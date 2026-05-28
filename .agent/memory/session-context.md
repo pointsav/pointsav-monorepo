@@ -1,95 +1,69 @@
-# Session Context — project-system cluster
-
-Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `session-context-archive.md`.
+## Session context — rolling 3-session summary
 
 ---
 
-## 2026-05-29 — Totebox Session — claude-code (claude-sonnet-4-6)
+### 2026-05-28 (continuation) | totebox@project-editorial | claude-sonnet-4-6
 
 **Done this session:**
-- Phase 1C.d DONE `fc245ee` (Peter Woodfine): AssembleImage fully implemented in Rust
-  - moonshot-toolkit v0.3.0; no Python/CMake/shell in critical path (MEMO §7 ✓)
-  - New `src/cpio.rs`: pure Rust CPIO "newc" writer; 4 tests
-  - `assemble_image()` in main.rs: validates prerequisites; generates CPIO archive;
-    writes archive.S with .incbin (absolute path); copies libcpio (cpio.c + cpio/cpio.h);
-    compiles 44 elfloader C/ASM sources + libcpio.c via std::process::Command;
-    preprocesses linker.lds; links -nostdlib -static -lgcc
-  - Key fix: `vendor-sel4-project/build-support/qemu-arm-virt/libcpio/cpio` is a
-    DIRECTORY (not a file); it contains `cpio.h`, included as `<cpio/cpio.h>` — both
-    cpio.c and the cpio/ subdirectory must be copied to build/libcpio/
-  - Verified: `build/system-image.bin` entry 0x40400000; QEMU: "Bootstrapping kernel"
-    → "Booting all finished, dropped to user space"
-  - 35 tests (26 lib + 9 bin); zero warnings
-- Outbox: Phase 1C.d complete notice + project-infrastructure VM request sent to Command
-
-- J2 citation research DONE `2966d8f` (Peter Woodfine): 9 YAML blocks written to outbox
-  msg-id: project-system-20260529-j2-citation-yaml; inbox J2/J5 relay marked actioned.
-  Flag: aws-nitro-2025 key vs actual Feb 2024 date — Command Session must decide.
-- Drafts updated `c54fb53` (Jennifer Woodfine): 3 pending Phase-1C drafts brought to
-  Phase 1C complete state (guide + 2 topics); 2 Spanish .es.md companions created for
-  both TOPICs. Superseding outbox to project-editorial sent
-  (msg-id: project-system-20260529-topic-guide-phase1c-v2).
-- moonshot-toolkit/CLAUDE.md updated: v0.2.0 → v0.3.0, 30 → 35 tests, cpio.rs added.
-- system-ledger/NEXT.md updated: Group 2D marked done; bench #9 blocked item added.
+- Applied preprint / public-posting versioning standard to all 6 JOURNAL manuscripts:
+  Block 1 updated to include `· CC BY 4.0` + `*Cite as:*` line in the notice block.
+  Frontmatter: `doi: ""`, `license: "CC BY 4.0"`, `cite_as:`, `revision_history:` added to all 6.
+  (Phases 1–2 were already committed by the prior run after context compaction; verified idempotent.)
+- Created `JOURNAL/` canonical folder at archive root; committed 6 paper copies — `147ceab6` (Peter)
+- Added 22 distribution outbox messages covering all 25 project-* archives (already committed `69085706`)
+- Updated `journal-artifact-discipline.md` — Block 1 template, mandatory versioning fields, standards basis (already committed `4d499ae4`, `bd031627`)
+- Created 6 annotated git tags: J1-v0.3-2026-05-28 … J6-v0.2-2026-05-28 (on HEAD `147ceab6`)
+- New inbox message actioned: `command-20260528-gis-a6-relay` (GIS A6 relay — figures ready, thesis draft staged)
 
 **Pending / carry-forward:**
-- Stage-6 for moonshot-toolkit v0.3.0 + system-core/ledger v1.0.0 (Command Session)
-- Outbox: project-infrastructure VM request for system-* testing (msg-id: project-system-20260529-infra-vm-request)
-- J2 citation YAML: Command Session must add 9 entries to ~/Foundry/citations.yaml; confirm aws-nitro key
-- hello.c rootserver: add SysDebugPutChar output (currently infinite loop)
-- Bench #9 quiet-VM re-run: verify_inclusion_proof composed 1024-leaf (load avg < 1.0 — BLOCKED at 11.93)
-- Task C (outbox to project-editorial with J2 update instructions): BLOCKED pending bench #9
-- PhD thesis pre-publication checklist still pending
+- All prior session blockers remain (§7.2 Phase 24B; Bench #9; §6 coverage metrics; §4-5 WireGuard benchmarks; J5 HOLD; user study)
+- DOI registration via Zenodo — operator action required
+- ORCID IDs for all three authors — operator action required (blocks all submissions)
+- Inbox: `command-20260526-dev-phase3-drafts-relay` (project-development Phase 3 drafts) — not yet actioned
+- Git tags not yet pushed (push separately when operator confirms public URL is live)
+- Stage 6 for all recent JOURNAL commits — Command Session scope
 
-**Operator preferences:**
-- Auto Mode active; all decisions proceed without stopping for clarifications
+**Operator preferences surfaced:**
+- "strict version control with international standard" → implemented: CC BY 4.0, cite_as, revision_history, Zenodo DOI stub, annotated tags
+- Every project-* archive gets at least one JOURNAL paper → implemented: 22 outbox messages
 
 ---
 
-## 2026-05-28 — Totebox Session — claude-code (claude-sonnet-4-6)
+### 2026-05-28 | totebox@project-editorial | claude-sonnet-4-6
 
 **Done this session:**
-- moonshot-toolkit v0.2.1 `6b59fd0`: corrected AssembleImage error message —
-  `microkit` PyPI package is an unrelated Flask helper; real SDK is a tarball
-  from github.com/seL4/microkit/releases
-- Phase 1C.c DONE `d550217` (Peter Woodfine): seL4 qemu-arm-virt AArch64 QEMU boot confirmed
-  - Full boot: elfloader → seL4 kernel → hello-rootserver → "hello from seL4 rootserver"
-  - Root cause 1: KernelVerificationBuild=ON silently disabled CONFIG_PRINTING (the CMake
-    cache shows `_DISABLED:INTERNAL=TRUE` with no warning); rebuilt kernel with
-    KernelVerificationBuild=OFF, KernelDebugBuild=ON, KernelPrinting=ON
-  - Root cause 2: GNU cpio --create --format=newc adds ~11 extra bytes per entry beyond
-    4-byte alignment; replaced with gen_cpio.py using exact ALIGN4 formula
-  - Root cause 3: QEMU -m 512M insufficient; kernel DTB describes [40000000..80000000) (1GB);
-    boot with -m 1G
-  - Elfloader built manually from vendor-sel4-tools/ source (45 C/ASM sources + libcpio)
-  - Committed: hello-rootserver source + build-support/ (gen_cpio.py, build-elfloader.sh,
-    libcpio, gen_config headers)
-  - NEXT.md updated: Phase 1C.c marked complete
+- Continued from prior session (context compaction boundary). Prior session: J2 language pass complete.
+- Checked project-gis outbox — found two messages: A6 figures/CSV ready (2026-05-28) + A6 thesis handoff (2026-05-27). Both actioned.
+- J3 full body writing pass (~7,800 words) + language pass — `forbidden_terms_cleared: true` — `02117825`
+- J6 §1–§5 writing pass (~5,200 words, MMP framework, 18-alias command table, IFC categories, BCF workflow) + language pass — `da4925a4`
+- J4 §1–§3 + §6–§7 writing pass (~4,800 words, CRMA architecture, WireGuard hub/spoke, three-ring AllowedIPs, BLAKE2s audit log) + language pass — `67eb9a37`
+- J1: ran OLS regression with available Phase 22 data (Model A: T1 β=+0.489 p<0.001, T1 clusters 63% larger; Model B: R²=0.503). Added §7.0 to J1, produced F6 partial forest plot, wrote `work/run-j1-ols.py` — `37523014`
+- Project-gis messages archived + `BRIEF-journal-phd-programme.md` updated to 2026-05-28 state — `a34825b6`
+- NEXT.md corrected (was project-infrastructure content) + updated with JOURNAL blockers
+- 5 JOURNAL return outbox messages sent to source projects (project-gis×2, project-system, project-infrastructure, project-orchestration, project-bim) — `25023ce9`
 
 **Pending / carry-forward:**
-- Phase 1C.d (AssembleImage): blocked on Microkit SDK tarball or Rust image assembler
-- Stage-6 for system-core+system-ledger v1.0.0: outbox `project-system-20260527-stage6-v100`
-- Image-signing key for Veriexec: outbox `project-system-20260527-image-signing-key`
-- Bench #9 quiet-VM re-run: verify_inclusion_proof composed 1024-leaf (load avg < 1.0)
-- PhD thesis pre-publication checklist
-- fleet-deployment file-mode drift: Command Session review needed
+- J1: §7.2 primary spec blocked on Phase 24B (Kontur pop join + O-D data) — project-gis
+- J2: Bench #9 quiet-VM re-run + 9 citation placeholder promotions — project-system
+- J3: §6 Results blocked on AEC nightly build coverage metrics — project-gis
+- J4: §4–§5 blocked on WireGuard benchmark data — project-infrastructure
+- J5: HOLD until J2 submitted — project-orchestration
+- J6: §6 blocked on user study execution — project-bim
+- All papers: ORCID IDs (operator action)
+- Convention layer changes for JOURNAL type (NEXT.md items) — Command Session scope
+- Inbox: `command-20260526-dev-phase3-drafts-relay` (project-development Phase 3 drafts) — not yet actioned
 
-**Operator preferences:**
-- Auto Mode active; all decisions proceed without stopping for clarifications
+**Operator preferences surfaced:**
+- Wants JOURNAL programme fully tracked and recoverable across sessions — save everything at shutdown
+- "send back to their respective projects" = outbox messages with file path + exact blockers + return instructions
 
 ---
 
-## 2026-05-27 (continued) — Totebox Session — claude-code (claude-sonnet-4-6)
+### 2026-05-24 | totebox@project-console | claude-sonnet-4-6
 
-**Done this session (continuation of prior context):**
-- Group 3A + 3D architecture decisions: all 7 resolved
-- Phase 1C.a DONE `34a1111`: moonshot-toolkit v0.2.0, real aarch64-linux-gnu-gcc
-- Phase 1C.b DONE: seL4 kernel.elf built, KernelPlatform=qemu-arm-virt, entry 0xffffff8040000000
+**Done this session:**
+- Phase 5 COMPLETE: `/new` slash command, Doorman SSE streaming, drafts-outbound write with foundry-draft-v1 frontmatter. Commits `6422c2a8` + `5118ce77`.
+- Inbox archived 8 messages; Stage 6 blocker retained.
 
-**Pending / carry-forward:**
-- (see 2026-05-28 entry above for updated status)
+**Pending:** Stage 6 push blocked on Command decision (history divergence); Phase 6 offline+Tantivy; pairing-server systemd; GCE port 2222; Peter SSH key.
 
-**Operator preferences:**
-- Auto Mode active
-
----
