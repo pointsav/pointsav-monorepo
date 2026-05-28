@@ -139,9 +139,43 @@ QEMU monitor:
 The `infrastructure/virt/vm-prove.sh` script includes `-device virtio-balloon` so that
 the balloon driver is present in the test VM from the first boot.
 
+## Planned: cross-node resource extension
+
+The per-node pool is the implemented layer. The planned distributed extension is intended
+to allow VMs to borrow compute from other physical nodes in the mesh when local capacity
+is under pressure.
+
+**Reboot not required.** Standard pool operations — balloon inflation, deflation, and
+cgroups v2 weight changes — are dynamic. The balloon controller signals the in-guest
+driver; the driver responds; the node pool adjusts. No guest restart or host reboot is
+needed. This holds for both the current manual-operator flow (QEMU monitor) and the
+planned automated controller.
+
+**virtio-mem** (upstream Linux kernel since 5.8; QEMU since 5.1) is the intended
+mechanism for the cross-node layer. Where `virtio_balloon` inflates and deflates a
+single device, `virtio-mem` supports fine-grained hot-plug and hot-unplug of individual
+memory blocks. The intended model: a lending node advertises unused blocks to a requesting
+VM on another node over the WireGuard mesh. The seL4 capability model is intended to
+ensure the lending node retains no read capability over the blocks it lends — the
+physical pages are exclusively mapped into the borrowing VM's address space.
+
+Cross-node placement decisions are intended to remain with `gateway-orchestration-command-1`
+(Totebox Orchestration layer). The **distributed capability ledger** — planned for
+development in `moonshot-protocol` and `moonshot-database` — is intended to carry
+cryptographically signed lending grants keyed to each node's pairing-ceremony identity.
+Revocation is intended to propagate as a Merkle DAG gossip across the mesh without
+relying on a central authority.
+
+The automated balloon controller — the component inside `os-infrastructure` that would
+trigger inflation and deflation in response to demand signals — is a planned milestone
+that precedes the cross-node lending layer.
+
+See: [[ppn-distributed-vm-fabric]]
+
 ## Related topics
 
 - **Infrastructure OS** — the Type I hypervisor that implements the balloon controller
 - **Totebox Archive** — the sovereign data vault running inside each VM
 - **OS Orchestration** — the stateless data aggregator (separate from the resource pool)
 - **Sovereign Mesh** — the WireGuard transport layer connecting PPN nodes
+- **PPN Distributed VM Fabric** — the planned cross-node extension: virtio-mem lending, distributed capability ledger, cross-node scheduler
