@@ -96,16 +96,24 @@ Last updated: 2026-05-28 (session 5).
 
 ---
 
-## TOPIC leg — drafts staged, needs editorial pickup
+## TOPIC + GUIDE leg — drafts staged, needs editorial pickup
 
-Seven draft pairs in `.agent/drafts-outbound/`; pickup notice to be sent to project-editorial.
+Nine TOPIC draft pairs + 3 GUIDE drafts in `.agent/drafts-outbound/`; pickup notice sent to project-editorial.
 
+**TOPICs (content-wiki-documentation):**
 - [ ] `topic-sovereign-mesh` + `.es` — expands stub at `infrastructure/sovereign-mesh.md` [session 2]
 - [ ] `topic-genesis-protocol` + `.es` — new; `architecture/genesis-protocol.md` [session 3]
 - [ ] `topic-ppn-command-protocol` + `.es` — new; `architecture/ppn-command-protocol.md` [session 3]
 - [ ] `topic-service-pointsav-link` + `.es` — new; `architecture/service-pointsav-link.md` [session 3]
-- [ ] `topic-os-network-admin` + `.es` — new; `systems/os-network-admin.md` [session 5]
+- [ ] `topic-os-network-admin` + `.es` — new; replaces published `systems/os-network-admin.md` (fixes app-network-admin conflation) [session 5]
 - [ ] `topic-ppn-hypervisor-resource-pool` + `.es` — new; `architecture/ppn-hypervisor-resource-pool.md` [session 5]
+- [ ] `topic-totebox-archive` + `.es` — new; `systems/totebox-archive.md` [session 6]
+- [ ] `topic-ppn-architecture-overview` + `.es` — new; `architecture/ppn-architecture-overview.md` [session 6]
+
+**GUIDEs (woodfine-fleet-deployment/fleet-infrastructure/):**
+- [ ] `guide-ppn-first-deployment` — 5-step deployment sequence from BRIEF §7 [session 6]
+- [ ] `guide-node-join-ceremony` — approval workflow, operator + node perspectives [session 6]
+- [ ] `guide-vm-prove-balloon-demo` — vm-prove.sh + virtio_balloon demo [session 6]
 
 ---
 

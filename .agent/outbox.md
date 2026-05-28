@@ -10,6 +10,64 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-infrastructure
 to: totebox@project-editorial
+re: session 6 — 2 new TOPIC pairs + 3 GUIDE drafts ready for pickup
+created: 2026-05-28
+priority: normal
+status: pending
+---
+
+Four new draft files staged at `.agent/drafts-outbound/` in the project-infrastructure
+archive (session 6):
+
+**TOPICs (target: content-wiki-documentation):**
+
+- `topic-totebox-archive.draft.md` + `.es` — `systems/totebox-archive.md`
+  What a Totebox Archive is: sovereign WORM data vault per entity; freely transferable
+  bootable disk image; JSONL/GeoParquet/Markdown; access only via Diode + PSP;
+  MBA keypair governs access; cluster naming convention; relationship to os-totebox /
+  os-console / os-orchestration; what it is NOT (database, cloud storage, file share).
+  No open questions.
+
+- `topic-ppn-architecture-overview.draft.md` + `.es` — `architecture/ppn-architecture-overview.md`
+  High-level entry-point TOPIC for the PPN as a whole: four layers (operator / PPN /
+  hypervisor / Totebox Orchestration), three key properties (isolation invariant, freely
+  transferable archives, zero crypto authority at network plane), what PPN is NOT (not a
+  data access layer, not a compute scheduler, not an identity authority).
+  Links to all 8 detailed TOPICs rather than duplicating their content.
+  No open questions.
+
+**GUIDEs (target: woodfine-fleet-deployment/fleet-infrastructure/):**
+
+- `guide-ppn-first-deployment.draft.md` — `guide-ppn-first-deployment.md`
+  The 5-step first-deployment sequence from BRIEF-PPN-DEV-BOOTSTRAP.md §7. All 5 steps
+  are unblocked as of 2026-05-28. Covers: deploy service-ppn-pairing on GCP VM; verify
+  reachability; build + copy os-network-admin to Laptop A; run os-network-admin; optional
+  vm-prove.sh. Includes exact commands, prerequisites, troubleshooting table.
+  Two noted open questions: Q2 (subnet ratification will change IP addresses) and Q5
+  (app-network-admin F8 Gateway subprocess to be replaced with HTTP to localhost:9080).
+
+- `guide-node-join-ceremony.draft.md` — `guide-node-join-ceremony.md`
+  Covers the node-join approval workflow from both perspectives. Node side: generates
+  Crockford base32 short code, submits via POST /v1/node-join/request. Operator side:
+  os-network-admin polls and displays codes; approve via curl POST /v1/node-join/approve.
+  Explains: CPace PAKE + SAS gap closure; nodes.jsonl append-only registry; expiry at
+  600s; planned ratatui TUI (planned/intended language). Security notes on SAS verification.
+
+- `guide-vm-prove-balloon-demo.draft.md` — `guide-vm-prove-balloon-demo.md`
+  How to run infrastructure/virt/vm-prove.sh and demonstrate virtio_balloon resource pool
+  management from the QEMU monitor. Covers: KVM detection + TCG fallback; optional GCP
+  nested virt enablement; balloon inflation (balloon 128) and deflation; pool formula;
+  explicit table of what this proves vs. what's a planned future milestone.
+
+**Running totals in drafts-outbound:**
+- TOPICs: 9 bilingual pairs (18 files) pending editorial pickup
+- GUIDEs: 3 files pending editorial pickup
+
+Archive path: `/srv/foundry/clones/project-infrastructure/.agent/drafts-outbound/`
+
+---
+from: totebox@project-infrastructure
+to: totebox@project-editorial
 re: two new TOPIC draft pairs ready for pickup — os-network-admin, ppn-hypervisor-resource-pool
 created: 2026-05-28
 priority: normal
