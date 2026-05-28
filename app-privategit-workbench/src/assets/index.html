@@ -1660,12 +1660,17 @@ async function openFile(path, name) {
       const text = await res.text();
       const ext = fname.split('.').pop().toLowerCase();
 
-      // JSON schema detection — peek first 512 chars for known document types
+      // JSON schema detection — peek first 6 KB for known document types
       if (ext === 'json') {
-        const peek = text.slice(0, 512);
-        if (peek.includes('"proforma_version"') ||
+        const peek = text.slice(0, 6144);
+        // Schema-versioned formats
+        const isVersionedDoc = peek.includes('"proforma_version"') ||
             peek.includes('"presentation_version"') ||
-            peek.includes('"schedule_version"')) {
+            peek.includes('"schedule_version"');
+        // Bespoke tool-proforma output (entity + date + data section key)
+        const isBespokeProforma = peek.includes('"entity"') && peek.includes('"date"') &&
+            (peek.includes('"income"') || peek.includes('"years"') || peek.includes('"areas"'));
+        if (isVersionedDoc || isBespokeProforma) {
           // Switch to server-side document renderer
           viewMode = 'iframe';
           tv.style.display = 'none';
