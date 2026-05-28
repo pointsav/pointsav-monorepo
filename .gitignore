@@ -1,2 +1,7 @@
 # Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock
+
+# External vendored clones and their symlinks — not committed
+vendor-sel4-tools/
+vendor-sel4-project/tools
+vendor-sel4-project/kernel
