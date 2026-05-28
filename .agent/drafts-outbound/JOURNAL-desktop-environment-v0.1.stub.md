@@ -70,6 +70,16 @@ cites:
 forbidden_terms_cleared: true
 preprint_posted: true
 preprint_posted_date: 2026-05-28
+doi: ""
+license: "CC BY 4.0"
+cite_as: "Woodfine, J.M., Woodfine, P.M., & Woodfine, M. (2026). Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration. Working Paper v0.2, 28 May 2026. Woodfine Management Corp., Vancouver, BC."
+revision_history:
+  - version: "0.1"
+    date: "2026-05-27"
+    changes: "Initial scaffold"
+  - version: "0.2"
+    date: "2026-05-28"
+    changes: "Writing pass §1–§5; language pass; preprint notice and FLS advisory; public posting"
 notes_for_editor: |
   Writing pass 2026-05-28: §1–§5 body written (~5,200 words). §6 Results pending user
   study execution. §7 Discussion written with formal hypotheses and falsification
@@ -85,8 +95,10 @@ notes_for_editor: |
   participants will satisfy TOCHI's empirical contribution requirement.
 ---
 
-> **Working Paper · Version 0.2 · 2026-05-28**
-> This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. The authors welcome correspondence at jmwoodfine@gmail.com.
+> **Working Paper · Version 0.2 · 2026-05-28 · CC BY 4.0**
+> This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. Correspondence: jmwoodfine@gmail.com.
+>
+> *Cite as:* Woodfine, J.M., Woodfine, P.M., & Woodfine, M. (2026). Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration. Working Paper v0.2, 28 May 2026. Woodfine Management Corp., Vancouver, BC.
 
 > **Forward-Looking Statements**
 > Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially. Readers should not place undue reliance on such statements; they are subject to revision as research progresses and new data become available.
