@@ -88,6 +88,29 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-28 — app-mediakit-knowledge Phase 6A+6B+6C — AJAX nav fix, home page caps, topnav header
+
+- **Phase 6A (wiki.js):** Root cause of "articles not loading" confirmed — `navigateTo()` was
+  targeting 3 stale selectors from Phase 2 DOM renames: `#vector-toc` → `aside.toc`,
+  `h1.page-title` → `h1.article__title`, `.wiki-breadcrumb` → `nav.crumb`. All 6 occurrences
+  fixed. Also fixed `initToc()`, `initTocPin()` getElementById → querySelector, and
+  `initActiveTocTracking()` heading selector `.mw-body h2[id]` → `.prose h2[id], .prose h3[id]`.
+  server.rs: added `id="toc-list"` to TOC `<ol>`.
+
+- **Phase 6B (server.rs home page):** Removed `div.wiki-home-uncategorised` block (orphan files
+  should not surface on the front page). Guides capped at 6 (`.iter().take(6)`). Data fetch
+  aligned: `recent_topics_by_last_edited(&buckets, 10)` → `(&buckets, 8)`.
+
+- **Phase 6C (server.rs + style.css):** Replaced 3-row `header.shell-header` (152px) with
+  single-row `header.topnav` (80px) in all three chrome functions. `WORDMARK_SVG_POINTSAV`
+  constant added: verbatim PointSav SVG from `home.pointsav.com` (320×80px). `.topnav` CSS:
+  `1fr auto 1fr` grid, Oswald 11px uppercase navy links, dark-mode SVG invert.
+  `--header-h` updated 152px → 80px.
+
+- **Commit:** `afa67bfa` (Jennifer). 106/106 tests pass. Stage 6 + binary rebuild pending.
+
+---
+
 ## 2026-05-27 — User feedback sprint: Issues 1–3, 5; AEC Night 3 recovery
 
 ### GIS map UI fixes (index.html — commit 16d3d975)
