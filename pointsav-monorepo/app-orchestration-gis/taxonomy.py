@@ -63,6 +63,14 @@ THRESHOLDS = {
     "university_min_enrolment":   1000,  # students; ETER/HESA/IPEDS
 }
 
+# ── GEOMETRIC TIER GATES ──────────────────────────────────────────────────────
+# T2 District requires the anchor pair to form a unified retail node.
+# Above this span the two stores likely serve separate trade areas (separate trips),
+# so the cluster downgrades to T3 Local regardless of anchor composition.
+# Calibrated so that NA T3 approaches EU parity (~24 % vs ~26 %).
+# Change B: introduced 2026-05-28.
+SPAN_T2_MAX_KM: float = 2.5
+
 # ── 17 DISPLAY COUNTRIES (grouped) ───────────────────────────────────────────
 DISPLAY_COUNTRIES = {
     "NA":          ["US", "CA", "MX"],
@@ -518,16 +526,16 @@ def category_of(chain_id: str) -> str | None:
     return _CHAIN_TO_CAT.get(chain_id)
 
 
-def tier_of(cats: set[str], tight: bool = False) -> int | None:
+def tier_of(cats: set[str], tight: bool = False, span_km: float | None = None) -> int | None:
     """
-    Composition-only tier rule.  cats = set of retail category keys present.
+    Composition-and-geometry tier rule.  cats = set of retail category keys present.
     Civic categories (medical, education) are ignored — they never gate the tier.
 
     T1 Regional:  hypermarket ∧ hardware ∧ (price_club ∨ lifestyle ∨ electronics)
                   OR tight cluster with 3+ members (H2b rule)
                   OR any 4+ retail anchor categories (destination cluster)
-    T2 District:  hypermarket ∧ hardware (both required; no tertiary anchor)
-    T3 Local:     all remaining co-locations
+    T2 District:  hypermarket ∧ hardware ∧ span_km ≤ SPAN_T2_MAX_KM (2.5 km)
+    T3 Local:     all remaining co-locations (including hyper+hw with span > 2.5 km)
     None:         singleton — not a co-location
 
     Three T1 admission paths (T1.a / T1.b / T1.c):
@@ -542,6 +550,11 @@ def tier_of(cats: set[str], tight: bool = False) -> int | None:
     The prior `has_hyper and n >= 2` rule promoted hypermarket-only clusters
     to T2; that was a code bug relative to the intended compositional definition.
     Removes ~621 clusters from T2 → T3.
+
+    Change B (geometric span gate): T2 further requires span_km ≤ SPAN_T2_MAX_KM.
+    A hypermarket+hardware pair with span > 2.5 km likely serves separate trade
+    areas (separate customer trips); downgraded to T3 Local.
+    Effect: ~667 T2 → T3 globally; NA T3 +44 %, EU T3 +54 %.
     """
     retail = cats & _RETAIL_CATS
     n = len(retail)
@@ -563,9 +576,11 @@ def tier_of(cats: set[str], tight: bool = False) -> int | None:
     # T1.c — category breadth ≥4
     if n >= 4:
         return 1
-    # T2 — hypermarket + hardware (both required)
+    # T2 — hypermarket + hardware within span gate (Change B)
     if has_hyper and has_hw:
-        return 2
+        if span_km is None or span_km <= SPAN_T2_MAX_KM:
+            return 2
+        return 3  # span > 2.5 km: stores too dispersed for a unified district node
     return 3
 
 
