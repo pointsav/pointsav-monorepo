@@ -323,6 +323,7 @@ impl ExternalTierClient {
             tier_used: Tier::External,
             model: model_id.to_string(),
             content,
+            reasoning_content: None,
             inference_ms,
             cost_usd,
             upstream_version: Some(provider.as_str().to_string()),

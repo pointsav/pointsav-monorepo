@@ -386,6 +386,11 @@ pub struct ComputeResponse {
     pub tier_used: Tier,
     pub model: String,
     pub content: String,
+    /// Think-model reasoning tokens when upstream uses `--reasoning-format deepseek`.
+    /// Present means `content` is already clean JSON; absent means `content` may
+    /// contain raw `<think>…</think>` blocks that callers must strip.
+    #[serde(default)]
+    pub reasoning_content: Option<String>,
     pub inference_ms: u64,
     pub cost_usd: f64,
     /// Yo-Yo or external-API implementation version, opaque string.

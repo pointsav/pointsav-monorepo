@@ -527,9 +527,14 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
     // 6. Parse result into response fields.
     let (entities, tier_used, model, extraction_ok, deferred, defer_reason_str) = match result {
         Ok(compute_resp) => {
-            // Strip <think>…</think> blocks emitted by Think-class models
-            // (e.g. OLMo-3 32B Think) before attempting JSON parse.
-            let content_no_think = strip_think_blocks(&compute_resp.content);
+            // With --reasoning-format deepseek, think tokens route to reasoning_content
+            // and content is already clean JSON. Fall back to strip_think_blocks()
+            // when reasoning_content is absent (raw format or pre-deepseek builds).
+            let content_no_think: String = if compute_resp.reasoning_content.is_some() {
+                compute_resp.content.clone()
+            } else {
+                strip_think_blocks(&compute_resp.content)
+            };
             // Strip markdown fences if the model wrapped its output.
             let raw_content = content_no_think.trim().to_string();
             let stripped = raw_content

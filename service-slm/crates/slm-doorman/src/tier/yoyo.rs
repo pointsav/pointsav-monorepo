@@ -245,6 +245,19 @@ impl YoYoTierClient {
             }
             Ok(Err(e)) => {
                 self.circuit.record_failure();
+                // reqwest issue #2839: when our socket timeout fires mid-stream,
+                // reqwest reports "error decoding response body" rather than a
+                // timeout error. Reclassify so callers apply timeout backoff.
+                if let DoormanError::Upstream(ref re) = e {
+                    if re.is_decode() {
+                        warn!(
+                            target: "slm_doorman::tier::yoyo",
+                            latency_ms = elapsed_ms,
+                            "Tier B: body-decode error reclassified as TierBTimeout (reqwest #2839)"
+                        );
+                        return Err(DoormanError::TierBTimeout);
+                    }
+                }
                 Err(e)
             }
             Err(_elapsed) => {
@@ -315,18 +328,19 @@ impl YoYoTierClient {
             .map(|s| s.to_string());
 
         let body: OpenAiChatResponse = resp.json().await?;
-        let content = body
+        let msg = body
             .choices
             .into_iter()
             .next()
-            .map(|c| c.message.content)
+            .map(|c| c.message)
             .ok_or_else(|| DoormanError::UpstreamShape("no choices in response".into()))?;
 
         Ok(ComputeResponse {
             request_id: req.request_id,
             tier_used: Tier::Yoyo,
             model,
-            content,
+            content: msg.content,
+            reasoning_content: msg.reasoning_content,
             inference_ms,
             cost_usd: self.config.pricing.yoyo_cost_usd(inference_ms),
             upstream_version,
@@ -523,7 +537,16 @@ struct OpenAiChatResponse {
 
 #[derive(Deserialize)]
 struct OpenAiChatChoice {
-    message: ChatMessage,
+    message: OpenAiAssistantMessage,
+}
+
+/// Upstream assistant turn — adds `reasoning_content` for `--reasoning-format deepseek`.
+/// When present, `content` is already clean JSON and reasoning tokens are isolated here.
+#[derive(Deserialize)]
+struct OpenAiAssistantMessage {
+    content: String,
+    #[serde(default)]
+    reasoning_content: Option<String>,
 }
 
 fn is_false(b: &bool) -> bool {

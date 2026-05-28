@@ -109,6 +109,7 @@ impl LocalTierClient {
             tier_used: Tier::Local,
             model,
             content,
+            reasoning_content: None,
             inference_ms,
             // Tier A runs on already-paid-for VM compute; per substrate
             // decision the marginal cost is sunk in the VM cost.
