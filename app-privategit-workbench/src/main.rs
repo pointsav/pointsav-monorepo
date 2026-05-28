@@ -174,7 +174,15 @@ async fn get_spa(State(state): State<AppState>) -> Html<String> {
 #[derive(Deserialize)]
 struct FileQuery {
     path: String,
+    #[serde(default = "default_true")]
+    page_numbers: bool,
+    #[serde(default)]
+    pn_position: Option<String>, // "bottom-center" | "bottom-right" | "top-right"
+    #[serde(default)]
+    paper: Option<String>, // "letter" | "a4"
 }
+
+fn default_true() -> bool { true }
 
 #[derive(Serialize)]
 struct FileResponse {
@@ -738,34 +746,37 @@ fn detect_doc_type(path: &Path, content_peek: Option<&str>) -> DocType {
 
 const WEASYPRINT_BIN: &str = "/usr/bin/weasyprint";
 
-/// Inject a minimal @page CSS block for page numbers before </head>.
+/// Inject a minimal @page CSS block before </head>.
+/// Respects print config from the request query: paper size, page numbers, position.
 /// The document content and all existing styles are untouched.
-fn inject_page_css(html: &str) -> String {
-    const PAGE_CSS: &str = concat!(
-        "<style>\n",
-        "@page {\n",
-        "  size: letter;\n",
-        "  margin: 2cm 2cm 2.5cm 2cm;\n",
-        "  @bottom-center {\n",
-        "    content: counter(page) \" / \" counter(pages);\n",
-        "    font-size: 9pt;\n",
-        "    color: #666;\n",
-        "    font-family: -apple-system, BlinkMacSystemFont, sans-serif;\n",
-        "  }\n",
-        "}\n",
-        "@page :first { margin-top: 3cm; }\n",
-        "</style>\n"
-    );
-    if html.contains("</head>") {
-        html.replacen("</head>", &format!("{}</head>", PAGE_CSS), 1)
-    } else if html.contains("<body") {
-        html.replacen(
-            "<body",
-            &format!("<head>{}</head>\n<body", PAGE_CSS),
-            1,
+fn inject_page_css(html: &str, q: &FileQuery) -> String {
+    let size = match q.paper.as_deref() {
+        Some("a4") => "a4",
+        _ => "letter",
+    };
+    let pn_rule = if q.page_numbers {
+        let prop = match q.pn_position.as_deref() {
+            Some("bottom-right") => "@bottom-right",
+            Some("top-right") => "@top-right",
+            _ => "@bottom-center",
+        };
+        format!(
+            "  {} {{\n    content: counter(page) \" / \" counter(pages);\n    font-size: 9pt;\n    color: #666;\n    font-family: \"Liberation Sans\", Arial, sans-serif;\n  }}\n",
+            prop
         )
     } else {
-        format!("{}{}", PAGE_CSS, html)
+        String::new()
+    };
+    let css = format!(
+        "<style>\n@page {{\n  size: {};\n  margin: 2cm 2cm 2.5cm 2cm;\n{}}}\n@page :first {{ margin-top: 3cm; }}\n</style>\n",
+        size, pn_rule
+    );
+    if html.contains("</head>") {
+        html.replacen("</head>", &format!("{}</head>", css), 1)
+    } else if html.contains("<body") {
+        html.replacen("<body", &format!("<head>{}</head>\n<body", css), 1)
+    } else {
+        format!("{}{}", css, html)
     }
 }
 
@@ -778,7 +789,7 @@ fn run_weasyprint(html: String) -> Result<Vec<u8>> {
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .spawn()
-        .context("spawning weasyprint — is it installed at /home/mathew/.local/bin/weasyprint?")?;
+        .context("spawning weasyprint — is it installed at /usr/bin/weasyprint?")?;
 
     if let Some(stdin) = child.stdin.as_mut() {
         stdin
@@ -989,7 +1000,7 @@ async fn get_pdf(
     let doc_type = detect_doc_type(&fs_path, Some(&content));
 
     let html = match doc_type {
-        DocType::HtmlDoc => inject_page_css(&content),
+        DocType::HtmlDoc => inject_page_css(&content, &q),
         DocType::Proforma => {
             // Phase 2 will have a full proforma spreadsheet renderer.
             // For now, render the basic metadata summary with page CSS.
@@ -1019,8 +1030,8 @@ async fn get_pdf(
 <style>
 @page {{ size: letter; margin: 2cm 2cm 2.5cm 2cm;
   @bottom-center {{ content: counter(page) " / " counter(pages);
-    font-size: 9pt; color: #666; font-family: sans-serif; }} }}
-body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 9pt; color: #666; font-family: "Liberation Sans", Arial, sans-serif; }} }}
+body {{ font-family: "Liberation Sans", Arial, sans-serif;
         margin: 0; padding: 32px 48px; color: #24292e; }}
 h1 {{ font-size: 1.6em; margin: 0 0 4px; }}
 .meta {{ font-size: 12px; color: #666; margin-bottom: 32px; }}
@@ -1058,8 +1069,8 @@ pre {{ background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px;
 <style>
 @page {{ size: letter landscape; margin: 2cm;
   @bottom-center {{ content: counter(page) " / " counter(pages);
-    font-size: 9pt; color: #666; font-family: sans-serif; }} }}
-body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 9pt; color: #666; font-family: "Liberation Sans", Arial, sans-serif; }} }}
+body {{ font-family: "Liberation Sans", Arial, sans-serif;
         margin: 0; padding: 24px; color: #24292e; }}
 h1 {{ font-size: 1.3em; margin: 0 0 8px; }}
 .meta {{ font-size: 12px; color: #666; margin-bottom: 24px; }}
