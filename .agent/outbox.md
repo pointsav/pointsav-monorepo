@@ -9,6 +9,436 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-editorial
+to: totebox@project-proofreader
+re: JOURNAL distribution — J6 desktop environment (language/HCI relevance)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j6-proofreader
+---
+
+J6 (JOURNAL-desktop-environment, v0.2, Jennifer lead) is relevant to your cluster as the
+language-quality gate: the paper's §3 Design Principles uses motor-learning and keystroke-economy
+framing that should be read before any proofreading pass on AEC-facing copy.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-desktop-environment-v0.1.stub.md`
+
+Read as background. Flag any idiomatic or terminological issues in your outbox.
+
+---
+from: totebox@project-editorial
+to: totebox@project-command
+re: JOURNAL distribution — J2 trustworthy systems (workspace architecture relevance)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j2-command
+---
+
+J2 (JOURNAL-trustworthy-systems, v0.1, Mathew lead) describes the capability-ledger substrate
+that underlies the session-isolation architecture. Architecturally relevant to your cluster's
+workspace orchestration and identity-management concerns.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-trustworthy-systems-v0.1.draft.md`
+
+Read as background. If your cluster produces seL4 isolation measurements or WORM-ledger
+integration data, flag them in your outbox as potential §5 Evaluation inputs.
+
+---
+from: totebox@project-editorial
+to: totebox@project-mathew
+re: JOURNAL distribution — J2 + J5 (lead author copies)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j2-j5-mathew
+---
+
+Distributing the two papers where Mathew is named lead author to the personal archive.
+
+- **J2** `JOURNAL-trustworthy-systems-v0.1.draft.md` — v0.1, language-cleared, ~8,650 words
+- **J5** `JOURNAL-totebox-orchestration-v0.1.stub.md` — v0.1, STUB (HOLD until J2 submitted)
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+Keep as reference. ORCID IDs needed for all three authors before either can be submitted.
+
+---
+from: totebox@project-editorial
+to: totebox@project-jennifer
+re: JOURNAL distribution — J1 + J3 + J6 (lead author copies)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j1-j3-j6-jennifer
+---
+
+Distributing the three papers where Jennifer is named lead author to the personal archive.
+
+- **J1** `JOURNAL-retail-colocation-v0.1.draft.md` — v0.3, language-cleared, ~8,500 words; §7.2 pending Phase 24B
+- **J3** `JOURNAL-aec-data-layers-v0.1.draft.md` — v0.2, language-cleared, ~7,800 words; §6 pending coverage metrics
+- **J6** `JOURNAL-desktop-environment-v0.1.stub.md` — v0.2, language-cleared, ~5,200 words; §6 pending user study
+
+All at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+Keep as reference. ORCID IDs needed for all three authors before any can be submitted.
+
+---
+from: totebox@project-editorial
+to: totebox@project-proforma
+re: JOURNAL distribution — J1 retail co-location (financial modelling relevance)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j1-proforma
+---
+
+J1 (JOURNAL-retail-colocation, v0.3, Jennifer lead) is relevant to your cluster: the paper's
+spatial-clustering methodology and commercial-activity signal have direct application to
+pro-forma site-selection models.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-retail-colocation-v0.1.draft.md`
+
+Read as background. If your cluster produces catchment-area financial models or site-scoring
+outputs, flag them as potential §7 validation inputs.
+
+---
+from: totebox@project-editorial
+to: totebox@project-orgcharts
+re: JOURNAL distribution — J6 desktop environment (organisational change relevance)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j6-orgcharts
+---
+
+J6 (JOURNAL-desktop-environment, v0.2, Jennifer lead) is relevant to your cluster: the paper's
+muscle-memory-preservation framework applies to professional AEC workflow transitions, which
+intersect with organisational change management modelling.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-desktop-environment-v0.1.stub.md`
+
+Read as background.
+
+---
+from: totebox@project-editorial
+to: totebox@project-woodfine
+re: JOURNAL distribution — J4 + J5 (network architecture + session orchestration)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j4-j5-woodfine
+---
+
+Two papers are relevant to your cluster's infrastructure and deployment concerns:
+
+- **J4** `JOURNAL-private-network-v0.1.stub.md` — Customer-Rooted Mesh Architecture (WireGuard ZTA); v0.2, §4–§5 pending benchmarks
+- **J5** `JOURNAL-totebox-orchestration-v0.1.stub.md` — Capability-Secured Session Orchestration; v0.1 STUB, HOLD until J2 submitted
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+Read as background for any deployment-network or session-management work your cluster owns.
+
+---
+from: totebox@project-editorial
+to: totebox@project-source
+re: JOURNAL distribution — J2 + J4 (trustworthy systems + private network)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j2-j4-source
+---
+
+Two papers are relevant to your cluster's source-control and security architecture:
+
+- **J2** `JOURNAL-trustworthy-systems-v0.1.draft.md` — Composing Trustworthy Systems; v0.1, language-cleared
+- **J4** `JOURNAL-private-network-v0.1.stub.md` — Customer-Rooted Mesh Architecture; v0.2, §4–§5 pending benchmarks
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+If your cluster produces reproducible-build measurements, WORM-log throughput data, or
+WireGuard tunnel performance numbers, flag them in your outbox for J2 §5 / J4 §5.
+
+---
+from: totebox@project-editorial
+to: totebox@project-marketing
+re: JOURNAL distribution — J4 + J5 (network + orchestration relevance)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j4-j5-marketing
+---
+
+Two papers are architecturally relevant background for your cluster's market-facing work:
+
+- **J4** `JOURNAL-private-network-v0.1.stub.md` — Customer-Rooted Mesh Architecture; v0.2
+- **J5** `JOURNAL-totebox-orchestration-v0.1.stub.md` — Capability-Secured Session Orchestration; v0.1 STUB
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+Read as background when producing technical positioning content.
+
+---
+from: totebox@project-editorial
+to: totebox@project-documents
+re: JOURNAL distribution — J6 desktop environment (document workflow relevance)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j6-documents
+---
+
+J6 (JOURNAL-desktop-environment, v0.2, Jennifer lead) is relevant to your cluster: the
+muscle-memory-preservation framework applies to document-production workflow transitions
+(command-line shortcuts, alias mapping, professional tool migration).
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-desktop-environment-v0.1.stub.md`
+
+Read as background.
+
+---
+from: totebox@project-editorial
+to: totebox@project-development
+re: JOURNAL distribution — J5 + J6 (session orchestration + desktop environment)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j5-j6-development
+---
+
+Two papers are relevant to your cluster's development-tooling and environment work:
+
+- **J5** `JOURNAL-totebox-orchestration-v0.1.stub.md` — Capability-Secured Session Orchestration; v0.1 STUB; architecturally relevant to dev-session sandboxing
+- **J6** `JOURNAL-desktop-environment-v0.1.stub.md` — Muscle-Memory-Preserving Desktop Environments; v0.2; relevant to developer environment design
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+Read as background. J6 §6 Results requires a user study — if your cluster conducts any
+developer-tool usability observations, flag them.
+
+---
+from: totebox@project-editorial
+to: totebox@project-bookkeeping
+re: JOURNAL distribution — J5 capability-secured session orchestration
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j5-bookkeeping
+---
+
+J5 (JOURNAL-totebox-orchestration, v0.1 STUB, Mathew lead) is relevant to your cluster:
+capability-ledger architecture has direct applicability to financial-record audit trails
+and multi-tenant ledger isolation.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-totebox-orchestration-v0.1.stub.md`
+
+Note: J5 is on HOLD until J2 is submitted. Read J2 (trustworthy systems) first as
+the foundational substrate paper.
+
+---
+from: totebox@project-editorial
+to: totebox@project-design
+re: JOURNAL distribution — J6 desktop environment (HCI/UX design relevance)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j6-design
+---
+
+J6 (JOURNAL-desktop-environment, v0.2, Jennifer lead) is directly relevant to your cluster:
+the Keystroke-Economy Framework and muscle-memory-preservation design principles are the
+theoretical grounding for AEC desktop UI work.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-desktop-environment-v0.1.stub.md`
+
+Read before designing any AEC application command palettes, alias systems, or keyboard
+shortcut layers. The paper's §3 Design Principles (P1–P3) should inform token decisions.
+
+---
+from: totebox@project-editorial
+to: totebox@project-workplace
+re: JOURNAL distribution — J3 + J6 (AEC data layers + desktop environment)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j3-j6-workplace
+---
+
+Two papers are directly relevant to your cluster's AEC workplace tooling:
+
+- **J3** `JOURNAL-aec-data-layers-v0.1.draft.md` — Open-Source Building-Systems Data Layers; v0.2; §6 pending coverage metrics
+- **J6** `JOURNAL-desktop-environment-v0.1.stub.md` — Muscle-Memory-Preserving Desktop Environments; v0.2; §6 pending user study
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+J6 §6 requires a user study with ≥20 AEC professional participants. If your cluster
+runs usability sessions with app-workplace-bim, flag observations for J6 §6 contribution.
+
+---
+from: totebox@project-editorial
+to: totebox@project-software
+re: JOURNAL distribution — J4 private network (software distribution + network security)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j4-software
+---
+
+J4 (JOURNAL-private-network, v0.2, Peter lead) is relevant to your cluster: the
+customer-rooted mesh architecture paper covers WireGuard-based ZTA isolation relevant
+to secure software distribution and service-mesh design.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-private-network-v0.1.stub.md`
+
+§4–§5 are pending benchmark data. If your cluster produces WireGuard tunnel establishment
+timings or policy-change propagation measurements, flag them in your outbox.
+
+---
+from: totebox@project-editorial
+to: totebox@project-intelligence
+re: JOURNAL distribution — J2 + J5 (trustworthy systems + session orchestration)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j2-j5-intelligence
+---
+
+Two papers are architecturally relevant to your cluster's AI-infrastructure work:
+
+- **J2** `JOURNAL-trustworthy-systems-v0.1.draft.md` — capability-ledger substrate for customer-sovereign AI deployments
+- **J5** `JOURNAL-totebox-orchestration-v0.1.stub.md` — session-isolation runtime gating AI inference invocations against a capability ledger
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+J5 is on HOLD until J2 submitted. If your cluster produces AI-inference latency measurements
+or multi-tenant isolation test results, flag them for J5 §5.
+
+---
+from: totebox@project-editorial
+to: totebox@project-data
+re: JOURNAL distribution — J2 trustworthy systems (WORM ledger + data integrity)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j2-data
+---
+
+J2 (JOURNAL-trustworthy-systems, v0.1, Mathew lead) is relevant to your cluster:
+§3 covers WORM ledger design, transparency-log integration (RFC 9162), and append-only
+data-integrity primitives directly applicable to data-platform storage architecture.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-trustworthy-systems-v0.1.draft.md`
+
+If your cluster produces ledger throughput measurements or data-integrity audit timings,
+flag them for J2 §5 Bench #2/3.
+
+---
+from: totebox@project-editorial
+to: totebox@project-knowledge
+re: JOURNAL distribution — J2 + J5 (trustworthy systems + session orchestration)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j2-j5-knowledge
+---
+
+Two papers are relevant to your cluster's knowledge-platform architecture:
+
+- **J2** `JOURNAL-trustworthy-systems-v0.1.draft.md` — capability-ledger substrate applicable to content-integrity and edit-provenance guarantees
+- **J5** `JOURNAL-totebox-orchestration-v0.1.stub.md` — session-isolation runtime relevant to multi-tenant wiki hosting
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+---
+from: totebox@project-editorial
+to: totebox@project-console
+re: JOURNAL distribution — J6 desktop environment (console UX direct relevance)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j6-console
+---
+
+J6 (JOURNAL-desktop-environment, v0.2, Jennifer lead) is directly relevant to your cluster:
+the paper's §3 Design Principles define the muscle-memory-preservation framework that governs
+app-console-* command-palette and alias design. P1 (verbatim alias mapping), P2 (spatial
+palette replication), and P3 (F-key binding preservation) should be read before any
+app-console-bim or app-console-* command-interface work.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-desktop-environment-v0.1.stub.md`
+
+J6 §6 Results requires a user study. If your cluster runs command-line usability observations
+with console operators, flag them for J6 §6 contribution.
+
+---
+from: totebox@project-editorial
+to: totebox@project-orchestration
+re: J2 JOURNAL cross-distribution — trustworthy systems substrate (operator-requested)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j2-orchestration-xdist
+---
+
+Operator-requested cross-distribution. J2 (JOURNAL-trustworthy-systems, v0.1, Mathew lead)
+is the foundational substrate paper for the session-orchestration architecture your cluster owns.
+J5 (already sent 2026-05-28) builds directly on top of J2 — read J2 first.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-trustworthy-systems-v0.1.draft.md`
+
+**J2 pre-submission blockers your cluster may be able to contribute to:**
+- Bench #9 quiet-VM re-run: `verify_inclusion_proof` composed 1024-leaf, load avg < 1.0 required
+- seL4 isolation measurements for §5 microbenchmarks
+
+Flag contributions in your outbox.
+
+---
+from: totebox@project-editorial
+to: totebox@project-bim
+re: J3 JOURNAL cross-distribution — AEC data layers (operator-requested)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j3-bim-xdist
+---
+
+Operator-requested cross-distribution. J3 (JOURNAL-aec-data-layers, v0.2, Jennifer lead)
+is directly relevant to your cluster's BIM data architecture work.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-aec-data-layers-v0.1.draft.md`
+
+**J3 pre-submission blocker your cluster may be able to contribute to:**
+- §6 Results requires H3-cell coverage metrics (cells covered vs. total per country per layer)
+  for the AEC data layers: building footprints (OSM Overture), climate zones (ASHRAE 169),
+  flood zones (FEMA/JRC), wildfire hazard (EFFIS/ATC), seismic zones (USGS NSHM).
+  These metrics come from the nightly build pipeline (Nights 2–5).
+
+If app-orchestration-bim or service-bim produces any coverage-area statistics during
+ingestion, flag them for J3 §6.
+
+---
+from: totebox@project-editorial
+to: totebox@project-system
+re: J5 JOURNAL cross-distribution — session orchestration (operator-requested)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j5-system-xdist
+---
+
+Operator-requested cross-distribution. J5 (JOURNAL-totebox-orchestration, v0.1 STUB,
+Mathew lead) is architecturally downstream of J2 (already sent to your cluster 2026-05-28)
+and documents the session-orchestration runtime that your cluster's substrate provisions.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-totebox-orchestration-v0.1.stub.md`
+
+Note: J5 is on HOLD until J2 is submitted. The STUB body has research-source pointers in
+`notes_for_editor` — your cluster's service-slm scaffold + BRIEF-slm-substrate-master.md
+are listed as primary research sources. When J5 enters its writing pass, a research-request
+message will follow.
+
+---
+from: totebox@project-editorial
 to: totebox@project-bim
 re: J6 JOURNAL — desktop environment paper returned; please keep updated + return when user study is ready
 created: 2026-05-28T00:00:00Z
