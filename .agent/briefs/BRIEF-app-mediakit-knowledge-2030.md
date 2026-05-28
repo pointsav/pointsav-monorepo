@@ -324,6 +324,22 @@ Three-state `--density: comfortable | compact | spacious` toggle in user prefere
 Changes only line-height, paragraph spacing, and chrome heights — never font-size.
 Default `comfortable` for all readers; toggle exposed in user preferences only.
 
+**Tufte sidenotes for JOURNAL-class articles (2030 target):**
+Articles with frontmatter `layout: journal` activate marginal note rendering at ≥1280px
+viewport. Footnotes and inline citations render as Tufte-style sidenotes in the right
+margin column adjacent to their cited paragraph; collapse to inline expanders below
+1280px. This serves the J1–J6 academic paper programme (see `.agent/rules/journal-artifact-discipline.md`)
+directly without affecting standard wiki articles. Does not require changes to other
+article types — gate on frontmatter flag only.
+
+**Per-instance body type (2030 direction, not current):**
+The current Oswald/Nunito Sans/Roboto Slab stack (locked as L8) is the editorial
+platform-document register. Research suggests the **corporate instance** specifically
+benefits from a heavier serif body (18–19px, higher line-height) aligned with the
+institutional finance / legal document register. This is a future per-instance
+typography split to evaluate in a dedicated design sprint, not a change to the locked
+stack. Candidate: Source Serif 4 (full Latin Extended-A, open licence) for `[data-instance="woodfine-corporate"] .page-body`.
+
 ---
 
 ## 8. Article toolbars — vision + current state + 2030 targets
@@ -400,6 +416,29 @@ below the footer. Displays: "Cite this article as: [auto-generated citation]". E
 a panel with APA, MLA, BibTeX formats. Clicking any format copies to clipboard. The
 citation generation uses the article's frontmatter (title, author, date) from the Git
 commit log.
+
+**Corporate instance — `effective_date:` / `supersedes:` frontmatter block:**
+Any article on `corporate.woodfinegroup.com` with frontmatter `effective_date:` and
+optionally `supersedes:` renders a disclosure block immediately under `h1.article__title`:
+```
+Version 1.4 · Effective 2026-04-01 · Supersedes Version 1.3 (2025-11-12)
+```
+This is the working-paper / SEC-filing convention; it is also what the
+`foundry-journal-v1` schema already specifies for JOURNAL manuscripts (see
+`.agent/rules/journal-artifact-discipline.md` "Public posting requirements"). Extend
+the same pattern to wiki articles on the corporate instance. Gate on `brand_instance`.
+
+**Corporate instance — auto-numbered sections:**
+For corporate articles, auto-generate `1.` / `1.1` / `1.1.1` section numbers from the
+heading hierarchy at render time. Implemented as a CSS `counter-reset` + `counter-increment`
+block scoped to `[data-instance="woodfine-corporate"] .page-body`. Operators may opt out
+per-article with frontmatter `numbered_sections: false`. Suppressed on documentation and
+projects instances.
+
+**Corporate instance — suppress feedback widget:**
+The "Was this helpful?" widget is appropriate for documentation. It is wrong-register for
+the corporate instance (regulatory documents are not rated by helpfulness). Gate via
+`brand_instance != BrandInstance::Corporate` in the chrome emit.
 
 **"Last edited" + integrity fingerprint:**
 ```
@@ -564,6 +603,9 @@ In priority order. Each phase is gated on operator clearance after prior phase s
 | **9** — claim-rail freshness sidebar | Right rail at ≥1280px; `citations` redb table + nightly URL validator; `<aside class="claim-rail">` server emit | Phase 7D (citations table) ships first |
 | **10** — reading state | Progress bar 3px; `localStorage` position; "Continue reading" home strip (logged-in); optional server-side sync | 7B ships first |
 | **11** — `query_claims(topic, asof)` | MCP API extension: given a claim ID and a date, return the resolved claim state at that point in the blake3 hash chain | Phase 9 (citations table + hash chain) ships first |
+| **7F** — Tufte sidenotes (JOURNAL) | Marginal note rendering for `layout: journal` articles at ≥1280px; collapse to inline expanders below; serves J1–J6 programme | 7B ships first |
+| **7G** — corporate frontmatter blocks | `effective_date:` / `supersedes:` block under `h1`; cite format expanders; suppress feedback widget on corporate | 7B ships first |
+| **7H** — corporate auto-numbered sections | CSS `counter-reset/increment` for `h2`/`h3` on `[data-instance="woodfine-corporate"]`; opt-out via `numbered_sections: false` frontmatter | 7G ships first |
 | **12** — AI marginalia | Opt-in "Summarize section ▾"; `service-slm` integration; ephemeral overlay; SYS-ADR-07/10/19 compliant | Gated on BP5 + SYS-ADR review |
 
 **Gated items (not yet sequenced):**
