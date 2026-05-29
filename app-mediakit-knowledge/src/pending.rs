@@ -403,7 +403,7 @@ pub async fn accept_edit(
         }
     }
 
-    if let Err(e) = crate::search::reindex_topic(&state.search, &edit.slug, &edit.body) {
+    if let Err(e) = crate::search::reindex_topic(&state.search, &edit.slug, &edit.body).await {
         tracing::warn!(slug = %edit.slug, error = %e, "reindex failed after accept");
     }
 

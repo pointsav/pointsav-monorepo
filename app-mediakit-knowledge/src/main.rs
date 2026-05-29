@@ -228,7 +228,7 @@ async fn serve(
                         let slug = content_path_to_slug(&cdir, path);
                         if is_write {
                             if let Ok(text) = std::fs::read_to_string(path) {
-                                if let Err(e) = search::reindex_topic(&idx, &slug, &text) {
+                                if let Err(e) = search::reindex_topic(&idx, &slug, &text).await {
                                     tracing::warn!(slug, error = %e, "reindex failed");
                                 }
                             }
@@ -236,7 +236,7 @@ async fn serve(
                         // Remove events: the slug is gone; reindex with empty
                         // body so it is deleted from the index.
                         if is_remove {
-                            let _ = search::reindex_topic(&idx, &slug, "");
+                            let _ = search::reindex_topic(&idx, &slug, "").await;
                         }
                     }
                 }
