@@ -3,7 +3,85 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Full TODO with all sections and sequencing: `.agent/plans/project-infrastructure-todo.md`.
 
-Last updated: 2026-05-28 (session 6).
+Last updated: 2026-05-29 (session 8).
+
+---
+
+## vm-mediakit — Phase 1 (unblocked)
+
+- [ ] **Install `genisoimage` + `socat` on host** — `sudo apt install -y genisoimage socat`
+  Required by `provision-vm-mediakit.sh` and `vm-mediakit.service`.
+  [2026-05-29 totebox@claude-code]
+
+- [ ] **Run `infrastructure/virt/provision-vm-mediakit.sh`** — boots Debian 12 QCOW2,
+  6 GiB RAM, QEMU/TCG, port-forward NAT. SSH at `localhost:10022` after ~60s.
+  Cloud-init key: `infrastructure/virt/work/foundry-vm-key`.
+  [2026-05-29 totebox@claude-code]
+
+- [ ] **Migrate services into vm-mediakit (piece by piece, originals stay running):**
+  Use `infrastructure/virt/migrate-service-to-vm.sh <service> <port>`.
+  Sequence: service-fs (9100) → proofreader (9092) → knowledge-documentation (9090)
+  → knowledge-corporate+projects (9095/9093) → marketing (9101/9102) → bim-orch (9096).
+  Test each via `curl http://localhost:1<port>/healthz` before proceeding.
+  [2026-05-29 totebox@claude-code]
+
+- [ ] **system-core + system-ledger install** — pending project-system (outbox sent).
+  They install at `/opt/mediakit/bin/` after 95 tests pass.
+  [2026-05-29 totebox@claude-code]
+
+- [ ] **service-fs install** — pending Command Session promotion of project-data (23 commits).
+  Outbox sent to project-data with install instructions.
+  [2026-05-29 totebox@claude-code]
+
+---
+
+## vm-mediakit — Phase 2 (blocked on P0 fixes in project-system)
+
+- [ ] **system-* P0 fixes** — project-system must fix:
+  (1) `system-udp`: BROADCAST_ADDR 10.50.0.255 → 10.42.255.255; source-IP filter
+  (2) `app-network-admin`: peer addresses 10.50.0.x → 10.42.0.0/16
+  (3) `system-gateway-mba`: hardcoded /home/mathew/deployments/ → env var
+  Outbox sent to project-system with exact fixes.
+  [2026-05-29 totebox@claude-code]
+
+---
+
+## os-mediakit seL4 — Phase 3 (planned — operator decision needed first)
+
+- [ ] **Operator decision: AArch64 GCP C4A vs Firecracker x86_64 on Laptop A**
+  Option A: AArch64 GCP C4A Arm instance — Microkit 2.2 native, formal proof (~$50-100/mo)
+  Option B: Firecracker + WireGuard on Laptop A — x86_64, KVM-native, pragmatic, free
+  Option C: seL4 x86_64 Multiboot2 — years of new toolchain work, not recommended
+  See BRIEF-totebox-transformation §9/§11 for full analysis.
+  [2026-05-29 totebox@claude-code]
+
+- [ ] **project-system: wire os-mediakit as AArch64 seL4 Microkit rootserver** — 7-step
+  build instructions sent to project-system outbox (2026-05-29). Gated on operator decision.
+  [2026-05-29 totebox@claude-code]
+
+---
+
+## TOPIC + GUIDE leg — drafts staged, needs editorial pickup
+
+Ten TOPIC draft pairs + 3 GUIDE drafts + 1 new TOPIC pair in `.agent/drafts-outbound/`;
+pickup notice sent to project-editorial.
+
+**TOPICs (content-wiki-documentation):**
+- [ ] `topic-sovereign-mesh` + `.es` — expands stub at `infrastructure/sovereign-mesh.md` [session 2]
+- [ ] `topic-genesis-protocol` + `.es` — new; `architecture/genesis-protocol.md` [session 3]
+- [ ] `topic-ppn-command-protocol` + `.es` — new; `architecture/ppn-command-protocol.md` [session 3]
+- [ ] `topic-service-pointsav-link` + `.es` — new; `architecture/service-pointsav-link.md` [session 3]
+- [ ] `topic-os-network-admin` + `.es` — new; replaces published `systems/os-network-admin.md` [session 5]
+- [ ] `topic-ppn-hypervisor-resource-pool` + `.es` — updated; §: Planned cross-node extension [session 7]
+- [ ] `topic-totebox-archive` + `.es` — new; `systems/totebox-archive.md` [session 6]
+- [ ] `topic-ppn-architecture-overview` + `.es` — updated; distributed fabric paragraph [session 7]
+- [ ] `topic-ppn-distributed-vm-fabric` + `.es` — new; full distributed VM fabric [session 7]
+- [ ] `topic-os-mediakit` + `.es` — **new**; `systems/os-mediakit.md`; AArch64-first seL4 target, Phase 1 Debian 12 vs Phase 3 seL4 Microkit [session 8]
+
+**GUIDEs (woodfine-fleet-deployment/fleet-infrastructure/):**
+- [ ] `guide-ppn-first-deployment` — 5-step deployment sequence; VM capacity planning table [session 7]
+- [ ] `guide-node-join-ceremony` — approval workflow [session 6]
+- [ ] `guide-vm-prove-balloon-demo` — vm-prove.sh + virtio_balloon demo [session 6]
 
 ---
 

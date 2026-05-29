@@ -186,7 +186,121 @@ central graduation register — each archive owns its own readiness.
 
 ---
 
-## 8. Cross-References
+## 9. seL4 Architecture Decision — AArch64-First
+
+**Microkit 2.2.0 (released March 2026) targets AArch64 and RISC-V 64 only. No x86_64.**
+
+seL4 kernel source is verified on x86_64 (pc99 target), but the Microkit framework — the
+seL4 Foundation's recommended programming model for new projects — has no x86_64 target.
+CAmkES (the predecessor) supports x86_64 but is not recommended for new work.
+
+**What this means for vm-mediakit / os-mediakit:**
+
+| Phase | Host OS | Rationale |
+|---|---|---|
+| Phase 1 (today) | Debian 12 x86_64 QCOW2, GCP TCG | Proven path; unblocked; gets services running |
+| Phase 2 | Debian 12 + system-* P0 fixes + WireGuard | Subnet blockers resolved; PPN mesh active |
+| Phase 3 | seL4 Microkit AArch64 bare metal | Replace Debian 12; true formally-verified isolation |
+
+**Two paths for Phase 3:**
+
+**Option A — AArch64 GCP instance (recommended for formal verification story):**
+Add a GCP C4A Arm instance to the PPN mesh. project-system's Phase 1C.d achievement
+(AArch64 qemu-arm-virt seL4 boot via moonshot-toolkit v0.3.0) targets this exact platform.
+Cost: ~$50–100/month for a T2A or C4A Arm instance.
+
+**Option B — Firecracker + WireGuard on Laptop A (recommended for x86_64 production):**
+Firecracker microVMs (Rust, 125ms boot, KVM-native, AWS Lambda-proven). Laptop A has real
+KVM (VT-x, Sandy Bridge i5-2400S). Not formally verified but sovereign-by-design.
+No additional hardware cost. Blocked by real KVM requirement (not available on GCP TCG).
+
+**Option C — seL4 x86_64 Multiboot2:** Requires new AssembleMultibootImage variant in
+moonshot-toolkit; loses Microkit programming model; no x86_64 Microkit available. Stretch
+goal for project-system, years of work for a small team. Not recommended for Phase 3.
+
+**seL4 Foundation guidance for small teams:** "incremental cyber-retrofit — Linux-in-VM-on-seL4
+first, port pieces out over time." Phase 1/2 on Debian 12 is consistent with this guidance.
+
+**project-system Phase 1C.d status (2026-05-29):** `moonshot-toolkit v0.3.0` produces a
+bootable AArch64 seL4 system image (elfloader + seL4 kernel + rootserver). QEMU boot:
+`qemu-system-aarch64 -machine virt,secure=off -cpu cortex-a53 -m 1G -nographic -kernel build/system-image.bin`
+→ "Bootstrapping kernel" → "hello from seL4 rootserver". Architecture: `aarch64`, platform:
+`qemu-arm-virt`. This is the foundation for Option A Phase 3.
+
+**Open operator decision (not needed for Phase 1):** Choose Option A or Option B before
+project-system begins the os-mediakit seL4 root task wiring (Phase 3 Step 1).
+
+---
+
+## 10. project-data Role in vm-mediakit / os-mediakit
+
+**service-fs (WORM ledger)** is project-data's primary contribution to the Totebox stack.
+It is production-ready (v0.1.0+, active on host at `127.0.0.1:9100`) and belongs in
+vm-mediakit Phase 1 alongside system-core + system-ledger.
+
+**Host → VM migration:** `local-fs.service` currently runs on host at port 9100.
+Inside vm-mediakit: same binary, same port, data dir at `/opt/mediakit/data/service-fs/`.
+Host port forward: `19100 → :9100` in `provision-vm-mediakit.sh`.
+
+**service-fs Envelope B (seL4 path):** `service-fs/ARCHITECTURE.md` §Envelope B defines
+the seL4 Microkit Protection Domain unikernel form: same CBOR-over-QUIC wire protocol,
+same tile format, `system-substrate-sel4` feature flag. This is the reference design
+for how Ring 1 services become seL4 PDs in os-mediakit Phase 3.
+
+**Ring 1 surface inside vm-mediakit (migration sequence):**
+
+| Service | Port | Phase | Status |
+|---|---|---|---|
+| service-fs | 9100 | Phase 1 | Production-ready on host; install in VM |
+| service-input | 9106 | Phase 2 | After service-fs stable in VM |
+| service-people | 9204 | Phase 2 | After service-fs stable |
+| service-email | 9200 | Phase 2 | After service-people stable |
+
+**Prerequisite:** project-data has 23 commits ahead of canonical (2026-05-29). Command
+Session must promote these via `bin/promote.sh` before project-data can build+deploy
+inside vm-mediakit. Outbox message sent to project-data and command@claude-code.
+
+**Ownership boundary:** `binary-targets.yaml` in project-data lists `service-content` and
+`service-extraction` as build targets, but project-data's manifest scopes ownership to the
+four Ring 1 services only. Cross-cluster ownership ambiguity must be resolved before
+os-mediakit assembly — flag to project-slm.
+
+---
+
+## 11. Firecracker x86_64 Alternative Path
+
+If formal seL4 verification is deferred and x86_64 production is the constraint,
+**Firecracker + WireGuard** is the pragmatic sovereign-isolation substrate.
+
+**What Firecracker provides:**
+- Rust microVM manager (Amazon, Apache 2.0)
+- KVM-native: requires `/dev/kvm` (real VT-x/AMD-V, not TCG)
+- 125ms boot to user space (Lambda-production proven)
+- Single-process threat model: no QEMU, no BIOS, no PCI bus emulation
+- jailer process for seccomp-BPF + cgroups v2 isolation
+- WireGuard tap interface assignable to each microVM — same as vm-mediakit user-mode NAT today
+
+**Guarantees vs seL4:**
+Firecracker is NOT formally verified. "Well-designed isolation, audited codebase" vs
+"machine-checked proof of intransitive non-interference." For the BCSC disclosure posture:
+Firecracker path = strong sovereignty claim; seL4 path = formally-verifiable sovereignty claim.
+
+**Prerequisites for Firecracker:**
+- Real KVM host: Laptop A (VT-x i5-2400S) or GCP with nested virtualization enabled
+- `/dev/kvm` available — GCP workspace VM does not have this
+- `firecracker` binary + `jailer` binary (Apache 2.0, installable via apt or release tarball)
+
+**Relationship to vm-mediakit:** Phase 1/2 vm-mediakit uses QEMU user-mode NAT (TCG compatible).
+Firecracker would replace QEMU for Phase 3+ once KVM is available. The `provision-vm-mediakit.sh`
+script can be adapted to a Firecracker boot config JSON with the same tap+WireGuard network model.
+
+**Decision point:** Operator must choose between Option A (AArch64 seL4) and Option B
+(Firecracker x86_64) before Phase 3 provisioning work begins. Both are valid;
+they trade "mathematically proven isolation" for "x86_64 compatibility."
+
+---
+
+## 12. Cross-References
 
 - `BRIEF-sovereign-os-family-master-plan.md §R–§W` — governance layer (which folders move where)
 - `BRIEF-PPN-ARCHITECTURE.md` — hypervisor TCB, seL4 proof, distributed fabric design
