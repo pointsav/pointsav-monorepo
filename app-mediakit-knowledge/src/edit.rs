@@ -218,7 +218,7 @@ pub async fn post_edit(
     if let Err(e) = state.links.rebuild_for_slug(&slug, &req.body) {
         tracing::warn!(slug = %slug, error = %e, "link graph rebuild failed after edit");
     }
-    if let Err(e) = crate::search::reindex_topic(&state.search, &slug, &req.body) {
+    if let Err(e) = crate::search::reindex_topic(&state.search, &slug, &req.body).await {
         tracing::warn!(slug = %slug, error = %e, "search reindex failed after edit");
     }
     Ok((StatusCode::OK, "saved").into_response())
@@ -278,7 +278,7 @@ pub async fn post_create(
     if let Err(e) = state.links.rebuild_for_slug(&slug, &body) {
         tracing::warn!(slug = %slug, error = %e, "link graph rebuild failed after create");
     }
-    if let Err(e) = crate::search::reindex_topic(&state.search, &slug, &body) {
+    if let Err(e) = crate::search::reindex_topic(&state.search, &slug, &body).await {
         tracing::warn!(slug = %slug, error = %e, "search reindex failed after create");
     }
     Ok((StatusCode::CREATED, slug).into_response())

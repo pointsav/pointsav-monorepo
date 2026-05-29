@@ -318,7 +318,11 @@ fn snippet_from_body(body: &str) -> String {
 /// Replace the indexed entry for `slug`, then commit. Called from Phase 3
 /// Step 3.2's `post_edit` and `post_create` paths after the on-disk write
 /// succeeds.
-pub fn reindex_topic(idx: &SearchIndex, slug: &str, raw_text: &str) -> Result<(), WikiError> {
+///
+/// All Tantivy ops (lock, delete_term, add_document, commit, reader reload)
+/// run inside `tokio::task::spawn_blocking` — tantivy is synchronous and
+/// must not be called on the async executor thread.
+pub async fn reindex_topic(idx: &SearchIndex, slug: &str, raw_text: &str) -> Result<(), WikiError> {
     let parsed = parse_page(raw_text)?;
     let title = parsed
         .frontmatter
@@ -327,32 +331,38 @@ pub fn reindex_topic(idx: &SearchIndex, slug: &str, raw_text: &str) -> Result<()
         .unwrap_or_else(|| slug.to_string());
     let body = parsed.body_md;
 
-    let mut writer = idx
-        .writer
-        .lock()
-        .map_err(|e| WikiError::SearchFailed(format!("writer lock: {e}")))?;
+    let writer = idx.writer.clone();
+    let reader = idx.reader.clone();
+    let fields = idx.fields;
+    let slug = slug.to_string();
 
-    let term = Term::from_field_text(idx.fields.slug, slug);
-    writer.delete_term(term);
-    writer
-        .add_document(doc!(
-            idx.fields.slug => slug.to_string(),
-            idx.fields.title => title,
-            idx.fields.body => body,
+    tokio::task::spawn_blocking(move || -> Result<(), WikiError> {
+        let mut w = writer
+            .lock()
+            .map_err(|e| WikiError::SearchFailed(format!("writer lock: {e}")))?;
+
+        let term = Term::from_field_text(fields.slug, &slug);
+        w.delete_term(term);
+        w.add_document(doc!(
+            fields.slug => slug.clone(),
+            fields.title => title,
+            fields.body => body,
         ))
         .map_err(|e| WikiError::SearchFailed(format!("add_document {slug}: {e}")))?;
-    writer
-        .commit()
-        .map_err(|e| WikiError::SearchFailed(format!("reindex commit: {e}")))?;
-    drop(writer);
+        w.commit()
+            .map_err(|e| WikiError::SearchFailed(format!("reindex commit: {e}")))?;
+        drop(w);
 
-    // Force the reader to pick up the new commit synchronously. Default
-    // ReloadPolicy::OnCommitWithDelay batches reloads — searches issued
-    // immediately after reindex would otherwise see pre-reindex state.
-    idx.reader
-        .reload()
-        .map_err(|e| WikiError::SearchFailed(format!("reader reload: {e}")))?;
-    Ok(())
+        // Force the reader to pick up the new commit synchronously. Default
+        // ReloadPolicy::OnCommitWithDelay batches reloads — searches issued
+        // immediately after reindex would otherwise see pre-reindex state.
+        reader
+            .reload()
+            .map_err(|e| WikiError::SearchFailed(format!("reader reload: {e}")))?;
+        Ok(())
+    })
+    .await
+    .map_err(|e| WikiError::SearchFailed(format!("spawn_blocking join: {e}")))?
 }
 
 #[cfg(test)]
