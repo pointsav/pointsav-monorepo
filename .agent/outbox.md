@@ -890,7 +890,7 @@ to: command@claude-code
 re: Sprint -1/1/2/4 complete — 4 commits; Goose ready; Command actions needed
 created: 2026-05-29T00:00:00Z
 priority: high
-status: pending
+status: actioned
 msg-id: project-intelligence-20260529-sprints-complete
 ---
 

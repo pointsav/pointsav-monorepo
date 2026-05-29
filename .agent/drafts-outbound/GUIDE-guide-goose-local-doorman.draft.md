@@ -12,7 +12,7 @@ authored_by: project-intelligence Totebox (claude-sonnet-4-6, session 6)
 authored_with: claude-sonnet-4-6
 research_done_count: 1
 research_suggested_count: 0
-open_questions_count: 1
+open_questions_count: 0
 research_provenance: |
   Source: live Goose installation and §7.2-3 verification attempt, 2026-05-29.
   Goose v1.36.0 from block/goose GitHub releases.
@@ -22,9 +22,9 @@ notes_for_editor: |
   Operations guide — configuring Goose to route through the local Doorman gateway.
   Bloomberg-register pass required. Bilingual ES sibling not required (GUIDE, not TOPIC).
   Remove internal service names (local-doorman, cluster-totebox-intelligence) before
-  external publication. Open question: Goose has not been run to full round-trip
-  completion in this cluster; §7.2 verification is CPU-blocked. Confirm Goose actually
-  round-trips once QEMU vm-mediakit is resolved before finalising this guide.
+  external publication. VERIFIED 2026-05-29T04:10Z: Goose v1.36.0 round-tripped
+  successfully (OLMo replied to "Say hello / 2+2" prompt). Note: inference is slow
+  under QEMU -accel tcg CPU contention (~3-5 min per response); guide is correct.
   Note on tool_use: OLMo 7B Q4_K_M does NOT reliably invoke tools — it responds with
   explanatory text. Tool invocation requires a tool-use-fine-tuned model (e.g. Tier B).
   Mark this limitation clearly in the guide body.
