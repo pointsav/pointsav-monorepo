@@ -54,6 +54,12 @@ pub struct DoormanConfig {
     /// the request proceeds without context injection.
     /// Set via `SERVICE_CONTENT_ENDPOINT` env var at Doorman startup.
     pub graph_context_client: Option<GraphContextClient>,
+    /// When `true`, Tier A is the confident primary regardless of request
+    /// complexity. The router only escalates to Tier B when the caller
+    /// explicitly hints `Tier::Yoyo` AND the relevant node circuit is closed
+    /// AND health probe is up. Set via `SLM_TIER_A_FIRST=true`. Mutually
+    /// exclusive with `SLM_FORCE_BROKER_MODE=true`.
+    pub tier_a_first: bool,
 }
 
 pub struct Orchestrator {
@@ -68,6 +74,7 @@ pub struct Doorman {
     lark_validator: Option<LarkValidator>,
     graph_context_client: Option<GraphContextClient>,
     pub orchestrator: Option<Orchestrator>,
+    tier_a_first: bool,
 }
 
 impl Doorman {
@@ -80,6 +87,7 @@ impl Doorman {
             lark_validator: config.lark_validator,
             graph_context_client: config.graph_context_client,
             orchestrator: None,
+            tier_a_first: config.tier_a_first,
         }
     }
 
@@ -194,6 +202,25 @@ impl Doorman {
     }
 
     fn select_tier(&self, req: &ComputeRequest) -> Result<Tier> {
+        // SLM_TIER_A_FIRST mode: Tier A is the confident primary. Escalate to
+        // Tier B only when the caller explicitly hints Yoyo AND the circuit is
+        // closed AND the health probe is up. All other requests go to Tier A.
+        if self.tier_a_first {
+            let yoyo_hint = req.tier_hint == Some(Tier::Yoyo);
+            if yoyo_hint {
+                let label = req.yoyo_label.as_deref().unwrap_or("default");
+                let yoyo_ready = self
+                    .yoyo
+                    .get(label)
+                    .map(|c| c.allow_request())
+                    .unwrap_or(false);
+                if yoyo_ready {
+                    return self.confirm_tier_with_req(Tier::Yoyo, req);
+                }
+            }
+            return self.confirm_tier_with_req(Tier::Local, req);
+        }
+
         if let Some(hint) = req.tier_hint {
             return self.confirm_tier_with_req(hint, req);
         }
@@ -604,6 +631,7 @@ mod tests {
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,
+                tier_a_first: false,
             },
             ledger(),
         );

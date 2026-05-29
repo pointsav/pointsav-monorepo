@@ -11,7 +11,7 @@ use std::path::Path;
 use std::sync::mpsc::RecvTimeoutError;
 use std::sync::Arc;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 #[derive(Debug)]
 enum ExtractResult {
@@ -19,6 +19,18 @@ enum ExtractResult {
     DeferTransient,
     DeferCircuitOpen,
     Failed,
+}
+
+/// Config for the rate-limited Tier A extraction fallback (Sprint 3B).
+/// Active only when `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=true`.
+/// When the Yo-Yo circuit is open, the WATCHER can attempt extraction via
+/// Tier A (/v1/chat/completions with JSON schema grammar constraint) at most
+/// once per `interval_secs`. Quality is degraded vs Tier B but prevents
+/// WATCHER stalling indefinitely.
+#[derive(Clone)]
+struct TierAFallbackConfig {
+    enabled: bool,
+    interval_secs: u64,
 }
 
 fn main() -> NotifyResult<()> {
@@ -45,10 +57,27 @@ fn main() -> NotifyResult<()> {
             .unwrap_or_else(|| "ontology".to_string())
     });
 
+    let tier_a_fallback = TierAFallbackConfig {
+        enabled: std::env::var("SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED")
+            .map(|v| matches!(v.trim(), "true" | "1"))
+            .unwrap_or(false),
+        interval_secs: std::env::var("SERVICE_CONTENT_TIER_A_FALLBACK_INTERVAL_SECS")
+            .ok()
+            .and_then(|s| s.parse::<u64>().ok())
+            .unwrap_or(300),
+    };
+    let mut last_tier_a_attempt: Option<Instant> = None;
+
     println!("[SYSTEM] Doorman endpoint: {}", doorman_endpoint);
     println!("[SYSTEM] Base dir: {}", base_dir);
     println!("[SYSTEM] Module ID: {}", module_id);
     println!("[SYSTEM] Ontology dir: {}", ontology_dir);
+    if tier_a_fallback.enabled {
+        println!(
+            "[SYSTEM] Tier A fallback enabled — interval {}s (degraded quality)",
+            tier_a_fallback.interval_secs
+        );
+    }
 
     let corpus_dir = format!("{}/service-content/ledgers", base_dir);
     let crm_dir = format!("{}/service-people/ledgers", base_dir);
@@ -167,6 +196,8 @@ fn main() -> NotifyResult<()> {
                         &doorman_endpoint,
                         &module_id,
                         &graph_store,
+                        &tier_a_fallback,
+                        &mut last_tier_a_attempt,
                     ) {
                         ExtractResult::Success
                         | ExtractResult::DeferCircuitOpen
@@ -213,6 +244,8 @@ fn main() -> NotifyResult<()> {
                                     &doorman_endpoint,
                                     &module_id,
                                     &graph_store,
+                                    &tier_a_fallback,
+                                    &mut last_tier_a_attempt,
                                 ) {
                                     ExtractResult::Success
                                     | ExtractResult::DeferCircuitOpen
@@ -247,6 +280,8 @@ fn main() -> NotifyResult<()> {
                         &doorman_endpoint,
                         &module_id,
                         &graph_store,
+                        &tier_a_fallback,
+                        &mut last_tier_a_attempt,
                     ) {
                         ExtractResult::Success
                         | ExtractResult::DeferCircuitOpen
@@ -272,6 +307,8 @@ fn process_corpus(
     doorman_endpoint: &str,
     module_id: &str,
     graph_store: &Arc<dyn GraphStore>,
+    tier_a_fallback: &TierAFallbackConfig,
+    last_tier_a_attempt: &mut Option<Instant>,
 ) -> ExtractResult {
     // SC-5: log read failures instead of silently returning
     let content = match fs::read_to_string(filepath) {
@@ -374,10 +411,126 @@ fn process_corpus(
                 let reason = extract_resp["defer_reason"].as_str().unwrap_or("unknown");
                 return match reason {
                     "yoyo-circuit-open" => {
+                        if !tier_a_fallback.enabled {
+                            println!(
+                                "  -> [WATCHER] Extraction deferred (circuit-open): skipping until restart."
+                            );
+                            return ExtractResult::DeferCircuitOpen;
+                        }
+                        // Rate limit: only attempt Tier A fallback once per interval.
+                        if let Some(last) = *last_tier_a_attempt {
+                            let elapsed = last.elapsed().as_secs();
+                            if elapsed < tier_a_fallback.interval_secs {
+                                println!(
+                                    "  -> [WATCHER-TIER-A] Tier A fallback rate-limited — next eligible in {}s",
+                                    tier_a_fallback.interval_secs.saturating_sub(elapsed)
+                                );
+                                return ExtractResult::DeferTransient;
+                            }
+                        }
                         println!(
-                            "  -> [WATCHER] Extraction deferred (circuit-open): skipping until restart."
+                            "  -> [WATCHER-TIER-A] Tier A fallback extraction — degraded quality — next eligible in {}s",
+                            tier_a_fallback.interval_secs
                         );
-                        ExtractResult::DeferCircuitOpen
+                        *last_tier_a_attempt = Some(Instant::now());
+                        let chat_body = serde_json::json!({
+                            "messages": [
+                                {
+                                    "role": "system",
+                                    "content": "Extract named entities from the text. Classify each entity into exactly one category.\nCategories and examples:\n  Person — named human individual. Example: \"Jane Smith\".\n  Company — registered organisation or business. Example: \"Woodfine Management Corp.\".\n  Project — named initiative, programme, or system. Example: \"service-slm\".\n  Account — financial account, service account, or contract reference.\n  Location — geographic place or address. Example: \"Vancouver\".\nOmit: laws and regulations (not Location), dates and years (not Location), abstract concepts (not Company), regulatory bodies (not Company unless they are a named legal entity with a registered name).\nIf an entity does not clearly fit one category, omit it rather than guessing.\nReturn a JSON array matching the schema exactly."
+                                },
+                                {
+                                    "role": "user",
+                                    "content": corpus_text
+                                }
+                            ],
+                            "grammar": {
+                                "type": "json-schema",
+                                "value": entity_schema
+                            }
+                        });
+                        let chat_url = format!("{}/v1/chat/completions", doorman_endpoint);
+                        let chat_client = reqwest::blocking::Client::new();
+                        let chat_res = chat_client
+                            .post(&chat_url)
+                            .header("X-Foundry-Complexity", "low")
+                            .json(&chat_body)
+                            .timeout(Duration::from_secs(300))
+                            .send();
+                        let chat_entities: Vec<serde_json::Value> = match chat_res {
+                            Ok(r) if r.status().is_success() => {
+                                match r.json::<serde_json::Value>() {
+                                    Ok(v) => {
+                                        let content = v["choices"][0]["message"]["content"]
+                                            .as_str()
+                                            .unwrap_or("[]");
+                                        serde_json::from_str(content).unwrap_or_default()
+                                    }
+                                    Err(_) => {
+                                        println!("  -> [WATCHER-TIER-A] Tier A response parse failed.");
+                                        return ExtractResult::DeferCircuitOpen;
+                                    }
+                                }
+                            }
+                            Ok(r) => {
+                                println!(
+                                    "  -> [WATCHER-TIER-A] Tier A chat call rejected: {}",
+                                    r.status()
+                                );
+                                return ExtractResult::DeferCircuitOpen;
+                            }
+                            Err(e) => {
+                                println!("  -> [WATCHER-TIER-A] Tier A chat call error: {}", e);
+                                return ExtractResult::DeferCircuitOpen;
+                            }
+                        };
+                        if chat_entities.is_empty() {
+                            println!("  -> [WATCHER-TIER-A] Tier A returned no entities.");
+                            return ExtractResult::DeferCircuitOpen;
+                        }
+                        let mut graph_entities_ta: Vec<GraphEntity> = Vec::new();
+                        for ent in &chat_entities {
+                            let entity_name =
+                                ent["entity_name"].as_str().unwrap_or("").to_string();
+                            let classification =
+                                ent["classification"].as_str().unwrap_or("").to_string();
+                            if entity_name.is_empty() || classification.is_empty() {
+                                continue;
+                            }
+                            graph_entities_ta.push(GraphEntity {
+                                entity_name,
+                                classification,
+                                role_vector: ent
+                                    .get("role_vector")
+                                    .and_then(|v| v.as_str())
+                                    .filter(|s| !s.is_empty() && *s != "null")
+                                    .map(str::to_string),
+                                location_vector: ent
+                                    .get("location_vector")
+                                    .and_then(|v| v.as_str())
+                                    .filter(|s| !s.is_empty() && *s != "null")
+                                    .map(str::to_string),
+                                contact_vector: ent
+                                    .get("contact_vector")
+                                    .and_then(|v| v.as_str())
+                                    .filter(|s| !s.is_empty() && *s != "null")
+                                    .map(str::to_string),
+                                module_id: effective_module_id.to_string(),
+                                confidence: 0.75,
+                            });
+                        }
+                        if let Err(e) =
+                            graph_store.upsert_entities(effective_module_id, &graph_entities_ta)
+                        {
+                            println!("  -> [WATCHER-TIER-A] Graph write failed: {}", e);
+                            return ExtractResult::DeferCircuitOpen;
+                        }
+                        println!(
+                            "  -> [WATCHER-TIER-A] {} entities written via Tier A fallback (module: {}).",
+                            graph_entities_ta.len(),
+                            effective_module_id
+                        );
+                        ExtractResult::Success
                     }
                     _ => {
                         println!(

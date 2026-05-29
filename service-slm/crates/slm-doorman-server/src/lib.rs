@@ -127,6 +127,7 @@ pub mod test_helpers {
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,
+                tier_a_first: false,
             },
             temp_ledger(),
         );
@@ -156,6 +157,7 @@ pub mod test_helpers {
                 external: Some(external),
                 lark_validator: None,
                 graph_context_client: None,
+                tier_a_first: false,
             },
             temp_ledger(),
         );
@@ -196,6 +198,7 @@ pub mod test_helpers {
             brief_tier_b_threshold_chars: 8000,
             doctrine_version: "0.0.1".to_string(),
             tenant: "test-tenant".to_string(),
+            tier_a_first: false,
         };
 
         let brief_cache = Arc::new(BriefCache::default());

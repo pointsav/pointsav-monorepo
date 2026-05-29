@@ -318,6 +318,7 @@ async fn correct_api_key_allows_request() {
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,
+                tier_a_first: false,
             },
             temp_ledger(),
         );

@@ -175,6 +175,7 @@ async fn hardware_readyz_shows_tier_a_available() {
             external: None,
             lark_validator: None,
             graph_context_client: None,
+            tier_a_first: false,
         },
         temp_ledger(),
     );

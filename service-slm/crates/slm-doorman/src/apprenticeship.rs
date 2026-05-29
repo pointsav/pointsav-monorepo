@@ -55,6 +55,9 @@ pub struct ApprenticeshipConfig {
     /// Tenant tag on corpus tuples. Vendor work defaults to
     /// `pointsav` per `apprenticeship-substrate.md` §8.
     pub tenant: String,
+    /// When `true`, shadow briefs route to Tier A regardless of size.
+    /// Mirrors `DoormanConfig::tier_a_first`. Set via `SLM_TIER_A_FIRST=true`.
+    pub tier_a_first: bool,
 }
 
 impl ApprenticeshipConfig {
@@ -78,12 +81,16 @@ impl ApprenticeshipConfig {
         let doctrine_version =
             std::env::var("FOUNDRY_DOCTRINE_VERSION").unwrap_or_else(|_| "0.0.13".to_string());
         let tenant = std::env::var("FOUNDRY_TENANT").unwrap_or_else(|_| "pointsav".to_string());
+        let tier_a_first = std::env::var("SLM_TIER_A_FIRST")
+            .map(|v| matches!(v.trim(), "true" | "1"))
+            .unwrap_or(false);
         Self {
             foundry_root,
             citations_path,
             brief_tier_b_threshold_chars: threshold,
             doctrine_version,
             tenant,
+            tier_a_first,
         }
     }
 }
@@ -132,7 +139,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
         brief: &ApprenticeshipBrief,
     ) -> Result<ApprenticeshipAttempt> {
         let prompt = apprentice_prompt(&self.config, brief);
-        let tier_hint = pick_tier_for_brief(brief, self.config.brief_tier_b_threshold_chars);
+        let tier_hint = pick_tier_for_brief(brief, self.config.brief_tier_b_threshold_chars, self.config.tier_a_first);
 
         let module_id = brief
             .scope
@@ -232,7 +239,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
 
         // Same routing as dispatch_brief.
         let prompt = apprentice_prompt(&self.config, brief);
-        let tier_hint = pick_tier_for_brief(brief, self.config.brief_tier_b_threshold_chars);
+        let tier_hint = pick_tier_for_brief(brief, self.config.brief_tier_b_threshold_chars, self.config.tier_a_first);
         let module_id = brief
             .scope
             .cluster
@@ -524,7 +531,17 @@ fn render_files(root: &Path, paths: &[String]) -> String {
 }
 
 /// Pick a tier hint for a brief. Char-based proxy per design-pass Q6.
-pub fn pick_tier_for_brief(brief: &ApprenticeshipBrief, threshold_chars: usize) -> Tier {
+/// When `tier_a_first=true`, always returns `Tier::Local` — shadow briefs
+/// run on Tier A, and the write_shadow_tuple guard filters escalated-empty
+/// results so no degenerate DPO tuples enter the corpus.
+pub fn pick_tier_for_brief(
+    brief: &ApprenticeshipBrief,
+    threshold_chars: usize,
+    tier_a_first: bool,
+) -> Tier {
+    if tier_a_first {
+        return Tier::Local;
+    }
     let size = brief.body.len() + brief.acceptance_test.len();
     if size > threshold_chars {
         Tier::Yoyo
@@ -715,6 +732,7 @@ mod tests {
             brief_tier_b_threshold_chars: 100, // small for tests
             doctrine_version: "0.0.7".into(),
             tenant: "pointsav".into(),
+            tier_a_first: false,
         }
     }
 
@@ -790,6 +808,7 @@ Bumping MANIFEST.md per ni-51-102 forward-looking marker.
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,
+                tier_a_first: false,
             },
             ledger(),
         );
@@ -859,6 +878,7 @@ I'm not sure how to apply this safely.
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,
+                tier_a_first: false,
             },
             ledger(),
         );
@@ -946,6 +966,7 @@ OK.
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,
+                tier_a_first: false,
             },
             ledger(),
         );
@@ -986,10 +1007,12 @@ OK.
         b.body = "x".repeat(50);
         b.acceptance_test = "y".repeat(50);
         // 50 + 50 = 100, NOT exceeding 100 → Tier A
-        assert_eq!(pick_tier_for_brief(&b, 100), Tier::Local);
+        assert_eq!(pick_tier_for_brief(&b, 100, false), Tier::Local);
         b.body = "x".repeat(51);
         // 51 + 50 = 101, exceeds 100 → Tier B
-        assert_eq!(pick_tier_for_brief(&b, 100), Tier::Yoyo);
+        assert_eq!(pick_tier_for_brief(&b, 100, false), Tier::Yoyo);
+        // tier_a_first=true always returns Tier A regardless of size
+        assert_eq!(pick_tier_for_brief(&b, 100, true), Tier::Local);
     }
 
     // ── AS-4 dispatch_shadow tests ───────────────────────────────────
@@ -1040,6 +1063,7 @@ Shadow attempt for the apprentice.
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,
+                tier_a_first: false,
             },
             ledger(),
         );
@@ -1108,6 +1132,7 @@ Shadow attempt for the apprentice.
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,
+                tier_a_first: false,
             },
             ledger(),
         );
