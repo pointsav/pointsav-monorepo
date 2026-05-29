@@ -151,7 +151,8 @@ if [[ "$FOREGROUND" -eq 1 ]]; then
     DAEMON_ARGS=()
 else
     # Daemon mode: -nographic is incompatible with -daemonize; use headless instead
-    DISPLAY_ARGS=(-display none -serial none)
+    # Serial output to file so we can inspect cloud-init/boot progress
+    DISPLAY_ARGS=(-display none -serial "file:${WORK_DIR}/vm-mediakit-serial.log")
     DAEMON_ARGS=(-daemonize -pidfile "$PID_FILE")
 fi
 
