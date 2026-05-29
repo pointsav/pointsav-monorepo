@@ -10,6 +10,96 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: Stage 6 pending — app-mediakit-knowledge Phase 7C — reading mode toggle + binary rebuild needed
+created: 2026-05-29T08:15:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260529-phase7c-knowledge
+---
+
+pointsav-monorepo commits (since last promote):
+- `7745dbb3` (jwoodfine) — docs: Phase 7C NEXT.md update
+- `d649f051` (pwoodfine) — Phase 7C: reading mode toggle, CSS body-class, localStorage
+- `eb880b01` (jwoodfine) — docs: Phase UX-B NEXT.md update
+- `2a19c626` (pwoodfine) — Phase UX-B: remove appearance dropdown, home standfirst, footer convergence, CC BY 4.0 gate, provenance ribbon
+- `e1b5fc6d` (jwoodfine) — docs: Phase UX-A NEXT.md update
+- `0dfe1647` (pwoodfine) — Phase UX-A: wire typography tokens, fix dark-mode contrast, suppress appearance dropdown
+- `bbb339b5` (pwoodfine) — Phase 7B: article-tabs row, Tools dropdown, anchor-share ¶, auth-gated tabs
+- `168314a1` (pwoodfine) — Phase 7A: restore TOC toggle/pin + add topnav search
+- `afa67bfa` (jwoodfine) — Phase 6A+6B+6C
+
+**Changes in this build (Phase 7C):**
+- `src/server.rs`: `button.reading-mode-btn #reading-mode-btn` added to article-tabs right in `wiki_chrome`
+- `static/style.css`: `body.reading-mode` hides nav, crumb, sidebar, footer, TOC; collapses shell to 72ch article width
+- `static/wiki.js`: `initReadingMode()` — toggles `body.reading-mode`, persists to `localStorage['wiki-reading-mode']`
+
+**CSS+JS changes embedded at compile time via rust-embed** — binary rebuild required.
+
+**Also deployed this session (not requiring commit):**
+- `WIKI_BRAND_INSTANCE=corporate` added to `/etc/systemd/system/local-knowledge-corporate.service`
+- `WIKI_BRAND_INSTANCE=projects` added to `/etc/systemd/system/local-knowledge-projects.service`
+- All three services restarted; Phase UX-B binary now live on all three instances
+
+**UX-B verified live:**
+- `documentation.pointsav.com` (port 9090): `home-standfirst` present, no `wiki-appearance-wrap`, footer converged, CC BY 4.0 badge present
+- `projects.woodfinegroup.com` (port 9093): Woodfine copyright, CC BY 4.0 badge present
+- `corporate.woodfinegroup.com` (port 9095): Woodfine copyright, NO CC BY 4.0 badge (gated correctly)
+
+**Action needed from Command Session:**
+1. Run `bin/promote.sh` to push all 9 pending commits to canonical
+2. Update `data/binary-ledger/app-mediakit-knowledge.jsonl` after Phase 7C binary deploys
+3. Run `bin/sync-local.sh --all` after promotion
+
+**Binary rebuild status:** release build running now (task bn5s06op8). Will deploy to all 3 instances once complete.
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
+re: Stage 6 pending — app-mediakit-knowledge Phase UX-B — institutional chrome refactor + binary rebuild needed
+created: 2026-05-29T06:00:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260529-phase-uxb-knowledge
+---
+
+pointsav-monorepo commits (since last promote):
+- `2a19c626` (pwoodfine) — Phase UX-B: remove appearance dropdown, home standfirst, footer convergence, CC BY 4.0 gate, provenance ribbon
+- `eb880b01` (jwoodfine) — docs: Phase UX-B NEXT.md update
+- `0dfe1647` (pwoodfine) — Phase UX-A: wire typography tokens, fix dark-mode contrast, suppress appearance dropdown
+- `e1b5fc6d` (jwoodfine) — docs: Phase UX-A NEXT.md update
+- `bbb339b5` (pwoodfine) — Phase 7B: article-tabs row, Tools dropdown, anchor-share ¶, auth-gated tabs
+- `168314a1` (pwoodfine) — Phase 7A: restore TOC toggle/pin + add topnav search
+- `afa67bfa` (jwoodfine) — Phase 6A+6B+6C
+
+**Changes in this build (Phase UX-B):**
+- `src/server.rs`: `div.wiki-appearance-wrap` removed from `home_chrome` and `wiki_chrome` HTML output
+  (dark mode now follows OS `prefers-color-scheme` silently; no manual toggle in nav)
+- `src/server.rs`: `p.home-standfirst` added to `home_chrome` above "Browse by area" category grid,
+  with per-instance copy (documentation / projects / corporate)
+- `src/server.rs`: `shell_footer(brand_instance, view_source_slug)` extracted — replaces three
+  near-identical footer blocks; minimal visible footer (3 lines), details.footer-more for expanded nav;
+  CC BY 4.0 badge gated on `brand_instance != "corporate"`; per-instance copyright line
+- `src/server.rs`: `div.article-provenance` added to `wiki_chrome` under `h1.article__title` with
+  last edited date + "View history" link
+- `static/style.css`: styles for `.home-standfirst`, `.article-provenance`, footer convergence
+
+**CSS changes embedded at compile time via rust-embed** — binary rebuild required.
+
+**UX-B.7 BLOCKED:** Woodfine SVG wordmark not yet provided by operator.
+`WORDMARK_WOODFINE` constant is still `■ Woodfine`. Once SVG is provided, replace that constant
+inline (same pattern as `WORDMARK_SVG_POINTSAV`).
+
+**Action needed from Command Session:**
+1. Run `bin/promote.sh` to push all pending commits to canonical
+2. Update `data/binary-ledger/app-mediakit-knowledge.jsonl` after binary deploy confirms
+3. Run `bin/sync-local.sh --all` after promotion
+
+**Binary rebuild status:** release build running from Totebox. Will deploy to all 3 instances
+(ports 9090/9093/9095) once build completes.
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: Stage 6 pending — app-mediakit-knowledge Phase UX-A — institutional UX CSS pass + binary rebuild needed
 created: 2026-05-29T03:35:00Z
 priority: high
