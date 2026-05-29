@@ -1,0 +1,23 @@
+[Unit]
+Description=Claude Code session → CORPUS bridge (entity extraction feed)
+Documentation=service-slm/scripts/claude-session-bridge.py
+After=network.target local-content.service
+Wants=local-content.service
+
+[Service]
+ExecStart=/usr/bin/python3 /srv/foundry/clones/project-intelligence/service-slm/scripts/claude-session-bridge.py
+Restart=on-failure
+RestartSec=10
+User=mathew
+WorkingDirectory=/home/mathew
+
+Environment=CLAUDE_PROJECTS_DIR=/home/mathew/.claude/projects
+Environment=CORPUS_WATCH_DIR=/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer/service-fs/data/service-content/ledgers
+Environment=POLL_INTERVAL_SECS=10
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=local-claude-bridge
+
+[Install]
+WantedBy=multi-user.target
