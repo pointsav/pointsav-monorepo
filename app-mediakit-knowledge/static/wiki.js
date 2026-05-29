@@ -1016,6 +1016,45 @@
     });
   }
 
+  function initCitationHoverCards() {
+    var card = null;
+
+    function getCard() {
+      if (!card) {
+        card = document.createElement('div');
+        card.className = 'cite-hover-card';
+        document.body.appendChild(card);
+      }
+      return card;
+    }
+
+    function showCard(sup, evt) {
+      var anchor = sup.querySelector('a[href^="#fn"]');
+      if (!anchor) return;
+      var fnId = anchor.getAttribute('href').slice(1); // e.g. "fn-1"
+      var fnEl = document.getElementById(fnId);
+      if (!fnEl) return;
+      var c = getCard();
+      c.innerHTML = fnEl.innerHTML;
+      // Strip back-link arrow inside the card.
+      var back = c.querySelector('.footnote-backref');
+      if (back) back.remove();
+      var r = sup.getBoundingClientRect();
+      c.style.left = (window.scrollX + r.left) + 'px';
+      c.style.top  = (window.scrollY + r.bottom + 4) + 'px';
+      c.style.display = 'block';
+    }
+
+    function hideCard() {
+      if (card) card.style.display = 'none';
+    }
+
+    document.querySelectorAll('sup.footnote-ref').forEach(function (sup) {
+      sup.addEventListener('mouseenter', function (e) { showCard(sup, e); });
+      sup.addEventListener('mouseleave', hideCard);
+    });
+  }
+
    /* ------------------------------------------------------------------ *
    * Boot                                                                 *
    * ------------------------------------------------------------------ */
@@ -1040,6 +1079,7 @@
     initAjaxNavigation();
     initAnchorShare();
     initReadingMode();
+    initCitationHoverCards();
   });
 
 }());

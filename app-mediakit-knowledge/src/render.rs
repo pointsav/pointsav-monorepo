@@ -448,6 +448,39 @@ fn inject_wiki_prefixes(html: &str, content_dir: &std::path::Path) -> String {
     out
 }
 
+/// Phase 7D — append a freshness dot inside comrak footnote `<sup>` markers.
+/// Comrak emits inline refs as:
+///   `<sup class="footnote-ref"><a href="#fn-N" id="fnref-N">N</a></sup>`
+/// This pass inserts `<span class="freshness-dot" data-status="unknown"></span>`
+/// before `</sup>` so JS can render hover cards and CSS can colour the dot.
+/// The class `footnote-ref` is left unchanged; the dot is purely additive.
+pub fn inject_citation_markers(html: &str) -> String {
+    const MARKER: &str = r#"<sup class="footnote-ref">"#;
+    const CLOSE: &str = "</sup>";
+    const DOT: &str = r#"<span class="freshness-dot" data-status="unknown"></span>"#;
+
+    let mut out = String::with_capacity(html.len() + 128);
+    let mut rest = html;
+
+    while let Some(pos) = rest.find(MARKER) {
+        out.push_str(&rest[..pos]);
+        let after_marker = &rest[pos + MARKER.len()..];
+        out.push_str(MARKER);
+
+        if let Some(close_rel) = after_marker.find(CLOSE) {
+            out.push_str(&after_marker[..close_rel]);
+            out.push_str(DOT);
+            out.push_str(CLOSE);
+            rest = &after_marker[close_rel + CLOSE.len()..];
+        } else {
+            out.push_str(after_marker);
+            break;
+        }
+    }
+    out.push_str(rest);
+    out
+}
+
 /// Walk rendered HTML and insert a right-floated `[edit]` span after every
 /// h2–h6 opening tag (h1 is the page title — it gets its own tab chrome).
 ///
