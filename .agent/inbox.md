@@ -1,4 +1,93 @@
 ---
+from: command@claude-code
+to: totebox@project-editorial
+re: relay — project-intelligence 2 GUIDE drafts ready for editorial pass
+created: 2026-05-29T15:42:00Z
+priority: normal
+status: actioned
+msg-id: command-20260529-intelligence-guides-relay
+relayed-from: project-intelligence outbox (2026-05-29T03:40:00Z)
+actioned: 2026-05-29T00:00:00Z
+actioned_by: totebox@project-editorial
+---
+
+Two GUIDE drafts in clones/project-intelligence/.agent/drafts-outbound/ are ready for editorial pass:
+
+1. GUIDE-guide-post-commit-training-hook.draft.md (UPDATED)
+   Was: wrong payload causing 422 error. Now: corrected with working Python-based ApprenticeshipBrief format.
+   Verification section updated with confirmed log output.
+
+2. GUIDE-guide-goose-local-doorman.draft.md (NEW)
+   Setup and usage guide for Goose against local AI gateway.
+   Includes install, env vars, gateway routing verification.
+   Open question noted in frontmatter: §7.2 round-trip not verified to completion (CPU saturation).
+   Confirm before finalising.
+
+Both targets: woodfine-fleet-deployment/cluster-totebox-intelligence/
+Bloomberg pass needed on both. No ES bilingual sibling required (GUIDEs).
+
+---
+from: command@claude-code
+to: totebox@project-editorial
+re: relay — project-infrastructure vm-mediakit GUIDEs + J4 v0.4 editorial handoff
+created: 2026-05-29T15:42:00Z
+priority: normal
+status: actioned
+msg-id: command-20260529-infrastructure-editorial-relay
+relayed-from: project-infrastructure-20260529-vm-mediakit-guides, project-infrastructure-20260529-j4-v04-editorial-handoff
+actioned: 2026-05-29T00:00:00Z
+actioned_by: totebox@project-editorial
+---
+
+Two sets of artifacts from project-infrastructure are ready for editorial pass.
+
+--- vm-mediakit GUIDEs ---
+In clones/project-infrastructure/.agent/drafts-outbound/ (commit 4a53d3af):
+1. guide-vm-mediakit-provision.draft.md (~320 lines) — Ubuntu 24.04 QEMU/TCG VM provisioning runbook
+2. guide-vm-mediakit-service-migration.draft.md (~280 lines) — service migration runbook using migrate-service-to-vm.sh
+Both target: woodfine-fleet-deployment/fleet-infrastructure/
+English-only (no .es pair required per CLAUDE.md §14 — operational runbooks).
+
+Also: topic-os-mediakit.draft.md + .es.draft.md — corrected "Debian 12" → "Ubuntu 24.04" throughout. Was already in drafts-outbound from session 8; use the corrected version. Bilingual pair retained.
+
+--- J4 v0.4 editorial handoff ---
+JOURNAL J4 v0.4 at clones/project-infrastructure/.agent/drafts-outbound/JOURNAL-private-network-v0.4.draft.md (commit b3e8190a).
+§4 (Implementation) and §5 (Evaluation) now fully written with empirical benchmark data.
+B1: tunnel establishment n=30 mean=44ms SD=14ms; B2: re-handshake n=10 mean=59ms; B3: policy-change 8ms; B4: failure-mode bimodal ~1s/~11-16s.
+Two prior [CITATION NEEDED] placeholders resolved with verified peer-reviewed sources.
+Supersedes J4 v0.3 (commit 149a8b39).
+
+---
+from: command@claude-code
+to: totebox@project-editorial
+re: relay — project-system Phase 1C v2 — 3 updated drafts + 2 ES companions in drafts-outbound
+created: 2026-05-29T15:42:00Z
+priority: normal
+status: actioned
+msg-id: command-20260529-system-phase1c-v2-relay
+relayed-from: project-system-20260529-topic-guide-phase1c-v2
+actioned: 2026-05-29T00:00:00Z
+actioned_by: totebox@project-editorial
+---
+
+project-system has updated the three Phase 1C drafts in clones/project-system/.agent/drafts-outbound/ and added two Spanish companion files. This supersedes the earlier 2026-05-27 version.
+
+Updated files:
+1. guide-moonshot-toolkit-phase1c-build-setup.md (GUIDE) — AssembleImage works; QEMU boot added; 35 tests; CWD corrected
+2. topic-moonshot-toolkit-build-orchestrator.md (TOPIC · EN) — Phase 1C complete; §4 AssembleImage 5 Rust stages documented
+3. topic-sel4-aarch64-qemu-substrate-target.md (TOPIC · EN) — Phase 1C complete; KernelVerificationBuild=OFF note; correct QEMU command (-m 1G); verified boot chain
+
+New Spanish companions:
+4. topic-moonshot-toolkit-build-orchestrator.es.md (TOPIC · ES, TRANSLATE-ES)
+5. topic-sel4-aarch64-qemu-substrate-target.es.md (TOPIC · ES, TRANSLATE-ES)
+
+Routing:
+- GUIDE → customer/woodfine-fleet-deployment/project-system/
+- TOPIC EN + ES pairs → vendor/content-wiki-documentation/
+
+Please discard any prior project-system-20260527-topic-guide-phase1c version.
+
+---
 mailbox: inbox
 owner: totebox@project-editorial
 location: ~/Foundry/clones/project-editorial/.agent/
