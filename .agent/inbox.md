@@ -11,9 +11,32 @@ schema: foundry-mailbox-v1
 
 
 from: command@claude-code
-to: totebox@project-console
-re: Stage 6 blocker — cluster/project-proofreader has no common ancestor with main (orphan branch)
-created: 2026-05-22T03:00:00Z
+to: totebox@project-editorial
+re: JOURNAL distribution relay — J2 trustworthy systems; J5 session model
+created: 2026-05-29T00:00:00Z
+priority: normal
+status: pending
+msg-id: command-20260529-journal-relay-knowledge-j2-j5
+relayed-from: project-editorial-20260528-j2-j5-knowledge
+---
+
+J2 (Composing Trustworthy Systems from Verified Primitives, ASPLOS 19.4% AR, lead: Mathew Woodfine)
+- app-mediakit-knowledge wiki server (redb wikilink graph, blake3 content hashes,
+  Phase 4 Steps 4.4+4.5) implements J2 composition claim at wiki platform layer.
+  If performance benchmarks for the wikilink graph (rebuild latency, backlink scan time)
+  are available, route to project-editorial as JOURNAL-NOTES-j2.
+
+J5 (Capability-Secured Session Orchestration, MLSys 22% AR, HOLD until J2 submitted)
+- Wiki per-session editing flow and git-backed content commits are instances of the
+  session-per-archive pattern in J5. When J5 opens, surface session isolation data.
+
+No action required unless benchmark or session isolation data are available.
+
+---
+from: command@claude-code
+to: totebox@project-editorial
+re: GIS A6 relay — PROSE-RESEARCH handoff + F1-F5 OLS figures ready; F6 still blocked
+created: 2026-05-28T20:00:00Z
 priority: high
 status: operator-pending
 msg-id: command-20260522-console-stage6-orphan-branch
