@@ -2,7 +2,7 @@
 artifact: brief
 name: BRIEF-journal-phd-programme
 status: active
-version: "0.3"
+version: "0.4"
 created: 2026-05-27
 updated: 2026-05-29
 owner: totebox@project-editorial
@@ -29,9 +29,9 @@ J1+J3 re-post dispatched to project-gis (msg-id `project-editorial-20260529-jour
 
 | ID | File | Body state | Cleared | Next action |
 |----|------|------------|---------|-------------|
-| J1 | JOURNAL-retail-colocation-v0.1.draft.md | Complete v0.3 (~8,200w) | language-cleared | §7.2 primary spec pending Phase 24B; permutation test; F1–F5 at project-gis; **repost dispatched** |
+| J1 | JOURNAL-retail-colocation-v0.1.draft.md | Complete v0.5 (~8,100w) | language-cleared | §4.3 removed; internal refs stripped; §7.2 pending O-D data; permutation test; F1–F5 at project-gis |
 | J2 | JOURNAL-trustworthy-systems-v0.1.draft.md | Complete (~8,800w) | language-cleared | Bench #9 quiet-VM re-run; ASPLOS short-version reformat (~6,000w) |
-| J3 | JOURNAL-aec-data-layers-v0.1.draft.md | Full body v0.2 (~7,800w) | language-cleared | §6 Results pending AEC nightly metrics from project-gis; **repost dispatched** |
+| J3 | JOURNAL-aec-data-layers-v0.1.draft.md | Full body v0.3 (~7,800w) | language-cleared | §5 tense demarcation added; §6 academic placeholder; §7.4 future tense; §6 Results pending coverage data |
 | J4 | JOURNAL-private-network-v0.1.stub.md | Full body v0.4 (~6,400w) | language-cleared (§4–§5 final pass pending) | Word count gap 6,400 → 9,000; ORCID IDs; §4–§5 final forbidden-terms sweep |
 | J5 | JOURNAL-totebox-orchestration-v0.1.stub.md | Stub (0w) | — | HOLD until J2 submitted |
 | J6 | JOURNAL-desktop-environment-v0.1.stub.md | §1-§5 written v0.2 (~5,200w) | language-cleared | §6 Results pending user study execution |
@@ -59,6 +59,21 @@ three decimal levels; no H4/H5 headings.
 
 These are not style preferences — they are the formatting requirements for the target venues.
 A paper that reads like a wiki article will be returned without review.
+
+### Development-history discipline
+
+JOURNAL manuscripts describe the current system and planned future work. They do not narrate
+internal development history, superseded approaches, or prior calibration targets. Internal
+phase numbers, scenario names, pipeline build identifiers, and internal script or file
+references must not appear in any paper body. Past states are invisible to the reader; only
+the current method and its forward-looking limitations are in scope.
+
+Specifically: if the current system replaced an earlier design, the paper describes the current
+design only. If a parameter was calibrated to a different target in an earlier version, the
+paper states the current rule, not the history. If a script or data file drives the analysis,
+it is described by its function, not its filename. Any sentence beginning "Originally..."
+"The earlier version..." "Previously..." "In the initial specification..." is a warning sign
+and should be recast to describe only the current state.
 
 ---
 
