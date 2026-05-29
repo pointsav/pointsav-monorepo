@@ -2764,6 +2764,44 @@ footer.shell-footer {
 .footer-trademark-line { font-size: 0.75rem; color: var(--fg-4); margin: 0.4rem 0; }
 .footer-badges { margin-top: 0.6rem; }
 
+/* Phase 7C — Reading mode */
+#reading-progress {
+  position: fixed; top: 0; left: 0; height: 3px; z-index: 200;
+  width: calc(var(--pct, 0) * 100%);
+  background: var(--navy);
+  transition: width 0.1s linear;
+  pointer-events: none;
+}
+.reading-mode-btn {
+  margin-left: 0.5rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 0 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: var(--navy);
+  font-family: inherit;
+}
+.reading-mode-btn:hover { background: var(--mw-color-base-10); }
+.reading-mode-btn[aria-pressed="true"] {
+  font-weight: 700;
+  border-color: var(--navy);
+  background: var(--mw-color-base-10);
+}
+body.reading-mode nav.article-tabs,
+body.reading-mode nav.crumb,
+body.reading-mode nav.sidebar,
+body.reading-mode footer.shell-footer { display: none !important; }
+body.reading-mode div.shell { grid-template-columns: 1fr !important; }
+body.reading-mode main.article-wrap {
+  max-width: 72ch;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+body.reading-mode header.topnav { opacity: 0.6; }
+body.reading-mode aside.toc { display: none !important; }
+
 /* Print styles */
 @media print {
   .shell-footer, .wiki-fab, .wiki-sticky-header, .mobile-nav-drawer,

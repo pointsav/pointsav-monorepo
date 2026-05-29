@@ -997,6 +997,26 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * Reading mode                                                         *
+   * ------------------------------------------------------------------ */
+
+  function initReadingMode() {
+    var btn = document.getElementById('reading-mode-btn');
+    if (!btn) return;
+    var PREF = 'wiki-reading-mode';
+    var on = localStorage.getItem(PREF) === '1';
+    if (on) {
+      document.body.classList.add('reading-mode');
+      btn.setAttribute('aria-pressed', 'true');
+    }
+    btn.addEventListener('click', function () {
+      var active = document.body.classList.toggle('reading-mode');
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      localStorage.setItem(PREF, active ? '1' : '0');
+    });
+  }
+
+   /* ------------------------------------------------------------------ *
    * Boot                                                                 *
    * ------------------------------------------------------------------ */
 
@@ -1019,6 +1039,7 @@
     initKeyboardShortcuts();
     initAjaxNavigation();
     initAnchorShare();
+    initReadingMode();
   });
 
 }());
