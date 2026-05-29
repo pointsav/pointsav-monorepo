@@ -1443,12 +1443,13 @@
 (function () {
   'use strict';
 
-  var walletAddress = '';
+  var staticWalletAddress = '';
   var currentProduct = '';
   var currentTier = '';
   var currentPrice = 0;
   var currentLabel = '';
   var currentTxHash = '';
+  var currentOrderId = '';
   var pollTimer = null;
   var pollCount = 0;
   var MAX_POLLS = 20;
@@ -1506,12 +1507,10 @@
     }
   }
 
-  // Fetch wallet address once at page load
+  // Fetch static fallback address at page load (used if per-order address unavailable)
   fetch('/v1/wallet/address')
     .then(function (r) { return r.json(); })
-    .then(function (d) {
-      walletAddress = d.address || '';
-    })
+    .then(function (d) { staticWalletAddress = d.address || ''; })
     .catch(function () {});
 
   // Wire up purchase triggers
@@ -1524,16 +1523,33 @@
         currentPrice = parseInt(a.dataset.price, 10);
         currentLabel = a.dataset.label;
         currentTxHash = '';
+        currentOrderId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : Date.now().toString(36) + Math.random().toString(36).slice(2);
         clearPoll();
         setError('');
         setSpinner('');
 
         el('co-product-label').textContent = currentLabel;
         el('co-amount').textContent = usdcDisplay(currentPrice);
-        el('co-wallet-addr').textContent = walletAddress || 'Loading…';
+        el('co-wallet-addr').textContent = 'Generating address…';
         el('co-tx-input').value = '';
         showStep(1);
         openOverlay();
+
+        // Fetch a unique per-order address; fall back to static address on error
+        fetch('/v1/order-address/' + encodeURIComponent(currentOrderId))
+          .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+          .then(function (res) {
+            if (res.ok && res.data.address) {
+              el('co-wallet-addr').textContent = res.data.address;
+            } else {
+              el('co-wallet-addr').textContent = staticWalletAddress || 'Unavailable';
+            }
+          })
+          .catch(function () {
+            el('co-wallet-addr').textContent = staticWalletAddress || 'Unavailable';
+          });
       });
     });
 
@@ -1546,7 +1562,7 @@
     el('co-close-btn').addEventListener('click', closeOverlay);
 
     el('co-copy-addr').addEventListener('click', function () {
-      copyText(walletAddress, el('co-copy-addr'));
+      copyText(el('co-wallet-addr').textContent, el('co-copy-addr'));
     });
 
     el('co-paid-btn').addEventListener('click', function () {
