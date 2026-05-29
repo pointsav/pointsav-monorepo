@@ -1,6 +1,6 @@
 #cloud-config
 # vm-mediakit first-boot configuration
-# Phase 1: Debian 12 host for os-mediakit services
+# Phase 1: Ubuntu 24.04 host for os-mediakit services (glibc 2.39 compatible with host binaries)
 # See BRIEF-totebox-transformation §2/§10 for context
 
 hostname: vm-mediakit
@@ -21,6 +21,7 @@ disable_root: true
 # Package install removed — install manually after SSH is up to avoid
 # long cloud-init block on slow TCG/SLIRP. Run:
 #   sudo apt-get update && sudo apt-get install -y curl ca-certificates socat nginx build-essential
+# Ubuntu 24.04 note: glibc 2.39 matches host; binaries copy directly without rebuild.
 
 runcmd:
   - mkdir -p /opt/mediakit/bin /opt/mediakit/data /etc/mediakit
