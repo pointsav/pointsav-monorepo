@@ -2,6 +2,31 @@
 
 ---
 
+### 2026-05-29 | totebox@project-intelligence | claude-sonnet-4-6 (session 5 — continued from summary)
+
+**Done this session:**
+- `fix(slm)`: Doorman tool format fix — `anthropic_tools_to_openai()` in `tier/mod.rs`; applied in `local.rs` + `yoyo.rs`; fixes llama-server "Missing tool type" error. 104 tests pass. Binary rebuilt + redeployed.
+- `test(slm)`: 2 unit tests for `anthropic_tools_to_openai` — converts `input_schema` → `parameters`, wraps in `{type:function,...}`.
+- `fix(scripts)`: git post-commit hook rewired to send full `ShadowWire` payload (was missing `brief` wrapper). VERIFIED: shadow briefs now queue correctly on every commit.
+- `docs(brief)`: BRIEF-slm-learning-loop.md §7 updated with verified/blocked statuses.
+- `docs(slm)`: NEXT.md system status updated (2026-05-29); QEMU blocker documented; §7 table added.
+- Goose v1.36.0 downloaded from block/goose releases; installed at `/usr/local/bin/goose`.
+- local-content restarted (had stopped via SIGTERM at 02:18Z; restarted 02:37Z).
+- Root-caused extraction failure: routes to Tier B (Yo-Yo) which has circuit OPEN — expected behaviour while Yo-Yo VM offline.
+
+**Pending / carry-forward:**
+- **QEMU vm-mediakit** (PID 3949093): consuming 95% CPU, starving llama-server task 1590 (25+ min, ~22 tokens). Confirm with project-infrastructure owner; kill to unblock inference. `kill 3949093`
+- **Live tool_use SSE test**: queued behind task 1590; will complete quickly once CPU free. Expected: `"type":"tool_use"` + `"stop_reason":"tool_use"` in SSE stream.
+- **Goose session test**: `ANTHROPIC_HOST=http://127.0.0.1:9080 ANTHROPIC_API_KEY=foundry-local GOOSE_MODEL=claude-haiku-4-5-20251001 goose run --text "Say hello"` — verify chat round-trips.
+- **§7.4 entity extraction**: start Yo-Yo VM to close Tier B circuit; until then extraction is deferred.
+- **Stage 6 promote**: archive is 30+ commits ahead of origin/main (Command Session scope).
+- **Binary ledger**: update `data/binary-ledger/slm-doorman-server.jsonl` after this session's rebuild.
+
+**Operator preferences surfaced:**
+- Working autonomously (QEMU + live test blocked — documented clearly; waiting for operator action)
+
+---
+
 ### 2026-05-29 | totebox@project-intelligence | claude-sonnet-4-6 (session 3+4)
 
 **Done this session:**
@@ -73,27 +98,3 @@
 **Operator preferences surfaced:**
 - "plan we can leave on auto" = write a tight AUTO plan then execute without further approval per step
 
----
-
-### 2026-05-23 | totebox@project-console | claude-sonnet-4-6
-
-**Done this session:**
-- Stage 6 rebase COMPLETE: 11 os-console commits rebased onto local `main` (tip `9afc9e25`). Conflicts resolved: .gitignore merge, .claude symlink discarded (kept directory), workspace Cargo.toml member-list merges at each phase commit, per-crate Cargo.toml/main.rs took cluster versions.
-- Push BLOCKED: discovered local `main` and all remotes (canonical + staging-j/staging-p) share zero common ancestors — full history divergence, not the "5 commits ahead" described in inbox. Escalated to Command via outbox `project-console-20260522-stage6-history-divergence`.
-- binary-targets.yaml written: declares os-console, pairing-server, proofctl (all AGPL-3.0, apache tier). service-proofreader NOT in current cluster branch — flagged to Command.
-- Build-request outbox sent: `project-console-20260523-build-request`.
-- Inbox msg `command-20260522-binary-targets-project-console` actioned; `command-20260522-console-stage6-orphan-branch` set to operator-pending.
-
-**Pending / carry-forward:**
-- Stage 6 push: waiting Command decision on history-replacement force-push. Local main tip `9afc9e25` ready.
-- Phase 3 QR: `ratatui-image` Kitty/Sixel pixel-perfect QR with Dense1x2 fallback
-- Phase 4 F11 app-console-system: operator approve/deny in-TUI
-- pairing-server systemd unit deployment on VM
-- GCE firewall port 2222 (operator action)
-- Tag v0.1.0 (after Stage 6)
-- Peter's SSH key + proofctl user add
-- Three per-user config.toml files
-- briefs/ migration (plans/ → briefs/ BRIEF- prefix) — inbox msg still pending
-
-**Operator preferences surfaced:**
-- "route to Command first" — when a destructive operation (force-push) has unexpected scope, escalate rather than proceed
