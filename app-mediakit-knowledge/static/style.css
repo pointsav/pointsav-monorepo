@@ -2824,6 +2824,49 @@ html[data-theme="dark"] .diff-rem { background: #2c0f0f; color: #fca5a5; }
   text-underline-offset: 2px;
 }
 
+/* Phase 8 — article content fingerprint */
+.article-integrity {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-tertiary, var(--mw-color-base-30, var(--fg-4)));
+  margin: 0 0 0.5rem;
+}
+.integrity-label {
+  opacity: 0.75;
+}
+.integrity-hash {
+  font-family: monospace;
+  letter-spacing: 0.02em;
+}
+.integrity-history-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Phase 8 — diff stats header */
+.diff-stats {
+  font-size: 0.85rem;
+  color: var(--text-secondary, var(--mw-color-base-30, var(--fg-4)));
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+}
+
+/* Phase 8 — history pagination */
+.history-pagination {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+.history-page-link {
+  color: var(--mw-color-link, var(--link));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* Phase UX-B — converged footer */
 footer.shell-footer {
   padding: 1.5rem var(--side-pad, 2rem) 1.25rem;
