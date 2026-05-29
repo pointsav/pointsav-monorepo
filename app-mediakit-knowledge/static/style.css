@@ -114,7 +114,7 @@
   --nav-h:       48px;
   --header-h:    80px;    /* topnav single-row height (SVG wordmark 80px) */
   --content-max: 1440px;
-  --reading-max: 760px;
+  --reading-max: 720px;
 
   --radius-sm: 6px;
   --radius:    10px;
@@ -147,6 +147,39 @@ html[data-theme="dark"] {
   --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md:   0 8px 24px rgba(0, 0, 0, 0.45);
   --shadow-lg:   0 24px 48px -16px rgba(0, 0, 0, 0.6);
+
+  /* Fix --navy references (topnav links etc.) on dark backgrounds */
+  --navy:        oklch(62% 0.14 250); /* ≈ #4d8fd1 — 4.7:1 on #0B1220 */
+  --navy-deep:   oklch(52% 0.14 250);
+  --navy-soft:   oklch(70% 0.12 250);
+}
+
+/* Auto dark mode — activated by OS preference when no explicit data-theme override */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    --bg:          #0B1220;
+    --bg-elevated: #111A2C;
+    --bg-subtle:   #16213A;
+    --bg-hover:    #1C2A45;
+    --fg-1:        #F3F6FA;
+    --fg-2:        #C9D1DC;
+    --fg-3:        #94A3B8;
+    --fg-4:        #64748B;
+    --border:      #1F2C44;
+    --border-strong: #2E3E5C;
+    --rule:        #1A2640;
+    --link:        #7AAEEA;
+    --link-hover:  #A7CBF2;
+    --code-bg:     #16213A;
+    --code-fg:     #E6EDF7;
+    --kbd-bg:      #1C2A45;
+    --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md:   0 8px 24px rgba(0, 0, 0, 0.45);
+    --shadow-lg:   0 24px 48px -16px rgba(0, 0, 0, 0.6);
+    --navy:        oklch(62% 0.14 250);
+    --navy-deep:   oklch(52% 0.14 250);
+    --navy-soft:   oklch(70% 0.12 250);
+  }
 }
 
 /* ---------- Reset ---------- */
@@ -224,8 +257,8 @@ kbd {
   height: 80px;
   width: 320px;
 }
-/* Appearance popup anchor inside nav.right */
-.topnav .wiki-appearance-wrap { position: relative; }
+/* Appearance popup — hidden (dark mode follows prefers-color-scheme) */
+.topnav .wiki-appearance-wrap { display: none !important; }
 /* Mobile-only controls hidden on desktop */
 .topnav .mobile-only { display: none; }
 @media (max-width: 768px) {
@@ -516,8 +549,8 @@ a.lang-toggle {
 }
 a.lang-toggle:hover { color: var(--fg-1); }
 
-/* Theme toggle button — compact for utility row */
-.wiki-appearance-wrap { position: relative; }
+/* Appearance toggle hidden — dark mode follows prefers-color-scheme (institutional standard) */
+.wiki-appearance-wrap { display: none !important; }
 .wiki-appearance-btn {
   display: inline-flex;
   align-items: center;
@@ -2127,8 +2160,8 @@ html[data-theme="dark"] .toc a.is-active { color: var(--link); border-left-color
 #mw-content-text { max-width: var(--reading-max); }
 .page-body {
   font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 1.72;
+  font-size: var(--knowledge-editorial-reading-body-size, 17px);
+  line-height: var(--knowledge-editorial-reading-body-lh, 1.70);
   color: var(--fg-2);
 }
 .page-body > * + * { margin-top: 1em; }
