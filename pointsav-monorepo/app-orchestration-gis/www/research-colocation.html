@@ -119,10 +119,15 @@
   .mobile-toc .toc li a { font-size: 13px; color: var(--text-main); }
   .mobile-toc .toc li > ul { padding-left: 16px; }
 
+  .toc-divider {
+    border: none;
+    border-top: 1px solid var(--border-soft);
+    margin: 12px 0;
+  }
   .sidebar-print-btn {
     display: block;
     width: 100%;
-    margin-top: 14px;
+    margin-top: 8px;
     background: var(--brand-primary);
     color: #fff;
     border: none;
@@ -284,8 +289,10 @@
 <div class="page-wrapper">
 
   <aside class="toc-sidebar">
-    <div class="toc-label">Contents</div>
     <a href="/research.html" class="back-to-map">← Research Papers</a>
+    <button class="sidebar-print-btn" onclick="window.print()">Print / Save PDF</button>
+    <hr class="toc-divider">
+    <div class="toc-label">Contents</div>
     <div class="toc">
 <ul>
 <li><a href="#retail-anchor-co-location-composition-as-a-spatial-leading-indicator-of-commercial-activity-a-continental-scale-cluster-analysis">Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity: A Continental-Scale Cluster Analysis</a><ul>
@@ -358,7 +365,6 @@
 </li>
 </ul>
 </div>
-  <button class="sidebar-print-btn" onclick="window.print()">Print / Save PDF</button>
 
   </aside>
 
