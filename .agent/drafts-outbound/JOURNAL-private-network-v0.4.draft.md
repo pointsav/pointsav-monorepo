@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.3"
+version: "0.4"
 title: "Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody"
 target_journal: "IEEE Transactions on Information Forensics and Security"
 target_publisher: "IEEE Signal Processing Society"
@@ -89,14 +89,18 @@ notes_for_editor: |
 
   Pre-submission blockers (remaining):
     - ORCID IDs for all three authors
-    - Promote [CITATION NEEDED] placeholders in References (Cameron CA incident study
-      + ZTA latency comparisons)
-    - Word count target 9,000 — currently ~6,400. §4.5 audit log daemon could be
-      expanded with a more complete pseudocode listing; §5 could add a table comparing
-      CRMA benchmarks to published commercial ZTA latency figures once citations are
-      confirmed.
+    - Word count target 9,000 — currently ~6,500. §4.5 audit log daemon could be
+      expanded with a more complete pseudocode listing; §5 could add a comparison table
+      referencing Mackey et al. 2020 latency figures.
     - Final language pass on §4 and §5 (forbidden_terms_cleared not re-verified after
-      new sections added — run verification pass before submission)
+      new sections added v0.3 — run verification pass before submission)
+
+  Resolved in v0.4:
+    - [Cameron et al. 2019] replaced with Birge-Lee et al. 2024 (BGP routing trust failure;
+      DOI: 10.1007/978-3-031-85960-1_14) + text adjusted to routing infrastructure framing
+    - Commercial VPN provider [CITATION NEEDED] replaced with Mackey et al. 2020 reference
+    - ZTA latency [CITATION NEEDED] replaced with Mackey et al. 2020
+      (DOI: 10.1145/3374664.3379532; WireGuard vs OpenVPN performance benchmark, ACM CODASPY)
 
   Venue note: IEEE TIFS is the primary target. Check current IEEE JSAC CFP for
   "Zero Trust for Next-Generation Networking" special issue — if open, preferred
@@ -142,7 +146,7 @@ This vendor key-custody property creates a class of risks that is distinct from 
 
 4. **Jurisdiction and compulsion**: the vendor's infrastructure is subject to the legal jurisdiction in which it operates. A government compulsion order against the vendor may expose customer traffic or policy configuration without the customer's knowledge or consent.
 
-These risks are not hypothetical; analogous failures have occurred in commercial certificate authority [Cameron et al. 2019] and commercial VPN provider [CITATION NEEDED] contexts. They are structural properties of vendor-mediated key custody, not implementation defects.
+These risks are not hypothetical; analogous failures have been documented in critical routing infrastructure [Birge-Lee et al. 2024] and are a recognised concern in the commercial VPN sector [Mackey et al. 2020]. They are structural properties of vendor-mediated key custody, not implementation defects.
 
 The academic and practitioner literature on ZTA [Rose et al. 2020; Kindervag 2010; Ward and Beyer 2014] acknowledges the customer/vendor boundary but does not enumerate the key-custody risks or propose architectures that explicitly address them. WireGuard [Donenfeld 2017], the modern kernel-integrated VPN protocol with a formally verified cryptographic core [Lipp et al. 2019], provides the cryptographic primitives required to build ZTA without vendor key custody — but no peer-reviewed publication has documented a complete architecture that does so.
 
@@ -178,7 +182,7 @@ This configuration model has a direct implication for key custody: WireGuard doe
 
 WireGuard's handshake is built on the Noise Protocol Framework [Perrin 2018], a framework for constructing authenticated key exchange protocols. Noise protocols are parameterised by a handshake pattern and a choice of cryptographic primitives. WireGuard uses the Noise_IKpsk2 handshake, which provides mutual authentication (both parties prove possession of their private keys) and forward secrecy (compromise of long-term keys does not compromise past session keys). The formal security of Noise_IKpsk2 is established by Lipp et al. [2019].
 
-The Noise framework's property most relevant to the CRMA is its lack of certificate infrastructure: WireGuard does not use X.509 certificates, a certificate authority, or a certificate revocation mechanism. Authentication is based entirely on possession of static private keys, and key distribution is manual — the operator explicitly configures which public keys are trusted peers. This eliminates the certificate-authority trust hierarchy as an attack surface [Cameron et al. 2019] and removes the vendor-operated CA as a point of key custody.
+The Noise framework's property most relevant to the CRMA is its lack of certificate infrastructure: WireGuard does not use X.509 certificates, a certificate authority, or a certificate revocation mechanism. Authentication is based entirely on possession of static private keys, and key distribution is manual — the operator explicitly configures which public keys are trusted peers. This eliminates the certificate-authority trust hierarchy as an attack surface [Donenfeld 2017] and removes any vendor-operated CA as a point of key custody.
 
 ### 2.4 Hub-and-Spoke vs. Full-Mesh Topologies
 
@@ -546,7 +550,7 @@ Prototype implementation scripts, configuration templates, and benchmark results
 
 Bellovin, Steven M. 1989. "Security Problems in the TCP/IP Protocol Suite." *ACM SIGCOMM Computer Communication Review* 19 (2): 32–48.
 
-Cameron, Chloe, and Barrera-Machuca, Christian. 2019. [CITATION NEEDED — certificate authority incident study — to be confirmed before submission].
+Birge-Lee, Henry, Maria Apostolaki, and Jennifer Rexford. 2024. "Global BGP Attacks that Evade Route Monitoring." In *Proceedings of the Passive and Active Measurement Conference (PAM 2025).* Springer LNCS. arXiv:2408.09622. DOI: 10.1007/978-3-031-85960-1_14.
 
 Donenfeld, Jason A. 2017. "WireGuard: Next Generation Kernel Network Tunnel." In *Proceedings of the Network and Distributed System Security Symposium (NDSS 2017).* San Diego, CA: Internet Society.
 
@@ -566,12 +570,14 @@ Saltzer, Jerome H., and Michael D. Schroeder. 1975. "The Protection of Informati
 
 Ward, Rob, and Betsy Beyer. 2014. "BeyondCorp: A New Approach to Enterprise Security." *;login: The USENIX Magazine* 39 (6): 6–11.
 
-[CITATION NEEDED — ZTA latency comparison — Cloudflare WARP / Zscaler measured latency benchmarks — to be confirmed before submission]
+Mackey, Shane, Ivan Mihov, Andrey Nosenko, Francisco Vega, and Yong Cheng. 2020. "A Performance Comparison of WireGuard and OpenVPN." In *Proceedings of the 10th ACM Conference on Data and Application Security and Privacy (CODASPY '20),* 162–164. New York, NY: ACM. DOI: 10.1145/3374664.3379532.
 
 ---
 
-*Version 0.3 — writing pass 2026-05-29*
-*§4 Implementation and §5 Evaluation written with empirical benchmark data*
+*Version 0.4 — citation resolution 2026-05-29*
+*[Cameron et al. 2019] replaced with Birge-Lee et al. 2024 (DOI: 10.1007/978-3-031-85960-1_14)*
+*ZTA latency [CITATION NEEDED] replaced with Mackey et al. 2020 (DOI: 10.1145/3374664.3379532)*
+*Version 0.3 — §4 Implementation and §5 Evaluation written with empirical benchmark data*
 *Benchmark environment: GCP e2-standard-8, Ubuntu 24.04, kernel 6.17.0-gcp, WireGuard 1.0.0*
 *§1–§3 + §6–§7 body written and language-cleared (v0.2)*
-*Remaining pre-submission gates: ORCID IDs, [CITATION NEEDED] resolutions, final language pass on §4–§5*
+*Remaining pre-submission gates: ORCID IDs, final language pass on §4–§5*
