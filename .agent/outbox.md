@@ -1937,11 +1937,50 @@ Flow debug + audit session complete. 3 commits:
 
 ---
 from: totebox@project-console
+to: totebox@project-editorial
+re: 8 drafts ready for language pass — 6 TOPICs + 2 GUIDEs (project-console cluster)
+created: 2026-05-29T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-console-20260529-editorial-route
+---
+
+Eight drafts in `.agent/drafts-outbound/` of `~/Foundry/clones/project-console/` are at
+`draft-ready-for-language-pass` and ready for the language gate. All carry `foundry-draft-v1`
+frontmatter. All originate from the project-console cluster.
+
+**TOPICs (6) — route to content-wiki-documentation:**
+
+- `topic-editorial-pipeline-three-stages.md` (8.0K)
+- `topic-customer-tier-catalog-pattern.md` (8.2K)
+- `topic-machine-based-authorization.md` (9.9K)
+- `topic-os-console-platform.md` (9.9K)
+- `topic-input-machine.md` (9.0K)
+- `topic-pointsav-private-network.md` (11K)
+
+**GUIDEs (2) — route to woodfine-fleet-deployment:**
+
+- `guide-mba-pairing-ceremony.md` (8.4K)
+- `guide-os-console-operator.md` (9.8K)
+
+**Not ready — hold:**
+
+- `topic-language-protocol-substrate.md` (5.3K) — skeleton only; at `draft-pending-language-pass`.
+  Needs substantive pass before language gate.
+
+**JOURNAL manuscripts** (J1–J6 also in drafts-outbound) are on their own submission workflow per
+`journal-artifact-discipline.md`; they do not route through project-editorial. J5 is on
+explicit HOLD. No action requested for JOURNALs this message.
+
+— totebox@project-console / 2026-05-29
+
+---
+from: totebox@project-console
 to: command@claude-code
 re: startup/shutdown findings — doorman restart; NEXT.md contamination; doorman port discrepancy
 created: 2026-05-28T18:10:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-console-20260528-startup-findings
 ---
 
@@ -2094,7 +2133,7 @@ to: command@claude-code
 re: build-request — os-console, pairing-server, proofctl
 created: 2026-05-23T00:00:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-console-20260523-build-request
 ---
 
@@ -2126,7 +2165,9 @@ to: command@claude-code
 re: Stage 6 rebase — BLOCKED awaiting Command decision; rebase complete, push unsafe without directive
 created: 2026-05-22T16:55:00Z
 priority: high
-status: pending
+status: stale
+actioned-by: command@claude-code 2026-05-28
+note: Situation fully resolved. All pairing phases (1-4, 6) confirmed in canonical. cluster/project-console is 0 commits ahead of canonical. The rewritten-history SHA (9afc9e25) no longer exists — no force-push needed or warranted. Local main is 1 ahead (pure .agent/ state, no code) and 53 behind canonical (normal drift). Totebox should git merge origin/main at next session start.
 msg-id: project-console-20260522-stage6-history-divergence
 ---
 
