@@ -8,8 +8,8 @@ use notify::{Event, RecursiveMode, Result as NotifyResult, Watcher};
 use serde_json::Value;
 use std::fs;
 use std::path::Path;
-use std::sync::Arc;
 use std::sync::mpsc::RecvTimeoutError;
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
@@ -197,8 +197,7 @@ fn main() -> NotifyResult<()> {
                 for path in paths {
                     if let Some(extension) = path.extension() {
                         if extension == "json" {
-                            let filename =
-                                path.file_name().unwrap().to_str().unwrap().to_string();
+                            let filename = path.file_name().unwrap().to_str().unwrap().to_string();
                             if filename.starts_with("CORPUS_")
                                 && !processed_ledgers.contains(&filename)
                                 && !deferred_ledgers.contains(&filename)
@@ -239,7 +238,7 @@ fn main() -> NotifyResult<()> {
                         deferred_ledgers.len()
                     );
                 }
-                let retry_queue: Vec<String> = deferred_ledgers.drain(..).collect();
+                let retry_queue: Vec<String> = std::mem::take(&mut deferred_ledgers);
                 for filename in retry_queue {
                     let path = Path::new(&corpus_dir).join(&filename);
                     match process_corpus(
@@ -407,8 +406,7 @@ fn process_corpus(
 
             for ent in &semantic_entities {
                 let entity_name = ent["entity_name"].as_str().unwrap_or("").to_string();
-                let classification =
-                    ent["classification"].as_str().unwrap_or("").to_string();
+                let classification = ent["classification"].as_str().unwrap_or("").to_string();
                 let role_vector = ent
                     .get("role_vector")
                     .and_then(|v| v.as_str())
@@ -438,8 +436,7 @@ fn process_corpus(
 
                 // Build the legacy JSON CRM record
                 let mut new_ent = serde_json::Map::new();
-                new_ent
-                    .insert("entity_name".to_string(), serde_json::json!(entity_name));
+                new_ent.insert("entity_name".to_string(), serde_json::json!(entity_name));
                 new_ent.insert(
                     "classification".to_string(),
                     serde_json::json!(classification),
