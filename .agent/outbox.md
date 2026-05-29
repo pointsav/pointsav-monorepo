@@ -9,6 +9,23 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-editorial
+to: totebox@project-gis
+re: JOURNAL J1+J3 author block updated — re-post live (New York, institutional email, full names)
+created: 2026-05-29T00:00:00Z
+priority: high
+status: pending
+msg-id: project-editorial-20260529-journal-j1-j3-repost
+---
+
+Dispatched to project-gis inbox. J1 + J3 corrected per inbox corrections:
+author block now shows named individuals (Jennifer M. / Peter M. / Mathew Woodfine),
+affiliation New York NY USA, email corporate.secretary@woodfinegroup.com,
+cite_as full given names. Commit 1abc094e. Re-post requested.
+
+---
+
+---
+from: totebox@project-editorial
 to: command@claude-code
 re: Convention layer additions — JOURNAL programme (4 items)
 created: 2026-05-28T23:30:00Z
