@@ -1,7 +1,7 @@
 ---
 schema: foundry-artifact-registry-v1
 project: project-gis
-last_updated: 2026-05-29
+last_updated: 2026-05-28
 ---
 
 # project-editorial Artifact Registry
@@ -27,12 +27,12 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 
 | ID | File | Title (working) | Target Journal | Lead Author | Status |
 |----|------|-----------------|----------------|-------------|--------|
-| J1 | `JOURNAL-retail-colocation-v0.1.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | language-cleared (v0.5; §4.3 removed; internal refs stripped 2026-05-29) |
+| J1 | `JOURNAL-retail-colocation-v0.1.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | language-cleared |
 | J2 | `JOURNAL-trustworthy-systems-v0.1.draft.md` | Composing Trustworthy Systems from Verified Primitives | ASPLOS (ACM, 19.4% AR) | Mathew Woodfine | language-cleared |
-| J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier, IF 12.0) | Jennifer M. Woodfine | language-cleared (v0.3; internal vocab stripped; §6 academic placeholder 2026-05-29) |
-| J4 | `JOURNAL-private-network-v0.1.stub.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | language-cleared (v0.4; PhD register pass 2026-05-29; word count ~6,400 vs 9,000 target; final §4–§5 language pass pending before submission) |
+| J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier, IF 12.0) | Jennifer M. Woodfine | language-cleared |
+| J4 | `JOURNAL-private-network-v0.3.draft.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | language-cleared |
 | J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | MLSys (ACM, 22% AR) | Mathew Woodfine | stub |
-| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared (v0.2; PhD register pass 2026-05-29; §6 Results pending user study) |
+| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared |
 
 ### Pre-submission blockers by paper
 
@@ -63,21 +63,16 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 - ORCID IDs for all three authors
 
 **J4 — Private Network / CRMA:**
-- ~~§1–§3 writing pass~~ — COMPLETE 2026-05-28
+- ~~§1–§3 writing pass~~ — COMPLETE 2026-05-28 (~4,800 words; §1 Introduction, §2 Background, §3 Architecture written; §6 Discussion + §7 Conclusion written)
 - ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`)
-- ~~§4 Implementation~~ — COMPLETE 2026-05-29: WireGuard hub+spoke config, BLAKE2s audit-log Python daemon; commit `77063dc3`
-- ~~§5 Evaluation~~ — COMPLETE 2026-05-29: 5 benchmarks; Table 1 vs Mackey et al.; commit `77063dc3`
-- ~~Citation placeholders~~ — RESOLVED 2026-05-29: Birge-Lee et al. 2024 + Mackey et al. 2020
-- ~~PhD register pass~~ — COMPLETE 2026-05-29: §1/3.1/4/5.3 prose, Listing captions, §6.2 falsification prose, §6.3 italic, §6.4 generalizability; commit `ec225be4`
-- **Word count gap** — ~6,400 words vs 9,000-word target; ~2,600 words expansion needed in §4–§5. project-infrastructure scope.
-- **Final §4–§5 language pass** — §4+§5 sections need one more forbidden-terms sweep before submission
-- ORCID IDs for all three authors
+- ~~§4 Implementation + §5 Evaluation~~ — COMPLETE 2026-05-29 v0.3 (commit 149a8b39): empirical benchmarks on GCP e2-standard-8; B1 n=30 mean=44ms; B2 n=10 mean=59ms; B3 wg set=8ms; B4 bimodal {1s,11-16s}
+- §4–§5 language pass — AT project-editorial (outbox d6cef558; `forbidden_terms_cleared` conservatively false for new sections)
+- [CITATION NEEDED] x2 — Cameron CA BGP incident + ZTA latency comparisons — resolve in language pass
+- ORCID IDs for all three authors (operator action required)
 
 **J6 — Desktop Environment:**
-- ~~§1–§4 writing pass~~ — COMPLETE 2026-05-28 (~5,200 words; §1–§5 + §7–§8 written)
-- ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`)
-- ~~PhD register pass~~ — COMPLETE 2026-05-29: contributions inline, §4 table captions + Appendix A, §5.2/§6 TODOs resolved, §7.3 falsification prose, §7.4 italic leads, [CITATION NEEDED] removed; commit `22cb91fa`
-- §6 Results — pending user study data collection (ethical clearance planned before recruitment)
+- §1–§4 writing pass (Introduction, Background, Design Principles, Implementation) — in progress
+- §5–§6 pending user study data
 - ORCID IDs for all three authors
 
 **J5:** HOLD until J2 submitted
@@ -86,12 +81,12 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 
 ## A — Active / In-Progress
 
-### A6 — PROSE-RESEARCH: Geometric Site Selection (JoEG preparation)
+### A6 — PROSE-RESEARCH: Geometric Site Selection (PhD paper scaffolding)
 - **File:** `PROSE-RESEARCH-geometric-site-selection.draft.md`
-- **Status:** COMMITTED 2026-05-29 — at content-wiki-documentation/research/geometric-site-selection-national-tenancy.md (commit 13b8caa)
-- **Destination:** content-wiki-documentation/research/geometric-site-selection-national-tenancy.md (research/ category created; preprint WIP block + Forward-Looking Statements advisory added per journal-artifact-discipline.md public-posting requirements)
+- **Status:** DISPATCHED — v0.4 (2026-05-27) — at project-gis drafts-outbound, dispatched to project-editorial
+- **Destination:** project-editorial → content-wiki-documentation/research/
 - **Content:** Continental-scale cluster analysis paper; geometric co-location as spatial leading indicator.
-  v0.4.1: 8 sections, §3.7 mobility catchments, §7.2 OLS regression, Bloomberg register, banned vocabulary clean. All inline TODO markers cleared; Appendix B/C deferred to v0.5 with placeholder text.
+  v0.4: 8 sections, §3.7 mobility catchments, §7.2 OLS regression, Bloomberg register, banned vocabulary clean.
 - **Editorial gates (project-editorial to resolve before publication):**
   - Appendix B country-by-country T1 table (Phase 22 data available — run taxonomy.py export)
   - §5.3 LODES employment medians (placeholder or "v0.5" note)
@@ -130,49 +125,6 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 - **Destination:** project-editorial
 - **Content:** Full rebuild procedure including Phase 1 taxonomy rebuild steps and Phase 2 build-geometric-ranking.py future pipeline
 
-### A7 — TOPIC: os-mediakit (bilingual)
-- **File:** `media-knowledge-documentation/systems/os-mediakit.md` + `.es.md`
-- **Status:** COMMITTED — `81ca9aa` (2026-05-29) — `media-knowledge-documentation/systems/`
-- **Source:** project-infrastructure drafts-outbound
-- **Content:** Ubuntu 24.04 QEMU/TCG VM platform; Phase 1 (deployed) + Phase 2–4 (planned); BCSC-clean
-
-### A8 — GUIDE: post-commit-training-hook
-- **File:** `.agent/drafts-outbound/guide-post-commit-training-hook.md`
-- **Status:** STAGED — `72761f65` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/cluster-totebox-intelligence/`
-- **Source:** project-intelligence drafts-outbound
-
-### A9 — GUIDE: goose-local-doorman
-- **File:** `.agent/drafts-outbound/guide-goose-local-doorman.md`
-- **Status:** STAGED — `72761f65` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/cluster-totebox-intelligence/`
-- **Source:** project-intelligence drafts-outbound
-
-### A10 — GUIDE: vm-mediakit-provision
-- **File:** `.agent/drafts-outbound/guide-vm-mediakit-provision.md`
-- **Status:** STAGED — `0d9da8ed` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/fleet-infrastructure/`
-- **Source:** project-infrastructure drafts-outbound
-
-### A11 — GUIDE: vm-mediakit-service-migration
-- **File:** `.agent/drafts-outbound/guide-vm-mediakit-service-migration.md`
-- **Status:** STAGED — `0d9da8ed` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/fleet-infrastructure/`
-- **Source:** project-infrastructure drafts-outbound
-
-### A12 — TOPIC: moonshot-toolkit-build-orchestrator (bilingual)
-- **File:** `media-knowledge-documentation/substrate/moonshot-toolkit-build-orchestrator.md` + `.es.md`
-- **Status:** COMMITTED — `95f6beb` (2026-05-29) — `media-knowledge-documentation/substrate/`
-- **Source:** project-system drafts-outbound (Phase 1C v2)
-- **Content:** Rust-only build orchestrator; 5-stage AssembleImage pipeline; Phase 1C complete
-
-### A13 — TOPIC: sel4-aarch64-qemu-substrate-target (bilingual)
-- **File:** `media-knowledge-documentation/substrate/sel4-aarch64-qemu-substrate-target.md` + `.es.md`
-- **Status:** COMMITTED — `95f6beb` (2026-05-29) — `media-knowledge-documentation/substrate/`
-- **Source:** project-system drafts-outbound (Phase 1C v2)
-- **Content:** seL4 AArch64 QEMU substrate target; verified boot chain; -m 1G requirement
-
-### A14 — GUIDE: moonshot-toolkit-phase1c-build-setup
-- **File:** `.agent/drafts-outbound/guide-moonshot-toolkit-phase1c-build-setup.md`
-- **Status:** STAGED — `fbde41fa` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/project-system/`
-- **Source:** project-system drafts-outbound (Phase 1C v2)
-
 ---
 
 ## B — Backlog (queued for future sessions)
@@ -191,7 +143,7 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 - **Status:** STAGED in drafts-outbound/ — at project-editorial
 
 ### B5 — TEXT: Canada/Walmart Supercentre + Hospital Coverage
-- **Status:** DISPATCHED to project-gis 2026-05-28 (msg-id `project-editorial-20260528-text-artifacts-dispatch`) — awaiting coverage verification + language pass return
+- **Status:** STAGED in drafts-outbound/ (text-gis-canada-walmart-hospital-coverage.draft.md)
 
 ### B6 — DESIGN-RESEARCH: Bento Merged Zones Disclosure
 - **Status:** IMPLEMENTED 21cf18df (2026-05-17) — merged-ring UX shipped in index.html (Union-Find groupOverlappingClusters, showMergedGroupPanel). Editorial draft still at project-design for write-up.
@@ -209,22 +161,22 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 - **Status:** STAGED in drafts-outbound/ — at project-design
 
 ### B11 — TEXT: Nordic/UK Coverage Release
-- **Status:** DISPATCHED to project-gis 2026-05-28 (msg-id `project-editorial-20260528-text-artifacts-dispatch`) — awaiting coverage verification + language pass return
+- **Status:** STAGED in drafts-outbound/ — at project-editorial
 
 ### B12 — TEXT: UK/EU Coverage Release
-- **Status:** DISPATCHED to project-gis 2026-05-28 (msg-id `project-editorial-20260528-text-artifacts-dispatch`) — awaiting coverage verification + language pass return
+- **Status:** STAGED in drafts-outbound/ — at project-editorial
 
 ### B13 — TOPIC: Regional Name Resolution Architecture
-- **Status:** REGISTRY DRIFT — file not found in drafts-outbound (2026-05-28 audit). File not staged; project-gis must write and dispatch. [2026-05-28]
+- **Status:** STAGED in drafts-outbound/ — at project-editorial
 
 ### B14 — TOPIC: Co-location Tier Nomenclature
-- **Status:** REGISTRY DRIFT — file not found in drafts-outbound (2026-05-28 audit). File not staged; project-gis must write and dispatch. [2026-05-28]
+- **Status:** STAGED in drafts-outbound/ — at project-editorial
 
 ### B15 — TOPIC: GIS as BIM Substrate
-- **Status:** REGISTRY DRIFT — file not found in drafts-outbound (2026-05-28 audit). File not staged; project-gis must write and dispatch. [2026-05-28]
+- **Status:** STAGED in drafts-outbound/ — at project-editorial
 
 ### B16 — TOPIC: UK/EU Food Retail Coverage
-- **Status:** REGISTRY DRIFT — file not found in drafts-outbound (2026-05-28 audit). File not staged; project-gis must write and dispatch. [2026-05-28]
+- **Status:** STAGED in drafts-outbound/ — at project-editorial
 
 ---
 
