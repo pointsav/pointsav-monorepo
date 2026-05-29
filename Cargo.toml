@@ -29,6 +29,10 @@ members = [
     # PPN node-join ceremony
     "system-pairing-codes",
     "service-ppn-pairing",
+    # PPN resource pooling
+    "system-vm-fleet-types",
+    "service-vm-fleet",
+    "service-vm-host",
 ]
 
 [profile.dev]
@@ -37,4 +41,6 @@ panic = "abort"     # Required for bare-metal evaluation
 [profile.release]
 opt-level = "z"     # Optimize for minimum binary size
 lto = true          # Link-time optimization
+codegen-units = 1   # Single codegen unit for maximum LTO benefit
 panic = "abort"     # Strip panic unwinding overhead
+strip = true        # Strip debug symbols from output binary
