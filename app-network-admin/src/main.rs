@@ -176,7 +176,7 @@ async fn handle_authorization(
         "NODE-CLOUD-RELAY" => vec!["10.50.0.1"],
         "NODE-LAPTOP-A" => vec!["10.50.0.2"],
         "NODE-IMAC-12" => vec!["10.50.0.3"],
-        "ALL" | _ => PEERS.to_vec(),
+        _ => PEERS.to_vec(),
     };
 
     for ip in target_ips {
