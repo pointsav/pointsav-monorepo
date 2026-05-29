@@ -1,6 +1,18 @@
 
 ---
 
+### 2026-05-28 (continuation) | totebox@project-editorial | claude-sonnet-4-6
+
+Preprint versioning standard applied to all 6 JOURNAL manuscripts (CC BY 4.0, cite_as, revision_history). JOURNAL/ folder created; 6 paper copies committed `147ceab6`. 22 distribution outbox messages to all project-* archives `69085706`. journal-artifact-discipline.md updated `4d499ae4`, `bd031627`. 6 annotated git tags created. `command-20260528-gis-a6-relay` actioned.
+
+---
+
+### 2026-05-28 | totebox@project-editorial | claude-sonnet-4-6
+
+J3 body + language pass `02117825`. J6 §1-§5 + language pass `da4925a4`. J4 §1-§3+§6-§7 + language pass `67eb9a37`. J1 §7.0 OLS (Model A T1 β=+0.489 p<0.001; Model B R²=0.503) + F6 partial + run-j1-ols.py `37523014`. project-gis A6 messages archived `a34825b6`. 5 JOURNAL return outbox messages `25023ce9`.
+
+---
+
 ### 2026-05-23 | totebox@project-console | claude-sonnet-4-6
 
 **Done this session:**
