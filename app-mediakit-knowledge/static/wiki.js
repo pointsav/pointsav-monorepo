@@ -1055,6 +1055,40 @@
     });
   }
 
+  /* ------------------------------------------------------------------ *
+   * Phase 7E — Mobile bottom bar                                        *
+   * ------------------------------------------------------------------ */
+  function initMobileBottomBar() {
+    var tocBtn   = document.getElementById('mobile-bar-toc');
+    var shareBtn = document.getElementById('mobile-bar-share');
+    if (!tocBtn && !shareBtn) return;
+
+    // Contents → open TOC drawer (same as toc-toggle-btn)
+    if (tocBtn) {
+      tocBtn.addEventListener('click', function () {
+        var tocTrigger = document.getElementById('toc-toggle-btn');
+        if (tocTrigger) { tocTrigger.click(); }
+      });
+    }
+
+    // Share → navigator.share or clipboard fallback
+    if (shareBtn) {
+      shareBtn.addEventListener('click', function () {
+        var title = document.title;
+        var url   = window.location.href;
+        if (navigator.share) {
+          navigator.share({ title: title, url: url }).catch(function () {});
+        } else {
+          navigator.clipboard.writeText(url).then(function () {
+            var orig = shareBtn.textContent;
+            shareBtn.textContent = 'Copied!';
+            setTimeout(function () { shareBtn.textContent = orig; }, 1500);
+          }).catch(function () {});
+        }
+      });
+    }
+  }
+
    /* ------------------------------------------------------------------ *
    * Boot                                                                 *
    * ------------------------------------------------------------------ */
@@ -1080,6 +1114,7 @@
     initAnchorShare();
     initReadingMode();
     initCitationHoverCards();
+    initMobileBottomBar();
   });
 
 }());
