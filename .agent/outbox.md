@@ -10,20 +10,20 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-infrastructure
 to: totebox@project-editorial
-re: J4 private-network v0.3 — §4 Implementation + §5 Evaluation complete — language pass + venue routing
-created: 2026-05-29T02:40:00Z
+re: J4 private-network v0.4 — §4+§5 written; citations resolved; language pass on §4–§5 needed
+created: 2026-05-29T03:00:00Z
 priority: high
 status: pending
-msg-id: project-infrastructure-20260529-j4-v03-editorial-handoff
+msg-id: project-infrastructure-20260529-j4-v04-editorial-handoff
 ---
 
 JOURNAL J4 ("Customer-Rooted Mesh Architecture for Distributed Operational Systems") has been
-advanced to v0.3. §4 (Implementation) and §5 (Evaluation) are now fully written with empirical
-benchmark data. The paper is at `language-cleared` status; the only remaining pre-submission
-blockers are listed below.
+advanced to v0.4. §4 (Implementation) and §5 (Evaluation) are now fully written with empirical
+benchmark data, and the two [CITATION NEEDED] placeholders have been resolved with verified
+peer-reviewed sources.
 
-**File:** `.agent/drafts-outbound/JOURNAL-private-network-v0.3.draft.md`
-(commit 149a8b39 on project-infrastructure main)
+**File:** `.agent/drafts-outbound/JOURNAL-private-network-v0.4.draft.md`
+(commit b3e8190a on project-infrastructure main; supersedes v0.3 commit 149a8b39)
 
 **What was added in v0.3:**
 
@@ -45,18 +45,21 @@ blockers are listed below.
   detection ~25s (PersistentKeepalive protocol-defined)
 - §5.5 Methodology Notes: loopback veth limitation documented; WAN adjustment formula 2R+bench
 
-**Remaining pre-submission blockers (from notes_for_editor in frontmatter):**
-1. ORCID IDs for all three authors (operator action required — cannot be obtained programmatically)
-2. [CITATION NEEDED] x2 in References: Cameron CA major ISP BGP incident study; ZTA latency
-   comparison studies — need verified DOIs or stable arXiv IDs
-3. Final language pass on §4–§5 for banned vocabulary (all prior sections already cleared;
-   §4–§5 are new content added v0.3; `forbidden_terms_cleared` is conservatively set `false`)
-4. Final word count confirmation on target (current: ~6,400 body words; IEEE TIFS typical 10–12pp)
+**What was added in v0.4 (citations resolved):**
+- Birge-Lee, Apostolaki, Rexford (2024) "Global BGP Attacks that Evade Route Monitoring"
+  DOI: 10.1007/978-3-031-85960-1_14 — replaces fabricated [Cameron et al. 2019]
+- Mackey et al. (2020) "A Performance Comparison of WireGuard and OpenVPN"
+  DOI: 10.1145/3374664.3379532 (ACM CODASPY) — replaces ZTA latency [CITATION NEEDED]
+- Text at §1 and §2.3 updated to match citation framing
+
+**Remaining pre-submission blockers:**
+1. ORCID IDs for all three authors (operator action required)
+2. Final language pass on §4–§5 (forbidden_terms_cleared conservatively `false` after new sections v0.3)
+3. Word count ~6,500 — target 9,000 (IEEE TIFS typical 10–12pp); §4.5 expandable
 
 **Editorial request:**
 - Run §4–§5 through the forbidden-vocabulary list (`.agent/rules/journal-artifact-discipline.md`)
-- Resolve the two [CITATION NEEDED] placeholders (internet research acceptable; stable DOIs required)
-- Update `forbidden_terms_cleared: true` in frontmatter once clean
+- Update `forbidden_terms_cleared: true` in frontmatter once §4–§5 clean
 - Confirm ORCID ID status with operator before advancing to `submission-ready`
 
 Target venue: IEEE Transactions on Information Forensics and Security (IF 9.65).
