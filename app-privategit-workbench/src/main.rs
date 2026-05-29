@@ -182,7 +182,9 @@ struct FileQuery {
     paper: Option<String>, // "letter" | "a4"
 }
 
-fn default_true() -> bool { true }
+fn default_true() -> bool {
+    true
+}
 
 #[derive(Serialize)]
 struct FileResponse {
@@ -713,10 +715,10 @@ async fn git_status(State(state): State<AppState>, Query(q): Query<GitStatusQuer
 
 #[derive(Debug, PartialEq)]
 enum DocType {
-    HtmlDoc,   // .html / .htm — inject @page CSS then WeasyPrint
-    GeoJson,   // .geojson
-    Proforma,  // .json with "proforma_version" key
-    Other,     // fall through to existing code-view behavior
+    HtmlDoc,  // .html / .htm — inject @page CSS then WeasyPrint
+    GeoJson,  // .geojson
+    Proforma, // .json with "proforma_version" key
+    Other,    // fall through to existing code-view behavior
 }
 
 fn detect_doc_type(path: &Path, content_peek: Option<&str>) -> DocType {
@@ -809,13 +811,12 @@ fn run_weasyprint(html: String) -> Result<Vec<u8>> {
     }
     drop(child.stdin.take());
 
-    let output = child.wait_with_output().context("weasyprint wait_with_output")?;
+    let output = child
+        .wait_with_output()
+        .context("weasyprint wait_with_output")?;
 
     if !output.status.success() {
-        return Err(anyhow!(
-            "weasyprint exited {}",
-            output.status
-        ));
+        return Err(anyhow!("weasyprint exited {}", output.status));
     }
     if output.stdout.is_empty() {
         return Err(anyhow!("weasyprint produced empty output"));
@@ -830,10 +831,7 @@ fn run_weasyprint(html: String) -> Result<Vec<u8>> {
 /// GET /document?path=<url_path>
 /// Returns a standalone HTML page for known document types.
 /// Unknown types redirect to the raw browse path.
-async fn get_document(
-    State(state): State<AppState>,
-    Query(q): Query<FileQuery>,
-) -> Response {
+async fn get_document(State(state): State<AppState>, Query(q): Query<FileQuery>) -> Response {
     let (fs_path, _writable) = match resolve_path(&state.roots, &q.path) {
         Ok(v) => v,
         Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
@@ -876,11 +874,18 @@ fn render_proforma_document(content: &str, path: &Path) -> Response {
     }
 
     // Fallback: no companion HTML found
-    let fname = path.file_name().and_then(|n| n.to_str()).unwrap_or("proforma.json");
+    let fname = path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("proforma.json");
     let title = extract_json_string_field(content, "title").unwrap_or_else(|| fname.to_string());
     let entity = extract_json_string_field(content, "entity").unwrap_or_default();
     let date = extract_json_string_field(content, "date").unwrap_or_default();
-    let sep = if !entity.is_empty() && !date.is_empty() { " — " } else { "" };
+    let sep = if !entity.is_empty() && !date.is_empty() {
+        " — "
+    } else {
+        ""
+    };
 
     let html = format!(
         r#"<!DOCTYPE html>
@@ -990,10 +995,7 @@ fn extract_json_string_field(json: &str, field: &str) -> Option<String> {
 /// For HTML files: injects @page CSS then renders.
 /// For proforma JSON: renders the proforma viewer HTML then renders.
 /// For other types: returns 422 Unprocessable Content.
-async fn get_pdf(
-    State(state): State<AppState>,
-    Query(q): Query<FileQuery>,
-) -> Response {
+async fn get_pdf(State(state): State<AppState>, Query(q): Query<FileQuery>) -> Response {
     let (fs_path, _writable) = match resolve_path(&state.roots, &q.path) {
         Ok(v) => v,
         Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
@@ -1023,12 +1025,24 @@ async fn get_pdf(
             } else {
                 // Fallback when no companion HTML exists
                 let title = extract_json_string_field(&content, "title")
-                    .or_else(|| fs_path.file_stem().and_then(|s| s.to_str()).map(|s| s.to_string()))
+                    .or_else(|| {
+                        fs_path
+                            .file_stem()
+                            .and_then(|s| s.to_str())
+                            .map(|s| s.to_string())
+                    })
                     .unwrap_or_else(|| "Proforma".to_string());
                 let entity = extract_json_string_field(&content, "entity").unwrap_or_default();
                 let date = extract_json_string_field(&content, "date").unwrap_or_default();
-                let fname = fs_path.file_name().and_then(|n| n.to_str()).unwrap_or("proforma.json");
-                let sep = if !entity.is_empty() && !date.is_empty() { " — " } else { "" };
+                let fname = fs_path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or("proforma.json");
+                let sep = if !entity.is_empty() && !date.is_empty() {
+                    " — "
+                } else {
+                    ""
+                };
 
                 let body = format!(
                     r#"<!DOCTYPE html>
