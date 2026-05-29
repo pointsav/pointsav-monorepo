@@ -89,24 +89,81 @@ else
     echo "  → /opt/mediakit/bin/${BINARY}"
 fi
 
-# --- Copy deployment data ----------------------------------------------------
+# --- Copy deployment data + content directories ------------------------------
 
 echo "[3/5] Copying deployment data..."
-DEPLOY_DIRS=( ~/Foundry/deployments/media-${SERVICE}-* ~/Foundry/deployments/${SERVICE}-* )
-FOUND_DEPLOY=0
-for DEPLOY_DIR in "${DEPLOY_DIRS[@]}"; do
-    if [[ -d "$DEPLOY_DIR" ]]; then
-        DEPLOY_NAME="$(basename "$DEPLOY_DIR")"
-        ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/${DEPLOY_NAME}"
-        scp -r $SSH_OPTS "$DEPLOY_DIR/" "${VM}:/opt/mediakit/data/${DEPLOY_NAME}/"
-        echo "  → /opt/mediakit/data/${DEPLOY_NAME}/"
+
+# Service-specific content directory transfers
+case "$SERVICE" in
+    knowledge-documentation)
+        echo "  rsync: content-wiki-documentation (~20M)..."
+        ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/content-wiki-documentation /opt/mediakit/data/knowledge"
+        rsync -az --exclude='.git' --exclude='target' \
+            -e "ssh $SSH_OPTS" \
+            /srv/foundry/clones/project-knowledge/content-wiki-documentation/ \
+            "${VM}:/opt/mediakit/data/content-wiki-documentation/"
+        scp $SSH_OPTS /srv/foundry/citations.yaml "${VM}:/opt/mediakit/data/content-wiki-documentation/citations.yaml"
+        echo "  → /opt/mediakit/data/content-wiki-documentation/"
         FOUND_DEPLOY=1
-        break
-    fi
-done
-if [[ "$FOUND_DEPLOY" -eq 0 ]]; then
-    echo "  (no deployment data directory found for ${SERVICE} — continuing)"
-fi
+        ;;
+    knowledge-corporate)
+        echo "  rsync: content-wiki-corporate (~4M)..."
+        ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/content-wiki-corporate /opt/mediakit/data/knowledge"
+        rsync -az --exclude='.git' \
+            -e "ssh $SSH_OPTS" \
+            /srv/foundry/customer/content-wiki-corporate/ \
+            "${VM}:/opt/mediakit/data/content-wiki-corporate/"
+        echo "  → /opt/mediakit/data/content-wiki-corporate/"
+        FOUND_DEPLOY=1
+        ;;
+    knowledge-projects)
+        echo "  rsync: content-wiki-projects (~4M)..."
+        ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/content-wiki-projects /opt/mediakit/data/knowledge"
+        rsync -az --exclude='.git' \
+            -e "ssh $SSH_OPTS" \
+            /srv/foundry/customer/content-wiki-projects/ \
+            "${VM}:/opt/mediakit/data/content-wiki-projects/"
+        echo "  → /opt/mediakit/data/content-wiki-projects/"
+        FOUND_DEPLOY=1
+        ;;
+    marketing-pointsav)
+        echo "  rsync: marketing-landing-2 (pointsav, ~2.5M)..."
+        ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/marketing-pointsav"
+        rsync -az --exclude='.git' \
+            -e "ssh $SSH_OPTS" \
+            ~/Foundry/deployments/media-marketing-landing-2/ \
+            "${VM}:/opt/mediakit/data/marketing-pointsav/"
+        echo "  → /opt/mediakit/data/marketing-pointsav/"
+        FOUND_DEPLOY=1
+        ;;
+    marketing)
+        echo "  rsync: marketing-landing-1 (woodfine, ~2.5M)..."
+        ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/marketing-woodfine"
+        rsync -az --exclude='.git' \
+            -e "ssh $SSH_OPTS" \
+            ~/Foundry/deployments/media-marketing-landing-1/ \
+            "${VM}:/opt/mediakit/data/marketing-woodfine/"
+        echo "  → /opt/mediakit/data/marketing-woodfine/"
+        FOUND_DEPLOY=1
+        ;;
+    *)
+        DEPLOY_DIRS=( ~/Foundry/deployments/media-${SERVICE}-* ~/Foundry/deployments/${SERVICE}-* )
+        FOUND_DEPLOY=0
+        for DEPLOY_DIR in "${DEPLOY_DIRS[@]}"; do
+            if [[ -d "$DEPLOY_DIR" ]]; then
+                DEPLOY_NAME="$(basename "$DEPLOY_DIR")"
+                ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/${DEPLOY_NAME}"
+                scp -r $SSH_OPTS "$DEPLOY_DIR/" "${VM}:/opt/mediakit/data/${DEPLOY_NAME}/"
+                echo "  → /opt/mediakit/data/${DEPLOY_NAME}/"
+                FOUND_DEPLOY=1
+                break
+            fi
+        done
+        if [[ "$FOUND_DEPLOY" -eq 0 ]]; then
+            echo "  (no deployment data directory found for ${SERVICE} — continuing)"
+        fi
+        ;;
+esac
 
 # --- Copy systemd unit -------------------------------------------------------
 

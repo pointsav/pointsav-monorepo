@@ -1,0 +1,32 @@
+[Unit]
+Description=Woodfine Projects Wiki (app-mediakit-knowledge — projects instance)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=foundry
+Group=foundry
+
+WorkingDirectory=/opt/mediakit/data/knowledge
+
+Environment="WIKI_CONTENT_DIR=/opt/mediakit/data/content-wiki-projects"
+Environment="WIKI_BIND=0.0.0.0:9093"
+Environment="WIKI_SITE_TITLE=Woodfine Projects Wiki"
+Environment="WIKI_SITE_TAGLINE=Real Estate Projects — Physical Architecture and Regional Deployment Strategy"
+Environment="WIKI_BRAND_THEME=woodfine-projects"
+Environment="WIKI_CITATIONS_YAML=/opt/mediakit/data/content-wiki-documentation/citations.yaml"
+Environment="WIKI_STATE_DIR=/opt/mediakit/data/knowledge/state-projects"
+
+ExecStart=/opt/mediakit/bin/app-mediakit-knowledge serve
+
+Restart=on-failure
+RestartSec=5s
+
+NoNewPrivileges=true
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
