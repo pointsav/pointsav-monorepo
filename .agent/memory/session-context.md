@@ -2,6 +2,26 @@
 
 ---
 
+### 2026-05-29 | totebox@project-console | claude-sonnet-4-6
+
+**Done this session:**
+- Editorial routing only. No code changes.
+- Inventoried `.agent/drafts-outbound/` (176 files). Identified 8 project-console drafts at `draft-ready-for-language-pass`: 6 TOPICs (editorial-pipeline-three-stages, customer-tier-catalog-pattern, machine-based-authorization, os-console-platform, input-machine, pointsav-private-network) + 2 GUIDEs (mba-pairing-ceremony, os-console-operator).
+- Prepended outbox message `project-console-20260529-editorial-route` to `totebox@project-editorial` listing all 8 ready drafts with their types and routing destinations.
+- `topic-language-protocol-substrate.md` held back — skeleton only, at `draft-pending-language-pass`.
+- JOURNAL manuscripts (J1–J6) noted but not routed — they follow the separate JOURNAL submission workflow; J5 is on explicit HOLD.
+
+**Pending / carry-forward:**
+- Stage 6 push: waiting Command authorization for force-push (orphan branch divergence). See inbox `command-20260522-console-stage6-orphan-branch`.
+- **Pre-Phase 6 blocker:** doorman port — verify 9080 vs 8011. Check `slm/endpoint.txt` and `pairings.yaml`. Update `app-console-content/src/draft.rs` + ContentCartridge if 9080 is correct.
+- Phase 6: offline mode + Tantivy full-text search.
+- Archive-level NEXT.md (`/srv/foundry/clones/project-console/NEXT.md`) has project-infrastructure contamination — Command decision pending.
+- `topic-language-protocol-substrate.md` needs a substantive writing pass before language gate.
+
+**Operator preferences surfaced:** (none new this session)
+
+---
+
 ### 2026-05-28 | totebox@project-console | claude-sonnet-4-6
 
 **Done this session:**
@@ -55,11 +75,4 @@
 
 ---
 
-### 2026-05-31 | totebox@project-intelligence | claude-sonnet-4-6 (session 12 — apprenticeship prompt audit; Fix A + Fix B deployed)
-
-**Done:** Full audit of shadow capture chain. Fix A: pass diff via `HOOK_DIFF` env var (heredoc was consuming stdin). Fix B: rewrote `APPRENTICE_SYSTEM_PROMPT` to remove Claude-specific jargon; OLMo was preambling before `---` causing 100% escalation. New binary deployed 00:41 UTC. Stage 6 complete by Command (`a0649002`, `aef13fd9`, `b57f9d22`).
-
-**Pending carried forward:** Fix C (GBNF grammar) deferred — now indefinitely deferred per session 14 architecture revision. Yo-Yo 1h test when L4 capacity returns. Stale shim test fields.
-
----
 
