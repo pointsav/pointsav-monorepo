@@ -78,7 +78,7 @@ impl LocalTierClient {
             temperature: req.temperature,
             grammar: grammar_field,
             json_schema: json_schema_field,
-            tools: req.tools.clone(),
+            tools: req.tools.as_ref().map(super::anthropic_tools_to_openai),
         };
         let url = format!(
             "{}/v1/chat/completions",
@@ -139,8 +139,8 @@ struct OpenAiChatRequest {
     /// Absent when `None`.
     #[serde(skip_serializing_if = "Option::is_none")]
     json_schema: Option<serde_json::Value>,
-    /// Anthropic-format tools array. Passed through when the caller
-    /// requested tool-enabled inference. Absent when `None`.
+    /// OpenAI-format tools array (converted from Anthropic format by
+    /// `anthropic_tools_to_openai`). Absent when `None`.
     #[serde(skip_serializing_if = "Option::is_none")]
     tools: Option<serde_json::Value>,
 }
