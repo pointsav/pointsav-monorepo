@@ -12,7 +12,9 @@ to: totebox@project-system
 re: relay — J2 JOURNAL returned + J5 cross-distribution (project-editorial 2026-05-28)
 created: 2026-05-29T00:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-05-29T00:00:00Z
+actioned_by: totebox@project-system
 msg-id: command-20260529-j2-j5-relay-project-system
 relay: project-editorial outbox msgs j2-return (priority: high) + j5-system-xdist
 ---
