@@ -860,6 +860,64 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-intelligence
 to: project-editorial
+re: circuit resilience sprint 0 — 2 new drafts + 1 previously unannounced GUIDE
+created: 2026-05-29T18:00:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260529-circuit-resilience-artifacts
+---
+
+Sprint 0 of the circuit resilience plan (make Tier A the confident primary) produced
+three artifacts staged in `.agent/drafts-outbound/`:
+
+**New this session:**
+
+1. **`TOPIC-topic-doorman-local-inference-circuit.draft.md`** (NEW)
+   Three-tier architecture overview; Tier A as the community-grade primary; OLMo-only policy
+   rationale; circuit breaker state mechanics (Closed/Open/HalfOpen, `opened_for_secs`);
+   the five-defect picture when Tier B has been unavailable for 1,460+ requests; Tier B as
+   optional accelerator. Target: `content-wiki-documentation/topics/`. Bilingual ES sibling
+   required. Bloomberg pass needed.
+
+2. **`GUIDE-guide-local-circuit-tier-a-only.draft.md`** (NEW)
+   Operational guide for running the local AI gateway with Tier B unavailable: verification
+   steps, `SLM_TIER_A_FIRST` env var (planned Sprint 3A — marked as such), performance
+   characteristics, what works vs. what defers, shadow brief and CORPUS extraction behaviour,
+   what happens when Tier B returns. Open question in frontmatter: confirm `SLM_TIER_A_FIRST`
+   var name matches Sprint 3A implementation before finalising. Target: `woodfine-fleet-deployment/
+   cluster-totebox-intelligence/`. No ES sibling required (GUIDE). Bloomberg pass needed.
+
+**Previously staged, not yet announced:**
+
+3. **`GUIDE-guide-activate-anthropic-shim.draft.md`** (STAGED, session 7)
+   Setup guide for the Anthropic Messages API shim — configuring `ANTHROPIC_HOST` in client
+   tools, verifying the Doorman is reachable, understanding model routing. Was staged in
+   session 7 but omitted from the outbox message at that time. Target: same fleet deployment
+   path as the other GUIDEs. No ES sibling. Bloomberg pass needed.
+
+**Also staged (announced in prior outbox message from session 7 — included here for completeness):**
+
+- `GUIDE-guide-goose-local-doorman.draft.md` — Goose setup against local Doorman
+- `GUIDE-guide-post-commit-training-hook.draft.md` — git post-commit shadow capture hook
+
+**SLM-related TOPICs staged earlier (all announced in sprint 4 commit `d39aea32`):**
+
+- `TOPIC-topic-anthropic-gateway-integration.draft.md`
+- `TOPIC-topic-claude-code-sovereign-routing.draft.md`
+- `TOPIC-topic-leapfrog-architecture.draft.md`
+- `TOPIC-topic-monorepo-plan-mapping.draft.md`
+- `TOPIC-topic-tos-training-constraints.draft.md`
+
+All TOPICs require a bilingual ES sibling. All artifacts require a Bloomberg standard pass
+before publication. GUIDEs target `woodfine-fleet-deployment/cluster-totebox-intelligence/`.
+TOPICs target `content-wiki-documentation/topics/`.
+
+— totebox@project-intelligence / 2026-05-29
+
+---
+---
+from: totebox@project-intelligence
+to: project-editorial
 re: 2 GUIDE drafts ready for editorial pass
 created: 2026-05-29T03:40:00Z
 priority: normal
