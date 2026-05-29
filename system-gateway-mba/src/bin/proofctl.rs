@@ -99,8 +99,8 @@ fn main() -> Result<()> {
                     println!("No users registered.");
                 } else {
                     println!(
-                        "{:<20} {:<10} {:<10} {:<6} {}",
-                        "USERNAME", "TENANT", "ROLE", "ACTIVE", "FINGERPRINT"
+                        "{:<20} {:<10} {:<10} {:<6} FINGERPRINT",
+                        "USERNAME", "TENANT", "ROLE", "ACTIVE"
                     );
                     for (fp, name, tenant, role, active) in &users {
                         println!(
@@ -140,8 +140,8 @@ fn main() -> Result<()> {
                     println!("No pending connection requests.");
                 } else {
                     println!(
-                        "{:<12} {:<20} {:<10} {}",
-                        "CODE", "USER", "TENANT", "REQUESTED"
+                        "{:<12} {:<20} {:<10} REQUESTED",
+                        "CODE", "USER", "TENANT"
                     );
                     for (_, code, user, tenant, created) in &pending {
                         println!(
