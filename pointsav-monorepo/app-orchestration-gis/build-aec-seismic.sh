@@ -83,44 +83,77 @@ fi
 mkdir -p "$WORK_DIR"
 echo "Work dir: $WORK_DIR" | tee -a "$LOG"
 
-# ── Step 1 — USGS NSHM 2023 PGA raster (CONUS, 2% in 50 years) ──────────────
+# ── Step 1 — USGS NSHM 2023 PGA shapefile (CONUS, 2% in 50 years) ────────────
 #
 # Source: USGS National Seismic Hazard Model 2023
 # DOI: https://doi.org/10.5066/P9PRVCF1
-# Direct GeoTIFF (PGA, 2%/50yr, site class B/C, CONUS, ~50 MB):
-#   https://earthquake.usgs.gov/static/lfs/nshm/2023/nshm2023_pga_2in50_conus.tif
-# Licence: public domain (US Government)
+# NOTE: The 2023 NSHM ships as shapefiles via ScienceBase (not a GeoTIFF).
+#   The original git-lfs URL (earthquake.usgs.gov/static/lfs/nshm/2023/...)
+#   returned only 111 bytes (a git-lfs pointer stub, not the actual file).
+# ScienceBase child item: https://www.sciencebase.gov/catalog/item/64ff886dd34ed30c2057b4d9
+#   "04. Uniform-hazard ground motion maps for the conterminous U.S."
+# Direct download (BC site class, PGA 2%/5%/10% in 50yr shapefiles, ~59 MB zip):
+#   https://www.sciencebase.gov/catalog/file/get/64ff886dd34ed30c2057b4d9?f=__disk__76%2Ff4%2Fb4%2F76f4b416aadf6f70680106a36acc31714473b4ff
+# Licence: public domain (US Government, CC0)
 
 echo "" | tee -a "$LOG"
-echo "[1/9] USGS NSHM 2023 PGA raster (CONUS, 2%/50yr)" | tee -a "$LOG"
+echo "[1/9] USGS NSHM 2023 PGA shapefile (CONUS, 2%/50yr, ScienceBase)" | tee -a "$LOG"
 
-USGS_TIF="$WORK_DIR/usgs-nshm-pga-us.tif"
-if [[ ! -f "$USGS_TIF" ]]; then
-    curl -L --retry 3 --retry-delay 10 -o "$USGS_TIF" \
-        "https://earthquake.usgs.gov/static/lfs/nshm/2023/nshm2023_pga_2in50_conus.tif" \
-        2>&1 | tee -a "$LOG"
+USGS_ZIP="$WORK_DIR/usgs-nshm-pga-us.zip"
+USGS_GEOJSON="$WORK_DIR/usgs-nshm-pga-us.geojson"
+if [[ ! -f "$USGS_GEOJSON" ]]; then
+    if [[ ! -f "$USGS_ZIP" ]] || ! file "$USGS_ZIP" | grep -qi "zip"; then
+        rm -f "$USGS_ZIP"
+        curl -L --retry 3 --retry-delay 10 \
+            -o "$USGS_ZIP" \
+            "https://www.sciencebase.gov/catalog/file/get/64ff886dd34ed30c2057b4d9?f=__disk__76%2Ff4%2Fb4%2F76f4b416aadf6f70680106a36acc31714473b4ff" \
+            2>&1 | tee -a "$LOG"
+    fi
+    if file "$USGS_ZIP" 2>/dev/null | grep -qi "zip"; then
+        TMP_USGS=$(mktemp -d)
+        unzip -o "$USGS_ZIP" -d "$TMP_USGS" 2>&1 | tee -a "$LOG" || true
+        # The outer zip may contain inner zips; unzip recursively
+        for inner in "$TMP_USGS"/*.zip; do
+            [[ -f "$inner" ]] && unzip -o "$inner" -d "$TMP_USGS" 2>&1 | tee -a "$LOG" || true
+        done
+        # Find the 2%/50yr PGA shapefile (look for *2Pct* or *2pct* or *PGA* shp)
+        SHP=$(find "$TMP_USGS" -name "*2Pct*.shp" -o -name "*2pct*.shp" -o -name "*PGA*.shp" 2>/dev/null | head -1)
+        if [[ -z "$SHP" ]]; then
+            SHP=$(find "$TMP_USGS" -name "*.shp" 2>/dev/null | head -1)
+        fi
+        if [[ -n "$SHP" ]]; then
+            ogr2ogr -f GeoJSON -t_srs EPSG:4326 "$USGS_GEOJSON" "$SHP" \
+                2>&1 | tee -a "$LOG"
+            echo "  Extracted shapefile: $SHP" | tee -a "$LOG"
+        fi
+        rm -rf "$TMP_USGS"
+    else
+        echo "  WARN: USGS ScienceBase download is not a valid zip" | tee -a "$LOG"
+        rm -f "$USGS_ZIP"
+    fi
 fi
-# Validate: a real GeoTIFF starts with II (little-endian) or MM (big-endian) TIFF magic
-if [[ ! -f "$USGS_TIF" ]] || ! file "$USGS_TIF" | grep -qi "TIFF"; then
-    echo "WARN: USGS PGA raster not a valid GeoTIFF (URL may have changed — check https://doi.org/10.5066/P9PRVCF1); US seismic sampling will be skipped" | tee -a "$LOG"
-    rm -f "$USGS_TIF"
+if [[ ! -f "$USGS_GEOJSON" ]]; then
+    echo "WARN: USGS NSHM 2023 shapefile not available — US seismic PGA sampling will be skipped" | tee -a "$LOG"
     SKIP_USGS=1
 else
-    echo "  → $USGS_TIF ($(du -sh "$USGS_TIF" | cut -f1))  ✓" | tee -a "$LOG"
+    FEAT_COUNT=$(python3 -c "import json; d=json.load(open('$USGS_GEOJSON')); print(len(d['features']))" 2>/dev/null || echo "?")
+    echo "  → $USGS_GEOJSON ($FEAT_COUNT features)  ✓" | tee -a "$LOG"
     SKIP_USGS=0
 fi
 
 # ── Step 2 — NRCan 2015 seismic hazard raster (Canada) ───────────────────────
 #
 # Source: Natural Resources Canada 2015 National Building Code seismic hazard
-# URL: https://earthquakescanada.nrcan.gc.ca/hazard-alea/interpolat/2015/
-# Download: Sa(0.0) = PGA, 2%/50yr, Site class C, netCDF or ASCII grid
 # Licence: Open Government Licence – Canada
 #
-# NRCan provides an interpolation web service; for the raster grid use the
-# 2015 NBC zip at:
-#   https://earthquakescanada.nrcan.gc.ca/hazard-alea/interpolat/2015/2015_pga_2p50.csv.zip
-# (CSV grid: lat, lon, pga_g columns)
+# NOTE: The original interpolat/2015/ endpoint returned 3.5 KB corrupt zip.
+# The 5th-Gen grid values are now at NRCan OSTR Open File 7893:
+#   https://ostrnrcan-dostrncan.canada.ca/handle/1845/153282
+# The GEOSCAN record R=297378 is the download gateway:
+#   https://geoscan.nrcan.gc.ca/starweb/geoscan/servlet.starweb?path=geoscan/downloade.web&search1=R=297378
+# If both fail, the NRCan interpolation tool at
+#   https://www.earthquakescanada.nrcan.gc.ca/hazard-alea/interpolat/calc-en.php
+# can generate per-point CSV (manual fallback; not automated here).
 
 echo "" | tee -a "$LOG"
 echo "[2/9] NRCan 2015 seismic PGA grid (Canada, 2%/50yr)" | tee -a "$LOG"
@@ -128,22 +161,30 @@ echo "[2/9] NRCan 2015 seismic PGA grid (Canada, 2%/50yr)" | tee -a "$LOG"
 NRCAN_ZIP="$WORK_DIR/nrcan-seismic-ca.zip"
 NRCAN_CSV="$WORK_DIR/nrcan-pga-2p50.csv"
 if [[ ! -f "$NRCAN_CSV" ]]; then
-    # Re-download only if we don't have a valid zip (a real zip starts with PK magic bytes)
-    if [[ ! -f "$NRCAN_ZIP" ]] || ! file "$NRCAN_ZIP" | grep -qi "zip"; then
+    # Try multiple sources in order
+    NRCAN_URLS=(
+        # GEOSCAN download (R=297378 — OF 7893 5th gen grid values)
+        "https://geoscan.nrcan.gc.ca/starweb/geoscan/servlet.starweb?path=geoscan/downloade.web&search1=R=297378"
+        # Legacy interpolat endpoint (may still work)
+        "https://earthquakescanada.nrcan.gc.ca/hazard-alea/interpolat/2015/2015_pga_2p50.csv.zip"
+    )
+    for url in "${NRCAN_URLS[@]}"; do
+        if [[ ! -f "$NRCAN_ZIP" ]] || ! file "$NRCAN_ZIP" 2>/dev/null | grep -qi "zip"; then
+            rm -f "$NRCAN_ZIP"
+            echo "  Trying NRCan URL: $url" | tee -a "$LOG"
+            curl -L --retry 2 --retry-delay 10 --max-time 120 -o "$NRCAN_ZIP" "$url" 2>&1 | tee -a "$LOG" || true
+        fi
+        file "$NRCAN_ZIP" 2>/dev/null | grep -qi "zip" && break
         rm -f "$NRCAN_ZIP"
-        curl -L --retry 3 --retry-delay 10 -o "$NRCAN_ZIP" \
-            "https://earthquakescanada.nrcan.gc.ca/hazard-alea/interpolat/2015/2015_pga_2p50.csv.zip" \
-            2>&1 | tee -a "$LOG"
-    fi
-    # Validate zip before extracting — URL may return an HTML error page
+    done
+    # Extract CSV from zip
     if file "$NRCAN_ZIP" 2>/dev/null | grep -qi "zip"; then
         unzip -o -j "$NRCAN_ZIP" "*.csv" -d "$WORK_DIR" 2>&1 | tee -a "$LOG" || true
-        # Rename to canonical name (actual filename inside zip may differ)
-        for f in "$WORK_DIR"/2015_pga*.csv "$WORK_DIR"/pga*.csv; do
-            [[ -f "$f" ]] && mv "$f" "$NRCAN_CSV" && break
+        for f in "$WORK_DIR"/2015_pga*.csv "$WORK_DIR"/pga*.csv "$WORK_DIR"/*.csv; do
+            [[ -f "$f" && "$f" != "$NRCAN_CSV" ]] && mv "$f" "$NRCAN_CSV" && break
         done
     else
-        echo "  WARN: NRCAN download is not a valid zip — URL may have changed (file: $(file "$NRCAN_ZIP" 2>/dev/null | cut -d: -f2-))" | tee -a "$LOG"
+        echo "  WARN: NRCan download not a valid zip — CA seismic sampling will be skipped" | tee -a "$LOG"
         rm -f "$NRCAN_ZIP"
     fi
 fi
@@ -248,35 +289,34 @@ PYEOF
 # ── Step 4 — Download ESHM20 EU seismic hazard zones ─────────────────────────
 #
 # Source: European Seismic Hazard Model 2020 (ESHM20)
-# Authors: Woessner et al. / EFEHR Consortium
+# Authors: EFEHR Consortium
 # Licence: CC BY 4.0
-# GeoJSON or Shapefile available at PANGAEA / EFEHR portal:
-#   https://doi.pangaea.de/10.1594/PANGAEA.919310
-#   https://efehr.org/
-# Direct download (shapefile zip):
-#   https://store.pangaea.de/Publications/Woessner-etal_2015/SeismicHazardMap_PGA_10in50.zip
+# Repository: https://gitlab.seismo.ethz.ch/efehr/eshm20
+# Direct download (full repo tarball, ~120 MB):
+#   https://gitlab.seismo.ethz.ch/efehr/eshm20/-/archive/master/eshm20-master.tar.gz
 #
-# This is the PGA 10%/50yr contour map (vector polygon zones, ~5 MB zip).
+# Shapefiles in tarball include PGA 10%/50yr hazard contour polygons.
 # Use PGA hazard contours as categorical zones: <0.05g / 0.05–0.10g / 0.10–0.20g /
 #   0.20–0.40g / >0.40g — five levels mapped to very_low/low/moderate/high/very_high.
 
 echo "" | tee -a "$LOG"
 echo "[4/9] ESHM20 EU seismic hazard zones (CC BY 4.0)" | tee -a "$LOG"
 
-ESHM20_ZIP="$WORK_DIR/eshm20-eu.zip"
+ESHM20_TAR="$WORK_DIR/eshm20-eu.tar.gz"
 ESHM20_GEOJSON="$WORK_DIR/eshm20-eu.geojson"
 if [[ ! -f "$ESHM20_GEOJSON" ]]; then
-    # Primary: PANGAEA download
+    # Primary: EFEHR GitLab tarball (ESHM20 — replaces retired Pangaea ESHM13 URL)
     curl -L --retry 3 --retry-delay 15 \
-        -o "$ESHM20_ZIP" \
-        "https://store.pangaea.de/Publications/Woessner-etal_2015/SeismicHazardMap_PGA_10in50.zip" \
+        -o "$ESHM20_TAR" \
+        "https://gitlab.seismo.ethz.ch/efehr/eshm20/-/archive/master/eshm20-master.tar.gz" \
         2>&1 | tee -a "$LOG" || true
 
-    if [[ -f "$ESHM20_ZIP" && $(stat -c%s "$ESHM20_ZIP") -gt 10000 ]]; then
+    if [[ -f "$ESHM20_TAR" && $(stat -c%s "$ESHM20_TAR") -gt 10000 ]]; then
         TMP_DIR=$(mktemp -d)
-        unzip -o "$ESHM20_ZIP" -d "$TMP_DIR" 2>&1 | tee -a "$LOG"
-        # Find shapefile
-        SHP=$(find "$TMP_DIR" -name "*.shp" | head -1)
+        tar xzf "$ESHM20_TAR" -C "$TMP_DIR" 2>&1 | tee -a "$LOG"
+        # Find shapefile — prefer PGA 10/50 if named; fall back to any .shp
+        SHP=$(find "$TMP_DIR" -name "*PGA*10*50*.shp" | head -1)
+        [[ -z "$SHP" ]] && SHP=$(find "$TMP_DIR" -name "*.shp" | head -1)
         if [[ -n "$SHP" ]]; then
             ogr2ogr -f GeoJSON -t_srs EPSG:4326 "$ESHM20_GEOJSON" "$SHP" \
                 2>&1 | tee -a "$LOG"
@@ -316,14 +356,15 @@ else
     echo "  SKIPPED — ESHM20 data not available" | tee -a "$LOG"
 fi
 
-# ── Step 6 — Download GWL_FCS30 global wetland raster ────────────────────────
+# ── Step 6 — Download GWL_FCS30 wetland raster tiles ─────────────────────────
 #
 # Source: Global Wetland-Land Cover FCS30 (GWL_FCS30)
 # Authors: Liu et al. 2022
 # Licence: CC BY 4.0
 # Zenodo record: https://zenodo.org/records/7340516
-# Direct TIF download (global composite, ~500 MB):
-#   https://zenodo.org/records/7340516/files/GWL_FCS30_2020_global.tif
+#
+# Dataset is distributed as 12 tiled 30°-longitude zip archives (no global composite).
+# Download the tiles covering NA (US+CA) and EU. Build a VRT mosaic for sampling.
 #
 # Classification codes of interest:
 #   100 = Permanent water body
@@ -337,21 +378,63 @@ fi
 # All other values = non-wetland (dry land / urban / agriculture / etc.)
 
 echo "" | tee -a "$LOG"
-echo "[6/9] GWL_FCS30 global wetland raster (CC BY 4.0, Zenodo 7340516)" | tee -a "$LOG"
+echo "[6/9] GWL_FCS30 wetland raster tiles (CC BY 4.0, Zenodo 7340516)" | tee -a "$LOG"
 
-GWL_TIF="$WORK_DIR/gwl-fcs30-global.tif"
-if [[ ! -f "$GWL_TIF" ]]; then
-    curl -L --retry 3 --retry-delay 30 \
-        -o "$GWL_TIF" \
-        "https://zenodo.org/records/7340516/files/GWL_FCS30_2020_global.tif" \
-        2>&1 | tee -a "$LOG"
-fi
-if [[ ! -f "$GWL_TIF" || $(stat -c%s "$GWL_TIF") -lt 1000000 ]]; then
-    echo "WARN: GWL_FCS30 raster not downloaded or too small — wetland sampling will be skipped" | tee -a "$LOG"
-    SKIP_WETLAND=1
-else
-    echo "  → $GWL_TIF ($(du -sh "$GWL_TIF" | cut -f1))  ✓" | tee -a "$LOG"
+GWL_DIR="$WORK_DIR/gwl-tiles"
+GWL_VRT="$WORK_DIR/gwl-fcs30-mosaic.vrt"
+GWL_TIF="$GWL_VRT"  # Step 7 references GWL_TIF; point at mosaic VRT
+mkdir -p "$GWL_DIR"
+
+GWL_TILES=(
+    "GWL_FCS30_2020_W65_W90.zip"   # NA east: eastern US, Maritime Canada
+    "GWL_FCS30_2020_W95_W120.zip"  # NA west: central/western US, BC/Alberta
+    "GWL_FCS30_2020_W35_W60.zip"   # NA northeast: Quebec, Atlantic provinces
+    "GWL_FCS30_2020_E0_E30.zip"    # EU: FR east, DE, NL, Nordics, PL, IT north, GR
+    "GWL_FCS30_2020_W0_W30.zip"    # UK, Ireland, Portugal, western France
+)
+
+GWL_BASE_URL="https://zenodo.org/records/7340516/files"
+GWL_TIFS=()
+
+for TILE in "${GWL_TILES[@]}"; do
+    TILE_ZIP="$GWL_DIR/$TILE"
+    TILE_NAME="${TILE%.zip}"
+    TILE_TIF="$GWL_DIR/${TILE_NAME}.tif"
+    if [[ -f "$TILE_TIF" ]]; then
+        GWL_TIFS+=("$TILE_TIF")
+        echo "  Cached: $TILE_TIF" | tee -a "$LOG"
+        continue
+    fi
+    if [[ ! -f "$TILE_ZIP" ]]; then
+        curl -L --retry 3 --retry-delay 30 \
+            -o "$TILE_ZIP" \
+            "${GWL_BASE_URL}/${TILE}" \
+            2>&1 | tee -a "$LOG" || true
+    fi
+    if [[ -f "$TILE_ZIP" && $(stat -c%s "$TILE_ZIP") -gt 1000000 ]]; then
+        unzip -o "$TILE_ZIP" "*.tif" -d "$GWL_DIR" 2>&1 | tee -a "$LOG"
+        EXTRACTED=$(find "$GWL_DIR" -name "${TILE_NAME}*.tif" | head -1)
+        if [[ -n "$EXTRACTED" ]]; then
+            [[ "$EXTRACTED" != "$TILE_TIF" ]] && mv -f "$EXTRACTED" "$TILE_TIF"
+            GWL_TIFS+=("$TILE_TIF")
+            echo "  → $TILE_TIF ($(du -sh "$TILE_TIF" | cut -f1))  ✓" | tee -a "$LOG"
+        else
+            echo "WARN: no TIF found in $TILE_ZIP" | tee -a "$LOG"
+        fi
+        rm -f "$TILE_ZIP"
+    else
+        echo "WARN: $TILE download failed or too small — skipping tile" | tee -a "$LOG"
+        rm -f "$TILE_ZIP"
+    fi
+done
+
+if [[ ${#GWL_TIFS[@]} -gt 0 ]]; then
+    gdalbuildvrt "$GWL_VRT" "${GWL_TIFS[@]}" 2>&1 | tee -a "$LOG"
+    echo "  → Mosaic VRT: $GWL_VRT (${#GWL_TIFS[@]} tiles)  ✓" | tee -a "$LOG"
     SKIP_WETLAND=0
+else
+    echo "WARN: No GWL_FCS30 tiles downloaded — wetland sampling will be skipped" | tee -a "$LOG"
+    SKIP_WETLAND=1
 fi
 
 # ── Step 7 — Sample wetland class at cluster centroids ───────────────────────
