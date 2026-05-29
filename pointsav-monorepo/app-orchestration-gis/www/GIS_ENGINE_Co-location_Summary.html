@@ -102,6 +102,7 @@
     text-align: center;
     letter-spacing: 0.01em;
     transition: opacity 0.15s;
+    margin-top: 8px;
   }
   .sidebar-print-btn:hover { opacity: 0.85; }
   .sidebar-meta {
@@ -259,14 +260,14 @@ body {
 .cc-mem   { font-size: 5.8pt; color: #999; display: block; margin-bottom: 2pt; }
 
 /* Tier bar */
-.tb { display: flex; height: 5.5pt; border-radius: 1.5pt; overflow: hidden; margin-bottom: 2.5pt; }
+.tb { display: flex; height: 9pt; border-radius: 2pt; overflow: hidden; margin-bottom: 3pt; }
 .tb-1 { background: #1a3a6b; }
 .tb-2 { background: #3d6ea8; }
 .tb-3 { background: #7a9cc5; }
 
 /* Tier counts */
-.tc { display: flex; gap: 6pt; font-size: 5.8pt; color: #666; }
-.tc b { color: #111; font-weight: 700; }
+.tc { display: flex; gap: 7pt; font-size: 6.5pt; color: #555; }
+.tc b { color: #111; font-weight: 800; font-size: 7pt; }
 
 /* EU 2-col mini-grid */
 .eu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3pt; flex: 1; overflow: hidden; }
@@ -305,12 +306,12 @@ body {
   padding: 6pt 8pt;
 }
 .comp-box h4 { font-size: 6.8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5pt; }
-.comp-row { display: flex; align-items: center; gap: 4pt; margin-bottom: 4pt; }
-.comp-lbl { font-size: 6pt; color: #555; min-width: 1.4in; }
-.comp-track { flex: 1; height: 7pt; background: #eee; border-radius: 1.5pt; overflow: hidden; }
-.comp-fill  { height: 100%; border-radius: 1.5pt; background: #1a3a6b; }
+.comp-row { display: flex; align-items: center; gap: 4pt; margin-bottom: 6pt; }
+.comp-lbl { font-size: 6.5pt; color: #444; min-width: 1.4in; font-weight: 600; }
+.comp-track { flex: 1; height: 11pt; background: #e4e8ee; border-radius: 2pt; overflow: hidden; }
+.comp-fill  { height: 100%; border-radius: 2pt; background: #1a3a6b; }
 .comp-fill.s { background: #3d6ea8; }
-.comp-pct  { font-size: 6.5pt; font-weight: 700; width: 1.1in; text-align: right; white-space: nowrap; }
+.comp-pct  { font-size: 7pt; font-weight: 800; width: 1.1in; text-align: right; white-space: nowrap; }
 .comp-note { font-size: 5.5pt; color: #999; line-height: 1.4; margin-top: 3pt; }
 
 /* Bottom band: pipeline + research */
@@ -385,21 +386,21 @@ body {
   letter-spacing: 0.06em;
 }
 
-/* Invest thesis callout inside pipeline-wrap */
-.invest-thesis {
-  border-left: 3pt solid #7c1d2e;
-  background: #fdf4f5;
+/* Data note callout inside pipeline-wrap */
+.data-note {
+  border-left: 3pt solid #1a3a6b;
+  background: #f0f4f8;
   border-radius: 0 2pt 2pt 0;
   padding: 5pt 7pt;
   margin-top: 5pt;
   flex-shrink: 0;
 }
-.invest-thesis p {
+.data-note p {
   font-size: 6pt;
-  color: #3d1010;
+  color: #333;
   line-height: 1.5;
 }
-.invest-thesis p strong { color: #111; }
+.data-note p strong { color: #111; }
 
 /* Research box */
 .res-box {
@@ -432,7 +433,8 @@ body {
   <!-- ── Sidebar (screen only) ── -->
   <aside class="toc-sidebar">
     <a href="/research.html" class="back-link">← Research Papers</a>
-    <a href="/" class="back-link">← Back to Map</a>
+    <button class="sidebar-print-btn" onclick="window.print()">Print / Save PDF</button>
+    <hr class="toc-divider">
     <div class="toc-label">Contents</div>
     <nav class="toc">
       <ul>
@@ -444,8 +446,7 @@ body {
       </ul>
     </nav>
     <hr class="toc-divider">
-    <button class="sidebar-print-btn" onclick="window.print()">Print / Save PDF</button>
-    <div class="sidebar-meta">Phase 22 · May 2026<br>Landscape US Letter</div>
+    <div class="sidebar-meta">v0.3 · May 2026</div>
   </aside>
 
   <!-- ── Document main ── -->
@@ -458,7 +459,7 @@ body {
     <div class="pg-hd">
       <div class="org">Woodfine Management Corp.</div>
       <div class="ttl">Retail Co-location Engine — Coverage Portfolio</div>
-      <div class="meta">PointSav GIS Platform · Phase 22 · 29 May 2026<br>Page 1 of 2</div>
+      <div class="meta">PointSav GIS Platform · v0.3 · 29 May 2026<br>Page 1 of 2</div>
     </div>
 
     <div class="stag" style="margin-bottom:3pt">
@@ -650,7 +651,7 @@ body {
     <div class="pg-hd">
       <div class="org">Woodfine Management Corp.</div>
       <div class="ttl">Retail Co-location Engine — Methodology &amp; Research Validation</div>
-      <div class="meta">PointSav GIS Platform · Phase 22 · 29 May 2026<br>Page 2 of 2</div>
+      <div class="meta">PointSav GIS Platform · v0.3 · 29 May 2026<br>Page 2 of 2</div>
     </div>
 
     <!-- §2 KPIs + §3 T2 composition -->
@@ -746,8 +747,8 @@ body {
 
         </div><!-- /pipeline-grid -->
 
-        <div class="invest-thesis">
-          <p><strong>Investment rationale:</strong> The cluster index is derived entirely from open-licence inputs — OpenStreetMap, Kontur Population (CC BY 4.0), US Census LODES, GISCO LAU2, StatCan. No proprietary mobility panel is required. SafeGraph samples only 7.5% of US devices with documented demographic skew (Li et al. 2024); this platform produces a supply-side location signal available before any demand data is commissioned, at a fraction of the cost, across 18 countries simultaneously.</p>
+        <div class="data-note">
+          <p><strong>Open-data advantage:</strong> The cluster index is derived entirely from open-licence inputs — OpenStreetMap, Kontur Population (CC BY 4.0), US Census LODES, GISCO LAU2, StatCan. No proprietary mobility panel is required. The pipeline produces a supply-side location signal available before any demand data is commissioned, across 18 countries simultaneously.</p>
         </div>
       </div>
 
@@ -770,7 +771,7 @@ body {
     </div><!-- /p2-bot -->
 
     <div class="pg-ft">
-      <span>Source: PointSav GIS Platform · gis.woodfinegroup.com · Phase 22 · Data: OpenStreetMap (ODbL), Kontur Population (CC BY 4.0), US Census LODES 2021, GISCO LAU2 2021, StatCan 2021</span>
+      <span>Source: PointSav GIS Platform · gis.woodfinegroup.com · Data: OpenStreetMap (ODbL), Kontur Population (CC BY 4.0), US Census LODES 2021, GISCO LAU2 2021, StatCan 2021</span>
       <span>All figures preliminary · Working papers in preparation for intended submission · CC BY 4.0</span>
     </div>
 
@@ -785,7 +786,7 @@ body {
   Woodfine Management Corp. &nbsp;·&nbsp; New York, New York &nbsp;·&nbsp;
   <a href="/">gis.woodfinegroup.com</a> &nbsp;·&nbsp;
   <a href="/research.html">Research Papers</a> &nbsp;·&nbsp;
-  Phase 22 · May 2026
+  v0.3 · May 2026
 </div>
 
 </body>
