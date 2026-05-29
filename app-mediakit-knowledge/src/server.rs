@@ -2288,6 +2288,45 @@ fn wiki_chrome(
                 }
                 div.mobile-nav-overlay #mobile-nav-overlay aria-hidden="true" {}
 
+                // Article-actions tab bar (wiki_chrome only — not home_chrome or chrome)
+                nav.article-tabs aria-label="Article actions" {
+                    div.article-tabs__left {
+                        a.article-tab.article-tab--article.article-tab--active
+                            href={ "/wiki/" (slug) }
+                            aria-current="page"
+                        { "Article" }
+                        a.article-tab.article-tab--talk
+                            href={ "/talk/" (slug) }
+                        { "Talk" }
+                    }
+                    div.article-tabs__right {
+                        a.article-tab.article-tab--read
+                            href={ "/wiki/" (slug) }
+                        { "Read" }
+                        a.article-tab.article-tab--edit
+                            href={ "/wiki/" (slug) "?action=edit" }
+                            accesskey="e"
+                        { "Edit" }
+                        a.article-tab.article-tab--history
+                            href={ "/history/" (slug) }
+                            accesskey="h"
+                        { "History" }
+                        details.tools-dropdown {
+                            summary.article-tab {
+                                "Tools "
+                                span.tools-caret { "▾" }
+                            }
+                            ul.tools-menu {
+                                li { a href={ "/special/cite/" (slug) } { "Cite this page" } }
+                                li { a href={ "/wiki/" (slug) "?oldid=HEAD" } { "Permanent link" } }
+                                li { a href={ "/wiki/" (slug) "?action=print" } { "Printable version" } }
+                                li { a href={ "/special/pageinfo/" (slug) } { "Page information" } }
+                                li { a href={ "/special/whatlinkshere/" (slug) } { "What links here" } }
+                            }
+                        }
+                    }
+                }
+
                 // Article layout: sidebar + article body (two-column shell)
                 div.shell {
 
