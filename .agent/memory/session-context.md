@@ -5,59 +5,49 @@ a fourth entry is added.
 
 ---
 
-## 2026-05-29 session 9 | Totebox | claude-code (Sonnet 4.6)
+## 2026-05-29 session 9+10 | Totebox | claude-code (Sonnet 4.6)
 
 **Done this session:**
-- Committed session 8 work (J4 v0.3 + vm-mediakit boot fix) from prior conversation that
-  ran out of context.
-- Fixed `provision-vm-mediakit.sh` daemon mode: replaced mutually-exclusive `-nographic` with
-  `-display none -serial none` when using `-daemonize` (commit 539e8494).
-- Booted vm-mediakit on GCP TCG: QEMU PID 3949093. Running ~35+ min; cloud-init apt-get
-  install still completing over SLIRP NAT on TCG (expected ~60+ min total). SSH banner
-  timeout: TCP connects (SLIRP ACK) but sshd not yet responding.
-- Wrote JOURNAL J4 §4 (Implementation) + §5 (Evaluation) with empirical WireGuard benchmarks
-  on GCP e2-standard-8 (commit 149a8b39); bumped to v0.3.
-- Resolved both [CITATION NEEDED] placeholders via internet research (commit b3e8190a):
-  - Birge-Lee et al. 2024 "Global BGP Attacks" (DOI 10.1007/978-3-031-85960-1_14) replaces
-    fabricated [Cameron et al. 2019]
-  - Mackey et al. 2020 "WireGuard vs. OpenVPN" (DOI 10.1145/3374664.3379532) for latency
-- Expanded §4.5 with full daemon loop + event detection + signal handling + JSONL log format
-  spec; added §5.5 performance comparison table vs. Mackey et al. 2020 (commit 2a79e728).
-- J4 now at v0.4 (~8,100 words; target 9,000). Sent to project-editorial outbox for §4–§5
-  language pass + `forbidden_terms_cleared` verification (commit a8e6c4ce).
-- Flagged two misrouted project-editorial messages in inbox to Command Session for re-routing.
-- Cleaned up NEXT.md: struck completed vm-mediakit prerequisites; removed duplicate TOPIC+GUIDE
-  section; marked J4 inbox message actioned.
-- Updated artifact-registry.md and journal-artifact-discipline.md to reflect J4 v0.4 state.
+- Switched vm-mediakit base image from Debian 12 to Ubuntu 24.04 (glibc 2.39 required by
+  all host-compiled Rust binaries; Debian 12 only has 2.36 — would segfault on load).
+- Booted Ubuntu 24.04 QEMU/TCG VM (PID 4113435). cloud-init completed at guest t=504s.
+  SSH confirmed working: kernel 6.8.0-117-generic, glibc 2.39, user foundry.
+- Fixed `migrate-service-to-vm.sh`: SCP_OPTS uppercase -P 10022; tar pipe replaces rsync
+  (rsync not in Ubuntu minimal); WorkingDirectory creation before systemctl enable; curl
+  double-output bug (removed || echo "000"); port-suffixed tmp path prevents binary race;
+  smoke test curl non-fatal + 60s timeout for TCG.
+- Created 7 systemd unit files in infrastructure/systemd/ for vm-mediakit:
+  local-proofreader, local-knowledge-documentation, local-knowledge-corporate,
+  local-knowledge-projects, local-marketing-pointsav, local-marketing, local-bim-orchestration.
+  All use User=foundry, 0.0.0.0:PORT binds.
+- Migrated 6/8 services into vm-mediakit (all originals still running on host, no DNS changes):
+  proofreader (9092) ✓ · knowledge-documentation (9090) ✓ HTTP 200 · knowledge-corporate
+  (9095) ✓ HTTP 200 · knowledge-projects (9093) ✓ HTTP 200 · marketing-pointsav (9101) ✓
+  HTTP 200 · marketing/woodfine (9102) ✓ HTTP 200.
+- Installed nginx/1.24.0 and build-essential in Ubuntu VM.
+- Sent status update to Command Session outbox: bim-orch blocked on service-fs.
 
 **Commits this session:**
-- `539e8494` — fix(vm): provision-vm-mediakit daemon mode QEMU display args
-- `149a8b39` — feat(journal): J4 v0.3 — §4 Implementation + §5 Evaluation empirical benchmarks
-- `d6cef558` — chore(outbox): J4 v0.3 handoff to project-editorial
-- `cbc1fc01` — chore(registry): J4 v0.3 status
-- `4cef97af` — chore(housekeeping): inbox + NEXT.md cleanup
-- `223cd3a0` — feat(journal): J4 v0.4 citation rename (Birge-Lee + Mackey)
-- `b3e8190a` — chore(journal): J4 v0.4 content — version bump + citations
-- `952b2b09` — chore(outbox): J4 v0.4 editorial handoff updated
-- `80cbb8a4` — chore(registry): J4 v0.4 file ref + blockers
-- `a8e6c4ce` — chore(outbox): flag misrouted messages to Command Session
-- `2a79e728` — feat(journal): J4 §4.5 full daemon + §5.5 comparison table; ~8100 words
+- `96ae4c77` — fix(vm-mediakit): minimal cloud-init — remove package stanza; serial log
+- `a52a9cca` — feat(vm-mediakit): VM-adapted unit files + migration script content rsync
+- `a23f3d82` — fix(vm-mediakit): use tar pipe instead of rsync for content dirs
+- `11acd012` — fix(vm-mediakit): Ubuntu 24.04 base image — glibc 2.39 required
+- `2e325dea` — fix(vm-mediakit): smoke test curl 000 double-output bug
+- `dd0bd69d` — fix(vm-migrate): port-suffixed tmp path prevents binary race; smoke test non-fatal
+- `4be18e37` — chore(vm-mediakit): session 9 status — 6/8 services active; bim-orch blocked
 
 **Pending / carry-forward:**
-- vm-mediakit SSH — cloud-init still running on TCG (PID 3949093); retry SSH after ~60 min
-  total uptime. TCP connects (port 10022 SLIRP ACK) but sshd not yet responding.
-- Service migration (once SSH up): service-fs → proofreader → knowledge-* → marketing-*
-  → bim-orchestration. `migrate-service-to-vm.sh` is ready.
-- service-fs migration blocked on Command Session promoting project-data's 23 commits.
-- system-core + system-ledger install — pending project-system reading outbox
-- system-* P0 fixes — pending project-system (outbox sent)
-- J4 final gates: ORCID IDs (operator); §4–§5 language pass at project-editorial; word count
-  ~8,100 vs 9,000 target (~900 words short — §4.5 or §6 expandable)
-- Operator decision: AArch64 GCP C4A vs Firecracker x86_64 for Phase 3 seL4
-- Q2–Q5 operator decisions still open
-- 11 TOPIC pairs + 3 GUIDEs in drafts-outbound awaiting project-editorial pickup
-- Stage 6 from Command Session — 7 commits ahead of origin/main this session
-- Cargo.lock modified pre-session, NOT committed
+- service-fs migration (port 9100) — BLOCKED: Command Session must promote project-data's
+  23 commits. Status update sent to command@claude-code outbox.
+- bim-orchestration migration (port 9096) — BLOCKED on service-fs in VM.
+- system-core + system-ledger install — pending project-system reading outbox.
+- system-* P0 fixes — pending project-system (outbox sent).
+- J4 final gates: ORCID IDs (operator); §4–§5 language pass at project-editorial.
+- Operator decision: AArch64 GCP C4A vs Firecracker x86_64 for Phase 3 seL4.
+- Q2–Q5 operator decisions still open.
+- 11 TOPIC pairs + 3 GUIDEs in drafts-outbound awaiting project-editorial pickup.
+- Stage 6 from Command Session (commits ahead of origin/main).
+- Cargo.lock modified pre-session, NOT committed.
 
 **Operator preferences surfaced:**
 - (no new preferences this session)
