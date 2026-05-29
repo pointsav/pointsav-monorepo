@@ -227,11 +227,12 @@ body {
 
 .region-grid {
   display: grid;
-  grid-template-columns: 2.75fr 0.95fr 3.15fr 1.5fr;
-  gap: 7pt;
+  grid-template-columns: 1.18fr 2fr;
+  gap: 8pt;
   flex: 1;
   overflow: hidden;
 }
+.region-col { display: flex; flex-direction: column; gap: 5pt; overflow: hidden; }
 .region { display: flex; flex-direction: column; gap: 4pt; overflow: hidden; }
 .region-hd {
   color: #fff;
@@ -469,171 +470,176 @@ body {
 
     <div class="region-grid">
 
-      <!-- ── NORTH AMERICA ──────────────────────────────────────────── -->
-      <div class="region">
-        <div class="region-hd" style="background:#1a3a6b">North America &nbsp;·&nbsp; 3,765 clusters</div>
+      <!-- ── LEFT COLUMN: AMERICAS + UK ──────────────────────────────── -->
+      <div class="region-col">
 
-        <div class="cc">
-          <div class="cc-top">
-            <div><span class="cc-name">United States</span><span class="cc-iso">US</span></div>
-            <span class="cc-count">3,104</span>
+        <div class="region">
+          <div class="region-hd" style="background:#1a3a6b">North America &nbsp;·&nbsp; 3,765 clusters</div>
+
+          <div class="cc">
+            <div class="cc-top">
+              <div><span class="cc-name">United States</span><span class="cc-iso">US</span></div>
+              <span class="cc-count">3,104</span>
+            </div>
+            <span class="cc-mem">10,011 anchor members</span>
+            <div class="tb">
+              <div class="tb-1" style="width:28.6%"></div>
+              <div class="tb-2" style="width:57.3%"></div>
+              <div class="tb-3" style="width:14.1%"></div>
+            </div>
+            <div class="tc"><span>T1 <b>889</b></span><span>T2 <b>1,779</b></span><span>T3 <b>436</b></span></div>
           </div>
-          <span class="cc-mem">10,011 anchor members</span>
-          <div class="tb">
-            <div class="tb-1" style="width:28.6%"></div>
-            <div class="tb-2" style="width:57.3%"></div>
-            <div class="tb-3" style="width:14.1%"></div>
+
+          <div class="cc">
+            <div class="cc-top">
+              <div><span class="cc-name">Canada</span><span class="cc-iso">CA</span></div>
+              <span class="cc-count">375</span>
+            </div>
+            <span class="cc-mem">1,168 anchor members</span>
+            <div class="tb">
+              <div class="tb-1" style="width:17.1%"></div>
+              <div class="tb-2" style="width:75.5%"></div>
+              <div class="tb-3" style="width:7.4%"></div>
+            </div>
+            <div class="tc"><span>T1 <b>64</b></span><span>T2 <b>283</b></span><span>T3 <b>28</b></span></div>
           </div>
-          <div class="tc"><span>T1 <b>889</b></span><span>T2 <b>1,779</b></span><span>T3 <b>436</b></span></div>
+
+          <div class="cc">
+            <div class="cc-top">
+              <div><span class="cc-name">Mexico</span><span class="cc-iso">MX</span></div>
+              <span class="cc-count">286</span>
+            </div>
+            <span class="cc-mem">1,028 anchor members</span>
+            <div class="tb">
+              <div class="tb-1" style="width:23.8%"></div>
+              <div class="tb-2" style="width:16.8%"></div>
+              <div class="tb-3" style="width:59.4%"></div>
+            </div>
+            <div class="tc"><span>T1 <b>68</b></span><span>T2 <b>48</b></span><span>T3 <b>170</b></span></div>
+          </div>
         </div>
 
-        <div class="cc">
-          <div class="cc-top">
-            <div><span class="cc-name">Canada</span><span class="cc-iso">CA</span></div>
-            <span class="cc-count">375</span>
+        <div class="region">
+          <div class="region-hd" style="background:#003153">United Kingdom &nbsp;·&nbsp; 457 clusters</div>
+          <div class="cc">
+            <div class="cc-top">
+              <div><span class="cc-name">Great Britain</span><span class="cc-iso">GB</span></div>
+              <span class="cc-count">457</span>
+            </div>
+            <span class="cc-mem">3,543 anchor members</span>
+            <div class="tb">
+              <div class="tb-1" style="width:4.8%"></div>
+              <div class="tb-2" style="width:87.5%"></div>
+              <div class="tb-3" style="width:7.7%"></div>
+            </div>
+            <div class="tc"><span>T1 <b>22</b></span><span>T2 <b>400</b></span><span>T3 <b>35</b></span></div>
           </div>
-          <span class="cc-mem">1,168 anchor members</span>
-          <div class="tb">
-            <div class="tb-1" style="width:17.1%"></div>
-            <div class="tb-2" style="width:75.5%"></div>
-            <div class="tb-3" style="width:7.4%"></div>
-          </div>
-          <div class="tc"><span>T1 <b>64</b></span><span>T2 <b>283</b></span><span>T3 <b>28</b></span></div>
         </div>
 
-        <div class="cc">
-          <div class="cc-top">
-            <div><span class="cc-name">Mexico</span><span class="cc-iso">MX</span></div>
-            <span class="cc-count">286</span>
-          </div>
-          <span class="cc-mem">1,028 anchor members</span>
-          <div class="tb">
-            <div class="tb-1" style="width:23.8%"></div>
-            <div class="tb-2" style="width:16.8%"></div>
-            <div class="tb-3" style="width:59.4%"></div>
-          </div>
-          <div class="tc"><span>T1 <b>68</b></span><span>T2 <b>48</b></span><span>T3 <b>170</b></span></div>
-        </div>
-      </div>
+      </div><!-- /region-col left -->
 
-      <!-- ── UNITED KINGDOM ──────────────────────────────────────────── -->
-      <div class="region">
-        <div class="region-hd" style="background:#003153">United Kingdom &nbsp;·&nbsp; 457</div>
-        <div class="cc grow">
-          <div class="cc-top">
-            <div><span class="cc-name">Great Britain</span><span class="cc-iso">GB</span></div>
-            <span class="cc-count">457</span>
-          </div>
-          <span class="cc-mem">3,543 anchor members</span>
-          <div class="tb">
-            <div class="tb-1" style="width:4.8%"></div>
-            <div class="tb-2" style="width:87.5%"></div>
-            <div class="tb-3" style="width:7.7%"></div>
-          </div>
-          <div class="tc"><span>T1 <b>22</b></span><span>T2 <b>400</b></span><span>T3 <b>35</b></span></div>
-        </div>
-      </div>
+      <!-- ── RIGHT COLUMN: CONTINENTAL EUROPE + NORDIC ──────────────── -->
+      <div class="region-col">
 
-      <!-- ── CONTINENTAL EUROPE ──────────────────────────────────────── -->
-      <div class="region">
-        <div class="region-hd" style="background:#5c1f1f">Continental Europe &nbsp;·&nbsp; 2,111 clusters</div>
-        <div class="eu-grid">
+        <div class="region">
+          <div class="region-hd" style="background:#5c1f1f">Continental Europe &nbsp;·&nbsp; 2,111 clusters</div>
+          <div class="eu-grid">
 
-          <div class="cc">
-            <div class="cc-top"><div><span class="cc-name">Germany</span><span class="cc-iso">DE</span></div><span class="cc-count">722</span></div>
-            <div class="tb"><div class="tb-1" style="width:31.4%"></div><div class="tb-2" style="width:46.8%"></div><div class="tb-3" style="width:21.7%"></div></div>
-            <div class="tc"><span>T1 <b>227</b></span><span>T2 <b>338</b></span><span>T3 <b>157</b></span></div>
-          </div>
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Germany</span><span class="cc-iso">DE</span></div><span class="cc-count">722</span></div>
+              <div class="tb"><div class="tb-1" style="width:31.4%"></div><div class="tb-2" style="width:46.8%"></div><div class="tb-3" style="width:21.7%"></div></div>
+              <div class="tc"><span>T1 <b>227</b></span><span>T2 <b>338</b></span><span>T3 <b>157</b></span></div>
+            </div>
 
-          <div class="cc">
-            <div class="cc-top"><div><span class="cc-name">France</span><span class="cc-iso">FR</span></div><span class="cc-count">624</span></div>
-            <div class="tb"><div class="tb-1" style="width:39.6%"></div><div class="tb-2" style="width:25.8%"></div><div class="tb-3" style="width:34.6%"></div></div>
-            <div class="tc"><span>T1 <b>247</b></span><span>T2 <b>161</b></span><span>T3 <b>216</b></span></div>
-          </div>
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">France</span><span class="cc-iso">FR</span></div><span class="cc-count">624</span></div>
+              <div class="tb"><div class="tb-1" style="width:39.6%"></div><div class="tb-2" style="width:25.8%"></div><div class="tb-3" style="width:34.6%"></div></div>
+              <div class="tc"><span>T1 <b>247</b></span><span>T2 <b>161</b></span><span>T3 <b>216</b></span></div>
+            </div>
 
-          <div class="cc">
-            <div class="cc-top"><div><span class="cc-name">Spain</span><span class="cc-iso">ES</span></div><span class="cc-count">218</span></div>
-            <div class="tb"><div class="tb-1" style="width:28.4%"></div><div class="tb-2" style="width:29.4%"></div><div class="tb-3" style="width:42.2%"></div></div>
-            <div class="tc"><span>T1 <b>62</b></span><span>T2 <b>64</b></span><span>T3 <b>92</b></span></div>
-          </div>
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Spain</span><span class="cc-iso">ES</span></div><span class="cc-count">218</span></div>
+              <div class="tb"><div class="tb-1" style="width:28.4%"></div><div class="tb-2" style="width:29.4%"></div><div class="tb-3" style="width:42.2%"></div></div>
+              <div class="tc"><span>T1 <b>62</b></span><span>T2 <b>64</b></span><span>T3 <b>92</b></span></div>
+            </div>
 
-          <div class="cc">
-            <div class="cc-top"><div><span class="cc-name">Italy</span><span class="cc-iso">IT</span></div><span class="cc-count">177</span></div>
-            <div class="tb"><div class="tb-1" style="width:24.3%"></div><div class="tb-2" style="width:19.8%"></div><div class="tb-3" style="width:55.9%"></div></div>
-            <div class="tc"><span>T1 <b>43</b></span><span>T2 <b>35</b></span><span>T3 <b>99</b></span></div>
-          </div>
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Italy</span><span class="cc-iso">IT</span></div><span class="cc-count">177</span></div>
+              <div class="tb"><div class="tb-1" style="width:24.3%"></div><div class="tb-2" style="width:19.8%"></div><div class="tb-3" style="width:55.9%"></div></div>
+              <div class="tc"><span>T1 <b>43</b></span><span>T2 <b>35</b></span><span>T3 <b>99</b></span></div>
+            </div>
 
-          <div class="cc">
-            <div class="cc-top"><div><span class="cc-name">Poland</span><span class="cc-iso">PL</span></div><span class="cc-count">164</span></div>
-            <div class="tb"><div class="tb-1" style="width:32.3%"></div><div class="tb-2" style="width:58.5%"></div><div class="tb-3" style="width:9.1%"></div></div>
-            <div class="tc"><span>T1 <b>53</b></span><span>T2 <b>96</b></span><span>T3 <b>15</b></span></div>
-          </div>
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Poland</span><span class="cc-iso">PL</span></div><span class="cc-count">164</span></div>
+              <div class="tb"><div class="tb-1" style="width:32.3%"></div><div class="tb-2" style="width:58.5%"></div><div class="tb-3" style="width:9.1%"></div></div>
+              <div class="tc"><span>T1 <b>53</b></span><span>T2 <b>96</b></span><span>T3 <b>15</b></span></div>
+            </div>
 
-          <div class="cc">
-            <div class="cc-top"><div><span class="cc-name">Netherlands</span><span class="cc-iso">NL</span></div><span class="cc-count">76</span></div>
-            <div class="tb"><div class="tb-1" style="width:25.0%"></div><div class="tb-2" style="width:25.0%"></div><div class="tb-3" style="width:50.0%"></div></div>
-            <div class="tc"><span>T1 <b>19</b></span><span>T2 <b>19</b></span><span>T3 <b>38</b></span></div>
-          </div>
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Netherlands</span><span class="cc-iso">NL</span></div><span class="cc-count">76</span></div>
+              <div class="tb"><div class="tb-1" style="width:25.0%"></div><div class="tb-2" style="width:25.0%"></div><div class="tb-3" style="width:50.0%"></div></div>
+              <div class="tc"><span>T1 <b>19</b></span><span>T2 <b>19</b></span><span>T3 <b>38</b></span></div>
+            </div>
 
-          <div class="cc">
-            <div class="cc-top"><div><span class="cc-name">Austria</span><span class="cc-iso">AT</span></div><span class="cc-count">64</span></div>
-            <div class="tb"><div class="tb-1" style="width:32.8%"></div><div class="tb-2" style="width:12.5%"></div><div class="tb-3" style="width:54.7%"></div></div>
-            <div class="tc"><span>T1 <b>21</b></span><span>T2 <b>8</b></span><span>T3 <b>35</b></span></div>
-          </div>
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Austria</span><span class="cc-iso">AT</span></div><span class="cc-count">64</span></div>
+              <div class="tb"><div class="tb-1" style="width:32.8%"></div><div class="tb-2" style="width:12.5%"></div><div class="tb-3" style="width:54.7%"></div></div>
+              <div class="tc"><span>T1 <b>21</b></span><span>T2 <b>8</b></span><span>T3 <b>35</b></span></div>
+            </div>
 
-          <div class="cc">
-            <div class="cc-top"><div><span class="cc-name">Portugal</span><span class="cc-iso">PT</span></div><span class="cc-count">41</span></div>
-            <div class="tb"><div class="tb-1" style="width:19.5%"></div><div class="tb-2" style="width:51.2%"></div><div class="tb-3" style="width:29.3%"></div></div>
-            <div class="tc"><span>T1 <b>8</b></span><span>T2 <b>21</b></span><span>T3 <b>12</b></span></div>
-          </div>
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Portugal</span><span class="cc-iso">PT</span></div><span class="cc-count">41</span></div>
+              <div class="tb"><div class="tb-1" style="width:19.5%"></div><div class="tb-2" style="width:51.2%"></div><div class="tb-3" style="width:29.3%"></div></div>
+              <div class="tc"><span>T1 <b>8</b></span><span>T2 <b>21</b></span><span>T3 <b>12</b></span></div>
+            </div>
 
-          <div class="cc">
-            <div class="cc-top"><div><span class="cc-name">Greece</span><span class="cc-iso">GR</span></div><span class="cc-count">22</span></div>
-            <div class="tb"><div class="tb-1" style="width:22.7%"></div><div class="tb-2" style="width:50.0%"></div><div class="tb-3" style="width:27.3%"></div></div>
-            <div class="tc"><span>T1 <b>5</b></span><span>T2 <b>11</b></span><span>T3 <b>6</b></span></div>
-          </div>
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Greece</span><span class="cc-iso">GR</span></div><span class="cc-count">22</span></div>
+              <div class="tb"><div class="tb-1" style="width:22.7%"></div><div class="tb-2" style="width:50.0%"></div><div class="tb-3" style="width:27.3%"></div></div>
+              <div class="tc"><span>T1 <b>5</b></span><span>T2 <b>11</b></span><span>T3 <b>6</b></span></div>
+            </div>
 
-          <div class="cc">
-            <div class="cc-top"><div><span class="cc-name">Iceland</span><span class="cc-iso">IS</span></div><span class="cc-count">3</span></div>
-            <div class="tb"><div class="tb-2" style="width:66.7%"></div><div class="tb-3" style="width:33.3%"></div></div>
-            <div class="tc"><span>T1 <b>0</b></span><span>T2 <b>2</b></span><span>T3 <b>1</b></span></div>
-          </div>
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Iceland</span><span class="cc-iso">IS</span></div><span class="cc-count">3</span></div>
+              <div class="tb"><div class="tb-2" style="width:66.7%"></div><div class="tb-3" style="width:33.3%"></div></div>
+              <div class="tc"><span>T1 <b>0</b></span><span>T2 <b>2</b></span><span>T3 <b>1</b></span></div>
+            </div>
 
-        </div><!-- /eu-grid -->
-      </div>
-
-      <!-- ── NORDIC ──────────────────────────────────────────────────── -->
-      <div class="region">
-        <div class="region-hd" style="background:#1a4a2e">Nordic &nbsp;·&nbsp; 160 clusters</div>
-
-        <div class="cc">
-          <div class="cc-top"><div><span class="cc-name">Sweden</span><span class="cc-iso">SE</span></div><span class="cc-count">28</span></div>
-          <span class="cc-mem">86 members</span>
-          <div class="tb"><div class="tb-1" style="width:39.3%"></div><div class="tb-2" style="width:28.6%"></div><div class="tb-3" style="width:32.1%"></div></div>
-          <div class="tc"><span>T1 <b>11</b></span><span>T2 <b>8</b></span><span>T3 <b>9</b></span></div>
+          </div><!-- /eu-grid -->
         </div>
 
-        <div class="cc">
-          <div class="cc-top"><div><span class="cc-name">Denmark</span><span class="cc-iso">DK</span></div><span class="cc-count">67</span></div>
-          <span class="cc-mem">259 members</span>
-          <div class="tb"><div class="tb-1" style="width:6.0%"></div><div class="tb-2" style="width:92.5%"></div><div class="tb-3" style="width:1.5%"></div></div>
-          <div class="tc"><span>T1 <b>4</b></span><span>T2 <b>62</b></span><span>T3 <b>1</b></span></div>
+        <div class="region">
+          <div class="region-hd" style="background:#1a4a2e">Nordic &nbsp;·&nbsp; 160 clusters</div>
+          <div class="eu-grid">
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Sweden</span><span class="cc-iso">SE</span></div><span class="cc-count">28</span></div>
+              <div class="tb"><div class="tb-1" style="width:39.3%"></div><div class="tb-2" style="width:28.6%"></div><div class="tb-3" style="width:32.1%"></div></div>
+              <div class="tc"><span>T1 <b>11</b></span><span>T2 <b>8</b></span><span>T3 <b>9</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Denmark</span><span class="cc-iso">DK</span></div><span class="cc-count">67</span></div>
+              <div class="tb"><div class="tb-1" style="width:6.0%"></div><div class="tb-2" style="width:92.5%"></div><div class="tb-3" style="width:1.5%"></div></div>
+              <div class="tc"><span>T1 <b>4</b></span><span>T2 <b>62</b></span><span>T3 <b>1</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Finland</span><span class="cc-iso">FI</span></div><span class="cc-count">55</span></div>
+              <div class="tb"><div class="tb-1" style="width:3.6%"></div><div class="tb-2" style="width:94.5%"></div><div class="tb-3" style="width:1.8%"></div></div>
+              <div class="tc"><span>T1 <b>2</b></span><span>T2 <b>52</b></span><span>T3 <b>1</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Norway</span><span class="cc-iso">NO</span></div><span class="cc-count">10</span></div>
+              <div class="tb"><div class="tb-1" style="width:10.0%"></div><div class="tb-2" style="width:60.0%"></div><div class="tb-3" style="width:30.0%"></div></div>
+              <div class="tc"><span>T1 <b>1</b></span><span>T2 <b>6</b></span><span>T3 <b>3</b></span></div>
+            </div>
+
+          </div><!-- /nordic-grid -->
         </div>
 
-        <div class="cc">
-          <div class="cc-top"><div><span class="cc-name">Finland</span><span class="cc-iso">FI</span></div><span class="cc-count">55</span></div>
-          <span class="cc-mem">166 members</span>
-          <div class="tb"><div class="tb-1" style="width:3.6%"></div><div class="tb-2" style="width:94.5%"></div><div class="tb-3" style="width:1.8%"></div></div>
-          <div class="tc"><span>T1 <b>2</b></span><span>T2 <b>52</b></span><span>T3 <b>1</b></span></div>
-        </div>
-
-        <div class="cc">
-          <div class="cc-top"><div><span class="cc-name">Norway</span><span class="cc-iso">NO</span></div><span class="cc-count">10</span></div>
-          <span class="cc-mem">24 members</span>
-          <div class="tb"><div class="tb-1" style="width:10.0%"></div><div class="tb-2" style="width:60.0%"></div><div class="tb-3" style="width:30.0%"></div></div>
-          <div class="tc"><span>T1 <b>1</b></span><span>T2 <b>6</b></span><span>T3 <b>3</b></span></div>
-        </div>
-      </div>
+      </div><!-- /region-col right -->
 
     </div><!-- /region-grid -->
 
@@ -763,8 +769,8 @@ body {
           <li><strong>Two manuscripts in preparation</strong> for intended submission to peer-reviewed journals — Economic Geography and Construction Technology.</li>
         </ul>
         <div class="cites">
-          Woodfine, J. M., Woodfine, P. M., &amp; Woodfine, M. (2026). <em>Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity.</em> Working Paper v0.4.2. Woodfine Management Corp., New York, New York.<br>
-          Woodfine, J. M., Woodfine, P. M., &amp; Woodfine, M. (2026). <em>Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis.</em> Working Paper v0.2. Woodfine Management Corp., New York, New York.
+          <div>Woodfine, J. M., Woodfine, P. M., &amp; Woodfine, M. (2026). <em>Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity.</em> Working Paper v0.4.2. Woodfine Management Corp., New York, New York.</div>
+          <div style="margin-top:5pt;">Woodfine, J. M., Woodfine, P. M., &amp; Woodfine, M. (2026). <em>Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis.</em> Working Paper v0.2. Woodfine Management Corp., New York, New York.</div>
         </div>
       </div>
 
