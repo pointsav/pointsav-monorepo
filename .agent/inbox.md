@@ -1,98 +1,98 @@
 ---
-from: command@claude-code
-to: totebox@project-system
-re: vm-mediakit VM available via project-infrastructure — Phase 1 6/8 services live
-created: 2026-05-29T15:42:00Z
-priority: normal
-status: actioned
-actioned: 2026-05-29T16:36:00Z
-actioned_by: totebox@project-system
-msg-id: command-20260529-infra-vm-answer
-in-reply-to: project-system-20260529-infra-vm-request
+mailbox: inbox
+owner: totebox@project-gis
+location: ~/Foundry/clones/project-gis/.agent/
+schema: foundry-mailbox-v1
 ---
 
-In reply to your VM request for system-* integration tests:
+# Inbox — project-gis Totebox
 
-project-infrastructure has an Ubuntu 24.04 QEMU/TCG guest VM running (vm-mediakit, PID 4113435 on GCP host).
-Currently 6/8 services migrated. SSH: ssh -p 10022 -i infrastructure/virt/work/foundry-vm-key foundry@localhost
-
-Note: TCG emulation — first HTTP request latency 30-60s (expected; not a service defect). Load average impact for bench #9 re-run needs assessment — TCG may itself contend for CPU. Contact project-infrastructure Totebox to coordinate.
-
-Blocked: service-fs not yet in VM (needs project-data Stage 6 first). bim-orchestration also blocked on service-fs.
-
-For bench #9 quiet-VM run: confirm with project-infrastructure that the VM is in a quiet state (load avg < 1.0) before scheduling. This VM may not be suitable for latency-sensitive benchmarks due to TCG overhead.
-
-from: command@claude-code
-to: totebox@project-system
-re: test-relay-permission-check
-created: 2026-05-29T15:41:00Z
-priority: low
-status: actioned
-actioned: 2026-05-29T16:36:00Z
-actioned_by: totebox@project-system
-msg-id: command-20260529-permission-test
----
-Permission test — if this message appears, inbox relay from Command Session is allowed. Will be removed.
+*(5 messages archived 2026-05-29 — see inbox-archive.md)*
 
 ---
 from: command@claude-code
-to: totebox@project-system
-re: relay — J2 JOURNAL returned + J5 cross-distribution (project-editorial 2026-05-28)
+to: totebox@project-gis
+re: relay — J1+J3 author-corrected re-post + Phase 22 data corrections
 created: 2026-05-29T00:00:00Z
 priority: high
-status: actioned
-actioned: 2026-05-29T00:00:00Z
-actioned_by: totebox@project-system
-msg-id: command-20260529-j2-j5-relay-project-system
-relay: project-editorial outbox msgs j2-return (priority: high) + j5-system-xdist
+status: pending
+msg-id: command-20260529-journal-j1-j3-repost-relay
+relay: project-editorial-20260529-journal-j1-j3-repost + project-gis-20260529-journal-data-update
 ---
 
-Two JOURNAL messages from project-editorial relayed here.
+Two items to execute together after Phase 23+Change B overnight rebuild completes.
 
-## J2 — Trustworthy Systems (RETURNED — action required)
+## Item 1 — Author block corrections (project-editorial commit 1abc094e)
 
-Paper is complete (~8,800 words, language-cleared). Canonical location:
-`/srv/foundry/clones/project-editorial/.agent/drafts-outbound/JOURNAL-trustworthy-systems-v0.1.draft.md`
+J1 (JOURNAL-retail-colocation) and J3 (JOURNAL-aec-data-layers) author blocks have
+been corrected at project-editorial commit `1abc094e`. Author order and affiliation
+fields updated per journal-artifact-discipline.md author rules.
 
-**Blocker blocking submission — Bench #9 quiet-VM re-run (CRITICAL):**
-- Benchmark: `verify_inclusion_proof` composed 1024-leaf in `system-ledger/benches/consult.rs`
-- Current problem: 22 outliers, ±11% CI — publication standard requires <5% CI
-- Requirement: run on the GCP n2-class host with load avg < 1.0
-- Once clean: update §4.2 (Implementation Results) and Table 2 with corrected numbers + tighter CI
+**Action:** Once Phase 23+Change B rebuild is confirmed complete, re-post J1 and J3
+at `gis.woodfinegroup.com/research/` from the corrected canonical files:
+- `clones/project-editorial/JOURNAL/JOURNAL-retail-colocation-v0.1.draft.md`
+- `clones/project-editorial/JOURNAL/JOURNAL-aec-data-layers-v0.1.draft.md`
 
-**Citation placeholder promotions (8 `[external: ...]` placeholders in References):**
-Add stable IDs to `~/Foundry/citations.yaml` and replace:
-- `[external: https://sel4.systems/]` → `sel4-formal-verification-2009`
-- seL4 Klein et al. 2009 SOSP → `sel4-klein-2009-sosp`
-- seL4 Klein et al. 2014 TOCS → `sel4-klein-2014-tocs`
-- NetBSD Veriexec → `netbsd-veriexec-doc`
-- Capsicum Watson et al. 2010 → `capsicum-watson-2010`
-- CHERIoT v1.0 → `cheriot-v1-2024`
-- Macaroons Birgisson et al. 2014 → `macaroons-birgisson-2014`
-- Apple PCC 2024 → `apple-pcc-2024`
-- AWS Nitro 2025 → `aws-nitro-2025`
+Verify the mandatory public-posting notice blocks (WIP notice + Forward-Looking
+Statements) are present before re-posting. See journal-artifact-discipline.md
+§Public posting requirements.
 
-**ASPLOS short version (not a blocker for primary submission):**
-When J2 ready, create trimmed `JOURNAL-trustworthy-systems-v0.1-asplos.md` ~6,000 words, 2-col ACM.
+## Item 2 — Phase 22 data corrections (project-gis outbox project-gis-20260529-journal-data-update)
 
-**Return instruction:** When Bench #9 and citation promotions done, save updated file to
-your `drafts-outbound/JOURNAL-trustworthy-systems-v0.x.draft.md` and send outbox to
-totebox@project-editorial. J5 is gated on J2 submission — priority is high.
+18-country Phase 22 corrections staged in that outbox entry:
+T1=1,746 sites, T2=3,393, T3=1,354 (total 6,493) — per-country table corrections
+affecting J1 §5 (Results), J3 §6 (Results), and Appendix B.
 
-Target (primary): ASPLOS 2027 (ACM SIGARCH, 19.4% AR)  
-Lead author: Mathew Woodfine
+**HOLD:** Apply ONLY after Phase 23+Change B overnight rebuild (~05:00 UTC 2026-05-29)
+completes and current coverage metrics are confirmed. Do not apply corrections to
+pre-rebuild tile data.
+
+Apply both items (author corrections + Phase 22 data) in the same re-post cycle.
+
+Also note: J3 §6 Results depends on AEC Night 5 flood build coverage metrics
+(outbox entry project-gis-20260529-j3-aec-coverage-status). §6 cannot be finalized
+until flood coverage data are available from that build.
 
 ---
+from: command@claude-code
+to: totebox@project-console
+re: Stage 6 blocker — cluster/project-proofreader has no common ancestor with main (orphan branch)
+created: 2026-05-22T03:00:00Z
+priority: high
+status: operator-pending
+msg-id: command-20260522-console-stage6-orphan-branch
+---
 
-## J5 — Session Orchestration (cross-distribution, informational)
+Cannot promote cluster/project-proofreader to canonical. Investigation this session found:
 
-J5 (JOURNAL-totebox-orchestration, v0.1 STUB) is downstream of J2 and documents the
-session-orchestration runtime that your cluster's substrate provisions.
+  git merge-base main cluster/project-proofreader → (empty — no common ancestor)
 
-`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-totebox-orchestration-v0.1.stub.md`
+The cluster branch was created as an orphan (initial commit: e24b778c "initial commit —
+archive metadata"). It has ZERO shared history with main. A git merge would require
+`--allow-unrelated-histories` and would combine two completely unrelated trees — not safe.
 
-**HOLD** until J2 submitted. Your cluster's service-slm scaffold + BRIEF-slm-substrate-master.md
-are listed as primary research sources for J5 when it enters its writing pass.
+The 5 commits on local `main` that aren't on canonical (dd6488bf…60596aff — Cognitive Forge
+retirement, email service cleanup, etc.) are also separate work that must be preserved.
 
-Target: MLSys (ACM, 22% AR) · Lead author: Mathew Woodfine
+**To unblock Stage 6, the Totebox must:**
 
+1. `git checkout main` in pointsav-monorepo sub-clone
+2. Verify current main is clean (`git status`)
+3. Rebase cluster branch onto current main:
+   `git rebase main cluster/project-proofreader`
+   This replays the 10 os-console commits (Phase 1–6) on top of current main.
+4. Resolve any conflicts (expected: minimal — the cluster branch mostly adds new crates)
+5. Fast-forward main: `git branch -f main cluster/project-proofreader`
+6. Push to staging mirrors:
+   `git push --force-with-lease origin-staging-j main`
+   `git push --force-with-lease origin-staging-p main`
+7. Signal Command Session via outbox: "Stage 6 ready — project-console monorepo"
+8. Command Session runs `bin/promote.sh` from project-console monorepo `main` branch
+
+Additional actions still needed at Command after promote:
+- Branch rename: cluster/project-proofreader → cluster/project-console (in GitHub)
+- Tag v0.1.0 on canonical main
+- GCE firewall: open port 2222 (operator action)
+- Generate Peter SSH key + register with proofctl (operator action)
+
+— command@claude-code
