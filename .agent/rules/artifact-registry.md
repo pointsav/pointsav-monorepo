@@ -30,9 +30,9 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 | J1 | `JOURNAL-retail-colocation-v0.1.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | language-cleared |
 | J2 | `JOURNAL-trustworthy-systems-v0.1.draft.md` | Composing Trustworthy Systems from Verified Primitives | ASPLOS (ACM, 19.4% AR) | Mathew Woodfine | language-cleared |
 | J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier, IF 12.0) | Jennifer M. Woodfine | language-cleared |
-| J4 | `JOURNAL-private-network-v0.1.stub.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | language-cleared (§4+§5 added 2026-05-29; word count ~6,400 vs 9,000 target; final §4–§5 language pass pending) |
+| J4 | `JOURNAL-private-network-v0.1.stub.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | language-cleared (v0.4; PhD register pass 2026-05-29; word count ~6,400 vs 9,000 target; final §4–§5 language pass pending before submission) |
 | J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | MLSys (ACM, 22% AR) | Mathew Woodfine | stub |
-| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared |
+| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared (v0.2; PhD register pass 2026-05-29; §6 Results pending user study) |
 
 ### Pre-submission blockers by paper
 
@@ -63,18 +63,21 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 - ORCID IDs for all three authors
 
 **J4 — Private Network / CRMA:**
-- ~~§1–§3 writing pass~~ — COMPLETE 2026-05-28 (~4,800 words; §1 Introduction, §2 Background, §3 Architecture written; §6 Discussion + §7 Conclusion written)
+- ~~§1–§3 writing pass~~ — COMPLETE 2026-05-28
 - ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`)
 - ~~§4 Implementation~~ — COMPLETE 2026-05-29: WireGuard hub+spoke config, BLAKE2s audit-log Python daemon; commit `77063dc3`
-- ~~§5 Evaluation~~ — COMPLETE 2026-05-29: 5 benchmarks (B1 44±5 ms n=30, B2 59±20 ms n=10, B3 8 ms n=20, B4 bimodal ~1s/~11–16s n=5, B5 throughput); Table 1 vs Mackey et al.; commit `77063dc3`
-- ~~Citation placeholders~~ — RESOLVED 2026-05-29: Birge-Lee et al. 2024 + Mackey et al. 2020 (DOI:10.1145/3374664.3379532)
+- ~~§5 Evaluation~~ — COMPLETE 2026-05-29: 5 benchmarks; Table 1 vs Mackey et al.; commit `77063dc3`
+- ~~Citation placeholders~~ — RESOLVED 2026-05-29: Birge-Lee et al. 2024 + Mackey et al. 2020
+- ~~PhD register pass~~ — COMPLETE 2026-05-29: §1/3.1/4/5.3 prose, Listing captions, §6.2 falsification prose, §6.3 italic, §6.4 generalizability; commit `ec225be4`
 - **Word count gap** — ~6,400 words vs 9,000-word target; ~2,600 words expansion needed in §4–§5. project-infrastructure scope.
-- **Final §4–§5 language pass** — new sections need one more forbidden-terms sweep before submission
+- **Final §4–§5 language pass** — §4+§5 sections need one more forbidden-terms sweep before submission
 - ORCID IDs for all three authors
 
 **J6 — Desktop Environment:**
-- §1–§4 writing pass (Introduction, Background, Design Principles, Implementation) — in progress
-- §5–§6 pending user study data
+- ~~§1–§4 writing pass~~ — COMPLETE 2026-05-28 (~5,200 words; §1–§5 + §7–§8 written)
+- ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`)
+- ~~PhD register pass~~ — COMPLETE 2026-05-29: contributions inline, §4 table captions + Appendix A, §5.2/§6 TODOs resolved, §7.3 falsification prose, §7.4 italic leads, [CITATION NEEDED] removed; commit `22cb91fa`
+- §6 Results — pending user study data collection (ethical clearance planned before recruitment)
 - ORCID IDs for all three authors
 
 **J5:** HOLD until J2 submitted
