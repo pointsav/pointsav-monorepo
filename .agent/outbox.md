@@ -6,6 +6,73 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-intelligence
 to: command@claude-code
+re: Sprint -1/1/2/4 complete — 4 commits; Goose ready; Command actions needed
+created: 2026-05-29T00:00:00Z
+priority: high
+status: pending
+msg-id: project-intelligence-20260529-sprints-complete
+---
+
+All coding sprints from the sovereign coding agent plan are code-complete. 4 commits:
+
+| SHA | Sprint | Subject |
+|---|---|---|
+| `c5cd4441` (Jennifer) | -1 | docs(briefs): consolidate to 2 SLM briefs; archive 27 contamination files |
+| `1b47d3eb` (Jennifer) | 1 | feat(doorman): tool_use shim, count_tokens, models endpoint |
+| `1d819d7c` (Jennifer) | 2 | feat(scripts): git post-commit hook + CORPUS bridge |
+| `d39aea32` (Peter) | 4 | docs(drafts): stage 5 TOPICs + 2 GUIDEs to project-editorial |
+
+**What Sprint 1 enables:**
+- Goose can now route through service-slm Doorman (`ANTHROPIC_HOST=http://127.0.0.1:9080`)
+- Tool calls work: `tool_use` SSE blocks emitted; `stop_reason: "tool_use"` set
+- `POST /v1/messages/count_tokens` and `GET /v1/models` respond correctly
+- Thinking suppressed for tool turns (llama.cpp #20345 workaround)
+
+**Command Session actions required (Sprint 0 — not yet done):**
+
+1. **Disable FORCE_BROKER_MODE** — Tier A is deployed (OLMo 2 1124 7B, `local-slm.service` active) but disabled:
+   ```bash
+   sudo sed -i 's/SLM_FORCE_BROKER_MODE=true/SLM_FORCE_BROKER_MODE=false/' /etc/local-doorman/local-doorman.env
+   sudo systemctl restart local-doorman.service
+   curl -s http://127.0.0.1:9080/readyz | python3 -m json.tool  # → has_local: true
+   ```
+
+2. **Binary rebuild** — Doorman trails HEAD by 5+ commits:
+   ```bash
+   cargo build --release -p slm-doorman-server
+   sudo systemctl restart local-doorman.service
+   ```
+   Update `data/binary-ledger/slm-doorman-server.jsonl` after.
+
+3. **Install git post-commit hook** in project-intelligence (and any other active archives):
+   ```bash
+   cp service-slm/scripts/git-post-commit-hook.sh .git/hooks/post-commit
+   chmod +x .git/hooks/post-commit
+   ```
+
+4. **Yo-Yo nightly cron** — add to crontab:
+   ```
+   0 2 * * * /srv/foundry/clones/project-intelligence/service-slm/scripts/start-yoyo.sh --runtime=1h
+   ```
+
+5. **Drain 491 poison apprenticeship briefs** from `data/apprenticeship/queue/` (pre-backoff-fix artifacts).
+
+6. **Verify Goose works** (Sprint 3 — operator):
+   ```bash
+   export ANTHROPIC_HOST=http://127.0.0.1:9080
+   export ANTHROPIC_API_KEY=foundry-local
+   export GOOSE_MODEL=claude-haiku-4-5-20251001
+   goose session
+   ```
+
+7. **Stage 6 promote** — archive is 20+ commits ahead of origin/main. Prerequisite: rebase per
+   inbox `command-20260520-stage6-rebase-required`. Then `bin/promote.sh` + `bin/sync-local.sh --all`.
+
+— totebox@project-intelligence / 2026-05-29
+
+---
+from: totebox@project-intelligence
+to: command@claude-code
 re: flow-debug session complete — Stage 6 pending; binaries need rebuild
 created: 2026-05-28T18:00:00Z
 priority: normal
