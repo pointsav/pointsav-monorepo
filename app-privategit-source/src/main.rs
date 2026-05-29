@@ -2,7 +2,7 @@ use anyhow::Result;
 use axum::{
     body::Body,
     extract::{Path, State},
-    http::{header, StatusCode},
+    http::{header, HeaderMap, StatusCode},
     response::{IntoResponse, Json, Response},
     routing::{get, post},
     Router,
@@ -53,6 +53,64 @@ fn load_verify_key(path: &str) -> Option<VerifyingKey> {
     let bytes = hex::decode(hex.trim()).ok()?;
     let arr: [u8; 32] = bytes.try_into().ok()?;
     VerifyingKey::from_bytes(&arr).ok()
+}
+
+// ── License verification ──────────────────────────────────────────────────────
+
+enum LicenseVerifyErr {
+    MalformedToken,
+    TokenTooShort,
+    InvalidSignature,
+    InvalidPayload,
+    WrongProduct,
+    ChannelExpired(String),
+}
+
+impl LicenseVerifyErr {
+    fn status(&self) -> StatusCode {
+        match self {
+            Self::WrongProduct | Self::ChannelExpired(_) => StatusCode::FORBIDDEN,
+            _ => StatusCode::UNAUTHORIZED,
+        }
+    }
+    fn reason(&self) -> &'static str {
+        match self {
+            Self::MalformedToken => "malformed-token",
+            Self::TokenTooShort => "token-too-short",
+            Self::InvalidSignature => "invalid-signature",
+            Self::InvalidPayload => "invalid-payload",
+            Self::WrongProduct => "wrong-product",
+            Self::ChannelExpired(_) => "channel-expired",
+        }
+    }
+}
+
+fn verify_license_key(
+    vk: &VerifyingKey,
+    key_b64: &str,
+    product_id: &str,
+) -> Result<LicensePayload, LicenseVerifyErr> {
+    use LicenseVerifyErr::*;
+    let token_bytes = URL_SAFE_NO_PAD.decode(key_b64).map_err(|_| MalformedToken)?;
+    if token_bytes.len() <= 64 {
+        return Err(TokenTooShort);
+    }
+    let (sig_bytes, payload_bytes) = token_bytes.split_at(64);
+    let sig_arr: [u8; 64] = sig_bytes.try_into().expect("exactly 64 bytes");
+    let sig = Signature::from_bytes(&sig_arr);
+    if vk.verify_strict(payload_bytes, &sig).is_err() {
+        return Err(InvalidSignature);
+    }
+    let payload: LicensePayload =
+        serde_json::from_slice(payload_bytes).map_err(|_| InvalidPayload)?;
+    if payload.product != product_id {
+        return Err(WrongProduct);
+    }
+    let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
+    if payload.channel_expiry < today {
+        return Err(ChannelExpired(payload.channel_expiry.clone()));
+    }
+    Ok(payload)
 }
 
 // ── Request / payload types ───────────────────────────────────────────────────
@@ -123,15 +181,59 @@ async fn manifest(
 
 async fn binary(
     State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
     Path((product, version, platform)): Path<(String, String, String)>,
 ) -> Response {
-    // Strip .sig suffix to detect signature requests
+    // Detached .sig files are unauthenticated — no license required
     if let Some(base_platform) = platform.strip_suffix(".sig") {
         let path = release_path(
             &state.releases_dir,
             &[&product, &version, &format!("{base_platform}.sig")],
         );
         return stream_file(path, "application/octet-stream").await;
+    }
+
+    // Require Authorization: Bearer <license_key_b64>
+    let key_b64 = match headers
+        .get(header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.strip_prefix("Bearer "))
+    {
+        Some(k) => k,
+        None => {
+            tracing::info!(product_id = %product, result = "unauthorized", reason = "missing-auth-header", "binary-download");
+            return (
+                StatusCode::UNAUTHORIZED,
+                Json(json!({"error": "license key required",
+                    "header": "Authorization: Bearer <license_key_b64>"})),
+            )
+                .into_response();
+        }
+    };
+
+    let Some(vk) = &state.verify_key else {
+        tracing::warn!(product_id = %product, result = "service-unavailable", "binary-download: VERIFY_KEY_PUB not set");
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({"error": "license verification not configured"})),
+        )
+            .into_response();
+    };
+
+    let key_fp = hex::encode(&vk.as_bytes()[..4]);
+    match verify_license_key(vk, key_b64, &product) {
+        Err(e) => {
+            let log_result = if e.status() == StatusCode::UNAUTHORIZED {
+                "unauthorized"
+            } else {
+                "forbidden"
+            };
+            tracing::info!(product_id = %product, key_fp = %key_fp, result = log_result, reason = e.reason(), "binary-download");
+            return (e.status(), Json(json!({"error": e.reason()}))).into_response();
+        }
+        Ok(_payload) => {
+            tracing::info!(product_id = %product, key_fp = %key_fp, result = "ok", "binary-download");
+        }
     }
 
     let path = release_path(&state.releases_dir, &[&product, &version, &platform]);
@@ -183,10 +285,7 @@ async fn verify_key_endpoint(
     Json(req): Json<VerifyKeyRequest>,
 ) -> (StatusCode, Json<Value>) {
     let Some(vk) = &state.verify_key else {
-        tracing::warn!(
-            result = "service-unavailable",
-            "verify-key: VERIFY_KEY_PUB not set"
-        );
+        tracing::warn!(result = "service-unavailable", "verify-key: VERIFY_KEY_PUB not set");
         return (
             StatusCode::SERVICE_UNAVAILABLE,
             Json(json!({"error": "verify key not configured — set VERIFY_KEY_PUB"})),
@@ -194,81 +293,37 @@ async fn verify_key_endpoint(
     };
     let key_fp = hex::encode(&vk.as_bytes()[..4]);
 
-    let token_bytes = match URL_SAFE_NO_PAD.decode(&req.license_key_b64) {
-        Ok(b) => b,
-        Err(_) => {
-            tracing::info!(product_id = %req.product_id, key_fp = %key_fp, result = "unauthorized", reason = "malformed-token", "verify-key");
-            return (
-                StatusCode::UNAUTHORIZED,
-                Json(json!({"valid": false, "reason": "malformed token"})),
-            );
+    match verify_license_key(vk, &req.license_key_b64, &req.product_id) {
+        Err(ref e @ LicenseVerifyErr::ChannelExpired(ref expired)) => {
+            tracing::info!(product_id = %req.product_id, key_fp = %key_fp, result = "forbidden", reason = "channel-expired", expired = %expired, "verify-key");
+            (
+                e.status(),
+                Json(json!({"valid": false, "reason": "channel expired", "expired": expired})),
+            )
         }
-    };
-
-    if token_bytes.len() <= 64 {
-        tracing::info!(product_id = %req.product_id, key_fp = %key_fp, result = "unauthorized", reason = "token-too-short", "verify-key");
-        return (
-            StatusCode::UNAUTHORIZED,
-            Json(json!({"valid": false, "reason": "token too short"})),
-        );
-    }
-
-    let (sig_bytes, payload_bytes) = token_bytes.split_at(64);
-    let sig_arr: [u8; 64] = sig_bytes.try_into().expect("exactly 64 bytes");
-    let sig = Signature::from_bytes(&sig_arr);
-
-    if vk.verify_strict(payload_bytes, &sig).is_err() {
-        tracing::info!(product_id = %req.product_id, key_fp = %key_fp, result = "unauthorized", reason = "invalid-signature", "verify-key");
-        return (
-            StatusCode::UNAUTHORIZED,
-            Json(json!({"valid": false, "reason": "invalid signature"})),
-        );
-    }
-
-    let payload: LicensePayload = match serde_json::from_slice(payload_bytes) {
-        Ok(p) => p,
-        Err(_) => {
-            tracing::info!(product_id = %req.product_id, key_fp = %key_fp, result = "unauthorized", reason = "invalid-payload", "verify-key");
-            return (
-                StatusCode::UNAUTHORIZED,
-                Json(json!({"valid": false, "reason": "invalid payload"})),
-            );
+        Err(e) => {
+            let log_result = if e.status() == StatusCode::UNAUTHORIZED {
+                "unauthorized"
+            } else {
+                "forbidden"
+            };
+            tracing::info!(product_id = %req.product_id, key_fp = %key_fp, result = log_result, reason = e.reason(), "verify-key");
+            (e.status(), Json(json!({"valid": false, "reason": e.reason()})))
         }
-    };
-
-    if payload.product != req.product_id {
-        tracing::info!(product_id = %req.product_id, key_fp = %key_fp, result = "forbidden", reason = "wrong-product", "verify-key");
-        return (
-            StatusCode::FORBIDDEN,
-            Json(json!({"valid": false, "reason": "wrong product"})),
-        );
+        Ok(payload) => {
+            tracing::info!(product_id = %payload.product, key_fp = %key_fp, result = "ok", "verify-key");
+            (
+                StatusCode::OK,
+                Json(json!({
+                    "valid": true,
+                    "product": payload.product,
+                    "version_floor": payload.version_floor,
+                    "channel_expiry": payload.channel_expiry,
+                    "entitlements": payload.entitlements,
+                })),
+            )
+        }
     }
-
-    // ISO 8601 YYYY-MM-DD is lexicographically ordered — string compare is correct.
-    let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
-    if payload.channel_expiry < today {
-        tracing::info!(product_id = %payload.product, key_fp = %key_fp, result = "forbidden", reason = "channel-expired", expired = %payload.channel_expiry, "verify-key");
-        return (
-            StatusCode::FORBIDDEN,
-            Json(json!({
-                "valid": false,
-                "reason": "channel expired",
-                "expired": payload.channel_expiry,
-            })),
-        );
-    }
-
-    tracing::info!(product_id = %payload.product, key_fp = %key_fp, result = "ok", "verify-key");
-    (
-        StatusCode::OK,
-        Json(json!({
-            "valid": true,
-            "product": payload.product,
-            "version_floor": payload.version_floor,
-            "channel_expiry": payload.channel_expiry,
-            "entitlements": payload.entitlements,
-        })),
-    )
 }
 
 async fn verify_key_pub(State(state): State<Arc<AppState>>) -> Response {
