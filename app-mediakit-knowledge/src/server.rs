@@ -2278,6 +2278,20 @@ fn wiki_chrome(
                 }
                 div.mobile-nav-overlay #mobile-nav-overlay aria-hidden="true" {}
 
+                // Mobile bottom action bar (wiki_chrome only; CSS hides on desktop)
+                nav.mobile-bottom-bar aria-label="Mobile article actions" {
+                    button.mobile-bar-btn #mobile-bar-toc aria-label="Contents" { "Contents" }
+                    button.mobile-bar-btn #mobile-bar-share aria-label="Share" { "Share" }
+                    a.mobile-bar-btn.tab-edit
+                        href={ "/wiki/" (slug) "?action=edit" }
+                        aria-label="Edit this article"
+                    { "Edit" }
+                    a.mobile-bar-btn
+                        href={ "/history/" (slug) }
+                        aria-label="View history"
+                    { "History" }
+                }
+
                 // Article-actions tab bar (wiki_chrome only — not home_chrome or chrome)
                 nav.article-tabs aria-label="Article actions" {
                     div.article-tabs__left {
