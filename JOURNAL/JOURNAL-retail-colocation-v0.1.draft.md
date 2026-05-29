@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.3"
+version: "0.4"
 title: "Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity: A Continental-Scale Cluster Analysis"
 target_journal: "Economic Geography"
 target_publisher: "Wiley-Blackwell"
@@ -62,7 +62,7 @@ preprint_posted: true
 preprint_posted_date: 2026-05-28
 doi: ""
 license: "CC BY 4.0"
-cite_as: "Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity. Working Paper v0.3, 28 May 2026. Woodfine Management Corp., New York, NY."
+cite_as: "Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity. Working Paper v0.4, 29 May 2026. Woodfine Management Corp., New York, NY."
 revision_history:
   - version: "0.1"
     date: "2026-05-27"
@@ -73,6 +73,9 @@ revision_history:
   - version: "0.3"
     date: "2026-05-28"
     changes: "§7.0 preliminary OLS added; preprint notice and FLS advisory; public posting"
+  - version: "0.4"
+    date: "2026-05-29"
+    changes: "Phase 23+Change B actual counts: T1=1,746, T2=2,726, T3=2,021; EU T1=725; table relabelled; §4.2 narrative updated to reflect SPAN_T2_MAX_KM=2.5 T2→T3 shift"
 notes_for_editor: |
   The preliminary OLS results in §7.0 are complete and reported with confidence intervals.
   The primary regression specification (§7.2) requires a population-weighted catchment
@@ -109,7 +112,7 @@ Woodfine Management Corp., New York, NY, USA
 
 ## Abstract
 
-Retail anchor co-location composition — the specific combination of hypermarket, hardware, and warehouse-club formats sharing a sub-metropolitan parking-lot campus — is a measurable, supply-side leading indicator of commercial activity intensity. This paper formalises a geometric framework for identifying and classifying co-location clusters at continental scale, without proprietary mobility data, using OpenStreetMap point-of-interest records and a two-pass DBSCAN clustering algorithm. Applied to 6,493 clusters across thirteen countries in North America and Europe, the framework assigns each cluster a tier (T1/T2/T3) by anchor category composition, then ranks clusters within tiers by geometric proximity and catchment characteristics. T1 clusters account for 26.9% of the study population (1,747 of 6,493). A seven-test falsification programme establishes the conditions under which the compositional hypothesis can be rejected. The framework is designed for confirmation by O-D mobility data derived from parking-lot geo-fencing at the cluster level, replacing administrative catchment boundaries with mobility-defined sub-metropolitan markets.
+Retail anchor co-location composition — the specific combination of hypermarket, hardware, and warehouse-club formats sharing a sub-metropolitan parking-lot campus — is a measurable, supply-side leading indicator of commercial activity intensity. This paper formalises a geometric framework for identifying and classifying co-location clusters at continental scale, without proprietary mobility data, using OpenStreetMap point-of-interest records and a two-pass DBSCAN clustering algorithm. Applied to 6,493 clusters across thirteen countries in North America and Europe, the framework assigns each cluster a tier (T1/T2/T3) by anchor category composition, then ranks clusters within tiers by geometric proximity and catchment characteristics. T1 clusters account for 26.9% of the study population (1,746 of 6,493). A seven-test falsification programme establishes the conditions under which the compositional hypothesis can be rejected. The framework is designed for confirmation by O-D mobility data derived from parking-lot geo-fencing at the cluster level, replacing administrative catchment boundaries with mobility-defined sub-metropolitan markets.
 
 *(148 words)*
 
@@ -320,22 +323,22 @@ The methodological consequence of this approach is that mobility-defined catchme
 
 ### 4.2 Dataset Characteristics
 
-The current dataset (build: May 2026) and the projected distribution under the revised taxonomy described in §3.2 are shown below:
+The current dataset (build: May 2026) and the distribution from the Phase 23+Change B actual build, incorporating the revised taxonomy described in §3.2, are shown below:
 
-| Metric | Current (May 2026) | Projected (revised taxonomy) |
+| Metric | Current (May 2026) | Phase 23+Change B (actual) |
 |---|---|---|
 | Total clusters | 6,493 | 6,493 |
-| T1 clusters | 1,537 (23.7%) | 1,747 (26.9%) |
-| T2 clusters | 3,090 (47.6%) | 3,392 (52.2%) |
-| T3 clusters | 1,866 (28.7%) | 1,354 (20.9%) |
+| T1 clusters | 1,537 (23.7%) | 1,746 (26.9%) |
+| T2 clusters | 3,090 (47.6%) | 2,726 (42.0%) |
+| T3 clusters | 1,866 (28.7%) | 2,021 (31.1%) |
 | Countries covered | 13 | 13 |
 | Chain YAML files | 120+ | 125+ |
 | Retail anchor points | ~90,000 | ~95,000 |
 | Clusters with O-D coverage | ~7,600 (US LODES) + 58 (ES MITMA) | — |
 
-The current T2 share (48%) is inflated because the production tier function promoted any hypermarket-containing cluster with two or more members to T2, regardless of whether a hardware anchor was present. The taxonomy revision described in §3.2 corrects this by requiring `has_hypermarket ∧ has_hardware` for T2, and introduces the T1.a tripartite disjunction. Under the revised rules, electronics-anchored clusters in Europe that already contain a hypermarket and hardware anchor are promoted to T1, lifting the global T1 count from 1,537 to a projected 1,747. European T1 grows from 516 to approximately 726, clearing the 500-cluster threshold that enables statistically meaningful cross-continental subgroup analysis. The T3 count falls because the T2→T3 redistribution (from removing the loose `n≥2` T2 path) is partially offset by the T3→T1 redistribution (from the electronics clause). All projected counts are estimates pending implementation of the revised taxonomy.
+The current T2 share (48%) is inflated because the production tier function promoted any hypermarket-containing cluster with two or more members to T2, regardless of whether a hardware anchor was present. The taxonomy revision described in §3.2 corrects this by requiring `has_hypermarket ∧ has_hardware` for T2, and introduces the T1.a tripartite disjunction. Under the revised rules, electronics-anchored clusters in Europe that already contain a hypermarket and hardware anchor are promoted to T1, lifting the global T1 count from 1,537 to 1,746. European T1 grows from 516 to 725, clearing the 500-cluster threshold that enables statistically meaningful cross-continental subgroup analysis. The T3 count rises — not falls — relative to the pre-Change B projection because Change B set `SPAN_T2_MAX_KM=2.5`, moving approximately 667 clusters from T2 to T3 that the original projection had not accounted for.
 
-The original research brief specified parameter calibration to a target of approximately 400 T1 locations per major region (North America, Europe). The framework presented here allows composition rules to determine cluster cardinality, producing 1,747 projected T1 clusters — materially more than the target-count specification. This represents a shift from target-count-driven to composition-rule-driven calibration; the implications for precision versus recall in site selection are discussed in §6.5.
+The original research brief specified parameter calibration to a target of approximately 400 T1 locations per major region (North America, Europe). The framework presented here allows composition rules to determine cluster cardinality, producing 1,746 T1 clusters (Phase 23+Change B actual) — materially more than the target-count specification. This represents a shift from target-count-driven to composition-rule-driven calibration; the implications for precision versus recall in site selection are discussed in §6.5.
 
 ### 4.3 The Five-Degree Framework
 
@@ -363,14 +366,14 @@ The sub-metropolitan market is the natural unit of analysis for commercial activ
 
 ### 5.1 Global Tier Distribution
 
-T1 clusters account for 26.9% of the study population (1,747 of 6,493) across thirteen countries under the projected revised taxonomy. The T1/T2/T3 distribution differs systematically between North America and Europe, reflecting structural differences in retail format composition. The following table reports projected counts under the revised taxonomy (§3.2, §4.2); current counts are in §4.2:
+T1 clusters account for 26.9% of the study population (1,746 of 6,493) across thirteen countries under the Phase 23+Change B actual counts. The T1/T2/T3 distribution differs systematically between North America and Europe, reflecting structural differences in retail format composition. The following table reports counts from the Phase 23+Change B build (§3.2, §4.2); pre-revision counts are in §4.2:
 
-| Region | T1 (projected) | T2 (projected) | T3 (projected) |
+| Region | T1 | T2 | T3 |
 |---|---|---|---|
 | North America | 1,021 (34%) | 1,712 (57%) | 268 (9%) |
-| Europe | 726 (24%) | 1,680 (56%) | 572 (19%) |
+| Europe | 725 (24%) | 1,680 (56%) | 572 (19%) |
 
-North America produces proportionally more T1 clusters because Walmart Supercentre (primary anchor), Home Depot/Lowe's (hardware), and Costco/Sam's Club (price club) achieved co-location in large numbers of sub-metropolitan markets during the 1990–2010 period of power centre development. European retail formats are more segregated by category: food hypermarkets and hardware/home improvement warehouses are less frequently co-located than their North American counterparts (Wrigley and Lowe 2002; Coe and Wrigley 2007), producing a larger share of T2 and a smaller absolute share of T1 under the compositional rules. The electronics clause in T1.a (§3.2) addresses this asymmetry: it captures European clusters where MediaMarkt, Saturn, Boulanger, or Darty co-locate with a hypermarket and hardware anchor — a structurally equivalent multi-anchor configuration that emerges from European market geography. Under the revised taxonomy, EU T1 rises from 516 to approximately 726, crossing the threshold required for statistically meaningful continental subgroup testing.
+North America produces proportionally more T1 clusters because Walmart Supercentre (primary anchor), Home Depot/Lowe's (hardware), and Costco/Sam's Club (price club) achieved co-location in large numbers of sub-metropolitan markets during the 1990–2010 period of power centre development. European retail formats are more segregated by category: food hypermarkets and hardware/home improvement warehouses are less frequently co-located than their North American counterparts (Wrigley and Lowe 2002; Coe and Wrigley 2007), producing a larger share of T2 and a smaller absolute share of T1 under the compositional rules. The electronics clause in T1.a (§3.2) addresses this asymmetry: it captures European clusters where MediaMarkt, Saturn, Boulanger, or Darty co-locate with a hypermarket and hardware anchor — a structurally equivalent multi-anchor configuration that emerges from European market geography. Under the revised taxonomy, EU T1 rises from 516 to 725, crossing the threshold required for statistically meaningful continental subgroup testing.
 
 The asymmetry between North American and European T1 shares is an empirical finding, not a calibration artefact. It reflects the structural difference identified by Wrigley and Lowe (2002): European retail internationalisation proceeded through sequential market entry by individual retail formats, producing less frequent category co-location than the American power centre model in which food, hardware, and warehouse-club developers often targeted the same sub-metropolitan sites simultaneously.
 
@@ -458,7 +461,7 @@ H₁ is falsified if T1 clusters do not systematically exhibit higher catchment 
 
 **Anchor type dependency.** The framework is calibrated to markets where Walmart Supercentre (North America) or IKEA (Europe) serves as the primary hypermarket anchor. Its application to retail markets dominated by different anchor typologies — for example, markets where Carrefour or Auchan is the dominant food retailer in countries outside the current thirteen — has not been tested.
 
-**Calibration philosophy.** A related calibration question is whether the framework should target a fixed number of T1 clusters per region — the original research specification proposed approximately 400 per major region — or allow composition rules to determine cardinality. The current framework adopts the latter; the tier boundaries produce 1,747 T1 clusters (26.9%), materially more than the ~400-per-region target. Whether this implies the thresholds are too permissive, or that the original target was too conservative for a multi-country dataset, is a question for stakeholder validation against commercial real-estate development pipelines.
+**Calibration philosophy.** A related calibration question is whether the framework should target a fixed number of T1 clusters per region — the original research specification proposed approximately 400 per major region — or allow composition rules to determine cardinality. The current framework adopts the latter; the tier boundaries produce 1,746 T1 clusters (26.9%), materially more than the ~400-per-region target. Whether this implies the thresholds are too permissive, or that the original target was too conservative for a multi-country dataset, is a question for stakeholder validation against commercial real-estate development pipelines.
 
 ---
 
