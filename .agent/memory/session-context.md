@@ -5,6 +5,51 @@ a fourth entry is added.
 
 ---
 
+## 2026-05-29 session 11 | Totebox | claude-code (Sonnet 4.6)
+
+**Done this session:**
+- Committed modified Cargo.lock (PPN workspace crate join; commit 49d07990).
+- Established VM-* architecture: 5 VM types mirror the 5 os-* source binaries exactly.
+  VM-Totebox · VM-MediaKit · VM-Orchestration · VM-PrivateGit · VM-Infrastructure.
+  Placement principle: service belongs in VM whose os-* namespace owns its data lifecycle.
+- Reframed VM-MediaKit Phase 1 as 6/6 COMPLETE: bim-orchestration correctly scoped to
+  VM-Orchestration; service-fs correctly scoped to VM-Totebox. No more "6/8 blocked" framing.
+- Wrote BRIEF-VM-ARCHITECTURE.md (new durable planning artifact; 7 sections; commit 93949411).
+- Restructured NEXT.md: 5 VM-typed sections replacing the flat vm-mediakit section.
+- Restructured `infrastructure/systemd/` into per-VM subdirs (mediakit/ orchestration/ ppn/ totebox/)
+  using `git mv` — history preserved (commit c0b14bf8).
+- Added `infrastructure/virt/lib/common.sh` + `ppn-join.sh` (shared shell functions).
+- Added provision script stubs for all 5 VM types (provision-vm-totebox.sh,
+  provision-vm-orchestration.sh, provision-vm-privategit.sh,
+  provision-vm-infrastructure-cloud.sh, provision-vm-infrastructure-onprem.sh).
+- Added cloud-init stubs for VM-Totebox and VM-Orchestration.
+- Wrote bilingual TOPIC pair `topic-vm-architecture` (EN + ES); staged to drafts-outbound.
+- Updated manifest.md wiki leg + BRIEF README index.
+- Sent outbox to project-editorial: 12 TOPIC pairs + 3 GUIDEs staged total.
+
+**Commits this session:**
+- `49d07990` — chore(deps): regenerate Cargo.lock — workspace PPN crate join
+- `93949411` — docs(vm-arch): BRIEF-VM-ARCHITECTURE + NEXT.md — 5 VM types, MediaKit Phase 1 complete
+- `c0b14bf8` — feat(infra): VM-* directory restructure — per-VM systemd/ subdirs + provision stubs + topic-vm-architecture TOPIC pair
+- `5edf44b4` — chore(outbox): topic-vm-architecture pickup notice to project-editorial
+
+**Pending / carry-forward:**
+- VM-Totebox Phase 1: service-fs blocked on Command promoting project-data (23 commits).
+- VM-Orchestration Phase 1: bim-orch depends on VM-Totebox service-fs.
+- Genesis Protocol code steps Q2–Q6 operator decisions still open.
+- J4 ORCID IDs: operator action required.
+- Stage 6 from Command Session (all 4 new commits above + prior session commits).
+- migrate-service-to-vm.sh references old systemd path (`infrastructure/systemd/*.service`);
+  update to `infrastructure/systemd/mediakit/*.service` when next migration runs.
+- 12 TOPIC pairs + 3 GUIDEs in drafts-outbound awaiting project-editorial pickup.
+
+**Operator preferences surfaced:**
+- Wants VM-* naming to mirror os-* exactly so development mirrors customer deployment.
+- Uses Opus research agents proactively for deep architectural decisions.
+- AArch64 hardware decision deferred; seL4 Phase 3 stays on roadmap explicitly.
+
+---
+
 ## 2026-05-29 session 9+10 | Totebox | claude-code (Sonnet 4.6)
 
 **Done this session:**
