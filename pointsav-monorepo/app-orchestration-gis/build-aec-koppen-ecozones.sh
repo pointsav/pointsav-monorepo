@@ -206,8 +206,9 @@ tippecanoe \
     --name="Köppen-Geiger Climate Classification 2023" \
     --attribution="Beck et al. 2023, Sci Data, CC BY 4.0" \
     --layer="koppen" \
-    --minimum-zoom=2 --maximum-zoom=8 \
-    --simplification=6 \
+    --minimum-zoom=4 --maximum-zoom=8 \
+    --simplification=12 \
+    --maximum-tile-bytes=65536 \
     --drop-densest-as-needed \
     --force \
     "$KG_GEOJSON" 2>&1 | tee -a "$LOG"
@@ -251,8 +252,9 @@ tippecanoe \
     --name="RESOLVE Ecoregions 2017" \
     --attribution="Dinerstein et al. 2017, BioScience, CC BY 4.0" \
     --layer="ecoregions" \
-    --minimum-zoom=2 --maximum-zoom=8 \
-    --simplification=4 \
+    --minimum-zoom=4 --maximum-zoom=8 \
+    --simplification=8 \
+    --maximum-tile-bytes=65536 \
     --drop-densest-as-needed \
     --force \
     "$ECO_GEOJSON" 2>&1 | tee -a "$LOG"
