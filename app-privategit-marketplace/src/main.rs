@@ -6,7 +6,9 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use chrono::Utc;
+use ed25519_dalek::{Signer, SigningKey};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -24,6 +26,7 @@ struct AppState {
     receipts_dir: String,
     claims_dir: String,
     source_base_url: String,
+    signing_key_hex: Option<String>,
 }
 
 // ── Catalog types ─────────────────────────────────────────────────────────────
@@ -59,6 +62,8 @@ struct Catalog {
 #[derive(Debug, Serialize, Deserialize)]
 struct LicenseReceipt {
     product_id: String,
+    #[serde(default)]
+    license_tier: String,
     version: String,
     customer_ref: String,
     price_usdc: u64,
@@ -67,6 +72,16 @@ struct LicenseReceipt {
     confirmed_at: String,
     block_number: u64,
     license_key: String,
+}
+
+// ── License token types ───────────────────────────────────────────────────────
+
+#[derive(Serialize)]
+struct LicensePayload {
+    product: String,
+    channel_expiry: String,
+    entitlements: Vec<String>,
+    version_floor: Option<String>,
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -84,6 +99,30 @@ fn receipt_path(receipts_dir: &str, tx_hash: &str) -> PathBuf {
         .join(now.format("%Y").to_string())
         .join(now.format("%m").to_string())
         .join(format!("{tx_hash}.json"))
+}
+
+fn find_receipt(receipts_dir: &str, tx_hash: &str) -> Option<LicenseReceipt> {
+    let base = PathBuf::from(receipts_dir);
+    let filename = format!("{tx_hash}.json");
+    for year_entry in fs::read_dir(&base).ok()?.flatten() {
+        if !year_entry.path().is_dir() {
+            continue;
+        }
+        for month_entry in fs::read_dir(year_entry.path()).ok()?.flatten() {
+            if !month_entry.path().is_dir() {
+                continue;
+            }
+            let candidate = month_entry.path().join(&filename);
+            if candidate.exists() {
+                if let Ok(raw) = fs::read_to_string(&candidate) {
+                    if let Ok(receipt) = serde_json::from_str::<LicenseReceipt>(&raw) {
+                        return Some(receipt);
+                    }
+                }
+            }
+        }
+    }
+    None
 }
 
 fn load_catalog(catalog_path: &str) -> Result<Catalog> {
@@ -251,8 +290,14 @@ async fn v1_license(
                     let license_key = generate_license_key(&product_id, &tx_hash, &customer_ref);
                     let confirmed_at = Utc::now().to_rfc3339();
 
+                    let license_tier = if product_id.ends_with("-fsl") {
+                        "fsl".to_string()
+                    } else {
+                        "apache".to_string()
+                    };
                     let receipt = LicenseReceipt {
                         product_id: product_id.clone(),
+                        license_tier: license_tier.clone(),
                         version: "0.0.1".into(),
                         customer_ref: customer_ref.clone(),
                         price_usdc: price_units,
@@ -364,6 +409,117 @@ async fn v1_wallet_address(State(state): State<Arc<AppState>>) -> Json<Value> {
     }))
 }
 
+async fn v1_issue_token(
+    State(state): State<Arc<AppState>>,
+    Path(tx_hash): Path<String>,
+) -> (StatusCode, Json<Value>) {
+    let tx_hash = tx_hash.to_lowercase();
+
+    let Some(ref key_hex) = state.signing_key_hex else {
+        tracing::warn!(tx_hash = %tx_hash, "issue-token: LICENSE_SIGNING_KEY not configured");
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({"error": "license signing not configured — set LICENSE_SIGNING_KEY"})),
+        );
+    };
+
+    let receipt = match find_receipt(&state.receipts_dir, &tx_hash) {
+        Some(r) => r,
+        None => {
+            return (
+                StatusCode::NOT_FOUND,
+                Json(json!({
+                    "error": "receipt not found",
+                    "hint": "call /v1/license/:tx_hash first to confirm and cache the payment"
+                })),
+            )
+        }
+    };
+
+    let seed_bytes = match hex::decode(key_hex.trim()) {
+        Ok(b) => b,
+        Err(_) => {
+            tracing::error!("LICENSE_SIGNING_KEY is not valid hex");
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": "signing key misconfigured"})),
+            );
+        }
+    };
+    let seed_arr: [u8; 32] = match seed_bytes.try_into() {
+        Ok(a) => a,
+        Err(_) => {
+            tracing::error!("LICENSE_SIGNING_KEY must be exactly 32 bytes (64 hex chars)");
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": "signing key wrong length"})),
+            );
+        }
+    };
+    let signing_key = SigningKey::from_bytes(&seed_arr);
+
+    let tier = if receipt.license_tier.is_empty() {
+        if receipt.product_id.ends_with("-fsl") {
+            "fsl".to_string()
+        } else {
+            "apache".to_string()
+        }
+    } else {
+        receipt.license_tier.clone()
+    };
+
+    let channel_expiry = (Utc::now() + chrono::Duration::days(365))
+        .format("%Y-%m-%d")
+        .to_string();
+
+    let payload = LicensePayload {
+        product: receipt.product_id.clone(),
+        channel_expiry: channel_expiry.clone(),
+        entitlements: vec![tier.clone()],
+        version_floor: None,
+    };
+    let payload_json = match serde_json::to_string(&payload) {
+        Ok(s) => s,
+        Err(e) => {
+            tracing::error!("payload serialization failed: {e}");
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": "internal error"})),
+            );
+        }
+    };
+
+    let sig = signing_key.sign(payload_json.as_bytes());
+    let mut token_bytes = sig.to_bytes().to_vec();
+    token_bytes.extend_from_slice(payload_json.as_bytes());
+    let token = URL_SAFE_NO_PAD.encode(&token_bytes);
+
+    let download_url = format!(
+        "{}/{}/latest?token={}",
+        state.source_base_url, receipt.product_id, token
+    );
+
+    tracing::info!(
+        tx_hash = %tx_hash,
+        product_id = %receipt.product_id,
+        tier = %tier,
+        channel_expiry = %channel_expiry,
+        "issue-token: signed download token issued"
+    );
+
+    (
+        StatusCode::OK,
+        Json(json!({
+            "token": token,
+            "product_id": receipt.product_id,
+            "license_tier": tier,
+            "license_key": receipt.license_key,
+            "channel_expiry": channel_expiry,
+            "download_url": download_url
+        })),
+    )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 #[tokio::main]
@@ -384,6 +540,10 @@ async fn main() -> Result<()> {
         std::env::var("CLAIMS_DIR").unwrap_or_else(|_| "/var/lib/local-software/claims".into());
     let source_base_url = std::env::var("SOURCE_BASE_URL")
         .unwrap_or_else(|_| "https://software.pointsav.com/releases".into());
+    let signing_key_hex = std::env::var("LICENSE_SIGNING_KEY").ok();
+    if signing_key_hex.is_none() {
+        tracing::warn!("LICENSE_SIGNING_KEY not set — /v1/issue-token will return 503");
+    }
 
     let state = Arc::new(AppState {
         wallet_address,
@@ -392,6 +552,7 @@ async fn main() -> Result<()> {
         receipts_dir,
         claims_dir,
         source_base_url,
+        signing_key_hex,
     });
 
     let app = Router::new()
@@ -401,6 +562,7 @@ async fn main() -> Result<()> {
         .route("/healthz", get(healthz))
         .route("/v1/products", get(v1_products))
         .route("/v1/license/:tx_hash", get(v1_license))
+        .route("/v1/issue-token/:tx_hash", get(v1_issue_token))
         .route("/v1/claim", post(v1_claim))
         .route("/v1/wallet/address", get(v1_wallet_address))
         .nest_service("/static", ServeDir::new("static"))
