@@ -2,6 +2,32 @@
 
 > Last updated: 2026-05-29
 
+## Phase 7D — COMPLETE (2026-05-29)
+
+Citation hover preview, freshness dot, `CITATIONS` redb table.
+Files: `src/links.rs`, `src/render.rs`, `src/server.rs`, `static/style.css`, `static/wiki.js`.
+
+- **`src/links.rs`** — `CITATIONS` redb table added (`TableDefinition<&str, &str>`; key=`cite_id`,
+  value=JSON blob). `record_citation(cite_id, url, title)`, `lookup_citation(cite_id)`,
+  `citation_status(cite_id)` API added. Table initialised in `open_or_create()`.
+- **`src/render.rs`** — `inject_citation_markers(html)` post-processor: finds comrak
+  `<sup class="footnote-ref">` elements and appends a
+  `<span class="freshness-dot" data-status="unknown"></span>` before `</sup>`.
+- **`src/server.rs`** — `inject_citation_markers()` wired into wiki_page render chain after
+  glossary tooltips, before heading extraction.
+- **`static/style.css`** — `.freshness-dot` (5px circle, oklch colors per status: fresh/stale/unknown).
+  `.cite-hover-card` (absolute positioned card, 300px max, shadow + border).
+- **`static/wiki.js`** — `initCitationHoverCards()`: mouseenter on `sup.footnote-ref` injects card
+  populated from matching `<li id="fn-N">` in the footnotes section. Card dismissed on mouseleave.
+  Called in DOMContentLoaded boot.
+
+Phase 7X is already implemented (YAML-based featured article + DYK; search in `section.hero`).
+Next: Phase 7E (mobile chrome) or 7F (Tufte sidenotes).
+
+Binary rebuild + deploy required (rust-embed CSS/JS). Stage 6 pending.
+
+---
+
 ## Phase 7C — COMPLETE (commit `d649f051`, 2026-05-29)
 
 Reading mode toggle. Files: `src/server.rs`, `static/style.css`, `static/wiki.js`.
@@ -94,8 +120,8 @@ binary rebuild queued for nightly ~1am Vancouver 2026-05-28.
 | **UX-B.7** | Woodfine SVG wordmark | **BLOCKED — operator must provide SVG asset** |
 | **7B** | Article-tabs row (40px); Tools dropdown; anchor-share `¶`; auth-gated tabs | **COMPLETE** |
 | **7C** | Reading mode toggle; CSS body-class; localStorage | **COMPLETE** (commit `d649f051`) |
-| **7X** | Home page: search hero, featured article, DYK section | **Next** |
-| **7D** | Citation hover preview; freshness dot; citations redb table | Queued |
+| **7X** | Home page: search hero, featured article, DYK section | **Already implemented** (YAML-based: `featured-topic.yaml`, `leapfrog-facts.yaml`; hero search in `section.hero`) |
+| **7D** | Citation hover preview; freshness dot; citations redb table | **COMPLETE** |
 | **7E** | Mobile chrome: 56px top/bottom bars; TOC bottom sheet; code/table overflow | Queued |
 | **7F** | Tufte sidenotes for `layout: journal` articles at ≥1280px | Queued |
 | **7G+7H** | Corporate: effective\_date block; auto-numbered sections (CSS counters) | Queued |
