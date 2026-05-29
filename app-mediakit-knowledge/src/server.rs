@@ -230,6 +230,7 @@ pub fn router(state: AppState) -> Router {
         .route("/special/pageinfo/{*slug}", get(page_info))
         .route("/special/cite/{*slug}", get(cite_page))
         .route("/special/categories", get(categories_index_page))
+        .route("/special/hash-lookup/{hash}", get(hash_lookup_page))
         // Phase 4 Step 4.8 — OpenAPI 3.1 specification
         .route("/openapi.yaml", get(openapi_yaml));
     // Phase 4 Step 4.6 — MCP JSON-RPC 2.0 endpoint; only mounted when
@@ -2024,6 +2025,11 @@ async fn wiki_page_inner(
 
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     let redirected_from = q.redirectedfrom.as_deref();
+    let body_fingerprint = {
+        let h = blake3::hash(parsed.body_md.as_bytes());
+        let hex = h.to_hex();
+        hex[..16].to_string()
+    };
     Ok(wiki_chrome(
         effective_locale,
         &title,
@@ -2038,6 +2044,7 @@ async fn wiki_page_inner(
         pending_count,
         redirected_from,
         q.printable,
+        &body_fingerprint,
     )
     .into_response())
 }
@@ -2091,6 +2098,7 @@ fn wiki_chrome(
     pending_count: i64,
     redirected_from: Option<&str>,
     printable: bool,
+    body_blake3: &str,
 ) -> Markup {
     let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
     let woodfine_projects = brand_theme == Some("woodfine-projects");
@@ -2415,6 +2423,11 @@ fn wiki_chrome(
                                         " · "
                                         a href={ "/history/" (slug) } { "View history" }
                                     }
+                                }
+                                div.article-integrity {
+                                    span.integrity-label { "Fingerprint" }
+                                    code.integrity-hash { (body_blake3) }
+                                    a.integrity-history-link href={ "/history/" (slug) } { "revision history" }
                                 }
                                 @if let Some(translations) = &fm.translations {
                                     @if !translations.is_empty() {
@@ -3495,6 +3508,7 @@ async fn talk_post(
 async fn history_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
+    Query(hp): Query<HistoryPageParams>,
     CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     crate::edit::validate_slug(&slug)?;
@@ -3502,11 +3516,19 @@ async fn history_page(
     if !path.is_file() {
         return Err(WikiError::NotFound(slug));
     }
-    let history = crate::history::topic_history(&state.content_dir, &slug, 50)?;
+
+    const PER_PAGE: usize = 25;
+    let page = hp.page.unwrap_or(1).max(1) as usize;
+    let all_history = crate::history::topic_history(&state.content_dir, &slug, 500)?;
+    let total = all_history.len();
+    let start = (page - 1) * PER_PAGE;
+    let history: Vec<_> = all_history.into_iter().skip(start).take(PER_PAGE).collect();
+    let has_older = start + history.len() < total;
+    let has_newer = page > 1;
 
     let body = html! {
         h1 { "History: " (slug) }
-        @if history.is_empty() {
+        @if total == 0 {
             p { "No revision history yet." }
         } @else {
             table.history-table {
@@ -3520,7 +3542,7 @@ async fn history_page(
                     }
                 }
                 tbody {
-                    @for entry in history {
+                    @for entry in &history {
                         tr.history-body-row {
                             td.history-td-sha {
                                 a href=(format!("/diff/{}?b={}&a={}~", slug, entry.sha, entry.sha)) {
@@ -3541,6 +3563,14 @@ async fn history_page(
                             }
                         }
                     }
+                }
+            }
+            nav.history-pagination {
+                @if has_newer {
+                    a.history-page-link href={ "/history/" (slug) "?page=" (page - 1) } { "← newer" }
+                }
+                @if has_older {
+                    a.history-page-link href={ "/history/" (slug) "?page=" (page + 1) } { "older →" }
                 }
             }
         }
@@ -3597,6 +3627,11 @@ async fn blame_page(
         maybe_user.as_ref(),
         pending_count,
     ))
+}
+
+#[derive(Deserialize)]
+struct HistoryPageParams {
+    page: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -3681,9 +3716,16 @@ async fn diff_page(
     }
     flush_pending(&mut pending_del, &mut pending_ins, &mut rows);
 
+    let added_count: usize = rows.iter().filter(|(_, _, c)| *c == "diff-row-ins").count();
+    let deleted_count: usize = rows.iter().filter(|(_, _, c)| *c == "diff-row-del").count();
+    let changed_count: usize = rows.iter().filter(|(_, _, c)| *c == "diff-row-chg").count();
+    let add_lines = added_count + changed_count;
+    let del_lines = deleted_count + changed_count;
+
     let body = html! {
         h1 { "Diff: " (slug) }
         p.diff-header { "From " code { (&a_sha[..7.min(a_sha.len())]) } " to " code { (&b_sha[..7.min(b_sha.len())]) } }
+        div.diff-stats { "+" (add_lines) " / −" (del_lines) " lines" }
         div.diff-two-col-wrap {
             table.diff-two-col {
                 thead {
@@ -3775,6 +3817,50 @@ fn word_diff_pair(old_line: &str, new_line: &str) -> (String, String) {
         }
     }
     (left, right)
+}
+
+/// Phase 8 — look up an article by its blake3 content fingerprint.
+async fn hash_lookup_page(
+    State(state): State<Arc<AppState>>,
+    Path(hash_hex): Path<String>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Response, WikiError> {
+    if hash_hex.len() != 64 || !hash_hex.chars().all(|c| c.is_ascii_hexdigit()) {
+        let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+        let body = html! {
+            h1 { "Hash lookup" }
+            p { "Invalid fingerprint — expected 64 hex characters." }
+        };
+        return Ok(chrome("Hash lookup", body, &state.site_title, maybe_user.as_ref(), pending_count).into_response());
+    }
+
+    let mut bytes = [0u8; 32];
+    for (i, chunk) in hash_hex.as_bytes().chunks(2).enumerate() {
+        let hi = (chunk[0] as char).to_digit(16).unwrap_or(0) as u8;
+        let lo = (chunk[1] as char).to_digit(16).unwrap_or(0) as u8;
+        bytes[i] = (hi << 4) | lo;
+    }
+
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    match state.links.lookup_by_hash(&bytes)? {
+        Some((slug, revision_sha)) => {
+            let short_sha = if revision_sha.len() >= 7 { &revision_sha[..7] } else { &revision_sha };
+            let body = html! {
+                h1 { "Hash lookup" }
+                p {
+                    "Article: "
+                    a href={ "/wiki/" (&slug) } { (&slug) }
+                    " at revision "
+                    code { (short_sha) }
+                }
+                p {
+                    a href={ "/diff/" (&slug) "?a=" (&revision_sha) "~&b=" (&revision_sha) } { "View diff for this revision" }
+                }
+            };
+            Ok(chrome("Hash lookup", body, &state.site_title, maybe_user.as_ref(), pending_count).into_response())
+        }
+        None => Err(WikiError::NotFound(format!("fingerprint {}", &hash_hex[..16]))),
+    }
 }
 
 /// Shared shell for non-article pages (search, category, errors).
