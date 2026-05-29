@@ -7,7 +7,7 @@ title: "Retail Anchor Co-location Composition as a Spatial Leading Indicator of 
 target_journal: "Economic Geography"
 target_publisher: "Wiley-Blackwell"
 impact_factor: "7.2"
-alternate_venue: "Journal of Economic Geography (Oxford University Press, IF 6.3); Regional Studies (Taylor & Francis, IF 5.54)"
+alternate_venue: "Journal of Urban Economics (Elsevier, IF 5.8); Regional Science and Urban Economics (Elsevier)"
 authors:
   - name: "Jennifer M. Woodfine"
     affiliation: "Woodfine Management Corp., New York, NY, USA"
@@ -74,28 +74,15 @@ revision_history:
     date: "2026-05-28"
     changes: "§7.0 preliminary OLS added; preprint notice and FLS advisory; public posting"
 notes_for_editor: |
-  Promoted from PROSE-RESEARCH v0.4 (2026-05-25 three-agent pipeline revision pass).
+  The preliminary OLS results in §7.0 are complete and reported with confidence intervals.
+  The primary regression specification (§7.2) requires a population-weighted catchment
+  dataset; that dataset is in preparation and is expected before the next writing pass.
+  Figures F1–F5 are production-ready. Figure F6 is a partial forest plot; it will be
+  updated when the §7.2 specification can be executed. Pre-submission requirements:
+  ORCID IDs for all three authors; Appendix B country-by-country coverage table;
+  Appendix C data-flow diagram; formal permutation test; word count confirmed on target.
 
-  v0.3 updates (2026-05-28):
-    - §7.0 added: two preliminary Phase 22 regressions executed and reported
-      Model A: log(span_km) ~ T1 + T2 + country FE — T1 63% larger than T3 (p<0.001)
-      Model B: T1_dummy ~ composition + log(span_km) + tight + country FE — R²=0.503
-    - F6 partial: coefficient forest plot produced (work/figures/F6-ols-coefficients.png)
-      F6 will be updated when §7.2 spec (catchment entropy + pop_150km) can run (Phase 24B)
-    - F1–F5 produced by project-gis (work/figures/ in project-gis monorepo)
-
-  Pre-submission blockers:
-    1. ORCID IDs for all three authors required before submission
-    2. §7.2 primary spec (catchment_entropy ~ tier + log[pop_150km]) — pending Phase 24B
-    3. F6 update with §7.2 spec results — pending above
-    4. Country-by-country results table (Appendix B) — outstanding
-    5. Architecture diagram (Appendix C) — outstanding
-    6. Formal permutation test (sim-tier-permutation.py) — outstanding
-    7. LODES employment join (§7.1) — outstanding
-    8. Year 2 research: CBRE/JLL leasing-data acquisition; Optimum Mosaic integration
-    9. ES bilingual sibling required (separate PROSE artifact; not a JOURNAL deliverable)
-
-  Do NOT reintroduce investment/leasing/capital language at editorial stage.
+  Do not reintroduce investment, leasing, or capital-market language at editorial stage.
 ---
 
 ---
@@ -333,9 +320,9 @@ The methodological consequence of this approach is that mobility-defined catchme
 
 ### 4.2 Dataset Characteristics
 
-The Phase 21 dataset (current build, May 2026) and the Phase 22 projected distribution under the taxonomy revision described in §3.2 are shown below:
+The current dataset (build: May 2026) and the projected distribution under the revised taxonomy described in §3.2 are shown below:
 
-| Metric | Phase 21 (current) | Phase 22 (projected) |
+| Metric | Current (May 2026) | Projected (revised taxonomy) |
 |---|---|---|
 | Total clusters | 6,493 | 6,493 |
 | T1 clusters | 1,537 (23.7%) | 1,747 (26.9%) |
@@ -346,7 +333,7 @@ The Phase 21 dataset (current build, May 2026) and the Phase 22 projected distri
 | Retail anchor points | ~90,000 | ~95,000 |
 | Clusters with O-D coverage | ~7,600 (US LODES) + 58 (ES MITMA) | — |
 
-The Phase 21 T2 share (48%) is inflated because the production tier function promoted any hypermarket-containing cluster with two or more members to T2, regardless of whether a hardware anchor was present. The Phase 22 taxonomy revision (§3.2) corrects this by requiring `has_hypermarket ∧ has_hardware` for T2, and introduces the T1.a tripartite disjunction. Under the revised rules, electronics-anchored clusters in Europe that already contain a hypermarket and hardware anchor are promoted to T1, lifting the global T1 count from 1,537 to a projected 1,747. European T1 grows from 516 to approximately 726, clearing the 500-cluster threshold that enables statistically meaningful cross-continental subgroup analysis. The T3 count falls because the T2→T3 redistribution (from removing the loose `n≥2` T2 path) is partially offset by the T3→T1 redistribution (from the electronics clause). All projected counts are estimates pending the Phase 22 rebuild.
+The current T2 share (48%) is inflated because the production tier function promoted any hypermarket-containing cluster with two or more members to T2, regardless of whether a hardware anchor was present. The taxonomy revision described in §3.2 corrects this by requiring `has_hypermarket ∧ has_hardware` for T2, and introduces the T1.a tripartite disjunction. Under the revised rules, electronics-anchored clusters in Europe that already contain a hypermarket and hardware anchor are promoted to T1, lifting the global T1 count from 1,537 to a projected 1,747. European T1 grows from 516 to approximately 726, clearing the 500-cluster threshold that enables statistically meaningful cross-continental subgroup analysis. The T3 count falls because the T2→T3 redistribution (from removing the loose `n≥2` T2 path) is partially offset by the T3→T1 redistribution (from the electronics clause). All projected counts are estimates pending implementation of the revised taxonomy.
 
 The original research brief specified parameter calibration to a target of approximately 400 T1 locations per major region (North America, Europe). The framework presented here allows composition rules to determine cluster cardinality, producing 1,747 projected T1 clusters — materially more than the target-count specification. This represents a shift from target-count-driven to composition-rule-driven calibration; the implications for precision versus recall in site selection are discussed in §6.5.
 
@@ -376,14 +363,14 @@ The sub-metropolitan market is the natural unit of analysis for commercial activ
 
 ### 5.1 Global Tier Distribution
 
-T1 clusters account for 26.9% of the study population (1,747 of 6,493) across thirteen countries under the Phase 22 projected taxonomy. The T1/T2/T3 distribution differs systematically between North America and Europe, reflecting structural differences in retail format composition. The following table reports Phase 22 projected counts under the revised taxonomy (§3.2, §4.2); Phase 21 current counts are in §4.2:
+T1 clusters account for 26.9% of the study population (1,747 of 6,493) across thirteen countries under the projected revised taxonomy. The T1/T2/T3 distribution differs systematically between North America and Europe, reflecting structural differences in retail format composition. The following table reports projected counts under the revised taxonomy (§3.2, §4.2); current counts are in §4.2:
 
-| Region | T1 (Phase 22 proj.) | T2 (Phase 22 proj.) | T3 (Phase 22 proj.) |
+| Region | T1 (projected) | T2 (projected) | T3 (projected) |
 |---|---|---|---|
 | North America | 1,021 (34%) | 1,712 (57%) | 268 (9%) |
 | Europe | 726 (24%) | 1,680 (56%) | 572 (19%) |
 
-North America produces proportionally more T1 clusters because Walmart Supercentre (primary anchor), Home Depot/Lowe's (hardware), and Costco/Sam's Club (price club) achieved co-location in large numbers of sub-metropolitan markets during the 1990–2010 period of power centre development. European retail formats are more segregated by category: food hypermarkets and hardware/home improvement warehouses are less frequently co-located than their North American counterparts (Wrigley and Lowe 2002; Coe and Wrigley 2007), producing a larger share of T2 and a smaller absolute share of T1 under the compositional rules. The electronics clause in T1.a (§3.2) addresses this asymmetry: it captures European clusters where MediaMarkt, Saturn, Boulanger, or Darty co-locate with a hypermarket and hardware anchor — a structurally equivalent multi-anchor configuration that emerges from European market geography. Under the Phase 22 taxonomy, EU T1 rises from 516 to approximately 726, crossing the threshold required for statistically meaningful continental subgroup testing.
+North America produces proportionally more T1 clusters because Walmart Supercentre (primary anchor), Home Depot/Lowe's (hardware), and Costco/Sam's Club (price club) achieved co-location in large numbers of sub-metropolitan markets during the 1990–2010 period of power centre development. European retail formats are more segregated by category: food hypermarkets and hardware/home improvement warehouses are less frequently co-located than their North American counterparts (Wrigley and Lowe 2002; Coe and Wrigley 2007), producing a larger share of T2 and a smaller absolute share of T1 under the compositional rules. The electronics clause in T1.a (§3.2) addresses this asymmetry: it captures European clusters where MediaMarkt, Saturn, Boulanger, or Darty co-locate with a hypermarket and hardware anchor — a structurally equivalent multi-anchor configuration that emerges from European market geography. Under the revised taxonomy, EU T1 rises from 516 to approximately 726, crossing the threshold required for statistically meaningful continental subgroup testing.
 
 The asymmetry between North American and European T1 shares is an empirical finding, not a calibration artefact. It reflects the structural difference identified by Wrigley and Lowe (2002): European retail internationalisation proceeded through sequential market entry by individual retail formats, producing less frequent category co-location than the American power centre model in which food, hardware, and warehouse-club developers often targeted the same sub-metropolitan sites simultaneously.
 
@@ -391,7 +378,7 @@ The asymmetry between North American and European T1 shares is an empirical find
 
 ### 5.2 Geometric Rank Distribution
 
-T1 cluster median span_km is 0.92 — lower than the T2 median of 1.14 — consistent with the hypothesis that high-composition clusters tend to be physically compact. Within each tier, the geometric rank (§3.4) produces a continuous compactness measure. Descriptive statistics for the current Phase 21 dataset:
+T1 cluster median span_km is 0.92 — lower than the T2 median of 1.14 — consistent with the hypothesis that high-composition clusters tend to be physically compact. Within each tier, the geometric rank (§3.4) produces a continuous compactness measure. Descriptive statistics for the current dataset:
 
 | Tier | Median span_km | 10th pctile | 90th pctile |
 |---|---|---|---|
@@ -421,15 +408,7 @@ Commercial location intelligence is conventionally inductive: it observes traffi
 
 Both are valid inference procedures. The question is efficiency for a specific class of research problems: identifying sub-metropolitan markets where commercial activity intensity is systematically higher than ambient population size would predict.
 
-The deductive approach is more efficient for this class of problems on four grounds:
-
-**Data availability.** Retail anchor locations are publicly observable from OpenStreetMap at zero marginal cost. Proprietary O-D datasets require per-market licensing with restricted cross-market comparability.
-
-**Temporal depth.** A Walmart Supercentre established in 2004 reflects twenty years of sustained market validation against observed traffic patterns and consumer demographics. Mobility panel data typically covers five to ten years, with significant gaps before 2015 (Büchel and Ehrlich 2021).
-
-**Counterfactual identification.** Compositional analysis identifies sub-metropolitan markets where the supply-side signal (anchor composition) is strong and commercial development in adjacent use classes has not yet occurred. Demand-driven analysis identifies existing high-traffic locations — where development has typically already priced in the signal.
-
-**Structural permanence.** National retail chains rarely exit sub-metropolitan markets that validate them commercially. The anchor location signal is durable across multi-decade horizons. Observed mobility patterns shift with consumer behaviour, remote work penetration, and digital commerce substitution.
+The deductive approach is more efficient for this class of problems on four grounds. *Data availability.* Retail anchor locations are publicly observable from OpenStreetMap at zero marginal cost; proprietary O-D datasets require per-market licensing with restricted cross-market comparability. *Temporal depth.* A Walmart Supercentre established in 2004 reflects twenty years of sustained market validation against observed traffic patterns and consumer demographics; mobility panel data typically covers five to ten years, with significant gaps before 2015 (Büchel and Ehrlich 2021). *Counterfactual identification.* Compositional analysis identifies sub-metropolitan markets where the supply-side signal is strong and commercial development in adjacent use classes has not yet occurred; demand-driven analysis identifies existing high-traffic locations where development has typically already priced in the signal. *Structural permanence.* National retail chains rarely exit sub-metropolitan markets that validate them commercially; the anchor location signal is durable across multi-decade horizons, while observed mobility patterns shift with consumer behaviour, remote work penetration, and digital commerce substitution.
 
 For practitioners in commercial real estate — the discipline that motivated the original research brief — the supply-side framework provides a site-selection signal that is available before, not after, a target market has been identified through demand analysis. A location that scores T1 under the geometric-composition rule carries evidence that three independent, well-resourced site-selection processes have already validated the sub-metropolitan market; this evidence is especially valuable in prospective markets where mobility-panel coverage is thin or where the development horizon is measured in years rather than months.
 
@@ -487,9 +466,9 @@ H₁ is falsified if T1 clusters do not systematically exhibit higher catchment 
 
 The following tests operationalise H₁, H₂, and H₃. Each test is stated as a regression model with a specific dataset requirement. Tests 1 and 4 are executable with data currently loaded; Tests 2, 3, and 5 require O-D and civic datasets currently being acquired.
 
-Two preliminary regressions were executed against the Phase 22 dataset (N = 6,481 clusters, 17 countries) to characterise tier geometry and validate the compositional classification prior to O-D data acquisition. Both specifications include country fixed effects and standard errors clustered at the ISO-country level (15 clusters in the SE), consistent with the country-FE strategy adopted in Tests 1–5 below.
+Two preliminary regressions were executed against the study dataset (N = 6,481 clusters, 17 countries) to characterise tier geometry and validate the compositional classification prior to O-D data acquisition. Both specifications include country fixed effects and standard errors clustered at the ISO-country level (15 clusters in the SE), consistent with the country-FE strategy adopted in Tests 1–5 below.
 
-### 7.0 Preliminary Phase 22 Analysis (executable)
+### 7.0 Preliminary Analysis (Executable)
 
 **Model A — Geometric tier characterisation.** The estimating equation is:
 
@@ -510,7 +489,7 @@ where T1_dummy equals 1 if the cluster is classified T1 and 0 otherwise, and has
 
 *Interpretation.* The two models together establish that (1) T1 tier membership is associated with a structurally larger physical footprint than T2 or T3 tiers and (2) the compositional taxonomy is empirically coherent — the anchor type flags that constitute the classification rules are also the strongest regression-based predictors of T1 membership in a held-out cross-sectional specification. Neither model is a test of H₁ (which requires O-D catchment data); they are diagnostic checks on the geometric and compositional properties of the tier taxonomy before the causal falsification programme is executed.
 
-*F6 note.* Figure 6 displays the coefficient plots from Models A and B. The §7.2 primary specification (log[catchment_entropy] ~ tier + log[pop_150km] + country FE) is pending O-D data and Kontur population join; F6 will be updated with those coefficients once the Phase 24B pipeline is complete.
+*F6 note.* Figure 6 displays the coefficient plots from Models A and B. The §7.2 primary specification (log[catchment_entropy] ~ tier + log[pop_150km] + country FE) is pending O-D data acquisition and population-weighted catchment construction; F6 will be updated with those coefficients once those datasets are available.
 
 ### 7.1 Test 1 — Work-Commute Employment Density (US, executable)
 
@@ -558,7 +537,7 @@ where `mobility_index` is an O-D-derived visitor intensity measure. H₂ predict
 
 **Prediction:** The observed rank correlation falls in the top 1% of the permutation distribution (one-tailed p < 0.01).
 
-**Data:** Current LODES dataset is sufficient. Implementation in `sim-tier-permutation.py` — to be written.
+**Data:** Current LODES dataset is sufficient. Implementation: shuffle T1/T2/T3 tier labels across the cluster population 10,000 times; compute the one-tailed p-value against the observed between-tier differential. Script to be written.
 
 ### 7.5 Test 5 — Civic Amplification (H₃)
 
@@ -599,7 +578,7 @@ The medium-term programme is O-D data acquisition for the UK, France, and German
 
 A near-term extension addresses the corollary prediction introduced in §2.2: that secondary anchors follow rather than precede hypermarket establishment. Event-study methods analogous to those applied to Walmart's diffusion by Holmes (2011), using temporal data on store-opening dates, may test this sequential-entry hypothesis directly. This is a planned line of research, not a current result.
 
-The long-term agenda is a time-series analysis. The current dataset is a cross-section (Phase 21, May 2026). Retail format evolution, the entry of new large-format anchor typologies (e-commerce fulfilment, health and wellness large-format), and the exit or repositioning of existing anchors will alter the tier distribution over time. Tracking these changes longitudinally against commercial activity outcomes may provide the strongest test of the compositional signal's predictive durability.
+The long-term agenda is a time-series analysis. The current dataset is a cross-section (May 2026). Retail format evolution, the entry of new large-format anchor typologies (e-commerce fulfilment, health and wellness large-format), and the exit or repositioning of existing anchors will alter the tier distribution over time. Tracking these changes longitudinally against commercial activity outcomes may provide the strongest test of the compositional signal's predictive durability.
 
 ---
 
@@ -715,7 +694,7 @@ Zhao, S., Y. Chen, Y. Duan, and Z. Xu. 2025. Site selection analysis and predict
 | home_work_ratio | Devices with home_hex inside catchment ÷ devices with work_hex inside catchment |
 | H₁, H₀, H₂, H₃ | Primary, null, demand-redundancy, and civic-amplification hypotheses |
 
-## Appendix B — Chain Coverage by Country (Phase 21)
+## Appendix B — Chain Coverage by Country
 
 *[TODO: Full chain-by-country table from taxonomy.py — to be added at v0.5 once Scenario A rebuild is complete.]*
 
@@ -735,7 +714,26 @@ This disclosure follows the COPE (Committee on Publication Ethics) guidelines on
 
 ---
 
-*Version 0.4 — 2026-05-25*
-*Target: Journal of Economic Geography*
-*For internal review before submission*
-*Forward-looking statements carry "planned / intended / may / target" language*
+## CRediT Contributor Roles
+
+**Jennifer M. Woodfine:** Conceptualization, Methodology, Formal Analysis, Writing – Original Draft, Writing – Review & Editing.
+**Peter M. Woodfine:** Conceptualization, Validation, Writing – Review & Editing.
+**Mathew Woodfine:** Software, Data Curation, Writing – Review & Editing.
+
+---
+
+## Conflict of Interest Declaration
+
+The authors have a commercial interest in retail location analysis tools. This interest did not influence the study design, data collection, or interpretation of results. The datasets used are publicly available; the analytical methodology is fully disclosed in §3 and §4; and all quantitative outputs are reproducible from the open-source data sources described herein.
+
+---
+
+## Funding Statement
+
+No external funding was received for this research.
+
+---
+
+## Data Availability Statement
+
+The retail anchor location data used in this study are derived from OpenStreetMap, which is freely available under the Open Database Licence (ODbL). Population data are from Kontur Population (CC BY 4.0). Origin-destination employment data are from the US LEHD LODES programme (public domain) and Spain MITMA (open government data). Cluster computation scripts and taxonomy configuration files are available from the corresponding author upon reasonable request.
