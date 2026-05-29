@@ -59,7 +59,7 @@ process_document() {
         --argjson schema "${ENTITY_SCHEMA}" \
         '{
             "messages": [
-                {"role": "system", "content": "Extract named entities. Return a JSON array matching the schema exactly."},
+                {"role": "system", "content": "Extract named entities from the text. Classify each entity into exactly one category.\nCategories and examples:\n  Person — named human individual. Example: \"Jane Smith\".\n  Company — registered organisation or business. Example: \"Woodfine Management Corp.\".\n  Project — named initiative, programme, or system. Example: \"service-slm\".\n  Account — financial account, service account, or contract reference.\n  Location — geographic place or address. Example: \"Vancouver\".\nOmit: laws and regulations (not Location), dates and years (not Location), abstract concepts (not Company), regulatory bodies (not Company unless they are a named legal entity with a registered name).\nIf an entity does not clearly fit one category, omit it rather than guessing.\nReturn a JSON array matching the schema exactly."},
                 {"role": "user", "content": $text}
             ],
             "grammar": {"type": "json-schema", "value": $schema},

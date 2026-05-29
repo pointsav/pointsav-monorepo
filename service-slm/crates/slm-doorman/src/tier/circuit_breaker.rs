@@ -120,6 +120,22 @@ impl CircuitBreaker {
         let inner = self.inner.read().unwrap_or_else(|p| p.into_inner());
         inner.state == CbState::Open
     }
+
+    /// Returns the current state as a static label: "closed", "open", or "half_open".
+    pub fn state_label(&self) -> &'static str {
+        let inner = self.inner.read().unwrap_or_else(|p| p.into_inner());
+        match inner.state {
+            CbState::Closed => "closed",
+            CbState::Open => "open",
+            CbState::HalfOpen => "half_open",
+        }
+    }
+
+    /// Returns the number of seconds since the circuit opened, or `None` if it is closed.
+    pub fn opened_for_secs(&self) -> Option<u64> {
+        let inner = self.inner.read().unwrap_or_else(|p| p.into_inner());
+        inner.opened_at.map(|t| t.elapsed().as_secs())
+    }
 }
 
 #[cfg(test)]

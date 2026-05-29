@@ -77,12 +77,17 @@ pub struct DraftResponse {
 #[derive(Debug, Serialize)]
 pub struct HealthResponse {
     pub status: &'static str,
+    pub entity_count: usize,
 }
 
 // ── handlers ──────────────────────────────────────────────────────────────────
 
-async fn healthz() -> Json<HealthResponse> {
-    Json(HealthResponse { status: "ok" })
+async fn healthz(State(state): State<Arc<HttpState>>) -> Json<HealthResponse> {
+    let (status, entity_count) = match state.graph.count_all() {
+        Ok(n) => ("ok", n),
+        Err(_) => ("degraded", 0),
+    };
+    Json(HealthResponse { status, entity_count })
 }
 
 async fn graph_context(

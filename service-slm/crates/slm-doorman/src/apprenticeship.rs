@@ -25,7 +25,7 @@ use slm_core::{
 };
 use std::str::FromStr;
 use std::sync::OnceLock;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 use crate::citations::{render_for_prompt, resolve as resolve_citations};
@@ -324,6 +324,18 @@ fn write_shadow_tuple(
     doctrine_version: &str,
     tenant: &str,
 ) -> Result<()> {
+    // Degenerate tuple guard: if Tier A escalated but produced no diff, this tuple
+    // carries no DPO signal (rejected sample is empty string). Skip rather than
+    // writing noise into the training corpus.
+    if attempt.escalate && attempt.diff.is_empty() {
+        warn!(
+            target: "slm_doorman::apprenticeship",
+            brief_id = %brief.brief_id,
+            "shadow tuple skipped — Tier A escalated with empty diff; awaiting Tier B"
+        );
+        return Ok(());
+    }
+
     let dir = corpus_root
         .join("data")
         .join("training-corpus")
