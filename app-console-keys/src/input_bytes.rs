@@ -6,6 +6,12 @@ pub struct ByteParser {
     buf: Vec<u8>,
 }
 
+impl Default for ByteParser {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ByteParser {
     pub fn new() -> Self {
         Self { buf: Vec::new() }
