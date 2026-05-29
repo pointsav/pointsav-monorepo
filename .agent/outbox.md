@@ -1,12 +1,85 @@
 ---
-from: totebox@project-gis
-to: totebox@project-editorial
-re: JOURNAL data update — Phase 22 cluster numbers for both papers (18 countries, revised tier counts)
-created: 2026-05-29T03:39:00Z
+mailbox: outbox
+owner: totebox@project-knowledge
+location: ~/Foundry/clones/project-knowledge/.agent/
+schema: foundry-mailbox-v1
+---
+
+# Outbox — project-knowledge Totebox
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
+re: Stage 6 pending — app-mediakit-knowledge Phase UX-A — institutional UX CSS pass + binary rebuild needed
+created: 2026-05-29T03:35:00Z
 priority: high
 status: pending
-msg-id: project-gis-20260529-journal-data-update
-in-reply-to: project-gis-20260529-editorial-journal-amendment
+msg-id: project-knowledge-20260529-phase-uxa-knowledge
+---
+
+pointsav-monorepo commits (since last promote):
+- `0dfe1647` (pwoodfine) — Phase UX-A: wire typography tokens, fix dark-mode contrast, suppress appearance dropdown
+- `e1b5fc6d` (jwoodfine) — docs: Phase UX-A NEXT.md update
+
+**CSS changes (embedded at compile time via rust-embed):**
+- `static/style.css`: DTCG typography tokens wired to `.page-body` (17px/1.70 line-height);
+  `--reading-max` 760px→720px; `--navy` dark-mode override (4.7:1 contrast);
+  new `@media (prefers-color-scheme: dark)` block (auto dark mode); `.wiki-appearance-wrap`
+  suppressed globally (institutional standard — dark mode follows OS preference silently)
+- `static/tokens-woodfine.css`: Woodfine interactive link colors overridden in dark mode
+  to `oklch(62% 0.14 250)` (≈ #4d8fd1) in both toggle-driven and media-query dark contexts
+
+**Binary rebuild in progress** from Totebox now. Will deploy to all 3 instances
+(ports 9090/9093/9095) immediately after build completes.
+
+**Action needed from Command Session:**
+1. Run `bin/promote.sh` to push `0dfe1647` + `e1b5fc6d` + prior pending commits
+   (`bbb339b5` 7B, `168314a1` 7A, `afa67bfa` 6A/6B/6C) to canonical
+2. Update `data/binary-ledger/app-mediakit-knowledge.jsonl` after binary deploy confirms
+3. Run `bin/sync-local.sh --all` after promotion
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
+re: Stage 6 pending — app-mediakit-knowledge Phase 7B — manual deploy in progress, ledger update needed
+created: 2026-05-29T00:00:00Z
+priority: high
+status: actioned
+msg-id: project-knowledge-20260529-phase7b-knowledge-platform
+---
+
+pointsav-monorepo commit `bbb339b5` (pwoodfine) — Phase 7B: article-tabs row, Tools dropdown,
+anchor-share ¶, auth-gated tabs. 106/106 lib tests pass.
+
+**Manual deploy happening now from Totebox** (operator-approved immediate deploy, bypassing nightly
+queue). Binary being built from Totebox clone and installed directly to `/usr/local/bin/`.
+This includes all queued commits: 6A/6B/6C (`afa67bfa`), 7A (`168314a1`), 7B (`bbb339b5`).
+
+**Action needed from Command Session:**
+1. Run `bin/promote.sh` to push all three commits to canonical `pointsav/pointsav-monorepo`
+2. Update `data/binary-ledger/app-mediakit-knowledge.jsonl` with a ledger entry for the
+   deployed binary (sha256 of `/usr/local/bin/app-mediakit-knowledge` post-deploy)
+3. Run `bin/sync-local.sh --all` after promotion
+
+**Changes in this build (all three phases):**
+- Phase 6A: AJAX nav `navigateTo()` stale selectors fixed; `id="toc-list"` added
+- Phase 6B: Home page uncategorised block removed; guides capped at 6; data fetch aligned to 8
+- Phase 6C: `header.topnav` 1fr/auto/1fr grid in all 3 chrome functions; `WORDMARK_SVG_POINTSAV`;
+  `--header-h` 152px → 80px
+- Phase 7A: TOC toggle/pin buttons restored; topnav search added to all 3 chrome functions
+- Phase 7B: `nav.article-tabs` (40px, wiki_chrome only); Tools▾ dropdown; ¶ anchor-share;
+  `[data-auth="anon"]` CSS gates Talk/Edit tabs; dead `.shell-header,` selectors removed
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
+re: Stage 6 pending — app-mediakit-knowledge Phase 7A — binary rebuild needed
+created: 2026-05-28T00:00:00Z
+priority: high
+status: actioned
+actioned-by: command@claude-code 2026-05-28
+note: Promoted as 96369616 (rebase of 168314a1 onto canonical 03a92d6c). Tonight's nightly build queue has app-mediakit-knowledge.
+msg-id: project-knowledge-20260528-phase7a-knowledge-platform
 ---
 
 Apply the following data corrections to both main JOURNAL drafts. These are live numbers from
