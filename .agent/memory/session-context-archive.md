@@ -2,6 +2,14 @@
 
 ---
 
+### 2026-05-23 | totebox@project-console | claude-sonnet-4-6
+
+**Done:** Stage 6 rebase complete (11 commits onto local `main`, tip `9afc9e25`). Push BLOCKED — zero common ancestors with all remotes (full history divergence). Escalated to Command via outbox. binary-targets.yaml written (os-console, pairing-server, proofctl; AGPL-3.0). Build-request outbox sent.
+
+**Pending at close:** Stage 6 force-push authorization; Phase 3 QR; Phase 4 F11; pairing-server systemd unit; GCE firewall; Tag v0.1.0; Peter SSH key.
+
+---
+
 ### 2026-05-22 | totebox@project-console | claude-sonnet-4-6
 
 **Done:** Pairing ceremony Phases 1+2: server-issued 8-char Crockford code; `pairing-server` (port 9201); `proofctl pair list/approve/deny`; Dense1x2 Unicode QR. Both commits pushed to canonical `cluster/project-proofreader`.
