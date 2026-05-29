@@ -112,9 +112,22 @@ pub struct Frontmatter {
     #[serde(default)]
     pub research_trail: Option<BTreeMap<String, serde_yaml::Value>>,
 
+    /// Phase 7F: article layout variant. When `"journal"`, marginal sidenotes
+    /// are injected at ≥1280px for footnotes. Other values are ignored (default
+    /// prose layout applies).
+    #[serde(default)]
+    pub layout: Option<String>,
+
+    /// Phase 7G: opt-out flag for auto-numbered sections on corporate instance.
+    /// When `false`, CSS counters are suppressed even when data-instance="woodfine-corporate".
+    #[serde(default = "default_true")]
+    pub auto_number: bool,
+
     #[serde(flatten)]
     pub extra: BTreeMap<String, serde_yaml::Value>,
 }
+
+fn default_true() -> bool { true }
 
 #[derive(Debug)]
 pub struct ParsedPage {
@@ -479,6 +492,163 @@ pub fn inject_citation_markers(html: &str) -> String {
     }
     out.push_str(rest);
     out
+}
+
+/// Phase 7F — transform comrak footnotes into Tufte-style marginal sidenotes.
+///
+/// Only active when `is_journal` is true (frontmatter `layout: journal`). When
+/// false, returns the HTML unchanged. The transform:
+/// 1. Parses all `<li id="fn-N">` definitions from the `<section class="footnotes">` block.
+/// 2. Replaces each `<sup class="footnote-ref">` inline marker with a
+///    `<span class="sidenote-anchor">` containing a label+checkbox toggle and the
+///    sidenote text inline.
+/// 3. Removes the `<section class="footnotes">` block (now redundant).
+///
+/// CSS drives the layout: ≥1280px → absolute-positioned margin notes; <1280px →
+/// checkbox-toggle expander.
+pub fn inject_sidenotes(html: &str, is_journal: bool) -> String {
+    if !is_journal {
+        return html.to_string();
+    }
+
+    // Step 1: extract footnote text from <section class="footnotes" ...>
+    let mut defs: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    const FN_SECTION: &str = r#"<section class="footnotes""#;
+    const LI_PREFIX: &str = r#"<li id="fn-"#;
+
+    if let Some(sec_start) = html.find(FN_SECTION) {
+        let mut rest = &html[sec_start..];
+        while let Some(li_pos) = rest.find(LI_PREFIX) {
+            let after_fn = &rest[li_pos + LI_PREFIX.len()..];
+            if let Some(quote) = after_fn.find('"') {
+                let n = after_fn[..quote].to_string();
+                let li_rest = &after_fn[quote + 1..]; // starts at '>' of <li ...>
+                if let Some(li_end) = li_rest.find("</li>") {
+                    let li_content = &li_rest[..li_end];
+                    defs.insert(n, sidenote_extract_text(li_content));
+                    rest = &li_rest[li_end + 5..];
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
+    if defs.is_empty() {
+        return html.to_string();
+    }
+
+    // Step 2: replace inline <sup class="footnote-ref"> with sidenote-anchor
+    let mut out = String::with_capacity(html.len() + 256);
+    let mut rest = html;
+    const SUP_MARKER: &str = r#"<sup class="footnote-ref">"#;
+    const SUP_CLOSE: &str = "</sup>";
+
+    while let Some(sup_pos) = rest.find(SUP_MARKER) {
+        out.push_str(&rest[..sup_pos]);
+        let after_sup = &rest[sup_pos + SUP_MARKER.len()..];
+        if let Some(close_rel) = after_sup.find(SUP_CLOSE) {
+            let sup_inner = &after_sup[..close_rel];
+            if let Some(n) = sidenote_extract_n(sup_inner) {
+                if let Some(text) = defs.get(&n) {
+                    out.push_str(&format!(
+                        concat!(
+                            r#"<span class="sidenote-anchor" id="sn-{n}">"#,
+                            r#"<label class="sn-toggle" for="sn-toggle-{n}">{n}</label>"#,
+                            r#"<input type="checkbox" class="sn-toggle-input" id="sn-toggle-{n}">"#,
+                            r#"<span class="sidenote" id="sn-note-{n}">{text}</span>"#,
+                            r#"</span>"#,
+                        ),
+                        n = n,
+                        text = text,
+                    ));
+                    rest = &after_sup[close_rel + SUP_CLOSE.len()..];
+                    continue;
+                }
+            }
+            // Fallback: emit original sup unchanged
+            out.push_str(SUP_MARKER);
+            out.push_str(sup_inner);
+            out.push_str(SUP_CLOSE);
+            rest = &after_sup[close_rel + SUP_CLOSE.len()..];
+        } else {
+            out.push_str(SUP_MARKER);
+            out.push_str(after_sup);
+            break;
+        }
+    }
+    out.push_str(rest);
+
+    // Step 3: remove the now-redundant <section class="footnotes"> block
+    sidenote_remove_section(&out)
+}
+
+/// Extract N from `href="#fn-N"` inside a footnote-ref sup inner.
+fn sidenote_extract_n(sup_inner: &str) -> Option<String> {
+    const HREF: &str = "href=\"#fn-";
+    let pos = sup_inner.find(HREF)?;
+    let after = &sup_inner[pos + HREF.len()..];
+    let end = after.find('"')?;
+    Some(after[..end].to_string())
+}
+
+/// Extract plain text from a `<li>` inner slice: `>...<p>text backref</p>...`.
+/// Strips the enclosing `<p>`, the `↩` backref link, and trailing whitespace.
+fn sidenote_extract_text(li_content: &str) -> String {
+    // li_content: ">\n<p>text. <a ...>↩</a></p>\n"
+    let mut s = li_content;
+    // Skip leading '>'
+    if let Some(pos) = s.find('>') {
+        s = s[pos + 1..].trim_start();
+    }
+    // Strip outer <p>…</p>
+    if s.starts_with("<p>") {
+        s = &s[3..];
+    }
+    let s = if let Some(pos) = s.rfind("</p>") {
+        &s[..pos]
+    } else {
+        s
+    };
+    // Remove backref anchor <a … class="footnote-backref" …>↩</a>
+    sidenote_remove_backref(s).trim().to_string()
+}
+
+/// Remove the `<a class="footnote-backref" ...>↩</a>` link from a text fragment.
+fn sidenote_remove_backref(text: &str) -> String {
+    // Identify the backref anchor by its href="#fnref-" or class="footnote-backref"
+    let marker = if text.contains(r#"class="footnote-backref""#) {
+        r#"class="footnote-backref""#
+    } else if text.contains("href=\"#fnref-") {
+        "href=\"#fnref-"
+    } else {
+        return text.to_string();
+    };
+    if let Some(attr_pos) = text.find(marker) {
+        let before = &text[..attr_pos];
+        if let Some(a_start) = before.rfind("<a ") {
+            if let Some(close_rel) = text[a_start..].find("</a>") {
+                let full_end = a_start + close_rel + 4;
+                return format!("{}{}", &text[..a_start], &text[full_end..]);
+            }
+        }
+    }
+    text.to_string()
+}
+
+/// Remove the `<section class="footnotes">…</section>` block from rendered HTML.
+fn sidenote_remove_section(html: &str) -> String {
+    const OPEN: &str = r#"<section class="footnotes""#;
+    const CLOSE: &str = "</section>";
+    if let Some(start) = html.find(OPEN) {
+        if let Some(rel_end) = html[start..].find(CLOSE) {
+            let full_end = start + rel_end + CLOSE.len();
+            return format!("{}{}", &html[..start], &html[full_end..]);
+        }
+    }
+    html.to_string()
 }
 
 /// Walk rendered HTML and insert a right-floated `[edit]` span after every
