@@ -70,8 +70,8 @@ forbidden_terms_cleared: false  # set true only after full language pass
 - Named natural persons only: **Peter M. Woodfine**, **Jennifer M. Woodfine**, **Mathew Woodfine**
 - AI is a tool, not an author; disclosed per COPE 2024 in §18 of the manuscript
 - ORCID IDs required before any journal submission (leave blank until obtained)
-- Affiliation primary: `Woodfine Management Corp., Vancouver, British Columbia, Canada`
-- Affiliation alternative: `Independent Researcher, Vancouver, BC, Canada`
+- Affiliation primary: `Woodfine Management Corp., New York, NY, USA`
+- Affiliation alternative: `Independent Researcher, New York, NY, USA`
 - Corresponding author: corporate.secretary@woodfinegroup.com
 
 ---
@@ -208,7 +208,7 @@ preprint_posted: true
 preprint_posted_date: YYYY-MM-DD
 doi: ""                # fill when registered on Zenodo (ISO 26324); leave blank until then
 license: "CC BY 4.0"  # Creative Commons Attribution 4.0 — de facto open-access preprint standard
-cite_as: "Author, F.M. et al. (YYYY). Title. Working Paper vX.X, DD Month YYYY. Woodfine Management Corp., Vancouver, BC."
+cite_as: "Author, Given M. et al. (YYYY). Title. Working Paper vX.X, DD Month YYYY. Woodfine Management Corp., New York, NY."
 revision_history:
   - version: "X.X"
     date: "YYYY-MM-DD"
