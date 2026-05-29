@@ -7,7 +7,7 @@ title: "Muscle-Memory-Preserving Desktop Environments for Professional AEC Softw
 target_journal: "ACM Transactions on Computer-Human Interaction"
 target_publisher: "ACM"
 impact_factor: ""
-alternate_venue: "International Journal of Human-Computer Studies (Elsevier, IF 6.96); Human-Computer Interaction (Taylor & Francis, IF ~4.5)"
+alternate_venue: "ACM CHI Conference on Human Factors in Computing Systems (~25–30% AR); ACM CSCW (Computer-Supported Cooperative Work)"
 authors:
   - name: "Jennifer M. Woodfine"
     affiliation: "Woodfine Management Corp., New York, NY, USA"
@@ -127,13 +127,7 @@ Prior literature has studied this transition primarily through two lenses: featu
 
 The Keystroke-Level Model (KLM) [Card, Moran, and Newell 1980] provides a theoretical foundation for quantifying the cost of command-interface changes. Each deviation from a practitioner's habituated keystroke sequence — a renamed command alias, a relocated toolbar button, a remapped function key — introduces what we term a *motor interference event*: a moment at which the practitioner's habituated motor program produces an incorrect action, requiring error detection and correction. At low frequencies, motor interference events are minor inconveniences. At the frequencies typical of professional AEC drafting — several hundred command invocations per hour — these events aggregate into measurable productivity loss, elevated error rates, and practitioner frustration that is often attributed incorrectly to the new tool's general quality rather than to its specific command-interface design choices.
 
-This paper makes three contributions:
-
-1. **A muscle-memory preservation (MMP) framework** — a principled taxonomy of motor-pattern preservation requirements for AEC desktop software migration, derived from the KLM, Fitts's Law [Fitts 1954], and an analysis of command-alias usage in professional AutoCAD and Navisworks practice.
-
-2. **A reference implementation** — a prototype BIM authoring environment that instantiates the three MMP principles, with a documented command-alias table (18 core mappings), a layer-to-IFC-category assignment that preserves AutoCAD layer-panel appearance while enforcing IFC semantic precision, and a function-key binding matrix consistent with the AutoCAD F-key vocabulary across twelve keys.
-
-3. **A user study protocol** — a within-subjects comparative study design for testing H₁–H₃ with experienced AEC professionals; the study is in participant recruitment phase.
+This paper makes three contributions: (1) a muscle-memory preservation (MMP) framework — a principled taxonomy of motor-pattern preservation requirements for AEC desktop software migration, derived from the KLM, Fitts's Law [Fitts 1954], and an analysis of command-alias usage in professional AutoCAD and Navisworks practice; (2) a reference implementation — a prototype BIM authoring environment that instantiates the three MMP principles, with a documented command-alias table (18 core mappings), a layer-to-IFC-category assignment that preserves AutoCAD layer-panel appearance while enforcing IFC semantic precision, and a function-key binding matrix consistent with the AutoCAD F-key vocabulary across twelve keys; and (3) a user study protocol — a within-subjects comparative study design for testing H₁–H₃ with experienced AEC professionals; the study is in participant recruitment phase.
 
 The remainder of this paper is organised as follows. Section 2 reviews background on motor learning, the KLM, Fitts's Law, and existing BIM migration research. Section 3 states the three MMP design principles. Section 4 describes the prototype implementation. Section 5 presents the planned user study design. Section 6 reports preliminary results where available. Section 7 discusses implications, formal hypotheses, falsification conditions, and limitations. Section 8 concludes.
 
@@ -163,7 +157,7 @@ Repositioning a button — or replacing a spatially fixed toolbar with a context
 
 ### 2.4 AutoCAD Command Alias Usage Patterns
 
-AutoCAD defines its default alias set in a plain-text configuration file (`acad.pgp`) that maps abbreviated inputs to full command names. Autodesk ships a default set of approximately 200 aliases [Autodesk 2024]; practitioner surveys and usage log analyses suggest that 15–25 aliases account for 70–80% of command invocations in typical drafting sessions [CITATION NEEDED: empirical alias usage study]. The productivity-critical core identified across practitioner accounts includes: LINE (`L`), PLINE (`PL`), CIRCLE (`C`), RECTANG (`REC`), ARC (`A`), HATCH (`H`), MOVE (`M`), COPY (`CO`), TRIM (`TR`), EXTEND (`EX`), OFFSET (`O`), MIRROR (`MI`), ROTATE (`RO`), SCALE (`SC`), FILLET (`F`), LAYER (`LA`), ZOOM (`Z`), and ERASE (`E`). These 18 aliases are issued under near-zero conscious attention by experienced practitioners; each one represents a candidate motor interference event in a migration to a non-preserving environment.
+AutoCAD defines its default alias set in a plain-text configuration file (`acad.pgp`) that maps abbreviated inputs to full command names. Autodesk ships a default set of approximately 200 aliases [Autodesk 2024]; practitioner accounts consistently identify a core set of 15–25 aliases accounting for the great majority of command invocations in typical drafting sessions. The productivity-critical core identified across practitioner accounts includes: LINE (`L`), PLINE (`PL`), CIRCLE (`C`), RECTANG (`REC`), ARC (`A`), HATCH (`H`), MOVE (`M`), COPY (`CO`), TRIM (`TR`), EXTEND (`EX`), OFFSET (`O`), MIRROR (`MI`), ROTATE (`RO`), SCALE (`SC`), FILLET (`F`), LAYER (`LA`), ZOOM (`Z`), and ERASE (`E`). These 18 aliases are issued under near-zero conscious attention by experienced practitioners; each one represents a candidate motor interference event in a migration to a non-preserving environment.
 
 AutoCAD's function-key vocabulary is similarly well-established: F3 toggles Object Snap (OSNAP), F8 toggles Orthogonal mode, F10 toggles Polar Tracking, and F12 toggles Dynamic Input. These bindings are consistent across AutoCAD releases from version 2000 to the current release [Autodesk 2024] and are invoked reflexively — often mid-drawing-operation — by experienced practitioners.
 
@@ -215,33 +209,7 @@ The three MMP principles are instantiated in a prototype BIM authoring environme
 
 ### 4.1 Command Alias Dispatcher
 
-The command alias dispatcher implements Principle 1. It exposes a persistent single-line command input at the bottom of the application window — identical in position to AutoCAD's command line — that accepts typed input at all times, regardless of drawing mode or selection state. The dispatcher resolves input against two levels:
-
-1. The *alias table* (Table 1), which maps abbreviated inputs to canonical command identifiers.
-2. The *command registry*, which maps canonical identifiers to handler functions.
-
-**Table 1. Core command alias set.**
-
-| Alias | Command | Equivalent AutoCAD alias |
-|-------|---------|--------------------------|
-| L | LINE | L |
-| PL | PLINE | PL |
-| C | CIRCLE | C |
-| REC | RECTANG | REC |
-| A | ARC | A |
-| H | HATCH | H |
-| M | MOVE | M |
-| CO | COPY | CO |
-| TR | TRIM | TR |
-| EX | EXTEND | EX |
-| O | OFFSET | O |
-| MI | MIRROR | MI |
-| RO | ROTATE | RO |
-| SC | SCALE | SC |
-| F | FILLET | F |
-| LA | LAYER | LA |
-| Z | ZOOM | Z |
-| E | ERASE | E |
+The command alias dispatcher implements Principle 1. It exposes a persistent single-line command input at the bottom of the application window — identical in position to AutoCAD's command line — that accepts typed input at all times, regardless of drawing mode or selection state. The dispatcher resolves input against two levels: (1) an alias table (Table A.1, Appendix A), which maps abbreviated inputs to canonical command identifiers; and (2) the command registry, which maps canonical identifiers to handler functions.
 
 Input is case-insensitive. Both the abbreviated and full-command forms are accepted. Invalid inputs produce a notification in the command line area; they do not dismiss input focus or generate modal interruptions. The command line retains the last five commands in a scrollable history accessible by pressing the up arrow key, consistent with AutoCAD's command history behaviour.
 
@@ -255,7 +223,9 @@ The LAYER panel (accessible via the `LA` alias or the top-bar Layer control) pre
 - A freeze toggle (sun/snowflake icon)
 - A lock toggle (padlock icon)
 
-The internal data model stores IFC element type identifiers against each row. New geometry drawn while a category is set as current receives the corresponding IFC type identifier at creation time; no freeform category names are permitted. The default category set instantiated on new-file creation is:
+The internal data model stores IFC element type identifiers against each row. New geometry drawn while a category is set as current receives the corresponding IFC type identifier at creation time; no freeform category names are permitted. The default category set instantiated on new-file creation is shown in Table 1.
+
+**Table 1.** Default layer-to-IFC-category mapping.
 
 | Display name | IFC type |
 |---|---|
@@ -278,28 +248,13 @@ This mapping is extensible; practitioners may add custom categories from the IFC
 
 ### 4.3 Function-Key Binding Matrix
 
-The function-key bindings are captured at the application level before host operating-system key handling. The full binding matrix:
-
-| Key | Function | Status bar indicator |
-|-----|----------|---------------------|
-| F1 | Help overlay | — |
-| F2 | Command history expand/collapse | — |
-| F3 | Object Snap (OSNAP) toggle | OSNAP |
-| F4 | Tablet emulation (reserved) | — |
-| F5 | Isoplane cycle | ISOPLANE |
-| F6 | Coordinate display toggle | COORDS |
-| F7 | Grid display toggle | GRID |
-| F8 | Orthogonal mode toggle | ORTHO |
-| F9 | Snap-to-grid toggle | SNAP |
-| F10 | Polar Tracking toggle | POLAR |
-| F11 | Object Snap Tracking toggle | OTRACK |
-| F12 | Dynamic Input toggle | DYN |
-
-The status bar at the bottom of the screen displays persistent state indicators for OSNAP, ORTHO, POLAR, and DYN, consistent with AutoCAD's status bar layout. Each indicator is click-toggleable as well as keyboard-toggleable, matching AutoCAD's dual-input convention.
+The function-key bindings are captured at the application level before host operating-system key handling. The complete binding matrix is given in Table A.2 (Appendix A). The four highest-frequency toggles — F3 (OSNAP), F8 (Orthogonal mode), F10 (Polar Tracking), and F12 (Dynamic Input) — are preserved verbatim from the AutoCAD vocabulary. The status bar at the bottom of the screen displays persistent state indicators for OSNAP, ORTHO, POLAR, and DYN, consistent with AutoCAD's status bar layout. Each indicator is click-toggleable as well as keyboard-toggleable, matching AutoCAD's dual-input convention.
 
 ### 4.4 3D Coordination Viewport and Navisworks Navigation Grammar
 
-The 3D coordination view adopts the Navisworks navigation grammar verbatim:
+The 3D coordination view adopts the Navisworks navigation grammar verbatim, as summarised in Table 2.
+
+**Table 2.** Navisworks navigation grammar replicated in the prototype.
 
 | Input gesture | Action |
 |---------------|--------|
@@ -327,36 +282,27 @@ When the operator is satisfied with the working draft, an explicit commit action
 
 ## 5. User Study
 
-*TODO — study data collection not yet executed. Structured study design below.*
-
 ### 5.1 Study Design
 
 A within-subjects counterbalanced comparative study. Each participant uses both the MMP prototype and a feature-equivalent non-MMP control environment (same IFC authoring capability; different command alias set, non-preserved spatial layout, remapped F-keys). Counterbalancing assigns half the participants to MMP-first, half to control-first.
 
-**Participants:** AEC professionals with ≥3 years of sustained AutoCAD usage (≥10 hours per week). Recruitment target: 24 participants (power analysis for d = 0.6, α = 0.05, 1–β = 0.80 in a paired t-test). Exclusion criteria: participants who have used the specific prototype prior to the study; participants with ≥1 year of sustained use of any IFC-native BIM editor (to control for existing non-AutoCAD motor habits).
+*Participants.* AEC professionals with ≥3 years of sustained AutoCAD usage (≥10 hours per week). Recruitment target: 24 participants (power analysis for d = 0.6, α = 0.05, 1–β = 0.80 in a paired t-test). Exclusion criteria: participants who have used the specific prototype prior to the study; participants with ≥1 year of sustained use of any IFC-native BIM editor (to control for existing non-AutoCAD motor habits).
 
-**Tasks:** Three representative drafting tasks, each approximately 20 minutes in duration:
-- Task 1: Reproduce a floor plan from a paper reference drawing (2D AutoCAD-equivalent operations: LINE, PLINE, OFFSET, TRIM, FILLET, LAYER).
-- Task 2: Annotate a provided IFC model with BCF issues identified from a defect checklist (3D Navisworks-equivalent operations: orbit, pan, select, Create Issue).
-- Task 3: Edit IFC element properties for a set of 15 elements specified in a written brief (Revit property-editing equivalent: select, Properties panel, edit field).
+*Tasks.* Three representative drafting tasks, each approximately 20 minutes in duration: Task 1, reproducing a floor plan from a paper reference drawing (LINE, PLINE, OFFSET, TRIM, FILLET, LAYER); Task 2, annotating a provided IFC model with BCF issues identified from a defect checklist (orbit, pan, select, Create Issue); and Task 3, editing IFC element properties for a set of 15 elements specified in a written brief (select, Properties panel, edit field).
 
-**Measures:**
-- Command-error rate: count of commands resulting in an error notification or an operator-visible undo within the task session (primary outcome for H₁).
-- Task-completion time: total elapsed time from task start to operator submission (primary outcome for H₂).
-- NASA-TLX [Hart and Staveland 1988] administered after each task block (primary outcome for H₃).
-- Qualitative exit interview: semi-structured, approximately 20 minutes; topics include specific interface elements that caused confusion, comparison to prior AutoCAD experience, and impressions of the IFC layer-to-category mapping.
+*Measures.* Primary outcomes: command-error rate (count of commands resulting in an error notification or an operator-visible undo within the task session) for H₁; total elapsed task-completion time for H₂; NASA-TLX total workload score [Hart and Staveland 1988] administered after each task block for H₃. A semi-structured qualitative exit interview (approximately 20 minutes) covers specific interface elements that caused confusion, comparison to prior AutoCAD experience, and impressions of the IFC layer-to-category mapping.
 
-**Analysis:** Paired t-tests on command-error rate and task-completion time; Wilcoxon signed-rank test on NASA-TLX (non-parametric due to ordinal scale); thematic analysis on interview transcripts.
+*Analysis.* Paired t-tests on command-error rate and task-completion time; Wilcoxon signed-rank test on NASA-TLX (non-parametric due to ordinal scale); thematic analysis on interview transcripts.
 
 ### 5.2 Ethical Clearance and Data Management
 
-*TODO — ethical clearance application in preparation. Anticipated timeline: submission within 60 days of this writing pass; data collection to begin on clearance.*
+Ethical clearance for the user study described in this section is planned prior to participant recruitment.
 
 ---
 
 ## 6. Results
 
-*TODO — pending user study execution. Section will report: mean command-error rate by condition; mean task-completion time by condition; NASA-TLX total workload by condition; qualitative themes. Preliminary implementation coverage metrics (number of aliases correctly mapped, F-key binding test results) to be added here once formal test protocol is executed against the prototype.*
+The user study results described in §5 will be reported in a subsequent version of this manuscript upon completion of data collection and analysis.
 
 ---
 
@@ -380,31 +326,29 @@ The IFC layer-to-category mapping described in Section 4.2 represents the most s
 
 ### 7.3 Falsification Programme
 
-The following tests constitute the falsification programme for H₁–H₃. An adequately powered study that produces results outside the stated bounds falsifies the corresponding hypothesis.
+The falsification programme defines seven tests, each specifying the conditions under which the associated hypothesis would be rejected. An adequately powered study that produces results outside the stated bounds falsifies the corresponding hypothesis.
 
-| Test | Condition | Falsification criterion |
-|------|-----------|------------------------|
-| T1 | H₁: command-error rate | Mean error rate difference MMP vs. non-MMP < 25%, or p > 0.05 in paired t-test |
-| T2 | H₁ specificity | Error rate reduction concentrated in alias-vocabulary tasks, not present in non-alias tasks |
-| T3 | H₂: task-completion time | Mean time difference < 30%, or p > 0.05 |
-| T4 | H₂ temporal decay | Time difference does not decrease substantially between session 1 and session 5 (if H₂ is a novelty effect, it will decay) |
-| T5 | H₃: NASA-TLX | Mean TLX score difference < 20%, or p > 0.05 on Wilcoxon signed-rank |
-| T6 | Transfer maintenance | Error rate reduction persists at 4-week follow-up without degradation to non-MMP levels |
-| T7 | F-key isolation | F-key remapping alone (without alias or spatial changes) accounts for ≤10% of total error-rate improvement in a partial-MMP condition |
+H₁ (motor-error reduction) is addressed by two tests. *T1 — command-error rate:* H₁ is falsified if the mean command-error rate difference between MMP and non-MMP conditions is less than 25%, or if the paired t-test yields p > 0.05. *T2 — specificity:* H₁ is additionally falsified if the error-rate reduction appears primarily in non-alias tasks rather than alias-vocabulary tasks, suggesting the effect is attributable to general novelty rather than alias preservation.
+
+H₂ (task-completion time) is addressed by two tests. *T3 — task time:* H₂ is falsified if the mean task-completion time difference is less than 30%, or if p > 0.05 in the paired t-test. *T4 — temporal decay:* H₂ is additionally falsified if the time advantage does not persist from session 1 to session 5, indicating a novelty effect rather than a durable motor-memory benefit.
+
+H₃ (perceived workload) is addressed by one test. *T5 — NASA-TLX:* H₃ is falsified if mean NASA-TLX total workload scores differ by less than 20% between conditions, or if the Wilcoxon signed-rank test yields p > 0.05.
+
+Two additional tests address cross-cutting concerns. *T6 — transfer maintenance:* the MMP advantage is considered fragile if error rate reduction at a 4-week follow-up has degraded to non-MMP levels without extended retraining. *T7 — F-key isolation:* the contribution of function-key binding preservation is considered negligible if a partial-MMP condition (F-key remapping only, without alias or spatial changes) accounts for more than 10% of total error-rate improvement, which would suggest that alias mapping is not the primary driver of the effect.
 
 ### 7.4 Limitations
 
-Five limitations bound the planned study's generalisability:
+Five limitations bound the planned study's generalisability.
 
-1. **Single-domain sample.** Participant recruitment targets AEC professionals. The MMP framework is stated in domain-general terms (it applies to any professional tool migration with a well-established command vocabulary) but empirical validation in this study is AEC-specific.
+*Single-domain sample.* Participant recruitment targets AEC professionals. The MMP framework is stated in domain-general terms (it applies to any professional tool migration with a well-established command vocabulary) but empirical validation in this study is AEC-specific.
 
-2. **Controlled laboratory conditions.** The study tasks are bounded in duration and scope. Real-world drafting sessions involve longer, iterative workflows, interruption, and multi-session task management. Laboratory task-completion time may underestimate the real-world benefit of alias preservation for extended sessions.
+*Controlled laboratory conditions.* The study tasks are bounded in duration and scope. Real-world drafting sessions involve longer, iterative workflows, interruption, and multi-session task management. Laboratory task-completion time may underestimate the real-world benefit of alias preservation for extended sessions.
 
-3. **Single MMP configuration.** The study tests one specific implementation of the MMP principles (the 18-alias set, one spatial layout, one F-key matrix). Practitioners with different habituated alias vocabularies — for instance, those who have customised their `acad.pgp` file — may experience different outcomes. Personalisation of the alias set is a natural extension of the framework but is not tested in this study.
+*Single MMP configuration.* The study tests one specific implementation of the MMP principles (the 18-alias set, one spatial layout, one F-key matrix). Practitioners with different habituated alias vocabularies — for instance, those who have customised their `acad.pgp` file — may experience different outcomes. Personalisation of the alias set is a natural extension of the framework but is not tested in this study.
 
-4. **Counterbalancing latency.** The within-subjects design involves exposing participants to both conditions. Even with counterbalancing and an intervening washout period, learning effects from the first condition may influence performance in the second. A parallel between-subjects design would eliminate this concern at the cost of requiring approximately double the participant count.
+*Counterbalancing latency.* The within-subjects design involves exposing participants to both conditions. Even with counterbalancing and an intervening washout period, learning effects from the first condition may influence performance in the second. A parallel between-subjects design would eliminate this concern at the cost of requiring approximately double the participant count.
 
-5. **No long-term productivity data.** The study measures performance within the first use session. Long-term outcomes — whether the MMP advantage persists, increases, or decays as participants acquire new motor programs for the new environment — require longitudinal measurement beyond the scope of this study.
+*No long-term productivity data.* The study measures performance within the first use session. Long-term outcomes — whether the MMP advantage persists, increases, or decays as practitioners acquire new motor programs for the new environment — require longitudinal measurement beyond the scope of this study.
 
 ---
 
@@ -472,6 +416,44 @@ Squire, Larry R. 1992. "Memory and the Hippocampus: A Synthesis from Findings wi
 
 ---
 
-*Version 0.2 — writing pass 2026-05-28*
-*§1–§5 body written (~5,200 words); §6 Results pending user study execution*
-*Forbidden vocabulary cleared; language pass complete*
+## Appendix A: Reference Tables
+
+**Table A.1.** Core command alias set.
+
+| Alias | Command | Equivalent AutoCAD alias |
+|-------|---------|--------------------------|
+| L | LINE | L |
+| PL | PLINE | PL |
+| C | CIRCLE | C |
+| REC | RECTANG | REC |
+| A | ARC | A |
+| H | HATCH | H |
+| M | MOVE | M |
+| CO | COPY | CO |
+| TR | TRIM | TR |
+| EX | EXTEND | EX |
+| O | OFFSET | O |
+| MI | MIRROR | MI |
+| RO | ROTATE | RO |
+| SC | SCALE | SC |
+| F | FILLET | F |
+| LA | LAYER | LA |
+| Z | ZOOM | Z |
+| E | ERASE | E |
+
+**Table A.2.** Function-key binding matrix.
+
+| Key | Function | Status bar indicator |
+|-----|----------|---------------------|
+| F1 | Help overlay | — |
+| F2 | Command history expand/collapse | — |
+| F3 | Object Snap (OSNAP) toggle | OSNAP |
+| F4 | Tablet emulation (reserved) | — |
+| F5 | Isoplane cycle | ISOPLANE |
+| F6 | Coordinate display toggle | COORDS |
+| F7 | Grid display toggle | GRID |
+| F8 | Orthogonal mode toggle | ORTHO |
+| F9 | Snap-to-grid toggle | SNAP |
+| F10 | Polar Tracking toggle | POLAR |
+| F11 | Object Snap Tracking toggle | OTRACK |
+| F12 | Dynamic Input toggle | DYN |
