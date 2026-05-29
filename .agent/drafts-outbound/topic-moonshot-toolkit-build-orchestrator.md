@@ -10,6 +10,8 @@ bcsc_class: no-disclosure-implication
 language_protocol: PROSE-TOPIC
 authored: 2026-05-27T02:00:00Z
 authored_by: task-project-system (session phase-1c-a)
+revised: 2026-05-29T00:00:00Z
+revised_by: task-project-system (session phase-1c-d)
 authored_with: claude-sonnet-4-6
 references:
   - MEMO-2026-03-30-Development-Overview-V8.md §7
@@ -17,26 +19,28 @@ references:
   - DOCTRINE.md claim #33
   - clones/project-system/moonshot-toolkit/src/spec.rs
   - clones/project-system/moonshot-toolkit/src/plan.rs
-  - clones/project-system/moonshot-toolkit/src/main.rs
+  - clones/project-system/moonshot-toolkit/src/cpio.rs
+  - clones/project-system/moonshot-toolkit/src/main.rs (assemble_image)
   - clones/project-system/moonshot-toolkit/examples/hello-world.toml
   - clones/project-system/moonshot-toolkit/ARCHITECTURE.md
-  - clones/project-system/moonshot-toolkit/CHANGELOG.md
-  - https://docs.sel4.systems/projects/microkit/manual/latest/
+  - clones/project-system/moonshot-toolkit/CHANGELOG.md v0.3.0
 notes_for_editor: |
-  Substance pass complete. Written from source code at v0.2.0 (commit 34a1111).
-  All technical details verified against moonshot-toolkit/src/*.rs and examples/.
+  Updated 2026-05-29 to reflect Phase 1C complete (moonshot-toolkit v0.3.0).
+  AssembleImage is now fully implemented — all "planned/intended" language in
+  Section 4 and Section 6 about AssembleImage has been replaced with current fact.
 
   Key discipline: the TOPIC documents what moonshot-toolkit IS and what it produces.
   It does not document how to run it (that is GUIDE territory). Cross-reference
   guide-moonshot-toolkit-phase1c-build-setup.md for the operational runbook.
 
-  Phase 1C.a is complete: CompilePd produces a verified AArch64 bare-metal static ELF.
-  Phase 1C.d (AssembleImage) is blocked on Microkit SDK or Rust image assembler —
-  document this gap honestly using planned/intended language per BCSC posture.
+  New in v0.3.0: src/cpio.rs (pure Rust CPIO "newc" writer) is a substantive
+  new module worth explaining — it is what allows AssembleImage to avoid Python
+  and CMake. Describe the CPIO role but do not go into format detail (that is
+  not the audience for this TOPIC).
 
   "Honest We Own It" posture: moonshot-toolkit ORCHESTRATES; it does not
-  implement the cross-compile toolchain (aarch64-linux-gnu-gcc is a system dependency)
-  and does not implement seL4 (that is vendor-sel4-kernel). Be precise.
+  implement the cross-compile toolchain (aarch64-linux-gnu-gcc is a system
+  dependency) and does not implement seL4 (that is vendor-sel4-kernel). Be precise.
 
   Banned-vocab + BCSC discipline + bilingual .es.md generation: project-language enforces.
   Avoid "blockchain" framing. This is a content-addressed build manifest, not a
@@ -48,8 +52,8 @@ notes_for_editor: |
 moonshot-toolkit is a Rust-only build orchestrator for Foundry's seL4 unikernel images,
 replacing the Python and CMake toolchain provided by the seL4 Microkit framework. It
 reads a TOML system specification, derives a deterministic content-addressed build
-manifest, and orchestrates the cross-compilation of each software component for the
-AArch64 bare-metal target.
+manifest, and orchestrates the cross-compilation and image assembly pipeline through to
+a bootable elfloader binary for the AArch64 target.
 
 ## 1. Why Rust-Only
 
@@ -103,7 +107,7 @@ A minimal hello-world specification looks like:
 ```toml
 [[protection_domains]]
 name     = "hello"
-binary   = "examples/hello.c"
+binary   = "moonshot-toolkit/examples/hello.c"
 priority = 100
 stack_bytes = 65536
 ```
@@ -141,19 +145,33 @@ appropriate for seL4 Microkit protection domains:
   linking is not available.
 - `-march=armv8-a`: target AArch64 ISA.
 - `-mgeneral-regs-only`: exclude FPU and SIMD registers; the seL4 kernel does not
-  save FPU state by default, and protection domains that need floating-point must
-  opt in explicitly.
+  save FPU state by default.
 
 The output is a statically linked ELF executable targeting the AArch64 architecture.
-As of Phase 1C.a (moonshot-toolkit v0.2.0), this step executes and is verified: the
-command `moonshot-toolkit build examples/hello-world.toml` produces `build/hello.elf`,
-confirmed as an AArch64 bare-metal static ELF with entry point 0x40010c.
 
-**AssembleImage** packs the compiled protection-domain binaries, the seL4 kernel, and
-the system specification into a single bootable image in Microkit's image format. This
-step requires either the Microkit SDK image-assembly tool or a Rust-native image
-assembler. As of v0.2.0, this step is planned — it returns a clear actionable error
-identifying the missing dependency and the path to resolve it (Phase 1C.d).
+**AssembleImage** produces the bootable system image. It executes in pure Rust without
+invoking Python, CMake, or shell scripts, in five stages:
+
+1. **CPIO archive**: the protection-domain binaries, the seL4 kernel ELF, and the
+   kernel device tree binary are packed into a CPIO "newc" archive using a Rust-native
+   writer (`src/cpio.rs`). The writer implements the exact 110-byte ASCII header format
+   and 4-byte-aligned padding that the seL4 elfloader's CPIO parser requires.
+
+2. **Archive embedding**: the CPIO archive is embedded into an assembly stub
+   (`archive.S`) using `.incbin`. This file is compiled as one object in the final link.
+
+3. **Elfloader compilation**: the 44 C and ASM source files of the seL4 elfloader
+   (from `vendor-sel4-tools/elfloader-tool/`) are compiled with AArch64 bare-metal
+   flags, together with the seL4 libcpio helper library. All include paths — elfloader
+   headers, CMake-generated configuration headers, kernel autoconf — are resolved from
+   the vendor trees present in the repository.
+
+4. **Link**: all objects are linked with `-nostdlib -static -lgcc` using a preprocessed
+   version of the elfloader's linker script. The result is a bare-metal AArch64 ELF
+   with entry point `0x40400000`.
+
+5. **Output**: the linked ELF is copied to the specified output path (default:
+   `build/system-image.bin`).
 
 ## 5. Reproducibility and Cosignature
 
@@ -173,13 +191,27 @@ system-substrate-doctrine.md §6.1) attaches.
 
 ## 6. Phase 1C Status
 
-moonshot-toolkit v0.2.0, released 2026-05-27, completes Phase 1C.a: the CompilePd
-step invokes the real AArch64 cross-compiler and produces a verified bare-metal ELF.
-The AssembleImage step (Phase 1C.d) is planned, pending availability of the Microkit
-SDK or a Rust-native image assembler. The full Phase 1C milestone — a seL4 hello-world
-protection domain booting in QEMU AArch64 — is intended to complete when Phase 1C.d
-and Phase 1C.c (QEMU boot, requiring the seL4 elfloader from the seL4_tools repository)
-are resolved.
+moonshot-toolkit v0.3.0, released 2026-05-29, completes the Phase 1C milestone:
+
+- **Phase 1C.a** (v0.2.0, 2026-05-27): CompilePd invokes the real AArch64
+  cross-compiler and produces a verified bare-metal ELF. Confirmed: `build/hello.elf`,
+  entry point `0x40010c`.
+
+- **Phase 1C.b** (2026-05-27): seL4 AArch64 kernel built from source with
+  `KernelPlatform=qemu-arm-virt`. The `kernel.elf` at `vendor-sel4-kernel/build/aarch64-qemu/`
+  is a valid AArch64 ELF, entry point `0xffffff8040000000`.
+
+- **Phase 1C.c** (2026-05-28): full QEMU boot confirmed. elfloader → seL4 kernel →
+  rootserver chain produces output: "Booting all finished, dropped to user space".
+
+- **Phase 1C.d** (v0.3.0, 2026-05-29): AssembleImage fully implemented in Rust.
+  `moonshot-toolkit build moonshot-toolkit/examples/hello-world.toml` produces
+  `build/system-image.bin`, entry point `0x40400000`. QEMU boots the image using
+  `-m 1G -kernel build/system-image.bin`.
+
+The complete build pipeline — from TOML specification to a booting seL4 system — now
+runs in a single `cargo run` invocation with no Python, CMake, or shell in the
+critical path.
 
 ## See Also
 

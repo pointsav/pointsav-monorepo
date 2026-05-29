@@ -10,6 +10,8 @@ bcsc_class: no-disclosure-implication
 language_protocol: PROSE-TOPIC
 authored: 2026-05-27T02:00:00Z
 authored_by: task-project-system (session phase-1c-b)
+revised: 2026-05-29T00:00:00Z
+revised_by: task-project-system (session phase-1c-d)
 authored_with: claude-sonnet-4-6
 references:
   - vendor-sel4-kernel/src/VERSION (v15.0.0-dev)
@@ -19,25 +21,25 @@ references:
   - DOCTRINE.md §IV.a
   - project-system-todo.md §179 (Group 3A decisions) + §221 (Group 3D decisions)
   - Phase 1C.b result: kernel.elf (AArch64 static ELF, entry 0xffffff8040000000)
+  - Phase 1C.c result: QEMU boot confirmed 2026-05-28
+  - Phase 1C.d result: AssembleImage complete, system-image.bin entry 0x40400000
   - https://github.com/seL4/seL4 (seL4 kernel source)
-  - https://github.com/seL4/seL4_tools (elfloader; separate repo)
+  - https://github.com/seL4/seL4_tools (elfloader; vendored at vendor-sel4-tools/)
 notes_for_editor: |
-  Substance pass complete. Written from source code in vendor-sel4-kernel/src/
-  at seL4 v15.0.0-dev, plus verified build output from Phase 1C.b (2026-05-27).
-  Audience is vendor-internal: assumes the reader knows what a microkernel is but
-  not specifically seL4 or AArch64 bare-metal boot.
+  Updated 2026-05-29 to reflect Phase 1C.c and 1C.d complete.
 
-  Key discipline: this TOPIC is about the TARGET (seL4 on AArch64 QEMU), not about
-  the build orchestrator (that is topic-moonshot-toolkit-build-orchestrator.md).
-  Focus on: what seL4 is, why AArch64, how the kernel is configured, why the elfloader
-  gap exists, what Phase 1C.c requires to close it.
+  Section 5 previously described the elfloader as a gap requiring manual resolution.
+  This section is updated: the elfloader is now assembled automatically by
+  moonshot-toolkit's AssembleImage step. Describe it as resolved, not open.
 
-  "Honest We Own It" posture per system-substrate-doctrine.md §8: be precise about
-  what is Foundry-owned vs. what seL4.systems provides. seL4 is a third-party
-  formally verified kernel; Foundry builds on it, does not own it.
+  Section 6 previously described Phase 1C.c as "intended". The section has been
+  updated to document the completed boot chain with the correct QEMU parameters.
+  IMPORTANT: the required memory flag is `-m 1G`, not `-m 512M`. The QEMU virt
+  device tree describes physical memory [0x40000000, 0x80000000) (1 GiB); booting
+  with less than 1G causes elfloader memory-map conflicts and a silent hang.
 
-  BCSC posture: Phase 1C.c and 1C.d completion are planned/intended. The kernel
-  build (Phase 1C.b) is current fact; QEMU boot (Phase 1C.c) is intended.
+  "Honest We Own It" posture: be precise about Foundry-owned vs. seL4.systems-provided.
+  seL4 is a third-party formally verified kernel; Foundry builds on it, does not own it.
 
   Banned-vocab + BCSC discipline + bilingual .es.md generation: project-language enforces.
 ---
@@ -111,6 +113,12 @@ binary from QEMU at configure time, then converts it to DTS and compiles it into
 the kernel. This is why `qemu-system-aarch64` must be present before the seL4 kernel
 can be configured.
 
+**Physical memory:** The QEMU `virt` device tree describes physical RAM from
+`0x40000000` to `0x80000000` — a 1 GiB window. QEMU must be launched with at least
+`-m 1G`; booting with less allocates physical memory that does not cover the full
+window described to the kernel, causing the elfloader to fail when placing images
+within the expected range.
+
 ## 4. Kernel Build Configuration
 
 The seL4 kernel is built from source at `vendor-sel4-kernel/src/` using CMake with
@@ -124,67 +132,93 @@ AArch64 target are:
 -DKernelPlatform=qemu-arm-virt
 -DKernelArch=arm
 -DKernelSel4Arch=aarch64
+-DKernelVerificationBuild=OFF
 -DKernelPrinting=ON
 -DKernelDebugBuild=ON
 ```
+
+`KernelVerificationBuild=OFF` is required for `KernelPrinting=ON` to take effect.
+When `KernelVerificationBuild=ON`, the CMake configuration silently disables
+`CONFIG_PRINTING` — the CMake cache records `KernelPrinting_DISABLED:INTERNAL=TRUE`
+without warning, and the kernel produces no serial output.
 
 `KernelPrinting=ON` enables the kernel's serial output via the PL011 UART.
 `KernelDebugBuild=ON` enables debug assertions and additional diagnostic output.
 Both are appropriate for development and testing; a production image would use
 `CMAKE_BUILD_TYPE=Release` without these options.
 
-The build produces `kernel.elf`, a statically linked AArch64 ELF executable. As
-of Phase 1C.b (2026-05-27), this build succeeds from the seL4 v15.0.0-dev source
-tree with the `aarch64-linux-gnu-gcc` v13.3.0 toolchain on Ubuntu 24.04.
+The build produces `kernel.elf`, a statically linked AArch64 ELF executable with
+entry point `0xffffff8040000000` — the kernel's intended virtual address once the
+AArch64 MMU is configured. As of Phase 1C.b (2026-05-27), this build succeeds from
+the seL4 v15.0.0-dev source tree with `aarch64-linux-gnu-gcc` v13.3.0 on Ubuntu 24.04.
 
-## 5. The Elfloader Gap
+## 5. The Elfloader and the Boot Chain
 
-The seL4 kernel ELF for AArch64 has an entry point at virtual address
-`0xffffff8040000000`. This is the kernel's intended virtual address once the
-AArch64 MMU is configured and the kernel's own page tables are in place.
+The seL4 kernel ELF for AArch64 has a link-time entry point at virtual address
+`0xffffff8040000000`. This is the kernel's intended virtual address once the AArch64
+MMU is configured and the kernel's own page tables are in place. QEMU cannot load the
+kernel ELF directly — it would attempt to place it at that virtual address in physical
+memory, which does not exist on the `virt` machine.
 
-QEMU, however, loads ELF files at their stated virtual addresses in physical memory.
-When QEMU is told to `-kernel kernel.elf`, it loads the binary at address
-`0xffffff8040000000` in physical address space. This address does not exist on the
-QEMU `virt` machine, which provides physical memory starting at `0x40000000`. The
-kernel cannot execute.
+The standard seL4 boot flow uses the **elfloader**, a small bootstrap program from
+the `seL4_tools` repository (vendored at `vendor-sel4-tools/elfloader-tool/`). The
+elfloader:
 
-The standard seL4 boot flow resolves this through the **elfloader**, a small
-bootstrap program provided by the `seL4_tools` repository (a separate repository
-from the seL4 kernel source at `github.com/seL4/seL4_tools`). The elfloader:
-
-1. Runs from a low physical address where QEMU can load it directly.
-2. Unpacks the seL4 kernel ELF from a cpio archive embedded in the loader.
-3. Configures the AArch64 MMU page tables to map the kernel's virtual address
-   to the correct physical location.
-4. Unpacks the initial user-level thread (rootserver) from the same archive.
+1. Runs from physical address `0x40400000`, where QEMU can load it directly.
+2. Unpacks the seL4 kernel ELF from a CPIO archive embedded in the loader image.
+3. Configures the AArch64 MMU page tables to map the kernel's virtual address space.
+4. Unpacks the initial user-level thread (rootserver) from the same CPIO archive.
 5. Jumps to the kernel entry point, now reachable through the MMU mapping.
 
-The combined elfloader + kernel + rootserver image is what QEMU actually boots.
-Without the elfloader, the kernel.elf file alone cannot be executed.
+The combined image — elfloader binary with the kernel, device tree, and rootserver
+embedded as a CPIO archive — is what QEMU actually boots.
 
-## 6. Phase 1C.b and the Path to QEMU Boot
+As of Phase 1C.d (moonshot-toolkit v0.3.0), this image is assembled automatically
+by the `moonshot-toolkit build` command. The AssembleImage step compiles the elfloader
+sources, generates the CPIO archive using a pure Rust writer, and links the combined
+binary. No Python, CMake, or shell scripts are involved in the image assembly path.
 
-Phase 1C.b (completed 2026-05-27) demonstrates that the seL4 kernel for AArch64
-QEMU can be built from source on the Foundry workspace VM. The resulting
-`kernel.elf` is a valid AArch64 static ELF with entry point 0xffffff8040000000,
-confirmed with `aarch64-linux-gnu-readelf`.
+## 6. Phase 1C Boot Chain — Verified
 
-Phase 1C.c — a full seL4 hello-world booting in QEMU with kernel output visible —
-is intended to follow once the `seL4_tools` elfloader is available and a minimal
-rootserver is written. The rootserver for this milestone is a C program that uses
-seL4's `seL4_DebugPutChar` interface to print to the PL011 UART. The combined
-elfloader + kernel + rootserver image is then loaded by QEMU using:
+Phase 1C is complete. The full AArch64 boot chain from source to QEMU output has been
+demonstrated on the Foundry workspace VM.
+
+**Phase 1C.b** (completed 2026-05-27): the seL4 kernel for QEMU AArch64 was built
+from source. `vendor-sel4-kernel/build/aarch64-qemu/kernel.elf` is a valid AArch64
+static ELF, entry point `0xffffff8040000000`.
+
+**Phase 1C.c** (completed 2026-05-28): full QEMU boot confirmed. A manually assembled
+elfloader image was loaded by QEMU, producing kernel output through the PL011 UART
+and handing off to a minimal rootserver.
+
+**Phase 1C.d** (completed 2026-05-29): moonshot-toolkit v0.3.0 automates the full
+pipeline. The command:
+
+```
+cargo run -p moonshot-toolkit -- build moonshot-toolkit/examples/hello-world.toml
+```
+
+produces `build/system-image.bin` with entry point `0x40400000`. Booting with:
 
 ```
 qemu-system-aarch64 -machine virt,secure=off -cpu cortex-a53 \
-  -m 512M -nographic -kernel <combined-image>
+  -m 1G -nographic -kernel build/system-image.bin
+```
+
+produces:
+
+```
+ELF-loader started on CPU: ARM Ltd. Cortex-A53 r0p4
+  paddr=[40400000..40423fff]
+Bootstrapping kernel
+…
+Booting all finished, dropped to user space
 ```
 
 ## See Also
 
 - `topic-moonshot-toolkit-build-orchestrator.md` — the Rust build orchestrator that
-  cross-compiles protection domains for this target
+  cross-compiles protection domains and assembles this target's boot image
 - `topic-capability-ledger-substrate.md` — what the unikernel images enforce at runtime
 - `guide-moonshot-toolkit-phase1c-build-setup.md` — operational runbook for the
   cross-compile and build environment
