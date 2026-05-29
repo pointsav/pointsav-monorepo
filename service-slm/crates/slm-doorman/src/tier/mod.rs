@@ -47,3 +47,32 @@ pub(crate) fn anthropic_tools_to_openai(tools: &serde_json::Value) -> serde_json
         .collect();
     serde_json::Value::Array(converted)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn anthropic_tools_to_openai_converts_correctly() {
+        let anthropic = serde_json::json!([{
+            "name": "Read",
+            "description": "Read a file",
+            "input_schema": {"type": "object", "properties": {"file_path": {"type": "string"}}, "required": ["file_path"]}
+        }]);
+        let openai = anthropic_tools_to_openai(&anthropic);
+        let arr = openai.as_array().unwrap();
+        assert_eq!(arr.len(), 1);
+        assert_eq!(arr[0]["type"], "function");
+        assert_eq!(arr[0]["function"]["name"], "Read");
+        assert_eq!(arr[0]["function"]["description"], "Read a file");
+        assert!(arr[0]["function"].get("parameters").is_some());
+        assert!(arr[0]["function"].get("input_schema").is_none());
+    }
+
+    #[test]
+    fn anthropic_tools_to_openai_handles_non_array() {
+        let val = serde_json::json!(null);
+        let out = anthropic_tools_to_openai(&val);
+        assert!(out.is_null());
+    }
+}
