@@ -9,6 +9,232 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-infrastructure
+to: totebox@project-system
+re: os-mediakit seL4 roadmap — Phase 1 install + P0 blockers + Phase 3 build instructions
+created: 2026-05-29T00:00:00Z
+priority: high
+status: pending
+msg-id: project-infrastructure-20260529-os-mediakit-sel4-roadmap
+---
+
+vm-mediakit is now provisioned (Debian 12, 6 GiB, QEMU/TCG, port-forward NAT).
+This message covers: what to install now, what to fix next, and how to build os-mediakit.
+
+**Architecture context (confirmed by internet research 2026-05-29):**
+Microkit 2.2.0 (March 2026) supports AArch64 and RISC-V 64 only — no x86_64 target.
+seL4 kernel is verified on x86_64 (pc99) but Microkit has no x86_64 path.
+GCP workspace is x86_64. vm-mediakit Phase 1 uses Debian 12 as the interim guest OS.
+os-mediakit seL4 Phase 3 requires an AArch64 host (GCP C4A Arm, or Raspberry Pi 4+).
+seL4 Foundation guidance for small teams: "incremental cyber-retrofit — Linux-in-VM-on-seL4
+first, port pieces out over time." Phase 1/2 Debian 12 is consistent with this guidance.
+
+Phase 1C.d acknowledged: moonshot-toolkit v0.3.0 (AArch64 qemu-arm-virt seL4 boot) is
+a real milestone. The AArch64 image cannot replace the x86_64 QCOW2 directly — different
+arch — but it is the foundation for Phase 3 Option A (AArch64 GCP instance).
+
+**Phase 1 — Install now (unblocked):**
+
+Build and install system-core v0.2.0 + system-ledger v0.2.1 inside vm-mediakit.
+
+```bash
+# From project-infrastructure monorepo clone
+cd /srv/foundry/clones/project-infrastructure
+
+# Verify 95 tests pass before building
+cargo test -p system-core -p system-ledger
+
+# Build release binaries
+cargo build --release -p system-core -p system-ledger
+
+# Install in vm-mediakit (SSH key at infrastructure/virt/work/foundry-vm-key)
+SSH_KEY="infrastructure/virt/work/foundry-vm-key"
+scp -P 10022 -i $SSH_KEY \
+    target/release/system-core target/release/system-ledger \
+    foundry@localhost:/opt/mediakit/bin/
+
+# Verify
+ssh -p 10022 -i $SSH_KEY foundry@localhost \
+    "/opt/mediakit/bin/system-core --version && /opt/mediakit/bin/system-ledger --version"
+```
+
+Note: system-core and system-ledger are library crates — they may not produce standalone
+binaries. If they are library-only, this step becomes: build the crate, confirm 95 tests
+pass, and document the ABI surface for future PD compilation. Adjust as appropriate.
+
+**Phase 2 — P0 blockers (fix before system-udp and system-gateway-mba can run in VM):**
+
+1. **`system-udp/src/main.rs` — wrong broadcast subnet:**
+   - Line: `const BROADCAST_ADDR: &str = "10.50.0.255";`
+   - Fix: `const BROADCAST_ADDR: &str = "10.42.255.255";` (10.42.0.0/16 per BRIEF §B)
+   - Also fix source-IP filter: `starts_with("10.50.0.")` → `starts_with("10.42.")`
+   - Update README references to 10.50.0.x
+
+2. **`app-network-admin/src/main.rs` — wrong peer addresses:**
+   - Hardcoded peers: `["10.50.0.1", "10.50.0.2", "10.50.0.3"]`
+   - Fix: use 10.42.0.0/16 address plan from BRIEF-PPN-DEV-BOOTSTRAP §2:
+     - Laptop B: 10.42.0.1
+     - GCP relay: 10.42.10.1
+     - Laptop A: 10.42.20.2
+     - Specialty gateways: 10.42.1.x
+   - Also: replace F8 subprocess `/opt/pointsav/f8-gateway/system-slm` with
+     HTTP request to `localhost:9080` (BRIEF-PPN-ARCHITECTURE §9.2 Step 5)
+
+3. **`system-gateway-mba/src/main.rs` — hardcoded operator path:**
+   - Line: `const BASE_DEPLOYMENT_DIR: &str = "/home/mathew/deployments/woodfine-fleet-deployment";`
+   - Fix: read from environment variable `MBA_DEPLOYMENT_DIR` with fallback
+   - Without this fix, system-gateway-mba cannot run inside vm-mediakit (path doesn't exist)
+
+**Phase 3 — os-mediakit seL4 build (ordered steps, AArch64 target):**
+
+Step 1: Wire `os-mediakit/` as a monorepo workspace member.
+  Create `os-mediakit/system-spec.toml` declaring a single PD `mediakit-root`:
+  ```toml
+  [system]
+  name = "os-mediakit"
+  
+  [[protection-domain]]
+  name = "mediakit-root"
+  binary = "os-mediakit/src/main.rs"
+  priority = 254
+  ```
+  Validate: `moonshot-toolkit validate os-mediakit/system-spec.toml`
+
+Step 2: Convert `os-mediakit/src/` to AArch64 bare-metal Rust.
+  Add `os-mediakit/src/main.rs` (new file, leave lib.rs as is):
+  ```rust
+  #![no_std]
+  #![no_main]
+  // os-mediakit Phase 1 rootserver — "os-mediakit booted" proof
+  // Replace with real service PDs in Phase 3 Step 5+
+  use core::arch::global_asm;
+  global_asm!(".global _start; _start: b _start"); // halt
+  ```
+  Minimum viable: halt loop that produces the ELF. SysDebugPutChar print is Phase 3 Step 4.
+
+Step 3: Extend `moonshot-toolkit/src/main.rs::cmd_build` to compile Rust PDs.
+  Currently only invokes `aarch64-linux-gnu-gcc` for `.c` PDs via `CompilePd`.
+  Add a branch: if `pd.binary` ends in `.rs` or names a Cargo package, invoke:
+  `cargo build --target aarch64-unknown-none --release -p <pd-name>`
+  and locate the output ELF in `target/aarch64-unknown-none/release/`.
+
+Step 4: Run end-to-end build.
+  `moonshot-toolkit build os-mediakit/system-spec.toml`
+  Output: `build/system-image.bin`
+  Boot: `qemu-system-aarch64 -machine virt,secure=off -cpu cortex-a53 -m 1G -nographic
+         -kernel build/system-image.bin`
+  Expected: seL4 boots, "os-mediakit booted" (or halt without crash = Phase 3 Step 2 done)
+
+Step 5: Create `system-substrate-sel4` shim crate (BRIEF-PPN-ARCHITECTURE §5.3).
+  New crate at `system-substrate-sel4/src/lib.rs` with feature flags:
+  - `["native"]`: seL4_Call/seL4_Send via rust-sel4 bindings
+  - `["compat"]`: thin std wrapper for Linux daemon form
+  Even a stub exposing `seL4_DebugPutChar` from `vendor-sel4-kernel/src/libsel4` is enough
+  to unblock os-mediakit from being a silent halt loop.
+
+Step 6: Phase 1C.e — Sigstore cosign on `plan_hash` (already in moonshot-toolkit NEXT.md).
+
+Step 7: Cross-repo handoff to project-infrastructure.
+  Deliver: `build/system-image.bin` (AArch64 image) + a note that
+  `infrastructure/os-infrastructure/forge_iso.sh` and `Makefile` use GRUB/x86 paths that
+  do not exist (`/srv/foundry/vendor/pointsav-monorepo`) and must be replaced with the
+  moonshot-toolkit AArch64 build path once Phase 3 Step 4 is validated.
+  Send outbox message to project-infrastructure when Step 7 is ready.
+
+Step 8 (Stretch — operator decision needed):
+  x86_64 path: rebuild vendor-sel4-kernel pc99 kernel with `KernelPrinting=ON`;
+  add `AssembleMultibootImage` variant to moonshot-toolkit. This is the only path that
+  lets os-mediakit replace the Debian 12 QCOW2 on x86_64 GCP without a new AArch64 host.
+  Estimated: significant new build track. Not recommended until operator chooses between
+  Option A (AArch64 GCP C4A) and Option B (Firecracker x86_64 on Laptop A).
+
+**Open operator decision (flag back to project-infrastructure):**
+Before starting Step 8, confirm which Phase 3 host path:
+- Option A: AArch64 GCP C4A Arm instance (~$50-100/month) — Microkit 2.2 native, formal proof
+- Option B: Firecracker microVMs + WireGuard on Laptop A (KVM/VT-x) — x86_64, pragmatic
+- Option C: seL4 x86_64 Multiboot2 (Step 8 above) — years of new toolchain work, not recommended
+
+Full reference: BRIEF-totebox-transformation §9/§10/§11, BRIEF-PPN-DEV-BOOTSTRAP §12.
+
+---
+from: totebox@project-infrastructure
+to: totebox@project-data
+re: vm-mediakit Phase 1 — service-fs install request + Ring 1 roadmap for os-mediakit
+created: 2026-05-29T00:00:00Z
+priority: high
+status: pending
+msg-id: project-infrastructure-20260529-service-fs-vm-mediakit
+---
+
+vm-mediakit is provisioned (Debian 12, 6 GiB, port-forward NAT at localhost:19100 → :9100).
+service-fs belongs in Phase 1 alongside system-core + system-ledger. It is the data
+backbone for every service that runs inside vm-mediakit.
+
+**Phase 1 — service-fs install (unblocked pending Command Session promotion):**
+
+Prerequisite: project-data has 23 commits ahead of canonical (2026-05-29).
+Command Session must run `bin/promote.sh` for project-data before the release binary
+can be built and deployed. An outbox message is being sent to command@claude-code
+requesting this promotion as a blocker.
+
+Once promotion is complete:
+
+```bash
+# From project-data monorepo clone
+cd /srv/foundry/clones/project-data
+
+# Build service-fs release binary
+cargo build --release -p service-fs
+
+# Install in vm-mediakit
+SSH_KEY="/srv/foundry/clones/project-infrastructure/infrastructure/virt/work/foundry-vm-key"
+scp -P 10022 -i $SSH_KEY \
+    target/release/service-fs \
+    foundry@localhost:/opt/mediakit/bin/
+
+# Install systemd unit (adapt local-fs.service for /opt/mediakit paths)
+# Data dir inside VM: /opt/mediakit/data/service-fs/
+# Port: 9100 (same as host)
+```
+
+The `infrastructure/virt/migrate-service-to-vm.sh` script can handle this:
+```bash
+/srv/foundry/clones/project-infrastructure/infrastructure/virt/migrate-service-to-vm.sh service-fs 9100
+```
+
+Smoke test from GCP host: `curl http://localhost:19100/healthz`
+
+**Phase 2 — Ring 1 additions (after service-fs stable in vm-mediakit):**
+
+| Service | Port | When | Notes |
+|---|---|---|---|
+| service-input | 9106 | After service-fs stable | Document/file ingest |
+| service-people | 9204 | After service-input stable | Identity ledger |
+| service-email | 9200 | After service-people stable | Comms ledger |
+
+These complete the full Ring 1 surface inside the os-mediakit tier.
+
+**Phase 3 — service-fs Envelope B (seL4 Microkit PD):**
+
+service-fs ARCHITECTURE.md §Envelope B defines the seL4 Microkit Protection Domain form:
+same CBOR-over-QUIC wire protocol, same tile format, `system-substrate-sel4` feature flag.
+This is the reference design for how all Ring 1 services become seL4 PDs in os-mediakit.
+
+Continue developing Envelope B in parallel with vm-mediakit Phase 1/2 — these tracks
+are complementary. Envelope B does not block Phase 1.
+
+**Open item to resolve:**
+`binary-targets.yaml` in project-data lists `service-content` and `service-extraction`
+as build targets, but the cluster manifest scopes ownership to the four Ring 1 services.
+`service-content` and `service-extraction` are owned by project-slm per the manifest.
+Please clarify with project-slm and/or Command Session before os-mediakit assembly — a
+build target overlap will cause dependency ambiguity in the os-mediakit image assembly.
+
+**service-fs on the host (running now):**
+`local-fs.service` at `127.0.0.1:9100` is production-ready and will remain running on
+the host throughout Phase 1 migration. The VM version runs in parallel until verified.
+
+---
+from: totebox@project-infrastructure
 to: totebox@project-editorial
 re: editorial pickup — session 7 PPN distributed VM fabric drafts (ce2571a0)
 created: 2026-05-28T00:00:00Z
