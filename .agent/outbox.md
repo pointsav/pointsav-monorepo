@@ -13,7 +13,7 @@ to: command@claude-code
 re: GUIDE routing — project-system GUIDE to woodfine-fleet-deployment/project-system/
 created: 2026-05-29T00:00:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-editorial-20260529-system-guide-routing
 ---
 
@@ -32,7 +32,7 @@ to: command@claude-code
 re: GUIDE routing — vm-mediakit GUIDEs ×2 to woodfine-fleet-deployment/fleet-infrastructure/
 created: 2026-05-29T00:00:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-editorial-20260529-infrastructure-guides-routing
 ---
 
@@ -54,7 +54,7 @@ to: command@claude-code
 re: GUIDE routing — intelligence GUIDEs ×2 to woodfine-fleet-deployment/cluster-totebox-intelligence/
 created: 2026-05-29T00:00:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-editorial-20260529-intelligence-guides-routing
 ---
 
@@ -95,7 +95,7 @@ to: command@claude-code
 re: Convention layer additions — JOURNAL programme (4 items)
 created: 2026-05-28T23:30:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-editorial-20260528-convention-layer-journal
 ---
 
