@@ -71,6 +71,10 @@
         .lc-btn:hover:not(.lc-disabled) { background: rgba(22,70,121,0.06); color: var(--text-main); }
         .lc-btn.lc-active { color: var(--brand-primary); background: rgba(22,70,121,0.07); }
         .lc-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+        .lc-spinner { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; border: 2px solid rgba(22,70,121,0.15); border-top-color: var(--brand-primary); animation: lc-spin 0.7s linear infinite; display: none; }
+        @keyframes lc-spin { to { transform: rotate(360deg); } }
+        .lc-loading .lc-spinner { display: block; }
+        .lc-loading .lc-dot { display: none; }
         .lc-disabled { cursor: default; opacity: 0.45; pointer-events: none; }
         .lc-planned { margin-left: auto; font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; background: rgba(0,0,0,0.05); padding: 2px 5px; border-radius: 4px; }
         .lc-group-label { font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; padding: 4px 4px 2px; }
@@ -441,6 +445,9 @@
     // ── PMTiles protocol ────────────────────────────────────────────
     const protocol = new pmtiles.Protocol();
     maplibregl.addProtocol('pmtiles', protocol.tile.bind(protocol));
+    // Pre-warm climate layer headers so first button click skips the header round-trip
+    protocol.add(new pmtiles.PMTiles('tiles/layer9-koppen-global.pmtiles'));
+    protocol.add(new pmtiles.PMTiles('tiles/layer9-ecoregions-global.pmtiles'));
 
     // ── Tier colour ramp — 4-tier: Regional → District → Local → Fringe ──
     // Keys are V2 rank values (3=Regional, 2=District, 1=Local, 0=Fringe) used by
@@ -1287,10 +1294,10 @@
                     <span class="lc-dot" style="background:#0A3070"></span>Cluster Bubbles
                 </button>
                 <button class="lc-btn${koppenActive ? ' lc-active' : ''}" id="lc-koppen" onclick="toggleKoppenLayer(this)" style="margin-top:4px;">
-                    <span class="lc-dot" style="background:linear-gradient(135deg,#2563eb 30%,#16a34a 65%,#dc2626 100%)"></span>Köppen-Geiger Climate
+                    <span class="lc-dot" style="background:linear-gradient(135deg,#2563eb 30%,#16a34a 65%,#dc2626 100%)"></span><span class="lc-spinner"></span>Köppen-Geiger Climate
                 </button>
                 <button class="lc-btn${ecoregionsActive ? ' lc-active' : ''}" id="lc-ecoregions" onclick="toggleEcoregionsLayer(this)">
-                    <span class="lc-dot" style="background:linear-gradient(135deg,#1a9641 50%,#2c7bb6 100%)"></span>Ecoregions (Biomes)
+                    <span class="lc-dot" style="background:linear-gradient(135deg,#1a9641 50%,#2c7bb6 100%)"></span><span class="lc-spinner"></span>Ecoregions (Biomes)
                 </button>
                 <div style="font-size:10px;color:var(--text-muted);font-style:italic;padding:4px 4px 0;margin-top:2px;">
                     Catchment · Spend · Work Origins — available after selecting a cluster.
@@ -1558,8 +1565,6 @@
             map.addSource('layer9-koppen-src', {
                 type: 'vector',
                 url: 'pmtiles://tiles/layer9-koppen-global.pmtiles',
-                minzoom: 4, maxzoom: 8,
-                bounds: [-180, -60, 180, 85],
             });
             map.addLayer({
                 id: 'layer9-koppen', type: 'fill',
@@ -1579,6 +1584,10 @@
             }, 'proximity-vignette');
         }
         if (map.getLayer('layer9-koppen')) map.setLayoutProperty('layer9-koppen', 'visibility', koppenActive ? 'visible' : 'none');
+        if (koppenActive) {
+            btn.classList.add('lc-loading');
+            map.once('idle', () => btn.classList.remove('lc-loading'));
+        }
         applyBubbleAecOverlayStyle();
     }
 
@@ -1595,8 +1604,6 @@
             map.addSource('layer9-ecoregions-src', {
                 type: 'vector',
                 url: 'pmtiles://tiles/layer9-ecoregions-global.pmtiles',
-                minzoom: 4, maxzoom: 8,
-                bounds: [-180, -60, 180, 85],
             });
             map.addLayer({
                 id: 'layer13-ecoregions', type: 'fill',
@@ -1620,6 +1627,10 @@
             }, 'proximity-vignette');
         }
         if (map.getLayer('layer13-ecoregions')) map.setLayoutProperty('layer13-ecoregions', 'visibility', ecoregionsActive ? 'visible' : 'none');
+        if (ecoregionsActive) {
+            btn.classList.add('lc-loading');
+            map.once('idle', () => btn.classList.remove('lc-loading'));
+        }
         applyBubbleAecOverlayStyle();
     }
 
