@@ -18,15 +18,9 @@ users:
 ssh_pwauth: false
 disable_root: true
 
-package_update: true
-package_upgrade: false
-packages:
-  - curl
-  - ca-certificates
-  - sudo
-  - socat
-  - nginx
-  - build-essential
+# Package install removed — install manually after SSH is up to avoid
+# long cloud-init block on slow TCG/SLIRP. Run:
+#   sudo apt-get update && sudo apt-get install -y curl ca-certificates socat nginx build-essential
 
 runcmd:
   - mkdir -p /opt/mediakit/bin /opt/mediakit/data /etc/mediakit
