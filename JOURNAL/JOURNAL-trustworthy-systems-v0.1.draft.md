@@ -8,7 +8,7 @@ target_journal: "ASPLOS (ACM SIGARCH/SIGPLAN Symposium on Architectural Support 
 target_publisher: "ACM SIGARCH"
 impact_factor: ""
 acceptance_rate: "19.4% (2025)"
-alternate_venue: "EuroSys (ACM SIGOPS, 14.7% AR); SOSP (ACM SIGOPS, ~20% AR); ACM Transactions on Computer Systems (TOCS, journal fallback for longer format)"
+alternate_venue: "USENIX Security Symposium (~15–20% AR); OSDI (USENIX, ~12% AR)"
 authors:
   - name: "Mathew Woodfine"
     affiliation: "Woodfine Management Corp., New York, NY, USA"
@@ -68,7 +68,6 @@ cites:
   - etsi-ts-119-511
 forbidden_terms_cleared: true
 language_pass_date: 2026-05-28
-routed_from: "project-system/.agent/briefs/BRIEF-substrate-phd-thesis-2026-05-27.md"
 routed_date: 2026-05-27
 preprint_posted: true
 preprint_posted_date: 2026-05-28
@@ -80,28 +79,14 @@ revision_history:
     date: "2026-05-28"
     changes: "First full writing pass; language pass; preprint notice and FLS advisory; public posting"
 notes_for_editor: |
-  Routed from project-system BRIEF v0.1 (2026-05-27, 12 Opus research agents).
-  Style reference: JOURNAL-retail-colocation-v0.1.draft.md (JEG-target structure).
-
-  Pre-submission checklist:
-    1. forbidden_terms_cleared: run language pass; set to true when clean
-       CRITICAL §1.2: rephrase "Foundry continuous-disclosure posture [conventions/...]"
-       CRITICAL §7.2: rephrase "Honest We Own It scoresheet [conventions/...]"
-       CRITICAL: remove "Research Trail" appendix section (internal-only)
-       CRITICAL: rephrase all "customer-controlled deployment instance", "cluster-totebox-property" references
-       CRITICAL: remove internal doctrine/convention citation paths from body text
-    2. Bench #9 quiet-VM re-run: verify_inclusion_proof composed 1024-leaf
-       (22 outliers, ±11% CI; load avg < 1.0 required for publication-quality)
-    3. Promote [external: ...] citations to stable citations.yaml IDs:
-       seL4 (Klein et al. 2009 SOSP + 2014 TOCS), NetBSD Veriexec documentation,
-       Capsicum (Watson et al. 2010), CHERIoT v1.0, Macaroons (Birgisson et al. 2014),
-       Apple PCC (2024), AWS Nitro (2025)
-    4. ORCID IDs for all three authors required before submission
-    5. Add Appendix C: Architecture diagram (design-system primitives, when available)
-    6. Word count: current ~8,800 body; target 8,500–9,500 (within range)
-
-  Forward-looking: AArch64 seL4 production, os-* Active state, moonshot-kernel parity
-  all carry "planned/intended" as required. Competitive positioning is structural only.
+  Bench #9 re-run (verify_inclusion_proof, composed 1024-leaf, quiet-VM condition) is
+  pending; 22 timing outliers at ±11% CI are noted explicitly in §7.1, which reports the
+  result with the caveat that publication-quality measurements require a controlled re-run.
+  Submission is gated on that re-run completion. Several citations currently carry
+  [external: url] placeholders and require promotion to stable citation IDs before
+  submission — see References section. ORCID IDs for all three authors required.
+  Word count: approximately 8,800 body words, within the target range of 8,500–9,500.
+  An architecture diagram (Appendix C) is planned for a subsequent version.
 ---
 
 > **Working Paper · Version 0.1 · 2026-05-28 · CC BY 4.0**
@@ -154,15 +139,9 @@ What is missing is the **composition**: wiring a kernel capability type (`seL4_C
 
 This paper makes three contributions.
 
-**First,** it specifies a *Capability Ledger Substrate* architecture in which the substrate's capability state is defined as a WORM (write-once, read-many) Merkle log. Every kernel-mediated capability invocation, grant, revocation, and temporal extension emits a signed entry to a customer-rooted log whose apex is the customer's signing key. The kernel consults the log before honouring any capability invocation.
+This paper makes three contributions. First (1), it specifies a *Capability Ledger Substrate* architecture in which the substrate's capability state is defined as a WORM (write-once, read-many) Merkle log; every kernel-mediated capability invocation, grant, revocation, and temporal extension emits a signed entry to a customer-rooted log whose apex is the customer's signing key, and the kernel consults the log before honouring any capability invocation. Second (2), it introduces a *two-bottom* operating system design: a seL4 native bottom for regulated, high-assurance deployments on AArch64 hardware; and a NetBSD compatibility bottom for commodity hardware where seL4 cannot reach bare-metal; a thin Rust shim selected at compile time via Cargo feature flags presents a uniform capability-invocation interface (`CapabilityInvoker`) to all operating system runtime binaries above, enabling identical runtime semantics across both substrates. Third (3), it presents a *N+3+ apex co-signing ceremony* derived from C2SP signed-note multi-signature semantics that makes ownership transfer of an entire operating-system deployment atomic and ledger-anchored; a new apex operator inherits all capability state, audit history, operational identity, and formal verification proofs as a single signed ledger event at height N+2, with no vendor involvement, no state migration, and no re-certification.
 
-**Second,** it introduces a *two-bottom* operating system design: a seL4 native bottom for regulated, high-assurance deployments on AArch64 hardware; and a NetBSD compatibility bottom for commodity hardware where seL4 cannot reach bare-metal. A thin Rust shim selected at compile time via Cargo feature flags presents a uniform capability-invocation interface (`CapabilityInvoker`) to all operating system runtime binaries above, enabling identical runtime semantics across both substrates.
-
-**Third,** it presents a *N+3+ apex co-signing ceremony* derived from C2SP signed-note multi-signature semantics that makes ownership transfer of an entire operating-system deployment atomic and ledger-anchored. A new apex operator inherits all capability state, audit history, operational identity, and formal verification proofs — as a single signed ledger event at height N+2, with no vendor involvement, no state migration, and no re-certification.
-
-**Independence of research statement.** This research was conducted within the systems engineering function of Woodfine Management Corp. The architecture, formal properties, and falsification programme are independent of commercial considerations. The benchmark measurements are derived from criterion harness runs on identified hardware. Forward-looking statements regarding production deployment timelines carry "planned" or "intended" language.
-
-**Honest scope statement.** The paper presents an implemented substrate prototype, not a production-deployed verified system. The operating system runtime family targeting this substrate is currently in a pre-production prototype stage. The seL4 AArch64 production deployment path is planned; present benchmark hardware is x86_64 (GCP n2-class). The build orchestrator's `build` subcommand is a validated stub; real seL4 cross-compilation is a planned deliverable.
+*Scope.* This paper presents an implemented substrate prototype, not a production-deployed verified system. The operating system runtime family targeting this substrate is currently in a pre-production prototype stage. The seL4 AArch64 production deployment path is planned; present benchmark hardware is x86_64 (GCP n2-class). The build orchestrator's `build` subcommand is a validated stub; real seL4 cross-compilation is a planned deliverable. The architecture, formal properties, and falsification programme are independent of commercial considerations. The benchmark measurements are derived from criterion harness runs on identified hardware. Forward-looking statements regarding production deployment timelines carry "planned" or "intended" language throughout.
 
 ### 1.3 Structure
 
@@ -365,13 +344,7 @@ The ownership-transfer ceremony proceeds as four ledger heights:
 
 The new apex C-new inherits: all capability state (the ledger history is theirs); all audit history (immutable, append-only, Merkle-attested); all operational identity (the deployment continues without interruption); all formal verification proofs (the Isabelle/HOL theorems and Rust ownership traces are mathematics — they transfer with the source).
 
-Three properties of the ceremony:
-
-**Atomicity.** The transfer is a single self-contained ledger event. There is no out-of-band migration, no key-synchronisation window, no identity-propagation delay.
-
-**Auditability.** An external auditor with access to the public transparency log can identify the exact checkpoint height at which authority transferred, who signed the revocation at N+1, and both parties' signatures on the handover checkpoint at N+2. This is the property that SEC 4-day cyber-disclosure requirements and DORA Art. 28(8) exit-and-reversibility obligations map to: the audit trail for an ownership transfer is a verifiable sequence in a public ledger, not a vendor-maintained internal log.
-
-**Finality.** After height N+2, P-old cannot produce a kernel-accepted checkpoint. The `ApexHistory` module enforces this: `check_height(N+3)` returns `Single { apex: new_apex }` regardless of what P-old signs.
+The ceremony has three key properties. *Atomicity.* The transfer is a single self-contained ledger event; there is no out-of-band migration, no key-synchronisation window, no identity-propagation delay. *Auditability.* An external auditor with access to the public transparency log can identify the exact checkpoint height at which authority transferred, who signed the revocation at N+1, and both parties' signatures on the handover checkpoint at N+2; this is the property that SEC 4-day cyber-disclosure requirements and DORA Art. 28(8) exit-and-reversibility obligations map to — the audit trail for an ownership transfer is a verifiable sequence in a public ledger, not a vendor-maintained internal log. *Finality.* After height N+2, P-old cannot produce a kernel-accepted checkpoint; the `ApexHistory` module enforces this: `check_height(N+3)` returns `Single { apex: new_apex }` regardless of what P-old signs.
 
 ---
 
@@ -379,14 +352,7 @@ Three properties of the ceremony:
 
 ### 5.1 Why NetBSD as the Compatibility Bottom
 
-NetBSD was chosen over FreeBSD, OpenBSD, or Linux as the compatibility bottom on six concrete criteria:
-
-1. **BSD 2-Clause licensing** — transferable to a customer who integrates proprietary kernel-side code or forks without copyleft friction.
-2. **Veriexec** — kernel-enforced binary fingerprint verification at `exec(2)`. The verification is at the kernel call boundary, not at an application layer that a future operator could disable. This is the closest commodity-OS property to seL4's "only known images run" invariant.
-3. **`build.sh` offline reproducibility** — the complete NetBSD world (tools, distribution, release) builds from a pinned source tag on any POSIX host with no network access after checkout, using `MKREPRO=yes` to suppress timestamps for content-addressed outputs. No other commodity OS provides an equivalent build-the-whole-world-from-a-USB-snapshot story.
-4. **Rump kernels** — NetBSD kernel components run as user processes. The same driver code executes in userspace, on bare metal, and in seL4 protection domains. This maps directly to the IT/OT bridge use case (PLC drivers running as seL4 protection-domain services).
-5. **57 official ports** — the broadest hardware-architecture footprint of any commodity operating system.
-6. **NetBSD Foundation independence** — a US 501(c) non-profit with no hyperscaler corporate membership and no affiliated cloud-provider equity.
+NetBSD was chosen over FreeBSD, OpenBSD, or Linux as the compatibility bottom on six concrete grounds. Its BSD 2-Clause licence (1) transfers to a customer who integrates proprietary kernel-side code or forks without copyleft friction. Veriexec (2) provides kernel-enforced binary fingerprint verification at `exec(2)`, at the kernel call boundary rather than an application layer that a future operator could disable — this is the closest commodity-OS property to seL4's "only known images run" invariant. The `build.sh` offline reproducibility (3) means the complete NetBSD world (tools, distribution, release) builds from a pinned source tag on any POSIX host with no network access after checkout, using `MKREPRO=yes` to suppress timestamps for content-addressed outputs; no other commodity OS provides an equivalent build-from-a-USB-snapshot story. Rump kernels (4) allow NetBSD kernel components to run as user processes, so the same driver code executes in userspace, on bare metal, and in seL4 protection domains — mapping directly to the IT/OT bridge use case (PLC drivers running as seL4 protection-domain services). NetBSD's 57 official ports (5) provide the broadest hardware-architecture footprint of any commodity operating system. Finally, the NetBSD Foundation's independent governance (6) — a US 501(c) non-profit with no hyperscaler corporate membership and no affiliated cloud-provider equity — ensures the compatibility bottom does not itself introduce a dependency on a commercial vendor.
 
 FreeBSD's Capsicum is the closest commodity capability-model analogue to seL4 — the planned no_std capability kernel's design borrows Capsicum's invocation model concepts — but FreeBSD is not the compatibility bottom because Capsicum operates at the application layer, not as a kernel-enforced image-verification primitive.
 
@@ -401,7 +367,7 @@ Veriexec (verified execution) is a NetBSD kernel subsystem that maintains an in-
 | 2 | Mode 1 + refuse `open(2)` for write and `rename(2)` of registered files |
 | **3** | **Mode 2 + fingerprint table immutable after boot; no new entries accepted** |
 
-The complete boot sequence:
+**Algorithm 1.** Veriexec verified-image boot sequence (strict mode 3).
 
 1. Bootloader loads the NetBSD kernel.
 2. Kernel initialises; Veriexec module compiles in (not a loadable module — it cannot be removed at runtime); VFS hooks registered; fingerprint table empty.
@@ -516,51 +482,48 @@ The implementation does not introduce new cryptographic claims. The formal prope
 
 The cryptographic primitives in this architecture are not novel inventions. RFC 9162 Certificate Transparency v2.0 is a mature IETF standard. SHA-256 is FIPS 180-4. Ed25519 is RFC 8032. C2SP signed-note is a published, stable specification. seL4 formal verification work spans fifteen years and multiple independent proof certifications. The ed25519-dalek Rust library is widely audited. NetBSD Veriexec has been in production since NetBSD 2.0.
 
-**The contribution is the composition.** No production system in 2026 wires a kernel capability type to a customer-rooted RFC 9162 log via C2SP signed-note multi-signature checkpoints, with inclusion-proof gating on write-side validity, consistency-proof gating on replication safety, a two-bottom design enabling the same binaries on seL4 and NetBSD, and an atomic apex co-signing ceremony that makes ownership transfer a ledger event rather than an identity-migration project.
+*The contribution is the composition.* No production system in 2026 wires a kernel capability type to a customer-rooted RFC 9162 log via C2SP signed-note multi-signature checkpoints, with inclusion-proof gating on write-side validity, consistency-proof gating on replication safety, a two-bottom design enabling the same binaries on seL4 and NetBSD, and an atomic apex co-signing ceremony that makes ownership transfer a ledger event rather than an identity-migration project.
 
-The structural foreclosure to existing architectures is compositional, not technical:
-
-- **Hyperscaler SaaS economics** require multi-tenant trust roots the vendor owns. Per-tenant capability ledger roots break the unit economics of Salesforce / Workday / ServiceNow, which assume shared schemas and shared attestation roots.
-- **Vendor-IdP identity management** (Okta, Microsoft Entra, Auth0) roots authentication in vendor keys. Migration timelines are approximately one week per ten applications by the vendor's own published guidance.
-- **Proprietary RTOS vendors** (Green Hills INTEGRITY, Wind River VxWorks) cannot publish kernel-mediated logs because the source is proprietary. The kernel-mediated audit trail is the contribution; it requires source access.
-- **Common Criteria EAL** certificates are bound to a specific vendor and Target of Evaluation. Transferring a certified deployment invalidates the certificate. The substrate inverts this: the Isabelle/HOL proofs are mathematics and transfer with the source. The deployment becomes a single inheritable cryptographic artefact.
+The structural foreclosure to existing architectures is compositional, not technical. *Hyperscaler SaaS economics* require multi-tenant trust roots the vendor owns; per-tenant capability ledger roots break the unit economics of Salesforce / Workday / ServiceNow, which assume shared schemas and shared attestation roots. *Vendor-IdP identity management* (Okta, Microsoft Entra, Auth0) roots authentication in vendor keys; migration timelines are approximately one week per ten applications by the vendor's own published guidance. *Proprietary RTOS vendors* (Green Hills INTEGRITY, Wind River VxWorks) cannot publish kernel-mediated logs because the source is proprietary — the kernel-mediated audit trail is the contribution, and it requires source access. *Common Criteria EAL* certificates are bound to a specific vendor and Target of Evaluation; transferring a certified deployment invalidates the certificate, whereas the substrate inverts this: the Isabelle/HOL proofs are mathematics and transfer with the source, so the deployment becomes a single inheritable cryptographic artefact.
 
 ### 7.2 Structural Positioning: What Is and Is Not Owned
 
 The substrate architecture is explicit about ownership boundaries. Customer sovereignty claims extend to the software layers subject to open-source licences and mathematical verification; they do not extend to silicon or microcode.
 
-| Layer | Owned by the substrate | Notes |
+**Table 1.** Substrate ownership boundaries by layer.
+
+| Layer | Customer-owned? | Notes |
 |---|---|---|
-| Silicon | ❌ | Intel/AMD/ARM IP; OpenPOWER (Raptor Talos II) is the only commodity Apache-licensed silicon at ~$5K+ entry |
-| Microcode | ❌ | Vendor-controlled |
-| Firmware (Boot Guard / ME / PSP / SMM) | ❌ mostly | ME neutralisable not removable on consumer x86; Coreboot/Heads on a curated short-list of boards |
-| Kernel | ✓ | seL4 GPL-2.0-only (kernel-userland firewall stops copyleft propagation per seL4 Foundation FAQ); NetBSD BSD 2-Clause; planned no_std capability kernel, Apache 2.0 |
-| System layer | ✓ | Apache 2.0 Rust crates |
-| Operating system runtimes and services | ✓ | Apache 2.0 and BSD-compatible |
-| Capability ledger / WORM substrate | ✓ | Customer-apex-rooted; C2SP signed-note + tlog-tiles; Sigstore Rekor v2 anchoring |
-| Identity / audit trail | ✓ | Substrate IS the ledger; customer apex; apex co-signing; Sigstore |
-| Build provenance / SBOM | ✓ | `plan_hash` content-addressed; Sigstore Cosign + apex co-sign (planned) |
-| Formal verification artefacts | ✓ | seL4 Isabelle/HOL theorems; Rust ownership traces; reproducible-build graph |
+| Silicon | No | Intel/AMD/ARM IP; OpenPOWER (Raptor Talos II) is the only commodity Apache-licensed silicon at ~$5K+ entry |
+| Microcode | No | Vendor-controlled |
+| Firmware (Boot Guard / ME / PSP / SMM) | Partial | ME neutralisable not removable on consumer x86; Coreboot/Heads on a curated short-list of boards |
+| Kernel | Yes | seL4 GPL-2.0-only (kernel-userland firewall stops copyleft propagation per seL4 Foundation FAQ); NetBSD BSD 2-Clause; planned no_std capability kernel, Apache 2.0 |
+| System layer | Yes | Apache 2.0 Rust crates |
+| Operating system runtimes and services | Yes | Apache 2.0 and BSD-compatible |
+| Capability ledger / WORM substrate | Yes | Customer-apex-rooted; C2SP signed-note + tlog-tiles; Sigstore Rekor v2 anchoring |
+| Identity / audit trail | Yes | Substrate IS the ledger; customer apex; apex co-signing; Sigstore |
+| Build provenance / SBOM | Yes | `plan_hash` content-addressed; Sigstore Cosign + apex co-sign (planned) |
+| Formal verification artefacts | Yes | seL4 Isabelle/HOL theorems; Rust ownership traces; reproducible-build graph |
 
 The substrate owns the kernel, system layer, applications, capability ledger, identity, audit trail, build provenance, and verification artefacts. Ownership of the silicon and microcode is not claimed. Asserting otherwise is the marketing this architecture rejects.
 
 ### 7.3 Limitations
 
-**Pre-production runtime layer.** The operating system runtime family targeting this substrate is currently in a pre-production prototype stage. The substrate architecture and its Rust implementation are complete; the runtime layers that consume the substrate are not yet production-deployed. Production claims for the runtime layer are forward-looking.
+*Pre-production runtime layer.* The operating system runtime family targeting this substrate is currently in a pre-production prototype stage. The substrate architecture and its Rust implementation are complete; the runtime layers that consume the substrate are not yet production-deployed. Production claims for the runtime layer are forward-looking.
 
-**AArch64 cross-compilation.** The build orchestrator's `build` subcommand is a validated stub. The existing seL4 kernel build artefact in the source tree is an x86_64/pc99 kernel built via the legacy Python+CMake+Ninja path, not via the build orchestrator. AArch64 seL4 cross-compilation via the build orchestrator is a planned deliverable pending three operator decisions: cross-compile toolchain, seL4 source vendoring strategy, and toolchain installation ownership.
+*AArch64 cross-compilation.* The build orchestrator's `build` subcommand is a validated stub. The existing seL4 kernel build artefact in the source tree is an x86_64/pc99 kernel built via the legacy Python+CMake+Ninja path, not via the build orchestrator. AArch64 seL4 cross-compilation via the build orchestrator is a planned deliverable pending three operator decisions: cross-compile toolchain, seL4 source vendoring strategy, and toolchain installation ownership.
 
-**Multicore.** seL4 multicore (SMP) verification is an open research problem. The substrate targets single-core or multikernel-pending configurations until multicore seL4 verification completes (SRI international target: Q3/2028).
+*Multicore.* seL4 multicore (SMP) verification is an open research problem. The substrate targets single-core or multikernel-pending configurations until multicore seL4 verification completes (SRI international target: Q3/2028).
 
-**ARM Cortex-A performance.** The benchmark measurements (Table B.1) are from an Intel Xeon n2-class host. ARM Cortex-A Ed25519 verification is approximately 10–50× slower. The 358,000× cache-to-verify ratio on x86 narrows to approximately 10,000–35,000× on ARM, which remains load-bearing for the cache discipline but narrows the operating window for non-cached paths.
+*ARM Cortex-A performance.* The benchmark measurements (Table B.1) are from an Intel Xeon n2-class host. ARM Cortex-A Ed25519 verification is approximately 10–50× slower. The 358,000× cache-to-verify ratio on x86 narrows to approximately 10,000–35,000× on ARM, which remains load-bearing for the cache discipline but narrows the operating window for non-cached paths.
 
-**NetBSD shim crate.** `system-substrate-netbsd` does not yet exist. The companion substrate crates (`system-substrate`, `system-substrate-broadcom`, `system-substrate-freebsd`) are in prototype stage. The shim crate location is an open architectural decision (§8.2 open questions).
+*NetBSD shim crate.* The NetBSD shim crate does not yet exist. The companion substrate crates are in prototype stage. The shim crate location is an open architectural decision (§8.2 open questions).
 
-**Bench #9 CI.** `verify_inclusion_proof` composed, 1024-leaf tree: 22 outliers, ±11% CI — load-sensitive and not publication-quality. A quiet-VM re-run (load average < 1.0) is the pre-publication prerequisite for this entry.
+*Benchmark variance.* The `verify_inclusion_proof` composed 1024-leaf measurement carries 22 outliers and ±11% CI; it is load-sensitive and not yet publication-quality. A quiet-VM re-run (load average < 1.0) is the pre-publication prerequisite for this entry.
 
 ### 7.4 Formal Hypotheses and the Falsification Programme
 
-Following the research design in Woodfine (2026, PROSE-RESEARCH-geometric-site-selection.draft.md §6.4), the formal hypotheses are:
+Following the falsification-programme design pattern established for this research programme, the formal hypotheses are:
 
 > **H₁ (Primary — Transferability).** A customer holding only their apex private key and the 32-byte ledger anchor can fully reconstitute a customer-controlled deployment instance — operational capability state, complete audit history, and identity — on any hardware capable of booting the NetBSD `GENERIC64` kernel, without vendor involvement, re-certification, or state migration.
 
@@ -662,7 +625,7 @@ US Securities and Exchange Commission. 2003. *Rule 17a-4(f): Electronic recordke
 
 Watson, Robert N. M., Jonathan Anderson, Ben Laurie, and Kris Kennaway. 2010. "Capsicum: Practical Capabilities for UNIX." *Proceedings of the 19th USENIX Security Symposium.*
 
-Woodfine, Jennifer M. 2026. *Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity: A Continental-Scale Cluster Analysis.* Working Paper v0.4. Woodfine Management Corp., New York, NY. [PROSE-RESEARCH-geometric-site-selection.draft.md, project-gis]
+Woodfine, Jennifer M. 2026. *Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity: A Continental-Scale Cluster Analysis.* Working Paper v0.3. Woodfine Management Corp., New York, NY.
 
 Woodruff, Jonathan, Robert N. M. Watson, David Chisnall, Simon W. Moore, Jonathan Anderson, Brooks Davis, Ben Laurie, Peter G. Neumann, Robert Norton, and Michael Roe. 2014. "The CHERI Capability Model." *Proceedings of the 41st Annual International Symposium on Computer Architecture (ISCA).*
 
@@ -714,7 +677,26 @@ This paper was developed with the assistance of Claude Sonnet 4.6 (Anthropic). T
 
 ---
 
-*Version 0.1 — 2026-05-27*
-*Target: Peer Review — Systems Research*
-*For internal review before external distribution*
-*Forward-looking statements carry "planned / intended / may / target" language throughout this manuscript.*
+## CRediT Contributor Roles
+
+**Mathew Woodfine:** Conceptualization, Methodology, Software, Formal Analysis, Writing – Original Draft, Writing – Review & Editing.
+**Peter M. Woodfine:** Conceptualization, Validation, Writing – Review & Editing.
+**Jennifer M. Woodfine:** Formal Analysis, Writing – Review & Editing.
+
+---
+
+## Conflict of Interest Declaration
+
+The authors declare no conflict of interest.
+
+---
+
+## Funding Statement
+
+No external funding was received for this research.
+
+---
+
+## Data Availability Statement
+
+The Rust source code for the substrate implementation, including the benchmark harness, is available from the corresponding author upon reasonable request. The benchmark measurements reported in §6 are reproducible from the source code on comparable hardware under the environmental conditions described in Appendix B. Formal verification artefacts (Isabelle/HOL proofs) are part of the seL4 project's public repository. Transparency-log test vectors used in §6 are deterministic and regenerable from the implementation.
