@@ -31,6 +31,9 @@ pub trait GraphStore: Send + Sync {
         classification: &str,
         location: &str,
     ) -> Result<usize>;
+    /// Count all Entity nodes in the graph across all modules. Used by /healthz to
+    /// surface the real entity count rather than always reporting 0.
+    fn count_all(&self) -> Result<usize>;
 }
 
 pub struct LbugGraphStore {
@@ -262,6 +265,25 @@ impl GraphStore for LbugGraphStore {
                 e
             )
         })?;
+        Ok(0)
+    }
+
+    fn count_all(&self) -> Result<usize> {
+        let conn = self.conn()?;
+        let mut stmt = conn
+            .prepare("MATCH (e:Entity) RETURN COUNT(e)")
+            .map_err(|e| anyhow!("Failed to prepare count_all: {}", e))?;
+        let result = conn
+            .execute(&mut stmt, vec![])
+            .map_err(|e| anyhow!("Failed to execute count_all: {}", e))?;
+        // Result is a single row with one column: the integer count.
+        if let Some(row) = result.into_iter().next() {
+            if let Some(val) = row.into_iter().next() {
+                if let Value::Int64(n) = val {
+                    return Ok(n as usize);
+                }
+            }
+        }
         Ok(0)
     }
 }
