@@ -2,6 +2,35 @@
 
 ---
 
+### 2026-05-29 (JOURNAL PhD register pass) | totebox@project-editorial | claude-sonnet-4-6
+
+**Done this session:**
+- 7-commit JOURNAL academic register pass complete (Jennifer/Peter alternating):
+  - `71ef7be6`: journal-artifact-discipline.md — 8 prose/typography rules + notes_for_editor discipline
+  - `eaeffe58`: BRIEF-journal-phd-programme.md — formatting standard + venue strategy subsections
+  - `775d20ae`: J1 — §6.1 prose, notes_for_editor clean, CRediT/COI/Funding added, venues updated
+  - `9e1de30f`: J2 — §5.1/5.2/6.3/7.2/7.3 prose, notes_for_editor clean, CRediT/COI/Funding added
+  - `beb01daa`: J3 — table captions, §7.1/7.4/7.5 prose, generalizability paragraph, venues updated
+  - `ec225be4`: J4 — §1/3.1/4/5.3 prose, Listing captions, §6.2 falsification prose, §6.3 italic, §6.4 generalizability, notes_for_editor clean
+  - `22cb91fa`: J6 — contributions inline, §4 table captions + Appendix A, §5.2/§6 TODOs resolved, §7.3 falsification prose, §7.4 italic, [CITATION NEEDED] removed
+- Operator note mid-execution: plain accessible language is a feature; target RAND/Yale dissertation register, not convoluted academic circumlocution — applied across all prose conversions
+- Artifact registry + NEXT.md updated — `2c831c55`
+- All forbidden-terms checks pass; no Results— labels; no TODO markers in edited papers
+
+**Pending / carry-forward:**
+- J4 word count gap: ~6,400 vs 9,000-word target; project-infrastructure to expand §4–§5
+- J4 final §4–§5 forbidden-terms pass still needed before submission
+- All other JOURNAL data blockers remain (Phase 24B / Bench #9 / AEC metrics / user study) — external
+- ORCID IDs for all three authors — operator action required
+- J1 tier-distribution tables: may need formal `**Table N.**` captions — not addressed in this pass (plan's per-J1 changes didn't list it explicitly; potential follow-up)
+- Stage 6 for all JOURNAL commits — Command Session scope
+- Git tags not yet pushed
+
+**Operator preferences surfaced:**
+- Plain language emphasis: "plain language as much as possible to make our JOURNAL accessible to as many people as possible" — confirmed again; write naturally, not with academic circumlocution
+
+---
+
 ### 2026-05-29 (inbox action session) | totebox@project-editorial | claude-sonnet-4-6
 
 **Done this session:**
@@ -57,31 +86,5 @@
 - Author presentation: RAND/Brookings style (people-first, no lab branding) — confirmed via plan approval
 
 ---
-
----
-
-### 2026-05-28 (session close) | totebox@project-editorial | claude-sonnet-4-6
-
-**Done this session:**
-- Full inbox/outbox/NEXT.md sweep at session start; plan created and approved.
-- `command-20260526-dev-phase3-drafts-relay` actioned: TOPIC committed to `media-knowledge-documentation/applications/app-privategit-workbench.md` + ES stub; GUIDE (`guide-workbench-setup.md`) staged to drafts-outbound + routed to Command via outbox `project-editorial-20260528-guide-workbench-routing`.
-- A6 PROSE-RESEARCH editorial pass complete (forbidden-terms clean, BCSC clean, DATA PENDING annotations for §7.2); committed to wiki — `a77e1bb` (Peter). Placed at `reference/geometric-site-selection-national-tenancy.md` + ES stub (no `research/` category in wiki; `reference/` used per prior pattern for BIM market context).
-- B5/B11/B12 TEXT artifacts (Canada/Walmart, Nordic coverage, UK/EU coverage) dispatched to project-gis for coverage verification + return; outbox msg-id `project-editorial-20260528-text-artifacts-dispatch`.
-- Convention layer outbox message sent to Command (msg-id `project-editorial-20260528-convention-layer-journal`): 4 items — artifact-classification.yaml JOURNAL row, conventions/journal-artifact-discipline.md new file, artifact-registry.md JOURNAL row, Foundry NEXT.md JOURNAL section.
-- B13–B16 registry drift surfaced: files not in drafts-outbound; project-gis must write and dispatch these 4 TOPIC files. Noted in NEXT.md and artifact registry.
-- Artifact registry updated: A6 → COMMITTED `a77e1bb`; B5/B11/B12 → DISPATCHED; B13–B16 → REGISTRY DRIFT.
-
-**Pending / carry-forward:**
-- All JOURNAL data blockers remain (Phase 24B / Bench #9 / AEC metrics / WireGuard benchmarks / user study) — external projects
-- ORCID IDs for all three authors — operator action
-- B5/B11/B12 TEXT: awaiting coverage verification from project-gis before language pass at project-editorial
-- B13–B16 TOPIC: need to be written and dispatched by project-gis
-- Convention layer (4 items): Command Session scope — msg sent
-- GUIDE `guide-workbench-setup.md` → woodfine-fleet-deployment: Command Session scope — msg sent
-- Stage 6 for all JOURNAL + wiki commits — Command Session scope
-- Git tags (J1-v0.3 … J6-v0.2) not yet pushed
-
-**Operator preferences surfaced:**
-- (none new this session)
 
 
