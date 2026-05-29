@@ -34,6 +34,7 @@ enum ContentState {
     },
     Submitting {
         original: String,
+        #[allow(dead_code)]
         protocol_idx: usize,
         rx: mpsc::Receiver<anyhow::Result<ProofreadResponse>>,
         spinner: usize,
@@ -76,7 +77,7 @@ impl ContentCartridge {
             "local",
             "http://127.0.0.1:9092",
             "http://localhost:8011",
-            &format!(
+            format!(
                 "{}/.local/share/os-console/drafts-outbound",
                 std::env::var("HOME").unwrap_or_else(|_| ".".into())
             ),
