@@ -1991,6 +1991,7 @@ async fn wiki_page_inner(
     // then inject pencils for the final body HTML. This keeps TOC text clean.
     let raw_html = render_html_raw(&parsed.body_md, &state.content_dir);
     let raw_html = crate::glossary::inject_glossary_tooltips(&raw_html, &state.glossary);
+    let raw_html = crate::render::inject_citation_markers(&raw_html);
     let headings = extract_headings(&raw_html);
     let body_html = inject_edit_pencils(&raw_html);
 
