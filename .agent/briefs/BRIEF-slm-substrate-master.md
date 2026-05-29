@@ -39,21 +39,22 @@ notes: >
 
 ---
 
-## §1 — Current live state (as of 2026-05-29T~18:00Z)
+## §1 — Current live state (as of 2026-05-29T19:30Z — Sprint 3 deployed)
 
 | Component | Version | Status | Notes |
 |---|---|---|---|
-| `slm-doorman-server` | rebuilt 2026-05-29T04:05Z | **active** | sha256=`d3c2d37db77c46e480da04006f2b1ad76e57ad493bf0a1fd2e36ee2a147827dc`; Think-strip + 180s/300s timeouts; drain-backoff; SLM_FORCE_BROKER_MODE=**false** (Tier A enabled); tool_use shim (Sprint 1) |
-| `service-content` | rebuilt 2026-05-25 | **active** | sha256=`00b075d0a114659aec84012b84dafda007b488855833681bb6d75c57d98ba1d5`; **STALE** — missing SC-2/3/5 fixes; rebuild required after Sprint 2A (entity_count in healthz) |
+| `slm-doorman-server` | rebuilt 2026-05-29T19:26Z | **active** | sha256=`81b8629cf474104fe33274244c6db832a1f2f5dca898c80a98cd524bf3269e2f`; Sprint 3A: `SLM_TIER_A_FIRST=true`; Sprint 2B: `tier_b` in readyz; Sprint 3C: `SLM_HOLD_THRESHOLD_SECS=3600`; commit `5493a8f4` |
+| `service-content` | rebuilt 2026-05-29T19:26Z | **active** | sha256=`2362ea5c580a9869c5e307b645d60219cb9535dbf4218bd8762da870a4c62f7b`; Sprint 2A: `entity_count` in `/healthz` (7,201 entities); Sprint 3B: Tier A fallback enabled; commit `5493a8f4` |
 | `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** | europe-west4-a L4 stockout; restart with `start-yoyo.sh --runtime=2h` when capacity returns |
-| `local-slm.service` | OLMo 2 1124 7B Instruct Q4_K_M (4.16 GiB) | **active** | Tier A is the always-on primary; Goose verified round-tripping 2026-05-29 |
-| `local-doorman.env` | — | current | `SLM_YOYO_GCP_ZONE=europe-west4-a`; `SLM_YOYO_IDLE_MINUTES=120`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_FORCE_BROKER_MODE=false` |
+| `local-slm.service` | OLMo 2 1124 7B Instruct Q4_K_M (4.16 GiB) | **active** | Tier A is the confident primary; `SLM_TIER_A_FIRST=true` confirmed in startup log |
+| `local-doorman.env` | — | current | `SLM_TIER_A_FIRST=true`; `SLM_HOLD_THRESHOLD_SECS=3600`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_FORCE_BROKER_MODE=false` |
+| `local-content.env` | — | current | Drop-in: `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=true`; `SERVICE_CONTENT_TIER_A_FALLBACK_INTERVAL_SECS=300` |
 
 **Tier routing (current):**
-- Tier A: **ENABLED** — OLMo 7B handles all chat/shadow; `has_local: true` in readyz
-- Tier B: **circuit OPEN** — Yo-Yo TERMINATED; 1,460+ consecutive failures; `opened_at` recorded
+- Tier A: **ENABLED + PRIMARY** — `SLM_TIER_A_FIRST=true`; all chat/shadow routes here unless Tier B explicitly hinted AND circuit closed
+- Tier B: **circuit initialising → OPEN** — Yo-Yo TERMINATED; health probes failing; circuit will open within ~90s of restart
 - Tier C: not configured — ToS hard constraint; never enable for training loop
-- Result: `ai_available: true` (Tier A); entity extraction deferred (Tier B circuit open)
+- Result: `ai_available: true` (Tier A primary); WATCHER Tier A fallback active (rate-limited, 300s interval); drain holds when all Tier B open >1h
 
 **Think-model fixes deployed (prev session commit `d835cab5`):**
 - `SOCKET_TIMEOUT` raised 60s → 180s; `OUTER_DEADLINE` raised 90s → 300s
@@ -308,10 +309,15 @@ Full plan: `/home/mathew/.claude/plans/make-plan-for-what-fluffy-whale.md`
 
 | Sprint | Scope | Files | Status |
 |---|---|---|---|
-| Sprint 0 | Documentation + artifact delivery | drafts-outbound/, briefs/ | **IN PROGRESS** |
-| Sprint 1 | Script fixes (no build) | export-dpo.sh, corpus-threshold.py | pending |
-| Sprint 2 | Honest observability (Rust, two binaries) | graph.rs, http.rs (both services), circuit_breaker.rs, router.rs | pending |
-| Sprint 3 | Tier A as confident primary (Rust, larger) | router.rs, apprenticeship.rs, main.rs (both services) | pending |
+| Sprint 0 | Documentation + artifact delivery | drafts-outbound/, briefs/ | ✅ DONE — commit `586edf2b` |
+| Sprint 1A | Filter degenerate DPO tuples (scripts) | export-dpo.sh, corpus-threshold.py | ✅ DONE — commit `2f85cb48` |
+| Sprint 1B | Improved extraction system prompt | http.rs, jennifer-datagraph-rebuild.sh | ✅ DONE — commit `30be4a1f` |
+| Sprint 2A | entity_count in /healthz | graph.rs, http.rs (service-content) | ✅ DONE — commit `30be4a1f`; live: 7,201 entities |
+| Sprint 2B | readyz exposes circuit state | circuit_breaker.rs, router.rs, http.rs (doorman) | ✅ DONE — commit `30be4a1f`; `tier_b` field live |
+| Sprint 2C | Degenerate tuple guard at write time | apprenticeship.rs | ✅ DONE — commit `5493a8f4` |
+| Sprint 3A | SLM_TIER_A_FIRST flag | router.rs, apprenticeship.rs, main.rs (doorman) | ✅ DONE — commit `5493a8f4`; `SLM_TIER_A_FIRST=true` deployed |
+| Sprint 3B | WATCHER Tier A fallback (rate-limited) | main.rs (service-content) | ✅ DONE — commit `5493a8f4`; enabled, 300s interval |
+| Sprint 3C | Drain worker pause when Tier B long-OPEN | main.rs (doorman) | ✅ DONE — commit `5493a8f4`; 1h threshold |
 
 **Not changing:** OLMo-only policy; `/v1/extract` Tier B-only boundary (ADR-07); three-tier architecture; zone fallback; GCS training upload.
 
@@ -334,38 +340,24 @@ Full plan: `/home/mathew/.claude/plans/make-plan-for-what-fluffy-whale.md`
 - [x] **Goose round-trip verification** ✓ DONE 2026-05-29T04:10Z
   Goose v1.36.0 replied "Hello! The result of 2+2 is 4." Doorman log: `dispatching ... tier="local"`.
 
-- [ ] **Circuit resilience Sprint 1** — filter degenerate DPO tuples (scripts only, no build)
-  1A: `export-dpo.sh` — add `select(.attempt.diff != null and .attempt.diff != "")` before chosen/rejected mapping
-  1A: `corpus-threshold.py` — skip files with empty attempt.diff in count
-  (Sprint 1B, improved extraction system prompt, batches with Sprint 2 build)
-
-- [ ] **Circuit resilience Sprint 2** — honest observability (two Rust binaries)
-  2A: `count_all()` to GraphStore trait + entity_count in /healthz (service-content rebuild)
-  2B: `state_label()` + `opened_for_secs()` on CircuitBreaker; `tier_b_status()` on Doorman; readyz update (Doorman rebuild)
-  2C: guard in `write_shadow_tuple` — skip when `attempt.escalate && attempt.diff.is_empty()`
-
-- [ ] **Circuit resilience Sprint 3** — Tier A as confident primary (larger Rust changes)
-  3A: `SLM_TIER_A_FIRST` env var; change select_tier + pick_tier_for_brief; startup guard
-  3B: WATCHER Tier A fallback (rate-limited) — `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED`
-  3C: drain worker pause when all Tier B circuits open for > `SLM_HOLD_THRESHOLD_SECS`
+- [x] **Circuit resilience Sprint 1A** ✓ — filter degenerate DPO tuples (scripts only) — 2026-05-29
+- [x] **Circuit resilience Sprint 1B** ✓ — structured extraction system prompt (5 categories with examples) — 2026-05-29
+- [x] **Circuit resilience Sprint 2A** ✓ — entity_count in /healthz; live: 7,201 entities — 2026-05-29
+- [x] **Circuit resilience Sprint 2B** ✓ — tier_b circuit state + opened_for_secs in readyz — 2026-05-29
+- [x] **Circuit resilience Sprint 2C** ✓ — degenerate tuple guard in write_shadow_tuple — 2026-05-29
+- [x] **Circuit resilience Sprint 3A** ✓ — SLM_TIER_A_FIRST=true deployed; shadow briefs route Tier A — 2026-05-29
+- [x] **Circuit resilience Sprint 3B** ✓ — WATCHER Tier A fallback enabled (300s rate limit) — 2026-05-29
+- [x] **Circuit resilience Sprint 3C** ✓ — drain worker holds queue when Tier B open >1h — 2026-05-29
+- [x] **service-content rebuilt + deployed** ✓ sha256=`2362ea5c580a9869c5e307b645d60219cb9535dbf4218bd8762da870a4c62f7b` — 2026-05-29
+- [x] **slm-doorman-server rebuilt + deployed** ✓ sha256=`81b8629cf474104fe33274244c6db832a1f2f5dca898c80a98cd524bf3269e2f` — 2026-05-29
+- [x] **Binary ledger updated** ✓ both entries appended to `data/binary-ledger/*.jsonl` — 2026-05-29
 
 - [ ] **Quarantine 590 poison briefs** (Command Session, before next Yo-Yo start)
   ```bash
   mv /srv/foundry/data/apprenticeship/queue-poison/* /srv/foundry/data/apprenticeship/quarantine/
   ```
 
-- [ ] **service-content rebuild** (after Sprint 2A)
-  ```bash
-  cargo test -p service-content && cargo build --release -p service-content
-  sudo cp target/release/service-content /usr/local/bin/service-content
-  sudo systemctl restart local-content.service
-  ```
-
-- [ ] **Binary ledger update** — slm-doorman-server sha256=`d3c2d37db77c46e480da04006f2b1ad76e57ad493bf0a1fd2e36ee2a147827dc` (built 2026-05-29); update `data/binary-ledger/slm-doorman-server.jsonl`
-
-- [ ] **Verify CORPUS extraction** after next Yo-Yo start
-  With Sprint 3B in place (WATCHER fallback), extraction will proceed via Tier A at rate limit.
-  Until then, deferred until Tier B returns.
+- [ ] **Verify CORPUS extraction via Tier A fallback** — drop a CORPUS file and confirm `[WATCHER-TIER-A]` log entry within 300s
 
 - [x] **Goose §7.2 verified** ✓ 2026-05-29T04:10Z (Doorman log confirms tier="local")
 
