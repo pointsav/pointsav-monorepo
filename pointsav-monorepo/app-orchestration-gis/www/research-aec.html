@@ -119,10 +119,15 @@
   .mobile-toc .toc li { margin: 4px 0; }
   .mobile-toc .toc ul ul { padding-left: 12px; }
 
+  .toc-divider {
+    border: none;
+    border-top: 1px solid var(--border-soft);
+    margin: 12px 0;
+  }
   .sidebar-print-btn {
     display: block;
     width: 100%;
-    margin-top: 14px;
+    margin-top: 8px;
     background: var(--brand-primary);
     color: #fff;
     border: none;
@@ -272,8 +277,10 @@
 <div class="page-wrapper">
 
   <aside class="toc-sidebar">
-    <div class="toc-label">Contents</div>
     <a href="/research.html" class="back-to-map">← Research Papers</a>
+    <button class="sidebar-print-btn" onclick="window.print()">Print / Save PDF</button>
+    <hr class="toc-divider">
+    <div class="toc-label">Contents</div>
     <div class="toc">
 <ul>
 <li><a href="#open-source-building-systems-data-layers">Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis</a><ul>
@@ -326,7 +333,6 @@
 </li>
 </ul>
 </div>
-  <button class="sidebar-print-btn" onclick="window.print()">Print / Save PDF</button>
 
   </aside>
 
