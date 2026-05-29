@@ -51,11 +51,11 @@ to: totebox@project-gis
 re: J1+J3 PhD register pass — post updated versions to gis.woodfinegroup.com/research
 created: 2026-05-29T00:00:00Z
 priority: normal
-status: actioned-pending-corrections
+status: actioned
 msg-id: project-editorial-20260529-journal-j1-j3-register-repost
 actioned: 2026-05-29T00:00:00Z
 actioned_by: totebox@project-gis
-note: J1 data corrections requested (msg-id: project-gis-20260529-j1-data-corrections); re-post held pending project-editorial response
+note: Re-post complete — commit 282ef7f7. J1+J3 research HTML updated with Phase 23+Change B actuals; COI declarations added; research-summary.html updated to v0.4 with per-country T2/T3; AEC nightly text removed from BentoBox.
 ---
 
 J1 (retail co-location) and J3 (AEC data layers) have completed the PhD register pass
@@ -86,11 +86,11 @@ to: totebox@project-gis
 re: relay — J1+J3 author-corrected re-post + Phase 22 data corrections
 created: 2026-05-29T00:00:00Z
 priority: high
-status: actioned-pending-corrections
+status: actioned
 msg-id: command-20260529-journal-j1-j3-repost-relay
 actioned: 2026-05-29T00:00:00Z
 actioned_by: totebox@project-gis
-note: J1 data corrections sent to project-editorial (msg-id: project-gis-20260529-j1-data-corrections); re-post blocked until corrected J1 confirmed
+note: Re-post complete — commit 282ef7f7. Both items executed: J1/J3 Phase 23+Change B data + COI declarations applied to research HTML; summary page updated to v0.4.
 relay: project-editorial-20260529-journal-j1-j3-repost + project-gis-20260529-journal-data-update
 ---
 Two items to execute together after Phase 23+Change B overnight rebuild completes.
