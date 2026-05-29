@@ -1,18 +1,19 @@
 # hello-world — minimal Phase 1C AArch64 seL4 protection domain spec.
 #
-# One PD: "hello" — compiles examples/hello.c to build/hello.elf.
-# Run from the moonshot-toolkit crate root:
+# One PD: "hello" — compiles to build/hello.elf, then elfloader.elf.
+# Run from the project root (all paths relative to project root):
 #
-#   cargo run -p moonshot-toolkit -- validate examples/hello-world.toml
-#   cargo run -p moonshot-toolkit -- plan    examples/hello-world.toml
-#   cargo run -p moonshot-toolkit -- build   examples/hello-world.toml
+#   cargo run -p moonshot-toolkit -- validate moonshot-toolkit/examples/hello-world.toml
+#   cargo run -p moonshot-toolkit -- plan    moonshot-toolkit/examples/hello-world.toml
+#   cargo run -p moonshot-toolkit -- build   moonshot-toolkit/examples/hello-world.toml
 #
 # Phase 1C.a: CompilePd produces build/hello.elf (AArch64 bare-metal ELF).
-# Phase 1C.d (follow-on): AssembleImage requires Microkit SDK or Rust
-# image assembler — not yet implemented.
+# Phase 1C.d: AssembleImage produces build/system-image.bin (bootable elfloader).
+# Boot: qemu-system-aarch64 -machine virt,secure=off -cpu cortex-a53 -m 1G \
+#         -nographic -kernel build/system-image.bin
 
 [[protection_domains]]
 name     = "hello"
-binary   = "examples/hello.c"
+binary   = "moonshot-toolkit/examples/hello.c"
 priority = 100
 stack_bytes = 65536
