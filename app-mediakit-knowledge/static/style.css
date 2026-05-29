@@ -2706,6 +2706,64 @@ html[data-theme="dark"] .diff-rem { background: #2c0f0f; color: #fca5a5; }
 .contributions-list { list-style: none; padding: 0; margin: 0; }
 .contributions-list li { display: flex; gap: 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
 
+/* Phase UX-B — institutional standfirst */
+.home-standfirst {
+  font-size: 1.1rem;
+  color: var(--fg-3);
+  max-width: 640px;
+  margin: 0 0 1.75rem;
+  line-height: 1.55;
+}
+
+/* Phase UX-B — article provenance ribbon */
+.article-provenance {
+  font-size: 0.82rem;
+  color: var(--mw-color-base-30, var(--fg-4));
+  margin: 0.25rem 0 0.75rem;
+  letter-spacing: 0.01em;
+}
+.article-provenance a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Phase UX-B — converged footer */
+footer.shell-footer {
+  padding: 1.5rem var(--side-pad, 2rem) 1.25rem;
+  border-top: 1px solid var(--rule);
+  margin-top: 2.5rem;
+  font-size: 0.82rem;
+  color: var(--fg-4);
+}
+.footer-primary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1.5rem;
+}
+.footer-primary .footer-cities { flex: 0 0 auto; }
+.footer-primary .footer-nav { display: flex; gap: 0.5rem; align-items: baseline; }
+.footer-primary .footer-copyright-line { flex: 1 1 100%; margin: 0.25rem 0 0; }
+.footer-more { margin-top: 0.75rem; }
+.footer-more > summary {
+  display: inline-block;
+  cursor: pointer;
+  color: var(--navy);
+  font-size: 0.8rem;
+  user-select: none;
+  list-style: none;
+}
+.footer-more > summary::-webkit-details-marker { display: none; }
+.footer-more-inner {
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--rule);
+}
+.footer-nav-more { display: flex; flex-wrap: wrap; gap: 0.25rem 0.6rem; margin-bottom: 0.5rem; }
+.footer-trademark-line { font-size: 0.75rem; color: var(--fg-4); margin: 0.4rem 0; }
+.footer-badges { margin-top: 0.6rem; }
+
 /* Print styles */
 @media print {
   .shell-footer, .wiki-fab, .wiki-sticky-header, .mobile-nav-drawer,
