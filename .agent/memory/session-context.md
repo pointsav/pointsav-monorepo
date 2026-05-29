@@ -2,28 +2,24 @@
 
 ---
 
-### 2026-05-29 | totebox@project-intelligence | claude-sonnet-4-6 (session 5 — continued from summary)
+### 2026-05-29 | totebox@project-intelligence | claude-sonnet-4-6 (session 6 — continuation)
 
 **Done this session:**
-- `fix(slm)`: Doorman tool format fix — `anthropic_tools_to_openai()` in `tier/mod.rs`; applied in `local.rs` + `yoyo.rs`; fixes llama-server "Missing tool type" error. 104 tests pass. Binary rebuilt + redeployed.
-- `test(slm)`: 2 unit tests for `anthropic_tools_to_openai` — converts `input_schema` → `parameters`, wraps in `{type:function,...}`.
-- `fix(scripts)`: git post-commit hook rewired to send full `ShadowWire` payload (was missing `brief` wrapper). VERIFIED: shadow briefs now queue correctly on every commit.
-- `docs(brief)`: BRIEF-slm-learning-loop.md §7 updated with verified/blocked statuses.
-- `docs(slm)`: NEXT.md system status updated (2026-05-29); QEMU blocker documented; §7 table added.
-- Goose v1.36.0 downloaded from block/goose releases; installed at `/usr/local/bin/goose`.
-- local-content restarted (had stopped via SIGTERM at 02:18Z; restarted 02:37Z).
-- Root-caused extraction failure: routes to Tier B (Yo-Yo) which has circuit OPEN — expected behaviour while Yo-Yo VM offline.
+- `docs(brief)`: BRIEF-slm-learning-loop.md §7.2-3 updated with live SSE test result. Commits `df1a5e64` (Peter) + `3fd2dfef` (Jennifer).
+- **§7.3 live SSE test completed**: sent `/v1/messages` with `Read` tool to OLMo 7B; got `stop_reason: end_turn` with text response. OLMo 7B is not fine-tuned for tool invocation — describes how to use `cat` instead of invoking the tool. Shim code is correct (no llama-server format errors); model capability is the limit.
+- Confirmed Goose v1.36.0 installed at `/usr/local/bin/goose`.
+- QEMU vm-mediakit PID updated in NEXT.md: 3949093 → 4039898 (project-infrastructure restarted it).
 
 **Pending / carry-forward:**
-- **QEMU vm-mediakit** (PID 3949093): consuming 95% CPU, starving llama-server task 1590 (25+ min, ~22 tokens). Confirm with project-infrastructure owner; kill to unblock inference. `kill 3949093`
-- **Live tool_use SSE test**: queued behind task 1590; will complete quickly once CPU free. Expected: `"type":"tool_use"` + `"stop_reason":"tool_use"` in SSE stream.
-- **Goose session test**: `ANTHROPIC_HOST=http://127.0.0.1:9080 ANTHROPIC_API_KEY=foundry-local GOOSE_MODEL=claude-haiku-4-5-20251001 goose run --text "Say hello"` — verify chat round-trips.
-- **§7.4 entity extraction**: start Yo-Yo VM to close Tier B circuit; until then extraction is deferred.
-- **Stage 6 promote**: archive is 30+ commits ahead of origin/main (Command Session scope).
-- **Binary ledger**: update `data/binary-ledger/slm-doorman-server.jsonl` after this session's rebuild.
+- **QEMU vm-mediakit** (PID 4039898, -accel tcg software emulation): system load 17+. Confirm with project-infrastructure owner; `kill 4039898` to unblock inference and enable §7.2 Goose test.
+- **§7.2 Goose chat round-trip**: `ANTHROPIC_HOST=http://127.0.0.1:9080 ANTHROPIC_API_KEY=foundry-local GOOSE_MODEL=claude-haiku-4-5-20251001 goose run --text "Say hello"`. Blocked by CPU saturation.
+- **§7.3 tool_use in Doorman log**: OLMo 7B does not invoke tools. Options: (a) wait for Yo-Yo VM with OLMo 3 32B-Think, (b) upgrade Tier A to a tool-use-tuned model (e.g. Qwen2.5-7B-Instruct), (c) mark §7.3 as "not achievable with current Tier A model".
+- **§7.4 entity extraction**: Yo-Yo VM must be started to close Tier B circuit. Command: `service-slm/scripts/start-yoyo.sh --runtime=2h`.
+- **Stage 6 promote**: archive is 32+ commits ahead of origin/main (Command Session scope; prereq rebase per `command-20260520-stage6-rebase-required`).
+- **Binary ledger**: `data/binary-ledger/slm-doorman-server.jsonl` in workspace (Command Session scope). SHA256: `9e8542b6...` (slm-doorman-server rebuilt 2026-05-29T02:14Z).
 
 **Operator preferences surfaced:**
-- Working autonomously (QEMU + live test blocked — documented clearly; waiting for operator action)
+- Working autonomously on verification; blocked items documented with clear next-action commands
 
 ---
 
