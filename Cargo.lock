@@ -4195,6 +4195,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "service-vm-fleet"
+version = "0.1.0"
+dependencies = [
+ "axum 0.7.9",
+ "chrono",
+ "serde",
+ "serde_json",
+ "system-vm-fleet-types",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "service-vm-host"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "system-vm-fleet-types",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "sha1"
 version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4580,6 +4608,15 @@ version = "0.1.0"
 [[package]]
 name = "system-substrate-broadcom"
 version = "0.1.0"
+
+[[package]]
+name = "system-vm-fleet-types"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "tempfile"

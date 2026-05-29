@@ -3,7 +3,7 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Full TODO with all sections and sequencing: `.agent/plans/project-infrastructure-todo.md`.
 
-Last updated: 2026-05-29 (session 11).
+Last updated: 2026-05-29 (session 12).
 
 Architecture: VM-* naming mirrors the os-* product lineup exactly. Each `os-*` binary is the
 source identity; each `VM-*` is the runtime identity. See `BRIEF-VM-ARCHITECTURE.md`.
@@ -30,7 +30,7 @@ source identity; each `VM-*` is the runtime identity. See `BRIEF-VM-ARCHITECTURE
 
 ## VM-Totebox — Phase 1 (blocked on Command promoting project-data)
 
-- [ ] **service-fs binary available on host** — blocked: Command must promote project-data (23 commits).
+- [ ] **service-fs binary available on host** — blocked: Command must promote project-data (33 commits).
   Outbox sent to project-data with install instructions.
   [2026-05-29 totebox@claude-code]
 - [ ] **VM-Totebox QEMU instance provisioned** — `infrastructure/virt/provision-vm-totebox.sh`
@@ -69,6 +69,21 @@ source identity; each `VM-*` is the runtime identity. See `BRIEF-VM-ARCHITECTURE
 
 ## VM-Infrastructure — fabric bootstrap (3-node trust mesh)
 
+### Phase 1 — Resource pool (session 12)
+
+- [x] `system-vm-fleet-types` scaffolded (4/4 tests pass) [2026-05-29 totebox@claude-code]
+- [x] `service-vm-fleet` scaffolded (8/8 tests pass; axum :9203; advisory placement; `auto_rebalance: false`) [2026-05-29 totebox@claude-code]
+- [x] `service-vm-host` scaffolded (host_stats tests pass; /proc/meminfo reader; qemu_monitor Phase 1 stub) [2026-05-29 totebox@claude-code]
+- [x] `infrastructure/systemd/ppn/local-vm-host.service` + `infrastructure/systemd/orchestration/local-vm-fleet.service` created [2026-05-29 totebox@claude-code]
+- [ ] **Enable GCP nested KVM** — operator action: GCP console → foundry-workspace → Edit → Enable nested virtualisation → restart. Then: `ls /dev/kvm` to verify. [2026-05-29 totebox@claude-code]
+- [ ] **Verify Laptop A KVM** — `ls /dev/kvm` on Laptop A; if absent: `sudo modprobe kvm kvm_intel` [2026-05-29 totebox@claude-code]
+- [ ] **Stage 6 — session 12 commits** — promote system-vm-fleet-types, service-vm-fleet, service-vm-host to canonical after this session commits. [2026-05-29 totebox@claude-code]
+- [ ] **Deploy service-vm-fleet on GCP** — install binary + enable `local-vm-fleet.service` (after Stage 6). See `guide-vm-infrastructure-resource-pool.draft.md`. [2026-05-29 totebox@claude-code]
+- [ ] **Deploy service-vm-host on all three nodes** — `local-vm-host.service` on GCP + Laptop A + Laptop B (after Stage 6). [2026-05-29 totebox@claude-code]
+- [ ] **Verify fleet: `curl :9203/v1/fleet`** — all 3 nodes appear within 15s of deployment. [2026-05-29 totebox@claude-code]
+
+### Phase 1 — Genesis Protocol
+
 - [x] Alpine Linux TCG proof-of-concept (`vm-prove.sh`, 2026-05-28) — virtio_balloon confirmed
 - [ ] **Deploy `service-ppn-pairing` on GCP** — build release binary + install systemd unit
   `infrastructure/systemd/ppn/local-ppn-pairing.service`. Listens on `0.0.0.0:9202`.
@@ -81,6 +96,21 @@ source identity; each `VM-*` is the runtime identity. See `BRIEF-VM-ARCHITECTURE
   [2026-05-29 totebox@claude-code]
 - [ ] **Deferred: os-network-admin ratatui TUI** — keyboard approve/deny; QR; expiry countdown.
   [2026-05-28 totebox@claude-code]
+
+---
+
+## Leapfrog 2030 — resource targets (session 12)
+
+See `BRIEF-LEAPFROG-2030.md` for full rationale and target table.
+
+Phase 3 targets: os-infrastructure 8 MB disk / 12 MB RAM idle; os-totebox 16 MB / 24 MB;
+os-mediakit 24 MB† / 32 MB†; os-orchestration 12 MB / 18 MB; os-privategit 20 MB† / 24 MB†.
+(† contingent on retiring MediaWiki/PHP and Gitea/Go respectively.)
+
+- [ ] **Application decision: retire MediaWiki/PHP for Rust static renderer** — gates os-mediakit P3 target. Not sequenced; operator decision required. [2026-05-29 totebox@claude-code]
+- [ ] **Application decision: retire Gitea/Go for gitoxide-based server** — gates os-privategit P3 target. Not sequenced; operator decision required. [2026-05-29 totebox@claude-code]
+- [ ] **AArch64 hardware acquisition** — gates os-infrastructure Phase 3 seL4 Microkit. [2026-05-29 totebox@claude-code]
+- [ ] **Phase 2: NetBSD 11.0 provision scripts** — `provision-vm-infrastructure-netbsd.sh` (NetBSD stable release expected 2026). [2026-05-29 totebox@claude-code]
 
 ---
 
@@ -101,7 +131,11 @@ source identity; each `VM-*` is the runtime identity. See `BRIEF-VM-ARCHITECTURE
 
 ## TOPIC + GUIDE leg — drafts staged, needs editorial pickup
 
-Ten TOPIC draft pairs + 3 GUIDE drafts + 1 new TOPIC pair in `.agent/drafts-outbound/`;
+Session 12 additions: `topic-vm-architecture` updated (NVMM fix + Resource Pooling section);
+`topic-os-infrastructure-ppn-node` new TOPIC pair (EN+ES); `guide-vm-infrastructure-resource-pool`
+new GUIDE. Pickup notice to be sent via outbox.
+
+Twelve TOPIC draft pairs + 4 GUIDE drafts + 1 new TOPIC pair in `.agent/drafts-outbound/`;
 pickup notice sent to project-editorial.
 
 **TOPICs (content-wiki-documentation):**
@@ -115,6 +149,11 @@ pickup notice sent to project-editorial.
 - [ ] `topic-ppn-architecture-overview` + `.es` — updated; distributed fabric paragraph [session 7]
 - [ ] `topic-ppn-distributed-vm-fabric` + `.es` — new; full distributed VM fabric [session 7]
 - [ ] `topic-os-mediakit` + `.es` — updated session 10: Ubuntu 24.04 fix; Phase 1 service table corrected [session 8, corrected 10]
+- [ ] `topic-vm-architecture` + `.es` — updated session 12: NVMM correction + Resource Pooling section [session 11, updated 12]
+- [ ] `topic-os-infrastructure-ppn-node` + `.es` — new; deep dive on os-infrastructure as PPN node OS; Phase 1/2/3 stacks; Genesis Protocol; resource targets [session 12]
+
+**GUIDEs (woodfine-fleet-deployment/fleet-infrastructure/) — session 12:**
+- [ ] `guide-vm-infrastructure-resource-pool` — resource pool setup across 3 nodes; GCP KVM; deploy service-vm-fleet + service-vm-host; verify; troubleshooting [session 12]
 
 **GUIDEs (woodfine-fleet-deployment/fleet-infrastructure/) — session 10:**
 - [ ] `guide-vm-mediakit-provision` — provision-vm-mediakit.sh runbook; cloud-init; pkg install; TCG notes [session 10]
