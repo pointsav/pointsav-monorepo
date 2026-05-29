@@ -3,50 +3,84 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Full TODO with all sections and sequencing: `.agent/plans/project-infrastructure-todo.md`.
 
-Last updated: 2026-05-29 (session 8).
+Last updated: 2026-05-29 (session 11).
+
+Architecture: VM-* naming mirrors the os-* product lineup exactly. Each `os-*` binary is the
+source identity; each `VM-*` is the runtime identity. See `BRIEF-VM-ARCHITECTURE.md`.
 
 ---
 
-## vm-mediakit — Phase 1 (unblocked)
+## VM-MediaKit — Phase 1 COMPLETE (6/6) [2026-05-29]
 
-- [x] **Install `genisoimage` + `socat` on host** — DONE 2026-05-29.
+- [x] Ubuntu 24.04 QEMU provisioned (6 GiB RAM, 2 CPUs, TCG; port-forward NAT on GCP host)
   [2026-05-29 totebox@claude-code]
-
-- [x] **Run `infrastructure/virt/provision-vm-mediakit.sh`** — DONE 2026-05-29. QEMU PID 3949093
-  running TCG. VM booting; cloud-init first-boot (pkg install via SLIRP) takes ~30-60 min on TCG.
-  SSH at `localhost:10022`; key `infrastructure/virt/work/foundry-vm-key`.
+- [x] 6/6 services migrated: proofreader (9092) · knowledge-documentation (9090) ·
+  knowledge-corporate (9095) · knowledge-projects (9093) · marketing-pointsav (9101) ·
+  marketing/woodfine (9102). All originals still running on host. No DNS changes.
   [2026-05-29 totebox@claude-code]
-
-- [x] **Migrate 6/8 services into vm-mediakit — DONE 2026-05-29:**
-  proofreader (9092) ✓ · knowledge-documentation (9090) ✓ · knowledge-corporate (9095) ✓
-  · knowledge-projects (9093) ✓ · marketing-pointsav (9101) ✓ · marketing/woodfine (9102) ✓
-  All originals still running on host. No DNS changes.
-  Note: TCG first-request latency ~30-60s (10x slower than KVM); smoke tests use 60s timeout.
+- [x] `guide-vm-mediakit-provision` + `guide-vm-mediakit-service-migration` staged (commit 4a53d3af)
   [2026-05-29 totebox@claude-code]
-
-- [ ] **Migrate bim-orchestration (9096)** — BLOCKED on service-fs in VM.
-  Depends on `FS_ENDPOINT=http://127.0.0.1:9100` inside VM.
-  Unblocks after service-fs install (see item below).
+- [x] `topic-os-mediakit` corrected for Ubuntu 24.04 (session 10)
   [2026-05-29 totebox@claude-code]
-
-- [ ] **system-core + system-ledger install** — pending project-system (outbox sent).
-  They install at `/opt/mediakit/bin/` after 95 tests pass.
+- [x] systemd units reorganised → `infrastructure/systemd/mediakit/`
   [2026-05-29 totebox@claude-code]
+- [ ] Binary-ledger sha256 entries — pending Stage 6 + nightly build rebuild
 
-- [ ] **service-fs install** — pending Command Session promotion of project-data (23 commits).
+---
+
+## VM-Totebox — Phase 1 (blocked on Command promoting project-data)
+
+- [ ] **service-fs binary available on host** — blocked: Command must promote project-data (23 commits).
   Outbox sent to project-data with install instructions.
   [2026-05-29 totebox@claude-code]
+- [ ] **VM-Totebox QEMU instance provisioned** — `infrastructure/virt/provision-vm-totebox.sh`
+  (stub exists; implementation follows service-fs availability)
+  [2026-05-29 totebox@claude-code]
+- [ ] **service-fs install inside VM-Totebox** — follows promotion
+  [2026-05-29 totebox@claude-code]
+- [ ] **system-core + system-ledger install** — pending project-system (outbox sent; 95 tests must pass)
+  [2026-05-29 totebox@claude-code]
 
 ---
 
-## vm-mediakit — Phase 2 (blocked on P0 fixes in project-system)
+## VM-Orchestration — Phase 1
 
-- [ ] **system-* P0 fixes** — project-system must fix:
-  (1) `system-udp`: BROADCAST_ADDR 10.50.0.255 → 10.42.255.255; source-IP filter
-  (2) `app-network-admin`: peer addresses 10.50.0.x → 10.42.0.0/16
-  (3) `system-gateway-mba`: hardcoded /home/mathew/deployments/ → env var
-  Outbox sent to project-system with exact fixes.
+- [ ] **Provision VM-Orchestration** — new QEMU instance, separate from vm-mediakit.
+  `infrastructure/virt/provision-vm-orchestration.sh` (stub exists)
   [2026-05-29 totebox@claude-code]
+- [ ] **app-orchestration-bim (9096)** — install + smoke test. Was previously mis-scoped to
+  VM-MediaKit; correct scope is VM-Orchestration. Depends on VM-Totebox service-fs.
+  [2026-05-29 totebox@claude-code]
+- [ ] **app-orchestration-gis instance** [2026-05-29 totebox@claude-code]
+- [ ] **app-orchestration-slm instance (:9180)** [2026-05-29 totebox@claude-code]
+
+---
+
+## VM-PrivateGit — Phase 1 (future)
+
+- [ ] **Provision VM-PrivateGit** — `infrastructure/virt/provision-vm-privategit.sh` (stub exists)
+  [2026-05-29 totebox@claude-code]
+- [ ] **app-privategit-source-control install** (Gitea + SSH)
+  [2026-05-29 totebox@claude-code]
+- [ ] **app-privategit-design-system** (Storybook)
+  [2026-05-29 totebox@claude-code]
+
+---
+
+## VM-Infrastructure — fabric bootstrap (3-node trust mesh)
+
+- [x] Alpine Linux TCG proof-of-concept (`vm-prove.sh`, 2026-05-28) — virtio_balloon confirmed
+- [ ] **Deploy `service-ppn-pairing` on GCP** — build release binary + install systemd unit
+  `infrastructure/systemd/ppn/local-ppn-pairing.service`. Listens on `0.0.0.0:9202`.
+  [2026-05-28 totebox@claude-code]
+- [ ] **Build + copy `os-network-admin` to Laptop A** — `cargo build --release -p os-network-admin`
+  then deploy to iMac with `PAIRING_SERVER=http://10.8.0.9:9202`. [2026-05-28 totebox@claude-code]
+- [ ] **provision-vm-infrastructure-cloud.sh** — GCP genesis-seed node (stub exists; implement after Q2–Q6)
+  [2026-05-29 totebox@claude-code]
+- [ ] **provision-vm-infrastructure-onprem.sh** — Laptop A join (stub exists; implement after Q2–Q6)
+  [2026-05-29 totebox@claude-code]
+- [ ] **Deferred: os-network-admin ratatui TUI** — keyboard approve/deny; QR; expiry countdown.
+  [2026-05-28 totebox@claude-code]
 
 ---
 
