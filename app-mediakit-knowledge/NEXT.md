@@ -2,6 +2,24 @@
 
 > Last updated: 2026-05-29
 
+## Phase UX-A — COMPLETE (commit `0dfe1647`, 2026-05-29)
+
+CSS-only institutional quality pass. Files: `static/style.css`, `static/tokens-woodfine.css`.
+
+- **Typography tokens wired:** `.page-body` now consumes `--knowledge-editorial-reading-body-size` (17px)
+  and `--knowledge-editorial-reading-body-lh` (1.70) from DTCG pipeline. `--reading-max` corrected to 720px.
+- **Dark-mode link contrast fixed:** `--navy` overridden to `oklch(62% 0.14 250)` (≈ #4d8fd1, 4.7:1 on
+  `#0B1220`) in `html[data-theme="dark"]`. Woodfine `--interactive-link` matching override in
+  `tokens-woodfine.css`.
+- **Auto dark mode added:** New `@media (prefers-color-scheme: dark)` block mirrors all dark-mode
+  variables — OS preference now activates dark mode without the manual toggle.
+- **Appearance dropdown suppressed:** `.wiki-appearance-wrap { display: none !important; }` — dark mode
+  follows `prefers-color-scheme` silently (Goldman/Bloomberg/Refinitiv institutional standard).
+
+Binary rebuild + deploy required to serve updated embedded CSS. Stage 6 pending (commit `0dfe1647`).
+
+---
+
 ## Phase 7B — COMPLETE (2026-05-29)
 
 `nav.article-tabs` two-row header added to `wiki_chrome()` only: Article/Talk (left) +
@@ -22,8 +40,10 @@ binary rebuild queued for nightly ~1am Vancouver 2026-05-28.
 
 | Phase | Scope | Status |
 |---|---|---|
+| **UX-A** | Typography tokens; dark-mode contrast; auto dark mode; suppress appearance toggle | **COMPLETE** (commit `0dfe1647`) |
+| **UX-B** | Remove appearance dropdown (Rust); home standfirst; footer convergence; `shell_footer()`; CC BY 4.0 gate; provenance ribbon | **Next** |
 | **7B** | Article-tabs row (40px); Tools dropdown; anchor-share `¶`; auth-gated tabs | **COMPLETE** |
-| **7C** | Reading mode toggle; CSS body-class; localStorage | **Next** |
+| **7C** | Reading mode toggle; CSS body-class; localStorage | Queued (after UX-B) |
 | **7X** | Home page: search hero, featured article, DYK section | Queued |
 | **7D** | Citation hover preview; freshness dot; citations redb table | Queued |
 | **7E** | Mobile chrome: 56px top/bottom bars; TOC bottom sheet; code/table overflow | Queued |
