@@ -323,6 +323,7 @@ async fn error_brief_cache_miss_returns_410() {
         brief_tier_b_threshold_chars: 8000,
         doctrine_version: "0.0.1".to_string(),
         tenant: "test".to_string(),
+        tier_a_first: false,
     };
     let brief_cache = Arc::new(BriefCache::default()); // empty
     let verdict_dispatcher = VerdictDispatcher {
@@ -840,6 +841,7 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
             external: None,
             lark_validator: Some(lark_validator),
             graph_context_client: None,
+            tier_a_first: false,
         },
         temp_ledger(),
     );
@@ -1175,6 +1177,7 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
             external: None,
             lark_validator: Some(lark_validator),
             graph_context_client: None,
+            tier_a_first: false,
         },
         temp_ledger(),
     );
