@@ -32,11 +32,13 @@ tetrad:                                # added 2026-05-18 — Phase 4.4 hardenin
         - totebox-archive.md
         - ppn-architecture-overview.md
         - vm-architecture.md
+        - os-infrastructure-ppn-node.md
     guides_staged_for_pickup:
       - guide-ppn-first-deployment.md
       - guide-node-join-ceremony.md
       - guide-vm-prove-balloon-demo.md
-    status: leg-active   # upgraded 2026-05-28: 7 topics + 3 guides staged
+      - guide-vm-infrastructure-resource-pool.md
+    status: leg-active   # upgraded 2026-05-29: 8 topics + 4 guides staged (session 12)
 ---
 
 # project-infrastructure — Cluster Manifest

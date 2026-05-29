@@ -1,0 +1,25 @@
+[Unit]
+Description=PPN VM resource pool — fleet controller
+Documentation=https://github.com/pointsav/pointsav-monorepo
+After=network-online.target wireguard.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=foundry
+EnvironmentFile=-/etc/default/vm-fleet
+ExecStart=/usr/local/bin/service-vm-fleet
+Restart=on-failure
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=local-vm-fleet
+
+# Required env vars — set in /etc/default/vm-fleet:
+# VM_NODE_ID=gcp-cloud-1
+# VM_WG_IP=10.8.0.9
+# VM_HEARTBEAT_INTERVAL_S=10
+# RUST_LOG=service_vm_fleet=info
+
+[Install]
+WantedBy=multi-user.target
