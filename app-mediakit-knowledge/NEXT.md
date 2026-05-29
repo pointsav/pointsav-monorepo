@@ -2,6 +2,35 @@
 
 > Last updated: 2026-05-29
 
+## Phase UX-B — COMPLETE (commit `2a19c626`, 2026-05-29)
+
+Rust chrome refactor. Files: `src/server.rs`, `static/style.css`.
+
+- **Appearance dropdown removed from Rust HTML:** `div.wiki-appearance-wrap` deleted from `home_chrome`
+  and `wiki_chrome`. Theme now follows `prefers-color-scheme` silently. UX-A CSS suppression removed
+  (element is gone). `chrome()` was already clean.
+- **Home standfirst added:** `p.home-standfirst` renders above "Browse by area" grid with per-instance
+  description text (documentation / projects / corporate variants).
+- **`shell_footer()` extracted:** Single shared footer function replaces three near-identical footer
+  blocks in `home_chrome`, `wiki_chrome`, and `chrome`. Accepts `brand_instance` and optional
+  `view_source_slug`.
+- **Footer convergence:** Visible footer is now 3 lines max (cities · nav · copyright). Trademark notice,
+  Contact, View source, and Media Kit links collapse into `details.footer-more`. Dramatically reduced
+  information density matches home site standard.
+- **CC BY 4.0 badge gated:** Badge not rendered on `brand_instance == "corporate"`. Corporate policy
+  documents are proprietary — the CC licence badge was legally incorrect there.
+- **Per-instance copyright line:** documentation → "© 2026 PointSav Digital Systems"; projects + corporate
+  → "© 2026 Woodfine Management Corp."
+- **Provenance ribbon:** `div.article-provenance` added to `wiki_chrome` under `h1.article__title`, showing
+  last edited date (from `fm.last_edited`) and a "View history" link.
+
+Binary rebuild + deploy required. Stage 6 pending (commit `2a19c626`).
+
+**UX-B.7 — BLOCKED (Woodfine SVG wordmark):** `WORDMARK_WOODFINE` constant is still Unicode `■ Woodfine`.
+Operator must provide the Woodfine Management Corp. SVG wordmark to complete this item.
+
+---
+
 ## Phase UX-A — COMPLETE (commit `0dfe1647`, 2026-05-29)
 
 CSS-only institutional quality pass. Files: `static/style.css`, `static/tokens-woodfine.css`.
@@ -41,9 +70,10 @@ binary rebuild queued for nightly ~1am Vancouver 2026-05-28.
 | Phase | Scope | Status |
 |---|---|---|
 | **UX-A** | Typography tokens; dark-mode contrast; auto dark mode; suppress appearance toggle | **COMPLETE** (commit `0dfe1647`) |
-| **UX-B** | Remove appearance dropdown (Rust); home standfirst; footer convergence; `shell_footer()`; CC BY 4.0 gate; provenance ribbon | **Next** |
+| **UX-B** | Remove appearance dropdown (Rust); home standfirst; footer convergence; `shell_footer()`; CC BY 4.0 gate; provenance ribbon | **COMPLETE** (commit `2a19c626`) |
+| **UX-B.7** | Woodfine SVG wordmark | **BLOCKED — operator must provide SVG asset** |
 | **7B** | Article-tabs row (40px); Tools dropdown; anchor-share `¶`; auth-gated tabs | **COMPLETE** |
-| **7C** | Reading mode toggle; CSS body-class; localStorage | Queued (after UX-B) |
+| **7C** | Reading mode toggle; CSS body-class; localStorage | **Next** |
 | **7X** | Home page: search hero, featured article, DYK section | Queued |
 | **7D** | Citation hover preview; freshness dot; citations redb table | Queued |
 | **7E** | Mobile chrome: 56px top/bottom bars; TOC bottom sheet; code/table overflow | Queued |
