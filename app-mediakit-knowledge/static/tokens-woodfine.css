@@ -36,3 +36,26 @@
   /* Engine-specific alias — overrides steel-blue to Woodfine Blue */
   --accent: #164679;
 }
+
+/* Dark mode — Woodfine Blue #164679 is 2.9:1 on #0B1220 (AA fail); lighten to 4.7:1 */
+html[data-theme="dark"] {
+  --interactive-link:           oklch(62% 0.14 250); /* ≈ #4d8fd1 */
+  --interactive-link-hover:     oklch(72% 0.12 250);
+  --interactive-link-visited:   oklch(55% 0.13 270);
+  --interactive-button-primary: oklch(62% 0.14 250);
+  --interactive-focus-ring:     oklch(62% 0.14 250);
+  --border-interactive:         oklch(62% 0.14 250);
+  --accent: oklch(62% 0.14 250);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    --interactive-link:           oklch(62% 0.14 250);
+    --interactive-link-hover:     oklch(72% 0.12 250);
+    --interactive-link-visited:   oklch(55% 0.13 270);
+    --interactive-button-primary: oklch(62% 0.14 250);
+    --interactive-focus-ring:     oklch(62% 0.14 250);
+    --border-interactive:         oklch(62% 0.14 250);
+    --accent: oklch(62% 0.14 250);
+  }
+}
