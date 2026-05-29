@@ -2,6 +2,26 @@
 
 > Last updated: 2026-05-29
 
+## Phase 7C — COMPLETE (commit `d649f051`, 2026-05-29)
+
+Reading mode toggle. Files: `src/server.rs`, `static/style.css`, `static/wiki.js`.
+
+- **`button.reading-mode-btn #reading-mode-btn`** added to article-tabs right section in `wiki_chrome`
+  (after the Tools dropdown). `aria-pressed` attribute updated on toggle.
+- **CSS:** `body.reading-mode` hides `nav.article-tabs`, `nav.crumb`, `nav.sidebar`, `footer.shell-footer`,
+  `aside.toc`. Collapses `div.shell` to single column. `main.article-wrap` centered at `72ch`.
+  `.reading-mode-btn` styles with `aria-pressed="true"` visual indicator.
+- **JS `initReadingMode()`:** Reads/writes `wiki-reading-mode` localStorage key. Toggles `body.reading-mode`
+  class and `aria-pressed` attribute on click. Called in DOMContentLoaded boot sequence.
+
+Also fixed: `WIKI_BRAND_INSTANCE` env var added to `local-knowledge-corporate.service` and
+`local-knowledge-projects.service` (was missing — both instances were defaulting to "documentation",
+causing PointSav copyright and CC BY 4.0 to show on Woodfine instances).
+
+Binary rebuild + deploy required. Stage 6 pending (commit `d649f051`).
+
+---
+
 ## Phase UX-B — COMPLETE (commit `2a19c626`, 2026-05-29)
 
 Rust chrome refactor. Files: `src/server.rs`, `static/style.css`.
@@ -73,8 +93,8 @@ binary rebuild queued for nightly ~1am Vancouver 2026-05-28.
 | **UX-B** | Remove appearance dropdown (Rust); home standfirst; footer convergence; `shell_footer()`; CC BY 4.0 gate; provenance ribbon | **COMPLETE** (commit `2a19c626`) |
 | **UX-B.7** | Woodfine SVG wordmark | **BLOCKED — operator must provide SVG asset** |
 | **7B** | Article-tabs row (40px); Tools dropdown; anchor-share `¶`; auth-gated tabs | **COMPLETE** |
-| **7C** | Reading mode toggle; CSS body-class; localStorage | **Next** |
-| **7X** | Home page: search hero, featured article, DYK section | Queued |
+| **7C** | Reading mode toggle; CSS body-class; localStorage | **COMPLETE** (commit `d649f051`) |
+| **7X** | Home page: search hero, featured article, DYK section | **Next** |
 | **7D** | Citation hover preview; freshness dot; citations redb table | Queued |
 | **7E** | Mobile chrome: 56px top/bottom bars; TOC bottom sheet; code/table overflow | Queued |
 | **7F** | Tufte sidenotes for `layout: journal` articles at ≥1280px | Queued |
