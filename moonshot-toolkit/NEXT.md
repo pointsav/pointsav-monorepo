@@ -7,8 +7,8 @@
 
 ## Right now
 
-- v0.3.1 in progress: `CompilePd -O2` fix + `hello.c SysDebugPutChar` +
-  `build-totebox.sh` removal. Rebuilding and QEMU-verifying this session.
+- Nothing in progress. v0.3.1 shipped (2026-05-29): CompilePd -O2 fix +
+  hello.c SysDebugPutChar verified + build-totebox.sh removed.
 
 ## Queue
 
