@@ -102,7 +102,9 @@ to: totebox@project-infrastructure
 re: JOURNAL distribution relay — J4 private network returned; §4–§5 benchmark data needed
 created: 2026-05-29T00:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-05-29T02:45:00Z
+actioned-result: §4 Implementation + §5 Evaluation written with empirical GCP e2-standard-8 benchmarks (commit 149a8b39); v0.3 returned to project-editorial via outbox (d6cef558)
 msg-id: command-20260529-journal-relay-infrastructure-j4-return
 relayed-from: project-editorial-20260528-j4-return
 ---
