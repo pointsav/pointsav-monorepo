@@ -25,11 +25,12 @@ research_sources: >
   (Microkit target set, x86_64 seL4 status, Foundation guidance for small teams)
 research_inline: true
 notes_for_editor: >
-  BCSC posture is critical here. The Debian 12 vm-mediakit phase is present tense
+  BCSC posture is critical here. The Ubuntu 24.04 vm-mediakit phase is present tense
   (proven, running). The seL4 Microkit Phase 3 is planned/intended language throughout.
   No wikilinks to os-infrastructure (its EAPOL-era content is superseded — BRIEF §9.2).
   Comparison table should make clear what changes (OS image) vs what stays (service binaries,
-  wire protocols, port numbers).
+  wire protocols, port numbers). Ubuntu 24.04 is required (not Debian 12) because all
+  host-compiled Rust binaries link against glibc 2.39; Debian 12 only provides glibc 2.36.
 ---
 
 # OS Mediakit
@@ -68,33 +69,38 @@ itself is `os-infrastructure` (the Genesis Protocol boot layer).
 
 ---
 
-## Phase 1: Debian 12 interim (present)
+## Phase 1: Ubuntu 24.04 interim (present)
 
-The first deployment of vm-mediakit uses a **Debian 12 genericcloud x86_64 QCOW2** as the
-guest OS. This is the production interim while the seL4 Microkit image is developed.
+The first deployment of vm-mediakit uses an **Ubuntu 24.04 server cloud x86_64 QCOW2** as
+the guest OS. This is the production interim while the seL4 Microkit image is developed.
+
+Ubuntu 24.04 is required — not Debian 12 — because all service binaries compiled on the
+GCP host (Ubuntu 24.04, glibc 2.39) link against `GLIBC_2.39` symbols. Debian 12 provides
+only glibc 2.36 and would fail to execute the binaries at load time.
 
 What is running today:
-- Debian 12 booted via `provision-vm-mediakit.sh` under QEMU/TCG (GCP workspace has no
+- Ubuntu 24.04 booted via `provision-vm-mediakit.sh` under QEMU/TCG (GCP workspace has no
   hardware KVM; TCG is adequate for Phase 1 testing)
 - 6 GiB RAM (`-m 6144`), 20 GB QCOW2 disk
 - User-mode NAT networking: host port-forwards `1xxxx → :xxxx` for each service
 - `virtio-balloon` device: dynamic RAM adjustment without guest reboot [infrastructure-os]
 - cloud-init first boot: hostname `vm-mediakit`, user `foundry`, systemd-native
+- nginx/1.24.0 and build-essential installed post-boot
 
-Services running inside the Debian 12 guest:
+Services running inside the Ubuntu 24.04 guest (Phase 1 state, 2026-05-29):
 
-| Service | Port | Purpose |
-|---|---|---|
-| service-fs | 9100 | WORM ledger — data ingest backbone |
-| system-core | — | Capability Ledger substrate (library) |
-| system-ledger | — | Ledger state-machine, revocation |
-| local-proofreader | 9092 | Proofreader service |
-| local-knowledge-documentation | 9090 | Documentation wiki |
-| local-knowledge-corporate | 9095 | Corporate wiki |
-| local-knowledge-projects | 9093 | Projects wiki |
-| local-marketing-pointsav | 9101 | PointSav marketing site |
-| local-marketing | 9102 | Woodfine marketing site |
-| local-bim-orchestration | 9096 | BIM gateway |
+| Service | Port | Purpose | Phase 1 status |
+|---|---|---|---|
+| local-proofreader | 9092 | Proofreader service | ✓ active |
+| local-knowledge-documentation | 9090 | Documentation wiki | ✓ active |
+| local-knowledge-corporate | 9095 | Corporate wiki | ✓ active |
+| local-knowledge-projects | 9093 | Projects wiki | ✓ active |
+| local-marketing-pointsav | 9101 | PointSav marketing site | ✓ active |
+| local-marketing | 9102 | Woodfine marketing site | ✓ active |
+| service-fs | 9100 | WORM ledger — data ingest backbone | pending (project-data build) |
+| local-bim-orchestration | 9096 | BIM gateway | pending (depends on service-fs) |
+| system-core | — | Capability Ledger substrate | pending (project-system install) |
+| system-ledger | — | Ledger state-machine | pending (project-system install) |
 
 The systemd host unit `infrastructure/local-vm-mediakit/vm-mediakit.service` manages the
 QEMU process and handles graceful shutdown via the QEMU monitor socket.
@@ -145,9 +151,9 @@ AArch64 platform (qemu-arm-virt, Raspberry Pi 4, AWS Graviton).
 
 ## What changes vs Phase 1, what stays the same
 
-| Property | Debian 12 (Phase 1) | seL4 Microkit (Phase 3, planned) |
+| Property | Ubuntu 24.04 (Phase 1) | seL4 Microkit (Phase 3, planned) |
 |---|---|---|
-| Guest OS | Linux 6.x | seL4 microkernel + Microkit PDs |
+| Guest OS | Ubuntu 24.04 Linux 6.x (glibc 2.39) | seL4 microkernel + Microkit PDs |
 | Host | QEMU/TCG (x86_64) | QEMU/KVM or bare metal AArch64 |
 | Service binaries | Same (cross-compiled) | Same (recompiled for AArch64 no_std) |
 | Wire protocols | CBOR-over-HTTP | CBOR-over-QUIC (same data schema) |

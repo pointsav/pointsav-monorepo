@@ -20,10 +20,11 @@ bcsc_reviewed: false
 operator_approved: false
 notes_for_editor: >
   Los nombres de productos (os-mediakit, vm-mediakit, PointSav Private Network, seL4,
-  Microkit, WireGuard, QEMU, Debian, service-fs, system-core, system-ledger,
+  Microkit, WireGuard, QEMU, Ubuntu, service-fs, system-core, system-ledger,
   virtio-balloon, moonshot-toolkit, CPIO, AArch64, x86_64, QCOW2) no se traducen.
-  Postura BCSC: fase Debian 12 en tiempo presente; fase seL4 Microkit en lenguaje
-  planificado/previsto.
+  Postura BCSC: fase Ubuntu 24.04 en tiempo presente; fase seL4 Microkit en lenguaje
+  planificado/previsto. Ubuntu 24.04 es obligatorio (no Debian 12) porque todos los
+  binarios compilados en el anfitrión dependen de glibc 2.39.
 ---
 
 # OS Mediakit
@@ -59,33 +60,38 @@ os-mediakit es uno de los tres invitados en el esquema de tres VMs:
 
 ---
 
-## Fase 1: Debian 12 provisional (presente)
+## Fase 1: Ubuntu 24.04 provisional (presente)
 
-El primer despliegue de vm-mediakit utiliza una imagen **Debian 12 genericcloud x86_64 QCOW2**
+El primer despliegue de vm-mediakit utiliza una imagen **Ubuntu 24.04 server cloud x86_64 QCOW2**
 como SO invitado. Esta es la implementación provisional de producción mientras se desarrolla
 la imagen seL4 Microkit.
 
+Ubuntu 24.04 es obligatorio — no Debian 12 — porque todos los binarios de servicio compilados
+en el anfitrión GCP (Ubuntu 24.04, glibc 2.39) dependen de los símbolos `GLIBC_2.39`. Debian 12
+solo proporciona glibc 2.36 y no puede ejecutar los binarios.
+
 Lo que está en funcionamiento actualmente:
-- Debian 12 arrancado mediante `provision-vm-mediakit.sh` bajo QEMU/TCG
+- Ubuntu 24.04 arrancado mediante `provision-vm-mediakit.sh` bajo QEMU/TCG
 - 6 GiB de RAM, disco QCOW2 de 20 GB
 - Red NAT de modo usuario: reenvíos de puerto anfitrión `1xxxx → :xxxx` por cada servicio
 - Dispositivo `virtio-balloon`: ajuste dinámico de RAM sin reinicio del invitado [infrastructure-os]
 - Primer arranque cloud-init: nombre de host `vm-mediakit`, usuario `foundry`, systemd nativo
+- nginx/1.24.0 y build-essential instalados tras el arranque
 
-Servicios en ejecución dentro del invitado Debian 12:
+Servicios dentro del invitado Ubuntu 24.04 (estado Fase 1, 2026-05-29):
 
-| Servicio | Puerto | Propósito |
-|---|---|---|
-| service-fs | 9100 | Registro WORM — columna vertebral de ingestión de datos |
-| system-core | — | Substrato del Registro de Capacidades (biblioteca) |
-| system-ledger | — | Máquina de estado del registro, revocación |
-| local-proofreader | 9092 | Servicio de corrección de pruebas |
-| local-knowledge-documentation | 9090 | Wiki de documentación |
-| local-knowledge-corporate | 9095 | Wiki corporativa |
-| local-knowledge-projects | 9093 | Wiki de proyectos |
-| local-marketing-pointsav | 9101 | Sitio de marketing PointSav |
-| local-marketing | 9102 | Sitio de marketing Woodfine |
-| local-bim-orchestration | 9096 | Puerta de enlace BIM |
+| Servicio | Puerto | Propósito | Estado Fase 1 |
+|---|---|---|---|
+| local-proofreader | 9092 | Servicio de corrección de pruebas | ✓ activo |
+| local-knowledge-documentation | 9090 | Wiki de documentación | ✓ activo |
+| local-knowledge-corporate | 9095 | Wiki corporativa | ✓ activo |
+| local-knowledge-projects | 9093 | Wiki de proyectos | ✓ activo |
+| local-marketing-pointsav | 9101 | Sitio de marketing PointSav | ✓ activo |
+| local-marketing | 9102 | Sitio de marketing Woodfine | ✓ activo |
+| service-fs | 9100 | Registro WORM — columna vertebral de datos | pendiente (build project-data) |
+| local-bim-orchestration | 9096 | Puerta de enlace BIM | pendiente (depende de service-fs) |
+| system-core | — | Substrato del Registro de Capacidades | pendiente (project-system) |
+| system-ledger | — | Máquina de estado del registro | pendiente (project-system) |
 
 ---
 
@@ -127,9 +133,9 @@ ARCHITECTURE.md §Envelope B de service-fs documenta el mismo patrón.
 
 ## Qué cambia respecto a la Fase 1 y qué permanece igual
 
-| Propiedad | Debian 12 (Fase 1) | seL4 Microkit (Fase 3, previsto) |
+| Propiedad | Ubuntu 24.04 (Fase 1) | seL4 Microkit (Fase 3, previsto) |
 |---|---|---|
-| SO invitado | Linux 6.x | Micronúcleo seL4 + PDs Microkit |
+| SO invitado | Ubuntu 24.04 Linux 6.x (glibc 2.39) | Micronúcleo seL4 + PDs Microkit |
 | Anfitrión | QEMU/TCG (x86_64) | QEMU/KVM o bare metal AArch64 |
 | Binarios de servicio | Los mismos (compilación cruzada) | Los mismos (recompilados para AArch64 no_std) |
 | Protocolos de comunicación | CBOR sobre HTTP | CBOR sobre QUIC (mismo esquema de datos) |
