@@ -2,7 +2,7 @@
 
 ---
 
-### 2026-05-29 | totebox@project-intelligence | claude-sonnet-4-6 (session 3)
+### 2026-05-29 | totebox@project-intelligence | claude-sonnet-4-6 (session 3+4)
 
 **Done this session:**
 - Sprint -1 (BRIEF consolidation): 27 contamination BRIEFs archived to `.agent/briefs/archive/`; README rewritten; BRIEF-slm-substrate-master.md corrected (OLMo model name, FORCE_BROKER_MODE rationale); BRIEF-slm-learning-loop.md created. Commit `c5cd4441` (Jennifer)
@@ -10,15 +10,17 @@
 - Sprint 1 (tool_use shim, ~210 LOC): `ComputeRequest.tools` + `ComputeResponse.tool_calls` added to slm-core; local.rs + yoyo.rs propagate tools through to backends and capture tool_calls; anthropic_sse_body emits tool_use SSE blocks; POST /v1/messages/count_tokens + GET /v1/models added. Commit `1b47d3eb` (Jennifer). 51/51 http_test + 102/102 slm-doorman pass.
 - Sprint 2 (training pipeline wiring): `git-post-commit-hook.sh` + `claude-session-bridge.py` written. Commit `1d819d7c` (Jennifer)
 - Sprint 4 (TOPIC/GUIDE dispatch): 5 TOPICs + 2 GUIDEs from `service-slm/docs/` staged to `.agent/drafts-outbound/`. Commit `d39aea32` (Peter)
+- Sprint 0 CONFIRMED COMPLETE by Command: readyz `{"ready":true,"has_local":true,"has_yoyo":true,"has_external":false}` — Tier A + Tier B both live
+- `infrastructure/systemd/local-claude-bridge.service` written — completes Sprint 2b wiring (bridge script → CORPUS_WATCH_DIR = jennifer ledgers dir). Needs Command to `sudo cp` + `systemctl enable --now`.
 
-**Pending / carry-forward (Sprint 0 — Command Session):**
-- **Disable FORCE_BROKER_MODE** — `sudo sed -i 's/SLM_FORCE_BROKER_MODE=true/SLM_FORCE_BROKER_MODE=false/' /etc/local-doorman/local-doorman.env && sudo systemctl restart local-doorman.service`
-- **Binary rebuild** — `cargo build --release -p slm-doorman-server && sudo systemctl restart local-doorman.service`
+**Pending / carry-forward:**
+- **Install claude-bridge service** (Command): `sudo cp infrastructure/systemd/local-claude-bridge.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable --now local-claude-bridge.service`
 - **Install git post-commit hook** — per archive: `cp service-slm/scripts/git-post-commit-hook.sh .git/hooks/post-commit && chmod +x`
-- **Yo-Yo nightly cron** — `0 2 * * * .../start-yoyo.sh --runtime=1h`
+- **Yo-Yo nightly cron** — confirm or add: `0 2 * * * .../start-yoyo.sh --runtime=1h` (Tier B currently live; may already be set)
 - **Drain 491 poison apprenticeship briefs** from `data/apprenticeship/queue/`
-- **Stage 6 promote** — archive is 20+ commits ahead; prerequisite rebase still needed
+- **Stage 6 promote** — archive is 25+ commits ahead; prerequisite rebase per `command-20260520-stage6-rebase-required`
 - **Binary ledger** — update `data/binary-ledger/slm-doorman-server.jsonl` after rebuild
+- **Goose install + verification** (Sprint 3, operator): `ANTHROPIC_HOST=http://127.0.0.1:9080 ANTHROPIC_API_KEY=foundry-local GOOSE_MODEL=claude-haiku-4-5-20251001 goose session`
 
 **Operator preferences surfaced:**
 - Resumed from context summary; no new preferences this session
