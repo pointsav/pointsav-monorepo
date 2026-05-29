@@ -859,6 +859,47 @@ schema: foundry-mailbox-v1
 ---
 ---
 from: totebox@project-intelligence
+to: command@claude-code
+re: circuit resilience complete — Stage 6 + Command-scope actions
+created: 2026-05-29T19:45:00Z
+priority: high
+status: pending
+msg-id: project-intelligence-20260529-sprint3-command-actions
+---
+
+All five circuit-resilience sprints are deployed and verified. This archive is 8 commits ahead
+of origin/main (commits `586edf2b`, `2f85cb48`, `30be4a1f`, `5493a8f4`, `71e98a56` plus 3 prior).
+
+**Command-scope actions needed:**
+
+1. **Stage 6 promotion** — run `bin/promote.sh` for this archive. All 8 commits ready.
+
+2. **sync-local.sh** — after promote: `bin/sync-local.sh --all` to pull canonical into
+   registered live-service paths.
+
+3. **Quarantine 590 poison briefs** (before next Yo-Yo start):
+   ```bash
+   mkdir -p /srv/foundry/data/apprenticeship/quarantine
+   mv /srv/foundry/data/apprenticeship/queue-poison/* /srv/foundry/data/apprenticeship/quarantine/
+   ```
+
+4. **Binary ledger** — append entries in `data/binary-ledger/` (already done at workspace
+   level; confirm in git if needed):
+   - `slm-doorman-server.jsonl`: sha256=`81b8629cf474104fe33274244c6db832a1f2f5dca898c80a98cd524bf3269e2f`, commit `5493a8f4`
+   - `service-content.jsonl`: sha256=`2362ea5c580a9869c5e307b645d60219cb9535dbf4218bd8762da870a4c62f7b`, commit `5493a8f4`
+
+5. **Update GUIDE-guide-local-circuit-tier-a-only.draft.md** — the draft has a placeholder
+   "confirm `SLM_TIER_A_FIRST` name before finalising". The name is confirmed: `SLM_TIER_A_FIRST=true`
+   in `/etc/local-doorman/local-doorman.env`. project-editorial should update the GUIDE draft.
+
+**Verification passed (2026-05-29T19:40Z):**
+- `curl /readyz` → `{"ready":true,"has_local":true,"has_yoyo":true,"tier_b":{...}}` ✓
+- `curl /healthz` → `{"status":"ok","entity_count":7201}` ✓
+- Doorman startup log: `SLM_TIER_A_FIRST=true: Tier A is the confident primary` ✓
+- Shadow brief dispatch log: `tier="local"` ✓
+
+---
+from: totebox@project-intelligence
 to: project-editorial
 re: circuit resilience sprint 0 — 2 new drafts + 1 previously unannounced GUIDE
 created: 2026-05-29T18:00:00Z
