@@ -22,11 +22,17 @@ Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `s
   - 35 tests (26 lib + 9 bin); zero warnings
 - Outbox: Phase 1C.d complete notice + project-infrastructure VM request sent to Command
 
+- J2 citation research DONE `2966d8f` (Peter Woodfine): 9 YAML blocks written to outbox
+  msg-id: project-system-20260529-j2-citation-yaml; inbox J2/J5 relay marked actioned.
+  Flag: aws-nitro-2025 key vs actual Feb 2024 date — Command Session must decide.
+
 **Pending / carry-forward:**
 - Stage-6 for moonshot-toolkit v0.3.0 + system-core/ledger v1.0.0 (Command Session)
 - Outbox: project-infrastructure VM request for system-* testing (msg-id: project-system-20260529-infra-vm-request)
+- J2 citation YAML: Command Session must add 9 entries to ~/Foundry/citations.yaml; confirm aws-nitro key
 - hello.c rootserver: add SysDebugPutChar output (currently infinite loop)
-- Bench #9 quiet-VM re-run: verify_inclusion_proof composed 1024-leaf (load avg < 1.0)
+- Bench #9 quiet-VM re-run: verify_inclusion_proof composed 1024-leaf (load avg < 1.0 — BLOCKED at 11.93)
+- Task C (outbox to project-editorial with J2 update instructions): BLOCKED pending bench #9
 - PhD thesis pre-publication checklist still pending
 
 **Operator preferences:**
