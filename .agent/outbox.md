@@ -10,6 +10,47 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: JOURNAL PhD register pass complete — Stage 6 + 8 commits pending
+created: 2026-05-29T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260529-journal-register-pass-complete
+---
+
+The 7-commit JOURNAL academic register pass (plus 1 ops commit) is complete on main.
+8 commits pending Stage 6 promotion.
+
+Commits:
+  71ef7be6 — editorial: journal-artifact-discipline.md prose/typography standards + notes_for_editor discipline (Jennifer)
+  eaeffe58 — editorial: BRIEF-journal-phd-programme.md formatting standard + venue strategy (Peter)
+  775d20ae — editorial(J1): PhD register pass (Jennifer)
+  9e1de30f — editorial(J2): PhD register pass (Peter)
+  beb01daa — editorial(J3): PhD register pass (Jennifer)
+  ec225be4 — editorial(J4): PhD register pass (Peter)
+  22cb91fa — editorial(J6): PhD register pass (Jennifer)
+  2c831c55 — ops(editorial): artifact-registry + NEXT updated (Peter)
+
+Summary of changes:
+  - journal-artifact-discipline.md: 8 prose/typography rules + notes_for_editor discipline
+  - BRIEF: formatting standard + venue strategy (primary + 2 alternatives per paper)
+  - J1–J4, J6: bold paragraph labels → run-in italic; falsification tables → prose;
+    notes_for_editor cleaned of all internal terms; alternate venues updated; COI/CRediT
+    verified; J4 §6.4 protocol generalizability added; J6 §4 Appendix A + [CITATION NEEDED] resolved
+  - forbidden_terms_cleared: true on all 5 papers (J5 HOLD stub excluded)
+
+No new GUIDEs or TOPICs produced this session. No cross-repo routing needed.
+
+Remaining open items (for your NEXT.md if not already present):
+  - J4 word count gap (~6,400 vs 9,000): project-infrastructure scope
+  - J4 final §4–§5 language pass before submission
+  - Convention layer 4 items (from prior outbox msg project-editorial-20260528-convention-layer-journal)
+  - 5 staged GUIDEs → woodfine-fleet-deployment (from prior routing messages)
+  - Git tags for J1-v0.3 … J6-v0.2 — push after Stage 6
+  - ORCID IDs (operator action)
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: GUIDE routing — project-system GUIDE to woodfine-fleet-deployment/project-system/
 created: 2026-05-29T00:00:00Z
 priority: normal
