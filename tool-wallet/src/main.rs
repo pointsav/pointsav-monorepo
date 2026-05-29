@@ -8,13 +8,18 @@
 /// for customer-side Reverse-Flow revenue. tool-wallet is distinct: it is
 /// a vendor-side utility for PointSav receiving inbound license payments.
 use anyhow::{Context, Result};
+use bip32::{DerivationPath, XPrv};
+use bip39::Mnemonic;
 use chrono::Utc;
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
+use sha3::Keccak256;
 use std::{
+    collections::HashMap,
     fs,
+    io::{Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
 };
 
@@ -90,6 +95,23 @@ struct CheckArgs {
 struct AddressArgs {
     #[arg(help = "Order ID — used to derive a unique per-order address")]
     order_id: String,
+    #[arg(env = "WALLET_SEED_PATH", long, help = "Path to BIP-39 mnemonic or 64-byte hex seed file")]
+    wallet_seed_path: Option<String>,
+    #[arg(
+        env = "ORDER_INDEX_PATH",
+        long,
+        default_value = "/var/lib/local-software/data/order-index.json",
+        help = "Path to per-order derivation index JSON file"
+    )]
+    order_index_path: String,
+}
+
+// ── Order index (HD address counter) ─────────────────────────────────────────
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+struct OrderIndex {
+    next_index: u32,
+    orders: HashMap<String, u32>,
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -471,15 +493,122 @@ async fn check(args: CheckArgs) -> Result<()> {
     }
 }
 
-// ── address (v0.0.2 stub) ─────────────────────────────────────────────────────
+// ── address ───────────────────────────────────────────────────────────────────
 
 async fn address(args: AddressArgs) -> Result<()> {
-    tracing::warn!(
+    let seed_path = match args.wallet_seed_path {
+        Some(p) => p,
+        None => {
+            eprintln!(
+                "address: WALLET_SEED_PATH not configured — set env var to activate HD address derivation"
+            );
+            std::process::exit(2);
+        }
+    };
+
+    let seed_content = fs::read_to_string(&seed_path)
+        .with_context(|| format!("reading WALLET_SEED_PATH: {seed_path}"))?;
+    let seed_content = seed_content.trim();
+
+    let seed_bytes: [u8; 64] = if seed_content.len() == 128
+        && seed_content.chars().all(|c| c.is_ascii_hexdigit())
+    {
+        let decoded = hex::decode(seed_content).context("decoding hex seed")?;
+        decoded
+            .try_into()
+            .map_err(|_| anyhow::anyhow!("hex seed must be exactly 64 bytes (128 hex chars)"))?
+    } else {
+        let mnemonic: Mnemonic = seed_content
+            .parse()
+            .map_err(|e| anyhow::anyhow!("invalid BIP-39 mnemonic: {e}"))?;
+        mnemonic.to_seed("")
+    };
+
+    let derivation_index = assign_order_index(&args.order_index_path, &args.order_id)
+        .context("assigning order derivation index")?;
+
+    let path_str = format!("m/44'/60'/0'/0/{derivation_index}");
+    let path: DerivationPath = path_str
+        .parse()
+        .with_context(|| format!("parsing derivation path: {path_str}"))?;
+
+    let child_xprv =
+        XPrv::derive_from_path(&seed_bytes, &path).context("BIP-32 key derivation failed")?;
+
+    let xpub = child_xprv.public_key();
+    let vk = xpub.public_key();
+    let encoded = vk.to_encoded_point(false); // uncompressed, 65 bytes
+    let raw = &encoded.as_bytes()[1..]; // drop 0x04 prefix → 64 bytes
+
+    let hash = Keccak256::digest(raw);
+    let addr_bytes = &hash[12..]; // last 20 bytes = Ethereum address
+    let eth_address = format!("0x{}", hex::encode(addr_bytes));
+
+    let output = json!({
+        "order_id": args.order_id,
+        "address": eth_address,
+        "derivation_index": derivation_index,
+        "derivation_path": path_str,
+        "chain": "polygon-pos",
+        "token": "USDC"
+    });
+
+    tracing::info!(
         order_id = %args.order_id,
-        "HD address derivation requires WALLET_SEED_PATH — arriving v0.0.2"
+        address = %eth_address,
+        derivation_index = derivation_index,
+        "HD address assigned"
     );
-    eprintln!("address: BIP-32 HD derivation not yet implemented (v0.0.2). Provision WALLET_SEED_PATH first.");
-    std::process::exit(2);
+
+    println!("{}", serde_json::to_string(&output)?);
+    Ok(())
+}
+
+fn assign_order_index(index_path: &str, order_id: &str) -> Result<u32> {
+    use fd_lock::RwLock;
+    use std::fs::OpenOptions;
+
+    if let Some(parent) = Path::new(index_path).parent() {
+        if !parent.as_os_str().is_empty() {
+            fs::create_dir_all(parent)
+                .with_context(|| format!("creating order index dir: {}", parent.display()))?;
+        }
+    }
+
+    let file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .open(index_path)
+        .with_context(|| format!("opening order index: {index_path}"))?;
+
+    let mut lock = RwLock::new(file);
+    let mut guard = lock.write().context("acquiring order index write lock")?;
+
+    let mut content = String::new();
+    guard.read_to_string(&mut content).context("reading order index")?;
+
+    let mut index: OrderIndex = if content.trim().is_empty() {
+        OrderIndex::default()
+    } else {
+        serde_json::from_str(&content).context("parsing order index JSON")?
+    };
+
+    // Idempotent: same order_id returns the cached derivation slot
+    if let Some(&cached) = index.orders.get(order_id) {
+        return Ok(cached);
+    }
+
+    let assigned = index.next_index;
+    index.next_index = index.next_index.saturating_add(1);
+    index.orders.insert(order_id.to_string(), assigned);
+
+    let new_json = serde_json::to_string_pretty(&index)?;
+    guard.seek(SeekFrom::Start(0)).context("seeking order index")?;
+    guard.set_len(0).context("truncating order index")?;
+    guard.write_all(new_json.as_bytes()).context("writing order index")?;
+
+    Ok(assigned)
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
