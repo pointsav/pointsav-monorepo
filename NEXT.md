@@ -9,13 +9,12 @@ Last updated: 2026-05-29 (session 8).
 
 ## vm-mediakit — Phase 1 (unblocked)
 
-- [ ] **Install `genisoimage` + `socat` on host** — `sudo apt install -y genisoimage socat`
-  Required by `provision-vm-mediakit.sh` and `vm-mediakit.service`.
+- [x] **Install `genisoimage` + `socat` on host** — DONE 2026-05-29.
   [2026-05-29 totebox@claude-code]
 
-- [ ] **Run `infrastructure/virt/provision-vm-mediakit.sh`** — boots Debian 12 QCOW2,
-  6 GiB RAM, QEMU/TCG, port-forward NAT. SSH at `localhost:10022` after ~60s.
-  Cloud-init key: `infrastructure/virt/work/foundry-vm-key`.
+- [x] **Run `infrastructure/virt/provision-vm-mediakit.sh`** — DONE 2026-05-29. QEMU PID 3949093
+  running TCG. VM booting; cloud-init first-boot (pkg install via SLIRP) takes ~30-60 min on TCG.
+  SSH at `localhost:10022`; key `infrastructure/virt/work/foundry-vm-key`.
   [2026-05-29 totebox@claude-code]
 
 - [ ] **Migrate services into vm-mediakit (piece by piece, originals stay running):**
@@ -172,28 +171,6 @@ pickup notice sent to project-editorial.
 - [ ] **Add focus crates to root `Cargo.toml` workspace members** — `os-infrastructure`,
   `os-network-admin`, `system-network-interface`, `system-substrate-broadcom`.
   [2026-05-27 totebox@claude-code]
-
----
-
-## TOPIC + GUIDE leg — drafts staged, needs editorial pickup
-
-Ten TOPIC draft pairs + 3 GUIDE drafts in `.agent/drafts-outbound/`; pickup notice sent to project-editorial.
-
-**TOPICs (content-wiki-documentation):**
-- [ ] `topic-sovereign-mesh` + `.es` — expands stub at `infrastructure/sovereign-mesh.md` [session 2]
-- [ ] `topic-genesis-protocol` + `.es` — new; `architecture/genesis-protocol.md` [session 3]
-- [ ] `topic-ppn-command-protocol` + `.es` — new; `architecture/ppn-command-protocol.md` [session 3]
-- [ ] `topic-service-pointsav-link` + `.es` — new; `architecture/service-pointsav-link.md` [session 3]
-- [ ] `topic-os-network-admin` + `.es` — new; replaces published `systems/os-network-admin.md` (fixes app-network-admin conflation) [session 5]
-- [ ] `topic-ppn-hypervisor-resource-pool` + `.es` — updated; added §: Planned cross-node extension (virtio-mem, no-reboot confirm, capability ledger ref) [session 7]
-- [ ] `topic-totebox-archive` + `.es` — new; `systems/totebox-archive.md` [session 6]
-- [ ] `topic-ppn-architecture-overview` + `.es` — updated; added distributed fabric paragraph + `[[ppn-distributed-vm-fabric]]` link [session 7]
-- [ ] `topic-ppn-distributed-vm-fabric` + `.es` — **new**; `architecture/ppn-distributed-vm-fabric.md`; full distributed VM fabric architecture: virtio-mem lending over WireGuard, distributed capability ledger (Merkle DAG), cross-node scheduler, sovereign attestation chain; comparison vs AWS/Azure/GCP; build sequence [session 7]
-
-**GUIDEs (woodfine-fleet-deployment/fleet-infrastructure/):**
-- [ ] `guide-ppn-first-deployment` — 5-step deployment sequence from BRIEF §7; updated: VM capacity planning table appended [session 7]
-- [ ] `guide-node-join-ceremony` — approval workflow, operator + node perspectives [session 6]
-- [ ] `guide-vm-prove-balloon-demo` — vm-prove.sh + virtio_balloon demo [session 6]
 
 ---
 

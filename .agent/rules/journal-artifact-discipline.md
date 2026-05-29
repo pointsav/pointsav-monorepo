@@ -324,6 +324,6 @@ Working drafts (may differ from canonical) are in `.agent/drafts-outbound/`.
 | JOURNAL-retail-colocation-v0.1.draft.md | Economic geography | *Economic Geography* (Wiley, IF 7.2) | 0.3 | language-cleared; §7.2 pending Phase 24B |
 | JOURNAL-trustworthy-systems-v0.1.draft.md | Systems CS | ASPLOS (ACM, 19.4% AR) | 0.1 | language-cleared; Bench #9 re-run pending |
 | JOURNAL-aec-data-layers-v0.1.draft.md | AEC/construction | *Automation in Construction* (Elsevier, IF 12.0) | 0.2 | language-cleared; §6 Results pending coverage metrics |
-| JOURNAL-private-network-v0.1.stub.md | Networking/ZTA | *IEEE TIFS* (IEEE, IF 9.65) | 0.2 | language-cleared; §4–§5 pending benchmarks |
+| JOURNAL-private-network-v0.3.draft.md | Networking/ZTA | *IEEE TIFS* (IEEE, IF 9.65) | 0.3 | language-cleared; §4–§5 written with empirical benchmarks; §4–§5 lang-pass at project-editorial |
 | JOURNAL-totebox-orchestration-v0.1.stub.md | Systems/ML | MLSys (ACM, 22% AR) | 0.1 | stub — HOLD until J2 submitted |
 | JOURNAL-desktop-environment-v0.1.stub.md | HCI/BIM | *ACM TOCHI* (ACM, Q1 HCI) | 0.2 | language-cleared; §6 Results pending user study |
