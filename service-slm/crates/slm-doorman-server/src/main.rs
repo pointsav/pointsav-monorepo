@@ -192,6 +192,14 @@ async fn main() -> anyhow::Result<()> {
             .unwrap_or(30);
         let drain_interval = Duration::from_secs(drain_interval_secs);
 
+        // Sprint 3C: hold queue when all Tier B nodes have been circuit-open
+        // for longer than this threshold. Briefs stay in queue/ until circuit
+        // closes. Env var: SLM_HOLD_THRESHOLD_SECS (default 3600 = 1 h).
+        let hold_threshold_secs: u64 = std::env::var("SLM_HOLD_THRESHOLD_SECS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(3600);
+
         // Clone only what the drain worker needs.
         let drain_cfg = queue_cfg.clone();
         let drain_doorman_arc = Arc::clone(&state);
@@ -207,6 +215,27 @@ async fn main() -> anyhow::Result<()> {
             );
 
             loop {
+                // Sprint 3C: when all configured Tier B nodes have been
+                // circuit-open longer than the hold threshold, skip this drain
+                // cycle. Briefs accumulate in queue/ until Tier B recovers.
+                let tier_b = drain_doorman_arc.doorman.tier_b_status();
+                if !tier_b.is_empty()
+                    && tier_b.values().all(|info| {
+                        info.circuit == "open"
+                            && info
+                                .opened_for_secs
+                                .map(|s| s >= hold_threshold_secs)
+                                .unwrap_or(false)
+                    })
+                {
+                    info!(
+                        hold_threshold_secs,
+                        "drain worker: Tier B circuit open beyond hold threshold — holding queue"
+                    );
+                    tokio::time::sleep(drain_interval).await;
+                    continue;
+                }
+
                 match dequeue_shadow(&drain_cfg, &worker_id) {
                     Ok(None) => {
                         // Queue empty; sleep and poll again.
@@ -404,6 +433,22 @@ fn build_doorman() -> anyhow::Result<Doorman> {
     let force_broker = std::env::var("SLM_FORCE_BROKER_MODE")
         .map(|v| matches!(v.trim(), "true" | "1"))
         .unwrap_or(false);
+    let tier_a_first = std::env::var("SLM_TIER_A_FIRST")
+        .map(|v| matches!(v.trim(), "true" | "1"))
+        .unwrap_or(false);
+
+    if force_broker && tier_a_first {
+        anyhow::bail!(
+            "SLM_FORCE_BROKER_MODE=true and SLM_TIER_A_FIRST=true are mutually exclusive. \
+             FORCE_BROKER_MODE disables Tier A entirely; TIER_A_FIRST makes it the primary. \
+             Set at most one of these flags."
+        );
+    }
+
+    if tier_a_first {
+        info!("SLM_TIER_A_FIRST=true: Tier A is the confident primary; Tier B used only when explicitly hinted and circuit closed");
+    }
+
     let local = if force_broker {
         info!("SLM_FORCE_BROKER_MODE=true: Tier A disabled; all inference routes to Yo-Yo");
         None
@@ -537,6 +582,7 @@ fn build_doorman() -> anyhow::Result<Doorman> {
             external,
             lark_validator,
             graph_context_client,
+            tier_a_first,
         },
         ledger,
     ))
