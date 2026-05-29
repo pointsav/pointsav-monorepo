@@ -935,6 +935,65 @@
     initActiveTocTracking();
     initToc();
     initTocPin();
+    initAnchorShare();
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Anchor-share ¶ buttons                                              *
+   * ------------------------------------------------------------------ */
+
+  function initAnchorShare() {
+    var prose = document.querySelector('.prose');
+    if (!prose) return;
+
+    // Ensure toast element exists
+    var toast = document.getElementById('anchor-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'anchor-toast';
+      toast.className = 'anchor-toast';
+      toast.textContent = 'Link copied';
+      document.body.appendChild(toast);
+    }
+
+    // Inject ¶ button after each h2/h3 with an id
+    prose.querySelectorAll('h2[id], h3[id]').forEach(function (heading) {
+      if (heading.querySelector('.anchor-share')) return; // idempotent
+      var btn = document.createElement('button');
+      btn.className = 'anchor-share';
+      btn.setAttribute('aria-label', 'Copy section link');
+      btn.setAttribute('data-target', heading.id);
+      btn.textContent = '¶';
+      heading.appendChild(btn);
+    });
+
+    // Delegate click to document (survives re-inits)
+    if (prose._anchorShareBound) return;
+    prose._anchorShareBound = true;
+    prose.addEventListener('click', function (e) {
+      var btn = e.target.closest('.anchor-share');
+      if (!btn) return;
+      var url = window.location.href.split('#')[0] + '#' + btn.getAttribute('data-target');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { showAnchorToast(); });
+      } else {
+        // Fallback for older browsers
+        var tmp = document.createElement('textarea');
+        tmp.value = url;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        document.body.removeChild(tmp);
+        showAnchorToast();
+      }
+    });
+  }
+
+  function showAnchorToast() {
+    var toast = document.getElementById('anchor-toast');
+    if (!toast) return;
+    toast.classList.add('visible');
+    setTimeout(function () { toast.classList.remove('visible'); }, 1500);
   }
 
   /* ------------------------------------------------------------------ *
@@ -959,6 +1018,7 @@
     initSearchAutocomplete();
     initKeyboardShortcuts();
     initAjaxNavigation();
+    initAnchorShare();
   });
 
 }());

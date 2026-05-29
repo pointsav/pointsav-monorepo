@@ -1,6 +1,39 @@
 # NEXT.md — app-mediakit-knowledge
 
-> Last updated: 2026-05-23
+> Last updated: 2026-05-29
+
+## Phase 7B — COMPLETE (2026-05-29)
+
+`nav.article-tabs` two-row header added to `wiki_chrome()` only: Article/Talk (left) +
+Read/Edit/History/Tools▾ (right). Tools dropdown (`details.tools-dropdown > summary + ul`):
+Cite/Permanent link/Printable/Page info/What links here. `¶` anchor-share buttons on
+`h2[id]`/`h3[id]` headings (`initAnchorShare()` in wiki.js, re-runs on AJAX nav).
+Auth-gating via `[data-auth="anon"]` CSS: Talk + Edit tabs hidden for anonymous users.
+Dead `.shell-header,` selectors removed from `static/style.css` (3 occurrences).
+106/106 lib tests pass.
+
+## Phase 7A — COMPLETE (commit `168314a1`, 2026-05-28)
+
+TOC toggle/pin buttons restored to `div.toc__header`; `div.topnav-search-wrap` +
+`#search-autocomplete-dropdown` added to all three chrome functions. Stage 6 +
+binary rebuild queued for nightly ~1am Vancouver 2026-05-28.
+
+## Phase 7+ backlog (from BRIEF-app-mediakit-knowledge-2030.md §12)
+
+| Phase | Scope | Status |
+|---|---|---|
+| **7B** | Article-tabs row (40px); Tools dropdown; anchor-share `¶`; auth-gated tabs | **COMPLETE** |
+| **7C** | Reading mode toggle; CSS body-class; localStorage | **Next** |
+| **7X** | Home page: search hero, featured article, DYK section | Queued |
+| **7D** | Citation hover preview; freshness dot; citations redb table | Queued |
+| **7E** | Mobile chrome: 56px top/bottom bars; TOC bottom sheet; code/table overflow | Queued |
+| **7F** | Tufte sidenotes for `layout: journal` articles at ≥1280px | Queued |
+| **7G+7H** | Corporate: effective\_date block; auto-numbered sections (CSS counters) | Queued |
+| **8** | History surface: revision list, diff UI, integrity-bar (blake3 SHA) | Queued |
+| **9** | Claim-rail freshness sidebar; citations redb table; nightly URL validator | Queued (after 7D) |
+| **10** | Reading state persistence; progress bar; "Continue reading" home strip | Queued |
+| **11** | `query_claims(topic, asof)` MCP API extension | Queued (after 9) |
+| **12** | AI marginalia | **GATED — BP5 + SYS-ADR review required** |
 
 ## Phase 4 DTCG token wiring — COMPLETE (Commits F–H, 2026-05-22)
 
