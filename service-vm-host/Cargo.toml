@@ -1,0 +1,18 @@
+[package]
+name = "service-vm-host"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "service-vm-host"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["rt", "macros", "net", "time", "io-util"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+system-vm-fleet-types = { path = "../system-vm-fleet-types" }
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
