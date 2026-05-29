@@ -174,6 +174,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
+            tools: None,
             };
 
         info!(
@@ -271,6 +272,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
+            tools: None,
             };
 
         info!(
