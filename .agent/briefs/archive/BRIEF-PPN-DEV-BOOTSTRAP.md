@@ -442,5 +442,68 @@ model they are optimised for.
 
 ---
 
-*End of BRIEF — project-infrastructure / 2026-05-28 (§11 added 2026-05-28)*
+---
+
+## 12. seL4 First-Boot Path — Phase 1C.d Achievement and Gap to os-mediakit
+
+*(Added 2026-05-29 — cross-ref: BRIEF-totebox-transformation §9)*
+
+### What project-system delivered (Phase 1C.d, moonshot-toolkit v0.3.0)
+
+`/srv/foundry/clones/project-system/moonshot-toolkit` produces a bootable AArch64 seL4
+system image using a pure-Rust assembler (no Python, no CMake in the critical path):
+
+- **CPIO writer** (`src/cpio.rs`) packs `kernel.elf` + `kernel.dtb` + rootserver ELF into
+  a CPIO archive that the seL4 elfloader extracts at boot
+- **System specification** (`system-spec.toml`) declares Protection Domains in a
+  Microkit-shaped TOML format (≤63 PDs, ≤63 channels/PD, `PPC` vs `Notification` distinction)
+- **Boot:** `qemu-system-aarch64 -machine virt,secure=off -cpu cortex-a53 -m 1G -nographic
+  -kernel build/system-image.bin` → seL4 boots to user space ("hello from seL4 rootserver")
+- **Architecture:** AArch64, `qemu-arm-virt` platform, `KernelDebugBuild=ON`,
+  `KernelPrinting=ON`. 35 unit/integration tests pass.
+
+The rootserver is currently `examples/hello.c` — a bare-metal halt loop proving the image
+assembly pipeline. It is NOT a Microkit root task (no libmicrokit, no `init`/`notified` entry
+points) and NOT using the Microkit Python SDK.
+
+### The gap: AArch64 kernel blob → os-mediakit guest OS
+
+| Gap | Detail |
+|---|---|
+| Arch mismatch | Phase 1C.d produces AArch64; GCP workspace is x86_64. Cannot replace Debian 12 QCOW2 directly. |
+| Rootserver is hello.c | Needs to become os-mediakit Rust binary with real services |
+| Rust PD compilation | moonshot-toolkit only compiles `.c` PDs; needs `cargo build --target aarch64-unknown-none` branch |
+| system-substrate-sel4 absent | BRIEF §5.3 shim crate (feature flags `["native"]`/`["compat"]`) not yet created |
+| os-mediakit scaffold only | `os-mediakit/src/lib.rs` is a 1-function stub in both project-system and project-infrastructure |
+| x86_64 QEMU path absent | moonshot-toolkit has no Multiboot2 assembler; GRUB/QEMU x86 path would be new build track |
+
+### Ordered steps for project-system to deliver os-mediakit Phase 1
+
+1. Wire `os-mediakit/` as workspace member with `system-spec.toml` — single PD `mediakit-root`
+2. Convert `os-mediakit/src/` to AArch64 `#![no_std] #![no_main]` Rust `_start` — halt loop
+   with `SysDebugPutChar` printing "os-mediakit booted" validates the pipeline
+3. Extend `moonshot-toolkit::cmd_build` to invoke `cargo build --target aarch64-unknown-none`
+   for Rust PDs (currently only `aarch64-linux-gnu-gcc` for `.c`)
+4. Boot: `moonshot-toolkit build os-mediakit/system-spec.toml` → verify QEMU output
+5. Create `system-substrate-sel4` shim crate — even a stub with `seL4_DebugPutChar` is enough
+6. Phase 1C.e: Sigstore cosign on `plan_hash` (already queued in moonshot-toolkit NEXT.md)
+7. Handoff artifact to project-infrastructure: `build/system-image.bin` + note that
+   `infrastructure/os-infrastructure/forge_iso.sh` is wrong toolchain (GRUB/x86, non-existent
+   paths) — replace with moonshot-toolkit AArch64 build path
+
+**Stretch (only if x86_64 is non-negotiable for Phase 3):**
+Rebuild vendor-sel4-kernel pc99 with `KernelPrinting=ON`; add `AssembleMultibootImage` variant
+to moonshot-toolkit; this enables the Debian 12 QCOW2 replacement path on x86_64 GCP.
+Estimated: significant new build track. Recommendation: prefer AArch64 GCP C4A instance.
+
+### Microkit x86_64 status (confirmed by internet research 2026-05-29)
+
+Microkit 2.2.0 supports **AArch64 and RISC-V 64 only**. x86_64 seL4 requires raw seL4 + CAmkES
+(not Microkit). No known production seL4 deployments on x86_64 in 2025-2026. Commercial
+momentum (Cog/Riverside Research, NASA cFS, Collins flight vehicle) is AArch64-dominant.
+The seL4 Foundation advises small teams: incremental cyber-retrofit, AArch64 bare metal first.
+
+---
+
+*End of BRIEF — project-infrastructure / 2026-05-28 (§12 added 2026-05-29)*
 *Activating the first ceremony: service-ppn-pairing on GCP VM + os-network-admin on Laptop A*
