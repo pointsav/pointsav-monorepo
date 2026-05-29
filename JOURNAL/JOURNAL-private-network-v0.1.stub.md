@@ -10,8 +10,8 @@ impact_factor: "9.65"
 alternate_venue: "Computers & Security (Elsevier, IF 7.98); IEEE Transactions on Network and Service Management (IEEE, IF 6.44)"
 authors:
   - name: "Peter M. Woodfine"
-    affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
-    email: jmwoodfine@gmail.com
+    affiliation: "Woodfine Management Corp., New York, NY, USA"
+    email: corporate.secretary@woodfinegroup.com
     orcid: ""
     credit_roles:
       - Conceptualization
@@ -19,7 +19,7 @@ authors:
       - Writing – Original Draft
       - Writing – Review & Editing
   - name: "Mathew Woodfine"
-    affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
+    affiliation: "Woodfine Management Corp., New York, NY, USA"
     email: ""
     orcid: ""
     credit_roles:
@@ -27,7 +27,7 @@ authors:
       - Formal Analysis
       - Writing – Review & Editing
   - name: "Jennifer M. Woodfine"
-    affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
+    affiliation: "Woodfine Management Corp., New York, NY, USA"
     email: ""
     orcid: ""
     credit_roles:
@@ -49,7 +49,7 @@ keywords:
   - audit log integrity
 bcsc_class: no-disclosure-implication
 ai_tool_used: "claude-sonnet-4-6 (Anthropic)"
-corresponding_author: jmwoodfine@gmail.com
+corresponding_author: corporate.secretary@woodfinegroup.com
 word_count_body: 4800
 word_count_target: 9000
 submission_status: not-submitted
@@ -59,7 +59,7 @@ preprint_posted: true
 preprint_posted_date: 2026-05-28
 doi: ""
 license: "CC BY 4.0"
-cite_as: "Woodfine, P.M., Woodfine, M., & Woodfine, J.M. (2026). Customer-Rooted Mesh Architecture for Distributed Operational Systems. Working Paper v0.2, 28 May 2026. Woodfine Management Corp., Vancouver, BC."
+cite_as: "Woodfine, Peter M., Woodfine, Mathew, & Woodfine, Jennifer M. (2026). Customer-Rooted Mesh Architecture for Distributed Operational Systems. Working Paper v0.2, 28 May 2026. Woodfine Management Corp., New York, NY."
 revision_history:
   - version: "0.1"
     date: "2026-05-27"
@@ -96,19 +96,18 @@ notes_for_editor: |
 ---
 
 > **Working Paper · Version 0.2 · 2026-05-28 · CC BY 4.0**
-> This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. Correspondence: jmwoodfine@gmail.com.
+> This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. Correspondence: corporate.secretary@woodfinegroup.com.
 >
-> *Cite as:* Woodfine, P.M., Woodfine, M., & Woodfine, J.M. (2026). Customer-Rooted Mesh Architecture for Distributed Operational Systems. Working Paper v0.2, 28 May 2026. Woodfine Management Corp., Vancouver, BC.
+> *Cite as:* Woodfine, Peter M., Woodfine, Mathew, & Woodfine, Jennifer M. (2026). Customer-Rooted Mesh Architecture for Distributed Operational Systems. Working Paper v0.2, 28 May 2026. Woodfine Management Corp., New York, NY.
 
 > **Forward-Looking Statements**
 > Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially. Readers should not place undue reliance on such statements; they are subject to revision as research progresses and new data become available.
 
 # Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody
 
-**Woodfine Management Corp.**
-Vancouver, British Columbia, Canada
-
-*Corresponding author:* jmwoodfine@gmail.com
+**Peter M. Woodfine, Mathew Woodfine, and Jennifer M. Woodfine**  
+Woodfine Management Corp., New York, NY, USA  
+*Corresponding author:* corporate.secretary@woodfinegroup.com
 
 ---
 
