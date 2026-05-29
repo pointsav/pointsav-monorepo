@@ -13,12 +13,12 @@ to: command@claude-code
 re: JOURNAL PhD register pass complete — Stage 6 + 8 commits pending
 created: 2026-05-29T00:00:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-editorial-20260529-journal-register-pass-complete
 ---
 
 The 7-commit JOURNAL academic register pass (plus 1 ops commit) is complete on main.
-8 commits pending Stage 6 promotion.
+8 commits pending Stage 6 promotion. **ACTIONED 2026-05-29 — all 26 project-editorial commits promoted to canonical (f99a6a17).**
 
 Commits:
   71ef7be6 — editorial: journal-artifact-discipline.md prose/typography standards + notes_for_editor discipline (Jennifer)
