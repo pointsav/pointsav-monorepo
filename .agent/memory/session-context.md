@@ -2,7 +2,42 @@
 
 ---
 
-### 2026-05-29 | totebox@project-intelligence | claude-sonnet-4-6 (session 6 — continuation)
+### 2026-05-29 | totebox@project-knowledge | claude-sonnet-4-6
+
+**Done this session:**
+- Phase 7F COMPLETE: `inject_sidenotes()` post-processor in `render.rs`. Parses comrak
+  footnote `<sup class="footnote-ref">` markers and `<section class="footnotes">` definitions;
+  replaces inline refs with `<span class="sidenote-anchor">` + checkbox toggle structure;
+  removes `<section class="footnotes">` block. `is_journal` flag checked against `frontmatter.layout`.
+  CSS: sidenotes absolute-positioned at ≥1280px for `[data-layout="journal"]`; checkbox toggle
+  inline display at <1280px. Test fixture `tests/fixtures/journal/sample.md` + integration test
+  `tests/journal_test.rs` (1/1 pass). Commit `c240837b` (Peter).
+- Phase 7G+7H COMPLETE (CSS-only): Auto-numbered sections via CSS counters for
+  `[data-instance="woodfine-corporate"]`. `data-numbered="false"` opt-out on `div.prose`.
+  Both phases shipped in same commit `c240837b`.
+- Raw string `"#` pitfall: `r#"href="#fn-"#` terminates early at the `"#` inside the string.
+  Fix: use regular escaped strings `"href=\"#fn-"`. Same for `"href=\"#fnref-"`.
+- NEXT.md updated: Phase 7F+7G+7H marked complete; Phase 8 flagged next. Commit `c7b7106a`.
+- Release binary built (7m 50s) and deployed to all three instances (9090/9093/9095).
+- Outbox Stage 6 request prepended. Commit `110c7926` (project-knowledge archive).
+- BRIEF-app-mediakit-knowledge-2030.md updated: §3 phase table extended through 7H.
+
+**Pending / carry-forward:**
+- Stage 6 promotion: 15 monorepo commits pending `bin/promote.sh` from Command Session.
+  Binary ledger update needed after promote.
+- Phase 8 next: history revision list at `/history/{slug}`, side-by-side diff UI,
+  `article-integrity-bar` with blake3 SHA fingerprint.
+- UX-B.7 BLOCKED: Woodfine SVG wordmark — operator must provide the asset.
+- ES bilingual pairs for four governance stubs — lower priority.
+- `.agent/manifest.md` wrong `cluster_name` (project-bim) — Command correction needed.
+
+**Operator preferences surfaced:**
+- AUTO mode continues: plan approved, execute without per-step approval.
+- "leapfrog 2003 UI/UX" — Goldman Sachs banker standard for all three instances.
+
+---
+
+### 2026-05-28 | totebox@project-knowledge | claude-sonnet-4-6
 
 **Done this session:**
 - `docs(brief)`: BRIEF-slm-learning-loop.md §7.2-3 updated with live SSE test result. Commits `df1a5e64` (Peter) + `3fd2dfef` (Jennifer).
@@ -71,26 +106,4 @@
 - "STARTUP" / "SHUTDOWN" = execute full checklist
 - Plan mode with AskUserQuestion for operator decisions before coding
 - "All 6 SC-* fixes in a single commit" — batch SC-* fixes together per audit cohort
-
----
-
-### 2026-05-24 | totebox@project-console | claude-sonnet-4-6
-
-**Done this session:**
-- T1-A: app-console-system added to Cargo.toml workspace members (`7e47fd05`)
-- T1-C/D: NEXT.md updated (Phase 3+4 complete, Phase 5 queued); service-extraction CLAUDE.md created (`e9b84f21`, `3a5b11f9`)
-- Phase 5 COMPLETE — draft mode: `/new <title>` slash command in ContentCartridge; Doorman Tier B SSE streaming client (`draft.rs`); `drafts-outbound` write with `foundry-draft-v1` frontmatter; `drafts_outbound_path` added to ConsoleConfig. Commits `6422c2a8` + `5118ce77`. `cargo check --workspace` exits 0.
-- Session close-out: NEXT.md updated (Phase 5 → Complete, Phase 6 → Next, commit `894452c1`); binary-targets.yaml notes updated; Phase 5 outbox notification sent to Command (`053847d`); inbox archived 8 actioned/stale messages, only Stage 6 blocker retained (`edc2b84`)
-
-**Pending / carry-forward:**
-- Stage 6 push: waiting Command decision on history-replacement force-push authorization. See outbox msg `project-console-20260522-stage6-history-divergence` for the 3 questions requiring sign-off.
-- Phase 6: offline mode + Tantivy full-text search (next coding phase)
-- pairing-server systemd unit deployment on VM (Command/operator)
-- GCE firewall port 2222 (operator action)
-- Tag v0.1.0 (after Stage 6)
-- Peter's SSH key + proofctl user add (Command is generating this — seen in COMMAND shell 2026-05-24)
-- Manifest path updates (fleet_deployment_repo, catalog_subfolder) — stale domain migration item
-
-**Operator preferences surfaced:**
-- "plan we can leave on auto" = write a tight AUTO plan then execute without further approval per step
 
