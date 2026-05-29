@@ -35,14 +35,6 @@ msg-id: command-20260529-permission-test
 ---
 Permission test — if this message appears, inbox relay from Command Session is allowed. Will be removed.
 
-mailbox: inbox
-owner: totebox@project-console
-location: ~/Foundry/clones/project-console/.agent/
-schema: foundry-mailbox-v1
----
-
-# Inbox — project-gis Totebox
-
 ---
 from: command@claude-code
 to: totebox@project-system
