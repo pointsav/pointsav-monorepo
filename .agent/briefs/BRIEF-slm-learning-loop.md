@@ -197,8 +197,9 @@ The learning loop is operational when ALL of the following pass:
 1. `curl -s http://127.0.0.1:9080/readyz | python3 -m json.tool` → `has_local: true` (Tier A live)
    **STATUS: VERIFIED ✓** (`has_local: true, has_yoyo: true`)
 2. `ANTHROPIC_HOST=http://127.0.0.1:9080 ANTHROPIC_API_KEY=foundry-local goose session` → chat round-trips
-   **STATUS: BLOCKED — Goose v1.36.0 installed ✓; CPU-saturated (load 17+, QEMU vm-mediakit 95%) prevents**
-   **reliable inference. Run once QEMU is terminated or migrated to KVM.**
+   **STATUS: VERIFIED ✓** (2026-05-29T04:10Z — Goose v1.36.0 round-tripped; OLMo replied "Hello! The result
+   of 2+2 is 4."; Doorman log: `dispatching ... tier="local"`; fix required: `system`-as-blocks deserialization
+   in `http.rs` — committed `74ba6da0`)
 3. Goose file tool (Read/Write) → `sudo journalctl -u local-doorman -f | grep -i tool_use` confirms routing
    **STATUS: PARTIAL — tool format shim verified (104 unit tests); LIVE SSE TEST: OLMo 7B returned text**
    **(stop_reason: end_turn) instead of invoking the tool. OLMo 7B is not fine-tuned for tool use;**
@@ -220,10 +221,10 @@ The learning loop is operational when ALL of the following pass:
   error from llama-server); OLMo 7B returned `stop_reason: end_turn` with text response rather than a
   `tool_use` content block. Model does not reliably invoke tools; this is a model capability limit, not a shim bug.
 
-### Blockers summary (2026-05-29)
-- **§7.2**: Goose installed; blocked by CPU saturation (QEMU vm-mediakit -accel tcg at 95%; load 17+).
-  Unblocked when QEMU is killed/migrated or hardware KVM is available.
-- **§7.3**: Blocked by OLMo 7B model capability + CPU saturation. Tool_use SSE blocks require either
+### Blockers summary (2026-05-29T04:10Z)
+- **§7.3**: OLMo 7B model does not invoke tools (responds with text). Tool_use SSE blocks require
   Tier B (Yo-Yo, OLMo 3 32B-Think) or Tier A upgrade to a tool-use-tuned model.
+- **§7.4**: Tier B (Yo-Yo VM) must be provisioned to close Tier B circuit breaker.
+- **§7.6**: Downstream of §7.4.
 - **§7.4**: Tier B (Yo-Yo VM) must be provisioned OR extraction rerouted to Tier A
 - **§7.6**: Downstream of §7.4
