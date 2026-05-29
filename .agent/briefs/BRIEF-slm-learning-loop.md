@@ -54,10 +54,8 @@ Tier C stays unconfigured by deliberate design. No Anthropic API key will be set
 
 ### What is NOT yet wired
 
-- **Git post-commit hook** — design complete; script not written; no archive has the hook
-  installed. This is the primary gap: coding work (diffs) does not enter the training queue.
-- **Claude Code CORPUS bridge** — design complete; script not written; Claude Code session
-  text is not feeding LadybugDB entity extraction.
+- **Git post-commit hook** — ~~design complete; script not written~~ **SCRIPT WRITTEN** (`service-slm/scripts/git-post-commit-hook.sh`, commit `1d819d7c`). Install per archive: `cp service-slm/scripts/git-post-commit-hook.sh .git/hooks/post-commit && chmod +x`. No archive has the hook installed yet — Command Session action needed.
+- **Claude Code CORPUS bridge** — ~~design complete; script not written~~ **SCRIPT WRITTEN** (`service-slm/scripts/claude-session-bridge.py`, commit `1d819d7c`). Needs `local-claude-bridge.service` systemd unit + `CORPUS_WATCH_DIR` pointed at service-content's watched directory.
 
 ### Poison brief situation
 
@@ -112,12 +110,12 @@ export GOOSE_MODEL=claude-sonnet-4-6   # → Tier B if up; Tier A fallback
 
 ---
 
-## §4 — Sprint 1: tool_use shim (~200 LOC, Jennifer)
+## §4 — Sprint 1: tool_use shim — CODE COMPLETE (commit `1b47d3eb`, Jennifer)
 
 **File:** `service-slm/crates/slm-doorman-server/src/http.rs`
 
-The `/v1/messages` handler at line 1387 silently drops all `tool_use`/`tool_result` blocks.
-Full spec in plan file. Summary of 7 changes:
+Implemented 2026-05-29. 51/51 http_test pass, 102/102 slm-doorman tests pass.
+Summary of 7 changes (all implemented):
 
 1. Add `tools`, `tool_choice`, `top_p`, `top_k` to `AnthropicMessagesBody` (line ~1214)
 2. Tool-turn thinking suppression: when `tools.is_some()`, `reasoning_budget = 0` — workaround
