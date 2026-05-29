@@ -1,5 +1,14 @@
 # Changelog — moonshot-toolkit
 
+## 0.3.1 — 2026-05-29
+- `CompilePd`: add `-O2` flag. seL4 rootserver starts with SP uninitialised;
+  without optimisation the compiler emits a stack-frame prologue at `_start`
+  that immediately faults (`stp [sp, #-32]`). Required for all bare-metal PDs.
+- `examples/hello.c`: wired `SysDebugPutChar` (-9 via AArch64 `svc #0`). Now
+  prints "hello from seL4 rootserver" before entering the yield loop.
+- `build-totebox.sh` removed (migration reference; Phase 1C.d complete).
+- 35 tests total. Zero warnings.
+
 ## 0.3.0 — 2026-05-29
 - `AssembleImage` fully implemented: pure Rust orchestration produces a
   bootable `build/system-image.bin` (elfloader.elf). No Python, CMake, or
