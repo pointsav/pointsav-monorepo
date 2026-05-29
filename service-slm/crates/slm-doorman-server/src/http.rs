@@ -1215,13 +1215,35 @@ fn urlencoding_encode(s: &str) -> String {
 // =============================================================================
 
 /// Inbound: Anthropic Messages API request body.
+/// Anthropic `system` field: plain string or array of content blocks.
+/// The Anthropic SDK (and Goose) may send either form. We flatten to a string.
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum AnthropicSystem {
+    Text(String),
+    Blocks(Vec<AnthropicContentBlock>),
+}
+
+impl AnthropicSystem {
+    fn into_text(self) -> String {
+        match self {
+            AnthropicSystem::Text(s) => s,
+            AnthropicSystem::Blocks(blocks) => blocks
+                .into_iter()
+                .filter_map(|b| b.text)
+                .collect::<Vec<_>>()
+                .join("\n"),
+        }
+    }
+}
+
 /// No `#[serde(deny_unknown_fields)]` — `cache_control`, `anthropic-beta`,
 /// and other SDK-injected fields must not 400.
 #[derive(Deserialize)]
 struct AnthropicMessagesBody {
     model: String,
     #[serde(default)]
-    system: Option<String>,
+    system: Option<AnthropicSystem>,
     messages: Vec<AnthropicMessage>,
     max_tokens: u32,
     #[serde(default)]
@@ -1308,8 +1330,9 @@ fn anthropic_to_compute_request(
     let mut messages: Vec<ChatMessage> = Vec::new();
 
     if let Some(system) = body.system {
-        if !system.is_empty() {
-            messages.push(ChatMessage { role: "system".to_string(), content: system });
+        let text = system.into_text();
+        if !text.is_empty() {
+            messages.push(ChatMessage { role: "system".to_string(), content: text });
         }
     }
 
