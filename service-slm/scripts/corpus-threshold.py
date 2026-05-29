@@ -49,6 +49,29 @@ def count_files(glob_pattern: str) -> list:
     return list(CORPUS_ROOT.glob(glob_pattern))
 
 
+def count_valid_dpo_files(glob_pattern: str) -> list:
+    """Count apprenticeship JSONL files that carry a non-empty attempt.diff.
+
+    Files where attempt.diff is absent, null, or "" are degenerate tuples
+    produced when Tier B was unavailable and OLMo escalated without a diff.
+    They are not valid DPO signal and must not count toward the threshold.
+    """
+    valid = []
+    for path in CORPUS_ROOT.glob(glob_pattern):
+        try:
+            with open(path, "r") as f:
+                first_line = f.readline().strip()
+            if not first_line:
+                continue
+            row = json.loads(first_line)
+            attempt_diff = (row.get("attempt") or {}).get("diff") or ""
+            if attempt_diff:
+                valid.append(path)
+        except (OSError, json.JSONDecodeError):
+            continue
+    return valid
+
+
 def write_pending_marker(adapter_name: str, files: list, dry_run: bool = False) -> Path:
     timestamp = datetime.now(timezone.utc).isoformat()
     spec = ADAPTER_SPECS[adapter_name]
@@ -158,13 +181,21 @@ def main() -> None:
         if args.adapter and adapter_name != args.adapter:
             continue
 
-        files = count_files(spec["glob"])
+        if spec["method"] == "dpo":
+            files = count_valid_dpo_files(spec["glob"])
+            all_files = count_files(spec["glob"])
+            degenerate = len(all_files) - len(files)
+        else:
+            files = count_files(spec["glob"])
+            degenerate = 0
         count = len(files)
         threshold = spec["threshold"]
         at_threshold = count >= threshold
 
         print(f"  [{adapter_name}]")
-        print(f"    tuples:      {count} / {threshold} threshold")
+        print(f"    tuples:      {count} / {threshold} threshold (valid DPO signal)")
+        if degenerate:
+            print(f"    degenerate:  {degenerate} skipped (attempt.diff empty — Tier B was unavailable)")
         print(f"    method:      {spec['method']}")
         print(f"    description: {spec['description']}")
 
