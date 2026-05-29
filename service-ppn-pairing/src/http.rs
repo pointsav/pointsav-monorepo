@@ -202,9 +202,7 @@ pub fn run_server(addr: &str) -> Result<()> {
             ("POST", "/v1/node-join/approve") => handle_approve(&mut request),
             ("POST", "/v1/node-join/deny") => handle_deny(&mut request),
             ("GET", "/v1/node-join/pending") => handle_pending(),
-            _ if method == "GET" && url.starts_with("/v1/node-join/status/") => {
-                handle_status(&url)
-            }
+            _ if method == "GET" && url.starts_with("/v1/node-join/status/") => handle_status(&url),
             _ => json_err(404, "not found"),
         };
 
