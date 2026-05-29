@@ -1,20 +1,38 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-28T05:30Z — Think-model timeout + think-block stripping fix deployed; Yo-Yo TERMINATED (idle/session end)
+> Last updated: 2026-05-29T02:45Z — Sprint 2 wiring complete; tool_use fix deployed; Goose v1.36.0 installed; live test pending QEMU VM resolution
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## ✅ SYSTEM STATUS (2026-05-28)
+## ✅ SYSTEM STATUS (2026-05-29)
 
 | Service | State | Notes |
 |---|---|---|
-| `local-doorman.service` | active | `SLM_FORCE_BROKER_MODE=true`; SOCKET_TIMEOUT=180s/OUTER=300s; think-strip deployed |
-| `yoyo-tier-b-1` | **TERMINATED** | Stopped 2026-05-28T05:25 UTC; start when resuming work |
-| `local-content.service` | active | LadybugDB loaded ~05:09; CORPUS drain failing until Yo-Yo up |
-| `local-slm.service` | active | Tier A disabled; kept for service health only |
-| Shadow capture | queued | 8GKR brief in queue (retrying); 539 done; drain-backoff fix deployed |
+| `local-doorman.service` | active | `SLM_FORCE_BROKER_MODE=false`; Tier A live; tool_use format fix deployed |
+| `local-slm.service` (llama-server) | active | OLMo-2-7B Q4_K_M; **1 slot busy** (task 1590 — CPU starved by QEMU vm-mediakit) |
+| `yoyo-tier-b-1` | **TERMINATED** | Stopped 2026-05-28; circuit breaker OPEN; start to enable entity extraction |
+| `local-content.service` | active (restarted 02:37Z) | LadybugDB loading; extraction BLOCKED by Tier B circuit open |
+| `local-claude-bridge.service` | active | Watching ~/.claude/projects/**; CORPUS files writing ✓ |
+| Shadow capture | active ✓ | Git hook fires; briefs queueing correctly every commit |
+| `vm-mediakit` QEMU | **RUNNING 95% CPU** | Started 02:15Z from project-infrastructure; starving llama-server |
+
+### ⚠️ ACTION REQUIRED: QEMU VM blocking live inference
+`qemu-system-x86_64 -accel tcg -m 6144M` (PID 3949093, no KVM) consuming 95% CPU continuously.
+Task 1590 in llama-server running since 02:18Z decoded ~22 tokens in 25 min (normal: 1.7 tok/s).
+3 requests queued behind it. Confirm with project-infrastructure owner then kill if appropriate:
+```bash
+kill 3949093   # kills vm-mediakit — verify it is safe first
+```
+
+### Learning loop §7 status (2026-05-29T02:45Z)
+- ✅ §7.1 `has_local: true` — verified
+- ⚠️ §7.2 Goose session — Goose v1.36.0 installed at `/usr/local/bin/goose`; test pending QEMU
+- ⚠️ §7.3 tool_use routing — fix committed (104 tests); live SSE pending QEMU resolution
+- ❌ §7.4 entities extracted — Tier B circuit OPEN; extraction deferred until Yo-Yo VM up
+- ✅ §7.5 git commit → shadow hit — verified
+- ❌ §7.6 corpus-threshold → training — downstream of §7.4
 
 **To start the Yo-Yo after it idles/stops:**
 ```bash
