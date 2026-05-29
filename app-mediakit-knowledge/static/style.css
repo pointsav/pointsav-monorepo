@@ -2458,6 +2458,61 @@ nav.mobile-bottom-bar {
   .page-body pre { font-size: 12.5px; }
 }
 
+/* Phase 7F — Tufte sidenotes for layout:journal articles */
+
+/* Mobile-first: sidenote toggle via checkbox pattern */
+.sn-toggle-input { display: none; }
+.sn-toggle {
+  display: inline;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--mw-color-link);
+  vertical-align: super;
+  line-height: 1;
+}
+.sidenote { display: none; }
+.sn-toggle-input:checked + .sidenote {
+  display: inline;
+  background: var(--mw-color-base-10);
+  border-left: 3px solid var(--mw-color-base-50);
+  padding: 0.25em 0.5em;
+  margin-left: 0.25em;
+  border-radius: 0 3px 3px 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* Wide screen: absolute-positioned marginal sidenotes */
+@media (min-width: 1280px) {
+  [data-layout="journal"] .sn-toggle { display: none; }
+  [data-layout="journal"] .sn-toggle-input { display: none; }
+  [data-layout="journal"] .sidenote-anchor { position: relative; }
+  [data-layout="journal"] .sidenote {
+    display: block;
+    position: absolute;
+    right: -17rem;
+    width: 14rem;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: var(--mw-color-base-30);
+    font-style: normal;
+  }
+}
+
+/* Phase 7G+7H — auto-numbered sections for corporate instance */
+[data-instance="woodfine-corporate"] div.prose { counter-reset: h2-counter h3-counter; }
+[data-instance="woodfine-corporate"] div.prose[data-numbered="false"] { counter-reset: none; }
+[data-instance="woodfine-corporate"] div.prose:not([data-numbered="false"]) h2::before {
+  counter-increment: h2-counter;
+  counter-reset: h3-counter;
+  content: counter(h2-counter) ". ";
+}
+[data-instance="woodfine-corporate"] div.prose:not([data-numbered="false"]) h3::before {
+  counter-increment: h3-counter;
+  content: counter(h2-counter) "." counter(h3-counter) " ";
+}
+
 /* Sticky scroll header (minimal, appears on scroll) */
 .wiki-sticky-header {
   display: none;
