@@ -25,6 +25,9 @@ notes_for_editor: >
   VM-Infrastructure: usar "flota de hosts con confianza en malla" y no "clúster".
   Frontmatter del artículo al confirmar: title "Arquitectura VM-* y Familia de SO",
   category "systems", status "active", quality "review".
+  ACTUALIZACIÓN 2026-05-29 (sesión 12): Corrección NetBSD/bhyve → NetBSD/NVMM.
+  Restricción Microkit x86-64 aclarada: no es solo AArch64; límite de 1 vCPU/invitado.
+  NUEVA SECCIÓN: "Agrupación de Recursos" — arquitectura service-vm-fleet + service-vm-host.
 research_done_count: 5
 research_suggested_count: 0
 open_questions_count: 0
@@ -117,6 +120,16 @@ La Fase 1 para todos los tipos de VM utiliza Ubuntu 24.04 bajo QEMU (acelerado p
 
 La Fase 2 prevé alojar cada VM de forma más ligera: jails de FreeBSD para el aislamiento por carga de trabajo de MediaKit, Alpine Linux con binarios estáticos enlazados a musl para Totebox, y sandboxing gVisor para los agregadores de Orchestration.
 
-La Fase 3 es el objetivo previsto de unikernel. Se prevé que VM-Totebox y VM-MediaKit se ejecuten como dominios de protección seL4 Microkit en hardware AArch64 (condicionado a la adquisición de hardware). Se prevé que los procesos del agregador de VM-Orchestration apunten a NanoVMs/OPS; las cargas de trabajo de inferencia SLM y GPU se prevé que permanezcan en un host Linux completo. Se prevé que la propia flota de hosts (VM-Infrastructure) ejecute el binario `os-infrastructure` en NetBSD+bhyve (capa de compatibilidad x86-64) o seL4+Microkit (capa nativa AArch64).
+La Fase 3 es el objetivo previsto de unikernel. Se prevé que VM-Totebox y VM-MediaKit se ejecuten como dominios de protección seL4 Microkit en hardware AArch64 (condicionado a la adquisición de hardware). Se prevé que los procesos del agregador de VM-Orchestration apunten a NanoVMs/OPS; las cargas de trabajo de inferencia SLM y GPU se prevé que permanezcan en un host Linux completo. Se prevé que la propia flota de hosts (VM-Infrastructure) ejecute el binario `os-infrastructure` en NetBSD/NVMM (capa de compatibilidad x86-64, Fase 2) o seL4+Microkit (capa nativa AArch64, Fase 3).
 
-La restricción de Microkit 2.2.0 — solo AArch64 a partir de 2026 — implica que la Fase 3 en hardware x86-64 utiliza la ruta de compatibilidad NetBSD/bhyve, no la ruta seL4. Ambas rutas comparten el mismo libro mayor de capacidades (`system-core`).
+Microkit 2.2.0 incluye un objetivo `x86_64_generic_vtx`, pero la Microkit x86-64 está limitada a un vCPU por máquina virtual y requiere Intel VT-x. La ruta de producción prevista para la Fase 3 es AArch64. La Fase 2 en x86-64 utiliza NetBSD/NVMM — el hipervisor nativo de NetBSD disponible desde NetBSD 9.0, mediante QEMU con el indicador `-accel nvmm`. Ambas rutas comparten el mismo libro mayor de capacidades (`system-core`).
+
+## Agrupación de Recursos
+
+La malla WireGuard de tres nodos (un nodo en la nube y hasta dos nodos locales) forma un grupo unificado de recursos de máquinas virtuales. Esta agrupación es una primitiva PPN de nivel gratuito: los operadores no pagan por cada nodo unido al grupo.
+
+Dos servicios implementan el grupo. `service-vm-host` se ejecuta en cada nodo de infraestructura: sondea la utilización local de CPU y RAM cada diez segundos y envía un latido al controlador de la flota. `service-vm-fleet` se ejecuta en el nodo en la nube y recibe esos latidos, expulsando cualquier nodo que permanezca silencioso durante más de treinta segundos. Cuando un operador solicita una nueva máquina virtual, el controlador de la flota aplica una ubicación orientativa — seleccionando el nodo con más RAM disponible por encima de un margen de seguridad — y envía la solicitud de creación.
+
+La migración en vivo de máquinas virtuales está excluida de forma permanente. El ancho de banda de WireGuard a través de enlaces de internet típicos haría que migrar una VM activa fuera inviable; las máquinas virtuales se colocan una vez y permanecen en el nodo asignado. Esta es una invariante arquitectónica, no una opción de configuración.
+
+Crear una VM es una acción del operador y requiere confirmación explícita en el panel F9 de `app-network-admin`. La selección de nodo por parte del controlador de la flota es infraestructura orientativa y no requiere confirmación. Las instancias de VM-Totebox siempre deben asignarse a un nodo específico, ya que los datos del archivo WORM no son transferibles a través de la red.

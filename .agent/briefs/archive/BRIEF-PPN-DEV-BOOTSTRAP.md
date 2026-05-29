@@ -212,7 +212,7 @@ The PPN hypervisor (`os-infrastructure`) manages a per-node pool of CPU and RAM:
 | Hypervisor | Isolation claim | Formal proof | Status |
 |---|---|---|---|
 | QEMU/KVM (Linux) | Process isolation + EPT | None | **Used for proof today on Laptop A** |
-| NetBSD/bhyve | EPT isolation; VeriExec load-time integrity | Argued (not proved) | compat bottom target |
+| NetBSD/NVMM | EPT isolation; VeriExec load-time integrity; in-kernel `wg(4)` | Argued (not proved) | compat bottom target |
 | seL4 (AArch64) | Machine-checked IFC; intransitive non-interference | Murray et al. 2013 | native bottom target (moonshot-kernel) |
 
 ### KVM availability
@@ -250,7 +250,7 @@ What it does:
    Totebox service is reachable inside a VM through the PPN mesh
 
 This is "Totebox Orchestration using a VM": the VM IS the cluster-totebox host.
-When `os-infrastructure` compiles, KVM is replaced by the bhyve/seL4 hypervisor.
+When `os-infrastructure` compiles, KVM is replaced by the NetBSD/NVMM or seL4 hypervisor.
 The ceremony and mesh provisioning are unchanged.
 
 ---
@@ -496,14 +496,32 @@ Rebuild vendor-sel4-kernel pc99 with `KernelPrinting=ON`; add `AssembleMultiboot
 to moonshot-toolkit; this enables the Debian 12 QCOW2 replacement path on x86_64 GCP.
 Estimated: significant new build track. Recommendation: prefer AArch64 GCP C4A instance.
 
-### Microkit x86_64 status (confirmed by internet research 2026-05-29)
+### Microkit x86_64 status (corrected 2026-05-29)
 
-Microkit 2.2.0 supports **AArch64 and RISC-V 64 only**. x86_64 seL4 requires raw seL4 + CAmkES
-(not Microkit). No known production seL4 deployments on x86_64 in 2025-2026. Commercial
-momentum (Cog/Riverside Research, NASA cFS, Collins flight vehicle) is AArch64-dominant.
-The seL4 Foundation advises small teams: incremental cyber-retrofit, AArch64 bare metal first.
+Microkit 2.2.0 includes an `x86_64_generic_vtx` (pc99) target in `platforms.yml` — it is
+NOT AArch64-only as previously documented. However, x86-64 Microkit carries severe constraints:
+**1 vCPU per VM (hard cap)**, **Intel VT-x only (AMD-V unsupported)**, and MCS verification
+dates are unconfirmed for x86-64. Commercial momentum (Cog/Riverside Research, NASA cFS,
+Collins flight vehicle) remains AArch64-dominant. **AArch64 is the correct Phase 3 production
+path.** x86-64 seL4 via Microkit is buildable but capacity-capped; use NetBSD/NVMM for
+Phase 2 x86-64 instead.
+
+### WireGuard Part A-lite status (confirmed live 2026-05-29)
+
+10.8.0.0/24 mesh is fully operational. All three nodes are reachable:
+- **Laptop A** (iMac / Linux Mint): 10.8.0.6
+- **Laptop B** (WireGuard hub): 10.8.0.1 · public 24.86.192.209:51820
+- **GCP VM** (foundry-workspace): 10.8.0.9
+
+SSH connectivity verified between all node pairs. The first PPN resource pooling tier
+(service-vm-fleet + service-vm-host) can be deployed across this live mesh immediately
+once the three new crates are scaffolded.
+
+**GCP KVM absent:** `/dev/kvm` not present on foundry-workspace. Operator action required:
+enable nested virtualization in GCP console before Phase 2 KVM-accelerated VM work begins.
+See BRIEF-PPN-ARCHITECTURE.md §13.
 
 ---
 
-*End of BRIEF — project-infrastructure / 2026-05-28 (§12 added 2026-05-29)*
+*End of BRIEF — project-infrastructure / 2026-05-29 (Microkit x86-64 corrected; WireGuard live status added)*
 *Activating the first ceremony: service-ppn-pairing on GCP VM + os-network-admin on Laptop A*

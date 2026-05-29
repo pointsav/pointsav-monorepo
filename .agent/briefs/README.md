@@ -23,6 +23,8 @@ Engine-agnostic: all engines (Claude Code, Gemini CLI) read and write here.
 | BRIEF-PPN-DEV-BOOTSTRAP.md | Operational BRIEF — activate first PPN ceremony on live WireGuard mesh (Laptop A + B + GCP). Dogfood principle; deployment steps; virtualization proof; address plan migration. | active |
 | BRIEF-VM-ARCHITECTURE.md | VM-* to os-* canonical mapping; placement principle; 3-node trust mesh; unikernel roadmap; infrastructure/ directory layout; phase checklists. | active |
 | BRIEF-active-work.md | Current work queue — consolidated action brief | active |
+| BRIEF-LEAPFROG-2030.md | Leapfrog 2030 resource targets — all five os-* types; Phase 2 (NetBSD/NVMM) + Phase 3 (seL4/unikernel) disk/RAM targets; Rust binary size discipline; engineering constraints. | active |
+| BRIEF-OS-FAMILY.md | Single consolidated reference for all five os-* types — purpose, hosted services, placement principle, phase stacks, resource targets, blocking decisions. Read before starting work on any os-*/system-*/service-* crate. | active |
 | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md | Knowledge-platform editorial execution plan (complete; archival operator-gated §9) | active |
 | BRIEF-framework-pointsav-products-services.md | PointSav products & services — research-archive framework (standing reference) | active |
 

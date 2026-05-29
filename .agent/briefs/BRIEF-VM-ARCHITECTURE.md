@@ -94,9 +94,16 @@ Long-term: each `os-*` becomes a binary — either a lightweight BSD image or a 
 | **VM-MediaKit** | Ubuntu 24.04 QEMU (TCG/KVM) | FreeBSD jails (1 per workload) | seL4 Microvisor 1:1 microVM per workload |
 | **VM-Orchestration** | Ubuntu 24.04 QEMU (TCG/KVM) | + gVisor sandboxing for aggregators | NanoVMs for aggregators; fat Linux stays for SLM/GPU inference |
 | **VM-PrivateGit** | Ubuntu 24.04 QEMU (TCG/KVM) | FreeBSD jail around Gitea | gVisor or seL4 microVM |
-| **VM-Infrastructure** (host OS) | Linux + KVM/TCG | NetBSD + bhyve on x86-64 (compat bottom) | seL4 + Microkit 2.2.0 on AArch64 (native bottom; requires hw acquisition) |
+| **VM-Infrastructure** (host OS) | Linux + KVM/TCG | NetBSD/NVMM on x86-64 (compat bottom; QEMU `-accel nvmm`) | seL4 + Microkit 2.2.0 on AArch64 (native bottom; requires hw acquisition) |
 
-**Binding constraint:** Microkit 2.2.0 is AArch64-only as of May 2026. Phase 3 seL4 implicitly requires AArch64 hardware purchase. x86-64 nodes stay on NetBSD/bhyve (compat bottom). Both bottoms share the same capability ledger (system-core).
+**Binding constraints (corrected 2026-05-29):**
+- Microkit 2.2.0 includes `x86_64_generic_vtx` (pc99) target — NOT AArch64-only — but
+  x86-64 Microkit is capacity-capped: **1 vCPU per guest max**, **Intel VT-x only** (AMD-V
+  unsupported). AArch64 is the correct Phase 3 production path.
+- Phase 2 compat bottom is **NetBSD/NVMM** (not bhyve — bhyve is FreeBSD's hypervisor).
+  NVMM is mainline in NetBSD since 9.0; NetBSD 11.0 adds in-kernel `wg(4)` WireGuard and
+  the MICROVM kernel config (NetBSD 11.0 RC4, May 2026).
+- Both compat and native bottoms share the same capability ledger (system-core).
 
 ---
 
@@ -188,9 +195,75 @@ Host-level systemd units (`local-vm-mediakit.service`, future `local-vm-totebox.
 
 | Decision | Impact |
 |---|---|
-| AArch64 hardware (GCP C4A or Firecracker x86-64 on Laptop A) | Phase 3 seL4 Microkit — AArch64-only |
+| AArch64 hardware (GCP C4A or Firecracker x86-64 on Laptop A) | Phase 3 seL4 Microkit — AArch64 preferred; x86-64 limited to 1 vCPU/guest |
 | Q2: Ratify 10.50.0.0/24 as canonical PPN subnet | Genesis Protocol INVENTORY.yaml; guide-mesh-orchestration.md |
 | Q3: GCP static IP for cloud relay | fleet-infrastructure-cloud/guide-provision-relay.md |
 | Q4: Laptop B local IP + network.woodfinegroup.com DNS | guide-deploy-vpn.md; guide-mesh-execution.md |
 | Q5: Doorman deployed at localhost:9080? | app-network-admin F8 subprocess → HTTP migration |
+| GCP nested KVM enablement | Unblocks KVM-accelerated VM provisioning on GCP; currently all QEMU runs TCG |
 | `/opt/mediakit/bin/` → `/opt/<vm-name>/bin/` | New VMs use per-VM path; MediaKit Phase 1 path stays as-is (no retroactive migration) |
+
+---
+
+## §8 — Resource Pooling Layer (added 2026-05-29)
+
+The three-node WireGuard mesh forms a unified VM resource pool. This is a free-tier PPN
+primitive — NOT the paid Orchestration tier. Three new crates implement the pool:
+
+```
+Laptop A               Laptop B (hub)         GCP VM
+service-vm-host        service-vm-host        service-vm-fleet :9203
+     │                      │                      │
+     └──── WireGuard heartbeat (10s) ──────────────┘
+                                                    │
+                                              app-network-admin
+                                              F9 panel (ratatui)
+```
+
+**`service-vm-host`** (one per node, outbound-only):
+- Polls `/proc/meminfo` + `/proc/loadavg` every 10s
+- Queries QEMU UNIX monitor socket per running VM → `VmRecord`
+- POSTs `NodeHeartbeat` to `service-vm-fleet` at `VM_FLEET_ENDPOINT`
+- Systemd: `infrastructure/systemd/ppn/local-vm-host.service`
+
+**`service-vm-fleet`** (GCP-resident, :9203):
+- Receives heartbeats; evicts nodes silent >30s
+- Placement: `ram_available_mb >= request.ram_mb + 512`; sort `ram_available_mb DESC`
+- VM-Totebox: `preferred_node` must be caller-specified (WORM data cannot migrate over WireGuard)
+- `auto_rebalance: false` — permanent architectural invariant; live migration excluded
+- Systemd: `infrastructure/systemd/orchestration/local-vm-fleet.service`
+
+**F12 doctrine (SYS-ADR-10):** "Create VM" is F12-gated. Scheduler's node choice is NOT.
+
+**`system-vm-fleet-types`** (`no_std`-compatible): shared wire types for both services.
+
+---
+
+## §9 — Leapfrog 2030 Resource Targets (added 2026-05-29)
+
+Phase 2 (NetBSD/NVMM host) and Phase 3 (seL4 unikernel) resource targets per os-* image.
+See `BRIEF-LEAPFROG-2030.md` for full rationale, engineering constraints, and benchmarks.
+
+| os-* | P2 disk | P2 RAM idle | P3 disk | P3 RAM idle | P3 RAM loaded | P3 OS stack |
+|---|---|---|---|---|---|---|
+| os-infrastructure | 120 MB | 48 MB | **8 MB** | **12 MB** | 48 MB | seL4+Microkit 2.x (AArch64) |
+| os-totebox | 80 MB | 64 MB | **16 MB** | **24 MB** | 96 MB | Nanos/OPS or seL4+Microkit |
+| os-mediakit | 600 MB | 180 MB | **24 MB†** | **32 MB†** | 128 MB† | Unikraft+Rust |
+| os-orchestration | 96 MB | 96 MB | **12 MB** | **18 MB** | 80 MB | Unikraft+Rust |
+| os-privategit | 180 MB | 96 MB | **20 MB†** | **24 MB†** | 96 MB† | Unikraft+Rust |
+| seL4 baseline (7 PDs, no services) | 2 MB | 3 MB | — | — | — | seL4 kernel 162 KiB |
+
+† contingent on retiring MediaWiki/PHP (os-mediakit) and Gitea/Go (os-privategit) — application decisions, not OS decisions.
+
+**Positioning:** Phase 3 targets are 4–10× lighter than Lambda 128 MB floor, 20–40× lighter than Cloud Run 512 MiB.
+
+**Key engineering discipline (all new service-* crates):**
+```toml
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+```
+Use `tokio::main(flavor = "current_thread")` for all daemons except service-fs.

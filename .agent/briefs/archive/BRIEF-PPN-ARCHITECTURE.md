@@ -20,7 +20,7 @@ description: >
 
 ## Abstract
 
-Small and medium businesses operate the long tail of the world's compute but cannot afford the operations staff that enterprise virtualization platforms presume. Existing Type I hypervisors require multi-day deployment, dedicated networking expertise, and continuous patching — capital and labour the SMB does not have. The **PointSav Private Network (PPN)** is a Type I hypervisor platform that lets an SMB stand up a formally-isolated private virtualization cluster in under five minutes by answering two questions: *Is this the first node?* and *What is the address of the existing network?* PPN couples a **Two-Bottoms Sovereign Substrate** — seL4 (formally verified, AArch64-first) for modern hardware, NetBSD/bhyve for commodity x86-64 hardware without IOMMU — with a **capability ledger** that mediates every cross-VM operation, a zero-config L2 discovery layer, and a short-code pairing ceremony for cluster join. We extend the seL4 Isabelle/HOL proof to establish a tenant-isolation invariant asserting that the hypervisor layer can enumerate and schedule VMs but has zero read capability over VM-internal state. We evaluate PPN with a [N]-operator user study and a hardware benchmark suite. Median time-to-first-VM is [T] seconds (vs. [T_ref] seconds for Proxmox VE); the isolation theorem adds [L] lines of Isabelle script over the seL4 baseline. PPN demonstrates that formally-grounded private virtualization can be delivered at SMB cost and SMB operator skill, broadening the population for whom sovereign compute is reachable.
+Small and medium businesses operate the long tail of the world's compute but cannot afford the operations staff that enterprise virtualization platforms presume. Existing Type I hypervisors require multi-day deployment, dedicated networking expertise, and continuous patching — capital and labour the SMB does not have. The **PointSav Private Network (PPN)** is a Type I hypervisor platform that lets an SMB stand up a formally-isolated private virtualization cluster in under five minutes by answering two questions: *Is this the first node?* and *What is the address of the existing network?* PPN couples a **Two-Bottoms Sovereign Substrate** — seL4 (formally verified, AArch64-first) for modern hardware, NetBSD/NVMM for commodity x86-64 hardware without IOMMU — with a **capability ledger** that mediates every cross-VM operation, a zero-config L2 discovery layer, and a short-code pairing ceremony for cluster join. We extend the seL4 Isabelle/HOL proof to establish a tenant-isolation invariant asserting that the hypervisor layer can enumerate and schedule VMs but has zero read capability over VM-internal state. We evaluate PPN with a [N]-operator user study and a hardware benchmark suite. Median time-to-first-VM is [T] seconds (vs. [T_ref] seconds for Proxmox VE); the isolation theorem adds [L] lines of Isabelle script over the seL4 baseline. PPN demonstrates that formally-grounded private virtualization can be delivered at SMB cost and SMB operator skill, broadening the population for whom sovereign compute is reachable.
 
 ---
 
@@ -38,9 +38,9 @@ Small and medium-sized businesses face a structural mismatch between the infrast
 
 This thesis makes five contributions:
 
-1. **The Two-Bottoms Sovereign Substrate.** A capability ledger and proof-chain protocol that operates *unchanged* on two heterogeneous substrates: seL4 on AArch64 (with machine-checked IFC inheritance) and NetBSD/bhyve on commodity x86-64 (with software-enforced capability mediation in the absence of VT-d/IOMMU). No prior system has demonstrated a single capability semantics spanning a verified microkernel and a commodity Type I monitor while preserving an end-to-end proof obligation across the join. This extends formal-substrate deployments to the installed base of pre-IOMMU SMB hardware without forking the operator model.
+1. **The Two-Bottoms Sovereign Substrate.** A capability ledger and proof-chain protocol that operates *unchanged* on two heterogeneous substrates: seL4 on AArch64 (with machine-checked IFC inheritance) and NetBSD/NVMM on commodity x86-64 (with software-enforced capability mediation in the absence of VT-d/IOMMU). No prior system has demonstrated a single capability semantics spanning a verified microkernel and a commodity Type I monitor while preserving an end-to-end proof obligation across the join. This extends formal-substrate deployments to the installed base of pre-IOMMU SMB hardware without forking the operator model.
 
-2. **A machine-checked hypervisor-blind isolation invariant.** Building on seL4's noninterference proof [Murray et al. 2013], we formulate and discharge an isolation invariant stating that the PPN hypervisor layer, while it may enumerate and schedule VMs, has *zero read capability* over VM-internal state. The contribution is the explicit construction of the operator-facing capability graph such that the existing seL4 IFC theorem applies to a real Type I deployment, plus a transcribed analogue for the NetBSD/bhyve bottom that makes the trust delta legible.
+2. **A machine-checked hypervisor-blind isolation invariant.** Building on seL4's noninterference proof [Murray et al. 2013], we formulate and discharge an isolation invariant stating that the PPN hypervisor layer, while it may enumerate and schedule VMs, has *zero read capability* over VM-internal state. The contribution is the explicit construction of the operator-facing capability graph such that the existing seL4 IFC theorem applies to a real Type I deployment, plus a transcribed analogue for the NetBSD/NVMM bottom that makes the trust delta legible.
 
 3. **Sub-five-minute SMB deployment via a two-question bootstrap and short-code pairing ceremony.** The first Type I sovereign hypervisor platform whose end-to-end installer — bare metal to a running, attested first VM — is mediated by a two-question prompt and a Crockford base32 short-code pairing exchange (adapting the IoT short-code literature [Vaudenay 2005, Fomichev et al. 2018] to a hypervisor substrate). Validated by an N-operator user study measuring time-to-first-VM, error-recovery paths, and self-reported confidence.
 
@@ -98,15 +98,17 @@ seL4 acquired ARM virtualization-extension support from v3.2.0 and x86-64 VT-x s
 
 ---
 
-## 4. Background: NetBSD/bhyve — The Compatibility Substrate
+## 4. Background: NetBSD/NVMM — The Compatibility Substrate
 
-### 4.1 bhyve
+### 4.1 NVMM
 
-Introduced in FreeBSD 10.0 [18], bhyve uses Intel EPT for hardware-accelerated guests on Sandy Bridge and later x86 hardware — EPT is a VT-x feature, not VT-d-dependent. Without VT-d, PCI passthrough is unavailable; the compat bottom exposes only paravirtual virtio devices, accepting host-mediated DMA in exchange for working on pre-2012 SMB hardware including the reference iMac 12,1 (i5-2400S, BCM57765 wired NIC served by NetBSD's `bge(4)`).
+NVMM (NetBSD Virtual Machine Monitor) is NetBSD's native bare-metal hypervisor, mainline since NetBSD 9.0. It uses Intel VT-x EPT (or AMD-V on AMD systems) for hardware-accelerated guests on Sandy Bridge and later x86 hardware — EPT is a VT-x feature, not VT-d-dependent. Without VT-d, PCI passthrough is unavailable; the compat bottom exposes only paravirtual virtio devices, accepting host-mediated DMA in exchange for working on pre-2012 SMB hardware including the reference iMac 12,1 (i5-2400S, BCM57765 wired NIC served by NetBSD's `bge(4)`). QEMU uses NVMM via the `-accel nvmm` flag. NetBSD 11.0 (2024) ships in-kernel `wg(4)` WireGuard and a `MICROVM` x86_64 kernel configuration for lightweight guest hosting. Capacity: 128 VMs × 256 vCPU × 128 GB RAM per host.
+
+Note: bhyve is a FreeBSD/illumos hypervisor (McKusick, Neville-Neil, Watson [18]) — distinct from NVMM. The compat bottom of PPN uses NetBSD + NVMM, not FreeBSD + bhyve. bhyve is noted in §2.2 as related work for comparison.
 
 ### 4.2 Rump Kernels
 
-Kantee's Aalto doctoral thesis (2012) [27] introduced the *anykernel*: a single NetBSD source tree from which kernel components (TCP/IP, file systems, drivers) compile either monolithically or as user-mode rump-kernel libraries. Kantee and Cormack [28] demonstrated the full NetBSD network stack, NFS/FFS, and most PCI NICs available as rump components. PPN uses rump kernels to host network and storage stacks as ordinary processes under bhyve's host NetBSD.
+Kantee's Aalto doctoral thesis (2012) [27] introduced the *anykernel*: a single NetBSD source tree from which kernel components (TCP/IP, file systems, drivers) compile either monolithically or as user-mode rump-kernel libraries. Kantee and Cormack [28] demonstrated the full NetBSD network stack, NFS/FFS, and most PCI NICs available as rump components. PPN uses rump kernels to host network and storage stacks as ordinary processes under NVMM's host NetBSD.
 
 ### 4.3 Veriexec
 
@@ -116,7 +118,7 @@ Efrat's Veriexec [29] is NetBSD's in-kernel file-integrity subsystem: a signed m
 
 The Mach anykernel (Accetta et al. 1986) [30] and OKL4 Microvisor (Heiser & Leslie, APSys 2010) [31] established that microkernels and hypervisors converge in practice. Reproducible builds on NetBSD (Lamb & Zacchiroli, IEEE Software 2022 [32]) make Veriexec's fingerprint manifests independently auditable rather than vendor-trusted.
 
-**Role in PPN.** The NetBSD/bhyve bottom activates when the PPN bootloader detects absent or non-functional DMAR ACPI tables — the test for VT-d. It runs the same cartridge artifacts the seL4 native bottom runs, trading seL4's machine-checked isolation guarantees for measurable load-time integrity and a well-understood UNIX TCB.
+**Role in PPN.** The NetBSD/NVMM bottom activates when the PPN bootloader detects absent or non-functional DMAR ACPI tables — the test for VT-d. It runs the same cartridge artifacts the seL4 native bottom runs, trading seL4's machine-checked isolation guarantees for measurable load-time integrity and a well-understood UNIX TCB.
 
 ---
 
@@ -203,14 +205,19 @@ PPN's differentiation is the combination: every competitor approaching PPN's boo
 
 ## 9. Implementation Roadmap
 
-### 9.1 Current State (2026-05-27)
+### 9.1 Current State (2026-05-29 — updated)
+
+**Seeded architectural corrections (2026-05-29):**
+- **Microkit 2.2.0 x86-64 support confirmed** — `x86_64_generic_vtx` target exists in `platforms.yml` (pc99). Constraints: **1 vCPU per guest max**, **Intel VT-x only (AMD-V unsupported)**, no MCS verification date. AArch64 remains the correct Phase 3 production path; x86-64 seL4 is buildable but capacity-capped. The claim "AArch64-only" was incorrect.
+- **WireGuard Part A-lite LIVE** — 10.8.0.0/24 mesh operational: Laptop A (10.8.0.6), Laptop B hub (10.8.0.1, public 24.86.192.209:51820), GCP (10.8.0.9). SSH verified between all nodes.
+- **GCP KVM absent** — `/dev/kvm` not present on GCP workspace VM. Nested virtualization not enabled. All QEMU currently runs TCG (~10× slower). Operator action: enable nested KVM in GCP console.
 
 **Native bottom (seL4):**
 - `vendor-sel4-kernel/` — seL4 v15.0.0, Microkit 2.2.0, rust-sel4 4.0.0. Quarantined dependency; moonshot-kernel is long-horizon replacement.
 - `system-substrate-broadcom/` — 4-line scaffold. Exports only `system_status()`. Missing: `silicon_ping()`, NIC detection.
 - `system-network-interface/` — 4-line scaffold lib (correct after split; F8 Gateway binary extracted).
 
-**Compat bottom (NetBSD/bhyve):**
+**Compat bottom (NetBSD/NVMM):**
 - `os-infrastructure/src/main.rs` — **DOES NOT COMPILE.** Imports 5 non-existent symbols from scaffold libs (`silicon_ping`, `enable_monitor_mode`, `init_dma_engine`, `hunt_for_eapol`, `RX_BUFFERS`). Current approach (EAPOL monitor mode) is **superseded** by the Genesis Protocol architecture described in the published TOPICs. This file must be rewritten.
 
 **F8 Terminal Gateway:**
@@ -260,7 +267,7 @@ PPN's differentiation is the combination: every competitor approaching PPN's boo
  │  └─────────────┘   └─────────────┘   └─────────────┘  │
  │                                                         │
  │  Native bottom: seL4 v15 (AArch64, VT-d present)        │
- │  Compat bottom: NetBSD/bhyve (x86-64, no VT-d, EPT)     │
+ │  Compat bottom: NetBSD/NVMM (x86-64, no VT-d; NVMM EPT) │
  └─────────────────────────────────────────────────────────┘
               │ WireGuard mesh (ppn0, port 8090)
               │ 10.50.0.0/24 (candidate; ratification pending)
@@ -301,7 +308,7 @@ CPU pool management uses cgroups v2 `cpu.weight` per QEMU process. Higher-weight
 
 The resource pool is bounded to a single physical PPN node. A node's RAM and vCPUs are not shared with other nodes across the WireGuard mesh. Cross-node workload placement — routing work to whichever node has capacity — is the responsibility of the Totebox Orchestration Layer (`os-orchestration` + `gateway-orchestration-command-1`), which assigns workloads to cluster-totebox-* nodes via MBA pairing. The PPN pool and the Totebox workload scheduler are orthogonal and communicate only at the boundary of VM lifecycle events (create, destroy, resize).
 
-**Implementation status:** `virtio_balloon` device flag is available in QEMU 7.x+ and in the NetBSD/bhyve bhyve(8) `virtio_balloon` module. The balloon controller logic (`os-infrastructure` deciding when to inflate/deflate based on demand signals from each VM) is a future milestone in the §9.2 build order.
+**Implementation status:** `virtio_balloon` device flag is available in QEMU 7.x+ with `-accel nvmm`; NVMM supports virtio paravirtual devices via QEMU's virtio backend. The balloon controller logic (`os-infrastructure` deciding when to inflate/deflate based on demand signals from each VM) is a future milestone in the §9.2 build order.
 
 ---
 
@@ -313,10 +320,10 @@ The resource pool is bounded to a single physical PPN node. A node's RAM and vCP
 
 **Claim B — Formal isolation invariant:**
 - Extend the seL4 Isabelle/HOL `l4v` repository. State PPN's tenant-VM non-interference property as an Isabelle theorem over the abstract spec; refine through the existing forward-simulation framework; discharge with `auto`/`clarsimp`/`wp` plus manual lemmas. Report: theorem statement, new proof-script line count, remaining axioms vs. discharged invariants.
-- For NetBSD/bhyve: isolation is argued, not proved. Explicit "Trust assumptions on bhyve" subsection enumerates the TCB delta.
+- For NetBSD/NVMM: isolation is argued, not proved. Explicit "Trust assumptions on bhyve" subsection enumerates the TCB delta.
 
 **Claim C — Two-Bottoms substrate equivalence:**
-- Comparative micro/macro benchmarks on (a) seL4 substrate, (b) NetBSD/bhyve substrate. Micro: capability-grant latency, IPC round-trip, page-fault dispatch. Macro: VM cold-boot, 10-VM cluster-join, sustained TCP throughput, memory-balloon reclaim. n = 30 runs; geometric-mean overhead vs. bare-metal Linux/KVM baseline; 95% CI.
+- Comparative micro/macro benchmarks on (a) seL4 substrate, (b) NetBSD/NVMM substrate. Micro: capability-grant latency, IPC round-trip, page-fault dispatch. Macro: VM cold-boot, 10-VM cluster-join, sustained TCP throughput, memory-balloon reclaim. n = 30 runs; geometric-mean overhead vs. bare-metal Linux/KVM baseline; 95% CI.
 - Capability-ledger semantic equivalence: replay a 10k-event ledger trace on both substrates; diff resulting capability graphs (must be bit-identical modulo timestamps).
 
 **SOSP/OSDI artifact targets:** Available + Functional + Results-Reproduced badges. Public Git mirror, deterministic Nix flake build, reviewer VM image with one-command `make repro`.
@@ -334,7 +341,7 @@ The resource pool is bounded to a single physical PPN node. A node's RAM and vCP
 | moonshot-kernel timeline as seL4 replacement | Long-horizon; project-orchestration scope | — |
 | Extend seL4 IFC proof to PPN capability graph | PhD thesis core work | Contribution #2 |
 | User study IRB approval and recruitment | Operational | Contribution #3 |
-| NetBSD/bhyve compat bottom — rump-kernel rederivation on seL4? | Research question | Future work |
+| NetBSD/NVMM compat bottom — rump-kernel rederivation on seL4? | Research question | Future work |
 
 ---
 
@@ -439,7 +446,7 @@ deployment instance (18 today). Per-cluster (9 clusters) is the intended next sc
 The per-node pool (Contribution #2) maps to the hardware-blind isolation layer in Intel
 TDX and AMD SEV-SNP. The PPN design is stronger in one dimension (machine-checked formal
 proof, not just hardware assertion) and more portable in another (works on pre-IOMMU
-hardware via the NetBSD/bhyve bottom). TDX and SEV-SNP require the silicon vendor's
+hardware via the NetBSD/NVMM bottom). TDX and SEV-SNP require the silicon vendor's
 attestation infrastructure; PPN's sovereignty model makes the operator the attestation
 root via the pairing ceremony.
 
@@ -467,5 +474,95 @@ ceremony rather than silicon vendor CA; sub-five-minute SMB deployment.
 
 ---
 
-*End of BRIEF — project-infrastructure / 2026-05-27 (Appendix A updated + Appendix B added 2026-05-28)*
-*Next action: operator ratifies thesis framing → step 1 (rewrite os-infrastructure) begins*
+## §12 — PPN Resource Pooling Layer (added 2026-05-29)
+
+The three-node WireGuard mesh (Laptop A · Laptop B · GCP) forms a single unified VM
+resource pool exposed as a free-tier PPN primitive. This is NOT the paid Orchestration
+tier — VM resource pooling is infrastructure management (which node owns which VM),
+while Orchestration charges for multi-Totebox data aggregation.
+
+**Architectural invariant: `auto_rebalance: false` is permanent and not configurable.**
+WireGuard at ~20 Mbps × 6 GB VM = ~40 min transfer time; live VM migration over WireGuard
+is permanently excluded. VMs are placed once and remain on their assigned node.
+
+### Three new crates
+
+**`system-vm-fleet-types`** (`no_std`-compatible shared wire types):
+- `NodeHeartbeat {node_id, wg_ip, hostname, ram_total_mb, ram_used_mb, cpu_cores, cpu_load_pct, vms: Vec<VmRecord>, boot_id, timestamp_utc}`
+- `VmRecord {vm_id, vm_type, state: VmState, ram_alloc_mb, vcpu_count, started_at}`
+- `VmState` — `Running | Stopped | Provisioning | Error`
+- `PlacementAdvice {recommended_node, reason, alternatives}`
+- `FleetStatus {nodes: Vec<NodeRecord>, last_updated}`
+- `NodeRecord {node_id, hostname, wg_ip, ram_available_mb, vm_count, last_heartbeat}`
+- `CreateVmRequest {vm_type, ram_mb, vcpu_count, preferred_node: Option<NodeId>}`
+
+**`service-vm-host`** (per-node daemon, one per infrastructure node):
+- Polls `/proc/meminfo` + `/proc/loadavg` every 10s
+- Queries QEMU UNIX monitor socket per running VM → `VmRecord`
+- POSTs `NodeHeartbeat` to `service-vm-fleet` at `VM_FLEET_ENDPOINT`
+- Accepts `CreateVm` dispatch → launches QEMU subprocess
+- Uses `tokio::main(flavor = "current_thread")`
+- Port: none (outbound-only). Systemd: `infrastructure/systemd/ppn/local-vm-host.service`
+
+**`service-vm-fleet`** (fleet controller, GCP-resident, :9203):
+- `POST /v1/nodes/heartbeat` — update NodeRecord; evict nodes silent >30s
+- `GET /v1/fleet` — FleetStatus
+- `GET /v1/nodes/{node_id}` — single node
+- `POST /v1/vms` — advisory placement + dispatch CreateVm to service-vm-host; return VmRecord
+- `DELETE /v1/vms/{vm_id}` — stop + destroy
+- Placement: filter `ram_available_mb >= request.ram_mb + 512`; sort `ram_available_mb DESC`; first candidate wins
+- VM-Totebox: `preferred_node` must be caller-specified (WORM data cannot migrate)
+- Auth: WireGuard peer IP must be a registered node; Phase 2 upgrade to SSH-signed tokens
+- Uses `tokio::main(flavor = "current_thread")`
+- Systemd: `infrastructure/systemd/orchestration/local-vm-fleet.service`
+
+### F12 doctrine (SYS-ADR-10)
+
+"Create VM" is an operator action → F12-gated in `app-network-admin` F9 panel.
+The fleet controller's node selection is advisory infrastructure, not an operator action —
+it is NOT F12-gated.
+
+### Phase 2: app-network-admin F9 panel (ratatui)
+
+Left column: node list (hostname, WG IP, RAM bar, CPU%, VM count).
+Right column: VM list for selected node.
+Bottom: `[C]reate VM [D]estroy [R]efresh`.
+Create flow → F12 confirmation → `POST /v1/vms`.
+Deferred until `service-vm-fleet` is running in production.
+
+---
+
+## §13 — GCP KVM Status (added 2026-05-29)
+
+**GCP workspace VM has no `/dev/kvm`.** Nested virtualization is not enabled on the
+`foundry-workspace` GCE instance. All QEMU processes run under TCG (software emulation),
+which is approximately 10× slower than KVM hardware acceleration.
+
+**Observable impact:**
+- vm-mediakit cloud-init: 504s (TCG) vs. expected ~50s (KVM)
+- vm-mediakit smoke test timeout: 60s (set in migrate-service-to-vm.sh) accommodates TCG
+- bench #9 re-run for J2 JOURNAL: TCG load spikes will corrupt latency measurements
+
+**Operator action required:** Enable nested virtualization in GCP console:
+```
+Compute Engine → VM instances → foundry-workspace → Edit
+→ CPU platform and GPU → Enable virtualized nested hardware performance counters: ON
+→ Restart instance
+→ verify: ls /dev/kvm   # should show char device
+```
+
+**Laptop A status:** VT-x present (Sandy Bridge i5-2400S), VT-d absent.
+Run `ls /dev/kvm` on Laptop A to confirm KVM availability before Phase 2 work begins.
+Expected: present (Linux host with VT-x normally exposes `/dev/kvm` via `kvm` module).
+
+**Laptop B status:** Acts as WireGuard hub (10.8.0.1, public 24.86.192.209:51820).
+KVM status not yet verified — operator action required.
+
+Until GCP nested KVM is enabled, VM provisioning and service migrations on GCP are
+possible but slow. Laptop A and Laptop B are the preferred test execution environments
+for time-sensitive operations.
+
+---
+
+*End of BRIEF — project-infrastructure / 2026-05-29 (§12 resource pooling + §13 GCP KVM added)*
+*Next action: three new crates scaffolded (system-vm-fleet-types, service-vm-fleet, service-vm-host)*

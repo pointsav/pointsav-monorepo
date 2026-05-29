@@ -28,6 +28,12 @@ notes_for_editor: >
   Phase 2 and Phase 3 unikernel/BSD targets use planned/intended language (BCSC posture).
   VM-Infrastructure note: use "trust-meshed host fleet" rather than "cluster" —
   it is not a resource-pooling scheduler.
+  UPDATE 2026-05-29 (session 12): Unikernel Roadmap section corrected — "NetBSD/bhyve"
+  replaced with "NetBSD/NVMM" (bhyve is FreeBSD; NVMM is NetBSD's native hypervisor).
+  Microkit x86-64 constraint clarified: NOT AArch64-only, but 1 vCPU/guest cap.
+  NEW: "Resource Pooling" section added — service-vm-fleet + service-vm-host architecture,
+  advisory placement, auto_rebalance: false invariant, live migration exclusion,
+  F12 doctrine for VM creation. ES draft needs same updates applied.
   Article frontmatter to add on commit: title "VM-* Architecture and OS Family",
   category "systems", status "active", quality "review",
   cites [infrastructure-os, os-network-admin, totebox-archive, ppn-architecture-overview,
@@ -126,6 +132,16 @@ Phase 1 for all VM types uses Ubuntu 24.04 under QEMU (KVM-accelerated where ava
 
 Phase 2 introduces lighter-weight hosting per VM type: FreeBSD jails for MediaKit's per-workload isolation, Alpine Linux with musl-linked static binaries for Totebox, and gVisor sandboxing for Orchestration aggregators.
 
-Phase 3 is the intended unikernel target. VM-Totebox and VM-MediaKit are intended to run as seL4 Microkit protection domains on AArch64 hardware (gated on hardware acquisition). VM-Orchestration aggregator processes are intended to target NanoVMs/OPS; SLM inference and GPU-accelerated workloads are intended to remain on a full Linux host. The host fleet itself (VM-Infrastructure) is intended to run the `os-infrastructure` binary on NetBSD+bhyve (x86-64 compat bottom) or seL4+Microkit (AArch64 native bottom).
+Phase 3 is the intended unikernel target. VM-Totebox and VM-MediaKit are intended to run as seL4 Microkit protection domains on AArch64 hardware (gated on hardware acquisition). VM-Orchestration aggregator processes are intended to target NanoVMs/OPS; SLM inference and GPU-accelerated workloads are intended to remain on a full Linux host. The host fleet itself (VM-Infrastructure) is intended to run the `os-infrastructure` binary on NetBSD/NVMM (x86-64 compat bottom, Phase 2) or seL4+Microkit (AArch64 native bottom, Phase 3).
 
-The Microkit 2.2.0 constraint — AArch64-only as of 2026 — means Phase 3 on x86-64 hardware uses the NetBSD/bhyve compat path, not the seL4 path. Both paths share the same capability ledger (`system-core`).
+Microkit 2.2.0 includes an `x86_64_generic_vtx` target, but x86-64 Microkit is capacity-capped to one vCPU per guest and requires Intel VT-x. AArch64 is the intended production Phase 3 path. Phase 2 on x86-64 uses NetBSD/NVMM — NVMM (NetBSD Virtual Machine Monitor) is NetBSD's native bare-metal hypervisor, mainline since NetBSD 9.0, using QEMU with the `-accel nvmm` flag. Both compat and native bottoms share the same capability ledger (`system-core`).
+
+## Resource Pooling
+
+The three-node WireGuard mesh (one cloud node and up to two on-premises nodes) forms a unified VM resource pool. This pooling is a free-tier PPN primitive — operators do not pay per node joined to the pool.
+
+Two services implement the pool. `service-vm-host` runs on each infrastructure node: it polls local CPU and RAM utilisation every ten seconds and sends a heartbeat to the fleet controller. `service-vm-fleet` runs on the cloud node and receives those heartbeats, evicting any node that goes silent for more than thirty seconds. When an operator requests a new VM, the fleet controller applies advisory placement — selecting the node with the most available RAM above a safety margin — and dispatches the creation request.
+
+Live VM migration is permanently excluded. WireGuard bandwidth over typical internet links would make migrating a live VM impractical; VMs are placed once and remain on their assigned node. This is an architectural invariant, not a configuration option.
+
+Creating a VM is an operator action and requires explicit confirmation in the `app-network-admin` F9 panel. The fleet controller's node selection is advisory infrastructure and does not require confirmation. VM-Totebox instances must always be assigned to a specific node, because WORM archive data is not transferable over the network.
