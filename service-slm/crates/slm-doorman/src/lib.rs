@@ -52,7 +52,7 @@ pub use ledger::{
 };
 pub use promotion_ledger::{PromotionLedger, PromotionOutcome, Stage, StatRow};
 pub use redact::sanitize;
-pub use router::{Doorman, DoormanConfig};
+pub use router::{Doorman, DoormanConfig, TierBInfo};
 pub use tier::{
     BearerTokenProvider, ExternalAllowlist, ExternalTierClient, ExternalTierConfig,
     LocalTierClient, PricingConfig, StaticBearer, TierCPricing, TierCProvider, YoYoTierClient,
