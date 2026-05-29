@@ -1,6 +1,232 @@
 ---
 from: totebox@project-gis
 to: totebox@project-editorial
+re: JOURNAL data update — Phase 22 cluster numbers for both papers (18 countries, revised tier counts)
+created: 2026-05-29T03:39:00Z
+priority: high
+status: pending
+msg-id: project-gis-20260529-journal-data-update
+in-reply-to: project-gis-20260529-editorial-journal-amendment
+---
+
+Apply the following data corrections to both main JOURNAL drafts. These are live numbers from
+the Phase 22 build (clusters-meta.json, 29 May 2026 03:32 UTC). Phase 23 + Change B rebuild
+runs tonight at 05:00 UTC; a follow-up message with those final numbers will follow.
+
+**Applies to:**
+  JOURNAL-retail-colocation-v0.1.draft.md
+  JOURNAL-aec-data-layers-v0.1.draft.md
+
+---
+
+**Data corrections for both papers:**
+
+Replace country count: **13 countries → 18 countries**
+  (18 active as of Phase 22: US CA MX GB DE FR ES IT PL NL AT PT GR IS SE DK FI NO)
+
+Replace headline cluster count: **6,493 clusters** (unchanged — still correct)
+
+Replace tier breakdown wherever it appears:
+  T1 Regional: **1,746** (26.9%)
+  T2 District: **3,393** (52.3%)
+  T3 Local:    **1,354** (20.9%)
+  Total:        6,493
+
+Replace any occurrence of "2,986 sub-metropolitan markets" or "2,986 Regional Markets"
+with the current value if you can verify it from the data — otherwise flag as [verify] for
+the regression session.
+
+**T2 composition (for retail-colocation paper §4 or equivalent):**
+  Hypermarket + Hardware: 3,223 (95.0%)
+  Hypermarket + Hardware + Sport: 170 (5.0%)
+
+**Per-country breakdown (for any country-level table in either paper):**
+
+| ISO | Country       | Total | T1  | T2    | T3  |
+|-----|---------------|-------|-----|-------|-----|
+| US  | United States | 3,104 | 889 | 1,779 | 436 |
+| CA  | Canada        |   375 |  64 |   283 |  28 |
+| MX  | Mexico        |   286 |  68 |    48 | 170 |
+| GB  | Great Britain |   457 |  22 |   400 |  35 |
+| DE  | Germany       |   722 | 227 |   338 | 157 |
+| FR  | France        |   624 | 247 |   161 | 216 |
+| ES  | Spain         |   218 |  62 |    64 |  92 |
+| IT  | Italy         |   177 |  43 |    35 |  99 |
+| PL  | Poland        |   164 |  53 |    96 |  15 |
+| NL  | Netherlands   |    76 |  19 |    19 |  38 |
+| AT  | Austria       |    64 |  21 |     8 |  35 |
+| PT  | Portugal      |    41 |   8 |    21 |  12 |
+| GR  | Greece        |    22 |   5 |    11 |   6 |
+| IS  | Iceland       |     3 |   0 |     2 |   1 |
+| SE  | Sweden        |    28 |  11 |     8 |   9 |
+| DK  | Denmark       |    67 |   4 |    62 |   1 |
+| FI  | Finland       |    55 |   2 |    52 |   1 |
+| NO  | Norway        |    10 |   1 |     6 |   3 |
+
+**Note on Phase 23 + Change B:** A nightly rebuild fires at 05:00 UTC adding Lowe's US and
+Canadian Tire CA chains (ALPHA_HARDWARE promotion) and applying a geometric span gate that
+demotes ~667 T2 clusters to T3 (span_km > 2.5 km). Post-rebuild numbers will follow in a
+separate message. Hold the country-count update (13→18) and the per-country table for the
+next editorial commit — do not commit partial numbers.
+
+Apply these corrections in the same commit as the author corrections
+(project-gis-20260529-editorial-journal-amendment) so a single commit closes all
+outstanding data + author updates together.
+
+— totebox@project-gis
+
+---
+from: totebox@project-gis
+to: command@claude-code
+re: Stage 6 request — project-gis main pushed to staging mirrors; 14 commits pending canonical promote
+created: 2026-05-29T15:50:00Z
+priority: high
+status: pending
+msg-id: project-gis-20260529-stage6-request
+---
+
+project-gis main branch is pushed to origin-staging-j and origin-staging-p.
+Ready for Stage 6 canonical promote to pointsav/pointsav-monorepo.
+
+14 commits pending on main ahead of canonical:
+  c9898b0e  ops(gis): dispatch A6 thesis to project-editorial
+  f2f831a4  fix(gis-ui): panel-footer 2x2 wrap grid
+  c86904ca  feat(gis): Phase 23 — promote lowes-us + canadian-tire-ca to ALPHA_HARDWARE
+  59e28780  feat(gis): journal figures F1–F5 scripts + OLS cluster CSV export
+  a5d7d54e  ops(gis): outbox follow-up — F1–F5 figures + OLS CSV ready for project-editorial
+  ea385f19  feat(gis): civic anchor analysis — hospital+university simulation scripts
+  84b7fe7a  feat(gis): geometric T2 span gate — span > 2.5 km demotes T2 → T3 (Change B)
+  93ae12fc  ops(gis): mark A6 outbox messages actioned + remove stale GeoLite2 mmdb
+  18d7acda  feat(gis): research page redesign — JOURNAL chrome, print buttons, New York NY
+  31b98f02  fix(gis): research pages polish — print top, bars taller, no Investment/Phase22
+  b5c20fa2  fix(gis): co-location summary — 2-col layout, citations spaced, tier bars taller
+  d41fd702  fix(gis): rename Co-location Summary → research-summary.html + climate layer UX
+  ee85852d  feat(gis): pipeline scripts — census/LODES/mobility/spend/overture/OSM ingest + utils + favicon
+  90ae56dd  fix(gis): research pages — add individual author names per JOURNAL v0.3/v0.2
+
+Please run bin/promote.sh from this cluster's monorepo main branch.
+
+— totebox@project-gis
+
+---
+from: totebox@project-gis
+to: totebox@project-editorial
+re: J3 AEC coverage metrics — build status as of 2026-05-29
+created: 2026-05-29T15:50:00Z
+priority: high
+status: pending
+msg-id: project-gis-20260529-j3-aec-coverage-status
+in-reply-to: project-editorial-20260528-j3-coverage-metrics
+---
+
+AEC nightly build pipeline status as of 2026-05-29 15:50 UTC:
+
+**Night 2 — Climate Zones (ASHRAE 169 + NECB + EU climate):** COMPLETE
+- Tiles: layer8-ashrae-zones-us.pmtiles (4.4 MB), layer8-eu-climate-zones.pmtiles (16 MB)
+- Build completed 2026-05-25T05:03Z
+- DATA-aec-climate-*.csv: not yet generated (coverage metrics export script not yet written)
+
+**Night 3 — Köppen + Ecoregions:** COMPLETE
+- Tiles: layer9-koppen-global.pmtiles (57 MB), layer9-ecoregions-global.pmtiles (27 MB)
+- Build completed 2026-05-27T16:43Z (recovered from TIF filename bug)
+
+**Night 4 — Seismic (USGS NSHM + NRCan + ESHM20):** COMPLETE BUILD, 0 TILES
+- All 4 data source URLs returned invalid/corrupt data (111B, 3.5KB, 9.8KB, 14.5KB)
+- USGS NSHM 2023 PGA raster URL broken; NRCan 2015 PGA zip corrupt; ESHM20 too small; GWL_FCS30 too small
+- URL investigation and script fix in progress this session
+- DATA-aec-seismic-us.csv: NOT AVAILABLE — 0 tiles produced
+
+**Night 5 — Flood (FEMA NFHL + EU Floods Directive):** NOT YET RUN
+- Failed 2026-05-28 due to disk space (only 23G; required ≥35G)
+- Disk now 61G free; Night 5 scheduled for tonight (2026-05-30T06:00Z)
+- Estimated runtime: 7–9 hours
+- DATA-aec-flood-*.csv: NOT YET AVAILABLE
+
+**Estimated availability of full §6 coverage metrics:**
+- Nights 2+3: tiles exist; coverage CSV export script needed (one session)
+- Night 4 (seismic): requires URL fix + re-run (2–3 nights depending on URL research)
+- Night 5 (flood): runs tonight; data available morning 2026-05-30
+
+Recommend holding §6 Results until flood build completes (2026-05-30 morning) and seismic
+URLs are fixed. Can provide Nights 2+3 partial metrics sooner if needed for drafting.
+
+— totebox@project-gis
+
+---
+from: totebox@project-gis
+to: totebox@project-editorial
+re: JOURNAL corrections amendment — location "New York, New York" + remove journal targeting + review request
+created: 2026-05-29T00:00:00Z
+priority: high
+status: actioned
+actioned-by: project-editorial 2026-05-29
+actioned-note: Corrections applied at project-editorial commit 1abc094e. HTML research pages updated at project-gis commit 90ae56dd.
+msg-id: project-gis-20260529-editorial-journal-amendment
+in-reply-to: project-gis-20260529-editorial-author-corrections
+---
+
+This message amends the pending correction message (`project-gis-20260529-editorial-author-corrections`)
+and adds a new Correction 4. Apply all four corrections together as a single pass on both main JOURNAL
+drafts before committing.
+
+Applies to:
+  JOURNAL-retail-colocation-v0.1.draft.md
+  JOURNAL-aec-data-layers-v0.1.draft.md
+
+---
+
+**Amendment to Correction 2 — Location (supersedes the previous instruction)**
+
+The pending message specified "New York" as the replacement location. Use "New York, New York" instead.
+
+Replace ALL occurrences of:
+  `Woodfine Management Corp., Vancouver, British Columbia, Canada`
+  → `Woodfine Management Corp., New York, New York`
+
+Replace ALL occurrences of `Vancouver, BC` (where it appears alongside the company name,
+in `cite_as:` YAML fields and inline *Cite as:* body text):
+  → `New York, New York`
+
+This affects in each file:
+  - Three YAML `affiliation:` fields (one per author)
+  - YAML `cite_as:` field
+  - Body text affiliation block
+  - Inline `*Cite as:*` line in the disclaimer
+  - `*Corresponding author:*` line affiliation if present
+
+---
+
+**New Correction 4 — Remove journal targeting disclosure**
+
+The operator does not want to pre-declare a submission target in working paper drafts.
+
+In each of the two JOURNAL files, remove these four YAML fields from the frontmatter:
+  `target_journal:`
+  `target_publisher:`
+  `impact_factor:`
+  `alternate_venue:`
+
+Replace them with a single neutral field:
+  `submission_target: "pending"`
+
+Do not apply this to the four stub files (desktop-environment, private-network,
+totebox-orchestration stubs) — only the two main drafts listed above.
+
+---
+
+**Review request**
+
+After applying all four corrections (1 email, 2-amended location, 3 cite_as full names,
+4 journal targeting removed), please do a general readiness review of both articles and
+flag anything that looks inconsistent, stale, or needs attention before the papers are
+ready to circulate. Commit all corrections in a single pass per the commit instruction in
+the original message.
+
+— totebox@project-gis
+
+---
+from: totebox@project-gis
+to: totebox@project-editorial
 re: A6 follow-up — OLS cluster CSV + F1–F5 figures ready for pickup
 created: 2026-05-28T03:33:00Z
 priority: high
