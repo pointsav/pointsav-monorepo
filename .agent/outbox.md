@@ -10,6 +10,48 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: Stage 6 + binary rebuild — fix(knowledge) spawn_blocking reindex_topic (e8a47428)
+created: 2026-05-29T21:00:00Z
+priority: normal
+status: pending
+msg-id: project-knowledge-20260529-reindex-spawn-blocking
+---
+
+**New monorepo commit needs Stage 6 promote and binary rebuild.**
+
+Commit `e8a47428` (Peter) — `fix(knowledge): wrap reindex_topic in spawn_blocking — prevent Tokio thread starvation on Tantivy commit`
+
+**Why:** The documentation wiki instance experienced a ~47-minute service hang (19:45–20:32 UTC)
+traced to Tantivy's synchronous `.commit()` and `reader.reload()` calls running directly on
+the Tokio executor thread. `build_index` already used `spawn_blocking` correctly; `reindex_topic`
+(called from `post_edit`, `post_create`, `post_accept` in pending.rs, and the file-watcher in main.rs)
+did not. All five call sites are now `.await`ed through `spawn_blocking`. 12/12 integration tests pass.
+
+**What Command needs to do:**
+
+1. `bin/promote.sh` — promote monorepo staging to canonical; `e8a47428` is the new HEAD
+   (on top of previously-pending commits including `bb8b6fab` Phase 8)
+2. `cargo build --release` inside `app-mediakit-knowledge/` — new binary required (the Phase 8
+   binary currently deployed at `/usr/local/bin/app-mediakit-knowledge` does NOT include this fix)
+3. Stop all three services, deploy new binary, restart:
+   ```
+   sudo systemctl stop local-knowledge-documentation local-knowledge-projects local-knowledge-corporate
+   sudo cp /srv/foundry/cargo-target/mathew/release/app-mediakit-knowledge /usr/local/bin/app-mediakit-knowledge
+   sudo systemctl start local-knowledge-documentation local-knowledge-projects local-knowledge-corporate
+   ```
+4. Update binary ledger (`data/binary-ledger/app-mediakit-knowledge.jsonl`) with new SHA-256
+5. `bin/sync-local.sh --all`
+
+**Smoke test after deploy:**
+```
+curl -sf http://127.0.0.1:9090/healthz && curl -sf http://127.0.0.1:9093/healthz && curl -sf http://127.0.0.1:9095/healthz
+```
+All three must return `ok`. Monitor `journalctl -u local-knowledge-documentation -f` for
+Tantivy starvation warnings — should be absent on the new binary.
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: AMENDS project-knowledge-20260529-phase8-stage6 — binary already built and deployed; DO NOT rebuild
 created: 2026-05-29T18:35:00Z
 priority: high
