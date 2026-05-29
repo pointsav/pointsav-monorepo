@@ -1,7 +1,7 @@
 # CLAUDE.md — moonshot-toolkit
 
-> **State:** Active  —  **Last updated:** 2026-05-27
-> **Version:** 0.2.0  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
+> **State:** Active  —  **Last updated:** 2026-05-29
+> **Version:** 0.3.0  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
 > **Registry row:** `pointsav-monorepo/.claude/rules/project-registry.md`
 
 ---
@@ -22,47 +22,50 @@ exercised."
 
 ## Current state
 
-Phase 1C.a complete at v0.2.0. `build` subcommand now executes real
-`aarch64-linux-gnu-gcc` invocations:
-- `validate` / `plan` subcommands: unchanged from v0.1.3.
-- `build` subcommand: `CompilePd` cross-compiles to AArch64 bare-metal
-  static ELF (-nostdlib -nostartfiles -ffreestanding -static -no-pie
-  -march=armv8-a); `AssembleImage` returns actionable error (Phase 1C.d).
-- `examples/hello-world.toml` + `examples/hello.c`: minimal Phase 1C
-  PD spec that cross-compiles cleanly to `build/hello.elf`.
+Phase 1C complete at v0.3.0. Full build pipeline from TOML spec to bootable
+seL4 system image runs in a single `cargo run` invocation:
 
-30 tests total (`cargo test --all-targets`). Zero warnings.
-30 tests remain (test count unchanged; `build_command_errors_without_source_file`
-replaces the old stub test).
+```
+cargo run -p moonshot-toolkit -- build moonshot-toolkit/examples/hello-world.toml
+```
 
-Phase 1C.c (QEMU boot) blocked on `seL4_tools` elfloader (separate repo;
-seL4 kernel needs elfloader to set up MMU before jumping to
-0xffffff8040000000). Phase 1C.d (image assembly) blocked on Microkit SDK
-or Rust image assembler. Both are follow-ons — see NEXT.md.
+Produces `build/system-image.bin` (elfloader ELF, entry 0x40400000). QEMU
+boots to "Booting all finished, dropped to user space".
+
+- `CompilePd`: aarch64-linux-gnu-gcc bare-metal AArch64 ELF.
+- `AssembleImage`: pure Rust — CPIO archive (`src/cpio.rs`), elfloader
+  compilation (44 C/ASM sources), link with -nostdlib -static -lgcc.
+- No Python, CMake, or shell in the critical path (MEMO §7 ✓).
+
+35 tests total (`cargo test --all-targets`; 26 lib + 9 bin). Zero warnings.
 
 ## Build and test
 
 ```
 cargo check -p moonshot-toolkit
-cargo test  -p moonshot-toolkit --all-targets   # 30 tests
-cargo run   -p moonshot-toolkit -- validate <path/to/system-spec.toml>
-cargo run   -p moonshot-toolkit -- plan     <path/to/system-spec.toml>
-cargo run   -p moonshot-toolkit -- build    <path/to/system-spec.toml>  # stub in v0.1.x
+cargo test  -p moonshot-toolkit --all-targets   # 35 tests
+cargo run   -p moonshot-toolkit -- validate moonshot-toolkit/examples/hello-world.toml
+cargo run   -p moonshot-toolkit -- plan     moonshot-toolkit/examples/hello-world.toml
+cargo run   -p moonshot-toolkit -- build    moonshot-toolkit/examples/hello-world.toml
 ```
+
+Note: `build` must be run from the project root (not moonshot-toolkit/ dir) because
+AssembleImage resolves vendor/ paths relative to CWD.
 
 ## File layout
 
 ```
 moonshot-toolkit/
-├── Cargo.toml             # workspace member; v0.1.3
+├── Cargo.toml             # workspace member; v0.3.0
 ├── README.md / README.es.md   # bilingual pair
 ├── CLAUDE.md / AGENTS.md / NEXT.md / ARCHITECTURE.md / DEVELOPMENT.md
-├── build-totebox.sh       # legacy shell sketch — remove after task #14 ships
+├── build-totebox.sh       # legacy shell sketch — remove (Phase 1C.d complete)
 └── src/
-    ├── lib.rs             # re-exports SystemSpec + BuildPlan for library consumers
+    ├── lib.rs             # re-exports SystemSpec + BuildPlan; pub mod cpio
     ├── spec.rs            # SystemSpec TOML parser (445 lines, 12 tests)
     ├── plan.rs            # BuildPlan generator (310 lines, 10 tests)
-    └── main.rs            # clap CLI — validate/plan/build (241 lines, 8 tests)
+    ├── cpio.rs            # pure Rust CPIO "newc" writer (4 tests)
+    └── main.rs            # clap CLI + assemble_image orchestration
 ```
 
 ## Hard constraints — do not violate
