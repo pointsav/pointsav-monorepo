@@ -186,7 +186,7 @@ fi
 
 echo "[5/5] Smoke test (localhost:${HOST_PORT})..."
 sleep 2
-HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://localhost:${HOST_PORT}/" 2>/dev/null || echo "000")
+HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://localhost:${HOST_PORT}/" 2>/dev/null)
 if [[ "$HTTP_STATUS" == "200" ]]; then
     echo "  ✓ localhost:${HOST_PORT}/ → HTTP 200"
 elif [[ "$HTTP_STATUS" != "000" ]]; then
