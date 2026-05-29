@@ -12,7 +12,33 @@ if [ -z "$DIFF" ]; then
     exit 0
 fi
 
-PAYLOAD=$(python3 -c 'import json,sys; print(json.dumps({"actual_diff": sys.stdin.read()}))' <<< "$DIFF")
+COMMIT_MSG=$(git log -1 --pretty=%s 2>/dev/null || echo "git-commit")
+
+PAYLOAD=$(python3 - "$COMMIT_MSG" <<'PYEOF'
+import json, sys, uuid, datetime
+
+diff_text = sys.stdin.read()
+commit_msg = sys.argv[1] if len(sys.argv) > 1 else "git-commit"
+brief_id = uuid.uuid4().hex.upper()
+now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+data = {
+    "brief": {
+        "brief_id": brief_id,
+        "created": now,
+        "senior_role": "master",
+        "senior_identity": "pwoodfine",
+        "task_type": "git-commit",
+        "scope": {"files": []},
+        "acceptance_test": "",
+        "shadow": True,
+        "body": "git-commit diff: " + commit_msg
+    },
+    "actual_diff": diff_text
+}
+print(json.dumps(data))
+PYEOF
+)
 
 curl -s -X POST "${DOORMAN_ENDPOINT}/v1/shadow" \
     -H "Content-Type: application/json" \
