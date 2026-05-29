@@ -88,7 +88,8 @@ msg-id: project-gis-20260529-stage6-request
 project-gis main branch is pushed to origin-staging-j and origin-staging-p.
 Ready for Stage 6 canonical promote to pointsav/pointsav-monorepo.
 
-14 commits pending on main ahead of canonical:
+15 commits pending on main ahead of canonical:
+  bd17a348  fix(gis): build-aec-seismic.sh — update broken source URLs for USGS/NRCan/ESHM20/GWL_FCS30
   c9898b0e  ops(gis): dispatch A6 thesis to project-editorial
   f2f831a4  fix(gis-ui): panel-footer 2x2 wrap grid
   c86904ca  feat(gis): Phase 23 — promote lowes-us + canadian-tire-ca to ALPHA_HARDWARE
@@ -132,9 +133,10 @@ AEC nightly build pipeline status as of 2026-05-29 15:50 UTC:
 
 **Night 4 — Seismic (USGS NSHM + NRCan + ESHM20):** COMPLETE BUILD, 0 TILES
 - All 4 data source URLs returned invalid/corrupt data (111B, 3.5KB, 9.8KB, 14.5KB)
-- USGS NSHM 2023 PGA raster URL broken; NRCan 2015 PGA zip corrupt; ESHM20 too small; GWL_FCS30 too small
-- URL investigation and script fix in progress this session
-- DATA-aec-seismic-us.csv: NOT AVAILABLE — 0 tiles produced
+- URL fix committed this session (bd17a348): USGS→ScienceBase shapefile; NRCan→GEOSCAN;
+  ESHM20→EFEHR GitLab tarball; GWL_FCS30→tiled Zenodo downloads + gdalbuildvrt mosaic
+- Seismic re-run needed: schedule after flood build completes (2026-05-30 morning)
+- DATA-aec-seismic-us.csv: NOT AVAILABLE — pending re-run
 
 **Night 5 — Flood (FEMA NFHL + EU Floods Directive):** NOT YET RUN
 - Failed 2026-05-28 due to disk space (only 23G; required ≥35G)
