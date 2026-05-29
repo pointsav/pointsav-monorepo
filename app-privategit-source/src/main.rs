@@ -1,7 +1,7 @@
 use anyhow::Result;
 use axum::{
     body::Body,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::{header, HeaderMap, StatusCode},
     response::{IntoResponse, Json, Response},
     routing::{get, post},
@@ -123,6 +123,11 @@ struct VerifyKeyRequest {
     product_id: String,
 }
 
+#[derive(Deserialize, Default)]
+struct BinaryQuery {
+    token: Option<String>,
+}
+
 #[derive(Deserialize)]
 struct LicensePayload {
     product: String,
@@ -185,6 +190,7 @@ async fn binary(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
     Path((product, version, platform)): Path<(String, String, String)>,
+    Query(query): Query<BinaryQuery>,
 ) -> Response {
     // Detached .sig files are unauthenticated — no license required
     if let Some(base_platform) = platform.strip_suffix(".sig") {
@@ -195,19 +201,23 @@ async fn binary(
         return stream_file(path, "application/octet-stream").await;
     }
 
-    // Require Authorization: Bearer <license_key_b64>
-    let key_b64 = match headers
+    // Accept Authorization: Bearer <token> header OR ?token= query param (for browser download links)
+    let key_b64 = headers
         .get(header::AUTHORIZATION)
         .and_then(|v| v.to_str().ok())
         .and_then(|s| s.strip_prefix("Bearer "))
-    {
+        .map(|s| s.to_string())
+        .or_else(|| query.token.clone());
+
+    let key_b64 = match key_b64 {
         Some(k) => k,
         None => {
-            tracing::info!(product_id = %product, result = "unauthorized", reason = "missing-auth-header", "binary-download");
+            tracing::info!(product_id = %product, result = "unauthorized", reason = "missing-auth", "binary-download");
             return (
                 StatusCode::UNAUTHORIZED,
                 Json(json!({"error": "license key required",
-                    "header": "Authorization: Bearer <license_key_b64>"})),
+                    "header": "Authorization: Bearer <license_key_b64>",
+                    "query": "?token=<license_key_b64>"})),
             )
                 .into_response();
         }
@@ -223,7 +233,7 @@ async fn binary(
     };
 
     let key_fp = hex::encode(&vk.as_bytes()[..4]);
-    match verify_license_key(vk, key_b64, &product) {
+    match verify_license_key(vk, &key_b64, &product) {
         Err(e) => {
             let log_result = if e.status() == StatusCode::UNAUTHORIZED {
                 "unauthorized"
