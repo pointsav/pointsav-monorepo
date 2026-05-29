@@ -22,7 +22,6 @@ Blocked: service-fs not yet in VM (needs project-data Stage 6 first). bim-orches
 
 For bench #9 quiet-VM run: confirm with project-infrastructure that the VM is in a quiet state (load avg < 1.0) before scheduling. This VM may not be suitable for latency-sensitive benchmarks due to TCG overhead.
 
----
 from: command@claude-code
 to: totebox@project-system
 re: test-relay-permission-check
