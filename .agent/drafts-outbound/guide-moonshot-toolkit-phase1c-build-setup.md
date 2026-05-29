@@ -10,37 +10,45 @@ bcsc_class: no-disclosure-implication
 language_protocol: PROSE-GUIDE
 authored: 2026-05-27T02:00:00Z
 authored_by: task-project-system (session phase-1c-a)
+revised: 2026-05-29T00:00:00Z
+revised_by: task-project-system (session phase-1c-d)
 authored_with: claude-sonnet-4-6
 references:
-  - clones/project-system/moonshot-toolkit/CHANGELOG.md v0.2.0
-  - clones/project-system/moonshot-toolkit/NEXT.md (Blocked section)
+  - clones/project-system/moonshot-toolkit/CHANGELOG.md v0.3.0
+  - clones/project-system/moonshot-toolkit/src/main.rs (assemble_image)
+  - clones/project-system/moonshot-toolkit/src/cpio.rs
   - clones/project-system/moonshot-toolkit/examples/hello-world.toml
   - clones/project-system/moonshot-toolkit/examples/hello.c
-  - clones/project-system/moonshot-toolkit/src/main.rs (execute_step)
+  - clones/project-system/vendor-sel4-tools/ (elfloader-tool)
+  - clones/project-system/vendor-sel4-kernel/build/aarch64-qemu/
+  - clones/project-system/vendor-sel4-project/projects/hello-rootserver/
 notes_for_editor: |
-  Operational runbook for the Phase 1C.a build environment. Written from the
-  actual workspace VM configuration after installation (2026-05-27).
+  Updated 2026-05-29 to reflect Phase 1C complete (moonshot-toolkit v0.3.0).
+  Phase 1C.c (QEMU boot) and Phase 1C.d (AssembleImage) are now done — the
+  "Current Limitation" section from the prior version has been replaced with
+  a "Full Build and Boot" section showing the verified output.
 
-  All commands are exact and have been run on Ubuntu 24.04 with Rust stable
-  and aarch64-linux-gnu-gcc v13.3.0. Do not paraphrase commands; preserve them.
+  IMPORTANT CWD NOTE: `moonshot-toolkit build` must be run from the project
+  root (~/Foundry/clones/project-system/), not from the moonshot-toolkit/
+  subdirectory. The AssembleImage step resolves vendor/ paths relative to CWD.
+  validate and plan can be run from either location but the guide now uses the
+  project root uniformly to avoid confusion.
 
-  The guide documents BOTH what works (Phase 1C.a: CompilePd produces hello.elf)
-  AND what is not yet implemented (Phase 1C.d: AssembleImage blocked). Be honest
-  about the gap without dismissive language.
+  All commands are exact and have been run on Ubuntu 24.04 with Rust stable,
+  aarch64-linux-gnu-gcc v13.3.0, and QEMU 8.2.x. Do not paraphrase commands.
+
+  The "Current Limitation" note is now removed. The full Phase 1C milestone
+  is complete: protection-domain ELF compiled, elfloader assembled, QEMU boots.
 
   English-only per CLAUDE.md §14 — GUIDEs are not bilingual. No .es.md pair.
-
-  BCSC posture: Phase 1C.c and 1C.d completion are planned/intended. Current
-  state (Phase 1C.a) is current fact.
 ---
 
 # moonshot-toolkit Phase 1C Build Setup
 
 This guide covers installing the AArch64 cross-compile environment on the Foundry
-workspace VM and using the `moonshot-toolkit build` subcommand to cross-compile a
-protection domain source file to a bare-metal AArch64 ELF. It reflects the Phase 1C.a
-milestone (moonshot-toolkit v0.2.0) and documents the current limitation at
-Phase 1C.d (image assembly not yet implemented).
+workspace VM and using the `moonshot-toolkit build` subcommand to produce a bootable
+seL4 system image for the QEMU AArch64 target. It reflects the Phase 1C complete
+milestone (moonshot-toolkit v0.3.0).
 
 ## Prerequisites
 
@@ -85,21 +93,38 @@ qemu-system-aarch64 --version
 ### Python Dependencies (for seL4 Kernel Build Only)
 
 The seL4 kernel CMake build uses Python scripts. These are not required for
-`moonshot-toolkit build` itself, but are needed if building the seL4 kernel from
+`moonshot-toolkit build` itself, but are needed if rebuilding the seL4 kernel from
 source (Phase 1C.b):
 
 ```
 pip install --break-system-packages pyfdt tempita
 ```
 
+### Vendor Prerequisites
+
+The `moonshot-toolkit build` command requires three vendor trees to be present
+relative to the project root:
+
+| Path | Contents |
+|---|---|
+| `vendor-sel4-tools/elfloader-tool/` | seL4 elfloader C/ASM source |
+| `vendor-sel4-kernel/build/aarch64-qemu/` | Built seL4 kernel (`kernel.elf`, `kernel.dtb`) |
+| `vendor-sel4-project/build-support/qemu-arm-virt/` | libcpio, gen_config headers, linker script |
+| `vendor-sel4-project/projects/hello-rootserver/` | Rootserver ELF (`hello-rootserver`) |
+
+On the Foundry workspace VM, these are present in the `clones/project-system/` archive.
+Build command validates each path at startup and reports which prerequisites are missing.
+
 ## Using moonshot-toolkit
 
-All commands are run from the `moonshot-toolkit/` directory within the
-`clones/project-system/` archive:
+All commands are run from the **project root** of the `clones/project-system/` archive:
 
 ```
-cd ~/Foundry/clones/project-system/moonshot-toolkit
+cd ~/Foundry/clones/project-system
 ```
+
+The `build` subcommand resolves vendor paths relative to the working directory. Running
+from a subdirectory will cause prerequisite checks to fail.
 
 ### Validate a System Specification
 
@@ -107,13 +132,13 @@ The `validate` subcommand parses a `system-spec.toml` and checks all invariants.
 It exits 0 on success and prints a one-line summary:
 
 ```
-cargo run -p moonshot-toolkit -- validate examples/hello-world.toml
+cargo run -p moonshot-toolkit -- validate moonshot-toolkit/examples/hello-world.toml
 ```
 
 Expected output:
 
 ```
-✓ examples/hello-world.toml — 1 protection_domain(s), 0 channel(s), 0 memory_region(s), 0 irq_delivery
+✓ moonshot-toolkit/examples/hello-world.toml — 1 protection_domain(s), 0 channel(s), 0 memory_region(s), 0 irq_delivery
 ```
 
 ### Generate a BuildPlan
@@ -122,37 +147,38 @@ The `plan` subcommand parses the spec and generates a deterministic `BuildPlan` 
 JSON. The `plan_hash` field is the SHA-256 of the canonical JSON of `(spec_hash, steps)`:
 
 ```
-cargo run -p moonshot-toolkit -- plan examples/hello-world.toml --format pretty-json
+cargo run -p moonshot-toolkit -- plan moonshot-toolkit/examples/hello-world.toml --format pretty-json
 ```
 
 The same spec always produces the same `plan_hash`. This hash is the value that a
 customer-apex cosignature attaches to per `system-substrate-doctrine.md §6.1`.
 
-### Build a Protection Domain (Phase 1C.a)
+### Build a Protection Domain and System Image (Phase 1C Complete)
 
-The `build` subcommand parses the spec, generates the BuildPlan, creates a `build/`
-output directory, and executes each step:
+The `build` subcommand parses the spec, generates the BuildPlan, and executes each
+step: cross-compiling the protection domain and then assembling the bootable system image.
 
 ```
-cargo run -p moonshot-toolkit -- build examples/hello-world.toml
+cargo run -p moonshot-toolkit -- build moonshot-toolkit/examples/hello-world.toml
 ```
 
-Expected output (Phase 1C.a):
+Expected output (Phase 1C complete, moonshot-toolkit v0.3.0):
 
 ```
 Building plan (plan_hash = 3280a9dc2943ac63…)
 [1/2] compile-pd-hello
   ✓ build/hello.elf
 [2/2] assemble-image
-error: assemble-image → build/system-image.bin: not yet implemented; requires Microkit SDK or Rust image assembler (Phase 1C.d). PD binaries ready: [build/hello.elf]
+  ✓ build/system-image.bin
 ```
 
-The exit code is non-zero because the AssembleImage step fails. The CompilePd step
-succeeds: `build/hello.elf` has been produced.
+The `build/system-image.bin` file is a bootable elfloader ELF image with entry
+point `0x40400000`. It contains the seL4 kernel, its device tree, and the
+rootserver, packed into a CPIO archive and linked with the seL4 elfloader.
 
-### Verify the Compiled Output
+### Verify the Compiled Protection Domain
 
-Confirm the ELF is a valid bare-metal AArch64 binary:
+Confirm the protection-domain ELF is a valid bare-metal AArch64 binary:
 
 ```
 file build/hello.elf
@@ -178,26 +204,52 @@ Expected:
   Entry point address:               0x40010c
 ```
 
-## Current Limitation
+### Verify the System Image
 
-As of moonshot-toolkit v0.2.0, the `AssembleImage` build step is not yet implemented.
-This step packs the compiled protection-domain ELFs and the seL4 kernel into a single
-bootable image in Microkit's image format. It requires either the seL4 Microkit SDK
-(a Python package that provides the `microkit` image-assembly tool) or a Rust-native
-image assembler planned for v0.3.0.
-
-The CompilePd step (Phase 1C.a) is complete and produces a verified AArch64
-bare-metal static ELF. The full Phase 1C hello-world milestone — a seL4 protection
-domain booting in QEMU and producing output — is intended to complete when the
-AssembleImage step (Phase 1C.d) and the QEMU boot infrastructure (Phase 1C.c,
-requiring the seL4 elfloader from `github.com/seL4/seL4_tools`) are in place.
-
-The AssembleImage error message includes the paths to any already-compiled PD binaries,
-so they do not need to be recompiled when Phase 1C.d resolves:
+Confirm the assembled elfloader image entry point:
 
 ```
-PD binaries ready: [build/hello.elf]
+aarch64-linux-gnu-readelf -h build/system-image.bin | grep "Entry point"
 ```
+
+Expected:
+
+```
+  Entry point address:               0x40400000
+```
+
+## Booting in QEMU
+
+After a successful build, boot the system image with:
+
+```
+qemu-system-aarch64 \
+  -machine virt,secure=off \
+  -cpu cortex-a53 \
+  -m 1G \
+  -nographic \
+  -kernel build/system-image.bin
+```
+
+The `-m 1G` flag is required. The QEMU `virt` machine device tree describes physical
+memory from `0x40000000` to `0x80000000` (1 GiB). Launching with less memory causes
+the elfloader memory map to conflict with QEMU's initialised regions.
+
+Expected serial output (first lines):
+
+```
+ELF-loader started on CPU: ARM Ltd. Cortex-A53 r0p4
+  paddr=[40400000..40423fff]
+Bootstrapping kernel
+…
+Booting all finished, dropped to user space
+```
+
+The rootserver runs after "dropped to user space". The hello-rootserver in the
+`vendor-sel4-project/projects/hello-rootserver/` source currently loops indefinitely.
+Adding `seL4_DebugPutChar` output is a planned next step.
+
+Terminate QEMU with `Ctrl-A X`.
 
 ## Running the Test Suite
 
@@ -205,10 +257,10 @@ PD binaries ready: [build/hello.elf]
 cargo test -p moonshot-toolkit --all-targets
 ```
 
-Expected: 30 tests pass (22 lib tests + 8 bin tests). The bin test
-`build_command_errors_without_source_file` verifies that the build subcommand
-correctly propagates compile errors when the source file referenced in the spec
-does not exist.
+Expected: 35 tests pass (26 lib tests + 9 bin tests). Tests include:
+- CPIO archive format verification (4 tests in `src/cpio.rs`)
+- `assemble_image_errors_when_elfloader_missing` — verifies prerequisite checking
+- `build_command_errors_without_source_file` — verifies compile error propagation
 
 ## See Also
 
