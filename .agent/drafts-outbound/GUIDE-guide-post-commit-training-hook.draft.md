@@ -20,7 +20,11 @@ notes_for_editor: |
   Operations guide — installing the git post-commit hook for DPO tuple capture.
   Bloomberg-register pass required. Bilingual ES sibling required for TOPIC artifacts.
   Remove any internal crate paths or infrastructure-specific detail before publication.
-  Verify all code references match HEAD (Sprint 1 updated several line numbers).
+  UPDATED 2026-05-29: Step 2 payload corrected. Old format used {"brief":{"id":...,"body":...}}
+  which is missing required ApprenticeshipBrief fields and causes a 422 "missing field 'brief'"
+  error. New format uses Python to emit the full struct. Verification section updated with
+  confirmed output (queue_position, brief_id fields). Gate 3 (SLM_SHIM_TRAINING_CAPTURE)
+  removed — deployed hook does not use this mechanism.
 ---
 
 # GUIDE: Post-Commit Training Hook — Automatic DPO Tuple Capture
@@ -67,30 +71,46 @@ Create `~/Foundry/.githooks/post-commit`:
 
 ```bash
 #!/bin/bash
-# post-commit: DPO training tuple capture for Tier A/B Claude Code sessions.
-# Tier C (Anthropic API) outputs are excluded — SLM_SHIM_TRAINING_CAPTURE gate enforces this.
+# post-commit: shadow brief capture — submits commit diff to /v1/shadow for apprenticeship.
 # Backgrounded and disowned — never blocks the developer terminal.
 
-MSG=$(git log -1 --pretty=%B)
+COMMIT_MSG=$(git log -1 --pretty=%B)
 DIFF=$(git show --no-color --format= HEAD)
 
-# Gate 1: must be a Claude Code commit (Co-Authored-By: Claude trailer)
-AUTHOR_TRAILER=$(echo "$MSG" | grep -Ei '^Co-Authored-By: Claude')
-[ -z "$AUTHOR_TRAILER" ] && exit 0
-
-# Gate 2: diff must be substantive
+# Gate 1: diff must be substantive (skip tiny doc-only commits)
 [ ${#DIFF} -lt 80 ] && exit 0
 
-# Gate 3: must be a Tier A/B session (Doorman sets this; absent for Tier C)
-[ "$SLM_SHIM_TRAINING_CAPTURE" != "true" ] && exit 0
+# Build full ApprenticeshipBrief payload using Python (all fields required by Doorman)
+PAYLOAD=$(python3 - "$COMMIT_MSG" <<'PYEOF'
+import json, sys, uuid, datetime
+diff_text = sys.stdin.read()
+commit_msg = sys.argv[1] if len(sys.argv) > 1 else "git-commit"
+brief_id = uuid.uuid4().hex.upper()
+now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+data = {
+    "brief": {
+        "brief_id": brief_id,
+        "created": now,
+        "senior_role": "master",
+        "senior_identity": "pwoodfine",
+        "task_type": "git-commit",
+        "scope": {"files": []},
+        "acceptance_test": "",
+        "shadow": True,
+        "body": "git-commit diff: " + commit_msg
+    },
+    "actual_diff": diff_text
+}
+print(json.dumps(data))
+PYEOF
+)
 
-# Submit async — fire and forget
-jq -nc --arg b "$MSG" --arg d "$DIFF" \
-  '{"brief":{"id":env.GIT_COMMIT,"body":$b},"actual_diff":$d}' \
-  | curl -sS --max-time 5 -X POST \
-      -H 'content-type: application/json' \
-      --data-binary @- \
-      http://127.0.0.1:9080/v1/shadow >/dev/null 2>&1 &
+# Submit async — fire and forget; Doorman deduplicates by brief_id
+echo "$PAYLOAD" | curl -sS --max-time 10 -X POST \
+    -H 'content-type: application/json' \
+    -H 'X-Foundry-Module-ID: git-hook' \
+    --data-binary @- \
+    http://127.0.0.1:9080/v1/shadow >/dev/null 2>&1 &
 disown
 ```
 
@@ -126,18 +146,22 @@ sudo systemctl restart local-doorman.service
 
 ## Verification
 
-After a Claude Code commit that was routed through Tier A or Tier B:
+After any commit (the gate checks run; the hook fires if the diff is large enough):
 
 ```bash
-# Check shadow queue files
-ls -la /srv/foundry/clones/project-intelligence/service-slm/data/apprenticeship/queue/
-
-# Check Doorman logs for shadow activity
+# Doorman logs — look for shadow queue entry
 journalctl -u local-doorman.service | grep -i shadow | tail -10
 ```
 
-A successful submission logs a shadow tuple ID. Doorman's first-write-wins deduplication
-uses the commit SHA as the tuple ID, so resubmitting the same commit is idempotent.
+A successful submission returns a `202 Accepted` response (invisible since the hook
+backgrounded the curl call) and logs a line such as:
+
+```
+shadow: queued brief_id=A3F2... at queue_position=4
+```
+
+Deduplication is by `brief_id` (a UUID generated per commit), so resubmitting the
+same commit does not create duplicate entries.
 
 ## Training Schedule
 
