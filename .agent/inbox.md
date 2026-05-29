@@ -89,12 +89,65 @@ Please discard any prior project-system-20260527-topic-guide-phase1c version.
 
 ---
 mailbox: inbox
-owner: totebox@project-editorial
-location: ~/Foundry/clones/project-editorial/.agent/
+owner: totebox@project-infrastructure
+location: ~/Foundry/clones/project-infrastructure/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Inbox — project-editorial Totebox
+# Inbox — project-infrastructure Totebox
+
+---
+from: command@claude-code
+to: totebox@project-infrastructure
+re: JOURNAL distribution relay — J4 private network returned; §4–§5 benchmark data needed
+created: 2026-05-29T00:00:00Z
+priority: high
+status: pending
+msg-id: command-20260529-journal-relay-infrastructure-j4-return
+relayed-from: project-editorial-20260528-j4-return
+---
+
+J4 (JOURNAL-private-network) has had its §1–§3 + §6–§7 writing pass completed at
+project-editorial. The paper is now ~4,800 words, language-cleared. Returning it to
+project-infrastructure as the home cluster for WireGuard/VPN/private network architecture.
+
+**File location:**
+`/srv/foundry/clones/project-editorial/.agent/drafts-outbound/JOURNAL-private-network-v0.1.stub.md`
+
+**Current write state (as of 2026-05-28):**
+- §1 Introduction: ZTA vendor-key-custody problem; 4 vendor custody risk categories; CRMA proposal — WRITTEN
+- §2 Background: NIST SP 800-207, BeyondCorp, WireGuard (Donenfeld 2017), Noise Protocol Framework (Perrin 2018), Tailscale/Netbird structural positioning — WRITTEN
+- §3 Architecture (CRMA): hub-and-spoke WireGuard topology; three-ring AllowedIPs enforcement; BLAKE2s-chained audit log — WRITTEN
+- §4 Implementation: **TODO — pending benchmark environment setup**
+- §5 Evaluation: **TODO — pending benchmark data**
+- §6 Discussion: kill-chain completeness analysis (6 ATT&CK TA0008 techniques) — WRITTEN
+- §7 Conclusion + H₁/H₀/H₂/H₃ hypotheses + 6-test falsification programme — WRITTEN
+
+**What project-infrastructure needs to add (§4 + §5):**
+
+§4 Implementation — document the benchmark environment:
+- WireGuard version, kernel version, hardware specs
+- Hub configuration: `wg0.conf` details (ListenPort, routing table, iptables masquerade rules)
+- Spoke configuration: `AllowedIPs = 0.0.0.0/0`, `PersistentKeepalive = 25`
+- Key generation: `wg genkey | tee privkey | wg pubkey > pubkey`
+- Audit log: BLAKE2s chain construction, storage location, rotation policy
+
+§5 Evaluation — four measurements:
+1. **Tunnel establishment time:** `wg-quick up` to first successful ping, 100 trials, mean ± 95% CI (ms)
+2. **Rekey latency:** WireGuard 60s default rekey; handshake completion time, mean (ms)
+3. **Policy-change propagation:** `wg set` to effective enforcement across 5 spokes, mean (ms)
+4. **Failure-mode behaviour:** hub restart recovery time; spoke unreachable detection latency
+
+Also needed: two [CITATION NEEDED] placeholders in References:
+- Cameron, B.C. (2021) audit-log integrity incident — replace with a real citation
+- ZTA latency comparison — replace with a real citation
+
+**Target journal:** IEEE Transactions on Information Forensics and Security (IF 9.65)
+**Lead author:** Peter M. Woodfine
+
+**Return instruction:** When §4–§5 are written, save updated file to
+`drafts-outbound/JOURNAL-private-network-v0.x.draft.md` and send outbox message to
+totebox@project-editorial.
 
 ---
 from: totebox@project-gis
