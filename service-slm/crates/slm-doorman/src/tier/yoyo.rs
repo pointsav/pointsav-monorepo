@@ -283,7 +283,7 @@ impl YoYoTierClient {
         // guided_* fields, which were removed in vLLM 0.12).
         // Lark/GBNF → {"structured_outputs": {"grammar": "<string>"}}
         // JsonSchema → {"structured_outputs": {"json": <schema object>}}
-        let extra_body = match req.grammar.as_ref() {
+        let mut extra_body: Option<serde_json::Value> = match req.grammar.as_ref() {
             None => None,
             Some(GrammarConstraint::Lark(s)) | Some(GrammarConstraint::Gbnf(s)) => {
                 Some(serde_json::json!({
@@ -297,6 +297,16 @@ impl YoYoTierClient {
             }
         };
 
+        // Workaround for llama.cpp #20345: grammar constraints (JSON schema for
+        // tool calls) are silently ignored when thinking is active. Suppress
+        // thinking on tool-enabled requests so the model outputs valid JSON.
+        if req.tools.is_some() {
+            let eb = extra_body.get_or_insert_with(|| serde_json::json!({}));
+            if let Some(obj) = eb.as_object_mut() {
+                obj.insert("reasoning_budget".to_string(), serde_json::json!(0));
+            }
+        }
+
         let body = OpenAiChatRequest {
             model: model.clone(),
             messages: req.messages.clone(),
@@ -304,6 +314,7 @@ impl YoYoTierClient {
             max_tokens: req.max_tokens,
             temperature: req.temperature,
             extra_body,
+            tools: req.tools.clone(),
         };
         let url = format!(
             "{}/v1/chat/completions",
@@ -339,11 +350,12 @@ impl YoYoTierClient {
             request_id: req.request_id,
             tier_used: Tier::Yoyo,
             model,
-            content: msg.content,
+            content: msg.content.unwrap_or_default(),
             reasoning_content: msg.reasoning_content,
             inference_ms,
             cost_usd: self.config.pricing.yoyo_cost_usd(inference_ms),
             upstream_version,
+            tool_calls: msg.tool_calls,
         })
     }
 
@@ -528,6 +540,10 @@ struct OpenAiChatRequest {
     /// `guided_grammar` top-level extra_body fields were removed in vLLM 0.12.
     #[serde(skip_serializing_if = "Option::is_none")]
     extra_body: Option<serde_json::Value>,
+    /// Anthropic-format tools array. Passed through when the caller
+    /// requested tool-enabled inference. Absent when `None`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tools: Option<serde_json::Value>,
 }
 
 #[derive(Deserialize)]
@@ -542,11 +558,15 @@ struct OpenAiChatChoice {
 
 /// Upstream assistant turn — adds `reasoning_content` for `--reasoning-format deepseek`.
 /// When present, `content` is already clean JSON and reasoning tokens are isolated here.
+/// Content may be null when the model chose to emit tool_calls instead of text.
 #[derive(Deserialize)]
 struct OpenAiAssistantMessage {
-    content: String,
+    #[serde(default)]
+    content: Option<String>,
     #[serde(default)]
     reasoning_content: Option<String>,
+    #[serde(default)]
+    tool_calls: Option<serde_json::Value>,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -582,6 +602,7 @@ mod tests {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
+            tools: None,
         }
     }
 

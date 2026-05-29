@@ -114,6 +114,12 @@ pub struct ComputeRequest {
     /// DataGraph entity rows from bloating Claude Code prompts.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub graph_context_enabled: Option<bool>,
+    /// Anthropic-format `tools` array passed through to the backend tier.
+    /// Present only when the Anthropic Messages shim receives a tools-enabled
+    /// request. Absent from most requests; omitted from the serialised form
+    /// when `None` so existing callers are unaffected.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tools: Option<serde_json::Value>,
 }
 
 #[cfg(test)]
@@ -142,6 +148,7 @@ mod tests {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
+            tools: None,
         }
     }
 
@@ -396,6 +403,11 @@ pub struct ComputeResponse {
     /// Yo-Yo or external-API implementation version, opaque string.
     #[serde(default)]
     pub upstream_version: Option<String>,
+    /// OpenAI-format `tool_calls` array from the backend when the model
+    /// chose to invoke a tool. The Anthropic Messages shim converts these
+    /// into Anthropic `tool_use` content blocks in the SSE response.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool_calls: Option<serde_json::Value>,
 }
 
 // ---------------------------------------------------------------------------

@@ -112,6 +112,8 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/readyz", get(readyz))
         .route("/v1/contract", get(contract))
         .route("/v1/messages", post(anthropic_messages))
+        .route("/v1/messages/count_tokens", post(anthropic_count_tokens))
+        .route("/v1/models", get(anthropic_models))
         .route("/v1/chat/completions", post(chat_completions))
         .route("/v1/brief", post(brief))
         .route("/v1/verdict", post(verdict))
@@ -231,6 +233,7 @@ async fn chat_completions(
         grammar: body.grammar,
         speculation: None,
         graph_context_enabled: None,
+        tools: None,
     };
 
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
@@ -514,6 +517,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         grammar: Some(GrammarConstraint::JsonSchema(req.schema)),
         speculation: None,
         graph_context_enabled: None,
+        tools: None,
     };
 
     // 5. Route — no Tier A fallback.
@@ -1211,6 +1215,8 @@ fn urlencoding_encode(s: &str) -> String {
 // =============================================================================
 
 /// Inbound: Anthropic Messages API request body.
+/// No `#[serde(deny_unknown_fields)]` — `cache_control`, `anthropic-beta`,
+/// and other SDK-injected fields must not 400.
 #[derive(Deserialize)]
 struct AnthropicMessagesBody {
     model: String,
@@ -1223,9 +1229,19 @@ struct AnthropicMessagesBody {
     #[serde(default)]
     temperature: Option<f32>,
     #[serde(default)]
+    top_p: Option<f32>,
+    #[serde(default)]
+    top_k: Option<u32>,
+    #[serde(default)]
     metadata: Option<serde_json::Value>,
     #[serde(default)]
     stop_sequences: Option<Vec<String>>,
+    /// Anthropic-format tools array. When present, tool_use SSE blocks are
+    /// emitted in the response and thinking is suppressed (llama.cpp #20345).
+    #[serde(default)]
+    tools: Option<serde_json::Value>,
+    #[serde(default)]
+    tool_choice: Option<serde_json::Value>,
 }
 
 #[derive(Deserialize)]
@@ -1330,19 +1346,23 @@ fn anthropic_to_compute_request(
         grammar: None,
         speculation: None,
         graph_context_enabled: Some(false),
+        tools: body.tools,
     }
 }
 
 /// Build a non-streaming Anthropic Messages API response body.
+/// When `resp.tool_calls` is present the content carries `tool_use` blocks
+/// and `stop_reason` is `"tool_use"` instead of `"end_turn"`.
 fn compute_to_anthropic_response(resp: &slm_core::ComputeResponse, model: &str) -> serde_json::Value {
     let output_tokens = resp.content.split_whitespace().count() as u32;
+    let (content, stop_reason) = build_anthropic_content(resp);
     serde_json::json!({
         "id": format!("msg_{}", resp.request_id),
         "type": "message",
         "role": "assistant",
-        "content": [{"type": "text", "text": resp.content}],
+        "content": content,
         "model": model,
-        "stop_reason": "end_turn",
+        "stop_reason": stop_reason,
         "stop_sequence": null,
         "usage": {
             "input_tokens": 0,
@@ -1351,7 +1371,46 @@ fn compute_to_anthropic_response(resp: &slm_core::ComputeResponse, model: &str) 
     })
 }
 
-/// Build a fake-SSE response: buffer the full content, emit all 6 events at once.
+/// Convert `ComputeResponse` content + optional tool_calls into an Anthropic
+/// content array and the corresponding stop_reason string.
+fn build_anthropic_content(resp: &slm_core::ComputeResponse) -> (serde_json::Value, &'static str) {
+    if let Some(tool_calls) = &resp.tool_calls {
+        // OpenAI-format tool_calls → Anthropic tool_use content blocks.
+        let blocks: Vec<serde_json::Value> = if let Some(arr) = tool_calls.as_array() {
+            arr.iter().enumerate().map(|(i, tc)| {
+                let id = tc.get("id")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string())
+                    .unwrap_or_else(|| format!("toolu_{i:03}"));
+                let name = tc.get("function")
+                    .and_then(|f| f.get("name"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown")
+                    .to_string();
+                let input_str = tc.get("function")
+                    .and_then(|f| f.get("arguments"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("{}");
+                let input: serde_json::Value = serde_json::from_str(input_str)
+                    .unwrap_or_else(|_| serde_json::json!({}));
+                serde_json::json!({
+                    "type": "tool_use",
+                    "id": id,
+                    "name": name,
+                    "input": input
+                })
+            }).collect()
+        } else {
+            vec![]
+        };
+        (serde_json::Value::Array(blocks), "tool_use")
+    } else {
+        (serde_json::json!([{"type": "text", "text": resp.content}]), "end_turn")
+    }
+}
+
+/// Build a fake-SSE response: buffer the full content, emit all events at once.
+/// When tool_calls are present, emits tool_use content blocks instead of text.
 /// Claude Code's streaming UX receives the full response in a single burst rather
 /// than token-by-token. Real per-token streaming lands in Sprint 0b.
 fn anthropic_sse_body(resp: &slm_core::ComputeResponse, model: &str) -> String {
@@ -1367,21 +1426,88 @@ fn anthropic_sse_body(resp: &slm_core::ComputeResponse, model: &str) -> String {
             "usage": {"input_tokens": 0, "output_tokens": 0}
         }
     });
-    let e_cb_start = serde_json::json!({"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}});
-    let e_cb_delta = serde_json::json!({"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": resp.content}});
-    let e_cb_stop  = serde_json::json!({"type": "content_block_stop",  "index": 0});
-    let e_msg_delta = serde_json::json!({"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": null}, "usage": {"output_tokens": output_tokens}});
-    let e_msg_stop  = serde_json::json!({"type": "message_stop"});
 
-    format!(
-        "event: message_start\ndata: {}\n\n\
-         event: content_block_start\ndata: {}\n\n\
-         event: content_block_delta\ndata: {}\n\n\
-         event: content_block_stop\ndata: {}\n\n\
-         event: message_delta\ndata: {}\n\n\
-         event: message_stop\ndata: {}\n\n",
-        e_start, e_cb_start, e_cb_delta, e_cb_stop, e_msg_delta, e_msg_stop
-    )
+    let mut events = format!("event: message_start\ndata: {e_start}\n\n");
+
+    if let Some(tool_calls) = &resp.tool_calls {
+        // Emit tool_use content blocks for each tool call.
+        let tool_calls_arr = tool_calls.as_array().map(|a| a.as_slice()).unwrap_or(&[]);
+        for (i, tc) in tool_calls_arr.iter().enumerate() {
+            let id = tc.get("id")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| format!("toolu_{i:03}"));
+            let name = tc.get("function")
+                .and_then(|f| f.get("name"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("unknown")
+                .to_string();
+            let input_str = tc.get("function")
+                .and_then(|f| f.get("arguments"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("{}");
+
+            let e_cb_start = serde_json::json!({
+                "type": "content_block_start",
+                "index": i,
+                "content_block": {"type": "tool_use", "id": id, "name": name, "input": {}}
+            });
+            let e_cb_delta = serde_json::json!({
+                "type": "content_block_delta",
+                "index": i,
+                "delta": {"type": "input_json_delta", "partial_json": input_str}
+            });
+            let e_cb_stop = serde_json::json!({"type": "content_block_stop", "index": i});
+            events.push_str(&format!(
+                "event: content_block_start\ndata: {e_cb_start}\n\n\
+                 event: content_block_delta\ndata: {e_cb_delta}\n\n\
+                 event: content_block_stop\ndata: {e_cb_stop}\n\n"
+            ));
+        }
+        let e_msg_delta = serde_json::json!({"type": "message_delta", "delta": {"stop_reason": "tool_use", "stop_sequence": null}, "usage": {"output_tokens": output_tokens}});
+        let e_msg_stop = serde_json::json!({"type": "message_stop"});
+        events.push_str(&format!(
+            "event: message_delta\ndata: {e_msg_delta}\n\n\
+             event: message_stop\ndata: {e_msg_stop}\n\n"
+        ));
+    } else {
+        // Standard text response.
+        let e_cb_start = serde_json::json!({"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}});
+        let e_cb_delta = serde_json::json!({"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": resp.content}});
+        let e_cb_stop  = serde_json::json!({"type": "content_block_stop", "index": 0});
+        let e_msg_delta = serde_json::json!({"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": null}, "usage": {"output_tokens": output_tokens}});
+        let e_msg_stop  = serde_json::json!({"type": "message_stop"});
+        events.push_str(&format!(
+            "event: content_block_start\ndata: {e_cb_start}\n\n\
+             event: content_block_delta\ndata: {e_cb_delta}\n\n\
+             event: content_block_stop\ndata: {e_cb_stop}\n\n\
+             event: message_delta\ndata: {e_msg_delta}\n\n\
+             event: message_stop\ndata: {e_msg_stop}\n\n"
+        ));
+    }
+
+    events
+}
+
+/// `POST /v1/messages/count_tokens` — token-count estimate for context budgeting.
+/// Heuristic: 1 token ≈ 4 bytes of JSON. Goose and other SDK clients call this
+/// before sending a request to check whether it fits in the context window.
+async fn anthropic_count_tokens(body: axum::body::Bytes) -> impl IntoResponse {
+    let estimate = (body.len() as u32).saturating_div(4);
+    (StatusCode::OK, Json(serde_json::json!({"input_tokens": estimate})))
+}
+
+/// `GET /v1/models` — model list expected by Anthropic SDK clients.
+/// Returns the two model IDs used by Doorman routing:
+/// - `claude-haiku-4-5-20251001` → Tier A (OLMo 7B, local)
+/// - `claude-sonnet-4-6` → Tier B (Yo-Yo OLMo-3-32B-Think) with Tier A fallback
+async fn anthropic_models() -> impl IntoResponse {
+    (StatusCode::OK, Json(serde_json::json!({
+        "data": [
+            {"id": "claude-haiku-4-5-20251001", "object": "model", "created": 0},
+            {"id": "claude-sonnet-4-6",         "object": "model", "created": 0}
+        ]
+    })))
 }
 
 async fn anthropic_messages(
