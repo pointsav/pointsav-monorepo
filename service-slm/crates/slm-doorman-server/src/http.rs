@@ -131,13 +131,12 @@ async fn healthz() -> &'static str {
 }
 
 async fn readyz(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    // The Doorman is always ready in B1; B5+ may add upstream-tier
-    // readiness checks (e.g., probe Tier A /healthz) before flipping.
     let body = serde_json::json!({
         "ready": true,
         "has_local": state.doorman.has_local(),
         "has_yoyo": state.doorman.has_yoyo(),
         "has_external": state.doorman.has_external(),
+        "tier_b": state.doorman.tier_b_status(),
     });
     (StatusCode::OK, Json(body))
 }
@@ -499,7 +498,16 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         messages: vec![
             ChatMessage {
                 role: "system".to_string(),
-                content: "Extract named entities. Return a JSON array matching the schema exactly.".to_string(),
+                content: "Extract named entities from the text. Classify each entity into exactly one category.\n\
+Categories and examples:\n\
+  Person — named human individual. Example: \"Jane Smith\".\n\
+  Company — registered organisation or business. Example: \"Woodfine Management Corp.\".\n\
+  Project — named initiative, programme, or system. Example: \"service-slm\".\n\
+  Account — financial account, service account, or contract reference.\n\
+  Location — geographic place or address. Example: \"Vancouver\".\n\
+Omit: laws and regulations (not Location), dates and years (not Location), abstract concepts (not Company), regulatory bodies (not Company unless they are a named legal entity with a registered name).\n\
+If an entity does not clearly fit one category, omit it rather than guessing.\n\
+Return a JSON array matching the schema exactly.".to_string(),
             },
             ChatMessage {
                 role: "user".to_string(),
