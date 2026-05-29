@@ -195,8 +195,28 @@ unserved by Tabnine or Copilot SaaS.
 The learning loop is operational when ALL of the following pass:
 
 1. `curl -s http://127.0.0.1:9080/readyz | python3 -m json.tool` → `has_local: true` (Tier A live)
+   **STATUS: VERIFIED ✓** (`has_local: true, has_yoyo: true`)
 2. `ANTHROPIC_HOST=http://127.0.0.1:9080 ANTHROPIC_API_KEY=foundry-local goose session` → chat round-trips
+   **STATUS: BLOCKED — Goose binary not installed**
 3. Goose file tool (Read/Write) → `sudo journalctl -u local-doorman -f | grep -i tool_use` confirms routing
+   **STATUS: BLOCKED — depends on §7.2; tool format fix committed (104 tests pass)**
 4. `sudo journalctl -u local-content -f | grep 'entities extracted'` → Claude Code CORPUS bridge feeding LadybugDB
+   **STATUS: BLOCKED — extraction requires Tier B (Yo-Yo VM). Circuit breaker OPEN.**
+   CORPUS bridge writes files correctly; service-content routes `/v1/extract` → Doorman → Tier B;
+   Tier B circuit open because Yo-Yo VM not provisioned. Deferred until Yo-Yo VM up.
+   Workaround option: route extraction to Tier A (OLMo-7B) — separate sprint decision.
 5. `git commit` in any Totebox archive → `/v1/shadow` hit confirmed in Doorman log
+   **STATUS: VERIFIED ✓** (shadow brief enqueued at queue_position 2-5 on every commit)
 6. Sunday 02:00 UTC: `corpus-threshold.py` reports above threshold → LoRA training job starts
+   **STATUS: PENDING — depends on §7.4 being unblocked**
+
+### Additional verified endpoints (not in original §7)
+- `/v1/messages/count_tokens` → `{"input_tokens": N}` ✓
+- `/v1/shadow` with full ShadowWire payload → `202 ACCEPTED` + queue entry ✓
+- `/v1/messages` with tools → tool format fix verified (104 unit tests); SSE output pending
+  (live test blocked: QEMU vm-mediakit consuming 95% CPU, llama-server task 1590 at ~0.03 tok/s)
+
+### Blockers summary (2026-05-29)
+- **§7.2-3**: Goose binary needed; install from block/goose releases v1.36.0+
+- **§7.4**: Tier B (Yo-Yo VM) must be provisioned OR extraction rerouted to Tier A
+- **§7.6**: Downstream of §7.4
