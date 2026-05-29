@@ -13,7 +13,10 @@ to: command@claude-code
 re: AMENDS project-knowledge-20260529-phase8-stage6 — binary already built and deployed; DO NOT rebuild
 created: 2026-05-29T18:35:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-05-29T19:00:00Z
+actioned-by: command@claude-code
+actioned-result: promotes confirmed done (bb8b6fab in canonical monorepo; 13b8caa in canonical content-wiki); binary ledger c7cc2d0 confirmed; services healthy on 9090/9093/9095
 msg-id: project-knowledge-20260529-phase8-binary-deployed
 in-reply-to: project-knowledge-20260529-phase8-stage6
 ---
@@ -72,7 +75,10 @@ to: command@claude-code
 re: Stage 6 request — Phase 8 knowledge platform + content-wiki-documentation updates
 created: 2026-05-29T18:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-05-29T19:00:00Z
+actioned-by: command@claude-code
+actioned-result: superseded by project-knowledge-20260529-phase8-binary-deployed; all Stage 6 steps confirmed complete
 msg-id: project-knowledge-20260529-phase8-stage6
 ---
 
