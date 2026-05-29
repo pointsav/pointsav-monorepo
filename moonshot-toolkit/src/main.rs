@@ -154,6 +154,11 @@ fn execute_step(step: &BuildStep) -> Result<(), String> {
                     "-no-pie",
                     "-march=armv8-a",
                     "-mgeneral-regs-only",
+                    // -O2: seL4 rootserver starts with SP uninitialised; without
+                    // optimisation the compiler emits a stack-frame prologue at
+                    // _start that immediately faults. -O2 inlines all static
+                    // helpers and elides the frame. Required for all bare-metal PDs.
+                    "-O2",
                     source_path,
                     "-o",
                     binary_target,
