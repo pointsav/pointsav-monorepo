@@ -2313,6 +2313,10 @@ fn wiki_chrome(
                                 li { a href={ "/special/whatlinkshere/" (slug) } { "What links here" } }
                             }
                         }
+                        button.article-tab.reading-mode-btn #reading-mode-btn
+                            title="Reading mode"
+                            aria-pressed="false"
+                        { "Reading mode" }
                     }
                 }
 
