@@ -88,6 +88,35 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-29 — app-mediakit-knowledge reindex_topic spawn_blocking fix
+
+- **Root cause of documentation service hang (19:45–20:32 UTC):** `reindex_topic()` in
+  `src/search.rs` called Tantivy's `.commit()` and `reader.reload()` directly on the Tokio
+  executor thread. The module doc comment states "all index ops run inside spawn_blocking" but
+  `reindex_topic` was never wrapped. On the 486-article documentation corpus (106,163 segment
+  entries), post-startup background Tantivy merge/GC plus any edit-triggered `.commit()` starves
+  the async runtime.
+
+- **Fix (commit `e8a47428`, Peter):** `reindex_topic` converted from sync `fn` to `async fn`.
+  Parse step (fast, CPU-only) remains on the executor. Writer lock, `delete_term`,
+  `add_document`, `.commit()`, and `reader.reload()` all run inside
+  `tokio::task::spawn_blocking`. `Arc<Mutex<IndexWriter>>` and `IndexReader` (both `Send`) are
+  cloned cheaply before the closure. `SearchFields` is `Copy`. `WikiError` is auto-`Send`.
+
+- **Five call sites updated** (all in async context, `.await` added):
+  - `src/edit.rs` line 221 — `post_edit`
+  - `src/edit.rs` line 281 — `post_create`
+  - `src/pending.rs` line 406 — `post_accept_edit`
+  - `src/main.rs` line 231 — file-watcher write event
+  - `src/main.rs` line 239 — file-watcher remove event
+
+- **Tests:** 12/12 pass (`cargo test --test search_test --test history_test`). `cargo check` clean.
+
+- **Stage 6 pending + binary rebuild needed:** `e8a47428` needs `bin/promote.sh` + new release
+  build from Command (outbox message `project-knowledge-20260529-reindex-spawn-blocking`).
+
+---
+
 ## 2026-05-29 — app-mediakit-knowledge Phase 8 + content-wiki-documentation updates
 
 - **Phase 8 (`src/server.rs` + `static/style.css` + `tests/history_test.rs`):**
