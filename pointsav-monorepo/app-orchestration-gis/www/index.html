@@ -1745,18 +1745,6 @@
         const hasWorkReach   = hasWorkReachData(p);
         const sourceBadgeTxt = catchmentSourceLabel(p, catchmentSubLayer);
 
-        // Cell 7 — civic context with per-tier breakdown (G14 override)
-        const hcReg = p.hc_count_regional != null ? parseInt(p.hc_count_regional) : 0;
-        const hcDst = p.hc_count_district != null ? parseInt(p.hc_count_district) : 0;
-        const heReg = p.he_count_regional != null ? parseInt(p.he_count_regional) : 0;
-        const heSml = p.he_count_small    != null ? parseInt(p.he_count_small)    : 0;
-        const civicParts = [
-            hcReg > 0 ? `${hcReg} regional hospital${hcReg > 1 ? 's' : ''}` : null,
-            hcDst > 0 ? `${hcDst} district hospital${hcDst > 1 ? 's' : ''}` : null,
-            heReg > 0 ? `${heReg} regional university${heReg > 1 ? 's' : ''}` : null,
-            heSml > 0 ? `${heSml} small university${heSml > 1 ? 's' : ''}` : null,
-        ].filter(Boolean);
-        const civicLine = civicParts.length > 0 ? civicParts.join(' · ') + ` within ${p.catchment_radius_km != null ? 5 : 5} km` : null;
 
         document.getElementById('inspector').innerHTML = `
             <div class="data-block">
@@ -1843,6 +1831,36 @@
                     </div>
                 </div>
             </div>
+            ${(() => {
+                const hcReg = parseInt(p.hc_count_regional) || 0;
+                const hcDst = parseInt(p.hc_count_district)  || 0;
+                const heReg = parseInt(p.he_count_regional)  || 0;
+                const heSml = parseInt(p.he_count_small)     || 0;
+                const hasHealthcare = hcReg > 0 || hcDst > 0;
+                const hasEducation  = heReg > 0 || heSml > 0;
+                if (!hasHealthcare && !hasEducation) return '';
+                const SUB = `font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;`;
+                const DIV = `border-top:1px solid var(--border-soft);margin-top:7px;padding-top:7px;`;
+                const ROW = `font-size:11px;color:var(--text-main);margin-bottom:2px;`;
+                const NUM = `font-weight:600;margin-right:5px;`;
+                let html = `<div class="data-block" style="padding-top:6px;"><div class="catchment-block">`;
+                html += `<div class="data-label" style="margin:0 0 6px;">Civic Context</div>`;
+                if (hasHealthcare) {
+                    html += `<div><div style="${SUB}">Healthcare</div>`;
+                    if (hcReg > 0) html += `<div style="${ROW}"><span style="${NUM}">${hcReg}</span>regional hospital${hcReg>1?'s':''}</div>`;
+                    if (hcDst > 0) html += `<div style="${ROW}"><span style="${NUM}">${hcDst}</span>district hospital${hcDst>1?'s':''}</div>`;
+                    html += `</div>`;
+                }
+                if (hasEducation) {
+                    html += `<div style="${hasHealthcare ? DIV : ''}"><div style="${SUB}">Education</div>`;
+                    if (heReg > 0) html += `<div style="${ROW}"><span style="${NUM}">${heReg}</span>regional universit${heReg>1?'ies':'y'}</div>`;
+                    if (heSml > 0) html += `<div style="${ROW}"><span style="${NUM}">${heSml}</span>small universit${heSml>1?'ies':'y'}</div>`;
+                    html += `</div>`;
+                }
+                html += `<div style="font-size:10px;color:var(--text-muted);margin-top:6px;">within 5 km</div>`;
+                html += `</div></div>`;
+                return html;
+            })()}
             <div class="data-block" style="padding-top:6px;">
                 <div class="catchment-block">
                     <div class="data-label" style="margin:0 0 6px;">Site Conditions</div>
@@ -1891,13 +1909,6 @@
                     })()}
                 </div>
             </div>
-            ${civicLine ? `
-            <div class="data-block" style="padding-top:6px;">
-                <div class="catchment-block">
-                    <div class="data-label" style="margin:0 0 4px;">Civic Context</div>
-                    <div style="font-size:12px;color:var(--text-main);margin-top:4px;line-height:1.5;">${civicLine}</div>
-                </div>
-            </div>` : ''}
         `;
         loadCatchmentStats(p.cluster_id || p.id);
     }
