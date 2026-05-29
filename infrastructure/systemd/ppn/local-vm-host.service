@@ -1,0 +1,25 @@
+[Unit]
+Description=PPN VM resource pool — per-node heartbeat agent
+Documentation=https://github.com/pointsav/pointsav-monorepo
+After=network-online.target wireguard.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=foundry
+EnvironmentFile=-/etc/default/vm-host
+ExecStart=/usr/local/bin/service-vm-host
+Restart=on-failure
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=local-vm-host
+
+# Required env vars — set in /etc/default/vm-host:
+# VM_FLEET_ENDPOINT=http://10.8.0.9:9203
+# VM_NODE_ID=<node-id>
+# VM_WG_IP=<wg-ip>
+# VM_HEARTBEAT_INTERVAL_S=10
+
+[Install]
+WantedBy=multi-user.target
