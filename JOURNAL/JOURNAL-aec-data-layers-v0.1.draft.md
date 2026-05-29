@@ -7,7 +7,7 @@ title: "Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis: 
 target_journal: "Automation in Construction"
 target_publisher: "Elsevier"
 impact_factor: "12.0"
-alternate_venue: "Journal of Computing in Civil Engineering (ASCE, IF 6.04); Journal of Information Technology in Construction (ITcon, IF 3.8, open access)"
+alternate_venue: "Journal of Computing in Civil Engineering (ASCE, IF 6.04); Buildings (MDPI, open access)"
 authors:
   - name: "Jennifer M. Woodfine"
     affiliation: "Woodfine Management Corp., New York, NY, USA"
@@ -180,7 +180,9 @@ No published study provides a systematic comparative assessment of open-licence 
 
 ### 3.1 Layer Categories and Regulatory Status
 
-Eight categories are selected to represent regulatory inputs required at site-analysis or schematic-design stage for a large commercial facility in at least one of the sixteen study countries. "Regulatory-grade" designates a source explicitly cited in a building code, a flood insurance programme, or an environmental compliance standard — not merely correlated with regulatory requirements.
+Eight categories are selected to represent regulatory inputs required at site-analysis or schematic-design stage for a large commercial facility in at least one of the sixteen study countries. "Regulatory-grade" designates a source explicitly cited in a building code, a flood insurance programme, or an environmental compliance standard — not merely correlated with regulatory requirements (Table 1).
+
+**Table 1.** AEC data layer categories, regulatory standing, and priority tier.
 
 | Layer | AEC discipline | Code-prescriptive | Priority tier |
 |---|---|---|---|
@@ -223,7 +225,9 @@ Landscape architects on commercial development projects reference eco-regions to
 
 ## 4. Per-Country Coverage Assessment
 
-Each of the sixteen study countries is assessed on the 8 layer categories under a three-level quality classification: ✓ (regulatory-grade open data — explicitly cited in national code or regulatory programme, freely available for commercial use), ~ (proxy or partial coverage — modelled, API-only, or partial geographic coverage), and ✗ (no open data — proprietary, non-commercial-restricted, or structurally absent).
+Each of the sixteen study countries is assessed on the 8 layer categories under a three-level quality classification: ✓ (regulatory-grade open data — explicitly cited in national code or regulatory programme, freely available for commercial use), ~ (proxy or partial coverage — modelled, API-only, or partial geographic coverage), and ✗ (no open data — proprietary, non-commercial-restricted, or structurally absent). The results are shown in Table 2.
+
+**Table 2.** Per-country AEC data layer coverage assessment across sixteen study countries.
 
 | ISO | Climate zone | Flood | Seismic | Solar | Eco-region | Wildfire | Soil | Wind/snow |
 |---|---|---|---|---|---|---|---|---|
@@ -289,13 +293,13 @@ Preliminary findings from the parity scorecard (§4): 5 of 8 layer types achieve
 
 ### 7.1 Coverage Gaps and Implications
 
-**EU building code climate zones are derived, not native.** No pan-EU harmonised climate zone polygon equivalent to ASHRAE 169 exists. The build-by-join pipeline produces regulatory-grade assignments for eight EU ISOs, but the output is a derived layer: it inherits errors in national code zone lookup tables and depends on the completeness of LAU2 boundary data from GISCO. This creates a maintenance dependency: when France updates RE2020, Germany updates GEG, or any of the eight ISOs revises its national energy code, the lookup table must be updated before the climate zone layer reflects the new regulatory regime. This limitation is structural and unavoidable with the current state of EU spatial data infrastructure; it is ameliorated but not eliminated by INSPIRE Directive implementation.
+*EU building code climate zones are derived, not native.* No pan-EU harmonised climate zone polygon equivalent to ASHRAE 169 exists. The build-by-join pipeline produces regulatory-grade assignments for eight EU ISOs, but the output is a derived layer: it inherits errors in national code zone lookup tables and depends on the completeness of LAU2 boundary data from GISCO. This creates a maintenance dependency — when France updates RE2020, Germany updates GEG, or any of the eight ISOs revises its national energy code, the lookup table must be updated before the climate zone layer reflects the new regulatory regime. This limitation is structural and unavoidable with the current state of EU spatial data infrastructure; it is ameliorated but not eliminated by INSPIRE Directive implementation.
 
-**Canada has no national flood hazard layer.** The FHIMP (Flood Hazard Identification and Mapping Programme, 2024–2028) is expected to produce the first nationally consistent Canadian flood hazard mapping layer. Until it delivers, the best available substitute is NRCan's Future Flood Susceptibility 2024 dataset — an XGBoost-modelled national layer, not a regulatory product. Any display of Canadian flood hazard data using this proxy must disclose its modelled, non-regulatory character.
+*Canada has no national flood hazard layer.* The FHIMP (Flood Hazard Identification and Mapping Programme, 2024–2028) is expected to produce the first nationally consistent Canadian flood hazard mapping layer. Until it delivers, the best available substitute is NRCan's Future Flood Susceptibility 2024 dataset — an XGBoost-modelled national layer, not a regulatory product. Any display of Canadian flood hazard data using this proxy must disclose its modelled, non-regulatory character.
 
-**CONABIO licensing blocks Mexico precision data.** CONABIO's eco-region and Köppen-García climate classification carry CC BY-NC 2.5 MX licences, blocking commercial use without written exception. Resolve Ecoregions 2017 (CC BY 4.0) serves as a globally available substitute, commercially permissible, but with lower site-scale precision for Mexican projects. The INEGI climate raster provides a usable NMX-C-460 zone proxy at the cost of a raster-to-vector build step.
+*CONABIO licensing blocks Mexico precision data.* CONABIO's eco-region and Köppen-García climate classification carry CC BY-NC 2.5 MX licences, blocking commercial use without written exception. Resolve Ecoregions 2017 (CC BY 4.0) serves as a globally available substitute, commercially permissible, but with lower site-scale precision for Mexican projects. The INEGI climate raster provides a usable NMX-C-460 zone proxy at the cost of a raster-to-vector build step.
 
-**ASCE 7 copyright constrains redistribution.** ASCE 7 wind speed and ground snow load maps are copyrighted. The ATC Hazards API provides a compliant point-lookup alternative, but the API architecture introduces latency and external dependency absent from bulk-downloaded raster layers. The constraint is well-documented in the structural engineering community but inconsistently reflected in geospatial tools that redistribute ASCE-derived values without licence.
+*ASCE 7 copyright constrains redistribution.* ASCE 7 wind speed and ground snow load maps are copyrighted. The ATC Hazards API provides a compliant point-lookup alternative, but the API architecture introduces latency and external dependency absent from bulk-downloaded raster layers. The constraint is well-documented in the structural engineering community but inconsistently reflected in geospatial tools that redistribute ASCE-derived values without licence.
 
 ### 7.2 Reproducibility and Licence Transparency
 
@@ -315,31 +319,31 @@ The Solargis annual GHI dataset (CC BY-SA 4.0) is excluded from the pipeline due
 
 Seven tests operationalise H₁, H₂, and the reproducibility commitment:
 
-**Test 1 — Coverage count.** For each of the eight layer categories, count the number of study countries achieving ✓ (regulatory-grade open) coverage. H₁ is falsified if fewer than six categories achieve ✓ for at least eight countries.
+*Test 1 — Coverage count.* For each of the eight layer categories, count the number of study countries achieving ✓ (regulatory-grade open) coverage. H₁ is falsified if fewer than six categories achieve ✓ for at least eight countries.
 
-**Test 2 — US regulatory-grade confirmation.** Verify that ASHRAE 169/IECC (PNNL/DOE), FEMA NFHL (SFHA zones), USGS NSHM 2023 PGA, and NREL NSRDB GHI are each cited as authoritative sources in US permit documentation or code compliance standards. H₂ is falsified if any of the four sources is rejected as non-authoritative by a competent US authority in a permit application context.
+*Test 2 — US regulatory-grade confirmation.* Verify that ASHRAE 169/IECC (PNNL/DOE), FEMA NFHL (SFHA zones), USGS NSHM 2023 PGA, and NREL NSRDB GHI are each cited as authoritative sources in US permit documentation or code compliance standards. H₂ is falsified if any of the four sources is rejected as non-authoritative by a competent US authority in a permit application context.
 
-**Test 3 — Licence compatibility.** Confirm that no CC BY-SA or CC BY-NC layer is included in the production pipeline without a documented written exception or an explicitly documented open-licence substitute. The pipeline is falsified if an incompatible layer is found in production without documentation.
+*Test 3 — Licence compatibility.* Confirm that no CC BY-SA or CC BY-NC layer is included in the production pipeline without a documented written exception or an explicitly documented open-licence substitute. The pipeline is falsified if an incompatible layer is found in production without documentation.
 
-**Test 4 — Reproducibility.** Re-execute the build pipeline from the listed source URLs on a clean environment. Compare PMTiles checksums to the reference build. Falsified if outputs differ due to an undisclosed proprietary data dependency.
+*Test 4 — Reproducibility.* Re-execute the build pipeline from the listed source URLs on a clean environment. Compare PMTiles checksums to the reference build. Falsified if outputs differ due to an undisclosed proprietary data dependency.
 
-**Test 5 — EU climate zone accuracy.** For each of the eight EU ISOs with build-by-join climate zone layers, select 50 municipal centroids from the corresponding national official publication. Confirm that the pipeline assigns the correct zone code. Falsified if the assignment error rate exceeds 5%.
+*Test 5 — EU climate zone accuracy.* For each of the eight EU ISOs with build-by-join climate zone layers, select 50 municipal centroids from the corresponding national official publication. Confirm that the pipeline assigns the correct zone code. Falsified if the assignment error rate exceeds 5%.
 
-**Test 6 — H3 join accuracy.** For US ASHRAE 169 zones: select 100 cluster centroids distributed across all 8 climate zones. Confirm that the H3 resolution-7 cell-to-zone assignment matches the PNNL county table. Falsified if more than 2% of centroids are assigned to a zone inconsistent with the PNNL table.
+*Test 6 — H3 join accuracy.* For US ASHRAE 169 zones: select 100 cluster centroids distributed across all 8 climate zones. Confirm that the H3 resolution-7 cell-to-zone assignment matches the PNNL county table. Falsified if more than 2% of centroids are assigned to a zone inconsistent with the PNNL table.
 
-**Test 7 — Copyright compliance.** Inspect every PMTiles layer in the production pipeline for ASCE 7 wind speed or ground snow load content. The pipeline is falsified if ASCE-copyrighted map content is reproduced in any served tile.
+*Test 7 — Copyright compliance.* Inspect every PMTiles layer in the production pipeline for ASCE 7 wind speed or ground snow load content. The pipeline is falsified if ASCE-copyrighted map content is reproduced in any served tile.
 
 ### 7.5 Limitations
 
-**Geographic scope.** The study covers sixteen countries. Findings regarding open-data availability may not generalise to other regions, particularly countries with less developed national spatial data infrastructure.
+*Single-deployment scope.* The pipeline was evaluated on a single production deployment covering sixteen countries. While the methodology is reproducible — the data sources are openly licensed and globally available (OpenStreetMap, FEMA NFHL, USGS NSHM, PVGIS, Resolve Ecoregions 2017), and the build steps are documented here — whether the coverage assessments generalise to deployments at different spatial scales, using different cluster inventories, or applied to regions outside the sixteen study countries is an open empirical question. The authors encourage independent replication using the documented pipeline against other geographies; the OSM, FEMA, USGS, and JRC sources are all freely available for such replication.
 
-**EU climate zone derivation.** EU climate zone layers are derived — lookup join to LAU2 boundaries — not native national publications. Accuracy depends on lookup table completeness, LAU2 boundary vintage, and the mapping from national zone codes to the harmonised output schema.
+*EU climate zone derivation.* EU climate zone layers are derived — lookup join to LAU2 boundaries — not native national publications. Accuracy depends on lookup table completeness, LAU2 boundary vintage, and the mapping from national zone codes to the harmonised output schema.
 
-**Canada flood proxy.** The Future Flood Susceptibility 2024 (NRCan) is a modelled layer, not a regulatory product. Until FHIMP delivers a national layer, Canadian flood hazard information carries higher uncertainty than US FEMA NFHL data.
+*Canada flood proxy.* The Future Flood Susceptibility 2024 (NRCan) is a modelled layer, not a regulatory product. Until FHIMP delivers a national layer, Canadian flood hazard information carries higher uncertainty than US FEMA NFHL data.
 
-**PMTiles hosting cost.** FEMA NFHL SFHA (~200–500 MB), EU Floods Directive shapefiles (~50–1,000 MB per country), and WRI AQUEDUCT (~1–3 GB) involve substantial hosted-data sizes. Expanding coverage to additional countries increases hosting costs proportionally.
+*PMTiles hosting cost.* FEMA NFHL SFHA (~200–500 MB), EU Floods Directive shapefiles (~50–1,000 MB per country), and WRI AQUEDUCT (~1–3 GB) involve substantial hosted-data sizes. Expanding coverage to additional countries increases hosting costs proportionally.
 
-**EFFIS wildfire data.** JRC EFFIS wildfire data requires a formal data request and cannot be reproduced from a public URL. GWIS FWI raster is used as a fallback for EU ISOs where EFFIS data is pending; FWI is a modelled fire-weather index, not a regulatory hazard zone polygon.
+*EFFIS wildfire data.* JRC EFFIS wildfire data requires a formal data request and cannot be reproduced from a public URL. GWIS FWI raster is used as a fallback for EU ISOs where EFFIS data is pending; FWI is a modelled fire-weather index, not a regulatory hazard zone polygon.
 
 ---
 
