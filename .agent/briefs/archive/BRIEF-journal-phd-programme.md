@@ -38,6 +38,55 @@ J1+J3 re-post dispatched to project-gis (msg-id `project-editorial-20260529-jour
 
 ---
 
+## Formatting standard
+
+The target register for all six papers is plain, accessible academic prose — the kind found in
+well-written dissertations from leading research universities: clear sentences, concrete claims,
+no unnecessary circumlocution. Technical vocabulary appears only where precision requires it;
+everywhere else, plain language wins.
+
+The practical rules are in `.agent/rules/journal-artifact-discipline.md` § Prose and typography
+standards. The key habits to enforce:
+
+Argument sections (Introduction through Conclusion) contain no numbered or bulleted lists.
+Claims run as prose, with parenthetical labels for benchmarks or hypotheses: `(B1)`, `(H₁)`.
+Bold is reserved for hypothesis labels and CRediT author names. Concept leads use run-in italic:
+*Term.* Prose continues in the same paragraph. Tables carry formal captions
+(`**Table N.** Caption.`) and a parenthetical body reference before they appear. Code listings
+carry formal captions (`**Listing N.** Caption.`). The ✓/❌ symbols in table cells are replaced
+with "Yes"/"No"; three-level scales (✓/~/✗) may be retained with a key. Section depth caps at
+three decimal levels; no H4/H5 headings.
+
+These are not style preferences — they are the formatting requirements for the target venues.
+A paper that reads like a wiki article will be returned without review.
+
+---
+
+## Venue strategy
+
+All five active papers (J1–J4, J6) are aimed at genuinely competitive venues — the top one or
+two slots in their domain by impact factor or acceptance rate. This is intentional: a strong
+submission to a top venue with an honest limitations section is more useful than an easy
+acceptance at a mid-tier venue. Preprint posting to arXiv or SSRN is acceptable at all five
+primary venues and is encouraged once the language pass is complete.
+
+Confirmed primary venues and their two best alternatives:
+
+| Paper | Primary | Alt 1 | Alt 2 |
+|-------|---------|-------|-------|
+| J1 Retail Co-location | *Economic Geography* (Wiley, IF 7.2) | *Journal of Urban Economics* (Elsevier, IF 5.8) | *Regional Science and Urban Economics* (Elsevier) |
+| J2 Trustworthy Systems | ASPLOS (ACM, 19.4% AR) | USENIX Security (~15–20% AR) | OSDI (USENIX, ~12% AR) |
+| J3 AEC Data Layers | *Automation in Construction* (Elsevier, IF 12.0) | *Journal of Computing in Civil Engineering* (ASCE, IF 6.04) | *Buildings* (MDPI, open access) |
+| J4 Private Network | *IEEE TIFS* (IEEE, IF 9.65) | *IEEE/ACM Transactions on Networking* | *ACM CCS* (~20% AR) |
+| J6 Desktop Environment | *ACM TOCHI* (ACM, Q1 HCI) | *ACM CHI* (~25–30% AR) | *ACM CSCW* |
+
+The body text of each paper must not name its target journal — the `target_journal:` frontmatter
+field is internal metadata and does not render in standard PDF export. Notes about submission
+routing belong in `notes_for_editor:` frontmatter only, and only in anonymisation-safe language
+(see rules file § notes_for_editor discipline).
+
+---
+
 ## J1 — Retail Anchor Co-location (Economic Geography)
 
 **Primary:** Economic Geography (Wiley-Blackwell, IF 7.2)
