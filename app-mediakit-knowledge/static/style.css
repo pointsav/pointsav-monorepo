@@ -2417,6 +2417,47 @@ html[data-auth="user"] .wiki-fab { display: flex; }
 .mobile-nav-links li a { display: block; padding: 10px 12px; color: var(--fg-2); font-size: 15px; font-weight: 600; }
 .mobile-nav-links li a:hover { background: var(--bg-hover); border-radius: var(--radius-sm); }
 
+/* Phase 7E — Mobile bottom action bar */
+nav.mobile-bottom-bar {
+  display: none; /* hidden on desktop */
+}
+@media (max-width: 767px) {
+  nav.article-tabs { display: none; } /* replaced by bottom bar on mobile */
+  nav.mobile-bottom-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 56px;
+    background: var(--bg-elevated, var(--bg));
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    align-items: stretch;
+  }
+  .mobile-bar-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-family: var(--font-ui);
+    font-weight: 500;
+    color: var(--fg-2);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    padding: 0;
+    transition: background 0.12s;
+  }
+  .mobile-bar-btn:hover, .mobile-bar-btn:active { background: var(--bg-hover, var(--mw-color-base-10)); }
+  [data-auth="anon"] .tab-edit { display: none; }
+  body { padding-bottom: 56px; }
+  /* Mobile table scroll */
+  .page-body table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* Tighter code font on mobile */
+  .page-body pre { font-size: 12.5px; }
+}
+
 /* Sticky scroll header (minimal, appears on scroll) */
 .wiki-sticky-header {
   display: none;
