@@ -39,7 +39,7 @@
         .panel-header h1 { margin: 0; font-size: 16px; font-weight: 800; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.5px; }
         .panel-header p  { margin: 2px 0 0 0; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
         .panel-content { padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        .data-block  { margin-bottom: 20px; }
+        .data-block  { margin-bottom: 14px; }
         .data-label  { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
         .data-value  { font-size: 18px; font-weight: 800; color: var(--text-main); }
         .tier-badge  { display: inline-block; padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 800; letter-spacing: 0.3px; }
@@ -64,13 +64,13 @@
         .lc-btn {
             display: flex; align-items: center; gap: 8px;
             width: 100%; border: none; background: transparent;
-            padding: 6px 4px; font-size: 11px; font-weight: 700;
+            padding: 5px 4px; font-size: 11px; font-weight: 700;
             color: var(--text-muted); cursor: pointer; border-radius: 6px;
             text-align: left; transition: all 0.15s; margin-bottom: 1px;
         }
         .lc-btn:hover:not(.lc-disabled) { background: rgba(22,70,121,0.06); color: var(--text-main); }
-        .lc-btn.lc-active { color: var(--brand-primary); }
-        .lc-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .lc-btn.lc-active { color: var(--brand-primary); background: rgba(22,70,121,0.07); }
+        .lc-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
         .lc-disabled { cursor: default; opacity: 0.45; pointer-events: none; }
         .lc-planned { margin-left: auto; font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; background: rgba(0,0,0,0.05); padding: 2px 5px; border-radius: 4px; }
         .lc-group-label { font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; padding: 4px 4px 2px; }
@@ -109,7 +109,7 @@
         /* ── Touch targets ────────────────────────────────────────── */
         button, .lc-btn, .region-tab, .sublayer-opt, .merged-group-item,
         .nav-btn, .footer-btn, .ctx-back { touch-action: manipulation; }
-        .region-tab, .lc-btn, .reach-btn, .footer-btn, .catchment-master-toggle,
+        .region-tab, .lc-btn, .reach-btn, .catchment-master-toggle,
         .ctx-back, .back-btn, .modal-close {
             min-height: 44px;
             padding-top: max(6px, calc((44px - 1.2em) / 2));
@@ -141,14 +141,17 @@
         }
 
         /* ── Footer & Modals ──────────────────────────────────────── */
-        .panel-footer { padding: 12px 20px; border-top: 1px solid var(--border-soft); background: rgba(0,0,0,0.02); display: flex; flex-wrap: wrap; gap: 8px; }
+        .panel-footer { padding: 6px 12px; border-top: 1px solid var(--border-soft); background: rgba(0,0,0,0.02); display: flex; gap: 0; }
         .footer-btn {
-            flex: 1 1 calc(50% - 4px); border: none; background: transparent; padding: 6px;
-            font-size: 11px; font-weight: 800; color: var(--text-muted);
+            flex: 1; border: none; background: transparent; padding: 8px 4px;
+            font-size: 9.5px; font-weight: 700; color: var(--text-muted);
             text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
             border-radius: 4px; transition: all 0.15s; text-align: center; text-decoration: none; display: block;
+            line-height: 1.2; min-height: auto;
         }
         .footer-btn:hover { background: rgba(0,0,0,0.05); color: var(--brand-primary); }
+        .footer-btn + .footer-btn { border-left: 1px solid var(--border-soft); }
+        .footer-btn-primary { color: var(--brand-primary); }
 
         .modal-overlay { 
             position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
@@ -336,10 +339,10 @@
             <div class="empty-msg">Select a commercial node to begin regional market analysis.</div>
         </div>
         <div class="panel-footer">
-            <button class="footer-btn" onclick="openModal('modal-credits')">Data Credits</button>
+            <button class="footer-btn" onclick="openModal('modal-credits')">Data</button>
             <button class="footer-btn" onclick="openModal('modal-disclaimer')">Disclaimer</button>
-            <button class="footer-btn" onclick="openModal('modal-methodology')">Methodology</button>
-            <a class="footer-btn" href="/research.html" target="_blank" rel="noopener">Research Paper</a>
+            <button class="footer-btn" onclick="openModal('modal-methodology')">Method</button>
+            <a class="footer-btn footer-btn-primary" href="/research.html" target="_blank" rel="noopener">Research ↗</a>
         </div>
     </aside>
 
@@ -587,9 +590,18 @@
         map.setFilter('catchment-inner-fill', fPrimary);
         map.setFilter('catchment-outer-line', fSecondary);
         map.setFilter('catchment-inner-line', fPrimary);
+
+        // Tint rings to match the cluster's tier colour — same visual language as the proximity ring.
+        const clusterMeta = clusterIndex?.get(clusterId);
+        const tierColor = (TIER_COLORS[TIER2_TO_V2[clusterMeta?.t]] ?? TIER_COLORS[3]).fill;
+        if (map.getLayer('catchment-outer-fill')) map.setPaintProperty('catchment-outer-fill', 'fill-color', tierColor);
+        if (map.getLayer('catchment-inner-fill')) map.setPaintProperty('catchment-inner-fill', 'fill-color', tierColor);
+        if (map.getLayer('catchment-outer-line')) map.setPaintProperty('catchment-outer-line', 'line-color', tierColor);
         if (map.getLayer('catchment-inner-line')) {
+            map.setPaintProperty('catchment-inner-line', 'line-color', tierColor);
             map.setPaintProperty('catchment-inner-line', 'line-dasharray', [4, 3]);
         }
+
         ['catchment-outer-fill','catchment-inner-fill',
          'catchment-outer-line','catchment-inner-line'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible');
@@ -619,20 +631,21 @@
         if (catchmentActive && selectedClusterId) {
             const meta = clusterIndex?.get(selectedClusterId);
             showCatchmentForCluster(selectedClusterId);
-            // flyTo to a fixed zoom of 8.5 frames both catchment rings predictably on all screen sizes
-            // without dropping below z7 (keeps the 35 km inner ring visible).
+            // Always fly to z7.5 — frames both the 35 km and 150 km rings comfortably on any screen.
             // The zoomend handler suppresses showOverview() while catchment is active,
             // so dropping below RETAIL_ZOOM_THRESHOLD (9) does not lose cluster selection.
-            if (meta && map.getZoom() > 9) {
-                map.flyTo({ center: [meta.lon, meta.lat], zoom: 8.5, duration: 800, essential: true });
+            if (meta) {
+                map.flyTo({ center: [meta.lon, meta.lat], zoom: 7.5, duration: 900, essential: true });
             }
         } else {
             hideCatchment();
             if (selectedClusterId) {
-                // Restore retail layers in place at the current zoom/center — no flyTo.
-                // The zoomend handler has no branch for (!catchmentActive && !overviewActive),
-                // so we must explicitly re-show proximity rings, retailer dots, and refresh
-                // ring geometry. Cluster bubbles stay hidden (we are still drilled into a cluster).
+                const meta = clusterIndex?.get(selectedClusterId);
+                // Fly back to retail-level zoom so the user lands on cluster detail, not ring-overview.
+                if (meta) {
+                    map.flyTo({ center: [meta.lon, meta.lat], zoom: 9.5, duration: 700, essential: true });
+                }
+                // Restore retailer dots and proximity rings; cluster bubbles stay hidden.
                 if (map.getLayer('all-locations')) {
                     map.setLayoutProperty('all-locations', 'visibility', 'visible');
                     map.setPaintProperty('all-locations', 'circle-opacity', 0.70);
@@ -713,6 +726,7 @@
         if (!catchmentActive) return;
         if (catchmentCentroidCache[clusterId]) {
             map.getSource('catchment-centroids-src')?.setData(catchmentCentroidCache[clusterId]);
+            updateCatchmentStats(catchmentCentroidCache[clusterId].features || []);
             return;
         }
         fetch(`data/catchment-cells/${clusterId}.json`)
@@ -732,9 +746,36 @@
                 catchmentCentroidCache[clusterId] = data;
                 if (catchmentActive && selectedClusterId === clusterId) {
                     map.getSource('catchment-centroids-src')?.setData(data);
+                    updateCatchmentStats(data.features || []);
                 }
             })
             .catch(err => { console.warn(`[catchment] centroid fetch failed for ${clusterId}:`, err); });
+    }
+
+    function updateCatchmentStats(features) {
+        const totalPop   = features.reduce((s, f) => s + (f.properties.pop        || 0), 0);
+        const totalSpend = features.reduce((s, f) => s + (f.properties.spend_total || 0), 0);
+        const popEl   = document.getElementById('catchment-stat-pop');
+        const spendEl = document.getElementById('catchment-stat-spend');
+        if (popEl   && totalPop   > 0) popEl.textContent   = compactNum(totalPop);
+        if (spendEl && totalSpend > 0) spendEl.textContent = '$' + compactNum(totalSpend);
+    }
+
+    function loadCatchmentStats(clusterId) {
+        if (catchmentCentroidCache[clusterId]) {
+            updateCatchmentStats(catchmentCentroidCache[clusterId].features || []);
+            return;
+        }
+        fetch(`data/catchment-cells/${clusterId}.json`)
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (!data) return;
+                if (Object.keys(catchmentCentroidCache).length > 8)
+                    delete catchmentCentroidCache[Object.keys(catchmentCentroidCache)[0]];
+                catchmentCentroidCache[clusterId] = data;
+                if (selectedClusterId === clusterId) updateCatchmentStats(data.features || []);
+            })
+            .catch(() => {});
     }
 
     function colorMatchExpr() {
@@ -1234,45 +1275,26 @@
             </div>
             <div class="data-block">
                 <div class="data-label">Quality Tiers</div>
-                <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
-                    <span class="tier-badge" style="background:#164679;color:#fff;font-size:12px;">T1 Regional &nbsp;${liveT1}</span>
-                    <span class="tier-badge" style="background:#54924E;color:#fff;font-size:12px;">T2 District &nbsp;${liveT2}</span>
-                    <span class="tier-badge" style="background:#EAB308;color:#111827;font-size:12px;">T3 Local &nbsp;${liveT3}</span>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;">
+                    <span class="tier-badge" style="background:#164679;color:#fff;font-size:11px;text-align:center;display:block;padding:4px 2px;">T1 ${liveT1.toLocaleString()}</span>
+                    <span class="tier-badge" style="background:#54924E;color:#fff;font-size:11px;text-align:center;display:block;padding:4px 2px;">T2 ${liveT2.toLocaleString()}</span>
+                    <span class="tier-badge" style="background:#EAB308;color:#111827;font-size:11px;text-align:center;display:block;padding:4px 2px;">T3 ${liveT3.toLocaleString()}</span>
                 </div>
             </div>
             <div class="data-block">
                 <div class="data-label">Layers</div>
-
-                <div class="lc-group-label">Co-location</div>
                 <button class="lc-btn lc-active" id="lc-clusters" onclick="toggleLayer('nodes', this)">
                     <span class="lc-dot" style="background:#0A3070"></span>Cluster Bubbles
                 </button>
-
-                <div class="lc-group-label">Climate Zones</div>
-                <button class="lc-btn${aecActive ? ' lc-active' : ''}" id="lc-aec-master" onclick="toggleAecMasterGlobal(this)">
-                    <span class="lc-dot" style="background:linear-gradient(135deg,#22d3ee 40%,#facc15 100%)"></span>ASHRAE · EU Climate
-                </button>
-
-                <div class="lc-group-label">Mobility &amp; Catchment</div>
-                <div class="lc-btn lc-disabled">
-                    <span class="lc-dot" style="background:#3b82f6"></span>Work Origins · Population · Spend
-                    <span class="lc-planned">Cluster only</span>
-                </div>
-
-                <div class="lc-group-label">Site Conditions</div>
-                <button class="lc-btn${koppenActive ? ' lc-active' : ''}" id="lc-koppen" onclick="toggleKoppenLayer(this)">
-                    <span class="lc-dot" style="background:linear-gradient(135deg,#0000FF 25%,#96FF96 50%,#FF0000 75%)"></span>Köppen-Geiger Climate
+                <button class="lc-btn${koppenActive ? ' lc-active' : ''}" id="lc-koppen" onclick="toggleKoppenLayer(this)" style="margin-top:4px;">
+                    <span class="lc-dot" style="background:linear-gradient(135deg,#2563eb 30%,#16a34a 65%,#dc2626 100%)"></span>Köppen-Geiger Climate
                 </button>
                 <button class="lc-btn${ecoregionsActive ? ' lc-active' : ''}" id="lc-ecoregions" onclick="toggleEcoregionsLayer(this)">
-                    <span class="lc-dot" style="background:linear-gradient(135deg,#1a9641 40%,#2c7bb6 100%)"></span>Ecoregions (Biomes)
+                    <span class="lc-dot" style="background:linear-gradient(135deg,#1a9641 50%,#2c7bb6 100%)"></span>Ecoregions (Biomes)
                 </button>
-                <div class="lc-btn lc-disabled">
-                    <span class="lc-dot" style="background:#a78bfa"></span>Seismic · Flood · Wildfire
-                    <span class="lc-planned">Night 4+</span>
+                <div style="font-size:10px;color:var(--text-muted);font-style:italic;padding:4px 4px 0;margin-top:2px;">
+                    Catchment · Spend · Work Origins — available after selecting a cluster.
                 </div>
-            </div>
-            <div style="padding:16px 0 4px;text-align:center;font-size:11px;color:var(--text-muted);font-style:italic;">
-                Select a cluster node to inspect
             </div>
         `;
     }
@@ -1400,6 +1422,9 @@
             flood_hazard:     c.flood_hazard      || null,
             wildfire_hazard:  c.wildfire_hazard   || null,
             ghi_kwh_m2_yr:    c.ghi_kwh_m2_yr    ?? null,
+            ecoregion_name:   c.ecoregion_name   || null,
+            ecoregion_biome:  c.ecoregion_biome  || null,
+            eu_biogeo_region: c.eu_biogeo_region || null,
             // Civic context (from members array)
             hc_count_regional: civicM.filter(m => m.category === 'medical').length,
             hc_count_district: 0,
@@ -1501,7 +1526,7 @@
 
     function applyBubbleAecOverlayStyle() {
         if (!map.getLayer('nodes')) return;
-        if (aecActive || koppenActive || ecoregionsActive) {
+        if (koppenActive || ecoregionsActive) {
             map.setPaintProperty('nodes', 'circle-opacity', 0);
             map.setPaintProperty('nodes', 'circle-stroke-width', 2);
             map.setPaintProperty('nodes', 'circle-stroke-color', [
@@ -1523,18 +1548,78 @@
     function toggleKoppenLayer(btn) {
         koppenActive = !koppenActive;
         btn.classList.toggle('lc-active', koppenActive);
-        if (map.getLayer('layer9-koppen')) {
-            map.setLayoutProperty('layer9-koppen', 'visibility', koppenActive ? 'visible' : 'none');
+        if (koppenActive && ecoregionsActive) {
+            ecoregionsActive = false;
+            const eb = document.getElementById('lc-ecoregions');
+            if (eb) eb.classList.remove('lc-active');
+            if (map.getLayer('layer13-ecoregions')) map.setLayoutProperty('layer13-ecoregions', 'visibility', 'none');
         }
+        if (!map.getSource('layer9-koppen-src')) {
+            map.addSource('layer9-koppen-src', {
+                type: 'vector',
+                url: 'pmtiles://tiles/layer9-koppen-global.pmtiles',
+                minzoom: 4, maxzoom: 8,
+                bounds: [-180, -60, 180, 85],
+            });
+            map.addLayer({
+                id: 'layer9-koppen', type: 'fill',
+                source: 'layer9-koppen-src', 'source-layer': 'koppen',
+                layout: { visibility: 'none' },
+                paint: {
+                    'fill-color': ['match', ['get', 'koppen_class'],
+                        'Af','#0000FF', 'Am','#0077FF', 'Aw','#46A9FA',
+                        'BWh','#FF0000', 'BWk','#FF9696', 'BSh','#F5A500', 'BSk','#FFDC64',
+                        'Csa','#FFFF00', 'Csb','#C8C800', 'Csc','#969600',
+                        'Cfa','#96FF96', 'Cfb','#64C864', 'Cfc','#329632',
+                        'Dfa','#C8FF50', 'Dfb','#96C800', 'Dfc','#6E9600', 'Dfd','#4B6400',
+                        'ET','#B2B2B2', 'EF','#FFFFFF', '#CCCCCC'
+                    ],
+                    'fill-opacity': 0.38,
+                },
+            }, 'proximity-vignette');
+        }
+        if (map.getLayer('layer9-koppen')) map.setLayoutProperty('layer9-koppen', 'visibility', koppenActive ? 'visible' : 'none');
         applyBubbleAecOverlayStyle();
     }
 
     function toggleEcoregionsLayer(btn) {
         ecoregionsActive = !ecoregionsActive;
         btn.classList.toggle('lc-active', ecoregionsActive);
-        if (map.getLayer('layer13-ecoregions')) {
-            map.setLayoutProperty('layer13-ecoregions', 'visibility', ecoregionsActive ? 'visible' : 'none');
+        if (ecoregionsActive && koppenActive) {
+            koppenActive = false;
+            const kb = document.getElementById('lc-koppen');
+            if (kb) kb.classList.remove('lc-active');
+            if (map.getLayer('layer9-koppen')) map.setLayoutProperty('layer9-koppen', 'visibility', 'none');
         }
+        if (!map.getSource('layer9-ecoregions-src')) {
+            map.addSource('layer9-ecoregions-src', {
+                type: 'vector',
+                url: 'pmtiles://tiles/layer9-ecoregions-global.pmtiles',
+                minzoom: 4, maxzoom: 8,
+                bounds: [-180, -60, 180, 85],
+            });
+            map.addLayer({
+                id: 'layer13-ecoregions', type: 'fill',
+                source: 'layer9-ecoregions-src', 'source-layer': 'ecoregions',
+                layout: { visibility: 'none' },
+                paint: {
+                    'fill-color': ['match', ['get', 'BIOME_NAME'],
+                        'Tropical & Subtropical Moist Broadleaf Forests', '#1a9641',
+                        'Tropical & Subtropical Dry Broadleaf Forests', '#a6d96a',
+                        'Tropical & Subtropical Grasslands, Savannas & Shrublands', '#fdae61',
+                        'Temperate Broadleaf & Mixed Forests', '#2c7bb6',
+                        'Temperate Conifer Forests', '#abd9e9',
+                        'Boreal Forests/Taiga', '#4393c3',
+                        'Mediterranean Forests, Woodlands & Scrub', '#d7191c',
+                        'Deserts & Xeric Shrublands', '#d9ef8b',
+                        'Tundra', '#f7f7f7',
+                        '#cccccc'
+                    ],
+                    'fill-opacity': 0.35,
+                },
+            }, 'proximity-vignette');
+        }
+        if (map.getLayer('layer13-ecoregions')) map.setLayoutProperty('layer13-ecoregions', 'visibility', ecoregionsActive ? 'visible' : 'none');
         applyBubbleAecOverlayStyle();
     }
 
@@ -1715,22 +1800,21 @@
                             ${catchmentActive ? 'Hide' : 'Show on Map'}
                         </button>
                     </div>
-                    ${(primaryPop > 0 || secondaryPop > 0) ? `
-                    <div class="catchment-pop-stats">
-                        ${primaryPop > 0 ? `<div class="catchment-zone-stat">
-                            <div class="catchment-zone-label">● 35 km zone</div>
-                            <div class="catchment-zone-pop">${compactNum(primaryPop)}</div>
-                        </div>` : ''}
-                        ${(primaryPop > 0 && secondaryPop > 0) ? `<div class="catchment-zone-stat">
-                            <div class="catchment-zone-label">○ 150 km zone</div>
-                            <div class="catchment-zone-pop">${compactNum(primaryPop + secondaryPop)}</div>
-                        </div>` : ''}
-                    </div>` : ''}
+                    <div class="catchment-pop-stats" id="catchment-pop-stats">
+                        <div class="catchment-zone-stat">
+                            <div class="catchment-zone-label">Population</div>
+                            <div class="catchment-zone-pop" id="catchment-stat-pop">—</div>
+                        </div>
+                        <div class="catchment-zone-stat">
+                            <div class="catchment-zone-label">Consumer Spend</div>
+                            <div class="catchment-zone-pop" id="catchment-stat-spend">—</div>
+                        </div>
+                    </div>
                     <div id="catchment-sublayers" class="catchment-sublayers${catchmentActive ? ' visible' : ''}">
                         <div class="sublayer-radio">
                             <div class="sublayer-opt${catchmentSubLayer === 'pop' ? ' active' : ''}"
                                  onclick="setCatchmentSubLayer('pop', this)">
-                                <div class="sublayer-dot" style="background:#f97316;"></div>Population density
+                                <div class="sublayer-dot" style="background:#3b82f6;"></div>Population density
                             </div>
                             <div class="sublayer-opt${catchmentSubLayer === 'spend' ? ' active' : ''}"
                                  onclick="setCatchmentSubLayer('spend', this)">
@@ -1755,20 +1839,26 @@
                     <div style="font-size:11px;color:var(--text-main);display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:4px;">
                         ${(p.ashrae_zone || p.eu_climate_zone || p.necb_zone) ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Climate Zone</span> <span>${p.ashrae_zone || p.eu_climate_zone || p.necb_zone}</span></div>` : ''}
                         ${p.koppen_class ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Köppen</span> <span>${p.koppen_class}</span></div>` : ''}
+                        ${p.ecoregion_name  ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Eco-region</span> <span>${p.ecoregion_name}</span></div>` : ''}
+                        ${p.ecoregion_biome ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Biome</span> <span>${p.ecoregion_biome}</span></div>` : ''}
+                        ${p.eu_biogeo_region ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">EU Biogeo.</span> <span>${p.eu_biogeo_region}</span></div>` : ''}
                         ${p.seismic_pga_g != null ? `<div><span style="color:var(--text-muted);">Seismic PGA</span> <span>${p.seismic_pga_g}g</span></div>` : ''}
                         ${p.ghi_kwh_m2_yr != null ? `<div><span style="color:var(--text-muted);">Solar GHI</span> <span>${p.ghi_kwh_m2_yr} kWh/m²</span></div>` : ''}
                         ${p.flood_hazard ? `<div><span style="color:var(--text-muted);">Flood</span> <span>${p.flood_hazard}</span></div>` : ''}
                         ${p.wildfire_hazard ? `<div><span style="color:var(--text-muted);">Wildfire</span> <span>${p.wildfire_hazard}</span></div>` : ''}
                     </div>` : `
-                    <div style="font-size:10px;color:var(--text-muted);font-style:italic;margin-top:4px;">Köppen · Seismic · Solar — Night 3+</div>`}
+                    <div style="font-size:10px;color:var(--text-muted);font-style:italic;margin-top:4px;">Köppen · Eco-region · Seismic · Solar — Night 3+</div>`}
                 </div>
             </div>
             ${civicLine ? `
-            <div class="data-block">
-                <div class="data-label">Civic Context</div>
-                <div style="font-size:12px;color:var(--text-main);margin-top:4px;line-height:1.5;">${civicLine}</div>
+            <div class="data-block" style="padding-top:6px;">
+                <div class="catchment-block">
+                    <div class="data-label" style="margin:0 0 4px;">Civic Context</div>
+                    <div style="font-size:12px;color:var(--text-main);margin-top:4px;line-height:1.5;">${civicLine}</div>
+                </div>
             </div>` : ''}
         `;
+        loadCatchmentStats(p.cluster_id || p.id);
     }
 
     // ── Individual element detail panel (Item 6) ─────────────────────
@@ -2116,49 +2206,49 @@
             data: { type: 'FeatureCollection', features: [] },
         });
 
-        // Outer zone fill (secondary ring — ≤150 km), cool slate
+        // Outer zone fill (secondary ring — ≤150 km), blue-200
         map.addLayer({
             id: 'catchment-outer-fill', type: 'fill',
             source: 'catchment-src', 'source-layer': 'catchment',
             layout: { visibility: 'none' },
             filter: ['==', ['get', 'cluster_id'], ''],
-            paint: { 'fill-color': '#fdba74', 'fill-opacity': 0.06 },
+            paint: { 'fill-color': '#60a5fa', 'fill-opacity': 0.07 },
         }, 'proximity-fill'); // insert below proximity ring
 
-        // Inner zone fill (primary ring — ≤35 km), warm orange
+        // Inner zone fill (primary ring — ≤35 km), blue-500 — lighter so co-location reads through
         map.addLayer({
             id: 'catchment-inner-fill', type: 'fill',
             source: 'catchment-src', 'source-layer': 'catchment',
             layout: { visibility: 'none' },
             filter: ['==', ['get', 'cluster_id'], ''],
-            paint: { 'fill-color': '#f97316', 'fill-opacity': 0.14 },
+            paint: { 'fill-color': '#2563eb', 'fill-opacity': 0.05 },
         }, 'proximity-fill');
 
-        // Outer boundary — blurred for soft gradient falloff
+        // Outer boundary — dashed, blue-400; no blur so the 150 km limit reads precisely
         map.addLayer({
             id: 'catchment-outer-line', type: 'line',
             source: 'catchment-src', 'source-layer': 'catchment',
             layout: { visibility: 'none' },
             filter: ['==', ['get', 'cluster_id'], ''],
             paint: {
-                'line-color': '#fb923c',
-                'line-width': ['interpolate', ['linear'], ['zoom'], 5, 2, 12, 5],
-                'line-blur':  ['interpolate', ['linear'], ['zoom'], 5, 6, 12, 18],
-                'line-opacity': 0.40,
+                'line-color': '#60a5fa',
+                'line-width': 1.5,
+                'line-dasharray': [6, 4],
+                'line-opacity': 0.70,
             },
         }, 'proximity-fill');
 
-        // Inner boundary — dashed when estimated, solid when MITMA-measured
+        // Inner boundary — blue-600, heavier weight; primary trade-area limit
         map.addLayer({
             id: 'catchment-inner-line', type: 'line',
             source: 'catchment-src', 'source-layer': 'catchment',
             layout: { visibility: 'none' },
             filter: ['==', ['get', 'cluster_id'], ''],
             paint: {
-                'line-color': '#c2410c',
-                'line-width': 1.5,
+                'line-color': '#2563eb',
+                'line-width': 2,
                 'line-dasharray': [4, 3],
-                'line-opacity': 0.70,
+                'line-opacity': 0.85,
             },
         }, 'proximity-fill');
 
@@ -2311,52 +2401,7 @@
             },
         }, 'proximity-vignette');
 
-        // ── AEC layer9 — Köppen-Geiger + Ecoregions (Night 3 build) ─────────────
-        map.addSource('layer9-koppen-src', {
-            type: 'vector',
-            url: 'pmtiles://tiles/layer9-koppen-global.pmtiles',
-        });
-        map.addLayer({
-            id: 'layer9-koppen', type: 'fill',
-            source: 'layer9-koppen-src', 'source-layer': 'koppen',
-            layout: { visibility: 'none' },
-            paint: {
-                'fill-color': ['match', ['get', 'koppen_class'],
-                    'Af','#0000FF', 'Am','#0077FF', 'Aw','#46A9FA',
-                    'BWh','#FF0000', 'BWk','#FF9696', 'BSh','#F5A500', 'BSk','#FFDC64',
-                    'Csa','#FFFF00', 'Csb','#C8C800', 'Csc','#969600',
-                    'Cfa','#96FF96', 'Cfb','#64C864', 'Cfc','#329632',
-                    'Dfa','#C8FF50', 'Dfb','#96C800', 'Dfc','#6E9600', 'Dfd','#4B6400',
-                    'ET','#B2B2B2', 'EF','#FFFFFF', '#CCCCCC'
-                ],
-                'fill-opacity': 0.45,
-            },
-        }, 'proximity-vignette');
-
-        map.addSource('layer9-ecoregions-src', {
-            type: 'vector',
-            url: 'pmtiles://tiles/layer9-ecoregions-global.pmtiles',
-        });
-        map.addLayer({
-            id: 'layer13-ecoregions', type: 'fill',
-            source: 'layer9-ecoregions-src', 'source-layer': 'ecoregions',
-            layout: { visibility: 'none' },
-            paint: {
-                'fill-color': ['match', ['get', 'BIOME_NAME'],
-                    'Tropical & Subtropical Moist Broadleaf Forests', '#1a9641',
-                    'Tropical & Subtropical Dry Broadleaf Forests', '#a6d96a',
-                    'Tropical & Subtropical Grasslands, Savannas & Shrublands', '#fdae61',
-                    'Temperate Broadleaf & Mixed Forests', '#2c7bb6',
-                    'Temperate Conifer Forests', '#abd9e9',
-                    'Boreal Forests/Taiga', '#4393c3',
-                    'Mediterranean Forests, Woodlands & Scrub', '#d7191c',
-                    'Deserts & Xeric Shrublands', '#d9ef8b',
-                    'Tundra', '#f7f7f7',
-                    '#cccccc'
-                ],
-                'fill-opacity': 0.40,
-            },
-        }, 'proximity-vignette');
+        // Köppen-Geiger + Ecoregions are lazy-inited on first toggle (see toggleKoppenLayer/toggleEcoregionsLayer)
 
         // Update aecLayers toggle to also cover the line layer
         // (handled by the existing toggleAEC function checking map.getLayer(id))
@@ -2371,9 +2416,15 @@
             const v3tier = p.tier ?? 4;
             const km = Math.max(1.0, (p.span_km || 0) / 2 * 1.15);
 
-            catchmentActive = true;
+            // Preserve catchmentActive state: if user had it on for a previous cluster,
+            // update rings for the new cluster; if off, leave it off so "Show on Map" renders correctly.
+            const wasCatchmentActive = catchmentActive;
             showClusterDetail(p, coords);
-            showCatchmentForCluster(selectedClusterId);
+            if (wasCatchmentActive) {
+                showCatchmentForCluster(selectedClusterId);
+            } else {
+                hideCatchment();
+            }
 
             // Mark ring centre with a small tier-coloured dot
             map.getSource('anchors').setData({ type: 'FeatureCollection', features: [] });
