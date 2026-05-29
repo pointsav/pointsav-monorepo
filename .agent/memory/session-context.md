@@ -5,6 +5,71 @@ a fourth entry is added.
 
 ---
 
+## 2026-05-29 session 12 | Totebox | claude-code (Sonnet 4.6)
+
+**Done this session:**
+- Brief corrections (NetBSD/NVMM replacing bhyve everywhere; Microkit x86-64 constraint
+  documented — 1 vCPU/VM, Intel VT-x only; AArch64 remains correct Phase 3 path).
+- WireGuard Part A-lite LIVE status documented: Laptop A (10.8.0.6), Laptop B hub
+  (10.8.0.1, 24.86.192.209:51820), GCP (10.8.0.9). SSH verified between all nodes.
+- GCP KVM absence documented: `/dev/kvm` not present; all QEMU runs TCG; operator action
+  required (GCP console nested virtualization).
+- New durable artifacts: BRIEF-LEAPFROG-2030.md + BRIEF-OS-FAMILY.md (consolidated os-*
+  reference with Phase 1/2/3 targets for all 5 os-* types).
+- Updated BRIEF-PPN-ARCHITECTURE.md (§12 resource pooling + §13 GCP KVM),
+  BRIEF-PPN-DEV-BOOTSTRAP.md (NVMM + Microkit x86-64 corrections), BRIEF-VM-ARCHITECTURE.md
+  (NVMM correction + §8 resource pooling + §9 Leapfrog 2030 table), briefs README.
+- Staged editorial: topic-vm-architecture (EN+ES) updated with NVMM correction + new
+  Resource Pooling section; topic-os-infrastructure-ppn-node (EN+ES) new bilingual pair;
+  guide-vm-infrastructure-resource-pool new GUIDE.
+- Three new Rust crates scaffolded and tested:
+  - system-vm-fleet-types: wire types (NodeHeartbeat, VmRecord, PlacementAdvice, etc.);
+    4/4 serde round-trip tests passing
+  - service-vm-fleet: axum :9203, fleet controller, heartbeat ingestion, advisory placement;
+    8/8 tests passing (fleet.rs 4 + placement.rs 4)
+  - service-vm-host: per-node heartbeat agent, /proc/meminfo reader, QEMU monitor stub;
+    2/2 tests passing; `current_thread` Tokio throughout
+- Added Rust `[profile.release]` size discipline to workspace Cargo.toml
+  (opt-level="z", lto, codegen-units=1, panic="abort", strip).
+- Two systemd unit stubs: local-vm-fleet.service (orchestration/) + local-vm-host.service (ppn/).
+- Project registry updated: 3 new rows (system-vm-fleet-types, service-vm-fleet, service-vm-host);
+  Scaffold-coded 56→59, Total 105→108.
+- NEXT.md: fixed 23→33 commit count; added VM-Infrastructure Phase 1 resource pool
+  checklist; added Leapfrog 2030 section.
+- Outbox: 3 messages (project-editorial pickup; project-system Leapfrog discipline + bench
+  #9 coordination; command Stage 6 urgency + GCP KVM operator action).
+
+**Commits this session:**
+- `9fec6e35` (Jennifer) — feat(vm-fleet): system-vm-fleet-types + service-vm-fleet — fleet
+  controller :9203 + advisory placement; brief corrections NVMM/Microkit; BRIEF-LEAPFROG-2030
+  + BRIEF-OS-FAMILY; topic-vm-architecture updated; topic-os-infrastructure-ppn-node +
+  guide-vm-infrastructure-resource-pool staged
+- `cdc044e9` (Jennifer) — feat(vm-host): service-vm-host per-node heartbeat agent;
+  local-vm-host.service; registry rows; NEXT.md session 12; outbox to project-system +
+  project-data + command
+
+**Pending / carry-forward:**
+- Enable GCP nested KVM (operator action: GCP console). Unblocks VM performance + bench #9.
+- Run `ls /dev/kvm` on Laptop A to confirm KVM availability (operator).
+- Ratify 10.50.0.0/24 as canonical PPN subnet Q2 (operator).
+- AArch64 hardware acquisition decision (gates Phase 3 seL4).
+- Stage 6 from Command Session: 33 project-data commits + these new commits.
+- Deploy service-vm-fleet + service-vm-host after Stage 6 binary rebuild.
+- VM-Totebox Phase 1: service-fs still blocked on project-data Stage 6 (33 commits).
+- VM-Orchestration Phase 1: blocked on VM-Totebox service-fs.
+- Genesis Protocol code steps Q2–Q6 still open.
+- J4 ORCID IDs: operator action required.
+- manifest.md prose tetrad section still shows old counts (edit failed; YAML frontmatter OK).
+- 12+ TOPIC pairs + 4 GUIDEs in drafts-outbound awaiting project-editorial pickup.
+
+**Operator preferences surfaced:**
+- Leapfrog 2030 targets: Phase 3 os-* must be 4–10× lighter than Lambda 128 MB.
+- `current_thread` Tokio + `opt-level="z"` `[profile.release]` as mandatory engineering
+  discipline for all new system-* and service-* crates going forward.
+- NetBSD/NVMM (not bhyve) — critical correction to hold across all future briefs.
+
+---
+
 ## 2026-05-29 session 11 | Totebox | claude-code (Sonnet 4.6)
 
 **Done this session:**
@@ -165,49 +230,4 @@ a fourth entry is added.
 - "run complete OPUS agents on everything we have here against the internet" — user expects
   internet research agents to be used proactively to validate architectural direction.
 
----
-
-## 2026-05-28 session 6 | Totebox | claude-code (Sonnet 4.6)
-
-**Done this session:**
-- Wrote two new TOPIC bilingual pairs (EN+ES) and committed to drafts-outbound:
-  - `topic-totebox-archive` — sovereign WORM data vault; disk image IS the archive;
-    freely transferable; JSONL/GeoParquet/Markdown; Diode + PSP access only; MBA keypair;
-    cluster naming convention; what it is NOT.
-  - `topic-ppn-architecture-overview` — four-layer architecture overview (operator / PPN /
-    hypervisor / Totebox Orchestration); three key properties (isolation invariant, freely
-    transferable archives, zero crypto authority at network plane); what PPN is NOT; links
-    to all 8 detailed TOPICs.
-- Wrote three GUIDE drafts and committed to drafts-outbound:
-  - `guide-ppn-first-deployment` — 5-step first-deployment sequence from BRIEF §7, all steps
-    unblocked, with exact commands and troubleshooting table.
-  - `guide-node-join-ceremony` — approval workflow (node side: Crockford base32 short code;
-    operator side: poll + approve via curl); CPace PAKE + SAS; nodes.jsonl; 600s TTL.
-  - `guide-vm-prove-balloon-demo` — vm-prove.sh walkthrough; virtio_balloon demo from QEMU
-    monitor; pool formula; GCP nested virt enablement; proves-vs-not-yet table.
-- Updated manifest.md: wiki leg leg-pending → leg-active; 7 TOPICs + 3 GUIDEs in
-  staged_for_pickup.
-- VM proof on GCP TCG: Alpine Linux 3.20 (kernel 6.6.31-0-virt) booted in 114s; full
-  virtio_balloon cycle confirmed: `balloon 128` → `actual=128`; `balloon 256` → `actual=256`.
-- Added `infrastructure/virt/.gitignore` — excludes Alpine ISO + QCOW2 work artifacts.
-- Sent outbox session 6 pickup notice to project-editorial (9 TOPIC pairs + 3 GUIDEs total).
-
-**Commits this session:**
-- `5029e0fd` — docs(ppn): totebox-archive + ppn-architecture-overview TOPICs; 3 GUIDE drafts; manifest leg-active
-- `04388865` — chore(vm-prove): mark GCP TCG balloon proof complete
-- `d608f18b` — chore: gitignore virt/work/ — Alpine ISO + QCOW2 are build artifacts
-
-**Pending / carry-forward:**
-- Q2: Ratify `10.50.0.0/24` as canonical PPN subnet (de facto confirmed in guide-lxc-network-admin)
-- Q3: GCP static IP for cloud relay
-- Q4: Laptop B local IP + `network.woodfinegroup.com` DNS status
-- Q5: Is service-slm Doorman deployed at `localhost:9080`? (app-network-admin F8 still uses subprocess)
-- Q6: Flag stale editorial pickup to Command Session?
-- All 7 Genesis Protocol code steps in BRIEF §9.2 gated on Q2–Q6
-- 9 TOPIC pairs + 3 GUIDEs in drafts-outbound awaiting project-editorial pickup
-- 12 commits ahead of origin/main — Stage 6 from Command Session when ready
-
-**Operator preferences surfaced:**
-- "keep going" / "what can we do next" workflow: plans work items in NEXT.md, approves plan,
-  then runs phases sequentially; no need to pause between phases once plan is approved.
 
