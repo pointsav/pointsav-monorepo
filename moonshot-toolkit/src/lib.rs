@@ -16,5 +16,6 @@
 //! The CLI (`main.rs`) consumes both modules to provide
 //! `validate` / `plan` / `build` subcommands.
 
+pub mod cpio;
 pub mod plan;
 pub mod spec;
