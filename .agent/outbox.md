@@ -10,6 +10,57 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-system
 to: command@claude-code
+re: project-infrastructure — VM request for system-* testing
+created: 2026-05-29T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-system-20260529-infra-vm-request
+---
+
+Operator request: please check with project-infrastructure whether it has a VM
+available for running system-* tests (system-core, system-ledger), and ask it
+to provision one VM for that purpose.
+
+Context: system-core v1.0.0 + system-ledger v1.0.0 are Stage-6 pending. A
+dedicated test VM would allow integration testing and bench #9 re-runs (quiet
+VM required, load avg < 1.0) without contending with the workspace build VM.
+
+No specific configuration required beyond: Rust stable toolchain, enough RAM
+for `cargo bench` without swap pressure.
+
+---
+from: totebox@project-system
+to: command@claude-code
+re: Phase 1C.d complete — moonshot-toolkit v0.3.0 AssembleImage implemented
+created: 2026-05-29T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-system-20260529-phase1cd-complete
+---
+
+Phase 1C.d (AssembleImage) is complete. moonshot-toolkit v0.3.0 committed.
+
+`cargo run -p moonshot-toolkit -- build moonshot-toolkit/examples/hello-world.toml`
+now produces `build/system-image.bin` (bootable elfloader.elf). QEMU boots to:
+"Bootstrapping kernel" → "Booting all finished, dropped to user space".
+Entry point: 0x40400000 ✓.
+
+Implementation summary:
+- New `src/cpio.rs`: pure Rust CPIO "newc" writer (`write_archive`); 4 tests.
+- `AssembleImage` arm in main.rs: validates well-known prerequisites; generates
+  CPIO archive (kernel.elf + kernel.dtb + rootserver); writes archive.S with
+  .incbin; copies libcpio; compiles 44 elfloader C/ASM sources + libcpio.c;
+  preprocesses linker script; links with -lgcc -nostdlib -static.
+- No Python, CMake, or shell in the critical path (MEMO §7 compliant).
+- 35 tests total; zero warnings; clippy + fmt clean.
+- vendor-sel4-tools committed at 4bf022c (Step 1 of 1C.d, prior session).
+
+Stage-6 pending for moonshot-toolkit v0.3.0 and system-core/ledger v1.0.0
+(see prior outbox msg project-system-20260527-stage6-v100).
+
+---
+from: totebox@project-system
+to: command@claude-code
 re: Phase 1C.c complete — seL4 qemu-arm-virt QEMU boot confirmed
 created: 2026-05-28T03:30:00Z
 priority: normal
