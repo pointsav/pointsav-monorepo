@@ -25,6 +25,12 @@ Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `s
 - J2 citation research DONE `2966d8f` (Peter Woodfine): 9 YAML blocks written to outbox
   msg-id: project-system-20260529-j2-citation-yaml; inbox J2/J5 relay marked actioned.
   Flag: aws-nitro-2025 key vs actual Feb 2024 date — Command Session must decide.
+- Drafts updated `c54fb53` (Jennifer Woodfine): 3 pending Phase-1C drafts brought to
+  Phase 1C complete state (guide + 2 topics); 2 Spanish .es.md companions created for
+  both TOPICs. Superseding outbox to project-editorial sent
+  (msg-id: project-system-20260529-topic-guide-phase1c-v2).
+- moonshot-toolkit/CLAUDE.md updated: v0.2.0 → v0.3.0, 30 → 35 tests, cpio.rs added.
+- system-ledger/NEXT.md updated: Group 2D marked done; bench #9 blocked item added.
 
 **Pending / carry-forward:**
 - Stage-6 for moonshot-toolkit v0.3.0 + system-core/ledger v1.0.0 (Command Session)

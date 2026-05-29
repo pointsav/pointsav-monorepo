@@ -1,25 +1,26 @@
 # NEXT.md — system-ledger
 
-> Last updated: 2026-05-20
+> Last updated: 2026-05-29
 > Read at session start. Update before session end.
 
 ---
 
 ## Right now
 
-- Nothing in progress. Group 2D test-gap items are queued below.
+- Nothing in progress.
 
 ## Queue
 
-- **Group 2D — test gap closure (3 items):**
-  - Add `ConsultError::InconsistentState` explicit test.
-  - Add `LedgerError::NoApexForCheckpoint` explicit test.
-  - Add `apply_witness_record` at handover height test (confirm inclusion
-    proof is checked against the handover checkpoint root).
+- Nothing in the queue.
 
 ## Blocked
 
-- Nothing currently blocked.
+- **Bench #9 quiet-VM re-run** — `verify_inclusion_proof` composed
+  1024-leaf; current CI ±11% (22 outliers); ASPLOS 2027 requires < 5%.
+  Requires load avg < 1.0 on the workspace VM. VM load has been elevated
+  (10–22) for several weeks. [2026-05-29 totebox@project-system]
+  Command: `cargo bench -p system-ledger -- "verify_inclusion_proof/composed/1024"`
+  After run: update BENCHMARKS.md row #9; send outbox to project-editorial.
 
 ## Deferred
 
@@ -31,6 +32,10 @@
 
 ## Recently done
 
+- 2026-05-27: v1.0.0 bump (`c2ae1e9`). API frozen. CHANGELOG.md created.
+- 2026-05-21: Group 2D test-gap closure (3 items): `ConsultError::InconsistentState`,
+  `LedgerError::NoApexForCheckpoint`, `apply_witness_record` at handover height.
+  47 tests (was 44). Consistency-proof bench fix (benches 11–12). BENCHMARKS.md 12 entries.
 - 2026-05-20: Group 2C hygiene — CLAUDE.md + NEXT.md + ARCHITECTURE.md
   updated to reflect v0.2.1 fully-delivered state. BENCHMARKS.md added.
 - 2026-04-28 (Phase 1A.5): `apply_witness_record` upgraded to take
