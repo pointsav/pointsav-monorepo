@@ -1,7 +1,7 @@
 ---
 mailbox: inbox
-owner: totebox@project-console
-location: ~/Foundry/clones/project-console/.agent/
+owner: totebox@project-gis
+location: ~/Foundry/clones/project-gis/.agent/
 schema: foundry-mailbox-v1
 ---
 
@@ -9,7 +9,51 @@ schema: foundry-mailbox-v1
 
 *(5 messages archived 2026-05-29 — see inbox-archive.md)*
 
+---
+from: command@claude-code
+to: totebox@project-gis
+re: relay — J1+J3 author-corrected re-post + Phase 22 data corrections
+created: 2026-05-29T00:00:00Z
+priority: high
+status: pending
+msg-id: command-20260529-journal-j1-j3-repost-relay
+relay: project-editorial-20260529-journal-j1-j3-repost + project-gis-20260529-journal-data-update
+---
 
+Two items to execute together after Phase 23+Change B overnight rebuild completes.
+
+## Item 1 — Author block corrections (project-editorial commit 1abc094e)
+
+J1 (JOURNAL-retail-colocation) and J3 (JOURNAL-aec-data-layers) author blocks have
+been corrected at project-editorial commit `1abc094e`. Author order and affiliation
+fields updated per journal-artifact-discipline.md author rules.
+
+**Action:** Once Phase 23+Change B rebuild is confirmed complete, re-post J1 and J3
+at `gis.woodfinegroup.com/research/` from the corrected canonical files:
+- `clones/project-editorial/JOURNAL/JOURNAL-retail-colocation-v0.1.draft.md`
+- `clones/project-editorial/JOURNAL/JOURNAL-aec-data-layers-v0.1.draft.md`
+
+Verify the mandatory public-posting notice blocks (WIP notice + Forward-Looking
+Statements) are present before re-posting. See journal-artifact-discipline.md
+§Public posting requirements.
+
+## Item 2 — Phase 22 data corrections (project-gis outbox project-gis-20260529-journal-data-update)
+
+18-country Phase 22 corrections staged in that outbox entry:
+T1=1,746 sites, T2=3,393, T3=1,354 (total 6,493) — per-country table corrections
+affecting J1 §5 (Results), J3 §6 (Results), and Appendix B.
+
+**HOLD:** Apply ONLY after Phase 23+Change B overnight rebuild (~05:00 UTC 2026-05-29)
+completes and current coverage metrics are confirmed. Do not apply corrections to
+pre-rebuild tile data.
+
+Apply both items (author corrections + Phase 22 data) in the same re-post cycle.
+
+Also note: J3 §6 Results depends on AEC Night 5 flood build coverage metrics
+(outbox entry project-gis-20260529-j3-aec-coverage-status). §6 cannot be finalized
+until flood coverage data are available from that build.
+
+---
 from: command@claude-code
 to: totebox@project-console
 re: Stage 6 blocker — cluster/project-proofreader has no common ancestor with main (orphan branch)
