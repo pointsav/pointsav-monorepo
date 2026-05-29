@@ -17,11 +17,16 @@ Last updated: 2026-05-29 (session 8).
   SSH at `localhost:10022`; key `infrastructure/virt/work/foundry-vm-key`.
   [2026-05-29 totebox@claude-code]
 
-- [ ] **Migrate services into vm-mediakit (piece by piece, originals stay running):**
-  Use `infrastructure/virt/migrate-service-to-vm.sh <service> <port>`.
-  Sequence: service-fs (9100) → proofreader (9092) → knowledge-documentation (9090)
-  → knowledge-corporate+projects (9095/9093) → marketing (9101/9102) → bim-orch (9096).
-  Test each via `curl http://localhost:1<port>/healthz` before proceeding.
+- [x] **Migrate 6/8 services into vm-mediakit — DONE 2026-05-29:**
+  proofreader (9092) ✓ · knowledge-documentation (9090) ✓ · knowledge-corporate (9095) ✓
+  · knowledge-projects (9093) ✓ · marketing-pointsav (9101) ✓ · marketing/woodfine (9102) ✓
+  All originals still running on host. No DNS changes.
+  Note: TCG first-request latency ~30-60s (10x slower than KVM); smoke tests use 60s timeout.
+  [2026-05-29 totebox@claude-code]
+
+- [ ] **Migrate bim-orchestration (9096)** — BLOCKED on service-fs in VM.
+  Depends on `FS_ENDPOINT=http://127.0.0.1:9100` inside VM.
+  Unblocks after service-fs install (see item below).
   [2026-05-29 totebox@claude-code]
 
 - [ ] **system-core + system-ledger install** — pending project-system (outbox sent).
