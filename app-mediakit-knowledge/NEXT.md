@@ -2,6 +2,28 @@
 
 > Last updated: 2026-05-29
 
+## Phase 7E — COMPLETE (2026-05-29)
+
+Mobile chrome: bottom action bar, mobile table overflow, mobile code font.
+Files: `src/server.rs`, `static/style.css`, `static/wiki.js`.
+
+- **`nav.mobile-bottom-bar`** added to `wiki_chrome()` (after mobile-nav-overlay). Four actions:
+  Contents (opens TOC drawer), Share (`navigator.share` or clipboard fallback), Edit (link to edit,
+  auth-gated via `[data-auth="anon"] .tab-edit { display: none; }`), History.
+  Fixed `bottom: 0; height: 56px; z-index: 100;` — visible only on `≤767px`.
+- **`nav.article-tabs` hidden on mobile** (`@media (max-width: 767px) { nav.article-tabs { display: none; } }`).
+  Bottom bar replaces it.
+- **`body { padding-bottom: 56px; }`** on mobile — prevents bottom bar overlap with content.
+- **Mobile table overflow:** `.page-body table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }`
+- **Mobile code font:** `.page-body pre { font-size: 12.5px; }` on mobile.
+- **`initMobileBottomBar()`** in wiki.js: Contents button delegates to existing `#toc-toggle-btn`;
+  Share button calls `navigator.share()` with page title + URL, falls back to clipboard.
+  Called in DOMContentLoaded boot sequence.
+
+Binary rebuild + deploy required (rust-embed). Stage 6 pending.
+
+---
+
 ## Phase 7D — COMPLETE (2026-05-29)
 
 Citation hover preview, freshness dot, `CITATIONS` redb table.
@@ -122,7 +144,7 @@ binary rebuild queued for nightly ~1am Vancouver 2026-05-28.
 | **7C** | Reading mode toggle; CSS body-class; localStorage | **COMPLETE** (commit `d649f051`) |
 | **7X** | Home page: search hero, featured article, DYK section | **Already implemented** (YAML-based: `featured-topic.yaml`, `leapfrog-facts.yaml`; hero search in `section.hero`) |
 | **7D** | Citation hover preview; freshness dot; citations redb table | **COMPLETE** |
-| **7E** | Mobile chrome: 56px top/bottom bars; TOC bottom sheet; code/table overflow | Queued |
+| **7E** | Mobile chrome: bottom bar; table overflow; code font; article-tabs hidden on mobile | **COMPLETE** |
 | **7F** | Tufte sidenotes for `layout: journal` articles at ≥1280px | Queued |
 | **7G+7H** | Corporate: effective\_date block; auto-numbered sections (CSS counters) | Queued |
 | **8** | History surface: revision list, diff UI, integrity-bar (blake3 SHA) | Queued |
