@@ -1992,6 +1992,8 @@ async fn wiki_page_inner(
     let raw_html = render_html_raw(&parsed.body_md, &state.content_dir);
     let raw_html = crate::glossary::inject_glossary_tooltips(&raw_html, &state.glossary);
     let raw_html = crate::render::inject_citation_markers(&raw_html);
+    let is_journal = parsed.frontmatter.layout.as_deref() == Some("journal");
+    let raw_html = crate::render::inject_sidenotes(&raw_html, is_journal);
     let headings = extract_headings(&raw_html);
     let body_html = inject_edit_pencils(&raw_html);
 
@@ -2558,7 +2560,10 @@ fn wiki_chrome(
                         }
 
                         // Article body
-                        div.prose #mw-content-text {
+                        div.prose #mw-content-text
+                            data-layout=(fm.layout.as_deref().unwrap_or(""))
+                            data-numbered=(if fm.auto_number { "true" } else { "false" })
+                        {
                             (PreEscaped(body_html))
                         }
 
