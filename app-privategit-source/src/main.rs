@@ -183,7 +183,10 @@ async fn verify_key_endpoint(
     Json(req): Json<VerifyKeyRequest>,
 ) -> (StatusCode, Json<Value>) {
     let Some(vk) = &state.verify_key else {
-        tracing::warn!(result = "service-unavailable", "verify-key: VERIFY_KEY_PUB not set");
+        tracing::warn!(
+            result = "service-unavailable",
+            "verify-key: VERIFY_KEY_PUB not set"
+        );
         return (
             StatusCode::SERVICE_UNAVAILABLE,
             Json(json!({"error": "verify key not configured — set VERIFY_KEY_PUB"})),
@@ -198,7 +201,7 @@ async fn verify_key_endpoint(
             return (
                 StatusCode::UNAUTHORIZED,
                 Json(json!({"valid": false, "reason": "malformed token"})),
-            )
+            );
         }
     };
 
@@ -229,7 +232,7 @@ async fn verify_key_endpoint(
             return (
                 StatusCode::UNAUTHORIZED,
                 Json(json!({"valid": false, "reason": "invalid payload"})),
-            )
+            );
         }
     };
 
