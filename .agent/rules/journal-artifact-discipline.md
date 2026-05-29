@@ -41,7 +41,7 @@ impact_factor: ""      # fill before submission
 alternate_venue: ""    # optional second-choice venue
 authors:
   - name: "Jennifer M. Woodfine"
-    affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
+    affiliation: "Woodfine Management Corp., New York, NY, USA"
     email: corporate.secretary@woodfinegroup.com
     orcid: ""           # required before submission
     credit_roles:
@@ -61,7 +61,25 @@ word_count_target: 8500
 submission_status: not-submitted
 cites: []
 forbidden_terms_cleared: false  # set true only after full language pass
+notes_for_editor: |    # optional; must use anonymisation-safe language only (see § below)
+  ...
 ```
+
+---
+
+## notes_for_editor discipline
+
+The `notes_for_editor:` frontmatter field must contain only anonymisation-safe language
+that could appear in a cover letter or submission portal without compromising double-blind
+review or disclosing internal process details.
+
+**Permitted:** venue rationale in public terms; word-count status; data-collection
+blockers described in general terms; citation and figure status in plain language.
+
+**Forbidden:** all terms from the Forbidden vocabulary list below; internal phase
+numbers (Phase 22, Phase 24B, etc.); archive names (project-gis, project-system, etc.);
+internal process terms (Stage 6, F12, BRIEF, NEXT.md, spawned agents, Opus pipeline,
+routing pass, etc.); internal file paths; scoresheet or convention names.
 
 ---
 
@@ -103,6 +121,46 @@ section bodies; promotion to `under-review` requires all sections populated.
 20. **Conflict of Interest Declaration**
 21. **Funding Statement** — or "No external funding received"
 22. **Data Availability Statement**
+
+---
+
+## Prose and typography standards
+
+The target register is a traditional academic PhD dissertation updated for open-access
+preprints: flowing proposition-based prose, numbered sections, formal captions on all
+tables and listings, run-in italic for first-use terminology, and no bold structural
+labels inside argument sections. The goal is accessibility — plain language wherever
+precision permits, technical vocabulary only where precision requires it.
+
+1. **Prose-first.** Numbered or bulleted lists are prohibited inside argument sections
+   (Introduction, Background, Methodology, Results, Discussion, Limitations, Conclusion).
+   Permitted in: formal Algorithm environments, Appendix reference tables, and
+   measurement protocol steps where sequence is operationally mandatory.
+
+2. **Bold usage.** Bold is reserved for hypothesis labels (H₁, H₀, H₂) and author names
+   in the CRediT block. Never use bold as a paragraph-opening label for a concept. Use
+   run-in italic instead: `*Term.* Prose continues in the same paragraph.`
+
+3. **Section depth.** Maximum three decimal levels (e.g. 3.1.2). No H4/H5 subheadings.
+   Further structural distinctions within a subsection use run-in italic paragraph leads.
+
+4. **Tables.** Every table requires: (a) a formal caption `**Table N.** Caption.` on the
+   line immediately preceding the table; (b) a parenthetical reference `(Table N)` in the
+   body text that introduces the table. Tables containing no comparative or quantitative
+   data should be converted to prose.
+
+5. **Code listings.** Every code block requires a formal caption `**Listing N.** Caption.`
+   on the line immediately preceding the fence. Surrounding prose narrates at the level of
+   mechanism — not step-by-step ("First... Then..."). One explanatory sentence suffices.
+
+6. **Symbols.** ✓/❌ in table cells → replace with "Yes"/"No" or convert the comparison
+   to prose. Three-level quality scales (✓/~/ ✗) may be retained with a key.
+
+7. **Results sub-labels.** Never `**Results — label.**` inside a running paragraph.
+   Results flow as prose with parenthetical benchmark identifiers: `(B1)`, `(B3)`.
+
+8. **Figures.** `**Figure N.** Caption.` on the line immediately following the figure
+   reference or the figure block.
 
 ---
 
