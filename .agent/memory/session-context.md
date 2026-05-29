@@ -35,6 +35,9 @@ a fourth entry is added.
 - `2e325dea` — fix(vm-mediakit): smoke test curl 000 double-output bug
 - `dd0bd69d` — fix(vm-migrate): port-suffixed tmp path prevents binary race; smoke test non-fatal
 - `4be18e37` — chore(vm-mediakit): session 9 status — 6/8 services active; bim-orch blocked
+- `df6e4cc3` — chore(session): session context update
+- `4a53d3af` — docs(vm-mediakit): topic-os-mediakit Ubuntu 24.04 fix; 2 new GUIDEs
+- `658e6876` — chore(outbox): editorial pickup notice for 2 GUIDEs + topic correction
 
 **Pending / carry-forward:**
 - service-fs migration (port 9100) — BLOCKED: Command Session must promote project-data's
