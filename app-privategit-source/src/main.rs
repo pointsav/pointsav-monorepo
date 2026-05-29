@@ -91,7 +91,9 @@ fn verify_license_key(
     product_id: &str,
 ) -> Result<LicensePayload, LicenseVerifyErr> {
     use LicenseVerifyErr::*;
-    let token_bytes = URL_SAFE_NO_PAD.decode(key_b64).map_err(|_| MalformedToken)?;
+    let token_bytes = URL_SAFE_NO_PAD
+        .decode(key_b64)
+        .map_err(|_| MalformedToken)?;
     if token_bytes.len() <= 64 {
         return Err(TokenTooShort);
     }
@@ -285,7 +287,10 @@ async fn verify_key_endpoint(
     Json(req): Json<VerifyKeyRequest>,
 ) -> (StatusCode, Json<Value>) {
     let Some(vk) = &state.verify_key else {
-        tracing::warn!(result = "service-unavailable", "verify-key: VERIFY_KEY_PUB not set");
+        tracing::warn!(
+            result = "service-unavailable",
+            "verify-key: VERIFY_KEY_PUB not set"
+        );
         return (
             StatusCode::SERVICE_UNAVAILABLE,
             Json(json!({"error": "verify key not configured — set VERIFY_KEY_PUB"})),
@@ -308,7 +313,10 @@ async fn verify_key_endpoint(
                 "forbidden"
             };
             tracing::info!(product_id = %req.product_id, key_fp = %key_fp, result = log_result, reason = e.reason(), "verify-key");
-            (e.status(), Json(json!({"valid": false, "reason": e.reason()})))
+            (
+                e.status(),
+                Json(json!({"valid": false, "reason": e.reason()})),
+            )
         }
         Ok(payload) => {
             tracing::info!(product_id = %payload.product, key_fp = %key_fp, result = "ok", "verify-key");
