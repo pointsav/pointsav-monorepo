@@ -1,0 +1,30 @@
+[Unit]
+Description=Woodfine Marketing Landing (app-mediakit-marketing — woodfine tenant)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=foundry
+Group=foundry
+
+WorkingDirectory=/opt/mediakit/data/marketing-woodfine
+
+Environment="SERVICE_MARKETING_CONTENT_DIR=/opt/mediakit/data/marketing-woodfine/content"
+Environment="SERVICE_MARKETING_BIND=0.0.0.0:9102"
+Environment="SERVICE_MARKETING_MODULE_ID=woodfine"
+Environment="SERVICE_MARKETING_SITE_TITLE=Woodfine"
+Environment="SERVICE_MARKETING_GRAPH_URL=http://127.0.0.1:9081"
+
+ExecStart=/opt/mediakit/bin/app-mediakit-marketing serve
+
+Restart=on-failure
+RestartSec=5s
+
+NoNewPrivileges=true
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
