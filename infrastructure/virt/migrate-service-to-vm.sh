@@ -96,53 +96,48 @@ echo "[3/5] Copying deployment data..."
 # Service-specific content directory transfers
 case "$SERVICE" in
     knowledge-documentation)
-        echo "  rsync: content-wiki-documentation (~20M)..."
+        echo "  copy: content-wiki-documentation (~20M, tar pipe)..."
         ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/content-wiki-documentation /opt/mediakit/data/knowledge"
-        rsync -az --exclude='.git' --exclude='target' \
-            -e "ssh $SSH_OPTS" \
-            /srv/foundry/clones/project-knowledge/content-wiki-documentation/ \
-            "${VM}:/opt/mediakit/data/content-wiki-documentation/"
+        tar -czf - --exclude='.git' --exclude='target' \
+            -C /srv/foundry/clones/project-knowledge/content-wiki-documentation . \
+            | ssh $SSH_OPTS "$VM" "tar -xzf - -C /opt/mediakit/data/content-wiki-documentation/"
         scp $SSH_OPTS /srv/foundry/citations.yaml "${VM}:/opt/mediakit/data/content-wiki-documentation/citations.yaml"
         echo "  → /opt/mediakit/data/content-wiki-documentation/"
         FOUND_DEPLOY=1
         ;;
     knowledge-corporate)
-        echo "  rsync: content-wiki-corporate (~4M)..."
+        echo "  copy: content-wiki-corporate (~4M, tar pipe)..."
         ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/content-wiki-corporate /opt/mediakit/data/knowledge"
-        rsync -az --exclude='.git' \
-            -e "ssh $SSH_OPTS" \
-            /srv/foundry/customer/content-wiki-corporate/ \
-            "${VM}:/opt/mediakit/data/content-wiki-corporate/"
+        tar -czf - --exclude='.git' \
+            -C /srv/foundry/customer/content-wiki-corporate . \
+            | ssh $SSH_OPTS "$VM" "tar -xzf - -C /opt/mediakit/data/content-wiki-corporate/"
         echo "  → /opt/mediakit/data/content-wiki-corporate/"
         FOUND_DEPLOY=1
         ;;
     knowledge-projects)
-        echo "  rsync: content-wiki-projects (~4M)..."
+        echo "  copy: content-wiki-projects (~4M, tar pipe)..."
         ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/content-wiki-projects /opt/mediakit/data/knowledge"
-        rsync -az --exclude='.git' \
-            -e "ssh $SSH_OPTS" \
-            /srv/foundry/customer/content-wiki-projects/ \
-            "${VM}:/opt/mediakit/data/content-wiki-projects/"
+        tar -czf - --exclude='.git' \
+            -C /srv/foundry/customer/content-wiki-projects . \
+            | ssh $SSH_OPTS "$VM" "tar -xzf - -C /opt/mediakit/data/content-wiki-projects/"
         echo "  → /opt/mediakit/data/content-wiki-projects/"
         FOUND_DEPLOY=1
         ;;
     marketing-pointsav)
-        echo "  rsync: marketing-landing-2 (pointsav, ~2.5M)..."
+        echo "  copy: marketing-landing-2 (pointsav, ~2.5M, tar pipe)..."
         ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/marketing-pointsav"
-        rsync -az --exclude='.git' \
-            -e "ssh $SSH_OPTS" \
-            ~/Foundry/deployments/media-marketing-landing-2/ \
-            "${VM}:/opt/mediakit/data/marketing-pointsav/"
+        tar -czf - --exclude='.git' \
+            -C ~/Foundry/deployments/media-marketing-landing-2 . \
+            | ssh $SSH_OPTS "$VM" "tar -xzf - -C /opt/mediakit/data/marketing-pointsav/"
         echo "  → /opt/mediakit/data/marketing-pointsav/"
         FOUND_DEPLOY=1
         ;;
     marketing)
-        echo "  rsync: marketing-landing-1 (woodfine, ~2.5M)..."
+        echo "  copy: marketing-landing-1 (woodfine, ~2.5M, tar pipe)..."
         ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/marketing-woodfine"
-        rsync -az --exclude='.git' \
-            -e "ssh $SSH_OPTS" \
-            ~/Foundry/deployments/media-marketing-landing-1/ \
-            "${VM}:/opt/mediakit/data/marketing-woodfine/"
+        tar -czf - --exclude='.git' \
+            -C ~/Foundry/deployments/media-marketing-landing-1 . \
+            | ssh $SSH_OPTS "$VM" "tar -xzf - -C /opt/mediakit/data/marketing-woodfine/"
         echo "  → /opt/mediakit/data/marketing-woodfine/"
         FOUND_DEPLOY=1
         ;;
