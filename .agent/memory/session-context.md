@@ -4,6 +4,36 @@ Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `s
 
 ---
 
+## 2026-05-29 — Totebox Session — claude-code (claude-sonnet-4-6)
+
+**Done this session:**
+- Phase 1C.d DONE `fc245ee` (Peter Woodfine): AssembleImage fully implemented in Rust
+  - moonshot-toolkit v0.3.0; no Python/CMake/shell in critical path (MEMO §7 ✓)
+  - New `src/cpio.rs`: pure Rust CPIO "newc" writer; 4 tests
+  - `assemble_image()` in main.rs: validates prerequisites; generates CPIO archive;
+    writes archive.S with .incbin (absolute path); copies libcpio (cpio.c + cpio/cpio.h);
+    compiles 44 elfloader C/ASM sources + libcpio.c via std::process::Command;
+    preprocesses linker.lds; links -nostdlib -static -lgcc
+  - Key fix: `vendor-sel4-project/build-support/qemu-arm-virt/libcpio/cpio` is a
+    DIRECTORY (not a file); it contains `cpio.h`, included as `<cpio/cpio.h>` — both
+    cpio.c and the cpio/ subdirectory must be copied to build/libcpio/
+  - Verified: `build/system-image.bin` entry 0x40400000; QEMU: "Bootstrapping kernel"
+    → "Booting all finished, dropped to user space"
+  - 35 tests (26 lib + 9 bin); zero warnings
+- Outbox: Phase 1C.d complete notice + project-infrastructure VM request sent to Command
+
+**Pending / carry-forward:**
+- Stage-6 for moonshot-toolkit v0.3.0 + system-core/ledger v1.0.0 (Command Session)
+- Outbox: project-infrastructure VM request for system-* testing (msg-id: project-system-20260529-infra-vm-request)
+- hello.c rootserver: add SysDebugPutChar output (currently infinite loop)
+- Bench #9 quiet-VM re-run: verify_inclusion_proof composed 1024-leaf (load avg < 1.0)
+- PhD thesis pre-publication checklist still pending
+
+**Operator preferences:**
+- Auto Mode active; all decisions proceed without stopping for clarifications
+
+---
+
 ## 2026-05-28 — Totebox Session — claude-code (claude-sonnet-4-6)
 
 **Done this session:**
@@ -49,36 +79,5 @@ Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `s
 
 **Operator preferences:**
 - Auto Mode active
-
----
-
-## 2026-05-27 — Totebox Session — claude-code (claude-sonnet-4-6)
-
-**Done this session:**
-- Full startup sequence (12 steps per AGENT.md)
-- Direction-finding: 4 Q&A questions answered; session agenda agreed (v1.0.0 bumps + Stage-6)
-- PhD thesis BRIEF created: `.agent/briefs/BRIEF-substrate-phd-thesis-2026-05-27.md` (719 lines)
-  — Yale PhD thesis-quality research on system-* layer, service-fs, seL4/NetBSD, Totebox transferability
-  — 12 Opus research agents used for source material; schema foundry-draft-v1 / PROSE-RESEARCH
-- Committed BRIEF: `edd4928` (Jennifer Woodfine)
-- Fixed pointsav-monorepo branch: switched from `main` to `cluster/project-system`
-- v1.0.0 version bumps: system-core 0.2.0→1.0.0, system-ledger 0.2.1→1.0.0
-  — Cargo.toml updated, CLAUDE.md headers updated, CHANGELOG.md created for both
-  — 62+47 tests passing; `c2ae1e9` (Jennifer Woodfine)
-- Outbox: `project-system-20260527-stage6-v100` prepended (Stage-6 ready signal to Command)
-- Old gate-decisions outbox msg marked actioned
-- cleanup-log.md session entry added
-- project-system-todo.md: v1.0.0 items marked complete
-
-**Pending / carry-forward:**
-- Stage-6 not yet run (awaiting Command Session to process outbox)
-- `pointsav-fleet-deployment` file-mode drift (32 files 644→755 + `.claude/rules/project-registry.md` structural deletion) — surfaced in outbox via cleanup-log; needs Command review
-- Bench #9 quiet-VM re-run: verify_inclusion_proof composed 1024-leaf; needs load avg < 1.0
-- PhD thesis pre-publication: bench #9, Group 3A decisions, citation promotion, language pass, ES panorama
-- WFD registry drift: `gateway-knowledge-documentation-1` absent from HEAD; reconcile against WFD main
-
-**Operator preferences surfaced:**
-- Auto Mode active: proceed without stopping for clarifications; make reasonable calls
-- Approved all 4 v1.0.0 gate decisions using recommendations
 
 ---
