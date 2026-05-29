@@ -1,0 +1,11 @@
+#cloud-config
+# VM-Orchestration guest cloud-init — stub.
+# TODO: populate when provision-vm-orchestration.sh is implemented.
+# Reference: infrastructure/virt/cloud-init-mediakit/user-data for the MediaKit pattern.
+hostname: vm-orchestration
+users:
+  - name: foundry
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - "# TODO: insert foundry-vm-key.pub contents here"
