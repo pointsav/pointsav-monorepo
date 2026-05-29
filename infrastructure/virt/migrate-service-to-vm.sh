@@ -46,6 +46,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 KEY="${SCRIPT_DIR}/work/foundry-vm-key"
 SSH_OPTS="-p 10022 -i ${KEY} -o StrictHostKeyChecking=no -o ConnectTimeout=10"
+SCP_OPTS="-P 10022 -i ${KEY} -o StrictHostKeyChecking=no -o ConnectTimeout=10"
 VM="foundry@localhost"
 HOST_PORT="1${PORT}"
 
@@ -84,7 +85,7 @@ if [[ ! -f "$BINARY_PATH" ]]; then
     echo "WARNING: ${BINARY_PATH} not found on host — skipping binary copy"
     echo "         Install the binary first, then re-run this script"
 else
-    scp $SSH_OPTS "$BINARY_PATH" "${VM}:/tmp/${BINARY}"
+    scp $SCP_OPTS "$BINARY_PATH" "${VM}:/tmp/${BINARY}"
     ssh $SSH_OPTS "$VM" "sudo mv /tmp/${BINARY} /opt/mediakit/bin/ && sudo chmod +x /opt/mediakit/bin/${BINARY}"
     echo "  → /opt/mediakit/bin/${BINARY}"
 fi
@@ -101,7 +102,7 @@ case "$SERVICE" in
         tar -czf - --exclude='.git' --exclude='target' \
             -C /srv/foundry/clones/project-knowledge/content-wiki-documentation . \
             | ssh $SSH_OPTS "$VM" "tar -xzf - -C /opt/mediakit/data/content-wiki-documentation/"
-        scp $SSH_OPTS /srv/foundry/citations.yaml "${VM}:/opt/mediakit/data/content-wiki-documentation/citations.yaml"
+        scp $SCP_OPTS /srv/foundry/citations.yaml "${VM}:/opt/mediakit/data/content-wiki-documentation/citations.yaml"
         echo "  → /opt/mediakit/data/content-wiki-documentation/"
         FOUND_DEPLOY=1
         ;;
@@ -169,6 +170,12 @@ if [[ ! -f "$UNIT_PATH" ]]; then
     echo "         Create the unit file, then re-run this script"
 else
     # Adapt unit: replace /usr/local/bin with /opt/mediakit/bin
+    # Extract WorkingDirectory from unit file and create it in the VM
+    WORK_DIR=$(grep '^WorkingDirectory=' "$UNIT_PATH" | cut -d= -f2-)
+    if [[ -n "$WORK_DIR" ]]; then
+        ssh $SSH_OPTS "$VM" "mkdir -p ${WORK_DIR} && chown foundry:foundry ${WORK_DIR}"
+    fi
+    # Adapt unit: replace /usr/local/bin with /opt/mediakit/bin
     ADAPTED_UNIT=$(sed "s|/usr/local/bin/${BINARY}|/opt/mediakit/bin/${BINARY}|g" "$UNIT_PATH")
     echo "$ADAPTED_UNIT" | ssh $SSH_OPTS "$VM" "sudo tee /etc/systemd/system/${UNIT_NAME} > /dev/null"
     ssh $SSH_OPTS "$VM" "sudo systemctl daemon-reload && sudo systemctl enable --now ${UNIT_NAME}"
@@ -179,14 +186,14 @@ fi
 
 echo "[5/5] Smoke test (localhost:${HOST_PORT})..."
 sleep 2
-HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://localhost:${HOST_PORT}/healthz" 2>/dev/null || echo "000")
+HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://localhost:${HOST_PORT}/" 2>/dev/null || echo "000")
 if [[ "$HTTP_STATUS" == "200" ]]; then
-    echo "  ✓ localhost:${HOST_PORT}/healthz → HTTP 200"
-elif [[ "$HTTP_STATUS" == "000" ]]; then
-    echo "  ! localhost:${HOST_PORT}/healthz — no response (service may need configuration)"
-    echo "  Check: ssh -p 10022 -i ${KEY} foundry@localhost 'systemctl status ${UNIT_NAME}'"
+    echo "  ✓ localhost:${HOST_PORT}/ → HTTP 200"
+elif [[ "$HTTP_STATUS" != "000" ]]; then
+    echo "  ✓ localhost:${HOST_PORT}/ → HTTP ${HTTP_STATUS} (service is responding)"
 else
-    echo "  ! localhost:${HOST_PORT}/healthz → HTTP ${HTTP_STATUS}"
+    echo "  ! localhost:${HOST_PORT}/ — no response (service may need configuration)"
+    echo "  Check: ssh -p 10022 -i ${KEY} foundry@localhost 'systemctl status ${UNIT_NAME}'"
     echo "  Check: ssh -p 10022 -i ${KEY} foundry@localhost 'journalctl -u ${UNIT_NAME} -n 20'"
 fi
 

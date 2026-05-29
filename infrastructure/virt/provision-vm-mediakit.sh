@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# provision-vm-mediakit.sh — create and launch vm-mediakit (Debian 12, Phase 1)
+# provision-vm-mediakit.sh — create and launch vm-mediakit (Ubuntu 24.04, Phase 1)
 #
 # Boots vm-mediakit as the os-mediakit guest on foundry-workspace.
 # Uses KVM if available (Laptop A / real hardware); falls back to QEMU TCG
 # (GCP workspace without nested virt). TCG is adequate for Phase 1 testing.
 #
-# Phase 1: Debian 12 x86_64 guest — seL4 AArch64 guest is Phase 3 (planned).
+# Ubuntu 24.04 (glibc 2.39) required — host binaries link against glibc 2.39.
+# Phase 1: Ubuntu 24.04 x86_64 guest — seL4 AArch64 guest is Phase 3 (planned).
 # See BRIEF-totebox-transformation §9 for the seL4 architecture decision.
 #
 # Usage:
@@ -28,9 +29,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORK_DIR="${SCRIPT_DIR}/work"
 CLOUD_INIT_DIR="${SCRIPT_DIR}/cloud-init-mediakit"
 
-DEBIAN_IMAGE="debian-12-genericcloud-amd64.qcow2"
-DEBIAN_URL="https://cloud.debian.org/images/cloud/bookworm/latest/${DEBIAN_IMAGE}"
-BASE_DISK="${WORK_DIR}/${DEBIAN_IMAGE}"
+UBUNTU_IMAGE="ubuntu-24.04-server-cloudimg-amd64.img"
+UBUNTU_URL="https://cloud-images.ubuntu.com/releases/noble/release/${UBUNTU_IMAGE}"
+BASE_DISK="${WORK_DIR}/${UBUNTU_IMAGE}"
 VM_DISK="${WORK_DIR}/vm-mediakit.qcow2"
 SEED_ISO="${WORK_DIR}/vm-mediakit-seed.iso"
 PID_FILE="${WORK_DIR}/vm-mediakit.pid"
@@ -79,8 +80,8 @@ fi
 # --- Download Debian 12 base image -------------------------------------------
 
 if [[ ! -f "$BASE_DISK" ]]; then
-    echo "provision-vm-mediakit: downloading Debian 12 genericcloud (~400 MB)..."
-    curl -fL --progress-bar "$DEBIAN_URL" -o "$BASE_DISK"
+    echo "provision-vm-mediakit: downloading Ubuntu 24.04 server cloud image (~630 MB)..."
+    curl -fL --progress-bar "$UBUNTU_URL" -o "$BASE_DISK"
 else
     echo "provision-vm-mediakit: using cached $BASE_DISK"
 fi
