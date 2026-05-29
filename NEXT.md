@@ -13,8 +13,10 @@ Last updated: 2026-05-28
 - [ ] **J2 Bench #9 re-run** — `verify_inclusion_proof` 1024-leaf; ±11% CI → <5% CI; quiet GCP n2 host. project-system owns. Outbox sent `project-editorial-20260528-j2-return`. [2026-05-28 totebox@project-editorial]
 - [ ] **J2 citation placeholders** — 9 `[external: ...]` stubs need stable IDs in `citations.yaml`. project-system owns. [2026-05-28 totebox@project-editorial]
 - [ ] **J3 §6 Results** — AEC nightly build coverage metrics (4 scripts × N countries). project-gis owns. Outbox sent `project-editorial-20260528-j3-coverage-metrics` + `project-editorial-20260528-j1-j3-return`. [2026-05-28 totebox@project-editorial]
-- [ ] **J4 §4–§5 benchmarks** — WireGuard tunnel establishment, rekey latency, policy-change propagation, failure-mode behaviour. project-infrastructure owns. Outbox sent `project-editorial-20260528-j4-return`. [2026-05-28 totebox@project-editorial]
-- [ ] **J4 two unresolved citations** — Cameron CA audit-log incident study + ZTA latency comparison. project-infrastructure to find or substitute. [2026-05-28 totebox@project-editorial]
+- [x] **J4 §4–§5 benchmarks** — COMPLETE 2026-05-29: §4 Implementation (WireGuard config, BLAKE2s audit daemon) + §5 Evaluation (5 benchmarks, Table 1 vs Mackey et al.) fully written; `forbidden_terms_cleared: true`; commit `77063dc3`. [2026-05-29 totebox@project-editorial]
+- [x] **J4 two unresolved citations** — RESOLVED 2026-05-29: Birge-Lee et al. 2024 replaces Cameron placeholder; Mackey et al. 2020 (DOI:10.1145/3374664.3379532) replaces ZTA [CITATION NEEDED]. [2026-05-29 totebox@project-editorial]
+- [ ] **J4 word count gap** — current ~6,400 words vs 9,000-word target. ~2,600 words needed in §4–§5 expansion. project-infrastructure scope. [2026-05-29 totebox@project-editorial]
+- [ ] **J4 final language pass** — §4+§5 added 2026-05-29 need a final forbidden-terms sweep before submission. [2026-05-29 totebox@project-editorial]
 - [ ] **J5 full writing pass** — HOLD until J2 submitted. project-orchestration owns. Outbox sent `project-editorial-20260528-j5-return`. [2026-05-28 totebox@project-editorial]
 - [ ] **J6 §6 Results** — user study execution (§5 protocol in JOURNAL file). project-bim owns. Outbox sent `project-editorial-20260528-j6-return`. [2026-05-28 totebox@project-editorial]
 
@@ -25,6 +27,9 @@ Last updated: 2026-05-28
 
 ## Inbox — pending pickup
 
+- [x] `command-20260529-intelligence-guides-relay` — ACTIONED 2026-05-29: guide-post-commit-training-hook + guide-goose-local-doorman staged (`72761f65`); routed to Command via outbox `project-editorial-20260529-intelligence-guides-routing`. [2026-05-29 totebox@project-editorial]
+- [x] `command-20260529-infrastructure-editorial-relay` — ACTIONED 2026-05-29: topic-os-mediakit bilingual committed to wiki (`81ca9aa`); guide-vm-mediakit-provision + guide-vm-mediakit-service-migration staged (`0d9da8ed`); J4 v0.4 canonical updated (`77063dc3`); vm-mediakit GUIDEs routed to Command via outbox `project-editorial-20260529-infrastructure-guides-routing`. [2026-05-29 totebox@project-editorial]
+- [x] `command-20260529-system-phase1c-v2-relay` — ACTIONED 2026-05-29: moonshot-toolkit-build-orchestrator + sel4-aarch64-qemu-substrate-target bilingual committed to wiki (`95f6beb`); guide-moonshot-toolkit-phase1c-build-setup staged (`fbde41fa`); GUIDE routed to Command via outbox `project-editorial-20260529-system-guide-routing`. [2026-05-29 totebox@project-editorial]
 - [x] `command-20260526-dev-phase3-drafts-relay` — ACTIONED 2026-05-28: TOPIC committed to `media-knowledge-documentation/applications/app-privategit-workbench.md` + ES stub; GUIDE staged + routed to Command via outbox `project-editorial-20260528-guide-workbench-routing`.
 
 ## Backlog drift — registry items needing source-project action
@@ -42,6 +47,17 @@ Last updated: 2026-05-28
 - [ ] Foundry `NEXT.md` — add JOURNAL programme tracking checkbox. Command Session scope. [2026-05-27 totebox@project-editorial]
 
 ---
+
+## Completed this session (2026-05-29)
+
+- [x] guide-post-commit-training-hook + guide-goose-local-doorman staged Bloomberg-clean — `72761f65`
+- [x] topic-os-mediakit bilingual (EN+ES) committed to media-knowledge-documentation/systems/ — `81ca9aa`
+- [x] guide-vm-mediakit-provision + guide-vm-mediakit-service-migration staged Bloomberg-clean — `0d9da8ed`
+- [x] J4 v0.4 canonical update: §4+§5 empirical content merged; citations resolved; forbidden_terms_cleared: true — `77063dc3`
+- [x] moonshot-toolkit-build-orchestrator + sel4-aarch64-qemu-substrate-target bilingual committed to media-knowledge-documentation/substrate/ — `95f6beb`
+- [x] guide-moonshot-toolkit-phase1c-build-setup staged Bloomberg-clean — `fbde41fa`
+- [x] Outbox: 3 GUIDE routing messages sent to command@claude-code
+- [x] 3 inbox messages marked actioned (intelligence, infrastructure, system Phase 1C v2)
 
 ## Completed this session (2026-05-28)
 

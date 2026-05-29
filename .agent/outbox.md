@@ -9,6 +9,71 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-editorial
+to: command@claude-code
+re: GUIDE routing — project-system GUIDE to woodfine-fleet-deployment/project-system/
+created: 2026-05-29T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260529-system-guide-routing
+---
+
+guide-moonshot-toolkit-phase1c-build-setup.md is Bloomberg-clean and staged at:
+  `.agent/drafts-outbound/guide-moonshot-toolkit-phase1c-build-setup.md` (commit `fbde41fa`)
+
+Route to: `woodfine-fleet-deployment/project-system/guide-moonshot-toolkit-phase1c-build-setup.md`
+
+Bloomberg pass complete. No ES pair required (operational GUIDE).
+
+---
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: GUIDE routing — vm-mediakit GUIDEs ×2 to woodfine-fleet-deployment/fleet-infrastructure/
+created: 2026-05-29T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260529-infrastructure-guides-routing
+---
+
+Two vm-mediakit GUIDEs are Bloomberg-clean and staged at:
+  `.agent/drafts-outbound/guide-vm-mediakit-provision.md` (commit `0d9da8ed`)
+  `.agent/drafts-outbound/guide-vm-mediakit-service-migration.md` (commit `0d9da8ed`)
+
+Route both to: `woodfine-fleet-deployment/fleet-infrastructure/`
+  → `guide-vm-mediakit-provision.md`
+  → `guide-vm-mediakit-service-migration.md`
+
+Bloomberg pass complete on both. No ES pairs required (operational GUIDEs).
+
+---
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: GUIDE routing — intelligence GUIDEs ×2 to woodfine-fleet-deployment/cluster-totebox-intelligence/
+created: 2026-05-29T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260529-intelligence-guides-routing
+---
+
+Two intelligence GUIDEs are Bloomberg-clean and staged at:
+  `.agent/drafts-outbound/guide-post-commit-training-hook.md` (commit `72761f65`)
+  `.agent/drafts-outbound/guide-goose-local-doorman.md` (commit `72761f65`)
+
+Route both to: `woodfine-fleet-deployment/cluster-totebox-intelligence/`
+  → `guide-post-commit-training-hook.md`
+  → `guide-goose-local-doorman.md`
+
+Bloomberg pass complete on both. goose-local-doorman: open question in source frontmatter
+(§7.2 round-trip CPU saturation) was marked VERIFIED 2026-05-29T04:10Z in the file itself
+— treated as resolved. No ES pairs required (operational GUIDEs).
+
+---
+
+---
+from: totebox@project-editorial
 to: totebox@project-gis
 re: JOURNAL J1+J3 author block updated — re-post live (New York, institutional email, full names)
 created: 2026-05-29T00:00:00Z

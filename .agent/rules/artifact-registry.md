@@ -1,7 +1,7 @@
 ---
 schema: foundry-artifact-registry-v1
 project: project-gis
-last_updated: 2026-05-28
+last_updated: 2026-05-29
 ---
 
 # project-editorial Artifact Registry
@@ -30,7 +30,7 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 | J1 | `JOURNAL-retail-colocation-v0.1.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | language-cleared |
 | J2 | `JOURNAL-trustworthy-systems-v0.1.draft.md` | Composing Trustworthy Systems from Verified Primitives | ASPLOS (ACM, 19.4% AR) | Mathew Woodfine | language-cleared |
 | J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier, IF 12.0) | Jennifer M. Woodfine | language-cleared |
-| J4 | `JOURNAL-private-network-v0.1.stub.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | language-cleared |
+| J4 | `JOURNAL-private-network-v0.1.stub.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | language-cleared (§4+§5 added 2026-05-29; word count ~6,400 vs 9,000 target; final §4–§5 language pass pending) |
 | J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | MLSys (ACM, 22% AR) | Mathew Woodfine | stub |
 | J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared |
 
@@ -65,8 +65,11 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 **J4 — Private Network / CRMA:**
 - ~~§1–§3 writing pass~~ — COMPLETE 2026-05-28 (~4,800 words; §1 Introduction, §2 Background, §3 Architecture written; §6 Discussion + §7 Conclusion written)
 - ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`)
-- §4 Implementation + §5 Evaluation — pending benchmark data (tunnel establishment time, rekey latency, policy-change propagation, failure-mode behaviour)
-- [CITATION NEEDED] placeholders in References — Cameron CA incident study + ZTA latency comparisons need verified citations
+- ~~§4 Implementation~~ — COMPLETE 2026-05-29: WireGuard hub+spoke config, BLAKE2s audit-log Python daemon; commit `77063dc3`
+- ~~§5 Evaluation~~ — COMPLETE 2026-05-29: 5 benchmarks (B1 44±5 ms n=30, B2 59±20 ms n=10, B3 8 ms n=20, B4 bimodal ~1s/~11–16s n=5, B5 throughput); Table 1 vs Mackey et al.; commit `77063dc3`
+- ~~Citation placeholders~~ — RESOLVED 2026-05-29: Birge-Lee et al. 2024 + Mackey et al. 2020 (DOI:10.1145/3374664.3379532)
+- **Word count gap** — ~6,400 words vs 9,000-word target; ~2,600 words expansion needed in §4–§5. project-infrastructure scope.
+- **Final §4–§5 language pass** — new sections need one more forbidden-terms sweep before submission
 - ORCID IDs for all three authors
 
 **J6 — Desktop Environment:**
@@ -123,6 +126,49 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 - **Status:** DISPATCHED fe5148fd (2026-05-16) — at project-editorial; Phase 1/2 sections appended
 - **Destination:** project-editorial
 - **Content:** Full rebuild procedure including Phase 1 taxonomy rebuild steps and Phase 2 build-geometric-ranking.py future pipeline
+
+### A7 — TOPIC: os-mediakit (bilingual)
+- **File:** `media-knowledge-documentation/systems/os-mediakit.md` + `.es.md`
+- **Status:** COMMITTED — `81ca9aa` (2026-05-29) — `media-knowledge-documentation/systems/`
+- **Source:** project-infrastructure drafts-outbound
+- **Content:** Ubuntu 24.04 QEMU/TCG VM platform; Phase 1 (deployed) + Phase 2–4 (planned); BCSC-clean
+
+### A8 — GUIDE: post-commit-training-hook
+- **File:** `.agent/drafts-outbound/guide-post-commit-training-hook.md`
+- **Status:** STAGED — `72761f65` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/cluster-totebox-intelligence/`
+- **Source:** project-intelligence drafts-outbound
+
+### A9 — GUIDE: goose-local-doorman
+- **File:** `.agent/drafts-outbound/guide-goose-local-doorman.md`
+- **Status:** STAGED — `72761f65` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/cluster-totebox-intelligence/`
+- **Source:** project-intelligence drafts-outbound
+
+### A10 — GUIDE: vm-mediakit-provision
+- **File:** `.agent/drafts-outbound/guide-vm-mediakit-provision.md`
+- **Status:** STAGED — `0d9da8ed` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/fleet-infrastructure/`
+- **Source:** project-infrastructure drafts-outbound
+
+### A11 — GUIDE: vm-mediakit-service-migration
+- **File:** `.agent/drafts-outbound/guide-vm-mediakit-service-migration.md`
+- **Status:** STAGED — `0d9da8ed` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/fleet-infrastructure/`
+- **Source:** project-infrastructure drafts-outbound
+
+### A12 — TOPIC: moonshot-toolkit-build-orchestrator (bilingual)
+- **File:** `media-knowledge-documentation/substrate/moonshot-toolkit-build-orchestrator.md` + `.es.md`
+- **Status:** COMMITTED — `95f6beb` (2026-05-29) — `media-knowledge-documentation/substrate/`
+- **Source:** project-system drafts-outbound (Phase 1C v2)
+- **Content:** Rust-only build orchestrator; 5-stage AssembleImage pipeline; Phase 1C complete
+
+### A13 — TOPIC: sel4-aarch64-qemu-substrate-target (bilingual)
+- **File:** `media-knowledge-documentation/substrate/sel4-aarch64-qemu-substrate-target.md` + `.es.md`
+- **Status:** COMMITTED — `95f6beb` (2026-05-29) — `media-knowledge-documentation/substrate/`
+- **Source:** project-system drafts-outbound (Phase 1C v2)
+- **Content:** seL4 AArch64 QEMU substrate target; verified boot chain; -m 1G requirement
+
+### A14 — GUIDE: moonshot-toolkit-phase1c-build-setup
+- **File:** `.agent/drafts-outbound/guide-moonshot-toolkit-phase1c-build-setup.md`
+- **Status:** STAGED — `fbde41fa` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/project-system/`
+- **Source:** project-system drafts-outbound (Phase 1C v2)
 
 ---
 
