@@ -306,14 +306,148 @@ html[data-theme="dark"] .topnav .logo-svg { filter: invert(1) brightness(2); }
 /* Hide search form on mobile in the right nav (it stays via wrap) */
 .topnav .right > .topnav-search-wrap { display: flex; }
 
-/* ---------- Three-row site header (legacy — kept for reference) ---------- */
-.shell-header,
+/* ---------- Site header ---------- */
 .site-header {
   position: sticky;
   top: 0;
   z-index: 50;
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border);
+}
+
+/* ---------- Article-tabs bar (wiki_chrome only, 40px) ---------- */
+nav.article-tabs {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  height: 40px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  position: sticky;
+  top: var(--header-h);
+  z-index: 40;
+}
+.article-tabs__left,
+.article-tabs__right {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+.article-tab {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 13px;
+  font-family: var(--font-ui);
+  color: var(--fg-muted);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  transition: color 0.15s, border-color 0.15s;
+}
+.article-tab:hover {
+  color: var(--fg);
+  border-bottom-color: var(--border);
+}
+.article-tab--active,
+.article-tab--article {
+  color: var(--fg);
+  font-weight: 600;
+  border-bottom-color: var(--navy, oklch(22% 0.05 260));
+}
+/* Auth-gating: Talk and Edit tabs hidden for anonymous users */
+[data-auth="anon"] .article-tab--talk { display: none; }
+[data-auth="anon"] .article-tab--edit { display: none; }
+/* Hide legacy wiki-page-tabs now that article-tabs provides this row */
+nav.wiki-page-tabs { display: none; }
+/* Tools dropdown */
+details.tools-dropdown {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+details.tools-dropdown > summary {
+  list-style: none;
+}
+details.tools-dropdown > summary::-webkit-details-marker { display: none; }
+details.tools-dropdown[open] > summary.article-tab {
+  color: var(--fg);
+  border-bottom-color: var(--border);
+}
+.tools-caret {
+  font-size: 10px;
+  margin-left: 2px;
+}
+ul.tools-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 180px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px oklch(0% 0 0 / 12%);
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 4px 0;
+  z-index: 200;
+}
+ul.tools-menu li a {
+  display: block;
+  padding: 7px 16px;
+  font-size: 13px;
+  color: var(--fg);
+  text-decoration: none;
+}
+ul.tools-menu li a:hover {
+  background: var(--bg-subtle);
+  color: var(--link);
+}
+/* Anchor-share ¶ button (appears on h2 hover) */
+.anchor-share {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 0 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fg-muted);
+  font-size: 0.85em;
+  opacity: 0;
+  transition: opacity 0.15s;
+  vertical-align: middle;
+}
+.prose h2:hover .anchor-share,
+.prose h3:hover .anchor-share {
+  opacity: 1;
+}
+.anchor-share:hover { color: var(--link); }
+/* Anchor-share toast */
+.anchor-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 500;
+}
+.anchor-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 /* Row 1 — utility bar (32px) */
@@ -678,8 +812,6 @@ html[data-theme="dark"] .nav-row ul.nav-list li a.is-active {
   border-bottom-color: var(--link);
 }
 
-/* Legacy nav-list classes (used inside .shell-header nav-row in server.rs) */
-.shell-header .nav-row .nav-list,
 .nav-list {
   display: flex;
   align-items: center;
@@ -2543,7 +2675,7 @@ html[data-theme="dark"] .diff-rem { background: #2c0f0f; color: #fca5a5; }
 
 /* Print styles */
 @media print {
-  .shell-header, .shell-footer, .wiki-fab, .wiki-sticky-header, .mobile-nav-drawer,
+  .shell-footer, .wiki-fab, .wiki-sticky-header, .mobile-nav-drawer,
   .toc-rail, .sidebar, .wiki-right-rail, .wiki-ivc-band, .wiki-density-toggle,
   .wiki-page-tabs, #p-views, .wiki-cactions { display: none !important; }
   body { font-size: 11pt; color: #000; background: #fff; }
