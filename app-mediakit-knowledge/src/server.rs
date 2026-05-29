@@ -977,6 +977,58 @@ fn compute_home_stats(buckets: &CategoryBuckets) -> HomeStats {
     }
 }
 
+// ─── Shared footer ─────────────────────────────────────────────────────────
+
+fn shell_footer(brand_instance: &str, view_source_slug: Option<&str>) -> maud::Markup {
+    let woodfine = matches!(brand_instance, "projects" | "corporate");
+    let copyright = if woodfine {
+        "© 2026 Woodfine Management Corp. All rights reserved."
+    } else {
+        "© 2026 PointSav Digital Systems. All rights reserved."
+    };
+    html! {
+        footer.shell-footer role="contentinfo" {
+            div.footer-primary {
+                div.footer-cities { "Vancouver · New York · Berlin" }
+                nav.footer-nav aria-label="Footer navigation" {
+                    a href="/wiki/disclaimers" { "Disclaimer" }
+                    " · "
+                    a href="/sitemap.xml" { "Sitemap" }
+                }
+                p.footer-copyright-line.copyright { (copyright) }
+            }
+            details.footer-more {
+                summary { "More" }
+                div.footer-more-inner {
+                    nav.footer-nav-more {
+                        a href="/wiki/contact" { "Contact" }
+                        @if let Some(slug) = view_source_slug {
+                            " · "
+                            a href={ "/git/" (slug) } { "View source" }
+                        }
+                        " · "
+                        a href="/wiki/pointsav-media-kit" { "Media kit" }
+                    }
+                    p.footer-trademark-line.trademark {
+                        "Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, "
+                        "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
+                        "Projects Inc. used in Canada, the United States, Latin America, and Europe."
+                    }
+                    @if brand_instance != "corporate" {
+                        div.footer-badges {
+                            a.footer-badge rel="license"
+                              href="https://creativecommons.org/licenses/by/4.0/"
+                              title="Content licensed under Creative Commons Attribution 4.0 International" {
+                                img src="/static/cc-by-4.svg" alt="CC BY 4.0" width="88" height="31";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 // ─── Home-page chrome ───────────────────────────────────────────────────────
 
 const WORDMARK_POINTSAV: &str = r##"<span class="brand__mark" aria-hidden="true">&#x25A0;</span><span class="brand__wordmark">PointSav</span><span class="brand__sub">Digital Systems</span>"##;
@@ -1105,30 +1157,6 @@ fn home_chrome(
                         (auth_nav_widget(user, pending_count))
                         a.lang-toggle href=(match locale { Locale::En => "/es/", Locale::Es => "/?noredirect=1" }) {
                             (match locale { Locale::En => "ES", Locale::Es => "EN" })
-                        }
-                        div.wiki-appearance-wrap #wiki-appearance-wrap {
-                            button.wiki-appearance-btn #wiki-appearance-btn
-                                aria-expanded="false"
-                                aria-controls="wiki-appearance-menu"
-                                title="Appearance"
-                            { "Aa" }
-                            div.wiki-appearance-menu #wiki-appearance-menu role="dialog" aria-label="Appearance" hidden="" {
-                                div.wiki-appearance-section {
-                                    p.wiki-appearance-label { "Color" }
-                                    div.wiki-appearance-options #wiki-theme-options {
-                                        button.wiki-appearance-opt #theme-auto data-theme-val="auto" { "Automatic" }
-                                        button.wiki-appearance-opt #theme-light data-theme-val="light" { "Light" }
-                                        button.wiki-appearance-opt #theme-dark data-theme-val="dark" { "Dark" }
-                                    }
-                                }
-                                div.wiki-appearance-section {
-                                    p.wiki-appearance-label { "Width" }
-                                    div.wiki-appearance-options #wiki-width-options {
-                                        button.wiki-appearance-opt #width-standard data-width-val="standard" { "Standard" }
-                                        button.wiki-appearance-opt #width-wide data-width-val="wide" { "Wide" }
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -1297,6 +1325,15 @@ fn home_chrome(
                         }
                     }
 
+                    // ── Institutional standfirst ─────────────────────────────
+                    p.home-standfirst {
+                        (match brand_instance {
+                            "projects"  => "Research papers, project narratives, and strategic documents for Woodfine Management Corp.",
+                            "corporate" => "Governance documents, policy frameworks, and corporate reference for Woodfine Management Corp.",
+                            _           => "Technical reference, architecture guides, and operational runbooks for the PointSav platform.",
+                        })
+                    }
+
                     // ── Browse by area ───────────────────────────────────────
                     div.section-head {
                         h2 { "Browse by area" }
@@ -1427,31 +1464,7 @@ fn home_chrome(
                     }
 
                 }
-                footer.shell-footer #site-footer role="contentinfo" {
-                    div.footer-cities { "Vancouver · New York · Berlin" }
-                    nav.footer-nav aria-label="Footer navigation" {
-                        a href="/wiki/disclaimers" { "Disclaimer" }
-                        a href="/wiki/contact" { "Contact" }
-                        a href="/sitemap.xml" { "Sitemap" }
-                        a href="/wiki/pointsav-media-kit" { "PointSav Media Kit" }
-                    }
-                    p.footer-copyright-line.copyright {
-                        "© 2026 Woodfine Capital Projects Inc. All rights reserved."
-                    }
-                    p.footer-trademark-line.trademark {
-                        "Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, "
-                        "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
-                        "Projects Inc. used in Canada, the United States, Latin America, and Europe. All other "
-                        "trademarks are the property of their respective owners."
-                    }
-                    div.footer-badges {
-                        a.footer-badge rel="license"
-                          href="https://creativecommons.org/licenses/by/4.0/"
-                          title="Content licensed under Creative Commons Attribution 4.0 International" {
-                            img src="/static/cc-by-4.svg" alt="CC BY 4.0" width="88" height="31";
-                        }
-                    }
-                }
+                (shell_footer(brand_instance, None))
                 script src="/static/wiki.js" defer="true" {}
             }
         }
@@ -2193,30 +2206,6 @@ fn wiki_chrome(
                         a.lang-toggle href=(match locale { Locale::En => format!("/es/wiki/{slug}"), Locale::Es => format!("/wiki/{slug}") }) {
                             (match locale { Locale::En => "ES", Locale::Es => "EN" })
                         }
-                        div.wiki-appearance-wrap #wiki-appearance-wrap {
-                            button.wiki-appearance-btn #wiki-appearance-btn
-                                aria-expanded="false"
-                                aria-controls="wiki-appearance-menu"
-                                title="Appearance"
-                            { "Aa" }
-                            div.wiki-appearance-menu #wiki-appearance-menu role="dialog" aria-label="Appearance" hidden="" {
-                                div.wiki-appearance-section {
-                                    p.wiki-appearance-label { "Color" }
-                                    div.wiki-appearance-options #wiki-theme-options {
-                                        button.wiki-appearance-opt #theme-auto data-theme-val="auto" { "Automatic" }
-                                        button.wiki-appearance-opt #theme-light data-theme-val="light" { "Light" }
-                                        button.wiki-appearance-opt #theme-dark data-theme-val="dark" { "Dark" }
-                                    }
-                                }
-                                div.wiki-appearance-section {
-                                    p.wiki-appearance-label { "Width" }
-                                    div.wiki-appearance-options #wiki-width-options {
-                                        button.wiki-appearance-opt #width-standard data-width-val="standard" { "Standard" }
-                                        button.wiki-appearance-opt #width-wide data-width-val="wide" { "Wide" }
-                                    }
-                                }
-                            }
-                        }
                         @if !numbered_headings.is_empty() {
                             button.toc-toggle-btn.mobile-only #toc-toggle-btn
                                 aria-label="Contents"
@@ -2397,6 +2386,13 @@ fn wiki_chrome(
                                     (title)
                                     @if let Some(ref q) = fm.quality {
                                         span class={ "quality-badge quality-" (q) } { (q) }
+                                    }
+                                }
+                                @if let Some(ref date) = fm.last_edited {
+                                    div.article-provenance {
+                                        "Last edited " (date)
+                                        " · "
+                                        a href={ "/history/" (slug) } { "View history" }
                                     }
                                 }
                                 @if let Some(translations) = &fm.translations {
@@ -2659,32 +2655,7 @@ fn wiki_chrome(
                     }
                 }
 
-                footer.shell-footer #site-footer role="contentinfo" {
-                    div.footer-cities { "Vancouver · New York · Berlin" }
-                    nav.footer-nav aria-label="Footer navigation" {
-                        a href="/wiki/disclaimers" { "Disclaimer" }
-                        a href="/wiki/contact" { "Contact" }
-                        a href={ "/git/" (slug) } { "View source" }
-                        a href="/sitemap.xml" { "Sitemap" }
-                        a href="/wiki/pointsav-media-kit" { "PointSav Media Kit" }
-                    }
-                    p.footer-copyright-line.copyright {
-                        "© 2026 Woodfine Capital Projects Inc. All rights reserved."
-                    }
-                    p.footer-trademark-line.trademark {
-                        "Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, "
-                        "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
-                        "Projects Inc. used in Canada, the United States, Latin America, and Europe. All other "
-                        "trademarks are the property of their respective owners."
-                    }
-                    div.footer-badges {
-                        a.footer-badge rel="license"
-                          href="https://creativecommons.org/licenses/by/4.0/"
-                          title="Content licensed under Creative Commons Attribution 4.0 International" {
-                            img src="/static/cc-by-4.svg" alt="CC BY 4.0" width="88" height="31";
-                        }
-                    }
-                }
+                (shell_footer(brand_instance, Some(slug)))
 
                 // Minimal JS: TOC collapse toggle + density preference persistence.
                 // Loaded last so HTML renders without it.
@@ -3836,30 +3807,7 @@ fn chrome(
                 main.site-main #main-content {
                     (body)
                 }
-                footer.shell-footer role="contentinfo" {
-                    div.footer-cities { "Vancouver · New York · Berlin" }
-                    nav.footer-nav aria-label="Footer navigation" {
-                        a href="/wiki/disclaimers" { "Disclaimer" }
-                        a href="/wiki/contact" { "Contact" }
-                        a href="/wiki/pointsav-media-kit" { "PointSav Media Kit" }
-                    }
-                    p.footer-copyright-line.copyright {
-                        "© 2026 Woodfine Capital Projects Inc. All rights reserved."
-                    }
-                    p.footer-trademark-line.trademark {
-                        "Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, "
-                        "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
-                        "Projects Inc. used in Canada, the United States, Latin America, and Europe. All other "
-                        "trademarks are the property of their respective owners."
-                    }
-                    div.footer-badges {
-                        a.footer-badge rel="license"
-                          href="https://creativecommons.org/licenses/by/4.0/"
-                          title="Content licensed under Creative Commons Attribution 4.0 International" {
-                            img src="/static/cc-by-4.svg" alt="CC BY 4.0" width="88" height="31";
-                        }
-                    }
-                }
+                (shell_footer("documentation", None))
             }
         }
     }
