@@ -25,7 +25,9 @@ service-content/data/
 # Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock
 
-# External vendored clones and their symlinks — not committed
-vendor-sel4-tools/
+# Symlinks to external vendored sources — not committed
 vendor-sel4-project/tools
 vendor-sel4-project/kernel
+
+# vendor-sel4-tools build artifacts
+vendor-sel4-tools/elfloader-tool/build/
