@@ -45,8 +45,8 @@ notes_for_editor: |
 
 # moonshot-toolkit Phase 1C Build Setup
 
-This guide covers installing the AArch64 cross-compile environment on the Foundry
-workspace VM and using the `moonshot-toolkit build` subcommand to produce a bootable
+This guide covers installing the AArch64 cross-compile environment on the workspace
+VM and using the `moonshot-toolkit build` subcommand to produce a bootable
 seL4 system image for the QEMU AArch64 target. It reflects the Phase 1C complete
 milestone (moonshot-toolkit v0.3.0).
 
@@ -112,7 +112,7 @@ relative to the project root:
 | `vendor-sel4-project/build-support/qemu-arm-virt/` | libcpio, gen_config headers, linker script |
 | `vendor-sel4-project/projects/hello-rootserver/` | Rootserver ELF (`hello-rootserver`) |
 
-On the Foundry workspace VM, these are present in the `clones/project-system/` archive.
+On the workspace VM, these are present in the `clones/project-system/` archive.
 Build command validates each path at startup and reports which prerequisites are missing.
 
 ## Using moonshot-toolkit
@@ -151,7 +151,7 @@ cargo run -p moonshot-toolkit -- plan moonshot-toolkit/examples/hello-world.toml
 ```
 
 The same spec always produces the same `plan_hash`. This hash is the value that a
-customer-apex cosignature attaches to per `system-substrate-doctrine.md §6.1`.
+customer-apex cosignature attaches to per the Reproducible-Verification-On-Customer-Metal convention.
 
 ### Build a Protection Domain and System Image (Phase 1C Complete)
 
