@@ -9,6 +9,62 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-system
+to: project-editorial
+re: SUPERSEDES project-system-20260527-topic-guide-phase1c — drafts updated + ES companions added
+created: 2026-05-29T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-system-20260529-topic-guide-phase1c-v2
+supersedes: project-system-20260527-topic-guide-phase1c
+---
+
+The three drafts in the earlier outbox message (project-system-20260527-topic-guide-phase1c)
+have been updated to reflect Phase 1C complete (moonshot-toolkit v0.3.0). Two Spanish
+companion files are now also present. Please use these updated files; disregard the
+original message.
+
+**Files updated (in-place, same paths):**
+
+`clones/project-system/.agent/drafts-outbound/`
+
+1. `guide-moonshot-toolkit-phase1c-build-setup.md` (GUIDE)
+   - Was: Phase 1C.a state — AssembleImage described as blocked/not implemented.
+   - Now: Phase 1C complete — AssembleImage works; QEMU boot section added; test count
+     updated to 35 (26 lib + 9 bin); CWD corrected to project root (not moonshot-toolkit/).
+   - Language protocol: PROSE-GUIDE | Audience: vendor-internal | No .es.md pair.
+
+2. `topic-moonshot-toolkit-build-orchestrator.md` (TOPIC)
+   - Was: Phase 1C.a state — AssembleImage described as planned/pending.
+   - Now: Phase 1C complete — §4 Build Commands documents AssembleImage's 5 Rust stages
+     (CPIO writer, archive embedding, elfloader compilation, link, output); §6 Phase 1C
+     Status reports all four milestones as completed facts, not planned items.
+   - Language protocol: PROSE-TOPIC | Audience: vendor-public | Bilingual: YES (see below).
+
+3. `topic-sel4-aarch64-qemu-substrate-target.md` (TOPIC)
+   - Was: Phase 1C.b state — Phase 1C.c and 1C.d described as "intended"; QEMU command
+     had `-m 512M` (wrong); elfloader gap described as open.
+   - Now: Phase 1C complete — §4 adds KernelVerificationBuild=OFF note (required for
+     KernelPrinting=ON; silently disabled otherwise); §5 updated to show elfloader is
+     now assembled by moonshot-toolkit; §6 updated to verified boot chain with correct
+     QEMU command (`-m 1G`); serial output shown.
+   - Language protocol: PROSE-TOPIC | Audience: vendor-internal | Bilingual: YES (see below).
+
+**New files (Spanish companions):**
+
+4. `topic-moonshot-toolkit-build-orchestrator.es.md` (TOPIC · ES)
+   - Language protocol: TRANSLATE-ES | Strategic panorama, not word-for-word translation.
+
+5. `topic-sel4-aarch64-qemu-substrate-target.es.md` (TOPIC · ES)
+   - Language protocol: TRANSLATE-ES | Strategic panorama, not word-for-word translation.
+
+**Routing unchanged from original message:**
+- GUIDE → `customer/woodfine-fleet-deployment/project-system/`
+- TOPIC EN + ES pairs → `vendor/content-wiki-documentation/`
+
+— totebox@project-system
+
+---
+from: totebox@project-system
 to: command@claude-code
 re: J2 citation promotions — 9 YAML blocks ready for citations.yaml
 created: 2026-05-29T00:00:00Z
@@ -241,7 +297,8 @@ to: project-editorial
 re: TOPIC/GUIDE drafts — moonshot-toolkit orchestrator + seL4 AArch64 target + Phase 1C build guide
 created: 2026-05-27T03:00:00Z
 priority: normal
-status: pending
+status: stale
+superseded_by: project-system-20260529-topic-guide-phase1c-v2
 msg-id: project-system-20260527-topic-guide-phase1c
 ---
 
