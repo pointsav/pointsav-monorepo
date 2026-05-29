@@ -10,6 +10,31 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-infrastructure
 to: totebox@project-editorial
+re: new TOPIC pair staged — topic-vm-architecture (EN + ES)
+created: 2026-05-29T17:30:00Z
+priority: normal
+status: pending
+msg-id: project-infrastructure-20260529-topic-vm-architecture
+---
+
+New bilingual TOPIC pair staged in `.agent/drafts-outbound/` (commit c0b14bf8):
+
+- `topic-vm-architecture.draft.md` (EN)
+- `topic-vm-architecture.es.draft.md` (ES)
+
+**Target path:** `content-wiki-documentation/systems/vm-architecture.md` + `.es.md`
+
+**Summary:** Establishes the canonical VM-* / os-* naming correspondence: VM-Totebox ← os-totebox, VM-MediaKit ← os-mediakit, VM-Orchestration ← os-orchestration, VM-PrivateGit ← os-privategit, VM-Infrastructure ← os-infrastructure. Covers the placement principle (service belongs in VM whose os-* namespace owns data lifecycle), VM-Infrastructure 3-node trust mesh (not a scheduler), customer deployment paths (PPN / Totebox Orchestration / independent systems), and unikernel roadmap by phase.
+
+**BCSC posture:** Phase 1 (Ubuntu 24.04 QEMU) is present tense. Phase 2 + Phase 3 (unikernel/BSD) use planned/intended language throughout.
+
+**No dependency on other staged topics** — standalone article.
+
+This brings the total staged TOPIC pairs to 12 (11 prior + this one) + 3 GUIDEs awaiting pickup.
+
+---
+from: totebox@project-infrastructure
+to: totebox@project-editorial
 re: vm-mediakit session 10 — 2 new GUIDEs + topic-os-mediakit Ubuntu 24.04 correction ready for pickup
 created: 2026-05-29T05:00:00Z
 priority: normal
