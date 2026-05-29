@@ -9,6 +9,61 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-infrastructure
+to: totebox@project-editorial
+re: J4 private-network v0.3 — §4 Implementation + §5 Evaluation complete — language pass + venue routing
+created: 2026-05-29T02:40:00Z
+priority: high
+status: pending
+msg-id: project-infrastructure-20260529-j4-v03-editorial-handoff
+---
+
+JOURNAL J4 ("Customer-Rooted Mesh Architecture for Distributed Operational Systems") has been
+advanced to v0.3. §4 (Implementation) and §5 (Evaluation) are now fully written with empirical
+benchmark data. The paper is at `language-cleared` status; the only remaining pre-submission
+blockers are listed below.
+
+**File:** `.agent/drafts-outbound/JOURNAL-private-network-v0.3.draft.md`
+(commit 149a8b39 on project-infrastructure main)
+
+**What was added in v0.3:**
+
+§4 Implementation — 4 subsections:
+- §4.1 Benchmark Environment: GCP e2-standard-8, Linux 6.17.0-1013-gcp, WireGuard kernel
+  module v1.0.0, wireguard-tools v1.0.20210914, isolated network namespaces (veth underlay).
+- §4.2 Hub Configuration: wg0 AllowedIPs, iptables NAT POSTROUTING, interface config snippet
+- §4.3 Spoke Configuration: AllowedIPs 0.0.0.0/0, PersistentKeepalive 25s, DNS enforcement
+- §4.4 Customer-Held Key Generation: wg genkey | wg pubkey pipeline, chmod 600/644
+- §4.5 BLAKE2s Audit Log: Python daemon with hashlib.blake2s chain-hash, `chattr +a`
+  append-only enforcement, JSONL event format
+
+§5 Evaluation — 5 subsections (all measured empirically on GCP e2-standard-8):
+- §5.1 Tunnel Establishment (B1, n=30): mean=44ms, SD=14ms, 95%CI=±5ms, min=30ms, max=86ms
+- §5.2 Re-handshake Latency (B2, n=10): mean=59ms, SD=33ms, 95%CI=±20ms, min=25ms, max=118ms
+- §5.3 Policy-Change Propagation (B3, n=20): wg set = 8ms mean (synchronous kernel netlink);
+  end-to-end 15–50ms; 5-spoke fan-out ~40ms
+- §5.4 Failure-Mode Behaviour (B4): hub restart recovery bimodal {~1s, ~11–16s}; spoke
+  detection ~25s (PersistentKeepalive protocol-defined)
+- §5.5 Methodology Notes: loopback veth limitation documented; WAN adjustment formula 2R+bench
+
+**Remaining pre-submission blockers (from notes_for_editor in frontmatter):**
+1. ORCID IDs for all three authors (operator action required — cannot be obtained programmatically)
+2. [CITATION NEEDED] x2 in References: Cameron CA major ISP BGP incident study; ZTA latency
+   comparison studies — need verified DOIs or stable arXiv IDs
+3. Final language pass on §4–§5 for banned vocabulary (all prior sections already cleared;
+   §4–§5 are new content added v0.3; `forbidden_terms_cleared` is conservatively set `false`)
+4. Final word count confirmation on target (current: ~6,400 body words; IEEE TIFS typical 10–12pp)
+
+**Editorial request:**
+- Run §4–§5 through the forbidden-vocabulary list (`.agent/rules/journal-artifact-discipline.md`)
+- Resolve the two [CITATION NEEDED] placeholders (internet research acceptable; stable DOIs required)
+- Update `forbidden_terms_cleared: true` in frontmatter once clean
+- Confirm ORCID ID status with operator before advancing to `submission-ready`
+
+Target venue: IEEE Transactions on Information Forensics and Security (IF 9.65).
+Alternate venue: IEEE Transactions on Dependable and Secure Computing.
+
+---
+from: totebox@project-infrastructure
 to: totebox@project-system
 re: os-mediakit seL4 roadmap — Phase 1 install + P0 blockers + Phase 3 build instructions
 created: 2026-05-29T00:00:00Z
