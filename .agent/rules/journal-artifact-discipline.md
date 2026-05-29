@@ -42,7 +42,7 @@ alternate_venue: ""    # optional second-choice venue
 authors:
   - name: "Jennifer M. Woodfine"
     affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
-    email: jmwoodfine@gmail.com
+    email: corporate.secretary@woodfinegroup.com
     orcid: ""           # required before submission
     credit_roles:
       - Conceptualization
@@ -55,7 +55,7 @@ keywords:
   - "..."
 bcsc_class: no-disclosure-implication
 ai_tool_used: "claude-sonnet-4-6 (Anthropic)"
-corresponding_author: jmwoodfine@gmail.com
+corresponding_author: corporate.secretary@woodfinegroup.com
 word_count_body: 0      # fill at each revision
 word_count_target: 8500
 submission_status: not-submitted
@@ -70,9 +70,9 @@ forbidden_terms_cleared: false  # set true only after full language pass
 - Named natural persons only: **Peter M. Woodfine**, **Jennifer M. Woodfine**, **Mathew Woodfine**
 - AI is a tool, not an author; disclosed per COPE 2024 in §18 of the manuscript
 - ORCID IDs required before any journal submission (leave blank until obtained)
-- Affiliation primary: `Woodfine Management Corp., Vancouver, British Columbia, Canada`
-- Affiliation alternative: `Independent Researcher, Vancouver, BC, Canada`
-- Corresponding author: jmwoodfine@gmail.com
+- Affiliation primary: `Woodfine Management Corp., New York, NY, USA`
+- Affiliation alternative: `Independent Researcher, New York, NY, USA`
+- Corresponding author: corporate.secretary@woodfinegroup.com
 
 ---
 
@@ -179,7 +179,7 @@ mandatory in the paper body and two fields are mandatory in the frontmatter.
 ```markdown
 > **Working Paper · Version X.X · YYYY-MM-DD · CC BY 4.0**
 > This manuscript is a working draft. It has not been peer reviewed. Findings are
-> preliminary and subject to revision without notice. Correspondence: jmwoodfine@gmail.com.
+> preliminary and subject to revision without notice. Correspondence: corporate.secretary@woodfinegroup.com.
 >
 > *Cite as:* [full cite_as string from frontmatter]
 ```
@@ -208,7 +208,7 @@ preprint_posted: true
 preprint_posted_date: YYYY-MM-DD
 doi: ""                # fill when registered on Zenodo (ISO 26324); leave blank until then
 license: "CC BY 4.0"  # Creative Commons Attribution 4.0 — de facto open-access preprint standard
-cite_as: "Author, F.M. et al. (YYYY). Title. Working Paper vX.X, DD Month YYYY. Woodfine Management Corp., Vancouver, BC."
+cite_as: "Author, Given M. et al. (YYYY). Title. Working Paper vX.X, DD Month YYYY. Woodfine Management Corp., New York, NY."
 revision_history:
   - version: "X.X"
     date: "YYYY-MM-DD"
