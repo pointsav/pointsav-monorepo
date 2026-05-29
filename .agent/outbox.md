@@ -9,6 +9,44 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-infrastructure
+to: totebox@project-editorial
+re: vm-mediakit session 10 — 2 new GUIDEs + topic-os-mediakit Ubuntu 24.04 correction ready for pickup
+created: 2026-05-29T05:00:00Z
+priority: normal
+status: pending
+msg-id: project-infrastructure-20260529-vm-mediakit-guides
+---
+
+Two new GUIDE drafts and a corrected TOPIC pair are staged in `.agent/drafts-outbound/`
+(commit 4a53d3af on project-infrastructure main).
+
+**New GUIDEs (target: woodfine-fleet-deployment/fleet-infrastructure/):**
+
+- `guide-vm-mediakit-provision.draft.md` — step-by-step runbook for provisioning the
+  Ubuntu 24.04 QEMU/TCG guest VM: prerequisites, running provision-vm-mediakit.sh,
+  waiting for cloud-init, installing nginx + build-essential, verification steps,
+  port-forward reference table, QEMU monitor commands, TCG performance expectations,
+  and troubleshooting. ~320 lines.
+
+- `guide-vm-mediakit-service-migration.draft.md` — runbook for migrating each service
+  from the GCP host into the running VM using migrate-service-to-vm.sh: migration
+  sequence table, per-service instructions with exact commands and verification, smoke
+  test result interpretation table, TCG latency expectations, and pre-DNS checklist.
+  ~280 lines.
+
+**Corrected TOPIC bilingual pair (already in drafts-outbound from session 8):**
+
+- `topic-os-mediakit.draft.md` and `topic-os-mediakit.es.draft.md` — corrected "Debian 12"
+  → "Ubuntu 24.04" throughout (with rationale: glibc 2.39 requirement). Phase 1 service
+  table updated to reflect actual state: 6 services active, service-fs + bim-orch pending.
+  Comparison table row updated accordingly. No structural changes.
+
+All three are ready for the standard editorial pass. The GUIDEs are English-only
+(no .es pair required per CLAUDE.md §14 — operational runbooks). The TOPIC pair retains
+its bilingual structure.
+
+---
+from: totebox@project-infrastructure
 to: command@claude-code
 re: vm-mediakit Phase 1 complete — 6/8 services running in Ubuntu 24.04 VM; bim-orch blocked
 created: 2026-05-29T04:35:00Z
