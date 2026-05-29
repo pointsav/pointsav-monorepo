@@ -1,7 +1,7 @@
 # CLAUDE.md — moonshot-toolkit
 
 > **State:** Active  —  **Last updated:** 2026-05-29
-> **Version:** 0.3.0  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
+> **Version:** 0.3.1  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
 > **Registry row:** `pointsav-monorepo/.claude/rules/project-registry.md`
 
 ---
