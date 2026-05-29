@@ -27,6 +27,8 @@ struct AppState {
     claims_dir: String,
     source_base_url: String,
     signing_key_hex: Option<String>,
+    wallet_seed_path: Option<String>,
+    order_index_path: String,
 }
 
 // ── Catalog types ─────────────────────────────────────────────────────────────
@@ -409,6 +411,61 @@ async fn v1_wallet_address(State(state): State<Arc<AppState>>) -> Json<Value> {
     }))
 }
 
+async fn v1_order_address(
+    State(state): State<Arc<AppState>>,
+    Path(order_id): Path<String>,
+) -> (StatusCode, Json<Value>) {
+    let seed_path = match &state.wallet_seed_path {
+        Some(p) => p.clone(),
+        None => {
+            tracing::warn!("order-address: WALLET_SEED_PATH not configured");
+            return (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(json!({"error": "wallet not configured — set WALLET_SEED_PATH"})),
+            );
+        }
+    };
+
+    let result = Command::new("tool-wallet")
+        .args(["address", &order_id])
+        .env("WALLET_SEED_PATH", &seed_path)
+        .env("ORDER_INDEX_PATH", &state.order_index_path)
+        .output();
+
+    match result {
+        Ok(out) if out.status.success() => {
+            match serde_json::from_slice::<Value>(&out.stdout) {
+                Ok(v) => {
+                    tracing::info!(order_id = %order_id, "order address assigned");
+                    (StatusCode::OK, Json(v))
+                }
+                Err(e) => {
+                    tracing::error!(order_id = %order_id, "tool-wallet address bad output: {e}");
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(json!({"error": "address derivation failed"})),
+                    )
+                }
+            }
+        }
+        Ok(out) => {
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            tracing::warn!(order_id = %order_id, "tool-wallet address exit {:?}: {stderr}", out.status);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": "address derivation failed"})),
+            )
+        }
+        Err(e) => {
+            tracing::error!("tool-wallet not available: {e}");
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(json!({"error": "wallet service unavailable"})),
+            )
+        }
+    }
+}
+
 async fn v1_issue_token(
     State(state): State<Arc<AppState>>,
     Path(tx_hash): Path<String>,
@@ -544,6 +601,12 @@ async fn main() -> Result<()> {
     if signing_key_hex.is_none() {
         tracing::warn!("LICENSE_SIGNING_KEY not set — /v1/issue-token will return 503");
     }
+    let wallet_seed_path = std::env::var("WALLET_SEED_PATH").ok();
+    if wallet_seed_path.is_none() {
+        tracing::warn!("WALLET_SEED_PATH not set — /v1/order-address will return 503");
+    }
+    let order_index_path = std::env::var("ORDER_INDEX_PATH")
+        .unwrap_or_else(|_| "/var/lib/local-software/data/order-index.json".into());
 
     let state = Arc::new(AppState {
         wallet_address,
@@ -553,6 +616,8 @@ async fn main() -> Result<()> {
         claims_dir,
         source_base_url,
         signing_key_hex,
+        wallet_seed_path,
+        order_index_path,
     });
 
     let app = Router::new()
@@ -565,6 +630,7 @@ async fn main() -> Result<()> {
         .route("/v1/issue-token/:tx_hash", get(v1_issue_token))
         .route("/v1/claim", post(v1_claim))
         .route("/v1/wallet/address", get(v1_wallet_address))
+        .route("/v1/order-address/:order_id", get(v1_order_address))
         .nest_service("/static", ServeDir::new("static"))
         .with_state(state);
 
