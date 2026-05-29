@@ -38,7 +38,7 @@
         .panel-header { padding: 20px; border-bottom: 1px solid var(--border-soft); background: #fff; }
         .panel-header h1 { margin: 0; font-size: 16px; font-weight: 800; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.5px; }
         .panel-header p  { margin: 2px 0 0 0; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-        .panel-content { padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .panel-content { padding: 0 20px 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .data-block  { margin-bottom: 14px; }
         .data-label  { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
         .data-value  { font-size: 18px; font-weight: 800; color: var(--text-main); }
@@ -1274,7 +1274,7 @@
             }
         }
         document.getElementById('inspector').innerHTML = `
-            <div class="data-block">
+            <div class="data-block" style="padding-top:16px;">
                 <div class="data-label">Coverage · ${escapeHtml(regionLabel)}</div>
                 <div class="data-value">${liveTotal ? liveTotal.toLocaleString() : '—'}</div>
                 <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">co-location clusters</div>
@@ -1329,7 +1329,7 @@
 
     function renderRetailLevelInspector() {
         document.getElementById('inspector').innerHTML = `
-            <div class="data-block">
+            <div class="data-block" style="padding-top:16px;">
                 <div class="data-label">Retail View</div>
                 <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
                     Click a ring to inspect its cluster.
@@ -1747,7 +1747,7 @@
 
 
         document.getElementById('inspector').innerHTML = `
-            <div class="data-block">
+            <div class="data-block" style="padding-top:16px;">
                 <div class="data-label">Regional Market</div>
                 ${regionBlock}
             </div>
@@ -1926,7 +1926,7 @@
         setNavContext(backLabel, backFn, name);
 
         document.getElementById('inspector').innerHTML = `
-            <div class="data-block">
+            <div class="data-block" style="padding-top:16px;">
                 <span class="cat-badge ${cat || ''}">${catLabels[cat] || cat || ''}</span>
             </div>
             <div class="data-block">
@@ -2558,7 +2558,7 @@
 
             setNavContext(REGIONS[currentRegion]?.label || 'Overview', flyToOverview, rmName);
             document.getElementById('inspector').innerHTML = `
-                <div class="data-block">
+                <div class="data-block" style="padding-top:16px;">
                     <div class="region-hero-block">
                         <div class="region-name-hero">${escapeHtml(rmName)}</div>
                         <div class="region-secondary-geo">${escapeHtml([metro, country].filter(Boolean).join(' · '))}</div>
