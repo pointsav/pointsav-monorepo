@@ -85,8 +85,8 @@ if [[ ! -f "$BINARY_PATH" ]]; then
     echo "WARNING: ${BINARY_PATH} not found on host — skipping binary copy"
     echo "         Install the binary first, then re-run this script"
 else
-    scp $SCP_OPTS "$BINARY_PATH" "${VM}:/tmp/${BINARY}"
-    ssh $SSH_OPTS "$VM" "sudo mv /tmp/${BINARY} /opt/mediakit/bin/ && sudo chmod +x /opt/mediakit/bin/${BINARY}"
+    scp $SCP_OPTS "$BINARY_PATH" "${VM}:/tmp/${BINARY}.${PORT}"
+    ssh $SSH_OPTS "$VM" "sudo mv /tmp/${BINARY}.${PORT} /opt/mediakit/bin/${BINARY} && sudo chmod +x /opt/mediakit/bin/${BINARY}"
     echo "  → /opt/mediakit/bin/${BINARY}"
 fi
 
@@ -185,8 +185,9 @@ fi
 # --- Smoke test --------------------------------------------------------------
 
 echo "[5/5] Smoke test (localhost:${HOST_PORT})..."
-sleep 2
-HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://localhost:${HOST_PORT}/" 2>/dev/null)
+sleep 3
+# TCG emulation is ~10x slower — first request can take 30-60s; curl errors are non-fatal
+HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 "http://localhost:${HOST_PORT}/" 2>/dev/null) || true
 if [[ "$HTTP_STATUS" == "200" ]]; then
     echo "  ✓ localhost:${HOST_PORT}/ → HTTP 200"
 elif [[ "$HTTP_STATUS" != "000" ]]; then
