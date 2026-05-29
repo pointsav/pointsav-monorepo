@@ -78,6 +78,7 @@ impl LocalTierClient {
             temperature: req.temperature,
             grammar: grammar_field,
             json_schema: json_schema_field,
+            tools: req.tools.clone(),
         };
         let url = format!(
             "{}/v1/chat/completions",
@@ -97,24 +98,25 @@ impl LocalTierClient {
             .await?;
         let inference_ms = started.elapsed().as_millis() as u64;
 
-        let content = resp
+        let msg = resp
             .choices
             .into_iter()
             .next()
-            .map(|c| c.message.content)
+            .map(|c| c.message)
             .ok_or_else(|| DoormanError::UpstreamShape("no choices in response".into()))?;
 
         Ok(ComputeResponse {
             request_id: req.request_id,
             tier_used: Tier::Local,
             model,
-            content,
+            content: msg.content.unwrap_or_default(),
             reasoning_content: None,
             inference_ms,
             // Tier A runs on already-paid-for VM compute; per substrate
             // decision the marginal cost is sunk in the VM cost.
             cost_usd: 0.0,
             upstream_version: None,
+            tool_calls: msg.tool_calls,
         })
     }
 }
@@ -137,6 +139,10 @@ struct OpenAiChatRequest {
     /// Absent when `None`.
     #[serde(skip_serializing_if = "Option::is_none")]
     json_schema: Option<serde_json::Value>,
+    /// Anthropic-format tools array. Passed through when the caller
+    /// requested tool-enabled inference. Absent when `None`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tools: Option<serde_json::Value>,
 }
 
 #[derive(Deserialize)]
@@ -146,7 +152,17 @@ struct OpenAiChatResponse {
 
 #[derive(Deserialize)]
 struct OpenAiChatChoice {
-    message: ChatMessage,
+    message: LocalAssistantMessage,
+}
+
+/// Assistant turn from llama-server. Content may be null when the model
+/// chose to emit tool_calls instead of text.
+#[derive(Deserialize)]
+struct LocalAssistantMessage {
+    #[serde(default)]
+    content: Option<String>,
+    #[serde(default)]
+    tool_calls: Option<serde_json::Value>,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -183,6 +199,7 @@ mod tests {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
+            tools: None,
         }
     }
 
