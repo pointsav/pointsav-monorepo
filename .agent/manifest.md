@@ -31,6 +31,7 @@ tetrad:                                # added 2026-05-18 — Phase 4.4 hardenin
         - ppn-hypervisor-resource-pool.md
         - totebox-archive.md
         - ppn-architecture-overview.md
+        - vm-architecture.md
     guides_staged_for_pickup:
       - guide-ppn-first-deployment.md
       - guide-node-join-ceremony.md
