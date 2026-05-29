@@ -80,7 +80,11 @@ pickup notice sent to project-editorial.
 - [ ] `topic-totebox-archive` + `.es` — new; `systems/totebox-archive.md` [session 6]
 - [ ] `topic-ppn-architecture-overview` + `.es` — updated; distributed fabric paragraph [session 7]
 - [ ] `topic-ppn-distributed-vm-fabric` + `.es` — new; full distributed VM fabric [session 7]
-- [ ] `topic-os-mediakit` + `.es` — **new**; `systems/os-mediakit.md`; AArch64-first seL4 target, Phase 1 Debian 12 vs Phase 3 seL4 Microkit [session 8]
+- [ ] `topic-os-mediakit` + `.es` — updated session 10: Ubuntu 24.04 fix; Phase 1 service table corrected [session 8, corrected 10]
+
+**GUIDEs (woodfine-fleet-deployment/fleet-infrastructure/) — session 10:**
+- [ ] `guide-vm-mediakit-provision` — provision-vm-mediakit.sh runbook; cloud-init; pkg install; TCG notes [session 10]
+- [ ] `guide-vm-mediakit-service-migration` — migrate-service-to-vm.sh; per-service instructions; pre-DNS checklist [session 10]
 
 **GUIDEs (woodfine-fleet-deployment/fleet-infrastructure/):**
 - [ ] `guide-ppn-first-deployment` — 5-step deployment sequence; VM capacity planning table [session 7]
