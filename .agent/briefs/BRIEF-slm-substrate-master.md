@@ -3,7 +3,7 @@ artifact: brief
 status: active
 title: SLM Substrate Master — Yo-Yo + DataGraph + Learning Loop
 created: 2026-05-24
-updated: 2026-05-29
+updated: 2026-05-29 (session 8 — circuit resilience plan; Tier A confirmed primary; five-defect inventory)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 grounds_in:
   - service-slm/ARCHITECTURE.md
@@ -39,21 +39,21 @@ notes: >
 
 ---
 
-## §1 — Current live state (as of 2026-05-28T~18:00Z)
+## §1 — Current live state (as of 2026-05-29T~18:00Z)
 
 | Component | Version | Status | Notes |
 |---|---|---|---|
-| `slm-doorman-server` | rebuilt 2026-05-28 (prev session) | **active** | Think-strip + 180s/300s timeouts; drain-backoff; `SLM_FORCE_BROKER_MODE=true`; idle 120min; **NEEDS REBUILD** for reasoning_content + reqwest-reclassify fixes (commit `446df43f`) |
-| `service-content` | rebuilt 2026-05-24 | **active** | LadybugDB loaded; CORPUS drain deferred until Yo-Yo restarts; **NEEDS REBUILD** for SC-2/3/5 fixes (commit `e263d6f0`) |
-| `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** | Restart with `start-yoyo.sh --runtime=2h`; next rebuild adds -fa/deepseek/budget flags |
-| `local-slm.service` | OLMo 2 1124 7B Instruct Q4_K_M (4.16 GiB) | active | Tier A disabled by FORCE_BROKER_MODE — **re-enable pending Sprint 0** |
-| `local-doorman.env` | — | current | `SLM_YOYO_GCP_ZONE=europe-west4-a`; `SLM_YOYO_IDLE_MINUTES=120`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_BRIEF_TIER_B_THRESHOLD_CHARS=0` |
+| `slm-doorman-server` | rebuilt 2026-05-29T04:05Z | **active** | sha256=`d3c2d37db77c46e480da04006f2b1ad76e57ad493bf0a1fd2e36ee2a147827dc`; Think-strip + 180s/300s timeouts; drain-backoff; SLM_FORCE_BROKER_MODE=**false** (Tier A enabled); tool_use shim (Sprint 1) |
+| `service-content` | rebuilt 2026-05-25 | **active** | sha256=`00b075d0a114659aec84012b84dafda007b488855833681bb6d75c57d98ba1d5`; **STALE** — missing SC-2/3/5 fixes; rebuild required after Sprint 2A (entity_count in healthz) |
+| `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** | europe-west4-a L4 stockout; restart with `start-yoyo.sh --runtime=2h` when capacity returns |
+| `local-slm.service` | OLMo 2 1124 7B Instruct Q4_K_M (4.16 GiB) | **active** | Tier A is the always-on primary; Goose verified round-tripping 2026-05-29 |
+| `local-doorman.env` | — | current | `SLM_YOYO_GCP_ZONE=europe-west4-a`; `SLM_YOYO_IDLE_MINUTES=120`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_FORCE_BROKER_MODE=false` |
 
 **Tier routing (current):**
-- Tier A: disabled (`SLM_FORCE_BROKER_MODE=true`) — **Sprint 0: set false to re-enable OLMo 7B as always-on primary**
-- Tier B: **circuit OPEN** (Yo-Yo TERMINATED) — nightly 1-hour cron (`0 2 * * *`) pending setup; extend to 4h after first verified run
+- Tier A: **ENABLED** — OLMo 7B handles all chat/shadow; `has_local: true` in readyz
+- Tier B: **circuit OPEN** — Yo-Yo TERMINATED; 1,460+ consecutive failures; `opened_at` recorded
 - Tier C: not configured — ToS hard constraint; never enable for training loop
-- Result: `ai_available: false` until Tier A is re-enabled (Sprint 0) or Yo-Yo restarts
+- Result: `ai_available: true` (Tier A); entity extraction deferred (Tier B circuit open)
 
 **Think-model fixes deployed (prev session commit `d835cab5`):**
 - `SOCKET_TIMEOUT` raised 60s → 180s; `OUTER_DEADLINE` raised 90s → 300s
@@ -74,14 +74,15 @@ notes: >
   SC-2 (defer_reason differentiation), SC-3d (30s retry loop), SC-3e (graph-first write),
   SC-3f (buffer pool env var) — all in commit `e263d6f0`
 
-**Shadow capture state:**
-- Queue: `8GKR3472S2X79VC10Q4ECZHNE1` (retrying — will succeed on next Yo-Yo start)
-- queue-done: 539 briefs
-- queue-poison: `FECH83K3N665A8H8AZ3MTVNCKZ` (accumulated pre-backoff-fix retries)
-- Training corpus: 1,900+ tuples
+**Shadow capture state (2026-05-29):**
+- queue/: 0 pending briefs
+- queue-done/: 550 briefs (dispatched)
+- queue-poison/: 590 files (accumulated during Tier B outage; mv to quarantine/ before next Yo-Yo start)
+- queue-paused/: 11 files
+- Training corpus: 591 DPO tuples (DEGENERATE — see §Circuit resilience plan) + 1,410 engineering SFT tuples (valid)
 
-**Stage 6 state:** project-intelligence archive is 16+ commits ahead of `origin/main`.
-Rebase required per inbox `command-20260520-stage6-rebase-required` before promote.
+**Stage 6 state:** archive ahead of `origin/main`; rebase required per inbox
+`command-20260520-stage6-rebase-required` before promote.
 
 ---
 
@@ -284,73 +285,89 @@ On every /v1/messages call:
 - `Interactive` / `Background` → Tier A first, fallback Tier B
 - `Batch` → Tier B (Yo-Yo) first — corpus extraction uses Batch
 
-**Tier A re-enable decision (2026-05-29):**
-`SLM_FORCE_BROKER_MODE=true` was a development workaround, not a permanent design decision.
-OLMo 2 1124 7B Instruct Q4_K_M is deployed and running (`local-slm.service`, 4.9G/8G).
-The 7B model is the always-on interactive tier for the sovereign coding agent architecture.
-Yo-Yo (Tier B) is the nightly bonus tier; it does not need to be the only inference path.
-**Sprint 0 (Command Session): set `SLM_FORCE_BROKER_MODE=false` in `/etc/local-doorman/local-doorman.env`
-and `sudo systemctl restart local-doorman.service`.**
+**Tier A is now the enabled primary (2026-05-29):**
+`SLM_FORCE_BROKER_MODE=false` confirmed in live env. OLMo 2 1124 7B Instruct Q4_K_M runs
+as `local-slm.service`. Goose round-trip verified 2026-05-29T04:10Z (`tier="local"`).
+Yo-Yo (Tier B) is the optional nightly accelerator — circuit OPEN due to VM termination.
 
 ---
 
-## §5 — Immediate open items (no prerequisites)
+## §4b — Circuit resilience plan (active, 2026-05-29)
 
-- [ ] **Sprint 0 (Command Session) — Re-enable Tier A + nightly Yo-Yo cron**
-  1. `sudo sed -i 's/SLM_FORCE_BROKER_MODE=true/SLM_FORCE_BROKER_MODE=false/' /etc/local-doorman/local-doorman.env`
-  2. `sudo systemctl restart local-doorman.service`
-  3. Verify: `curl -s http://127.0.0.1:9080/readyz | python3 -m json.tool` → `has_local: true`
-  4. Add crontab: `0 2 * * * /srv/foundry/clones/project-intelligence/service-slm/scripts/start-yoyo.sh --runtime=1h`
-  5. Binary rebuild: `cargo build --release -p slm-doorman-server -p service-content`
-  6. `sudo systemctl restart local-doorman.service local-content.service`
-  7. Drain/purge 491 poison apprenticeship briefs from `data/apprenticeship/queue/`
+Five concrete defects arise when Tier B has been unavailable for 1,460+ consecutive requests.
+Full plan: `/home/mathew/.claude/plans/make-plan-for-what-fluffy-whale.md`
 
-- [ ] **Sprint 1 (Jennifer, ~200 LOC) — tool_use shim for Goose**
-  File: `service-slm/crates/slm-doorman-server/src/http.rs`
-  See plan file `/home/mathew/.claude/plans/fancy-riding-turtle.md` §Sprint 1 for full spec.
-  7 changes: `tools`/`tool_choice` fields, thinking suppression on tool turns (llama.cpp #20345),
-  tool_use SSE blocks, `stop_reason:"tool_use"`, `count_tokens` endpoint, unknown-field passthrough, `/v1/models`.
+**The five defects:**
+1. **591 degenerate DPO tuples** — shadow briefs escalate to Tier B; `attempt.diff=""` → empty rejected sample → meaningless training signal
+2. **readyz lies** — `has_yoyo: true` reflects config presence, not circuit breaker runtime state
+3. **entity_count always 0** — `/healthz` has no entity_count field; monitors see 0 via `jq .entity_count // 0`
+4. **WATCHER stalls** — all CORPUS files marked skip-until-restart when Tier B unavailable
+5. **Drain worker accumulates poison** — no circuit-aware pause; queue fills with unprocessable briefs
 
-- [ ] **Sprint 2 (Peter) — training pipeline wiring**
-  2a. `service-slm/scripts/git-post-commit-hook.sh` → diff capture to `/v1/shadow`
-  2b. `service-slm/scripts/claude-session-bridge.py` → Claude Code CORPUS bridge (no ToS conflict — OLMo extracts entities from Claude text)
+**Sprints:**
 
-- [x] **Start Yo-Yo when europe-west4-a L4 capacity is available** ✓ DONE 2026-05-28 04:50 UTC
-  VM restarted Mode 1; llama-server loaded OLMo-3 32B Think in ~2 min; circuit closed.
+| Sprint | Scope | Files | Status |
+|---|---|---|---|
+| Sprint 0 | Documentation + artifact delivery | drafts-outbound/, briefs/ | **IN PROGRESS** |
+| Sprint 1 | Script fixes (no build) | export-dpo.sh, corpus-threshold.py | pending |
+| Sprint 2 | Honest observability (Rust, two binaries) | graph.rs, http.rs (both services), circuit_breaker.rs, router.rs | pending |
+| Sprint 3 | Tier A as confident primary (Rust, larger) | router.rs, apprenticeship.rs, main.rs (both services) | pending |
 
-- [x] **End-to-end flow test** ✓ DONE 2026-05-28 04:58 UTC
-  `POST /v1/messages` with `model: claude-sonnet-4-6` → routes to Tier B trainer → OLMo-3 32B
-  Think replied with `<think>` tokens. Shadow brief dispatch also confirmed OK (JARG5G8T45W0QMD3DTWKH29GTC).
+**Not changing:** OLMo-only policy; `/v1/extract` Tier B-only boundary (ADR-07); three-tier architecture; zone fallback; GCS training upload.
 
-  **Routing note:** Direct `/v1/messages` requests require `model: claude-sonnet-*` (or `claude-opus-*`)
-  to route to Tier B. Model `olmo` maps to Complexity::Medium → Local (fails with FORCE_BROKER_MODE).
-  Shadow briefs bypass this (ApprenticeshipDispatcher forces tier_hint=Yoyo).
+---
 
-- [x] **Verify service-content drains deferred CORPUS files** ✓ PARTIAL 2026-05-28
-  service-content loads in ~3.5 min (not 16), restarted 05:06 UTC, HTTP up at 05:09.
-  CORPUS drain is still deferring with "yoyo-transient" — root cause found and fixed:
-  OLMo-3 32B Think emits `<think>` blocks before JSON; old 60s timeout fires before `</think>`.
-  **Fix deployed:** `strip_think_blocks()` + SOCKET_TIMEOUT 180s + OUTER_DEADLINE 300s.
-  CORPUS drain will succeed on next Yo-Yo start.
+## §5 — Immediate open items
 
-- [x] **Drain worker backoff — new briefs should dispatch cleanly** ✓ DONE 2026-05-28
-  Observed: drain backoff is working. `J7BFN7NTRZ1SCTV131GDCPMBFF` succeeded at 05:13:16
-  after retry (first two attempts timed at 60s; third try succeeded in 58s = marginal win).
-  New 180s timeout means shadow briefs no longer race against the socket limit.
+- [x] **Tier A re-enable (Command Session)** ✓ DONE 2026-05-29
+  `SLM_FORCE_BROKER_MODE=false` confirmed; `local-slm.service` active; Goose verified.
 
-- [ ] **Rebuild + deploy slm-doorman-server and service-content** to pick up this session's fixes
+- [x] **Tool_use shim (Sprint 1 → Jennifer)** ✓ DONE 2026-05-29T04:00Z
+  Commit `1b47d3eb` — 51/51 http_test pass; 102/102 slm-doorman tests pass.
+  `/v1/messages/count_tokens`, `/v1/models`, tool_use SSE blocks, thinking suppression all shipped.
+
+- [x] **Training pipeline wiring (Sprint 2 → Peter)** ✓ DONE 2026-05-29
+  Commit `1d819d7c` — `git-post-commit-hook.sh` + `claude-session-bridge.py`.
+  Hook install per archive: `cp service-slm/scripts/git-post-commit-hook.sh .git/hooks/post-commit && chmod +x`
+  Command Session action needed: install hook in active archives.
+
+- [x] **Goose round-trip verification** ✓ DONE 2026-05-29T04:10Z
+  Goose v1.36.0 replied "Hello! The result of 2+2 is 4." Doorman log: `dispatching ... tier="local"`.
+
+- [ ] **Circuit resilience Sprint 1** — filter degenerate DPO tuples (scripts only, no build)
+  1A: `export-dpo.sh` — add `select(.attempt.diff != null and .attempt.diff != "")` before chosen/rejected mapping
+  1A: `corpus-threshold.py` — skip files with empty attempt.diff in count
+  (Sprint 1B, improved extraction system prompt, batches with Sprint 2 build)
+
+- [ ] **Circuit resilience Sprint 2** — honest observability (two Rust binaries)
+  2A: `count_all()` to GraphStore trait + entity_count in /healthz (service-content rebuild)
+  2B: `state_label()` + `opened_for_secs()` on CircuitBreaker; `tier_b_status()` on Doorman; readyz update (Doorman rebuild)
+  2C: guard in `write_shadow_tuple` — skip when `attempt.escalate && attempt.diff.is_empty()`
+
+- [ ] **Circuit resilience Sprint 3** — Tier A as confident primary (larger Rust changes)
+  3A: `SLM_TIER_A_FIRST` env var; change select_tier + pick_tier_for_brief; startup guard
+  3B: WATCHER Tier A fallback (rate-limited) — `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED`
+  3C: drain worker pause when all Tier B circuits open for > `SLM_HOLD_THRESHOLD_SECS`
+
+- [ ] **Quarantine 590 poison briefs** (Command Session, before next Yo-Yo start)
   ```bash
-  cargo build --release -p slm-doorman-server
-  cargo build --release -p service-content
-  sudo systemctl restart local-doorman.service local-content.service
+  mv /srv/foundry/data/apprenticeship/queue-poison/* /srv/foundry/data/apprenticeship/quarantine/
   ```
 
-- [ ] **Verify CORPUS extraction succeeds** after next Yo-Yo start + binary rebuild
-  service-content CORPUS drain should complete with "entities extracted: N" messages.
-  With SC-2/3/5 fixes + deepseek format (after Packer rebuild), extraction should succeed cleanly.
+- [ ] **service-content rebuild** (after Sprint 2A)
   ```bash
-  sudo journalctl -u local-content -f | grep -E 'entities extracted|WATCHER|deferred|RETRY'
+  cargo test -p service-content && cargo build --release -p service-content
+  sudo cp target/release/service-content /usr/local/bin/service-content
+  sudo systemctl restart local-content.service
   ```
+
+- [ ] **Binary ledger update** — slm-doorman-server sha256=`d3c2d37db77c46e480da04006f2b1ad76e57ad493bf0a1fd2e36ee2a147827dc` (built 2026-05-29); update `data/binary-ledger/slm-doorman-server.jsonl`
+
+- [ ] **Verify CORPUS extraction** after next Yo-Yo start
+  With Sprint 3B in place (WATCHER fallback), extraction will proceed via Tier A at rate limit.
+  Until then, deferred until Tier B returns.
+
+- [x] **Goose §7.2 verified** ✓ 2026-05-29T04:10Z (Doorman log confirms tier="local")
 
 ---
 
