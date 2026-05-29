@@ -10,6 +10,61 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: Stage 6 request — Phase 8 knowledge platform + content-wiki-documentation updates
+created: 2026-05-29T18:00:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260529-phase8-stage6
+---
+
+**Monorepo — app-mediakit-knowledge Phase 8 (commit `0e5fd685`, Peter)**
+
+Three files changed: `src/server.rs`, `static/style.css`, `tests/history_test.rs`.
+
+Changes:
+- A1 Article integrity bar: `div.article-integrity` added to `wiki_chrome()` after `div.article-provenance`.
+  Computes blake3 hex (first 16 chars) of article body and displays with link to revision history.
+  `body_blake3: &str` added as final parameter to `wiki_chrome()` signature.
+- A2 History pagination: `?page=N` query param (25 per page, 500 max fetched), "← newer / older →"
+  nav links in `nav.history-pagination`.
+- A3 Diff stats header: `div.diff-stats` above the two-column diff table, "+N / −M lines".
+- A4 `/special/hash-lookup/{hash}` route: validates 64-char hex, calls `state.links.lookup_by_hash()`,
+  returns article info on hit or 404 on miss.
+- A5 CSS: `.article-integrity`, `.integrity-hash`, `.diff-stats`, `.history-pagination` blocks.
+- A6 Tests: 3 new tests in `tests/history_test.rs` — integrity bar blake3 render, hash-lookup
+  returns slug, hash-lookup 404 for unknown hash.
+
+Binary rebuild required (static assets embedded via rust-embed). Cargo tests running now.
+
+**content-wiki-documentation (commit `13b8caa`, Jennifer)**
+
+9 files changed:
+- `about.es.md`, `contact.es.md`, `disclaimers.es.md`, `contribute.es.md` — Spanish governance stubs
+- `research/_index.md`, `research/_index.es.md` — new research/ category landing pages
+- `research/geometric-site-selection-national-tenancy.md` — A6 PROSE-RESEARCH article (v0.4.1,
+  658 lines, preprint WIP block added per journal-artifact-discipline.md §public-posting-requirements)
+- `applications/app-privategit-workbench.md`, `applications/app-privategit-workbench.es.md` —
+  frontmatter cleanup (draft fields removed, quality updated)
+
+No binary rebuild needed for content-wiki-documentation (disk-served content, immediate).
+
+**Action required from Command Session:**
+1. `bin/promote.sh` for monorepo commit `0e5fd685` + all 16 prior pending commits
+2. `cargo build --release` in `pointsav-monorepo/app-mediakit-knowledge/`
+3. `sudo cp target/release/app-mediakit-knowledge /usr/local/bin/app-mediakit-knowledge`
+4. `sudo systemctl restart local-knowledge-documentation local-knowledge-projects local-knowledge-corporate`
+5. Healthcheck: `curl http://127.0.0.1:9090/healthz && curl http://127.0.0.1:9093/healthz && curl http://127.0.0.1:9095/healthz`
+6. Smoke-test: `curl -s http://127.0.0.1:9090/wiki/about | grep article-integrity`
+7. `bin/promote.sh` for content-wiki-documentation commit `13b8caa`
+8. `bin/sync-local.sh --all`
+9. Binary ledger update: `data/binary-ledger/app-mediakit-knowledge.jsonl`
+
+**GUIDE-workbench-setup.md:** staged at `clones/project-knowledge/.agent/drafts-outbound/GUIDE-workbench-setup.md`
+(from project-development, foundry-draft-v1). Route to `woodfine-fleet-deployment/vault-privategit-source/`.
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: Stage 6 pending — app-mediakit-knowledge Phase 7F+7G+7H — Tufte sidenotes + auto-numbered sections + binary rebuild needed
 created: 2026-05-29T16:45:00Z
 priority: high
