@@ -2802,6 +2802,35 @@ body.reading-mode main.article-wrap {
 body.reading-mode header.topnav { opacity: 0.6; }
 body.reading-mode aside.toc { display: none !important; }
 
+/* Phase 7D — Citation freshness dot + hover card */
+.freshness-dot {
+  display: inline-block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  vertical-align: super;
+  margin-left: 1px;
+  background: var(--mw-color-base-30, #72777d);
+}
+.freshness-dot[data-status="fresh"]   { background: oklch(65% 0.15 142); }
+.freshness-dot[data-status="stale"]   { background: oklch(72% 0.13 55); }
+.freshness-dot[data-status="unknown"] { background: var(--mw-color-base-30, #72777d); }
+
+.cite-hover-card {
+  position: absolute;
+  z-index: 300;
+  max-width: 300px;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg, #fff);
+  border: 1px solid var(--mw-color-base-50, #c8ccd1);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--fg, #202122);
+  pointer-events: none;
+}
+.cite-hover-card p { margin: 0; }
+
 /* Print styles */
 @media print {
   .shell-footer, .wiki-fab, .wiki-sticky-header, .mobile-nav-drawer,

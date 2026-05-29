@@ -1,6 +1,7 @@
 //! Phase 4 Steps 4.4+4.5 — redb-backed wikilink graph + blake3 content hashes.
+//! Phase 7D — citations table for URL freshness tracking.
 //!
-//! Two tables in a single redb database at `<state_dir>/links.redb`:
+//! Three tables in a single redb database at `<state_dir>/links.redb`:
 //!
 //! - `OUTLINKS`: composite key `"from_slug\x00to_slug"` → u8 sentinel.
 //!   Supports two query patterns:
@@ -9,6 +10,10 @@
 //!
 //! - `HASHES`: composite key `"slug\x00revision_sha"` → 32-byte blake3 digest.
 //!   Federation-seam baseline (Phase 7 lights up an efficient reverse index).
+//!
+//! - `CITATIONS`: key `cite_id` (e.g. `"slug:fn-1"`) → JSON blob
+//!   `{"url":"...","title":"...","status":"unknown"}`. Phase 9 URL validator
+//!   updates `status` to `"fresh"` or `"stale"` on a nightly sweep.
 
 use crate::claim::Claim;
 use crate::error::WikiError;
@@ -19,11 +24,11 @@ use std::{path::Path, sync::Arc};
 const OUTLINKS: TableDefinition<&str, u8> = TableDefinition::new("outlinks");
 const HASHES: TableDefinition<&str, &[u8]> = TableDefinition::new("hashes");
 
-// Phase 3.3 — claim-dependency graph. Composite key
-// `from_claim_id\x00to_claim_id` → u8 sentinel; claim ids are global
-// (`<slug>:<local-id>`, convention §7). Forward scan = `depends_on`;
-// reverse scan = `cited_by` (dependents). Mirrors the OUTLINKS pattern.
+// Phase 3.3 — claim-dependency graph.
 const CLAIM_DEPS: TableDefinition<&str, u8> = TableDefinition::new("claim_deps");
+
+// Phase 7D — citation URL freshness tracking.
+const CITATIONS: TableDefinition<&str, &str> = TableDefinition::new("citations");
 
 pub struct LinkGraph {
     db: Arc<Database>,
@@ -51,6 +56,9 @@ impl LinkGraph {
             .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
         let _ = wtx
             .open_table(CLAIM_DEPS)
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let _ = wtx
+            .open_table(CITATIONS)
             .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
         wtx.commit()
             .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
@@ -283,6 +291,66 @@ impl LinkGraph {
             .collect();
 
         Ok(results)
+    }
+
+    /// Record a citation for `cite_id` (e.g. `"slug:fn-1"`). The status
+    /// defaults to `"unknown"`. Phase 9 URL validator overwrites status.
+    pub fn record_citation(
+        &self,
+        cite_id: &str,
+        url: &str,
+        title: &str,
+    ) -> Result<(), WikiError> {
+        let blob = format!(
+            r#"{{"url":{},"title":{},"status":"unknown"}}"#,
+            serde_json::to_string(url).unwrap_or_default(),
+            serde_json::to_string(title).unwrap_or_default(),
+        );
+        let wtx = self
+            .db
+            .begin_write()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        {
+            let mut table = wtx
+                .open_table(CITATIONS)
+                .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+            table
+                .insert(cite_id, blob.as_str())
+                .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        }
+        wtx.commit()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        Ok(())
+    }
+
+    /// Look up the JSON blob for `cite_id`. Returns `None` if not recorded.
+    pub fn lookup_citation(&self, cite_id: &str) -> Result<Option<String>, WikiError> {
+        let rtx = self
+            .db
+            .begin_read()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let table = rtx
+            .open_table(CITATIONS)
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let result = table
+            .get(cite_id)
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?
+            .map(|v| v.value().to_owned());
+        Ok(result)
+    }
+
+    /// Return just the status field for `cite_id`: `"fresh"`, `"stale"`, or `"unknown"`.
+    pub fn citation_status(&self, cite_id: &str) -> &'static str {
+        let Ok(Some(blob)) = self.lookup_citation(cite_id) else {
+            return "unknown";
+        };
+        if blob.contains(r#""status":"fresh""#) {
+            "fresh"
+        } else if blob.contains(r#""status":"stale""#) {
+            "stale"
+        } else {
+            "unknown"
+        }
     }
 
     /// The claims that declare a `depends_on` edge **to** `claim_id` — the
