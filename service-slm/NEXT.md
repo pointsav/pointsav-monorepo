@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-29T03:25Z — §7.3 live SSE test run: OLMo 7B returned text (not tool_use); QEMU PID 4039898 still at 95% CPU
+> Last updated: 2026-05-29T04:20Z — §7.2 VERIFIED (Goose round-trip); system-as-blocks fix deployed; Yo-Yo TERMINATED, no auto-start
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -26,15 +26,21 @@ Confirm with project-infrastructure owner then kill if appropriate:
 kill 4039898   # kills vm-mediakit — verify it is safe first
 ```
 
-### Learning loop §7 status (2026-05-29T03:25Z)
+### Learning loop §7 status (2026-05-29T04:20Z)
 - ✅ §7.1 `has_local: true` — verified
-- ⚠️ §7.2 Goose session — Goose v1.36.0 installed; test BLOCKED by CPU saturation (QEMU PID 4039898)
-- ⚠️ §7.3 tool_use routing — LIVE TEST DONE: tool format shim works; OLMo 7B returned text not tool_use
-         (stop_reason: end_turn). OLMo 7B not fine-tuned for tool invocation. Requires Tier B or
-         upgraded Tier A model for reliable tool_use SSE blocks.
-- ❌ §7.4 entities extracted — Tier B circuit OPEN; extraction deferred until Yo-Yo VM up
+- ✅ §7.2 Goose session — VERIFIED 2026-05-29T04:10Z (OLMo replied; Doorman log: tier="local")
+         Fix required first: `system`-as-blocks deserialization bug → commit `74ba6da0`
+- ⚠️ §7.3 tool_use routing — shim correct; OLMo 7B does not invoke tools (text response).
+         Requires Tier B (OLMo 3 32B-Think) or tool-use-tuned Tier A model.
+- ❌ §7.4 entities extracted — Tier B circuit OPEN; Yo-Yo TERMINATED (operator: start manually when ready)
 - ✅ §7.5 git commit → shadow hit — verified
 - ❌ §7.6 corpus-threshold → training — downstream of §7.4
+
+### Yo-Yo status (2026-05-29)
+- VM: TERMINATED on GCP (europe-west4-a, yoyo-tier-b-1)
+- **No auto-start mechanism** — must be started manually: `service-slm/scripts/start-yoyo.sh --runtime=2h`
+- Operator decision: more testing required before re-enabling
+- Idle monitor (yoyo-idle-monitor.timer) is stop-only; safe to leave running
 
 **To start the Yo-Yo after it idles/stops:**
 ```bash
