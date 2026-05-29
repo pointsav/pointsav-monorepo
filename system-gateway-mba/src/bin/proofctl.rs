@@ -139,10 +139,7 @@ fn main() -> Result<()> {
                 if pending.is_empty() {
                     println!("No pending connection requests.");
                 } else {
-                    println!(
-                        "{:<12} {:<20} {:<10} REQUESTED",
-                        "CODE", "USER", "TENANT"
-                    );
+                    println!("{:<12} {:<20} {:<10} REQUESTED", "CODE", "USER", "TENANT");
                     for (_, code, user, tenant, created) in &pending {
                         println!(
                             "{:<12} {:<20} {:<10} {}",
