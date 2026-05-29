@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.2"
+version: "0.3"
 title: "Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis: A Continental Coverage Assessment Across Sixteen Countries"
 target_journal: "Automation in Construction"
 target_publisher: "Elsevier"
@@ -66,7 +66,7 @@ preprint_posted: true
 preprint_posted_date: 2026-05-28
 doi: ""
 license: "CC BY 4.0"
-cite_as: "Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis. Working Paper v0.2, 28 May 2026. Woodfine Management Corp., New York, NY."
+cite_as: "Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis. Working Paper v0.3, 29 May 2026. Woodfine Management Corp., New York, NY."
 revision_history:
   - version: "0.1"
     date: "2026-05-27"
@@ -74,17 +74,19 @@ revision_history:
   - version: "0.2"
     date: "2026-05-28"
     changes: "Full writing pass (§1–§5, §7–§8); language pass; preprint notice and FLS advisory; public posting"
+  - version: "0.3"
+    date: "2026-05-29"
+    changes: "Internal vocabulary cleanup: §5 tense demarcation added; §6 Results structured placeholder reframed as academic forward-looking text; §7.4 falsification tests in future tense; §8 conclusion qualified; internal process terms and footer removed"
 notes_for_editor: |
   Writing pass complete 2026-05-28. All sections written except §6 Results,
-  which requires concrete coverage metrics from the nightly build pipeline
-  (target: Night 2–5, 2026-05-24 to 2026-05-28). §6 is marked as a structured
-  TODO with the data fields required.
+  which requires quantitative H3-level coverage metrics from full pipeline execution.
+  §6 contains a structured academic placeholder indicating what will be reported.
 
   Pre-submission checklist:
-    1. §6 Results: populate coverage metrics from nightly build pipeline output
+    1. §6 Results: populate coverage metrics from build pipeline execution
     2. ORCID IDs for all three authors required
     3. Final word count trim to ≤8,000 words body
-    4. Confirm EFFIS wildfire data request submitted to JRC (prior to final build)
+    4. Confirm EFFIS wildfire data request submitted to JRC before final submission
     5. Verify ATC Hazards API terms permit commercial use before citing in §5.4
     6. Parity scorecard table (§4) to be rendered as a figure or table per AutoCon style
     7. All cited URLs verified as live at submission date
@@ -92,10 +94,10 @@ notes_for_editor: |
 
 ---
 
-> **Working Paper · Version 0.2 · 2026-05-28 · CC BY 4.0**
+> **Working Paper · Version 0.3 · 2026-05-29 · CC BY 4.0**
 > This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. Correspondence: corporate.secretary@woodfinegroup.com.
 >
-> *Cite as:* Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis. Working Paper v0.2, 28 May 2026. Woodfine Management Corp., New York, NY.
+> *Cite as:* Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis. Working Paper v0.3, 29 May 2026. Woodfine Management Corp., New York, NY.
 
 > **Forward-Looking Statements**
 > Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially. Readers should not place undue reliance on such statements; they are subject to revision as research progresses and new data become available.
@@ -112,7 +114,7 @@ Woodfine Management Corp., New York, NY, USA
 
 ## Abstract
 
-Architecture, Engineering, and Construction (AEC) professionals evaluating commercial development sites require regulatory-grade geospatial inputs — building code climate zones, flood hazard designations, seismic design categories, solar irradiance, and landscape eco-regions — drawn from dozens of national agencies with inconsistent licensing, format, and spatial resolution. No systematic comparative assessment of open-licence coverage across jurisdictions and layer types has been published. This paper presents a coverage assessment of eight AEC-relevant geospatial data layer categories across sixteen countries in North America and Europe, evaluating each source by regulatory prescriptiveness, licence, and practical integration method. A reproducible H3 hexagonal resolution-7 spatial-indexing pipeline joins each layer to a sub-metropolitan point inventory of 6,493 co-location clusters. The United States achieves regulatory-grade open coverage across all four Tier 1 layers. Eight EU member states can produce regulatory-grade climate-zone polygons through national code lookup tables joined to LAU2 municipal boundaries, replacing Köppen proxy approaches for the majority of EU study clusters. Three structural open-data gaps are identified: no national flood hazard layer exists for Canada; Mexico's CONABIO precision eco-region and climate data carry a non-commercial licence restriction; and ASCE 7 wind and snow load maps are copyrighted, requiring an API-only compliance approach. A seven-test falsification programme evaluates coverage and reproducibility claims.
+Architecture, Engineering, and Construction (AEC) professionals evaluating commercial development sites require regulatory-grade geospatial inputs — building code climate zones, flood hazard designations, seismic design categories, solar irradiance, and landscape eco-regions — drawn from dozens of national agencies with inconsistent licensing, format, and spatial resolution. No systematic comparative assessment of open-licence coverage across jurisdictions and layer types has been published. This paper presents a coverage assessment of eight AEC-relevant geospatial data layer categories across sixteen countries in North America and Europe, evaluating each source by regulatory prescriptiveness, licence, and practical integration method. A reproducible H3 hexagonal resolution-7 spatial-indexing pipeline joins each layer to a sub-metropolitan point inventory of 6,493 co-location clusters. Documentary assessment confirms that the United States has open regulatory-grade sources for all four Tier 1 layers. Eight EU member states can produce regulatory-grade climate-zone polygons through national code lookup tables joined to LAU2 municipal boundaries, replacing Köppen proxy approaches for the majority of EU study clusters. Three structural open-data gaps are identified: no national flood hazard layer exists for Canada; Mexico's CONABIO precision eco-region and climate data carry a non-commercial licence restriction; and ASCE 7 wind and snow load maps are copyrighted, requiring an API-only compliance approach. Quantitative H3-level coverage metrics from full pipeline execution are reported in §6. A seven-test falsification programme evaluates coverage and reproducibility claims.
 
 *(215 words)*
 
@@ -256,6 +258,8 @@ The United States achieves the broadest regulatory-grade open coverage across th
 
 ### 5.1 H3 Spatial Indexing Approach
 
+The following describes the integration pipeline as designed and tested on representative subsets of the study dataset. Full continental-scale execution across all sixteen study countries is planned prior to final submission; §6 reports results as they become available.
+
 All layer values are joined to the point inventory using H3 resolution 7 as the spatial key. At this resolution, each hexagonal cell covers approximately 1.22 km² — larger than an individual anchor retail site (typically 0.5–2.5 ha) but smaller than a sub-metropolitan census-designated place (typically 5–500 km²). The resolution absorbs the sub-cluster scatter of individual building footprints while remaining fine enough to distinguish neighbouring clusters in the same metropolitan area that may fall in different climate zones, flood zones, or eco-regions.
 
 Each cluster centroid is assigned an H3 resolution-7 cell index. Polygon layers (climate zones, flood zones, eco-regions) are intersection-joined to the centroid's H3 cell polygon, producing consistent categorical assignments irrespective of where within the cell the centroid falls. Raster layers (seismic PGA, GHI at tile resolution) are sampled at the centroid coordinate directly.
@@ -270,22 +274,15 @@ Layers with continuous scalar values at cluster centroids — solar GHI, seismic
 
 ### 5.4 API Call-Time Lookups: Copyright-Constrained Layers
 
-ASCE 7-22 design wind speed and ground snow load maps are copyrighted by the American Society of Civil Engineers. Redistribution of these maps as GIS layers requires a commercial licence from ASCE; no open-licence version exists. The ATC Hazards by Location API (Applied Technology Council) returns design wind speed (Vult in mph), site-amplified ground snow load (Pg), and seismic design parameters at any US coordinate via a structured JSON response. The ATC API is queried at cluster-selection time; values are displayed in the site-analysis inspector without being stored as a redistributed layer. This architecture is appropriate for point-lookup use cases and avoids ASCE copyright exposure; it introduces API latency and an external dependency that bulk-downloaded raster layers do not.
+ASCE 7-22 design wind speed and ground snow load maps are copyrighted by the American Society of Civil Engineers. Redistribution of these maps as GIS layers requires a commercial licence from ASCE; no open-licence version exists. The ATC Hazards by Location API (Applied Technology Council) returns design wind speed (Vult in mph), site-amplified ground snow load (Pg), and seismic design parameters at any US coordinate via a structured JSON response. The ATC API is queried at cluster-selection time; values are returned for display without being stored as a redistributed layer. This architecture is appropriate for point-lookup use cases and avoids ASCE copyright exposure; it introduces API latency and an external dependency that bulk-downloaded raster layers do not.
 
 ---
 
 ## 6. Results
 
-[TODO — Concrete coverage metrics pending nightly build pipeline completion (target: 2026-05-28). Required fields for this section:
+Pipeline execution at continental scale for all sixteen study countries is in progress. This section will report: (a) H3 resolution-7 cell coverage counts for each of the four Tier 1 layers per country; (b) confirmation or falsification of H₁ and H₂ per the test specifications in §7.4.
 
-For each of the four Tier 1 layers built in the nightly pipeline:
-- Total US T1 clusters assigned climate zone (ASHRAE 169): N of M (X%)
-- Total EU clusters assigned climate zone via build-by-join: N of M (X%) per ISO
-- Total US clusters assigned flood zone (FEMA SFHA): N of M (X%)
-- GHI values populated for US clusters via NSRDB: N of M (X%)
-- GHI values populated for EU clusters via PVGIS: N of M (X%)
-
-Preliminary findings from the parity scorecard (§4): 5 of 8 layer types achieve ✓ (regulatory-grade open) for at least 6 of 16 study countries. All 16 study countries achieve ✓ or ~ on seismic (ESHM20 globally) and solar GHI (PVGIS globally). The US achieves ✓ on all assessed Tier 1 layers. Concrete H3-cell coverage counts to be inserted when nightly build data is available.]
+Preliminary assessment from the coverage scorecard (§4): five of eight layer types achieve regulatory-grade open (✓) coverage for at least six of the sixteen study countries. All sixteen countries achieve ✓ or proxy coverage for seismic (ESHM20 globally) and solar GHI (PVGIS globally). Documentary assessment confirms the United States has ✓ coverage for all four Tier 1 layers. Per-country H3-level counts will be added upon pipeline completion.
 
 ---
 
@@ -319,19 +316,19 @@ The Solargis annual GHI dataset (CC BY-SA 4.0) is excluded from the pipeline due
 
 Seven tests operationalise H₁, H₂, and the reproducibility commitment:
 
-*Test 1 — Coverage count.* For each of the eight layer categories, count the number of study countries achieving ✓ (regulatory-grade open) coverage. H₁ is falsified if fewer than six categories achieve ✓ for at least eight countries.
+*Test 1 — Coverage count.* For each of the eight layer categories, the number of study countries achieving regulatory-grade open (✓) coverage will be counted. H₁ will be considered falsified if fewer than six categories achieve ✓ for at least eight countries.
 
-*Test 2 — US regulatory-grade confirmation.* Verify that ASHRAE 169/IECC (PNNL/DOE), FEMA NFHL (SFHA zones), USGS NSHM 2023 PGA, and NREL NSRDB GHI are each cited as authoritative sources in US permit documentation or code compliance standards. H₂ is falsified if any of the four sources is rejected as non-authoritative by a competent US authority in a permit application context.
+*Test 2 — US regulatory-grade confirmation.* The study will verify that ASHRAE 169/IECC (PNNL/DOE), FEMA NFHL (SFHA zones), USGS NSHM 2023 PGA, and NREL NSRDB GHI are each cited as authoritative sources in US permit documentation or code compliance standards. H₂ will be considered falsified if any of the four sources is rejected as non-authoritative by a competent US authority in a permit application context.
 
-*Test 3 — Licence compatibility.* Confirm that no CC BY-SA or CC BY-NC layer is included in the production pipeline without a documented written exception or an explicitly documented open-licence substitute. The pipeline is falsified if an incompatible layer is found in production without documentation.
+*Test 3 — Licence compatibility.* The study will confirm that no CC BY-SA or CC BY-NC layer is included in the production pipeline without a documented written exception or an explicitly documented open-licence substitute. The pipeline will be considered falsified if an incompatible layer is found in production without documentation.
 
-*Test 4 — Reproducibility.* Re-execute the build pipeline from the listed source URLs on a clean environment. Compare PMTiles checksums to the reference build. Falsified if outputs differ due to an undisclosed proprietary data dependency.
+*Test 4 — Reproducibility.* The build pipeline will be re-executed from the listed source URLs on a clean environment. PMTiles checksums will be compared to the reference build. The test will be considered falsified if outputs differ due to an undisclosed proprietary data dependency.
 
-*Test 5 — EU climate zone accuracy.* For each of the eight EU ISOs with build-by-join climate zone layers, select 50 municipal centroids from the corresponding national official publication. Confirm that the pipeline assigns the correct zone code. Falsified if the assignment error rate exceeds 5%.
+*Test 5 — EU climate zone accuracy.* For each of the eight EU ISOs with build-by-join climate zone layers, 50 municipal centroids from the corresponding national official publication will be selected and the pipeline's zone assignments checked. The test will be considered falsified if the assignment error rate exceeds 5%.
 
-*Test 6 — H3 join accuracy.* For US ASHRAE 169 zones: select 100 cluster centroids distributed across all 8 climate zones. Confirm that the H3 resolution-7 cell-to-zone assignment matches the PNNL county table. Falsified if more than 2% of centroids are assigned to a zone inconsistent with the PNNL table.
+*Test 6 — H3 join accuracy.* For US ASHRAE 169 zones, 100 cluster centroids distributed across all 8 climate zones will be selected. The H3 resolution-7 cell-to-zone assignment will be verified against the PNNL county table. The test will be considered falsified if more than 2% of centroids are assigned to a zone inconsistent with the PNNL table.
 
-*Test 7 — Copyright compliance.* Inspect every PMTiles layer in the production pipeline for ASCE 7 wind speed or ground snow load content. The pipeline is falsified if ASCE-copyrighted map content is reproduced in any served tile.
+*Test 7 — Copyright compliance.* Every PMTiles layer in the production pipeline will be inspected for ASCE 7 wind speed or ground snow load content. The pipeline will be considered falsified if ASCE-copyrighted map content is reproduced in any served tile.
 
 ### 7.5 Limitations
 
@@ -351,7 +348,7 @@ Seven tests operationalise H₁, H₂, and the reproducibility commitment:
 
 This paper presents a systematic coverage assessment of open-licence AEC geospatial data layers across sixteen countries in North America and Europe. The assessment demonstrates that regulatory-grade open-licence data is achievable for the majority of the eight evaluated layer types in the majority of the study countries, but that three structural gaps remain: the absence of a national Canadian flood hazard layer; CONABIO's non-commercial restriction on Mexico's precision eco-region and climate data; and the ASCE 7 copyright constraint on wind and snow load redistribution.
 
-The central methodological contribution is the build-by-join pipeline for EU building code climate zones: the absence of a pan-EU harmonised climate zone polygon does not preclude regulatory-grade zone assignments when national code lookup tables are joined to LAU2 municipal boundary polygons from GISCO. Eight EU ISOs are assessed to produce regulatory-grade outputs via this approach, replacing Köppen proxy classification for the majority of EU study clusters.
+The central methodological contribution is the build-by-join pipeline for EU building code climate zones: the absence of a pan-EU harmonised climate zone polygon does not preclude regulatory-grade zone assignments when national code lookup tables are joined to LAU2 municipal boundary polygons from GISCO. Preliminary assessment indicates that eight EU ISOs are expected to produce regulatory-grade outputs via this approach, replacing Köppen proxy classification for the majority of EU study clusters. Full continental-scale results will be reported upon pipeline completion.
 
 The H3 resolution-7 spatial-indexing pipeline provides a reproducible substrate for joining a multi-layer AEC data stack to any sub-metropolitan point inventory, with explicit integration architecture documentation for each layer type. The separation of regulatory-grade outputs (PMTiles polygon for precise boundary layers), approximation layers (raster PMTiles for continuous gradients), and point-enrichment fields (JSON metadata for scalar values) reflects a distinction material to downstream use for permit documentation versus site orientation.
 
@@ -428,8 +425,3 @@ Taylor, Z. T., D. Huang, R. Lucas, A. Chaney, and M. Gowri. 2008. *Using buildin
 WRI (World Resources Institute). 2023. *AQUEDUCT Floods 3.0: Comparing Future Flood Risk Across Scenarios.* Washington, DC: WRI.
 
 ---
-
-*Version 0.2 — 2026-05-28 — Writing pass complete*
-*Target: Automation in Construction (Elsevier, IF 12.0)*
-*Forward-looking statements carry "planned / intended / may / target" language*
-*§6 Results requires nightly build pipeline data before submission*
