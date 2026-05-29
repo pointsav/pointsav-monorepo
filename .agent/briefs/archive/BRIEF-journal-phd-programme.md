@@ -19,13 +19,19 @@ Registry: `.agent/rules/artifact-registry.md` §J
 
 ---
 
-## Status banner (2026-05-28)
+## Status banner (2026-05-29)
+
+Author block updated 2026-05-29: all six papers now use RAND/Brookings Approach A — named
+individuals first (`**Jennifer M. Woodfine, Peter M. Woodfine, and Mathew Woodfine**`),
+institution on second line (`Woodfine Management Corp., New York, NY, USA`), institutional
+email (`corporate.secretary@woodfinegroup.com`), full-name cite_as. Commits `c4a51814` + `1abc094e`.
+J1+J3 re-post dispatched to project-gis (msg-id `project-editorial-20260529-journal-j1-j3-repost`).
 
 | ID | File | Body state | Cleared | Next action |
 |----|------|------------|---------|-------------|
-| J1 | JOURNAL-retail-colocation-v0.1.draft.md | Complete v0.3 (~8,200w) | language-cleared | §7.2 primary spec pending Phase 24B (pop + O-D data); permutation test; F1–F5 at project-gis |
+| J1 | JOURNAL-retail-colocation-v0.1.draft.md | Complete v0.3 (~8,200w) | language-cleared | §7.2 primary spec pending Phase 24B; permutation test; F1–F5 at project-gis; **repost dispatched** |
 | J2 | JOURNAL-trustworthy-systems-v0.1.draft.md | Complete (~8,800w) | language-cleared | Bench #9 quiet-VM re-run; ASPLOS short-version reformat (~6,000w) |
-| J3 | JOURNAL-aec-data-layers-v0.1.draft.md | Full body v0.2 (~7,800w) | language-cleared | §6 Results pending AEC nightly build coverage metrics from project-gis |
+| J3 | JOURNAL-aec-data-layers-v0.1.draft.md | Full body v0.2 (~7,800w) | language-cleared | §6 Results pending AEC nightly metrics from project-gis; **repost dispatched** |
 | J4 | JOURNAL-private-network-v0.1.stub.md | §1-§3+§6-§7 written v0.2 (~4,800w) | language-cleared | §4 Implementation + §5 Evaluation pending benchmark data |
 | J5 | JOURNAL-totebox-orchestration-v0.1.stub.md | Stub (0w) | — | HOLD until J2 submitted |
 | J6 | JOURNAL-desktop-environment-v0.1.stub.md | §1-§5 written v0.2 (~5,200w) | language-cleared | §6 Results pending user study execution |
