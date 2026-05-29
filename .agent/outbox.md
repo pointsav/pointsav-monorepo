@@ -10,6 +10,111 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: Stage 6 pending — app-mediakit-knowledge Phase 7F+7G+7H — Tufte sidenotes + auto-numbered sections + binary rebuild needed
+created: 2026-05-29T16:45:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260529-phase7fgh-knowledge
+---
+
+pointsav-monorepo commit `c240837b` (Phase 7F+7G+7H, Peter) — adds to the pending stack:
+
+Phase 7F: `inject_sidenotes()` post-processor in `render.rs`; `layout: journal` frontmatter check in render
+chain (`server.rs`); sidenote CSS (absolute positioned at ≥1280px, checkbox-toggle at <1280px) in `style.css`.
+Phase 7G+7H: CSS counter auto-numbered sections for `[data-instance="woodfine-corporate"]` in `style.css`.
+Test fixture `tests/fixtures/journal/sample.md` + integration test `tests/journal_test.rs` — 1/1 pass.
+
+Binary rebuild in progress on this Totebox. Deploy sequence:
+  sudo systemctl stop local-knowledge-documentation.service local-knowledge-projects.service local-knowledge-corporate.service
+  sudo cp /srv/foundry/cargo-target/release/app-mediakit-knowledge /usr/local/bin/
+  sudo systemctl start local-knowledge-documentation.service local-knowledge-projects.service local-knowledge-corporate.service
+
+Verify: curl http://127.0.0.1:9090/ (documentation), :9093 (projects), :9095 (corporate)
+Journal layout test: create an article with `layout: journal` frontmatter — footnotes should render as sidenotes.
+
+Pending Stage 6 commits (now 14 total, newest first):
+  c240837b  feat(knowledge): Phase 7F+7G+7H — Tufte sidenotes for layout:journal, auto-numbered corporate sections
+  bbb339b5  feat(knowledge): Phase 7E — mobile bottom bar, mobile table/code overflow
+  [prior 12 commits from previous outbox entry]
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
+re: Stage 6 pending — app-mediakit-knowledge Phase 7E — mobile bottom bar + binary rebuild needed
+created: 2026-05-29T12:27:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260529-phase7e-knowledge
+---
+
+pointsav-monorepo commits (since last promote) — now 13 pending:
+- `d9c7a101` (jwoodfine) — docs: Phase 7E NEXT.md update
+- `ccb9b1d0` (jwoodfine) — Phase 7E: mobile bottom bar, table overflow, article-tabs hidden on mobile
+- `855f9d3a` (pwoodfine) — docs: Phase 7D NEXT.md update
+- `f0b1d903` (jwoodfine) — Phase 7D: citation hover preview, freshness dot, citations redb table
+- `7745dbb3` (jwoodfine) — docs: Phase 7C NEXT.md update
+- `d649f051` (pwoodfine) — Phase 7C: reading mode toggle, CSS body-class, localStorage
+- `eb880b01` (jwoodfine) — docs: Phase UX-B NEXT.md update
+- `2a19c626` (pwoodfine) — Phase UX-B: remove appearance dropdown, home standfirst, footer convergence, CC BY 4.0 gate, provenance ribbon
+- `e1b5fc6d` (jwoodfine) — docs: Phase UX-A NEXT.md update
+- `0dfe1647` (pwoodfine) — Phase UX-A: wire typography tokens, fix dark-mode contrast, suppress appearance dropdown
+- `bbb339b5` (pwoodfine) — Phase 7B: article-tabs row, Tools dropdown, anchor-share ¶, auth-gated tabs
+- `168314a1` (jwoodfine) — Phase 7A: TOC toggle/pin restored; topnav search added
+- `afa67bfa` (jwoodfine) — Phase 6A/6B/6C: AJAX nav fix, home page caps, topnav refactor
+
+Action required:
+1. `bin/promote.sh` for all 13 commits to reach canonical `pointsav/pointsav-monorepo`
+2. Binary rebuild (rust-embed — CSS/JS embedded at compile time)
+3. Deploy rebuilt binary to all 3 instances (stop → copy → start)
+4. Binary ledger update: `/usr/local/bin/app-mediakit-knowledge`
+5. `bin/sync-local.sh --all`
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
+re: Stage 6 pending — app-mediakit-knowledge Phase 7D — citation hover preview + binary rebuild needed
+created: 2026-05-29T09:30:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260529-phase7d-knowledge
+---
+
+pointsav-monorepo commits (since last promote):
+- `855f9d3a` (pwoodfine) — docs: Phase 7D NEXT.md update
+- `f0b1d903` (jwoodfine) — Phase 7D: citation hover preview, freshness dot, citations redb table
+- `7745dbb3` (jwoodfine) — docs: Phase 7C NEXT.md update
+- `d649f051` (pwoodfine) — Phase 7C: reading mode toggle, CSS body-class, localStorage
+- `eb880b01` (jwoodfine) — docs: Phase UX-B NEXT.md update
+- `2a19c626` (pwoodfine) — Phase UX-B: remove appearance dropdown, home standfirst, footer convergence, CC BY 4.0 gate, provenance ribbon
+- `e1b5fc6d` (jwoodfine) — docs: Phase UX-A NEXT.md update
+- `0dfe1647` (pwoodfine) — Phase UX-A: wire typography tokens, fix dark-mode contrast, suppress appearance dropdown
+- `bbb339b5` (pwoodfine) — Phase 7B: article-tabs row, Tools dropdown, anchor-share ¶, auth-gated tabs
+- `168314a1` (pwoodfine) — Phase 7A: restore TOC toggle/pin + add topnav search
+- `afa67bfa` (jwoodfine) — Phase 6A+6B+6C
+
+**Changes in this build (Phase 7D):**
+- `src/links.rs`: `CITATIONS` redb table added; `record_citation`, `lookup_citation`, `citation_status` API
+- `src/render.rs`: `inject_citation_markers()` — appends `<span class="freshness-dot" data-status="unknown">` inside comrak `<sup class="footnote-ref">` markers
+- `src/server.rs`: `inject_citation_markers()` wired into wiki_page render chain
+- `static/style.css`: `.freshness-dot` (5px circle, oklch per status) + `.cite-hover-card` styles
+- `static/wiki.js`: `initCitationHoverCards()` — DOM-based hover card from `<li id="fn-N">` content
+
+**Phase 7C deployed live:**
+- All three instances running Phase 7C binary (reading mode toggle live)
+- `reading-mode-btn` confirmed present in HTML output
+
+**CSS+JS+Rust changes embedded at compile time via rust-embed** — binary rebuild required.
+
+**Action needed from Command Session:**
+1. Run `bin/promote.sh` to push all 11 pending commits to canonical
+2. Update `data/binary-ledger/app-mediakit-knowledge.jsonl` after Phase 7D binary deploys
+3. Run `bin/sync-local.sh --all` after promotion
+
+**Binary rebuild status:** release build running now. Will deploy to all 3 instances once complete.
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: Stage 6 pending — app-mediakit-knowledge Phase 7C — reading mode toggle + binary rebuild needed
 created: 2026-05-29T08:15:00Z
 priority: high
