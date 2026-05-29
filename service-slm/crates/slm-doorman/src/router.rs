@@ -22,7 +22,18 @@ use crate::ledger::{AuditEntry, AuditLedger, CompletionStatus, ENTRY_TYPE_CHAT_C
 use crate::mesh::MeshRegistry;
 use crate::tier::{ExternalTierClient, LocalTierClient, YoYoTierClient};
 
+use serde::Serialize;
 use std::collections::HashMap;
+
+/// Runtime observability snapshot for a single Tier B node.
+/// Serialized into `GET /readyz` under the `tier_b` key.
+#[derive(Debug, Serialize)]
+pub struct TierBInfo {
+    pub configured: bool,
+    pub health_up: bool,
+    pub circuit: &'static str,
+    pub opened_for_secs: Option<u64>,
+}
 
 #[derive(Default)]
 pub struct DoormanConfig {
@@ -96,6 +107,24 @@ impl Doorman {
 
     pub fn has_external(&self) -> bool {
         self.external.is_some()
+    }
+
+    /// Returns runtime state for each configured Tier B node.
+    /// Exposes circuit breaker state and health probe outcome for use in /readyz.
+    pub fn tier_b_status(&self) -> HashMap<String, TierBInfo> {
+        use std::sync::atomic::Ordering;
+        self.yoyo
+            .iter()
+            .map(|(label, client)| {
+                let info = TierBInfo {
+                    configured: true,
+                    health_up: client.health_up.load(Ordering::Relaxed),
+                    circuit: client.circuit.state_label(),
+                    opened_for_secs: client.circuit.opened_for_secs(),
+                };
+                (label.clone(), info)
+            })
+            .collect()
     }
 
     pub fn ledger(&self) -> &AuditLedger {
