@@ -88,7 +88,33 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
-## 2026-05-28 — app-mediakit-knowledge Phase 7A — restore TOC toggle/pin, add topnav search
+## 2026-05-29 — app-mediakit-knowledge Phase 8 + content-wiki-documentation updates
+
+- **Phase 8 (`src/server.rs` + `static/style.css` + `tests/history_test.rs`):**
+  - `wiki_chrome()` extended with `body_blake3: &str`; renders `div.article-integrity`
+    with first 16 hex chars of `blake3::hash(body.as_bytes())`.
+  - `history_page()`: pagination via `HistoryPageParams { page: Option<u32> }`, `PER_PAGE = 25`,
+    older→/←newer nav links at bottom.
+  - `diff_page()`: counts `diff-row-ins`/`del`/`chg` rows; `div.diff-stats` "+N / −M lines" header.
+  - `hash_lookup_page()`: `/special/hash-lookup/{hash}` route; 200 on slug hit, 404 on miss.
+  - CSS: `.article-integrity`, `.integrity-hash`, `.diff-stats`, `.history-pagination` added.
+  - 3 new tests in `history_test.rs`; all 7 pass. Commit `0e5fd685` (Peter).
+  - Pre-existing `collab_test`/`doorman_test` failures (stale `AppState.collab`) unchanged.
+
+- **content-wiki-documentation (commit `13b8caa`, Jennifer):**
+  - ES governance stubs: `about.es.md`, `contact.es.md`, `disclaimers.es.md`, `contribute.es.md`.
+  - A6 PROSE-RESEARCH committed: `research/geometric-site-selection-national-tenancy.md` with
+    preprint WIP block + Forward-Looking Statements block per `journal-artifact-discipline.md`.
+  - `research/_index.md` + `research/_index.es.md` category landing pages.
+  - `applications/app-privategit-workbench.md` draft fields removed; quality → pre-build.
+  - Inbox cleared; 3 messages archived.
+
+- **Stage 6 pending:** 16+ monorepo commits + `13b8caa` need `bin/promote.sh` from Command.
+  Release binary build running; deploy to 9090/9093/9095 pending.
+
+---
+
+## 2026-05-28 — app-mediakit-knowledge Phase 6A+6B+6C — AJAX nav fix, home page caps, topnav header
 
 - **Root cause diagnosis:** Phase 6C (commit `afa67bfa`) replaced the 3-row `header.shell-header`
   with a single-row `header.topnav` but (a) dropped the TOC toggle/pin buttons from `aside.toc`,
