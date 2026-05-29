@@ -5,6 +5,65 @@ a fourth entry is added.
 
 ---
 
+## 2026-05-29 session 9 | Totebox | claude-code (Sonnet 4.6)
+
+**Done this session:**
+- Committed session 8 work (J4 v0.3 + vm-mediakit boot fix) from prior conversation that
+  ran out of context.
+- Fixed `provision-vm-mediakit.sh` daemon mode: replaced mutually-exclusive `-nographic` with
+  `-display none -serial none` when using `-daemonize` (commit 539e8494).
+- Booted vm-mediakit on GCP TCG: QEMU PID 3949093. Running ~35+ min; cloud-init apt-get
+  install still completing over SLIRP NAT on TCG (expected ~60+ min total). SSH banner
+  timeout: TCP connects (SLIRP ACK) but sshd not yet responding.
+- Wrote JOURNAL J4 §4 (Implementation) + §5 (Evaluation) with empirical WireGuard benchmarks
+  on GCP e2-standard-8 (commit 149a8b39); bumped to v0.3.
+- Resolved both [CITATION NEEDED] placeholders via internet research (commit b3e8190a):
+  - Birge-Lee et al. 2024 "Global BGP Attacks" (DOI 10.1007/978-3-031-85960-1_14) replaces
+    fabricated [Cameron et al. 2019]
+  - Mackey et al. 2020 "WireGuard vs. OpenVPN" (DOI 10.1145/3374664.3379532) for latency
+- Expanded §4.5 with full daemon loop + event detection + signal handling + JSONL log format
+  spec; added §5.5 performance comparison table vs. Mackey et al. 2020 (commit 2a79e728).
+- J4 now at v0.4 (~8,100 words; target 9,000). Sent to project-editorial outbox for §4–§5
+  language pass + `forbidden_terms_cleared` verification (commit a8e6c4ce).
+- Flagged two misrouted project-editorial messages in inbox to Command Session for re-routing.
+- Cleaned up NEXT.md: struck completed vm-mediakit prerequisites; removed duplicate TOPIC+GUIDE
+  section; marked J4 inbox message actioned.
+- Updated artifact-registry.md and journal-artifact-discipline.md to reflect J4 v0.4 state.
+
+**Commits this session:**
+- `539e8494` — fix(vm): provision-vm-mediakit daemon mode QEMU display args
+- `149a8b39` — feat(journal): J4 v0.3 — §4 Implementation + §5 Evaluation empirical benchmarks
+- `d6cef558` — chore(outbox): J4 v0.3 handoff to project-editorial
+- `cbc1fc01` — chore(registry): J4 v0.3 status
+- `4cef97af` — chore(housekeeping): inbox + NEXT.md cleanup
+- `223cd3a0` — feat(journal): J4 v0.4 citation rename (Birge-Lee + Mackey)
+- `b3e8190a` — chore(journal): J4 v0.4 content — version bump + citations
+- `952b2b09` — chore(outbox): J4 v0.4 editorial handoff updated
+- `80cbb8a4` — chore(registry): J4 v0.4 file ref + blockers
+- `a8e6c4ce` — chore(outbox): flag misrouted messages to Command Session
+- `2a79e728` — feat(journal): J4 §4.5 full daemon + §5.5 comparison table; ~8100 words
+
+**Pending / carry-forward:**
+- vm-mediakit SSH — cloud-init still running on TCG (PID 3949093); retry SSH after ~60 min
+  total uptime. TCP connects (port 10022 SLIRP ACK) but sshd not yet responding.
+- Service migration (once SSH up): service-fs → proofreader → knowledge-* → marketing-*
+  → bim-orchestration. `migrate-service-to-vm.sh` is ready.
+- service-fs migration blocked on Command Session promoting project-data's 23 commits.
+- system-core + system-ledger install — pending project-system reading outbox
+- system-* P0 fixes — pending project-system (outbox sent)
+- J4 final gates: ORCID IDs (operator); §4–§5 language pass at project-editorial; word count
+  ~8,100 vs 9,000 target (~900 words short — §4.5 or §6 expandable)
+- Operator decision: AArch64 GCP C4A vs Firecracker x86_64 for Phase 3 seL4
+- Q2–Q5 operator decisions still open
+- 11 TOPIC pairs + 3 GUIDEs in drafts-outbound awaiting project-editorial pickup
+- Stage 6 from Command Session — 7 commits ahead of origin/main this session
+- Cargo.lock modified pre-session, NOT committed
+
+**Operator preferences surfaced:**
+- (no new preferences this session)
+
+---
+
 ## 2026-05-29 session 8 | Totebox | claude-code (Sonnet 4.6)
 
 **Done this session:**
@@ -114,32 +173,3 @@ a fourth entry is added.
 - "keep going" / "what can we do next" workflow: plans work items in NEXT.md, approves plan,
   then runs phases sequentially; no need to pause between phases once plan is approved.
 
----
-
-## 2026-05-28 session 5 | Totebox | claude-code (Sonnet 4.6)
-
-**Done this session:**
-- Wrote os-network-admin TOPIC bilingual pair (EN+ES) — corrects published wiki article that
-  conflates os-network-admin (Foundation OS) with app-network-admin (F8 Terminal on top).
-  Staged draft is the corrected replacement; project-editorial applies it on pickup.
-- Wrote ppn-hypervisor-resource-pool TOPIC bilingual pair (EN+ES) — per-node CPU/RAM pool
-  management; virtio_balloon formula; cgroups v2 cpu.weight; orthogonality with os-orchestration.
-- Updated BRIEF-PPN-DEV-BOOTSTRAP.md §3 (four-layer diagram) and §6 (virtio_balloon proof plan).
-- Updated BRIEF-PPN-ARCHITECTURE.md §9.4 (Resource Pool Management added).
-- Added `-device "virtio-balloon"` to both QEMU invocations in `infrastructure/virt/vm-prove.sh`.
-- Updated NEXT.md: dev-environment bootstrap tasks, future milestones.
-- Sent outbox session 5 pickup notice to project-editorial.
-
-**Commits this session:**
-- `7ec14c86` — docs(ppn): document resource pool, os-network-admin; add virtio_balloon to vm-prove.sh
-- (and `565bc755` from earlier in same conversation — dev-environment bootstrap)
-
-**Pending / carry-forward:**
-- Q2–Q6 operator decisions (same as session 4)
-- All 7 code implementation steps gated on those decisions
-- 7 TOPIC pairs in drafts-outbound awaiting project-editorial pickup
-
-**Operator preferences surfaced:**
-- Produces TOPIC and GUIDE drafts proactively alongside code work — "what can we do next,
-  also need to make TOPIC and GUIDE and send them to project-editorial."
-- Wants accuracy audit of existing published topics when new TOPICs are added.

@@ -4,6 +4,32 @@ Entries aged out of the rolling 3-session summary in `session-context.md`. Newes
 
 ---
 
+## 2026-05-28 session 5 | Totebox | claude-code (Sonnet 4.6)
+
+**Done this session:**
+- Wrote os-network-admin TOPIC bilingual pair (EN+ES) — corrects published wiki article that
+  conflates os-network-admin (Foundation OS) with app-network-admin (F8 Terminal on top).
+  Staged draft is the corrected replacement; project-editorial applies it on pickup.
+- Wrote ppn-hypervisor-resource-pool TOPIC bilingual pair (EN+ES) — per-node CPU/RAM pool
+  management; virtio_balloon formula; cgroups v2 cpu.weight; orthogonality with os-orchestration.
+- Updated BRIEF-PPN-DEV-BOOTSTRAP.md §3 (four-layer diagram) and §6 (virtio_balloon proof plan).
+- Updated BRIEF-PPN-ARCHITECTURE.md §9.4 (Resource Pool Management added).
+- Added `-device "virtio-balloon"` to both QEMU invocations in `infrastructure/virt/vm-prove.sh`.
+- Updated NEXT.md: dev-environment bootstrap tasks, future milestones.
+- Sent outbox session 5 pickup notice to project-editorial.
+
+**Commits:** `7ec14c86`, `565bc755`
+
+**Pending / carry-forward:**
+- Q2–Q6 operator decisions (same as session 4)
+- All 7 code implementation steps gated on those decisions
+
+**Operator preferences surfaced:**
+- Produces TOPIC and GUIDE drafts proactively alongside code work.
+- Wants accuracy audit of existing published topics when new TOPICs are added.
+
+---
+
 ## 2026-05-27 session 4 | Totebox | claude-code (Sonnet 4.6)
 
 **Done this session:**
