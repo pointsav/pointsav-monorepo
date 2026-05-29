@@ -46,41 +46,33 @@ impl PathInput {
                 self.text.insert(self.cursor, c);
                 self.cursor += c.len_utf8();
             }
-            KeyCode::Backspace => {
-                if self.cursor > 0 {
-                    let len = self.text[..self.cursor]
-                        .chars()
-                        .last()
-                        .map(|c| c.len_utf8())
-                        .unwrap_or(1);
-                    self.cursor -= len;
-                    self.text.remove(self.cursor);
-                }
+            KeyCode::Backspace if self.cursor > 0 => {
+                let len = self.text[..self.cursor]
+                    .chars()
+                    .last()
+                    .map(|c| c.len_utf8())
+                    .unwrap_or(1);
+                self.cursor -= len;
+                self.text.remove(self.cursor);
             }
-            KeyCode::Delete => {
-                if self.cursor < self.text.len() {
-                    self.text.remove(self.cursor);
-                }
+            KeyCode::Delete if self.cursor < self.text.len() => {
+                self.text.remove(self.cursor);
             }
-            KeyCode::Left => {
-                if self.cursor > 0 {
-                    let len = self.text[..self.cursor]
-                        .chars()
-                        .last()
-                        .map(|c| c.len_utf8())
-                        .unwrap_or(1);
-                    self.cursor -= len;
-                }
+            KeyCode::Left if self.cursor > 0 => {
+                let len = self.text[..self.cursor]
+                    .chars()
+                    .last()
+                    .map(|c| c.len_utf8())
+                    .unwrap_or(1);
+                self.cursor -= len;
             }
-            KeyCode::Right => {
-                if self.cursor < self.text.len() {
-                    let len = self.text[self.cursor..]
-                        .chars()
-                        .next()
-                        .map(|c| c.len_utf8())
-                        .unwrap_or(1);
-                    self.cursor += len;
-                }
+            KeyCode::Right if self.cursor < self.text.len() => {
+                let len = self.text[self.cursor..]
+                    .chars()
+                    .next()
+                    .map(|c| c.len_utf8())
+                    .unwrap_or(1);
+                self.cursor += len;
             }
             KeyCode::Home => self.cursor = 0,
             KeyCode::End => self.cursor = self.text.len(),
