@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-29T02:45Z — Sprint 2 wiring complete; tool_use fix deployed; Goose v1.36.0 installed; live test pending QEMU VM resolution
+> Last updated: 2026-05-29T03:25Z — §7.3 live SSE test run: OLMo 7B returned text (not tool_use); QEMU PID 4039898 still at 95% CPU
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -16,20 +16,22 @@
 | `local-content.service` | active (restarted 02:37Z) | LadybugDB loading; extraction BLOCKED by Tier B circuit open |
 | `local-claude-bridge.service` | active | Watching ~/.claude/projects/**; CORPUS files writing ✓ |
 | Shadow capture | active ✓ | Git hook fires; briefs queueing correctly every commit |
-| `vm-mediakit` QEMU | **RUNNING 95% CPU** | Started 02:15Z from project-infrastructure; starving llama-server |
+| `vm-mediakit` QEMU | **RUNNING 95% CPU** | PID 4039898 (restarted from project-infrastructure); starving llama-server |
 
 ### ⚠️ ACTION REQUIRED: QEMU VM blocking live inference
-`qemu-system-x86_64 -accel tcg -m 6144M` (PID 3949093, no KVM) consuming 95% CPU continuously.
-Task 1590 in llama-server running since 02:18Z decoded ~22 tokens in 25 min (normal: 1.7 tok/s).
-3 requests queued behind it. Confirm with project-infrastructure owner then kill if appropriate:
+`qemu-system-x86_64 -accel tcg -m 6144M` (PID 4039898, no KVM) consuming 95% CPU continuously.
+System load 17+. llama-server is active but inference is extremely slow (~0.03 tok/s vs normal 1.7 tok/s).
+Confirm with project-infrastructure owner then kill if appropriate:
 ```bash
-kill 3949093   # kills vm-mediakit — verify it is safe first
+kill 4039898   # kills vm-mediakit — verify it is safe first
 ```
 
-### Learning loop §7 status (2026-05-29T02:45Z)
+### Learning loop §7 status (2026-05-29T03:25Z)
 - ✅ §7.1 `has_local: true` — verified
-- ⚠️ §7.2 Goose session — Goose v1.36.0 installed at `/usr/local/bin/goose`; test pending QEMU
-- ⚠️ §7.3 tool_use routing — fix committed (104 tests); live SSE pending QEMU resolution
+- ⚠️ §7.2 Goose session — Goose v1.36.0 installed; test BLOCKED by CPU saturation (QEMU PID 4039898)
+- ⚠️ §7.3 tool_use routing — LIVE TEST DONE: tool format shim works; OLMo 7B returned text not tool_use
+         (stop_reason: end_turn). OLMo 7B not fine-tuned for tool invocation. Requires Tier B or
+         upgraded Tier A model for reliable tool_use SSE blocks.
 - ❌ §7.4 entities extracted — Tier B circuit OPEN; extraction deferred until Yo-Yo VM up
 - ✅ §7.5 git commit → shadow hit — verified
 - ❌ §7.6 corpus-threshold → training — downstream of §7.4
