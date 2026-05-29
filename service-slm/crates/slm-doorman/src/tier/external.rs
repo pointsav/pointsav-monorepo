@@ -327,6 +327,7 @@ impl ExternalTierClient {
             inference_ms,
             cost_usd,
             upstream_version: Some(provider.as_str().to_string()),
+            tool_calls: None,
         })
     }
 }
@@ -406,6 +407,7 @@ mod tests {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
+            tools: None,
         }
     }
 
