@@ -2,6 +2,29 @@
 
 ---
 
+### 2026-05-29 | totebox@project-intelligence | claude-sonnet-4-6 (session 3)
+
+**Done this session:**
+- Sprint -1 (BRIEF consolidation): 27 contamination BRIEFs archived to `.agent/briefs/archive/`; README rewritten; BRIEF-slm-substrate-master.md corrected (OLMo model name, FORCE_BROKER_MODE rationale); BRIEF-slm-learning-loop.md created. Commit `c5cd4441` (Jennifer)
+- Multi-agent research: 5 Opus 4.7 agents for TOPICs/GUIDEs sweep + leapfrog 2030 gap analysis; plan file rewritten
+- Sprint 1 (tool_use shim, ~210 LOC): `ComputeRequest.tools` + `ComputeResponse.tool_calls` added to slm-core; local.rs + yoyo.rs propagate tools through to backends and capture tool_calls; anthropic_sse_body emits tool_use SSE blocks; POST /v1/messages/count_tokens + GET /v1/models added. Commit `1b47d3eb` (Jennifer). 51/51 http_test + 102/102 slm-doorman pass.
+- Sprint 2 (training pipeline wiring): `git-post-commit-hook.sh` + `claude-session-bridge.py` written. Commit `1d819d7c` (Jennifer)
+- Sprint 4 (TOPIC/GUIDE dispatch): 5 TOPICs + 2 GUIDEs from `service-slm/docs/` staged to `.agent/drafts-outbound/`. Commit `d39aea32` (Peter)
+
+**Pending / carry-forward (Sprint 0 — Command Session):**
+- **Disable FORCE_BROKER_MODE** — `sudo sed -i 's/SLM_FORCE_BROKER_MODE=true/SLM_FORCE_BROKER_MODE=false/' /etc/local-doorman/local-doorman.env && sudo systemctl restart local-doorman.service`
+- **Binary rebuild** — `cargo build --release -p slm-doorman-server && sudo systemctl restart local-doorman.service`
+- **Install git post-commit hook** — per archive: `cp service-slm/scripts/git-post-commit-hook.sh .git/hooks/post-commit && chmod +x`
+- **Yo-Yo nightly cron** — `0 2 * * * .../start-yoyo.sh --runtime=1h`
+- **Drain 491 poison apprenticeship briefs** from `data/apprenticeship/queue/`
+- **Stage 6 promote** — archive is 20+ commits ahead; prerequisite rebase still needed
+- **Binary ledger** — update `data/binary-ledger/slm-doorman-server.jsonl` after rebuild
+
+**Operator preferences surfaced:**
+- Resumed from context summary; no new preferences this session
+
+---
+
 ### 2026-05-28 | totebox@project-intelligence | claude-sonnet-4-6 (session 2)
 
 **Done this session:**
