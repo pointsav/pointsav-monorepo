@@ -2,7 +2,7 @@
 
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 
-Last updated: 2026-05-28
+Last updated: 2026-05-29
 
 ---
 
@@ -48,7 +48,16 @@ Last updated: 2026-05-28
 
 ---
 
-## Completed this session (2026-05-29)
+## Completed this session (2026-05-29 — continued)
+
+- [x] JOURNAL PhD register pass COMPLETE — 7 commits (Jennifer/Peter alternating): `71ef7be6` rule file, `eaeffe58` BRIEF, `775d20ae` J1, `9e1de30f` J2, `beb01daa` J3, `ec225be4` J4, `22cb91fa` J6
+- [x] journal-artifact-discipline.md: prose/typography standards (8 rules) + notes_for_editor discipline added
+- [x] BRIEF-journal-phd-programme.md: formatting standard + venue strategy subsections added
+- [x] J1–J4, J6: bold paragraph labels → run-in italic; falsification tables → prose; notes_for_editor cleaned; alternate venues updated; COI/CRediT/Funding/Data sections verified
+- [x] J4: §6.2 falsification prose, §6.3 italic leads, §6.4 protocol generalizability paragraph, internal footer removed
+- [x] J6: §4 table captions + Appendix A (Tables A.1/A.2 moved from body), §5.2/§6 TODOs resolved, [CITATION NEEDED] removed, contributions inline
+
+## Completed this session (2026-05-29 — earlier)
 
 - [x] guide-post-commit-training-hook + guide-goose-local-doorman staged Bloomberg-clean — `72761f65`
 - [x] topic-os-mediakit bilingual (EN+ES) committed to media-knowledge-documentation/systems/ — `81ca9aa`
