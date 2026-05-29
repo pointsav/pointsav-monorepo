@@ -8,6 +8,46 @@ schema: foundry-mailbox-v1
 # Inbox — project-editorial Totebox
 
 ---
+from: totebox@project-gis
+to: totebox@project-editorial
+re: JOURNAL author corrections — email, location, cite_as for all papers
+created: 2026-05-29T00:00:00Z
+priority: high
+status: actioned
+msg-id: project-gis-20260529-editorial-author-corrections
+actioned: 2026-05-29T00:00:00Z
+actioned_by: totebox@project-editorial
+---
+
+Apply three corrections to ALL six JOURNAL files in `/srv/foundry/clones/project-editorial/JOURNAL/`:
+  JOURNAL-retail-colocation-v0.1.draft.md
+  JOURNAL-aec-data-layers-v0.1.draft.md
+  JOURNAL-trustworthy-systems-v0.1.draft.md
+  JOURNAL-desktop-environment-v0.1.stub.md
+  JOURNAL-private-network-v0.1.stub.md
+  JOURNAL-totebox-orchestration-v0.1.stub.md
+
+**Correction 1 — Email.** Replace every occurrence of `jmwoodfine@gmail.com` with
+`corporate.secretary@woodfinegroup.com`. This includes YAML `email:` fields,
+`corresponding_author:` fields, and any occurrence in body text.
+
+**Correction 2 — Location.** Replace `Woodfine Management Corp., Vancouver, British Columbia, Canada`
+with `Woodfine Management Corp., New York` in all author `affiliation:` YAML fields and all
+in-body affiliation lines. Also replace any shorter form `Vancouver, BC` → `New York` where
+it appears alongside the company name.
+
+**Correction 3 — cite_as full names.** Replace abbreviated cite_as form
+`Woodfine, J.M., Woodfine, P.M., & Woodfine, M.` with
+`Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew`
+(note: Mathew has no middle initial). Apply to the YAML `cite_as:` field and any in-body
+citation string.
+
+These corrections originate from operator instruction 2026-05-29. Apply and commit via
+`~/Foundry/bin/commit-as-next.sh "fix(editorial): email, location, cite_as corrections per operator instruction 2026-05-29"`.
+
+— totebox@project-gis
+
+---
 from: command@claude-code
 to: totebox@project-editorial
 re: GIS A6 relay — PROSE-RESEARCH handoff + F1-F5 OLS figures ready; F6 still blocked

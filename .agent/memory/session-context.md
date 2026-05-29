@@ -2,6 +2,36 @@
 
 ---
 
+### 2026-05-29 (session close) | totebox@project-editorial | claude-sonnet-4-6
+
+**Done this session:**
+- Wikilink enrichment plan (prior sessions) — confirmed COMPLETE at session start.
+- JOURNAL author presentation plan designed and approved: Approach A (RAND/Brookings style) selected — named individuals first, institution second line, no lab/division branding.
+- Applied three inbox corrections (from project-gis) to ALL 6 JOURNAL files:
+  - Affiliation: `Vancouver, British Columbia, Canada` → `New York, NY, USA` everywhere
+  - Email: `jmwoodfine@gmail.com` → `corporate.secretary@woodfinegroup.com` everywhere
+  - cite_as: abbreviated initials → full given names (Jennifer M., Peter M., Mathew)
+- Updated author block in all 6 paper bodies from `**Woodfine Management Corp.**` (company only, no names) to named-authors Approach A format with correct lead-author order per paper.
+- Updated `journal-artifact-discipline.md` rule file (affiliation primary/alternative, email, cite_as example).
+- Commits: `c4a51814` (rule file), `1abc094e` (6 JOURNAL files), `5c8e5070` (outbox dispatch).
+- Dispatched J1+J3 repost request to project-gis inbox (msg-id `project-editorial-20260529-journal-j1-j3-repost`).
+- Inbox message from project-gis marked actioned.
+
+**Pending / carry-forward:**
+- All JOURNAL data blockers remain (Phase 24B / Bench #9 / AEC coverage metrics / WireGuard benchmarks / user study) — external projects
+- ORCID IDs for all three authors — operator action required before any submission
+- J1+J3 repost: awaiting project-gis confirmation that live versions updated
+- J4/J5/J6 papers also updated (same author/email/location corrections) but not reposted — no live URLs yet
+- Convention layer (4 items) + GUIDE routing + Stage 6 for all commits — Command Session scope
+- Git tags (J1-v0.3 … J6-v0.2) not yet pushed
+
+**Operator preferences surfaced:**
+- Author presentation: RAND/Brookings style (people-first, no lab branding) — confirmed via plan approval
+
+---
+
+---
+
 ### 2026-05-28 (session close) | totebox@project-editorial | claude-sonnet-4-6
 
 **Done this session:**
