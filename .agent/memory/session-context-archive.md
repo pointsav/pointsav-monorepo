@@ -4,6 +4,52 @@ Entries aged out of the rolling 3-session summary in `session-context.md`. Newes
 
 ---
 
+## 2026-05-28 session 6 | Totebox | claude-code (Sonnet 4.6)
+
+**Done this session:**
+- Wrote two new TOPIC bilingual pairs (EN+ES) and committed to drafts-outbound:
+  - `topic-totebox-archive` — sovereign WORM data vault; disk image IS the archive;
+    freely transferable; JSONL/GeoParquet/Markdown; Diode + PSP access only; MBA keypair;
+    cluster naming convention; what it is NOT.
+  - `topic-ppn-architecture-overview` — four-layer architecture overview (operator / PPN /
+    hypervisor / Totebox Orchestration); three key properties (isolation invariant, freely
+    transferable archives, zero crypto authority at network plane); what PPN is NOT; links
+    to all 8 detailed TOPICs.
+- Wrote three GUIDE drafts and committed to drafts-outbound:
+  - `guide-ppn-first-deployment` — 5-step first-deployment sequence from BRIEF §7, all steps
+    unblocked, with exact commands and troubleshooting table.
+  - `guide-node-join-ceremony` — approval workflow (node side: Crockford base32 short code;
+    operator side: poll + approve via curl); CPace PAKE + SAS; nodes.jsonl; 600s TTL.
+  - `guide-vm-prove-balloon-demo` — vm-prove.sh walkthrough; virtio_balloon demo from QEMU
+    monitor; pool formula; GCP nested virt enablement; proves-vs-not-yet table.
+- Updated manifest.md: wiki leg leg-pending → leg-active; 7 TOPICs + 3 GUIDEs in
+  staged_for_pickup.
+- VM proof on GCP TCG: Alpine Linux 3.20 (kernel 6.6.31-0-virt) booted in 114s; full
+  virtio_balloon cycle confirmed: `balloon 128` → `actual=128`; `balloon 256` → `actual=256`.
+- Added `infrastructure/virt/.gitignore` — excludes Alpine ISO + QCOW2 work artifacts.
+- Sent outbox session 6 pickup notice to project-editorial (9 TOPIC pairs + 3 GUIDEs total).
+
+**Commits this session:**
+- `5029e0fd` — docs(ppn): totebox-archive + ppn-architecture-overview TOPICs; 3 GUIDE drafts; manifest leg-active
+- `04388865` — chore(vm-prove): mark GCP TCG balloon proof complete
+- `d608f18b` — chore: gitignore virt/work/ — Alpine ISO + QCOW2 are build artifacts
+
+**Pending / carry-forward:**
+- Q2: Ratify `10.50.0.0/24` as canonical PPN subnet (de facto confirmed in guide-lxc-network-admin)
+- Q3: GCP static IP for cloud relay
+- Q4: Laptop B local IP + `network.woodfinegroup.com` DNS status
+- Q5: Is service-slm Doorman deployed at `localhost:9080`? (app-network-admin F8 still uses subprocess)
+- Q6: Flag stale editorial pickup to Command Session?
+- All 7 Genesis Protocol code steps in BRIEF §9.2 gated on Q2–Q6
+- 9 TOPIC pairs + 3 GUIDEs in drafts-outbound awaiting project-editorial pickup
+- 12 commits ahead of origin/main — Stage 6 from Command Session when ready
+
+**Operator preferences surfaced:**
+- "keep going" / "what can we do next" workflow: plans work items in NEXT.md, approves plan,
+  then runs phases sequentially; no need to pause between phases once plan is approved.
+
+---
+
 ## 2026-05-28 session 5 | Totebox | claude-code (Sonnet 4.6)
 
 **Done this session:**
