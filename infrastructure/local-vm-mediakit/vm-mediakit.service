@@ -1,0 +1,21 @@
+[Unit]
+Description=vm-mediakit — os-mediakit guest VM (Debian 12 Phase 1)
+Documentation=file:///srv/foundry/clones/project-infrastructure/infrastructure/virt/provision-vm-mediakit.sh
+After=network.target
+Wants=network.target
+
+[Service]
+Type=forking
+PIDFile=/srv/foundry/clones/project-infrastructure/infrastructure/virt/work/vm-mediakit.pid
+ExecStart=/srv/foundry/clones/project-infrastructure/infrastructure/virt/provision-vm-mediakit.sh
+ExecStop=/bin/bash -c '\
+  echo "system_powerdown" | \
+  socat - UNIX-CONNECT:/srv/foundry/clones/project-infrastructure/infrastructure/virt/work/vm-mediakit.monitor \
+  && sleep 10'
+TimeoutStopSec=30
+Restart=no
+User=mathew
+WorkingDirectory=/srv/foundry/clones/project-infrastructure
+
+[Install]
+WantedBy=multi-user.target

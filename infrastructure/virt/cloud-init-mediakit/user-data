@@ -1,0 +1,39 @@
+#cloud-config
+# vm-mediakit first-boot configuration
+# Phase 1: Debian 12 host for os-mediakit services
+# See BRIEF-totebox-transformation §2/§10 for context
+
+hostname: vm-mediakit
+fqdn: vm-mediakit.local
+manage_etc_hosts: true
+
+users:
+  - name: foundry
+    groups: [sudo, systemd-journal]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMC1LpWcHrYhlSOrpyqcsOaNfAJ+nwjeMgmamGMzRS4f foundry@vm-mediakit
+
+ssh_pwauth: false
+disable_root: true
+
+package_update: true
+package_upgrade: false
+packages:
+  - curl
+  - ca-certificates
+  - sudo
+  - socat
+  - nginx
+  - build-essential
+
+runcmd:
+  - mkdir -p /opt/mediakit/bin /opt/mediakit/data /etc/mediakit
+  - chown -R foundry:foundry /opt/mediakit
+  - chmod 755 /opt/mediakit/bin /opt/mediakit/data
+
+final_message: |
+  vm-mediakit cloud-init complete.
+  SSH: ssh -p 10022 -i infrastructure/virt/work/foundry-vm-key foundry@localhost
+  Services: install via migrate-service-to-vm.sh
