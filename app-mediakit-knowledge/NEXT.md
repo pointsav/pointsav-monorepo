@@ -145,9 +145,9 @@ binary rebuild queued for nightly ~1am Vancouver 2026-05-28.
 | **7X** | Home page: search hero, featured article, DYK section | **Already implemented** (YAML-based: `featured-topic.yaml`, `leapfrog-facts.yaml`; hero search in `section.hero`) |
 | **7D** | Citation hover preview; freshness dot; citations redb table | **COMPLETE** |
 | **7E** | Mobile chrome: bottom bar; table overflow; code font; article-tabs hidden on mobile | **COMPLETE** |
-| **7F** | Tufte sidenotes for `layout: journal` articles at ≥1280px | Queued |
-| **7G+7H** | Corporate: effective\_date block; auto-numbered sections (CSS counters) | Queued |
-| **8** | History surface: revision list, diff UI, integrity-bar (blake3 SHA) | Queued |
+| **7F** | Tufte sidenotes for `layout: journal` articles at ≥1280px | **COMPLETE** (commit `c240837b`) |
+| **7G+7H** | Corporate: effective\_date block; auto-numbered sections (CSS counters) | **COMPLETE** (commit `c240837b`, CSS-only: auto-numbered sections) |
+| **8** | History surface: revision list, diff UI, integrity-bar (blake3 SHA) | **Next** |
 | **9** | Claim-rail freshness sidebar; citations redb table; nightly URL validator | Queued (after 7D) |
 | **10** | Reading state persistence; progress bar; "Continue reading" home strip | Queued |
 | **11** | `query_claims(topic, asof)` MCP API extension | Queued (after 9) |
