@@ -3,6 +3,7 @@ artifact: brief
 status: active
 title: SLM Substrate Master — Yo-Yo + DataGraph + Learning Loop
 created: 2026-05-24
+updated: 2026-05-29
 author: totebox@project-intelligence (claude-sonnet-4-6)
 grounds_in:
   - service-slm/ARCHITECTURE.md
@@ -45,14 +46,14 @@ notes: >
 | `slm-doorman-server` | rebuilt 2026-05-28 (prev session) | **active** | Think-strip + 180s/300s timeouts; drain-backoff; `SLM_FORCE_BROKER_MODE=true`; idle 120min; **NEEDS REBUILD** for reasoning_content + reqwest-reclassify fixes (commit `446df43f`) |
 | `service-content` | rebuilt 2026-05-24 | **active** | LadybugDB loaded; CORPUS drain deferred until Yo-Yo restarts; **NEEDS REBUILD** for SC-2/3/5 fixes (commit `e263d6f0`) |
 | `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** | Restart with `start-yoyo.sh --runtime=2h`; next rebuild adds -fa/deepseek/budget flags |
-| `local-slm.service` | OLMo 2 1B | active | Tier A disabled — kept for health only |
+| `local-slm.service` | OLMo 2 1124 7B Instruct Q4_K_M (4.16 GiB) | active | Tier A disabled by FORCE_BROKER_MODE — **re-enable pending Sprint 0** |
 | `local-doorman.env` | — | current | `SLM_YOYO_GCP_ZONE=europe-west4-a`; `SLM_YOYO_IDLE_MINUTES=120`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_BRIEF_TIER_B_THRESHOLD_CHARS=0` |
 
 **Tier routing (current):**
-- Tier A: disabled (`SLM_FORCE_BROKER_MODE=true`)
-- Tier B: **circuit OPEN** (Yo-Yo TERMINATED — start VM to resume)
-- Tier C: not configured (no `ANTHROPIC_API_KEY`)
-- Result: `ai_available: false` until Yo-Yo restarts
+- Tier A: disabled (`SLM_FORCE_BROKER_MODE=true`) — **Sprint 0: set false to re-enable OLMo 7B as always-on primary**
+- Tier B: **circuit OPEN** (Yo-Yo TERMINATED) — nightly 1-hour cron (`0 2 * * *`) pending setup; extend to 4h after first verified run
+- Tier C: not configured — ToS hard constraint; never enable for training loop
+- Result: `ai_available: false` until Tier A is re-enabled (Sprint 0) or Yo-Yo restarts
 
 **Think-model fixes deployed (prev session commit `d835cab5`):**
 - `SOCKET_TIMEOUT` raised 60s → 180s; `OUTER_DEADLINE` raised 90s → 300s
@@ -275,7 +276,7 @@ On every /v1/messages call:
 
 | Tier | Model | Host | Gate | Current |
 |---|---|---|---|---|
-| A | OLMo 2 1B (`olmo-2-0425-1b-instruct`) | workspace VM (`local-slm.service`) | node_class=hardware AND NOT force-broker-mode | DISABLED — `SLM_FORCE_BROKER_MODE=true` |
+| A | OLMo 2 1124 7B Instruct Q4_K_M | workspace VM (`local-slm.service`) | NOT force-broker-mode | DISABLED — `SLM_FORCE_BROKER_MODE=true` — re-enable Sprint 0 |
 | B | OLMo-3-32B-Think Q4_K_M | `yoyo-tier-b-1` GCE L4 | Tier B circuit Closed | CIRCUIT OPEN (VM terminated) |
 | C | External API (Anthropic) | external | `ANTHROPIC_API_KEY` set, Tier B unavailable | NOT CONFIGURED |
 
@@ -283,17 +284,36 @@ On every /v1/messages call:
 - `Interactive` / `Background` → Tier A first, fallback Tier B
 - `Batch` → Tier B (Yo-Yo) first — corpus extraction uses Batch
 
-**Why Tier A is disabled on the workspace VM:**
-The workspace VM is `e2-standard-8` (Hardware-class per DOCTRINE claim #49).
-Tier A is designed for customer-side NUC-rung hardware (DOCTRINE claim #54 + §2 of
-`conventions/four-tier-slm-substrate.md`). The 1B model works on the workspace VM
-but is intentionally bypassed via `SLM_FORCE_BROKER_MODE=true` so all inference
-flows through the real Tier B path during development — keeping the training data
-representative of production.
+**Tier A re-enable decision (2026-05-29):**
+`SLM_FORCE_BROKER_MODE=true` was a development workaround, not a permanent design decision.
+OLMo 2 1124 7B Instruct Q4_K_M is deployed and running (`local-slm.service`, 4.9G/8G).
+The 7B model is the always-on interactive tier for the sovereign coding agent architecture.
+Yo-Yo (Tier B) is the nightly bonus tier; it does not need to be the only inference path.
+**Sprint 0 (Command Session): set `SLM_FORCE_BROKER_MODE=false` in `/etc/local-doorman/local-doorman.env`
+and `sudo systemctl restart local-doorman.service`.**
 
 ---
 
 ## §5 — Immediate open items (no prerequisites)
+
+- [ ] **Sprint 0 (Command Session) — Re-enable Tier A + nightly Yo-Yo cron**
+  1. `sudo sed -i 's/SLM_FORCE_BROKER_MODE=true/SLM_FORCE_BROKER_MODE=false/' /etc/local-doorman/local-doorman.env`
+  2. `sudo systemctl restart local-doorman.service`
+  3. Verify: `curl -s http://127.0.0.1:9080/readyz | python3 -m json.tool` → `has_local: true`
+  4. Add crontab: `0 2 * * * /srv/foundry/clones/project-intelligence/service-slm/scripts/start-yoyo.sh --runtime=1h`
+  5. Binary rebuild: `cargo build --release -p slm-doorman-server -p service-content`
+  6. `sudo systemctl restart local-doorman.service local-content.service`
+  7. Drain/purge 491 poison apprenticeship briefs from `data/apprenticeship/queue/`
+
+- [ ] **Sprint 1 (Jennifer, ~200 LOC) — tool_use shim for Goose**
+  File: `service-slm/crates/slm-doorman-server/src/http.rs`
+  See plan file `/home/mathew/.claude/plans/fancy-riding-turtle.md` §Sprint 1 for full spec.
+  7 changes: `tools`/`tool_choice` fields, thinking suppression on tool turns (llama.cpp #20345),
+  tool_use SSE blocks, `stop_reason:"tool_use"`, `count_tokens` endpoint, unknown-field passthrough, `/v1/models`.
+
+- [ ] **Sprint 2 (Peter) — training pipeline wiring**
+  2a. `service-slm/scripts/git-post-commit-hook.sh` → diff capture to `/v1/shadow`
+  2b. `service-slm/scripts/claude-session-bridge.py` → Claude Code CORPUS bridge (no ToS conflict — OLMo extracts entities from Claude text)
 
 - [x] **Start Yo-Yo when europe-west4-a L4 capacity is available** ✓ DONE 2026-05-28 04:50 UTC
   VM restarted Mode 1; llama-server loaded OLMo-3 32B Think in ~2 min; circuit closed.
