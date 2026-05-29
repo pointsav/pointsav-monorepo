@@ -1,6 +1,6 @@
 # NEXT.md — app-mediakit-knowledge
 
-> Last updated: 2026-05-29
+> Last updated: 2026-05-29 (session 2 — Phase 8 marked complete)
 
 ## Phase 7E — COMPLETE (2026-05-29)
 
@@ -147,7 +147,7 @@ binary rebuild queued for nightly ~1am Vancouver 2026-05-28.
 | **7E** | Mobile chrome: bottom bar; table overflow; code font; article-tabs hidden on mobile | **COMPLETE** |
 | **7F** | Tufte sidenotes for `layout: journal` articles at ≥1280px | **COMPLETE** (commit `c240837b`) |
 | **7G+7H** | Corporate: effective\_date block; auto-numbered sections (CSS counters) | **COMPLETE** (commit `c240837b`, CSS-only: auto-numbered sections) |
-| **8** | History surface: revision list, diff UI, integrity-bar (blake3 SHA) | **Next** |
+| **8** | History surface: revision list, diff UI, integrity-bar (blake3 SHA) | **COMPLETE** (commit `0e5fd685`, 2026-05-29) |
 | **9** | Claim-rail freshness sidebar; citations redb table; nightly URL validator | Queued (after 7D) |
 | **10** | Reading state persistence; progress bar; "Continue reading" home strip | Queued |
 | **11** | `query_claims(topic, asof)` MCP API extension | Queued (after 9) |
