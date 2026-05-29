@@ -62,9 +62,6 @@ pub fn render(
         MbaStatus::Pending => (Color::Blue, Color::White),
     };
 
-    let style = Style::default()
-        .fg(fg)
-        .bg(bg)
-        .add_modifier(Modifier::BOLD);
+    let style = Style::default().fg(fg).bg(bg).add_modifier(Modifier::BOLD);
     frame.render_widget(Paragraph::new(text).style(style), area);
 }

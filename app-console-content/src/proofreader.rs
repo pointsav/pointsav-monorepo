@@ -4,14 +4,14 @@ use std::time::Duration;
 
 pub const PROTOCOLS: &[(&str, &str)] = &[
     ("prose-architecture", "PROSE — ARCHITECTURE"),
-    ("prose-guide",        "PROSE — GUIDE (operational runbook)"),
-    ("prose-memo",         "PROSE — MEMO"),
-    ("prose-readme",       "PROSE — README"),
-    ("prose-topic",        "PROSE — TOPIC (content-wiki)"),
-    ("comms-chat",         "COMMS — chat"),
-    ("comms-email",        "COMMS — email"),
+    ("prose-guide", "PROSE — GUIDE (operational runbook)"),
+    ("prose-memo", "PROSE — MEMO"),
+    ("prose-readme", "PROSE — README"),
+    ("prose-topic", "PROSE — TOPIC (content-wiki)"),
+    ("comms-chat", "COMMS — chat"),
+    ("comms-email", "COMMS — email"),
     ("comms-ticket-comment", "COMMS — ticket comment"),
-    ("translate-en-es",    "TRANSLATE — EN → ES"),
+    ("translate-en-es", "TRANSLATE — EN → ES"),
 ];
 
 pub const DEFAULT_PROTOCOL_IDX: usize = 4; // prose-topic
@@ -47,7 +47,12 @@ struct VerdictRequest {
     verdict: String,
 }
 
-pub fn submit_proofread(text: &str, protocol: &str, tenant: &str, endpoint: &str) -> Result<ProofreadResponse> {
+pub fn submit_proofread(
+    text: &str,
+    protocol: &str,
+    tenant: &str,
+    endpoint: &str,
+) -> Result<ProofreadResponse> {
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(300))
         .build()?;
@@ -57,10 +62,7 @@ pub fn submit_proofread(text: &str, protocol: &str, tenant: &str, endpoint: &str
         tenant: tenant.to_string(),
     };
     let url = format!("{}/v1/proofread", endpoint.trim_end_matches('/'));
-    let resp = client
-        .post(&url)
-        .json(&req)
-        .send()?;
+    let resp = client.post(&url).json(&req).send()?;
     if !resp.status().is_success() {
         let body = resp.text().unwrap_or_default();
         bail!("service-proofreader: {}", body);
@@ -79,10 +81,6 @@ pub fn post_verdict(request_id: &str, tenant: &str, verdict: &str, endpoint: &st
         verdict: verdict.to_string(),
     };
     let url = format!("{}/v1/verdict", endpoint.trim_end_matches('/'));
-    let _ = client
-        .post(&url)
-        .json(&req)
-        .send()?
-        .text();
+    let _ = client.post(&url).json(&req).send()?.text();
     Ok(())
 }

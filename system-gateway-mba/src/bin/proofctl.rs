@@ -10,7 +10,11 @@ use system_gateway_mba::{
 };
 
 #[derive(Parser)]
-#[command(name = "proofctl", about = "Manage os-console users and SSH keys", version)]
+#[command(
+    name = "proofctl",
+    about = "Manage os-console users and SSH keys",
+    version
+)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -75,7 +79,12 @@ fn main() -> Result<()> {
 
     match cli.command {
         Command::User { action } => match action {
-            UserAction::Add { username, tenant, key_file, role } => {
+            UserAction::Add {
+                username,
+                tenant,
+                key_file,
+                role,
+            } => {
                 if !["pointsav", "woodfine"].contains(&tenant.as_str()) {
                     bail!("tenant must be 'pointsav' or 'woodfine'");
                 }
@@ -130,9 +139,18 @@ fn main() -> Result<()> {
                 if pending.is_empty() {
                     println!("No pending connection requests.");
                 } else {
-                    println!("{:<12} {:<20} {:<10} {}", "CODE", "USER", "TENANT", "REQUESTED");
+                    println!(
+                        "{:<12} {:<20} {:<10} {}",
+                        "CODE", "USER", "TENANT", "REQUESTED"
+                    );
                     for (_, code, user, tenant, created) in &pending {
-                        println!("{:<12} {:<20} {:<10} {}", code, user, tenant, &created[..19]);
+                        println!(
+                            "{:<12} {:<20} {:<10} {}",
+                            code,
+                            user,
+                            tenant,
+                            &created[..19]
+                        );
                     }
                 }
             }

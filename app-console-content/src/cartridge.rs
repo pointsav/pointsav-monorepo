@@ -7,14 +7,16 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState},
+    widgets::{
+        Block, Borders, List, ListItem, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState,
+    },
     Frame,
 };
 use tui_textarea::TextArea;
 
 use crate::draft::{self, DraftEvent};
 use crate::drafts_out;
-use crate::proofreader::{self, ProofreadResponse, PROTOCOLS, DEFAULT_PROTOCOL_IDX};
+use crate::proofreader::{self, ProofreadResponse, DEFAULT_PROTOCOL_IDX, PROTOCOLS};
 
 const SPINNER: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 const PLACEHOLDER: &str =
@@ -96,7 +98,9 @@ impl ContentCartridge {
             proof_endpoint: proof_endpoint.into(),
             slm_endpoint: slm_endpoint.into(),
             drafts_outbound_path: drafts_outbound_path.into(),
-            state: ContentState::Input { protocol_idx: DEFAULT_PROTOCOL_IDX },
+            state: ContentState::Input {
+                protocol_idx: DEFAULT_PROTOCOL_IDX,
+            },
             textarea: ta,
         }
     }
@@ -169,7 +173,11 @@ impl ContentCartridge {
         let inner = outer.inner(area);
         frame.render_widget(outer, area);
 
-        let mid = Rect { y: inner.y + inner.height / 2, height: 2, ..inner };
+        let mid = Rect {
+            y: inner.y + inner.height / 2,
+            height: 2,
+            ..inner
+        };
         frame.render_widget(
             Paragraph::new(format!(
                 "  {} Sending to service-proofreader — please wait (up to 300s)…",
@@ -231,10 +239,13 @@ impl ContentCartridge {
             let (prefix, style) = match change.tag() {
                 ChangeTag::Delete => ("- ", Style::default().fg(Color::Red)),
                 ChangeTag::Insert => ("+ ", Style::default().fg(Color::LightGreen)),
-                ChangeTag::Equal  => ("  ", Style::default().fg(Color::DarkGray)),
+                ChangeTag::Equal => ("  ", Style::default().fg(Color::DarkGray)),
             };
             let text = change.value().trim_end_matches('\n');
-            lines.push(Line::from(Span::styled(format!("{}{}", prefix, text), style)));
+            lines.push(Line::from(Span::styled(
+                format!("{}{}", prefix, text),
+                style,
+            )));
         }
 
         if lines.is_empty() || original == response.improved_text {
@@ -248,10 +259,7 @@ impl ContentCartridge {
         let visible = chunks[1].height;
         let offset = scroll.min(total.saturating_sub(visible));
 
-        frame.render_widget(
-            Paragraph::new(lines.clone()).scroll((offset, 0)),
-            chunks[1],
-        );
+        frame.render_widget(Paragraph::new(lines.clone()).scroll((offset, 0)), chunks[1]);
 
         if total > visible {
             let mut sb_state = ScrollbarState::new(total as usize).position(offset as usize);
@@ -271,10 +279,13 @@ impl ContentCartridge {
         let inner = outer.inner(area);
         frame.render_widget(outer, area);
 
-        let mid = Rect { y: inner.y + inner.height / 2, height: 3, ..inner };
+        let mid = Rect {
+            y: inner.y + inner.height / 2,
+            height: 3,
+            ..inner
+        };
         frame.render_widget(
-            Paragraph::new(format!("  Error: {}", message))
-                .style(Style::default().fg(Color::Red)),
+            Paragraph::new(format!("  Error: {}", message)).style(Style::default().fg(Color::Red)),
             mid,
         );
     }
@@ -306,7 +317,12 @@ impl ContentCartridge {
 
         let lines: Vec<Line> = buffer
             .lines()
-            .map(|l| Line::from(Span::styled(l.to_string(), Style::default().fg(Color::White))))
+            .map(|l| {
+                Line::from(Span::styled(
+                    l.to_string(),
+                    Style::default().fg(Color::White),
+                ))
+            })
             .collect();
 
         let total = lines.len() as u16;
@@ -347,8 +363,16 @@ impl ContentCartridge {
 
         // Tab → protocol picker
         if key.code == KeyCode::Tab {
-            let saved: Vec<String> = self.textarea.lines().iter().map(|s| s.to_string()).collect();
-            self.state = ContentState::PickProtocol { saved_text: saved, selected: protocol_idx };
+            let saved: Vec<String> = self
+                .textarea
+                .lines()
+                .iter()
+                .map(|s| s.to_string())
+                .collect();
+            self.state = ContentState::PickProtocol {
+                saved_text: saved,
+                selected: protocol_idx,
+            };
             return CartridgeAction::Consumed;
         }
 
@@ -363,7 +387,11 @@ impl ContentCartridge {
             let trimmed = text.trim();
             if let Some(rest) = trimmed.strip_prefix("/new") {
                 let title = rest.trim().to_string();
-                let title = if title.is_empty() { "Untitled".to_string() } else { title };
+                let title = if title.is_empty() {
+                    "Untitled".to_string()
+                } else {
+                    title
+                };
                 let protocol = PROTOCOLS[protocol_idx].0.to_string();
                 let tenant = self.tenant.clone();
                 let slm = self.slm_endpoint.clone();
@@ -391,7 +419,12 @@ impl ContentCartridge {
             let text_clone = text.clone();
             let (tx, rx) = mpsc::channel();
             thread::spawn(move || {
-                let _ = tx.send(proofreader::submit_proofread(&text_clone, &protocol, &tenant, &endpoint));
+                let _ = tx.send(proofreader::submit_proofread(
+                    &text_clone,
+                    &protocol,
+                    &tenant,
+                    &endpoint,
+                ));
             });
             self.state = ContentState::Submitting {
                 original: text,
@@ -403,27 +436,39 @@ impl ContentCartridge {
         }
 
         // Everything else → textarea
-        self.textarea.input(tui_textarea::Input::from(event.clone()));
+        self.textarea
+            .input(tui_textarea::Input::from(event.clone()));
         CartridgeAction::Consumed
     }
 
-    fn on_picker_key(&mut self, key: &crossterm::event::KeyEvent, selected: usize, saved: &[String]) -> CartridgeAction {
+    fn on_picker_key(
+        &mut self,
+        key: &crossterm::event::KeyEvent,
+        selected: usize,
+        saved: &[String],
+    ) -> CartridgeAction {
         match key.code {
             KeyCode::Esc | KeyCode::BackTab => {
                 let saved_clone = saved.to_vec();
                 let mut ta = TextArea::from(saved_clone);
                 ta.set_placeholder_text(PLACEHOLDER);
                 self.textarea = ta;
-                self.state = ContentState::Input { protocol_idx: selected };
+                self.state = ContentState::Input {
+                    protocol_idx: selected,
+                };
             }
             KeyCode::Up => {
                 if let ContentState::PickProtocol { selected: s, .. } = &mut self.state {
-                    if *s > 0 { *s -= 1; }
+                    if *s > 0 {
+                        *s -= 1;
+                    }
                 }
             }
             KeyCode::Down => {
                 if let ContentState::PickProtocol { selected: s, .. } = &mut self.state {
-                    if *s < PROTOCOLS.len() - 1 { *s += 1; }
+                    if *s < PROTOCOLS.len() - 1 {
+                        *s += 1;
+                    }
                 }
             }
             KeyCode::Enter => {
@@ -431,7 +476,9 @@ impl ContentCartridge {
                 let mut ta = TextArea::from(saved_clone);
                 ta.set_placeholder_text(PLACEHOLDER);
                 self.textarea = ta;
-                self.state = ContentState::Input { protocol_idx: selected };
+                self.state = ContentState::Input {
+                    protocol_idx: selected,
+                };
             }
             _ => {}
         }
@@ -441,9 +488,13 @@ impl ContentCartridge {
     fn on_drafting_key(&mut self, key: &crossterm::event::KeyEvent) -> CartridgeAction {
         // Extract needed values without keeping a borrow across mutable calls
         let (done, title, protocol_idx, buffer) = match &self.state {
-            ContentState::DraftingNew { done, title, protocol_idx, buffer, .. } => {
-                (*done, title.clone(), *protocol_idx, buffer.clone())
-            }
+            ContentState::DraftingNew {
+                done,
+                title,
+                protocol_idx,
+                buffer,
+                ..
+            } => (*done, title.clone(), *protocol_idx, buffer.clone()),
             _ => return CartridgeAction::Consumed,
         };
 
@@ -538,35 +589,55 @@ impl Cartridge for ContentCartridge {
 
     fn render(&mut self, frame: &mut Frame, area: Rect) {
         // Poll for HTTP result (non-blocking)
-        let new_state: Option<ContentState> = if let ContentState::Submitting { rx, original, .. } = &mut self.state {
-            match rx.try_recv() {
-                Ok(Ok(resp)) => Some(ContentState::Results {
-                    response: resp,
-                    original: original.clone(),
-                    scroll: 0,
-                }),
-                Ok(Err(e)) => Some(ContentState::Error { message: e.to_string() }),
-                Err(mpsc::TryRecvError::Disconnected) => Some(ContentState::Error {
-                    message: "HTTP thread disconnected unexpectedly".into(),
-                }),
-                Err(mpsc::TryRecvError::Empty) => None,
-            }
-        } else {
-            None
-        };
+        let new_state: Option<ContentState> =
+            if let ContentState::Submitting { rx, original, .. } = &mut self.state {
+                match rx.try_recv() {
+                    Ok(Ok(resp)) => Some(ContentState::Results {
+                        response: resp,
+                        original: original.clone(),
+                        scroll: 0,
+                    }),
+                    Ok(Err(e)) => Some(ContentState::Error {
+                        message: e.to_string(),
+                    }),
+                    Err(mpsc::TryRecvError::Disconnected) => Some(ContentState::Error {
+                        message: "HTTP thread disconnected unexpectedly".into(),
+                    }),
+                    Err(mpsc::TryRecvError::Empty) => None,
+                }
+            } else {
+                None
+            };
         if let Some(ns) = new_state {
             self.state = ns;
         }
 
         // Drain SSE tokens for DraftingNew
-        if let ContentState::DraftingNew { rx, buffer, done, error, .. } = &mut self.state {
+        if let ContentState::DraftingNew {
+            rx,
+            buffer,
+            done,
+            error,
+            ..
+        } = &mut self.state
+        {
             loop {
                 match rx.try_recv() {
                     Ok(DraftEvent::Token(tok)) => buffer.push_str(&tok),
-                    Ok(DraftEvent::Done)        => { *done = true; break; }
-                    Ok(DraftEvent::Error(e))    => { *error = Some(e); *done = true; break; }
-                    Err(mpsc::TryRecvError::Empty)        => break,
-                    Err(mpsc::TryRecvError::Disconnected) => { *done = true; break; }
+                    Ok(DraftEvent::Done) => {
+                        *done = true;
+                        break;
+                    }
+                    Ok(DraftEvent::Error(e)) => {
+                        *error = Some(e);
+                        *done = true;
+                        break;
+                    }
+                    Err(mpsc::TryRecvError::Empty) => break,
+                    Err(mpsc::TryRecvError::Disconnected) => {
+                        *done = true;
+                        break;
+                    }
                 }
             }
         }
@@ -586,27 +657,34 @@ impl Cartridge for ContentCartridge {
             Error(String),
         }
         let cmd = match &self.state {
-            ContentState::Input { protocol_idx }         => Cmd::Input(*protocol_idx),
-            ContentState::PickProtocol { selected, .. }  => Cmd::Picker(*selected),
-            ContentState::Submitting { spinner, .. }     => Cmd::Submitting(*spinner),
-            ContentState::Results { response, original, scroll } => {
-                Cmd::Results(response.clone(), original.clone(), *scroll)
-            }
-            ContentState::DraftingNew { title, buffer, done, error, scroll, .. } => {
-                Cmd::Drafting(title.clone(), buffer.clone(), *done, error.clone(), *scroll)
-            }
-            ContentState::Error { message }              => Cmd::Error(message.clone()),
+            ContentState::Input { protocol_idx } => Cmd::Input(*protocol_idx),
+            ContentState::PickProtocol { selected, .. } => Cmd::Picker(*selected),
+            ContentState::Submitting { spinner, .. } => Cmd::Submitting(*spinner),
+            ContentState::Results {
+                response,
+                original,
+                scroll,
+            } => Cmd::Results(response.clone(), original.clone(), *scroll),
+            ContentState::DraftingNew {
+                title,
+                buffer,
+                done,
+                error,
+                scroll,
+                ..
+            } => Cmd::Drafting(title.clone(), buffer.clone(), *done, error.clone(), *scroll),
+            ContentState::Error { message } => Cmd::Error(message.clone()),
         };
 
         match cmd {
-            Cmd::Input(pidx)               => self.render_input(frame, area, pidx),
-            Cmd::Picker(sel)               => Self::render_picker(frame, area, sel),
-            Cmd::Submitting(sp)            => Self::render_submitting(frame, area, sp),
-            Cmd::Results(resp, orig, sc)   => Self::render_results(frame, area, &resp, &orig, sc),
+            Cmd::Input(pidx) => self.render_input(frame, area, pidx),
+            Cmd::Picker(sel) => Self::render_picker(frame, area, sel),
+            Cmd::Submitting(sp) => Self::render_submitting(frame, area, sp),
+            Cmd::Results(resp, orig, sc) => Self::render_results(frame, area, &resp, &orig, sc),
             Cmd::Drafting(t, buf, done, err, sc) => {
                 Self::render_drafting(frame, area, &t, &buf, done, err.as_deref(), sc)
             }
-            Cmd::Error(msg)                => Self::render_error(frame, area, &msg),
+            Cmd::Error(msg) => Self::render_error(frame, area, &msg),
         }
     }
 
@@ -626,22 +704,23 @@ impl Cartridge for ContentCartridge {
         }
         let kind = match &self.state {
             ContentState::Input { protocol_idx } => StateKind::Input(*protocol_idx),
-            ContentState::PickProtocol { selected, saved_text } => {
-                StateKind::Picker(*selected, saved_text.clone())
-            }
-            ContentState::Submitting { .. }  => StateKind::Submitting,
-            ContentState::Results { .. }     => StateKind::Results,
+            ContentState::PickProtocol {
+                selected,
+                saved_text,
+            } => StateKind::Picker(*selected, saved_text.clone()),
+            ContentState::Submitting { .. } => StateKind::Submitting,
+            ContentState::Results { .. } => StateKind::Results,
             ContentState::DraftingNew { .. } => StateKind::Drafting,
-            ContentState::Error { .. }       => StateKind::Error,
+            ContentState::Error { .. } => StateKind::Error,
         };
 
         match kind {
             StateKind::Input(pidx) => self.on_input_key(event, pidx),
             StateKind::Picker(sel, saved) => self.on_picker_key(key, sel, &saved),
             StateKind::Submitting => CartridgeAction::Consumed,
-            StateKind::Results    => self.on_results_key(key),
-            StateKind::Drafting   => self.on_drafting_key(key),
-            StateKind::Error      => {
+            StateKind::Results => self.on_results_key(key),
+            StateKind::Drafting => self.on_drafting_key(key),
+            StateKind::Error => {
                 self.reset_textarea(DEFAULT_PROTOCOL_IDX);
                 CartridgeAction::Consumed
             }
