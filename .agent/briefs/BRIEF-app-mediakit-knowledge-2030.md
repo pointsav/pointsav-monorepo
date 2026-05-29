@@ -82,11 +82,12 @@ These are decided. Do not revisit within a session without operator confirmation
 
 ---
 
-## 3. Current implementation state (Phases 1–7A shipped, 2026-05-28)
+## 3. Current implementation state (Phases 1–7H shipped + deployed, 2026-05-29)
 
 All commits on `pointsav-monorepo` staging branch. Phase 6A/6B/6C promoted to canonical
-by Command (2026-05-28). Phase 7A committed `168314a1` (Peter), Stage 6 + binary rebuild
-pending nightly queue (~1am Vancouver 2026-05-28).
+by Command (2026-05-28). Phases UX-A through 7H committed 2026-05-29; binary deployed to
+all three live instances (2026-05-29 ~05:15 UTC). Stage 6 promotion of 15 commits pending
+Command Session (`bin/promote.sh`).
 
 | Phase | Status | Key commit(s) |
 |---|---|---|
@@ -98,23 +99,33 @@ pending nightly queue (~1am Vancouver 2026-05-28).
 | 4 DTCG | Shipped | `dtcg-bundle.json` → `dtcg-to-css.py` → `tokens.css` (157 tokens, all colors in `oklch()`) |
 | 5 core — auth + edit review | Shipped | Cookie sessions, argon2id, edit review queue; `auth.rs` + `pending.rs` + `users.rs` |
 | 5.1+ ACLs/OIDC/webhooks | Deferred | Gated on BP5 clearance |
-| 6A — AJAX nav fix | Shipped `afa67bfa` | `navigateTo()` stale selectors fixed (3 DOM-rename pairs); `initToc`, `initTocPin`, `initActiveTocTracking` corrected |
-| 6B — home page caps | Shipped `afa67bfa` | Uncategorised block removed; guides capped at 6; recent fetch 10 → 8 |
-| 6C — topnav header | Shipped `afa67bfa` | `header.topnav` 80px `1fr/auto/1fr` grid; `WORDMARK_SVG_POINTSAV`; `--header-h` 152px→80px |
-| 7A — TOC toggle/pin + search | Committed `168314a1` | TOC buttons restored to `div.toc__header`; `div.topnav-search-wrap` + `#search-autocomplete-dropdown` added to all three chrome functions |
+| 6A/6B/6C | Shipped + promoted `afa67bfa` | AJAX nav fix; home page caps; topnav 80px header |
+| 7A | Committed + deployed `168314a1` | TOC buttons + topnav search restored |
+| UX-A | Committed + deployed `0dfe1647` | Typography tokens wired; dark-mode contrast; auto dark mode; appearance toggle hidden |
+| UX-B | Committed + deployed `2a19c626` | Appearance dropdown removed; home standfirst; `shell_footer()`; footer convergence; CC BY 4.0 gate; provenance ribbon |
+| 7B | Committed + deployed `bbb339b5` | `nav.article-tabs`; Tools▾ dropdown; anchor-share `¶`; auth-gated tabs |
+| 7C | Committed + deployed `d649f051` | Reading mode toggle; CSS body-class; localStorage |
+| 7X | Pre-existing | Home search hero; YAML-based featured article + DYK |
+| 7D | Committed + deployed | Citation hover preview; freshness dot; CITATIONS redb table |
+| 7E | Committed + deployed `bbb339b5` | Mobile bottom bar; article-tabs hidden on mobile; table/code overflow |
+| 7F | Committed + deployed `c240837b` | Tufte sidenotes for `layout: journal`; `inject_sidenotes()` post-processor |
+| 7G+7H | Committed + deployed `c240837b` | Auto-numbered sections for `[data-instance="woodfine-corporate"]` (CSS) |
+| **8 — history surface** | **Next** | Revision list at `/history/{slug}`; diff UI; `article-integrity-bar` (blake3 SHA) |
 
-**Test state:** `cargo test` exits 0 (106 lib tests pass; `collab_test` + `doorman_test`
-pre-existing failures on removed `AppState.collab` field — unrelated to current phases).
+**Test state:** `cargo test` exits 0 (107 tests: 106 lib + 1 journal integration; `collab_test` +
+`doorman_test` pre-existing failures on removed `AppState.collab` field — unrelated to current phases).
 
-**Binary state:** Services currently running binary built from `1c2947d7` (pre-Phase-6A).
-Phase 6A/6B/6C (`afa67bfa`) and Phase 7A (`168314a1`) both need Stage 6 promotion +
-nightly binary rebuild to go live.
+**Binary state:** All three services live on binary deployed 2026-05-29 ~05:15 UTC (includes
+Phases UX-A through 7H). 15 commits pending Stage 6 promotion by Command.
 
-**Post-6C open cleanup (not blocking):**
-- Remove legacy `.shell-header` CSS block (dead code since 6C)
-- ES bilingual pairs for four governance stub articles (disclaimers, contact, about, contribute)
+**UX-B.7 — BLOCKED:** `WORDMARK_WOODFINE` constant still Unicode `■ Woodfine`. Operator must
+provide Woodfine Management Corp. SVG wordmark file before this can ship.
+
+**Post-6C cleanup (now done):** Legacy `.shell-header` CSS block removed in Phase 7B.
+
+**Still open:**
+- ES bilingual pairs for four governance stub articles
 - `.agent/manifest.md` wrong `cluster_name` (says `project-bim`) — Command correction needed
-- Dark mode topnav: verify SVG invert on `#0B1220` dark canvas
 
 ---
 
