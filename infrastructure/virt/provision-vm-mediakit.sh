@@ -145,8 +145,13 @@ echo "  localhost:19101 → :9101 (marketing-pointsav)"
 echo "  localhost:19102 → :9102 (marketing-woodfine)"
 echo ""
 
-DAEMON_ARGS=()
-if [[ "$FOREGROUND" -eq 0 ]]; then
+if [[ "$FOREGROUND" -eq 1 ]]; then
+    # Foreground mode: -nographic streams serial console to stdout
+    DISPLAY_ARGS=(-nographic)
+    DAEMON_ARGS=()
+else
+    # Daemon mode: -nographic is incompatible with -daemonize; use headless instead
+    DISPLAY_ARGS=(-display none -serial none)
     DAEMON_ARGS=(-daemonize -pidfile "$PID_FILE")
 fi
 
@@ -154,7 +159,7 @@ exec qemu-system-x86_64 \
     -accel "$ACCEL" \
     -m "${RAM_MB}M" \
     -smp 2 \
-    -nographic \
+    "${DISPLAY_ARGS[@]}" \
     -drive "file=${VM_DISK},format=qcow2,if=virtio" \
     -drive "file=${SEED_ISO},format=raw,if=virtio,media=cdrom,readonly=on" \
     -netdev "user,id=net0,\
