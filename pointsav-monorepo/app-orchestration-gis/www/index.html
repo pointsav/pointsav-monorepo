@@ -1832,32 +1832,48 @@
                 </div>
             </div>
             ${(() => {
+                const loaded      = p.hc_count_regional != null || p.hc_count_district != null ||
+                                    p.he_count_regional != null || p.he_count_small     != null;
                 const hcReg = parseInt(p.hc_count_regional) || 0;
                 const hcDst = parseInt(p.hc_count_district)  || 0;
                 const heReg = parseInt(p.he_count_regional)  || 0;
                 const heSml = parseInt(p.he_count_small)     || 0;
                 const hasHealthcare = hcReg > 0 || hcDst > 0;
                 const hasEducation  = heReg > 0 || heSml > 0;
-                if (!hasHealthcare && !hasEducation) return '';
-                const SUB = `font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;`;
-                const DIV = `border-top:1px solid var(--border-soft);margin-top:7px;padding-top:7px;`;
-                const ROW = `font-size:11px;color:var(--text-main);margin-bottom:2px;`;
-                const NUM = `font-weight:600;margin-right:5px;`;
+                const SUB  = `font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;`;
+                const DIV  = `border-top:1px solid var(--border-soft);margin-top:7px;padding-top:7px;`;
+                const ROW  = `font-size:11px;color:var(--text-main);line-height:1.5;margin-bottom:1px;`;
+                const NUM  = `font-weight:700;margin-right:6px;min-width:14px;display:inline-block;`;
+                const DASH = `color:var(--text-muted);`;
                 let html = `<div class="data-block" style="padding-top:6px;"><div class="catchment-block">`;
                 html += `<div class="data-label" style="margin:0 0 6px;">Civic Context</div>`;
-                if (hasHealthcare) {
+                if (!loaded) {
                     html += `<div><div style="${SUB}">Healthcare</div>`;
-                    if (hcReg > 0) html += `<div style="${ROW}"><span style="${NUM}">${hcReg}</span>regional hospital${hcReg>1?'s':''}</div>`;
-                    if (hcDst > 0) html += `<div style="${ROW}"><span style="${NUM}">${hcDst}</span>district hospital${hcDst>1?'s':''}</div>`;
-                    html += `</div>`;
+                    html += `<div style="${ROW}${DASH}"><span>Regional hospitals</span> <span>—</span></div>`;
+                    html += `<div style="${ROW}${DASH}"><span>District hospitals</span> <span>—</span></div></div>`;
+                    html += `<div style="${DIV}"><div style="${SUB}">Education</div>`;
+                    html += `<div style="${ROW}${DASH}"><span>Regional universities</span> <span>—</span></div>`;
+                    html += `<div style="${ROW}${DASH}"><span>Small universities</span> <span>—</span></div></div>`;
+                    html += `<div style="font-size:10px;color:var(--text-muted);margin-top:7px;">within 5 km · data pending</div>`;
+                } else {
+                    if (hasHealthcare) {
+                        html += `<div><div style="${SUB}">Healthcare</div>`;
+                        if (hcReg > 0) html += `<div style="${ROW}"><span style="${NUM}">${hcReg}</span>regional hospital${hcReg>1?'s':''}</div>`;
+                        if (hcDst > 0) html += `<div style="${ROW}"><span style="${NUM}">${hcDst}</span>district hospital${hcDst>1?'s':''}</div>`;
+                        html += `</div>`;
+                    }
+                    if (hasEducation) {
+                        html += `<div style="${hasHealthcare ? DIV : ''}"><div style="${SUB}">Education</div>`;
+                        if (heReg > 0) html += `<div style="${ROW}"><span style="${NUM}">${heReg}</span>regional universit${heReg>1?'ies':'y'}</div>`;
+                        if (heSml > 0) html += `<div style="${ROW}"><span style="${NUM}">${heSml}</span>small universit${heSml>1?'ies':'y'}</div>`;
+                        html += `</div>`;
+                    }
+                    if (!hasHealthcare && !hasEducation) {
+                        html += `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">None within 5 km</div>`;
+                    } else {
+                        html += `<div style="font-size:10px;color:var(--text-muted);margin-top:6px;">within 5 km</div>`;
+                    }
                 }
-                if (hasEducation) {
-                    html += `<div style="${hasHealthcare ? DIV : ''}"><div style="${SUB}">Education</div>`;
-                    if (heReg > 0) html += `<div style="${ROW}"><span style="${NUM}">${heReg}</span>regional universit${heReg>1?'ies':'y'}</div>`;
-                    if (heSml > 0) html += `<div style="${ROW}"><span style="${NUM}">${heSml}</span>small universit${heSml>1?'ies':'y'}</div>`;
-                    html += `</div>`;
-                }
-                html += `<div style="font-size:10px;color:var(--text-muted);margin-top:6px;">within 5 km</div>`;
                 html += `</div></div>`;
                 return html;
             })()}
@@ -1868,12 +1884,36 @@
                         const hasClimate = !!(p.ashrae_zone || p.eu_climate_zone || p.necb_zone || p.koppen_class);
                         const hasEcology = !!(p.ecoregion_name || p.ecoregion_biome || p.eu_biogeo_region);
                         const hasHazards = !!(p.seismic_pga_g != null || p.ghi_kwh_m2_yr != null || p.flood_hazard || p.wildfire_hazard);
+                        const SUB  = `font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;`;
+                        const GRID = `display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:11px;color:var(--text-main);line-height:1.5;`;
+                        const DIV  = `border-top:1px solid var(--border-soft);margin-top:7px;padding-top:7px;`;
+                        const DASH = `color:var(--text-muted);`;
                         if (!hasClimate && !hasEcology && !hasHazards) {
-                            return `<div style="font-size:10px;color:var(--text-muted);font-style:italic;margin-top:2px;">Köppen · Eco-region · Seismic · Solar — Night 3+</div>`;
+                            return `
+                            <div>
+                                <div style="${SUB}">Climate</div>
+                                <div style="${GRID}${DASH}">
+                                    <div style="grid-column:1/-1"><span>Zone</span> <span>—</span></div>
+                                    <div style="grid-column:1/-1"><span>Köppen</span> <span>—</span></div>
+                                </div>
+                            </div>
+                            <div style="${DIV}">
+                                <div style="${SUB}">Ecology</div>
+                                <div style="${GRID}${DASH}">
+                                    <div style="grid-column:1/-1"><span>Eco-region</span> <span>—</span></div>
+                                    <div style="grid-column:1/-1"><span>Biome</span> <span>—</span></div>
+                                </div>
+                            </div>
+                            <div style="${DIV}">
+                                <div style="${SUB}">Hazards &amp; Resources</div>
+                                <div style="${GRID}${DASH}">
+                                    <div><span>Seismic PGA</span> <span>—</span></div>
+                                    <div><span>Solar GHI</span> <span>—</span></div>
+                                    <div><span>Flood</span> <span>—</span></div>
+                                </div>
+                            </div>
+                            <div style="font-size:10px;color:var(--text-muted);margin-top:7px;">AEC data builds nightly</div>`;
                         }
-                        const SUB = `font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;`;
-                        const GRID = `display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;font-size:11px;color:var(--text-main);`;
-                        const DIV = `border-top:1px solid var(--border-soft);margin-top:7px;padding-top:7px;`;
                         let html = '';
                         if (hasClimate) {
                             html += `<div>
