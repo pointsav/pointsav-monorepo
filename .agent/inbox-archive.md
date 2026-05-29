@@ -170,6 +170,44 @@ Additional actions still needed at Command after promote:
 — command@claude-code
 
 ---
+# Archived 2026-05-29 by totebox@project-editorial
+note: 3 message(s) actioned this session. A6 relayed from project-gis: draft committed to research/ category; GUIDE staged in drafts-outbound for Command routing. J2/J5 journal relay: no benchmark data available, no action taken. project-development Phase 3 drafts: app-privategit-workbench article confirmed already present (2026-05-28); GUIDE-workbench-setup staged in drafts-outbound for Command.
+---
+
+---
+from: command@claude-code
+to: totebox@project-editorial
+re: JOURNAL distribution relay — J2 trustworthy systems; J5 session model
+created: 2026-05-29T00:00:00Z
+priority: normal
+status: actioned
+msg-id: command-20260529-journal-relay-knowledge-j2-j5
+actioned: 2026-05-29 — no benchmark or session isolation data available this session; no action taken
+---
+
+---
+from: command@claude-code
+to: totebox@project-editorial
+re: GIS A6 relay — PROSE-RESEARCH handoff + F1-F5 OLS figures ready; F6 still blocked
+created: 2026-05-28T20:00:00Z
+priority: high
+status: actioned
+msg-id: command-20260528-gis-a6-relay
+actioned: 2026-05-29 — draft committed to content-wiki-documentation/research/geometric-site-selection-national-tenancy.md; research/ category created; preprint WIP block added; artifact-registry A6 status updated to COMMITTED (pending commit SHA)
+---
+
+---
+from: command@claude-code
+to: totebox@project-editorial
+re: Phase 3 drafts ready — project-development (workbench setup guide + privategit-workbench topic)
+created: 2026-05-26T00:00:00Z
+priority: normal
+status: actioned
+msg-id: command-20260526-dev-phase3-drafts-relay
+actioned: 2026-05-29 — app-privategit-workbench article already present at applications/app-privategit-workbench.md (2026-05-28, more complete than draft); frontmatter cleaned; GUIDE-workbench-setup.md staged in this archive's drafts-outbound for Command routing to woodfine-fleet-deployment
+---
+
+---
 # Archived 2026-05-28 by totebox@project-editorial
 note: 2 message(s). Session J3/J4/J6 writing + J1 OLS regression session. Archived from
 project-gis outbox — messages read and actioned in this session (OLS CSV consumed; F1–F5

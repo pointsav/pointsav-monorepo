@@ -110,13 +110,14 @@ Command Session (`bin/promote.sh`).
 | 7E | Committed + deployed `bbb339b5` | Mobile bottom bar; article-tabs hidden on mobile; table/code overflow |
 | 7F | Committed + deployed `c240837b` | Tufte sidenotes for `layout: journal`; `inject_sidenotes()` post-processor |
 | 7G+7H | Committed + deployed `c240837b` | Auto-numbered sections for `[data-instance="woodfine-corporate"]` (CSS) |
-| **8 — history surface** | **Next** | Revision list at `/history/{slug}`; diff UI; `article-integrity-bar` (blake3 SHA) |
+| **8 — history surface** | **Committed `0e5fd685` — deploy pending** | Integrity bar (blake3, 16 hex chars); history pagination (?page=N, 25/page); diff stats (+N/−M); `/special/hash-lookup/{hash}` route; 7/7 history_test pass |
 
 **Test state:** `cargo test` exits 0 (107 tests: 106 lib + 1 journal integration; `collab_test` +
 `doorman_test` pre-existing failures on removed `AppState.collab` field — unrelated to current phases).
 
-**Binary state:** All three services live on binary deployed 2026-05-29 ~05:15 UTC (includes
-Phases UX-A through 7H). 15 commits pending Stage 6 promotion by Command.
+**Binary state:** Three services live on binary deployed 2026-05-29 ~05:15 UTC (Phases UX-A
+through 7H). Phase 8 commit `0e5fd685` staged; release build running; deploy pending.
+16+ commits pending Stage 6 promotion by Command.
 
 **UX-B.7 — BLOCKED:** `WORDMARK_WOODFINE` constant still Unicode `■ Woodfine`. Operator must
 provide Woodfine Management Corp. SVG wordmark file before this can ship.
@@ -124,8 +125,9 @@ provide Woodfine Management Corp. SVG wordmark file before this can ship.
 **Post-6C cleanup (now done):** Legacy `.shell-header` CSS block removed in Phase 7B.
 
 **Still open:**
-- ES bilingual pairs for four governance stub articles
 - `.agent/manifest.md` wrong `cluster_name` (says `project-bim`) — Command correction needed
+- ES bilingual pairs for four governance stub articles — DONE this session (2026-05-29)
+- A6 PROSE-RESEARCH committed to content-wiki-documentation/research/ (2026-05-29 commit `13b8caa`)
 
 ---
 
