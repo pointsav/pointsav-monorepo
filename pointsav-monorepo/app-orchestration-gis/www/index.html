@@ -71,10 +71,6 @@
         .lc-btn:hover:not(.lc-disabled) { background: rgba(22,70,121,0.06); color: var(--text-main); }
         .lc-btn.lc-active { color: var(--brand-primary); background: rgba(22,70,121,0.07); }
         .lc-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-        .lc-spinner { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; border: 2px solid rgba(22,70,121,0.15); border-top-color: var(--brand-primary); animation: lc-spin 0.7s linear infinite; display: none; }
-        @keyframes lc-spin { to { transform: rotate(360deg); } }
-        .lc-loading .lc-spinner { display: block; }
-        .lc-loading .lc-dot { display: none; }
         .lc-disabled { cursor: default; opacity: 0.45; pointer-events: none; }
         .lc-planned { margin-left: auto; font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; background: rgba(0,0,0,0.05); padding: 2px 5px; border-radius: 4px; }
         .lc-group-label { font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; padding: 4px 4px 2px; }
@@ -145,12 +141,13 @@
         }
 
         /* ── Footer & Modals ──────────────────────────────────────── */
-        .panel-footer { padding: 12px 20px; border-top: 1px solid var(--border-soft); background: rgba(0,0,0,0.02); display: flex; flex-wrap: wrap; gap: 8px; }
+        .panel-footer { padding: 6px 12px; border-top: 1px solid var(--border-soft); background: rgba(0,0,0,0.02); display: flex; gap: 0; }
         .footer-btn {
-            flex: 1 1 calc(50% - 4px); border: none; background: transparent; padding: 6px;
-            font-size: 11px; font-weight: 800; color: var(--text-muted);
+            flex: 1; border: none; background: transparent; padding: 8px 4px;
+            font-size: 9.5px; font-weight: 700; color: var(--text-muted);
             text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
             border-radius: 4px; transition: all 0.15s; text-align: center; text-decoration: none; display: block;
+            line-height: 1.2; min-height: auto;
         }
         .footer-btn:hover { background: rgba(0,0,0,0.05); color: var(--brand-primary); }
         .footer-btn + .footer-btn { border-left: 1px solid var(--border-soft); }
@@ -444,9 +441,6 @@
     // ── PMTiles protocol ────────────────────────────────────────────
     const protocol = new pmtiles.Protocol();
     maplibregl.addProtocol('pmtiles', protocol.tile.bind(protocol));
-    // Pre-warm climate layer headers so first button click skips the header round-trip
-    protocol.add(new pmtiles.PMTiles('tiles/layer9-koppen-global.pmtiles'));
-    protocol.add(new pmtiles.PMTiles('tiles/layer9-ecoregions-global.pmtiles'));
 
     // ── Tier colour ramp — 4-tier: Regional → District → Local → Fringe ──
     // Keys are V2 rank values (3=Regional, 2=District, 1=Local, 0=Fringe) used by
@@ -1293,10 +1287,10 @@
                     <span class="lc-dot" style="background:#0A3070"></span>Cluster Bubbles
                 </button>
                 <button class="lc-btn${koppenActive ? ' lc-active' : ''}" id="lc-koppen" onclick="toggleKoppenLayer(this)" style="margin-top:4px;">
-                    <span class="lc-dot" style="background:linear-gradient(135deg,#2563eb 30%,#16a34a 65%,#dc2626 100%)"></span><span class="lc-spinner"></span>Köppen-Geiger Climate
+                    <span class="lc-dot" style="background:linear-gradient(135deg,#2563eb 30%,#16a34a 65%,#dc2626 100%)"></span>Köppen-Geiger Climate
                 </button>
                 <button class="lc-btn${ecoregionsActive ? ' lc-active' : ''}" id="lc-ecoregions" onclick="toggleEcoregionsLayer(this)">
-                    <span class="lc-dot" style="background:linear-gradient(135deg,#1a9641 50%,#2c7bb6 100%)"></span><span class="lc-spinner"></span>Ecoregions (Biomes)
+                    <span class="lc-dot" style="background:linear-gradient(135deg,#1a9641 50%,#2c7bb6 100%)"></span>Ecoregions (Biomes)
                 </button>
                 <div style="font-size:10px;color:var(--text-muted);font-style:italic;padding:4px 4px 0;margin-top:2px;">
                     Catchment · Spend · Work Origins — available after selecting a cluster.
@@ -1564,6 +1558,8 @@
             map.addSource('layer9-koppen-src', {
                 type: 'vector',
                 url: 'pmtiles://tiles/layer9-koppen-global.pmtiles',
+                minzoom: 4, maxzoom: 8,
+                bounds: [-180, -60, 180, 85],
             });
             map.addLayer({
                 id: 'layer9-koppen', type: 'fill',
@@ -1583,10 +1579,6 @@
             }, 'proximity-vignette');
         }
         if (map.getLayer('layer9-koppen')) map.setLayoutProperty('layer9-koppen', 'visibility', koppenActive ? 'visible' : 'none');
-        if (koppenActive) {
-            btn.classList.add('lc-loading');
-            map.once('idle', () => btn.classList.remove('lc-loading'));
-        }
         applyBubbleAecOverlayStyle();
     }
 
@@ -1603,6 +1595,8 @@
             map.addSource('layer9-ecoregions-src', {
                 type: 'vector',
                 url: 'pmtiles://tiles/layer9-ecoregions-global.pmtiles',
+                minzoom: 4, maxzoom: 8,
+                bounds: [-180, -60, 180, 85],
             });
             map.addLayer({
                 id: 'layer13-ecoregions', type: 'fill',
@@ -1626,10 +1620,6 @@
             }, 'proximity-vignette');
         }
         if (map.getLayer('layer13-ecoregions')) map.setLayoutProperty('layer13-ecoregions', 'visibility', ecoregionsActive ? 'visible' : 'none');
-        if (ecoregionsActive) {
-            btn.classList.add('lc-loading');
-            map.once('idle', () => btn.classList.remove('lc-loading'));
-        }
         applyBubbleAecOverlayStyle();
     }
 
@@ -1744,6 +1734,18 @@
         const hasWorkReach   = hasWorkReachData(p);
         const sourceBadgeTxt = catchmentSourceLabel(p, catchmentSubLayer);
 
+        // Cell 7 — civic context with per-tier breakdown (G14 override)
+        const hcReg = p.hc_count_regional != null ? parseInt(p.hc_count_regional) : 0;
+        const hcDst = p.hc_count_district != null ? parseInt(p.hc_count_district) : 0;
+        const heReg = p.he_count_regional != null ? parseInt(p.he_count_regional) : 0;
+        const heSml = p.he_count_small    != null ? parseInt(p.he_count_small)    : 0;
+        const civicParts = [
+            hcReg > 0 ? `${hcReg} regional hospital${hcReg > 1 ? 's' : ''}` : null,
+            hcDst > 0 ? `${hcDst} district hospital${hcDst > 1 ? 's' : ''}` : null,
+            heReg > 0 ? `${heReg} regional university${heReg > 1 ? 's' : ''}` : null,
+            heSml > 0 ? `${heSml} small university${heSml > 1 ? 's' : ''}` : null,
+        ].filter(Boolean);
+        const civicLine = civicParts.length > 0 ? civicParts.join(' · ') + ` within ${p.catchment_radius_km != null ? 5 : 5} km` : null;
 
         document.getElementById('inspector').innerHTML = `
             <div class="data-block">
@@ -1830,124 +1832,31 @@
                     </div>
                 </div>
             </div>
-            ${(() => {
-                const loaded      = p.hc_count_regional != null || p.hc_count_district != null ||
-                                    p.he_count_regional != null || p.he_count_small     != null;
-                const hcReg = parseInt(p.hc_count_regional) || 0;
-                const hcDst = parseInt(p.hc_count_district)  || 0;
-                const heReg = parseInt(p.he_count_regional)  || 0;
-                const heSml = parseInt(p.he_count_small)     || 0;
-                const hasHealthcare = hcReg > 0 || hcDst > 0;
-                const hasEducation  = heReg > 0 || heSml > 0;
-                const SUB  = `font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;`;
-                const DIV  = `border-top:1px solid var(--border-soft);margin-top:7px;padding-top:7px;`;
-                const ROW  = `font-size:11px;color:var(--text-main);line-height:1.5;margin-bottom:1px;`;
-                const NUM  = `font-weight:700;margin-right:6px;min-width:14px;display:inline-block;`;
-                const DASH = `color:var(--text-muted);`;
-                let html = `<div class="data-block" style="padding-top:6px;"><div class="catchment-block">`;
-                html += `<div class="data-label" style="margin:0 0 6px;">Civic Context</div>`;
-                if (!loaded) {
-                    html += `<div><div style="${SUB}">Healthcare</div>`;
-                    html += `<div style="${ROW}${DASH}"><span>Regional hospitals</span> <span>—</span></div>`;
-                    html += `<div style="${ROW}${DASH}"><span>District hospitals</span> <span>—</span></div></div>`;
-                    html += `<div style="${DIV}"><div style="${SUB}">Education</div>`;
-                    html += `<div style="${ROW}${DASH}"><span>Regional universities</span> <span>—</span></div>`;
-                    html += `<div style="${ROW}${DASH}"><span>Small universities</span> <span>—</span></div></div>`;
-                    html += `<div style="font-size:10px;color:var(--text-muted);margin-top:7px;">within 5 km · data pending</div>`;
-                } else {
-                    if (hasHealthcare) {
-                        html += `<div><div style="${SUB}">Healthcare</div>`;
-                        if (hcReg > 0) html += `<div style="${ROW}"><span style="${NUM}">${hcReg}</span>regional hospital${hcReg>1?'s':''}</div>`;
-                        if (hcDst > 0) html += `<div style="${ROW}"><span style="${NUM}">${hcDst}</span>district hospital${hcDst>1?'s':''}</div>`;
-                        html += `</div>`;
-                    }
-                    if (hasEducation) {
-                        html += `<div style="${hasHealthcare ? DIV : ''}"><div style="${SUB}">Education</div>`;
-                        if (heReg > 0) html += `<div style="${ROW}"><span style="${NUM}">${heReg}</span>regional universit${heReg>1?'ies':'y'}</div>`;
-                        if (heSml > 0) html += `<div style="${ROW}"><span style="${NUM}">${heSml}</span>small universit${heSml>1?'ies':'y'}</div>`;
-                        html += `</div>`;
-                    }
-                    if (!hasHealthcare && !hasEducation) {
-                        html += `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">None within 5 km</div>`;
-                    } else {
-                        html += `<div style="font-size:10px;color:var(--text-muted);margin-top:6px;">within 5 km</div>`;
-                    }
-                }
-                html += `</div></div>`;
-                return html;
-            })()}
             <div class="data-block" style="padding-top:6px;">
                 <div class="catchment-block">
-                    <div class="data-label" style="margin:0 0 6px;">Site Conditions</div>
-                    ${(() => {
-                        const hasClimate = !!(p.ashrae_zone || p.eu_climate_zone || p.necb_zone || p.koppen_class);
-                        const hasEcology = !!(p.ecoregion_name || p.ecoregion_biome || p.eu_biogeo_region);
-                        const hasHazards = !!(p.seismic_pga_g != null || p.ghi_kwh_m2_yr != null || p.flood_hazard || p.wildfire_hazard);
-                        const SUB  = `font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;`;
-                        const GRID = `display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:11px;color:var(--text-main);line-height:1.5;`;
-                        const DIV  = `border-top:1px solid var(--border-soft);margin-top:7px;padding-top:7px;`;
-                        const DASH = `color:var(--text-muted);`;
-                        if (!hasClimate && !hasEcology && !hasHazards) {
-                            return `
-                            <div>
-                                <div style="${SUB}">Climate</div>
-                                <div style="${GRID}${DASH}">
-                                    <div style="grid-column:1/-1"><span>Zone</span> <span>—</span></div>
-                                    <div style="grid-column:1/-1"><span>Köppen</span> <span>—</span></div>
-                                </div>
-                            </div>
-                            <div style="${DIV}">
-                                <div style="${SUB}">Ecology</div>
-                                <div style="${GRID}${DASH}">
-                                    <div style="grid-column:1/-1"><span>Eco-region</span> <span>—</span></div>
-                                    <div style="grid-column:1/-1"><span>Biome</span> <span>—</span></div>
-                                </div>
-                            </div>
-                            <div style="${DIV}">
-                                <div style="${SUB}">Hazards &amp; Resources</div>
-                                <div style="${GRID}${DASH}">
-                                    <div><span>Seismic PGA</span> <span>—</span></div>
-                                    <div><span>Solar GHI</span> <span>—</span></div>
-                                    <div><span>Flood</span> <span>—</span></div>
-                                </div>
-                            </div>
-                            <div style="font-size:10px;color:var(--text-muted);margin-top:7px;">AEC data builds nightly</div>`;
-                        }
-                        let html = '';
-                        if (hasClimate) {
-                            html += `<div>
-                                <div style="${SUB}">Climate</div>
-                                <div style="${GRID}">
-                                    ${(p.ashrae_zone||p.eu_climate_zone||p.necb_zone) ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Zone</span> <span>${p.ashrae_zone||p.eu_climate_zone||p.necb_zone}</span></div>` : ''}
-                                    ${p.koppen_class ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Köppen</span> <span>${p.koppen_class}</span></div>` : ''}
-                                </div>
-                            </div>`;
-                        }
-                        if (hasEcology) {
-                            html += `<div style="${hasClimate ? DIV : ''}">
-                                <div style="${SUB}">Ecology</div>
-                                <div style="${GRID}">
-                                    ${p.ecoregion_name  ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Eco-region</span> <span>${p.ecoregion_name}</span></div>` : ''}
-                                    ${p.ecoregion_biome ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Biome</span> <span>${p.ecoregion_biome}</span></div>` : ''}
-                                    ${p.eu_biogeo_region ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">EU Biogeo.</span> <span>${p.eu_biogeo_region}</span></div>` : ''}
-                                </div>
-                            </div>`;
-                        }
-                        if (hasHazards) {
-                            html += `<div style="${(hasClimate||hasEcology) ? DIV : ''}">
-                                <div style="${SUB}">Hazards &amp; Resources</div>
-                                <div style="${GRID}">
-                                    ${p.seismic_pga_g != null ? `<div><span style="color:var(--text-muted);">Seismic PGA</span> <span>${p.seismic_pga_g}g</span></div>` : ''}
-                                    ${p.ghi_kwh_m2_yr  != null ? `<div><span style="color:var(--text-muted);">Solar GHI</span> <span>${p.ghi_kwh_m2_yr} kWh/m²</span></div>` : ''}
-                                    ${p.flood_hazard    ? `<div><span style="color:var(--text-muted);">Flood</span> <span>${p.flood_hazard}</span></div>` : ''}
-                                    ${p.wildfire_hazard ? `<div><span style="color:var(--text-muted);">Wildfire</span> <span>${p.wildfire_hazard}</span></div>` : ''}
-                                </div>
-                            </div>`;
-                        }
-                        return html;
-                    })()}
+                    <div class="data-label" style="margin:0 0 4px;">Site Conditions</div>
+                    ${(p.ashrae_zone || p.eu_climate_zone || p.necb_zone || p.koppen_class || p.seismic_pga_g != null || p.flood_hazard || p.wildfire_hazard || p.ghi_kwh_m2_yr != null) ? `
+                    <div style="font-size:11px;color:var(--text-main);display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:4px;">
+                        ${(p.ashrae_zone || p.eu_climate_zone || p.necb_zone) ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Climate Zone</span> <span>${p.ashrae_zone || p.eu_climate_zone || p.necb_zone}</span></div>` : ''}
+                        ${p.koppen_class ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Köppen</span> <span>${p.koppen_class}</span></div>` : ''}
+                        ${p.ecoregion_name  ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Eco-region</span> <span>${p.ecoregion_name}</span></div>` : ''}
+                        ${p.ecoregion_biome ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Biome</span> <span>${p.ecoregion_biome}</span></div>` : ''}
+                        ${p.eu_biogeo_region ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">EU Biogeo.</span> <span>${p.eu_biogeo_region}</span></div>` : ''}
+                        ${p.seismic_pga_g != null ? `<div><span style="color:var(--text-muted);">Seismic PGA</span> <span>${p.seismic_pga_g}g</span></div>` : ''}
+                        ${p.ghi_kwh_m2_yr != null ? `<div><span style="color:var(--text-muted);">Solar GHI</span> <span>${p.ghi_kwh_m2_yr} kWh/m²</span></div>` : ''}
+                        ${p.flood_hazard ? `<div><span style="color:var(--text-muted);">Flood</span> <span>${p.flood_hazard}</span></div>` : ''}
+                        ${p.wildfire_hazard ? `<div><span style="color:var(--text-muted);">Wildfire</span> <span>${p.wildfire_hazard}</span></div>` : ''}
+                    </div>` : `
+                    <div style="font-size:10px;color:var(--text-muted);font-style:italic;margin-top:4px;">Köppen · Eco-region · Seismic · Solar — Night 3+</div>`}
                 </div>
             </div>
+            ${civicLine ? `
+            <div class="data-block" style="padding-top:6px;">
+                <div class="catchment-block">
+                    <div class="data-label" style="margin:0 0 4px;">Civic Context</div>
+                    <div style="font-size:12px;color:var(--text-main);margin-top:4px;line-height:1.5;">${civicLine}</div>
+                </div>
+            </div>` : ''}
         `;
         loadCatchmentStats(p.cluster_id || p.id);
     }
