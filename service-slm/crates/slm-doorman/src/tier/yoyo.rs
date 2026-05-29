@@ -314,7 +314,7 @@ impl YoYoTierClient {
             max_tokens: req.max_tokens,
             temperature: req.temperature,
             extra_body,
-            tools: req.tools.clone(),
+            tools: req.tools.as_ref().map(super::anthropic_tools_to_openai),
         };
         let url = format!(
             "{}/v1/chat/completions",
