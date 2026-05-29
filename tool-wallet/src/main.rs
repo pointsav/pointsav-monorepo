@@ -13,7 +13,10 @@ use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
-use std::{fs, path::{Path, PathBuf}};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 // USDC contract on Polygon PoS (native USDC, not bridged)
 const USDC_CONTRACT: &str = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359";
@@ -23,8 +26,8 @@ const TRANSFER_TOPIC: &str = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a116
 // Known license prices in 6-decimal USDC units → product_id
 // $1.00 USDC = 1_000_000 units; $19.00 USDC = 19_000_000 units
 const PRICE_MAP: &[(u64, &str)] = &[
-    (1_000_000,  "os-privategit"),       // Apache 2.0 — $1.00 USDC
-    (19_000_000, "os-privategit-fsl"),   // FSL — $19.00 USDC
+    (1_000_000, "os-privategit"),      // Apache 2.0 — $1.00 USDC
+    (19_000_000, "os-privategit-fsl"), // FSL — $19.00 USDC
 ];
 
 // ── CLI ───────────────────────────────────────────────────────────────────────
@@ -94,7 +97,7 @@ struct AddressArgs {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct LicenseReceipt {
     product_id: String,
-    license_tier: String,   // "apache" | "fsl"
+    license_tier: String, // "apache" | "fsl"
     version: String,
     customer_ref: String,
     price_usdc: u64,
