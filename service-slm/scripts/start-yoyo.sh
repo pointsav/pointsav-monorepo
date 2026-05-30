@@ -25,9 +25,17 @@
 #   2 — vLLM ready-poll timeout (VM up, but model not loaded in time)
 #   3 — zone stockout cascade exhausted across all retries
 #
+# --runtime=Nh / --runtime=Nm: after vLLM is ready, schedule an auto-stop after
+#   N hours or N minutes. Requires --wait-ready to have any effect (the timer
+#   starts only after the ready-poll succeeds). The stop runs in a background
+#   subshell so the script exits immediately; the stop-timer PID is logged.
+#   Doorman's idle monitor (30 min) may stop the VM sooner if it goes idle.
+#   Example: ./scripts/start-yoyo.sh --wait-ready=120 --runtime=1h
+#
 # Usage:
 #   ./scripts/start-yoyo.sh
 #   ./scripts/start-yoyo.sh --wait-ready=300 --auto-snapshot
+#   ./scripts/start-yoyo.sh --wait-ready=120 --runtime=1h
 #   ./scripts/start-yoyo.sh --retry-cycles=3 --retry-wait-seconds=300
 #   SLM_YOYO_GCP_INSTANCE=yoyo-tier-b-2 ./scripts/start-yoyo.sh
 set -uo pipefail
@@ -54,6 +62,7 @@ WAIT_READY=0       # 0 = no wait, >0 = poll seconds before exiting
 AUTO_SNAPSHOT=false
 RETRY_CYCLES=1
 RETRY_WAIT=300
+RUNTIME_SECS=0     # 0 = no auto-stop; >0 = stop VM this many seconds after ready
 WEIGHTS_GCS_BUCKET="${SLM_YOYO_WEIGHTS_GCS_BUCKET:-woodfine-node-gcp-free-foundry-substrate}"
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -62,8 +71,16 @@ while [[ $# -gt 0 ]]; do
         --auto-snapshot)        AUTO_SNAPSHOT=true; shift ;;
         --retry-cycles=*)       RETRY_CYCLES="${1#*=}"; shift ;;
         --retry-wait-seconds=*) RETRY_WAIT="${1#*=}"; shift ;;
+        --runtime=*)
+            _rt="${1#*=}"
+            if   [[ "${_rt}" =~ ^([0-9]+)h$ ]]; then RUNTIME_SECS=$(( ${BASH_REMATCH[1]} * 3600 ))
+            elif [[ "${_rt}" =~ ^([0-9]+)m$ ]]; then RUNTIME_SECS=$(( ${BASH_REMATCH[1]} * 60 ))
+            elif [[ "${_rt}" =~ ^([0-9]+)s?$ ]]; then RUNTIME_SECS="${BASH_REMATCH[1]}"
+            else echo "Unknown --runtime format '${_rt}'. Use Nh, Nm, or Ns." >&2; exit 1
+            fi
+            shift ;;
         --help|-h)
-            sed -n '2,30p' "$0"
+            sed -n '2,37p' "$0"
             exit 0
             ;;
         *) echo "Unknown flag: $1" >&2; exit 1 ;;
@@ -459,6 +476,30 @@ if [[ "${WAIT_READY}" -gt 0 ]]; then
 else
     log "Allow ~2 minutes for vLLM to finish loading the model."
     log "Doorman health probe will detect readiness within 30 seconds."
+fi
+
+# ── Optional auto-stop timer ─────────────────────────────────────────────────
+# Spawned only when --runtime=Nh/Nm is set AND the VM reached ready state.
+# Runs in a background subshell so this script exits immediately.
+# Doorman's 30-minute idle monitor may stop the VM sooner if it goes idle.
+if [[ "${RUNTIME_SECS}" -gt 0 ]]; then
+    if [[ "${WAIT_READY}" -le 0 ]]; then
+        log "WARN: --runtime=${RUNTIME_SECS}s has no effect without --wait-ready (timer starts from ready confirmation, not VM start)."
+    else
+        _zone="${STARTED_ZONE}"
+        (
+            sleep "${RUNTIME_SECS}"
+            _ts="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo "[start-yoyo ${_ts}] runtime-stop: stopping ${INSTANCE} in ${PROJECT}/${_zone} after ${RUNTIME_SECS}s"
+            gcloud compute instances stop "${INSTANCE}" \
+                --project="${PROJECT}" --zone="${_zone}" --quiet \
+                && echo "[start-yoyo $(date -u +'%Y-%m-%dT%H:%M:%SZ')] runtime-stop: VM stopped." \
+                || echo "[start-yoyo $(date -u +'%Y-%m-%dT%H:%M:%SZ')] runtime-stop: WARNING: gcloud stop returned non-zero"
+        ) &
+        STOP_TIMER_PID=$!
+        log "runtime-stop: auto-stop scheduled in ${RUNTIME_SECS}s (background PID=${STOP_TIMER_PID})."
+        log "  To cancel: kill ${STOP_TIMER_PID}"
+    fi
 fi
 
 log "Session done. Exit 0."
