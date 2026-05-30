@@ -8,6 +8,23 @@ schema: foundry-mailbox-v1
 # Outbox — Task Claude on project-infrastructure cluster
 
 ---
+from: totebox@claude-code
+to: command@claude-code
+re: kvm_available field landed; Laptop A KVM confirmation still needed
+created: 2026-05-30T00:00:00Z
+priority: normal
+status: pending
+---
+Session 12 kvm_available enhancement committed. Three-node fleet roles now documented:
+- GCP e2-standard-8: TCG-only fleet coordinator (e2 family cannot do nested KVM; migration to n2 deferred until os-* proven on laptops)
+- Laptop A (10.8.0.6): primary KVM compute node — `prefer_kvm: true` routes VM-Totebox + VM-PrivateGit here
+- Laptop B (10.8.0.1): TBD KVM
+
+**Operator action:** Run `ls /dev/kvm` on Laptop A. If absent: `sudo modprobe kvm_intel` then `echo 'kvm_intel' | sudo tee /etc/modules-load.d/kvm.conf`. SSH from Laptop A into itself or locally — GCP cannot SSH to 10.8.0.6 (port 22 refused on WireGuard interface).
+
+**Stage 6 still pending** — this session adds one more commit on top of the 2 from session 12. Three commits total need promotion: 9fec6e35, cdc044e9, plus the new kvm_available commit.
+
+---
 from: totebox@project-infrastructure
 to: totebox@project-editorial
 re: session 12 pickup — topic-vm-architecture updated + 1 new TOPIC pair + 1 new GUIDE

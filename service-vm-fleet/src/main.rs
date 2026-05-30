@@ -91,7 +91,7 @@ async fn create_vm_handler(
         }
         pref.clone()
     } else {
-        placement::select_node(&reg, req.ram_mb).ok_or_else(|| {
+        placement::select_node(&reg, req.ram_mb, req.prefer_kvm).ok_or_else(|| {
             (
                 StatusCode::SERVICE_UNAVAILABLE,
                 "insufficient RAM on all registered nodes".to_string(),
