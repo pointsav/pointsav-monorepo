@@ -195,10 +195,16 @@ async fn main() -> anyhow::Result<()> {
         // Sprint 3C: hold queue when all Tier B nodes have been circuit-open
         // for longer than this threshold. Briefs stay in queue/ until circuit
         // closes. Env var: SLM_HOLD_THRESHOLD_SECS (default 3600 = 1 h).
+        // Bypassed when SLM_TIER_A_FIRST=true — Tier A is the primary so there
+        // is no need to wait for Tier B to recover before dispatching briefs.
         let hold_threshold_secs: u64 = std::env::var("SLM_HOLD_THRESHOLD_SECS")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(3600);
+        let tier_a_first: bool = std::env::var("SLM_TIER_A_FIRST")
+            .ok()
+            .map(|v| v.eq_ignore_ascii_case("true") || v == "1")
+            .unwrap_or(false);
 
         // Clone only what the drain worker needs.
         let drain_cfg = queue_cfg.clone();
@@ -218,8 +224,12 @@ async fn main() -> anyhow::Result<()> {
                 // Sprint 3C: when all configured Tier B nodes have been
                 // circuit-open longer than the hold threshold, skip this drain
                 // cycle. Briefs accumulate in queue/ until Tier B recovers.
+                // Exception: when SLM_TIER_A_FIRST=true the hold is bypassed;
+                // Tier A is the confident primary so Tier B unavailability
+                // should not prevent shadow brief dispatch.
                 let tier_b = drain_doorman_arc.doorman.tier_b_status();
-                if !tier_b.is_empty()
+                if !tier_a_first
+                    && !tier_b.is_empty()
                     && tier_b.values().all(|info| {
                         info.circuit == "open"
                             && info
