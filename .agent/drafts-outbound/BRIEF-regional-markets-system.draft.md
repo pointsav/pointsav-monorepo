@@ -14,16 +14,30 @@ date: 2026-05-30
 ## Executive Summary
 
 The Regional Markets Intelligence System is a continental-scale geographic
-analysis framework that identifies sub-metropolitan retail markets defined by
-the convergence of large-format retail anchors, civic infrastructure, and
-demographic catchment. The current dataset spans 6,493 co-location clusters
-across eighteen countries in North America and Europe, classified into three
-compositional tiers (T1, T2, T3) and aggregated into 4,436 named Regional
-Markets. The system combines retail point-of-interest records, population
-rasters, modelled consumer spend, mobility-derived catchments, and four
-climate-and-ecology data layers into a single ranked index. This document is
-the canonical reference for downstream wiki articles, methodology guides, and
-the Top-400 Regional Markets list surface.
+analysis framework that identifies suburban retail markets — named suburbs and
+satellite municipalities lying within commuting distance of major metropolitan
+centres — defined by the convergence of large-format retail anchors, civic
+infrastructure, and demographic catchment.
+
+The research addresses a gap in institutional commercial real estate analysis.
+Major research organisations (Oxford Economics, CBRE, Colliers International,
+and others) produce extensive coverage of primary metro markets: London, Paris,
+New York, Chicago, Dallas, Toronto, and their immediate urban cores. The
+suburban ring — the belt of named municipalities 15 to 80 kilometres from a
+major metro centre — is systematically underanalysed by institutional research.
+This is where large-format retail, hospital systems, and university campuses
+co-locate in patterns that function as leading indicators of demographic and
+economic activity at the sub-metropolitan scale. The Regional Markets dataset
+is the analytical surface for that suburban ring.
+
+The current dataset spans 6,493 co-location clusters across eighteen countries
+in North America and Europe, classified into three compositional tiers (T1,
+T2, T3) and aggregated into 4,436 named Regional Markets. The system combines
+retail point-of-interest records, population rasters, modelled consumer spend,
+mobility-derived catchments, and four climate-and-ecology data layers into a
+single ranked index. This document is the canonical reference for downstream
+wiki articles, methodology guides, and the Top-400 Regional Markets list
+surface.
 
 ---
 
@@ -105,11 +119,31 @@ fields but do not alter tier classification.
 
 ## 3. Regional Markets
 
-A Regional Market is a named settlement — city, municipality, county, or
-equivalent administrative unit — that contains one or more co-location
-clusters. The Regional Market is the editorial unit of the system: each
-Regional Market corresponds to a single article surface, regardless of how
-many clusters it contains.
+A Regional Market is a named municipality or equivalent administrative unit
+that contains one or more co-location clusters and lies within commuting
+distance of a major metropolitan centre. Three settlement types are
+distinguished:
+
+| Type | Distance from major metro | Ranking |
+|---|---|---|
+| **Metro-core** | < 15 km | Excluded from Top 400 (covered by institutional metro-market research) |
+| **Suburban-regional** | 15–80 km | Ranked in the Top 400 (the research gap) |
+| **Standalone-secondary** | > 80 km | Excluded from Top 400 (separate analysis category) |
+
+The suburban-regional type is the Top 400 pool. Markets closer than 15 km
+from a major metro centroid are treated as extensions of the metro core —
+the kind of urban co-location pattern already covered by CBRE, Oxford
+Economics, and similar institutional analyses. Markets further than 80 km
+from any major metro centroid are standalone secondary cities that function
+independently rather than as satellites; they are tracked but ranked
+separately. A geographic coherence constraint excludes name-collision
+aggregations: any settlement whose constituent clusters span more than 200 km
+is excluded as an administrative artefact rather than a functioning market.
+
+**Total count: 4,436 Regional Markets** (all three types combined). The
+**suburban-regional** pool eligible for the Top 400 contains approximately
+1,000 qualifying North American markets and 1,200 qualifying European markets.
+Of these, the top 400 per continent are ranked and published.
 
 **Total count: 4,436 Regional Markets.** Of these, **2,327 are in North
 America** and **2,109 are in Europe**. The breakdown reflects both the
@@ -137,41 +171,48 @@ and the climate-and-ecology layers described in §6.
 
 ## 4. Top 400 Composite Ranking
 
-The Top 400 Regional Markets list is a composite ranking that combines
-tier composition, civic infrastructure, distance from primary metropolitan
-nodes, and confidence in the underlying chain data. The list is produced
-separately for North America and Europe, yielding two ranked surfaces of
-400 markets each.
+The Top 400 Regional Markets list is a composite ranking of suburban-regional
+settlements. The list is produced separately for North America and Europe,
+yielding two ranked surfaces of 400 markets each. The suburban-regional
+classification (15–80 km, described in §3) is a pre-filter, not a score
+component: every market that reaches the scoring stage is already in the
+correct proximity band.
 
 **Composite score formula.**
 
 ```
-score = tier_score × civic_multiplier × metro_distance_multiplier × confidence_factor
+score = tier_score × civic_multiplier × confidence_factor
 
 where:
   tier_score = (T1 × 4) + (T2 × 2) + (T3 × 1)
   civic_multiplier = 1.5  if any medical or higher-education anchor present, else 1.0
-  metro_distance_multiplier = clamp(dist_km / 50, 0.5, 2.0)
   confidence_factor = 1.0  for high-confidence chain coverage
                       0.7  for low-confidence chain coverage
 ```
 
 **Rationale.** The composite score identifies markets that combine
-supply-side anchor strength, civic infrastructure, and suburban character.
-The tier weighting (4 / 2 / 1) reflects the compositional hierarchy: a
-single T1 cluster contributes more than two T2 clusters because the
-presence of three independent anchor categories is a stronger signal than
-the presence of two. The civic multiplier rewards the presence of medical
-or academic anchors that indicate a functioning sub-metropolitan service
-centre rather than a pure retail strip. The metro-distance multiplier is
-configured to reward markets that sit at functional distance from the
-nearest primary metropolitan node — close enough to share regional supply
-chains, far enough to serve a distinct catchment.
+supply-side anchor strength with civic infrastructure. The tier weighting
+(4 / 2 / 1) reflects the compositional hierarchy: a single T1 cluster
+contributes more than two T2 clusters because the simultaneous presence of
+three independent anchor categories — hypermarket, hardware, and warehouse
+club — is a stronger commercial-density signal than the presence of any
+two. The civic multiplier rewards the presence of medical or academic
+anchors, which indicate a functioning sub-metropolitan service centre rather
+than a pure retail strip.
 
-The clamp at 0.5 prevents the formula from penalising markets that sit
-within the metropolitan urbanised area itself (Berlin, Houston) where the
-co-location signal remains meaningful even in zero-distance terms. The
-clamp at 2.0 prevents extreme distances from dominating the score.
+No metro-distance multiplier appears in the formula. Under the previous
+methodology, a distance bonus rewarded markets far from metro centres —
+inadvertently causing standalone secondary cities (Nürnberg at 150 km from
+Munich; Wichita at 250 km from Oklahoma City) to outrank genuine suburbs of
+major metros (Plano at 28 km from Dallas; Krefeld at 19 km from Düsseldorf).
+The corrected design separates classification from scoring: the 15–80 km
+filter puts suburban markets in the ranked pool; the formula then ranks them
+by anchor depth and civic quality, without re-introducing a distance bias.
+
+**Current top results.** North America: rank 1 Plano, TX (suburb of Dallas,
+score 25.5); rank 2 Mesa, AZ (suburb of Phoenix, score 22.5); rank 3 Frisco,
+TX (suburb of Dallas, score 21.0). Europe: rank 1 Chemnitz (suburb of Dresden,
+score 18.0); rank 5 Krefeld (suburb of Düsseldorf, score 12.0).
 
 The Top 400 list is the entry surface for editorial coverage: each
 Regional Market in the list is a candidate for a dedicated wiki article.
