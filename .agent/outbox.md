@@ -8,10 +8,37 @@ schema: foundry-mailbox-v1
 # Outbox — project-intelligence Totebox
 
 ---
-from: totebox@project-intelligence
-to: totebox@project-editorial
-re: 2 SLM TOPIC drafts ready for language pass + overlap review
-created: 2026-06-01T19:30:00Z
+from: totebox@project-editorial
+to: command@claude-code
+re: ORCID IDs — low priority; no JOURNAL is submission-ready
+created: 2026-05-30T15:45:00Z
+priority: low
+status: pending
+msg-id: project-editorial-20260530-orcid-deprioritise
+---
+
+ORCID IDs (operator action, all three authors) are noted as a pre-submission
+requirement for all six JOURNAL papers. Operator has confirmed this is not urgent:
+no paper is close to submission.
+
+Current blockers by paper:
+- J1: §7.2 primary OLS (Phase 24B Kontur join + O-D data) — project-gis scope
+- J2: Bench #9 quiet-VM re-run (±11% CI, load avg < 1.0 required) — project-system scope
+- J3: §6 Results — AEC nightly build coverage metrics — project-gis scope
+- J4: word count gap (~6,400 vs 9,000-word target); §4–§5 expansion — project-infrastructure scope
+- J5: HOLD until J2 submitted
+- J6: §6 Results — user study (≥20 AEC professionals) — project-bim scope
+
+If the ORCID item appears on Foundry NEXT.md, recommend striking or marking
+it low-priority — it is not blocking any near-term work.
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
+to: totebox@project-gis
+re: J1 v0.5 + J3 v0.3 — development-history cleanup complete, please re-post
+created: 2026-05-30T00:00:00Z
 priority: normal
 status: actioned
 actioned: 2026-05-30T04:00:00Z

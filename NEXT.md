@@ -10,14 +10,43 @@ with project-console content since 2026-05-28).
 
 ## VM-MediaKit — Phase 1 COMPLETE (6/6) [2026-05-29]
 
-- [x] Ubuntu 24.04 QEMU provisioned (6 GiB RAM, 2 CPUs, TCG; port-forward NAT on GCP host)
-- [x] 6/6 services migrated: proofreader (9092) · knowledge-documentation (9090) ·
-  knowledge-corporate (9095) · knowledge-projects (9093) · marketing-pointsav (9101) ·
-  marketing/woodfine (9102). All originals still running on host. No DNS changes.
-- [x] `guide-vm-mediakit-provision` + `guide-vm-mediakit-service-migration` staged (commit 4a53d3af)
-- [x] `topic-os-mediakit` corrected for Ubuntu 24.04
-- [x] systemd units reorganised → `infrastructure/systemd/mediakit/`
-- [ ] Binary-ledger sha256 entries — pending Stage 6 + nightly build rebuild
+- [ ] **J1 §7.2 primary spec** — `log(catchment_entropy) ~ tier + log(pop_150km) + C(country)` — blocked on Phase 24B (Kontur population join to clusters-ols.csv + O-D data join). project-gis owns. Outbox sent `project-editorial-20260528-j1-j3-return`. [2026-05-28 totebox@project-editorial]
+- [ ] **J1 permutation test** — `sim-tier-permutation.py` needs writing (10,000 shuffles, one-tailed p-value, cluster coords at project-gis `work/clusters-ols.csv`). project-gis owns. [2026-05-28 totebox@project-editorial]
+- [ ] **J2 Bench #9 re-run** — `verify_inclusion_proof` 1024-leaf; ±11% CI → <5% CI; quiet GCP n2 host. project-system owns. Outbox sent `project-editorial-20260528-j2-return`. [2026-05-28 totebox@project-editorial]
+- [ ] **J2 citation placeholders** — 9 `[external: ...]` stubs need stable IDs in `citations.yaml`. project-system owns. [2026-05-28 totebox@project-editorial]
+- [ ] **J3 §6 Results** — AEC nightly build coverage metrics (4 scripts × N countries). project-gis owns. Outbox sent `project-editorial-20260528-j3-coverage-metrics` + `project-editorial-20260528-j1-j3-return`. [2026-05-28 totebox@project-editorial]
+- [x] **J4 §4–§5 benchmarks** — COMPLETE 2026-05-29: §4 Implementation (WireGuard config, BLAKE2s audit daemon) + §5 Evaluation (5 benchmarks, Table 1 vs Mackey et al.) fully written; `forbidden_terms_cleared: true`; commit `77063dc3`. [2026-05-29 totebox@project-editorial]
+- [x] **J4 two unresolved citations** — RESOLVED 2026-05-29: Birge-Lee et al. 2024 replaces Cameron placeholder; Mackey et al. 2020 (DOI:10.1145/3374664.3379532) replaces ZTA [CITATION NEEDED]. [2026-05-29 totebox@project-editorial]
+- [ ] **J4 word count gap** — current ~6,400 words vs 9,000-word target. ~2,600 words needed in §4–§5 expansion. project-infrastructure scope. [2026-05-29 totebox@project-editorial]
+- [ ] **J4 final language pass** — §4+§5 added 2026-05-29 need a final forbidden-terms sweep before submission. [2026-05-29 totebox@project-editorial]
+- [ ] **J5 full writing pass** — HOLD until J2 submitted. project-orchestration owns. Outbox sent `project-editorial-20260528-j5-return`. [2026-05-28 totebox@project-editorial]
+- [ ] **J6 §6 Results** — user study execution (§5 protocol in JOURNAL file). project-bim owns. Outbox sent `project-editorial-20260528-j6-return`. [2026-05-28 totebox@project-editorial]
+
+## JOURNAL programme — operator actions (all papers)
+
+- [ ] **ORCID IDs** for Jennifer M. Woodfine, Peter M. Woodfine, Mathew Woodfine — required before any submission; not urgent — no paper is submission-ready; all blocked on data. [2026-05-30 totebox@project-editorial]
+- [ ] **J1 bilingual ES sibling** — Spanish translation of J1 required before Economic Geography submission (per JoEG policy). [2026-05-28 totebox@project-editorial]
+
+## Inbox — pending pickup
+
+- [x] `command-20260529-intelligence-guides-relay` — ACTIONED 2026-05-29: guide-post-commit-training-hook + guide-goose-local-doorman staged (`72761f65`); routed to Command via outbox `project-editorial-20260529-intelligence-guides-routing`. [2026-05-29 totebox@project-editorial]
+- [x] `command-20260529-infrastructure-editorial-relay` — ACTIONED 2026-05-29: topic-os-mediakit bilingual committed to wiki (`81ca9aa`); guide-vm-mediakit-provision + guide-vm-mediakit-service-migration staged (`0d9da8ed`); J4 v0.4 canonical updated (`77063dc3`); vm-mediakit GUIDEs routed to Command via outbox `project-editorial-20260529-infrastructure-guides-routing`. [2026-05-29 totebox@project-editorial]
+- [x] `command-20260529-system-phase1c-v2-relay` — ACTIONED 2026-05-29: moonshot-toolkit-build-orchestrator + sel4-aarch64-qemu-substrate-target bilingual committed to wiki (`95f6beb`); guide-moonshot-toolkit-phase1c-build-setup staged (`fbde41fa`); GUIDE routed to Command via outbox `project-editorial-20260529-system-guide-routing`. [2026-05-29 totebox@project-editorial]
+- [x] `command-20260526-dev-phase3-drafts-relay` — ACTIONED 2026-05-28: TOPIC committed to `media-knowledge-documentation/applications/app-privategit-workbench.md` + ES stub; GUIDE staged + routed to Command via outbox `project-editorial-20260528-guide-workbench-routing`.
+
+## Backlog drift — registry items needing source-project action
+
+- [ ] **B13 Regional Name Resolution TOPIC** — file missing from drafts-outbound; project-gis must write and dispatch. [2026-05-28 totebox@project-editorial]
+- [ ] **B14 Co-location Tier Nomenclature TOPIC** — file missing from drafts-outbound; project-gis must write and dispatch. [2026-05-28 totebox@project-editorial]
+- [ ] **B15 GIS as BIM Substrate TOPIC** — file missing from drafts-outbound; project-gis must write and dispatch. [2026-05-28 totebox@project-editorial]
+- [ ] **B16 UK/EU Food Retail Coverage TOPIC** — file missing from drafts-outbound; project-gis must write and dispatch. [2026-05-28 totebox@project-editorial]
+
+## Convention layer — pending (from earlier session)
+
+- [ ] `conventions/artifact-classification.yaml` — add JOURNAL entry (schema, gateway, destinations, bilingual_pair: false). [2026-05-27 totebox@project-editorial]
+- [ ] `conventions/journal-artifact-discipline.md` — new file; copy/adapt from `.agent/rules/journal-artifact-discipline.md`. Command Session scope. [2026-05-27 totebox@project-editorial]
+- [ ] `conventions/artifact-registry.md` — add JOURNAL section row. Command Session scope. [2026-05-27 totebox@project-editorial]
+- [ ] Foundry `NEXT.md` — add JOURNAL programme tracking checkbox. Command Session scope. [2026-05-27 totebox@project-editorial]
 
 ---
 
