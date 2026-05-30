@@ -2,9 +2,12 @@
 
 ## Hot items
 
-- [ ] Restart `local-workplace-http-prototype.service` (or `cargo run`)
-      and smoke-test Stage 1 Memo end-to-end from browser at
-      `http://10.8.0.1:9110`
+- [x] SSE real-time file events — `/api/files/events`; inotify watcher; index +
+      memo auto-refresh on change (fab7a2f6)
+- [x] nginx 9200 proxies prototype root — `http://10.8.0.9:9200/` is now the
+      daily-use URL; prototype binds on 9110 internally
+- [ ] Add systemd unit `local-workplace-http-prototype.service` so the binary
+      survives session exit (currently launched manually)
 
 ## Stage 2 — Proforma
 
