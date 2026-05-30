@@ -28,6 +28,10 @@ Last updated: 2026-05-30
 
 ## Inbox — pending pickup
 
+- [x] `command-20260530-infrastructure-sessions2-7-topic-relay` (INF-A) — ACTIONED 2026-05-30: 11 bilingual TOPIC pairs committed to media-knowledge-documentation `277847a`; sovereign-mesh IP fix applied. [2026-05-30 totebox@project-editorial]
+- [x] `command-20260530-infrastructure-sessions6-7-editorial` (INF-B) — ACTIONED 2026-05-30: same TOPIC pairs (overlapping coverage with INF-A); 4 GUIDEs staged `955d6f34` + routed to Command; PROSE-RESEARCH review returned to project-infrastructure outbox. [2026-05-30 totebox@project-editorial]
+- [x] `command-20260530-infrastructure-session12-editorial` (INF-C) — ACTIONED 2026-05-30 (folded into INF-B action): vm-architecture + os-infrastructure-ppn-node bilingual committed `277847a`; guide-vm-infrastructure-resource-pool staged `955d6f34`. [2026-05-30 totebox@project-editorial]
+- [x] GIS-2/GIS-3/GIS-4 (project-gis outbox) — ACTIONED 2026-05-30: 12 bilingual TOPICs committed to media-knowledge-projects `294488f` (prior session); GUIDE A14 test-market refs updated + staged; A13 DESIGN routed to project-design; ack sent. [2026-05-30 totebox@project-editorial]
 - [x] `command-20260529-intelligence-guides-relay` — ACTIONED 2026-05-29: guide-post-commit-training-hook + guide-goose-local-doorman staged (`72761f65`); routed to Command via outbox `project-editorial-20260529-intelligence-guides-routing`. [2026-05-29 totebox@project-editorial]
 - [x] `command-20260529-infrastructure-editorial-relay` — ACTIONED 2026-05-29: topic-os-mediakit bilingual committed to wiki (`81ca9aa`); guide-vm-mediakit-provision + guide-vm-mediakit-service-migration staged (`0d9da8ed`); J4 v0.4 canonical updated (`77063dc3`); vm-mediakit GUIDEs routed to Command via outbox `project-editorial-20260529-infrastructure-guides-routing`. [2026-05-29 totebox@project-editorial]
 - [x] `command-20260529-system-phase1c-v2-relay` — ACTIONED 2026-05-29: moonshot-toolkit-build-orchestrator + sel4-aarch64-qemu-substrate-target bilingual committed to wiki (`95f6beb`); guide-moonshot-toolkit-phase1c-build-setup staged (`fbde41fa`); GUIDE routed to Command via outbox `project-editorial-20260529-system-guide-routing`. [2026-05-29 totebox@project-editorial]
@@ -49,7 +53,17 @@ Last updated: 2026-05-30
 
 ---
 
-## Completed this session (2026-05-30)
+## Completed this session (2026-05-30 — infrastructure/GIS pickup)
+
+- [x] GIS Regional Markets batch (12 bilingual TOPICs) committed to media-knowledge-projects — `294488f` (carried from prior session)
+- [x] GUIDE A14 (regional-market-topic-production) test-market refs updated: Wichita→Plano TX, Nürnberg→Krefeld DE — staged to drafts-outbound, routed Command
+- [x] A13 DESIGN routed to project-design via outbox
+- [x] INF-A + INF-B + INF-C: 11 bilingual TOPIC pairs (22 files) committed — `277847a` (Jennifer)
+- [x] 4 infrastructure GUIDEs staged to drafts-outbound — `955d6f34` (Peter); routed to Command via outbox
+- [x] PROSE-RESEARCH review of PPN architecture phd thesis: 6-point findings returned to project-infrastructure outbox
+- [x] Artifact registry A23–A25 added + NEXT.md inbox items actioned
+
+## Completed this session (2026-05-30 — JOURNAL readability overhaul)
 
 - [x] Pass 1 (history-language cleanup) COMPLETE — J1 (`c8a9c3b2`, Peter), J2 (`9218940f`, Jennifer), J3 (`69b6bfd9`, Jennifer), J4 (clean), J6 (`d7b0979f`, Jennifer); internal phase numbers, WIP framing, and development-history narration stripped from all five papers
 - [x] Pass 2 (readability overhaul) COMPLETE — J3 (`ab276f23`, ~28 expansions, v0.5), J2 (`cf302a90`, 22 expansions, v0.2), J1 (`62fa554b`, 6 expansions, v0.7), J6 (`0861de14`, 5 expansions, v0.4), J4 (`37733685`, 4 expansions, v0.5); all non-universal abbreviations expanded on first body-text use per R1; topic sentences added to all section openings per R4
