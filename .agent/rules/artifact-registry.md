@@ -1,7 +1,7 @@
 ---
 schema: foundry-artifact-registry-v1
 project: project-gis
-last_updated: 2026-05-28
+last_updated: 2026-05-30
 ---
 
 # project-editorial Artifact Registry
@@ -81,7 +81,55 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 
 ## A — Active / In-Progress
 
-### A6 — PROSE-RESEARCH: Geometric Site Selection (PhD paper scaffolding)
+### A7 — BRIEF: Regional Markets System
+- **File:** `BRIEF-regional-markets-system.draft.md`
+- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-regional-markets-dispatch)
+- **Destination:** project-editorial → media-knowledge-documentation
+- **Content:** System BRIEF synthesising co-location methodology, tier system, Regional Markets definition, composite ranking formula, civic layer, AEC data coverage, POI schema, catchment model, Top 400 key findings. 3,786 words. Phase 23+Change B dataset (6,493 clusters; T1=1,746/T2=2,726/T3=2,021).
+
+### A8 — TOPIC: Top 400 Regional Markets — North America
+- **File:** `TOPIC-top-400-regional-markets-na.draft.md`
+- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-regional-markets-dispatch)
+- **Destination:** project-editorial → media-knowledge-documentation
+- **Content:** Full 400-entry ranked list (US 340 / CA 30 / MX 30); Top-25 9-column sortable table + compact 26–400 table; country breakdowns; methodology in plain prose; civic anchor names; data sources. Province-level aggregations flagged with †. 8,203 words.
+
+### A9 — TOPIC: Top 400 Regional Markets — Europe
+- **File:** `TOPIC-top-400-regional-markets-eu.draft.md`
+- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-regional-markets-dispatch)
+- **Destination:** project-editorial → media-knowledge-documentation
+- **Content:** Full 400-entry ranked list (DE 105 / FR 95 / GB 70 / ES 40 / PL 31 / IT 26 / AT 12 / others); Top-25 table + compact 26–400 table; country breakdowns; German polycentric dominance noted; score plateau at 12.00 documented. 14 EU countries. 38.5 KB.
+
+### A10 — TOPIC: Wichita, Kansas Regional Market
+- **File:** `TOPIC-rm-wichita-ks.draft.md`
+- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-regional-markets-dispatch)
+- **Destination:** project-editorial → media-knowledge-documentation
+- **Content:** Rank 16 NA. 4×T1, civic=true. Wikipedia live extract (population 397,532). AEC: ASHRAE=4A, Köppen=Dfa, eco=Central-Southern US mixed grasslands, biome=Temperate Grasslands Savannas & Shrublands.
+
+### A11 — TOPIC: Colorado Springs, Colorado Regional Market
+- **File:** `TOPIC-rm-colorado-springs-co.draft.md`
+- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-regional-markets-dispatch)
+- **Destination:** project-editorial → media-knowledge-documentation
+- **Content:** Rank 14 NA. 7 clusters (3×T1 + 4×T2), civic=true. Wikipedia: population 478,961, 2nd most populous in CO, 95km south of Denver. AEC: ASHRAE=5B, Köppen=BSk/Dfb split, eco=Western shortgrass prairie, biome=Temperate Grasslands.
+
+### A12 — TOPIC: Nürnberg, Germany Regional Market
+- **File:** `TOPIC-rm-nurnberg-de.draft.md`
+- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-regional-markets-dispatch)
+- **Destination:** project-editorial → media-knowledge-documentation
+- **Content:** Rank 1 EU (score 51.0). 4×T1 + 1×T3, civic=true (FAU Erlangen-Nürnberg + Klinikum Nürnberg). Wikipedia: 546,397 inhabitants (2024), 2nd largest in Bavaria. AEC: EU Climate=IV (continental), Köppen=Dfb, eco=Western European broadleaf forests.
+
+### A13 — DESIGN-RESEARCH: Regional Market TOPIC Template
+- **File:** `DESIGN-regional-market-topic-template.draft.md`
+- **Status:** STAGED in drafts-outbound/ — dispatched to project-design 2026-05-30 (msg-id: project-gis-20260530-regional-markets-dispatch)
+- **Destination:** project-design → pointsav-design-system
+- **Content:** Visual layout spec for Regional Market TOPIC wiki article type. Two-column layout, infobox card, co-location table with tier colour-coding, AEC data grid, CSS score breakdown bar, Wikipedia attribution footer. HTML skeleton + named CSS classes. 5 open questions for project-design.
+
+### A14 — GUIDE: Regional Market TOPIC Production
+- **File:** `GUIDE-regional-market-topic-production.draft.md`
+- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-regional-markets-dispatch)
+- **Destination:** project-editorial → media-knowledge-documentation
+- **Content:** 11-section operational guide covering: prerequisites, running score-regional-markets.py, running export-aec-coverage.py, market selection criteria, Wikipedia API lookup procedure, TOPIC frontmatter checklist, AEC data join, TOPIC body structure, review/dispatch, artifact registry, batch production workflow.
+
+### A6 — PROSE-RESEARCH: Geometric Site Selection (JoEG preparation)
 - **File:** `PROSE-RESEARCH-geometric-site-selection.draft.md`
 - **Status:** DISPATCHED — v0.4 (2026-05-27) — at project-gis drafts-outbound, dispatched to project-editorial
 - **Destination:** project-editorial → content-wiki-documentation/research/

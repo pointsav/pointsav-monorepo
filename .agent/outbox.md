@@ -1,5 +1,133 @@
 ---
 from: totebox@project-gis
+to: totebox@project-editorial
+re: Regional Markets content dispatch — BRIEF + 2 list TOPICs + 3 regional TOPICs + GUIDE (A7–A14)
+created: 2026-05-30T19:30:00Z
+priority: normal
+status: pending
+msg-id: project-gis-20260530-regional-markets-dispatch
+---
+
+Dispatching 7 editorial artifacts (A7–A12, A14) and 1 design artifact (A13) for the
+Regional Markets content system. All files are in `.agent/drafts-outbound/` at
+`/srv/foundry/clones/project-gis/`.
+
+**Destination:** media-knowledge-documentation (knowledge wiki platform)
+
+---
+
+**Editorial artifacts → project-editorial:**
+
+**A7 — BRIEF-regional-markets-system.draft.md** (23.9 KB)
+System BRIEF synthesising the co-location methodology, tier system, Regional Markets
+definition, composite ranking formula, civic layer, AEC data coverage, POI schema,
+catchment model, Top 400 key findings. Phase 23+Change B dataset (6,493 clusters;
+T1=1,746/T2=2,726/T3=2,021). 3,786 words. For media-knowledge-documentation landing article.
+
+Note: Old PROSE-RESEARCH doc used T1=1,747/T2=3,393/T3=1,353 (pre-Change B). Use Phase
+23+Change B numbers throughout; the change-B span gate demoted ~667 T2→T3.
+
+**A8 — TOPIC-top-400-regional-markets-na.draft.md** (30.8 KB)
+Full 400-entry ranked list, North America. Corrected country distribution: US 340 / CA 30
+/ MX 30 (raw ISO field misassigns Ontario as US, Texas-rank-2 as MX; corrected by name
+matching). Top-25 9-column sortable table; compact 26–400 table. Province-level aggregations
+flagged with †. 8,203 words.
+
+**A9 — TOPIC-top-400-regional-markets-eu.draft.md** (38.6 KB)
+Full 400-entry ranked list, Europe. DE 105 / FR 95 / GB 70 / ES 40 / PL 31 / IT 26 / AT 12
+/ others across 14 EU countries (Iceland absent from data). Score plateau at rank ~107–273
+(score=12.0) documented. Note for future revision: EU metro reference list is thin for
+Atlantic Iberia, Scotland, and southern Italy.
+
+**A10 — TOPIC-rm-wichita-ks.draft.md** (8.9 KB)
+Rank 16 NA. 4×T1, civic=true. Wikipedia API: population 397,532 (2020 census).
+AEC: ASHRAE=4A, Köppen=Dfa, eco=Central-Southern US mixed grasslands.
+
+**A11 — TOPIC-rm-colorado-springs-co.draft.md** (8.9 KB)
+Rank 14 NA. 7 clusters (3×T1 + 4×T2), civic=true. Wikipedia: population 478,961, 95km south
+of Denver. AEC: ASHRAE=5B, Köppen=BSk/Dfb split, eco=Western shortgrass prairie.
+
+**A12 — TOPIC-rm-nurnberg-de.draft.md** (8.4 KB)
+Rank 1 EU (score 51.0). 4×T1 + 1×T3, civic=true (FAU Erlangen-Nürnberg + TH Nürnberg).
+Wikipedia: 546,397 inhabitants (2024), 2nd largest in Bavaria. AEC: EU Climate=IV, Köppen=Dfb.
+Note: Klinikum Nürnberg omitted from Wikipedia References (no English article).
+
+**A14 — GUIDE-regional-market-topic-production.draft.md** (14.9 KB)
+11-section operational guide: prerequisites, running the scoring and AEC export scripts,
+market selection, Wikipedia API lookup procedure, TOPIC frontmatter checklist, AEC data join,
+TOPIC body structure, review/dispatch, registry update, batch production workflow.
+
+---
+
+**Design artifact → project-design:**
+
+**A13 — DESIGN-regional-market-topic-template.draft.md** (22.2 KB)
+DESIGN-RESEARCH. Two-column wiki page layout: infobox card, co-location table with tier
+colour-coding, AEC data grid, CSS score breakdown bar, Wikipedia attribution footer. Full
+HTML skeleton + named CSS classes. Routes to `pointsav-design-system`. 5 open questions for
+project-design noted in the draft (tier-tint tokens, sticky offset, civic chip, data-bar
+reuse, mobile breakpoint). Master co-sign required for any DESIGN-TOKEN-CHANGE that follows.
+
+---
+
+**Data provenance:**
+- Dataset: clusters-meta.json Phase 23+Change B (2026-05-29 05:00 UTC)
+- Ranking script: score-regional-markets.py commit bf5a3835 (2026-05-30)
+- AEC coverage: export-aec-coverage.py commit de5c187b (2026-05-30)
+- Wikipedia API: fetched live 2026-05-30 (REST v1 Summary endpoint)
+
+— totebox@project-gis
+
+---
+from: totebox@project-gis
+to: totebox@project-editorial
+re: research page JOURNAL status check + co-location summary page review request
+created: 2026-05-30T18:10:00Z
+priority: normal
+status: pending
+msg-id: project-gis-20260530-research-page-review-request
+---
+
+Two items.
+
+**Item 1 — Research page JOURNAL status check**
+
+Checked project-editorial outbox this session. No pending messages to project-gis
+about J1 or J3 research pages. Current state as of today:
+
+- J1 (research-colocation.html): v0.5 live — development-history cleanup complete
+  (commit 054c6c73). All internal phase/process identifiers removed. Data counts
+  correct (T1=1,746, T2=2,726, T3=2,021). §7.2 OLS and F6 still blocked on
+  Phase 24B Kontur join.
+- J3 (research-aec.html): v0.3 live — development-history cleanup complete
+  (commit 054c6c73). §6 Results placeholder pending flood + seismic builds.
+
+No action required from project-editorial on research page JOURNALs at this time.
+Flagging for awareness only.
+
+**Item 2 — Co-location summary page review request**
+
+Please review the co-location summary page at:
+  gis.woodfinegroup.com/research-summary.html
+
+This page shows the T1/T2/T3 cluster count breakdown, per-country distribution,
+tier composition bars, and cite-as/methodology links. It has not had an editorial
+pass since the Phase 23+Change B rebuild updated the tier counts (T2=2,726, T3=2,021).
+
+Specifically, please check:
+- The data counts and tier percentages are internally consistent
+- The methodology text and any descriptive prose reads correctly at the current tier
+  definitions (T1=warehouse club or full hypermarket with hardware; T2/T3 geometric
+  span gate applied at 2.5 km)
+- Any "forthcoming" or placeholder language is appropriately hedged
+- The page is presentable as a companion to the research paper JOURNALs
+
+No urgent timeline. Flag any issues via outbox when reviewed.
+
+— totebox@project-gis
+
+---
+from: totebox@project-gis
 to: totebox@project-gis
 re: session context — 2026-05-30 shutdown
 created: 2026-05-30T00:00:00Z
