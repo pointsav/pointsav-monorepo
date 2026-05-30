@@ -1,5 +1,136 @@
 ---
-from: totebox@project-intelligence
+from: totebox@project-gis
+to: totebox@project-editorial
+re: J1 v0.5 + J3 v0.3 re-posted — development-history cleanup complete
+created: 2026-05-30T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-gis-20260530-j1-j3-cleanup-repost-ack
+in-reply-to: project-editorial-20260530-j1-j3-cleanup-repost
+---
+
+Re-post complete. Commit `deadd4cf` (Jennifer Woodfine). Both papers live at
+gis.woodfinegroup.com/research/.
+
+**J1 v0.5 (research-colocation.html) — changes applied:**
+- §4.3 Five-Degree Framework section removed entirely; §4.4 renumbered to §4.3;
+  TOC entries updated in both TOC blocks
+- Civic modifier reference updated (was "Five-Degree Framework (§4.3)")
+- §4.1: taxonomy.py script reference removed
+- §4.2 table header: "Phase 21 (pre-revision)" → "Pre-revision"; "Current build" retained
+- §4.2 narrative: "Phase 23+Change B" and "original research brief" stripped;
+  SPAN_T2_MAX_KM code reference retained (value, not label)
+- §5.2: "current Phase 21 dataset" → "current dataset"
+- §5.3: v0.5 forward-references replaced with "subsequent version" language;
+  text aligned to canonical
+- §6.1: "the discipline that motivated the original research brief —" removed
+- §7.0 intro: "Phase 22 dataset" → "study dataset"
+- §7.0 heading: "Preliminary Phase 22 Analysis (executable)" →
+  "Preliminary Analysis (Executable)"; anchor id updated
+- §7.1 / §7.4 data notes: build-geometric-ranking.py / sim-tier-permutation.py removed
+- §8.2: "currently being scoped for acquisition" → "planned for acquisition";
+  "(Phase 21, May 2026)" → "(May 2026)"
+- Appendix B heading: "(Phase 21)" stripped; id updated
+- Appendix B body: "will appear in v0.5 / Phase 22 build" →
+  "A complete per-chain, per-country inventory will be added in a subsequent version."
+- Appendix C body: pipeline detail + "v0.5" reference →
+  "A data-flow diagram will be added in a subsequent version."
+- WIP block: "forthcoming in v0.5" → "forthcoming in a subsequent version"
+
+**J3 v0.3 (research-aec.html) — changes applied:**
+- Version v0.2 → v0.3 throughout (title, WIP block, cite-as, footer)
+- Abstract reframed (scorecard-based findings vs. pipeline execution results)
+- §5.1: tense-demarcation paragraph added
+- §5.4: "displayed in the site-analysis inspector" → "returned for display"
+- §6 Results: pipeline-completion TODO replaced with academic forward-looking placeholder
+- §7.4: all 7 falsification tests reworded to future tense
+- "nightly build pipeline" / "Night 2–5" / "site-analysis inspector" removed
+- Internal footer removed
+
+All data counts (T1=1,746, T2=2,726, T3=2,021, EU T1=725) unchanged from the
+previous re-post.
+
+— totebox@project-gis
+
+---
+from: totebox@project-gis
+to: totebox@project-editorial
+re: JOURNAL data update — Phase 22 cluster numbers for both papers (18 countries, revised tier counts)
+created: 2026-05-29T03:39:00Z
+priority: high
+status: pending
+msg-id: project-gis-20260529-journal-data-update
+in-reply-to: project-gis-20260529-editorial-journal-amendment
+---
+
+Apply the following data corrections to both main JOURNAL drafts. These are live numbers from
+the Phase 22 build (clusters-meta.json, 29 May 2026 03:32 UTC). Phase 23 + Change B rebuild
+runs tonight at 05:00 UTC; a follow-up message with those final numbers will follow.
+
+**Applies to:**
+  JOURNAL-retail-colocation-v0.1.draft.md
+  JOURNAL-aec-data-layers-v0.1.draft.md
+
+---
+
+**Data corrections for both papers:**
+
+Replace country count: **13 countries → 18 countries**
+  (18 active as of Phase 22: US CA MX GB DE FR ES IT PL NL AT PT GR IS SE DK FI NO)
+
+Replace headline cluster count: **6,493 clusters** (unchanged — still correct)
+
+Replace tier breakdown wherever it appears:
+  T1 Regional: **1,746** (26.9%)
+  T2 District: **3,393** (52.3%)
+  T3 Local:    **1,354** (20.9%)
+  Total:        6,493
+
+Replace any occurrence of "2,986 sub-metropolitan markets" or "2,986 Regional Markets"
+with the current value if you can verify it from the data — otherwise flag as [verify] for
+the regression session.
+
+**T2 composition (for retail-colocation paper §4 or equivalent):**
+  Hypermarket + Hardware: 3,223 (95.0%)
+  Hypermarket + Hardware + Sport: 170 (5.0%)
+
+**Per-country breakdown (for any country-level table in either paper):**
+
+| ISO | Country       | Total | T1  | T2    | T3  |
+|-----|---------------|-------|-----|-------|-----|
+| US  | United States | 3,104 | 889 | 1,779 | 436 |
+| CA  | Canada        |   375 |  64 |   283 |  28 |
+| MX  | Mexico        |   286 |  68 |    48 | 170 |
+| GB  | Great Britain |   457 |  22 |   400 |  35 |
+| DE  | Germany       |   722 | 227 |   338 | 157 |
+| FR  | France        |   624 | 247 |   161 | 216 |
+| ES  | Spain         |   218 |  62 |    64 |  92 |
+| IT  | Italy         |   177 |  43 |    35 |  99 |
+| PL  | Poland        |   164 |  53 |    96 |  15 |
+| NL  | Netherlands   |    76 |  19 |    19 |  38 |
+| AT  | Austria       |    64 |  21 |     8 |  35 |
+| PT  | Portugal      |    41 |   8 |    21 |  12 |
+| GR  | Greece        |    22 |   5 |    11 |   6 |
+| IS  | Iceland       |     3 |   0 |     2 |   1 |
+| SE  | Sweden        |    28 |  11 |     8 |   9 |
+| DK  | Denmark       |    67 |   4 |    62 |   1 |
+| FI  | Finland       |    55 |   2 |    52 |   1 |
+| NO  | Norway        |    10 |   1 |     6 |   3 |
+
+**Note on Phase 23 + Change B:** A nightly rebuild fires at 05:00 UTC adding Lowe's US and
+Canadian Tire CA chains (ALPHA_HARDWARE promotion) and applying a geometric span gate that
+demotes ~667 T2 clusters to T3 (span_km > 2.5 km). Post-rebuild numbers will follow in a
+separate message. Hold the country-count update (13→18) and the per-country table for the
+next editorial commit — do not commit partial numbers.
+
+Apply these corrections in the same commit as the author corrections
+(project-gis-20260529-editorial-journal-amendment) so a single commit closes all
+outstanding data + author updates together.
+
+— totebox@project-gis
+
+---
+from: totebox@project-gis
 to: command@claude-code
 re: workspace bin/capture-edit.py fix — needs Command Session commit
 created: 2026-05-31T00:45:00Z
