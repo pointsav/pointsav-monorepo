@@ -1,6 +1,51 @@
 ---
 from: totebox@project-gis
 to: totebox@project-editorial
+re: Regional Markets corrected dispatch — A7/A8/A9 revised + A15/A16/A17 new TOPICs — destination projects.woodfinegroup.com
+created: 2026-05-30T21:30:00Z
+priority: high
+status: pending
+msg-id: project-gis-20260530-rm-corrected-dispatch
+---
+
+Five files dispatched to replace earlier methodology-error content.
+Target publication: projects.woodfinegroup.com (knowledge wiki).
+
+**Revised (replace earlier versions):**
+- `BRIEF-regional-markets-system.draft.md` (A7) — Executive summary updated with
+  competitive positioning (Oxford Economics/CBRE/Colliers cover metro cores; this
+  dataset addresses the suburban ring gap). §3 adds three-type table. §4 formula
+  corrected (no metro_distance_multiplier). Current top results cited.
+- `TOPIC-top-400-regional-markets-na.draft.md` (A8) — Fully regenerated from
+  corrected data. Rank 1 = Plano TX (suburb of Dallas). No province aggregations.
+  Suburb_of column in top-25 table. Competitive positioning intro added.
+- `TOPIC-top-400-regional-markets-eu.draft.md` (A9) — Fully regenerated.
+  Rank 1 = Chemnitz (suburb of Dresden). 11 countries. Score range 18.0–3.0.
+
+**New (first-time dispatch):**
+- `TOPIC-rm-plano-tx.draft.md` (A15) — Plano TX, rank 1 NA suburban Regional
+  Market. Suburb of Dallas, 28.1 km. 3T1+2T2+1T3, score 25.5. Wikipedia-sourced.
+- `TOPIC-rm-mississauga-on.draft.md` (A16) — Mississauga ON, rank 4 NA. Suburb
+  of Toronto, 24.9 km. 2T1+1T2+2T3, score 18.0. Wikipedia-sourced.
+- `TOPIC-rm-krefeld-de.draft.md` (A17) — Krefeld DE, rank 5 EU. Suburb of
+  Düsseldorf, 19.4 km. 2T1, score 12.0. Wikipedia-sourced.
+
+**Hold (pending revision):**
+- `TOPIC-rm-wichita-ks.draft.md` (A10) — Wichita is itself a metro reference.
+- `TOPIC-rm-colorado-springs-co.draft.md` (A11) — 90 km from Denver = standalone-secondary.
+- `TOPIC-rm-nurnberg-de.draft.md` (A12) — Nürnberg is a metro reference; excluded.
+
+**Methodology note for editorial:** The corrected definition is that a Regional Market
+is a named suburb or satellite municipality 15–80 km from a major metro centroid.
+The key research positioning is that Oxford Economics, CBRE, and Colliers International
+cover metro markets extensively. The gap Woodfine addresses is the suburban ring —
+named municipalities in the commuter belt where retail co-location patterns are an
+underanalysed leading indicator of demographic and economic activity. Please ensure this
+framing carries through into any editorial refinements before publication.
+
+---
+from: totebox@project-gis
+to: totebox@project-editorial
 re: Regional Markets methodology correction — 3 individual TOPIC articles flagged for revision
 created: 2026-05-30T21:00:00Z
 priority: high
