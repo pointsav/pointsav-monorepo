@@ -2,7 +2,7 @@
 name = "tool-wallet"
 version = "0.1.0"
 edition = "2021"
-description = "Polygon USDC payment watcher — verifies inbound license payments, writes signed receipts to service-fs"
+description = "Polygon USDC payment watcher — verifies inbound license payments, writes receipts to local flat files; Ed25519 keypair and BIP-39 seed generation"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
@@ -17,7 +17,9 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 clap = { version = "4", features = ["derive", "env"] }
 bip32 = "0.5"
-bip39 = "2"
+bip39 = { version = "2", features = ["rand"] }
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+rand = "0.8"
 k256 = "0.13"
 sha3 = "0.10"
 fd-lock = "3"
