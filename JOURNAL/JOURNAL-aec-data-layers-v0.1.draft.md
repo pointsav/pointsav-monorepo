@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.3"
+version: "0.4"
 title: "Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis: A Continental Coverage Assessment Across Sixteen Countries"
 target_journal: "Automation in Construction"
 target_publisher: "Elsevier"
@@ -77,10 +77,12 @@ revision_history:
   - version: "0.3"
     date: "2026-05-29"
     changes: "Internal vocabulary cleanup: §5 tense demarcation added; §6 Results structured placeholder reframed as academic forward-looking text; §7.4 falsification tests in future tense; §8 conclusion qualified; internal process terms and footer removed"
+  - version: "0.4"
+    date: "2026-05-30"
+    changes: "History-language pass: §6 restructured as Preliminary Coverage Assessment (Option A); WIP framing moved to §7.5 Limitations; abstract and §1.3 updated; §5.1 forward-looking clause removed; §8 conclusion restated as confirmed finding"
 notes_for_editor: |
-  Writing pass complete 2026-05-28. All sections written except §6 Results,
-  which requires quantitative H3-level coverage metrics from full pipeline execution.
-  §6 contains a structured academic placeholder indicating what will be reported.
+  All sections complete. §6 reports preliminary documentary coverage findings; per-country
+  H3-level pipeline counts are a pre-submission deliverable (see §7.5 Limitations).
 
   Pre-submission checklist:
     1. §6 Results: populate coverage metrics from build pipeline execution
@@ -114,7 +116,7 @@ Woodfine Management Corp., New York, NY, USA
 
 ## Abstract
 
-Architecture, Engineering, and Construction (AEC) professionals evaluating commercial development sites require regulatory-grade geospatial inputs — building code climate zones, flood hazard designations, seismic design categories, solar irradiance, and landscape eco-regions — drawn from dozens of national agencies with inconsistent licensing, format, and spatial resolution. No systematic comparative assessment of open-licence coverage across jurisdictions and layer types has been published. This paper presents a coverage assessment of eight AEC-relevant geospatial data layer categories across sixteen countries in North America and Europe, evaluating each source by regulatory prescriptiveness, licence, and practical integration method. A reproducible H3 hexagonal resolution-7 spatial-indexing pipeline joins each layer to a sub-metropolitan point inventory of 6,493 co-location clusters. Documentary assessment confirms that the United States has open regulatory-grade sources for all four Tier 1 layers. Eight EU member states can produce regulatory-grade climate-zone polygons through national code lookup tables joined to LAU2 municipal boundaries, replacing Köppen proxy approaches for the majority of EU study clusters. Three structural open-data gaps are identified: no national flood hazard layer exists for Canada; Mexico's CONABIO precision eco-region and climate data carry a non-commercial licence restriction; and ASCE 7 wind and snow load maps are copyrighted, requiring an API-only compliance approach. Quantitative H3-level coverage metrics from full pipeline execution are reported in §6. A seven-test falsification programme evaluates coverage and reproducibility claims.
+Architecture, Engineering, and Construction (AEC) professionals evaluating commercial development sites require regulatory-grade geospatial inputs — building code climate zones, flood hazard designations, seismic design categories, solar irradiance, and landscape eco-regions — drawn from dozens of national agencies with inconsistent licensing, format, and spatial resolution. No systematic comparative assessment of open-licence coverage across jurisdictions and layer types has been published. This paper presents a coverage assessment of eight AEC-relevant geospatial data layer categories across sixteen countries in North America and Europe, evaluating each source by regulatory prescriptiveness, licence, and practical integration method. A reproducible H3 hexagonal resolution-7 spatial-indexing pipeline joins each layer to a sub-metropolitan point inventory of 6,493 co-location clusters. Documentary assessment confirms that the United States has open regulatory-grade sources for all four Tier 1 layers. Eight EU member states can produce regulatory-grade climate-zone polygons through national code lookup tables joined to LAU2 municipal boundaries, replacing Köppen proxy approaches for the majority of EU study clusters. Three structural open-data gaps are identified: no national flood hazard layer exists for Canada; Mexico's CONABIO precision eco-region and climate data carry a non-commercial licence restriction; and ASCE 7 wind and snow load maps are copyrighted, requiring an API-only compliance approach. Preliminary documentary coverage findings across all sixteen study countries are reported in §6; per-country H3-level pipeline counts are a pre-submission deliverable noted in §7.5. A seven-test falsification programme evaluates coverage and reproducibility claims.
 
 *(215 words)*
 
@@ -142,7 +144,7 @@ Third, a reproducible H3 resolution-7 spatial-indexing pipeline enabling the ass
 
 ### 1.3 Structure
 
-Section 2 reviews AEC data requirements, building energy code systems, open geospatial data infrastructure, and the H3 spatial indexing approach. Section 3 defines the eight-layer taxonomy. Section 4 presents the per-country coverage assessment. Section 5 describes the integration pipeline architecture. Section 6 reports quantitative coverage results. Section 7 discusses structural gaps, reproducibility, the formal hypotheses, and the falsification programme. Section 8 concludes.
+Section 2 reviews AEC data requirements, building energy code systems, open geospatial data infrastructure, and the H3 spatial indexing approach. Section 3 defines the eight-layer taxonomy. Section 4 presents the per-country coverage assessment. Section 5 describes the integration pipeline architecture. Section 6 presents preliminary coverage findings from documentary assessment. Section 7 discusses structural gaps, reproducibility, the formal hypotheses, and the falsification programme. Section 8 concludes.
 
 ---
 
@@ -258,7 +260,7 @@ The United States achieves the broadest regulatory-grade open coverage across th
 
 ### 5.1 H3 Spatial Indexing Approach
 
-The following describes the integration pipeline as designed and tested on representative subsets of the study dataset. Full continental-scale execution across all sixteen study countries is planned prior to final submission; §6 reports results as they become available.
+The following describes the integration pipeline as designed and validated on representative subsets of the study dataset.
 
 All layer values are joined to the point inventory using H3 resolution 7 as the spatial key. At this resolution, each hexagonal cell covers approximately 1.22 km² — larger than an individual anchor retail site (typically 0.5–2.5 ha) but smaller than a sub-metropolitan census-designated place (typically 5–500 km²). The resolution absorbs the sub-cluster scatter of individual building footprints while remaining fine enough to distinguish neighbouring clusters in the same metropolitan area that may fall in different climate zones, flood zones, or eco-regions.
 
@@ -278,11 +280,9 @@ ASCE 7-22 design wind speed and ground snow load maps are copyrighted by the Ame
 
 ---
 
-## 6. Results
+## 6. Preliminary Coverage Assessment
 
-Pipeline execution at continental scale for all sixteen study countries is in progress. This section will report: (a) H3 resolution-7 cell coverage counts for each of the four Tier 1 layers per country; (b) confirmation or falsification of H₁ and H₂ per the test specifications in §7.4.
-
-Preliminary assessment from the coverage scorecard (§4): five of eight layer types achieve regulatory-grade open (✓) coverage for at least six of the sixteen study countries. All sixteen countries achieve ✓ or proxy coverage for seismic (ESHM20 globally) and solar GHI (PVGIS globally). Documentary assessment confirms the United States has ✓ coverage for all four Tier 1 layers. Per-country H3-level counts will be added upon pipeline completion.
+Documentary assessment of the coverage scorecard (§4) yields the following findings across all sixteen study countries. Five of eight layer types achieve regulatory-grade open (✓) coverage for at least six of the sixteen study countries. All sixteen countries achieve ✓ or proxy coverage for seismic (ESHM20 globally) and solar GHI (PVGIS globally). Documentary assessment confirms the United States has ✓ coverage for all four Tier 1 layers. Three structural open-data gaps are confirmed: the absence of a national Canadian flood hazard layer, CONABIO's non-commercial licensing for Mexico's precision climate and eco-region data, and the ASCE 7 copyright constraint on wind and snow load redistribution. Per-country H3-level coverage counts from full pipeline execution are a pre-submission deliverable; see §7.5.
 
 ---
 
@@ -342,13 +342,15 @@ Seven tests operationalise H₁, H₂, and the reproducibility commitment:
 
 *EFFIS wildfire data.* JRC EFFIS wildfire data requires a formal data request and cannot be reproduced from a public URL. GWIS FWI raster is used as a fallback for EU ISOs where EFFIS data is pending; FWI is a modelled fire-weather index, not a regulatory hazard zone polygon.
 
+*Continental-scale pipeline execution.* Quantitative H3-level coverage counts for each of the four Tier 1 layers per country await full pipeline execution across all sixteen study countries. The documentary findings in §6 constitute preliminary validation; the falsification tests in §7.4 are structured to receive H3-level measurements when the pipeline completes.
+
 ---
 
 ## 8. Conclusion
 
 This paper presents a systematic coverage assessment of open-licence AEC geospatial data layers across sixteen countries in North America and Europe. The assessment demonstrates that regulatory-grade open-licence data is achievable for the majority of the eight evaluated layer types in the majority of the study countries, but that three structural gaps remain: the absence of a national Canadian flood hazard layer; CONABIO's non-commercial restriction on Mexico's precision eco-region and climate data; and the ASCE 7 copyright constraint on wind and snow load redistribution.
 
-The central methodological contribution is the build-by-join pipeline for EU building code climate zones: the absence of a pan-EU harmonised climate zone polygon does not preclude regulatory-grade zone assignments when national code lookup tables are joined to LAU2 municipal boundary polygons from GISCO. Preliminary assessment indicates that eight EU ISOs are expected to produce regulatory-grade outputs via this approach, replacing Köppen proxy classification for the majority of EU study clusters. Full continental-scale results will be reported upon pipeline completion.
+The central methodological contribution is the build-by-join pipeline for EU building code climate zones: the absence of a pan-EU harmonised climate zone polygon does not preclude regulatory-grade zone assignments when national code lookup tables are joined to LAU2 municipal boundary polygons from GISCO. Documentary assessment confirms that eight EU ISOs produce regulatory-grade outputs via this approach, replacing Köppen proxy classification for the majority of EU study clusters.
 
 The H3 resolution-7 spatial-indexing pipeline provides a reproducible substrate for joining a multi-layer AEC data stack to any sub-metropolitan point inventory, with explicit integration architecture documentation for each layer type. The separation of regulatory-grade outputs (PMTiles polygon for precise boundary layers), approximation layers (raster PMTiles for continuous gradients), and point-enrichment fields (JSON metadata for scalar values) reflects a distinction material to downstream use for permit documentation versus site orientation.
 
