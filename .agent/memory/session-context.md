@@ -2,6 +2,37 @@
 
 ---
 
+### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 10 — lease expiry fix + flow confirmed)
+
+**Done this session:**
+- **Root cause diagnosed for 26 poison entries:** Previous session (ran out of context) manually moved 25 briefs to queue-poison/ at 21:23 during investigation; one more (177F2B11) at 21:38. The drain worker itself did not cause the poison.
+- **Root cause diagnosed for drain worker silence:** Reaper's 300s lease expiry < 1860s drain wrapper → reaper reclaimed lease at 300s, drain worker's `release_shadow()` found stale lease and silently returned `Ok()`. After brief was re-queued by reaper and drain woke after 1800s timeout, it worked correctly — but during the previous session's investigation, the briefs had been manually quarantined to poison.
+- **Lease expiry fix:** Added `SLM_QUEUE_LEASE_EXPIRY_SEC=2100` to `/etc/local-doorman/local-doorman.env`. 2100s > 1860s drain wrapper; reaper now cannot reclaim a live lease. Restart at 22:17:58 UTC. Confirmed `lease_expiry_secs=2100` in startup log.
+- **26 poison entries recovered:** All 26 moved from `queue-poison/` to `queue/`. 0 poison after recovery.
+- **Flow confirmed:** New drain worker (PID 1821781) immediately dispatched `0BDB1DF0` at 22:17:58 (tier="local"). llama-server busy with inference. Queue: 24 pending, 1 active in-flight, 0 poison.
+- **NEXT.md updated:** System status, poison recovery note, lease fix documented.
+- **BRIEF-slm-substrate-master.md updated:** §1 live state table updated with lease fix.
+
+**Pending / carry-forward:**
+- **Stage 6** — 9 commits ahead of origin/main (outbox `project-intelligence-20260530-stage6-sprint3d`); `SLM_QUEUE_LEASE_EXPIRY_SEC=2100` is an env-only change (not git-tracked), no new commit needed
+- **Operator installs** (see outbox `project-intelligence-20260530-stage6-orchestration-deploy`):
+  1. Build + deploy `orchestration-slm-server` binary
+  2. Install `/etc/foundry/local-orchestration-slm.env`
+  3. `sudo systemctl enable --now local-orchestration-slm.service`
+  4. Add `SLM_ORCHESTRATION_ENDPOINT=http://127.0.0.1:9180` etc. to local-doorman.env + restart
+  5. Enable daily/weekly smoke timers
+- **Monitor drain:** 24 pending briefs + 1 orphaned in-flight (0B050EFD from dead PID 1771363; reaper reclaims at 22:52). Each brief takes 17–60 min at OLMo CPU speed.
+- **project-console actions** (see outbox `project-intelligence-20260530-console-wiring`):
+  - Port fix: `app-console-content/src/draft.rs` 8011 → 9080
+  - Sprint 4a: implement `app-console-slm status` command
+- **Yo-Yo 1h test** when L4 capacity returns
+- **stale test fields** — `anthropic_shim_test.rs` `tier_a_reason`/`idle_monitor` fields stale
+
+**Operator preferences surfaced:**
+- Expects full flow investigation before reporting "done" — the 26 poison entries needed root cause analysis and recovery, not just status report
+
+---
+
 ### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 9 end — Sprint 3D + poison recovery)
 
 **Done this session (continued from session 9 start):**
@@ -57,35 +88,5 @@
 **Operator preferences surfaced:**
 - Want daily hardening testing to keep everything flowing 24h/day
 - Yo-Yo must remain manually started (confirmed session 7)
-
----
-
-### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 8 — circuit resilience complete)
-
-**Done this session:**
-- **All five circuit-resilience sprints deployed** (commits `96dcaf2b`→`b08cec3d`):
-  - Sprint 3A: `SLM_TIER_A_FIRST=true` threaded through `DoormanConfig`, `ApprenticeshipConfig`, `select_tier()`, `pick_tier_for_brief()`. Startup guard prevents mutual use with `SLM_FORCE_BROKER_MODE`. `route_yoyo_only` (ADR-07) unchanged.
-  - Sprint 3B: WATCHER Tier A fallback in `service-content/src/main.rs`. Rate-limited at 300s. `TierAFallbackConfig` + `last_tier_a_attempt`. Calls `/v1/chat/completions` with 5-category system prompt + json-schema grammar; confidence 0.75; upserts entities to LadybugDB.
-  - Sprint 3C: Drain worker pause in `slm-doorman-server/src/main.rs`. Before `dequeue_shadow()`, checks `tier_b_status()` — if ALL nodes circuit=open AND `opened_for_secs >= SLM_HOLD_THRESHOLD_SECS` (3600s default), skips cycle and logs.
-- **Both binaries rebuilt and deployed** (2026-05-29T19:26Z):
-  - `slm-doorman-server` sha256=`81b8629c`; running with `SLM_TIER_A_FIRST=true`, `SLM_HOLD_THRESHOLD_SECS=3600`
-  - `service-content` sha256=`2362ea5c`; running with `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=true`, 300s interval; entity_count=7,201 live
-- **Verification**: `/readyz` → `tier_b` field with per-node circuit state ✓; `/healthz` → `entity_count: 7201` ✓; startup log `SLM_TIER_A_FIRST=true: Tier A is the confident primary` ✓; shadow dispatch `tier="local"` ✓
-- **Binary ledger updated** at `/srv/foundry/data/binary-ledger/` (workspace level)
-- **BRIEF-slm-substrate-master.md** updated: all 8 sprint checkboxes ✓; live state table updated
-- **Outbox to Command**: Stage 6 promotion requested for 9 commits; quarantine 590 poison briefs; binary ledger confirmation
-
-**Pending / carry-forward:**
-- **Stage 6 promotion** — 9 commits ahead of origin/main; Command Session required
-- **Quarantine 590 poison briefs** — `mv /srv/foundry/data/apprenticeship/queue-poison/* /srv/foundry/data/apprenticeship/quarantine/`
-- **Install claude-bridge service** (Command if not done): `sudo cp infrastructure/systemd/local-claude-bridge.service /etc/systemd/system/ && sudo systemctl enable --now local-claude-bridge.service`
-- **Install git post-commit hook** — per archive: `cp service-slm/scripts/git-post-commit-hook.sh .git/hooks/post-commit && chmod +x`
-- **Verify CORPUS extraction via Tier A fallback** — drop a CORPUS file, confirm `[WATCHER-TIER-A]` log within 300s
-- **`.agent/` contamination** — Command Stage-6 rebase pulled project-knowledge/.agent/ content into project-intelligence (outbox.md + NEXT.md at root show project-editorial/knowledge content). Report to Command for cleanup.
-
-**Operator preferences surfaced:**
-- No new preferences this session
-
----
 
 

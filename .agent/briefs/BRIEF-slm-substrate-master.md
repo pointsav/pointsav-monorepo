@@ -39,7 +39,7 @@ notes: >
 
 ---
 
-## §1 — Current live state (as of 2026-05-30T21:14Z — session 9 end: Sprint 3D timeout fix + poison queue recovery)
+## §1 — Current live state (as of 2026-05-30T22:17Z — session 10: lease expiry fix + flow confirmed)
 
 | Component | Version | Status | Notes |
 |---|---|---|---|
@@ -48,7 +48,7 @@ notes: >
 | `orchestration-slm-server` | built session 9 | **NOT YET DEPLOYED** | unit file committed `d445b5ea`; Command operator install needed (see outbox `project-intelligence-20260530-stage6-orchestration-deploy`) |
 | `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** | europe-west4-a L4 stockout; restart with `start-yoyo.sh --wait-ready=120 --runtime=1h` when capacity returns |
 | `local-slm.service` | OLMo 2 1124 7B Instruct Q4_K_M (4.16 GiB) | **active** | Tier A is the confident primary; `SLM_TIER_A_FIRST=true` confirmed in startup log |
-| `local-doorman.env` | — | current | `SLM_TIER_A_FIRST=true`; `SLM_HOLD_THRESHOLD_SECS=3600`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_FORCE_BROKER_MODE=false` |
+| `local-doorman.env` | — | current | `SLM_TIER_A_FIRST=true`; `SLM_HOLD_THRESHOLD_SECS=3600`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_FORCE_BROKER_MODE=false`; **`SLM_QUEUE_LEASE_EXPIRY_SEC=2100`** (session 10) |
 | `local-content.env` | — | current | Drop-in: `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=true`; `SERVICE_CONTENT_TIER_A_FALLBACK_INTERVAL_SECS=300` |
 
 **Tier routing (current):**
