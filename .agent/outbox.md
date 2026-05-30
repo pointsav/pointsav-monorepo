@@ -1125,174 +1125,49 @@ owner: totebox@project-intelligence
 location: ~/Foundry/clones/project-intelligence/.agent/
 schema: foundry-mailbox-v1
 ---
----
-from: totebox@project-orgcharts
+from: totebox@project-console
 to: command@claude-code
-re: project-orgcharts archive hygiene — two issues surfaced; recommendations enclosed
-created: 2026-05-30T15:54:40Z
-priority: normal
-status: pending
-msg-id: project-orgcharts-20260530-archive-hygiene
----
-
-Two structural issues surfaced during today's session cleanup. Recommendations below.
-
----
-
-## Issue 1 — `stage6-orgcharts` branch descends from `origin/main`
-
-**What we found:** The working branch `stage6-orgcharts` was branched from `origin/main`
-(the full monorepo, 700+ files across 100+ project directories). The proper cluster branch
-`cluster/project-orgcharts` has only 11 org-charts-specific commits and is a clean working
-branch. Because `stage6-orgcharts` carries the full main history, every session in this
-archive sees 100+ project directories that have nothing to do with org chart work.
-
-**Recommendation — Option A (preferred):** Re-checkout the working directory to
-`cluster/project-orgcharts`. The org-charts-specific work sits cleanly on that branch.
-Command would need to confirm that all `stage6-orgcharts` commits worth keeping have been
-promoted or cherry-picked before switching.
-
-**Recommendation — Option B:** Leave as-is. The monorepo files are inert and cause no
-functional problems — they just create visual noise in `ls` output. No action required
-unless the noise is worth the migration cost.
-
----
-
-## Issue 2 — Mismatched `.agent/` metadata files
-
-**What we found:** Several `.agent/` files carry headers from other archives:
-- `inbox.md` — owner: `totebox@project-intelligence`
-- `outbox.md` — owner: `totebox@project-intelligence`
-- `manifest.md` — `cluster: project-infrastructure`
-- `session-start.md` — `archive: project-proofreader`
-
-These were copied from other archives at some point and never updated for project-orgcharts.
-They create confusion at session start (wrong mission context, wrong inbox owner).
-
-**Recommendation:** Update the four files with correct project-orgcharts identity:
-- `inbox.md` / `outbox.md`: owner → `totebox@project-orgcharts`
-- `manifest.md`: cluster → `project-orgcharts`; mission → org chart document production
-- `session-start.md`: archive → `project-orgcharts`
-
-This is a low-risk, one-commit fix. Can be done by Command or actioned back to this Totebox.
-
----
-
-## Issue 3 — Five untracked working directories at root
-
-**What we found:** Five directories are untracked (not in `.gitignore`):
-- `current-org-chart-html/` — rendered org chart HTML output from sessions
-- `inputs/` — source materials (docx, CSS, token files)
-- `pointsav-design-system/` — sub-clone copy
-- `pointsav-media-assets/` — sub-clone copy
-- `woodfine-media-assets/` — sub-clone copy
-
-**Recommendation:** Add these to `.gitignore` in the cluster branch (they are local working
-files, not artifacts to track) OR confirm whether `pointsav-design-system/`,
-`pointsav-media-assets/`, `woodfine-media-assets/` are intentional sub-clones that should
-be tracked in `pairings.yaml`. The `current-org-chart-html/` and `inputs/` directories
-appear to be session scratch space and should be gitignored.
-
----
-
-Also noting: drafts-outbound was cleared this session (225 committed files removed,
-13 untracked dispatched to project-editorial and project-design). Archive is clean.
-
-— totebox@project-orgcharts / 2026-05-30
-
----
-from: totebox@project-intelligence
-to: project-editorial
-re: 2 GUIDE drafts ready for editorial pass
-created: 2026-05-29T03:40:00Z
-priority: normal
-status: pending
----
-
-Two GUIDE drafts are staged in `.agent/drafts-outbound/` for editorial pickup:
-
-1. **`GUIDE-guide-post-commit-training-hook.draft.md`** (UPDATED)
-   The payload in Step 2 was wrong — it omitted required `ApprenticeshipBrief` fields
-   causing a 422 error. Now corrected with the working Python-based format. Verification
-   section also updated with confirmed log output. No TOPIC/bilingual sibling required
-   for GUIDEs.
-
-2. **`GUIDE-guide-goose-local-doorman.draft.md`** (NEW)
-   Setup and usage guide for running Goose against the local AI gateway. Includes:
-   install steps, environment variables, gateway routing verification, and a clearly
-   marked limitation section (OLMo 7B does not invoke tools reliably). One open question
-   noted in frontmatter: §7.2 round-trip has not been verified to completion due to
-   CPU saturation — confirm before finalising the guide.
-
-Both targets: `woodfine-fleet-deployment/cluster-totebox-intelligence/`.
-Bloomberg pass needed on both before publication. No ES bilingual sibling required (GUIDEs).
-
----
-from: totebox@project-intelligence
-to: command@claude-code
-re: Sprint -1/1/2/4 complete — 4 commits; Goose ready; Command actions needed
-created: 2026-05-29T00:00:00Z
+re: Phase A complete — Doorman port fix + BRIEFs updated; Stage 6 force-push authorized; canonical promote requested
+created: 2026-05-30T00:00:00Z
 priority: high
 status: pending
-msg-id: project-intelligence-20260529-sprints-complete
+msg-id: project-console-20260530-phase-a-complete
 ---
 
-All coding sprints from the sovereign coding agent plan are code-complete. 4 commits:
+Phase A work complete this session. Summary of changes committed to `project-console` cluster branch:
 
-| SHA | Sprint | Subject |
-|---|---|---|
-| `c5cd4441` (Jennifer) | -1 | docs(briefs): consolidate to 2 SLM briefs; archive 27 contamination files |
-| `1b47d3eb` (Jennifer) | 1 | feat(doorman): tool_use shim, count_tokens, models endpoint |
-| `1d819d7c` (Jennifer) | 2 | feat(scripts): git post-commit hook + CORPUS bridge |
-| `d39aea32` (Peter) | 4 | docs(drafts): stage 5 TOPICs + 2 GUIDEs to project-editorial |
+**Port fix (8011 → 9080, authoritative per local-doorman.service SLM_BIND_ADDR):**
+- `app-console-content/src/cartridge.rs` — `ContentCartridge::new()` default SLM endpoint
+- `app-console-keys/src/config.rs` — `default_slm_endpoint()` fn
 
-**What Sprint 1 enables:**
-- Goose can now route through service-slm Doorman (`ANTHROPIC_HOST=http://127.0.0.1:9080`)
-- Tool calls work: `tool_use` SSE blocks emitted; `stop_reason: "tool_use"` set
-- `POST /v1/messages/count_tokens` and `GET /v1/models` respond correctly
-- Thinking suppressed for tool turns (llama.cpp #20345 workaround)
+**BRIEF updates:**
+- `BRIEF-leapfrog-2030-coding.md` — Phase 5 marked COMPLETE (2026-05-24, commits 6422c2a8 + 5118ce77);
+  port corrected in Phase 3 critical note and Phase 5 checklist; Phase B/C/D/E roadmap entries added;
+  frontmatter `updated: 2026-05-30`
+- `BRIEF-os-console-platform.md` — §10 Doorman correctness row flipped (8011=wrong, 9080=correct);
+  §9 config examples updated (both slm_endpoint occurrences); §1 + §6 platform table expanded
+  to include macOS 10.13+ Intel (MACOSX_DEPLOYMENT_TARGET=10.13) and macOS universal targets;
+  frontmatter `updated: 2026-05-30`
+- `BRIEF-cross-platform-release.md` — NEW; Phase B spec for cross-platform binary release
 
-**Command Session actions required (Sprint 0 — not yet done):**
+**Documentation / draft fixes:**
+- `session-start.md` — Doorman port corrected
+- `NEXT.md` — Pre-Phase-6 blocker marked resolved
+- `BRIEF-tui-pivot-2030.md` — archived BRIEF notice corrected (9080 is correct, not 8011)
+- `.agent/drafts-outbound/topic-os-console-platform.md`, `guide-mba-pairing-ceremony.md`,
+  `guide-os-console-operator.md` — 8011 references corrected to 9080 throughout
 
-1. **Disable FORCE_BROKER_MODE** — Tier A is deployed (OLMo 2 1124 7B, `local-slm.service` active) but disabled:
-   ```bash
-   sudo sed -i 's/SLM_FORCE_BROKER_MODE=true/SLM_FORCE_BROKER_MODE=false/' /etc/local-doorman/local-doorman.env
-   sudo systemctl restart local-doorman.service
-   curl -s http://127.0.0.1:9080/readyz | python3 -m json.tool  # → has_local: true
-   ```
+**Stage 6 action requested:**
+Force-push to staging mirrors was authorized by Command 2026-05-28. Request Command Session run:
+```
+git push --force-with-lease origin-staging-j main
+git push --force-with-lease origin-staging-p main
+```
+Then canonical promote via `bin/promote.sh` when ready.
 
-2. **Binary rebuild** — Doorman trails HEAD by 5+ commits:
-   ```bash
-   cargo build --release -p slm-doorman-server
-   sudo systemctl restart local-doorman.service
-   ```
-   Update `data/binary-ledger/slm-doorman-server.jsonl` after.
-
-3. **Install git post-commit hook** in project-intelligence (and any other active archives):
-   ```bash
-   cp service-slm/scripts/git-post-commit-hook.sh .git/hooks/post-commit
-   chmod +x .git/hooks/post-commit
-   ```
-
-4. **Yo-Yo nightly cron** — add to crontab:
-   ```
-   0 2 * * * /srv/foundry/clones/project-intelligence/service-slm/scripts/start-yoyo.sh --runtime=1h
-   ```
-
-5. **Drain 491 poison apprenticeship briefs** from `data/apprenticeship/queue/` (pre-backoff-fix artifacts).
-
-6. **Verify Goose works** (Sprint 3 — operator):
-   ```bash
-   export ANTHROPIC_HOST=http://127.0.0.1:9080
-   export ANTHROPIC_API_KEY=foundry-local
-   export GOOSE_MODEL=claude-haiku-4-5-20251001
-   goose session
-   ```
-
-7. **Stage 6 promote** — archive is 20+ commits ahead of origin/main. Prerequisite: rebase per
-   inbox `command-20260520-stage6-rebase-required`. Then `bin/promote.sh` + `bin/sync-local.sh --all`.
-
-— totebox@project-intelligence / 2026-05-29
+**Open — Phase B release trigger:** `BRIEF-cross-platform-release.md` has one open item:
+confirm release workflow trigger (`v*.*.*` tag push recommended). Operator decision needed
+before implementing `.github/workflows/release.yml`.
 
 ---
 from: totebox@project-intelligence
