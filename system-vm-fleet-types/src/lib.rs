@@ -130,7 +130,10 @@ mod tests {
             started_at: None,
         };
         let json = serde_json::to_string(&rec).unwrap();
-        assert!(json.contains("\"Running\""), "state must serialise as PascalCase");
+        assert!(
+            json.contains("\"Running\""),
+            "state must serialise as PascalCase"
+        );
     }
 
     #[test]
