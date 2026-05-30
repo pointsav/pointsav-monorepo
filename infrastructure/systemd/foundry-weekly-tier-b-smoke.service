@@ -1,0 +1,20 @@
+[Unit]
+Description=Foundry weekly Tier B smoke test — start Yo-Yo for 1h then run full flow
+Documentation=service-slm/scripts/start-yoyo.sh
+
+[Service]
+Type=oneshot
+User=mathew
+TimeoutStartSec=4800
+ExecStart=/bin/bash -c '\
+  mkdir -p /srv/foundry/data/smoke-test && \
+  LOG=/srv/foundry/data/smoke-test/tier-b-$(date +%%Y-%%m-%%d).log && \
+  echo "[$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)] weekly-tier-b-smoke: starting Yo-Yo --wait-ready=300 --runtime=1h" >> "$LOG" 2>&1 && \
+  /srv/foundry/clones/project-intelligence/service-slm/scripts/start-yoyo.sh --wait-ready=300 --runtime=1h >> "$LOG" 2>&1 && \
+  echo "[$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)] weekly-tier-b-smoke: Yo-Yo ready, running full smoke test" >> "$LOG" 2>&1 && \
+  /srv/foundry/bin/smoke-test-service-slm.sh >> "$LOG" 2>&1 && \
+  echo "[$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)] weekly-tier-b-smoke: PASS" >> "$LOG" 2>&1 || \
+  echo "[$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)] weekly-tier-b-smoke: FAIL (see log)" >> "$LOG" 2>&1'
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=foundry-weekly-tier-b-smoke

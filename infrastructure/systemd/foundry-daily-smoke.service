@@ -1,0 +1,11 @@
+[Unit]
+Description=Foundry daily smoke test — service-slm Tier A flow (no Yo-Yo)
+Documentation=bin/smoke-test-service-slm.sh
+
+[Service]
+Type=oneshot
+User=mathew
+ExecStart=/bin/bash -c 'mkdir -p /srv/foundry/data/smoke-test && /srv/foundry/bin/smoke-test-service-slm.sh --skip-tier-b >> /srv/foundry/data/smoke-test/$(date +%%Y-%%m-%%d).log 2>&1'
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=foundry-daily-smoke
