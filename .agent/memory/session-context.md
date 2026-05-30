@@ -1,68 +1,84 @@
----
-schema: foundry-session-context-v1
-archive: project-design
-format: rolling-3-entries  # oldest entry pushed to session-context-archive.md
----
-
-# Session context — project-design
+## Session context — rolling 3-session summary
 
 ---
 
-## 2026-05-26–30 (working session) | Totebox | claude-code
+### 2026-05-29/30 (spawn_blocking fix + site health) | totebox@project-knowledge | claude-sonnet-4-6
 
 **Done this session:**
-- BIM supplement (project-bim-20260517-design-sweep-supplement) fully actioned:
-  - html-print-pdf-pipeline.md committed to `pointsav-design-system/research/` (`a6dc0df`, Jennifer Woodfine)
-  - BIM design-index accepted as-is; namespace decision: keep `tokens/bim/`, `components/bim-*/`, `research/bim-*.md`
-  - 9 generic components flowback acknowledged; ps- naming convention chosen for META-substrate; P1/P2/P3 priority queue noted
-  - ACK sent to project-bim (outbox `project-design-20260526-bim-design-index-ack`)
-- Knowledge design commission (command-20260524-knowledge-design-routing) fully actioned:
-  - 10 files committed to `pointsav-design-system/dtcg-vault/research/` + `competition/` (`36770dd`, Peter Woodfine)
-  - 5 DESIGN-RESEARCH: visual-language, ux-writing, service-design, token-architecture, market-positioning (BCSC-reviewed, internal only)
-  - 5 DESIGN-COMPETITION: 4 HTML prototypes (A/B/C/D) + jury report (hybrid = D tokens + A shell + B TOC)
-  - ACK sent to project-knowledge (outbox `project-design-20260530-knowledge-design-ack`)
-- New inbox message noted: `command-20260529-journal-relay-design-j6` — J6 journal article; flag token/component decisions re professional power-user patterns; route to project-editorial as JOURNAL-NOTES-j6
-
-**pointsav-design-system HEAD:** `36770dd` on `main`
-**woodfine-media-assets HEAD:** `5753b96` on `main` (up to date with canonical)
-**project-design archive HEAD:** `934651ca` on `cluster/project-design`
+- Diagnosed 47-minute documentation wiki hang (19:45–20:32 UTC 2026-05-29): `reindex_topic()` in `search.rs` called Tantivy `.commit()` + `reader.reload()` directly on Tokio executor thread — blocked async runtime on 486-article corpus
+- Fixed: converted `reindex_topic` to `async fn`, wrapped all blocking Tantivy ops in `tokio::task::spawn_blocking`; updated 5 call sites (`edit.rs` ×2, `pending.rs`, `main.rs` ×2) with `.await`
+- Commit `e8a47428` (Peter) + cleanup log `a6b5c9c2` (Jennifer) in monorepo sub-clone
+- Outbox `project-knowledge-20260529-reindex-spawn-blocking` → Command; actioned at 03:31 UTC 2026-05-30: promoted `336140df` archive + `5f94b708` monorepo; binary rebuilt + deployed sha256=`3f7c656b`; ledger written
+- Verified all three wikis live at session end: 9090/9093/9095 all `ok`, `div.article-integrity` confirmed, correct binary sha256 prefix
+- User noted sites "don't look updated" at session close — unresolved; likely browser cache or subtle visual delta; no action taken
 
 **Pending / carry-forward:**
-- [ ] DTCG chart entity-role tokens from project-orgcharts (BLOCKED: waiting on project-orgcharts Stage 6; msg-id: project-orgcharts-20260521-chart-tokens-dtcg)
-- [ ] 9 generic BIM components → META-substrate: CodeBlockWithCopy, EmptyStateCard, ChipRow (P1), SidebarAccordion, TabBarDisclosure, BreadcrumbNav, PreviewFrame, MachineSurfaceFooter (P2), EditOnGitHubLink (P3)
-- [ ] J6 journal relay: flag relevant token/component decisions to project-editorial (msg-id: command-20260529-journal-relay-design-j6)
-- [ ] GIS screenshots: asset-gis-map-screenshots-2026-05-06.md at asset-capture-pending-operator (operator action)
-- [ ] pointsav-design-system Stage 6 still pending (commits on main not yet promoted to canonical via promote.sh)
+- User concern "don't look updated" — follow up at next session start: ask what they're comparing and whether a hard-refresh resolves it
+- REBASE_HEAD noted in content-wiki-documentation/.git/ — should be investigated and resolved
+- UX-B.7: Woodfine SVG wordmark still blocked (operator must provide SVG)
+- ORCID IDs for J1–J6 authors — operator action required
+- `.agent/manifest.md` cluster_name still says `project-bim` — Command correction needed
 
-**Operator preferences surfaced:** none new.
+**Operator preferences surfaced:**
+- (none new — session was mostly autonomous fix + verification)
 
 ---
 
-## 2026-05-23 (working session) | Totebox | claude-code
+### 2026-05-29 (JOURNAL PhD register pass) | totebox@project-editorial | claude-sonnet-4-6
 
 **Done this session:**
-- `binary-targets.yaml` committed (a0222ff) — declared `app-privategit-design` scaffold, FSL-1.1-ALv2, soft_enabled: false
-- 5 project-editorial DESIGN drafts committed to pointsav-design-system (7a50a43): 4 GIS component recipe.html files (brand-family-swatch, country-filter-chips, map-side-drawer, map-stats-panel) + research/zoom-tier-reveal-pattern.md; ACK sent to project-editorial
-- icon-tab component committed (4d46147): HTML + CSS + ARIA; 3 open items in aria.md; ACK sent to project-marketing
-- woodfine-blue-tint token committed + pushed to canonical woodfine-media-assets (5753b96); ACK sent to project-marketing
-- fleet-deployment .claude→.agent migration + guide lowercase rename committed (4188310)
-- Mailbox updates committed (1bf4f02)
-
-**pointsav-design-system HEAD:** `4d46147` on `main`
-**woodfine-media-assets HEAD:** `5753b96` on `main` (up to date with canonical)
+- 7-commit JOURNAL academic register pass complete (Jennifer/Peter alternating):
+  - `71ef7be6`: journal-artifact-discipline.md — 8 prose/typography rules + notes_for_editor discipline
+  - `eaeffe58`: BRIEF-journal-phd-programme.md — formatting standard + venue strategy subsections
+  - `775d20ae`: J1 — §6.1 prose, notes_for_editor clean, CRediT/COI/Funding added, venues updated
+  - `9e1de30f`: J2 — §5.1/5.2/6.3/7.2/7.3 prose, notes_for_editor clean, CRediT/COI/Funding added
+  - `beb01daa`: J3 — table captions, §7.1/7.4/7.5 prose, generalizability paragraph, venues updated
+  - `ec225be4`: J4 — §1/3.1/4/5.3 prose, Listing captions, §6.2 falsification prose, §6.3 italic, §6.4 generalizability, notes_for_editor clean
+  - `22cb91fa`: J6 — contributions inline, §4 table captions + Appendix A, §5.2/§6 TODOs resolved, §7.3 falsification prose, §7.4 italic, [CITATION NEEDED] removed
+- Operator note mid-execution: plain accessible language is a feature; target RAND/Yale dissertation register, not convoluted academic circumlocution — applied across all prose conversions
+- Artifact registry + NEXT.md updated — `2c831c55`
+- All forbidden-terms checks pass; no Results— labels; no TODO markers in edited papers
 
 **Pending / carry-forward:**
-- [ ] DTCG chart entity-role tokens from project-orgcharts (BLOCKED: waiting on project-orgcharts Stage 6; msg-id: project-orgcharts-20260521-chart-tokens-dtcg)
-- [ ] 3 BIM supplemental drafts from project-bim (NEW 2026-05-24; msg-id: project-bim-20260517-design-sweep-supplement): html-print-pdf-pipeline research, BIM design-index, 9 generic components
-- [ ] GIS screenshots: asset-gis-map-screenshots-2026-05-06.md at asset-capture-pending-operator (operator action)
-- [ ] pointsav-design-system Stage 6 still pending (commits on main not yet promoted to canonical via promote.sh)
+- J4 word count gap: ~6,400 vs 9,000-word target; project-infrastructure to expand §4–§5
+- J4 final §4–§5 forbidden-terms pass still needed before submission
+- All other JOURNAL data blockers remain (Phase 24B / Bench #9 / AEC metrics / user study) — external
+- ORCID IDs for all three authors — operator action required
+- J1 tier-distribution tables: may need formal `**Table N.**` captions — not addressed in this pass (plan's per-J1 changes didn't list it explicitly; potential follow-up)
+- Stage 6 for all JOURNAL commits — Command Session scope
+- Git tags not yet pushed
 
-**Operator preferences surfaced:** none new.
+**Operator preferences surfaced:**
+- Plain language emphasis: "plain language as much as possible to make our JOURNAL accessible to as many people as possible" — confirmed again; write naturally, not with academic circumlocution
 
 ---
 
-## 2026-05-23 (startup-shutdown) | Totebox | claude-code
+### 2026-05-29 (inbox action session) | totebox@project-editorial | claude-sonnet-4-6
 
-**Done this session:** Startup-then-immediate-shutdown. Stale session lock from 2026-05-20 cleared (PID 702884 dead). No work performed.
+**Done this session:**
+- Actioned all 3 pending inbox messages (intelligence GUIDEs, infrastructure GUIDEs + J4, system Phase 1C v2)
+- Bloomberg pass + editorial corrections on 11 draft artifacts from 3 peer clusters; produced 12 output files
+- guide-post-commit-training-hook + guide-goose-local-doorman staged Bloomberg-clean — `72761f65`
+- topic-os-mediakit bilingual (EN+ES) committed to media-knowledge-documentation/systems/ — `81ca9aa`
+- guide-vm-mediakit-provision + guide-vm-mediakit-service-migration staged Bloomberg-clean — `0d9da8ed`
+- J4 v0.4 canonical update: §4+§5 empirical content merged (44±5 ms tunnel establishment, 59±20 ms re-handshake, 8 ms policy-change, bimodal 1–16 s failure-mode); citations resolved (Birge-Lee 2024 + Mackey 2020); `forbidden_terms_cleared: true`; version "0.4" — `77063dc3`
+- moonshot-toolkit-build-orchestrator + sel4-aarch64-qemu-substrate-target bilingual committed to media-knowledge-documentation/substrate/ — `95f6beb`
+- guide-moonshot-toolkit-phase1c-build-setup staged Bloomberg-clean — `fbde41fa`
+- Artifact registry updated (J4 language-cleared with §4–§5 note; A7–A14 added); 3 outbox routing messages to Command; NEXT.md updated — `adb7e0a0`
+- Total: 7 commits in project-editorial; 2 commits in media-knowledge-documentation sub-clone
 
-**Pending / carry-forward (superseded by working session above).**
+**Pending / carry-forward:**
+- J4 word count gap: ~6,400 vs 9,000-word target; project-infrastructure to expand §4–§5
+- J4 final §4–§5 forbidden-terms pass needed before submission
+- All other JOURNAL data blockers remain (Phase 24B / Bench #9 / AEC metrics / user study) — external
+- ORCID IDs for all three authors — operator action
+- 5 staged GUIDEs → woodfine-fleet-deployment: 3 outbox routing messages sent to Command; Command Session must action
+- Stage 6 for all commits — Command Session scope
+- Git tags not yet pushed
+
+**Operator preferences surfaced:**
+- (none new this session — long autonomous execution from prior approved plan)
+
+---
+
+
