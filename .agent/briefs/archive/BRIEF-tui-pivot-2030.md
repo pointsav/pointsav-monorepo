@@ -13,7 +13,8 @@ doctrine_anchors: [claim-45, claim-49, claim-54, SYS-ADR-07, SYS-ADR-10, SYS-ADR
 > and `BRIEF-leapfrog-2030-coding.md` (coding roadmap). **Part 6 (Teardown Plan — sudo
 > commands for web UI services, nginx vhost, cert) remains the Command Session reference.**
 > All other sections are superseded. Note: Doorman port in Part 1 audit table shows 9080
-> (stale) — correct port is 8011 (see BRIEF-os-console-platform.md §10). Part 7 phase
+> — this is correct; the stale value is 8011 (see BRIEF-os-console-platform.md §10 for the
+> authoritative correctness table). Part 7 phase
 > numbers are the old sequence — do not use them.
 
 # Leapfrog 2030 — Project Proofreader TUI Pivot

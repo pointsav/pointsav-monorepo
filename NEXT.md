@@ -192,6 +192,14 @@ pickup notice sent to project-editorial.
   via `system-pairing-codes::qr_unicode`; expiry countdown. Full §9.2 Step 4 UX.
   [2026-05-28 totebox@claude-code]
 
+~~**Pre-Phase 6 blocker:** Doorman port discrepancy.~~ **RESOLVED 2026-05-30.** Authoritative port is
+`127.0.0.1:9080` (from `local-doorman.service` `SLM_BIND_ADDR`). Fixed in this session:
+`app-console-content/src/cartridge.rs` + `app-console-keys/src/config.rs` (default `slm_endpoint`)
++ `BRIEF-leapfrog-2030-coding.md` + `BRIEF-os-console-platform.md` + `session-start.md`.
+[2026-05-30 totebox@project-console]
+
+### Layout hygiene — defect closures queued
+
 ---
 
 ## Blocking — operator decisions needed first
