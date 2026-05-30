@@ -1,7 +1,9 @@
+mod workbench;
+
 use axum::{
     extract::{Query, State},
     http::{header, StatusCode},
-    response::{IntoResponse, Response},
+    response::{IntoResponse, Redirect, Response},
     routing::{get, post, put},
     Json, Router,
 };
@@ -20,13 +22,44 @@ use tokio_stream::{wrappers::BroadcastStream, StreamExt as _};
 
 #[derive(RustEmbed)]
 #[folder = "src/assets/"]
-struct Assets;
+pub(crate) struct Assets;
+
+#[derive(Clone, Debug)]
+pub(crate) struct WorkbenchRoot {
+    pub(crate) url_prefix: String,
+    pub(crate) fs_path: PathBuf,
+    pub(crate) writable: bool,
+}
+
+#[derive(Deserialize, Default)]
+struct ProtoConfig {
+    #[serde(default)]
+    root: Vec<RootConfig>,
+    weasyprint: Option<String>,
+    #[serde(default = "default_max_bytes")]
+    max_bytes: usize,
+}
+
+#[derive(Deserialize)]
+struct RootConfig {
+    url_prefix: String,
+    fs_path: String,
+    #[serde(default)]
+    writable: bool,
+}
+
+fn default_max_bytes() -> usize {
+    2 * 1024 * 1024
+}
 
 #[derive(Clone)]
-struct AppState {
-    workspace_dir: Arc<PathBuf>,
-    tokens_path: Arc<PathBuf>,
-    events_tx: broadcast::Sender<String>,
+pub(crate) struct AppState {
+    pub(crate) workspace_dir: Arc<PathBuf>,
+    pub(crate) tokens_path: Arc<PathBuf>,
+    pub(crate) events_tx: broadcast::Sender<String>,
+    pub(crate) roots: Arc<Vec<WorkbenchRoot>>,
+    pub(crate) weasyprint: Arc<Option<PathBuf>>,
+    pub(crate) max_bytes: usize,
 }
 
 #[tokio::main]
@@ -48,9 +81,58 @@ async fn main() {
         "/srv/foundry/vendor/pointsav-design-system/tokens/dtcg-bundle.json".to_string()
     });
 
+    // Load optional config.toml for workbench roots
+    let config_path = std::env::var("WORKPLACE_PROTO_CONFIG")
+        .unwrap_or_else(|_| "config.toml".to_string());
+    let config: ProtoConfig = if std::path::Path::new(&config_path).exists() {
+        match std::fs::read_to_string(&config_path)
+            .ok()
+            .and_then(|s| toml::from_str::<ProtoConfig>(&s).ok())
+        {
+            Some(c) => c,
+            None => {
+                eprintln!("warning: failed to parse {config_path}; using defaults");
+                ProtoConfig::default()
+            }
+        }
+    } else {
+        ProtoConfig::default()
+    };
+
+    let roots: Vec<WorkbenchRoot> = config
+        .root
+        .iter()
+        .map(|r| WorkbenchRoot {
+            url_prefix: r.url_prefix.clone(),
+            fs_path: PathBuf::from(&r.fs_path),
+            writable: r.writable,
+        })
+        .collect();
+
+    let weasyprint: Option<PathBuf> = config
+        .weasyprint
+        .as_deref()
+        .map(PathBuf::from)
+        .or_else(|| {
+            let p = PathBuf::from("/usr/bin/weasyprint");
+            p.exists().then_some(p)
+        });
+
+    let max_bytes = if config.max_bytes == 0 {
+        default_max_bytes()
+    } else {
+        config.max_bytes
+    };
+
+    // SSE broadcast + filesystem watcher
     let (events_tx, _) = broadcast::channel::<String>(64);
     let watcher_tx = events_tx.clone();
     let watch_path = workspace_path.clone();
+    let writable_roots: Vec<PathBuf> = roots
+        .iter()
+        .filter(|r| r.writable)
+        .map(|r| r.fs_path.clone())
+        .collect();
     tokio::spawn(async move {
         let (inner_tx, mut inner_rx) = tokio::sync::mpsc::channel::<()>(8);
         let mut watcher = recommended_watcher(move |res: notify::Result<notify::Event>| {
@@ -62,6 +144,9 @@ async fn main() {
         watcher
             .watch(&watch_path, RecursiveMode::Recursive)
             .expect("failed to watch workspace");
+        for path in &writable_roots {
+            watcher.watch(path, RecursiveMode::Recursive).ok();
+        }
         while inner_rx.recv().await.is_some() {
             let _ = watcher_tx.send("changed".to_string());
         }
@@ -71,7 +156,16 @@ async fn main() {
         workspace_dir: Arc::new(workspace_path),
         tokens_path: Arc::new(PathBuf::from(&tokens_path)),
         events_tx,
+        roots: Arc::new(roots),
+        weasyprint: Arc::new(weasyprint),
+        max_bytes,
     };
+
+    println!("app-workplace-http-prototype listening on http://0.0.0.0:{port}");
+    println!("workspace: {workspace_dir}");
+    println!("tokens:    {tokens_path}");
+    println!("config:    {config_path}");
+    println!("workbench roots: {}", state.roots.len());
 
     let app = Router::new()
         .route("/", get(serve_index))
@@ -84,15 +178,14 @@ async fn main() {
         .route("/api/files/create", post(create_file))
         .route("/api/tokens", get(get_tokens))
         .route("/api/files/events", get(get_file_events))
+        .route("/workbench/", get(|| async { Redirect::permanent("/workbench") }))
+        .nest("/workbench", workbench::router())
         .layer(CorsLayer::permissive())
         .with_state(state);
 
-    let addr = format!("0.0.0.0:{port}");
-    println!("app-workplace-http-prototype listening on http://{addr}");
-    println!("workspace: {workspace_dir}");
-    println!("tokens:    {tokens_path}");
-
-    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}"))
+        .await
+        .unwrap();
     axum::serve(listener, app).await.unwrap();
 }
 
@@ -169,7 +262,7 @@ async fn read_file(
     State(state): State<AppState>,
     Query(params): Query<ReadParams>,
 ) -> impl IntoResponse {
-    match resolve_path(&state.workspace_dir, &params.path) {
+    match resolve_workspace_path(&state.workspace_dir, &params.path) {
         Ok(abs) => match std::fs::read_to_string(&abs) {
             Ok(content) => (StatusCode::OK, content).into_response(),
             Err(_) => StatusCode::NOT_FOUND.into_response(),
@@ -188,7 +281,7 @@ async fn save_file(
     State(state): State<AppState>,
     Json(body): Json<SaveBody>,
 ) -> impl IntoResponse {
-    match resolve_path(&state.workspace_dir, &body.path) {
+    match resolve_workspace_path(&state.workspace_dir, &body.path) {
         Ok(abs) => {
             if let Some(parent) = abs.parent() {
                 let _ = std::fs::create_dir_all(parent);
@@ -226,7 +319,7 @@ async fn create_file(
         format!("{safe_name}.html")
     };
     let rel_path = format!("memo/{filename}");
-    match resolve_path(&state.workspace_dir, &rel_path) {
+    match resolve_workspace_path(&state.workspace_dir, &rel_path) {
         Ok(abs) => {
             let skeleton = format!(
                 "<h1>{}</h1>\n<p></p>\n",
@@ -253,7 +346,7 @@ async fn get_file_events(State(state): State<AppState>) -> impl IntoResponse {
     Sse::new(stream).keep_alive(KeepAlive::default())
 }
 
-fn resolve_path(workspace: &Path, rel: &str) -> Result<PathBuf, ()> {
+fn resolve_workspace_path(workspace: &Path, rel: &str) -> Result<PathBuf, ()> {
     let candidate = workspace.join(rel);
     let abs = candidate.canonicalize().unwrap_or(candidate.clone());
     let ws_abs = workspace
