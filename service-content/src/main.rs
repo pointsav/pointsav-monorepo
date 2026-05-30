@@ -467,7 +467,9 @@ fn process_corpus(
                                         serde_json::from_str(content).unwrap_or_default()
                                     }
                                     Err(_) => {
-                                        println!("  -> [WATCHER-TIER-A] Tier A response parse failed.");
+                                        println!(
+                                            "  -> [WATCHER-TIER-A] Tier A response parse failed."
+                                        );
                                         return ExtractResult::DeferCircuitOpen;
                                     }
                                 }
@@ -490,8 +492,7 @@ fn process_corpus(
                         }
                         let mut graph_entities_ta: Vec<GraphEntity> = Vec::new();
                         for ent in &chat_entities {
-                            let entity_name =
-                                ent["entity_name"].as_str().unwrap_or("").to_string();
+                            let entity_name = ent["entity_name"].as_str().unwrap_or("").to_string();
                             let classification =
                                 ent["classification"].as_str().unwrap_or("").to_string();
                             if entity_name.is_empty() || classification.is_empty() {

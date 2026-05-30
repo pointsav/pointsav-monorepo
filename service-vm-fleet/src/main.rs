@@ -120,10 +120,7 @@ async fn create_vm_handler(
     Ok(Json(record))
 }
 
-async fn destroy_vm_handler(
-    State(state): State<AppState>,
-    Path(vm_id): Path<VmId>,
-) -> StatusCode {
+async fn destroy_vm_handler(State(state): State<AppState>, Path(vm_id): Path<VmId>) -> StatusCode {
     let mut reg = state.registry.write().await;
     if reg.remove_vm(&vm_id) {
         tracing::info!(vm_id = %vm_id, "VM destroyed");
