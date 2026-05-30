@@ -29,7 +29,8 @@ pub mod test_helpers {
     use std::sync::{Arc, Mutex};
 
     use slm_doorman::tier::{
-        ExternalTierClient, LocalTierClient, LocalTierConfig, TierCPricing, TierCProvider,
+        ExternalTierClient, LocalTierClient, LocalTierConfig, StaticBearer, TierCPricing,
+        TierCProvider, YoYoTierClient, YoYoTierConfig,
     };
     use slm_doorman::{
         AuditLedger, AuditProxyClient, AuditProxyConfig, AuditProxyPurposeAllowlist, BriefCache,
@@ -110,6 +111,8 @@ pub mod test_helpers {
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
+            node_class: "hardware",
+            tier_a_reason: "available",
         })
     }
 
@@ -142,6 +145,53 @@ pub mod test_helpers {
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
+            node_class: "hardware",
+            tier_a_reason: "available",
+        })
+    }
+
+    /// Build an `AppState` backed by a Yo-Yo tier pointing at `yoyo_endpoint`.
+    /// The `_gateway_token` parameter is accepted for call-site compatibility but
+    /// is not yet wired into AppState (gateway auth not yet implemented).
+    pub fn app_state_with_yoyo(
+        yoyo_endpoint: impl Into<String>,
+        _gateway_token: Option<String>,
+    ) -> Arc<AppState> {
+        let yoyo = YoYoTierClient::new(
+            YoYoTierConfig {
+                endpoint: yoyo_endpoint.into(),
+                default_model: "Olmo-3-1125-32B-Think".to_string(),
+                contract_version: slm_doorman::YOYO_CONTRACT_VERSION.to_string(),
+                pricing: Default::default(),
+            },
+            std::sync::Arc::new(StaticBearer::new("test-bearer-token")),
+        );
+        let mut yoyo_map = std::collections::HashMap::new();
+        yoyo_map.insert("default".to_string(), yoyo);
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: None,
+                yoyo: yoyo_map,
+                external: None,
+                lark_validator: None,
+                graph_context_client: None,
+                tier_a_first: false,
+            },
+            temp_ledger(),
+        );
+        Arc::new(AppState {
+            doorman,
+            apprenticeship: None,
+            brief_cache: Arc::new(BriefCache::default()),
+            verdict_dispatcher: None,
+            audit_proxy_client: None,
+            audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+            audit_tenant_concurrency: empty_concurrency_map(),
+            audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
+            queue_config: temp_queue_config(),
+            service_content_endpoint: String::new(),
+            node_class: "hardware",
+            tier_a_reason: "available",
         })
     }
 
@@ -172,6 +222,8 @@ pub mod test_helpers {
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
+            node_class: "hardware",
+            tier_a_reason: "available",
         })
     }
 
@@ -226,6 +278,8 @@ pub mod test_helpers {
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
+            node_class: "hardware",
+            tier_a_reason: "available",
         })
     }
 
@@ -295,6 +349,8 @@ pub mod test_helpers {
             audit_tenant_concurrency_cap: concurrency_cap,
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
+            node_class: "hardware",
+            tier_a_reason: "available",
         });
         (state, ledger_dir)
     }
@@ -343,6 +399,8 @@ pub mod test_helpers {
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
+            node_class: "hardware",
+            tier_a_reason: "available",
         });
         (state, ledger_dir)
     }
@@ -365,6 +423,8 @@ pub mod test_helpers {
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
             service_content_endpoint: service_content_endpoint.into(),
+            node_class: "hardware",
+            tier_a_reason: "available",
         })
     }
 }
