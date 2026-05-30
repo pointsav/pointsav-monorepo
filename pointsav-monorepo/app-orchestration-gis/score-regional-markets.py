@@ -1,43 +1,74 @@
 #!/usr/bin/env python3
 """
-score-regional-markets.py — Composite ranking for Top 400 NA and EU Regional Markets.
+score-regional-markets.py — Top 400 Regional Markets ranking (NA and EU).
 
-Scoring formula:
-  score = tier_score × civic_multiplier × metro_multiplier × confidence_factor
+DEFINITION: A Regional Market is a named suburb or satellite municipality within
+commuting distance (15–80 km) of a major metro centre. Major metro cores are
+covered extensively by institutional research (Oxford Economics, CBRE, Colliers
+International). Standalone secondary cities (>80 km from any major metro) are a
+separate category. This script ranks only the suburban-regional tier.
+
+Classification by haversine distance to nearest major metro centroid:
+  metro-core           dist_km < SUBURBAN_MIN_KM  → excluded
+  suburban-regional    SUBURBAN_MIN_KM ≤ dist_km ≤ SUBURBAN_MAX_KM  → Top 400 pool
+  standalone-secondary dist_km > SUBURBAN_MAX_KM  → excluded (separate category)
+
+Geographic coherence check:
+  Any RM whose clusters span > MAX_SPAN_KM is a name-collision aggregation and
+  is excluded regardless of distance classification.
+
+Scoring formula (within suburban-regional pool only):
+  score = tier_score × civic_multiplier × confidence_factor
 
   tier_score        = (t1 × 4) + (t2 × 2) + (t3 × 1)
-  civic_multiplier  = 1.5 if any cluster member has a civic anchor category, else 1.0
-  metro_multiplier  = clamp(dist_km_to_nearest_metro / 50.0, 0.5, 2.0)
+  civic_multiplier  = 1.5 if any cluster member has a civic-anchor category, else 1.0
   confidence_factor = 1.0 if mkt_conf == 'high' else 0.7
 
+  No metro_multiplier — all markets in the pool are already in the suburban band.
+
 Outputs:
-  work/top400-na.json  — top 400 NA Regional Markets ranked by score
-  work/top400-eu.json  — top 400 EU Regional Markets ranked by score
+  work/top400-regional-na.json  — top 400 suburban-regional NA markets
+  work/top400-regional-eu.json  — top 400 suburban-regional EU markets
+  work/classified-na.json       — all NA markets with rm_type (reference)
+  work/classified-eu.json       — all EU markets with rm_type (reference)
 
 Run from:  app-orchestration-gis/
   python3 score-regional-markets.py
 """
 
+import csv
 import json
 import math
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent
-WORK_DIR = SCRIPT_DIR / 'work'
-RM_PATH = Path('/srv/foundry/deployments/gateway-orchestration-gis-1/www/data/regional-markets.json')
-CLUSTERS_PATH = Path('/srv/foundry/deployments/gateway-orchestration-gis-1/www/data/clusters-meta.json')
-AEC_PATH = WORK_DIR / 'DATA-aec-clusters.csv'
+WORK_DIR   = SCRIPT_DIR / 'work'
 
-OUT_NA = WORK_DIR / 'top400-na.json'
-OUT_EU = WORK_DIR / 'top400-eu.json'
+RM_PATH       = Path('/srv/foundry/deployments/gateway-orchestration-gis-1/www/data/regional-markets.json')
+CLUSTERS_PATH = Path('/srv/foundry/deployments/gateway-orchestration-gis-1/www/data/clusters-meta.json')
+AEC_PATH      = WORK_DIR / 'DATA-aec-clusters.csv'
+
+OUT_NA       = WORK_DIR / 'top400-regional-na.json'
+OUT_EU       = WORK_DIR / 'top400-regional-eu.json'
+OUT_CLASS_NA = WORK_DIR / 'classified-na.json'
+OUT_CLASS_EU = WORK_DIR / 'classified-eu.json'
+
+# Suburban distance thresholds
+SUBURBAN_MIN_KM = 15    # < 15 km = metro core → excluded
+SUBURBAN_MAX_KM = 80    # > 80 km = standalone secondary city → excluded
+MAX_SPAN_KM     = 200   # cluster bounding-box span limit (name-collision check)
 
 CIVIC_CATEGORIES = {
     'healthcare', 'higher_education', 'medical', 'education',
     'hospital', 'university', 'college', 'clinic',
 }
 
-# Major NA metro centroids (lat, lon, name)
+# ── Metro reference lists ──────────────────────────────────────────────────────
+# These define both metro-core exclusion zones and suburban distance reference.
+# Covers ~100 NA + ~120 EU major metro centres.
+
 NA_METROS = [
+    # United States
     (40.7128, -74.0060, 'New York'),
     (34.0522, -118.2437, 'Los Angeles'),
     (41.8781, -87.6298, 'Chicago'),
@@ -81,12 +112,53 @@ NA_METROS = [
     (41.7658, -72.6851, 'Hartford'),
     (41.8240, -71.4128, 'Providence'),
     (35.1495, -90.0490, 'Memphis'),
-    (43.0389, -76.1422, 'Syracuse'),
+    (43.0481, -76.1474, 'Syracuse'),
     (32.2226, -110.9747, 'Tucson'),
     (36.7378, -119.7871, 'Fresno'),
     (35.0853, -106.6056, 'Albuquerque'),
     (42.3601, -71.0589, 'Boston'),
     (42.3314, -83.0458, 'Detroit'),
+    (43.0389, -87.9065, 'Milwaukee'),
+    (31.7619, -106.4850, 'El Paso'),
+    (37.6879, -97.3442, 'Wichita'),
+    (38.8339, -104.8214, 'Colorado Springs'),
+    (41.2565, -95.9345, 'Omaha'),
+    (41.5868, -93.6250, 'Des Moines'),
+    (36.1540, -95.9928, 'Tulsa'),
+    (35.9606, -83.9207, 'Knoxville'),
+    (36.0726, -79.7920, 'Greensboro'),
+    (36.0999, -80.2442, 'Winston-Salem'),
+    (35.9940, -78.8986, 'Durham'),
+    (36.8529, -75.9780, 'Virginia Beach'),
+    (33.9988, -81.0450, 'Columbia SC'),
+    (34.8526, -82.3940, 'Greenville SC'),
+    (43.5978, -116.2024, 'Boise'),
+    (46.8772, -96.7898, 'Fargo'),
+    (43.5460, -96.7313, 'Sioux Falls'),
+    (44.5133, -88.0133, 'Green Bay'),
+    (42.6526, -73.7562, 'Albany'),
+    (42.2626, -71.8023, 'Worcester'),
+    (41.3083, -72.9279, 'New Haven'),
+    (34.7465, -92.2896, 'Little Rock'),
+    (30.6954, -88.0399, 'Pensacola'),
+    (30.4158, -91.1800, 'Baton Rouge'),
+    (29.9511, -90.0715, 'New Orleans'),
+    (34.2000, -119.1800, 'Oxnard'),
+    (33.9958, -117.3564, 'Riverside'),
+    (37.9577, -121.2908, 'Stockton'),
+    (37.6391, -120.9969, 'Modesto'),
+    (35.3733, -119.0187, 'Bakersfield'),
+    (47.2529, -122.4443, 'Tacoma'),
+    (47.0379, -122.9007, 'Olympia'),
+    (44.0805, -103.2310, 'Rapid City'),
+    (40.7989, -77.8600, 'State College'),
+    (40.0379, -76.3055, 'Lancaster'),
+    (39.9576, -75.6052, 'Wilmington DE'),
+    (30.3960, -88.8853, 'Mobile'),
+    (32.3668, -86.2999, 'Montgomery'),
+    (33.9519, -84.5499, 'Kennesaw'),
+    (39.7817, -89.6501, 'Springfield IL'),
+    # Canada
     (43.6532, -79.3832, 'Toronto'),
     (45.5017, -73.5673, 'Montreal'),
     (49.2827, -123.1207, 'Vancouver'),
@@ -95,109 +167,324 @@ NA_METROS = [
     (45.4215, -75.6972, 'Ottawa'),
     (49.8951, -97.1384, 'Winnipeg'),
     (46.8139, -71.2080, 'Quebec City'),
+    (43.2557, -79.8711, 'Hamilton'),
+    (43.1594, -79.2469, 'St. Catharines'),
+    (43.3501, -80.3161, 'Kitchener'),
+    (46.1548, -60.1942, 'Cape Breton'),
+    (44.6476, -63.5728, 'Halifax'),
+    (46.0878, -64.7782, 'Moncton'),
+    (47.5615, -52.7126, 'St. John\'s'),
+    # Mexico
     (19.4326, -99.1332, 'Mexico City'),
     (20.6597, -103.3496, 'Guadalajara'),
     (25.6866, -100.3161, 'Monterrey'),
     (19.0413, -98.2062, 'Puebla'),
+    (21.1619, -86.8515, 'Cancún'),
+    (20.9674, -89.5926, 'Mérida'),
+    (32.5027, -117.0087, 'Tijuana'),
+    (29.0729, -110.9559, 'Hermosillo'),
+    (28.6353, -106.0889, 'Chihuahua'),
+    (26.9353, -101.4252, 'Saltillo'),
+    (22.1565, -100.9855, 'San Luis Potosí'),
+    (21.0190, -101.2574, 'León'),
+    (20.5888, -100.3899, 'Querétaro'),
+    (19.7010, -101.1844, 'Morelia'),
+    (20.1011, -98.7591, 'Pachuca'),
+    (18.9242, -99.2216, 'Cuernavaca'),
+    (21.8853, -102.2916, 'Aguascalientes'),
+    (20.9670, -100.7440, 'Irapuato'),
+    (19.8301, -90.5349, 'Campeche'),
+    (17.0732, -96.7266, 'Oaxaca'),
 ]
 
-# Major EU metro centroids (lat, lon, name)
 EU_METROS = [
+    # United Kingdom
     (51.5074, -0.1278, 'London'),
-    (48.8566, 2.3522, 'Paris'),
+    (53.4808, -2.2426, 'Manchester'),
+    (52.4862, -1.8904, 'Birmingham'),
+    (53.8008, -1.5491, 'Leeds'),
+    (55.8642, -4.2518, 'Glasgow'),
+    (55.9533, -3.1883, 'Edinburgh'),
+    (51.4816, -3.1791, 'Cardiff'),
+    (51.4545, -2.5879, 'Bristol'),
+    (52.9548, -1.1581, 'Nottingham'),
+    (53.3811, -1.4701, 'Sheffield'),
+    (52.6369, -1.1398, 'Leicester'),
+    (50.8229, -0.1363, 'Brighton'),
+    (53.7632, -2.7044, 'Preston'),
+    (54.9783, -1.6178, 'Newcastle'),
+    (51.8787, -0.4200, 'Luton'),
+    (51.4400, -1.0000, 'Reading'),
+    (52.2053,  0.1218, 'Cambridge'),
+    (51.7520, -1.2577, 'Oxford'),
+    (52.6333, -1.1333, 'Coventry'),
+    (53.5453, -2.6318, 'Wigan'),
+    (53.7974, -1.7631, 'Bradford'),
+    (50.9097, -1.4044, 'Southampton'),
+    (50.7192, -1.8808, 'Bournemouth'),
+    (51.3781, -2.3597, 'Bath'),
+    (51.6214, -3.9436, 'Swansea'),
+    (54.5967, -5.9301, 'Belfast'),
+    (57.1499, -2.0942, 'Aberdeen'),
+    (56.4620, -2.9707, 'Dundee'),
+    # Germany
     (52.5200, 13.4050, 'Berlin'),
-    (40.4168, -3.7038, 'Madrid'),
-    (41.9028, 12.4964, 'Rome'),
-    (44.4268, 26.1025, 'Bucharest'),
-    (48.2082, 16.3738, 'Vienna'),
     (53.5753, 10.0153, 'Hamburg'),
-    (47.4979, 19.0402, 'Budapest'),
-    (52.2297, 21.0122, 'Warsaw'),
-    (41.3851, 2.1734, 'Barcelona'),
     (48.1351, 11.5820, 'Munich'),
-    (45.4654, 9.1859, 'Milan'),
-    (50.0755, 14.4378, 'Prague'),
-    (42.6977, 23.3219, 'Sofia'),
-    (50.9333, 6.9500, 'Cologne'),
-    (59.3293, 18.0686, 'Stockholm'),
-    (40.8518, 14.2681, 'Naples'),
-    (45.0703, 7.6869, 'Turin'),
-    (52.3676, 4.9041, 'Amsterdam'),
-    (43.2965, 5.3698, 'Marseille'),
-    (39.4699, -0.3763, 'Valencia'),
-    (50.0647, 19.9450, 'Kraków'),
-    (50.1109, 8.6821, 'Frankfurt'),
-    (37.3891, -5.9845, 'Seville'),
-    (51.9225, 4.4792, 'Rotterdam'),
-    (60.1699, 24.9384, 'Helsinki'),
-    (37.9838, 23.7275, 'Athens'),
-    (51.2217, 6.7762, 'Düsseldorf'),
-    (48.7758, 9.1829, 'Stuttgart'),
-    (51.5136, 7.4653, 'Dortmund'),
-    (51.1079, 17.0385, 'Wrocław'),
-    (38.7223, -9.1393, 'Lisbon'),
+    (50.9333,  6.9500, 'Cologne'),
+    (50.1109,  8.6821, 'Frankfurt'),
+    (48.7758,  9.1829, 'Stuttgart'),
+    (51.5136,  7.4653, 'Dortmund'),
+    (51.2217,  6.7762, 'Düsseldorf'),
+    (51.4508,  7.0131, 'Essen'),
+    (53.0793,  8.8017, 'Bremen'),
+    (52.3759,  9.7320, 'Hannover'),
+    (51.9607,  7.6261, 'Münster'),
+    (49.4521, 11.0767, 'Nürnberg'),
+    (51.0504, 13.7373, 'Dresden'),
     (51.3397, 12.3731, 'Leipzig'),
-    (50.8503, 4.3517, 'Brussels'),
-    (51.4508, 7.0131, 'Essen'),
-    (50.2649, 19.0238, 'Katowice'),
-    (38.1157, 13.3615, 'Palermo'),
-    (45.7640, 4.8357, 'Lyon'),
-    (43.6047, 1.4442, 'Toulouse'),
-    (43.2965, -0.3698, 'Nice'),
+    (52.1205, 11.6276, 'Magdeburg'),
+    (49.0069,  8.4037, 'Karlsruhe'),
+    (49.4875,  8.4660, 'Mannheim'),
+    (48.3705, 10.8978, 'Augsburg'),
+    (50.7753,  6.0839, 'Aachen'),
+    (51.4779,  7.2148, 'Bochum'),
+    (52.2689, 10.5268, 'Braunschweig'),
+    (52.0302,  8.5325, 'Bielefeld'),
+    (47.9990,  7.8421, 'Freiburg'),
+    (48.1374,  9.3730, 'Ulm'),
+    (54.0924, 12.0991, 'Rostock'),
+    (53.8655, 10.6866, 'Lübeck'),
+    (53.0758, 13.9907, 'Cottbus'),
+    (51.4818, 11.9697, 'Halle'),
+    (49.0000, 12.1000, 'Regensburg'),
+    (50.0000,  8.2700, 'Wiesbaden'),
+    (50.1106,  8.6821, 'Darmstadt'),
+    # France
+    (48.8566,  2.3522, 'Paris'),
+    (43.2965,  5.3698, 'Marseille'),
+    (45.7640,  4.8357, 'Lyon'),
+    (43.6047,  1.4442, 'Toulouse'),
+    (43.7102,  7.2620, 'Nice'),
     (47.2184, -1.5536, 'Nantes'),
-    (48.5734, 7.7521, 'Strasbourg'),
-    (43.6108, 3.8767, 'Montpellier'),
+    (48.5734,  7.7521, 'Strasbourg'),
+    (43.6108,  3.8767, 'Montpellier'),
     (44.8378, -0.5792, 'Bordeaux'),
-    (50.6292, 3.0573, 'Lille'),
+    (50.6292,  3.0573, 'Lille'),
     (48.1173, -1.6778, 'Rennes'),
-    (49.2583, 4.0317, 'Reims'),
-    (49.4938, 0.1077, 'Le Havre'),
-    (45.4338, 4.3903, 'Saint-Étienne'),
-    (43.1242, 5.9280, 'Toulon'),
-    (45.1885, 5.7245, 'Grenoble'),
-    (47.3220, 5.0415, 'Dijon'),
-    (47.4784, -0.5632, 'Angers'),
-    (43.8367, 4.3601, 'Nîmes'),
-    (43.5297, 5.4474, 'Aix-en-Provence'),
+    (45.4338,  4.3903, 'Saint-Étienne'),
+    (43.1242,  5.9280, 'Toulon'),
+    (45.1885,  5.7245, 'Grenoble'),
+    (49.4938,  0.1077, 'Le Havre'),
+    (47.3220,  5.0415, 'Dijon'),
+    (49.2583,  4.0317, 'Reims'),
+    (48.7833,  2.0000, 'Versailles'),
+    (47.9784,  7.7649, 'Colmar'),
+    (43.8384,  4.3601, 'Nîmes'),
+    (43.5297,  5.4474, 'Aix-en-Provence'),
     (48.3905, -4.4860, 'Brest'),
-    (47.9960, 0.1966, 'Le Mans'),
-    (52.3758, 4.8975, 'The Hague'),
-    (51.4416, 5.4697, 'Eindhoven'),
-    (52.0907, 5.1214, 'Utrecht'),
+    (47.9960,  0.1966, 'Le Mans'),
+    (50.3672,  3.5236, 'Valenciennes'),
+    (49.8941,  2.2958, 'Amiens'),
+    # Poland
+    (52.2297, 21.0122, 'Warsaw'),
+    (50.0647, 19.9450, 'Kraków'),
+    (51.1079, 17.0385, 'Wrocław'),
+    (51.7592, 19.4560, 'Łódź'),
+    (53.4285, 14.5528, 'Szczecin'),
+    (54.3520, 18.6466, 'Gdańsk'),
+    (53.1325, 23.1688, 'Białystok'),
+    (51.2465, 22.5684, 'Lublin'),
+    (53.7784, 20.4801, 'Olsztyn'),
+    (53.1138, 18.0084, 'Bydgoszcz'),
+    (52.4064, 16.9252, 'Poznań'),
+    (50.8661, 20.6286, 'Kielce'),
+    (50.2649, 19.0238, 'Katowice'),
+    (50.3000, 18.6667, 'Gliwice'),
+    (50.6751, 17.9213, 'Opole'),
+    (53.4289, 21.5690, 'Łomża'),
+    # Spain
+    (40.4168, -3.7038, 'Madrid'),
+    (41.3851,  2.1734, 'Barcelona'),
+    (39.4699, -0.3763, 'Valencia'),
+    (37.3891, -5.9845, 'Seville'),
+    (37.1773, -3.5986, 'Granada'),
+    (38.3452, -0.4815, 'Alicante'),
+    (39.5693,  2.6502, 'Palma'),
+    (36.7213, -4.4214, 'Málaga'),
+    (43.2627, -2.9253, 'Bilbao'),
+    (43.3623, -8.4115, 'A Coruña'),
+    (41.6488, -0.8891, 'Zaragoza'),
+    (43.3614, -5.8593, 'Oviedo'),
+    (39.8628, -4.0273, 'Toledo'),
+    (41.6561, -4.7244, 'Valladolid'),
+    (37.8882, -4.7794, 'Córdoba'),
+    (36.5271, -6.2886, 'Cádiz'),
+    # Italy
+    (41.9028, 12.4964, 'Rome'),
+    (45.4654,  9.1859, 'Milan'),
+    (40.8518, 14.2681, 'Naples'),
+    (45.0703,  7.6869, 'Turin'),
+    (38.1157, 13.3615, 'Palermo'),
+    (44.4056,  8.9463, 'Genoa'),
+    (43.7696, 11.2558, 'Florence'),
+    (44.4949, 11.3426, 'Bologna'),
+    (45.4409, 12.3155, 'Venice'),
+    (45.4384, 10.9916, 'Verona'),
+    (37.5019, 15.0875, 'Catania'),
+    (38.1111, 15.6617, 'Messina'),
+    (45.6495, 13.7768, 'Trieste'),
+    (43.3167, 13.3167, 'Ancona'),
+    (41.1171, 16.8719, 'Bari'),
+    (40.6401, 15.8051, 'Potenza'),
+    (37.9333, 15.5500, 'Reggio Calabria'),
+    # Netherlands
+    (52.3676,  4.9041, 'Amsterdam'),
+    (51.9225,  4.4792, 'Rotterdam'),
+    (52.3758,  4.8975, 'The Hague'),
+    (52.0907,  5.1214, 'Utrecht'),
+    (51.4416,  5.4697, 'Eindhoven'),
+    (51.8126,  5.8372, 'Nijmegen'),
+    (53.2194,  6.5665, 'Groningen'),
+    # Belgium
+    (50.8503,  4.3517, 'Brussels'),
+    (51.2213,  4.3997, 'Antwerp'),
+    (51.0543,  3.7174, 'Ghent'),
+    (50.6451,  5.5734, 'Liège'),
+    (50.4109,  4.4441, 'Charleroi'),
+    (50.8280,  3.2614, 'Kortrijk'),
+    # Austria
+    (48.2082, 16.3738, 'Vienna'),
+    (47.8095, 13.0550, 'Salzburg'),
+    (47.2692, 11.4041, 'Innsbruck'),
+    (47.0707, 15.4395, 'Graz'),
+    (48.3069, 14.2858, 'Linz'),
+    # Scandinavia
+    (59.3293, 18.0686, 'Stockholm'),
+    (57.7089, 11.9746, 'Gothenburg'),
+    (55.6761, 12.5683, 'Copenhagen'),
+    (56.1572, 10.2107, 'Aarhus'),
+    (55.3959, 10.3883, 'Odense'),
+    (55.0607, 14.9057, 'Bornholm'),
+    (57.0488, 9.9187, 'Aalborg'),
+    (59.9139, 10.7522, 'Oslo'),
+    (58.9700,  5.7331, 'Stavanger'),
+    (63.4305, 10.3951, 'Trondheim'),
+    (60.3913,  5.3221, 'Bergen'),
+    (60.1699, 24.9384, 'Helsinki'),
+    (61.4978, 23.7610, 'Tampere'),
+    (65.0121, 25.4651, 'Oulu'),
+    (60.4518, 22.2666, 'Turku'),
+    # Greece
+    (37.9838, 23.7275, 'Athens'),
+    (40.6401, 22.9444, 'Thessaloniki'),
+    (38.2466, 21.7346, 'Patras'),
+    (35.3387, 25.1442, 'Heraklion'),
+    # Portugal
+    (38.7223, -9.1393, 'Lisbon'),
+    (41.1579, -8.6291, 'Porto'),
+    (41.5503, -8.4200, 'Braga'),
+    (40.2033, -8.4103, 'Coimbra'),
+    # Czech Republic / Slovakia
+    (50.0755, 14.4378, 'Prague'),
+    (49.1951, 16.6068, 'Brno'),
+    (49.7384, 13.3736, 'Plzeň'),
+    (48.1486, 17.1077, 'Bratislava'),
+    (48.6971, 21.2611, 'Košice'),
+    # Hungary / Romania / Bulgaria
+    (47.4979, 19.0402, 'Budapest'),
+    (47.1585, 27.6014, 'Iași'),
+    (44.4268, 26.1025, 'Bucharest'),
+    (46.7712, 23.6236, 'Cluj-Napoca'),
+    (45.7489, 21.2087, 'Timișoara'),
+    (45.6427, 25.5887, 'Brașov'),
+    (44.1598, 28.6348, 'Constanța'),
+    (42.6977, 23.3219, 'Sofia'),
+    (42.1354, 24.7453, 'Plovdiv'),
+    (43.2048, 27.9101, 'Varna'),
+    # Iceland / others
+    (64.1265, -21.8174, 'Reykjavik'),
 ]
 
 NA_ISOS = {'US', 'CA', 'MX'}
-EU_ISOS = {'GB', 'DE', 'FR', 'ES', 'IT', 'PL', 'NL', 'AT', 'PT', 'GR', 'IS', 'SE', 'DK', 'FI', 'NO'}
+EU_ISOS = {
+    'GB', 'DE', 'FR', 'ES', 'IT', 'PL', 'NL', 'AT', 'PT', 'GR',
+    'IS', 'SE', 'DK', 'FI', 'NO', 'BE', 'CZ', 'SK', 'HU', 'RO', 'BG',
+}
 
+
+# ── Utility functions ──────────────────────────────────────────────────────────
 
 def haversine(lat1, lon1, lat2, lon2):
     R = 6371.0
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
-    a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
+    a = (math.sin(dlat / 2) ** 2
+         + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2))
+         * math.sin(dlon / 2) ** 2)
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
 def nearest_metro(lat, lon, metros):
-    best_dist = float('inf')
-    best_name = ''
+    best_dist, best_name = float('inf'), ''
     for mlat, mlon, name in metros:
         d = haversine(lat, lon, mlat, mlon)
         if d < best_dist:
-            best_dist = d
-            best_name = name
+            best_dist, best_name = d, name
     return best_dist, best_name
 
 
-def metro_multiplier(dist_km):
-    return max(0.5, min(2.0, dist_km / 50.0))
+def classify_rm(dist_km):
+    if dist_km < SUBURBAN_MIN_KM:
+        return 'metro-core'
+    elif dist_km <= SUBURBAN_MAX_KM:
+        return 'suburban-regional'
+    else:
+        return 'standalone-secondary'
+
+
+def cluster_lat_lon(c):
+    """Extract lat/lon from cluster object; falls back to parsing cluster ID."""
+    lat = c.get('lat')
+    lon = c.get('lon')
+    if lat is not None and lon is not None:
+        return float(lat), float(lon)
+    # Parse from ID format: co_{iso}_{n|s}{lat×100000}_{e|w}{lon×100000}
+    cid = c.get('id', '')
+    parts = cid.split('_')
+    if len(parts) >= 4:
+        try:
+            lp = parts[-2]
+            op = parts[-1]
+            lat_sign = 1 if lp[0] == 'n' else -1
+            lon_sign = 1 if op[0] == 'e' else -1
+            return lat_sign * int(lp[1:]) / 100000, lon_sign * int(op[1:]) / 100000
+        except (ValueError, IndexError):
+            pass
+    return None, None
+
+
+def is_geographically_coherent(cluster_list):
+    """Return False if cluster bounding box spans more than MAX_SPAN_KM."""
+    if len(cluster_list) < 2:
+        return True
+    coords = []
+    for c in cluster_list:
+        lat, lon = cluster_lat_lon(c)
+        if lat is not None:
+            coords.append((lat, lon))
+    if len(coords) < 2:
+        return True
+    lats = [c[0] for c in coords]
+    lons = [c[1] for c in coords]
+    span = haversine(min(lats), min(lons), max(lats), max(lons))
+    return span <= MAX_SPAN_KM
 
 
 def load_aec_data():
     aec = {}
     if not AEC_PATH.exists():
         return aec
-    import csv
     with open(AEC_PATH) as f:
         for row in csv.DictReader(f):
             aec[row['cluster_id']] = {
@@ -226,32 +513,38 @@ print("Loading AEC data...", flush=True)
 aec_data = load_aec_data()
 print(f"  {len(aec_data)} AEC records", flush=True)
 
-# Build rm → cluster list
+# Build rm_id → cluster list
 rm_clusters = {}
 for c in clusters_raw:
     rm = c.get('rm')
     if rm:
         rm_clusters.setdefault(rm, []).append(c)
 
-# ── Score each RM ──────────────────────────────────────────────────────────────
+# ── Score and classify ─────────────────────────────────────────────────────────
 
-print("\nScoring Regional Markets...", flush=True)
+print("\nScoring and classifying Regional Markets...", flush=True)
 
-scored = []
+all_scored = []
+skip_counts = {'no_clusters': 0, 'no_tier': 0, 'incoherent': 0}
+
 for rm in rms_raw:
-    rm_id   = rm['rm_id']
-    iso     = rm.get('iso', '')
-    cont    = rm.get('continent', rm.get('cont', ''))
+    rm_id = rm['rm_id']
+    iso   = rm.get('iso', '')
+    cont  = rm.get('continent', rm.get('cont', ''))
 
-    # Determine continent from ISO if missing
     if not cont:
         cont = 'NA' if iso in NA_ISOS else 'EU' if iso in EU_ISOS else 'OTHER'
-
     if cont not in ('NA', 'EU'):
         continue
 
     cl = rm_clusters.get(rm_id, [])
     if not cl:
+        skip_counts['no_clusters'] += 1
+        continue
+
+    # Geographic coherence — exclude name-collision aggregations
+    if not is_geographically_coherent(cl):
+        skip_counts['incoherent'] += 1
         continue
 
     # Tier counts
@@ -260,17 +553,14 @@ for rm in rms_raw:
     t3 = sum(1 for c in cl if c['t'] == 3)
     tier_score = t1 * 4 + t2 * 2 + t3 * 1
     if tier_score == 0:
+        skip_counts['no_tier'] += 1
         continue
 
     # Civic anchor
-    civic = False
-    for c in cl:
-        for m in c.get('members', []):
-            if m.get('category', '').lower() in CIVIC_CATEGORIES:
-                civic = True
-                break
-        if civic:
-            break
+    civic = any(
+        m.get('category', '').lower() in CIVIC_CATEGORIES
+        for c in cl for m in c.get('members', [])
+    )
     civ_mult = 1.5 if civic else 1.0
 
     # Centroid
@@ -283,18 +573,27 @@ for rm in rms_raw:
     else:
         lat = lon = 0
 
-    # Metro distance
-    metros = NA_METROS if cont == 'NA' else EU_METROS
-    dist_km, nearest = nearest_metro(lat, lon, metros)
-    met_mult = metro_multiplier(dist_km)
+    # Metro distance and classification
+    metros  = NA_METROS if cont == 'NA' else EU_METROS
+    dist_km, suburb_of = nearest_metro(lat, lon, metros)
+    rm_type = classify_rm(dist_km)
+
+    # Name-match override: large cities (LA, Memphis) can have clusters 15–80 km
+    # from the metro centroid while still within city limits. If the market base
+    # name exactly matches a metro reference name, force metro-core.
+    market_base = rm.get('market', '').split(',')[0].strip()
+    metro_names_lc = {name.lower() for _, _, name in metros}
+    if market_base.lower() in metro_names_lc:
+        rm_type = 'metro-core'
 
     # Confidence
-    mkt_conf = rm.get('mkt_conf', 'high')
+    mkt_conf    = rm.get('mkt_conf', 'high')
     conf_factor = 1.0 if mkt_conf == 'high' else 0.7
 
-    score = tier_score * civ_mult * met_mult * conf_factor
+    # Score — no metro_multiplier; all ranked markets are already in the suburban band
+    score = tier_score * civ_mult * conf_factor
 
-    # AEC summary for clusters in this RM
+    # AEC summary
     cluster_ids = [c['id'] for c in cl]
     aec_summary = {}
     for cid in cluster_ids:
@@ -303,14 +602,17 @@ for rm in rms_raw:
                 if v and k not in aec_summary:
                     aec_summary[k] = v
 
-    # Cluster details
+    # Cluster detail
     cluster_details = []
     for c in cl:
+        clat, clon = cluster_lat_lon(c)
         cluster_details.append({
             'cluster_id': c['id'],
-            'tier': c['t'],
-            'tier_desc': c.get('td', ''),
-            'span_km': c.get('span', 0),
+            'tier':       c['t'],
+            'tier_desc':  c.get('td', ''),
+            'span_km':    c.get('span', 0),
+            'lat':        clat,
+            'lon':        clon,
             'members': [
                 {'chain_id': m.get('chain_id', ''), 'name': m.get('name', ''),
                  'category': m.get('category', '')}
@@ -319,85 +621,125 @@ for rm in rms_raw:
             'aec': aec_data.get(c['id'], {}),
         })
 
-    scored.append({
-        'rm_id':             rm_id,
-        'market':            rm.get('market', ''),
-        'iso':               iso,
-        'continent':         cont,
-        'region':            rm.get('region', ''),
-        'centroid':          {'lat': lat, 'lon': lon},
+    all_scored.append({
+        'rm_id':            rm_id,
+        'market':           rm.get('market', ''),
+        'rm_type':          rm_type,
+        'suburb_of':        suburb_of,
+        'dist_km':          round(dist_km, 1),
+        'iso':              iso,
+        'continent':        cont,
+        'region':           rm.get('region', ''),
+        'centroid':         {'lat': lat, 'lon': lon},
         't1': t1, 't2': t2, 't3': t3,
-        'tier_score':        tier_score,
-        'civic':             civic,
-        'civic_multiplier':  civ_mult,
-        'nearest_metro':     nearest,
-        'dist_km':           round(dist_km, 1),
-        'metro_multiplier':  round(met_mult, 3),
-        'mkt_conf':          mkt_conf,
+        'tier_score':       tier_score,
+        'civic':            civic,
+        'civic_multiplier': civ_mult,
+        'mkt_conf':         mkt_conf,
         'confidence_factor': conf_factor,
-        'score':             round(score, 3),
-        'cluster_ids':       cluster_ids,
-        'clusters':          cluster_details,
-        'aec_summary':       aec_summary,
+        'score':            round(score, 3),
+        'cluster_ids':      cluster_ids,
+        'clusters':         cluster_details,
+        'aec_summary':      aec_summary,
     })
 
-print(f"  Scored {len(scored)} Regional Markets", flush=True)
+print(f"  Scored {len(all_scored)} Regional Markets", flush=True)
+print(f"  Skipped — no clusters: {skip_counts['no_clusters']} | "
+      f"no tier: {skip_counts['no_tier']} | "
+      f"incoherent: {skip_counts['incoherent']}", flush=True)
 
-# ── Split and rank ─────────────────────────────────────────────────────────────
+# ── Classification summary ─────────────────────────────────────────────────────
 
-na_scored = sorted([r for r in scored if r['continent'] == 'NA'], key=lambda r: r['score'], reverse=True)
-eu_scored = sorted([r for r in scored if r['continent'] == 'EU'], key=lambda r: r['score'], reverse=True)
+for cont in ('NA', 'EU'):
+    subset     = [r for r in all_scored if r['continent'] == cont]
+    metro_core = [r for r in subset if r['rm_type'] == 'metro-core']
+    suburban   = [r for r in subset if r['rm_type'] == 'suburban-regional']
+    standalone = [r for r in subset if r['rm_type'] == 'standalone-secondary']
+    print(f"  {cont}: {len(metro_core)} metro-core | "
+          f"{len(suburban)} suburban-regional | "
+          f"{len(standalone)} standalone-secondary", flush=True)
 
-# Add rank
-for i, r in enumerate(na_scored, 1):
+# ── Filter and rank ────────────────────────────────────────────────────────────
+
+na_regional = sorted(
+    [r for r in all_scored if r['continent'] == 'NA' and r['rm_type'] == 'suburban-regional'],
+    key=lambda r: r['score'], reverse=True,
+)
+eu_regional = sorted(
+    [r for r in all_scored if r['continent'] == 'EU' and r['rm_type'] == 'suburban-regional'],
+    key=lambda r: r['score'], reverse=True,
+)
+
+na_all = sorted([r for r in all_scored if r['continent'] == 'NA'], key=lambda r: r['score'], reverse=True)
+eu_all = sorted([r for r in all_scored if r['continent'] == 'EU'], key=lambda r: r['score'], reverse=True)
+
+for i, r in enumerate(na_regional, 1):
     r['rank'] = i
-for i, r in enumerate(eu_scored, 1):
+for i, r in enumerate(eu_regional, 1):
     r['rank'] = i
 
-top400_na = na_scored[:400]
-top400_eu = eu_scored[:400]
+top_na = na_regional[:400]
+top_eu = eu_regional[:400]
 
 # ── Write output ───────────────────────────────────────────────────────────────
 
+WORK_DIR.mkdir(exist_ok=True)
+
 with open(OUT_NA, 'w') as f:
-    json.dump(top400_na, f, indent=2)
-print(f"\nWrote {OUT_NA} ({len(top400_na)} entries)", flush=True)
+    json.dump(top_na, f, indent=2)
+print(f"\nWrote {OUT_NA} ({len(top_na)} suburban-regional NA entries)", flush=True)
 
 with open(OUT_EU, 'w') as f:
-    json.dump(top400_eu, f, indent=2)
-print(f"Wrote {OUT_EU} ({len(top400_eu)} entries)", flush=True)
+    json.dump(top_eu, f, indent=2)
+print(f"Wrote {OUT_EU} ({len(top_eu)} suburban-regional EU entries)", flush=True)
 
-# ── Print top 20 NA and EU for agent context ───────────────────────────────────
+with open(OUT_CLASS_NA, 'w') as f:
+    json.dump(na_all, f, indent=2)
+print(f"Wrote {OUT_CLASS_NA} ({len(na_all)} total NA with rm_type)", flush=True)
 
-print("\n── TOP 20 NA Regional Markets ──")
-print(f"{'Rank':>4}  {'Market':<40}  {'ISO':>3}  {'T1':>3}  {'T2':>3}  {'T3':>3}  {'Civic':>5}  {'Metro dist':>10}  {'Score':>7}")
-for r in top400_na[:20]:
-    print(f"{r['rank']:>4}  {r['market']:<40}  {r['iso']:>3}  {r['t1']:>3}  {r['t2']:>3}  {r['t3']:>3}  {'Yes' if r['civic'] else 'No':>5}  {r['nearest_metro'][:8]:>10}  {r['score']:>7.2f}")
+with open(OUT_CLASS_EU, 'w') as f:
+    json.dump(eu_all, f, indent=2)
+print(f"Wrote {OUT_CLASS_EU} ({len(eu_all)} total EU with rm_type)", flush=True)
 
-print("\n── TOP 20 EU Regional Markets ──")
-print(f"{'Rank':>4}  {'Market':<40}  {'ISO':>3}  {'T1':>3}  {'T2':>3}  {'T3':>3}  {'Civic':>5}  {'Metro dist':>10}  {'Score':>7}")
-for r in top400_eu[:20]:
-    print(f"{r['rank']:>4}  {r['market']:<40}  {r['iso']:>3}  {r['t1']:>3}  {r['t2']:>3}  {r['t3']:>3}  {'Yes' if r['civic'] else 'No':>5}  {r['nearest_metro'][:8]:>10}  {r['score']:>7.2f}")
+# ── Console summary ────────────────────────────────────────────────────────────
 
-# ── Identify 3 test regions for TOPIC articles ──────────────────────────────────
+print("\n── TOP 20 NA Regional Markets (suburban-regional) ──")
+hdr = f"{'Rk':>3}  {'Market':<30}  {'ISO':>3}  {'Suburb of':<16}  {'km':>5}  T1  T2  T3  Civ  Score"
+print(hdr)
+for r in top_na[:20]:
+    print(f"{r['rank']:>3}  {r['market']:<30}  {r['iso']:>3}  "
+          f"{r['suburb_of']:<16}  {r['dist_km']:>5.1f}  "
+          f"{r['t1']:>2}  {r['t2']:>2}  {r['t3']:>2}  "
+          f"{'Y' if r['civic'] else 'N':>3}  {r['score']:>6.2f}")
 
-print("\n── 3 TEST REGIONS FOR TOPIC ARTICLES ──")
-print("  (top-scoring NA non-metro, second NA, top-scoring EU)")
+print("\n── TOP 20 EU Regional Markets (suburban-regional) ──")
+print(hdr)
+for r in top_eu[:20]:
+    print(f"{r['rank']:>3}  {r['market']:<30}  {r['iso']:>3}  "
+          f"{r['suburb_of']:<16}  {r['dist_km']:>5.1f}  "
+          f"{r['t1']:>2}  {r['t2']:>2}  {r['t3']:>2}  "
+          f"{'Y' if r['civic'] else 'N':>3}  {r['score']:>6.2f}")
 
-def first_non_metro(ranked, metro_threshold_km=40):
-    for r in ranked:
-        if r['dist_km'] >= metro_threshold_km:
-            return r
-    return ranked[0]
+# ── 3 candidate test markets for TOPIC articles ────────────────────────────────
 
-test1 = first_non_metro(top400_na, 40)
-test2 = next((r for r in top400_na if r['rm_id'] != test1['rm_id'] and r['dist_km'] >= 40), top400_na[1])
-test3 = first_non_metro(top400_eu, 40)
+print("\n── 3 CANDIDATE TEST REGIONS FOR TOPIC ARTICLES ──")
+
+test1 = top_na[0] if top_na else None
+test2 = next(
+    (r for r in top_na if test1 and r['suburb_of'] != test1['suburb_of']),
+    top_na[1] if len(top_na) > 1 else None
+)
+test3 = top_eu[0] if top_eu else None
 
 for i, r in enumerate([test1, test2, test3], 1):
-    print(f"\n  Test {i}: {r['market']} ({r['iso']}) rank={r['rank']} score={r['score']:.2f}")
-    print(f"    dist_from_{r['nearest_metro']}={r['dist_km']}km  T1={r['t1']} T2={r['t2']} T3={r['t3']}  civic={r['civic']}")
-    print(f"    centroid: lat={r['centroid']['lat']} lon={r['centroid']['lon']}")
-    print(f"    clusters: {r['cluster_ids']}")
+    if r:
+        print(f"\n  Test {i}: {r['market']} ({r['iso']}), rank={r['rank']}, score={r['score']:.2f}")
+        print(f"    suburb_of={r['suburb_of']}  dist={r['dist_km']} km  "
+              f"T1={r['t1']} T2={r['t2']} T3={r['t3']}  civic={r['civic']}")
+        print(f"    centroid: lat={r['centroid']['lat']} lon={r['centroid']['lon']}")
+        print(f"    rm_id: {r['rm_id']}")
 
 print("\n── Score Complete ──")
+print(f"\nDefinition: suburban-regional = {SUBURBAN_MIN_KM}–{SUBURBAN_MAX_KM} km from a major metro centre.")
+print(f"Metro cores (<{SUBURBAN_MIN_KM} km) and standalone secondary cities (>{SUBURBAN_MAX_KM} km)")
+print(f"are classified and written to classified-*.json but excluded from the Top 400.")
