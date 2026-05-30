@@ -19,7 +19,7 @@
 - [ ] First-run port configuration screen: show a setup dialog if `workbench-config.json` is absent
 - [ ] Graceful error page when workbench server is not reachable (retry button + port change link)
 - [ ] Update window title to show connected URL and connection status
-- [ ] Smoke test: workbench loads over WireGuard PPN (`http://10.8.0.1:<port>`)
+- [ ] Smoke test: workbench loads over WireGuard PPN (`http://10.8.0.9:<port>`)
 - [ ] Add to project-software `binary-targets.yaml` once first build passes
 
 ## Pending decisions
