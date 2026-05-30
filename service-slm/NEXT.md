@@ -1,24 +1,36 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-29T04:20Z — §7.2 VERIFIED (Goose round-trip); system-as-blocks fix deployed; Yo-Yo TERMINATED, no auto-start
+> Last updated: 2026-05-30 — Circuit resilience ALL SPRINTS COMPLETE; Tier A is the confident primary
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## ✅ SYSTEM STATUS (2026-05-29)
+## ✅ SYSTEM STATUS (2026-05-30)
 
 | Service | State | Notes |
 |---|---|---|
-| `local-doorman.service` | active | `SLM_FORCE_BROKER_MODE=false`; Tier A live; tool_use format fix deployed |
-| `local-slm.service` (llama-server) | active | OLMo-2-7B Q4_K_M; **1 slot busy** (task 1590 — CPU starved by QEMU vm-mediakit) |
-| `yoyo-tier-b-1` | **TERMINATED** | Stopped 2026-05-28; circuit breaker OPEN; start to enable entity extraction |
-| `local-content.service` | active (restarted 02:37Z) | LadybugDB loading; extraction BLOCKED by Tier B circuit open |
+| `local-doorman.service` | active | **`SLM_TIER_A_FIRST=true`**; Sprint 3A deployed; tier_b readyz field live |
+| `local-slm.service` (llama-server) | active | OLMo-2-7B Q4_K_M; Tier A primary |
+| `yoyo-tier-b-1` | **TERMINATED** | Stopped 2026-05-28; circuit will open after probe failures (not circuit-breaker tripped by requests with tier_a_first) |
+| `local-content.service` | active (rebuilt 2026-05-29T19:26Z) | LadybugDB ready (7,201 entities); **Tier A fallback enabled (300s interval)**; entity_count in /healthz |
 | `local-claude-bridge.service` | active | Watching ~/.claude/projects/**; CORPUS files writing ✓ |
-| Shadow capture | active ✓ | Git hook fires; briefs queueing correctly every commit |
-| `vm-mediakit` QEMU | **RUNNING 95% CPU** | PID 4039898 (restarted from project-infrastructure); starving llama-server |
+| Shadow capture | active ✓ | Git hook fires; briefs route Tier A (tier_a_first=true) |
 
-### ⚠️ ACTION REQUIRED: QEMU VM blocking live inference
+### Circuit Resilience — ALL SPRINTS DEPLOYED (2026-05-29/30)
+
+| Sprint | Status | Commit |
+|---|---|---|
+| 1A: DPO tuple filter scripts | ✅ DONE | `96dcaf2b` |
+| 1B: structured extraction prompt | ✅ DONE | `853e4634` |
+| 2A: entity_count in /healthz | ✅ DONE | `853e4634` (7,201 live) |
+| 2B: tier_b circuit state in readyz | ✅ DONE | `853e4634` |
+| 2C: degenerate tuple guard | ✅ DONE | `08d64e01` |
+| 3A: SLM_TIER_A_FIRST flag | ✅ DONE | `08d64e01` |
+| 3B: WATCHER Tier A fallback | ✅ DONE | `08d64e01` |
+| 3C: drain hold when Tier B open >1h | ✅ DONE | `08d64e01` |
+
+### ⚠️ PENDING: QEMU VM may still be blocking inference
 `qemu-system-x86_64 -accel tcg -m 6144M` (PID 4039898, no KVM) consuming 95% CPU continuously.
 System load 17+. llama-server is active but inference is extremely slow (~0.03 tok/s vs normal 1.7 tok/s).
 Confirm with project-infrastructure owner then kill if appropriate:
@@ -26,7 +38,7 @@ Confirm with project-infrastructure owner then kill if appropriate:
 kill 4039898   # kills vm-mediakit — verify it is safe first
 ```
 
-### Learning loop §7 status (2026-05-29T04:20Z)
+### Learning loop §7 status (2026-05-30)
 - ✅ §7.1 `has_local: true` — verified
 - ✅ §7.2 Goose session — VERIFIED 2026-05-29T04:10Z (OLMo replied; Doorman log: tier="local")
          Fix required first: `system`-as-blocks deserialization bug → commit `74ba6da0`
