@@ -32,12 +32,34 @@
         <div id="open-menu-files"></div>
       </div>
     </div>
+    <span class="sep"></span>
+    <button id="btn-tokens" title="Design Tokens" onclick="toggleTokenPanel()">Tokens</button>
   </div>
 
-  <div id="memo-editor"
-       contenteditable="true"
-       spellcheck="true"
-       data-placeholder="Start typing…"></div>
+  <div id="memo-body">
+    <div id="memo-editor"
+         contenteditable="true"
+         spellcheck="true"
+         data-placeholder="Start typing…"></div>
+
+    <div id="tok-panel">
+      <div id="tok-panel-hdr">
+        <span>Design Tokens</span>
+        <button onclick="toggleTokenPanel()" title="Close panel">✕</button>
+      </div>
+      <div id="tok-panel-search">
+        <input id="tok-search" type="text" placeholder="Filter tokens…" oninput="filterTokens(this.value)">
+      </div>
+      <div id="tok-panel-body">
+        <div class="tok-section-hdr">Colors</div>
+        <div id="tok-colors">
+          <span style="color:var(--text-dim);font-size:11px;padding:8px 10px;display:block">Loading…</span>
+        </div>
+        <div class="tok-section-hdr">Typography</div>
+        <div id="tok-type"></div>
+      </div>
+    </div>
+  </div>
 
   <div id="memo-status">No file open</div>
 </div>
@@ -218,6 +240,138 @@ document.addEventListener('keydown', e => {
 
 document.addEventListener('click', e => {
   if (!e.target.closest('.open-wrap')) hideOpenMenu();
+});
+
+// ── Token panel ───────────────────────────────────────────────────────────
+let tokOpen = false;
+let tokLoaded = false;
+
+function toggleTokenPanel() {
+  tokOpen = !tokOpen;
+  document.getElementById('tok-panel').classList.toggle('open', tokOpen);
+  document.getElementById('btn-tokens').classList.toggle('active', tokOpen);
+  if (tokOpen && !tokLoaded) loadTokens();
+}
+
+async function loadTokens() {
+  try {
+    const res = await fetch('/api/tokens');
+    if (!res.ok) {
+      document.getElementById('tok-colors').innerHTML =
+        '<span style="color:var(--text-dim);font-size:11px;padding:8px 10px;display:block">Could not load tokens.</span>';
+      return;
+    }
+    const data = await res.json();
+    tokLoaded = true;
+    renderTokColors(data);
+    renderTokType(data);
+  } catch(e) {
+    document.getElementById('tok-colors').innerHTML =
+      `<span style="color:var(--text-dim);font-size:11px;padding:8px 10px;display:block">${escHtml(e.message)}</span>`;
+  }
+}
+
+function flattenTokGroup(group, prefix) {
+  const out = [];
+  for (const [k, v] of Object.entries(group)) {
+    if (k.startsWith('$') || !v || typeof v !== 'object') continue;
+    const path = prefix ? prefix + '/' + k : k;
+    if ('$value' in v) {
+      out.push({ name: k, path, value: String(v.$value), type: v.$type || '', desc: v.$description || '' });
+    } else {
+      out.push(...flattenTokGroup(v, path));
+    }
+  }
+  return out;
+}
+
+function renderTokColors(data) {
+  const tokens = flattenTokGroup((data.primitive || {}).color || {}, '');
+  const el = document.getElementById('tok-colors');
+  if (!tokens.length) { el.innerHTML = '<span style="color:var(--text-dim);font-size:11px;padding:8px 10px;display:block">No colors found.</span>'; return; }
+  el.innerHTML = tokens.map(t =>
+    `<div class="tok-chip" draggable="true" data-value="${escAttr(t.value)}" data-type="color"
+          title="${escAttr(t.name + ': ' + t.value + (t.desc ? '\n' + t.desc : ''))}"
+          onclick="applyTokColor('${escAttr(t.value)}')">
+       <span class="tok-chip-swatch" style="background:${escAttr(t.value)}"></span>
+       <span class="tok-chip-name">${escHtml(t.name)}</span>
+       <span class="tok-chip-val">${escHtml(t.value)}</span>
+     </div>`
+  ).join('');
+  wireTokDrag();
+}
+
+function renderTokType(data) {
+  const tokens = flattenTokGroup((data.primitive || {}).font || {}, '');
+  const el = document.getElementById('tok-type');
+  if (!tokens.length) { el.textContent = ''; return; }
+  el.innerHTML = tokens.map(t => {
+    const v = String(t.value);
+    return `<div class="tok-type-chip" title="${escAttr(v)}"
+                 onclick="applyTokFont('${escAttr(v)}')">
+       <span class="tok-type-sample" style="font-family:${escAttr(v)}">Aa</span>
+       <span class="tok-chip-name">${escHtml(t.name)}</span>
+     </div>`;
+  }).join('');
+}
+
+function applyTokColor(val) {
+  document.getElementById('memo-editor').focus();
+  document.execCommand('foreColor', false, val);
+}
+
+function applyTokFont(val) {
+  document.getElementById('memo-editor').focus();
+  document.execCommand('fontName', false, val);
+}
+
+function wireTokDrag() {
+  document.querySelectorAll('.tok-chip[draggable]').forEach(chip => {
+    chip.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('application/x-token',
+        JSON.stringify({ type: chip.dataset.type, value: chip.dataset.value }));
+      e.dataTransfer.effectAllowed = 'copy';
+    });
+  });
+}
+
+function filterTokens(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('.tok-chip, .tok-type-chip').forEach(el => {
+    el.style.display = (!q || el.textContent.toLowerCase().includes(q)) ? '' : 'none';
+  });
+}
+
+function escAttr(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Real-time file list — refresh open menu whenever workspace changes
+const _fileEvents = new EventSource('/api/files/events');
+_fileEvents.onmessage = () => loadOpenMenuFiles();
+
+// Token drop on editor
+const _ed = document.getElementById('memo-editor');
+_ed.addEventListener('dragover', e => {
+  if (e.dataTransfer.types.includes('application/x-token')) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  }
+});
+_ed.addEventListener('drop', e => {
+  const raw = e.dataTransfer.getData('application/x-token');
+  if (!raw) return;
+  e.preventDefault();
+  try {
+    const { type, value } = JSON.parse(raw);
+    if (document.caretRangeFromPoint) {
+      const range = document.caretRangeFromPoint(e.clientX, e.clientY);
+      if (range) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); }
+    }
+    if (type === 'color') document.execCommand('foreColor', false, value);
+  } catch { /* silent */ }
 });
 </script>
 </body>
