@@ -511,13 +511,13 @@ The substrate owns the kernel, system layer, applications, capability ledger, id
 
 *Pre-production runtime layer.* The operating system runtime family targeting this substrate is currently in a pre-production prototype stage. The substrate architecture and its Rust implementation are complete; the runtime layers that consume the substrate are not yet production-deployed. Production claims for the runtime layer are forward-looking.
 
-*AArch64 cross-compilation.* The build orchestrator's `build` subcommand is a validated stub. The existing seL4 kernel build artefact in the source tree is an x86_64/pc99 kernel built via the legacy Python+CMake+Ninja path, not via the build orchestrator. AArch64 seL4 cross-compilation via the build orchestrator is a planned deliverable pending three operator decisions: cross-compile toolchain, seL4 source vendoring strategy, and toolchain installation ownership.
+*AArch64 cross-compilation.* The build orchestrator's `build` subcommand is a validated stub. AArch64 seL4 cross-compilation via the build orchestrator is a planned deliverable pending three operator decisions: cross-compile toolchain, seL4 source vendoring strategy, and toolchain installation ownership.
 
 *Multicore.* seL4 multicore (SMP) verification is an open research problem. The substrate targets single-core or multikernel-pending configurations until multicore seL4 verification completes (SRI international target: Q3/2028).
 
 *ARM Cortex-A performance.* The benchmark measurements (Table B.1) are from an Intel Xeon n2-class host. ARM Cortex-A Ed25519 verification is approximately 10–50× slower. The 358,000× cache-to-verify ratio on x86 narrows to approximately 10,000–35,000× on ARM, which remains load-bearing for the cache discipline but narrows the operating window for non-cached paths.
 
-*NetBSD shim crate.* The NetBSD shim crate does not yet exist. The companion substrate crates are in prototype stage. The shim crate location is an open architectural decision (§8.2 open questions).
+*NetBSD shim crate.* The NetBSD compatibility crate is designed and its interface is specified through the `CapabilityInvoker` trait; implementation is planned. The shim crate location is an open architectural decision (§8.2 open questions).
 
 *Benchmark variance.* The `verify_inclusion_proof` composed 1024-leaf measurement carries 22 outliers and ±11% CI; it is load-sensitive and not yet publication-quality. A quiet-VM re-run (load average < 1.0) is the pre-publication prerequisite for this entry.
 
@@ -535,7 +535,7 @@ H₁ is falsified if: (a) any step in the Mechanism C recovery flow (§5.4) requ
 
 H₂ is falsified if: the compiled outputs of the `native` and `compat` feature-flag variants produce different `Verdict` values, different capability hashes, or different ledger entry payloads given identical input sequences. Specifically: `LedgerConsumer::consult_capability(cap, checkpoint, now, witness)` with the same arguments must return the same `Verdict` variant on both substrates.
 
-**Test specifications.** H₁ requires a full recovery drill on a fresh QEMU AArch64 NetBSD VM from a paper-printed seed, with an independently audited ledger transcript. H₂ requires a cross-compilation CI job that runs the same test vectors against both feature-flag variants and compares outputs deterministically. Both are planned Phase 2 deliverables.
+**Test specifications.** H₁ requires a full recovery drill on a fresh QEMU AArch64 NetBSD VM from a paper-printed seed, with an independently audited ledger transcript. H₂ requires a cross-compilation CI job that runs the same test vectors against both feature-flag variants and compares outputs deterministically. Both are planned.
 
 **Additional open questions for future passes:**
 
@@ -565,7 +565,7 @@ Five research directions follow from this architecture.
 
 **Cross-substrate semantic equivalence testing.** H₂ (§7.4) requires a CI harness that cross-compiles operating system runtime binaries for both feature-flag variants and runs identical test vectors, comparing outputs deterministically. This is the engineering prerequisite for any production claim that the two bottoms are semantically equivalent.
 
-**AArch64 seL4 production deployment.** Phase 1C (cross-compile toolchain + Phase 2 NetBSD compat-bottom prototype) must close before the architecture can be evaluated on its primary hardware target. The formal-verification properties of seL4 AArch64 are the load-bearing claim; x86_64 evaluation is a proxy.
+**AArch64 seL4 production deployment.** The architecture cannot be fully evaluated on its primary hardware target until the AArch64 cross-compile toolchain is resolved and the NetBSD compatibility layer is implemented; current benchmarks use the x86_64 GCP VM as a proxy for the AArch64 production target. The formal-verification properties of seL4 AArch64 are the load-bearing claim.
 
 **Witness federation cardinality on embedded hardware.** The 10–50× slower Ed25519 verification on ARM Cortex-A narrows the witness-federation operating window. A quantitative study of cardinality ceilings and cache-sizing requirements on QEMU AArch64 (and eventually on production AArch64 hardware) is needed to bound the practical federation parameters for the regulated-SMB deployment profile.
 
@@ -656,9 +656,9 @@ Woodruff, Jonathan, Robert N. M. Watson, David Chisnall, Simon W. Moore, Jonatha
 
 Full table: see Table B.1 in §6.2.
 
-**Three-run comparison** (Phase 1A.3 quiet VM vs Phase 1A.4 heavy load vs this run):
+**Three-run comparison** (quiet VM, loaded VM, this study):
 
-| Operation | 1A.3 quiet | 1A.4 heavy | This run |
+| Operation | Quiet VM | Loaded VM | This study |
 |---|---|---|---|
 | `Capability::hash` | 5.0 µs | 14.78 µs | 6.44 µs |
 | `verify_signer` (1-sig) | 3.40 ms | 4.89 ms | 4.01 ms |
@@ -667,7 +667,7 @@ Full table: see Table B.1 in §6.2.
 | Cache miss (64-scan) | 338 ns | 673 ns | 362 ns |
 | `consult_capability` Allow path | 3.39 ms | 6.32 ms | 3.74 ms |
 
-Quiet-VM target (load avg < 1.0) is the publication-quality baseline. The 1A.3 run is the closest approximation; this run is intermediate.
+The quiet-VM condition (load avg < 1.0) is the publication-quality baseline; the loaded-VM run illustrates the upper bound on variance.
 
 ---
 
