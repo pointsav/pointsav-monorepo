@@ -2,6 +2,31 @@
 
 ---
 
+### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 9 end — Sprint 3D + poison recovery)
+
+**Done this session (continued from session 9 start):**
+- **Sprint 3D — Tier A timeout fix (commits `5166f43b`, `e452abdb`, `526b3735`, `1398522b`):**
+  - Root problem: `reqwest::Client::new()` in `local.rs` had no timeout → drain worker blocked indefinitely
+  - First fix: added 120s client timeout (`5166f43b`) and 150s drain wrapper (`e452abdb`) — turned out 120s is too short for OLMo 7B (2048 tokens at ~2 tok/s = 1024s theoretical max; observed 17–60 min)
+  - Second fix: `SLM_TIER_A_FIRST=true` bypass for drain hold (`526b3735`) — drain hold was holding the queue waiting for Tier B recovery even though Tier A is the primary
+  - **Final fix (`1398522b`):** raised client timeout 120s→1800s; drain wrapper 150s→1860s
+- **Binary deployed 2026-05-30T21:14:54Z** — sha256=`bd91eafc7c2a232c10e0c449f31474d9d994568df9c4054eb8f591f93ce3360d`; binary ledger updated
+- **21 poison briefs recovered** — moved from `queue-poison/` back to `queue/`. Root cause: old binary called `dequeue()` on `ShadowQueueEntry`-format files (JSON has `{"brief":..., "actual_diff":...}` wrapper); `dequeue()` expects bare `ApprenticeshipBrief` → parse failed → poison. New binary uses `dequeue_shadow()` correctly.
+- **Drain worker confirmed live**: 23 briefs queued, 1 in-flight (brief 4BA59EC8 dispatched at 21:14Z), 550 done, 0 poison
+
+**Pending / carry-forward:**
+- **Stage 6** — now **9 commits ahead** of origin/main; see outbox `project-intelligence-20260530-stage6-sprint3d`
+- **Confirm drain completes** — brief 4BA59EC8 should complete (done: 551) within 30 min; if it hits reaper (300s lease) check for "dispatch timed out after 1860s" log
+- **Operator installs** — orchestration-slm-server binary + service still pending from session 9 start (see outbox `project-intelligence-20260530-stage6-orchestration-deploy`)
+- **stale test fields** — `anthropic_shim_test.rs` likely has stale `AppState` fields (`tier_a_reason`, `idle_monitor`) — add NEXT.md item; low priority
+- **Yo-Yo 1h test** — `start-yoyo.sh --wait-ready=120 --runtime=1h` when L4 capacity available
+
+**Operator preferences surfaced:**
+- Timeouts must cover actual hardware reality (CPU inference rate, not GPU assumption)
+- Want Tier A flow to be reliable 24h/day without manual intervention
+
+---
+
 ### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 9 — orchestration-slm + daily smoke)
 
 **Done this session:**
@@ -63,27 +88,4 @@
 
 ---
 
-### 2026-05-29 | totebox@project-intelligence | claude-sonnet-4-6 (session 7 — Goose verified)
-
-**Done this session:**
-- **§7.2 VERIFIED** (2026-05-29T04:10Z): Goose v1.36.0 round-tripped through Doorman → Tier A → OLMo replied "Hello! The result of 2+2 is 4." Doorman log: `dispatching ... tier="local"`.
-- **Root cause found and fixed** (`74ba6da0`, Jennifer): Goose sends `system` as array-of-content-blocks `[{"type":"text","text":"..."}]`; Doorman's `AnthropicMessagesBody.system: Option<String>` rejected this with 422. Fixed with `AnthropicSystem` untagged enum that handles both `Text(String)` and `Blocks(Vec<AnthropicContentBlock>)`. 51/51 http_test pass.
-- **Goose config written**: `/home/mathew/.config/goose/config.yaml` with `GOOSE_PROVIDER: anthropic`, `ANTHROPIC_BASE_URL: http://127.0.0.1:9080`, `GOOSE_MODEL: claude-haiku-4-5-20251001`.
-- **§7.3 live SSE test**: Goose `Read /etc/hostname` tool invocation — OLMo 7B returned `stop_reason: end_turn` with text response (not a tool_use block). Model capability limit confirmed, not a shim bug.
-- **Yo-Yo confirmed TERMINATED**: GCP europe-west4-a `yoyo-tier-b-1` is TERMINATED. No file accumulation in Doorman or llama-server queues. No auto-start mechanism exists anywhere (no cron, no timer that starts; `yoyo-idle-monitor.timer` is stop-only).
-- **Operator decision**: Yo-Yo must remain manually started. No auto-start until further testing complete.
-- **2 GUIDEs staged** to `.agent/drafts-outbound/`: `GUIDE-guide-goose-local-doorman.draft.md` + `GUIDE-guide-post-commit-training-hook.draft.md` (hook payload fixed with Python ShadowWire struct). Commits `4055ad96` + `5fcbd4a3`.
-- **BRIEF-slm-learning-loop.md** §7 updated: §7.2 ✅ VERIFIED, §7.3 PARTIAL, blockers summary updated.
-
-**Pending / carry-forward:**
-- **§7.3 tool_use**: OLMo 7B does not invoke tools. Requires Tier B (Yo-Yo OLMo 3 32B-Think) or Tier A upgrade to tool-use-tuned model.
-- **§7.4 entity extraction + §7.6 training**: Requires manual Yo-Yo start (`service-slm/scripts/start-yoyo.sh --runtime=2h`) after operator testing complete.
-- **QEMU vm-mediakit** (PID 4039898): still at ~150% CPU from project-infrastructure; inference was slow (~0.03 tok/s) during test; stopped `local-content` service temporarily to free the llama-server slot. `local-content` restarted after test.
-- **Stage 6 promote**: archive is 15+ commits ahead of origin/main (Command Session scope; prereq rebase per `command-20260520-stage6-rebase-required`).
-- **Binary ledger**: `data/binary-ledger/slm-doorman-server.jsonl` needs fresh sha256 after `74ba6da0` rebuild (Command Session scope).
-
-**Operator preferences surfaced:**
-- Yo-Yo: do NOT auto-start; requires explicit operator invocation after further testing
-
----
 
