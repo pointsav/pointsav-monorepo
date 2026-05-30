@@ -17,6 +17,8 @@ pub struct NodeHeartbeat {
     pub ram_used_mb: u64,
     pub cpu_cores: u32,
     pub cpu_load_pct: f32,
+    /// Whether /dev/kvm is present on this node (hardware-accelerated virtualization).
+    pub kvm_available: bool,
     pub vms: Vec<VmRecord>,
     pub boot_id: String,
     pub timestamp_utc: DateTime<Utc>,
@@ -66,6 +68,8 @@ pub struct NodeRecord {
     pub wg_ip: String,
     pub ram_available_mb: u64,
     pub vm_count: u32,
+    /// Whether /dev/kvm is present on this node, as last reported by its heartbeat.
+    pub kvm_available: bool,
     pub last_heartbeat: DateTime<Utc>,
 }
 
@@ -77,6 +81,9 @@ pub struct CreateVmRequest {
     pub vm_type: String,
     pub ram_mb: u64,
     pub vcpu_count: u32,
+    /// Request a KVM-capable node. Falls back to TCG nodes when no KVM node has enough RAM.
+    #[serde(default)]
+    pub prefer_kvm: bool,
     /// If Some, skip advisory placement and dispatch directly to this node.
     pub preferred_node: Option<NodeId>,
 }
@@ -95,6 +102,7 @@ mod tests {
             ram_used_mb: 2048,
             cpu_cores: 4,
             cpu_load_pct: 12.5,
+            kvm_available: true,
             vms: vec![],
             boot_id: "abc-123".to_string(),
             timestamp_utc: Utc::now(),
@@ -134,6 +142,7 @@ mod tests {
                 wg_ip: "10.8.0.6".to_string(),
                 ram_available_mb: 6144,
                 vm_count: 0,
+                kvm_available: true,
                 last_heartbeat: Utc::now(),
             }],
             last_updated: Utc::now(),
@@ -150,12 +159,14 @@ mod tests {
             vm_type: "VmTotebox".to_string(),
             ram_mb: 4096,
             vcpu_count: 2,
+            prefer_kvm: true,
             preferred_node: Some("laptop-a-1".to_string()),
         };
         let without_pref = CreateVmRequest {
             vm_type: "VmMediaKit".to_string(),
             ram_mb: 2048,
             vcpu_count: 2,
+            prefer_kvm: false,
             preferred_node: None,
         };
         let j1 = serde_json::to_string(&with_pref).unwrap();
@@ -164,5 +175,13 @@ mod tests {
         let d2: CreateVmRequest = serde_json::from_str(&j2).unwrap();
         assert_eq!(d1.preferred_node, Some("laptop-a-1".to_string()));
         assert_eq!(d2.preferred_node, None);
+    }
+
+    #[test]
+    fn prefer_kvm_defaults_to_false_when_absent() {
+        // Callers that omit prefer_kvm (e.g. older clients) get false — opt-in behaviour.
+        let json = r#"{"vm_type":"VmMediaKit","ram_mb":2048,"vcpu_count":2}"#;
+        let req: CreateVmRequest = serde_json::from_str(json).unwrap();
+        assert!(!req.prefer_kvm);
     }
 }

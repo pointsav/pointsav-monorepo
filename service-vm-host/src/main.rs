@@ -50,6 +50,7 @@ async fn main() {
             ram_used_mb: stats.ram_used_mb,
             cpu_cores: stats.cpu_cores,
             cpu_load_pct: stats.cpu_load_pct,
+            kvm_available: stats.kvm_available,
             vms,
             boot_id: boot_id.clone(),
             timestamp_utc: Utc::now(),
