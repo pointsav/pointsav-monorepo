@@ -82,12 +82,9 @@ These are decided. Do not revisit within a session without operator confirmation
 
 ---
 
-## 3. Current implementation state (Phases 1–7H shipped + deployed, 2026-05-29)
+## 3. Current implementation state (Phases 1–8 + Leapfrog design redesign shipped + deployed, 2026-05-30)
 
-All commits on `pointsav-monorepo` staging branch. Phase 6A/6B/6C promoted to canonical
-by Command (2026-05-28). Phases UX-A through 7H committed 2026-05-29; binary deployed to
-all three live instances (2026-05-29 ~05:15 UTC). Stage 6 promotion of 15 commits pending
-Command Session (`bin/promote.sh`).
+All commits promoted to canonical. Binary `e48c70d6` deployed to all three instances 2026-05-30 20:42 UTC.
 
 | Phase | Status | Key commit(s) |
 |---|---|---|
@@ -100,24 +97,24 @@ Command Session (`bin/promote.sh`).
 | 5 core — auth + edit review | Shipped | Cookie sessions, argon2id, edit review queue; `auth.rs` + `pending.rs` + `users.rs` |
 | 5.1+ ACLs/OIDC/webhooks | Deferred | Gated on BP5 clearance |
 | 6A/6B/6C | Shipped + promoted `afa67bfa` | AJAX nav fix; home page caps; topnav 80px header |
-| 7A | Committed + deployed `168314a1` | TOC buttons + topnav search restored |
-| UX-A | Committed + deployed `0dfe1647` | Typography tokens wired; dark-mode contrast; auto dark mode; appearance toggle hidden |
-| UX-B | Committed + deployed `2a19c626` | Appearance dropdown removed; home standfirst; `shell_footer()`; footer convergence; CC BY 4.0 gate; provenance ribbon |
-| 7B | Committed + deployed `bbb339b5` | `nav.article-tabs`; Tools▾ dropdown; anchor-share `¶`; auth-gated tabs |
-| 7C | Committed + deployed `d649f051` | Reading mode toggle; CSS body-class; localStorage |
-| 7X | Pre-existing | Home search hero; YAML-based featured article + DYK |
-| 7D | Committed + deployed | Citation hover preview; freshness dot; CITATIONS redb table |
-| 7E | Committed + deployed `bbb339b5` | Mobile bottom bar; article-tabs hidden on mobile; table/code overflow |
-| 7F | Committed + deployed `c240837b` | Tufte sidenotes for `layout: journal`; `inject_sidenotes()` post-processor |
-| 7G+7H | Committed + deployed `c240837b` | Auto-numbered sections for `[data-instance="woodfine-corporate"]` (CSS) |
-| **8 — history surface** | **Committed `0e5fd685` — deploy pending** | Integrity bar (blake3, 16 hex chars); history pagination (?page=N, 25/page); diff stats (+N/−M); `/special/hash-lookup/{hash}` route; 7/7 history_test pass |
+| 7A | Shipped + deployed `168314a1` | TOC buttons + topnav search restored |
+| UX-A | Shipped + deployed `0dfe1647` | Typography tokens wired; dark-mode contrast; auto dark mode |
+| UX-B | Shipped + deployed `2a19c626` | Appearance dropdown removed; home standfirst; footer convergence |
+| 7B | Shipped + deployed `bbb339b5` | `nav.article-tabs`; Tools▾ dropdown; anchor-share `¶` |
+| 7C | Shipped + deployed `d649f051` | Reading mode toggle; CSS body-class; localStorage |
+| 7X | Shipped | Home search hero; YAML-based featured article + DYK |
+| 7D | Shipped + deployed | Citation hover preview; freshness dot; CITATIONS redb table |
+| 7E | Shipped + deployed `bbb339b5` | Mobile bottom bar; article-tabs hidden on mobile |
+| 7F | Shipped + deployed `c240837b` | Tufte sidenotes for `layout: journal` |
+| 7G+7H | Shipped + deployed `c240837b` | Auto-numbered sections for corporate instance |
+| 8 — history surface | Shipped + deployed `0e5fd685` | Integrity bar, history pagination, diff stats, hash-lookup |
+| **Leapfrog design — fonts** | **Shipped + deployed `9bf24198`** | Source Serif 4 reading body (13→4 woff2); home stats demoted to footer one-liner |
+| **Leapfrog design — layout** | **Shipped + deployed `be4ea8c0`** | Sidebar removed; full-width single-column; red-link italic |
+| **Leapfrog design — content types** | **Shipped + deployed `1c767bf4`** | Kirby blueprint system: `content_type:` frontmatter → guide steps, research box, type badge |
 
-**Test state:** `cargo test` exits 0 (107 tests: 106 lib + 1 journal integration; `collab_test` +
-`doorman_test` pre-existing failures on removed `AppState.collab` field — unrelated to current phases).
+**Binary state:** `e48c70d6` (sha256 prefix) — deployed 2026-05-30 20:42 UTC. All three instances healthy.
 
-**Binary state:** Three services live on binary deployed 2026-05-29 ~05:15 UTC (Phases UX-A
-through 7H). Phase 8 commit `0e5fd685` staged; release build running; deploy pending.
-16+ commits pending Stage 6 promotion by Command.
+**UX-B.7 — BLOCKED:** `WORDMARK_WOODFINE` constant still Unicode `■ Woodfine`. Operator must
 
 **UX-B.7 — BLOCKED:** `WORDMARK_WOODFINE` constant still Unicode `■ Woodfine`. Operator must
 provide Woodfine Management Corp. SVG wordmark file before this can ship.
