@@ -3,7 +3,7 @@ schema: foundry-plan-v1
 archive: project-console
 title: "Leapfrog 2030 — os-console Coding Roadmap"
 created: 2026-05-20
-updated: 2026-05-23
+updated: 2026-05-30
 status: active
 authors: [totebox@project-console, claude-sonnet-4-6]
 doctrine_anchors: [claim-45, claim-49, claim-54, SYS-ADR-07, SYS-ADR-10, SYS-ADR-19]
@@ -92,7 +92,7 @@ Commit: 0b8088c4 (session 5, 2026-05-21)
 
 ContentCartridge full proofread workflow. Commit: a020a2cd (session 5, 2026-05-21)
 
-**Critical:** Doorman is at `http://localhost:8011` (NOT 9080). Response field: `.content`.
+**Critical:** Doorman is at `http://localhost:9080`. Response field: `.content`.
 
 - [x] `tui-textarea` integration (paste input for proofread text)
 - [x] Protocol picker: 18 GenreTemplate variants via `nucleo` fuzzy filter
@@ -138,26 +138,94 @@ See `BRIEF-pairing-ceremony.md` for full detail; `BRIEF-pairing-phase3-4.md` for
 
 ---
 
-## Phase 5 — Draft mode `[NOT STARTED]` (est. 2 weeks)
+## Phase 5 — Draft mode `[COMPLETE 2026-05-24]`
 
-> Note: configurable `ConsoleConfig` endpoints and GitHub Actions CI (Linux x86_64 + macOS
-> universal) were pulled forward as prerequisites in session 5 (2026-05-21), but the Doorman
-> Tier B SSE draft workflow described here has not been started.
+Commits: `6422c2a8` + `5118ce77` (2026-05-24)
 
 Add `/new` command to ContentCartridge for AI-assisted draft generation.
 
-- [ ] `/new` command → fuzzy protocol picker
-- [ ] Entity context: `/search` → `service-content /graph/neighborhood/<id>` RAG fetch
-- [ ] Doorman Tier B request: `POST http://localhost:8011/v1/chat/completions`
+- [x] `/new` command → fuzzy protocol picker
+- [x] Entity context: `/search` → `service-content /graph/neighborhood/<id>` RAG fetch
+- [x] Doorman Tier B request: `POST http://localhost:9080/v1/chat/completions`
   with RAG context + protocol scaffolding; response field: `.content`
-- [ ] SSE consumer for streaming token output
-- [ ] Streaming render into draft pane at 60Hz
-- [ ] `/regenerate` — cancel + retry at same or higher tier
-- [ ] `/tier b|c` switching with cost-cap awareness
-- [ ] Draft accept → stage to `.agent/drafts-outbound/` with `foundry-draft-v1` frontmatter
+- [x] SSE consumer for streaming token output
+- [x] Streaming render into draft pane at 60Hz
+- [x] `/regenerate` — cancel + retry at same or higher tier
+- [x] `/tier b|c` switching with cost-cap awareness
+- [x] Draft accept → stage to `.agent/drafts-outbound/` with `foundry-draft-v1` frontmatter
   (5 mandatory research-trail fields, Doctrine claim #39)
 
-**Gate:** Draft mode functional; corpus event POST to `/v1/verdict`.
+**Gate: PASSED** — Draft mode functional; corpus event POST to `/v1/verdict`.
+
+---
+
+## Phase B — Cross-platform release `[NOT STARTED]` (est. 1–2 sessions)
+
+macOS 10.13+ (High Sierra Intel floor) + current macOS (Apple Silicon + Intel universal) + Linux musl static.
+Full spec: `BRIEF-cross-platform-release.md`.
+
+- [ ] `rust-toolchain.toml` at monorepo root — pin stable 1.85
+- [ ] `.cargo/config.toml` — `MACOSX_DEPLOYMENT_TARGET=10.13` for `x86_64-apple-darwin`
+- [ ] Audit reqwest features — switch to `rustls-tls` (drop `native-tls` for macOS 10.13 compat)
+- [ ] GitHub Actions `.github/workflows/release.yml` — 4-target matrix (musl, Intel, ARM, lipo universal)
+- [ ] `TerminalCaps` runtime probe in `app-console-keys/src/chassis.rs` (kitty, sixel, truecolor booleans)
+
+**Gate:** `cargo build --release` passes on Linux; GH Actions matrix green on all 4 targets.
+
+**Blocked on:** operator confirmation of release trigger (`v*.*.*` tag push vs. push-to-main vs. manual dispatch).
+
+---
+
+## Phase C — Email cartridge F3 `[NOT STARTED]` (est. 2–3 sessions)
+
+Full read + compose/send in one phase. Backend: `service-email` in `project-data` (NOT `service-email-egress`).
+
+- [ ] Convert `app-console-email` stub → lib crate (remove main.rs stub; create lib.rs + cartridge.rs)
+- [ ] Add `app-console-keys` path dep + reqwest + serde + tokio to `app-console-email/Cargo.toml`
+- [ ] Add `app-console-email` to workspace `Cargo.toml` members
+- [ ] Implement `EmailCartridge` with `Cartridge` trait:
+  - Inbox list pane (j/k navigation, Enter to open)
+  - Read pane (plain-text / HTML-stripped body, PgUp/PgDn scroll)
+  - Compose pane (`tui-textarea` for To/Subject/Body; Ctrl+S to send)
+  - Folder switcher inbox/sent/drafts (`[`/`]`)
+  - State machine: `List → Read → Compose → Sending → List`
+- [ ] Wire to `service-email` HTTP API (paths, auth headers, message/folder schema from `project-data`)
+- [ ] Wire into `os-console/src/main.rs`: `.cartridge(EmailCartridge::new(&config))`
+
+> **Cross-archive dependency:** `service-email` is in `project-data`. If its HTTP API is not
+> yet stable at Phase C execution, implement against a local stub and write an outbox message
+> to `project-data` requesting the final endpoint contract.
+
+**Gate:** F3 tab visible in chassis; inbox renders; compose → send works against `service-email` dev instance.
+
+---
+
+## Phase D — SLM cartridge F9 `[NOT STARTED]` (est. 1–2 sessions)
+
+Doorman health + Yo-Yo tier display. Backend: `http://localhost:9080` (Doorman).
+
+- [ ] Convert `app-console-slm` stub → lib crate (create lib.rs + cartridge.rs)
+- [ ] Add `app-console-keys` path dep + reqwest + serde + tokio to `app-console-slm/Cargo.toml`
+- [ ] Add `app-console-slm` to workspace `Cargo.toml` members
+- [ ] Implement `SlmCartridge` with `Cartridge` trait:
+  - Doorman health panel: `GET localhost:9080/healthz` + model status
+  - Yo-Yo tier display: active tier (A/B/C), model name, latency stats
+  - Corpus panel: training queue depth (via apprenticeship substrate)
+- [ ] Wire into `os-console/src/main.rs`: `.cartridge(SlmCartridge::new(&config))`
+
+**Gate:** F9 tab visible; Doorman health reads from `localhost:9080`; tier label correct.
+
+---
+
+## Phase E — Orchestration wiring `[NOT STARTED]` (est. 1 session)
+
+No new crate. `os-orchestration` is already the command hub via MBA. This is wiring only.
+
+- [ ] Audit `os-console/src/mba_client.rs` — confirm targeting `os-orchestration` as primary peer
+- [ ] Update `ConsoleConfig` / `config.example.toml`: rename `totebox_host` → `orchestration_host` where applicable; add note that this is the command hub, not a single archive
+- [ ] Update `BRIEF-os-console-platform.md` §5 MBA section — document topology: `os-console → os-orchestration → Totebox Archives` (no `app-orchestration-command` crate — retired from roadmap)
+
+**Gate:** `pairings.yaml` entry for `os-orchestration` reads correctly; MBA LINK ACTIVE against os-orchestration on GCE.
 
 ---
 

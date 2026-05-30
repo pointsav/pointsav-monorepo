@@ -29,7 +29,7 @@ Located in `pointsav-monorepo/os-console/` — Scaffold-coded, Cargo.toml presen
 
 **Properties:**
 - One process. One binary. No child process launching. No nesting.
-- Runs natively on Linux Mint (NODE-IMAC-12, iMac 12.1) and macOS 13.*
+- Runs natively on Linux Mint (NODE-IMAC-12, iMac 12.1), macOS 10.13+ Intel (High Sierra minimum floor), and current macOS (Apple Silicon + Intel universal)
 - "We Own It" — all dependencies compiled in; no Docker, no dynamic plugin loading
 - Feature-gated SSH server: `#[cfg(feature = "ssh-server")]` for GCE VM deployment;
   default build uses crossterm PTY for local terminal use on Linux Mint and macOS
@@ -156,9 +156,11 @@ See `TOPIC-pointsav-private-network.md` and plan `os-console-platform.md` §5.
 | Platform | Mode | Terminal requirement | Build |
 |---|---|---|---|
 | Linux Mint (NODE-IMAC-12) | Primary; local crossterm PTY | Any VTE terminal; kitty recommended | Native `cargo build` |
-| macOS 13.* | Primary; local crossterm PTY | kitty, iTerm2, Ghostty, WezTerm | GitHub Actions macos-14 runner |
+| macOS 10.13+ Intel (High Sierra floor) | Local crossterm PTY; text TUI on all terminals; Kitty/Sixel degrade gracefully on Terminal.app | Terminal.app (256-color, no graphics protocol); kitty/iTerm2/WezTerm for full features | GitHub Actions macos-13; `MACOSX_DEPLOYMENT_TARGET=10.13` |
+| macOS current (Apple Silicon) | Local crossterm PTY | kitty, iTerm2, Ghostty, WezTerm | GitHub Actions macos-14; `MACOSX_DEPLOYMENT_TARGET=11.0` |
+| macOS universal binary | Distribution artifact | — | `lipo` of macos-13 + macos-14 artifacts |
 | GCE VM | SSH server (`--features ssh-server`) | Any terminal over SSH port 2222 | Native `cargo build` |
-| Linux Mint static binary | Distribution artifact | — | cargo-zigbuild (musl) |
+| Linux static binary | Distribution artifact | — | cargo-zigbuild (`x86_64-unknown-linux-musl`) |
 
 **PDF terminal requirement:** Kitty graphics protocol (primary) + Sixel fallback.
 Terminals without graphics protocol support receive an error — no text-extraction
@@ -219,13 +221,13 @@ mode = "local"  # local | gce-native | tunnel | wireguard | offline
 [profile.local]
 # Linux Mint / macOS — crossterm PTY; no SSH server
 totebox_endpoint = "http://localhost:9000"
-slm_endpoint = "http://localhost:8011"
+slm_endpoint = "http://localhost:9080"
 
 [profile.gce-native]
 # On GCE VM — SSH server mode
 ssh_port = 2222
 totebox_endpoint = "http://localhost:9092"
-slm_endpoint = "http://localhost:8011"
+slm_endpoint = "http://localhost:9080"
 ```
 
 ---
@@ -234,7 +236,7 @@ slm_endpoint = "http://localhost:8011"
 
 | Issue | Wrong | Correct |
 |---|---|---|
-| Doorman endpoint | `http://localhost:9080` | `http://localhost:8011` |
+| Doorman endpoint | `http://localhost:8011` | `http://localhost:9080` |
 | Doorman response field | `.choices[0].message.content` | `.content` |
 | Long-poll timeout | 30s | 300s on `/v1/proofread`; 30s elsewhere |
 | russh async_trait | Required | Not required in russh 0.60 — native async fn |
