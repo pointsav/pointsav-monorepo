@@ -58,6 +58,17 @@
     </div>
   </div>
 
+  <div id="utilities-section">
+    <h3>Utilities</h3>
+    <div class="util-row">
+      <a href="/tokens" class="util-tile">
+        <span class="util-icon">🎨</span>
+        <span class="util-name">Design Tokens</span>
+        <span class="util-tag">Browse &amp; copy</span>
+      </a>
+    </div>
+  </div>
+
   <div id="recent-section">
     <h3>Recent Memo files</h3>
     <ul id="recent-list">
@@ -111,6 +122,9 @@ function escHtml(s) {
 }
 
 loadRecentFiles();
+
+const _fileEvents = new EventSource('/api/files/events');
+_fileEvents.onmessage = () => loadRecentFiles();
 </script>
 </body>
 </html>
