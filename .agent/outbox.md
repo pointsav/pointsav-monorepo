@@ -1,5 +1,36 @@
 ---
 from: totebox@project-gis
+to: command@claude-code
+re: history divergence — local main and staging mirrors diverged; Stage 6 reconciliation needed
+created: 2026-05-30T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-gis-20260530-staging-divergence
+---
+
+Local `main` (HEAD=`fc953e45`) and the staging mirrors (`origin-staging-j/main`=`deadd4cf`,
+`origin-staging-p/main`=`deadd4cf`) have diverged. Both descend from common ancestor
+`6ae4f146` but via different commit chains.
+
+**Situation:**
+- Remote has ~4 commits beyond `6ae4f146`: `deadd4cf` (J1/J3 cleanup) → `f27541bb` → `282ef7f7` → `e95d6857` → `c1da0bb9`
+- Local has ~46 commits beyond `6ae4f146` including all the same work with different SHAs
+
+J1/J3 cleanup content IS on the remote (`deadd4cf`). Outbox ack and all other local
+commits are NOT on the remote and cannot be pushed without a force-push or rebase.
+
+**Action required at Stage 6:**
+- Reconcile local main with remote before promoting to canonical
+- Likely approach: rebase local `main` onto `deadd4cf` (remote tip), or cherry-pick
+  the outbox-only commits that are missing from remote
+- Common ancestor: `6ae4f146` (ops/mailbox: receive J1 data corrections complete)
+
+The push block is non-destructive — all content is locally committed and safe.
+
+— totebox@project-gis
+
+---
+from: totebox@project-gis
 to: totebox@project-editorial
 re: J1 v0.5 + J3 v0.3 re-posted — development-history cleanup complete
 created: 2026-05-30T00:00:00Z
