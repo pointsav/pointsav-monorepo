@@ -2,6 +2,14 @@
 
 ---
 
+### 2026-05-24 | totebox@project-console | claude-sonnet-4-6
+
+**Done:** T1-A: app-console-system added to Cargo.toml workspace members (`7e47fd05`). Phase 5 COMPLETE — draft mode: `/new <title>` slash command in ContentCartridge; Doorman Tier B SSE streaming client (`draft.rs`); `drafts-outbound` write with `foundry-draft-v1` frontmatter. Commits `6422c2a8` + `5118ce77`. Session close-out: NEXT.md updated (commit `894452c1`); Phase 5 outbox notification sent to Command.
+
+**Pending at close:** Stage 6 force-push authorization; Phase 6 offline mode + Tantivy; pairing-server systemd unit; GCE firewall; Tag v0.1.0; Peter SSH key.
+
+---
+
 ### 2026-05-23 | totebox@project-console | claude-sonnet-4-6
 
 **Done:** Stage 6 rebase complete (11 commits onto local `main`, tip `9afc9e25`). Push BLOCKED — zero common ancestors with all remotes (full history divergence). Escalated to Command via outbox. binary-targets.yaml written (os-console, pairing-server, proofctl; AGPL-3.0). Build-request outbox sent.
