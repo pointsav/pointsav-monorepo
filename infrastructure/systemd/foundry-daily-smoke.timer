@@ -1,0 +1,9 @@
+[Unit]
+Description=Foundry daily smoke test — 02:00 (Tier A only)
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
