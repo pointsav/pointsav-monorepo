@@ -104,6 +104,15 @@ pub struct AppState {
     /// is not set. Set to an empty string to mark the proxy as unconfigured
     /// (handlers return 503 with `GraphProxyServiceUnavailable`).
     pub service_content_endpoint: String,
+    /// Node class label derived from env detection at startup.
+    /// One of: "micro" (e2-micro fleet), "hardware" (workspace VM), "cloud" (GCE GPU node).
+    /// Surfaced in `/readyz` for operational diagnostics (DOCTRINE.md #49, #54).
+    pub node_class: &'static str,
+    /// Human-readable reason Tier A is or isn't active on this node.
+    /// Examples: "available", "micro-node-class", "force-broker-mode".
+    /// Surfaced in `/readyz` so operators can diagnose routing decisions without
+    /// reading logs.
+    pub tier_a_reason: &'static str,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -131,11 +140,18 @@ async fn healthz() -> &'static str {
 }
 
 async fn readyz(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    let has_local = state.doorman.has_local();
+    let has_yoyo = state.doorman.has_yoyo();
+    let has_external = state.doorman.has_external();
     let body = serde_json::json!({
         "ready": true,
-        "has_local": state.doorman.has_local(),
-        "has_yoyo": state.doorman.has_yoyo(),
-        "has_external": state.doorman.has_external(),
+        "node_class": state.node_class,
+        "tier_a": has_local,
+        "tier_a_reason": state.tier_a_reason,
+        "ai_available": has_local || has_yoyo || has_external,
+        "has_local": has_local,
+        "has_yoyo": has_yoyo,
+        "has_external": has_external,
         "tier_b": state.doorman.tier_b_status(),
     });
     (StatusCode::OK, Json(body))

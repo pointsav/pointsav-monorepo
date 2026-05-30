@@ -128,6 +128,28 @@ async fn main() -> anyhow::Result<()> {
     let service_content_endpoint = std::env::var("SERVICE_CONTENT_ENDPOINT")
         .unwrap_or_else(|_| http::DEFAULT_SERVICE_CONTENT_ENDPOINT.to_string());
 
+    // Node class: env-var override or default "hardware".
+    // "micro" = $7/mo e2-micro fleet; "hardware" = workspace VM; "cloud" = GCE GPU node.
+    let node_class: &'static str = match std::env::var("SLM_NODE_CLASS").as_deref() {
+        Ok("micro") => "micro",
+        Ok("cloud") => "cloud",
+        _ => "hardware",
+    };
+
+    // Derive Tier A availability reason for /readyz diagnostics.
+    let force_broker = std::env::var("SLM_FORCE_BROKER_MODE")
+        .map(|v| v == "true" || v == "1")
+        .unwrap_or(false);
+    let tier_a_reason: &'static str = if force_broker {
+        "force-broker-mode"
+    } else if node_class == "micro" {
+        "micro-node-class"
+    } else if doorman.has_local() {
+        "available"
+    } else {
+        "no-local-tier"
+    };
+
     let state = Arc::new(http::AppState {
         doorman,
         apprenticeship,
@@ -147,6 +169,8 @@ async fn main() -> anyhow::Result<()> {
         queue_config: Arc::new(queue_cfg.clone()),
         // Graph proxy — base URL for service-content (datagraph-access-discipline).
         service_content_endpoint,
+        node_class,
+        tier_a_reason,
     });
 
     info!(

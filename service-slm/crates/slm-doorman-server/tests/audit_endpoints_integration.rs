@@ -114,6 +114,8 @@ fn app_state_with_proxy_and_ledger_dir(
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
+        node_class: "hardware",
+        tier_a_reason: "available",
     })
 }
 
