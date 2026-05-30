@@ -536,7 +536,7 @@ async fn address(args: AddressArgs) -> Result<()> {
         .with_context(|| format!("parsing derivation path: {path_str}"))?;
 
     let child_xprv =
-        XPrv::derive_from_path(&seed_bytes, &path).context("BIP-32 key derivation failed")?;
+        XPrv::derive_from_path(seed_bytes, &path).context("BIP-32 key derivation failed")?;
 
     let xpub = child_xprv.public_key();
     let vk = xpub.public_key();
@@ -582,6 +582,7 @@ fn assign_order_index(index_path: &str, order_id: &str) -> Result<u32> {
         .read(true)
         .write(true)
         .create(true)
+        .truncate(false)
         .open(index_path)
         .with_context(|| format!("opening order index: {index_path}"))?;
 
