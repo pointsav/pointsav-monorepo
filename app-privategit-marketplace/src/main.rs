@@ -20,8 +20,6 @@ use tower_http::services::ServeDir;
 #[derive(Clone)]
 struct AppState {
     wallet_address: String,
-    #[allow(dead_code)]
-    fs_endpoint: String,
     catalog_path: String,
     receipts_dir: String,
     claims_dir: String,
@@ -585,8 +583,6 @@ async fn main() -> Result<()> {
 
     let bind_addr = std::env::var("MARKETPLACE_BIND").unwrap_or_else(|_| "127.0.0.1:9202".into());
     let wallet_address = std::env::var("POLYGON_WALLET_ADDRESS").unwrap_or_default();
-    let fs_endpoint =
-        std::env::var("FS_ENDPOINT").unwrap_or_else(|_| "http://127.0.0.1:8020".into());
     let catalog_path = std::env::var("CATALOG_PATH")
         .unwrap_or_else(|_| "/var/lib/local-software/catalog/products.yaml".into());
     let receipts_dir =
@@ -608,7 +604,6 @@ async fn main() -> Result<()> {
 
     let state = Arc::new(AppState {
         wallet_address,
-        fs_endpoint,
         catalog_path,
         receipts_dir,
         claims_dir,
