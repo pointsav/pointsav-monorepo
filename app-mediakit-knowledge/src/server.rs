@@ -1174,57 +1174,12 @@ fn home_chrome(
                                 "The corporate knowledge wiki for the PointSav Digital Systems platform."
                             }
                         }
-                        @if stats.article_count > 0 {
-                            div.hero__meta {
-                                div.hero__stat {
-                                    strong { (fmt_commas(stats.article_count)) }
-                                    " article"
-                                    @if stats.article_count != 1 { "s" }
-                                }
-                                div.hero__stat {
-                                    strong { (stats.category_count) }
-                                    " categories"
-                                }
-                                @if let Some(ref d) = stats.last_updated {
-                                    div.hero__stat {
-                                        "Updated "
-                                        time datetime=(d) { (d) }
-                                    }
-                                }
-                            }
-                        }
                         div.wiki-home-search {
                             form action="/search" method="get" {
                                 input type="search" name="q"
                                       placeholder={ "Search " (fmt_commas(stats.article_count)) " articles" }
                                       aria-label="Search the wiki" {}
                                 button type="submit" { "Search" }
-                            }
-                        }
-                    }
-
-                    // ── Ledger stripe ────────────────────────────────────────
-                    @if stats.article_count > 0 {
-                        div.ledger-stripe {
-                            div.ledger-stripe__inner {
-                                div.ledger-fact {
-                                    span.num { (fmt_commas(stats.article_count)) }
-                                    span.label { "Articles" }
-                                }
-                                div.ledger-fact {
-                                    span.num { (stats.category_count) }
-                                    span.label { "Categories" }
-                                }
-                                div.ledger-fact {
-                                    span.num { (fmt_commas(guides.len())) }
-                                    span.label { "Guides" }
-                                }
-                                @if let Some(ref d) = stats.last_updated {
-                                    div.ledger-fact {
-                                        span.num { (d) }
-                                        span.label { "Last Updated" }
-                                    }
-                                }
                             }
                         }
                     }
@@ -1348,9 +1303,6 @@ fn home_chrome(
                             a.cat-card href={ "/category/" (cat) } {
                                 div.cat-card__head {
                                     span.cat-card__name { (humanize_category(cat)) }
-                                    @if count > 0 {
-                                        span.cat-card__count { (count) }
-                                    }
                                 }
                                 @if let Some(desc) = cat_descriptions.get(*cat) {
                                     p.cat-card__desc { (desc) }
@@ -1465,6 +1417,20 @@ fn home_chrome(
                     }
 
                 }
+
+                // ── Stats one-liner (footer, subtle) ─────────────────────────
+                @if stats.article_count > 0 {
+                    p.home-stats-oneliner {
+                        (fmt_commas(stats.article_count))
+                        " articles · "
+                        (stats.category_count)
+                        " categories"
+                        @if let Some(ref d) = stats.last_updated {
+                            " · Updated " (d)
+                        }
+                    }
+                }
+
                 (shell_footer(brand_instance, None))
                 script src="/static/wiki.js" defer="true" {}
             }
