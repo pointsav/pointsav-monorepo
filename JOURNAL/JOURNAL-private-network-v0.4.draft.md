@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.4"
+version: "0.5"
 title: "Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody"
 target_journal: "IEEE Transactions on Information Forensics and Security"
 target_publisher: "IEEE Signal Processing Society"
@@ -59,7 +59,7 @@ preprint_posted: true
 preprint_posted_date: 2026-05-28
 doi: ""
 license: "CC BY 4.0"
-cite_as: "Woodfine, P.M., Woodfine, M., & Woodfine, J.M. (2026). Customer-Rooted Mesh Architecture for Distributed Operational Systems. Working Paper v0.3, 29 May 2026. Woodfine Management Corp., Vancouver, BC."
+cite_as: "Woodfine, Peter M., Woodfine, Mathew, & Woodfine, Jennifer M. (2026). Customer-Rooted Mesh Architecture for Distributed Operational Systems. Working Paper v0.5, 30 May 2026. Woodfine Management Corp., New York, NY."
 revision_history:
   - version: "0.1"
     date: "2026-05-27"
@@ -69,7 +69,13 @@ revision_history:
     changes: "Writing pass §1–§3, §6–§7; language pass; preprint notice and FLS advisory; public posting"
   - version: "0.3"
     date: "2026-05-29"
-    changes: "§4 Implementation written: benchmark environment, hub/spoke configuration, key generation procedure, BLAKE2s audit log construction. §5 Evaluation written: empirical benchmark results from four measurements (tunnel establishment n=30, re-handshake n=10, policy-change propagation n=20, failure-mode n=5). Benchmark platform: GCP e2-standard-8, Ubuntu 24.04, kernel 6.17.0-gcp, WireGuard 1.0.0."
+    changes: "§4 Implementation written: benchmark environment (GCP e2-standard-8, Ubuntu 24.04, kernel 6.17.0-1013-gcp, WireGuard 1.0.0), hub/spoke configuration, key generation procedure, BLAKE2s audit log construction with full Python daemon. §5 Evaluation written: empirical benchmark results — tunnel establishment n=30 44±5 ms, re-handshake n=10 59±20 ms, policy-change propagation n=20 8 ms mean, hub restart recovery n=5 bimodal 1–16 s."
+  - version: "0.4"
+    date: "2026-05-29"
+    changes: "Citation resolution: [Cameron et al. 2019] replaced with Birge-Lee et al. 2024 (BGP routing trust failure, DOI: 10.1007/978-3-031-85960-1_14); commercial VPN [CITATION NEEDED] and ZTA latency [CITATION NEEDED] replaced with Mackey et al. 2020 (WireGuard vs OpenVPN performance benchmark, DOI: 10.1145/3374664.3379532). Abstract updated with empirical results. §7 Conclusion updated with benchmark summary."
+  - version: "0.5"
+    date: "2026-05-30"
+    changes: "Readability pass: VPN, NIST/SP, NAT, AES/AES-NI first-use expansions in §1.2, §2.1, §3.1, §5.3"
 cites:
   - donenfeld-2017-wireguard
   - rose-2020-nist-800-207
@@ -107,10 +113,10 @@ notes_for_editor: |
   submission path. Standard TIFS track is the fallback.
 ---
 
-> **Working Paper · Version 0.3 · 2026-05-29 · CC BY 4.0**
-> This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. Correspondence: jmwoodfine@gmail.com.
+> **Working Paper · Version 0.5 · 2026-05-30 · CC BY 4.0**
+> This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. Correspondence: corporate.secretary@woodfinegroup.com.
 >
-> *Cite as:* Woodfine, P.M., Woodfine, M., & Woodfine, J.M. (2026). Customer-Rooted Mesh Architecture for Distributed Operational Systems. Working Paper v0.3, 29 May 2026. Woodfine Management Corp., Vancouver, BC.
+> *Cite as:* Woodfine, Peter M., Woodfine, Mathew, & Woodfine, Jennifer M. (2026). Customer-Rooted Mesh Architecture for Distributed Operational Systems. Working Paper v0.5, 30 May 2026. Woodfine Management Corp., New York, NY.
 
 > **Forward-Looking Statements**
 > Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially. Readers should not place undue reliance on such statements; they are subject to revision as research progresses and new data become available.
@@ -146,7 +152,7 @@ This vendor key-custody property creates a class of risks that is distinct from 
 
 4. **Jurisdiction and compulsion**: the vendor's infrastructure is subject to the legal jurisdiction in which it operates. A government compulsion order against the vendor may expose customer traffic or policy configuration without the customer's knowledge or consent.
 
-These risks are not hypothetical; analogous failures have been documented in critical routing infrastructure [Birge-Lee et al. 2024] and are a recognised concern in the commercial VPN sector [Mackey et al. 2020]. They are structural properties of vendor-mediated key custody, not implementation defects.
+These risks are not hypothetical; analogous failures have been documented in critical routing infrastructure [Birge-Lee et al. 2024] and are a recognised concern in the commercial virtual private network (VPN) sector [Mackey et al. 2020]. They are structural properties of vendor-mediated key custody, not implementation defects.
 
 The academic and practitioner literature on ZTA [Rose et al. 2020; Kindervag 2010; Ward and Beyer 2014] acknowledges the customer/vendor boundary but does not enumerate the key-custody risks or propose architectures that explicitly address them. WireGuard [Donenfeld 2017], the modern kernel-integrated VPN protocol with a formally verified cryptographic core [Lipp et al. 2019], provides the cryptographic primitives required to build ZTA without vendor key custody — but no peer-reviewed publication has documented a complete architecture that does so.
 
@@ -168,7 +174,7 @@ The remainder of this paper is organised as follows. Section 2 reviews backgroun
 
 Zero-trust architecture was introduced by Kindervag [2010] as "never trust, always verify" — the principle that network location (inside or outside a perimeter) should carry no implicit access rights, and that every access request must be explicitly authenticated and authorised. The concept was operationalised by Google's BeyondCorp programme [Ward and Beyer 2014; Osborn et al. 2016], which migrated Google employees to a model where corporate applications were accessible from any network after device and user authentication, without VPN tunnels to a corporate perimeter.
 
-NIST SP 800-207 [Rose et al. 2020] formalises ZTA as an enterprise security framework. The NIST definition identifies seven ZTA tenets, including: (1) all data sources and computing services are considered resources; (2) all communication is secured regardless of network location; (3) access to individual enterprise resources is granted on a per-session basis; (4) access policy is dynamic and informed by observable state of client identity, application, and other behavioural attributes; and (5) the enterprise monitors and measures the integrity and security posture of all owned and associated assets. The NIST framework does not specify where cryptographic key material must reside — this is the gap the CRMA addresses.
+National Institute of Standards and Technology (NIST) Special Publication (SP) 800-207 [Rose et al. 2020] formalises ZTA as an enterprise security framework. The NIST definition identifies seven ZTA tenets, including: (1) all data sources and computing services are considered resources; (2) all communication is secured regardless of network location; (3) access to individual enterprise resources is granted on a per-session basis; (4) access policy is dynamic and informed by observable state of client identity, application, and other behavioural attributes; and (5) the enterprise monitors and measures the integrity and security posture of all owned and associated assets. The NIST framework does not specify where cryptographic key material must reside — this is the gap the CRMA addresses.
 
 ### 2.2 WireGuard
 
@@ -186,7 +192,7 @@ The Noise framework's property most relevant to the CRMA is its lack of certific
 
 ### 2.4 Hub-and-Spoke vs. Full-Mesh Topologies
 
-WireGuard supports both hub-and-spoke and full-mesh topologies. In a hub-and-spoke topology, all spoke nodes route traffic through a single hub node, which provides NAT traversal and serves as the routing coordinator for the mesh. In a full-mesh topology, every node has a direct tunnel to every other node. Hub-and-spoke topologies are simpler to configure (O(n) peer entries rather than O(n²)), provide a single point for traffic inspection (hub can log all inter-spoke traffic), and support NAT traversal for spoke nodes behind residential or mobile NAT. Full-mesh topologies provide lower latency for spoke-to-spoke communication and eliminate the hub as a single point of failure.
+WireGuard supports both hub-and-spoke and full-mesh topologies. In a hub-and-spoke topology, all spoke nodes route traffic through a single hub node, which provides Network Address Translation (NAT) traversal and serves as the routing coordinator for the mesh. In a full-mesh topology, every node has a direct tunnel to every other node. Hub-and-spoke topologies are simpler to configure (O(n) peer entries rather than O(n²)), provide a single point for traffic inspection (hub can log all inter-spoke traffic), and support NAT traversal for spoke nodes behind residential or mobile NAT. Full-mesh topologies provide lower latency for spoke-to-spoke communication and eliminate the hub as a single point of failure.
 
 The CRMA uses a hub-and-spoke topology as its reference design. Full-mesh topology is a natural extension and is addressed in Section 3.4.
 
@@ -559,7 +565,7 @@ n = 5 trials. Results are bimodal: two trials completed in 1,031–1,039 ms; thr
 
 The benchmark measurements reported above were obtained on a GCP e2-standard-8 virtual machine using co-located network namespaces, which eliminates physical network latency as a variable. This isolation allows clean measurement of the WireGuard handshake and kernel-operation costs independent of network conditions. The trade-off is that the results do not reflect realistic WAN deployment latencies; the 2R + handshake model in Section 5.1 provides the adjustment for deployments with measured round-trip latency R.
 
-The benchmark environment runs on shared cloud hardware with hypervisor scheduling. Scheduling jitter contributes to the SD values reported in Sections 5.1–5.2 and is not separable from WireGuard's own latency variance at this measurement level. Bare-metal measurements are expected to show lower SD due to reduced scheduling noise. The mean values are expected to remain stable across hardware generations given WireGuard's fixed-cost cryptographic suite (ChaCha20-Poly1305 is consistently faster than AES-GCM on processors without AES-NI acceleration).
+The benchmark environment runs on shared cloud hardware with hypervisor scheduling. Scheduling jitter contributes to the SD values reported in Sections 5.1–5.2 and is not separable from WireGuard's own latency variance at this measurement level. Bare-metal measurements are expected to show lower SD due to reduced scheduling noise. The mean values are expected to remain stable across hardware generations given WireGuard's fixed-cost cryptographic suite (ChaCha20-Poly1305 is consistently faster than Advanced Encryption Standard (AES)-GCM on processors without AES New Instructions (AES-NI) hardware acceleration).
 
 Table 1 compares the CRMA prototype's tunnel establishment latency against the WireGuard and OpenVPN measurements reported by Mackey et al. [2020], who benchmarked both protocols on a local-area network (LAN) between dedicated workstations:
 
