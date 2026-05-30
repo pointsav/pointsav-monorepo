@@ -13,6 +13,7 @@ use tokio::sync::RwLock;
 
 mod fleet;
 mod placement;
+mod vm_spawn;
 
 use fleet::NodeRegistry;
 
@@ -36,6 +37,7 @@ async fn main() {
     let app = Router::new()
         .route("/v1/nodes/heartbeat", post(heartbeat_handler))
         .route("/v1/fleet", get(fleet_handler))
+        .route("/v1/nodes", get(nodes_handler))
         .route("/v1/nodes/:node_id", get(node_handler))
         .route("/v1/vms", post(create_vm_handler))
         .route("/v1/vms/:vm_id", delete(destroy_vm_handler))
@@ -99,6 +101,9 @@ async fn create_vm_handler(
         })?
     };
 
+    // Capture kvm_available before releasing the lock.
+    let kvm = reg.get_node(&target).map(|n| n.kvm_available).unwrap_or(false);
+
     let vm_id = format!("{}-{}", req.vm_type.to_lowercase(), Utc::now().timestamp());
     let record = VmRecord {
         vm_id: vm_id.clone(),
@@ -114,8 +119,27 @@ async fn create_vm_handler(
         vm_id = %vm_id,
         node = %target,
         ram_mb = req.ram_mb,
+        kvm,
         "VM provisioning dispatched"
     );
+
+    // Release the lock before the blocking QEMU spawn.
+    drop(reg);
+
+    let spawn_record = record.clone();
+    let disk_size_gb = (req.ram_mb / 1024).max(8) as u32;
+    let _ = tokio::task::spawn_blocking(move || {
+        match vm_spawn::create_blank_disk(&spawn_record.vm_id, disk_size_gb) {
+            Ok(_) => {
+                if let Err(e) = vm_spawn::spawn_qemu(&spawn_record, kvm) {
+                    tracing::warn!(vm_id = %spawn_record.vm_id, error = %e, "QEMU spawn failed");
+                }
+            }
+            Err(e) => {
+                tracing::warn!(vm_id = %spawn_record.vm_id, error = %e, "disk creation failed");
+            }
+        }
+    });
 
     Ok(Json(record))
 }
@@ -124,8 +148,17 @@ async fn destroy_vm_handler(State(state): State<AppState>, Path(vm_id): Path<VmI
     let mut reg = state.registry.write().await;
     if reg.remove_vm(&vm_id) {
         tracing::info!(vm_id = %vm_id, "VM destroyed");
+        drop(reg);
+        let id = vm_id.clone();
+        let _ = tokio::task::spawn_blocking(move || vm_spawn::kill_qemu(&id));
         StatusCode::NO_CONTENT
     } else {
         StatusCode::NOT_FOUND
     }
+}
+
+async fn nodes_handler(State(state): State<AppState>) -> Json<Vec<NodeRecord>> {
+    let mut reg = state.registry.write().await;
+    reg.evict_stale();
+    Json(reg.all_nodes())
 }

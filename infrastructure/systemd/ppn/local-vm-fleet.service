@@ -1,0 +1,20 @@
+[Unit]
+Description=PPN VM fleet controller
+Documentation=https://github.com/pointsav/pointsav-monorepo
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mathew
+ExecStart=/usr/local/bin/service-vm-fleet
+Restart=on-failure
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=local-vm-fleet
+Environment=RUST_LOG=service_vm_fleet=info
+Environment=VM_DISK_DIR=/var/lib/vm-fleet
+
+[Install]
+WantedBy=multi-user.target
