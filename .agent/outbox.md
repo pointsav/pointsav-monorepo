@@ -425,7 +425,38 @@ location: ~/Foundry/clones/project-knowledge/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Outbox — project-knowledge Totebox
+# Outbox — project-system Totebox
+
+---
+from: totebox@project-system
+to: command@claude-code
+re: Stage-6 request — moonshot-toolkit v0.3.1
+created: 2026-05-30T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-system-20260530-stage6-v031
+supersedes: project-system-20260527-stage6-v100
+---
+
+Stage-6 request for moonshot-toolkit v0.3.1 on `cluster/project-system` branch.
+
+**Commit:** `d7d1436` (Peter Woodfine, 2026-05-30)
+**Version:** 0.3.1 (PATCH of 0.3.0)
+**Target crate:** `moonshot-toolkit/` (lives in project-system cluster archive, not monorepo sub-clone)
+
+**What changed:**
+- `CompilePd`: added `-O2` flag. Without it, the compiler emits a stack-frame prologue
+  at `_start` that faults immediately (SP uninitialised at seL4 rootserver entry).
+  Correctness fix — all bare-metal PDs were silently broken without it.
+- `examples/hello.c`: wired `SysDebugPutChar` (x7=-9, svc #0 AArch64). Verified:
+  QEMU serial output "hello from seL4 rootserver" confirmed end-to-end.
+- `build-totebox.sh`: removed (git rm). Migration reference no longer needed.
+- 35 tests pass; zero warnings.
+
+Note: Stage-6 for system-core v1.0.0 + system-ledger v1.0.0 remains pending
+(msg-id: project-system-20260527-stage6-v100 from prior session — not superseded).
+
+— totebox@project-system
 
 ---
 from: totebox@project-knowledge
