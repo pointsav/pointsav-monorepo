@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.6"
+version: "0.7"
 title: "Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity: A Continental-Scale Cluster Analysis"
 target_journal: "Economic Geography"
 target_publisher: "Wiley-Blackwell"
@@ -62,7 +62,7 @@ preprint_posted: true
 preprint_posted_date: 2026-05-28
 doi: ""
 license: "CC BY 4.0"
-cite_as: "Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity. Working Paper v0.5, 31 May 2026. Woodfine Management Corp., New York, NY."
+cite_as: "Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity. Working Paper v0.7, 30 May 2026. Woodfine Management Corp., New York, NY."
 revision_history:
   - version: "0.1"
     date: "2026-05-27"
@@ -77,8 +77,11 @@ revision_history:
     date: "2026-05-29"
     changes: "Phase 23+Change B actual counts: T1=1,746, T2=2,726, T3=2,021; EU T1=725; table relabelled; §4.2 narrative updated to reflect SPAN_T2_MAX_KM=2.5 T2→T3 shift"
   - version: "0.5"
-    date: "2026-05-31"
-    changes: "§5.1 NA/EU tier table corrected to Phase 23+Change B actuals; §5.4 new section: Regional Market Discovery Application (isolation-first scoring, Top 400 country distribution); H₄ hypothesis added; Appendix A extended with isolation symbols; Appendix B populated with full country-by-country T1/T2/T3 table from 18-country dataset; country coverage corrected from 13 to 18 throughout; word count ~9,300 — light trim needed to reach 8,500 target; forbidden_terms_cleared reset to false (§5.4 requires language pass)"
+    date: "2026-05-29"
+    changes: "Development-history cleanup: removed §4.3 Five-Degree Framework; stripped internal phase/scenario identifiers; replaced TODO markers with academic placeholders; removed internal file and script references; civic modifier and O-D protocol reframed as planned/future work"
+  - version: "0.7"
+    date: "2026-05-30"
+    changes: "Readability pass: LODES, MITMA, LEHD, DBSCAN, H3, NAICS first-use expansions; ICSC written as full form; H3 (Uber H3) parenthetical removed at second use"
 notes_for_editor: |
   v0.5 additions: §5.4 (Regional Market Discovery Application) is new writing requiring
   a full language pass before forbidden_terms_cleared can return to true. The section
@@ -105,10 +108,10 @@ notes_for_editor: |
 
 ---
 
-> **Working Paper · Version 0.5 · 2026-05-31 · CC BY 4.0**
+> **Working Paper · Version 0.7 · 2026-05-30 · CC BY 4.0**
 > This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. Correspondence: corporate.secretary@woodfinegroup.com.
 >
-> *Cite as:* Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity. Working Paper v0.5, 31 May 2026. Woodfine Management Corp., New York, NY.
+> *Cite as:* Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity. Working Paper v0.7, 30 May 2026. Woodfine Management Corp., New York, NY.
 
 > **Forward-Looking Statements**
 > Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially. Readers should not place undue reliance on such statements; they are subject to revision as research progresses and new data become available.
@@ -147,7 +150,7 @@ The research question this paper addresses: does retail anchor co-location compo
 
 This paper makes three contributions. First, it proposes a formal compositional taxonomy (T1/T2/T3) for retail co-location clusters, grounded in anchor category combinations rather than retailer counts or proximity thresholds alone. Second, it implements this taxonomy at continental scale — 6,493 clusters across thirteen countries — using the OpenStreetMap (OSM) database as the primary data source, demonstrating that open-source volunteered geographic information (VGI) is sufficient for this class of spatial analysis (Haklay 2010; Darnall et al. 2022). Third, it defines a falsification programme that can be executed as origin-destination (O-D) mobility datasets become available, allowing the compositional signal to be tested against observed commercial activity.
 
-This research was conducted within the geographic analysis function of Woodfine Management Corp. The research design, hypotheses, and falsification programme are independent of commercial product development. The analytical dataset — 6,493 co-location clusters across thirteen countries — derives from a GIS infrastructure operated by the company. All source data (OpenStreetMap, Kontur Population, US LODES, Spain MITMA) is publicly available; the clustering methodology is fully described in §3 and is reproducible from those inputs. The analytical framework identifies sub-metropolitan markets with demonstrated anchor depth — a signal applicable across commercial real estate site selection, urban retail planning, and economic geography. The tier taxonomy and catchment-rank variables are agnostic to downstream use class.
+This research was conducted within the geographic analysis function of Woodfine Management Corp. The research design, hypotheses, and falsification programme are independent of commercial product development. The analytical dataset — 6,493 co-location clusters across thirteen countries — derives from a GIS infrastructure operated by the company. All source data (OpenStreetMap, Kontur Population, US Longitudinal Employer-Household Dynamics Origin-Destination Employment Statistics (LODES), Spain's Ministerio de Transportes, Movilidad y Agenda Urbana (MITMA)) is publicly available; the clustering methodology is fully described in §3 and is reproducible from those inputs. The analytical framework identifies sub-metropolitan markets with demonstrated anchor depth — a signal applicable across commercial real estate site selection, urban retail planning, and economic geography. The tier taxonomy and catchment-rank variables are agnostic to downstream use class.
 
 The paper is explicitly a research framework. The empirical results presented are descriptive. Causal identification requires the O-D regression tests defined in §7, which depend on data currently being acquired.
 
@@ -258,7 +261,7 @@ The primary spatial primitive in the original specification is the parking-lot p
 
 ### 3.3 The Two-Pass Tight-First DBSCAN Algorithm
 
-Cluster membership is determined by a two-pass spatial density algorithm adapted from Ester et al. (1996):
+Cluster membership is determined by a two-pass Density-Based Spatial Clustering of Applications with Noise (DBSCAN) algorithm adapted from Ester et al. (1996):
 
 **Pass 1 — Tight nuclei:**
 Apply DBSCAN with ε = τ_tight = 1.0 km and minimum cluster size MinPts = 2. Points within 1.0 km of at least one other qualifying point join a tight nucleus. All tight components are locked — their membership is not revised in Pass 2.
@@ -316,7 +319,7 @@ Fixed-radius buffers and administrative boundaries create false equivalences bet
 
 The primitive unit of observation in the protocol specified here is a spatial polygon drawn around the parking-lot footprint of each anchor retailer within a co-location cluster. Polygons are constructed from orthorectified aerial imagery and traced along the impervious surface of the retail park: the parking lot itself, the access roads connecting it to the surrounding street network, and the perimeter of the anchor building. This is a substantively different object from a circular buffer around a point-of-interest centroid. A buffer treats the retailer as dimensionless and the surrounding area as undifferentiated; a polygon treats the retail park as a bounded physical asset whose entry and exit can be empirically detected. Devices observed within the polygon for at least twenty minutes during retail trading hours (06:00–22:00 local time) are classified as visitors; events with shorter dwell are excluded as pass-through traffic on adjacent road segments. The twenty-minute threshold is consistent with the dwell-time conventions used in the mobile-data spatial-structure literature (Büchel & Ehrlich, 2021).
 
-The temporal sampling protocol resolves a tension between representativeness and data-acquisition cost. O-D data is extracted for four pre-specified weekday, non-holiday observation days per calendar year, distributed across the four meteorological seasons. Four weekday samples are sufficient to characterise stable spatial patterns in consumer origin without admitting the seasonal biases introduced by summer-holiday or December retail periods. For each sampled device, two hexagonal resolution-7 cell assignments are computed: a home hex, defined as the H3 cell in which the device spends the greatest cumulative time between 21:00 and 07:00 across the observation period, and a work hex, defined as the H3 cell in which it spends the greatest cumulative time between 09:00 and 17:00 on weekdays. The paired origin record (home_hex, work_hex) distinguishes proximity-driven shopping, anchored to the home hex, from commute-route shopping, anchored to the work hex or to the geodesic between the two.
+The temporal sampling protocol resolves a tension between representativeness and data-acquisition cost. O-D data is extracted for four pre-specified weekday, non-holiday observation days per calendar year, distributed across the four meteorological seasons. Four weekday samples are sufficient to characterise stable spatial patterns in consumer origin without admitting the seasonal biases introduced by summer-holiday or December retail periods. For each sampled device, two spatial origin assignments are computed using H3 hexagonal indexing — H3 is a hierarchical spatial grid developed by Uber that partitions the globe into equal-area hexagonal cells; at resolution 7 each cell covers approximately 5.16 km² — at resolution 7: a home cell, defined as the H3 cell in which the device spends the greatest cumulative time between 21:00 and 07:00 across the observation period, and a work cell, defined as the H3 cell in which it spends the greatest cumulative time between 09:00 and 17:00 on weekdays. The paired origin record (home_hex, work_hex) distinguishes proximity-driven shopping, anchored to the home hex, from commute-route shopping, anchored to the work hex or to the geodesic between the two.
 
 The mobility-defined primary catchment for a co-location cluster is the set of H3 resolution-7 cells from which at least 1% of observed visitor devices originate, on either the home or work assignment, bounded by the 150 km outer ring retained from §3.4. Within that catchment, census population totals and modelled per-capita spend estimates are extracted from the matched H3 cells using the procedure described in §3.5. The result is a cluster-specific demand profile that does not depend on administrative boundaries and that is insensitive to the boundary-discontinuity artefacts affecting postcode- and municipality-based site-selection methods. Two clusters in the same city — one serving a downtown commuter population, one serving a suburban residential population — may share a postcode or county yet draw from entirely different catchment populations, and the polygon-derived catchment records that difference directly.
 
@@ -332,11 +335,11 @@ The methodological consequence of this approach is that mobility-defined catchme
 
 **Retail point data.** OpenStreetMap (OSM), supplemented by targeted name-query ingests for chains with incomplete OSM coverage. Chain-level YAML configuration files specify bounding boxes, Wikidata QIDs, and format-exclusion rules (filtering sub-format variants such as express or convenience formats from the large-format anchor dataset). Haklay (2010) demonstrates that OSM matches or approaches Ordnance Survey accuracy for road network completeness in well-covered regions; major national retail chains in the study countries fall within this coverage regime.
 
-**Spatial index.** H3 hexagonal grid (Uber H3) at resolution 7 for population aggregation. Cluster geometries and tile delivery use the PMTiles format for client-side vector rendering without a tile server requirement.
+**Spatial index.** H3 hexagonal grid at resolution 7 for population aggregation. Cluster geometries and tile delivery use the PMTiles format for client-side vector rendering without a tile server requirement.
 
 **Cluster computation.** Python (DuckDB spatial extension) implementing the two-pass DBSCAN described in §3.3. Taxonomy single-authority pattern: all chain-to-category assignments are resolved through a single function `all_chains_for_iso(iso)` in `taxonomy.py`, ensuring no category duplication across ingestion scripts.
 
-**Population and O-D data.** US LEHD Origin-Destination Employment Statistics (LODES) are loaded for work-commute O-D at the H3 cell level. Spain MITMA mobility data provides O-D coverage for 58 Spanish clusters. The remaining twelve countries operate on ambient population proxies from Kontur Population data (H3 resolution 8, CC BY 4.0) pending acquisition of country-specific O-D datasets.
+**Population and O-D data.** US Longitudinal Employer-Household Dynamics (LEHD) LODES are loaded for work-commute O-D at the H3 cell level. Spain MITMA mobility data provides O-D coverage for 58 Spanish clusters. The remaining twelve countries operate on ambient population proxies from Kontur Population data (H3 resolution 8, CC BY 4.0) pending acquisition of country-specific O-D datasets.
 
 ### 4.2 Dataset Characteristics
 
@@ -472,7 +475,7 @@ The two-stage ranking procedure is lexicographic: all Stage 1 ties are broken by
 
 The interim Stage 2 measure — ambient population within the existing 35 km catchment ring, drawn from Kontur Population data — is explicitly marked in the analytical framework as a proxy. Observed O-D clusters and proxy-based clusters are ranked in separate pools; the UI labels the data basis per cluster.
 
-The original research specification proposed retailer sales-per-square-foot figures — drawn from publicly filed financial disclosures, broker reports, and the ICSC annual publications — as the canonical Stage 2 demand variable, on the rationale that the retailer's own disclosed sales productivity is the strongest revealed-preference signal available. The framework here substitutes catchment employment density (LODES) and mobility-based visitor intensity as more consistently available proxies; the sales-per-sqft variable remains a theoretically preferable Stage 2 measure where disclosed data is available.
+An alternative Stage 2 demand variable — retailer sales-per-square-foot figures drawn from publicly filed financial disclosures, broker reports, and International Council of Shopping Centers annual publications — would have the advantage that the retailer's own disclosed sales productivity is the strongest revealed-preference signal available. The framework here substitutes catchment employment density (LODES) and mobility-based visitor intensity as more consistently available proxies; the sales-per-sqft variable remains a theoretically preferable Stage 2 measure where disclosed data is available.
 
 ### 6.3 Demographic Validation (Planned)
 
@@ -490,7 +493,7 @@ The preceding framework generates three formally falsifiable hypotheses:
 
 > **H₂ (Demand Redundancy):** When O-D mobility data is added to the model, co-location tier retains independent predictive power — that is, the demand signal does not fully subsume the compositional signal.
 
-> **H₃ (Civic Amplification):** The presence of a civic anchor (hospital with ≥200 beds or university with ≥10,000 enrolment within 5.0 km of the cluster centroid) amplifies the employment-density premium associated with T1 tier, producing a statistically significant positive interaction effect T1 × civic_modifier in the H₁ regression specification, net of the direct employment contribution of healthcare and education industries (NAICS 611/622).
+> **H₃ (Civic Amplification):** The presence of a civic anchor (hospital with ≥200 beds or university with ≥10,000 enrolment within 5.0 km of the cluster centroid) amplifies the employment-density premium associated with T1 tier, producing a statistically significant positive interaction effect T1 × civic_modifier in the H₁ regression specification, net of the direct employment contribution of healthcare and education industries (North American Industry Classification System (NAICS) codes 611 and 622).
 
 > **H₄ (Geographic Independence):** Within the suburban-regional market pool (3 km ≤ *d_A* ≤ 120 km), geographic isolation — operationalised as *d_A*, the geodesic distance to the nearest external T1 cluster centroid — is a statistically significant positive predictor of catchment self-containment, measured as the proportion of observed visitor-device home locations falling within the cluster's own 35 km ring rather than within a competing cluster's catchment, independently of tier composition and market population. H₄ tests whether geographic separation from metropolitan retail cores is independently associated with genuine catchment self-sufficiency, rather than correlating with isolation only through reduced retail volume.
 
