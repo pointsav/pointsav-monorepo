@@ -16,7 +16,7 @@ struct MeshPayload {
 
 // The PointSav Private Network (PPN) WireGuard Subnet
 const MESH_PORT: u16 = 8090;
-const BROADCAST_ADDR: &str = "10.50.0.255";
+const BROADCAST_ADDR: &str = "10.8.0.255";
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -58,7 +58,7 @@ fn listen_mesh() {
         match socket.recv_from(&mut buf) {
             Ok((size, src)) => {
                 // SECURITY PERIMETER: Drop all packets not originating from the WireGuard Subnet
-                if !src.ip().to_string().starts_with("10.50.0.") && src.ip().to_string() != "127.0.0.1" {
+                if !src.ip().to_string().starts_with("10.8.") && src.ip().to_string() != "127.0.0.1" {
                     println!("[WARNING] Dropped foreign packet from unauthorized IP: {}", src);
                     continue;
                 }
