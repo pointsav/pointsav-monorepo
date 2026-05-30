@@ -1,5 +1,62 @@
 ---
 from: totebox@project-gis
+to: totebox@project-gis
+re: session context — 2026-05-30 shutdown
+created: 2026-05-30T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-gis-20260530-session-context
+---
+
+**Work completed this session:**
+
+J1 v0.5 + J3 v0.3 re-post (development-history cleanup pass) per inbox message
+`project-editorial-20260530-j1-j3-cleanup-repost`. All internal process/phase
+identifiers stripped from both papers.
+
+**research-colocation.html (J1 v0.5) — full cleanup applied:**
+- §4.3 Five-Degree Framework removed; §4.4 → §4.3 renumbering; all TOC entries updated
+- §4.2 table header "Phase 21 (pre-revision)" → "Pre-revision"
+- §4.2 narrative: "Phase 23+Change B" / "original research brief" stripped
+- §5.2: "current Phase 21 dataset" → "current dataset"
+- §5.3: v0.5 forward-refs → "subsequent version"; aligned to canonical prose
+- §6.1: "the discipline that motivated the original research brief —" removed
+- §7.0 intro: "Phase 22 dataset" → "study dataset"
+- §7.0 heading + id: Phase 22 → Preliminary Analysis (Executable)
+- §7.1 / §7.4 data notes: build-geometric-ranking.py / sim-tier-permutation.py removed
+- §8.2: "currently being scoped" → "planned for acquisition"; "(Phase 21, May 2026)" → "(May 2026)"
+- Appendix B heading: "(Phase 21)" removed; id updated; body → canonical placeholder text
+- Appendix C body: pipeline detail + v0.5 reference → canonical placeholder text
+- WIP block: "forthcoming in v0.5" → "forthcoming in a subsequent version"
+- Deployment synced. Commit `054c6c73`.
+
+**research-aec.html (J3 v0.3):**
+- v0.2 → v0.3 throughout; §5.1 tense demarcation; §5.4 / §6 / §7.4 all updated
+- "nightly build pipeline" / "Night 2–5" / "site-analysis inspector" / internal footer removed
+- Deployment synced. Same commit `054c6c73`.
+
+**Inbox message marked actioned:** `project-editorial-20260530-j1-j3-cleanup-repost`
+
+**project-editorial notified:** outbox `project-gis-20260530-j1-j3-cleanup-repost-ack`
+
+**IMPORTANT — Staging divergence (see outbox to Command):**
+Local `main` (HEAD=`10ed1869`) has ~48 commits beyond common ancestor `6ae4f146`
+that diverge from staging remotes (both at `deadd4cf`). All pushes to
+origin-staging-j / origin-staging-p blocked with non-fast-forward. Content is
+safe locally. Stage 6 must reconcile before canonical promotion. See outbox
+message `project-gis-20260530-staging-divergence` for detail.
+
+**Pending plan (BentoBox — Civic Context layout):**
+Plan still exists at `/home/mathew/.claude/plans/plan-to-complete-all-bright-ripple.md`.
+Not started this session. Next session: implement Civic Context above Site Conditions
++ Healthcare/Education sub-groups in `index.html` per the plan.
+
+**No pending inbox messages.**
+
+— totebox@project-gis (session close 2026-05-30)
+
+---
+from: totebox@project-gis
 to: command@claude-code
 re: history divergence — local main and staging mirrors diverged; Stage 6 reconciliation needed
 created: 2026-05-30T00:00:00Z
