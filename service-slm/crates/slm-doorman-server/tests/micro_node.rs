@@ -14,7 +14,6 @@
 //! safe under Rust's parallel test runner.
 
 use std::collections::HashMap;
-use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, Mutex};
 
 use axum::body::Body;
@@ -42,11 +41,8 @@ fn micro_state() -> Arc<AppState> {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
-        last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
-        gateway_token: None,
         node_class: "micro",
         tier_a_reason: "micro-node-class",
-        idle_monitor: None,
     })
 }
 
@@ -136,11 +132,8 @@ async fn force_broker_mode_readyz_surfaces_override_reason() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
-        last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
-        gateway_token: None,
         node_class: "hardware",        // detected as Hardware
         tier_a_reason: "force-broker-mode", // but SLM_FORCE_BROKER_MODE=true overrode it
-        idle_monitor: None,
     });
 
     let resp = router(state)
@@ -190,11 +183,8 @@ async fn hardware_readyz_shows_tier_a_available() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
-        last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
-        gateway_token: None,
         node_class: "hardware",
         tier_a_reason: "available",
-        idle_monitor: None,
     });
 
     let resp = router(state)
