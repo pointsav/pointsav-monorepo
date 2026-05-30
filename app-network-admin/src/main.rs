@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use std::net::UdpSocket;
 use std::sync::Arc;
-use tokio::process::Command;
 use tokio::sync::Mutex;
 use warp::Filter;
 
@@ -33,7 +32,7 @@ struct TerminalResponse {
 
 const MESH_PORT: u16 = 8090;
 const HTTP_PORT: u16 = 8085;
-const PEERS: &[&str] = &["10.50.0.1", "10.50.0.2", "10.50.0.3"];
+const PEERS: &[&str] = &["10.8.0.1", "10.8.0.2", "10.8.0.3"];
 
 #[tokio::main]
 async fn main() {
@@ -119,31 +118,30 @@ async fn handle_upload(filename: String, body: Bytes) -> Result<impl warp::Reply
 }
 
 async fn handle_translation(req: TranslateRequest) -> Result<impl warp::Reply, warp::Rejection> {
-    let output = Command::new("/opt/pointsav/f8-gateway/system-slm")
-        .arg(&req.raw_input)
-        .output()
+    let res = reqwest::Client::new()
+        .post("http://localhost:9080/v1/translate")
+        .json(&serde_json::json!({"input": req.raw_input}))
+        .send()
         .await;
-    match output {
-        Ok(out) => {
-            if out.status.success() {
-                let stdout_str = String::from_utf8_lossy(&out.stdout).trim().to_string();
-                if let Ok(json_val) = serde_json::from_str::<serde_json::Value>(&stdout_str) {
-                    Ok(warp::reply::json(&TerminalResponse {
+    match res {
+        Ok(resp) => {
+            if resp.status().is_success() {
+                match resp.json::<serde_json::Value>().await {
+                    Ok(json_val) => Ok(warp::reply::json(&TerminalResponse {
                         status: "PENDING_AUTHORIZATION".to_string(),
                         message: "Awaiting Verification.".to_string(),
                         data: Some(json_val),
-                    }))
-                } else {
-                    Ok(warp::reply::json(&TerminalResponse {
+                    })),
+                    Err(_) => Ok(warp::reply::json(&TerminalResponse {
                         status: "ERROR".to_string(),
                         message: "Invalid JSON.".to_string(),
                         data: None,
-                    }))
+                    })),
                 }
             } else {
                 Ok(warp::reply::json(&TerminalResponse {
                     status: "ERROR".to_string(),
-                    message: String::from_utf8_lossy(&out.stderr).to_string(),
+                    message: resp.status().to_string(),
                     data: None,
                 }))
             }
@@ -173,9 +171,9 @@ async fn handle_authorization(
     let mut success_count = 0;
 
     let target_ips: Vec<&str> = match auth.target.as_str() {
-        "NODE-CLOUD-RELAY" => vec!["10.50.0.1"],
-        "NODE-LAPTOP-A" => vec!["10.50.0.2"],
-        "NODE-IMAC-12" => vec!["10.50.0.3"],
+        "NODE-CLOUD-RELAY" => vec!["10.8.0.1"],
+        "NODE-LAPTOP-A" => vec!["10.8.0.2"],
+        "NODE-IMAC-12" => vec!["10.8.0.3"],
         _ => PEERS.to_vec(),
     };
 

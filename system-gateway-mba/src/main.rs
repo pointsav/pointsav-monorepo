@@ -3,7 +3,10 @@ use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tiny_http::{Method, Response, Server};
 
-const BASE_DEPLOYMENT_DIR: &str = "/home/mathew/deployments/woodfine-fleet-deployment";
+fn deployment_dir() -> String {
+    std::env::var("MBA_DEPLOYMENT_DIR")
+        .unwrap_or_else(|_| "/home/mathew/deployments/woodfine-fleet-deployment".to_string())
+}
 
 fn main() {
     let server = Server::http("0.0.0.0:8080").expect("[CRITICAL] Failed to bind to port 8080");
@@ -52,7 +55,7 @@ fn main() {
                     dest_archive, target_service
                 );
 
-                let mut out_dir = PathBuf::from(BASE_DEPLOYMENT_DIR);
+                let mut out_dir = PathBuf::from(deployment_dir());
                 out_dir.push(dest_archive);
                 out_dir.push("service-fs/data");
                 out_dir.push(target_service);
