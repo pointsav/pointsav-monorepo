@@ -3,6 +3,7 @@ pub struct HostStats {
     pub ram_used_mb: u64,
     pub cpu_cores: u32,
     pub cpu_load_pct: f32,
+    pub kvm_available: bool,
 }
 
 /// Read host resource statistics from /proc.
@@ -19,7 +20,12 @@ pub fn read_host_stats() -> HostStats {
         ram_used_mb,
         cpu_cores,
         cpu_load_pct,
+        kvm_available: check_kvm(),
     }
+}
+
+fn check_kvm() -> bool {
+    std::path::Path::new("/dev/kvm").exists()
 }
 
 fn read_meminfo() -> (u64, u64) {
@@ -97,6 +103,12 @@ mod tests {
             parse_meminfo_line("Buffers:          131072 kB", "MemTotal:"),
             None
         );
+    }
+
+    #[test]
+    fn kvm_check_returns_bool() {
+        // Smoke test — either value is valid; this must not panic.
+        let _ = check_kvm();
     }
 
     #[test]

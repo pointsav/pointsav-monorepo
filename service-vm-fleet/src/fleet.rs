@@ -34,6 +34,7 @@ impl NodeRegistry {
                 wg_ip: hb.wg_ip.clone(),
                 ram_available_mb: ram_available,
                 vm_count,
+                kvm_available: hb.kvm_available,
                 last_heartbeat: hb.timestamp_utc,
             },
             vms: HashMap::new(),
@@ -43,6 +44,7 @@ impl NodeRegistry {
         entry.record.wg_ip = hb.wg_ip.clone();
         entry.record.ram_available_mb = ram_available;
         entry.record.vm_count = vm_count;
+        entry.record.kvm_available = hb.kvm_available;
         entry.record.last_heartbeat = hb.timestamp_utc;
 
         // Sync VM records from heartbeat
@@ -121,6 +123,7 @@ mod tests {
             ram_used_mb: ram_used,
             cpu_cores: 4,
             cpu_load_pct: 5.0,
+            kvm_available: true,
             vms: vec![],
             boot_id: "boot-1".to_string(),
             timestamp_utc: Utc::now(),
