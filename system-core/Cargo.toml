@@ -9,6 +9,15 @@ repository = "https://github.com/pointsav/pointsav-monorepo"
 keywords = ["capability", "merkle", "ledger", "ed25519", "substrate"]
 categories = ["cryptography", "data-structures"]
 
+[workspace]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
