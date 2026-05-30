@@ -2,7 +2,36 @@
 
 ---
 
-### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 11 — drain-apprenticeship.timer conflict found and killed; flow confirmed)
+### 2026-05-30 | totebox@project-console | claude-sonnet-4-6
+
+**Done this session:**
+- **Doorman port fix** (8011→9080, authoritative per `local-doorman.service SLM_BIND_ADDR`):
+  - `app-console-content/src/cartridge.rs` `ContentCartridge::new()` default SLM endpoint
+  - `app-console-keys/src/config.rs` `default_slm_endpoint()` fn
+- **BRIEF-leapfrog-2030-coding.md**: Phase 5 marked COMPLETE 2026-05-24 (commits 6422c2a8 + 5118ce77); port fixed; Phase B/C/D/E roadmap entries added; updated date
+- **BRIEF-os-console-platform.md**: §10 Doorman correctness table fixed (8011=wrong, 9080=correct); §9 config examples updated; §6 platform table expanded for macOS 10.13+ Intel + universal; §1 updated
+- **BRIEF-cross-platform-release.md**: NEW — Phase B spec; macOS 10.13 compat model; build matrix; dependency audit; TerminalCaps design; Phase B checklist
+- **BRIEF-tui-pivot-2030.md**: archived notice corrected (9080 is correct)
+- `session-start.md`, `NEXT.md` (blocker resolved), drafts-outbound (3 files): all 8011 refs corrected to 9080
+- **Outbox**: new message to Command Session (project-console-20260530-phase-a-complete)
+- **Committed** `009b2e04` as Peter Woodfine (12 files, 313 insertions / 35 deletions)
+- **Stage 6 force-push COMPLETE**: origin-staging-j + origin-staging-p both at `009b2e04` (forced deadd4cf→009b2e04)
+
+**Pending / carry-forward:**
+- **Operator decision needed**: release trigger for `.github/workflows/release.yml` (Phase B4). Recommend `v*.*.*` tag push. Noted in BRIEF-cross-platform-release.md + outbox.
+- **Phase B** (cross-platform release): rust-toolchain.toml, .cargo/config.toml, reqwest audit, GH Actions matrix, TerminalCaps probe
+- **Phase C** (email F3): app-console-email lib crate + EmailCartridge (service-email backend in project-data)
+- **Phase D** (SLM F9): app-console-slm lib crate + SlmCartridge (Doorman at 9080)
+- **Phase E** (orchestration wiring): mba_client.rs audit; os-orchestration confirmed as command hub
+- **Canonical promote**: Command Session runs `bin/promote.sh` after reviewing outbox msg
+- Binary rebuild + `systemctl restart` for any consuming services after canonical promote
+
+**Operator preferences surfaced:**
+- Continues previous sessions: "STARTUP/SHUTDOWN" = full checklist; auto mode = work without stopping for confirmation
+
+---
+
+### 2026-05-28 | totebox@project-intelligence | claude-sonnet-4-6 (session 2)
 
 **Done this session:**
 - **Root cause of recurring poison identified:** `drain-apprenticeship.timer` (Phase 3.4 legacy shell drainer) was firing every ~15 min and poisoning ALL queue entries. Script (`/srv/foundry/bin/drain-apprenticeship-queue.sh`) expected flat `ApprenticeshipBrief` JSON but queue contains `ShadowQueueEntry` format (`{"brief": {...}, "actual_diff": ""}`). `prompt` field always empty → poison. Script also bypassed Doorman (called port 8080 directly) — architectural conflict with Rust drain worker.
@@ -61,30 +90,4 @@
 
 **Operator preferences surfaced:**
 - Expects full flow investigation before reporting "done" — the 26 poison entries needed root cause analysis and recovery, not just status report
-
----
-
-### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 9 end — Sprint 3D + poison recovery)
-
-**Done this session (continued from session 9 start):**
-- **Sprint 3D — Tier A timeout fix (commits `5166f43b`, `e452abdb`, `526b3735`, `1398522b`):**
-  - Root problem: `reqwest::Client::new()` in `local.rs` had no timeout → drain worker blocked indefinitely
-  - First fix: added 120s client timeout (`5166f43b`) and 150s drain wrapper (`e452abdb`) — turned out 120s is too short for OLMo 7B (2048 tokens at ~2 tok/s = 1024s theoretical max; observed 17–60 min)
-  - Second fix: `SLM_TIER_A_FIRST=true` bypass for drain hold (`526b3735`) — drain hold was holding the queue waiting for Tier B recovery even though Tier A is the primary
-  - **Final fix (`1398522b`):** raised client timeout 120s→1800s; drain wrapper 150s→1860s
-- **Binary deployed 2026-05-30T21:14:54Z** — sha256=`bd91eafc7c2a232c10e0c449f31474d9d994568df9c4054eb8f591f93ce3360d`; binary ledger updated
-- **21 poison briefs recovered** — moved from `queue-poison/` back to `queue/`. Root cause: old binary called `dequeue()` on `ShadowQueueEntry`-format files (JSON has `{"brief":..., "actual_diff":...}` wrapper); `dequeue()` expects bare `ApprenticeshipBrief` → parse failed → poison. New binary uses `dequeue_shadow()` correctly.
-- **Drain worker confirmed live**: 23 briefs queued, 1 in-flight (brief 4BA59EC8 dispatched at 21:14Z), 550 done, 0 poison
-
-**Pending / carry-forward:**
-- **Stage 6** — now **9 commits ahead** of origin/main; see outbox `project-intelligence-20260530-stage6-sprint3d`
-- **Confirm drain completes** — brief 4BA59EC8 should complete (done: 551) within 30 min; if it hits reaper (300s lease) check for "dispatch timed out after 1860s" log
-- **Operator installs** — orchestration-slm-server binary + service still pending from session 9 start (see outbox `project-intelligence-20260530-stage6-orchestration-deploy`)
-- **stale test fields** — `anthropic_shim_test.rs` likely has stale `AppState` fields (`tier_a_reason`, `idle_monitor`) — add NEXT.md item; low priority
-- **Yo-Yo 1h test** — `start-yoyo.sh --wait-ready=120 --runtime=1h` when L4 capacity available
-
-**Operator preferences surfaced:**
-- Timeouts must cover actual hardware reality (CPU inference rate, not GPU assumption)
-- Want Tier A flow to be reliable 24h/day without manual intervention
-
 
