@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-30 — Sprint 3D: Tier A timeout 120s→1800s; drain wrapper 150s→1860s; 21 poison briefs recovered
+> Last updated: 2026-05-30 — Session 10: lease expiry fix (SLM_QUEUE_LEASE_EXPIRY_SEC=2100); 26 poison briefs recovered; flow confirmed
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -10,7 +10,7 @@
 
 | Service | State | Notes |
 |---|---|---|
-| `local-doorman.service` | active | **`SLM_TIER_A_FIRST=true`**; Sprint 3D deployed (timeout 1800s); 23 briefs queued; 1 in-flight |
+| `local-doorman.service` | active | **`SLM_TIER_A_FIRST=true`**; Sprint 3D (timeout 1800s); **`SLM_QUEUE_LEASE_EXPIRY_SEC=2100`** added; 24 briefs queued; 1 active in-flight |
 | `local-slm.service` (llama-server) | active | OLMo-2-7B Q4_K_M; Tier A primary |
 | `yoyo-tier-b-1` | **TERMINATED** | Stopped 2026-05-28; circuit will open after probe failures (not circuit-breaker tripped by requests with tier_a_first) |
 | `local-content.service` | active (rebuilt 2026-05-29T19:26Z) | LadybugDB ready (7,201 entities); **Tier A fallback enabled (300s interval)**; entity_count in /healthz |
@@ -62,11 +62,22 @@ Monitor: `ps aux | grep qemu` — if ≥90% CPU again, coordinate with project-i
 these fields are checked or if AppState struct is tightened. Add NEXT.md
 cleanup item for a follow-up session.
 
-### ⚠️ Poison queue recovery (2026-05-30)
-21 briefs were in queue-poison due to old binary calling dequeue() instead of
-dequeue_shadow() on ShadowQueueEntry-format files. All 21 moved back to queue/
-manually. Current new binary (Sprint 3D) handles these correctly via dequeue_shadow().
-Monitor queue-poison after next ~20 drain cycles to confirm no recurrence.
+### ✅ Lease expiry fix deployed (2026-05-30 session 10)
+**Root cause found:** `SLM_QUEUE_LEASE_EXPIRY_SEC` defaulted to 300s but drain wrapper
+is 1860s → reaper reclaimed leases before drain completed → stale-lease path silently
+returned Ok() → brief dropped from tracking.
+
+**Fix:** Added `SLM_QUEUE_LEASE_EXPIRY_SEC=2100` to `/etc/local-doorman/local-doorman.env`.
+2100s > 1860s drain wrapper → reaper will never reclaim a live lease. Restart 22:17:58 UTC.
+Confirmed `lease_expiry_secs=2100` in startup log.
+
+### ✅ Poison queue recovery (2026-05-30 session 10)
+26 briefs (25 manually quarantined during investigation at 21:23, 1 at 21:38; plus the
+original 21 from old binary format mismatch) moved from queue-poison/ to queue/. 0 poison,
+flow resuming. New brief (0BDB1DF0) dispatching at 22:17:58.
+
+**Previous note (session 9):** 21 briefs moved back to queue/ (old binary dequeue() vs
+dequeue_shadow() format mismatch). New binary handles correctly via dequeue_shadow().
 
 ### Yo-Yo status (2026-05-29)
 - VM: TERMINATED on GCP (europe-west4-a, yoyo-tier-b-1)
