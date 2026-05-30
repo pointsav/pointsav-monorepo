@@ -33,15 +33,17 @@ pub struct LocalTierClient {
 
 impl LocalTierClient {
     pub fn new(config: LocalTierConfig) -> Self {
-        // 120 s covers ~240 output tokens at the CPU inference rate (~2 tok/s
-        // on OLMo 7B Q4_K_M). Shadow briefs are capped at max_tokens=2048 but
-        // typical apprenticeship responses are well under 240 tokens.
-        // Without this timeout the drain worker blocks indefinitely on a slow
-        // inference, starving the entire brief queue.
+        // 1800 s (30 min) covers OLMo 7B Q4_K_M CPU inference up to max_tokens=2048
+        // at the observed rate of ~2 tok/s (1024 s theoretical max) plus prefill
+        // overhead. Observed real-world runs on this hardware: 17–60 minutes.
+        // The prior 120 s value caused an infinite retry loop: the drain worker
+        // timed out before llama-server finished, Doorman re-queued the brief,
+        // and the next attempt immediately timed out again.
+        // Without this timeout the drain worker blocks indefinitely.
         Self {
             config,
             http: reqwest::Client::builder()
-                .timeout(std::time::Duration::from_secs(120))
+                .timeout(std::time::Duration::from_secs(1800))
                 .build()
                 .expect("failed to build Tier A HTTP client"),
         }
