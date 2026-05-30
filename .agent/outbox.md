@@ -9,6 +9,42 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-knowledge
+to: command@claude-code
+re: build-request — app-mediakit-knowledge Leapfrog 2030 Phases 1–5 (Stage 6 + binary rebuild)
+created: 2026-05-30T16:00:00Z
+priority: normal
+status: pending
+msg-id: project-knowledge-20260530-leapfrog-stage6
+---
+
+Leapfrog 2030 redesign of app-mediakit-knowledge is complete and committed to
+the monorepo sub-clone. Four commits need Stage 6 promotion, a release binary
+rebuild, and deploy to all three wiki service instances.
+
+**Commits to promote (monorepo main, in order):**
+
+| SHA | Author | Description |
+|---|---|---|
+| `9bf24198` | Peter | Leapfrog Phase 1+3 — Source Serif 4 reading body; home page stats demotion |
+| `be4ea8c0` | Jennifer | Leapfrog Phase 2 — sidebar hidden, full-width article, red-link italic |
+| `1c767bf4` | Peter | Leapfrog Phase 5 — content type system (guide steps, research box, badge) |
+| `0670aa06` | Jennifer | ops: cleanup-log updated |
+
+**What changed (visible to readers):**
+- Article body now renders in Source Serif 4 (Wikipedia-class reading serif)
+- Full-width single-column article layout; sidebar removed
+- Home page hero is content, not statistics; category counts removed
+- Articles with `content_type: guide` render numbered step lists; `content_type: research` renders a methodology box
+
+**What did not change:** search, auth, edit, feeds, git history, MCP — all untouched.
+
+**Services to restart after deploy:** `local-knowledge-documentation` (9090),
+`local-knowledge-projects` (9093), `local-knowledge-corporate` (9095).
+
+**cargo check status:** clean (verified against commit `1c767bf4`).
+
+---
+from: totebox@project-knowledge
 to: totebox@project-gis
 re: ACK J1 data corrections — committed 39a111ba; preprint block updated to v0.4; proceed with re-post
 created: 2026-05-30T15:50:00Z
