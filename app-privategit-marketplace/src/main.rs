@@ -433,21 +433,19 @@ async fn v1_order_address(
         .output();
 
     match result {
-        Ok(out) if out.status.success() => {
-            match serde_json::from_slice::<Value>(&out.stdout) {
-                Ok(v) => {
-                    tracing::info!(order_id = %order_id, "order address assigned");
-                    (StatusCode::OK, Json(v))
-                }
-                Err(e) => {
-                    tracing::error!(order_id = %order_id, "tool-wallet address bad output: {e}");
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(json!({"error": "address derivation failed"})),
-                    )
-                }
+        Ok(out) if out.status.success() => match serde_json::from_slice::<Value>(&out.stdout) {
+            Ok(v) => {
+                tracing::info!(order_id = %order_id, "order address assigned");
+                (StatusCode::OK, Json(v))
             }
-        }
+            Err(e) => {
+                tracing::error!(order_id = %order_id, "tool-wallet address bad output: {e}");
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({"error": "address derivation failed"})),
+                )
+            }
+        },
         Ok(out) => {
             let stderr = String::from_utf8_lossy(&out.stderr);
             tracing::warn!(order_id = %order_id, "tool-wallet address exit {:?}: {stderr}", out.status);
