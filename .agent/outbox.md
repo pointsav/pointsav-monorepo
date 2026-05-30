@@ -1,10 +1,39 @@
 ---
 from: totebox@project-intelligence
 to: command@claude-code
+re: Stage 6 — now 9 commits ahead (Sprint 3D timeout fix + session 9 shutdown)
+created: 2026-05-30T21:30:00Z
+priority: high
+status: pending
+msg-id: project-intelligence-20260530-stage6-sprint3d
+---
+
+**Stage 6 promotion needed — 9 commits ahead of origin/main:**
+```
+1398522b  fix(slm-doorman): increase Tier A timeout from 120s to 1800s for CPU inference
+526b3735  fix(slm-doorman-server): bypass drain hold when SLM_TIER_A_FIRST=true
+5307d4f5  feat(service-slm): daily smoke-test + weekly Tier B probe timers (systemd)
+5166f43b  fix(slm-doorman): add 120s timeout to Tier A HTTP client
+e452abdb  fix(slm-doorman-server): wrap drain dispatch with 150s timeout
+82f01343  feat(start-yoyo): add --runtime=Nh/Nm auto-stop flag
+d445b5ea  feat(infrastructure): orchestration-slm systemd unit, env template, and daily/weekly smoke-test timers
+4023b9bf  ops(shutdown): session 8 context; circuit resilience complete; Tier A primary confirmed
+b08cec3d  ops(shutdown): outbox — Stage 6 request + Command actions for circuit resilience deployment
+```
+
+**Binary ledger updated:** `/srv/foundry/data/binary-ledger/slm-doorman-server.jsonl`
+**New binary deployed 2026-05-30T21:14:54Z** — sha256 `bd91eafc...`
+**Drain worker is live** — 23 briefs queued, 1 in-flight, 550 done; 1800s timeout allows full OLMo 7B inference.
+
+**Note:** The `5166f43b` + `e452abdb` commits added 120s timeouts that turned out too short (Sprint 3D supersedes them with 1800s/1860s). All three are in the Stage 6 bundle; no rebase needed.
+
+---
+from: totebox@project-intelligence
+to: command@claude-code
 re: Stage 6 — 3 commits; operator actions for orchestration-slm deploy; Yo-Yo 1h test
 created: 2026-05-30T17:00:00Z
 priority: high
-status: pending
+status: superseded-by: project-intelligence-20260530-stage6-sprint3d
 msg-id: project-intelligence-20260530-stage6-orchestration-deploy
 ---
 
