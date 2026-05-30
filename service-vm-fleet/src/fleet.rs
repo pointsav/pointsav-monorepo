@@ -1,8 +1,6 @@
 use chrono::Utc;
 use std::collections::HashMap;
-use system_vm_fleet_types::{
-    FleetStatus, NodeHeartbeat, NodeId, NodeRecord, VmId, VmRecord,
-};
+use system_vm_fleet_types::{FleetStatus, NodeHeartbeat, NodeId, NodeRecord, VmId, VmRecord};
 
 const STALE_THRESHOLD_SECS: i64 = 30;
 
@@ -27,18 +25,21 @@ impl NodeRegistry {
         let ram_available = hb.ram_total_mb.saturating_sub(hb.ram_used_mb);
         let vm_count = hb.vms.len() as u32;
 
-        let entry = self.nodes.entry(hb.node_id.clone()).or_insert_with(|| NodeEntry {
-            record: NodeRecord {
-                node_id: hb.node_id.clone(),
-                hostname: hb.hostname.clone(),
-                wg_ip: hb.wg_ip.clone(),
-                ram_available_mb: ram_available,
-                vm_count,
-                kvm_available: hb.kvm_available,
-                last_heartbeat: hb.timestamp_utc,
-            },
-            vms: HashMap::new(),
-        });
+        let entry = self
+            .nodes
+            .entry(hb.node_id.clone())
+            .or_insert_with(|| NodeEntry {
+                record: NodeRecord {
+                    node_id: hb.node_id.clone(),
+                    hostname: hb.hostname.clone(),
+                    wg_ip: hb.wg_ip.clone(),
+                    ram_available_mb: ram_available,
+                    vm_count,
+                    kvm_available: hb.kvm_available,
+                    last_heartbeat: hb.timestamp_utc,
+                },
+                vms: HashMap::new(),
+            });
 
         entry.record.hostname = hb.hostname.clone();
         entry.record.wg_ip = hb.wg_ip.clone();

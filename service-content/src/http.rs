@@ -87,7 +87,10 @@ async fn healthz(State(state): State<Arc<HttpState>>) -> Json<HealthResponse> {
         Ok(n) => ("ok", n),
         Err(_) => ("degraded", 0),
     };
-    Json(HealthResponse { status, entity_count })
+    Json(HealthResponse {
+        status,
+        entity_count,
+    })
 }
 
 async fn graph_context(

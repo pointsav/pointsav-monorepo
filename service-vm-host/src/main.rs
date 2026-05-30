@@ -16,10 +16,8 @@ async fn main() {
 
     let fleet_endpoint = std::env::var("VM_FLEET_ENDPOINT")
         .expect("VM_FLEET_ENDPOINT must be set (e.g. http://10.8.0.9:9203)");
-    let node_id = std::env::var("VM_NODE_ID")
-        .expect("VM_NODE_ID must be set (e.g. gcp-cloud-1)");
-    let wg_ip = std::env::var("VM_WG_IP")
-        .expect("VM_WG_IP must be set (e.g. 10.8.0.9)");
+    let node_id = std::env::var("VM_NODE_ID").expect("VM_NODE_ID must be set (e.g. gcp-cloud-1)");
+    let wg_ip = std::env::var("VM_WG_IP").expect("VM_WG_IP must be set (e.g. 10.8.0.9)");
     let interval_secs: u64 = std::env::var("VM_HEARTBEAT_INTERVAL_S")
         .unwrap_or_else(|_| "10".into())
         .parse()
@@ -28,7 +26,10 @@ async fn main() {
     let hostname = hostname();
     let boot_id = read_boot_id();
     let client = reqwest::Client::new();
-    let heartbeat_url = format!("{}/v1/nodes/heartbeat", fleet_endpoint.trim_end_matches('/'));
+    let heartbeat_url = format!(
+        "{}/v1/nodes/heartbeat",
+        fleet_endpoint.trim_end_matches('/')
+    );
 
     tracing::info!(
         node_id = %node_id,
