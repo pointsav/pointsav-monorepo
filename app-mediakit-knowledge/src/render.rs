@@ -123,6 +123,12 @@ pub struct Frontmatter {
     #[serde(default = "default_true")]
     pub auto_number: bool,
 
+    /// Leapfrog 2030 Phase 5 — Kirby blueprint content type.
+    /// Drives template branching and structured-field rendering.
+    /// Values: article (default) | guide | topic | research | category
+    #[serde(default)]
+    pub content_type: Option<String>,
+
     #[serde(flatten)]
     pub extra: BTreeMap<String, serde_yaml::Value>,
 }
