@@ -1,60 +1,75 @@
-# Session Context Archive — project-system cluster
-
-Entries pushed from session-context.md when > 3 entries accumulate. Newest on top.
 
 ---
 
-## 2026-05-28 — Totebox Session — claude-code (claude-sonnet-4-6)
+### 2026-05-29 (session close) | totebox@project-editorial | claude-sonnet-4-6
+
+**Done:** JOURNAL author presentation plan approved (Approach A). Three corrections from project-gis applied across all 6 JOURNAL files (affiliation NYC, email corporate.secretary@, cite_as full given names). `journal-artifact-discipline.md` rule file updated. J1+J3 repost request dispatched to project-gis.
+
+**Pending:** All JOURNAL data blockers external; ORCID IDs operator action; J1+J3 repost awaiting confirmation; Stage 6 + git tags — Command scope.
+
+---
+
+### 2026-05-28 (continuation) | totebox@project-editorial | claude-sonnet-4-6
+
+Preprint versioning standard applied to all 6 JOURNAL manuscripts (CC BY 4.0, cite_as, revision_history). JOURNAL/ folder created; 6 paper copies committed `147ceab6`. 22 distribution outbox messages to all project-* archives `69085706`. journal-artifact-discipline.md updated `4d499ae4`, `bd031627`. 6 annotated git tags created. `command-20260528-gis-a6-relay` actioned.
+
+---
+
+### 2026-05-28 | totebox@project-editorial | claude-sonnet-4-6
+
+J3 body + language pass `02117825`. J6 §1-§5 + language pass `da4925a4`. J4 §1-§3+§6-§7 + language pass `67eb9a37`. J1 §7.0 OLS (Model A T1 β=+0.489 p<0.001; Model B R²=0.503) + F6 partial + run-j1-ols.py `37523014`. project-gis A6 messages archived `a34825b6`. 5 JOURNAL return outbox messages `25023ce9`.
+
+---
+
+### 2026-05-23 | totebox@project-console | claude-sonnet-4-6
 
 **Done this session:**
-- moonshot-toolkit v0.2.1 `6b59fd0`: corrected AssembleImage error message —
-  `microkit` PyPI package is an unrelated Flask helper; real SDK is a tarball
-  from github.com/seL4/microkit/releases
-- Phase 1C.c DONE `d550217` (Peter Woodfine): seL4 qemu-arm-virt AArch64 QEMU boot confirmed
-  - Full boot: elfloader → seL4 kernel → hello-rootserver → "hello from seL4 rootserver"
-  - Root cause 1: KernelVerificationBuild=ON silently disabled CONFIG_PRINTING
-  - Root cause 2: GNU cpio --create adds extra bytes; replaced with gen_cpio.py
-  - Root cause 3: QEMU -m 512M insufficient; boot with -m 1G
-  - Elfloader built manually from vendor-sel4-tools/ source (45 C/ASM sources + libcpio)
+- Stage 6 rebase complete (tip `9afc9e25`); push BLOCKED — full history divergence from canonical. Escalated to Command via outbox.
+- binary-targets.yaml written; build-request outbox sent.
 
-**Pending (superseded by later entries):** Phase 1C.d, Stage-6, bench #9, PhD thesis
+**Pending:** Force-push authorization from Command; Phase 3+4 QR/F11; pairing-server deploy; GCE port 2222.
 
 ---
 
-## 2026-05-27 (continued) — Totebox Session — claude-code (claude-sonnet-4-6)
+### 2026-05-20 | totebox@project-console | claude-sonnet-4-6
 
-**Done this session (continuation of prior context):**
-- Group 3A + 3D architecture decisions: all 7 resolved
-- Phase 1C.a DONE `34a1111`: moonshot-toolkit v0.2.0, real aarch64-linux-gnu-gcc
-- Phase 1C.b DONE: seL4 kernel.elf built, KernelPlatform=qemu-arm-virt, entry 0xffffff8040000000
+**Done:** Architecture Q&A; os-console-platform.md + leapfrog-2030-coding.md plans; 4 TOPICs + 2 GUIDEs drafted; Phase 1 chassis (app-console-keys); rename project-proofreader→project-console actioned.
+
+**Pending at close:** Phase 2 (MBA + SSH server), Stage 6.
 
 ---
 
-## 2026-05-27 — Totebox Session — claude-code (claude-sonnet-4-6)
+### 2026-05-17 | totebox@project-proofreader | claude-sonnet-4-6
+
+**Done:** Phase 0 spike — russh + ratatui SSH TUI on port 2222; workspace Cargo.toml; proofctl stub; gate passed.
+
+**Pending at close:** Phase 1 (chassis), architecture Q&A.
+
+
+### 2026-05-24 | totebox@project-console | claude-sonnet-4-6
 
 **Done this session:**
-- Full startup sequence (12 steps per AGENT.md)
-- Direction-finding: 4 Q&A questions answered; session agenda agreed (v1.0.0 bumps + Stage-6)
-- PhD thesis BRIEF created: `.agent/briefs/BRIEF-substrate-phd-thesis-2026-05-27.md` (719 lines)
-  — Yale PhD thesis-quality research on system-* layer, service-fs, seL4/NetBSD, Totebox transferability
-  — 12 Opus research agents used for source material; schema foundry-draft-v1 / PROSE-RESEARCH
-- Committed BRIEF: `edd4928` (Jennifer Woodfine)
-- Fixed pointsav-monorepo branch: switched from `main` to `cluster/project-system`
-- v1.0.0 version bumps: system-core 0.2.0→1.0.0, system-ledger 0.2.1→1.0.0
-  — Cargo.toml updated, CLAUDE.md headers updated, CHANGELOG.md created for both
-  — 62+47 tests passing; `c2ae1e9` (Jennifer Woodfine)
-- Outbox: `project-system-20260527-stage6-v100` prepended (Stage-6 ready signal to Command)
-- Old gate-decisions outbox msg marked actioned
-- cleanup-log.md session entry added
-- project-system-todo.md: v1.0.0 items marked complete
+- Phase 5 COMPLETE: `/new` slash command, Doorman SSE streaming, drafts-outbound write with foundry-draft-v1 frontmatter. Commits `6422c2a8` + `5118ce77`.
+- Inbox archived 8 messages; Stage 6 blocker retained.
 
-**Pending / carry-forward:**
-- Stage-6 not yet run (awaiting Command Session to process outbox)
-- `pointsav-fleet-deployment` file-mode drift (32 files 644→755 + `.claude/rules/project-registry.md` structural deletion) — surfaced in outbox via cleanup-log; needs Command review
-- Bench #9 quiet-VM re-run: verify_inclusion_proof composed 1024-leaf; needs load avg < 1.0
-- PhD thesis pre-publication: bench #9, Group 3A decisions, citation promotion, language pass, ES panorama
-- WFD registry drift: `gateway-knowledge-documentation-1` absent from HEAD; reconcile against WFD main
+**Pending:** Stage 6 push blocked on Command decision (history divergence); Phase 6 offline+Tantivy; pairing-server systemd; GCE port 2222; Peter SSH key.
 
-**Operator preferences surfaced:**
-- Auto Mode active: proceed without stopping for clarifications; make reasonable calls
-- Approved all 4 v1.0.0 gate decisions using recommendations
+---
+
+### 2026-05-29 | totebox@project-intelligence | claude-sonnet-4-6 (session 3+4)
+
+**Done this session:**
+- Sprint -1 (BRIEF consolidation): 27 contamination BRIEFs archived to `.agent/briefs/archive/`; README rewritten; BRIEF-slm-substrate-master.md corrected (OLMo model name, FORCE_BROKER_MODE rationale); BRIEF-slm-learning-loop.md created. Commit `c5cd4441` (Jennifer)
+- Multi-agent research: 5 Opus 4.7 agents for TOPICs/GUIDEs sweep + leapfrog 2030 gap analysis; plan file rewritten
+- Sprint 1 (tool_use shim, ~210 LOC): `ComputeRequest.tools` + `ComputeResponse.tool_calls` added to slm-core; local.rs + yoyo.rs propagate tools; anthropic_sse_body emits tool_use SSE blocks; POST /v1/messages/count_tokens + GET /v1/models added. Commit `1b47d3eb`. 51/51 http_test + 102/102 slm-doorman pass.
+- Sprint 2 (training pipeline wiring): `git-post-commit-hook.sh` + `claude-session-bridge.py` written. Commit `1d819d7c`
+- Sprint 4 (TOPIC/GUIDE dispatch): 5 TOPICs + 2 GUIDEs staged to `.agent/drafts-outbound/`. Commit `d39aea32`
+
+---
+
+### 2026-05-28 | totebox@project-intelligence | claude-sonnet-4-6 (session 2)
+
+**Done this session:**
+- Multi-agent analysis of CORPUS extraction failures; plan written and executed. 3 commits (446df43f, e263d6f0, 08896158).
+- 111/111 lib tests pass; service-content cargo check clean.
+- Operator preferences: STARTUP/SHUTDOWN execute full checklist; plan mode before coding; batch SC-* fixes per audit cohort.

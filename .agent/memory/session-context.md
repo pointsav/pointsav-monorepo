@@ -1,142 +1,124 @@
-# Session Context — project-system cluster
-
-Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `session-context-archive.md`.
+## Session context — rolling 3-session summary
 
 ---
 
-## 2026-05-30 (session 2) — Totebox Session — claude-code (claude-sonnet-4-6)
+### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 8 — circuit resilience complete)
 
 **Done this session:**
-- Actioned project-infrastructure outbox messages (2 pending + 2 actioned-but-unimplemented)
-- BRIEF-substrate-phd-thesis-2026-05-27.md confirmed committed (215b49c6, 2026-05-27);
-  ack sent to project-infrastructure (outbox msg project-system-20260530-ack-phd-thesis-brief)
-- P0 subnet fixes `119c494b` (Jennifer Woodfine): canonical PPN subnet 10.8.0.0/24 applied:
-  - system-udp/src/main.rs: BROADCAST_ADDR 10.50.0.255 → 10.8.0.255; IP filter updated
-  - app-network-admin/src/main.rs: PEERS updated; handle_translation subprocess →
-    HTTP POST localhost:9080/v1/translate (Doorman); target_ips corrected; reqwest json feature added
-  - system-gateway-mba/src/main.rs: BASE_DEPLOYMENT_DIR const → deployment_dir() env var fn
-  - system-udp/Cargo.toml: [workspace] added (was missing)
-- Binary discipline `2553d970` (Peter Woodfine): [profile.release] (opt-z/lto/codegen-1/
-  panic-abort/strip) + [workspace] added to system-core, system-ledger, moonshot-toolkit Cargo.toml
-- Outbox: anomaly report to command@claude-code (inbox/manifest/outbox contamination flags);
-  PhD thesis ack to project-infrastructure
+- **All five circuit-resilience sprints deployed** (commits `96dcaf2b`→`b08cec3d`):
+  - Sprint 3A: `SLM_TIER_A_FIRST=true` threaded through `DoormanConfig`, `ApprenticeshipConfig`, `select_tier()`, `pick_tier_for_brief()`. Startup guard prevents mutual use with `SLM_FORCE_BROKER_MODE`. `route_yoyo_only` (ADR-07) unchanged.
+  - Sprint 3B: WATCHER Tier A fallback in `service-content/src/main.rs`. Rate-limited at 300s. `TierAFallbackConfig` + `last_tier_a_attempt`. Calls `/v1/chat/completions` with 5-category system prompt + json-schema grammar; confidence 0.75; upserts entities to LadybugDB.
+  - Sprint 3C: Drain worker pause in `slm-doorman-server/src/main.rs`. Before `dequeue_shadow()`, checks `tier_b_status()` — if ALL nodes circuit=open AND `opened_for_secs >= SLM_HOLD_THRESHOLD_SECS` (3600s default), skips cycle and logs.
+- **Both binaries rebuilt and deployed** (2026-05-29T19:26Z):
+  - `slm-doorman-server` sha256=`81b8629c`; running with `SLM_TIER_A_FIRST=true`, `SLM_HOLD_THRESHOLD_SECS=3600`
+  - `service-content` sha256=`2362ea5c`; running with `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=true`, 300s interval; entity_count=7,201 live
+- **Verification**: `/readyz` → `tier_b` field with per-node circuit state ✓; `/healthz` → `entity_count: 7201` ✓; startup log `SLM_TIER_A_FIRST=true: Tier A is the confident primary` ✓; shadow dispatch `tier="local"` ✓
+- **Binary ledger updated** at `/srv/foundry/data/binary-ledger/` (workspace level)
+- **BRIEF-slm-substrate-master.md** updated: all 8 sprint checkboxes ✓; live state table updated
+- **Outbox to Command**: Stage 6 promotion requested for 9 commits; quarantine 590 poison briefs; binary ledger confirmation
 
 **Pending / carry-forward:**
-- Stage-6 needed for ALL pending commits: v0.3.1, v1.0.0, P0 fixes `119c494b`, binary discipline `2553d970`
-- INBOX CONTAMINATION: .agent/inbox.md has project-gis content — Command must rebuild
-- MANIFEST CONTAMINATION: .agent/manifest.md says cluster: project-infrastructure — Command fix
-- OUTBOX CONTAMINATION: project-gis messages at top of .agent/outbox.md — Command clean
-- J2 citation YAML (9 entries): Command must add to ~/Foundry/citations.yaml; confirm aws-nitro key
-- Bench #9 quiet-VM re-run: BLOCKED (load avg persistently high)
-- PhD thesis pre-publication checklist pending
+- **Stage 6 promotion** — 9 commits ahead of origin/main; Command Session required
+- **Quarantine 590 poison briefs** — `mv /srv/foundry/data/apprenticeship/queue-poison/* /srv/foundry/data/apprenticeship/quarantine/`
+- **Install claude-bridge service** (Command if not done): `sudo cp infrastructure/systemd/local-claude-bridge.service /etc/systemd/system/ && sudo systemctl enable --now local-claude-bridge.service`
+- **Install git post-commit hook** — per archive: `cp service-slm/scripts/git-post-commit-hook.sh .git/hooks/post-commit && chmod +x`
+- **Verify CORPUS extraction via Tier A fallback** — drop a CORPUS file, confirm `[WATCHER-TIER-A]` log within 300s
+- **`.agent/` contamination** — Command Stage-6 rebase pulled project-knowledge/.agent/ content into project-intelligence (outbox.md + NEXT.md at root show project-editorial/knowledge content). Report to Command for cleanup.
 
-**Operator preferences:**
-- Auto Mode active; all decisions proceed without stopping for clarifications
+**Operator preferences surfaced:**
+- No new preferences this session
 
 ---
 
-## 2026-05-30 — Totebox Session — claude-code (claude-sonnet-4-6)
+### 2026-05-29 | totebox@project-intelligence | claude-sonnet-4-6 (session 7 — Goose verified)
 
 **Done this session:**
-- moonshot-toolkit v0.3.1 `d7d1436` (Peter Woodfine): CompilePd -O2 fix +
-  hello.c SysDebugPutChar + build-totebox.sh removal
-  - Root cause found: CompilePd used default -O0; compiler emits `stp [sp, #-32]`
-    prologue at `_start`; seL4 rootserver starts with SP uninitialised → immediate
-    fault. Phase 1C.c main.c compiled with explicit -O2 (hence it worked).
-  - examples/hello.c: wired SysDebugPutChar (x7=-9, x0=char, svc #0 on AArch64).
-  - Verified: QEMU serial output "hello from seL4 rootserver" confirmed.
-  - build-totebox.sh: git rm (Phase 1C.d complete).
-  - 35 tests pass; zero warnings; clippy clean.
-- system-core/NEXT.md corrected: Group 2A/2B done 2026-05-20 moved to Recently done;
-  v1.0.0 bump 2026-05-27 added; stale Queue entries removed.
-- Inbox: 2 pending messages actioned (vm-mediakit answer + permission test).
+- **§7.2 VERIFIED** (2026-05-29T04:10Z): Goose v1.36.0 round-tripped through Doorman → Tier A → OLMo replied "Hello! The result of 2+2 is 4." Doorman log: `dispatching ... tier="local"`.
+- **Root cause found and fixed** (`74ba6da0`, Jennifer): Goose sends `system` as array-of-content-blocks `[{"type":"text","text":"..."}]`; Doorman's `AnthropicMessagesBody.system: Option<String>` rejected this with 422. Fixed with `AnthropicSystem` untagged enum that handles both `Text(String)` and `Blocks(Vec<AnthropicContentBlock>)`. 51/51 http_test pass.
+- **Goose config written**: `/home/mathew/.config/goose/config.yaml` with `GOOSE_PROVIDER: anthropic`, `ANTHROPIC_BASE_URL: http://127.0.0.1:9080`, `GOOSE_MODEL: claude-haiku-4-5-20251001`.
+- **§7.3 live SSE test**: Goose `Read /etc/hostname` tool invocation — OLMo 7B returned `stop_reason: end_turn` with text response (not a tool_use block). Model capability limit confirmed, not a shim bug.
+- **Yo-Yo confirmed TERMINATED**: GCP europe-west4-a `yoyo-tier-b-1` is TERMINATED. No file accumulation in Doorman or llama-server queues. No auto-start mechanism exists anywhere (no cron, no timer that starts; `yoyo-idle-monitor.timer` is stop-only).
+- **Operator decision**: Yo-Yo must remain manually started. No auto-start until further testing complete.
+- **2 GUIDEs staged** to `.agent/drafts-outbound/`: `GUIDE-guide-goose-local-doorman.draft.md` + `GUIDE-guide-post-commit-training-hook.draft.md` (hook payload fixed with Python ShadowWire struct). Commits `4055ad96` + `5fcbd4a3`.
+- **BRIEF-slm-learning-loop.md** §7 updated: §7.2 ✅ VERIFIED, §7.3 PARTIAL, blockers summary updated.
 
 **Pending / carry-forward:**
-- Stage-6 for moonshot-toolkit v0.3.1 + system-core/ledger v1.0.0 (Command Session)
-- J2 citation YAML (9 entries): Command Session must add to ~/Foundry/citations.yaml;
-  confirm aws-nitro-2025 key vs Feb 2024 date
-- Bench #9 quiet-VM re-run: BLOCKED (load avg was 11.35 all session)
-- Task C (outbox to project-editorial with J2 update): BLOCKED pending bench #9
-- PhD thesis pre-publication checklist pending
-- moonshot-toolkit Queue: Sigstore Cosign cosignature; configurable kernel/elfloader paths
+- **§7.3 tool_use**: OLMo 7B does not invoke tools. Requires Tier B (Yo-Yo OLMo 3 32B-Think) or Tier A upgrade to tool-use-tuned model.
+- **§7.4 entity extraction + §7.6 training**: Requires manual Yo-Yo start (`service-slm/scripts/start-yoyo.sh --runtime=2h`) after operator testing complete.
+- **QEMU vm-mediakit** (PID 4039898): still at ~150% CPU from project-infrastructure; inference was slow (~0.03 tok/s) during test; stopped `local-content` service temporarily to free the llama-server slot. `local-content` restarted after test.
+- **Stage 6 promote**: archive is 15+ commits ahead of origin/main (Command Session scope; prereq rebase per `command-20260520-stage6-rebase-required`).
+- **Binary ledger**: `data/binary-ledger/slm-doorman-server.jsonl` needs fresh sha256 after `74ba6da0` rebuild (Command Session scope).
 
-**Operator preferences:**
-- Auto Mode active; all decisions proceed without stopping for clarifications
+**Operator preferences surfaced:**
+- Yo-Yo: do NOT auto-start; requires explicit operator invocation after further testing
 
 ---
 
-## 2026-05-29 — Totebox Session — claude-code (claude-sonnet-4-6)
+### 2026-05-29 | totebox@project-intelligence | claude-sonnet-4-6 (session 6 — continuation)
 
 **Done this session:**
-- Phase 1C.d DONE `fc245ee` (Peter Woodfine): AssembleImage fully implemented in Rust
-  - moonshot-toolkit v0.3.0; no Python/CMake/shell in critical path (MEMO §7 ✓)
-  - New `src/cpio.rs`: pure Rust CPIO "newc" writer; 4 tests
-  - `assemble_image()` in main.rs: validates prerequisites; generates CPIO archive;
-    writes archive.S with .incbin (absolute path); copies libcpio (cpio.c + cpio/cpio.h);
-    compiles 44 elfloader C/ASM sources + libcpio.c via std::process::Command;
-    preprocesses linker.lds; links -nostdlib -static -lgcc
-  - Key fix: `vendor-sel4-project/build-support/qemu-arm-virt/libcpio/cpio` is a
-    DIRECTORY (not a file); it contains `cpio.h`, included as `<cpio/cpio.h>` — both
-    cpio.c and the cpio/ subdirectory must be copied to build/libcpio/
-  - Verified: `build/system-image.bin` entry 0x40400000; QEMU: "Bootstrapping kernel"
-    → "Booting all finished, dropped to user space"
-  - 35 tests (26 lib + 9 bin); zero warnings
-- Outbox: Phase 1C.d complete notice + project-infrastructure VM request sent to Command
-
-- J2 citation research DONE `2966d8f` (Peter Woodfine): 9 YAML blocks written to outbox
-  msg-id: project-system-20260529-j2-citation-yaml; inbox J2/J5 relay marked actioned.
-  Flag: aws-nitro-2025 key vs actual Feb 2024 date — Command Session must decide.
-- Drafts updated `c54fb53` (Jennifer Woodfine): 3 pending Phase-1C drafts brought to
-  Phase 1C complete state (guide + 2 topics); 2 Spanish .es.md companions created for
-  both TOPICs. Superseding outbox to project-editorial sent
-  (msg-id: project-system-20260529-topic-guide-phase1c-v2).
-- moonshot-toolkit/CLAUDE.md updated: v0.2.0 → v0.3.0, 30 → 35 tests, cpio.rs added.
-- system-ledger/NEXT.md updated: Group 2D marked done; bench #9 blocked item added.
+- `docs(brief)`: BRIEF-slm-learning-loop.md §7.2-3 updated with live SSE test result. Commits `df1a5e64` (Peter) + `3fd2dfef` (Jennifer).
+- **§7.3 live SSE test completed**: sent `/v1/messages` with `Read` tool to OLMo 7B; got `stop_reason: end_turn` with text response. OLMo 7B is not fine-tuned for tool invocation — describes how to use `cat` instead of invoking the tool. Shim code is correct (no llama-server format errors); model capability is the limit.
+- Confirmed Goose v1.36.0 installed at `/usr/local/bin/goose`.
+- QEMU vm-mediakit PID updated in NEXT.md: 3949093 → 4039898 (project-infrastructure restarted it).
 
 **Pending / carry-forward:**
-- Stage-6 for moonshot-toolkit v0.3.0 + system-core/ledger v1.0.0 (Command Session)
-- Outbox: project-infrastructure VM request for system-* testing (msg-id: project-system-20260529-infra-vm-request)
-- J2 citation YAML: Command Session must add 9 entries to ~/Foundry/citations.yaml; confirm aws-nitro key
-- hello.c rootserver: add SysDebugPutChar output (currently infinite loop)
-- Bench #9 quiet-VM re-run: verify_inclusion_proof composed 1024-leaf (load avg < 1.0 — BLOCKED at 11.93)
-- Task C (outbox to project-editorial with J2 update instructions): BLOCKED pending bench #9
-- PhD thesis pre-publication checklist still pending
+- **QEMU vm-mediakit** (PID 4039898, -accel tcg software emulation): system load 17+. Confirm with project-infrastructure owner; `kill 4039898` to unblock inference and enable §7.2 Goose test.
+- **§7.2 Goose chat round-trip**: `ANTHROPIC_HOST=http://127.0.0.1:9080 ANTHROPIC_API_KEY=foundry-local GOOSE_MODEL=claude-haiku-4-5-20251001 goose run --text "Say hello"`. Blocked by CPU saturation.
+- **§7.3 tool_use in Doorman log**: OLMo 7B does not invoke tools. Options: (a) wait for Yo-Yo VM with OLMo 3 32B-Think, (b) upgrade Tier A to a tool-use-tuned model (e.g. Qwen2.5-7B-Instruct), (c) mark §7.3 as "not achievable with current Tier A model".
+- **§7.4 entity extraction**: Yo-Yo VM must be started to close Tier B circuit. Command: `service-slm/scripts/start-yoyo.sh --runtime=2h`.
+- **Stage 6 promote**: archive is 32+ commits ahead of origin/main (Command Session scope; prereq rebase per `command-20260520-stage6-rebase-required`).
+- **Binary ledger**: `data/binary-ledger/slm-doorman-server.jsonl` in workspace (Command Session scope). SHA256: `9e8542b6...` (slm-doorman-server rebuilt 2026-05-29T02:14Z).
 
-**Operator preferences:**
-- Auto Mode active; all decisions proceed without stopping for clarifications
+**Operator preferences surfaced:**
+- Working autonomously on verification; blocked items documented with clear next-action commands
 
----
-
-## 2026-05-28 — Totebox Session — claude-code (claude-sonnet-4-6)
 
 **Done this session:**
-- moonshot-toolkit v0.2.1 `6b59fd0`: corrected AssembleImage error message —
-  `microkit` PyPI package is an unrelated Flask helper; real SDK is a tarball
-  from github.com/seL4/microkit/releases
-- Phase 1C.c DONE `d550217` (Peter Woodfine): seL4 qemu-arm-virt AArch64 QEMU boot confirmed
-  - Full boot: elfloader → seL4 kernel → hello-rootserver → "hello from seL4 rootserver"
-  - Root cause 1: KernelVerificationBuild=ON silently disabled CONFIG_PRINTING (the CMake
-    cache shows `_DISABLED:INTERNAL=TRUE` with no warning); rebuilt kernel with
-    KernelVerificationBuild=OFF, KernelDebugBuild=ON, KernelPrinting=ON
-  - Root cause 2: GNU cpio --create --format=newc adds ~11 extra bytes per entry beyond
-    4-byte alignment; replaced with gen_cpio.py using exact ALIGN4 formula
-  - Root cause 3: QEMU -m 512M insufficient; kernel DTB describes [40000000..80000000) (1GB);
-    boot with -m 1G
-  - Elfloader built manually from vendor-sel4-tools/ source (45 C/ASM sources + libcpio)
-  - Committed: hello-rootserver source + build-support/ (gen_cpio.py, build-elfloader.sh,
-    libcpio, gen_config headers)
-  - NEXT.md updated: Phase 1C.c marked complete
+- Sprint -1 (BRIEF consolidation): 27 contamination BRIEFs archived to `.agent/briefs/archive/`; README rewritten; BRIEF-slm-substrate-master.md corrected (OLMo model name, FORCE_BROKER_MODE rationale); BRIEF-slm-learning-loop.md created. Commit `c5cd4441` (Jennifer)
+- Multi-agent research: 5 Opus 4.7 agents for TOPICs/GUIDEs sweep + leapfrog 2030 gap analysis; plan file rewritten
+- Sprint 1 (tool_use shim, ~210 LOC): `ComputeRequest.tools` + `ComputeResponse.tool_calls` added to slm-core; local.rs + yoyo.rs propagate tools through to backends and capture tool_calls; anthropic_sse_body emits tool_use SSE blocks; POST /v1/messages/count_tokens + GET /v1/models added. Commit `1b47d3eb` (Jennifer). 51/51 http_test + 102/102 slm-doorman pass.
+- Sprint 2 (training pipeline wiring): `git-post-commit-hook.sh` + `claude-session-bridge.py` written. Commit `1d819d7c` (Jennifer)
+- Sprint 4 (TOPIC/GUIDE dispatch): 5 TOPICs + 2 GUIDEs from `service-slm/docs/` staged to `.agent/drafts-outbound/`. Commit `d39aea32` (Peter)
+- Sprint 0 CONFIRMED COMPLETE by Command: readyz `{"ready":true,"has_local":true,"has_yoyo":true,"has_external":false}` — Tier A + Tier B both live
+- `infrastructure/systemd/local-claude-bridge.service` written — completes Sprint 2b wiring (bridge script → CORPUS_WATCH_DIR = jennifer ledgers dir). Needs Command to `sudo cp` + `systemctl enable --now`.
 
 **Pending / carry-forward:**
-- Phase 1C.d (AssembleImage): blocked on Microkit SDK tarball or Rust image assembler
-- Stage-6 for system-core+system-ledger v1.0.0: outbox `project-system-20260527-stage6-v100`
-- Image-signing key for Veriexec: outbox `project-system-20260527-image-signing-key`
-- Bench #9 quiet-VM re-run: verify_inclusion_proof composed 1024-leaf (load avg < 1.0)
-- PhD thesis pre-publication checklist
-- fleet-deployment file-mode drift: Command Session review needed
+- **Install claude-bridge service** (Command): `sudo cp infrastructure/systemd/local-claude-bridge.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable --now local-claude-bridge.service`
+- **Install git post-commit hook** — per archive: `cp service-slm/scripts/git-post-commit-hook.sh .git/hooks/post-commit && chmod +x`
+- **Yo-Yo nightly cron** — confirm or add: `0 2 * * * .../start-yoyo.sh --runtime=1h` (Tier B currently live; may already be set)
+- **Drain 491 poison apprenticeship briefs** from `data/apprenticeship/queue/`
+- **Stage 6 promote** — archive is 25+ commits ahead; prerequisite rebase per `command-20260520-stage6-rebase-required`
+- **Binary ledger** — update `data/binary-ledger/slm-doorman-server.jsonl` after rebuild
+- **Goose install + verification** (Sprint 3, operator): `ANTHROPIC_HOST=http://127.0.0.1:9080 ANTHROPIC_API_KEY=foundry-local GOOSE_MODEL=claude-haiku-4-5-20251001 goose session`
 
-**Operator preferences:**
-- Auto Mode active; all decisions proceed without stopping for clarifications
+**Operator preferences surfaced:**
+- Resumed from context summary; no new preferences this session
 
 ---
+
+### 2026-05-28 | totebox@project-intelligence | claude-sonnet-4-6 (session 2)
+
+**Done this session:**
+- Multi-agent analysis of CORPUS extraction failures: root causes identified (throughput gap ~5-7x due to missing Flash Attention; slot starvation; grammar silently disabled with thinking; reqwest decode-error misclassification)
+- Multi-agent code audit: SC-2/3/5/3d/3e/3f audit items in service-content; SLM-1..SLM-6 in service-slm
+- Plan written, approved, executed. 3 commits:
+  - `446df43f` (Peter): Tier 2 — deepseek reasoning_content field; reqwest decode→TierBTimeout; Doorman restart after IP update; Packer template adds -fa/deepseek/budget flags
+  - `e263d6f0` (Jennifer): Tier 3 — service-content SC-3 health-check, SC-5 logging, SC-2 defer differentiation, SC-3d retry loop, SC-3e write order, SC-3f buffer pool
+  - `08896158` (Peter): ops — NEXT.md + BRIEF updated; Stage 6 count updated to 16+
+- 111/111 lib tests pass; service-content cargo check clean
+
+**Pending / carry-forward:**
+- **Rebuild binaries** — slm-doorman-server and service-content need `cargo build --release` + `systemctl restart` to pick up this session's fixes (commits 446df43f + e263d6f0)
+- **Verify CORPUS extraction** after next Yo-Yo start + binary rebuild: `sudo journalctl -u local-content -f | grep -E 'entities extracted|WATCHER|deferred|RETRY'`
+- **Packer rebuild** — adds `-fa`, `--reasoning-format deepseek`, `--reasoning-budget 1024` to llama-server.service on the next Yo-Yo image
+- Stage 6 promote: archive is 16+ commits ahead of origin/main (Command Session scope); prerequisite rebase per inbox `command-20260520-stage6-rebase-required`
+- Binary ledger: `data/binary-ledger/slm-doorman-server.jsonl` + `service-content.jsonl` need fresh sha256 entries after rebuild
+- Yo-Yo VM TERMINATED — start with `service-slm/scripts/start-yoyo.sh --runtime=2h` when L4 capacity in europe-west4-a is available
+
+**Operator preferences surfaced:**
+- "STARTUP" / "SHUTDOWN" = execute full checklist
+- Plan mode with AskUserQuestion for operator decisions before coding
+- "All 6 SC-* fixes in a single commit" — batch SC-* fixes together per audit cohort
+
 
