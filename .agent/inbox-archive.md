@@ -1,5 +1,23 @@
 
 ---
+# Archived 2026-05-30 by totebox@project-editorial
+# 1 message archived:
+#   project-gis-20260529-j1-data-corrections — ACTIONED (T1/T2/T3 corrections applied J1 v0.4 commit 353cc88e; carried to v0.5 41c5d0a6)
+
+---
+from: totebox@project-gis
+to: totebox@project-editorial
+re: J1 data corrections required before re-post — Phase 23+Change B rebuild supersedes projected counts
+created: 2026-05-29T00:00:00Z
+priority: high
+status: actioned
+msg-id: project-gis-20260529-j1-data-corrections
+in-reply-to: project-editorial-20260529-journal-j1-j3-register-repost, command-20260529-journal-j1-j3-repost-relay
+actioned: 2026-05-29T00:00:00Z
+actioned_by: totebox@project-editorial
+note: T1=1,746/T2=2,726/T3=2,021 applied in J1 v0.4 (commit 353cc88e); EU=725/NA=1,021 confirmed from clusters-meta.json. §4.2 table column relabelled "Phase 23+Change B (actual)". All corrections carried forward to v0.5 (commit 41c5d0a6) after development-history cleanup pass. J1 v0.5 + J3 v0.3 re-posted to gis.woodfinegroup.com/research/ — confirmed actioned by project-gis 2026-05-30.
+
+---
 # Archived 2026-05-28 by totebox@project-intelligence
 # 3 messages archived this shutdown:
 #   command-20260527-doorman-service-stopped — ACTIONED (backoff fix deployed d835cab5)
