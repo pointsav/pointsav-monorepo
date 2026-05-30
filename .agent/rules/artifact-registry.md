@@ -83,39 +83,51 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 
 ### A7 — BRIEF: Regional Markets System
 - **File:** `BRIEF-regional-markets-system.draft.md`
-- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-regional-markets-dispatch)
+- **Status:** REVISED + STAGED — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-rm-corrected-dispatch)
 - **Destination:** project-editorial → media-knowledge-documentation
-- **Content:** System BRIEF synthesising co-location methodology, tier system, Regional Markets definition, composite ranking formula, civic layer, AEC data coverage, POI schema, catchment model, Top 400 key findings. 3,786 words. Phase 23+Change B dataset (6,493 clusters; T1=1,746/T2=2,726/T3=2,021).
+- **Content:** System BRIEF updated v2: executive summary adds competitive positioning (Oxford Economics/CBRE/Colliers cover metro cores; this dataset addresses the suburban ring gap). §3 Regional Markets adds three-type table (metro-core/suburban-regional/standalone-secondary) and coherence constraint. §4 Top 400 formula corrected (metro_distance_multiplier removed; rationale explains why). Current top results cited. Phase 23+Change B dataset (6,493 clusters; T1=1,746/T2=2,726/T3=2,021).
 
 ### A8 — TOPIC: Top 400 Regional Markets — North America
 - **File:** `TOPIC-top-400-regional-markets-na.draft.md`
-- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-regional-markets-dispatch)
+- **Status:** REVISED + STAGED — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-rm-corrected-dispatch)
 - **Destination:** project-editorial → media-knowledge-documentation
-- **Content:** Full 400-entry ranked list (US 340 / CA 30 / MX 30); Top-25 9-column sortable table + compact 26–400 table; country breakdowns; methodology in plain prose; civic anchor names; data sources. Province-level aggregations flagged with †. 8,203 words.
+- **Content:** REVISED v2 — corrected methodology: suburban-regional definition (15–80 km from major metro), no province aggregations, no metro_multiplier. US 369 / CA 23 / MX 8. Rank 1 = Plano TX (suburb of Dallas, score 25.5). Score range 25.5–4.0.
 
 ### A9 — TOPIC: Top 400 Regional Markets — Europe
 - **File:** `TOPIC-top-400-regional-markets-eu.draft.md`
-- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-regional-markets-dispatch)
+- **Status:** REVISED + STAGED — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-rm-corrected-dispatch)
 - **Destination:** project-editorial → media-knowledge-documentation
-- **Content:** Full 400-entry ranked list (DE 105 / FR 95 / GB 70 / ES 40 / PL 31 / IT 26 / AT 12 / others); Top-25 table + compact 26–400 table; country breakdowns; German polycentric dominance noted; score plateau at 12.00 documented. 14 EU countries. 38.5 KB.
+- **Content:** REVISED v2 — corrected methodology: suburban-regional definition (15–80 km), no metro_multiplier. DE 124 / FR 102 / GB 81 / ES 23 / IT 21 / PL 16 / NL 14 / AT 7 / DK 5 / SE 4 / PT 3 = 11 countries. Rank 1 = Chemnitz (suburb of Dresden, score 18.0). Score range 18.0–3.0. Suburb_of column in top-25 table.
 
 ### A10 — TOPIC: Wichita, Kansas Regional Market
 - **File:** `TOPIC-rm-wichita-ks.draft.md`
-- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-regional-markets-dispatch)
-- **Destination:** project-editorial → media-knowledge-documentation
-- **Content:** Rank 16 NA. 4×T1, civic=true. Wikipedia live extract (population 397,532). AEC: ASHRAE=4A, Köppen=Dfa, eco=Central-Southern US mixed grasslands, biome=Temperate Grasslands Savannas & Shrublands.
+- **Status:** SUPERSEDED — hold pending revision (msg-id: project-gis-20260530-rm-methodology-correction). Wichita is itself a metro reference; its suburbs (Derby, Andover, Maize) are regional markets, not Wichita proper.
 
 ### A11 — TOPIC: Colorado Springs, Colorado Regional Market
 - **File:** `TOPIC-rm-colorado-springs-co.draft.md`
-- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-regional-markets-dispatch)
-- **Destination:** project-editorial → media-knowledge-documentation
-- **Content:** Rank 14 NA. 7 clusters (3×T1 + 4×T2), civic=true. Wikipedia: population 478,961, 2nd most populous in CO, 95km south of Denver. AEC: ASHRAE=5B, Köppen=BSk/Dfb split, eco=Western shortgrass prairie, biome=Temperate Grasslands.
+- **Status:** SUPERSEDED — hold pending revision. Colorado Springs is ~90 km from Denver = standalone-secondary (>80 km threshold). Excluded from Top 400 under corrected methodology.
 
 ### A12 — TOPIC: Nürnberg, Germany Regional Market
 - **File:** `TOPIC-rm-nurnberg-de.draft.md`
-- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-regional-markets-dispatch)
-- **Destination:** project-editorial → media-knowledge-documentation
-- **Content:** Rank 1 EU (score 51.0). 4×T1 + 1×T3, civic=true (FAU Erlangen-Nürnberg + Klinikum Nürnberg). Wikipedia: 546,397 inhabitants (2024), 2nd largest in Bavaria. AEC: EU Climate=IV (continental), Köppen=Dfb, eco=Western European broadleaf forests.
+- **Status:** SUPERSEDED — hold pending revision. Nürnberg is a metro reference (added to EU_METROS list). Classified as metro-core (dist=1.6 km from itself). Excluded from Top 400 under corrected methodology.
+
+### A15 — TOPIC: Plano, Texas Regional Market
+- **File:** `TOPIC-rm-plano-tx.draft.md`
+- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-rm-corrected-dispatch)
+- **Destination:** project-editorial → media-knowledge-documentation (projects.woodfinegroup.com)
+- **Content:** Rank 1 NA. Suburb of Dallas (28.1 km). 3×T1 + 2×T2 + 1×T3, civic=true. Score=25.5. Civic anchors: Texas Health Presbyterian, Baylor Scott & White, Medical City Plano, UT Dallas, Texas A&M AgriLife. ASHRAE=3A, Köppen=Cfa. ~1,050 words body.
+
+### A16 — TOPIC: Mississauga, Ontario Regional Market
+- **File:** `TOPIC-rm-mississauga-on.draft.md`
+- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-rm-corrected-dispatch)
+- **Destination:** project-editorial → media-knowledge-documentation (projects.woodfinegroup.com)
+- **Content:** Rank 4 NA. Suburb of Toronto (24.9 km). 2×T1 + 1×T2 + 2×T3, civic=true. Score=18.0. Civic anchors: Mississauga Hospital, Credit Valley Hospital (Trillium Health Partners), University of Toronto Mississauga. Köppen=Dfa. ~900 words body.
+
+### A17 — TOPIC: Krefeld, Germany Regional Market
+- **File:** `TOPIC-rm-krefeld-de.draft.md`
+- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-rm-corrected-dispatch)
+- **Destination:** project-editorial → media-knowledge-documentation (projects.woodfinegroup.com)
+- **Content:** Rank 5 EU. Suburb of Düsseldorf (19.4 km). 2×T1, civic=true. Score=12.0. Civic anchors: Helios Klinikum Krefeld, Hochschule Niederrhein. EU Climate=II (Atlantic), Köppen=Cfb. ~950 words body.
 
 ### A13 — DESIGN-RESEARCH: Regional Market TOPIC Template
 - **File:** `DESIGN-regional-market-topic-template.draft.md`
