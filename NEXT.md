@@ -188,6 +188,33 @@ pickup notice sent to project-editorial.
   `actual=256`. Full KVM proof on Laptop A (hardware VT-x) remains for production
   validation. [2026-05-28 totebox@claude-code]
 
+### Active coding — cluster/project-console
+
+| Phase | Status | Commit |
+|---|---|---|
+| Phase 3 — Kitty/Sixel pixel QR | Complete | `11135186` |
+| Phase 4 — F11 System Cartridge; pending-pair panel | Complete | `28000772` |
+| Phase 5 — Draft mode; `/new` slash command; Doorman Tier B SSE | Complete | `5118ce77` |
+| Phase 6 — Offline mode + Tantivy search | **Pending** | — |
+| Phase B — Cross-platform CI matrix + TerminalCaps | **Complete** | `6f21f580` |
+| Phase C — Email cartridge (F3) | **Next** | — |
+| Phase D — SLM cartridge (F9) | **Next** | — |
+| Phase E — Orchestration wiring | **Next** | — |
+| Phase 7–12 | Not started | — |
+
+- [ ] **Phase C: Email cartridge (F3)** — convert `app-console-email` stub → lib crate;
+  implement `EmailCartridge` (inbox list, read pane, compose/send via `service-email`);
+  wire into `os-console/src/main.rs`. Backend: `service-email` in `project-data`.
+  [2026-05-30 totebox@project-console]
+
+- [ ] **Phase D: SLM cartridge (F9)** — convert `app-console-slm` stub → lib crate;
+  implement `SlmCartridge` (Doorman health at `localhost:9080`, Yo-Yo tier display, corpus
+  panel); wire into `os-console/src/main.rs`. [2026-05-30 totebox@project-console]
+
+- [ ] **Phase E: Orchestration wiring** — audit `os-console/src/mba_client.rs`; update
+  `ConsoleConfig` to name `orchestration_host`; no `app-orchestration-command` crate.
+  [2026-05-30 totebox@project-console]
+
 - [ ] **Deferred: os-network-admin ratatui TUI** — keyboard approve/deny (a/d); QR rendering
   via `system-pairing-codes::qr_unicode`; expiry countdown. Full §9.2 Step 4 UX.
   [2026-05-28 totebox@claude-code]
