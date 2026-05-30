@@ -250,6 +250,97 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 - **Destination:** project-editorial
 - **Content:** Full rebuild procedure including Phase 1 taxonomy rebuild steps and Phase 2 build-geometric-ranking.py future pipeline
 
+### A7 — TOPIC: os-mediakit (bilingual)
+- **File:** `media-knowledge-documentation/systems/os-mediakit.md` + `.es.md`
+- **Status:** COMMITTED — `81ca9aa` (2026-05-29) — `media-knowledge-documentation/systems/`
+- **Source:** project-infrastructure drafts-outbound
+- **Content:** Ubuntu 24.04 QEMU/TCG VM platform; Phase 1 (deployed) + Phase 2–4 (planned); BCSC-clean
+
+### A8 — GUIDE: post-commit-training-hook
+- **File:** `.agent/drafts-outbound/guide-post-commit-training-hook.md`
+- **Status:** STAGED — `72761f65` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/cluster-totebox-intelligence/`
+- **Source:** project-intelligence drafts-outbound
+
+### A9 — GUIDE: goose-local-doorman
+- **File:** `.agent/drafts-outbound/guide-goose-local-doorman.md`
+- **Status:** STAGED — `72761f65` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/cluster-totebox-intelligence/`
+- **Source:** project-intelligence drafts-outbound
+
+### A10 — GUIDE: vm-mediakit-provision
+- **File:** `.agent/drafts-outbound/guide-vm-mediakit-provision.md`
+- **Status:** STAGED — `0d9da8ed` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/fleet-infrastructure/`
+- **Source:** project-infrastructure drafts-outbound
+
+### A11 — GUIDE: vm-mediakit-service-migration
+- **File:** `.agent/drafts-outbound/guide-vm-mediakit-service-migration.md`
+- **Status:** STAGED — `0d9da8ed` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/fleet-infrastructure/`
+- **Source:** project-infrastructure drafts-outbound
+
+### A12 — TOPIC: moonshot-toolkit-build-orchestrator (bilingual)
+- **File:** `media-knowledge-documentation/substrate/moonshot-toolkit-build-orchestrator.md` + `.es.md`
+- **Status:** COMMITTED — `95f6beb` (2026-05-29) — `media-knowledge-documentation/substrate/`
+- **Source:** project-system drafts-outbound (Phase 1C v2)
+- **Content:** Rust-only build orchestrator; 5-stage AssembleImage pipeline; Phase 1C complete
+
+### A13 — TOPIC: sel4-aarch64-qemu-substrate-target (bilingual)
+- **File:** `media-knowledge-documentation/substrate/sel4-aarch64-qemu-substrate-target.md` + `.es.md`
+- **Status:** COMMITTED — `95f6beb` (2026-05-29) — `media-knowledge-documentation/substrate/`
+- **Source:** project-system drafts-outbound (Phase 1C v2)
+- **Content:** seL4 AArch64 QEMU substrate target; verified boot chain; -m 1G requirement
+
+### A14 — GUIDE: moonshot-toolkit-phase1c-build-setup
+- **File:** `.agent/drafts-outbound/guide-moonshot-toolkit-phase1c-build-setup.md`
+- **Status:** STAGED — `fbde41fa` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/project-system/`
+- **Source:** project-system drafts-outbound (Phase 1C v2)
+
+### A15 — TOPIC: Regional Markets System landing article (bilingual) [GIS dispatch A7]
+- **File:** `media-knowledge-projects/topic-regional-markets-system.md` + `.es.md`
+- **Status:** COMMITTED — `294488f` (2026-05-30) — `media-knowledge-projects/`
+- **Source:** project-gis GIS-4 corrected dispatch (BRIEF-regional-markets-system.draft.md)
+- **Content:** System reference article — tier definition, composite scoring formula, AEC layers, competitive positioning (Oxford Economics/CBRE/Colliers cover metro cores; Woodfine dataset covers suburban ring 15–80 km); audience: customer-woodfine; quality: complete
+
+### A16 — TOPIC: Top 400 Regional Markets — North America (bilingual) [GIS dispatch A8]
+- **File:** `media-knowledge-projects/topic-top-400-regional-markets-na.md` + `.es.md`
+- **Status:** COMMITTED — `294488f` (2026-05-30) — `media-knowledge-projects/`
+- **Source:** project-gis GIS-4 corrected dispatch (TOPIC-top-400-regional-markets-na.draft.md)
+- **Content:** 400-entry NA ranked list; rank 1 = Plano TX (suburb of Dallas, score 25.5); US 340 / CA 30 / MX 30; top-25 nine-column table with suburb_of + km columns; corrected methodology (15–80 km range, no metro_distance_multiplier)
+
+### A17 — TOPIC: Top 400 Regional Markets — Europe (bilingual) [GIS dispatch A9]
+- **File:** `media-knowledge-projects/topic-top-400-regional-markets-eu.md` + `.es.md`
+- **Status:** COMMITTED — `294488f` (2026-05-30) — `media-knowledge-projects/`
+- **Source:** project-gis GIS-4 corrected dispatch (TOPIC-top-400-regional-markets-eu.draft.md)
+- **Content:** 400-entry EU ranked list; rank 1 = Chemnitz (suburb of Dresden, 64 km, score 18.0); 11 countries; score range 18.0–3.0; score distribution note (EU max lower due to smaller LAU-2 municipal units)
+
+### A18 — TOPIC: Plano, Texas — Regional Market (bilingual) [GIS dispatch A15]
+- **File:** `media-knowledge-projects/topic-rm-plano-tx.md` + `.es.md`
+- **Status:** COMMITTED — `294488f` (2026-05-30) — `media-knowledge-projects/`
+- **Source:** project-gis GIS-4 corrected dispatch (TOPIC-rm-plano-tx.draft.md)
+- **Content:** Rank 1 NA suburban Regional Market; suburb of Dallas 28.1 km; 3T1+2T2+1T3; score 25.5; 6 cluster profiles; dense civic layer (4 hospital systems + UTD + DBU)
+
+### A19 — TOPIC: Mississauga, Ontario — Regional Market (bilingual) [GIS dispatch A16]
+- **File:** `media-knowledge-projects/topic-rm-mississauga-on.md` + `.es.md`
+- **Status:** COMMITTED — `294488f` (2026-05-30) — `media-knowledge-projects/`
+- **Source:** project-gis GIS-4 corrected dispatch (TOPIC-rm-mississauga-on.draft.md)
+- **Content:** Rank 4 NA suburban Regional Market; suburb of Toronto 24.9 km; 2T1+1T2+2T3; score 18.0; 5 cluster profiles; Trillium Health Partners + UTM civic anchors
+
+### A20 — TOPIC: Krefeld — Regional Market (bilingual) [GIS dispatch A17]
+- **File:** `media-knowledge-projects/topic-rm-krefeld-de.md` + `.es.md`
+- **Status:** COMMITTED — `294488f` (2026-05-30) — `media-knowledge-projects/`
+- **Source:** project-gis GIS-4 corrected dispatch (TOPIC-rm-krefeld-de.draft.md)
+- **Content:** Rank 5 EU suburban Regional Market; suburb of Düsseldorf 19.4 km; 2T1; score 12.0; Helios network + Hochschule Niederrhein civic anchors; Cfb oceanic climate
+
+### A21 — GUIDE: Regional Market TOPIC production (EN-only) [GIS dispatch A14]
+- **File:** `.agent/drafts-outbound/GUIDE-regional-market-topic-production.draft.md`
+- **Status:** STAGED (2026-05-30) — pending Command Session routing to `woodfine-fleet-deployment/`
+- **Source:** project-gis GIS-4 corrected dispatch (GUIDE-regional-market-topic-production.draft.md); test-market references updated this session (Wichita→Plano TX, Nürnberg→Krefeld DE)
+- **Content:** Operational guide for producing Regional Market TOPIC articles; 11 sections; EN-only
+
+### A22 — DESIGN: Regional Market TOPIC template [GIS dispatch A13]
+- **File:** `project-gis/.agent/drafts-outbound/DESIGN-regional-market-topic-template.draft.md`
+- **Status:** ROUTED to project-design outbox (2026-05-30) — project-editorial does not action DESIGN-RESEARCH artifacts
+- **Source:** project-gis GIS-4 corrected dispatch; `language_protocol: DESIGN-RESEARCH`
+- **Content:** Template design for Regional Market TOPIC articles; routed per artifact-registry routing rules
+
 ---
 
 ## B — Backlog (queued for future sessions)
