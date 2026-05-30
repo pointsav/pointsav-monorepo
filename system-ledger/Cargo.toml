@@ -9,6 +9,15 @@ repository = "https://github.com/pointsav/pointsav-monorepo"
 keywords = ["ledger", "capability", "merkle", "substrate", "cache"]
 categories = ["cryptography", "data-structures"]
 
+[workspace]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
 [dependencies]
 system-core = { path = "../system-core" }
 tempfile = "3"
