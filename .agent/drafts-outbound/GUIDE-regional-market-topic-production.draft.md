@@ -85,13 +85,13 @@ Each entry in the JSON list has the shape:
 {
   "rank": 16,
   "rm_id": "RM-NA-0123",
-  "market": "Wichita, Kansas",
+  "market": "Plano, Texas",
   "country": "US",
-  "centroid_lat": 37.6872,
-  "centroid_lon": -97.3301,
+  "centroid_lat": 33.0198,
+  "centroid_lon": -96.6989,
   "cluster_ids": ["NA-12345", "NA-12378", ...],
-  "score": 48.0,
-  "t1": 1, "t2": 2, "t3": 1,
+  "score": 25.5,
+  "t1": 3, "t2": 2, "t3": 1,
   "mkt_conf": "high",
   "components": { /* per-metric scoring breakdown */ }
 }
@@ -148,8 +148,8 @@ def wp_summary(title):
         return json.loads(r.read())
 
 # Examples
-# US city:        wp_summary("Wichita, Kansas")
-# German city:    wp_summary("Nuremberg")
+# US city:        wp_summary("Plano, Texas")
+# German city:    wp_summary("Krefeld")
 # French city:    wp_summary("Toulouse")
 # UK city:        wp_summary("Manchester")
 ```
@@ -238,17 +238,17 @@ title: "[Market name] — Regional Market"
 date: 2026-05-30
 rm_id: "RM-NA-0123"
 country: "US"
-rank: 16
+rank: 1
 rank_total: 400
-score: 48.0
+score: 25.5
 best_tier: 1
-cluster_count: 4
-centroid_lat: 37.6872
-centroid_lon: -97.3301
-wikipedia_city: "https://en.wikipedia.org/wiki/Wichita,_Kansas"
+cluster_count: 6
+centroid_lat: 33.0198
+centroid_lon: -96.6989
+wikipedia_city: "https://en.wikipedia.org/wiki/Plano,_Texas"
 wikipedia_sources:
-  - "https://en.wikipedia.org/wiki/Wichita,_Kansas"
-  - "https://en.wikipedia.org/wiki/Sedgwick_County,_Kansas"
+  - "https://en.wikipedia.org/wiki/Plano,_Texas"
+  - "https://en.wikipedia.org/wiki/Collin_County,_Texas"
 wikipedia_thumbnail: "https://upload.wikimedia.org/..."   # optional
 data_vintage: "2026-05-22"  # date of the cluster build the RM was scored against
 paired_with: "topic-rm-[slug].es.md"  # if a Spanish sibling is planned
@@ -259,15 +259,15 @@ paired_with: "topic-rm-[slug].es.md"  # if a Spanish sibling is planned
 
 Two or three sentences. Required content, in order:
 
-1. Market name + rank ("Wichita is a Tier-1 Regional Market…").
+1. Market name + rank ("Plano is the rank-1 Regional Market in North America…").
 2. Cluster count + composition summary.
 3. Distance from the nearest larger metro (helps reader place it).
 
 Example:
 
-> Wichita is a Tier-1 Regional Market containing four co-location
-> clusters. It is the largest market in central Kansas, 250 km
-> southeast of Oklahoma City.
+> Plano, Texas is the rank-1 Regional Market in North America, containing
+> six co-location clusters. It is situated 28 km north of Dallas within
+> the Dallas–Fort Worth metroplex.
 
 ### Body sections (in order — match the template)
 
@@ -343,8 +343,8 @@ Filename pattern (lowercase, hyphenated market slug):
 Examples:
 
 ```
-.agent/drafts-outbound/TOPIC-rm-wichita-kansas.draft.md
-.agent/drafts-outbound/TOPIC-rm-nuremberg.draft.md
+.agent/drafts-outbound/TOPIC-rm-plano-tx.draft.md
+.agent/drafts-outbound/TOPIC-rm-krefeld-de.draft.md
 .agent/drafts-outbound/TOPIC-rm-toulouse.draft.md
 ```
 
