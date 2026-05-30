@@ -75,7 +75,13 @@ source identity; each `VM-*` is the runtime identity. See `BRIEF-VM-ARCHITECTURE
 - [x] `service-vm-fleet` scaffolded (8/8 tests pass; axum :9203; advisory placement; `auto_rebalance: false`) [2026-05-29 totebox@claude-code]
 - [x] `service-vm-host` scaffolded (host_stats tests pass; /proc/meminfo reader; qemu_monitor Phase 1 stub) [2026-05-29 totebox@claude-code]
 - [x] `infrastructure/systemd/ppn/local-vm-host.service` + `infrastructure/systemd/orchestration/local-vm-fleet.service` created [2026-05-29 totebox@claude-code]
-- [ ] **Enable GCP nested KVM** — operator action: GCP console → foundry-workspace → Edit → Enable nested virtualisation → restart. Then: `ls /dev/kvm` to verify. [2026-05-29 totebox@claude-code]
+- [x] `kvm_available` field in NodeHeartbeat + NodeRecord; `prefer_kvm` in CreateVmRequest; KVM-first placement with TCG fallback (5+10+3=18 tests pass) [2026-05-30 totebox@claude-code]
+- **Node roles — GCP e2 does not support nested KVM (e2 family limitation). Three roles:**
+  - GCP e2-standard-8: fleet coordinator + TCG-only VMs (vm-mediakit already live); `prefer_kvm: false`
+  - Laptop A (10.8.0.6): primary KVM compute — VM-Totebox, VM-PrivateGit; `prefer_kvm: true`
+  - Laptop B (10.8.0.1): primary KVM compute (KVM TBD); `prefer_kvm: true`
+- **GCP TCG test path for os-infrastructure images:** `qemu-system-x86_64 -nographic -m 256M -kernel os-infra.bin` — boots image without nested KVM; validates boot sequence + WireGuard setup at TCG speed
+- [ ] **GCP nested KVM: NOT available on e2.** To enable later: migrate to n2-standard-8 (same specs, ~10–15% higher cost). Defer until os-* images proven on laptops. [2026-05-30 totebox@claude-code]
 - [ ] **Verify Laptop A KVM** — `ls /dev/kvm` on Laptop A; if absent: `sudo modprobe kvm kvm_intel` [2026-05-29 totebox@claude-code]
 - [ ] **Stage 6 — session 12 commits** — promote system-vm-fleet-types, service-vm-fleet, service-vm-host to canonical after this session commits. [2026-05-29 totebox@claude-code]
 - [ ] **Deploy service-vm-fleet on GCP** — install binary + enable `local-vm-fleet.service` (after Stage 6). See `guide-vm-infrastructure-resource-pool.draft.md`. [2026-05-29 totebox@claude-code]
