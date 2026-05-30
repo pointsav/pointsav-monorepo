@@ -1,6 +1,20 @@
 
 ---
 
+### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 8 — circuit resilience complete)
+
+**Done this session:**
+- **All five circuit-resilience sprints deployed** (commits `96dcaf2b`→`b08cec3d`):
+  - Sprint 3A: `SLM_TIER_A_FIRST=true` threaded through `DoormanConfig`, `ApprenticeshipConfig`, `select_tier()`, `pick_tier_for_brief()`. Startup guard prevents mutual use with `SLM_FORCE_BROKER_MODE`. `route_yoyo_only` (ADR-07) unchanged.
+  - Sprint 3B: WATCHER Tier A fallback in `service-content/src/main.rs`. Rate-limited at 300s. `TierAFallbackConfig` + `last_tier_a_attempt`. Calls `/v1/chat/completions` with 5-category system prompt + json-schema grammar; confidence 0.75; upserts entities to LadybugDB.
+  - Sprint 3C: Drain worker pause in `slm-doorman-server/src/main.rs`. Before `dequeue_shadow()`, checks `tier_b_status()` — if ALL nodes circuit=open AND `opened_for_secs >= SLM_HOLD_THRESHOLD_SECS` (3600s default), skips cycle and logs.
+- **Both binaries rebuilt and deployed** (2026-05-29T19:26Z): slm-doorman-server sha256=`81b8629c`; service-content sha256=`2362ea5c`
+- **Verification**: `/readyz` tier_b field; `/healthz` entity_count:7201; startup `SLM_TIER_A_FIRST=true`; shadow dispatch tier="local" ✓
+- **Binary ledger updated** at `/srv/foundry/data/binary-ledger/`
+- **Outbox to Command**: Stage 6 for 9 commits; quarantine 590 poison briefs
+
+---
+
 ### 2026-05-29 | totebox@project-intelligence | claude-sonnet-4-6 (session 7 — Goose verified)
 
 **Done this session:**
