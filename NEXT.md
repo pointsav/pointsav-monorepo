@@ -3,8 +3,7 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Architecture: VM-* naming mirrors the os-* product lineup exactly. See `BRIEF-VM-ARCHITECTURE.md`.
 
-Last updated: 2026-06-01 (session 16 — reconstructed from session context; was contaminated
-with project-console content since 2026-05-28).
+Last updated: 2026-05-30
 
 ---
 
@@ -50,7 +49,13 @@ with project-console content since 2026-05-28).
 
 ---
 
-## VM-Totebox — Phase 1 (blocked on Command promoting project-data)
+## Completed this session (2026-05-30)
+
+- [x] Pass 1 (history-language cleanup) COMPLETE — J1 (`c8a9c3b2`, Peter), J2 (`9218940f`, Jennifer), J3 (`69b6bfd9`, Jennifer), J4 (clean), J6 (`d7b0979f`, Jennifer); internal phase numbers, WIP framing, and development-history narration stripped from all five papers
+- [x] Pass 2 (readability overhaul) COMPLETE — J3 (`ab276f23`, ~28 expansions, v0.5), J2 (`cf302a90`, 22 expansions, v0.2), J1 (`62fa554b`, 6 expansions, v0.7), J6 (`0861de14`, 5 expansions, v0.4), J4 (`37733685`, 4 expansions, v0.5); all non-universal abbreviations expanded on first body-text use per R1; topic sentences added to all section openings per R4
+- [x] Artifact registry updated — J1–J6 status + version numbers — `a48d395f`
+
+## Completed this session (2026-05-29 — continued)
 
 - [ ] **service-fs binary available on host** — blocked: Command must promote project-data.
   Outbox sent to project-data with install instructions.
