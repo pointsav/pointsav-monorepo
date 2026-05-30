@@ -276,7 +276,7 @@ async fn main() -> anyhow::Result<()> {
                             // (e.g. a future Tier B slow-start or a new code
                             // path that forgets to set a deadline).
                             let dispatch_result = tokio::time::timeout(
-                                std::time::Duration::from_secs(150),
+                                std::time::Duration::from_secs(1860),
                                 dispatcher.dispatch_shadow(
                                     &leased.entry.brief,
                                     &leased.entry.actual_diff,
@@ -287,7 +287,7 @@ async fn main() -> anyhow::Result<()> {
                                 Err(_elapsed) => {
                                     tracing::warn!(
                                         brief_id = %brief_id,
-                                        "drain worker: dispatch timed out after 150s — \
+                                        "drain worker: dispatch timed out after 1860s — \
                                          brief will be re-queued by reaper"
                                     );
                                     ReleaseOutcome::Retry
