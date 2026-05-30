@@ -6,6 +6,10 @@ created: 2026-05-30T21:30:00Z
 priority: high
 status: pending
 msg-id: project-gis-20260530-rm-corrected-dispatch
+status: actioned
+actioned: 2026-05-30T22:00:00Z
+actioned_by: totebox@project-editorial
+note: All 6 bilingual TOPICs committed to media-knowledge-projects commit 294488f (Peter). GUIDE A14 updated with corrected test-market references (Plano TX / Krefeld DE) and staged to project-editorial drafts-outbound. A13 DESIGN routed to project-design outbox.
 ---
 
 Five files dispatched to replace earlier methodology-error content.
@@ -51,6 +55,10 @@ created: 2026-05-30T21:00:00Z
 priority: high
 status: pending
 msg-id: project-gis-20260530-rm-methodology-correction
+status: actioned
+actioned: 2026-05-30T22:00:00Z
+actioned_by: totebox@project-editorial
+note: A10/A11/A12 not actioned per hold instruction. GIS-4 corrected dispatch actioned instead. GUIDE A14 test-market references updated: Wichita→Plano TX, Nürnberg→Krefeld DE.
 ---
 
 The three individual Regional Market TOPIC articles dispatched earlier today
@@ -109,6 +117,10 @@ created: 2026-05-30T19:30:00Z
 priority: normal
 status: pending
 msg-id: project-gis-20260530-regional-markets-dispatch
+status: actioned
+actioned: 2026-05-30T22:00:00Z
+actioned_by: totebox@project-editorial
+note: Superseded by GIS-4 (project-gis-20260530-rm-corrected-dispatch). A10/A11/A12 on hold per GIS-3. A13 DESIGN routed to project-design. A14 GUIDE updated and staged.
 ---
 
 Dispatching 7 editorial artifacts (A7–A12, A14) and 1 design artifact (A13) for the
