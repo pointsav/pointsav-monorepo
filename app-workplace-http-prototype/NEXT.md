@@ -6,6 +6,9 @@
       memo auto-refresh on change (fab7a2f6)
 - [x] nginx 9200 proxies prototype root — `http://10.8.0.9:9200/` is now the
       daily-use URL; prototype binds on 9110 internally
+- [x] Workbench merge — SPA + backend at `/workbench/`; config.toml roots;
+      /files/ and 9210 standalone untouched (ab75fa69)
+- [ ] Jennifer tests `/workbench` surface; confirm before retiring /files/ and 9210
 - [ ] Add systemd unit `local-workplace-http-prototype.service` so the binary
       survives session exit (currently launched manually)
 
