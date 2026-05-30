@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.3"
+version: "0.4"
 title: "Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration: A Keystroke-Economy Framework"
 target_journal: "ACM Transactions on Computer-Human Interaction"
 target_publisher: "ACM"
@@ -72,7 +72,7 @@ preprint_posted: true
 preprint_posted_date: 2026-05-28
 doi: ""
 license: "CC BY 4.0"
-cite_as: "Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration. Working Paper v0.2, 28 May 2026. Woodfine Management Corp., New York, NY."
+cite_as: "Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration. Working Paper v0.4, 30 May 2026. Woodfine Management Corp., New York, NY."
 revision_history:
   - version: "0.1"
     date: "2026-05-27"
@@ -80,6 +80,12 @@ revision_history:
   - version: "0.2"
     date: "2026-05-28"
     changes: "Writing pass §1–§5; language pass; preprint notice and FLS advisory; public posting"
+  - version: "0.3"
+    date: "2026-05-30"
+    changes: "History-language pass: WIP framing removed from §6/§8; Phase labels stripped from §4; §6 results framed as pending user study"
+  - version: "0.4"
+    date: "2026-05-30"
+    changes: "Readability pass: AEC, IFC, BIM, CAD, NASA-TLX first-use expansions in §1.1 and §5"
 notes_for_editor: |
   Writing pass 2026-05-28: §1–§5 body written (~5,200 words). §6 Results pending user
   study execution. §7 Discussion written with formal hypotheses and falsification
@@ -95,10 +101,10 @@ notes_for_editor: |
   participants will satisfy TOCHI's empirical contribution requirement.
 ---
 
-> **Working Paper · Version 0.2 · 2026-05-28 · CC BY 4.0**
+> **Working Paper · Version 0.4 · 2026-05-30 · CC BY 4.0**
 > This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. Correspondence: corporate.secretary@woodfinegroup.com.
 >
-> *Cite as:* Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration. Working Paper v0.2, 28 May 2026. Woodfine Management Corp., New York, NY.
+> *Cite as:* Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration. Working Paper v0.4, 30 May 2026. Woodfine Management Corp., New York, NY.
 
 > **Forward-Looking Statements**
 > Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially. Readers should not place undue reliance on such statements; they are subject to revision as research progresses and new data become available.
@@ -119,11 +125,11 @@ Professional migration from established AEC design software to new alternatives 
 
 ## 1. Introduction
 
-Professional AEC software — principally Autodesk AutoCAD, Revit, and Navisworks — is learned through extended practice that encodes not only declarative knowledge of features but procedural motor routines: the specific keystroke sequences, command abbreviations, and spatial pointing gestures that allow experienced practitioners to operate without conscious attention to the tool interface [Card et al. 1980; Fitts and Posner 1967]. These routines, once acquired, function as skilled motor memory that is robust to interruption within a familiar environment but fragile when the environment changes [Reason 1990].
+Professional Architecture, Engineering, and Construction (AEC) software — principally Autodesk AutoCAD, Revit, and Navisworks — is learned through extended practice that encodes not only declarative knowledge of features but procedural motor routines: the specific keystroke sequences, command abbreviations, and spatial pointing gestures that allow experienced practitioners to operate without conscious attention to the tool interface [Card et al. 1980; Fitts and Posner 1967]. These routines, once acquired, function as skilled motor memory that is robust to interruption within a familiar environment but fragile when the environment changes [Reason 1990].
 
-The AEC industry is undergoing a sustained migration from proprietary file formats toward open IFC-based workflows and platform-independent editors. This migration creates a well-documented productivity valley: practitioners accustomed to AutoCAD's left-hand-on-keyboard command-alias paradigm encounter new environments whose interfaces are visually different, spatially reorganised, and — in most cases — designed from first principles rather than designed to preserve existing motor patterns.
+The AEC industry is undergoing a sustained migration from proprietary file formats toward open Industry Foundation Classes (IFC)-based workflows and platform-independent editors. This migration creates a well-documented productivity valley: practitioners accustomed to AutoCAD's left-hand-on-keyboard command-alias paradigm encounter new environments whose interfaces are visually different, spatially reorganised, and — in most cases — designed from first principles rather than designed to preserve existing motor patterns.
 
-Prior literature has studied this transition primarily through two lenses: feature-coverage analysis (which capabilities the new tool provides relative to the incumbent) and learning-curve measurement (how quickly new users reach proficiency). Neither lens isolates the motor-pattern disruption variable. A practitioner with ten years of AutoCAD experience and a practitioner with no prior CAD experience face categorically different adoption challenges when migrating to a new BIM editor, yet existing migration studies typically aggregate them under the same learning-curve framework. This aggregation obscures a structurally distinct problem: the experienced practitioner does not need to learn *what* the tool can do — they need to *unlearn* existing motor routines before learning the new ones, a process the motor-learning literature calls negative transfer [Schmidt and Lee 2014].
+Prior literature has studied this transition primarily through two lenses: feature-coverage analysis (which capabilities the new tool provides relative to the incumbent) and learning-curve measurement (how quickly new users reach proficiency). Neither lens isolates the motor-pattern disruption variable. A practitioner with ten years of AutoCAD experience and a practitioner with no prior Computer-Aided Design (CAD) experience face categorically different adoption challenges when migrating to a new Building Information Modelling (BIM) editor, yet existing migration studies typically aggregate them under the same learning-curve framework. This aggregation obscures a structurally distinct problem: the experienced practitioner does not need to learn *what* the tool can do — they need to *unlearn* existing motor routines before learning the new ones, a process the motor-learning literature calls negative transfer [Schmidt and Lee 2014].
 
 The Keystroke-Level Model (KLM) [Card, Moran, and Newell 1980] provides a theoretical foundation for quantifying the cost of command-interface changes. Each deviation from a practitioner's habituated keystroke sequence — a renamed command alias, a relocated toolbar button, a remapped function key — introduces what we term a *motor interference event*: a moment at which the practitioner's habituated motor program produces an incorrect action, requiring error detection and correction. At low frequencies, motor interference events are minor inconveniences. At the frequencies typical of professional AEC drafting — several hundred command invocations per hour — these events aggregate into measurable productivity loss, elevated error rates, and practitioner frustration that is often attributed incorrectly to the new tool's general quality rather than to its specific command-interface design choices.
 
@@ -290,7 +296,7 @@ A within-subjects counterbalanced comparative study. Each participant uses both 
 
 *Tasks.* Three representative drafting tasks, each approximately 20 minutes in duration: Task 1, reproducing a floor plan from a paper reference drawing (LINE, PLINE, OFFSET, TRIM, FILLET, LAYER); Task 2, annotating a provided IFC model with BCF issues identified from a defect checklist (orbit, pan, select, Create Issue); and Task 3, editing IFC element properties for a set of 15 elements specified in a written brief (select, Properties panel, edit field).
 
-*Measures.* Primary outcomes: command-error rate (count of commands resulting in an error notification or an operator-visible undo within the task session) for H₁; total elapsed task-completion time for H₂; NASA-TLX total workload score [Hart and Staveland 1988] administered after each task block for H₃. A semi-structured qualitative exit interview (approximately 20 minutes) covers specific interface elements that caused confusion, comparison to prior AutoCAD experience, and impressions of the IFC layer-to-category mapping.
+*Measures.* Primary outcomes: command-error rate (count of commands resulting in an error notification or an operator-visible undo within the task session) for H₁; total elapsed task-completion time for H₂; National Aeronautics and Space Administration Task Load Index (NASA-TLX) total workload score [Hart and Staveland 1988] administered after each task block for H₃. A semi-structured qualitative exit interview (approximately 20 minutes) covers specific interface elements that caused confusion, comparison to prior AutoCAD experience, and impressions of the IFC layer-to-category mapping.
 
 *Analysis.* Paired t-tests on command-error rate and task-completion time; Wilcoxon signed-rank test on NASA-TLX (non-parametric due to ordinal scale); thematic analysis on interview transcripts.
 
