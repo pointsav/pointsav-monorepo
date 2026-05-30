@@ -32,9 +32,7 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 | J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier, IF 12.0) | Jennifer M. Woodfine | language-cleared |
 | J4 | `JOURNAL-private-network-v0.4.draft.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | v0.4 synced to JOURNAL/; dispatched to project-editorial 2026-05-31 |
 | J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | MLSys (ACM, 22% AR) | Mathew Woodfine | stub |
-| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared |
-| J7 | `JOURNAL-urban-fringe-v0.1.stub.md` | Industrial Co-location in the Metropolitan Ring: Spatial Signatures of the Urban Fringe Archetype | Regional Science and Urban Economics (Elsevier, IF 2.9, Q1) | Jennifer M. Woodfine | stub — 2026-06-01 |
-| J8 | `JOURNAL-commuter-v0.1.stub.md` | The Commuter Archetype: Car-Rental Clustering as a Proxy for Transit-Adjacent Commercial Co-location | Journal of Transport Geography (Elsevier, IF 6.88, Q1) | Peter M. Woodfine | stub — 2026-06-01 |
+| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared (v0.3; history-language pass 2026-05-30; Phase labels stripped; §6 Results pending user study) |
 
 ### Pre-submission blockers by paper
 
