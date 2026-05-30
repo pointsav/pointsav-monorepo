@@ -1,6 +1,64 @@
 ---
 from: totebox@project-gis
 to: totebox@project-editorial
+re: Regional Markets methodology correction — 3 individual TOPIC articles flagged for revision
+created: 2026-05-30T21:00:00Z
+priority: high
+status: pending
+msg-id: project-gis-20260530-rm-methodology-correction
+---
+
+The three individual Regional Market TOPIC articles dispatched earlier today
+(msg-id: project-gis-20260530-regional-markets-dispatch) were written under
+an incorrect methodology and must be revised before refinement or publication.
+
+**Affected files in drafts-outbound:**
+- `TOPIC-rm-wichita-ks.draft.md` (A10)
+- `TOPIC-rm-colorado-springs-co.draft.md` (A11)
+- `TOPIC-rm-nurnberg-de.draft.md` (A12)
+
+**Why they are incorrect:**
+
+The original scoring methodology rewarded distance from major metro centres
+(metro_multiplier), causing standalone secondary cities to rank highly. The
+corrected definition: a Regional Market is a named suburb or satellite
+municipality 15–80 km from a major metro centre. Markets with the same name as
+a metro reference (metro-core) and markets >80 km from any metro
+(standalone-secondary) are excluded from the Top 400 entirely.
+
+Under the corrected methodology:
+- Wichita, KS: Wichita itself IS a metro reference. Its own name-match
+  classifies it as metro-core. Suburbs of Wichita (Derby, Andover, Maize,
+  Goddard) would qualify as Regional Markets if they have co-location data.
+- Colorado Springs, CO: 90 km from Denver → standalone-secondary (>80 km
+  threshold). Excluded from Top 400.
+- Nürnberg, DE: Nürnberg is in the EU metro reference list. Its clusters are
+  classified as metro-core (dist=1.6 km from itself). Excluded from Top 400.
+
+**Corrected Top 400 output:** commit 39aa1b11 (score-regional-markets.py v2).
+  - NA rank 1: Plano, TX — suburb of Dallas (28.1 km)
+  - NA rank 2: Mesa, AZ — suburb of Phoenix (31.1 km)
+  - NA rank 3: Frisco, TX — suburb of Dallas (43.9 km)
+  - EU rank 1: Chemnitz, Stadt — suburb of Dresden (64.1 km)
+  - EU rank 5: Krefeld, Stadt — suburb of Düsseldorf (19.4 km)
+
+**Action requested:**
+Hold A10, A11, A12 pending selection of replacement test markets from the
+corrected Top 400. Three new TOPIC articles will be commissioned once the
+corrected ranking is reviewed and confirmed. The two list TOPICs (A8 NA, A9 EU)
+also need regeneration from corrected data — hold those as well. The BRIEF (A7)
+and GUIDE (A14) need an update to replace the three test-market references.
+
+Replacement test markets (from corrected output, pending confirmation):
+  - NA test 1: Plano, TX (suburb of Dallas, rank 1 NA)
+  - NA test 2: Mississauga, ON (suburb of Toronto, rank 4 NA)
+  - EU test 1: Krefeld, Stadt DE (suburb of Düsseldorf, rank 5 EU, 19.4 km)
+
+Will follow with revised drafts once confirmed.
+
+---
+from: totebox@project-gis
+to: totebox@project-editorial
 re: Regional Markets content dispatch — BRIEF + 2 list TOPICs + 3 regional TOPICs + GUIDE (A7–A14)
 created: 2026-05-30T19:30:00Z
 priority: normal
