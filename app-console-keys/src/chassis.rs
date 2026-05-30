@@ -20,7 +20,7 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame, Terminal,
 };
-use ratatui_image::{picker::Picker, protocol::StatefulProtocol, StatefulImage};
+use ratatui_image::{picker::{Picker, ProtocolType}, protocol::StatefulProtocol, StatefulImage};
 
 use crate::{
     cartridge::{Cartridge, CartridgeAction},
@@ -33,6 +33,31 @@ use std::collections::BTreeSet;
 pub enum ChassisAction {
     None,
     Quit,
+}
+
+/// Runtime terminal capability snapshot — populated once at startup via probe + env var.
+/// Cartridges should read this to choose render paths rather than hard-coding platform assumptions.
+#[derive(Debug, Clone, Copy)]
+pub struct TerminalCaps {
+    pub kitty: bool,
+    pub sixel: bool,
+    pub truecolor: bool,
+}
+
+impl TerminalCaps {
+    fn detect(picker: &Option<Picker>) -> Self {
+        let truecolor = std::env::var("COLORTERM")
+            .map(|v| v == "truecolor" || v == "24bit")
+            .unwrap_or(false);
+        match picker {
+            None => Self { kitty: false, sixel: false, truecolor },
+            Some(p) => Self {
+                kitty: matches!(p.protocol_type(), ProtocolType::Kitty),
+                sixel: matches!(p.protocol_type(), ProtocolType::Sixel),
+                truecolor,
+            },
+        }
+    }
 }
 
 pub struct AppConsoleKeys {
@@ -49,6 +74,8 @@ pub struct AppConsoleKeys {
     picker: Option<Picker>,
     // Cached QR image protocol state for the AwaitingApproval screen.
     qr_state: Option<StatefulProtocol>,
+    // Terminal capability snapshot — populated in run_local() after enable_raw_mode + probe.
+    caps: TerminalCaps,
 }
 
 impl AppConsoleKeys {
@@ -65,6 +92,7 @@ impl AppConsoleKeys {
             pair_rx: None,
             picker: None,
             qr_state: None,
+            caps: TerminalCaps { kitty: false, sixel: false, truecolor: false },
         }
     }
 
@@ -96,6 +124,10 @@ impl AppConsoleKeys {
 
     pub fn set_pair_rx(&mut self, rx: mpsc::Receiver<PairingEvent>) {
         self.pair_rx = Some(rx);
+    }
+
+    pub fn caps(&self) -> TerminalCaps {
+        self.caps
     }
 
     pub fn register(&mut self, cartridge: Box<dyn Cartridge>) {
@@ -526,6 +558,7 @@ impl AppConsoleKeys {
         enable_raw_mode()?;
         // Must run after enable_raw_mode — Picker sends XTGETTCAP in raw mode.
         self.picker = Picker::from_query_stdio().ok();
+        self.caps = TerminalCaps::detect(&self.picker);
         let mut stdout = io::stdout();
         execute!(stdout, EnterAlternateScreen, cursor::Hide)?;
 
