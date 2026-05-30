@@ -46,7 +46,12 @@ mod tests {
         make_heartbeat_kvm(node_id, ram_total, ram_used, true)
     }
 
-    fn make_heartbeat_kvm(node_id: &str, ram_total: u64, ram_used: u64, kvm: bool) -> NodeHeartbeat {
+    fn make_heartbeat_kvm(
+        node_id: &str,
+        ram_total: u64,
+        ram_used: u64,
+        kvm: bool,
+    ) -> NodeHeartbeat {
         NodeHeartbeat {
             node_id: node_id.to_string(),
             wg_ip: "10.8.0.9".to_string(),
@@ -67,7 +72,7 @@ mod tests {
         let mut reg = NodeRegistry::new();
         reg.update_node(&make_heartbeat("node-a", 8192, 6144)); // 2048 available
         reg.update_node(&make_heartbeat("node-b", 16384, 4096)); // 12288 available
-        // Request 1024 MB — both qualify; node-b has more RAM
+                                                                 // Request 1024 MB — both qualify; node-b has more RAM
         let result = select_node(&reg, 1024, false);
         assert_eq!(result, Some("node-b".to_string()));
     }
@@ -85,7 +90,7 @@ mod tests {
         let mut reg = NodeRegistry::new();
         // Exactly at request + safety margin (512 + 512 = 1024 available)
         reg.update_node(&make_heartbeat("node-a", 4096, 3072)); // 1024 available
-        // Requesting 512 MB — needs 512 + 512 = 1024 MB available — exactly meets threshold
+                                                                // Requesting 512 MB — needs 512 + 512 = 1024 MB available — exactly meets threshold
         assert!(select_node(&reg, 512, false).is_some());
         // Requesting 513 MB — needs 513 + 512 = 1025 MB — exceeds available
         assert!(select_node(&reg, 513, false).is_none());
