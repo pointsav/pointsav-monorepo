@@ -4,7 +4,7 @@ Documentation=https://github.com/pointsav/pointsav-monorepo
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/service-ppn-pairing 0.0.0.0:9202
+ExecStart=/usr/local/bin/service-ppn-pairing 0.0.0.0:9205
 Restart=on-failure
 RestartSec=5
 User=mathew
