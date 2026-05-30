@@ -13,7 +13,7 @@ WORKPLACE_PROTO_PORT=9110 \
 ./target/release/app-workplace-http-prototype
 ```
 
-Open `http://10.8.0.1:9110` on the WireGuard PPN.
+Open `http://10.8.0.9:9200` on the WireGuard PPN (nginx proxy; prototype binds internally on port 9110).
 
 ## Surfaces
 
