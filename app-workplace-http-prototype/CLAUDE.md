@@ -29,7 +29,7 @@ cargo build --release
 WORKPLACE_PROTO_WORKSPACE=/home/jennifer/workbench cargo run --release
 ```
 
-Reachable at `http://10.8.0.1:9110` over WireGuard PPN.
+Reachable at `http://10.8.0.9:9200` over WireGuard PPN (nginx proxy; prototype binds on port 9110).
 `WORKPLACE_PROTO_PORT` overrides the default port.
 
 ## File format — Memo
