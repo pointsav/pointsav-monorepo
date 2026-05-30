@@ -278,10 +278,8 @@ impl GraphStore for LbugGraphStore {
             .map_err(|e| anyhow!("Failed to execute count_all: {}", e))?;
         // Result is a single row with one column: the integer count.
         if let Some(row) = result.into_iter().next() {
-            if let Some(val) = row.into_iter().next() {
-                if let Value::Int64(n) = val {
-                    return Ok(n as usize);
-                }
+            if let Some(Value::Int64(n)) = row.into_iter().next() {
+                return Ok(n as usize);
             }
         }
         Ok(0)
