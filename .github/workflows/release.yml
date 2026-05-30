@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'
   workflow_dispatch:
 
 env:
@@ -11,12 +11,17 @@ env:
 
 jobs:
   build-linux:
-    name: Build — Linux x86_64
-    runs-on: ubuntu-latest
+    name: Build — Linux x86_64 (musl static)
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl
+
+      - name: Install cargo-zigbuild
+        run: cargo install cargo-zigbuild
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -25,31 +30,34 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: linux-x86_64-${{ hashFiles('**/Cargo.lock') }}
+          key: linux-musl-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build
+      - name: Build static binary
         working-directory: pointsav-monorepo
-        run: cargo build --release --bin os-console
+        run: cargo zigbuild --release --bin os-console --target x86_64-unknown-linux-musl
 
       - name: Stage artifact
         run: |
-          cp pointsav-monorepo/target/release/os-console os-console-linux-x86_64
-          chmod +x os-console-linux-x86_64
+          cp pointsav-monorepo/target/x86_64-unknown-linux-musl/release/os-console \
+             os-console-${{ github.ref_name }}-x86_64-unknown-linux-musl
+          chmod +x os-console-${{ github.ref_name }}-x86_64-unknown-linux-musl
 
       - uses: actions/upload-artifact@v4
         with:
-          name: os-console-linux-x86_64
-          path: os-console-linux-x86_64
+          name: os-console-linux-musl
+          path: os-console-${{ github.ref_name }}-x86_64-unknown-linux-musl
 
-  build-macos:
-    name: Build — macOS universal (Intel + Apple Silicon)
+  build-macos-intel:
+    name: Build — macOS Intel (10.13+ High Sierra floor)
     runs-on: macos-13
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "10.13"
     steps:
       - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: x86_64-apple-darwin,aarch64-apple-darwin
+          targets: x86_64-apple-darwin
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -58,31 +66,88 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: macos-universal-${{ hashFiles('**/Cargo.lock') }}
+          key: macos-intel-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build x86_64
         working-directory: pointsav-monorepo
         run: cargo build --release --bin os-console --target x86_64-apple-darwin
 
+      - name: Stage artifact
+        run: |
+          cp pointsav-monorepo/target/x86_64-apple-darwin/release/os-console \
+             os-console-${{ github.ref_name }}-x86_64-apple-darwin
+          chmod +x os-console-${{ github.ref_name }}-x86_64-apple-darwin
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: os-console-macos-intel
+          path: os-console-${{ github.ref_name }}-x86_64-apple-darwin
+
+  build-macos-arm:
+    name: Build — macOS Apple Silicon (11.0+ floor)
+    runs-on: macos-14
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: macos-arm-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Build aarch64
         working-directory: pointsav-monorepo
         run: cargo build --release --bin os-console --target aarch64-apple-darwin
 
+      - name: Stage artifact
+        run: |
+          cp pointsav-monorepo/target/aarch64-apple-darwin/release/os-console \
+             os-console-${{ github.ref_name }}-aarch64-apple-darwin
+          chmod +x os-console-${{ github.ref_name }}-aarch64-apple-darwin
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: os-console-macos-arm
+          path: os-console-${{ github.ref_name }}-aarch64-apple-darwin
+
+  build-macos-universal:
+    name: Build — macOS universal (lipo Intel + Apple Silicon)
+    runs-on: macos-14
+    needs: [build-macos-intel, build-macos-arm]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: os-console-macos-intel
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: os-console-macos-arm
+
       - name: Create universal binary
         run: |
-          lipo -create -output os-console-macos-universal \
-            pointsav-monorepo/target/x86_64-apple-darwin/release/os-console \
-            pointsav-monorepo/target/aarch64-apple-darwin/release/os-console
-          chmod +x os-console-macos-universal
+          lipo -create \
+            -output os-console-${{ github.ref_name }}-universal-apple-darwin \
+            os-console-${{ github.ref_name }}-x86_64-apple-darwin \
+            os-console-${{ github.ref_name }}-aarch64-apple-darwin
+          chmod +x os-console-${{ github.ref_name }}-universal-apple-darwin
 
       - uses: actions/upload-artifact@v4
         with:
           name: os-console-macos-universal
-          path: os-console-macos-universal
+          path: os-console-${{ github.ref_name }}-universal-apple-darwin
 
   release:
     name: Create GitHub Release
-    needs: [build-linux, build-macos]
+    needs: [build-linux, build-macos-intel, build-macos-arm, build-macos-universal]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
@@ -96,6 +161,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/os-console-linux-x86_64/os-console-linux-x86_64
-            artifacts/os-console-macos-universal/os-console-macos-universal
+            artifacts/os-console-linux-musl/os-console-${{ github.ref_name }}-x86_64-unknown-linux-musl
+            artifacts/os-console-macos-intel/os-console-${{ github.ref_name }}-x86_64-apple-darwin
+            artifacts/os-console-macos-arm/os-console-${{ github.ref_name }}-aarch64-apple-darwin
+            artifacts/os-console-macos-universal/os-console-${{ github.ref_name }}-universal-apple-darwin
           generate_release_notes: true
