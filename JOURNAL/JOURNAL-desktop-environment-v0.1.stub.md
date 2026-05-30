@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.2"
+version: "0.3"
 title: "Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration: A Keystroke-Economy Framework"
 target_journal: "ACM Transactions on Computer-Human Interaction"
 target_publisher: "ACM"
@@ -127,7 +127,7 @@ Prior literature has studied this transition primarily through two lenses: featu
 
 The Keystroke-Level Model (KLM) [Card, Moran, and Newell 1980] provides a theoretical foundation for quantifying the cost of command-interface changes. Each deviation from a practitioner's habituated keystroke sequence — a renamed command alias, a relocated toolbar button, a remapped function key — introduces what we term a *motor interference event*: a moment at which the practitioner's habituated motor program produces an incorrect action, requiring error detection and correction. At low frequencies, motor interference events are minor inconveniences. At the frequencies typical of professional AEC drafting — several hundred command invocations per hour — these events aggregate into measurable productivity loss, elevated error rates, and practitioner frustration that is often attributed incorrectly to the new tool's general quality rather than to its specific command-interface design choices.
 
-This paper makes three contributions: (1) a muscle-memory preservation (MMP) framework — a principled taxonomy of motor-pattern preservation requirements for AEC desktop software migration, derived from the KLM, Fitts's Law [Fitts 1954], and an analysis of command-alias usage in professional AutoCAD and Navisworks practice; (2) a reference implementation — a prototype BIM authoring environment that instantiates the three MMP principles, with a documented command-alias table (18 core mappings), a layer-to-IFC-category assignment that preserves AutoCAD layer-panel appearance while enforcing IFC semantic precision, and a function-key binding matrix consistent with the AutoCAD F-key vocabulary across twelve keys; and (3) a user study protocol — a within-subjects comparative study design for testing H₁–H₃ with experienced AEC professionals; the study is in participant recruitment phase.
+This paper makes three contributions: (1) a muscle-memory preservation (MMP) framework — a principled taxonomy of motor-pattern preservation requirements for AEC desktop software migration, derived from the KLM, Fitts's Law [Fitts 1954], and an analysis of command-alias usage in professional AutoCAD and Navisworks practice; (2) a reference implementation — a prototype BIM authoring environment that instantiates the three MMP principles, with a documented command-alias table (18 core mappings), a layer-to-IFC-category assignment that preserves AutoCAD layer-panel appearance while enforcing IFC semantic precision, and a function-key binding matrix consistent with the AutoCAD F-key vocabulary across twelve keys; and (3) a user study protocol — a within-subjects comparative study design for testing H₁–H₃ with experienced AEC professionals.
 
 The remainder of this paper is organised as follows. Section 2 reviews background on motor learning, the KLM, Fitts's Law, and existing BIM migration research. Section 3 states the three MMP design principles. Section 4 describes the prototype implementation. Section 5 presents the planned user study design. Section 6 reports preliminary results where available. Section 7 discusses implications, formal hypotheses, falsification conditions, and limitations. Section 8 concludes.
 
@@ -205,7 +205,7 @@ The MMP binding matrix preserves the AutoCAD F-key vocabulary verbatim for F3, F
 
 ## 4. Implementation
 
-The three MMP principles are instantiated in a prototype BIM authoring environment targeting Phase 1 (2D drafting, AutoCAD motor-memory profile) and Phase 2 (3D coordination, Navisworks motor-memory profile). The prototype is structured around a web-rendered drawing surface embedded in a native desktop application container, with IFC geometry operations delegated to an IfcOpenShell [IfcOpenShell Contributors 2025] subprocess. This architecture is not specific to the MMP framework; it is a reasonable implementation choice for cross-platform BIM development that imposes no constraints on command-interface design.
+The three MMP principles are instantiated in a prototype BIM authoring environment addressing two practice profiles: the 2D drafting profile (AutoCAD muscle memory) and the 3D coordination profile (Navisworks muscle memory). The prototype is structured around a web-rendered drawing surface embedded in a native desktop application container, with IFC geometry operations delegated to an IfcOpenShell [IfcOpenShell Contributors 2025] subprocess. This architecture is not specific to the MMP framework; it is a reasonable implementation choice for cross-platform BIM development that imposes no constraints on command-interface design.
 
 ### 4.1 Command Alias Dispatcher
 
@@ -302,7 +302,7 @@ Ethical clearance for the user study described in this section is planned prior 
 
 ## 6. Results
 
-The user study results described in §5 will be reported in a subsequent version of this manuscript upon completion of data collection and analysis.
+The hypothesis tests specified in §7 remain to be executed upon completion of user study data collection. The study protocol is described in §5; quantitative findings will be reported when available.
 
 ---
 
@@ -358,7 +358,7 @@ This paper has identified motor-pattern disruption as a structurally distinct an
 
 The KLM analysis in Section 2.2 establishes that the aggregate cost of alias disruption across the 18-alias core set can exceed 30 minutes of productive drafting per session during the negative-transfer period — a cost that is entirely avoidable through the design choices described in this paper. Whether the empirical reduction is as large as H₁ predicts (≥25% error-rate reduction) or smaller, the framework provides a principled basis for evaluating command-interface decisions in future BIM editor design.
 
-The planned user study will provide the first controlled empirical measurement of the MMP framework's effect on command-error rate, task-completion time, and perceived workload in experienced AEC professionals. Results will be reported in a subsequent publication; the present paper establishes the theoretical foundation, implementation reference, and study protocol on which that measurement rests.
+The planned user study will provide the first controlled empirical measurement of the MMP framework's effect on command-error rate, task-completion time, and perceived workload in experienced AEC professionals. The present paper's contribution is the MMP theoretical framework (§3), the prototype implementation reference (§4), and the reproducible study protocol (§5); empirical hypothesis testing is planned.
 
 ---
 
