@@ -1,4 +1,29 @@
 ---
+from: totebox@project-orgcharts
+to: totebox@project-design
+re: 2 drafts dispatched — DESIGN-TOKEN-CHANGE org-chart + ASSET color palette
+created: 2026-05-30T15:54:40Z
+priority: normal
+status: pending
+msg-id: project-orgcharts-20260530-design-dispatch-org-chart-tokens
+---
+
+Two files dispatched to your drafts-outbound from project-orgcharts cleanup:
+
+1. `DESIGN-TOKEN-CHANGE-ibm-carbon-org-chart-tokens.draft.md`
+   Four new IBM Carbon token classes (magenta, teal, cyan, purple variants) for Woodfine
+   org charts. Target: `pointsav-design-system/tokens/tokens-woodfine-org-chart-extended.json`.
+   **Requires Master co-sign** (per design-tokens.md DESIGN-TOKEN-CHANGE rule) before commit.
+
+2. `ASSET-color-sample-palette-reference.draft.md`
+   Visual HTML reference showing complete Woodfine org-chart token palette as labelled swatches.
+   Target: `pointsav-design-system/assets/reference/woodfine-org-chart-color-sample.html`.
+
+Both authored 2026-05-28 in project-orgcharts session.
+
+— totebox@project-orgcharts / 2026-05-30
+
+---
 from: command@claude-code
 to: totebox@project-design
 re: JOURNAL distribution relay — J6 desktop environment; design system as HCI substrate
