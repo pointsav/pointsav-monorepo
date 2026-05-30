@@ -12,6 +12,11 @@ use std::{
     sync::Arc,
 };
 use tower_http::cors::CorsLayer;
+use axum::response::sse::{Event, KeepAlive, Sse};
+use notify::{recommended_watcher, RecursiveMode, Watcher};
+use std::convert::Infallible;
+use tokio::sync::broadcast;
+use tokio_stream::{wrappers::BroadcastStream, StreamExt as _};
 
 #[derive(RustEmbed)]
 #[folder = "src/assets/"]
@@ -20,6 +25,8 @@ struct Assets;
 #[derive(Clone)]
 struct AppState {
     workspace_dir: Arc<PathBuf>,
+    tokens_path: Arc<PathBuf>,
+    events_tx: broadcast::Sender<String>,
 }
 
 #[tokio::main]
@@ -37,24 +44,53 @@ async fn main() {
         std::fs::create_dir_all(&memo_dir).expect("failed to create memo/ dir");
     }
 
+    let tokens_path = std::env::var("DESIGN_TOKENS_PATH").unwrap_or_else(|_| {
+        "/srv/foundry/vendor/pointsav-design-system/tokens/dtcg-bundle.json".to_string()
+    });
+
+    let (events_tx, _) = broadcast::channel::<String>(64);
+    let watcher_tx = events_tx.clone();
+    let watch_path = workspace_path.clone();
+    tokio::spawn(async move {
+        let (inner_tx, mut inner_rx) = tokio::sync::mpsc::channel::<()>(8);
+        let mut watcher = recommended_watcher(move |res: notify::Result<notify::Event>| {
+            if res.is_ok() {
+                let _ = inner_tx.blocking_send(());
+            }
+        })
+        .expect("failed to create file watcher");
+        watcher
+            .watch(&watch_path, RecursiveMode::Recursive)
+            .expect("failed to watch workspace");
+        while inner_rx.recv().await.is_some() {
+            let _ = watcher_tx.send("changed".to_string());
+        }
+    });
+
     let state = AppState {
         workspace_dir: Arc::new(workspace_path),
+        tokens_path: Arc::new(PathBuf::from(&tokens_path)),
+        events_tx,
     };
 
     let app = Router::new()
         .route("/", get(serve_index))
         .route("/memo", get(serve_memo))
+        .route("/tokens", get(serve_tokens_page))
         .route("/style.css", get(serve_css))
         .route("/api/files", get(list_files))
         .route("/api/files/read", get(read_file))
         .route("/api/files/save", put(save_file))
         .route("/api/files/create", post(create_file))
+        .route("/api/tokens", get(get_tokens))
+        .route("/api/files/events", get(get_file_events))
         .layer(CorsLayer::permissive())
         .with_state(state);
 
     let addr = format!("0.0.0.0:{port}");
     println!("app-workplace-http-prototype listening on http://{addr}");
     println!("workspace: {workspace_dir}");
+    println!("tokens:    {tokens_path}");
 
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
@@ -66,6 +102,21 @@ async fn serve_index() -> impl IntoResponse {
 
 async fn serve_memo() -> impl IntoResponse {
     serve_asset("memo.html", "text/html")
+}
+
+async fn serve_tokens_page() -> impl IntoResponse {
+    serve_asset("tokens.html", "text/html")
+}
+
+async fn get_tokens(State(state): State<AppState>) -> impl IntoResponse {
+    match std::fs::read_to_string(&*state.tokens_path) {
+        Ok(content) => (
+            [(header::CONTENT_TYPE, "application/json; charset=utf-8")],
+            content,
+        )
+            .into_response(),
+        Err(_) => StatusCode::NOT_FOUND.into_response(),
+    }
 }
 
 async fn serve_css() -> impl IntoResponse {
@@ -143,7 +194,10 @@ async fn save_file(
                 let _ = std::fs::create_dir_all(parent);
             }
             match std::fs::write(&abs, &body.content) {
-                Ok(_) => StatusCode::OK.into_response(),
+                Ok(_) => {
+                    let _ = state.events_tx.send("changed".to_string());
+                    StatusCode::OK.into_response()
+                }
                 Err(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
             }
         }
@@ -179,13 +233,24 @@ async fn create_file(
                 html_escape(&body.name)
             );
             match std::fs::write(&abs, skeleton) {
-                Ok(_) => (StatusCode::CREATED, Json(CreateResponse { path: rel_path }))
-                    .into_response(),
+                Ok(_) => {
+                    let _ = state.events_tx.send("changed".to_string());
+                    (StatusCode::CREATED, Json(CreateResponse { path: rel_path }))
+                        .into_response()
+                }
                 Err(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
             }
         }
         Err(_) => StatusCode::BAD_REQUEST.into_response(),
     }
+}
+
+async fn get_file_events(State(state): State<AppState>) -> impl IntoResponse {
+    let rx = state.events_tx.subscribe();
+    let stream = BroadcastStream::new(rx)
+        .filter_map(|r| r.ok())
+        .map(|_| Ok::<_, Infallible>(Event::default().data("changed")));
+    Sse::new(stream).keep_alive(KeepAlive::default())
 }
 
 fn resolve_path(workspace: &Path, rel: &str) -> Result<PathBuf, ()> {
