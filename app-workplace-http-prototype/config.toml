@@ -1,0 +1,16 @@
+weasyprint = "/usr/bin/weasyprint"
+
+[[root]]
+url_prefix = "sandbox-jennifer"
+fs_path = "/home/jennifer/sandbox"
+writable = true
+
+[[root]]
+url_prefix = "_command"
+fs_path = "/srv/foundry"
+writable = false
+
+[[root]]
+url_prefix = "_clones"
+fs_path = "/srv/foundry/clones"
+writable = false
