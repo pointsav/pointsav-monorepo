@@ -1,6 +1,30 @@
 
 ---
 
+### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 9 — orchestration-slm + daily smoke)
+
+**Done this session:**
+- **Planned** console → orchestration chain (project-console port fix + app-console-slm Sprint 4a spec sent via outbox)
+- **Quarantined** 26 remaining poison briefs → `/srv/foundry/data/apprenticeship/quarantine/` (668 total)
+- **Confirmed** git post-commit hook already installed and matching source
+- **Commit `d445b5ea` (Jennifer):** 6 new infrastructure files:
+  - `infrastructure/systemd/local-orchestration-slm.service` — Yo-Yo broker chassis at port 9180
+  - `infrastructure/env/local-orchestration-slm.env.template` — operator env template with comments
+  - `infrastructure/systemd/foundry-daily-smoke.{service,timer}` — daily Tier A smoke at 02:00
+  - `infrastructure/systemd/foundry-weekly-tier-b-smoke.{service,timer}` — Saturday 03:00 Yo-Yo 1h test
+- **Commit `82f01343` (Peter):** `start-yoyo.sh` `--runtime=Nh/Nm/Ns` auto-stop flag
+
+**Pending / carry-forward:**
+- Operator installs (see outbox `project-intelligence-20260530-stage6-orchestration-deploy`)
+- project-console actions (see outbox `project-intelligence-20260530-console-wiring`)
+- Yo-Yo 1h test when L4 capacity available
+
+**Operator preferences surfaced:**
+- Want daily hardening testing to keep everything flowing 24h/day
+- Yo-Yo must remain manually started (confirmed session 7)
+
+---
+
 ### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 8 — circuit resilience complete)
 
 **Done this session:**
