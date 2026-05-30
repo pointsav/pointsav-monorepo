@@ -1,0 +1,19 @@
+[Unit]
+Description=PointSav Orchestration-SLM Chassis (Yo-Yo broker — port 9180)
+Documentation=app-orchestration-slm/CLAUDE.md
+After=network.target local-doorman.service
+Wants=local-doorman.service
+
+[Service]
+Type=simple
+User=mathew
+EnvironmentFile=/etc/foundry/local-orchestration-slm.env
+ExecStart=/usr/local/bin/orchestration-slm-server
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=local-orchestration-slm
+
+[Install]
+WantedBy=multi-user.target
