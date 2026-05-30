@@ -39,13 +39,14 @@ notes: >
 
 ---
 
-## §1 — Current live state (as of 2026-05-29T19:30Z — Sprint 3 deployed)
+## §1 — Current live state (as of 2026-05-30T17:00Z — session 9: orchestration-slm + daily smoke)
 
 | Component | Version | Status | Notes |
 |---|---|---|---|
 | `slm-doorman-server` | rebuilt 2026-05-29T19:26Z | **active** | sha256=`81b8629cf474104fe33274244c6db832a1f2f5dca898c80a98cd524bf3269e2f`; Sprint 3A: `SLM_TIER_A_FIRST=true`; Sprint 2B: `tier_b` in readyz; Sprint 3C: `SLM_HOLD_THRESHOLD_SECS=3600`; commit `5493a8f4` |
 | `service-content` | rebuilt 2026-05-29T19:26Z | **active** | sha256=`2362ea5c580a9869c5e307b645d60219cb9535dbf4218bd8762da870a4c62f7b`; Sprint 2A: `entity_count` in `/healthz` (7,201 entities); Sprint 3B: Tier A fallback enabled; commit `5493a8f4` |
-| `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** | europe-west4-a L4 stockout; restart with `start-yoyo.sh --runtime=2h` when capacity returns |
+| `orchestration-slm-server` | built session 9 | **NOT YET DEPLOYED** | unit file committed `d445b5ea`; Command operator install needed (see outbox `project-intelligence-20260530-stage6-orchestration-deploy`) |
+| `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** | europe-west4-a L4 stockout; restart with `start-yoyo.sh --wait-ready=120 --runtime=1h` when capacity returns |
 | `local-slm.service` | OLMo 2 1124 7B Instruct Q4_K_M (4.16 GiB) | **active** | Tier A is the confident primary; `SLM_TIER_A_FIRST=true` confirmed in startup log |
 | `local-doorman.env` | — | current | `SLM_TIER_A_FIRST=true`; `SLM_HOLD_THRESHOLD_SECS=3600`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_FORCE_BROKER_MODE=false` |
 | `local-content.env` | — | current | Drop-in: `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=true`; `SERVICE_CONTENT_TIER_A_FALLBACK_INTERVAL_SECS=300` |
