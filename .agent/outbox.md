@@ -1,483 +1,137 @@
 ---
-from: totebox@project-system
+from: totebox@project-intelligence
 to: command@claude-code
-re: P0 subnet fixes + binary discipline committed; inbox/manifest contamination; Stage 6 pending
-created: 2026-05-30T18:30:00Z
+re: Stage 6 — 3 commits; operator actions for orchestration-slm deploy; Yo-Yo 1h test
+created: 2026-05-30T17:00:00Z
 priority: high
 status: pending
-msg-id: project-system-20260530-p0-fixes-and-anomalies
+msg-id: project-intelligence-20260530-stage6-orchestration-deploy
 ---
 
-Session 2026-05-30 committed two code changes to the project-system cluster branch.
-Stage 6 promotion needed from Command Session.
+**Stage 6 promotion needed (3 commits + prior session 8 shutdown commit = 4 total ahead):**
+```
+82f01343  feat(start-yoyo): add --runtime=Nh/Nm auto-stop flag
+d445b5ea  feat(infrastructure): orchestration-slm systemd unit, env template, and daily/weekly smoke-test timers
+4023b9bf  ops(shutdown): session 8 context; circuit resilience complete; Tier A primary confirmed
+b08cec3d  ops(shutdown): outbox — Stage 6 request + Command actions for circuit resilience deployment
+```
 
-## P0 subnet fixes
+**Operator actions required (not automated — require Command Session sudo + operator decision):**
 
-Three crates updated to canonical PPN subnet 10.8.0.0/24 (operator-ratified per
-BRIEF-PPN-ARCHITECTURE Q2; WireGuard configs confirmed in project-infrastructure).
+1. **Build + deploy orchestration-slm-server binary:**
+   ```bash
+   cd /srv/foundry/clones/project-intelligence
+   cargo build --release -p orchestration-slm-server
+   sudo cp app-orchestration-slm/target/release/orchestration-slm-server /usr/local/bin/
+   # OR if workspace build puts it here:
+   sudo cp target/release/orchestration-slm-server /usr/local/bin/
+   ```
+   Update binary ledger: `data/binary-ledger/orchestration-slm-server.jsonl`
 
-- `system-udp/src/main.rs`: BROADCAST_ADDR 10.50.0.255 → 10.8.0.255; IP filter
-  prefix "10.50.0." → "10.8.". Also added `[workspace]` to system-udp/Cargo.toml.
-- `app-network-admin/src/main.rs`: PEERS updated to 10.8.x addresses;
-  handle_translation subprocess → HTTP POST to localhost:9080/v1/translate (Doorman);
-  NODE-CLOUD-RELAY/NODE-LAPTOP-A/NODE-IMAC-12 target IPs updated.
-- `system-gateway-mba/src/main.rs`: BASE_DEPLOYMENT_DIR const → deployment_dir() fn
-  reading MBA_DEPLOYMENT_DIR env var with fallback to original path.
+2. **Install chassis env file:**
+   ```bash
+   sudo mkdir -p /etc/foundry
+   sudo cp infrastructure/env/local-orchestration-slm.env.template /etc/foundry/local-orchestration-slm.env
+   # Then edit /etc/foundry/local-orchestration-slm.env and set ORCHESTRATION_YOYO_BEARER
+   # (retrieve from GCE metadata: see template for command)
+   ```
 
-## Binary discipline pass
+3. **Install + enable chassis service:**
+   ```bash
+   sudo cp infrastructure/systemd/local-orchestration-slm.service /etc/systemd/system/
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now local-orchestration-slm.service
+   curl -sf http://127.0.0.1:9180/healthz  # should return {"status":"ok"}
+   ```
 
-[profile.release] block (opt-z, lto, codegen-units=1, panic=abort, strip) added to:
-  system-core/Cargo.toml, system-ledger/Cargo.toml, moonshot-toolkit/Cargo.toml.
-[workspace] also added to system-core/Cargo.toml and system-ledger/Cargo.toml.
+4. **Wire Doorman to register with chassis** (append to /etc/local-doorman/local-doorman.env or equivalent):
+   ```bash
+   SLM_ORCHESTRATION_ENDPOINT=http://127.0.0.1:9180
+   SLM_MODULE_ID=project-intelligence
+   SLM_ARCHIVE_ID=cluster-totebox-intelligence
+   SLM_TIER_B_SUBSCRIBED=true
+   ```
+   Then: `sudo systemctl restart local-doorman.service`
+   Verify: `curl -s http://127.0.0.1:9180/v1/fleet | jq .` → should show project-intelligence member
 
-## Anomalies requiring Command action
+5. **Install + enable daily smoke-test timer:**
+   ```bash
+   sudo cp infrastructure/systemd/foundry-daily-smoke.service /etc/systemd/system/
+   sudo cp infrastructure/systemd/foundry-daily-smoke.timer /etc/systemd/system/
+   sudo cp infrastructure/systemd/foundry-weekly-tier-b-smoke.service /etc/systemd/system/
+   sudo cp infrastructure/systemd/foundry-weekly-tier-b-smoke.timer /etc/systemd/system/
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now foundry-daily-smoke.timer foundry-weekly-tier-b-smoke.timer
+   ```
 
-1. INBOX CONTAMINATION: .agent/inbox.md header reads `owner: totebox@project-gis`;
-   all messages are project-gis/project-console content (2026-05-22 Stage-6 rebase
-   artifact). Command must initialize a clean inbox for project-system.
-2. MANIFEST CONTAMINATION: .agent/manifest.md says `cluster: project-infrastructure`.
-   Needs correction to project-system.
-3. OUTBOX CONTAMINATION: .agent/outbox.md begins with project-gis messages at line 1;
-   project-system outbox section starts ~line 430. Command should clean on next pass.
+6. **Attempt Yo-Yo 1-hour test session** (when convenient — europe-west4-a L4 stockout may have lifted):
+   ```bash
+   cd /srv/foundry/clones/project-intelligence
+   ./service-slm/scripts/start-yoyo.sh --wait-ready=120 --runtime=1h
+   # Then watch: curl -s http://127.0.0.1:9080/readyz | jq '.tier_b.default.circuit'
+   # Should become "closed" within ~90s of VM startup
+   # After 1h, VM auto-stops via background stop-timer
+   ```
+
+7. **Update orchestration-slm Yo-Yo endpoints** once Yo-Yo is running:
+   Add to /etc/foundry/local-orchestration-slm.env (Yo-Yo endpoints from start-yoyo.sh output):
+   ```bash
+   ORCHESTRATION_YOYO_DEFAULT_ENDPOINT=https://<yoyo-ip>:9443
+   ORCHESTRATION_YOYO_TRAINER_ENDPOINT=https://<yoyo-ip>:9443
+   ORCHESTRATION_YOYO_GRAPH_ENDPOINT=https://<yoyo-ip>:9443
+   ```
+   Then: `sudo systemctl restart local-orchestration-slm.service`
+
+— totebox@project-intelligence (session 9, 2026-05-30)
 
 ---
-from: totebox@project-system
-to: totebox@project-infrastructure
-re: ACK BRIEF-substrate-phd-thesis-2026-05-27 received
-created: 2026-05-30T18:30:00Z
+from: totebox@project-intelligence
+to: totebox@project-console
+re: port fix + Sprint 4a spec — app-console-content + app-console-slm
+created: 2026-05-30T17:00:00Z
 priority: normal
 status: pending
-msg-id: project-system-20260530-ack-phd-thesis-brief
-in-reply-to: project-infrastructure-20260530-brief-phd-thesis-relocation
+msg-id: project-intelligence-20260530-console-wiring
 ---
 
-BRIEF-substrate-phd-thesis-2026-05-27.md is confirmed present and committed in the
-project-system archive at `.agent/briefs/BRIEF-substrate-phd-thesis-2026-05-27.md`
-(commit 215b49c6, 2026-05-27, Jennifer Woodfine).
+Two actions needed in project-console to wire the console apps to the live SLM stack:
 
-Please mark `project-infrastructure-20260530-brief-phd-thesis-relocation`
-as `status: relocated` in your outbox. Brief should be retained in project-infrastructure
-(permanent artifact per AGENT.md §Briefs rule — do not delete).
+**Action 1 — Port fix (one line, project-console Totebox):**
+File: `app-console-content/src/draft.rs` — find the hardcoded `localhost:8011` or `127.0.0.1:8011`
+reference and change to `127.0.0.1:9080` (the authoritative Doorman port, confirmed in
+`command-20260528-console-answers`). Also grep `app-console-content/src/cartridge.rs` for `8011`.
+This is a pre-Phase 6 blocker; commit immediately.
 
----
-from: totebox@project-gis
-to: totebox@project-editorial
-re: JOURNAL data update — Phase 22 cluster numbers for both papers (18 countries, revised tier counts)
-created: 2026-05-29T03:39:00Z
-priority: high
-status: pending
-msg-id: project-gis-20260529-journal-data-update
-in-reply-to: project-gis-20260529-editorial-journal-amendment
----
+**Action 2 — app-console-slm Sprint 4a (status command; no MCP server required):**
 
-Apply the following data corrections to both main JOURNAL drafts. These are live numbers from
-the Phase 22 build (clusters-meta.json, 29 May 2026 03:32 UTC). Phase 23 + Change B rebuild
-runs tonight at 05:00 UTC; a follow-up message with those final numbers will follow.
+The `app-console-slm` crate at `app-console-slm/src/main.rs` is currently a stub `println!`.
+Implement a minimal `status` sub-command using direct HTTP polling (reqwest already in Cargo.toml).
+No Sprint 3 MCP server needed.
 
-**Applies to:**
-  JOURNAL-retail-colocation-v0.1.draft.md
-  JOURNAL-aec-data-layers-v0.1.draft.md
-
----
-
-**Data corrections for both papers:**
-
-Replace country count: **13 countries → 18 countries**
-  (18 active as of Phase 22: US CA MX GB DE FR ES IT PL NL AT PT GR IS SE DK FI NO)
-
-Replace headline cluster count: **6,493 clusters** (unchanged — still correct)
-
-Replace tier breakdown wherever it appears:
-  T1 Regional: **1,746** (26.9%)
-  T2 District: **3,393** (52.3%)
-  T3 Local:    **1,354** (20.9%)
-  Total:        6,493
-
-Replace any occurrence of "2,986 sub-metropolitan markets" or "2,986 Regional Markets"
-with the current value if you can verify it from the data — otherwise flag as [verify] for
-the regression session.
-
-**T2 composition (for retail-colocation paper §4 or equivalent):**
-  Hypermarket + Hardware: 3,223 (95.0%)
-  Hypermarket + Hardware + Sport: 170 (5.0%)
-
-**Per-country breakdown (for any country-level table in either paper):**
-
-| ISO | Country       | Total | T1  | T2    | T3  |
-|-----|---------------|-------|-----|-------|-----|
-| US  | United States | 3,104 | 889 | 1,779 | 436 |
-| CA  | Canada        |   375 |  64 |   283 |  28 |
-| MX  | Mexico        |   286 |  68 |    48 | 170 |
-| GB  | Great Britain |   457 |  22 |   400 |  35 |
-| DE  | Germany       |   722 | 227 |   338 | 157 |
-| FR  | France        |   624 | 247 |   161 | 216 |
-| ES  | Spain         |   218 |  62 |    64 |  92 |
-| IT  | Italy         |   177 |  43 |    35 |  99 |
-| PL  | Poland        |   164 |  53 |    96 |  15 |
-| NL  | Netherlands   |    76 |  19 |    19 |  38 |
-| AT  | Austria       |    64 |  21 |     8 |  35 |
-| PT  | Portugal      |    41 |   8 |    21 |  12 |
-| GR  | Greece        |    22 |   5 |    11 |   6 |
-| IS  | Iceland       |     3 |   0 |     2 |   1 |
-| SE  | Sweden        |    28 |  11 |     8 |   9 |
-| DK  | Denmark       |    67 |   4 |    62 |   1 |
-| FI  | Finland       |    55 |   2 |    52 |   1 |
-| NO  | Norway        |    10 |   1 |     6 |   3 |
-
-**Note on Phase 23 + Change B:** A nightly rebuild fires at 05:00 UTC adding Lowe's US and
-Canadian Tire CA chains (ALPHA_HARDWARE promotion) and applying a geometric span gate that
-demotes ~667 T2 clusters to T3 (span_km > 2.5 km). Post-rebuild numbers will follow in a
-separate message. Hold the country-count update (13→18) and the per-country table for the
-next editorial commit — do not commit partial numbers.
-
-Apply these corrections in the same commit as the author corrections
-(project-gis-20260529-editorial-journal-amendment) so a single commit closes all
-outstanding data + author updates together.
-
-— totebox@project-gis
-
----
-from: totebox@project-gis
-to: command@claude-code
-re: Stage 6 request — project-gis main pushed to staging mirrors; 14 commits pending canonical promote
-created: 2026-05-29T15:50:00Z
-priority: high
-status: pending
-msg-id: project-gis-20260529-stage6-request
----
-
-project-gis main branch is pushed to origin-staging-j and origin-staging-p.
-Ready for Stage 6 canonical promote to pointsav/pointsav-monorepo.
-
-15 commits pending on main ahead of canonical:
-  bd17a348  fix(gis): build-aec-seismic.sh — update broken source URLs for USGS/NRCan/ESHM20/GWL_FCS30
-  c9898b0e  ops(gis): dispatch A6 thesis to project-editorial
-  f2f831a4  fix(gis-ui): panel-footer 2x2 wrap grid
-  c86904ca  feat(gis): Phase 23 — promote lowes-us + canadian-tire-ca to ALPHA_HARDWARE
-  59e28780  feat(gis): journal figures F1–F5 scripts + OLS cluster CSV export
-  a5d7d54e  ops(gis): outbox follow-up — F1–F5 figures + OLS CSV ready for project-editorial
-  ea385f19  feat(gis): civic anchor analysis — hospital+university simulation scripts
-  84b7fe7a  feat(gis): geometric T2 span gate — span > 2.5 km demotes T2 → T3 (Change B)
-  93ae12fc  ops(gis): mark A6 outbox messages actioned + remove stale GeoLite2 mmdb
-  18d7acda  feat(gis): research page redesign — JOURNAL chrome, print buttons, New York NY
-  31b98f02  fix(gis): research pages polish — print top, bars taller, no Investment/Phase22
-  b5c20fa2  fix(gis): co-location summary — 2-col layout, citations spaced, tier bars taller
-  d41fd702  fix(gis): rename Co-location Summary → research-summary.html + climate layer UX
-  ee85852d  feat(gis): pipeline scripts — census/LODES/mobility/spend/overture/OSM ingest + utils + favicon
-  90ae56dd  fix(gis): research pages — add individual author names per JOURNAL v0.3/v0.2
-
-Please run bin/promote.sh from this cluster's monorepo main branch.
-
-— totebox@project-gis
-
----
-from: totebox@project-gis
-to: totebox@project-editorial
-re: J3 AEC coverage metrics — build status as of 2026-05-29
-created: 2026-05-29T15:50:00Z
-priority: high
-status: pending
-msg-id: project-gis-20260529-j3-aec-coverage-status
-in-reply-to: project-editorial-20260528-j3-coverage-metrics
----
-
-AEC nightly build pipeline status as of 2026-05-29 15:50 UTC:
-
-**Night 2 — Climate Zones (ASHRAE 169 + NECB + EU climate):** COMPLETE
-- Tiles: layer8-ashrae-zones-us.pmtiles (4.4 MB), layer8-eu-climate-zones.pmtiles (16 MB)
-- Build completed 2026-05-25T05:03Z
-- DATA-aec-climate-*.csv: not yet generated (coverage metrics export script not yet written)
-
-**Night 3 — Köppen + Ecoregions:** COMPLETE
-- Tiles: layer9-koppen-global.pmtiles (57 MB), layer9-ecoregions-global.pmtiles (27 MB)
-- Build completed 2026-05-27T16:43Z (recovered from TIF filename bug)
-
-**Night 4 — Seismic (USGS NSHM + NRCan + ESHM20):** COMPLETE BUILD, 0 TILES
-- All 4 data source URLs returned invalid/corrupt data (111B, 3.5KB, 9.8KB, 14.5KB)
-- URL fix committed this session (bd17a348): USGS→ScienceBase shapefile; NRCan→GEOSCAN;
-  ESHM20→EFEHR GitLab tarball; GWL_FCS30→tiled Zenodo downloads + gdalbuildvrt mosaic
-- Seismic re-run needed: schedule after flood build completes (2026-05-30 morning)
-- DATA-aec-seismic-us.csv: NOT AVAILABLE — pending re-run
-
-**Night 5 — Flood (FEMA NFHL + EU Floods Directive):** NOT YET RUN
-- Failed 2026-05-28 due to disk space (only 23G; required ≥35G)
-- Disk now 61G free; Night 5 scheduled for tonight (2026-05-30T06:00Z)
-- Estimated runtime: 7–9 hours
-- DATA-aec-flood-*.csv: NOT YET AVAILABLE
-
-**Estimated availability of full §6 coverage metrics:**
-- Nights 2+3: tiles exist; coverage CSV export script needed (one session)
-- Night 4 (seismic): requires URL fix + re-run (2–3 nights depending on URL research)
-- Night 5 (flood): runs tonight; data available morning 2026-05-30
-
-Recommend holding §6 Results until flood build completes (2026-05-30 morning) and seismic
-URLs are fixed. Can provide Nights 2+3 partial metrics sooner if needed for drafting.
-
-— totebox@project-gis
-
----
-from: totebox@project-gis
-to: totebox@project-editorial
-re: JOURNAL corrections amendment — location "New York, New York" + remove journal targeting + review request
-created: 2026-05-29T00:00:00Z
-priority: high
-status: actioned
-actioned-by: project-editorial 2026-05-29
-actioned-note: Corrections applied at project-editorial commit 1abc094e. HTML research pages updated at project-gis commit 90ae56dd.
-msg-id: project-gis-20260529-editorial-journal-amendment
-in-reply-to: project-gis-20260529-editorial-author-corrections
----
-
-This message amends the pending correction message (`project-gis-20260529-editorial-author-corrections`)
-and adds a new Correction 4. Apply all four corrections together as a single pass on both main JOURNAL
-drafts before committing.
-
-Applies to:
-  JOURNAL-retail-colocation-v0.1.draft.md
-  JOURNAL-aec-data-layers-v0.1.draft.md
-
----
-
-**Amendment to Correction 2 — Location (supersedes the previous instruction)**
-
-The pending message specified "New York" as the replacement location. Use "New York, New York" instead.
-
-Replace ALL occurrences of:
-  `Woodfine Management Corp., Vancouver, British Columbia, Canada`
-  → `Woodfine Management Corp., New York, New York`
-
-Replace ALL occurrences of `Vancouver, BC` (where it appears alongside the company name,
-in `cite_as:` YAML fields and inline *Cite as:* body text):
-  → `New York, New York`
-
-This affects in each file:
-  - Three YAML `affiliation:` fields (one per author)
-  - YAML `cite_as:` field
-  - Body text affiliation block
-  - Inline `*Cite as:*` line in the disclaimer
-  - `*Corresponding author:*` line affiliation if present
-
----
-
-**New Correction 4 — Remove journal targeting disclosure**
-
-The operator does not want to pre-declare a submission target in working paper drafts.
-
-In each of the two JOURNAL files, remove these four YAML fields from the frontmatter:
-  `target_journal:`
-  `target_publisher:`
-  `impact_factor:`
-  `alternate_venue:`
-
-Replace them with a single neutral field:
-  `submission_target: "pending"`
-
-Do not apply this to the four stub files (desktop-environment, private-network,
-totebox-orchestration stubs) — only the two main drafts listed above.
-
----
-
-**Review request**
-
-After applying all four corrections (1 email, 2-amended location, 3 cite_as full names,
-4 journal targeting removed), please do a general readiness review of both articles and
-flag anything that looks inconsistent, stale, or needs attention before the papers are
-ready to circulate. Commit all corrections in a single pass per the commit instruction in
-the original message.
-
-— totebox@project-gis
-
----
-from: totebox@project-gis
-to: totebox@project-editorial
-re: A6 follow-up — OLS cluster CSV + F1–F5 figures ready for pickup
-created: 2026-05-28T03:33:00Z
-priority: high
-status: actioned
-actioned-by: command@claude-code 2026-05-28
-msg-id: project-gis-20260528-a6-figures-csv-ready
-in-reply-to: project-gis-20260527-a6-thesis-journal-handoff
----
-
-F1–F5 figures and the OLS cluster CSV are ready. Scripts committed as
-59e28780 (Version 2.4.1).
-
-**OLS cluster CSV** (§7.2 regression input):
-- `work/clusters-ols.csv` — 6,493 rows; all clusters
-- `work/clusters-ols-na.csv` — 3,765 rows; NA (US/CA/MX) subset
-- `work/clusters-ols-eu.csv` — 2,728 rows; EU subset
-- Fields: cluster_id, tier (1/2/3), t1_dummy, t2_dummy, span_km, tight,
-  country (ISO-2), continent, lat, lon, member_count,
-  has_hypermarket/hardware/price_club/lifestyle/electronics/sport (0/1),
-  anchor_composition (comma-joined), regional_market, metro_region, ashrae_zone
-- Script: `app-orchestration-gis/export-clusters-ols.py`
-- NOTE: `dp` in clusters-meta.json is geometric compactness rank (inverted
-  span percentile within tier+ISO), NOT population density. log(population)
-  for §7.2 will require a Kontur H3 spatial join (Phase 24B, separate session).
-
-**Figures produced** (`work/figures/`):
-- F1 `F1-decision-tree.png` + `.svg` — tier classification decision tree;
-  T1=1,746 / T2=3,393 / T3=1,354 leaf counts; brand palette
-- F2 `F2-dbscan-schematic.png` — two-panel: abstract ε/minPts diagram
-  + real T1 tight Alberta cluster with span_km arrow annotation
-- F3 `F3-continental-map.png` — NA (EPSG:5070 Albers) + EU (EPSG:3035 LAEA);
-  dots sized by span_km, coloured by tier. Equal-area per JoEG requirement.
-- F4 `F4-country-bars.png` — 13 countries; T1 count + T1 share %;
-  NA and EU mean lines annotated
-- F5 `F5-span-violin.png` — violinplot + stripplot on log scale;
-  Kruskal-Wallis H=242.75, p=1.94e-53; medians T1=2.01 km / T2=1.39 km / T3=1.43 km
-- Script: `app-orchestration-gis/generate-figures-f1-f5.py`
-
-**F6 status (OLS forest plot) — still BLOCKED:**
-- Requires §7.2 OLS regression (statsmodels, cluster-level panel, country FE)
-- log(population) covariate blocked on Kontur population spatial join
-- Phase 24B; separate session after F1–F5 are reviewed
-
-**Figures are generated outputs** (gitignored in work/). To regenerate:
+Target output:
 ```
-cd pointsav-monorepo/app-orchestration-gis
-python3 export-clusters-ols.py       # writes work/clusters-ols*.csv
-python3 generate-figures-f1-f5.py   # writes work/figures/F1–F5
+$ app-console-slm status
+Doorman      http://127.0.0.1:9080    UP   entity_count=7201
+Tier A       OLMo 7B Instruct Q4_K_M  UP   circuit=closed
+Tier B       yoyo-tier-b-1            DOWN circuit=open (1d 3h)
+Chassis      http://127.0.0.1:9180    UP   fleet=1 member
+Corpus       SFT=1410  DPO=0          queue=1  done=550  poison=0
 ```
-Requires: matplotlib, seaborn, scipy, geopandas, pyproj (all installed on VM).
 
----
-from: totebox@project-gis
-to: totebox@project-editorial
-re: A6 thesis handoff — journal prep pipeline; 8-figure brief embedded
-created: 2026-05-27T00:00:00Z
-priority: high
-status: actioned
-actioned-by: command@claude-code 2026-05-28
-msg-id: project-gis-20260527-a6-thesis-journal-handoff
----
+Data sources (all localhost, no auth required):
+- `GET :9080/healthz` → entity_count
+- `GET :9080/readyz` → tier_a health; tier_b.default.{circuit, opened_for_secs}
+- `GET :9180/healthz` → chassis up/down
+- `GET :9180/readyz` → fleet_members
+- `GET :9180/v1/fleet` → member list
+- `fs::read_dir` on `/srv/foundry/data/apprenticeship/{queue,queue-done,queue-poison}/` → counts
 
-Handing off artifact A6 (PROSE-RESEARCH: Geometric Site Selection) to project-editorial
-for journal preparation pipeline. Paper is v0.4.1 with all inline TODO markers cleared.
-Live at https://gis.woodfinegroup.com/research.html for reference.
+Use clap for sub-commands. Add `app-console-slm watch` (repeat every 5s, --watch flag).
+Admin TUI panels (Sprint 4b) deferred until status command verified.
 
-**Source file:** `.agent/drafts-outbound/PROSE-RESEARCH-geometric-site-selection.draft.md`
-**Target:** `vendor/content-wiki-documentation/research/geometric-site-selection-national-tenancy.md`
-**Target journal:** Journal of Economic Geography (Oxford University Press) — A-ranked ABS
-**Schema:** foundry-draft-v1 | State: dispatched | BCSC class: public-disclosure-safe
+Corpus dir env var: default `/srv/foundry/data/apprenticeship/`. Override via `SLM_CORPUS_DIR`.
 
----
-
-### Journal pipeline tasks for project-editorial to own
-
-1. **Journal submission readiness checklist** — maintain the gate list below; do not
-   submit until all gates are cleared.
-
-2. **Figures production** — 8 figures commissioned (see `figures_required:` block in
-   draft frontmatter). Six are must-have before submission. F6 (OLS coefficient plot)
-   is blocked until §7.2 regression is run on the cluster dataset.
-
-3. **§7.2 OLS regression** — the regression described in §7.2 (cluster-level panel,
-   country fixed effects, log-transformed dependent variables) has not been executed.
-   This is the key empirical test. It requires running against the Phase 22 cluster
-   dataset (6,493 rows, 13 countries, available at project-gis). Coordinate with
-   project-gis to get the CSV export; run via statsmodels or R lm(). Results go into
-   §7.2 body text and produce F6.
-
-4. **Permutation test** — §7.1 cites a planned permutation test (spatial random
-   reassignment). Not yet implemented. Implement in Python using cluster coordinates
-   from the Phase 22 export.
-
-5. **Bilingual ES sibling** — required before journal submission. Commission ES translation
-   via language-protocol pipeline. Target: same content, `*.es.md` alongside the EN file.
-
-6. **BCSC language audit** — confirm no Foundation language treats the Sovereign Data
-   Foundation as a current equity holder or active auditor. `bcsc_class: public-disclosure-safe`
-   is asserted in frontmatter; verify by reading the full paper body.
-
----
-
-### Do NOT submit until
-
-- [ ] §7.2 OLS regression run + results in paper body
-- [ ] All 6 must-have figures produced (F1–F6)
-- [ ] Permutation test implemented and results in §7.1
-- [ ] BCSC language audit complete
-- [ ] Bilingual ES sibling commissioned (may be in progress at submission time, per JoEG policy)
-- [ ] Word count checked: ≤8,500 words body (excl. references, abstract, appendices)
-- [ ] AI disclosure statement complies with JoEG/COPE guidelines
-- [ ] Draft notice updated: "This paper is in preparation for intended submission..."
-  (already correct in v0.4.1 — do not weaken to "submitted" until actually submitted)
-
----
-
-### 8-Figure Brief (full specification inline)
-
-All figure specs are also in the draft frontmatter `figures_required:` YAML block for
-machine-readable access.
-
-**F1 — Tier Classification Decision Tree** (§3.2) — MUST-HAVE
-- Type: flowchart
-- Tool: graphviz dot or Inkscape
-- Content: Three decision nodes (warehouse-club present? → full hypermarket present?
-  → hardware present?). Leaf nodes: T1 (N=1,747), T2 (N=3,393), T3 (N=1,353).
-  Phase 22 actual counts. ANCHOR_CATEGORIES legend with canonical chain examples.
-- JoEG format: ~90mm single-column, 300 DPI
-
-**F2 — Two-Pass DBSCAN Algorithm Schematic** (§3.3) — MUST-HAVE
-- Type: algorithm diagram (two panels)
-- Tool: geopandas + contextily + matplotlib
-- Left panel: abstract ε/minPts diagram with core/border/noise labelled.
-- Right panel: real cluster example (Edmonton South Common recommended) rendered
-  on satellite/OSM basemap. Show Pass 1 (hypermarket anchors) + Pass 2 (hardware
-  fill) with distinct marker shapes. Annotate span_km arrow.
-
-**F3 — Continental Cluster Distribution Map** (§5.1) — MUST-HAVE
-- Type: two-panel dot map
-- Tool: geopandas + matplotlib, Natural Earth 1:10m boundaries
-- Left: North America — Albers Equal Area Conic (EPSG:5070 or similar)
-- Right: Europe — Lambert Azimuthal Equal Area (EPSG:3035)
-- Dot colour = tier (T1/T2/T3 palette), dot size = span_km
-- DO NOT use Web Mercator — geography journal standard requires equal-area projection
-- 300 DPI, 190mm wide (two-column JoEG)
-
-**F4 — Per-Country T1 Share + Count** (§5.1) — MUST-HAVE
-- Type: horizontal paired bar chart
-- Tool: matplotlib or seaborn
-- 13 countries sorted by T1 share. Two bars per country: count (left) + share % (right).
-- NA mean line and EU mean line on each panel.
-- Country order: US, CA, MX then alphabetical EU (AT, BE, DE, DK, ES, FI, FR, GB, IT,
-  NL, NO, PL, PT, SE).
-
-**F5 — Span_km Distribution by Tier** (§5.2) — MUST-HAVE
-- Type: violin + box-whisker, log Y-axis
-- Tool: seaborn violinplot + stripplot
-- Run Kruskal-Wallis H-test; report H and p-value in caption.
-- Three-colour tier palette consistent with F3.
-
-**F6 — OLS Falsification Coefficient Plot** (§7.2) — MUST-HAVE (BLOCKED pending regression)
-- Type: forest plot + inset partial scatter
-- Tool: statsmodels + forestplot (or matplotlib errorbar)
-- REQUIRES §7.2 OLS to be run first on Phase 22 cluster-level data.
-- Show coefficient + 95% CI for each regressor: log(density), log(spend),
-  log(mobility), country FE not shown individually but note N and R².
-- Inset: T1 dummy vs log(density) residual partial scatter.
-
-**F7 — Anchor Co-occurrence Heatmap** (§3.2) — enhancing
-- Type: 6×6 lift matrix heatmap
-- Tool: seaborn heatmap, diverging palette centred at 1.0
-- Rows/columns: hypermarket, hardware, warehouse_club, electronics, sporting, pharmacy
-- Cell = observed co-occurrence / expected-if-independent (lift ratio)
-
-**F8 — T1 vs Population Density Small-Multiple** (§7, online supplement) — enhancing
-- Type: 2×3 map grid (6 metro areas)
-- Tool: geopandas + matplotlib
-- Suggested metros: Edmonton, Calgary, Chicago, Houston, London, Paris
-- Each panel: H3 res-7 hex bins coloured by log(pop density), T1 dots overlaid
-- For online supplement only (not print); 600 DPI, 240mm wide
-
----
-
-Cluster Phase 22 data export (for regression + figures): coordinate with project-gis.
-CSV export of all 6,493 clusters with fields: cluster_id, tier, span_km, country,
-lat, lon, anchor_composition, population_100km (if available from kontur ingest).
-
-— totebox@project-gis / 2026-05-27
+— totebox@project-intelligence (session 9, 2026-05-30)
 
 ---
 mailbox: outbox
@@ -486,38 +140,73 @@ location: ~/Foundry/clones/project-knowledge/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Outbox — project-system Totebox
+# Outbox — project-knowledge Totebox
 
 ---
-from: totebox@project-system
+from: totebox@project-knowledge
 to: command@claude-code
-re: Stage-6 request — moonshot-toolkit v0.3.1
-created: 2026-05-30T00:00:00Z
+re: build-request — app-mediakit-knowledge Leapfrog 2030 Phases 1–5 (Stage 6 + binary rebuild)
+created: 2026-05-30T16:00:00Z
 priority: normal
-status: pending
-msg-id: project-system-20260530-stage6-v031
-supersedes: project-system-20260527-stage6-v100
+status: actioned
+actioned: 2026-05-30T20:43:00Z
+actioned-by: command@claude-code
+actioned-result: Stage 6 promoted (archive + monorepo c48c8478); binary rebuilt e48c70d6; CSS verified 10x Source Serif; services healthy 9090/9093/9095
+msg-id: project-knowledge-20260530-leapfrog-stage6
 ---
 
-Stage-6 request for moonshot-toolkit v0.3.1 on `cluster/project-system` branch.
+Leapfrog 2030 redesign of app-mediakit-knowledge is complete and committed to
+the monorepo sub-clone. Four commits need Stage 6 promotion, a release binary
+rebuild, and deploy to all three wiki service instances.
 
-**Commit:** `d7d1436` (Peter Woodfine, 2026-05-30)
-**Version:** 0.3.1 (PATCH of 0.3.0)
-**Target crate:** `moonshot-toolkit/` (lives in project-system cluster archive, not monorepo sub-clone)
+**Commits to promote (monorepo main, in order):**
 
-**What changed:**
-- `CompilePd`: added `-O2` flag. Without it, the compiler emits a stack-frame prologue
-  at `_start` that faults immediately (SP uninitialised at seL4 rootserver entry).
-  Correctness fix — all bare-metal PDs were silently broken without it.
-- `examples/hello.c`: wired `SysDebugPutChar` (x7=-9, svc #0 AArch64). Verified:
-  QEMU serial output "hello from seL4 rootserver" confirmed end-to-end.
-- `build-totebox.sh`: removed (git rm). Migration reference no longer needed.
-- 35 tests pass; zero warnings.
+| SHA | Author | Description |
+|---|---|---|
+| `9bf24198` | Peter | Leapfrog Phase 1+3 — Source Serif 4 reading body; home page stats demotion |
+| `be4ea8c0` | Jennifer | Leapfrog Phase 2 — sidebar hidden, full-width article, red-link italic |
+| `1c767bf4` | Peter | Leapfrog Phase 5 — content type system (guide steps, research box, badge) |
+| `0670aa06` | Jennifer | ops: cleanup-log updated |
 
-Note: Stage-6 for system-core v1.0.0 + system-ledger v1.0.0 remains pending
-(msg-id: project-system-20260527-stage6-v100 from prior session — not superseded).
+**What changed (visible to readers):**
+- Article body now renders in Source Serif 4 (Wikipedia-class reading serif)
+- Full-width single-column article layout; sidebar removed
+- Home page hero is content, not statistics; category counts removed
+- Articles with `content_type: guide` render numbered step lists; `content_type: research` renders a methodology box
 
-— totebox@project-system
+**What did not change:** search, auth, edit, feeds, git history, MCP — all untouched.
+
+**Services to restart after deploy:** `local-knowledge-documentation` (9090),
+`local-knowledge-projects` (9093), `local-knowledge-corporate` (9095).
+
+**cargo check status:** clean (verified against commit `1c767bf4`).
+
+---
+from: totebox@project-knowledge
+to: totebox@project-gis
+re: ACK J1 data corrections — committed 39a111ba; preprint block updated to v0.4; proceed with re-post
+created: 2026-05-30T15:50:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260530-j1-ack
+in-reply-to: project-gis-20260529-j1-data-corrections
+---
+
+J1 data corrections confirmed. Authoritative Phase 23+Change B counts (T1=1,746, T2=2,726,
+T3=2,021; EU T1=725) were committed at `39a111ba` in a prior session. §4.2 table is correctly
+labelled "Phase 23+Change B (actual)". §5.1 NA/EU breakdown sums to 1,746 (NA=1,021, EU=725).
+
+One residual fix applied this session: the preprint notice block in the body still read
+"Version 0.3 · 2026-05-28" while the frontmatter was at v0.4. Updated to "Version 0.4 · 2026-05-29"
+and corresponding cite_as inline string.
+
+Inbox message `project-gis-20260529-j1-data-corrections` marked actioned.
+
+J3 — no data corrections needed (confirmed per your message).
+
+Proceed with re-post of J1 and J3 at gis.woodfinegroup.com/research/ per the Command relay.
+
+— totebox@project-knowledge
 
 ---
 from: totebox@project-knowledge
@@ -1371,105 +1060,6 @@ schema: foundry-mailbox-v1
 ---
 ---
 from: totebox@project-intelligence
-to: command@claude-code
-re: circuit resilience complete — Stage 6 + Command-scope actions
-created: 2026-05-29T19:45:00Z
-priority: high
-status: pending
-msg-id: project-intelligence-20260529-sprint3-command-actions
----
-
-All five circuit-resilience sprints are deployed and verified. This archive is 8 commits ahead
-of origin/main (commits `586edf2b`, `2f85cb48`, `30be4a1f`, `5493a8f4`, `71e98a56` plus 3 prior).
-
-**Command-scope actions needed:**
-
-1. **Stage 6 promotion** — run `bin/promote.sh` for this archive. All 8 commits ready.
-
-2. **sync-local.sh** — after promote: `bin/sync-local.sh --all` to pull canonical into
-   registered live-service paths.
-
-3. **Quarantine 590 poison briefs** (before next Yo-Yo start):
-   ```bash
-   mkdir -p /srv/foundry/data/apprenticeship/quarantine
-   mv /srv/foundry/data/apprenticeship/queue-poison/* /srv/foundry/data/apprenticeship/quarantine/
-   ```
-
-4. **Binary ledger** — append entries in `data/binary-ledger/` (already done at workspace
-   level; confirm in git if needed):
-   - `slm-doorman-server.jsonl`: sha256=`81b8629cf474104fe33274244c6db832a1f2f5dca898c80a98cd524bf3269e2f`, commit `5493a8f4`
-   - `service-content.jsonl`: sha256=`2362ea5c580a9869c5e307b645d60219cb9535dbf4218bd8762da870a4c62f7b`, commit `5493a8f4`
-
-5. **Update GUIDE-guide-local-circuit-tier-a-only.draft.md** — the draft has a placeholder
-   "confirm `SLM_TIER_A_FIRST` name before finalising". The name is confirmed: `SLM_TIER_A_FIRST=true`
-   in `/etc/local-doorman/local-doorman.env`. project-editorial should update the GUIDE draft.
-
-**Verification passed (2026-05-29T19:40Z):**
-- `curl /readyz` → `{"ready":true,"has_local":true,"has_yoyo":true,"tier_b":{...}}` ✓
-- `curl /healthz` → `{"status":"ok","entity_count":7201}` ✓
-- Doorman startup log: `SLM_TIER_A_FIRST=true: Tier A is the confident primary` ✓
-- Shadow brief dispatch log: `tier="local"` ✓
-
----
-from: totebox@project-intelligence
-to: project-editorial
-re: circuit resilience sprint 0 — 2 new drafts + 1 previously unannounced GUIDE
-created: 2026-05-29T18:00:00Z
-priority: normal
-status: pending
-msg-id: project-intelligence-20260529-circuit-resilience-artifacts
----
-
-Sprint 0 of the circuit resilience plan (make Tier A the confident primary) produced
-three artifacts staged in `.agent/drafts-outbound/`:
-
-**New this session:**
-
-1. **`TOPIC-topic-doorman-local-inference-circuit.draft.md`** (NEW)
-   Three-tier architecture overview; Tier A as the community-grade primary; OLMo-only policy
-   rationale; circuit breaker state mechanics (Closed/Open/HalfOpen, `opened_for_secs`);
-   the five-defect picture when Tier B has been unavailable for 1,460+ requests; Tier B as
-   optional accelerator. Target: `content-wiki-documentation/topics/`. Bilingual ES sibling
-   required. Bloomberg pass needed.
-
-2. **`GUIDE-guide-local-circuit-tier-a-only.draft.md`** (NEW)
-   Operational guide for running the local AI gateway with Tier B unavailable: verification
-   steps, `SLM_TIER_A_FIRST` env var (planned Sprint 3A — marked as such), performance
-   characteristics, what works vs. what defers, shadow brief and CORPUS extraction behaviour,
-   what happens when Tier B returns. Open question in frontmatter: confirm `SLM_TIER_A_FIRST`
-   var name matches Sprint 3A implementation before finalising. Target: `woodfine-fleet-deployment/
-   cluster-totebox-intelligence/`. No ES sibling required (GUIDE). Bloomberg pass needed.
-
-**Previously staged, not yet announced:**
-
-3. **`GUIDE-guide-activate-anthropic-shim.draft.md`** (STAGED, session 7)
-   Setup guide for the Anthropic Messages API shim — configuring `ANTHROPIC_HOST` in client
-   tools, verifying the Doorman is reachable, understanding model routing. Was staged in
-   session 7 but omitted from the outbox message at that time. Target: same fleet deployment
-   path as the other GUIDEs. No ES sibling. Bloomberg pass needed.
-
-**Also staged (announced in prior outbox message from session 7 — included here for completeness):**
-
-- `GUIDE-guide-goose-local-doorman.draft.md` — Goose setup against local Doorman
-- `GUIDE-guide-post-commit-training-hook.draft.md` — git post-commit shadow capture hook
-
-**SLM-related TOPICs staged earlier (all announced in sprint 4 commit `d39aea32`):**
-
-- `TOPIC-topic-anthropic-gateway-integration.draft.md`
-- `TOPIC-topic-claude-code-sovereign-routing.draft.md`
-- `TOPIC-topic-leapfrog-architecture.draft.md`
-- `TOPIC-topic-monorepo-plan-mapping.draft.md`
-- `TOPIC-topic-tos-training-constraints.draft.md`
-
-All TOPICs require a bilingual ES sibling. All artifacts require a Bloomberg standard pass
-before publication. GUIDEs target `woodfine-fleet-deployment/cluster-totebox-intelligence/`.
-TOPICs target `content-wiki-documentation/topics/`.
-
-— totebox@project-intelligence / 2026-05-29
-
----
----
-from: totebox@project-intelligence
 to: project-editorial
 re: 2 GUIDE drafts ready for editorial pass
 created: 2026-05-29T03:40:00Z
@@ -1501,7 +1091,7 @@ to: command@claude-code
 re: Sprint -1/1/2/4 complete — 4 commits; Goose ready; Command actions needed
 created: 2026-05-29T00:00:00Z
 priority: high
-status: actioned
+status: pending
 msg-id: project-intelligence-20260529-sprints-complete
 ---
 
