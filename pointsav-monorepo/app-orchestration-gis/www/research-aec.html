@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis — Working Paper v0.2</title>
+<title>Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis — Working Paper v0.3</title>
 <style>
   :root {
     --brand-primary: #164679;
@@ -359,10 +359,9 @@
     </details>
 
     <div class="draft-notice">
-      <strong>Working paper · v0.2 · May 2026 · CC BY 4.0.</strong>
+      <strong>Working paper · v0.3 · May 2026 · CC BY 4.0.</strong>
       This paper is in preparation for intended submission.
-      §6 Results section pending nightly build pipeline completion; all other sections are complete.
-      <em>Cite as:</em> Woodfine, Jennifer M., Woodfine, Peter M., &amp; Woodfine, Mathew (2026). Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis. Working Paper v0.2, May 2026. Woodfine Management Corp., New York, New York.
+      <em>Cite as:</em> Woodfine, Jennifer M., Woodfine, Peter M., &amp; Woodfine, Mathew (2026). Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis. Working Paper v0.3, 29 May 2026. Woodfine Management Corp., New York, NY.
       <br /><br />
       <strong>Forward-Looking Statements.</strong>
       Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially.
@@ -465,6 +464,7 @@ Woodfine Management Corp., New York, NY, USA</p>
 <hr />
 <h2 id="5-integration-pipeline">5. Integration Pipeline</h2>
 <h3 id="51-h3-indexing">5.1 H3 Spatial Indexing Approach</h3>
+<p>The following describes the integration pipeline as designed and tested on representative subsets of the study dataset. Full continental-scale execution across all sixteen study countries is planned prior to final submission; §6 reports results as they become available.</p>
 <p>All layer values are joined to the point inventory using H3 resolution 7 as the spatial key. At this resolution, each hexagonal cell covers approximately 1.22 km² — larger than an individual anchor retail site (typically 0.5–2.5 ha) but smaller than a sub-metropolitan census-designated place (typically 5–500 km²). The resolution absorbs the sub-cluster scatter of individual building footprints while remaining fine enough to distinguish neighbouring clusters in the same metropolitan area that may fall in different climate zones, flood zones, or eco-regions.</p>
 <p>Each cluster centroid is assigned an H3 resolution-7 cell index. Polygon layers (climate zones, flood zones, eco-regions) are intersection-joined to the centroid's H3 cell polygon, producing consistent categorical assignments irrespective of where within the cell the centroid falls. Raster layers (seismic PGA, GHI at tile resolution) are sampled at the centroid coordinate directly.</p>
 <h3 id="52-polygon-layers">5.2 Polygon Layers: PMTiles</h3>
@@ -472,11 +472,11 @@ Woodfine Management Corp., New York, NY, USA</p>
 <h3 id="53-point-enrichment">5.3 Point Enrichment: Cluster Metadata Fields</h3>
 <p>Layers with continuous scalar values at cluster centroids — solar GHI, seismic PGA, urban heat island intensity, soil classification — are stored as fields in the cluster metadata JSON rather than as tile layers. This approach eliminates tile hosting overhead for these layers while making values available for programmatic query, inspector panel display, and export. The solar GHI field (<code>ghi_kwh_m2_yr</code>) is populated by querying NREL NSRDB for US clusters and PVGIS for EU clusters via their respective public APIs; seismic PGA (<code>pga_2pct_50yr_g</code>) is sampled from USGS NSHM 2023 for US clusters and ESHM20 for EU clusters at cluster centroid coordinates.</p>
 <h3 id="54-api-lookups">5.4 API Call-Time Lookups: Copyright-Constrained Layers</h3>
-<p>ASCE 7-22 design wind speed and ground snow load maps are copyrighted by the American Society of Civil Engineers. Redistribution of these maps as GIS layers requires a commercial licence from ASCE; no open-licence version exists. The ATC Hazards by Location API (Applied Technology Council) returns design wind speed (Vult in mph), site-amplified ground snow load (Pg), and seismic design parameters at any US coordinate via a structured JSON response. The ATC API is queried at cluster-selection time; values are displayed in the site-analysis inspector without being stored as a redistributed layer. This architecture is appropriate for point-lookup use cases and avoids ASCE copyright exposure; it introduces API latency and an external dependency that bulk-downloaded raster layers do not.</p>
+<p>ASCE 7-22 design wind speed and ground snow load maps are copyrighted by the American Society of Civil Engineers. Redistribution of these maps as GIS layers requires a commercial licence from ASCE; no open-licence version exists. The ATC Hazards by Location API (Applied Technology Council) returns design wind speed (Vult in mph), site-amplified ground snow load (Pg), and seismic design parameters at any US coordinate via a structured JSON response. The ATC API is queried at cluster-selection time; values are returned for display without being stored as a redistributed layer. This architecture is appropriate for point-lookup use cases and avoids ASCE copyright exposure; it introduces API latency and an external dependency that bulk-downloaded raster layers do not.</p>
 <hr />
 <h2 id="6-results">6. Results</h2>
-<p><em>Concrete coverage metrics pending nightly build pipeline completion (target: 2026-05-28 overnight run). Required fields: H3-cell assignment rates for Tier 1 layers by country; total clusters assigned per layer type; NSRDB/PVGIS GHI population rates.</em></p>
-<p><strong>Preliminary findings from the parity scorecard (§4):</strong> 5 of 8 layer types achieve ✓ (regulatory-grade open) for at least 6 of 16 study countries. All 16 study countries achieve ✓ or ~ on seismic (ESHM20 globally) and solar GHI (PVGIS globally). The US achieves ✓ on all assessed Tier 1 layers.</p>
+<p>Pipeline execution at continental scale for all sixteen study countries is in progress. This section will report: (a) H3 resolution-7 cell coverage counts for each of the four Tier 1 layers per country; (b) confirmation or falsification of H₁ and H₂ per the test specifications in §7.4.</p>
+<p>Preliminary assessment from the coverage scorecard (§4): five of eight layer types achieve regulatory-grade open (✓) coverage for at least six of the sixteen study countries. All sixteen countries achieve ✓ or proxy coverage for seismic (ESHM20 globally) and solar GHI (PVGIS globally). Documentary assessment confirms the United States has ✓ coverage for all four Tier 1 layers. Per-country H3-level counts will be added upon pipeline completion.</p>
 <hr />
 <h2 id="7-discussion">7. Discussion</h2>
 <h3 id="71-coverage-gaps">7.1 Coverage Gaps and Implications</h3>
@@ -499,13 +499,13 @@ Woodfine Management Corp., New York, NY, USA</p>
 </blockquote>
 <h3 id="74-falsification">7.4 Falsification Programme</h3>
 <p>Seven tests operationalise H₁, H₂, and the reproducibility commitment:</p>
-<p><strong>Test 1 — Coverage count.</strong> For each of the eight layer categories, count the number of study countries achieving ✓ (regulatory-grade open) coverage. H₁ is falsified if fewer than six categories achieve ✓ for at least eight countries.</p>
-<p><strong>Test 2 — US regulatory-grade confirmation.</strong> Verify that ASHRAE 169/IECC (PNNL/DOE), FEMA NFHL (SFHA zones), USGS NSHM 2023 PGA, and NREL NSRDB GHI are each cited as authoritative sources in US permit documentation or code compliance standards. H₂ is falsified if any of the four sources is rejected as non-authoritative by a competent US authority in a permit application context.</p>
-<p><strong>Test 3 — Licence compatibility.</strong> Confirm that no CC BY-SA or CC BY-NC layer is included in the production pipeline without a documented written exception or an explicitly documented open-licence substitute. The pipeline is falsified if an incompatible layer is found in production without documentation.</p>
-<p><strong>Test 4 — Reproducibility.</strong> Re-execute the build pipeline from the listed source URLs on a clean environment. Compare PMTiles checksums to the reference build. Falsified if outputs differ due to an undisclosed proprietary data dependency.</p>
-<p><strong>Test 5 — EU climate zone accuracy.</strong> For each of the eight EU ISOs with build-by-join climate zone layers, select 50 municipal centroids from the corresponding national official publication. Confirm that the pipeline assigns the correct zone code. Falsified if the assignment error rate exceeds 5%.</p>
-<p><strong>Test 6 — H3 join accuracy.</strong> For US ASHRAE 169 zones: select 100 cluster centroids distributed across all 8 climate zones. Confirm that the H3 resolution-7 cell-to-zone assignment matches the PNNL county table. Falsified if more than 2% of centroids are assigned to a zone inconsistent with the PNNL table.</p>
-<p><strong>Test 7 — Copyright compliance.</strong> Inspect every PMTiles layer in the production pipeline for ASCE 7 wind speed or ground snow load content. The pipeline is falsified if ASCE-copyrighted map content is reproduced in any served tile.</p>
+<p><strong>Test 1 — Coverage count.</strong> For each of the eight layer categories, the number of study countries achieving regulatory-grade open (✓) coverage will be counted. H₁ will be considered falsified if fewer than six categories achieve ✓ for at least eight countries.</p>
+<p><strong>Test 2 — US regulatory-grade confirmation.</strong> The study will verify that ASHRAE 169/IECC (PNNL/DOE), FEMA NFHL (SFHA zones), USGS NSHM 2023 PGA, and NREL NSRDB GHI are each cited as authoritative sources in US permit documentation or code compliance standards. H₂ will be considered falsified if any of the four sources is rejected as non-authoritative by a competent US authority in a permit application context.</p>
+<p><strong>Test 3 — Licence compatibility.</strong> The study will confirm that no CC BY-SA or CC BY-NC layer is included in the production pipeline without a documented written exception or an explicitly documented open-licence substitute. The pipeline will be considered falsified if an incompatible layer is found in production without documentation.</p>
+<p><strong>Test 4 — Reproducibility.</strong> The build pipeline will be re-executed from the listed source URLs on a clean environment. PMTiles checksums will be compared to the reference build. The test will be considered falsified if outputs differ due to an undisclosed proprietary data dependency.</p>
+<p><strong>Test 5 — EU climate zone accuracy.</strong> For each of the eight EU ISOs with build-by-join climate zone layers, 50 municipal centroids from the corresponding national official publication will be selected and the pipeline's zone assignments checked. The test will be considered falsified if the assignment error rate exceeds 5%.</p>
+<p><strong>Test 6 — H3 join accuracy.</strong> For US ASHRAE 169 zones, 100 cluster centroids distributed across all 8 climate zones will be selected. The H3 resolution-7 cell-to-zone assignment will be verified against the PNNL county table. The test will be considered falsified if more than 2% of centroids are assigned to a zone inconsistent with the PNNL table.</p>
+<p><strong>Test 7 — Copyright compliance.</strong> Every PMTiles layer in the production pipeline will be inspected for ASCE 7 wind speed or ground snow load content. The pipeline will be considered falsified if ASCE-copyrighted map content is reproduced in any served tile.</p>
 <h3 id="75-limitations">7.5 Limitations</h3>
 <p><strong>Single-deployment scope.</strong> The pipeline has been validated against a single-deployment production instance. Generalisation to deployments with different infrastructure configurations or data access patterns has not been empirically tested.</p>
 <p><strong>Geographic scope.</strong> The study covers sixteen countries. Findings regarding open-data availability may not generalise to other regions, particularly countries with less developed national spatial data infrastructure.</p>
@@ -549,7 +549,7 @@ Woodfine Management Corp., New York, NY, USA</p>
 </div>
 
 <div class="page-footer">
-  <span>Woodfine Management Corp. · Working Paper v0.2 · <a href="/research.html">← Research Papers</a> · <a href="/">Map</a></span>
+  <span>Woodfine Management Corp. · Working Paper v0.3 · <a href="/research.html">← Research Papers</a> · <a href="/">Map</a></span>
 </div>
 
 </body>

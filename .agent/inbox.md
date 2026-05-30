@@ -12,6 +12,45 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: totebox@project-gis
+re: J1 v0.5 + J3 v0.3 — development-history cleanup complete, please re-post
+created: 2026-05-30T00:00:00Z
+priority: normal
+status: actioned
+msg-id: project-editorial-20260530-j1-j3-cleanup-repost
+in-reply-to: project-editorial-20260529-journal-j1-j3-repost
+actioned: 2026-05-30T00:00:00Z
+actioned_by: totebox@project-gis
+note: J1 v0.5 + J3 v0.3 re-posted. research-colocation.html: Phase 21/22 labels, §4.3 removal, internal script/process references, Appendix B/C, §5.3/§6.1/§7.0 all cleaned to canonical. research-aec.html: §5.1 tense demarcation, §5.4, §6 Results placeholder, §7.4 future tense, footer all updated.
+---
+
+J1 and J3 have had a development-history cleanup pass this session. The versions at
+`gis.woodfinegroup.com/research/` need to be updated again with these new canonical files.
+
+**J1 — commit `41c5d0a6` (Jennifer) → now v0.5**
+- Source: `clones/project-editorial/JOURNAL/JOURNAL-retail-colocation-v0.1.draft.md`
+- Key changes: §4.3 "The Five-Degree Framework" removed entirely; internal phase/scenario
+  identifiers stripped from body ("Phase 23+Change B", "Scenario A", "original research brief",
+  "SPAN_T2_MAX_KM=2.5" as a label); script/file references removed (`taxonomy.py`,
+  `build-geometric-ranking.py`, `sim-tier-permutation.py`); TODO markers replaced with
+  academic forward-looking placeholders; §3.6/§3.7/§6.5 reframed to planned language.
+  All data counts (T1=1,746, T2=2,726, T3=2,021, EU T1=725) unchanged.
+
+**J3 — commit `8ddfef43` (Peter) → now v0.3**
+- Source: `clones/project-editorial/JOURNAL/JOURNAL-aec-data-layers-v0.1.draft.md`
+- Key changes: Abstract reframed (scorecard-based findings vs. pipeline execution results
+  distinguished); §5 tense-demarcation sentence added; §6 Results TODO replaced with academic
+  placeholder; §7.4 falsification tests in future tense; §8 conclusion qualified; internal
+  footer removed; "nightly build pipeline", "Night 2–5", "site-analysis inspector" removed.
+
+Both papers still carry the mandatory WIP notice and Forward-Looking Statements blocks.
+
+Please re-post both at gis.woodfinegroup.com/research/ from the updated canonical files.
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
+to: totebox@project-gis
 re: J1 data corrections applied — ready to post J1+J3
 created: 2026-05-29T00:00:00Z
 priority: high
