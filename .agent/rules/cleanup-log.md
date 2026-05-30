@@ -88,6 +88,36 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-30 — app-mediakit-knowledge Leapfrog 2030 Phases 1–5 complete
+
+Three commits (continuation of prior session context-boundary):
+
+- **Phase 1+3 (`9bf24198`, Peter):** Font stack reduced from 13 → 4 woff2 files. Oswald ×2 +
+  Roboto Slab ×2 @font-face blocks replaced with Source Serif 4 400 normal + 400 italic. Nunito
+  Sans retained (400 + 600 only). CSS variables `--font-reading`, `--font-serif` point to Source
+  Serif 4; `.page-body` uses `var(--font-reading)`. Home page: `div.hero__meta` stats block and
+  `div.ledger-stripe` removed; `span.cat-card__count` removed from category grid; subtle
+  `.home-stats-oneliner` added before footer.
+
+- **Phase 2 (`be4ea8c0`, Jennifer):** `.shell` changed from two-column grid to
+  `grid-template-columns: 1fr`. `nav.sidebar` set `display: none`. Dead sidebar scrollbar CSS
+  removed. `nav.topnav .nav-toggle-btn { display: flex; }` override makes hamburger accessible
+  on desktop. `.page-body a.wiki-redlink { font-style: italic; }` added.
+
+- **Phase 5 (`1c767bf4`, Peter):** Kirby blueprint content type system. `Frontmatter.content_type:
+  Option<String>` added to `src/render.rs` (serde default, placed before `extra` flatten field).
+  `src/server.rs`: `article.article__body` gains `data-content-type` attribute; `span.content-type-badge`
+  rendered for non-article types (guide/topic/research/category); `ol.guide-steps` rendered from
+  `steps:` YAML array for guide type; `aside.methodology-box` rendered from `methodology:` string
+  for research type. `static/style.css`: ~75 lines added for `.content-type-badge` (pill, type-specific
+  color), `.guide-steps` (CSS counter circles, green), `.methodology-box` (blue left-border aside).
+  `cargo check` clean.
+
+**Stage 6 pending:** `9bf24198`, `be4ea8c0`, `1c767bf4` need `bin/promote.sh` from Command Session +
+binary rebuild and deploy to ports 9090/9093/9095.
+
+---
+
 ## 2026-05-29 — app-mediakit-knowledge reindex_topic spawn_blocking fix
 
 - **Root cause of documentation service hang (19:45–20:32 UTC):** `reindex_topic()` in
