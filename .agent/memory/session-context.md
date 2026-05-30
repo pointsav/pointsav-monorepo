@@ -47,10 +47,14 @@ a fourth entry is added.
 - `cdc044e9` (Jennifer) — feat(vm-host): service-vm-host per-node heartbeat agent;
   local-vm-host.service; registry rows; NEXT.md session 12; outbox to project-system +
   project-data + command
+- `97f8b81c` (Peter) — feat(vm-fleet): kvm_available field + prefer_kvm placement —
+  Laptop A/B as primary KVM compute nodes; TCG fallback for GCP e2
+  (GCP e2 cannot do nested KVM at all; no migration yet; Laptop A/B = KVM pool;
+  5+10+3=18 tests pass)
 
 **Pending / carry-forward:**
-- Enable GCP nested KVM (operator action: GCP console). Unblocks VM performance + bench #9.
-- Run `ls /dev/kvm` on Laptop A to confirm KVM availability (operator).
+- GCP e2 cannot do nested KVM (family-level block; e2→n2 migration deferred until os-* proven on laptops).
+- Run `ls /dev/kvm` on Laptop A locally (not from GCP — port 22 refused on WireGuard interface); if absent: `sudo modprobe kvm_intel`.
 - Ratify 10.50.0.0/24 as canonical PPN subnet Q2 (operator).
 - AArch64 hardware acquisition decision (gates Phase 3 seL4).
 - Stage 6 from Command Session: 33 project-data commits + these new commits.
@@ -67,6 +71,8 @@ a fourth entry is added.
 - `current_thread` Tokio + `opt-level="z"` `[profile.release]` as mandatory engineering
   discipline for all new system-* and service-* crates going forward.
 - NetBSD/NVMM (not bhyve) — critical correction to hold across all future briefs.
+- GCP e2 is a hard KVM block (not a config issue); Laptop A/B are the KVM pool; don't suggest nested KVM steps for e2 instances.
+- Old laptops (Sandy Bridge i5-2400S etc.) are intentionally the Leapfrog 2030 test targets — proving freely-transferable os-* on constrained bare metal is the point.
 
 ---
 
