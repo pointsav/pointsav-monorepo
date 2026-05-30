@@ -1,17 +1,22 @@
-/// tool-wallet — Polygon USDC payment watcher + receipt writer
+/// tool-wallet — Polygon USDC payment watcher + receipt writer + key utilities
 ///
 /// Single-tenant (PointSav vendor). Watches for inbound USDC transfers to
-/// POLYGON_WALLET_ADDRESS on Polygon PoS. On confirmation, writes a signed
-/// receipt to service-fs (WORM ledger) and to a local fallback directory.
+/// POLYGON_WALLET_ADDRESS on Polygon PoS. On confirmation, writes receipts to
+/// local flat files at RECEIPTS_DIR.
+///
+/// Also provides: `keygen` (Ed25519 signing keypair for license issuance) and
+/// `generate-seed` (BIP-39 mnemonic + master Polygon wallet address).
 ///
 /// service-wallet (Doctrine claim #53) is the multi-tenant Ring 2 service
 /// for customer-side Reverse-Flow revenue. tool-wallet is distinct: it is
 /// a vendor-side utility for PointSav receiving inbound license payments.
 use anyhow::{Context, Result};
 use bip32::{DerivationPath, XPrv};
-use bip39::Mnemonic;
+use bip39::{Language, Mnemonic};
 use chrono::Utc;
 use clap::{Parser, Subcommand};
+use ed25519_dalek::{SigningKey, VerifyingKey};
+use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -20,6 +25,7 @@ use std::{
     collections::HashMap,
     fs,
     io::{Read, Seek, SeekFrom, Write},
+    os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
 };
 
@@ -49,12 +55,16 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    /// Watch for incoming USDC payments and write receipts to service-fs
+    /// Watch for incoming USDC payments and write receipts to local flat files
     Watch(WatchArgs),
     /// Check whether a given tx_hash is a confirmed payment for a product
     Check(CheckArgs),
     /// Generate a fresh HD-derived payment address for a pending order (v0.0.2)
     Address(AddressArgs),
+    /// Generate a fresh Ed25519 signing keypair for LICENSE_SIGNING_KEY + VERIFY_KEY_PUB
+    Keygen,
+    /// Generate a fresh BIP-39 mnemonic, write to file, and print the master Polygon wallet address
+    GenerateSeed(GenerateSeedArgs),
 }
 
 #[derive(Parser)]
@@ -67,10 +77,6 @@ struct WatchArgs {
         help = "Receiving wallet address"
     )]
     wallet_address: String,
-    #[arg(env = "FS_ENDPOINT", long, default_value = "http://127.0.0.1:8020")]
-    fs_endpoint: String,
-    #[arg(env = "FS_MODULE_ID", long, default_value = "software")]
-    fs_module_id: String,
     #[arg(
         env = "RECEIPTS_DIR",
         long,
@@ -79,6 +85,12 @@ struct WatchArgs {
     receipts_dir: String,
     #[arg(long, default_value = "30", help = "Poll interval in seconds")]
     poll_secs: u64,
+}
+
+#[derive(Parser)]
+struct GenerateSeedArgs {
+    #[arg(long, help = "Path to write the generated BIP-39 mnemonic (chmod 0600)")]
+    output: PathBuf,
 }
 
 #[derive(Parser)]
@@ -95,11 +107,7 @@ struct CheckArgs {
 struct AddressArgs {
     #[arg(help = "Order ID — used to derive a unique per-order address")]
     order_id: String,
-    #[arg(
-        env = "WALLET_SEED_PATH",
-        long,
-        help = "Path to BIP-39 mnemonic or 64-byte hex seed file"
-    )]
+    #[arg(env = "WALLET_SEED_PATH", long, help = "Path to BIP-39 mnemonic or 64-byte hex seed file")]
     wallet_seed_path: Option<String>,
     #[arg(
         env = "ORDER_INDEX_PATH",
@@ -187,13 +195,7 @@ fn generate_license_key(product_id: &str, tx_hash: &str, customer_ref: &str) -> 
 
 // ── Receipt writer ────────────────────────────────────────────────────────────
 
-async fn confirm_and_write_receipt(
-    receipt: &LicenseReceipt,
-    receipts_dir: &str,
-    fs_endpoint: &str,
-    fs_module_id: &str,
-    client: &reqwest::Client,
-) -> Result<()> {
+async fn confirm_and_write_receipt(receipt: &LicenseReceipt, receipts_dir: &str) -> Result<()> {
     let now = Utc::now();
     let local_path = PathBuf::from(receipts_dir)
         .join(now.format("%Y").to_string())
@@ -204,37 +206,8 @@ async fn confirm_and_write_receipt(
         fs::create_dir_all(parent).context("create receipts dir")?;
     }
     let raw = serde_json::to_string_pretty(receipt).context("serialize receipt")?;
-    fs::write(&local_path, &raw).context("write local receipt")?;
-    tracing::info!(tx_hash = %receipt.tx_hash, path = %local_path.display(), "receipt written locally");
-
-    // Post to service-fs if reachable
-    let fs_url = format!("{}/v1/append", fs_endpoint);
-    let fs_path = format!(
-        "vault/source/license-receipts/{}/{}/{}.json",
-        now.format("%Y"),
-        now.format("%m"),
-        receipt.tx_hash
-    );
-    match client
-        .post(&fs_url)
-        .header("X-Foundry-Module-ID", fs_module_id)
-        .header("X-Foundry-Path", &fs_path)
-        .header("Content-Type", "application/json")
-        .body(raw)
-        .timeout(std::time::Duration::from_secs(10))
-        .send()
-        .await
-    {
-        Ok(resp) if resp.status().is_success() => {
-            tracing::info!(tx_hash = %receipt.tx_hash, "receipt posted to service-fs");
-        }
-        Ok(resp) => {
-            tracing::warn!(tx_hash = %receipt.tx_hash, status = %resp.status(), "service-fs rejected receipt (local copy retained)");
-        }
-        Err(e) => {
-            tracing::debug!(tx_hash = %receipt.tx_hash, "service-fs not reachable: {e} (local copy retained)");
-        }
-    }
+    fs::write(&local_path, &raw).context("write receipt")?;
+    tracing::info!(tx_hash = %receipt.tx_hash, path = %local_path.display(), "receipt written");
     Ok(())
 }
 
@@ -392,15 +365,7 @@ async fn watch(args: WatchArgs) -> Result<()> {
                     "confirmed USDC payment — writing receipt"
                 );
 
-                match confirm_and_write_receipt(
-                    &receipt,
-                    &args.receipts_dir,
-                    &args.fs_endpoint,
-                    &args.fs_module_id,
-                    &client,
-                )
-                .await
-                {
+                match confirm_and_write_receipt(&receipt, &args.receipts_dir).await {
                     Ok(()) => append_tx_log(&receipt, &args.receipts_dir).await,
                     Err(e) => tracing::error!("receipt write failed: {e:#}"),
                 }
@@ -497,6 +462,52 @@ async fn check(args: CheckArgs) -> Result<()> {
     }
 }
 
+// ── keygen ────────────────────────────────────────────────────────────────────
+
+fn keygen() {
+    let signing_key = SigningKey::generate(&mut OsRng);
+    let verifying_key: VerifyingKey = signing_key.verifying_key();
+    println!("LICENSE_SIGNING_KEY={}", hex::encode(signing_key.to_bytes()));
+    println!("VERIFY_KEY_PUB={}", hex::encode(verifying_key.to_bytes()));
+}
+
+// ── generate-seed ─────────────────────────────────────────────────────────────
+
+fn generate_seed(args: GenerateSeedArgs) -> Result<()> {
+    let mnemonic = Mnemonic::generate_in(Language::English, 24)
+        .map_err(|e| anyhow::anyhow!("mnemonic generation failed: {e}"))?;
+    let mnemonic_str = mnemonic.to_string();
+
+    fs::write(&args.output, &mnemonic_str)
+        .with_context(|| format!("writing seed to {}", args.output.display()))?;
+    fs::set_permissions(&args.output, fs::Permissions::from_mode(0o600))
+        .context("setting seed file permissions to 0600")?;
+
+    let seed_bytes: [u8; 64] = mnemonic.to_seed("");
+    let eth_address = derive_eth_address_at_path(&seed_bytes, "m/44'/60'/0'/0/0")?;
+
+    eprintln!("seed written to {}", args.output.display());
+    println!("POLYGON_WALLET_ADDRESS={eth_address}");
+    Ok(())
+}
+
+// ── Ethereum address derivation helper ────────────────────────────────────────
+
+fn derive_eth_address_at_path(seed_bytes: &[u8; 64], path_str: &str) -> Result<String> {
+    let path: DerivationPath = path_str
+        .parse()
+        .with_context(|| format!("parsing derivation path: {path_str}"))?;
+    let child_xprv =
+        XPrv::derive_from_path(seed_bytes, &path).context("BIP-32 key derivation failed")?;
+    let xpub = child_xprv.public_key();
+    let vk = xpub.public_key();
+    let encoded = vk.to_encoded_point(false);
+    let raw = &encoded.as_bytes()[1..];
+    let hash = Keccak256::digest(raw);
+    let addr_bytes = &hash[12..];
+    Ok(format!("0x{}", hex::encode(addr_bytes)))
+}
+
 // ── address ───────────────────────────────────────────────────────────────────
 
 async fn address(args: AddressArgs) -> Result<()> {
@@ -514,38 +525,25 @@ async fn address(args: AddressArgs) -> Result<()> {
         .with_context(|| format!("reading WALLET_SEED_PATH: {seed_path}"))?;
     let seed_content = seed_content.trim();
 
-    let seed_bytes: [u8; 64] =
-        if seed_content.len() == 128 && seed_content.chars().all(|c| c.is_ascii_hexdigit()) {
-            let decoded = hex::decode(seed_content).context("decoding hex seed")?;
-            decoded
-                .try_into()
-                .map_err(|_| anyhow::anyhow!("hex seed must be exactly 64 bytes (128 hex chars)"))?
-        } else {
-            let mnemonic: Mnemonic = seed_content
-                .parse()
-                .map_err(|e| anyhow::anyhow!("invalid BIP-39 mnemonic: {e}"))?;
-            mnemonic.to_seed("")
-        };
+    let seed_bytes: [u8; 64] = if seed_content.len() == 128
+        && seed_content.chars().all(|c| c.is_ascii_hexdigit())
+    {
+        let decoded = hex::decode(seed_content).context("decoding hex seed")?;
+        decoded
+            .try_into()
+            .map_err(|_| anyhow::anyhow!("hex seed must be exactly 64 bytes (128 hex chars)"))?
+    } else {
+        let mnemonic: Mnemonic = seed_content
+            .parse()
+            .map_err(|e| anyhow::anyhow!("invalid BIP-39 mnemonic: {e}"))?;
+        mnemonic.to_seed("")
+    };
 
     let derivation_index = assign_order_index(&args.order_index_path, &args.order_id)
         .context("assigning order derivation index")?;
 
     let path_str = format!("m/44'/60'/0'/0/{derivation_index}");
-    let path: DerivationPath = path_str
-        .parse()
-        .with_context(|| format!("parsing derivation path: {path_str}"))?;
-
-    let child_xprv =
-        XPrv::derive_from_path(seed_bytes, &path).context("BIP-32 key derivation failed")?;
-
-    let xpub = child_xprv.public_key();
-    let vk = xpub.public_key();
-    let encoded = vk.to_encoded_point(false); // uncompressed, 65 bytes
-    let raw = &encoded.as_bytes()[1..]; // drop 0x04 prefix → 64 bytes
-
-    let hash = Keccak256::digest(raw);
-    let addr_bytes = &hash[12..]; // last 20 bytes = Ethereum address
-    let eth_address = format!("0x{}", hex::encode(addr_bytes));
+    let eth_address = derive_eth_address_at_path(&seed_bytes, &path_str)?;
 
     let output = json!({
         "order_id": args.order_id,
@@ -582,7 +580,6 @@ fn assign_order_index(index_path: &str, order_id: &str) -> Result<u32> {
         .read(true)
         .write(true)
         .create(true)
-        .truncate(false)
         .open(index_path)
         .with_context(|| format!("opening order index: {index_path}"))?;
 
@@ -590,9 +587,7 @@ fn assign_order_index(index_path: &str, order_id: &str) -> Result<u32> {
     let mut guard = lock.write().context("acquiring order index write lock")?;
 
     let mut content = String::new();
-    guard
-        .read_to_string(&mut content)
-        .context("reading order index")?;
+    guard.read_to_string(&mut content).context("reading order index")?;
 
     let mut index: OrderIndex = if content.trim().is_empty() {
         OrderIndex::default()
@@ -610,13 +605,9 @@ fn assign_order_index(index_path: &str, order_id: &str) -> Result<u32> {
     index.orders.insert(order_id.to_string(), assigned);
 
     let new_json = serde_json::to_string_pretty(&index)?;
-    guard
-        .seek(SeekFrom::Start(0))
-        .context("seeking order index")?;
+    guard.seek(SeekFrom::Start(0)).context("seeking order index")?;
     guard.set_len(0).context("truncating order index")?;
-    guard
-        .write_all(new_json.as_bytes())
-        .context("writing order index")?;
+    guard.write_all(new_json.as_bytes()).context("writing order index")?;
 
     Ok(assigned)
 }
@@ -625,7 +616,11 @@ fn assign_order_index(index_path: &str, order_id: &str) -> Result<u32> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Write logs to stderr so stdout carries only machine-readable output (JSON).
+    // The address/check subcommands are called as subprocesses by app-privategit-marketplace,
+    // which captures stdout to parse JSON responses.
     tracing_subscriber::fmt()
+        .with_writer(std::io::stderr)
         .with_env_filter(std::env::var("RUST_LOG").unwrap_or_else(|_| "info".into()))
         .init();
 
@@ -635,5 +630,10 @@ async fn main() -> Result<()> {
         Command::Watch(args) => watch(args).await,
         Command::Check(args) => check(args).await,
         Command::Address(args) => address(args).await,
+        Command::Keygen => {
+            keygen();
+            Ok(())
+        }
+        Command::GenerateSeed(args) => generate_seed(args),
     }
 }
