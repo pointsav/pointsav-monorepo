@@ -13,8 +13,11 @@ to: totebox@project-editorial
 re: 2 SLM TOPIC drafts ready for language pass + overlap review
 created: 2026-06-01T19:30:00Z
 priority: normal
-status: pending
-msg-id: project-intelligence-20260601-topic-drafts-slm-substrate
+status: actioned
+actioned: 2026-05-30T04:00:00Z
+actioned_by: command@claude-code
+note: project-gis inbox confirmed actioned (re-post complete). No relay needed.
+msg-id: project-editorial-20260530-j1-j3-cleanup-repost
 ---
 
 Two TOPIC drafts in `.agent/drafts-outbound/` are ready for editorial review.
