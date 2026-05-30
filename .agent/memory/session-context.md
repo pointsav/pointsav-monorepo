@@ -2,6 +2,31 @@
 
 ---
 
+### 2026-05-30 | totebox@project-console | claude-sonnet-4-6
+
+**Done this session:**
+- Phase A complete (prior session): Doorman port 8011→9080 fixed everywhere; Phase 5 marked complete in BRIEFs; `BRIEF-cross-platform-release.md` created; Stage 6 force-push executed (`009b2e04`); outbox sent to Command.
+- Phase B complete (this session): Cross-platform release infrastructure.
+  - `rust-toolchain.toml` (stable channel pinned at monorepo root)
+  - `.github/workflows/release.yml` rewritten: 4-target matrix (Linux musl via cargo-zigbuild on ubuntu-22.04, macOS Intel 10.13+ on macos-13, macOS ARM 11.0+ on macos-14, universal lipo); trigger on `v*.*.*` tag + workflow_dispatch; `softprops/action-gh-release@v2`
+  - `reqwest` TLS switched from default (native-tls) to `rustls-tls` in all 4 workspace members: app-console-keys, app-console-content, app-console-input, app-console-system
+  - `TerminalCaps` struct added to `app-console-keys/src/chassis.rs`: fields `kitty`, `sixel`, `truecolor`; detected from `Picker::protocol_type()` (ratatui-image 9.0.0) + `COLORTERM` env var; stored on `AppConsoleKeys`; populated in `run_local()` after probe; exposed via `caps()` accessor
+  - `cargo check --workspace` exits 0; committed `6f21f580` (Jennifer Woodfine)
+- B2 (`.cargo/config.toml`) omitted: `[env]` in Cargo config has no target-conditional syntax; `MACOSX_DEPLOYMENT_TARGET` correctly set per-job in CI workflow.
+- `pointsav-monorepo/NEXT.md` updated: Phase B complete; Phase C/D/E added as next items.
+
+**Pending / carry-forward:**
+- Stage 6 for Phase B commit (`6f21f580`) + prior Phase A commit (`009b2e04`): need `bin/promote.sh` from Command Session. Outbox sent (prior session).
+- **Phase C** — Email cartridge (F3): convert `app-console-email` stub → lib; implement `EmailCartridge` (inbox/read/compose via `service-email` in `project-data`); wire into `os-console`.
+- **Phase D** — SLM cartridge (F9): convert `app-console-slm` stub → lib; implement `SlmCartridge` (Doorman health at 9080, Yo-Yo tier display); wire into `os-console`.
+- **Phase E** — Orchestration wiring: audit `mba_client.rs`; rename `totebox_host` → `orchestration_host` in `ConsoleConfig`.
+- Phase 6: offline mode + Tantivy full-text search (original coding roadmap).
+- Tag `v0.1.0` triggers GitHub Actions release (after Stage 6 + canonical promote).
+
+**Operator preferences surfaced:** (none new this session)
+
+---
+
 ### 2026-05-29 | totebox@project-console | claude-sonnet-4-6
 
 **Done this session:**
@@ -39,40 +64,5 @@
 - Archive-level NEXT.md replacement (currently has project-infrastructure content) — Command decision needed.
 
 **Operator preferences surfaced:** (none new this session)
-
----
-
-### 2026-05-24 | totebox@project-console | claude-sonnet-4-6
-
-**Done this session:**
-
-- **Brief consolidation (session 13):** Archived 3 contaminated project-infrastructure briefs + 1 project-editorial file. Staged Gemini AI-AUDIT with corrections. Updated BRIEF-slm-substrate-master.md (P0/P1/P2/P3 open items). Created BRIEF-project-intelligence-active-work.md. Commit `1b6c8df8`.
-- **Poison queue resolved (session 13):** 78 entries investigated — 68 pre-Fix-A quarantined, 10 post-Fix-A (llama-server outage artifact) recovered to queue/. queue-poison: 0.
-- **P1 — /readyz reason+zone (session 14):** Added `reason` + `zone` fields to `TierBInfo` in `slm-doorman/src/router.rs`. Zone read from `SLM_YOYO_GCP_ZONE` env var. 3 new tests (`tier_b_status_reason_health_probe_failures`, `_request_failures`, `_no_reason_when_closed`). All 105 lib tests pass. Commits `6347d41e`, `eb9a2f75`.
-- **P2 — service-content base_dir (session 14):** Replaced stale `/home/mathew/deployments/...` default with `${INFRASTRUCTURE_ROOT}/data`. Commit `6347d41e`.
-- **Sprint 4a — app-console-slm status command (session 14):** Full implementation — Doorman /healthz+/readyz, Tier A/B health, chassis health, corpus counts. 6 unit tests pass. Smoke test confirmed (`Doorman UP, Tier A UP`). Commits `df802ff3`, `5077d92d`.
-- **Corpus audit (session 14):** Discovered all 1,410 existing `edit` tuples have empty `actual_diff` (pre-Fix-A). 548 shadow-capture tuples have empty OLMo diffs (generated before Fix B). Only the 77+ post-Fix-A `queue/` entries have real diffs. These are the ONLY useful training signal.
-- **Research + architecture revision (session 14):** Web research (5 papers) confirms: (1) empty DPO rejected samples are HARMFUL not neutral; (2) SFT alone outperforms SFT+DPO at <5K samples; (3) CodeDPO with execution-based validation is the right GPU path. Revised architecture: SFT-first → CodeDPO-on-GPU only. BRIEF-slm-learning-loop.md §9 written. Commit `9311da5c`.
-- **All tests pass:** slm-doorman (all), app-console-slm (6/6), service-content (10/10).
-
-**Pending / carry-forward:**
-
-- **OPERATOR ACTION REQUIRED — drain pause:** Run `sudo sed -i 's/SLM_HOLD_THRESHOLD_SECS=3600/SLM_HOLD_THRESHOLD_SECS=1/' /etc/local-doorman/local-doorman.env && sudo systemctl restart local-doorman.service` — pauses CPU drain, keeps SFT capture, auto-resumes when Yo-Yo starts. (Blocked by sudo classifier from Totebox session.)
-- **Stage 6:** 6 commits ahead of origin/main — Command Session needs `bin/promote.sh`. Commits: `1b6c8df8`, `6347d41e`, `df802ff3`, `5077d92d`, `eb9a2f75`, `9311da5c`.
-- **SFT extraction script:** `scripts/extract-sft-pairs.py` — read `queue/*.jsonl`, filter `actual_diff != ""`, output clean SFT JSONL for LoRA training on 77 post-Fix-A entries.
-- **CodeDPO scaffold (Yo-Yo gated):** Generate candidate diffs with OLMo 3 32B-Think, validate with `cargo check`, output execution-validated DPO pairs.
-- **Quarantine corrupt DPO tuples:** The 548 `training-corpus/apprenticeship/shadow-capture/` tuples must be quarantined before any training run.
-- **LoRA fine-tuning first run:** After SFT extraction + CodeDPO pairs. Rank=16, alpha=32, 5–10 epochs. Checklist in BRIEF-slm-learning-loop.md §9.
-- **Fix C (deferred indefinitely):** GBNF grammar no longer urgent — CPU drain paused; GPU OLMo 3 handles format natively.
-- **orchestration-slm deploy:** Operator actions from outbox `project-intelligence-20260530-stage6-orchestration-deploy` still pending.
-- **app-console-content port fix (project-console):** `src/draft.rs` 8011 → 9080 — message in outbox to project-console.
-- **stale shim test fields:** `anthropic_shim_test.rs` `tier_a_reason`/`idle_monitor`.
-- **drain-timer systemd cleanup:** Disabled units still in `/etc/systemd/system/`.
-
-**Operator preferences surfaced:**
-- Deep think before coding — questioned whether CPU DPO was realistic (it wasn't). Research before committing to architecture.
-- Comprehensive BRIEF updates after major findings — don't lose valuable learning between sessions.
-
----
 
 
