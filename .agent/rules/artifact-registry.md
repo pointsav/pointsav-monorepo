@@ -341,6 +341,38 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 - **Source:** project-gis GIS-4 corrected dispatch; `language_protocol: DESIGN-RESEARCH`
 - **Content:** Template design for Regional Market TOPIC articles; routed per artifact-registry routing rules
 
+### A23 — TOPIC batch: INF-A/INF-B sessions 2–12 infrastructure TOPICs (bilingual)
+- **Status:** COMMITTED — `277847a` (2026-05-30) — `media-knowledge-documentation/`
+- **Source:** project-infrastructure INF-A + INF-B (sessions 2–12); inbox messages `command-20260530-infrastructure-sessions2-7-topic-relay` and `command-20260530-infrastructure-sessions6-7-editorial`
+- **Content:** 11 bilingual TOPIC pairs (22 files) for documentation.pointsav.com:
+  - `infrastructure/sovereign-mesh` + `.es` (updated — IP fix 10.50→10.8 applied)
+  - `architecture/genesis-protocol` + `.es` (updated)
+  - `architecture/ppn-command-protocol` + `.es` (updated)
+  - `architecture/service-pointsav-link` + `.es` (updated)
+  - `architecture/ppn-hypervisor-resource-pool` + `.es` (new — session 7 latest)
+  - `architecture/ppn-distributed-vm-fabric` + `.es` (new)
+  - `architecture/ppn-architecture-overview` + `.es` (new)
+  - `systems/os-network-admin` + `.es` (updated)
+  - `systems/totebox-archive` + `.es` (updated)
+  - `systems/vm-architecture` + `.es` (new — session 12: NetBSD/NVMM fix + Resource Pooling)
+  - `systems/os-infrastructure-ppn-node` + `.es` (new — session 12)
+
+### A24 — GUIDE batch: INF-B sessions 6–12 infrastructure GUIDEs (EN-only)
+- **Status:** STAGED — `955d6f34` (2026-05-30) — pending Command Session routing to woodfine-fleet-deployment
+- **Source:** project-infrastructure INF-B (sessions 6–12)
+- **Content:** 4 EN-only operational GUIDEs routed to Command via outbox (msg-id: project-editorial-20260530-inf-b-guides-route):
+  - `guide-ppn-first-deployment` → `fleet-infrastructure/` (session 7; supersedes session 6)
+  - `guide-node-join-ceremony` → `fleet-infrastructure/`
+  - `guide-vm-prove-balloon-demo` → `fleet-infrastructure/`
+  - `guide-vm-infrastructure-resource-pool` → `fleet-infrastructure-cloud-1/`
+
+### A25 — PROSE-RESEARCH review: PROSE-RESEARCH-ppn-architecture-phd-thesis.draft.md
+- **Status:** REVIEW RETURNED (2026-05-30) — findings posted to project-infrastructure outbox (msg-id: project-editorial-20260530-ppn-arch-review)
+- **Source:** project-infrastructure INF-B PROSE-RESEARCH review request
+- **Scope:** 6-point review: academic register, structure, contributions, citations, BCSC posture, abstract
+- **Key findings:** Abstract 30 words over; "groundbreaking" violation; Related Work out-of-order; WireGuard missing from bibliography; "may be deliverable" softens empirical claim; Contribution #4 weakly falsifiable
+- **Benchmarks [T]/[N]/[L]:** Confirmed NOT filled — no violation
+
 ---
 
 ## B — Backlog (queued for future sessions)

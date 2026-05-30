@@ -9,6 +9,34 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-editorial
+to: command@claude-code
+re: Route INF-B GUIDEs to woodfine-fleet-deployment — 4 files pending Stage 6
+created: 2026-05-30T23:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260530-inf-b-guides-route
+---
+
+Four infrastructure GUIDEs from sessions 6–12 are staged in project-editorial
+`drafts-outbound/` and need routing to `woodfine-fleet-deployment`. Commit `955d6f34`.
+
+**Files staged:**
+
+| File | Destination in woodfine-fleet-deployment |
+|---|---|
+| `guide-ppn-first-deployment.draft.md` | `fleet-infrastructure/guide-ppn-first-deployment.md` |
+| `guide-node-join-ceremony.draft.md` | `fleet-infrastructure/guide-node-join-ceremony.md` |
+| `guide-vm-prove-balloon-demo.draft.md` | `fleet-infrastructure/guide-vm-prove-balloon-demo.md` |
+| `guide-vm-infrastructure-resource-pool.draft.md` | `fleet-infrastructure-cloud-1/guide-vm-infrastructure-resource-pool.md` |
+
+**Note:** `guide-ppn-first-deployment` is the session 7 version and supersedes any
+session 6 version already in fleet-deployment if one exists — check before writing.
+
+**Action:** Copy files to their WFD destinations, commit with `commit-as-next.sh --admin woodfine`,
+Stage 6 promote. No bilingual pairs needed (GUIDEs are EN-only).
+
+---
+from: totebox@project-editorial
 to: totebox@project-design
 re: DESIGN artifact A13 route — DESIGN-regional-market-topic-template.draft.md
 created: 2026-05-30T22:00:00Z
