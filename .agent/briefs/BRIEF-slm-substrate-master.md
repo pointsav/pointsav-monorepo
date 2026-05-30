@@ -3,7 +3,7 @@ artifact: brief
 status: active
 title: SLM Substrate Master — Yo-Yo + DataGraph + Learning Loop
 created: 2026-05-24
-updated: 2026-05-29 (session 8 — circuit resilience plan; Tier A confirmed primary; five-defect inventory)
+updated: 2026-05-30 (session 9 end — Sprint 3D: Tier A timeout 120s→1800s; drain wrapper 150s→1860s; poison queue recovered)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 grounds_in:
   - service-slm/ARCHITECTURE.md
@@ -39,11 +39,11 @@ notes: >
 
 ---
 
-## §1 — Current live state (as of 2026-05-30T17:00Z — session 9: orchestration-slm + daily smoke)
+## §1 — Current live state (as of 2026-05-30T21:14Z — session 9 end: Sprint 3D timeout fix + poison queue recovery)
 
 | Component | Version | Status | Notes |
 |---|---|---|---|
-| `slm-doorman-server` | rebuilt 2026-05-29T19:26Z | **active** | sha256=`81b8629cf474104fe33274244c6db832a1f2f5dca898c80a98cd524bf3269e2f`; Sprint 3A: `SLM_TIER_A_FIRST=true`; Sprint 2B: `tier_b` in readyz; Sprint 3C: `SLM_HOLD_THRESHOLD_SECS=3600`; commit `5493a8f4` |
+| `slm-doorman-server` | rebuilt 2026-05-30T21:14Z | **active** | sha256=`bd91eafc7c2a232c10e0c449f31474d9d994568df9c4054eb8f591f93ce3360d`; **Sprint 3D: timeout 1800s**; Sprint 3A: `SLM_TIER_A_FIRST=true`; Sprint 3C: drain hold bypass; commit `1398522b` |
 | `service-content` | rebuilt 2026-05-29T19:26Z | **active** | sha256=`2362ea5c580a9869c5e307b645d60219cb9535dbf4218bd8762da870a4c62f7b`; Sprint 2A: `entity_count` in `/healthz` (7,201 entities); Sprint 3B: Tier A fallback enabled; commit `5493a8f4` |
 | `orchestration-slm-server` | built session 9 | **NOT YET DEPLOYED** | unit file committed `d445b5ea`; Command operator install needed (see outbox `project-intelligence-20260530-stage6-orchestration-deploy`) |
 | `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** | europe-west4-a L4 stockout; restart with `start-yoyo.sh --wait-ready=120 --runtime=1h` when capacity returns |

@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-30 — Circuit resilience ALL SPRINTS COMPLETE; Tier A is the confident primary
+> Last updated: 2026-05-30 — Sprint 3D: Tier A timeout 120s→1800s; drain wrapper 150s→1860s; 21 poison briefs recovered
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -10,7 +10,7 @@
 
 | Service | State | Notes |
 |---|---|---|
-| `local-doorman.service` | active | **`SLM_TIER_A_FIRST=true`**; Sprint 3A deployed; tier_b readyz field live |
+| `local-doorman.service` | active | **`SLM_TIER_A_FIRST=true`**; Sprint 3D deployed (timeout 1800s); 23 briefs queued; 1 in-flight |
 | `local-slm.service` (llama-server) | active | OLMo-2-7B Q4_K_M; Tier A primary |
 | `yoyo-tier-b-1` | **TERMINATED** | Stopped 2026-05-28; circuit will open after probe failures (not circuit-breaker tripped by requests with tier_a_first) |
 | `local-content.service` | active (rebuilt 2026-05-29T19:26Z) | LadybugDB ready (7,201 entities); **Tier A fallback enabled (300s interval)**; entity_count in /healthz |
@@ -29,14 +29,22 @@
 | 3A: SLM_TIER_A_FIRST flag | ✅ DONE | `08d64e01` |
 | 3B: WATCHER Tier A fallback | ✅ DONE | `08d64e01` |
 | 3C: drain hold when Tier B open >1h | ✅ DONE | `08d64e01` |
+| 3D: Tier A timeout 120s→1800s (30 min); drain wrapper 150s→1860s | ✅ DONE | `1398522b` |
 
-### ⚠️ PENDING: QEMU VM may still be blocking inference
-`qemu-system-x86_64 -accel tcg -m 6144M` (PID 4039898, no KVM) consuming 95% CPU continuously.
-System load 17+. llama-server is active but inference is extremely slow (~0.03 tok/s vs normal 1.7 tok/s).
-Confirm with project-infrastructure owner then kill if appropriate:
-```bash
-kill 4039898   # kills vm-mediakit — verify it is safe first
-```
+**3D rationale:** OLMo 7B on CPU at ~2 tok/s generates up to 2048 tokens in
+inference (max_tokens=2048 per `dispatch_shadow()`). At 2 tok/s that's 1024s
+theoretical max + prefill overhead; observed real-world runs on this VM: 17–60 min.
+The prior 120s timeout created an infinite retry loop: brief retried immediately
+on timeout, llama-server accepted a new request, timed out again. Fixed by
+raising client timeout to 1800s and drain wrapper to 1860s (always > client timeout).
+
+**Binary deployed 2026-05-30T21:14:54Z:**
+- SHA256: `bd91eafc7c2a232c10e0c449f31474d9d994568df9c4054eb8f591f93ce3360d`
+- Ledger entry: `/srv/foundry/data/binary-ledger/slm-doorman-server.jsonl`
+
+### ⚠️ RESOLVED: QEMU CPU was briefly at 95% (2026-05-29/30)
+QEMU dropped to ~8% CPU. vm-mediakit is no longer blocking inference.
+Monitor: `ps aux | grep qemu` — if ≥90% CPU again, coordinate with project-infrastructure.
 
 ### Learning loop §7 status (2026-05-30)
 - ✅ §7.1 `has_local: true` — verified
@@ -47,6 +55,18 @@ kill 4039898   # kills vm-mediakit — verify it is safe first
 - ❌ §7.4 entities extracted — Tier B circuit OPEN; Yo-Yo TERMINATED (operator: start manually when ready)
 - ✅ §7.5 git commit → shadow hit — verified
 - ❌ §7.6 corpus-threshold → training — downstream of §7.4
+
+### ⚠️ NEXT: stale test fields in anthropic_shim_test.rs
+`tier_a_reason` and `idle_monitor` fields in `AppState` construction in
+`http.rs` shim tests are stale (fields were removed). Tests may fail if
+these fields are checked or if AppState struct is tightened. Add NEXT.md
+cleanup item for a follow-up session.
+
+### ⚠️ Poison queue recovery (2026-05-30)
+21 briefs were in queue-poison due to old binary calling dequeue() instead of
+dequeue_shadow() on ShadowQueueEntry-format files. All 21 moved back to queue/
+manually. Current new binary (Sprint 3D) handles these correctly via dequeue_shadow().
+Monitor queue-poison after next ~20 drain cycles to confirm no recurrence.
 
 ### Yo-Yo status (2026-05-29)
 - VM: TERMINATED on GCP (europe-west4-a, yoyo-tier-b-1)
