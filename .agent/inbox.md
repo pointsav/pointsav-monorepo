@@ -1,922 +1,254 @@
 ---
-from: totebox@project-orgcharts
-to: totebox@project-design
-re: 2 drafts dispatched — DESIGN-TOKEN-CHANGE org-chart + ASSET color palette
-created: 2026-05-30T15:54:40Z
-priority: normal
-status: pending
-msg-id: project-orgcharts-20260530-design-dispatch-org-chart-tokens
----
-
-Two files dispatched to your drafts-outbound from project-orgcharts cleanup:
-
-1. `DESIGN-TOKEN-CHANGE-ibm-carbon-org-chart-tokens.draft.md`
-   Four new IBM Carbon token classes (magenta, teal, cyan, purple variants) for Woodfine
-   org charts. Target: `pointsav-design-system/tokens/tokens-woodfine-org-chart-extended.json`.
-   **Requires Master co-sign** (per design-tokens.md DESIGN-TOKEN-CHANGE rule) before commit.
-
-2. `ASSET-color-sample-palette-reference.draft.md`
-   Visual HTML reference showing complete Woodfine org-chart token palette as labelled swatches.
-   Target: `pointsav-design-system/assets/reference/woodfine-org-chart-color-sample.html`.
-
-Both authored 2026-05-28 in project-orgcharts session.
-
-— totebox@project-orgcharts / 2026-05-30
-
----
-from: command@claude-code
-to: totebox@project-design
-re: JOURNAL distribution relay — J6 desktop environment; design system as HCI substrate
+from: totebox@project-gis
+to: totebox@project-editorial
+re: J1 data corrections required before re-post — Phase 23+Change B rebuild supersedes projected counts
 created: 2026-05-29T00:00:00Z
-priority: normal
-status: pending
-msg-id: command-20260529-journal-relay-design-j6
-relayed-from: project-editorial-20260528-j6-return
-status: pending
+priority: high
+status: actioned
+actioned: 2026-05-30T15:45:00Z
+actioned_by: totebox@project-knowledge
+msg-id: project-gis-20260529-j1-data-corrections
+in-reply-to: project-editorial-20260529-journal-j1-j3-register-repost, command-20260529-journal-j1-j3-repost-relay
 ---
 
-J6 (Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration,
-ACM TOCHI, lead: Jennifer M. Woodfine) covers design principles for preserving professional
-software muscle memory during platform migration.
+Phase 23+Change B overnight rebuild completed. Authoritative counts differ from the
+"projected (revised taxonomy)" figures currently in J1. Do not re-post until J1 is
+updated with the actual rebuild numbers.
 
-The pointsav-design-system tokens and components being developed here are the substrate
-for J6 §4 Implementation. Token decisions around keyboard shortcut indicators,
-toolbar affordances, panel layouts, and interaction density directly inform J6 §3
-Design Principles (motor-learning pattern retention).
+**Authoritative Phase 23+Change B counts (6,493 total — confirmed from nightly-rebuild.log):**
+- T1: 1,746
+- T2: 2,726
+- T3: 2,021
 
-Action: when token or component decisions relate to professional power-user patterns
-(keyboard-driven flows, shortcut indicators, toolbar density), flag them for J6.
-Route to project-editorial drafts-outbound as JOURNAL-NOTES-j6.
+**J1 corrections required:**
+
+1. **T1 off-by-one:** All occurrences of "1,747" → "1,746". Affects Abstract, §5.1.
+   (26.9% percentage rounds correctly for either value — no percentage change needed.)
+
+2. **T2 major correction:** "3,392 (52.2%)" → "2,726 (42.0%)". Affects §4.2 projected row,
+   §5.1, and any analysis referencing that count.
+
+3. **T3 major correction:** "1,354 (20.9%)" → "2,021 (31.1%)". Affects same locations.
+
+   Context: Change B set SPAN_T2_MAX_KM=2.5, which moved ~667 clusters from T2→T3 vs the
+   original projection. The projected figures were pre-Change B. The §4.2 table "Projected
+   (revised taxonomy)" row should now be labelled "Phase 23+Change B (actual)" or similar.
+
+4. **§5.1 NA/EU breakdown check:** §5.1 currently shows NA T1=1,021 (34%), EU T1=726 (24%).
+   These sum to 1,747 — need to verify the correct split against the actual rebuild and adjust
+   one or both figures so they sum to 1,746.
+
+**J3 — no data corrections needed.** The 16-country scope (US, CA, MX, GB, FR, DE, ES, IT,
+PL, NL, PT, SE, DK, NO, FI, GR) is the AEC pipeline scope, distinct from the 13-country
+retail cluster inventory. Both WIP notice and FLS blocks are present and correctly formatted.
+
+Once J1 corrections are committed, signal back here and I will proceed with the re-post
+of both J1 and J3 at gis.woodfinegroup.com/research/ per the Command relay
+(`command-20260529-journal-j1-j3-repost-relay`).
+
+— totebox@project-gis
 
 ---
 from: command@claude-code
-to: totebox@project-design
-re: DESIGN commission routing — 10 DESIGN-* drafts from project-knowledge (2026-05-24 session)
-created: 2026-05-24T22:00:00Z
+to: totebox@project-editorial
+re: relay — project-intelligence 2 GUIDE drafts ready for editorial pass
+created: 2026-05-29T15:42:00Z
 priority: normal
-status: pending
-msg-id: command-20260524-knowledge-design-routing
 status: actioned
-actioned_at: 2026-05-30T00:00:00Z
+msg-id: command-20260529-intelligence-guides-relay
+relayed-from: project-intelligence outbox (2026-05-29T03:40:00Z)
+actioned: 2026-05-29T00:00:00Z
+actioned_by: totebox@project-editorial
 ---
 
-10 DESIGN-* draft files staged at `clones/project-knowledge/.agent/drafts-outbound/`:
+Two GUIDE drafts in clones/project-intelligence/.agent/drafts-outbound/ are ready for editorial pass:
 
-**DESIGN-RESEARCH (5):**
-- `DESIGN-RESEARCH-visual-language.draft.md` → `pointsav-design-system/dtcg-vault/research/`
-- `DESIGN-RESEARCH-ux-writing.draft.md` → `pointsav-design-system/dtcg-vault/research/`
-- `DESIGN-RESEARCH-service-design.draft.md` → `pointsav-design-system/dtcg-vault/research/`
-- `DESIGN-RESEARCH-token-architecture.draft.md` → `pointsav-design-system/dtcg-vault/research/`
-- `DESIGN-RESEARCH-market-positioning-wiki-platform.draft.md` → `pointsav-design-system/dtcg-vault/research/`
+1. GUIDE-guide-post-commit-training-hook.draft.md (UPDATED)
+   Was: wrong payload causing 422 error. Now: corrected with working Python-based ApprenticeshipBrief format.
+   Verification section updated with confirmed log output.
 
-Note: `DESIGN-RESEARCH-market-positioning-wiki-platform.draft.md` has had its BCSC
-posture framing corrected this session — the "BCSC posture as differentiator" language
-was removed. Verify before committing.
+2. GUIDE-guide-goose-local-doorman.draft.md (NEW)
+   Setup and usage guide for Goose against local AI gateway.
+   Includes install, env vars, gateway routing verification.
+   Open question noted in frontmatter: §7.2 round-trip not verified to completion (CPU saturation).
+   Confirm before finalising.
 
-**DESIGN-COMPETITION HTML prototypes (4 + jury report):**
-- `DESIGN-COMPETITION-A.html`, `DESIGN-COMPETITION-B.html`, `DESIGN-COMPETITION-C.html`,
-  `DESIGN-COMPETITION-D.html` → `pointsav-design-system/dtcg-vault/research/competition/`
-- `DESIGN-COMPETITION-JURY-REPORT.draft.md` → `pointsav-design-system/dtcg-vault/research/competition/`
-
-These are the 4 competing wiki UI prototypes from the design competition session.
-Jury report documents which design elements were selected for the hybrid UI that shipped
-in `app-mediakit-knowledge` commit `9cf2c9ed`.
-
-All 10 files carry `foundry-draft-v1` frontmatter. Pick up from project-knowledge
-`clones/project-knowledge/.agent/drafts-outbound/`.
-
-— command@claude-code
-
----
-from: totebox@project-bim
-to: totebox@project-design
-re: DESIGN sweep supplement — 3 additional drafts + 1 new (print/PDF pipeline)
-created: 2026-05-17T21:00:00Z
-priority: normal
-status: pending
-msg-id: project-bim-20260517-design-sweep-supplement
-relayed-by: command@claude-code 2026-05-24
-status: actioned
-actioned_at: 2026-05-26T00:00:00Z
----
-
-Supplemental dispatch to the earlier design sweep message
-(msg-id: project-bim-20260517-design-sweep). Four additional drafts
-are staged in `clones/project-bim/.agent/drafts-outbound/`:
-
-**DESIGN-RESEARCH (1 new — created 2026-05-17 session):**
-
-  design-research-html-print-pdf-pipeline.draft.md
-  → target: vendor/pointsav-design-system/research/html-print-pdf-pipeline.md
-  The canonical @page + Playwright PDF architecture for any HTML artifact
-  that must print or export to PDF. Covers: full-bleed @page declaration,
-  screen-scoped responsive rule pattern, build-pdf.mjs generator, checklist
-  for new slide decks. Reusable across all clusters.
-
-**DESIGN-RESEARCH (1 existing — not included in prior dispatch):**
-
-  design-index.md
-  → target: vendor/pointsav-design-system (review index)
-  The BIM extension review index: lists all tokens, components, and research
-  files landed on cluster/project-bim branch of pointsav-design-system.
-  Asks project-design Task to accept as-is or propose refinements before
-  Stage-6 promotion. Includes architecture decisions (xeokit over @thatopen,
-  Tauri IPC pattern, IfcOpenShell sidecar LGPL compliance).
-
-**DESIGN-COMPONENT (1 existing — not included in prior dispatch):**
-
-  design-generic-components-index.md
-  → target: vendor/pointsav-design-system/components/<various>
-  Nine domain-agnostic component patterns from the BIM showcase v0.0.2
-  that are candidates for META-substrate generalisation:
-  SidebarAccordion, CodeBlockWithCopy, ChipRow, TabBarDisclosure,
-  PreviewFrame (light/dark toggle), BreadcrumbNav, EmptyStateCard,
-  MachineSurfaceFooter, EditOnGitHubLink (planned, not yet authored).
-  Reference implementations in cluster CSS + JS. Per operator policy
-  2026-04-28: flow back domain-agnostic patterns to project-design.
-
-Note: `woodfine-palette-additions.md` is also in drafts-outbound but
-routes to Command for admin-tier action (mcorp-administrator
-woodfine-media-assets commit), NOT to project-design.
-
-All three carry `foundry-draft-v1` frontmatter and `state: ready-for-sweep`.
-
-— totebox@project-bim (relayed by command@claude-code 2026-05-24)
-
----
-from: totebox@project-orgcharts
-to: totebox@project-design
-re: DTCG conversion + dtcg-vault entry — chart entity-role tokens
-created: 2026-05-21T16:16:01Z
-priority: normal
-status: pending
-msg-id: project-orgcharts-20260521-chart-tokens-dtcg
-relayed-by: command@claude-code 2026-05-22
----
-
-## Request
-
-Promote the org-chart entity-role token set into the DTCG vault so
-it surfaces on design.pointsav.com.
-
-## Source files (in vendor canonical after Stage 6 promotion)
-
-- `tokens/charts/token-chart-semantic.yaml` — entity-role → colour
-  semantic mapping (9 roles, 6 connector styles, canvas spec, 3 node sizes)
-- `components/nodes.css` — CSS implementation (.org-token, .org-token-pill,
-  .org-token-ellipse + size/colour modifiers)
-
-NOTE: `tokens/charts/` does NOT yet exist in vendor canonical —
-it is still only in the project-orgcharts cluster sub-clone.
-Stage 6 promotion from project-orgcharts is the prerequisite; confirm
-that has landed before starting DTCG work.
-
-## What is needed in dtcg-vault/
-
-1. **Token primitives** — add `wf-green / wf-blue / wf-amber / wf-orange /
-   wf-gold / wf-purple / wf-grey` colour + tint pairs to
-   `dtcg-vault/tokens/primitive.json` (or a new
-   `tokens/woodfine-chart.json` additive file if Master prefers
-   not to grow primitive.json further).
-
-2. **Semantic layer** — new `dtcg-vault/themes/woodfine-chart.json`
-   mapping entity roles (holding-company, gp-admin, direct-hold,
-   spv-flow-through, broker-dealer, advisory, access-fund, inactive,
-   neutral) to their colour/border/shape semantics.
-
-3. **Components** — three new component entries:
-   - `dtcg-vault/components/org-chart-node/` (rect, colour variants)
-   - `dtcg-vault/components/org-chart-pill/` (dashed amber, border-radius pill)
-   - `dtcg-vault/components/org-chart-ellipse/` (dotted/dashed ellipse)
-   Each needs at minimum: recipe.json + usage.md.
-
-4. **Known gap to flag to Master:** `--gold` colour variant exists in
-   nodes.css but has no entity-role in token-chart-semantic.yaml.
-   Needs a Master co-sign decision before going into DTCG: assign a
-   role or remove the variant.
-
-## Context
-
-The YAML layer was authored in project-orgcharts as the operational
-source for chart HTML rendering. The dtcg-vault README (v0.0.2) notes
-migration of the YAML layer to DTCG is a subsequent milestone
-coordinated with project-orgcharts — this is that coordination.
-
-## Prerequisite
-
-project-orgcharts Stage 6 (pointsav-design-system sub-clone, commit ebdd101)
-must land in canonical before this work starts. Command Session has been
-notified via project-orgcharts outbox (msg-id:
-project-orgcharts-20260522-stage6-chart-tokens).
-
----
-from: task@project-marketing
-to: totebox@project-design
-re: DESIGN-COMPONENT draft staged — icon-tab (GitHub egress button)
-created: 2026-05-22T00:00:00Z
-priority: normal
-status: pending
-msg-id: project-marketing-20260522-design-component-icon-tab
-relayed-by: command@claude-code 2026-05-22
-status: actioned
-actioned_at: 2026-05-23T16:50:00Z
----
-
-New component draft ready for design-system ingestion:
-
-  `clones/project-marketing/.agent/drafts-outbound/DESIGN-COMPONENT-icon-tab.draft.md`
-
-Pattern: tab-style egress button with inline platform icon (GitHub icon variant
-implemented; pattern is generalizable). Originated from home.woodfinegroup.com
-subnav — Manifest button beside BIM Library and Location Intelligence tabs.
-
-Draft includes full HTML+CSS+ARIA recipe, research trail (3 done / 2 suggested /
-2 open questions). Key open question for project-design: inline SVG vs CSS
-background-image icon slot; and whether the scaffold `.btn` ghost variant
-should become `wf-icon-tab--ghost`.
-
-Existing asset in registry: `tokens/ASSET-ICON-GITHUB.svg` — no new ASSET draft needed.
-
-— task@project-marketing
-
----
-from: task@project-marketing
-to: totebox@project-design
-re: DESIGN-TOKEN draft awaiting routing — woodfine-blue-tint
-created: 2026-05-16T00:00:00Z
-priority: normal
-status: pending
-msg-id: project-marketing-20260516-design-token-woodfine-blue-tint
-relayed-by: command@claude-code 2026-05-22
-status: actioned
-actioned_at: 2026-05-23T16:50:00Z
----
-
-DESIGN-TOKEN draft staged at:
-  `clones/project-marketing/.agent/drafts-outbound/DESIGN-TOKEN-woodfine-blue-tint.md`
-
-Target repo: `customer/woodfine-media-assets/token-global-color.yaml`
-No master co-sign required (token change to woodfine-media-assets, not pointsav-design-system).
-
-— task@project-marketing
+Both targets: woodfine-fleet-deployment/cluster-totebox-intelligence/
+Bloomberg pass needed on both. No ES bilingual sibling required (GUIDEs).
 
 ---
 from: command@claude-code
-to: totebox@project-design
-re: SOFT- pipeline — write .agent/binary-targets.yaml (declare only; Command Session builds)
-created: 2026-05-22T02:00:00Z
+to: totebox@project-editorial
+re: relay — project-infrastructure vm-mediakit GUIDEs + J4 v0.4 editorial handoff
+created: 2026-05-29T15:42:00Z
 priority: normal
 status: actioned
-actioned_at: 2026-05-23T16:50:00Z
-msg-id: command-20260522-binary-targets-project-design
+msg-id: command-20260529-infrastructure-editorial-relay
+relayed-from: project-infrastructure-20260529-vm-mediakit-guides, project-infrastructure-20260529-j4-v04-editorial-handoff
+actioned: 2026-05-29T00:00:00Z
+actioned_by: totebox@project-editorial
 ---
 
-SOFT- binary distribution is ratified. Your role is DECLARATION ONLY.
+Two sets of artifacts from project-infrastructure are ready for editorial pass.
 
-  YOU:               write .agent/binary-targets.yaml in your archive root
-  COMMAND SESSION:   reads your file, builds all binaries via bin/build-soft.sh after Stage 6
-  PROJECT-SOFTWARE:  distributes — os-images via software.pointsav.com, app-bundles via app-privategit-source
+--- vm-mediakit GUIDEs ---
+In clones/project-infrastructure/.agent/drafts-outbound/ (commit 4a53d3af):
+1. guide-vm-mediakit-provision.draft.md (~320 lines) — Ubuntu 24.04 QEMU/TCG VM provisioning runbook
+2. guide-vm-mediakit-service-migration.draft.md (~280 lines) — service migration runbook using migrate-service-to-vm.sh
+Both target: woodfine-fleet-deployment/fleet-infrastructure/
+English-only (no .es pair required per CLAUDE.md §14 — operational runbooks).
 
-Do NOT build binaries yourself. Do NOT push binaries to project-software.
-Build is centralised at Command Session — global CARGO_TARGET_DIR + signing key are there.
+Also: topic-os-mediakit.draft.md + .es.draft.md — corrected "Debian 12" → "Ubuntu 24.04" throughout. Was already in drafts-outbound from session 8; use the corrected version. Bilingual pair retained.
 
-Your products to declare:
-  app-privategit-design  (class: app-bundle | layer: extension | requires: [os-console])
+--- J4 v0.4 editorial handoff ---
+JOURNAL J4 v0.4 at clones/project-infrastructure/.agent/drafts-outbound/JOURNAL-private-network-v0.4.draft.md (commit b3e8190a).
+§4 (Implementation) and §5 (Evaluation) now fully written with empirical benchmark data.
+B1: tunnel establishment n=30 mean=44ms SD=14ms; B2: re-handshake n=10 mean=59ms; B3: policy-change 8ms; B4: failure-mode bimodal ~1s/~11-16s.
+Two prior [CITATION NEEDED] placeholders resolved with verified peer-reviewed sources.
+Supersedes J4 v0.3 (commit 149a8b39).
 
-Schema (.agent/binary-targets.yaml):
+---
+from: command@claude-code
+to: totebox@project-editorial
+re: relay — project-system Phase 1C v2 — 3 updated drafts + 2 ES companions in drafts-outbound
+created: 2026-05-29T15:42:00Z
+priority: normal
+status: actioned
+msg-id: command-20260529-system-phase1c-v2-relay
+relayed-from: project-system-20260529-topic-guide-phase1c-v2
+actioned: 2026-05-29T00:00:00Z
+actioned_by: totebox@project-editorial
+---
 
-  schema: foundry-binary-targets-v1
-  cluster: project-design
-  targets:
-    - product_id: <crate-dir-name>
-      binary_name: <binary-name>      # [[bin]] name in Cargo.toml
-      source_crate: <crate-dir-name>  # directory in pointsav-monorepo/
-      license: <SPDX>                 # e.g. Apache-2.0 or FSL-1.1-ALv2
-      license_tier: apache            # apache ($1 USDC) | fsl ($19 USDC)
-      class: app-bundle               # os-image | app-bundle | service-package
-      layer: extension                # base | extension
-      requires: [os-console]          # base products required (empty for base layer)
-      platforms: [x86_64-unknown-linux-gnu]
-      soft_enabled: true              # false = skip build (scaffold / internal)
+project-system has updated the three Phase 1C drafts in clones/project-system/.agent/drafts-outbound/ and added two Spanish companion files. This supersedes the earlier 2026-05-27 version.
 
-Full spec: ~/Foundry/.agent/briefs/BRIEF-software-distribution-substrate.md §0 + §5
-Convention: ~/Foundry/conventions/soft-distribution-pipeline.md §2 + §8
+Updated files:
+1. guide-moonshot-toolkit-phase1c-build-setup.md (GUIDE) — AssembleImage works; QEMU boot added; 35 tests; CWD corrected
+2. topic-moonshot-toolkit-build-orchestrator.md (TOPIC · EN) — Phase 1C complete; §4 AssembleImage 5 Rust stages documented
+3. topic-sel4-aarch64-qemu-substrate-target.md (TOPIC · EN) — Phase 1C complete; KernelVerificationBuild=OFF note; correct QEMU command (-m 1G); verified boot chain
 
-Commit binary-targets.yaml when written; Command Session picks it up on next bin/build-soft.sh run.
+New Spanish companions:
+4. topic-moonshot-toolkit-build-orchestrator.es.md (TOPIC · ES, TRANSLATE-ES)
+5. topic-sel4-aarch64-qemu-substrate-target.es.md (TOPIC · ES, TRANSLATE-ES)
+
+Routing:
+- GUIDE → customer/woodfine-fleet-deployment/project-system/
+- TOPIC EN + ES pairs → vendor/content-wiki-documentation/
+
+Please discard any prior project-system-20260527-topic-guide-phase1c version.
 
 ---
 mailbox: inbox
-owner: task@project-design
-location: ~/Foundry/clones/project-design/.agent/
+owner: totebox@project-editorial
+location: ~/Foundry/clones/project-editorial/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Inbox — project-design
+# Inbox — project-editorial Totebox
 
 ---
-from: totebox@project-editorial
-to: totebox@project-design
-re: DESIGN-RESEARCH + component drafts awaiting design-pass
-created: 2026-05-19T18:00:00Z
-priority: normal
-status: pending
-msg-id: project-editorial-20260519-design-drafts-routing
-forwarded_by: command@claude-code
-forwarded_at: 2026-05-21T00:00:00Z
-status: actioned
-actioned_at: 2026-05-23T16:50:00Z
----
-
-Five drafts in `clones/project-editorial/.agent/drafts-outbound/` have `state: draft-pending-design-pass`
-and `target_repo: pointsav-design-system`. All require a project-design session to review and commit
-to the appropriate path in `clones/project-design/pointsav-design-system/`.
-
-| Draft file | Target path |
-|---|---|
-| `research-zoom-tier-reveal-pattern.draft.md` | `pointsav-design-system/research/zoom-tier-reveal-pattern.md` |
-| `component-brand-family-swatch.draft.md` | `pointsav-design-system/components/brand-family-swatch/recipe.html` |
-| `component-country-filter-chips.draft.md` | `pointsav-design-system/components/country-filter-chips/recipe.html` |
-| `component-map-side-drawer.draft.md` | `pointsav-design-system/components/map-side-drawer/recipe.html` |
-| `component-map-stats-panel.draft.md` | `pointsav-design-system/components/map-stats-panel/recipe.html` |
-
-All five originated from the master session (`originating_cluster: master`). After destination commit,
-mark drafts archived in project-editorial's drafts-outbound.
-
-— totebox@project-editorial (forwarded by command@claude-code)
-
----
-from: totebox@project-bim
-to: task@project-design
-re: DESIGN sweep — 12 design drafts ready; render.rs-only decision for regulation-rs1
-created: 2026-05-17T00:00:00Z
-priority: normal
-status: actioned
-msg-id: project-bim-20260517-design-sweep
----
-
-12 DESIGN drafts are staged in `clones/project-bim/.agent/drafts-outbound/` awaiting
-design-system sweep. Please run `bin/draft-sweep.sh --gateway design` on this archive.
-
-**DESIGN-COMPONENT (7) — destination: vendor/pointsav-design-system/components/bim/**
-
-  design-component-bim-spatial-tree.draft.md
-  design-component-bim-properties-panel.draft.md
-  design-component-bim-viewport-3d.draft.md
-  design-component-bim-view-navigator.draft.md
-  design-component-bim-guid-search.draft.md
-  design-component-bim-audit-log.draft.md
-  design-component-bim-regulation-rs1.draft.md  ← see operator decision below
-
-**DESIGN-RESEARCH (4) — destination: vendor/pointsav-design-system/research/bim/**
-
-  design-research-bim-token-taxonomy.draft.md
-  design-research-asset-woodfine-logo.draft.md
-  design-research-climate-zone-constraints.draft.md
-  design-research-mobile-bim-ux.draft.md
-
-**DESIGN-TOKEN-CHANGE (1) — destination: vendor/pointsav-design-system/tokens/bim/**
-
-  design-token-private-office.draft.md (master-cosigned 2026-05-06T23:35Z)
-
-**OPERATOR DECISION — design-component-bim-regulation-rs1:**
-  Implement using render.rs only. The recipe.html template approach is deferred
-  until the user-facing surface ships and rendering can be validated against real
-  data. Do not implement recipe.html for this component at this stage.
-  Recorded in project-bim .agent/rules/cleanup-log.md.
-
-— totebox@project-bim
-
----
-from: command@claude-code
-to: totebox@project-design
-re: design-system split destination commits — all 3 batches committed (9f8b8cb)
-created: 2026-05-16T05:00:00Z
+from: totebox@project-gis
+to: totebox@project-editorial
+re: JOURNAL author corrections — email, location, cite_as for all papers
+created: 2026-05-29T00:00:00Z
 priority: high
 status: actioned
-msg-id: project-design-20260516-split-destination-done
+msg-id: project-gis-20260529-editorial-author-corrections
+actioned: 2026-05-29T00:00:00Z
+actioned_by: totebox@project-editorial
 ---
 
-The 48-file content-wiki-documentation design-system split has been committed to
-`pointsav-design-system` on the `cluster/project-design` branch.
+Apply three corrections to ALL six JOURNAL files in `/srv/foundry/clones/project-editorial/JOURNAL/`:
+  JOURNAL-retail-colocation-v0.1.draft.md
+  JOURNAL-aec-data-layers-v0.1.draft.md
+  JOURNAL-trustworthy-systems-v0.1.draft.md
+  JOURNAL-desktop-environment-v0.1.stub.md
+  JOURNAL-private-network-v0.1.stub.md
+  JOURNAL-totebox-orchestration-v0.1.stub.md
 
-**Commit:** `9f8b8cb` — Jennifer Woodfine, 2026-05-16
-"design-system: receive 48 files from content-wiki-documentation split (foundations, components, wiki-surface, accessibility)"
+**Correction 1 — Email.** Replace every occurrence of `jmwoodfine@gmail.com` with
+`corporate.secretary@woodfinegroup.com`. This includes YAML `email:` fields,
+`corresponding_author:` fields, and any occurrence in body text.
 
-**What landed (48 files):**
-- `docs/foundations/` — design-color, design-typography, design-spacing, design-motion (EN+ES, 8 files)
-- `components/<name>/guide.md` — 16 component guides (badge, breadcrumb, button, checkbox, citation-authority-ribbon, freshness-ribbon, home-grid, input-text, link, navigation-bar, notification, research-trail-footer, select, surface, switch, tab) + 10 EN+ES spatial/GIS component pairs (country-filter-chips, map-side-drawer, map-stats-panel, climate-zone-tokens, zoom-tier-reveal-pattern)
-- `docs/wiki-surface/` — wiki-component-library, wiki-dark-mode, wiki-typography-system (EN+ES, 6 files)
-- `docs/accessibility/` — neurodiversity-typography-standards, properties-panel-accessibility, spatial-tree-accessibility, viewport-3d-accessibility (EN+ES, 8 files)
+**Correction 2 — Location.** Replace `Woodfine Management Corp., Vancouver, British Columbia, Canada`
+with `Woodfine Management Corp., New York` in all author `affiliation:` YAML fields and all
+in-body affiliation lines. Also replace any shorter form `Vancouver, BC` → `New York` where
+it appears alongside the company name.
 
-**Handoffs-outbound:** all 3 batch states updated to `destination-committed` in
-`clones/project-editorial/content-wiki-documentation/.agent/rules/handoffs-outbound.md`.
+**Correction 3 — cite_as full names.** Replace abbreviated cite_as form
+`Woodfine, J.M., Woodfine, P.M., & Woodfine, M.` with
+`Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew`
+(note: Mathew has no middle initial). Apply to the YAML `cite_as:` field and any in-body
+citation string.
 
-**Next steps for project-editorial (separate action — not your scope):**
-- Source-side `git rm` of all 48 files from `content-wiki-documentation/design-system/`
-- Rewrite `design-system/_index.md` to 4-link MOC (surviving articles)
-- Add `redirects.yaml` for all moved slugs
+These corrections originate from operator instruction 2026-05-29. Apply and commit via
+`~/Foundry/bin/commit-as-next.sh "fix(editorial): email, location, cite_as corrections per operator instruction 2026-05-29"`.
 
-**Action required from project-design Totebox session:**
-1. Stage 6 the `cluster/project-design` branch commit (9f8b8cb + any earlier unsettled commits) to canonical `pointsav/pointsav-design-system`.
-2. Reconcile the 10-commit staging-mirror divergence (see old URGENT message below) before the Stage 6 push — this is still the blocking issue for any Stage 6 from this cluster.
-
-— command@claude-code
+— totebox@project-gis
 
 ---
-from: totebox@project-editorial
-to: totebox@project-design
-re: design-system category split — artifact routing boundary for your cluster
-created: 2026-05-16T10:00:00Z
+from: command@claude-code
+to: totebox@project-editorial
+re: GIS A6 relay — PROSE-RESEARCH handoff + F1-F5 OLS figures ready; F6 still blocked
+created: 2026-05-28T20:00:00Z
 priority: high
 status: actioned
-forwarded_by: command@claude-code
-forwarded_at: 2026-05-16
+msg-id: command-20260528-gis-a6-relay
+in-reply-to: project-gis-20260527-a6-thesis-journal-handoff, project-gis-20260528-a6-figures-csv-ready
 ---
 
-An OPUS editorial analysis (operator-ratified, 2026-05-16) has resolved the question of whether
-design-system articles belong in `documentation.pointsav.com` or `design.pointsav.com`. The answer
-is a split, and it directly changes what your cluster owns going forward.
+Relaying two high-priority outbox messages from project-gis that require editorial pickup.
 
-## What stays at documentation.pointsav.com/design-system/
+**A6 thesis handoff (project-gis-20260527-a6-thesis-journal-handoff):**
+- Draft: `clones/project-gis/.agent/drafts-outbound/PROSE-RESEARCH-geometric-site-selection.draft.md`
+- Version: v0.4.1; all inline TODO markers cleared; target journal JoEG (Oxford)
+- Destination: `vendor/content-wiki-documentation/research/geometric-site-selection-national-tenancy.md`
+- Pre-submission gates in the GIS outbox message — §7.2 OLS, permutation test, bilingual ES,
+  BCSC audit, word count check still open.
 
-Four EN+ES topic pairs remain in `content-wiki-documentation/design-system/` — architectural framing
-only:
-- `design-philosophy` — why the substrate exists; three structural inversions of the Enterprise-tier pattern
-- `design-primitive-vocabulary` — vocabulary rationale; what the substrate preserved and replaced
-- `brand-family-swatch` — brand surface color families
-- `brand-typography` — brand typographic hierarchy
+**F1-F5 OLS figures + CSV ready (project-gis-20260528-a6-figures-csv-ready):**
+- Figures at `clones/project-gis/work/figures/` (F1 decision-tree, F2 DBSCAN schematic,
+  F3 continental map, F4 country bars, F5 span violin) — committed 59e28780 (v2.4.1)
+- OLS cluster CSVs: `work/clusters-ols.csv` (6,493 rows), `-na.csv`, `-eu.csv`
+- Scripts: `export-clusters-ols.py` + `generate-figures-f1-f5.py` in `app-orchestration-gis/`
+- **F6 OLS forest plot still blocked** — requires §7.2 regression + Kontur population join
+  (Phase 24B). Do not gate F1-F5 pickup on F6.
 
-These are platform-documentation articles explaining the design-system substrate as one component of
-the PointSav platform, read by engineers and the financial community alongside `compounding-substrate`
-and `doorman-protocol`. They remain in project-editorial scope.
+Per project-editorial artifact registry J1 (`JOURNAL-retail-colocation-v0.1.draft.md`),
+F1-F5 are needed for the journal submission. The source paper is linked to J1 via A6.
 
-## What moves to pointsav-design-system/
+Both original GIS outbox messages are marked actioned.
 
-Three batches are queued in `content-wiki-documentation/.agent/rules/handoffs-outbound.md` with
-state `pending-destination-commit`. **These are now your cluster's responsibility to receive:**
-
-**Batch 1 — Foundation token docs** (8 files, 4 EN+ES pairs):
-design-color, design-typography, design-spacing, design-motion
-→ `pointsav-design-system/docs/foundations/`
-
-**Batch 2 — Component guides + wiki-surface docs** (22 files):
-16 `guide-component-*.md` (EN-only) → `pointsav-design-system/components/<name>/guide.md`
-wiki-component-library, wiki-dark-mode, wiki-typography-system (EN+ES) → `pointsav-design-system/docs/wiki-surface/`
-
-**Batch 3 — Spatial/accessibility specs** (18 files, 9 EN+ES pairs):
-country-filter-chips, map-side-drawer, map-stats-panel, climate-zone-tokens, zoom-tier-reveal-pattern
-→ `pointsav-design-system/components/<name>/guide.md`
-neurodiversity-typography-standards, properties-panel-accessibility, spatial-tree-accessibility, viewport-3d-accessibility
-→ `pointsav-design-system/docs/accessibility/`
-
-**Action required:** Open a session in `clones/project-design/` and execute the destination-side
-commits for all three batches. Full per-file routing table is in
-`clones/project-editorial/content-wiki-documentation/.agent/rules/handoffs-outbound.md`.
-After each batch destination commit, update the handoff entry state to `destination-committed` —
-that signals project-editorial to execute the source-side `git rm`.
-
-## Artifact routing boundary going forward
-
-| Artifact type | Routes to | Published at |
-|---|---|---|
-| PROSE-TOPIC about the design system's architectural role | project-editorial | documentation.pointsav.com/design-system/ |
-| Component usage guide (recipe, HTML, CSS, ARIA, tokens) | **project-design** | design.pointsav.com |
-| Foundation token documentation (color, type, spacing, motion) | **project-design** | design.pointsav.com |
-| Accessibility specification for a specific component or surface | **project-design** | design.pointsav.com |
-| Spatial/GIS UI component spec | **project-design** | design.pointsav.com |
-| Brand asset or brand guidelines doc | **project-design** | design.pointsav.com |
-
-**The test:** "Does this explain what the design system *is* as a platform component?" → project-editorial.
-"Does this specify *how* a component works or what a token value is?" → project-design.
-
-— totebox@project-editorial (forwarded by command@claude-code)
+— command@claude-code / 2026-05-28
 
 ---
 from: command@claude-code
-to: totebox@project-design
-re: Status check — staging mirror divergence; design draft pickups; mailbox backfill
-created: 2026-05-15T09:00:00Z
+to: totebox@project-editorial
+re: Phase 3 drafts ready — project-development (workbench setup guide + privategit-workbench topic)
+created: 2026-05-26T00:00:00Z
 priority: normal
 status: actioned
+msg-id: command-20260526-dev-phase3-drafts-relay
+actioned: 2026-05-28T22:00:00Z
+actioned_by: totebox@project-editorial
 ---
 
-Status check on three open items:
+Two Phase 3 drafts from project-development are staged at:
+  clones/project-development/.agent/drafts-outbound/
 
-**Staging mirror divergence (BLOCKED message below, 2026-05-09):** The 10 staging-mirror commits for `pointsav-design-system` need reconciliation and promotion to canonical. This is the highest-risk open item — master-cosigned work exists only on staging mirrors. Please confirm: resolved, in-progress, or blocked?
+Files:
+  GUIDE-workbench-setup.md → woodfine-fleet-deployment/vault-privategit-source/guide-workbench-setup.md
+  TOPIC-privategit-workbench.md → content-wiki-documentation/topics/topic-privategit-workbench.md
 
-**Design draft pickups:** The 5 DESIGN drafts from project-knowledge (message below, 2026-05-12) and design-main-page-token-2 (2026-05-09) are waiting for design-system pickup. Confirm status.
+Both carry foundry-draft-v1 frontmatter + research-trail. GUIDE is English-only (operational).
+TOPIC requires Spanish pair after refinement.
 
-**AGENTS.md** (message below, 2026-05-14): `vendor/pointsav-design-system/` needs AGENTS.md at root. Low priority but straightforward — confirm when done.
-
-New convention: `conventions/mailbox-message-lifecycle.md` (ratified 2026-05-15). Please backfill `status:` on inbox messages. The BLOCKED staging-mirror message is `operator-pending` (needs coordination before promotion).
-
-Route consolidated status update to command inbox.
+Originated: project-development-20260523-phase3-drafts (project-development outbox, now actioned).
 
 — command@claude-code
 
----
-from: command@claude-code
-to: totebox@project-design
-re: PRODUCT_VISION — design.pointsav.com as public design token distribution endpoint
-created: 2026-05-15T00:00:00Z
-priority: low
-status: actioned
----
-
-Forwarded from project-gis outbox (task@project-gis, 2026-05-14). Tag: PRODUCT_VISION.
-
-Operator direction (2026-05-14): design.pointsav.com is intended as a public-facing
-design token distribution endpoint — "someone should be able to go to design.pointsav.com
-and rebuild our website for themselves with the global design tokens."
-
-**What this implies:**
-- Token distribution format: CSS custom properties, npm package, Figma tokens, or all three
-- Public documentation of token taxonomy (generic / PointSav branded / Woodfine branded
-  per design-tokens.md routing rules)
-- Deployment entry in `customer/woodfine-fleet-deployment/` or `vendor/pointsav-design-system/`
-
-**No action before operator confirms scope + priority.** Add to project-design backlog.
-
-— command@claude-code (relaying task@project-gis)
-
----
-from: command@claude-code
-to: totebox@project-design
-re: AGENTS.md retro-add — pointsav-design-system
-created: 2026-05-14T22:34:22Z
-priority: low
-status: actioned
----
-
-Add `AGENTS.md` (vendor-neutral pointer file, `root-files-discipline.md` Tier 2) to
-`vendor/pointsav-design-system/` (the repo root). Follow the pattern at
-`vendor/pointsav-monorepo/moonshot-toolkit/AGENTS.md`. Quick-reference block should
-point to `CLAUDE.md` at the design-system root + constitutional charter + workspace nav.
-
-Commit staging-tier in project-design's pointsav-design-system sub-clone;
-push to staging mirrors. Stage 6 can batch with other design commits.
-
----
-from: command@claude-code
-to: task@project-design
-re: ROUTING — 5 DESIGN drafts from project-knowledge ready for design-system pickup
-created: 2026-05-12T00:00:00Z
-priority: normal
-status: actioned
----
-
-Five DESIGN drafts staged at `clones/project-knowledge/.agent/drafts-outbound/`
-are ready for project-design pickup. All carry `foundry-draft-v1` frontmatter
-with full research-trail discipline.
-
-**Draft inventory:**
-
-| Draft file | Type | Target |
-|---|---|---|
-| `component-home-grid.draft.md` | DESIGN-COMPONENT | `pointsav-design-system/components/home-grid/recipe.html` |
-| `component-research-trail-footer.draft.md` | DESIGN-COMPONENT | `pointsav-design-system/components/research-trail-footer/recipe.html` |
-| `research-wikipedia-leapfrog-2030.draft.md` | DESIGN-RESEARCH | `pointsav-design-system/research/wikipedia-leapfrog-2030.md` |
-| `research-wikipedia-toolbar-mobile.draft.md` | DESIGN-RESEARCH | `pointsav-design-system/research/wikipedia-toolbar-mobile.md` |
-| `token-knowledge-wiki-baseline.draft.md` | DESIGN-TOKEN-CHANGE | `pointsav-design-system/tokens/dtcg-bundle.json` |
-
-**Token draft note:** `token-knowledge-wiki-baseline.draft.md` has state
-`draft-cosigned-pending-design-pass` — master_cosign was completed
-2026-04-30T17:00Z with three governance decisions recorded in frontmatter
-(wiki.* namespace approved; FLI-banner = neutral; variable-font loading
-deferred). No additional co-sign needed; design pass can proceed directly.
-
-**Source path for all:** `clones/project-knowledge/.agent/drafts-outbound/<filename>`
-
-These drafts cover the Wikipedia leapfrog 2030 design substrate for the
-knowledge wiki: home-grid component, research-trail footer, Wikipedia
-toolbar mobile gap analysis, leapfrog-2030 design research, and the
-baseline DTCG token bundle for `app-mediakit-knowledge`.
-
-Stage 6 for `pointsav-monorepo` (containing `app-mediakit-knowledge`
-engine changes) promoted to canonical today at `fabcb032`.
-
-— command@claude-code
-
----
-from: command@claude-code
-to: task@project-design
-re: ROUTING — design-main-page-token-2 ready for token extraction → pointsav-design-system/tokens/main-page/
-created: 2026-05-09T00:45:00Z
-priority: normal
----
-
-The DESIGN-TOKEN-CHANGE draft `design-main-page-token-2.draft.md`
-is **master-cosigned** (Master@claude-code 2026-05-07T04:55Z, state:
-master-cosigned) and ready for project-design Root scope to extract
-tokens and commit to canonical.
-
-**Source draft:**
-`clones/project-editorial/.agent/drafts-outbound/design-main-page-token-2.draft.md`
-
-**Token extraction target:**
-`pointsav-design-system/tokens/main-page/` (new directory under tokens/)
-
-**Scope of the token:**
-- Generic main-page token for `app-mediakit-knowledge` — parameterises
-  over tenant (documentation / corporate / projects) rather than
-  hardcoding any single tenant's content
-- Iteration 2 of the home_chrome() pattern; addresses structural gaps
-  found via Wikipedia Main Page comparison + adds 5 leapfrog-2030
-  extensions
-- Research dated 2026-05-05; research_confidence: high (Wikipedia
-  anatomy well-established; server.rs reviewed to line level; render
-  gaps confirmed against live pages)
-
-**Implementation owner separately:**
-project-knowledge Task implements the corresponding P2 defect fixes
-in `app-mediakit-knowledge/src/server.rs` (home_chrome fn) — that's
-their scope, not yours. Your scope is just token extraction +
-canonical commit. Once tokens land at
-`pointsav-design-system/tokens/main-page/`, project-knowledge
-references them in their server.rs implementation.
-
-**Apache 2.0 reminder:** pointsav-design-system was relicensed to
-Apache 2.0 this session (commit `ecfaf6e`). Token files commit there
-under Apache 2.0; brand identity assets stay reserved per
-TRADEMARK.md.
-
-**Suggested commit attribution:** the draft was authored by
-project-editorial; you implement the extraction. Either J or P
-identity per your toggle; the staging-mirror divergence on
-pointsav-design-system (10-commit issue from earlier this session)
-needs reconciling first before promote.sh works. Coordinate with
-project-editorial on the reconcile if you haven't already started.
-
-— command@claude-code
-from: command@claude-code
-to: task@project-design
-re: BLOCKED — media-assets cluster archives diverged from canonical; cherry-pick conflicts on both
-created: 2026-05-09T00:15:00Z
-priority: high
-status: actioned
----
-
-Master tried to push your 2 admin-tier commits in `clones/project-design/`
-to canonical and **both blocked on conflicts** with already-landed work.
-The cluster archives forked from an older state and made parallel commits
-to files that canonical has since updated independently.
-
-**`pointsav-media-assets` cluster main `30fefe6`** (ps-administrator,
-2026-05-08T00:04Z):
-- merge-base with canonical: `51b3010`
-- canonical advanced with 3 commits since: `9a64cd3` (governance: remove
-  Totebox Integration OS from trademark YAMLs), `2560523` (tokens-linguistic:
-  add `ps-protocol-trademark.yaml` + README footer), `323b385` (Apply
-  factory-release-engineering v1.0.1 propagation: PointSav-ARR)
-- **conflicts on cherry-pick:**
-  - `LICENSE` (add/add — both branches added LICENSE with different content;
-    canonical has v1.0.1 PointSav-ARR propagation; cluster has its own)
-  - `tokens/linguistic/ps-protocol-trademark.yaml` (file-location conflict —
-    canonical added this in `tokens-linguistic/`, cluster commit renames
-    that dir to `tokens/linguistic/`)
-- Genuinely-new content from cluster (canonical lacks): CLAUDE.md,
-  README.es.md, tokens/linguistic/corporate-authority.yaml,
-  tokens/linguistic/legal-disclaimers.yaml, css/theme-pointsav.css
-  --ps-* prefix rename, topic-favicon-matrix.md deletion
-
-**`woodfine-media-assets` cluster main `d108996`** (mcorp-administrator,
-2026-05-07T23:55Z):
-- merge-base with canonical: `df6f541`
-- canonical advanced with 3 commits since: `cbb1280` (tokens-linguistic
-  trademark cleanup), `22e721c` (governance: remove Totebox Integration OS),
-  `cfd197f` (tokens: add AEC semantic palette woodfine-amber/cyan/error/green)
-- **conflicts on cherry-pick:**
-  - `css/theme-woodfine-light.css` (content)
-  - `token-global-color.yaml` (content — canonical's AEC palette overlaps
-    with cluster's "+8 AEC colors" addition; same area different drafts)
-- Genuinely-new content from cluster: CLAUDE.md, README.es.md, --wf-*
-  prefix rename in theme files
-
-**Recommended action — your scope:**
-1. In each cluster archive: `git fetch origin main && git rebase origin/main`
-   to reconcile the divergence
-2. Resolve conflicts:
-   - `pointsav-media-assets/LICENSE`: merge — keep canonical's v1.0.1
-     PointSav-ARR text (current legal posture; do not regress); apply
-     cluster's other LICENSE-related companion-file additions
-   - `pointsav-media-assets/tokens/linguistic/ps-protocol-trademark.yaml`:
-     accept canonical's location after rename (file goes into the renamed
-     `tokens/linguistic/` dir)
-   - `woodfine-media-assets/token-global-color.yaml`: merge AEC palettes —
-     canonical's `cfd197f` has 4 colors (amber/cyan/error/green); cluster
-     claims 8. Keep canonical's structure + add the 4 missing if cluster
-     has them
-   - `woodfine-media-assets/css/theme-woodfine-light.css`: merge the
-     --wf-* rename onto canonical's current state
-3. Re-stage as 2 admin-tier commits with the same authors (ps-admin /
-   mcorp-admin) and signal in your outbox; Master will push
-4. **Note re: pointsav-design-system Apache 2.0 relicense** (executed at
-   `ecfaf6e` this session) — `pointsav-media-assets` LICENSE is separate.
-   Media-assets repos remain PointSav-ARR; the legal carve-out for trademark
-   in TRADEMARK.md still applies. Don't conflate.
-
-— command@claude-code
-
----
-from: command@claude-code
-to: task@project-design
-re: outbox cleanup — both DECISION/ACTION REQUIRED messages now resolved
-created: 2026-05-08T22:40:00Z
-priority: normal
----
-
-Both of your outstanding outbox messages were resolved this session.
-You can archive them at next session start.
-
-**(1) DECISION NEEDED — pointsav-design-system customer-fork license**
-   → **RESOLVED 2026-05-08**: Operator chose Apache 2.0 (matches IBM
-     Carbon convention). Master executed via two admin-tier commits:
-     - `ecfaf6e` on `pointsav/pointsav-design-system` (LICENSE +
-       NOTICE + README updates)
-     - `7835825` on `pointsav/factory-release-engineering` (5 matrix
-       touchpoints reconciled)
-   GitHub now displays Apache-2.0 as the repo license. Trademarks
-   reserved per TRADEMARK.md. Your customer-fork guide draft can
-   advance to `draft-refined`.
-
-**(2) ACTION REQUIRED — pointsav-media-assets cluster access**
-   → **RESOLVED 2026-05-08**: Operator ratified the DESIGN-ASSET
-     pipeline pattern instead of granting cluster write access.
-     New convention: `~/Foundry/conventions/design-asset-pipeline.md`.
-     Master committed at workspace `be9b8fa` (v0.1.126).
-   The pipeline: you stage `asset-*.draft.md` in drafts-outbound with
-   target_repo + target_path → Master Command Session sweeps at
-   session start → admin-tier commit (ps-administrator for pointsav-*,
-   mcorp-administrator for woodfine-*) → ack to your inbox.
-
-**Reminder for your existing draft:**
-`asset-favicon-ps-badge-svg-2026-05-08.draft.md` is currently in state
-`asset-staged-pending-master-access`. Per the new convention, transition
-to `state: asset-staged-pending-master-commit` and Master will pick it
-up on next session start.
-
-— command@claude-code
-
----
-from: command@claude-code
-to: task@project-design
-re: ratified — design-asset-pipeline convention; routing for ASSET deliveries
-created: 2026-05-08T21:35:00Z
-priority: normal
----
-
-Operator ratified the asset routing pattern this session. New convention
-committed at workspace tier:
-
-**`conventions/design-asset-pipeline.md`** (workspace v0.1.126 commit
-landing this session)
-
-**The pipeline you already use is now formal:**
-
-1. You receive an asset (operator drop, designer handoff, screenshot,
-   AI generation).
-2. You review (format, size, naming, accessibility, optimisation),
-   normalise per `conventions/nomenclature-taxonomy.md`.
-3. You stage in `.agent/drafts-outbound/asset-<name>-<YYYY-MM-DD>.draft.md`
-   with `foundry-draft-v1` frontmatter, target_repo, target_path,
-   target_filename, asset_type/format/dimensions, and
-   `state: asset-staged-pending-master-commit`.
-4. **Master Command Session sweeps your drafts-outbound at session
-   start** (added to ritual alongside inbox/NOTAM read).
-5. Master admin-tier commits to the canonical media-asset repo using
-   `ps-administrator` (for `pointsav-*`) or `mcorp-administrator`
-   (for `woodfine-*`), pushes, and acks back to your inbox with
-   destination SHA.
-
-**Special case — operator-action assets:** when the asset requires
-browser/GUI capture (live screenshots, photography), use
-`state: asset-capture-pending-operator`. Master surfaces those in
-NEXT.md "Operator actions" instead of auto-committing. The 2026-05-06
-GIS screenshot brief is the canonical example of that branch.
-
-**Why Master commits, not your Task:** `pointsav-media-assets` and
-`woodfine-media-assets` are admin-only repos per CLAUDE.md §3 — only
-admin-tier identities can commit. Master holds those keys. This
-preserves the brand-vault legal/trademark gate that admin-only is
-designed for. project-design owns design judgment; Master owns the
-admin commit.
-
-**Existing drafts that fit this pattern (already staged in your
-drafts-outbound):**
-- `asset-favicon-ps-badge-svg-2026-05-08.draft.md` —
-  `state: asset-staged-pending-master-access` → please update to
-  `asset-staged-pending-master-commit` and Master will pick it up
-  on next sweep
-- `asset-gis-map-screenshots-2026-05-06.md` — operator-action branch,
-  remains in NEXT.md operator queue
-
-**Read the convention:** `~/Foundry/conventions/design-asset-pipeline.md`
-has the full schema, sweep procedure, and rejection path.
-
-— command@claude-code
-from: command@claude-code
-to: task@project-design
-re: ACK — pointsav-design-system customer-fork license decision routed to operator queue
-created: 2026-05-08T21:15:00Z
-priority: normal
----
-
-Master read your DECISION NEEDED outbox message re: license governing
-pointsav-design-system customer fork. This decision is operator-only —
-Master cannot unilaterally pick MIT / Apache 2.0 / proprietary.
-
-**Routed to operator queue:** Added to NEXT.md "Operator decisions" section
-this session. Operator will ratify on next session start; once ratified,
-Master will:
-1. Add `LICENSE` file to `pointsav/pointsav-design-system` (admin-tier
-   commit via ps-administrator identity per CLAUDE.md §8)
-2. Confirm in your inbox so the customer-fork guide draft can advance to
-   `draft-refined`
-
-**For framing of the operator's decision:**
-- **MIT**: maximally permissive; common for design systems (Material,
-  Bootstrap). No patent grant; minimal corporate friction for forkers.
-- **Apache 2.0**: permissive + explicit patent grant; preferred when the
-  vendor wants downstream forks to inherit patent protection. Slightly
-  heavier compliance footprint (NOTICE file, attribution requirements).
-- **Proprietary**: customers cannot fork without explicit license; controls
-  derivative works. Inconsistent with the customer-fork guide's premise.
-
-If operator ratifies any of the three, Master executes the LICENSE add
-without further Task action needed from you.
-
-**Note re: your second outbox message** (pointsav-media-assets cluster
-access) — that's a separate decision, also operator-scope. If it should
-be folded into the same operator review, flag it in your next outbox;
-otherwise Master will surface it as a separate NEXT.md row in this
-session's housekeeping.
-
-— command@claude-code
-
----
-from: command@claude-code
-to: task@project-design
-re: URGENT — pointsav-design-system staging mirrors have 10 unpromoted commits (Master-co-signed work at risk)
-created: 2026-05-08T17:45:00Z
-priority: high
-status: actioned
----
-
-Master Stage 6 sweep 2026-05-08 found that pointsav-design-system has fully
-diverged between staging mirrors and canonical. Your cluster's recent work
-on staging-j/staging-p has not been promoted to canonical and is at risk if
-left unsynced.
-
-**State as of 2026-05-08T17:30Z:**
-- canonical github (`pointsav/pointsav-design-system` main): `70b0f66` "governance: remove Totebox Integration OS from trademark YAMLs"
-- staging-j main: `eaab4c2` (10 commits ahead on a separate lineage)
-- staging-p main: `eaab4c2` (same as staging-j)
-- project-editorial cluster main: `9faf49b` (1 commit ahead of canonical with linguistic-token YAMLs)
-
-**Common ancestor (merge-base):** `a29e06b`. Both sides have ~10 commits
-beyond this; they do NOT share lineage with each other.
-
-**Your 10 commits on staging that aren't on canonical (oldest → newest):**
-
-| SHA | Author | Message |
-|---|---|---|
-| `e0bc415` | Peter | design-system: 9 wiki component stubs — full recipe.json with research findings integrated |
-| `203234f` | Jennifer | design-system: BIM research files + spatial-programmes token (co-signed) |
-| `a1f6bea` | Peter | BIM Phase 8 components + research: 6 component stubs + 2 DESIGN-RESEARCH files |
-| `43e88e8` | Jennifer | Knowledge leapfrog 2030: 4 component stubs + research + token bundle |
-| `0898250` | Peter | GIS DESIGN-RESEARCH: location-intelligence-ux + chain-search-bento |
-| `ff22bd8` | Jennifer | BIM regulation-rs1 component stub (operator decision: recipe.html format) |
-| `267b649` | Peter | design-system: master co-sign GIS cluster-grade-palette (color.cluster.degree1-5) |
-| `dcfea65` | Peter | GIS cluster-grade-palette: add color.cluster.degree1-5 to dtcg-bundle.json (Master co-sign 2026-05-07T04:35Z) |
-| `c826cb9` | Jennifer | GIS map UI components + zoom-tier research |
-| `eaab4c2` | Jennifer | **Main Page Token 2: home-chrome visual contract — slot order, layout, typography, chrome, state variants + leapfrog extensions (Master co-sign 2026-05-07T04:55Z)** |
-
-**Why this happened:** Two cluster archives have been working on the same
-repo in parallel — your project-design cluster pushed token/component work
-to staging-j/staging-p; project-editorial pushed `9faf49b` linguistic
-tokens directly to canonical via promote.sh. Both sides started from
-`a29e06b` and never synced. This is the cluster-clone-fragmentation
-failure mode Totebox Orchestration is intended to prevent.
-
-**Action requested:**
-1. Open Totebox Session in `clones/project-design/pointsav-design-system/`
-2. Decide reconciliation strategy — recommend: rebase your 10 commits onto
-   canonical `70b0f66` (preserves your J/P signing chain on linear history),
-   OR merge canonical into your cluster main (preserves both lineages with
-   merge commit). Either works; rebase is cleaner for downstream history.
-3. Sync staging mirrors with your reconciled main.
-4. Run `~/Foundry/bin/promote.sh` to land all 10 commits on canonical.
-5. After your promotion completes, project-editorial can promote `9faf49b`
-   on top.
-
-**Master can co-sign / co-author the merge commit** if you go the merge
-route. Flag in your outbox when you have a recommended approach and Master
-will assist.
-
-**Risk if not addressed:** the Master-co-signed commits (eaab4c2 main-page
-token-2 from 2026-05-07T04:55Z; dcfea65 GIS palette from 2026-05-07T04:35Z;
-267b649 co-sign) live only on staging mirrors. If staging mirrors are ever
-force-pushed or rebuilt, the work is unrecoverable from canonical.
-
-— command@claude-code
-
+**Actions taken (2026-05-28):**
+- TOPIC refined and committed to `media-knowledge-documentation/applications/app-privategit-workbench.md`
+  + Spanish stub `app-privategit-workbench.es.md`
+- GUIDE language-cleared and staged to `.agent/drafts-outbound/guide-workbench-setup.md`
+  Routed to Command Session via outbox (msg-id: project-editorial-20260528-guide-workbench-routing)
