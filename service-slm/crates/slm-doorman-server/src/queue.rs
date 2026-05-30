@@ -972,8 +972,18 @@ mod tests {
         let result_a = handle_a.join().expect("thread A joined");
         let result_b = handle_b.join().expect("thread B joined");
 
-        let got_a = result_a.expect("worker A ok");
-        let got_b = result_b.expect("worker B ok");
+        // When two workers race, the loser gets Err(QueueLockFailed) — not Ok(None).
+        // This is correct: the drain worker treats QueueLockFailed as "retry later".
+        let got_a = match result_a {
+            Ok(v) => v,
+            Err(DoormanError::QueueLockFailed { .. }) => None,
+            Err(e) => panic!("worker A unexpected error: {e:?}"),
+        };
+        let got_b = match result_b {
+            Ok(v) => v,
+            Err(DoormanError::QueueLockFailed { .. }) => None,
+            Err(e) => panic!("worker B unexpected error: {e:?}"),
+        };
 
         // Exactly one should have received the brief.
         let success_count = [got_a.is_some(), got_b.is_some()]
@@ -1126,5 +1136,146 @@ mod tests {
             inflight_count, 0,
             "queue-in-flight/ must be empty after reap"
         );
+    }
+
+    // ── Shadow queue (ShadowQueueEntry format) ────────────────────────────────
+    //
+    // These tests cover the enqueue_shadow / dequeue_shadow / release_shadow
+    // path used by the drain worker.  The old enqueue/dequeue tests above cover
+    // the legacy flat ApprenticeshipBrief path; both must pass independently.
+
+    fn make_shadow_entry(brief_id: &str) -> ShadowQueueEntry {
+        ShadowQueueEntry {
+            brief: make_brief(brief_id),
+            actual_diff: "diff --git a/README.md b/README.md\n+test line\n".to_string(),
+        }
+    }
+
+    /// enqueue_shadow writes `{"brief":{...},"actual_diff":"..."}` to queue/.
+    /// dequeue_shadow reads it back and returns a matching LeasedShadowEntry.
+    #[test]
+    fn shadow_enqueue_dequeue_round_trip() {
+        let cfg = tmp_queue("shadow-round-trip");
+        let entry = make_shadow_entry("01J9SHADOWTEST000000000001");
+
+        enqueue_shadow(&cfg, &entry).expect("enqueue_shadow ok");
+
+        let leased = dequeue_shadow(&cfg, "drain-test")
+            .expect("dequeue_shadow ok")
+            .expect("queue must return the shadow entry");
+
+        assert_eq!(leased.entry.brief.brief_id, entry.brief.brief_id);
+        assert_eq!(leased.entry.brief.task_type, entry.brief.task_type);
+        assert_eq!(leased.entry.actual_diff, entry.actual_diff);
+        assert!(
+            leased.lease_path.exists(),
+            "lease file must be in queue-in-flight/"
+        );
+        assert!(
+            leased.lease_path.starts_with(cfg.in_flight_dir()),
+            "lease must be inside queue-in-flight/"
+        );
+    }
+
+    /// release_shadow with Done moves the lease file to queue-done/.
+    #[test]
+    fn shadow_release_done_moves_to_done() {
+        let cfg = tmp_queue("shadow-release-done");
+        let entry = make_shadow_entry("01J9SHADOWTEST000000000002");
+
+        enqueue_shadow(&cfg, &entry).expect("enqueue_shadow ok");
+        let leased = dequeue_shadow(&cfg, "drain-done")
+            .expect("dequeue_shadow ok")
+            .expect("queue not empty");
+
+        release_shadow(&cfg, &leased, ReleaseOutcome::Done).expect("release ok");
+
+        let done_path = cfg.done_dir().join(&leased.base_filename);
+        assert!(done_path.exists(), "brief must be in queue-done/ after Done release");
+        assert!(!leased.lease_path.exists(), "lease file must be gone");
+        assert!(!cfg.queue_dir().join(&leased.base_filename).exists(), "queue/ must be empty");
+    }
+
+    /// release_shadow with Retry moves the lease file back to queue/.
+    #[test]
+    fn shadow_release_retry_returns_to_queue() {
+        let cfg = tmp_queue("shadow-release-retry");
+        let entry = make_shadow_entry("01J9SHADOWTEST000000000003");
+
+        enqueue_shadow(&cfg, &entry).expect("enqueue_shadow ok");
+        let leased = dequeue_shadow(&cfg, "drain-retry")
+            .expect("dequeue_shadow ok")
+            .expect("queue not empty");
+
+        release_shadow(&cfg, &leased, ReleaseOutcome::Retry).expect("release ok");
+
+        let queue_path = cfg.queue_dir().join(&leased.base_filename);
+        assert!(queue_path.exists(), "brief must be back in queue/ after Retry");
+        assert!(!leased.lease_path.exists(), "lease file must be gone");
+
+        // A second dequeue should see it again.
+        let re_leased = dequeue_shadow(&cfg, "drain-retry-2")
+            .expect("second dequeue ok")
+            .expect("queue must return the re-queued entry");
+        assert_eq!(re_leased.entry.brief.brief_id, entry.brief.brief_id);
+    }
+
+    /// release_shadow with Poison moves the lease file to queue-poison/.
+    #[test]
+    fn shadow_release_poison_goes_to_poison() {
+        let cfg = tmp_queue("shadow-release-poison");
+        let entry = make_shadow_entry("01J9SHADOWTEST000000000004");
+
+        enqueue_shadow(&cfg, &entry).expect("enqueue_shadow ok");
+        let leased = dequeue_shadow(&cfg, "drain-poison")
+            .expect("dequeue_shadow ok")
+            .expect("queue not empty");
+
+        release_shadow(&cfg, &leased, ReleaseOutcome::Poison).expect("release ok");
+
+        let poison_path = cfg.poison_dir().join(&leased.base_filename);
+        assert!(poison_path.exists(), "brief must be in queue-poison/ after Poison");
+        assert!(!leased.lease_path.exists(), "lease file must be gone");
+    }
+
+    /// A ShadowQueueEntry with an empty actual_diff round-trips correctly.
+    /// This covers briefs enqueued before the actual_diff field existed.
+    #[test]
+    fn shadow_empty_diff_field_round_trips() {
+        let cfg = tmp_queue("shadow-empty-diff");
+        let mut entry = make_shadow_entry("01J9SHADOWTEST000000000005");
+        entry.actual_diff = String::new();
+
+        enqueue_shadow(&cfg, &entry).expect("enqueue_shadow ok");
+        let leased = dequeue_shadow(&cfg, "drain-empty")
+            .expect("dequeue_shadow ok")
+            .expect("queue not empty");
+
+        assert_eq!(leased.entry.actual_diff, "");
+    }
+
+    /// A file containing a flat ApprenticeshipBrief (old format, no `brief` wrapper)
+    /// is accepted by dequeue_shadow as a legacy compatibility path.
+    /// The brief is wrapped in a ShadowQueueEntry with `actual_diff = ""`.
+    /// This documents that the Rust drain worker correctly handles briefs
+    /// written by the old enqueue() path (before ShadowQueueEntry was introduced).
+    #[test]
+    fn shadow_dequeue_accepts_flat_brief_as_legacy() {
+        let cfg = tmp_queue("shadow-flat-brief");
+        ensure_dirs(&cfg).expect("ensure dirs");
+
+        let old_id = "01J9SHADOWTEST000000000006";
+        let old_path = cfg.queue_dir().join(brief_filename(old_id));
+        // Write the old flat ApprenticeshipBrief format (no "brief" wrapper)
+        let flat_json = serde_json::to_vec(&make_brief(old_id)).expect("serialize");
+        fs::write(&old_path, &flat_json).expect("write flat brief");
+
+        let leased = dequeue_shadow(&cfg, "drain-flat")
+            .expect("dequeue_shadow ok")
+            .expect("queue not empty");
+
+        assert_eq!(leased.entry.brief.brief_id, old_id);
+        // Legacy flat briefs get an empty actual_diff
+        assert_eq!(leased.entry.actual_diff, "");
     }
 }
