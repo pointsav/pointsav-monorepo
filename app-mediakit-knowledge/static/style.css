@@ -2021,6 +2021,78 @@ html[data-theme="dark"] .toc a.is-active { color: var(--link); border-left-color
   color: var(--fg-3);
 }
 
+/* ---------- Phase 5: Content-type badge ---------- */
+.content-type-badge {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  color: var(--fg-3);
+  margin: 4px 0 8px;
+}
+.content-type-badge[data-type="guide"]    { color: #1a7a4a; border-color: #1a7a4a; }
+.content-type-badge[data-type="research"] { color: #3b5ea6; border-color: #3b5ea6; }
+.content-type-badge[data-type="topic"]    { color: #7a5c1a; border-color: #7a5c1a; }
+.content-type-badge[data-type="category"] { color: var(--fg-3); }
+
+/* ---------- Phase 5: Guide steps ---------- */
+.guide-steps {
+  counter-reset: guide-step;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+}
+.guide-steps li {
+  counter-increment: guide-step;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  margin-bottom: 8px;
+  font-family: var(--font-reading);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.guide-steps li::before {
+  content: counter(guide-step);
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: #1a7a4a; color: #fff;
+  font-family: var(--font-display);
+  font-size: 13px; font-weight: 700;
+  margin-top: 1px;
+}
+
+/* ---------- Phase 5: Research methodology box ---------- */
+.methodology-box {
+  border: 1px solid var(--border);
+  border-left: 4px solid #3b5ea6;
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: var(--fg-2);
+}
+.methodology-box h4 {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3b5ea6;
+  margin: 0 0 8px;
+}
+.methodology-box p { margin: 0; line-height: 1.6; }
+
 /* Forward-looking information notice */
 .fli-notice {
   background: var(--bg-subtle);

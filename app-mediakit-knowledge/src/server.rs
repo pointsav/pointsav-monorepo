@@ -2338,7 +2338,7 @@ fn wiki_chrome(
 
                     // --- Article body column (two-column: prose + TOC) ---
                     main.article-wrap {
-                    article.article__body {
+                    article.article__body data-content-type=(fm.content_type.as_deref().unwrap_or("article")) {
 
                         // Title row: tabs (top-left) + title + language switcher + action tabs (top-right)
                         div.wiki-title-row {
@@ -2381,6 +2381,21 @@ fn wiki_chrome(
                                     (title)
                                     @if let Some(ref q) = fm.quality {
                                         span class={ "quality-badge quality-" (q) } { (q) }
+                                    }
+                                }
+                                // Phase 5: content-type badge (non-default types only)
+                                @if let Some(ref ct) = fm.content_type {
+                                    @if ct != "article" {
+                                        span.content-type-badge data-type=(ct) {
+                                            @let label = match ct.as_str() {
+                                                "guide"    => "Guide",
+                                                "topic"    => "Topic",
+                                                "research" => "Research",
+                                                "category" => "Category",
+                                                other      => other,
+                                            };
+                                            (label)
+                                        }
                                     }
                                 }
                                 @if let Some(ref date) = fm.last_edited {
@@ -2525,6 +2540,35 @@ fn wiki_chrome(
                         @if let Some(hatnote) = &fm.hatnote {
                             div.wiki-hatnote {
                                 (hatnote)
+                            }
+                        }
+
+                        // Phase 5: Guide steps — structured ol from frontmatter `steps:` array
+                        @if fm.content_type.as_deref() == Some("guide") {
+                            @if let Some(steps_val) = fm.extra.get("steps") {
+                                @if let Some(steps) = steps_val.as_sequence() {
+                                    @if !steps.is_empty() {
+                                        ol.guide-steps {
+                                            @for step in steps {
+                                                @if let Some(text) = step.as_str() {
+                                                    li { (text) }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Phase 5: Research methodology box from frontmatter `methodology:`
+                        @if fm.content_type.as_deref() == Some("research") {
+                            @if let Some(method_val) = fm.extra.get("methodology") {
+                                @if let Some(method) = method_val.as_str() {
+                                    aside.methodology-box {
+                                        h4 { "Methodology" }
+                                        p { (method) }
+                                    }
+                                }
                             }
                         }
 
