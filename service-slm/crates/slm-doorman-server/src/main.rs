@@ -260,15 +260,33 @@ async fn main() -> anyhow::Result<()> {
                             // Pass the actual_diff from the queue entry so the
                             // corpus tuple carries the senior's real committed diff
                             // (per §7B capture-on-completion semantics).
-                            match dispatcher
-                                .dispatch_shadow(&leased.entry.brief, &leased.entry.actual_diff)
-                                .await
-                            {
-                                Ok(_) => {
+                            // 150 s safety-net: the 120 s Tier A HTTP client
+                            // timeout fires first in normal operation; this
+                            // wrapper catches any other path that could hang
+                            // (e.g. a future Tier B slow-start or a new code
+                            // path that forgets to set a deadline).
+                            let dispatch_result = tokio::time::timeout(
+                                std::time::Duration::from_secs(150),
+                                dispatcher.dispatch_shadow(
+                                    &leased.entry.brief,
+                                    &leased.entry.actual_diff,
+                                ),
+                            )
+                            .await;
+                            match dispatch_result {
+                                Err(_elapsed) => {
+                                    tracing::warn!(
+                                        brief_id = %brief_id,
+                                        "drain worker: dispatch timed out after 150s — \
+                                         brief will be re-queued by reaper"
+                                    );
+                                    ReleaseOutcome::Retry
+                                }
+                                Ok(Ok(_)) => {
                                     info!(brief_id = %brief_id, "drain worker: shadow dispatch ok");
                                     ReleaseOutcome::Done
                                 }
-                                Err(e) => {
+                                Ok(Err(e)) => {
                                     tracing::warn!(
                                         brief_id = %brief_id,
                                         error = %e,
