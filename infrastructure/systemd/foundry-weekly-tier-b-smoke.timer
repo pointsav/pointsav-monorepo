@@ -1,0 +1,9 @@
+[Unit]
+Description=Foundry weekly Tier B smoke test — Saturday 03:00 (Yo-Yo 1h session)
+
+[Timer]
+OnCalendar=Sat *-*-* 03:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
