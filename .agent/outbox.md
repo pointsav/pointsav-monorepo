@@ -13,7 +13,10 @@ to: command@claude-code
 re: build-request — app-mediakit-knowledge Leapfrog 2030 Phases 1–5 (Stage 6 + binary rebuild)
 created: 2026-05-30T16:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-30T20:43:00Z
+actioned-by: command@claude-code
+actioned-result: Stage 6 promoted (archive + monorepo c48c8478); binary rebuilt e48c70d6; CSS verified 10x Source Serif; services healthy 9090/9093/9095
 msg-id: project-knowledge-20260530-leapfrog-stage6
 ---
 
