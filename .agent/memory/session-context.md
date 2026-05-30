@@ -2,6 +2,28 @@
 
 ---
 
+### 2026-05-30 (Leapfrog 2030 Phases 1–5) | totebox@project-knowledge | claude-sonnet-4-6
+
+**Done this session:**
+- Leapfrog 2030 redesign of `app-mediakit-knowledge` — all five Kirby+MediaWiki synthesis phases shipped:
+  - **Phase 1+3** (`9bf24198`, Peter): Font stack 13 → 4 woff2 files; Source Serif 4 replaces Oswald+Roboto Slab as reading body; home page stats removed from hero (moved to one-liner footer); category counts removed
+  - **Phase 2** (`be4ea8c0`, Jennifer): Sidebar hidden; `.shell` → single-column; hamburger shown on desktop; red-link italic added
+  - **Phase 5** (`1c767bf4`, Peter): Kirby content type system — `Frontmatter.content_type: Option<String>`, `data-content-type` attr on article, content-type badge, `ol.guide-steps` (CSS counter + green circles), `aside.methodology-box` (blue left-border); ~75 lines CSS added; `cargo check` clean
+- Phases 4 (mobile bottom bar) confirmed pre-existing; Phase 6 (Brotli/fingerprinting) is deployment-scope — deferred
+- Cleanup-log updated (`0670aa06`, Jennifer)
+
+**Pending / carry-forward:**
+- Stage 6 for Leapfrog commits `9bf24198`, `be4ea8c0`, `1c767bf4`, `0670aa06` — Command Session scope
+- Binary rebuild + deploy to ports 9090/9093/9095 after Stage 6
+- Phase 6 (Brotli compression, asset fingerprinting, critical CSS inline) — operational; requires deployment/nginx config change
+- Prior carries: REBASE_HEAD in content-wiki-documentation; UX-B.7 Woodfine SVG wordmark; ORCID IDs; manifest.md cluster_name still `project-bim`
+- User concern "don't look updated" from 2026-05-29 — pending follow-up
+
+**Operator preferences surfaced:**
+- Auto mode active; batch all in-scope work with minimal interruptions
+
+---
+
 ### 2026-05-29/30 (spawn_blocking fix + site health) | totebox@project-knowledge | claude-sonnet-4-6
 
 **Done this session:**
@@ -50,35 +72,5 @@
 
 **Operator preferences surfaced:**
 - Plain language emphasis: "plain language as much as possible to make our JOURNAL accessible to as many people as possible" — confirmed again; write naturally, not with academic circumlocution
-
----
-
-### 2026-05-29 (inbox action session) | totebox@project-editorial | claude-sonnet-4-6
-
-**Done this session:**
-- Actioned all 3 pending inbox messages (intelligence GUIDEs, infrastructure GUIDEs + J4, system Phase 1C v2)
-- Bloomberg pass + editorial corrections on 11 draft artifacts from 3 peer clusters; produced 12 output files
-- guide-post-commit-training-hook + guide-goose-local-doorman staged Bloomberg-clean — `72761f65`
-- topic-os-mediakit bilingual (EN+ES) committed to media-knowledge-documentation/systems/ — `81ca9aa`
-- guide-vm-mediakit-provision + guide-vm-mediakit-service-migration staged Bloomberg-clean — `0d9da8ed`
-- J4 v0.4 canonical update: §4+§5 empirical content merged (44±5 ms tunnel establishment, 59±20 ms re-handshake, 8 ms policy-change, bimodal 1–16 s failure-mode); citations resolved (Birge-Lee 2024 + Mackey 2020); `forbidden_terms_cleared: true`; version "0.4" — `77063dc3`
-- moonshot-toolkit-build-orchestrator + sel4-aarch64-qemu-substrate-target bilingual committed to media-knowledge-documentation/substrate/ — `95f6beb`
-- guide-moonshot-toolkit-phase1c-build-setup staged Bloomberg-clean — `fbde41fa`
-- Artifact registry updated (J4 language-cleared with §4–§5 note; A7–A14 added); 3 outbox routing messages to Command; NEXT.md updated — `adb7e0a0`
-- Total: 7 commits in project-editorial; 2 commits in media-knowledge-documentation sub-clone
-
-**Pending / carry-forward:**
-- J4 word count gap: ~6,400 vs 9,000-word target; project-infrastructure to expand §4–§5
-- J4 final §4–§5 forbidden-terms pass needed before submission
-- All other JOURNAL data blockers remain (Phase 24B / Bench #9 / AEC metrics / user study) — external
-- ORCID IDs for all three authors — operator action
-- 5 staged GUIDEs → woodfine-fleet-deployment: 3 outbox routing messages sent to Command; Command Session must action
-- Stage 6 for all commits — Command Session scope
-- Git tags not yet pushed
-
-**Operator preferences surfaced:**
-- (none new this session — long autonomous execution from prior approved plan)
-
----
 
 
