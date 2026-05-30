@@ -27,12 +27,12 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 
 | ID | File | Title (working) | Target Journal | Lead Author | Status |
 |----|------|-----------------|----------------|-------------|--------|
-| J1 | `JOURNAL-retail-colocation-v0.1.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | v0.5 dispatched to project-editorial 2026-05-31 |
-| J2 | `JOURNAL-trustworthy-systems-v0.1.draft.md` | Composing Trustworthy Systems from Verified Primitives | ASPLOS (ACM, 19.4% AR) | Mathew Woodfine | language-cleared |
-| J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier, IF 12.0) | Jennifer M. Woodfine | language-cleared |
-| J4 | `JOURNAL-private-network-v0.4.draft.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | v0.4 synced to JOURNAL/; dispatched to project-editorial 2026-05-31 |
+| J1 | `JOURNAL-retail-colocation-v0.1.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | language-cleared (v0.7; Pass 1+2 complete 2026-05-30; LODES/MITMA/LEHD/DBSCAN/H3/NAICS expanded) |
+| J2 | `JOURNAL-trustworthy-systems-v0.1.draft.md` | Composing Trustworthy Systems from Verified Primitives | ASPLOS (ACM, 19.4% AR) | Mathew Woodfine | language-cleared (v0.2; Pass 1+2 complete 2026-05-30; 22 abbreviations expanded; 5 topic sentences) |
+| J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier, IF 12.0) | Jennifer M. Woodfine | language-cleared (v0.5; Pass 1+2 complete 2026-05-30; ~28 abbreviation expansions; §6 academic placeholder) |
+| J4 | `JOURNAL-private-network-v0.1.stub.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | language-cleared (v0.5; Pass 1+2 complete 2026-05-30; VPN/NIST/NAT/AES expanded; word count ~6,400 vs 9,000 target) |
 | J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | MLSys (ACM, 22% AR) | Mathew Woodfine | stub |
-| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared (v0.3; history-language pass 2026-05-30; Phase labels stripped; §6 Results pending user study) |
+| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared (v0.4; Pass 1+2 complete 2026-05-30; AEC/IFC/BIM/CAD/NASA-TLX expanded; §6 Results pending user study) |
 
 ### Pre-submission blockers by paper
 
