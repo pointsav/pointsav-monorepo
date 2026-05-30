@@ -1,76 +1,142 @@
-## Session context — rolling 3-session summary
+# Session Context — project-system cluster
+
+Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `session-context-archive.md`.
 
 ---
 
-### 2026-05-30 (Leapfrog 2030 Phases 1–5) | totebox@project-knowledge | claude-sonnet-4-6
+## 2026-05-30 (session 2) — Totebox Session — claude-code (claude-sonnet-4-6)
 
 **Done this session:**
-- Leapfrog 2030 redesign of `app-mediakit-knowledge` — all five Kirby+MediaWiki synthesis phases shipped:
-  - **Phase 1+3** (`9bf24198`, Peter): Font stack 13 → 4 woff2 files; Source Serif 4 replaces Oswald+Roboto Slab as reading body; home page stats removed from hero (moved to one-liner footer); category counts removed
-  - **Phase 2** (`be4ea8c0`, Jennifer): Sidebar hidden; `.shell` → single-column; hamburger shown on desktop; red-link italic added
-  - **Phase 5** (`1c767bf4`, Peter): Kirby content type system — `Frontmatter.content_type: Option<String>`, `data-content-type` attr on article, content-type badge, `ol.guide-steps` (CSS counter + green circles), `aside.methodology-box` (blue left-border); ~75 lines CSS added; `cargo check` clean
-- Phases 4 (mobile bottom bar) confirmed pre-existing; Phase 6 (Brotli/fingerprinting) is deployment-scope — deferred
-- Cleanup-log updated (`0670aa06`, Jennifer)
+- Actioned project-infrastructure outbox messages (2 pending + 2 actioned-but-unimplemented)
+- BRIEF-substrate-phd-thesis-2026-05-27.md confirmed committed (215b49c6, 2026-05-27);
+  ack sent to project-infrastructure (outbox msg project-system-20260530-ack-phd-thesis-brief)
+- P0 subnet fixes `119c494b` (Jennifer Woodfine): canonical PPN subnet 10.8.0.0/24 applied:
+  - system-udp/src/main.rs: BROADCAST_ADDR 10.50.0.255 → 10.8.0.255; IP filter updated
+  - app-network-admin/src/main.rs: PEERS updated; handle_translation subprocess →
+    HTTP POST localhost:9080/v1/translate (Doorman); target_ips corrected; reqwest json feature added
+  - system-gateway-mba/src/main.rs: BASE_DEPLOYMENT_DIR const → deployment_dir() env var fn
+  - system-udp/Cargo.toml: [workspace] added (was missing)
+- Binary discipline `2553d970` (Peter Woodfine): [profile.release] (opt-z/lto/codegen-1/
+  panic-abort/strip) + [workspace] added to system-core, system-ledger, moonshot-toolkit Cargo.toml
+- Outbox: anomaly report to command@claude-code (inbox/manifest/outbox contamination flags);
+  PhD thesis ack to project-infrastructure
 
 **Pending / carry-forward:**
-- Stage 6 for Leapfrog commits `9bf24198`, `be4ea8c0`, `1c767bf4`, `0670aa06` — Command Session scope
-- Binary rebuild + deploy to ports 9090/9093/9095 after Stage 6
-- Phase 6 (Brotli compression, asset fingerprinting, critical CSS inline) — operational; requires deployment/nginx config change
-- Prior carries: REBASE_HEAD in content-wiki-documentation; UX-B.7 Woodfine SVG wordmark; ORCID IDs; manifest.md cluster_name still `project-bim`
-- User concern "don't look updated" from 2026-05-29 — pending follow-up
+- Stage-6 needed for ALL pending commits: v0.3.1, v1.0.0, P0 fixes `119c494b`, binary discipline `2553d970`
+- INBOX CONTAMINATION: .agent/inbox.md has project-gis content — Command must rebuild
+- MANIFEST CONTAMINATION: .agent/manifest.md says cluster: project-infrastructure — Command fix
+- OUTBOX CONTAMINATION: project-gis messages at top of .agent/outbox.md — Command clean
+- J2 citation YAML (9 entries): Command must add to ~/Foundry/citations.yaml; confirm aws-nitro key
+- Bench #9 quiet-VM re-run: BLOCKED (load avg persistently high)
+- PhD thesis pre-publication checklist pending
 
-**Operator preferences surfaced:**
-- Auto mode active; batch all in-scope work with minimal interruptions
+**Operator preferences:**
+- Auto Mode active; all decisions proceed without stopping for clarifications
 
 ---
 
-### 2026-05-29/30 (spawn_blocking fix + site health) | totebox@project-knowledge | claude-sonnet-4-6
+## 2026-05-30 — Totebox Session — claude-code (claude-sonnet-4-6)
 
 **Done this session:**
-- Diagnosed 47-minute documentation wiki hang (19:45–20:32 UTC 2026-05-29): `reindex_topic()` in `search.rs` called Tantivy `.commit()` + `reader.reload()` directly on Tokio executor thread — blocked async runtime on 486-article corpus
-- Fixed: converted `reindex_topic` to `async fn`, wrapped all blocking Tantivy ops in `tokio::task::spawn_blocking`; updated 5 call sites (`edit.rs` ×2, `pending.rs`, `main.rs` ×2) with `.await`
-- Commit `e8a47428` (Peter) + cleanup log `a6b5c9c2` (Jennifer) in monorepo sub-clone
-- Outbox `project-knowledge-20260529-reindex-spawn-blocking` → Command; actioned at 03:31 UTC 2026-05-30: promoted `336140df` archive + `5f94b708` monorepo; binary rebuilt + deployed sha256=`3f7c656b`; ledger written
-- Verified all three wikis live at session end: 9090/9093/9095 all `ok`, `div.article-integrity` confirmed, correct binary sha256 prefix
-- User noted sites "don't look updated" at session close — unresolved; likely browser cache or subtle visual delta; no action taken
+- moonshot-toolkit v0.3.1 `d7d1436` (Peter Woodfine): CompilePd -O2 fix +
+  hello.c SysDebugPutChar + build-totebox.sh removal
+  - Root cause found: CompilePd used default -O0; compiler emits `stp [sp, #-32]`
+    prologue at `_start`; seL4 rootserver starts with SP uninitialised → immediate
+    fault. Phase 1C.c main.c compiled with explicit -O2 (hence it worked).
+  - examples/hello.c: wired SysDebugPutChar (x7=-9, x0=char, svc #0 on AArch64).
+  - Verified: QEMU serial output "hello from seL4 rootserver" confirmed.
+  - build-totebox.sh: git rm (Phase 1C.d complete).
+  - 35 tests pass; zero warnings; clippy clean.
+- system-core/NEXT.md corrected: Group 2A/2B done 2026-05-20 moved to Recently done;
+  v1.0.0 bump 2026-05-27 added; stale Queue entries removed.
+- Inbox: 2 pending messages actioned (vm-mediakit answer + permission test).
 
 **Pending / carry-forward:**
-- User concern "don't look updated" — follow up at next session start: ask what they're comparing and whether a hard-refresh resolves it
-- REBASE_HEAD noted in content-wiki-documentation/.git/ — should be investigated and resolved
-- UX-B.7: Woodfine SVG wordmark still blocked (operator must provide SVG)
-- ORCID IDs for J1–J6 authors — operator action required
-- `.agent/manifest.md` cluster_name still says `project-bim` — Command correction needed
+- Stage-6 for moonshot-toolkit v0.3.1 + system-core/ledger v1.0.0 (Command Session)
+- J2 citation YAML (9 entries): Command Session must add to ~/Foundry/citations.yaml;
+  confirm aws-nitro-2025 key vs Feb 2024 date
+- Bench #9 quiet-VM re-run: BLOCKED (load avg was 11.35 all session)
+- Task C (outbox to project-editorial with J2 update): BLOCKED pending bench #9
+- PhD thesis pre-publication checklist pending
+- moonshot-toolkit Queue: Sigstore Cosign cosignature; configurable kernel/elfloader paths
 
-**Operator preferences surfaced:**
-- (none new — session was mostly autonomous fix + verification)
+**Operator preferences:**
+- Auto Mode active; all decisions proceed without stopping for clarifications
 
 ---
 
-### 2026-05-29 (JOURNAL PhD register pass) | totebox@project-editorial | claude-sonnet-4-6
+## 2026-05-29 — Totebox Session — claude-code (claude-sonnet-4-6)
 
 **Done this session:**
-- 7-commit JOURNAL academic register pass complete (Jennifer/Peter alternating):
-  - `71ef7be6`: journal-artifact-discipline.md — 8 prose/typography rules + notes_for_editor discipline
-  - `eaeffe58`: BRIEF-journal-phd-programme.md — formatting standard + venue strategy subsections
-  - `775d20ae`: J1 — §6.1 prose, notes_for_editor clean, CRediT/COI/Funding added, venues updated
-  - `9e1de30f`: J2 — §5.1/5.2/6.3/7.2/7.3 prose, notes_for_editor clean, CRediT/COI/Funding added
-  - `beb01daa`: J3 — table captions, §7.1/7.4/7.5 prose, generalizability paragraph, venues updated
-  - `ec225be4`: J4 — §1/3.1/4/5.3 prose, Listing captions, §6.2 falsification prose, §6.3 italic, §6.4 generalizability, notes_for_editor clean
-  - `22cb91fa`: J6 — contributions inline, §4 table captions + Appendix A, §5.2/§6 TODOs resolved, §7.3 falsification prose, §7.4 italic, [CITATION NEEDED] removed
-- Operator note mid-execution: plain accessible language is a feature; target RAND/Yale dissertation register, not convoluted academic circumlocution — applied across all prose conversions
-- Artifact registry + NEXT.md updated — `2c831c55`
-- All forbidden-terms checks pass; no Results— labels; no TODO markers in edited papers
+- Phase 1C.d DONE `fc245ee` (Peter Woodfine): AssembleImage fully implemented in Rust
+  - moonshot-toolkit v0.3.0; no Python/CMake/shell in critical path (MEMO §7 ✓)
+  - New `src/cpio.rs`: pure Rust CPIO "newc" writer; 4 tests
+  - `assemble_image()` in main.rs: validates prerequisites; generates CPIO archive;
+    writes archive.S with .incbin (absolute path); copies libcpio (cpio.c + cpio/cpio.h);
+    compiles 44 elfloader C/ASM sources + libcpio.c via std::process::Command;
+    preprocesses linker.lds; links -nostdlib -static -lgcc
+  - Key fix: `vendor-sel4-project/build-support/qemu-arm-virt/libcpio/cpio` is a
+    DIRECTORY (not a file); it contains `cpio.h`, included as `<cpio/cpio.h>` — both
+    cpio.c and the cpio/ subdirectory must be copied to build/libcpio/
+  - Verified: `build/system-image.bin` entry 0x40400000; QEMU: "Bootstrapping kernel"
+    → "Booting all finished, dropped to user space"
+  - 35 tests (26 lib + 9 bin); zero warnings
+- Outbox: Phase 1C.d complete notice + project-infrastructure VM request sent to Command
+
+- J2 citation research DONE `2966d8f` (Peter Woodfine): 9 YAML blocks written to outbox
+  msg-id: project-system-20260529-j2-citation-yaml; inbox J2/J5 relay marked actioned.
+  Flag: aws-nitro-2025 key vs actual Feb 2024 date — Command Session must decide.
+- Drafts updated `c54fb53` (Jennifer Woodfine): 3 pending Phase-1C drafts brought to
+  Phase 1C complete state (guide + 2 topics); 2 Spanish .es.md companions created for
+  both TOPICs. Superseding outbox to project-editorial sent
+  (msg-id: project-system-20260529-topic-guide-phase1c-v2).
+- moonshot-toolkit/CLAUDE.md updated: v0.2.0 → v0.3.0, 30 → 35 tests, cpio.rs added.
+- system-ledger/NEXT.md updated: Group 2D marked done; bench #9 blocked item added.
 
 **Pending / carry-forward:**
-- J4 word count gap: ~6,400 vs 9,000-word target; project-infrastructure to expand §4–§5
-- J4 final §4–§5 forbidden-terms pass still needed before submission
-- All other JOURNAL data blockers remain (Phase 24B / Bench #9 / AEC metrics / user study) — external
-- ORCID IDs for all three authors — operator action required
-- J1 tier-distribution tables: may need formal `**Table N.**` captions — not addressed in this pass (plan's per-J1 changes didn't list it explicitly; potential follow-up)
-- Stage 6 for all JOURNAL commits — Command Session scope
-- Git tags not yet pushed
+- Stage-6 for moonshot-toolkit v0.3.0 + system-core/ledger v1.0.0 (Command Session)
+- Outbox: project-infrastructure VM request for system-* testing (msg-id: project-system-20260529-infra-vm-request)
+- J2 citation YAML: Command Session must add 9 entries to ~/Foundry/citations.yaml; confirm aws-nitro key
+- hello.c rootserver: add SysDebugPutChar output (currently infinite loop)
+- Bench #9 quiet-VM re-run: verify_inclusion_proof composed 1024-leaf (load avg < 1.0 — BLOCKED at 11.93)
+- Task C (outbox to project-editorial with J2 update instructions): BLOCKED pending bench #9
+- PhD thesis pre-publication checklist still pending
 
-**Operator preferences surfaced:**
-- Plain language emphasis: "plain language as much as possible to make our JOURNAL accessible to as many people as possible" — confirmed again; write naturally, not with academic circumlocution
+**Operator preferences:**
+- Auto Mode active; all decisions proceed without stopping for clarifications
 
+---
+
+## 2026-05-28 — Totebox Session — claude-code (claude-sonnet-4-6)
+
+**Done this session:**
+- moonshot-toolkit v0.2.1 `6b59fd0`: corrected AssembleImage error message —
+  `microkit` PyPI package is an unrelated Flask helper; real SDK is a tarball
+  from github.com/seL4/microkit/releases
+- Phase 1C.c DONE `d550217` (Peter Woodfine): seL4 qemu-arm-virt AArch64 QEMU boot confirmed
+  - Full boot: elfloader → seL4 kernel → hello-rootserver → "hello from seL4 rootserver"
+  - Root cause 1: KernelVerificationBuild=ON silently disabled CONFIG_PRINTING (the CMake
+    cache shows `_DISABLED:INTERNAL=TRUE` with no warning); rebuilt kernel with
+    KernelVerificationBuild=OFF, KernelDebugBuild=ON, KernelPrinting=ON
+  - Root cause 2: GNU cpio --create --format=newc adds ~11 extra bytes per entry beyond
+    4-byte alignment; replaced with gen_cpio.py using exact ALIGN4 formula
+  - Root cause 3: QEMU -m 512M insufficient; kernel DTB describes [40000000..80000000) (1GB);
+    boot with -m 1G
+  - Elfloader built manually from vendor-sel4-tools/ source (45 C/ASM sources + libcpio)
+  - Committed: hello-rootserver source + build-support/ (gen_cpio.py, build-elfloader.sh,
+    libcpio, gen_config headers)
+  - NEXT.md updated: Phase 1C.c marked complete
+
+**Pending / carry-forward:**
+- Phase 1C.d (AssembleImage): blocked on Microkit SDK tarball or Rust image assembler
+- Stage-6 for system-core+system-ledger v1.0.0: outbox `project-system-20260527-stage6-v100`
+- Image-signing key for Veriexec: outbox `project-system-20260527-image-signing-key`
+- Bench #9 quiet-VM re-run: verify_inclusion_proof composed 1024-leaf (load avg < 1.0)
+- PhD thesis pre-publication checklist
+- fleet-deployment file-mode drift: Command Session review needed
+
+**Operator preferences:**
+- Auto Mode active; all decisions proceed without stopping for clarifications
+
+---
 
