@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-30 — Session 10: lease expiry fix (SLM_QUEUE_LEASE_EXPIRY_SEC=2100); 26 poison briefs recovered; flow confirmed
+> Last updated: 2026-05-30 — Session 11: drain-apprenticeship.timer disabled (legacy conflict); 25 briefs recovered; flow confirmed
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -10,7 +10,7 @@
 
 | Service | State | Notes |
 |---|---|---|
-| `local-doorman.service` | active | **`SLM_TIER_A_FIRST=true`**; Sprint 3D (timeout 1800s); **`SLM_QUEUE_LEASE_EXPIRY_SEC=2100`** added; 24 briefs queued; 1 active in-flight |
+| `local-doorman.service` | active | **`SLM_TIER_A_FIRST=true`**; Sprint 3D (timeout 1800s); **`SLM_QUEUE_LEASE_EXPIRY_SEC=2100`**; 25 briefs queued; 1 active in-flight (0BDB1DF0) |
 | `local-slm.service` (llama-server) | active | OLMo-2-7B Q4_K_M; Tier A primary |
 | `yoyo-tier-b-1` | **TERMINATED** | Stopped 2026-05-28; circuit will open after probe failures (not circuit-breaker tripped by requests with tier_a_first) |
 | `local-content.service` | active (rebuilt 2026-05-29T19:26Z) | LadybugDB ready (7,201 entities); **Tier A fallback enabled (300s interval)**; entity_count in /healthz |
@@ -71,10 +71,26 @@ returned Ok() → brief dropped from tracking.
 2100s > 1860s drain wrapper → reaper will never reclaim a live lease. Restart 22:17:58 UTC.
 Confirmed `lease_expiry_secs=2100` in startup log.
 
+### ✅ drain-apprenticeship.timer disabled (2026-05-30 session 11)
+**Root cause of recurring poison:** Legacy Phase 3.4 shell drainer (`drain-apprenticeship-queue.sh`)
+was running via `drain-apprenticeship.timer` every ~15 min. The script expected the old flat
+`ApprenticeshipBrief` JSON format (`d.get('prompt','')` etc.), but the queue now contains
+`ShadowQueueEntry` format (`{"brief": {...}, "actual_diff": ""}`). The top-level `prompt` field
+was always missing → empty string → script poisoned every brief it touched.
+
+The script also called llama-server directly (port 8080), bypassing Doorman entirely — a second
+architectural conflict with the Rust drain worker.
+
+**Fix:** `sudo systemctl stop drain-apprenticeship.timer && sudo systemctl disable drain-apprenticeship.timer`.
+Timer and service definitions remain in `/etc/systemd/system/` for historical reference but are
+no longer active. The Rust drain worker in `local-doorman.service` is the sole drainer.
+
+25 briefs recovered from queue-poison/ → queue/. Drain worker immediately active on next 30s cycle.
+
 ### ✅ Poison queue recovery (2026-05-30 session 10)
-26 briefs (25 manually quarantined during investigation at 21:23, 1 at 21:38; plus the
-original 21 from old binary format mismatch) moved from queue-poison/ to queue/. 0 poison,
-flow resuming. New brief (0BDB1DF0) dispatching at 22:17:58.
+26 briefs (25 manually quarantined during investigation at 21:23, 1 at 21:38) moved from
+queue-poison/ to queue/. Lease expiry fix deployed (SLM_QUEUE_LEASE_EXPIRY_SEC=2100).
+Brief 0BDB1DF0 dispatching at 22:17:58 UTC.
 
 **Previous note (session 9):** 21 briefs moved back to queue/ (old binary dequeue() vs
 dequeue_shadow() format mismatch). New binary handles correctly via dequeue_shadow().
