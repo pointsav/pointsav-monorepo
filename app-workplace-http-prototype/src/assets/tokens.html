@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Tokens — Workplace</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header id="app-header">
+  <span class="logo"><a href="/" style="color:inherit;text-decoration:none">Workplace</a></span>
+  <span class="version">Design Tokens</span>
+</header>
+
+<div id="tokens-layout">
+  <nav id="tokens-sidebar">
+    <h3>Categories</h3>
+    <a href="#prim-colors" class="tok-nav active" data-section="prim-colors" onclick="navTo(this)">Primitive Colors</a>
+    <a href="#sem-colors"  class="tok-nav"        data-section="sem-colors"  onclick="navTo(this)">Semantic Colors</a>
+    <a href="#typography"  class="tok-nav"        data-section="typography"  onclick="navTo(this)">Typography</a>
+  </nav>
+
+  <main id="tokens-main">
+    <section id="section-prim-colors">
+      <h2>Primitive Colors</h2>
+      <div id="prim-colors-grid" class="tok-grid">
+        <span style="color:var(--text-dim);font-size:12px">Loading…</span>
+      </div>
+    </section>
+
+    <section id="section-sem-colors">
+      <h2>Semantic Colors</h2>
+      <div id="sem-colors-grid" class="tok-grid">
+        <span style="color:var(--text-dim);font-size:12px">Loading…</span>
+      </div>
+    </section>
+
+    <section id="section-typography">
+      <h2>Typography</h2>
+      <table class="tok-type-table">
+        <thead><tr><th>Token</th><th>Sample</th><th>Value</th></tr></thead>
+        <tbody id="type-tbody">
+          <tr><td colspan="3" style="color:var(--text-dim)">Loading…</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<div id="tok-toast">Copied!</div>
+
+<script>
+// ── Token loading ────────────────────────────────────────────────────
+async function init() {
+  try {
+    const res = await fetch('/api/tokens');
+    if (!res.ok) { showError('Could not load tokens (HTTP ' + res.status + ')'); return; }
+    const data = await res.json();
+    renderPrimitiveColors(data);
+    renderSemanticColors(data);
+    renderTypography(data);
+  } catch(e) {
+    showError('Error loading tokens: ' + e.message);
+  }
+}
+
+// Walk a DTCG group, yielding leaf token objects
+function flatten(group, prefix) {
+  const out = [];
+  for (const [k, v] of Object.entries(group)) {
+    if (k.startsWith('$') || v === null || typeof v !== 'object') continue;
+    const path = prefix ? prefix + '/' + k : k;
+    if ('$value' in v) {
+      out.push({ name: k, path, value: String(v.$value), type: v.$type || '', desc: v.$description || '' });
+    } else {
+      out.push(...flatten(v, path));
+    }
+  }
+  return out;
+}
+
+function renderPrimitiveColors(data) {
+  const tokens = flatten((data.primitive || {}).color || {}, '');
+  const el = document.getElementById('prim-colors-grid');
+  if (!tokens.length) { el.innerHTML = '<span style="color:var(--text-dim);font-size:12px">No primitive color tokens found.</span>'; return; }
+  el.innerHTML = tokens.map(t => colorCard(t)).join('');
+}
+
+function renderSemanticColors(data) {
+  const semantic = data.semantic || {};
+  const tokens = flatten(semantic, '').filter(t => {
+    const v = t.value;
+    return v.startsWith('#') || v.startsWith('rgb') || v.startsWith('{');
+  });
+  const el = document.getElementById('sem-colors-grid');
+  if (!tokens.length) { el.innerHTML = '<span style="color:var(--text-dim);font-size:12px">No semantic color tokens found.</span>'; return; }
+  el.innerHTML = tokens.map(t => colorCard(t)).join('');
+}
+
+function colorCard(t) {
+  const isHex = t.value.startsWith('#') || t.value.startsWith('rgb');
+  const swatchStyle = isHex ? `background:${esc(t.value)}` : `background:var(--border)`;
+  const shortDesc = t.desc.length > 70 ? t.desc.substring(0, 70) + '…' : t.desc;
+  return `<div class="tok-card" onclick="copyVal('${esc(t.value)}')">
+    <div class="tok-swatch" style="${swatchStyle}"></div>
+    <div class="tok-card-body">
+      <div class="tok-name">${esc(t.name)}</div>
+      <div class="tok-value">${esc(t.value)}</div>
+      ${shortDesc ? `<div class="tok-desc">${esc(shortDesc)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderTypography(data) {
+  const tokens = flatten((data.primitive || {}).font || {}, '');
+  const tbody = document.getElementById('type-tbody');
+  if (!tokens.length) {
+    tbody.innerHTML = '<tr><td colspan="3" style="color:var(--text-dim)">No typography tokens found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = tokens.map(t => {
+    const val = t.value;
+    const preview = val.length > 55 ? val.substring(0, 55) + '…' : val;
+    return `<tr class="tok-type-row" onclick="copyVal('${esc(val)}')">
+      <td style="font-family:var(--font-mono);color:var(--text-dim);font-size:11px">${esc(t.path)}</td>
+      <td><span style="font-family:${esc(val)};font-size:18px;color:var(--text-heading)">${esc(t.name)} Aa</span></td>
+      <td style="font-size:11px;color:var(--text-dim)">${esc(preview)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Clipboard + toast ────────────────────────────────────────────────
+function copyVal(val) {
+  navigator.clipboard.writeText(val).then(() => {
+    const t = document.getElementById('tok-toast');
+    t.textContent = 'Copied: ' + val.substring(0, 30) + (val.length > 30 ? '…' : '');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  });
+}
+
+// ── Sidebar nav ──────────────────────────────────────────────────────
+function navTo(el) {
+  document.querySelectorAll('.tok-nav').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+  const target = document.getElementById('section-' + el.dataset.section);
+  if (target) target.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Error ────────────────────────────────────────────────────────────
+function showError(msg) {
+  ['prim-colors-grid', 'sem-colors-grid'].forEach(id => {
+    document.getElementById(id).innerHTML = `<span style="color:var(--text-dim);font-size:12px">${esc(msg)}</span>`;
+  });
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+init();
+</script>
+</body>
+</html>
