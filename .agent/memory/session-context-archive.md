@@ -1,7 +1,29 @@
 
 ---
 
-### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 9 — orchestration-slm + daily smoke)
+### 2026-05-23 | totebox@project-console | claude-sonnet-4-6
+
+**Done this session:**
+- Stage 6 rebase COMPLETE: 11 os-console commits rebased onto local `main` (tip `9afc9e25`). Conflicts resolved: .gitignore merge, .claude symlink discarded (kept directory), workspace Cargo.toml member-list merges at each phase commit, per-crate Cargo.toml/main.rs took cluster versions.
+- Push BLOCKED: discovered local `main` and all remotes (canonical + staging-j/staging-p) share zero common ancestors — full history divergence, not the "5 commits ahead" described in inbox. Escalated to Command via outbox `project-console-20260522-stage6-history-divergence`.
+- binary-targets.yaml written: declares os-console, pairing-server, proofctl (all AGPL-3.0, apache tier). service-proofreader NOT in current cluster branch — flagged to Command.
+- Build-request outbox sent: `project-console-20260523-build-request`.
+- Inbox msg `command-20260522-binary-targets-project-console` actioned; `command-20260522-console-stage6-orphan-branch` set to operator-pending.
+
+**Pending / carry-forward:**
+- Stage 6 push: waiting Command decision on history-replacement force-push. Local main tip `9afc9e25` ready.
+- Phase 3 QR: `ratatui-image` Kitty/Sixel pixel-perfect QR with Dense1x2 fallback
+- Phase 4 F11 app-console-system: operator approve/deny in-TUI
+- pairing-server systemd unit deployment on VM
+- GCE firewall port 2222 (operator action)
+- Tag v0.1.0 (after Stage 6)
+- Peter's SSH key + proofctl user add
+- Three per-user config.toml files
+- briefs/ migration (plans/ → briefs/ BRIEF- prefix) — inbox msg still pending
+
+---
+
+## 2026-05-20 session 3 | Totebox | claude-code
 
 **Done this session:**
 - **Planned** console → orchestration chain (project-console port fix + app-console-slm Sprint 4a spec sent via outbox)
