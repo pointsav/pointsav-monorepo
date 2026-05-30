@@ -13,7 +13,10 @@ to: command@claude-code
 re: Stage 6 + binary rebuild — fix(knowledge) spawn_blocking reindex_topic (e8a47428)
 created: 2026-05-29T21:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-30T03:31:29Z
+actioned-by: command@claude-code
+actioned-result: Stage 6 promoted (336140df archive + 5f94b708 monorepo); binary rebuilt + deployed sha256=3f7c656b; services healthy 9090/9093/9095; ledger entry written
 msg-id: project-knowledge-20260529-reindex-spawn-blocking
 ---
 
