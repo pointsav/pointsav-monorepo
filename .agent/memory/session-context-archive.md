@@ -1,11 +1,13 @@
 
 ---
 
-### 2026-05-29 (session close) | totebox@project-editorial | claude-sonnet-4-6
+### 2026-05-29 | totebox@project-intelligence | claude-sonnet-4-6 (session 7 — Goose verified)
 
-**Done:** JOURNAL author presentation plan approved (Approach A). Three corrections from project-gis applied across all 6 JOURNAL files (affiliation NYC, email corporate.secretary@, cite_as full given names). `journal-artifact-discipline.md` rule file updated. J1+J3 repost request dispatched to project-gis.
-
-**Pending:** All JOURNAL data blockers external; ORCID IDs operator action; J1+J3 repost awaiting confirmation; Stage 6 + git tags — Command scope.
+**Done this session:**
+- §7.2 VERIFIED: Goose round-tripped through Doorman → Tier A → OLMo replied correctly
+- Root cause found and fixed (`74ba6da0`): AnthropicSystem untagged enum for `system` as blocks
+- Yo-Yo confirmed TERMINATED; operator decision: no auto-start without more testing
+- 2 GUIDEs staged to drafts-outbound
 
 ---
 
