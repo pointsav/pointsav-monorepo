@@ -90,6 +90,10 @@ impl NodeRegistry {
         self.nodes.values().map(|e| &e.record)
     }
 
+    pub fn all_nodes(&self) -> Vec<NodeRecord> {
+        self.nodes.values().map(|e| e.record.clone()).collect()
+    }
+
     pub fn register_vm(&mut self, node_id: &str, vm: VmRecord) {
         if let Some(entry) = self.nodes.get_mut(node_id) {
             entry.vms.insert(vm.vm_id.clone(), vm);
@@ -157,6 +161,15 @@ mod tests {
         reg.update_node(&make_heartbeat("fresh-node", 8192, 1024));
         reg.evict_stale();
         assert!(reg.get_node("fresh-node").is_some());
+    }
+
+    #[test]
+    fn all_nodes_returns_registered_nodes() {
+        let mut reg = NodeRegistry::new();
+        assert!(reg.all_nodes().is_empty());
+        reg.update_node(&make_heartbeat("node-a", 8192, 2048));
+        reg.update_node(&make_heartbeat("node-b", 16384, 4096));
+        assert_eq!(reg.all_nodes().len(), 2);
     }
 
     #[test]
