@@ -82,33 +82,43 @@ Command runs `bin/promote.sh`.
 
 ---
 
-## §4 — Next coding phases
+## §4 — Next coding phases (COMPLETE as of 2026-05-31)
 
-### Phase C — Email cartridge (F3)
+### Phase C — Email cartridge (F3) ✓
 
-- Convert `app-console-email/` stub → lib crate with `EmailCartridge` implementing `Cartridge`
-- Inbox list view + message read pane + compose/send
-- Backend: `service-email` in `project-data` cluster (NOT `service-email-egress`)
-- Wire into `os-console/src/main.rs` at F3
-- Plain mode: all email operations available without color/graphics
+- `app-console-email/` converted to lib crate with `EmailCartridge` implementing `Cartridge`
+- Inbox list + message read + compose/send; `j/k` navigate, `Enter` open, `N` compose, `R` refresh
+- Backend: `service-email` at `email_endpoint` (default `localhost:9093`)
+- Registered in `os-console/src/main.rs` at F3; workspace member
+- Plain mode: `plain: bool` passed from `ConsoleConfig.plain_mode`; ASCII borders, text labels
 
-### Phase D — SLM cartridge (F9)
+### Phase D — SLM cartridge (F9) ✓
 
-- Convert `app-console-slm/` stub → lib crate with `SlmCartridge`
-- Doorman health display: circuit state (open/closed), tier routing, `ai_available` flag
-- Yo-Yo tier status panel: VM state, daily budget remaining
-- Backend: `http://localhost:9080` (Doorman health endpoint)
-- Wire into `os-console/src/main.rs` at F9
+- `app-console-slm/` converted to lib crate with `SlmCartridge`
+- Doorman health dashboard: circuit state, tier routing, `ai_available`, entity count
+- Background poller (10s interval) + `R` manual refresh; `?` help overlay
+- Backend: `slm_endpoint` (default `localhost:9080`) via `/readyz`
+- Registered in `os-console/src/main.rs` at F9; workspace member
 
-### Phase E — Orchestration wiring
+### Phase E — Orchestration wiring ✓
 
-- Audit `os-console/src/mba_client.rs` — confirm `orchestration_host` config field exists
-- Rename any `app-orchestration-command` references (no such crate — `app-console-system` owns system status)
-- Ensure `ConsoleConfig` accurately names all peer endpoints
+- `mba_client.rs` audited: clean, connects via `totebox_host:totebox_ssh_port`; no stale refs
+- Zero `app-orchestration-command` references in any Rust source
+- `orchestration_host: String` added to `ConsoleConfig` (default `127.0.0.1`)
+- `email_endpoint` + `plain_mode` also added to `ConsoleConfig` (Phase C prerequisite)
+- `BRIEF-os-console-platform.md` §5 updated with full peer-field table
+
+## §4b — Next coding phases
+
+### Phase 6 — Offline mode + Tantivy search
+
+- Offline detection: poll `slm_endpoint/v1/health/ready`; switch to deterministic-only mode
+- Greyed inference widgets in `ContentCartridge` when offline
+- `/search <query>` → `service-content` port 9081 Tantivy index
 
 ---
 
-## §5 — Deferred phases (from BRIEF-leapfrog-2030-coding.md)
+## §5 — Deferred phases
 
 | Phase | What |
 |---|---|
@@ -116,7 +126,7 @@ Command runs `bin/promote.sh`.
 | Phase 7 | PDF viewing — pdfium-render → Kitty/Sixel pixel render; hard error on unsupported terminals |
 | Phase 8 | Polish — OSC 8 hyperlinks; truecolor; multi-tab; session persistence; `/audit` log viewer; F2 People |
 | Phase 9 | Operations — `local-console.service` systemd unit; Prometheus metrics; fail2ban for port 2222; graceful SIGTERM |
-| Phase 10–13 | F7 BIM, F10 mesh, F13 ops, chassis auto-reconnect watchdog |
+| Phase 10–13 | F7 BIM, F10 mesh, chassis auto-reconnect watchdog |
 
 ---
 
