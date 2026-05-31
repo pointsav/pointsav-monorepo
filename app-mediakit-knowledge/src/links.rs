@@ -35,6 +35,19 @@ pub struct LinkGraph {
 }
 
 impl LinkGraph {
+    /// Returns true if any hash entry exists for this slug (prefix scan on
+    /// the composite `"slug\x00revision"` key, so the exact revision is ignored).
+    pub fn exists(&self, slug: &str) -> bool {
+        let Ok(rtx) = self.db.begin_read() else { return false; };
+        let Ok(table) = rtx.open_table(HASHES) else { return false; };
+        let prefix = format!("{}\x00", slug);
+        let Ok(mut range) = table.range(prefix.as_str()..) else { return false; };
+        match range.next() {
+            Some(Ok((k, _))) => k.value().starts_with(prefix.as_str()),
+            _ => false,
+        }
+    }
+
     /// Open an existing database or create a new one at `path`.
     pub fn open_or_create(path: &Path) -> Result<Self, WikiError> {
         let db = if path.exists() {
@@ -351,6 +364,20 @@ impl LinkGraph {
         } else {
             "unknown"
         }
+    }
+
+    /// Phase 11 — return all citation records for a given slug as JSON-blob strings.
+    /// The `asof` parameter is reserved for future date-filtering (currently ignored).
+    pub fn citations_for_slug(&self, slug: &str, _asof: Option<&str>) -> Vec<(String, String)> {
+        let Ok(rtx) = self.db.begin_read() else { return vec![]; };
+        let Ok(table) = rtx.open_table(CITATIONS) else { return vec![]; };
+        let prefix = format!("{}:", slug);
+        let Ok(range) = table.range(prefix.as_str()..) else { return vec![]; };
+        range
+            .filter_map(|r| r.ok())
+            .take_while(|(k, _)| k.value().starts_with(prefix.as_str()))
+            .map(|(k, v)| (k.value().to_owned(), v.value().to_owned()))
+            .collect()
     }
 
     /// The claims that declare a `depends_on` edge **to** `claim_id` — the

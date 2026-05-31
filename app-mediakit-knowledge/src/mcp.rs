@@ -74,6 +74,7 @@ async fn dispatch(state: &AppState, method: &str, params: &Value) -> Result<Valu
         "resources/read" => resources_read(state, params).await,
         "prompts/list" => prompts_list(),
         "prompts/get" => prompts_get(params),
+        "query_claims" => query_claims(state, params),
         _ => Err((-32601, format!("method not found: {method}"))),
     }
 }
@@ -363,4 +364,36 @@ fn prompts_get(params: &Value) -> Result<Value, (i32, String)> {
         }
         _ => Err((-32601, format!("unknown prompt: {name}"))),
     }
+}
+
+// ─── query_claims ────────────────────────────────────────────────────────────
+
+/// Phase 11 — `query_claims(topic, asof)`.
+/// Returns all citation/claim records for the given article slug.
+/// `asof` is a reserved ISO 8601 date string; date-filtering is planned for
+/// Phase 11 full implementation once the citations table carries timestamps.
+fn query_claims(state: &AppState, params: &Value) -> Result<Value, (i32, String)> {
+    let topic = params
+        .get("topic")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| (-32602i32, "missing param: topic".to_string()))?;
+    if topic.contains("..") {
+        return Err((-32602, "invalid slug".to_string()));
+    }
+    let asof = params.get("asof").and_then(|v| v.as_str());
+    let records = state.links.citations_for_slug(topic, asof);
+    let claims: Vec<Value> = records
+        .into_iter()
+        .filter_map(|(cite_id, blob)| {
+            let parsed: serde_json::Value = serde_json::from_str(&blob).ok()?;
+            Some(json!({
+                "claim_id":      cite_id,
+                "status":        parsed.get("status").and_then(|v| v.as_str()).unwrap_or("unknown"),
+                "cite_url":      parsed.get("url").and_then(|v| v.as_str()).unwrap_or(""),
+                "cite_title":    parsed.get("title").and_then(|v| v.as_str()).unwrap_or(""),
+                "last_verified": null
+            }))
+        })
+        .collect();
+    Ok(json!({ "claims": claims, "topic": topic, "asof": asof }))
 }
