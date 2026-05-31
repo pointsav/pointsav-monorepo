@@ -76,7 +76,7 @@ impl ContentCartridge {
             "operator",
             "local",
             "http://127.0.0.1:9092",
-            "http://localhost:8011",
+            "http://localhost:9080",
             format!(
                 "{}/.local/share/os-console/drafts-outbound",
                 std::env::var("HOME").unwrap_or_else(|_| ".".into())
