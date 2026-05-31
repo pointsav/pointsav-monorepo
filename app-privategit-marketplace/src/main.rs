@@ -134,11 +134,15 @@ fn load_catalog(catalog_path: &str) -> Result<Catalog> {
 // ── Handlers ──────────────────────────────────────────────────────────────────
 
 async fn root() -> Redirect {
-    Redirect::to("/software")
+    Redirect::to("/products")
 }
 
-async fn software_page() -> Response {
-    serve_static_html(include_str!("../static/software.html"))
+async fn products_page() -> Response {
+    serve_static_html(include_str!("../static/products.html"))
+}
+
+async fn software_page() -> Redirect {
+    Redirect::permanent("/products")
 }
 
 async fn licensing_page() -> Response {
@@ -615,6 +619,7 @@ async fn main() -> Result<()> {
 
     let app = Router::new()
         .route("/", get(root))
+        .route("/products", get(products_page))
         .route("/software", get(software_page))
         .route("/licensing", get(licensing_page))
         .route("/healthz", get(healthz))
