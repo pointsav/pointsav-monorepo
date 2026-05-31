@@ -3,7 +3,7 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Architecture: VM-* naming mirrors the os-* product lineup exactly. See `BRIEF-VM-ARCHITECTURE.md`.
 
-Last updated: 2026-05-30
+Last updated: 2026-05-31
 
 ---
 
@@ -58,6 +58,20 @@ Last updated: 2026-05-30
 - [ ] `conventions/journal-artifact-discipline.md` — new file; copy/adapt from `.agent/rules/journal-artifact-discipline.md`. Command Session scope. [2026-05-27 totebox@project-editorial]
 - [ ] `conventions/artifact-registry.md` — add JOURNAL section row. Command Session scope. [2026-05-27 totebox@project-editorial]
 - [ ] Foundry `NEXT.md` — add JOURNAL programme tracking checkbox. Command Session scope. [2026-05-27 totebox@project-editorial]
+
+## Command-scope items surfaced this session
+
+- [ ] **A4 text-gis-data-methodology-dialog** — routing message sent (msg-id: project-editorial-20260531-text-dialog-route); Command must place in gateway-orchestration-gis static web copy. [2026-05-31 totebox@project-editorial]
+- [ ] **Legal tokens** — routing message sent (msg-id: project-editorial-20260531-legal-tokens-route); Command must commit legal-tokens-pointsav.yaml + legal-tokens-woodfine.yaml to factory-release-engineering/tokens/ via admin-tier. [2026-05-31 totebox@project-editorial]
+
+---
+
+## Completed this session (2026-05-31 — full sweep)
+
+- [x] J4 final language pass: §4+§5 confirmed clean; `forbidden_terms_cleared: true` validated; stale notes_for_editor warning removed — `0fa3dfc6` (Peter)
+- [x] Group 2 backlog: A3/B1/B2 source drafts confirmed superseded and archived; A4 routing message sent to Command
+- [x] Unexpected files resolved: colocation-tier-summary.json archived (data misfile); legal-tokens-*.draft.yaml routing sent to Command
+- [x] Artifact registry: A3/A4/B1/B2/J4-language-pass all updated — `1e91a6a1` (Jennifer)
 
 ---
 
