@@ -4044,58 +4044,78 @@ setSurface(activeSurface);
     };
   }
 
-  function reloadTabContent(idx, path, mtime) {
+  function reloadTabContent(idx, path, mtime, preloadedData) {
     var tab = tabs[idx];
     if (!tab) return;
-    // This prototype's file-content API is /_api/edit/file (not /workbench/file).
-    // It returns { content, mtime } for text-editable files.
     var apiPath = path.replace(/^\/+/, '');
+
+    function paintData(fileData) {
+      if (!fileData) return;
+      tab.content = fileData.content;
+      tab.editorMtime = fileData.mtime || mtime;
+      tab.dirty = false;
+      if (idx === activeTabIdx) {
+        if (editorPath && editorPath === apiPath) {
+          var ta = document.getElementById('editor-textarea');
+          if (ta) ta.value = fileData.content;
+          editorMtime = fileData.mtime || editorMtime;
+          setDirty(false);
+          if (typeof updateGutterLines === 'function') updateGutterLines();
+          if (typeof scheduleHighlight === 'function') scheduleHighlight();
+        }
+        if (viewMode === 'iframe') {
+          var frame = document.getElementById('preview-frame');
+          if (frame) { frame.removeAttribute('src'); frame.srcdoc = fileData.content; }
+        } else if (viewMode === 'text') {
+          var tc = document.getElementById('text-content');
+          if (tc) {
+            var ext = (tab.name || '').split('.').pop().toLowerCase();
+            if (ext === 'md') {
+              tc.className = 'md-view';
+              tc.innerHTML = mdToHtml(fileData.content);
+            } else {
+              tc.className = 'code-view';
+              tc.textContent = fileData.content;
+            }
+          }
+        }
+      }
+    }
+
+    if (preloadedData) {
+      paintData(preloadedData);
+    } else {
+      // /_api/edit/file is the local-intranet-editor (nginx → 9210); reads from disk.
+      fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath))
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(paintData)
+        .catch(function() {});
+    }
+  }
+
+  // Poll the active tab every 4 s — catches external changes (e.g. another agent
+  // rewriting a file in _clones/) that the SSE watcher does not cover.
+  function pollActiveTab() {
+    var idx = activeTabIdx;
+    var tab = tabs && tabs[idx];
+    if (!tab || !tab.path) return;
+    var apiPath = tab.path.replace(/^\/+/, '');
     fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath))
       .then(function(r) { return r.ok ? r.json() : null; })
-      .then(function(fileData) {
-        if (!fileData) return;
-        tab.content = fileData.content;
-        tab.editorMtime = fileData.mtime || mtime;
-        tab.dirty = false;
-        // If this is the currently active tab, re-render the viewer + editor
-        // by mirroring the display logic in switchTab(). There is no
-        // standalone renderViewer() in this app; the canonical viewer-paint
-        // path lives inline in switchTab/openFile.
-        if (idx === activeTabIdx) {
-          // Update editor textarea + mtime tracker if the editor is open on this file
-          if (editorPath && editorPath === apiPath) {
-            var ta = document.getElementById('editor-textarea');
-            if (ta) ta.value = fileData.content;
-            editorMtime = fileData.mtime || editorMtime;
-            setDirty(false);
-            if (typeof updateGutterLines === 'function') updateGutterLines();
-            if (typeof scheduleHighlight === 'function') scheduleHighlight();
-          }
-          // Repaint the viewer area according to current viewMode
-          if (viewMode === 'iframe') {
-            var frame = document.getElementById('preview-frame');
-            if (frame) {
-              frame.removeAttribute('src');
-              frame.srcdoc = fileData.content;
-            }
-          } else if (viewMode === 'text') {
-            var tc = document.getElementById('text-content');
-            if (tc) {
-              var ext = (tab.name || '').split('.').pop().toLowerCase();
-              if (ext === 'md') {
-                tc.className = 'md-view';
-                tc.innerHTML = mdToHtml(fileData.content);
-              } else {
-                tc.className = 'code-view';
-                tc.textContent = fileData.content;
-              }
-            }
-          }
-          // image mode: binary content isn't editable here; nothing to do
+      .then(function(data) {
+        if (!data || !data.mtime) return;
+        var stored = tab.editorMtime || 0;
+        if (data.mtime === stored) return;
+        if (tab.dirty) {
+          showChangeNotice(idx, apiPath);
+        } else {
+          reloadTabContent(idx, apiPath, data.mtime, data);
         }
       })
       .catch(function() {});
   }
+
+  setInterval(pollActiveTab, 4000);
 
   function showChangeNotice(idx, path) {
     var existing = document.getElementById('sse-change-notice');
