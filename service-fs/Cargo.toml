@@ -11,5 +11,13 @@ path = "src/main.rs"
 # Excluded from test builds: #[panic_handler] conflicts with std test harness
 test = false
 
+[dev-dependencies]
+tower = { version = "0.4", features = ["util"] }
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "ledger_bench"
+harness = false
+
 [dependencies]
 # Pure bare-metal enclave. Zero OS dependencies permitted.
