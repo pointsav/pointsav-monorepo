@@ -827,37 +827,20 @@ fn first_body_line(body_md: &str) -> String {
 /// as tiebreaker), and return the top `n` entries.
 ///
 /// Topics with `last_edited: None` fall back to git-commit-date via
-/// `git log -1 --format=%cI -- <path>`. If that fails, falls back to
 /// filesystem mtime. Topics that cannot produce any date sort last.
 fn recent_topics_by_last_edited(buckets: &CategoryBuckets, n: usize) -> Vec<TopicSummary> {
     let mut all: Vec<TopicSummary> = buckets.values().flatten().cloned().collect();
 
-    // Resolve a sort key for each entry: prefer `last_edited`, then git, then mtime.
-    // We use a String key so ISO-8601 lexicographic order == chronological order.
+    // Resolve a sort key for each entry: prefer `last_edited` frontmatter,
+    // then filesystem mtime. We use a String key so ISO-8601 / unix-seconds
+    // lexicographic order == chronological order.
     let key_for = |t: &TopicSummary| -> String {
         if let Some(ref d) = t.last_edited {
             return d.clone();
         }
-        // Try git commit date.
-        if let Ok(output) = std::process::Command::new("git")
-            .args([
-                "log",
-                "-1",
-                "--format=%cI",
-                "--",
-                t.file_path.to_str().unwrap_or(""),
-            ])
-            .output()
-        {
-            let s = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            if !s.is_empty() {
-                return s;
-            }
-        }
-        // Fall back to filesystem mtime.
+        // Fall back to filesystem mtime (fast — no subprocess).
         if let Ok(meta) = std::fs::metadata(&t.file_path) {
             if let Ok(modified) = meta.modified() {
-                // Convert to a rough ISO string for comparison.
                 let dur = modified
                     .duration_since(std::time::UNIX_EPOCH)
                     .unwrap_or_default();
@@ -2041,9 +2024,22 @@ async fn static_asset(Path(path): Path<String>) -> Response {
     match StaticAsset::get(&path) {
         Some(asset) => {
             let mime = mime_guess::from_path(&path).first_or_octet_stream();
+            let hash = asset.metadata.sha256_hash();
+            let etag = format!(
+                "\"{}\"",
+                hash.iter().map(|b| format!("{b:02x}")).collect::<String>()
+            );
             let mut resp = asset.data.into_owned().into_response();
-            if let Ok(value) = HeaderValue::from_str(mime.as_ref()) {
-                resp.headers_mut().insert(header::CONTENT_TYPE, value);
+            let hdrs = resp.headers_mut();
+            if let Ok(v) = HeaderValue::from_str(mime.as_ref()) {
+                hdrs.insert(header::CONTENT_TYPE, v);
+            }
+            hdrs.insert(
+                header::CACHE_CONTROL,
+                HeaderValue::from_static("public, max-age=3600, stale-while-revalidate=86400"),
+            );
+            if let Ok(v) = HeaderValue::from_str(&etag) {
+                hdrs.insert(header::ETAG, v);
             }
             resp
         }
