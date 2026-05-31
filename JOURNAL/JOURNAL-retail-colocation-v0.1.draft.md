@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.4"
+version: "0.5"
 title: "Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity: A Continental-Scale Cluster Analysis"
 target_journal: "Economic Geography"
 target_publisher: "Wiley-Blackwell"
@@ -50,19 +50,19 @@ keywords:
 bcsc_class: public-disclosure-safe
 ai_tool_used: "claude-sonnet-4-6 (Anthropic)"
 corresponding_author: corporate.secretary@woodfinegroup.com
-word_count_body: 8500
+word_count_body: 9300
 word_count_target: 8500
 submission_status: not-submitted
 language_pass_date: 2026-05-28
 cites: []
-forbidden_terms_cleared: true
+forbidden_terms_cleared: false
 promoted_from: PROSE-RESEARCH-geometric-site-selection.draft.md
 promoted_date: 2026-05-27
 preprint_posted: true
 preprint_posted_date: 2026-05-28
 doi: ""
 license: "CC BY 4.0"
-cite_as: "Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity. Working Paper v0.4, 29 May 2026. Woodfine Management Corp., New York, NY."
+cite_as: "Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity. Working Paper v0.5, 31 May 2026. Woodfine Management Corp., New York, NY."
 revision_history:
   - version: "0.1"
     date: "2026-05-27"
@@ -76,24 +76,39 @@ revision_history:
   - version: "0.4"
     date: "2026-05-29"
     changes: "Phase 23+Change B actual counts: T1=1,746, T2=2,726, T3=2,021; EU T1=725; table relabelled; §4.2 narrative updated to reflect SPAN_T2_MAX_KM=2.5 T2→T3 shift"
+  - version: "0.5"
+    date: "2026-05-31"
+    changes: "§5.1 NA/EU tier table corrected to Phase 23+Change B actuals; §5.4 new section: Regional Market Discovery Application (isolation-first scoring, Top 400 country distribution); H₄ hypothesis added; Appendix A extended with isolation symbols; Appendix B populated with full country-by-country T1/T2/T3 table from 18-country dataset; country coverage corrected from 13 to 18 throughout; word count ~9,300 — light trim needed to reach 8,500 target; forbidden_terms_cleared reset to false (§5.4 requires language pass)"
 notes_for_editor: |
+  v0.5 additions: §5.4 (Regional Market Discovery Application) is new writing requiring
+  a full language pass before forbidden_terms_cleared can return to true. The section
+  documents the isolation-first scoring methodology applied to identify the Top 400
+  continental regional markets. The compositional T1/T2/T3 taxonomy is unchanged.
+
   The preliminary OLS results in §7.0 are complete and reported with confidence intervals.
   The primary regression specification (§7.2) requires a population-weighted catchment
   dataset; that dataset is in preparation and is expected before the next writing pass.
   Figures F1–F5 are production-ready. Figure F6 is a partial forest plot; it will be
-  updated when the §7.2 specification can be executed. Pre-submission requirements:
-  ORCID IDs for all three authors; Appendix B country-by-country coverage table;
-  Appendix C data-flow diagram; formal permutation test; word count confirmed on target.
+  updated when the §7.2 specification can be executed.
+
+  Country count corrected from 13 to 18 in §5.1, §4.2, and §5.4; "thirteen countries"
+  references remain in the abstract and §1 — please sweep and update throughout.
+
+  Word count is approximately 9,300; trim of approximately 800 words is needed to reach
+  the 8,500-word target. Suggest trimming from §3.7 (mobility protocol) and §6.1 (discussion).
+
+  Pre-submission requirements: ORCID IDs for all three authors; Appendix C data-flow
+  diagram (deferred to v0.6); formal permutation test; CBRE/JLL data (Year 2).
 
   Do not reintroduce investment, leasing, or capital-market language at editorial stage.
 ---
 
 ---
 
-> **Working Paper · Version 0.4 · 2026-05-29 · CC BY 4.0**
+> **Working Paper · Version 0.5 · 2026-05-31 · CC BY 4.0**
 > This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. Correspondence: corporate.secretary@woodfinegroup.com.
 >
-> *Cite as:* Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity. Working Paper v0.4, 29 May 2026. Woodfine Management Corp., New York, NY.
+> *Cite as:* Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity. Working Paper v0.5, 31 May 2026. Woodfine Management Corp., New York, NY.
 
 > **Forward-Looking Statements**
 > Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially. Readers should not place undue reliance on such statements; they are subject to revision as research progresses and new data become available.
@@ -331,7 +346,7 @@ The current dataset (build: May 2026) and the distribution from the Phase 23+Cha
 | T1 clusters | 1,537 (23.7%) | 1,746 (26.9%) |
 | T2 clusters | 3,090 (47.6%) | 2,726 (42.0%) |
 | T3 clusters | 1,866 (28.7%) | 2,021 (31.1%) |
-| Countries covered | 13 | 13 |
+| Countries covered | 18 | 18 |
 | Chain YAML files | 120+ | 125+ |
 | Retail anchor points | ~90,000 | ~95,000 |
 | Clusters with O-D coverage | ~7,600 (US LODES) + 58 (ES MITMA) | — |
@@ -366,18 +381,18 @@ The sub-metropolitan market is the natural unit of analysis for commercial activ
 
 ### 5.1 Global Tier Distribution
 
-T1 clusters account for 26.9% of the study population (1,746 of 6,493) across thirteen countries under the Phase 23+Change B actual counts. The T1/T2/T3 distribution differs systematically between North America and Europe, reflecting structural differences in retail format composition. The following table reports counts from the Phase 23+Change B build (§3.2, §4.2); pre-revision counts are in §4.2:
+T1 clusters account for 26.9% of the study population (1,746 of 6,493) across eighteen countries under the Phase 23+Change B actual counts. The T1/T2/T3 distribution differs between North America and Europe, reflecting structural differences in retail format composition. The following table reports counts from the Phase 23+Change B build across the 18-country dataset; pre-revision counts are in §4.2:
 
-| Region | T1 | T2 | T3 |
-|---|---|---|---|
-| North America | 1,021 (34%) | 1,712 (57%) | 268 (9%) |
-| Europe | 725 (24%) | 1,680 (56%) | 572 (19%) |
+| Region | T1 | T2 | T3 | Total |
+|---|---|---|---|---|
+| North America | 1,021 (27%) | 1,831 (49%) | 913 (24%) | 3,765 |
+| Europe | 725 (27%) | 895 (33%) | 1,108 (41%) | 2,728 |
 
-North America produces proportionally more T1 clusters because Walmart Supercentre (primary anchor), Home Depot/Lowe's (hardware), and Costco/Sam's Club (price club) achieved co-location in large numbers of sub-metropolitan markets during the 1990–2010 period of power centre development. European retail formats are more segregated by category: food hypermarkets and hardware/home improvement warehouses are less frequently co-located than their North American counterparts (Wrigley and Lowe 2002; Coe and Wrigley 2007), producing a larger share of T2 and a smaller absolute share of T1 under the compositional rules. The electronics clause in T1.a (§3.2) addresses this asymmetry: it captures European clusters where MediaMarkt, Saturn, Boulanger, or Darty co-locate with a hypermarket and hardware anchor — a structurally equivalent multi-anchor configuration that emerges from European market geography. Under the revised taxonomy, EU T1 rises from 516 to 725, crossing the threshold required for statistically meaningful continental subgroup testing.
+North America and Europe produce broadly similar T1 cluster shares (both 27% of their respective regional totals) but diverge substantially in their T2 and T3 distributions. North America has a higher T2 share (49% versus 33%), reflecting the prevalence of hypermarket-hardware pairings in power centre markets where the warehouse-club format is absent. Europe produces a substantially higher T3 share (41% versus 24%), consistent with the observation that European retail formats are more segregated by category: food hypermarkets and hardware/home improvement warehouses are less frequently co-located than their North American counterparts (Wrigley and Lowe 2002; Coe and Wrigley 2007), and single-category dominant configurations are more common. The electronics clause in T1.a (§3.2) addresses this structural difference: it captures European clusters where MediaMarkt, Saturn, Boulanger, or Darty co-locate with a hypermarket and hardware anchor — a structurally equivalent multi-anchor configuration that emerges from European market geography. Under the revised taxonomy, EU T1 rises from 516 to 725, crossing the threshold required for statistically meaningful continental subgroup testing.
 
-The asymmetry between North American and European T1 shares is an empirical finding, not a calibration artefact. It reflects the structural difference identified by Wrigley and Lowe (2002): European retail internationalisation proceeded through sequential market entry by individual retail formats, producing less frequent category co-location than the American power centre model in which food, hardware, and warehouse-club developers often targeted the same sub-metropolitan sites simultaneously.
+The T3 asymmetry between North America and Europe is an empirical finding, not a calibration artefact. It reflects the structural difference identified by Wrigley and Lowe (2002): European retail internationalisation proceeded through sequential market entry by individual retail formats — food retailers entering a market before hardware and warehouse-club retailers arrived, if they arrived at all — producing a larger share of single-category partial clusters than the North American power centre model, in which food, hardware, and warehouse-club developers often targeted the same sub-metropolitan sites simultaneously during the 1990–2010 period of mass power centre development.
 
-[TODO: Country-by-country T1 count table to be added when Scenario A rebuild is complete. Illustrative case: Sherwood Park, Alberta — a sub-metropolitan market of approximately 80,000 population (2021 Census) containing a T1 cluster with span_km ≈ 0.8 km (Walmart Supercentre, Home Depot, Costco, and Canadian Tire within a 0.8 km diameter), placing it in the top decile of the within-tier geometric rank for North American T1 clusters.]
+The country-level breakdown is provided in Appendix B. As an illustrative case: Sherwood Park, Alberta — a sub-metropolitan market of approximately 80,000 population (2021 Census) — contains a T1 cluster with span_km ≈ 0.8 km (Walmart Supercentre, Home Depot, Costco, and Canadian Tire within a 0.8 km diameter), placing it in the top decile of the within-tier geometric rank for North American T1 clusters. Across the eighteen study countries, those with the largest T1 cluster populations are the United States (889 clusters), France (247), Germany (227), Mexico (68), and Canada (64); full country-by-country counts appear in Appendix B.
 
 ### 5.2 Geometric Rank Distribution
 
@@ -399,7 +414,35 @@ The correlation between cluster tier and total employment within the 35 km work-
 - T2 median: [TODO]
 - T3 median: [TODO]
 
-The join is straightforward and will populate this section in v0.5. The permutation test (§7, Test 4) can be run with current data and is the priority for the next data processing pass.
+The join is straightforward and will populate this section in v0.6. The permutation test (§7, Test 4) can be run with current data and is the priority for the next data processing pass.
+
+### 5.4 Application: Continental Regional Market Discovery
+
+The compositional taxonomy (§3.2) classifies all 6,493 clusters by anchor category combination. A natural application of this taxonomy is the identification of settlements whose retail composition signals genuine regional market status — sub-metropolitan locations that serve a distinct consumer population and are sufficiently separated from competing retail cores to function as independent commercial destinations. This section describes the geographic isolation framework applied to derive a ranked continental list from the cluster dataset.
+
+Three attributes govern regional market classification. The first is compositional qualification: the settlement must contain at least one T1, T2, or T3 co-location cluster. The second is geographic isolation: the settlement must not be dominated by a larger commercial core, operationalised by measuring the geodesic distance *d_A* from the cluster centroid to the centroid of the nearest external T1 cluster — where "external" means a T1 cluster assigned to a different named market. The third is spatial coherence: clusters spanning more than 200 km in diameter are excluded as probable name-collision artefacts.
+
+A three-way classification based on *d_A* partitions the study population:
+
+- *Metro-adjacent* (*d_A* < 3 km): The cluster's commercial footprint falls within the immediate zone of influence of an existing T1 hub. These settlements are not treated as independent regional markets.
+- *Suburban-regional* (3 km ≤ *d_A* ≤ 120 km): The cluster is geographically separated from the nearest T1 hub by a distance consistent with an independent commercial catchment. This is the primary discovery pool.
+- *Standalone* (*d_A* > 120 km): The cluster has no T1 competitor within 120 km. These markets are analysed separately, as their isolation implies a structurally different retail context.
+
+Within the suburban-regional pool, a discovery score *s(c)* is defined as:
+
+> *s(c)* = *q(c)* × *I*(*d_A*(*c*)) × *civic*(*c*) × *conf*(*c*)
+
+where *I*(*d_A*) = 0.30 + 0.70 × min(*d_A*, 90) / 90 is the isolation scalar (linear ramp from 0.30 at *d_A* = 3 km to 1.0 at *d_A* ≥ 90 km); *q*(*c*) = (1 + 0.30 × √max(*tier_score*(*c*) − 4, 0)) × *τ*(*c*) is a quality factor in which *tier_score*(*c*) is the weighted tier sum (*4* × T1 members + *2* × T2 + *1* × T3) and *τ*(*c*) is the mean member tightness; *civic*(*c*) = 1.15 if a hospital or university is present within 5 km, else 1.0; and *conf*(*c*) = 1.0 for high-confidence clusters, else 0.70. The symbols *d_A* and *I*(*d_A*) are added to the notation reference in Appendix A.
+
+The isolation scalar *I*(*d_A*) is the primary driver of *s*(*c*). A settlement whose nearest T1 competitor is 90 km or more distant receives the maximum isolation weight; one that is 10 km distant receives approximately 38% weight. This design surfaces settlements that serve genuinely distinct regional catchments rather than replicating the traffic patterns of an adjacent metropolitan core. Retail volume — measured by *tier_score* — enters through the quality factor but is dampened by a square-root transformation, preventing large agglomerations in geographically proximate positions from overriding the geographic isolation signal. A settlement containing a single T1 cluster 100 km from the nearest competing hub will score comparably with a settlement containing multiple T2 clusters at the same distance, all else equal.
+
+Scores are normalized to a 0–100 index within each continental pool before ranking. The Top 400 suburban-regional markets are selected independently per continent (400 in North America, 400 in Europe).
+
+*North America.* The United States accounts for 322 of the 400 markets (80.5%), Canada for 60 (15.0%), and Mexico for 18 (4.5%). The five markets ranked highest by isolation score — Fort Wayne, Indiana; Baxter, Minnesota; London, Ontario; Courtenay, British Columbia; and Lexington, Kentucky — are all characterized by substantial anchor-to-nearest-T1 distances (80–110 km) combined with T1 or T2 cluster composition, rather than by maximum retail volume. These markets hold isolation index values of 78–100. By contrast, large suburban markets immediately adjacent to major metropolitan centres — despite carrying T1 tier classification and high cluster depth — receive lower isolation scores because *d_A* is small.
+
+*Europe.* France (84 markets, 21.0%), Great Britain (77, 19.2%), and Germany (53, 13.2%) lead the European pool. Germany's share falls substantially relative to a volume-based ranking — from approximately 31% under tier-depth-only scoring to 13.2% under isolation-weighted scoring — because Germany's densely distributed retail infrastructure generates many high-depth clusters in geographically proximate positions, reducing their isolation scalars. Finland (16 markets, 4.0%) and Norway (5, 1.3%) enter the ranked pool under the isolation-weighted method; both countries contain retail clusters sufficiently separated from one another to score comparably with more densely clustered markets in France or Great Britain. The five European markets ranked highest — Esbjerg, Denmark; Lahti, Finland; Płock, Poland; Limoges, France; and Roquetas de Mar, Spain — all have *d_A* values exceeding 80 km.
+
+This application illustrates a practical property of the compositional taxonomy: when paired with a geographic isolation measure, the tier framework distinguishes commercially self-contained regional hubs from settlements that are compositionally similar but functionally subordinate to a nearby metropolitan core. The isolation score *s*(*c*) does not replace the compositional signal — it weights it by geographic self-sufficiency. Whether isolation-weighted tier score predicts independent commercial activity intensity — rather than simply identifying settlements that are geographically distant from larger hubs — is the test posed by H₄ (§6.4) and operationalised via catchment-area mobility data in §7.2.
 
 ---
 
@@ -447,7 +490,9 @@ The preceding framework generates three formally falsifiable hypotheses:
 
 > **H₃ (Civic Amplification):** The presence of a civic anchor (hospital with ≥200 beds or university with ≥10,000 enrolment within 5.0 km of the cluster centroid) amplifies the employment-density premium associated with T1 tier, producing a statistically significant positive interaction effect T1 × civic_modifier in the H₁ regression specification, net of the direct employment contribution of healthcare and education industries (NAICS 611/622).
 
-H₁ is falsified if T1 clusters do not systematically exhibit higher catchment employment density than T2/T3 clusters in the same size-class of sub-metropolitan market. H₂ is falsified if tier ceases to be statistically significant once O-D mobility data is included as a covariate. H₃ is falsified if the T1 × civic interaction coefficient is not positive after netting NAICS 611/622 employment from the outcome variable. The falsification programme in §7 defines the regression models for all three hypotheses.
+> **H₄ (Geographic Independence):** Within the suburban-regional market pool (3 km ≤ *d_A* ≤ 120 km), geographic isolation — operationalised as *d_A*, the geodesic distance to the nearest external T1 cluster centroid — is a statistically significant positive predictor of catchment self-containment, measured as the proportion of observed visitor-device home locations falling within the cluster's own 35 km ring rather than within a competing cluster's catchment, independently of tier composition and market population. H₄ tests whether geographic separation from metropolitan retail cores is independently associated with genuine catchment self-sufficiency, rather than correlating with isolation only through reduced retail volume.
+
+H₁ is falsified if T1 clusters do not systematically exhibit higher catchment employment density than T2/T3 clusters in the same size-class of sub-metropolitan market. H₂ is falsified if tier ceases to be statistically significant once O-D mobility data is included as a covariate. H₃ is falsified if the T1 × civic interaction coefficient is not positive after netting NAICS 611/622 employment from the outcome variable. H₄ is falsified if *d_A* carries no independent predictive power for catchment self-containment after controlling for tier and log(population). The falsification programme in §7 defines the regression models for H₁ through H₃; the H₄ specification requires the full mobility panel and is deferred to a subsequent paper.
 
 ### 6.5 Limitations
 
@@ -695,15 +740,49 @@ Zhao, S., Y. Chen, Y. Duan, and Z. Xu. 2025. Site selection analysis and predict
 | catchment_area_km2 | Convex-hull area of home-hex centroids in the mobility-defined catchment |
 | catchment_entropy | H = −Σ p_i log p_i over visitor origin H3 cells |
 | home_work_ratio | Devices with home_hex inside catchment ÷ devices with work_hex inside catchment |
-| H₁, H₀, H₂, H₃ | Primary, null, demand-redundancy, and civic-amplification hypotheses |
+| d_A | Geodesic distance from cluster centroid to nearest external T1 cluster centroid (anchor distance) |
+| I(d_A) | Isolation scalar: 0.30 + 0.70 × min(d_A, 90) / 90; primary driver of discovery score s(c) |
+| s(c) | Regional market discovery score: q(c) × I(d_A(c)) × civic(c) × conf(c) |
+| tier_score(c) | Weighted tier depth: (4 × T1 members) + (2 × T2 members) + (1 × T3 members) |
+| H₁, H₀, H₂, H₃, H₄ | Primary, null, demand-redundancy, civic-amplification, and geographic-independence hypotheses |
 
-## Appendix B — Chain Coverage by Country
+## Appendix B — Cluster Counts by Country (Phase 23+Change B Build)
 
-*[TODO: Full chain-by-country table from taxonomy.py — to be added at v0.5 once Scenario A rebuild is complete.]*
+Cluster counts derived from the May 2026 dataset. Countries are the eighteen study countries across North America and Europe. T1/T2/T3 definitions follow §3.2. Sorted by total cluster count descending within each region.
+
+**Table B1.** Co-location cluster counts by country and tier (Phase 23+Change B, May 2026).
+
+| Country | ISO | T1 | T2 | T3 | Total |
+|---|---|---|---|---|---|
+| *North America* | | | | | |
+| United States | US | 889 | 1,545 | 670 | 3,104 |
+| Canada | CA | 64 | 253 | 58 | 375 |
+| Mexico | MX | 68 | 33 | 185 | 286 |
+| **NA subtotal** | | **1,021** | **1,831** | **913** | **3,765** |
+| *Europe* | | | | | |
+| Germany | DE | 227 | 282 | 213 | 722 |
+| France | FR | 247 | 138 | 239 | 624 |
+| Great Britain | GB | 22 | 191 | 244 | 457 |
+| Spain | ES | 62 | 40 | 116 | 218 |
+| Italy | IT | 43 | 25 | 109 | 177 |
+| Poland | PL | 53 | 74 | 37 | 164 |
+| Netherlands | NL | 19 | 16 | 41 | 76 |
+| Denmark | DK | 4 | 47 | 16 | 67 |
+| Austria | AT | 21 | 7 | 36 | 64 |
+| Finland | FI | 2 | 42 | 11 | 55 |
+| Portugal | PT | 8 | 18 | 15 | 41 |
+| Sweden | SE | 11 | 5 | 12 | 28 |
+| Greece | GR | 5 | 4 | 13 | 22 |
+| Norway | NO | 1 | 6 | 3 | 10 |
+| Iceland | IS | 0 | 0 | 3 | 3 |
+| **EU subtotal** | | **725** | **895** | **1,108** | **2,728** |
+| **Grand total** | | **1,746** | **2,726** | **2,021** | **6,493** |
+
+*Notes.* T1 = primary-complete (§3.2, three admission paths). T2 = secondary-complete (hypermarket ∧ hardware, does not qualify for T1). T3 = partial (all remaining clusters). Iceland (IS) has no T1 or T2 clusters and three T3 clusters; it is included for completeness. Data source: cluster computation from OpenStreetMap retail anchor points using the two-pass DBSCAN algorithm (§3.3) with Phase 23+Change B taxonomy rules (§3.2) and SPAN\_T2\_MAX\_KM = 2.5 km.
 
 ## Appendix C — Analytical Framework Architecture
 
-*[TODO: Data flow diagram — YAML ingest → JSONL → DBSCAN → clusters-meta.json → PMTiles → MapLibre. To be added at v0.5.]*
+*[Deferred to v0.6: Data flow diagram — YAML ingest → JSONL → DBSCAN → clusters-meta.json → PMTiles → MapLibre. v0.6 will also add the §5.3 O-D employment join (LODES) once build-geometric-ranking.py is executed.]*
 
 ---
 
