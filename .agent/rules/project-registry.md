@@ -67,7 +67,10 @@ Last updated: 2026-05-31.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-privategit-design-system | Scaffold-coded | app-privategit | 4 files |
-| app-privategit-source-control | Scaffold-coded | app-privategit | 4 files |
+| app-privategit-marketplace | Active | app-privategit | software.pointsav.com storefront; product catalog, license issuance, payment verification; v0.0.3 deployed on vault-privategit-source-1 port 9202; activated 2026-05-21 |
+| app-privategit-source | Active | app-privategit | Binary release server + Ed25519 license token verification; port 9201; v0.1.0 deployed; supersedes `app-privategit-source-control`; activated 2026-05-21 |
+| app-privategit-source-control | Scaffold-coded | app-privategit | Original scaffold (lib.rs stub, 4 files); superseded by `app-privategit-source`; pending cleanup |
+| app-privategit-workbench | Scaffold-coded | app-privategit | Browser-based Totebox developer workbench; 1,191-line main.rs; v0.0.1; not in manifest; registry drift closed 2026-05-31 |
 
 ## App — Totebox surface (`app-totebox-*`)
 
@@ -168,6 +171,7 @@ Last updated: 2026-05-31.
 | tool-edgar-extractor | Reserved-folder | tool | 2 files |
 | tool-egress-pull | Scaffold-coded | tool | 4 files |
 | tool-template-rescue | Reserved-folder | tool | 3 files |
+| tool-wallet | Active | tool | Polygon USDC payment watcher + receipt writer; BIP-39/BIP-32 HD address derivation; Ed25519 keygen; v0.0.3 deployed on vault-privategit-source-1; activated 2026-05-21 |
 
 ## Vendor (`vendor-*`)
 
@@ -193,14 +197,14 @@ Last updated: 2026-05-31.
 
 ---
 
-## Summary (2026-05-29)
+## Summary (2026-05-31)
 
-- **Active:** 7 (`app-console-bookkeeper`, `app-console-keys`, `app-workplace-memo`, `app-workplace-presentation`, `app-workplace-proforma`, `app-workplace-workbench`, `service-extraction`)
-- **Scaffold-coded:** 59 (adds `system-vm-fleet-types`, `service-vm-fleet`, `service-vm-host` 2026-05-29)
-- **Reserved-folder:** 39 (added exchange, gis, market, slm orchestration rows; `app-workplace-bim` remains reserved-folder)
-- **Defect:** 0 (all 5 prior defects resolved 2026-04-23 — see `cleanup-log.md` Completed migrations)
+- **Active:** 10 (adds `app-privategit-marketplace`, `app-privategit-source`, `tool-wallet` 2026-05-31)
+- **Scaffold-coded:** 60 (adds `app-privategit-workbench` 2026-05-31; `app-privategit-source-control` retained as stale scaffold)
+- **Reserved-folder:** 39
+- **Defect:** 0
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 108. Last updated: 2026-05-29.
+**Total rows:** 112 (added `app-privategit-marketplace`, `app-privategit-source`, `app-privategit-workbench`, `tool-wallet` 2026-05-31). Last updated: 2026-05-31.
