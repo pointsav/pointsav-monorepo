@@ -38,9 +38,18 @@ Last updated: 2026-05-28 (Command Session — replaced erroneous project-infrast
 - [x] `content_endpoint` field added to `ConsoleConfig` (default `http://127.0.0.1:9081`)
 - [x] `app-console-content/src/search.rs` new module; `cargo check` 0 errors
 
+## Phase 7 — complete 2026-05-31
+
+- [x] `app-console-content/src/pdf.rs`: `render_page(path, page_idx)` via `pdfium-render` 0.8 (binds libpdfium at runtime; A4 res 1240px); graceful error if libpdfium absent
+- [x] `ContentState::PdfView` — bg render channel + cached `StatefulProtocol`; `/pdf <path>` command
+- [x] `on_pdf_key`: j/k/PgUp/PgDn page nav (re-renders in bg thread); Esc to exit
+- [x] `render_pdf_view`: Kitty/Sixel pixel render via `ratatui-image` 9; text fallback on terminals without graphics protocol
+- [x] `Cartridge::set_graphics_caps(kitty, sixel, font_size)` trait method; chassis calls after probe
+- [x] `image` dep trimmed to `default-features = false` (drops rav1e/avif; matches app-console-keys); `cargo check` 0 warnings
+
 ## Next coding phase
 
-- [ ] **Phase 7 — PDF viewing** — `pdfium-render` → Kitty/Sixel pixel render; hard error on unsupported terminals
+- [ ] **Phase 8 — Polish** — OSC 8 hyperlinks; truecolor; multi-tab editing; session persistence; `/audit` verdict-log viewer; F2 People cartridge
 
 ## Stage 6 — monorepo sub-clone
 
