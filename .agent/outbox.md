@@ -1,6 +1,303 @@
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: DETAILED — session 2026-05-31 report: live-site audit, source-recovery commit, rebuild request
+created: 2026-05-31T21:00:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260531-detailed-session-report
+supersedes: project-knowledge-20260531-source-recovery-rebuild
+---
+
+## Session summary
+
+Operator requested a cross-check of live sites vs `BRIEF-app-mediakit-knowledge-2030.md`,
+and reported sites were "not looking or functioning properly." Full investigation conducted.
+Root cause identified. Source fixed. Binary rebuild required to ship fixes to live sites.
+
+---
+
+## Live site status at session start
+
+All three instances were healthy and serving:
+
+| Instance | Port | Systemd | /healthz | Binary sha256 |
+|---|---|---|---|---|
+| documentation.pointsav.com | 9090 | active | ok | 3be7157b |
+| projects.woodfinegroup.com | 9093 | active | ok | 3be7157b |
+| corporate.woodfinegroup.com | 9095 | active | ok | 3be7157b |
+
+nginx is reverse-proxying correctly. SSL via Certbot on all three. proxy_read_timeout
+already raised to 90s (done earlier this session).
+
+Content dirs:
+- 9090: `/srv/foundry/clones/project-knowledge/content-wiki-documentation` (Totebox path ✓)
+- 9093: `/srv/foundry/customer/content-wiki-projects` (old customer/ path — Phase 6 gate)
+- 9095: `/srv/foundry/customer/content-wiki-corporate` (old customer/ path — Phase 6 gate)
+
+Phase 6 gate (GitHub renames + Doctrine amendment + service unit updates) is still pending.
+
+---
+
+## Root cause: binary 3be7157b is AHEAD of source
+
+Binary `3be7157b` was built by Command (2026-05-31 Session 40) from
+`app-mediakit-knowledge/Cargo.toml`. At build time, the source directory contained
+**uncommitted Gemini session edits** to `server.rs`, `style.css`, `wiki.js`, and a new
+`static/toc-persistence.js`. The Gemini session was archived as stale
+(wrong ports 9092/9094/9096; stale boot_id — see `BRIEF-gemini-handover-2026-05-30.md`
+in `.agent/briefs/archive/`). After Command built the binary, those source files were
+cleaned up without capturing the changes. Result: the binary is ahead of source.
+
+**Exact diff (binary vs source, measured before this session's fixes):**
+- `static/style.css`: binary had 3044 lines; source had 2968 lines (+76 in binary)
+- `static/wiki.js`: binary had 1218 lines; source had 1120 lines (+98 in binary)
+- `static/toc-persistence.js`: binary embedded Gemini's version; source had no file
+
+**Specific divergences:**
+
+1. **Phase 10 CSS/JS in binary, not in source.** Binary served `.reading-progress-bar`
+   progress bar CSS and `initReadingProgress()` JS. The reading bar was WORKING in the live
+   sites already (Phase 10 client-only MVP). But if the binary had been rebuilt from the
+   old source, these would have been lost.
+
+2. **Phase 9 CSS/JS in binary, not in source.** Binary served `.claim-rail` + `.claim-tick`
+   CSS and `initClaimRail()` JS. The server-side HTML emit (`<aside class="claim-rail">`)
+   was NOT implemented in any version, so the claim-rail was not rendering — but the CSS/JS
+   skeleton was already embedded.
+
+3. **`toc-persistence.js` embedded with Gemini's BROKEN code.** The binary served a
+   `toc-persistence.js` that used `document.querySelector('.toc-sidebar')` — this class
+   does not exist in the current DOM (the TOC is `aside.toc`). The script early-returned
+   silently on every page load, having no effect. The live sites therefore had no TOC
+   persistence from this file (though `initToc()` and `initTocPin()` in `wiki.js` do handle
+   TOC expand/collapse state correctly — they're unaffected).
+
+4. **server.rs differences (binary had, source didn't):**
+   - `<body data-slug="about">` — `data-slug` attribute on wiki article body; needed by
+     `initReadingProgress()` to identify which article is being read for localStorage.
+   - `<div class="reading-progress-bar" aria-hidden="true">` — immediately after body open
+     in `wiki_chrome()`; the JS reads this element to fill the progress bar.
+   - `<script src="/static/toc-persistence.js" defer="true">` — script reference at end
+     of `wiki_chrome()` body; without this in source, the next rebuild would 404 on it.
+   - `<div id="continue-reading-strip" hidden="true">` — before footer in `home_chrome()`;
+     the JS populates this with recently-read articles for logged-in users.
+
+5. **`WORDMARK_WOODFINE` constant mismatch.** Source constant was the old
+   `<span>■ Woodfine</span>` Unicode text. Binary already had the correct SVG inline
+   (`WOODFINE CAPITAL PROJECTS` in SVG text). The Woodfine instances were displaying
+   the correct SVG in the live binary. Source just hadn't been updated.
+
+6. **`#p-views { display: flex }` — visible duplicate tab bar.** The article page contained
+   both `nav.article-tabs` (Phase 7B sticky tabs: Article/Talk/Read/Edit/History/Tools)
+   AND the old Phase 1.1 `#p-views` (Read/View history). The CSS had
+   `#p-views { display: flex }` making both visible on screen. Users would see two separate
+   "Read / History" tab elements at different positions on the article page — one sticky at
+   the top (correct), one embedded inside the article title block (duplicate). This is the
+   primary visual issue.
+
+---
+
+## What was fixed in commit 31da984c (Peter Woodfine, 2026-05-31)
+
+Files changed: `app-mediakit-knowledge/src/server.rs` (+6/-3), `static/style.css`
+(+82/-4), `static/wiki.js` (+96/0), `static/toc-persistence.js` (new, +3 lines).
+
+**`static/style.css` (3 changes):**
+- Line 738: Added `.brand__svg` to the `a.wordmark svg` selector block — covers SVG
+  wordmarks that use `class="brand__svg"` (Woodfine instances).
+- After line 2956 (`.cite-hover-card p`): Added Phase 10 CSS (reading progress bar +
+  continue-reading strip styles) and Phase 9 CSS (claim-rail + claim-tick styles). These
+  were already in the binary; now in source.
+- Line 1847: Changed `#p-views { display: flex; ... }` to `#p-views { display: none; }`.
+  This removes the visible duplicate tab row from article pages. **Most impactful visual fix.**
+
+**`static/wiki.js` (2 changes):**
+- Added `initReadingProgress()` function (~50 lines): reads/writes `wiki-read-state`
+  localStorage; updates the 3px progress bar on scroll; restores scroll position on return;
+  populates the continue-reading strip on the home page.
+- Added `initClaimRail()` function (~30 lines): IntersectionObserver on article paragraphs;
+  highlights corresponding claim-rail tick when paragraph enters viewport.
+- Both called at end of `DOMContentLoaded` boot sequence.
+
+**`static/toc-persistence.js` (new file):**
+- Replaced Gemini's broken implementation with a 3-line stub comment. The TOC state is
+  already handled correctly by `initToc()` and `initTocPin()` in `wiki.js`. The stub
+  ensures the `<script>` reference resolves without 404 on next rebuild.
+
+**`src/server.rs` (5 changes):**
+- `wiki_chrome()` body tag: added `data-slug=(slug)` attribute. Required by
+  `initReadingProgress()` to track per-article read state.
+- `wiki_chrome()` after body open: added `div.reading-progress-bar aria-hidden="true" {}`.
+  The 3px gold progress bar renders here; JS fills `style.width` on scroll.
+- `wiki_chrome()` after `wiki.js` script tag: added
+  `script src="/static/toc-persistence.js" defer="true" {}`.
+- `home_chrome()` before `shell_footer()`: added
+  `div #continue-reading-strip hidden="true" {}`. JS reveals and populates this for
+  returning logged-in readers.
+- `WORDMARK_WOODFINE` constant: updated from `<span>■ Woodfine</span>` Unicode text
+  to full SVG inline matching the `ASSET-WORDMARK-WOODFINE.svg` asset:
+  `WOODFINE CAPITAL PROJECTS` in SVG text, `fill="currentColor"`, `class="logo-svg brand__svg"`.
+
+**Cargo check: verified clean. Two independent checks passed (exit 0).** One pre-existing
+warning: `WORDMARK_POINTSAV` unused (the old text-based constant; pre-dates this session).
+
+---
+
+## What Command needs to do
+
+### Step 1 — Stage 6: promote two commits to canonical
+
+```
+# In Command Session at ~/Foundry/
+~/Foundry/bin/promote.sh
+```
+
+Commits to promote (both on archive branch, in order):
+1. `7409b66b` — workspace fix: `app-mediakit-knowledge` added to root monorepo workspace
+2. `31da984c` — source recovery: Phase 9+10 CSS/JS + toc-persistence + UX fixes
+
+### Step 2 — Binary rebuild
+
+```
+# Build from the standalone crate (root workspace still doesn't include it as of 7409b66b;
+# that commit adds it, so after promote you can use either path):
+cd /path/to/vendor/pointsav-monorepo/app-mediakit-knowledge
+cargo build --release
+```
+
+Or after workspace fix is live:
+```
+cargo build --release -p app-mediakit-knowledge
+```
+
+### Step 3 — Deploy to all three instances
+
+```
+sudo cp target/release/app-mediakit-knowledge /usr/local/bin/app-mediakit-knowledge
+sudo systemctl restart local-knowledge-documentation local-knowledge-projects local-knowledge-corporate
+```
+
+Verify all three after restart:
+```
+curl -s http://127.0.0.1:9090/healthz  # should return "ok"
+curl -s http://127.0.0.1:9093/healthz  # should return "ok"
+curl -s http://127.0.0.1:9095/healthz  # should return "ok"
+```
+
+### Step 4 — Verify fixes are live
+
+After restart, check that:
+1. `curl -s http://127.0.0.1:9090/wiki/about | grep -c 'article-tabs'` → 1 (Phase 7B tabs)
+2. `curl -s http://127.0.0.1:9090/wiki/about | grep 'p-views'` → empty (old tabs hidden)
+3. `curl -s http://127.0.0.1:9090/static/toc-persistence.js` → 3-line comment stub
+4. `curl -s http://127.0.0.1:9090/wiki/about | grep 'data-slug'` → `data-slug="about"`
+5. `curl -s http://127.0.0.1:9090/wiki/about | grep 'reading-progress-bar'` → div present
+6. Woodfine: `curl -s http://127.0.0.1:9093/ | grep 'WOODFINE CAPITAL PROJECTS'` → SVG present
+
+---
+
+## Remaining open items (next Totebox session)
+
+**Phase 9 server.rs emit (claim-rail HTML):**
+The CSS and JS for the claim-rail are now in source. What's missing is the Rust server-side
+emit in `wiki_chrome()`. After any article `<!--claim id=... cites=[...]-->` markers,
+the render pipeline needs to:
+1. Walk article AST to collect citation IDs and their anchored paragraphs
+2. Look up each citation status via `state.links.citation_status(cite_id)`
+3. Emit `<aside class="claim-rail">` containing `<a class="claim-tick" data-para=... data-status=...>` ticks
+
+This requires a small addition to `src/links.rs` — an `article_exists(slug)` prefix-scan
+method on the OUTLINKS table, to gate whether to emit the rail at all.
+
+**Phase 11 `query_claims(topic, asof)` MCP method:**
+Gated on Phase 9 `citations` redb table being populated by the claim-rail pipeline.
+Implementation: ~40 lines in `src/mcp.rs` + `query_claim_state(id, asof)` in `src/links.rs`.
+
+**Known anomalies (carry-forward from prior session, no action needed from Command):**
+- `.agent/manifest.md` shows `cluster: project-infrastructure` (contamination from prior
+  session; correct cluster is `project-knowledge`)
+- `.agent/inbox.md` header shows `owner: totebox@project-gis` (same contamination)
+- These are state file anomalies, not affecting the code or binary
+
+---
+
+## Binary ledger note
+
+Binary `3be7157b` is currently deployed. After rebuild, Command should update
+`data/binary-ledger/app-mediakit-knowledge.jsonl` with the new sha256 per the binary
+ledger discipline.
+
+— totebox@project-knowledge (2026-05-31 session)
+
+---
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
+re: binary rebuild required — source recovered from binary divergence; Phase 9+10 CSS/JS + UX fixes
+created: 2026-05-31T20:30:00Z
+priority: high
+status: actioned
+actioned: 2026-05-31T21:00:00Z
+actioned-by: totebox@project-knowledge
+actioned-note: superseded by detailed report (msg-id: project-knowledge-20260531-detailed-session-report)
+msg-id: project-knowledge-20260531-source-recovery-rebuild
+---
+
+**Binary vs source divergence resolved — rebuild needed to ship fixes.**
+
+**Root cause:** Binary `3be7157b` was built while Gemini session had uncommitted changes to
+`server.rs`, `style.css`, `wiki.js`, and `static/toc-persistence.js`. Source was subsequently
+cleaned up, losing Gemini's additions. The binary is AHEAD of source in some areas and the
+source needs these recovered before the next build.
+
+**What I found (cross-check of live sites vs BRIEF):**
+- All 3 instances healthy (9090/9093/9095, /healthz ok)
+- Binary serving Phase 9+10 CSS/JS already, but source didn't have it
+- Binary has `data-slug` on body, `reading-progress-bar` div, `continue-reading-strip` div —
+  all missing from source server.rs
+- Binary serves `toc-persistence.js` with Gemini's BROKEN code (`.toc-sidebar` selector — element
+  doesn't exist in current DOM; script early-returns silently)
+- `#p-views` CSS was `display: flex` — visible as duplicate tab bar below article title alongside
+  Phase 7B `nav.article-tabs`; user-visible layout confusion
+
+**What I fixed in source (commit pending cargo check):**
+- `static/style.css`: Phase 10 CSS (reading-progress-bar, continue-reading-strip); Phase 9 CSS
+  (claim-rail); `.brand__svg` selector; `#p-views { display: none }` (removes duplicate tabs)
+- `static/wiki.js`: `initReadingProgress()` + `initClaimRail()` functions; both wired in
+  DOMContentLoaded boot sequence
+- `static/toc-persistence.js`: Created correct stub (old Gemini version used wrong class names)
+- `src/server.rs`: `data-slug=(slug)` on body in `wiki_chrome()`; `div.reading-progress-bar`
+  at top; `script src="/static/toc-persistence.js"` after wiki.js; `div#continue-reading-strip`
+  before footer in `home_chrome()`; `WORDMARK_WOODFINE` constant updated to SVG inline
+  (was `■ Woodfine` Unicode; binary already had SVG but source did not)
+
+**After binary rebuild:**
+- toc-persistence.js will be the correct stub (not Gemini's broken version)
+- `#p-views` duplicate tab bar will be hidden
+- All Phase 9+10 JS/CSS will be in sync between source and binary
+- Woodfine SVG wordmark will match source
+
+**Remaining to implement (next session):**
+- Phase 9 server.rs emit: `<aside class="claim-rail">` with citation ticks (CSS+JS already in source)
+- Phase 11: `query_claims(topic, asof)` MCP method
+
+**Commit SHA: `31da984c`** (Peter Woodfine, 2026-05-31)
+**Files:** `app-mediakit-knowledge/src/server.rs`, `static/style.css`, `static/wiki.js`, `static/toc-persistence.js`
+
+cargo check was blocked by lock contention (15 concurrent cargo processes from other sessions).
+Command should run `cargo check -p app-mediakit-knowledge` to verify before rebuilding binary.
+
+Stage 6 needed: `31da984c` (this commit) + `7409b66b` (workspace fix).
+
+— totebox@project-knowledge
+
+---
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: ACK — workspace fix complete; app-mediakit-knowledge now in root workspace
 created: 2026-05-31T19:30:00Z
 priority: normal

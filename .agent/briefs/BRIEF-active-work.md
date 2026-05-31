@@ -17,15 +17,18 @@ Current session and near-term work items. Updated at session end.
 
 - [x] Session startup: corporate wiki (9095) restarted — was down since 06:37Z
 - [x] nginx proxy_read_timeout raised 30s → 90s on all three vhosts
-- [ ] BRIEF consolidation — index synced, Gemini handover archived, outbox to Command
-- [ ] Revert Gemini's unused link_graph threading in render.rs/server.rs
-- [ ] Fix links.rs `exists()` method (broken key lookup — needs prefix scan)
-- [ ] Wire `toc-persistence.js` into `wiki_chrome()` in server.rs
-- [ ] UX-B.7: Inline Woodfine SVG wordmark from `woodfine-media-assets/ASSET-WORDMARK-WOODFINE.svg`
-- [ ] Phase 9: Claim-rail freshness sidebar (server.rs emit + CSS + JS + links.rs method)
-- [ ] Phase 10: Reading state progress bar (CSS + JS, client-only MVP)
+- [x] BRIEF consolidation — Gemini handover archived; BRIEF-active-work created
+- [x] Revert Gemini's threading — no revert needed; source was clean (Gemini never committed)
+- [x] Wire `toc-persistence.js` into `wiki_chrome()` — DONE: file created + server.rs wired
+- [x] UX-B.7: Woodfine SVG wordmark — DONE: WORDMARK_WOODFINE constant updated to SVG inline
+- [x] Phase 10: Reading state progress bar — DONE: CSS + JS added to source (was already in binary)
+- [x] Phase 9 CSS + JS: claim-rail — DONE: CSS + JS added to source (was already in binary)
+- [x] Fix #p-views display — hidden; duplicate tab bar below article title removed
+- [x] Recover binary-vs-source divergence — source now matches binary on Phase 9+10 + toc-persistence
+- [ ] Fix links.rs `exists()` method — scoped to Phase 9 server.rs emit (claim-rail needs it)
+- [ ] Phase 9: server.rs emit of `<aside class="claim-rail">` + links.rs exists() method
 - [ ] Phase 11: `query_claims(topic, asof)` MCP method (mcp.rs + links.rs)
-- [ ] cargo check → stage → commit (monorepo sub-clone)
+- [ ] cargo check → stage → commit (monorepo sub-clone) — in progress
 
 ## Pending Command Session
 
