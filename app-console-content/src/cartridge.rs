@@ -14,14 +14,22 @@ use ratatui::{
 };
 use tui_textarea::TextArea;
 
+use image::DynamicImage;
+use ratatui_image::{
+    picker::{Picker, ProtocolType},
+    protocol::StatefulProtocol,
+    StatefulImage,
+};
+
 use crate::draft::{self, DraftEvent};
 use crate::drafts_out;
+use crate::pdf::{self, PdfPageData};
 use crate::proofreader::{self, ProofreadResponse, DEFAULT_PROTOCOL_IDX, PROTOCOLS};
 use crate::search::{self, SearchResult};
 
 const SPINNER: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 const PLACEHOLDER: &str =
-    "Paste or type text — Ctrl-S: submit · Tab: protocol · /new <title>: draft · /search <query>: search";
+    "Paste or type text — Ctrl-S: submit · Tab: protocol · /new: draft · /search: search · /pdf: view PDF";
 
 // ── State machine ─────────────────────────────────────────────────────────────
 
@@ -61,6 +69,18 @@ enum ContentState {
         selected: usize,
         scroll: u16,
     },
+    PdfView {
+        path: String,
+        page: u32,
+        total_pages: u32,
+        /// Background render channel — Some while loading, None once result received.
+        render_rx: Option<mpsc::Receiver<anyhow::Result<PdfPageData>>>,
+        /// Current page image. None while first load is in flight.
+        current_image: Option<DynamicImage>,
+        /// ratatui-image protocol state. Reset to None when current_image changes.
+        proto_state: Option<StatefulProtocol>,
+        error: Option<String>,
+    },
     Error {
         message: String,
     },
@@ -79,6 +99,10 @@ pub struct ContentCartridge {
     textarea: TextArea<'static>,
     offline: bool,
     health_rx: mpsc::Receiver<bool>,
+    // PDF graphics capabilities — set by chassis after terminal probe.
+    pdf_kitty: bool,
+    pdf_sixel: bool,
+    pdf_font_size: (u16, u16),
 }
 
 impl ContentCartridge {
@@ -143,6 +167,9 @@ impl ContentCartridge {
             textarea: ta,
             offline: false,
             health_rx,
+            pdf_kitty: false,
+            pdf_sixel: false,
+            pdf_font_size: (10, 20),
         }
     }
 
@@ -459,6 +486,94 @@ impl ContentCartridge {
         }
     }
 
+    fn render_pdf_view(&mut self, frame: &mut Frame, area: Rect, path: &str, page: u32, total: u32) {
+        let title = format!(
+            " F4: Content — PDF: {}   page {}/{}    [j/k PgUp/PgDn: navigate  Esc: back] ",
+            std::path::Path::new(path).file_name().and_then(|n| n.to_str()).unwrap_or(path),
+            page + 1,
+            total,
+        );
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Cyan))
+            .title(title.as_str());
+        let inner = block.inner(area);
+        frame.render_widget(block, area);
+
+        // Show error if any
+        let error_opt = if let ContentState::PdfView { error, .. } = &self.state {
+            error.clone()
+        } else {
+            None
+        };
+        if let Some(e) = error_opt {
+            frame.render_widget(
+                Paragraph::new(format!("  Error: {}", e))
+                    .style(Style::default().fg(Color::Red)),
+                inner,
+            );
+            return;
+        }
+
+        // Loading indicator while first page renders
+        let loading = if let ContentState::PdfView { render_rx, current_image, .. } = &self.state {
+            render_rx.is_some() && current_image.is_none()
+        } else {
+            false
+        };
+        if loading {
+            frame.render_widget(
+                Paragraph::new("  Rendering page…").style(Style::default().fg(Color::Yellow)),
+                inner,
+            );
+            return;
+        }
+
+        // No graphics support — show fallback text
+        if !self.pdf_kitty && !self.pdf_sixel {
+            frame.render_widget(
+                Paragraph::new(
+                    "  PDF rendered (graphics protocol not available on this terminal).\n\
+                     \n  Requires Kitty, iTerm2, Ghostty, or WezTerm for pixel rendering.\n\
+                     \n  Navigation: j/k or PgUp/PgDn to change pages  ·  Esc to exit",
+                )
+                .style(Style::default().fg(Color::DarkGray)),
+                inner,
+            );
+            return;
+        }
+
+        // Build proto_state from current_image if not yet created, then render it.
+        let protocol = if self.pdf_kitty {
+            ProtocolType::Kitty
+        } else {
+            ProtocolType::Sixel
+        };
+        let font_size = self.pdf_font_size;
+        if let ContentState::PdfView {
+            current_image,
+            proto_state,
+            ..
+        } = &mut self.state
+        {
+            if proto_state.is_none() {
+                if let Some(img) = current_image {
+                    // from_fontsize is deprecated upstream in favour of from_query_stdio,
+                    // but we cannot re-query the terminal from inside the render loop.
+                    // The chassis already probed the real font size and protocol and handed
+                    // them to us via set_graphics_caps — reconstruct the picker from those.
+                    #[allow(deprecated)]
+                    let mut picker = Picker::from_fontsize(font_size);
+                    picker.set_protocol_type(protocol);
+                    *proto_state = Some(picker.new_resize_protocol(img.clone()));
+                }
+            }
+            if let Some(state) = proto_state {
+                frame.render_stateful_widget(StatefulImage::new(), inner, state);
+            }
+        }
+    }
+
     // ── Event handlers ────────────────────────────────────────────────────────
 
     fn on_input_key(&mut self, event: &Event, protocol_idx: usize) -> CartridgeAction {
@@ -551,6 +666,32 @@ impl ContentCartridge {
                         scroll: 0,
                     };
                 }
+                return CartridgeAction::Consumed;
+            }
+
+            // /pdf <path> → PDF viewer
+            if let Some(rest) = trimmed.strip_prefix("/pdf") {
+                let path = rest.trim().to_string();
+                if path.is_empty() {
+                    self.state = ContentState::Error {
+                        message: "Usage: /pdf <path/to/file.pdf>".into(),
+                    };
+                    return CartridgeAction::Consumed;
+                }
+                let path_clone = path.clone();
+                let (tx, rx) = mpsc::channel();
+                thread::spawn(move || {
+                    let _ = tx.send(pdf::render_page(&path_clone, 0));
+                });
+                self.state = ContentState::PdfView {
+                    path,
+                    page: 0,
+                    total_pages: 1,
+                    render_rx: Some(rx),
+                    current_image: None,
+                    proto_state: None,
+                    error: None,
+                };
                 return CartridgeAction::Consumed;
             }
 
@@ -733,6 +874,53 @@ impl ContentCartridge {
         }
         CartridgeAction::Consumed
     }
+
+    fn on_pdf_key(&mut self, key: &crossterm::event::KeyEvent) -> CartridgeAction {
+        // Compute the requested page change, then kick off a render if it moved.
+        let (path, page, total) = match &self.state {
+            ContentState::PdfView {
+                path, page, total_pages, ..
+            } => (path.clone(), *page, *total_pages),
+            _ => return CartridgeAction::Consumed,
+        };
+
+        let new_page = match key.code {
+            KeyCode::Esc | KeyCode::Char('q') => {
+                self.reset_textarea(DEFAULT_PROTOCOL_IDX);
+                return CartridgeAction::Consumed;
+            }
+            KeyCode::Char('j') | KeyCode::Down | KeyCode::PageDown => {
+                if page + 1 < total {
+                    page + 1
+                } else {
+                    page
+                }
+            }
+            KeyCode::Char('k') | KeyCode::Up | KeyCode::PageUp => page.saturating_sub(1),
+            _ => return CartridgeAction::Consumed,
+        };
+
+        if new_page != page {
+            let path_clone = path.clone();
+            let (tx, rx) = mpsc::channel();
+            thread::spawn(move || {
+                let _ = tx.send(pdf::render_page(&path_clone, new_page));
+            });
+            if let ContentState::PdfView {
+                page,
+                render_rx,
+                proto_state,
+                ..
+            } = &mut self.state
+            {
+                *page = new_page;
+                *render_rx = Some(rx);
+                // Clear cached protocol so the new page image is picked up on next render
+                *proto_state = None;
+            }
+        }
+        CartridgeAction::Consumed
+    }
 }
 
 impl Default for ContentCartridge {
@@ -847,6 +1035,43 @@ impl Cartridge for ContentCartridge {
             }
         }
 
+        // Drain PDF render channel — take() frees the borrow
+        let pdf_rx_opt = if let ContentState::PdfView { render_rx, .. } = &mut self.state {
+            render_rx.take()
+        } else {
+            None
+        };
+        if let Some(rx) = pdf_rx_opt {
+            match rx.try_recv() {
+                Ok(Ok(data)) => {
+                    if let ContentState::PdfView {
+                        total_pages,
+                        current_image,
+                        proto_state,
+                        error,
+                        ..
+                    } = &mut self.state
+                    {
+                        *total_pages = data.total_pages;
+                        *current_image = Some(data.image);
+                        *proto_state = None; // force rebuild for the new page
+                        *error = None;
+                    }
+                }
+                Ok(Err(e)) => {
+                    if let ContentState::PdfView { error, .. } = &mut self.state {
+                        *error = Some(e.to_string());
+                    }
+                }
+                Err(mpsc::TryRecvError::Empty) => {
+                    if let ContentState::PdfView { render_rx, .. } = &mut self.state {
+                        *render_rx = Some(rx);
+                    }
+                }
+                Err(mpsc::TryRecvError::Disconnected) => {}
+            }
+        }
+
         // Extract state data — borrow ends before calling render helpers
         enum Cmd {
             Input(usize),
@@ -855,6 +1080,7 @@ impl Cartridge for ContentCartridge {
             Results(ProofreadResponse, String, u16),
             Drafting(String, String, bool, Option<String>, u16),
             Search(String, Vec<SearchResult>, usize, u16, bool),
+            Pdf(String, u32, u32),
             Error(String),
         }
         let cmd = match &self.state {
@@ -887,6 +1113,12 @@ impl Cartridge for ContentCartridge {
                 *scroll,
                 search_rx.is_some(),
             ),
+            ContentState::PdfView {
+                path,
+                page,
+                total_pages,
+                ..
+            } => Cmd::Pdf(path.clone(), *page, *total_pages),
             ContentState::Error { message } => Cmd::Error(message.clone()),
         };
 
@@ -901,6 +1133,7 @@ impl Cartridge for ContentCartridge {
             Cmd::Search(q, results, sel, sc, loading) => {
                 Self::render_search_results(frame, area, &q, &results, sel, sc, loading)
             }
+            Cmd::Pdf(path, page, total) => self.render_pdf_view(frame, area, &path, page, total),
             Cmd::Error(msg) => Self::render_error(frame, area, &msg),
         }
     }
@@ -918,6 +1151,7 @@ impl Cartridge for ContentCartridge {
             Results,
             Drafting,
             Search,
+            Pdf,
             Error,
         }
         let kind = match &self.state {
@@ -930,6 +1164,7 @@ impl Cartridge for ContentCartridge {
             ContentState::Results { .. } => StateKind::Results,
             ContentState::DraftingNew { .. } => StateKind::Drafting,
             ContentState::SearchResults { .. } => StateKind::Search,
+            ContentState::PdfView { .. } => StateKind::Pdf,
             ContentState::Error { .. } => StateKind::Error,
         };
 
@@ -940,10 +1175,17 @@ impl Cartridge for ContentCartridge {
             StateKind::Results => self.on_results_key(key),
             StateKind::Drafting => self.on_drafting_key(key),
             StateKind::Search => self.on_search_key(key),
+            StateKind::Pdf => self.on_pdf_key(key),
             StateKind::Error => {
                 self.reset_textarea(DEFAULT_PROTOCOL_IDX);
                 CartridgeAction::Consumed
             }
         }
+    }
+
+    fn set_graphics_caps(&mut self, kitty: bool, sixel: bool, font_size: (u16, u16)) {
+        self.pdf_kitty = kitty;
+        self.pdf_sixel = sixel;
+        self.pdf_font_size = font_size;
     }
 }
