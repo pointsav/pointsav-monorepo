@@ -676,9 +676,8 @@ mod tests {
         let yoyo = make_yoyo(Some("europe-west4-a".into()));
         // Simulate health probe failure + circuit open.
         yoyo.health_up.store(false, Ordering::Relaxed);
-        yoyo.circuit.record_failure(); // trip the circuit
-        yoyo.circuit.record_failure();
-        yoyo.circuit.record_failure();
+        // FAILURE_THRESHOLD is 5 — need 5 consecutive failures to open circuit
+        for _ in 0..5 { yoyo.circuit.record_failure(); }
 
         let mut map = HashMap::new();
         map.insert("default".to_string(), yoyo);
@@ -695,9 +694,8 @@ mod tests {
         let yoyo = make_yoyo(None);
         // health probe still up, but circuit tripped by request failures.
         yoyo.health_up.store(true, Ordering::Relaxed);
-        yoyo.circuit.record_failure();
-        yoyo.circuit.record_failure();
-        yoyo.circuit.record_failure();
+        // FAILURE_THRESHOLD is 5 — need 5 consecutive failures to open circuit
+        for _ in 0..5 { yoyo.circuit.record_failure(); }
 
         let mut map = HashMap::new();
         map.insert("default".to_string(), yoyo);
