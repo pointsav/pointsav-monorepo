@@ -47,9 +47,18 @@ Last updated: 2026-05-28 (Command Session — replaced erroneous project-infrast
 - [x] `Cartridge::set_graphics_caps(kitty, sixel, font_size)` trait method; chassis calls after probe
 - [x] `image` dep trimmed to `default-features = false` (drops rav1e/avif; matches app-console-keys); `cargo check` 0 warnings
 
-## Next coding phase
+## Phase 8 — IN PROGRESS
 
-- [ ] **Phase 8 — Polish** — OSC 8 hyperlinks; truecolor; multi-tab editing; session persistence; `/audit` verdict-log viewer; F2 People cartridge
+- [x] `/audit` verdict-log viewer — F12 InputCartridge; Ctrl-A opens `AuditLog` state; `audit::query_recent(200)` reads local `ingest_log` SQLite; j/k scroll; Esc back; status colour-coded (3c9e6c89, 2026-05-31)
+- [ ] OSC 8 hyperlinks on TOPIC/protocol references + citations
+- [ ] 24-bit truecolor detection + application (TerminalCaps.truecolor already probed)
+- [ ] Multi-tab editing (`Ctrl-w n`, `Ctrl-w h/l`)
+- [ ] Session persistence — re-open last draft on reconnect (local SQLite)
+- [ ] **F2 People cartridge — BLOCKED.** `service-people` has no HTTP API. Contract requested
+  from project-data via outbox `project-console-20260531-service-people-contract`. Build F2
+  once project-data ships/defines the endpoint. Leave `app-console-people` Reserved until then.
+
+## Next coding phase
 
 ## Stage 6 — monorepo sub-clone
 
