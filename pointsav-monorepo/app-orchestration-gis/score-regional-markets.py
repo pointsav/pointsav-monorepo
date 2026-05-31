@@ -53,10 +53,18 @@ OUT_EU       = WORK_DIR / 'top400-regional-eu.json'
 OUT_CLASS_NA = WORK_DIR / 'classified-na.json'
 OUT_CLASS_EU = WORK_DIR / 'classified-eu.json'
 
-# Suburban distance thresholds
-SUBURBAN_MIN_KM = 15    # < 15 km = metro core → excluded
-SUBURBAN_MAX_KM = 80    # > 80 km = standalone secondary city → excluded
-MAX_SPAN_KM     = 200   # cluster bounding-box span limit (name-collision check)
+# Geometric isolation thresholds (replaces fixed metro-distance approach)
+# INNER_KM: below this = metro-adjacent (too close to be an independent suburban market)
+# OUTER_KM: above this = standalone (not connected to the suburban ring of any major metro)
+# Both are derived from co-location data geometry, not from a metro reference list.
+INNER_KM      = 3     # only excludes near-duplicate co-located markets (same hub as a
+                      # neighbour). Well-known dense-metro suburbs (Plano, Brampton) stay
+                      # IN and are ranked DOWN by the isolation gradient, not excluded.
+OUTER_KM      = 120   # replaces SUBURBAN_MAX_KM=80; wider range opens low-density countries
+METRO_CORE_KM = 12    # a market centroid within this of a major metro centroid IS that
+                      # metro (already a "Metro Market") → excluded. Exclusion-only; does
+                      # NOT define the suburban band. Catches localized names (Roma, Genova).
+MAX_SPAN_KM   = 200   # cluster bounding-box span limit (name-collision check)
 
 CIVIC_CATEGORIES = {
     'healthcare', 'higher_education', 'medical', 'education',
@@ -434,13 +442,53 @@ def nearest_metro(lat, lon, metros):
     return best_dist, best_name
 
 
-def classify_rm(dist_km):
-    if dist_km < SUBURBAN_MIN_KM:
-        return 'metro-core'
-    elif dist_km <= SUBURBAN_MAX_KM:
-        return 'suburban-regional'
+def classify_rm_geometric(anchor_d):
+    """Classify using anchor_d — distance to nearest T1 cluster outside this RM.
+    No fixed metro reference needed; classification emerges from co-location topology."""
+    if anchor_d < INNER_KM:
+        return 'metro-adjacent'       # too close to a larger hub
+    elif anchor_d <= OUTER_KM:
+        return 'suburban-regional'    # eligible for Top 400
     else:
-        return 'standalone-secondary'
+        return 'standalone'           # genuinely isolated city
+
+
+def rm_regional_score(clusters, anchor_d, civic, mkt_conf):
+    """Regional-market DISCOVERY score.
+
+    Philosophy: a Regional Market's value is being the retail anchor for an
+    UNDERSERVED region — a place people don't already associate with a major
+    metro. Large, well-known suburbs (Mississauga, Plano) are effectively metro
+    markets already; they belong in the Top 400 but should never rank #1.
+
+    ISOLATION (distance to the nearest other major hub) is the primary signal.
+    Retail VOLUME is dampened (sqrt of depth beyond the anchor floor) so a place
+    with many clusters cannot dominate just by being a big retail agglomeration.
+    The #1 slots go to isolated, sufficient regional hubs — the genuine discoveries.
+
+    Returns (score, tier_score, quality_base).
+    """
+    if not clusters:
+        return 0.0, 0.0, 0.0
+
+    # Tier depth with strong diminishing returns. A qualifying T1 anchor = floor of 1.0;
+    # additional tier depth adds a sqrt bonus so 3T1+2T2+1T3 is ~2×, not ~4×, a lone T1.
+    tier_score  = sum(4 if c['t'] == 1 else 2 if c['t'] == 2 else 1 for c in clusters)
+    depth_bonus = 0.30 * math.sqrt(max(tier_score - 4, 0))
+    tight_avg   = sum(1.1 if c.get('tight') else 1.0 for c in clusters) / len(clusters)
+    quality     = (1.0 + depth_bonus) * tight_avg
+
+    # Isolation — PRIMARY discovery driver. Linear 0.30→1.0 over 10–90 km, then plateau.
+    # Near-metro suburbs (low anchor_d) are penalized; isolated regional hubs peak.
+    iso_norm  = min(anchor_d, 90.0) / 90.0
+    isolation = 0.30 + 0.70 * iso_norm
+
+    # Civic (hospital/university) — modest community-vitality signal
+    civic_mult  = 1.15 if civic else 1.0
+    conf_factor = 1.0 if mkt_conf == 'high' else 0.7
+
+    score = quality * isolation * civic_mult * conf_factor
+    return round(score, 4), round(tier_score, 4), round(quality, 4)
 
 
 def cluster_lat_lon(c):
@@ -520,6 +568,44 @@ for c in clusters_raw:
     if rm:
         rm_clusters.setdefault(rm, []).append(c)
 
+# ── T1 spatial index for geometric isolation classifier ────────────────────────
+# Pre-compute positions of all T1 clusters for fast anchor_d lookup.
+# anchor_d = distance to the nearest T1 cluster NOT in this RM.
+t1_positions = []  # [(lat, lon, cluster_id, rm_id), ...]
+for c in clusters_raw:
+    if c.get('t') == 1:
+        clat, clon = cluster_lat_lon(c)
+        if clat is not None:
+            t1_positions.append((clat, clon, c['id'], c.get('rm', '')))
+
+print(f"  T1 spatial index: {len(t1_positions)} T1 clusters", flush=True)
+
+
+def nearest_external_t1(rm_id, lat, lon):
+    """Haversine distance to nearest T1 cluster NOT belonging to this RM (km).
+    Uses a ~180 km bounding-box pre-filter for speed."""
+    best = float('inf')
+    lat_tol = 1.65   # ~180 km in latitude degrees
+    lon_tol = 2.5    # ~180 km in longitude at mid-latitudes
+    for clat, clon, cid, crm in t1_positions:
+        if crm == rm_id:
+            continue
+        if abs(clat - lat) > lat_tol or abs(clon - lon) > lon_tol:
+            continue
+        d = haversine(lat, lon, clat, clon)
+        if d < best:
+            best = d
+    # If bounding box found nothing, do a full scan (handles sparse areas)
+    if best == float('inf'):
+        for clat, clon, cid, crm in t1_positions:
+            if crm == rm_id:
+                continue
+            d = haversine(lat, lon, clat, clon)
+            if d < best:
+                best = d
+    return best if best < float('inf') else 999.0
+
+
 # ── Score and classify ─────────────────────────────────────────────────────────
 
 print("\nScoring and classifying Regional Markets...", flush=True)
@@ -547,7 +633,7 @@ for rm in rms_raw:
         skip_counts['incoherent'] += 1
         continue
 
-    # Tier counts
+    # Tier counts (kept for output metadata and comparison)
     t1 = sum(1 for c in cl if c['t'] == 1)
     t2 = sum(1 for c in cl if c['t'] == 2)
     t3 = sum(1 for c in cl if c['t'] == 3)
@@ -561,7 +647,6 @@ for rm in rms_raw:
         m.get('category', '').lower() in CIVIC_CATEGORIES
         for c in cl for m in c.get('members', [])
     )
-    civ_mult = 1.5 if civic else 1.0
 
     # Centroid
     centroid = rm.get('centroid', {})
@@ -573,25 +658,34 @@ for rm in rms_raw:
     else:
         lat = lon = 0
 
-    # Metro distance and classification
-    metros  = NA_METROS if cont == 'NA' else EU_METROS
-    dist_km, suburb_of = nearest_metro(lat, lon, metros)
-    rm_type = classify_rm(dist_km)
+    # Geometric classification — anchor_d replaces fixed distance thresholds.
+    # anchor_d = nearest T1 cluster outside this RM; derived from co-location data.
+    anchor_d = nearest_external_t1(rm_id, lat, lon)
+    rm_type  = classify_rm_geometric(anchor_d)
 
-    # Name-match override: large cities (LA, Memphis) can have clusters 15–80 km
-    # from the metro centroid while still within city limits. If the market base
-    # name exactly matches a metro reference name, force metro-core.
-    market_base = rm.get('market', '').split(',')[0].strip()
+    # Metro distance used for (a) naming/display and (b) metro-core exclusion below.
+    metros             = NA_METROS if cont == 'NA' else EU_METROS
+    dist_km, suburb_of = nearest_metro(lat, lon, metros)
+
+    # Metro-core exclusion: a market sitting essentially ON a major metro centroid
+    # IS that metro (already covered as a Metro Market) → exclude. Language-agnostic;
+    # catches localized spellings the name match misses (Roma=Rome, Genova=Genoa).
+    if dist_km < METRO_CORE_KM:
+        rm_type = 'metro-adjacent'
+
+    # Name-match override: also force metro-adjacent when the market name IS the metro
+    # (compound names like "Indianapolis city (balance)" whose centroid may be offset).
+    market_base    = rm.get('market', '').split(',')[0].strip().lower()
     metro_names_lc = {name.lower() for _, _, name in metros}
-    if market_base.lower() in metro_names_lc:
-        rm_type = 'metro-core'
+    if (market_base in metro_names_lc
+            or any(market_base.startswith(m) for m in metro_names_lc if len(m) >= 5)):
+        rm_type = 'metro-adjacent'
 
     # Confidence
-    mkt_conf    = rm.get('mkt_conf', 'high')
-    conf_factor = 1.0 if mkt_conf == 'high' else 0.7
+    mkt_conf = rm.get('mkt_conf', 'high')
 
-    # Score — no metro_multiplier; all ranked markets are already in the suburban band
-    score = tier_score * civ_mult * conf_factor
+    # Regional discovery score (isolation-primary, volume-dampened)
+    score, geo_quality_raw, normalized_quality = rm_regional_score(cl, anchor_d, civic, mkt_conf)
 
     # AEC summary
     cluster_ids = [c['id'] for c in cl]
@@ -622,25 +716,26 @@ for rm in rms_raw:
         })
 
     all_scored.append({
-        'rm_id':            rm_id,
-        'market':           rm.get('market', ''),
-        'rm_type':          rm_type,
-        'suburb_of':        suburb_of,
-        'dist_km':          round(dist_km, 1),
-        'iso':              iso,
-        'continent':        cont,
-        'region':           rm.get('region', ''),
-        'centroid':         {'lat': lat, 'lon': lon},
+        'rm_id':              rm_id,
+        'market':             rm.get('market', ''),
+        'rm_type':            rm_type,
+        'suburb_of':          suburb_of,
+        'dist_km':            round(dist_km, 1),      # metro distance (display only)
+        'anchor_d':           round(anchor_d, 1),     # geometric isolation distance
+        'iso':                iso,
+        'continent':          cont,
+        'region':             rm.get('region', ''),
+        'centroid':           {'lat': lat, 'lon': lon},
         't1': t1, 't2': t2, 't3': t3,
-        'tier_score':       tier_score,
-        'civic':            civic,
-        'civic_multiplier': civ_mult,
-        'mkt_conf':         mkt_conf,
-        'confidence_factor': conf_factor,
-        'score':            round(score, 3),
-        'cluster_ids':      cluster_ids,
-        'clusters':         cluster_details,
-        'aec_summary':      aec_summary,
+        'tier_score':         tier_score,             # raw tier count (metadata)
+        'geo_quality_raw':    geo_quality_raw,        # sum of per-cluster quality
+        'normalized_quality': normalized_quality,     # geo_quality_raw / cluster_count
+        'civic':              civic,
+        'mkt_conf':           mkt_conf,
+        'score':              round(score, 3),
+        'cluster_ids':        cluster_ids,
+        'clusters':           cluster_details,
+        'aec_summary':        aec_summary,
     })
 
 print(f"  Scored {len(all_scored)} Regional Markets", flush=True)
@@ -652,12 +747,12 @@ print(f"  Skipped — no clusters: {skip_counts['no_clusters']} | "
 
 for cont in ('NA', 'EU'):
     subset     = [r for r in all_scored if r['continent'] == cont]
-    metro_core = [r for r in subset if r['rm_type'] == 'metro-core']
+    adjacent   = [r for r in subset if r['rm_type'] == 'metro-adjacent']
     suburban   = [r for r in subset if r['rm_type'] == 'suburban-regional']
-    standalone = [r for r in subset if r['rm_type'] == 'standalone-secondary']
-    print(f"  {cont}: {len(metro_core)} metro-core | "
+    standalone = [r for r in subset if r['rm_type'] == 'standalone']
+    print(f"  {cont}: {len(adjacent)} metro-adjacent | "
           f"{len(suburban)} suburban-regional | "
-          f"{len(standalone)} standalone-secondary", flush=True)
+          f"{len(standalone)} standalone", flush=True)
 
 # ── Filter and rank ────────────────────────────────────────────────────────────
 
@@ -687,22 +782,28 @@ WORK_DIR.mkdir(exist_ok=True)
 
 # rm-top400.json — flat dict keyed by rm_id for O(1) lookup in the map JS.
 # Deployed to www/data/ so the browser can fetch it alongside clusters-meta.json.
+# 'score' is rescaled to a 0–100 Regional Market Index (per continent, top = 100)
+# for presentation; the raw discovery score is kept as 'raw'.
 OUT_RM_TOP400 = Path('/srv/foundry/deployments/gateway-orchestration-gis-1/www/data/rm-top400.json')
+
+na_max = max((r['score'] for r in top_na), default=1.0) or 1.0
+eu_max = max((r['score'] for r in top_eu), default=1.0) or 1.0
+
 rm_top400_dict = {}
 for r in top_na:
     rm_top400_dict[r['rm_id']] = {
-        'rank': r['rank'], 'score': r['score'],
+        'rank': r['rank'], 'score': round(100 * r['score'] / na_max, 1), 'raw': r['score'],
         'name': r['market'], 'metro': r['suburb_of'],
-        'dist_km': r['dist_km'],
+        'dist_km': r['anchor_d'],   # anchor_d = geometric isolation distance
         'lat': r['centroid']['lat'], 'lon': r['centroid']['lon'],
         't1': r['t1'], 't2': r['t2'], 't3': r['t3'],
         'cont': 'NA',
     }
 for r in top_eu:
     rm_top400_dict[r['rm_id']] = {
-        'rank': r['rank'], 'score': r['score'],
+        'rank': r['rank'], 'score': round(100 * r['score'] / eu_max, 1), 'raw': r['score'],
         'name': r['market'], 'metro': r['suburb_of'],
-        'dist_km': r['dist_km'],
+        'dist_km': r['anchor_d'],   # anchor_d = geometric isolation distance
         'lat': r['centroid']['lat'], 'lon': r['centroid']['lon'],
         't1': r['t1'], 't2': r['t2'], 't3': r['t3'],
         'cont': 'EU',
@@ -734,17 +835,17 @@ hdr = f"{'Rk':>3}  {'Market':<30}  {'ISO':>3}  {'Suburb of':<16}  {'km':>5}  T1 
 print(hdr)
 for r in top_na[:20]:
     print(f"{r['rank']:>3}  {r['market']:<30}  {r['iso']:>3}  "
-          f"{r['suburb_of']:<16}  {r['dist_km']:>5.1f}  "
+          f"{r['suburb_of']:<16}  {r['anchor_d']:>5.1f}  "
           f"{r['t1']:>2}  {r['t2']:>2}  {r['t3']:>2}  "
-          f"{'Y' if r['civic'] else 'N':>3}  {r['score']:>6.2f}")
+          f"{'Y' if r['civic'] else 'N':>3}  {r['score']:>6.3f}")
 
 print("\n── TOP 20 EU Regional Markets (suburban-regional) ──")
 print(hdr)
 for r in top_eu[:20]:
     print(f"{r['rank']:>3}  {r['market']:<30}  {r['iso']:>3}  "
-          f"{r['suburb_of']:<16}  {r['dist_km']:>5.1f}  "
+          f"{r['suburb_of']:<16}  {r['anchor_d']:>5.1f}  "
           f"{r['t1']:>2}  {r['t2']:>2}  {r['t3']:>2}  "
-          f"{'Y' if r['civic'] else 'N':>3}  {r['score']:>6.2f}")
+          f"{'Y' if r['civic'] else 'N':>3}  {r['score']:>6.3f}")
 
 # ── 3 candidate test markets for TOPIC articles ────────────────────────────────
 
@@ -766,6 +867,6 @@ for i, r in enumerate([test1, test2, test3], 1):
         print(f"    rm_id: {r['rm_id']}")
 
 print("\n── Score Complete ──")
-print(f"\nDefinition: suburban-regional = {SUBURBAN_MIN_KM}–{SUBURBAN_MAX_KM} km from a major metro centre.")
-print(f"Metro cores (<{SUBURBAN_MIN_KM} km) and standalone secondary cities (>{SUBURBAN_MAX_KM} km)")
+print(f"\nDefinition: suburban-regional = anchor_d in [{INNER_KM}–{OUTER_KM}] km from nearest external T1 cluster.")
+print(f"Metro-adjacent (<{INNER_KM} km) and standalone (>{OUTER_KM} km)")
 print(f"are classified and written to classified-*.json but excluded from the Top 400.")
