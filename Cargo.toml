@@ -12,6 +12,8 @@ members = [
     "xtask",
     "app-console-keys",
     "app-console-system",
+    "app-console-email",
+    "app-console-slm",
     "os-console",
     "app-privategit-marketplace",
     "app-privategit-source",

@@ -16,6 +16,8 @@ app-console-keys = { path = "../app-console-keys" }
 app-console-content = { path = "../app-console-content" }
 app-console-input = { path = "../app-console-input" }
 app-console-system = { path = "../app-console-system" }
+app-console-email = { path = "../app-console-email" }
+app-console-slm = { path = "../app-console-slm" }
 system-gateway-mba = { path = "../system-gateway-mba" }
 anyhow = "1"
 tokio = { version = "1", features = ["full"] }
