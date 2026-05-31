@@ -447,3 +447,107 @@ Checklist before first LoRA run:
 - [ ] Run CodeDPO on 50–100 entries (GPU) to generate validated DPO pairs
 - [ ] Exclude all 548 existing shadow-capture tuples from training set
 - [ ] LoRA: rank=16, alpha=32, 5–10 epochs, early stop
+
+---
+
+## §10 — Forward operating model (researched 2026-05-31; THE comprehensive plan)
+
+> This section is the durable answer to "how do we run the learning loop going forward."
+> Grounded in: corpus audit (§9), web research (8 papers + GPU/cost benchmarks, sources
+> in frontmatter), and the EXISTING pipeline (`scripts/lora-update.sh` + `docs/yoyo-training-
+> substrate-and-service-content-integration.md`). Read this before any training work.
+
+### §10.1 — What already exists (do NOT rebuild)
+
+`service-slm/scripts/lora-update.sh` is a complete 9-step orchestrator, HARD DISABLED behind
+two gates (`SLM_LORA_AUTO_ENABLE=true` + operator-signed `data/training-approved/<id>.tag`):
+
+```
+export-dpo.sh → snapshot → push to Yo-Yo trainer VM → ssh trigger Unsloth DPOTrainer
+→ poll for adapter (≤4h) → pull adapter → eval-adapter.sh → register in data/adapters/registry.yaml
+```
+
+It already implements (matching research best practice):
+- **Adapter versioning** — `data/adapters/registry.yaml` (research §3: version adapters separately)
+- **Eval gate** — `eval-adapter.sh` scores against held-out set before registration (research §2)
+- **F12 human gate** — SYS-ADR-10 compliant; no automated training without operator tag (Doctrine)
+- **Unsloth trainer** — ~40% faster than vanilla PEFT on L4 (research: 2–3h for 1,500 samples)
+
+**Gap:** the pipeline is DPO-first (`export-dpo.sh`). Research says SFT-first at our scale.
+The single missing piece is an `export-sft.sh` that emits `{instruction, output}` JSONL from
+queue entries (brief.body+scope → instruction; actual_diff → output). ~40 LOC.
+
+### §10.2 — The drain pause (immediate decision)
+
+The CPU shadow drain produces empty OLMo diffs (harmful — §9). It must pause until GPU returns.
+No existing env var pauses it cleanly because the Sprint 3C hold is bypassed when
+`SLM_TIER_A_FIRST=true` (router.rs:223). Three levers, in order of preference:
+
+| Lever | Stops CPU drain | Keeps SFT capture | Routing impact | Effort |
+|---|---|---|---|---|
+| **`SLM_DRAIN_PAUSED=true`** (NEW — recommended) | ✅ unconditional | ✅ yes | none | ~10 LOC + rebuild |
+| `SLM_TIER_A_FIRST=false` + `HOLD=1` | ✅ after ~90s | ✅ yes | High-complexity → dead Yo-Yo first (negligible for dev traffic) | env only, immediate |
+| `SLM_APPRENTICESHIP_ENABLED=false` | ✅ unconditional | ❌ /v1/shadow returns 404 | none | env only, immediate |
+
+**Recommendation:** ship `SLM_DRAIN_PAUSED` as the proper lever (drain loop checks it before
+dequeue, sleeps, continues — fully decoupled from routing and capture). Until that binary
+ships, bridge with `SLM_TIER_A_FIRST=false` to keep capture alive. Avoid disabling
+apprenticeship — losing the SFT capture stream is the one thing we cannot afford.
+
+### §10.3 — The sustainable GPU-gated loop (target operating model)
+
+Per-cycle cost ~$1.74, monthly ~$10–15 on L4 spot. Two GPU jobs, run as SEPARATE spot launches
+(both don't fit one 1–2h window; Job B alone is ~2h):
+
+```
+TRIGGER (whichever first):  weekly  OR  ≥100 new post-Fix-A briefs in queue/
+
+JOB A — DPO candidate generation [L4 spot, ~45 min, vLLM batch]:
+  For each of 50–100 briefs: OLMo 3 32B-Think generates 3–5 candidate diffs
+  → run `cargo check`/`cargo test` on each → chosen=passes, rejected=fails
+  → keep only pairs with ≥40% pass-rate gap (CodeDPO; arxiv 2410.05605)
+
+JOB B — LoRA training [L4 spot, ~2h, Unsloth]:
+  SFT set (export-sft.sh: queue actual_diffs) + replay buffer (100–500 historical, 2:1 new:old)
+  + validated DPO pairs from Job A (only if ≥200 exist)
+  → LoRA rank=16, alpha=32, lr=2e-4 warmup-stable-decay, weight_decay=0.01, 5–10 epochs
+  → checkpoint every 500 steps to GCS (spot preemption survival)
+
+EVAL GATE [CPU, eval-adapter.sh]:
+  Held-out: 10–30 diffs stratified by language/change-type, never in training set
+  Metric: pass@5 on held-out. Promote ONLY if pass@5 ≥ current adapter (no regression).
+
+PROMOTE [llama.cpp hot-swap]:
+  GGUF LoRA adapters stay separate from base; swap via /lora-adapters endpoint (~1s).
+  Canary 10% of requests → if no regression, promote 100%; else rollback (registry.yaml).
+```
+
+### §10.4 — Catastrophic-forgetting guardrails (mandatory for repeated narrow fine-tunes)
+
+Repeated LoRA on one codebase erodes general capability. Apply all three (research §4):
+1. **Replay buffer:** 100–500 historical commits mixed at 2:1 new:old per run
+2. **Conservative LR:** 2e-4, warmup-stable-decay (10/80/10), `weight_decay=0.01` (L2-LoRA)
+3. **General-data interleave:** every 3rd cycle, ~20% public Rust/Python in the batch
+
+Expected: retain ~90–95% general capability, +5–8% on Foundry-specific tasks.
+
+### §10.5 — Phased rollout (concrete next steps)
+
+- **Phase A (next coding session):** add `SLM_DRAIN_PAUSED` flag (~10 LOC, main.rs drain loop);
+  write `export-sft.sh` (~40 LOC). Both ship in one Stage 6.
+- **Phase B (first Yo-Yo window):** run Job B SFT-only on the 77+ queue briefs (no DPO yet).
+  Register adapter v1, eval against held-out, do NOT auto-promote — manual review first run.
+- **Phase C (second Yo-Yo window):** add Job A CodeDPO generation; accumulate ≥200 validated
+  pairs before first DPO-augmented run.
+- **Phase D (steady state):** arm `lora-update.timer` (weekly) with the operator approval-tag
+  gate; canary+promote loop runs hands-off except the F12 tag.
+
+### §10.6 — What this means for the local OLMo (the operator's question)
+
+The local 7B's best uses, in priority order:
+1. **Interactive Goose sessions** — short prompts, code navigation, quick drafts (its sweet spot)
+2. **Entity extraction** for service-content (short structured output — handles well)
+3. **The model being improved** — it is the *target* of the LoRA loop, not the *generator* of
+   training data. The 32B-on-GPU is the generator/teacher; the 7B-on-CPU is the student.
+
+It should NOT be: a batch DPO-critique generator on CPU. That was the mistake — fixed here.
