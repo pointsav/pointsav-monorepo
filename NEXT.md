@@ -24,7 +24,7 @@ Last updated: 2026-05-31
 ## JOURNAL programme — operator actions (all papers)
 
 - [ ] **ORCID IDs** for Jennifer M. Woodfine, Peter M. Woodfine, Mathew Woodfine — required before any submission; not urgent — no paper is submission-ready; all blocked on data. [2026-05-30 totebox@project-editorial]
-- [ ] **J1 bilingual ES sibling** — Spanish translation of J1 required before Economic Geography submission (per JoEG policy). [2026-05-28 totebox@project-editorial]
+- [x] **J1 bilingual ES sibling** — COMPLETE 2026-05-31: `JOURNAL/JOURNAL-retail-colocation-v0.1.es.draft.md` written; all 22 sections in Spanish academic register; ~8,500 words; `forbidden_terms_cleared: true`. [2026-05-31 totebox@project-editorial]
 
 ## Inbox — pending pickup
 
