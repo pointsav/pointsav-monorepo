@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-30 — Session 11: drain-apprenticeship.timer disabled (legacy conflict); 25 briefs recovered; flow confirmed
+> Last updated: 2026-05-31 — Session 12: Fix A (actual_diff empty — HOOK_DIFF env var pattern) + Fix B (OLMo system prompt rewrite) deployed; Fix C deferred
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -70,6 +70,34 @@ returned Ok() → brief dropped from tracking.
 **Fix:** Added `SLM_QUEUE_LEASE_EXPIRY_SEC=2100` to `/etc/local-doorman/local-doorman.env`.
 2100s > 1860s drain wrapper → reaper will never reclaim a live lease. Restart 22:17:58 UTC.
 Confirmed `lease_expiry_secs=2100` in startup log.
+
+### ✅ Apprenticeship prompt audit (2026-05-31 session 12)
+
+Two critical gaps found in the training pipeline and fixed in commit `a0649002`:
+
+**Fix A — `actual_diff: ""` in all 554 corpus entries (DEPLOYED)**
+Root cause: the post-commit hook used `python3 - <<'PYEOF'` + `sys.stdin.read()` to get the diff.
+The heredoc IS stdin — the script source consumed it, leaving `sys.stdin.read()` always returning `""`.
+Fix: pass diff via `HOOK_DIFF` env var; Python reads `os.environ.get('HOOK_DIFF', '')`.
+Applied to both `service-slm/scripts/git-post-commit-hook.sh` and workspace `bin/capture-edit.py`.
+Verification: three newest queue entries after fix have `actual_diff` 2–3.5 KB each. ✓
+
+**Fix B — 100% escalation rate from OLMo preamble (DEPLOYED)**
+Root cause: `APPRENTICE_SYSTEM_PROMPT` used Claude-specific jargon ("Doctrine claim #32",
+"Master/Root/Task Claude") OLMo has never seen. OLMo wrote preamble before `---`; the
+`extract_frontmatter()` regex requires `\A` (start of string), so preamble → parse fail → `escalate: true`.
+Fix: rewrote `APPRENTICE_SYSTEM_PROMPT` with OLMo-compatible plain instructions and explicit
+"Do not write any introductory text before the opening `---`".
+
+**Fix C — GBNF grammar (DEFERRED)**
+Add `grammar: Some(GrammarConstraint::Gbnf(APPRENTICE_GBNF_GRAMMAR))` to both `dispatch_shadow()`
+calls (apprenticeship.rs lines 181 and 279). Currently both pass `grammar: None`. The wiring in
+`LocalTierClient::complete()` already handles GBNF. Deferred: observe 5–10 drain cycles after Fix B
+first. If OLMo still preambles, implement Fix C. See BRIEF-slm-learning-loop.md §8.
+
+**OLMo inference speed note:** ~2 tok/s on this CPU VM. With `max_tokens=2048`, each shadow
+brief takes 17–60 min wall-clock. Consider reducing to 512–768 for CPU-primary mode to bring
+latency under 10 min per brief. Separate config decision; not blocking Fix C.
 
 ### ✅ drain-apprenticeship.timer disabled (2026-05-30 session 11)
 **Root cause of recurring poison:** Legacy Phase 3.4 shell drainer (`drain-apprenticeship-queue.sh`)

@@ -2,36 +2,31 @@
 
 ---
 
-### 2026-05-30 | totebox@project-console | claude-sonnet-4-6
+### 2026-05-31 | totebox@project-intelligence | claude-sonnet-4-6 (session 12 — apprenticeship prompt audit; Fix A + Fix B deployed)
 
 **Done this session:**
-- **Doorman port fix** (8011→9080, authoritative per `local-doorman.service SLM_BIND_ADDR`):
-  - `app-console-content/src/cartridge.rs` `ContentCartridge::new()` default SLM endpoint
-  - `app-console-keys/src/config.rs` `default_slm_endpoint()` fn
-- **BRIEF-leapfrog-2030-coding.md**: Phase 5 marked COMPLETE 2026-05-24 (commits 6422c2a8 + 5118ce77); port fixed; Phase B/C/D/E roadmap entries added; updated date
-- **BRIEF-os-console-platform.md**: §10 Doorman correctness table fixed (8011=wrong, 9080=correct); §9 config examples updated; §6 platform table expanded for macOS 10.13+ Intel + universal; §1 updated
-- **BRIEF-cross-platform-release.md**: NEW — Phase B spec; macOS 10.13 compat model; build matrix; dependency audit; TerminalCaps design; Phase B checklist
-- **BRIEF-tui-pivot-2030.md**: archived notice corrected (9080 is correct)
-- `session-start.md`, `NEXT.md` (blocker resolved), drafts-outbound (3 files): all 8011 refs corrected to 9080
-- **Outbox**: new message to Command Session (project-console-20260530-phase-a-complete)
-- **Committed** `009b2e04` as Peter Woodfine (12 files, 313 insertions / 35 deletions)
-- **Stage 6 force-push COMPLETE**: origin-staging-j + origin-staging-p both at `009b2e04` (forced deadd4cf→009b2e04)
+- **Apprenticeship prompt audit (full call chain):** Identified two critical gaps making the 554-entry training corpus nearly useless. Both fixed in commit `a0649002` (promoted to canonical by Command).
+- **Fix A — `actual_diff: ""` bug:** The post-commit hook used `python3 - <<'PYEOF'` + `sys.stdin.read()`. Heredoc consumes stdin (the script source); `sys.stdin.read()` always returns `""`. Fix: pass diff via `HOOK_DIFF` env var, read via `os.environ.get()`. Applied to `service-slm/scripts/git-post-commit-hook.sh` and workspace `bin/capture-edit.py` (workspace commit `48f23c9` by Command). Verified: 3 newest queue entries have `actual_diff` 2–3.5 KB each.
+- **Fix B — 100% escalation rate:** `APPRENTICE_SYSTEM_PROMPT` had Claude-specific jargon ("Doctrine claim #32", "Master/Root/Task Claude"). OLMo wrote preamble before `---`; `extract_frontmatter()` regex requires `\A` → parse fail → `escalate: true`. Rewrote to OLMo-compatible plain instructions with explicit "Do not write any introductory text before the opening `---`".
+- **New binary deployed** via `sudo cp` + `sudo systemctl restart local-doorman` at 00:41 UTC.
+- **Stage 6 complete (by Command):** commits `a0649002` (Fix A+B), `aef13fd9` (outbox), `b57f9d22` (bonus: Doorman endpoint 8011→9080 in app-console-content + app-console-keys). Archive 0 commits ahead of origin/main.
+- **BRIEF-slm-learning-loop.md §8 written:** full audit findings + Fix A/B/C doc.
+- **service-slm/NEXT.md updated:** Fix C deferred item + OLMo inference speed note.
 
 **Pending / carry-forward:**
-- **Operator decision needed**: release trigger for `.github/workflows/release.yml` (Phase B4). Recommend `v*.*.*` tag push. Noted in BRIEF-cross-platform-release.md + outbox.
-- **Phase B** (cross-platform release): rust-toolchain.toml, .cargo/config.toml, reqwest audit, GH Actions matrix, TerminalCaps probe
-- **Phase C** (email F3): app-console-email lib crate + EmailCartridge (service-email backend in project-data)
-- **Phase D** (SLM F9): app-console-slm lib crate + SlmCartridge (Doorman at 9080)
-- **Phase E** (orchestration wiring): mba_client.rs audit; os-orchestration confirmed as command hub
-- **Canonical promote**: Command Session runs `bin/promote.sh` after reviewing outbox msg
-- Binary rebuild + `systemctl restart` for any consuming services after canonical promote
+- **Fix C (deferred):** Add GBNF grammar to both `dispatch_shadow()` calls (apprenticeship.rs lines 181, 279). Observe 5–10 drain cycles after Fix B first — if OLMo still preambles, implement. Wiring already exists in `LocalTierClient::complete()`.
+- **OLMo inference speed:** ~2 tok/s CPU; `max_tokens=2048` → 17–60 min per brief. Consider reducing to 512–768 for CPU-primary mode (separate config decision, not urgent).
+- **project-console Sprint 4a:** implement `app-console-slm status` command (outbox `project-intelligence-20260530-console-wiring`).
+- **Yo-Yo 1h test** when europe-west4-a L4 capacity returns.
+- **drain-apprenticeship.service/timer files** in `/etc/systemd/system/` — disabled but present; low-priority cleanup.
+- **stale shim test fields** — `anthropic_shim_test.rs` `tier_a_reason`/`idle_monitor` stale (NEXT.md).
 
 **Operator preferences surfaced:**
-- Continues previous sessions: "STARTUP/SHUTDOWN" = full checklist; auto mode = work without stopping for confirmation
+- None new this session.
 
 ---
 
-### 2026-05-28 | totebox@project-intelligence | claude-sonnet-4-6 (session 2)
+### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 11 — drain-apprenticeship.timer conflict found and killed; flow confirmed)
 
 **Done this session:**
 - **Root cause of recurring poison identified:** `drain-apprenticeship.timer` (Phase 3.4 legacy shell drainer) was firing every ~15 min and poisoning ALL queue entries. Script (`/srv/foundry/bin/drain-apprenticeship-queue.sh`) expected flat `ApprenticeshipBrief` JSON but queue contains `ShadowQueueEntry` format (`{"brief": {...}, "actual_diff": ""}`). `prompt` field always empty → poison. Script also bypassed Doorman (called port 8080 directly) — architectural conflict with Rust drain worker.
@@ -90,4 +85,7 @@
 
 **Operator preferences surfaced:**
 - Expects full flow investigation before reporting "done" — the 26 poison entries needed root cause analysis and recovery, not just status report
+
+---
+
 
