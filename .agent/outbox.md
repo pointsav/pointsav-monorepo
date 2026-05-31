@@ -221,7 +221,8 @@ All new feature work for this session is committed. Please:
 1. **Stage 6 promote** the following commits from the project-knowledge cluster branch
    to canonical `pointsav-monorepo` main:
    - Leapfrog commits (already in archive; may have been promoted — verify): `9bf24198`, `be4ea8c0`, `1c767bf4`, `0670aa06`
-   - This session's commit (SHA TBD — run `git log -1 --oneline` after we commit)
+   - BRIEF consolidation: `47b4c9fa`
+   - Feature code (this session): `98d1b183`
 
 2. **Binary rebuild**: `cargo build --release -p app-mediakit-knowledge`
 
