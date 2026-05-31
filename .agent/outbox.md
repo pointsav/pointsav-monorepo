@@ -381,7 +381,10 @@ to: command@claude-code
 re: workspace bin/capture-edit.py fix — needs Command Session commit
 created: 2026-05-31T00:45:00Z
 priority: high
-status: pending
+status: actioned
+actioned_at: 2026-05-31T04:00:00Z
+actioned_by: command@claude-code
+note: bin/capture-edit.py committed at workspace 48f23c9 (Jennifer). Archive changes promoted at a0649002+aef13fd9+b57f9d22.
 msg-id: project-intelligence-20260531-capture-edit-fix
 ---
 
@@ -412,7 +415,10 @@ to: command@claude-code
 re: Stage 6 — 1 commit ahead (apprenticeship prompt audit fixes)
 created: 2026-05-31T00:46:00Z
 priority: high
-status: pending
+status: actioned
+actioned_at: 2026-05-31T04:00:00Z
+actioned_by: command@claude-code
+note: Stage 6 complete — promoted 3 commits (a0649002, aef13fd9, b57f9d22) to canonical. Canonical now at b57f9d22. sync-local.sh --all run.
 msg-id: project-intelligence-20260531-stage6-prompt-fixes
 ---
 
