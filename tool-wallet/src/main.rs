@@ -85,6 +85,12 @@ struct WatchArgs {
     receipts_dir: String,
     #[arg(long, default_value = "30", help = "Poll interval in seconds")]
     poll_secs: u64,
+    #[arg(
+        env = "FS_ENDPOINT",
+        long,
+        help = "service-fs WORM ledger endpoint; if set, receipts are POST-ed asynchronously for Rekor anchoring"
+    )]
+    fs_endpoint: Option<String>,
 }
 
 #[derive(Parser)]
@@ -254,6 +260,44 @@ async fn append_tx_log(receipt: &LicenseReceipt, receipts_dir: &str) {
     }
 }
 
+// ── service-fs relay (fire-and-forget; Rekor anchoring via local-fs-anchoring) ─
+
+fn post_receipt_to_fs(client: &reqwest::Client, endpoint: &str, receipt: &LicenseReceipt) {
+    let client = client.clone();
+    let receipt = receipt.clone();
+    let now = chrono::Utc::now();
+    let url = format!(
+        "{}/vault/source/license-receipts/{}/{}/{}.json",
+        endpoint.trim_end_matches('/'),
+        now.format("%Y"),
+        now.format("%m"),
+        receipt.tx_hash
+    );
+    tokio::spawn(async move {
+        match client
+            .post(&url)
+            .json(&receipt)
+            .timeout(std::time::Duration::from_secs(30))
+            .send()
+            .await
+        {
+            Ok(resp) if resp.status().is_success() => {
+                tracing::info!(tx_hash = %receipt.tx_hash, "receipt posted to service-fs");
+            }
+            Ok(resp) => {
+                tracing::warn!(
+                    tx_hash = %receipt.tx_hash,
+                    status = %resp.status(),
+                    "service-fs returned non-success status"
+                );
+            }
+            Err(e) => {
+                tracing::warn!(tx_hash = %receipt.tx_hash, "service-fs post failed: {e}");
+            }
+        }
+    });
+}
+
 // ── watch ─────────────────────────────────────────────────────────────────────
 
 async fn watch(args: WatchArgs) -> Result<()> {
@@ -373,7 +417,12 @@ async fn watch(args: WatchArgs) -> Result<()> {
                 );
 
                 match confirm_and_write_receipt(&receipt, &args.receipts_dir).await {
-                    Ok(()) => append_tx_log(&receipt, &args.receipts_dir).await,
+                    Ok(()) => {
+                        append_tx_log(&receipt, &args.receipts_dir).await;
+                        if let Some(ref endpoint) = args.fs_endpoint {
+                            post_receipt_to_fs(&client, endpoint, &receipt);
+                        }
+                    }
                     Err(e) => tracing::error!("receipt write failed: {e:#}"),
                 }
             }
