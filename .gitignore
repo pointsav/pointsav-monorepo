@@ -21,6 +21,7 @@ service-content/data/
 
 # Agent runtime lock files
 .agent/scheduled_tasks.lock
+.agent/._claude_bkp/
 
 # Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock

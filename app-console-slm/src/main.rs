@@ -47,13 +47,9 @@ struct HealthzResponse {
 #[derive(Deserialize, Default)]
 struct ReadyzResponse {
     #[serde(default)]
-    ready: bool,
-    #[serde(default)]
     node_class: Option<String>,
     #[serde(default)]
     tier_a: bool,
-    #[serde(default)]
-    tier_a_reason: Option<String>,
     #[serde(default)]
     has_local: bool,
     #[serde(default)]
@@ -62,8 +58,6 @@ struct ReadyzResponse {
 
 #[derive(Deserialize, Default)]
 struct TierBInfo {
-    #[serde(default)]
-    configured: bool,
     #[serde(default)]
     health_up: bool,
     #[serde(default)]
@@ -144,10 +138,14 @@ fn cmd_status(doorman_url: &str, chassis_url: &str, corpus_root: &str) {
     let client = http_client();
     let (label_w, url_w, _) = col_width();
 
-    // ── Doorman /healthz ─────────────────────────────────────────────────────
+    // ── Doorman /healthz + /readyz ───────────────────────────────────────────
+    // /healthz returns 404 in current builds (known bug — route not yet added).
+    // Fall back to /readyz to determine Doorman availability.
     let healthz: Option<HealthzResponse> =
         get_json(&client, &format!("{doorman_url}/healthz"));
-    let doorman_up = healthz.is_some();
+    let readyz: Option<ReadyzResponse> =
+        get_json(&client, &format!("{doorman_url}/readyz"));
+    let doorman_up = healthz.is_some() || readyz.is_some();
     let entity_count = healthz
         .as_ref()
         .and_then(|h| h.entity_count)
@@ -159,10 +157,6 @@ fn cmd_status(doorman_url: &str, chassis_url: &str, corpus_root: &str) {
         doorman_url,
         up_down(doorman_up),
     );
-
-    // ── Doorman /readyz (Tier A + Tier B) ────────────────────────────────────
-    let readyz: Option<ReadyzResponse> =
-        get_json(&client, &format!("{doorman_url}/readyz"));
 
     if let Some(ref rz) = readyz {
         let node_class = rz.node_class.as_deref().unwrap_or("unknown");
