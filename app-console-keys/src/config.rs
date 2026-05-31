@@ -31,6 +31,10 @@ pub struct ProfileConfig {
     pub pair_endpoint: String,
     #[serde(default = "default_drafts_outbound_path")]
     pub drafts_outbound_path: String,
+    #[serde(default = "default_email_endpoint")]
+    pub email_endpoint: String,
+    #[serde(default)]
+    pub plain_mode: bool,
 }
 
 fn default_username() -> String {
@@ -68,6 +72,9 @@ fn default_drafts_outbound_path() -> String {
     let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
     format!("{}/.local/share/os-console/drafts-outbound", home)
 }
+fn default_email_endpoint() -> String {
+    "http://127.0.0.1:9093".into()
+}
 
 impl Default for ProfileConfig {
     fn default() -> Self {
@@ -83,6 +90,8 @@ impl Default for ProfileConfig {
             slm_endpoint: default_slm_endpoint(),
             pair_endpoint: default_pair_endpoint(),
             drafts_outbound_path: default_drafts_outbound_path(),
+            email_endpoint: default_email_endpoint(),
+            plain_mode: false,
         }
     }
 }
