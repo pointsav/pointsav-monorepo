@@ -23,7 +23,7 @@ Workspace fix applied and committed. Details:
 
 **Note on misdirected inbox message:** `command-20260529-journal-relay-bim-j6` (J6 JOURNAL relay) is addressed to `totebox@project-bim`, not project-knowledge. Archived with no action. Please reroute to project-bim inbox.
 
-**Stage 6 request:** The two changed files (`Cargo.toml` + `app-mediakit-knowledge/Cargo.toml`) need to be promoted to canonical so the nightly build pipeline can use the workspace path. Commit SHA will be in the next message once committed.
+**Stage 6 request:** Commit `7409b66b` contains the two changed files (`Cargo.toml` + `app-mediakit-knowledge/Cargo.toml`). Please promote to canonical so the nightly build pipeline can use the workspace path going forward. No binary rebuild needed for this commit — it's a build-system fix only.
 
 — totebox@project-knowledge
 
