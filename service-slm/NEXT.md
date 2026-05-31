@@ -1,21 +1,23 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-31 — Session 12: Fix A (actual_diff empty — HOOK_DIFF env var pattern) + Fix B (OLMo system prompt rewrite) deployed; Fix C deferred
+> Last updated: 2026-05-31 — Sessions 13+14: corpus audit (all existing tuples empty/corrupt); CPU drain paused; SFT-first + CodeDPO-on-GPU architecture adopted; P1 /readyz reason+zone; Sprint 4a app-console-slm status; Fix C deferred indefinitely
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## ✅ SYSTEM STATUS (2026-05-30)
+## ✅ SYSTEM STATUS (2026-05-31 sessions 13+14)
 
 | Service | State | Notes |
 |---|---|---|
-| `local-doorman.service` | active | **`SLM_TIER_A_FIRST=true`**; Sprint 3D (timeout 1800s); **`SLM_QUEUE_LEASE_EXPIRY_SEC=2100`**; 25 briefs queued; 1 active in-flight (0BDB1DF0) |
-| `local-slm.service` (llama-server) | active | OLMo-2-7B Q4_K_M; Tier A primary |
-| `yoyo-tier-b-1` | **TERMINATED** | Stopped 2026-05-28; circuit will open after probe failures (not circuit-breaker tripped by requests with tier_a_first) |
-| `local-content.service` | active (rebuilt 2026-05-29T19:26Z) | LadybugDB ready (7,201 entities); **Tier A fallback enabled (300s interval)**; entity_count in /healthz |
-| `local-claude-bridge.service` | active | Watching ~/.claude/projects/**; CORPUS files writing ✓ |
-| Shadow capture | active ✓ | Git hook fires; briefs route Tier A (tier_a_first=true) |
+| `local-doorman.service` | active | `SLM_TIER_A_FIRST=true`; `SLM_QUEUE_LEASE_EXPIRY_SEC=2100`; **`SLM_HOLD_THRESHOLD_SECS=1` PENDING** (operator must apply — pauses CPU drain) |
+| `local-slm.service` (llama-server) | active | OLMo-2-7B Q4_K_M; Tier A primary; :8080 busy when inference active (curl hangs = normal) |
+| `yoyo-tier-b-1` | **TERMINATED** | europe-west4-a L4 stockout; restart when capacity returns |
+| `local-content.service` | active | LadybugDB; 7,201 entities; Tier A fallback enabled |
+| Shadow capture | active ✓ | Post-commit hook writing real diffs (Fix A deployed) |
+| Corpus drain | **PAUSING** | `SLM_HOLD_THRESHOLD_SECS=1` pending operator restart; CPU drain was producing empty OLMo diffs — harmful for DPO |
+| Corpus queue | 77+ pending | Post-Fix-A entries with real diffs — save for GPU processing |
+| `app-console-slm` | ✅ built | `status` command live at `/srv/foundry/cargo-target/mathew/release/app-console-slm` |
 
 ### Circuit Resilience — ALL SPRINTS DEPLOYED (2026-05-29/30)
 
@@ -89,15 +91,24 @@ Root cause: `APPRENTICE_SYSTEM_PROMPT` used Claude-specific jargon ("Doctrine cl
 Fix: rewrote `APPRENTICE_SYSTEM_PROMPT` with OLMo-compatible plain instructions and explicit
 "Do not write any introductory text before the opening `---`".
 
-**Fix C — GBNF grammar (DEFERRED)**
-Add `grammar: Some(GrammarConstraint::Gbnf(APPRENTICE_GBNF_GRAMMAR))` to both `dispatch_shadow()`
-calls (apprenticeship.rs lines 181 and 279). Currently both pass `grammar: None`. The wiring in
-`LocalTierClient::complete()` already handles GBNF. Deferred: observe 5–10 drain cycles after Fix B
-first. If OLMo still preambles, implement Fix C. See BRIEF-slm-learning-loop.md §8.
+**Fix C — GBNF grammar (DEFERRED INDEFINITELY — 2026-05-31)**
+CPU drain is paused (`SLM_HOLD_THRESHOLD_SECS=1` pending operator restart). GPU OLMo 3 32B-Think
+handles format constraints reliably without GBNF. Fix C is only needed if CPU drain resumes AND
+Fix B proves insufficient. Do not implement until CPU drain is intentionally re-enabled.
 
-**OLMo inference speed note:** ~2 tok/s on this CPU VM. With `max_tokens=2048`, each shadow
-brief takes 17–60 min wall-clock. Consider reducing to 512–768 for CPU-primary mode to bring
-latency under 10 min per brief. Separate config decision; not blocking Fix C.
+### ⚠️ TRAINING ARCHITECTURE REVISED (2026-05-31 sessions 13+14)
+
+**Corpus audit findings:**
+- 1,410 `training-corpus/engineering/*/` edit tuples: ALL have empty `actual_diff` (pre-Fix-A). Useless.
+- 548 `training-corpus/apprenticeship/shadow-capture/` tuples: empty OLMo diffs. **HARMFUL for DPO** — must quarantine before any training run (empty rejected samples cause model collapse per arxiv 2506.12725).
+- 77+ `queue/` entries (post-Fix-A): real diffs. **The only valid training signal.** Save for GPU.
+
+**Revised training path:**
+1. **SFT first** (GPU, no OLMo processing needed): extract `queue/*.jsonl` where `actual_diff != ""` → LoRA rank=16, alpha=32, 5–10 epochs on brief+diff pairs.
+2. **CodeDPO on GPU only** (Yo-Yo OLMo 3 32B-Think): generate N candidate diffs per brief → `cargo check/test` → execution-validated DPO pairs (≥40% pass-rate gap required).
+3. **Never** run DPO on CPU / never train on empty rejected samples.
+
+**Operator action needed:** `sudo sed -i 's/SLM_HOLD_THRESHOLD_SECS=3600/SLM_HOLD_THRESHOLD_SECS=1/' /etc/local-doorman/local-doorman.env && sudo systemctl restart local-doorman.service`
 
 ### ✅ drain-apprenticeship.timer disabled (2026-05-30 session 11)
 **Root cause of recurring poison:** Legacy Phase 3.4 shell drainer (`drain-apprenticeship-queue.sh`)

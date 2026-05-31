@@ -1,6 +1,12 @@
 
 ---
 
+### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 10 — lease expiry fix + flow confirmed)
+
+**Done:** Root cause for drain worker silence (reaper 300s < 1860s wrapper); `SLM_QUEUE_LEASE_EXPIRY_SEC=2100` fix; 26 poison entries recovered; flow confirmed (`0BDB1DF0` dispatched, llama-server at 124% CPU).
+
+---
+
 ### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 9 end — Sprint 3D + poison recovery)
 
 **Done this session (continued from session 9 start):**

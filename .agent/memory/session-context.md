@@ -2,90 +2,52 @@
 
 ---
 
-### 2026-05-31 | totebox@project-intelligence | claude-sonnet-4-6 (session 12 — apprenticeship prompt audit; Fix A + Fix B deployed)
+### 2026-05-31 | totebox@project-intelligence | claude-sonnet-4-6 (sessions 13+14 — brief consolidation; corpus audit; P1/P2/Sprint 4a; training architecture revised)
 
 **Done this session:**
-- **Apprenticeship prompt audit (full call chain):** Identified two critical gaps making the 554-entry training corpus nearly useless. Both fixed in commit `a0649002` (promoted to canonical by Command).
-- **Fix A — `actual_diff: ""` bug:** The post-commit hook used `python3 - <<'PYEOF'` + `sys.stdin.read()`. Heredoc consumes stdin (the script source); `sys.stdin.read()` always returns `""`. Fix: pass diff via `HOOK_DIFF` env var, read via `os.environ.get()`. Applied to `service-slm/scripts/git-post-commit-hook.sh` and workspace `bin/capture-edit.py` (workspace commit `48f23c9` by Command). Verified: 3 newest queue entries have `actual_diff` 2–3.5 KB each.
-- **Fix B — 100% escalation rate:** `APPRENTICE_SYSTEM_PROMPT` had Claude-specific jargon ("Doctrine claim #32", "Master/Root/Task Claude"). OLMo wrote preamble before `---`; `extract_frontmatter()` regex requires `\A` → parse fail → `escalate: true`. Rewrote to OLMo-compatible plain instructions with explicit "Do not write any introductory text before the opening `---`".
-- **New binary deployed** via `sudo cp` + `sudo systemctl restart local-doorman` at 00:41 UTC.
-- **Stage 6 complete (by Command):** commits `a0649002` (Fix A+B), `aef13fd9` (outbox), `b57f9d22` (bonus: Doorman endpoint 8011→9080 in app-console-content + app-console-keys). Archive 0 commits ahead of origin/main.
-- **BRIEF-slm-learning-loop.md §8 written:** full audit findings + Fix A/B/C doc.
-- **service-slm/NEXT.md updated:** Fix C deferred item + OLMo inference speed note.
+
+- **Brief consolidation (session 13):** Archived 3 contaminated project-infrastructure briefs + 1 project-editorial file. Staged Gemini AI-AUDIT with corrections. Updated BRIEF-slm-substrate-master.md (P0/P1/P2/P3 open items). Created BRIEF-project-intelligence-active-work.md. Commit `1b6c8df8`.
+- **Poison queue resolved (session 13):** 78 entries investigated — 68 pre-Fix-A quarantined, 10 post-Fix-A (llama-server outage artifact) recovered to queue/. queue-poison: 0.
+- **P1 — /readyz reason+zone (session 14):** Added `reason` + `zone` fields to `TierBInfo` in `slm-doorman/src/router.rs`. Zone read from `SLM_YOYO_GCP_ZONE` env var. 3 new tests (`tier_b_status_reason_health_probe_failures`, `_request_failures`, `_no_reason_when_closed`). All 105 lib tests pass. Commits `6347d41e`, `eb9a2f75`.
+- **P2 — service-content base_dir (session 14):** Replaced stale `/home/mathew/deployments/...` default with `${INFRASTRUCTURE_ROOT}/data`. Commit `6347d41e`.
+- **Sprint 4a — app-console-slm status command (session 14):** Full implementation — Doorman /healthz+/readyz, Tier A/B health, chassis health, corpus counts. 6 unit tests pass. Smoke test confirmed (`Doorman UP, Tier A UP`). Commits `df802ff3`, `5077d92d`.
+- **Corpus audit (session 14):** Discovered all 1,410 existing `edit` tuples have empty `actual_diff` (pre-Fix-A). 548 shadow-capture tuples have empty OLMo diffs (generated before Fix B). Only the 77+ post-Fix-A `queue/` entries have real diffs. These are the ONLY useful training signal.
+- **Research + architecture revision (session 14):** Web research (5 papers) confirms: (1) empty DPO rejected samples are HARMFUL not neutral; (2) SFT alone outperforms SFT+DPO at <5K samples; (3) CodeDPO with execution-based validation is the right GPU path. Revised architecture: SFT-first → CodeDPO-on-GPU only. BRIEF-slm-learning-loop.md §9 written. Commit `9311da5c`.
+- **All tests pass:** slm-doorman (all), app-console-slm (6/6), service-content (10/10).
 
 **Pending / carry-forward:**
-- **Fix C (deferred):** Add GBNF grammar to both `dispatch_shadow()` calls (apprenticeship.rs lines 181, 279). Observe 5–10 drain cycles after Fix B first — if OLMo still preambles, implement. Wiring already exists in `LocalTierClient::complete()`.
-- **OLMo inference speed:** ~2 tok/s CPU; `max_tokens=2048` → 17–60 min per brief. Consider reducing to 512–768 for CPU-primary mode (separate config decision, not urgent).
-- **project-console Sprint 4a:** implement `app-console-slm status` command (outbox `project-intelligence-20260530-console-wiring`).
-- **Yo-Yo 1h test** when europe-west4-a L4 capacity returns.
-- **drain-apprenticeship.service/timer files** in `/etc/systemd/system/` — disabled but present; low-priority cleanup.
-- **stale shim test fields** — `anthropic_shim_test.rs` `tier_a_reason`/`idle_monitor` stale (NEXT.md).
+
+- **OPERATOR ACTION REQUIRED — drain pause:** Run `sudo sed -i 's/SLM_HOLD_THRESHOLD_SECS=3600/SLM_HOLD_THRESHOLD_SECS=1/' /etc/local-doorman/local-doorman.env && sudo systemctl restart local-doorman.service` — pauses CPU drain, keeps SFT capture, auto-resumes when Yo-Yo starts. (Blocked by sudo classifier from Totebox session.)
+- **Stage 6:** 6 commits ahead of origin/main — Command Session needs `bin/promote.sh`. Commits: `1b6c8df8`, `6347d41e`, `df802ff3`, `5077d92d`, `eb9a2f75`, `9311da5c`.
+- **SFT extraction script:** `scripts/extract-sft-pairs.py` — read `queue/*.jsonl`, filter `actual_diff != ""`, output clean SFT JSONL for LoRA training on 77 post-Fix-A entries.
+- **CodeDPO scaffold (Yo-Yo gated):** Generate candidate diffs with OLMo 3 32B-Think, validate with `cargo check`, output execution-validated DPO pairs.
+- **Quarantine corrupt DPO tuples:** The 548 `training-corpus/apprenticeship/shadow-capture/` tuples must be quarantined before any training run.
+- **LoRA fine-tuning first run:** After SFT extraction + CodeDPO pairs. Rank=16, alpha=32, 5–10 epochs. Checklist in BRIEF-slm-learning-loop.md §9.
+- **Fix C (deferred indefinitely):** GBNF grammar no longer urgent — CPU drain paused; GPU OLMo 3 handles format natively.
+- **orchestration-slm deploy:** Operator actions from outbox `project-intelligence-20260530-stage6-orchestration-deploy` still pending.
+- **app-console-content port fix (project-console):** `src/draft.rs` 8011 → 9080 — message in outbox to project-console.
+- **stale shim test fields:** `anthropic_shim_test.rs` `tier_a_reason`/`idle_monitor`.
+- **drain-timer systemd cleanup:** Disabled units still in `/etc/systemd/system/`.
 
 **Operator preferences surfaced:**
-- None new this session.
+- Deep think before coding — questioned whether CPU DPO was realistic (it wasn't). Research before committing to architecture.
+- Comprehensive BRIEF updates after major findings — don't lose valuable learning between sessions.
+
+---
+
+### 2026-05-31 | totebox@project-intelligence | claude-sonnet-4-6 (session 12 — apprenticeship prompt audit; Fix A + Fix B deployed)
+
+**Done:** Full audit of shadow capture chain. Fix A: pass diff via `HOOK_DIFF` env var (heredoc was consuming stdin). Fix B: rewrote `APPRENTICE_SYSTEM_PROMPT` to remove Claude-specific jargon; OLMo was preambling before `---` causing 100% escalation. New binary deployed 00:41 UTC. Stage 6 complete by Command (`a0649002`, `aef13fd9`, `b57f9d22`).
+
+**Pending carried forward:** Fix C (GBNF grammar) deferred — now indefinitely deferred per session 14 architecture revision. Yo-Yo 1h test when L4 capacity returns. Stale shim test fields.
 
 ---
 
 ### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 11 — drain-apprenticeship.timer conflict found and killed; flow confirmed)
 
-**Done this session:**
-- **Root cause of recurring poison identified:** `drain-apprenticeship.timer` (Phase 3.4 legacy shell drainer) was firing every ~15 min and poisoning ALL queue entries. Script (`/srv/foundry/bin/drain-apprenticeship-queue.sh`) expected flat `ApprenticeshipBrief` JSON but queue contains `ShadowQueueEntry` format (`{"brief": {...}, "actual_diff": ""}`). `prompt` field always empty → poison. Script also bypassed Doorman (called port 8080 directly) — architectural conflict with Rust drain worker.
-- **Timer stopped and disabled:** `sudo systemctl stop drain-apprenticeship.timer && sudo systemctl disable drain-apprenticeship.timer`. Definitions left in /etc/systemd/system/ for reference. Rust drain worker in local-doorman.service is the sole drainer.
-- **25 briefs recovered:** queue-poison/ → queue/. Queue: 25 pending, 0 poison, 1 active in-flight (0BDB1DF0 dispatched at 22:17:58 UTC by drain-1821781).
-- **Flow confirmed:** llama-server busy with 0BDB1DF0 (curl to :8080 timed out = inference in progress). Done count was 550; will reach 551 when OLMo completes 0BDB1DF0 (17-60 min range from dispatch).
-- **NEXT.md updated:** drain-apprenticeship.timer root cause documented; system status table updated.
+**Done:** Identified `drain-apprenticeship.timer` (legacy shell drainer, wrong format) as root cause of all poison. Stopped and disabled it. Recovered 25 briefs. Flow confirmed: `0BDB1DF0` dispatched, OLMo at 124% CPU.
 
-**Pending / carry-forward:**
-- **Monitor flow:** 0BDB1DF0 in-flight since 22:17:58 UTC; completion expected 22:35–23:17 UTC. After done count reaches 551, worker picks up next of 25 queued.
-- **Orphaned 0B050EFD lease:** From dead PID 1771363; reaper reclaims at 22:17:56 + 2100s = 22:52:56 UTC.
-- **drain-apprenticeship.service/timer files:** Still in /etc/systemd/system/. Consider removing or archiving in a cleanup session — they are disabled but misleading.
-- **Stage 6** — 9 commits ahead of origin/main (outbox `project-intelligence-20260530-stage6-sprint3d`)
-- **Operator installs** (see outbox `project-intelligence-20260530-stage6-orchestration-deploy`):
-  1. Build + deploy `orchestration-slm-server` binary
-  2. Install `/etc/foundry/local-orchestration-slm.env`
-  3. `sudo systemctl enable --now local-orchestration-slm.service`
-  4. Add `SLM_ORCHESTRATION_ENDPOINT=http://127.0.0.1:9180` to local-doorman.env + restart
-  5. Enable daily/weekly smoke timers
-- **project-console actions** (see outbox `project-intelligence-20260530-console-wiring`):
-  - Port fix: `app-console-content/src/draft.rs` 8011 → 9080
-  - Sprint 4a: implement `app-console-slm status` command
-- **Yo-Yo 1h test** when L4 capacity returns
-- **stale test fields** — `anthropic_shim_test.rs` `tier_a_reason`/`idle_monitor` fields stale
-
-**Operator preferences surfaced:**
-- Flow investigation requires full root cause before "done" — recurring poison needed tracing to drain-apprenticeship.timer, not just recovery
+**Pending carried forward:** Stage 6 (actioned by Command), orchestration-slm deploy (still pending operator), drain-timer systemd cleanup (still pending).
 
 ---
-
-### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 10 — lease expiry fix + flow confirmed)
-
-**Done this session:**
-- **Root cause diagnosed for 26 poison entries:** Previous session (ran out of context) manually moved 25 briefs to queue-poison/ at 21:23 during investigation; one more (177F2B11) at 21:38. The drain worker itself did not cause the poison.
-- **Root cause diagnosed for drain worker silence:** Reaper's 300s lease expiry < 1860s drain wrapper → reaper reclaimed lease at 300s, drain worker's `release_shadow()` found stale lease and silently returned `Ok()`. After brief was re-queued by reaper and drain woke after 1800s timeout, it worked correctly — but during the previous session's investigation, the briefs had been manually quarantined to poison.
-- **Lease expiry fix:** Added `SLM_QUEUE_LEASE_EXPIRY_SEC=2100` to `/etc/local-doorman/local-doorman.env`. 2100s > 1860s drain wrapper; reaper now cannot reclaim a live lease. Restart at 22:17:58 UTC. Confirmed `lease_expiry_secs=2100` in startup log.
-- **26 poison entries recovered:** All 26 moved from `queue-poison/` to `queue/`. 0 poison after recovery.
-- **Flow confirmed:** New drain worker (PID 1821781) immediately dispatched `0BDB1DF0` at 22:17:58 (tier="local"). llama-server busy with inference. Queue: 24 pending, 1 active in-flight, 0 poison.
-- **NEXT.md updated:** System status, poison recovery note, lease fix documented.
-- **BRIEF-slm-substrate-master.md updated:** §1 live state table updated with lease fix.
-
-**Pending / carry-forward:**
-- **Stage 6** — 9 commits ahead of origin/main (outbox `project-intelligence-20260530-stage6-sprint3d`); `SLM_QUEUE_LEASE_EXPIRY_SEC=2100` is an env-only change (not git-tracked), no new commit needed
-- **Operator installs** (see outbox `project-intelligence-20260530-stage6-orchestration-deploy`):
-  1. Build + deploy `orchestration-slm-server` binary
-  2. Install `/etc/foundry/local-orchestration-slm.env`
-  3. `sudo systemctl enable --now local-orchestration-slm.service`
-  4. Add `SLM_ORCHESTRATION_ENDPOINT=http://127.0.0.1:9180` etc. to local-doorman.env + restart
-  5. Enable daily/weekly smoke timers
-- **Monitor drain:** 24 pending briefs + 1 orphaned in-flight (0B050EFD from dead PID 1771363; reaper reclaims at 22:52). Each brief takes 17–60 min at OLMo CPU speed.
-- **project-console actions** (see outbox `project-intelligence-20260530-console-wiring`):
-  - Port fix: `app-console-content/src/draft.rs` 8011 → 9080
-  - Sprint 4a: implement `app-console-slm status` command
-- **Yo-Yo 1h test** when L4 capacity returns
-- **stale test fields** — `anthropic_shim_test.rs` `tier_a_reason`/`idle_monitor` fields stale
-
-**Operator preferences surfaced:**
-- Expects full flow investigation before reporting "done" — the 26 poison entries needed root cause analysis and recovery, not just status report
-
----
-
 
