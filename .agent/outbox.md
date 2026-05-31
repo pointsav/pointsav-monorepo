@@ -1938,10 +1938,86 @@ Flow debug + audit session complete. 3 commits:
 ---
 from: totebox@project-console
 to: command@claude-code
+re: Comprehensive Stage 6 brief — 9 monorepo commits pending + 4 operator items
+created: 2026-05-31T17:45:00Z
+priority: high
+status: pending
+msg-id: project-console-20260531-comprehensive-stage6
+supersedes:
+  - project-console-20260531-phase-cde-complete
+  - project-console-20260530-phase-b-complete
+  - project-console-20260524-phase5-complete
+  - project-console-20260524-phase3-4-complete
+  - project-proofreader-20260520-console-pivot-handoff
+  - project-proofreader-20260516-tui-pivot-handoff
+  - all prior pending messages to command@claude-code
+---
+
+**Read this message only. All prior pending Command messages are superseded.**
+
+## Stage 6 — force-push required
+
+Both staging mirrors are 9 commits behind local main due to history rebase.
+Force-push authorization confirmed (Command 2026-05-28, inbox `command-20260528-console-answers`).
+
+Sub-clone: `/srv/foundry/clones/project-console/pointsav-monorepo/`
+Staging mirrors: `origin-staging-j` (jwoodfine/pointsav-monorepo), `origin-staging-p` (pwoodfine/pointsav-monorepo)
+
+### All 9 commits — oldest → newest
+
+| SHA | Subject |
+|---|---|
+| `3d5b05d0` | feat(service-fs): criterion benchmarks — append throughput + checkpoint latency |
+| `454afe4b` | docs(j2-benchmarks): update with measured criterion results |
+| `f545af90` | fix(slm): Doorman port 8011→9080; Phase 5 complete; cross-platform release BRIEF |
+| `cefd27be` | ops(session): close Phase A |
+| `d54dfb67` | feat(release): Phase B — CI matrix, rustls-tls, TerminalCaps probe |
+| `fb33f674` | ops(session): Phase B complete |
+| `043add7c` | ops(brief): mark Phase B complete |
+| `5c1051e2` | chore(fmt): cargo fmt — TerminalCaps chassis.rs |
+| `7d9c0b13` | feat(console): Phases C/D/E — EmailCartridge (F3), SlmCartridge (F9), config fields |
+
+`cargo check` exits 0 at `7d9c0b13`.
+
+### Commands
+
+```bash
+cd /srv/foundry/clones/project-console/pointsav-monorepo
+git push --force-with-lease origin-staging-j main
+git push --force-with-lease origin-staging-p main
+# After both succeed:
+~/Foundry/bin/promote.sh
+```
+
+## Operator-gated items (all still open)
+
+1. **GCE firewall port 2222** — required for external MBA connections (os-console users on Mathew/Jennifer/Peter machines)
+2. **`pairing-server` systemd unit** — deploy to GCE VM; listens `0.0.0.0:9201`; source: `system-gateway-mba/src/bin/pairing_server.rs`
+3. **Peter SSH key** — generate Ed25519 + `proofctl user add peter --tenant woodfine --key-file peter.pub --role editor`
+4. **Tag `v0.1.0`** on `pointsav-monorepo` after promote — triggers GitHub Actions 4-target release build (Linux musl, macOS Intel, ARM, universal)
+
+## What Phases C/D/E shipped
+
+- **Phase C** — `app-console-email` F3 EmailCartridge: inbox list + read + compose/send; `service-email` backend at 9093; plain mode; workspace member
+- **Phase D** — `app-console-slm` F9 SlmCartridge: Doorman health dashboard (circuit, tier, ai_available, entity count); 10s poll + R refresh; plain mode; workspace member
+- **Phase E** — `ConsoleConfig` gains: `orchestration_host`, `email_endpoint`, `plain_mode`; `mba_client.rs` audited clean; `BRIEF-os-console-platform.md` §5 peer-field table
+- **BRIEF consolidation** — `BRIEF-project-console-master.md` created; 4 BRIEFs absorbed; platform BRIEF port note fixed
+
+## Next phase
+
+**Phase 6 — Offline mode + Tantivy search** in `ContentCartridge`. Ready to start after Stage 6
+promote completes. No Command action needed to begin.
+
+— totebox@project-console / 2026-05-31
+
+---
+from: totebox@project-console
+to: command@claude-code
 re: Phases C/D/E complete; Stage 6 pending for 7d9c0b13 + prior commits
 created: 2026-05-31T00:00:00Z
 priority: normal
-status: pending
+status: superseded
+superseded_by: project-console-20260531-comprehensive-stage6
 msg-id: project-console-20260531-phase-cde-complete
 ---
 
@@ -1989,7 +2065,8 @@ to: command@claude-code
 re: Phase B complete — cross-platform release infrastructure; Stage 6 pending for 6f21f580
 created: 2026-05-30T00:00:00Z
 priority: normal
-status: pending
+status: superseded
+superseded_by: project-console-20260531-comprehensive-stage6
 msg-id: project-console-20260530-phase-b-complete
 ---
 
@@ -2110,7 +2187,8 @@ to: command@claude-code
 re: Phase 5 complete — draft mode; /new slash command; Doorman SSE streaming; drafts-outbound
 created: 2026-05-24T00:00:00Z
 priority: normal
-status: pending
+status: superseded
+superseded_by: project-console-20260531-comprehensive-stage6
 msg-id: project-console-20260524-phase5-complete
 ---
 
@@ -2154,7 +2232,8 @@ to: command@claude-code
 re: Pairing Phase 3+4 complete — nightly build notes; shutdown
 created: 2026-05-24T00:00:00Z
 priority: normal
-status: pending
+status: superseded
+superseded_by: project-console-20260531-comprehensive-stage6
 msg-id: project-console-20260524-phase3-4-complete
 ---
 
@@ -2334,7 +2413,8 @@ to: command@claude-code
 re: Pairing Phases 1+2 complete — 15 commits on canonical; shutdown complete
 created: 2026-05-22T01:00:00Z
 priority: normal
-status: pending
+status: superseded
+superseded_by: project-console-20260531-comprehensive-stage6
 ---
 
 Pairing ceremony Phase 1 (server-issued code, proofctl pair) and Phase 2 (Unicode QR)
@@ -2367,7 +2447,8 @@ to: command@claude-code
 re: Stage 6 complete — cluster/project-proofreader pushed to canonical; PR needed
 created: 2026-05-22T00:00:00Z
 priority: normal
-status: pending
+status: superseded
+superseded_by: project-console-20260531-comprehensive-stage6
 ---
 
 Stage 6 promotion executed. All 14 commits pushed to canonical:
@@ -2402,7 +2483,8 @@ to: command@claude-code
 re: Phase 5 complete — Stage 6 + infrastructure needed for distribution
 created: 2026-05-21T00:00:00Z
 priority: high
-status: pending
+status: superseded
+superseded_by: project-console-20260531-comprehensive-stage6
 
 Phases 1–5 of leapfrog-2030-coding.md are complete. 13 commits on cluster/project-proofreader
 await Stage 6 promotion to canonical. Please action:
@@ -2437,7 +2519,8 @@ to: command@claude-code
 re: os-console platform pivot — rename + clone + catalog action items
 created: 2026-05-20T00:00:00Z
 priority: high
-status: pending
+status: superseded
+superseded_by: project-console-20260531-comprehensive-stage6
 msg-id: project-proofreader-20260520-console-pivot-handoff
 ---
 
@@ -2529,7 +2612,8 @@ to: command@claude-code
 re: TUI pivot plan complete — 8 action items for Command Session
 created: 2026-05-16T20:15:00Z
 priority: high
-status: pending
+status: superseded
+superseded_by: project-console-20260531-comprehensive-stage6
 msg-id: project-proofreader-20260516-tui-pivot-handoff
 ---
 
