@@ -120,21 +120,31 @@ Cannot be done by Totebox session alone. All from outbox `project-intelligence-2
 
 ## §4 — Medium-term (sessions 16–20)
 
-- [ ] **P3: orchestration-slm persistence** — replace ephemeral HashMap metering with Redb or SQLite; required for production audit trail (1 session)
-- [ ] **Claude Code CORPUS bridge deployment** — install `local-claude-bridge.service` systemd unit
-- [ ] **drain-apprenticeship.service/timer cleanup** — these units are disabled but still in `/etc/systemd/system/`; remove or archive
-- [ ] **Stale shim test fields** — `anthropic_shim_test.rs` `tier_a_reason` / `idle_monitor` fields are stale
-- [ ] **max_tokens 2048 → 512–768 for CPU shadow briefs** — reduces per-brief latency from 17–60 min to under 10 min (separate config decision; lower quality tradeoff)
-- [ ] **DPO corpus audit** — after Fix C or drain stability confirmed, run `export-dpo.sh` and verify ≤ 5 tuples output; `corpus-threshold.py` honest count check
+- [ ] **P3: orchestration-slm persistence** — replace ephemeral HashMap metering with Redb or SQLite (1 session)
+- [ ] **SFT extraction script** — `scripts/extract-sft-pairs.py`: read `queue/*.jsonl`, filter `actual_diff != ""`, output clean SFT JSONL for LoRA. Target: 77 post-Fix-A entries.
+- [ ] **CodeDPO scaffold** (GPU-gated) — script to generate N candidate diffs per brief via OLMo 3 32B-Think, run `cargo check`, output validated DPO pairs. Only run on Yo-Yo.
+- [ ] **LoRA fine-tuning first run** — after SFT extraction + CodeDPO pairs ready. Checklist: BRIEF-slm-learning-loop.md §9. Rank=16, alpha=32, 5–10 epochs.
+- [ ] **Exclude corrupt DPO tuples** — the 548 `training-corpus/apprenticeship/shadow-capture/` tuples have empty OLMo diffs and are HARMFUL for DPO. Quarantine before training run.
+- [ ] **drain-apprenticeship.service/timer cleanup** — disabled units in `/etc/systemd/system/`; remove
+- [ ] **Stale shim test fields** — `anthropic_shim_test.rs` `tier_a_reason` / `idle_monitor`
+- [ ] **Claude Code CORPUS bridge deployment** — lower priority now; SFT path uses queue/ directly
 
 ---
 
-## §5 — Leapfrog 2030 trajectory pointer
+## §5 — Leapfrog 2030 + training architecture (revised 2026-05-31)
 
 Full competitive analysis in `BRIEF-slm-learning-loop.md §6`. Three moats:
 1. OLMo verifiable training provenance (OLMoTrace) — cite in regulated-sector procurement
 2. Per-inference Ed25519 signed audit trail — P0 ledger sha256 is the next step
 3. Customer-owned compounding LoRA weights
 
-**Next milestone:** stable drain (Fix C if needed) → Yo-Yo 1h test → first non-degenerate
-DPO tuples → Sunday 02:00 UTC `corpus-threshold.py` threshold reached → LoRA training trigger.
+**Revised milestone (2026-05-31):** CPU drain paused (`SLM_HOLD_THRESHOLD_SECS=1`).
+Next path → **SFT first**: extract 77 post-Fix-A queue entries → LoRA SFT run on GPU →
+validate model improvement on held-out Foundry commits → THEN CodeDPO on Yo-Yo →
+DPO fine-tune on execution-validated pairs. Fix C deferred — GPU OLMo 3 32B-Think
+handles format constraints natively.
+
+**What NOT to do:**
+- Do NOT train on the 548 existing shadow-capture tuples (empty OLMo diffs — harmful)
+- Do NOT run CPU drain for DPO — OLMo 7B cannot generate useful code critique
+- Do NOT combine SFT+DPO at this data scale (<5K samples) per research findings
