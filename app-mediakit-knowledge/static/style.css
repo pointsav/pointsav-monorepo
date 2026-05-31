@@ -1843,13 +1843,9 @@ html[data-theme="dark"] .toc a.is-active { color: var(--link); border-left-color
   flex-shrink: 0;
 }
 
-/* Read / History tabs */
+/* Read / History tabs — hidden on screen; nav.article-tabs (Phase 7B) replaces this row */
 #p-views {
-  display: flex;
-  align-items: flex-end;
-  gap: 0;
-  margin-left: auto;
-  flex-shrink: 0;
+  display: none;
 }
 
 .wiki-tab {
