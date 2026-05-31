@@ -9,11 +9,19 @@
 - [x] Workbench merge — SPA + backend at `/workbench/`; config.toml roots;
       /files/ and 9210 standalone untouched (ab75fa69)
 - [x] Jennifer confirmed `/workbench` working — /files/ retired (301 → /workbench)
+- [x] Surface toolbar — 8 surfaces in workbench header; `/` redirects to
+      `/workbench`; home page retired (4fc7b341)
 - [ ] Retire `app-privategit-workbench` service (9210) — pending: switch
       `/_api/edit/` nginx proxy from 9210 → 9110/workbench + update config.toml
       url_prefix values to match SPA browse paths (_sandbox-jennifer, _command, _clones)
 - [ ] Add systemd unit `local-workplace-http-prototype.service` so the binary
       survives session exit (currently launched manually)
+- [ ] Auto-refresh tree on background file changes — SSE watcher; clear
+      `dataset.loaded` + re-render expanded dirs on "changed" event
+- [ ] Pin stability audit — stale `dataset.pinIdx`; empty `pin.apiPath` guard;
+      context menu path undefined for pinned folder items
+- [ ] File-click delay — split `Promise.all` into independent fetches; show
+      viewer from `viewerP` immediately without waiting for `editorP`
 
 ## Stage 2 — Proforma
 
