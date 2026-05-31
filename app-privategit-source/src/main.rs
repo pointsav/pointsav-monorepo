@@ -63,13 +63,15 @@ fn load_verify_key(val: &str) -> Option<VerifyingKey> {
 // ── Version helpers ───────────────────────────────────────────────────────────
 
 fn compare_versions(a: &str, b: &str) -> std::cmp::Ordering {
-    let parse = |s: &str| -> Vec<u64> {
-        s.split('.').map(|p| p.parse().unwrap_or(0)).collect()
-    };
+    let parse = |s: &str| -> Vec<u64> { s.split('.').map(|p| p.parse().unwrap_or(0)).collect() };
     parse(a).cmp(&parse(b))
 }
 
-fn latest_version_with_platform(releases_dir: &str, product: &str, platform: &str) -> Option<String> {
+fn latest_version_with_platform(
+    releases_dir: &str,
+    product: &str,
+    platform: &str,
+) -> Option<String> {
     let product_dir = PathBuf::from(releases_dir).join(product);
     let mut versions: Vec<String> = fs::read_dir(&product_dir)
         .ok()?

@@ -597,8 +597,8 @@ async fn main() -> Result<()> {
         std::env::var("CLAIMS_DIR").unwrap_or_else(|_| "/var/lib/local-software/claims".into());
     let source_base_url = std::env::var("SOURCE_BASE_URL")
         .unwrap_or_else(|_| "https://software.pointsav.com/releases".into());
-    let default_platform = std::env::var("DEFAULT_PLATFORM")
-        .unwrap_or_else(|_| "x86_64-unknown-linux-gnu".into());
+    let default_platform =
+        std::env::var("DEFAULT_PLATFORM").unwrap_or_else(|_| "x86_64-unknown-linux-gnu".into());
     let signing_key_hex = std::env::var("LICENSE_SIGNING_KEY").ok();
     if signing_key_hex.is_none() {
         tracing::warn!("LICENSE_SIGNING_KEY not set — /v1/issue-token will return 503");

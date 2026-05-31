@@ -229,10 +229,15 @@ async fn integrity_bar_renders_blake3_fingerprint() {
     assert!(html.contains("integrity-hash"));
     // fingerprint must be exactly 16 hex chars
     let hex_chars: &str = "0123456789abcdef";
-    let fp_start = html.find("integrity-hash\">").map(|i| i + "integrity-hash\">".len());
+    let fp_start = html
+        .find("integrity-hash\">")
+        .map(|i| i + "integrity-hash\">".len());
     if let Some(start) = fp_start {
         let fp = &html[start..start + 16];
-        assert!(fp.chars().all(|c| hex_chars.contains(c)), "expected 16 hex chars, got: {fp}");
+        assert!(
+            fp.chars().all(|c| hex_chars.contains(c)),
+            "expected 16 hex chars, got: {fp}"
+        );
     } else {
         panic!("integrity-hash element not found in rendered HTML");
     }
