@@ -695,9 +695,9 @@ mod tests {
         let yoyo = make_yoyo(None);
         // health probe still up, but circuit tripped by request failures.
         yoyo.health_up.store(true, Ordering::Relaxed);
-        yoyo.circuit.on_failure();
-        yoyo.circuit.on_failure();
-        yoyo.circuit.on_failure();
+        yoyo.circuit.record_failure();
+        yoyo.circuit.record_failure();
+        yoyo.circuit.record_failure();
 
         let mut map = HashMap::new();
         map.insert("default".to_string(), yoyo);
