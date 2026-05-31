@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-view="home" data-auth="anon">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Woodfine Projects Wiki — Wikipedia Evolved</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,600;0,6..12,700;1,6..12,400&family=Zilla+Slab:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* =================================================================
+   WOODFINE PROJECTS WIKI — "Wikipedia Evolved" Design System
+   Single-file prototype. All CSS + JS inlined.
+   ================================================================= */
+
+/* -------- TOKENS -------- */
+:root {
+  /* Canvas */
+  --canvas-light: #F7F9FA;
+  --canvas-dark:  #1A1A2E;
+
+  /* Brand */
+  --brand-primary: #164679;
+  --brand-primary-on: #FFFFFF;
+  --brand-accent: #EAB308;
+  --brand-primary-dim: #1d5a99;
+  --brand-primary-deep: #0f3358;
+
+  /* Fonts */
+  --font-display: "Barlow Condensed", "Trade Gothic LT Std", "Helvetica Neue", Arial, sans-serif;
+  --font-body:    "Nunito Sans", "Avenir LT Std", -apple-system, "Segoe UI", sans-serif;
+  --font-serif:   "Zilla Slab", "Caecilia LT Std", Georgia, serif;
+
+  /* Ink */
+  --ink-1: #111827;
+  --ink-2: #374151;
+  --ink-3: #6B7280;
+  --ink-4: #9CA3AF;
+
+  /* Paper */
+  --paper-1: #FFFFFF;
+  --paper-2: #F7F9FA;
+  --paper-3: #E6E7E8;
+  --paper-4: #D1D5DB;
+
+  /* Semantic */
+  --status-featured: #16A34A;
+  --status-review: #EAB308;
+  --status-stub: #9CA3AF;
+
+  --link: #164679;
+  --link-visited: #5B2A86;
+  --link-hover: #0f3358;
+
+  /* Spatial */
+  --rail-toc: 240px;
+  --content-max: 820px;
+  --shell-max: 1360px;
+  --row1-h: 32px;
+  --row2-h: 96px;
+  --row3-h: 56px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --hairline: 1px solid var(--paper-3);
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  /* Slate palette — genuine dark, not inverted */
+  --canvas-light: #1A1A2E;
+  --paper-1: #232342;
+  --paper-2: #1A1A2E;
+  --paper-3: #2E2E4F;
+  --paper-4: #3F3F66;
+
+  --ink-1: #F1F2F6;
+  --ink-2: #C8CAD4;
+  --ink-3: #9CA0B1;
+  --ink-4: #6E7388;
+
+  --brand-primary: #5B8FD0;
+  --brand-primary-on: #0F1124;
+  --brand-primary-deep: #3D6DA8;
+  --brand-primary-dim: #7AA6DD;
+
+  --link: #8FB6E3;
+  --link-visited: #B79BD8;
+  --link-hover: #B9D2F0;
+
+  --hairline: 1px solid var(--paper-3);
+
+  color-scheme: dark;
+}
+
+/* -------- BASE -------- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-1);
+  background: var(--canvas-light);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+  transition: background 0.25s var(--ease), color 0.25s var(--ease);
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+a:hover { color: var(--link-hover); text-decoration: underline; }
+a:visited { color: var(--link-visited); }
+[data-theme="dark"] a:visited { color: var(--link-visited); }
+
+button {
+  font-family: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+}
+
+/* =================================================================
+   PROTOTYPE CHROME — view + auth + theme switchers
+   ================================================================= */
+.proto-bar {
+  position: fixed;
+  top: 12px; right: 12px;
+  z-index: 1000;
+  background: var(--paper-1);
+  border: 1px solid var(--paper-4);
+  border-radius: 999px;
+  padding: 6px;
+  display: flex;
+  gap: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.proto-bar .group {
+  display: flex;
+  border-right: 1px solid var(--paper-3);
+  padding-right: 4px;
+  gap: 2px;
+}
+.proto-bar .group:last-child { border-right: none; padding-right: 0; }
+.proto-bar button {
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: var(--ink-3);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  transition: all 0.15s var(--ease);
+}
+.proto-bar button:hover { color: var(--ink-1); background: var(--paper-2); }
+.proto-bar button.is-active {
+  background: var(--brand-primary);
+  color: var(--brand-primary-on);
+}
+.proto-bar .label {
+  padding: 6px 8px;
+  color: var(--ink-4);
+  font-size: 10px;
+  align-self: center;
+}
+
+/* =================================================================
+   SHELL — Three-row header
+   ================================================================= */
+.shell-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--canvas-light);
+  transition: box-shadow 0.25s var(--ease);
+}
+.shell-header.is-scrolled {
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+}
+
+/* Row 1 — utility stripe */
+.row-utility {
+  background: var(--paper-3);
+  height: var(--row1-h);
+  display: flex;
+  align-items: center;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  transition: max-height 0.3s var(--ease), opacity 0.25s var(--ease);
+  overflow: hidden;
+  max-height: var(--row1-h);
+}
+.shell-header.is-scrolled .row-utility {
+  max-height: 0;
+  opacity: 0;
+}
+.row-utility-inner {
+  max-width: var(--shell-max);
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.instance-pill {
+  background: var(--brand-primary);
+  color: var(--brand-primary-on);
+  padding: 4px 12px;
+  border-radius: 2px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+.utility-right {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+.utility-right a, .utility-right button {
+  color: var(--ink-2);
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  font-weight: 500;
+}
+.utility-right a:hover, .utility-right button:hover {
+  color: var(--brand-primary);
+}
+
+/* Row 2 — brand wordmark */
+.row-brand {
+  background: var(--canvas-light);
+  padding: 28px 56px;
+  text-align: center;
+  border-bottom: var(--hairline);
+  transition: padding 0.3s var(--ease), max-height 0.3s var(--ease), opacity 0.25s var(--ease);
+  overflow: hidden;
+  max-height: var(--row2-h);
+}
+.shell-header.is-scrolled .row-brand {
+  max-height: 0;
+  padding: 0 56px;
+  opacity: 0;
+}
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 44px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  line-height: 1;
+}
+.wordmark .accent { color: var(--brand-accent); }
+
+/* Row 3 — navigation */
+.row-nav {
+  background: var(--canvas-light);
+  height: var(--row3-h);
+  border-top: var(--hairline);
+  border-bottom: var(--hairline);
+}
+.row-nav-inner {
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  padding: 0 32px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.nav-primary {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.nav-link {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  padding: 8px 14px;
+  border-radius: 4px;
+  transition: all 0.15s var(--ease);
+}
+.nav-link:hover {
+  background: var(--paper-2);
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+.nav-link.is-active {
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+.nav-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--paper-4);
+  flex-shrink: 0;
+}
+.search-wrap {
+  flex: 1;
+  max-width: 640px;
+  position: relative;
+}
+.search-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 16px 0 40px;
+  background: var(--paper-2);
+  border: 1px solid var(--paper-3);
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-1);
+  transition: all 0.15s var(--ease);
+}
+.search-input::placeholder { color: var(--ink-4); }
+.search-input:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  background: var(--paper-1);
+  box-shadow: 0 0 0 3px rgba(22, 70, 121, 0.12);
+}
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-4);
+  pointer-events: none;
+}
+.sister-sites {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.sister-sites .label { color: var(--ink-4); }
+.sister-sites a { color: var(--ink-2); font-weight: 500; }
+.sister-sites a:hover { color: var(--brand-primary); text-decoration: none; }
+
+/* =================================================================
+   MAIN — shared
+   ================================================================= */
+.shell-main {
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  padding: 40px 32px 80px;
+}
+
+/* View toggle */
+.view-home { display: none; }
+.view-article { display: none; }
+[data-view="home"] .view-home { display: block; }
+[data-view="article"] .view-article { display: block; }
+
+/* =================================================================
+   HOME VIEW — Wikipedia-style portal
+   ================================================================= */
+.home-hero {
+  border-bottom: var(--hairline);
+  padding-bottom: 32px;
+  margin-bottom: 40px;
+}
+.home-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 48px;
+  line-height: 1.1;
+  letter-spacing: -0.005em;
+  color: var(--ink-1);
+  margin-bottom: 12px;
+}
+.home-tagline {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 760px;
+  margin-bottom: 18px;
+}
+.home-stats {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.home-stats .dot {
+  width: 4px; height: 4px;
+  background: var(--ink-4);
+  border-radius: 50%;
+}
+.home-stats strong {
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+/* Two-column grid */
+.home-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
+/* Portal box */
+.portal {
+  background: var(--paper-1);
+  border: var(--hairline);
+  border-radius: 4px;
+  padding: 28px 32px;
+  margin-bottom: 28px;
+}
+.portal-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--paper-3);
+  padding-bottom: 14px;
+  margin-bottom: 20px;
+}
+.portal-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.portal-title::before {
+  content: "";
+  width: 4px; height: 14px;
+  background: var(--brand-accent);
+  display: inline-block;
+}
+.portal-meta {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+/* Featured article */
+.featured-article {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 24px;
+}
+.featured-thumb {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 3px;
+  background:
+    linear-gradient(135deg, #164679 0%, #1d5a99 40%, #5B8FD0 100%);
+  position: relative;
+  overflow: hidden;
+}
+.featured-thumb::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 30% 70%, rgba(234,179,8,0.35), transparent 50%),
+    radial-gradient(circle at 70% 30%, rgba(255,255,255,0.15), transparent 60%);
+}
+.featured-thumb::after {
+  content: "TIER METHODOLOGY";
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: rgba(255,255,255,0.85);
+  font-weight: 500;
+}
+.featured-content h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.25;
+  margin-bottom: 10px;
+}
+.featured-content h3 a { color: var(--ink-1); }
+.featured-content h3 a:hover { color: var(--brand-primary); text-decoration: none; }
+.featured-lead {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-2);
+  margin-bottom: 12px;
+}
+.featured-link {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--brand-primary);
+}
+.featured-link::after {
+  content: " →";
+  transition: transform 0.15s var(--ease);
+  display: inline-block;
+}
+.featured-link:hover { text-decoration: none; }
+.featured-link:hover::after { transform: translateX(3px); }
+
+/* DYK panel */
+.dyk-body {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-2);
+  padding-left: 16px;
+  border-left: 3px solid var(--brand-accent);
+}
+.dyk-body strong {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--ink-1);
+}
+
+/* Recent additions */
+.recent-list {
+  list-style: none;
+}
+.recent-item {
+  display: grid;
+  grid-template-columns: 60px 1fr auto;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--paper-3);
+  align-items: center;
+}
+.recent-item:last-child { border-bottom: none; }
+.recent-date {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  font-weight: 500;
+}
+.recent-title a {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink-1);
+}
+.recent-title a:hover { color: var(--brand-primary); text-decoration: none; }
+.recent-cat {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  background: var(--paper-2);
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+.lang-flag {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--brand-primary);
+  margin-left: 6px;
+  padding: 1px 4px;
+  border: 1px solid var(--brand-primary);
+  border-radius: 2px;
+}
+
+/* Right column — categories */
+.categories-portal {
+  position: sticky;
+  top: calc(var(--row3-h) + 24px);
+}
+.cat-list {
+  list-style: none;
+}
+.cat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--paper-3);
+}
+.cat-item:last-child { border-bottom: none; }
+.cat-name {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink-1);
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.cat-name a { color: inherit; }
+.cat-name a:hover { color: var(--brand-primary); text-decoration: none; }
+.cat-marker {
+  width: 3px;
+  height: 14px;
+  background: var(--brand-primary);
+  display: inline-block;
+  flex-shrink: 0;
+}
+.cat-marker.gold { background: var(--brand-accent); }
+.cat-marker.muted { background: var(--paper-4); }
+.cat-count {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* =================================================================
+   ARTICLE VIEW
+   ================================================================= */
+.article-shell {
+  display: grid;
+  grid-template-columns: var(--rail-toc) minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+}
+
+/* Left TOC rail */
+.toc-rail {
+  position: sticky;
+  top: calc(var(--row3-h) + 24px);
+  font-size: 13px;
+  max-height: calc(100vh - var(--row3-h) - 48px);
+  overflow-y: auto;
+  padding-right: 8px;
+}
+.toc-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--paper-3);
+}
+.toc-list { list-style: none; }
+.toc-list ol { list-style: none; }
+.toc-list li { margin: 0; }
+.toc-link {
+  display: block;
+  padding: 6px 12px 6px 14px;
+  color: var(--ink-2);
+  font-weight: 500;
+  border-left: 2px solid transparent;
+  transition: all 0.15s var(--ease);
+  line-height: 1.4;
+}
+.toc-link:hover {
+  color: var(--brand-primary);
+  background: var(--paper-2);
+  text-decoration: none;
+}
+.toc-link.is-active {
+  color: var(--brand-primary);
+  border-left-color: var(--brand-primary);
+  font-weight: 600;
+  background: var(--paper-2);
+}
+.toc-list .sub {
+  padding-left: 16px;
+}
+.toc-list .sub .toc-link {
+  font-size: 12px;
+  color: var(--ink-3);
+  font-weight: 400;
+}
+.toc-num {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--ink-4);
+  margin-right: 8px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.toc-link.is-active .toc-num { color: var(--brand-primary); }
+
+/* Article body */
+.article-body {
+  max-width: var(--content-max);
+  position: relative;
+}
+
+.breadcrumb {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.breadcrumb a { color: var(--ink-3); font-weight: 500; }
+.breadcrumb a:hover { color: var(--brand-primary); text-decoration: none; }
+.breadcrumb .sep { color: var(--ink-4); }
+.breadcrumb .current { color: var(--ink-2); font-weight: 600; }
+
+/* Auth-state tab row (logged-in only) */
+.article-tabs {
+  display: none;
+  gap: 4px;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--paper-3);
+}
+[data-auth="auth"] .article-tabs { display: flex; }
+.tab-pill {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: var(--ink-3);
+  background: transparent;
+  transition: all 0.15s var(--ease);
+}
+.tab-pill:hover { background: var(--paper-2); color: var(--ink-1); }
+.tab-pill.is-active {
+  background: var(--brand-primary);
+  color: var(--brand-primary-on);
+}
+.tab-overflow {
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: var(--ink-3);
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+.tab-overflow:hover { background: var(--paper-2); }
+
+.article-title-block {
+  margin-bottom: 24px;
+  position: relative;
+}
+.article-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 44px;
+  line-height: 1.1;
+  letter-spacing: -0.005em;
+  color: var(--ink-1);
+  padding-right: 28px;
+  position: relative;
+  display: inline-block;
+}
+.status-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--status-featured);
+  position: absolute;
+  top: 14px;
+  margin-left: 10px;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+  cursor: help;
+}
+.status-dot[data-status="review"] {
+  background: var(--status-review);
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.18);
+}
+.last-reviewed {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  margin-top: 8px;
+  font-weight: 500;
+}
+.last-reviewed strong { color: var(--ink-3); font-weight: 600; }
+
+/* Hatnote ribbon */
+.hatnote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-3);
+  padding: 6px 0 6px 28px;
+  margin-bottom: 18px;
+  position: relative;
+}
+.hatnote::before {
+  content: "›";
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  font-family: var(--font-display);
+  color: var(--ink-4);
+  font-size: 18px;
+  font-style: normal;
+}
+.hatnote a { color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--paper-4); }
+.hatnote a:hover { color: var(--brand-primary); text-decoration-color: var(--brand-primary); }
+
+/* Lead paragraph — serif */
+.lead {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--ink-1);
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--paper-3);
+}
+.lead .term {
+  font-weight: 500;
+}
+
+/* Article body sections */
+.article-section { margin-bottom: 36px; scroll-margin-top: calc(var(--row3-h) + 24px); }
+.article-section h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 26px;
+  line-height: 1.25;
+  color: var(--ink-1);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--paper-3);
+  margin-bottom: 18px;
+  position: relative;
+  cursor: default;
+}
+.article-section h2 .edit-pencil {
+  opacity: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  margin-left: 12px;
+  transition: opacity 0.15s var(--ease);
+  border: 1px solid var(--paper-3);
+  padding: 2px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+[data-auth="auth"] .article-section h2:hover .edit-pencil,
+.article-section h2:hover .edit-pencil {
+  opacity: 1;
+}
+.article-section h2 .edit-pencil:hover {
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+.article-section h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 19px;
+  line-height: 1.3;
+  color: var(--ink-1);
+  margin-bottom: 12px;
+  margin-top: 22px;
+}
+.article-section p {
+  margin-bottom: 14px;
+  color: var(--ink-2);
+  font-size: 16px;
+  line-height: 1.7;
+}
+.article-section p strong { color: var(--ink-1); font-weight: 600; }
+
+/* Inline citation */
+.cite {
+  font-size: 11px;
+  vertical-align: super;
+  line-height: 0;
+  color: var(--brand-primary);
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0 1px;
+}
+.cite::before { content: "["; }
+.cite::after { content: "]"; }
+.cite:hover { background: rgba(22,70,121,0.1); }
+
+/* Infobox-style sidebar callout */
+.callout {
+  background: var(--paper-2);
+  border-left: 3px solid var(--brand-primary);
+  padding: 14px 20px;
+  margin: 18px 0;
+  font-size: 14px;
+  border-radius: 0 3px 3px 0;
+}
+.callout-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+/* See also section */
+.see-also ul {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px 24px;
+}
+.see-also li {
+  position: relative;
+  padding-left: 16px;
+  font-size: 15px;
+}
+.see-also li::before {
+  content: "›";
+  position: absolute;
+  left: 0;
+  color: var(--ink-4);
+}
+
+/* References — footnote style */
+.references {
+  background: var(--paper-2);
+  border-radius: 4px;
+  padding: 20px 24px;
+  margin-top: 40px;
+}
+.references summary {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.references summary::-webkit-details-marker { display: none; }
+.references summary::before {
+  content: "+";
+  display: inline-block;
+  width: 18px; height: 18px;
+  background: var(--paper-1);
+  border: 1px solid var(--paper-4);
+  border-radius: 3px;
+  text-align: center;
+  line-height: 16px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--brand-primary);
+  transition: transform 0.15s var(--ease);
+}
+.references[open] summary::before { content: "–"; }
+.references ol {
+  margin-top: 14px;
+  padding-left: 28px;
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+.references li { padding: 4px 0; }
+.references li a { color: var(--ink-2); }
+.references li a:hover { color: var(--brand-primary); }
+
+/* Article footer */
+.article-footer {
+  margin-top: 60px;
+  padding-top: 24px;
+  border-top: 1px solid var(--paper-3);
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.bilingual-notice {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-3);
+  text-align: center;
+  padding: 14px 20px;
+  background: var(--paper-2);
+  border-radius: 3px;
+  margin-bottom: 20px;
+}
+.bilingual-notice .sep { color: var(--paper-4); margin: 0 12px; }
+.footer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+}
+.footer-meta .left, .footer-meta .right { display: flex; gap: 18px; }
+.footer-meta a { color: var(--ink-3); }
+
+/* =================================================================
+   FAB — mobile edit button (logged-in)
+   ================================================================= */
+.edit-fab {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  background: var(--brand-primary);
+  color: var(--brand-primary-on);
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 24px rgba(22,70,121,0.35);
+  z-index: 90;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* =================================================================
+   RESPONSIVE
+   ================================================================= */
+@media (max-width: 1024px) {
+  .article-shell {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .toc-rail {
+    position: relative;
+    top: auto;
+    max-height: none;
+    padding: 16px 18px;
+    background: var(--paper-2);
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+  .home-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .categories-portal { position: static; }
+  .wordmark { font-size: 36px; }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --row1-h: 28px;
+    --row2-h: 76px;
+  }
+  .row-utility-inner { padding: 0 16px; }
+  .row-brand { padding: 18px 16px; }
+  .wordmark { font-size: 28px; letter-spacing: 0.03em; }
+  .row-nav-inner { padding: 0 16px; gap: 12px; }
+  .nav-primary { display: none; }
+  .sister-sites { display: none; }
+  .nav-divider { display: none; }
+  .shell-main { padding: 24px 16px 80px; }
+
+  .home-title { font-size: 32px; }
+  .home-tagline { font-size: 16px; }
+  .featured-article { grid-template-columns: 1fr; }
+  .featured-thumb { max-height: 180px; }
+  .article-title { font-size: 30px; }
+  .article-section h2 { font-size: 22px; }
+  .lead { font-size: 17px; }
+
+  /* Mobile: hide editing chrome */
+  [data-auth="auth"] .edit-fab { display: flex; }
+  .article-tabs { display: none !important; }
+  .edit-pencil { display: none !important; }
+}
+
+/* Focus visibility */
+:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Tooltip */
+[title] { cursor: help; }
+
+/* Subtle hairline under wordmark */
+.wordmark-sub {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  font-weight: 400;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- =================================================================
+     PROTOTYPE TOGGLE BAR (would not ship in production)
+     ================================================================= -->
+<div class="proto-bar" role="toolbar" aria-label="Prototype controls">
+  <div class="group">
+    <span class="label">View</span>
+    <button data-set-view="home" class="is-active">Home</button>
+    <button data-set-view="article">Article</button>
+  </div>
+  <div class="group">
+    <span class="label">Auth</span>
+    <button data-set-auth="anon" class="is-active">Anon</button>
+    <button data-set-auth="auth">Logged-in</button>
+  </div>
+  <div class="group">
+    <span class="label">Theme</span>
+    <button data-set-theme="light" class="is-active">Light</button>
+    <button data-set-theme="dark">Dark</button>
+  </div>
+</div>
+
+<!-- =================================================================
+     SHELL HEADER — three rows
+     ================================================================= -->
+<header class="shell-header" id="shellHeader">
+  <!-- Row 1 — utility stripe -->
+  <div class="row-utility">
+    <div class="row-utility-inner">
+      <span class="instance-pill">Projects Wiki</span>
+      <div class="utility-right">
+        <a href="#">EN ▾</a>
+        <a href="#" title="Reading size">Aa</a>
+        <a href="#">Log in</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2 — brand -->
+  <div class="row-brand">
+    <div class="wordmark">Woodfine <span style="color:var(--ink-3);font-weight:400;">Capital</span> Projects</div>
+    <div class="wordmark-sub">Knowledge Platform — Internal Encyclopedia</div>
+  </div>
+
+  <!-- Row 3 — navigation -->
+  <nav class="row-nav" aria-label="Primary">
+    <div class="row-nav-inner">
+      <div class="nav-primary">
+        <a href="#" class="nav-link is-active">Home</a>
+        <a href="#" class="nav-link">All articles</a>
+        <a href="#" class="nav-link">Categories</a>
+        <a href="#" class="nav-link">Recent</a>
+      </div>
+      <div class="nav-divider" aria-hidden="true"></div>
+      <div class="search-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="search" class="search-input" placeholder="Search 30 articles in 12 categories…" aria-label="Search the wiki">
+      </div>
+      <div class="sister-sites">
+        <span class="label">Sister:</span>
+        <a href="#">Corporate</a>
+        <span style="color:var(--paper-4)">·</span>
+        <a href="#">Newsroom</a>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<!-- =================================================================
+     MAIN
+     ================================================================= -->
+<main class="shell-main">
+
+  <!-- ─────────────  HOME VIEW  ───────────── -->
+  <section class="view-home" id="viewHome">
+    <div class="home-hero">
+      <h1 class="home-title">Welcome to Woodfine Projects Wiki</h1>
+      <p class="home-tagline">
+        The corporate knowledge base for Woodfine Capital Projects — co-location
+        methodology, BIM strategy, and real property intelligence.
+      </p>
+      <div class="home-stats">
+        <span><strong>30</strong> articles</span>
+        <span class="dot"></span>
+        <span><strong>12</strong> categories</span>
+        <span class="dot"></span>
+        <span>Last updated <strong>2026-05-22</strong></span>
+      </div>
+    </div>
+
+    <div class="home-grid">
+      <!-- LEFT COLUMN -->
+      <div class="home-left">
+
+        <!-- Featured article -->
+        <article class="portal">
+          <div class="portal-header">
+            <h2 class="portal-title">Featured article</h2>
+            <span class="portal-meta">Week of 19 May 2026</span>
+          </div>
+          <div class="featured-article">
+            <div class="featured-thumb" role="img" aria-label="Co-location tier diagram"></div>
+            <div class="featured-content">
+              <h3><a href="#" data-set-view="article">Co-location Tier Methodology</a></h3>
+              <p class="featured-lead">
+                The Woodfine co-location tier methodology classifies retail commercial
+                nodes by the density and diversity of anchor tenant categories, civic
+                service adjacency, and estimated trade area population. The system
+                operates across 13 countries and approximately 5,700 indexed clusters
+                as of May 2026.
+              </p>
+              <a href="#" class="featured-link" data-set-view="article">Read the article</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Did you know? -->
+        <article class="portal">
+          <div class="portal-header">
+            <h2 class="portal-title">Did you know?</h2>
+            <span class="portal-meta">Curated weekly</span>
+          </div>
+          <p class="dyk-body">
+            …that Woodfine's co-location index covers <strong>5,702 commercial
+            clusters</strong> across North America and Europe, with first-tier
+            nodes identified in <strong>27 metropolitan markets</strong>?
+          </p>
+        </article>
+
+        <!-- Recent additions -->
+        <article class="portal">
+          <div class="portal-header">
+            <h2 class="portal-title">Recent additions</h2>
+            <a href="#" class="portal-meta" style="color:var(--brand-primary);font-weight:600">View all →</a>
+          </div>
+          <ul class="recent-list">
+            <li class="recent-item">
+              <span class="recent-date">22 May</span>
+              <div class="recent-title">
+                <a href="#">Direct Hold Framework</a>
+                <span class="lang-flag">EN</span><span class="lang-flag">ES</span>
+              </div>
+              <span class="recent-cat">Governance</span>
+            </li>
+            <li class="recent-item">
+              <span class="recent-date">20 May</span>
+              <div class="recent-title">
+                <a href="#">Regional Market Matrix</a>
+              </div>
+              <span class="recent-cat">Co-location</span>
+            </li>
+            <li class="recent-item">
+              <span class="recent-date">18 May</span>
+              <div class="recent-title">
+                <a href="#">BIM Floor-Plate Methodology</a>
+              </div>
+              <span class="recent-cat">BIM</span>
+            </li>
+          </ul>
+        </article>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <aside class="categories-portal">
+        <div class="portal">
+          <div class="portal-header">
+            <h2 class="portal-title">Categories</h2>
+            <span class="portal-meta">12 total</span>
+          </div>
+          <ul class="cat-list">
+            <li class="cat-item">
+              <span class="cat-name"><span class="cat-marker"></span><a href="#">Co-location Intelligence</a></span>
+              <span class="cat-count">8</span>
+            </li>
+            <li class="cat-item">
+              <span class="cat-name"><span class="cat-marker gold"></span><a href="#">BIM Strategy</a></span>
+              <span class="cat-count">5</span>
+            </li>
+            <li class="cat-item">
+              <span class="cat-name"><span class="cat-marker"></span><a href="#">Real Property</a></span>
+              <span class="cat-count">4</span>
+            </li>
+            <li class="cat-item">
+              <span class="cat-name"><span class="cat-marker"></span><a href="#">Governance</a></span>
+              <span class="cat-count">4</span>
+            </li>
+            <li class="cat-item">
+              <span class="cat-name"><span class="cat-marker"></span><a href="#">Data Methodology</a></span>
+              <span class="cat-count">4</span>
+            </li>
+            <li class="cat-item">
+              <span class="cat-name"><span class="cat-marker muted"></span><a href="#">Newsroom</a></span>
+              <span class="cat-count">3</span>
+            </li>
+            <li class="cat-item">
+              <span class="cat-name"><span class="cat-marker muted"></span><a href="#">Disclosure</a></span>
+              <span class="cat-count">2</span>
+            </li>
+            <li class="cat-item">
+              <span class="cat-name"><span class="cat-marker muted"></span><a href="#">Methodology Notes</a></span>
+              <span class="cat-count">—</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="portal" style="margin-top:0">
+          <div class="portal-header">
+            <h2 class="portal-title">About this wiki</h2>
+          </div>
+          <p style="font-size:14px; line-height:1.6; color:var(--ink-2); margin-bottom:12px">
+            Woodfine Projects Wiki is the internal encyclopedia for the
+            knowledge platform. Articles document methodology, governance
+            posture, and data lineage for the firm's co-location, BIM, and
+            real property workstreams.
+          </p>
+          <p style="font-size:13px; color:var(--ink-3); font-style:italic;">
+            Forward-looking statements use planned / intended / target language
+            per BCSC continuous-disclosure posture.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ─────────────  ARTICLE VIEW  ───────────── -->
+  <section class="view-article" id="viewArticle">
+    <div class="article-shell">
+
+      <!-- LEFT TOC RAIL -->
+      <aside class="toc-rail" aria-label="Table of contents">
+        <div class="toc-label">Contents</div>
+        <ol class="toc-list">
+          <li><a href="#sec-overview" class="toc-link is-active"><span class="toc-num">1</span>Overview</a></li>
+          <li>
+            <a href="#sec-tiers" class="toc-link"><span class="toc-num">2</span>Tier Definitions</a>
+            <ol class="sub">
+              <li><a href="#sec-tier1" class="toc-link"><span class="toc-num">2.1</span>Tier 1 — Anchor Composite</a></li>
+              <li><a href="#sec-tier2" class="toc-link"><span class="toc-num">2.2</span>Tier 2 — Regional Node</a></li>
+              <li><a href="#sec-tier3" class="toc-link"><span class="toc-num">2.3</span>Tier 3 — Community Cluster</a></li>
+            </ol>
+          </li>
+          <li><a href="#sec-data" class="toc-link"><span class="toc-num">3</span>Data Sources</a></li>
+          <li><a href="#sec-catchment" class="toc-link"><span class="toc-num">4</span>Catchment Methodology</a></li>
+          <li><a href="#sec-limitations" class="toc-link"><span class="toc-num">5</span>Limitations</a></li>
+          <li><a href="#sec-seealso" class="toc-link"><span class="toc-num">6</span>See also</a></li>
+          <li><a href="#sec-references" class="toc-link"><span class="toc-num">7</span>References</a></li>
+        </ol>
+      </aside>
+
+      <!-- ARTICLE BODY -->
+      <article class="article-body">
+
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="#" data-set-view="home">Wiki home</a>
+          <span class="sep">›</span>
+          <a href="#">Co-location Intelligence</a>
+          <span class="sep">›</span>
+          <span class="current">Co-location Tier Methodology</span>
+        </nav>
+
+        <!-- Auth-state tabs (logged-in only) -->
+        <div class="article-tabs" role="tablist">
+          <button class="tab-pill is-active" role="tab" aria-selected="true">Article</button>
+          <button class="tab-pill" role="tab">Edit</button>
+          <button class="tab-pill" role="tab">History</button>
+          <button class="tab-overflow" aria-label="More actions" title="Discussion · Watch · Share">···</button>
+        </div>
+
+        <!-- Title block -->
+        <div class="article-title-block">
+          <h1 class="article-title">
+            Co-location Tier Methodology
+            <span class="status-dot" data-status="featured" title="Featured article"></span>
+          </h1>
+          <span class="last-reviewed">
+            Last reviewed <strong>2026-05-22</strong> · 8 contributors · 14,200 words
+          </span>
+        </div>
+
+        <!-- Hatnote ribbon -->
+        <p class="hatnote">
+          This article is also available in Spanish: <a href="#">Metodología de niveles de co-ubicación</a>.
+          For the parent topic, see <a href="#">Co-location Intelligence</a>.
+        </p>
+
+        <!-- Lead — serif -->
+        <p class="lead">
+          The Woodfine <span class="term">co-location tier methodology</span>
+          classifies retail commercial nodes by the density and diversity of
+          anchor tenant categories, civic service adjacency, and estimated
+          trade area population. The system operates across 13 countries and
+          approximately 5,700 indexed clusters as of May 2026.<a href="#ref-1" class="cite">1</a>
+        </p>
+
+        <!-- Section 1: Overview -->
+        <section class="article-section" id="sec-overview">
+          <h2>Overview <button class="edit-pencil" aria-label="Edit section">Edit</button></h2>
+          <p>
+            The methodology was developed internally at Woodfine Capital
+            Projects to provide a consistent classification basis for
+            commercial nodes across heterogeneous national land-use regimes.
+            Earlier industry approaches relied on raw gross leasable area or
+            anchor count alone; the Woodfine system layers anchor diversity,
+            civic adjacency, and population catchment into a composite score.
+          </p>
+          <p>
+            Each indexed cluster is assigned a tier from 1 (Anchor Composite)
+            through 3 (Community Cluster). The classification is reviewed on
+            a rolling 18-month cadence and validated against ground-truth
+            footfall data where available.<a href="#ref-2" class="cite">2</a>
+          </p>
+          <div class="callout">
+            <div class="callout-label">Methodology note</div>
+            Tier assignments are <strong>intended</strong> to support internal
+            portfolio analytics and are not used directly to determine
+            transaction pricing. Forward-looking applications of the
+            methodology carry BCSC NI 51-102 disclosure language.
+          </div>
+        </section>
+
+        <!-- Section 2: Tier Definitions -->
+        <section class="article-section" id="sec-tiers">
+          <h2>Tier Definitions <button class="edit-pencil" aria-label="Edit section">Edit</button></h2>
+          <p>
+            The system distinguishes three tiers. Tier boundaries are defined
+            empirically rather than by fixed population or anchor thresholds —
+            cluster scores are normalised within each national market before
+            tiering, accounting for differences in retail density baselines.
+          </p>
+
+          <h3 id="sec-tier1">Tier 1 — Anchor Composite</h3>
+          <p>
+            Tier 1 clusters host a composite of at least four distinct anchor
+            categories (grocery, mass merchandise, pharmacy, civic services)
+            within a 600-metre walking radius. As of May 2026, 27 metropolitan
+            markets contain at least one Tier 1 cluster, with the densest
+            concentrations observed in Toronto, Madrid, and Mexico City.
+          </p>
+
+          <h3 id="sec-tier2">Tier 2 — Regional Node</h3>
+          <p>
+            Tier 2 clusters retain anchor diversity but at lower density, and
+            typically serve a regional catchment of 60,000–180,000 residents.
+            These nodes form the operational backbone of the Woodfine
+            portfolio model.
+          </p>
+
+          <h3 id="sec-tier3">Tier 3 — Community Cluster</h3>
+          <p>
+            Tier 3 clusters serve smaller communities and are characterised by
+            one or two anchors plus a stable convenience tail. These clusters
+            are tracked but are not the focus of the firm's principal
+            investment workstreams.
+          </p>
+        </section>
+
+        <!-- Section 3: Data Sources -->
+        <section class="article-section" id="sec-data">
+          <h2>Data Sources <button class="edit-pencil" aria-label="Edit section">Edit</button></h2>
+          <p>
+            The tier methodology draws on three primary data substrates:
+            anchor tenant location registries (proprietary, refreshed
+            quarterly), public-sector population grids
+            (WorldPop, US LODES, MITMA ES),<a href="#ref-3" class="cite">3</a>
+            and civic facility registries derived from OpenStreetMap with
+            manual correction passes.
+          </p>
+          <p>
+            Anchor registries are maintained as an internal write-only
+            ledger (WORM substrate); changes are appended and tied to a
+            review timestamp, with prior values retained for audit. This
+            posture supports BCSC continuous-disclosure traceability for any
+            methodology output that subsequently surfaces in public-facing
+            materials.
+          </p>
+        </section>
+
+        <!-- Section 4: Catchment Methodology -->
+        <section class="article-section" id="sec-catchment">
+          <h2>Catchment Methodology <button class="edit-pencil" aria-label="Edit section">Edit</button></h2>
+          <p>
+            Trade area estimation uses a hybrid drive-time and walk-time
+            buffer, weighted by the proportion of working-age population
+            within each band. The methodology does not assume a single
+            modal mix; instead, modal weights are calibrated per-market
+            using national travel survey data where available, and
+            interpolated from peer markets otherwise.
+          </p>
+          <p>
+            Catchment estimates are produced at quarterly cadence and stored
+            alongside the cluster record. Material methodology changes
+            trigger re-tiering of all affected clusters and are noted in the
+            CHANGELOG attached to each cluster's article.
+          </p>
+        </section>
+
+        <!-- Section 5: Limitations -->
+        <section class="article-section" id="sec-limitations">
+          <h2>Limitations <button class="edit-pencil" aria-label="Edit section">Edit</button></h2>
+          <p>
+            The methodology has three known limitations. First, the anchor
+            diversity metric assumes that category labels translate cleanly
+            across national markets, which is imperfect — e.g. the
+            distinction between a hypermarché and a supermarket varies
+            materially between France and Spain. Second, population grids
+            lag actual demographic change by 2–4 years depending on the
+            source. Third, civic facility registries derived from
+            OpenStreetMap exhibit completeness variation by country.
+          </p>
+          <p>
+            Ongoing work targets reducing population grid lag through
+            integration of utility-meter density signals and mobile-network
+            presence data, subject to BCSC privacy posture review.
+          </p>
+        </section>
+
+        <!-- Section 6: See also -->
+        <section class="article-section see-also" id="sec-seealso">
+          <h2>See also <button class="edit-pencil" aria-label="Edit section">Edit</button></h2>
+          <ul>
+            <li><a href="#">Regional Market Matrix</a></li>
+            <li><a href="#">Anchor Tenant Registry</a></li>
+            <li><a href="#">Direct Hold Framework</a></li>
+            <li><a href="#">BIM Floor-Plate Methodology</a></li>
+            <li><a href="#">Catchment Estimation Notes</a></li>
+            <li><a href="#">Co-location Intelligence (portal)</a></li>
+          </ul>
+        </section>
+
+        <!-- References -->
+        <details class="references" id="sec-references" open>
+          <summary>References (3)</summary>
+          <ol>
+            <li id="ref-1">WorldPop 2026 population grid. <a href="#">https://www.worldpop.org</a> — accessed 2026-05-01.</li>
+            <li id="ref-2">US LODES 2022 Origin-Destination Employment Statistics. United States Census Bureau. <a href="#">https://lehd.ces.census.gov</a></li>
+            <li id="ref-3">MITMA ES 2023 — Estudio de la movilidad con Big Data. Ministerio de Transportes y Movilidad Sostenible, Spain. <a href="#">https://www.mitma.gob.es</a></li>
+          </ol>
+        </details>
+
+        <!-- Article footer -->
+        <footer class="article-footer">
+          <div class="bilingual-notice">
+            This article is available in English and Spanish.
+            <span class="sep">|</span>
+            Este artículo está disponible en inglés y español.
+          </div>
+          <div class="footer-meta">
+            <div class="left">
+              <span>Article published 2025-11-12</span>
+              <span>·</span>
+              <span>Revision 14</span>
+            </div>
+            <div class="right">
+              <a href="#">Cite this article</a>
+              <a href="#">Permanent link</a>
+              <a href="#">Download as PDF</a>
+            </div>
+          </div>
+        </footer>
+      </article>
+    </div>
+  </section>
+
+</main>
+
+<!-- Mobile edit FAB (logged-in only) -->
+<button class="edit-fab" aria-label="Edit article">Edit</button>
+
+<script>
+/* =================================================================
+   PROTOTYPE — view, auth, theme switching
+   ================================================================= */
+(function() {
+  'use strict';
+
+  const root = document.documentElement;
+
+  // Set state and update active button visuals
+  function setState(attr, value) {
+    root.setAttribute('data-' + attr, value);
+    document.querySelectorAll('[data-set-' + attr + ']').forEach(btn => {
+      if (btn.tagName === 'BUTTON' || btn.classList.contains('proto-bar')) {
+        btn.classList.toggle('is-active', btn.getAttribute('data-set-' + attr) === value);
+      }
+    });
+    // Scroll to top on view change
+    if (attr === 'view') window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  // Wire up all data-set-* triggers
+  document.querySelectorAll('[data-set-view], [data-set-auth], [data-set-theme]').forEach(el => {
+    el.addEventListener('click', function(e) {
+      ['view', 'auth', 'theme'].forEach(attr => {
+        const v = el.getAttribute('data-set-' + attr);
+        if (v) {
+          e.preventDefault();
+          setState(attr, v);
+        }
+      });
+    });
+  });
+
+  /* ===========================================================
+     STICKY HEADER COLLAPSE
+     =========================================================== */
+  const header = document.getElementById('shellHeader');
+  let lastScroll = 0;
+  let ticking = false;
+
+  function updateHeader() {
+    const y = window.scrollY;
+    if (y > 80) {
+      header.classList.add('is-scrolled');
+    } else {
+      header.classList.remove('is-scrolled');
+    }
+    lastScroll = y;
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      window.requestAnimationFrame(updateHeader);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  /* ===========================================================
+     TOC ACTIVE-SECTION HIGHLIGHTING (IntersectionObserver)
+     =========================================================== */
+  const tocLinks = document.querySelectorAll('.toc-link');
+  const sections = document.querySelectorAll('.article-section');
+
+  if ('IntersectionObserver' in window && sections.length) {
+    const observer = new IntersectionObserver(function(entries) {
+      // Find the topmost intersecting section
+      let topMost = null;
+      let topMostY = Infinity;
+
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const rect = entry.target.getBoundingClientRect();
+          if (rect.top < topMostY && rect.top > -50) {
+            topMostY = rect.top;
+            topMost = entry.target;
+          }
+        }
+      });
+
+      if (topMost) {
+        const id = topMost.id;
+        tocLinks.forEach(link => {
+          const href = link.getAttribute('href');
+          link.classList.toggle('is-active', href === '#' + id);
+        });
+      }
+    }, {
+      rootMargin: '-100px 0px -60% 0px',
+      threshold: [0, 0.25, 0.5, 0.75, 1]
+    });
+
+    sections.forEach(s => observer.observe(s));
+  }
+
+  /* ===========================================================
+     Smooth scroll for TOC links (offset for sticky header)
+     =========================================================== */
+  document.querySelectorAll('.toc-link, .breadcrumb a[href^="#"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        const target = document.getElementById(href.slice(1));
+        if (target) {
+          e.preventDefault();
+          const offset = 80;
+          const y = target.getBoundingClientRect().top + window.scrollY - offset;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }
+    });
+  });
+
+  /* ===========================================================
+     Edit pencil — only show on hover for anon (CSS already)
+     For anon: clicking edit prompts login (stub)
+     =========================================================== */
+  document.querySelectorAll('.edit-pencil').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (root.getAttribute('data-auth') === 'anon') {
+        alert('Please log in to edit this article.');
+      } else {
+        // Stub — would open inline editor
+        console.log('Open editor for section');
+      }
+    });
+  });
+
+  /* ===========================================================
+     Edit FAB on mobile
+     =========================================================== */
+  document.querySelector('.edit-fab').addEventListener('click', function() {
+    console.log('Mobile edit FAB clicked');
+  });
+
+  /* ===========================================================
+     Keyboard shortcuts
+     - "/" focuses search
+     - "g h" goes home, "g a" goes to article (Wikipedia-style "go to")
+     =========================================================== */
+  let lastKey = '';
+  let lastKeyTime = 0;
+  document.addEventListener('keydown', function(e) {
+    if (e.target.matches('input, textarea')) return;
+
+    if (e.key === '/') {
+      e.preventDefault();
+      document.querySelector('.search-input').focus();
+      return;
+    }
+
+    const now = Date.now();
+    if (e.key === 'g' && (now - lastKeyTime) > 1500) {
+      lastKey = 'g';
+      lastKeyTime = now;
+      return;
+    }
+
+    if (lastKey === 'g' && (now - lastKeyTime) < 1500) {
+      if (e.key === 'h') { setState('view', 'home'); lastKey = ''; }
+      if (e.key === 'a') { setState('view', 'article'); lastKey = ''; }
+    }
+  });
+
+  /* ===========================================================
+     Respect prefers-color-scheme on first load
+     =========================================================== */
+  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    // We default to light; user toggle remains in their hands.
+    // Uncomment next line to honour OS preference:
+    // setState('theme', 'dark');
+  }
+
+})();
+</script>
+</body>
+</html>
