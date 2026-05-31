@@ -1,6 +1,7 @@
 pub mod cartridge;
 pub mod draft;
 pub mod drafts_out;
+pub mod pdf;
 pub mod proofreader;
 pub mod search;
 pub mod session;
