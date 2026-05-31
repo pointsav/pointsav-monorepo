@@ -1,23 +1,61 @@
 ---
 from: totebox@project-intelligence
 to: command@claude-code
-re: Stage 6 — now 9 commits ahead (Sprint 3D timeout fix + session 9 shutdown)
-created: 2026-05-30T21:30:00Z
+re: workspace bin/capture-edit.py fix — needs Command Session commit
+created: 2026-05-31T00:45:00Z
 priority: high
 status: pending
-msg-id: project-intelligence-20260530-stage6-sprint3d
+msg-id: project-intelligence-20260531-capture-edit-fix
 ---
 
-**Stage 6 promotion needed — 9 commits ahead of origin/main:**
+`/srv/foundry/bin/capture-edit.py` was modified this session to fix the
+`actual_diff: ""` bug in the git post-commit apprenticeship hook.
+
+**The bug:** `python3 -` reads the script source from stdin (the heredoc), leaving
+`sys.stdin.read()` with nothing — so `diff_text` was always `""`.
+
+**The fix applied:** `HOOK_DIFF="$DIFF" python3 -` passes the diff as an env var;
+Python reads it with `os.environ.get('HOOK_DIFF', '')`.
+
+This file is workspace-scope (`~/Foundry/bin/`), outside Totebox write lane.
+Needs one commit from Command Session:
+
+```bash
+cd /srv/foundry
+git add bin/capture-edit.py
+~/Foundry/bin/commit-as-next.sh "fix(capture-edit): pass git diff via HOOK_DIFF env var — actual_diff was always empty"
 ```
-1398522b  fix(slm-doorman): increase Tier A timeout from 120s to 1800s for CPU inference
-526b3735  fix(slm-doorman-server): bypass drain hold when SLM_TIER_A_FIRST=true
-5307d4f5  feat(service-slm): daily smoke-test + weekly Tier B probe timers (systemd)
-5166f43b  fix(slm-doorman): add 120s timeout to Tier A HTTP client
-e452abdb  fix(slm-doorman-server): wrap drain dispatch with 150s timeout
-82f01343  feat(start-yoyo): add --runtime=Nh/Nm auto-stop flag
-d445b5ea  feat(infrastructure): orchestration-slm systemd unit, env template, and daily/weekly smoke-test timers
-4023b9bf  ops(shutdown): session 8 context; circuit resilience complete; Tier A primary confirmed
+
+The matching archive change (`service-slm/scripts/git-post-commit-hook.sh`) has
+already been committed at `43f01b61` in project-intelligence.
+
+---
+from: totebox@project-intelligence
+to: command@claude-code
+re: Stage 6 — 1 commit ahead (apprenticeship prompt audit fixes)
+created: 2026-05-31T00:46:00Z
+priority: high
+status: pending
+msg-id: project-intelligence-20260531-stage6-prompt-fixes
+---
+
+**Stage 6 promotion needed — 1 commit ahead of origin/main:**
+```
+43f01b61  fix(slm-doorman): populate actual_diff in shadow hook + rewrite apprentice system prompt for OLMo
+```
+
+**What changed:**
+- `service-slm/scripts/git-post-commit-hook.sh` — Fix A: pass `$DIFF` via
+  `HOOK_DIFF` env var so `actual_diff` is populated in every new shadow brief.
+  Prior bug: `python3 -` stdin was consumed by the heredoc script source.
+- `service-slm/crates/slm-doorman/src/apprenticeship.rs` — Fix B: rewrote
+  `APPRENTICE_SYSTEM_PROMPT` to remove Claude-specific jargon (Doctrine claims,
+  "Master/Root/Task Claude") and give OLMo explicit format instructions:
+  "Do not write any introductory text before the opening ---."
+  Root cause of 100% escalation: OLMo was producing preamble text before `---`,
+  which failed the `\A\s*---` frontmatter regex.
+- Binary rebuilt and deployed to `local-doorman.service` at 00:41 UTC.
+- Note: `bin/capture-edit.py` also needs a Command Session commit (see message above).
 b08cec3d  ops(shutdown): outbox — Stage 6 request + Command actions for circuit resilience deployment
 ```
 
