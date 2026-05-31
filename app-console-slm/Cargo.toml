@@ -1,3 +1,5 @@
+[workspace]
+
 [package]
 name = "app-console-slm"
 version = "0.1.0"
@@ -9,10 +11,11 @@ name = "app_console_slm"
 path = "src/lib.rs"
 
 [dependencies]
-app-console-keys = { path = "../app-console-keys" }
-ratatui = "0.29"
-crossterm = { version = "0.28", features = ["event-stream"] }
-anyhow = "1"
-reqwest = { version = "0.12", default-features = false, features = ["json", "blocking", "rustls-tls"] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+clap = { version = "4", features = ["derive", "env"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "blocking"] }
+tokio = { version = "1", features = ["full"] }
+
+[dev-dependencies]
+tempfile = "3"
