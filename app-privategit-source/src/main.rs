@@ -48,9 +48,14 @@ async fn stream_file(path: PathBuf, content_type: &'static str) -> Response {
     }
 }
 
-fn load_verify_key(path: &str) -> Option<VerifyingKey> {
-    let hex = fs::read_to_string(path).ok()?;
-    let bytes = hex::decode(hex.trim()).ok()?;
+fn load_verify_key(val: &str) -> Option<VerifyingKey> {
+    // Accept either a 64-char hex string directly or a path to a file containing one.
+    let hex = if val.len() == 64 && val.chars().all(|c| c.is_ascii_hexdigit()) {
+        val.to_string()
+    } else {
+        fs::read_to_string(val).ok()?.trim().to_string()
+    };
+    let bytes = hex::decode(&hex).ok()?;
     let arr: [u8; 32] = bytes.try_into().ok()?;
     VerifyingKey::from_bytes(&arr).ok()
 }
