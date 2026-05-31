@@ -300,16 +300,12 @@ fn poll_loop(endpoint: String, tx: mpsc::Sender<BgMsg>, refresh_rx: mpsc::Receiv
     // Initial fetch — ignore Result; Err means sender dropped, handled in loop below
     let _ = do_fetch(&endpoint, &tx);
 
-    loop {
-        // Wait for either a refresh signal or the poll interval
-        match refresh_rx.recv_timeout(POLL_INTERVAL) {
-            Ok(()) | Err(mpsc::RecvTimeoutError::Timeout) => {
-                if do_fetch(&endpoint, &tx).is_err() {
-                    // Sender dropped — chassis is shutting down
-                    break;
-                }
-            }
-            Err(mpsc::RecvTimeoutError::Disconnected) => break,
+    while let Ok(()) | Err(mpsc::RecvTimeoutError::Timeout) =
+        refresh_rx.recv_timeout(POLL_INTERVAL)
+    {
+        if do_fetch(&endpoint, &tx).is_err() {
+            // Sender dropped — chassis is shutting down
+            break;
         }
     }
 }
