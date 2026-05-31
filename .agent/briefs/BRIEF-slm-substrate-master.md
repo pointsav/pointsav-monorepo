@@ -76,11 +76,10 @@ notes: >
   SC-2 (defer_reason differentiation), SC-3d (30s retry loop), SC-3e (graph-first write),
   SC-3f (buffer pool env var) — all in commit `e263d6f0`
 
-**Shadow capture state (2026-05-29):**
-- queue/: 0 pending briefs
+**Shadow capture state (2026-05-31 session 13):**
+- queue/: 5 pending briefs
 - queue-done/: 550 briefs (dispatched)
-- queue-poison/: 590 files (accumulated during Tier B outage; mv to quarantine/ before next Yo-Yo start)
-- queue-paused/: 11 files
+- queue-poison/: 78 files (up from 0 at session 11 close; newest have `actual_diff: ""` + no `response_raw` — never dispatched to OLMo; root cause under investigation — see §5)
 - Training corpus: 591 DPO tuples (DEGENERATE — see §Circuit resilience plan) + 1,410 engineering SFT tuples (valid)
 
 **Stage 6 state:** archive ahead of `origin/main`; rebase required per inbox
@@ -353,10 +352,32 @@ Full plan: `/home/mathew/.claude/plans/make-plan-for-what-fluffy-whale.md`
 - [x] **slm-doorman-server rebuilt + deployed** ✓ sha256=`81b8629cf474104fe33274244c6db832a1f2f5dca898c80a98cd524bf3269e2f` — 2026-05-29
 - [x] **Binary ledger updated** ✓ both entries appended to `data/binary-ledger/*.jsonl` — 2026-05-29
 
-- [ ] **Quarantine 590 poison briefs** (Command Session, before next Yo-Yo start)
-  ```bash
-  mv /srv/foundry/data/apprenticeship/queue-poison/* /srv/foundry/data/apprenticeship/quarantine/
-  ```
+- [ ] **Poison queue root cause (session 13)** — 78 entries (up from 0 at session 11).
+  Newest entries (May 31 04:47–04:58 UTC, post-Fix-B) have `actual_diff: ""` + no `response_raw`.
+  Two hypotheses: H1 = pre-Fix-A carry-forward briefs; H2 = hook still broken for some commits.
+  Verify via `brief.created` timestamps vs Fix-A deploy (00:41 UTC May 31).
+  Action: quarantine if H1; investigate hook if H2. See BRIEF-project-intelligence-active-work.md §1.
+
+- [ ] **P0 (Gemini audit) — Doorman audit ledger sha256**
+  File: `service-slm/crates/slm-doorman-server/src/ledger.rs`
+  Add `sha256: String` field to `LedgerEntry`; compute `blake3::hash(serialized_entry)` on every write.
+  Brings Doorman's own inference log to WORM baseline. Does NOT depend on system-ledger.
+
+- [ ] **P1 (Gemini audit) — /readyz structured circuit_breaker_state**
+  File: `service-slm/crates/slm-doorman-server/src/http.rs`
+  Augment Tier B circuit JSON with `reason: Option<String>` (stockout | timeout | error) and
+  `zone: Option<String>`. ~30 LOC. Benefit: app-console-slm status command can display reason.
+
+- [ ] **P2 (Gemini audit) — service-content path decoupling**
+  File: `service-content/src/main.rs`
+  Replace hardcoded `/srv/foundry/...` paths with env vars:
+  `INFRASTRUCTURE_ROOT` (default `/srv/foundry`) and `CORPUS_ROOT` (default
+  `/srv/foundry/data/apprenticeship`). Defaults preserve current behaviour. ~20 LOC.
+
+- [ ] **P3 (Gemini audit) — orchestration-slm persistence**
+  File: `app-orchestration-slm/` (metering/registry module)
+  Replace ephemeral `HashMap` metering with Redb or SQLite persistent store.
+  Required for production-grade audit trail. Estimate: 1 session.
 
 - [ ] **Verify CORPUS extraction via Tier A fallback** — drop a CORPUS file and confirm `[WATCHER-TIER-A]` log entry within 300s
 
