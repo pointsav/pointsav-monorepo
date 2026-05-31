@@ -3,7 +3,7 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Full TODO with all sections and sequencing: `.agent/plans/project-infrastructure-todo.md`.
 
-Last updated: 2026-05-29 (session 12).
+Last updated: 2026-05-31 (session 13).
 
 Architecture: VM-* naming mirrors the os-* product lineup exactly. Each `os-*` binary is the
 source identity; each `VM-*` is the runtime identity. See `BRIEF-VM-ARCHITECTURE.md`.
@@ -201,10 +201,10 @@ pickup notice sent to project-editorial.
   bootstrap architecture. EAPOL approach superseded entirely. Code rewrite gated on Q2–Q6.
   [2026-05-27 totebox@claude-code]
 
-- [ ] **Q2: Ratify `10.50.0.0/24` as the canonical PPN subnet**
-  Code hardcodes `10.50.0.1/2/3`; `guide-lxc-network-admin.md` also uses this range (de
-  facto confirmed). Confirm, then update `route-network-admin/guide-mesh-orchestration.md`
-  + `INVENTORY.yaml`. [2026-05-27 totebox@claude-code]
+- [x] **Q2: Ratify `10.8.0.0/24` as the canonical PPN subnet** — RESOLVED 2026-05-30.
+  Operator-ratified per BRIEF-PPN-ARCHITECTURE. `system-udp` + `app-network-admin` updated
+  to 10.8.0.x (commit 119c494b). Docs (`guide-mesh-orchestration.md`, `INVENTORY.yaml`) still
+  reference old range — Command follow-up to update GUIDE leg. [2026-05-30 totebox@claude-code]
 
 - [ ] **Q3: Provide GCP static IP for cloud relay**
   Needed to complete `fleet-infrastructure-cloud/guide-provision-relay.md` and
@@ -216,9 +216,9 @@ pickup notice sent to project-editorial.
   `guide-mesh-execution.md` references `https://network.woodfinegroup.com`.
   [2026-05-27 totebox@claude-code]
 
-- [ ] **Q5: Is service-slm Doorman deployed at `localhost:9080`?**
-  `app-network-admin/src/main.rs` F8 Gateway still calls subprocess `/opt/pointsav/f8-gateway/system-slm`.
-  Must be replaced with HTTP to `localhost:9080` (BRIEF §9.2 Step 5). [2026-05-27 totebox@claude-code]
+- [x] **Q5: Replace F8 Gateway subprocess with HTTP to `localhost:9080`** — DONE 2026-05-30.
+  `handle_translation` in `app-network-admin/src/main.rs` now POSTs to `localhost:9080/v1/translate`
+  (commit 119c494b). Operator must verify `systemctl is-active local-doorman`. [2026-05-30 totebox@claude-code]
 
 - [ ] **Q6: Flag stale editorial pickup to Command Session outbox?**
   5 draft pairs in `.agent/drafts-outbound/` — 7 days without pickup. [2026-05-27 totebox@claude-code]
@@ -250,8 +250,8 @@ pickup notice sent to project-editorial.
 - [ ] **Short-code pairing ceremony for node join** — CPace PAKE + Crockford base32 8-char
   code; mirrors project-console Phases 1–4. BRIEF §9.2 Step 4. [2026-05-27 totebox@claude-code]
 
-- [ ] **Replace F8 Gateway subprocess with HTTP to `localhost:9080`** — Q5 must be
-  confirmed first. BRIEF §9.2 Step 5. [2026-05-27 totebox@claude-code]
+- [x] **Replace F8 Gateway subprocess with HTTP to `localhost:9080`** — DONE 2026-05-30
+  (commit 119c494b). [2026-05-30 totebox@claude-code]
 
 - [ ] **Replace JSON mesh payloads with 16-byte binary protocol** — BRIEF §9.2 Step 6.
   [2026-05-27 totebox@claude-code]
@@ -286,6 +286,30 @@ pickup notice sent to project-editorial.
   `$HOME/Foundry/pointsav-monorepo/` → `/srv/foundry/vendor/pointsav-monorepo/`.
   Edit lives in `customer/woodfine-fleet-deployment` — Command Session admin-tier.
   [2026-05-20 task@claude-code]
+
+---
+
+## Carry-forward — 2026-05-30 sessions
+
+- [ ] **Stage 6 — moonshot-toolkit v0.3.1** (`d7d1436`) — Command must run `bin/promote.sh`.
+  [2026-05-30 totebox@claude-code]
+- [ ] **Stage 6 — system-core + system-ledger v1.0.0** (`c2ae1e9`) — Command must run `bin/promote.sh`.
+  [2026-05-30 totebox@claude-code]
+- [ ] **Stage 6 — P0 fixes + binary discipline** (`119c494b`, `2553d970`) — Command must run `bin/promote.sh`.
+  [2026-05-30 totebox@claude-code]
+- [ ] **Inbox/manifest/outbox contamination cleanup** — Command must rebuild clean inbox for
+  project-system; correct `manifest.md` cluster field; remove project-gis messages from outbox.
+  Details: outbox msg-id `project-system-20260530-p0-fixes-and-anomalies`. [2026-05-30 totebox@claude-code]
+- [ ] **J2 citation YAML** — 9 entries pending addition to `~/Foundry/citations.yaml` (outbox
+  msg-id: project-system-20260529-j2-citation-yaml). Confirm `aws-nitro-2025` key vs Feb 2024 date.
+  [2026-05-29 totebox@claude-code]
+- [ ] **Bench #9 quiet-VM re-run** — `verify_inclusion_proof` composed 1024-leaf; requires load avg < 1.0.
+  Blocked by persistently high load on workspace VM. [2026-05-29 totebox@claude-code]
+- [ ] **Gitignore: add `system-*/Cargo.lock` + `moonshot-*/Cargo.lock`** — adding `[workspace]` to
+  standalone crates causes Cargo to generate per-crate lockfiles; these are currently untracked.
+  [2026-05-30 totebox@claude-code]
+- [ ] **Verify `systemctl is-active local-doorman` on GCP** — Q5 code fix is deployed; operator
+  must confirm Doorman is running so `app-network-admin` HTTP calls succeed. [2026-05-30 totebox@claude-code]
 
 ---
 
