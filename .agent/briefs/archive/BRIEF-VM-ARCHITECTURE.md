@@ -1,6 +1,8 @@
+> **Archived 2026-06-01: belongs in project-infrastructure archive. Read from there.**
+
 ---
 artifact: brief
-status: active
+status: archived
 created: 2026-05-29
 author: totebox@project-infrastructure
 ---

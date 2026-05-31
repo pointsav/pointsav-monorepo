@@ -1,5 +1,8 @@
+> **Archived 2026-06-01: belongs in project-infrastructure archive. Read from there.**
+
 ---
 artifact: brief
+status: archived
 name: BRIEF-OS-FAMILY
 status: active
 created: 2026-05-29
