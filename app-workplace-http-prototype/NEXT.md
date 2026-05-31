@@ -11,6 +11,11 @@
 - [x] Jennifer confirmed `/workbench` working — /files/ retired (301 → /workbench)
 - [x] Surface toolbar — 8 surfaces in workbench header; `/` redirects to
       `/workbench`; home page retired (4fc7b341)
+- [x] File tree truncation — 75-item cap + "Show N more…" button (6b4940a6)
+- [x] Pin stability audit — path-based unpin; apiPath guard; pinFolder
+      validation (6b4940a6)
+- [x] File tree timestamps — always shows date + time; 5-mode sort cycle
+      (A-Z / Date / Time / Mod / Size) in sidebar toolbar (6afbbb8a)
 - [ ] Retire `app-privategit-workbench` service (9210) — pending: switch
       `/_api/edit/` nginx proxy from 9210 → 9110/workbench + update config.toml
       url_prefix values to match SPA browse paths (_sandbox-jennifer, _command, _clones)
@@ -18,10 +23,10 @@
       survives session exit (currently launched manually)
 - [ ] Auto-refresh tree on background file changes — SSE watcher; clear
       `dataset.loaded` + re-render expanded dirs on "changed" event
-- [ ] Pin stability audit — stale `dataset.pinIdx`; empty `pin.apiPath` guard;
-      context menu path undefined for pinned folder items
 - [ ] File-click delay — split `Promise.all` into independent fetches; show
       viewer from `viewerP` immediately without waiting for `editorP`
+- [ ] Existing broken pins (apiPath="") — user needs to unpin + re-pin from
+      file tree; no automatic migration
 
 ## Stage 2 — Proforma
 
