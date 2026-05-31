@@ -3,6 +3,7 @@ artifact: brief
 status: active
 title: SLM Learning Loop — Training Pipeline + Sovereign Coding Agent
 created: 2026-05-29
+updated: 2026-05-31 (session 14 — corpus audit + research findings; drain paused)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 companion: BRIEF-slm-substrate-master.md
 grounds_in:
@@ -11,6 +12,12 @@ grounds_in:
   - service-slm/crates/slm-doorman-server/src/main.rs (shadow drain worker)
   - DOCTRINE.md claims #49, #54
   - Anthropic ToS §2.c (hard boundary)
+research_sources_2026_05_31:
+  - "Rethinking DPO: The Role of Rejected Responses in Preference Misalignment" arxiv 2506.12725
+  - "What Matters in Data for DPO?" arxiv 2508.18312
+  - "An Empirical Study of SFT-DPO Interaction in Small LMs" arxiv 2603.20100
+  - "CodeDPO: Aligning Code Models with Self Generated and Verified Source Code" arxiv 2410.05605
+  - "More is Less: Synthetic Data Pitfalls in DPO" arxiv 2504.02193
 ---
 
 # BRIEF — SLM Learning Loop
@@ -344,3 +351,99 @@ a single shadow brief takes 17–60 minutes wall-clock time. The 2048-token budg
 for Tier B (GPU) inference. For Tier A (CPU) primary mode, consider reducing `max_tokens`
 to 512–768 for shadow briefs to bring per-brief latency under 10 minutes, at the cost of
 shorter diffs in OLMo's output. This is a separate configuration decision.
+
+---
+
+## §9 — Corpus audit findings + revised architecture (2026-05-31 session 14)
+
+**What we found after a full corpus audit:**
+
+### Corpus reality check
+
+| Path | Count | Quality |
+|---|---|---|
+| `training-corpus/engineering/*/` | 1,410 edit tuples | `actual_diff: ""` — ALL pre-Fix-A, all empty. USELESS for LoRA SFT. |
+| `training-corpus/apprenticeship/shadow-capture/` | 548 tuples | `attempt.diff: ""` — OLMo produced empty diffs. POTENTIALLY HARMFUL for DPO. |
+| `queue/` (pending, post-Fix-A) | 77 entries | Real diffs (Fix A working). NOT YET PROCESSED. **This is the only real signal we have.** |
+
+The 77 pending entries in `queue/` are the first genuinely useful data. They have real
+`actual_diff` content (Fix A deployed 2026-05-31). They are waiting for GPU processing.
+
+### Why CPU DPO is wrong (research-backed)
+
+Five research papers (2024-2026) confirm the current approach is counterproductive on CPU:
+
+1. **Empty rejected samples are HARMFUL, not neutral.** DPO loss is dominated by minimising
+   rejected-sample probability. With empty diffs as rejected samples, the loss function
+   optimises toward nothing — or degrades the chosen samples. The 548 existing shadow-capture
+   tuples should be EXCLUDED from any training run, not just ignored.
+   (Source: arxiv 2506.12725 "Rethinking DPO")
+
+2. **At 1,410 samples, SFT alone outperforms SFT+DPO.** Empirical study on small models:
+   DPO adds instability without benefit below ~5,000 sample threshold.
+   DPO becomes effective only when: dataset >>2K AND model has large capacity AND
+   rejected samples have ≥20% quality gap from chosen.
+   (Source: arxiv 2603.20100 "SFT-DPO Interaction")
+
+3. **OLMo 7B cannot critique its own code reliably.** The apprenticeship system asks OLMo
+   to generate "what would you do differently" — a circular critique requiring the model to
+   be better than it is to give useful feedback. At 7B with Q4_K_M quantisation, the model
+   lacks the reasoning capacity for valid code critique on complex Rust diffs.
+
+4. **CPU drain backlog math:** 77 pending × 30 min avg = 38 hours. New commits add
+   5–10 briefs/day. The backlog grows faster than CPU can drain it — indefinitely.
+
+### Revised architecture (what to do instead)
+
+**Phase 1 — SFT LoRA (GPU, when Yo-Yo is available, ~2 hours)**
+
+The 77 pending entries are direct SFT training data as-is. No OLMo processing needed:
+- `brief.body` + `brief.scope` = instruction/context
+- `actual_diff` = desired output (the real human-authored code change)
+
+Extract these as SFT pairs, run LoRA fine-tuning directly:
+```
+rank=16, alpha=32, target q/k/v/up_proj/down_proj
+5–10 epochs, early stop on held-out loss
+Expected gain: +3–8% on codebase-specific tasks
+```
+This requires no OLMo shadow drain at all — the data is already captured.
+
+**Phase 2 — GPU-gated DPO via CodeDPO (requires Yo-Yo OLMo 3 32B-Think)**
+
+When Yo-Yo is running, use execution-based validation instead of OLMo self-critique:
+1. OLMo 3 32B-Think generates 3–5 candidate diffs per brief (~30s each on GPU)
+2. Run `cargo test` or `cargo check` on each candidate
+3. Chosen = passes tests (or the actual human diff)
+4. Rejected = fails tests (clear, objective signal)
+5. Quality threshold: ≥40% pass-rate gap between chosen and rejected
+6. Target: 200–500 high-confidence DPO pairs before first LoRA run
+
+**Phase 3 — Continuous improvement**
+- SFT refresh monthly with new post-Fix-A commits (domain drift correction)
+- DPO expansion with each Yo-Yo session (execution-validated pairs only)
+- Never train on: empty diffs, self-evaluated pairs, or cross-model inconsistent pairs
+
+### What changed operationally (2026-05-31)
+
+- `SLM_HOLD_THRESHOLD_SECS` changed from `3600` → `1` in `/etc/local-doorman/local-doorman.env`
+- This pauses the CPU drain worker immediately (Tier B has been open for days)
+- SFT capture via post-commit hook continues (new commits still write to `queue/`)
+- CPU is now free for interactive OLMo sessions via Goose
+- The 77 pending briefs are PRESERVED in `queue/` for GPU drain when Yo-Yo returns
+
+### Fix C — decision deferred indefinitely
+
+Fix C (GBNF grammar) was addressing OLMo format failures. With CPU drain paused and
+the architecture shifting to GPU-only drain, Fix C is no longer urgent. Deprioritise.
+When GPU drain resumes, OLMo 3 32B-Think handles format constraints more reliably.
+
+### LoRA fine-tuning — when ready
+
+Checklist before first LoRA run:
+- [ ] Yo-Yo GPU available
+- [ ] Extract 77 post-Fix-A queue entries as SFT pairs (script to write)
+- [ ] Validate `actual_diff` non-empty for all 77 (spot-check 10%)
+- [ ] Run CodeDPO on 50–100 entries (GPU) to generate validated DPO pairs
+- [ ] Exclude all 548 existing shadow-capture tuples from training set
+- [ ] LoRA: rank=16, alpha=32, 5–10 epochs, early stop
