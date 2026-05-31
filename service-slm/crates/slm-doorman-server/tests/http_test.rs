@@ -829,6 +829,7 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
             default_model: "test-model".to_string(),
             contract_version: YOYO_CONTRACT_VERSION.to_string(),
             pricing: PricingConfig::default(),
+            zone: None,
         },
         Arc::new(StaticBearer::new("test-token")),
     );
@@ -1169,6 +1170,7 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
             default_model: "test-model".to_string(),
             contract_version: YOYO_CONTRACT_VERSION.to_string(),
             pricing: PricingConfig::default(),
+            zone: None,
         },
         Arc::new(StaticBearer::new("test-token")),
     );
