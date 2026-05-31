@@ -567,6 +567,15 @@ header .tag {
 .surface-btn .s-icon { font-size: 13px; }
 #surface-sep { width: 1px; height: 16px; background: #333; margin: 0 4px; flex-shrink: 0; }
 
+/* ── File tree — timestamp and sort ──────────────────────────────── */
+.tree-mtime {
+  font-size: 10px; color: #555; margin-left: auto; flex-shrink: 0;
+  padding-left: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.tree-item:hover .tree-mtime { color: #888; }
+.sidebar.sb-collapsed .tree-mtime { display: none; }
+#sb-sort-btn { font-size: 11px; font-weight: 600; letter-spacing: 0.03em; }
+
 /* ── Surface panel (replaces viewer when a non-files surface is active) ── */
 #surface-panel {
   flex: 1; display: none; flex-direction: column;
@@ -634,6 +643,7 @@ header .tag {
     <div id="sidebar-toolbar">
       <button id="sb-toggle-btn" class="sb-tool-btn" title="Toggle sidebar (collapse/expand)">☰</button>
       <button id="sb-hidden-btn" class="sb-tool-btn" title="Toggle hidden files (.agent, .claude, etc.)">👁</button>
+      <button id="sb-sort-btn" class="sb-tool-btn" title="Sort: Name — click to cycle (Name → Date → Size)">A-Z</button>
     </div>
 
     <div id="search-panel">
@@ -824,6 +834,54 @@ let sidebarPinnedWidth = parseInt(sessionStorage.getItem('wb-sidebar-w') || '300
 
 // Hidden-files toggle (persists across reloads)
 let showHidden = localStorage.getItem('wb-show-hidden') === '1';
+
+// Sort mode: 'name' | 'mtime' | 'size'
+let treeSortMode = localStorage.getItem('wb-sort') || 'name';
+
+// ── Timestamp format ──────────────────────────────────────────────────────────
+function fmtMtime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'Z');      // lister returns UTC without trailing Z
+  const now = new Date();
+  const diffMs = now - d;
+  const diffDays = diffMs / 86400000;
+  if (diffDays < 1)  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (diffDays < 7)  return d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+  if (diffDays < 365) return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ── Sort entries using current treeSortMode ───────────────────────────────────
+function sortedEntries(entries) {
+  const visible = entries.filter(e => showHidden || !e.name.startsWith('.'));
+  if (treeSortMode === 'mtime') {
+    return visible.slice().sort((a, b) => (b.mtime || '').localeCompare(a.mtime || ''));
+  }
+  if (treeSortMode === 'size') {
+    const dirs  = visible.filter(e => e.type === 'directory').sort((a,b) => a.name.localeCompare(b.name));
+    const files = visible.filter(e => e.type !== 'directory').sort((a,b) => (b.size || 0) - (a.size || 0));
+    return [...dirs, ...files];
+  }
+  // 'name' — dirs first, then viewable files, then rest
+  const dirs     = visible.filter(e => e.type === 'directory').sort((a,b) => a.name.localeCompare(b.name));
+  const viewable = visible.filter(e => e.type !== 'directory' && VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
+  const rest     = visible.filter(e => e.type !== 'directory' && !VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
+  return [...dirs, ...viewable, ...rest];
+}
+
+// Re-render all currently expanded dirs after sort mode changes.
+function reloadAllExpandedDirs() {
+  document.querySelectorAll('.tree-item[data-type="dir"]').forEach(i => i.removeAttribute('data-loaded'));
+  document.querySelectorAll('.tree-item[data-type="dir"].open').forEach(item => {
+    const node = item.closest('.tree-node');
+    const children = node && (node.querySelector('.tree-children') || node.querySelector('.pinned-folder-children'));
+    if (children && !children.classList.contains('collapsed')) {
+      children.innerHTML = '';
+      const pl = parseInt(item.style.paddingLeft) || 14;
+      loadChildren(item, children, Math.round(pl / 14));
+    }
+  });
+}
 
 // ── File type routing ─────────────────────────────────────────────────────────
 const IFRAME_EXTS = new Set(['html','htm','pdf']);
@@ -2361,19 +2419,21 @@ function buildItem(entry, apiBase, browseBase, depth) {
     item.dataset.api    = apiBase + name + '/';
     item.dataset.browse = browseBase + name + '/';
     item.dataset.type   = 'dir';
+    const dmtime = entry.mtime ? `<span class="tree-mtime">${fmtMtime(entry.mtime)}</span>` : '';
     item.innerHTML =
       `<span class="arrow">▶</span>` +
       `<span class="icon">${iconFor(name, true)}</span>` +
-      `<span class="label">${name}</span>`;
+      `<span class="label">${name}</span>` + dmtime;
   } else {
     item.dataset.href  = browseBase + name;
     item.dataset.type  = 'file';
     item.dataset.label = name;
     const gs = gitStatus.get(browseBase + name);
     const badge = gs ? `<span class="tree-git" data-s="${gs}">●</span>` : '';
+    const fmtime = entry.mtime ? `<span class="tree-mtime">${fmtMtime(entry.mtime)}</span>` : '';
     item.innerHTML =
       `<span class="icon" style="margin-left:14px">${iconFor(name, false)}</span>` +
-      `<span class="label">${name}</span>` + badge;
+      `<span class="label">${name}</span>` + fmtime + badge;
   }
 
   const children = document.createElement('div');
@@ -2404,13 +2464,8 @@ async function loadChildren(item, childrenEl, depth) {
     const apiBase    = item.dataset.api;
     const browseBase = item.dataset.browse;
 
-    const dirs     = entries.filter(e => e.type === 'directory').sort((a,b) => a.name.localeCompare(b.name));
-    const viewable = entries.filter(e => e.type !== 'directory' && VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
-    const rest     = entries.filter(e => e.type !== 'directory' && !VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
-
     const TREE_LIMIT = 75;
-    const allEntries = [...dirs, ...viewable, ...rest]
-      .filter(entry => showHidden || !entry.name.startsWith('.'));
+    const allEntries = sortedEntries(entries);
     const visEntries = allEntries.slice(0, TREE_LIMIT);
     const moreEntries = allEntries.slice(TREE_LIMIT);
 
@@ -2907,11 +2962,7 @@ function renderPinnedSection() {
             const entries = await res.json();
             children.innerHTML = '';
             if (!entries.length) { children.innerHTML = '<div class="empty">Empty</div>'; return; }
-            const dirs = entries.filter(e => e.type === 'directory').sort((a,b) => a.name.localeCompare(b.name));
-            const vw   = entries.filter(e => e.type !== 'directory' && VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
-            const rest = entries.filter(e => e.type !== 'directory' && !VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
-            const allPinEntries = [...dirs, ...vw, ...rest]
-              .filter(entry => showHidden || !entry.name.startsWith('.'));
+            const allPinEntries = sortedEntries(entries);
             const visPinEntries = allPinEntries.slice(0, TREE_LIMIT);
             const morePinEntries = allPinEntries.slice(TREE_LIMIT);
             visPinEntries.forEach(entry => {
@@ -3686,6 +3737,28 @@ searchInput.addEventListener('keydown', e => {
   if (hiddenBtn) {
     hiddenBtn.classList.toggle('active', showHidden);
     hiddenBtn.addEventListener('click', e => { e.stopPropagation(); toggleHiddenFiles(); });
+  }
+
+  // Sort-mode button — cycles Name → Date → Size
+  const sortLabels = { name: 'A-Z', mtime: 'Date', size: 'Size' };
+  const sortTitles = {
+    name:  'Sort: Name — click for Date',
+    mtime: 'Sort: Date (newest first) — click for Size',
+    size:  'Sort: Size (largest first) — click for Name',
+  };
+  const sortCycle = { name: 'mtime', mtime: 'size', size: 'name' };
+  const sortBtn = document.getElementById('sb-sort-btn');
+  if (sortBtn) {
+    sortBtn.textContent = sortLabels[treeSortMode] || 'A-Z';
+    sortBtn.title       = sortTitles[treeSortMode] || '';
+    sortBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      treeSortMode = sortCycle[treeSortMode] || 'name';
+      localStorage.setItem('wb-sort', treeSortMode);
+      sortBtn.textContent = sortLabels[treeSortMode];
+      sortBtn.title       = sortTitles[treeSortMode];
+      reloadAllExpandedDirs();
+    });
   }
 
   // Clicking anywhere on a collapsed sidebar expands it
