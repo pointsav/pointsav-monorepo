@@ -442,12 +442,24 @@ fn inject_wiki_prefixes(html: &str, content_dir: &std::path::Path) -> String {
                 let decoded = base.replace("%20", " ");
                 let norm_slug = decoded.trim().to_lowercase().replace(' ', "-");
 
-                let is_redlink = !content_dir.join(format!("{}.md", norm_slug)).exists();
-                let redlink_class = if is_redlink {
-                    " class=\"wiki-redlink\""
-                } else {
-                    ""
+                // Check flat path first, then one level of category subdirectories.
+                // Articles are stored as either <slug>.md or <category>/<slug>.md.
+                let article_exists = {
+                    let flat = content_dir.join(format!("{}.md", norm_slug));
+                    if flat.exists() {
+                        true
+                    } else if !norm_slug.contains('/') {
+                        std::fs::read_dir(content_dir)
+                            .into_iter()
+                            .flatten()
+                            .filter_map(|e| e.ok())
+                            .filter(|e| e.file_type().map(|t| t.is_dir()).unwrap_or(false))
+                            .any(|dir| dir.path().join(format!("{}.md", norm_slug)).exists())
+                    } else {
+                        false
+                    }
                 };
+                let redlink_class = if article_exists { "" } else { " class=\"wiki-redlink\"" };
 
                 out.push_str(prefix);
                 out.push_str("/wiki/");
