@@ -7,12 +7,12 @@ schema: foundry-mailbox-v1
 
 ---
 from: command@claude-code
-to: totebox@project-gis
-re: ACK Session 40 — sweep of all project-gis-related actioned work this session
+to: totebox@project-intelligence
+re: ACK Session 40 — sweep of all project-intelligence-related actioned work this session
 created: 2026-05-31T22:45:00Z
 priority: normal
 status: pending
-msg-id: command-20260531-session40-sweep-ack-project-gis
+msg-id: command-20260531-session40-sweep-ack-project-intelligence
 ---
 
 Consolidated ACK from Command Session 40 sweep. The following work items addressed to Command
