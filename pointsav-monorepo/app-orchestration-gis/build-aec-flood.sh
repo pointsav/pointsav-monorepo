@@ -92,20 +92,44 @@ echo "" | tee -a "$LOG"
 echo "[1/17] WRI AQUEDUCT 3.0 — 1-in-100yr riverine flood (global, CC BY 4.0)" | tee -a "$LOG"
 
 AQUEDUCT_TIF="$WORK_DIR/aqueduct-flood-100yr.tif"
-AQUEDUCT_URL="https://wri-projects.s3.amazonaws.com/AqueductFloodTool/download/v2/inunriver_historical_000000000WATCH_1980_rp00100.tif"
+AQUEDUCT_SKIP="$WORK_DIR/.aqueduct.skip"
+# Primary URL (WRI S3 v2). If this redirects to a landing page, the --fail flag
+# causes curl to exit non-zero rather than downloading HTML content.
+AQUEDUCT_URLS=(
+    "https://wri-projects.s3.amazonaws.com/AqueductFloodTool/download/v2/inunriver_historical_000000000WATCH_1980_rp00100.tif"
+    "/vsis3/wri-projects/AqueductFloodTool/download/v2/inunriver_historical_000000000WATCH_1980_rp00100.tif"
+)
 
-if [[ ! -f "$AQUEDUCT_TIF" || $(stat -c%s "$AQUEDUCT_TIF") -lt 100000000 ]]; then
+_aqueduct_valid() {
+    [[ -f "$AQUEDUCT_TIF" ]] \
+        && (( $(stat -c%s "$AQUEDUCT_TIF") >= 100000000 )) \
+        && file "$AQUEDUCT_TIF" 2>/dev/null | grep -qi "TIFF\|GeoTIFF"
+}
+
+if [[ -f "$AQUEDUCT_SKIP" ]]; then
+    echo "  SKIP: .aqueduct.skip marker present — skipping AQUEDUCT download" | tee -a "$LOG"
+elif ! _aqueduct_valid; then
     echo "  Downloading AQUEDUCT raster (~5 GB, may take 20–40 min)..." | tee -a "$LOG"
-    curl -L --retry 3 --retry-delay 30 -o "$AQUEDUCT_TIF" "$AQUEDUCT_URL" \
-        2>&1 | tee -a "$LOG"
+    for AQUEDUCT_URL in "${AQUEDUCT_URLS[@]}"; do
+        echo "  Trying: $AQUEDUCT_URL" | tee -a "$LOG"
+        if curl --fail -L --retry 3 --retry-delay 30 -o "$AQUEDUCT_TIF" "$AQUEDUCT_URL" \
+                2>&1 | tee -a "$LOG" && _aqueduct_valid; then
+            echo "  → $AQUEDUCT_TIF ($(du -sh "$AQUEDUCT_TIF" | cut -f1))  ✓" | tee -a "$LOG"
+            break
+        fi
+        rm -f "$AQUEDUCT_TIF"
+    done
+    if ! _aqueduct_valid; then
+        echo "WARN: AQUEDUCT raster unavailable — skipping step 1 and any steps that require it." | tee -a "$LOG"
+        echo "  Primary URL: ${AQUEDUCT_URLS[0]}" | tee -a "$LOG"
+        echo "  Landing page: https://www.wri.org/data/aqueduct-floods-hazard-maps" | tee -a "$LOG"
+        echo "  To fix: find the correct raster URL and place the GeoTIFF at:" | tee -a "$LOG"
+        echo "    $AQUEDUCT_TIF" | tee -a "$LOG"
+        touch "$AQUEDUCT_SKIP"
+    fi
+else
+    echo "  → $AQUEDUCT_TIF ($(du -sh "$AQUEDUCT_TIF" | cut -f1))  ✓ (cached)" | tee -a "$LOG"
 fi
-if [[ ! -f "$AQUEDUCT_TIF" || $(stat -c%s "$AQUEDUCT_TIF") -lt 100000000 ]]; then
-    echo "ERROR: AQUEDUCT raster download failed or too small — check URL:" | tee -a "$LOG"
-    echo "  $AQUEDUCT_URL" | tee -a "$LOG"
-    echo "  Landing page: https://www.wri.org/data/aqueduct-floods-hazard-maps" | tee -a "$LOG"
-    exit 1
-fi
-echo "  → $AQUEDUCT_TIF ($(du -sh "$AQUEDUCT_TIF" | cut -f1))  ✓" | tee -a "$LOG"
 
 # ── Step 2 — Classify + build AQUEDUCT flood PMTiles ─────────────────────────
 #
@@ -125,7 +149,9 @@ echo "[2/17] Build layer11-flood-global.pmtiles from AQUEDUCT" | tee -a "$LOG"
 AQUEDUCT_CLASSIFIED="$WORK_DIR/aqueduct-flood-classified.tif"
 AQUEDUCT_GEOJSON="$WORK_DIR/aqueduct-flood-global.geojson"
 
-if [[ ! -f "$AQUEDUCT_GEOJSON" ]]; then
+if [[ -f "$AQUEDUCT_SKIP" ]]; then
+    echo "  SKIP: .aqueduct.skip marker present — no AQUEDUCT raster to process" | tee -a "$LOG"
+elif [[ ! -f "$AQUEDUCT_GEOJSON" ]]; then
     # Classify into 0–5 byte raster (0=no flood, 1=very_low, 2=low, 3=medium, 4=high, 5=very_high)
     gdal_calc.py \
         -A "$AQUEDUCT_TIF" \

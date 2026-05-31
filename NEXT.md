@@ -1,360 +1,47 @@
-# NEXT.md — project-infrastructure (cluster/project-infrastructure branch)
+# NEXT.md — project-gis
 
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Full TODO with all sections and sequencing: `.agent/plans/project-infrastructure-todo.md`.
 
-Last updated: 2026-05-31 (session 13).
-
-Architecture: VM-* naming mirrors the os-* product lineup exactly. Each `os-*` binary is the
-source identity; each `VM-*` is the runtime identity. See `BRIEF-VM-ARCHITECTURE.md`.
+Last updated: 2026-05-31
 
 ---
 
 ## VM-MediaKit — Phase 1 COMPLETE (6/6) [2026-05-29]
 
-- [x] Ubuntu 24.04 QEMU provisioned (6 GiB RAM, 2 CPUs, TCG; port-forward NAT on GCP host)
-  [2026-05-29 totebox@claude-code]
-- [x] 6/6 services migrated: proofreader (9092) · knowledge-documentation (9090) ·
-  knowledge-corporate (9095) · knowledge-projects (9093) · marketing-pointsav (9101) ·
-  marketing/woodfine (9102). All originals still running on host. No DNS changes.
-  [2026-05-29 totebox@claude-code]
-- [x] `guide-vm-mediakit-provision` + `guide-vm-mediakit-service-migration` staged (commit 4a53d3af)
-  [2026-05-29 totebox@claude-code]
-- [x] `topic-os-mediakit` corrected for Ubuntu 24.04 (session 10)
-  [2026-05-29 totebox@claude-code]
-- [x] systemd units reorganised → `infrastructure/systemd/mediakit/`
-  [2026-05-29 totebox@claude-code]
-- [ ] Binary-ledger sha256 entries — pending Stage 6 + nightly build rebuild
-
----
-
-## VM-Totebox — Phase 1 (blocked on Command promoting project-data)
-
-- [ ] **service-fs binary available on host** — blocked: Command must promote project-data (33 commits).
-  Outbox sent to project-data with install instructions.
-  [2026-05-29 totebox@claude-code]
-- [ ] **VM-Totebox QEMU instance provisioned** — `infrastructure/virt/provision-vm-totebox.sh`
-  (stub exists; implementation follows service-fs availability)
-  [2026-05-29 totebox@claude-code]
-- [ ] **service-fs install inside VM-Totebox** — follows promotion
-  [2026-05-29 totebox@claude-code]
-- [ ] **system-core + system-ledger install** — pending project-system (outbox sent; 95 tests must pass)
-  [2026-05-29 totebox@claude-code]
-
----
-
-## VM-Orchestration — Phase 1
-
-- [ ] **Provision VM-Orchestration** — new QEMU instance, separate from vm-mediakit.
-  `infrastructure/virt/provision-vm-orchestration.sh` (stub exists)
-  [2026-05-29 totebox@claude-code]
-- [ ] **app-orchestration-bim (9096)** — install + smoke test. Was previously mis-scoped to
-  VM-MediaKit; correct scope is VM-Orchestration. Depends on VM-Totebox service-fs.
-  [2026-05-29 totebox@claude-code]
-- [ ] **app-orchestration-gis instance** [2026-05-29 totebox@claude-code]
-- [ ] **app-orchestration-slm instance (:9180)** [2026-05-29 totebox@claude-code]
-
----
-
-## VM-PrivateGit — Phase 1 (future)
-
-- [ ] **Provision VM-PrivateGit** — `infrastructure/virt/provision-vm-privategit.sh` (stub exists)
-  [2026-05-29 totebox@claude-code]
-- [ ] **app-privategit-source-control install** (Gitea + SSH)
-  [2026-05-29 totebox@claude-code]
-- [ ] **app-privategit-design-system** (Storybook)
-  [2026-05-29 totebox@claude-code]
-
----
-
-## VM-Infrastructure — fabric bootstrap (3-node trust mesh)
-
-### Phase 1 — Resource pool (session 12)
-
-- [x] `system-vm-fleet-types` scaffolded (4/4 tests pass) [2026-05-29 totebox@claude-code]
-- [x] `service-vm-fleet` scaffolded (8/8 tests pass; axum :9203; advisory placement; `auto_rebalance: false`) [2026-05-29 totebox@claude-code]
-- [x] `service-vm-host` scaffolded (host_stats tests pass; /proc/meminfo reader; qemu_monitor Phase 1 stub) [2026-05-29 totebox@claude-code]
-- [x] `infrastructure/systemd/ppn/local-vm-host.service` + `infrastructure/systemd/orchestration/local-vm-fleet.service` created [2026-05-29 totebox@claude-code]
-- [x] `kvm_available` field in NodeHeartbeat + NodeRecord; `prefer_kvm` in CreateVmRequest; KVM-first placement with TCG fallback (5+10+3=18 tests pass) [2026-05-30 totebox@claude-code]
-- **Node roles — GCP e2 does not support nested KVM (e2 family limitation). Three roles:**
-  - GCP e2-standard-8: fleet coordinator + TCG-only VMs (vm-mediakit already live); `prefer_kvm: false`
-  - Laptop A (10.8.0.6): primary KVM compute — VM-Totebox, VM-PrivateGit; `prefer_kvm: true`
-  - Laptop B (10.8.0.1): primary KVM compute (KVM TBD); `prefer_kvm: true`
-- **GCP TCG test path for os-infrastructure images:** `qemu-system-x86_64 -nographic -m 256M -kernel os-infra.bin` — boots image without nested KVM; validates boot sequence + WireGuard setup at TCG speed
-- [ ] **GCP nested KVM: NOT available on e2.** To enable later: migrate to n2-standard-8 (same specs, ~10–15% higher cost). Defer until os-* images proven on laptops. [2026-05-30 totebox@claude-code]
-- [ ] **Verify Laptop A KVM** — `ls /dev/kvm` on Laptop A; if absent: `sudo modprobe kvm kvm_intel` [2026-05-29 totebox@claude-code]
-- [ ] **Stage 6 — session 12 commits** — promote system-vm-fleet-types, service-vm-fleet, service-vm-host to canonical after this session commits. [2026-05-29 totebox@claude-code]
-- [ ] **Deploy service-vm-fleet on GCP** — install binary + enable `local-vm-fleet.service` (after Stage 6). See `guide-vm-infrastructure-resource-pool.draft.md`. [2026-05-29 totebox@claude-code]
-- [ ] **Deploy service-vm-host on all three nodes** — `local-vm-host.service` on GCP + Laptop A + Laptop B (after Stage 6). [2026-05-29 totebox@claude-code]
-- [ ] **Verify fleet: `curl :9203/v1/fleet`** — all 3 nodes appear within 15s of deployment. [2026-05-29 totebox@claude-code]
-
-### Phase 1 — Genesis Protocol
-
-- [x] Alpine Linux TCG proof-of-concept (`vm-prove.sh`, 2026-05-28) — virtio_balloon confirmed
-- [ ] **Deploy `service-ppn-pairing` on GCP** — build release binary + install systemd unit
-  `infrastructure/systemd/ppn/local-ppn-pairing.service`. Listens on `0.0.0.0:9202`.
-  [2026-05-28 totebox@claude-code]
-- [ ] **Build + copy `os-network-admin` to Laptop A** — `cargo build --release -p os-network-admin`
-  then deploy to iMac with `PAIRING_SERVER=http://10.8.0.9:9202`. [2026-05-28 totebox@claude-code]
-- [ ] **provision-vm-infrastructure-cloud.sh** — GCP genesis-seed node (stub exists; implement after Q2–Q6)
-  [2026-05-29 totebox@claude-code]
-- [ ] **provision-vm-infrastructure-onprem.sh** — Laptop A join (stub exists; implement after Q2–Q6)
-  [2026-05-29 totebox@claude-code]
-- [ ] **Deferred: os-network-admin ratatui TUI** — keyboard approve/deny; QR; expiry countdown.
-  [2026-05-28 totebox@claude-code]
-
----
-
-## Leapfrog 2030 — resource targets (session 12)
-
-See `BRIEF-LEAPFROG-2030.md` for full rationale and target table.
-
-Phase 3 targets: os-infrastructure 8 MB disk / 12 MB RAM idle; os-totebox 16 MB / 24 MB;
-os-mediakit 24 MB† / 32 MB†; os-orchestration 12 MB / 18 MB; os-privategit 20 MB† / 24 MB†.
-(† contingent on retiring MediaWiki/PHP and Gitea/Go respectively.)
-
-- [ ] **Application decision: retire MediaWiki/PHP for Rust static renderer** — gates os-mediakit P3 target. Not sequenced; operator decision required. [2026-05-29 totebox@claude-code]
-- [ ] **Application decision: retire Gitea/Go for gitoxide-based server** — gates os-privategit P3 target. Not sequenced; operator decision required. [2026-05-29 totebox@claude-code]
-- [ ] **AArch64 hardware acquisition** — gates os-infrastructure Phase 3 seL4 Microkit. [2026-05-29 totebox@claude-code]
-- [ ] **Phase 2: NetBSD 11.0 provision scripts** — `provision-vm-infrastructure-netbsd.sh` (NetBSD stable release expected 2026). [2026-05-29 totebox@claude-code]
-
----
-
-## os-mediakit seL4 — Phase 3 (planned — operator decision needed first)
-
-- [ ] **Operator decision: AArch64 GCP C4A vs Firecracker x86_64 on Laptop A**
-  Option A: AArch64 GCP C4A Arm instance — Microkit 2.2 native, formal proof (~$50-100/mo)
-  Option B: Firecracker + WireGuard on Laptop A — x86_64, KVM-native, pragmatic, free
-  Option C: seL4 x86_64 Multiboot2 — years of new toolchain work, not recommended
-  See BRIEF-totebox-transformation §9/§11 for full analysis.
-  [2026-05-29 totebox@claude-code]
-
-- [ ] **project-system: wire os-mediakit as AArch64 seL4 Microkit rootserver** — 7-step
-  build instructions sent to project-system outbox (2026-05-29). Gated on operator decision.
-  [2026-05-29 totebox@claude-code]
-
----
-
-## TOPIC + GUIDE leg — drafts staged, needs editorial pickup
-
-Session 12 additions: `topic-vm-architecture` updated (NVMM fix + Resource Pooling section);
-`topic-os-infrastructure-ppn-node` new TOPIC pair (EN+ES); `guide-vm-infrastructure-resource-pool`
-new GUIDE. Pickup notice to be sent via outbox.
-
-Twelve TOPIC draft pairs + 4 GUIDE drafts + 1 new TOPIC pair in `.agent/drafts-outbound/`;
-pickup notice sent to project-editorial.
-
-**TOPICs (content-wiki-documentation):**
-- [ ] `topic-sovereign-mesh` + `.es` — expands stub at `infrastructure/sovereign-mesh.md` [session 2]
-- [ ] `topic-genesis-protocol` + `.es` — new; `architecture/genesis-protocol.md` [session 3]
-- [ ] `topic-ppn-command-protocol` + `.es` — new; `architecture/ppn-command-protocol.md` [session 3]
-- [ ] `topic-service-pointsav-link` + `.es` — new; `architecture/service-pointsav-link.md` [session 3]
-- [ ] `topic-os-network-admin` + `.es` — new; replaces published `systems/os-network-admin.md` [session 5]
-- [ ] `topic-ppn-hypervisor-resource-pool` + `.es` — updated; §: Planned cross-node extension [session 7]
-- [ ] `topic-totebox-archive` + `.es` — new; `systems/totebox-archive.md` [session 6]
-- [ ] `topic-ppn-architecture-overview` + `.es` — updated; distributed fabric paragraph [session 7]
-- [ ] `topic-ppn-distributed-vm-fabric` + `.es` — new; full distributed VM fabric [session 7]
-- [ ] `topic-os-mediakit` + `.es` — updated session 10: Ubuntu 24.04 fix; Phase 1 service table corrected [session 8, corrected 10]
-- [ ] `topic-vm-architecture` + `.es` — updated session 12: NVMM correction + Resource Pooling section [session 11, updated 12]
-- [ ] `topic-os-infrastructure-ppn-node` + `.es` — new; deep dive on os-infrastructure as PPN node OS; Phase 1/2/3 stacks; Genesis Protocol; resource targets [session 12]
-
-**GUIDEs (woodfine-fleet-deployment/fleet-infrastructure/) — session 12:**
-- [ ] `guide-vm-infrastructure-resource-pool` — resource pool setup across 3 nodes; GCP KVM; deploy service-vm-fleet + service-vm-host; verify; troubleshooting [session 12]
-
-**GUIDEs (woodfine-fleet-deployment/fleet-infrastructure/) — session 10:**
-- [ ] `guide-vm-mediakit-provision` — provision-vm-mediakit.sh runbook; cloud-init; pkg install; TCG notes [session 10]
-- [ ] `guide-vm-mediakit-service-migration` — migrate-service-to-vm.sh; per-service instructions; pre-DNS checklist [session 10]
-
-**GUIDEs (woodfine-fleet-deployment/fleet-infrastructure/):**
-- [ ] `guide-ppn-first-deployment` — 5-step deployment sequence; VM capacity planning table [session 7]
-- [ ] `guide-node-join-ceremony` — approval workflow [session 6]
-- [ ] `guide-vm-prove-balloon-demo` — vm-prove.sh + virtio_balloon demo [session 6]
-
----
-
-## Dev-environment bootstrap (unblocked — activate first ceremony)
-
-- [ ] **Deploy `service-ppn-pairing` on GCP VM** — build release binary + install systemd unit
-  `infrastructure/systemd/local-ppn-pairing.service`. Listens on `0.0.0.0:9202`.
-  [2026-05-28 totebox@claude-code]
-
-- [ ] **Build + copy `os-network-admin` to Laptop A (iMac)** — `cargo build --release -p os-network-admin`
-  then `scp target/release/os-network-admin mathew@10.8.0.6:~/bin/`. Run with
-  `PAIRING_SERVER=http://10.8.0.9:9202 ~/bin/os-network-admin`. [2026-05-28 totebox@claude-code]
-
-- [x] **Run `infrastructure/virt/vm-prove.sh` — GCP TCG proof complete 2026-05-28.**
-  Alpine Linux 3.20 (kernel 6.6.31-0-virt) booted in 114s via TCG. virtio_balloon
-  inflation confirmed: `balloon 128` → `actual=128`; deflation: `balloon 256` →
-  `actual=256`. Full KVM proof on Laptop A (hardware VT-x) remains for production
-  validation. [2026-05-28 totebox@claude-code]
-
-### Active coding — cluster/project-console
-
-| Phase | Status | Commit |
-|---|---|---|
-| Phase 3 — Kitty/Sixel pixel QR | Complete | `11135186` |
-| Phase 4 — F11 System Cartridge; pending-pair panel | Complete | `28000772` |
-| Phase 5 — Draft mode; `/new` slash command; Doorman Tier B SSE | Complete | `5118ce77` |
-| Phase 6 — Offline mode + Tantivy search | **Pending** | — |
-| Phase B — Cross-platform CI matrix + TerminalCaps | **Complete** | `6f21f580` |
-| Phase C — Email cartridge (F3) | **Next** | — |
-| Phase D — SLM cartridge (F9) | **Next** | — |
-| Phase E — Orchestration wiring | **Next** | — |
-| Phase 7–12 | Not started | — |
-
-- [ ] **Phase C: Email cartridge (F3)** — convert `app-console-email` stub → lib crate;
-  implement `EmailCartridge` (inbox list, read pane, compose/send via `service-email`);
-  wire into `os-console/src/main.rs`. Backend: `service-email` in `project-data`.
-  [2026-05-30 totebox@project-console]
-
-- [ ] **Phase D: SLM cartridge (F9)** — convert `app-console-slm` stub → lib crate;
-  implement `SlmCartridge` (Doorman health at `localhost:9080`, Yo-Yo tier display, corpus
-  panel); wire into `os-console/src/main.rs`. [2026-05-30 totebox@project-console]
-
-- [ ] **Phase E: Orchestration wiring** — audit `os-console/src/mba_client.rs`; update
-  `ConsoleConfig` to name `orchestration_host`; no `app-orchestration-command` crate.
-  [2026-05-30 totebox@project-console]
-
-- [ ] **Deferred: os-network-admin ratatui TUI** — keyboard approve/deny (a/d); QR rendering
-  via `system-pairing-codes::qr_unicode`; expiry countdown. Full §9.2 Step 4 UX.
-  [2026-05-28 totebox@claude-code]
-
-~~**Pre-Phase 6 blocker:** Doorman port discrepancy.~~ **RESOLVED 2026-05-30.** Authoritative port is
-`127.0.0.1:9080` (from `local-doorman.service` `SLM_BIND_ADDR`). Fixed in this session:
-`app-console-content/src/cartridge.rs` + `app-console-keys/src/config.rs` (default `slm_endpoint`)
-+ `BRIEF-leapfrog-2030-coding.md` + `BRIEF-os-console-platform.md` + `session-start.md`.
-[2026-05-30 totebox@project-console]
-
-### Layout hygiene — defect closures queued
-
----
-
-## Blocking — operator decisions needed first
-
-- [x] **Decide: EAPOL-monitor-mode vs Genesis Protocol** — **RESOLVED: Genesis Protocol.**
-  BRIEF-PPN-ARCHITECTURE.md (2026-05-27) establishes Genesis Protocol as the canonical
-  bootstrap architecture. EAPOL approach superseded entirely. Code rewrite gated on Q2–Q6.
-  [2026-05-27 totebox@claude-code]
-
-- [x] **Q2: Ratify `10.8.0.0/24` as the canonical PPN subnet** — RESOLVED 2026-05-30.
-  Operator-ratified per BRIEF-PPN-ARCHITECTURE. `system-udp` + `app-network-admin` updated
-  to 10.8.0.x (commit 119c494b). Docs (`guide-mesh-orchestration.md`, `INVENTORY.yaml`) still
-  reference old range — Command follow-up to update GUIDE leg. [2026-05-30 totebox@claude-code]
-
-- [ ] **Q3: Provide GCP static IP for cloud relay**
-  Needed to complete `fleet-infrastructure-cloud/guide-provision-relay.md` and
-  `os-network-admin/scripts/mesh_status.sh` (`[ENTER_YOUR_GCP_STATIC_IP_HERE]` placeholder).
-  [2026-05-27 totebox@claude-code]
-
-- [ ] **Q4: Confirm Laptop B local IP + `network.woodfinegroup.com` DNS status**
-  `guide-deploy-vpn.md` has `<LOCAL_IP_OF_LAPTOP_B>` placeholder.
-  `guide-mesh-execution.md` references `https://network.woodfinegroup.com`.
-  [2026-05-27 totebox@claude-code]
-
-- [x] **Q5: Replace F8 Gateway subprocess with HTTP to `localhost:9080`** — DONE 2026-05-30.
-  `handle_translation` in `app-network-admin/src/main.rs` now POSTs to `localhost:9080/v1/translate`
-  (commit 119c494b). Operator must verify `systemctl is-active local-doorman`. [2026-05-30 totebox@claude-code]
-
-- [ ] **Q6: Flag stale editorial pickup to Command Session outbox?**
-  5 draft pairs in `.agent/drafts-outbound/` — 7 days without pickup. [2026-05-27 totebox@claude-code]
-
----
-
-## BRIEF — PPN Architecture (gate for all code decisions)
-
-- [x] **`BRIEF-PPN-ARCHITECTURE.md` written** — Yale PhD thesis quality; 385 lines / 39.5 KB;
-  57-citation bibliography; Genesis Protocol confirmed; CPace PAKE + SAS short-code pairing;
-  CAmkES OS personality; intransitive non-interference invariant. Committed 2026-05-27.
-  All code work in §9.2 build order is now unblocked at the architecture level; operator
-  decisions Q2–Q6 gate individual implementation steps. [2026-05-27 totebox@claude-code]
-
----
-
-## Code — implement Genesis Protocol (gated on Q2–Q6)
-
-- [ ] **Rewrite `os-infrastructure/src/main.rs`** — Genesis Protocol boot sequence
-  (blind boot → mDNS scan → genesis fork → WebSocket holding pattern → admin claim).
-  Replaces broken EAPOL approach. BRIEF §9.2 Step 1. [2026-05-27 totebox@claude-code]
-
-- [ ] **Implement `system-substrate-broadcom/src/lib.rs`** — `silicon_ping() -> bool`,
-  Broadcom 14e4:16b4 PCI detection, no_std. BRIEF §9.2 Step 2. [2026-05-27 totebox@claude-code]
-
-- [ ] **Implement `system-network-interface/src/lib.rs`** — WireGuard/mDNS substrate
-  (replaces 4-line scaffold). BRIEF §9.2 Step 3. [2026-05-27 totebox@claude-code]
-
-- [ ] **Short-code pairing ceremony for node join** — CPace PAKE + Crockford base32 8-char
-  code; mirrors project-console Phases 1–4. BRIEF §9.2 Step 4. [2026-05-27 totebox@claude-code]
-
-- [x] **Replace F8 Gateway subprocess with HTTP to `localhost:9080`** — DONE 2026-05-30
-  (commit 119c494b). [2026-05-30 totebox@claude-code]
-
-- [ ] **Replace JSON mesh payloads with 16-byte binary protocol** — BRIEF §9.2 Step 6.
-  [2026-05-27 totebox@claude-code]
-
-- [ ] **Add focus crates to root `Cargo.toml` workspace members** — `os-infrastructure`,
-  `os-network-admin`, `system-network-interface`, `system-substrate-broadcom`.
-  [2026-05-27 totebox@claude-code]
-
----
-
-## Future milestones — balloon controller + PSP + Phase 4 gateway
-
-- [ ] **Balloon controller in `os-infrastructure`** — the virtio_balloon controller that decides
-  when to inflate/deflate each VM's balloon in response to demand signals. Planned milestone.
-  Until implemented, operators use QEMU monitor: `balloon 128` / `info balloon`.
-  [2026-05-28 totebox@claude-code]
-
-- [ ] **PSP (PointSav Protocol) implementation** — the capability-based binary protocol over TLS
-  that `os-orchestration` uses to query Totebox Archives. Stateless aggregator sends signed
-  capability objects; Totebox verifies and emits only result rows. Planned milestone.
-  [2026-05-28 totebox@claude-code]
-
-- [ ] **Phase 4 gateway: `gateway-orchestration-command-1`** — inbound MBA connections via PSP;
-  multi-archive query routing. Gated on PSP protocol implementation.
-  [2026-05-28 totebox@claude-code]
-
----
-
-## GUIDE leg — cross-repo fix (Command Session scope)
-
-- [ ] **`fleet-infrastructure-leased/guide-deploy-vpn.md`** — fix hardcoded path
-  `$HOME/Foundry/pointsav-monorepo/` → `/srv/foundry/vendor/pointsav-monorepo/`.
-  Edit lives in `customer/woodfine-fleet-deployment` — Command Session admin-tier.
-  [2026-05-20 task@claude-code]
-
----
-
-## Carry-forward — 2026-05-30 sessions
-
-- [ ] **Stage 6 — moonshot-toolkit v0.3.1** (`d7d1436`) — Command must run `bin/promote.sh`.
-  [2026-05-30 totebox@claude-code]
-- [ ] **Stage 6 — system-core + system-ledger v1.0.0** (`c2ae1e9`) — Command must run `bin/promote.sh`.
-  [2026-05-30 totebox@claude-code]
-- [ ] **Stage 6 — P0 fixes + binary discipline** (`119c494b`, `2553d970`) — Command must run `bin/promote.sh`.
-  [2026-05-30 totebox@claude-code]
-- [ ] **Inbox/manifest/outbox contamination cleanup** — Command must rebuild clean inbox for
-  project-system; correct `manifest.md` cluster field; remove project-gis messages from outbox.
-  Details: outbox msg-id `project-system-20260530-p0-fixes-and-anomalies`. [2026-05-30 totebox@claude-code]
-- [ ] **J2 citation YAML** — 9 entries pending addition to `~/Foundry/citations.yaml` (outbox
-  msg-id: project-system-20260529-j2-citation-yaml). Confirm `aws-nitro-2025` key vs Feb 2024 date.
-  [2026-05-29 totebox@claude-code]
-- [ ] **Bench #9 quiet-VM re-run** — `verify_inclusion_proof` composed 1024-leaf; requires load avg < 1.0.
-  Blocked by persistently high load on workspace VM. [2026-05-29 totebox@claude-code]
-- [ ] **Gitignore: add `system-*/Cargo.lock` + `moonshot-*/Cargo.lock`** — adding `[workspace]` to
-  standalone crates causes Cargo to generate per-crate lockfiles; these are currently untracked.
-  [2026-05-30 totebox@claude-code]
-- [ ] **Verify `systemctl is-active local-doorman` on GCP** — Q5 code fix is deployed; operator
-  must confirm Doorman is running so `app-network-admin` HTTP calls succeed. [2026-05-30 totebox@claude-code]
-
----
-
-## Completed this cluster (archived for reference)
-
-- [x] Sweep project-intelligence contamination from archive (2026-05-20 session 1)
-- [x] Fix `session-start.md`, `manifest.md` slug mismatch, `NEXT.md`, memory init (session 1)
-- [x] Stage `sovereign-mesh.md` + `.es.md` drafts to `drafts-outbound/` (session 2)
-- [x] Fix `os-infrastructure/Makefile` script name (session 2)
-- [x] Fix `os-infrastructure/forge_iso.sh` hardcoded path (session 2)
-- [x] Gitignore build artifacts in `os-infrastructure/` and `os-network-admin/` (session 2)
-- [x] Create `app-infrastructure-onprem/`, `-leased/`, `-cloud/` Reserved-folder scaffolds (session 2)
-- [x] Split `system-network-interface` → extract F8 Gateway binary to `app-network-admin/` (session 2)
+- [ ] **J1 §7.2 OLS regression** — `log(catchment_entropy) ~ tier + log(pop_150km) + C(country)`.
+      Blocked on Phase 24B: Kontur H3 population join to `work/clusters-ols.csv`. [2026-05-28]
+- [ ] **J1 permutation test** — `sim-tier-permutation.py`; 10,000 spatial shuffles, one-tailed p-value. [2026-05-28]
+- [ ] **J3 §6 Results** — AEC flood + seismic build coverage metrics required. [2026-05-29]
+
+## AEC pipeline
+
+- [ ] **Flood build (Night 5)** — Aqueduct URL fix applied 2026-05-31 (skip-on-failure logic added).
+      Re-run crontabbed 2026-06-02T05:00Z. Check `build-aec-flood.log` at session start.
+- [ ] **Seismic rebuild** — URL fix in bd17a348; crontabbed 2026-06-01T05:00Z.
+      Check `build-aec-seismic.log` at next session start.
+- [ ] **Coverage metrics export script** — write `export-aec-coverage.py` additions for flood + seismic
+      after both builds complete. Feeds J3 §6 Results and GUIDE A14.
+
+## Stage 6 pending
+
+- [ ] **4 commits** (39aa1b11 → d1899abb) awaiting Command Session canonical promote.
+      Staging divergence documented in outbox `project-gis-20260530-staging-divergence`.
+      Needs rebase/cherry-pick reconciliation before canonical push.
+- [ ] **Session cleanup commit** (this session) — pending; will add to Stage 6 queue.
+
+## Regional Markets
+
+- [ ] **294488f gap** — re-dispatch signal sent to project-editorial
+      (outbox `project-gis-20260531-rm-redispatch-294488f`). Command to verify
+      content-wiki-projects after project-editorial re-commits.
+- [ ] **A10/A11/A12** — hold pending revision (methodology correction applies).
+      Wichita suburbs (Derby KS, Andover KS) may qualify under corrected definition; needs
+      data verification from `score-regional-markets.py` output.
+
+## Editorial backlog dispatched this session
+
+- [x] **B13** TOPIC-regional-name-resolution — dispatched 2026-05-31
+- [x] **B14** TOPIC-colocation-tier-nomenclature — dispatched 2026-05-31
+- [x] **B15** TOPIC-gis-as-bim-substrate — dispatched 2026-05-31
+- [x] **B16** TOPIC-uk-eu-food-retail-coverage — dispatched 2026-05-31
