@@ -52,3 +52,28 @@ pub fn append(rec: &IngestRecord) -> Result<()> {
     )?;
     Ok(())
 }
+
+/// Read the most recent `limit` ingest records, newest first.
+/// Returns an empty Vec if the table is empty or the DB does not exist yet.
+pub fn query_recent(limit: usize) -> Result<Vec<IngestRecord>> {
+    let conn = open_db()?;
+    let mut stmt = conn.prepare(
+        "SELECT created_at, username, tenant, path, ledger_id, status
+         FROM ingest_log ORDER BY id DESC LIMIT ?1",
+    )?;
+    let rows = stmt.query_map(params![limit as i64], |row| {
+        Ok(IngestRecord {
+            created_at: row.get(0)?,
+            username: row.get(1)?,
+            tenant: row.get(2)?,
+            path: row.get(3)?,
+            ledger_id: row.get(4)?,
+            status: row.get(5)?,
+        })
+    })?;
+    let mut out = Vec::new();
+    for r in rows {
+        out.push(r?);
+    }
+    Ok(out)
+}

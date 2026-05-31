@@ -18,6 +18,16 @@ use crate::{
 
 const SPINNER: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
+fn truncate(s: &str, max: usize) -> String {
+    if s.chars().count() <= max {
+        s.to_string()
+    } else {
+        let mut out: String = s.chars().take(max.saturating_sub(1)).collect();
+        out.push('…');
+        out
+    }
+}
+
 // ── Single-line path input ───────────────────────────────────────────────────
 
 struct PathInput {
@@ -129,6 +139,10 @@ enum InputState {
         path: String,
         result: IngestResult,
     },
+    AuditLog {
+        records: Vec<IngestRecord>,
+        scroll: u16,
+    },
     Error {
         message: String,
     },
@@ -223,7 +237,7 @@ impl InputCartridge {
         self.path_input.render_into(frame, chunks[2]);
 
         frame.render_widget(
-            Paragraph::new("  [Enter: confirm  Esc: cancel]")
+            Paragraph::new("  [Enter: confirm  Esc: cancel  Ctrl-A: audit log]")
                 .style(Style::default().fg(Color::DarkGray)),
             chunks[3],
         );
@@ -338,6 +352,57 @@ impl InputCartridge {
         frame.render_widget(Paragraph::new(lines), inner);
     }
 
+    fn render_audit(frame: &mut Frame, area: Rect, records: &[IngestRecord], scroll: u16) {
+        // Full-pane (not modal) — audit log can be long.
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Cyan))
+            .title(" F12: Input Machine — Audit Log    [j/k: scroll  Esc: back] ");
+        let inner = block.inner(area);
+        frame.render_widget(block, area);
+
+        if records.is_empty() {
+            frame.render_widget(
+                Paragraph::new("  No ingest events recorded yet.")
+                    .style(Style::default().fg(Color::DarkGray)),
+                inner,
+            );
+            return;
+        }
+
+        let lines: Vec<Line> = records
+            .iter()
+            .map(|r| {
+                let status_color = match r.status.as_str() {
+                    "ok" => Color::Green,
+                    "warned" => Color::Yellow,
+                    "error" => Color::Red,
+                    _ => Color::DarkGray,
+                };
+                Line::from(vec![
+                    Span::styled(
+                        format!("{:<20} ", truncate(&r.created_at, 19)),
+                        Style::default().fg(Color::DarkGray),
+                    ),
+                    Span::styled(
+                        format!("{:<8} ", truncate(&r.status, 7)),
+                        Style::default().fg(status_color),
+                    ),
+                    Span::raw(format!(
+                        "{:<18} {}",
+                        truncate(&format!("{}@{}", r.username, r.tenant), 18),
+                        truncate(&r.path, 60),
+                    )),
+                ])
+            })
+            .collect();
+
+        let total = lines.len() as u16;
+        let visible = inner.height;
+        let offset = scroll.min(total.saturating_sub(visible));
+        frame.render_widget(Paragraph::new(lines).scroll((offset, 0)), inner);
+    }
+
     fn render_error(frame: &mut Frame, area: Rect, message: &str) {
         let modal = Self::render_modal(frame, area);
 
@@ -438,6 +503,7 @@ impl Cartridge for InputCartridge {
             Confirm(&'a str),
             Submitting(usize),
             Done(&'a str, &'a IngestResult),
+            Audit(&'a [IngestRecord], u16),
             Error(&'a str),
         }
 
@@ -446,6 +512,7 @@ impl Cartridge for InputCartridge {
             InputState::Confirm { path } => Cmd::Confirm(path.as_str()),
             InputState::Submitting { spinner, .. } => Cmd::Submitting(*spinner),
             InputState::Done { path, result } => Cmd::Done(path.as_str(), result),
+            InputState::AuditLog { records, scroll } => Cmd::Audit(records.as_slice(), *scroll),
             InputState::Error { message } => Cmd::Error(message.as_str()),
         };
 
@@ -454,6 +521,7 @@ impl Cartridge for InputCartridge {
             Cmd::Confirm(p) => Self::render_confirm(frame, area, p),
             Cmd::Submitting(sp) => Self::render_submitting(frame, area, sp),
             Cmd::Done(p, r) => Self::render_done(frame, area, p, r),
+            Cmd::Audit(recs, sc) => Self::render_audit(frame, area, recs, sc),
             Cmd::Error(m) => Self::render_error(frame, area, m),
         }
     }
@@ -471,6 +539,12 @@ impl Cartridge for InputCartridge {
 
         match &self.state {
             InputState::Entry => {
+                // Ctrl-A → open the local ingest audit log (Ctrl-modified keys bypass PathInput).
+                if key.code == KeyCode::Char('a') && key.modifiers.contains(KeyModifiers::CONTROL) {
+                    let records = audit::query_recent(200).unwrap_or_default();
+                    self.state = InputState::AuditLog { records, scroll: 0 };
+                    return CartridgeAction::Consumed;
+                }
                 match self.path_input.handle_key(key) {
                     Some(PathInputAction::Submit(path)) => {
                         self.state = InputState::Confirm { path };
@@ -480,6 +554,26 @@ impl Cartridge for InputCartridge {
                         return CartridgeAction::GoBack;
                     }
                     None => {}
+                }
+                CartridgeAction::Consumed
+            }
+
+            InputState::AuditLog { .. } => {
+                match key.code {
+                    KeyCode::Esc | KeyCode::Char('q') => {
+                        self.reset();
+                    }
+                    KeyCode::Char('j') | KeyCode::Down => {
+                        if let InputState::AuditLog { scroll, .. } = &mut self.state {
+                            *scroll = scroll.saturating_add(1);
+                        }
+                    }
+                    KeyCode::Char('k') | KeyCode::Up => {
+                        if let InputState::AuditLog { scroll, .. } = &mut self.state {
+                            *scroll = scroll.saturating_sub(1);
+                        }
+                    }
+                    _ => {}
                 }
                 CartridgeAction::Consumed
             }
