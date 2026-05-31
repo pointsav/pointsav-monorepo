@@ -26,9 +26,8 @@ updated: 2026-05-28
 
 ## Last session handoff
 
-*2026-05-28 — Housekeeping session:*
-*1. Generated landscape PDFs of both home pages via WeasyPrint (extracted bundler inner HTML to work around JS rendering). Deleted per operator request.*
-*2. Established `outputs/` folder — `.gitkeep` + gitignore rule committed (6fa271b, Peter Woodfine).*
-*Outbox clean. No open items.*
+*2026-05-31 — Startup/shutdown only; no work items actioned:*
+*1. Archived J4/J5 journal relay (command-20260529-journal-relay-marketing-j4-j5) — noted, no benchmarks available.*
+*Inbox clean. Outbox clean. No open items.*
 
 *Note: WeasyPrint v61.1 is at `/usr/bin/weasyprint` — use for future HTML→PDF needs.*
