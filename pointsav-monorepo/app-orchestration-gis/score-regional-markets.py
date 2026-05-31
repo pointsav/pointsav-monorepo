@@ -685,6 +685,32 @@ top_eu = eu_regional[:400]
 
 WORK_DIR.mkdir(exist_ok=True)
 
+# rm-top400.json — flat dict keyed by rm_id for O(1) lookup in the map JS.
+# Deployed to www/data/ so the browser can fetch it alongside clusters-meta.json.
+OUT_RM_TOP400 = Path('/srv/foundry/deployments/gateway-orchestration-gis-1/www/data/rm-top400.json')
+rm_top400_dict = {}
+for r in top_na:
+    rm_top400_dict[r['rm_id']] = {
+        'rank': r['rank'], 'score': r['score'],
+        'name': r['market'], 'metro': r['suburb_of'],
+        'dist_km': r['dist_km'],
+        'lat': r['centroid']['lat'], 'lon': r['centroid']['lon'],
+        't1': r['t1'], 't2': r['t2'], 't3': r['t3'],
+        'cont': 'NA',
+    }
+for r in top_eu:
+    rm_top400_dict[r['rm_id']] = {
+        'rank': r['rank'], 'score': r['score'],
+        'name': r['market'], 'metro': r['suburb_of'],
+        'dist_km': r['dist_km'],
+        'lat': r['centroid']['lat'], 'lon': r['centroid']['lon'],
+        't1': r['t1'], 't2': r['t2'], 't3': r['t3'],
+        'cont': 'EU',
+    }
+with open(OUT_RM_TOP400, 'w') as f:
+    json.dump(rm_top400_dict, f, separators=(',', ':'))
+print(f"Wrote {OUT_RM_TOP400} ({len(rm_top400_dict)} entries)", flush=True)
+
 with open(OUT_NA, 'w') as f:
     json.dump(top_na, f, indent=2)
 print(f"\nWrote {OUT_NA} ({len(top_na)} suburban-regional NA entries)", flush=True)

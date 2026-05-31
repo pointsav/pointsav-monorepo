@@ -78,6 +78,10 @@
         .lc-disabled { cursor: default; opacity: 0.45; pointer-events: none; }
         .lc-planned { margin-left: auto; font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; background: rgba(0,0,0,0.05); padding: 2px 5px; border-radius: 4px; }
         .lc-group-label { font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; padding: 4px 4px 2px; }
+        .rm-badge { display: flex; align-items: center; gap: 6px; background: rgba(217,119,6,0.10); border-left: 3px solid #D97706; border-radius: 0 4px 4px 0; padding: 5px 8px; margin: 4px 0 2px; }
+        .rm-star  { color: #D97706; font-size: 14px; line-height: 1; flex-shrink: 0; }
+        .rm-label { color: #92400E; font-weight: 600; flex: 1; font-size: 11px; }
+        .rm-score { color: #D97706; font-weight: 800; font-size: 13px; white-space: nowrap; }
 
         /* ── Region switcher (panel header tabs) ──────────────────── */
         .region-switch { display: flex; gap: 4px; margin-top: 10px; padding: 3px; background: rgba(0,0,0,0.05); border-radius: 8px; }
@@ -841,6 +845,8 @@
     // In-memory cluster data for ring generation and BentoBox fallback (loaded at startup)
     let clusterMeta  = null;
     let clusterIndex = null; // Map: cluster_id → meta object
+    let rmTop400     = {};   // rm_id → { rank, score, name, metro, dist_km, lat, lon, t1, t2, t3, cont }
+    let rmStarsActive = false;
 
     // ── Catchment state ──────────────────────────────────────────────────────
     let catchmentActive    = false;
@@ -1250,6 +1256,7 @@
             map.setFilter('nodes-halo', ['==', ['get', 'tier'], 1]);
         }
         applyBubbleAecOverlayStyle();
+        if (rmStarsActive) applyRmStarsStyle(); // restore amber stars if toggle was on
         if (map.getLayer('nodes-label')) map.setFilter('nodes-label', ['<=', ['get', 'tier'], 2]);
         if (map.getSource('anchors')) {
             map.getSource('anchors').setData({ type: 'FeatureCollection', features: [] });
@@ -1287,6 +1294,13 @@
                     <span class="tier-badge" style="background:#54924E;color:#fff;font-size:11px;text-align:center;display:block;padding:4px 2px;">T2 ${liveT2.toLocaleString()}</span>
                     <span class="tier-badge" style="background:#EAB308;color:#111827;font-size:11px;text-align:center;display:block;padding:4px 2px;">T3 ${liveT3.toLocaleString()}</span>
                 </div>
+            </div>
+            <div class="data-block">
+                <div class="data-label" style="color:#92400E;display:flex;align-items:center;gap:5px;"><span style="color:#D97706">★</span> Regional Markets</div>
+                <button class="lc-btn${rmStarsActive ? ' lc-active' : ''}" id="lc-rm-stars" onclick="toggleRmStars(this)">
+                    <span class="lc-dot" style="background:#D97706"></span>Top 400 Highlight
+                    <span class="lc-planned">800 markets</span>
+                </button>
             </div>
             <div class="data-block">
                 <div class="data-label">Layers</div>
@@ -1531,6 +1545,33 @@
         applyBubbleAecOverlayStyle();
     }
 
+    // ── Regional Markets star layer ───────────────────────────────────────────
+    function toggleRmStars(btn) {
+        rmStarsActive = !rmStarsActive;
+        if (btn) btn.classList.toggle('lc-active', rmStarsActive);
+        applyRmStarsStyle();
+    }
+
+    function applyRmStarsStyle() {
+        const vis = (rmStarsActive && prodView.mode === 'GLOBAL') ? 'visible' : 'none';
+        ['rm-stars-glow', 'rm-stars-dot'].forEach(id => {
+            if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
+        });
+        if (!map.getLayer('nodes')) return;
+        if (rmStarsActive && prodView.mode === 'GLOBAL') {
+            // Ghost cluster dots so the amber stars are the foreground
+            map.setPaintProperty('nodes', 'circle-opacity', 0.10);
+            map.setPaintProperty('nodes', 'circle-stroke-opacity', 0.0);
+            if (map.getLayer('nodes-halo')) map.setPaintProperty('nodes-halo', 'circle-opacity', 0.0);
+        } else if (!koppenActive && !ecoregionsActive) {
+            // Restore to default (defer to AEC style if active)
+            map.setPaintProperty('nodes', 'circle-opacity', 0.88);
+            map.setPaintProperty('nodes', 'circle-stroke-opacity', 1.0);
+            if (map.getLayer('nodes-halo')) map.setPaintProperty('nodes-halo', 'circle-opacity', 0.10);
+            if (activeChainFilter) applyClusterBubbleStroke();
+        }
+    }
+
     function applyBubbleAecOverlayStyle() {
         if (!map.getLayer('nodes')) return;
         if (koppenActive || ecoregionsActive) {
@@ -1645,6 +1686,8 @@
         setVis(['all-locations', 'all-locations-hit'], local);
         setVis(['cluster-centroid'], false);
         setVis(['proximity-merged-label'], false);
+        // rm-stars: hidden at retailer zoom (no double-ring conflict); restored by applyRmStarsStyle on overview
+        setVis(['rm-stars-glow', 'rm-stars-dot'], false);
     }
 
     // Build a ring for every cluster in the current viewport — no merging.
@@ -1735,6 +1778,14 @@
             ? `<div class="region-hero-block"><div class="region-name-hero">${regionRaw}</div>${secondaryGeo ? `<div class="region-secondary-geo">${secondaryGeo}</div>` : ''}</div>`
             : `<div class="data-value" style="font-size:16px;">${regionLabel}</div>`;
 
+        // RM rank badge (shown when cluster belongs to a Top 400 Regional Market)
+        const rmRank  = p.rm_rank  || 0;
+        const rmScore = p.rm_score || 0;
+        const rmCont  = p.rm_cont  || '';
+        const rmBadge = rmRank > 0
+            ? `<div class="rm-badge"><span class="rm-star">★</span><span class="rm-label">${rmCont} Regional Market &nbsp;·&nbsp; Rank&nbsp;#${rmRank}&nbsp;of&nbsp;400</span><span class="rm-score">${rmScore.toFixed(1)}</span></div>`
+            : '';
+
         // Cell 2 — tier badge (dominant) + composition chip
         const tierDesc  = p.tier_descriptor || tc.name;
         const predHover = preds.length > 0 ? ` title="${preds.join(', ')}"` : '';
@@ -1750,6 +1801,7 @@
             <div class="data-block" style="padding-top:16px;">
                 <div class="data-label">Regional Market</div>
                 ${regionBlock}
+                ${rmBadge}
             </div>
             <div id="sel-el" class="sel-el-block sel-el-pinned data-block">
                 <div class="data-label">Selected Location</div>
@@ -2022,6 +2074,12 @@
 
         // Load cluster data into memory: nodes GeoJSON source + ring generation + BentoBox fallback
         document.getElementById('inspector').innerHTML = '<div class="loading-skeleton">Loading map data…</div>';
+        // Load rm-top400 first (small file, ~145 KB) then clusters-meta
+        fetch('data/rm-top400.json')
+            .then(r => r.json())
+            .then(d => { rmTop400 = d || {}; })
+            .catch(() => {});
+
         fetch('data/clusters-meta.json')
             .then(r => r.json())
             .then(data => {
@@ -2032,20 +2090,42 @@
                 // Populate the 'data' GeoJSON source — eliminates tile-fetch latency during zoom
                 const nodesGeoJSON = {
                     type: 'FeatureCollection',
-                    features: data.map(c => ({
-                        type: 'Feature',
-                        geometry: { type: 'Point', coordinates: [c.lon, c.lat] },
-                        properties: {
-                            cluster_id:   c.id,
-                            tier:         c.t  ?? 0,
-                            ring_radius_km: c.rr || 3.0,
-                            display_name: c.mkt || '',
-                            hw_list:      [],
-                            wh_list:      [],
-                        },
-                    })),
+                    features: data.map(c => {
+                        const rmInfo = rmTop400[c.rm] || null;
+                        return {
+                            type: 'Feature',
+                            geometry: { type: 'Point', coordinates: [c.lon, c.lat] },
+                            properties: {
+                                cluster_id:   c.id,
+                                tier:         c.t  ?? 0,
+                                ring_radius_km: c.rr || 3.0,
+                                display_name: c.mkt || '',
+                                hw_list:      [],
+                                wh_list:      [],
+                                rm_rank:  rmInfo ? rmInfo.rank  : 0,
+                                rm_score: rmInfo ? rmInfo.score : 0,
+                                rm_cont:  rmInfo ? rmInfo.cont  : '',
+                            },
+                        };
+                    }),
                 };
                 if (map.getSource('data')) map.getSource('data').setData(nodesGeoJSON);
+                // Populate rm-stars source (one dot per Regional Market)
+                const rmStarsFeatures = Object.values(rmTop400)
+                    .filter(r => r.lat && r.lon)
+                    .map(r => ({
+                        type: 'Feature',
+                        geometry: { type: 'Point', coordinates: [r.lon, r.lat] },
+                        properties: {
+                            rm_rank: r.rank, rm_score: r.score,
+                            rm_name: r.name, rm_metro: r.metro,
+                            rm_cont: r.cont, rm_dist_km: r.dist_km,
+                            rm_t1: r.t1, rm_t2: r.t2, rm_t3: r.t3,
+                        },
+                    }));
+                if (map.getSource('rm-stars-src')) {
+                    map.getSource('rm-stars-src').setData({ type: 'FeatureCollection', features: rmStarsFeatures });
+                }
                 if (prodView.mode === 'LOCAL') buildProdRings();
             })
             .catch(() => { /* rings fall back to querySourceFeatures */ });
@@ -2224,6 +2304,43 @@
                 'circle-stroke-width': 1.5,
                 'circle-stroke-color': 'rgba(10, 48, 112, 0.25)',
                 'circle-opacity': 0.88,
+            },
+        });
+
+        // ── rm-stars: one amber dot per Top 400 Regional Market ─────────────────
+        // Shown only at co-location zoom (z < 9) when rmStarsActive; hidden at retailer zoom.
+        // One dot per market (not per cluster) — no double-ring conflict with nodes-halo.
+        map.addSource('rm-stars-src', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+        });
+        // Glow halo (amber wash behind each star dot)
+        map.addLayer({
+            id: 'rm-stars-glow', type: 'circle',
+            source: 'rm-stars-src',
+            layout: { visibility: 'none' },
+            paint: {
+                'circle-radius': ['interpolate', ['linear'], ['zoom'],
+                    2, ['interpolate', ['linear'], ['get', 'rm_score'], 3, 7,  25.5, 16],
+                    8, ['interpolate', ['linear'], ['get', 'rm_score'], 3, 12, 25.5, 28]],
+                'circle-color': '#D97706',
+                'circle-opacity': 0.14,
+                'circle-stroke-width': 0,
+            },
+        });
+        // Solid amber star dot (score-proportional size)
+        map.addLayer({
+            id: 'rm-stars-dot', type: 'circle',
+            source: 'rm-stars-src',
+            layout: { visibility: 'none' },
+            paint: {
+                'circle-radius': ['interpolate', ['linear'], ['zoom'],
+                    2, ['interpolate', ['linear'], ['get', 'rm_score'], 3, 3,  25.5, 8],
+                    8, ['interpolate', ['linear'], ['get', 'rm_score'], 3, 5,  25.5, 14]],
+                'circle-color': '#D97706',
+                'circle-opacity': 0.92,
+                'circle-stroke-color': 'rgba(255,255,255,0.9)',
+                'circle-stroke-width': 1.5,
             },
         });
 
