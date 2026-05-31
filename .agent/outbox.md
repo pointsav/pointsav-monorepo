@@ -10,6 +10,39 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: from-project-system READMEs — place 3 bilingual pairs in pointsav-monorepo staging branches
+created: 2026-05-31T23:55:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260531-system-readmes-route
+---
+
+Six README files in `.agent/drafts-outbound/from-project-system/` are `state: approved`
+and ready for placement in the pointsav-monorepo staging branches (origin-staging-j and
+origin-staging-p). All carry `language_protocol: PROSE-README`, `bcsc_class: current-fact`,
+`audience: vendor-public`.
+
+**Files and destinations (source → target path in pointsav-monorepo):**
+
+1. `from-project-system/README-moonshot-toolkit.md` → `moonshot-toolkit/README.md`
+2. `from-project-system/README-moonshot-toolkit.es.md` → `moonshot-toolkit/README.es.md`
+3. `from-project-system/README-system-core.md` → `system-core/README.md`
+4. `from-project-system/README-system-core.es.md` → `system-core/README.es.md`
+5. `from-project-system/README-system-ledger.md` → `system-ledger/README.md`
+6. `from-project-system/README-system-ledger.es.md` → `system-ledger/README.es.md`
+
+All were produced in the project-system cluster during the May 2026 v1.0.0 version bump
+series and describe the current API-stable state of their respective crates. The files
+are ready to overwrite existing placeholder READMEs in the monorepo.
+
+After placement, archive the source files from `.agent/drafts-outbound/from-project-system/`
+or leave for project-editorial cleanup.
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: legal governance tokens — route to factory-release-engineering/tokens/ (admin-tier)
 created: 2026-05-31T14:00:00Z
 priority: normal
