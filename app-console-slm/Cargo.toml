@@ -2,11 +2,17 @@
 name = "app-console-slm"
 version = "0.1.0"
 edition = "2021"
-authors = ["PointSav Digital Systems"]
-description = "Sovereign operator console for the Foundry AI infrastructure — Doorman health, Yo-Yo controls, corpus and DataGraph panels."
+description = "os-console F9 SLM Cartridge — Doorman health, tier routing, entity count dashboard"
+
+[lib]
+name = "app_console_slm"
+path = "src/lib.rs"
 
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
-tokio = { version = "1", features = ["full"] }
+app-console-keys = { path = "../app-console-keys" }
+ratatui = "0.29"
+crossterm = { version = "0.28", features = ["event-stream"] }
+anyhow = "1"
+reqwest = { version = "0.12", default-features = false, features = ["json", "blocking", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
