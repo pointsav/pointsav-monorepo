@@ -17,10 +17,11 @@ use tui_textarea::TextArea;
 use crate::draft::{self, DraftEvent};
 use crate::drafts_out;
 use crate::proofreader::{self, ProofreadResponse, DEFAULT_PROTOCOL_IDX, PROTOCOLS};
+use crate::search::{self, SearchResult};
 
 const SPINNER: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 const PLACEHOLDER: &str =
-    "Paste or type text to proofread — Ctrl-S to submit · Tab to pick protocol · /new <title> to draft";
+    "Paste or type text — Ctrl-S: submit · Tab: protocol · /new <title>: draft · /search <query>: search";
 
 // ── State machine ─────────────────────────────────────────────────────────────
 
@@ -53,6 +54,13 @@ enum ContentState {
         error: Option<String>,
         scroll: u16,
     },
+    SearchResults {
+        query: String,
+        results: Vec<SearchResult>,
+        search_rx: Option<mpsc::Receiver<anyhow::Result<Vec<SearchResult>>>>,
+        selected: usize,
+        scroll: u16,
+    },
     Error {
         message: String,
     },
@@ -66,8 +74,11 @@ pub struct ContentCartridge {
     proof_endpoint: String,
     slm_endpoint: String,
     drafts_outbound_path: String,
+    content_endpoint: String,
     state: ContentState,
     textarea: TextArea<'static>,
+    offline: bool,
+    health_rx: mpsc::Receiver<bool>,
 }
 
 impl ContentCartridge {
@@ -81,6 +92,7 @@ impl ContentCartridge {
                 "{}/.local/share/os-console/drafts-outbound",
                 std::env::var("HOME").unwrap_or_else(|_| ".".into())
             ),
+            "http://127.0.0.1:9081",
         )
     }
 
@@ -90,19 +102,47 @@ impl ContentCartridge {
         proof_endpoint: impl Into<String>,
         slm_endpoint: impl Into<String>,
         drafts_outbound_path: impl Into<String>,
+        content_endpoint: impl Into<String>,
     ) -> Self {
+        let slm = slm_endpoint.into();
+
+        // Background health poller — polls Doorman /readyz every 30s
+        let (health_tx, health_rx) = mpsc::channel::<bool>();
+        let slm_clone = slm.clone();
+        thread::spawn(move || loop {
+            let available = reqwest::blocking::Client::builder()
+                .timeout(std::time::Duration::from_secs(3))
+                .build()
+                .ok()
+                .and_then(|c| c.get(&format!("{}/readyz", slm_clone)).send().ok())
+                .and_then(|r| {
+                    if r.status().is_success() {
+                        r.json::<serde_json::Value>().ok()
+                    } else {
+                        None
+                    }
+                })
+                .and_then(|v| v["ai_available"].as_bool())
+                .unwrap_or(false);
+            let _ = health_tx.send(available);
+            thread::sleep(std::time::Duration::from_secs(30));
+        });
+
         let mut ta = TextArea::default();
         ta.set_placeholder_text(PLACEHOLDER);
         Self {
             username: username.into(),
             tenant: tenant.into(),
             proof_endpoint: proof_endpoint.into(),
-            slm_endpoint: slm_endpoint.into(),
+            slm_endpoint: slm,
             drafts_outbound_path: drafts_outbound_path.into(),
+            content_endpoint: content_endpoint.into(),
             state: ContentState::Input {
                 protocol_idx: DEFAULT_PROTOCOL_IDX,
             },
             textarea: ta,
+            offline: false,
+            health_rx,
         }
     }
 
@@ -117,9 +157,10 @@ impl ContentCartridge {
 
     fn render_input(&mut self, frame: &mut Frame, area: Rect, protocol_idx: usize) {
         let (slug, display) = PROTOCOLS[protocol_idx];
+        let border_color = if self.offline { Color::DarkGray } else { Color::Cyan };
         let outer = Block::default()
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(Color::Cyan))
+            .border_style(Style::default().fg(border_color))
             .title(" F4: Content — Proofreader ");
         let inner = outer.inner(area);
         frame.render_widget(outer, area);
@@ -131,9 +172,10 @@ impl ContentCartridge {
 
         frame.render_widget(&self.textarea, chunks[0]);
 
+        let offline_note = if self.offline { "  [⚠ AI OFFLINE — /new disabled]" } else { "" };
         let hint = Paragraph::new(format!(
-            " Protocol: {}  —  {}    [Tab: change  Ctrl-S: submit  /new <title> Ctrl-S: draft  q/Ctrl-C: quit]",
-            slug, display
+            " Protocol: {}  —  {}    [Tab: change  Ctrl-S: submit  /new: draft  /search: search  q/Ctrl-C: quit]{}",
+            slug, display, offline_note
         ))
         .style(Style::default().fg(Color::DarkGray));
         frame.render_widget(hint, chunks[1]);
@@ -347,6 +389,76 @@ impl ContentCartridge {
         }
     }
 
+    fn render_search_results(
+        frame: &mut Frame,
+        area: Rect,
+        query: &str,
+        results: &[SearchResult],
+        selected: usize,
+        scroll: u16,
+        loading: bool,
+    ) {
+        let title = format!(
+            " F4: Content — Search: \"{}\"    [j/k: navigate  Esc: back] ",
+            query
+        );
+        let outer = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Cyan))
+            .title(title.as_str());
+        let inner = outer.inner(area);
+        frame.render_widget(outer, area);
+
+        if loading {
+            frame.render_widget(
+                Paragraph::new("  Searching…").style(Style::default().fg(Color::Yellow)),
+                inner,
+            );
+            return;
+        }
+
+        if results.is_empty() {
+            frame.render_widget(
+                Paragraph::new("  No results.").style(Style::default().fg(Color::DarkGray)),
+                inner,
+            );
+            return;
+        }
+
+        let lines: Vec<Line> = results
+            .iter()
+            .enumerate()
+            .map(|(i, r)| {
+                let style = if i == selected {
+                    Style::default().fg(Color::Black).bg(Color::Cyan)
+                } else {
+                    Style::default()
+                };
+                let text = if r.excerpt.is_empty() {
+                    format!("  {}  [{}]", r.title, r.slug)
+                } else {
+                    format!("  {} [{}]  {}", r.title, r.slug, r.excerpt)
+                };
+                Line::from(Span::styled(text, style))
+            })
+            .collect();
+
+        let total = lines.len() as u16;
+        let visible = inner.height;
+        let offset = scroll.min(total.saturating_sub(visible));
+
+        frame.render_widget(Paragraph::new(lines).scroll((offset, 0)), inner);
+
+        if total > visible {
+            let mut sb = ScrollbarState::new(total as usize).position(offset as usize);
+            frame.render_stateful_widget(
+                Scrollbar::new(ScrollbarOrientation::VerticalRight),
+                inner,
+                &mut sb,
+            );
+        }
+    }
+
     // ── Event handlers ────────────────────────────────────────────────────────
 
     fn on_input_key(&mut self, event: &Event, protocol_idx: usize) -> CartridgeAction {
@@ -384,9 +496,17 @@ impl ContentCartridge {
                 return CartridgeAction::Consumed;
             }
 
-            // Intercept /new <title> as draft-mode trigger
+            // Intercept slash commands before proofread
             let trimmed = text.trim();
+
+            // /new <title> → draft mode (blocked when offline)
             if let Some(rest) = trimmed.strip_prefix("/new") {
+                if self.offline {
+                    self.state = ContentState::Error {
+                        message: "AI unavailable — Doorman is offline. Check the F9 SLM panel.".into(),
+                    };
+                    return CartridgeAction::Consumed;
+                }
                 let title = rest.trim().to_string();
                 let title = if title.is_empty() {
                     "Untitled".to_string()
@@ -396,7 +516,6 @@ impl ContentCartridge {
                 let protocol = PROTOCOLS[protocol_idx].0.to_string();
                 let tenant = self.tenant.clone();
                 let slm = self.slm_endpoint.clone();
-                // Use the title as the prompt — operator can refine before submitting
                 let prompt = title.clone();
                 let (tx, rx) = mpsc::channel();
                 thread::spawn(move || {
@@ -411,6 +530,27 @@ impl ContentCartridge {
                     error: None,
                     scroll: 0,
                 };
+                return CartridgeAction::Consumed;
+            }
+
+            // /search <query> → Tantivy search results
+            if let Some(rest) = trimmed.strip_prefix("/search") {
+                let query = rest.trim().to_string();
+                if !query.is_empty() {
+                    let ep = self.content_endpoint.clone();
+                    let q = query.clone();
+                    let (tx, rx) = mpsc::channel();
+                    thread::spawn(move || {
+                        let _ = tx.send(search::fetch_search(&ep, &q));
+                    });
+                    self.state = ContentState::SearchResults {
+                        query,
+                        results: vec![],
+                        search_rx: Some(rx),
+                        selected: 0,
+                        scroll: 0,
+                    };
+                }
                 return CartridgeAction::Consumed;
             }
 
@@ -571,6 +711,28 @@ impl ContentCartridge {
         }
         CartridgeAction::Consumed
     }
+
+    fn on_search_key(&mut self, key: &crossterm::event::KeyEvent) -> CartridgeAction {
+        match key.code {
+            KeyCode::Esc | KeyCode::Char('q') => {
+                self.reset_textarea(DEFAULT_PROTOCOL_IDX);
+            }
+            KeyCode::Char('j') | KeyCode::Down => {
+                if let ContentState::SearchResults { selected, results, .. } = &mut self.state {
+                    if *selected + 1 < results.len() {
+                        *selected += 1;
+                    }
+                }
+            }
+            KeyCode::Char('k') | KeyCode::Up => {
+                if let ContentState::SearchResults { selected, .. } = &mut self.state {
+                    *selected = selected.saturating_sub(1);
+                }
+            }
+            _ => {}
+        }
+        CartridgeAction::Consumed
+    }
 }
 
 impl Default for ContentCartridge {
@@ -586,6 +748,13 @@ impl Cartridge for ContentCartridge {
 
     fn title(&self) -> &str {
         "Content"
+    }
+
+    fn tick(&mut self) {
+        // Drain health poll — take the most recent availability status
+        while let Ok(available) = self.health_rx.try_recv() {
+            self.offline = !available;
+        }
     }
 
     fn render(&mut self, frame: &mut Frame, area: Rect) {
@@ -648,6 +817,36 @@ impl Cartridge for ContentCartridge {
             *spinner = spinner.wrapping_add(1);
         }
 
+        // Drain search results — take() frees the borrow so we can act on self.state freely
+        let search_rx_opt = if let ContentState::SearchResults { search_rx, .. } = &mut self.state {
+            search_rx.take()
+        } else {
+            None
+        };
+        if let Some(rx) = search_rx_opt {
+            match rx.try_recv() {
+                Ok(Ok(found)) => {
+                    if let ContentState::SearchResults { results, .. } = &mut self.state {
+                        *results = found;
+                    }
+                }
+                Ok(Err(e)) => {
+                    self.state = ContentState::Error {
+                        message: format!("Search error: {}", e),
+                    };
+                }
+                Err(mpsc::TryRecvError::Empty) => {
+                    // Not done yet — put receiver back
+                    if let ContentState::SearchResults { search_rx, .. } = &mut self.state {
+                        *search_rx = Some(rx);
+                    }
+                }
+                Err(mpsc::TryRecvError::Disconnected) => {
+                    // Thread done but results were already set (or errored above)
+                }
+            }
+        }
+
         // Extract state data — borrow ends before calling render helpers
         enum Cmd {
             Input(usize),
@@ -655,6 +854,7 @@ impl Cartridge for ContentCartridge {
             Submitting(usize),
             Results(ProofreadResponse, String, u16),
             Drafting(String, String, bool, Option<String>, u16),
+            Search(String, Vec<SearchResult>, usize, u16, bool),
             Error(String),
         }
         let cmd = match &self.state {
@@ -674,6 +874,19 @@ impl Cartridge for ContentCartridge {
                 scroll,
                 ..
             } => Cmd::Drafting(title.clone(), buffer.clone(), *done, error.clone(), *scroll),
+            ContentState::SearchResults {
+                query,
+                results,
+                search_rx,
+                selected,
+                scroll,
+            } => Cmd::Search(
+                query.clone(),
+                results.clone(),
+                *selected,
+                *scroll,
+                search_rx.is_some(),
+            ),
             ContentState::Error { message } => Cmd::Error(message.clone()),
         };
 
@@ -684,6 +897,9 @@ impl Cartridge for ContentCartridge {
             Cmd::Results(resp, orig, sc) => Self::render_results(frame, area, &resp, &orig, sc),
             Cmd::Drafting(t, buf, done, err, sc) => {
                 Self::render_drafting(frame, area, &t, &buf, done, err.as_deref(), sc)
+            }
+            Cmd::Search(q, results, sel, sc, loading) => {
+                Self::render_search_results(frame, area, &q, &results, sel, sc, loading)
             }
             Cmd::Error(msg) => Self::render_error(frame, area, &msg),
         }
@@ -701,6 +917,7 @@ impl Cartridge for ContentCartridge {
             Submitting,
             Results,
             Drafting,
+            Search,
             Error,
         }
         let kind = match &self.state {
@@ -712,6 +929,7 @@ impl Cartridge for ContentCartridge {
             ContentState::Submitting { .. } => StateKind::Submitting,
             ContentState::Results { .. } => StateKind::Results,
             ContentState::DraftingNew { .. } => StateKind::Drafting,
+            ContentState::SearchResults { .. } => StateKind::Search,
             ContentState::Error { .. } => StateKind::Error,
         };
 
@@ -721,6 +939,7 @@ impl Cartridge for ContentCartridge {
             StateKind::Submitting => CartridgeAction::Consumed,
             StateKind::Results => self.on_results_key(key),
             StateKind::Drafting => self.on_drafting_key(key),
+            StateKind::Search => self.on_search_key(key),
             StateKind::Error => {
                 self.reset_textarea(DEFAULT_PROTOCOL_IDX);
                 CartridgeAction::Consumed
