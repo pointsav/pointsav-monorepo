@@ -41,8 +41,10 @@ fn main() -> NotifyResult<()> {
 
     let doorman_endpoint = std::env::var("SLM_DOORMAN_ENDPOINT")
         .unwrap_or_else(|_| "http://127.0.0.1:9080".to_string());
+    let infrastructure_root = std::env::var("INFRASTRUCTURE_ROOT")
+        .unwrap_or_else(|_| "/srv/foundry".to_string());
     let base_dir = std::env::var("SERVICE_CONTENT_BASE_DIR")
-        .unwrap_or_else(|_| "/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-personnel-1/service-fs/data".to_string());
+        .unwrap_or_else(|_| format!("{}/data", infrastructure_root));
     let module_id =
         std::env::var("SERVICE_CONTENT_MODULE_ID").unwrap_or_else(|_| "woodfine".to_string());
 

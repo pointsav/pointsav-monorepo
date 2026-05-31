@@ -661,6 +661,7 @@ fn build_yoyo_client(
                         .unwrap_or_else(|_| "Olmo-3-1125-32B-Think".to_string()),
                     contract_version: slm_doorman::YOYO_CONTRACT_VERSION.to_string(),
                     pricing: PricingConfig { yoyo_hourly_usd },
+                    zone: std::env::var("SLM_YOYO_GCP_ZONE").ok(),
                 },
                 bearer,
             ))

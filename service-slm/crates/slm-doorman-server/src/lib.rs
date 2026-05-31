@@ -163,6 +163,7 @@ pub mod test_helpers {
                 default_model: "Olmo-3-1125-32B-Think".to_string(),
                 contract_version: slm_doorman::YOYO_CONTRACT_VERSION.to_string(),
                 pricing: Default::default(),
+                zone: None,
             },
             std::sync::Arc::new(StaticBearer::new("test-bearer-token")),
         );
