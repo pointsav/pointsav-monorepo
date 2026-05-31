@@ -617,6 +617,15 @@ msg-id: command-20260528-gis-work-aec-cleanup
 ---
 
 ---
+# Archived 2026-05-31 by totebox@project-console
+note: 3 messages. Session: command-20260529-journal-relay-console-j6 (noted; J6 keyboard
+shortcut flagging going forward); command-20260528-console-answers (all items actioned —
+port fixed in 009b2e04, Stage 6 authorized, NEXT.md fixed by Command); 
+command-20260522-console-stage6-orphan-branch (stale — superseded by Command's own note
+on the outbox entry marking situation resolved).
+---
+
+---
 # Archived 2026-05-24 by totebox@project-console
 note: 8 message(s). Session close-out sweep. Archived: binary-targets (actioned), briefs-migration
 (actioned), tui-pivot-relay (actioned), wfd-spoke-cleanup (actioned), wfd-sub-clone-reset (actioned),
