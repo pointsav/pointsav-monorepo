@@ -742,6 +742,7 @@ let previewTimer = null;
 let statusTimer  = null;
 let hlTimer      = null;   // syntax-highlight debounce
 let gutterTimer  = null;   // gutter-lines rebuild debounce
+let typingTimer  = null;   // typing-burst tracker for highlight hide
 let autosaveRunning = false; // dedup guard for concurrent autosave calls
 
 // Tab state — each tab caches its file content so switching is instant.
@@ -1091,6 +1092,7 @@ document.getElementById('editor-textarea').addEventListener('click', () => {
 
 // ── Live preview from editor textarea ────────────────────────────────────────
 function applyEditorPreview() {
+  if (viewMode === 'none') return;
   const text = document.getElementById('editor-textarea').value;
   if (!currentPath) return;
   const name = currentPath.split('/').pop();
@@ -1208,11 +1210,18 @@ document.getElementById('editor-textarea').addEventListener('input', () => {
   scheduleHighlight();
   if (gutterTimer) clearTimeout(gutterTimer);
   gutterTimer = setTimeout(updateGutterLines, 200);
-  updateEditorPos();
+  requestAnimationFrame(updateEditorPos);
+  // Hide highlight overlay while typing; restore after 150ms idle
+  const hl = document.getElementById('editor-highlight');
+  if (hl) hl.style.visibility = 'hidden';
+  if (typingTimer) clearTimeout(typingTimer);
+  typingTimer = setTimeout(() => {
+    if (hl) hl.style.visibility = '';
+  }, 150);
 });
 
-document.getElementById('editor-textarea').addEventListener('keyup', updateEditorPos);
-document.getElementById('editor-textarea').addEventListener('click', updateEditorPos);
+document.getElementById('editor-textarea').addEventListener('keyup', () => requestAnimationFrame(updateEditorPos));
+document.getElementById('editor-textarea').addEventListener('click', () => requestAnimationFrame(updateEditorPos));
 document.getElementById('editor-textarea').addEventListener('scroll', () => {
   const ta = document.getElementById('editor-textarea');
   const gutter = document.getElementById('editor-gutter');
