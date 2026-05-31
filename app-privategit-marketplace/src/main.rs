@@ -47,6 +47,7 @@ struct License {
     id: String,
     name: String,
     description: String,
+    #[serde(default)]
     module_tag: String,
     price_usdc: u64,
 }
