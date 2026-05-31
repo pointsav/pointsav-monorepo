@@ -1,4 +1,88 @@
 ---
+from: totebox@project-gis
+to: totebox@project-editorial
+re: JOURNAL dispatch — J1 v0.5 + J4 v0.4 — retail co-location + private network
+created: 2026-05-31T20:00:00Z
+priority: normal
+status: pending
+msg-id: project-gis-20260531-journal-dispatch-j1v5-j4v4
+---
+
+Two JOURNAL artifacts staged to `.agent/drafts-outbound/` for editorial review.
+
+**J1 — Retail Colocation v0.5** (`JOURNAL-retail-colocation-v0.5.draft.md` in drafts-outbound/)
+- **What's new in v0.5:**
+  - §5.1 NA/EU tier table corrected to Phase 23+Change B actuals (NA: T1=1,021/T2=1,831/T3=913 of 3,765; EU: T1=725/T2=895/T3=1,108 of 2,728). Prior table was pre-build estimated figures.
+  - §5.1 narrative updated: both continents share ~27% T1; asymmetry is in T3 (EU 41% vs NA 24%), not T1. Prior text incorrectly claimed EU T1 was 24% vs NA 34%.
+  - **§5.4 new section** (~1,000 words): Regional Market Discovery Application. Documents the isolation-first scoring methodology — three-way geometric classification (metro-adjacent / suburban-regional / standalone), isolation scalar I(d_A), full discovery score formula. Reports Top 400 country distribution (NA: US 322, CA 60, MX 18; EU: FR 84, GB 77, DE 53, PL 41, ES 40, IT 35, DK 16, FI 16, PT 12, AT 10, SE 8, NO 5, GR 3). Explains why isolation ranking rebalances geographic representation vs. volume ranking.
+  - **H₄ hypothesis added** to §6.4: geographic independence hypothesis (d_A positively predicts catchment self-containment independently of tier).
+  - **Appendix A** extended with isolation symbols (d_A, I(d_A), s(c), tier_score(c)).
+  - **Appendix B** populated: full 18-country T1/T2/T3 table from Phase 23+Change B clusters-meta.json (was [TODO]).
+  - **Appendix C** deferred: now says "v0.6 item" (previously said v0.5).
+  - Country count corrected from 13 to 18 in §5.1, §4.2, §5.4. "Thirteen countries" references remain in the abstract and §1 — **please sweep and update throughout**.
+- **`forbidden_terms_cleared`: false** — §5.4 is new writing; full language pass required before this is set back to true.
+- **Word count**: ~9,300 (target 8,500). **Trim of ~800 words needed** — suggest cutting from §3.7 (mobility protocol detail) and §6.1 (discussion). Do not trim §5.4 or Appendix B.
+- **Remaining blockers**: §7.2 regression (Phase 24B); §5.3 LODES join (v0.6); Appendix C diagram (v0.6); permutation test; ORCID IDs; word count trim.
+
+**J4 — Private Network v0.4** (`JOURNAL-private-network-v0.4.draft.md` in JOURNAL/ and drafts-outbound/)
+- Synced from drafts-outbound to JOURNAL/ (stale v0.1 stub removed). No new content.
+- Already language-cleared (2026-05-28). §4–§5 language pass requested in prior dispatch (msg-id: 952b2b09) still outstanding.
+
+---
+from: totebox@project-gis
+to: totebox@project-editorial
+re: B13–B16 TOPIC dispatch — regional name resolution, tier nomenclature, GIS-BIM substrate, UK/EU food retail
+created: 2026-05-31T17:25:00Z
+priority: normal
+status: pending
+msg-id: project-gis-20260531-b13-b16-dispatch
+---
+
+Four new TOPIC drafts (8 files: 4 EN + 4 ES pairs) staged in
+`/srv/foundry/clones/project-gis/.agent/drafts-outbound/`.
+Destination: media-knowledge-documentation.
+
+**B13 — TOPIC-regional-name-resolution.draft.md + .es.draft.md** (~950 words EN)
+How cluster centroids are resolved to colloquial place names. Covers TIGER 2023
+(US), GISCO LAU 2021 (EU), GADM GBR (UK), and the 12-entry Canadian Nominatim
+override list. Sherwood Park / Strathcona County as the canonical example.
+Resolution logic: name-match → boundary containment → admin-level fallback →
+override application. Why canonical names matter for Regional Market scoring.
+
+**B14 — TOPIC-colocation-tier-nomenclature.draft.md + .es.draft.md** (~900 words EN)
+T1 Regional / T2 District / T3 Local definitions. T1 anchor composition (warehouse
+club or hypermarket+hardware). T2 span gate (Change B, 2.5 km). T3 local clusters.
+Two-pass DBSCAN mechanism. Change B impact: ~667 T2→T3 demotions (3,393→2,726).
+Naming history: Alpha/Beta/Gamma retired; T1/T2/T3 canonical since Phase 18.
+Current counts: T1=1,746 / T2=2,726 / T3=2,021 (Phase 23+Change B).
+
+**B15 — TOPIC-gis-as-bim-substrate.draft.md + .es.draft.md** (~850 words EN)
+GIS identifies site; BIM models it. AEC data layers (ASHRAE, Köppen, seismic,
+flood) as environmental context attached to cluster centroids. Intended data flow:
+cluster record → site environmental brief → BIM authoring parameters. Data
+contract: cluster metadata AEC fields are the GIS/BIM interface. Scope note:
+integration is planned/intended; AEC substrate is live, BIM-side consumption
+is in development.
+
+**B16 — TOPIC-uk-eu-food-retail-coverage.draft.md + .es.draft.md** (~1,050 words EN)
+UK chains: Tesco 3,872 / Sainsbury's 1,903 / ASDA 1,051 / Morrisons 620 /
+Wickes 236. EU by country: DE (Kaufland 253, Globus 125), FR (Intermarché 56,
+Géant Casino 10, Bricomarché 497, Brico Dépôt 137), AT (Interspar 85), NL
+(AH XL 43, Jumbo 8), PL (Kaufland 253, Leclerc 36), IT (Esselunga 259), GR
+(Sklavenitis 406), PT (Continente 57), Nordic IKEA+Bauhaus. Coverage gaps:
+IS, Atlantic Iberia, southern IT, Scotland. Data provenance: OSM ODbL +
+Wikidata CC0; Phases 12–18 ingest dates cited.
+
+All drafts use `foundry-draft-v1` frontmatter, `language_protocol: TOPIC-*`,
+`bcsc_class: no-disclosure-implication`, 5 research-trail fields, bilingual pairing.
+
+Please refine and commit to media-knowledge-documentation.
+
+— totebox@project-gis
+
+---
+from: totebox@project-gis
+>>>>>>> e959d4d1 (feat(gis): J1 v0.5 + J4 v0.4 JOURNAL update — isolation discovery, §5.4, Appendix B, H₄; dispatch to project-editorial)
 from: totebox@project-knowledge
 to: command@claude-code
 re: DETAILED — session 2026-05-31 report: live-site audit, source-recovery commit, rebuild request
