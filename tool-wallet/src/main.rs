@@ -89,7 +89,10 @@ struct WatchArgs {
 
 #[derive(Parser)]
 struct GenerateSeedArgs {
-    #[arg(long, help = "Path to write the generated BIP-39 mnemonic (chmod 0600)")]
+    #[arg(
+        long,
+        help = "Path to write the generated BIP-39 mnemonic (chmod 0600)"
+    )]
     output: PathBuf,
 }
 
@@ -107,7 +110,11 @@ struct CheckArgs {
 struct AddressArgs {
     #[arg(help = "Order ID — used to derive a unique per-order address")]
     order_id: String,
-    #[arg(env = "WALLET_SEED_PATH", long, help = "Path to BIP-39 mnemonic or 64-byte hex seed file")]
+    #[arg(
+        env = "WALLET_SEED_PATH",
+        long,
+        help = "Path to BIP-39 mnemonic or 64-byte hex seed file"
+    )]
     wallet_seed_path: Option<String>,
     #[arg(
         env = "ORDER_INDEX_PATH",
@@ -467,7 +474,10 @@ async fn check(args: CheckArgs) -> Result<()> {
 fn keygen() {
     let signing_key = SigningKey::generate(&mut OsRng);
     let verifying_key: VerifyingKey = signing_key.verifying_key();
-    println!("LICENSE_SIGNING_KEY={}", hex::encode(signing_key.to_bytes()));
+    println!(
+        "LICENSE_SIGNING_KEY={}",
+        hex::encode(signing_key.to_bytes())
+    );
     println!("VERIFY_KEY_PUB={}", hex::encode(verifying_key.to_bytes()));
 }
 
@@ -525,19 +535,18 @@ async fn address(args: AddressArgs) -> Result<()> {
         .with_context(|| format!("reading WALLET_SEED_PATH: {seed_path}"))?;
     let seed_content = seed_content.trim();
 
-    let seed_bytes: [u8; 64] = if seed_content.len() == 128
-        && seed_content.chars().all(|c| c.is_ascii_hexdigit())
-    {
-        let decoded = hex::decode(seed_content).context("decoding hex seed")?;
-        decoded
-            .try_into()
-            .map_err(|_| anyhow::anyhow!("hex seed must be exactly 64 bytes (128 hex chars)"))?
-    } else {
-        let mnemonic: Mnemonic = seed_content
-            .parse()
-            .map_err(|e| anyhow::anyhow!("invalid BIP-39 mnemonic: {e}"))?;
-        mnemonic.to_seed("")
-    };
+    let seed_bytes: [u8; 64] =
+        if seed_content.len() == 128 && seed_content.chars().all(|c| c.is_ascii_hexdigit()) {
+            let decoded = hex::decode(seed_content).context("decoding hex seed")?;
+            decoded
+                .try_into()
+                .map_err(|_| anyhow::anyhow!("hex seed must be exactly 64 bytes (128 hex chars)"))?
+        } else {
+            let mnemonic: Mnemonic = seed_content
+                .parse()
+                .map_err(|e| anyhow::anyhow!("invalid BIP-39 mnemonic: {e}"))?;
+            mnemonic.to_seed("")
+        };
 
     let derivation_index = assign_order_index(&args.order_index_path, &args.order_id)
         .context("assigning order derivation index")?;
@@ -580,6 +589,7 @@ fn assign_order_index(index_path: &str, order_id: &str) -> Result<u32> {
         .read(true)
         .write(true)
         .create(true)
+        .truncate(false)
         .open(index_path)
         .with_context(|| format!("opening order index: {index_path}"))?;
 
@@ -587,7 +597,9 @@ fn assign_order_index(index_path: &str, order_id: &str) -> Result<u32> {
     let mut guard = lock.write().context("acquiring order index write lock")?;
 
     let mut content = String::new();
-    guard.read_to_string(&mut content).context("reading order index")?;
+    guard
+        .read_to_string(&mut content)
+        .context("reading order index")?;
 
     let mut index: OrderIndex = if content.trim().is_empty() {
         OrderIndex::default()
@@ -605,9 +617,13 @@ fn assign_order_index(index_path: &str, order_id: &str) -> Result<u32> {
     index.orders.insert(order_id.to_string(), assigned);
 
     let new_json = serde_json::to_string_pretty(&index)?;
-    guard.seek(SeekFrom::Start(0)).context("seeking order index")?;
+    guard
+        .seek(SeekFrom::Start(0))
+        .context("seeking order index")?;
     guard.set_len(0).context("truncating order index")?;
-    guard.write_all(new_json.as_bytes()).context("writing order index")?;
+    guard
+        .write_all(new_json.as_bytes())
+        .context("writing order index")?;
 
     Ok(assigned)
 }
