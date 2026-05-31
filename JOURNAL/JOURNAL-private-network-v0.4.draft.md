@@ -7,11 +7,11 @@ title: "Customer-Rooted Mesh Architecture for Distributed Operational Systems: Z
 target_journal: "IEEE Transactions on Information Forensics and Security"
 target_publisher: "IEEE Signal Processing Society"
 impact_factor: "9.65"
-alternate_venue: "IEEE/ACM Transactions on Networking; ACM CCS (~20% AR)"
+alternate_venue: "Computers & Security (Elsevier, IF 7.98); IEEE Transactions on Network and Service Management (IEEE, IF 6.44)"
 authors:
   - name: "Peter M. Woodfine"
-    affiliation: "Woodfine Management Corp., New York, NY, USA"
-    email: corporate.secretary@woodfinegroup.com
+    affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
+    email: jmwoodfine@gmail.com
     orcid: ""
     credit_roles:
       - Conceptualization
@@ -19,7 +19,7 @@ authors:
       - Writing – Original Draft
       - Writing – Review & Editing
   - name: "Mathew Woodfine"
-    affiliation: "Woodfine Management Corp., New York, NY, USA"
+    affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
     email: ""
     orcid: ""
     credit_roles:
@@ -27,7 +27,7 @@ authors:
       - Formal Analysis
       - Writing – Review & Editing
   - name: "Jennifer M. Woodfine"
-    affiliation: "Woodfine Management Corp., New York, NY, USA"
+    affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
     email: ""
     orcid: ""
     credit_roles:
@@ -49,7 +49,7 @@ keywords:
   - audit log integrity
 bcsc_class: no-disclosure-implication
 ai_tool_used: "claude-sonnet-4-6 (Anthropic)"
-corresponding_author: corporate.secretary@woodfinegroup.com
+corresponding_author: jmwoodfine@gmail.com
 word_count_body: 6400
 word_count_target: 9000
 submission_status: not-submitted
@@ -59,7 +59,7 @@ preprint_posted: true
 preprint_posted_date: 2026-05-28
 doi: ""
 license: "CC BY 4.0"
-cite_as: "Woodfine, Peter M., Woodfine, Mathew, & Woodfine, Jennifer M. (2026). Customer-Rooted Mesh Architecture for Distributed Operational Systems. Working Paper v0.4, 29 May 2026. Woodfine Management Corp., New York, NY."
+cite_as: "Woodfine, P.M., Woodfine, M., & Woodfine, J.M. (2026). Customer-Rooted Mesh Architecture for Distributed Operational Systems. Working Paper v0.3, 29 May 2026. Woodfine Management Corp., Vancouver, BC."
 revision_history:
   - version: "0.1"
     date: "2026-05-27"
@@ -69,10 +69,7 @@ revision_history:
     changes: "Writing pass §1–§3, §6–§7; language pass; preprint notice and FLS advisory; public posting"
   - version: "0.3"
     date: "2026-05-29"
-    changes: "§4 Implementation written: benchmark environment (GCP e2-standard-8, Ubuntu 24.04, kernel 6.17.0-1013-gcp, WireGuard 1.0.0), hub/spoke configuration, key generation procedure, BLAKE2s audit log construction with full Python daemon. §5 Evaluation written: empirical benchmark results — tunnel establishment n=30 44±5 ms, re-handshake n=10 59±20 ms, policy-change propagation n=20 8 ms mean, hub restart recovery n=5 bimodal 1–16 s."
-  - version: "0.4"
-    date: "2026-05-29"
-    changes: "Citation resolution: [Cameron et al. 2019] replaced with Birge-Lee et al. 2024 (BGP routing trust failure, DOI: 10.1007/978-3-031-85960-1_14); commercial VPN [CITATION NEEDED] and ZTA latency [CITATION NEEDED] replaced with Mackey et al. 2020 (WireGuard vs OpenVPN performance benchmark, DOI: 10.1145/3374664.3379532). Abstract updated with empirical results. §7 Conclusion updated with benchmark summary."
+    changes: "§4 Implementation written: benchmark environment, hub/spoke configuration, key generation procedure, BLAKE2s audit log construction. §5 Evaluation written: empirical benchmark results from four measurements (tunnel establishment n=30, re-handshake n=10, policy-change propagation n=20, failure-mode n=5). Benchmark platform: GCP e2-standard-8, Ubuntu 24.04, kernel 6.17.0-gcp, WireGuard 1.0.0."
 cites:
   - donenfeld-2017-wireguard
   - rose-2020-nist-800-207
@@ -83,32 +80,47 @@ cites:
   - bellovin-1989-security-problems
   - dingledine-2004-tor
   - asokan-2011-man-in-middle
-  - birge-lee-2024
-  - mackey-2020-wireguard-openvpn
 forbidden_terms_cleared: true
 notes_for_editor: |
-  §4 and §5 were added at v0.4 and require one additional language pass before submission.
-  Current body word count is approximately 6,400 words against a 9,000-word target;
-  the remaining approximately 2,600 words are expected to come from expanded implementation
-  detail in §4 and additional evaluation discussion in §5. ORCID IDs for all three authors
-  required before submission. Benchmark measurements were collected in isolated Linux network
-  namespaces with veth-pair underlay on commodity cloud hardware; the benchmark environment
-  is described in full in §4.1.
+  Writing pass 2026-05-29 (v0.3): §4 and §5 now fully written with empirical data.
+  Benchmark platform: GCP e2-standard-8, Ubuntu 24.04, kernel 6.17.0-1013-gcp,
+  WireGuard kernel module v1.0.0. Tests used isolated Linux network namespaces with
+  veth-pair underlay (0 additional network latency).
+
+  Pre-submission blockers (remaining):
+    - ORCID IDs for all three authors
+    - Word count target 9,000 — currently ~6,500. §4.5 audit log daemon could be
+      expanded with a more complete pseudocode listing; §5 could add a comparison table
+      referencing Mackey et al. 2020 latency figures.
+    - Final language pass on §4 and §5 (forbidden_terms_cleared not re-verified after
+      new sections added v0.3 — run verification pass before submission)
+
+  Resolved in v0.4:
+    - [Cameron et al. 2019] replaced with Birge-Lee et al. 2024 (BGP routing trust failure;
+      DOI: 10.1007/978-3-031-85960-1_14) + text adjusted to routing infrastructure framing
+    - Commercial VPN provider [CITATION NEEDED] replaced with Mackey et al. 2020 reference
+    - ZTA latency [CITATION NEEDED] replaced with Mackey et al. 2020
+      (DOI: 10.1145/3374664.3379532; WireGuard vs OpenVPN performance benchmark, ACM CODASPY)
+
+  Venue note: IEEE TIFS is the primary target. Check current IEEE JSAC CFP for
+  "Zero Trust for Next-Generation Networking" special issue — if open, preferred
+  submission path. Standard TIFS track is the fallback.
 ---
 
-> **Working Paper · Version 0.4 · 2026-05-29 · CC BY 4.0**
-> This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. Correspondence: corporate.secretary@woodfinegroup.com.
+> **Working Paper · Version 0.3 · 2026-05-29 · CC BY 4.0**
+> This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. Correspondence: jmwoodfine@gmail.com.
 >
-> *Cite as:* Woodfine, Peter M., Woodfine, Mathew, & Woodfine, Jennifer M. (2026). Customer-Rooted Mesh Architecture for Distributed Operational Systems. Working Paper v0.4, 29 May 2026. Woodfine Management Corp., New York, NY.
+> *Cite as:* Woodfine, P.M., Woodfine, M., & Woodfine, J.M. (2026). Customer-Rooted Mesh Architecture for Distributed Operational Systems. Working Paper v0.3, 29 May 2026. Woodfine Management Corp., Vancouver, BC.
 
 > **Forward-Looking Statements**
 > Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially. Readers should not place undue reliance on such statements; they are subject to revision as research progresses and new data become available.
 
 # Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody
 
-**Peter M. Woodfine, Mathew Woodfine, and Jennifer M. Woodfine**  
-Woodfine Management Corp., New York, NY, USA  
-*Corresponding author:* corporate.secretary@woodfinegroup.com
+**Woodfine Management Corp.**
+Vancouver, British Columbia, Canada
+
+*Corresponding author:* jmwoodfine@gmail.com
 
 ---
 
@@ -138,7 +150,13 @@ These risks are not hypothetical; analogous failures have been documented in cri
 
 The academic and practitioner literature on ZTA [Rose et al. 2020; Kindervag 2010; Ward and Beyer 2014] acknowledges the customer/vendor boundary but does not enumerate the key-custody risks or propose architectures that explicitly address them. WireGuard [Donenfeld 2017], the modern kernel-integrated VPN protocol with a formally verified cryptographic core [Lipp et al. 2019], provides the cryptographic primitives required to build ZTA without vendor key custody — but no peer-reviewed publication has documented a complete architecture that does so.
 
-This paper makes three contributions: (1) a taxonomy of key-custody risks in commercial ZTA, enumerating the four risk categories above and defining measurable falsification criteria for customer key-custody assurance; (2) the customer-rooted mesh architecture (CRMA), a WireGuard-based ZTA design in which private keys are generated on and never leave the nodes they protect, the central coordinator holds only public keys and distributes topology configuration, and the audit log is written to customer-controlled append-only storage; and (3) a prototype implementation with empirical benchmarks — a hub-provisioning script, spoke-factory script, and configuration templates that instantiate the CRMA, with measured performance characteristics for tunnel establishment, policy-change propagation, and failure-mode recovery.
+This paper makes three contributions:
+
+1. **A taxonomy of key-custody risks in commercial ZTA** — enumerating the four risk categories above and defining measurable falsification criteria for customer key-custody assurance.
+
+2. **The customer-rooted mesh architecture (CRMA)** — a WireGuard-based ZTA design in which private keys are generated on and never leave the nodes they protect; the central coordinator holds only public keys and distributes topology configuration; and the audit log is written to customer-controlled append-only storage.
+
+3. **A prototype implementation with empirical benchmarks** — a hub-provisioning script, spoke-factory script, and configuration templates that instantiate the CRMA, with measured performance characteristics for tunnel establishment, policy-change propagation, and failure-mode recovery.
 
 The remainder of this paper is organised as follows. Section 2 reviews background on ZTA, WireGuard, and the Noise Protocol Framework. Section 3 describes the CRMA design. Section 4 describes the prototype implementation and benchmark environment. Section 5 presents the empirical evaluation. Section 6 states formal hypotheses and the falsification programme. Section 7 concludes.
 
@@ -186,7 +204,13 @@ In the CRMA, audit logs are written to a customer-controlled, host-local append-
 
 The CRMA is defined by four design principles derived from the key-custody risk taxonomy in Section 1:
 
-Four design principles govern the architecture. *Node-local key generation (P1).* Each node generates its own WireGuard private key using the system's cryptographically secure random number generator (`wg genkey` on Linux, invoking `getrandom(2)`); the private key is stored in a root-readable file on the generating node (`/etc/wireguard/privatekey`, permissions 0600) and is never transmitted, never escrowed, and never accessible to the central coordinator. *Public-key-only coordinator (P2).* The central coordinator (hub node) maintains a registry of peer public keys and their assigned tunnel IP addresses; it distributes mesh-configuration updates to spoke nodes — updated `[Peer]` sections listing which public keys are authorised and what AllowedIPs each peer is assigned — and holds no private keys other than its own; a coordinator that is compromised or subpoenaed exposes only the list of current peer public keys, the current mesh topology, and coordinator traffic logs, but not any private keys. *Topology-derived AllowedIPs (P3).* The AllowedIPs configuration for each node is derived from the application's service-composition dependency graph: a service at Ring 1 (data boundary) is assigned AllowedIPs that permit inbound connections only from Ring 2 addresses; a service at Ring 2 permits connections from both Ring 1 and Ring 3; a service at Ring 3 (the outermost application ring) may initiate connections to Ring 2 only; this topology-enforcement is implemented entirely through the static AllowedIPs configuration, with no runtime firewall component or dynamic policy engine, so the correctness of the isolation guarantee is auditable by reading the WireGuard configuration files. *Customer-controlled audit log (P4).* Each node writes an audit log to a local append-only file recording WireGuard handshake events (timestamp, peer public key, handshake result), tunnel state changes, and AllowedIPs configuration changes; the hub additionally logs topology-change events distributed to spoke nodes; log files are append-only by OS-enforced permission (owner read-write, group read, world none; no `O_TRUNC` permitted by the logging process); optionally, log entries are BLAKE2s-chained for Merkle-tree-style non-repudiation.
+**P1: Node-Local Key Generation.** Each node in the mesh generates its own WireGuard private key using the system's cryptographically secure random number generator (`wg genkey` on Linux, invoking `getrandom(2)`). The private key is stored in a root-readable file on the generating node (`/etc/wireguard/privatekey`, permissions 0600). The private key is never transmitted, never escrowed, and never accessible to the central coordinator.
+
+**P2: Public-Key-Only Coordinator.** The central coordinator (hub node) maintains a registry of peer public keys and their assigned tunnel IP addresses. The coordinator distributes mesh-configuration updates to spoke nodes — specifically, updated `[Peer]` sections listing which public keys are authorised and what AllowedIPs each peer is assigned. The coordinator holds no private keys other than its own. A coordinator that is compromised or subpoenaed exposes only: (a) the list of current peer public keys, (b) the current mesh topology (which node is at which tunnel IP), and (c) coordinator traffic logs. It does not expose any private keys.
+
+**P3: Topology-Derived AllowedIPs.** The AllowedIPs configuration for each node is derived from the application's service-composition dependency graph. A service at Ring 1 (data boundary) is assigned AllowedIPs that permit inbound connections only from Ring 2 addresses; a service at Ring 2 is assigned AllowedIPs that permit connections from both Ring 1 and Ring 3; a service at Ring 3 (the outermost application ring) may initiate connections to Ring 2 only. This topology-enforcement is implemented entirely through the static AllowedIPs configuration — there is no runtime firewall component or dynamic policy engine. The correctness of the isolation guarantee is therefore auditable by reading the WireGuard configuration files.
+
+**P4: Customer-Controlled Audit Log.** Each node writes an audit log to a local append-only file. The log records: WireGuard handshake events (timestamp, peer public key, handshake result); tunnel state changes (peer up/down); AllowedIPs configuration changes (with the previous and new configurations, timestamp, and operator identity if available). The hub additionally logs topology-change events distributed to spoke nodes. Log files are append-only by OS-enforced permission (owner read-write, group read, world none; no `O_TRUNC` permitted by the logging process). Optional: log entries are BLAKE2s-chained for Merkle-tree-style non-repudiation.
 
 ### 3.2 Network Topology
 
@@ -317,9 +341,7 @@ Benchmark tests were conducted using two Linux network namespaces (`bench-hub` a
 
 ### 4.2 Hub Configuration
 
-The hub is provisioned by a hub-provisioning script that performs key generation, `wg0.conf` construction, IP forwarding activation, iptables masquerade rule installation, and WireGuard service start. The resulting configuration is shown in Listing 1.
-
-**Listing 1.** Hub WireGuard configuration (`wg0.conf`).
+The hub is provisioned by a hub-provisioning script that performs the following steps: key generation, `wg0.conf` construction, IP forwarding activation via `sysctl -w net.ipv4.ip_forward=1`, iptables masquerade rule installation, and WireGuard service start. The resulting `wg0.conf` has the structure:
 
 ```ini
 [Interface]
@@ -344,9 +366,7 @@ Peer additions and AllowedIPs changes are applied at runtime using `wg set wg0 p
 
 ### 4.3 Spoke Configuration
 
-The spoke-factory script generates a keypair on the provisioning machine, assigns the spoke a tunnel address from the hub's `/24` subnet, and constructs the configuration shown in Listing 2.
-
-**Listing 2.** Spoke WireGuard configuration (`wg0.conf`).
+The spoke-factory script generates a keypair on the provisioning machine, assigns the spoke a tunnel address from the hub's `/24` subnet, and constructs a `wg0.conf`:
 
 ```ini
 [Interface]
@@ -377,9 +397,7 @@ The `wg genkey` command calls `getrandom(2)` to produce 32 bytes of uniformly di
 
 ### 4.5 BLAKE2s Audit Log Construction
 
-The BLAKE2s-chained audit log is implemented as a polling daemon that reads WireGuard state every five seconds via `wg show all dump` and appends structured events to `/var/log/wireguard-audit.jsonl`. The core chain-construction functions are shown in Listing 3.
-
-**Listing 3.** BLAKE2s audit log daemon — chain construction (Python 3.8+).
+The BLAKE2s-chained audit log is implemented as a polling daemon that reads WireGuard state every five seconds via `wg show all dump` and appends structured events to `/var/log/wireguard-audit.jsonl`:
 
 ```python
 import hashlib, json, time
@@ -475,6 +493,7 @@ def run_daemon():
                 chain_head = append_event(event, chain_head)
             prev_state = curr_state
         except subprocess.CalledProcessError as exc:
+            # wg command failed (interface down, permission error)
             chain_head = append_event(
                 {'event': 'wg_poll_error', 'detail': str(exc), 'ts': int(time.time())},
                 chain_head)
@@ -522,7 +541,9 @@ WireGuard automatically rekeys established sessions at REKEY_AFTER_TIME (120 s, 
 
 **Measurement protocol.** AllowedIPs updates are applied to the hub's WireGuard interface using `wg set wg-hub peer <pubkey> allowed-ips <new-cidr>`. Two measurements are reported: (a) the `wg set` command execution time (pure kernel netlink operation), and (b) end-to-end time from `wg set` invocation to verified application-layer reachability of a newly-permitted IP address.
 
-Two metrics are reported for policy-change propagation. For `wg set` command latency (B3a): n = 20 trials, mean = 8 ms, min = 7 ms, max = 11 ms. The `wg set` operation is a synchronous kernel netlink call: AllowedIPs enforcement takes effect before the command returns, so a packet arriving at the WireGuard interface after `wg set` returns will be filtered according to the updated AllowedIPs table; there is no propagation delay at the policy-enforcement layer. For application-layer verification latency (B3b): n = 20 trials; after `wg set`, ICMP ping to the newly-permitted address succeeds within a window that includes route table propagation on the spoke (1–3 ms), kernel scheduling latency, and, if the spoke has not recently communicated with the hub, the re-handshake cost described in §5.2; excluding trials that required a new handshake, end-to-end reachability was confirmed within 15–50 ms of the `wg set` call. The `wg set` operation itself (8 ms) constitutes the policy-enforcement action; subsequent latency is attributable to routing and transport, not to WireGuard policy propagation.
+**Results — (a) wg set command latency.** n = 20 trials. Mean = 8 ms, min = 7 ms, max = 11 ms. The `wg set` operation is a synchronous kernel netlink call: AllowedIPs enforcement takes effect before the command returns. A packet arriving at the WireGuard interface after `wg set` returns will be filtered according to the updated AllowedIPs table. There is no propagation delay at the policy-enforcement layer.
+
+**Results — (b) Application-layer verification latency.** n = 20 trials. After `wg set`, ICMP ping to the newly-permitted address succeeds within a window that includes route table propagation on the spoke (1–3 ms), kernel scheduling latency, and, if the spoke has not recently communicated with the hub, the re-handshake cost described in Section 5.2. Excluding trials that required a new handshake, end-to-end reachability was confirmed within 15–50 ms of the `wg set` call. The `wg set` operation itself (8 ms) constitutes the policy-enforcement action; subsequent latency is attributable to routing and transport, not to WireGuard policy propagation.
 
 For deployments with multiple spoke nodes, AllowedIPs changes on the hub must be applied sequentially (one `wg set` call per peer). With 5 spokes and 8 ms per `wg set` call, hub-side policy update time is approximately 40 ms; this is consistent with the O(n) peer-entry update model noted in Section 3.4.
 
@@ -570,29 +591,26 @@ Policy-change propagation (8 ms mean for `wg set`) has no direct analogue in the
 
 ### 6.2 Falsification Programme
 
-The falsification programme defines six tests specifying the conditions under which each hypothesis would be rejected.
-
-H₁ (isolation equivalence) is addressed by two tests. *T1 — NIST coverage:* H₁ is falsified if a reviewer identifies a NIST SP 800-207 tenet that the CRMA structurally cannot satisfy, and demonstrates the shortfall with a concrete attack scenario that AllowedIPs enforcement and handshake authentication together fail to mitigate. *T2 — policy dynamism:* H₁ is additionally falsified if a reviewer constructs a representative deployment scenario where observable-state-driven policy change is required for security, shows that static AllowedIPs is insufficient, and estimates that such scenarios occur with enough frequency to be materially relevant.
-
-H₂ (key custody preservation) is addressed by two tests. *T3 — key isolation:* H₂ is falsified if a reviewer demonstrates a software pathway by which a hub-side process can extract a spoke private key under design constraints P1–P4, or shows that hub compromise enables traffic decryption through session-key recovery from hub memory. *T4 — impersonation:* H₂ is additionally falsified if a reviewer demonstrates that a hub-side attacker can construct a valid WireGuard handshake impersonating a spoke to another spoke, using only materials available on the hub.
-
-H₃ (audit log integrity) is addressed by two tests. *T5 — log insertion:* H₃ is falsified if a reviewer constructs a BLAKE2s-chained log entry insertion that passes chain-integrity verification without access to the spoke node's logging daemon or local log file. *T6 — log truncation:* H₃ is additionally falsified if a reviewer demonstrates that a hub-side attacker can truncate a spoke's audit log below the spoke's current chain head without producing a chain break detectable by an independent verifier.
+| Test | Hypothesis | Falsification criterion |
+|------|------------|------------------------|
+| T1 | H₁ NIST coverage | Identify a NIST SP 800-207 tenet that the CRMA structurally cannot satisfy; demonstrate with a concrete attack scenario not mitigated by AllowedIPs + handshake authentication |
+| T2 | H₁ policy dynamism | Construct a scenario where observable-state-driven policy change is required for security and static AllowedIPs is insufficient; estimate frequency of such scenarios in representative deployments |
+| T3 | H₂ key isolation | Demonstrate a software pathway through which a hub-side process can extract a spoke private key under the CRMA design constraints (P1–P4); or demonstrate that a hub compromise enables traffic decryption via session-key extraction from hub memory |
+| T4 | H₂ impersonation | Demonstrate that a hub-side attacker can construct a WireGuard handshake that impersonates a spoke to another spoke, using only materials available on the hub |
+| T5 | H₃ log integrity | Construct a BLAKE2s-chained log entry insertion that passes chain-integrity verification without access to the spoke node's logging daemon or local log file |
+| T6 | H₃ truncation | Demonstrate that a hub-side attacker can truncate a spoke's audit log below the spoke's current chain head without producing a detectable chain break |
 
 ### 6.3 Limitations
 
-Four limitations bound the CRMA as designed.
+Four limitations bound the CRMA as designed:
 
-*Static AllowedIPs and dynamic threat response.* The NIST SP 800-207 framework envisions dynamic access policy informed by observed device and user state — for example, blocking a node from accessing Ring 2 resources if its operating system patch level drops below threshold. The CRMA's AllowedIPs enforcement is static at the tunnel layer; dynamic policy changes require a spoke-configuration update and a `wg syncconf` cycle. This introduces a policy-change latency that commercial ZTA products with runtime policy engines do not share. For threat-response scenarios requiring sub-minute policy updates across many nodes, the static AllowedIPs model may be insufficient.
+1. **Static AllowedIPs and dynamic threat response.** The NIST SP 800-207 framework envisions dynamic access policy informed by observed device and user state — for example, blocking a node from accessing Ring 2 resources if its operating system patch level drops below threshold. The CRMA's AllowedIPs enforcement is static at the tunnel layer; dynamic policy changes require a spoke-configuration update and a `wg syncconf` cycle. This introduces a policy-change latency that commercial ZTA products with runtime policy engines do not share. For threat-response scenarios requiring sub-minute policy updates across many nodes, the static AllowedIPs model may be insufficient.
 
-*Spoke private-key security is OS-dependent.* P1 guarantees that the CRMA design does not transmit private keys; it does not guarantee the security of private keys once stored on the spoke node. A spoke node with a compromised operating system, unencrypted storage, or weak file permissions (`/etc/wireguard/privatekey` with world-readable permissions) negates the key-custody property. The CRMA's security model requires that each spoke node's OS is considered trusted; the design provides no mechanism for attestation of spoke OS integrity.
+2. **Spoke private-key security is OS-dependent.** P1 guarantees that the CRMA design does not transmit private keys; it does not guarantee the security of private keys once stored on the spoke node. A spoke node with a compromised operating system, unencrypted storage, or weak file permissions (`/etc/wireguard/privatekey` with world-readable permissions) negates the key-custody property. The CRMA's security model requires that each spoke node's OS is considered trusted; the design provides no mechanism for attestation of spoke OS integrity.
 
-*Hub as single point of availability.* In full-tunnel mode (AllowedIPs = 0.0.0.0/0), all inter-spoke traffic routes through the hub. Hub unavailability disrupts all spoke-to-spoke communication. This is a deliberate availability trade-off against simplicity of configuration and auditability. Full-mesh topology (where spokes have direct peer entries for each other) resolves the availability bottleneck at the cost of O(n²) peer entries and the requirement for spoke-to-spoke NAT traversal.
+3. **Hub as single point of availability.** In full-tunnel mode (AllowedIPs = 0.0.0.0/0), all inter-spoke traffic routes through the hub. Hub unavailability disrupts all spoke-to-spoke communication. This is a deliberate availability trade-off against simplicity of configuration and auditability. Full-mesh topology (where spokes have direct peer entries for each other) resolves the availability bottleneck at the cost of O(n²) peer entries and the requirement for spoke-to-spoke NAT traversal.
 
-*Out-of-band spoke configuration distribution.* The CRMA does not specify a protocol for delivering spoke configuration files to new spoke nodes. Secure delivery of spoke `wg0.conf` files (which include the spoke private key) requires a pre-existing secure channel — typically SSH copy with host-key verification. This is an onboarding bootstrapping problem. For large deployments, an automated spoke-provisioning service that generates spoke keypairs on-device and distributes only the hub's public key (not the spoke's private key) would resolve the bootstrapping problem without violating P1, but such a service is not implemented in the prototype.
-
-### 6.4 Protocol Generalizability
-
-The CRMA is specified and evaluated in terms of WireGuard, but the four design principles (P1–P4) and the key-custody taxonomy in Section 1 are protocol-agnostic. The security properties asserted by H₁–H₃ — handshake authentication, session-key secrecy under coordinator compromise, and hash chain integrity — are expressible for any authenticated key-exchange protocol that supports node-local key generation and static peer configuration. An implementation using IKEv2 with pre-shared keys generated on-node, or a QUIC-based mesh using TLS 1.3 client certificates generated on-node, would satisfy P1–P4 under equivalent assumptions. WireGuard was chosen for this prototype because its minimal cryptographic surface, formal verification, and kernel-native integration make it well suited to the customer-controlled deployment model. The falsification programme tests (T1–T6) are stated in terms of cryptographic properties rather than WireGuard-specific behaviour, and apply equally to any CRMA instantiation.
+4. **Out-of-band spoke configuration distribution.** The CRMA does not specify a protocol for delivering spoke configuration files to new spoke nodes. Secure delivery of spoke `wg0.conf` files (which include the spoke private key) requires a pre-existing secure channel — typically SSH copy with host-key verification. This is an onboarding bootstrapping problem. For large deployments, an automated spoke-provisioning service that generates spoke keypairs on-device and distributes only the hub's public key (not the spoke's private key) would resolve the bootstrapping problem without violating P1, but such a service is not implemented in the prototype.
 
 ---
 
@@ -648,8 +666,6 @@ Laurie, Ben, Adam Langley, and Emilia Kasper. 2013. "Certificate Transparency." 
 
 Lipp, Benjamin, Bruno Blanchet, and Karthikeyan Bhargavan. 2019. "A Mechanised Cryptographic Proof of the WireGuard VPN Protocol." In *Proceedings of the 40th IEEE Symposium on Security and Privacy (IEEE S&P 2019),* 231–248. IEEE.
 
-Mackey, Shane, Ivan Mihov, Andrey Nosenko, Francisco Vega, and Yong Cheng. 2020. "A Performance Comparison of WireGuard and OpenVPN." In *Proceedings of the 10th ACM Conference on Data and Application Security and Privacy (CODASPY '20),* 162–164. New York, NY: ACM. DOI: 10.1145/3374664.3379532.
-
 Osborn, Betsy, Jason Polakis, and Angelos Keromytis. 2016. "Google BeyondCorp: The Access Proxy." *;login: The USENIX Magazine* 41 (1): 28–33.
 
 Perrin, Trevor. 2018. "The Noise Protocol Framework." Revision 34. Available: https://noiseprotocol.org/noise.html
@@ -660,3 +676,14 @@ Saltzer, Jerome H., and Michael D. Schroeder. 1975. "The Protection of Informati
 
 Ward, Rob, and Betsy Beyer. 2014. "BeyondCorp: A New Approach to Enterprise Security." *;login: The USENIX Magazine* 39 (6): 6–11.
 
+Mackey, Shane, Ivan Mihov, Andrey Nosenko, Francisco Vega, and Yong Cheng. 2020. "A Performance Comparison of WireGuard and OpenVPN." In *Proceedings of the 10th ACM Conference on Data and Application Security and Privacy (CODASPY '20),* 162–164. New York, NY: ACM. DOI: 10.1145/3374664.3379532.
+
+---
+
+*Version 0.4 — citation resolution 2026-05-29*
+*[Cameron et al. 2019] replaced with Birge-Lee et al. 2024 (DOI: 10.1007/978-3-031-85960-1_14)*
+*ZTA latency [CITATION NEEDED] replaced with Mackey et al. 2020 (DOI: 10.1145/3374664.3379532)*
+*Version 0.3 — §4 Implementation and §5 Evaluation written with empirical benchmark data*
+*Benchmark environment: GCP e2-standard-8, Ubuntu 24.04, kernel 6.17.0-gcp, WireGuard 1.0.0*
+*§1–§3 + §6–§7 body written and language-cleared (v0.2)*
+*Remaining pre-submission gates: ORCID IDs, final language pass on §4–§5*
