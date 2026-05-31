@@ -1,96 +1,224 @@
-## Session context — rolling 3-session summary
+# Session Context — project-infrastructure
+
+Rolling 3-session summary. Newest on top. Push oldest to `session-context-archive.md` when
+a fourth entry is added.
 
 ---
 
-### 2026-06-01 | totebox@project-gis | claude-sonnet-4-6 + opus-4-8
+## 2026-05-31 session 13–14 | Totebox | claude-code (Sonnet 4.6)
 
-**Done this session — Location Intelligence VWH + PKS data collection:**
-- Established three-archetype model: **PRO** (Professional Centres = existing T1/T2/T3), **VWH** (Vertical Warehouse), **PKS** (Parking Structures). Codes ratified PRO/VWH/PKS.
-- **Taxonomy**: 8 new non-tier-gating categories in `taxonomy.py` (auto_parts, paint, mro_industrial, flooring, tool_rental, lumber, plumbing, electrical, welding, car_rental); BRAND_FILL + DISPLAY_NAMES for 32 chains.
-- **27 chain YAMLs** created in deployment service-business; **19,242 records ingested** across 32 chains (AutoZone 4,047, O'Reilly 3,393, Würth 882, Enterprise 1,869, Europcar 1,022, etc.).
-- **build-clusters.py**: added `enrich_with_vwh` pass — VWH/PKS chains attach to clusters within 5km like civic, never gate tier. Validated: tier counts identical (T1=1,746/T2=2,726/T3=2,021), 4,634 clusters enriched, 152/360 VWH candidates carry industrial signal (Colorado Springs strength=4).
-- **test-cluster-archetypes.py**: loads IATA-airports + railway stations as combined PKS anchors (Overture fallback); scores VWH by `vwh_signal`/`vwh_strength`. Output renamed to canonical archetype-vwh/-pks names; deployed to gateway.
-- **index.html**: VWH/PKS toggle overlays under Layers; `applyLiOverlayStyle()` copies rm-stars fade; BentoBox untouched per operator.
-- **Infra scripts**: `ingest-osm-airports.py` (IATA filter + military exclusion + US/CA tiling) and `ingest-osm-railway.py` (intercity operator filter, MX/IS skipped) written + validated.
-- **nightly-rebuild.sh**: wired archetype test + GeoJSON deploy as step 3 (after cluster rebuild).
-- Editorial: BRIEF-location-intelligence-archetypes + TOPIC-vertical-warehouse + TOPIC-parking-structures + GUIDE-location-intelligence-data-collection drafted (registry A18–A21).
+**Done this session:**
+- BRIEF consolidation: 7 BRIEFs → 4 (BRIEF-totebox-transformation + BRIEF-PPN-DEV-BOOTSTRAP
+  archived; content merged into BRIEF-VM-ARCHITECTURE, BRIEF-OS-FAMILY, BRIEF-PPN-ARCHITECTURE).
+- Cross-archive guidance messages written to project-system, project-data, project-console
+  + BRIEF-OS-FAMILY §7 Totebox-Archive-as-VM scaling table added.
+- `vm_spawn` module implemented (create_blank_disk + spawn_qemu + kill_qemu; qemu-img +
+  qemu-system-x86_64 -daemonize; user-mode networking; ENV_LOCK mutex for test serialization).
+- `vm_spawn` wired into service-vm-fleet: create_vm_handler (spawn_blocking QEMU fork after
+  lock release), destroy_vm_handler (kill_qemu), GET /v1/nodes + all_nodes() in fleet.rs.
+- QEMU monitor Phase 2: full QMP socket scan in service-vm-host/src/qemu_monitor.rs
+  (UnixStream, 500ms timeout, query-status → VmState::Running).
+- local-vm-fleet.service created; local-vm-host.service User=foundry→User=mathew fixed.
+- All 19 tests pass (14 service-vm-fleet + 5 service-vm-host).
+- Deployment (GCP workspace VM): all 3 services active:
+  - service-ppn-pairing :9205 (port 9202 conflict with app-privategit-marketplace → moved)
+  - service-vm-fleet :9203 (gcp-cloud-1 registered, kvm_available=false)
+  - service-vm-host (heartbeating every 10s from gcp-cloud-1)
+- /etc/default/vm-host created; /var/lib/vm-fleet created (mathew:foundry ownership).
+- Editorial review received from project-editorial for PROSE-RESEARCH-ppn-architecture-phd-thesis:
+  6 revision points (register, structure, contribution #4, citations, BCSC posture, abstract).
+  Notes in NEXT.md.
 
-**Infra ingest COMPLETE (08:10Z):** 4,024 IATA-filtered airports (3,774 w/ IATA code; vs 20,841 Overture noise) + 18,107 intercity rail stations in service-places. test-cluster-archetypes.py re-run with both → **14,332 PKS candidates** (1,744 airport + 12,588 rail), **3,904 integrated** (637 airport + 3,267 rail). Railway dominates — EU park-and-train. GeoJSON redeployed to gateway.
+**Commits this session:**
+- `ba5a8236` (Peter) — chore(outbox): mark BRIEF Q2-Q6 + sessions 2-5 TOPIC relay messages actioned
+- `7a9daa83` (Jennifer) — ops(mailbox): Laptop A KVM confirmed present — /dev/kvm verified 2026-05-30
+- `7a34038e` (Peter) — ops(mailbox): mark 7 command-facing + editorial outbox messages actioned
+- `45f7a255` (Jennifer) — chore(shutdown): session 12 extended close — kvm_available; GCP e2 KVM block
+- `87aa0ddd` (Peter) — ops(relay): mark 6 outbox messages actioned
+- `34dac679` (Jennifer) — feat(guidance): cross-archive alignment msgs + OS-FAMILY §7 Totebox VM scaling
+- `567ed608` (Peter) — feat(vm-fleet): QEMU spawn module + monitor Phase 2 + /v1/nodes + systemd units
+- `7cf272a7` (Peter) — fix(ppn-pairing): bind port 9202→9205
+- `ab24ab4c` (Jennifer) — ops(deploy): 3 services live on GCP — ppn-pairing :9205, vm-fleet :9203, vm-host
 
 **Pending / carry-forward:**
-- Re-run `ingest-osm-airports.py --countries US` to fill tile gaps (a few US tiles failed under throttle; US got 1,714 airports — solid but incomplete).
-- **Railway drift + PKS re-run:** deployed `archetype-pks.geojson` was built from 18,107 rail stations; a duplicate detached ingest run finished afterward and settled the file at **18,116** (+9 stations, last-writer-wins, no corruption). Trivial drift — re-run `test-cluster-archetypes.py` next session (or let nightly-rebuild.sh do it) to resync the deployed PKS GeoJSON to 18,116.
-- **Stage 6 pending**: code commits (taxonomy/build-clusters/ingest scripts/test/nightly) need `bin/promote.sh` from Command.
-- Chain YAMLs + JSONL live in deployment (cluster-totebox-personnel-1), local-only — not committed (per architecture).
+- Binary ledger entries for 3 new binaries (Command action — outbox written).
+- software-units.yaml: add ppn-pairing-server :9205 entry (Command action).
+- Stage 6 — 9 commits ahead of origin/main (Command action).
+- Deploy service-vm-host on Laptop A + Laptop B (needs /etc/default/vm-host per node).
+- PROSE-RESEARCH-ppn-architecture-phd-thesis: 6 editorial revision points (see NEXT.md).
+- Laptop A KVM verified (/dev/kvm present) — can assign prefer_kvm=true in fleet when Laptop A vm-host deployed.
+- Genesis Protocol: Q2–Q6 operator decisions still open.
+- VM-Totebox Phase 1 blocked on project-data Stage 6 (service-fs needed).
 
 **Operator preferences surfaced:**
-- BentoBox is working well — do NOT modify it; VWH/PKS are map overlays only.
-- Capture research in BRIEF/TOPIC/GUIDE artifacts so nothing is lost.
-- Heavy data collection belongs in night builds (like AEC).
+- (no new preferences this session)
 
 ---
 
-### 2026-05-30 | totebox@project-console | claude-sonnet-4-6
+## 2026-05-29 session 12 | Totebox | claude-code (Sonnet 4.6)
 
 **Done this session:**
-- Phase A complete (prior session): Doorman port 8011→9080 fixed everywhere; Phase 5 marked complete in BRIEFs; `BRIEF-cross-platform-release.md` created; Stage 6 force-push executed (`009b2e04`); outbox sent to Command.
-- Phase B complete (this session): Cross-platform release infrastructure.
-  - `rust-toolchain.toml` (stable channel pinned at monorepo root)
-  - `.github/workflows/release.yml` rewritten: 4-target matrix (Linux musl via cargo-zigbuild on ubuntu-22.04, macOS Intel 10.13+ on macos-13, macOS ARM 11.0+ on macos-14, universal lipo); trigger on `v*.*.*` tag + workflow_dispatch; `softprops/action-gh-release@v2`
-  - `reqwest` TLS switched from default (native-tls) to `rustls-tls` in all 4 workspace members: app-console-keys, app-console-content, app-console-input, app-console-system
-  - `TerminalCaps` struct added to `app-console-keys/src/chassis.rs`: fields `kitty`, `sixel`, `truecolor`; detected from `Picker::protocol_type()` (ratatui-image 9.0.0) + `COLORTERM` env var; stored on `AppConsoleKeys`; populated in `run_local()` after probe; exposed via `caps()` accessor
-  - `cargo check --workspace` exits 0; committed `6f21f580` (Jennifer Woodfine)
-- B2 (`.cargo/config.toml`) omitted: `[env]` in Cargo config has no target-conditional syntax; `MACOSX_DEPLOYMENT_TARGET` correctly set per-job in CI workflow.
-- `pointsav-monorepo/NEXT.md` updated: Phase B complete; Phase C/D/E added as next items.
+- Brief corrections (NetBSD/NVMM replacing bhyve everywhere; Microkit x86-64 constraint
+  documented — 1 vCPU/VM, Intel VT-x only; AArch64 remains correct Phase 3 path).
+- WireGuard Part A-lite LIVE status documented: Laptop A (10.8.0.6), Laptop B hub
+  (10.8.0.1, 24.86.192.209:51820), GCP (10.8.0.9). SSH verified between all nodes.
+- GCP KVM absence documented: `/dev/kvm` not present; all QEMU runs TCG; operator action
+  required (GCP console nested virtualization).
+- New durable artifacts: BRIEF-LEAPFROG-2030.md + BRIEF-OS-FAMILY.md (consolidated os-*
+  reference with Phase 1/2/3 targets for all 5 os-* types).
+- Updated BRIEF-PPN-ARCHITECTURE.md (§12 resource pooling + §13 GCP KVM),
+  BRIEF-PPN-DEV-BOOTSTRAP.md (NVMM + Microkit x86-64 corrections), BRIEF-VM-ARCHITECTURE.md
+  (NVMM correction + §8 resource pooling + §9 Leapfrog 2030 table), briefs README.
+- Staged editorial: topic-vm-architecture (EN+ES) updated with NVMM correction + new
+  Resource Pooling section; topic-os-infrastructure-ppn-node (EN+ES) new bilingual pair;
+  guide-vm-infrastructure-resource-pool new GUIDE.
+- Three new Rust crates scaffolded and tested:
+  - system-vm-fleet-types: wire types (NodeHeartbeat, VmRecord, PlacementAdvice, etc.);
+    4/4 serde round-trip tests passing
+  - service-vm-fleet: axum :9203, fleet controller, heartbeat ingestion, advisory placement;
+    8/8 tests passing (fleet.rs 4 + placement.rs 4)
+  - service-vm-host: per-node heartbeat agent, /proc/meminfo reader, QEMU monitor stub;
+    2/2 tests passing; `current_thread` Tokio throughout
+- Added Rust `[profile.release]` size discipline to workspace Cargo.toml
+  (opt-level="z", lto, codegen-units=1, panic="abort", strip).
+- Two systemd unit stubs: local-vm-fleet.service (orchestration/) + local-vm-host.service (ppn/).
+- Project registry updated: 3 new rows (system-vm-fleet-types, service-vm-fleet, service-vm-host);
+  Scaffold-coded 56→59, Total 105→108.
+- NEXT.md: fixed 23→33 commit count; added VM-Infrastructure Phase 1 resource pool
+  checklist; added Leapfrog 2030 section.
+- Outbox: 3 messages (project-editorial pickup; project-system Leapfrog discipline + bench
+  #9 coordination; command Stage 6 urgency + GCP KVM operator action).
+
+**Commits this session:**
+- `9fec6e35` (Jennifer) — feat(vm-fleet): system-vm-fleet-types + service-vm-fleet — fleet
+  controller :9203 + advisory placement; brief corrections NVMM/Microkit; BRIEF-LEAPFROG-2030
+  + BRIEF-OS-FAMILY; topic-vm-architecture updated; topic-os-infrastructure-ppn-node +
+  guide-vm-infrastructure-resource-pool staged
+- `cdc044e9` (Jennifer) — feat(vm-host): service-vm-host per-node heartbeat agent;
+  local-vm-host.service; registry rows; NEXT.md session 12; outbox to project-system +
+  project-data + command
+- `97f8b81c` (Peter) — feat(vm-fleet): kvm_available field + prefer_kvm placement —
+  Laptop A/B as primary KVM compute nodes; TCG fallback for GCP e2
+  (GCP e2 cannot do nested KVM at all; no migration yet; Laptop A/B = KVM pool;
+  5+10+3=18 tests pass)
 
 **Pending / carry-forward:**
-- Stage 6 for Phase B commit (`6f21f580`) + prior Phase A commit (`009b2e04`): need `bin/promote.sh` from Command Session. Outbox sent (prior session).
-- **Phase C** — Email cartridge (F3): convert `app-console-email` stub → lib; implement `EmailCartridge` (inbox/read/compose via `service-email` in `project-data`); wire into `os-console`.
-- **Phase D** — SLM cartridge (F9): convert `app-console-slm` stub → lib; implement `SlmCartridge` (Doorman health at 9080, Yo-Yo tier display); wire into `os-console`.
-- **Phase E** — Orchestration wiring: audit `mba_client.rs`; rename `totebox_host` → `orchestration_host` in `ConsoleConfig`.
-- Phase 6: offline mode + Tantivy full-text search (original coding roadmap).
-- Tag `v0.1.0` triggers GitHub Actions release (after Stage 6 + canonical promote).
+- GCP e2 cannot do nested KVM (family-level block; e2→n2 migration deferred until os-* proven on laptops).
+- Run `ls /dev/kvm` on Laptop A locally (not from GCP — port 22 refused on WireGuard interface); if absent: `sudo modprobe kvm_intel`.
+- Ratify 10.50.0.0/24 as canonical PPN subnet Q2 (operator).
+- AArch64 hardware acquisition decision (gates Phase 3 seL4).
+- Stage 6 from Command Session: 33 project-data commits + these new commits.
+- Deploy service-vm-fleet + service-vm-host after Stage 6 binary rebuild.
+- VM-Totebox Phase 1: service-fs still blocked on project-data Stage 6 (33 commits).
+- VM-Orchestration Phase 1: blocked on VM-Totebox service-fs.
+- Genesis Protocol code steps Q2–Q6 still open.
+- J4 ORCID IDs: operator action required.
+- manifest.md prose tetrad section still shows old counts (edit failed; YAML frontmatter OK).
+- 12+ TOPIC pairs + 4 GUIDEs in drafts-outbound awaiting project-editorial pickup.
 
-**Operator preferences surfaced:** (none new this session)
+**Operator preferences surfaced:**
+- Leapfrog 2030 targets: Phase 3 os-* must be 4–10× lighter than Lambda 128 MB.
+- `current_thread` Tokio + `opt-level="z"` `[profile.release]` as mandatory engineering
+  discipline for all new system-* and service-* crates going forward.
+- NetBSD/NVMM (not bhyve) — critical correction to hold across all future briefs.
+- GCP e2 is a hard KVM block (not a config issue); Laptop A/B are the KVM pool; don't suggest nested KVM steps for e2 instances.
+- Old laptops (Sandy Bridge i5-2400S etc.) are intentionally the Leapfrog 2030 test targets — proving freely-transferable os-* on constrained bare metal is the point.
 
 ---
 
-### 2026-05-29 | totebox@project-console | claude-sonnet-4-6
+## 2026-05-29 session 11 | Totebox | claude-code (Sonnet 4.6)
 
 **Done this session:**
-- Editorial routing only. No code changes.
-- Inventoried `.agent/drafts-outbound/` (176 files). Identified 8 project-console drafts at `draft-ready-for-language-pass`: 6 TOPICs (editorial-pipeline-three-stages, customer-tier-catalog-pattern, machine-based-authorization, os-console-platform, input-machine, pointsav-private-network) + 2 GUIDEs (mba-pairing-ceremony, os-console-operator).
-- Prepended outbox message `project-console-20260529-editorial-route` to `totebox@project-editorial` listing all 8 ready drafts with their types and routing destinations.
-- `topic-language-protocol-substrate.md` held back — skeleton only, at `draft-pending-language-pass`.
-- JOURNAL manuscripts (J1–J6) noted but not routed — they follow the separate JOURNAL submission workflow; J5 is on explicit HOLD.
+- Committed modified Cargo.lock (PPN workspace crate join; commit 49d07990).
+- Established VM-* architecture: 5 VM types mirror the 5 os-* source binaries exactly.
+  VM-Totebox · VM-MediaKit · VM-Orchestration · VM-PrivateGit · VM-Infrastructure.
+  Placement principle: service belongs in VM whose os-* namespace owns its data lifecycle.
+- Reframed VM-MediaKit Phase 1 as 6/6 COMPLETE: bim-orchestration correctly scoped to
+  VM-Orchestration; service-fs correctly scoped to VM-Totebox. No more "6/8 blocked" framing.
+- Wrote BRIEF-VM-ARCHITECTURE.md (new durable planning artifact; 7 sections; commit 93949411).
+- Restructured NEXT.md: 5 VM-typed sections replacing the flat vm-mediakit section.
+- Restructured `infrastructure/systemd/` into per-VM subdirs (mediakit/ orchestration/ ppn/ totebox/)
+  using `git mv` — history preserved (commit c0b14bf8).
+- Added `infrastructure/virt/lib/common.sh` + `ppn-join.sh` (shared shell functions).
+- Added provision script stubs for all 5 VM types (provision-vm-totebox.sh,
+  provision-vm-orchestration.sh, provision-vm-privategit.sh,
+  provision-vm-infrastructure-cloud.sh, provision-vm-infrastructure-onprem.sh).
+- Added cloud-init stubs for VM-Totebox and VM-Orchestration.
+- Wrote bilingual TOPIC pair `topic-vm-architecture` (EN + ES); staged to drafts-outbound.
+- Updated manifest.md wiki leg + BRIEF README index.
+- Sent outbox to project-editorial: 12 TOPIC pairs + 3 GUIDEs staged total.
+
+**Commits this session:**
+- `49d07990` — chore(deps): regenerate Cargo.lock — workspace PPN crate join
+- `93949411` — docs(vm-arch): BRIEF-VM-ARCHITECTURE + NEXT.md — 5 VM types, MediaKit Phase 1 complete
+- `c0b14bf8` — feat(infra): VM-* directory restructure — per-VM systemd/ subdirs + provision stubs + topic-vm-architecture TOPIC pair
+- `5edf44b4` — chore(outbox): topic-vm-architecture pickup notice to project-editorial
 
 **Pending / carry-forward:**
-- Stage 6 push: waiting Command authorization for force-push (orphan branch divergence). See inbox `command-20260522-console-stage6-orphan-branch`.
-- **Pre-Phase 6 blocker:** doorman port — verify 9080 vs 8011. Check `slm/endpoint.txt` and `pairings.yaml`. Update `app-console-content/src/draft.rs` + ContentCartridge if 9080 is correct.
-- Phase 6: offline mode + Tantivy full-text search.
-- Archive-level NEXT.md (`/srv/foundry/clones/project-console/NEXT.md`) has project-infrastructure contamination — Command decision pending.
-- `topic-language-protocol-substrate.md` needs a substantive writing pass before language gate.
+- VM-Totebox Phase 1: service-fs blocked on Command promoting project-data (23 commits).
+- VM-Orchestration Phase 1: bim-orch depends on VM-Totebox service-fs.
+- Genesis Protocol code steps Q2–Q6 operator decisions still open.
+- J4 ORCID IDs: operator action required.
+- Stage 6 from Command Session (all 4 new commits above + prior session commits).
+- migrate-service-to-vm.sh references old systemd path (`infrastructure/systemd/*.service`);
+  update to `infrastructure/systemd/mediakit/*.service` when next migration runs.
+- 12 TOPIC pairs + 3 GUIDEs in drafts-outbound awaiting project-editorial pickup.
 
-**Operator preferences surfaced:** (none new this session)
+**Operator preferences surfaced:**
+- Wants VM-* naming to mirror os-* exactly so development mirrors customer deployment.
+- Uses Opus research agents proactively for deep architectural decisions.
+- AArch64 hardware decision deferred; seL4 Phase 3 stays on roadmap explicitly.
 
 ---
 
-### 2026-05-28 | totebox@project-console | claude-sonnet-4-6
+## 2026-05-29 session 9+10 | Totebox | claude-code (Sonnet 4.6)
 
 **Done this session:**
-- Startup only. No code changes.
-- NOTAM hazard resolved: 17 health alerts (doorman-unreachable, services-down) cascaded from 2026-05-27T00:34Z. Root cause: `slm-doorman-server` killed by SIGTERM after spin-loop on shadow brief `84DEA8VZHK0XNXW0JD1FERH3WX`. Apprenticeship queue was empty; restarted `local-doorman` — service now healthy.
-- Doorman port discrepancy discovered: service binds `127.0.0.1:9080` per systemd logs; manifest + Phase 3 code note says `localhost:8011`. `app-console-content` code references 8011. Must resolve before Phase 6 work (offline mode polls doorman healthz). Added to monorepo NEXT.md.
-- Archive-level NEXT.md (`/srv/foundry/clones/project-console/NEXT.md`) contains project-infrastructure content ("NEXT.md — project-infrastructure (cluster/project-infrastructure branch)") — contamination noted in outbox for Command.
-- Updated monorepo `NEXT.md`: Phase 5 → Complete; Phase 6 → Current (was still showing Phase 5 as Current since `894452c1` shutdown update didn't land in monorepo on rebased main).
+- Switched vm-mediakit base image from Debian 12 to Ubuntu 24.04 (glibc 2.39 required by
+  all host-compiled Rust binaries; Debian 12 only has 2.36 — would segfault on load).
+- Booted Ubuntu 24.04 QEMU/TCG VM (PID 4113435). cloud-init completed at guest t=504s.
+  SSH confirmed working: kernel 6.8.0-117-generic, glibc 2.39, user foundry.
+- Fixed `migrate-service-to-vm.sh`: SCP_OPTS uppercase -P 10022; tar pipe replaces rsync
+  (rsync not in Ubuntu minimal); WorkingDirectory creation before systemctl enable; curl
+  double-output bug (removed || echo "000"); port-suffixed tmp path prevents binary race;
+  smoke test curl non-fatal + 60s timeout for TCG.
+- Created 7 systemd unit files in infrastructure/systemd/ for vm-mediakit:
+  local-proofreader, local-knowledge-documentation, local-knowledge-corporate,
+  local-knowledge-projects, local-marketing-pointsav, local-marketing, local-bim-orchestration.
+  All use User=foundry, 0.0.0.0:PORT binds.
+- Migrated 6/8 services into vm-mediakit (all originals still running on host, no DNS changes):
+  proofreader (9092) ✓ · knowledge-documentation (9090) ✓ HTTP 200 · knowledge-corporate
+  (9095) ✓ HTTP 200 · knowledge-projects (9093) ✓ HTTP 200 · marketing-pointsav (9101) ✓
+  HTTP 200 · marketing/woodfine (9102) ✓ HTTP 200.
+- Installed nginx/1.24.0 and build-essential in Ubuntu VM.
+- Sent status update to Command Session outbox: bim-orch blocked on service-fs.
+
+**Commits this session:**
+- `96ae4c77` — fix(vm-mediakit): minimal cloud-init — remove package stanza; serial log
+- `a52a9cca` — feat(vm-mediakit): VM-adapted unit files + migration script content rsync
+- `a23f3d82` — fix(vm-mediakit): use tar pipe instead of rsync for content dirs
+- `11acd012` — fix(vm-mediakit): Ubuntu 24.04 base image — glibc 2.39 required
+- `2e325dea` — fix(vm-mediakit): smoke test curl 000 double-output bug
+- `dd0bd69d` — fix(vm-migrate): port-suffixed tmp path prevents binary race; smoke test non-fatal
+- `4be18e37` — chore(vm-mediakit): session 9 status — 6/8 services active; bim-orch blocked
+- `df6e4cc3` — chore(session): session context update
+- `4a53d3af` — docs(vm-mediakit): topic-os-mediakit Ubuntu 24.04 fix; 2 new GUIDEs
+- `658e6876` — chore(outbox): editorial pickup notice for 2 GUIDEs + topic correction
 
 **Pending / carry-forward:**
-- Stage 6 push: waiting Command authorization for force-push. See outbox `project-console-20260522-stage6-history-divergence`.
-- **Pre-Phase 6 blocker:** doorman port — verify which is authoritative (9080 from service log vs 8011 from manifest). Check `slm/endpoint.txt` and `pairings.yaml`. If 9080 is correct, update code references in `app-console-content/src/draft.rs` and `ContentCartridge`.
-- Phase 6: offline mode + Tantivy full-text search.
-- Pairing-server systemd unit, GCE firewall port 2222, Peter's SSH key — Command/operator.
-- Archive-level NEXT.md replacement (currently has project-infrastructure content) — Command decision needed.
+- service-fs migration (port 9100) — BLOCKED: Command Session must promote project-data's
+  23 commits. Status update sent to command@claude-code outbox.
+- bim-orchestration migration (port 9096) — BLOCKED on service-fs in VM.
+- system-core + system-ledger install — pending project-system reading outbox.
+- system-* P0 fixes — pending project-system (outbox sent).
+- J4 final gates: ORCID IDs (operator); §4–§5 language pass at project-editorial.
+- Operator decision: AArch64 GCP C4A vs Firecracker x86_64 for Phase 3 seL4.
+- Q2–Q5 operator decisions still open.
+- 11 TOPIC pairs + 3 GUIDEs in drafts-outbound awaiting project-editorial pickup.
+- Stage 6 from Command Session (commits ahead of origin/main).
+- Cargo.lock modified pre-session, NOT committed.
 
-**Operator preferences surfaced:** (none new this session)
+**Operator preferences surfaced:**
+- (no new preferences this session)
 
-
+---
