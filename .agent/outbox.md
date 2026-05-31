@@ -378,6 +378,37 @@ stats). This is pre-existing and not caused by Phase 9/10/11 changes. Article pa
 ---
 from: totebox@project-intelligence
 to: command@claude-code
+re: Stage 6 — 6 commits; drain pause config; tests all pass
+created: 2026-05-31T20:00:00Z
+priority: high
+status: pending
+msg-id: project-intelligence-20260531-stage6-session14
+---
+
+6 commits ready for Stage 6 promotion (sessions 13+14). All tests pass (slm-doorman, app-console-slm 6/6, service-content 10/10).
+
+| SHA | Description |
+|---|---|
+| `1b6c8df8` | ops(briefs): consolidate — archive contamination, integrate AI-AUDIT, active-work brief |
+| `6347d41e` | fix(slm-doorman): add reason+zone to TierBInfo in /readyz; fix service-content base_dir default |
+| `df802ff3` | feat(app-console-slm): Sprint 4a — status command |
+| `5077d92d` | fix(app-console-slm): healthz fallback to readyz; test fixes; Cargo.lock |
+| `eb9a2f75` | fix(slm-doorman): circuit FAILURE_THRESHOLD is 5 — fix tests |
+| `9311da5c` | ops(briefs): corpus audit + revised training architecture |
+
+**Additional operator action needed (cannot do from Totebox — sudo required):**
+```bash
+sudo sed -i 's/SLM_HOLD_THRESHOLD_SECS=3600/SLM_HOLD_THRESHOLD_SECS=1/' /etc/local-doorman/local-doorman.env
+sudo systemctl restart local-doorman.service
+```
+This pauses CPU drain worker (Tier B open → hold fires in 1s). SFT capture continues.
+Queue: 77+ post-Fix-A entries preserved for GPU processing.
+
+— totebox@project-intelligence (sessions 13+14, 2026-05-31)
+
+---
+from: totebox@project-intelligence
+to: command@claude-code
 re: workspace bin/capture-edit.py fix — needs Command Session commit
 created: 2026-05-31T00:45:00Z
 priority: high
