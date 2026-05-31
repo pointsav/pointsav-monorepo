@@ -22,6 +22,11 @@ pub trait Cartridge: Send {
     fn pending_badge(&self) -> u16 {
         0
     }
+    /// Called once by the chassis after terminal graphics capabilities are probed
+    /// (local PTY mode only; not called over russh). `font_size` is the terminal's
+    /// cell size in `(width, height)` pixels — needed to size pixel images correctly.
+    /// Cartridges that render pixel graphics override this to store the caps.
+    fn set_graphics_caps(&mut self, _kitty: bool, _sixel: bool, _font_size: (u16, u16)) {}
     fn render(&mut self, frame: &mut Frame, area: Rect);
     fn handle_event(&mut self, event: &Event) -> CartridgeAction;
 }
