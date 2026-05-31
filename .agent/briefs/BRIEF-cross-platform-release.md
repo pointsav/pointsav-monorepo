@@ -3,7 +3,7 @@ schema: foundry-plan-v1
 archive: project-console
 title: "os-console Cross-Platform Release"
 created: 2026-05-30
-updated: 2026-05-30
+updated: 2026-05-31
 status: active
 authors: [totebox@project-console, claude-sonnet-4-6]
 doctrine_anchors: [SYS-ADR-07, SYS-ADR-10, SYS-ADR-19]
@@ -98,65 +98,56 @@ assumptions, no hard-coded `cfg(target_os)` checks for feature decisions.
 
 - [ ] Create `pointsav-monorepo/rust-toolchain.toml`
 
-**B2. `.cargo/config.toml`** at monorepo root — deployment targets.
+**B2. `.cargo/config.toml`** — **SKIPPED** (intentional). Cargo `[env]` has no target-conditional
+syntax, making the plan's proposed content a no-op. `MACOSX_DEPLOYMENT_TARGET` is set correctly
+as a per-job env var in the CI workflow. No file created.
 
-- [ ] Create `pointsav-monorepo/.cargo/config.toml` with macOS Intel env:
-  ```toml
-  [target.x86_64-apple-darwin]
-  rustflags = []
+**B3. reqwest TLS audit** — **COMPLETE** (2026-05-30, commit `6f21f580`).
 
-  [env]
-  MACOSX_DEPLOYMENT_TARGET = { value = "10.13", target = "x86_64-apple-darwin" }
-  ```
+- [x] `app-console-keys/Cargo.toml`: `default-features = false, features = ["json", "blocking", "rustls-tls"]`
+- [x] `app-console-content/Cargo.toml`: same
+- [x] `app-console-input/Cargo.toml`: same
+- [x] `app-console-system/Cargo.toml`: same
 
-**B3. reqwest TLS audit** — confirm no `native-tls` on macOS path.
+**B4. GitHub Actions release workflow** — **COMPLETE** (2026-05-30, commit `6f21f580`).
 
-- [ ] Check `os-console/Cargo.toml`, `app-console-content/Cargo.toml` for reqwest features
-- [ ] Switch any `default-features = true` reqwest to `features = ["json", "stream", "rustls-tls"]`
+- [x] Trigger: `v*.*.*` annotated tag push + `workflow_dispatch` (operator confirmed)
+- [x] `build-linux`: ubuntu-22.04, cargo-zigbuild, `x86_64-unknown-linux-musl`
+- [x] `build-macos-intel`: macos-13, `MACOSX_DEPLOYMENT_TARGET=10.13`, `x86_64-apple-darwin`
+- [x] `build-macos-arm`: macos-14, `MACOSX_DEPLOYMENT_TARGET=11.0`, `aarch64-apple-darwin`
+- [x] `build-macos-universal`: macos-14, `lipo -create` of Intel + ARM
+- [x] `release`: `softprops/action-gh-release@v2`, `generate_release_notes: true`, 4 artifacts
 
-**B4. GitHub Actions release workflow** — `.github/workflows/release.yml`.
+**B5. `TerminalCaps` runtime probe** — **COMPLETE** (2026-05-30, commit `6f21f580`).
 
-- [ ] Trigger: tag push `v*.*.*`
-- [ ] Matrix: Linux (ubuntu-22.04), macOS Intel (macos-13), macOS ARM (macos-14)
-- [ ] Linux: `cargo install cargo-zigbuild` → `cargo zigbuild --release --target x86_64-unknown-linux-musl`
-- [ ] macOS Intel: `MACOSX_DEPLOYMENT_TARGET=10.13 cargo build --release --target x86_64-apple-darwin`
-- [ ] macOS ARM: `MACOSX_DEPLOYMENT_TARGET=11.0 cargo build --release --target aarch64-apple-darwin`
-- [ ] Universal: `lipo -create -output os-console-universal os-console-x86_64 os-console-arm64`
-- [ ] Upload all 4 artifacts to GitHub Release
-
-**B5. `TerminalCaps` runtime probe** in `app-console-keys/src/chassis.rs`.
-
-- [ ] Implement Kitty graphics probe (send `_Ga=31,s=1,v=1,a=q,t=d,f=24;AAAA` and parse response)
-- [ ] Implement `COLORTERM=truecolor` / `TERM_PROGRAM` 24-bit check
-- [ ] Store in `AppConsoleKeys`; pass to cartridges
+- [x] `TerminalCaps { kitty, sixel, truecolor }` struct in `app-console-keys/src/chassis.rs`
+- [x] Detection: `Picker::protocol_type()` (ratatui-image 9.0.0 `ProtocolType::Kitty/Sixel`) + `COLORTERM` env
+- [x] Stored on `AppConsoleKeys`; populated in `run_local()` after probe; `caps()` accessor
+- [x] `cargo check --workspace` exits 0
 
 ---
 
 ## Release artifact naming
 
 ```
-os-console-v{VERSION}-x86_64-unknown-linux-musl     # Linux static
-os-console-v{VERSION}-x86_64-apple-darwin           # macOS Intel
-os-console-v{VERSION}-aarch64-apple-darwin          # macOS Apple Silicon
-os-console-v{VERSION}-universal-apple-darwin        # macOS universal (lipo)
+os-console-{VERSION}-x86_64-unknown-linux-musl     # Linux static
+os-console-{VERSION}-x86_64-apple-darwin           # macOS Intel
+os-console-{VERSION}-aarch64-apple-darwin          # macOS Apple Silicon
+os-console-{VERSION}-universal-apple-darwin        # macOS universal (lipo)
 ```
 
 Versioning follows workspace `Cargo.toml` `version` field. Tag format: `v{MAJOR}.{MINOR}.{PATCH}`.
-
----
-
-## Release trigger (open — operator to confirm)
-
-GitHub Actions release workflow trigger is currently proposed as annotated tag push
-(`v*.*.*`). Alternatives: push to main (every merge), manual dispatch (`workflow_dispatch`).
-**Operator confirmation required before implementing Phase B4.**
+Tag `v0.1.0` will trigger the first release build after Stage 6 + canonical promote.
 
 ---
 
 ## Status
 
-- [ ] Phase B1 — rust-toolchain.toml
-- [ ] Phase B2 — .cargo/config.toml
-- [ ] Phase B3 — reqwest TLS audit
-- [ ] Phase B4 — GitHub Actions release workflow  ← **blocked: confirm release trigger**
-- [ ] Phase B5 — TerminalCaps runtime probe
+- [x] Phase B1 — rust-toolchain.toml (`6f21f580`)
+- [x] Phase B2 — .cargo/config.toml (intentionally skipped — CI env handles it)
+- [x] Phase B3 — reqwest TLS audit (`6f21f580`)
+- [x] Phase B4 — GitHub Actions release workflow (`6f21f580`)
+- [x] Phase B5 — TerminalCaps runtime probe (`6f21f580`)
+
+**Phase B COMPLETE.** Stage 6 pending: Command to push + promote `6f21f580`.
+Next: Phase C (Email cartridge F3) and Phase D (SLM cartridge F9).
