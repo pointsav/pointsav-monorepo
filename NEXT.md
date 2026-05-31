@@ -44,6 +44,12 @@ Last updated: 2026-05-30
 - [ ] **B15 GIS as BIM Substrate TOPIC** — file missing from drafts-outbound; project-gis must write and dispatch. [2026-05-28 totebox@project-editorial]
 - [ ] **B16 UK/EU Food Retail Coverage TOPIC** — file missing from drafts-outbound; project-gis must write and dispatch. [2026-05-28 totebox@project-editorial]
 
+## drafts-outbound — unresolved groups (cleanup 2026-05-31)
+
+- [ ] **Group 3 — 10 unregistered guides**: GUIDE-guide-activate-anthropic-shim, GUIDE-guide-local-circuit-tier-a-only, guide-bim-archive-operations, guide-bim-token-authoring, guide-climate-zone-tokens, guide-deploy-bim-substrate, guide-mba-pairing-ceremony, guide-os-console-operator, guide-proofreader-distillation, guide-regulation-overlay-publishing — need routing decision (WFD destination + outbox message). Likely sources: project-intelligence (shim, circuit), project-bim (bim-*), project-gis (regulation-overlay). [2026-05-31 totebox@project-editorial]
+- [ ] **Group 4 — LICENSE artifacts**: LICENSE-DATA-MANIFEST.draft.md + .refined.md, LICENSE-DISCLAIMER.draft.md + .refined.md — check if committed to media-knowledge-documentation/ reference/; if committed, archive source drafts; if not, route to Command for governance. [2026-05-31 totebox@project-editorial]
+- [ ] **Group 5 — 3 unregistered TOPICs**: topic-co-location-intelligence-overview.draft.md (check vs applications/location-intelligence-platform.md), topic-customer-tier-catalog-pattern.md, topic-radical-proofreader-ui.md — determine if committed or archive. [2026-05-31 totebox@project-editorial]
+
 ## Convention layer — pending (from earlier session)
 
 - [ ] `conventions/artifact-classification.yaml` — add JOURNAL entry (schema, gateway, destinations, bilingual_pair: false). [2026-05-27 totebox@project-editorial]
