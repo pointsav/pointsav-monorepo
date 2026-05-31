@@ -508,7 +508,7 @@ header .tag {
 
 /* ── Print ────────────────────────────────────────────────────────── */
 @media print {
-  header, .sidebar, .resizer, .viewer-bar, #editor-panel, .editor-bar { display: none !important; }
+  header, #surface-bar, .sidebar, .resizer, .viewer-bar, #editor-panel, .editor-bar { display: none !important; }
   body, .layout, #main-area, .viewer { display: block !important; height: auto !important; overflow: visible !important; }
   #text-viewer { display: block !important; overflow: visible !important; }
   #text-content.md-view { padding: 0 !important; max-width: none !important; }
@@ -548,6 +548,57 @@ header .tag {
 #pdf-dialog-cancel { background: #3a3a3a; color: #ccc; }
 #pdf-dialog-cancel:hover { background: #4a4a4a; }
 .pdf-dialog-status { font-size: 11px; color: #89d185; margin-top: 6px; min-height: 14px; }
+
+/* ── Surface toolbar ──────────────────────────────────────────────── */
+#surface-bar {
+  background: #181818; border-bottom: 1px solid #2a2a2a;
+  padding: 0 10px; display: flex; align-items: center; gap: 2px;
+  flex-shrink: 0; height: 32px; overflow-x: auto;
+}
+#surface-bar::-webkit-scrollbar { display: none; }
+.surface-btn {
+  background: none; border: none; cursor: pointer; color: #666;
+  font-size: 12px; padding: 3px 10px; border-radius: 3px;
+  white-space: nowrap; display: flex; align-items: center; gap: 5px;
+  transition: background 0.1s, color 0.1s; flex-shrink: 0; line-height: 1.3;
+}
+.surface-btn:hover { background: #2a2d2e; color: #bbb; }
+.surface-btn.active { background: #094771; color: #fff; }
+.surface-btn .s-icon { font-size: 13px; }
+#surface-sep { width: 1px; height: 16px; background: #333; margin: 0 4px; flex-shrink: 0; }
+
+/* ── Surface panel (replaces viewer when a non-files surface is active) ── */
+#surface-panel {
+  flex: 1; display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px; padding: 40px 32px; overflow-y: auto;
+}
+#surface-panel.visible { display: flex; }
+.sp-icon { font-size: 42px; }
+.sp-name { font-size: 17px; color: #ccc; font-weight: 500; }
+.sp-tag {
+  font-size: 10px; color: #555; text-transform: uppercase;
+  letter-spacing: 0.08em; border: 1px solid #333;
+  padding: 2px 9px; border-radius: 3px;
+}
+.sp-files-list {
+  width: 100%; max-width: 480px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.sp-file-item {
+  padding: 7px 14px; background: #252526; border-radius: 3px;
+  cursor: pointer; display: flex; align-items: center; gap: 10px;
+  font-size: 12px; color: #bbb; transition: background 0.1s;
+}
+.sp-file-item:hover { background: #2a2d2e; color: #eee; }
+.sp-file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-open-hint { color: #555; font-size: 10px; flex-shrink: 0; }
+.sp-new-btn {
+  background: #094771; color: #4d9fff; border: 1px solid #1a5f8f;
+  border-radius: 3px; padding: 7px 18px; font-size: 12px; cursor: pointer;
+}
+.sp-new-btn:hover { background: #0d5a8c; }
+.sp-dim { color: #555; font-size: 12px; padding: 8px 0; }
 </style>
 </head>
 <body>
@@ -560,6 +611,19 @@ header .tag {
     <span id="search-status">indexing…</span>
   </div>
 </header>
+
+<div id="surface-bar">
+  <button class="surface-btn active" data-surface="files"><span class="s-icon">📁</span> Files</button>
+  <div id="surface-sep"></div>
+  <button class="surface-btn" data-surface="memo"><span class="s-icon">📝</span> Memo</button>
+  <button class="surface-btn" data-surface="proforma"><span class="s-icon">📊</span> Proforma</button>
+  <button class="surface-btn" data-surface="presentation"><span class="s-icon">🖼</span> Presentation</button>
+  <button class="surface-btn" data-surface="schedule"><span class="s-icon">📅</span> Schedule</button>
+  <button class="surface-btn" data-surface="code"><span class="s-icon">💻</span> Code</button>
+  <button class="surface-btn" data-surface="pdf"><span class="s-icon">📄</span> PDF</button>
+  <button class="surface-btn" data-surface="gis"><span class="s-icon">🗺</span> GIS</button>
+  <button class="surface-btn" data-surface="bim"><span class="s-icon">🏗</span> BIM</button>
+</div>
 
 <div id="tab-bar"></div>
 
@@ -656,6 +720,8 @@ header .tag {
   <div class="resizer" id="resizer"></div>
 
   <div id="main-area">
+
+    <div id="surface-panel"></div>
 
     <div class="viewer" id="viewer">
       <div class="viewer-bar" id="viewer-bar">
@@ -3588,6 +3654,112 @@ searchInput.addEventListener('keydown', e => {
     });
   }
 })();
+
+// ── Surface switching ─────────────────────────────────────────────────────────
+let activeSurface = localStorage.getItem('wb-surface') || 'files';
+
+function setSurface(name) {
+  activeSurface = name;
+  localStorage.setItem('wb-surface', name);
+
+  document.querySelectorAll('#surface-bar .surface-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.surface === name);
+  });
+
+  const sp     = document.getElementById('surface-panel');
+  const viewer = document.getElementById('viewer');
+  const r2     = document.getElementById('resizer2');
+  const ep     = document.getElementById('editor-panel');
+
+  if (name === 'files') {
+    sp.classList.remove('visible');
+    sp.innerHTML = '';
+    viewer.style.display = '';
+  } else {
+    sp.classList.add('visible');
+    viewer.style.display = 'none';
+    // Close editor when leaving Files surface
+    if (ep && ep.classList.contains('visible')) {
+      ep.classList.remove('visible');
+      if (r2) r2.style.display = 'none';
+    }
+    if (name === 'memo') {
+      renderMemoSurface(sp);
+    } else {
+      const info = {
+        proforma:     { icon: '📊', label: 'Proforma' },
+        presentation: { icon: '🖼', label: 'Presentation' },
+        schedule:     { icon: '📅', label: 'Schedule' },
+        code:         { icon: '💻', label: 'Code' },
+        pdf:          { icon: '📄', label: 'PDF' },
+        gis:          { icon: '🗺', label: 'GIS' },
+        bim:          { icon: '🏗', label: 'BIM' },
+      }[name] || { icon: '🔧', label: name };
+      sp.innerHTML = `
+        <div class="sp-icon">${info.icon}</div>
+        <div class="sp-name">${info.label}</div>
+        <div class="sp-tag">Coming soon</div>
+      `;
+    }
+  }
+}
+
+async function renderMemoSurface(sp) {
+  sp.innerHTML = `
+    <div class="sp-icon">📝</div>
+    <div class="sp-name">Memo</div>
+    <button class="sp-new-btn" id="sp-memo-new">+ New document</button>
+    <div class="sp-files-list" id="sp-memo-files"><div class="sp-dim">Loading…</div></div>
+  `;
+  document.getElementById('sp-memo-new').addEventListener('click', async () => {
+    const nm = prompt('Document name (no extension needed):');
+    if (!nm || !nm.trim()) return;
+    try {
+      const res = await fetch('/api/files/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nm.trim() }),
+      });
+      if (!res.ok) { alert('Failed to create document.'); return; }
+      const { path } = await res.json();
+      window.open('/memo?path=' + encodeURIComponent(path), '_blank');
+    } catch { alert('Network error.'); }
+  });
+  try {
+    const res = await fetch('/api/files');
+    const files = await res.json();
+    const list = document.getElementById('sp-memo-files');
+    if (!list) return;
+    if (!files.length) {
+      list.innerHTML = '<div class="sp-dim">No memo files yet.</div>';
+      return;
+    }
+    list.innerHTML = files.map(f =>
+      `<div class="sp-file-item" data-path="${esc(f.path)}">
+        <span>📄</span>
+        <span class="sp-file-name">${esc(f.name)}</span>
+        <span class="sp-open-hint">Open →</span>
+      </div>`
+    ).join('');
+    list.querySelectorAll('.sp-file-item').forEach(el => {
+      el.addEventListener('click', () => {
+        window.open('/memo?path=' + encodeURIComponent(el.dataset.path), '_blank');
+      });
+    });
+  } catch {
+    const list = document.getElementById('sp-memo-files');
+    if (list) list.innerHTML = '<div style="color:#f85149;font-size:12px">Could not load files.</div>';
+  }
+}
+
+// Wire surface bar clicks
+document.querySelectorAll('#surface-bar .surface-btn').forEach(btn => {
+  btn.addEventListener('click', () => setSurface(btn.dataset.surface));
+});
+
+// Apply saved surface state at startup
+setSurface(activeSurface);
+
 </script>
 
 <div id="ctx-menu"></div>
