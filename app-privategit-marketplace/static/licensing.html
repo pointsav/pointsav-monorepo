@@ -1661,5 +1661,14 @@
   }
 
 }());
+
+// Auto-open checkout overlay when arriving via ?product= link (e.g. from /products page)
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var pid = params.get('product');
+  if (!pid) return;
+  var trigger = document.querySelector('.co-trigger[data-product="' + pid + '"]');
+  if (trigger) trigger.click();
+}());
 </script>
 </body></html>
