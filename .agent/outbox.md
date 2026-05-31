@@ -10,6 +10,168 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: Group 3 guides — Batch A — route to woodfine-fleet-deployment/cluster-totebox-intelligence/
+created: 2026-05-31T12:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260531-guides-intelligence-batch-a
+---
+
+Two unregistered GUIDEs from drafts-outbound have been reviewed (Bloomberg-clean) and are
+ready for placement in woodfine-fleet-deployment. Both are project-intelligence scope.
+
+**Destination:** `woodfine-fleet-deployment/cluster-totebox-intelligence/`
+
+**Files:**
+- `.agent/drafts-outbound/GUIDE-guide-activate-anthropic-shim.draft.md` → `guide-activate-anthropic-shim.md`
+  Content: Sprint 0a Anthropic Messages API shim activation (Doorman Tier C configuration,
+  env vars, healthcheck verification). Prerequisite: Doorman running, Tier A healthy.
+- `.agent/drafts-outbound/GUIDE-guide-local-circuit-tier-a-only.draft.md` → `guide-local-circuit-tier-a-only.md`
+  Content: Running the local inference circuit with only Tier A (OLMo 7B CPU) — no Tier B GPU.
+  Covers capacity stockout, community deployments, local-only data policy scenarios.
+
+**Action for Command:** Place both files at the destination path; commit via admin-tier.
+Ack to this outbox when done. Source drafts will be archived from drafts-outbound once placement confirmed.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: Group 3 guides — Batch B — route to woodfine-fleet-deployment/cluster-totebox-property/
+created: 2026-05-31T12:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260531-guides-bim-property
+---
+
+One unregistered GUIDE from drafts-outbound is ready for placement.
+
+**Destination:** `woodfine-fleet-deployment/cluster-totebox-property/`
+
+**File:**
+- `.agent/drafts-outbound/guide-bim-archive-operations.draft.md` → `guide-bim-archive-operations.md`
+  Content: Operating a Totebox Archive vault — vault layout, IFC model management, YAML sidecar
+  operations, ingestion queue, BCF issue management, daily procedures. Audience: operators with
+  access to the archive vault directory on the deployment host.
+
+**Action for Command:** Place at destination; commit via admin-tier. Ack when done.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: Group 3 guides — Batch C — route to woodfine-fleet-deployment/gateway-orchestration-bim/
+created: 2026-05-31T12:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260531-guides-bim-orchestration-batch-c
+---
+
+Four unregistered GUIDEs from drafts-outbound are ready for placement in the BIM orchestration node.
+
+**Destination:** `woodfine-fleet-deployment/gateway-orchestration-bim/`
+
+**Files:**
+- `.agent/drafts-outbound/guide-bim-token-authoring.draft.md` → `guide-bim-token-authoring.md`
+  Content: Authoring new BIM Tokens as DTCG JSON files in the sovereign token vault.
+  Prerequisites, file structure, schema validation, commit procedure.
+- `.agent/drafts-outbound/guide-climate-zone-tokens.draft.md` → `guide-climate-zone-tokens.md`
+  Content: Climate Zone performance data in the BIM token vault — structure, file location
+  (`tokens/bim/climate-zones.dtcg.json`), consumption by app-orchestration-bim.
+- `.agent/drafts-outbound/guide-deploy-bim-substrate.draft.md` → `guide-deploy-bim-substrate.md`
+  Content: Setting up woodfine-design-bim token vault and deploying app-orchestration-bim.
+  Two parts: provision vault repository, deploy serving node with systemd.
+- `.agent/drafts-outbound/guide-regulation-overlay-publishing.draft.md` → `guide-regulation-overlay-publishing.md`
+  Content: Authoring, validating, and promoting a Regulatory Overlay bundle (three-file set)
+  to a live token vault. Jurisdiction-specific requirement overlays.
+
+**Action for Command:** Place all four at destination; commit via admin-tier. Ack when done.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: Group 3 guides — Batch D — route to woodfine-fleet-deployment/node-console-operator/
+created: 2026-05-31T12:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260531-guides-console-operator
+---
+
+Two unregistered GUIDEs from drafts-outbound are ready for placement in the console operator node.
+
+**Destination:** `woodfine-fleet-deployment/node-console-operator/`
+
+**Files:**
+- `.agent/drafts-outbound/guide-mba-pairing-ceremony.md` → `guide-mba-pairing-ceremony.md`
+  Content: Machine-Based Authorization pairing ceremony — connecting os-console to os-*
+  services. P1 operator action. Pairing key exchange, verification, revocation.
+  Audience: operators setting up a new os-console ↔ os-* connection.
+- `.agent/drafts-outbound/guide-os-console-operator.md` → `guide-os-console-operator.md`
+  Content: os-console operator reference — daily operation, cartridge navigation, F-key map,
+  what os-console is and is not. Prerequisite: MBA pairings established. Audience: daily operators.
+
+**Action for Command:** Place both at destination; commit via admin-tier. Ack when done.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: Group 3 flag — guide-proofreader-distillation routing ambiguity — Command decision needed
+created: 2026-05-31T12:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260531-guides-proofreader-routing-flag
+---
+
+One GUIDE in drafts-outbound has a routing conflict requiring Command decision.
+
+**File:** `.agent/drafts-outbound/guide-proofreader-distillation.md`
+
+**Conflict:** Draft frontmatter declares `target_repo: content-wiki-documentation`, but the
+artifact is an operational GUIDE (runbook for executing SLM distillation from the proofreader
+apprenticeship corpus). Per CLAUDE.md §14, guides belong in
+`customer/woodfine-fleet-deployment/<name>/`, not content-wiki-documentation.
+
+**Content summary:** Steps to run the Rust distillation tool against `app-console-proofreader`
+JSONL corpus; requires `service-slm` teacher-student distillation environment; references
+pointsav-monorepo tools directly.
+
+**Likely correct destination:** `woodfine-fleet-deployment/cluster-totebox-intelligence/guide-proofreader-distillation.md`
+(alongside the other intelligence GUIDEs in Batch A above). If content-wiki-documentation is
+intentional (developer reference, not operator runbook), please confirm.
+
+File remains in drafts-outbound pending Command routing confirmation.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: Group 4 — LICENSE artifacts — route to woodfine-fleet-deployment/gateway-orchestration-gis/
+created: 2026-05-31T12:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260531-license-gis-route
+---
+
+Two approved governance artifacts from drafts-outbound are ready for placement
+(state: approved; refined 2026-05-22).
+
+**Destination:** `woodfine-fleet-deployment/gateway-orchestration-gis/`
+
+**Files:**
+- `.agent/drafts-outbound/LICENSE-DATA-MANIFEST.refined.md` → `LICENSE-DATA-MANIFEST.md`
+  Content: Data Manifest & Licensing document for the GIS platform. Covers OSM (ODbL),
+  Overture Maps Foundation (CDLA-2.0), WorldPop, WorldMove licences; attribution requirements;
+  usage restrictions. Public audience; no-disclosure-implication classification.
+- `.agent/drafts-outbound/LICENSE-DISCLAIMER.refined.md` → `LICENSE-DISCLAIMER.md`
+  Content: Legal disclaimer for the Woodfine Location Intelligence platform. Covers metric
+  synthesis disclaimer, no-guarantee clauses, privacy/ethics, usage restrictions (not for
+  navigation/critical infrastructure/high-stakes site selection), non-endorsement.
+
+**Note:** The .draft.md versions of both files have been archived from drafts-outbound
+(superseded). The two .refined.md files remain until Command confirms placement.
+
+**Action for Command:** Place both refined files at destination path; commit via admin-tier. Ack.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: Clarification — commit 294488f discrepancy note is incorrect
 created: 2026-05-31T00:30:00Z
 priority: normal
