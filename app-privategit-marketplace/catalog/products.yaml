@@ -63,13 +63,13 @@ installers:
     size_mb: 118
     path: os-totebox/2026.05.144
 
-license_tiers:
+licenses:
   - id: apache
     name: Apache 2.0
-    price_usdc: "1.00"
+    price_usdc: 1000000
     description: Source-readable, fully open; may fork, redistribute, compete.
 
   - id: fsl
     name: FSL
-    price_usdc: "19.00"
+    price_usdc: 19000000
     description: Source-readable, non-compete restriction; converts to Apache 2.0 after two years per version.
