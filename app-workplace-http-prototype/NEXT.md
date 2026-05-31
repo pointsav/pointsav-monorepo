@@ -8,7 +8,10 @@
       daily-use URL; prototype binds on 9110 internally
 - [x] Workbench merge — SPA + backend at `/workbench/`; config.toml roots;
       /files/ and 9210 standalone untouched (ab75fa69)
-- [ ] Jennifer tests `/workbench` surface; confirm before retiring /files/ and 9210
+- [x] Jennifer confirmed `/workbench` working — /files/ retired (301 → /workbench)
+- [ ] Retire `app-privategit-workbench` service (9210) — pending: switch
+      `/_api/edit/` nginx proxy from 9210 → 9110/workbench + update config.toml
+      url_prefix values to match SPA browse paths (_sandbox-jennifer, _command, _clones)
 - [ ] Add systemd unit `local-workplace-http-prototype.service` so the binary
       survives session exit (currently launched manually)
 
