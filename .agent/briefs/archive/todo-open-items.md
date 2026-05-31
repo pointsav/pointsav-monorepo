@@ -1,3 +1,5 @@
+> **Archived 2026-06-01: belongs in project-editorial archive. Read from there.**
+
 # Open items — project-editorial
 
 > Persistent TODO tracker. Updated at session end. Last updated: 2026-05-24 (session 5).
