@@ -1906,7 +1906,7 @@ html[data-theme="dark"] .toc a.is-active { color: var(--link); border-left-color
 .wiki-lang-btn:hover { background: var(--bg-hover); }
 
 /* More actions ("cactions") */
-.wiki-cactions { display: flex; align-items: flex-end; }
+.wiki-cactions { display: none; }
 .wiki-cactions-toggle {
   display: inline-block;
   padding: 0.35rem 0.5rem;
@@ -2144,7 +2144,13 @@ html[data-theme="dark"] .toc a.is-active { color: var(--link); border-left-color
   font-size: var(--knowledge-editorial-reading-body-size, 17px);
   line-height: var(--knowledge-editorial-reading-body-lh, 1.70);
   color: var(--fg-2);
+  max-width: 68ch;
+  font-feature-settings: "kern", "liga", "calt";
+  font-variant-numeric: oldstyle-nums proportional-nums;
+  text-rendering: optimizeLegibility;
 }
+.page-body table { font-variant-numeric: lining-nums tabular-nums; }
+.page-body[lang] { hyphens: auto; }
 .page-body > * + * { margin-top: 1em; }
 .page-body h2 {
   font-family: var(--font-display);
