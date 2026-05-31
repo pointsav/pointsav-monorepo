@@ -190,7 +190,7 @@ async fn main() {
 }
 
 async fn serve_index() -> impl IntoResponse {
-    serve_asset("index.html", "text/html")
+    Redirect::permanent("/workbench")
 }
 
 async fn serve_memo() -> impl IntoResponse {
