@@ -59,7 +59,7 @@ fn default_totebox_endpoint() -> String {
     "http://localhost:9000".into()
 }
 fn default_slm_endpoint() -> String {
-    "http://localhost:8011".into()
+    "http://localhost:9080".into()
 }
 fn default_pair_endpoint() -> String {
     "http://127.0.0.1:9201".into()
