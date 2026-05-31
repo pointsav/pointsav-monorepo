@@ -495,6 +495,12 @@ header .tag {
 .pinned-folder-children { overflow: hidden; }
 .pinned-folder-children.collapsed { display: none; }
 
+/* ── Recent section ───────────────────────────────────────────────── */
+#recent-section { display: none; }
+#recent-section.visible { display: block; }
+.recent-show-more { padding: 4px 8px 4px 28px; color: #4d9fff; font-size: 11px; cursor: pointer; }
+.recent-show-more:hover { color: #7bb8ff; text-decoration: underline; }
+
 /* ── Git status badges ────────────────────────────────────────────── */
 .tree-git {
   font-size: 9px;
@@ -656,6 +662,11 @@ header .tag {
       <div id="pinned-section">
         <div class="section-header open" style="cursor:default;">📌 Pinned</div>
         <div id="pinned-body" class="section-body"></div>
+      </div>
+
+      <div id="recent-section">
+        <div class="section-header open" data-section="recent"><span class="arrow">▶</span> 🕐 Recent</div>
+        <div class="section-body" id="section-recent"></div>
       </div>
 
       <div class="section-header open" data-section="sandboxes">
@@ -1843,6 +1854,7 @@ function cacheBust(path) {
 }
 
 async function openFile(path, name) {
+  recordRecent(path, name || path.split('/').pop());
   // If already open in a tab, just activate it
   const existingIdx = tabs.findIndex(t => t.path === path);
   if (existingIdx >= 0) {
@@ -3035,6 +3047,7 @@ function renderPinnedSection() {
       body.appendChild(item);
     }
   });
+  renderRecentSection();
 }
 
 function pinFile(path, name) {
@@ -3056,6 +3069,82 @@ function pinFolder(browsePath, name, apiPath) {
   pins.push({ path: browsePath, name, alias: alias || name, isDir: true, apiPath });
   savePins(pins);
   renderPinnedSection();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Recent files (MRU list)
+// ─────────────────────────────────────────────────────────────────────────────
+const RECENT_MAX_STORED   = 50;
+const RECENT_DEFAULT_SHOW = 10;
+
+function loadRecent() {
+  try { return JSON.parse(localStorage.getItem('wb-recent') || '[]'); } catch(e) { return []; }
+}
+function saveRecent(items) {
+  try { localStorage.setItem('wb-recent', JSON.stringify(items)); } catch(e) {}
+}
+
+function recordRecent(path, name) {
+  let items = loadRecent();
+  items = items.filter(r => r.path !== path);
+  items.unshift({ path, name, ts: Date.now() });
+  if (items.length > RECENT_MAX_STORED) items = items.slice(0, RECENT_MAX_STORED);
+  saveRecent(items);
+  renderRecentSection();
+}
+
+function renderRecentSection() {
+  const pinnedPaths = new Set(loadPins().map(p => p.path));
+  const all = loadRecent().filter(r => !pinnedPaths.has(r.path));
+  const section = document.getElementById('recent-section');
+  const body    = document.getElementById('section-recent');
+  if (!section || !body) return;
+  if (!all.length) { section.classList.remove('visible'); return; }
+  section.classList.add('visible');
+  body.innerHTML = '';
+
+  const visible = all.slice(0, RECENT_DEFAULT_SHOW);
+  const hidden  = all.slice(RECENT_DEFAULT_SHOW);
+
+  function makeRecentItem(r) {
+    const item = document.createElement('div');
+    item.className = 'tree-item viewable';
+    item.style.paddingLeft = '14px';
+    item.dataset.href  = r.path;
+    item.dataset.label = r.name;
+    item.dataset.type  = 'file';
+    const ic  = document.createElement('span'); ic.className = 'icon'; ic.style.marginLeft = '14px'; ic.textContent = iconFor(r.name, false);
+    const lab = document.createElement('span'); lab.className = 'label'; lab.textContent = r.name;
+    item.appendChild(ic); item.appendChild(lab);
+    item.addEventListener('click', () => { setTreeActive(item); openFile(r.path, r.name); });
+    item.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      showCtxMenu(e.clientX, e.clientY, [
+        { label: 'Open', action: () => openFile(r.path, r.name) },
+        '-',
+        { label: '📌 Pin to top', action: () => { pinFile(r.path, r.name); } },
+        '-',
+        { label: 'Remove from Recent', action: () => {
+            saveRecent(loadRecent().filter(x => x.path !== r.path));
+            renderRecentSection();
+          }},
+      ]);
+    });
+    return item;
+  }
+
+  visible.forEach(r => body.appendChild(makeRecentItem(r)));
+
+  if (hidden.length > 0) {
+    const moreDiv = document.createElement('div');
+    moreDiv.className = 'recent-show-more';
+    moreDiv.textContent = 'Show ' + hidden.length + ' more…';
+    moreDiv.addEventListener('click', () => {
+      moreDiv.remove();
+      hidden.forEach(r => body.appendChild(makeRecentItem(r)));
+    });
+    body.appendChild(moreDiv);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
