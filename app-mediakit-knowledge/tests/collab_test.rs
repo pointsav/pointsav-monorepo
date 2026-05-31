@@ -35,8 +35,8 @@ async fn build_state(enable_collab: bool) -> (AppState, tempfile::TempDir, tempf
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
-                links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
-                db: None,
+        links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+        db: None,
     };
     (state, dir, state_dir)
 }
@@ -103,7 +103,12 @@ async fn editor_page_omits_collab_flag_when_disabled() {
         .await
         .unwrap();
     let html = String::from_utf8(
-        resp.into_body().collect().await.unwrap().to_bytes().to_vec(),
+        resp.into_body()
+            .collect()
+            .await
+            .unwrap()
+            .to_bytes()
+            .to_vec(),
     )
     .unwrap();
     assert!(
@@ -133,7 +138,12 @@ async fn editor_page_includes_collab_flag_when_enabled() {
         .await
         .unwrap();
     let html = String::from_utf8(
-        resp.into_body().collect().await.unwrap().to_bytes().to_vec(),
+        resp.into_body()
+            .collect()
+            .await
+            .unwrap()
+            .to_bytes()
+            .to_vec(),
     )
     .unwrap();
     assert!(
