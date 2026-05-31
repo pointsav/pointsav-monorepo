@@ -46,10 +46,10 @@ Last updated: 2026-05-31
 
 ## drafts-outbound — unresolved groups (cleanup 2026-05-31)
 
-- [x] **Group 3 — 10 unregistered guides** — ACTIONED 2026-05-31: 9 guides routed to Command via outbox (Batch A→cluster-totebox-intelligence, Batch B→cluster-totebox-property, Batch C→gateway-orchestration-bim, Batch D→node-console-operator) + archived; guide-proofreader-distillation flagged to Command (routing ambiguity: frontmatter says content-wiki but artifact is a GUIDE — msg-id: project-editorial-20260531-guides-proofreader-routing-flag). [2026-05-31 totebox@project-editorial]
-- [x] **Group 4 — LICENSE artifacts** — PARTIALLY ACTIONED 2026-05-31: LICENSE-DATA-MANIFEST.draft.md + LICENSE-DISCLAIMER.draft.md archived (superseded); LICENSE-DATA-MANIFEST.refined.md + LICENSE-DISCLAIMER.refined.md routed to Command for placement in woodfine-fleet-deployment/gateway-orchestration-gis/ (msg-id: project-editorial-20260531-license-gis-route). [2026-05-31 totebox@project-editorial]
+- [x] **Group 3 — 10 unregistered guides** — FULLY ACTIONED: 3 NEW guides placed by Command WFD `7e77081` (cluster-intelligence/guide-activate-anthropic-shim, guide-local-circuit-tier-a-only, guide-proofreader-distillation); 6 guides not re-placed (canonical already more refined — see ack msg-id: command-20260531-editorial-group3-routing-ack); all 6 source drafts already archived in `0b5814a1`. [2026-05-31 totebox@project-editorial]
+- [x] **Group 4 — LICENSE artifacts** — FULLY ACTIONED 2026-05-31: LICENSE-DATA-MANIFEST.refined.md + LICENSE-DISCLAIMER.refined.md confirmed placed in gateway-orchestration-gis/ (WFD `7e77081`); refined copies archived from drafts-outbound. [2026-05-31 totebox@project-editorial]
 - [x] **Group 5 — 3 unregistered TOPICs** — ACTIONED 2026-05-31: topic-co-location-intelligence-overview.draft.md confirmed superseded (already committed to media-knowledge-projects, 5 edit passes since 2026-05-02 authoring); topic-customer-tier-catalog-pattern.md + topic-radical-proofreader-ui.md archived as stale project-proofreader skeletons (source project must resubmit if still relevant). All 3 archived. [2026-05-31 totebox@project-editorial]
-- [ ] **Group 1 — 17 files actively pending Command routing** — CARRY FORWARD: 2 COMMS-bencal (+ 2 renderings), 2 RESEARCH-bencal, 5 infrastructure GUIDEs (A8/A9/A10/A11/A24 batch), GUIDE-workbench-setup, GUIDE-regional-market-topic-production (A21), guide-moonshot-toolkit-phase1c-build-setup (A14); 2 LICENSE refined (routed this session, awaiting Command ack). Outbox messages sent; Command action required.
+- [ ] **Group 1 — 15 files actively pending Command routing** — CARRY FORWARD: 2 COMMS-bencal (+ 2 renderings), 2 RESEARCH-bencal, 5 infrastructure GUIDEs (A8/A9/A10/A11/A24 batch), GUIDE-workbench-setup, GUIDE-regional-market-topic-production (A21), guide-moonshot-toolkit-phase1c-build-setup (A14); LICENSE refined files now archived (Group 4 closed). Outbox messages sent; Command action required.
 - [ ] **guide-proofreader-distillation** — routing decision pending Command (msg-id: project-editorial-20260531-guides-proofreader-routing-flag). [2026-05-31 totebox@project-editorial]
 
 ## Convention layer — pending (from earlier session)
@@ -63,6 +63,15 @@ Last updated: 2026-05-31
 
 - [ ] **A4 text-gis-data-methodology-dialog** — routing message sent (msg-id: project-editorial-20260531-text-dialog-route); Command must place in gateway-orchestration-gis static web copy. [2026-05-31 totebox@project-editorial]
 - [ ] **Legal tokens** — routing message sent (msg-id: project-editorial-20260531-legal-tokens-route); Command must commit legal-tokens-pointsav.yaml + legal-tokens-woodfine.yaml to factory-release-engineering/tokens/ via admin-tier. [2026-05-31 totebox@project-editorial]
+
+---
+
+## Completed this session (2026-05-31 — Command ack + housekeeping)
+
+- [x] Command ack actioned: Group 3 FULLY ACTIONED (3 new placed WFD `7e77081`; 6 non-placed source drafts already archived); Group 4 FULLY ACTIONED (LICENSE refined archived, placement confirmed) — (Jennifer)
+- [x] archive-2026-04/ reviewed: stale April 2026 epoch content; effectively archived in subfolder; no active items require re-dispatch (Peter)
+- [x] from-project-system/ READMEs routed to Command: 3 bilingual pairs (moonshot-toolkit, system-core, system-ledger) for pointsav-monorepo placement (Peter)
+- [x] J1 Spanish bilingual sibling written: JOURNAL-retail-colocation-v0.1.es.md — ~8,500-word academic adaptation in Spanish (Jennifer)
 
 ---
 
