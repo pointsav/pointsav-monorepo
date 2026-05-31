@@ -140,6 +140,9 @@ pub struct YoYoTierConfig {
     /// Per-provider pricing for Tier B cost computation. Empty default
     /// means cost_usd is 0.0 (community-tier / dev mode).
     pub pricing: PricingConfig,
+    /// GCP zone where the Yo-Yo VM runs (e.g. "europe-west4-a").
+    /// Read from `SLM_YOYO_GCP_ZONE` at construction; surfaced in /readyz.
+    pub zone: Option<String>,
 }
 
 impl Default for YoYoTierConfig {
@@ -149,6 +152,7 @@ impl Default for YoYoTierConfig {
             default_model: "Olmo-3-1125-32B-Think".to_string(),
             contract_version: crate::YOYO_CONTRACT_VERSION.to_string(),
             pricing: PricingConfig::default(),
+            zone: None,
         }
     }
 }
@@ -164,6 +168,8 @@ pub struct YoYoTierClient {
     /// Three-state circuit breaker driven by actual request outcomes.
     /// Shared with no other task; updated only by complete() return path.
     pub circuit: Arc<CircuitBreaker>,
+    /// GCP zone for this node (from `SLM_YOYO_GCP_ZONE`). Surfaced in /readyz.
+    pub zone: Option<String>,
 }
 
 impl YoYoTierClient {
@@ -180,6 +186,7 @@ impl YoYoTierClient {
             handle.spawn(run_health_probe(endpoint, health_up_clone));
         }
 
+        let zone = config.zone.clone();
         Self {
             config,
             http: reqwest::Client::builder()
@@ -190,6 +197,7 @@ impl YoYoTierClient {
             bearer,
             health_up,
             circuit,
+            zone,
         }
     }
 
@@ -625,6 +633,7 @@ mod tests {
                 default_model: "Olmo-3-1125-32B-Think".into(),
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
                 pricing,
+                zone: None,
             },
             Arc::new(StaticBearer::new("test-token-v1")),
         )
@@ -747,6 +756,7 @@ mod tests {
                 default_model: "Olmo-3-1125-32B-Think".into(),
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
                 pricing: PricingConfig::default(),
+                zone: None,
             },
             bearer.clone(),
         );
@@ -996,6 +1006,7 @@ mod tests {
                 default_model: "Olmo-3-1125-32B-Think".into(),
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
                 pricing: PricingConfig::default(),
+                zone: None,
             },
             Arc::new(FailingBearer),
         );
@@ -1041,6 +1052,7 @@ mod tests {
                 default_model: "Olmo-3-1125-32B-Think".into(),
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
                 pricing: PricingConfig::default(),
+                zone: None,
             },
             Arc::new(EmptyBearer),
         );
