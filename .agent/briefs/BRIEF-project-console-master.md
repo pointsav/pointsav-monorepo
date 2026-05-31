@@ -122,11 +122,15 @@ Command runs `bin/promote.sh`.
 
 | Phase | What |
 |---|---|
-| Phase 6 | Offline mode + Tantivy search — poll `/v1/health/ready`; greyed inference widgets; `/search` via `service-content` port 9081 |
-| Phase 7 | PDF viewing — pdfium-render → Kitty/Sixel pixel render; hard error on unsupported terminals |
+| ~~Phase 6~~ | **DONE 2026-05-31** — Offline mode (Doorman `/readyz` poll) + `/search` Tantivy command |
+| ~~Phase 7~~ | **DONE 2026-05-31** — PDF viewing via pdfium-render → Kitty/Sixel pixel render; text fallback on unsupported terminals; `/pdf <path>` command |
 | Phase 8 | Polish — OSC 8 hyperlinks; truecolor; multi-tab; session persistence; `/audit` log viewer; F2 People |
 | Phase 9 | Operations — `local-console.service` systemd unit; Prometheus metrics; fail2ban for port 2222; graceful SIGTERM |
 | Phase 10–13 | F7 BIM, F10 mesh, chassis auto-reconnect watchdog |
+
+**Phase 7 note:** `Cartridge` trait gained `set_graphics_caps(kitty, sixel, font_size)`, called once
+by the chassis after the terminal probe. The `image` dependency in `app-console-content` is pinned
+to `default-features = false` (matches `app-console-keys`) to avoid pulling AVIF/rav1e codecs.
 
 ---
 
