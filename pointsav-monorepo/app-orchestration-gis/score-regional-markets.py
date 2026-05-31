@@ -64,6 +64,13 @@ OUTER_KM      = 120   # replaces SUBURBAN_MAX_KM=80; wider range opens low-densi
 METRO_CORE_KM = 12    # a market centroid within this of a major metro centroid IS that
                       # metro (already a "Metro Market") → excluded. Exclusion-only; does
                       # NOT define the suburban band. Catches localized names (Roma, Genova).
+
+# Market confidence overrides — where naming resolution returns administrative names
+# instead of colloquial names, confidence is downgraded in regional-markets.json.
+# These markets are real; upgrade confidence here rather than editing the source data.
+MKT_CONF_OVERRIDES = {
+    'rm_ca_strathcona_county': 'high',  # Sherwood Park / Strathcona County, AB — real T1 market
+}
 MAX_SPAN_KM   = 200   # cluster bounding-box span limit (name-collision check)
 
 CIVIC_CATEGORIES = {
@@ -471,21 +478,37 @@ def rm_regional_score(clusters, anchor_d, civic, mkt_conf):
     if not clusters:
         return 0.0, 0.0, 0.0
 
-    # Tier depth with strong diminishing returns. A qualifying T1 anchor = floor of 1.0;
-    # additional tier depth adds a sqrt bonus so 3T1+2T2+1T3 is ~2×, not ~4×, a lone T1.
-    tier_score  = sum(4 if c['t'] == 1 else 2 if c['t'] == 2 else 1 for c in clusters)
-    depth_bonus = 0.30 * math.sqrt(max(tier_score - 4, 0))
+    # T1.b scoring correction: tight_intact ∧ mc ≥ 3 should classify as T1 per the
+    # taxonomy definition, but some builds miss this path and emit t=2. Apply correction
+    # at score time so these markets compete as T1 without requiring a full rebuild.
+    def effective_tier(c):
+        if c.get('t') == 2 and c.get('tight') and c.get('mc', 0) >= 3:
+            return 1  # T1.b: compact multi-anchor (tight, ≥3 members)
+        return c.get('t', 3)
+
+    # Tier depth. For close-in suburbs (anchor_d ≤ 40 km), use a depth_bonus floor of 2
+    # so single T1 clusters (tier_score=4) earn a quality bonus over single T2 (tier_score=2).
+    # This lets composition distinguish Airdrie/Sherwood Park from T2 markets nearby.
+    # For isolated markets (anchor_d > 40 km), keep floor=4 — they score high from isolation
+    # and don't need an additional composition boost that would flood the top ranks with
+    # small-town T1.b reclassifications far from any competing T1.
+    depth_floor = 2 if anchor_d <= 40.0 else 4
+    tier_score  = sum(4 if effective_tier(c) == 1 else 2 if effective_tier(c) == 2 else 1 for c in clusters)
+    depth_bonus = 0.30 * math.sqrt(max(tier_score - depth_floor, 0))
     tight_avg   = sum(1.1 if c.get('tight') else 1.0 for c in clusters) / len(clusters)
     quality     = (1.0 + depth_bonus) * tight_avg
 
-    # Isolation — PRIMARY discovery driver. Linear 0.30→1.0 over 10–90 km, then plateau.
-    # Near-metro suburbs (low anchor_d) are penalized; isolated regional hubs peak.
+    # Isolation — discovery signal. Linear 0.65→1.0 over 0–90 km, then plateau.
+    # Floor raised from 0.30 to 0.65 so close-in suburbs (Sherwood Park, Airdrie)
+    # compete on composition rather than being suppressed by proximity alone.
     iso_norm  = min(anchor_d, 90.0) / 90.0
-    isolation = 0.30 + 0.70 * iso_norm
+    isolation = 0.65 + 0.35 * iso_norm
 
     # Civic (hospital/university) — modest community-vitality signal
     civic_mult  = 1.15 if civic else 1.0
-    conf_factor = 1.0 if mkt_conf == 'high' else 0.7
+    # Confidence penalty reduced from 0.70 to 0.90 — medium confidence reflects naming
+    # uncertainty, not market quality; a 10% penalty is sufficient signal.
+    conf_factor = 1.0 if mkt_conf == 'high' else 0.90
 
     score = quality * isolation * civic_mult * conf_factor
     return round(score, 4), round(tier_score, 4), round(quality, 4)
@@ -681,8 +704,8 @@ for rm in rms_raw:
             or any(market_base.startswith(m) for m in metro_names_lc if len(m) >= 5)):
         rm_type = 'metro-adjacent'
 
-    # Confidence
-    mkt_conf = rm.get('mkt_conf', 'high')
+    # Confidence (with override for markets where naming resolution lowered confidence)
+    mkt_conf = MKT_CONF_OVERRIDES.get(rm_id, rm.get('mkt_conf', 'high'))
 
     # Regional discovery score (isolation-primary, volume-dampened)
     score, geo_quality_raw, normalized_quality = rm_regional_score(cl, anchor_d, civic, mkt_conf)
