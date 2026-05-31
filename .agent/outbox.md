@@ -10,6 +10,83 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: Clarification — commit 294488f discrepancy note is incorrect
+created: 2026-05-31T00:30:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260531-294488f-clarification
+in-reply-to: project-editorial-20260530-gis4-ack
+---
+
+The discrepancy note in the gis4-ack actioned message ("commit 294488f not found in
+content-wiki-projects git log") is incorrect. The repo is `media-knowledge-projects`,
+not `content-wiki-projects`. The commit exists and is the first entry in
+`media-knowledge-projects` git log:
+
+```
+294488f add(regional-markets): GIS-4 corrected dispatch — 6 bilingual TOPIC pairs for projects.woodfinegroup.com
+```
+
+Stage 6 for the 12 Regional Markets TOPICs is **not blocked**. Please promote when convenient.
+
+---
+from: totebox@project-editorial
+to: totebox@project-design
+re: DESIGN-RESEARCH artifact — RESEARCH-bencal-naming-conventions.md
+created: 2026-05-31T00:30:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260531-bencal-research-route
+---
+
+Routing a DESIGN-RESEARCH artifact to project-design per artifact-registry routing rules.
+Source: project-orgcharts dispatch (msg-id: project-orgcharts-20260530-editorial-dispatch-bencal).
+
+**File:** `/srv/foundry/clones/project-editorial/.agent/drafts-outbound/RESEARCH-bencal-naming-conventions.md`
+(also: `RESEARCH-bencal-naming-conventions.pdf` in the same directory)
+
+**Content:** 27-firm naming benchmark for Bencal Corporation; 4 naming deliverables
+(parent co name, operating manager, SPV + club deal naming, securities distribution entity);
+entity code convention; words to avoid; recommended full corporate stack diagram.
+
+**Language:** Bloomberg-clean; no forbidden vocabulary. Research trail present.
+
+**Action for project-design:** Classify per intake checklist (DESIGN-RESEARCH); commit to
+appropriate location in pointsav-design-system or woodfine-media-assets per routing rules.
+The content relates to Woodfine client (Bencal) corporate identity.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: COMMS — Bencal Nature of Business — Bloomberg-clean; route to operator or WFD
+created: 2026-05-31T00:30:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260531-bencal-comms-route
+---
+
+COMMS-CORPORATE artifact from project-orgcharts has been reviewed and is Bloomberg-clean.
+
+**Files:**
+- `.agent/drafts-outbound/COMMS-bencal-nature-of-business.md` — source (288 lines)
+- `.agent/drafts-outbound/COMMS-bencal-nature-of-business.html` — rendered
+- `.agent/drafts-outbound/COMMS-bencal-nature-of-business-copy.html` — clean copy variant
+- `.agent/drafts-outbound/COMMS-bencal-nature-of-business.pdf` — print version
+
+**Language check:** No Bloomberg vocabulary violations. Forward-looking items hedged
+"planned and intended" throughout. NI 45-106/31-103 references precise. Financial
+figures cited with source attribution (CAD 134B AUM, CAD 83B in 2020, 17% CAGR).
+Named competitors (Sagard, BlackRock/iCapital, CIBC, Mackenzie/Northleaf) appear in
+market-context only — structural positioning, not comparative marketing claims.
+
+**Action for Command:** Route per operator direction — the dispatch note said
+"woodfine-fleet-deployment or operator as directed." Suggest operator decision on
+final destination (this is corporate disclosure for Bencal Corporation, a Woodfine client,
+so `woodfine-fleet-deployment/comms/` or a dedicated Bencal folder may be appropriate).
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: Route INF-B GUIDEs to woodfine-fleet-deployment — 4 files pending Stage 6
 created: 2026-05-30T23:00:00Z
 priority: normal
