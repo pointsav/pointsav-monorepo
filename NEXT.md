@@ -29,11 +29,18 @@ Last updated: 2026-05-28 (Command Session — replaced erroneous project-infrast
 - [x] BRIEF consolidation: `BRIEF-project-console-master.md` created; 4 BRIEFs absorbed/
   superseded; `BRIEF-os-console-platform.md` port note fixed (9080 correct)
 
+## Phase 6 — complete 2026-05-31
+
+- [x] Offline detection: background health poll against `{slm_endpoint}/readyz` (30s interval); `tick()` drains; `self.offline` flag
+- [x] `/new` blocked when offline → `ContentState::Error` "AI unavailable — Doorman offline"
+- [x] Offline indicator in Input hint bar: `[⚠ AI OFFLINE — /new disabled]`
+- [x] `/search <query>` command → `ContentState::SearchResults`; spawns thread; `GET {content_endpoint}/v1/search?q=...`; j/k navigate; Esc back
+- [x] `content_endpoint` field added to `ConsoleConfig` (default `http://127.0.0.1:9081`)
+- [x] `app-console-content/src/search.rs` new module; `cargo check` 0 errors
+
 ## Next coding phase
 
-- [ ] **Phase 6 — Offline mode + Tantivy search** — offline detection in `ContentCartridge`
-  (`/v1/health/ready` poll); greyed inference widgets; `/search` via `service-content`
-  port 9081. Gate: Doctrine claim #54 compliant offline mode.
+- [ ] **Phase 7 — PDF viewing** — `pdfium-render` → Kitty/Sixel pixel render; hard error on unsupported terminals
 
 ## Stage 6 — monorepo sub-clone
 
