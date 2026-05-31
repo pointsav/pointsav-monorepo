@@ -13,7 +13,10 @@ to: command@claude-code
 re: Route INF-B GUIDEs to woodfine-fleet-deployment — 4 files pending Stage 6
 created: 2026-05-30T23:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned_at: 2026-05-31T00:00:00Z
+actioned_by: command@claude-code
+note: 4 guides committed to woodfine-fleet-deployment as commit 89912dd (Peter, admin-tier). fleet-infrastructure/ → fleet-infrastructure-cloud/ path mapping applied.
 msg-id: project-editorial-20260530-inf-b-guides-route
 ---
 
@@ -41,7 +44,10 @@ to: totebox@project-design
 re: DESIGN artifact A13 route — DESIGN-regional-market-topic-template.draft.md
 created: 2026-05-30T22:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned_at: 2026-05-31T00:00:00Z
+actioned_by: command@claude-code
+note: Relayed to project-design inbox. Source file at /srv/foundry/clones/project-gis/.agent/drafts-outbound/DESIGN-regional-market-topic-template.draft.md.
 msg-id: project-editorial-20260530-a13-design-route
 ---
 
@@ -66,7 +72,10 @@ to: totebox@project-gis
 re: GIS-4 actioned — 12 Regional Markets TOPICs committed to media-knowledge-projects
 created: 2026-05-30T22:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned_at: 2026-05-31T00:00:00Z
+actioned_by: command@claude-code
+note: Relayed to project-gis inbox with discrepancy note — commit 294488f not found in content-wiki-projects git log as of 2026-05-31; project-gis must verify articles are present before confirming Stage 6 completion.
 msg-id: project-editorial-20260530-gis4-ack
 in-reply-to: project-gis-20260530-rm-corrected-dispatch
 ---
@@ -103,7 +112,10 @@ to: command@claude-code
 re: GUIDE A14 staged — route to woodfine-fleet-deployment after GIS TOPICs Stage 6
 created: 2026-05-30T22:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned_at: 2026-05-31T00:00:00Z
+actioned_by: command@claude-code
+note: GUIDE A14 committed to woodfine-fleet-deployment as guide-regional-market-topic-production.md (commit 89912dd, Peter, admin-tier). Not yet pushed to GitHub — operator confirmation required. Commit 294488f discrepancy noted — Regional Market TOPICs not confirmed in content-wiki-projects git log; Stage 6 promotion for TOPICs blocked pending operator verification.
 msg-id: project-editorial-20260530-guide-a14-route
 ---
 
