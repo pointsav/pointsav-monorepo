@@ -8,7 +8,7 @@ must be closed.
 
 State vocabulary — see `~/Foundry/CLAUDE.md` §8 for definitions.
 
-Last updated: 2026-05-27.
+Last updated: 2026-05-31.
 
 ---
 
@@ -19,14 +19,15 @@ Last updated: 2026-05-27.
 | app-console-bim | Reserved-folder | app-console | 1 file (RESEARCH.md); research phase |
 | app-console-bookkeeper | Active | app-console | Activated 2026-04-22 via framework §8 (pilot); HTML-plugin pattern (view + cartridge); registry row was originally mis-classified; `README.*` and data-binding pending |
 | app-console-content | Scaffold-coded | app-console | 8 files; in workspace members |
-| app-console-email | Scaffold-coded | app-console | 4 files |
+| app-console-email | Active | app-console | Phase C 2026-05-31; lib crate; EmailCartridge (F3); inbox list + read + compose/send; workspace member; plain mode supported |
 | app-console-help | Reserved-folder | app-console | READMEs only |
 | app-console-input | Scaffold-coded | app-console | 6 files |
 | app-console-keys | Active | app-console | Phase 3+4 active; chassis + Kitty/Sixel QR + Cartridge trait; ratatui-image v9 |
 | app-console-mesh | Reserved-folder | app-console | Placeholder |
 | app-console-minutebook | Reserved-folder | app-console | READMEs only |
 | app-console-people | Scaffold-coded | app-console | 5 files |
-| app-console-system | Scaffold-coded | app-console | 5 files; F11 operator panel; pending-pair approvals; activated 2026-05-23 |
+| app-console-slm | Active | app-console | Phase D 2026-05-31; lib crate; SlmCartridge (F9); Doorman health dashboard + entity count; 10s poll + R refresh; workspace member |
+| app-console-system | Active | app-console | Phase 4 (pairing) 2026-05-23; F11 operator panel; pending-pair approvals; workspace member |
 | app-console-vault | Reserved-folder | app-console | Placeholder |
 
 ## App — MediaKit surface (`app-mediakit-*`)

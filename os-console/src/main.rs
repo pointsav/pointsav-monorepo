@@ -16,8 +16,10 @@ fn inner_main() -> anyhow::Result<()> {
 #[cfg(not(feature = "ssh-server"))]
 fn inner_main() -> anyhow::Result<()> {
     use app_console_content::cartridge::ContentCartridge;
+    use app_console_email::EmailCartridge;
     use app_console_input::InputCartridge;
     use app_console_keys::{pairing, AppConsoleKeys, ConsoleConfig};
+    use app_console_slm::SlmCartridge;
     use app_console_system::SystemCartridge;
 
     let cfg = ConsoleConfig::load();
@@ -70,6 +72,10 @@ fn inner_main() -> anyhow::Result<()> {
         }
     }
 
+    chassis.register(Box::new(EmailCartridge::new_for(
+        &p.email_endpoint,
+        p.plain_mode,
+    )));
     chassis.register(Box::new(ContentCartridge::new_for(
         &p.username,
         &p.tenant,
@@ -82,6 +88,7 @@ fn inner_main() -> anyhow::Result<()> {
         &p.tenant,
         &p.ingest_endpoint,
     )));
+    chassis.register(Box::new(SlmCartridge::new(&p.slm_endpoint, p.plain_mode)));
     chassis.register(Box::new(SystemCartridge::new(&p.pair_endpoint)));
     chassis.run_local()
 }

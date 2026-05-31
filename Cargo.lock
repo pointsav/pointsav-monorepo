@@ -187,6 +187,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "app-console-email"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "app-console-keys",
+ "crossterm",
+ "ratatui",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "app-console-input"
 version = "0.1.0"
 dependencies = [
@@ -216,6 +229,19 @@ dependencies = [
  "serde",
  "serde_json",
  "toml",
+]
+
+[[package]]
+name = "app-console-slm"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "app-console-keys",
+ "crossterm",
+ "ratatui",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -3040,8 +3066,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "app-console-content",
+ "app-console-email",
  "app-console-input",
  "app-console-keys",
+ "app-console-slm",
  "app-console-system",
  "rand 0.10.1",
  "ratatui",

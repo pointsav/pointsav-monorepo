@@ -33,6 +33,8 @@ pub struct ProfileConfig {
     pub drafts_outbound_path: String,
     #[serde(default = "default_email_endpoint")]
     pub email_endpoint: String,
+    #[serde(default = "default_orchestration_host")]
+    pub orchestration_host: String,
     #[serde(default)]
     pub plain_mode: bool,
 }
@@ -75,6 +77,9 @@ fn default_drafts_outbound_path() -> String {
 fn default_email_endpoint() -> String {
     "http://127.0.0.1:9093".into()
 }
+fn default_orchestration_host() -> String {
+    "127.0.0.1".into()
+}
 
 impl Default for ProfileConfig {
     fn default() -> Self {
@@ -91,6 +96,7 @@ impl Default for ProfileConfig {
             pair_endpoint: default_pair_endpoint(),
             drafts_outbound_path: default_drafts_outbound_path(),
             email_endpoint: default_email_endpoint(),
+            orchestration_host: default_orchestration_host(),
             plain_mode: false,
         }
     }
