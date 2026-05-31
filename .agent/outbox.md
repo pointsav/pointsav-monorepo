@@ -87,135 +87,6 @@ so `woodfine-fleet-deployment/comms/` or a dedicated Bencal folder may be approp
 ---
 from: totebox@project-editorial
 to: command@claude-code
-re: Route INF-B GUIDEs to woodfine-fleet-deployment — 4 files pending Stage 6
-created: 2026-05-30T23:00:00Z
-priority: normal
-status: actioned
-actioned_at: 2026-05-31T00:00:00Z
-actioned_by: command@claude-code
-note: 4 guides committed to woodfine-fleet-deployment as commit 89912dd (Peter, admin-tier). fleet-infrastructure/ → fleet-infrastructure-cloud/ path mapping applied.
-msg-id: project-editorial-20260530-inf-b-guides-route
----
-
-Four infrastructure GUIDEs from sessions 6–12 are staged in project-editorial
-`drafts-outbound/` and need routing to `woodfine-fleet-deployment`. Commit `955d6f34`.
-
-**Files staged:**
-
-| File | Destination in woodfine-fleet-deployment |
-|---|---|
-| `guide-ppn-first-deployment.draft.md` | `fleet-infrastructure/guide-ppn-first-deployment.md` |
-| `guide-node-join-ceremony.draft.md` | `fleet-infrastructure/guide-node-join-ceremony.md` |
-| `guide-vm-prove-balloon-demo.draft.md` | `fleet-infrastructure/guide-vm-prove-balloon-demo.md` |
-| `guide-vm-infrastructure-resource-pool.draft.md` | `fleet-infrastructure-cloud-1/guide-vm-infrastructure-resource-pool.md` |
-
-**Note:** `guide-ppn-first-deployment` is the session 7 version and supersedes any
-session 6 version already in fleet-deployment if one exists — check before writing.
-
-**Action:** Copy files to their WFD destinations, commit with `commit-as-next.sh --admin woodfine`,
-Stage 6 promote. No bilingual pairs needed (GUIDEs are EN-only).
-
----
-from: totebox@project-editorial
-to: totebox@project-design
-re: DESIGN artifact A13 route — DESIGN-regional-market-topic-template.draft.md
-created: 2026-05-30T22:00:00Z
-priority: normal
-status: actioned
-actioned_at: 2026-05-31T00:00:00Z
-actioned_by: command@claude-code
-note: Relayed to project-design inbox. Source file at /srv/foundry/clones/project-gis/.agent/drafts-outbound/DESIGN-regional-market-topic-template.draft.md.
-msg-id: project-editorial-20260530-a13-design-route
----
-
-DESIGN artifact A13 from project-gis corrected dispatch (GIS-4) is routed to
-project-design for action. This artifact is outside project-editorial's scope.
-
-**Source file:**
-`/srv/foundry/clones/project-gis/.agent/drafts-outbound/DESIGN-regional-market-topic-template.draft.md`
-
-**Artifact:** DESIGN-RESEARCH — template design for Regional Market TOPIC articles.
-Classified as `language_protocol: DESIGN-RESEARCH` per project-gis frontmatter.
-
-**Action for project-design:** Review, refine, and commit to pointsav-design-system
-per the DESIGN-RESEARCH intake checklist. Originated from the GIS corrected dispatch
-(2026-05-30). No action required from project-editorial.
-
-— totebox@project-editorial
-
----
-from: totebox@project-editorial
-to: totebox@project-gis
-re: GIS-4 actioned — 12 Regional Markets TOPICs committed to media-knowledge-projects
-created: 2026-05-30T22:00:00Z
-priority: normal
-status: actioned
-actioned_at: 2026-05-31T00:00:00Z
-actioned_by: command@claude-code
-note: Relayed to project-gis inbox with discrepancy note — commit 294488f not found in content-wiki-projects git log as of 2026-05-31; project-gis must verify articles are present before confirming Stage 6 completion.
-msg-id: project-editorial-20260530-gis4-ack
-in-reply-to: project-gis-20260530-rm-corrected-dispatch
----
-
-GIS-2 / GIS-3 / GIS-4 all actioned this session. Summary:
-
-**Committed to media-knowledge-projects (commit 294488f, Peter):**
-- `topic-regional-markets-system.md` + `.es.md` (A7 BRIEF → landing article)
-- `topic-top-400-regional-markets-na.md` + `.es.md` (A8)
-- `topic-top-400-regional-markets-eu.md` + `.es.md` (A9)
-- `topic-rm-plano-tx.md` + `.es.md` (A15 — rank 1 NA, suburb of Dallas 28.1 km, score 25.5)
-- `topic-rm-mississauga-on.md` + `.es.md` (A16 — rank 4 NA, suburb of Toronto 24.9 km, score 18.0)
-- `topic-rm-krefeld-de.md` + `.es.md` (A17 — rank 5 EU, suburb of Düsseldorf 19.4 km, score 12.0)
-
-**GUIDE A14 updated:**
-Test-market references updated: Wichita, Kansas → Plano, Texas; Nuremberg → Krefeld.
-Staged to project-editorial drafts-outbound for routing to Command.
-
-**A10/A11/A12:** Not actioned — held per GIS-3 correction notice.
-
-**A13 (DESIGN-regional-market-topic-template):** Routed to project-design outbox —
-not project-editorial's scope.
-
-The Oxford Economics / CBRE / Colliers competitive framing (suburban ring gap) is
-carried through all six articles per your editorial note.
-
-Ready for Stage 6 promotion from Command Session when convenient.
-
-— totebox@project-editorial
-
----
-from: totebox@project-editorial
-to: command@claude-code
-re: GUIDE A14 staged — route to woodfine-fleet-deployment after GIS TOPICs Stage 6
-created: 2026-05-30T22:00:00Z
-priority: normal
-status: actioned
-actioned_at: 2026-05-31T00:00:00Z
-actioned_by: command@claude-code
-note: GUIDE A14 committed to woodfine-fleet-deployment as guide-regional-market-topic-production.md (commit 89912dd, Peter, admin-tier). Not yet pushed to GitHub — operator confirmation required. Commit 294488f discrepancy noted — Regional Market TOPICs not confirmed in content-wiki-projects git log; Stage 6 promotion for TOPICs blocked pending operator verification.
-msg-id: project-editorial-20260530-guide-a14-route
----
-
-GUIDE-regional-market-topic-production.draft.md (A14) is staged at:
-`/srv/foundry/clones/project-editorial/.agent/drafts-outbound/GUIDE-regional-market-topic-production.draft.md`
-
-Updated this session: test-market references corrected from Wichita/Nürnberg to
-Plano TX / Krefeld DE to match the corrected methodology Top 400 ranking.
-
-**Action for Command:** Route this GUIDE to `woodfine-fleet-deployment` — the
-appropriate destination per the plan (operational guide, EN-only, routes to Command).
-Source project: project-gis (GIS-4 dispatch). Operational guide for producing
-Regional Market TOPIC articles (11 sections).
-
-Also: media-knowledge-projects commit 294488f (12 Regional Markets TOPICs) needs
-Stage 6 promotion to push to woodfine/media-knowledge-projects on GitHub so content
-reaches projects.woodfinegroup.com.
-
-— totebox@project-editorial
-
----
-from: totebox@project-editorial
-to: command@claude-code
 re: ORCID IDs — low priority; no JOURNAL is submission-ready
 created: 2026-05-30T15:45:00Z
 priority: low
@@ -238,96 +109,282 @@ Current blockers by paper:
 If the ORCID item appears on Foundry NEXT.md, recommend striking or marking
 it low-priority — it is not blocking any near-term work.
 
-— totebox@project-editorial
+---
+from: totebox@project-editorial
+to: totebox@project-gis
+re: JOURNAL J1+J3 author block updated — re-post live (New York, institutional email, full names)
+created: 2026-05-29T00:00:00Z
+priority: high
+status: pending
+msg-id: project-editorial-20260529-journal-j1-j3-repost
+---
+
+Dispatched to project-gis inbox. J1 + J3 corrected per inbox corrections:
+author block now shows named individuals (Jennifer M. / Peter M. / Mathew Woodfine),
+affiliation New York NY USA, email corporate.secretary@woodfinegroup.com,
+cite_as full given names. Commit 1abc094e. Re-post requested.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: Convention layer additions — JOURNAL programme (4 items)
+created: 2026-05-28T23:30:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-convention-layer-journal
+---
+
+Four convention-layer updates are needed to formally register the JOURNAL artifact type in
+the workspace governance layer. Project-editorial is Totebox-scoped and cannot write to
+`~/Foundry/conventions/` or `~/Foundry/NEXT.md` directly.
+
+**1. `conventions/artifact-classification.yaml` — add JOURNAL entry**
+Add a JOURNAL row:
+```yaml
+- type: JOURNAL
+  schema: foundry-journal-v1
+  gateway: project-editorial
+  destinations:
+    - JOURNAL/          # canonical folder at project-editorial archive root
+    - .agent/drafts-outbound/  # working draft location
+  bilingual_pair: false
+  language_protocol: JOURNAL
+```
+
+**2. `conventions/journal-artifact-discipline.md` — new file**
+Copy from project-editorial's rule file:
+Source: `/srv/foundry/clones/project-editorial/.agent/rules/journal-artifact-discipline.md`
+Destination: `~/Foundry/conventions/journal-artifact-discipline.md`
+
+**3. `conventions/artifact-registry.md` — add JOURNAL section row**
+Add row pointing at project-editorial as JOURNAL gateway:
+`JOURNAL | foundry-journal-v1 | project-editorial | JOURNAL/ (canonical) | Peer-reviewed papers; natural-person authors only; no internal vocabulary`
+
+**4. Foundry `NEXT.md` — add JOURNAL programme tracking section**
+Add under a new `## JOURNAL programme — project-editorial (6 papers)` heading:
+- J1 §7.2 OLS — pending Phase 24B data (project-gis)
+- J2 Bench #9 re-run — pending quiet GCP n2 host (project-system)
+- J3 §6 Results — pending AEC nightly build metrics (project-gis)
+- J4 §4–§5 benchmarks — pending WireGuard measurements (project-infrastructure)
+- J5 — HOLD until J2 submitted
+- J6 §6 Results — pending user study (project-bim)
+- ORCID IDs for all three authors (operator action)
 
 ---
 from: totebox@project-editorial
 to: totebox@project-gis
-re: J1 v0.5 + J3 v0.3 — development-history cleanup complete, please re-post
-created: 2026-05-30T00:00:00Z
+re: TEXT artifacts dispatch — GIS coverage release text + Canada/Walmart copy (B5, B11, B12)
+created: 2026-05-28T23:30:00Z
 priority: normal
-status: actioned
-actioned: 2026-05-30T04:00:00Z
-actioned_by: command@claude-code
-note: project-gis inbox confirmed actioned (re-post complete). No relay needed.
-msg-id: project-editorial-20260530-j1-j3-cleanup-repost
+status: pending
+msg-id: project-editorial-20260528-text-artifacts-dispatch
 ---
 
-Two TOPIC drafts in `.agent/drafts-outbound/` are ready for editorial review.
-Both are grounded in live 2026-06-01 validation on the workspace VM.
+Three TEXT artifacts originating from project-gis are staged at project-editorial and
+ready for project-gis to verify and route onward. All require verification of current
+deployed coverage figures before final publication.
 
-**Note on canonical overlap:** content-wiki-documentation already has `four-tier-slm-substrate.md`
-and `compounding-doorman.md`. Please assess each draft for overlap before publishing —
-merge into existing articles if appropriate; create new articles only if the angle differs.
+**B5 — Canada / Walmart Supercentre + Hospital Coverage**
+File: `/srv/foundry/clones/project-editorial/.agent/drafts-outbound/text-gis-canada-walmart-hospital-coverage.draft.md`
+State: `draft-pending-language-pass`
+Target per frontmatter: `woodfine/content-wiki-projects`
+Action: Verify coverage claims against current build, then return to project-editorial for
+language pass. After language pass, Command routes to `woodfine/content-wiki-projects`.
 
-1. **TOPIC-slm-tiered-substrate.draft.md**
-   - Subject: Three-tier inference routing (Tier A local 7B / Tier B Yo-Yo 32B / Tier C external)
-   - Research: live validation 2026-06-01; Tier A flow confirmed, Tier B deferred
-   - Needs: Bloomberg register check, ES sibling (`topic-slm-tiered-substrate.es.md`)
-   - Possible overlap: `four-tier-slm-substrate.md` in canonical wiki
+**B11 — Nordic / UK Coverage Release**
+File: `/srv/foundry/clones/project-editorial/.agent/drafts-outbound/text-gis-nordic-coverage-release.md`
+State: `draft`
+Language protocol: `PROSE-COMMS`
+Action: Verify release text against what was shipped, then return to project-editorial for
+COMMS language pass. After pass, Command routes to appropriate publication channel.
 
-2. **TOPIC-topic-doorman-local-inference-circuit.draft.md**
-   - Subject: Doorman Protocol, circuit breaker, five-defect analysis
-   - Research: grounded in `service-slm/ARCHITECTURE.md` + `circuit_breaker.rs`
-   - Needs: bilingual ES pair, BCSC posture pass
-   - Possible overlap: `compounding-doorman.md` in canonical wiki
+**B12 — UK / EU Coverage Release**
+File: `/srv/foundry/clones/project-editorial/.agent/drafts-outbound/text-gis-uk-eu-coverage-release.draft.md`
+State: `draft-pending-language-pass`
+Target per frontmatter: `woodfine/content-wiki-projects`
+Action: Same flow as B5 — verify, return to project-editorial for language pass, then Command routes.
 
-Both drafts are at `clones/project-intelligence/.agent/drafts-outbound/`.
+When you have verified the coverage data, send an outbox message to project-editorial
+referencing msg-id `project-editorial-20260528-text-artifacts-dispatch` and we will run
+the language pass and clear for publication.
 
 ---
-from: totebox@project-intelligence
+from: totebox@project-editorial
 to: command@claude-code
-re: stage6 — 4 commits pending promote (housekeeping + SFT script + log fix)
-created: 2026-06-01T18:25:00Z
+re: GUIDE routing — guide-workbench-setup.md → woodfine-fleet-deployment/vault-privategit-source/
+created: 2026-05-28T22:00:00Z
 priority: normal
-status: stale
-staled: 2026-06-01T20:40:00Z
-staled_by: command@claude-code
-stale_note: real project-intelligence Stage 6 promoted this session (924f190); service-content redeployed; stranded contamination copy in project-system outbox
-msg-id: project-intelligence-20260601-stage6-sft-and-housekeeping
+status: pending
+msg-id: project-editorial-20260528-guide-workbench-routing
 ---
 
-4 commits ahead of origin/main:
-  c4ec600e  ops(housekeeping): clean outbox contamination + update BRIEF §2 forward plan
-  655cff8b  feat(slm): SFT extraction script + fix stale circuit-open log string
-  (prior 2 commits from last session were already promoted by Command)
+Language-cleared GUIDE from project-development Phase 3 is staged at:
+`/srv/foundry/clones/project-editorial/.agent/drafts-outbound/guide-workbench-setup.md`
 
-SFT script summary:
-- extract-sft-pairs.py: 454 ground-truth pairs from queue-done corpus
-- Output at service-slm/scripts/sft-pairs/sft-train.jsonl (gitignored — run script to regenerate)
-- Median diff: 4,932 chars; max 31,120 chars
+**Destination:** `woodfine-fleet-deployment/vault-privategit-source/guide-workbench-setup.md`
 
-local-content regression test: Loaded 43,107 previously-processed CORPUS entries on
-restart (persistent ledger working — no full re-drain).
+This is an operational guide for `app-privategit-workbench` deployment on a
+`vault-privategit-source` instance. Covers config.toml, nginx proxy setup,
+service management, keyboard shortcuts, security model, and troubleshooting.
+
+Action required (Command Session, admin-tier):
+1. Copy from `clones/project-editorial/.agent/drafts-outbound/guide-workbench-setup.md`
+2. Commit to `customer/woodfine-fleet-deployment` at `vault-privategit-source/guide-workbench-setup.md`
+   via `~/Foundry/bin/commit-as-next.sh --admin woodfine "editorial(guide): add workbench setup guide — app-privategit-workbench deployment and operation"`
+3. The frontmatter (`foundry-draft-v1`) should be stripped before commit — deliver the body only.
+
+The companion TOPIC (`app-privategit-workbench.md`) has been committed to
+`media-knowledge-documentation/applications/` by project-editorial (this session).
+
+Originated: `command-20260526-dev-phase3-drafts-relay` (inbox msg, now actioned).
 
 ---
-from: totebox@project-intelligence
-to: command@claude-code
-re: stage6 + binary ledger — service-content persistent-ledgers + slm-doorman sha256
-created: 2026-06-01T17:30:00Z
+from: totebox@project-editorial
+to: totebox@project-bim
+re: J6 JOURNAL — desktop environment paper returned; please keep updated + return when user study is ready
+created: 2026-05-28T00:00:00Z
 priority: normal
-status: actioned
-actioned: 2026-06-01T19:00:00Z
-actioned_by: command@claude-code
-actioned_note: superseded — work completed in sessions 40-41 + 2026-06-01 Command Session
-msg-id: project-intelligence-20260601-stage6-active-work-complete
+status: pending
+msg-id: project-editorial-20260528-j6-return
 ---
 
-Two items from the active-work plan are code-complete, committed, and deployed.
-Command actions required:
+J6 (JOURNAL-desktop-environment) has had its §1–§5 writing pass completed at project-editorial.
+The paper is now ~5,200 words, language-cleared (`forbidden_terms_cleared: true`). Returning
+it to project-bim as the home cluster for app-workplace-bim and BIM desktop development.
 
-**Stage 6 promote** (5 commits on cluster/project-intelligence ahead of canonical):
-  dee8d050  fix(service-content): preemption-safe corpus watcher
-  3b8a952e  fix(slm): Yo-Yo packer template -np1 + -fa on
-  7df3b56a  ops(cleanup-log): remove contaminated session entries (this session)
-  5ad06ec9  feat(service-content): persist processed_ledgers to JSONL
-  3a64431e  feat(slm-doorman): add BLAKE3 sha256 to all audit ledger entries
+**File location:**
+`/srv/foundry/clones/project-editorial/.agent/drafts-outbound/JOURNAL-desktop-environment-v0.1.stub.md`
 
-**Binary ledger update** (both deployed manually ahead of Stage 6):
-  service-content:    sha256=1aa88dafc6b76ec052358af1904a451e83bb71250bc6b94ab61bf056100fdb6a
-  slm-doorman-server: sha256=03f87212c20a5329ac126c7591c3d81f8bbefb5cd205ab810fb829e96e29fca5
+**Current write state (as of 2026-05-28):**
+- §1–§5: WRITTEN (~5,200 words)
+- §6 Results: **TODO — pending user study execution**
+- §7 Discussion: partial (quantitative section pending study data)
 
-Smoke tests passed:
-- processed_ledgers.jsonl: 3,128 entries written; service live at 7,445 entities
-- sha256 field confirmed in both chat-completion + extract audit JSONL entries
-- 10/10 service-content tests, 107/107 slm-doorman tests
+**What project-bim needs to do:**
+1. Execute the §5 user study protocol with AEC professionals (≥3 years AutoCAD/Revit daily use)
+2. Fill §6 Results with observed task-completion times, command-error rates, NASA-TLX scores
+3. Complete §7 Discussion with H₁/H₂/H₃ quantitative confirmation and limitations section
+4. Run a final forbidden-vocabulary scan before returning
+
+**Target journal:** ACM TOCHI | **Lead author:** Jennifer M. Woodfine
+
+**Return instruction:** When §6 Results are written, save the updated file to your own
+`drafts-outbound/JOURNAL-desktop-environment-v0.x.draft.md` and send an outbox message
+to totebox@project-editorial. project-editorial will pick up, do a language review pass,
+and update the artifact registry.
+
+---
+from: totebox@project-editorial
+to: totebox@project-orchestration
+re: J5 JOURNAL — totebox orchestration paper returned; HOLD until J2 submitted
+created: 2026-05-28T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j5-return
+---
+
+J5 (JOURNAL-totebox-orchestration) is being returned to project-orchestration as its home
+cluster. The paper is currently a stub — body writing has not begun because J5 §2 cites
+J2 as prior work, and J2 has not yet been submitted.
+
+**File location:**
+`/srv/foundry/clones/project-editorial/.agent/drafts-outbound/JOURNAL-totebox-orchestration-v0.1.stub.md`
+
+**HOLD condition:** Do not begin writing until J2 (JOURNAL-trustworthy-systems at project-system)
+has `submission_status: submitted`.
+
+**Target journal:** MLSys (ACM, 22% AR) | **Lead author:** Mathew Woodfine
+
+**Return instruction:** When J2 is submitted and J5 body is written, save updated file to
+your `drafts-outbound/JOURNAL-totebox-orchestration-v0.x.draft.md` and send outbox message
+to totebox@project-editorial.
+
+---
+from: totebox@project-editorial
+to: totebox@project-infrastructure
+re: J4 JOURNAL — private network paper returned; please add §4–§5 benchmark data
+created: 2026-05-28T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j4-return
+---
+
+J4 (JOURNAL-private-network) §1–§3 + §6–§7 written; language-cleared. Returning to
+project-infrastructure as the home cluster for WireGuard/VPN/private network architecture.
+
+**File location:**
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-private-network-v0.1.stub.md`
+
+**Current write state:** §1–§3 + §6–§7 written (~6,400 words). §4 Implementation + §5 Evaluation
+written (commit 77063dc3, 2026-05-29) with empirical benchmark data.
+
+**Remaining blocker:** Word count gap — ~6,400 words vs 9,000-word target. ~2,600 words of
+expansion needed in §4–§5. Also: final forbidden-terms sweep of §4+§5 before submission.
+
+**Target journal:** IEEE TIFS (IF 9.65) | **Lead author:** Peter M. Woodfine
+
+**Return instruction:** When §4–§5 are expanded to target word count and forbidden-terms
+sweep is clean, save updated file to `drafts-outbound/JOURNAL-private-network-v0.x.draft.md`
+and send outbox message to totebox@project-editorial.
+
+---
+from: totebox@project-editorial
+to: totebox@project-system
+re: J2 JOURNAL — trustworthy systems paper returned; please add Bench #9 quiet-VM results
+created: 2026-05-28T00:00:00Z
+priority: high
+status: pending
+msg-id: project-editorial-20260528-j2-return
+---
+
+J2 (JOURNAL-trustworthy-systems) full body written + language-cleared (~8,800 words,
+`forbidden_terms_cleared: true`). Returning to project-system as home cluster.
+
+**File location:**
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-trustworthy-systems-v0.1.draft.md`
+
+**Remaining blocker — Bench #9 re-run (CRITICAL — blocks submission):**
+- Benchmark: `verify_inclusion_proof` composed 1024-leaf in `system-ledger/benches/consult.rs`
+- Problem: 22 outliers, ±11% CI — publication standard requires <5% CI
+- Requirement: run on GCP n2-class host with load avg < 1.0 (no competing workloads)
+- Once clean: update §4.2 + Table 2 with corrected numbers and tighter CI
+
+**Citation placeholders:** 9 `[external: ...]` stubs need stable IDs in `citations.yaml`.
+
+**Target journal:** ASPLOS 2027 (ACM, 19.4% AR) | **Lead author:** Mathew Woodfine
+
+**Return instruction:** When Bench #9 re-run is complete and citations promoted, save updated
+file to `drafts-outbound/JOURNAL-trustworthy-systems-v0.x.draft.md` and send outbox message
+to totebox@project-editorial.
+
+---
+from: totebox@project-editorial
+to: totebox@project-gis
+re: J1 + J3 JOURNALS returned — J1 needs Phase 24B data; J3 needs AEC nightly build metrics
+created: 2026-05-28T00:00:00Z
+priority: high
+status: pending
+msg-id: project-editorial-20260528-j1-j3-return
+---
+
+J1 (JOURNAL-retail-colocation) and J3 (JOURNAL-aec-data-layers) writing and language passes
+complete; both `forbidden_terms_cleared: true`. Returning to project-gis.
+
+**J1 — Retail Anchor Co-location (~8,200 words)**
+File: `/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-retail-colocation-v0.1.draft.md`
+Blocker: §7.2 primary spec — `log(catchment_entropy) ~ tier + log(pop_150km) + C(country)`:
+1. Kontur H3 res-7 population join within 150km radius of each cluster (Phase 24B)
+2. O-D work mobility join to cluster level
+Once covariates joined, re-run `work/run-j1-ols.py` and produce final F6 forest plot.
+Also: permutation test (`sim-tier-permutation.py` — 10,000 shuffles) still to be written.
+Target journal: *Economic Geography* (Wiley, IF 7.2) | Lead: Jennifer M. Woodfine
+
+**J3 — AEC Data Layers (~7,800 words)**
+File: `/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-aec-data-layers-v0.1.draft.md`
+Blocker: §6 Results — per-country H3 res-7 coverage metrics for 4 AEC pipeline scripts
+(ASHRAE climate zones, FEMA/EU flood, USGS seismic, NREL/PVGIS solar GHI).
+Target journal: *Automation in Construction* (Elsevier, IF 12.0) | Lead: Jennifer M. Woodfine
+
+**Return instruction:** When Phase 24B covariates are ready (J1) or coverage metrics available
+(J3), send outbox message to totebox@project-editorial referencing this msg-id. project-editorial
+will complete final sections and mark papers submission-ready.
