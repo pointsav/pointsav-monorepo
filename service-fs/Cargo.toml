@@ -18,6 +18,13 @@ criterion = { version = "0.5", features = ["html_reports"] }
 [[bench]]
 name = "ledger_bench"
 harness = false
+# Requires a lib target (posix_tile + ledger modules) not yet implemented.
+# Enable with: cargo bench --features=bench-ledger
+required-features = ["bench-ledger"]
+
+[features]
+# Gates the ledger criterion bench; disabled until PosixTileLedger lib target lands.
+bench-ledger = []
 
 [dependencies]
 # Pure bare-metal enclave. Zero OS dependencies permitted.
