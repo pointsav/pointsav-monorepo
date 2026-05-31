@@ -3866,7 +3866,14 @@ async fn hash_lookup_page(
             h1 { "Hash lookup" }
             p { "Invalid fingerprint — expected 64 hex characters." }
         };
-        return Ok(chrome("Hash lookup", body, &state.site_title, maybe_user.as_ref(), pending_count).into_response());
+        return Ok(chrome(
+            "Hash lookup",
+            body,
+            &state.site_title,
+            maybe_user.as_ref(),
+            pending_count,
+        )
+        .into_response());
     }
 
     let mut bytes = [0u8; 32];
@@ -3879,7 +3886,11 @@ async fn hash_lookup_page(
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     match state.links.lookup_by_hash(&bytes)? {
         Some((slug, revision_sha)) => {
-            let short_sha = if revision_sha.len() >= 7 { &revision_sha[..7] } else { &revision_sha };
+            let short_sha = if revision_sha.len() >= 7 {
+                &revision_sha[..7]
+            } else {
+                &revision_sha
+            };
             let body = html! {
                 h1 { "Hash lookup" }
                 p {
@@ -3892,9 +3903,19 @@ async fn hash_lookup_page(
                     a href={ "/diff/" (&slug) "?a=" (&revision_sha) "~&b=" (&revision_sha) } { "View diff for this revision" }
                 }
             };
-            Ok(chrome("Hash lookup", body, &state.site_title, maybe_user.as_ref(), pending_count).into_response())
+            Ok(chrome(
+                "Hash lookup",
+                body,
+                &state.site_title,
+                maybe_user.as_ref(),
+                pending_count,
+            )
+            .into_response())
         }
-        None => Err(WikiError::NotFound(format!("fingerprint {}", &hash_hex[..16]))),
+        None => Err(WikiError::NotFound(format!(
+            "fingerprint {}",
+            &hash_hex[..16]
+        ))),
     }
 }
 
@@ -5178,7 +5199,10 @@ mod tests {
             StatusCode::FOUND,
             "Accept-Language: es should redirect to /es/"
         );
-        assert_eq!(resp.headers().get("location").and_then(|v| v.to_str().ok()), Some("/es/"));
+        assert_eq!(
+            resp.headers().get("location").and_then(|v| v.to_str().ok()),
+            Some("/es/")
+        );
     }
 
     /// `GET /?noredirect=1` with `Accept-Language: es` serves EN home (no redirect).
@@ -5224,7 +5248,11 @@ mod tests {
             .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
             .await
             .unwrap();
-        assert_eq!(resp.status(), StatusCode::OK, "no Accept-Language should serve EN 200");
+        assert_eq!(
+            resp.status(),
+            StatusCode::OK,
+            "no Accept-Language should serve EN 200"
+        );
     }
 
     /// ES home lang-toggle links to `/?noredirect=1` to prevent redirect loop.
