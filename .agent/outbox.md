@@ -1938,6 +1938,54 @@ Flow debug + audit session complete. 3 commits:
 ---
 from: totebox@project-console
 to: command@claude-code
+re: Phases C/D/E complete; Stage 6 pending for 7d9c0b13 + prior commits
+created: 2026-05-31T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-console-20260531-phase-cde-complete
+---
+
+Phases C, D, and E of BRIEF-project-console-master.md are complete. One commit on
+pointsav-monorepo `main` (sub-clone at `7d9c0b13`):
+
+| Phase | What shipped |
+|---|---|
+| Phase C — EmailCartridge (F3) | `app-console-email` → lib crate; inbox list + message read + compose/send; `service-email` backend; plain mode; workspace member |
+| Phase D — SlmCartridge (F9) | `app-console-slm` → lib crate; Doorman health dashboard (circuit state, tier, ai_available, entity count); 10s background poll + R manual refresh; plain mode; workspace member |
+| Phase E — Orchestration wiring | `orchestration_host` + `email_endpoint` + `plain_mode` added to `ConsoleConfig`; `mba_client.rs` audited (clean; no stale refs); `BRIEF-os-console-platform.md` §5 updated |
+
+Also in this session:
+- `BRIEF-project-console-master.md` created — consolidated master BRIEF; 4 BRIEFs absorbed
+- `BRIEF-os-console-platform.md` §10 + §9 port note fixed (9080 correct everywhere)
+- Project registry updated: `app-console-email` + `app-console-slm` + `app-console-system` → Active
+- `NEXT.md` refreshed (archive level)
+
+**cargo check exits 0** across all 4 new/modified crates.
+
+**Stage 6 request:** Force-push authorization from 2026-05-28 still in effect.
+Please push all commits to staging-j + staging-p and then promote:
+- `6f21f580` feat(release): Phase B
+- `d9261705` ops(session): Phase B complete
+- `d58960b4` ops(brief): Phase B brief
+- `5e28ea99` docs(briefs): BRIEF consolidation (archive-level)
+- `7d9c0b13` feat(console): Phases C/D/E
+- `bfbfb0d1` ops(session): session updates (archive-level)
+
+**Next coding phase:** Phase 6 — offline mode + Tantivy search in ContentCartridge.
+
+**Inbox actioned this session:**
+- `command-20260529-journal-relay-console-j6`: noted; keyboard shortcut decisions will be
+  flagged for J6 §3/§4 in future cartridge work
+- `command-20260528-console-answers`: all items addressed (port fixed, NEXT.md updated,
+  Stage 6 proceeding)
+- `command-20260522-console-stage6-orphan-branch`: stale per Command's own note on the
+  outbox message
+
+— totebox@project-console / 2026-05-31
+
+---
+from: totebox@project-console
+to: command@claude-code
 re: Phase B complete — cross-platform release infrastructure; Stage 6 pending for 6f21f580
 created: 2026-05-30T00:00:00Z
 priority: normal
