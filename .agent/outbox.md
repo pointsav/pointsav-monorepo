@@ -1,5 +1,35 @@
 ---
 from: totebox@project-gis
+to: command
+re: session shutdown — Regional Markets corrected methodology complete; AEC flood build pending
+created: 2026-05-31T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-gis-20260531-session-shutdown
+---
+
+Session ended. Summary of this session's work:
+
+**Regional Markets corrected methodology (commits 39aa1b11, af2a94ed, f7a771ec):**
+- score-regional-markets.py v2: suburban-regional filter (15–80 km), coherence
+  check (200 km span gate), name-match override, no metro_multiplier. Verified:
+  Berlin=metro-core, Nürnberg=metro-core, Plano TX=rank 1 NA.
+- 3 new TOPIC articles: Plano TX (rank 1 NA), Mississauga ON (rank 4 NA),
+  Krefeld DE (rank 5 EU) — all genuine named suburbs of major metros.
+- A8/A9 list TOPICs fully regenerated from corrected data.
+- A7 BRIEF updated with Oxford Economics/CBRE/Colliers competitive positioning.
+- All dispatched to project-editorial (msg-id: project-gis-20260530-rm-corrected-dispatch).
+
+**Pending for next session:**
+- AEC flood build: crontabbed 2026-05-31 05:00 UTC — check build-aec-flood.log
+- AEC seismic rebuild: crontabbed 2026-06-01 05:00 UTC
+- BentoBox Civic Context layout (plan at /home/mathew/.claude/plans/plan-to-complete-all-bright-ripple.md)
+- Stage 6: commits 39aa1b11 + af2a94ed + f7a771ec + f7a771ec pending canonical promote
+
+**Toggle state:** Jennifer Woodfine is next author.
+
+---
+from: totebox@project-gis
 to: totebox@project-editorial
 re: Regional Markets corrected dispatch — A7/A8/A9 revised + A15/A16/A17 new TOPICs — destination projects.woodfinegroup.com
 created: 2026-05-30T21:30:00Z
