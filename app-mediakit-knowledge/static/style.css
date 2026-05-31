@@ -735,7 +735,7 @@ a.wordmark {
   text-decoration: none;
   color: inherit;
 }
-a.wordmark svg { display: block; height: 32px; width: auto; }
+a.wordmark svg, a.wordmark .brand__svg { display: block; height: 32px; width: auto; }
 
 /* Search inside brand row */
 .search {
@@ -2954,6 +2954,82 @@ body.reading-mode aside.toc { display: none !important; }
   pointer-events: none;
 }
 .cite-hover-card p { margin: 0; }
+
+/* Phase 10 — Reading state progress bar */
+.reading-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: var(--accent, #C7A961);
+  z-index: 9999;
+  transition: width 0.1s linear;
+  pointer-events: none;
+}
+
+/* Phase 10 — Continue-reading strip (home page) */
+#continue-reading-strip {
+  padding: 0.75rem 1rem;
+  background: var(--bg, #f7f9fa);
+  border-top: 1px solid var(--mw-color-base-50, #c8ccd1);
+  margin-top: 1.5rem;
+}
+.continue-reading__label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mw-color-base-30, #72777d);
+  margin: 0 0 0.5rem;
+}
+.continue-reading__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0;
+  text-decoration: none;
+  color: var(--link, var(--navy));
+  border-bottom: 1px solid var(--mw-color-base-80, #eaecf0);
+  font-size: 0.875rem;
+}
+.continue-reading__item:last-child { border-bottom: none; }
+.continue-reading__pct {
+  font-size: 0.75rem;
+  color: var(--mw-color-base-30, #72777d);
+  min-width: 3rem;
+  text-align: right;
+}
+
+/* Phase 9 — Claim-rail freshness sidebar */
+.claim-rail {
+  display: none;
+  position: sticky;
+  top: 88px; /* below topnav 80px + 8px gap */
+  align-self: start;
+  width: 6px;
+  flex-shrink: 0;
+  margin-left: 0.75rem;
+}
+@media (min-width: 1280px) {
+  .claim-rail { display: flex; flex-direction: column; gap: 2px; }
+  div.shell { grid-template-columns: 1fr auto; }
+}
+.claim-tick {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mw-color-base-50, #c8ccd1);
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  text-decoration: none;
+}
+.claim-tick[data-status="fresh"]  { background: oklch(72% 0.18 145); }
+.claim-tick[data-status="stale"]  { background: oklch(78% 0.15 55); }
+.claim-tick[data-status="broken"] { background: oklch(55% 0.22 25); }
+.claim-tick.active { opacity: 1; transform: scale(1.4); }
+.claim-tick:hover  { opacity: 1; }
 
 /* Print styles */
 @media print {
