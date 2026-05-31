@@ -35,6 +35,8 @@ members = [
     "system-vm-fleet-types",
     "service-vm-fleet",
     "service-vm-host",
+    # Knowledge wiki engine
+    "app-mediakit-knowledge",
 ]
 
 [profile.dev]
@@ -46,3 +48,10 @@ lto = true          # Link-time optimization
 codegen-units = 1   # Single codegen unit for maximum LTO benefit
 panic = "abort"     # Strip panic unwinding overhead
 strip = true        # Strip debug symbols from output binary
+
+# app-mediakit-knowledge is a runtime HTTP server — use speed-optimised profile,
+# not the bare-metal size-optimised defaults. Preserves the standalone Cargo.toml
+# [profile.release] settings (moved here on workspace integration 2026-05-31).
+[profile.release.package.app-mediakit-knowledge]
+opt-level = 3
+strip = "symbols"
