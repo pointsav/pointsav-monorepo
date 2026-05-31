@@ -4093,8 +4093,8 @@ setSurface(activeSurface);
     }
   }
 
-  // Poll the active tab every 4 s — catches external changes (e.g. another agent
-  // rewriting a file in _clones/) that the SSE watcher does not cover.
+  // Poll the active tab every 30 s as a safety net for any inotify misses.
+  // SSE (EventSource above) is the primary mechanism; this is the fallback.
   function pollActiveTab() {
     var idx = activeTabIdx;
     var tab = tabs && tabs[idx];
@@ -4115,7 +4115,7 @@ setSurface(activeSurface);
       .catch(function() {});
   }
 
-  setInterval(pollActiveTab, 4000);
+  setInterval(pollActiveTab, 30000);
 
   function showChangeNotice(idx, path) {
     var existing = document.getElementById('sse-change-notice');

@@ -128,10 +128,10 @@ async fn main() {
     let (events_tx, _) = broadcast::channel::<String>(64);
     let watcher_tx = events_tx.clone();
     let watch_path = workspace_path.clone();
-    let writable_roots: Vec<PathBuf> = roots
+    // Collect all root (url_prefix, fs_path) pairs for path normalisation.
+    let root_mappings: Vec<(String, PathBuf)> = roots
         .iter()
-        .filter(|r| r.writable)
-        .map(|r| r.fs_path.clone())
+        .map(|r| (r.url_prefix.clone(), r.fs_path.clone()))
         .collect();
     tokio::spawn(async move {
         let (inner_tx, mut inner_rx) = tokio::sync::mpsc::channel::<String>(8);
@@ -148,15 +148,39 @@ async fn main() {
         watcher
             .watch(&watch_path, RecursiveMode::Recursive)
             .expect("failed to watch workspace");
-        for path in &writable_roots {
-            watcher.watch(path, RecursiveMode::Recursive).ok();
+        // Watch ALL configured roots (not just writable ones) so inotify fires
+        // for external writes (e.g. Claude Code editing files in _clones/).
+        for (_, fs_path) in &root_mappings {
+            if let Err(e) = watcher.watch(fs_path, RecursiveMode::Recursive) {
+                eprintln!("warning: could not watch {:?}: {}", fs_path, e);
+            }
         }
         while let Some(path_str) = inner_rx.recv().await {
-            let msg = if path_str.is_empty() {
-                "changed".to_string()
-            } else {
-                format!(r#"{{"event":"changed","path":"{}","mtime":0}}"#, path_str)
-            };
+            if path_str.is_empty() {
+                let _ = watcher_tx.send("changed".to_string());
+                continue;
+            }
+            // Convert absolute filesystem path to root-relative (url_prefix/rel)
+            // so the frontend can match it against tab.path directly.
+            let rel = root_mappings.iter().find_map(|(prefix, base)| {
+                let base_str = base.to_string_lossy();
+                let base_str = base_str.trim_end_matches('/');
+                if path_str.starts_with(base_str) {
+                    let rest = path_str[base_str.len()..].trim_start_matches('/');
+                    Some(format!("{}/{}", prefix, rest))
+                } else {
+                    None
+                }
+            }).unwrap_or_else(|| path_str.clone());
+            let mtime = std::fs::metadata(&path_str)
+                .ok()
+                .and_then(|m| {
+                    m.modified().ok()
+                        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                })
+                .map(|d| d.as_secs())
+                .unwrap_or(0);
+            let msg = format!(r#"{{"event":"changed","path":"{}","mtime":{}}}"#, rel, mtime);
             let _ = watcher_tx.send(msg);
         }
     });
