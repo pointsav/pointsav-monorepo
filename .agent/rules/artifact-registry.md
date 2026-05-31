@@ -373,6 +373,18 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 - **Key findings:** Abstract 30 words over; "groundbreaking" violation; Related Work out-of-order; WireGuard missing from bibliography; "may be deliverable" softens empirical claim; Contribution #4 weakly falsifiable
 - **Benchmarks [T]/[N]/[L]:** Confirmed NOT filled — no violation
 
+### A26 — COMMS: Bencal Nature of Business [project-orgcharts dispatch]
+- **File:** `.agent/drafts-outbound/COMMS-bencal-nature-of-business.md` + `.html` + `-copy.html` + `.pdf`
+- **Status:** REVIEWED (2026-05-31) — Bloomberg-clean; pending Command routing to operator or WFD (msg-id: project-editorial-20260531-bencal-comms-route)
+- **Source:** project-orgcharts (msg-id: project-orgcharts-20260530-editorial-dispatch-bencal); authored 2026-05-29
+- **Content:** Corporate nature-of-business disclosure for Bencal Corporation (Canadian alternative investment manager); 4 sections: Nature of Business, Market Positioning, Operating Company + Products, Glossary; NI 45-106 / NI 31-103 references; BCSC-posture compliant
+
+### A27 — DESIGN-RESEARCH: Bencal Naming Conventions [project-orgcharts dispatch]
+- **File:** `.agent/drafts-outbound/RESEARCH-bencal-naming-conventions.md` + `.pdf`
+- **Status:** ROUTED to project-design outbox (2026-05-31) — DESIGN-RESEARCH per frontmatter; not project-editorial's scope
+- **Source:** project-orgcharts (msg-id: project-orgcharts-20260530-editorial-dispatch-bencal); authored 2026-05-29
+- **Content:** 27-firm naming benchmark; 4 naming deliverables (parent co, operating manager, SPV/club deal, EMD); entity code convention; recommended corporate stack
+
 ---
 
 ## B — Backlog (queued for future sessions)
