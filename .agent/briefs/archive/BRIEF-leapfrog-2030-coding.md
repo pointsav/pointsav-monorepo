@@ -3,8 +3,10 @@ schema: foundry-plan-v1
 archive: project-console
 title: "Leapfrog 2030 — os-console Coding Roadmap"
 created: 2026-05-20
-updated: 2026-05-30
-status: active
+updated: 2026-05-23
+status: superseded
+superseded_by: BRIEF-project-console-master.md
+superseded: 2026-05-31
 authors: [totebox@project-console, claude-sonnet-4-6]
 doctrine_anchors: [claim-45, claim-49, claim-54, SYS-ADR-07, SYS-ADR-10, SYS-ADR-19]
 supersedes: "~/.claude/plans/can-you-make-a-deep-naur.md (standalone proofreader approach)"
