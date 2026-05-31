@@ -19,46 +19,43 @@ Engine-agnostic: all engines (Claude Code, Gemini CLI) read and write here.
 
 | File | Subject | Status |
 |---|---|---|
-| BRIEF-active-work.md | Current work queue — project-knowledge session action list | active |
-| BRIEF-app-mediakit-knowledge-2030.md | app-mediakit-knowledge product brief — all phases, locked decisions, 2030 vision. PRIMARY BRIEF for wiki engine work. | active |
-| BRIEF-LEAPFROG-2030.md | Leapfrog 2030 os-* resource targets (Phase 2/3 disk/RAM). *Workspace-level — pending redistribution to Command.* | active |
-| BRIEF-OS-FAMILY.md | Five os-* types reference. *Workspace-level — pending redistribution to Command.* | active |
-| BRIEF-VM-ARCHITECTURE.md | VM-* to os-* canonical mapping; unikernel roadmap. *project-infrastructure scope — pending redistribution.* | active |
-| BRIEF-slm-substrate-master.md | SLM Yo-Yo substrate + DataGraph + learning loop. PRIMARY PLAN for SLM work. *project-intelligence scope — pending redistribution.* | active |
-| BRIEF-slm-learning-loop.md | SLM training pipeline + sovereign coding agent. *project-intelligence scope — pending redistribution.* | active |
-| BRIEF-substrate-phd-thesis-2026-05-27.md | PhD thesis draft (trustworthy systems). *project-system scope — pending redistribution.* | active |
-| BRIEF-totebox-transformation.md | VM fabric implementation plan. *project-infrastructure scope — pending redistribution.* | active |
+| BRIEF-slm-substrate-master.md | SLM substrate ops — Yo-Yo VM, DataGraph, tier routing, circuit resilience. PRIMARY PLAN OF RECORD for all SLM sessions. | active |
+| BRIEF-slm-learning-loop.md | Training pipeline — ToS boundary, DPO corpus, sovereign coding agent, sprints, Fix A/B/C | active |
+| BRIEF-project-intelligence-active-work.md | Active work queue — 3-session forward plan; session-start reading | active |
+| AI-AUDIT-baseline-2026-05-31.md | Gemini CLI automated audit vs architecture principles; findings integrated into substrate master §5 | active |
 
 ## Archived briefs
 
-| File | Archived | Superseded by / Notes |
-|---|---|---|
-| BRIEF-vm-hardening-and-consolidation.md | 2026-05-24 | Absorbed into BRIEF-slm-substrate-master.md |
-| BRIEF-gemini-handover-2026-05-30.md | 2026-05-31 | Stale Gemini session note; wrong ports; archivist note inside |
-| archive/BRIEF-institutional-chrome-sprint.md | 2026-05-23 | Superseded by active-work |
-| archive/BRIEF-github-presence-elevation.md | 2026-05-23 | Superseded by active-work |
-| archive/BRIEF-publishing-tier-naming-cross-check.md | 2026-05-23 | Superseded by active-work |
-| archive/BRIEF-award-winning-wiki-overhaul.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
-| archive/BRIEF-FINAL_AWARD_WINNING_WIKI_EXECUTION_PLAN.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
-| archive/BRIEF-INPUT-KNOWLEDGE-PLATFORM-BLUEPRINT.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
-| archive/BRIEF-MASTER_STRATEGY_AWARD_WINNING_WIKI.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
-| archive/BRIEF-overhaul-*.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
-| archive/BRIEF-PPN-ARCHITECTURE.md | prior | Now in project-infrastructure archive |
-| archive/BRIEF-PPN-DEV-BOOTSTRAP.md | prior | Now in project-infrastructure archive |
+Superseded briefs retained per standing instruction — never delete; supersede by editing
+`status: archived` or `git mv` to `archive/`.
 
-**Note on cross-archive BRIEFs:** Several active BRIEFs (LEAPFROG-2030, OS-FAMILY,
-VM-ARCHITECTURE, slm-*, substrate-phd-thesis, totebox-transformation) belong to other
-archives. They live here pending redistribution; outbox to Command filed 2026-05-31.
+| File | Archived | Notes |
+|---|---|---|
+| archive/BRIEF-VM-ARCHITECTURE.md | 2026-06-01 | Contamination from project-infrastructure — read from there |
+| archive/BRIEF-OS-FAMILY.md | 2026-06-01 | Contamination from project-infrastructure — read from there |
+| archive/BRIEF-LEAPFROG-2030.md | 2026-06-01 | Contamination from project-infrastructure — read from there |
+| archive/todo-open-items.md | 2026-06-01 | Contamination from project-editorial — read from there |
 
 ## Non-brief files kept here
 
 | File | Role |
 |---|---|
-| todo-open-items.md | Persistent open-items tracker (AGENT.md shutdown step 3) |
 | audit-foundry-wide-2026-05-16.md | Foundry-wide vocabulary / trademark / file-hygiene audit |
 | domain-map.tsv | Overhaul domain-map data |
 | vocabulary-baseline.tsv | Overhaul vocabulary-baseline data |
-| archive/ | Superseded plan copies retained for history |
+| archive/ | Archived and superseded briefs |
+
+## Unverified briefs (present on disk, not yet audited for correct archive)
+
+The following files exist in this directory but were not reviewed in the 2026-06-01
+consolidation. A future session should confirm each belongs here or move to archive/.
+
+| File | Origin suspicion |
+|---|---|
+| BRIEF-app-mediakit-knowledge-2030.md | Possible project-knowledge contamination |
+| BRIEF-substrate-phd-thesis-2026-05-27.md | Likely project-intelligence (system-*/seL4 thesis) |
+| BRIEF-totebox-transformation.md | Possible project-infrastructure contamination |
+| BRIEF-vm-hardening-and-consolidation.md | Absorbed into BRIEF-slm-substrate-master.md (listed in that brief's `replaces:`) |
 
 ## Lifecycle
 

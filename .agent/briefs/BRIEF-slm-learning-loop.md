@@ -92,18 +92,15 @@ After Sprint 1A: `python3 service-slm/scripts/corpus-threshold.py` will report h
 - **Git post-commit hook** — ~~design complete; script not written~~ **SCRIPT WRITTEN** (`service-slm/scripts/git-post-commit-hook.sh`, commit `1d819d7c`). Install per archive: `cp service-slm/scripts/git-post-commit-hook.sh .git/hooks/post-commit && chmod +x`. No archive has the hook installed yet — Command Session action needed.
 - **Claude Code CORPUS bridge** — ~~design complete; script not written~~ **SCRIPT WRITTEN** (`service-slm/scripts/claude-session-bridge.py`, commit `1d819d7c`). Needs `local-claude-bridge.service` systemd unit + `CORPUS_WATCH_DIR` pointed at service-content's watched directory.
 
-### Queue state (2026-05-29)
+### Queue state (2026-05-31 session 13)
 
-- queue/: 0 pending (drained)
+- queue/: 5 pending
 - queue-done/: 550 briefs
-- queue-poison/: 590 files — accumulated during extended Tier B outage. These are
-  structurally valid JSONL (recoverable if needed) but represent briefs that timed out
-  or were rejected when Tier B was unavailable. Not useful training signal.
-  **Command Session action required before next Yo-Yo start:**
-  ```bash
-  mv /srv/foundry/data/apprenticeship/queue-poison/* /srv/foundry/data/apprenticeship/quarantine/
-  ```
-  Leaving them in queue-poison/ causes wasted Yo-Yo compute on garbage inputs at next start.
+- queue-poison/: 78 files — up from 0 at session 11 close (590 prior briefs were quarantined
+  in sessions 10–11). Newest entries (May 31 04:47–04:58 UTC, post-Fix-B) have `actual_diff: ""`
+  and no `response_raw` — never dispatched to OLMo. Root cause: either pre-Fix-A carry-forward
+  briefs (H1, likely) or hook still broken for some commits (H2). Investigate before quarantining.
+  See BRIEF-project-intelligence-active-work.md §1 for investigation procedure.
 
 With Sprint 3C (drain worker pause), new briefs will be held in queue/ rather than moved
 to queue-poison/ during extended Tier B outages. This prevents future accumulation.
@@ -333,6 +330,12 @@ wiring call are missing.
 Deferred: Fix B (system prompt rewrite) may be sufficient to reduce escalation rate to
 acceptable levels without the complexity of a GBNF grammar. Observe the next 5–10 drain
 cycles before implementing Fix C. If OLMo still preambles after Fix B, implement Fix C.
+
+**Session 13 update — 78 poison entries accumulated post-Fix-B:** Newest entries have
+`actual_diff: ""` and no `response_raw` (never dispatched to OLMo). This is likely
+pre-Fix-A carry-forward briefs being reclassified by the Sprint 2C degenerate-tuple guard,
+NOT a Fix B failure. Investigation required before concluding Fix C is needed. Fix C
+addresses preamble-before-`---`; it does NOT help when `actual_diff` is empty.
 
 ### Key inference timing fact (for future planning)
 
