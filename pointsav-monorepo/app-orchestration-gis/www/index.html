@@ -1783,7 +1783,7 @@
         const rmScore = p.rm_score || 0;
         const rmCont  = p.rm_cont  || '';
         const rmBadge = rmRank > 0
-            ? `<div class="rm-badge"><span class="rm-star">★</span><span class="rm-label">${rmCont} Regional Market &nbsp;·&nbsp; Rank&nbsp;#${rmRank}&nbsp;of&nbsp;400</span><span class="rm-score">${rmScore.toFixed(1)}</span></div>`
+            ? `<div class="rm-badge"><span class="rm-star">★</span><span class="rm-label">${rmCont} Regional Market &nbsp;·&nbsp; Rank&nbsp;#${rmRank}&nbsp;of&nbsp;400</span><span class="rm-score" title="Regional Market Index (0–100)">${rmScore.toFixed(0)}</span></div>`
             : '';
 
         // Cell 2 — tier badge (dominant) + composition chip
@@ -2314,29 +2314,29 @@
             type: 'geojson',
             data: { type: 'FeatureCollection', features: [] },
         });
-        // Glow halo (amber wash behind each star dot)
+        // Glow halo (amber wash behind each star dot) — sized by rank (1 = biggest)
         map.addLayer({
             id: 'rm-stars-glow', type: 'circle',
             source: 'rm-stars-src',
             layout: { visibility: 'none' },
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'],
-                    2, ['interpolate', ['linear'], ['get', 'rm_score'], 3, 7,  25.5, 16],
-                    8, ['interpolate', ['linear'], ['get', 'rm_score'], 3, 12, 25.5, 28]],
+                    2, ['interpolate', ['linear'], ['get', 'rm_rank'], 1, 16, 400, 6],
+                    8, ['interpolate', ['linear'], ['get', 'rm_rank'], 1, 28, 400, 11]],
                 'circle-color': '#D97706',
                 'circle-opacity': 0.14,
                 'circle-stroke-width': 0,
             },
         });
-        // Solid amber star dot (score-proportional size)
+        // Solid amber star dot — rank-proportional size (rank 1 largest, rank 400 smallest)
         map.addLayer({
             id: 'rm-stars-dot', type: 'circle',
             source: 'rm-stars-src',
             layout: { visibility: 'none' },
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'],
-                    2, ['interpolate', ['linear'], ['get', 'rm_score'], 3, 3,  25.5, 8],
-                    8, ['interpolate', ['linear'], ['get', 'rm_score'], 3, 5,  25.5, 14]],
+                    2, ['interpolate', ['linear'], ['get', 'rm_rank'], 1, 8,  400, 2.5],
+                    8, ['interpolate', ['linear'], ['get', 'rm_rank'], 1, 14, 400, 4.5]],
                 'circle-color': '#D97706',
                 'circle-opacity': 0.92,
                 'circle-stroke-color': 'rgba(255,255,255,0.9)',
