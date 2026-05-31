@@ -615,7 +615,152 @@ header .tag {
 }
 .sp-new-btn:hover { background: #0d5a8c; }
 .sp-dim { color: #555; font-size: 12px; padding: 8px 0; }
+
+/* ── Light mode ───────────────────────────────────────────────────── */
+html.light body          { background: #ffffff; color: #333; }
+html.light header        { background: #f3f3f3; border-bottom-color: #d0d0d0; }
+html.light header h1     { color: #111; }
+html.light #search-status { color: #999; }
+html.light .search-wrap input { background: #e8e8e8; border-color: #cccccc; color: #333; }
+html.light .search-wrap input::placeholder { color: #aaa; }
+html.light .search-wrap input:focus { border-color: #0066cc; }
+
+html.light .sidebar      { background: #f3f3f3; }
+html.light #sidebar-toolbar { border-bottom-color: #d0d0d0; }
+html.light .sb-tool-btn  { color: #888; }
+html.light .sb-tool-btn:hover { background: #e0e0e0; color: #333; }
+html.light .sb-tool-btn.active { color: #0066cc; background: #d0e4fa; }
+
+html.light .resizer { background: #e0e0e0; }
+html.light .resizer:hover, html.light .resizer.active { background: #90c0ff; }
+
+html.light #search-panel::-webkit-scrollbar-thumb { background: #c0c0c0; }
+html.light .search-result { border-bottom-color: #e8e8e8; }
+html.light .search-result:hover { background: #f0f0f0; }
+html.light .search-result.active { background: #d6e8fa; }
+html.light .res-name { color: #3a6e3a; }
+html.light .search-result.active .res-name { color: #1a5a1a; }
+html.light .res-path { color: #888; }
+html.light .search-msg { color: #aaa; }
+
+html.light #tree-panel::-webkit-scrollbar-thumb { background: #c0c0c0; }
+html.light .section-header { color: #666; }
+html.light .section-header:hover { color: #333; }
+html.light .section-header .arrow { color: #aaa; }
+html.light .tree-item { color: #444; }
+html.light .tree-item:hover { background: #f0f0f0; color: #111; }
+html.light .tree-item.active { background: #d6e8fa; color: #003d80; border-left-color: #0066cc; }
+html.light .tree-item.viewable { color: #3a6e3a; }
+html.light .tree-item.viewable:hover { color: #1a5a1a; }
+html.light .tree-item.viewable.active { color: #003d80; }
+html.light .tree-item .arrow { color: #bbb; }
+html.light .loading, html.light .empty { color: #aaa; }
+html.light .tree-mtime { color: #aaa; }
+html.light .tree-item:hover .tree-mtime { color: #777; }
+
+html.light .viewer-bar { background: #f3f3f3; border-bottom-color: #d0d0d0; }
+html.light .viewer-bar .bar-path { color: #666; }
+html.light .bar-btn { color: #444; background: #e4e4e4; border-color: #cccccc; }
+html.light .bar-btn:hover { background: #d4d4d4; color: #111; }
+html.light .viewer-bar .bar-link { color: #0066cc; }
+html.light .viewer-bar .bar-link:hover { color: #004fa0; }
+html.light .viewer-placeholder { color: #bbb; }
+html.light .viewer-placeholder h2 { color: #999; }
+
+html.light #tab-bar { background: #f3f3f3; border-bottom-color: #d0d0d0; }
+html.light #tab-bar::-webkit-scrollbar-thumb { background: #c0c0c0; }
+html.light .tab { color: #777; border-right-color: #d0d0d0; }
+html.light .tab:hover { background: #e8e8e8; color: #333; }
+html.light .tab.active { background: #ffffff; color: #111; border-top-color: #0066cc; }
+html.light .tab .tab-dirty { color: #c08000; }
+html.light .tab .tab-close { color: #bbb; }
+html.light .tab .tab-close:hover { color: #111; background: #d0d0d0; }
+
+html.light #editor-panel { background: #f8f8f8; }
+html.light .editor-bar { background: #f3f3f3; border-bottom-color: #d0d0d0; border-left-color: #d0d0d0; }
+html.light .editor-bar .editor-title { color: #888; }
+html.light #editor-status, html.light #editor-cursor { color: #888; }
+html.light #editor-dirty { color: #c08000; }
+html.light #save-btn.saved { color: #3a8a35; border-color: #3a8a3555; }
+html.light #ln-jump-input { background: #e8e8e8; border-color: #cccccc; color: #333; }
+html.light #ln-jump-input:focus { border-color: #0066cc; }
+
+html.light #goto-bar { background: #f3f3f3; border-bottom-color: #d0d0d0; border-left-color: #d0d0d0; }
+html.light .goto-label { color: #888; }
+html.light #goto-input { background: #e8e8e8; border-color: #cccccc; color: #333; }
+html.light #goto-input:focus { border-color: #0066cc; }
+html.light .goto-hint { color: #ccc; }
+
+html.light #find-bar { background: #f3f3f3; border-bottom-color: #d0d0d0; border-left-color: #d0d0d0; }
+html.light .find-row input { background: #e8e8e8; border-color: #cccccc; color: #333; }
+html.light .find-row input:focus { border-color: #0066cc; }
+html.light #find-count { color: #888; }
+html.light .find-btn { color: #555; background: #e4e4e4; border-color: #cccccc; }
+html.light .find-btn:hover { background: #d4d4d4; color: #111; }
+
+html.light #outline-panel { background: #f3f3f3; border-color: #d0d0d0; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+html.light #outline-filter { background: #e8e8e8; border-bottom-color: #d0d0d0; color: #333; }
+html.light .outline-item { color: #444; }
+html.light .outline-item:hover, html.light .outline-item.outline-focused { background: #d6e8fa; color: #111; }
+html.light .outline-depth { color: #0066cc; }
+html.light .outline-empty { color: #aaa; }
+
+html.light #editor-gutter { background: #f0f0f0; border-left-color: #d0d0d0; border-right-color: #e0e0e0; color: #bbb; }
+html.light #editor-gutter .gl-active { color: #444; }
+html.light #editor-code-wrap { background: #f8f8f8; }
+html.light #editor-highlight { color: #333; }
+html.light #editor-textarea { caret-color: #333; }
+html.light #editor-textarea::-webkit-scrollbar-thumb { background: #c0c0c0; }
+html.light #text-viewer::-webkit-scrollbar-thumb { background: #c0c0c0; }
+
+html.light #text-content.code-view { background: #f8f8f8; color: #333; }
+html.light .hl-kw   { color: #0000cc; }
+html.light .hl-str  { color: #a31515; }
+html.light .hl-cmt  { color: #4a7a4a; }
+html.light .hl-num  { color: #5a7a5a; }
+html.light .hl-type { color: #007777; }
+html.light .hl-fn   { color: #7a5800; }
+html.light .hl-macro { color: #6b00ab; }
+html.light .hl-attr { color: #003bbb; }
+html.light .hl-tag  { color: #0000bb; }
+
+html.light #image-viewer { background: #e8e8e8; }
+
+html.light #recovery-bar { background: #fff3d0; color: #7a5800; }
+html.light #recovery-restore { background: #c08000; color: #fff; }
+html.light #recovery-discard { color: #7a5800; border-color: #c08000; }
+
+html.light #ctx-menu { background: #f3f3f3; border-color: #d0d0d0; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+html.light #ctx-menu button { color: #333; }
+html.light #ctx-menu button:hover { background: #d6e8fa; color: #111; }
+html.light #ctx-menu hr { border-top-color: #d0d0d0; }
+
+html.light #surface-bar { background: #ebebeb; border-bottom-color: #d0d0d0; }
+html.light .surface-btn { color: #888; }
+html.light .surface-btn:hover { background: #dddddd; color: #333; }
+html.light .surface-btn.active { background: #d6e8fa; color: #003d80; }
+html.light #surface-sep { background: #d0d0d0; }
+
+html.light .sp-name { color: #333; }
+html.light .sp-tag { color: #888; border-color: #d0d0d0; }
+html.light .sp-file-item { background: #f3f3f3; color: #444; }
+html.light .sp-file-item:hover { background: #e8e8e8; color: #111; }
+html.light .sp-open-hint { color: #aaa; }
+html.light .sp-new-btn { background: #d6e8fa; color: #003d80; border-color: #b0d0f0; }
+html.light .sp-new-btn:hover { background: #c4dcf8; }
+html.light .sp-dim { color: #aaa; }
+
+html.light #pdf-dialog-panel { background: #f3f3f3; border-color: #d0d0d0; box-shadow: 0 8px 24px rgba(0,0,0,0.18); color: #333; }
+html.light #pdf-dialog-panel h3 { color: #111; }
+html.light .pdf-opt label { color: #333; }
+html.light .pdf-opt select { background: #e8e8e8; color: #333; border-color: #cccccc; }
+html.light .pdf-dialog-status { color: #3a8a35; }
+html.light #pdf-dialog-cancel { background: #e4e4e4; color: #333; border-color: #cccccc; }
+html.light #pdf-dialog-cancel:hover { background: #d4d4d4; }
+html.light .recent-show-more { color: #0066cc; }
+html.light .recent-show-more:hover { color: #004fa0; }
 </style>
+<script>(function(){if(localStorage.getItem('wb-theme')==='light')document.documentElement.classList.add('light');})()</script>
 </head>
 <body>
 
@@ -651,6 +796,7 @@ header .tag {
       <button id="sb-toggle-btn" class="sb-tool-btn" title="Toggle sidebar (collapse/expand)">☰</button>
       <button id="sb-hidden-btn" class="sb-tool-btn" title="Toggle hidden files (.agent, .claude, etc.)">👁</button>
       <button id="sb-sort-btn" class="sb-tool-btn" title="Sort: Alphabetical — click to cycle">A-Z</button>
+      <button id="sb-theme-btn" class="sb-tool-btn" title="Switch to light mode">☀</button>
     </div>
 
     <div id="search-panel">
@@ -4145,6 +4291,26 @@ setSurface(activeSurface);
   } else {
     connect();
   }
+})();
+
+// ---------------------------------------------------------------------------
+// Light / dark theme toggle
+// ---------------------------------------------------------------------------
+(function() {
+  var btn = document.getElementById('sb-theme-btn');
+  if (!btn) return;
+  var isLight = document.documentElement.classList.contains('light');
+  function applyTheme() {
+    document.documentElement.classList.toggle('light', isLight);
+    btn.textContent = isLight ? '🌙' : '☀';
+    btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+  }
+  applyTheme();
+  btn.addEventListener('click', function() {
+    isLight = !isLight;
+    localStorage.setItem('wb-theme', isLight ? 'light' : 'dark');
+    applyTheme();
+  });
 })();
 
 </script>
