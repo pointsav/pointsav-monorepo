@@ -1,9 +1,3 @@
-# Standalone workspace marker. The parent monorepo Cargo.toml declares
-# only 8 of ~70 crates as workspace members (Layer 1 audit finding,
-# cleanup-log.md 2026-04-18); until that's resolved at repo level by a
-# Root Claude, this crate operates as its own workspace boundary.
-[workspace]
-
 [package]
 name = "app-mediakit-knowledge"
 version = "0.1.0"
@@ -79,8 +73,3 @@ blake3 = "1.8"
 tower = { version = "0.5", features = ["util"] }
 http-body-util = "0.1"
 
-[profile.release]
-opt-level = 3
-lto = "thin"
-codegen-units = 1
-strip = "symbols"
