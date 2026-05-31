@@ -14,10 +14,10 @@ fi
 
 COMMIT_MSG=$(git log -1 --pretty=%s 2>/dev/null || echo "git-commit")
 
-PAYLOAD=$(python3 - "$COMMIT_MSG" <<'PYEOF'
-import json, sys, uuid, datetime
+PAYLOAD=$(HOOK_DIFF="$DIFF" python3 - "$COMMIT_MSG" <<'PYEOF'
+import json, sys, uuid, datetime, os
 
-diff_text = sys.stdin.read()
+diff_text = os.environ.get('HOOK_DIFF', '')
 commit_msg = sys.argv[1] if len(sys.argv) > 1 else "git-commit"
 brief_id = uuid.uuid4().hex.upper()
 now = datetime.datetime.now(datetime.timezone.utc).isoformat()
