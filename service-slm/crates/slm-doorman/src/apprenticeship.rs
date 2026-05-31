@@ -972,6 +972,7 @@ OK.
                 default_model: "Olmo-3-1125-32B-Think".into(),
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
                 pricing: PricingConfig::default(),
+                zone: None,
             },
             bearer,
         );

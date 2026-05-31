@@ -33,6 +33,12 @@ pub struct TierBInfo {
     pub health_up: bool,
     pub circuit: &'static str,
     pub opened_for_secs: Option<u64>,
+    /// Why the circuit opened. Derived from health_up + circuit state.
+    /// "health-probe-failures" when probes fail; "request-failures" when
+    /// dispatch errors trigger the circuit; null when circuit is closed.
+    pub reason: Option<&'static str>,
+    /// GCP zone where this Yo-Yo node runs. Populated from `SLM_YOYO_GCP_ZONE`.
+    pub zone: Option<String>,
 }
 
 #[derive(Default)]
@@ -124,11 +130,20 @@ impl Doorman {
         self.yoyo
             .iter()
             .map(|(label, client)| {
+                let health_up = client.health_up.load(Ordering::Relaxed);
+                let circuit = client.circuit.state_label();
+                let reason = match circuit {
+                    "open" if !health_up => Some("health-probe-failures"),
+                    "open" => Some("request-failures"),
+                    _ => None,
+                };
                 let info = TierBInfo {
                     configured: true,
-                    health_up: client.health_up.load(Ordering::Relaxed),
-                    circuit: client.circuit.state_label(),
+                    health_up,
+                    circuit,
                     opened_for_secs: client.circuit.opened_for_secs(),
+                    reason,
+                    zone: client.zone.clone(),
                 };
                 (label.clone(), info)
             })
@@ -619,6 +634,7 @@ mod tests {
                 default_model: "Olmo-3-1125-32B-Think".into(),
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
                 pricing: crate::tier::PricingConfig::default(),
+                zone: None,
             },
             std::sync::Arc::new(crate::tier::StaticBearer::new("unused-in-selection-test")),
         );
@@ -639,5 +655,69 @@ mod tests {
             .select_tier(&req(Complexity::High, None, None))
             .expect("should pick yoyo");
         assert_eq!(picked, Tier::Yoyo);
+    }
+
+    fn make_yoyo(zone: Option<String>) -> YoYoTierClient {
+        YoYoTierClient::new(
+            crate::tier::YoYoTierConfig {
+                endpoint: "http://invalid.example".into(),
+                default_model: "Olmo-3-1125-32B-Think".into(),
+                contract_version: crate::YOYO_CONTRACT_VERSION.into(),
+                pricing: crate::tier::PricingConfig::default(),
+                zone,
+            },
+            std::sync::Arc::new(crate::tier::StaticBearer::new("test")),
+        )
+    }
+
+    #[test]
+    fn tier_b_status_reason_health_probe_failures() {
+        use std::sync::atomic::Ordering;
+        let yoyo = make_yoyo(Some("europe-west4-a".into()));
+        // Simulate health probe failure + circuit open.
+        yoyo.health_up.store(false, Ordering::Relaxed);
+        yoyo.circuit.record_failure(); // trip the circuit
+        yoyo.circuit.record_failure();
+        yoyo.circuit.record_failure();
+
+        let mut map = HashMap::new();
+        map.insert("default".to_string(), yoyo);
+        let doorman = Doorman::new(DoormanConfig { yoyo: map, ..Default::default() }, ledger());
+        let status = doorman.tier_b_status();
+        let info = status.get("default").unwrap();
+        assert_eq!(info.reason, Some("health-probe-failures"));
+        assert_eq!(info.zone.as_deref(), Some("europe-west4-a"));
+    }
+
+    #[test]
+    fn tier_b_status_reason_request_failures() {
+        use std::sync::atomic::Ordering;
+        let yoyo = make_yoyo(None);
+        // health probe still up, but circuit tripped by request failures.
+        yoyo.health_up.store(true, Ordering::Relaxed);
+        yoyo.circuit.on_failure();
+        yoyo.circuit.on_failure();
+        yoyo.circuit.on_failure();
+
+        let mut map = HashMap::new();
+        map.insert("default".to_string(), yoyo);
+        let doorman = Doorman::new(DoormanConfig { yoyo: map, ..Default::default() }, ledger());
+        let status = doorman.tier_b_status();
+        let info = status.get("default").unwrap();
+        assert_eq!(info.reason, Some("request-failures"));
+        assert!(info.zone.is_none());
+    }
+
+    #[test]
+    fn tier_b_status_no_reason_when_closed() {
+        let yoyo = make_yoyo(Some("us-central1-a".into()));
+        let mut map = HashMap::new();
+        map.insert("default".to_string(), yoyo);
+        let doorman = Doorman::new(DoormanConfig { yoyo: map, ..Default::default() }, ledger());
+        let status = doorman.tier_b_status();
+        let info = status.get("default").unwrap();
+        assert_eq!(info.circuit, "closed");
+        assert!(info.reason.is_none());
+        assert_eq!(info.zone.as_deref(), Some("us-central1-a"));
     }
 }
