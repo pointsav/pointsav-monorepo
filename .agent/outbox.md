@@ -10,6 +10,62 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: legal governance tokens — route to factory-release-engineering/tokens/ (admin-tier)
+created: 2026-05-31T14:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260531-legal-tokens-route
+---
+
+Two legal governance token YAML files drafted by project-editorial 2026-05-24 are ready
+for admin-tier placement in factory-release-engineering.
+
+**Destination:** `factory-release-engineering/tokens/`
+
+**Files (in `.agent/drafts-outbound/`):**
+- `legal-tokens-pointsav.draft.yaml` → `legal-tokens-pointsav.yaml`
+  Content: foundry-legal-tokens-v1; brand: pointsav; owner: Woodfine Capital Projects Inc.;
+  trade_name: PointSav Digital Systems; trademark, copyright, jurisdiction, and regulatory
+  disclosure tokens.
+- `legal-tokens-woodfine.draft.yaml` → `legal-tokens-woodfine.yaml`
+  Content: foundry-legal-tokens-v1; brand: woodfine; brand_surface: woodfinegroup.com;
+  same token categories for the Woodfine brand.
+
+**Action for Command:** Commit both files to factory-release-engineering/tokens/ via admin-tier
+(`bin/commit-as-next.sh --admin pointsav`). Ack to this outbox when placed.
+Source drafts will be archived from drafts-outbound after confirmation.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: text-gis-data-methodology-dialog — route to gateway-orchestration-gis static web copy
+created: 2026-05-31T14:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260531-text-dialog-route
+---
+
+Modal copy for the "Data" button on gis.woodfinegroup.com is Bloomberg-clean and ready
+for deployment.
+
+**Destination:** `woodfine-fleet-deployment/gateway-orchestration-gis/` static web copy
+(this is UI modal text, not a wiki TOPIC — does not commit to media-knowledge-projects)
+
+**File:** `.agent/drafts-outbound/text-gis-data-methodology-dialog.draft.md`
+
+**Content summary:** Three sections of modal copy — (1) Data Sources (OSM, Wikidata,
+Overture Maps, Kontur Population, LODES, MITMA, national statistical agencies),
+(2) Methodology (H3 res-7, 35 km provisional radius, DBSCAN clustering, composite scoring),
+(3) Coverage (current countries + data vintage). All data attributions and methodology
+notes included. BCSC-posture clean — forward-looking claims appropriately hedged.
+
+**Action for Command:** Place content at the appropriate static path in
+woodfine-fleet-deployment/gateway-orchestration-gis/ and commit via admin-tier.
+Ack to this outbox when placed.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: Group 3 guides — Batch A — route to woodfine-fleet-deployment/cluster-totebox-intelligence/
 created: 2026-05-31T12:00:00Z
 priority: normal

@@ -88,29 +88,12 @@ cites:
   - asokan-2011-man-in-middle
 forbidden_terms_cleared: true
 notes_for_editor: |
-  Writing pass 2026-05-29 (v0.3): §4 and §5 now fully written with empirical data.
-  Benchmark platform: GCP e2-standard-8, Ubuntu 24.04, kernel 6.17.0-1013-gcp,
-  WireGuard kernel module v1.0.0. Tests used isolated Linux network namespaces with
-  veth-pair underlay (0 additional network latency).
-
-  Pre-submission blockers (remaining):
-    - ORCID IDs for all three authors
-    - Word count target 9,000 — currently ~6,500. §4.5 audit log daemon could be
-      expanded with a more complete pseudocode listing; §5 could add a comparison table
-      referencing Mackey et al. 2020 latency figures.
-    - Final language pass on §4 and §5 (forbidden_terms_cleared not re-verified after
-      new sections added v0.3 — run verification pass before submission)
-
-  Resolved in v0.4:
-    - [Cameron et al. 2019] replaced with Birge-Lee et al. 2024 (BGP routing trust failure;
-      DOI: 10.1007/978-3-031-85960-1_14) + text adjusted to routing infrastructure framing
-    - Commercial VPN provider [CITATION NEEDED] replaced with Mackey et al. 2020 reference
-    - ZTA latency [CITATION NEEDED] replaced with Mackey et al. 2020
-      (DOI: 10.1145/3374664.3379532; WireGuard vs OpenVPN performance benchmark, ACM CODASPY)
-
-  Venue note: IEEE TIFS is the primary target. Check current IEEE JSAC CFP for
-  "Zero Trust for Next-Generation Networking" special issue — if open, preferred
-  submission path. Standard TIFS track is the fallback.
+  Current body word count is approximately 6,400 words against a 9,000-word target;
+  the remaining approximately 2,600 words are expected to come from expanded implementation
+  detail in §4 and additional evaluation discussion in §5. ORCID IDs for all three authors
+  required before submission. Benchmark measurements were collected in isolated Linux network
+  namespaces with veth-pair underlay on commodity cloud hardware; the benchmark environment
+  is described in full in §4.1.
 ---
 
 > **Working Paper · Version 0.5 · 2026-05-30 · CC BY 4.0**

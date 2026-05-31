@@ -17,7 +17,7 @@ Last updated: 2026-05-30
 - [x] **J4 §4–§5 benchmarks** — COMPLETE 2026-05-29: §4 Implementation (WireGuard config, BLAKE2s audit daemon) + §5 Evaluation (5 benchmarks, Table 1 vs Mackey et al.) fully written; `forbidden_terms_cleared: true`; commit `77063dc3`. [2026-05-29 totebox@project-editorial]
 - [x] **J4 two unresolved citations** — RESOLVED 2026-05-29: Birge-Lee et al. 2024 replaces Cameron placeholder; Mackey et al. 2020 (DOI:10.1145/3374664.3379532) replaces ZTA [CITATION NEEDED]. [2026-05-29 totebox@project-editorial]
 - [ ] **J4 word count gap** — current ~6,400 words vs 9,000-word target. ~2,600 words needed in §4–§5 expansion. project-infrastructure scope. [2026-05-29 totebox@project-editorial]
-- [ ] **J4 final language pass** — §4+§5 added 2026-05-29 need a final forbidden-terms sweep before submission. [2026-05-29 totebox@project-editorial]
+- [x] **J4 final language pass** — COMPLETE 2026-05-31: §4+§5 scanned clean; no forbidden terms found; `forbidden_terms_cleared: true` confirmed accurate; stale notes_for_editor warning removed. [2026-05-31 totebox@project-editorial]
 - [ ] **J5 full writing pass** — HOLD until J2 submitted. project-orchestration owns. Outbox sent `project-editorial-20260528-j5-return`. [2026-05-28 totebox@project-editorial]
 - [ ] **J6 §6 Results** — user study execution (§5 protocol in JOURNAL file). project-bim owns. Outbox sent `project-editorial-20260528-j6-return`. [2026-05-28 totebox@project-editorial]
 
