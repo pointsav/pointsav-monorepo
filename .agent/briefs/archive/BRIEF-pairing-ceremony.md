@@ -2,7 +2,9 @@
 artifact: brief
 name: BRIEF-pairing-ceremony
 topic: Zero-jargon pairing ceremony (Phases 1–2)
-status: active
+status: superseded
+superseded_by: BRIEF-project-console-master.md
+superseded: 2026-05-31
 created: 2026-05-22
 updated: 2026-05-22
 ---

@@ -2,7 +2,9 @@
 artifact: brief
 name: BRIEF-pairing-phase3-4
 topic: Pairing Ceremony — Phase 3 (Kitty/Sixel QR) and Phase 4 (F11 operator panel)
-status: active
+status: superseded
+superseded_by: BRIEF-project-console-master.md
+superseded: 2026-05-31
 created: 2026-05-23
 ---
 
