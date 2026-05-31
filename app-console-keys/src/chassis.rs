@@ -20,7 +20,11 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame, Terminal,
 };
-use ratatui_image::{picker::{Picker, ProtocolType}, protocol::StatefulProtocol, StatefulImage};
+use ratatui_image::{
+    picker::{Picker, ProtocolType},
+    protocol::StatefulProtocol,
+    StatefulImage,
+};
 
 use crate::{
     cartridge::{Cartridge, CartridgeAction},
@@ -50,7 +54,11 @@ impl TerminalCaps {
             .map(|v| v == "truecolor" || v == "24bit")
             .unwrap_or(false);
         match picker {
-            None => Self { kitty: false, sixel: false, truecolor },
+            None => Self {
+                kitty: false,
+                sixel: false,
+                truecolor,
+            },
             Some(p) => Self {
                 kitty: matches!(p.protocol_type(), ProtocolType::Kitty),
                 sixel: matches!(p.protocol_type(), ProtocolType::Sixel),
@@ -92,7 +100,11 @@ impl AppConsoleKeys {
             pair_rx: None,
             picker: None,
             qr_state: None,
-            caps: TerminalCaps { kitty: false, sixel: false, truecolor: false },
+            caps: TerminalCaps {
+                kitty: false,
+                sixel: false,
+                truecolor: false,
+            },
         }
     }
 
