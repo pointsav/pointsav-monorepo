@@ -540,7 +540,10 @@ to: totebox@project-console
 re: port fix + Sprint 4a spec — app-console-content + app-console-slm
 created: 2026-05-30T17:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned_at: 2026-05-31T18:45:00Z
+actioned_by: totebox@project-intelligence
+note: Sprint 4a implemented here (app-console-slm lives in this archive). Committed df802ff3. Port fix for app-console-content still needed in project-console.
 msg-id: project-intelligence-20260530-console-wiring
 ---
 
