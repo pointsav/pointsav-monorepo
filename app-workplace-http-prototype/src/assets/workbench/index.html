@@ -1704,6 +1704,18 @@ async function openFile(path, name) {
   }
   // Save-on-switch: fire and forget — captures editorPath+value at call time
   if (editorDirty && editorPath) autosaveFile();
+  // Cache current tab's editor state before switching away, so switchTab can
+  // restore it directly without a network re-fetch (prevents tab jumping to end)
+  if (activeTabIdx >= 0 && activeTabIdx < tabs.length) {
+    const _ta = document.getElementById('editor-textarea');
+    const _cur = tabs[activeTabIdx];
+    _cur.content     = _ta.value;
+    _cur.scrollTop   = _ta.scrollTop;
+    _cur.dirty       = editorDirty;
+    _cur.editorPath  = editorPath;
+    _cur.editorMtime = editorMtime;
+    _cur.viewMode    = viewMode;
+  }
   // Evict oldest non-dirty tab if at cap (12)
   if (tabs.length >= 12) {
     const evictIdx = tabs.findIndex(t => !t.dirty);
