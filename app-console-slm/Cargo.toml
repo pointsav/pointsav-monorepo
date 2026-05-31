@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "app-console-slm"
 version = "0.1.0"
