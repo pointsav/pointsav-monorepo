@@ -209,10 +209,137 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: [CONSOLIDATED] build-request — app-mediakit-knowledge 2026-05-31 — Stage 6 + binary rebuild + deploy
+created: 2026-05-31T17:00:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260531-consolidated-build-request
+supersedes: project-knowledge-20260531-phase9-10-11-stage6
+---
+
+## Readiness
+
+- Working tree: **clean** (no uncommitted changes)
+- All three wiki services: **healthy** (9090/9093/9095 confirmed `ok` this session)
+- `cargo check`: **passed** (exit 0, fresh temp-target build, 0 errors, 0 warnings)
+- nginx `proxy_read_timeout`: **already updated** this session (30s → 90s; connect=10s; send=90s; reloaded)
+
+---
+
+## Commits requiring Stage 6 (since `fed6f2d2`, oldest → newest)
+
+| SHA | Author | Description | Impact |
+|---|---|---|---|
+| `c7abb139` | Peter | `chore: cargo fmt --all — format pass before Stage 6 promote` | Multiple monorepo crates — formatting only |
+| `c14bfafc` | Jennifer | `fix(tool-wallet): remove needless borrow + add truncate(false) to OpenOptions` | `tool-wallet/` source |
+| `c3f2c3c4` | Peter | `fix(service-content): clippy — collapse nested if-let into single pattern` | `service-content/` source |
+| `09e79291` | Jennifer | `ops(brief): update BRIEF-app-mediakit-knowledge-2030` | Archive `.agent/` only — no monorepo source |
+| `47b4c9fa` | Peter | `chore(briefs): consolidate index — active-work, Gemini handover archived, README synced` | Archive `.agent/` only — no monorepo source |
+| `98d1b183` | Jennifer | `feat(knowledge): Phase 9 claim-rail + Phase 10 reading state + Phase 11 query_claims MCP + UX-B.7 Woodfine SVG wordmark + TOC persistence` | **`app-mediakit-knowledge/src/` + `static/`** |
+| `54ca5937` | Peter | `ops(outbox): add Stage 6 SHA references for 2026-05-31 session commits` | Archive `.agent/` only — no monorepo source |
+
+**Promote all 7.** The three `.agent/`-only commits are harmless to promote (no Rust source affected); they document the session state.
+
+---
+
+## Binary rebuild required
+
+Only `app-mediakit-knowledge` needs a new production binary:
+
+```bash
+cargo build --release -p app-mediakit-knowledge
+```
+
+`tool-wallet` and `service-content` had clippy/fmt fixes only. Their currently-running binaries do not need redeployment.
+
+---
+
+## Deploy targets
+
+Stop → install → start → healthz for each:
+
+| Service unit | Port | Binary path |
+|---|---|---|
+| `local-knowledge-documentation.service` | 9090 | `/usr/local/bin/app-mediakit-knowledge` |
+| `local-knowledge-projects.service` | 9093 | same binary |
+| `local-knowledge-corporate.service` | 9095 | same binary |
+
+Standard procedure (same as prior Leapfrog deploy):
+```bash
+sudo systemctl stop local-knowledge-{documentation,projects,corporate}
+sudo install -m 755 target/release/app-mediakit-knowledge /usr/local/bin/app-mediakit-knowledge
+sudo systemctl start local-knowledge-{documentation,projects,corporate}
+curl http://127.0.0.1:9090/healthz && curl http://127.0.0.1:9093/healthz && curl http://127.0.0.1:9095/healthz
+```
+
+Update the binary ledger entry for `app-mediakit-knowledge` with the new sha256 after deploy.
+
+---
+
+## What the new binary delivers
+
+Relative to running binary `e48c70d6` (deployed 2026-05-30 20:42 UTC):
+
+**Phase 9 — Claim-rail freshness sidebar**
+`wiki_page_inner` scans rendered article HTML for `href="#fn-N"` footnote anchors, queries the CITATIONS redb table for each, and emits `<aside class="claim-rail">` with one `<a class="claim-tick" data-status="...">` per citation. Rail is hidden below 1280px viewport width; `IntersectionObserver` JS highlights the active tick as the reader scrolls. Colors: fresh=green, stale=amber, broken=red, unknown=grey.
+
+**Phase 10 — Reading state progress bar**
+- 3px gold (`var(--accent)`) bar fixed at page top (`z-index: 9999`) on article pages; fills with scroll %
+- `localStorage["wiki-read-state"]` stores `{scrollPct, lastReadAt, completed}` keyed by article slug; position restored on return visits
+- Home page: `div#continue-reading-strip` shows top-5 unfinished articles from localStorage; populated client-side, no server round-trip
+
+**Phase 11 — `query_claims` MCP method**
+New JSON-RPC 2.0 method registered in `src/mcp.rs`:
+- Endpoint: `POST /mcp` (existing)
+- Method: `query_claims`
+- Params: `{ "topic": "<slug>", "asof": "<ISO8601 optional>" }`
+- Returns: `{ "claims": [{claim_id, status, cite_url, cite_title, last_verified}, ...], "topic": "...", "asof": null }`
+- Backed by `links.rs::citations_for_slug()` prefix-scan over the CITATIONS redb table
+
+**UX-B.7 — Woodfine SVG wordmark**
+`WORDMARK_WOODFINE` Unicode placeholder (■ Woodfine Capital Projects) replaced with inline SVG sourced from `woodfine-media-assets/ASSET-WORDMARK-WOODFINE.svg` (`fill="currentColor"`; `role="img"`; `<title>` for accessibility). Applied on both Woodfine instances (projects + corporate).
+
+**TOC localStorage persistence**
+`static/toc-persistence.js` wired into `wiki_chrome` via `<script ... defer>`. Saves/restores `.pinned` state for the TOC sidebar across page loads using `localStorage["toc-pinned"]`.
+
+**links.rs housekeeping**
+- `exists()`: fixed broken exact-key lookup → prefix scan on composite `"slug\x00revision"` key
+- `citations_for_slug(slug, asof)`: prefix-scan returning all CITATIONS table entries for a slug (Phase 11 backing method)
+
+---
+
+## Post-deploy verification
+
+```bash
+# Health
+curl http://127.0.0.1:9090/healthz   # → ok
+curl http://127.0.0.1:9093/healthz   # → ok
+curl http://127.0.0.1:9095/healthz   # → ok
+
+# Phase 10 — progress bar div in HTML
+curl -s http://127.0.0.1:9090/wiki/about | grep -c "reading-progress-bar"   # → 1
+
+# UX-B.7 — Woodfine SVG wordmark present on projects/corporate instances
+curl -s http://127.0.0.1:9093/ | grep -c "WOODFINE CAPITAL"   # → >0
+curl -s http://127.0.0.1:9095/ | grep -c "WOODFINE CAPITAL"   # → >0
+
+# Phase 11 — MCP query_claims method
+curl -s -X POST http://127.0.0.1:9090/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"query_claims","params":{"topic":"about"}}' \
+  | python3 -m json.tool   # → {"claims": [...], "topic": "about"}
+```
+
+— totebox@project-knowledge | 2026-05-31 session
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: build-request — app-mediakit-knowledge Phase 9/10/11 + Leapfrog (Stage 6 + binary rebuild)
 created: 2026-05-31T16:00:00Z
 priority: high
-status: pending
+status: superseded
+superseded-by: project-knowledge-20260531-consolidated-build-request
 msg-id: project-knowledge-20260531-phase9-10-11-stage6
 ---
 
