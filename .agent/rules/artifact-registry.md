@@ -27,10 +27,10 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 
 | ID | File | Title (working) | Target Journal | Lead Author | Status |
 |----|------|-----------------|----------------|-------------|--------|
-| J1 | `JOURNAL-retail-colocation-v0.1.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | language-cleared |
+| J1 | `JOURNAL-retail-colocation-v0.1.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | v0.5 dispatched to project-editorial 2026-05-31 |
 | J2 | `JOURNAL-trustworthy-systems-v0.1.draft.md` | Composing Trustworthy Systems from Verified Primitives | ASPLOS (ACM, 19.4% AR) | Mathew Woodfine | language-cleared |
 | J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier, IF 12.0) | Jennifer M. Woodfine | language-cleared |
-| J4 | `JOURNAL-private-network-v0.4.draft.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | language-cleared |
+| J4 | `JOURNAL-private-network-v0.4.draft.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | v0.4 synced to JOURNAL/; dispatched to project-editorial 2026-05-31 |
 | J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | MLSys (ACM, 22% AR) | Mathew Woodfine | stub |
 | J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared |
 
@@ -41,11 +41,16 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 - ~~F1–F5 figures~~ — READY at project-gis `work/figures/` (produced 2026-05-28)
 - ~~Phase 22 CSV~~ — READY at project-gis `work/clusters-ols.csv` (6,493 rows, 2026-05-28)
 - ~~§7.0 preliminary OLS~~ — COMPLETE 2026-05-28: Model A (T1 span β=+0.489, p<0.001) + Model B (R²=0.503); F6 partial produced
+- ~~§5.1 table corrected~~ — DONE 2026-05-31 v0.5: NA/EU Phase 23+Change B actuals (NA T1=1,021/T2=1,831/T3=913; EU T1=725/T2=895/T3=1,108)
+- ~~§5.4 Regional Market Discovery~~ — DONE 2026-05-31 v0.5: isolation-first scoring, Top 400 country distribution, H₄ hypothesis
+- ~~Appendix B~~ — DONE 2026-05-31 v0.5: 18-country T1/T2/T3 table from Phase 23+Change B clusters-meta.json
+- Language pass on §5.4 (new section; `forbidden_terms_cleared` reset to false) — AT project-editorial
 - §7.2 primary spec (catchment_entropy ~ tier + log[pop_150km] + country FE) — pending Phase 24B (Kontur population join + O-D data)
 - F6 update with §7.2 spec results — pending Phase 24B
-- §5.3 TODO slots (LODES employment join) — executable once `build-geometric-ranking.py` run
-- §5.1 country-by-country T1 table; Appendix B chain table; Appendix C data flow diagram
+- §5.3 LODES employment join — v0.6 item (executable once `build-geometric-ranking.py` run)
+- Appendix C data-flow diagram — v0.6 item
 - Permutation test (`sim-tier-permutation.py`) — to be written
+- Word count trim (~800 words; from 9,300 to 8,500 target) — AT project-editorial
 - CBRE/JLL leasing-data acquisition (Year 2 research)
 - ORCID IDs for all three authors
 
@@ -67,6 +72,7 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 - ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`)
 - ~~§4 Implementation + §5 Evaluation~~ — COMPLETE 2026-05-29 v0.3 (commit 149a8b39): empirical benchmarks on GCP e2-standard-8; B1 n=30 mean=44ms; B2 n=10 mean=59ms; B3 wg set=8ms; B4 bimodal {1s,11-16s}
 - ~~[CITATION NEEDED] x2~~ — RESOLVED v0.4 (b3e8190a): Birge-Lee 2024 DOI:10.1007/978-3-031-85960-1_14 + Mackey 2020 DOI:10.1145/3374664.3379532
+- ~~JOURNAL/ sync~~ — DONE 2026-05-31: v0.4 copied to JOURNAL/JOURNAL-private-network-v0.4.draft.md; stale v0.1 stub removed
 - §4–§5 language pass — AT project-editorial (outbox 952b2b09; `forbidden_terms_cleared` conservatively false for new sections)
 - ORCID IDs for all three authors (operator action required)
 
