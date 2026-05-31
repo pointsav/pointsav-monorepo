@@ -70,11 +70,13 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 **J4 — Private Network / CRMA:**
 - ~~§1–§3 writing pass~~ — COMPLETE 2026-05-28 (~4,800 words; §1 Introduction, §2 Background, §3 Architecture written; §6 Discussion + §7 Conclusion written)
 - ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`)
-- ~~§4 Implementation + §5 Evaluation~~ — COMPLETE 2026-05-29 v0.3 (commit 149a8b39): empirical benchmarks on GCP e2-standard-8; B1 n=30 mean=44ms; B2 n=10 mean=59ms; B3 wg set=8ms; B4 bimodal {1s,11-16s}
-- ~~[CITATION NEEDED] x2~~ — RESOLVED v0.4 (b3e8190a): Birge-Lee 2024 DOI:10.1007/978-3-031-85960-1_14 + Mackey 2020 DOI:10.1145/3374664.3379532
-- ~~JOURNAL/ sync~~ — DONE 2026-05-31: v0.4 copied to JOURNAL/JOURNAL-private-network-v0.4.draft.md; stale v0.1 stub removed
-- §4–§5 language pass — AT project-editorial (outbox 952b2b09; `forbidden_terms_cleared` conservatively false for new sections)
-- ORCID IDs for all three authors (operator action required)
+- ~~§4 Implementation~~ — COMPLETE 2026-05-29: WireGuard hub+spoke config, BLAKE2s audit-log Python daemon; commit `77063dc3`
+- ~~§5 Evaluation~~ — COMPLETE 2026-05-29: 5 benchmarks; Table 1 vs Mackey et al.; commit `77063dc3`
+- ~~Citation placeholders~~ — RESOLVED 2026-05-29: Birge-Lee et al. 2024 + Mackey et al. 2020
+- ~~PhD register pass~~ — COMPLETE 2026-05-29: §1/3.1/4/5.3 prose, Listing captions, §6.2 falsification prose, §6.3 italic, §6.4 generalizability; commit `ec225be4`
+- **Word count gap** — ~6,400 words vs 9,000-word target; ~2,600 words expansion needed in §4–§5. project-infrastructure scope.
+- ~~**Final §4–§5 language pass**~~ — COMPLETE 2026-05-31: §4+§5 scanned clean; no forbidden terms found; `forbidden_terms_cleared: true` confirmed accurate; stale notes_for_editor warning removed
+- ORCID IDs for all three authors
 
 **J6 — Desktop Environment:**
 - §1–§4 writing pass (Introduction, Background, Design Principles, Implementation) — in progress
@@ -235,13 +237,12 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 
 ### A3 — TOPIC: Catchment Ranking Methodology
 - **File:** `topic-catchment-ranking-methodology.draft.md`
-- **Status:** DISPATCHED fe5148fd (2026-05-16) — at project-editorial
-- **Destination:** project-editorial
+- **Status:** SUPERSEDED / ARCHIVED 2026-05-31 — confirmed committed in media-knowledge-projects as `topic-catchment-ranking-methodology-v3.md` + `.es.md`; source draft archived to `.agent/drafts-outbound/archived/`
 - **Content:** Combined primary+secondary rank dimensions; no-weights rationale; future weighting roadmap
 
 ### A4 — TEXT: Data Methodology Dialog
 - **File:** `text-gis-data-methodology-dialog.draft.md`
-- **Status:** DISPATCHED fe5148fd (2026-05-16) — at project-editorial
+- **Status:** REVIEWED 2026-05-31 — Bloomberg-clean; Command routing message sent (msg-id: project-editorial-20260531-text-dialog-route); destination: gateway-orchestration-gis static web copy; file remains in drafts-outbound pending Command ack
 - **Content:** Copy for the "Data" button modal on gis.woodfinegroup.com; all data source attributions; methodology notes; link to DATA-MANIFEST.md
 
 ### A5 — GUIDE: Pipeline Rebuild (Phase 1/2 appended)
@@ -390,11 +391,10 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 ## B — Backlog (queued for future sessions)
 
 ### B1 — TOPIC: Co-location Ranking System (full update)
-- **Status:** BACKLOG — existing draft dispatched; needs update for catchment rank fields
-- **Destination:** project-editorial
+- **Status:** SUPERSEDED / ARCHIVED 2026-05-31 — confirmed committed in media-knowledge-projects as `topic-co-location-ranking-system.md` + `.es.md`; source draft archived to `.agent/drafts-outbound/archived/`
 
 ### B2 — TOPIC: POI Data Schema
-- **Status:** DISPATCHED sprint 13 (ba5fe38) — at project-editorial
+- **Status:** SUPERSEDED / ARCHIVED 2026-05-31 — confirmed committed in media-knowledge-documentation as `architecture/poi-data-schema.md` + `.es.md` (last_edited: 2026-05-25); source draft archived to `.agent/drafts-outbound/archived/`
 
 ### B3 — GUIDE: Adding a Chain
 - **Status:** DISPATCHED sprint 11/13 — at project-editorial; appendix added
