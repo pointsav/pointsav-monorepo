@@ -1101,7 +1101,6 @@
       try { localStorage.setItem('wiki-read-state', JSON.stringify(data)); } catch(e) {}
     }
 
-    // Progress bar + position restore (article pages only — bar div in wiki_chrome)
     var bar = document.querySelector('.reading-progress-bar');
     var slug = document.body.dataset.slug;
     if (bar && slug) {
@@ -1128,7 +1127,6 @@
       }, { passive: true });
     }
 
-    // "Continue reading" strip (home page only — strip div in home_chrome)
     var strip = document.getElementById('continue-reading-strip');
     if (strip) {
       var entries = Object.entries(getState())
