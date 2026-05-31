@@ -1089,6 +1089,102 @@
     }
   }
 
+  /* ------------------------------------------------------------------ *
+   * Phase 10 — Reading state progress bar                               *
+   * ------------------------------------------------------------------ */
+
+  function initReadingProgress() {
+    function getState() {
+      try { return JSON.parse(localStorage.getItem('wiki-read-state') || '{}'); } catch(e) { return {}; }
+    }
+    function setState(data) {
+      try { localStorage.setItem('wiki-read-state', JSON.stringify(data)); } catch(e) {}
+    }
+
+    // Progress bar + position restore (article pages only — bar div in wiki_chrome)
+    var bar = document.querySelector('.reading-progress-bar');
+    var slug = document.body.dataset.slug;
+    if (bar && slug) {
+      function scrollPct() {
+        var el = document.documentElement;
+        var scrollable = el.scrollHeight - el.clientHeight;
+        return scrollable > 0 ? Math.round((window.scrollY / scrollable) * 100) : 0;
+      }
+      function updateBar() { bar.style.width = scrollPct() + '%'; }
+
+      var state = getState();
+      if (state[slug] && state[slug].scrollPct > 0) {
+        var scrollable = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        window.scrollTo(0, Math.round((state[slug].scrollPct / 100) * scrollable));
+      }
+      updateBar();
+
+      window.addEventListener('scroll', function () {
+        updateBar();
+        var pct = scrollPct();
+        var st = getState();
+        st[slug] = { scrollPct: pct, lastReadAt: Date.now(), completed: pct >= 90 };
+        setState(st);
+      }, { passive: true });
+    }
+
+    // "Continue reading" strip (home page only — strip div in home_chrome)
+    var strip = document.getElementById('continue-reading-strip');
+    if (strip) {
+      var entries = Object.entries(getState())
+        .filter(function(e) { return !e[1].completed && e[1].scrollPct > 3; })
+        .sort(function(a, b) { return b[1].lastReadAt - a[1].lastReadAt; })
+        .slice(0, 5);
+      if (entries.length > 0) {
+        strip.hidden = false;
+        strip.innerHTML = '<p class="continue-reading__label">Continue reading</p>' +
+          entries.map(function(e) {
+            var s = e[0]; var pct = e[1].scrollPct;
+            return '<a class="continue-reading__item" href="/wiki/' + s + '">' +
+              '<span class="continue-reading__title">' + s.replace(/-/g,' ') + '</span>' +
+              '<span class="continue-reading__pct">' + pct + '%</span>' +
+              '</a>';
+          }).join('');
+      }
+    }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Phase 9 — Claim-rail IntersectionObserver                           *
+   * ------------------------------------------------------------------ */
+
+  function initClaimRail() {
+    var rail = document.querySelector('.claim-rail');
+    if (!rail) return;
+    var ticks = Array.from(rail.querySelectorAll('.claim-tick[data-para]'));
+    if (!ticks.length) return;
+
+    var paras = {};
+    ticks.forEach(function(t) { paras[t.dataset.para] = t; });
+
+    var obs = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        var id = entry.target.id || entry.target.dataset.para;
+        var tick = paras[id];
+        if (tick) tick.classList.toggle('active', entry.isIntersecting);
+      });
+    }, { threshold: 0.3 });
+
+    Object.keys(paras).forEach(function(id) {
+      var el = document.getElementById(id) || document.querySelector('[data-para="' + id + '"]');
+      if (el) obs.observe(el);
+    });
+
+    ticks.forEach(function(t) {
+      t.addEventListener('click', function(e) {
+        e.preventDefault();
+        var id = t.dataset.para;
+        var el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  }
+
    /* ------------------------------------------------------------------ *
    * Boot                                                                 *
    * ------------------------------------------------------------------ */
@@ -1115,6 +1211,8 @@
     initReadingMode();
     initCitationHoverCards();
     initMobileBottomBar();
+    initReadingProgress();
+    initClaimRail();
   });
 
 }());
