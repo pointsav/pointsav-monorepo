@@ -138,6 +138,16 @@ peer-to-peer. NOT network-layer authorization.
 - `os-mediakit` — Media production and documentation wiki
 - `os-network-admin` — PPN mesh management authority
 
+**`ConsoleConfig` peer fields (Phase E, 2026-05-31):**
+- `totebox_host` + `totebox_ssh_port` — MBA SSH connection to os-totebox
+- `totebox_endpoint` — HTTP endpoint for os-totebox services
+- `orchestration_host` — MBA SSH hostname for os-orchestration (default `127.0.0.1`; ssh_port reuses `totebox_ssh_port` until multi-peer wiring lands)
+- `slm_endpoint` — Doorman HTTP at `localhost:9080`
+- `email_endpoint` — service-email HTTP at `localhost:9093`
+- `proof_endpoint` — service-proofreader HTTP at `localhost:9092`
+- `ingest_endpoint` — service-input HTTP at `localhost:9100`
+- `pair_endpoint` — pairing-server HTTP at `localhost:9201`
+
 **MBA architecture summary:**
 - `system-gateway-mba` (Scaffold-coded, Cargo.toml present) — server-side verifier on each os-* peer
 - `app-console-keys` — client-side pairing state; presents `MBA LINK ACTIVE`
