@@ -571,6 +571,12 @@ impl AppConsoleKeys {
         // Must run after enable_raw_mode — Picker sends XTGETTCAP in raw mode.
         self.picker = Picker::from_query_stdio().ok();
         self.caps = TerminalCaps::detect(&self.picker);
+        // Notify cartridges of probed capabilities so they can configure pixel rendering.
+        let (kitty, sixel) = (self.caps.kitty, self.caps.sixel);
+        let font_size = self.picker.as_ref().map(|p| p.font_size()).unwrap_or((10, 20));
+        for c in self.cartridges.values_mut() {
+            c.set_graphics_caps(kitty, sixel, font_size);
+        }
         let mut stdout = io::stdout();
         execute!(stdout, EnterAlternateScreen, cursor::Hide)?;
 
