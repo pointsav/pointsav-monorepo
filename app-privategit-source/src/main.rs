@@ -3,7 +3,7 @@ use axum::{
     body::Body,
     extract::{Path, Query, State},
     http::{header, HeaderMap, StatusCode},
-    response::{IntoResponse, Json, Response},
+    response::{IntoResponse, Json, Redirect, Response},
     routing::{get, post},
     Router,
 };
@@ -58,6 +58,28 @@ fn load_verify_key(val: &str) -> Option<VerifyingKey> {
     let bytes = hex::decode(&hex).ok()?;
     let arr: [u8; 32] = bytes.try_into().ok()?;
     VerifyingKey::from_bytes(&arr).ok()
+}
+
+// ── Version helpers ───────────────────────────────────────────────────────────
+
+fn compare_versions(a: &str, b: &str) -> std::cmp::Ordering {
+    let parse = |s: &str| -> Vec<u64> {
+        s.split('.').map(|p| p.parse().unwrap_or(0)).collect()
+    };
+    parse(a).cmp(&parse(b))
+}
+
+fn latest_version_with_platform(releases_dir: &str, product: &str, platform: &str) -> Option<String> {
+    let product_dir = PathBuf::from(releases_dir).join(product);
+    let mut versions: Vec<String> = fs::read_dir(&product_dir)
+        .ok()?
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().is_dir())
+        .filter_map(|e| e.file_name().into_string().ok())
+        .filter(|v| product_dir.join(v).join(platform).exists())
+        .collect();
+    versions.sort_by(|a, b| compare_versions(a, b));
+    versions.into_iter().last()
 }
 
 // ── License verification ──────────────────────────────────────────────────────
@@ -189,6 +211,28 @@ async fn manifest(
 ) -> Response {
     let path = release_path(&state.releases_dir, &[&product, &version, "MANIFEST.json"]);
     stream_file(path, "application/json").await
+}
+
+async fn latest_redirect(
+    State(state): State<Arc<AppState>>,
+    Path((product, platform)): Path<(String, String)>,
+    Query(query): Query<BinaryQuery>,
+) -> Response {
+    match latest_version_with_platform(&state.releases_dir, &product, &platform) {
+        Some(version) => {
+            let target = match &query.token {
+                Some(tok) => format!("/releases/{product}/{version}/{platform}?token={tok}"),
+                None => format!("/releases/{product}/{version}/{platform}"),
+            };
+            Redirect::temporary(&target).into_response()
+        }
+        None => (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "no binary available for this platform",
+                "hint": "The formal build pipeline has not produced a release for this platform yet."})),
+        )
+            .into_response(),
+    }
 }
 
 async fn binary(
@@ -394,6 +438,7 @@ async fn main() -> Result<()> {
         .route("/releases/", get(releases_index))
         .route("/releases/:product/", get(product_index))
         .route("/releases/:product/:version/MANIFEST", get(manifest))
+        .route("/releases/:product/latest/:platform", get(latest_redirect))
         .route("/releases/:product/:version/:platform", get(binary))
         .route("/git/*path", get(git_stub).post(git_stub))
         .route("/verify-key", post(verify_key_endpoint))
