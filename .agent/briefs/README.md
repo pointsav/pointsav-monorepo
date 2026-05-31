@@ -19,32 +19,36 @@ Engine-agnostic: all engines (Claude Code, Gemini CLI) read and write here.
 
 | File | Subject | Status |
 |---|---|---|
-| BRIEF-PPN-ARCHITECTURE.md | PPN architecture — Yale PhD thesis quality; Genesis Protocol; seL4; CAmkES; intransitive non-interference. Gates all code work. | active |
-| BRIEF-PPN-DEV-BOOTSTRAP.md | Operational BRIEF — activate first PPN ceremony on live WireGuard mesh (Laptop A + B + GCP). Dogfood principle; deployment steps; virtualization proof; address plan migration. | active |
-| BRIEF-VM-ARCHITECTURE.md | VM-* to os-* canonical mapping; placement principle; 3-node trust mesh; unikernel roadmap; infrastructure/ directory layout; phase checklists. | active |
-| BRIEF-active-work.md | Current work queue — consolidated action brief | active |
-| BRIEF-LEAPFROG-2030.md | Leapfrog 2030 resource targets — all five os-* types; Phase 2 (NetBSD/NVMM) + Phase 3 (seL4/unikernel) disk/RAM targets; Rust binary size discipline; engineering constraints. | active |
-| BRIEF-OS-FAMILY.md | Single consolidated reference for all five os-* types — purpose, hosted services, placement principle, phase stacks, resource targets, blocking decisions. Read before starting work on any os-*/system-*/service-* crate. | active |
-| BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md | Knowledge-platform editorial execution plan (complete; archival operator-gated §9) | active |
-| BRIEF-framework-pointsav-products-services.md | PointSav products & services — research-archive framework (standing reference) | active |
+| BRIEF-active-work.md | Current work queue — project-knowledge session action list | active |
+| BRIEF-app-mediakit-knowledge-2030.md | app-mediakit-knowledge product brief — all phases, locked decisions, 2030 vision. PRIMARY BRIEF for wiki engine work. | active |
+| BRIEF-LEAPFROG-2030.md | Leapfrog 2030 os-* resource targets (Phase 2/3 disk/RAM). *Workspace-level — pending redistribution to Command.* | active |
+| BRIEF-OS-FAMILY.md | Five os-* types reference. *Workspace-level — pending redistribution to Command.* | active |
+| BRIEF-VM-ARCHITECTURE.md | VM-* to os-* canonical mapping; unikernel roadmap. *project-infrastructure scope — pending redistribution.* | active |
+| BRIEF-slm-substrate-master.md | SLM Yo-Yo substrate + DataGraph + learning loop. PRIMARY PLAN for SLM work. *project-intelligence scope — pending redistribution.* | active |
+| BRIEF-slm-learning-loop.md | SLM training pipeline + sovereign coding agent. *project-intelligence scope — pending redistribution.* | active |
+| BRIEF-substrate-phd-thesis-2026-05-27.md | PhD thesis draft (trustworthy systems). *project-system scope — pending redistribution.* | active |
+| BRIEF-totebox-transformation.md | VM fabric implementation plan. *project-infrastructure scope — pending redistribution.* | active |
 
 ## Archived briefs
 
-Superseded briefs retained per standing instruction — deleted only after the
-overhaul ships, on explicit operator go-ahead.
-
-| File | Archived | Superseded by |
+| File | Archived | Superseded by / Notes |
 |---|---|---|
-| BRIEF-institutional-chrome-sprint.md | 2026-05-23 | BRIEF-active-work.md |
-| BRIEF-github-presence-elevation.md | 2026-05-23 | BRIEF-active-work.md |
-| BRIEF-publishing-tier-naming-cross-check.md | 2026-05-23 | BRIEF-active-work.md |
-| BRIEF-award-winning-wiki-overhaul.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
-| BRIEF-FINAL_AWARD_WINNING_WIKI_EXECUTION_PLAN.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
-| BRIEF-INPUT-KNOWLEDGE-PLATFORM-BLUEPRINT.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
-| BRIEF-MASTER_STRATEGY_AWARD_WINNING_WIKI.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
-| BRIEF-overhaul-documentation-pointsav-com.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
-| BRIEF-overhaul-gemini-analysis.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
-| BRIEF-overhaul-progress.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
+| BRIEF-vm-hardening-and-consolidation.md | 2026-05-24 | Absorbed into BRIEF-slm-substrate-master.md |
+| BRIEF-gemini-handover-2026-05-30.md | 2026-05-31 | Stale Gemini session note; wrong ports; archivist note inside |
+| archive/BRIEF-institutional-chrome-sprint.md | 2026-05-23 | Superseded by active-work |
+| archive/BRIEF-github-presence-elevation.md | 2026-05-23 | Superseded by active-work |
+| archive/BRIEF-publishing-tier-naming-cross-check.md | 2026-05-23 | Superseded by active-work |
+| archive/BRIEF-award-winning-wiki-overhaul.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
+| archive/BRIEF-FINAL_AWARD_WINNING_WIKI_EXECUTION_PLAN.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
+| archive/BRIEF-INPUT-KNOWLEDGE-PLATFORM-BLUEPRINT.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
+| archive/BRIEF-MASTER_STRATEGY_AWARD_WINNING_WIKI.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
+| archive/BRIEF-overhaul-*.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
+| archive/BRIEF-PPN-ARCHITECTURE.md | prior | Now in project-infrastructure archive |
+| archive/BRIEF-PPN-DEV-BOOTSTRAP.md | prior | Now in project-infrastructure archive |
+
+**Note on cross-archive BRIEFs:** Several active BRIEFs (LEAPFROG-2030, OS-FAMILY,
+VM-ARCHITECTURE, slm-*, substrate-phd-thesis, totebox-transformation) belong to other
+archives. They live here pending redistribution; outbox to Command filed 2026-05-31.
 
 ## Non-brief files kept here
 

@@ -205,6 +205,103 @@ mailbox: outbox
 owner: totebox@project-knowledge
 location: ~/Foundry/clones/project-knowledge/.agent/
 schema: foundry-mailbox-v1
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
+re: build-request — app-mediakit-knowledge Phase 9/10/11 + Leapfrog (Stage 6 + binary rebuild)
+created: 2026-05-31T16:00:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260531-phase9-10-11-stage6
+---
+
+All new feature work for this session is committed. Please:
+
+1. **Stage 6 promote** the following commits from the project-knowledge cluster branch
+   to canonical `pointsav-monorepo` main:
+   - Leapfrog commits (already in archive; may have been promoted — verify): `9bf24198`, `be4ea8c0`, `1c767bf4`, `0670aa06`
+   - This session's commit (SHA TBD — run `git log -1 --oneline` after we commit)
+
+2. **Binary rebuild**: `cargo build --release -p app-mediakit-knowledge`
+
+3. **Deploy** rebuilt binary to all three instances (9090/9093/9095)
+
+**Note:** nginx `proxy_read_timeout` raised from 30s to 90s (connect=10s, send=90s) this
+session on all three vhosts — no nginx reload needed from Command, already reloaded.
+
+**What's new in this commit:**
+- Phase 9: Claim-rail freshness sidebar (right rail at ≥1280px, IntersectionObserver JS)
+- Phase 10: Reading-state scroll progress bar (localStorage, 3px fixed bar)
+- Phase 11: `query_claims(topic, asof)` MCP method
+- UX-B.7: Woodfine SVG wordmark inline (from `woodfine-media-assets/ASSET-WORDMARK-WOODFINE.svg`)
+- TOC localStorage persistence (`toc-persistence.js` wired into wiki_chrome)
+- links.rs: fixed `exists()` prefix scan; added `citations_for_slug()` for Phase 11
+
+— totebox@project-knowledge
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
+re: BRIEF redistribution — 7 cross-archive BRIEFs sitting in project-knowledge
+created: 2026-05-31T16:00:00Z
+priority: normal
+status: pending
+msg-id: project-knowledge-20260531-brief-redistribution
+---
+
+The following BRIEFs are physically in `.agent/briefs/` of project-knowledge but
+belong to other archives. They are marked in the README with "pending redistribution".
+Please pick them up and move to their correct archives:
+
+| BRIEF | Target archive |
+|---|---|
+| `BRIEF-slm-substrate-master.md` | project-intelligence |
+| `BRIEF-slm-learning-loop.md` | project-intelligence |
+| `BRIEF-VM-ARCHITECTURE.md` | project-infrastructure |
+| `BRIEF-totebox-transformation.md` | project-infrastructure |
+| `BRIEF-substrate-phd-thesis-2026-05-27.md` | project-system |
+| `BRIEF-OS-FAMILY.md` | workspace root (Command scope) |
+| `BRIEF-LEAPFROG-2030.md` | workspace root (Command scope) |
+
+These stay here physically until Command confirms pickup. After redistribution,
+remove from this archive's briefs/ and update the README archived section.
+
+— totebox@project-knowledge
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
+re: Phase 6 gate — three conditions before Totebox can act
+created: 2026-05-31T16:00:00Z
+priority: normal
+status: pending
+msg-id: project-knowledge-20260531-phase6-gate
+---
+
+Phase 6 (three-instance deployment split) is gated on three conditions, all Command scope:
+
+**Gate 1 — GitHub repo renames (operator action):**
+Six repos need renaming on GitHub:
+- `jwoodfine/content-wiki-documentation` → `jwoodfine/media-knowledge-documentation`
+- `jwoodfine/content-wiki-projects` → `jwoodfine/media-knowledge-projects`
+- `jwoodfine/content-wiki-corporate` → `jwoodfine/media-knowledge-corporate`
+- Same for `pwoodfine/*` equivalents
+
+**Gate 2 — MASTER Doctrine amendment (Command scope):**
+Source-of-truth inversion for `media-knowledge-{documentation,projects,corporate}` repos:
+Totebox clone = canonical; GitHub = downstream mirror (instead of the current arrangement).
+This requires a Doctrine amendment ratified at the workspace level.
+
+**Gate 3 — Service unit env var updates (Command scope):**
+After renames, update `WIKI_CONTENT_DIR` env vars in the three systemd service units:
+- `local-knowledge-documentation.service`: already correct (`/srv/foundry/clones/project-knowledge/content-wiki-documentation`)
+- `local-knowledge-projects.service`: update path
+- `local-knowledge-corporate.service`: update path
+
+Totebox scope begins after all three gates clear. Nothing to do here until Command confirms.
+
+— totebox@project-knowledge
 ---
 
 # Outbox — project-knowledge Totebox
