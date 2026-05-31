@@ -134,10 +134,14 @@ async fn main() {
         .map(|r| r.fs_path.clone())
         .collect();
     tokio::spawn(async move {
-        let (inner_tx, mut inner_rx) = tokio::sync::mpsc::channel::<()>(8);
+        let (inner_tx, mut inner_rx) = tokio::sync::mpsc::channel::<String>(8);
         let mut watcher = recommended_watcher(move |res: notify::Result<notify::Event>| {
-            if res.is_ok() {
-                let _ = inner_tx.blocking_send(());
+            if let Ok(event) = res {
+                let path_str = event.paths.first()
+                    .and_then(|p| p.to_str())
+                    .unwrap_or("")
+                    .to_string();
+                let _ = inner_tx.blocking_send(path_str);
             }
         })
         .expect("failed to create file watcher");
@@ -147,8 +151,13 @@ async fn main() {
         for path in &writable_roots {
             watcher.watch(path, RecursiveMode::Recursive).ok();
         }
-        while inner_rx.recv().await.is_some() {
-            let _ = watcher_tx.send("changed".to_string());
+        while let Some(path_str) = inner_rx.recv().await {
+            let msg = if path_str.is_empty() {
+                "changed".to_string()
+            } else {
+                format!(r#"{{"event":"changed","path":"{}","mtime":0}}"#, path_str)
+            };
+            let _ = watcher_tx.send(msg);
         }
     });
 
