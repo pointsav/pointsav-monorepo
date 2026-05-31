@@ -230,6 +230,20 @@ async fn main() -> anyhow::Result<()> {
             .map(|v| v.eq_ignore_ascii_case("true") || v == "1")
             .unwrap_or(false);
 
+        // SLM_DRAIN_PAUSED: hard, unconditional pause of shadow-brief dispatch.
+        // When set, the drain worker skips every cycle WITHOUT dequeuing —
+        // briefs stay untouched in queue/ and the inference tier is never hit.
+        // Decoupled from SLM_TIER_A_FIRST (which bypasses the Sprint 3C hold)
+        // and from SLM_APPRENTICESHIP_ENABLED (which 404s the /v1/shadow capture
+        // endpoint). This lets the operator stop wasteful CPU drain while keeping
+        // capture writing new briefs to queue/ for later GPU processing.
+        // Read once at startup; restart Doorman to change. See
+        // BRIEF-slm-learning-loop.md §10.2.
+        let drain_paused: bool = std::env::var("SLM_DRAIN_PAUSED")
+            .ok()
+            .map(|v| v.eq_ignore_ascii_case("true") || v == "1")
+            .unwrap_or(false);
+
         // Clone only what the drain worker needs.
         let drain_cfg = queue_cfg.clone();
         let drain_doorman_arc = Arc::clone(&state);
@@ -244,7 +258,25 @@ async fn main() -> anyhow::Result<()> {
                 "brief queue drain worker started"
             );
 
+            if drain_paused {
+                info!(
+                    %worker_id,
+                    "drain worker: SLM_DRAIN_PAUSED=true — dispatch suspended; \
+                     capture continues writing to queue/ for later GPU processing"
+                );
+            }
+
             loop {
+                // SLM_DRAIN_PAUSED: unconditional pause — never dequeue, never
+                // dispatch. Briefs accumulate untouched in queue/. The reaper
+                // still runs (separate task) to reclaim any stale in-flight
+                // leases. Highest-priority skip — checked before the Sprint 3C
+                // hold and before any dequeue.
+                if drain_paused {
+                    tokio::time::sleep(drain_interval).await;
+                    continue;
+                }
+
                 // Sprint 3C: when all configured Tier B nodes have been
                 // circuit-open longer than the hold threshold, skip this drain
                 // cycle. Briefs accumulate in queue/ until Tier B recovers.
