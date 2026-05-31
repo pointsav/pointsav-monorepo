@@ -81,8 +81,6 @@ Please refine and commit to media-knowledge-documentation.
 — totebox@project-gis
 
 ---
-from: totebox@project-gis
->>>>>>> e959d4d1 (feat(gis): J1 v0.5 + J4 v0.4 JOURNAL update — isolation discovery, §5.4, Appendix B, H₄; dispatch to project-editorial)
 from: totebox@project-knowledge
 to: command@claude-code
 re: DETAILED — session 2026-05-31 report: live-site audit, source-recovery commit, rebuild request
