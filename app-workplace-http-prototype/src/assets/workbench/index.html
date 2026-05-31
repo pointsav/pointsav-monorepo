@@ -3997,6 +3997,136 @@ document.querySelectorAll('#surface-bar .surface-btn').forEach(btn => {
 // Apply saved surface state at startup
 setSurface(activeSurface);
 
+// ---------------------------------------------------------------------------
+// Live file-change notifications via SSE
+// ---------------------------------------------------------------------------
+(function() {
+  var sseUrl = 'events';
+  var es;
+  var retryTimer = null;
+
+  function connect() {
+    if (es) { try { es.close(); } catch(e) {} }
+    es = new EventSource(sseUrl);
+
+    es.onmessage = function(e) {
+      var data;
+      try { data = JSON.parse(e.data); } catch(_) { return; }
+      if (!data || data.event !== 'changed') return;
+
+      var changedPath = (data.path || '').replace(/^\/+/, '');
+      var newMtime = data.mtime || 0;
+
+      // Walk open tabs and refresh any that match the changed path.
+      // This app's tab.path is the URL path (e.g. "docs/readme.md") with no
+      // leading slash after normalization — same canonical form as the SSE
+      // payload after the replace() above.
+      tabs.forEach(function(tab, idx) {
+        var tabPath = (tab.path || '').replace(/^\/+/, '');
+        if (tabPath !== changedPath && changedPath !== '') return;
+
+        // If this tab is in view-mode (not editing with unsaved changes), reload silently
+        if (tab.dirty) {
+          // Editor is open and dirty — show a non-intrusive banner
+          showChangeNotice(idx, changedPath);
+        } else {
+          // Safe to reload
+          reloadTabContent(idx, changedPath, newMtime);
+        }
+      });
+    };
+
+    es.onerror = function() {
+      es.close();
+      es = null;
+      if (retryTimer) clearTimeout(retryTimer);
+      retryTimer = setTimeout(connect, 5000);
+    };
+  }
+
+  function reloadTabContent(idx, path, mtime) {
+    var tab = tabs[idx];
+    if (!tab) return;
+    // This prototype's file-content API is /_api/edit/file (not /workbench/file).
+    // It returns { content, mtime } for text-editable files.
+    var apiPath = path.replace(/^\/+/, '');
+    fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath))
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(fileData) {
+        if (!fileData) return;
+        tab.content = fileData.content;
+        tab.editorMtime = fileData.mtime || mtime;
+        tab.dirty = false;
+        // If this is the currently active tab, re-render the viewer + editor
+        // by mirroring the display logic in switchTab(). There is no
+        // standalone renderViewer() in this app; the canonical viewer-paint
+        // path lives inline in switchTab/openFile.
+        if (idx === activeTabIdx) {
+          // Update editor textarea + mtime tracker if the editor is open on this file
+          if (editorPath && editorPath === apiPath) {
+            var ta = document.getElementById('editor-textarea');
+            if (ta) ta.value = fileData.content;
+            editorMtime = fileData.mtime || editorMtime;
+            setDirty(false);
+            if (typeof updateGutterLines === 'function') updateGutterLines();
+            if (typeof scheduleHighlight === 'function') scheduleHighlight();
+          }
+          // Repaint the viewer area according to current viewMode
+          if (viewMode === 'iframe') {
+            var frame = document.getElementById('preview-frame');
+            if (frame) {
+              frame.removeAttribute('src');
+              frame.srcdoc = fileData.content;
+            }
+          } else if (viewMode === 'text') {
+            var tc = document.getElementById('text-content');
+            if (tc) {
+              var ext = (tab.name || '').split('.').pop().toLowerCase();
+              if (ext === 'md') {
+                tc.className = 'md-view';
+                tc.innerHTML = mdToHtml(fileData.content);
+              } else {
+                tc.className = 'code-view';
+                tc.textContent = fileData.content;
+              }
+            }
+          }
+          // image mode: binary content isn't editable here; nothing to do
+        }
+      })
+      .catch(function() {});
+  }
+
+  function showChangeNotice(idx, path) {
+    var existing = document.getElementById('sse-change-notice');
+    if (existing) return; // already showing
+    var bar = document.createElement('div');
+    bar.id = 'sse-change-notice';
+    bar.style.cssText = [
+      'position:fixed', 'bottom:48px', 'left:50%', 'transform:translateX(-50%)',
+      'background:#2d4a6e', 'color:#e8f4ff', 'padding:8px 16px',
+      'border-radius:6px', 'font-size:12px', 'z-index:9999',
+      'box-shadow:0 2px 8px rgba(0,0,0,0.4)', 'cursor:pointer',
+      'white-space:nowrap'
+    ].join(';');
+    var filename = path.split('/').pop();
+    bar.textContent = '⚠️ ' + filename + ' changed on disk — click to reload';
+    bar.addEventListener('click', function() {
+      bar.remove();
+      reloadTabContent(idx, path, 0);
+    });
+    document.body.appendChild(bar);
+    setTimeout(function() { if (bar.parentNode) bar.remove(); }, 8000);
+  }
+
+  // Start connection once DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', connect);
+  } else {
+    connect();
+  }
+})();
+
 </script>
 
 <div id="ctx-menu"></div>

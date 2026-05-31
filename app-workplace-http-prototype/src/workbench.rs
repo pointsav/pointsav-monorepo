@@ -34,6 +34,7 @@ pub fn router() -> Router<AppState> {
         .route("/git-status", get(git_status))
         .route("/document", get(get_document))
         .route("/pdf", get(get_pdf))
+        .route("/events", get(get_workbench_events))
 }
 
 // ---------------------------------------------------------------------------
@@ -303,10 +304,29 @@ async fn put_file(
         .map(|d| d.as_secs())
         .unwrap_or(0);
 
+    let event_json = format!(r#"{{"event":"changed","path":"{}","mtime":{}}}"#, q.path, new_mtime);
+    let _ = state.events_tx.send(event_json);
+
     let mut resp = HashMap::new();
     resp.insert("ok", serde_json::Value::Bool(true));
     resp.insert("mtime", serde_json::Value::Number(new_mtime.into()));
     Json(resp).into_response()
+}
+
+// ---------------------------------------------------------------------------
+// GET /workbench/events — SSE stream for real-time file change notifications
+// ---------------------------------------------------------------------------
+
+async fn get_workbench_events(State(state): State<AppState>) -> impl IntoResponse {
+    use axum::response::sse::{Event, KeepAlive, Sse};
+    use std::convert::Infallible;
+    use tokio_stream::{wrappers::BroadcastStream, StreamExt as _};
+
+    let rx = state.events_tx.subscribe();
+    let stream = BroadcastStream::new(rx)
+        .filter_map(|r| r.ok())
+        .map(|data| Ok::<_, Infallible>(Event::default().data(data)));
+    Sse::new(stream).keep_alive(KeepAlive::default())
 }
 
 // ---------------------------------------------------------------------------
