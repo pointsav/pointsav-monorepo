@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Top 400 Regional Markets — Summary &amp; Methodology · Woodfine Management Corp.</title>
+<style>
+/* ─── Print setup ──────────────────────────────────────────────────── */
+@page { size: letter landscape; margin: 0.45in 0.5in 0.38in 0.5in; }
+
+/* ─── Reset ────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── Document variables ───────────────────────────────────────────── */
+:root {
+  --brand-primary: #164679;
+  --text-main: #1a202c;
+  --text-muted: #64748b;
+  --border-soft: #e2e8f0;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+}
+
+/* ─── Screen layout ────────────────────────────────────────────────── */
+@media screen {
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text-main);
+    background: var(--bg);
+  }
+  a { color: var(--brand-primary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .page-wrapper {
+    display: flex;
+    gap: 28px;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 28px 20px 48px;
+    align-items: flex-start;
+  }
+
+  .toc-sidebar {
+    flex: 0 0 200px;
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    font-size: 13px;
+    padding-right: 8px;
+  }
+  .toc-label {
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .back-link {
+    display: block;
+    padding: 4px 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brand-primary);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border-soft);
+    margin-bottom: 10px;
+  }
+  .back-link:hover { text-decoration: underline; }
+  .toc ul { list-style: none; padding: 0; }
+  .toc li { margin: 3px 0; }
+  .toc li a {
+    color: var(--text-muted);
+    font-size: 11.5px;
+    line-height: 1.4;
+    display: block;
+    padding: 2px 0;
+  }
+  .toc li a:hover { color: var(--brand-primary); text-decoration: none; }
+  .toc-divider {
+    border: none;
+    border-top: 1px solid var(--border-soft);
+    margin: 12px 0;
+  }
+  .sidebar-print-btn {
+    display: block;
+    width: 100%;
+    background: var(--brand-primary);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    letter-spacing: 0.01em;
+    transition: opacity 0.15s;
+    margin-top: 8px;
+  }
+  .sidebar-print-btn:hover { opacity: 0.85; }
+  .sidebar-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  .doc-main {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+  }
+  .pages-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-bottom: 4px;
+  }
+  .page {
+    background: #fff;
+    box-shadow: 0 2px 18px rgba(0,0,0,0.10);
+    border-radius: 4px;
+  }
+
+  .page-footer {
+    background: var(--brand-primary);
+    color: #fff;
+    padding: 14px 20px;
+    text-align: center;
+    font-size: 12px;
+    font-family: 'Inter', system-ui, sans-serif;
+    margin-top: 8px;
+  }
+  .page-footer a { color: rgba(255,255,255,0.82); text-decoration: none; }
+  .page-footer a:hover { color: #fff; text-decoration: underline; }
+
+  @media (max-width: 700px) {
+    .toc-sidebar { display: none; }
+    .page-wrapper { padding: 12px 10px 40px; gap: 0; }
+  }
+}
+
+/* ─── Print ─────────────────────────────────────────────────────────── */
+@media print {
+  .toc-sidebar,
+  .page-footer { display: none !important; }
+  .page-wrapper { display: block; padding: 0; }
+  .doc-main { overflow: visible; }
+  .pages-wrapper { padding: 0; gap: 0; display: block; }
+  .page { box-shadow: none; border-radius: 0; }
+}
+
+/* ─── Print-document base typography ────────────────────────────────── */
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #111;
+  font-size: 7.6pt;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ─── Page shell ─────────────────────────────────────────────────────── */
+.page {
+  width: 10in;
+  min-height: 7.52in;
+  page-break-after: always;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.page:last-child { page-break-after: auto; }
+
+/* ─── Page header / footer ───────────────────────────────────────────── */
+.pg-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1.5pt solid #111;
+  padding-bottom: 3pt;
+  margin-bottom: 5pt;
+  flex-shrink: 0;
+}
+.pg-hd .org  { font-size: 6.8pt; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.pg-hd .ttl  { font-size: 9pt; font-weight: 800; }
+.pg-hd .meta { font-size: 6pt; color: #666; text-align: right; line-height: 1.4; }
+.pg-ft {
+  border-top: 0.5pt solid #ccc;
+  margin-top: 4pt;
+  padding-top: 2.5pt;
+  display: flex;
+  justify-content: space-between;
+  font-size: 5.5pt;
+  color: #aaa;
+  flex-shrink: 0;
+}
+
+/* ─── Section tags ───────────────────────────────────────────────────── */
+.stag {
+  font-size: 5.8pt;
+  font-weight: 700;
+  color: #bbb;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 2pt;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   PAGE 1 — GEOGRAPHIC DISTRIBUTION
+══════════════════════════════════════════════════════════════════════ */
+
+.region-grid {
+  display: grid;
+  grid-template-columns: 1.18fr 2fr;
+  gap: 8pt;
+  flex: 1;
+  overflow: hidden;
+}
+.region-col { display: flex; flex-direction: column; gap: 5pt; overflow: hidden; }
+.region { display: flex; flex-direction: column; gap: 4pt; overflow: hidden; }
+.region-hd {
+  color: #fff;
+  padding: 3pt 6pt;
+  font-size: 6.5pt;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border-radius: 2pt;
+  flex-shrink: 0;
+}
+
+/* Country card */
+.cc {
+  border: 0.5pt solid #d0d0d0;
+  border-radius: 2pt;
+  padding: 4pt 5pt;
+  break-inside: avoid;
+  flex-shrink: 0;
+}
+.cc-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2pt; }
+.cc-name  { font-size: 7.5pt; font-weight: 700; }
+.cc-iso   { font-size: 5.8pt; color: #888; letter-spacing: 0.07em; margin-left: 2pt; }
+.cc-count { font-size: 8.5pt; font-weight: 800; color: #111; }
+.cc-sub   { font-size: 5.8pt; color: #999; display: block; margin-bottom: 2pt; }
+
+/* Share bar — count/400 × 100% */
+.sb { display: flex; height: 7pt; border-radius: 2pt; overflow: hidden; background: #e8ecf3; margin-bottom: 2pt; }
+.sb-na  { background: #1a3a6b; border-radius: 2pt 0 0 2pt; }
+.sb-eu  { background: #5c1f1f; border-radius: 2pt 0 0 2pt; }
+.sb-ca  { background: #3d6ea8; }
+.sb-mx  { background: #7a9cc5; }
+
+/* Share pct */
+.cc-pct { font-size: 6pt; color: #777; }
+
+/* EU 2-col mini-grid */
+.eu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3pt; flex: 1; overflow: hidden; }
+.eu-grid .cc { padding: 3pt 4pt; }
+
+/* Leader inset */
+.leaders {
+  border: 0.5pt solid #d0d0d0;
+  border-left: 3pt solid #1a3a6b;
+  border-radius: 0 2pt 2pt 0;
+  padding: 4pt 6pt;
+  flex-shrink: 0;
+}
+.leaders.eu-leaders { border-left-color: #5c1f1f; }
+.leaders-hd { font-size: 5.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: #888; margin-bottom: 3pt; }
+.leader-row { display: flex; align-items: baseline; gap: 3pt; padding: 1.5pt 0; border-bottom: 0.5pt solid #f0f0f0; }
+.leader-row:last-child { border-bottom: none; }
+.lr-rank  { font-size: 5.5pt; font-weight: 800; color: #aaa; width: 8pt; flex-shrink: 0; }
+.lr-name  { font-size: 6.5pt; font-weight: 700; color: #111; flex: 1; }
+.lr-metro { font-size: 5.5pt; color: #888; flex-shrink: 0; padding-right: 4pt; }
+.lr-score { font-size: 7pt; font-weight: 800; color: #1a3a6b; min-width: 22pt; text-align: right; flex-shrink: 0; }
+
+/* Definition note */
+.data-note {
+  border-left: 3pt solid #1a3a6b;
+  background: #f0f4f8;
+  border-radius: 0 2pt 2pt 0;
+  padding: 5pt 7pt;
+  margin-top: 5pt;
+  flex-shrink: 0;
+}
+.data-note p {
+  font-size: 6pt;
+  color: #333;
+  line-height: 1.5;
+}
+.data-note p strong { color: #111; }
+.data-note p em { font-style: italic; }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   PAGE 2 — METHODOLOGY + RESEARCH CONTEXT
+══════════════════════════════════════════════════════════════════════ */
+
+/* Top band: KPIs + classification left, formula right */
+.p2-top {
+  display: grid;
+  grid-template-columns: 1fr 2.35in;
+  gap: 7pt;
+  margin-bottom: 6pt;
+  flex-shrink: 0;
+}
+
+/* KPI cards */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5pt; margin-bottom: 6pt; }
+.kpi { border: 0.5pt solid #d0d0d0; border-radius: 2pt; padding: 6pt 7pt 5pt; text-align: center; }
+.kpi.k-all  { border-top: 2.5pt solid #111; }
+.kpi.k-na   { border-top: 2.5pt solid #1a3a6b; }
+.kpi.k-eu   { border-top: 2.5pt solid #5c1f1f; }
+.kpi.k-ctry { border-top: 2.5pt solid #3d6ea8; }
+.kpi-n   { font-size: 19pt; font-weight: 800; line-height: 1; color: #111; }
+.kpi-lbl { font-size: 5.8pt; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-top: 2pt; }
+.kpi-sub { font-size: 6.5pt; font-weight: 600; color: #555; margin-top: 1pt; }
+
+/* Classification bands table */
+.cls-grid { display: grid; grid-template-columns: auto auto 1fr; gap: 0; border: 0.5pt solid #d0d0d0; border-radius: 2pt; overflow: hidden; }
+.cls-row { display: contents; }
+.cls-row > div { padding: 3pt 5pt; font-size: 6pt; border-bottom: 0.5pt solid #e8ecf3; }
+.cls-row:last-child > div { border-bottom: none; }
+.cls-band { font-weight: 700; white-space: nowrap; }
+.cls-range { color: #666; white-space: nowrap; padding-right: 8pt; }
+.cls-note { color: #444; }
+.cls-row.pool > div { background: #eef3fa; }
+.cls-row.pool .cls-band { color: #1a3a6b; }
+.cls-row.excl > div { color: #aaa; }
+.cls-row.other > div { }
+.cls-head > div { background: #f0f4f8; font-size: 5.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; padding: 2.5pt 5pt; border-bottom: 0.5pt solid #d0d0d0; }
+
+/* Scoring formula box */
+.comp-box {
+  border: 0.5pt solid #d0d0d0;
+  border-left: 3pt solid #1a3a6b;
+  border-radius: 2pt;
+  padding: 6pt 8pt;
+}
+.comp-box h4 { font-size: 6.8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5pt; }
+.formula-line { font-size: 6.5pt; color: #111; line-height: 2; font-weight: 600; padding: 1pt 0; }
+.formula-var { color: #1a3a6b; font-weight: 800; }
+.formula-eq  { color: #444; font-weight: 400; }
+.comp-note { font-size: 5.5pt; color: #999; line-height: 1.4; margin-top: 6pt; border-top: 0.5pt solid #eee; padding-top: 4pt; }
+
+/* Score example rows */
+.score-ex { margin-top: 6pt; }
+.score-ex-hd { font-size: 5.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 3pt; }
+.score-ex-row { display: flex; justify-content: space-between; align-items: baseline; padding: 1.5pt 0; border-bottom: 0.5pt solid #f0f0f0; font-size: 6pt; }
+.score-ex-row:last-child { border-bottom: none; }
+.ser-name { font-weight: 700; color: #111; }
+.ser-comp { color: #666; font-size: 5.5pt; flex: 1; padding: 0 4pt; }
+.ser-val  { font-weight: 800; color: #1a3a6b; }
+
+/* Bottom band: top 5 tables left, research right */
+.p2-bot {
+  display: grid;
+  grid-template-columns: 1fr 2.35in;
+  gap: 7pt;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Top 5 sub-grid */
+.top5-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 6pt; overflow: hidden; }
+
+.rank-table-box { overflow: hidden; }
+.rank-table-box h4 { font-size: 6.8pt; font-weight: 700; color: #111; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 3pt; }
+.rank-table-box h4 span { font-size: 5.8pt; font-weight: 400; color: #888; letter-spacing: 0; text-transform: none; }
+.rank-table { width: 100%; border-collapse: collapse; }
+.rank-table th { font-size: 5.5pt; text-transform: uppercase; letter-spacing: 0.06em; color: #888; font-weight: 700; padding: 2pt 3pt; border-bottom: 0.5pt solid #ddd; text-align: left; }
+.rank-table th:last-child { text-align: right; }
+.rank-table td { padding: 2.5pt 3pt; font-size: 6pt; border-bottom: 0.5pt solid #f0f0f0; vertical-align: top; }
+.rank-table td:last-child { text-align: right; font-weight: 800; font-size: 7pt; color: #1a3a6b; white-space: nowrap; }
+.rank-table .rk { color: #bbb; font-weight: 800; width: 10pt; }
+.rank-table .mn { font-weight: 700; color: #111; }
+.rank-table .mt { color: #888; font-size: 5.5pt; display: block; }
+.rank-table .km { color: #999; font-size: 5.5pt; }
+.rank-table tr:nth-child(1) td { background: #f7f9ff; }
+
+/* Research context box */
+.res-box {
+  border: 0.5pt solid #d0d0d0;
+  border-radius: 2pt;
+  padding: 7pt 8pt;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.res-box h4 { font-size: 6.8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #5c1f1f; margin-bottom: 5pt; }
+.res-box .context-p { font-size: 6pt; color: #333; line-height: 1.5; margin-bottom: 6pt; }
+.res-box ul { list-style: none; display: flex; flex-direction: column; gap: 4pt; flex: 1; }
+.res-box li { font-size: 6.3pt; line-height: 1.45; padding-left: 9pt; position: relative; }
+.res-box li::before { content: '—'; position: absolute; left: 0; color: #5c1f1f; font-weight: 700; }
+.res-box li strong { color: #111; }
+.cites {
+  font-size: 5.5pt;
+  color: #aaa;
+  border-top: 0.5pt solid #eee;
+  padding-top: 4pt;
+  margin-top: 5pt;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- ── Sidebar (screen only) ── -->
+  <aside class="toc-sidebar">
+    <a href="/research.html" class="back-link">← Research Papers</a>
+    <button class="sidebar-print-btn" onclick="window.print()">Print / Save PDF</button>
+    <hr class="toc-divider">
+    <div class="toc-label">Contents</div>
+    <nav class="toc">
+      <ul>
+        <li><a href="#">§1 Geographic Distribution</a></li>
+        <li><a href="#">§2 Market Counts &amp; Scores</a></li>
+        <li><a href="#">§3 Classification Bands</a></li>
+        <li><a href="#">§4 Scoring Formula</a></li>
+        <li><a href="#">§5 Top Markets</a></li>
+        <li><a href="#">§6 Research Context</a></li>
+      </ul>
+    </nav>
+    <hr class="toc-divider">
+    <div class="sidebar-meta">v0.1 · May 2026<br>Full lists: projects.woodfinegroup.com</div>
+  </aside>
+
+  <!-- ── Document main ── -->
+  <div class="doc-main">
+  <div class="pages-wrapper">
+
+  <!-- ═══════════════════════ PAGE 1 ═══════════════════════════════════ -->
+  <div class="page">
+
+    <div class="pg-hd">
+      <div class="org">Woodfine Management Corp.</div>
+      <div class="ttl">Top 400 Regional Markets — Geographic Distribution</div>
+      <div class="meta">PointSav GIS Platform · v0.1 · 31 May 2026<br>Page 1 of 2</div>
+    </div>
+
+    <div class="stag" style="margin-bottom:3pt">
+      §1 &nbsp;·&nbsp; Geographic Distribution &nbsp;·&nbsp;
+      <strong style="color:#111">800 ranked markets &nbsp;·&nbsp; 14 countries &nbsp;·&nbsp; 15–80 km from major metro centres &nbsp;·&nbsp; Phase 23 + Change B</strong>
+    </div>
+
+    <div class="region-grid">
+
+      <!-- ── LEFT COLUMN: NORTH AMERICA ──────────────────────────────── -->
+      <div class="region-col">
+
+        <div class="region">
+          <div class="region-hd" style="background:#1a3a6b">North America &nbsp;·&nbsp; 400 markets &nbsp;·&nbsp; 3 countries</div>
+
+          <div class="cc">
+            <div class="cc-top">
+              <div><span class="cc-name">United States</span><span class="cc-iso">US</span></div>
+              <span class="cc-count">369</span>
+            </div>
+            <span class="cc-sub">92.3% of NA Top 400</span>
+            <div class="sb"><div class="sb-na" style="width:92.3%"></div></div>
+            <span class="cc-pct">Score range 4.0–25.5 &nbsp;·&nbsp; Dallas-metro markets lead (28 of top 400)</span>
+          </div>
+
+          <div class="cc">
+            <div class="cc-top">
+              <div><span class="cc-name">Canada</span><span class="cc-iso">CA</span></div>
+              <span class="cc-count">23</span>
+            </div>
+            <span class="cc-sub">5.8% of NA Top 400</span>
+            <div class="sb"><div class="sb-ca" style="width:5.8%"></div></div>
+            <span class="cc-pct">Ontario &amp; Alberta concentrated &nbsp;·&nbsp; Score range 4.0–18.0</span>
+          </div>
+
+          <div class="cc">
+            <div class="cc-top">
+              <div><span class="cc-name">Mexico</span><span class="cc-iso">MX</span></div>
+              <span class="cc-count">8</span>
+            </div>
+            <span class="cc-sub">2.0% of NA Top 400</span>
+            <div class="sb"><div class="sb-mx" style="width:2.0%"></div></div>
+            <span class="cc-pct">Mexico City ring suburbs &nbsp;·&nbsp; Score range 4.0–9.0</span>
+          </div>
+        </div>
+
+        <div class="leaders">
+          <div class="leaders-hd">§2 &nbsp;Top-ranked North American markets</div>
+          <div class="leader-row">
+            <span class="lr-rank">1</span>
+            <span class="lr-name">Plano, Texas</span>
+            <span class="lr-metro">Dallas · 28.1 km</span>
+            <span class="lr-score">25.5</span>
+          </div>
+          <div class="leader-row">
+            <span class="lr-rank">2</span>
+            <span class="lr-name">Mesa, Arizona</span>
+            <span class="lr-metro">Phoenix · 31.1 km</span>
+            <span class="lr-score">22.5</span>
+          </div>
+          <div class="leader-row">
+            <span class="lr-rank">3</span>
+            <span class="lr-name">Frisco, Texas</span>
+            <span class="lr-metro">Dallas · 43.9 km</span>
+            <span class="lr-score">21.0</span>
+          </div>
+          <div class="leader-row">
+            <span class="lr-rank">4</span>
+            <span class="lr-name">Mississauga, Ontario</span>
+            <span class="lr-metro">Toronto · 24.9 km</span>
+            <span class="lr-score">18.0</span>
+          </div>
+          <div class="leader-row">
+            <span class="lr-rank">5</span>
+            <span class="lr-name">Santa Clarita, California</span>
+            <span class="lr-metro">Los Angeles · 48.2 km</span>
+            <span class="lr-score">18.0</span>
+          </div>
+        </div>
+
+      </div><!-- /region-col left -->
+
+      <!-- ── RIGHT COLUMN: EUROPE ───────────────────────────────────── -->
+      <div class="region-col">
+
+        <div class="region">
+          <div class="region-hd" style="background:#5c1f1f">Europe &nbsp;·&nbsp; 400 markets &nbsp;·&nbsp; 11 countries</div>
+          <div class="eu-grid">
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Germany</span><span class="cc-iso">DE</span></div><span class="cc-count">124</span></div>
+              <span class="cc-sub">31.0% of EU Top 400</span>
+              <div class="sb"><div class="sb-eu" style="width:31.0%"></div></div>
+              <span class="cc-pct">Rhine-Ruhr + Saxon corridor dominant</span>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">France</span><span class="cc-iso">FR</span></div><span class="cc-count">102</span></div>
+              <span class="cc-sub">25.5% of EU Top 400</span>
+              <div class="sb"><div class="sb-eu" style="width:25.5%"></div></div>
+              <span class="cc-pct">Paris basin ring &amp; Rhône suburbs</span>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Great Britain</span><span class="cc-iso">GB</span></div><span class="cc-count">81</span></div>
+              <span class="cc-sub">20.3% of EU Top 400</span>
+              <div class="sb"><div class="sb-eu" style="width:20.3%"></div></div>
+              <span class="cc-pct">London commuter belt &amp; Midlands</span>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Spain</span><span class="cc-iso">ES</span></div><span class="cc-count">23</span></div>
+              <span class="cc-sub">5.8%</span>
+              <div class="sb"><div class="sb-eu" style="width:5.8%"></div></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Italy</span><span class="cc-iso">IT</span></div><span class="cc-count">21</span></div>
+              <span class="cc-sub">5.3%</span>
+              <div class="sb"><div class="sb-eu" style="width:5.3%"></div></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Poland</span><span class="cc-iso">PL</span></div><span class="cc-count">16</span></div>
+              <span class="cc-sub">4.0%</span>
+              <div class="sb"><div class="sb-eu" style="width:4.0%"></div></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Netherlands</span><span class="cc-iso">NL</span></div><span class="cc-count">14</span></div>
+              <span class="cc-sub">3.5%</span>
+              <div class="sb"><div class="sb-eu" style="width:3.5%"></div></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Austria</span><span class="cc-iso">AT</span></div><span class="cc-count">7</span></div>
+              <span class="cc-sub">1.8%</span>
+              <div class="sb"><div class="sb-eu" style="width:1.8%"></div></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Denmark</span><span class="cc-iso">DK</span></div><span class="cc-count">5</span></div>
+              <span class="cc-sub">1.3%</span>
+              <div class="sb"><div class="sb-eu" style="width:1.3%"></div></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Sweden</span><span class="cc-iso">SE</span></div><span class="cc-count">4</span></div>
+              <span class="cc-sub">1.0%</span>
+              <div class="sb"><div class="sb-eu" style="width:1.0%"></div></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Portugal</span><span class="cc-iso">PT</span></div><span class="cc-count">3</span></div>
+              <span class="cc-sub">0.8%</span>
+              <div class="sb"><div class="sb-eu" style="width:0.8%"></div></div>
+            </div>
+
+          </div><!-- /eu-grid -->
+        </div>
+
+        <div class="leaders eu-leaders">
+          <div class="leaders-hd">§2 &nbsp;Top-ranked European markets</div>
+          <div class="leader-row">
+            <span class="lr-rank">1</span>
+            <span class="lr-name">Chemnitz</span>
+            <span class="lr-metro">Dresden · 64.1 km</span>
+            <span class="lr-score">18.0</span>
+          </div>
+          <div class="leader-row">
+            <span class="lr-rank">2</span>
+            <span class="lr-name">Ingolstadt</span>
+            <span class="lr-metro">Regensburg · 55.8 km</span>
+            <span class="lr-score">13.5</span>
+          </div>
+          <div class="leader-row">
+            <span class="lr-rank">3</span>
+            <span class="lr-name">Dessau-Roßlau</span>
+            <span class="lr-metro">Halle · 43.8 km</span>
+            <span class="lr-score">12.0</span>
+          </div>
+          <div class="leader-row">
+            <span class="lr-rank">4</span>
+            <span class="lr-name">Kaiserslautern</span>
+            <span class="lr-metro">Mannheim · 53.7 km</span>
+            <span class="lr-score">12.0</span>
+          </div>
+          <div class="leader-row">
+            <span class="lr-rank">5</span>
+            <span class="lr-name">Krefeld</span>
+            <span class="lr-metro">Düsseldorf · 19.4 km</span>
+            <span class="lr-score">12.0</span>
+          </div>
+        </div>
+
+      </div><!-- /region-col right -->
+
+    </div><!-- /region-grid -->
+
+    <div class="data-note">
+      <p><strong>Definition:</strong> A <em>Regional Market</em> is a named municipality 15–80 km from a major metro centre that contains one or more retail co-location clusters. Markets whose name matches a metro reference (<em>metro-core</em>) and markets more than 80 km from any metro (<em>standalone-secondary</em>) are excluded from the Top 400 lists and scored separately. Full ranked lists — North America and Europe — at <strong>projects.woodfinegroup.com</strong>.</p>
+    </div>
+
+    <div class="pg-ft">
+      <span>Source: PointSav GIS Platform · gis.woodfinegroup.com · OpenStreetMap (ODbL), Wikidata (CC0), TIGER 2023, GISCO LAU 2021, GADM GBR · Phase 23 + Change B (2026-05-29)</span>
+      <span>Methodology: page 2 &nbsp;·&nbsp; Full lists: projects.woodfinegroup.com</span>
+    </div>
+
+  </div><!-- /page 1 -->
+
+
+  <!-- ═══════════════════════ PAGE 2 ═══════════════════════════════════ -->
+  <div class="page">
+
+    <div class="pg-hd">
+      <div class="org">Woodfine Management Corp.</div>
+      <div class="ttl">Top 400 Regional Markets — Scoring Methodology &amp; Research Context</div>
+      <div class="meta">PointSav GIS Platform · v0.1 · 31 May 2026<br>Page 2 of 2</div>
+    </div>
+
+    <!-- §2–§4: KPIs + classification left, formula right -->
+    <div class="p2-top">
+
+      <div>
+        <div class="stag">§2 &nbsp;·&nbsp; Market Summary</div>
+        <div class="kpi-row">
+          <div class="kpi k-all">
+            <div class="kpi-n">800</div>
+            <div class="kpi-lbl">Markets Ranked</div>
+            <div class="kpi-sub">400 NA · 400 EU</div>
+          </div>
+          <div class="kpi k-na">
+            <div class="kpi-n">25.5</div>
+            <div class="kpi-lbl">Score Ceiling NA</div>
+            <div class="kpi-sub">Plano TX · 3T1+2T2+1T3 · civic</div>
+          </div>
+          <div class="kpi k-eu">
+            <div class="kpi-n">18.0</div>
+            <div class="kpi-lbl">Score Ceiling EU</div>
+            <div class="kpi-sub">Chemnitz · 3T1 · civic</div>
+          </div>
+          <div class="kpi k-ctry">
+            <div class="kpi-n">14</div>
+            <div class="kpi-lbl">Countries</div>
+            <div class="kpi-sub">3 NA · 11 EU</div>
+          </div>
+        </div>
+
+        <div class="stag">§3 &nbsp;·&nbsp; Classification Bands</div>
+        <div class="cls-grid">
+          <div class="cls-row cls-head">
+            <div>Band</div><div>Distance from metro</div><div>Treatment</div>
+          </div>
+          <div class="cls-row excl">
+            <div class="cls-band">Metro-core</div>
+            <div class="cls-range">&lt; 15 km</div>
+            <div class="cls-note">Excluded — shares the metro's own retail catchment</div>
+          </div>
+          <div class="cls-row pool">
+            <div class="cls-band">Suburban-regional</div>
+            <div class="cls-range">15 – 80 km</div>
+            <div class="cls-note">Top 400 pool — named suburb with independent co-location signal</div>
+          </div>
+          <div class="cls-row other">
+            <div class="cls-band">Standalone-secondary</div>
+            <div class="cls-range">&gt; 80 km</div>
+            <div class="cls-note">Separate analysis — independent city, not a commuter suburb</div>
+          </div>
+        </div>
+
+      </div><!-- /left -->
+
+      <div class="comp-box">
+        <div class="stag">§4 &nbsp;·&nbsp; Scoring Formula</div>
+        <h4>Regional Market Score</h4>
+
+        <div class="formula-line">
+          <span class="formula-var">score</span>
+          <span class="formula-eq"> = tier_score × civic_multiplier × confidence</span>
+        </div>
+        <div class="formula-line">
+          <span class="formula-var">tier_score</span>
+          <span class="formula-eq"> = (T1 × 4) + (T2 × 2) + (T3 × 1)</span>
+        </div>
+        <div class="formula-line">
+          <span class="formula-var">civic_multiplier</span>
+          <span class="formula-eq"> = 1.5 if hospital or university · else 1.0</span>
+        </div>
+        <div class="formula-line">
+          <span class="formula-var">confidence</span>
+          <span class="formula-eq"> = 1.0 strong match · 0.7 low-confidence</span>
+        </div>
+
+        <div class="score-ex">
+          <div class="score-ex-hd">Formula examples</div>
+          <div class="score-ex-row">
+            <span class="ser-name">Plano TX</span>
+            <span class="ser-comp">3T1+2T2+1T3 · civic · (12+4+1)×1.5</span>
+            <span class="ser-val">25.5</span>
+          </div>
+          <div class="score-ex-row">
+            <span class="ser-name">Mississauga ON</span>
+            <span class="ser-comp">2T1+1T2+2T3 · civic · (8+2+2)×1.5</span>
+            <span class="ser-val">18.0</span>
+          </div>
+          <div class="score-ex-row">
+            <span class="ser-name">Chemnitz DE</span>
+            <span class="ser-comp">3T1 · civic · (12)×1.5</span>
+            <span class="ser-val">18.0</span>
+          </div>
+          <div class="score-ex-row">
+            <span class="ser-name">Krefeld DE</span>
+            <span class="ser-comp">2T1 · civic · (8)×1.5</span>
+            <span class="ser-val">12.0</span>
+          </div>
+        </div>
+
+        <div class="comp-note">T1 = Hypermarket + Hardware (or Warehouse Club). T2 = Hypermarket + Hardware, span &gt; 2.5 km. T3 = single-format anchor. Civic = hospital or university cluster member. Score uses the underlying 6,493-cluster database (Phase 23 + Change B, 2026-05-29).</div>
+      </div>
+
+    </div><!-- /p2-top -->
+
+    <!-- §5 top-5 tables left, §6 research context right -->
+    <div class="p2-bot">
+
+      <div class="top5-wrap">
+
+        <div class="rank-table-box">
+          <div class="stag">§5 &nbsp;·&nbsp; Top 5 North America</div>
+          <table class="rank-table">
+            <thead>
+              <tr><th class="rk">#</th><th>Market</th><th>km</th><th>Score</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="rk">1</td>
+                <td><span class="mn">Plano, Texas</span><span class="mt">Dallas metro · US</span></td>
+                <td class="km">28.1</td>
+                <td>25.5</td>
+              </tr>
+              <tr>
+                <td class="rk">2</td>
+                <td><span class="mn">Mesa, Arizona</span><span class="mt">Phoenix metro · US</span></td>
+                <td class="km">31.1</td>
+                <td>22.5</td>
+              </tr>
+              <tr>
+                <td class="rk">3</td>
+                <td><span class="mn">Frisco, Texas</span><span class="mt">Dallas metro · US</span></td>
+                <td class="km">43.9</td>
+                <td>21.0</td>
+              </tr>
+              <tr>
+                <td class="rk">4</td>
+                <td><span class="mn">Mississauga, Ontario</span><span class="mt">Toronto metro · CA</span></td>
+                <td class="km">24.9</td>
+                <td>18.0</td>
+              </tr>
+              <tr>
+                <td class="rk">5</td>
+                <td><span class="mn">Santa Clarita, California</span><span class="mt">Los Angeles metro · US</span></td>
+                <td class="km">48.2</td>
+                <td>18.0</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="rank-table-box">
+          <div class="stag">§5 &nbsp;·&nbsp; Top 5 Europe</div>
+          <table class="rank-table">
+            <thead>
+              <tr><th class="rk">#</th><th>Market</th><th>km</th><th>Score</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="rk">1</td>
+                <td><span class="mn">Chemnitz</span><span class="mt">Dresden metro · DE</span></td>
+                <td class="km">64.1</td>
+                <td>18.0</td>
+              </tr>
+              <tr>
+                <td class="rk">2</td>
+                <td><span class="mn">Ingolstadt</span><span class="mt">Regensburg metro · DE</span></td>
+                <td class="km">55.8</td>
+                <td>13.5</td>
+              </tr>
+              <tr>
+                <td class="rk">3</td>
+                <td><span class="mn">Dessau-Roßlau</span><span class="mt">Halle metro · DE</span></td>
+                <td class="km">43.8</td>
+                <td>12.0</td>
+              </tr>
+              <tr>
+                <td class="rk">4</td>
+                <td><span class="mn">Kaiserslautern</span><span class="mt">Mannheim metro · DE</span></td>
+                <td class="km">53.7</td>
+                <td>12.0</td>
+              </tr>
+              <tr>
+                <td class="rk">5</td>
+                <td><span class="mn">Krefeld</span><span class="mt">Düsseldorf metro · DE</span></td>
+                <td class="km">19.4</td>
+                <td>12.0</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div><!-- /top5-wrap -->
+
+      <div class="res-box">
+        <div class="stag">§6 &nbsp;·&nbsp; Research Context</div>
+        <h4>The Suburban Ring Gap</h4>
+        <p class="context-p">Oxford Economics, CBRE, and Colliers International produce extensive research on metropolitan markets — the largest 50–100 cities by GDP and population. The commuter-belt suburbs of those metros, where retail co-location patterns already signal demographic and economic activity, receive substantially less coverage. These 800 ranked markets address that gap.</p>
+        <ul>
+          <li><strong>Supply-side signal:</strong> Score derived entirely from open-source POI data — no proprietary mobility or consumer-spend panel required. Available across 14 countries simultaneously.</li>
+          <li><strong>Civic anchor validation:</strong> All top-5 markets in both NA and EU carry the civic multiplier — hospital and/or university presence — confirming these are community-service nodes, not retail-only zones.</li>
+          <li><strong>Score ceiling differential:</strong> NA ceiling (25.5) is 42% higher than EU (18.0), reflecting the larger-format retail park typology in North American suburban markets.</li>
+          <li><strong>Name resolution verified:</strong> TIGER 2023 (US), GISCO LAU 2021 (EU), GADM GBR, plus 12 manual CSD overrides for Canada (Sherwood Park AB, etc.).</li>
+          <li><strong>Companion manuscript in preparation</strong> for intended submission to <em>Journal of Economic Geography</em> (Oxford University Press) — gis.woodfinegroup.com/research/</li>
+        </ul>
+        <div class="cites">
+          <div>Woodfine, J. M., Woodfine, P. M., &amp; Woodfine, M. (2026). <em>Top 400 Regional Markets: North America and Europe.</em> Working Data v0.1. Woodfine Management Corp., New York, New York. projects.woodfinegroup.com</div>
+          <div style="margin-top:4pt;">Woodfine, J. M., Woodfine, P. M., &amp; Woodfine, M. (2026). <em>Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity.</em> Working Paper v0.5. Woodfine Management Corp., New York, New York.</div>
+        </div>
+      </div>
+
+    </div><!-- /p2-bot -->
+
+    <div class="pg-ft">
+      <span>Scoring: Phase 23 + Change B cluster data (2026-05-29) · 6,493 clusters · 18 countries · Open data: OpenStreetMap (ODbL), Wikidata (CC0)</span>
+      <span>All figures preliminary · Full ranked lists: projects.woodfinegroup.com</span>
+    </div>
+
+  </div><!-- /page 2 -->
+
+  </div><!-- /pages-wrapper -->
+  </div><!-- /doc-main -->
+
+</div><!-- /page-wrapper -->
+
+<div class="page-footer">
+  Woodfine Management Corp. &nbsp;·&nbsp; New York, New York &nbsp;·&nbsp;
+  <a href="/">gis.woodfinegroup.com</a> &nbsp;·&nbsp;
+  <a href="/research.html">Research Papers</a> &nbsp;·&nbsp;
+  <a href="https://projects.woodfinegroup.com" target="_blank">Full ranked lists</a> &nbsp;·&nbsp;
+  v0.1 · May 2026
+</div>
+
+</body>
+</html>
