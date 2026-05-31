@@ -34,15 +34,12 @@ fn bench_dir(tag: &str) -> PathBuf {
 /// Open a PosixTileLedger with `n` entries already appended.
 /// Uses a fixed payload so results are reproducible.
 fn seed_ledger(n: u64, root: &std::path::Path) -> PosixTileLedger {
-    let ledger =
-        PosixTileLedger::open(root, "bench", None::<&std::path::Path>).unwrap();
+    let ledger = PosixTileLedger::open(root, "bench", None::<&std::path::Path>).unwrap();
     let payload = serde_json::json!({
         "data": "benchmark-payload-fixed-32-bytes"
     });
     for i in 0..n {
-        ledger
-            .append(&format!("bench-{}", i), &payload)
-            .unwrap();
+        ledger.append(&format!("bench-{}", i), &payload).unwrap();
     }
     ledger
 }
@@ -106,13 +103,9 @@ fn bench_checkpoint(c: &mut Criterion) {
         let root = bench_dir(&format!("cp-{}", size));
         let ledger = seed_ledger(size, &root);
 
-        group.bench_with_input(
-            BenchmarkId::new("entries", size),
-            &size,
-            |b, _| {
-                b.iter(|| ledger.checkpoint().unwrap());
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("entries", size), &size, |b, _| {
+            b.iter(|| ledger.checkpoint().unwrap());
+        });
 
         cleanup(&root);
     }
@@ -133,13 +126,9 @@ fn bench_read_since(c: &mut Criterion) {
         let root = bench_dir(&format!("rs-{}", size));
         let ledger = seed_ledger(size, &root);
 
-        group.bench_with_input(
-            BenchmarkId::new("entries", size),
-            &size,
-            |b, _| {
-                b.iter(|| ledger.read_since(0).unwrap());
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("entries", size), &size, |b, _| {
+            b.iter(|| ledger.read_since(0).unwrap());
+        });
 
         cleanup(&root);
     }
