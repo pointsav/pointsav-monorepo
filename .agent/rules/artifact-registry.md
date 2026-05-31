@@ -1,7 +1,7 @@
 ---
 schema: foundry-artifact-registry-v1
 project: project-gis
-last_updated: 2026-05-30
+last_updated: 2026-05-31
 ---
 
 # project-editorial Artifact Registry
@@ -41,10 +41,7 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 - ~~F1–F5 figures~~ — READY at project-gis `work/figures/` (produced 2026-05-28)
 - ~~Phase 22 CSV~~ — READY at project-gis `work/clusters-ols.csv` (6,493 rows, 2026-05-28)
 - ~~§7.0 preliminary OLS~~ — COMPLETE 2026-05-28: Model A (T1 span β=+0.489, p<0.001) + Model B (R²=0.503); F6 partial produced
-- ~~§5.1 table corrected~~ — DONE 2026-05-31 v0.5: NA/EU Phase 23+Change B actuals (NA T1=1,021/T2=1,831/T3=913; EU T1=725/T2=895/T3=1,108)
-- ~~§5.4 Regional Market Discovery~~ — DONE 2026-05-31 v0.5: isolation-first scoring, Top 400 country distribution, H₄ hypothesis
-- ~~Appendix B~~ — DONE 2026-05-31 v0.5: 18-country T1/T2/T3 table from Phase 23+Change B clusters-meta.json
-- Language pass on §5.4 (new section; `forbidden_terms_cleared` reset to false) — AT project-editorial
+- ~~**Bilingual ES sibling**~~ — COMPLETE 2026-05-31: `JOURNAL/JOURNAL-retail-colocation-v0.1.es.draft.md` written (~8,500 words; all 22 sections; full Spanish academic adaptation; `forbidden_terms_cleared: true`)
 - §7.2 primary spec (catchment_entropy ~ tier + log[pop_150km] + country FE) — pending Phase 24B (Kontur population join + O-D data)
 - F6 update with §7.2 spec results — pending Phase 24B
 - §5.3 LODES employment join — v0.6 item (executable once `build-geometric-ranking.py` run)
