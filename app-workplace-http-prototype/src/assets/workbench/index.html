@@ -571,6 +571,7 @@ header .tag {
 .tree-mtime {
   font-size: 10px; color: #555; margin-left: auto; flex-shrink: 0;
   padding-left: 6px; white-space: nowrap; font-variant-numeric: tabular-nums;
+  min-width: 100px; text-align: right;
 }
 .tree-item:hover .tree-mtime { color: #888; }
 .sidebar.sb-collapsed .tree-mtime { display: none; }
@@ -643,7 +644,7 @@ header .tag {
     <div id="sidebar-toolbar">
       <button id="sb-toggle-btn" class="sb-tool-btn" title="Toggle sidebar (collapse/expand)">☰</button>
       <button id="sb-hidden-btn" class="sb-tool-btn" title="Toggle hidden files (.agent, .claude, etc.)">👁</button>
-      <button id="sb-sort-btn" class="sb-tool-btn" title="Sort: Name — click to cycle (Name → Date → Size)">A-Z</button>
+      <button id="sb-sort-btn" class="sb-tool-btn" title="Sort: Alphabetical — click to cycle">A-Z</button>
     </div>
 
     <div id="search-panel">
@@ -835,34 +836,56 @@ let sidebarPinnedWidth = parseInt(sessionStorage.getItem('wb-sidebar-w') || '300
 // Hidden-files toggle (persists across reloads)
 let showHidden = localStorage.getItem('wb-show-hidden') === '1';
 
-// Sort mode: 'name' | 'mtime' | 'size'
+// Sort mode: 'name' | 'date' | 'time' | 'modified' | 'size'
 let treeSortMode = localStorage.getItem('wb-sort') || 'name';
 
-// ── Timestamp format ──────────────────────────────────────────────────────────
+// ── Timestamp format — always shows full date + time ─────────────────────────
 function fmtMtime(iso) {
   if (!iso) return '';
-  const d = new Date(iso + 'Z');      // lister returns UTC without trailing Z
+  const d = new Date(iso + 'Z');     // lister returns UTC without trailing Z
+  const mon = d.toLocaleDateString([], { month: 'short' });
+  const day = d.getDate();
+  const yr  = d.getFullYear();
   const now = new Date();
-  const diffMs = now - d;
-  const diffDays = diffMs / 86400000;
-  if (diffDays < 1)  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  if (diffDays < 7)  return d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-  if (diffDays < 365) return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
-  return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+  const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const yearStr = yr !== now.getFullYear() ? ` ${yr}` : '';
+  return `${mon} ${day}${yearStr}, ${time}`;
 }
 
 // ── Sort entries using current treeSortMode ───────────────────────────────────
+// 'name'     — dirs alpha, viewable files alpha, rest alpha
+// 'date'     — newest calendar date first (YYYY-MM-DD); ties broken by name
+// 'time'     — latest time-of-day first (HH:MM:SS); ties broken by name
+// 'modified' — newest full timestamp first (date + time combined)
+// 'size'     — dirs alpha first, then files largest-first
 function sortedEntries(entries) {
   const visible = entries.filter(e => showHidden || !e.name.startsWith('.'));
-  if (treeSortMode === 'mtime') {
-    return visible.slice().sort((a, b) => (b.mtime || '').localeCompare(a.mtime || ''));
+
+  if (treeSortMode === 'date') {
+    return visible.slice().sort((a, b) => {
+      const da = (a.mtime || '').slice(0, 10);
+      const db = (b.mtime || '').slice(0, 10);
+      return db.localeCompare(da) || a.name.localeCompare(b.name);
+    });
+  }
+  if (treeSortMode === 'time') {
+    return visible.slice().sort((a, b) => {
+      const ta = (a.mtime || '').slice(11);
+      const tb = (b.mtime || '').slice(11);
+      return tb.localeCompare(ta) || a.name.localeCompare(b.name);
+    });
+  }
+  if (treeSortMode === 'modified') {
+    return visible.slice().sort((a, b) =>
+      (b.mtime || '').localeCompare(a.mtime || '') || a.name.localeCompare(b.name)
+    );
   }
   if (treeSortMode === 'size') {
     const dirs  = visible.filter(e => e.type === 'directory').sort((a,b) => a.name.localeCompare(b.name));
     const files = visible.filter(e => e.type !== 'directory').sort((a,b) => (b.size || 0) - (a.size || 0));
     return [...dirs, ...files];
   }
-  // 'name' — dirs first, then viewable files, then rest
+  // 'name' — dirs first, then viewable files, then rest (all alpha)
   const dirs     = visible.filter(e => e.type === 'directory').sort((a,b) => a.name.localeCompare(b.name));
   const viewable = visible.filter(e => e.type !== 'directory' && VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
   const rest     = visible.filter(e => e.type !== 'directory' && !VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
@@ -3740,13 +3763,15 @@ searchInput.addEventListener('keydown', e => {
   }
 
   // Sort-mode button — cycles Name → Date → Size
-  const sortLabels = { name: 'A-Z', mtime: 'Date', size: 'Size' };
+  const sortLabels = { name: 'A-Z', date: 'Date', time: 'Time', modified: 'Mod', size: 'Size' };
   const sortTitles = {
-    name:  'Sort: Name — click for Date',
-    mtime: 'Sort: Date (newest first) — click for Size',
-    size:  'Sort: Size (largest first) — click for Name',
+    name:     'Sort: Alphabetical — click for Date',
+    date:     'Sort: By date (newest day first) — click for Time',
+    time:     'Sort: By time of day (latest first) — click for Last Modified',
+    modified: 'Sort: By last modified (newest first) — click for Size',
+    size:     'Sort: By size (largest first) — click for Alphabetical',
   };
-  const sortCycle = { name: 'mtime', mtime: 'size', size: 'name' };
+  const sortCycle = { name: 'date', date: 'time', time: 'modified', modified: 'size', size: 'name' };
   const sortBtn = document.getElementById('sb-sort-btn');
   if (sortBtn) {
     sortBtn.textContent = sortLabels[treeSortMode] || 'A-Z';
