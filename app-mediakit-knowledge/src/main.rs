@@ -277,8 +277,8 @@ async fn serve(
     };
 
     tracing::info!(git_tenant = %git_tenant, "git remote enabled at /git-server/{}/info/refs", git_tenant);
-    let brand_instance = std::env::var("WIKI_BRAND_INSTANCE")
-        .unwrap_or_else(|_| "documentation".to_string());
+    let brand_instance =
+        std::env::var("WIKI_BRAND_INSTANCE").unwrap_or_else(|_| "documentation".to_string());
     let state = AppState {
         content_dir,
         guide_dir,

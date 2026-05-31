@@ -31,10 +31,10 @@ async fn doorman_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
             collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
             enable_collab: false,
             git_tenant: "pointsav".to_string(),
-        mcp_enabled: false,
+            mcp_enabled: false,
             glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
-                links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
-                db: None,
+            links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+            db: None,
             site_title: "PointSav Documentation Wiki".to_string(),
         },
         dir,
@@ -116,8 +116,8 @@ async fn doorman_stubs_return_correct_json_shape() {
         );
 
         let body = resp.into_body().collect().await.unwrap().to_bytes();
-        let parsed: serde_json::Value = serde_json::from_slice(&body)
-            .expect("doorman stub should return valid JSON");
+        let parsed: serde_json::Value =
+            serde_json::from_slice(&body).expect("doorman stub should return valid JSON");
 
         let phase = parsed.get("phase").and_then(|v| v.as_u64());
         assert_eq!(
