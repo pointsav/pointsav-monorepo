@@ -24,6 +24,7 @@ struct AppState {
     receipts_dir: String,
     claims_dir: String,
     source_base_url: String,
+    default_platform: String,
     signing_key_hex: Option<String>,
     wallet_seed_path: Option<String>,
     order_index_path: String,
@@ -553,8 +554,8 @@ async fn v1_issue_token(
     let token = URL_SAFE_NO_PAD.encode(&token_bytes);
 
     let download_url = format!(
-        "{}/{}/latest?token={}",
-        state.source_base_url, receipt.product_id, token
+        "{}/{}/latest/{}?token={}",
+        state.source_base_url, receipt.product_id, state.default_platform, token
     );
 
     tracing::info!(
@@ -596,6 +597,8 @@ async fn main() -> Result<()> {
         std::env::var("CLAIMS_DIR").unwrap_or_else(|_| "/var/lib/local-software/claims".into());
     let source_base_url = std::env::var("SOURCE_BASE_URL")
         .unwrap_or_else(|_| "https://software.pointsav.com/releases".into());
+    let default_platform = std::env::var("DEFAULT_PLATFORM")
+        .unwrap_or_else(|_| "x86_64-unknown-linux-gnu".into());
     let signing_key_hex = std::env::var("LICENSE_SIGNING_KEY").ok();
     if signing_key_hex.is_none() {
         tracing::warn!("LICENSE_SIGNING_KEY not set — /v1/issue-token will return 503");
@@ -613,6 +616,7 @@ async fn main() -> Result<()> {
         receipts_dir,
         claims_dir,
         source_base_url,
+        default_platform,
         signing_key_hex,
         wallet_seed_path,
         order_index_path,
