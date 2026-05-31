@@ -38,10 +38,16 @@ impl LinkGraph {
     /// Returns true if any hash entry exists for this slug (prefix scan on
     /// the composite `"slug\x00revision"` key, so the exact revision is ignored).
     pub fn exists(&self, slug: &str) -> bool {
-        let Ok(rtx) = self.db.begin_read() else { return false; };
-        let Ok(table) = rtx.open_table(HASHES) else { return false; };
+        let Ok(rtx) = self.db.begin_read() else {
+            return false;
+        };
+        let Ok(table) = rtx.open_table(HASHES) else {
+            return false;
+        };
         let prefix = format!("{}\x00", slug);
-        let Ok(mut range) = table.range(prefix.as_str()..) else { return false; };
+        let Ok(mut range) = table.range(prefix.as_str()..) else {
+            return false;
+        };
         match range.next() {
             Some(Ok((k, _))) => k.value().starts_with(prefix.as_str()),
             _ => false,
@@ -308,12 +314,7 @@ impl LinkGraph {
 
     /// Record a citation for `cite_id` (e.g. `"slug:fn-1"`). The status
     /// defaults to `"unknown"`. Phase 9 URL validator overwrites status.
-    pub fn record_citation(
-        &self,
-        cite_id: &str,
-        url: &str,
-        title: &str,
-    ) -> Result<(), WikiError> {
+    pub fn record_citation(&self, cite_id: &str, url: &str, title: &str) -> Result<(), WikiError> {
         let blob = format!(
             r#"{{"url":{},"title":{},"status":"unknown"}}"#,
             serde_json::to_string(url).unwrap_or_default(),
@@ -369,10 +370,16 @@ impl LinkGraph {
     /// Phase 11 — return all citation records for a given slug as JSON-blob strings.
     /// The `asof` parameter is reserved for future date-filtering (currently ignored).
     pub fn citations_for_slug(&self, slug: &str, _asof: Option<&str>) -> Vec<(String, String)> {
-        let Ok(rtx) = self.db.begin_read() else { return vec![]; };
-        let Ok(table) = rtx.open_table(CITATIONS) else { return vec![]; };
+        let Ok(rtx) = self.db.begin_read() else {
+            return vec![];
+        };
+        let Ok(table) = rtx.open_table(CITATIONS) else {
+            return vec![];
+        };
         let prefix = format!("{}:", slug);
-        let Ok(range) = table.range(prefix.as_str()..) else { return vec![]; };
+        let Ok(range) = table.range(prefix.as_str()..) else {
+            return vec![];
+        };
         range
             .filter_map(|r| r.ok())
             .take_while(|(k, _)| k.value().starts_with(prefix.as_str()))
