@@ -274,3 +274,70 @@ The learning loop is operational when ALL of the following pass:
 Before any LoRA run, verify `export-dpo.sh` filtered output contains ≤ 5 tuples (after Sprint 1A fix).
 591 existing degenerate tuples must NOT be included in a training run — they will degrade the model.
 The 1,410 engineering SFT tuples are always valid and may be used independently.
+
+---
+
+## §8 — Apprenticeship prompt audit + fixes (session 12, 2026-05-31)
+
+Full audit of the call chain from `dispatch_shadow()` → OLMo 7B and the live training corpus.
+
+### Two critical gaps found and fixed
+
+**Fix A — `actual_diff: ""` in all 554 corpus entries (DEPLOYED, commit `a0649002`)**
+
+Root cause: `/srv/foundry/bin/capture-edit.py` (the installed hook) used the pattern:
+
+```bash
+DIFF=$(git diff HEAD~1 HEAD ...)
+PAYLOAD=$(python3 - "$COMMIT_MSG" <<'PYEOF'
+diff_text = sys.stdin.read()   # BUG: stdin is already consumed by the heredoc script source
+```
+
+When `python3 -` is invoked with `<<'PYEOF'`, the heredoc IS stdin — reading it provides the
+script source. `sys.stdin.read()` inside the script then returns `""` because stdin was already
+exhausted. The bash variable `$DIFF` was captured correctly but never reached Python.
+
+Fix: pass via env var — `HOOK_DIFF="$DIFF" python3 -` then `os.environ.get('HOOK_DIFF', '')`.
+Applied to both `service-slm/scripts/git-post-commit-hook.sh` and workspace `/srv/foundry/bin/capture-edit.py`.
+
+Verification: three newest queue entries after fix have non-empty `actual_diff` (2–3.5 KB each).
+All future commits now produce complete DPO pairs with a real gold label.
+
+**Fix B — 100% escalation rate from OLMo preamble before `---` (DEPLOYED, commit `a0649002`)**
+
+Root cause: `APPRENTICE_SYSTEM_PROMPT` (apprenticeship.rs line ~446) contained terms OLMo
+has never seen ("Doctrine claim #32", "Master/Root/Task Claude", "Foundry apprentice"). OLMo
+responded with substantive reasoning but wrote natural-language preamble before the YAML
+frontmatter. The `extract_frontmatter()` regex (`r"(?s)\A\s*---\s*\n(.*?)\n---\s*\n"`) requires
+`\A` (start of string); any preamble = no frontmatter parsed = fallback defaults:
+`self_confidence: 0.0, escalate: true`.
+
+Fix: rewrote `APPRENTICE_SYSTEM_PROMPT` with OLMo-compatible plain instructions:
+- Explicit "Do not write any introductory text before the opening `---`"
+- Concrete format example showing exact YAML + ## Reasoning + ## Diff block
+- Rules in plain language (no internal Foundry terminology)
+
+All corpus entries before Fix B: `escalate: true`, `self_confidence: 0.0`. After Fix B the
+next drain cycle will produce the first genuine attempt results.
+
+### What is NOT yet done (Fix C — deferred)
+
+**Fix C: Add GBNF grammar to `dispatch_shadow()` in `apprenticeship.rs`**
+
+Currently both `dispatch_shadow()` calls (lines 181 and 279) pass `grammar: None`.
+Adding `grammar: Some(GrammarConstraint::Gbnf(APPRENTICE_GBNF_GRAMMAR))` would constrain
+OLMo output at the token level, eliminating format-failure escalations entirely. The wiring
+is already in place (`LocalTierClient::complete()` handles GBNF); only the constant and
+wiring call are missing.
+
+Deferred: Fix B (system prompt rewrite) may be sufficient to reduce escalation rate to
+acceptable levels without the complexity of a GBNF grammar. Observe the next 5–10 drain
+cycles before implementing Fix C. If OLMo still preambles after Fix B, implement Fix C.
+
+### Key inference timing fact (for future planning)
+
+OLMo 7B on this CPU VM runs at approximately **2 tokens/second**. With `max_tokens=2048`,
+a single shadow brief takes 17–60 minutes wall-clock time. The 2048-token budget was set
+for Tier B (GPU) inference. For Tier A (CPU) primary mode, consider reducing `max_tokens`
+to 512–768 for shadow briefs to bring per-brief latency under 10 minutes, at the cost of
+shorter diffs in OLMo's output. This is a separate configuration decision.
