@@ -10,6 +10,8 @@ pub struct PendingRequest {
     pub username: String,
     pub tenant: String,
     pub created_at: String,
+    // Absent until the pairing API returns the field; None means "not yet provided by server".
+    pub fingerprint: Option<String>,
 }
 
 #[derive(Deserialize)]
