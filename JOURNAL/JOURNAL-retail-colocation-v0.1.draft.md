@@ -151,6 +151,8 @@ This research was conducted within the geographic analysis function of Woodfine 
 
 The paper is explicitly a research framework. The empirical results presented are descriptive. Causal identification requires the O-D regression tests defined in §7, which depend on data currently being acquired.
 
+Companion papers examine two additional archetypes identified through the same spatial pipeline: Urban Fringe locations characterised by hardware and trades-supply co-location without grocery anchors in the peri-urban metropolitan ring [J7, in preparation], and Commuter locations characterised by car-rental and transit-adjacent commercial clustering near intercity rail stations and regional airports [J8, in preparation].
+
 ### 1.3 Structure
 
 Section 2 reviews the relevant literature and identifies the gap. Section 3 formalises the geometric co-location model. Section 4 describes the data and analytical framework. Section 5 presents current descriptive results. Section 6 discusses the relationship between compositional and demand-driven commercial activity signals and states the formal hypothesis. Section 7 defines the falsification programme. Section 8 concludes.

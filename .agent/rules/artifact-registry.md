@@ -33,6 +33,8 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 | J4 | `JOURNAL-private-network-v0.4.draft.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | v0.4 synced to JOURNAL/; dispatched to project-editorial 2026-05-31 |
 | J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | MLSys (ACM, 22% AR) | Mathew Woodfine | stub |
 | J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared |
+| J7 | `JOURNAL-urban-fringe-v0.1.stub.md` | Industrial Co-location in the Metropolitan Ring: Spatial Signatures of the Urban Fringe Archetype | Regional Science and Urban Economics (Elsevier, IF 2.9, Q1) | Jennifer M. Woodfine | stub — 2026-06-01 |
+| J8 | `JOURNAL-commuter-v0.1.stub.md` | The Commuter Archetype: Car-Rental Clustering as a Proxy for Transit-Adjacent Commercial Co-location | Journal of Transport Geography (Elsevier, IF 6.88, Q1) | Peter M. Woodfine | stub — 2026-06-01 |
 
 ### Pre-submission blockers by paper
 
@@ -82,6 +84,33 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 - ORCID IDs for all three authors
 
 **J5:** HOLD until J2 submitted
+
+**J7 — Urban Fringe pre-submission blockers:**
+- Full chain ingestion (MRO, flooring, tool-rental, lumber YAMLs) — pending Overpass ingest
+- Full literature review (§2) — stub only
+- Validation section (§4.4) — stub only
+- OLS regression (§5.3 / §7.1) — executable once full dataset available
+- ORCID IDs for all three authors
+
+**J8 — Commuter pre-submission blockers:**
+- Literature review (§2) — stub only
+- Validation (§4.4) — stub only
+- Integration rate regression (§5.3 / §7.2) — requires rail-frequency external data
+- ORCID IDs for all three authors
+
+---
+
+## S — Practitioner Summaries (CBRE/JLL white paper format)
+
+Self-contained market briefs. Audience: commercial real estate investors, developers, planners. No academic citations. Published to `gis.woodfinegroup.com/research/` alongside companion JOURNAL papers.
+
+| ID | File | Title | Companion | Status |
+|---|---|---|---|---|
+| S1 | `SUMMARY/SUMMARY-urban-fringe.draft.md` | Urban Fringe: The Industrial Co-location Layer in the Metropolitan Ring | J7 | stub — 2026-06-01 |
+| S2 | `SUMMARY/SUMMARY-commuter.draft.md` | Commuter: Transit-Adjacent Commercial Co-location at Regional Rail Stations and Airports | J8 | stub — 2026-06-01 |
+
+**S1 pre-completion requirements:** Full chain ingestion → updated §2 country table; §5 integration analysis; §6 investment thesis
+**S2 pre-completion requirements:** §5 integration rate analysis written; §6 investment thesis; map figures from work/archetype-pks.geojson
 
 ---
 
