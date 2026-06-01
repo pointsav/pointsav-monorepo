@@ -81,6 +81,10 @@ async fn main() {
     if !proforma_dir.exists() {
         std::fs::create_dir_all(&proforma_dir).expect("failed to create proforma/ dir");
     }
+    let bim_dir = workspace_path.join("bim");
+    if !bim_dir.exists() {
+        std::fs::create_dir_all(&bim_dir).expect("failed to create bim/ dir");
+    }
 
     let tokens_path = std::env::var("DESIGN_TOKENS_PATH").unwrap_or_else(|_| {
         "/srv/foundry/vendor/pointsav-design-system/tokens/dtcg-bundle.json".to_string()
@@ -217,6 +221,9 @@ async fn main() {
         .route("/api/files/create", post(create_file))
         .route("/api/proforma/files", get(list_proforma_files))
         .route("/api/proforma/create", post(create_proforma_file))
+        .route("/bim", get(serve_bim))
+        .route("/api/bim/files", get(list_bim_files))
+        .route("/api/bim/create", post(create_bim_file))
         .route("/api/tokens", get(get_tokens))
         .route("/api/files/events", get(get_file_events))
         .route("/workbench/", get(|| async { Redirect::permanent("/workbench") }))
@@ -460,6 +467,74 @@ async fn create_proforma_file(
                 "cells": {}
             });
             match std::fs::write(&abs, skeleton.to_string()) {
+                Ok(_) => {
+                    let _ = state.events_tx.send("changed".to_string());
+                    (StatusCode::CREATED, Json(CreateResponse { path: rel_path }))
+                        .into_response()
+                }
+                Err(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+            }
+        }
+        Err(_) => StatusCode::BAD_REQUEST.into_response(),
+    }
+}
+
+async fn serve_bim() -> impl IntoResponse {
+    serve_asset("bim.html", "text/html")
+}
+
+async fn list_bim_files(State(state): State<AppState>) -> impl IntoResponse {
+    let bim_dir = state.workspace_dir.join("bim");
+    let mut entries: Vec<FileEntry> = Vec::new();
+    if let Ok(rd) = std::fs::read_dir(&bim_dir) {
+        for entry in rd.flatten() {
+            let path = entry.path();
+            if path.to_str().map(|s| s.ends_with(".bim.json")).unwrap_or(false) {
+                if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                    entries.push(FileEntry {
+                        name: name.to_string(),
+                        path: format!("bim/{name}"),
+                    });
+                }
+            }
+        }
+    }
+    entries.sort_by(|a, b| a.name.cmp(&b.name));
+    Json(entries)
+}
+
+async fn create_bim_file(
+    State(state): State<AppState>,
+    Json(body): Json<CreateBody>,
+) -> impl IntoResponse {
+    let safe_name = sanitize_filename(&body.name);
+    let filename = if safe_name.ends_with(".bim.json") {
+        safe_name
+    } else {
+        format!("{safe_name}.bim.json")
+    };
+    let rel_path = format!("bim/{filename}");
+    match resolve_workspace_path(&state.workspace_dir, &rel_path) {
+        Ok(abs) => {
+            let skeleton = json!({
+                "$schema": "bim-workspace-v1.0",
+                "project": {
+                    "title":    { "$value": body.name, "$type": "string" },
+                    "ifc-file": { "$value": "", "$type": "file-reference",
+                                  "$description": "path to .ifc file relative to workspace root" }
+                },
+                "element-styles": {
+                    "IfcWall":   { "color": { "$value": "#c8c8c8", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } },
+                    "IfcDoor":   { "color": { "$value": "#8b6914", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } },
+                    "IfcWindow": { "color": { "$value": "#88c8e8", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } },
+                    "IfcSlab":   { "color": { "$value": "#a0a0a0", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } },
+                    "IfcColumn": { "color": { "$value": "#b0b0b0", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } },
+                    "IfcBeam":   { "color": { "$value": "#909090", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } },
+                    "IfcStair":  { "color": { "$value": "#d4c08c", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } },
+                    "IfcRoof":   { "color": { "$value": "#8c6060", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } }
+                }
+            });
+            match std::fs::write(&abs, serde_json::to_string_pretty(&skeleton).unwrap_or_default()) {
                 Ok(_) => {
                     let _ = state.events_tx.send("changed".to_string());
                     (StatusCode::CREATED, Json(CreateResponse { path: rel_path }))
