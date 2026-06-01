@@ -65,7 +65,13 @@ Last updated: 2026-06-01
 - [ ] **Legal tokens** — routing message sent (msg-id: project-editorial-20260531-legal-tokens-route); Command must commit legal-tokens-pointsav.yaml + legal-tokens-woodfine.yaml to factory-release-engineering/tokens/ via admin-tier. [2026-05-31 totebox@project-editorial]
 - [x] **from-project-system READMEs** — CLOSED 2026-06-01: canonical already at v1.0.0 (62 tests); drafts were v0.2.0 (51 tests, refined 2026-05-22); all 6 draft files archived; routing request withdrawn. [2026-06-01 totebox@project-editorial]
 - [x] **GUIDE v0.2 local-circuit-tier-a-only** — PLACED 2026-06-01: `cluster-intelligence/guide-local-circuit-tier-a-only.md` WFD commit `35a2341` pushed to GitHub per Command ack. [2026-06-01 totebox@project-editorial]
-- [ ] **Directive §D (knowledge-platform doc alignment)** — linking model / zero-dead-links / content-contract.md + naming-convention.md updates deferred; needs operator input on slug migration strategy (run `topic-` prefix migration in one pass or stage separately?). [2026-06-01 totebox@project-editorial]
+- [x] **Directive §D/§E/§F (knowledge-platform doc alignment)** — FULLY ACTIONED 2026-06-01:
+  - §D governance docs committed (naming-convention.md + content-contract.md + leapfrog mobile-first + contribute slug discipline) — `de4e611` (Jennifer)
+  - §D alias pass: 30 files in media-knowledge-corporate — `ac7cccb` (Jennifer); 86 files in media-knowledge-projects — `476ebb2` (Peter)
+  - §E mobile-first: 8 design-system files — `42e7f57` (Peter)
+  - §F combined GUIDE staged to drafts-outbound; routing message sent (msg-id: project-editorial-20260601-guide-knowledge-wiki-deployment-route)
+  [2026-06-01 totebox@project-editorial]
+- [ ] **§F GUIDE routing** — guide-knowledge-wiki-deployment.draft.md staged; Command must place in `woodfine-fleet-deployment/gateway-knowledge-documentation-1/`. [2026-06-01 totebox@project-editorial]
 
 ---
 
