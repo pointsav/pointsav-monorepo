@@ -2082,8 +2082,10 @@ to: command@claude-code
 re: Phase 5 complete — Stage 6 + infrastructure needed for distribution
 created: 2026-05-21T00:00:00Z
 priority: high
-status: pending
-
+status: stale
+staled: 2026-06-01T20:05:00Z
+staled_by: command@claude-code
+stale_note: Misrouted project-console Phase 5 broadcast; Stage 6 done in Session 22; data copy is contamination
 Phases 1–5 of leapfrog-2030-coding.md are complete. 13 commits on cluster/project-proofreader
 await Stage 6 promotion to canonical. Please action:
 
