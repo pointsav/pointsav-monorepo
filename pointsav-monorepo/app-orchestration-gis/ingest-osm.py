@@ -49,6 +49,7 @@ COUNTRY_BBOX = {
     "DK":      (54.5,    7.5,   58.0,   15.5),
     "FI":      (59.5,   19.5,   70.5,   31.5),
     "Nordics": (54.5,  -25.0,   71.5,   31.5),
+    "EU":      (35.0,  -10.0,   71.5,   31.5),  # all display EU countries — multi-country chain sweep
     "FR":      (41.0,   -5.5,   51.5,   10.0),
     "DE":      (47.0,    6.0,   55.5,   15.5),
     "GB":      (49.5,   -8.5,   61.5,    2.0),
@@ -307,9 +308,12 @@ def ingest_chain(chain_id: str) -> int:
         return 0
 
     country_code = chain.get("country_code") or chain.get("country", "")
-    bbox = COUNTRY_BBOX.get(country_code) or COUNTRY_BBOX.get(country_code.title())
+    # query_bbox override: multi-country chains keep country_code for record tagging
+    # but sweep a wider region (e.g. "EU") in a single Overpass query.
+    bbox_key = chain.get("query_bbox") or country_code
+    bbox = COUNTRY_BBOX.get(bbox_key) or COUNTRY_BBOX.get(bbox_key.title())
     if bbox is None:
-        print(f"  No bbox for country_code '{country_code}' — skip")
+        print(f"  No bbox for '{bbox_key}' — skip")
         return 0
 
     elements = []
