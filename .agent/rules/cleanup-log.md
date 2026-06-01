@@ -88,16 +88,25 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
-## 2026-06-01 — Startup contamination cleanup
+## 2026-06-01 — Contaminated session entries removed
 
-- **Removed 9 contaminated session entries** from this file. All 9 described work in
-  project-system, project-knowledge, or project-gis archives; none described work performed
-  in project-console sessions. Arrived via bulk `.agent/` copy during a prior multi-archive
-  provisioning pass (flagged by Command, msg-id: command-20260601-cleanup-log-review-project-console;
-  contamination also noted in outbox msg project-console-20260601-needs-completed §5).
-- **Config sections retained** — active renames, deprecations, intentional exceptions, open
-  questions, and completed migrations are monorepo-wide and correctly belong here.
-- **cleanup-log-archive.md** also contains contaminated session entries from other archives;
-  left for a future Command Session sweep.
+All prior session entries in this file were copy-pasted from other archives during a past
+`.agent/` bulk-copy. None described work performed in this archive's sessions. Entries removed:
 
-> **Archived entries:** session logs before this point are in `cleanup-log-archive.md`.
+- 2026-05-30 — P0 subnet fixes (project-system: system-udp, app-network-admin, system-gateway-mba, system-core, system-ledger, moonshot-toolkit)
+- 2026-05-29 — app-mediakit-knowledge reindex_topic spawn_blocking fix (project-knowledge)
+- 2026-05-29 — app-mediakit-knowledge Phase 8 + content-wiki-documentation (project-knowledge)
+- 2026-05-28 — app-mediakit-knowledge Phase 6A+6B+6C (project-knowledge)
+- 2026-05-27 — GIS map UI fixes + AEC Night 3 (project-gis; commit 16d3d975 not in this archive)
+- 2026-05-27 — Phase 1C.a moonshot-toolkit + seL4 kernel (project-system)
+- 2026-05-27 — v1.0.0 version bumps + PhD thesis BRIEF (project-system)
+- 2026-05-21 — Groups 6+7 Stage-6 prep + WFD housekeeping (project-system)
+- 2026-05-20 — Group 2 mechanical hygiene (project-system)
+
+Action: command-20260601-cleanup-log-review-project-data (HIGH inbox item, actioned this session).
+
+Actual session history for this archive begins below. Future session entries should describe
+work committed to THIS archive's git branch only.
+
+---
+
