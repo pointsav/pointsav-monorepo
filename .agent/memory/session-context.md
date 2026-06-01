@@ -19,6 +19,7 @@
 
 **Pending / carry-forward:**
 - Re-run `ingest-osm-airports.py --countries US` to fill tile gaps (a few US tiles failed under throttle; US got 1,714 airports — solid but incomplete).
+- **Railway drift + PKS re-run:** deployed `archetype-pks.geojson` was built from 18,107 rail stations; a duplicate detached ingest run finished afterward and settled the file at **18,116** (+9 stations, last-writer-wins, no corruption). Trivial drift — re-run `test-cluster-archetypes.py` next session (or let nightly-rebuild.sh do it) to resync the deployed PKS GeoJSON to 18,116.
 - **Stage 6 pending**: code commits (taxonomy/build-clusters/ingest scripts/test/nightly) need `bin/promote.sh` from Command.
 - Chain YAMLs + JSONL live in deployment (cluster-totebox-personnel-1), local-only — not committed (per architecture).
 
