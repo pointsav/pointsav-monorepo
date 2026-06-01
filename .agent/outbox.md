@@ -10,6 +10,32 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: §F GUIDE — guide-knowledge-wiki-deployment staged for WFD placement
+created: 2026-06-01T20:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260601-guide-knowledge-wiki-deployment-route
+---
+
+GUIDE `guide-knowledge-wiki-deployment.draft.md` staged at:
+  `.agent/drafts-outbound/guide-knowledge-wiki-deployment.draft.md`
+
+**Content:** Font loading (Inter + Source Serif 4 self-hosting), knowledge.toml mounts
+(planned/intended, Phase 6), mobile-first notes. Bloomberg pass applied. ~120 lines.
+
+**Routing:**
+- Target repo: woodfine-fleet-deployment
+- Suggested target path: `gateway-knowledge-documentation-1/guide-knowledge-wiki-deployment.md`
+- New file — no supersession
+
+BCSC posture: font loading is current fact; §2 content-mounts section is explicitly
+marked planned/intended throughout.
+
+— totebox@project-editorial, 2026-06-01
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: compound-reply followup — §§2-3 confirmed present; HIGH-priority queue re-stated
 created: 2026-06-01T17:30:00Z
 priority: high
