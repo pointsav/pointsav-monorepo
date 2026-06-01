@@ -7,6 +7,7 @@ use graph::{GraphEntity, GraphStore, LbugGraphStore};
 use notify::{Event, RecursiveMode, Result as NotifyResult, Watcher};
 use serde_json::Value;
 use std::fs;
+use std::io::{BufRead, Write};
 use std::path::Path;
 use std::sync::mpsc::RecvTimeoutError;
 use std::sync::Arc;
@@ -189,7 +190,14 @@ fn main() -> NotifyResult<()> {
     //   whole backlog during a GPU stockout). A single recovery probe per tick drains
     //   this list back into deferred_ledgers once Tier B is reachable again, so the
     //   backlog resumes WITHOUT a service restart. (Preemption-safe: nothing skipped.)
-    let mut processed_ledgers: Vec<String> = Vec::new();
+    let processed_ledgers_path = Path::new(&graph_dir).join("processed_ledgers.jsonl");
+    let mut processed_ledgers = load_processed_ledgers(&processed_ledgers_path);
+    if !processed_ledgers.is_empty() {
+        println!(
+            "[SYSTEM] Loaded {} previously-processed CORPUS entries from ledger — skipping on drain.",
+            processed_ledgers.len()
+        );
+    }
     let mut deferred_ledgers: Vec<String> = Vec::new();
     let mut circuit_deferred_ledgers: Vec<String> = Vec::new();
 
@@ -199,6 +207,9 @@ fn main() -> NotifyResult<()> {
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 let filename = path.file_name().unwrap().to_str().unwrap().to_string();
                 if filename.starts_with("CORPUS_") {
+                    if processed_ledgers.contains(&filename) {
+                        continue;
+                    }
                     match process_corpus(
                         &path,
                         &crm_dir,
@@ -209,6 +220,7 @@ fn main() -> NotifyResult<()> {
                         &mut last_tier_a_attempt,
                     ) {
                         ExtractResult::Success | ExtractResult::Failed => {
+                            append_processed_ledger(&processed_ledgers_path, &filename);
                             processed_ledgers.push(filename);
                         }
                         ExtractResult::DeferCircuitOpen => {
@@ -260,6 +272,7 @@ fn main() -> NotifyResult<()> {
                                 ) {
                                     ExtractResult::Success | ExtractResult::Failed => {
                                         deferred_ledgers.retain(|f| f != &filename);
+                                        append_processed_ledger(&processed_ledgers_path, &filename);
                                         processed_ledgers.push(filename);
                                     }
                                     ExtractResult::DeferCircuitOpen => {
@@ -297,6 +310,7 @@ fn main() -> NotifyResult<()> {
                         &mut last_tier_a_attempt,
                     ) {
                         ExtractResult::Success | ExtractResult::Failed => {
+                            append_processed_ledger(&processed_ledgers_path, &filename);
                             processed_ledgers.push(filename);
                         }
                         ExtractResult::DeferCircuitOpen => {
@@ -339,7 +353,10 @@ fn main() -> NotifyResult<()> {
                             // result, then resume the dormant backlog.
                             match outcome {
                                 ExtractResult::DeferTransient => deferred_ledgers.push(probe),
-                                _ => processed_ledgers.push(probe),
+                                _ => {
+                                    append_processed_ledger(&processed_ledgers_path, &probe);
+                                    processed_ledgers.push(probe);
+                                }
                             }
                             if !circuit_deferred_ledgers.is_empty() {
                                 println!(
@@ -357,6 +374,24 @@ fn main() -> NotifyResult<()> {
     }
 
     Ok(())
+}
+
+fn load_processed_ledgers(path: &Path) -> Vec<String> {
+    let Ok(file) = fs::File::open(path) else {
+        return Vec::new();
+    };
+    std::io::BufReader::new(file)
+        .lines()
+        .filter_map(|l| l.ok())
+        .map(|l| l.trim().to_string())
+        .filter(|l| !l.is_empty())
+        .collect()
+}
+
+fn append_processed_ledger(path: &Path, filename: &str) {
+    if let Ok(mut f) = fs::OpenOptions::new().create(true).append(true).open(path) {
+        let _ = writeln!(f, "{}", filename);
+    }
 }
 
 fn process_corpus(
