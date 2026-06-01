@@ -383,6 +383,28 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 - **Source:** project-orgcharts (msg-id: project-orgcharts-20260530-editorial-dispatch-bencal); authored 2026-05-29
 - **Content:** 27-firm naming benchmark; 4 naming deliverables (parent co, operating manager, SPV/club deal, EMD); entity code convention; recommended corporate stack
 
+### A28 — TOPIC: SLM tiered substrate (bilingual) [project-intelligence dispatch]
+- **File:** `media-knowledge-documentation/substrate/slm-tiered-substrate.md` + `.es.md`
+- **Status:** COMMITTED — `473716c` (2026-06-01) — `media-knowledge-documentation/substrate/`
+- **Source:** project-intelligence `TOPIC-slm-tiered-substrate.draft.md` (2026-06-01)
+- **Content:** Local-first AI routing architecture; three-tier inference (Tier A/B/C); structured-data boundary (SYS-ADR-07); grammar constraints; interrupted-burst recovery (preemption-safe watcher); Bloomberg pass applied; "sovereign deployment" → "customer-controlled deployment"
+
+### A29 — GUIDE: Local inference circuit without Tier B v0.2 [project-intelligence dispatch]
+- **File:** `.agent/drafts-outbound/GUIDE-guide-local-circuit-tier-a-only.v0.2.draft.md`
+- **Status:** STAGED (2026-06-01) — Bloomberg pass complete; pending Command routing to `woodfine-fleet-deployment/cluster-intelligence/guide-local-circuit-tier-a-only.md` (msg-id: project-editorial-20260601-guide-local-circuit-v02-route); supersedes v1 at WFD commit `7e77081`
+- **Source:** project-intelligence v0.2 (2026-06-01, preemption-safe watcher update)
+- **Content:** 310-line operational guide; Steps 1–7 + verification checklist + When Tier B returns; target_path corrected to cluster-intelligence/
+
+### A30 — DIRECTIVE: Knowledge-platform doc alignment [project-knowledge forward]
+- **Source:** project-knowledge outbox (msg-id: project-knowledge-20260601-doc-alignment-directive); forwarded via Command
+- **Status:** PARTIALLY ACTIONED (2026-06-01):
+  - §A typography fix — COMPLETE (commits `1bf7129`, Peter): 8 files in design-system/ updated; IBM Plex → Inter + Source Serif 4; measure 65ch → 68ch
+  - §B engine TOPIC — COMPLETE (commit `7c9194a`, Peter): `applications/app-mediakit-knowledge.md` + `.es.md` federation section added
+  - §C new pattern — COMPLETE (commit `7c9194a`, Peter): `patterns/federation-via-content-mounts.md` + `.es.md` created
+  - §D linking model / zero-dead-links — DEFERRED: needs operator input on slug migration strategy (open question in directive: run `topic-` prefix migration in one pass or stage separately?)
+  - §E design-system mobile-first — DEFERRED: separate session scope
+  - §F GUIDE fleet-deployment fonts/mounts — DEFERRED: WFD scope, Command placement
+
 ---
 
 ## B — Backlog (queued for future sessions)

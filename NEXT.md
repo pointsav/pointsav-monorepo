@@ -3,7 +3,7 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Architecture: VM-* naming mirrors the os-* product lineup exactly. See `BRIEF-VM-ARCHITECTURE.md`.
 
-Last updated: 2026-05-31
+Last updated: 2026-06-01
 
 ---
 
@@ -64,6 +64,19 @@ Last updated: 2026-05-31
 - [ ] **A4 text-gis-data-methodology-dialog** — routing message sent (msg-id: project-editorial-20260531-text-dialog-route); Command must place in gateway-orchestration-gis static web copy. [2026-05-31 totebox@project-editorial]
 - [ ] **Legal tokens** — routing message sent (msg-id: project-editorial-20260531-legal-tokens-route); Command must commit legal-tokens-pointsav.yaml + legal-tokens-woodfine.yaml to factory-release-engineering/tokens/ via admin-tier. [2026-05-31 totebox@project-editorial]
 - [x] **from-project-system READMEs** — CLOSED 2026-06-01: canonical already at v1.0.0 (62 tests); drafts were v0.2.0 (51 tests, refined 2026-05-22); all 6 draft files archived; routing request withdrawn. [2026-06-01 totebox@project-editorial]
+- [ ] **GUIDE v0.2 local-circuit-tier-a-only** — routing message sent (msg-id: project-editorial-20260601-guide-local-circuit-v02-route); Command must place in `woodfine-fleet-deployment/cluster-intelligence/` superseding v1 at `7e77081`. [2026-06-01 totebox@project-editorial]
+- [ ] **Directive §D (knowledge-platform doc alignment)** — linking model / zero-dead-links / content-contract.md + naming-convention.md updates deferred; needs operator input on slug migration strategy (run `topic-` prefix migration in one pass or stage separately?). [2026-06-01 totebox@project-editorial]
+
+---
+
+## Completed this session (2026-06-01 — open inbox + directive §A/§B/§C)
+
+- [x] Compound reply flag (command-20260601-editorial-compound-reply-incomplete): §§2-3 confirmed present; follow-up sent to Command re-stating HIGH-priority items. [Jennifer]
+- [x] Knowledge-platform directive §A typography fix: 8 files in design-system/ updated; IBM Plex → Inter + Source Serif 4; measure 65→68ch — commit `1bf7129` (Peter)
+- [x] Knowledge-platform directive §B engine TOPIC: app-mediakit-knowledge.md + .es.md federation section added — commit `7c9194a` (Peter)
+- [x] Knowledge-platform directive §C new pattern: patterns/federation-via-content-mounts.md + .es.md created — commit `7c9194a` (Peter)
+- [x] TOPIC-slm-tiered-substrate: Bloomberg pass + ES sibling authored + committed to media-knowledge-documentation/substrate/ — commit `473716c` (Jennifer)
+- [x] GUIDE v0.2 local-circuit-tier-a-only: Bloomberg pass complete; staged to drafts-outbound; routing message sent to Command. [Peter]
 
 ---
 
