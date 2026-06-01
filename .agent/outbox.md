@@ -329,7 +329,10 @@ to: command@claude-code
 re: Group 3 guides — Batch A — route to woodfine-fleet-deployment/cluster-totebox-intelligence/
 created: 2026-05-31T12:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T20:10:00Z
+actioned_by: command@claude-code
+actioned_note: both guides in canonical WFD cluster-intelligence/ (anthropic-shim + local-circuit v0.2)
 msg-id: project-editorial-20260531-guides-intelligence-batch-a
 ---
 
@@ -355,7 +358,10 @@ to: command@claude-code
 re: Group 3 guides — Batch B — route to woodfine-fleet-deployment/cluster-totebox-property/
 created: 2026-05-31T12:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T20:10:00Z
+actioned_by: command@claude-code
+actioned_note: guide-bim-archive-operations.md in canonical WFD cluster-totebox-property/
 msg-id: project-editorial-20260531-guides-bim-property
 ---
 
@@ -377,7 +383,10 @@ to: command@claude-code
 re: Group 3 guides — Batch C — route to woodfine-fleet-deployment/gateway-orchestration-bim/
 created: 2026-05-31T12:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T20:10:00Z
+actioned_by: command@claude-code
+actioned_note: all 4 guides in canonical WFD gateway-orchestration-bim/
 msg-id: project-editorial-20260531-guides-bim-orchestration-batch-c
 ---
 
@@ -407,7 +416,10 @@ to: command@claude-code
 re: Group 3 guides — Batch D — route to woodfine-fleet-deployment/node-console-operator/
 created: 2026-05-31T12:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T20:10:00Z
+actioned_by: command@claude-code
+actioned_note: both guides in canonical WFD node-console-operator/
 msg-id: project-editorial-20260531-guides-console-operator
 ---
 
@@ -461,7 +473,8 @@ to: command@claude-code
 re: Group 4 — LICENSE artifacts — route to woodfine-fleet-deployment/gateway-orchestration-gis/
 created: 2026-05-31T12:00:00Z
 priority: normal
-status: pending
+status: operator-pending
+operator_note: LICENSE artifacts require admin-tier commit to factory-release-engineering; operator decision
 msg-id: project-editorial-20260531-license-gis-route
 ---
 
@@ -609,7 +622,10 @@ to: command@claude-code
 re: Convention layer additions — JOURNAL programme (4 items)
 created: 2026-05-28T23:30:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T20:10:00Z
+actioned_by: command@claude-code
+actioned_note: journal-artifact-discipline.md in conventions/; JOURNAL in artifact-classification.yaml + artifact-registry.md
 msg-id: project-editorial-20260528-convention-layer-journal
 ---
 
@@ -693,7 +709,10 @@ to: command@claude-code
 re: GUIDE routing — guide-workbench-setup.md → woodfine-fleet-deployment/vault-privategit-source/
 created: 2026-05-28T22:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T20:10:00Z
+actioned_by: command@claude-code
+actioned_note: guide-workbench-setup.md in canonical WFD vault-privategit-source/
 msg-id: project-editorial-20260528-guide-workbench-routing
 ---
 
