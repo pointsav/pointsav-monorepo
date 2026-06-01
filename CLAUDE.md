@@ -1,8 +1,8 @@
 @~/Foundry/AGENT.md
 
-# project-system — Archive Guide
+# project-data — Archive Guide
 
-> **State:** active | **Last updated:** 2026-05-18
+> **State:** active | **Last updated:** 2026-06-01
 > **Cluster manifest:** `.agent/manifest.md`
 > **Workspace AGENT.md takes precedence on conflict.**
 
