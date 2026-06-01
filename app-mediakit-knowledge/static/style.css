@@ -2634,6 +2634,19 @@ html[data-auth="user"] .wiki-fab { display: flex; }
   padding: 0;
 }
 .mobile-nav-drawer[aria-hidden="false"] { display: block; }
+/* TOC drawer — same hidden-by-default overlay as the nav drawer. Without this it
+   had NO display rule and rendered in-flow at the top of every article (and
+   duplicated the desktop "On this page" rail). Opened via the bottom-bar Contents button. */
+.mobile-toc-drawer {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg-elevated);
+  z-index: 200;
+  overflow-y: auto;
+  padding: 0 0 calc(56px + var(--safe-b));
+}
+.mobile-toc-drawer[aria-hidden="false"] { display: block; }
 .mobile-nav-header {
   display: flex;
   align-items: center;
