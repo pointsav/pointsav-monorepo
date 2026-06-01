@@ -476,7 +476,10 @@ to: command@claude-code
 re: Group 3 flag — guide-proofreader-distillation routing ambiguity — Command decision needed
 created: 2026-05-31T12:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T20:40:00Z
+actioned_by: command@claude-code
+actioned_note: GUIDE already at canonical WFD cluster-intelligence/guide-proofreader-distillation.md (correct per CLAUDE.md §14 — operational runbook → WFD); flag resolved
 msg-id: project-editorial-20260531-guides-proofreader-routing-flag
 ---
 
@@ -623,7 +626,10 @@ to: command@claude-code
 re: ORCID IDs — low priority; no JOURNAL is submission-ready
 created: 2026-05-30T15:45:00Z
 priority: low
-status: pending
+status: actioned
+actioned: 2026-06-01T20:40:00Z
+actioned_by: command@claude-code
+actioned_note: informational; ORCID remains operator action at submission time (tracked in NEXT.md)
 msg-id: project-editorial-20260530-orcid-deprioritise
 ---
 
