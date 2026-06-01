@@ -65,6 +65,8 @@ enum Command {
     Keygen,
     /// Generate a fresh BIP-39 mnemonic, write to file, and print the master Polygon wallet address
     GenerateSeed(GenerateSeedArgs),
+    /// Export receipts from local flat files to CSV for bookkeeping
+    Export(ExportArgs),
 }
 
 #[derive(Parser)]
@@ -86,6 +88,13 @@ struct WatchArgs {
     #[arg(long, default_value = "30", help = "Poll interval in seconds")]
     poll_secs: u64,
     #[arg(
+        env = "POLYGON_RPC_FALLBACK_URLS",
+        long,
+        value_delimiter = ',',
+        help = "Comma-separated fallback Polygon JSON-RPC endpoints tried in order on primary failure"
+    )]
+    rpc_fallback_urls: Vec<String>,
+    #[arg(
         env = "FS_ENDPOINT",
         long,
         help = "service-fs WORM ledger endpoint; if set, receipts are POST-ed asynchronously for Rekor anchoring"
@@ -100,6 +109,25 @@ struct GenerateSeedArgs {
         help = "Path to write the generated BIP-39 mnemonic (chmod 0600)"
     )]
     output: PathBuf,
+}
+
+#[derive(Parser)]
+struct ExportArgs {
+    #[arg(long, default_value = "csv", help = "Output format (only csv supported)")]
+    format: String,
+    #[arg(
+        env = "RECEIPTS_DIR",
+        long,
+        default_value = "/var/lib/local-software/receipts",
+        help = "Directory containing receipt JSON files"
+    )]
+    receipts_dir: String,
+    #[arg(long, help = "Earliest date to include, YYYY-MM-DD (inclusive)")]
+    from: Option<String>,
+    #[arg(long, help = "Latest date to include, YYYY-MM-DD (inclusive)")]
+    to: Option<String>,
+    #[arg(long, short = 'o', help = "Output file path (default: stdout)")]
+    output: Option<PathBuf>,
 }
 
 #[derive(Parser)]
@@ -181,6 +209,26 @@ async fn rpc_call(
         anyhow::bail!("RPC error: {err}");
     }
     Ok(json["result"].clone())
+}
+
+async fn try_rpc_with_fallback(
+    client: &reqwest::Client,
+    urls: &[String],
+    method: &str,
+    params: Value,
+) -> Result<Value> {
+    let mut last_err = anyhow::anyhow!("no RPC URLs configured");
+    for url in urls {
+        match rpc_call(client, url, method, params.clone()).await {
+            Ok(v) => return Ok(v),
+            Err(e) => {
+                tracing::warn!(url = %url, method = %method, "RPC call failed, trying fallback: {e}");
+                last_err = e;
+            }
+        }
+    }
+    tracing::error!(method = %method, "all {} RPC endpoints failed", urls.len());
+    Err(last_err)
 }
 
 fn pad_address(addr: &str) -> String {
@@ -309,9 +357,12 @@ async fn watch(args: WatchArgs) -> Result<()> {
 
     let client = reqwest::Client::new();
     let wallet_padded = pad_address(&args.wallet_address);
+    let all_rpcs: Vec<String> = std::iter::once(args.rpc_url.clone())
+        .chain(args.rpc_fallback_urls.iter().cloned())
+        .collect();
 
     // Fetch current block to start from
-    let head_hex = rpc_call(&client, &args.rpc_url, "eth_blockNumber", json!([])).await?;
+    let head_hex = try_rpc_with_fallback(&client, &all_rpcs, "eth_blockNumber", json!([])).await?;
     let head_str = head_hex.as_str().unwrap_or("0x0").trim_start_matches("0x");
     let mut last_block = u64::from_str_radix(head_str, 16)
         .unwrap_or(0)
@@ -322,7 +373,7 @@ async fn watch(args: WatchArgs) -> Result<()> {
         tokio::time::sleep(std::time::Duration::from_secs(args.poll_secs)).await;
 
         // Get current block
-        let head_hex = match rpc_call(&client, &args.rpc_url, "eth_blockNumber", json!([])).await {
+        let head_hex = match try_rpc_with_fallback(&client, &all_rpcs, "eth_blockNumber", json!([])).await {
             Ok(v) => v,
             Err(e) => {
                 tracing::warn!("eth_blockNumber failed: {e}");
@@ -342,9 +393,9 @@ async fn watch(args: WatchArgs) -> Result<()> {
         let from_block = format!("0x{:x}", last_block + 1);
         let to_block = format!("0x{:x}", current_block.saturating_sub(1)); // 1 confirmation
 
-        let logs = match rpc_call(
+        let logs = match try_rpc_with_fallback(
             &client,
-            &args.rpc_url,
+            &all_rpcs,
             "eth_getLogs",
             json!([{
                 "address": USDC_CONTRACT,
@@ -677,6 +728,106 @@ fn assign_order_index(index_path: &str, order_id: &str) -> Result<u32> {
     Ok(assigned)
 }
 
+// ── export ────────────────────────────────────────────────────────────────────
+
+fn run_export(args: ExportArgs) -> Result<()> {
+    if args.format != "csv" {
+        anyhow::bail!(
+            "unsupported format '{}'; only 'csv' is supported",
+            args.format
+        );
+    }
+
+    let receipts_dir = PathBuf::from(&args.receipts_dir);
+    if !receipts_dir.exists() {
+        anyhow::bail!(
+            "receipts directory does not exist: {}",
+            receipts_dir.display()
+        );
+    }
+
+    let mut receipts: Vec<LicenseReceipt> = Vec::new();
+
+    for year_entry in fs::read_dir(&receipts_dir).context("reading receipts dir")? {
+        let year_entry = year_entry?;
+        if !year_entry.file_type()?.is_dir() {
+            continue;
+        }
+        for month_entry in fs::read_dir(year_entry.path()).context("reading month dir")? {
+            let month_entry = month_entry?;
+            if !month_entry.file_type()?.is_dir() {
+                continue;
+            }
+            for file_entry in fs::read_dir(month_entry.path()).context("reading receipt files")? {
+                let file_entry = file_entry?;
+                let path = file_entry.path();
+                if path.extension().and_then(|e| e.to_str()) != Some("json") {
+                    continue;
+                }
+                let content = fs::read_to_string(&path)
+                    .with_context(|| format!("reading {}", path.display()))?;
+                match serde_json::from_str::<LicenseReceipt>(&content) {
+                    Ok(r) => receipts.push(r),
+                    Err(e) => {
+                        eprintln!(
+                            "warning: skipping unparseable receipt {}: {e}",
+                            path.display()
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    // Date filters — compare against confirmed_at (RFC 3339); from uses full string,
+    // to uses YYYY-MM-DD prefix of confirmed_at
+    if let Some(ref from) = args.from {
+        receipts.retain(|r| r.confirmed_at.as_str() >= from.as_str());
+    }
+    if let Some(ref to) = args.to {
+        let to_str = to.as_str();
+        receipts.retain(|r| r.confirmed_at.get(..10).unwrap_or("") <= to_str);
+    }
+
+    receipts.sort_by(|a, b| a.confirmed_at.cmp(&b.confirmed_at));
+
+    let header =
+        "tx_hash,product_id,license_tier,price_usdc_units,price_usdc_display,block_number,confirmed_at,chain,customer_ref\n";
+    let mut out = String::with_capacity(header.len() + receipts.len() * 128);
+    out.push_str(header);
+
+    for r in &receipts {
+        let price_display = format!("{:.6}", r.price_usdc as f64 / 1_000_000.0);
+        out.push_str(&format!(
+            "{},{},{},{},{},{},{},{},{}\n",
+            r.tx_hash,
+            r.product_id,
+            r.license_tier,
+            r.price_usdc,
+            price_display,
+            r.block_number,
+            r.confirmed_at,
+            r.chain,
+            r.customer_ref,
+        ));
+    }
+
+    match args.output {
+        Some(ref path) => {
+            fs::write(path, &out)
+                .with_context(|| format!("writing CSV to {}", path.display()))?;
+            eprintln!("wrote {} receipts to {}", receipts.len(), path.display());
+        }
+        None => {
+            std::io::stdout()
+                .write_all(out.as_bytes())
+                .context("writing CSV to stdout")?;
+        }
+    }
+
+    Ok(())
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 #[tokio::main]
@@ -700,5 +851,6 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Command::GenerateSeed(args) => generate_seed(args),
+        Command::Export(args) => run_export(args),
     }
 }
