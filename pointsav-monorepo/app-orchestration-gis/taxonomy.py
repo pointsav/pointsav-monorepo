@@ -52,9 +52,64 @@ CATEGORIES = {
         "naics": "611310",
         "description": "Degree-granting, enrolment-filtered.",
     },
+    # ── VWH archetype enrichment categories (do NOT gate PRO tier) ────────────
+    "auto_parts": {
+        "label": "Automotive Parts & Accessories",
+        "naics": "441310",
+        "description": "Auto-parts retail — VWH archetype signal. Never gates T1/T2/T3 tier.",
+    },
+    "paint": {
+        "label": "Paint / Coatings",
+        "naics": "444120",
+        "description": "Paint-store retail — VWH archetype signal. Never gates T1/T2/T3 tier.",
+    },
+    # ── VWH Tier A enrichment categories ─────────────────────────────────────────
+    "mro_industrial": {
+        "label": "Industrial MRO Supply",
+        "naics": "423840",
+        "description": "MRO distributor (Würth/Fastenal class) — VWH signal. Never gates tier.",
+    },
+    "flooring": {
+        "label": "Flooring & Tile Supply",
+        "naics": "442210",
+        "description": "Contractor flooring warehouse (Floor & Decor class) — VWH signal. Never gates tier.",
+    },
+    "tool_rental": {
+        "label": "Tool & Equipment Rental",
+        "naics": "532412",
+        "description": "Equipment rental branch — VWH signal; deliberate hardware adjacency. Never gates tier.",
+    },
+    "lumber": {
+        "label": "Lumber & Building Materials",
+        "naics": "444190",
+        "description": "Lumber yard or building materials dealer — VWH signal. Never gates tier.",
+    },
+    # ── VWH Tier B enrichment categories ─────────────────────────────────────────
+    "plumbing": {
+        "label": "Plumbing & HVAC Supply",
+        "naics": "423720",
+        "description": "Plumbing/HVAC trade counter — VWH Tier B signal. Never gates tier.",
+    },
+    "electrical": {
+        "label": "Electrical Supply",
+        "naics": "423610",
+        "description": "Electrical trade counter — VWH Tier B signal. Never gates tier.",
+    },
+    "welding": {
+        "label": "Welding & Industrial Gas",
+        "naics": "424690",
+        "description": "Welding supply / industrial gas — VWH Tier B signal. Never gates tier.",
+    },
+    # ── PKS archetype commercial signal ──────────────────────────────────────────
+    "car_rental": {
+        "label": "Car Rental",
+        "naics": "532111",
+        "description": "Car rental branch — PKS defining commercial signal. Never gates tier.",
+    },
 }
 
 # Retail-only set used in tier_of()
+# VWH/PKS enrichment categories are intentionally excluded — they never gate PRO tier logic.
 _RETAIL_CATS = {"hypermarket", "hardware", "price_club", "lifestyle", "sport", "electronics"}
 
 # ── CIVIC SCALE THRESHOLDS ────────────────────────────────────────────────────
@@ -382,6 +437,102 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
     # Civic categories have no BRAND_FILL — detected from OSM civic JSONL
     "medical":   {},
     "education": {},
+
+    # VWH enrichment categories — not gating tier; BRAND_FILL drives ingest-osm.py
+    "auto_parts": {
+        "US": ["autozone-us", "oreilley-auto-us", "napa-us"],
+        "CA": [],        # Canadian Tire already covers auto in CA taxonomy
+        "MX": [],
+        "GB": ["halfords-uk"],
+        "FR": [],        # euromaster-fr pending
+        "DE": [], "ES": [], "IT": [], "GR": [], "PL": [],
+        "AT": [], "NL": [], "PT": [],
+        "SE": [], "DK": [], "NO": [], "FI": [], "IS": [],
+    },
+    "paint": {
+        "US": ["sherwin-williams-us"],
+        "CA": [], "MX": [],
+        "GB": [], "FR": [], "DE": [], "ES": [], "IT": [], "GR": [], "PL": [],
+        "AT": [], "NL": [], "PT": [],
+        "SE": [], "DK": [], "NO": [], "FI": [], "IS": [],
+    },
+    # ── VWH Tier A ────────────────────────────────────────────────────────────────
+    "mro_industrial": {
+        "US": ["fastenal-us", "grainger-us"],
+        "CA": [], "MX": [],
+        "GB": ["wurth-de"],
+        "FR": ["wurth-de"], "DE": ["wurth-de"], "ES": ["wurth-de"],
+        "IT": ["wurth-de"], "GR": [], "PL": ["wurth-de"],
+        "AT": ["wurth-de"], "NL": ["wurth-de"], "PT": [],
+        "SE": ["wurth-de"], "DK": ["wurth-de"], "NO": ["wurth-de"],
+        "FI": ["wurth-de"], "IS": [],
+    },
+    "flooring": {
+        "US": ["floor-decor-us"],
+        "GB": ["topps-tiles-uk"],
+        "CA": [], "MX": [],
+        "FR": [], "DE": [], "ES": [], "IT": [], "GR": [], "PL": [],
+        "AT": [], "NL": [], "PT": [],
+        "SE": [], "DK": [], "NO": [], "FI": [], "IS": [],
+    },
+    "tool_rental": {
+        "US": ["united-rentals-us", "sunbelt-rentals-us"],
+        "CA": ["united-rentals-us"],
+        "MX": [],
+        "GB": ["hss-hire-uk", "speedy-hire-uk"],
+        "FR": ["loxam-fr", "kiloutou-fr"],
+        "DE": [], "ES": [], "IT": [], "GR": [], "PL": [],
+        "AT": [], "NL": ["boels-rental-nl"], "PT": [],
+        "SE": [], "DK": [], "NO": [],
+        "FI": ["ramirent-fi"], "IS": [],
+    },
+    "lumber": {
+        "US": ["84-lumber-us", "builders-firstsource-us"],
+        "CA": ["kent-building-supplies-ca"],
+        "MX": [],
+        "GB": [], "FR": [], "DE": [], "ES": [], "IT": [], "GR": [], "PL": [],
+        "AT": [], "NL": [], "PT": [],
+        "SE": [], "DK": [], "NO": [], "FI": [], "IS": [],
+    },
+    # ── VWH Tier B ────────────────────────────────────────────────────────────────
+    "plumbing": {
+        "US": ["ferguson-us"],
+        "GB": ["wolseley-uk"],
+        "CA": [], "MX": [],
+        "FR": [], "DE": [], "ES": [], "IT": [], "GR": [], "PL": [],
+        "AT": [], "NL": [], "PT": [],
+        "SE": [], "DK": [], "NO": [], "FI": [], "IS": [],
+    },
+    "electrical": {
+        "US": [],
+        "GB": ["cef-uk"],
+        "FR": ["rexel-fr"], "DE": ["rexel-fr"], "ES": ["rexel-fr"],
+        "IT": ["rexel-fr"], "NL": ["rexel-fr"],
+        "CA": [], "MX": [], "GR": [], "PL": [],
+        "AT": [], "PT": [],
+        "SE": [], "DK": [], "NO": [], "FI": [], "IS": [],
+    },
+    "welding": {
+        "GB": ["boc-uk"],
+        "US": [], "CA": [], "MX": [],
+        "FR": [], "DE": [], "ES": [], "IT": [], "GR": [], "PL": [],
+        "AT": [], "NL": [], "PT": [],
+        "SE": [], "DK": [], "NO": [], "FI": [], "IS": [],
+    },
+    # ── PKS commercial signal ─────────────────────────────────────────────────────
+    "car_rental": {
+        "US": ["enterprise-us", "hertz-us", "avis-us"],
+        "CA": ["enterprise-us", "hertz-us", "avis-us"],
+        "MX": [],
+        "GB": ["europcar-fr", "sixt-de"],
+        "FR": ["europcar-fr", "sixt-de"],
+        "DE": ["sixt-de", "europcar-fr"],
+        "ES": ["europcar-fr", "sixt-de"],
+        "IT": ["europcar-fr", "sixt-de"],
+        "GR": [], "PL": [],
+        "AT": ["sixt-de"], "NL": ["europcar-fr", "sixt-de"], "PT": [],
+        "SE": ["sixt-de"], "DK": ["sixt-de"], "NO": [], "FI": [], "IS": [],
+    },
 }
 
 # ── CONTINENT MAPPING ─────────────────────────────────────────────────────────
@@ -507,6 +658,48 @@ DISPLAY_NAMES: dict[str, str] = {
     "xxxlutz-at": "XXXLutz", "xxxlutz-de": "XXXLutz",
     "xxxlutz-se": "XXXLutz", "xxxlutz-fr": "XXXLutz",
     "hoeffner-de": "Höffner",
+    # VWH — auto_parts (Phase 1, 2026-06-01)
+    "autozone-us": "AutoZone",
+    "oreilley-auto-us": "O'Reilly Auto Parts",
+    "napa-us": "NAPA Auto Parts",
+    "halfords-uk": "Halfords",
+    # VWH — paint (Phase 1, 2026-06-01)
+    "sherwin-williams-us": "Sherwin-Williams",
+    # VWH — mro_industrial (Phase 1, 2026-06-01)
+    "wurth-de": "Würth",
+    "fastenal-us": "Fastenal",
+    "grainger-us": "Grainger",
+    "hilti-ch": "Hilti",
+    # VWH — flooring (Phase 1, 2026-06-01)
+    "floor-decor-us": "Floor & Decor",
+    "topps-tiles-uk": "Topps Tiles",
+    # VWH — tool_rental (Phase 1, 2026-06-01)
+    "united-rentals-us": "United Rentals",
+    "sunbelt-rentals-us": "Sunbelt Rentals",
+    "loxam-fr": "Loxam",
+    "kiloutou-fr": "Kiloutou",
+    "hss-hire-uk": "HSS Hire",
+    "speedy-hire-uk": "Speedy Hire",
+    "boels-rental-nl": "Boels Rental",
+    "ramirent-fi": "Ramirent",
+    # VWH — lumber (Phase 1, 2026-06-01)
+    "84-lumber-us": "84 Lumber",
+    "builders-firstsource-us": "Builders FirstSource",
+    "kent-building-supplies-ca": "Kent Building Supplies",
+    # VWH — plumbing (Phase 1, 2026-06-01)
+    "ferguson-us": "Ferguson",
+    "wolseley-uk": "Wolseley",
+    # VWH — electrical (Phase 1, 2026-06-01)
+    "rexel-fr": "Rexel",
+    "cef-uk": "City Electrical Factors",
+    # VWH — welding (Phase 1, 2026-06-01)
+    "boc-uk": "BOC",
+    # PKS — car_rental (Phase 1, 2026-06-01)
+    "enterprise-us": "Enterprise Rent-A-Car",
+    "hertz-us": "Hertz",
+    "avis-us": "Avis",
+    "sixt-de": "Sixt",
+    "europcar-fr": "Europcar",
 }
 
 # ── REVERSE INDEX: chain_id → category ───────────────────────────────────────

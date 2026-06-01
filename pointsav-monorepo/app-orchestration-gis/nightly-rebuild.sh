@@ -93,6 +93,22 @@ META_SIZE=$(du -sh "$META_OUT" | cut -f1)
 echo "  → $TILES_OUT ($TILES_SIZE)  ✓" | tee -a "$LOG"
 echo "  → $META_OUT ($META_SIZE)  ✓" | tee -a "$LOG"
 
+# ── step 3 — Location Intelligence: VWH + PKS archetype candidates ─────────
+# Depends on fresh cluster data (PKS integration scoring uses T1/T2 proximity;
+# VWH enrichment reads the new chain members). ~60s. Non-fatal on error.
+
+echo "" | tee -a "$LOG"
+echo "[3/3] test-cluster-archetypes.py (VWH + PKS)" | tee -a "$LOG"
+if python3 test-cluster-archetypes.py >> "$LOG" 2>&1; then
+    WWW_DATA="/srv/foundry/deployments/gateway-orchestration-gis-1/www/data"
+    cp work/archetype-vwh-candidates.geojson "$WWW_DATA/archetype-vwh.geojson" 2>/dev/null \
+        && echo "  → archetype-vwh.geojson deployed  ✓" | tee -a "$LOG"
+    cp work/archetype-pks-candidates.geojson "$WWW_DATA/archetype-pks.geojson" 2>/dev/null \
+        && echo "  → archetype-pks.geojson deployed  ✓" | tee -a "$LOG"
+else
+    echo "  WARNING: archetype test failed — VWH/PKS overlays not refreshed" | tee -a "$LOG"
+fi
+
 # ── summary ───────────────────────────────────────────────────────────────
 
 echo "" | tee -a "$LOG"
