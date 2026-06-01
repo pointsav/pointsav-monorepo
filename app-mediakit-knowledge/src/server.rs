@@ -1098,10 +1098,12 @@ fn home_chrome(
                 meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover";
                 title { (site_title) }
                 link rel="stylesheet" href="/static/tokens.css";
+                link rel="stylesheet" href="/static/style.css";
                 @if woodfine_theme {
+                    // Brand override loads AFTER style.css so its :root tokens (e.g. --accent)
+                    // win over style.css's defaults — otherwise the per-brand theme is dead.
                     link rel="stylesheet" href="/static/tokens-woodfine.css";
                 }
-                link rel="stylesheet" href="/static/style.css";
                 // Anti-FOUT: apply stored theme before first paint
                 script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'light';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
                 // hreflang + canonical for bilingual home
@@ -2277,10 +2279,12 @@ fn wiki_chrome(
                 meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover";
                 title { (page_title) }
                 link rel="stylesheet" href="/static/tokens.css";
+                link rel="stylesheet" href="/static/style.css";
                 @if woodfine_theme {
+                    // Brand override loads AFTER style.css so its :root tokens (e.g. --accent)
+                    // win over style.css's defaults — otherwise the per-brand theme is dead.
                     link rel="stylesheet" href="/static/tokens-woodfine.css";
                 }
-                link rel="stylesheet" href="/static/style.css";
                 // Anti-FOUT: apply stored theme/width before first paint to
                 // avoid a flash of the default light theme for dark-mode users.
                 script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'light';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
