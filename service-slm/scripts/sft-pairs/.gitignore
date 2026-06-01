@@ -1,0 +1,3 @@
+# Generated SFT training data — not tracked in git
+# Reproduce with: python3 ../extract-sft-pairs.py
+*.jsonl
