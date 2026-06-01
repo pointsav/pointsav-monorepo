@@ -433,10 +433,46 @@ fn normalise_claim_ref(dep: &str, slug: &str) -> String {
 pub(crate) fn parse_wikilinks(body: &str) -> Vec<String> {
     static RE: std::sync::OnceLock<Regex> = std::sync::OnceLock::new();
     let re = RE.get_or_init(|| Regex::new(r"\[\[([^\]|#\[]+)").unwrap());
-    re.captures_iter(body)
+    // Strip code first so `[[wikilink]]` shown as *example syntax* in fenced or
+    // inline code is not treated as a real link (also keeps such examples out of
+    // the live link graph).
+    let cleaned = strip_code_spans(body);
+    re.captures_iter(&cleaned)
         .map(|cap| cap[1].trim().to_lowercase().replace(' ', "-"))
         .filter(|s| !s.is_empty())
         .collect()
+}
+
+/// Remove fenced code blocks (lines toggled by a ``` ``` ``` or `~~~` fence) and
+/// inline code spans (`` `…` ``) from `body`, so wikilink parsing ignores
+/// example syntax. Fence lines and inline-code contents are dropped; everything
+/// else is preserved line-for-line.
+fn strip_code_spans(body: &str) -> String {
+    let mut out = String::with_capacity(body.len());
+    let mut in_fence = false;
+    for line in body.lines() {
+        let trimmed = line.trim_start();
+        if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
+            in_fence = !in_fence;
+            continue; // drop the fence line itself
+        }
+        if in_fence {
+            continue; // drop fenced content
+        }
+        // Drop inline `…` spans on this line.
+        let mut in_code = false;
+        for ch in line.chars() {
+            if ch == '`' {
+                in_code = !in_code;
+                continue;
+            }
+            if !in_code {
+                out.push(ch);
+            }
+        }
+        out.push('\n');
+    }
+    out
 }
 
 #[cfg(test)]
@@ -463,6 +499,20 @@ mod tests {
     fn parse_wikilink_with_anchor() {
         let links = parse_wikilinks("See [[foo-bar#section]].");
         assert_eq!(links, vec!["foo-bar"]);
+    }
+
+    #[test]
+    fn ignores_wikilinks_in_inline_code() {
+        // The `[[example]]` is shown as inline-code syntax; only the real link counts.
+        let links = parse_wikilinks("Write `[[example]]` to link to [[real-page]].");
+        assert_eq!(links, vec!["real-page"]);
+    }
+
+    #[test]
+    fn ignores_wikilinks_in_fenced_code() {
+        let body = "Intro [[real-one]].\n\n```\nuse [[wikilink]] like [[slug]]\n```\n\nOutro [[real-two]].\n";
+        let links = parse_wikilinks(body);
+        assert_eq!(links, vec!["real-one", "real-two"]);
     }
 
     #[test]
