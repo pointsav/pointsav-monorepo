@@ -10,7 +10,7 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
-re: DEPLOY — browser-verified UX batch (Phase 3/2/M1/Cmd+K) + check tooling — promote HEAD 1499e9b4
+re: DEPLOY — browser-verified UX batch (Phase 3/2/M1/Cmd+K/per-brand) + check tooling — promote HEAD c5448dfb
 created: 2026-06-01T23:30:00Z
 priority: high
 status: pending
@@ -26,6 +26,10 @@ The prior batch (cache-busting + Phase 0 federation infra) is already live (depl
 new project-knowledge loop — Playwright in `~/sandbox/wiki-harness/`, screenshots in `shots/`).
 
 Commits (newest first):
+- `c5448dfb` — **Phase 5 per-brand theming fix** — `tokens-woodfine.css` now loads AFTER `style.css`
+  (was before → its `:root` accent override was dead at equal specificity, so all 3 instances looked
+  identical). Woodfine corporate/projects now render their blue accent vs documentation's gold.
+  Browser-verified all three instances, console clean.
 - `1499e9b4` — **Phase 4 Cmd+K command palette** (self-contained overlay; fuzzy `/api/complete`;
   full-screen on mobile, centered on desktop). Verified: opens + renders results + console clean, both viewports.
 - `1ccfa4a3` — **M1 tap-popovers** — glossary/footnote/citation popovers now open on TAP (were
@@ -37,12 +41,13 @@ Commits (newest first):
 - `0580e6d4` — wikilink parser strips code spans (dead-link gate false positives 38→17).
 - `4c8523cf` — **`check` subcommand** (build-time dead-link gate + blueprint validation; CLI tool).
 
-**Action:** `~/Foundry/bin/deploy-binary.sh app-mediakit-knowledge --note "UX batch: Phase 3/2/M1/Cmd+K + check (1499e9b4)"`
+**Action:** `~/Foundry/bin/deploy-binary.sh app-mediakit-knowledge --note "UX batch: Phase 3/2/M1/Cmd+K/per-brand + check (c5448dfb)"`
 (promote first if HEAD isn't on canonical origin/main). Post-deploy: a normal browser refresh shows
 the polished home + clean article shell; tap a glossary term on mobile → popover; Cmd/Ctrl-K → palette.
 
-**Still pending (next session):** Phase 5 per-brand theming (needs corporate/projects instances in the
-browser loop). Editorial content fixes (17 dead links + 6 missing-slug guides) tracked separately below.
+**Still pending (next session):** deeper per-brand differentiation (density / serif-heading "editorial
+gravitas" for corporate/projects beyond the accent — a brand-design decision; the current specs share
+the blue palette). Editorial content fixes (17 dead links + 6 missing-slug guides) tracked separately below.
 
 ---
 from: totebox@project-knowledge
