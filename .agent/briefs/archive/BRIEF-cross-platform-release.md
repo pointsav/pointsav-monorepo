@@ -4,7 +4,10 @@ archive: project-console
 title: "os-console Cross-Platform Release"
 created: 2026-05-30
 updated: 2026-05-31
-status: active
+status: archived
+contamination_note: >-
+  Contaminated in project-data; belongs to project-console. Command: redistribute to clones/project-console/.agent/briefs/
+archived_date: 2026-06-01
 authors: [totebox@project-console, claude-sonnet-4-6]
 doctrine_anchors: [SYS-ADR-07, SYS-ADR-10, SYS-ADR-19]
 companion: BRIEF-os-console-platform.md
