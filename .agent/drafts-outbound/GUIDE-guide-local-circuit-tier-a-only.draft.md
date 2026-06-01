@@ -11,7 +11,7 @@ bilingual_required: false
 author: totebox@project-intelligence (claude-sonnet-4-6)
 created: 2026-05-29
 updated: 2026-06-01
-version: "0.2"
+version: "0.3"
 grounds_in:
   - service-slm/crates/slm-doorman/src/router.rs
   - service-slm/crates/slm-doorman-server/src/http.rs
@@ -20,14 +20,12 @@ grounds_in:
 editorial_notes: >
   Bloomberg standard. No forward-looking language for shipped features.
   v0.2 (2026-06-01): Step 7 + "When Tier B returns" rewritten for the shipped
-  preemption-safe watcher (deployed binary 8b08c01d) — deferred CORPUS files now
-  auto-resume via a recovery probe, no restart. Tier A fallback (Sprint 3B) has
-  SHIPPED (available but disabled by default) — no longer planned/intended. Sprint
-  3A (SLM_TIER_A_FIRST) remains planned — mark as such. Verify step output snippets
-  against live service before publication.
-open_questions:
-  - "Confirm SLM_TIER_A_FIRST env var name matches Sprint 3A implementation before finalising Step 3."
-  - "Verify /readyz JSON field names match Sprint 2B implementation when shipped."
+  preemption-safe watcher (deployed binary 8b08c01d).
+  v0.3 (2026-06-01): SLM_TIER_A_FIRST CONFIRMED SHIPPED (set in live env); drain
+  flow validated end-to-end; processed_ledgers DEPLOYED (43,107 entries skip on restart).
+  Step "When Tier B returns" item 4 updated — SLM_TIER_A_FIRST is now shipped, not planned.
+  Validation note added at end.
+open_questions: []
 ---
 
 # Operating the Local Inference Circuit Without Tier B
@@ -297,8 +295,27 @@ When `start-yoyo.sh` exits 0 and the Doorman closes the circuit:
 2. Service-content's recovery probe detects Tier B is reachable and promotes the entire
    dormant CORPUS backlog back into the active retry queue automatically — no restart needed.
 3. Entity extraction results appear in the graph as the backlog drains.
-4. If `SLM_TIER_A_FIRST=true` (planned Sprint 3A), Tier B will only receive requests
-   with an explicit `tier_hint=yoyo` — remove the flag to return to complexity-based routing.
+4. `SLM_TIER_A_FIRST=true` is set by default in this configuration. Tier B will only
+   receive requests with an explicit `tier_hint=yoyo`. Remove the flag to return to
+   complexity-based routing.
+
+---
+
+---
+
+## Validation record (v0.3, 2026-06-01)
+
+End-to-end flow verified on workspace VM (GCP e2-standard-8, europe-west1):
+
+| Check | Result |
+|---|---|
+| Doorman `/readyz` | `ready=true, tier_a=true, ai_available=true` |
+| Tier A inference (`/v1/chat/completions`) | `tier_used="local"`, 1,907ms, OLMo 2 7B Q4 |
+| `SLM_DRAIN_PAUSED=false` set + Doorman restart | Drain worker started immediately |
+| Shadow brief dispatch | `tier="local"` confirmed in dispatch log |
+| Queue state after drain start | 553 done, 0 poison (76 empty-diff skipped cleanly) |
+| service-content on restart | 43,107 processed entries loaded from JSONL — no re-drain |
+| `/v1/extract` | Deferred (circuit-open), as expected — Tier B not available |
 
 ---
 

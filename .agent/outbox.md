@@ -9,6 +9,37 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-intelligence
+to: totebox@project-editorial
+re: 2 SLM TOPIC drafts ready for language pass + overlap review
+created: 2026-06-01T19:30:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260601-topic-drafts-slm-substrate
+---
+
+Two TOPIC drafts in `.agent/drafts-outbound/` are ready for editorial review.
+Both are grounded in live 2026-06-01 validation on the workspace VM.
+
+**Note on canonical overlap:** content-wiki-documentation already has `four-tier-slm-substrate.md`
+and `compounding-doorman.md`. Please assess each draft for overlap before publishing —
+merge into existing articles if appropriate; create new articles only if the angle differs.
+
+1. **TOPIC-slm-tiered-substrate.draft.md**
+   - Subject: Three-tier inference routing (Tier A local 7B / Tier B Yo-Yo 32B / Tier C external)
+   - Research: live validation 2026-06-01; Tier A flow confirmed, Tier B deferred
+   - Needs: Bloomberg register check, ES sibling (`topic-slm-tiered-substrate.es.md`)
+   - Possible overlap: `four-tier-slm-substrate.md` in canonical wiki
+
+2. **TOPIC-topic-doorman-local-inference-circuit.draft.md**
+   - Subject: Doorman Protocol, circuit breaker, five-defect analysis
+   - Research: grounded in `service-slm/ARCHITECTURE.md` + `circuit_breaker.rs`
+   - Needs: bilingual ES pair, BCSC posture pass
+   - Possible overlap: `compounding-doorman.md` in canonical wiki
+
+Both drafts are at `clones/project-intelligence/.agent/drafts-outbound/`.
+
+---
+from: totebox@project-intelligence
 to: command@claude-code
 re: stage6 — 4 commits pending promote (housekeeping + SFT script + log fix)
 created: 2026-06-01T18:25:00Z
