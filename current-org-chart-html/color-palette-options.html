@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Palette Options B — Woodfine Org Charts</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; background: #F1F5F9; padding: 40px; margin: 0; color: #0F172A; }
+
+  h1 { font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 4px 0; }
+  .page-note { font-size: 11px; color: #64748B; margin: 0 0 40px 0; }
+
+  h2 { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; margin: 40px 0 4px 0; border-top: 2px solid #CBD5E1; padding-top: 16px; }
+  h2:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+  .system-note { font-size: 10px; color: #64748B; margin: 0 0 16px 0; max-width: 700px; line-height: 1.5; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 8px; }
+  .swatch { padding: 10px 12px 28px 12px; box-sizing: border-box; position: relative; min-height: 88px; }
+  .swatch-name { font-size: 10px; font-weight: 700; color: #000; line-height: 1.3; margin-bottom: 2px; }
+  .swatch-class { font-size: 8px; font-family: monospace; color: #475569; }
+  .swatch-hex { position: absolute; bottom: 8px; left: 12px; font-size: 8px; font-family: monospace; color: #64748B; }
+
+  /* ── IBM Carbon — varied tone weights for visual separation ── */
+  /* Blue↔Cyan: Blue=very dark border/pale bg  Cyan=medium border/tinted bg */
+  .ibm-blue        { background: #EDF5FF; border: 2px solid #002D9C; }  /* Blue-80 / Blue-10 — heavy */
+  .ibm-cyan        { background: #BAE6FF; border: 2px solid #00539A; }  /* Cyan-70 / Cyan-20 — light border, tinted bg */
+
+  /* Teal↔Green: Teal=very dark/pale  Green=medium/saturated */
+  .ibm-teal        { background: #D9FBFB; border: 2px solid #004144; }  /* Teal-80 / Teal-10 — heavy */
+  .ibm-green       { background: #A7F0BA; border: 2px solid #198038; }  /* Green-60 / Green-20 — medium border, tinted bg */
+
+  /* Purple↔Magenta: Purple=very dark/pale  Magenta=medium/tinted */
+  .ibm-purple      { background: #F6F2FF; border: 2px solid #491D8B; }  /* Purple-80 / Purple-10 — heavy */
+  .ibm-magenta     { background: #FFD6E8; border: 2px solid #9F1853; }  /* Magenta-70 / Magenta-20 — tinted bg */
+
+  /* Red↔Orange: Red=very dark/pale  Orange=medium/tinted */
+  .ibm-red         { background: #FFF1F1; border: 2px solid #750E13; }  /* Red-80 / Red-10 — heavy */
+  .ibm-orange      { background: #FFD9BD; border: 2px solid #8A3800; }  /* Orange-70 / Orange-20 — tinted bg */
+
+  /* Yellow — mid-weight, distinct warm tone */
+  .ibm-yellow      { background: #FCF4D6; border: 2px solid #8E6A00; }  /* Yellow-70 / Yellow-10 */
+
+  /* Grays: CoolGray=dark/tinted  WarmGray=medium/pale  Gray=light */
+  .ibm-cool-gray   { background: #DDE1E6; border: 2px solid #343A3F; }  /* CoolGray-80 / CoolGray-20 — heavy */
+  .ibm-warm-gray   { background: #F6F2EF; border: 2px solid #565151; }  /* WarmGray-60 / WarmGray-10 — medium */
+  .ibm-gray        { background: #F4F4F4; border: 2px solid #6F6F6F; }  /* Gray-50 / Gray-10 — light */
+
+  /* ── Tailwind ── */
+  .tw-red          { background: #FEF2F2; border: 2px solid #B91C1C; }
+  .tw-rose         { background: #FFF1F2; border: 2px solid #BE123C; }
+  .tw-pink         { background: #FDF2F8; border: 2px solid #BE185D; }
+  .tw-fuchsia      { background: #FDF4FF; border: 2px solid #A21CAF; }
+  .tw-purple       { background: #FAF5FF; border: 2px solid #7E22CE; }
+  .tw-violet       { background: #F5F3FF; border: 2px solid #6D28D9; }
+  .tw-indigo       { background: #EEF2FF; border: 2px solid #4338CA; }
+  .tw-blue         { background: #EFF6FF; border: 2px solid #1D4ED8; }
+  .tw-sky          { background: #F0F9FF; border: 2px solid #0369A1; }
+  .tw-cyan         { background: #ECFEFF; border: 2px solid #0E7490; }
+  .tw-teal         { background: #F0FDFA; border: 2px solid #0F766E; }
+  .tw-emerald      { background: #ECFDF5; border: 2px solid #047857; }
+  .tw-green        { background: #F0FDF4; border: 2px solid #15803D; }
+  .tw-lime         { background: #F7FEE7; border: 2px solid #4D7C0F; }
+  .tw-yellow       { background: #FEFCE8; border: 2px solid #A16207; }
+  .tw-amber        { background: #FFFBEB; border: 2px solid #B45309; }
+  .tw-orange       { background: #FFF7ED; border: 2px solid #C2410C; }
+  .tw-slate        { background: #F8FAFC; border: 2px solid #334155; }
+  .tw-zinc         { background: #FAFAFA; border: 2px solid #3F3F46; }
+  .tw-stone        { background: #FAFAF9; border: 2px solid #44403C; }
+
+  @media print {
+    @page { size: landscape; margin: 15mm; }
+    body { background: #fff; padding: 0; }
+    .grid { grid-template-columns: repeat(6, 1fr); }
+    h2 { page-break-before: always; }
+    h2:first-of-type { page-break-before: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Option B — Full Palette Replacement</h1>
+<p class="page-note">Two candidate systems. Pick one to replace the current Material Design palette across all org charts.</p>
+
+<h2>Recommended 4 New Colors — IBM Carbon (unused families)</h2>
+<p class="system-note">Each is paired against its nearest existing color using opposite tone treatment so they stay clearly distinct. Existing colors are unchanged.</p>
+<div class="grid" style="grid-template-columns: repeat(4, 1fr); max-width: 700px;">
+  <div class="swatch" style="background:#9EF0F0; border:2px solid #005D5D;">
+    <div class="swatch-name">Teal</div>
+    <div class="swatch-class">token-teal</div>
+    <div class="swatch-hex">#005D5D / #9EF0F0<br>Tinted — pairs with Green (heavy)</div>
+  </div>
+  <div class="swatch" style="background:#E5F6FF; border:2px solid #003A6D;">
+    <div class="swatch-name">Cyan</div>
+    <div class="swatch-class">token-cyan</div>
+    <div class="swatch-hex">#003A6D / #E5F6FF<br>Heavy — pairs with Blue (heavy)</div>
+  </div>
+  <div class="swatch" style="background:#FFD6E8; border:2px solid #9F1853;">
+    <div class="swatch-name">Magenta</div>
+    <div class="swatch-class">token-magenta</div>
+    <div class="swatch-hex">#9F1853 / #FFD6E8<br>Tinted — pairs with Purple (heavy)</div>
+  </div>
+  <div class="swatch" style="background:#FFB3B8; border:2px solid #A2191F;">
+    <div class="swatch-name">Red</div>
+    <div class="swatch-class">token-red</div>
+    <div class="swatch-hex">#A2191F / #FFB3B8<br>Tinted — pairs with Orange (heavy)</div>
+  </div>
+</div>
+<p class="system-note" style="margin-top:8px;">If you need a 5th option: <strong>Warm Gray</strong> (#565151 / #E5E0DB) — earthy neutral, distinct from existing cool grey and neutral grays.</p>
+<hr style="border:none; border-top:2px solid #CBD5E1; margin: 32px 0 0 0;">
+
+<h2>Option B1 — IBM Carbon Design System (varied tone weights)</h2>
+<p class="system-note">Adjacent similar hues are separated by alternating heavy vs light treatment: heavy = very dark border + pale background; light = medium border + tinted background. Each pair reads as clearly distinct even at a glance.</p>
+<div class="grid">
+  <div class="swatch ibm-blue">
+    <div class="swatch-name">Blue — heavy</div>
+    <div class="swatch-class">ibm-blue</div>
+    <div class="swatch-hex">#002D9C / #EDF5FF</div>
+  </div>
+  <div class="swatch ibm-cyan">
+    <div class="swatch-name">Cyan — tinted bg</div>
+    <div class="swatch-class">ibm-cyan</div>
+    <div class="swatch-hex">#00539A / #BAE6FF</div>
+  </div>
+  <div class="swatch ibm-teal">
+    <div class="swatch-name">Teal — heavy</div>
+    <div class="swatch-class">ibm-teal</div>
+    <div class="swatch-hex">#004144 / #D9FBFB</div>
+  </div>
+  <div class="swatch ibm-green">
+    <div class="swatch-name">Green — tinted bg</div>
+    <div class="swatch-class">ibm-green</div>
+    <div class="swatch-hex">#198038 / #A7F0BA</div>
+  </div>
+  <div class="swatch ibm-purple">
+    <div class="swatch-name">Purple — heavy</div>
+    <div class="swatch-class">ibm-purple</div>
+    <div class="swatch-hex">#491D8B / #F6F2FF</div>
+  </div>
+  <div class="swatch ibm-magenta">
+    <div class="swatch-name">Magenta — tinted bg</div>
+    <div class="swatch-class">ibm-magenta</div>
+    <div class="swatch-hex">#9F1853 / #FFD6E8</div>
+  </div>
+  <div class="swatch ibm-red">
+    <div class="swatch-name">Red — heavy</div>
+    <div class="swatch-class">ibm-red</div>
+    <div class="swatch-hex">#750E13 / #FFF1F1</div>
+  </div>
+  <div class="swatch ibm-orange">
+    <div class="swatch-name">Orange — tinted bg</div>
+    <div class="swatch-class">ibm-orange</div>
+    <div class="swatch-hex">#8A3800 / #FFD9BD</div>
+  </div>
+  <div class="swatch ibm-yellow">
+    <div class="swatch-name">Yellow</div>
+    <div class="swatch-class">ibm-yellow</div>
+    <div class="swatch-hex">#8E6A00 / #FCF4D6</div>
+  </div>
+  <div class="swatch ibm-cool-gray">
+    <div class="swatch-name">Cool Gray — heavy</div>
+    <div class="swatch-class">ibm-cool-gray</div>
+    <div class="swatch-hex">#343A3F / #DDE1E6</div>
+  </div>
+  <div class="swatch ibm-warm-gray">
+    <div class="swatch-name">Warm Gray — medium</div>
+    <div class="swatch-class">ibm-warm-gray</div>
+    <div class="swatch-hex">#565151 / #F6F2EF</div>
+  </div>
+  <div class="swatch ibm-gray">
+    <div class="swatch-name">Gray — light</div>
+    <div class="swatch-class">ibm-gray</div>
+    <div class="swatch-hex">#6F6F6F / #F4F4F4</div>
+  </div>
+</div>
+
+<h2>Option B2 — Tailwind CSS (700 border / 50 background)</h2>
+<p class="system-note">20 hues, all using the -700 shade for borders and -50 shade for backgrounds. Very consistent visual weight across all colors. Widely used in modern web and document design. Slightly more vibrant than IBM Carbon.</p>
+<div class="grid">
+  <div class="swatch tw-red">
+    <div class="swatch-name">Red</div>
+    <div class="swatch-class">tw-red</div>
+    <div class="swatch-hex">#B91C1C / #FEF2F2</div>
+  </div>
+  <div class="swatch tw-rose">
+    <div class="swatch-name">Rose</div>
+    <div class="swatch-class">tw-rose</div>
+    <div class="swatch-hex">#BE123C / #FFF1F2</div>
+  </div>
+  <div class="swatch tw-pink">
+    <div class="swatch-name">Pink</div>
+    <div class="swatch-class">tw-pink</div>
+    <div class="swatch-hex">#BE185D / #FDF2F8</div>
+  </div>
+  <div class="swatch tw-fuchsia">
+    <div class="swatch-name">Fuchsia</div>
+    <div class="swatch-class">tw-fuchsia</div>
+    <div class="swatch-hex">#A21CAF / #FDF4FF</div>
+  </div>
+  <div class="swatch tw-purple">
+    <div class="swatch-name">Purple</div>
+    <div class="swatch-class">tw-purple</div>
+    <div class="swatch-hex">#7E22CE / #FAF5FF</div>
+  </div>
+  <div class="swatch tw-violet">
+    <div class="swatch-name">Violet</div>
+    <div class="swatch-class">tw-violet</div>
+    <div class="swatch-hex">#6D28D9 / #F5F3FF</div>
+  </div>
+  <div class="swatch tw-indigo">
+    <div class="swatch-name">Indigo</div>
+    <div class="swatch-class">tw-indigo</div>
+    <div class="swatch-hex">#4338CA / #EEF2FF</div>
+  </div>
+  <div class="swatch tw-blue">
+    <div class="swatch-name">Blue</div>
+    <div class="swatch-class">tw-blue</div>
+    <div class="swatch-hex">#1D4ED8 / #EFF6FF</div>
+  </div>
+  <div class="swatch tw-sky">
+    <div class="swatch-name">Sky</div>
+    <div class="swatch-class">tw-sky</div>
+    <div class="swatch-hex">#0369A1 / #F0F9FF</div>
+  </div>
+  <div class="swatch tw-cyan">
+    <div class="swatch-name">Cyan</div>
+    <div class="swatch-class">tw-cyan</div>
+    <div class="swatch-hex">#0E7490 / #ECFEFF</div>
+  </div>
+  <div class="swatch tw-teal">
+    <div class="swatch-name">Teal</div>
+    <div class="swatch-class">tw-teal</div>
+    <div class="swatch-hex">#0F766E / #F0FDFA</div>
+  </div>
+  <div class="swatch tw-emerald">
+    <div class="swatch-name">Emerald</div>
+    <div class="swatch-class">tw-emerald</div>
+    <div class="swatch-hex">#047857 / #ECFDF5</div>
+  </div>
+  <div class="swatch tw-green">
+    <div class="swatch-name">Green</div>
+    <div class="swatch-class">tw-green</div>
+    <div class="swatch-hex">#15803D / #F0FDF4</div>
+  </div>
+  <div class="swatch tw-lime">
+    <div class="swatch-name">Lime</div>
+    <div class="swatch-class">tw-lime</div>
+    <div class="swatch-hex">#4D7C0F / #F7FEE7</div>
+  </div>
+  <div class="swatch tw-yellow">
+    <div class="swatch-name">Yellow</div>
+    <div class="swatch-class">tw-yellow</div>
+    <div class="swatch-hex">#A16207 / #FEFCE8</div>
+  </div>
+  <div class="swatch tw-amber">
+    <div class="swatch-name">Amber</div>
+    <div class="swatch-class">tw-amber</div>
+    <div class="swatch-hex">#B45309 / #FFFBEB</div>
+  </div>
+  <div class="swatch tw-orange">
+    <div class="swatch-name">Orange</div>
+    <div class="swatch-class">tw-orange</div>
+    <div class="swatch-hex">#C2410C / #FFF7ED</div>
+  </div>
+  <div class="swatch tw-slate">
+    <div class="swatch-name">Slate</div>
+    <div class="swatch-class">tw-slate</div>
+    <div class="swatch-hex">#334155 / #F8FAFC</div>
+  </div>
+  <div class="swatch tw-zinc">
+    <div class="swatch-name">Zinc</div>
+    <div class="swatch-class">tw-zinc</div>
+    <div class="swatch-hex">#3F3F46 / #FAFAFA</div>
+  </div>
+  <div class="swatch tw-stone">
+    <div class="swatch-name">Stone</div>
+    <div class="swatch-class">tw-stone</div>
+    <div class="swatch-hex">#44403C / #FAFAF9</div>
+  </div>
+</div>
+
+</body>
+</html>
