@@ -209,10 +209,15 @@ Deployed to map:
 | Script | Purpose | Status |
 |---|---|---|
 | `test-cluster-archetypes.py` | Produces VWH and PKS GeoJSON from existing data | ✅ Done; runs in ~60s |
-| `ingest-osm-airports.py` | IATA-filtered commercial airport ingest (replaces Overture 20,841) | ❌ Planned |
-| `ingest-osm-railway.py` | OSM intercity railway station ingest → service-places | ❌ Planned |
+| `ingest-osm-airports.py` | IATA-filtered commercial airport ingest (replaces Overture 20,841) | ✅ Done — 4,024 airports (3,774 w/ IATA); US tile gaps remain |
+| `ingest-osm-railway.py` | OSM intercity railway station ingest → service-places | ✅ Done — 18,107 intercity stations, 16 countries |
 | `ingest-osm-industrial.py` | OSM `landuse=industrial` polygon ingest | ❌ Planned |
-| Chain YAMLs (see §3 production gaps) | Auto-parts, paint, car rental, logistics | ⚠️ YAML scaffold done; ingest not run |
+| Chain YAMLs (see §3 production gaps) | Auto-parts, paint, car rental, logistics | ✅ Done — 19,242 records / 32 chains |
+
+**Final PKS run (2026-06-01 08:10Z):** with real transit anchors (4,024 IATA airports +
+18,107 intercity rail), test produced **14,332 PKS candidates** (1,744 airport + 12,588 rail),
+**3,904 integrated** with a T1/T2 Regional Market (637 airport + 3,267 rail). Railway dominates —
+EU park-and-train pattern. Replaces the earlier 6,640-candidate Overture-airport-only proxy.
 
 ---
 
