@@ -309,6 +309,33 @@ async fn main() -> anyhow::Result<()> {
                     }
                     Ok(Some(leased)) => {
                         let brief_id = leased.entry.brief.brief_id.clone();
+
+                        // P0 guard: skip briefs with an empty actual_diff. These
+                        // carry no ground-truth reference, so dispatching them to
+                        // OLMo yields a hallucinated diff with nothing to compare
+                        // against — pure wasted CPU. Worse, OLMo can run away on
+                        // such out-of-distribution prompts and block the whole
+                        // drain queue for the full max_tokens budget. Move straight
+                        // to done without ever touching the inference tier.
+                        if leased.entry.actual_diff.trim().is_empty() {
+                            tracing::warn!(
+                                brief_id = %brief_id,
+                                task_type = %leased.entry.brief.task_type,
+                                "drain worker: skipping empty-diff brief (no actual_diff captured); \
+                                 marking done without OLMo dispatch"
+                            );
+                            if let Err(e) =
+                                release_shadow(&drain_cfg, &leased, ReleaseOutcome::Done)
+                            {
+                                tracing::warn!(
+                                    brief_id = %brief_id,
+                                    error = %e,
+                                    "drain worker: release_shadow failed for empty-diff brief"
+                                );
+                            }
+                            continue;
+                        }
+
                         info!(
                             brief_id = %brief_id,
                             task_type = %leased.entry.brief.task_type,
@@ -326,11 +353,12 @@ async fn main() -> anyhow::Result<()> {
                             // Pass the actual_diff from the queue entry so the
                             // corpus tuple carries the senior's real committed diff
                             // (per §7B capture-on-completion semantics).
-                            // 150 s safety-net: the 120 s Tier A HTTP client
-                            // timeout fires first in normal operation; this
-                            // wrapper catches any other path that could hang
-                            // (e.g. a future Tier B slow-start or a new code
-                            // path that forgets to set a deadline).
+                            // 1860 s safety-net: the Tier A HTTP client timeout is
+                            // 1800 s; this wrapper fires 60 s later to catch any
+                            // path that bypasses the client timeout. With the
+                            // empty-diff guard above and the Tier A max_tokens=512
+                            // cap, worst-case Tier A dispatch is ~4 min, so this
+                            // timeout should never fire in practice.
                             let dispatch_result = tokio::time::timeout(
                                 std::time::Duration::from_secs(1860),
                                 dispatcher.dispatch_shadow(
