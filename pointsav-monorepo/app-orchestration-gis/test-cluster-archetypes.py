@@ -103,18 +103,22 @@ def nearest_cluster(
 
 # ── PARAMETERS ────────────────────────────────────────────────────────────────
 
-# Urban Fringe (VWH)
-VW_MIN_METRO_KM = 3.0    # not downtown core (lowered from 5.0; EU dense cities)
-VW_MAX_METRO_KM = 120.0  # suburban industrial belt (raised from 80.0)
+# Urban Fringe (VWH) — sweep-tuned 2026-06-01 (sweep-report.md)
+VW_MIN_METRO_KM = 3.0    # not downtown core (keep ≥3km so "fringe" stays peri-urban)
+VW_MAX_METRO_KM = 150.0  # extended outer suburban industrial belt (was 120.0)
 VW_MAX_SPAN_KM  = 5.0    # tight commercial node
 
-# Commuter (PKS)
-TN_MIN_METRO_KM     = 25.0   # regional hubs only (raised from 15.0; drops suburban stations)
+# Commuter (PKS) — sweep-tuned 2026-06-01 (sweep-report.md)
+# Recommended set: balance 0.954 vs Retail, NA% 40.5, all 3 tiers filled, total 2,395.
+TN_MIN_METRO_KM     = 35.0   # regional hubs only (raised from 25.0; drops near-suburban)
 TN_MAX_METRO_KM     = 150.0  # regional sweet spot
 TN_HUB_EXCL_KM      = 5.0    # T1 within this → likely major hub → exclude
-TN_INTEGRATED_KM    = 5.0    # T1/T2 within this → "T1" node (tightened from 10.0)
-TN_CLUSTER_SEARCH_KM = 10.0  # outer search radius → T2 zone (narrowed from 20.0)
-TN_T3_SCORE_MIN     = 1.0    # standalone hubs qualify as T3 if transit_node_score ≥ this
+TN_INTEGRATED_KM    = 3.0    # T1/T2 within this → "T1" node (tightened from 5.0)
+TN_CLUSTER_SEARCH_KM = 8.0   # outer search radius → T2 boundary (narrowed from 10.0)
+TN_T3_SWEETSPOT     = (30.0, 100.0)  # metro-distance band for standalone T3 eligibility
+# T3 = standalone airport (no RC within T2 boundary) in the metro sweet-spot.
+# Airport-only keeps T3 bounded (regional airports) and rebalances toward NA;
+# rail-station standalones are excluded (they flooded the tier — 6,703 in prior run).
 
 # ── LOAD CLUSTERS ─────────────────────────────────────────────────────────────
 
@@ -428,17 +432,23 @@ for c in vw_candidates:
     c2["vwh_tier"] = t
     vw_tiered.append(c2)
 
-# Commuter: T1/T2 by RC proximity only; standalone hubs excluded
-# (T3 is not used for Commuter — standalone transit hubs are too numerous
-# and lack the commercial co-location signal that defines the archetype;
-# they will become T1/T2 as Retail Centre coverage expands)
+# Commuter T1/T2 by RC proximity; T3 = standalone regional airport in metro sweet-spot.
+#   T1: Retail Centre within TN_INTEGRATED_KM (tight co-location)
+#   T2: Retail Centre within TN_CLUSTER_SEARCH_KM (adjacent)
+#   T3: no RC within TN_CLUSTER_SEARCH_KM, but a regional AIRPORT in the metro sweet-spot
+#       (airport-only keeps T3 bounded + rebalances toward NA; rail standalones excluded)
 tn_tiered: list[dict] = []
+_t3_lo, _t3_hi = TN_T3_SWEETSPOT
 for c in tn_candidates:
     km = c["nearest_cluster_km"]
     if km is not None and km <= TN_INTEGRATED_KM:
         t = 1
     elif km is not None and km <= TN_CLUSTER_SEARCH_KM:
         t = 2
+    elif (km is None
+          and c["transit_type"] == "airport"
+          and _t3_lo <= c["metro_dist_km"] <= _t3_hi):
+        t = 3
     else:
         t = None
     if t is not None:
