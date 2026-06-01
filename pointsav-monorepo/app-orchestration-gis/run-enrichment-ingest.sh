@@ -23,9 +23,13 @@ STAMP() { date -u '+%Y-%m-%dT%H:%M:%SZ'; }
 
 echo "──── enrichment ingest $(STAMP) ────" | tee -a "$LOG"
 
-# 1. Ingest pending enrichment chains (polite delay for Overpass)
-echo "[$(STAMP)] [1/4] ingest-osm.py --all-pending" | tee -a "$LOG"
-python3 -u ingest-osm.py --all-pending --delay 8 >> "$LOG" 2>&1 || {
+# 1. Ingest the Phase 2 enrichment chains (scoped — NOT --all-pending, which would
+#    sweep tier-gating retail chains and shift the Retail Centre reference).
+#    Enrichment categories never gate tier, so the Retail reference stays stable.
+ENRICHMENT_CHAINS="autozone-mx comex-mx napa-ca partsource-ca princess-auto-ca \
+norauto-fr atu-de feuvert-fr euromaster-eu"
+echo "[$(STAMP)] [1/4] ingest-osm.py --chain (9 enrichment chains)" | tee -a "$LOG"
+python3 -u ingest-osm.py --chain $ENRICHMENT_CHAINS --delay 8 >> "$LOG" 2>&1 || {
     echo "WARN: some chains failed to ingest (see log); continuing with rebuild" | tee -a "$LOG"; }
 
 # 2. Rebuild clusters (enrich_with_vwh attaches new enrichment stores)
