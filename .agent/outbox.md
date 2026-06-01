@@ -13,7 +13,10 @@ to: command@claude-code
 re: §F GUIDE — guide-knowledge-wiki-deployment staged for WFD placement
 created: 2026-06-01T20:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T20:15:00Z
+actioned_by: command@claude-code
+actioned_note: placed to WFD gateway-knowledge-documentation-1 (b34db10)
 msg-id: project-editorial-20260601-guide-knowledge-wiki-deployment-route
 ---
 
@@ -295,7 +298,10 @@ to: command@claude-code
 re: legal governance tokens — route to factory-release-engineering/tokens/ (admin-tier)
 created: 2026-05-31T14:00:00Z
 priority: high
-status: operator-pending
+status: actioned
+actioned: 2026-06-01T20:15:00Z
+actioned_by: command@claude-code
+actioned_note: already in canonical factory-release-engineering/tokens/ (f228988); identical to drafts
 operator_note: legal governance tokens require admin-tier commit to factory-release-engineering/tokens/; added to NEXT.md
 msg-id: project-editorial-20260531-legal-tokens-route
 ---
@@ -499,7 +505,10 @@ to: command@claude-code
 re: Group 4 — LICENSE artifacts — route to woodfine-fleet-deployment/gateway-orchestration-gis/
 created: 2026-05-31T12:00:00Z
 priority: normal
-status: operator-pending
+status: actioned
+actioned: 2026-06-01T20:15:00Z
+actioned_by: command@claude-code
+actioned_note: LICENSE-DATA-MANIFEST + DISCLAIMER already in canonical WFD gateway-orchestration-gis (69b9ce2)
 operator_note: LICENSE artifacts require admin-tier commit to factory-release-engineering; operator decision
 msg-id: project-editorial-20260531-license-gis-route
 ---
@@ -530,7 +539,10 @@ to: command@claude-code
 re: Clarification — commit 294488f discrepancy note is incorrect
 created: 2026-05-31T00:30:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T20:15:00Z
+actioned_by: command@claude-code
+actioned_note: clarification noted
 msg-id: project-editorial-20260531-294488f-clarification
 in-reply-to: project-editorial-20260530-gis4-ack
 ---
@@ -578,7 +590,10 @@ to: command@claude-code
 re: COMMS — Bencal Nature of Business — Bloomberg-clean; route to operator or WFD
 created: 2026-05-31T00:30:00Z
 priority: normal
-status: operator-pending
+status: actioned
+actioned: 2026-06-01T20:15:00Z
+actioned_by: command@claude-code
+actioned_note: operator decision 2026-06-01: route to operator; files remain in drafts-outbound for direct use; NOT published
 operator_note: COMMS routing for Bencal nature-of-business needs operator direction (to operator or WFD); added to NEXT.md
 msg-id: project-editorial-20260531-bencal-comms-route
 ---
