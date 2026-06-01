@@ -1079,7 +1079,7 @@ fn home_chrome(
              data-instance=(brand_instance) {
             head {
                 meta charset="utf-8";
-                meta name="viewport" content="width=device-width, initial-scale=1";
+                meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover";
                 title { (site_title) }
                 link rel="stylesheet" href="/static/tokens.css";
                 @if woodfine_theme {
@@ -2243,7 +2243,7 @@ fn wiki_chrome(
              data-instance=(brand_instance) {
             head {
                 meta charset="utf-8";
-                meta name="viewport" content="width=device-width, initial-scale=1";
+                meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover";
                 title { (page_title) }
                 link rel="stylesheet" href="/static/tokens.css";
                 @if woodfine_theme {
@@ -3868,7 +3868,7 @@ fn chrome(
              data-instance="documentation" {
             head {
                 meta charset="utf-8";
-                meta name="viewport" content="width=device-width, initial-scale=1";
+                meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover";
                 title { (site_title) }
                 link rel="stylesheet" href="/static/tokens.css";
                 link rel="stylesheet" href="/static/style.css";
