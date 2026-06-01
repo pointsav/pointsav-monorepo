@@ -179,6 +179,49 @@ sudo sed -i 's/SLM_YOYO_AUTO_RESTART=false/SLM_YOYO_AUTO_RESTART=true/' \
 sudo systemctl restart local-doorman.service
 ```
 
+### §2.4a — Preemption-safe flow: what happens to in-flight work (2026-06-01)
+
+Audited end-to-end after observing a real preemption at 04:41Z (~37 min uptime,
+before our `--runtime` timer). Verdict: **no work is permanently lost on either side;
+one real flow gap fixed in service-content.**
+
+**service-slm (training drain / Doorman) — already preemption-safe, no change needed:**
+- A brief dispatched to Tier B when the VM dies → its lease sits in `queue-in-flight/`;
+  the **reaper reclaims it within 300s and re-queues it** (`ReleaseOutcome::Retry`).
+  Never lost, never wrongly poisoned. (`queue.rs::reap_expired_leases`, 60s interval.)
+- Circuit opens after 5 consecutive failures (`circuit_breaker.rs` FAILURE_THRESHOLD=5);
+  health probe marks Tier B down after 3 misses (~30s). Then requests fail fast.
+- `route_yoyo_only` returns explicit `TierUnavailable(Yoyo)` (extraction) — caller defers,
+  no silent loss. Transient Tier B errors fall back to Tier A for general inference.
+- Every request is audit-logged regardless of outcome.
+
+**service-content (DataGraph watcher) — FIXED (commit `a5f573f6`, Jennifer):**
+The watcher previously marked preemption-affected CORPUS files as *processed*
+(skip-until-restart) in two paths, so they were never retried when Tier B recovered
+without a service restart. Now:
+- Transport/connection error (Doorman unreachable, or the call interrupted by a
+  preempted Tier B) → `DeferTransient` (retry), not `Failed`.
+- Circuit-open defer → new **dormant** `circuit_deferred_ledgers` list (not `processed`,
+  not the 30s retry list — so the 41k backlog is neither lost nor stormed onto the Doorman).
+- **One recovery probe per 30s tick** attempts a single dormant file; while Tier B is down
+  it fast-fails and is returned to the list; the moment Tier B recovers, the whole dormant
+  backlog is promoted back to the active retry queue — **extraction resumes with no restart.**
+- Genuine parse/extract failures still go to `processed_ledgers` (retrying garbage is pointless).
+- **Deploy:** needs a release rebuild + `deploy-binary.sh` + restart of `local-content.service`
+  to go live. Source committed `a5f573f6`; **not yet deployed** (deployed binary is the May-29 build).
+
+**Doc/code drift flagged:** `service-content/CLAUDE.md` claims "Sprint 5: graph-backed
+persistent processed_ledgers — no restart retry storm" is code-complete, but `main.rs`
+uses an **in-memory `Vec<String>`** (volatile across restarts). Either Sprint 5 was never
+merged to this source or the doc is aspirational. Reconcile before relying on restart-survival.
+
+**Remaining optional enhancement (not a loss risk):** neither service listens for the GCP
+~30s preemption *notice* (`instance/preempted` metadata / ACPI soft-off) to drain in-flight
+work proactively. `yoyo-stability-gate.sh` checks `instance/preempted` only at **boot** (to
+avoid loading the 64GB model into a doomed VM). An in-VM unit that, on preemption notice,
+gracefully quiesces llama-server would shave the in-flight request's 180–300s timeout — but
+both services already degrade cleanly without it (defer → retry → reaper). Low priority.
+
 ### §2.5 — Zone fallback (Mode 2): planned migration only
 
 Mode 2 provisions a new VM in a different zone. **It is NOT for stockouts — see §2.2 policy.**
