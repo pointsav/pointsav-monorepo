@@ -8,6 +8,7 @@
 
 pub mod assets;
 pub mod auth;
+pub mod blueprints;
 pub mod citations;
 pub mod claim;
 pub mod config;
@@ -21,6 +22,7 @@ pub mod history;
 pub mod jsonld;
 pub mod links;
 pub mod mcp;
+pub mod mounts;
 pub mod pending;
 pub mod render;
 pub mod search;
