@@ -634,13 +634,10 @@ ratified 2026-04-26 in Doctrine v0.0.7.
 Three endpoints gated behind `SLM_APPRENTICESHIP_ENABLED=true`;
 404 when unset so existing deployments are unchanged.
 
-**Current on-VM state:** disabled. The workspace `local-doorman.service` unit runs
-with `SLM_APPRENTICESHIP_ENABLED` unset. The B7 re-deploy (2026-04-29, Master
-v0.1.68) set the flag; a subsequent service restart left the flag unset again.
-Re-enabling requires an operator-presence pass: update the
-`infrastructure/local-doorman/service.d/env-file.conf` drop-in and restart the
-unit. The corpus capture path (brief queue §11 configuration below) is fully
-implemented and will resume accumulating tuples immediately once the flag is set.
+**Current on-VM state:** **enabled and active.** `SLM_APPRENTICESHIP_ENABLED=true`
+in `/etc/local-doorman/local-doorman.env`. Drain worker running (`SLM_DRAIN_PAUSED=false`
+as of 2026-06-01); 285 pending briefs routing through Tier A (`tier="local"`); 0 poison.
+Flow verified end-to-end 2026-06-01: shadow capture → queue → Tier A dispatch → corpus tuple.
 
 | Endpoint | Purpose | Returns |
 |---|---|---|
@@ -700,7 +697,7 @@ SQLite-backed durability is a v0.5+ upgrade.
 
 | Env var | Default | Purpose |
 |---|---|---|
-| `SLM_APPRENTICESHIP_ENABLED` | unset (off) | Gates the three endpoints; `true` or `1` to enable |
+| `SLM_APPRENTICESHIP_ENABLED` | `true` | Gates the three endpoints; `true` or `1` to enable |
 | `FOUNDRY_ROOT` | `/srv/foundry` | Resolves `scope.files`, `citations.yaml`, ledger / corpus paths |
 | `FOUNDRY_ALLOWED_SIGNERS` | `${FOUNDRY_ROOT}/identity/allowed_signers` | Path passed to `ssh-keygen -Y verify -f` |
 | `FOUNDRY_DOCTRINE_VERSION` | `0.0.7` | Embedded in corpus tuples |

@@ -1,6 +1,6 @@
 # CLAUDE.md — service-content
 
-> **State:** Scaffold-coded  —  **Last updated:** 2026-05-24
+> **State:** Scaffold-coded  —  **Last updated:** 2026-06-01
 > **Registry row:** `pointsav-monorepo/.agent/rules/project-registry.md`
 
 ---
@@ -19,20 +19,20 @@ Doorman's `POST /v1/graph/mutate` endpoint.
 ## Current state
 
 **Scaffold-coded** — binary deployed and running as `local-content.service`
-on the workspace VM. HTTP 200 from `/healthz` with 1,529+ entities in
-LadybugDB graph.
+on the workspace VM. HTTP 200 from `/healthz` with **7,445 entities** in
+LadybugDB graph (2026-06-01).
 
 | Feature | State |
 |---|---|
 | LadybugDB graph store (Tier A) | Live — 2GB buffer pool; 4G MemoryMax |
 | SQLite graph store (Micro) | Code-complete; test-only |
 | Taxonomy upsert (guides, archetypes, domain, topics) | Live on startup |
-| Corpus drain loop | Live — Sprint 5: graph-backed processed_ledgers |
+| Corpus drain loop | Live |
 | Corpus watcher loop | Live |
 | `/v1/graph/context` | Live — Doorman queries before inference |
 | `/v1/graph/mutate` | Live — proxied through Doorman |
 | Sprint 2: `node_type` + `RelatedTo` edges | Code-complete, 23/23 tests |
-| Sprint 5: persistent `processed_ledgers` | Code-complete — no restart retry storm |
+| Sprint 5: persistent `processed_ledgers` | **DEPLOYED** (commit `5ad06ec9`, 2026-06-01) — JSONL sidecar at `$SERVICE_CONTENT_GRAPH_DIR/processed_ledgers.jsonl`; 43,107 entries loaded on restart; no re-drain |
 | Tier B (Yo-Yo) extraction | Deferred — circuit breaker open until Yo-Yo online |
 | `/v1/draft/generate` | 503 pre-D4 (Doorman unconfigured for Tier C auth) |
 
