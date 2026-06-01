@@ -1,6 +1,8 @@
 ---
 artifact: brief
-status: active
+status: archived
+superseded_by: BRIEF-knowledge-platform-master.md
+archived: 2026-06-01
 topic: app-mediakit-knowledge — Leapfrog 2030 vision + implementation state
 archive: project-knowledge
 created: 2026-05-28
@@ -11,6 +13,13 @@ research_sources:
   - agent-2-article-surface-internet-research-2026-05-28
   - agent-3-codebase-synthesis-2026-05-28
 ---
+
+> **ARCHIVED 2026-06-01 — superseded by `BRIEF-knowledge-platform-master.md`.**
+> The master brief carries forward all still-valid content from this document (locked
+> decisions, implementation-state record, differentiation strategy, canonical footer text)
+> and adds the 2026-06-01 research: mobile-first, content federation (mounts + blueprints),
+> the Inter + Source Serif 4 font decision (supersedes L8 here), the Wikipedia-DNA/Stripe-craft
+> principle, and the zero-dead-links rule. Read the master for current truth; this remains for history.
 
 # BRIEF — app-mediakit-knowledge: Leapfrog 2030
 
