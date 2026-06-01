@@ -1,0 +1,12 @@
+[Unit]
+Description=Run the daily SLM substrate status report at 06:00 UTC
+Documentation=file:///srv/foundry/clones/project-intelligence/service-slm/scripts/daily-slm-report.sh
+
+[Timer]
+# Daily at 06:00 UTC. Persistent=true → runs on next boot if the VM was off at 06:00.
+OnCalendar=*-*-* 06:00:00 UTC
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target
