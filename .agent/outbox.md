@@ -1,9 +1,9 @@
 ---
 mailbox: outbox
-owner: sandbox@mathew
-location: ~/sandbox/.agent/
+owner: totebox@project-mathew
+location: ~/Foundry/clones/project-mathew/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Outbox — mathew sandbox
+# Outbox — project-mathew
 
