@@ -410,7 +410,8 @@ to: command@claude-code
 re: DESIGN-TOKEN-CHANGE master co-sign required — IBM Carbon org-chart tokens (project-orgcharts)
 created: 2026-06-01T15:54:00Z
 priority: normal
-status: actioned
+status: operator-pending
+operator_note: DESIGN-TOKEN-CHANGE co-sign requires operator master_cosign approval. Adding to workspace NEXT.md.
 msg-id: project-design-20260601-cosign-request-org-chart-tokens
 ---
 
@@ -442,7 +443,8 @@ to: command@claude-code
 re: Branch drift — pointsav-design-system main vs cluster/project-design
 created: 2026-06-01T15:54:00Z
 priority: normal
-status: actioned
+status: operator-pending
+operator_note: branch drift noted — fast-forward cluster/project-design to main requires operator decision (CITATION.cff commit would be discarded). Adding to workspace NEXT.md.
 msg-id: project-design-20260601-branch-drift-design-system
 resolved: 2026-06-02 — cluster/project-design FF'd to main at 62cbc90; branches identical
 ---
@@ -608,6 +610,7 @@ created: 2026-05-26T00:00:00Z
 priority: high
 priority-boosted: 2026-06-02
 status: pending
+attempts: 2
 msg-id: project-design-20260526-bim-design-index-ack
 ---
 
