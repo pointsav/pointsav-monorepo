@@ -24,15 +24,32 @@ Engine-agnostic: all engines (Claude Code, Gemini CLI) read and write here.
 
 ## Active briefs
 
-| File | Subject | Status |
-|---|---|---|
-| **BRIEF-knowledge-platform-master.md** | **Knowledge platform master spec — federation (mounts + blueprints), mobile-first, premium UX (Wikipedia-model/Stripe-craft), linking model + zero dead links, Inter+Source-Serif font decision. SINGLE SOURCE OF TRUTH.** | **active** |
-| BRIEF-active-work.md | project-knowledge current session work queue | active |
+*(none — all briefs in this archive are contamination from other sessions. See Archived section below.)*
+
+Legitimate project-data briefs should be created here when GIS/data pipeline or JOURNAL
+programme work generates planning artifacts that span multiple sessions.
 
 ## Archived briefs
 
-Superseded briefs retained per standing instruction — never delete; supersede by editing
-`status: archived` or `git mv` to `archive/`.
+All briefs in `archive/` are retained per standing discipline (never delete). The 2026-06-01
+cleanup archival was a contamination sweep — none of these described project-data work.
+
+### Archived 2026-06-01 — contamination sweep (previous sessions ran other archives' work here)
+
+| File | Origin | Notes |
+|---|---|---|
+| archive/BRIEF-slm-substrate-master.md | project-intelligence | SLM Yo-Yo + Doorman + tier routing. Redistribute to project-intelligence. |
+| archive/BRIEF-slm-learning-loop.md | project-intelligence | DPO corpus + LoRA training pipeline. Redistribute to project-intelligence. |
+| archive/BRIEF-project-intelligence-active-work.md | project-intelligence | 3-session forward plan for project-intelligence. Redistribute. |
+| archive/AI-AUDIT-baseline-2026-05-31.md | project-intelligence | Gemini CLI vs architecture audit. Redistribute to project-intelligence. |
+| archive/BRIEF-substrate-phd-thesis-2026-05-27.md | project-intelligence | seL4/verified systems PhD thesis prep. Redistribute to project-intelligence. |
+| archive/BRIEF-vm-hardening-and-consolidation.md | project-intelligence | Absorbed into BRIEF-slm-substrate-master.md; already archived before sweep. |
+| archive/BRIEF-app-mediakit-knowledge-2030.md | project-knowledge | Knowledge platform Leapfrog 2030 vision. Redistribute to project-knowledge. |
+| archive/BRIEF-active-work-project-knowledge-2026-05-31.md | project-knowledge | project-knowledge session work queue. Redistribute to project-knowledge. |
+| archive/BRIEF-cross-platform-release.md | project-console | os-console cross-platform release engineering. Redistribute to project-console. |
+| archive/BRIEF-totebox-transformation.md | project-infrastructure | VM fabric implementation. Redistribute to project-infrastructure. |
+
+### Archived 2026-06-01 — prior sweep (moved by previous session)
 
 | File | Archived | Notes |
 |---|---|---|
@@ -47,6 +64,12 @@ Superseded briefs retained per standing instruction — never delete; supersede 
 | ~~archive/BRIEF-LEAPFROG-2030.md~~ | 2026-06-01 | Redistributed to workspace root 2026-06-01 — git rm'd |
 | archive/todo-open-items.md | 2026-06-01 | Contamination from project-editorial — read from there |
 
+### Earlier archived briefs (knowledge platform era)
+
+Numerous briefs in `archive/` from earlier project-knowledge and project-editorial sessions
+(BRIEF-KNOWLEDGE-PLATFORM-*, BRIEF-Wikipedia-parity-*, BRIEF-overhaul-*, etc.). These were
+from sessions that predated the separate archive structure. See `archive/` directory listing.
+
 ## Non-brief files kept here
 
 | File | Role |
@@ -55,21 +78,6 @@ Superseded briefs retained per standing instruction — never delete; supersede 
 | domain-map.tsv | Overhaul domain-map data |
 | vocabulary-baseline.tsv | Overhaul vocabulary-baseline data |
 | archive/ | Archived and superseded briefs |
-
-## Contamination flagged for owning archives (do not action here)
-
-Physically present in this dir from rebases, but they belong to other archives. Flagged for
-those archives to reclaim; not actioned in project-knowledge. (Was "Unverified briefs"; the
-app-mediakit-knowledge brief was confirmed genuine project-knowledge and is now the archived
-predecessor of the master.)
-
-| File(s) | Owning archive | Status |
-|---|---|---|
-| ~~BRIEF-slm-substrate-master.md, BRIEF-slm-learning-loop.md~~ | project-intelligence (SLM) | **redistributed 2026-06-01** |
-| BRIEF-project-intelligence-active-work.md, ~~BRIEF-substrate-phd-thesis-2026-05-27.md~~, AI-AUDIT-baseline-2026-05-31.md | project-intelligence | phd-thesis redistributed 2026-06-01; others pending |
-| ~~BRIEF-totebox-transformation.md~~, BRIEF-vm-hardening-and-consolidation.md, archive/BRIEF-PPN-*.md | project-infrastructure | totebox-transformation redistributed 2026-06-01; others pending |
-| BRIEF-cross-platform-release.md, archive/BRIEF-os-console-platform.md, archive/BRIEF-pairing-*.md, archive/BRIEF-tui-pivot-2030.md, archive/BRIEF-leapfrog-2030-coding.md | project-console | pending (not in this pass) |
-| archive/BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md, archive/BRIEF-journal-phd-programme.md, archive/BRIEF-framework-pointsav-products-services.md, archive/BRIEF-overhaul-*.md, archive/BRIEF-github-presence-elevation.md, archive/BRIEF-publishing-tier-naming-cross-check.md | project-editorial | pending (not in this pass) |
 
 ## Lifecycle
 
