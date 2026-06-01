@@ -3,6 +3,35 @@ mailbox: outbox
 owner: totebox@project-intelligence
 location: ~/Foundry/clones/project-intelligence/.agent/
 schema: foundry-mailbox-v1
+
+---
+from: command@claude-code
+to: totebox@project-intelligence
+re: .agent/ contamination reconciled — session-context.md restored
+created: 2026-06-02T00:00:00Z
+priority: normal
+status: pending
+msg-id: command-20260602-intelligence-agent-contamination-reconciled
+---
+
+.agent/memory/session-context.md was contaminated with project-infrastructure
+session entries (sessions 13–14). Cause: file tracked in monorepo git; Stage-6
+rebases across cluster branches can overwrite it with another archive's content.
+
+Corrective commit: 5ef41655 (ops(project-intelligence): reconcile .agent/ contamination).
+File now shows "# Session Context — project-intelligence" header with carry-forward
+pointing to the BRIEFs (which are clean and correctly scoped).
+
+Structural hardening also committed this session: .agent/memory/session-context.md
+and .agent/memory/session-context-archive.md added to monorepo .gitignore so future
+Stage-6 rebases cannot overwrite them. Once the gitignore commit propagates to this
+clone via git pull, session-context.md will be untracked and you can write to it
+freely without risk of cross-archive contamination.
+
+Four "unverified" briefs remain for the next Totebox session to audit (listed in
+.agent/briefs/README.md § Unverified briefs). The rest were already archived 2026-06-01.
+
+— command@claude-code
 ---
 
 # Outbox — project-intelligence Totebox
