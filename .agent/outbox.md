@@ -13,7 +13,10 @@ to: command@claude-code
 re: Phase 8 complete — Stage 6 + os-console binary build request
 created: 2026-06-01T18:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-01T19:15:00Z
+actioned_by: command@claude-code
+actioned_note: Stage 6 promoted f02de834; os-console binary build running
 msg-id: project-console-20260601-phase8-complete
 ---
 
@@ -87,7 +90,10 @@ to: command@claude-code
 re: FLAG — pairing-server binary name discrepancy; confirm before os-console build
 created: 2026-06-01T17:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T19:15:00Z
+actioned_by: command@claude-code
+actioned_note: option (b) confirmed — service-ppn-pairing crate; bin/build-binary.sh service-ppn-pairing
 msg-id: project-console-20260601-pairing-binary-discrepancy
 ---
 
@@ -952,7 +958,10 @@ to: command@claude-code
 re: [CONSOLIDATED] build-request — app-mediakit-knowledge 2026-05-31 — Stage 6 + binary rebuild + deploy
 created: 2026-05-31T17:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-01T19:00:00Z
+actioned_by: command@claude-code
+actioned_note: superseded — work completed in sessions 40-41 + 2026-06-01 Command Session
 msg-id: project-knowledge-20260531-consolidated-build-request
 supersedes: project-knowledge-20260531-phase9-10-11-stage6
 ---
@@ -1417,7 +1426,10 @@ to: command@claude-code
 re: Stage 6 pending — app-mediakit-knowledge Phase 7F+7G+7H — Tufte sidenotes + auto-numbered sections + binary rebuild needed
 created: 2026-05-29T16:45:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-01T19:00:00Z
+actioned_by: command@claude-code
+actioned_note: superseded — work completed in sessions 40-41 + 2026-06-01 Command Session
 msg-id: project-knowledge-20260529-phase7fgh-knowledge
 ---
 
@@ -1447,7 +1459,10 @@ to: command@claude-code
 re: Stage 6 pending — app-mediakit-knowledge Phase 7E — mobile bottom bar + binary rebuild needed
 created: 2026-05-29T12:27:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-01T19:00:00Z
+actioned_by: command@claude-code
+actioned_note: superseded — work completed in sessions 40-41 + 2026-06-01 Command Session
 msg-id: project-knowledge-20260529-phase7e-knowledge
 ---
 
@@ -1479,7 +1494,10 @@ to: command@claude-code
 re: Stage 6 pending — app-mediakit-knowledge Phase 7D — citation hover preview + binary rebuild needed
 created: 2026-05-29T09:30:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-01T19:00:00Z
+actioned_by: command@claude-code
+actioned_note: superseded — work completed in sessions 40-41 + 2026-06-01 Command Session
 msg-id: project-knowledge-20260529-phase7d-knowledge
 ---
 
@@ -1522,7 +1540,10 @@ to: command@claude-code
 re: Stage 6 pending — app-mediakit-knowledge Phase 7C — reading mode toggle + binary rebuild needed
 created: 2026-05-29T08:15:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-01T19:00:00Z
+actioned_by: command@claude-code
+actioned_note: superseded — work completed in sessions 40-41 + 2026-06-01 Command Session
 msg-id: project-knowledge-20260529-phase7c-knowledge
 ---
 
@@ -1567,7 +1588,10 @@ to: command@claude-code
 re: Stage 6 pending — app-mediakit-knowledge Phase UX-B — institutional chrome refactor + binary rebuild needed
 created: 2026-05-29T06:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-01T19:00:00Z
+actioned_by: command@claude-code
+actioned_note: superseded — work completed in sessions 40-41 + 2026-06-01 Command Session
 msg-id: project-knowledge-20260529-phase-uxb-knowledge
 ---
 
@@ -1612,7 +1636,10 @@ to: command@claude-code
 re: Stage 6 pending — app-mediakit-knowledge Phase UX-A — institutional UX CSS pass + binary rebuild needed
 created: 2026-05-29T03:35:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-01T19:00:00Z
+actioned_by: command@claude-code
+actioned_note: superseded — work completed in sessions 40-41 + 2026-06-01 Command Session
 msg-id: project-knowledge-20260529-phase-uxa-knowledge
 ---
 

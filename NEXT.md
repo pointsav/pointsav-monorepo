@@ -3,14 +3,14 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Monorepo coding roadmap: `pointsav-monorepo/NEXT.md`.
 
-Last updated: 2026-06-01 (Session 41 — Phase 8A-D complete; Stage 6 + binary build requested from Command).
+Last updated: 2026-06-01 (Session 41 sweep 2 — Phase 8 on canonical f02de834; pairing-server binary confirmed option b).
 
 ---
 
 ## Stage 6 — complete (2026-06-01)
 
-All three Phase 6/7/8 commits cherry-picked onto canonical via Command Session 40.
-`HEAD = origin/main = 371e968c`. Prior staging-mirror push and promote-queue items superseded.
+Phase 6/7/8 commits (Command Session 40) + Phase 8A-D (Session 41, promoted `f02de834`).
+All console commits now on canonical. os-console binary build running at Command.
 
 ## Phase C/D/E — complete 2026-05-31
 
@@ -60,9 +60,8 @@ All three Phase 6/7/8 commits cherry-picked onto canonical via Command Session 4
 - [ ] **GCE firewall port 2222** — required for external MBA → `pairing-server` connections
 - [ ] **pairing-server systemd unit** — unit file EXISTS at
   `infrastructure/systemd/ppn/local-ppn-pairing.service` (ExecStart: `/usr/local/bin/service-ppn-pairing`);
-  binary name discrepancy flagged to Command (unit says `service-ppn-pairing`; Cargo provides
-  `pairing-server` from `system-gateway-mba` and `ppn-pairing-server` from `service-ppn-pairing`
-  — awaiting Command confirmation of which binary to install)
+  **option (b) confirmed** — use `service-ppn-pairing` crate; deploy via
+  `bin/build-binary.sh service-ppn-pairing` (Command-actionable, unblocked)
 - [ ] **Peter SSH key + proofctl user add** — post-Stage 6; Peter needs SSH key committed to authorized_keys
 - [ ] **Tag v0.1.0 on pointsav-monorepo** — triggers GitHub Actions release (os-console + pairing-server + proofctl)
 
