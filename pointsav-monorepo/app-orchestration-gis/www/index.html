@@ -846,7 +846,9 @@
     let clusterMeta  = null;
     let clusterIndex = null; // Map: cluster_id → meta object
     let rmTop400     = {};   // rm_id → { rank, score, name, metro, dist_km, lat, lon, t1, t2, t3, cont }
-    let rmStarsActive = false;
+    let rmStarsActive     = false;
+    let urbanFringeActive = false;
+    let commuterActive    = false;
 
     // ── Catchment state ──────────────────────────────────────────────────────
     let catchmentActive    = false;
@@ -1301,6 +1303,12 @@
                     <span class="lc-dot" style="background:#D97706"></span>Top 400 Highlight
                     <span class="lc-planned">800 markets</span>
                 </button>
+                <button class="lc-btn${urbanFringeActive ? ' lc-active' : ''}" id="lc-urban-fringe" onclick="toggleUrbanFringeLayer(this)" style="margin-top:4px;">
+                    <span class="lc-dot" style="background:#EA580C"></span>Urban Fringe
+                </button>
+                <button class="lc-btn${commuterActive ? ' lc-active' : ''}" id="lc-commuter" onclick="toggleCommuterLayer(this)" style="margin-top:4px;">
+                    <span class="lc-dot" style="background:#0891B2"></span>Commuter
+                </button>
             </div>
             <div class="data-block">
                 <div class="data-label">Layers</div>
@@ -1545,9 +1553,51 @@
         applyBubbleAecOverlayStyle();
     }
 
+    // ── Overlay group: Top400 / Urban Fringe / Commuter — mutually exclusive ─────
+    // Only one of the three may be active at a time. All ghost the Co-location
+    // bubbles to 10% opacity so the overlay layer reads as foreground.
+
+    function deactivateOverlayGroup() {
+        if (rmStarsActive) {
+            rmStarsActive = false;
+            document.getElementById('lc-rm-stars')?.classList.remove('lc-active');
+            ['rm-stars-glow', 'rm-stars-dot'].forEach(id =>
+                map.getLayer(id) && map.setLayoutProperty(id, 'visibility', 'none'));
+        }
+        if (urbanFringeActive) {
+            urbanFringeActive = false;
+            document.getElementById('lc-urban-fringe')?.classList.remove('lc-active');
+            ['uf-t1', 'uf-t2'].forEach(id =>
+                map.getLayer(id) && map.setLayoutProperty(id, 'visibility', 'none'));
+        }
+        if (commuterActive) {
+            commuterActive = false;
+            document.getElementById('lc-commuter')?.classList.remove('lc-active');
+            ['cm-t1', 'cm-t2'].forEach(id =>
+                map.getLayer(id) && map.setLayoutProperty(id, 'visibility', 'none'));
+        }
+    }
+
+    function _restoreNodesIfClear() {
+        if (!koppenActive && !ecoregionsActive) {
+            map.setPaintProperty('nodes', 'circle-opacity', 0.88);
+            map.setPaintProperty('nodes', 'circle-stroke-opacity', 1.0);
+            if (map.getLayer('nodes-halo')) map.setPaintProperty('nodes-halo', 'circle-opacity', 0.10);
+            if (activeChainFilter) applyClusterBubbleStroke();
+        }
+    }
+
+    function _ghostNodes() {
+        map.setPaintProperty('nodes', 'circle-opacity', 0.10);
+        map.setPaintProperty('nodes', 'circle-stroke-opacity', 0.0);
+        if (map.getLayer('nodes-halo')) map.setPaintProperty('nodes-halo', 'circle-opacity', 0.0);
+    }
+
     // ── Regional Markets star layer ───────────────────────────────────────────
     function toggleRmStars(btn) {
-        rmStarsActive = !rmStarsActive;
+        const turningOn = !rmStarsActive;
+        if (turningOn) deactivateOverlayGroup();
+        rmStarsActive = turningOn;
         if (btn) btn.classList.toggle('lc-active', rmStarsActive);
         applyRmStarsStyle();
     }
@@ -1559,16 +1609,53 @@
         });
         if (!map.getLayer('nodes')) return;
         if (rmStarsActive && prodView.mode === 'GLOBAL') {
-            // Ghost cluster dots so the amber stars are the foreground
-            map.setPaintProperty('nodes', 'circle-opacity', 0.10);
-            map.setPaintProperty('nodes', 'circle-stroke-opacity', 0.0);
-            if (map.getLayer('nodes-halo')) map.setPaintProperty('nodes-halo', 'circle-opacity', 0.0);
-        } else if (!koppenActive && !ecoregionsActive) {
-            // Restore to default (defer to AEC style if active)
-            map.setPaintProperty('nodes', 'circle-opacity', 0.88);
-            map.setPaintProperty('nodes', 'circle-stroke-opacity', 1.0);
-            if (map.getLayer('nodes-halo')) map.setPaintProperty('nodes-halo', 'circle-opacity', 0.10);
-            if (activeChainFilter) applyClusterBubbleStroke();
+            _ghostNodes();
+        } else if (!urbanFringeActive && !commuterActive) {
+            _restoreNodesIfClear();
+        }
+    }
+
+    // ── Urban Fringe layer ────────────────────────────────────────────────────
+    function toggleUrbanFringeLayer(btn) {
+        const turningOn = !urbanFringeActive;
+        if (turningOn) deactivateOverlayGroup();
+        urbanFringeActive = turningOn;
+        if (btn) btn.classList.toggle('lc-active', urbanFringeActive);
+        applyUrbanFringeStyle();
+    }
+
+    function applyUrbanFringeStyle() {
+        const vis = (urbanFringeActive && prodView.mode === 'GLOBAL') ? 'visible' : 'none';
+        ['uf-t1', 'uf-t2'].forEach(id => {
+            if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
+        });
+        if (!map.getLayer('nodes')) return;
+        if (urbanFringeActive && prodView.mode === 'GLOBAL') {
+            _ghostNodes();
+        } else if (!rmStarsActive && !commuterActive) {
+            _restoreNodesIfClear();
+        }
+    }
+
+    // ── Commuter layer ────────────────────────────────────────────────────────
+    function toggleCommuterLayer(btn) {
+        const turningOn = !commuterActive;
+        if (turningOn) deactivateOverlayGroup();
+        commuterActive = turningOn;
+        if (btn) btn.classList.toggle('lc-active', commuterActive);
+        applyCommuterStyle();
+    }
+
+    function applyCommuterStyle() {
+        const vis = (commuterActive && prodView.mode === 'GLOBAL') ? 'visible' : 'none';
+        ['cm-t1', 'cm-t2'].forEach(id => {
+            if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
+        });
+        if (!map.getLayer('nodes')) return;
+        if (commuterActive && prodView.mode === 'GLOBAL') {
+            _ghostNodes();
+        } else if (!rmStarsActive && !urbanFringeActive) {
+            _restoreNodesIfClear();
         }
     }
 
@@ -1686,8 +1773,8 @@
         setVis(['all-locations', 'all-locations-hit'], local);
         setVis(['cluster-centroid'], false);
         setVis(['proximity-merged-label'], false);
-        // rm-stars: hidden at retailer zoom (no double-ring conflict); restored by applyRmStarsStyle on overview
-        setVis(['rm-stars-glow', 'rm-stars-dot'], false);
+        // rm-stars + archetype overlays: hidden at retailer zoom; restored on overview
+        setVis(['rm-stars-glow', 'rm-stars-dot', 'uf-t1', 'uf-t2', 'cm-t1', 'cm-t2'], false);
     }
 
     // Build a ring for every cluster in the current viewport — no merging.
@@ -2341,6 +2428,60 @@
                 'circle-opacity': 0.92,
                 'circle-stroke-color': 'rgba(255,255,255,0.9)',
                 'circle-stroke-width': 1.5,
+            },
+        });
+
+        // ── Urban Fringe overlay layers ──────────────────────────────────────────
+        map.addSource('uf-src', { type: 'geojson', data: 'data/archetype-vwh.geojson' });
+        map.addLayer({
+            id: 'uf-t1', type: 'circle', source: 'uf-src',
+            filter: ['==', ['get', 'vwh_tier'], 1],
+            layout: { visibility: 'none' },
+            paint: {
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 5, 8, 9],
+                'circle-color': '#EA580C',
+                'circle-opacity': 0.85,
+                'circle-stroke-width': 1.5,
+                'circle-stroke-color': '#7C2D12',
+            },
+        });
+        map.addLayer({
+            id: 'uf-t2', type: 'circle', source: 'uf-src',
+            filter: ['==', ['get', 'vwh_tier'], 2],
+            layout: { visibility: 'none' },
+            paint: {
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 3, 8, 6],
+                'circle-color': '#FB923C',
+                'circle-opacity': 0.70,
+                'circle-stroke-width': 1,
+                'circle-stroke-color': '#C2410C',
+            },
+        });
+
+        // ── Commuter overlay layers ──────────────────────────────────────────────
+        map.addSource('cm-src', { type: 'geojson', data: 'data/archetype-pks.geojson' });
+        map.addLayer({
+            id: 'cm-t1', type: 'circle', source: 'cm-src',
+            filter: ['==', ['get', 'commuter_tier'], 1],
+            layout: { visibility: 'none' },
+            paint: {
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 5, 8, 9],
+                'circle-color': '#0891B2',
+                'circle-opacity': 0.85,
+                'circle-stroke-width': 1.5,
+                'circle-stroke-color': '#164E63',
+            },
+        });
+        map.addLayer({
+            id: 'cm-t2', type: 'circle', source: 'cm-src',
+            filter: ['==', ['get', 'commuter_tier'], 2],
+            layout: { visibility: 'none' },
+            paint: {
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 3, 8, 6],
+                'circle-color': '#38BDF8',
+                'circle-opacity': 0.70,
+                'circle-stroke-width': 1,
+                'circle-stroke-color': '#0369A1',
             },
         });
 
