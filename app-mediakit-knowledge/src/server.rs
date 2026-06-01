@@ -132,6 +132,22 @@ pub struct AppState {
     pub brand_instance: String,
 }
 
+impl AppState {
+    /// Extra content roots (federated guide dirs) checked alongside `content_dir`
+    /// when resolving wikilinks, so TOPIC↔GUIDE links resolve across mounts and
+    /// don't dead-link. Generalizes to the full mount set in the Phase 0 refactor.
+    fn link_roots(&self) -> Vec<&std::path::Path> {
+        let mut v = Vec::new();
+        if let Some(p) = self.guide_dir.as_deref() {
+            v.push(p);
+        }
+        if let Some(p) = self.guide_dir_2.as_deref() {
+            v.push(p);
+        }
+        v
+    }
+}
+
 pub fn router(state: AppState) -> Router {
     let mcp_enabled = state.mcp_enabled;
     let mut r = Router::new()
@@ -395,7 +411,7 @@ async fn wanted_page(
     let mut wanted: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for tf in &topic_files {
         if let Ok(text) = fs::read_to_string(&tf.path).await {
-            let html = crate::render::render_html_raw(&text, &state.content_dir);
+            let html = crate::render::render_html_raw(&text, &state.content_dir, &state.link_roots());
             for cap in re.captures_iter(&html) {
                 let missing = cap[1].to_string();
                 wanted.entry(missing).or_default().push(tf.slug.clone());
@@ -1629,6 +1645,7 @@ async fn category_page(
                         Some(crate::render::render_html_raw(
                             &parsed.body_md,
                             &state.content_dir,
+                            &state.link_roots(),
                         ))
                     } else {
                         None
@@ -1746,7 +1763,8 @@ async fn home_inner(
     .await?;
     let recent = recent_topics_by_last_edited(&buckets, 8);
     let stats = compute_home_stats(&buckets);
-    let home_html = crate::render::render_html_raw(&home_parsed.body_md, &state.content_dir);
+    let home_html =
+        crate::render::render_html_raw(&home_parsed.body_md, &state.content_dir, &state.link_roots());
     let home_html = crate::glossary::inject_glossary_tooltips(&home_html, &state.glossary);
     let featured = load_featured(&state.content_dir, &buckets).await;
     let dyk = load_dyk_localized(&state.content_dir, locale).await;
@@ -2053,7 +2071,7 @@ async fn wiki_page_inner(
 
     // Two-step render: extract headings from clean comrak output (no edit pencils),
     // then inject pencils for the final body HTML. This keeps TOC text clean.
-    let raw_html = render_html_raw(&parsed.body_md, &state.content_dir);
+    let raw_html = render_html_raw(&parsed.body_md, &state.content_dir, &state.link_roots());
     let raw_html = crate::glossary::inject_glossary_tooltips(&raw_html, &state.glossary);
     let raw_html = crate::render::inject_citation_markers(&raw_html);
     let is_journal = parsed.frontmatter.layout.as_deref() == Some("journal");
@@ -3314,7 +3332,7 @@ async fn statistics_page(
                         most_recent = Some(le.clone());
                     }
                 }
-                let html = crate::render::render_html_raw(&text, &state.content_dir);
+                let html = crate::render::render_html_raw(&text, &state.content_dir, &state.link_roots());
                 redlink_count += re_redlink.find_iter(&html).count();
             }
         }
@@ -3367,7 +3385,7 @@ async fn talk_page(
     let body_html = if talk_md.is_empty() {
         String::new()
     } else {
-        crate::render::render_html(&talk_md, &state.content_dir)
+        crate::render::render_html(&talk_md, &state.content_dir, &state.link_roots())
     };
 
     let article_url = format!("/wiki/{slug}");
