@@ -35,6 +35,7 @@ from config import (
 from taxonomy import (
     BRAND_FILL, ALL_DISPLAY_ISO, ISO_TO_CONTINENT,
     DISPLAY_NAMES, category_of, tier_of, ring_radius_km, all_chains_for_iso,
+    slots_for,
 )
 from utils.region_engine import RegionEngine
 
@@ -46,6 +47,14 @@ SERVICE_PLACES   = TOTEBOX_DATA_PATH / "service-places" / "cleansed-civic-osm.js
 TAU_TIGHT_KM = 1.0
 TAU_LOOSE_KM = 3.0
 CIVIC_RADIUS_KM = 5.0   # civic stores added to members if within this radius of centroid
+
+# VWH/PKS enrichment categories — attached to clusters post-clustering like civic.
+# They NEVER affect tier (tier_of uses only the 6 retail cats) or cluster geometry.
+ENRICH_CATS = [
+    "auto_parts", "paint", "mro_industrial", "flooring", "tool_rental",
+    "lumber", "plumbing", "electrical", "welding", "car_rental",
+]
+ENRICH_RADIUS_KM = 5.0   # enrichment stores added to members if within this radius
 
 
 # ── HAVERSINE ─────────────────────────────────────────────────────────────────
@@ -353,6 +362,41 @@ def enrich_with_civic(clusters: list[dict], civic_recs: list) -> None:
             })
 
 
+# ── VWH/PKS ENRICHMENT ────────────────────────────────────────────────────────
+
+def load_enrich_recs(iso: str) -> list:
+    """Load all VWH/PKS enrichment-category chain records for an ISO.
+    These attach to clusters as members but never gate tier or geometry."""
+    recs = []
+    for cat in ENRICH_CATS:
+        for cid in slots_for(iso, cat):
+            for r in load_chain_jsonl(cid):
+                r["iso_country_code"] = iso
+                recs.append(r)
+    return recs
+
+
+def enrich_with_vwh(clusters: list[dict], enrich_recs: list) -> None:
+    """Attach nearby VWH/PKS enrichment stores (auto_parts, mro_industrial,
+    car_rental, etc.) to each cluster's members. Marked _enrich; never tier."""
+    if not enrich_recs:
+        return
+    grid = build_grid(enrich_recs)
+    for c in clusters:
+        clat, clon = c["clat"], c["clon"]
+        for idx, d in neighbours_within(clat, clon, enrich_recs, grid, ENRICH_RADIUS_KM):
+            r = enrich_recs[idx]
+            c["members"].append({
+                "chain_id":    r["chain_id"],
+                "latitude":    r["latitude"],
+                "longitude":   r["longitude"],
+                "location_name": r.get("location_name") or r["chain_id"],
+                "city":        r.get("city"),
+                "_enrich":     True,
+                "_dist_km":    round(d, 2),
+            })
+
+
 # ── GEOCODING + SCHEMA ASSEMBLY ───────────────────────────────────────────────
 
 def assemble_feature(c: dict, engine: RegionEngine) -> dict:
@@ -378,8 +422,9 @@ def assemble_feature(c: dict, engine: RegionEngine) -> dict:
         re.sub(r"[^a-z0-9]+", "_", (city or region_name or iso).lower()).strip("_")
     )
 
-    retail_members = [m for m in c["members"] if not m.get("_civic")]
+    retail_members = [m for m in c["members"] if not m.get("_civic") and not m.get("_enrich")]
     civic_members  = [m for m in c["members"] if m.get("_civic")]
+    enrich_members = [m for m in c["members"] if m.get("_enrich")]
 
     members_out = []
     for m in retail_members:
@@ -400,6 +445,19 @@ def assemble_feature(c: dict, engine: RegionEngine) -> dict:
             "lat":         round(float(m["latitude"]), 5),
             "lon":         round(float(m["longitude"]), 5),
             "dist_km":     m.get("_dist_km"),
+            "addr":        None,
+            "city":        (m.get("city") or "").strip() or None,
+        })
+    # VWH/PKS enrichment members (auto_parts, mro_industrial, car_rental, …)
+    for m in enrich_members:
+        members_out.append({
+            "chain_id":    m["chain_id"],
+            "category":    category_of(m["chain_id"]) or "unknown",
+            "name":        DISPLAY_NAMES.get(m["chain_id"], m["chain_id"]),
+            "lat":         round(float(m["latitude"]), 5),
+            "lon":         round(float(m["longitude"]), 5),
+            "dist_km":     m.get("_dist_km"),
+            "_enrich":     True,
             "addr":        None,
             "city":        (m.get("city") or "").strip() or None,
         })
@@ -467,6 +525,9 @@ def main():
         print(f"  {iso}: {len(all_recs)} retail records from {len(chain_map)} chains")
         clusters = run_dbscan_for_iso(iso, all_recs)
         enrich_with_civic(clusters, civic_recs)
+        enrich_recs = load_enrich_recs(iso)
+        if enrich_recs:
+            enrich_with_vwh(clusters, enrich_recs)
 
         for c in clusters:
             feat = assemble_feature(c, engine)
