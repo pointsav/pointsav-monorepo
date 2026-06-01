@@ -1089,6 +1089,89 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * Phase 4 — Command palette (Cmd/Ctrl-K)                              *
+   *                                                                     *
+   * Self-contained: builds its own overlay (no markup change). Fuzzy    *
+   * search via /api/complete; arrow/enter nav; Esc / tap-scrim close.   *
+   * Full-screen on mobile (≤640px), centered palette on desktop.        *
+   * ------------------------------------------------------------------ */
+  function initCommandPalette() {
+    var overlay = document.createElement('div');
+    overlay.className = 'cmdk-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.innerHTML =
+      '<div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="Search articles">' +
+        '<input class="cmdk-input" type="search" placeholder="Search articles…" autocomplete="off" spellcheck="false" aria-label="Search articles">' +
+        '<ul class="cmdk-results" role="listbox"></ul>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    var input = overlay.querySelector('.cmdk-input');
+    var list = overlay.querySelector('.cmdk-results');
+    var items = [];
+    var active = -1;
+    var debounce;
+
+    function isOpen() { return overlay.getAttribute('aria-hidden') === 'false'; }
+    function open() {
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      setTimeout(function () { input.focus(); }, 40);
+    }
+    function close() {
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      input.value = ''; list.innerHTML = ''; items = []; active = -1;
+    }
+    function highlight() {
+      Array.prototype.forEach.call(list.children, function (li, i) {
+        li.classList.toggle('cmdk-active', i === active);
+        li.setAttribute('aria-selected', i === active ? 'true' : 'false');
+        if (i === active) li.scrollIntoView({ block: 'nearest' });
+      });
+    }
+    function go(i) { if (items[i]) window.location.href = '/wiki/' + items[i].slug; }
+    function render(rows) {
+      items = rows || [];
+      list.innerHTML = '';
+      items.forEach(function (r, i) {
+        var li = document.createElement('li');
+        li.className = 'cmdk-item';
+        li.setAttribute('role', 'option');
+        li.textContent = r.title;
+        li.addEventListener('click', function () { go(i); });
+        list.appendChild(li);
+      });
+      active = items.length ? 0 : -1;
+      highlight();
+    }
+
+    input.addEventListener('input', function () {
+      var q = input.value.trim();
+      clearTimeout(debounce);
+      if (!q) { render([]); return; }
+      debounce = setTimeout(function () {
+        fetch('/api/complete?q=' + encodeURIComponent(q))
+          .then(function (r) { return r.json(); })
+          .then(function (d) { if (isOpen()) render((d || []).slice(0, 20)); })
+          .catch(function () {});
+      }, 120);
+    });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(active + 1, items.length - 1); highlight(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(active - 1, 0); highlight(); }
+      else if (e.key === 'Enter') { e.preventDefault(); go(active); }
+      else if (e.key === 'Escape') { e.preventDefault(); close(); }
+    });
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        isOpen() ? close() : open();
+      }
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
    * Phase 7E — Mobile bottom bar                                        *
    * ------------------------------------------------------------------ */
   function initMobileBottomBar() {
@@ -1245,6 +1328,7 @@
     initReadingProgress();
     initClaimRail();
     initTapPopovers();
+    initCommandPalette();
   });
 
 }());

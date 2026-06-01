@@ -3332,3 +3332,53 @@ body.reading-mode aside.toc { display: none !important; }
   .page-body h3 { page-break-after: avoid; }
   .article-shell { display: block; }
 }
+
+/* ---------- Phase 4 — Command palette (Cmd/Ctrl-K) ---------- */
+.cmdk-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  z-index: 300;
+  background: color-mix(in oklab, var(--fg-1) 45%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: calc(10vh + var(--safe-t));
+}
+.cmdk-overlay[aria-hidden="false"] { display: flex; }
+.cmdk-panel {
+  width: min(560px, 92vw);
+  max-height: 70svh;
+  display: flex; flex-direction: column;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.cmdk-input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 16px;            /* ≥16px — no iOS zoom */
+  padding: 16px 18px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg-1);
+  outline: none;
+}
+.cmdk-results { list-style: none; margin: 0; padding: 6px; overflow-y: auto; overscroll-behavior: contain; }
+.cmdk-item {
+  min-height: var(--tap-min);
+  display: flex; align-items: center;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--fg-2);
+  cursor: pointer;
+}
+.cmdk-item.cmdk-active, .cmdk-item:hover { background: var(--bg-hover); color: var(--fg-1); }
+@media (max-width: 640px) {
+  .cmdk-overlay { padding-top: 0; }
+  .cmdk-panel { width: 100vw; height: 100svh; max-height: 100svh; border: 0; border-radius: 0; }
+}
