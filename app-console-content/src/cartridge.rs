@@ -42,6 +42,12 @@ const PLACEHOLDER: &str =
 
 // ── State machine ─────────────────────────────────────────────────────────────
 
+struct DraftTab {
+    label: String,
+    lines: Vec<String>,
+    protocol_idx: usize,
+}
+
 enum ContentState {
     Input {
         protocol_idx: usize,
@@ -92,6 +98,10 @@ enum ContentState {
     },
     Error {
         message: String,
+    },
+    MultiDraft {
+        tabs: Vec<DraftTab>,
+        active: usize,
     },
 }
 
@@ -783,6 +793,26 @@ impl ContentCartridge {
             return CartridgeAction::Consumed;
         }
 
+        // Ctrl-t → open a new tab (transition Input → MultiDraft)
+        if key.code == KeyCode::Char('t') && key.modifiers.contains(KeyModifiers::CONTROL) {
+            let lines: Vec<String> = self.textarea.lines().iter().map(String::from).collect();
+            let tab1 = DraftTab {
+                label: "Draft 1".into(),
+                lines,
+                protocol_idx,
+            };
+            let tab2 = DraftTab {
+                label: "Draft 2".into(),
+                lines: Vec::new(),
+                protocol_idx: DEFAULT_PROTOCOL_IDX,
+            };
+            self.state = ContentState::MultiDraft { tabs: vec![tab1, tab2], active: 1 };
+            let mut ta = TextArea::default();
+            ta.set_placeholder_text(PLACEHOLDER);
+            self.textarea = ta;
+            return CartridgeAction::Consumed;
+        }
+
         // Everything else → textarea
         self.textarea
             .input(tui_textarea::Input::from(event.clone()));
@@ -990,6 +1020,154 @@ impl ContentCartridge {
         }
         CartridgeAction::Consumed
     }
+
+    fn on_multidraft_key(&mut self, event: &Event, _active: usize) -> CartridgeAction {
+        let Event::Key(key) = event else {
+            return CartridgeAction::None;
+        };
+        if matches!(key.code, KeyCode::F(_)) {
+            return CartridgeAction::None;
+        }
+        if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) {
+            return CartridgeAction::None;
+        }
+
+        // Ctrl-t → add another tab
+        if key.code == KeyCode::Char('t') && key.modifiers.contains(KeyModifiers::CONTROL) {
+            if let ContentState::MultiDraft { tabs, active } = &mut self.state {
+                let lines: Vec<String> = self.textarea.lines().iter().map(String::from).collect();
+                tabs[*active].lines = lines;
+                let n = tabs.len() + 1;
+                tabs.push(DraftTab {
+                    label: format!("Draft {}", n),
+                    lines: Vec::new(),
+                    protocol_idx: DEFAULT_PROTOCOL_IDX,
+                });
+                *active = tabs.len() - 1;
+            }
+            let mut ta = TextArea::default();
+            ta.set_placeholder_text(PLACEHOLDER);
+            self.textarea = ta;
+            return CartridgeAction::Consumed;
+        }
+
+        // Ctrl-Left → previous tab
+        if key.code == KeyCode::Left && key.modifiers.contains(KeyModifiers::CONTROL) {
+            if let ContentState::MultiDraft { tabs, active } = &mut self.state {
+                if *active > 0 {
+                    let lines: Vec<String> = self.textarea.lines().iter().map(String::from).collect();
+                    tabs[*active].lines = lines;
+                    *active -= 1;
+                    let target = TextArea::from(tabs[*active].lines.clone());
+                    self.textarea = target;
+                    self.textarea.set_placeholder_text(PLACEHOLDER);
+                }
+            }
+            return CartridgeAction::Consumed;
+        }
+
+        // Ctrl-Right → next tab
+        if key.code == KeyCode::Right && key.modifiers.contains(KeyModifiers::CONTROL) {
+            if let ContentState::MultiDraft { tabs, active } = &mut self.state {
+                if *active + 1 < tabs.len() {
+                    let lines: Vec<String> = self.textarea.lines().iter().map(String::from).collect();
+                    tabs[*active].lines = lines;
+                    *active += 1;
+                    let target = TextArea::from(tabs[*active].lines.clone());
+                    self.textarea = target;
+                    self.textarea.set_placeholder_text(PLACEHOLDER);
+                }
+            }
+            return CartridgeAction::Consumed;
+        }
+
+        // Ctrl-w → close current tab
+        if key.code == KeyCode::Char('w') && key.modifiers.contains(KeyModifiers::CONTROL) {
+            let new_state = if let ContentState::MultiDraft { tabs, active } = &mut self.state {
+                tabs.remove(*active);
+                if tabs.len() == 1 {
+                    let pidx = tabs[0].protocol_idx;
+                    let lines = tabs[0].lines.clone();
+                    let ta = TextArea::from(lines);
+                    self.textarea = ta;
+                    self.textarea.set_placeholder_text(PLACEHOLDER);
+                    Some(ContentState::Input { protocol_idx: pidx })
+                } else {
+                    *active = (*active).min(tabs.len() - 1);
+                    let lines = tabs[*active].lines.clone();
+                    let ta = TextArea::from(lines);
+                    self.textarea = ta;
+                    self.textarea.set_placeholder_text(PLACEHOLDER);
+                    None
+                }
+            } else {
+                None
+            };
+            if let Some(s) = new_state {
+                self.state = s;
+            }
+            return CartridgeAction::Consumed;
+        }
+
+        // Forward to textarea
+        self.textarea.input(tui_textarea::Input::from(event.clone()));
+        CartridgeAction::Consumed
+    }
+
+    fn render_multidraft(&mut self, frame: &mut Frame, area: Rect, labels: &[String], active: usize, protocol_idx: usize) {
+        let (slug, display) = PROTOCOLS[protocol_idx];
+
+        // Split: 1 row tab bar + rest for content
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(1), Constraint::Fill(1), Constraint::Length(1)])
+            .split(area);
+
+        // Tab bar
+        let tab_line: Line = Line::from(
+            labels
+                .iter()
+                .enumerate()
+                .flat_map(|(i, label)| {
+                    let (open, close) = if i == active { ("▶[", "]") } else { ("[", "]") };
+                    let style = if i == active {
+                        Style::default().fg(Color::Black).bg(self.selection_bg()).add_modifier(Modifier::BOLD)
+                    } else {
+                        Style::default().fg(Color::DarkGray)
+                    };
+                    vec![
+                        Span::raw(" "),
+                        Span::styled(format!("{}{}{}", open, label, close), style),
+                    ]
+                })
+                .chain(std::iter::once(Span::raw("   [Ctrl-t: new  Ctrl-←/→: switch  Ctrl-w: close]")))
+                .collect::<Vec<_>>(),
+        );
+        frame.render_widget(Paragraph::new(tab_line), chunks[0]);
+
+        // Content area (same as render_input)
+        let border_color = if self.offline { Color::DarkGray } else { self.accent_color() };
+        let outer = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(border_color))
+            .title(format!(" {} ", labels.get(active).map(|s| s.as_str()).unwrap_or("Draft")));
+        let inner = outer.inner(chunks[1]);
+        frame.render_widget(outer, chunks[1]);
+
+        let content_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Fill(1), Constraint::Length(1)])
+            .split(inner);
+        frame.render_widget(&self.textarea, content_chunks[0]);
+
+        let offline_note = if self.offline { "  [⚠ AI OFFLINE — /new disabled]" } else { "" };
+        let hint = Paragraph::new(format!(
+            " Protocol: {}  —  {}    [Ctrl-S: submit  /search: search  q/Ctrl-C: quit]{}",
+            slug, display, offline_note
+        ))
+        .style(Style::default().fg(Color::DarkGray));
+        frame.render_widget(hint, chunks[2]);
+    }
 }
 
 impl Default for ContentCartridge {
@@ -1151,6 +1329,7 @@ impl Cartridge for ContentCartridge {
             Search(String, Vec<SearchResult>, usize, u16, bool),
             Pdf(String, u32, u32),
             Error(String),
+            MultiDraft(Vec<String>, usize, usize),
         }
         let cmd = match &self.state {
             ContentState::Input { protocol_idx } => Cmd::Input(*protocol_idx),
@@ -1189,6 +1368,11 @@ impl Cartridge for ContentCartridge {
                 ..
             } => Cmd::Pdf(path.clone(), *page, *total_pages),
             ContentState::Error { message } => Cmd::Error(message.clone()),
+            ContentState::MultiDraft { tabs, active } => Cmd::MultiDraft(
+                tabs.iter().map(|t| t.label.clone()).collect(),
+                *active,
+                tabs.get(*active).map(|t| t.protocol_idx).unwrap_or(DEFAULT_PROTOCOL_IDX),
+            ),
         };
 
         self.pending_hyperlinks.clear();
@@ -1208,6 +1392,9 @@ impl Cartridge for ContentCartridge {
             }
             Cmd::Pdf(path, page, total) => self.render_pdf_view(frame, area, &path, page, total),
             Cmd::Error(msg) => Self::render_error(frame, area, &msg),
+            Cmd::MultiDraft(labels, active, pidx) => {
+                self.render_multidraft(frame, area, &labels, active, pidx)
+            }
         }
     }
 
@@ -1226,6 +1413,7 @@ impl Cartridge for ContentCartridge {
             Search,
             Pdf,
             Error,
+            MultiDraft(usize),
         }
         let kind = match &self.state {
             ContentState::Input { protocol_idx } => StateKind::Input(*protocol_idx),
@@ -1239,6 +1427,7 @@ impl Cartridge for ContentCartridge {
             ContentState::SearchResults { .. } => StateKind::Search,
             ContentState::PdfView { .. } => StateKind::Pdf,
             ContentState::Error { .. } => StateKind::Error,
+            ContentState::MultiDraft { active, .. } => StateKind::MultiDraft(*active),
         };
 
         match kind {
@@ -1253,6 +1442,7 @@ impl Cartridge for ContentCartridge {
                 self.reset_textarea(DEFAULT_PROTOCOL_IDX);
                 CartridgeAction::Consumed
             }
+            StateKind::MultiDraft(active) => self.on_multidraft_key(event, active),
         }
     }
 
