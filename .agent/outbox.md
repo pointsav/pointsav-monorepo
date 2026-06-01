@@ -34,9 +34,15 @@ monorepo sub-clone (branch `main`). All verified: `cargo test` 105 pass / 1 pre-
   scroll-margin-top for sticky-header anchor jumps; hairline blockquote; data tables in Inter.
 - `a48a9346` — Phase 2b article code blocks: `.prose pre` was unstyled — now border-defined mono
   14px/1.6 with M9 horizontal scroll + never-wrap; `.prose` tables scroll on ≤640px.
+- `458717f5` — Phase 0a wikilink resolver (Rust): **L18 zero dead links** + **TOPIC↔GUIDE
+  cross-root resolution**. `inject_wiki_prefixes` now checks content_dir + federated guide roots
+  (`AppState::link_roots`); unresolved links unwrap to plain text instead of dead red-links (red-link
+  path removed); `render_html/_raw` take `extra_roots`; new unit-test coverage.
+- `0a13b21a` — M3 touch targets: mobile nav/TOC links + close button to 44px min (were 26–35px).
 - `c97e1c38` — engine `NEXT.md` points to the new master brief (Phase −1).
 
-All five verified together (final gate): `cargo test` 105 pass / 1 pre-existing fail; `clippy` clean.
+All seven verified together (final gate): `cargo test` 105 pass / 1 pre-existing fail
+(`wiki_page_renders_navigation_portlet`, stale-chrome, unrelated); `cargo clippy` clean.
 
 **Visible result after deploy:** all three sites render in Inter (headings + UI) with Source Serif 4
 reading body, larger 17px body, and the mobile fixes — the headline typographic transformation.
@@ -44,12 +50,15 @@ Fonts are already on disk (`static/fonts/Inter-*`, `Source-Serif-4-*`); rust-emb
 release rebuild. Smoke-test note: after deploy, `curl -s :9090/static/style.css | grep -c "font-family: 'Inter'"`
 should be 6, and `grep viewport-fit=cover` on the page should hit.
 
-**Remaining plan (NOT in this build — deferred to focused sessions, per `BRIEF-knowledge-platform-master.md` §14):**
-Phase 0 federation engine (mounts + blueprints + the `inject_wiki_prefixes` cross-mount/zero-dead-link
-fix + build gate), Phase 2 remainder (bottom action bar, tap-popovers for hover-only features,
-desktop three-column shell), Phase 3 home redesign, Phase 4 Cmd+K palette, Phase 5 per-brand theming.
-Held back deliberately — the federation refactor + core-render surgery warrant supervised passes, not
-an autonomous night-batch, to keep the tree green for the nightly build.
+**Remaining plan (deferred — needs browser verification or is large infra; per `BRIEF-knowledge-platform-master.md` §14):**
+Phase 0 b/c federation engine (full `knowledge.toml` mount manifest + `blueprints/*.yaml` registry —
+large Rust infra, no user-visible change, best as a dedicated pass); the build-time dead-link GATE
+(complements the now-shipped render-time L18 fallback); Phase 2 remainder (bottom action bar,
+tap-popovers replacing hover-only features for touch, desktop three-column shell); Phase 3 home
+redesign; Phase 4 Cmd+K palette (net-new JS — held back because it can't be browser-verified in a
+Totebox session and a JS error has page-wide blast radius); Phase 5 per-brand theming.
+Note: the contained, safely-verifiable wins (fonts, mobile primitives M2/M4/M5/M7, reading surface,
+code blocks M9, touch targets M3, L18 linking) ARE in this build.
 
 ---
 from: totebox@project-knowledge
