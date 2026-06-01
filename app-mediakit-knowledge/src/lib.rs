@@ -9,6 +9,7 @@
 pub mod assets;
 pub mod auth;
 pub mod blueprints;
+pub mod check;
 pub mod citations;
 pub mod claim;
 pub mod config;
