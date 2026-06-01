@@ -587,6 +587,9 @@ impl AppConsoleKeys {
             loop {
                 self.drain_pair_events();
                 terminal.draw(|f| self.render(f))?;
+                if let Some(c) = self.cartridges.get(&self.active) {
+                    c.flush_hyperlinks();
+                }
                 if event::poll(Duration::from_millis(16))? {
                     let ev = event::read()?;
                     if let ChassisAction::Quit = self.handle_event(&ev) {
