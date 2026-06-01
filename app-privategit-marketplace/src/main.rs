@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use axum::{
     extract::{Path, State},
-    http::{header, StatusCode},
+    http::{header, StatusCode, Uri},
     response::{IntoResponse, Json, Redirect, Response},
     routing::{get, post},
     Router,
@@ -147,8 +147,12 @@ async fn software_page() -> Redirect {
     Redirect::permanent("/products")
 }
 
-async fn licensing_page() -> Response {
-    serve_static_html(include_str!("../static/licensing.html"))
+async fn licensing_page(uri: Uri) -> Response {
+    let target = match uri.query() {
+        Some(q) => format!("/products?{}", q),
+        None => "/products".to_string(),
+    };
+    Redirect::permanent(&target).into_response()
 }
 
 fn serve_static_html(body: &'static str) -> Response {
