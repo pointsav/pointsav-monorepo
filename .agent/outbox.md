@@ -1735,7 +1735,10 @@ to: command@claude-code
 re: build-request — os-console, pairing-server, proofctl
 created: 2026-05-23T00:00:00Z
 priority: normal
-status: pending
+status: stale
+staled: 2026-06-01T20:15:00Z
+staled_by: command@claude-code
+stale_note: os-console/pairing/proofctl built in prior+this session
 msg-id: project-console-20260523-build-request
 ---
 
@@ -1767,7 +1770,10 @@ to: command@claude-code
 re: Stage 6 rebase — BLOCKED awaiting Command decision; rebase complete, push unsafe without directive
 created: 2026-05-22T16:55:00Z
 priority: high
-status: pending
+status: stale
+staled: 2026-06-01T20:15:00Z
+staled_by: command@claude-code
+stale_note: investigated: the 11 os-console commits ARE in canonical (77c70e4e pairing Phase 2, 947be496 MBA, 20ea504d F12 Input Machine); divergence superseded by Session 41 rename + promotes; no force-push needed
 msg-id: project-console-20260522-stage6-history-divergence
 ---
 
