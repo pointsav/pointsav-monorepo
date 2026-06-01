@@ -506,7 +506,7 @@ fn process_corpus(
                     "yoyo-circuit-open" => {
                         if !tier_a_fallback.enabled {
                             println!(
-                                "  -> [WATCHER] Extraction deferred (circuit-open): skipping until restart."
+                                "  -> [WATCHER] Extraction deferred (circuit-open): recovery probe active — will resume when Tier B returns."
                             );
                             return ExtractResult::DeferCircuitOpen;
                         }
