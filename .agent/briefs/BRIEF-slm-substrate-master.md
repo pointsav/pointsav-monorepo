@@ -232,6 +232,66 @@ Summary:
 
 ---
 
+## §2.8 — Yo-Yo Tier B inference findings (live test 2026-06-01)
+
+Stockout cleared 2026-06-01 ~02:10. Brought the VM up and tested Tier B end-to-end
+(`/v1/extract` → "trainer" label → 32B-Think). The substrate plumbing works; three
+distinct issues found and partly fixed live. **Tested-first deliberately — a blind Packer
+rebuild would have shipped two of these bugs and not fixed the third at all.**
+
+### Confirmed working
+- Stockout recovery (Mode 1 start), llama-server (olmo-3-32b-think-**q3**.gguf) loads on the
+  L4 (~6–18s from the pre-loaded weights disk), `/health` 200, Doorman circuit closes,
+  `health_up` recovers (~24s after vLLM ready). Generation ~10–11 tok/s on the L4.
+
+### Bug 1 — slot-context starvation (truncation) — FIXED LIVE, validated
+- Deployed image ran `-c 4096 -np 4` → context split across 4 slots = **1024 tokens/slot**.
+- The 32B-Think reasoning block consumed the whole 1024-token slot → `truncated=1`, no JSON.
+- **Fix (validated live): `-np 1`** → full 4096/slot → `truncated=0`, model completes cleanly.
+  (Alternative: `-c 16384 -np 4` for concurrency, but 4× KV-cache VRAM — risky on a 24 GB L4.
+  `-np 1` is the safe choice; Yo-Yo volume is low, single-slot is fine.)
+
+### Bug 2 — bare `-fa` crashes on the current llama.cpp build — FIXED LIVE
+- The repo Packer template uses bare `-fa`. The current llama.cpp build changed it to
+  `--flash-attn [on|off|auto]` (takes a value), so bare `-fa` consumed the next flag as its
+  value and llama-server exited 1 on startup. **Fix: `-fa on`** (or drop it — `auto` default).
+
+### Bug 3 — JSON-schema grammar NOT constraining extraction — THE REAL BLOCKER (code, not config)
+- With Bug 1 fixed, llama-server completes (200, `truncated=0`) but extraction STILL defers
+  `yoyo-transient` after ~118–120s. Root cause: the model generates **1300+ unconstrained
+  tokens** (prose, not tight JSON) — **regardless of `--reasoning-budget` (tested 1024 AND 0,
+  identical ~118s / ~1300 tokens)**. The JSON-schema grammar is not reaching/constraining
+  llama-server, so the output isn't parseable JSON → Doorman defers.
+- **This is a Doorman `/v1/extract`-path code bug** (grammar plumbing to llama-server and/or
+  deepseek response parsing), NOT a VM config issue. A Packer rebuild does not fix it.
+- Constant ~118s timing across reasoning-budget values proves it's not the model/timeout —
+  it's unconstrained generation length.
+
+### Correct fix sequence (do NOT rebuild the image first)
+1. **Doorman code fix:** ensure the JSON-schema grammar is passed to AND enforced by
+   llama-server on `/v1/extract`; confirm the handler parses the `--reasoning-format deepseek`
+   response (`reasoning_content` + `content`). This is the real blocker. See NEXT.md.
+2. **Packer template fix (both validated):** `-np 4`→`-np 1`; `-fa`→`-fa on`.
+   File: `service-slm/compute/packer/scripts/llama-server.service`.
+3. **Re-validate live** (one short window), THEN rebuild the image once.
+
+### Design note
+Extraction is a *structured* task — the 32B-**Think** model reasoning is overhead for it
+(reasoning-budget 0 didn't even help here because grammar wasn't enforced). Once grammar is
+enforced, consider whether extraction should run reasoning-off (budget 0) for speed/cost, and
+reserve full reasoning for the DPO/coding path. Reasoning-budget is a server-wide flag, so
+per-path control needs request-side plumbing (future).
+
+### Cost
+Three short test windows 2026-06-01 totalling ~30 min L4 spot, < $1. VM stopped after each;
+image has a 70-min `max-lifetime-seconds` dead-man's switch baked in as a backstop.
+
+### State left behind
+The VM boot disk now carries a live-edited `llama-server.service` (`-np 1`, reasoning-budget 0,
+no `-fa`) — harmless (better than original) and moot once the image is rebuilt. VM TERMINATED.
+
+---
+
 ## §3 — DataGraph flow (service-content ↔ Doorman ↔ Yo-Yo)
 
 How data moves through the substrate once the Yo-Yo is running:

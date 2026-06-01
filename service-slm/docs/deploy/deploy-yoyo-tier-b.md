@@ -43,6 +43,18 @@ Optional: override zone or project:
 packer build -var project_id=woodfine-node-gcp-free -var zone=us-west1-c yoyo-image.pkr.hcl
 ```
 
+> **⚠️ llama-server flag corrections (verified live 2026-06-01 — see BRIEF-slm-substrate-master.md §2.8).**
+> The `scripts/llama-server.service` baked into the image must use:
+> - **`-np 1`** (NOT `-np 4`): with `-c 4096`, `-np 4` splits context to **1024 tokens/slot**,
+>   which the 32B-Think reasoning block overruns → `truncated=1`, no JSON. `-np 1` gives the
+>   full 4096/slot. (Use `-c 16384 -np 4` only if you've confirmed the KV cache fits the 24 GB L4.)
+> - **`-fa on`** (NOT bare `-fa`): the current llama.cpp build requires a value for `--flash-attn`;
+>   bare `-fa` consumes the next flag as its value and llama-server exits 1 on startup.
+>
+> **Do not rebuild the image to "fix extraction" until the Doorman `/v1/extract` grammar bug is
+> resolved** (the JSON schema isn't constraining the 32B → unconstrained output → defer). That is
+> a code fix in slm-doorman, not an image change. See NEXT.md "TIER B grammar" section.
+
 ---
 
 ## Step 2 — Provision infrastructure

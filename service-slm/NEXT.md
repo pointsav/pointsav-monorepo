@@ -1,8 +1,37 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-31 — Sessions 13+14: corpus audit (all existing tuples empty/corrupt); CPU drain paused; SFT-first + CodeDPO-on-GPU architecture adopted; P1 /readyz reason+zone; Sprint 4a app-console-slm status; Fix C deferred indefinitely
+> Last updated: 2026-06-01 — Yo-Yo Tier B live test: stockout cleared; truncation fixed (-np 1); 2 Packer-template bugs found; REAL blocker = /v1/extract grammar not constraining 32B output (code fix). Prior: Sessions 13+14 corpus audit; CPU drain paused; SFT-first; P1 readyz reason+zone; Sprint 4a status.
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
+
+---
+
+## 🔴 TIER B (/v1/extract) — grammar not constraining 32B output (2026-06-01, THE blocker)
+
+Live Yo-Yo test 2026-06-01 (full diagnosis: BRIEF-slm-substrate-master.md §2.8). Substrate
+works; truncation fixed live; but extraction still fails. Concrete fix items:
+
+- [ ] **P0 — Doorman `/v1/extract` grammar plumbing (CODE).** The JSON-schema grammar is not
+  reaching/constraining llama-server: the 32B generates 1300+ unconstrained prose tokens
+  (identical with `--reasoning-budget` 1024 AND 0) → Doorman can't parse JSON → defers
+  `yoyo-transient` after ~118s. Verify how `/v1/extract` passes the schema to the Yo-Yo
+  client (GBNF/json-schema grammar field) and that llama-server enforces it; confirm the
+  handler parses the `--reasoning-format deepseek` response (`reasoning_content` + `content`).
+  Files: `crates/slm-doorman-server/src/http.rs` (extract handler ~line 480–540),
+  `crates/slm-doorman/src/tier/yoyo.rs` (request build → grammar field).
+- [ ] **P1 — Packer template fix (both validated live), `compute/packer/scripts/llama-server.service`:**
+  `-np 4` → `-np 1` (4096 ctx was split to 1024/slot → truncation); `-fa` → `-fa on`
+  (bare `-fa` crashes the current llama.cpp build — now requires a value). FIXED in this
+  session's commit; rebuild image only AFTER the P0 grammar fix is validated.
+- [ ] **P2 — re-validate live, then Packer rebuild once.** Start Yo-Yo, apply fixed Doorman
+  binary + template, run `/v1/extract` → expect tight JSON in <20s. Then `packer build`.
+- [ ] **Design — extraction reasoning-off?** Once grammar is enforced, consider reasoning-budget
+  0 for the extraction path (structured task; Think reasoning is overhead) and reserve full
+  reasoning for DPO/coding. Per-path control needs request-side plumbing (reasoning-budget is
+  a server-wide llama-server flag today).
+
+Note: stockout cleared 2026-06-01 but Yo-Yo is stopped (manual). The VM boot disk has a
+live-edited llama-server.service (-np 1) — moot once rebuilt.
 
 ---
 
