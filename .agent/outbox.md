@@ -28,9 +28,17 @@ ETag, so browsers revalidate every load — cheap 304 when unchanged, the new fi
 deploy). This permanently ends the stale-CSS-after-deploy problem. Verified green: `cargo test`
 105 pass / 1 pre-existing fail (`wiki_page_renders_navigation_portlet`, unrelated); `cargo clippy` clean.
 
+**Also ready to ride this promote (behavior-preserving, no live change):**
+- `2a3e6ab0` — Phase 0 federation INFRA: new `src/mounts.rs` (declarative `knowledge.toml` Mount
+  manifest loader + env-synthesize fallback) + `src/blueprints.rs` (content-type registry: built-in
+  topic/guide + `blueprints/*.yaml` customer overrides + frontmatter validation). `serve()` resolves
+  the mount set but synthesizes from env when no manifest is present — so all current instances behave
+  identically. Adds the `toml` crate. 114 tests pass (9 new), clippy clean. Deep integration (mounts
+  replacing `content_dir` engine-wide; blueprint-driven cross-link rails) is follow-on per BRIEF §11.
+
 **Action (Command workspace monorepo):**
 ```
-~/Foundry/bin/deploy-binary.sh app-mediakit-knowledge --note "cache-busting: per-type Cache-Control (fc40a4c1)"
+~/Foundry/bin/deploy-binary.sh app-mediakit-knowledge --note "cache-busting (fc40a4c1) + Phase 0 federation infra (2a3e6ab0)"
 ```
 (Promote first if `fc40a4c1` isn't on canonical origin/main yet — last batch's commits were
 fast-forwarded, so this should ride the same path.)
