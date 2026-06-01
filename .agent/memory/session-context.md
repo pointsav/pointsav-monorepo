@@ -15,9 +15,10 @@
 - **nightly-rebuild.sh**: wired archetype test + GeoJSON deploy as step 3 (after cluster rebuild).
 - Editorial: BRIEF-location-intelligence-archetypes + TOPIC-vertical-warehouse + TOPIC-parking-structures + GUIDE-location-intelligence-data-collection drafted (registry A18–A21).
 
+**Infra ingest COMPLETE (08:10Z):** 4,024 IATA-filtered airports (3,774 w/ IATA code; vs 20,841 Overture noise) + 18,107 intercity rail stations in service-places. test-cluster-archetypes.py re-run with both → **14,332 PKS candidates** (1,744 airport + 12,588 rail), **3,904 integrated** (637 airport + 3,267 rail). Railway dominates — EU park-and-train. GeoJSON redeployed to gateway.
+
 **Pending / carry-forward:**
-- **Infra ingest (airports + railway) running detached** (`run-infra-ingest.sh` via setsid) at session end — overnight-scale under Overpass throttle. A few US airport tiles fail even with retry. When complete, re-run `test-cluster-archetypes.py` to pick up IATA airports + rail as PKS anchors (replaces noisy 20,841 Overture set).
-- Re-run `ingest-osm-airports.py --countries US` once Overpass rate limit fully clears, to fill tile gaps.
+- Re-run `ingest-osm-airports.py --countries US` to fill tile gaps (a few US tiles failed under throttle; US got 1,714 airports — solid but incomplete).
 - **Stage 6 pending**: code commits (taxonomy/build-clusters/ingest scripts/test/nightly) need `bin/promote.sh` from Command.
 - Chain YAMLs + JSONL live in deployment (cluster-totebox-personnel-1), local-only — not committed (per architecture).
 
