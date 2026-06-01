@@ -10,6 +10,48 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: DEPLOY — cache-busting fix (fc40a4c1) — promote + rebuild; ends the stale-CSS masking
+created: 2026-06-01T17:30:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260601-cachebust-deploy
+---
+
+**Context:** the foundation batch IS already live (binary `d2312a99`, deployed 16:37Z) — Inter +
+Source Serif 4 etc. are being served. But users with a browser cache from before 16:37 still see the
+OLD Oswald CSS, because `/static/style.css` was served `max-age=3600` with an unversioned URL. That
+is the "live sites not correct" report — a stale client cache, not a deploy failure.
+
+**New commit to promote + deploy:** `fc40a4c1` — `static_asset` now sets `Cache-Control` by asset
+type: fonts/images `max-age=31536000, immutable`; **css/js `max-age=0, must-revalidate`** (keeps the
+ETag, so browsers revalidate every load — cheap 304 when unchanged, the new file instantly after a
+deploy). This permanently ends the stale-CSS-after-deploy problem. Verified green: `cargo test`
+105 pass / 1 pre-existing fail (`wiki_page_renders_navigation_portlet`, unrelated); `cargo clippy` clean.
+
+**Action (Command workspace monorepo):**
+```
+~/Foundry/bin/deploy-binary.sh app-mediakit-knowledge --note "cache-busting: per-type Cache-Control (fc40a4c1)"
+```
+(Promote first if `fc40a4c1` isn't on canonical origin/main yet — last batch's commits were
+fast-forwarded, so this should ride the same path.)
+
+**Verify after deploy:**
+```
+curl -s -D- -o /dev/null :9090/static/style.css | grep -i cache-control   # css → max-age=0, must-revalidate
+curl -s -D- -o /dev/null :9090/static/fonts/Inter-400-normal-latin.woff2 | grep -i cache-control  # → immutable
+```
+Then a normal browser refresh (no hard-refresh needed) should show the new Inter/serif design — and
+all future deploys take effect immediately.
+
+**Remaining plan deferred to a BROWSER-VERIFIED session (per `BRIEF-knowledge-platform-master.md` §14):**
+M1 tap-popovers + Phase 4 Cmd+K (both net-new/reworked JS — a logic bug is invisible to `node --check`
+and hits 80% mobile page-wide), Phase 3 home redesign / Phase 5 per-brand / Phase 2 desktop 3-col
+(aesthetic CSS that wants visual checks), and Phase 0 b/c mount-manifest + blueprint registry (large
+infra, no user-visible change). All are committed-spec only; none started this batch.
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: DEPLOY-ONLY — app-mediakit-knowledge: promote is DONE, binary rebuild + deploy still pending
 created: 2026-06-01T16:45:00Z
 priority: high
