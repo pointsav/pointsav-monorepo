@@ -1,5 +1,28 @@
 # NEXT.md — app-mediakit-knowledge
 
+> Last updated: 2026-06-01 (Phase −1 documentation consolidation)
+> **SOURCE OF TRUTH:** `.agent/briefs/BRIEF-knowledge-platform-master.md` — read it first.
+> It supersedes the 2030 brief and consolidates the 2026-06-01 research (mobile-first,
+> content federation via mounts + blueprints, premium UX, linking model + zero dead links).
+
+## 2026-06-01 direction (from the master brief)
+
+- [ ] **§7 font decision (supersedes L8):** Oswald/Nunito/Roboto Slab → **Inter (UI+headings)
+      + Source Serif 4 (reading body) + system mono.** Files already on disk; lands in Phase 1.
+      ⚠️ Conflict surfaced to Command (overrides a "LOCKED" decision); logged in master Decision Log.
+- [ ] **Phase 0 — federation engine:** `knowledge.toml` mounts; `blueprints/*.yaml` + `src/blueprints.rs`;
+      thread mounts into `inject_wiki_prefixes` (cross-mount resolution); build-time dead-link gate;
+      **remove red-link path** (`render.rs:464`, L18); typed TOPIC↔GUIDE backlinks; slug normalization.
+- [ ] **Phase 1 — mobile-first foundation:** breakpoint ladder; safe-area/tap-size/dvh/tap-highlight
+      primitives (M1–M9, §10 of master); 8px grid; modular type scale; Inter + Source Serif 4 @font-face.
+- [ ] **Phases 2–5:** article surface (phone-first) · home · Cmd+K + motion · per-brand theming + DTCG back-port.
+- [ ] **Content docs** updated as drafts → project-editorial (see `.agent/drafts-outbound/`).
+
+> Phase backlog below (7E…8) is the pre-consolidation record; the master brief's §14 is the
+> current plan. Older entries retained for history.
+
+---
+
 > Last updated: 2026-05-29 (session 2 — Phase 8 marked complete)
 
 ## Phase 7E — COMPLETE (2026-05-29)
