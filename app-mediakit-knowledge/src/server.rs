@@ -2173,10 +2173,23 @@ async fn static_asset(Path(path): Path<String>) -> Response {
             if let Ok(v) = HeaderValue::from_str(mime.as_ref()) {
                 hdrs.insert(header::CONTENT_TYPE, v);
             }
-            hdrs.insert(
-                header::CACHE_CONTROL,
-                HeaderValue::from_static("public, max-age=3600, stale-while-revalidate=86400"),
-            );
+            // Cache-Control by asset type. Filenames for fonts/images are stable
+            // and their content never changes in place, so they get a 1-year
+            // immutable cache. CSS/JS share stable filenames but DO change on each
+            // deploy, and the page links them unversioned — so they must revalidate
+            // every load (cheap 304 via ETag when unchanged; the new file is fetched
+            // instantly after a deploy). This is what ends the "stale CSS after
+            // deploy" problem. (A future enhancement is content-hashed asset URLs.)
+            let ext = path.rsplit('.').next().unwrap_or("").to_ascii_lowercase();
+            let cache = match ext.as_str() {
+                "woff2" | "woff" | "ttf" | "otf" | "png" | "svg" | "ico" | "jpg"
+                | "jpeg" | "webp" | "gif" | "avif" => {
+                    "public, max-age=31536000, immutable"
+                }
+                "css" | "js" | "mjs" | "map" | "json" => "public, max-age=0, must-revalidate",
+                _ => "public, max-age=3600",
+            };
+            hdrs.insert(header::CACHE_CONTROL, HeaderValue::from_static(cache));
             if let Ok(v) = HeaderValue::from_str(&etag) {
                 hdrs.insert(header::ETAG, v);
             }
