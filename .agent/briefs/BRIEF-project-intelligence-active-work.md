@@ -2,7 +2,7 @@
 artifact: brief
 status: active
 created: 2026-06-01
-updated: 2026-06-01 (Yo-Yo Tier B validated; /v1/extract grammar fix RESOLVED)
+updated: 2026-06-01 (persistent processed_ledgers DONE; audit sha256 DONE)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 replaces: BRIEF-active-work.md (missing — never existed on disk)
 companion:
@@ -23,7 +23,7 @@ companion:
 |---|---|---|
 | `local-doorman.service` | **active** | New binary `2c96603b` (Tier B grammar fix); Tier A primary; `/healthz` returns plain `ok` (no entity_count — known gap); `/readyz` OK incl. P1 zone field |
 | `local-slm.service` (Tier A) | **active** | OLMo 2 7B Q4_K_M; idle ~2% (wedge fixed — was 69 h stuck); serves interactive in ~2–4s |
-| `service-content` | **active** | 7,203 entities; **Tier A fallback persisted OFF** (drop-in) → defers the 41k backlog safely |
+| `service-content` | **active** | 7,445 entities; fallback OFF; **processed_ledgers.jsonl live** — 3,128 entries (no restart re-drain) |
 | `yoyo-tier-b-1` (Tier B) | **TERMINATED** (stopped) | Stockout cleared 2026-06-01; tested + validated; stopped to save cost. `start-yoyo.sh` to bring up |
 | Apprenticeship drain | **paused** | `SLM_DRAIN_PAUSED=true` — CPU drain off; capture continues |
 | Apprenticeship queue | **~170 pending / 550 done / 0 poison** | poison cleared session 13; capture live |
@@ -32,6 +32,17 @@ companion:
 ---
 
 ## §0 — Resolved this session (2026-06-01) — read before picking work
+
+- ✅ **Persistent `processed_ledgers` — DONE (commit `5ad06ec9`, binary deployed).** `load_processed_ledgers()` /
+  `append_processed_ledger()` added to `service-content/src/main.rs`. Sidecar JSONL at
+  `$SERVICE_CONTENT_GRAPH_DIR/processed_ledgers.jsonl`. 3,128 entries written on first drain.
+  Next restart will skip all 3,128 already-processed files. Binary sha256=`1aa88dafc6b76ec0`.
+- ✅ **P0: Doorman audit sha256 — DONE (commit `3a64431e`, binary deployed).** `write_with_hash()`
+  injects `"sha256": blake3_hex` into all 5 `AuditLedger::append_*` methods in `ledger.rs`.
+  Verified live: `chat-completion` + `extract` entries in today's JSONL all carry `sha256`.
+  Binary sha256=`03f87212c20a5329`.
+
+
 
 - ✅ **Preemption-safe DataGraph watcher — FIXED + DEPLOYED (commit `a5f573f6`).** When Tier B
   is preempted mid-request, the watcher no longer marks affected CORPUS files skip-until-restart.
@@ -63,8 +74,9 @@ companion:
   app-console-slm status.
 - ✅ **Brief consolidation** (session 13): archived contamination; AI-AUDIT integrated.
 
-**Open for Command (outbox):** Stage 6 promote (`dee8d050`, `3b8a952e`); commit binary ledger
-+ fallback drop-in mirror; Yo-Yo Packer rebuild now SAFE to queue (persists -np/-fa).
+**Open for Command (outbox):** Stage 6 promote (`dee8d050`, `3b8a952e`, `7df3b56a`, `5ad06ec9`, `3a64431e`);
+binary ledger update for `service-content` (`1aa88dafc6b76ec0`) + `slm-doorman-server` (`03f87212c20a5329`);
+fallback drop-in mirror; Yo-Yo Packer rebuild SAFE to queue.
 
 ---
 
