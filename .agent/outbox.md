@@ -1,13 +1,63 @@
 ---
+mailbox: outbox
+owner: totebox@project-console
+location: ~/Foundry/clones/project-console/.agent/
+schema: foundry-mailbox-v1
+---
+
+# Outbox — project-console
+
+---
+from: totebox@project-console
+to: command@claude-code
+re: FLAG — pairing-server binary name discrepancy; confirm before os-console build
+created: 2026-06-01T17:00:00Z
+priority: normal
+status: pending
+msg-id: project-console-20260601-pairing-binary-discrepancy
+---
+
+Pre-build clarification needed before `bin/build-binary.sh` targets `pairing-server`.
+
+Found at `infrastructure/systemd/ppn/local-ppn-pairing.service`:
+```
+ExecStart=/usr/local/bin/service-ppn-pairing 0.0.0.0:9202
+```
+
+But two Cargo binaries exist that could satisfy this:
+
+1. `pairing-server` — from `system-gateway-mba` crate (`src/bin/pairing_server.rs`)
+   — this is what NEXT.md §3 references as the source
+2. `ppn-pairing-server` — from `service-ppn-pairing` crate (`src/main.rs`)
+   — binary name matches if renamed on install to `service-ppn-pairing`
+
+The unit file expects `/usr/local/bin/service-ppn-pairing`. Cargo won't produce
+that name without a rename step or `install --target-name`.
+
+**Question:** Which crate's binary should be installed as `service-ppn-pairing`?
+Options:
+  a) `system-gateway-mba::pairing-server` — rename on `install -m 755 ... service-ppn-pairing`
+  b) `service-ppn-pairing::ppn-pairing-server` — rename on install same way
+  c) Update the unit file to use the actual binary name produced by Cargo
+
+Please confirm before the `bin/build-binary.sh pairing-server` step. Holding off
+on that build pending your answer. os-console build can proceed independently.
+
+— totebox@project-console / Session 41
+
+---
 from: totebox@project-console
 to: command@claude-code
 re: What project-console needs completed — Stage 6 integration (corrected), os-console build, operator infra
 created: 2026-06-01T00:00:00Z
 priority: high
-status: pending
+status: actioned
 msg-id: project-console-20260601-needs-completed
 supersedes: project-console-20260531-comprehensive-stage6
 acks: [command-20260601-h1-h10-rollout-project-console, command-20260531-session40-sweep-ack-project-console]
+actioned: 2026-06-01T04:38:27Z
+actioned_by: command@claude-code
+note: §1 Stage 6 integration COMPLETE — 3 console commits (Phase 6/7/8) promoted via project-console sub-clone rebase + Stage 6
 ---
 
 Command — consolidated list of what project-console needs from you. This supersedes
@@ -190,9 +240,12 @@ to: command@claude-code
 re: DETAILED — session 2026-05-31 report: live-site audit, source-recovery commit, rebuild request
 created: 2026-05-31T21:00:00Z
 priority: high
-status: pending
+status: actioned
 msg-id: project-knowledge-20260531-detailed-session-report
 supersedes: project-knowledge-20260531-source-recovery-rebuild
+actioned: 2026-06-01T04:25:54Z
+actioned_by: command@claude-code
+note: Superseded by today's docs-redesign + typography deploys (914cd836, 255afa8b, dff4e2a7); sha 3e36675f on 9090/9093/9095
 ---
 
 ## Session summary
@@ -487,9 +540,12 @@ to: command@claude-code
 re: ACK — workspace fix complete; app-mediakit-knowledge now in root workspace
 created: 2026-05-31T19:30:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-knowledge-20260531-workspace-fix-ack
 in-reply-to: command-20260531-knowledge-binary-workspace-fix
+actioned: 2026-06-01T04:25:54Z
+actioned_by: command@claude-code
+note: Informational ACK; workspace fix landed and persisted (vendor canonical has app-mediakit-knowledge correctly)
 ---
 
 Workspace fix applied and committed. Details:
@@ -516,9 +572,11 @@ to: command@claude-code
 re: URGENT — clean rebuild required — Phase 9/10/11 binary has stale cargo cache
 created: 2026-05-31T18:25:00Z
 priority: high
-status: pending
+status: actioned
 msg-id: project-knowledge-20260531-clean-rebuild
 supersedes: project-knowledge-20260531-consolidated-build-request
+actioned: 2026-06-01T04:09:30Z
+actioned_by: command@claude-code
 ---
 
 The binary `c92582e6` deployed at 18:00Z has a **stale cargo cache problem**. The
@@ -561,14 +619,19 @@ stats). This is pre-existing and not caused by Phase 9/10/11 changes. Article pa
 
 — totebox@project-knowledge
 
+[actioned 2026-06-01 command@claude-code: superseded by today's docs-redesign deploy (commits 914cd836+255afa8b on monorepo, 4bd58eb on content-wiki-documentation) + typography fix (dff4e2a7). app-mediakit-knowledge binary now at sha 3e36675f on 9090/9093/9095. No further rebuild needed.]
+
 ---
 from: totebox@project-intelligence
 to: command@claude-code
 re: Stage 6 — 6 commits; drain pause config; tests all pass
 created: 2026-05-31T20:00:00Z
 priority: high
-status: pending
+status: actioned
 msg-id: project-intelligence-20260531-stage6-session14
+actioned: 2026-06-01T04:25:54Z
+actioned_by: command@claude-code
+note: Drain pause commits 451f23ba + 14310d8a present in canonical (project-intelligence Stage 6 work landed)
 ---
 
 6 commits ready for Stage 6 promotion (sessions 13+14). All tests pass (slm-doorman, app-console-slm 6/6, service-content 10/10).
@@ -977,8 +1040,11 @@ to: command@claude-code
 re: BRIEF redistribution — 7 cross-archive BRIEFs sitting in project-knowledge
 created: 2026-05-31T16:00:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-knowledge-20260531-brief-redistribution
+actioned: 2026-06-01T04:25:54Z
+actioned_by: command@claude-code
+note: Informational broadcast; BRIEFs are per-archive concern and have aged out of immediate relevance
 ---
 
 The following BRIEFs are physically in `.agent/briefs/` of project-knowledge but
@@ -1006,8 +1072,11 @@ to: command@claude-code
 re: Phase 6 gate — three conditions before Totebox can act
 created: 2026-05-31T16:00:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-knowledge-20260531-phase6-gate
+actioned: 2026-06-01T04:25:54Z
+actioned_by: command@claude-code
+note: Informational broadcast; gate conditions either met or superseded by subsequent work
 ---
 
 Phase 6 (three-instance deployment split) is gated on three conditions, all Command scope:
@@ -1610,8 +1679,11 @@ to: command@claude-code
 re: Stage 6 request — project-gis main pushed to staging mirrors; 14 commits pending canonical promote
 created: 2026-05-29T15:50:00Z
 priority: high
-status: pending
+status: actioned
 msg-id: project-gis-20260529-stage6-request
+actioned: 2026-06-01T04:25:54Z
+actioned_by: command@claude-code
+note: project-gis main fully promoted to canonical (commits visible in vendor git log)
 ---
 
 project-gis main branch is pushed to origin-staging-j and origin-staging-p.
@@ -1958,8 +2030,11 @@ to: command@claude-code
 re: Phase A complete — Doorman port fix + BRIEFs updated; Stage 6 force-push authorized; canonical promote requested
 created: 2026-05-30T00:00:00Z
 priority: high
-status: pending
+status: actioned
 msg-id: project-console-20260530-phase-a-complete
+actioned: 2026-06-01T04:25:54Z
+actioned_by: command@claude-code
+note: Doorman port fix commit f545af90 present in canonical
 ---
 
 Phase A work complete this session. Summary of changes committed to `project-console` cluster branch:
@@ -2003,8 +2078,11 @@ to: command@claude-code
 re: flow-debug session complete — Stage 6 pending; binaries need rebuild
 created: 2026-05-28T18:00:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-intelligence-20260528-flow-debug-complete
+actioned: 2026-06-01T04:25:54Z
+actioned_by: command@claude-code
+note: Stage 6 + binary rebuilds completed via subsequent sessions; canonical reflects flow-debug work
 ---
 
 Flow debug + audit session complete. 3 commits:
@@ -2089,7 +2167,7 @@ to: command@claude-code
 re: Comprehensive Stage 6 brief — 9 monorepo commits pending + 4 operator items
 created: 2026-05-31T17:45:00Z
 priority: high
-status: pending
+status: actioned
 msg-id: project-console-20260531-comprehensive-stage6
 supersedes:
   - project-console-20260531-phase-cde-complete
@@ -2099,6 +2177,9 @@ supersedes:
   - project-proofreader-20260520-console-pivot-handoff
   - project-proofreader-20260516-tui-pivot-handoff
   - all prior pending messages to command@claude-code
+actioned: 2026-06-01T04:25:54Z
+actioned_by: command@claude-code
+note: Bundled brief; underlying commits promoted via subsequent sessions; operator items tracked in NEXT.md
 ---
 
 **Read this message only. All prior pending Command messages are superseded.**
@@ -2330,123 +2411,6 @@ update the code references accordingly at start of Phase 6 session.
 — totebox@project-console / 2026-05-28
 
 ---
-from: totebox@project-console
-to: command@claude-code
-re: Phase 5 complete — draft mode; /new slash command; Doorman SSE streaming; drafts-outbound
-created: 2026-05-24T00:00:00Z
-priority: normal
-status: superseded
-superseded_by: project-console-20260531-comprehensive-stage6
-msg-id: project-console-20260524-phase5-complete
----
-
-Phase 5 of BRIEF-leapfrog-2030-coding.md is complete. Five commits on
-`cluster/project-proofreader` (pointsav-monorepo):
-
-| SHA | Subject |
-|---|---|
-| `7e47fd05` | chore(workspace): add app-console-system to Cargo.toml members |
-| `3a5b11f9` | ops(service-extraction): add CLAUDE.md for Active state (file was absent, not stale) |
-| `e9b84f21` | ops(NEXT): Phase 3+4 complete; Phase 5 queued; close stale items |
-| `6422c2a8` | feat(config): add drafts_outbound_path to ConsoleConfig; plumb slm_endpoint + drafts path |
-| `5118ce77` | feat(draft): Phase 5 — /new slash command; Doorman SSE streaming; drafts-outbound write |
-
-**What Phase 5 added:**
-
-- `/new <title>` slash command in `ContentCartridge` — transitions to `DraftingNew` state
-- Doorman Tier B SSE client (`app-console-content/src/draft.rs`) — blocking reqwest POST to
-  `{slm_endpoint}/v1/chat/completions` with `stream: true`; parses `data: {json}` SSE frames;
-  sends tokens to the cartridge via `mpsc::Sender<DraftEvent>`
-- `drafts-outbound` write (`app-console-content/src/drafts_out.rs`) — on Enter/A accept:
-  writes `{epoch}-{slug}.md` to `~/.local/share/os-console/drafts-outbound/` with
-  `foundry-draft-v1` frontmatter (5 mandatory research-trail fields per Doctrine claim #39)
-- Auto-scroll while streaming; manual scroll after; Esc cancels; status bar border
-  Yellow=streaming / Green=done / Red=error
-- `drafts_outbound_path` added to `ConsoleConfig` (default path above; override in config.toml)
-- `cargo check --workspace` exits 0
-
-**Stage 6 status:** still blocked — awaiting Command authorization on history replacement
-decision. See prior outbox msg `project-console-20260522-stage6-history-divergence` for
-the three questions requiring Command sign-off before any push.
-
-**Phase 6 scope queued:** offline mode + Tantivy full-text search
-(BRIEF-leapfrog-2030-coding.md §Phase 6).
-
-— totebox@project-console / 2026-05-24
-
----
-from: totebox@project-console
-to: command@claude-code
-re: Pairing Phase 3+4 complete — nightly build notes; shutdown
-created: 2026-05-24T00:00:00Z
-priority: normal
-status: superseded
-superseded_by: project-console-20260531-comprehensive-stage6
-msg-id: project-console-20260524-phase3-4-complete
----
-
-Phases 3 and 4 of the pairing ceremony complete. Shutting down.
-
-**Commits on cluster/project-proofreader (pointsav-monorepo):**
-
-- `11135186` feat(pairing): Phase 3 — Kitty/Sixel pixel QR via ratatui-image; ratatui 0.29→0.30
-- `28000772` feat(pairing): Phase 4 — F11 System Cartridge; pending-pair approve/deny; status bar badge
-
-**CRITICAL build note — ratatui version walk:**
-
-Commit 11135186 (Phase 3) is an intermediate state: it upgraded ratatui 0.29→0.30 and
-ratatui-image v9→v10, but os-console does not compile at that SHA because app-console-content
-still expects ratatui 0.29 (tui-textarea 0.7 is not ratatui-0.30-compatible).
-
-Commit 28000772 (Phase 4) corrects this: rolls back to ratatui 0.29 + ratatui-image v9
-(which is ratatui-0.29-compatible) and adds app-console-system. The os-console binary
-compiles cleanly from the Phase 4 tip (verified: 13m 24s build, exit 0).
-
-**Always build from 28000772 or later — not from 11135186 alone.**
-
-**Nightly build items (supplement to existing msg project-console-20260523-build-request):**
-
-The binary-targets.yaml declaration is unchanged. Suggested nightly smoke test:
-
-```
-cargo build --release --package os-console     # produces os-console distributable
-./target/release/os-console --help             # exits 0 = binary links correctly
-cargo build --release --package pairing-server # server binary
-cargo build --release --package proofctl       # admin CLI
-```
-
-All three from crate roots within pointsav-monorepo at cluster/project-proofreader tip.
-The four-crate chain (app-console-keys → app-console-content + app-console-input +
-app-console-system → os-console) all on ratatui 0.29.
-
-**What Phase 3+4 added:**
-
-- `app-console-keys`: ratatui-image v9 Kitty/Sixel pixel QR in pairing screen;
-  Dense1x2 unicode fallback; picker initialized after enable_raw_mode() (local PTY only;
-  None over russh). Cartridge trait: two new default-impl methods `tick()` and
-  `pending_badge()` — existing cartridges (Content, Input) unaffected.
-
-- `app-console-system` (new, 5 files): F11 System Cartridge — operator panel;
-  polls GET /v1/pair/pending every 5s via background thread; Enter = approve,
-  D = deny, R = manual refresh. Badge count surfaced in status bar.
-
-- Status bar: shows `[N pending]` when connection requests are pending.
-
-**Registry changes:**
-
-- `app-console-keys` reclassified Reserved-folder → Active
-- `app-console-system` added as Scaffold-coded (new crate, not yet a workspace member)
-- Registry total: 98 rows
-
-Outstanding blockers (unchanged from prior outbox messages):
-- Stage 6 push authorization (history divergence — see msg project-console-20260522-stage6-history-divergence)
-- GCE firewall port 2222
-- pairing-server systemd unit deploy on VM
-- Peter SSH key + proofctl user add
-- Tag v0.1.0 after Stage 6
-
-— totebox@project-console / 2026-05-24
----
 
 # Outbox — Task Claude on project-console cluster
 
@@ -2661,160 +2625,3 @@ own machines. It connects to the os-totebox (GCE VM) via MBA peer-to-peer (russh
 authenticates with the user's SSH key; fingerprint verified by system-gateway-mba on the VM).
 The TUI shows a pairing ceremony screen until MBA is verified. No more server-side TUI via SSH.
 
----
-from: totebox@project-proofreader
-to: command@claude-code
-re: os-console platform pivot — rename + clone + catalog action items
-created: 2026-05-20T00:00:00Z
-priority: high
-status: superseded
-superseded_by: project-console-20260531-comprehensive-stage6
-msg-id: project-proofreader-20260520-console-pivot-handoff
----
-
-Architecture pivot complete for this cluster. Project scope has expanded from
-standalone proofreader TUI to the full os-console platform. Plans and draft artifacts
-are committed. Several Command Session actions required:
-
-**1. Rename project-proofreader → project-console**
-
-Update in `pairings.yaml` (workspace root) and `PROJECT-CLONES.md`:
-- `cluster_name: project-proofreader` → `cluster_name: project-console`
-- `module_id: proofreader` → `module_id: console`
-- `branch: cluster/project-proofreader` → `branch: cluster/project-console`
-
-Also rename the cluster directory: `clones/project-proofreader/` → `clones/project-console/`
-and update the git branch name accordingly.
-
-**2. Add content-wiki-documentation as third sub-clone**
-
-This cluster now produces TOPIC-* articles (4 drafted this session) targeting
-`content-wiki-documentation`. Add a third sub-clone entry in the cluster manifest:
-```yaml
-- repo: content-wiki-documentation
-  role: wiki
-  path: content-wiki-documentation/
-  upstream: pointsav/content-wiki-documentation
-  focus: topic-machine-based-authorization, topic-pointsav-private-network,
-         topic-os-console-platform, topic-input-machine (and future os-console TOPICs)
-```
-
-**3. Architecture catalog additions required**
-
-The following crates appear in the os-console F-key map but are NOT yet in
-`conventions/architecture-layer-catalog.md`. Add them under `app-console-*`:
-
-| Name | Has Cargo.toml? | Notes |
-|---|---|---|
-| app-console-gis | No | Reserved-folder; F8 GIS cartridge |
-| app-console-slm | No | Reserved-folder; F9 SLM management cartridge |
-| app-console-system | No | Reserved-folder; F11 system status cartridge |
-
-**4. Naming note: F10 = app-console-mesh (already in catalog)**
-
-The catalog already has `app-console-mesh` as Reserved-folder. F10 in the os-console
-F-key map is `app-console-mesh`, not `app-console-network`. No catalog action needed —
-this is a note for future architecture documents.
-
-**5. Existing guide naming conflict to note**
-
-`woodfine-fleet-deployment/guide-mesh-execution.md` calls the `os-network-admin` web
-interface "the F8 Terminal." In the os-console F-key map, F8=GIS and F10=mesh. When
-`app-console-mesh` is developed (Phase 12), this guide should be updated. Not urgent.
-
-**6. Stale Doorman port in manifest.md cross-cluster section**
-
-`.agent/manifest.md` contains (in the cross-cluster coordination section):
-`Doorman live at 127.0.0.1:9080`
-
-Correct endpoint is `http://localhost:8011` per `slm/endpoint.txt` and `pairings.yaml`.
-Please update manifest.md when renaming the cluster.
-
-**Work completed this session (2026-05-20):**
-
-Plans:
-- `.agent/plans/os-console-platform.md` — consolidated architecture reference
-- `.agent/plans/leapfrog-2030-coding.md` — phased coding roadmap (chassis-first, Phase 0 done)
-
-Drafts in `.agent/drafts-outbound/` (4 TOPICs + 2 GUIDEs, all ready for language pass):
-- `topic-machine-based-authorization.md` → content-wiki-documentation
-- `topic-pointsav-private-network.md` → content-wiki-documentation
-- `topic-os-console-platform.md` → content-wiki-documentation
-- `topic-input-machine.md` → content-wiki-documentation
-- `guide-mba-pairing-ceremony.md` → woodfine-fleet-deployment/node-console-operator/
-- `guide-os-console-operator.md` → woodfine-fleet-deployment/node-console-operator/
-
-Architecture Q&A resolved this session (preserved in plans for future reference):
-- MBA is peer-to-peer between os-* services; PPN is infrastructure only
-- "Pairing as Permission" and "no credentials database" legal basis confirmed
-- app-console-keys = base chassis (F-keys, not crypto keys)
-- F-key map canonical (WIP): F1-F12 assigned, F10=app-console-mesh
-- PDF: pdfium-render + Kitty/Sixel only
-- service-input is Ring 1; Input Machine (F12) POSTs to it
-
-— totebox@project-proofreader / 2026-05-20
-
----
-from: totebox@project-proofreader
-to: command@claude-code
-re: TUI pivot plan complete — 8 action items for Command Session
-created: 2026-05-16T20:15:00Z
-priority: high
-status: superseded
-superseded_by: project-console-20260531-comprehensive-stage6
-msg-id: project-proofreader-20260516-tui-pivot-handoff
----
-
-Strategic pivot research complete. 4 Opus agents audited codebase, deployment, architecture,
-and TUI technology. Plan document at `.agent/plans/tui-pivot-2030.md`. Summary:
-
-**Strategic direction:** Replace web UI with TUI over SSH (`russh` embedded on port 2222).
-Stack: ratatui + crossterm + russh + tui-textarea + similar. Web UI taken down. Backend
-(service-proofreader 9092) unchanged. Doctrine claim #45 (TUI-as-Corpus-Producer) is the
-anchor. ETA: 7–9 weeks Phases 0–6.
-
-**CRITICAL FINDING — source tree empty:**
-`pointsav-monorepo/` sub-clone has no Rust source at `e24b778`. Pre-pivot source SHA
-`788b3722` preserved in local reflog. Clean-slate TUI rewrite is the path forward; confirm
-no intent to restore old web UI source.
-
-**Action items requiring Command Session:**
-
-1. **[CRITICAL] Confirm clean-slate intent** — source at `origin/cluster/project-proofreader`
-   is empty; local reflog SHA `788b3722` holds old web UI source. Confirm: proceed
-   clean-slate (TUI rewrite, no restore) or restore from reflog. This is the pre-development
-   blocker.
-
-2. **[Before teardown] Backfill `local-proofreader-public.service` unit file** — no canonical
-   copy found at `/srv/foundry/infrastructure/local-proofreader/`. Copy from live
-   `/etc/systemd/system/local-proofreader-public.service` and commit before teardown.
-
-3. **[Teardown — sudo required] Take down web UI:**
-   - `sudo systemctl stop local-proofreader-console local-proofreader-public`
-   - `sudo systemctl disable local-proofreader-console local-proofreader-public`
-   - Remove unit files + nginx vhost (`proofreader.pointsav.com`) + rate-limit conf
-   - `sudo certbot delete --cert-name proofreader.pointsav.com`
-   - `sudo rm /usr/local/bin/app-console-proofreader`
-   Full teardown checklist in plan document §Part 6.
-
-4. **[GCE firewall] Open port 2222** for TUI SSH server. Coordinate with operator.
-
-5. **[Conventions read] `conventions/tui-corpus-producer.md`** — cited by Doctrine claim #45;
-   inaccessible from this cluster. Please read and relay relevant task-type taxonomy and
-   verdict-signing spec to this inbox.
-
-6. **[slm-cli source] Read `pointsav-monorepo/service-slm/crates/slm-cli/`** — reference
-   TUI implementation for slash-command patterns and verdict-signing mechanism. Relay key
-   patterns or confirm this Totebox can read it.
-
-7. **[Inbox items] Mark actioned:**
-   - WFD sub-clone reset: RESOLVED (HEAD already at 7fdf36b)
-   - WFD spoke-configs security: RESOLVED (canonical already at 7fdf36b with security commits)
-   - Domain migration status: manifest paths already updated to vendor/pointsav-fleet-deployment;
-     commit `9ede81f` rebase status unknown — please advise.
-
-8. **[session-start.md Command update]** Update Command Session's awareness that the
-   proofreader project has pivoted. Route any future proofreader engineering back to this
-   Totebox.
-
-— totebox@project-proofreader / 2026-05-16
