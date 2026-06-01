@@ -397,13 +397,19 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 
 ### A30 — DIRECTIVE: Knowledge-platform doc alignment [project-knowledge forward]
 - **Source:** project-knowledge outbox (msg-id: project-knowledge-20260601-doc-alignment-directive); forwarded via Command
-- **Status:** PARTIALLY ACTIONED (2026-06-01):
-  - §A typography fix — COMPLETE (commits `1bf7129`, Peter): 8 files in design-system/ updated; IBM Plex → Inter + Source Serif 4; measure 65ch → 68ch
-  - §B engine TOPIC — COMPLETE (commit `7c9194a`, Peter): `applications/app-mediakit-knowledge.md` + `.es.md` federation section added
-  - §C new pattern — COMPLETE (commit `7c9194a`, Peter): `patterns/federation-via-content-mounts.md` + `.es.md` created
-  - §D linking model / zero-dead-links — DEFERRED: needs operator input on slug migration strategy (open question in directive: run `topic-` prefix migration in one pass or stage separately?)
-  - §E design-system mobile-first — DEFERRED: separate session scope
-  - §F GUIDE fleet-deployment fonts/mounts — DEFERRED: WFD scope, Command placement
+- **Status:** FULLY ACTIONED (2026-06-01):
+  - §A typography fix — COMPLETE (`1bf7129`, Peter): 8 design-system/ files; IBM Plex → Inter + Source Serif 4
+  - §B engine TOPIC — COMPLETE (`7c9194a`, Peter): `app-mediakit-knowledge.md` + `.es.md` federation section
+  - §C new pattern — COMPLETE (`7c9194a`, Peter): `patterns/federation-via-content-mounts.md` + `.es.md`
+  - §D governance docs — COMPLETE (`de4e611`, Jennifer): naming-convention.md + content-contract.md + leapfrog + contribute
+  - §D alias pass — COMPLETE: 30 files in media-knowledge-corporate (`ac7cccb`, Jennifer); 86 files in media-knowledge-projects (`476ebb2`, Peter)
+  - §E mobile-first — COMPLETE (`42e7f57`, Peter): 8 design-system/ bilingual files
+  - §F combined GUIDE — STAGED: guide-knowledge-wiki-deployment.draft.md in drafts-outbound; routing msg `project-editorial-20260601-guide-knowledge-wiki-deployment-route`
+
+### A31 — GUIDE: Knowledge wiki deployment (§F) [editorial authorship]
+- **File:** `.agent/drafts-outbound/guide-knowledge-wiki-deployment.draft.md`
+- **Status:** STAGED (2026-06-01) — Bloomberg pass complete; pending Command routing to `woodfine-fleet-deployment/gateway-knowledge-documentation-1/` (msg-id: project-editorial-20260601-guide-knowledge-wiki-deployment-route)
+- **Content:** Font loading (Inter + Source Serif 4 self-hosting), knowledge.toml mounts (Phase 6 planned/intended), mobile-first notes. ~120 lines.
 
 ---
 
