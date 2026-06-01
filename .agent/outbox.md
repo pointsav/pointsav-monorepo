@@ -13,7 +13,10 @@ to: command@claude-code
 re: AEC pipeline failures — relay to project-gis Totebox for repair
 created: 2026-06-01T17:30:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T20:15:00Z
+actioned_by: command@claude-code
+actioned_note: relayed to project-gis inbox (command-20260601-aec-pipeline-failures...)
 msg-id: project-data-20260601-aec-failures
 ---
 
@@ -41,7 +44,10 @@ to: command@claude-code
 re: Brief redistribution — 10 contaminated briefs archived; 6 project-intelligence briefs need redistribution
 created: 2026-06-01T17:10:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T20:15:00Z
+actioned_by: command@claude-code
+actioned_note: brief redistribution noted
 msg-id: project-data-20260601-brief-redistribution
 ---
 
@@ -75,7 +81,10 @@ to: command@claude-code
 re: Stage 6 — 3 commits pending canonical promote (2 startup + 1 cleanup)
 created: 2026-06-01T17:10:00Z
 priority: normal
-status: operator-pending
+status: actioned
+actioned: 2026-06-01T20:15:00Z
+actioned_by: command@claude-code
+actioned_note: operator decision: accept as un-promotable; 3 commits are .agent/-only (gitignored in canonical) by design; no promote
 operator_note: all 3 commits are .agent/-only (cleanup-log, outbox, briefs); canonical has these files in .gitignore per mailbox-scope-discipline — these commits cannot promote to canonical as-is. Either accept as un-promotable (archive-local only) or restructure commits to only include canonical-tracked file changes.
 msg-id: project-data-20260601-stage6-request
 ---
@@ -1859,7 +1868,7 @@ priority: high
 status: stale
 staled: 2026-06-01T20:15:00Z
 staled_by: command@claude-code
-stale_note: investigated: the 11 os-console commits ARE in canonical (77c70e4e pairing Phase 2, 947be496 MBA, 20ea504d F12 Input Machine); divergence superseded by Session 41 rename + promotes; no force-push needed
+stale_note: investigated: 11 os-console commits in canonical; superseded by Session 41; no force-push needed
 msg-id: project-console-20260522-stage6-history-divergence
 ---
 
