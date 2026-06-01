@@ -44,6 +44,9 @@ impl LocalTierClient {
             config,
             http: reqwest::Client::builder()
                 .timeout(std::time::Duration::from_secs(1800))
+                // Catch TCP-level hangs independently of the response timeout.
+                // Tier A is always localhost, so 10 s is generous.
+                .connect_timeout(std::time::Duration::from_secs(10))
                 .build()
                 .expect("failed to build Tier A HTTP client"),
         }
@@ -88,6 +91,7 @@ impl LocalTierClient {
             temperature: req.temperature,
             grammar: grammar_field,
             json_schema: json_schema_field,
+            stop: req.stop_sequences.clone(),
             tools: req.tools.as_ref().map(super::anthropic_tools_to_openai),
         };
         let url = format!(
@@ -149,6 +153,10 @@ struct OpenAiChatRequest {
     /// Absent when `None`.
     #[serde(skip_serializing_if = "Option::is_none")]
     json_schema: Option<serde_json::Value>,
+    /// Stop sequences. Generation halts at the first match. llama-server
+    /// accepts this as a top-level `stop` array. Absent when `None`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    stop: Option<Vec<String>>,
     /// OpenAI-format tools array (converted from Anthropic format by
     /// `anthropic_tools_to_openai`). Absent when `None`.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -210,6 +218,7 @@ mod tests {
             speculation: None,
             graph_context_enabled: None,
             tools: None,
+            stop_sequences: None,
         }
     }
 

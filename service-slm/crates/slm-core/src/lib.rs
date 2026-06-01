@@ -120,6 +120,12 @@ pub struct ComputeRequest {
     /// when `None` so existing callers are unaffected.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tools: Option<serde_json::Value>,
+    /// Optional stop sequences. When present, generation halts at the first
+    /// match. Translated to the backend's native stop-sequence field by each
+    /// tier client. Absent from most requests; omitted from serialised form
+    /// when `None` so existing callers are unaffected.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stop_sequences: Option<Vec<String>>,
 }
 
 #[cfg(test)]
@@ -149,6 +155,7 @@ mod tests {
             speculation: None,
             graph_context_enabled: None,
             tools: None,
+            stop_sequences: None,
         }
     }
 

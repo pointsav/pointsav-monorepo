@@ -249,6 +249,7 @@ async fn chat_completions(
         speculation: None,
         graph_context_enabled: None,
         tools: None,
+        stop_sequences: None,
     };
 
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
@@ -542,6 +543,7 @@ Return a JSON array matching the schema exactly.".to_string(),
         speculation: None,
         graph_context_enabled: None,
         tools: None,
+        stop_sequences: None,
     };
 
     // 5. Route — no Tier A fallback.
@@ -1394,6 +1396,7 @@ fn anthropic_to_compute_request(
         speculation: None,
         graph_context_enabled: Some(false),
         tools: body.tools,
+        stop_sequences: None,
     }
 }
 

@@ -170,10 +170,14 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             },
             tier_hint: Some(tier_hint),
             stream: false,
-            // Cap at 2048 tokens so Think-model reasoning blocks don't run
-            // indefinitely. At ~9 tok/s on 32B Think, 2048 tokens ≈ 228 s —
-            // well within the 300 s OUTER_DEADLINE.
-            max_tokens: Some(2048),
+            // Tier B (OLMo 3 32B-Think): 2048 tokens ≈ 228 s at 9 tok/s.
+            // Tier A (OLMo 2 7B Q4): capped at 512 tokens ≈ 4 min at 2 tok/s.
+            // The cap prevents a single brief from blocking the drain queue for
+            // 17–60 min while the model generates a long diff no one needs yet.
+            max_tokens: Some(match tier_hint {
+                Tier::Yoyo => 2048,
+                _ => 512,
+            }),
             temperature: None,
             sanitised_outbound: true,
             tier_c_label: None,
@@ -182,6 +186,14 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             speculation: None,
             graph_context_enabled: None,
             tools: None,
+            // Stop at the natural end of the diff code block. Without stop
+            // sequences, OLMo may never emit EOS for out-of-distribution prompts,
+            // causing the generation to run until max_tokens is reached.
+            stop_sequences: Some(vec![
+                "```\n\n".to_string(),
+                "<|endoftext|>".to_string(),
+                "<|im_end|>".to_string(),
+            ]),
             };
 
         info!(
@@ -268,10 +280,14 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             },
             tier_hint: Some(tier_hint),
             stream: false,
-            // Cap at 2048 tokens so Think-model reasoning blocks don't run
-            // indefinitely. At ~9 tok/s on 32B Think, 2048 tokens ≈ 228 s —
-            // well within the 300 s OUTER_DEADLINE.
-            max_tokens: Some(2048),
+            // Tier B (OLMo 3 32B-Think): 2048 tokens ≈ 228 s at 9 tok/s.
+            // Tier A (OLMo 2 7B Q4): capped at 512 tokens ≈ 4 min at 2 tok/s.
+            // The cap prevents a single brief from blocking the drain queue for
+            // 17–60 min while the model generates a long diff no one needs yet.
+            max_tokens: Some(match tier_hint {
+                Tier::Yoyo => 2048,
+                _ => 512,
+            }),
             temperature: None,
             sanitised_outbound: true,
             tier_c_label: None,
@@ -280,6 +296,14 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             speculation: None,
             graph_context_enabled: None,
             tools: None,
+            // Stop at the natural end of the diff code block. Without stop
+            // sequences, OLMo may never emit EOS for out-of-distribution prompts,
+            // causing the generation to run until max_tokens is reached.
+            stop_sequences: Some(vec![
+                "```\n\n".to_string(),
+                "<|endoftext|>".to_string(),
+                "<|im_end|>".to_string(),
+            ]),
             };
 
         info!(

@@ -618,6 +618,7 @@ mod tests {
             speculation: None,
             graph_context_enabled: None,
             tools: None,
+            stop_sequences: None,
         }
     }
 
