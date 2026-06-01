@@ -490,7 +490,7 @@ fn inject_wiki_prefixes(
 
 /// True if `<norm_slug>.md` exists at the flat level OR one level of category
 /// subdirectory under `content_dir` or any `extra_roots` entry.
-fn page_exists(
+pub(crate) fn page_exists(
     norm_slug: &str,
     content_dir: &std::path::Path,
     extra_roots: &[&std::path::Path],

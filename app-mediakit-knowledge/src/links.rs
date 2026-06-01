@@ -430,7 +430,7 @@ fn normalise_claim_ref(dep: &str, slug: &str) -> String {
 
 /// Parse `[[target]]` wikilinks from Markdown body. Returns the slug form of
 /// each target: lowercased, spaces replaced with hyphens, anchor/alias stripped.
-fn parse_wikilinks(body: &str) -> Vec<String> {
+pub(crate) fn parse_wikilinks(body: &str) -> Vec<String> {
     static RE: std::sync::OnceLock<Regex> = std::sync::OnceLock::new();
     let re = RE.get_or_init(|| Regex::new(r"\[\[([^\]|#\[]+)").unwrap());
     re.captures_iter(body)
