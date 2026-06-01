@@ -33,6 +33,12 @@ companion:
 
 ## §0 — Resolved this session (2026-06-01) — read before picking work
 
+- ✅ **Preemption-safe DataGraph watcher — FIXED (commit `a5f573f6`).** When Tier B is
+  preempted mid-request, the watcher no longer marks affected CORPUS files skip-until-restart.
+  Transport error → `DeferTransient`; circuit-open → dormant `circuit_deferred_ledgers`; one
+  recovery probe per 30s tick auto-resumes the backlog when Tier B returns (no restart). Doorman
+  drain side was already safe (reaper re-queues leases). **Deploy pending** (release rebuild +
+  restart of `local-content.service`). Full detail: BRIEF-slm-substrate-master.md §2.4a.
 - ✅ **Tier B `/v1/extract` grammar — FIXED + validated live.** `yoyo.rs` sent the schema in
   vLLM `extra_body` format; server is llama.cpp (top-level `json_schema`/`grammar`). Fixed →
   live: 7.2s, `extraction_ok:true`, 4 entities classified. Commit `dee8d050`; binary `2c96603b`.
