@@ -104,16 +104,17 @@ def nearest_cluster(
 # ── PARAMETERS ────────────────────────────────────────────────────────────────
 
 # Urban Fringe (VWH)
-VW_MIN_METRO_KM = 5.0   # not downtown core
-VW_MAX_METRO_KM = 80.0  # urban fringe, not exurban
-VW_MAX_SPAN_KM  = 5.0   # tight commercial node
+VW_MIN_METRO_KM = 3.0    # not downtown core (lowered from 5.0; EU dense cities)
+VW_MAX_METRO_KM = 120.0  # suburban industrial belt (raised from 80.0)
+VW_MAX_SPAN_KM  = 5.0    # tight commercial node
 
 # Commuter (PKS)
-TN_MIN_METRO_KM     = 15.0   # not a suburb
+TN_MIN_METRO_KM     = 25.0   # regional hubs only (raised from 15.0; drops suburban stations)
 TN_MAX_METRO_KM     = 150.0  # regional sweet spot
 TN_HUB_EXCL_KM      = 5.0    # T1 within this → likely major hub → exclude
-TN_INTEGRATED_KM    = 10.0   # T1/T2 within this → "integrated" node
-TN_CLUSTER_SEARCH_KM = 20.0  # outer search radius for any nearby cluster
+TN_INTEGRATED_KM    = 5.0    # T1/T2 within this → "T1" node (tightened from 10.0)
+TN_CLUSTER_SEARCH_KM = 10.0  # outer search radius → T2 zone (narrowed from 20.0)
+TN_T3_SCORE_MIN     = 1.0    # standalone hubs qualify as T3 if transit_node_score ≥ this
 
 # ── LOAD CLUSTERS ─────────────────────────────────────────────────────────────
 
@@ -406,31 +407,37 @@ with open(out_pks, "w") as f:
     json.dump(to_geojson(tn_candidates, "parking_structure"), f)
 print(f"Wrote {out_pks}  ({len(tn_candidates):,} features)")
 
-# ── TIER-FILTERED GEOJSON (map overlay — excludes untiered candidates) ────────
+# ── TIER-FILTERED GEOJSON (map overlay — T1/T2/T3 for both archetypes) ────────
 #
 # Urban Fringe tiers  (vwh_strength = enrichment category count):
 #   T1 (strength≥2): hardware + 2+ enrichment cats → established industrial node
-#   T2 (strength=1): hardware + 1 enrichment cat  → emerging industrial node
-#   untiered (strength=0): bare hardware only — not shown on overlay
+#   T2 (strength=1): hardware + 1 enrichment cat   → emerging industrial node
+#   T3 (strength=0): bare hardware, no enrichment  → proxy-only; data gap expected
 #
-# Commuter tiers (proximity to nearest Retail Centre T1/T2):
-#   T1 (integrated, ≤10km): transit hub with RC co-located → commercially complete
-#   T2 (linked, 10-20km):   transit hub near an RC        → commercially adjacent
-#   untiered (standalone, >20km): no RC nearby — not shown on overlay
+# Commuter tiers (proximity to nearest Retail Centre T1/T2 + metro score):
+#   T1 (RC ≤ TN_INTEGRATED_KM):     transit hub tightly co-located with RC
+#   T2 (RC ≤ TN_CLUSTER_SEARCH_KM): transit hub near an RC
+#   T3 (standalone, score ≥ TN_T3_SCORE_MIN): strong metro position, no RC yet
+#   excluded: weak standalone (score < threshold) — not shown
 
+# Urban Fringe: all candidates get a tier (T3 = bare hardware)
 vw_tiered: list[dict] = []
 for c in vw_candidates:
-    t = 1 if c["vwh_strength"] >= 2 else (2 if c["vwh_strength"] == 1 else None)
-    if t is not None:
-        c2 = dict(c)
-        c2["vwh_tier"] = t
-        vw_tiered.append(c2)
+    t = 1 if c["vwh_strength"] >= 2 else (2 if c["vwh_strength"] == 1 else 3)
+    c2 = dict(c)
+    c2["vwh_tier"] = t
+    vw_tiered.append(c2)
 
+# Commuter: T1/T2 by RC proximity only; standalone hubs excluded
+# (T3 is not used for Commuter — standalone transit hubs are too numerous
+# and lack the commercial co-location signal that defines the archetype;
+# they will become T1/T2 as Retail Centre coverage expands)
 tn_tiered: list[dict] = []
 for c in tn_candidates:
-    if c["integrated"]:
+    km = c["nearest_cluster_km"]
+    if km is not None and km <= TN_INTEGRATED_KM:
         t = 1
-    elif c["nearest_cluster_km"] is not None:
+    elif km is not None and km <= TN_CLUSTER_SEARCH_KM:
         t = 2
     else:
         t = None
@@ -446,13 +453,15 @@ with open(out_vwh_map, "w") as f:
     json.dump(to_geojson(vw_tiered, "urban_fringe"), f)
 n_vwh_t1 = sum(1 for c in vw_tiered if c["vwh_tier"] == 1)
 n_vwh_t2 = sum(1 for c in vw_tiered if c["vwh_tier"] == 2)
-print(f"Wrote {out_vwh_map}  ({len(vw_tiered):,} tiered: T1={n_vwh_t1} T2={n_vwh_t2}  untiered={len(vw_candidates)-len(vw_tiered)})")
+n_vwh_t3 = sum(1 for c in vw_tiered if c["vwh_tier"] == 3)
+print(f"Wrote {out_vwh_map}  ({len(vw_tiered):,} features: T1={n_vwh_t1} T2={n_vwh_t2} T3={n_vwh_t3})")
 
 with open(out_pks_map, "w") as f:
     json.dump(to_geojson(tn_tiered, "commuter"), f)
 n_pks_t1 = sum(1 for c in tn_tiered if c["commuter_tier"] == 1)
 n_pks_t2 = sum(1 for c in tn_tiered if c["commuter_tier"] == 2)
-print(f"Wrote {out_pks_map}  ({len(tn_tiered):,} tiered: T1={n_pks_t1} T2={n_pks_t2}  untiered={len(tn_candidates)-len(tn_tiered)})")
+n_pks_t3 = sum(1 for c in tn_tiered if c["commuter_tier"] == 3)
+print(f"Wrote {out_pks_map}  ({len(tn_tiered):,} features: T1={n_pks_t1} T2={n_pks_t2} T3={n_pks_t3}  excluded={len(tn_candidates)-len(tn_tiered)})")
 
 # ── PRINT SUMMARY ─────────────────────────────────────────────────────────────
 
