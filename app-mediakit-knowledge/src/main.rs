@@ -186,6 +186,31 @@ async fn serve(
         }
         tracing::info!(guide_dir_2 = %gd2.display(), "guide directory 2 enabled");
     }
+
+    // Phase 0 federation: resolve the content mount set. When a `knowledge.toml`
+    // manifest is present in the content root it is authoritative and its guide
+    // mounts override the env guide dirs; otherwise the env config is synthesized
+    // into the same mount shape (so existing instances are unchanged). The first
+    // two guide mounts map onto the current two-guide-dir AppState; >2 await the
+    // full mount-set AppState refactor (BRIEF §11).
+    let mounts = app_mediakit_knowledge::mounts::resolve(
+        &content_dir,
+        guide_dir.as_deref(),
+        guide_dir_2.as_deref(),
+    );
+    let manifest_present = content_dir.join("knowledge.toml").exists();
+    let (guide_dir, guide_dir_2) = if manifest_present {
+        app_mediakit_knowledge::mounts::guide_dirs_from(&mounts)
+    } else {
+        (guide_dir, guide_dir_2)
+    };
+    tracing::info!(
+        mounts = mounts.len(),
+        manifest = manifest_present,
+        ids = ?mounts.iter().map(|m| m.id.as_str()).collect::<Vec<_>>(),
+        "content mounts resolved"
+    );
+
     tracing::info!(
         content_dir = %content_dir.display(),
         state_dir = %state_dir.display(),
