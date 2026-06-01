@@ -99,10 +99,11 @@ pub struct ContentCartridge {
     textarea: TextArea<'static>,
     offline: bool,
     health_rx: mpsc::Receiver<bool>,
-    // PDF graphics capabilities — set by chassis after terminal probe.
+    // Graphics capabilities — set by chassis after terminal probe.
     pdf_kitty: bool,
     pdf_sixel: bool,
     pdf_font_size: (u16, u16),
+    truecolor: bool,
 }
 
 impl ContentCartridge {
@@ -170,6 +171,25 @@ impl ContentCartridge {
             pdf_kitty: false,
             pdf_sixel: false,
             pdf_font_size: (10, 20),
+            truecolor: false,
+        }
+    }
+
+    /// Accent color — teal-family; richer RGB on truecolor terminals.
+    fn accent_color(&self) -> Color {
+        if self.truecolor {
+            Color::Rgb(32, 178, 170)
+        } else {
+            Color::Cyan
+        }
+    }
+
+    /// Selection background — deep teal on truecolor, Cyan otherwise.
+    fn selection_bg(&self) -> Color {
+        if self.truecolor {
+            Color::Rgb(0, 95, 135)
+        } else {
+            Color::Cyan
         }
     }
 
@@ -184,7 +204,7 @@ impl ContentCartridge {
 
     fn render_input(&mut self, frame: &mut Frame, area: Rect, protocol_idx: usize) {
         let (slug, display) = PROTOCOLS[protocol_idx];
-        let border_color = if self.offline { Color::DarkGray } else { Color::Cyan };
+        let border_color = if self.offline { Color::DarkGray } else { self.accent_color() };
         let outer = Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(border_color))
@@ -208,7 +228,7 @@ impl ContentCartridge {
         frame.render_widget(hint, chunks[1]);
     }
 
-    fn render_picker(frame: &mut Frame, area: Rect, selected: usize) {
+    fn render_picker(frame: &mut Frame, area: Rect, selected: usize, sel_bg: Color) {
         let outer = Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::Yellow))
@@ -223,7 +243,7 @@ impl ContentCartridge {
                 let style = if i == selected {
                     Style::default()
                         .fg(Color::Black)
-                        .bg(Color::Cyan)
+                        .bg(sel_bg)
                         .add_modifier(Modifier::BOLD)
                 } else {
                     Style::default()
@@ -424,6 +444,7 @@ impl ContentCartridge {
         selected: usize,
         scroll: u16,
         loading: bool,
+        sel_bg: Color,
     ) {
         let title = format!(
             " F4: Content — Search: \"{}\"    [j/k: navigate  Esc: back] ",
@@ -457,7 +478,7 @@ impl ContentCartridge {
             .enumerate()
             .map(|(i, r)| {
                 let style = if i == selected {
-                    Style::default().fg(Color::Black).bg(Color::Cyan)
+                    Style::default().fg(Color::Black).bg(sel_bg)
                 } else {
                     Style::default()
                 };
@@ -1124,14 +1145,14 @@ impl Cartridge for ContentCartridge {
 
         match cmd {
             Cmd::Input(pidx) => self.render_input(frame, area, pidx),
-            Cmd::Picker(sel) => Self::render_picker(frame, area, sel),
+            Cmd::Picker(sel) => Self::render_picker(frame, area, sel, self.selection_bg()),
             Cmd::Submitting(sp) => Self::render_submitting(frame, area, sp),
             Cmd::Results(resp, orig, sc) => Self::render_results(frame, area, &resp, &orig, sc),
             Cmd::Drafting(t, buf, done, err, sc) => {
                 Self::render_drafting(frame, area, &t, &buf, done, err.as_deref(), sc)
             }
             Cmd::Search(q, results, sel, sc, loading) => {
-                Self::render_search_results(frame, area, &q, &results, sel, sc, loading)
+                Self::render_search_results(frame, area, &q, &results, sel, sc, loading, self.selection_bg())
             }
             Cmd::Pdf(path, page, total) => self.render_pdf_view(frame, area, &path, page, total),
             Cmd::Error(msg) => Self::render_error(frame, area, &msg),
@@ -1183,9 +1204,10 @@ impl Cartridge for ContentCartridge {
         }
     }
 
-    fn set_graphics_caps(&mut self, kitty: bool, sixel: bool, font_size: (u16, u16)) {
+    fn set_graphics_caps(&mut self, kitty: bool, sixel: bool, font_size: (u16, u16), truecolor: bool) {
         self.pdf_kitty = kitty;
         self.pdf_sixel = sixel;
         self.pdf_font_size = font_size;
+        self.truecolor = truecolor;
     }
 }
