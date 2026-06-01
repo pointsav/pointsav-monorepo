@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proforma</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #1e1e1e; color: #cccccc;
+  font: 13px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow: hidden; height: 100vh; display: flex; flex-direction: column;
+}
+
+/* ── Toolbar ── */
+#toolbar {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  background: #252526; border-bottom: 1px solid #3c3c3c; padding: 5px 10px;
+}
+#title-input {
+  background: transparent; border: 1px solid transparent;
+  color: #cccccc; font: 600 13px/1 inherit; padding: 3px 6px; border-radius: 3px;
+  min-width: 160px;
+}
+#title-input:hover { border-color: #555; }
+#title-input:focus { border-color: #007acc; outline: none; background: #3c3c3c; }
+.tb-sep { width: 1px; background: #3c3c3c; height: 18px; margin: 0 2px; flex-shrink: 0; }
+.tb-btn {
+  background: #333; border: 1px solid #555; color: #bbb;
+  padding: 3px 8px; border-radius: 3px; cursor: pointer;
+  font: 11px/1 inherit; white-space: nowrap;
+}
+.tb-btn:hover { background: #3c3c3c; border-color: #888; }
+#save-btn {
+  background: #0e639c; border: none; color: #fff;
+  padding: 4px 12px; border-radius: 3px; cursor: pointer; font: 12px/1 inherit;
+}
+#save-btn:hover { background: #1177bb; }
+#save-status { font-size: 11px; color: #888; min-width: 60px; }
+
+/* ── Formula bar ── */
+#fbar {
+  display: flex; align-items: center; flex-shrink: 0;
+  background: #252526; border-bottom: 1px solid #3c3c3c; padding: 3px 8px;
+}
+#cell-ref {
+  width: 50px; text-align: center; font-size: 12px; color: #888;
+  border-right: 1px solid #3c3c3c; padding: 0 8px 0 0; margin-right: 8px; flex-shrink: 0;
+  font-family: ui-monospace, monospace;
+}
+#fbar-eq { color: #888; font-size: 14px; margin-right: 4px; flex-shrink: 0; }
+#formula-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: #cccccc; font: 13px/1 ui-monospace, monospace; padding: 2px 0;
+}
+
+/* ── Grid ── */
+#grid-wrap {
+  flex: 1; overflow: auto; position: relative; background: #1e1e1e;
+}
+#grid {
+  border-collapse: collapse; table-layout: fixed;
+  font-size: 13px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+#grid th, #grid td { border: 1px solid #2d2d2d; padding: 0; }
+#grid .corner { width: 46px; min-width: 46px; background: #252526; border-color: #3c3c3c; }
+#grid .ch {
+  min-width: 90px; width: 90px; background: #252526; border-color: #3c3c3c;
+  text-align: center; font-weight: 600; color: #888; padding: 3px 4px;
+  cursor: default; user-select: none; font-size: 12px;
+}
+#grid .rh {
+  width: 46px; min-width: 46px; background: #252526; border-color: #3c3c3c;
+  text-align: right; font-weight: 600; color: #888;
+  padding: 0 6px 0 0; cursor: default; user-select: none; font-size: 11px; height: 22px;
+}
+#grid td.cell {
+  height: 22px; padding: 1px 5px; cursor: cell; color: #ccc;
+  overflow: hidden; white-space: nowrap;
+}
+#grid td.cell.num { text-align: right; color: #9cdcfe; }
+#grid td.cell.str { text-align: left; }
+#grid td.cell.err { text-align: left; color: #f14c4c; }
+#grid td.cell.sel {
+  outline: 2px solid #007acc; outline-offset: -1px; background: #1a2a3a;
+}
+#grid th.ch.col-hl { background: #2a2e36; color: #ccc; }
+#grid th.rh.row-hl { background: #2a2e36; color: #ccc; }
+
+/* ── Edit overlay ── */
+#edit-overlay {
+  position: absolute; z-index: 50;
+  background: #1e2a36; border: 2px solid #007acc;
+  padding: 0 4px; outline: none;
+  font: 13px/22px ui-monospace, monospace;
+  color: #ccc; min-width: 90px;
+}
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <input id="title-input" type="text" value="Untitled Proforma" spellcheck="false" autocomplete="off">
+  <div class="tb-sep"></div>
+  <button class="tb-btn" id="btn-ar">+ Row</button>
+  <button class="tb-btn" id="btn-ac">+ Col</button>
+  <button class="tb-btn" id="btn-dr">− Row</button>
+  <button class="tb-btn" id="btn-dc">− Col</button>
+  <div class="tb-sep"></div>
+  <button id="save-btn">Save</button>
+  <span id="save-status"></span>
+</div>
+
+<div id="fbar">
+  <span id="cell-ref">A1</span>
+  <span id="fbar-eq">ƒx</span>
+  <input id="formula-input" type="text" spellcheck="false" autocomplete="off" placeholder="">
+</div>
+
+<div id="grid-wrap">
+  <table id="grid"></table>
+  <input id="edit-overlay" type="text" style="display:none" spellcheck="false" autocomplete="off">
+</div>
+
+<script>
+(function () {
+'use strict';
+
+// ── State ────────────────────────────────────────────────────────────────
+let doc = { schema: 'proforma-v1.0', title: 'Untitled Proforma', rows: 20, cols: 8, cells: {} };
+let filePath = null;
+let sel = { row: 0, col: 0 };
+let editing = false;
+let saveTimer = null;
+let dirty = false;
+
+const params = new URLSearchParams(location.search);
+filePath = params.get('path');
+
+// ── Column address helpers ────────────────────────────────────────────────
+function colLabel(i) {
+  let s = ''; i++;
+  while (i > 0) { s = String.fromCharCode(64 + (i % 26 || 26)) + s; i = Math.floor((i - 1) / 26); }
+  return s;
+}
+function colIndex(s) {
+  let r = 0;
+  for (const c of s.toUpperCase()) r = r * 26 + c.charCodeAt(0) - 64;
+  return r - 1;
+}
+function parseRef(ref) {
+  const m = ref.match(/^([A-Z]+)(\d+)$/i);
+  if (!m) return null;
+  return { row: +m[2] - 1, col: colIndex(m[1]) };
+}
+function cellAddr(row, col) { return colLabel(col) + (row + 1); }
+
+// ── Formula evaluation ────────────────────────────────────────────────────
+function rawAt(r, c) { return doc.cells[r + ',' + c]; }
+
+function evalCell(r, c, depth) {
+  if (depth > 64) return '#CIRC!';
+  const raw = rawAt(r, c);
+  if (raw === undefined || raw === null || raw === '') return '';
+  if (typeof raw === 'number') return raw;
+  if (typeof raw === 'string' && raw.charAt(0) === '=')
+    return evalExpr(raw.slice(1).trim(), depth + 1);
+  const n = Number(raw);
+  return (!isNaN(n) && raw.trim() !== '') ? n : raw;
+}
+
+function evalExpr(expr, depth) {
+  // SUM(A1:B3)
+  const sm = expr.match(/^SUM\(\s*([A-Z]+\d+)\s*:\s*([A-Z]+\d+)\s*\)$/i);
+  if (sm) {
+    const s = parseRef(sm[1]), e = parseRef(sm[2]);
+    if (!s || !e) return '#REF!';
+    let sum = 0;
+    for (let r = Math.min(s.row, e.row); r <= Math.max(s.row, e.row); r++)
+      for (let c = Math.min(s.col, e.col); c <= Math.max(s.col, e.col); c++) {
+        const v = evalCell(r, c, depth);
+        if (typeof v === 'number') sum += v;
+      }
+    return sum;
+  }
+  // Resolve A1-style refs then evaluate arithmetic
+  try {
+    const resolved = expr.replace(/([A-Z]+\d+)/gi, m => {
+      const ref = parseRef(m);
+      if (!ref) return '0';
+      const v = evalCell(ref.row, ref.col, depth);
+      return (typeof v === 'number') ? String(v) : '0';
+    });
+    // Guard: only digits, operators, parens, dots, spaces
+    if (/^[\d\s+\-*/.()e]+$/i.test(resolved))
+      return Function('"use strict";return(' + resolved + ')')(); // arithmetic-only eval; prototype-only
+    return expr; // treat as string
+  } catch { return '#ERR!'; }
+}
+
+function dispVal(r, c) {
+  const v = evalCell(r, c, 0);
+  if (v === '' || v === null || v === undefined) return '';
+  if (typeof v === 'number') return fmtNum(v);
+  return String(v);
+}
+
+function fmtNum(n) {
+  if (!isFinite(n)) return String(n);
+  if (Number.isInteger(n)) return n.toLocaleString('en-CA');
+  return n.toLocaleString('en-CA', { maximumFractionDigits: 2 });
+}
+
+function cellClass(r, c) {
+  const raw = rawAt(r, c);
+  const v = evalCell(r, c, 0);
+  if (typeof v === 'string' && (v.startsWith('#') && v.endsWith('!'))) return 'cell err';
+  if (typeof v === 'number') return 'cell num';
+  return 'cell str';
+}
+
+// ── DOM refs ──────────────────────────────────────────────────────────────
+const grid       = document.getElementById('grid');
+const gridWrap   = document.getElementById('grid-wrap');
+const overlay    = document.getElementById('edit-overlay');
+const cellRefEl  = document.getElementById('cell-ref');
+const fbarInput  = document.getElementById('formula-input');
+const titleInput = document.getElementById('title-input');
+const saveStatus = document.getElementById('save-status');
+
+function cellEl(r, c) { return grid.querySelector('td[data-r="'+r+'"][data-c="'+c+'"]'); }
+function chEl(c)      { return grid.querySelector('th.ch[data-c="'+c+'"]'); }
+function rhEl(r)      { return grid.querySelector('th.rh[data-r="'+r+'"]'); }
+
+// ── Build grid ────────────────────────────────────────────────────────────
+function buildGrid() {
+  const buf = ['<thead><tr><th class="corner"></th>'];
+  for (let c = 0; c < doc.cols; c++)
+    buf.push('<th class="ch" data-c="'+c+'">'+colLabel(c)+'</th>');
+  buf.push('</tr></thead><tbody>');
+  for (let r = 0; r < doc.rows; r++) {
+    buf.push('<tr><th class="rh" data-r="'+r+'">'+(r+1)+'</th>');
+    for (let c = 0; c < doc.cols; c++)
+      buf.push('<td class="cell" data-r="'+r+'" data-c="'+c+'"></td>');
+    buf.push('</tr>');
+  }
+  buf.push('</tbody>');
+  grid.innerHTML = buf.join('');
+  refreshAll();
+  highlightSel();
+}
+
+function refreshAll() {
+  for (let r = 0; r < doc.rows; r++)
+    for (let c = 0; c < doc.cols; c++) refreshCell(r, c);
+}
+
+function refreshCell(r, c) {
+  const td = cellEl(r, c);
+  if (!td) return;
+  td.className = cellClass(r, c);
+  td.textContent = dispVal(r, c);
+}
+
+// ── Selection ─────────────────────────────────────────────────────────────
+function highlightSel() {
+  grid.querySelectorAll('.sel').forEach(el => el.classList.remove('sel'));
+  grid.querySelectorAll('.col-hl').forEach(el => el.classList.remove('col-hl'));
+  grid.querySelectorAll('.row-hl').forEach(el => el.classList.remove('row-hl'));
+  const td = cellEl(sel.row, sel.col);
+  if (td) td.classList.add('sel');
+  const ch = chEl(sel.col); if (ch) ch.classList.add('col-hl');
+  const rh = rhEl(sel.row); if (rh) rh.classList.add('row-hl');
+}
+
+function selectCell(r, c) {
+  r = Math.max(0, Math.min(r, doc.rows - 1));
+  c = Math.max(0, Math.min(c, doc.cols - 1));
+  sel = { row: r, col: c };
+  highlightSel();
+  cellRefEl.textContent = cellAddr(r, c);
+  fbarInput.value = rawAt(r, c) !== undefined ? String(rawAt(r, c)) : '';
+  // Scroll into view
+  const td = cellEl(r, c);
+  if (td) td.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+
+// ── Overlay edit ──────────────────────────────────────────────────────────
+function openEdit(initial) {
+  if (editing) return;
+  editing = true;
+  const td = cellEl(sel.row, sel.col);
+  if (!td) return;
+  const wr = gridWrap.getBoundingClientRect();
+  const tr = td.getBoundingClientRect();
+  overlay.style.left   = (tr.left - wr.left + gridWrap.scrollLeft) + 'px';
+  overlay.style.top    = (tr.top  - wr.top  + gridWrap.scrollTop)  + 'px';
+  overlay.style.width  = Math.max(tr.width, 100) + 'px';
+  overlay.style.height = tr.height + 'px';
+  overlay.value = initial !== undefined ? initial : (rawAt(sel.row, sel.col) !== undefined ? String(rawAt(sel.row, sel.col)) : '');
+  overlay.style.display = 'block';
+  overlay.focus();
+  if (initial !== undefined && initial.length > 0) {
+    overlay.setSelectionRange(initial.length, initial.length);
+  } else {
+    overlay.select();
+  }
+  fbarInput.value = overlay.value;
+}
+
+function commitEdit() {
+  if (!editing) return;
+  editing = false;
+  overlay.style.display = 'none';
+  const val = overlay.value;
+  const key = sel.row + ',' + sel.col;
+  if (val === '') {
+    delete doc.cells[key];
+  } else {
+    const n = Number(val);
+    doc.cells[key] = (!val.startsWith('=') && !isNaN(n) && val.trim() !== '') ? n : val;
+  }
+  refreshAll();
+  fbarInput.value = rawAt(sel.row, sel.col) !== undefined ? String(rawAt(sel.row, sel.col)) : '';
+  markDirty();
+}
+
+function cancelEdit() {
+  if (!editing) return;
+  editing = false;
+  overlay.style.display = 'none';
+  fbarInput.value = rawAt(sel.row, sel.col) !== undefined ? String(rawAt(sel.row, sel.col)) : '';
+}
+
+// ── Grid events ───────────────────────────────────────────────────────────
+grid.setAttribute('tabindex', '0');
+
+grid.addEventListener('mousedown', e => {
+  const td = e.target.closest('td.cell');
+  if (!td) return;
+  const r = +td.dataset.r, c = +td.dataset.c;
+  if (editing) commitEdit();
+  selectCell(r, c);
+  grid.focus();
+  if (e.detail >= 2) { e.preventDefault(); openEdit(); }
+});
+
+grid.addEventListener('keydown', e => {
+  if (editing) return;
+  const s = e.shiftKey;
+  switch (e.key) {
+    case 'ArrowLeft':  e.preventDefault(); selectCell(sel.row, sel.col - 1); break;
+    case 'ArrowRight': e.preventDefault(); selectCell(sel.row, sel.col + 1); break;
+    case 'ArrowUp':    e.preventDefault(); selectCell(sel.row - 1, sel.col); break;
+    case 'ArrowDown':  e.preventDefault(); selectCell(sel.row + 1, sel.col); break;
+    case 'Tab':        e.preventDefault(); selectCell(sel.row, sel.col + (s ? -1 : 1)); break;
+    case 'Enter':      e.preventDefault(); openEdit(); break;
+    case 'F2':         e.preventDefault(); openEdit(); break;
+    case 'Delete':
+    case 'Backspace':
+      e.preventDefault();
+      delete doc.cells[sel.row + ',' + sel.col];
+      refreshCell(sel.row, sel.col);
+      fbarInput.value = '';
+      markDirty();
+      break;
+    default:
+      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        openEdit(e.key);
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault(); doSave();
+      }
+  }
+});
+
+// ── Overlay events ────────────────────────────────────────────────────────
+overlay.addEventListener('input', () => { fbarInput.value = overlay.value; });
+
+overlay.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault(); commitEdit();
+    selectCell(sel.row + 1, sel.col); grid.focus();
+  } else if (e.key === 'Tab') {
+    e.preventDefault(); commitEdit();
+    selectCell(sel.row, sel.col + (e.shiftKey ? -1 : 1)); grid.focus();
+  } else if (e.key === 'Escape') {
+    e.preventDefault(); cancelEdit(); grid.focus();
+  } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault(); commitEdit(); doSave();
+  }
+});
+
+// ── Formula bar events ────────────────────────────────────────────────────
+fbarInput.addEventListener('focus', () => { if (!editing) openEdit(fbarInput.value); });
+fbarInput.addEventListener('input', () => { if (editing) overlay.value = fbarInput.value; });
+fbarInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter')  { e.preventDefault(); commitEdit(); grid.focus(); }
+  if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); grid.focus(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); commitEdit(); doSave(); }
+});
+
+// ── Toolbar ───────────────────────────────────────────────────────────────
+function withCommit(fn) { if (editing) commitEdit(); fn(); }
+
+document.getElementById('btn-ar').addEventListener('click', () => withCommit(() => { doc.rows++; buildGrid(); selectCell(sel.row, sel.col); markDirty(); }));
+document.getElementById('btn-ac').addEventListener('click', () => withCommit(() => { doc.cols++; buildGrid(); selectCell(sel.row, sel.col); markDirty(); }));
+document.getElementById('btn-dr').addEventListener('click', () => withCommit(() => {
+  if (doc.rows <= 1) return;
+  const r = doc.rows - 1;
+  for (let c = 0; c < doc.cols; c++) delete doc.cells[r + ',' + c];
+  doc.rows--; buildGrid(); selectCell(Math.min(sel.row, doc.rows - 1), sel.col); markDirty();
+}));
+document.getElementById('btn-dc').addEventListener('click', () => withCommit(() => {
+  if (doc.cols <= 1) return;
+  const c = doc.cols - 1;
+  for (let r = 0; r < doc.rows; r++) delete doc.cells[r + ',' + c];
+  doc.cols--; buildGrid(); selectCell(sel.row, Math.min(sel.col, doc.cols - 1)); markDirty();
+}));
+
+titleInput.addEventListener('change', () => { doc.title = titleInput.value; document.title = titleInput.value + ' — Proforma'; markDirty(); });
+
+document.getElementById('save-btn').addEventListener('click', doSave);
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); if (editing) commitEdit(); doSave(); }
+});
+
+// ── Save ──────────────────────────────────────────────────────────────────
+function markDirty() {
+  dirty = true;
+  saveStatus.textContent = 'Unsaved…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 3000);
+}
+
+async function doSave() {
+  clearTimeout(saveTimer);
+  if (!filePath) {
+    const nm = (doc.title || 'Untitled Proforma').trim();
+    try {
+      const res = await fetch('/api/proforma/create', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nm }),
+      });
+      if (!res.ok) { saveStatus.textContent = 'Save failed'; return; }
+      const data = await res.json();
+      filePath = data.path;
+      history.replaceState({}, '', '/proforma?path=' + encodeURIComponent(filePath));
+    } catch { saveStatus.textContent = 'Save failed'; return; }
+  }
+  try {
+    const res = await fetch('/api/files/save', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: filePath, content: JSON.stringify(doc, null, 2) }),
+    });
+    if (res.ok) {
+      dirty = false;
+      saveStatus.textContent = 'Saved ✓';
+      setTimeout(() => { if (!dirty) saveStatus.textContent = ''; }, 2500);
+    } else {
+      saveStatus.textContent = 'Save failed';
+    }
+  } catch { saveStatus.textContent = 'Save failed'; }
+}
+
+// ── Load ──────────────────────────────────────────────────────────────────
+async function loadFile() {
+  if (filePath) {
+    try {
+      const res = await fetch('/api/files/read?path=' + encodeURIComponent(filePath));
+      if (res.ok) {
+        const parsed = JSON.parse(await res.text());
+        if (parsed.schema === 'proforma-v1.0') doc = parsed;
+      }
+    } catch { /* start blank */ }
+  }
+  titleInput.value = doc.title || 'Untitled Proforma';
+  document.title = titleInput.value + ' — Proforma';
+  buildGrid();
+  selectCell(0, 0);
+  grid.focus();
+}
+
+loadFile();
+
+})();
+</script>
+</body>
+</html>
