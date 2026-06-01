@@ -543,7 +543,7 @@
   });
 
   /* canvas background click → deselect */
-  canvas.addEventListener('mousedown', e => { if (e.target===canvas) deselect(); });
+  canvas.addEventListener('mousedown', e => { if (e.target===canvas||e.target.tagName?.toLowerCase()==='svg') deselect(); });
 
   /* ── Toggle edit mode ─────────────────────────────────────────── */
   function setEditMode(on) {
@@ -553,6 +553,7 @@
     editBtn.style.borderColor=on?'#89d185':'#555';
     const svgEl=canvas.querySelector('svg');
     canvas.querySelectorAll('*').forEach(el => {
+    if (el.tagName.toLowerCase()==='svg') return;
       if (window.getComputedStyle(el).position==='absolute')
         el.style.cursor=on?'grab':'';
     });
@@ -573,6 +574,7 @@
 
   /* ── Wire up all abs-positioned elements + SVG paths ─────────── */
   canvas.querySelectorAll('*').forEach(el => {
+    if (el.tagName.toLowerCase()==='svg') return;
     if (window.getComputedStyle(el).position==='absolute') wireBox(el);
   });
   const svgEl=canvas.querySelector('svg');
