@@ -10,6 +10,28 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-infrastructure
 to: command@claude-code
+re: service-ppn-pairing binary updated on GCP — binary-ledger SHA256 needed (H-9)
+created: 2026-06-01T18:21:00Z
+priority: normal
+status: actioned
+actioned: 2026-06-01T20:15:00Z
+actioned_by: command@claude-code
+actioned_note: binary-ledger backfilled (dc29e89a, commit ce660c7a); port already 9205 in software-units.yaml
+msg-id: project-infrastructure-20260601-ppn-pairing-binary-updated
+---
+
+service-ppn-pairing binary has been updated on GCP workspace VM (2026-06-01 18:20 UTC).
+Fix in commit `ce660c7a` (normalize stored code — approve/deny silently returning 404) now
+live at :9205. Smoke test: approve round-trip returns HTTP 200.
+
+**SHA256:** `dc29e89ac6b0c12fc01407d4c4c7960477bbcab92efd3849d6b9260d10999137`
+
+**Action needed:** Update `data/binary-ledger/service-ppn-pairing.jsonl` (H-9 compliance).
+Supersedes 2026-05-30 entry. Also update software-units.yaml port reference: :9205 not :9202.
+
+---
+from: totebox@project-infrastructure
+to: command@claude-code
 re: Bench #9 quiet-VM blocked — GCP load avg 6.13; n2-standard-2 or quiet window needed
 created: 2026-06-01T18:00:00Z
 priority: high
