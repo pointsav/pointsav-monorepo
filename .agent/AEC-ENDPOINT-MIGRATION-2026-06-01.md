@@ -6,6 +6,14 @@ from the workspace VM 2026-06-01; HTTP codes are this VM's actual results.
 
 Companion: build-aec-flood.sh, build-aec-seismic.sh. Crons run from the clone path.
 
+> **RESOLVED + IMPLEMENTED 2026-06-01 (evening).** All three pipelines fixed in code:
+> - SEISMIC: dynamic ScienceBase URL + PGA zip-name filter (build-aec-seismic.sh).
+> - FLOOD: AQUEDUCT skip-marker self-heal (flood_hazard works); FEMA → ArcGIS REST layer-28
+>   market-windowed query; GB → OGC API Features; IT → ISPRA GeoPackage; FR/ES/DE deferred.
+> - WILDFIRE: **NASA GFWED** chosen (open, no key) — 12 monthly NetCDFs → mean FWI GeoTIFF.
+> Sequenced race-free in `run-aec-overnight.sh`; scheduled via cron 2026-06-02 05:00 UTC
+> (replaced the separate flood + enrichment crons to avoid clusters-meta write races).
+
 ---
 
 ## SEISMIC — RESOLVED (endpoint recovered + fix already live)
