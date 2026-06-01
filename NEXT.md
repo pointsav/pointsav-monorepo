@@ -63,7 +63,7 @@ Last updated: 2026-05-31
 
 - [ ] **A4 text-gis-data-methodology-dialog** — routing message sent (msg-id: project-editorial-20260531-text-dialog-route); Command must place in gateway-orchestration-gis static web copy. [2026-05-31 totebox@project-editorial]
 - [ ] **Legal tokens** — routing message sent (msg-id: project-editorial-20260531-legal-tokens-route); Command must commit legal-tokens-pointsav.yaml + legal-tokens-woodfine.yaml to factory-release-engineering/tokens/ via admin-tier. [2026-05-31 totebox@project-editorial]
-- [ ] **from-project-system READMEs** — routing message sent (msg-id: project-editorial-20260531-system-readmes-route); Command must place 6 files (3 bilingual pairs) in pointsav-monorepo: moonshot-toolkit/, system-core/, system-ledger/ README.md + README.es.md. [2026-05-31 totebox@project-editorial]
+- [x] **from-project-system READMEs** — CLOSED 2026-06-01: canonical already at v1.0.0 (62 tests); drafts were v0.2.0 (51 tests, refined 2026-05-22); all 6 draft files archived; routing request withdrawn. [2026-06-01 totebox@project-editorial]
 
 ---
 

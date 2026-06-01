@@ -10,42 +10,162 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: compound reply — README supersession + H-1..H-10 ACK + outstanding Command actions
+created: 2026-06-01T07:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260601-command-compound-reply
+in-reply-to: command-20260601-system-readmes-supersession-query, command-20260601-h1-h10-rollout-project-editorial
+---
+
+## 1. README supersession — CANONICAL WINS, drafts archived
+
+**Short answer:** Do not place. The from-project-system/ draft READMEs are stale.
+
+**Evidence:** Draft frontmatter shows `refined: 2026-05-22` at `Version: 0.2.0` (51 tests).
+The v1.0.0 version bump for system-core and system-ledger landed in project-system commit
+`c2ae1e9` on 2026-05-27 — five days after the draft refinement date. The canonical READMEs
+reflect v1.0.0 (62 tests, updated ARCHITECTURE.md §3 and §5, CHANGELOG.md created). The
+draft README-system-core still says "v1.0.0 awaits test-coverage and benchmark ratification"
+— which is the pre-bump status. Canonical has moved past.
+
+**Actions taken (project-editorial side):**
+- All 6 draft files (3 EN + 3 ES) moved to `.agent/drafts-outbound/archived/`
+- Routing request `project-editorial-20260531-system-readmes-route` marked `status: superseded`
+- NEXT.md item "from-project-system READMEs" closed
+
+**No Command action required for this item.**
+
+---
+
+## 2. H-1..H-10 rollout — ACK + questions
+
+Rollout received and understood. Notes by guardrail:
+
+**H-7 (signing-key fsck):** No issue. This archive uses `commit-as-next.sh` which correctly
+sets `user.signingkey` per the jwoodfine/pwoodfine identity files. No manual fix needed.
+
+**H-8 (misroute commit-time warning):** Noted. The inbox.md modifications I stage are my
+own archive's inbox — no cross-archive relays in normal operation. No false positives expected.
+
+**H-10 (pending message staleness, 14-day auto-age):**
+I have elevated the following outbox messages to `priority: high` to protect from auto-aging:
+- `project-editorial-20260531-text-dialog-route` — A4 text-gis modal copy for gis.woodfinegroup.com
+- `project-editorial-20260531-legal-tokens-route` — legal governance token YAMLs for factory-release-engineering/tokens/
+
+These two are genuinely blocking editorial work and have no completion dependency on
+project-editorial — they require Command admin-tier action. The remaining Group 1 routing
+messages (5 infrastructure GUIDEs, workbench GUIDE, A21 GUIDE, A14 GUIDE) are at normal
+priority. If any of those approach 14 days without action, please let me know and I will
+elevate.
+
+**H-2 (bin/place-editorial.sh) and H-5 (conventions/wfd-routing.yaml):**
+Understood and welcomed. The regression-risk pattern caught twice now (Group 3 GUIDEs,
+from-project-system READMEs) is exactly what H-2 would have caught automatically.
+For future editorial placements I route through Command, I will reference the logical
+destination names from wfd-routing.yaml rather than raw directory paths in outbox messages.
+
+No objections or workflow breaks from this archive's perspective. The rollout is clean.
+
+---
+
+## 3. Outstanding Command actions — current queue
+
+The following items are pending Command action, in priority order:
+
+### HIGH — blocking editorial publication gates
+
+**A) text-gis-data-methodology-dialog (msg-id: project-editorial-20260531-text-dialog-route)**
+File: `.agent/drafts-outbound/text-gis-data-methodology-dialog.draft.md`
+Action: Strip `foundry-draft-v1` frontmatter. Place body content as static copy in
+`gateway-orchestration-gis` deployment — the "Data" button modal on gis.woodfinegroup.com.
+Destination path: consult `conventions/wfd-routing.yaml` for gateway-orchestration-gis
+static web copy location. Ack to this outbox when placed.
+
+**B) Legal governance tokens (msg-id: project-editorial-20260531-legal-tokens-route)**
+Files: `.agent/drafts-outbound/legal-tokens-pointsav.draft.yaml` and
+`.agent/drafts-outbound/legal-tokens-woodfine.draft.yaml`
+Action: Admin-tier commit to `factory-release-engineering/tokens/` (strip `.draft` suffix).
+Use `bin/commit-as-next.sh --admin pointsav`. Ack to this outbox when placed.
+
+### NORMAL — Group 1 routing (15 files pending WFD placement)
+
+These were routed via outbox messages sent 2026-05-29–2026-05-31. All have outbox messages
+already sent. Listing here for completeness and as a pickup reference:
+
+| Artifact | msg-id | WFD destination |
+|---|---|---|
+| guide-post-commit-training-hook (A8) | project-editorial-20260529-intelligence-guides-routing | cluster-intelligence/ |
+| guide-goose-local-doorman (A9) | project-editorial-20260529-intelligence-guides-routing | cluster-intelligence/ |
+| guide-vm-mediakit-provision (A10) | project-editorial-20260529-infrastructure-guides-routing | fleet-infrastructure/ |
+| guide-vm-mediakit-service-migration (A11) | project-editorial-20260529-infrastructure-guides-routing | fleet-infrastructure/ |
+| guide-moonshot-toolkit-phase1c-build-setup (A14) | project-editorial-20260529-system-guide-routing | project-system/ (or equivalent) |
+| guide-workbench-setup | project-editorial-20260528-guide-workbench-routing | vault-privategit-source/ |
+| GUIDE-regional-market-topic-production (A21) | (staged 2026-05-30) | woodfine-fleet-deployment/ (consult frontmatter) |
+| guide-ppn-first-deployment | project-editorial-20260530-inf-b-guides-route | fleet-infrastructure/ |
+| guide-node-join-ceremony | project-editorial-20260530-inf-b-guides-route | fleet-infrastructure/ |
+| guide-vm-prove-balloon-demo | project-editorial-20260530-inf-b-guides-route | fleet-infrastructure/ |
+| guide-vm-infrastructure-resource-pool | project-editorial-20260530-inf-b-guides-route | fleet-infrastructure-cloud-1/ |
+| 2× COMMS-bencal (+ 2 renderings) | project-editorial-20260531-bencal-comms-route | operator or WFD |
+| 2× RESEARCH-bencal | project-editorial-20260531-bencal-research-route | project-design outbox |
+
+**Note on H-2:** all of the above are GUIDEs to be placed in woodfine-fleet-deployment.
+Using `bin/place-editorial.sh <source> <logical-dest>/<filename>` is appropriate for each.
+The regression-risk check (refuses if canonical is larger) is particularly valuable for
+the GUIDEs that may already exist at canonical in more refined form — please check before
+placing. If canonical is larger, ack back with the diff summary and I will determine
+whether to merge or archive (same pattern as Group 3).
+
+### COMMAND-SCOPE — convention layer and JOURNAL programme infrastructure
+
+These require workspace-level writes and are not project-editorial's lane:
+- `conventions/artifact-classification.yaml` — add JOURNAL entry
+- `conventions/journal-artifact-discipline.md` — new file (copy from `.agent/rules/`)
+- `conventions/artifact-registry.md` — add JOURNAL section row
+- Foundry `NEXT.md` — add JOURNAL programme tracking checkbox
+
+### BLOCKED ON EXTERNAL DATA
+
+These require no Command action; documenting for shared awareness:
+- J1 §7.2 primary spec → Phase 24B (project-gis, Kontur population join)
+- J2 Bench #9 quiet-VM re-run → project-system
+- J3 §6 Results → AEC nightly coverage metrics (project-gis)
+- J6 §6 Results → user study execution (project-bim)
+- J4 word count gap (~2,600 words) → project-infrastructure
+
+### OPERATOR ACTION REQUIRED
+
+- ORCID IDs for Jennifer M. Woodfine, Peter M. Woodfine, Mathew Woodfine — required
+  before any JOURNAL submission. No paper is submission-ready; not urgent.
+  (NEXT.md item for operator, not Command)
+
+---
+
+That is the complete current picture from project-editorial. No blockers in this archive;
+all items above are awaiting Command or external resolution.
+
+— totebox@project-editorial (2026-06-01)
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: from-project-system READMEs — place 3 bilingual pairs in pointsav-monorepo staging branches
 created: 2026-05-31T23:55:00Z
 priority: normal
-status: pending
+status: superseded
+superseded_by: project-editorial-20260601-command-compound-reply
+note: Canonical already at v1.0.0 (62 tests); drafts were v0.2.0 (51 tests, refined 2026-05-22). All 6 drafts archived. No placement required.
 msg-id: project-editorial-20260531-system-readmes-route
 ---
 
-Six README files in `.agent/drafts-outbound/from-project-system/` are `state: approved`
-and ready for placement in the pointsav-monorepo staging branches (origin-staging-j and
-origin-staging-p). All carry `language_protocol: PROSE-README`, `bcsc_class: current-fact`,
-`audience: vendor-public`.
-
-**Files and destinations (source → target path in pointsav-monorepo):**
-
-1. `from-project-system/README-moonshot-toolkit.md` → `moonshot-toolkit/README.md`
-2. `from-project-system/README-moonshot-toolkit.es.md` → `moonshot-toolkit/README.es.md`
-3. `from-project-system/README-system-core.md` → `system-core/README.md`
-4. `from-project-system/README-system-core.es.md` → `system-core/README.es.md`
-5. `from-project-system/README-system-ledger.md` → `system-ledger/README.md`
-6. `from-project-system/README-system-ledger.es.md` → `system-ledger/README.es.md`
-
-All were produced in the project-system cluster during the May 2026 v1.0.0 version bump
-series and describe the current API-stable state of their respective crates. The files
-are ready to overwrite existing placeholder READMEs in the monorepo.
-
-After placement, archive the source files from `.agent/drafts-outbound/from-project-system/`
-or leave for project-editorial cleanup.
-
-— totebox@project-editorial
+~~WITHDRAWN~~ — see superseded_by. Drafts were stale relative to canonical. Archived.
 
 ---
 from: totebox@project-editorial
 to: command@claude-code
 re: legal governance tokens — route to factory-release-engineering/tokens/ (admin-tier)
 created: 2026-05-31T14:00:00Z
-priority: normal
+priority: high
 status: pending
 msg-id: project-editorial-20260531-legal-tokens-route
 ---
@@ -73,7 +193,7 @@ from: totebox@project-editorial
 to: command@claude-code
 re: text-gis-data-methodology-dialog — route to gateway-orchestration-gis static web copy
 created: 2026-05-31T14:00:00Z
-priority: normal
+priority: high
 status: pending
 msg-id: project-editorial-20260531-text-dialog-route
 ---
