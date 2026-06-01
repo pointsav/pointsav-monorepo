@@ -424,13 +424,14 @@ When Yo-Yo is running, use execution-based validation instead of OLMo self-criti
 - DPO expansion with each Yo-Yo session (execution-validated pairs only)
 - Never train on: empty diffs, self-evaluated pairs, or cross-model inconsistent pairs
 
-### What changed operationally (2026-05-31)
+### What changed operationally (updated 2026-06-01)
 
-- `SLM_HOLD_THRESHOLD_SECS` changed from `3600` → `1` in `/etc/local-doorman/local-doorman.env`
-- This pauses the CPU drain worker immediately (Tier B has been open for days)
+- `SLM_HOLD_THRESHOLD_SECS` changed from `3600` → `1` (2026-05-31) — aggressive hold
+- **`SLM_DRAIN_PAUSED=false` set 2026-06-01** — drain is now **ACTIVE**; routing all pending briefs
+  through Tier A (OLMo 2 7B). Flow verified: `tier="local"` confirmed in dispatch log; 0 poison
+  after initial drain pass (76 empty-diff ghost commits skipped cleanly; 209 real-diff briefs queued)
 - SFT capture via post-commit hook continues (new commits still write to `queue/`)
-- CPU is now free for interactive OLMo sessions via Goose
-- The 77 pending briefs are PRESERVED in `queue/` for GPU drain when Yo-Yo returns
+- The 285 pending briefs (209 real-diff) are draining via Tier A; GPU drain via Yo-Yo is not blocked
 
 ### Fix C — decision deferred indefinitely
 
