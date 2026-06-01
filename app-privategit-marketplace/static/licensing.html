@@ -89,6 +89,7 @@
     align-items: center;
     justify-content: center;
     line-height: 1;
+    text-decoration: none;
   }
   .wordmark img, .wordmark .logo-svg {
     display: block;
@@ -321,57 +322,51 @@
   .props .row-2 { margin-top: 28px; }
 
   /* === Footer (matches Disclaimer page) === */
-  footer {
-    margin: 0 56px;
-    background: var(--paper-2);
-    border-top: 1px solid var(--rule);
-    padding: 0 0 20px;
-  }
-  .footer-nav {
-    display: flex;
+  /* ── Footer — matching home.pointsav.com ──────────────────────── */
+  footer.footer {
+    display: grid;
+    grid-template-columns: 1fr auto;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-    background: #B4C5D5;
-    padding: 18px 140px;
+    padding: 22px 56px;
+    background: var(--paper-3);
+    margin-top: 48px;
   }
-  .footer-bottom-wrap { padding: 0 140px; }
-  .footer-nav .offices {
-    font-family: var(--display);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #164679;
+  .cities {
+    font-family: var(--serif);
+    font-size: 14px;
+    color: var(--ink-2);
   }
-  .footer-nav .offices span { margin: 0 6px; color: #164679; opacity: 0.45; }
-  .footer-nav .footer-links a { color: #164679; }
-  .footer-nav .footer-links a:hover { color: #0f3056; }
-  .footer-links {
+  .cities .sep { margin: 0 6px; color: var(--ink-4); }
+  .footnav {
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    gap: 4px;
+    text-align: right;
+  }
+  .footnav a {
     font-family: var(--display);
-    font-size: 11px;
-    letter-spacing: 0.1em;
+    font-size: 10px;
+    font-weight: 500;
     text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-decoration: none;
   }
-  .footer-links a { color: var(--ink-3); text-decoration: none; }
-  .footer-links a:hover { color: var(--accent); }
-  .footer-bottom {
-    border-top: 1px solid var(--rule);
-    padding-top: 14px;
-    font-family: var(--sans);
-    font-size: 11px;
-    color: var(--ink-3);
-    line-height: 1.7;
-  }
-  .footer-bottom strong { color: var(--ink-2); }
-  .footer-version {
-    margin-top: 10px;
-    font-family: var(--sans);
+  .footnav a:hover { opacity: 0.7; }
+  .copyright {
+    text-align: center;
     font-size: 10px;
     color: var(--ink-4);
-    letter-spacing: 0.04em;
+    padding: 12px 56px 4px;
+  }
+  .footer-legal {
+    text-align: center;
+    font-size: 9px;
+    color: var(--ink-4);
+    padding: 0 56px 24px;
+    line-height: 1.6;
+    max-width: 900px;
+    margin: 0 auto;
   }
 
   /* ── Tweaks panel hooks ───────────────────────────────────────── */
@@ -1136,12 +1131,12 @@
 <div class="page" data-screen-label="Licensing">
   <header class="topnav">
     <nav class="left">
-      <a href="/software">Software</a>
+      <a href="/products">Products</a>
       <a class="active-page" href="#">Licensing</a>
       <a href="#">Disclaimer</a>
       <a href="#">Contact us</a>
     </nav>
-    <div class="wordmark" aria-label="PointSav, Inc.">
+    <a class="wordmark" href="https://home.pointsav.com/" aria-label="PointSav, Inc.">
       <svg class="logo-svg" role="img" aria-label="PointSav, Inc." viewBox="0 0 144 36" width="280" height="auto" xmlns="http://www.w3.org/2000/svg" fill="#111827">
 <g transform="translate(-28.8654, -10.2516) scale(1.3911)">
   <defs id="defs2"></defs>
@@ -1149,11 +1144,11 @@
   <path d="m 36.767496,30.4389 v -2.25 h 0.56 q 0.29,0 0.485,0.085 0.2,0.08 0.32,0.235 0.12,0.155 0.17,0.375 0.055,0.215 0.055,0.485 0,0.295 -0.075,0.5 -0.075,0.205 -0.2,0.335 -0.125,0.125 -0.285,0.18 -0.16,0.055 -0.33,0.055 z m -0.785,-2.91 v 3.57 h 1.54 q 0.41,0 0.71,-0.135 0.305,-0.14 0.505,-0.38 0.205,-0.24 0.305,-0.57 0.1,-0.33 0.1,-0.72 0,-0.445 -0.125,-0.775 -0.12,-0.33 -0.34,-0.55 -0.215,-0.22 -0.515,-0.33 -0.295,-0.11 -0.64,-0.11 z m 5.704996,0 v 3.57 h 0.785 v -3.57 z m 6.055,3.165 0.08,0.405 h 0.5 v -1.93 h -1.5 v 0.585 h 0.79 q -0.035,0.375 -0.25,0.575 -0.21,0.195 -0.6,0.195 -0.265,0 -0.45,-0.1 -0.185,-0.105 -0.3,-0.275 -0.115,-0.17 -0.17,-0.38 -0.05,-0.215 -0.05,-0.44 0,-0.235 0.05,-0.455 0.055,-0.22 0.17,-0.39 0.115,-0.175 0.3,-0.275 0.185,-0.105 0.45,-0.105 0.285,0 0.485,0.15 0.2,0.15 0.27,0.45 h 0.75 q -0.03,-0.305 -0.165,-0.54 -0.135,-0.235 -0.345,-0.395 -0.205,-0.16 -0.465,-0.24 -0.255,-0.085 -0.53,-0.085 -0.41,0 -0.74,0.145 -0.325,0.145 -0.55,0.4 -0.225,0.255 -0.345,0.6 -0.12,0.34 -0.12,0.74 0,0.39 0.12,0.73 0.12,0.335 0.345,0.585 0.225,0.25 0.55,0.395 0.33,0.14 0.74,0.14 0.26,0 0.515,-0.105 0.255,-0.11 0.465,-0.38 z m 3.215004,-3.165 v 3.57 h 0.785 v -3.57 z m 4.265001,0.66 v 2.91 h 0.785 v -2.91 h 1.07 v -0.66 h -2.925 v 0.66 z m 4.705005,1.53 0.465,-1.31 h 0.01 l 0.45,1.31 z m 0.075,-2.19 -1.35,3.57 h 0.79 l 0.28,-0.795 h 1.335 l 0.27,0.795 h 0.815 l -1.335,-3.57 z m 4.449997,0 v 3.57 h 2.525 v -0.66 h -1.74 v -2.91 z m 8.890002,2.385 h -0.76 q -0.005,0.33 0.12,0.57 0.125,0.24 0.335,0.395 0.215,0.155 0.49,0.225 0.28,0.075 0.575,0.075 0.365,0 0.64,-0.085 0.28,-0.085 0.465,-0.235 0.19,-0.155 0.285,-0.365 0.095,-0.21 0.095,-0.455 0,-0.3 -0.13,-0.49 -0.125,-0.195 -0.3,-0.31 -0.175,-0.115 -0.355,-0.165 -0.175,-0.055 -0.275,-0.075 -0.335,-0.085 -0.545,-0.14 -0.205,-0.055 -0.325,-0.11 -0.115,-0.055 -0.155,-0.12 -0.04,-0.065 -0.04,-0.17 0,-0.115 0.05,-0.19 0.05,-0.075 0.125,-0.125 0.08,-0.05 0.175,-0.07 0.095,-0.02 0.19,-0.02 0.145,0 0.265,0.025 0.125,0.025 0.22,0.085 0.095,0.06 0.15,0.165 0.06,0.105 0.07,0.265 h 0.76 q 0,-0.31 -0.12,-0.525 -0.115,-0.22 -0.315,-0.36 -0.2,-0.14 -0.46,-0.2 -0.255,-0.065 -0.535,-0.065 -0.24,0 -0.48,0.065 -0.24,0.065 -0.43,0.2 -0.19,0.135 -0.31,0.34 -0.115,0.2 -0.115,0.475 0,0.245 0.09,0.42 0.095,0.17 0.245,0.285 0.15,0.115 0.34,0.19 0.19,0.07 0.39,0.12 0.195,0.055 0.385,0.1 0.19,0.045 0.34,0.105 0.15,0.06 0.24,0.15 0.095,0.09 0.095,0.235 0,0.135 -0.07,0.225 -0.07,0.085 -0.175,0.135 -0.105,0.05 -0.225,0.07 -0.12,0.015 -0.225,0.015 -0.155,0 -0.3,-0.035 -0.145,-0.04 -0.255,-0.115 -0.105,-0.08 -0.17,-0.205 -0.065,-0.125 -0.065,-0.305 z m 5.635002,-0.205 v 1.39 h 0.785 v -1.37 l 1.325,-2.2 h -0.875 l -0.83,1.41 -0.835,-1.41 h -0.88 z m 4.944999,0.205 h -0.76 q -0.005,0.33 0.12,0.57 0.125,0.24 0.335,0.395 0.215,0.155 0.49,0.225 0.28,0.075 0.575,0.075 0.365,0 0.64,-0.085 0.28,-0.085 0.465,-0.235 0.19,-0.155 0.285,-0.365 0.095,-0.21 0.095,-0.455 0,-0.3 -0.13,-0.49 -0.125,-0.195 -0.3,-0.31 -0.175,-0.115 -0.355,-0.165 -0.175,-0.055 -0.275,-0.075 -0.335,-0.085 -0.545,-0.14 -0.205,-0.055 -0.325,-0.11 -0.115,-0.055 -0.155,-0.12 -0.04,-0.065 -0.04,-0.17 0,-0.115 0.05,-0.19 0.05,-0.075 0.125,-0.125 0.08,-0.05 0.175,-0.07 0.095,-0.02 0.19,-0.02 0.145,0 0.265,0.025 0.125,0.025 0.22,0.085 0.095,0.06 0.15,0.165 0.06,0.105 0.07,0.265 h 0.76 q 0,-0.31 -0.12,-0.525 -0.115,-0.22 -0.315,-0.36 -0.2,-0.14 -0.46,-0.2 -0.255,-0.065 -0.535,-0.065 -0.24,0 -0.48,0.065 -0.24,0.065 -0.43,0.2 -0.19,0.135 -0.31,0.34 -0.115,0.2 -0.115,0.475 0,0.245 0.09,0.42 0.095,0.17 0.245,0.285 0.15,0.115 0.34,0.19 0.19,0.07 0.39,0.12 0.195,0.055 0.385,0.1 0.19,0.045 0.34,0.105 0.15,0.06 0.24,0.15 0.095,0.09 0.095,0.235 0,0.135 -0.07,0.225 -0.07,0.085 -0.175,0.135 -0.105,0.05 -0.225,0.07 -0.12,0.015 -0.225,0.015 -0.155,0 -0.3,-0.035 -0.145,-0.04 -0.255,-0.115 -0.105,-0.08 -0.17,-0.205 -0.065,-0.125 -0.065,-0.305 z m 5.499999,-1.725 v 2.91 h 0.785 v -2.91 h 1.07 v -0.66 h -2.925 v 0.66 z m 4.265001,-0.66 v 3.57 h 2.71 v -0.66 h -1.925 v -0.875 h 1.73 v -0.61 h -1.73 v -0.765 h 1.885 v -0.66 z m 5.240001,0 v 3.57 h 0.735 v -2.505 h 0.01 l 0.874997,2.505 h 0.605 l 0.875,-2.53 h 0.01 v 2.53 h 0.735 v -3.57 h -1.105 l -0.79,2.455 h -0.01 l -0.835,-2.455 z m 7.070007,2.385 h -0.76 q -0.005,0.33 0.12,0.57 0.125,0.24 0.335,0.395 0.215,0.155 0.49,0.225 0.28,0.075 0.575,0.075 0.365,0 0.64,-0.085 0.28,-0.085 0.465,-0.235 0.19,-0.155 0.285,-0.365 0.095,-0.21 0.095,-0.455 0,-0.3 -0.13,-0.49 -0.125,-0.195 -0.3,-0.31 -0.175,-0.115 -0.355,-0.165 -0.175,-0.055 -0.275,-0.075 -0.335,-0.085 -0.545,-0.14 -0.205,-0.055 -0.325,-0.11 -0.115,-0.055 -0.155,-0.12 -0.04,-0.065 -0.04,-0.17 0,-0.115 0.05,-0.19 0.05,-0.075 0.125,-0.125 0.08,-0.05 0.175,-0.07 0.095,-0.02 0.19,-0.02 0.145,0 0.265,0.025 0.125,0.025 0.22,0.085 0.095,0.06 0.15,0.165 0.06,0.105 0.07,0.265 h 0.76 q 0,-0.31 -0.12,-0.525 -0.115,-0.22 -0.315,-0.36 -0.2,-0.14 -0.46,-0.2 -0.255,-0.065 -0.535,-0.065 -0.24,0 -0.48,0.065 -0.24,0.065 -0.43,0.2 -0.19,0.135 -0.31,0.34 -0.115,0.2 -0.115,0.475 0,0.245 0.09,0.42 0.095,0.17 0.245,0.285 0.15,0.115 0.34,0.19 0.19,0.07 0.39,0.12 0.195,0.055 0.385,0.1 0.19,0.045 0.34,0.105 0.15,0.06 0.24,0.15 0.095,0.09 0.095,0.235 0,0.135 -0.07,0.225 -0.07,0.085 -0.175,0.135 -0.105,0.05 -0.225,0.07 -0.12,0.015 -0.225,0.015 -0.155,0 -0.3,-0.035 -0.145,-0.04 -0.255,-0.115 -0.105,-0.08 -0.17,-0.205 -0.065,-0.125 -0.065,-0.305 z" id="text2" style="font-weight:700;font-size:5px;font-family:&#39;Helvetica Neue&#39;, Helvetica, Arial, sans-serif;letter-spacing:2;text-anchor:middle;fill:#111827;fill-rule:evenodd" aria-label="DIGITAL SYSTEMS"></path>
 </g>
 </svg>
-    </div>
+    </a>
     <nav class="right">
-      <a href="https://documentation.pointsav.com/" target="_blank" rel="noopener">Documentation</a>
-      <a href="https://software.pointsav.com">Marketplace</a>
-      <a href="https://pointsav.com/" target="_blank" rel="noopener">Newsroom</a>
+      <a href="https://corporate.woodfinegroup.com/" target="_blank" rel="noopener">Corporate</a>
+      <a href="https://projects.woodfinegroup.com/" target="_blank" rel="noopener">Projects</a>
+      <a href="https://newsroom.woodfinegroup.com/" target="_blank" rel="noopener">Newsroom</a>
     </nav>
   </header>
 
@@ -1338,35 +1333,19 @@
   </main>
 
   <!-- Footer (matches Disclaimer page) -->
-  <footer>
-    <div class="footer-nav">
-      <div class="offices">
-        Vancouver <span>|</span> New York <span>|</span> Berlin
-      </div>
-      <div class="footer-links">
-        <a href="/software">Software</a>
-        <a href="#">Contact us</a>
-        <a href="#">Disclaimer</a>
-      </div>
-    </div>
-    <div class="footer-bottom-wrap">
-    <div class="footer-bottom">
-      <p>
-        <strong>© 2011–2026 Woodfine Capital Projects Inc. All rights reserved.</strong>
-      </p>
-      <p style="margin-top:6px;">
-        Woodfine Capital Projects&#x2122;, Woodfine Management Corp&#x2122;, PointSav Digital Systems&#x2122;,
-        Totebox Orchestration&#x2122;, and Totebox Archive&#x2122; are trademarks of Woodfine Capital
-        Projects Inc., used in Canada, the United States, Latin America, and Europe.
-        All other trademarks are the property of their respective owners.
-      </p>
-      <p class="footer-version">
-        Website Disclaimer v1.0 — Woodfine Capital Projects Inc. — Effective 2026-05-07 —
-        Source: factory-release-engineering/policies/DISCLAIMER.md
-      </p>
-    </div>
-    </div>
+  <footer class="footer">
+    <div class="cities">Vancouver <span class="sep">|</span> New York <span class="sep">|</span> Berlin</div>
+    <nav class="footnav">
+      <a href="#">Contact us</a>
+      <a href="#">Disclaimer</a>
+    </nav>
   </footer>
+  <div class="copyright">© 2011–2026 Woodfine Capital Projects Inc. All rights reserved.</div>
+  <div class="footer-legal">Woodfine Capital Projects&#x2122;, Woodfine Management Corp&#x2122;, PointSav Digital Systems&#x2122;,
+    Totebox Orchestration&#x2122;, and Totebox Archive&#x2122; are trademarks of Woodfine Capital
+    Projects Inc., used in Canada, the United States, Latin America, and Europe.
+    All other trademarks are the property of their respective owners.
+    Website Disclaimer v1.0 — Effective 2026-05-07.</div>
 
   <!-- ── Checkout overlay ─────────────────────────────────────────────────── -->
   <div id="checkout-overlay" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
