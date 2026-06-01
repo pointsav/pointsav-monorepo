@@ -23,10 +23,10 @@ companion:
 |---|---|---|
 | `local-doorman.service` | **active** | New binary `2c96603b` (Tier B grammar fix); Tier A primary; `/healthz` returns plain `ok` (no entity_count — known gap); `/readyz` OK incl. P1 zone field |
 | `local-slm.service` (Tier A) | **active** | OLMo 2 7B Q4_K_M; idle ~2% (wedge fixed — was 69 h stuck); serves interactive in ~2–4s |
-| `service-content` | **active** | 7,445 entities; fallback OFF; **processed_ledgers.jsonl live** — 3,128 entries (no restart re-drain) |
-| `yoyo-tier-b-1` (Tier B) | **TERMINATED** (stopped) | Stockout cleared 2026-06-01; tested + validated; stopped to save cost. `start-yoyo.sh` to bring up |
-| Apprenticeship drain | **paused** | `SLM_DRAIN_PAUSED=true` — CPU drain off; capture continues |
-| Apprenticeship queue | **~170 pending / 550 done / 0 poison** | poison cleared session 13; capture live |
+| `service-content` | **active** | 7,445 entities; fallback OFF; processed_ledgers.jsonl live |
+| `yoyo-tier-b-1` (Tier B) | **TERMINATED** | L4 stockout; `start-yoyo.sh` to bring up when capacity returns |
+| Apprenticeship drain | **ACTIVE (Tier A)** | `SLM_DRAIN_PAUSED=false` — drain running; 209 real briefs + 76 empty-diff pending; routing to OLMo 7B |
+| Apprenticeship queue | **285 pending / 553 done / 0 poison** | Local flow verified 2026-06-01: Tier A dispatch confirmed, no poison |
 | `local-orchestration-slm.service` | **inactive** | Operator deploy pending (§3) |
 
 ---
