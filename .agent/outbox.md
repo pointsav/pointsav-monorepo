@@ -8,6 +8,63 @@ schema: foundry-mailbox-v1
 # Outbox — project-data
 
 ---
+from: totebox@project-data
+to: command@claude-code
+re: Brief redistribution — 10 contaminated briefs archived; 6 project-intelligence briefs need redistribution
+created: 2026-06-01T17:10:00Z
+priority: normal
+status: pending
+msg-id: project-data-20260601-brief-redistribution
+---
+
+Contamination sweep 2026-06-01 archived 10 briefs from other archives. The following
+6 project-intelligence briefs should be redistributed to `clones/project-intelligence/.agent/briefs/`:
+
+| Source (project-data archive/) | Target |
+|---|---|
+| archive/BRIEF-slm-substrate-master.md | clones/project-intelligence/.agent/briefs/ |
+| archive/BRIEF-slm-learning-loop.md | clones/project-intelligence/.agent/briefs/ |
+| archive/BRIEF-project-intelligence-active-work.md | clones/project-intelligence/.agent/briefs/ |
+| archive/AI-AUDIT-baseline-2026-05-31.md | clones/project-intelligence/.agent/briefs/ |
+| archive/BRIEF-substrate-phd-thesis-2026-05-27.md | clones/project-intelligence/.agent/briefs/ |
+| archive/BRIEF-vm-hardening-and-consolidation.md | clones/project-intelligence/.agent/briefs/ |
+
+Additionally:
+- archive/BRIEF-app-mediakit-knowledge-2030.md → clones/project-knowledge/.agent/briefs/
+- archive/BRIEF-active-work-project-knowledge-2026-05-31.md → clones/project-knowledge/.agent/briefs/
+- archive/BRIEF-cross-platform-release.md → clones/project-console/.agent/briefs/
+- archive/BRIEF-totebox-transformation.md → clones/project-infrastructure/.agent/briefs/
+
+Originals are archived here permanently (brief lifecycle rules). Redistribution means COPY
+to correct archive (the other archive can then git mv to its main briefs/ if active,
+or keep in archive/ since they have `status: archived`).
+
+— totebox@project-data, 2026-06-01
+
+---
+from: totebox@project-data
+to: command@claude-code
+re: Stage 6 — 3 commits pending canonical promote (2 startup + 1 cleanup)
+created: 2026-06-01T17:10:00Z
+priority: normal
+status: pending
+msg-id: project-data-20260601-stage6-request
+---
+
+Three archive-level commits awaiting `bin/promote.sh`:
+
+| SHA | Author | Description |
+|---|---|---|
+| `59373c45` | Jennifer | ops(cleanup-log): remove 9 contaminated session entries |
+| `005cc299` | Peter | ops(outbox): Command Session 40 sweep changes; remove stale lock |
+| *(pending)* | — | ops(cleanup): briefs sweep + state files repair (this session) |
+
+No monorepo sub-clone commits in this batch — archive .agent/ changes only.
+No binary build or deploy needed.
+
+— totebox@project-data, 2026-06-01
+
+---
 from: totebox@project-knowledge
 to: command@claude-code
 re: DETAILED — session 2026-05-31 report: live-site audit, source-recovery commit, rebuild request

@@ -1,55 +1,58 @@
 ---
 schema: foundry-session-start-v1
-archive: project-system
-updated: 2026-05-14
+archive: project-data
+updated: 2026-06-01
 ---
 
-# Session start — project-system
+# Session start — project-data
 
 > Step 8 of the session start ritual (AGENT.md §Session start).
 > Engine-agnostic — Claude Code and Gemini CLI both read this.
 
 ## This archive at a glance
 
-- **Mission:** Substrate-shaped cluster — the substrate touches every numbered runtime under `~/Foundry/deployments/`. Owns vendor-side showcase content (public-facing Customer and Community Members) and customer-tier operational mirror content. Receives `GUIDE-substrate-rollout-{onprem,cloud,leased}.md` drafted Task-side; public bundle per Doctrine §VIII. Real-time feedback loop for every cluster's Task when substrate breaks.
-- **Active branch:** `cluster/project-system`
+- **Mission:** GIS co-location analysis pipeline, JOURNAL academic papers (J1–J6), AEC
+  environmental data layers, Regional Markets editorial production. The monorepo sub-clone
+  at `./pointsav-monorepo/` carries the `app-orchestration-gis` crate and related pipeline code.
+- **Active branch:** `main` (archive-level); monorepo sub-clone on `cluster/project-data`
+  (confirm with `cd pointsav-monorepo && git branch`)
 - **Inbox:** read `.agent/inbox.md` (step 4 — already done before this file)
 
-## Critical state
+## Critical state (as of 2026-06-01)
 
-- **Phase 0 COMPLETE** — `app-console-content` crate committed; `cargo build` green; SSH TUI gate
-  passed (ratatui frame confirmed over port 2222 via `ssh -p 2222 -i ~/.ssh/google_compute_engine
-  mathew@localhost`).
-- **Phase 1 = chassis first** — next task is creating `app-console-keys` lib crate and converting
-  `app-console-content` from a standalone binary to a lib crate (F4 Cartridge). See
-  `leapfrog-2030-coding.md` Phase 1 checklist.
-- **No `app-console-keys/` Cargo.toml yet** — Reserved-folder in catalog; Phase 1 creates it.
-- **SSH key note**: `mathew` user has no standard `id_ed25519`; use `-i ~/.ssh/google_compute_engine`
-  for localhost testing until Phase 2 adds `proofctl user add`.
-- **russh 0.60 API**: native async fn in impl (no async_trait); `russh::keys::PrivateKey::random(&mut rand::rng(), Algorithm::Ed25519)`; `session.channel_success(channel)?` in pty_request + shell_request; TerminalHandle uses sink Vec<u8> + flush sends. See memory for full reference.
-- **Web UI is to be taken down** — blocked on Command Session (sudo). Teardown checklist in
-  `tui-pivot-2030.md` §Part 6. `local-proofreader-console.service` (9091) + `local-proofreader-public.service` (9097) + nginx vhost + cert.
-- **Pending rename:** project-proofreader → project-console. Outbox msg sent to Command.
+- **AEC pipeline** — Seismic rebuild crontabbed 2026-06-01T05:00Z; flood build crontabbed
+  2026-06-02T05:00Z. Logs in `project-gis` clone: check
+  `/srv/foundry/clones/project-gis/pointsav-monorepo/app-orchestration-gis/build-aec-seismic.log`
+  and `build-aec-flood.log`. Coverage metrics feed J3 §6 Results.
+- **JOURNAL J1** — §7.2 OLS regression blocked on Phase 24B (Kontur H3 population join).
+  Permutation test (`sim-tier-permutation.py`) not yet written.
+- **JOURNAL J3** — §6 Results blocked on AEC flood + seismic coverage metrics.
+- **JOURNAL J4** — §4–§5 language pass at project-editorial (outbox ref: 952b2b09).
+- **Stage 6 pending** — 2 unpromoted commits (`59373c45`, `005cc299`) from this session's
+  startup cleanup. Command Session needs `bin/promote.sh`.
+- **Regional Markets** — A10/A11/A12 on hold pending methodology revision.
+  Dispatched A7/A8/A9/A15/A16/A17 are at project-editorial.
+- **Briefs** — All contaminated briefs archived 2026-06-01. Main briefs/ is empty of
+  active briefs. See `.agent/briefs/README.md`.
 
-## Architecture at a glance (2026-05-20)
+## Key directories in this archive
 
-- `os-console` = single binary; `app-console-keys` = base chassis (always-installed, like
-  `service-fs` for os-totebox); other cartridges are optional compiled-in lib crates.
-- **F-key map (WIP):** F1=help, F2=people, F3=email, F4=content, F5=minutebook, F6=bookkeeper,
-  F7=bim, F8=gis, F9=slm, F10=**app-console-mesh**, F11=system, **F12=input (The Anchor, immovable)**
-- **MBA** = peer-to-peer (os-console ↔ os-totebox/os-orchestration/etc.); NOT network-layer.
-  `system-gateway-mba` is server side; `app-console-keys` is client side (shows `MBA LINK ACTIVE`).
-- **PPN** = WireGuard infrastructure only; deliberately isolated from os-* application layer.
-- **Doorman:** `http://localhost:9080`. Response field: `.content`.
-- **Input Machine (F12):** global intercept → POST to `service-input` → classify + route + audit.
-  SYS-ADR-10: cannot be bypassed from other panes.
+- `JOURNAL/` — canonical JOURNAL draft files (J1–J6)
+- `work/` — OLS regression scripts and output (J1 §7.2 prep)
+- `pointsav-monorepo/` — monorepo sub-clone; GIS crate lives here
+- `app-orchestration-gis/` — GIS pipeline app (also present in monorepo sub-clone's parent at project-gis)
+- `.agent/rules/artifact-registry.md` — JOURNAL and A-series artifact tracking
+
+## Note on archive identity
+
+This archive's folder is `project-data`. The NEXT.md and some state files were contaminated
+from `project-gis` (a separate archive at `/srv/foundry/clones/project-gis/`). The crontab
+AEC pipeline jobs run in `project-gis`. The JOURNAL papers and Regional Markets editorial are
+tracked and owned here in `project-data`.
 
 ## Known gotchas
 
-- Substrate changes have system-wide impact — changes here propagate to every deployment runtime. Coordinate with Command Session before any substrate modification.
-- Vendor-side and customer-tier content is mirrored — ensure changes are consistent across both branches of content.
-- Commit via `~/Foundry/bin/commit-as-next.sh` only (staging-tier).
-
-## Last session handoff
-
-*No prior handoff recorded.*
+- The crontab AEC builds write logs to the `project-gis` clone, not this archive.
+- `NEXT.md` may contain items labelled "project-gis" that were contaminated; treat them as
+  project-data items or verify against the project-gis NEXT.md.
+- Monorepo sub-clone branch: confirm `cd pointsav-monorepo && git status` at session start.

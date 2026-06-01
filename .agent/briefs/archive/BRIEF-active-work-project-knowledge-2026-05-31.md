@@ -1,6 +1,9 @@
 ---
 artifact: brief
-status: active
+status: archived
+contamination_note: >-
+  Contaminated in project-data; belongs to project-knowledge. Command: redistribute to clones/project-knowledge/.agent/briefs/
+archived_date: 2026-06-01
 topic: project-knowledge current work queue
 archive: project-knowledge
 created: 2026-05-31

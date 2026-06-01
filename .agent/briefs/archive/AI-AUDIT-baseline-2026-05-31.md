@@ -1,6 +1,9 @@
 ---
 artifact: brief
-status: active
+status: archived
+contamination_note: >-
+  Contaminated in project-data; belongs to project-intelligence. Command: redistribute to clones/project-intelligence/.agent/briefs/
+archived_date: 2026-06-01
 created: 2026-05-31
 author: gemini-cli (totebox@project-intelligence)
 reviewed: 2026-06-01 claude-sonnet-4-6
