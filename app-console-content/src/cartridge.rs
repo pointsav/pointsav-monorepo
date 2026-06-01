@@ -22,6 +22,7 @@ use ratatui_image::{
 };
 
 use crate::draft::{self, DraftEvent};
+use crate::draft_save::DraftSave;
 use crate::drafts_out;
 use crate::pdf::{self, PdfPageData};
 use crate::proofreader::{self, ProofreadResponse, DEFAULT_PROTOCOL_IDX, PROTOCOLS};
@@ -114,6 +115,9 @@ pub struct ContentCartridge {
     truecolor: bool,
     // Hyperlinks produced by the most recent render() call — consumed by flush_hyperlinks().
     pending_hyperlinks: Vec<HyperlinkTarget>,
+    // Draft persistence — save/restore across sessions.
+    draft_save: DraftSave,
+    restored_hint: bool,
 }
 
 impl ContentCartridge {
@@ -163,7 +167,18 @@ impl ContentCartridge {
             thread::sleep(std::time::Duration::from_secs(30));
         });
 
-        let mut ta = TextArea::default();
+        let draft_save = DraftSave::open();
+        let saved_draft = draft_save.load();
+        let restored_hint = saved_draft.is_some();
+        let protocol_idx = saved_draft
+            .as_ref()
+            .and_then(|s| PROTOCOLS.iter().position(|(slug, _)| *slug == s.protocol.as_str()))
+            .unwrap_or(DEFAULT_PROTOCOL_IDX);
+        let mut ta: TextArea<'static> = if let Some(ref saved) = saved_draft {
+            TextArea::from(saved.content.lines().map(String::from).collect::<Vec<_>>())
+        } else {
+            TextArea::default()
+        };
         ta.set_placeholder_text(PLACEHOLDER);
         Self {
             username: username.into(),
@@ -172,9 +187,7 @@ impl ContentCartridge {
             slm_endpoint: slm,
             drafts_outbound_path: drafts_outbound_path.into(),
             content_endpoint: content_endpoint.into(),
-            state: ContentState::Input {
-                protocol_idx: DEFAULT_PROTOCOL_IDX,
-            },
+            state: ContentState::Input { protocol_idx },
             textarea: ta,
             offline: false,
             health_rx,
@@ -183,6 +196,8 @@ impl ContentCartridge {
             pdf_font_size: (10, 20),
             truecolor: false,
             pending_hyperlinks: Vec::new(),
+            draft_save,
+            restored_hint,
         }
     }
 
@@ -231,12 +246,14 @@ impl ContentCartridge {
         frame.render_widget(&self.textarea, chunks[0]);
 
         let offline_note = if self.offline { "  [⚠ AI OFFLINE — /new disabled]" } else { "" };
+        let restored_note = if self.restored_hint { "  [restored]" } else { "" };
         let hint = Paragraph::new(format!(
-            " Protocol: {}  —  {}    [Tab: change  Ctrl-S: submit  /new: draft  /search: search  q/Ctrl-C: quit]{}",
-            slug, display, offline_note
+            " Protocol: {}  —  {}    [Tab: change  Ctrl-S: submit  /new: draft  /search: search  q/Ctrl-C: quit]{}{}",
+            slug, display, offline_note, restored_note
         ))
         .style(Style::default().fg(Color::DarkGray));
         frame.render_widget(hint, chunks[1]);
+        self.restored_hint = false; // Clear after one frame
     }
 
     fn render_picker(frame: &mut Frame, area: Rect, selected: usize, sel_bg: Color) {
@@ -769,6 +786,9 @@ impl ContentCartridge {
         // Everything else → textarea
         self.textarea
             .input(tui_textarea::Input::from(event.clone()));
+        // Auto-save draft after each keystroke.
+        let content = self.textarea.lines().join("\n");
+        self.draft_save.save(PROTOCOLS[protocol_idx].0, &content);
         CartridgeAction::Consumed
     }
 
