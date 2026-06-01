@@ -15,14 +15,19 @@ Engine-agnostic: all engines (Claude Code, Gemini CLI) read and write here.
 - Save planning files HERE — not `~/.claude/plans/` or `~/.gemini/tmp/`.
 - AGENT.md startup step 7 reads this file; shutdown step 1 writes `BRIEF-<topic>.md`.
 
+> **This archive is `project-knowledge`** — the app-mediakit-knowledge knowledge platform.
+> The prior version of this README (and `.agent/manifest.md`) were contaminated by rebases and
+> described it as project-intelligence/project-bim; corrected 2026-06-01. The genuine
+> project-knowledge briefs are below. The SLM / intelligence / infrastructure / console /
+> editorial briefs physically present in this dir are **contamination flagged for their owning
+> archives** — see "Contamination flagged" at the bottom; do not action them here.
+
 ## Active briefs
 
 | File | Subject | Status |
 |---|---|---|
-| BRIEF-slm-substrate-master.md | SLM substrate ops — Yo-Yo VM, DataGraph, tier routing, circuit resilience. PRIMARY PLAN OF RECORD for all SLM sessions. | active |
-| BRIEF-slm-learning-loop.md | Training pipeline — ToS boundary, DPO corpus, sovereign coding agent, sprints, Fix A/B/C | active |
-| BRIEF-project-intelligence-active-work.md | Active work queue — 3-session forward plan; session-start reading | active |
-| AI-AUDIT-baseline-2026-05-31.md | Gemini CLI automated audit vs architecture principles; findings integrated into substrate master §5 | active |
+| **BRIEF-knowledge-platform-master.md** | **Knowledge platform master spec — federation (mounts + blueprints), mobile-first, premium UX (Wikipedia-model/Stripe-craft), linking model + zero dead links, Inter+Source-Serif font decision. SINGLE SOURCE OF TRUTH.** | **active** |
+| BRIEF-active-work.md | project-knowledge current session work queue | active |
 
 ## Archived briefs
 
@@ -31,6 +36,12 @@ Superseded briefs retained per standing instruction — never delete; supersede 
 
 | File | Archived | Notes |
 |---|---|---|
+| BRIEF-app-mediakit-knowledge-2030.md | 2026-06-01 | Superseded by BRIEF-knowledge-platform-master.md (content absorbed) |
+| archive/BRIEF-award-winning-wiki-overhaul.md | 2026-06-01 | Historical wiki brief — superseded by the master |
+| archive/BRIEF-MASTER_STRATEGY_AWARD_WINNING_WIKI.md | 2026-06-01 | Historical wiki brief — superseded by the master |
+| archive/BRIEF-WIKIPEDIA-PARITY-*.md | 2026-06-01 | Historical wiki briefs (parity-era) — superseded by the master |
+| archive/BRIEF-institutional-chrome-sprint.md | 2026-06-01 | Historical wiki brief — superseded by the master |
+| archive/BRIEF-knowledge-platform.md | 2026-05-28 | Predecessor (already archived) — chain points to the master |
 | archive/BRIEF-VM-ARCHITECTURE.md | 2026-06-01 | Contamination from project-infrastructure — read from there |
 | archive/BRIEF-OS-FAMILY.md | 2026-06-01 | Contamination from project-infrastructure — read from there |
 | archive/BRIEF-LEAPFROG-2030.md | 2026-06-01 | Contamination from project-infrastructure — read from there |
@@ -45,17 +56,20 @@ Superseded briefs retained per standing instruction — never delete; supersede 
 | vocabulary-baseline.tsv | Overhaul vocabulary-baseline data |
 | archive/ | Archived and superseded briefs |
 
-## Unverified briefs (present on disk, not yet audited for correct archive)
+## Contamination flagged for owning archives (do not action here)
 
-The following files exist in this directory but were not reviewed in the 2026-06-01
-consolidation. A future session should confirm each belongs here or move to archive/.
+Physically present in this dir from rebases, but they belong to other archives. Flagged for
+those archives to reclaim; not actioned in project-knowledge. (Was "Unverified briefs"; the
+app-mediakit-knowledge brief was confirmed genuine project-knowledge and is now the archived
+predecessor of the master.)
 
-| File | Origin suspicion |
+| File(s) | Owning archive |
 |---|---|
-| BRIEF-app-mediakit-knowledge-2030.md | Possible project-knowledge contamination |
-| BRIEF-substrate-phd-thesis-2026-05-27.md | Likely project-intelligence (system-*/seL4 thesis) |
-| BRIEF-totebox-transformation.md | Possible project-infrastructure contamination |
-| BRIEF-vm-hardening-and-consolidation.md | Absorbed into BRIEF-slm-substrate-master.md (listed in that brief's `replaces:`) |
+| BRIEF-slm-substrate-master.md, BRIEF-slm-learning-loop.md | project-intelligence (SLM) |
+| BRIEF-project-intelligence-active-work.md, BRIEF-substrate-phd-thesis-2026-05-27.md, AI-AUDIT-baseline-2026-05-31.md | project-intelligence |
+| BRIEF-totebox-transformation.md, BRIEF-vm-hardening-and-consolidation.md, archive/BRIEF-PPN-*.md | project-infrastructure |
+| BRIEF-cross-platform-release.md, archive/BRIEF-os-console-platform.md, archive/BRIEF-pairing-*.md, archive/BRIEF-tui-pivot-2030.md, archive/BRIEF-leapfrog-2030-coding.md | project-console |
+| archive/BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md, archive/BRIEF-journal-phd-programme.md, archive/BRIEF-framework-pointsav-products-services.md, archive/BRIEF-overhaul-*.md, archive/BRIEF-github-presence-elevation.md, archive/BRIEF-publishing-tier-naming-cross-check.md | project-editorial |
 
 ## Lifecycle
 
