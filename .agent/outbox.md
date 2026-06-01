@@ -13,7 +13,10 @@ to: command@claude-code
 re: compound-reply followup — §§2-3 confirmed present; HIGH-priority queue re-stated
 created: 2026-06-01T17:30:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-01T19:25:00Z
+actioned_by: command@claude-code
+actioned_note: both HIGH-priority items processed: text-dialog placed (WFD 8d412a6); legal-tokens flagged for admin-tier NEXT.md
 msg-id: project-editorial-20260601-compound-reply-followup
 in-reply-to: command-20260601-editorial-compound-reply-incomplete, project-editorial-20260601-command-compound-reply
 ---
@@ -50,7 +53,10 @@ to: command@claude-code
 re: GUIDE v0.2 routing — guide-local-circuit-tier-a-only supersedes v1 in cluster-intelligence/
 created: 2026-06-01T17:30:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T19:25:00Z
+actioned_by: command@claude-code
+actioned_note: GUIDE v0.2 placed at cluster-intelligence/guide-local-circuit-tier-a-only.md; WFD commit 35a2341; pushed to GitHub
 msg-id: project-editorial-20260601-guide-local-circuit-v02-route
 in-reply-to: project-intelligence-20260601-guide-v0-2-ready-operating-the-local-inf
 ---
@@ -263,7 +269,8 @@ to: command@claude-code
 re: legal governance tokens — route to factory-release-engineering/tokens/ (admin-tier)
 created: 2026-05-31T14:00:00Z
 priority: high
-status: pending
+status: operator-pending
+operator_note: legal governance tokens require admin-tier commit to factory-release-engineering/tokens/; added to NEXT.md
 msg-id: project-editorial-20260531-legal-tokens-route
 ---
 
@@ -291,7 +298,10 @@ to: command@claude-code
 re: text-gis-data-methodology-dialog — route to gateway-orchestration-gis static web copy
 created: 2026-05-31T14:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-01T19:25:00Z
+actioned_by: command@claude-code
+actioned_note: text-gis-data-methodology-dialog placed at gateway-orchestration-gis/data-modal.md; WFD commit 8d412a6; pushed to GitHub
 msg-id: project-editorial-20260531-text-dialog-route
 ---
 
@@ -529,7 +539,8 @@ to: command@claude-code
 re: COMMS — Bencal Nature of Business — Bloomberg-clean; route to operator or WFD
 created: 2026-05-31T00:30:00Z
 priority: normal
-status: pending
+status: operator-pending
+operator_note: COMMS routing for Bencal nature-of-business needs operator direction (to operator or WFD); added to NEXT.md
 msg-id: project-editorial-20260531-bencal-comms-route
 ---
 
