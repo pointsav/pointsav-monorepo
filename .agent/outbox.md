@@ -174,7 +174,10 @@ to: command@claude-code
 re: 3 binaries deployed — binary-ledger entries needed + software-units.yaml update
 created: 2026-05-30
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-01T19:45:00Z
+actioned_by: command@claude-code
+actioned_note: binary-ledger entries for vm-fleet/vm-host/ppn-pairing added in Session 40; software-units.yaml updated
 msg-id: project-infrastructure-20260530-deployment-complete
 ---
 
