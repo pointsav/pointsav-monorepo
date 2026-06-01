@@ -7,6 +7,7 @@ use axum::{
     routing::{get, post, put},
     Json, Router,
 };
+use serde_json::json;
 use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -75,6 +76,10 @@ async fn main() {
     let memo_dir = workspace_path.join("memo");
     if !memo_dir.exists() {
         std::fs::create_dir_all(&memo_dir).expect("failed to create memo/ dir");
+    }
+    let proforma_dir = workspace_path.join("proforma");
+    if !proforma_dir.exists() {
+        std::fs::create_dir_all(&proforma_dir).expect("failed to create proforma/ dir");
     }
 
     let tokens_path = std::env::var("DESIGN_TOKENS_PATH").unwrap_or_else(|_| {
@@ -203,12 +208,15 @@ async fn main() {
     let app = Router::new()
         .route("/", get(serve_index))
         .route("/memo", get(serve_memo))
+        .route("/proforma", get(serve_proforma))
         .route("/tokens", get(serve_tokens_page))
         .route("/style.css", get(serve_css))
         .route("/api/files", get(list_files))
         .route("/api/files/read", get(read_file))
         .route("/api/files/save", put(save_file))
         .route("/api/files/create", post(create_file))
+        .route("/api/proforma/files", get(list_proforma_files))
+        .route("/api/proforma/create", post(create_proforma_file))
         .route("/api/tokens", get(get_tokens))
         .route("/api/files/events", get(get_file_events))
         .route("/workbench/", get(|| async { Redirect::permanent("/workbench") }))
@@ -405,4 +413,61 @@ fn html_escape(s: &str) -> String {
         .replace('<', "&lt;")
         .replace('>', "&gt;")
         .replace('"', "&quot;")
+}
+
+async fn serve_proforma() -> impl IntoResponse {
+    serve_asset("proforma.html", "text/html")
+}
+
+async fn list_proforma_files(State(state): State<AppState>) -> impl IntoResponse {
+    let proforma_dir = state.workspace_dir.join("proforma");
+    let mut entries: Vec<FileEntry> = Vec::new();
+    if let Ok(rd) = std::fs::read_dir(&proforma_dir) {
+        for entry in rd.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|e| e.to_str()) == Some("json") {
+                if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                    entries.push(FileEntry {
+                        name: name.to_string(),
+                        path: format!("proforma/{name}"),
+                    });
+                }
+            }
+        }
+    }
+    entries.sort_by(|a, b| a.name.cmp(&b.name));
+    Json(entries)
+}
+
+async fn create_proforma_file(
+    State(state): State<AppState>,
+    Json(body): Json<CreateBody>,
+) -> impl IntoResponse {
+    let safe_name = sanitize_filename(&body.name);
+    let filename = if safe_name.ends_with(".json") {
+        safe_name
+    } else {
+        format!("{safe_name}.json")
+    };
+    let rel_path = format!("proforma/{filename}");
+    match resolve_workspace_path(&state.workspace_dir, &rel_path) {
+        Ok(abs) => {
+            let skeleton = json!({
+                "schema": "proforma-v1.0",
+                "title": body.name,
+                "rows": 20,
+                "cols": 8,
+                "cells": {}
+            });
+            match std::fs::write(&abs, skeleton.to_string()) {
+                Ok(_) => {
+                    let _ = state.events_tx.send("changed".to_string());
+                    (StatusCode::CREATED, Json(CreateResponse { path: rel_path }))
+                        .into_response()
+                }
+                Err(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+            }
+        }
+        Err(_) => StatusCode::BAD_REQUEST.into_response(),
+    }
 }

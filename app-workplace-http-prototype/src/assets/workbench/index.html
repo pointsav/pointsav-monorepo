@@ -4068,6 +4068,8 @@ function setSurface(name) {
     }
     if (name === 'memo') {
       renderMemoSurface(sp);
+    } else if (name === 'proforma') {
+      renderProformaSurface(sp);
     } else {
       const info = {
         proforma:     { icon: '📊', label: 'Proforma' },
@@ -4084,6 +4086,54 @@ function setSurface(name) {
         <div class="sp-tag">Coming soon</div>
       `;
     }
+  }
+}
+
+async function renderProformaSurface(sp) {
+  sp.innerHTML = `
+    <div class="sp-icon">📊</div>
+    <div class="sp-name">Proforma</div>
+    <button class="sp-new-btn" id="sp-pf-new">+ New proforma</button>
+    <div class="sp-files-list" id="sp-pf-files"><div class="sp-dim">Loading…</div></div>
+  `;
+  document.getElementById('sp-pf-new').addEventListener('click', async () => {
+    const nm = prompt('Proforma name (no extension needed):');
+    if (!nm || !nm.trim()) return;
+    try {
+      const res = await fetch('/api/proforma/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nm.trim() }),
+      });
+      if (!res.ok) { alert('Failed to create proforma.'); return; }
+      const { path } = await res.json();
+      window.open('/proforma?path=' + encodeURIComponent(path), '_blank');
+    } catch { alert('Network error.'); }
+  });
+  try {
+    const res = await fetch('/api/proforma/files');
+    const files = await res.json();
+    const list = document.getElementById('sp-pf-files');
+    if (!list) return;
+    if (!files.length) {
+      list.innerHTML = '<div class="sp-dim">No proforma files yet.</div>';
+      return;
+    }
+    list.innerHTML = files.map(f =>
+      `<div class="sp-file-item" data-path="${esc(f.path)}">
+        <span>📊</span>
+        <span class="sp-file-name">${esc(f.name)}</span>
+        <span class="sp-open-hint">Open →</span>
+      </div>`
+    ).join('');
+    list.querySelectorAll('.sp-file-item').forEach(el => {
+      el.addEventListener('click', () => {
+        window.open('/proforma?path=' + encodeURIComponent(el.dataset.path), '_blank');
+      });
+    });
+  } catch {
+    const list = document.getElementById('sp-pf-files');
+    if (list) list.innerHTML = '<div style="color:#f85149;font-size:12px">Could not load files.</div>';
   }
 }
 
