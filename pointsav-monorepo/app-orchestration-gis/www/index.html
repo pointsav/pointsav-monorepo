@@ -1567,7 +1567,7 @@
         if (urbanFringeActive) {
             urbanFringeActive = false;
             document.getElementById('lc-urban-fringe')?.classList.remove('lc-active');
-            ['uf-t1', 'uf-t2'].forEach(id =>
+            ['uf-t1', 'uf-t2', 'uf-t3'].forEach(id =>
                 map.getLayer(id) && map.setLayoutProperty(id, 'visibility', 'none'));
         }
         if (commuterActive) {
@@ -1626,7 +1626,7 @@
 
     function applyUrbanFringeStyle() {
         const vis = (urbanFringeActive && prodView.mode === 'GLOBAL') ? 'visible' : 'none';
-        ['uf-t1', 'uf-t2'].forEach(id => {
+        ['uf-t1', 'uf-t2', 'uf-t3'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
         });
         if (!map.getLayer('nodes')) return;
@@ -1774,7 +1774,7 @@
         setVis(['cluster-centroid'], false);
         setVis(['proximity-merged-label'], false);
         // rm-stars + archetype overlays: hidden at retailer zoom; restored on overview
-        setVis(['rm-stars-glow', 'rm-stars-dot', 'uf-t1', 'uf-t2', 'cm-t1', 'cm-t2'], false);
+        setVis(['rm-stars-glow', 'rm-stars-dot', 'uf-t1', 'uf-t2', 'uf-t3', 'cm-t1', 'cm-t2'], false);
     }
 
     // Build a ring for every cluster in the current viewport — no merging.
@@ -2452,9 +2452,21 @@
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 3, 8, 6],
                 'circle-color': '#FB923C',
-                'circle-opacity': 0.70,
+                'circle-opacity': 0.72,
                 'circle-stroke-width': 1,
                 'circle-stroke-color': '#C2410C',
+            },
+        });
+        map.addLayer({
+            id: 'uf-t3', type: 'circle', source: 'uf-src',
+            filter: ['==', ['get', 'vwh_tier'], 3],
+            layout: { visibility: 'none' },
+            paint: {
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 2, 8, 4],
+                'circle-color': '#FED7AA',
+                'circle-opacity': 0.55,
+                'circle-stroke-width': 0.5,
+                'circle-stroke-color': '#EA580C',
             },
         });
 
