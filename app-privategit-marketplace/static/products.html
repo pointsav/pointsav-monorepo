@@ -461,6 +461,107 @@
     margin: 0 auto;
   }
 
+  /* ── Checkout overlay ──────────────────────────────────────────── */
+  #checkout-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 900;
+    align-items: center;
+    justify-content: center;
+  }
+  #checkout-overlay.open { display: flex; }
+  #checkout-panel {
+    background: var(--paper);
+    border: 1px solid var(--rule-strong);
+    border-radius: 4px;
+    width: min(540px, 96vw);
+    padding: 32px 36px;
+    position: relative;
+  }
+  #checkout-panel h3 {
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin: 0 0 6px;
+  }
+  #checkout-panel .product-label {
+    font-size: 13px;
+    color: var(--ink-3);
+    margin-bottom: 20px;
+  }
+  #checkout-close {
+    position: absolute;
+    top: 14px; right: 18px;
+    background: none; border: none;
+    font-size: 20px; cursor: pointer;
+    color: var(--ink-3);
+    line-height: 1;
+  }
+  .co-step { display: none; }
+  .co-step.active { display: block; }
+  .co-addr-box {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 12px 14px;
+    font-family: monospace;
+    font-size: 13px;
+    word-break: break-all;
+    margin-bottom: 10px;
+  }
+  .co-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--ink-2);
+    margin-bottom: 8px;
+  }
+  .co-row .label { color: var(--ink-3); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+  .co-btn-row { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .co-btn {
+    font-family: var(--display);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase;
+    border: none; border-radius: 2px; cursor: pointer;
+    padding: 10px 18px;
+    background: var(--accent); color: #fff;
+  }
+  .co-btn:hover { opacity: .88; }
+  .co-btn.secondary { background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--rule-strong); }
+  .co-btn.copy-btn { background: var(--paper-3); color: var(--ink-2); font-size: 10px; padding: 6px 12px; }
+  .co-input {
+    width: 100%; box-sizing: border-box;
+    border: 1px solid var(--rule-strong); border-radius: 3px;
+    padding: 10px 12px; font-size: 13px; font-family: monospace;
+    background: var(--paper); color: var(--ink);
+    margin-bottom: 10px;
+  }
+  .co-input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  .co-spinner {
+    display: none;
+    font-size: 13px; color: var(--ink-3);
+    margin-top: 12px;
+  }
+  .co-spinner.active { display: block; }
+  .co-key-box {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 12px 14px;
+    font-family: monospace;
+    font-size: 13px;
+    word-break: break-all;
+    margin-bottom: 8px;
+  }
+  .co-error { color: #b94a48; font-size: 13px; margin-top: 10px; }
+  .co-note { font-size: 12px; color: var(--ink-3); margin-top: 10px; line-height: 1.55; }
+
   /* Font pairing */
   body.fp-brand { --display: "Oswald", sans-serif; --serif: "Roboto Slab", Georgia, serif; --sans: "Nunito Sans", system-ui, sans-serif; }
 </style>
@@ -471,7 +572,6 @@
   <header class="topnav">
     <nav class="left">
       <a class="active-page" href="#">Products</a>
-      <a href="/licensing">Licensing</a>
       <a href="#">Disclaimer</a>
       <a href="#">Contact us</a>
     </nav>
@@ -537,7 +637,9 @@
         <div class="col"><span class="label">Edition</span>2026.05.144</div>
         <div class="col"><span class="label">Platform</span>macOS · Win · Linux</div>
         <div class="col"><span class="label">Size</span>412 MB</div>
-        <a class="get" href="/licensing?product=os-console">Licence &amp; Install →</a>
+        <a class="get co-trigger" href="#checkout-overlay"
+           data-product="os-console" data-price="19000000" data-tier="fsl"
+           data-label="PointSav Console OS — FSL">FSL · $19.00 →</a>
       </div>
 
       <div class="installer">
@@ -548,7 +650,9 @@
         <div class="col"><span class="label">Edition</span>2026.05.144</div>
         <div class="col"><span class="label">Platform</span>Bare-metal · any hardware</div>
         <div class="col"><span class="label">Size</span>188 MB</div>
-        <a class="get" href="/licensing?product=os-infrastructure">Licence &amp; Install →</a>
+        <a class="get co-trigger" href="#checkout-overlay"
+           data-product="os-infrastructure" data-price="1000000" data-tier="apache"
+           data-label="PointSav Infrastructure OS — Apache 2.0">Apache · $1.00 →</a>
       </div>
 
       <div class="installer">
@@ -559,7 +663,9 @@
         <div class="col"><span class="label">Edition</span>2026.05.142</div>
         <div class="col"><span class="label">Platform</span>Linux server</div>
         <div class="col"><span class="label">Size</span>96 MB</div>
-        <a class="get" href="/licensing?product=os-mediakit">Licence &amp; Install →</a>
+        <a class="get co-trigger" href="#checkout-overlay"
+           data-product="os-mediakit" data-price="1000000" data-tier="apache"
+           data-label="PointSav MediaKit OS — Apache 2.0">Apache · $1.00 →</a>
       </div>
 
       <div class="installer">
@@ -570,7 +676,9 @@
         <div class="col"><span class="label">Edition</span>2026.05.140</div>
         <div class="col"><span class="label">Platform</span>Linux · embedded</div>
         <div class="col"><span class="label">Size</span>124 MB</div>
-        <a class="get" href="/licensing?product=os-network-admin">Licence &amp; Install →</a>
+        <a class="get co-trigger" href="#checkout-overlay"
+           data-product="os-network-admin" data-price="1000000" data-tier="apache"
+           data-label="PointSav Network OS — Apache 2.0">Apache · $1.00 →</a>
       </div>
 
       <div class="installer">
@@ -581,7 +689,9 @@
         <div class="col"><span class="label">Edition</span>2026.05.144</div>
         <div class="col"><span class="label">Platform</span>Linux server</div>
         <div class="col"><span class="label">Size</span>142 MB</div>
-        <a class="get" href="/licensing?product=os-privategit">Licence &amp; Install →</a>
+        <a class="get co-trigger" href="#checkout-overlay"
+           data-product="os-privategit" data-price="19000000" data-tier="fsl"
+           data-label="PointSav PrivateGit OS — FSL">FSL · $19.00 →</a>
       </div>
 
       <div class="installer">
@@ -592,7 +702,9 @@
         <div class="col"><span class="label">Edition</span>2026.05.144</div>
         <div class="col"><span class="label">Platform</span>Bare-metal · appliance</div>
         <div class="col"><span class="label">Size</span>286 MB</div>
-        <a class="get" href="/licensing?product=os-workplace">Licence &amp; Install →</a>
+        <a class="get co-trigger" href="#checkout-overlay"
+           data-product="os-workplace" data-price="19000000" data-tier="fsl"
+           data-label="PointSav Workplace OS — FSL">FSL · $19.00 →</a>
       </div>
 
       <div class="installer">
@@ -603,7 +715,9 @@
         <div class="col"><span class="label">Edition</span>2026.05.142</div>
         <div class="col"><span class="label">Platform</span>Linux server</div>
         <div class="col"><span class="label">Size</span>156 MB</div>
-        <a class="get" href="/licensing?product=os-interface">Licence &amp; Install →</a>
+        <a class="get co-trigger" href="#checkout-overlay"
+           data-product="os-interface" data-price="1000000" data-tier="apache"
+           data-label="Totebox Integration OS — Apache 2.0">Apache · $1.00 →</a>
       </div>
 
       <div class="installer">
@@ -614,7 +728,9 @@
         <div class="col"><span class="label">Edition</span>2026.05.144</div>
         <div class="col"><span class="label">Platform</span>Bare-metal · any hardware</div>
         <div class="col"><span class="label">Size</span>118 MB</div>
-        <a class="get" href="/licensing?product=os-totebox">Licence &amp; Install →</a>
+        <a class="get co-trigger" href="#checkout-overlay"
+           data-product="os-totebox" data-price="19000000" data-tier="fsl"
+           data-label="Totebox OS — FSL">FSL · $19.00 →</a>
       </div>
 
     </div>
@@ -622,26 +738,25 @@
     <!-- Licence tiers -->
     <div class="license-section" id="license-tiers">
       <h2>Licence Tiers</h2>
-      <p class="intro">All products above are available under either licence. Choose based on the commercial constraints that apply to your use. Payments are non-custodial — USDC on Polygon PoS sent directly to the PointSav wallet; no payment processor holds funds in transit.</p>
+      <p class="intro">Each product is sold at one price only. Infrastructure and utility OS images are Apache 2.0 at $1.00 USDC. Application-layer OS images are FSL at $19.00 USDC. Payments are non-custodial — USDC on Polygon PoS sent directly to the PointSav wallet; no payment processor holds funds in transit.</p>
       <div class="tiers">
         <div class="tier">
           <div class="tier-price">$1.00</div>
           <div class="tier-currency">USDC · Polygon PoS</div>
           <div class="tier-name">Apache 2.0</div>
-          <div class="tier-desc">Source-readable, fully open. You may fork, redistribute, and compete. Annual channel — renew each version independently to access future builds.</div>
+          <div class="tier-desc">Source-readable, fully open. You may fork, redistribute, and compete. Annual channel — renew each version independently to access future builds. Applies to: Infrastructure OS, MediaKit OS, Network OS, Totebox Integration OS.</div>
           <span class="tier-badge">Open commercial use</span>
         </div>
         <div class="tier tier-fsl">
           <div class="tier-price">$19.00</div>
           <div class="tier-currency">USDC · Polygon PoS</div>
           <div class="tier-name">Functional Source Licence (FSL)</div>
-          <div class="tier-desc">Source-readable; non-compete restriction applies for two years per version, after which the version converts to Apache 2.0 automatically. Perpetual channel — one payment covers that version indefinitely.</div>
+          <div class="tier-desc">Source-readable; non-compete restriction applies for two years per version, after which the version converts to Apache 2.0 automatically. Perpetual channel — one payment covers that version indefinitely. Applies to: Console OS, PrivateGit OS, Workplace OS, Totebox OS.</div>
           <span class="tier-badge">Internal and non-competing use</span>
         </div>
       </div>
       <div class="license-cta">
-        <p>Payment is made in USDC on Polygon PoS. After the transaction confirms on-chain, a signed licence key is issued automatically. No account required. See the <a href="https://documentation.pointsav.com/" target="_blank" rel="noopener" style="color:var(--accent);">documentation</a> for the signing key and build manifest.</p>
-        <a class="cta-btn" href="/licensing">Proceed to checkout →</a>
+        <p>Payment is made in USDC on Polygon PoS. After the transaction confirms on-chain, a signed licence key is issued automatically. No account required. Select a product above to purchase.</p>
       </div>
     </div>
 
@@ -660,6 +775,301 @@
     Projects Inc., used in Canada, the United States, Latin America, and Europe.
     All other trademarks are the property of their respective owners.
     Website Disclaimer v1.0 — Effective 2026-05-07.</div>
+
+  <!-- ── Checkout overlay ─────────────────────────────────────────────────── -->
+  <div id="checkout-overlay" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+    <div id="checkout-panel">
+      <button id="checkout-close" aria-label="Close checkout">&times;</button>
+
+      <!-- Step 1: payment instructions -->
+      <div class="co-step active" id="co-step-1">
+        <h3 id="checkout-title">Pay with Polygon USDC</h3>
+        <p class="product-label" id="co-product-label"></p>
+        <div class="co-row"><span class="label">Amount</span><span id="co-amount"></span></div>
+        <div class="co-row"><span class="label">Chain</span><span>Polygon PoS</span></div>
+        <div class="co-row"><span class="label">Token</span><span>USDC (native)</span></div>
+        <div class="co-row" style="margin-bottom:6px;"><span class="label">Send to</span></div>
+        <div class="co-addr-box" id="co-wallet-addr">Loading…</div>
+        <div class="co-btn-row">
+          <button class="co-btn copy-btn" id="co-copy-addr">Copy address</button>
+          <button class="co-btn" id="co-paid-btn">I've sent payment →</button>
+        </div>
+        <p class="co-note">Send exactly the amount shown. Include no memo. The transaction hash you receive from your wallet is needed in the next step.</p>
+      </div>
+
+      <!-- Step 2: transaction hash entry -->
+      <div class="co-step" id="co-step-2">
+        <h3>Confirm payment</h3>
+        <p class="product-label" id="co-product-label-2"></p>
+        <p style="font-size:13px;color:var(--ink-2);margin-bottom:14px;">Paste the Polygon transaction hash from your wallet. Confirmation typically takes 30–120 seconds.</p>
+        <input class="co-input" id="co-tx-input" type="text" placeholder="0x… transaction hash" autocomplete="off" spellcheck="false" />
+        <div class="co-btn-row">
+          <button class="co-btn" id="co-verify-btn">Verify payment →</button>
+          <button class="co-btn secondary" id="co-back-btn">← Back</button>
+        </div>
+        <div class="co-spinner" id="co-spinner">Checking on-chain… <span id="co-retry-note"></span></div>
+        <div class="co-error" id="co-error" style="display:none;"></div>
+      </div>
+
+      <!-- Step 3: success -->
+      <div class="co-step" id="co-step-3">
+        <h3>Payment confirmed</h3>
+        <p class="product-label" id="co-product-label-3"></p>
+        <div class="co-row" style="margin-bottom:6px;"><span class="label">License key</span></div>
+        <div class="co-key-box" id="co-license-key"></div>
+        <div class="co-btn-row" style="margin-bottom:16px;">
+          <button class="co-btn copy-btn" id="co-copy-key">Copy license key</button>
+        </div>
+        <div id="co-download-wrap" style="display:none;">
+          <div class="co-row" style="margin-bottom:6px;"><span class="label">Download token</span></div>
+          <div class="co-key-box" id="co-token" style="font-size:11px;"></div>
+          <div class="co-btn-row">
+            <button class="co-btn copy-btn" id="co-copy-token">Copy token</button>
+            <a class="co-btn" id="co-download-link" href="#" target="_blank" rel="noopener">Download binary →</a>
+          </div>
+        </div>
+        <div id="co-signing-note" style="display:none;">
+          <p class="co-note">License key issued. Download tokens require the signing key to be configured on this server — use your license key when prompted after installing from the free source path. <a href="https://documentation.pointsav.com/" target="_blank" rel="noopener" style="color:var(--accent);">Documentation →</a></p>
+        </div>
+        <div class="co-btn-row" style="margin-top:18px;">
+          <button class="co-btn secondary" id="co-close-btn">Close</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
+<script>
+(function () {
+  'use strict';
+
+  var staticWalletAddress = '';
+  var currentProduct = '';
+  var currentTier = '';
+  var currentPrice = 0;
+  var currentLabel = '';
+  var currentTxHash = '';
+  var currentOrderId = '';
+  var pollTimer = null;
+  var pollCount = 0;
+  var MAX_POLLS = 20;
+
+  function el(id) { return document.getElementById(id); }
+
+  function showStep(n) {
+    [1, 2, 3].forEach(function (i) {
+      var s = el('co-step-' + i);
+      if (s) s.classList.toggle('active', i === n);
+    });
+  }
+
+  function openOverlay() {
+    el('checkout-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeOverlay() {
+    el('checkout-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    clearPoll();
+  }
+
+  function clearPoll() {
+    if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+    pollCount = 0;
+  }
+
+  function usdcDisplay(units) {
+    return '$' + (units / 1000000).toFixed(2) + ' USDC';
+  }
+
+  function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(function () {
+      var orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(function () { btn.textContent = orig; }, 1500);
+    });
+  }
+
+  function setError(msg) {
+    var e = el('co-error');
+    e.textContent = msg;
+    e.style.display = msg ? 'block' : 'none';
+  }
+
+  function setSpinner(msg) {
+    var s = el('co-spinner');
+    if (msg) {
+      el('co-retry-note').textContent = msg;
+      s.classList.add('active');
+    } else {
+      s.classList.remove('active');
+    }
+  }
+
+  fetch('/v1/wallet/address')
+    .then(function (r) { return r.json(); })
+    .then(function (d) { staticWalletAddress = d.address || ''; })
+    .catch(function () {});
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.co-trigger').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        currentProduct = a.dataset.product;
+        currentTier = a.dataset.tier;
+        currentPrice = parseInt(a.dataset.price, 10);
+        currentLabel = a.dataset.label;
+        currentTxHash = '';
+        currentOrderId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : Date.now().toString(36) + Math.random().toString(36).slice(2);
+        clearPoll();
+        setError('');
+        setSpinner('');
+
+        el('co-product-label').textContent = currentLabel;
+        el('co-amount').textContent = usdcDisplay(currentPrice);
+        el('co-wallet-addr').textContent = 'Generating address…';
+        el('co-tx-input').value = '';
+        showStep(1);
+        openOverlay();
+
+        fetch('/v1/order-address/' + encodeURIComponent(currentOrderId))
+          .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+          .then(function (res) {
+            if (res.ok && res.data.address) {
+              el('co-wallet-addr').textContent = res.data.address;
+            } else {
+              el('co-wallet-addr').textContent = staticWalletAddress || 'Unavailable';
+            }
+          })
+          .catch(function () {
+            el('co-wallet-addr').textContent = staticWalletAddress || 'Unavailable';
+          });
+      });
+    });
+
+    el('checkout-overlay').addEventListener('click', function (e) {
+      if (e.target === el('checkout-overlay')) closeOverlay();
+    });
+
+    el('checkout-close').addEventListener('click', closeOverlay);
+    el('co-close-btn').addEventListener('click', closeOverlay);
+
+    el('co-copy-addr').addEventListener('click', function () {
+      copyText(el('co-wallet-addr').textContent, el('co-copy-addr'));
+    });
+
+    el('co-paid-btn').addEventListener('click', function () {
+      el('co-product-label-2').textContent = currentLabel;
+      setError('');
+      setSpinner('');
+      showStep(2);
+    });
+
+    el('co-back-btn').addEventListener('click', function () {
+      clearPoll();
+      setError('');
+      setSpinner('');
+      showStep(1);
+    });
+
+    el('co-verify-btn').addEventListener('click', function () {
+      var txHash = el('co-tx-input').value.trim();
+      if (!txHash) { setError('Please enter a transaction hash.'); return; }
+      if (!/^0x[0-9a-fA-F]{64}$/.test(txHash)) {
+        setError('Transaction hash must be 0x followed by 64 hex characters.');
+        return;
+      }
+      currentTxHash = txHash.toLowerCase();
+      setError('');
+      pollCount = 0;
+      pollLicense();
+    });
+
+    el('co-copy-key').addEventListener('click', function () {
+      copyText(el('co-license-key').textContent, el('co-copy-key'));
+    });
+
+    el('co-copy-token').addEventListener('click', function () {
+      copyText(el('co-token').textContent, el('co-copy-token'));
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeOverlay();
+    });
+  });
+
+  function pollLicense() {
+    if (pollCount >= MAX_POLLS) {
+      setSpinner('');
+      setError('Payment not confirmed after ' + MAX_POLLS + ' attempts. Check your wallet and try again, or contact support.');
+      return;
+    }
+    setSpinner(pollCount > 0 ? 'Attempt ' + (pollCount + 1) + ' of ' + MAX_POLLS + '…' : '');
+    pollCount++;
+
+    fetch('/v1/license/' + encodeURIComponent(currentTxHash))
+      .then(function (r) {
+        if (r.status === 200) return r.json().then(function (d) { onConfirmed(d); });
+        if (r.status === 202) {
+          return r.json().then(function (d) {
+            var delay = ((d.retry_after || 30) * 1000);
+            setSpinner('Waiting for on-chain confirmation… retrying in ' + (d.retry_after || 30) + 's');
+            pollTimer = setTimeout(pollLicense, delay);
+          });
+        }
+        return r.json().then(function (d) {
+          setSpinner('');
+          setError(d.message || d.error || 'Payment not found. Check the transaction hash and try again.');
+        });
+      })
+      .catch(function () {
+        setSpinner('');
+        setError('Network error — check your connection and retry.');
+      });
+  }
+
+  function onConfirmed(data) {
+    setSpinner('');
+    var licenseKey = data.license_key || '';
+    fetch('/v1/issue-token/' + encodeURIComponent(currentTxHash))
+      .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+      .then(function (res) {
+        showSuccess(licenseKey, res.status === 200 ? res.data : null);
+      })
+      .catch(function () { showSuccess(licenseKey, null); });
+  }
+
+  function showSuccess(licenseKey, tokenData) {
+    el('co-product-label-3').textContent = currentLabel;
+    el('co-license-key').textContent = licenseKey;
+    showStep(3);
+
+    if (tokenData && tokenData.token) {
+      el('co-token').textContent = tokenData.token;
+      var dlLink = el('co-download-link');
+      dlLink.href = tokenData.download_url || '#';
+      el('co-download-wrap').style.display = 'block';
+      el('co-signing-note').style.display = 'none';
+    } else {
+      el('co-download-wrap').style.display = 'none';
+      el('co-signing-note').style.display = 'block';
+    }
+  }
+
+}());
+
+// Auto-open checkout overlay when arriving via ?product= link
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var pid = params.get('product');
+  if (!pid) return;
+  var trigger = document.querySelector('.co-trigger[data-product="' + pid + '"]');
+  if (trigger) trigger.click();
+}());
+</script>
 </body>
 </html>
