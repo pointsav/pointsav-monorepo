@@ -29,7 +29,14 @@ monorepo sub-clone (branch `main`). All verified: `cargo test` 105 pass / 1 pre-
   (`viewport-fit=cover`, tap-highlight, `::selection`, `:focus-visible` on all interactive elements,
   `pointer:coarse` 16px inputs to stop iOS zoom, `prefers-reduced-motion`); one `--measure:68ch` token.
 - `d572fd20` — M5: `100vh` → `100dvh` on docs-sidenav + toc-rail (no mobile address-bar layout shift).
+- `e5384106` — Phase 2a article reading surface: Source Serif 4 reading body + Inter headings;
+  fixed collapsed h2/h3 hierarchy (h2 30px/600, h3 20px/600); text-wrap pretty/balance;
+  scroll-margin-top for sticky-header anchor jumps; hairline blockquote; data tables in Inter.
+- `a48a9346` — Phase 2b article code blocks: `.prose pre` was unstyled — now border-defined mono
+  14px/1.6 with M9 horizontal scroll + never-wrap; `.prose` tables scroll on ≤640px.
 - `c97e1c38` — engine `NEXT.md` points to the new master brief (Phase −1).
+
+All five verified together (final gate): `cargo test` 105 pass / 1 pre-existing fail; `clippy` clean.
 
 **Visible result after deploy:** all three sites render in Inter (headings + UI) with Source Serif 4
 reading body, larger 17px body, and the mobile fixes — the headline typographic transformation.
@@ -39,9 +46,10 @@ should be 6, and `grep viewport-fit=cover` on the page should hit.
 
 **Remaining plan (NOT in this build — deferred to focused sessions, per `BRIEF-knowledge-platform-master.md` §14):**
 Phase 0 federation engine (mounts + blueprints + the `inject_wiki_prefixes` cross-mount/zero-dead-link
-fix), and Phases 2–5 (article-surface mobile rewrite, home, Cmd+K, per-brand theming). These were held
-back deliberately — the federation refactor + core-render surgery warrant supervised passes, not an
-autonomous night-batch, to keep the tree green for the nightly build.
+fix + build gate), Phase 2 remainder (bottom action bar, tap-popovers for hover-only features,
+desktop three-column shell), Phase 3 home redesign, Phase 4 Cmd+K palette, Phase 5 per-brand theming.
+Held back deliberately — the federation refactor + core-render surgery warrant supervised passes, not
+an autonomous night-batch, to keep the tree green for the nightly build.
 
 ---
 from: totebox@project-knowledge
