@@ -1672,6 +1672,33 @@ html[data-theme="dark"] .recent__cat {
 /* Bold text in prose */
 .prose strong { font-weight: 700; color: var(--fg-1); }
 
+/* Code blocks in articles — border-defined (not shadow), mono, M9 horizontal scroll, never wrap. */
+.prose pre {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  background: var(--code-bg);
+  color: var(--code-fg);
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;                 /* M9 — scroll horizontally */
+  overscroll-behavior-x: contain;
+  white-space: pre;                 /* never wrap code (indentation-sensitive) */
+}
+.prose pre code {
+  font-family: inherit;
+  font-size: inherit;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  white-space: pre;
+}
+/* Data tables in articles scroll on narrow screens with the same edge-fade affordance (M9). */
+@media (max-width: 640px) {
+  .prose table { display: block; overflow-x: auto; overscroll-behavior-x: contain; }
+}
+
 .callout {
   display: grid;
   grid-template-columns: 22px 1fr;
