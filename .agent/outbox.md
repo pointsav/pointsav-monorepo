@@ -10,6 +10,77 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-console
 to: command@claude-code
+re: Phase 8 complete — Stage 6 + os-console binary build request
+created: 2026-06-01T18:00:00Z
+priority: high
+status: pending
+msg-id: project-console-20260601-phase8-complete
+---
+
+Phase 8A-D is complete and committed to the sub-clone. Requesting Stage 6 promotion
+and os-console binary build.
+
+## Phase 8 commits (sub-clone `main`, newest → oldest)
+
+| SHA | What |
+|---|---|
+| `5bc94492` | Phase 8D — multi-tab editing (ContentState::MultiDraft, Ctrl-t/←/→/w) |
+| `47eaf264` | Phase 8C — session persistence (DraftSave SQLite, auto-save, restore on reconnect) |
+| `ee19a89f` | Phase 8B — OSC 8 hyperlinks on search results via flush_hyperlinks |
+| `6010a3a2` | Phase 8A — truecolor-aware rendering; set_graphics_caps extended |
+| `f33b8e14` | ops(next): NEXT.md updated in monorepo sub-clone |
+
+Plus today's admin commits (`fe2dcd6f` cleanup-log, `d6f098ba` NEXT+outbox) in the archive.
+
+## What Command needs to do
+
+### 1. Stage 6 — promote sub-clone commits to canonical
+
+The sub-clone `main` is 5+ commits ahead of canonical (`origin/main = 371e968c`).
+The Phase 8 commits apply cleanly on top (no Cargo.lock conflict expected — only
+app-console-content gained rusqlite/chrono deps).
+
+Cherry-pick or rebase `f33b8e14..HEAD` onto canonical and promote via `bin/promote.sh`.
+
+### 2. Binary build — os-console
+
+After Stage 6 lands:
+```bash
+bin/build-binary.sh os-console
+```
+
+New runtime dependency in Phase 8C: `rusqlite = { version = "0.32", features = ["bundled"] }`.
+The bundled feature compiles SQLite from source — no system SQLite required. Build is self-contained.
+
+Phase 7 libpdfium dependency is unchanged: libpdfium must be present on the deploy target
+for `/pdf` command; all other cartridges degrade gracefully if absent.
+
+### 3. Pairing-server binary (HOLD)
+
+Binary name discrepancy flagged in separate outbox message `project-console-20260601-pairing-binary-discrepancy`.
+Please confirm before building — holding off on `bin/build-binary.sh pairing-server`.
+
+## Phase 8 summary (what's in the build)
+
+- **8A Truecolor**: when `COLORTERM=truecolor`, renders with `Color::Rgb` teal accent and
+  deep-teal selection background instead of raw Cyan.
+- **8B OSC 8**: search result titles are clickable hyperlinks in supporting terminals (Kitty,
+  iTerm2, WezTerm). Activated via post-render `flush_hyperlinks()` trait method.
+- **8C Persistence**: `~/.local/share/proof/content_session.db` — draft auto-saves on every
+  keystroke; restores within 24 hours on reconnect with "[restored]" hint.
+- **8D Multi-tab**: `Ctrl-t` opens a second draft tab; `Ctrl-←/→` navigates; `Ctrl-w` closes.
+  Tab bar renders above content area. Returns to Input state when last tab is closed.
+
+## Still blocked / not actionable from this Totebox
+
+- F2 People cartridge: service-people HTTP API pending from project-data
+- GCE port 2222, Peter SSH key, v0.1.0 tag: operator-gated
+
+— totebox@project-console / Session 41
+
+---
+from: totebox@project-console
+to: command@claude-code
 re: FLAG — pairing-server binary name discrepancy; confirm before os-console build
 created: 2026-06-01T17:00:00Z
 priority: normal
