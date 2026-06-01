@@ -102,6 +102,25 @@ enum Command {
         #[arg(long, env = "WIKI_BRAND_THEME")]
         brand_theme: Option<String>,
     },
+
+    /// Validate content without serving: report dead `[[wikilinks]]` and
+    /// frontmatter that violates its content-type blueprint. Exits non-zero on
+    /// dead links (a CI / pre-promote gate). With `--strict`, missing required
+    /// fields also fail.
+    Check {
+        #[arg(long, env = "WIKI_CONTENT_DIR")]
+        content_dir: PathBuf,
+        #[arg(long, env = "WIKI_GUIDE_DIR")]
+        guide_dir: Option<PathBuf>,
+        #[arg(long, env = "WIKI_GUIDE_DIR_2")]
+        guide_dir_2: Option<PathBuf>,
+        /// Directory of customer `*.yaml` blueprints (built-ins used if absent).
+        #[arg(long)]
+        blueprints_dir: Option<PathBuf>,
+        /// Treat missing-required-field findings as failures too.
+        #[arg(long)]
+        strict: bool,
+    },
 }
 
 #[tokio::main]
@@ -143,6 +162,46 @@ async fn main() -> Result<()> {
                 brand_theme,
             )
             .await
+        }
+        Command::Check {
+            content_dir,
+            guide_dir,
+            guide_dir_2,
+            blueprints_dir,
+            strict,
+        } => {
+            let report = app_mediakit_knowledge::check::run_check(
+                &app_mediakit_knowledge::check::CheckOpts {
+                    content_dir,
+                    guide_dir,
+                    guide_dir_2,
+                    blueprints_dir,
+                },
+            )
+            .await?;
+            println!("checked {} pages", report.pages_checked);
+            for d in &report.dead_links {
+                println!("DEAD LINK   {} -> [[{}]]", d.page, d.target);
+            }
+            for m in &report.missing_fields {
+                println!(
+                    "MISSING     {} (type {}): {}",
+                    m.page,
+                    m.type_name,
+                    m.missing.join(", ")
+                );
+            }
+            println!(
+                "{} dead link(s), {} page(s) with missing required fields",
+                report.dead_links.len(),
+                report.missing_fields.len()
+            );
+            let fail = !report.dead_links.is_empty()
+                || (strict && !report.missing_fields.is_empty());
+            if fail {
+                std::process::exit(1);
+            }
+            Ok(())
         }
     }
 }
