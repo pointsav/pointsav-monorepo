@@ -571,23 +571,27 @@ struct FeaturedArticle {
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)] // Validation-only struct: Deserialize enforces shape; fields unread by design.
 struct LeapfrogFacts {
     facts: Vec<LeapfrogFact>,
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)] // Validation-only struct: Deserialize enforces shape; fields unread by design.
 struct LeapfrogFact {
     text: String,
     link_slug: Option<String>,
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)] // Validation-only struct: Deserialize enforces shape; fields unread by design.
 struct ReferenceInvariants {
     heading: String,
     items: Vec<ReferenceInvariant>,
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)] // Validation-only struct: Deserialize enforces shape; fields unread by design.
 struct ReferenceInvariant {
     label: Option<String>,
     text: String,
@@ -1377,11 +1381,26 @@ fn home_chrome(
 fn humanize_category(s: &str) -> String {
     // Known acronyms / brand tokens that should render upper-case in nav + titles.
     const ACRONYMS: &[(&str, &str)] = &[
-        ("bim", "BIM"), ("gis", "GIS"), ("os", "OS"), ("slm", "SLM"),
-        ("worm", "WORM"), ("ai", "AI"), ("mba", "MBA"), ("ppn", "PPN"),
-        ("ews", "EWS"), ("imap", "IMAP"), ("vpn", "VPN"), ("udp", "UDP"),
-        ("api", "API"), ("ui", "UI"), ("ux", "UX"), ("sel4", "seL4"),
-        ("ifc", "IFC"), ("pdf", "PDF"), ("svg", "SVG"), ("id", "ID"),
+        ("bim", "BIM"),
+        ("gis", "GIS"),
+        ("os", "OS"),
+        ("slm", "SLM"),
+        ("worm", "WORM"),
+        ("ai", "AI"),
+        ("mba", "MBA"),
+        ("ppn", "PPN"),
+        ("ews", "EWS"),
+        ("imap", "IMAP"),
+        ("vpn", "VPN"),
+        ("udp", "UDP"),
+        ("api", "API"),
+        ("ui", "UI"),
+        ("ux", "UX"),
+        ("sel4", "seL4"),
+        ("ifc", "IFC"),
+        ("pdf", "PDF"),
+        ("svg", "SVG"),
+        ("id", "ID"),
     ];
     s.split('-')
         .map(|word| {
@@ -1450,7 +1469,9 @@ fn render_docs_sidenav(buckets: &CategoryBuckets, active_slug: &str) -> String {
     out.push_str("<div class=\"docs-sidenav__inner\">");
 
     for cat in ordered_categories(buckets) {
-        let Some(items) = buckets.get(&cat) else { continue };
+        let Some(items) = buckets.get(&cat) else {
+            continue;
+        };
         let mut articles: Vec<&TopicSummary> = items
             .iter()
             .filter(|t| t.status.as_deref() != Some("stub"))
@@ -1458,7 +1479,7 @@ fn render_docs_sidenav(buckets: &CategoryBuckets, active_slug: &str) -> String {
         if articles.is_empty() {
             continue;
         }
-        articles.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
+        articles.sort_by_key(|a| a.title.to_lowercase());
         let any_active = articles.iter().any(|t| t.slug == active_slug);
         let open = if any_active { " open" } else { "" };
         let _ = write!(
@@ -1485,20 +1506,25 @@ fn render_docs_sidenav(buckets: &CategoryBuckets, active_slug: &str) -> String {
     out
 }
 
+/// Per-content-dir cache entry: (instant the bucket was computed, shared bucket).
+type NavCacheEntry = (std::time::Instant, Arc<CategoryBuckets>);
+/// Map from content directory to its cached bucket entry.
+type NavCacheMap = std::collections::HashMap<PathBuf, NavCacheEntry>;
+
 /// Process-global cache of the category buckets used to build the left
 /// navigation, keyed by content directory (one entry per running instance;
 /// tests with distinct temp dirs do not collide). A short TTL keeps the nav
 /// fast on every article page while still reflecting edits within ~20 s.
-static NAV_CACHE: std::sync::OnceLock<
-    tokio::sync::RwLock<std::collections::HashMap<PathBuf, (std::time::Instant, Arc<CategoryBuckets>)>>,
-> = std::sync::OnceLock::new();
+static NAV_CACHE: std::sync::OnceLock<tokio::sync::RwLock<NavCacheMap>> =
+    std::sync::OnceLock::new();
 const NAV_TTL: std::time::Duration = std::time::Duration::from_secs(20);
 
 /// Return the category buckets for the left navigation, parsing the content
 /// tree at most once per [`NAV_TTL`] window. The expensive frontmatter parse
 /// happens on a cache miss; warm requests clone a cheap `Arc`.
 async fn nav_buckets_cached(state: &AppState) -> Arc<CategoryBuckets> {
-    let cache = NAV_CACHE.get_or_init(|| tokio::sync::RwLock::new(std::collections::HashMap::new()));
+    let cache =
+        NAV_CACHE.get_or_init(|| tokio::sync::RwLock::new(std::collections::HashMap::new()));
     {
         let r = cache.read().await;
         if let Some((built, buckets)) = r.get(&state.content_dir) {

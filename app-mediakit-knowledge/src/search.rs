@@ -510,7 +510,9 @@ mod tests {
     async fn reindex_replaces_existing_entry() {
         let (index, _c, _s) = fixture_index().await;
         let new_body = "---\ntitle: \"Alpha v2\"\nslug: topic-alpha\n---\nReindex changed the body completely. New keywords: phoenix, eagle.\n";
-        reindex_topic(&index, "topic-alpha", new_body).unwrap();
+        reindex_topic(&index, "topic-alpha", new_body)
+            .await
+            .unwrap();
         // Old body had "substrate"; new body doesn't.
         let hits_old = search(&index, "substrate", 10).unwrap();
         assert!(
