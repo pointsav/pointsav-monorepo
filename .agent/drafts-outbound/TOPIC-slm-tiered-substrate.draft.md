@@ -108,6 +108,29 @@ the extraction path with reasoning suppressed — fast, cheap, and deterministic
 > Today the reasoning budget is a server-wide setting; per-path control is a planned, not
 > delivered, capability and should be described in planned/intended terms.
 
+## Surviving an interrupted burst
+
+The burst GPU runs on reclaimable (spot) capacity: the cloud provider can take the machine back
+at any moment, often with little or no warning. A substrate that lost or corrupted work every time
+this happened would be unusable, so the design treats interruption as a normal event rather than a
+failure.
+
+Two paths carry in-flight work, and both are built to fail closed. On the batch side, each unit of
+work is leased from a durable queue before it is sent to the GPU; if the machine disappears
+mid-request, the lease simply expires and a reaper returns the unit to the queue, where the next
+worker picks it up. Nothing is marked done until the result is actually in hand. On the extraction
+side, the service that feeds documents to the gateway distinguishes a transient interruption from a
+genuine, permanent failure. A request cut off because the GPU vanished is treated as retryable, not
+as a processed document — so it is never silently dropped. While the GPU is unavailable, pending
+documents are held in a dormant state rather than retried in a tight loop, which would needlessly
+hammer the gateway. A single lightweight probe runs on a fixed interval; the moment it succeeds, the
+whole dormant backlog is promoted back into the active queue and extraction resumes on its own,
+without any operator action or service restart.
+
+The result is a flow that degrades gracefully: an interrupted burst costs some latency while the
+system notices and falls back, but no document is lost, no record is half-written, and recovery is
+automatic when capacity returns.
+
 ## Why this matters
 
 The tiered substrate is what lets a sovereign deployment behave like a managed AI service without
