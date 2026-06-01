@@ -2,6 +2,32 @@
 
 ---
 
+### 2026-06-01 | totebox@project-gis | claude-sonnet-4-6 + opus-4-8
+
+**Done this session — Location Intelligence VWH + PKS data collection:**
+- Established three-archetype model: **PRO** (Professional Centres = existing T1/T2/T3), **VWH** (Vertical Warehouse), **PKS** (Parking Structures). Codes ratified PRO/VWH/PKS.
+- **Taxonomy**: 8 new non-tier-gating categories in `taxonomy.py` (auto_parts, paint, mro_industrial, flooring, tool_rental, lumber, plumbing, electrical, welding, car_rental); BRAND_FILL + DISPLAY_NAMES for 32 chains.
+- **27 chain YAMLs** created in deployment service-business; **19,242 records ingested** across 32 chains (AutoZone 4,047, O'Reilly 3,393, Würth 882, Enterprise 1,869, Europcar 1,022, etc.).
+- **build-clusters.py**: added `enrich_with_vwh` pass — VWH/PKS chains attach to clusters within 5km like civic, never gate tier. Validated: tier counts identical (T1=1,746/T2=2,726/T3=2,021), 4,634 clusters enriched, 152/360 VWH candidates carry industrial signal (Colorado Springs strength=4).
+- **test-cluster-archetypes.py**: loads IATA-airports + railway stations as combined PKS anchors (Overture fallback); scores VWH by `vwh_signal`/`vwh_strength`. Output renamed to canonical archetype-vwh/-pks names; deployed to gateway.
+- **index.html**: VWH/PKS toggle overlays under Layers; `applyLiOverlayStyle()` copies rm-stars fade; BentoBox untouched per operator.
+- **Infra scripts**: `ingest-osm-airports.py` (IATA filter + military exclusion + US/CA tiling) and `ingest-osm-railway.py` (intercity operator filter, MX/IS skipped) written + validated.
+- **nightly-rebuild.sh**: wired archetype test + GeoJSON deploy as step 3 (after cluster rebuild).
+- Editorial: BRIEF-location-intelligence-archetypes + TOPIC-vertical-warehouse + TOPIC-parking-structures + GUIDE-location-intelligence-data-collection drafted (registry A18–A21).
+
+**Pending / carry-forward:**
+- **Infra ingest (airports + railway) running detached** (`run-infra-ingest.sh` via setsid) at session end — overnight-scale under Overpass throttle. A few US airport tiles fail even with retry. When complete, re-run `test-cluster-archetypes.py` to pick up IATA airports + rail as PKS anchors (replaces noisy 20,841 Overture set).
+- Re-run `ingest-osm-airports.py --countries US` once Overpass rate limit fully clears, to fill tile gaps.
+- **Stage 6 pending**: code commits (taxonomy/build-clusters/ingest scripts/test/nightly) need `bin/promote.sh` from Command.
+- Chain YAMLs + JSONL live in deployment (cluster-totebox-personnel-1), local-only — not committed (per architecture).
+
+**Operator preferences surfaced:**
+- BentoBox is working well — do NOT modify it; VWH/PKS are map overlays only.
+- Capture research in BRIEF/TOPIC/GUIDE artifacts so nothing is lost.
+- Heavy data collection belongs in night builds (like AEC).
+
+---
+
 ### 2026-05-30 | totebox@project-console | claude-sonnet-4-6
 
 **Done this session:**

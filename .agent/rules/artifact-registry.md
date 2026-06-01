@@ -87,6 +87,38 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 
 ## A — Active / In-Progress
 
+### A18 — BRIEF: Location Intelligence Archetypes (PRO / VWH / PKS)
+- **File:** `.agent/briefs/BRIEF-location-intelligence-archetypes-2026-06-01.md`
+- **Status:** ACTIVE — updated 2026-06-01 with §8 full data collection inventory and §9 sequencing
+- **Destination:** internal (BRIEF stays in archive); editorial drafts dispatched separately
+- **Content:** Three-archetype Location Intelligence system (PRO/VWH/PKS). Definitions, co-location
+  signals, test results (360 VWH / 6,640 PKS / 1,803 integrated), full chain taxonomy with Wikidata
+  IDs, data collection sequencing, airport/rail classification findings, service-parking architecture.
+
+### A19 — TOPIC: Vertical Warehouse (VWH)
+- **File:** `.agent/drafts-outbound/TOPIC-vertical-warehouse.draft.md`
+- **Status:** STAGED — draft complete 2026-06-01; ready for project-editorial
+- **Destination:** project-editorial → media-knowledge-documentation
+- **Content:** VWH archetype definition (3-6 story urban logistics/light-mfg), spatial signature,
+  site selection signals, 360 test candidates, full Tier A/B chain taxonomy (Würth, Floor & Decor,
+  United Rentals, Fastenal, etc.), data collection plan with Wikidata IDs.
+
+### A20 — TOPIC: Parking Structures (PKS)
+- **File:** `.agent/drafts-outbound/TOPIC-parking-structures.draft.md`
+- **Status:** STAGED — draft complete 2026-06-01; ready for project-editorial
+- **Destination:** project-editorial → media-knowledge-documentation
+- **Content:** PKS archetype definition (3-9 story transit car parks), regional-to-metro relationship,
+  airport and rail station classification, 6,640 test candidates (1,803 integrated), commercial
+  co-location pattern from Overpass spot checks, car rental chains, parking operator directory.
+
+### A21 — GUIDE: Location Intelligence Data Collection
+- **File:** `.agent/drafts-outbound/GUIDE-location-intelligence-data-collection.draft.md`
+- **Status:** STAGED — draft complete 2026-06-01; ready for project-editorial
+- **Destination:** project-editorial → media-knowledge-documentation
+- **Content:** 7-step operational runbook: run existing YAML ingests, add Würth + new taxonomy
+  categories, add Tier A VWH chains, write ingest-osm-airports.py, write ingest-osm-railway.py,
+  add PKS car rental chains, re-run test-cluster-archetypes.py and deploy updated GeoJSON.
+
 ### A7 — BRIEF: Regional Markets System
 - **File:** `BRIEF-regional-markets-system.draft.md`
 - **Status:** REVISED + STAGED — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-rm-corrected-dispatch)
