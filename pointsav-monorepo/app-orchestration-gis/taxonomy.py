@@ -441,17 +441,23 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
     # VWH enrichment categories — not gating tier; BRAND_FILL drives ingest-osm.py
     "auto_parts": {
         "US": ["autozone-us", "oreilley-auto-us", "napa-us"],
-        "CA": [],        # Canadian Tire already covers auto in CA taxonomy
-        "MX": [],
+        "CA": ["napa-ca", "partsource-ca"],                    # Phase 2 2026-06-01
+        "MX": ["autozone-mx"],                                  # Phase 2 2026-06-01
         "GB": ["halfords-uk"],
-        "FR": [],        # euromaster-fr pending
-        "DE": [], "ES": [], "IT": [], "GR": [], "PL": [],
-        "AT": [], "NL": [], "PT": [],
-        "SE": [], "DK": [], "NO": [], "FI": [], "IS": [],
+        # EU auto-parts deepening (multi-country EU ingests) — Phase 2 2026-06-01
+        "FR": ["norauto-fr", "feuvert-fr", "euromaster-eu"],
+        "DE": ["atu-de", "euromaster-eu"],
+        "ES": ["norauto-fr", "feuvert-fr"],
+        "IT": ["norauto-fr", "euromaster-eu"],
+        "PL": ["norauto-fr"],
+        "NL": ["euromaster-eu"],
+        "PT": ["feuvert-fr"],
+        "GR": [], "AT": ["atu-de"],
+        "SE": ["euromaster-eu"], "DK": [], "NO": [], "FI": [], "IS": [],
     },
     "paint": {
         "US": ["sherwin-williams-us"],
-        "CA": [], "MX": [],
+        "CA": [], "MX": ["comex-mx"],                           # Phase 2 2026-06-01
         "GB": [], "FR": [], "DE": [], "ES": [], "IT": [], "GR": [], "PL": [],
         "AT": [], "NL": [], "PT": [],
         "SE": [], "DK": [], "NO": [], "FI": [], "IS": [],
@@ -459,7 +465,8 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
     # ── VWH Tier A ────────────────────────────────────────────────────────────────
     "mro_industrial": {
         "US": ["fastenal-us", "grainger-us"],
-        "CA": [], "MX": [],
+        "CA": ["princess-auto-ca"],                            # Phase 2 2026-06-01
+        "MX": [],
         "GB": ["wurth-de"],
         "FR": ["wurth-de"], "DE": ["wurth-de"], "ES": ["wurth-de"],
         "IT": ["wurth-de"], "GR": [], "PL": ["wurth-de"],
