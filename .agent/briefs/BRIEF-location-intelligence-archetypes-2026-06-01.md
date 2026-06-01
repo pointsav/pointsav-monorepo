@@ -19,13 +19,13 @@ Three-letter codes ratified 2026-06-01.
 
 | Code | Name | Status | Anchor type |
 |---|---|---|---|
-| **PRO** | Professional Centres | Live — T1/T2/T3 clusters | Grocery hypermarket + hardware ± price club / lifestyle / electronics |
-| **VWH** | Vertical Warehouse | Test data (360 sites) | Hardware without grocery; 3–6 story urban logistics / light-manufacturing |
-| **PKS** | Parking Structures | Test data (6,640 / 1,803 integrated) | Regional airport or intercity train station 15–150km from major metro |
+| **PRO** | Retail Centres | Live — T1/T2/T3 clusters | Grocery hypermarket + hardware ± price club / lifestyle / electronics |
+| **VWH** | Urban Fringe | Test data (360 sites) | Hardware without grocery; 3–6 story urban logistics / light-manufacturing |
+| **PKS** | Commuter | Test data (6,640 / 1,803 integrated) | Regional airport or intercity train station 15–150km from major metro |
 
 ---
 
-## 2. PRO — Professional Centres (existing system)
+## 2. PRO — Retail Centres (existing system)
 
 The current T1/T2/T3 pipeline. Grocery-anchored retail co-location at three scales:
 - **T1 Regional**: hypermarket ∧ hardware ∧ (price club ∨ lifestyle ∨ electronics) — or ≥4 anchor categories — or ≥3 anchors in tight (≤1km) cluster
@@ -37,7 +37,7 @@ T1=1,746 / T2=2,726 / T3=2,021. 17 display countries (NA + EU).
 
 ---
 
-## 3. VWH — Vertical Warehouse
+## 3. VWH — Urban Fringe
 
 ### Definition
 
@@ -107,7 +107,7 @@ To make VWH production-grade, add:
 
 ---
 
-## 4. PKS — Parking Structures
+## 4. PKS — Commuter
 
 ### Definition
 
@@ -224,7 +224,7 @@ EU park-and-train pattern. Replaces the earlier 6,640-candidate Overture-airport
 ## 7. UI integration (updated 2026-06-01)
 
 VWH and PKS toggle buttons placed under **★ Regional Markets** section in `index.html` layer control
-(not a separate Location Intelligence group — that concept was retired). PRO Professional Centres
+(not a separate Location Intelligence group — that concept was retired). PRO Retail Centres
 is the base map product and is NOT a toggle overlay alongside VWH/PKS.
 
 State variables: `vwhActive`, `psActive`. Functions: `toggleVwhLayer(btn)`, `togglePsLayer(btn)`.
