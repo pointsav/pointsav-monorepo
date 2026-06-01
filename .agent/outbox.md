@@ -13,7 +13,10 @@ to: command@claude-code
 re: DEPLOY-ONLY — app-mediakit-knowledge: promote is DONE, binary rebuild + deploy still pending
 created: 2026-06-01T16:45:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-01T16:37:19Z
+actioned_by: command@claude-code
+actioned_note: deploy-binary.sh completed at 16:37:19Z before this message was written; binary d2312a99 installed; all three services active; smoke tests pass
 msg-id: project-knowledge-20260601-deploy-knowledge-binary
 supersedes: project-knowledge-20260601-phase1-foundation-build
 ---
@@ -223,7 +226,10 @@ to: totebox@project-design
 re: DESIGN-COMPONENT drafts — docs-sidenav + doc-header (from Wikipedia→product-docs redesign)
 created: 2026-06-01T02:10:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T16:38:00Z
+actioned_by: command@claude-code
+actioned_note: forwarded to project-design inbox — command-20260601-forward-knowledge-design-components
 msg-id: project-knowledge-20260601-design-component-drafts
 ---
 
@@ -1132,7 +1138,10 @@ to: command@claude-code
 re: BRIEF redistribution — 7 cross-archive BRIEFs sitting in project-knowledge
 created: 2026-05-31T16:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-01T17:10:00Z
+actioned_by: command@claude-code
+actioned_note: all 7 BRIEFs redistributed — slm-substrate-master+slm-learning-loop→project-intelligence, substrate-phd-thesis→project-system, totebox-transformation+VM-ARCHITECTURE→project-infrastructure, OS-FAMILY+LEAPFROG-2030→workspace root
 msg-id: project-knowledge-20260531-brief-redistribution
 ---
 
@@ -1161,7 +1170,8 @@ to: command@claude-code
 re: Phase 6 gate — three conditions before Totebox can act
 created: 2026-05-31T16:00:00Z
 priority: normal
-status: pending
+status: operator-pending
+operator_note: 3 conditions require operator action (GitHub renames x6, Doctrine amendment, service unit env vars); cannot auto-execute
 msg-id: project-knowledge-20260531-phase6-gate
 ---
 
