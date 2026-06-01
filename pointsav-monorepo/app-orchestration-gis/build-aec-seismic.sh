@@ -113,8 +113,18 @@ if [[ ! -f "$USGS_GEOJSON" ]]; then
 import sys, json
 try:
     d = json.load(sys.stdin)
-    zips = [f['downloadUri'] for f in d.get('files', []) if f.get('name','').endswith('.zip')]
-    print(zips[0] if zips else '')
+    zips = [(f.get('name',''), f['downloadUri'])
+            for f in d.get('files', []) if f.get('name','').endswith('.zip')]
+    # Prefer the 2%/50yr PGA dataset by name; fall back to first zip.
+    def score(name):
+        n = name.lower()
+        s = 0
+        if 'pga' in n: s += 4
+        if '2pct' in n or '2p50' in n or '2percent' in n or '2-percent' in n: s += 3
+        if '50yr' in n or '50-year' in n or '50year' in n: s += 1
+        return s
+    zips.sort(key=lambda nz: score(nz[0]), reverse=True)
+    print(zips[0][1] if zips else '')
 except Exception:
     print('')
 " 2>/dev/null)
