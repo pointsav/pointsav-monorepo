@@ -10,7 +10,8 @@ target_path: cluster-totebox-intelligence/guide-local-circuit-tier-a-only.md
 bilingual_required: false
 author: totebox@project-intelligence (claude-sonnet-4-6)
 created: 2026-05-29
-version: "0.1"
+updated: 2026-06-01
+version: "0.2"
 grounds_in:
   - service-slm/crates/slm-doorman/src/router.rs
   - service-slm/crates/slm-doorman-server/src/http.rs
@@ -18,8 +19,12 @@ grounds_in:
   - TOPIC-topic-doorman-local-inference-circuit
 editorial_notes: >
   Bloomberg standard. No forward-looking language for shipped features.
-  Sprint 3A/3B are planned/intended — mark as such. Verify step output
-  snippets against live service before publication.
+  v0.2 (2026-06-01): Step 7 + "When Tier B returns" rewritten for the shipped
+  preemption-safe watcher (deployed binary 8b08c01d) — deferred CORPUS files now
+  auto-resume via a recovery probe, no restart. Tier A fallback (Sprint 3B) has
+  SHIPPED (available but disabled by default) — no longer planned/intended. Sprint
+  3A (SLM_TIER_A_FIRST) remains planned — mark as such. Verify step output snippets
+  against live service before publication.
 open_questions:
   - "Confirm SLM_TIER_A_FIRST env var name matches Sprint 3A implementation before finalising Step 3."
   - "Verify /readyz JSON field names match Sprint 2B implementation when shipped."
@@ -236,19 +241,38 @@ Tier B outages.
 
 **CORPUS entity extraction:** Service-content routes all CORPUS files through
 `/v1/extract` (Tier B-only, ADR-07). When the circuit is open, each file is
-marked `deferred` and will not be retried until the service restarts with a
-working Tier B connection.
+deferred — but it is **not** discarded or skipped-until-restart. The watcher is
+preemption-safe (2026-06-01):
 
-With Sprint 3B (planned), a rate-limited Tier A fallback via `/v1/chat/completions`
-will be available for CORPUS files. Enable it with:
+- A request interrupted mid-flight — for example, the Tier B (Yo-Yo) spot VM
+  reclaimed by the cloud provider while the extraction was in progress — is
+  treated as a transient error and retried. It is never marked done.
+- Files deferred because the circuit is open are held on a **dormant** list, not
+  retried in a tight loop (which would needlessly hammer the gateway with the
+  whole backlog during an outage).
+- Once per 30-second tick the watcher attempts a single dormant file as a
+  **recovery probe**. While Tier B is down the probe fast-fails (circuit-open) and
+  is returned to the list. The moment Tier B becomes reachable again, the probe
+  succeeds and the **entire dormant backlog is promoted back into the active retry
+  queue — extraction resumes automatically, with no service restart.**
+
+The graph retains all previously extracted entities throughout; no data is lost.
+
+A rate-limited Tier A fallback for CORPUS files (degraded-quality extraction via
+`/v1/chat/completions` while Tier B is down) is available but **disabled by
+default** — it is kept off in normal operation so a large backlog cannot peg the
+local CPU. Enable it only deliberately, for a small, controlled set of files:
 
 ```bash
 SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=true
 SERVICE_CONTENT_TIER_A_FALLBACK_INTERVAL_SECS=300
 ```
 
-Until Sprint 3B ships, entity extraction stalls during Tier B outages. The graph
-retains all previously extracted entities; no data is lost.
+> **Restart caveat (operator).** The watcher's "already processed" tracking is
+> in-memory, so restarting `local-content` re-scans the full CORPUS backlog from
+> scratch (currently ~42.5k files). With Tier B down this is harmless HTTP-defer
+> churn at high CPU for a while, not re-extraction. Persistent processed-tracking
+> is a planned improvement to remove this re-scan.
 
 ---
 
@@ -268,9 +292,11 @@ retains all previously extracted entities; no data is lost.
 
 When `start-yoyo.sh` exits 0 and the Doorman closes the circuit:
 
-1. The drain worker resumes dispatching shadow briefs automatically.
-2. Service-content processes any CORPUS files that were deferred.
-3. Entity extraction results appear in the graph within minutes.
+1. The drain worker resumes dispatching shadow briefs automatically. (Any brief left
+   leased by an interrupted dispatch is reclaimed by the reaper and re-queued — none lost.)
+2. Service-content's recovery probe detects Tier B is reachable and promotes the entire
+   dormant CORPUS backlog back into the active retry queue automatically — no restart needed.
+3. Entity extraction results appear in the graph as the backlog drains.
 4. If `SLM_TIER_A_FIRST=true` (planned Sprint 3A), Tier B will only receive requests
    with an explicit `tier_hint=yoyo` — remove the flag to return to complexity-based routing.
 
