@@ -166,7 +166,7 @@ elif [[ ! -f "$AQUEDUCT_GEOJSON" ]]; then
         2>&1 | tee -a "$LOG"
 
     # Map integer class to label
-    python3 - <<'PYEOF' 2>&1 | tee -a "$LOG"
+    python3 - <<PYEOF 2>&1 | tee -a "$LOG"
 import json, pathlib
 LABELS = {1:'very_low',2:'low',3:'medium',4:'high',5:'very_high'}
 p = pathlib.Path("$AQUEDUCT_GEOJSON")
@@ -335,7 +335,7 @@ GB_GEOJSON="$WORK_DIR/flood-eu-gb.geojson"
 if [[ ! -f "$GB_GEOJSON" ]]; then
     echo "  [GB] Environment Agency INSPIRE Flood Zones (RoFRS 1-in-100yr)..." | tee -a "$LOG"
     # EA INSPIRE WFS for Flood Risk Zones (RoFRS):
-    curl -L --retry 2 --max-time 900 \
+    curl -L --no-progress-meter --show-error --retry 2 --max-time 900 \
         -o "$GB_GEOJSON" \
         "https://environment.data.gov.uk/arcgis/rest/services/EA/FloodMapForPlanning/MapServer/4/query?where=1%3D1&outFields=*&f=geojson&returnGeometry=true&resultRecordCount=1000&outSR=4326" \
         2>&1 | tee -a "$LOG" || echo "    WARN: GB flood data request failed" | tee -a "$LOG"
@@ -347,7 +347,7 @@ fi
 FR_GEOJSON="$WORK_DIR/flood-eu-fr.geojson"
 if [[ ! -f "$FR_GEOJSON" ]]; then
     echo "  [FR] Géorisques GASPAR flood zones (T100)..." | tee -a "$LOG"
-    curl -L --retry 2 --max-time 900 \
+    curl -L --no-progress-meter --show-error --retry 2 --max-time 900 \
         -o "$FR_GEOJSON" \
         "https://www.georisques.gouv.fr/api/v1/gaspar/azi?rayon=0&page=1&page_size=1000&format=geojson" \
         2>&1 | tee -a "$LOG" || echo "    WARN: FR flood data request failed" | tee -a "$LOG"
@@ -358,7 +358,7 @@ fi
 ES_GEOJSON="$WORK_DIR/flood-eu-es.geojson"
 if [[ ! -f "$ES_GEOJSON" ]]; then
     echo "  [ES] SNCZI T100 flood zones (MITERD)..." | tee -a "$LOG"
-    curl -L --retry 2 --max-time 900 \
+    curl -L --no-progress-meter --show-error --retry 2 --max-time 900 \
         -o "$ES_GEOJSON" \
         "https://servicios.idee.es/wfs-inspire/riesgos-naturales/inundaciones?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=hy-p:RiskZone&SRSNAME=EPSG:4326&outputFormat=application/json&count=5000" \
         2>&1 | tee -a "$LOG" || echo "    WARN: ES flood data request failed" | tee -a "$LOG"
@@ -372,7 +372,7 @@ echo "[11/17] EU flood zones (DE, IT) — INSPIRE WFS" | tee -a "$LOG"
 DE_GEOJSON="$WORK_DIR/flood-eu-de.geojson"
 if [[ ! -f "$DE_GEOJSON" ]]; then
     echo "  [DE] LAWA HQ100 flood zones (16 Länder, UBA INSPIRE)..." | tee -a "$LOG"
-    curl -L --retry 2 --max-time 900 \
+    curl -L --no-progress-meter --show-error --retry 2 --max-time 900 \
         -o "$DE_GEOJSON" \
         "https://gis.uba.de/arcgis/rest/services/wasser/Hochwasserrisikokarten/MapServer/1/query?where=1%3D1&outFields=*&f=geojson&returnGeometry=true&outSR=4326&resultRecordCount=2000" \
         2>&1 | tee -a "$LOG" || echo "    WARN: DE flood data request failed" | tee -a "$LOG"
@@ -383,7 +383,7 @@ fi
 IT_GEOJSON="$WORK_DIR/flood-eu-it.geojson"
 if [[ ! -f "$IT_GEOJSON" ]]; then
     echo "  [IT] IdroGEO ISPRA P3 flood hazard zones..." | tee -a "$LOG"
-    curl -L --retry 2 --max-time 900 \
+    curl -L --no-progress-meter --show-error --retry 2 --max-time 900 \
         -o "$IT_GEOJSON" \
         "https://idrogeo.isprambiente.it/api/geoserver/risk/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=risk:pau_ifs&srsName=EPSG:4326&outputFormat=application/json&count=2000" \
         2>&1 | tee -a "$LOG" || echo "    WARN: IT flood data request failed" | tee -a "$LOG"
@@ -445,7 +445,7 @@ GWIS_TIF="$WORK_DIR/gwis-fwi-global.tif"
 GWIS_URL="https://effis-gwis-cms.s3.eu-west-1.amazonaws.com/apps/country.profile/mean_fwi_m_1981_2010.tif"
 
 if [[ ! -f "$GWIS_TIF" || $(stat -c%s "$GWIS_TIF") -lt 1000000 ]]; then
-    curl -L --retry 3 --retry-delay 15 -o "$GWIS_TIF" "$GWIS_URL" \
+    curl -L --no-progress-meter --show-error --retry 3 --retry-delay 15 -o "$GWIS_TIF" "$GWIS_URL" \
         2>&1 | tee -a "$LOG"
 fi
 if [[ ! -f "$GWIS_TIF" || $(stat -c%s "$GWIS_TIF") -lt 1000000 ]]; then
@@ -478,7 +478,7 @@ if [[ $SKIP_WILDFIRE -eq 0 && ! -f "$GWIS_GEOJSON" ]]; then
     gdal_polygonize.py "$GWIS_CLASSIFIED" -f GeoJSON "$GWIS_GEOJSON" wildfire_zones fwi_class \
         2>&1 | tee -a "$LOG"
 
-    python3 - <<'PYEOF' 2>&1 | tee -a "$LOG"
+    python3 - <<PYEOF 2>&1 | tee -a "$LOG"
 import json, pathlib
 LABELS = {1:'low',2:'moderate',3:'high',4:'very_high',5:'extreme'}
 p = pathlib.Path("$GWIS_GEOJSON")
@@ -511,7 +511,7 @@ fi
 echo "" | tee -a "$LOG"
 echo "[15/17] Canada AQUEDUCT flood sampling (supplemental)" | tee -a "$LOG"
 
-python3 - <<'PYEOF' 2>&1 | tee -a "$LOG"
+python3 - <<PYEOF 2>&1 | tee -a "$LOG"
 import json, subprocess, pathlib
 
 META = pathlib.Path("$META_PATH")
@@ -558,7 +558,7 @@ echo "" | tee -a "$LOG"
 echo "[16/17] Patch wildfire_hazard into clusters-meta.json" | tee -a "$LOG"
 
 if [[ $SKIP_WILDFIRE -eq 0 ]]; then
-python3 - <<'PYEOF' 2>&1 | tee -a "$LOG"
+python3 - <<PYEOF 2>&1 | tee -a "$LOG"
 import json, subprocess, pathlib
 
 META = pathlib.Path("$META_PATH")
