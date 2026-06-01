@@ -239,7 +239,7 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 
 ### A4 — TEXT: Data Methodology Dialog
 - **File:** `text-gis-data-methodology-dialog.draft.md`
-- **Status:** REVIEWED 2026-05-31 — Bloomberg-clean; Command routing message sent (msg-id: project-editorial-20260531-text-dialog-route); destination: gateway-orchestration-gis static web copy; file remains in drafts-outbound pending Command ack
+- **Status:** PLACED 2026-06-01 — gateway-orchestration-gis static web copy; WFD commit `8d412a6` per Command ack `project-editorial-20260601-compound-reply-followup`
 - **Content:** Copy for the "Data" button modal on gis.woodfinegroup.com; all data source attributions; methodology notes; link to DATA-MANIFEST.md
 
 ### A5 — GUIDE: Pipeline Rebuild (Phase 1/2 appended)
@@ -391,7 +391,7 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 
 ### A29 — GUIDE: Local inference circuit without Tier B v0.2 [project-intelligence dispatch]
 - **File:** `.agent/drafts-outbound/GUIDE-guide-local-circuit-tier-a-only.v0.2.draft.md`
-- **Status:** STAGED (2026-06-01) — Bloomberg pass complete; pending Command routing to `woodfine-fleet-deployment/cluster-intelligence/guide-local-circuit-tier-a-only.md` (msg-id: project-editorial-20260601-guide-local-circuit-v02-route); supersedes v1 at WFD commit `7e77081`
+- **Status:** PLACED 2026-06-01 — `cluster-intelligence/guide-local-circuit-tier-a-only.md` WFD commit `35a2341` pushed to GitHub; supersedes v1 at `7e77081`
 - **Source:** project-intelligence v0.2 (2026-06-01, preemption-safe watcher update)
 - **Content:** 310-line operational guide; Steps 1–7 + verification checklist + When Tier B returns; target_path corrected to cluster-intelligence/
 
