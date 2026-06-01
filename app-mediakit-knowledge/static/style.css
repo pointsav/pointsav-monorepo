@@ -2651,6 +2651,11 @@ html[data-auth="user"] .wiki-fab { display: flex; }
   color: var(--fg-2);
   cursor: pointer;
   padding: 6px 12px;
+  min-height: var(--tap-min);   /* M3 — 44px touch target */
+  min-width: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .mobile-drawer-section-heading {
   font-family: var(--font-display);
@@ -2666,12 +2671,12 @@ html[data-auth="user"] .wiki-fab { display: flex; }
 .mobile-toc-list li,
 .mobile-nav-toc li { padding: 0; }
 .mobile-toc-list a,
-.mobile-nav-toc a { display: block; padding: 8px 12px; color: var(--fg-2); font-size: 14px; }
+.mobile-nav-toc a { display: flex; align-items: center; min-height: var(--tap-min); padding: 6px 12px; color: var(--fg-2); font-size: 14px; }  /* M3 — 44px touch target */
 .toc-level-2 a { padding-left: 24px; }
 .toc-level-3 a { padding-left: 40px; }
 .mobile-drawer-divider { border: 0; border-top: 1px solid var(--border); margin: 12px 20px; }
 .mobile-nav-links { list-style: none; padding: 0 8px; margin: 0; }
-.mobile-nav-links li a { display: block; padding: 10px 12px; color: var(--fg-2); font-size: 15px; font-weight: 600; }
+.mobile-nav-links li a { display: flex; align-items: center; min-height: var(--tap-min); padding: 8px 12px; color: var(--fg-2); font-size: 15px; font-weight: 600; }  /* M3 — 44px touch target */
 .mobile-nav-links li a:hover { background: var(--bg-hover); border-radius: var(--radius-sm); }
 
 /* Phase 7E — Mobile bottom action bar */
