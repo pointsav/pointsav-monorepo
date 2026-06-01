@@ -207,8 +207,18 @@ without a service restart. Now:
   it fast-fails and is returned to the list; the moment Tier B recovers, the whole dormant
   backlog is promoted back to the active retry queue — **extraction resumes with no restart.**
 - Genuine parse/extract failures still go to `processed_ledgers` (retrying garbage is pointless).
-- **Deploy:** needs a release rebuild + `deploy-binary.sh` + restart of `local-content.service`
-  to go live. Source committed `a5f573f6`; **not yet deployed** (deployed binary is the May-29 build).
+- **Deploy:** **DEPLOYED 2026-06-01.** Release binary `8b08c01d` installed to
+  `/usr/local/bin/service-content` (manual ledger-compliant install — `deploy-binary.sh` is gated
+  Command-only + promotion, so it could not run from Totebox against the unpromoted commit). Smoke
+  test pass: `entity_count`=7445 survived the restart; binary-ledger drift check MATCH. Source
+  `a5f573f6` (+docs `e6b34bb3`,`45f38da8`); **Stage 6 PENDING** (binary deployed ahead of canonical;
+  outbox to Command sent 2026-06-01). Tier A fallback stayed OFF — restart re-drain is HTTP-defer
+  churn, no inference.
+- **Restart cost (pre-existing, flagged):** `processed_ledgers` is in-memory despite the CLAUDE.md
+  "Sprint 5 persistent" claim, so every `local-content` restart re-drains all ~42.5k backlog files
+  (hours of high-CPU HTTP defers, harmless). Implementing persistent processed-tracking is the
+  highest-value next fix. The circuit-open log still prints "skipping until restart" — cosmetically
+  stale now (behavior is dormant-with-recovery-probe); fix on next build.
 
 **Doc/code drift flagged:** `service-content/CLAUDE.md` claims "Sprint 5: graph-backed
 persistent processed_ledgers — no restart retry storm" is code-complete, but `main.rs`
