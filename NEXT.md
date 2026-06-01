@@ -25,21 +25,27 @@ Last updated: 2026-06-01
       Blocked on Phase 24B: Kontur H3 population join to `work/clusters-ols.csv`. [2026-05-28]
 - [ ] **J1 permutation test** — `sim-tier-permutation.py`; 10,000 spatial shuffles, one-tailed p-value. [2026-05-28]
 - [ ] **J3 §6 Results** — AEC flood + seismic build coverage metrics required. [2026-05-29]
-      Note: AEC builds run in project-gis clone. Check
-      `/srv/foundry/clones/project-gis/pointsav-monorepo/app-orchestration-gis/build-aec-seismic.log`
-      (cron 2026-06-01T05:00Z) and `build-aec-flood.log` (cron 2026-06-02T05:00Z).
-- [ ] **J3 coverage metrics export** — write `export-aec-coverage.py` additions after both builds complete.
+      AEC build results checked 2026-06-01:
+      - **Seismic (cron 2026-06-01T05:00Z): partial — EXIT 0, but 3 layers skipped:**
+        USGS NSHM CONUS (curl empty reply from ScienceBase), ESHM20 EU (GeoJSON not produced),
+        GWL_FCS30 wetland (download failed). EU + wetland skip → coverage incomplete for J3.
+        Ran twice (05:00Z + 05:12Z); second run also stuck at [1/9]. Needs fix in project-gis.
+      - **Flood (cron 2026-06-01T05:18Z): FAILED at step [15/17]** — Python `$META_PATH`
+        env var not expanded (`Path('$META_PATH').read_text()` literal, not `os.environ`).
+        Needs fix in project-gis `build-aec-flood.sh`. Outbox flagged to Command.
+      Coverage metrics still blocked. Will unblock after fixes + re-runs.
+- [ ] **J3 coverage metrics export** — write `export-aec-coverage.py` additions after both builds complete and produce valid data.
 - [ ] **J4 §4–§5 language pass** — at project-editorial (outbox ref: 952b2b09). [2026-05-29]
 
 ---
 
-### Cluster 2 — genuinely-missing targets (write page or correct link)
+## Stage 6
 
-- [ ] **3 commits** awaiting Command Session canonical promote:
-      - `59373c45` — cleanup-log contamination removal
-      - `005cc299` — outbox sweep + stale lock removal
-      - *(this session's cleanup commit — pending)*
-      Outbox message `project-data-20260601-stage6-request` queued.
+- **Archive-local commits only — no canonical promotion needed.**
+  All 3 commits (59373c45, 005cc299, 161efbd1) are `.agent/`-only changes
+  (cleanup-log, outbox, briefs, state files). The canonical monorepo gitignores `.agent/`.
+  Outbox message `project-data-20260601-stage6-request` updated to `operator-pending`
+  with this finding by the operator.
 
 ---
 
