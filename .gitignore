@@ -26,6 +26,16 @@ service-content/data/
 # Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock
 
+# Mailbox state — per-archive, never tracked in canonical
+# (canonical-tracked mailbox files were the root cause of cross-archive
+# contamination — see conventions/mailbox-scope-discipline.md)
+.agent/inbox.md
+.agent/outbox.md
+.agent/inbox-archive.md
+.agent/outbox-archive.md
+.agent/outbox_copy.md
+.agent/outbox/
+
 # Symlinks to external vendored sources — not committed
 vendor-sel4-project/tools
 vendor-sel4-project/kernel
