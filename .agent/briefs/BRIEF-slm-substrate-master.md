@@ -3,7 +3,7 @@ artifact: brief
 status: active
 title: SLM Substrate Master — Yo-Yo + DataGraph + Learning Loop
 created: 2026-05-24
-updated: 2026-06-01 (consolidation pass — §1 state table current; drain ACTIVE; poison 0; persistent ledgers DEPLOYED)
+updated: 2026-06-01 (drain stall FIXED + verified; drain RE-PAUSED — CPU throughput non-viable, GPU required)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 grounds_in:
   - service-slm/ARCHITECTURE.md
@@ -48,14 +48,14 @@ notes: >
 | `orchestration-slm-server` | built session 9 | **NOT YET DEPLOYED** | unit file committed `d445b5ea`; Command operator install needed (see outbox `project-intelligence-20260530-stage6-orchestration-deploy`) |
 | `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** | europe-west4-a L4 stockout; restart with `start-yoyo.sh --wait-ready=120 --runtime=1h` when capacity returns |
 | `local-slm.service` | OLMo 2 1124 7B Instruct Q4_K_M (4.16 GiB) | **active** | Tier A is the confident primary; `SLM_TIER_A_FIRST=true` confirmed in startup log |
-| `local-doorman.env` | — | current | `SLM_TIER_A_FIRST=true`; **`SLM_DRAIN_PAUSED=false`**; `SLM_HOLD_THRESHOLD_SECS=1`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_FORCE_BROKER_MODE=false`; `SLM_QUEUE_LEASE_EXPIRY_SEC=2100` |
+| `local-doorman.env` | — | current | `SLM_TIER_A_FIRST=true`; **`SLM_DRAIN_PAUSED=true`** (re-paused 2026-06-01 — see drain-stall note below); `SLM_HOLD_THRESHOLD_SECS=1`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_QUEUE_LEASE_EXPIRY_SEC=2100` |
 | `local-content.env` | — | current | Drop-in: `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=false`; fallback OFF (Yo-Yo is the extraction tier) |
 
 **Tier routing (current):**
-- Tier A: **ENABLED + PRIMARY** — `SLM_TIER_A_FIRST=true`; all chat/shadow routes here; drain ACTIVE, routing 285 pending briefs via `tier="local"`
+- Tier A: **ENABLED + PRIMARY** — `SLM_TIER_A_FIRST=true`; all chat/shadow routes here; interactive flow verified end-to-end
 - Tier B: **TERMINATED** — health probes failing; circuit OPEN; `/v1/extract` defers (circuit-open); recovery probe in service-content will auto-resume when Yo-Yo returns
 - Tier C: not configured — ToS hard constraint; never enable for training loop
-- Result: `ai_available: true` (Tier A primary); drain worker ACTIVE (`SLM_DRAIN_PAUSED=false`); 0 poison after initial drain pass
+- Drain: **RE-PAUSED** (`SLM_DRAIN_PAUSED=true`) — see drain-stall note below. Capture continues; dispatch deferred to GPU (Yo-Yo)
 
 **Think-model fixes deployed (prev session commit `d835cab5`):**
 - `SOCKET_TIMEOUT` raised 60s → 180s; `OUTER_DEADLINE` raised 90s → 300s
@@ -76,14 +76,36 @@ notes: >
   SC-2 (defer_reason differentiation), SC-3d (30s retry loop), SC-3e (graph-first write),
   SC-3f (buffer pool env var) — all in commit `e263d6f0`
 
-**Shadow capture state (2026-06-01 — drain ACTIVE):**
-- queue/: 285 pending briefs (209 with non-empty actual_diff; 76 empty-diff ghost commits)
-- queue-done/: 553 briefs processed
-- queue-poison/: **0** (cleared session 13; pre-Fix-A entries quarantined; H1 confirmed)
-- Training corpus: 591 legacy shadow-capture tuples (DEGENERATE — empty OLMo diffs; exclude from DPO); 454 ground-truth SFT pairs extracted to `service-slm/scripts/sft-pairs/sft-train.jsonl`
-- **Drain status:** ACTIVE — `SLM_DRAIN_PAUSED=false` set 2026-06-01; `tier="local"` confirmed in dispatch log; flow verified end-to-end
+**Shadow capture state (2026-06-01):**
+- queue/: ~290 pending (≥240 real-diff; ~110 empty-diff ghost commits)
+- queue-done/: 553 processed; queue-poison/: **0**
+- Training corpus: 591 legacy shadow-capture tuples (DEGENERATE — exclude from DPO); 454 ground-truth SFT pairs at `service-slm/scripts/sft-pairs/sft-train.jsonl`
 
-**Stage 6 state:** 7+ commits ahead of `origin/main`; see outbox for promote request.
+### Drain-stall fix + the CPU-throughput finding (2026-06-01, commit `df118c47`)
+
+**The stall:** drain worker hung 2.5 h on brief `01FDA738…` — a `git-commit` capture with
+`actual_diff:""`. OLMo 2 7B was dispatched to predict a diff from an empty reference; with no
+stop sequences and no effective cap it never terminated, blocking the serial drain queue.
+
+**Three bugs fixed + VERIFIED live:**
+- **Fix 1 (empty-diff guard, P0):** drain now skips any brief whose `actual_diff` is empty
+  before OLMo dispatch. **Verified:** the exact 2.5 h brief `01FDA738` was skipped in
+  milliseconds on the new binary (`"skipping empty-diff brief … marking done without OLMo dispatch"`).
+- **Fix 2 (stop sequences):** `stop_sequences` threaded through `ComputeRequest` → llama-server
+  top-level `stop`. **Verified:** real-diff brief `056B…` stopped at `n_tokens=430` (< 512 cap)
+  via stop-seq/EOS — params honored, no runaway.
+- **Fix 3 (Tier A token cap):** Tier A 2048 → 512; Tier B keeps 2048.
+- Fix 4/5: reqwest `connect_timeout(10s)`; corrected stale 1860s-timeout comment.
+- 181 tests pass; binary `15b3f5c3` deployed.
+
+**The throughput finding (why drain is RE-PAUSED):** even with the fixes, OLMo 7B on this
+loaded CPU VM generates at **~0.3 tok/s** — a real-diff brief takes 15–22 min. The serial drain
+cannot keep pace with the commit arrival rate, and §6/§5 already establish CPU OLMo 7B output is
+low-value for DPO. So `SLM_DRAIN_PAUSED=true` is restored. The fixes are what make the eventual
+**GPU (Yo-Yo) drain safe** — empty briefs skip, real briefs are bounded. SFT training uses
+`extract-sft-pairs.py` on `queue-done/` directly, not live CPU drain.
+
+**Stage 6 state:** `df118c47` (drain fix) + doc commits ahead of `origin/main`; see outbox.
 
 ---
 
