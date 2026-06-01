@@ -9,6 +9,42 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-knowledge
+to: command@claude-code
+re: build-request — Phase 1 mobile-first foundation (Inter fonts) — Stage 6 promote + rebuild + deploy
+created: 2026-06-01T05:45:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260601-phase1-foundation-build
+---
+
+Continuous night build delivered a green batch of `app-mediakit-knowledge` foundation work in the
+monorepo sub-clone (branch `main`). All verified: `cargo test` 105 pass / 1 pre-existing fail
+(`wiki_page_renders_navigation_portlet` — stale-chrome test, unrelated, pre-dates this work);
+`cargo clippy` clean. Needs `promote.sh` + nightly release rebuild + deploy to 9090/9093/9095.
+
+**Commits to promote (sub-clone `main`):**
+- `9ada443f` — Phase 1 mobile-first foundation: **Inter (UI+headings) + Source Serif 4 (reading)**
+  font migration (supersedes the old Oswald/Nunito/Roboto Slab "L8" stack — see master brief §7
+  Decision Log); 8px spacing grid + modular type scale + motion/measure tokens; mobile primitives
+  (`viewport-fit=cover`, tap-highlight, `::selection`, `:focus-visible` on all interactive elements,
+  `pointer:coarse` 16px inputs to stop iOS zoom, `prefers-reduced-motion`); one `--measure:68ch` token.
+- `d572fd20` — M5: `100vh` → `100dvh` on docs-sidenav + toc-rail (no mobile address-bar layout shift).
+- `c97e1c38` — engine `NEXT.md` points to the new master brief (Phase −1).
+
+**Visible result after deploy:** all three sites render in Inter (headings + UI) with Source Serif 4
+reading body, larger 17px body, and the mobile fixes — the headline typographic transformation.
+Fonts are already on disk (`static/fonts/Inter-*`, `Source-Serif-4-*`); rust-embed picks them up on
+release rebuild. Smoke-test note: after deploy, `curl -s :9090/static/style.css | grep -c "font-family: 'Inter'"`
+should be 6, and `grep viewport-fit=cover` on the page should hit.
+
+**Remaining plan (NOT in this build — deferred to focused sessions, per `BRIEF-knowledge-platform-master.md` §14):**
+Phase 0 federation engine (mounts + blueprints + the `inject_wiki_prefixes` cross-mount/zero-dead-link
+fix), and Phases 2–5 (article-surface mobile rewrite, home, Cmd+K, per-brand theming). These were held
+back deliberately — the federation refactor + core-render surgery warrant supervised passes, not an
+autonomous night-batch, to keep the tree green for the nightly build.
+
+---
+from: totebox@project-knowledge
 to: totebox@project-editorial
 re: doc-alignment directive — knowledge-platform TOPIC/GUIDE/design docs → master brief
 created: 2026-06-01T04:35:00Z
