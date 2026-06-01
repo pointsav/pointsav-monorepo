@@ -156,3 +156,11 @@ J3 body + language pass `02117825`. J6 §1-§5 + language pass `da4925a4`. J4 §
 - Multi-agent analysis of CORPUS extraction failures; plan written and executed. 3 commits (446df43f, e263d6f0, 08896158).
 - 111/111 lib tests pass; service-content cargo check clean.
 - Operator preferences: STARTUP/SHUTDOWN execute full checklist; plan mode before coding; batch SC-* fixes per audit cohort.
+
+---
+
+### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 11 — drain-apprenticeship.timer conflict found and killed; flow confirmed)
+
+**Done:** Identified `drain-apprenticeship.timer` (legacy shell drainer, wrong format) as root cause of all poison. Stopped and disabled it. Recovered 25 briefs. Flow confirmed: `0BDB1DF0` dispatched, OLMo at 124% CPU.
+
+**Pending carried forward:** Stage 6 (actioned by Command), orchestration-slm deploy (still pending operator), drain-timer systemd cleanup (still pending).
