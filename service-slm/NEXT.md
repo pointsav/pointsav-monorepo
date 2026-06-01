@@ -6,6 +6,25 @@
 
 ---
 
+## 🟡 OPS — service-content drops when Doorman restarts (2026-06-01)
+
+`local-content.service` has `Requires=local-doorman.service`. A `Requires` dependency
+propagates STOP: restarting/redeploying the Doorman silently stops service-content, and
+starting the Doorman does NOT auto-restart it → the DataGraph goes down unnoticed (this is
+why entity_count showed 0 twice this session). Fix candidate (Command/infra scope, needs the
+unit edited + mirrored to `~/Foundry/infrastructure/local-content/`):
+- [ ] Change `Requires=local-doorman.service` → `Wants=local-doorman.service` (ordering-only,
+  no stop-propagation), OR add `systemctl start local-content` to the Doorman deploy runbook.
+  Until fixed: **after any Doorman restart, run `sudo systemctl start local-content.service`.**
+
+## 📊 Daily report — `daily-slm-report.sh` (2026-06-01)
+
+`service-slm/scripts/daily-slm-report.sh` writes a Markdown status snapshot (Doorman tiers,
+apprenticeship queue, training-corpus counts, service-content entity_count, Yo-Yo VM, binary
+integrity) to `/srv/foundry/data/reports/slm-daily-{<date>,latest}.md`. systemd units staged
+at `docs/deploy/foundry-slm-daily-report.{service,timer}` (daily 06:00 UTC). Operator install:
+`sudo cp docs/deploy/foundry-slm-daily-report.* /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable --now foundry-slm-daily-report.timer`
+
 ## 🔴 TIER B (/v1/extract) — grammar not constraining 32B output (2026-06-01, THE blocker)
 
 Live Yo-Yo test 2026-06-01 (full diagnosis: BRIEF-slm-substrate-master.md §2.8). Substrate

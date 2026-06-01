@@ -1,0 +1,16 @@
+[Unit]
+Description=Daily SLM substrate status report (service-slm training + service-content DataGraph)
+Documentation=file:///srv/foundry/clones/project-intelligence/service-slm/scripts/daily-slm-report.sh
+After=network-online.target
+
+[Service]
+Type=oneshot
+# Read-only snapshot; writes Markdown to /srv/foundry/data/reports/.
+Environment=REPORT_DIR=/srv/foundry/data/reports
+ExecStart=/srv/foundry/clones/project-intelligence/service-slm/scripts/daily-slm-report.sh
+# Non-fatal: a down service must not fail the timer.
+SuccessExitStatus=0 1
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target
