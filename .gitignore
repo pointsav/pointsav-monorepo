@@ -42,3 +42,10 @@ vendor-sel4-project/kernel
 
 # vendor-sel4-tools build artifacts
 vendor-sel4-tools/elfloader-tool/build/
+
+# Standalone-workspace library crate lockfiles
+# Library crates don't commit Cargo.lock per Rust convention.
+# Binary crates (system-udp, moonshot-toolkit) DO commit their lockfiles.
+# Resolves 2026-05-30 cleanup-log open question.
+system-core/Cargo.lock
+system-ledger/Cargo.lock
