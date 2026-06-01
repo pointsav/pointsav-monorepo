@@ -178,8 +178,12 @@ pub fn parse_page(text: &str) -> Result<ParsedPage, serde_yaml::Error> {
 /// for the final body HTML — or use the convenience wrapper pair
 /// `render_html_with_toc`. The edit-pencil pass happens after heading
 /// extraction so that TOC text is clean (no "[edit]" fragments).
-pub fn render_html(body_md: &str, content_dir: &std::path::Path) -> String {
-    let raw = render_html_raw(body_md, content_dir);
+pub fn render_html(
+    body_md: &str,
+    content_dir: &std::path::Path,
+    extra_roots: &[&std::path::Path],
+) -> String {
+    let raw = render_html_raw(body_md, content_dir, extra_roots);
     inject_edit_pencils(&raw)
 }
 
@@ -189,7 +193,11 @@ pub fn render_html(body_md: &str, content_dir: &std::path::Path) -> String {
 /// Sprint B/AC: uses comrak's AST API so that fenced code blocks with info strings
 /// "infobox", "navbox", and "main" can be walked and replaced with structured HTML before
 /// final rendering.
-pub fn render_html_raw(body_md: &str, content_dir: &std::path::Path) -> String {
+pub fn render_html_raw(
+    body_md: &str,
+    content_dir: &std::path::Path,
+    extra_roots: &[&std::path::Path],
+) -> String {
     let mut options = Options::default();
     options.extension.wikilinks_title_after_pipe = true;
     options.extension.table = true;
@@ -248,7 +256,7 @@ pub fn render_html_raw(body_md: &str, content_dir: &std::path::Path) -> String {
 
     let mut raw = String::new();
     format_html(root, &options, &mut raw).expect("comrak format_html");
-    inject_wiki_prefixes(&raw, content_dir)
+    inject_wiki_prefixes(&raw, content_dir, extra_roots)
 }
 
 /// B2/AC: Render an infobox YAML body as a Wikipedia-style float-right summary table.
@@ -415,74 +423,95 @@ fn escape_html(s: &str) -> String {
         .replace('"', "&quot;")
 }
 
-/// Walk rendered HTML and prefix any `href="slug" data-wikilink="true"` generated
-/// by comrak with `/wiki/` so they route correctly. Also marks non-existent targets as red links.
-fn inject_wiki_prefixes(html: &str, content_dir: &std::path::Path) -> String {
-    // Comrak emits: <a href="slug" data-wikilink="true">
-    // We split on the marker and reconstruct.
+/// Walk rendered HTML and route any `href="slug" data-wikilink="true"` (emitted by
+/// comrak) to `/wiki/<slug>` when the target exists. Existence is checked across
+/// `content_dir` AND every `extra_roots` entry (the federated guide dirs), so a
+/// TOPIC↔GUIDE wikilink resolves regardless of which mount holds the target.
+///
+/// L18 (zero dead links): an unresolved wikilink is NOT emitted as a (dead) anchor —
+/// its link text is unwrapped and rendered as plain text. The red-link class is gone.
+fn inject_wiki_prefixes(
+    html: &str,
+    content_dir: &std::path::Path,
+    extra_roots: &[&std::path::Path],
+) -> String {
+    const MARKER: &str = " data-wikilink=\"true\">";
     let mut out = String::with_capacity(html.len() + 128);
     let mut rest = html;
 
-    while let Some(pos) = rest.find(" data-wikilink=\"true\">") {
-        // Look backwards for the href="
+    while let Some(pos) = rest.find(MARKER) {
         let before_marker = &rest[..pos];
+        let after_marker = &rest[pos + MARKER.len()..];
+
         if let Some(href_pos) = before_marker.rfind("href=\"") {
-            let prefix = &before_marker[..href_pos + 6]; // up to and including href="
-            let raw = &before_marker[href_pos + 6..];
-            // Comrak puts the closing " of the href attribute in before_marker;
-            // strip it so we get only the slug value.
-            let raw_slug = raw.trim_end_matches('"');
+            let raw_slug = before_marker[href_pos + 6..].trim_end_matches('"');
 
             if raw_slug.starts_with("/category/") {
-                // Category links pass through with their original href intact
-                out.push_str(prefix);
-                out.push_str(raw_slug);
-                out.push_str("\" data-wikilink=\"true\">");
-            } else {
-                let base = raw_slug.strip_prefix("/wiki/").unwrap_or(raw_slug);
-                // Decode %20, then normalise: lowercase + spaces→hyphens
-                let decoded = base.replace("%20", " ");
-                let norm_slug = decoded.trim().to_lowercase().replace(' ', "-");
+                // Category links pass through with their original href intact.
+                out.push_str(before_marker);
+                out.push_str(MARKER);
+                rest = after_marker;
+                continue;
+            }
 
-                // Check flat path first, then one level of category subdirectories.
-                // Articles are stored as either <slug>.md or <category>/<slug>.md.
-                let article_exists = {
-                    let flat = content_dir.join(format!("{}.md", norm_slug));
-                    if flat.exists() {
-                        true
-                    } else if !norm_slug.contains('/') {
-                        std::fs::read_dir(content_dir)
-                            .into_iter()
-                            .flatten()
-                            .filter_map(|e| e.ok())
-                            .filter(|e| e.file_type().map(|t| t.is_dir()).unwrap_or(false))
-                            .any(|dir| dir.path().join(format!("{}.md", norm_slug)).exists())
-                    } else {
-                        false
-                    }
-                };
-                let redlink_class = if article_exists {
-                    ""
-                } else {
-                    " class=\"wiki-redlink\""
-                };
+            let base = raw_slug.strip_prefix("/wiki/").unwrap_or(raw_slug);
+            let decoded = base.replace("%20", " ");
+            let norm_slug = decoded.trim().to_lowercase().replace(' ', "-");
 
-                out.push_str(prefix);
+            if page_exists(&norm_slug, content_dir, extra_roots) {
+                // Resolved → emit the routed anchor.
+                out.push_str(&before_marker[..href_pos + 6]); // up to and including href="
                 out.push_str("/wiki/");
                 out.push_str(&norm_slug);
-                out.push_str("\" data-wikilink=\"true\"");
-                out.push_str(redlink_class);
-                out.push('>');
+                out.push_str("\" data-wikilink=\"true\">");
+                rest = after_marker;
+            } else {
+                // Unresolved → unwrap to plain text (no dead link). Drop the <a …>
+                // opening tag and its matching </a>.
+                let a_open = before_marker[..href_pos].rfind("<a").unwrap_or(href_pos);
+                out.push_str(&before_marker[..a_open]);
+                if let Some(close) = after_marker.find("</a>") {
+                    out.push_str(&after_marker[..close]); // inner link text, unwrapped
+                    rest = &after_marker[close + 4..];
+                } else {
+                    rest = after_marker;
+                }
             }
         } else {
-            // Malformed, just copy
+            // Malformed marker — copy through verbatim.
             out.push_str(before_marker);
-            out.push_str(" data-wikilink=\"true\">");
+            out.push_str(MARKER);
+            rest = after_marker;
         }
-        rest = &rest[pos + 22..]; // length of marker
     }
     out.push_str(rest);
     out
+}
+
+/// True if `<norm_slug>.md` exists at the flat level OR one level of category
+/// subdirectory under `content_dir` or any `extra_roots` entry.
+fn page_exists(
+    norm_slug: &str,
+    content_dir: &std::path::Path,
+    extra_roots: &[&std::path::Path],
+) -> bool {
+    for root in std::iter::once(content_dir).chain(extra_roots.iter().copied()) {
+        if root.join(format!("{}.md", norm_slug)).exists() {
+            return true;
+        }
+        if !norm_slug.contains('/') {
+            let found = std::fs::read_dir(root)
+                .into_iter()
+                .flatten()
+                .filter_map(|e| e.ok())
+                .filter(|e| e.file_type().map(|t| t.is_dir()).unwrap_or(false))
+                .any(|dir| dir.path().join(format!("{}.md", norm_slug)).exists());
+            if found {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 /// Phase 7D — append a freshness dot inside comrak footnote `<sup>` markers.
@@ -832,21 +861,50 @@ mod tests {
 
     #[test]
     fn renders_wikilinks() {
-        let html = render_html("see [[Other Page]] for context", std::path::Path::new("."));
+        let dir = std::env::temp_dir().join(format!("wikilink-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("other-page.md"), "# Other Page\n").unwrap();
+
+        // Existing target → routed anchor.
+        let html = render_html("see [[Other Page]] for context", &dir, &[]);
         assert!(
             html.contains("Other Page"),
             "wikilink text should be in output: {html}"
         );
         assert!(
-            html.contains("href"),
-            "wikilink should produce an anchor: {html}"
+            html.contains("href=\"/wiki/other-page\""),
+            "existing wikilink should produce a routed anchor: {html}"
         );
+
+        // Missing target → plain text, never a dead link (L18).
+        let html2 = render_html("see [[No Such Page]] here", &dir, &[]);
+        assert!(
+            html2.contains("No Such Page"),
+            "missing wikilink text should be retained as plain text: {html2}"
+        );
+        assert!(
+            !html2.contains("/wiki/no-such-page"),
+            "missing wikilink must NOT render as a dead link: {html2}"
+        );
+
+        // Target reachable only via an extra (guide) root → resolves (TOPIC↔GUIDE).
+        let guide = std::env::temp_dir().join(format!("wikilink-guide-{}", std::process::id()));
+        std::fs::create_dir_all(&guide).unwrap();
+        std::fs::write(guide.join("setup-guide.md"), "# Setup\n").unwrap();
+        let html3 = render_html("see [[Setup Guide]]", &dir, &[guide.as_path()]);
+        assert!(
+            html3.contains("href=\"/wiki/setup-guide\""),
+            "wikilink to a guide-root target should resolve: {html3}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+        std::fs::remove_dir_all(&guide).ok();
     }
 
     #[test]
     fn renders_gfm_table() {
         let md = "| a | b |\n|---|---|\n| 1 | 2 |\n";
-        let html = render_html(md, std::path::Path::new("."));
+        let html = render_html(md, std::path::Path::new("."), &[]);
         assert!(html.contains("<table>"), "GFM table should render: {html}");
     }
 
@@ -856,7 +914,7 @@ mod tests {
     #[test]
     fn edit_pencils_injected_on_h2_not_h1() {
         let md = "# Title\n\n## Section\n\ntext\n";
-        let html = render_html(md, std::path::Path::new("."));
+        let html = render_html(md, std::path::Path::new("."), &[]);
         // The h1 should not carry an edit pencil.
         let h1_pos = html.find("<h1").unwrap();
         let h1_end = html[h1_pos..].find("</h1>").unwrap() + h1_pos;
@@ -875,7 +933,7 @@ mod tests {
     #[test]
     fn extracts_headings_from_html() {
         let md = "## Alpha\n\ntext\n\n### Beta\n\nmore\n";
-        let raw = render_html_raw(md, std::path::Path::new("."));
+        let raw = render_html_raw(md, std::path::Path::new("."), &[]);
         let headings = extract_headings(&raw);
         assert_eq!(
             headings.len(),
@@ -893,7 +951,7 @@ mod tests {
     #[test]
     fn toc_text_has_no_edit_fragments() {
         let md = "## A Section\n\ntext\n";
-        let raw = render_html_raw(md, std::path::Path::new("."));
+        let raw = render_html_raw(md, std::path::Path::new("."), &[]);
         let headings = extract_headings(&raw);
         assert_eq!(headings.len(), 1);
         assert!(
@@ -943,7 +1001,7 @@ mod tests {
             The search index is derived state.\n\
             <!--/claim-->\n\n\
             After the claim.\n";
-        let html = render_html(block, std::path::Path::new("."));
+        let html = render_html(block, std::path::Path::new("."), &[]);
         assert!(
             html.contains("<!--claim id=derived-state cites=[] confidence=structural-->"),
             "opening marker must survive verbatim: {html}"
@@ -965,7 +1023,7 @@ mod tests {
         let inline =
             "An auditor <!--claim id=audit confidence=established cites=[rfc-9162]-->can verify \
              integrity<!--/claim--> independently.";
-        let html2 = render_html(inline, std::path::Path::new("."));
+        let html2 = render_html(inline, std::path::Path::new("."), &[]);
         assert!(
             html2.contains("<!--claim id=audit confidence=established cites=[rfc-9162]-->")
                 && html2.contains("<!--/claim-->"),
