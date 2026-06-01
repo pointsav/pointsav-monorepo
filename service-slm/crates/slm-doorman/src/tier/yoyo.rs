@@ -286,34 +286,33 @@ impl YoYoTierClient {
             .clone()
             .unwrap_or_else(|| self.config.default_model.clone());
 
-        // Translate GrammarConstraint → vLLM 0.12+ wire format.
-        // All variants route via extra_body.structured_outputs (not top-level
-        // guided_* fields, which were removed in vLLM 0.12).
-        // Lark/GBNF → {"structured_outputs": {"grammar": "<string>"}}
-        // JsonSchema → {"structured_outputs": {"json": <schema object>}}
-        let mut extra_body: Option<serde_json::Value> = match req.grammar.as_ref() {
-            None => None,
+        // Translate GrammarConstraint → llama.cpp top-level structured-output fields.
+        // The deployed Tier B server is llama.cpp (llama-server), which reads the
+        // constraint from TOP-LEVEL request fields, NOT vLLM's
+        // `extra_body.structured_outputs` (llama.cpp silently ignores extra_body →
+        // unconstrained output). Confirmed empirically 2026-06-01: a top-level
+        // `json_schema` field forces schema-conformant JSON; `extra_body` does nothing.
+        //   JsonSchema → top-level `json_schema`: <schema object>
+        //   Lark/GBNF  → top-level `grammar`: "<GBNF string>"
+        // See BRIEF-slm-substrate-master.md §2.8.
+        let mut json_schema: Option<serde_json::Value> = None;
+        let mut grammar: Option<String> = None;
+        match req.grammar.as_ref() {
+            None => {}
+            Some(GrammarConstraint::JsonSchema(v)) => json_schema = Some(v.clone()),
             Some(GrammarConstraint::Lark(s)) | Some(GrammarConstraint::Gbnf(s)) => {
-                Some(serde_json::json!({
-                    "structured_outputs": { "grammar": s }
-                }))
-            }
-            Some(GrammarConstraint::JsonSchema(v)) => {
-                Some(serde_json::json!({
-                    "structured_outputs": { "json": v }
-                }))
-            }
-        };
-
-        // Workaround for llama.cpp #20345: grammar constraints (JSON schema for
-        // tool calls) are silently ignored when thinking is active. Suppress
-        // thinking on tool-enabled requests so the model outputs valid JSON.
-        if req.tools.is_some() {
-            let eb = extra_body.get_or_insert_with(|| serde_json::json!({}));
-            if let Some(obj) = eb.as_object_mut() {
-                obj.insert("reasoning_budget".to_string(), serde_json::json!(0));
+                grammar = Some(s.clone())
             }
         }
+
+        // Workaround for llama.cpp #20345: grammar constraints are silently ignored
+        // when thinking is active. Suppress thinking on tool-enabled requests so the
+        // model emits valid JSON. llama.cpp accepts a per-request `reasoning_budget`.
+        let extra_body: Option<serde_json::Value> = if req.tools.is_some() {
+            Some(serde_json::json!({ "reasoning_budget": 0 }))
+        } else {
+            None
+        };
 
         let body = OpenAiChatRequest {
             model: model.clone(),
@@ -321,6 +320,8 @@ impl YoYoTierClient {
             stream: req.stream,
             max_tokens: req.max_tokens,
             temperature: req.temperature,
+            json_schema,
+            grammar,
             extra_body,
             tools: req.tools.as_ref().map(super::anthropic_tools_to_openai),
         };
@@ -541,11 +542,17 @@ struct OpenAiChatRequest {
     max_tokens: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     temperature: Option<f32>,
-    /// vLLM 0.12+ structured output envelope. Shape:
-    /// `{"structured_outputs": {"json": <schema>}}` for JsonSchema,
-    /// `{"structured_outputs": {"grammar": "<string>"}}` for Lark/GBNF.
-    /// Absent when no grammar constraint. The old `guided_json` /
-    /// `guided_grammar` top-level extra_body fields were removed in vLLM 0.12.
+    /// llama.cpp top-level JSON-schema constraint. When present, llama-server
+    /// converts it to a GBNF grammar and forces schema-conformant output.
+    /// This is what actually constrains the deployed Tier B server (llama.cpp);
+    /// `extra_body.structured_outputs` (vLLM format) is ignored by it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    json_schema: Option<serde_json::Value>,
+    /// llama.cpp top-level GBNF grammar string (Lark/GBNF constraints).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    grammar: Option<String>,
+    /// vLLM-only structured-output / reasoning envelope. Retained for the tool
+    /// turn `reasoning_budget` workaround; llama.cpp ignores unknown keys here.
     #[serde(skip_serializing_if = "Option::is_none")]
     extra_body: Option<serde_json::Value>,
     /// Anthropic-format tools array. Passed through when the caller
@@ -853,14 +860,10 @@ mod tests {
         client.complete(&r).await.expect("lark grammar happy path");
 
         let body = captured.lock().unwrap().clone().expect("body captured");
-        assert_eq!(
-            body["extra_body"]["structured_outputs"]["grammar"],
-            serde_json::json!("start: /[a-z]+/")
-        );
-        assert!(
-            body["extra_body"]["structured_outputs"].get("json").is_none(),
-            "json field absent for Lark"
-        );
+        // llama.cpp top-level grammar field (not vLLM extra_body).
+        assert_eq!(body["grammar"], serde_json::json!("start: /[a-z]+/"));
+        assert!(body.get("json_schema").is_none(), "json_schema absent for Lark");
+        assert!(body.get("extra_body").is_none(), "no extra_body without tools");
     }
 
     #[tokio::test]
@@ -892,18 +895,14 @@ mod tests {
         client.complete(&r).await.expect("gbnf grammar happy path");
 
         let body = captured.lock().unwrap().clone().expect("body captured");
-        assert_eq!(
-            body["extra_body"]["structured_outputs"]["grammar"],
-            serde_json::json!(r#"root ::= "yes" | "no""#)
-        );
-        assert!(
-            body["extra_body"]["structured_outputs"].get("json").is_none(),
-            "json field absent for GBNF"
-        );
+        // llama.cpp top-level grammar field (not vLLM extra_body).
+        assert_eq!(body["grammar"], serde_json::json!(r#"root ::= "yes" | "no""#));
+        assert!(body.get("json_schema").is_none(), "json_schema absent for GBNF");
+        assert!(body.get("extra_body").is_none(), "no extra_body without tools");
     }
 
     #[tokio::test]
-    async fn grammar_json_schema_serialises_into_response_format() {
+    async fn grammar_json_schema_serialises_into_top_level_json_schema_field() {
         use std::sync::Mutex;
 
         let captured: Arc<Mutex<Option<serde_json::Value>>> = Arc::new(Mutex::new(None));
@@ -937,11 +936,11 @@ mod tests {
             .expect("json_schema grammar happy path");
 
         let body = captured.lock().unwrap().clone().expect("body captured");
-        assert_eq!(body["extra_body"]["structured_outputs"]["json"], schema);
-        assert!(
-            body["extra_body"]["structured_outputs"].get("grammar").is_none(),
-            "grammar field absent for JsonSchema"
-        );
+        // llama.cpp top-level json_schema field (not vLLM extra_body) — this is what
+        // actually constrains the deployed Tier B server. Confirmed live 2026-06-01.
+        assert_eq!(body["json_schema"], schema);
+        assert!(body.get("grammar").is_none(), "grammar absent for JsonSchema");
+        assert!(body.get("extra_body").is_none(), "no extra_body without tools");
     }
 
     #[tokio::test]
