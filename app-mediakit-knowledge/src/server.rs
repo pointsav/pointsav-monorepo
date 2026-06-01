@@ -1028,8 +1028,8 @@ fn home_chrome(
     stats: &HomeStats,
     guides: &[TopicSummary],
     featured: Option<FeaturedArticle>,
-    dyk: Option<LeapfrogFacts>,
-    ref_inv: Option<ReferenceInvariants>,
+    _dyk: Option<LeapfrogFacts>,
+    _ref_inv: Option<ReferenceInvariants>,
     cat_descriptions: &BTreeMap<String, String>,
     site_title: &str,
     brand_theme: Option<&str>,
@@ -1189,50 +1189,6 @@ fn home_chrome(
                                 a href="/feed.atom" { "Subscribe" }
                                 " · "
                                 a href="/wiki/about" { "About" }
-                            }
-                        }
-                    }
-
-                    // ── Did you know ─────────────────────────────────────────
-                    @if let Some(ref dyk) = dyk {
-                        section #mp-dyk .wiki-home-box .wiki-home-dyk {
-                            h2 { "Did you know\u{00a0}..." }
-                            ul.wiki-home-box-body {
-                                @for fact in &dyk.facts {
-                                    li {
-                                        "… that "
-                                        (fact.text)
-                                        @if !fact.text.ends_with('?') { "?" }
-                                        @if let Some(ref slug) = fact.link_slug {
-                                            " " a href={ "/wiki/" (slug) } { "[more]" }
-                                        }
-                                    }
-                                }
-                            }
-                            div.wiki-home-box-footer {
-                                a href="/special/all-pages" { "Archive" }
-                                " · "
-                                a href="/wiki/contribute" { "Nominate" }
-                            }
-                        }
-                    }
-
-                    // ── Reference invariants ─────────────────────────────────
-                    @if let Some(ref ri) = ref_inv {
-                        section #mp-otd .wiki-home-box .wiki-home-otd {
-                            h2 { (ri.heading) }
-                            ul.wiki-home-box-body.wiki-home-doctrine-list {
-                                @for item in &ri.items {
-                                    li {
-                                        @if let Some(ref label) = item.label {
-                                            strong { (label) " — " }
-                                        }
-                                        (item.text)
-                                        @if let Some(ref slug) = item.link_slug {
-                                            " " a href={ "/wiki/" (slug) } { "[more]" }
-                                        }
-                                    }
-                                }
                             }
                         }
                     }
@@ -1424,8 +1380,19 @@ fn home_chrome(
 /// Convert a category slug to a display label: hyphens become spaces, each word title-cased.
 /// E.g. "design-system" → "Design System", "substrate" → "Substrate".
 fn humanize_category(s: &str) -> String {
+    // Known acronyms / brand tokens that should render upper-case in nav + titles.
+    const ACRONYMS: &[(&str, &str)] = &[
+        ("bim", "BIM"), ("gis", "GIS"), ("os", "OS"), ("slm", "SLM"),
+        ("worm", "WORM"), ("ai", "AI"), ("mba", "MBA"), ("ppn", "PPN"),
+        ("ews", "EWS"), ("imap", "IMAP"), ("vpn", "VPN"), ("udp", "UDP"),
+        ("api", "API"), ("ui", "UI"), ("ux", "UX"), ("sel4", "seL4"),
+        ("ifc", "IFC"), ("pdf", "PDF"), ("svg", "SVG"), ("id", "ID"),
+    ];
     s.split('-')
         .map(|word| {
+            if let Some((_, up)) = ACRONYMS.iter().find(|(low, _)| *low == word) {
+                return (*up).to_string();
+            }
             let mut c = word.chars();
             match c.next() {
                 None => String::new(),
@@ -1434,6 +1401,70 @@ fn humanize_category(s: &str) -> String {
         })
         .collect::<Vec<_>>()
         .join(" ")
+}
+
+/// Build the docs left-navigation HTML: every ratified category with its
+/// articles listed underneath, the active article highlighted, and the
+/// active category's section expanded.
+///
+/// Deliberately cheap: a `read_dir` of each category subdirectory (stat-only,
+/// no file-content parsing) so it adds well under 10 ms per request and always
+/// reflects the current content tree. Article labels are title-cased from the
+/// filename stem via [`humanize_category`].
+fn render_docs_sidenav(content_dir: &FsPath, active_slug: &str) -> String {
+    use std::fmt::Write as _;
+    let mut out = String::with_capacity(8192);
+    out.push_str("<nav class=\"docs-sidenav\" aria-label=\"Documentation\">");
+    out.push_str("<div class=\"docs-sidenav__inner\">");
+
+    for cat in RATIFIED_CATEGORIES {
+        let dir = content_dir.join(cat);
+        let mut articles: Vec<(String, String)> = Vec::new();
+        if let Ok(entries) = std::fs::read_dir(&dir) {
+            for e in entries.flatten() {
+                let path = e.path();
+                if path.extension().and_then(|x| x.to_str()) != Some("md") {
+                    continue;
+                }
+                let stem = match path.file_stem().and_then(|s| s.to_str()) {
+                    Some(s) => s,
+                    None => continue,
+                };
+                // Skip Spanish siblings, index, and partials.
+                if stem.ends_with(".es") || stem == "index" || stem.starts_with('_') {
+                    continue;
+                }
+                articles.push((format!("{cat}/{stem}"), humanize_category(stem)));
+            }
+        }
+        if articles.is_empty() {
+            continue;
+        }
+        articles.sort_by(|a, b| a.1.to_lowercase().cmp(&b.1.to_lowercase()));
+        let any_active = articles.iter().any(|(s, _)| s == active_slug);
+        let open = if any_active { " open" } else { "" };
+        let _ = write!(
+            out,
+            "<details class=\"docs-sidenav__cat\"{open}><summary>{}</summary><ul class=\"docs-sidenav__list\">",
+            humanize_category(cat)
+        );
+        for (slug, title) in &articles {
+            if slug == active_slug {
+                let _ = write!(
+                    out,
+                    "<li><a class=\"docs-sidenav__link is-active\" aria-current=\"page\" href=\"/wiki/{slug}\">{title}</a></li>"
+                );
+            } else {
+                let _ = write!(
+                    out,
+                    "<li><a class=\"docs-sidenav__link\" href=\"/wiki/{slug}\">{title}</a></li>"
+                );
+            }
+        }
+        out.push_str("</ul></details>");
+    }
+    out.push_str("</div></nav>");
+    out
 }
 
 // ─── Placeholder index (index.md absent) ───────────────────────────────────
@@ -2015,6 +2046,7 @@ async fn wiki_page_inner(
         q.printable,
         &body_fingerprint,
         &claim_rail_html,
+        &render_docs_sidenav(&state.content_dir, &slug),
     )
     .into_response())
 }
@@ -2081,8 +2113,9 @@ fn wiki_chrome(
     pending_count: i64,
     redirected_from: Option<&str>,
     printable: bool,
-    body_blake3: &str,
+    _body_blake3: &str,
     claim_rail_html: &str,
+    sidenav: &str,
 ) -> Markup {
     let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
     let woodfine_projects = brand_theme == Some("woodfine-projects");
@@ -2149,16 +2182,6 @@ fn wiki_chrome(
             body class=(if printable { "printable" } else { "" }) data-slug=(slug) {
                 div.reading-progress-bar aria-hidden="true" {}
                 a.skip-to-content href="#mw-content-text" { "Skip to content" }
-                // Sticky header — appears on scroll; minimal chrome only
-                div.wiki-sticky-header #wiki-sticky-header aria-hidden="true" {
-                    div.sticky-inner {
-                        a.sticky-logo href="/" { (site_title) }
-                        span.sticky-title #sticky-title { (title) }
-                        form.sticky-search action="/search" method="get" {
-                            input type="search" name="q" placeholder="Search…" autocomplete="off";
-                        }
-                    }
-                }
                 header.topnav {
                     nav.left {
                         a href="/wiki/disclaimers" { "Disclaimer" }
@@ -2287,122 +2310,33 @@ fn wiki_chrome(
                     { "History" }
                 }
 
-                // Article-actions tab bar (wiki_chrome only — not home_chrome or chrome)
-                nav.article-tabs aria-label="Article actions" {
-                    div.article-tabs__left {
-                        a.article-tab.article-tab--article.article-tab--active
-                            href={ "/wiki/" (slug) }
-                            aria-current="page"
-                        { "Article" }
-                        a.article-tab.article-tab--talk
-                            href={ "/talk/" (slug) }
-                        { "Talk" }
-                    }
-                    div.article-tabs__right {
-                        a.article-tab.article-tab--read
-                            href={ "/wiki/" (slug) }
-                        { "Read" }
-                        a.article-tab.article-tab--edit
-                            href={ "/wiki/" (slug) "?action=edit" }
-                            accesskey="e"
-                        { "Edit" }
-                        a.article-tab.article-tab--history
-                            href={ "/history/" (slug) }
-                            accesskey="h"
-                        { "History" }
-                        details.tools-dropdown {
-                            summary.article-tab {
-                                "Tools "
-                                span.tools-caret { "▾" }
-                            }
-                            ul.tools-menu {
-                                li { a href={ "/special/cite/" (slug) } { "Cite this page" } }
-                                li { a href={ "/wiki/" (slug) "?oldid=HEAD" } { "Permanent link" } }
-                                li { a href={ "/wiki/" (slug) "?action=print" } { "Printable version" } }
-                                li { a href={ "/special/pageinfo/" (slug) } { "Page information" } }
-                                li { a href={ "/special/whatlinkshere/" (slug) } { "What links here" } }
-                            }
-                        }
-                        button.article-tab.reading-mode-btn #reading-mode-btn
-                            title="Reading mode"
-                            aria-pressed="false"
-                        { "Reading mode" }
-                    }
-                }
-
-                // Article layout: sidebar + article body (+ optional claim-rail at ≥1280px)
+                // Article layout: docs side-nav + article body (+ optional claim-rail at ≥1280px)
                 div.shell {
 
-                    // --- Sidebar: navigation portlet + page tools ---
-                    nav.sidebar aria-label="Site navigation" {
-                        h3.wiki-portlet-heading { "Navigation" }
-                        ul.wiki-portlet-links {
-                            li { a href="/" { "Main page" } }
-                            li { a href="/random" { "Random article" } }
-                            li { a href="/wanted" { "Wanted articles" } }
-                            li { a href="/special/all-pages" { "All pages" } }
-                            li { a href="/special/categories" { "Categories" } }
-                            li { a href="/special/recent-changes" { "Recent changes" } }
-                            li { a href="/special/statistics" { "Statistics" } }
-                            li { a href="/search" { "Search" } }
-                        }
-                        h3.wiki-portlet-heading { "Tools" }
-                        ul.wiki-portlet-links {
-                            li { a href={ "/special/whatlinkshere/" (slug) } { "What links here" } }
-                            li { a href={ "/special/pageinfo/" (slug) } { "Page information" } }
-                            li { a href={ "/special/cite/" (slug) } { "Cite this page" } }
-                            li { a href={ "/git/" (slug) } { "Download as Markdown" } }
-                        }
-                    }
+                    // --- Docs left navigation: full category/article tree ---
+                    (PreEscaped(sidenav))
 
                     // --- Article body column (two-column: prose + TOC) ---
                     main.article-wrap {
                     article.article__body data-content-type=(fm.content_type.as_deref().unwrap_or("article")) {
 
-                        // Title row: tabs (top-left) + title + language switcher + action tabs (top-right)
-                        div.wiki-title-row {
-                            // Article / Talk tabs — top-left.
-                            // 21st-century-Wikipedia: Talk is auth-gated only.
-                            // For anonymous readers, only the Article tab renders
-                            // here; Talk is reachable from the authenticated FAB
-                            // overflow menu instead (Section 6 of the hybrid CSS).
-                            nav.wiki-page-tabs aria-label="Page tabs" {
-                                a.wiki-tab.wiki-tab-active
-                                    href={ "/wiki/" (slug) }
-                                    aria-current="page"
-                                { "Article" }
-                                @if is_authenticated {
-                                    a.wiki-tab
-                                        href={ "/talk/" (slug) }
-                                        accesskey="t"
-                                        title="Discussion page"
-                                    { "Talk" }
+                        // Clean product-docs article header: breadcrumb, title,
+                        // content-type badge, lede, language switcher, last-edited.
+                        // No Wikipedia tabs / quality badge / integrity fingerprint.
+                        header.doc-header {
+                            @if let Some(ref cat) = fm.category {
+                                @if cat != "root" {
+                                    nav.crumb aria-label="breadcrumb" {
+                                        a href="/" { "Home" }
+                                        " › "
+                                        a href={ "/category/" (cat) } { (humanize_category(cat)) }
+                                        " › "
+                                        (title)
+                                    }
                                 }
                             }
-
-                            // Page title + language switcher + tagline (centre)
-                            // Language button sits BELOW the H1, left-aligned —
-                            // matching MediaWiki Vector 2022 (.mw-portlet-lang placement).
-                            div.wiki-title-block {
-                                // Hybrid Section 5: breadcrumb above H1 (Design B)
-                                @if let Some(ref cat) = fm.category {
-                                    @if cat != "root" {
-                                        nav.crumb aria-label="breadcrumb" {
-                                            a href="/" { "Home" }
-                                            " › "
-                                            a href={ "/category/" (cat) } { (humanize_category(cat)) }
-                                            " › "
-                                            (title)
-                                        }
-                                    }
-                                }
-                                h1.article__title {
-                                    (title)
-                                    @if let Some(ref q) = fm.quality {
-                                        span class={ "quality-badge quality-" (q) } { (q) }
-                                    }
-                                }
-                                // Phase 5: content-type badge (non-default types only)
+                            div.doc-header__titlewrap {
+                                h1.article__title { (title) }
                                 @if let Some(ref ct) = fm.content_type {
                                     @if ct != "article" {
                                         span.content-type-badge data-type=(ct) {
@@ -2417,22 +2351,21 @@ fn wiki_chrome(
                                         }
                                     }
                                 }
+                            }
+                            @if let Some(ref desc) = fm.short_description {
+                                p.article__lede { (desc) }
+                            }
+                            div.doc-header__meta {
                                 @if let Some(ref date) = fm.last_edited {
-                                    div.article-provenance {
-                                        "Last edited " (date)
+                                    span.doc-header__edited {
+                                        "Updated " (date)
                                         " · "
-                                        a href={ "/history/" (slug) } { "View history" }
+                                        a href={ "/history/" (slug) } { "History" }
                                     }
-                                }
-                                div.article-integrity {
-                                    span.integrity-label { "Fingerprint" }
-                                    code.integrity-hash { (body_blake3) }
-                                    a.integrity-history-link href={ "/history/" (slug) } { "revision history" }
                                 }
                                 @if let Some(translations) = &fm.translations {
                                     @if !translations.is_empty() {
-                                        div.wiki-lang-switcher {
-                                            span.wiki-lang-globe aria-hidden="true" {}
+                                        span.wiki-lang-switcher {
                                             @for (lang, lang_slug) in translations {
                                                 @let lang_label = match lang.as_str() {
                                                     "es" => "Español",
@@ -2455,78 +2388,6 @@ fn wiki_chrome(
                                         }
                                     }
                                 }
-                                p.wiki-tagline { "From " (site_title.trim_end_matches(" Wiki")) }
-                                @if let Some(ref desc) = fm.short_description {
-                                    p.article__lede { (desc) }
-                                }
-                            }
-
-                            // Read / History tabs — top-right (Edit/View source in article footer)
-                            nav #p-views aria-label="Page actions" {
-                                a.wiki-tab.wiki-tab-active
-                                    href={ "/wiki/" (slug) }
-                                    accesskey="r"
-                                    aria-current="page"
-                                { "Read" }
-                                a.wiki-tab
-                                    href={ "/history/" (slug) }
-                                    accesskey="h"
-                                { "View history" }
-                            }
-                            // "More" actions dropdown (caret after View history)
-                            nav.wiki-cactions #p-cactions aria-label="More actions" {
-                                details #p-cactions-details {
-                                    summary.wiki-cactions-toggle title="More actions" { "▾" }
-                                    ul.wiki-cactions-menu {
-                                        li { a href={ "/wiki/" (slug) "?printable=yes" } { "Print / Export" } }
-                                        li { a href={ "/special/pageinfo/" (slug) } { "Page information" } }
-                                        li { a href={ "/special/cite/" (slug) } { "Cite this page" } }
-                                        li { a href={ "/git/" (slug) } { "Download as Markdown" } }
-                                    }
-                                }
-                            }
-                        }
-
-                        // Article metadata row (last-edited / category / editor)
-                        @if fm.last_edited.is_some() || fm.category.is_some() {
-                            dl.article__meta {
-                                @if let Some(ref date) = fm.last_edited {
-                                    div.article__meta-item {
-                                        dt { "Last edited" }
-                                        dd { time datetime=(date) { (date) } }
-                                    }
-                                }
-                                @if let Some(ref cat) = fm.category {
-                                    @if cat != "root" {
-                                        div.article__meta-item {
-                                            dt { "Category" }
-                                            dd { a href={ "/category/" (cat) } { (humanize_category(cat)) } }
-                                        }
-                                    }
-                                }
-                                @if let Some(editor) = fm.extra.get("editor").and_then(|v| v.as_str()) {
-                                    div.article__meta-item {
-                                        dt { "Editor" }
-                                        dd { (editor) }
-                                    }
-                                }
-                            }
-                        }
-
-                        // IVC masthead band placeholder (UX-DESIGN.md §4.5)
-                        div.wiki-ivc-band role="status" aria-label="Verification status" {
-                            span.ivc-band-text {
-                                "Citation verification not yet available."
-                            }
-                            // Reader density toggle (UX-DESIGN.md §4.6)
-                            // Preference persists to localStorage; no machinery honours it
-                            // until Phase 7. Default: Exceptions only.
-                            div.wiki-density-toggle {
-                                span.density-label { "Citation marks:" }
-                                button.density-btn #density-off { "Off" }
-                                button.density-btn #density-exceptions.density-btn-active
-                                    { "Exceptions only" }
-                                button.density-btn #density-all { "All" }
                             }
                         }
 
@@ -2678,25 +2539,15 @@ fn wiki_chrome(
 
                     // --- Right-side TOC (sticky, beside article prose) ---
                     @if !numbered_headings.is_empty() {
-                        aside.toc {
-                            div.toc__header {
-                                span.toc__title { "Contents" }
-                                button.toc-toggle #toc-toggle
-                                    aria-expanded="true"
-                                    title="Toggle table of contents"
-                                { "[hide]" }
-                                button.toc-pin-btn #toc-pin-btn
-                                    aria-pressed="false"
-                                    title="Pin table of contents"
-                                { "Pin" }
-                            }
-                            ol #toc-list {
-                                @for (id, text, level, num) in &numbered_headings {
-                                    li class={ "toc-level-" (level) } {
-                                        a href={ "#" (id) } {
-                                            span.toc-numb { (num) }
-                                            " "
-                                            (text)
+                        @if !numbered_headings.is_empty() {
+                            aside.toc {
+                                div.toc__header {
+                                    span.toc__title { "On this page" }
+                                }
+                                ol #toc-list {
+                                    @for (id, text, level, _num) in &numbered_headings {
+                                        li class={ "toc-level-" (level) } {
+                                            a href={ "#" (id) } { (text) }
                                         }
                                     }
                                 }
@@ -2710,19 +2561,12 @@ fn wiki_chrome(
                     }
                 }
 
-                // Hybrid Section 6: floating action bar (auth-gated by CSS).
-                // Emitted unconditionally; CSS hides it for `html[data-auth="anon"]`.
-                // Talk/Discussion lives ONLY in the overflow menu — never on the
-                // reading surface for anonymous readers.
-                div.wiki-fab aria-label="Article tools" {
-                    a.fab-edit href={ "/edit/" (slug) } { "Edit" }
-                    details.fab-overflow-wrap {
-                        summary.fab-overflow title="More actions" { "···" }
-                        ul.fab-overflow-menu {
-                            li { a href={ "/history/" (slug) } { "History" } }
-                            li { a href={ "/talk/" (slug) } { "Talk" } }
-                        }
-                    }
+                // "Edit this page" affordance — docs convention; auth-gated by CSS
+                // (hidden for `html[data-auth="anon"]`). No floating Wikipedia FAB.
+                div.doc-edit-row {
+                    a.doc-edit-link href={ "/edit/" (slug) } { "Edit this page" }
+                    " · "
+                    a.doc-edit-link href={ "/git/" (slug) } { "View source" }
                 }
 
                 (shell_footer(brand_instance, Some(slug)))
@@ -4139,10 +3983,10 @@ mod tests {
 
     // Phase 1.1 chrome tests — additive; all existing tests remain unchanged.
 
-    /// Verify that the wiki page renders the Article / Talk tab pair and the
-    /// Read / Edit / View history tabs (items 1 and 2 in the UX inventory).
+    /// Verify the product-docs chrome: a docs left-navigation is emitted and the
+    /// Wikipedia article-tab bar is gone.
     #[tokio::test]
-    async fn wiki_page_has_navigation_tabs() {
+    async fn wiki_page_has_docs_sidenav() {
         let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
@@ -4158,39 +4002,24 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
-            html.contains("Article"),
-            "Article tab should appear: {html}"
+            html.contains("docs-sidenav"),
+            "docs left-navigation should be emitted: {html}"
         );
-        // 21st-century-Wikipedia: Talk tab is auth-gated — it must NOT appear in
-        // the anonymous reading-surface tab bar. It is still reachable from the
-        // authenticated floating-action-bar overflow menu, but never on the
-        // anonymous reader's article chrome. Hybrid jury report (2026-05-24).
-        // (We assert absence in the visible page-tabs nav by checking the
-        //  rendered tab markup — the FAB markup is emitted unconditionally
-        //  but the overflow `Talk` label is inside a <details> overflow menu
-        //  hidden by CSS for `html[data-auth="anon"]`, so its plain-text
-        //  occurrence in the HTML body still satisfies the auth-gating
-        //  contract at the visible-chrome level. We assert here that no
-        //  visible "wiki-tab" anchor carries the Talk label.)
-        assert!(
-            !html.contains(r#"class="wiki-tab" href="/talk/"#)
-                && !html.contains(r#"accesskey="t""#),
-            "Talk tab must NOT render as a wiki-tab for anonymous readers: {html}"
-        );
-        assert!(html.contains("Read"), "Read tab should appear: {html}");
         assert!(
             html.contains("View source"),
-            "View source link should appear (footer): {html}"
+            "View source link should appear (edit row): {html}"
         );
+        // Wikipedia chrome must be gone.
         assert!(
-            html.contains("View history"),
-            "View history tab should appear: {html}"
+            !html.contains("article-tabs") && !html.contains("wiki-page-tabs"),
+            "Wikipedia tab bars must not render: {html}"
         );
     }
 
-    /// Verify that the tagline appears below the page title (item 9).
+    /// Verify the Wikipedia "From <site>" tagline is gone and the clean
+    /// product-docs header renders instead.
     #[tokio::test]
-    async fn wiki_page_has_tagline() {
+    async fn wiki_page_has_clean_header() {
         let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
@@ -4205,14 +4034,18 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
-            html.contains("From PointSav Documentation"),
-            "tagline should appear: {html}"
+            html.contains("doc-header"),
+            "clean docs header should appear: {html}"
+        );
+        assert!(
+            !html.contains("From PointSav Documentation"),
+            "Wikipedia tagline must not render: {html}"
         );
     }
 
-    /// Verify that the IVC masthead band placeholder renders on every TOPIC.
+    /// Verify the Wikipedia IVC masthead band / density toggle are gone.
     #[tokio::test]
-    async fn wiki_page_has_ivc_masthead_band() {
+    async fn wiki_page_has_no_ivc_band() {
         let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
@@ -4227,8 +4060,8 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
-            html.contains("wiki-ivc-band"),
-            "IVC masthead band container should appear: {html}"
+            !html.contains("wiki-ivc-band"),
+            "IVC masthead band must not render: {html}"
         );
     }
 
@@ -4286,9 +4119,9 @@ mod tests {
         );
     }
 
-    /// Verify that the reader density toggle buttons render (UX-DESIGN.md §4.6).
+    /// Verify the Wikipedia reader density toggle is gone from the clean chrome.
     #[tokio::test]
-    async fn wiki_page_has_density_toggle() {
+    async fn wiki_page_has_no_density_toggle() {
         let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
@@ -4303,16 +4136,8 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
-            html.contains("Exceptions only"),
-            "density toggle should appear: {html}"
-        );
-        assert!(
-            html.contains("density-off"),
-            "Off button should appear: {html}"
-        );
-        assert!(
-            html.contains("density-all"),
-            "All button should appear: {html}"
+            !html.contains("wiki-density-toggle"),
+            "density toggle must not render: {html}"
         );
     }
 
