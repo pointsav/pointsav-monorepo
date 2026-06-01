@@ -17,24 +17,23 @@ status: pending
 msg-id: project-knowledge-20260601-content-audit-dead-links
 ---
 
-The new `check` subcommand (commit `4c8523cf`) ran against the live documentation content
-(content-wiki-documentation + both fleet-deployment guide roots): 334 pages, **38 dead `[[wikilink]]`
-targets + 6 pages typed `topic` but missing the required `slug`**. Full report staged at
-`.agent/drafts-outbound/CONTENT-AUDIT-dead-links-2026-06-01.md`.
+The `check` subcommand — now **code-span-aware** (commit `0580e6d4`) — ran against the live
+documentation content (content-wiki-documentation + both fleet-deployment guide roots): 334 pages,
+**17 real dead `[[wikilink]]` targets + 6 pages typed `topic` but missing the required `slug`**.
+(Was 38 before the fix; example `[[wikilink]]`/`[[slug]]` syntax inside code no longer counts.)
+Full report staged at `.agent/drafts-outbound/CONTENT-AUDIT-dead-links-2026-06-01.md`.
 
-Action for project-editorial (content fixes — editorial-owned):
-- **Triage the dead links.** Some are false positives — illustrative `[[wikilink]]` / `[[slug]]`
-  examples inside syntax-documentation pages (e.g. `substrate/substrate-native-compatibility`).
-  The rest are real broken targets: write the missing page or correct the link.
+Action for project-editorial (content fixes — editorial-owned), two clusters:
+- **Stray-backslash links** (`[[slug\]]`) — escape artifacts/typos in `systems/os-family-overview`
+  and `systems/mediakit-os`; remove the backslash or write the target.
+- **Genuinely-missing targets** — `[[os-totebox]]`, `[[regional-name-resolution-architecture]]`,
+  `[[topic-knowledge-wiki-home-page-design]]`: write the page or correct the link.
 - **The 6 guides** (`guide-deployment`, `guide-operate-knowledge-wiki`, `guide-provision-node`,
-  `guide-telemetry-integration`, `guide-telemetry-operations`, …) are typed `topic` but lack a `slug`
-  — either add `slug:` or retype them `guide` (per the `type: guide` formalization in the staged
-  doc-alignment directive). These live in the fleet-deployment repos.
-- Note: since L18 shipped, these dead links already render as plain text (not broken anchors) — this
-  is cleanup, not a live breakage.
-
-(Tooling enhancement for later: the gate is regex-based and counts `[[ ]]` inside code/example
-spans; skipping fenced/inline code would remove the example-syntax false positives.)
+  `guide-keep-the-home-page-the-gold-standard`, `guide-telemetry-integration`,
+  `guide-telemetry-operations`) are typed `topic` but lack a `slug` — add `slug:` or retype `guide`
+  (per the `type: guide` formalization in the staged doc-alignment directive). In fleet-deployment repos.
+- Note: since L18 shipped, these already render as plain text (not broken anchors) — cleanup, not a
+  live breakage. Once triaged to zero, Command can wire `check --strict` as a pre-promote gate.
 
 ---
 from: totebox@project-knowledge
