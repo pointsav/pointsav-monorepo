@@ -36,11 +36,14 @@ Plus today's admin commits (`fe2dcd6f` cleanup-log, `d6f098ba` NEXT+outbox) in t
 
 ### 1. Stage 6 — promote sub-clone commits to canonical
 
-The sub-clone `main` is 5+ commits ahead of canonical (`origin/main = 371e968c`).
-The Phase 8 commits apply cleanly on top (no Cargo.lock conflict expected — only
-app-console-content gained rusqlite/chrono deps).
+Our sub-clone `main` (`5bc94492`) is 5 commits ahead of the merge-base with canonical:
+- Merge-base: `371e968c` (Phase 8 audit viewer — previously cherry-picked to canonical)
+- Canonical `origin/main` at check time: `4969356a` (Cargo.lock update on knowledge platform)
+- Our 5 commits: `f33b8e14` → `6010a3a2` → `ee19a89f` → `47eaf264` → `5bc94492`
 
-Cherry-pick or rebase `f33b8e14..HEAD` onto canonical and promote via `bin/promote.sh`.
+Cherry-pick or rebase `f33b8e14..5bc94492` onto canonical `origin/main` and promote via
+`bin/promote.sh`. The knowledge-platform commits on canonical don't touch `app-console-*`
+or `app-console-keys` — no merge conflicts expected other than Cargo.lock (auto-mergeable).
 
 ### 2. Binary build — os-console
 
