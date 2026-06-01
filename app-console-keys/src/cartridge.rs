@@ -38,4 +38,7 @@ pub trait Cartridge: Send {
     }
     fn render(&mut self, frame: &mut Frame, area: Rect);
     fn handle_event(&mut self, event: &Event) -> CartridgeAction;
+    /// Called by the chassis after each terminal.draw() to emit OSC 8 hyperlinks
+    /// for any rendered links. Default no-op; override in cartridges that render links.
+    fn flush_hyperlinks(&self) {}
 }

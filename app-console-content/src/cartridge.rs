@@ -28,6 +28,14 @@ use crate::proofreader::{self, ProofreadResponse, DEFAULT_PROTOCOL_IDX, PROTOCOL
 use crate::search::{self, SearchResult};
 
 const SPINNER: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+
+/// A hyperlink position recorded during render — consumed by flush_hyperlinks().
+struct HyperlinkTarget {
+    col: u16,
+    row: u16,
+    text: String,
+    url: String,
+}
 const PLACEHOLDER: &str =
     "Paste or type text — Ctrl-S: submit · Tab: protocol · /new: draft · /search: search · /pdf: view PDF";
 
@@ -104,6 +112,8 @@ pub struct ContentCartridge {
     pdf_sixel: bool,
     pdf_font_size: (u16, u16),
     truecolor: bool,
+    // Hyperlinks produced by the most recent render() call — consumed by flush_hyperlinks().
+    pending_hyperlinks: Vec<HyperlinkTarget>,
 }
 
 impl ContentCartridge {
@@ -172,6 +182,7 @@ impl ContentCartridge {
             pdf_sixel: false,
             pdf_font_size: (10, 20),
             truecolor: false,
+            pending_hyperlinks: Vec::new(),
         }
     }
 
@@ -445,7 +456,8 @@ impl ContentCartridge {
         scroll: u16,
         loading: bool,
         sel_bg: Color,
-    ) {
+        content_endpoint: &str,
+    ) -> Vec<HyperlinkTarget> {
         let title = format!(
             " F4: Content — Search: \"{}\"    [j/k: navigate  Esc: back] ",
             query
@@ -462,7 +474,7 @@ impl ContentCartridge {
                 Paragraph::new("  Searching…").style(Style::default().fg(Color::Yellow)),
                 inner,
             );
-            return;
+            return Vec::new();
         }
 
         if results.is_empty() {
@@ -470,7 +482,7 @@ impl ContentCartridge {
                 Paragraph::new("  No results.").style(Style::default().fg(Color::DarkGray)),
                 inner,
             );
-            return;
+            return Vec::new();
         }
 
         let lines: Vec<Line> = results
@@ -505,6 +517,22 @@ impl ContentCartridge {
                 &mut sb,
             );
         }
+
+        // Build hyperlink targets for each visible result title.
+        results
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| {
+                let row = *i as u16;
+                row >= offset && row < offset + visible
+            })
+            .map(|(i, r)| HyperlinkTarget {
+                col: inner.x + 2,
+                row: inner.y + (i as u16 - offset),
+                text: r.title.clone(),
+                url: format!("{}/wiki/{}", content_endpoint, r.slug),
+            })
+            .collect()
     }
 
     fn render_pdf_view(&mut self, frame: &mut Frame, area: Rect, path: &str, page: u32, total: u32) {
@@ -1143,6 +1171,7 @@ impl Cartridge for ContentCartridge {
             ContentState::Error { message } => Cmd::Error(message.clone()),
         };
 
+        self.pending_hyperlinks.clear();
         match cmd {
             Cmd::Input(pidx) => self.render_input(frame, area, pidx),
             Cmd::Picker(sel) => Self::render_picker(frame, area, sel, self.selection_bg()),
@@ -1152,7 +1181,10 @@ impl Cartridge for ContentCartridge {
                 Self::render_drafting(frame, area, &t, &buf, done, err.as_deref(), sc)
             }
             Cmd::Search(q, results, sel, sc, loading) => {
-                Self::render_search_results(frame, area, &q, &results, sel, sc, loading, self.selection_bg())
+                self.pending_hyperlinks = Self::render_search_results(
+                    frame, area, &q, &results, sel, sc, loading, self.selection_bg(),
+                    &self.content_endpoint,
+                );
             }
             Cmd::Pdf(path, page, total) => self.render_pdf_view(frame, area, &path, page, total),
             Cmd::Error(msg) => Self::render_error(frame, area, &msg),
@@ -1201,6 +1233,21 @@ impl Cartridge for ContentCartridge {
                 self.reset_textarea(DEFAULT_PROTOCOL_IDX);
                 CartridgeAction::Consumed
             }
+        }
+    }
+
+    fn flush_hyperlinks(&self) {
+        use crossterm::{cursor::MoveTo, style::Print, ExecutableCommand};
+        let mut stdout = std::io::stdout();
+        for h in &self.pending_hyperlinks {
+            let osc8 = format!(
+                "\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\",
+                h.url,
+                &h.text[..h.text.len().min((h.text.len()).max(1))]
+            );
+            let _ = stdout
+                .execute(MoveTo(h.col, h.row))
+                .and_then(|s| s.execute(Print(osc8)));
         }
     }
 
