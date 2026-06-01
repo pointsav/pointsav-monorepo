@@ -26,6 +26,14 @@ service-content/data/
 # Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock
 
+# Per-session rolling context — ephemeral, per-archive, NOT shared across cluster branches.
+# Cross-archive contamination root cause: these files were tracked in the monorepo git;
+# Stage-6 rebases brought another archive's session entries into this clone.
+# Untracked 2026-06-02 (Command Session — see ops(mailbox-system): hardening commit).
+# Each archive manages its own session-context.md locally without git.
+.agent/memory/session-context.md
+.agent/memory/session-context-archive.md
+
 # Mailbox state — per-archive, never tracked in canonical
 # (canonical-tracked mailbox files were the root cause of cross-archive
 # contamination — see conventions/mailbox-scope-discipline.md)
