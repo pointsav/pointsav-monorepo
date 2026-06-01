@@ -461,7 +461,11 @@ fn inject_wiki_prefixes(html: &str, content_dir: &std::path::Path) -> String {
                         false
                     }
                 };
-                let redlink_class = if article_exists { "" } else { " class=\"wiki-redlink\"" };
+                let redlink_class = if article_exists {
+                    ""
+                } else {
+                    " class=\"wiki-redlink\""
+                };
 
                 out.push_str(prefix);
                 out.push_str("/wiki/");
