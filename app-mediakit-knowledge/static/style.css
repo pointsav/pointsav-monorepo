@@ -1287,10 +1287,10 @@ html[data-theme="dark"] .side-link.is-active {
 html[data-theme="dark"] .hero__eyebrow { color: var(--link); }
 .hero__title {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 600;
   font-size: clamp(34px, 4.2vw, 52px);
   line-height: 1.08;
-  letter-spacing: -0.005em;
+  letter-spacing: var(--tracking-display);
   color: var(--fg-1);
   margin-bottom: 20px;
   max-width: 880px;
@@ -1352,10 +1352,10 @@ html[data-theme="dark"] .featured__row { color: var(--link); }
 }
 .featured__title {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 600;
   font-size: 30px;
   line-height: 1.15;
-  letter-spacing: -0.005em;
+  letter-spacing: var(--tracking-heading);
   color: var(--fg-1);
 }
 .featured__title a { color: inherit; }
