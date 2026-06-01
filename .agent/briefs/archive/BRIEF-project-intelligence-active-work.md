@@ -1,6 +1,9 @@
 ---
 artifact: brief
-status: active
+status: archived
+contamination_note: >-
+  Contaminated in project-data; belongs to project-intelligence. Command: redistribute to clones/project-intelligence/.agent/briefs/
+archived_date: 2026-06-01
 created: 2026-06-01
 updated: 2026-06-01 (persistent processed_ledgers DONE; audit sha256 DONE)
 author: totebox@project-intelligence (claude-sonnet-4-6)

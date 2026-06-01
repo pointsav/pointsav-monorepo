@@ -1,6 +1,9 @@
 ---
 artifact: brief
 status: archived
+contamination_note: >-
+  Contaminated in project-data; belongs to project-intelligence. Command: redistribute to clones/project-intelligence/.agent/briefs/
+archived_date: 2026-06-01
 archived: 2026-05-23
 absorbed: 2026-05-24
 absorbed_into: BRIEF-slm-substrate-master.md
