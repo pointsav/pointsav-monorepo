@@ -1147,7 +1147,13 @@ fn home_chrome(
 
                     // ── Hero banner ──────────────────────────────────────────
                     section.hero #mp-topbanner {
-                        div.hero__eyebrow { "Knowledge Wiki" }
+                        div.hero__eyebrow {
+                            (match brand_instance {
+                                "projects"  => "Projects",
+                                "corporate" => "Corporate",
+                                _           => "Documentation",
+                            })
+                        }
                         h1.hero__title { (site_title) }
                         @if !home_html.is_empty() {
                             div.hero__lede { (PreEscaped(home_html)) }
@@ -1219,33 +1225,22 @@ fn home_chrome(
                         }
                     }
 
-                    // ── Institutional standfirst ─────────────────────────────
-                    p.home-standfirst {
-                        (match brand_instance {
-                            "projects"  => "Research papers, project narratives, and strategic documents for Woodfine Management Corp.",
-                            "corporate" => "Governance documents, policy frameworks, and corporate reference for Woodfine Management Corp.",
-                            _           => "Technical reference, architecture guides, and operational runbooks for the PointSav platform.",
-                        })
-                    }
-
                     // ── Browse by area ───────────────────────────────────────
                     div.section-head {
                         h2 { "Browse by area" }
                     }
                     div.cat-grid {
-                        @for cat in RATIFIED_CATEGORIES {
-                            @let all_in_cat = buckets.get(*cat).map(|v| v.as_slice()).unwrap_or(&[]);
-                            @let count = all_in_cat.iter()
+                        @for cat in ordered_categories(buckets) {
+                            @let count = buckets.get(&cat).map(|v| v.as_slice()).unwrap_or(&[]).iter()
                                 .filter(|t| t.status.as_deref() != Some("stub"))
                                 .count();
                             a.cat-card href={ "/category/" (cat) } {
                                 div.cat-card__head {
-                                    span.cat-card__name { (humanize_category(cat)) }
+                                    span.cat-card__name { (humanize_category(&cat)) }
+                                    span.cat-card__count { (count) }
                                 }
-                                @if let Some(desc) = cat_descriptions.get(*cat) {
+                                @if let Some(desc) = cat_descriptions.get(&cat) {
                                     p.cat-card__desc { (desc) }
-                                } @else if count == 0 {
-                                    p.cat-card__desc { "In preparation." }
                                 }
                             }
                         }
@@ -1403,68 +1398,130 @@ fn humanize_category(s: &str) -> String {
         .join(" ")
 }
 
-/// Build the docs left-navigation HTML: every ratified category with its
-/// articles listed underneath, the active article highlighted, and the
-/// active category's section expanded.
+/// HTML-escape text destined for an attribute-free element body / nav label.
+fn esc(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}
+
+/// The categories that actually carry (non-stub) articles in `buckets`, in
+/// display order: the ratified platform categories first (in their canonical
+/// order), then any other categories the content declares — `bim`, `company`,
+/// `operations`, etc. — alphabetically. The `uncategorised` bucket is omitted.
 ///
-/// Deliberately cheap: a `read_dir` of each category subdirectory (stat-only,
-/// no file-content parsing) so it adds well under 10 ms per request and always
-/// reflects the current content tree. Article labels are title-cased from the
-/// filename stem via [`humanize_category`].
-fn render_docs_sidenav(content_dir: &FsPath, active_slug: &str) -> String {
+/// This is what makes the navigation correct across all three instances: the
+/// documentation wiki uses the ratified categories, while the Woodfine projects
+/// and corporate wikis declare their own (`bim`, `company`, `operations`, …).
+fn ordered_categories(buckets: &CategoryBuckets) -> Vec<String> {
+    let has_real = |c: &str| {
+        buckets
+            .get(c)
+            .map(|v| v.iter().any(|t| t.status.as_deref() != Some("stub")))
+            .unwrap_or(false)
+    };
+    let mut seen = std::collections::HashSet::new();
+    let mut out = Vec::new();
+    for c in RATIFIED_CATEGORIES {
+        if has_real(c) {
+            out.push((*c).to_string());
+            seen.insert((*c).to_string());
+        }
+    }
+    let mut extras: Vec<String> = buckets
+        .keys()
+        .filter(|k| k.as_str() != "uncategorised" && !seen.contains(*k) && has_real(k))
+        .cloned()
+        .collect();
+    extras.sort();
+    out.extend(extras);
+    out
+}
+
+/// Build the docs left-navigation HTML from the already-computed category
+/// buckets: every populated category with its articles, the active article
+/// highlighted, and the active category's section expanded. Article labels are
+/// the real frontmatter titles. Works uniformly across all three instances
+/// because it groups by declared category, not by physical subdirectory.
+fn render_docs_sidenav(buckets: &CategoryBuckets, active_slug: &str) -> String {
     use std::fmt::Write as _;
     let mut out = String::with_capacity(8192);
     out.push_str("<nav class=\"docs-sidenav\" aria-label=\"Documentation\">");
     out.push_str("<div class=\"docs-sidenav__inner\">");
 
-    for cat in RATIFIED_CATEGORIES {
-        let dir = content_dir.join(cat);
-        let mut articles: Vec<(String, String)> = Vec::new();
-        if let Ok(entries) = std::fs::read_dir(&dir) {
-            for e in entries.flatten() {
-                let path = e.path();
-                if path.extension().and_then(|x| x.to_str()) != Some("md") {
-                    continue;
-                }
-                let stem = match path.file_stem().and_then(|s| s.to_str()) {
-                    Some(s) => s,
-                    None => continue,
-                };
-                // Skip Spanish siblings, index, and partials.
-                if stem.ends_with(".es") || stem == "index" || stem.starts_with('_') {
-                    continue;
-                }
-                articles.push((format!("{cat}/{stem}"), humanize_category(stem)));
-            }
-        }
+    for cat in ordered_categories(buckets) {
+        let Some(items) = buckets.get(&cat) else { continue };
+        let mut articles: Vec<&TopicSummary> = items
+            .iter()
+            .filter(|t| t.status.as_deref() != Some("stub"))
+            .collect();
         if articles.is_empty() {
             continue;
         }
-        articles.sort_by(|a, b| a.1.to_lowercase().cmp(&b.1.to_lowercase()));
-        let any_active = articles.iter().any(|(s, _)| s == active_slug);
+        articles.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
+        let any_active = articles.iter().any(|t| t.slug == active_slug);
         let open = if any_active { " open" } else { "" };
         let _ = write!(
             out,
             "<details class=\"docs-sidenav__cat\"{open}><summary>{}</summary><ul class=\"docs-sidenav__list\">",
-            humanize_category(cat)
+            esc(&humanize_category(&cat))
         );
-        for (slug, title) in &articles {
-            if slug == active_slug {
-                let _ = write!(
-                    out,
-                    "<li><a class=\"docs-sidenav__link is-active\" aria-current=\"page\" href=\"/wiki/{slug}\">{title}</a></li>"
-                );
+        for t in &articles {
+            let active = if t.slug == active_slug {
+                " is-active\" aria-current=\"page"
             } else {
-                let _ = write!(
-                    out,
-                    "<li><a class=\"docs-sidenav__link\" href=\"/wiki/{slug}\">{title}</a></li>"
-                );
-            }
+                ""
+            };
+            let _ = write!(
+                out,
+                "<li><a class=\"docs-sidenav__link{active}\" href=\"/wiki/{}\">{}</a></li>",
+                esc(&t.slug),
+                esc(&t.title)
+            );
         }
         out.push_str("</ul></details>");
     }
     out.push_str("</div></nav>");
     out
+}
+
+/// Process-global cache of the category buckets used to build the left
+/// navigation, keyed by content directory (one entry per running instance;
+/// tests with distinct temp dirs do not collide). A short TTL keeps the nav
+/// fast on every article page while still reflecting edits within ~20 s.
+static NAV_CACHE: std::sync::OnceLock<
+    tokio::sync::RwLock<std::collections::HashMap<PathBuf, (std::time::Instant, Arc<CategoryBuckets>)>>,
+> = std::sync::OnceLock::new();
+const NAV_TTL: std::time::Duration = std::time::Duration::from_secs(20);
+
+/// Return the category buckets for the left navigation, parsing the content
+/// tree at most once per [`NAV_TTL`] window. The expensive frontmatter parse
+/// happens on a cache miss; warm requests clone a cheap `Arc`.
+async fn nav_buckets_cached(state: &AppState) -> Arc<CategoryBuckets> {
+    let cache = NAV_CACHE.get_or_init(|| tokio::sync::RwLock::new(std::collections::HashMap::new()));
+    {
+        let r = cache.read().await;
+        if let Some((built, buckets)) = r.get(&state.content_dir) {
+            if built.elapsed() < NAV_TTL {
+                return buckets.clone();
+            }
+        }
+    }
+    let buckets = Arc::new(
+        bucket_topics_by_category(
+            &state.content_dir,
+            state.guide_dir.as_deref(),
+            state.guide_dir_2.as_deref(),
+        )
+        .await
+        .unwrap_or_default(),
+    );
+    let mut w = cache.write().await;
+    w.insert(
+        state.content_dir.clone(),
+        (std::time::Instant::now(), buckets.clone()),
+    );
+    buckets
 }
 
 // ─── Placeholder index (index.md absent) ───────────────────────────────────
@@ -2030,6 +2087,13 @@ async fn wiki_page_inner(
             format!("<aside class=\"claim-rail\" aria-label=\"Citation freshness\">{ticks}</aside>")
         }
     };
+    // Docs left-navigation, grouped by declared category (correct for all three
+    // instances). Built from the same bucketing the home page uses, cached with
+    // a short TTL so article pages stay fast.
+    let sidenav_html = {
+        let buckets = nav_buckets_cached(&state).await;
+        render_docs_sidenav(&buckets, &slug)
+    };
     Ok(wiki_chrome(
         effective_locale,
         &title,
@@ -2046,7 +2110,7 @@ async fn wiki_page_inner(
         q.printable,
         &body_fingerprint,
         &claim_rail_html,
-        &render_docs_sidenav(&state.content_dir, &slug),
+        &sidenav_html,
     )
     .into_response())
 }
