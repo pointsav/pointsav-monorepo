@@ -3,7 +3,7 @@ artifact: brief
 status: active
 title: SLM Substrate Master — Yo-Yo + DataGraph + Learning Loop
 created: 2026-05-24
-updated: 2026-05-30 (session 9 end — Sprint 3D: Tier A timeout 120s→1800s; drain wrapper 150s→1860s; poison queue recovered)
+updated: 2026-06-01 (consolidation pass — §1 state table current; drain ACTIVE; poison 0; persistent ledgers DEPLOYED)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 grounds_in:
   - service-slm/ARCHITECTURE.md
@@ -39,23 +39,23 @@ notes: >
 
 ---
 
-## §1 — Current live state (as of 2026-05-30T22:17Z — session 10: lease expiry fix + flow confirmed)
+## §1 — Current live state (as of 2026-06-01 — consolidation pass: drain active, persistent ledgers deployed)
 
 | Component | Version | Status | Notes |
 |---|---|---|---|
-| `slm-doorman-server` | rebuilt 2026-05-30T21:14Z | **active** | sha256=`bd91eafc7c2a232c10e0c449f31474d9d994568df9c4054eb8f591f93ce3360d`; **Sprint 3D: timeout 1800s**; Sprint 3A: `SLM_TIER_A_FIRST=true`; Sprint 3C: drain hold bypass; commit `1398522b` |
-| `service-content` | rebuilt 2026-05-29T19:26Z | **active** | sha256=`2362ea5c580a9869c5e307b645d60219cb9535dbf4218bd8762da870a4c62f7b`; Sprint 2A: `entity_count` in `/healthz` (7,201 entities); Sprint 3B: Tier A fallback enabled; commit `5493a8f4` |
+| `slm-doorman-server` | rebuilt 2026-06-01 | **active** | sha256=`2c96603b` (Tier B `/v1/extract` grammar fix — Tier A-first confirmed; audit ledger BLAKE3 sha256 field deployed); commit `3a64431e` |
+| `service-content` | rebuilt 2026-06-01 | **active** | sha256=`1aa88dafc6b76ec0` (persistent processed_ledgers — 43,107 entries loaded on restart; no re-drain); entity_count=**7,445**; commit `5ad06ec9` |
 | `orchestration-slm-server` | built session 9 | **NOT YET DEPLOYED** | unit file committed `d445b5ea`; Command operator install needed (see outbox `project-intelligence-20260530-stage6-orchestration-deploy`) |
 | `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** | europe-west4-a L4 stockout; restart with `start-yoyo.sh --wait-ready=120 --runtime=1h` when capacity returns |
 | `local-slm.service` | OLMo 2 1124 7B Instruct Q4_K_M (4.16 GiB) | **active** | Tier A is the confident primary; `SLM_TIER_A_FIRST=true` confirmed in startup log |
-| `local-doorman.env` | — | current | `SLM_TIER_A_FIRST=true`; `SLM_HOLD_THRESHOLD_SECS=3600`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_FORCE_BROKER_MODE=false`; **`SLM_QUEUE_LEASE_EXPIRY_SEC=2100`** (session 10) |
-| `local-content.env` | — | current | Drop-in: `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=true`; `SERVICE_CONTENT_TIER_A_FALLBACK_INTERVAL_SECS=300` |
+| `local-doorman.env` | — | current | `SLM_TIER_A_FIRST=true`; **`SLM_DRAIN_PAUSED=false`**; `SLM_HOLD_THRESHOLD_SECS=1`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_FORCE_BROKER_MODE=false`; `SLM_QUEUE_LEASE_EXPIRY_SEC=2100` |
+| `local-content.env` | — | current | Drop-in: `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=false`; fallback OFF (Yo-Yo is the extraction tier) |
 
 **Tier routing (current):**
-- Tier A: **ENABLED + PRIMARY** — `SLM_TIER_A_FIRST=true`; all chat/shadow routes here unless Tier B explicitly hinted AND circuit closed
-- Tier B: **circuit initialising → OPEN** — Yo-Yo TERMINATED; health probes failing; circuit will open within ~90s of restart
+- Tier A: **ENABLED + PRIMARY** — `SLM_TIER_A_FIRST=true`; all chat/shadow routes here; drain ACTIVE, routing 285 pending briefs via `tier="local"`
+- Tier B: **TERMINATED** — health probes failing; circuit OPEN; `/v1/extract` defers (circuit-open); recovery probe in service-content will auto-resume when Yo-Yo returns
 - Tier C: not configured — ToS hard constraint; never enable for training loop
-- Result: `ai_available: true` (Tier A primary); WATCHER Tier A fallback active (rate-limited, 300s interval); drain holds when all Tier B open >1h
+- Result: `ai_available: true` (Tier A primary); drain worker ACTIVE (`SLM_DRAIN_PAUSED=false`); 0 poison after initial drain pass
 
 **Think-model fixes deployed (prev session commit `d835cab5`):**
 - `SOCKET_TIMEOUT` raised 60s → 180s; `OUTER_DEADLINE` raised 90s → 300s
@@ -76,14 +76,14 @@ notes: >
   SC-2 (defer_reason differentiation), SC-3d (30s retry loop), SC-3e (graph-first write),
   SC-3f (buffer pool env var) — all in commit `e263d6f0`
 
-**Shadow capture state (2026-05-31 session 13):**
-- queue/: 5 pending briefs
-- queue-done/: 550 briefs (dispatched)
-- queue-poison/: 78 files (up from 0 at session 11 close; newest have `actual_diff: ""` + no `response_raw` — never dispatched to OLMo; root cause under investigation — see §5)
-- Training corpus: 591 DPO tuples (DEGENERATE — see §Circuit resilience plan) + 1,410 engineering SFT tuples (valid)
+**Shadow capture state (2026-06-01 — drain ACTIVE):**
+- queue/: 285 pending briefs (209 with non-empty actual_diff; 76 empty-diff ghost commits)
+- queue-done/: 553 briefs processed
+- queue-poison/: **0** (cleared session 13; pre-Fix-A entries quarantined; H1 confirmed)
+- Training corpus: 591 legacy shadow-capture tuples (DEGENERATE — empty OLMo diffs; exclude from DPO); 454 ground-truth SFT pairs extracted to `service-slm/scripts/sft-pairs/sft-train.jsonl`
+- **Drain status:** ACTIVE — `SLM_DRAIN_PAUSED=false` set 2026-06-01; `tier="local"` confirmed in dispatch log; flow verified end-to-end
 
-**Stage 6 state:** archive ahead of `origin/main`; rebase required per inbox
-`command-20260520-stage6-rebase-required` before promote.
+**Stage 6 state:** 7+ commits ahead of `origin/main`; see outbox for promote request.
 
 ---
 
@@ -214,16 +214,12 @@ without a service restart. Now:
   `a5f573f6` (+docs `e6b34bb3`,`45f38da8`); **Stage 6 PENDING** (binary deployed ahead of canonical;
   outbox to Command sent 2026-06-01). Tier A fallback stayed OFF — restart re-drain is HTTP-defer
   churn, no inference.
-- **Restart cost (pre-existing, flagged):** `processed_ledgers` is in-memory despite the CLAUDE.md
-  "Sprint 5 persistent" claim, so every `local-content` restart re-drains all ~42.5k backlog files
-  (hours of high-CPU HTTP defers, harmless). Implementing persistent processed-tracking is the
-  highest-value next fix. The circuit-open log still prints "skipping until restart" — cosmetically
-  stale now (behavior is dormant-with-recovery-probe); fix on next build.
-
-**Doc/code drift flagged:** `service-content/CLAUDE.md` claims "Sprint 5: graph-backed
-persistent processed_ledgers — no restart retry storm" is code-complete, but `main.rs`
-uses an **in-memory `Vec<String>`** (volatile across restarts). Either Sprint 5 was never
-merged to this source or the doc is aspirational. Reconcile before relying on restart-survival.
+- **Persistent processed_ledgers — RESOLVED 2026-06-01 (commit `5ad06ec9`):** `load_processed_ledgers()` /
+  `append_processed_ledger()` added; JSONL sidecar at `$SERVICE_CONTENT_GRAPH_DIR/processed_ledgers.jsonl`.
+  Verified: 43,107 entries loaded on restart — no re-drain. `service-content/CLAUDE.md` Sprint 5 row
+  updated to DEPLOYED.
+- **Stale log string — RESOLVED 2026-06-01:** circuit-open log now reads "recovery probe active —
+  will resume when Tier B returns" (was "skipping until restart"). Matches actual dormant-with-probe behavior.
 
 **Remaining optional enhancement (not a loss risk):** neither service listens for the GCP
 ~30s preemption *notice* (`instance/preempted` metadata / ACPI soft-off) to drain in-flight
