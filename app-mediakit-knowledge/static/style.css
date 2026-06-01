@@ -1390,9 +1390,9 @@ html[data-theme="dark"] .featured__cta { color: var(--link); }
 }
 .section-head h2 {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 600;
   font-size: 22px;
-  letter-spacing: 0.01em;
+  letter-spacing: var(--tracking-normal);
   color: var(--fg-1);
 }
 .section-head__hint { font-size: 13px; color: var(--fg-3); }
@@ -1401,24 +1401,24 @@ html[data-theme="dark"] .featured__cta { color: var(--link); }
 .cat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(258px, 1fr));
-  gap: 14px;
+  gap: var(--space-5);
   margin-bottom: 56px;
 }
 .cat-card {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 20px 22px;
+  padding: 22px 24px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   text-decoration: none;
   color: inherit;
-  transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+  transition: border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
 }
 .cat-card:hover {
   border-color: var(--navy-soft);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 .cat-card__head {
@@ -1444,8 +1444,8 @@ html[data-theme="dark"] .featured__cta { color: var(--link); }
   font-weight: 600;
 }
 .cat-card__desc {
-  font-size: 13.5px;
-  color: var(--fg-3);
+  font-size: 14px;
+  color: var(--fg-2);
   line-height: 1.5;
 }
 .cat-card__icon {
