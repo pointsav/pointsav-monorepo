@@ -57,12 +57,15 @@ fn handle_join_request(req: &mut Request) -> BoxResp {
     let _ = sweep_expired(&conn);
 
     let code = new_code();
+    // Store the normalized (no-hyphen) form so approve/deny lookups match regardless
+    // of whether the admin types "XXXX-XXXX" or "XXXXXXXX".
+    let stored_code = normalize(&code);
     let request_id = uuid::Uuid::new_v4().to_string();
     let now = chrono::Utc::now();
     let created_at = now.to_rfc3339();
     let expires_at = (now + chrono::Duration::seconds(600)).to_rfc3339();
 
-    if let Err(e) = insert_request(&conn, &request_id, &code, &body, &created_at, &expires_at) {
+    if let Err(e) = insert_request(&conn, &request_id, &stored_code, &body, &created_at, &expires_at) {
         return json_err(500, &format!("insert error: {e}"));
     }
 

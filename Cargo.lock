@@ -6624,7 +6624,9 @@ dependencies = [
  "serde",
  "serde_json",
  "system-pairing-codes",
+ "tempfile",
  "tiny_http",
+ "ureq",
  "uuid",
 ]
 
