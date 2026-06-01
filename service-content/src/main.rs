@@ -181,10 +181,17 @@ fn main() -> NotifyResult<()> {
     }
 
     // ── Process any pre-existing CORPUS_* files ───────────────────────────────
-    // processed_ledgers: permanently done (success, circuit-open defer, hard failure)
+    // processed_ledgers: permanently done (success, or a hard parse/extract failure
+    //   that retrying cannot fix)
     // deferred_ledgers: transient defer — retried every 30 s by the watcher timeout
+    // circuit_deferred_ledgers: deferred because the Tier B (Yo-Yo) circuit is open.
+    //   Held dormant — NOT retried every tick (that would storm the Doorman with the
+    //   whole backlog during a GPU stockout). A single recovery probe per tick drains
+    //   this list back into deferred_ledgers once Tier B is reachable again, so the
+    //   backlog resumes WITHOUT a service restart. (Preemption-safe: nothing skipped.)
     let mut processed_ledgers: Vec<String> = Vec::new();
     let mut deferred_ledgers: Vec<String> = Vec::new();
+    let mut circuit_deferred_ledgers: Vec<String> = Vec::new();
 
     if let Ok(entries) = fs::read_dir(Path::new(&corpus_dir)) {
         for entry in entries.flatten() {
@@ -201,10 +208,11 @@ fn main() -> NotifyResult<()> {
                         &tier_a_fallback,
                         &mut last_tier_a_attempt,
                     ) {
-                        ExtractResult::Success
-                        | ExtractResult::DeferCircuitOpen
-                        | ExtractResult::Failed => {
+                        ExtractResult::Success | ExtractResult::Failed => {
                             processed_ledgers.push(filename);
+                        }
+                        ExtractResult::DeferCircuitOpen => {
+                            circuit_deferred_ledgers.push(filename);
                         }
                         ExtractResult::DeferTransient => {
                             deferred_ledgers.push(filename);
@@ -234,6 +242,7 @@ fn main() -> NotifyResult<()> {
                             if filename.starts_with("CORPUS_")
                                 && !processed_ledgers.contains(&filename)
                                 && !deferred_ledgers.contains(&filename)
+                                && !circuit_deferred_ledgers.contains(&filename)
                             {
                                 println!("\n[WATCHER] New Corpus Detected: {}", filename);
                                 thread::sleep(Duration::from_millis(250));
@@ -249,11 +258,13 @@ fn main() -> NotifyResult<()> {
                                     &tier_a_fallback,
                                     &mut last_tier_a_attempt,
                                 ) {
-                                    ExtractResult::Success
-                                    | ExtractResult::DeferCircuitOpen
-                                    | ExtractResult::Failed => {
+                                    ExtractResult::Success | ExtractResult::Failed => {
                                         deferred_ledgers.retain(|f| f != &filename);
                                         processed_ledgers.push(filename);
+                                    }
+                                    ExtractResult::DeferCircuitOpen => {
+                                        deferred_ledgers.retain(|f| f != &filename);
+                                        circuit_deferred_ledgers.push(filename);
                                     }
                                     ExtractResult::DeferTransient => {
                                         // stays in deferred_ledgers; retried on next timeout
@@ -285,13 +296,58 @@ fn main() -> NotifyResult<()> {
                         &tier_a_fallback,
                         &mut last_tier_a_attempt,
                     ) {
-                        ExtractResult::Success
-                        | ExtractResult::DeferCircuitOpen
-                        | ExtractResult::Failed => {
+                        ExtractResult::Success | ExtractResult::Failed => {
                             processed_ledgers.push(filename);
+                        }
+                        ExtractResult::DeferCircuitOpen => {
+                            // Tier B went down for this file — move it to the
+                            // dormant circuit-deferred list (no per-tick storm).
+                            circuit_deferred_ledgers.push(filename);
                         }
                         ExtractResult::DeferTransient => {
                             deferred_ledgers.push(filename);
+                        }
+                    }
+                }
+
+                // Tier-B recovery probe. Files deferred because the Yo-Yo circuit
+                // is open sit dormant (not retried every tick — that would storm
+                // the Doorman with the whole backlog during a GPU stockout). Each
+                // tick we attempt exactly ONE of them: while Tier B is down the
+                // probe fast-fails (circuit-open) and is returned to the list; the
+                // moment Tier B recovers the probe succeeds (or defers transiently)
+                // and the entire dormant backlog is promoted back into the active
+                // retry queue — extraction resumes with no service restart.
+                if !circuit_deferred_ledgers.is_empty() {
+                    let probe = circuit_deferred_ledgers.remove(0);
+                    let probe_path = Path::new(&corpus_dir).join(&probe);
+                    match process_corpus(
+                        &probe_path,
+                        &crm_dir,
+                        &doorman_endpoint,
+                        &module_id,
+                        &graph_store,
+                        &tier_a_fallback,
+                        &mut last_tier_a_attempt,
+                    ) {
+                        ExtractResult::DeferCircuitOpen => {
+                            // Still down — keep it dormant.
+                            circuit_deferred_ledgers.push(probe);
+                        }
+                        outcome => {
+                            // Tier B is reachable again. Record the probe's own
+                            // result, then resume the dormant backlog.
+                            match outcome {
+                                ExtractResult::DeferTransient => deferred_ledgers.push(probe),
+                                _ => processed_ledgers.push(probe),
+                            }
+                            if !circuit_deferred_ledgers.is_empty() {
+                                println!(
+                                    "[RECOVERY] Tier B reachable again — resuming {} circuit-deferred CORPUS file(s).",
+                                    circuit_deferred_ledgers.len()
+                                );
+                                deferred_ledgers.append(&mut circuit_deferred_ledgers);
+                            }
                         }
                     }
                 }
@@ -658,8 +714,16 @@ fn process_corpus(
             ExtractResult::Success
         }
         Err(e) => {
-            println!("  -> [SYS_HALT] Doorman routing failed: {}", e);
-            ExtractResult::Failed
+            // Transport error (Doorman unreachable, or the call interrupted —
+            // e.g. Tier B preempted and the Doorman timed the request out) is
+            // transient, not a permanent parse failure. Defer for retry rather
+            // than marking the file processed, so an interrupted in-flight
+            // extraction is never silently lost.
+            println!(
+                "  -> [SYS_HALT] Doorman routing failed (transient — will retry): {}",
+                e
+            );
+            ExtractResult::DeferTransient
         }
     }
 }
