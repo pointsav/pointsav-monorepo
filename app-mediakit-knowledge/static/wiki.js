@@ -1056,6 +1056,39 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * M1 — Tap-to-open popovers on touch devices                          *
+   *                                                                     *
+   * The glossary / footnote / citation popovers above bind only         *
+   * mouseenter/mouseleave, so they are unreachable on touch (no hover). *
+   * On (hover: none) devices a tap on a NON-navigating affordance        *
+   * (glossary term, footnote/citation ref) re-dispatches the same mouse  *
+   * events to reuse the existing show/hide logic; tap-again, tap-outside,*
+   * or Esc dismiss. Wikilinks are excluded — a tap on a real link should *
+   * navigate, not preview. Delegated once on document so it survives     *
+   * AJAX navigation.                                                     *
+   * ------------------------------------------------------------------ */
+  function initTapPopovers() {
+    if (!window.matchMedia || !window.matchMedia('(hover: none)').matches) return;
+    var SEL = '.wiki-glossary-term, sup.footnote-ref';
+    var openEl = null;
+    function fire(el, type) { el.dispatchEvent(new MouseEvent(type, { bubbles: true })); }
+    function close() { if (openEl) { fire(openEl, 'mouseleave'); openEl = null; } }
+    document.addEventListener('click', function (e) {
+      var t = e.target.closest(SEL);
+      if (t) {
+        e.preventDefault();        // footnote refs: show inline, don't jump to the note
+        if (openEl === t) { close(); return; } // tap again closes
+        if (openEl) fire(openEl, 'mouseleave');
+        fire(t, 'mouseenter');
+        openEl = t;
+      } else {
+        close();                   // tap outside closes
+      }
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+  }
+
+  /* ------------------------------------------------------------------ *
    * Phase 7E — Mobile bottom bar                                        *
    * ------------------------------------------------------------------ */
   function initMobileBottomBar() {
@@ -1211,6 +1244,7 @@
     initMobileBottomBar();
     initReadingProgress();
     initClaimRail();
+    initTapPopovers();
   });
 
 }());
