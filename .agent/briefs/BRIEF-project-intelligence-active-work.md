@@ -2,11 +2,12 @@
 artifact: brief
 status: active
 created: 2026-06-01
+updated: 2026-06-01 (Yo-Yo Tier B validated; /v1/extract grammar fix RESOLVED)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 replaces: BRIEF-active-work.md (missing — never existed on disk)
 companion:
-  - BRIEF-slm-substrate-master.md  (SLM operations reference)
-  - BRIEF-slm-learning-loop.md     (training pipeline spec)
+  - BRIEF-slm-substrate-master.md  (SLM operations reference; §2.8 = Yo-Yo findings)
+  - BRIEF-slm-learning-loop.md     (training pipeline spec; §9/§10 = SFT-first plan)
 ---
 
 # BRIEF — project-intelligence Active Work
@@ -16,28 +17,51 @@ companion:
 
 ---
 
-## Current service state (2026-05-31)
+## Current service state (2026-06-01)
 
 | Service | State | Note |
 |---|---|---|
-| `local-doorman.service` | **active** | Tier A ready; /healthz 404 (known — route missing); /readyz OK |
-| `local-slm.service` | **active** | OLMo 2 7B Q4_K_M; Tier A primary |
-| `service-content` | **active** | 7,201 entities; Tier B extraction deferred (Yo-Yo down) |
-| `local-orchestration-slm.service` | **inactive** | Unit file installed; operator deploy pending (§3) |
-| `yoyo-tier-b-1` | TERMINATED | europe-west4-a L4 stockout; restart when capacity returns |
-| Apprenticeship queue | **5 pending / 550 done / 78 poison** | See §1 |
+| `local-doorman.service` | **active** | New binary `2c96603b` (Tier B grammar fix); Tier A primary; `/healthz` returns plain `ok` (no entity_count — known gap); `/readyz` OK incl. P1 zone field |
+| `local-slm.service` (Tier A) | **active** | OLMo 2 7B Q4_K_M; idle ~2% (wedge fixed — was 69 h stuck); serves interactive in ~2–4s |
+| `service-content` | **active** | 7,203 entities; **Tier A fallback persisted OFF** (drop-in) → defers the 41k backlog safely |
+| `yoyo-tier-b-1` (Tier B) | **TERMINATED** (stopped) | Stockout cleared 2026-06-01; tested + validated; stopped to save cost. `start-yoyo.sh` to bring up |
+| Apprenticeship drain | **paused** | `SLM_DRAIN_PAUSED=true` — CPU drain off; capture continues |
+| Apprenticeship queue | **~170 pending / 550 done / 0 poison** | poison cleared session 13; capture live |
+| `local-orchestration-slm.service` | **inactive** | Operator deploy pending (§3) |
 
 ---
 
-## §1 — Poison queue investigation item
+## §0 — Resolved this session (2026-06-01) — read before picking work
 
-78 entries in `queue-poison/` as of session 13, up from 0 at session 11 close.
+- ✅ **Tier B `/v1/extract` grammar — FIXED + validated live.** `yoyo.rs` sent the schema in
+  vLLM `extra_body` format; server is llama.cpp (top-level `json_schema`/`grammar`). Fixed →
+  live: 7.2s, `extraction_ok:true`, 4 entities classified. Commit `dee8d050`; binary `2c96603b`.
+  Full detail: BRIEF-slm-substrate-master.md §2.8.
+- ✅ **Yo-Yo truncation** — image had `-c 4096 -np 4` (1024 tok/slot). Packer template fixed to
+  `-np 1` + `-fa on` (`compute/packer/scripts/llama-server.service`, commit `3b8a952e`).
+- ✅ **Tier A wedge** — 69 h stuck llama-server cleared (restart); now idle/healthy.
+- ✅ **service-content was DOWN** — started; 7,203 entities; fallback persisted OFF.
+- ✅ **Local test series** — cargo (191+10 pass), Doorman endpoints, drain-pause, graph proxy.
+- ✅ **P1/P2/Sprint 4a** (sessions 13/14): /readyz reason+zone, service-content base_dir,
+  app-console-slm status.
+- ✅ **Brief consolidation** (session 13): archived contamination; AI-AUDIT integrated.
+
+**Open for Command (outbox):** Stage 6 promote (`dee8d050`, `3b8a952e`); commit binary ledger
++ fallback drop-in mirror; Yo-Yo Packer rebuild now SAFE to queue (persists -np/-fa).
+
+---
+
+## §1 — Poison queue (RESOLVED session 13)
+
+Was 78 entries; investigated (68 pre-Fix-A empty-diff → quarantined; 10 llama-server-outage
+artifacts → recovered). **queue-poison now 0.** Kept for reference:
+
 Newest entries (May 31 04:47–04:58 UTC, post-Fix-B deploy at 00:41 UTC):
 - `actual_diff: ""` at top level — Fix A was not applied to these entries
 - No `response_raw`, no `escalate` field — never dispatched to OLMo
 
-**Two hypotheses:**
-- **H1 (likely)**: Pre-Fix-A briefs carried forward from session 11's recovery batch.
+**Two hypotheses (H1 confirmed):**
+- **H1 (confirmed)**: Pre-Fix-A briefs carried forward from session 11's recovery batch.
   Sprint 2C `write_shadow_tuple` guard rejects `actual_diff: ""` entries and moves them
   to poison/ without dispatching. These are already known-bad; quarantine resolves it.
 - **H2**: New commits post-Fix-A are producing briefs with empty `actual_diff` — meaning
