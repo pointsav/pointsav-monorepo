@@ -26,13 +26,17 @@ service-bookkeeper (project-bookkeeping) reads receipt → Dr Wallet/USDC Cr Rev
 tool-wallet watch     # daemon — polls Polygon for incoming USDC; writes receipts
 tool-wallet check     # one-shot — verify a specific tx_hash
 tool-wallet address   # generate a per-order HD-derived payment address
+tool-wallet export    # export receipts to CSV for bookkeeping
+tool-wallet keygen    # generate Ed25519 signing keypair
+tool-wallet generate-seed  # generate BIP-39 seed + master wallet address
 ```
 
 ## Environment variables
 
 | Variable | Purpose |
 |---|---|
-| `POLYGON_RPC_URL` | Polygon JSON-RPC endpoint (public or private node) |
+| `POLYGON_RPC_URL` | Polygon JSON-RPC endpoint (primary) |
+| `POLYGON_RPC_FALLBACK_URLS` | Comma-separated fallback endpoints tried in order when primary fails (optional; applies to both `watch` and `check`) |
 | `POLYGON_WALLET_ADDRESS` | PointSav receiving wallet address |
 | `WALLET_SEED_PATH` | Path to HD seed file — operator-provisioned, never in git |
 | `FS_ENDPOINT` | service-fs WORM ledger endpoint |
