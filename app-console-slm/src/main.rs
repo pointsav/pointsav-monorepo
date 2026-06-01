@@ -22,13 +22,25 @@ enum Commands {
     /// Show live status of Doorman, tiers, chassis, and corpus.
     Status {
         /// Doorman base URL.
-        #[arg(long, env = "SLM_DOORMAN_ENDPOINT", default_value = "http://127.0.0.1:9080")]
+        #[arg(
+            long,
+            env = "SLM_DOORMAN_ENDPOINT",
+            default_value = "http://127.0.0.1:9080"
+        )]
         doorman: String,
         /// Chassis base URL.
-        #[arg(long, env = "SLM_ORCHESTRATION_ENDPOINT", default_value = "http://127.0.0.1:9180")]
+        #[arg(
+            long,
+            env = "SLM_ORCHESTRATION_ENDPOINT",
+            default_value = "http://127.0.0.1:9180"
+        )]
         chassis: String,
         /// Corpus data directory (contains queue/, queue-done/, queue-poison/ subdirs).
-        #[arg(long, env = "CORPUS_ROOT", default_value = "/srv/foundry/data/apprenticeship")]
+        #[arg(
+            long,
+            env = "CORPUS_ROOT",
+            default_value = "/srv/foundry/data/apprenticeship"
+        )]
         corpus: String,
     },
 }
@@ -129,7 +141,11 @@ fn col_width() -> (usize, usize, usize) {
 }
 
 fn up_down(up: bool) -> &'static str {
-    if up { "UP  " } else { "DOWN" }
+    if up {
+        "UP  "
+    } else {
+        "DOWN"
+    }
 }
 
 // ── Status command ────────────────────────────────────────────────────────────
@@ -141,15 +157,10 @@ fn cmd_status(doorman_url: &str, chassis_url: &str, corpus_root: &str) {
     // ── Doorman /healthz + /readyz ───────────────────────────────────────────
     // /healthz returns 404 in current builds (known bug — route not yet added).
     // Fall back to /readyz to determine Doorman availability.
-    let healthz: Option<HealthzResponse> =
-        get_json(&client, &format!("{doorman_url}/healthz"));
-    let readyz: Option<ReadyzResponse> =
-        get_json(&client, &format!("{doorman_url}/readyz"));
+    let healthz: Option<HealthzResponse> = get_json(&client, &format!("{doorman_url}/healthz"));
+    let readyz: Option<ReadyzResponse> = get_json(&client, &format!("{doorman_url}/readyz"));
     let doorman_up = healthz.is_some() || readyz.is_some();
-    let entity_count = healthz
-        .as_ref()
-        .and_then(|h| h.entity_count)
-        .unwrap_or(0);
+    let entity_count = healthz.as_ref().and_then(|h| h.entity_count).unwrap_or(0);
 
     println!(
         "{:<label_w$} {:<url_w$} {}  entity_count={entity_count}",
@@ -174,7 +185,12 @@ fn cmd_status(doorman_url: &str, chassis_url: &str, corpus_root: &str) {
         );
 
         if rz.tier_b.is_empty() {
-            println!("{:<label_w$} {:<url_w$} {}  not configured", "Tier B", "", up_down(false));
+            println!(
+                "{:<label_w$} {:<url_w$} {}  not configured",
+                "Tier B",
+                "",
+                up_down(false)
+            );
         } else {
             for (label, info) in &rz.tier_b {
                 let mut detail = format!("circuit={}", info.circuit);
@@ -198,8 +214,18 @@ fn cmd_status(doorman_url: &str, chassis_url: &str, corpus_root: &str) {
             }
         }
     } else {
-        println!("{:<label_w$} {:<url_w$} {}  /readyz unavailable", "Tier A", "", up_down(false));
-        println!("{:<label_w$} {:<url_w$} {}  /readyz unavailable", "Tier B", "", up_down(false));
+        println!(
+            "{:<label_w$} {:<url_w$} {}  /readyz unavailable",
+            "Tier A",
+            "",
+            up_down(false)
+        );
+        println!(
+            "{:<label_w$} {:<url_w$} {}  /readyz unavailable",
+            "Tier B",
+            "",
+            up_down(false)
+        );
     }
 
     // ── Chassis /healthz ─────────────────────────────────────────────────────
@@ -239,8 +265,7 @@ fn cmd_status(doorman_url: &str, chassis_url: &str, corpus_root: &str) {
     // script runs.
     println!(
         "{:<label_w$} {:<url_w$}       queue={pending}  done={done}  poison={poison}",
-        "Corpus",
-        corpus_root,
+        "Corpus", corpus_root,
     );
 }
 
@@ -249,7 +274,11 @@ fn cmd_status(doorman_url: &str, chassis_url: &str, corpus_root: &str) {
 fn main() {
     let cli = Cli::parse();
     match cli.command {
-        Commands::Status { doorman, chassis, corpus } => {
+        Commands::Status {
+            doorman,
+            chassis,
+            corpus,
+        } => {
             cmd_status(&doorman, &chassis, &corpus);
         }
     }
