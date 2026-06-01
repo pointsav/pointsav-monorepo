@@ -136,6 +136,13 @@ struct CheckArgs {
     tx_hash: String,
     #[arg(env = "POLYGON_RPC_URL", long)]
     rpc_url: String,
+    #[arg(
+        env = "POLYGON_RPC_FALLBACK_URLS",
+        long,
+        value_delimiter = ',',
+        help = "Comma-separated fallback Polygon JSON-RPC endpoints tried in order on primary failure"
+    )]
+    rpc_fallback_urls: Vec<String>,
     #[arg(env = "POLYGON_WALLET_ADDRESS", long)]
     wallet_address: String,
 }
@@ -489,10 +496,13 @@ async fn check(args: CheckArgs) -> Result<()> {
     let client = reqwest::Client::new();
     let tx_hash = args.tx_hash.to_lowercase();
     let wallet_padded = pad_address(&args.wallet_address);
+    let all_rpcs: Vec<String> = std::iter::once(args.rpc_url.clone())
+        .chain(args.rpc_fallback_urls.iter().cloned())
+        .collect();
 
-    let receipt = rpc_call(
+    let receipt = try_rpc_with_fallback(
         &client,
-        &args.rpc_url,
+        &all_rpcs,
         "eth_getTransactionReceipt",
         json!([tx_hash]),
     )
