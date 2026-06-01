@@ -406,6 +406,54 @@ with open(out_pks, "w") as f:
     json.dump(to_geojson(tn_candidates, "parking_structure"), f)
 print(f"Wrote {out_pks}  ({len(tn_candidates):,} features)")
 
+# ── TIER-FILTERED GEOJSON (map overlay — excludes untiered candidates) ────────
+#
+# Urban Fringe tiers  (vwh_strength = enrichment category count):
+#   T1 (strength≥2): hardware + 2+ enrichment cats → established industrial node
+#   T2 (strength=1): hardware + 1 enrichment cat  → emerging industrial node
+#   untiered (strength=0): bare hardware only — not shown on overlay
+#
+# Commuter tiers (proximity to nearest Retail Centre T1/T2):
+#   T1 (integrated, ≤10km): transit hub with RC co-located → commercially complete
+#   T2 (linked, 10-20km):   transit hub near an RC        → commercially adjacent
+#   untiered (standalone, >20km): no RC nearby — not shown on overlay
+
+vw_tiered: list[dict] = []
+for c in vw_candidates:
+    t = 1 if c["vwh_strength"] >= 2 else (2 if c["vwh_strength"] == 1 else None)
+    if t is not None:
+        c2 = dict(c)
+        c2["vwh_tier"] = t
+        vw_tiered.append(c2)
+
+tn_tiered: list[dict] = []
+for c in tn_candidates:
+    if c["integrated"]:
+        t = 1
+    elif c["nearest_cluster_km"] is not None:
+        t = 2
+    else:
+        t = None
+    if t is not None:
+        c2 = dict(c)
+        c2["commuter_tier"] = t
+        tn_tiered.append(c2)
+
+out_vwh_map = WORK / "archetype-vwh.geojson"
+out_pks_map = WORK / "archetype-pks.geojson"
+
+with open(out_vwh_map, "w") as f:
+    json.dump(to_geojson(vw_tiered, "urban_fringe"), f)
+n_vwh_t1 = sum(1 for c in vw_tiered if c["vwh_tier"] == 1)
+n_vwh_t2 = sum(1 for c in vw_tiered if c["vwh_tier"] == 2)
+print(f"Wrote {out_vwh_map}  ({len(vw_tiered):,} tiered: T1={n_vwh_t1} T2={n_vwh_t2}  untiered={len(vw_candidates)-len(vw_tiered)})")
+
+with open(out_pks_map, "w") as f:
+    json.dump(to_geojson(tn_tiered, "commuter"), f)
+n_pks_t1 = sum(1 for c in tn_tiered if c["commuter_tier"] == 1)
+n_pks_t2 = sum(1 for c in tn_tiered if c["commuter_tier"] == 2)
+print(f"Wrote {out_pks_map}  ({len(tn_tiered):,} tiered: T1={n_pks_t1} T2={n_pks_t2}  untiered={len(tn_candidates)-len(tn_tiered)})")
+
 # ── PRINT SUMMARY ─────────────────────────────────────────────────────────────
 
 W = 70
