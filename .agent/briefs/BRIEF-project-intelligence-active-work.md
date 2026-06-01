@@ -33,12 +33,23 @@ companion:
 
 ## §0 — Resolved this session (2026-06-01) — read before picking work
 
-- ✅ **Preemption-safe DataGraph watcher — FIXED (commit `a5f573f6`).** When Tier B is
-  preempted mid-request, the watcher no longer marks affected CORPUS files skip-until-restart.
+- ✅ **Preemption-safe DataGraph watcher — FIXED + DEPLOYED (commit `a5f573f6`).** When Tier B
+  is preempted mid-request, the watcher no longer marks affected CORPUS files skip-until-restart.
   Transport error → `DeferTransient`; circuit-open → dormant `circuit_deferred_ledgers`; one
   recovery probe per 30s tick auto-resumes the backlog when Tier B returns (no restart). Doorman
-  drain side was already safe (reaper re-queues leases). **Deploy pending** (release rebuild +
-  restart of `local-content.service`). Full detail: BRIEF-slm-substrate-master.md §2.4a.
+  drain side was already safe (reaper re-queues leases). **DEPLOYED 2026-06-01**: binary
+  `8b08c01d` installed to `/usr/local/bin/service-content`, ledgered, smoke test pass
+  (`entity_count`=7445 survived restart). **Manual install** — `deploy-binary.sh` is gated
+  (Command-only + promotion); **Stage 6 PENDING** for `a5f573f6`+`e6b34bb3` (Command must promote;
+  binary deployed ahead of canonical). Full detail: BRIEF-slm-substrate-master.md §2.4a.
+  - ⚠️ **Follow-ups surfaced at deploy:** (1) **Persistent `processed_ledgers` is unimplemented**
+    (CLAUDE.md drift) → every `local-content` restart re-drains all **42,558** backlog files
+    (~hours of harmless HTTP-defer churn at high CPU, no inference). This is the highest-value
+    next fix — implement graph-backed/file-backed processed tracking so restarts don't re-scan.
+    (2) The `process_corpus` circuit-open log still prints "skipping until restart" — now
+    cosmetically stale (behavior is dormant-with-recovery-probe); fix string on next build.
+    (3) On Tier B recovery the backlog drains sequentially in one blocking 30s-tick loop —
+    batch/parallel extraction is a separate throughput optimization.
 - ✅ **Tier B `/v1/extract` grammar — FIXED + validated live.** `yoyo.rs` sent the schema in
   vLLM `extra_body` format; server is llama.cpp (top-level `json_schema`/`grammar`). Fixed →
   live: 7.2s, `extraction_ok:true`, 4 entities classified. Commit `dee8d050`; binary `2c96603b`.
