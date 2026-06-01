@@ -109,6 +109,7 @@
 
   /* Layout */
   --sidebar-w:   272px;
+  --sidenav-w:   256px;   /* docs left navigation */
   --toc-w:       248px;
   --utility-h:   32px;
   --brand-h:     72px;
@@ -968,12 +969,117 @@ html[data-theme="dark"] .nav-row ul.nav-list li a.is-active {
   max-width: var(--content-max);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: var(--sidenav-w) minmax(0, 1fr);
+  align-items: start;
   gap: 0;
   padding: 0 28px;
 }
 .sidebar {
   display: none;
+}
+
+/* ======================================================================
+   Docs left navigation (product-documentation pattern)
+   ====================================================================== */
+.docs-sidenav {
+  position: sticky;
+  top: var(--header-h);
+  align-self: start;
+  height: calc(100vh - var(--header-h));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px 22px 48px 0;
+  border-right: 1px solid var(--rule);
+  scrollbar-width: thin;
+}
+.docs-sidenav__inner { display: flex; flex-direction: column; gap: 2px; }
+.docs-sidenav__cat { margin-bottom: 4px; }
+.docs-sidenav__cat > summary {
+  list-style: none;
+  cursor: pointer;
+  font-family: var(--font-display, var(--font-body));
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  padding: 8px 10px 6px;
+  border-radius: 7px;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.docs-sidenav__cat > summary::-webkit-details-marker { display: none; }
+.docs-sidenav__cat > summary::before {
+  content: "›";
+  display: inline-block;
+  font-size: 13px;
+  color: var(--fg-4);
+  transition: transform 0.15s ease;
+}
+.docs-sidenav__cat[open] > summary::before { transform: rotate(90deg); }
+.docs-sidenav__cat > summary:hover { color: var(--fg-1); }
+.docs-sidenav__list { list-style: none; margin: 2px 0 8px; padding: 0; }
+.docs-sidenav__list li { margin: 0; }
+.docs-sidenav__link {
+  display: block;
+  padding: 6px 10px 6px 24px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--fg-2);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.docs-sidenav__link:hover { background: var(--bg-hover); color: var(--fg-1); }
+.docs-sidenav__link.is-active {
+  color: var(--link, var(--navy));
+  font-weight: 600;
+  background: var(--bg-subtle);
+  border-left-color: var(--link, var(--navy));
+}
+
+/* ======================================================================
+   Clean product-docs article header
+   ====================================================================== */
+.doc-header { margin-bottom: 28px; }
+.doc-header__titlewrap {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.doc-header .article__title { margin-bottom: 8px; }
+.doc-header__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--fg-3);
+}
+.doc-header__edited a { color: var(--fg-3); font-weight: 600; }
+.doc-header__edited a:hover { color: var(--link, var(--navy)); }
+
+/* "Edit this page" / "View source" — docs convention, auth-gated */
+.doc-edit-row {
+  margin: 48px 0 8px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  font-size: 13px;
+  color: var(--fg-3);
+}
+.doc-edit-link { color: var(--fg-3); font-weight: 600; text-decoration: none; }
+.doc-edit-link:hover { color: var(--link, var(--navy)); text-decoration: underline; }
+html[data-auth="anon"] .doc-edit-row { display: none; }
+
+/* Collapse the left nav below the tablet breakpoint — content goes full width */
+@media (max-width: 1023px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .docs-sidenav { display: none; }
 }
 
 .side-group { margin-bottom: 22px; }
