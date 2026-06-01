@@ -3,6 +3,15 @@ Description=llama.cpp OpenAI-compatible inference server (Yo-Yo Tier B)
 After=vllm-weights-prep.service network.target
 Requires=vllm-weights-prep.service
 
+# Flag corrections verified live 2026-06-01 (BRIEF-slm-substrate-master.md §2.8):
+#  -np 1  : with -c 4096, -np 4 splits context to 1024 tok/slot → the 32B-Think reasoning
+#           block overruns it → truncated=1, no JSON. -np 1 = full 4096/slot. (To keep
+#           4-way concurrency use -c 16384, but only if the KV cache fits the 24 GB L4.)
+#  -fa on : the current llama.cpp build requires a value for --flash-attn; bare -fa consumes
+#           the next flag as its value and llama-server exits 1 on startup.
+# NOTE: this image still does NOT fix extraction — the Doorman /v1/extract JSON-schema grammar
+# does not constrain the 32B (unconstrained output → defer). That is a slm-doorman CODE fix;
+# do not rebuild expecting extraction to work until it lands. See service-slm/NEXT.md.
 [Service]
 Type=simple
 ExecStart=/opt/llama.cpp/build/bin/llama-server \
@@ -12,8 +21,8 @@ ExecStart=/opt/llama.cpp/build/bin/llama-server \
     --port 8000 \
     -c 4096 \
     -a Olmo-3-1125-32B-Think,Olmo-3-32B-Think,olmo-3-32b \
-    -np 4 \
-    -fa \
+    -np 1 \
+    -fa on \
     --reasoning-format deepseek \
     --reasoning-budget 1024 \
     --metrics
