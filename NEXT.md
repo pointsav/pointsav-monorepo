@@ -3,7 +3,7 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Monorepo coding roadmap: `pointsav-monorepo/NEXT.md`.
 
-Last updated: 2026-06-01 (Session 41 — Stage 6 complete; Phase 8 work queue updated).
+Last updated: 2026-06-01 (Session 41 — Phase 8A-D complete; Stage 6 + binary build requested from Command).
 
 ---
 
@@ -47,10 +47,10 @@ All three Phase 6/7/8 commits cherry-picked onto canonical via Command Session 4
 ## Phase 8 — continuing (Session 41)
 
 - [x] `/audit` verdict-log viewer — F12 InputCartridge; Ctrl-A opens `AuditLog` state; `audit::query_recent(200)` reads local `ingest_log` SQLite; j/k scroll; Esc back; status colour-coded (3c9e6c89, 2026-05-31)
-- [ ] **Phase 8A** — 24-bit truecolor application (`TerminalCaps.truecolor` already probed; extend `set_graphics_caps` signature; use `Color::Rgb` vs `Color::Indexed` fallback in render paths)
-- [ ] **Phase 8B** — OSC 8 hyperlinks on search result titles, audit log paths, protocol name spans (post-render injection via crossterm)
-- [ ] **Phase 8C** — Session persistence — auto-save draft content to `~/.local/share/proof/content_session.db`; restore on reconnect (rusqlite pattern from `app-console-input/src/audit.rs`)
-- [ ] **Phase 8D** — Multi-tab editing (`Ctrl-w n` new tab, `Ctrl-w h/l` navigate, `Ctrl-w c` close; `ContentState::MultiDraft` variant + tab bar render)
+- [x] **Phase 8A** — 24-bit truecolor application; `set_graphics_caps` extended with `truecolor: bool`; `accent_color()` + `selection_bg()` helpers; RGB used on truecolor terminals (6010a3a2, 2026-06-01)
+- [x] **Phase 8B** — OSC 8 hyperlinks on search results via post-render `flush_hyperlinks()`; `HyperlinkTarget` positions recorded during render; OSC 8 emitted via crossterm `MoveTo`+`Print` (ee19a89f, 2026-06-01)
+- [x] **Phase 8C** — Session persistence; `DraftSave` module (SQLite, rusqlite bundled); auto-save on every keystroke; restore on reconnect with "[restored]" hint (47eaf264, 2026-06-01)
+- [x] **Phase 8D** — Multi-tab editing; `ContentState::MultiDraft` + `DraftTab`; `Ctrl-t` new tab, `Ctrl-←/→` navigate, `Ctrl-w` close; tab bar render (5bc94492, 2026-06-01)
 - [ ] **F2 People cartridge — BLOCKED.** `service-people` has no HTTP API. Contract requested
   from project-data via outbox `project-console-20260531-service-people-contract`. Build F2
   once project-data ships/defines the endpoint. Leave `app-console-people` Reserved until then.
