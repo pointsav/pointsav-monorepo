@@ -2,13 +2,13 @@
 """
 test-cluster-archetypes.py — Probe existing GIS data for two new co-location archetypes.
 
-Archetype 1 — Vertical Warehouse (VW)
+Archetype 1 — Urban Fringe (VWH)
   3–6 story urban logistics / light-manufacturing building.
   Proxy signal: hardware cluster with NO hypermarket anchor, at urban fringe (5–80 km
   from nearest major metro), cluster span < 5 km.
   Not a retail zone — serves contractors, manufacturers, JIT delivery.
 
-Archetype 2 — Transit Node (TN)
+Archetype 2 — Commuter (PKS)
   Regional airport 15–150 km from a major metro, co-located with a T1/T2 cluster
   (the Regional Market whose population generates park-and-fly / park-and-train demand).
   Major hub proxy: airports with a T1 cluster within 5 km are excluded (major hubs have
@@ -103,12 +103,12 @@ def nearest_cluster(
 
 # ── PARAMETERS ────────────────────────────────────────────────────────────────
 
-# Vertical Warehouse
+# Urban Fringe (VWH)
 VW_MIN_METRO_KM = 5.0   # not downtown core
 VW_MAX_METRO_KM = 80.0  # urban fringe, not exurban
 VW_MAX_SPAN_KM  = 5.0   # tight commercial node
 
-# Transit Node
+# Commuter (PKS)
 TN_MIN_METRO_KM     = 15.0   # not a suburb
 TN_MAX_METRO_KM     = 150.0  # regional sweet spot
 TN_HUB_EXCL_KM      = 5.0    # T1 within this → likely major hub → exclude
@@ -144,7 +144,7 @@ for feat in features:
     if tier in (1, 2):
         t12_index.append(entry)
 
-    # ── Vertical Warehouse filter ──────────────────────────────────────────────
+    # ── Urban Fringe filter ────────────────────────────────────────────────────
     members_raw = p["members"]
     members = json.loads(members_raw) if isinstance(members_raw, str) else members_raw
 
@@ -182,7 +182,7 @@ for feat in features:
     })
 
 print(f"  T1 clusters: {len(t1_index):,}  |  T1+T2: {len(t12_index):,}")
-print(f"  Vertical Warehouse candidates: {len(vw_candidates):,}")
+print(f"  Urban Fringe candidates: {len(vw_candidates):,}")
 
 # ── LOAD TRANSIT ANCHORS (airports + railway stations) ────────────────────────
 # Prefer the IATA-filtered OSM airport set; fall back to raw Overture if absent.
@@ -257,9 +257,9 @@ if airport_dedup:
     print(f"  {len(transit):,} → {len(deduped):,} after dedup")
     transit = deduped
 
-# ── TRANSIT NODE PASS (PKS) ───────────────────────────────────────────────────
+# ── COMMUTER PASS (PKS) ───────────────────────────────────────────────────────
 
-print("\nScoring transit anchors as Parking Structure (PKS) candidates …")
+print("\nScoring transit anchors as Commuter (PKS) candidates …")
 tn_candidates: list[dict] = []
 skipped_range = skipped_hub = 0
 
@@ -322,7 +322,7 @@ for i, ap in enumerate(transit):
 
 print(f"  Skipped (metro distance out of range): {skipped_range:,}")
 print(f"  Skipped (T1 within {TN_HUB_EXCL_KM} km — major hub): {skipped_hub:,}")
-print(f"  Transit Node candidates: {len(tn_candidates):,}")
+print(f"  Commuter candidates: {len(tn_candidates):,}")
 
 integrated_count   = sum(1 for t in tn_candidates if t["integrated"])
 linked_count       = sum(1 for t in tn_candidates if t["nearest_cluster_km"] is not None)
@@ -411,7 +411,7 @@ print(f"Wrote {out_pks}  ({len(tn_candidates):,} features)")
 W = 70
 
 print("\n" + "=" * W)
-print("VERTICAL WAREHOUSE — Top 25 candidates (sorted by proximity to metro)")
+print("URBAN FRINGE — Top 25 candidates (sorted by proximity to metro)")
 print("=" * W)
 for c in vw_candidates[:25]:
     hw     = ", ".join(c["hardware_chains"])
@@ -425,7 +425,7 @@ for iso, cnt in list(by_country(vw_candidates).items())[:17]:
     print(f"  {iso:4}  {cnt:>6}")
 
 print("\n" + "=" * W)
-print("TRANSIT NODE — Top 25 candidates (by score)")
+print("COMMUTER — Top 25 candidates (by score)")
 print("=" * W)
 for c in tn_candidates[:25]:
     cluster = (c["nearest_cluster_id"] or "none")[:20]
