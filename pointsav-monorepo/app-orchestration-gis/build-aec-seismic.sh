@@ -104,10 +104,29 @@ USGS_GEOJSON="$WORK_DIR/usgs-nshm-pga-us.geojson"
 if [[ ! -f "$USGS_GEOJSON" ]]; then
     if [[ ! -f "$USGS_ZIP" ]] || ! file "$USGS_ZIP" | grep -qi "zip"; then
         rm -f "$USGS_ZIP"
-        curl -L --retry 3 --retry-delay 10 \
-            -o "$USGS_ZIP" \
-            "https://www.sciencebase.gov/catalog/file/get/64ff886dd34ed30c2057b4d9?f=__disk__76%2Ff4%2Fb4%2F76f4b416aadf6f70680106a36acc31714473b4ff" \
-            2>&1 | tee -a "$LOG"
+        SCIENCEBASE_ITEM="64ff886dd34ed30c2057b4d9"
+        echo "  Resolving current download URL via ScienceBase catalog API..." | tee -a "$LOG"
+        USGS_DL_URL=$(curl -sL --max-time 30 --connect-timeout 10 \
+            -H "User-Agent: Mozilla/5.0 (compatible; USGS-Data-Fetch/1.0)" \
+            "https://www.sciencebase.gov/catalog/item/${SCIENCEBASE_ITEM}?format=json" | \
+            python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    zips = [f['downloadUri'] for f in d.get('files', []) if f.get('name','').endswith('.zip')]
+    print(zips[0] if zips else '')
+except Exception:
+    print('')
+" 2>/dev/null)
+        if [[ -z "$USGS_DL_URL" ]]; then
+            echo "  WARN: ScienceBase catalog API unreachable or no .zip file — USGS seismic data will be skipped" | tee -a "$LOG"
+        else
+            echo "  Downloading: $USGS_DL_URL" | tee -a "$LOG"
+            curl -L --retry 3 --retry-delay 10 --max-time 300 \
+                -H "User-Agent: Mozilla/5.0 (compatible; USGS-Data-Fetch/1.0)" \
+                -o "$USGS_ZIP" "$USGS_DL_URL" \
+                2>&1 | tee -a "$LOG"
+        fi
     fi
     if file "$USGS_ZIP" 2>/dev/null | grep -qi "zip"; then
         TMP_USGS=$(mktemp -d)
