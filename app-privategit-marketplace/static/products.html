@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=1440">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Software — PointSav</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -286,6 +286,7 @@
     text-align: center;
   }
   .installer .get:hover { background: #A0B5C8; }
+  .installer .get.fsl { border: 1px solid var(--accent); }
 
   .installers .head {
     display: grid;
@@ -571,7 +572,7 @@
 <div class="page" data-screen-label="Products">
   <header class="topnav">
     <nav class="left">
-      <a class="active-page" href="#">Products</a>
+      <a class="active-page" href="#">Software</a>
       <a href="#">Disclaimer</a>
       <a href="#">Contact us</a>
     </nav>
@@ -592,7 +593,7 @@
   </header>
 
   <div class="page-hero">
-    <h1>Products</h1>
+    <h1>Software</h1>
   </div>
 
   <main class="subpage-main">
@@ -602,14 +603,14 @@
       <div class="path-col">
         <span class="path-label">Free path</span>
         <h2>Compile from source</h2>
-        <p>PointSav is open source under Apache 2.0. Clone the repository, run <code>cargo build --release</code>, and use the binary at no cost. No payment, no account, no licence key required.</p>
+        <p>PointSav is open source under Apache 2.0. Clone the repository and run <code>cargo build --release</code> to produce your own binary at no cost — no payment, no account, no licence key required. Pre-compiled binaries are not distributed on GitHub; they are available here only.</p>
         <a class="path-link" href="https://github.com/pointsav/pointsav-monorepo" target="_blank" rel="noopener">github.com/pointsav/pointsav-monorepo →</a>
       </div>
       <div class="divider"></div>
       <div class="path-col">
         <span class="path-label">Paid path</span>
         <h2>Pre-compiled binary</h2>
-        <p>Pre-compiled, Ed25519-signed OS images built from the same source. Pay once in USDC on Polygon — <strong>application images at $1.00</strong> or <strong>infrastructure images at $19.00</strong>. No subscription. Each version purchased independently.</p>
+        <p>Pre-compiled, Ed25519-signed OS images built from the same source. Each product has one fixed price — <strong>application images at $1.00 USDC</strong>, <strong>infrastructure images at $19.00 USDC</strong>. No subscription. Each version purchased independently.</p>
         <a class="path-link" href="#license-tiers">See licence tiers →</a>
       </div>
     </div>
@@ -626,7 +627,7 @@
         <div class="col">Edition</div>
         <div class="col">Platform</div>
         <div class="col">Size</div>
-        <div class="col"></div>
+        <div class="col">Purchase</div>
       </div>
 
       <div class="installer">
@@ -650,7 +651,7 @@
         <div class="col"><span class="label">Edition</span>2026.05.144</div>
         <div class="col"><span class="label">Platform</span>Bare-metal · any hardware</div>
         <div class="col"><span class="label">Size</span>188 MB</div>
-        <a class="get co-trigger" href="#checkout-overlay"
+        <a class="get co-trigger fsl" href="#checkout-overlay"
            data-product="os-infrastructure" data-price="19000000" data-tier="fsl"
            data-label="PointSav Infrastructure OS — FSL">FSL · $19.00 →</a>
       </div>
@@ -663,7 +664,7 @@
         <div class="col"><span class="label">Edition</span>2026.05.142</div>
         <div class="col"><span class="label">Platform</span>Linux server</div>
         <div class="col"><span class="label">Size</span>96 MB</div>
-        <a class="get co-trigger" href="#checkout-overlay"
+        <a class="get co-trigger fsl" href="#checkout-overlay"
            data-product="os-mediakit" data-price="19000000" data-tier="fsl"
            data-label="PointSav MediaKit OS — FSL">FSL · $19.00 →</a>
       </div>
@@ -715,7 +716,7 @@
         <div class="col"><span class="label">Edition</span>2026.05.142</div>
         <div class="col"><span class="label">Platform</span>Linux server</div>
         <div class="col"><span class="label">Size</span>156 MB</div>
-        <a class="get co-trigger" href="#checkout-overlay"
+        <a class="get co-trigger fsl" href="#checkout-overlay"
            data-product="os-interface" data-price="19000000" data-tier="fsl"
            data-label="Totebox Orchestration OS — FSL">FSL · $19.00 →</a>
       </div>
