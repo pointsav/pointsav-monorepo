@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Color Sample — Woodfine Org Chart Token Palette</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; background: #E2E8F0; padding: 40px; margin: 0; }
+  h2 { font-size: 13px; font-weight: 800; color: #0F172A; letter-spacing: 0.06em; text-transform: uppercase; margin: 24px 0 12px 0; }
+  h2:first-of-type { margin-top: 0; }
+  .section-note { font-size: 10px; color: #64748B; margin: -8px 0 12px 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 8px; }
+  .box { width: 180px; height: 100px; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+  .box-title { font-size: 11px; font-weight: 800; color: #000; line-height: 1.2; }
+  .box-class { font-size: 9px; font-family: monospace; color: #475569; }
+  .box-colors { font-size: 8px; color: #64748B; }
+  .box-num { position: absolute; bottom: 6px; right: 8px; font-size: 10px; font-weight: 700; color: #94A3B8; font-family: monospace; }
+
+  /* ── Section 1: Core named token classes ── */
+  .token-orange-solid        { background: #FFF3E0; border: 2px solid #E65100; }
+  .token-blue-solid          { background: #E3F2FD; border: 2px solid #1565C0; }
+  .token-blue-dashed         { background: #E3F2FD; border: 2px dashed #1565C0; border-radius: 100px; }
+  .token-blue-ellipse-dotted { background: #E3F2FD; border: 2px dotted #1565C0; border-radius: 110px; }
+  .token-grey-dashed         { background: #F8FAFC; border: 2px dashed #94A3B8; }
+  .token-grey-solid          { background: #EEEEEE; border: 2px solid #757575; border-radius: 12px; }
+  .token-yellow              { background: #FFFDE7; border: 2px dashed #F57F17; border-radius: 100px; }
+
+  /* ── Section 2: Additional colors already in org charts ── */
+  .token-green               { background: #F1F8E9; border: 2px solid #2E7D32; }
+  .token-purple              { background: #F3E5F5; border: 2px solid #7B1FA2; }
+  .token-purple-ellipse-dotted { background: #F3E5F5; border: 2px dotted #7B1FA2; border-radius: 110px; }
+  .token-olive               { background: #F9FBE7; border: 2px solid #827717; }
+  .token-gray-dark           { background: #F5F5F5; border: 2px solid #424242; }
+  .token-gray-light          { background: #EEEEEE; border: 2px solid #757575; border-radius: 12px; }
+
+  /* ── Section 3: Proposed new tokens (not yet in any chart) ── */
+  .token-crimson             { background: #FFEBEE; border: 2px solid #C62828; }
+  .token-magenta             { background: #FCE4EC; border: 2px solid #AD1457; }
+  .token-cyan                { background: #E0F7FA; border: 2px solid #00838F; }
+  .token-cyan-dashed         { background: #E0F7FA; border: 2px dashed #00838F; border-radius: 100px; }
+  .token-slate               { background: #ECEFF1; border: 2px solid #37474F; }
+  .token-deep-violet         { background: #EDE7F6; border: 2px solid #4527A0; }
+  .token-navy                { background: #E8EAF6; border: 2px solid #1A237E; }
+</style>
+</head>
+<body>
+
+<h2>Section 1 — Core Token Classes</h2>
+<p class="section-note">Named token classes used across 3+ org charts</p>
+<div class="row">
+  <div class="box token-orange-solid">
+    <div class="box-title">Management Corp.</div>
+    <div class="box-class">token-orange-solid</div>
+    <div class="box-colors">#E65100 / #FFF3E0 solid</div>
+  </div>
+  <div class="box token-blue-solid">
+    <div class="box-title">Special Purpose Inc.</div>
+    <div class="box-class">token-blue-solid</div>
+    <div class="box-colors">#1565C0 / #E3F2FD solid</div>
+  </div>
+  <div class="box token-blue-dashed">
+    <div class="box-title">Special Purpose LP</div>
+    <div class="box-class">token-blue-dashed</div>
+    <div class="box-colors">#1565C0 / #E3F2FD dashed ellipse</div>
+  </div>
+  <div class="box token-blue-ellipse-dotted">
+    <div class="box-title">Special Purpose LP</div>
+    <div class="box-class">token-blue-ellipse-dotted</div>
+    <div class="box-colors">#1565C0 / #E3F2FD dotted ellipse</div>
+  </div>
+  <div class="box token-grey-dashed">
+    <div class="box-title">Exempt Market Dealer</div>
+    <div class="box-class">token-grey-dashed</div>
+    <div class="box-colors">#94A3B8 / #F8FAFC dashed</div>
+  </div>
+  <div class="box token-grey-solid">
+    <div class="box-title">Woodfine Buildings</div>
+    <div class="box-class">token-grey-solid</div>
+    <div class="box-colors">#757575 / #EEEEEE solid rounded</div>
+  </div>
+  <div class="box token-yellow">
+    <div class="box-title">Professional Centres LP</div>
+    <div class="box-class">token-yellow</div>
+    <div class="box-colors">#F57F17 / #FFFDE7 dashed ellipse</div>
+  </div>
+</div>
+
+<h2>Section 2 — Additional Existing Colors</h2>
+<p class="section-note">Found in org charts — not yet in every file's CSS</p>
+<div class="row">
+  <div class="box token-green">
+    <div class="box-title">Sample Entity Name</div>
+    <div class="box-class">token-green</div>
+    <div class="box-colors">#2E7D32 / #F1F8E9 solid</div>
+  </div>
+  <div class="box token-purple">
+    <div class="box-title">Sample Entity Name</div>
+    <div class="box-class">token-purple</div>
+    <div class="box-colors">#7B1FA2 / #F3E5F5 solid</div>
+  </div>
+  <div class="box token-purple-ellipse-dotted">
+    <div class="box-title">Sample Entity Name</div>
+    <div class="box-class">token-purple-ellipse-dotted</div>
+    <div class="box-colors">#7B1FA2 / #F3E5F5 dotted ellipse</div>
+  </div>
+  <div class="box token-olive">
+    <div class="box-title">Sample Entity Name</div>
+    <div class="box-class">token-olive</div>
+    <div class="box-colors">#827717 / #F9FBE7 solid</div>
+  </div>
+  <div class="box token-gray-dark">
+    <div class="box-title">Sample Entity Name</div>
+    <div class="box-class">token-gray-dark</div>
+    <div class="box-colors">#424242 / #F5F5F5 solid</div>
+  </div>
+  <div class="box token-gray-light">
+    <div class="box-title">Sample Entity Name</div>
+    <div class="box-class">token-gray-light</div>
+    <div class="box-colors">#757575 / #EEEEEE solid rounded</div>
+  </div>
+</div>
+
+<h2>Section 3 — Proposed New Colors</h2>
+<p class="section-note">Not yet used in any chart — picked from hue wheel gaps (red ~0°, magenta ~330°, cyan ~185°, slate ~200°, deep-violet ~260°, navy ~230°)</p>
+<div class="row">
+  <div class="box token-crimson">
+    <div class="box-title">Sample Entity Name</div>
+    <div class="box-class">token-crimson</div>
+    <div class="box-colors">#C62828 / #FFEBEE solid — true red</div>
+  </div>
+  <div class="box token-magenta">
+    <div class="box-title">Sample Entity Name</div>
+    <div class="box-class">token-magenta</div>
+    <div class="box-colors">#AD1457 / #FCE4EC solid — rose/magenta</div>
+  </div>
+  <div class="box token-cyan">
+    <div class="box-title">Sample Entity Name</div>
+    <div class="box-class">token-cyan</div>
+    <div class="box-colors">#00838F / #E0F7FA solid — turquoise</div>
+  </div>
+  <div class="box token-cyan-dashed">
+    <div class="box-title">Sample Entity Name</div>
+    <div class="box-class">token-cyan-dashed</div>
+    <div class="box-colors">#00838F / #E0F7FA dashed ellipse</div>
+  </div>
+  <div class="box token-slate">
+    <div class="box-title">Sample Entity Name</div>
+    <div class="box-class">token-slate</div>
+    <div class="box-colors">#37474F / #ECEFF1 solid — cool blue-grey</div>
+  </div>
+  <div class="box token-deep-violet">
+    <div class="box-title">Sample Entity Name</div>
+    <div class="box-class">token-deep-violet</div>
+    <div class="box-colors">#4527A0 / #EDE7F6 solid — deeper than purple</div>
+  </div>
+  <div class="box token-navy">
+    <div class="box-title">Sample Entity Name</div>
+    <div class="box-class">token-navy</div>
+    <div class="box-colors">#1A237E / #E8EAF6 solid — darker than blue</div>
+  </div>
+</div>
+
+</body>
+</html>

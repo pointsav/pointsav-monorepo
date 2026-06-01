@@ -1,0 +1,481 @@
+<!--
+schema: foundry-draft-v1
+state: draft-pending-design-pass
+originating_cluster: project-orgcharts
+language_protocol: COMMS
+authored: 2026-05-29T00:00:00Z
+authored_by: totebox-project-orgcharts / claude-opus-4-7
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bencal Corporation — Nature of Business, Corporate Structure, and Definitions</title>
+
+CLAUDE: Can we put on the top right corner the version control to the top right hand side "DRAFT - 2026-05-29 - V1" 
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@page {
+  size: letter;
+  margin: 1in;
+  @top-left { content: "BENCAL CORPORATION — NATURE OF BUSINESS — 2026"; font-family: 'Tinos', serif; font-size: 10pt; }
+  @bottom-center { content: "- " counter(page) " -"; font-family: 'Tinos', serif; font-size: 10pt; }
+}
+CLAUDE: Can you take this "BENCAL CORPORATION — NATURE OF BUSINESS — 2026" out throught the document.
+
+@page :first {
+  @top-left { content: ""; }
+  @bottom-center { content: ""; }
+}
+body { font-family: 'Tinos', 'Times New Roman', serif; font-size: 11.5pt; line-height: 1.5; color: #000; max-width: 100%; }
+h1 { font-size: 24pt; font-weight: bold; margin: 24pt 0 12pt 0; }
+h2 { font-size: 11.5pt; font-weight: bold; margin: 12pt 0 6pt 0; }
+p { margin: 0 0 8pt 0; text-align: justify; }
+.title { text-align: center; font-size: 13pt; font-weight: bold; margin-bottom: 4pt; }
+.subtitle { text-align: center; font-size: 13pt; margin-bottom: 4pt; }
+.title-block { text-align: center; margin-bottom: 24pt; }
+.title-block p { text-align: center; margin: 2pt 0; font-size: 13pt; }
+.title-block p.main { font-weight: bold; }
+.parties-block { margin: 0 0 14pt 0; }
+.party-label { font-weight: bold; }
+.whereas { margin-left: 30pt; margin-bottom: 8pt; }
+.whereas-label { font-weight: bold; }
+mark { background-color: #FFFF00; }
+.section-num { font-weight: bold; }
+ol.alpha { list-style-type: lower-alpha; margin-left: 30pt; }
+.sig-section { margin-top: 48pt; page-break-inside: avoid; }
+.sig-table { width: 100%; border-collapse: collapse; }
+.sig-cell-open { width: 48%; vertical-align: top; padding-right: 4%; }
+.sig-box { border: 1pt solid black; padding: 36pt 12pt 12pt 12pt; min-height: 90pt; }
+.sig-name { font-weight: bold; margin-top: 8pt; }
+.divider { border: none; border-top: 1pt solid black; margin: 20pt 0; }
+.and-divider { text-align: center; margin: 14pt 0; font-weight: bold; }
+.addendum-block { margin-top: 36pt; padding: 12pt; border: 1pt dashed #555; background-color: #fafafa; page-break-inside: avoid; }
+.addendum-block h2 { margin-top: 0; }
+.party-name { font-weight: bold; text-transform: uppercase; margin: 0; }
+.address-line { margin: 0; }
+.note { font-style: italic; margin: 6pt 0 14pt 0; }
+.defined { font-weight: bold; }
+.indent-a { margin-left: 30pt; margin-bottom: 6pt; }
+table.insert-table { border-collapse: collapse; width: 100%; margin: 8pt 0 12pt 0; font-size: 11pt; }
+table.insert-table th, table.insert-table td { border: 0.5pt solid #999; padding: 6pt; text-align: left; vertical-align: top; }
+table.insert-table th { font-weight: bold; background-color: transparent; }
+table.insert-table tr.group-heading td { font-weight: bold; background-color: transparent; border-top: 0.5pt solid #999; border-bottom: 0.5pt solid #999; }
+.definition { margin: 0 0 8pt 0; text-align: justify; }
+.closing { margin-top: 24pt; font-style: italic; text-align: center; font-size: 10.5pt; }
+</style>
+</head>
+<body>
+
+<div class="title-block">
+  <p class="main">NATURE OF BUSINESS, CORPORATE STRUCTURE, AND DEFINITIONS</p>
+  <p>Bencal Corporation</p>
+  <p>Province of British Columbia, Canada</p>
+  <p>Reference Date: 2026-05-29</p>
+</div>
+
+<p>Bencal Corporation is a British Columbia corporation that organises, capitalises, and administers private capital vehicles for accredited investors. This insert is prepared by counsel for Bencal Corporation and may be incorporated by reference into agreements to which Bencal Corporation or any Bencal Group entity is a party. This document sets out the corporate structure of the Bencal Group, the nature of its business, and the defined terms applicable to such agreements.</p>
+
+CLAUDE: "accredited investors. This insert is prepared by counsel for Bencal Corporation" --- In this frist paragraph this wording is incorrect we need to say that this has been prepared by "Management"
+
+
+
+
+<h2>1. Principals</h2>
+
+<p>The beneficial owners of Bencal Corporation are the following personal holding companies (each a &ldquo;<strong>Principal</strong>&rdquo;):</p>
+
+<table class="insert-table">
+  <thead>
+    <tr>
+      <th>Entity</th>
+      <th>Role</th>
+      <th>Code</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Kiel Capital Inc.</td>
+      <td>Personal Holding Company &mdash; Principal</td>
+      <td>BCL-CA-01-HLD</td>
+    </tr>
+    <tr>
+      <td>Elzen Holdings Inc.</td>
+      <td>Personal Holding Company &mdash; Principal</td>
+      <td>BCL-CA-02-HLD</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>2. Corporate Platform</h2>
+
+<p>The Bencal Group operates through the following corporate platform:</p>
+
+<table class="insert-table">
+  <thead>
+    <tr>
+      <th>Entity</th>
+      <th>Role</th>
+      <th>Code</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Bencal Corporation</td>
+      <td>Parent Corporation</td>
+      <td>BCL-CA-01-PAR</td>
+    </tr>
+    <tr>
+      <td>Bencal Investment Management Inc.</td>
+      <td>Operating Manager / Licensed Manager</td>
+      <td>BCL-CA-01-OPR</td>
+    </tr>
+  </tbody>
+</table>
+
+CLAUDE: In #2 where it says "Operating Manager / Licensed Manager" this needs to be changed to just "Operating Manager" we should make a point that prehaps this company is "yet to be formed"
+
+<p>Bencal Investment Management Inc. acts as general partner, promoter, and manager for each investment vehicle organised by Bencal Corporation, holds required securities registrations, and employs personnel. Bencal Corporation holds the equity interests in Bencal Investment Management Inc. and in each strategy-specific general partner corporation.</p>
+
+CLAUDE: "Bencal Investment Management Inc. acts as general partner, promoter, and manager for each" -- is incorrect in that it will never act as General Partner as each Club Deal or Private SPV will have its own General Partner for that deal. 
+
+CLAUDE: "Bencal Investment Management Inc. acts as general partner, promoter, and manager for each" -- Bencal Investement Management Inc. would act as the sub-agent for the strategy specific general partner corporations as needed. 
+
+<h2>3. Investment Strategy Vehicles (Club Deals)</h2>
+
+CLAUDE: "3. Investment Strategy Vehicles (Club Deals)" 
+
+<p>Bencal Corporation organises club deal investment vehicles in three strategy families. Each deal is structured as a separate numbered general partner corporation and limited partnership, with [N] denoting the sequential deal number:</p>
+
+
+
+<table class="insert-table">
+  <thead>
+    <tr>
+      <th>Strategy</th>
+      <th>General Partner Corporation</th>
+      <th>Limited Partnership</th>
+      <th>Scope</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Credit</td>
+      <td>Bencal Credit Partners [N] Inc.</td>
+      <td>Bencal Credit Partners [N] Limited Partnership</td>
+      <td>Private debt, mezzanine, senior secured loans, structured income</td>
+    </tr>
+    <tr>
+      <td>Real Assets</td>
+      <td>Bencal Real Assets [N] Inc.</td>
+      <td>Bencal Real Assets [N] Limited Partnership</td>
+      <td>Real estate, infrastructure, tangible-asset direct investments</td>
+    </tr>
+    <tr>
+      <td>Equity</td>
+      <td>Bencal Equity Partners [N] Inc.</td>
+      <td>Bencal Equity Partners [N] Limited Partnership</td>
+      <td>Growth equity, co-investment, direct equity participations</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>4. Private Investment Vehicles</h2>
+
+CLAUDE: We dont have the code pattern for the strategies in table #3 maybe it is better not to put the code pattern in at this point, in which case it should be taken off Table #4 below or if not Table #3 and Table #4 should be self-similar. 
+
+CLAUDE: We need to be careful in that the "CA" is the code pattern is variable as it represents the country, also the code pattern for a general partner is "xxx-aa-n-ADM" for Administration as in some countries the "General Partner" is the Administrator of a trust to create the same flow-through structure. 
+
+<p>Bencal Corporation also organises private investment vehicles not bound to a single strategy family, used for bespoke transactions with individual or small groups of investors:</p>
+
+<table class="insert-table">
+  <thead>
+    <tr>
+      <th>Entity</th>
+      <th>Type</th>
+      <th>Code Pattern</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Bencal Private Investments [N] Inc.</td>
+      <td>General Partner Corporation</td>
+      <td>BCL-CA-[N]-GPR</td>
+    </tr>
+    <tr>
+      <td>Bencal Private Investments [N] Limited Partnership</td>
+      <td>Limited Partnership</td>
+      <td>BCL-CA-[N]-AST</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Bencal Special Purpose 1 Inc. (BCL-CA-01-AST) and Bencal Special Purpose 2 Inc. (BCL-CA-02-ADM) together with Bencal Special Purpose 2 Limited Partnership (BCL-CA-02-AST) are existing private investment vehicles and constitute the first vehicles in this series.</p>
+
+CLAUDE: Here we will need to adjust the existing company names as follows "Bencal Equity Partners 1 Inc. (BCL-CA-01-AST) and Bencal Real Assets 1 Inc. (BCL-CA-01-ADM) together with Bencal Real Assets 1 Limited Partnership (BCL-CA-01-AST) are existing private investment vehicles and constitute the first vehicles in this series." 
+
+<h2>5. Nature of Business</h2>
+
+<p>Bencal Corporation is a Canadian private capital manager that organises and promotes investment vehicles for accredited investors pursuant to applicable prospectus exemptions under NI 45-106. Investment vehicles are structured on a deal-by-deal basis; investors subscribe to identified transactions in advance of any commitment. Bencal Investment Management Inc. holds a co-investment interest in each vehicle, aligning principal and investor interests.</p>
+
+CLAUDE: "advance of any commitment. Bencal Investment Management Inc. holds a co-investment interest in each vehicle, aligning principal and investor interests." --- It is Bencal Corporation that will own not a "co-investment interest in each vehicle" but rather will take the majority if not all its compensation as either unit-based/share-based compensation in each vehicle. 
+
+
+
+
+<p>Bencal Corporation currently operates as a promoter relying on the accredited investor prospectus exemption under section 2.3 of NI 45-106. Securities of Bencal Group vehicles are distributed through a referral arrangement with Altas One Digital Securities Inc., a registered exempt market dealer. It is intended that Bencal Investment Management Inc. will seek registration as an exempt market dealer, and subsequently as a portfolio manager and investment fund manager, as assets under management expand.</p>
+
+CLAUDE: "It is intended that Bencal Investment Management Inc. will seek registration as an exempt market dealer, and subsequently as a portfolio manager and investment fund manager, as assets under management expand" --- we need to say that the "Yet to be Formed Bencal Investment Management Inc." this needs to be the convenion through the document.
+
+CLAUDE: " market dealer, and subsequently as a portfolio manager and investment fund manager, as assets under management expand." --- this is good forsight however moving up to "portolio manager" and "investmnt fund manager" significally changes the dynamic of being an alternative investment manager offering club deals and private SPVs which is the business Bencal Corporation wants to stay in, pure alternatives.
+
+
+<p>No offering document in respect of any Bencal Group vehicle has been filed with any securities regulatory authority; all distributions are made in reliance on applicable prospectus exemptions.</p>
+
+CLAUDE: "No offering document in respect of any Bencal Group vehicle has been filed with any securities regulatory authority; all distributions are made in reliance on applicable prospectus exemptions." --- we should say "No offering documents in respect of any Bencal Group vehicles have been filed with any securities regulatory authority; all distributions are made in reliance on applicable prospectus exemptions."
+
+<h2>6. Definitions</h2>
+
+<p>In any agreement into which this insert is incorporated by reference, the following terms shall have the meanings set out below:</p>
+
+<p class="definition"><strong>&ldquo;Accredited Investor&rdquo;</strong> means an individual or entity that qualifies as an &ldquo;accredited investor&rdquo; within the meaning of section 1.1 of NI 45-106.</p>
+
+<p class="definition"><strong>&ldquo;Affiliate&rdquo;</strong>, when used to indicate a relationship with a specified Person, means another Person that directly, or indirectly through one or more intermediaries or otherwise, controls, or is controlled by, or is under common control with, such specified Person. A corporation shall be deemed to be an Affiliate of another corporation if one of them is the Subsidiary of the other or if both are Subsidiaries of the same Person or if each of them is directly or indirectly controlled by the same Person.</p>
+
+<p class="definition"><strong>&ldquo;Agent&rdquo;</strong> means Altas One Digital Securities Inc., a registered exempt market dealer, acting as referral agent pursuant to the Referral Agreement.</p>
+
+<p class="definition"><strong>&ldquo;Bencal Corporation&rdquo;</strong> means Bencal Corporation, a company incorporated under the <em>Business Corporations Act</em> (British Columbia), acting as parent holding company of the Bencal Group.</p>
+
+<p class="definition"><strong>&ldquo;Bencal Group&rdquo;</strong> means Bencal Corporation together with Bencal Investment Management Inc. and all general partner corporations and limited partnerships in which Bencal Corporation holds a direct or indirect interest.</p>
+
+<p class="definition"><strong>&ldquo;Bencal Management&rdquo;</strong> means Bencal Investment Management Inc. (BCL-CA-01-OPR), the operating manager and licensed manager of the Bencal Group, formerly known as Bencal Management Corp.</p>
+
+CLAUDE: "formerly known as Bencal Management Corp." --- we can take out "formerly known as Bencal Management Corp." these companies where never formed we are simply using different versions until now. 
+
+
+<p class="definition"><strong>&ldquo;Bencal SPV1&rdquo;</strong> means Bencal Special Purpose 1 Inc. (BCL-CA-01-AST), a private investment vehicle of the Bencal Group.</p>
+
+<p class="definition"><strong>&ldquo;Bencal SPV2&rdquo;</strong> means, collectively, Bencal Special Purpose 2 Inc. (BCL-CA-02-ADM) and Bencal Special Purpose 2 Limited Partnership (BCL-CA-02-AST).</p>
+
+<p class="definition"><strong>&ldquo;Bencal SPV2-GP&rdquo;</strong> means Bencal Special Purpose 2 Inc. (BCL-CA-02-ADM), in its capacity as general partner of Bencal SPV2-LP.</p>
+
+<p class="definition"><strong>&ldquo;Bencal SPV2-LP&rdquo;</strong> means Bencal Special Purpose 2 Limited Partnership (BCL-CA-02-AST).</p>
+
+CLAUDE: "<p class="definition"><strong>&ldquo;Bencal SPV1&rdquo;</strong> means Bencal Special Purpose 1 Inc. (BCL-CA-01-AST), a private investment vehicle of the Bencal Group.</p>
+
+<p class="definition"><strong>&ldquo;Bencal SPV2&rdquo;</strong> means, collectively, Bencal Special Purpose 2 Inc. (BCL-CA-02-ADM) and Bencal Special Purpose 2 Limited Partnership (BCL-CA-02-AST).</p>
+
+<p class="definition"><strong>&ldquo;Bencal SPV2-GP&rdquo;</strong> means Bencal Special Purpose 2 Inc. (BCL-CA-02-ADM), in its capacity as general partner of Bencal SPV2-LP.</p>
+
+<p class="definition"><strong>&ldquo;Bencal SPV2-LP&rdquo;</strong> means Bencal Special Purpose 2 Limited Partnership (BCL-CA-02-AST).</p>" --- we need to change all these as follows "<p class="definition"><strong>&ldquo;Bencal Equity Partners 1 &rdquo;</strong> means Bencal Equity Partners 1 Inc. (BCL-CA-01-AST), a private investment vehicle of the Bencal Group.</p>
+
+<p class="definition"><strong>&ldquo;Bencal Real Assets 1 &rdquo;</strong> means, collectively, Bencal Real Assets 1 Inc. (BCL-CA-01-ADM) and Bencal Real Assets 1 Limited Partnership (BCL-CA-01-AST).</p>
+
+<p class="definition"><strong>&ldquo;Bencal Real Assets 1 GP&rdquo;</strong> means Bencal Real Assets 1 Inc. (BCL-CA-01-ADM), in its capacity as general partner of Bencal Real Assets 1 LP.</p>
+
+<p class="definition"><strong>&ldquo;Bencal Real Assets 1 LP&rdquo;</strong> means Bencal Real Assets 1 Limited Partnership (BCL-CA-01-AST).</p>"
+
+<!-- RECONCILIATION REQUIRED: The BenCal Glossary (§1 Definitions and §2 Nomenclature) records "BenCo" as BenCo Inc. and assigns entity code BCL-CA-02-HLD to BenCo Inc. The current corporate structure set out in §1 (Principals) and §7 (Nomenclature) of this insert assigns BCL-CA-02-HLD to Elzen Holdings Inc. Reconciliation of the BenCo / Elzen Holdings naming and the BCL-CA-02-HLD code allocation is required before final execution of any agreement incorporating this insert by reference. -->
+<p class="definition"><strong>&ldquo;BenCo&rdquo;</strong> means BenCo Inc.</p>
+
+CLAUDE: "<p class="definition"><strong>&ldquo;BenCo&rdquo;</strong> means BenCo Inc.</p>" --- definition BenCo is no longer needed, please remove it. 
+
+<p class="definition"><strong>&ldquo;Club Deal&rdquo;</strong> means a private placement of limited partnership interests in a numbered Bencal vehicle to a defined group of Accredited Investors in respect of an identified investment transaction.</p>
+
+
+CLAUDE: "interests in a numbered Bencal vehicle to a defined group of " --- Bencal on its own is not defined, this will need to say somethign more like "interests in a numbered Bencal Group vehicle to a defined group of "
+
+
+<p class="definition"><strong>&ldquo;General Partner&rdquo;</strong> means, in respect of any Bencal limited partnership, the general partner corporation of that limited partnership as identified in the applicable limited partnership agreement.</p>
+
+CLAUDE: "eans, in respect of any Bencal limited partnership, the " -- again Bencal on its own is not defined, this would need to say "eans, in respect of any Bencal Group limited partnership, the "
+
+<p class="definition"><strong>&ldquo;Kiel Capital&rdquo;</strong> means Kiel Capital Inc. (BCL-CA-01-HLD), a personal holding company of a Principal.</p>
+
+<p class="definition"><strong>&ldquo;Limited Partnership&rdquo;</strong> means a limited partnership formed under the <em>Partnership Act</em> (British Columbia) or applicable provincial partnership legislation.</p>
+
+<p class="definition"><strong>&ldquo;NI 31-103&rdquo;</strong> means National Instrument 31-103 <em>Registration Requirements, Exemptions and Ongoing Registrant Obligations</em>, as amended from time to time.</p>
+
+<p class="definition"><strong>&ldquo;NI 45-106&rdquo;</strong> means National Instrument 45-106 <em>Prospectus Exemptions</em>, as amended from time to time.</p>
+
+<p class="definition"><strong>&ldquo;Professional Centres Canada LP&rdquo;</strong> means Woodfine Professional Centres Limited Partnership.</p>
+
+CLAUDE: "Woodfine Professional Centres Limited Partnership" --- for resisdence of Canada. Foregin investors must invest through a Special Purpose Vehilce like the ones offered by Bencal Group.
+
+<p class="definition"><strong>&ldquo;Professional Centres Mexico FIBRA&rdquo;</strong> means Woodfine Professional Centres 4 Fideicomiso de Infraestructura en Bienes Raíces.</p>
+
+CLAUDE: "Professional Centres Mexico FIBRA" --- for resisdence of Mexico. Foregin investors must invest through a Special Purpose Vehilce like the ones offered by Bencal Group.
+
+<p class="definition"><strong>&ldquo;Professional Centres Spain SOCIMI&rdquo;</strong> means Woodfine Professional Centres 3 Sociedad Anónima Cotizada de Inversión Inmobiliaria.</p>
+
+CLAUDE: "Professional Centres Spain SOCIMI" --- for resisdence of Spain. Foregin investors must invest through a Special Purpose Vehilce like the ones offered by Bencal Group.
+
+<p class="definition"><strong>&ldquo;Professional Centres United States LP&rdquo;</strong> means Woodfine Professional Centres 2 Limited Partnership.</p>
+
+CLAUDE: "Professional Centres United States LP" --- for resisdence of United States. Foregin investors must invest through a Special Purpose Vehilce like the ones offered by Bencal Group.
+
+<p class="definition"><strong>&ldquo;Promoter&rdquo;</strong> has the meaning ascribed to it under NI 45-106.</p>
+
+<p class="definition"><strong>&ldquo;Prospectus Exemption&rdquo;</strong> means the exemption from the prospectus requirement available under NI 45-106, including the accredited investor exemption under section 2.3 thereof, or such other exemption as may be relied upon from time to time.</p>
+
+<p class="definition"><strong>&ldquo;Woodfine Group&rdquo;</strong> means Woodfine Capital Projects Inc. together with its Affiliates, including each Woodfine Professional Centres entity and any general partner, administrator, or special purpose vehicle related thereto.</p>
+
+CLAUDE: "general partner, administrator, or special purpose vehicle related thereto" --- here "sepcial purpose vehicle" does not read good, is there any other way of saying this ? We need something else.
+
+<h2>7. Nomenclature</h2>
+
+<p>The following table sets out the entity codes, legal names, and institutional nomenclature used to identify entities of the Bencal Group and associated parties in agreements and other documents.</p>
+
+<table class="insert-table">
+  <thead>
+    <tr>
+      <th>Entity Code</th>
+      <th>Legal Name</th>
+      <th>Institutional Nomenclature</th>
+    </tr>
+  </thead>
+  <tbody>
+    
+CLAUDE: Can we just check the labelling of the three columns in the table with a OPUS CLAUDE AGENT.
+
+    <tr class="group-heading"><td colspan="3">Personal Holding Companies</td></tr>
+
+    CLAUDE: We don't need the breakout "Personal Holding Companies" it is making the chart too hard to read. 
+
+    <tr>
+      <td>BCL-CA-01-HLD</td>
+      <td>Kiel Capital Inc.</td>
+      <td>Personal Holding Company</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-02-HLD</td>
+      <td>Elzen Holdings Inc.</td>
+      <td>Personal Holding Company</td>
+    </tr>
+    <tr class="group-heading"><td colspan="3">Bencal Group</td></tr>
+CLAUDE: We don't need the breakout "Bencal Group" it is making the chart too hard to read.
+
+    <tr>
+      <td>BCL-CA-01-PAR</td>
+      <td>Bencal Corporation</td>
+      <td>Parent Corporation</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-01-OPR</td>
+      <td>Bencal Investment Management Inc.</td>
+      <td>Operating Manager / Licensed Manager</td>
+
+CLAUDE: "Operating Manager / Licensed Manager" --- we need to be clear here that this is "yet to be formed" and the idea is to get an EMD licence in the future. 
+
+    </tr>
+    <tr>
+      <td>BCL-CA-01-GPR</td>
+      <td>Bencal Private Investments 1 Inc.</td>
+      <td>General Partner &mdash; Private Investments</td>
+    </tr>
+
+CALUDE: "General Partner &mdash; Private Investments" --- we need a better definition here. It is not so much priate investments as it is investment vehicles for only one or two people or families that don't want to be co-mingled in the club deals. 
+
+    <tr>
+      <td>BCL-CA-01-AST</td>
+      <td>Bencal Special Purpose 1 Inc.</td>
+      <td>Private Investment Vehicle (SPV1)</td>
+
+  CALUDE: "Bencal Special Purpose 1 Inc." -- this should be Bencal Equity Partners 1 Inc. 
+  CLAUDE: "Private Investment Vehicle (SPV1)" --- this should Bencal Equity Partners 1 - WCP common shares
+
+    </tr>
+    <tr>
+      <td>BCL-CA-02-ADM</td>
+      <td>Bencal Special Purpose 2 Inc.</td>
+      <td>Administrative General Partner &mdash; Private Investments</td>
+    </tr>
+CLAUDE: "Bencal Special Purpose 2 Inc." --- this should be Bencal Real Assets 1 Inc.
+ClAUDE: "Administrative General Partner &mdash; Private Investments</td>" --- this should be "General Partner - Professional Centres Canada LP"
+
+    <tr>
+      <td>BCL-CA-02-AST</td>
+      <td>Bencal Special Purpose 2 Limited Partnership</td>
+      <td>Private Investment Vehicle (SPV2)</td>
+    </tr>
+CLAUDE: "Bencal Special Purpose 2 Limited Partnership<" --- this should be Bencal Real Assets 1 Limited Partnership
+CLAUDE: "Private Investment Vehicle (SPV2)" --- this should be "Limited Partnership - Professional Cantres Canada LP"
+    <tr>
+      <td>BCL-CA-[N]-GPR</td>
+      <td>Bencal Credit Partners [N] Inc.</td>
+      <td>General Partner &mdash; Credit</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-[N]-AST</td>
+      <td>Bencal Credit Partners [N] Limited Partnership</td>
+      <td>Club Deal Vehicle &mdash; Credit</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-[N]-GPR</td>
+      <td>Bencal Real Assets [N] Inc.</td>
+      <td>General Partner &mdash; Real Assets</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-[N]-AST</td>
+      <td>Bencal Real Assets [N] Limited Partnership</td>
+      <td>Club Deal Vehicle &mdash; Real Assets</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-[N]-GPR</td>
+      <td>Bencal Equity Partners [N] Inc.</td>
+      <td>General Partner &mdash; Equity</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-[N]-AST</td>
+      <td>Bencal Equity Partners [N] Limited Partnership</td>
+      <td>Club Deal Vehicle &mdash; Equity</td>
+    </tr>
+    <tr class="group-heading"><td colspan="3">External Counterparties</td></tr>
+CLAUDE: We don't need the breakout "External Counterparties" it is making the chart too hard to read. 
+    <tr>
+      <td>AOD-CA-01-AGT</td>
+      <td>Altas One Digital Securities Inc.</td>
+      <td>Exempt Market Dealer &mdash; Agent</td>
+    </tr>
+
+ CLAUDE: "OD-CA-01-AGT"   --- change this to "BCL-CA-02-OPR"
+    <tr>
+      <td>WCP-CA-01-HLD</td>
+      <td>Woodfine Capital Projects Inc.</td>
+      <td>Founding Limited Partner / Co-Investment Counterparty</td>
+CLAUDE: "Founding Limited Partner / Co-Investment Counterparty" --- change this to "direct-hold solutions"
+    </tr>
+  </tbody>
+</table>
+
+<p style="margin-top: 12pt;"><strong>Type Code Reference.</strong></p>
+
+<table class="insert-table">
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Role Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>PAR</td><td>Parent corporation</td></tr>
+    <tr><td>HLD</td><td>Personal holding company</td></tr>
+    <tr><td>OPR</td><td>Operating manager / licensed manager</td></tr>
+    <tr><td>ADM</td><td>Administrative general partner corporation</td></tr>
+CLAUDE: "Administrative general partner corporation" -- needs to say "General Partner / Administrator corporation"
+    <tr><td>GPR</td><td>General partner corporation</td></tr>
+CLAUDE: "GPR</td><td>General partner corporation<" -- this whole line needs to be removed, we dont use this.
+    <tr><td>AST</td><td>Asset-holding vehicle (limited partnership or SPV)</td></tr>
+CLAUDE: "(limited partnership or SPV)" --- this should be (limited partnership or corporation or trust)
+    <tr><td>AGT</td><td>External agent or dealer</td></tr>
+CLAUDE: "<tr><td>AGT</td><td>External agent or dealer</td></tr>" --- this whole line needs to be remove, we don't use this.
+  </tbody>
+</table>
+
+<p class="closing"><em>Bencal Corporation &mdash; 2026-05-29 &mdash; Private and confidential &mdash; prepared by counsel for Bencal Corporation for incorporation by reference into material agreements.</em></p>
+
+CLAUDE: "prepared by counsel " --- needs to say prepared by Management.
+
+</body>
+</html>

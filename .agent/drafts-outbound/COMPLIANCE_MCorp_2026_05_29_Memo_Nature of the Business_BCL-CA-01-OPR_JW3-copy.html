@@ -1,0 +1,380 @@
+<!--
+schema: foundry-draft-v1
+state: draft-pending-design-pass
+originating_cluster: project-orgcharts
+language_protocol: COMMS
+authored: 2026-05-30T00:00:00Z
+authored_by: totebox-project-orgcharts / claude-opus-4-7
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bencal Corporation — Nature of Business, Corporate Structure, and Definitions — JW3</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@page {
+  size: letter;
+  margin: 1in;
+  @bottom-center { content: "- " counter(page) " -"; font-family: 'Tinos', serif; font-size: 10pt; }
+}
+
+@page :first {
+  @top-left { content: ""; }
+  @top-right {
+    content: "DRAFT \2014 2026-05-29 \2014 V1";
+    font-family: 'Tinos', 'Times New Roman', serif;
+    font-size: 9pt;
+    font-weight: bold;
+    color: #555;
+    letter-spacing: 0.04em;
+  }
+  @bottom-center { content: ""; }
+}
+body { font-family: 'Tinos', 'Times New Roman', serif; font-size: 11.5pt; line-height: 1.5; color: #000; max-width: 100%; }
+h1 { font-size: 24pt; font-weight: bold; margin: 24pt 0 12pt 0; }
+h2 { font-size: 11.5pt; font-weight: bold; margin: 12pt 0 6pt 0; }
+p { margin: 0 0 8pt 0; text-align: justify; }
+.title { text-align: center; font-size: 13pt; font-weight: bold; margin-bottom: 4pt; }
+.subtitle { text-align: center; font-size: 13pt; margin-bottom: 4pt; }
+.title-block { text-align: center; margin-bottom: 24pt; }
+.title-block p { text-align: center; margin: 2pt 0; font-size: 13pt; }
+.title-block p.main { font-weight: bold; }
+.parties-block { margin: 0 0 14pt 0; }
+.party-label { font-weight: bold; }
+.whereas { margin-left: 30pt; margin-bottom: 8pt; }
+.whereas-label { font-weight: bold; }
+mark { background-color: #FFFF00; }
+.section-num { font-weight: bold; }
+ol.alpha { list-style-type: lower-alpha; margin-left: 30pt; }
+.sig-section { margin-top: 48pt; page-break-inside: avoid; }
+.sig-table { width: 100%; border-collapse: collapse; }
+.sig-cell-open { width: 48%; vertical-align: top; padding-right: 4%; }
+.sig-box { border: 1pt solid black; padding: 36pt 12pt 12pt 12pt; min-height: 90pt; }
+.sig-name { font-weight: bold; margin-top: 8pt; }
+.divider { border: none; border-top: 1pt solid black; margin: 20pt 0; }
+.and-divider { text-align: center; margin: 14pt 0; font-weight: bold; }
+.addendum-block { margin-top: 36pt; padding: 12pt; border: 1pt dashed #555; background-color: #fafafa; page-break-inside: avoid; }
+.addendum-block h2 { margin-top: 0; }
+.party-name { font-weight: bold; text-transform: uppercase; margin: 0; }
+.address-line { margin: 0; }
+.note { font-style: italic; margin: 6pt 0 14pt 0; }
+.defined { font-weight: bold; }
+.indent-a { margin-left: 30pt; margin-bottom: 6pt; }
+table.insert-table { border-collapse: collapse; width: 100%; margin: 8pt 0 12pt 0; font-size: 11pt; }
+table.insert-table th, table.insert-table td { border: 0.5pt solid #999; padding: 6pt; text-align: left; vertical-align: top; }
+table.insert-table th { font-weight: bold; background-color: transparent; }
+table.insert-table tr.group-heading td { font-weight: bold; background-color: transparent; border-top: 0.5pt solid #999; border-bottom: 0.5pt solid #999; }
+.definition { margin: 0 0 8pt 0; text-align: justify; }
+.closing { margin-top: 24pt; font-style: italic; text-align: center; font-size: 10.5pt; }
+.first-page-header { position: relative; }
+/* Screen-only version tag — hidden in print; PDF uses @page :first @top-right */
+.version-tag { position: absolute; top: -0.55in; right: -0.5in; font-size: 9pt; font-weight: bold; color: #555; letter-spacing: 0.04em; }
+@media print { .version-tag { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="first-page-header">
+  <div class="version-tag">DRAFT &mdash; 2026-05-29 &mdash; V1</div>
+  <div class="title-block">
+    <p class="main">NATURE OF BUSINESS, CORPORATE STRUCTURE, AND DEFINITIONS</p>
+    <p>Bencal Corporation</p>
+    <p>Province of British Columbia, Canada</p>
+    <p>Reference Date: 2026-05-29</p>
+  </div>
+</div>
+
+<p>Bencal Corporation is a British Columbia corporation that organises, capitalises, and administers private capital vehicles for accredited investors. This document is prepared by Management of Bencal Corporation and may be incorporated by reference into agreements to which Bencal Corporation or any Bencal Group entity is a party. This document sets out the corporate structure of the Bencal Group, the nature of its business, and the defined terms applicable to such agreements.</p>
+
+<h2>1. Principals</h2>
+
+<p>The beneficial owners of Bencal Corporation are the following personal holding companies (each a &ldquo;<strong>Principal</strong>&rdquo;):</p>
+
+<table class="insert-table">
+  <thead>
+    <tr>
+      <th>Entity</th>
+      <th>Role</th>
+      <th>Code</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Kiel Capital Inc.</td>
+      <td>Personal Holding Company &mdash; Principal</td>
+      <td>BCL-CA-01-HLD</td>
+    </tr>
+    <tr>
+      <td>Elzen Holdings Inc.</td>
+      <td>Personal Holding Company &mdash; Principal</td>
+      <td>BCL-CA-02-HLD</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>2. Corporate Platform</h2>
+
+<p>The Bencal Group operates through the following corporate platform:</p>
+
+<table class="insert-table">
+  <thead>
+    <tr>
+      <th>Entity</th>
+      <th>Role</th>
+      <th>Code</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Bencal Corporation</td>
+      <td>Parent Corporation</td>
+      <td>BCL-CA-01-PAR</td>
+    </tr>
+    <tr>
+      <td>Bencal Investment Management Inc.</td>
+      <td>Operating Manager <em>(yet to be formed)</em></td>
+      <td>BCL-CA-01-OPR</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Bencal Investment Management Inc. (yet to be formed) acts as promoter and manager for each investment vehicle organised by Bencal Corporation and, where applicable, as sub-agent for the strategy-specific general partner corporation of that vehicle. Bencal Corporation holds the equity interests in Bencal Investment Management Inc. and in each strategy-specific general partner corporation.</p>
+
+<h2>3. Investment Strategy Vehicles (Club Deals)</h2>
+
+<p>Bencal Corporation organises club deal investment vehicles in three strategy families. Each deal is structured as a separate numbered general partner corporation and limited partnership, with [N] denoting the sequential deal number:</p>
+
+<table class="insert-table">
+  <thead>
+    <tr>
+      <th>Strategy</th>
+      <th>General Partner Corporation</th>
+      <th>Limited Partnership</th>
+      <th>Scope</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Credit</td>
+      <td>Bencal Credit Partners [N] Inc.</td>
+      <td>Bencal Credit Partners [N] Limited Partnership</td>
+      <td>Private debt, mezzanine, senior secured loans, structured income</td>
+    </tr>
+    <tr>
+      <td>Real Assets</td>
+      <td>Bencal Real Assets [N] Inc.</td>
+      <td>Bencal Real Assets [N] Limited Partnership</td>
+      <td>Real estate, infrastructure, tangible-asset direct investments</td>
+    </tr>
+    <tr>
+      <td>Equity</td>
+      <td>Bencal Equity Partners [N] Inc.</td>
+      <td>Bencal Equity Partners [N] Limited Partnership</td>
+      <td>Growth equity, co-investment, direct equity participations</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>4. Private Investment Vehicles</h2>
+
+<p>Bencal Corporation also organises private investment vehicles not bound to a single strategy family, used for bespoke transactions with individual or small groups of investors:</p>
+
+<table class="insert-table">
+  <thead>
+    <tr>
+      <th>Entity</th>
+      <th>Type</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Bencal Private Investments [N] Inc.</td>
+      <td>General Partner Corporation</td>
+    </tr>
+    <tr>
+      <td>Bencal Private Investments [N] Limited Partnership</td>
+      <td>Limited Partnership</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Bencal Equity Partners 1 Inc. (BCL-CA-01-AST) and Bencal Real Assets 1 Inc. (BCL-CA-01-ADM) together with Bencal Real Assets 1 Limited Partnership (BCL-CA-01-AST) are existing investment vehicles and constitute the first vehicles in their respective series.</p>
+
+<h2>5. Nature of Business</h2>
+
+<p>Bencal Corporation is a Canadian private capital manager that organises and promotes investment vehicles for accredited investors pursuant to applicable prospectus exemptions under NI 45-106. Investment vehicles are structured on a deal-by-deal basis; investors subscribe to identified transactions in advance of any commitment. Bencal Corporation takes its compensation primarily in the form of unit-based or share-based interests in each vehicle, aligning the interests of the principal shareholders with those of investors.</p>
+
+<p>Bencal Corporation currently operates as a promoter relying on the accredited investor prospectus exemption under section 2.3 of NI 45-106. Securities of Bencal Group vehicles are distributed through a referral arrangement with Altas One Digital Securities Inc., a registered exempt market dealer. It is intended that the proposed Bencal Investment Management Inc. will seek registration as an exempt market dealer to formalise the distribution of Bencal Group vehicles as assets under management expand.</p>
+
+<p>No offering documents in respect of any Bencal Group vehicles have been filed with any securities regulatory authority; all distributions are made in reliance on applicable prospectus exemptions.</p>
+
+<h2>6. Definitions</h2>
+
+<p>In any agreement into which this insert is incorporated by reference, the following terms shall have the meanings set out below:</p>
+
+<p class="definition"><strong>&ldquo;Accredited Investor&rdquo;</strong> means an individual or entity that qualifies as an &ldquo;accredited investor&rdquo; within the meaning of section 1.1 of NI 45-106.</p>
+
+<p class="definition"><strong>&ldquo;Affiliate&rdquo;</strong>, when used to indicate a relationship with a specified Person, means another Person that directly, or indirectly through one or more intermediaries or otherwise, controls, or is controlled by, or is under common control with, such specified Person. A corporation shall be deemed to be an Affiliate of another corporation if one of them is the Subsidiary of the other or if both are Subsidiaries of the same Person or if each of them is directly or indirectly controlled by the same Person.</p>
+
+<p class="definition"><strong>&ldquo;Agent&rdquo;</strong> means Altas One Digital Securities Inc., a registered exempt market dealer, acting as referral agent pursuant to the Referral Agreement.</p>
+
+<p class="definition"><strong>&ldquo;Bencal Corporation&rdquo;</strong> means Bencal Corporation, a company incorporated under the <em>Business Corporations Act</em> (British Columbia), acting as parent holding company of the Bencal Group.</p>
+
+<p class="definition"><strong>&ldquo;Bencal Equity Partners 1&rdquo;</strong> means Bencal Equity Partners 1 Inc. (BCL-CA-01-AST), a private investment vehicle of the Bencal Group.</p>
+
+<p class="definition"><strong>&ldquo;Bencal Group&rdquo;</strong> means Bencal Corporation together with Bencal Investment Management Inc. and all general partner corporations and limited partnerships in which Bencal Corporation holds a direct or indirect interest.</p>
+
+<p class="definition"><strong>&ldquo;Bencal Management&rdquo;</strong> means Bencal Investment Management Inc. (BCL-CA-01-OPR), the operating manager and licensed manager of the Bencal Group.</p>
+
+<p class="definition"><strong>&ldquo;Bencal Real Assets 1&rdquo;</strong> means, collectively, Bencal Real Assets 1 Inc. (BCL-CA-01-ADM) and Bencal Real Assets 1 Limited Partnership (BCL-CA-01-AST).</p>
+
+<p class="definition"><strong>&ldquo;Bencal Real Assets 1 GP&rdquo;</strong> means Bencal Real Assets 1 Inc. (BCL-CA-01-ADM), in its capacity as general partner of Bencal Real Assets 1 LP.</p>
+
+<p class="definition"><strong>&ldquo;Bencal Real Assets 1 LP&rdquo;</strong> means Bencal Real Assets 1 Limited Partnership (BCL-CA-01-AST).</p>
+
+<p class="definition"><strong>&ldquo;Club Deal&rdquo;</strong> means a private placement of limited partnership interests in a numbered Bencal Group vehicle to a defined group of Accredited Investors in respect of an identified investment transaction.</p>
+
+<p class="definition"><strong>&ldquo;General Partner&rdquo;</strong> means, in respect of any Bencal Group limited partnership, the general partner corporation of that limited partnership as identified in the applicable limited partnership agreement.</p>
+
+<p class="definition"><strong>&ldquo;Kiel Capital&rdquo;</strong> means Kiel Capital Inc. (BCL-CA-01-HLD), a personal holding company of a Principal.</p>
+
+<p class="definition"><strong>&ldquo;Limited Partnership&rdquo;</strong> means a limited partnership formed under the <em>Partnership Act</em> (British Columbia) or applicable provincial partnership legislation.</p>
+
+<p class="definition"><strong>&ldquo;NI 31-103&rdquo;</strong> means National Instrument 31-103 <em>Registration Requirements, Exemptions and Ongoing Registrant Obligations</em>, as amended from time to time.</p>
+
+<p class="definition"><strong>&ldquo;NI 45-106&rdquo;</strong> means National Instrument 45-106 <em>Prospectus Exemptions</em>, as amended from time to time.</p>
+
+<p class="definition"><strong>&ldquo;Professional Centres Canada LP&rdquo;</strong> means Woodfine Professional Centres Limited Partnership. This vehicle is available to residents of Canada. Investors resident outside Canada participate through an investment vehicle of the Bencal Group.</p>
+
+<p class="definition"><strong>&ldquo;Professional Centres Mexico FIBRA&rdquo;</strong> means Woodfine Professional Centres 4 Fideicomiso de Infraestructura en Bienes Ra&iacute;ces. This vehicle is available to residents of Mexico. Investors resident outside Mexico participate through an investment vehicle of the Bencal Group.</p>
+
+<p class="definition"><strong>&ldquo;Professional Centres Spain SOCIMI&rdquo;</strong> means Woodfine Professional Centres 3 Sociedad An&oacute;nima Cotizada de Inversi&oacute;n Inmobiliaria. This vehicle is available to residents of Spain. Investors resident outside Spain participate through an investment vehicle of the Bencal Group.</p>
+
+<p class="definition"><strong>&ldquo;Professional Centres United States LP&rdquo;</strong> means Woodfine Professional Centres 2 Limited Partnership. This vehicle is available to residents of the United States. Investors resident outside the United States participate through an investment vehicle of the Bencal Group.</p>
+
+<p class="definition"><strong>&ldquo;Promoter&rdquo;</strong> has the meaning ascribed to it under NI 45-106.</p>
+
+<p class="definition"><strong>&ldquo;Prospectus Exemption&rdquo;</strong> means the exemption from the prospectus requirement available under NI 45-106, including the accredited investor exemption under section 2.3 thereof, or such other exemption as may be relied upon from time to time.</p>
+
+<p class="definition"><strong>&ldquo;Woodfine Group&rdquo;</strong> means Woodfine Capital Projects Inc. together with its Affiliates, including each Woodfine Professional Centres entity and any general partner, administrator, or investment vehicle related thereto.</p>
+
+<h2>7. Nomenclature</h2>
+
+<p>The following table sets out the entity codes, legal names, and institutional nomenclature used to identify entities of the Bencal Group and associated parties in agreements and other documents.</p>
+
+<table class="insert-table">
+  <thead>
+    <tr>
+      <th>Entity Code</th>
+      <th>Legal Name</th>
+      <th>Institutional Nomenclature</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>BCL-CA-01-HLD</td>
+      <td>Kiel Capital Inc.</td>
+      <td>Personal Holding Company</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-02-HLD</td>
+      <td>Elzen Holdings Inc.</td>
+      <td>Personal Holding Company</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-01-PAR</td>
+      <td>Bencal Corporation</td>
+      <td>Parent Corporation</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-01-OPR</td>
+      <td>Bencal Investment Management Inc.</td>
+      <td>Operating Manager <em>(yet to be formed &mdash; proposed EMD)</em></td>
+    </tr>
+    <tr>
+      <td>BCL-CA-01-GPR</td>
+      <td>Bencal Private Investments 1 Inc.</td>
+      <td>General Partner &mdash; Proprietary Investment Vehicles</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-01-AST</td>
+      <td>Bencal Equity Partners 1 Inc.</td>
+      <td>Bencal Equity Partners 1 &mdash; WCP Common Shares</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-02-ADM</td>
+      <td>Bencal Real Assets 1 Inc.</td>
+      <td>General Partner &mdash; Professional Centres Canada LP</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-02-AST</td>
+      <td>Bencal Real Assets 1 Limited Partnership</td>
+      <td>Limited Partnership &mdash; Professional Centres Canada LP</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-[N]-GPR</td>
+      <td>Bencal Credit Partners [N] Inc.</td>
+      <td>General Partner &mdash; Credit</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-[N]-AST</td>
+      <td>Bencal Credit Partners [N] Limited Partnership</td>
+      <td>Club Deal Vehicle &mdash; Credit</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-[N]-GPR</td>
+      <td>Bencal Real Assets [N] Inc.</td>
+      <td>General Partner &mdash; Real Assets</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-[N]-AST</td>
+      <td>Bencal Real Assets [N] Limited Partnership</td>
+      <td>Club Deal Vehicle &mdash; Real Assets</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-[N]-GPR</td>
+      <td>Bencal Equity Partners [N] Inc.</td>
+      <td>General Partner &mdash; Equity</td>
+    </tr>
+    <tr>
+      <td>BCL-CA-[N]-AST</td>
+      <td>Bencal Equity Partners [N] Limited Partnership</td>
+      <td>Club Deal Vehicle &mdash; Equity</td>
+    </tr>
+    <tr>
+      <td>AOD-CA-01-OPR</td>
+      <td>Altas One Digital Securities Inc.</td>
+      <td>Exempt Market Dealer &mdash; Agent</td>
+    </tr>
+    <tr>
+      <td>WCP-CA-01-HLD</td>
+      <td>Woodfine Capital Projects Inc.</td>
+      <td>Direct-Hold Solutions</td>
+    </tr>
+  </tbody>
+</table>
+
+<p style="margin-top: 12pt;"><strong>Type Code Reference.</strong></p>
+
+<table class="insert-table">
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Role Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>PAR</td><td>Parent corporation</td></tr>
+    <tr><td>HLD</td><td>Personal holding company</td></tr>
+    <tr><td>OPR</td><td>Operating manager / licensed manager</td></tr>
+    <tr><td>ADM</td><td>General Partner / Administrator corporation</td></tr>
+    <tr><td>AST</td><td>Asset-holding vehicle (limited partnership or corporation or trust)</td></tr>
+  </tbody>
+</table>
+
+<p class="closing"><em>Bencal Corporation &mdash; 2026-05-29 &mdash; Private and confidential &mdash; prepared by Management of Bencal Corporation for incorporation by reference into material agreements.</em></p>
+
+</body>
+</html>
