@@ -11,14 +11,13 @@
 Live Yo-Yo test 2026-06-01 (full diagnosis: BRIEF-slm-substrate-master.md §2.8). Substrate
 works; truncation fixed live; but extraction still fails. Concrete fix items:
 
-- [ ] **P0 — Doorman `/v1/extract` grammar plumbing (CODE).** The JSON-schema grammar is not
-  reaching/constraining llama-server: the 32B generates 1300+ unconstrained prose tokens
-  (identical with `--reasoning-budget` 1024 AND 0) → Doorman can't parse JSON → defers
-  `yoyo-transient` after ~118s. Verify how `/v1/extract` passes the schema to the Yo-Yo
-  client (GBNF/json-schema grammar field) and that llama-server enforces it; confirm the
-  handler parses the `--reasoning-format deepseek` response (`reasoning_content` + `content`).
-  Files: `crates/slm-doorman-server/src/http.rs` (extract handler ~line 480–540),
-  `crates/slm-doorman/src/tier/yoyo.rs` (request build → grammar field).
+- [x] **P0 — Doorman `/v1/extract` grammar plumbing (CODE) — ✅ DONE + validated live 2026-06-01.**
+  Root cause: `yoyo.rs` serialised the schema into vLLM's `extra_body.structured_outputs`, but
+  the server is llama.cpp (reads top-level `json_schema`/`grammar`; ignores `extra_body`).
+  Fixed `yoyo.rs` to use top-level fields (matches `local.rs`). 107/107 unit tests pass.
+  **Live result:** `/v1/extract` → 7.2s, `extraction_ok:true`, 4 entities correctly classified.
+  Doorman binary rebuilt (sha `2c96603b…`) + deployed. Note: extraction needs an ARRAY-type
+  schema; service-content already sends that.
 - [ ] **P1 — Packer template fix (both validated live), `compute/packer/scripts/llama-server.service`:**
   `-np 4` → `-np 1` (4096 ctx was split to 1024/slot → truncation); `-fa` → `-fa on`
   (bare `-fa` crashes the current llama.cpp build — now requires a value). FIXED in this

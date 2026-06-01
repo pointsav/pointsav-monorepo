@@ -256,24 +256,34 @@ rebuild would have shipped two of these bugs and not fixed the third at all.**
   `--flash-attn [on|off|auto]` (takes a value), so bare `-fa` consumed the next flag as its
   value and llama-server exited 1 on startup. **Fix: `-fa on`** (or drop it — `auto` default).
 
-### Bug 3 — JSON-schema grammar NOT constraining extraction — THE REAL BLOCKER (code, not config)
-- With Bug 1 fixed, llama-server completes (200, `truncated=0`) but extraction STILL defers
-  `yoyo-transient` after ~118–120s. Root cause: the model generates **1300+ unconstrained
-  tokens** (prose, not tight JSON) — **regardless of `--reasoning-budget` (tested 1024 AND 0,
-  identical ~118s / ~1300 tokens)**. The JSON-schema grammar is not reaching/constraining
-  llama-server, so the output isn't parseable JSON → Doorman defers.
-- **This is a Doorman `/v1/extract`-path code bug** (grammar plumbing to llama-server and/or
-  deepseek response parsing), NOT a VM config issue. A Packer rebuild does not fix it.
-- Constant ~118s timing across reasoning-budget values proves it's not the model/timeout —
-  it's unconstrained generation length.
+### Bug 3 — JSON-schema grammar NOT constraining extraction — ✅ RESOLVED + validated live
+- Root cause: `yoyo.rs` (Tier B client) serialised the schema into vLLM's
+  `extra_body.structured_outputs` format, but the deployed server is **llama.cpp**, which
+  reads structured-output constraints from **top-level** `json_schema` / `grammar` fields and
+  silently ignores `extra_body`. So the schema never constrained the 32B → 1300+ unconstrained
+  tokens → defer. (`local.rs` / Tier A already used the correct top-level fields — `yoyo.rs`
+  was simply never updated when the substrate migrated vLLM→llama.cpp.)
+- **Empirically confirmed:** a top-level `json_schema` probe against the live llama-server
+  returned exactly `{"answer":4}` (constrained); `extra_body` did nothing.
+- **Fix (commit this session):** `yoyo.rs` now maps `JsonSchema`→top-level `json_schema`,
+  `Gbnf/Lark`→top-level `grammar`; dropped the vLLM `extra_body` grammar envelope (kept only
+  for the tools `reasoning_budget` workaround). Matches the existing `local.rs` pattern.
+  107/107 slm-doorman unit tests pass (3 tests' assertions updated to the new wire format).
+- **VALIDATED LIVE 2026-06-01:** `/v1/extract` with the real array-schema returned in **7.2s**,
+  `extraction_ok:true`, 4 correctly-classified entities (Acme Robotics→Company, Northgate
+  Plaza→Location, Calgary→Location, Dana Whitfield→Person). `tier_used:yoyo_trainer`.
+- Note: extraction expects an **array-type** schema (`{"type":"array","items":{...}}`); the
+  handler parses `Vec<Value>`. service-content sends exactly this. (An object-wrapper schema
+  would return an object → handler parse-fail → defer; that was a malformed-test artifact, not
+  a bug.)
 
-### Correct fix sequence (do NOT rebuild the image first)
-1. **Doorman code fix:** ensure the JSON-schema grammar is passed to AND enforced by
-   llama-server on `/v1/extract`; confirm the handler parses the `--reasoning-format deepseek`
-   response (`reasoning_content` + `content`). This is the real blocker. See NEXT.md.
-2. **Packer template fix (both validated):** `-np 4`→`-np 1`; `-fa`→`-fa on`.
-   File: `service-slm/compute/packer/scripts/llama-server.service`.
-3. **Re-validate live** (one short window), THEN rebuild the image once.
+### Remaining for full persistence (only template + rebuild now)
+- ✅ Doorman code fix — DONE + validated.
+- [ ] **Packer template fix (both validated): `-np 4`→`-np 1`; `-fa`→`-fa on`** — already edited
+  in `service-slm/compute/packer/scripts/llama-server.service` (this session's commit).
+- [ ] **Rebuild the Yo-Yo image once** (Packer) so the `-np`/`-fa` fixes + a current llama.cpp
+  persist into the image. The Doorman grammar fix is in the binary (no rebuild needed for it).
+  This is now SAFE to queue — the blocker is resolved.
 
 ### Design note
 Extraction is a *structured* task — the 32B-**Think** model reasoning is overhead for it
