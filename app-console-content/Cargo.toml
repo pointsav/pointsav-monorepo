@@ -18,3 +18,5 @@ similar = "2.5"
 pdfium-render = "0.8"
 ratatui-image = { version = "9", default-features = false, features = ["crossterm"] }
 image = { version = "0.25", default-features = false }
+rusqlite = { version = "0.32", features = ["bundled"] }
+chrono = "0.4"

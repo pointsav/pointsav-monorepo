@@ -1,5 +1,6 @@
 pub mod cartridge;
 pub mod draft;
+pub mod draft_save;
 pub mod drafts_out;
 pub mod pdf;
 pub mod proofreader;
