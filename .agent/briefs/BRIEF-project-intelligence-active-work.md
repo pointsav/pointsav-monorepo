@@ -115,47 +115,27 @@ Empty `actual_diff` means the brief was never dispatched; grammar constraints ar
 
 ---
 
-## §2 — Next 3 sessions: short-term queue
+## §2 — Next items: short-term queue (updated 2026-06-01)
 
-### Session 13 (this session)
+Sessions 13–15 items all complete. This is the current forward plan.
 
-- [ ] **Poison queue investigation** (§1 above) — determine H1 vs H2; quarantine or investigate
-- [ ] **Brief consolidation** — this session's deliverable (underway)
+- [ ] **SFT extraction script** — `service-slm/scripts/extract-sft-pairs.py`
+  Extract 544 ground-truth pairs from `queue-done/*.jsonl` for LoRA training.
+  Entry structure: `{"brief": {"body": ..., ...}, "actual_diff": "..."}`.
+  Output: `service-slm/scripts/sft-pairs/sft-train.jsonl` (gitignored).
+  Format: `{"instruction": "<task_type + files + body>", "output": "<actual_diff>"}`.
 
-### Session 14
+- [x] **Stale log string** — `service-content/src/main.rs` line 509 — DONE this session
+  "skipping until restart" → "recovery probe active — will resume when Tier B returns"
 
-- [ ] **P1: /readyz structured circuit_breaker_state** (~30 LOC)
-  File: `service-slm/crates/slm-doorman-server/src/http.rs`
-  Add `reason: Option<String>` and `zone: Option<String>` to the Tier B circuit state JSON.
-  Populate from `circuit_breaker.rs`. Benefit: app-console-slm status command gets human-readable reason.
+- [ ] **Stage 6** — 4 commits pending promote after this session's work
+  (cb1f85a4 briefs + 6a58af76 outbox + housekeeping + SFT script)
 
-- [ ] **app-console-slm Sprint 4a** — `app-console-slm status` command
-  Outbox `project-intelligence-20260530-console-wiring` is addressed to project-console.
-  If that session is inactive, implement here — the crate lives in this archive.
-  Full spec (endpoints, output format) in that outbox message.
-
-- [ ] **P2: service-content path decoupling** (~20 LOC)
-  File: `service-content/src/main.rs`
-  Replace hardcoded `/srv/foundry/...` paths with env vars:
-  `INFRASTRUCTURE_ROOT` (default `/srv/foundry`) and `CORPUS_ROOT` (default `/srv/foundry/data/apprenticeship`).
-
-### Session 15
-
-- [ ] **Fix C: GBNF grammar** — only if H1 confirmed AND post-Fix-B drain cycles still show
-  OLMo preamble escalations (check via `grep escalate:true queue-done/*.jsonl | wc -l`)
-  File: `service-slm/crates/slm-doorman-server/src/apprenticeship.rs` lines 181, 279
-  Add `grammar: Some(GrammarConstraint::Gbnf(APPRENTICE_GBNF_GRAMMAR))` to both
-  `dispatch_shadow()` calls. Wiring exists in `LocalTierClient::complete()`.
-
-- [ ] **P0: Doorman audit ledger sha256**
-  File: `service-slm/crates/slm-doorman-server/src/ledger.rs`
-  Add `sha256: String` field to `LedgerEntry`; compute `blake3::hash(serialized_entry)` on write.
-  Not the same as system-ledger — this is Doorman's own per-inference audit log.
+- [ ] **Disabled systemd unit cleanup** — check/remove `drain-apprenticeship.service`/timer
+  (`ls /etc/systemd/system/ | grep drain`)
 
 - [ ] **Yo-Yo 1h test** — when europe-west4-a L4 capacity returns:
-  ```bash
-  service-slm/scripts/start-yoyo.sh --wait-ready=120 --runtime=1h
-  ```
+  `service-slm/scripts/start-yoyo.sh --wait-ready=120 --runtime=1h`
 
 ---
 
