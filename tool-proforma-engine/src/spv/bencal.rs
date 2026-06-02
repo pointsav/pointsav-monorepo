@@ -1,13 +1,31 @@
 use crate::excel::pclp1::Pclp1Data;
 use crate::excel::wcp::{WcpBook, WcpData, WcpFairDiv, WcpIncome, WcpLp, WcpMarket};
 
-// Bencal Management holds 10% of Bencal SPV1 (which holds 300K WCP = 3.0% of 10M outstanding).
-// Effective WCP exposure at Bencal Management level via lookthrough: 10% × 3.0% = 0.30%.
-const BENCAL_AD1_STAKE: f64 = 0.10;
-const AD1_WCP_STAKE: f64 = 0.03; // BRIEF v0.15.9 §5e: 300K of 10M = 3.0%
+// Bencal Management's ownership chains (BRIEF v0.15.9 §5d–§5f):
+//
+//                       Bencal Management Corp.
+//                              │  10% of SPV1                 10% of SPV2
+//                              ▼                                   ▼
+//                       Bencal SPV1 Inc.                  Bencal SPV2-LP / GP
+//                              │  300K WCP shares           │  600K WCP shares (NEW v0.15.9)
+//                              │  (3.0% of 10M)             │  (6.0% of 10M; Flag 15 path b)
+//                              │                            │  + 250K PCLP1 LP units
+//                              ▼                            ▼
+//                            WCP Inc.                Professional Centres Canada LP
+//
+// Total Bencal Management implied WCP exposure: 10% × 300K + 10% × 600K = 90K shares
+// = 0.9% of 10M WCP outstanding.
 
-// Bencal Management holds 10% of Bencal SPV2-LP (v0.15.6 manager units: 27,843 of 278,434 diluted).
-const BENCAL_AD2_UNITS: f64 = 27_843.0;
+const BENCAL_AD1_STAKE: f64 = 0.10; // BM's stake in Bencal SPV1
+const AD1_WCP_STAKE: f64 = 0.03; // BRIEF §5e: SPV1 holds 300K of 10M WCP = 3.0%
+
+const BENCAL_AD2_STAKE: f64 = 0.10; // BM's stake in Bencal SPV2 (27,843 of 278,434 diluted = 10.0000%)
+const AD2_WCP_STAKE: f64 = 0.06; // BRIEF §5d v0.15.9: SPV2 holds 600K of 10M WCP = 6.0% (NEW)
+const AD2_PCLP_UNITS: f64 = 250_000.0; // BRIEF §5d: SPV2 invests $25M / $100 = 250K PCLP1 units
+
+// Bencal Management's implied PCLP1 lookthrough = BENCAL_AD2_STAKE × AD2_PCLP_UNITS = 25,000 units.
+// (NOT 27,843 — that would be the manager's own SPV2 units, distinct from the PCLP1 lookthrough.)
+const BENCAL_AD2_UNITS: f64 = 25_000.0;
 
 // Bencal Management share capital — 2 shares at $5.00 nominal = $10.00 (BRIEF §5f).
 const BENCAL_SHARES_OUTSTANDING: f64 = 2.0;
@@ -41,56 +59,79 @@ fn spv_acct(y: usize) -> f64 {
     }
 }
 
+/// Combined WCP scale factor at Bencal Management = lookthrough via SPV1 + lookthrough via SPV2.
+///
+/// Per BRIEF v0.15.9 §5d (Bencal SPV2 dual-asset addition):
+///   via SPV1: 10% × 3.0% = 0.30%
+///   via SPV2: 10% × 6.0% = 0.60%   (NEW; Flag 15 path b)
+///   total   = 0.90% (= 90,000-share implied exposure on 10M WCP outstanding)
+const fn total_wcp_sf() -> f64 {
+    BENCAL_AD1_STAKE * AD1_WCP_STAKE + BENCAL_AD2_STAKE * AD2_WCP_STAKE
+}
+
 pub fn derivation_json(wcp: &WcpData, pclp: &Pclp1Data) -> serde_json::Value {
-    let wcp_sf = BENCAL_AD1_STAKE * AD1_WCP_STAKE;
+    let wcp_sf_via_ad1 = BENCAL_AD1_STAKE * AD1_WCP_STAKE;
+    let wcp_sf_via_ad2 = BENCAL_AD2_STAKE * AD2_WCP_STAKE;
+    let wcp_sf = total_wcp_sf();
     let pclp_sf = BENCAL_AD2_UNITS / pclp.assumptions.diluted_units;
     serde_json::json!({
         "source_models": ["WCP 42M Excel", "PCLP 1 Excel"],
         "method": "dual_proportional_scale",
-        "description": "BenCal Holdings Inc. income derives from two positions: (1) 10% of Ambassadors Direct 1 Inc. which holds 30% of WCP — giving BenCal an effective 3% WCP exposure; (2) 25,000 PCLP 1 unit equivalent via 10% of Ambassadors Direct 2 LP (250,000 units). Commission income of $100K/year is included in Y1–Y3 from WCP share-sale activity.",
+        "description": "Bencal Management Corp. income derives from three positions (BRIEF v0.15.9 §5d–§5f dual-asset): (1) 10% of Bencal SPV1 which holds 300K WCP = 3.0% of 10M outstanding → 0.30% WCP exposure; (2) 10% of Bencal SPV2 which holds 250K PCLP 1 LP units → 25,000-unit PCLP1 lookthrough; (3) 10% of Bencal SPV2 which also holds 600K WCP (founding-bonus from Strategic Partner per Flag 15 path b) = 6.0% of 10M → 0.60% additional WCP exposure. Total Bencal Management implied WCP = 90,000 shares (0.9% of 10M). Commission income to BM is one-time at close per Flag 13 (Altas One direct rebates).",
         "wcp_exposure": {
-            "via": "Ambassadors Direct 1 Inc.",
-            "bencal_ad1_stake": BENCAL_AD1_STAKE,
-            "ad1_wcp_stake": AD1_WCP_STAKE,
-            "effective_wcp_scale_factor": wcp_sf,
+            "via_spv1": {
+                "bencal_ad1_stake": BENCAL_AD1_STAKE,
+                "ad1_wcp_stake": AD1_WCP_STAKE,
+                "scale_factor": wcp_sf_via_ad1
+            },
+            "via_spv2_founding_bonus": {
+                "bencal_ad2_stake": BENCAL_AD2_STAKE,
+                "ad2_wcp_stake": AD2_WCP_STAKE,
+                "scale_factor": wcp_sf_via_ad2,
+                "treatment": "Flag 15 path (b) — capital contribution from Strategic Partner; Y0 FMV against contributed surplus equity; no Y0 IS impact at Bencal SPV2"
+            },
+            "total_effective_scale_factor": wcp_sf,
+            "implied_shares_at_bm": wcp_sf * wcp.shares_outstanding,
             "source_entity": wcp.entity
         },
         "pclp_exposure": {
-            "via": "Ambassadors Direct 2 LP",
-            "units_held": BENCAL_AD2_UNITS,
+            "via": "Bencal Special Purpose 2 (GP + LP)",
+            "implied_pclp_units": BENCAL_AD2_UNITS,
             "pclp_diluted_units": pclp.assumptions.diluted_units,
             "pclp_scale_factor": pclp_sf,
             "source_entity": pclp.entity
         },
         "commission_income": {
             "amount_per_year": COMMISSION_PER_YEAR,
-            "years_active": [1, 2, 3],
-            "total": COMMISSION_PER_YEAR * 3.0,
-            "description": "WCP share-sale commission income, evenly spread over Y1–Y3"
+            "years_active": [],
+            "total": 0.0,
+            "description": "Flag 13 (RESOLVED 2026-06-02): Altas One distributes commission rebates DIRECTLY to each Bencal entity at formation (one-time, Y0); the prior per-year stream model is obsolete."
         },
-        "authority": "spv-bencal governance document — BenCal Holdings Inc. structure"
+        "authority": "BRIEF-tool-proforma-leapfrog-2030.md v0.15.9 §5d–§5f"
     })
 }
 
-/// Derive BenCal Holdings Inc. WcpData from the WCP and PCLP 1 models.
+/// Derive Bencal Management Corp. WcpData from the WCP and PCLP 1 models.
 ///
-/// BenCal's income sources:
-///   - 3% of WCP (via 10% of AD1 which holds 30% of WCP)
-///   - 25,000 PCLP-unit equivalent (via 10% of AD2 LP)
-///   - $100K/year WCP commission income in Y1–Y3
+/// Bencal Management's income sources (BRIEF v0.15.9 §5d–§5f):
+///   - 0.30% of WCP via SPV1 (10% × 3.0%)
+///   - 0.60% of WCP via SPV2 founding bonus (10% × 6.0%; Flag 15 path b)
+///   - 25,000 PCLP-unit lookthrough via SPV2 (10% × 250K PCLP1 units held by SPV2)
+///   - Commission income: nil per-year (Flag 13: direct rebates from Altas One at close, not stream)
 pub fn derive(wcp: &WcpData, pclp: &Pclp1Data) -> WcpData {
-    let wcp_sf = BENCAL_AD1_STAKE * AD1_WCP_STAKE; // 0.03
+    let wcp_sf = total_wcp_sf(); // 0.009 — combined SPV1 + SPV2 WCP lookthrough
     let pclp_sf = BENCAL_AD2_UNITS / pclp.assumptions.diluted_units;
 
     let commission: [f64; 10] =
         std::array::from_fn(|y| if y < 3 { COMMISSION_PER_YEAR } else { 0.0 });
 
-    // Revenue Generator: BenCal's 3% slice of each WCP LP fund + AD2 LP entry.
+    // Revenue Generator: Bencal Management's combined WCP lookthrough slice (SPV1 + SPV2 dual-asset)
+    // of each WCP LP fund + the Bencal SPV2-LP PCLP1 lookthrough entry.
     let mut lps: Vec<WcpLp> = wcp
         .lps
         .iter()
         .map(|lp| WcpLp {
-            name: format!("AD1 — {}", lp.name),
+            name: format!("Bencal Group via WCP — {}", lp.name),
             advisory_fee: std::array::from_fn(|y| lp.advisory_fee[y] * wcp_sf),
             distributions: std::array::from_fn(|y| lp.distributions[y] * wcp_sf),
             nav: std::array::from_fn(|y| lp.nav[y] * wcp_sf),
@@ -98,7 +139,7 @@ pub fn derive(wcp: &WcpData, pclp: &Pclp1Data) -> WcpData {
         .collect();
 
     lps.push(WcpLp {
-        name: "Ambassadors Direct 2 LP".to_string(),
+        name: "Bencal SPV2-LP — Professional Centres Canada LP lookthrough".to_string(),
         advisory_fee: [0.0; 10],
         distributions: std::array::from_fn(|y| pclp.years[y].dist_per_unit * BENCAL_AD2_UNITS),
         nav: std::array::from_fn(|y| pclp.years[y].nav_per_unit * BENCAL_AD2_UNITS),
@@ -367,5 +408,37 @@ mod tests {
         assert!(note.contains("10%"));
         assert!(note.contains("dilution") || note.contains("dilution"));
         assert!(note.contains("$5.00"));
+    }
+
+    #[test]
+    fn total_wcp_lookthrough_matches_brief() {
+        // BRIEF v0.15.9 §5d–§5f:
+        //   via SPV1: 10% × 3.0% = 0.30%
+        //   via SPV2: 10% × 6.0% = 0.60%   (NEW dual-asset, Flag 15 path b)
+        //   total   = 0.90%
+        let sf = total_wcp_sf();
+        assert!((sf - 0.009).abs() < 1e-9, "total wcp_sf should be 0.009 (0.9%)");
+        // 0.9% on 10M outstanding → 90,000 implied shares at BM
+        let implied_shares = sf * 10_000_000.0;
+        assert!((implied_shares - 90_000.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn pclp_lookthrough_matches_brief() {
+        // BRIEF §5d: SPV2 invests $25M / $100 = 250,000 PCLP1 units;
+        // BM holds 10% of SPV2 → 25,000 PCLP1 lookthrough units (NOT 27,843).
+        assert_eq!(BENCAL_AD2_UNITS, 25_000.0);
+        assert!((BENCAL_AD2_STAKE * AD2_PCLP_UNITS - BENCAL_AD2_UNITS).abs() < 1e-9);
+    }
+
+    #[test]
+    fn constants_sanity() {
+        // The four constants on the dual-path WCP lookthrough should compose cleanly.
+        assert_eq!(BENCAL_AD1_STAKE, 0.10);
+        assert_eq!(BENCAL_AD2_STAKE, 0.10);
+        assert_eq!(AD1_WCP_STAKE, 0.03);
+        assert_eq!(AD2_WCP_STAKE, 0.06);
+        // SPV2's WCP stake (6%) is exactly 2× SPV1's WCP stake (3%) per BRIEF §5c cap table
+        assert!((AD2_WCP_STAKE - 2.0 * AD1_WCP_STAKE).abs() < 1e-9);
     }
 }
