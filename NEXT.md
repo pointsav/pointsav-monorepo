@@ -1,10 +1,10 @@
-# NEXT.md — project-marketing
+# NEXT.md — project-knowledge (app-mediakit-knowledge)
 
 Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
 
 ---
 
-## Viewport / zoom fix — 2026-06-02
+## Pending Command Session
 
 - [x] **iOS Safari 30% zoom** — `documentElement.replaceWith()` dropped viewport-meta re-evaluation; iOS fell back to 980px desktop width → `max-width:1440px` layout at ~27% on 390px screens. Fix: swap `<head>` content and `<body>` separately (never replace `documentElement`). Applied to both deployed bundles 2026-06-02. Verified: `body_w == viewport_w` at 375/768/1280/1440px on both tenants.
 - [x] **Regen guard** — `scripts/fix-viewport.sh` created 2026-06-02; idempotent patch script re-applies the body-only swap to both deployment `index.html` files after any bundle rebuild. Run `bash scripts/fix-viewport.sh` before restarting services. Detects already-patched files safely. [2026-06-02 totebox@claude-code]
@@ -88,26 +88,35 @@ Add this to the shutdown checklist before the commit step. [2026-06-02 totebox@p
   - §F combined GUIDE staged to drafts-outbound; routing message sent (msg-id: project-editorial-20260601-guide-knowledge-wiki-deployment-route)
   [2026-06-01 totebox@project-editorial]
 - [ ] **§F GUIDE routing** — guide-knowledge-wiki-deployment.draft.md staged; Command must place in `woodfine-fleet-deployment/gateway-knowledge-documentation-1/`. [2026-06-01 totebox@project-editorial]
+- [ ] **Binary deploy — UX batch** — 7 commits on canonical; run from Command workspace:
+      `~/Foundry/bin/deploy-binary.sh app-mediakit-knowledge --note "UX batch: Phase 5/4/M1/Phase 2/Phase 3/wikilink-parser/check (39f4dcd1)"`
+      Services: local-knowledge-documentation (9090), local-knowledge-projects (9093), local-knowledge-corporate (9095)
+      [2026-06-01 totebox@claude-code]
+- [ ] **GUIDE placement** — `GUIDE-location-intelligence-data-collection.draft.md` from project-gis drafts-outbound
+      → `woodfine-fleet-deployment/gateway-orchestration-gis-1/guide-location-intelligence-data-collection.md`
+      Blocked by pretool-scope-check.sh hook; requires admin-tier commit from Command
+      [2026-06-02 totebox@claude-code]
 
----
+## Pending project-editorial
 
-## SEO — brand search experience
+- [ ] **Content audit triage** — 17 dead wikilinks + 6 missing-slug guides in documentation corpus
+      Report: `.agent/drafts-outbound/CONTENT-AUDIT-dead-links-2026-06-01.md`
+      Missing targets: `[[os-totebox]]`, `[[regional-name-resolution-architecture]]`,
+      `[[topic-knowledge-wiki-home-page-design]]`; stray-backslash links in 2 files
+      [2026-06-01 totebox@claude-code]
+- [ ] **`check --strict`** CI gate — wire as pre-promote gate once dead-link count reaches 0
+      [2026-06-01 totebox@claude-code]
 
-- [ ] Apply SEO head block to `home.pointsav.com` index [2026-05-20 totebox@claude-code]
-      Plan: `.agent/plans/seo-home-pages.md`
-      File: `/srv/foundry/deployments/media-marketing-landing-2/content/index.html`
-- [ ] Apply SEO head block to `home.woodfinegroup.com` index [2026-05-20 totebox@claude-code]
-      Plan: `.agent/plans/seo-home-pages.md`
-      File: `/srv/foundry/deployments/media-marketing-landing-1/content/index.html`
-- [ ] Confirm: any LinkedIn or social profiles to add to `sameAs` in JSON-LD? [2026-05-20 operator-pending]
-- [ ] Decide scope: also update disclaimer/contact subpages + software.pointsav.com pages in same pass? [2026-05-20 operator-pending]
-- [ ] Follow-up (after home pages done): add `robots.txt` + `sitemap.xml` to both sites [2026-05-20 totebox@claude-code]
+## Pending project-design
 
----
+- [ ] **DESIGN-docs-sidenav-component** — staged in drafts-outbound; routed via outbox
+      [2026-06-01 totebox@claude-code]
+- [ ] **DESIGN-doc-header-component** — staged in drafts-outbound; routed via outbox
+      [2026-06-01 totebox@claude-code]
 
-## Deployment (pre-existing)
+## Standing deferred
 
-- [ ] On next bundle rebuild for `home.pointsav.com`: fix `<title>` to read `PointSav — Home` (not `PointSav, Inc. — Home`) — direct fix applied to live `deployments/media-marketing-landing-2/content/index.html` 2026-05-21 but gitignored; source fix needed at build time [2026-05-21 totebox@claude-code]
-- [ ] Bootstrap deploy: `media-marketing-landing-1` (home.woodfinegroup.com) — operator-gated
-- [ ] Bootstrap deploy: `media-marketing-landing-2` (home.pointsav.com) — operator-gated
-- [ ] Certbot TLS for both deployments — operator-gated
+- Phase 12 (AI marginalia): gated on BP5 + SYS-ADR-07/10/19 review [2026-06-01]
+- Phase 5.1+ (ACLs/OIDC/webhooks): gated on BP5 clearance [2026-06-01]
+- Phase 6 (three-instance deployment split): gated on GitHub renames + Doctrine amendment [2026-06-01]
+- claim-rail nightly URL validator: gated on server infrastructure [2026-06-01]
