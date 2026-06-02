@@ -134,6 +134,25 @@ let editing = false;
 let saveTimer = null;
 let dirty = false;
 
+// ── Undo / clipboard ─────────────────────────────────────────────────────────
+let undoStack = [], undoPtr = -1, clipboard = null;
+const UNDO_LIMIT = 50;
+function snapshot() { return { cells: JSON.parse(JSON.stringify(doc.cells)), rows: doc.rows, cols: doc.cols }; }
+function pushUndo() {
+  undoStack = undoStack.slice(0, undoPtr + 1);
+  undoStack.push(snapshot());
+  if (undoStack.length > UNDO_LIMIT) undoStack.shift(); else undoPtr++;
+}
+function applySnap(s) {
+  doc.cells = JSON.parse(JSON.stringify(s.cells));
+  doc.rows = s.rows; doc.cols = s.cols;
+  buildGrid();
+  selectCell(Math.min(sel.row, doc.rows - 1), Math.min(sel.col, doc.cols - 1));
+  dirty = true; saveStatus.textContent = 'Unsaved…';
+}
+function undo() { if (undoPtr > 0) { undoPtr--; applySnap(undoStack[undoPtr]); } }
+function redo() { if (undoPtr < undoStack.length - 1) { undoPtr++; applySnap(undoStack[undoPtr]); } }
+
 const params = new URLSearchParams(location.search);
 filePath = params.get('path');
 
@@ -314,12 +333,15 @@ function commitEdit() {
   overlay.style.display = 'none';
   const val = overlay.value;
   const key = sel.row + ',' + sel.col;
-  if (val === '') {
-    delete doc.cells[key];
-  } else {
-    const n = Number(val);
-    doc.cells[key] = (!val.startsWith('=') && !isNaN(n) && val.trim() !== '') ? n : val;
+  const prev = doc.cells[key];
+  const newVal = val === '' ? undefined : (() => { const n = Number(val); return (!val.startsWith('=') && !isNaN(n) && val.trim() !== '') ? n : val; })();
+  if (newVal === prev || (newVal === undefined && prev === undefined)) {
+    refreshAll();
+    fbarInput.value = rawAt(sel.row, sel.col) !== undefined ? String(rawAt(sel.row, sel.col)) : '';
+    return;
   }
+  pushUndo();
+  if (newVal === undefined) delete doc.cells[key]; else doc.cells[key] = newVal;
   refreshAll();
   fbarInput.value = rawAt(sel.row, sel.col) !== undefined ? String(rawAt(sel.row, sel.col)) : '';
   markDirty();
@@ -359,6 +381,7 @@ grid.addEventListener('keydown', e => {
     case 'Delete':
     case 'Backspace':
       e.preventDefault();
+      pushUndo();
       delete doc.cells[sel.row + ',' + sel.col];
       refreshCell(sel.row, sel.col);
       fbarInput.value = '';
@@ -370,6 +393,34 @@ grid.addEventListener('keydown', e => {
         openEdit(e.key);
       } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault(); doSave();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault(); undo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault(); redo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        e.preventDefault();
+        clipboard = rawAt(sel.row, sel.col);
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        e.preventDefault();
+        if (clipboard === null || clipboard === undefined) return;
+        pushUndo();
+        doc.cells[sel.row + ',' + sel.col] = clipboard;
+        refreshAll();
+        fbarInput.value = String(clipboard);
+        markDirty();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+        e.preventDefault();
+        if (sel.row === 0) return;
+        const src = rawAt(sel.row - 1, sel.col);
+        if (src === undefined || src === null || src === '') return;
+        pushUndo();
+        const filled = typeof src === 'string' && src.charAt(0) === '='
+          ? src.replace(/([A-Z]+)(\d+)/gi, (_, c, r) => c + (parseInt(r, 10) + 1))
+          : src;
+        doc.cells[sel.row + ',' + sel.col] = filled;
+        refreshAll();
+        fbarInput.value = String(filled);
+        markDirty();
       }
   }
 });
@@ -388,6 +439,10 @@ overlay.addEventListener('keydown', e => {
     e.preventDefault(); cancelEdit(); grid.focus();
   } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
     e.preventDefault(); commitEdit(); doSave();
+  } else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+    e.preventDefault(); cancelEdit(); undo(); grid.focus();
+  } else if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+    e.preventDefault(); cancelEdit(); redo(); grid.focus();
   }
 });
 
@@ -398,21 +453,25 @@ fbarInput.addEventListener('keydown', e => {
   if (e.key === 'Enter')  { e.preventDefault(); commitEdit(); grid.focus(); }
   if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); grid.focus(); }
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); commitEdit(); doSave(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); cancelEdit(); undo(); grid.focus(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); cancelEdit(); redo(); grid.focus(); }
 });
 
 // ── Toolbar ───────────────────────────────────────────────────────────────
 function withCommit(fn) { if (editing) commitEdit(); fn(); }
 
-document.getElementById('btn-ar').addEventListener('click', () => withCommit(() => { doc.rows++; buildGrid(); selectCell(sel.row, sel.col); markDirty(); }));
-document.getElementById('btn-ac').addEventListener('click', () => withCommit(() => { doc.cols++; buildGrid(); selectCell(sel.row, sel.col); markDirty(); }));
+document.getElementById('btn-ar').addEventListener('click', () => withCommit(() => { pushUndo(); doc.rows++; buildGrid(); selectCell(sel.row, sel.col); markDirty(); }));
+document.getElementById('btn-ac').addEventListener('click', () => withCommit(() => { pushUndo(); doc.cols++; buildGrid(); selectCell(sel.row, sel.col); markDirty(); }));
 document.getElementById('btn-dr').addEventListener('click', () => withCommit(() => {
   if (doc.rows <= 1) return;
+  pushUndo();
   const r = doc.rows - 1;
   for (let c = 0; c < doc.cols; c++) delete doc.cells[r + ',' + c];
   doc.rows--; buildGrid(); selectCell(Math.min(sel.row, doc.rows - 1), sel.col); markDirty();
 }));
 document.getElementById('btn-dc').addEventListener('click', () => withCommit(() => {
   if (doc.cols <= 1) return;
+  pushUndo();
   const c = doc.cols - 1;
   for (let r = 0; r < doc.rows; r++) delete doc.cells[r + ',' + c];
   doc.cols--; buildGrid(); selectCell(sel.row, Math.min(sel.col, doc.cols - 1)); markDirty();
@@ -478,6 +537,7 @@ async function loadFile() {
   document.title = titleInput.value + ' — Proforma';
   buildGrid();
   selectCell(0, 0);
+  undoStack = [snapshot()]; undoPtr = 0;
   grid.focus();
 }
 
