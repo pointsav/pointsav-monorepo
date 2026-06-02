@@ -8,6 +8,28 @@ Last updated: 2026-06-03
 ---
 
 ## Archetype model rework — 2026-06-03 (DEPLOYED LIVE)
+## Content sync protocol — standing session-start procedure
+
+**Root cause identified 2026-06-02:** project-editorial commits content to its local
+media-knowledge-* clones but does not push to GitHub. project-knowledge's live services
+read from project-knowledge's content-wiki-* clones, which fall behind silently.
+
+**Standing rule — start of every project-knowledge session:**
+```bash
+git -C /srv/foundry/clones/project-knowledge/content-wiki-documentation pull --no-rebase /srv/foundry/clones/project-editorial/media-knowledge-documentation main
+git -C /srv/foundry/clones/project-knowledge/content-wiki-projects pull /srv/foundry/clones/project-editorial/media-knowledge-projects main
+git -C /srv/foundry/clones/project-knowledge/content-wiki-corporate pull /srv/foundry/clones/project-editorial/media-knowledge-corporate main
+```
+
+Run before any content work. If any pull reports "Already up to date", skip it.
+If diverged branches require `--no-rebase`, use it (creates a merge commit — acceptable).
+
+Note sent to project-editorial outbox (msg-id: project-knowledge-20260602-editorial-push-protocol)
+requesting they push to GitHub at session end so both routes work.
+
+---
+
+## Content audit — 2026-06-01 batch (remaining items)
 
 - [x] **Commuter overnight ingest complete; PKS then redefined.** The commuter/metro ingest
       finished; PKS was then **redefined as a geometric airport-led park-and-ride model**
@@ -41,6 +63,23 @@ Last updated: 2026-06-03
 
 - [ ] **Stage 6** — promote this session's archive-local commits (`aec2187e` + the docs commit) to
       canonical monorepo. Command Session runs `bin/promote.sh`. [2026-06-03]
+### Cluster 1 — stray-backslash links ~~DONE 2026-06-02~~
+
+- [x] `systems/mediakit-os` → `[[app-mediakit-marketing\]]` — fixed 2026-06-02
+- [x] `systems/mediakit-os` → `[[app-mediakit-knowledge\]]` — fixed 2026-06-02
+- [x] `systems/os-family-overview` → 8 backslash links — fixed 2026-06-02
+
+### Cluster 2 — genuinely-missing targets
+
+- [x] `contribute` → `[[all-pages]]` (×2) + `[[wanted]]` (×2) — links removed 2026-06-02
+- [x] `reference/bim-market-context` → `[[os-totebox]]` — stub created 2026-06-02
+- [ ] `architecture/gis-as-bim-substrate` → `[[regional-name-resolution-architecture]]` — write page (B13 dispatch would create this)
+- [ ] `substrate/substrate-without-inference-base-case` → `[[service-fs]]` — write page or correct slug
+- [ ] `media-knowledge-documentation/guide-keep-the-home-page-the-gold-standard` → `[[topic-knowledge-wiki-home-page-design]]` — write page
+
+### Missing slug / type mismatch ~~DONE 2026-06-02~~
+
+- [x] All 6 flagged guide files in pointsav-fleet-deployment — `type: guide` + `slug:` added 2026-06-02
 
 ---
 
@@ -51,6 +90,9 @@ Last updated: 2026-06-03
       defaulting to the YAML `country:` field). Re-ran wurth-de, rexel-fr, loxam-fr, kiloutou-fr.
       Würth now correctly DE 411 / FI 72 / IT 59 / PL 52 / AT 44 / NL 29 / PT 27 … (was DE 847).
       VWH per-country counts corrected (IT/FI/PL/AT/NL/PT all rose). [2026-06-03]
+- [x] **A19 TOPIC: Vertical Warehouse** — committed to archetypes/ 2026-06-02 (commit 9fb4e0e, Peter); live at documentation.pointsav.com/archetypes/vertical-warehouse
+- [x] **A20 TOPIC: Parking Structures** — committed to archetypes/ 2026-06-02 (commit 9fb4e0e, Peter); live at documentation.pointsav.com/archetypes/parking-structures
+- [x] **A21 GUIDE: Location Intelligence Data Collection** — routed to Command via outbox 2026-06-02 (msg-id: project-knowledge-20260602-guide-location-intelligence-route)
 
 ---
 
