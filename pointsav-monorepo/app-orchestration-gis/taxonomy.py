@@ -467,12 +467,12 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "US": ["fastenal-us", "grainger-us"],
         "CA": ["princess-auto-ca"],                            # Phase 2 2026-06-01
         "MX": [],
-        "GB": ["wurth-de"],
-        "FR": ["wurth-de"], "DE": ["wurth-de"], "ES": ["wurth-de"],
-        "IT": ["wurth-de"], "GR": [], "PL": ["wurth-de"],
-        "AT": ["wurth-de"], "NL": ["wurth-de"], "PT": [],
-        "SE": ["wurth-de"], "DK": ["wurth-de"], "NO": ["wurth-de"],
-        "FI": ["wurth-de"], "IS": [],
+        "GB": ["wurth-de", "hilti-ch"],
+        "FR": ["wurth-de", "hilti-ch"], "DE": ["wurth-de", "hilti-ch"], "ES": ["wurth-de", "hilti-ch"],
+        "IT": ["wurth-de", "hilti-ch"], "GR": [], "PL": ["wurth-de", "hilti-ch"],
+        "AT": ["wurth-de", "hilti-ch"], "NL": ["wurth-de", "hilti-ch"], "PT": [],
+        "SE": ["wurth-de", "hilti-ch"], "DK": ["wurth-de", "hilti-ch"], "NO": ["wurth-de", "hilti-ch"],
+        "FI": ["wurth-de", "hilti-ch"], "IS": [],
     },
     "flooring": {
         "US": ["floor-decor-us"],
