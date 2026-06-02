@@ -474,33 +474,35 @@ MX and IS: airport-only (no intercity passenger rail).
 
 ---
 
-## 10. Session state — 2026-06-02
+## 10. Session state — 2026-06-02 (updated)
 
-**Committed:** `6e84a3a4` — feat(vwh): enrichment-chain-led Urban Fringe detection — 440 → 2,587 sites
+**Committed this session:**
+- `2e70000e` — feat(map-ui): VWH + PKS dots fade through z9-z12 (zoom continuity)
+- `0fab2667` — feat(vwh): coord-based ISO fix + Nordic enrichment chains
 
-**What shipped:**
-- VWH Pass 2: enrichment-chain-led detection. Pure-industrial chains (Würth, Fastenal,
-  Floor & Decor, United Rentals, Rexel, etc.) now seed VWH candidates without requiring
-  a hardware-store anchor. Root cause was that 3,296 industrial chain locations were
-  invisible (they never seed PRO DBSCAN clusters).
-- hilti-ch added to BRAND_FILL[mro_industrial] for all EU keys.
-- VWH: 440 → 2,587 (T1=423 T2=1978 T3=186). hardware-anchor=440, enrichment-led=2,147.
-  US=879 DE=771 FR=425 GB=285 MX=64 CA=52 NL=39 IT=35.
-- GeoJSON synced to gateway-orchestration-gis-1 www/data/archetype-vwh.geojson.
+**What shipped (this session):**
+- Map UI: VWH/PKS archetype dots now visible at LOCAL zoom (z9–z12) via paint opacity
+  fade expression. Previously disappeared abruptly at z9.
+- ISO fix: `ingest-osm.py` now uses Shapely point-in-polygon for multi-country chains
+  when OSM addr:country tag absent. Würth DE-tagged Finnish/Italian/Polish records
+  now correctly attributed. Rewrote wurth-de, rexel-fr, loxam-fr, kiloutou-fr.
+- New Nordic enrichment chains: cramo-fi (53 records FI/SE) + ahlsell-se (48 records SE/FI)
+  + ramirent-fi/hss-hire-uk/speedy-hire-uk wired into _VWH_INDUSTRIAL_CHAINS.
+- VWH re-run: 2,590 total (T1=471 T2=1933 T3=186). Coverage improvements:
+  IT 35→91, FI 3→81, NL 39→69, PL 6→50, AT 16→48, SE 4→33, PT 3→28, ES 2→18.
+  DE 771→459 (correct — were misattributed Würth branches outside Germany).
+- GeoJSON synced: archetype-vwh.geojson + archetype-pks.geojson → gateway www/data/.
+
+**Previously shipped (6e84a3a4):**
+- VWH Pass 2: enrichment-chain-led detection. 440 → 2,587 → 2,590 after ISO fix.
 
 **Previously shipped (438b37d6):**
-- VWH and PKS both have dedicated ring modes (not dot overlays). Toggling either hides
-  Retail completely. Rings use standard T1/T2/T3 blue/green/gold. `activeArchetype` drives
-  all layer dispatch.
-- `ingest-osm-railway-commuter.py` written; covers commuter rail, suburban rail, metro/subway
-  last stops across 20 countries. NOT YET RUN.
-- `test-cluster-archetypes.py` updated for per-class metro distance ranges (subway 5–35 km,
-  suburban 10–80 km, intercity/airport 35–150 km).
+- VWH and PKS dedicated ring modes. `ingest-osm-railway-commuter.py` written (not run).
 
 **Outstanding (see NEXT.md):**
-- Commuter ingest run (overnight, after 22:00 Vancouver)
-- Re-run archetypes script → updated PKS GeoJSON
-- Sync PKS GeoJSON to gateway
+- Commuter ingest run (overnight, after 22:00 Vancouver) — script at `/tmp/aec-commuter-ingest.sh`
+  or run manually: `python3 ingest-osm-railway-commuter.py --all`
+- Re-run archetypes + sync PKS GeoJSON after commuter ingest completes
 - Stage 6 promotion (Command Session)
 
 **PKS GeoJSON on gateway:** 2,396 features (intercity+airport only, no commuter/metro yet).
