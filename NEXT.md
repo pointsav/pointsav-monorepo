@@ -84,6 +84,20 @@ Country chain additions (still in effect):
 ---
 
 ## Pending Command Session
+## Live-site edit workflow fix — 2026-06-02
+
+- [x] **Root cause identified** — git commits do NOT update the live sites. The binary reads
+  from gitignored deployment dirs. Changes made to the monorepo were never reflected live because
+  no step copies from monorepo → deployment dirs. [2026-06-02 totebox@claude-code]
+- [x] **`scripts/verify-live.sh` created** — run at session start and end; shows file size,
+  mtime, `<title>`, viewport patch state, and HTTP 200 health for both tenants. [2026-06-02 totebox@claude-code]
+- [x] **`scripts/edit-live-content.sh` created** — single entry point for live edits; opens
+  the correct deployment HTML in `$EDITOR`, re-applies fix-viewport.sh, and confirms the change
+  landed. Usage: `bash scripts/edit-live-content.sh woodfine|pointsav` [2026-06-02 totebox@claude-code]
+- [x] **CLAUDE.md updated** — "CRITICAL" section at top with workflow and `verify-live.sh` in
+  session start checklist. [2026-06-02 totebox@claude-code]
+
+## Viewport / zoom fix — 2026-06-02
 
 - [x] **iOS Safari 30% zoom** — `documentElement.replaceWith()` dropped viewport-meta re-evaluation; iOS fell back to 980px desktop width → `max-width:1440px` layout at ~27% on 390px screens. Fix: swap `<head>` content and `<body>` separately (never replace `documentElement`). Applied to both deployed bundles 2026-06-02. Verified: `body_w == viewport_w` at 375/768/1280/1440px on both tenants.
 - [x] **Regen guard** — `scripts/fix-viewport.sh` created 2026-06-02; idempotent patch script re-applies the body-only swap to both deployment `index.html` files after any bundle rebuild. Run `bash scripts/fix-viewport.sh` before restarting services. Detects already-patched files safely. [2026-06-02 totebox@claude-code]
