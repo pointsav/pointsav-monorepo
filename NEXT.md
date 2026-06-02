@@ -114,6 +114,13 @@ Add this to the shutdown checklist before the commit step. [2026-06-02 totebox@p
 - [ ] **DESIGN-doc-header-component** — staged in drafts-outbound; routed via outbox
       [2026-06-01 totebox@claude-code]
 
+## Code fix needed
+
+- [ ] **Doorman stub routes missing** — `tests/doorman_test.rs` expects `POST /api/doorman/complete`
+      and `POST /api/doorman/instruct` to return 501; both return 404 because the routes don't
+      exist in server.rs. Add two minimal stub handlers returning `StatusCode::NOT_IMPLEMENTED`.
+      Pre-existing gap; not a regression from UX batch. [2026-06-02 totebox@claude-code]
+
 ## Standing deferred
 
 - Phase 12 (AI marginalia): gated on BP5 + SYS-ADR-07/10/19 review [2026-06-01]
