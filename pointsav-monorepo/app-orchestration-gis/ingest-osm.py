@@ -97,6 +97,30 @@ def _load_country_polygon(iso_code: str):
     return poly
 
 
+_ISO_FROM_COORDS_CANDIDATES = [
+    "US", "CA", "MX",
+    "GB", "SE", "DK", "NO", "FI", "IS",
+    "FR", "DE", "ES", "IT", "GR", "PL", "AT", "NL", "PT",
+    "EE", "LV", "LT", "BE", "CH", "CZ", "HU", "SK", "SI",
+    "HR", "RO", "BG", "RS",
+]
+
+def _iso_from_coords(lat: float, lon: float) -> str | None:
+    """Return the ISO-3166-1 alpha-2 code of the country containing (lat, lon).
+    Checks DISPLAY_ISO countries in priority order using polygon containment.
+    Returns None if no match or Shapely unavailable."""
+    try:
+        from shapely.geometry import Point
+    except ImportError:
+        return None
+    pt = Point(lon, lat)
+    for iso in _ISO_FROM_COORDS_CANDIDATES:
+        poly = _load_country_polygon(iso)
+        if poly is not None and poly.contains(pt):
+            return iso
+    return None
+
+
 def _filter_records_by_country_polygon(records: list, iso_code: str) -> tuple:
     """Drop records whose lat/lon falls outside the country polygon.
     Returns (kept_records, dropped_count). No-op if shapely unavailable or
@@ -244,7 +268,10 @@ def element_to_record(elem: dict, chain: dict) -> dict | None:
         "city": city,
         "region": state_region,
         "postal_code": postal_code,
-        "iso_country_code": iso_country or chain.get("country_code"),
+        "iso_country_code": (iso_country
+                             or (_iso_from_coords(lat, lon)
+                                 if chain.get("multi_country") else None)
+                             or chain.get("country_code")),
         "latitude": round(lat, 7),
         "longitude": round(lon, 7),
         "polygon_wkt": None,
