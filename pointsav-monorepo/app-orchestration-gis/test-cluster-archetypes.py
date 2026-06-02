@@ -183,11 +183,156 @@ for feat in features:
                            if m["category"] in _RETAIL_CATS and m["category"] != "hardware"],
         "vwh_signal":     vwh_signal,     # industrial enrichment categories present
         "vwh_strength":   len(vwh_signal),  # 0 = bare hardware; higher = stronger VWH
+        "vwh_source":     "hardware",
         "market_name":    p.get("market_name", ""),
     })
 
 print(f"  T1 clusters: {len(t1_index):,}  |  T1+T2: {len(t12_index):,}")
-print(f"  Urban Fringe candidates: {len(vw_candidates):,}")
+print(f"  Urban Fringe candidates (hardware-anchor pass): {len(vw_candidates):,}")
+
+# ── VWH PASS 2: ENRICHMENT-CHAIN-LED DETECTION ───────────────────────────────
+# Finds industrial estate co-locations that have NO hardware (Home Depot class) anchor.
+# Pure-industrial chains — never found in grocery retail parks — used as primary signals.
+# auto_parts and paint excluded as seeds (too common in suburban strip malls).
+print("\nVWH Pass 2 — enrichment-chain-led detection …")
+
+CHAIN_DIR = TOTEBOX / "service-fs" / "service-business"
+ENRICH_VWH_EPS_KM   = 3.0   # proximity radius for grouping enrichment-chain records
+ENRICH_VWH_DEDUP_KM = 2.0   # skip if within this distance of a hardware-anchor VWH site
+
+_VWH_INDUSTRIAL_CHAINS: dict[str, list[str]] = {
+    "mro_industrial": ["fastenal-us", "grainger-us", "princess-auto-ca",
+                       "wurth-de", "hilti-ch"],
+    "flooring":       ["floor-decor-us", "topps-tiles-uk"],
+    "tool_rental":    ["united-rentals-us", "sunbelt-rentals-us",
+                       "loxam-fr", "kiloutou-fr", "boels-rental-nl"],
+    "lumber":         ["84-lumber-us", "builders-firstsource-us",
+                       "kent-building-supplies-ca"],
+    "plumbing":       ["ferguson-us", "wolseley-uk"],
+    "electrical":     ["cef-uk", "rexel-fr"],
+    "welding":        ["boc-uk"],
+}
+
+
+def _load_industrial_recs() -> list[dict]:
+    recs = []
+    for cat, chains in _VWH_INDUSTRIAL_CHAINS.items():
+        for cid in chains:
+            p = CHAIN_DIR / f"{cid}.jsonl"
+            if not p.exists():
+                continue
+            with open(p) as fh:
+                for line in fh:
+                    try:
+                        r = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    lat = r.get("latitude")
+                    lon = r.get("longitude")
+                    if lat is None or lon is None:
+                        continue
+                    iso = (r.get("iso_country_code") or "")[:2].upper()
+                    if iso not in DISPLAY_ISO:
+                        continue
+                    recs.append({
+                        "chain_id": cid,
+                        "category": cat,
+                        "lat":      float(lat),
+                        "lon":      float(lon),
+                        "iso":      iso,
+                        "city":     r.get("city") or "",
+                    })
+    return recs
+
+
+def _group_by_proximity(recs: list[dict], eps_km: float) -> list[list[int]]:
+    """Single-linkage grouping via union-find. Returns list of index groups."""
+    n = len(recs)
+    parent = list(range(n))
+
+    def find(x: int) -> int:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    margin = eps_km / 111.0
+    sorted_idx = sorted(range(n), key=lambda i: recs[i]["lat"])
+    for ii, i in enumerate(sorted_idx):
+        lat_i, lon_i = recs[i]["lat"], recs[i]["lon"]
+        for jj in range(ii + 1, len(sorted_idx)):
+            j = sorted_idx[jj]
+            if recs[j]["lat"] - lat_i > margin:
+                break
+            if abs(recs[j]["lon"] - lon_i) > margin * 1.5:
+                continue
+            if haversine(lat_i, lon_i, recs[j]["lat"], recs[j]["lon"]) <= eps_km:
+                parent[find(i)] = find(j)
+
+    groups: dict[int, list[int]] = defaultdict(list)
+    for i in range(n):
+        groups[find(i)].append(i)
+    return list(groups.values())
+
+
+ind_recs = _load_industrial_recs()
+print(f"  Industrial enrichment records loaded: {len(ind_recs):,}")
+
+hw_vwh_pts = [(c["lat"], c["lon"]) for c in vw_candidates]
+enrich_added = enrich_skipped_metro = enrich_skipped_dedup = 0
+
+if ind_recs:
+    groups = _group_by_proximity(ind_recs, ENRICH_VWH_EPS_KM)
+    for group in groups:
+        lats  = [ind_recs[i]["lat"]      for i in group]
+        lons  = [ind_recs[i]["lon"]      for i in group]
+        isos  = [ind_recs[i]["iso"]      for i in group]
+        cats_present = {ind_recs[i]["category"] for i in group}
+        iso = max(set(isos), key=isos.count)
+
+        clat = sum(lats) / len(lats)
+        clon = sum(lons) / len(lons)
+
+        metro_dist, metro_name = nearest_metro(clat, clon)
+        if not (VW_MIN_METRO_KM <= metro_dist <= VW_MAX_METRO_KM):
+            enrich_skipped_metro += 1
+            continue
+
+        lat_margin = ENRICH_VWH_DEDUP_KM / 111.0
+        too_close = any(
+            abs(hlat - clat) <= lat_margin
+            and haversine(clat, clon, hlat, hlon) < ENRICH_VWH_DEDUP_KM
+            for hlat, hlon in hw_vwh_pts
+        )
+        if too_close:
+            enrich_skipped_dedup += 1
+            continue
+
+        vwh_signal   = sorted(cats_present)
+        vwh_strength = len(vwh_signal)
+        vw_candidates.append({
+            "id":            f"vwh-enrich-{iso.lower()}-{round(clat,4)}-{round(clon,4)}",
+            "lat":           clat,
+            "lon":           clon,
+            "iso":           iso,
+            "tier":          3,
+            "span_km":       0.0,
+            "metro_dist_km": round(metro_dist, 1),
+            "nearest_metro": metro_name,
+            "member_count":  len(group),
+            "hardware_chains": [],
+            "other_retail":  [],
+            "vwh_signal":    vwh_signal,
+            "vwh_strength":  vwh_strength,
+            "vwh_source":    "enrichment",
+            "market_name":   "",
+        })
+        enrich_added += 1
+
+print(f"  Enrichment-led candidates added:    {enrich_added:,}")
+print(f"  Skipped (metro distance):           {enrich_skipped_metro:,}")
+print(f"  Skipped (dedup with hardware VWH):  {enrich_skipped_dedup:,}")
+print(f"  Total VWH candidates:               {len(vw_candidates):,}")
 
 # ── LOAD TRANSIT ANCHORS (airports + railway stations) ────────────────────────
 # Prefer the IATA-filtered OSM airport set; fall back to raw Overture if absent.
@@ -458,10 +603,14 @@ print(f"Wrote {out_pks}  ({len(tn_candidates):,} features)")
 
 # ── TIER-FILTERED GEOJSON (map overlay — T1/T2/T3 for both archetypes) ────────
 #
-# Urban Fringe tiers  (vwh_strength = enrichment category count):
-#   T1 (strength≥2): hardware + 2+ enrichment cats → established industrial node
-#   T2 (strength=1): hardware + 1 enrichment cat   → emerging industrial node
-#   T3 (strength=0): bare hardware, no enrichment  → proxy-only; data gap expected
+# Urban Fringe tiers  (vwh_strength = distinct industrial enrichment category count):
+#   hardware-anchor pass:
+#     T1 (strength≥2): hardware + 2+ enrichment cats → established industrial node
+#     T2 (strength=1): hardware + 1 enrichment cat   → emerging industrial node
+#     T3 (strength=0): bare hardware, no enrichment  → proxy-only; data gap expected
+#   enrichment-led pass (vwh_source="enrichment"):
+#     T1 (strength≥2): 2+ industrial categories co-located → strong industrial zone
+#     T2 (strength=1): single industrial category          → moderate industrial signal
 #
 # Commuter tiers (proximity to nearest Retail Centre T1/T2 + metro score):
 #   T1 (RC ≤ TN_INTEGRATED_KM):     transit hub tightly co-located with RC
