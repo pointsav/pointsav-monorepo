@@ -1805,8 +1805,8 @@
         // buildProdRings() dispatcher populates the right geometry before this call.
         setVis(['proximity-fill', 'proximity-line-t1', 'proximity-line-t234', 'proximity-ring-label'], local);
 
-        // Retail individual store dots: only when Retail mode is active
-        setVis(['all-locations', 'all-locations-hit'], local && arch === null);
+        // Individual store dots: visible in all LOCAL mode views (Retail, VWH, PKS)
+        setVis(['all-locations', 'all-locations-hit'], local);
 
         setVis(['cluster-centroid'], false);
         setVis(['proximity-merged-label'], false);
