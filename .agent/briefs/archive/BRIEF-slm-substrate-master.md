@@ -624,9 +624,40 @@ Tier A continues serving throughout — unaffected by any step above.
 First request after idle: ~60–90s (GCS FUSE reads 20 GB GGUF into GPU memory).
 If unacceptable: set `--min-instances 1` (~$0.67/hr continuous, ~$490/month GPU alone).
 
+### Migration progress (2026-06-02 session)
+
+**Completed:**
+- Cloud Run service deployed: `yoyo-tier-b` in europe-west4 (revision 00003-jnd)
+- Service URL: `https://yoyo-tier-b-369270631281.europe-west4.run.app`
+- Image: `docker.io/ollama/ollama:latest` (GPU: nvidia-l4, 4 vCPU, 16 GiB)
+- OLMo Q3 GGUF (15.6 GiB) copied to GCS: `ollama-store/blobs/sha256-06c420f9...`
+- Ollama model store in GCS: `ollama-store/` (blobs + manifests)
+- Model manifest written manually: `olmo3:latest` registered in Ollama
+- Doorman code: `MetadataBearer` + `SLM_YOYO_GCP_AUTH` + `SLM_YOYO_HEALTH_PATH` — committed `04adf39c`
+- New Doorman binary built (release): `service-slm/target/release/slm-doorman-server`
+
+**Pending (Command Session required):**
+- Deploy new Doorman binary (binary ledger + `bin/deploy-binary.sh`)
+- Apply `/tmp/local-doorman-new.env` → `/etc/local-doorman/local-doorman.env`
+- Restart `local-doorman.service` to activate Cloud Run Tier B
+- Verify circuit closes: `curl /readyz | jq .tier_b_circuit_state`
+
+**Known cold-start behaviour:**
+- First inference after idle: model loads 15.6 GiB from GCS FUSE → L4 VRAM (3-10 min)
+- Subsequent requests within same session: fast (model stays in VRAM)
+- `--min-instances 0` → $0 when idle; `--min-instances 1` → ~$0.67/hr always-warm
+
+**Ollama specifics:**
+- Model name in Doorman: `SLM_YOYO_MODEL=olmo3` (NOT `Olmo-3-1125-32B-Think`)
+- Health check path: `SLM_YOYO_HEALTH_PATH=/` (Ollama root, not `/health`)
+- Auth: `SLM_YOYO_GCP_AUTH=true` (GCP identity token via metadata service)
+- IAM: `--allow-unauthenticated` deploy flag failed (SA lacks setIamPolicy); identity tokens work
+
 ### Follow-up items (post-migration)
-- [ ] Add Cloud Run IAM auth (replace `--allow-unauthenticated`; update Doorman to fetch GCP
-      identity token from metadata service instead of static bearer token)
-- [ ] Update `service-slm/docs/deploy/deploy-yoyo-tier-b.md` with Cloud Run procedure
+- [ ] Confirm inference works (first cold-start test in progress as of 2026-06-02)
+- [ ] Deploy new Doorman binary via Command Session (binary ledger required)
+- [x] MetadataBearer implemented in Doorman (commit 04adf39c)
+- [ ] Update `service-slm/docs/deploy/deploy-yoyo-tier-b.md` with Cloud Run + Ollama procedure
 - [ ] Release static IP `34.6.204.25` if old VM is permanently retired
-- [ ] Update §7 definition-of-done item 1 (replace `start-yoyo.sh` gate with Cloud Run health check)
+- [ ] Consider `--min-instances 1` if cold-start latency is unacceptable for production use
+- [ ] Consider OLMo 7B as a faster cold-start alternative if 32B proves too slow
