@@ -101,6 +101,56 @@ impl BearerTokenProvider for StaticBearer {
     }
 }
 
+/// GCP Compute Engine metadata-service identity token bearer.
+/// Fetches a fresh token on every call — identity tokens expire after 1 h,
+/// fetching on each request keeps them valid without manual rotation.
+/// Enable via `SLM_YOYO_GCP_AUTH=true` when the Tier B endpoint is Cloud Run.
+#[derive(Debug)]
+pub struct MetadataBearer {
+    audience: String,
+    client: reqwest::Client,
+}
+
+impl MetadataBearer {
+    pub fn new(audience: impl Into<String>) -> Self {
+        Self {
+            audience: audience.into(),
+            client: reqwest::Client::builder()
+                .timeout(Duration::from_secs(5))
+                .build()
+                .unwrap_or_default(),
+        }
+    }
+}
+
+#[async_trait]
+impl BearerTokenProvider for MetadataBearer {
+    async fn token(&self) -> Result<String> {
+        let url = format!(
+            "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience={}",
+            self.audience
+        );
+        let token = self.client
+            .get(&url)
+            .header("Metadata-Flavor", "Google")
+            .send()
+            .await
+            .map_err(|e| crate::error::DoormanError::UpstreamShape(
+                format!("metadata identity fetch failed: {e}")
+            ))?
+            .text()
+            .await
+            .map_err(|e| crate::error::DoormanError::UpstreamShape(
+                format!("metadata identity read failed: {e}")
+            ))?;
+        Ok(token.trim().to_string())
+    }
+
+    async fn refresh(&self) -> Result<String> {
+        self.token().await
+    }
+}
+
 /// Per-provider pricing for Tier B cost computation. CONTRACT.md does
 /// not carry a cost field on the wire; the Doorman computes cost
 /// deterministically as `(hourly_usd / 3_600_000) × inference_ms`
@@ -143,6 +193,10 @@ pub struct YoYoTierConfig {
     /// GCP zone where the Yo-Yo VM runs (e.g. "europe-west4-a").
     /// Read from `SLM_YOYO_GCP_ZONE` at construction; surfaced in /readyz.
     pub zone: Option<String>,
+    /// Path polled by the background health probe (default: `/health`).
+    /// Override via `SLM_YOYO_HEALTH_PATH` when the Tier B backend uses a
+    /// different liveness endpoint (e.g. `/` for Ollama).
+    pub health_path: String,
 }
 
 impl Default for YoYoTierConfig {
@@ -153,6 +207,7 @@ impl Default for YoYoTierConfig {
             contract_version: crate::YOYO_CONTRACT_VERSION.to_string(),
             pricing: PricingConfig::default(),
             zone: None,
+            health_path: "/health".to_string(),
         }
     }
 }
@@ -183,7 +238,8 @@ impl YoYoTierClient {
         if let Ok(handle) = tokio::runtime::Handle::try_current() {
             let health_up_clone = Arc::clone(&health_up);
             let endpoint = config.endpoint.clone();
-            handle.spawn(run_health_probe(endpoint, health_up_clone));
+            let health_path = config.health_path.clone();
+            handle.spawn(run_health_probe(endpoint, health_path, health_up_clone));
         }
 
         let zone = config.zone.clone();
@@ -473,9 +529,10 @@ impl YoYoTierClient {
 }
 
 /// Background health probe task. Spawned once per `YoYoTierClient::new()`.
-/// Polls `<endpoint>/health` every 30 s with a 2 s timeout.
+/// Polls `<endpoint><health_path>` every 30 s with a 2 s timeout.
 /// Three consecutive failures set `health_up` to false; one recovery resets.
-async fn run_health_probe(endpoint: String, health_up: Arc<AtomicBool>) {
+/// `health_path` defaults to `/health` (llama-server); set to `/` for Ollama.
+async fn run_health_probe(endpoint: String, health_path: String, health_up: Arc<AtomicBool>) {
     let http = reqwest::Client::builder()
         .timeout(HEALTH_PROBE_TIMEOUT)
         .danger_accept_invalid_certs(true)
@@ -483,7 +540,7 @@ async fn run_health_probe(endpoint: String, health_up: Arc<AtomicBool>) {
         .unwrap_or_default();
 
     let mut consecutive_failures: u32 = 0;
-    let url = format!("{}/health", endpoint.trim_end_matches('/'));
+    let url = format!("{}{}", endpoint.trim_end_matches('/'), health_path);
 
     info!(
         target: "slm_doorman::tier::yoyo",
@@ -642,6 +699,7 @@ mod tests {
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
                 pricing,
                 zone: None,
+                health_path: "/health".to_string(),
             },
             Arc::new(StaticBearer::new("test-token-v1")),
         )
@@ -765,6 +823,7 @@ mod tests {
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
                 pricing: PricingConfig::default(),
                 zone: None,
+                health_path: "/health".to_string(),
             },
             bearer.clone(),
         );
@@ -1007,6 +1066,7 @@ mod tests {
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
                 pricing: PricingConfig::default(),
                 zone: None,
+                health_path: "/health".to_string(),
             },
             Arc::new(FailingBearer),
         );
@@ -1053,6 +1113,7 @@ mod tests {
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
                 pricing: PricingConfig::default(),
                 zone: None,
+                health_path: "/health".to_string(),
             },
             Arc::new(EmptyBearer),
         );

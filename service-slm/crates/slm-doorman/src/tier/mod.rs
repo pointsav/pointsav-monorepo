@@ -17,7 +17,10 @@ pub use external::{
     FOUNDRY_DEFAULT_ALLOWLIST,
 };
 pub use local::{LocalTierClient, LocalTierConfig};
-pub use yoyo::{BearerTokenProvider, PricingConfig, StaticBearer, YoYoTierClient, YoYoTierConfig};
+pub use yoyo::{
+    BearerTokenProvider, MetadataBearer, PricingConfig, StaticBearer, YoYoTierClient,
+    YoYoTierConfig,
+};
 
 /// Convert Anthropic-format tools to OpenAI-format tools for llama-server.
 ///
