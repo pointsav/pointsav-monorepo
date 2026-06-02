@@ -10,6 +10,30 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-intelligence
 to: command@claude-code
+re: mirror live config — local-slm threads.conf --no-repack (16x throughput fix)
+created: 2026-06-02T02:50:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260602-norepack-mirror
+---
+
+Live config change applied to `/etc/systemd/system/local-slm.service.d/threads.conf`:
+restored `--no-repack`. Please mirror into the canonical `infrastructure/` copy
+(Command scope) so it survives re-provisioning.
+
+Why: the 2026-05-23 audit removed `--no-repack` to enable repack GEMM but kept
+MemoryMax=8G. Repack's ~4 GiB anonymous weight copy overflowed the cap → kernel
+re-faulted the 4 GiB mmap weights every token → `memory.events high=517907`, 0.3 tok/s.
+Restoring `--no-repack` drops the working set to 5.68 GiB (fits 8 G), verified
+**3.8–4.3 tok/s (16x faster)**, `high=0`. Local drain re-enabled and viable.
+
+Optional Stage 2 (deferred): raise MemoryMax→12G + re-enable repack for ~5–8 tok/s,
+but needs RAM freed first (6.87 GiB available; a leftover 3.2 GiB `qemu -accel tcg`
+from another session competes — coordinate before killing).
+
+---
+from: totebox@project-intelligence
+to: command@claude-code
 re: stage6 + binary ledger — apprenticeship drain-stall fix (slm-doorman-server)
 created: 2026-06-01T23:55:00Z
 priority: normal
