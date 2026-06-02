@@ -196,6 +196,7 @@ table#elements-table {
 }
 /* DTCG key colouring */
 .jk-schema  { color: #c586c0; }   /* $schema */
+.jk-ext     { color: #dcdcaa; }   /* $extensions */
 .jk-type    { color: #4ec9b0; }   /* $type */
 .jk-value   { color: #ce9178; }   /* $value */
 .jk-desc    { color: #888; }      /* $description */
@@ -244,7 +245,7 @@ table#elements-table {
   </div>
 
   <div id="bim-right">
-    <div id="bim-right-header">bim-workspace-v1.0 · W3C DTCG format</div>
+    <div id="bim-right-header">W3C DTCG format · bim-workspace v1.0</div>
     <pre id="json-preview"></pre>
   </div>
 </div>
@@ -319,10 +320,19 @@ async function createNew(name) {
   }
 }
 
-// ── Populate UI from bim-workspace-v1.0 data ─────────────────────────────────
+// ── Populate UI from bim-workspace data (handles legacy v1.0 and DTCG format) ─
 function populateFromData(data) {
-  const title   = data?.project?.title?.['$value']    || '';
-  const ifcFile = data?.project?.['ifc-file']?.['$value'] || '';
+  const isLegacy = data?.['$schema'] === 'bim-workspace-v1.0';
+
+  let title, ifcFile;
+  if (isLegacy) {
+    title   = data?.project?.title?.['$value']        || '';
+    ifcFile = data?.project?.['ifc-file']?.['$value'] || '';
+  } else {
+    const bimExt = data?.['$extensions']?.['bim-workspace'] || {};
+    title   = bimExt?.project?.title        || '';
+    ifcFile = bimExt?.project?.['ifc-file'] || '';
+  }
   document.getElementById('title-input').value = title;
   document.getElementById('ifc-input').value   = ifcFile;
 
@@ -333,8 +343,15 @@ function populateFromData(data) {
   const keys = Object.keys(styles).length > 0 ? Object.keys(styles) : Object.keys(DEFAULT_STYLES);
   for (const typeName of keys) {
     const s = styles[typeName] || {};
-    const color   = s?.color?.['$value']   || DEFAULT_STYLES[typeName]?.color   || '#808080';
-    const visible = s?.visible?.['$value'] !== undefined ? s.visible['$value'] : true;
+    let color, visible;
+    if (isLegacy) {
+      color   = s?.color?.['$value']   || DEFAULT_STYLES[typeName]?.color || '#808080';
+      visible = s?.visible?.['$value'] !== undefined ? s.visible['$value'] : true;
+    } else {
+      color   = s?.['$value'] || DEFAULT_STYLES[typeName]?.color || '#808080';
+      visible = s?.['$extensions']?.['bim-workspace']?.visible !== undefined
+                ? s['$extensions']['bim-workspace'].visible : true;
+    }
     appendRow(typeName, color, visible);
   }
 }
@@ -404,7 +421,7 @@ function removeRow(btn) {
   refreshPreview();
 }
 
-// ── Build bim-workspace-v1.0 data object ─────────────────────────────────────
+// ── Build W3C DTCG data object ────────────────────────────────────────────────
 function buildData() {
   const title   = document.getElementById('title-input').value.trim() || 'Untitled';
   const ifcFile = document.getElementById('ifc-input').value.trim();
@@ -416,19 +433,21 @@ function buildData() {
     const color   = tr.querySelector('input[type="color"]').value;
     const visible = tr.querySelector('.visible-check').checked;
     elementStyles[typeName] = {
-      color:   { '$value': color,   '$type': 'color' },
-      visible: { '$value': visible, '$type': 'boolean' },
+      '$value':      color,
+      '$type':       'color',
+      '$extensions': { 'bim-workspace': { visible } },
     };
   });
 
   return {
-    '$schema': 'bim-workspace-v1.0',
-    project: {
-      title:      { '$value': title,   '$type': 'string' },
-      'ifc-file': { '$value': ifcFile, '$type': 'file-reference',
-                    '$description': 'path to .ifc file relative to workspace root' },
-    },
+    '$schema': 'https://design-tokens.github.io/community-group/format/',
     'element-styles': elementStyles,
+    '$extensions': {
+      'bim-workspace': {
+        version: '1.0',
+        project: { title, 'ifc-file': ifcFile },
+      },
+    },
   };
 }
 
@@ -442,13 +461,14 @@ function refreshPreview() {
 function colorizeJson(raw) {
   return raw
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"(\$schema)"(\s*:)/g,  '<span class="jk-schema">"$1"</span>$2')
-    .replace(/"(\$type)"(\s*:)/g,    '<span class="jk-type">"$1"</span>$2')
-    .replace(/"(\$value)"(\s*:)/g,   '<span class="jk-value">"$1"</span>$2')
+    .replace(/"(\$schema)"(\s*:)/g,     '<span class="jk-schema">"$1"</span>$2')
+    .replace(/"(\$extensions)"(\s*:)/g, '<span class="jk-ext">"$1"</span>$2')
+    .replace(/"(\$type)"(\s*:)/g,       '<span class="jk-type">"$1"</span>$2')
+    .replace(/"(\$value)"(\s*:)/g,      '<span class="jk-value">"$1"</span>$2')
     .replace(/"(\$description)"(\s*:)/g,'<span class="jk-desc">"$1"</span>$2')
-    .replace(/"(Ifc[A-Za-z]+)"(\s*:)/g,'<span class="jk-group">"$1"</span>$2')
-    .replace(/: (#[0-9a-fA-F]{3,8})/g, ': <span class="jv-color">$1</span>')
-    .replace(/: (true|false)/g,       ': <span class="jv-bool">$1</span>');
+    .replace(/"(Ifc[A-Za-z]+)"(\s*:)/g, '<span class="jk-group">"$1"</span>$2')
+    .replace(/"(#[0-9a-fA-F]{3,8})"/g,  '"<span class="jv-color">$1</span>"')
+    .replace(/: (true|false)/g,          ': <span class="jv-bool">$1</span>');
 }
 
 // ── Save ──────────────────────────────────────────────────────────────────────
