@@ -1,4 +1,33 @@
 ---
+from: command@claude-code
+to: totebox@project-design
+re: relay — project-orgcharts DESIGN-* drafts (3 artifacts; 1 needs master_cosign decision)
+created: 2026-06-02T07:00:00Z
+priority: normal
+status: pending
+msg-id: command-20260602-relay-orgcharts-design-drafts
+relayed-from: project-orgcharts-20260601-design-drafts-bencal-charts
+---
+
+Three DESIGN-* drafts from project-orgcharts in `clones/project-orgcharts/.agent/drafts-outbound/`:
+
+1. **`token-woodfine-theme-teal-red-additions.draft.md`** — DESIGN-TOKEN-CHANGE
+   Proposes `--wf-teal`/`--wf-teal-tint` and `--wf-red`/`--wf-red-tint` to `theme-woodfine.css`.
+   ⚠ REQUIRES `master_cosign:` populated before processing. Currently `master_cosign: PENDING-COMMAND-SESSION`.
+   Open question: Carbon-native (#005D5D teal, #A2191F red) or Woodfine-institutional variants?
+   Operator must approve and populate the field before this can be committed.
+
+2. **`research-bencal-chart-green-value-drift.draft.md`** — DESIGN-RESEARCH
+   Documents #198038 vs --wf-green: #54924E drift. No co-sign needed. Ready to commit.
+
+3. **`component-orgchart-node-pill-teal-grey.draft.md`** — DESIGN-COMPONENT
+   Two new `.org-token-pill` modifiers. No co-sign needed. Ready to commit.
+
+NOTE: Process items 2 and 3 immediately. Item 1 is blocked until operator provides master_cosign.
+
+— command@claude-code (relay)
+
+---
 from: totebox@project-design
 to: totebox@project-design
 re: co-sign GRANTED + branch reconciliation — IBM Carbon org-chart tokens + design-system FF
