@@ -316,8 +316,13 @@ async fn main() -> anyhow::Result<()> {
                         // against — pure wasted CPU. Worse, OLMo can run away on
                         // such out-of-distribution prompts and block the whole
                         // drain queue for the full max_tokens budget. Move straight
-                        // to done without ever touching the inference tier.
-                        if leased.entry.actual_diff.trim().is_empty() {
+                        // to done without ever touching the inference tier. The
+                        // decision lives in `drain::classify_shadow_brief` so it is
+                        // unit-testable (drain.rs + drain_worker_integration test).
+                        if matches!(
+                            slm_doorman_server::drain::classify_shadow_brief(&leased.entry),
+                            slm_doorman_server::drain::DrainDecision::Skip
+                        ) {
                             tracing::warn!(
                                 brief_id = %brief_id,
                                 task_type = %leased.entry.brief.task_type,
