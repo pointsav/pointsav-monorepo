@@ -3,7 +3,7 @@ artifact: brief
 status: active
 title: SLM Substrate Master — Yo-Yo + DataGraph + Learning Loop
 created: 2026-05-24
-updated: 2026-06-01 (drain stall FIXED + verified; drain RE-PAUSED — CPU throughput non-viable, GPU required)
+updated: 2026-06-02 (drain stall FIXED; throughput bug FIXED — was cgroup thrash, not CPU limit; ~4 tok/s; drain RE-ENABLED)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 grounds_in:
   - service-slm/ARCHITECTURE.md
@@ -48,14 +48,15 @@ notes: >
 | `orchestration-slm-server` | built session 9 | **NOT YET DEPLOYED** | unit file committed `d445b5ea`; Command operator install needed (see outbox `project-intelligence-20260530-stage6-orchestration-deploy`) |
 | `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** | europe-west4-a L4 stockout; restart with `start-yoyo.sh --wait-ready=120 --runtime=1h` when capacity returns |
 | `local-slm.service` | OLMo 2 1124 7B Instruct Q4_K_M (4.16 GiB) | **active** | Tier A is the confident primary; `SLM_TIER_A_FIRST=true` confirmed in startup log |
-| `local-doorman.env` | — | current | `SLM_TIER_A_FIRST=true`; **`SLM_DRAIN_PAUSED=true`** (re-paused 2026-06-01 — see drain-stall note below); `SLM_HOLD_THRESHOLD_SECS=1`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_QUEUE_LEASE_EXPIRY_SEC=2100` |
+| `local-doorman.env` | — | current | `SLM_TIER_A_FIRST=true`; **`SLM_DRAIN_PAUSED=false`** (re-enabled 2026-06-02 after throughput fix); `SLM_HOLD_THRESHOLD_SECS=1`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_QUEUE_LEASE_EXPIRY_SEC=2100` |
+| `local-slm.service` mem | — | **FIXED 2026-06-02** | `--no-repack` restored in `threads.conf` drop-in — repack anon copy overflowed MemoryMax=8G → 517k throttle events → 0.3 tok/s. no-repack fits working set (5.68 GiB) in 8 G. **~4.3 tok/s confirmed** |
 | `local-content.env` | — | current | Drop-in: `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=false`; fallback OFF (Yo-Yo is the extraction tier) |
 
 **Tier routing (current):**
 - Tier A: **ENABLED + PRIMARY** — `SLM_TIER_A_FIRST=true`; all chat/shadow routes here; interactive flow verified end-to-end
 - Tier B: **TERMINATED** — health probes failing; circuit OPEN; `/v1/extract` defers (circuit-open); recovery probe in service-content will auto-resume when Yo-Yo returns
 - Tier C: not configured — ToS hard constraint; never enable for training loop
-- Drain: **RE-PAUSED** (`SLM_DRAIN_PAUSED=true`) — see drain-stall note below. Capture continues; dispatch deferred to GPU (Yo-Yo)
+- Drain: **ACTIVE** (`SLM_DRAIN_PAUSED=false`, re-enabled 2026-06-02) — throughput fixed (~4.3 tok/s); real-diff briefs ~2 min each. Empty-diff briefs skip instantly (Fix 1)
 
 **Think-model fixes deployed (prev session commit `d835cab5`):**
 - `SOCKET_TIMEOUT` raised 60s → 180s; `OUTER_DEADLINE` raised 90s → 300s
@@ -98,12 +99,33 @@ stop sequences and no effective cap it never terminated, blocking the serial dra
 - Fix 4/5: reqwest `connect_timeout(10s)`; corrected stale 1860s-timeout comment.
 - 181 tests pass; binary `15b3f5c3` deployed.
 
-**The throughput finding (why drain is RE-PAUSED):** even with the fixes, OLMo 7B on this
-loaded CPU VM generates at **~0.3 tok/s** — a real-diff brief takes 15–22 min. The serial drain
-cannot keep pace with the commit arrival rate, and §6/§5 already establish CPU OLMo 7B output is
-low-value for DPO. So `SLM_DRAIN_PAUSED=true` is restored. The fixes are what make the eventual
-**GPU (Yo-Yo) drain safe** — empty briefs skip, real briefs are bounded. SFT training uses
-`extract-sft-pairs.py` on `queue-done/` directly, not live CPU drain.
+### Throughput bug — ROOT CAUSE WAS CGROUP THRASH, NOT CPU (FIXED 2026-06-02)
+
+The 0.3 tok/s observed during the drain-stall investigation was **NOT a CPU limit** — it was a
+self-inflicted cgroup memory-thrash config bug. (The earlier "CPU drain non-viable" conclusion
+was wrong; corrected here.)
+
+**Root cause:** the 2026-05-23 audit removed `--no-repack` to enable the faster repack GEMM path
+but left `MemoryMax=8G`. Repack builds a ~4 GiB **anonymous** SIMD copy of the weights on top of
+the 4.16 GiB mmap'd weights + ~1.5 GiB KV (ctx 4096) ≈ **10.6 GiB working set** inside an 8 GiB
+cap. The kernel could only reclaim the clean mmap'd weight pages, so it evicted + re-faulted all
+4 GiB **every token** → `memory.events: high 517907`, ~15% of one core (waiting on faults), 0.3 tok/s.
+The "speed up" backfired 38× (throttle events 13,691 → 517,907).
+
+**Fix (2026-06-02):** `--no-repack` restored in `threads.conf`. Working set drops to ~5.68 GiB,
+fits in 8 G, zero reclaim. **Verified: 3.8–4.3 tok/s** (16× faster); `memory.events high 0` (no
+thrash). Real-diff brief (512 tok) now ~2 min vs 22 min.
+
+**Hardware ceiling (for reference):** Broadwell Xeon @ 2.2 GHz, 4 physical cores, AVX2, no AVX512
+→ ~4 tok/s with no-repack is near the realistic ceiling here. 14–20 tok/s would need AVX512-VNNI
+or a faster desktop. Stage 2 (raise MemoryMax to 12 G + re-enable repack → maybe 5–8 tok/s) is
+deferred — needs RAM freed first (only 6.87 GiB available; a leftover 3.2 GiB qemu competes).
+
+**Conclusion: local CPU drain IS viable.** Drain re-enabled. SFT training still uses
+`extract-sft-pairs.py` on `queue-done/` for the LoRA corpus; live drain accumulates new tuples.
+
+**Note for Command:** the `threads.conf` change is live in `/etc/`; mirror it into the canonical
+`infrastructure/` copy (Command scope) so it survives re-provisioning.
 
 **Stage 6 state:** `df118c47` (drain fix) + doc commits ahead of `origin/main`; see outbox.
 
