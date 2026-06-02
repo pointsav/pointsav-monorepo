@@ -191,9 +191,20 @@ print(f"  Urban Fringe candidates: {len(vw_candidates):,}")
 
 # ── LOAD TRANSIT ANCHORS (airports + railway stations) ────────────────────────
 # Prefer the IATA-filtered OSM airport set; fall back to raw Overture if absent.
+# Also loads commuter/suburban/metro stations from cleansed-civic-railway-commuter.jsonl
+# if that file exists (produced by ingest-osm-railway-commuter.py).
 
-AIRPORTS_OSM = TOTEBOX / "service-places" / "cleansed-civic-airports.jsonl"
-RAILWAY_OSM  = TOTEBOX / "service-places" / "cleansed-civic-railway.jsonl"
+AIRPORTS_OSM  = TOTEBOX / "service-places" / "cleansed-civic-airports.jsonl"
+RAILWAY_OSM   = TOTEBOX / "service-places" / "cleansed-civic-railway.jsonl"
+RAILWAY_COMM  = TOTEBOX / "service-places" / "cleansed-civic-railway-commuter.jsonl"
+
+# Metro/subway/commuter distance range: tighter than intercity (fringe not deep regional).
+# Subway/light_rail: 5–35 km (end-of-line fringe stations).
+# Suburban commuter rail: 10–80 km (broad suburban belt).
+TN_SUBWAY_MIN_KM    = 5.0
+TN_SUBWAY_MAX_KM    = 35.0
+TN_SUBURBAN_MIN_KM  = 10.0
+TN_SUBURBAN_MAX_KM  = 80.0
 
 def _load_jsonl(path: Path, category: str | None = None) -> list[dict]:
     recs = []
@@ -221,18 +232,34 @@ else:
     airport_dedup = True
 
 railways = _load_jsonl(RAILWAY_OSM, "railway_station")
-print(f"  railway stations: {len(railways):,} from cleansed-civic-railway.jsonl")
+print(f"  intercity railway: {len(railways):,} from cleansed-civic-railway.jsonl")
+
+# Commuter/suburban/metro stations (optional — present after running ingest-osm-railway-commuter.py)
+commuter_railways = _load_jsonl(RAILWAY_COMM, "railway_station")
+if commuter_railways:
+    print(f"  commuter/subway: {len(commuter_railways):,} from cleansed-civic-railway-commuter.jsonl")
+    # Tag each with its transit class (set by the ingest script; default to 'suburban' if missing)
+    for r in commuter_railways:
+        tc = r.get("transit_class", "suburban")
+        r["transit_type"] = "railway_commuter"
+        r["transit_class"] = tc
+else:
+    print(f"  commuter/subway: 0 (run ingest-osm-railway-commuter.py --all to populate)")
 
 # Tag transit type and filter to display countries
 for a in airports:
     a["transit_type"] = "airport"
 for r in railways:
     r["transit_type"] = "railway"
+    r["transit_class"] = "intercity"
 
-transit = [t for t in (airports + railways) if t.get("iso_country_code") in DISPLAY_ISO]
+all_transit = airports + railways + commuter_railways
+transit = [t for t in all_transit if t.get("iso_country_code") in DISPLAY_ISO]
+n_airports  = sum(1 for t in transit if t["transit_type"] == "airport")
+n_intercity = sum(1 for t in transit if t.get("transit_class") == "intercity")
+n_commuter  = sum(1 for t in transit if t["transit_type"] == "railway_commuter")
 print(f"  {len(transit):,} transit anchors in display countries "
-      f"({sum(1 for t in transit if t['transit_type']=='airport'):,} airports, "
-      f"{sum(1 for t in transit if t['transit_type']=='railway'):,} railway)")
+      f"(airports={n_airports:,}  intercity-rail={n_intercity:,}  commuter/metro={n_commuter:,})")
 
 # Deduplicate only the Overture-fallback airports (raw Overture has duplicate nodes).
 if airport_dedup:
@@ -263,6 +290,11 @@ if airport_dedup:
     transit = deduped
 
 # ── COMMUTER PASS (PKS) ───────────────────────────────────────────────────────
+# Each transit anchor is checked against per-class metro distance ranges:
+#   airport / intercity-rail: TN_MIN_METRO_KM (35) – TN_MAX_METRO_KM (150)
+#   suburban commuter rail:   TN_SUBURBAN_MIN_KM (10) – TN_SUBURBAN_MAX_KM (80)
+#   subway / light_rail:      TN_SUBWAY_MIN_KM (5) – TN_SUBWAY_MAX_KM (35)
+# All classes share the same hub exclusion and cluster search logic.
 
 print("\nScoring transit anchors as Commuter (PKS) candidates …")
 tn_candidates: list[dict] = []
@@ -275,40 +307,53 @@ for i, ap in enumerate(transit):
     lat = ap["latitude"]
     lon = ap["longitude"]
     iso = ap.get("iso_country_code", "")
+    tc  = ap.get("transit_class", "intercity")  # intercity | suburban | subway | light_rail
 
-    # Step 1: metro distance filter
+    # Per-class metro distance range
+    if tc in ("subway", "light_rail"):
+        d_min, d_max = TN_SUBWAY_MIN_KM, TN_SUBWAY_MAX_KM
+        ideal_lo, ideal_hi = TN_SUBWAY_MIN_KM, TN_SUBWAY_MAX_KM
+    elif tc == "suburban":
+        d_min, d_max = TN_SUBURBAN_MIN_KM, TN_SUBURBAN_MAX_KM
+        ideal_lo, ideal_hi = 15.0, 60.0
+    else:
+        # airport / intercity
+        d_min, d_max = TN_MIN_METRO_KM, TN_MAX_METRO_KM
+        ideal_lo, ideal_hi = 30.0, 100.0
+
+    # Step 1: metro distance filter (class-specific range)
     metro_dist, metro_name = nearest_metro(lat, lon)
-    if not (TN_MIN_METRO_KM <= metro_dist <= TN_MAX_METRO_KM):
+    if not (d_min <= metro_dist <= d_max):
         skipped_range += 1
         continue
 
-    # Step 2: hub exclusion — T1 within TN_HUB_EXCL_KM → skip
-    hub_d, _ = nearest_cluster(lat, lon, t1_index, max_km=TN_HUB_EXCL_KM)
-    if hub_d is not None:
-        skipped_hub += 1
-        continue
+    # Step 2: hub exclusion — T1 within TN_HUB_EXCL_KM → skip (airports only;
+    # commuter/metro stations may legitimately be near T1 clusters)
+    if tc in ("intercity", "airport"):
+        hub_d, _ = nearest_cluster(lat, lon, t1_index, max_km=TN_HUB_EXCL_KM)
+        if hub_d is not None:
+            skipped_hub += 1
+            continue
 
     # Step 3: find nearest T1/T2 cluster
     cluster_d, cluster_id = nearest_cluster(lat, lon, t12_index, max_km=TN_CLUSTER_SEARCH_KM)
     integrated = cluster_d is not None and cluster_d <= TN_INTEGRATED_KM
 
     # Step 4: score
-    ideal_lo, ideal_hi = 30.0, 100.0
     if metro_dist < ideal_lo:
         metro_score = metro_dist / ideal_lo
     elif metro_dist <= ideal_hi:
         metro_score = 1.0
     else:
-        metro_score = max(0.0, 1.0 - (metro_dist - ideal_hi) / (TN_MAX_METRO_KM - ideal_hi))
+        metro_score = max(0.0, 1.0 - (metro_dist - ideal_hi) / (d_max - ideal_hi))
 
     integration_score = (1.0 if integrated
                          else 0.5 if cluster_d is not None
                          else 0.0)
 
-    # Multi-modal bonus: airport with a railway station nearby (or vice versa)
-    # is a higher-value PKS site. Computed in a second pass below; placeholder here.
     tn_candidates.append({
         "transit_type":       ap.get("transit_type", "airport"),
+        "transit_class":      tc,
         "name":               ap.get("location_name") or ap.get("city") or "",
         "iata":               ap.get("iata_code"),
         "operator":           ap.get("operator"),
