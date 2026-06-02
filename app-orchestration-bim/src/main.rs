@@ -1846,16 +1846,29 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
                 ),
                 None => String::new(),
             };
-            let has_dwg = furn_lib.join(format!("{}.dwg", it.slug)).exists();
-            let has_rfa = furn_lib.join(format!("{}.rfa", it.slug)).exists();
-            let has_dxf = furn_lib.join(format!("{}.dxf", it.slug)).exists();
-            let dwg_btn = if has_dwg {
+            let has_dxf     = furn_lib.join(format!("{}.dxf", it.slug)).exists();
+            let has_dwg_local = furn_lib.join(format!("{}.dwg", it.slug)).exists();
+            let has_rfa_local = furn_lib.join(format!("{}.rfa", it.slug)).exists();
+            // DWG and RFA: local file takes priority; fall back to manufacturer page.
+            let dwg_btn = if has_dwg_local {
                 format!("<a class=\"furn-dl-btn\" href=\"/furniture/download/{}.dwg\">DWG</a>", esc(&it.slug))
+            } else if let Some(u) = &it.url {
+                format!(
+                    "<a class=\"furn-dl-btn furn-dl-ext\" href=\"{}\" target=\"_blank\" \
+                     rel=\"noopener\" title=\"Download DWG from manufacturer site\">DWG ↗</a>",
+                    esc(u)
+                )
             } else {
                 "<span class=\"furn-dl-unavail\" title=\"Not yet available\">DWG</span>".to_string()
             };
-            let rfa_btn = if has_rfa {
+            let rfa_btn = if has_rfa_local {
                 format!("<a class=\"furn-dl-btn\" href=\"/furniture/download/{}.rfa\">RFA</a>", esc(&it.slug))
+            } else if let Some(u) = &it.url {
+                format!(
+                    "<a class=\"furn-dl-btn furn-dl-ext\" href=\"{}\" target=\"_blank\" \
+                     rel=\"noopener\" title=\"Download RFA from manufacturer site\">RFA ↗</a>",
+                    esc(u)
+                )
             } else {
                 "<span class=\"furn-dl-unavail\" title=\"Not yet available\">RFA</span>".to_string()
             };
@@ -2065,6 +2078,8 @@ const FURN_CSS: &str = r#"<style>
 .furn-dl-btn:hover{background:var(--bim-accent,#1a3a5c);color:#fff}
 .furn-dl-ifc{background:var(--bim-accent,#1a3a5c);color:#fff}
 .furn-dl-ifc:hover{opacity:.85}
+.furn-dl-ext{border-style:dashed;opacity:.85}
+.furn-dl-ext:hover{background:var(--bim-accent,#1a3a5c);color:#fff;opacity:1}
 .furn-dl-unavail{display:inline-block;padding:5px 13px;border:1px solid #ccc;color:#bbb;border-radius:4px;font-size:12px;font-weight:600;letter-spacing:.03em;cursor:not-allowed;user-select:none}
 .furn-docs-desc{font-size:11px;color:var(--bim-text-muted,#6b7280);line-height:1.5;margin:0;border-top:1px solid var(--bim-border,#dde1e7);padding-top:12px}
 @media(max-width:900px){.furn-bundle-bar{flex-direction:column;gap:8px;text-align:center}.furn-layout{grid-template-columns:1fr}.furn-col-sidebar{border-right:none;border-bottom:1px solid var(--bim-border,#dde1e7);display:flex;flex-wrap:wrap;gap:4px;padding:10px}.furn-btn{width:auto;border-left:none;border:1px solid var(--bim-border,#dde1e7);padding:5px 10px;font-size:12px;border-radius:4px}.furn-btn.active{border-color:var(--bim-accent,#1a3a5c);background:var(--bim-accent,#1a3a5c);color:#fff}.furn-col-docs{border-left:none;border-top:1px solid var(--bim-border,#dde1e7);max-height:none}}
