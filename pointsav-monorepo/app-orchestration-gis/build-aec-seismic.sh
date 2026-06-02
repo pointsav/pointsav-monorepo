@@ -145,11 +145,12 @@ except Exception:
         for inner in "$TMP_USGS"/*.zip; do
             [[ -f "$inner" ]] && unzip -o "$inner" -d "$TMP_USGS" 2>&1 | tee -a "$LOG" || true
         done
-        # Find the 2%/50yr PGA shapefile (look for *2Pct* or *2pct* or *PGA* shp)
-        SHP=$(find "$TMP_USGS" -name "*2Pct*.shp" -o -name "*2pct*.shp" -o -name "*PGA*.shp" 2>/dev/null | head -1)
-        if [[ -z "$SHP" ]]; then
-            SHP=$(find "$TMP_USGS" -name "*.shp" 2>/dev/null | head -1)
-        fi
+        # Find the 2%/50yr PGA shapefile — prefer poly (zones) then arc (contours)
+        # Note: find -o is unparenthesized here so we chain explicit checks instead
+        SHP=$(find "$TMP_USGS" -name "*2Pct*poly*.shp" 2>/dev/null | head -1)
+        [[ -z "$SHP" ]] && SHP=$(find "$TMP_USGS" -name "*2Pct*.shp" 2>/dev/null | head -1)
+        [[ -z "$SHP" ]] && SHP=$(find "$TMP_USGS" -name "*PGA*.shp" 2>/dev/null | head -1)
+        [[ -z "$SHP" ]] && SHP=$(find "$TMP_USGS" -name "*.shp" 2>/dev/null | head -1)
         if [[ -n "$SHP" ]]; then
             ogr2ogr -f GeoJSON -t_srs EPSG:4326 "$USGS_GEOJSON" "$SHP" \
                 2>&1 | tee -a "$LOG"
@@ -236,16 +237,60 @@ echo "" | tee -a "$LOG"
 echo "[3/9] Sample seismic PGA at cluster centroids" | tee -a "$LOG"
 
 python3 - <<PYEOF 2>&1 | tee -a "$LOG"
-import json, subprocess, csv, math, pathlib, sys
+import json, csv, pathlib
 
 META = pathlib.Path("$META_PATH")
-USGS_TIF = "$USGS_TIF"
+USGS_GEOJSON_PATH = "$USGS_GEOJSON"
 NRCAN_CSV = "$NRCAN_CSV"
 SKIP_NRCAN = int("${SKIP_NRCAN:-1}")
 SKIP_USGS  = int("${SKIP_USGS:-0}")
 
 clusters = json.loads(META.read_text())
-use_gdallocationinfo = $USE_GDALLOCATIONINFO
+
+# Build USGS seismic lookup from GeoJSON arc/contour features.
+# The USGS NSHM 2023 shapefile ships as contour arcs (LineString) with a
+# 'Contour' property holding the PGA value in g. Sentinel -1000000.0 = ocean/nodata.
+# Poly variants use polygon centroids; both are handled below.
+usgs_points = []  # [(lat, lon, pga_g)]
+if not SKIP_USGS and pathlib.Path(USGS_GEOJSON_PATH).exists():
+    try:
+        gj = json.loads(pathlib.Path(USGS_GEOJSON_PATH).read_text())
+        for feat in gj.get('features', []):
+            props = feat.get('properties') or {}
+            pga_raw = None
+            for key in ('Contour', 'CONTOUR', 'PGA', 'ACC', 'VALUE', 'pga', 'contour'):
+                if key in props and props[key] is not None:
+                    pga_raw = props[key]; break
+            if pga_raw is None:
+                continue
+            try:
+                pga_g = float(pga_raw)
+            except (TypeError, ValueError):
+                continue
+            if pga_g <= 0:
+                continue  # nodata sentinel (-1000000) or zero
+            geom = feat.get('geometry') or {}
+            coords = geom.get('coordinates', [])
+            gtype = geom.get('type', '')
+            if gtype == 'LineString' and coords:
+                mid = coords[len(coords) // 2]
+                usgs_points.append((mid[1], mid[0], pga_g))
+            elif gtype == 'MultiLineString' and coords and coords[0]:
+                mid = coords[0][len(coords[0]) // 2]
+                usgs_points.append((mid[1], mid[0], pga_g))
+            elif gtype == 'Polygon' and coords and coords[0]:
+                ring = coords[0]
+                clat = sum(p[1] for p in ring) / len(ring)
+                clon = sum(p[0] for p in ring) / len(ring)
+                usgs_points.append((clat, clon, pga_g))
+            elif gtype == 'MultiPolygon' and coords and coords[0] and coords[0][0]:
+                ring = coords[0][0]
+                clat = sum(p[1] for p in ring) / len(ring)
+                clon = sum(p[0] for p in ring) / len(ring)
+                usgs_points.append((clat, clon, pga_g))
+        print(f"  USGS arcs: {len(usgs_points)} contour points loaded")
+    except Exception as e:
+        print(f"  WARN: failed to load USGS GeoJSON — {e}")
 
 # Build NRCan nearest-neighbour lookup grid from CSV
 nrcan_grid = []  # [(lat, lon, pga_g)]
@@ -271,18 +316,15 @@ if not SKIP_NRCAN and pathlib.Path(NRCAN_CSV).exists():
     print(f"  NRCan grid: {len(nrcan_grid)} points loaded")
 
 def sample_usgs(lon, lat):
-    """Sample USGS NSHM 2023 PGA raster at (lon, lat) → float g or None."""
-    if SKIP_USGS or not use_gdallocationinfo:
+    """Nearest-neighbour lookup in USGS arc/contour data → float g or None."""
+    if not usgs_points:
         return None
-    try:
-        result = subprocess.run(
-            ["gdallocationinfo", "-valonly", "-wgs84", USGS_TIF, str(lon), str(lat)],
-            capture_output=True, text=True, timeout=10
-        )
-        val = result.stdout.strip()
-        return round(float(val), 4) if val else None
-    except Exception:
-        return None
+    best, best_dist = None, float('inf')
+    for glat, glon, pga in usgs_points:
+        d = (glat - lat) ** 2 + (glon - lon) ** 2
+        if d < best_dist:
+            best_dist = d; best = pga
+    return round(best, 4) if best is not None and best_dist < 1.0 else None
 
 def sample_nrcan(lon, lat):
     """Nearest-neighbour lookup in NRCan CSV grid → float g or None."""
