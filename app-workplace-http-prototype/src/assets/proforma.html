@@ -190,6 +190,8 @@ html.light #theme-btn:hover { border-color: #888; color: #111; }
   <button class="tb-btn" id="btn-dr">− Row</button>
   <button class="tb-btn" id="btn-dc">− Col</button>
   <div class="tb-sep"></div>
+  <button class="tb-btn" id="btn-sum" title="AutoSum (Alt+=)">Σ</button>
+  <div class="tb-sep"></div>
   <button id="save-btn">Save</button>
   <span id="save-status"></span>
   <button id="theme-btn" title="Switch to light mode">☀</button>
@@ -284,19 +286,29 @@ function evalCell(r, c, depth) {
   return (!isNaN(n) && raw.trim() !== '') ? n : raw;
 }
 
+function evalRange(fn, s, e, depth) {
+  const vals = [];
+  for (let r = Math.min(s.row, e.row); r <= Math.max(s.row, e.row); r++)
+    for (let c = Math.min(s.col, e.col); c <= Math.max(s.col, e.col); c++) {
+      const v = evalCell(r, c, depth);
+      if (typeof v === 'number') vals.push(v);
+    }
+  const f = fn.toUpperCase();
+  if (f === 'SUM')                    return vals.reduce((a, b) => a + b, 0);
+  if (f === 'AVERAGE' || f === 'AVG') return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+  if (f === 'MIN')                    return vals.length ? Math.min(...vals) : 0;
+  if (f === 'MAX')                    return vals.length ? Math.max(...vals) : 0;
+  if (f === 'COUNT')                  return vals.length;
+  return '#NAME!';
+}
+
 function evalExpr(expr, depth) {
-  // SUM(A1:B3)
-  const sm = expr.match(/^SUM\(\s*([A-Z]+\d+)\s*:\s*([A-Z]+\d+)\s*\)$/i);
-  if (sm) {
-    const s = parseRef(sm[1]), e = parseRef(sm[2]);
+  // Range functions: SUM, AVERAGE, AVG, MIN, MAX, COUNT
+  const rm = expr.match(/^(SUM|AVERAGE|AVG|MIN|MAX|COUNT)\(\s*([A-Z]+\d+)\s*:\s*([A-Z]+\d+)\s*\)$/i);
+  if (rm) {
+    const s = parseRef(rm[2]), e = parseRef(rm[3]);
     if (!s || !e) return '#REF!';
-    let sum = 0;
-    for (let r = Math.min(s.row, e.row); r <= Math.max(s.row, e.row); r++)
-      for (let c = Math.min(s.col, e.col); c <= Math.max(s.col, e.col); c++) {
-        const v = evalCell(r, c, depth);
-        if (typeof v === 'number') sum += v;
-      }
-    return sum;
+    return evalRange(rm[1], s, e, depth);
   }
   // Resolve A1-style refs then evaluate arithmetic
   try {
@@ -306,11 +318,41 @@ function evalExpr(expr, depth) {
       const v = evalCell(ref.row, ref.col, depth);
       return (typeof v === 'number') ? String(v) : '0';
     });
-    // Guard: only digits, operators, parens, dots, spaces
     if (/^[\d\s+\-*/.()e]+$/i.test(resolved))
-      return Function('"use strict";return(' + resolved + ')')(); // arithmetic-only eval; prototype-only
-    return expr; // treat as string
+      return Function('"use strict";return(' + resolved + ')')();
+    return expr;
   } catch { return '#ERR!'; }
+}
+
+function autoSum() {
+  if (editing) commitEdit();
+
+  function insertFormula(formula) {
+    pushUndo();
+    doc.cells[sel.row + ',' + sel.col] = formula;
+    refreshAll();
+    fbarInput.value = formula;
+    markDirty();
+  }
+
+  // Try column sum: walk up from sel.row-1 finding numeric cells
+  let rTop = sel.row - 1;
+  while (rTop > 0 && typeof evalCell(rTop - 1, sel.col, 0) === 'number') rTop--;
+  if (rTop < sel.row && typeof evalCell(rTop, sel.col, 0) === 'number') {
+    insertFormula('=SUM(' + colLabel(sel.col) + (rTop + 1) + ':' + colLabel(sel.col) + sel.row + ')');
+    return;
+  }
+
+  // Try row sum: walk left from sel.col-1 finding numeric cells
+  let cLeft = sel.col - 1;
+  while (cLeft > 0 && typeof evalCell(sel.row, cLeft - 1, 0) === 'number') cLeft--;
+  if (cLeft < sel.col && typeof evalCell(sel.row, cLeft, 0) === 'number') {
+    insertFormula('=SUM(' + colLabel(cLeft) + (sel.row + 1) + ':' + colLabel(sel.col - 1) + (sel.row + 1) + ')');
+    return;
+  }
+
+  // Nothing adjacent — open edit with = so user can type manually
+  openEdit('=');
 }
 
 function dispVal(r, c) {
@@ -570,6 +612,8 @@ grid.addEventListener('keydown', e => {
         refreshAll();
         fbarInput.value = String(clipboard);
         markDirty();
+      } else if (e.altKey && e.key === '=') {
+        e.preventDefault(); autoSum();
       } else if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
         e.preventDefault();
         if (sel.row === 0) return;
@@ -645,6 +689,8 @@ document.getElementById('btn-dc').addEventListener('click', () => withCommit(() 
   colDefs.pop();
   buildGrid(); selectCell(sel.row, Math.min(sel.col, doc.cols - 1)); markDirty();
 }));
+
+document.getElementById('btn-sum').addEventListener('click', () => { autoSum(); grid.focus(); });
 
 titleInput.addEventListener('change', () => { doc.title = titleInput.value; document.title = titleInput.value + ' — Proforma'; markDirty(); });
 entityInput.addEventListener('change',  () => markDirty());
