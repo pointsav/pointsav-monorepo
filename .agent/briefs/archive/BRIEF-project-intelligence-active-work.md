@@ -5,7 +5,7 @@ contamination_note: >-
   Contaminated in project-data; belongs to project-intelligence. Command: redistribute to clones/project-intelligence/.agent/briefs/
 archived_date: 2026-06-01
 created: 2026-06-01
-updated: 2026-06-01 (persistent processed_ledgers DONE; audit sha256 DONE)
+updated: 2026-06-02 (retry counter deployed; memory hardening committed)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 replaces: BRIEF-active-work.md (missing — never existed on disk)
 companion:
@@ -17,6 +17,56 @@ companion:
 
 > **Session-start reading.** Read this before asking what to work on.
 > Companions: substrate master (Yo-Yo ops, tier routing), learning loop (training spec, corpus).
+
+---
+
+## §mem — Memory pressure incident + hardening (2026-06-02)
+
+**Incident:** GIS python3 process (PID 4170894, run by `mathew`) entered D-state at 05:00 UTC
+and held 2.9 GiB for 11+ hours. VM swap rose to 20.7 GiB (23 GiB total). zram0 fully exhausted.
+Load average peaked at 28+, iowait 57–69%. service-content hit its 4G cgroup ceiling
+(`available: 0B`) and stopped responding on port 9081. Core training flow (capture → drain →
+OLMo) continued; graph context injection was broken.
+
+**Root cause:** service-content had no `MemoryMin` guarantee — the kernel could evict its pages
+under host pressure. The existing 4G MemoryMax was already at the watermark for 7,445 entities.
+The Doorman also lacked a circuit breaker on the graph context path, so every inference call
+made a full 5s blocking HTTP request even when service-content was obviously down.
+
+**Fixes committed this session:**
+
+1. **graph.rs circuit breaker** — `consecutive_failures: AtomicU32` +
+   `circuit_open_until_secs: AtomicU64` added to `GraphContextClient`. After
+   `GRAPH_CIRCUIT_THRESHOLD=3` failures the circuit opens for `GRAPH_CIRCUIT_OPEN_SECS=120s`,
+   returning `None` immediately without HTTP. Probes once after timeout; resets on success.
+   3 new tests. Code only — **binary rebuild needed** (Command: `deploy-binary.sh` after Stage 6).
+
+2. **Infrastructure drop-ins committed** — 3 new files in `infrastructure/systemd/`:
+   - `local-content-memory.conf`: `MemoryMin=2G`, `MemoryHigh=5500M`, `MemoryMax=6G`,
+     `MemorySwapMax=0` — raised from 3800M/4G; adds kernel guarantee floor.
+   - `local-content-oom.conf`: `OOMScoreAdjust=-200`, `Slice=foundry-services.slice` —
+     protects DataGraph from OOM killer; was unprotected before.
+   - `foundry-services.slice`: `MemoryMin=12G` — slice-level reservation for entire
+     foundry stack; prevents host batch processes from evicting service memory.
+
+   **Command must install these:**
+   ```bash
+   sudo cp infrastructure/systemd/local-content-memory.conf \
+       /etc/systemd/system/local-content.service.d/memory.conf
+   sudo cp infrastructure/systemd/local-content-oom.conf \
+       /etc/systemd/system/local-content.service.d/oom.conf
+   sudo cp infrastructure/systemd/foundry-services.slice \
+       /etc/systemd/system/foundry-services.slice
+   sudo systemctl daemon-reload && sudo systemctl restart local-content.service
+   ```
+
+3. **`Requires=` → `Wants=` pending** — `local-content.service` still has
+   `Requires=local-doorman.service` meaning Doorman restarts kill service-content.
+   Tracked in NEXT.md. Fix: edit `/etc/systemd/system/local-content.service` on the VM.
+   (Cannot be done from Totebox — infra-scope; Command must apply.)
+
+**Outstanding:** GIS python3 (PID 4170894) kill request sent to Command via outbox
+`project-intelligence-20260602-vm-memory-critical`. Verify it was actioned.
 
 ---
 

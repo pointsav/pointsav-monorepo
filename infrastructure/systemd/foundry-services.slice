@@ -1,0 +1,22 @@
+[Unit]
+Description=Foundry services slice — memory-protected tier for all foundry runtime services
+Documentation=file:///srv/foundry/infrastructure/systemd/foundry-services.slice
+
+[Slice]
+# Guarantee at least 12G of RAM for the foundry service stack under host pressure.
+# The host has 31G total; this reservation prevents rogue batch processes
+# (GIS pipelines, research scripts, external Claude sessions) from evicting
+# foundry service memory even under severe swap pressure.
+#
+# Sum of per-service MemoryMin values:
+#   local-slm (llama-server):   none set — weights are mmap'd and replaceable
+#   local-content (LadybugDB):  2G (entity graph; expensive to rebuild)
+#   local-doorman:              none set — tiny (4.8 MiB RSS)
+#   other foundry services:     buffer
+#
+# 12G provides the llama-server's ~7G working set + local-content's 2G guarantee
+# + 3G buffer for other foundry services and OS page cache.
+#
+# Install: sudo cp this file /etc/systemd/system/foundry-services.slice
+#          sudo systemctl daemon-reload
+MemoryMin=12G
