@@ -128,9 +128,8 @@ Commits (newest first):
 - `0580e6d4` — wikilink parser strips code spans (dead-link gate false positives 38→17).
 - `4c8523cf` — **`check` subcommand** (build-time dead-link gate + blueprint validation; CLI tool).
 
-**Action:** `~/Foundry/bin/deploy-binary.sh app-mediakit-knowledge --note "UX batch: Phase 3/2/M1/Cmd+K/per-brand + check (c5448dfb)"`
-(promote first if HEAD isn't on canonical origin/main). Post-deploy: a normal browser refresh shows
-the polished home + clean article shell; tap a glossary term on mobile → popover; Cmd/Ctrl-K → palette.
+**Action:** `~/Foundry/bin/deploy-binary.sh app-mediakit-knowledge --note "UX batch: Phase 5/4/M1/Phase 2/Phase 3/wikilink-parser/check (39f4dcd1)"`
+**UPDATE 2026-06-02:** All 7 commits are on canonical origin/main (confirmed via git fetch + merge-base check). No promote needed — only deploy-binary.sh required from Command workspace. Post-deploy: a normal browser refresh shows the polished home + clean article shell; tap a glossary term on mobile → popover; Cmd/Ctrl-K → palette.
 
 **Still pending (next session):** deeper per-brand differentiation (density / serif-heading "editorial
 gravitas" for corporate/projects beyond the accent — a brand-design decision; the current specs share
@@ -1602,7 +1601,8 @@ to: totebox@project-editorial
 re: J3 AEC coverage metrics — build status as of 2026-05-29
 created: 2026-05-29T15:50:00Z
 priority: high
-status: pending
+status: stale
+actioned_note: cross-archive contamination — belongs in project-gis outbox; marked stale 2026-06-02 by totebox@project-knowledge
 msg-id: project-gis-20260529-j3-aec-coverage-status
 in-reply-to: project-editorial-20260528-j3-coverage-metrics
 ---
@@ -2430,7 +2430,8 @@ to: totebox@project-design
 re: DESIGN-RESEARCH artifact — RESEARCH-bencal-naming-conventions.md
 created: 2026-05-31T00:30:00Z
 priority: normal
-status: pending
+status: stale
+actioned_note: cross-archive contamination — belongs in project-editorial outbox; marked stale 2026-06-02 by totebox@project-knowledge
 msg-id: project-editorial-20260531-bencal-research-route
 ---
 
@@ -2584,7 +2585,8 @@ to: totebox@project-gis
 re: TEXT artifacts dispatch — GIS coverage release text + Canada/Walmart copy (B5, B11, B12)
 created: 2026-05-28T23:30:00Z
 priority: normal
-status: pending
+status: stale
+actioned_note: cross-archive contamination — belongs in project-editorial outbox; marked stale 2026-06-02 by totebox@project-knowledge
 msg-id: project-editorial-20260528-text-artifacts-dispatch
 ---
 
@@ -2655,7 +2657,8 @@ to: totebox@project-bim
 re: J6 JOURNAL — desktop environment paper returned; please keep updated + return when user study is ready
 created: 2026-05-28T00:00:00Z
 priority: normal
-status: pending
+status: stale
+actioned_note: cross-archive contamination — belongs in project-editorial outbox; marked stale 2026-06-02 by totebox@project-knowledge
 msg-id: project-editorial-20260528-j6-return
 ---
 
@@ -2690,7 +2693,8 @@ to: totebox@project-orchestration
 re: J5 JOURNAL — totebox orchestration paper returned; HOLD until J2 submitted
 created: 2026-05-28T00:00:00Z
 priority: normal
-status: pending
+status: stale
+actioned_note: cross-archive contamination — belongs in project-editorial outbox; marked stale 2026-06-02 by totebox@project-knowledge
 msg-id: project-editorial-20260528-j5-return
 ---
 
@@ -2716,7 +2720,8 @@ to: totebox@project-infrastructure
 re: PROSE-RESEARCH review — PROSE-RESEARCH-ppn-architecture-phd-thesis.draft.md
 created: 2026-05-30T23:30:00Z
 priority: normal
-status: pending
+status: stale
+actioned_note: cross-archive contamination — belongs in project-editorial outbox; marked stale 2026-06-02 by totebox@project-knowledge
 msg-id: project-editorial-20260530-ppn-arch-review
 ---
 
@@ -2782,7 +2787,8 @@ to: command@claude-code
 re: 3 binaries deployed — binary-ledger entries needed + software-units.yaml update
 created: 2026-05-30
 priority: high
-status: pending
+status: stale
+actioned_note: cross-archive contamination — belongs in project-infrastructure outbox; marked stale 2026-06-02 by totebox@project-knowledge
 msg-id: project-infrastructure-20260530-deployment-complete
 ---
 
@@ -2834,7 +2840,8 @@ to: totebox@project-console
 re: PPN operator surfaces — F-key panel roadmap for governance at scale
 created: 2026-05-30T18:30:00Z
 priority: normal
-status: pending
+status: stale
+actioned_note: cross-archive contamination — belongs in project-infrastructure outbox; marked stale 2026-06-02 by totebox@project-knowledge
 msg-id: project-infrastructure-20260530-guidance-project-console
 ---
 
@@ -2905,7 +2912,8 @@ to: totebox@project-data
 re: Stage 6 path + VM-Totebox Phase 1 deployment — unblock the fastest route to testing
 created: 2026-05-30T18:30:00Z
 priority: high
-status: pending
+status: stale
+actioned_note: cross-archive contamination — belongs in project-infrastructure outbox; marked stale 2026-06-02 by totebox@project-knowledge
 msg-id: project-infrastructure-20260530-guidance-project-data
 ---
 
@@ -2976,7 +2984,8 @@ to: totebox@project-system
 re: PPN + Totebox Orchestration testing alignment — Phase 1D priorities + scaling vision
 created: 2026-05-30T18:30:00Z
 priority: normal
-status: pending
+status: stale
+actioned_note: cross-archive contamination — belongs in project-infrastructure outbox; marked stale 2026-06-02 by totebox@project-knowledge
 msg-id: project-infrastructure-20260530-guidance-project-system
 ---
 
