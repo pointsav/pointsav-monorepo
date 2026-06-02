@@ -131,8 +131,8 @@ async fn create_vm_handler(
 
     let spawn_record = record.clone();
     let disk_size_gb = (req.ram_mb / 1024).max(8) as u32;
-    drop(tokio::task::spawn_blocking(move || {
-        match vm_spawn::create_blank_disk(&spawn_record.vm_id, disk_size_gb) {
+    drop(tokio::task::spawn_blocking(
+        move || match vm_spawn::create_blank_disk(&spawn_record.vm_id, disk_size_gb) {
             Ok(_) => {
                 if let Err(e) = vm_spawn::spawn_qemu(&spawn_record, kvm) {
                     tracing::warn!(vm_id = %spawn_record.vm_id, error = %e, "QEMU spawn failed");
@@ -141,8 +141,8 @@ async fn create_vm_handler(
             Err(e) => {
                 tracing::warn!(vm_id = %spawn_record.vm_id, error = %e, "disk creation failed");
             }
-        }
-    }));
+        },
+    ));
 
     Ok(Json(record))
 }
@@ -153,7 +153,9 @@ async fn destroy_vm_handler(State(state): State<AppState>, Path(vm_id): Path<VmI
         tracing::info!(vm_id = %vm_id, "VM destroyed");
         drop(reg);
         let id = vm_id.clone();
-        drop(tokio::task::spawn_blocking(move || vm_spawn::kill_qemu(&id)));
+        drop(tokio::task::spawn_blocking(move || {
+            vm_spawn::kill_qemu(&id)
+        }));
         StatusCode::NO_CONTENT
     } else {
         StatusCode::NOT_FOUND
