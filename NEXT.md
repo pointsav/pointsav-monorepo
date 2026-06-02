@@ -7,7 +7,7 @@ Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
 ## Viewport / zoom fix — 2026-06-02
 
 - [x] **iOS Safari 30% zoom** — `documentElement.replaceWith()` dropped viewport-meta re-evaluation; iOS fell back to 980px desktop width → `max-width:1440px` layout at ~27% on 390px screens. Fix: swap `<head>` content and `<body>` separately (never replace `documentElement`). Applied to both deployed bundles 2026-06-02. Verified: `body_w == viewport_w` at 375/768/1280/1440px on both tenants.
-- [ ] **Regen guard** — fix applied directly to gitignored content files; must be re-applied if bundles are regenerated from source. Source bundler JS lives in the binary build pipeline (not yet in this archive). Flag as blocker before any rebuild. [2026-06-02 totebox@claude-code]
+- [x] **Regen guard** — `scripts/fix-viewport.sh` created 2026-06-02; idempotent patch script re-applies the body-only swap to both deployment `index.html` files after any bundle rebuild. Run `bash scripts/fix-viewport.sh` before restarting services. Detects already-patched files safely. [2026-06-02 totebox@claude-code]
 - [x] **Monitoring** — daily remote agent `trig_01P7iwnuwpPShgaivbg4m2gq` created 2026-06-02; fires 07:00 UTC; checks HTTP 200 + viewport meta + no replaceWith regression on both tenants. Dashboard: https://claude.ai/code/routines/trig_01P7iwnuwpPShgaivbg4m2gq [2026-06-02 totebox@claude-code]
 
 ---
