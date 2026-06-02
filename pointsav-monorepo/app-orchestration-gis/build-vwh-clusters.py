@@ -11,7 +11,7 @@ Categories: hardware, mro_industrial, tool_rental, auto_parts, electrical,
 T1/T2/T3 by category composition:
   T1: 3+ distinct categories  OR  hardware + 2+ non-hardware categories
   T2: 2 distinct categories
-  T3: 1 category, 2+ distinct chains co-located
+  T3: 1 category, 2+ store locations (same or different chains)
 
 Excluded: singletons (single chain at single location — not a co-location)
           hypermarket within 1 km (retail park, not industrial fringe)
@@ -43,7 +43,7 @@ VWH_MIN_METRO_KM    = 3.0
 VWH_MAX_METRO_KM    = 150.0
 VWH_SPAN_MAX_KM     = 8.0    # max cluster diameter — wider than retail (3 km) to catch spread industrial parks
 HYPER_DISQUALIFY_KM = 1.0    # hypermarket within this → retail park, exclude
-MIN_CHAIN_COUNT     = 2      # minimum distinct chain IDs to qualify as a co-location
+MIN_RECORDS         = 2      # minimum store locations to qualify (same or different chains)
 
 EPS_TIGHT_KM = 1.0
 EPS_LOOSE_KM = 3.0
@@ -392,8 +392,8 @@ def build(output_path: Path):
     for comp in comp_list:
         chains_in = set(all_recs[i]["chain_id"] for i in comp)
 
-        # Must have 2+ distinct chains (not just 2+ records of the same chain)
-        if len(chains_in) < MIN_CHAIN_COUNT:
+        # Must have 2+ store locations (same or different chains) — single-location singletons excluded
+        if len(comp) < MIN_RECORDS:
             n_skipped_single += 1
             continue
 
