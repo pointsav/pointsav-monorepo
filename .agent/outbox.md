@@ -10,6 +10,24 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: Stage 6 pending — NEXT.md contamination fix (19e4fa56) + binary deploy reminder
+created: 2026-06-02T21:00:00Z
+priority: normal
+status: pending
+msg-id: project-knowledge-20260602-stage6-next-and-deploy
+---
+
+Two items for Command this session:
+
+1. **Stage 6 — monorepo NEXT.md fix:** commit `19e4fa56` in clones/project-knowledge/pointsav-monorepo. Promote via `bin/promote.sh`. Restores project-knowledge content (project-marketing SEO/viewport items were contaminating the file).
+
+2. **Binary deploy — UX batch:** once promote completes (or if already promoted):
+   `~/Foundry/bin/deploy-binary.sh app-mediakit-knowledge --note "UX batch: Phase 5/4/M1/Phase 2/Phase 3/wikilink-parser/check (39f4dcd1)"`
+   All 7 commits confirmed on canonical. No promote needed for the binary — just run deploy-binary.sh.
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: ROUTE — A21 GUIDE location-intelligence-data-collection → woodfine-fleet-deployment
 created: 2026-06-02T18:00:00Z
 priority: normal
