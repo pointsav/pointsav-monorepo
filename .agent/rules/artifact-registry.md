@@ -1,7 +1,7 @@
 ---
 schema: foundry-artifact-registry-v1
 project: project-gis
-last_updated: 2026-05-31
+last_updated: 2026-06-02
 ---
 
 # project-editorial Artifact Registry
@@ -27,7 +27,7 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 
 | ID | File | Title (working) | Target Journal | Lead Author | Status |
 |----|------|-----------------|----------------|-------------|--------|
-| J1 | `JOURNAL-retail-colocation-v0.1.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | language-cleared (v0.7; Pass 1+2 complete 2026-05-30; LODES/MITMA/LEHD/DBSCAN/H3/NAICS expanded) |
+| J1 | `JOURNAL/JOURNAL-retail-colocation-v0.5.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | language-cleared (v0.5; §5.4 pass + 9× country-count fixes 2026-06-02; `forbidden_terms_cleared: true`; commit `1a30310f`) |
 | J2 | `JOURNAL-trustworthy-systems-v0.1.draft.md` | Composing Trustworthy Systems from Verified Primitives | ASPLOS (ACM, 19.4% AR) | Mathew Woodfine | language-cleared (v0.2; Pass 1+2 complete 2026-05-30; 22 abbreviations expanded; 5 topic sentences) |
 | J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier, IF 12.0) | Jennifer M. Woodfine | language-cleared (v0.5; Pass 1+2 complete 2026-05-30; ~28 abbreviation expansions; §6 academic placeholder) |
 | J4 | `JOURNAL-private-network-v0.1.stub.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | language-cleared (v0.5; Pass 1+2 complete 2026-05-30; VPN/NIST/NAT/AES expanded; word count ~6,400 vs 9,000 target) |
@@ -410,6 +410,29 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 - **File:** `.agent/drafts-outbound/guide-knowledge-wiki-deployment.draft.md`
 - **Status:** STAGED (2026-06-01) — Bloomberg pass complete; pending Command routing to `woodfine-fleet-deployment/gateway-knowledge-documentation-1/` (msg-id: project-editorial-20260601-guide-knowledge-wiki-deployment-route)
 - **Content:** Font loading (Inter + Source Serif 4 self-hosting), knowledge.toml mounts (Phase 6 planned/intended), mobile-first notes. ~120 lines.
+
+### A32 — TOPIC: Regional Name Resolution Architecture [GIS B13] (bilingual)
+- **File:** `media-knowledge-documentation/architecture/regional-name-resolution.md` + `.es.md`
+- **Status:** COMMITTED — `29c35f3` (2026-06-02) — `media-knowledge-documentation/architecture/`
+- **Source:** project-gis B13 dispatch (via project-editorial drafts-outbound); `ALPHA_HYPERMARKET` refs absent; clean
+- **Content:** How co-location cluster centroids are resolved to colloquial place names; TIGER 2023, GISCO LAU 2021, GADM GBR, 12-entry Canadian Nominatim override; Sherwood Park/Strathcona County example; ~950 words body
+
+### A33 — TOPIC: Co-location Tier Nomenclature [GIS B14] (bilingual)
+- **File:** `media-knowledge-documentation/architecture/colocation-tier-nomenclature.md` + `.es.md`
+- **Status:** COMMITTED — `29c35f3` (2026-06-02) — `media-knowledge-documentation/architecture/`
+- **Source:** project-gis B14 dispatch; Change B span gate documented; 2026-05-29 data
+- **Content:** T1/T2/T3 definitions; anchor composition rules; two-pass DBSCAN; Change B span gate (2.5 km); current counts T1=1,746/T2=2,726/T3=2,021; ~900 words body
+
+### A34 — TOPIC: UK and EU Food Retail Coverage [GIS B16] (bilingual)
+- **File:** `media-knowledge-documentation/reference/uk-eu-food-retail-coverage.md` + `.es.md`
+- **Status:** COMMITTED — `29c35f3` (2026-06-02) — `media-knowledge-documentation/reference/`
+- **Source:** project-gis B16 dispatch; `ALPHA_HYPERMARKET EU` internal code name replaced with plain description in EN + ES
+- **Content:** Per-chain record counts UK/EU; Tesco 3,872 / Sainsbury's 1,903 / ASDA 1,051 / Morrisons 620 / Wickes 236; EU by country; coverage gaps noted; ~1,050 words body
+
+### A35 — Dead-link fixes: 17 broken wikilinks [content-audit 2026-06-01]
+- **File:** 9 files in `media-knowledge-documentation/` modified
+- **Status:** COMMITTED — `612aa03` (2026-06-02) — `media-knowledge-documentation/`
+- **Content:** Backslash-escape table links in os-family-overview + mediakit-os (10 links); os-totebox slug → totebox-os in bim-market-context; service-fs → service-fs-architecture in substrate article; contribute.md meta-links (all-pages, wanted) replaced with plain text; regional-name-resolution-architecture → regional-name-resolution in gis-as-bim-substrate. All 4 guide files with missing slug fields are in project-knowledge's fleet deployment manifest (not wiki content repo) — noted for project-knowledge to action.
 
 ---
 
