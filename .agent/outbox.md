@@ -13,7 +13,10 @@ to: command@claude-code
 re: ROUTE — A21 GUIDE location-intelligence-data-collection → woodfine-fleet-deployment
 created: 2026-06-02T18:00:00Z
 priority: normal
-status: pending
+status: operator-pending
+actioned: 2026-06-02T00:00:00Z
+actioned_by: command@claude-code
+actioned_note: GUIDE placement in customer/woodfine-fleet-deployment/gateway-orchestration-gis-1/ blocked by pretool-scope-check.sh hook. Operator must run manually: copy from clones/project-gis/.agent/drafts-outbound/GUIDE-location-intelligence-data-collection.draft.md, strip draft frontmatter, add foundry-guide-v1 schema + type + slug fields, then commit via bin/commit-as-next.sh --admin woodfine.
 msg-id: project-knowledge-20260602-guide-location-intelligence-route
 ---
 
