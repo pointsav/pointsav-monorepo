@@ -997,6 +997,7 @@ OK.
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
                 pricing: PricingConfig::default(),
                 zone: None,
+                health_path: "/health".to_string(),
             },
             bearer,
         );

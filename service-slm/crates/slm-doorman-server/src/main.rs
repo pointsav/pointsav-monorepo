@@ -13,6 +13,9 @@
 //!   SLM_YOYO_ENDPOINT         optional; absent = no Yo-Yo (community-tier mode)
 //!   SLM_YOYO_MODEL            default Olmo-3-1125-32B-Think
 //!   SLM_YOYO_BEARER           static bearer token used by Tier B (B2);
+//!   SLM_YOYO_HEALTH_PATH      health probe path (default /health; use / for Ollama)
+//!   SLM_YOYO_GCP_AUTH         if "true", use GCP metadata identity tokens instead of
+//!                              SLM_YOYO_BEARER (required for Cloud Run endpoints)
 //!                             real deployments swap StaticBearer for a
 //!                             provider-specific BearerTokenProvider impl
 //!   SLM_YOYO_HOURLY_USD       per-provider hourly USD rate used to
@@ -83,7 +86,8 @@ use std::time::Duration;
 use anyhow::Context;
 use slm_doorman::tier::{
     BearerTokenProvider, ExternalTierClient, ExternalTierConfig, LocalTierClient, LocalTierConfig,
-    PricingConfig, StaticBearer, TierCPricing, TierCProvider, YoYoTierClient, YoYoTierConfig,
+    MetadataBearer, PricingConfig, StaticBearer, TierCPricing, TierCProvider, YoYoTierClient,
+    YoYoTierConfig,
     FOUNDRY_DEFAULT_ALLOWLIST,
 };
 use slm_doorman::{
@@ -769,8 +773,15 @@ fn build_yoyo_client(
 ) -> Option<YoYoTierClient> {
     match std::env::var(env_endpoint) {
         Ok(endpoint) if !endpoint.is_empty() => {
-            let bearer_token = std::env::var(env_bearer).unwrap_or_default();
-            let bearer: Arc<dyn BearerTokenProvider> = Arc::new(StaticBearer::new(bearer_token));
+            let use_gcp_auth = std::env::var("SLM_YOYO_GCP_AUTH")
+                .map(|v| v.eq_ignore_ascii_case("true"))
+                .unwrap_or(false);
+            let bearer: Arc<dyn BearerTokenProvider> = if use_gcp_auth {
+                Arc::new(MetadataBearer::new(&endpoint))
+            } else {
+                let bearer_token = std::env::var(env_bearer).unwrap_or_default();
+                Arc::new(StaticBearer::new(bearer_token))
+            };
             let yoyo_hourly_usd = std::env::var(env_hourly)
                 .ok()
                 .and_then(|s| s.parse::<f64>().ok())
@@ -783,6 +794,8 @@ fn build_yoyo_client(
                     contract_version: slm_doorman::YOYO_CONTRACT_VERSION.to_string(),
                     pricing: PricingConfig { yoyo_hourly_usd },
                     zone: std::env::var("SLM_YOYO_GCP_ZONE").ok(),
+                    health_path: std::env::var("SLM_YOYO_HEALTH_PATH")
+                        .unwrap_or_else(|_| "/health".to_string()),
                 },
                 bearer,
             ))
