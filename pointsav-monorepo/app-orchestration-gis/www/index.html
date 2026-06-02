@@ -849,6 +849,11 @@
     let rmStarsActive     = false;
     let urbanFringeActive = false;
     let commuterActive    = false;
+    // null = Retail mode; 'VWH' = Urban Fringe; 'PKS' = Commuter
+    let activeArchetype   = null;
+    // Archetype GeoJSON (loaded alongside clusters-meta.json)
+    let vwhData = null;
+    let pksData = null;
 
     // ── Catchment state ──────────────────────────────────────────────────────
     let catchmentActive    = false;
@@ -1258,7 +1263,9 @@
             map.setFilter('nodes-halo', ['==', ['get', 'tier'], 1]);
         }
         applyBubbleAecOverlayStyle();
-        if (rmStarsActive) applyRmStarsStyle(); // restore amber stars if toggle was on
+        if (rmStarsActive)     applyRmStarsStyle();
+        if (urbanFringeActive) applyUrbanFringeStyle(); // restore VWH dots on zoom-out
+        if (commuterActive)    applyCommuterStyle();    // restore PKS dots on zoom-out
         if (map.getLayer('nodes-label')) map.setFilter('nodes-label', ['<=', ['get', 'tier'], 2]);
         if (map.getSource('anchors')) {
             map.getSource('anchors').setData({ type: 'FeatureCollection', features: [] });
@@ -1576,6 +1583,13 @@
             ['cm-t1', 'cm-t2', 'cm-t3'].forEach(id =>
                 map.getLayer(id) && map.setLayoutProperty(id, 'visibility', 'none'));
         }
+        // Reset archetype mode → restore Retail cluster nodes
+        if (activeArchetype !== null) {
+            activeArchetype = null;
+            if (map.getLayer('nodes')) map.setLayoutProperty('nodes', 'visibility', 'visible');
+            if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'visible');
+            _restoreNodesIfClear();
+        }
     }
 
     function _restoreNodesIfClear() {
@@ -1625,14 +1639,22 @@
     }
 
     function applyUrbanFringeStyle() {
+        activeArchetype = urbanFringeActive ? 'VWH' : null;
+        // Archetype dot overlay: visible only at GLOBAL zoom when active
         const vis = (urbanFringeActive && prodView.mode === 'GLOBAL') ? 'visible' : 'none';
         ['uf-t1', 'uf-t2', 'uf-t3'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
         });
         if (!map.getLayer('nodes')) return;
-        if (urbanFringeActive && prodView.mode === 'GLOBAL') {
-            _ghostNodes();
+        if (urbanFringeActive) {
+            // Completely hide Retail cluster nodes — VWH is a dedicated view
+            map.setLayoutProperty('nodes', 'visibility', 'none');
+            if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'none');
+            // In LOCAL (ring) mode, rebuild rings from VWH data
+            if (prodView.mode === 'LOCAL') buildProdRings();
         } else if (!rmStarsActive && !commuterActive) {
+            map.setLayoutProperty('nodes', 'visibility', 'visible');
+            if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'visible');
             _restoreNodesIfClear();
         }
     }
@@ -1647,14 +1669,19 @@
     }
 
     function applyCommuterStyle() {
+        activeArchetype = commuterActive ? 'PKS' : null;
         const vis = (commuterActive && prodView.mode === 'GLOBAL') ? 'visible' : 'none';
         ['cm-t1', 'cm-t2', 'cm-t3'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
         });
         if (!map.getLayer('nodes')) return;
-        if (commuterActive && prodView.mode === 'GLOBAL') {
-            _ghostNodes();
+        if (commuterActive) {
+            map.setLayoutProperty('nodes', 'visibility', 'none');
+            if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'none');
+            if (prodView.mode === 'LOCAL') buildProdRings();
         } else if (!rmStarsActive && !urbanFringeActive) {
+            map.setLayoutProperty('nodes', 'visibility', 'visible');
+            if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'visible');
             _restoreNodesIfClear();
         }
     }
@@ -1762,25 +1789,45 @@
         applyBubbleAecOverlayStyle();
     }
 
-    // Derive production layer visibility from (prodView.mode, prodView.selected). The only writer.
+    // Derive production layer visibility from (prodView.mode, activeArchetype). The only writer.
     function applyView() {
         const setVis = (ids, on) => ids.forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
         });
         const local = prodView.mode === 'LOCAL';
-        setVis(['nodes', 'nodes-halo'], !local);
+        const arch  = activeArchetype; // null | 'VWH' | 'PKS'
+
+        // Retail cluster nodes: show only in GLOBAL when no archetype overlay is active
+        setVis(['nodes', 'nodes-halo'], !local && arch === null);
+
+        // Proximity rings (proximity-circle-src): shared by Retail + VWH + PKS.
+        // buildProdRings() dispatcher populates the right geometry before this call.
         setVis(['proximity-fill', 'proximity-line-t1', 'proximity-line-t234', 'proximity-ring-label'], local);
-        setVis(['all-locations', 'all-locations-hit'], local);
+
+        // Retail individual store dots: only when Retail mode is active
+        setVis(['all-locations', 'all-locations-hit'], local && arch === null);
+
         setVis(['cluster-centroid'], false);
         setVis(['proximity-merged-label'], false);
-        // rm-stars + archetype overlays: hidden at retailer zoom; restored on overview
-        setVis(['rm-stars-glow', 'rm-stars-dot', 'uf-t1', 'uf-t2', 'uf-t3', 'cm-t1', 'cm-t2', 'cm-t3'], false);
+
+        // Archetype dot overlays at drill-in zoom: hide them (rings take over).
+        // At GLOBAL zoom, the toggle functions (applyUrbanFringeStyle/applyCommuterStyle)
+        // control visibility based on activeArchetype.
+        if (local) {
+            setVis(['rm-stars-glow', 'rm-stars-dot', 'uf-t1', 'uf-t2', 'uf-t3', 'cm-t1', 'cm-t2', 'cm-t3'], false);
+        }
     }
 
-    // Build a ring for every cluster in the current viewport — no merging.
-    // Each cluster uses its own ring_radius_km (c.rr). Called on drillIntoCluster,
-    // setRetailLevel, and moveend while in LOCAL mode.
+    // Ring dispatcher — routes to the correct builder based on activeArchetype.
+    // All callers use this name; mode-switching updates activeArchetype before calling.
     function buildProdRings() {
+        if (activeArchetype === 'VWH') { buildVwhRings(); return; }
+        if (activeArchetype === 'PKS') { buildPksRings(); return; }
+        _buildRetailRings();
+    }
+
+    // Retail rings: one circle per cluster in the current viewport (same radius formula as before).
+    function _buildRetailRings() {
         if (!map.getSource('proximity-circle-src')) return;
         const circles = [];
         if (clusterMeta) {
@@ -1796,12 +1843,58 @@
             }
         }
         map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: circles });
-        if (map.getSource('proximity-vignette-src')) {
+        if (map.getSource('proximity-vignette-src'))
             map.getSource('proximity-vignette-src').setData({ type: 'FeatureCollection', features: [] });
-        }
-        if (map.getSource('proximity-merged-label-src')) {
+        if (map.getSource('proximity-merged-label-src'))
             map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: [] });
+    }
+
+    // Urban Fringe (VWH) rings — same T1/T2/T3 colors as Retail.
+    // Radius = max(1.0, span_km / 2 * 1.15). Rank = 4 - vwh_tier.
+    function buildVwhRings() {
+        if (!map.getSource('proximity-circle-src') || !vwhData) return;
+        const circles = [];
+        const b = map.getBounds();
+        const pad = 0.1;
+        for (const feat of vwhData.features) {
+            const p = feat.properties;
+            if (p.lon < b.getWest() - pad || p.lon > b.getEast() + pad) continue;
+            if (p.lat < b.getSouth() - pad || p.lat > b.getNorth() + pad) continue;
+            const km  = Math.max(1.0, (p.span_km || 0) / 2 * 1.15);
+            const rank = 4 - (p.vwh_tier || 3);
+            const circle = makeCircleGeoJSON([p.lon, p.lat], km);
+            circle.features[0].properties = { cluster_id: p.id || '', rank, merged_count: 1, member_ids: p.id || '' };
+            circles.push(circle.features[0]);
         }
+        map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: circles });
+        if (map.getSource('proximity-vignette-src'))
+            map.getSource('proximity-vignette-src').setData({ type: 'FeatureCollection', features: [] });
+        if (map.getSource('proximity-merged-label-src'))
+            map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: [] });
+    }
+
+    // Commuter (PKS) rings — transit nodes are point locations; fixed 2 km radius.
+    // Rank = 4 - commuter_tier (T1 → rank 3 = blue, T2 → rank 2 = green, T3 → rank 1 = gold).
+    function buildPksRings() {
+        if (!map.getSource('proximity-circle-src') || !pksData) return;
+        const circles = [];
+        const b = map.getBounds();
+        const pad = 0.1;
+        for (const feat of pksData.features) {
+            const p = feat.properties;
+            const lon = p.lon, lat = p.lat;
+            if (lon < b.getWest() - pad || lon > b.getEast() + pad) continue;
+            if (lat < b.getSouth() - pad || lat > b.getNorth() + pad) continue;
+            const rank = 4 - (p.commuter_tier || 3);
+            const circle = makeCircleGeoJSON([lon, lat], 2.0);
+            circle.features[0].properties = { cluster_id: p.name || p.iata || '', rank, merged_count: 1, member_ids: '' };
+            circles.push(circle.features[0]);
+        }
+        map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: circles });
+        if (map.getSource('proximity-vignette-src'))
+            map.getSource('proximity-vignette-src').setData({ type: 'FeatureCollection', features: [] });
+        if (map.getSource('proximity-merged-label-src'))
+            map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: [] });
     }
 
 
@@ -2217,6 +2310,23 @@
             })
             .catch(() => { /* rings fall back to querySourceFeatures */ });
 
+        // Load VWH and PKS archetype GeoJSON into JS so ring builders can access properties
+        fetch('data/archetype-vwh.geojson')
+            .then(r => r.json())
+            .then(d => {
+                vwhData = d;
+                if (activeArchetype === 'VWH' && prodView.mode === 'LOCAL') buildVwhRings();
+            })
+            .catch(() => {});
+
+        fetch('data/archetype-pks.geojson')
+            .then(r => r.json())
+            .then(d => {
+                pksData = d;
+                if (activeArchetype === 'PKS' && prodView.mode === 'LOCAL') buildPksRings();
+            })
+            .catch(() => {});
+
         // GeoJSON source for 1km/3km proximity ring around selected anchor (drawn dynamically at drill-in)
         map.addSource('proximity-circle-src', {
             type: 'geojson',
@@ -2431,7 +2541,7 @@
             },
         });
 
-        // ── Urban Fringe overlay layers ──────────────────────────────────────────
+        // ── Urban Fringe overlay layers (T1/T2/T3 standard color palette) ─────────
         map.addSource('uf-src', { type: 'geojson', data: 'data/archetype-vwh.geojson' });
         map.addLayer({
             id: 'uf-t1', type: 'circle', source: 'uf-src',
@@ -2439,10 +2549,10 @@
             layout: { visibility: 'none' },
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 5, 8, 9],
-                'circle-color': '#EA580C',
+                'circle-color': '#164679',
                 'circle-opacity': 0.85,
                 'circle-stroke-width': 1.5,
-                'circle-stroke-color': '#7C2D12',
+                'circle-stroke-color': '#0A2040',
             },
         });
         map.addLayer({
@@ -2451,10 +2561,10 @@
             layout: { visibility: 'none' },
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 3, 8, 6],
-                'circle-color': '#FB923C',
-                'circle-opacity': 0.72,
+                'circle-color': '#54924E',
+                'circle-opacity': 0.75,
                 'circle-stroke-width': 1,
-                'circle-stroke-color': '#C2410C',
+                'circle-stroke-color': '#2D5228',
             },
         });
         map.addLayer({
@@ -2463,14 +2573,14 @@
             layout: { visibility: 'none' },
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 2, 8, 4],
-                'circle-color': '#FED7AA',
-                'circle-opacity': 0.55,
+                'circle-color': '#EAB308',
+                'circle-opacity': 0.65,
                 'circle-stroke-width': 0.5,
-                'circle-stroke-color': '#EA580C',
+                'circle-stroke-color': '#854D0E',
             },
         });
 
-        // ── Commuter overlay layers ──────────────────────────────────────────────
+        // ── Commuter overlay layers (T1/T2/T3 standard color palette) ───────────
         map.addSource('cm-src', { type: 'geojson', data: 'data/archetype-pks.geojson' });
         map.addLayer({
             id: 'cm-t1', type: 'circle', source: 'cm-src',
@@ -2478,10 +2588,10 @@
             layout: { visibility: 'none' },
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 5, 8, 9],
-                'circle-color': '#0891B2',
+                'circle-color': '#164679',
                 'circle-opacity': 0.85,
                 'circle-stroke-width': 1.5,
-                'circle-stroke-color': '#164E63',
+                'circle-stroke-color': '#0A2040',
             },
         });
         map.addLayer({
@@ -2490,10 +2600,10 @@
             layout: { visibility: 'none' },
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 3, 8, 6],
-                'circle-color': '#38BDF8',
-                'circle-opacity': 0.72,
+                'circle-color': '#54924E',
+                'circle-opacity': 0.75,
                 'circle-stroke-width': 1,
-                'circle-stroke-color': '#0369A1',
+                'circle-stroke-color': '#2D5228',
             },
         });
         map.addLayer({
@@ -2502,10 +2612,10 @@
             layout: { visibility: 'none' },
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 2, 8, 4],
-                'circle-color': '#7DD3FC',
-                'circle-opacity': 0.55,
+                'circle-color': '#EAB308',
+                'circle-opacity': 0.65,
                 'circle-stroke-width': 0.5,
-                'circle-stroke-color': '#0891B2',
+                'circle-stroke-color': '#854D0E',
             },
         });
 
