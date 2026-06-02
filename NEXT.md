@@ -24,8 +24,29 @@ Last updated: 2026-06-02
       UI pull from that path. No code change needed — UI already supports the updated data.
       [2026-06-02 jwoodfine]
 
-- [ ] **Stage 6** — promote commit `438b37d6` (feat: Urban Fringe + Commuter dedicated ring modes)
-      to canonical monorepo. Command Session runs `bin/promote.sh`. [2026-06-02 jwoodfine]
+- [ ] **Stage 6** — promote commits `438b37d6` + `6e84a3a4` + `a1c0ffab` (Urban Fringe expansion
+      + BRIEF update) to canonical monorepo. Command Session runs `bin/promote.sh`. [2026-06-02 jwoodfine]
+
+---
+
+## VWH data quality — enrichment-chain JSONL iso_country_code mismatches
+
+Surfaced during the 2026-06-02 enrichment-chain-led VWH expansion. Affects `wurth-de.jsonl`
+and potentially other multi-country ingest files where the chain ID suffix (`-de`, `-fr`, etc.)
+is a chain identifier, not a country filter.
+
+- [ ] **`wurth-de.jsonl` — GR/PT/PL branches tagged `iso_country_code: DE`** — confirmed: Würth
+      branches at Thessaloniki (GR), Braga (PT), and Wrocław (PL) area coordinates have
+      `iso_country_code: DE`. Root cause: OSM ingest did not filter by geo-bounding-box per
+      country; all records defaulted to the YAML `country: DE` field. Coordinates are correct;
+      only the ISO attribute is wrong. Impact: these sites appear under DE in VWH country counts
+      instead of GR/PT/PL. Fix: re-run `ingest-osm.py --chain wurth-de` with per-country
+      geo-filtering, OR add a post-ingest ISO correction pass. [2026-06-02 pwoodfine]
+
+- [ ] **Audit other `*-de` / `*-fr` multi-country chain YAMLs for the same issue** — candidates:
+      `rexel-fr.jsonl` (rexel-fr has GB/BE/DE/SE records — check their ISO codes), `loxam-fr.jsonl`,
+      `kiloutou-fr.jsonl`. If the YAML `country:` field drives `iso_country_code` rather than the
+      actual OSM node's country, all multi-country ingests have this defect. [2026-06-02 pwoodfine]
 
 ---
 
