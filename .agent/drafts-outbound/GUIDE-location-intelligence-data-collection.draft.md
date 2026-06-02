@@ -2,11 +2,15 @@
 schema: foundry-draft-v1
 artifact_type: GUIDE
 language_protocol: GUIDE-OPERATIONS
-status: draft
+status: language-cleared
+language_pass_date: 2026-06-02
+language_pass_by: totebox@project-editorial
 created: 2026-06-01
 author: totebox@project-gis
 destination: project-editorial
-target_repo: media-knowledge-documentation
+target_repo: woodfine-fleet-deployment
+target_path: gateway-orchestration-gis-1/
+target_filename: guide-location-intelligence-data-collection.md
 bcsc_class: no-disclosure-implication
 research_done_count: 3
 research_suggested_count: 2
