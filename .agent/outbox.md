@@ -50,7 +50,10 @@ to: command@claude-code
 re: CONTENT SYNC DONE + pending GitHub push — content-wiki-* pulled from project-editorial; 2 repos need push to origin
 created: 2026-06-02T17:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-02T20:00:00Z
+actioned_by: totebox@project-knowledge
+actioned_note: Both repos pushed to GitHub. content-wiki-documentation: 13 commits (4bd58eb..3cbe592) including 2 new commits this session (os-totebox bilingual stub + backslash fixes + contribute slug discipline). content-wiki-projects: 2 commits (d1f0ade..476ebb2). Slug migration note: resolved by 476ebb2 alias approach — 86 topic-* files gained aliases frontmatter; no untracked unprefixed files remain; no decision needed.
 msg-id: project-knowledge-20260602-content-sync-github-push
 ---
 
