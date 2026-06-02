@@ -121,26 +121,25 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
   signals, test results (360 VWH / 6,640 PKS / 1,803 integrated), full chain taxonomy with Wikidata
   IDs, data collection sequencing, airport/rail classification findings, service-parking architecture.
 
-### A19 — TOPIC: Vertical Warehouse (VWH)
-- **File:** `.agent/drafts-outbound/TOPIC-vertical-warehouse.draft.md`
-- **Status:** STAGED — draft complete 2026-06-01; ready for project-editorial
-- **Destination:** project-editorial → media-knowledge-documentation
+### A19 — TOPIC: Vertical Warehouse (VWH) (bilingual)
+- **File:** `media-knowledge-documentation/archetypes/vertical-warehouse.md` + `.es.md`
+- **Status:** COMMITTED — `9fb4e0e` (2026-06-02) — `media-knowledge-documentation/archetypes/`
+- **Source draft archived:** `.agent/drafts-outbound/archived/TOPIC-vertical-warehouse.draft.md`
 - **Content:** VWH archetype definition (3-6 story urban logistics/light-mfg), spatial signature,
   site selection signals, 360 test candidates, full Tier A/B chain taxonomy (Würth, Floor & Decor,
   United Rentals, Fastenal, etc.), data collection plan with Wikidata IDs.
 
-### A20 — TOPIC: Parking Structures (PKS)
-- **File:** `.agent/drafts-outbound/TOPIC-parking-structures.draft.md`
-- **Status:** STAGED — draft complete 2026-06-01; ready for project-editorial
-- **Destination:** project-editorial → media-knowledge-documentation
+### A20 — TOPIC: Parking Structures (PKS) (bilingual)
+- **File:** `media-knowledge-documentation/archetypes/parking-structures.md` + `.es.md`
+- **Status:** COMMITTED — `9fb4e0e` (2026-06-02) — `media-knowledge-documentation/archetypes/`
+- **Source draft archived:** `.agent/drafts-outbound/archived/TOPIC-parking-structures.draft.md`
 - **Content:** PKS archetype definition (3-9 story transit car parks), regional-to-metro relationship,
   airport and rail station classification, 6,640 test candidates (1,803 integrated), commercial
   co-location pattern from Overpass spot checks, car rental chains, parking operator directory.
 
 ### A21 — GUIDE: Location Intelligence Data Collection
 - **File:** `.agent/drafts-outbound/GUIDE-location-intelligence-data-collection.draft.md`
-- **Status:** STAGED — draft complete 2026-06-01; ready for project-editorial
-- **Destination:** project-editorial → media-knowledge-documentation
+- **Status:** STAGED (2026-06-01) — pending Command routing to `woodfine-fleet-deployment/gateway-orchestration-gis-1/guide-location-intelligence-data-collection.md` (routing msg in project-knowledge outbox: project-knowledge-20260602-guide-location-intelligence-route)
 - **Content:** 7-step operational runbook: run existing YAML ingests, add Würth + new taxonomy
   categories, add Tier A VWH chains, write ingest-osm-airports.py, write ingest-osm-railway.py,
   add PKS car rental chains, re-run test-cluster-archetypes.py and deploy updated GeoJSON.
@@ -433,6 +432,13 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 - **File:** 9 files in `media-knowledge-documentation/` modified
 - **Status:** COMMITTED — `612aa03` (2026-06-02) — `media-knowledge-documentation/`
 - **Content:** Backslash-escape table links in os-family-overview + mediakit-os (10 links); os-totebox slug → totebox-os in bim-market-context; service-fs → service-fs-architecture in substrate article; contribute.md meta-links (all-pages, wanted) replaced with plain text; regional-name-resolution-architecture → regional-name-resolution in gis-as-bim-substrate. All 4 guide files with missing slug fields are in project-knowledge's fleet deployment manifest (not wiki content repo) — noted for project-knowledge to action.
+
+### A36 — JOURNAL-NOTES: J2 §4 performance data addendum [project-data dispatch]
+- **File:** `.agent/drafts-outbound/JOURNAL-NOTES-j2-benchmarks.md`
+- **Status:** STAGED (2026-05-29) — pending merge into J2 §4 or return to project-system
+- **Source:** project-data (originating_cluster: project-data); created 2026-05-29
+- **Content:** service-fs benchmark data from `ledger_bench.rs` (commit 7006b29f); three benchmark groups, 100 samples each; Criterion 0.5.1; GCE e2 VM hardware. Supplement to JOURNAL-NOTES-j2.md. Distinct from J2 Bench #9 (which is `verify_inclusion_proof` 1024-leaf needing a quiet n2 host).
+- **Next action:** When J2 returns from project-system with Bench #9 clean, merge this data into J2 §4 at the same time.
 
 ---
 
