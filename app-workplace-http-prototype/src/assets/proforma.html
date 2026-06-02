@@ -87,6 +87,41 @@ body {
 #grid th.ch.col-hl { background: #2a2e36; color: #ccc; }
 #grid th.rh.row-hl { background: #2a2e36; color: #ccc; }
 
+/* ── Metadata subbar ── */
+#subbar {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  background: #252526; border-bottom: 1px solid #3c3c3c; padding: 3px 10px;
+}
+.meta-label { font-size: 10px; color: #666; text-transform: uppercase;
+              letter-spacing: 0.05em; white-space: nowrap; }
+.meta-input {
+  background: transparent; border: 1px solid transparent;
+  color: #aaa; font: 12px/1 inherit; padding: 2px 5px; border-radius: 3px;
+  min-width: 80px; max-width: 160px;
+}
+.meta-input:hover { border-color: #444; }
+.meta-input:focus { border-color: #007acc; outline: none; background: #3c3c3c; color: #ccc; }
+.tb-sep-sm { width: 1px; background: #3c3c3c; height: 14px; flex-shrink: 0; }
+
+/* ── Column header inputs ── */
+#grid .ch { min-width: 110px; width: 110px; padding: 2px 3px; }
+.col-label-input {
+  background: transparent; border: none; outline: none; color: #aaa;
+  font: 600 11px/1 inherit; text-align: center; width: calc(100% - 22px);
+  padding: 1px 2px; cursor: text;
+}
+.col-label-input:focus { color: #ccc; background: #2a2e36; }
+.fmt-btn {
+  background: none; border: 1px solid #444; color: #666;
+  font-size: 9px; padding: 1px 3px; border-radius: 2px; cursor: pointer;
+  vertical-align: middle; width: 20px; text-align: center; flex-shrink: 0;
+}
+.fmt-btn:hover { border-color: #888; color: #ccc; }
+.fmt-btn[data-fmt="currency"] { color: #4ec9b0; border-color: #4ec9b0; }
+.fmt-btn[data-fmt="percent"]  { color: #ce9178; border-color: #ce9178; }
+.fmt-btn[data-fmt="number"]   { color: #9cdcfe; border-color: #9cdcfe; }
+.fmt-btn[data-fmt="text"]     { color: #555;    border-color: #444; }
+
 /* ── Edit overlay ── */
 #edit-overlay {
   position: absolute; z-index: 50;
@@ -111,6 +146,17 @@ body {
   <span id="save-status"></span>
 </div>
 
+<div id="subbar">
+  <span class="meta-label">Entity</span>
+  <input class="meta-input" id="entity-input" type="text" placeholder="—" autocomplete="off" spellcheck="false">
+  <div class="tb-sep-sm"></div>
+  <span class="meta-label">Date</span>
+  <input class="meta-input" id="date-input" type="text" placeholder="YYYY-MM-DD" autocomplete="off" spellcheck="false" style="max-width:100px">
+  <div class="tb-sep-sm"></div>
+  <span class="meta-label">Analyst</span>
+  <input class="meta-input" id="analyst-input" type="text" placeholder="—" autocomplete="off" spellcheck="false">
+</div>
+
 <div id="fbar">
   <span id="cell-ref">A1</span>
   <span id="fbar-eq">ƒx</span>
@@ -127,7 +173,8 @@ body {
 'use strict';
 
 // ── State ────────────────────────────────────────────────────────────────
-let doc = { schema: 'proforma-v1.0', title: 'Untitled Proforma', rows: 20, cols: 8, cells: {} };
+let doc = { schema: 'proforma-v2.0', title: 'Untitled Proforma', rows: 20, cols: 8, cells: {} };
+let colDefs = [];  // [{label: string, format: 'text'|'currency'|'percent'|'number'}]
 let filePath = null;
 let sel = { row: 0, col: 0 };
 let editing = false;
@@ -220,14 +267,23 @@ function evalExpr(expr, depth) {
 function dispVal(r, c) {
   const v = evalCell(r, c, 0);
   if (v === '' || v === null || v === undefined) return '';
-  if (typeof v === 'number') return fmtNum(v);
-  return String(v);
+  if (typeof v !== 'number') return String(v);
+  const fmt = (colDefs[c] && colDefs[c].format) || 'number';
+  if (fmt === 'currency') return fmtCurrency(v);
+  if (fmt === 'percent')  return fmtNum(v) + '%';
+  return fmtNum(v);
 }
 
 function fmtNum(n) {
   if (!isFinite(n)) return String(n);
   if (Number.isInteger(n)) return n.toLocaleString('en-CA');
   return n.toLocaleString('en-CA', { maximumFractionDigits: 2 });
+}
+
+function fmtCurrency(n) {
+  if (!isFinite(n)) return String(n);
+  const s = Math.abs(n).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  return n < 0 ? '(' + s + ')' : s;
 }
 
 function cellClass(r, c) {
@@ -239,23 +295,58 @@ function cellClass(r, c) {
 }
 
 // ── DOM refs ──────────────────────────────────────────────────────────────
-const grid       = document.getElementById('grid');
-const gridWrap   = document.getElementById('grid-wrap');
-const overlay    = document.getElementById('edit-overlay');
-const cellRefEl  = document.getElementById('cell-ref');
-const fbarInput  = document.getElementById('formula-input');
-const titleInput = document.getElementById('title-input');
-const saveStatus = document.getElementById('save-status');
+const grid        = document.getElementById('grid');
+const gridWrap    = document.getElementById('grid-wrap');
+const overlay     = document.getElementById('edit-overlay');
+const cellRefEl   = document.getElementById('cell-ref');
+const fbarInput   = document.getElementById('formula-input');
+const titleInput  = document.getElementById('title-input');
+const saveStatus  = document.getElementById('save-status');
+const entityInput = document.getElementById('entity-input');
+const dateInput   = document.getElementById('date-input');
+const analystInput= document.getElementById('analyst-input');
 
 function cellEl(r, c) { return grid.querySelector('td[data-r="'+r+'"][data-c="'+c+'"]'); }
 function chEl(c)      { return grid.querySelector('th.ch[data-c="'+c+'"]'); }
 function rhEl(r)      { return grid.querySelector('th.rh[data-r="'+r+'"]'); }
 
+// ── Utilities ─────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Column definitions ────────────────────────────────────────────────────
+function initColDefs(n) {
+  colDefs = [];
+  for (let c = 0; c < n; c++) {
+    colDefs.push({
+      label:  (doc.col_labels  && doc.col_labels[c]  !== undefined) ? doc.col_labels[c]  : (c === 0 ? '' : 'Year ' + c),
+      format: (doc.col_formats && doc.col_formats[c] !== undefined) ? doc.col_formats[c] : (c === 0 ? 'text' : 'currency'),
+    });
+  }
+}
+
+function buildDoc() {
+  doc.schema      = 'proforma-v2.0';
+  doc.entity      = entityInput.value.trim();
+  doc.date        = dateInput.value.trim();
+  doc.analyst     = analystInput.value.trim();
+  doc.col_labels  = colDefs.map(d => d.label);
+  doc.col_formats = colDefs.map(d => d.format);
+}
+
 // ── Build grid ────────────────────────────────────────────────────────────
 function buildGrid() {
+  const fmtIcon = { currency: '$', percent: '%', number: '#', text: 'T' };
   const buf = ['<thead><tr><th class="corner"></th>'];
-  for (let c = 0; c < doc.cols; c++)
-    buf.push('<th class="ch" data-c="'+c+'">'+colLabel(c)+'</th>');
+  for (let c = 0; c < doc.cols; c++) {
+    const def = colDefs[c] || { label: colLabel(c), format: 'text' };
+    const icon = fmtIcon[def.format] || 'T';
+    buf.push('<th class="ch" data-c="'+c+'">'
+      + '<input class="col-label-input" data-c="'+c+'" value="'+esc(def.label)+'" tabindex="-1">'
+      + '<button class="fmt-btn" data-c="'+c+'" data-fmt="'+def.format+'" tabindex="-1">'+icon+'</button>'
+      + '</th>');
+  }
   buf.push('</tr></thead><tbody>');
   for (let r = 0; r < doc.rows; r++) {
     buf.push('<tr><th class="rh" data-r="'+r+'">'+(r+1)+'</th>');
@@ -265,6 +356,28 @@ function buildGrid() {
   }
   buf.push('</tbody>');
   grid.innerHTML = buf.join('');
+
+  // Wire column label inputs
+  grid.querySelectorAll('.col-label-input').forEach(inp => {
+    inp.addEventListener('change', () => { colDefs[+inp.dataset.c].label = inp.value; markDirty(); });
+    inp.addEventListener('mousedown', e => e.stopPropagation());
+  });
+
+  // Wire format buttons
+  grid.querySelectorAll('.fmt-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const c = +btn.dataset.c;
+      const order = ['text', 'currency', 'percent', 'number'];
+      colDefs[c].format = order[(order.indexOf(colDefs[c].format) + 1) % order.length];
+      btn.dataset.fmt  = colDefs[c].format;
+      btn.textContent  = fmtIcon[colDefs[c].format];
+      for (let r = 0; r < doc.rows; r++) refreshCell(r, c);
+      markDirty();
+    });
+    btn.addEventListener('mousedown', e => e.stopPropagation());
+  });
+
   refreshAll();
   highlightSel();
 }
@@ -461,7 +574,12 @@ fbarInput.addEventListener('keydown', e => {
 function withCommit(fn) { if (editing) commitEdit(); fn(); }
 
 document.getElementById('btn-ar').addEventListener('click', () => withCommit(() => { pushUndo(); doc.rows++; buildGrid(); selectCell(sel.row, sel.col); markDirty(); }));
-document.getElementById('btn-ac').addEventListener('click', () => withCommit(() => { pushUndo(); doc.cols++; buildGrid(); selectCell(sel.row, sel.col); markDirty(); }));
+document.getElementById('btn-ac').addEventListener('click', () => withCommit(() => {
+  pushUndo();
+  doc.cols++;
+  colDefs.push({ label: 'Year ' + (doc.cols - 1), format: 'currency' });
+  buildGrid(); selectCell(sel.row, sel.col); markDirty();
+}));
 document.getElementById('btn-dr').addEventListener('click', () => withCommit(() => {
   if (doc.rows <= 1) return;
   pushUndo();
@@ -474,10 +592,15 @@ document.getElementById('btn-dc').addEventListener('click', () => withCommit(() 
   pushUndo();
   const c = doc.cols - 1;
   for (let r = 0; r < doc.rows; r++) delete doc.cells[r + ',' + c];
-  doc.cols--; buildGrid(); selectCell(sel.row, Math.min(sel.col, doc.cols - 1)); markDirty();
+  doc.cols--;
+  colDefs.pop();
+  buildGrid(); selectCell(sel.row, Math.min(sel.col, doc.cols - 1)); markDirty();
 }));
 
 titleInput.addEventListener('change', () => { doc.title = titleInput.value; document.title = titleInput.value + ' — Proforma'; markDirty(); });
+entityInput.addEventListener('change',  () => markDirty());
+dateInput.addEventListener('change',    () => markDirty());
+analystInput.addEventListener('change', () => markDirty());
 
 document.getElementById('save-btn').addEventListener('click', doSave);
 document.addEventListener('keydown', e => {
@@ -494,6 +617,7 @@ function markDirty() {
 
 async function doSave() {
   clearTimeout(saveTimer);
+  buildDoc();
   if (!filePath) {
     const nm = (doc.title || 'Untitled Proforma').trim();
     try {
@@ -529,12 +653,16 @@ async function loadFile() {
       const res = await fetch('/api/files/read?path=' + encodeURIComponent(filePath));
       if (res.ok) {
         const parsed = JSON.parse(await res.text());
-        if (parsed.schema === 'proforma-v1.0') doc = parsed;
+        if (parsed.schema === 'proforma-v1.0' || parsed.schema === 'proforma-v2.0') doc = parsed;
       }
     } catch { /* start blank */ }
   }
-  titleInput.value = doc.title || 'Untitled Proforma';
+  titleInput.value  = doc.title   || 'Untitled Proforma';
+  entityInput.value = doc.entity  || '';
+  dateInput.value   = doc.date    || '';
+  analystInput.value= doc.analyst || '';
   document.title = titleInput.value + ' — Proforma';
+  initColDefs(doc.cols);
   buildGrid();
   selectCell(0, 0);
   undoStack = [snapshot()]; undoPtr = 0;
