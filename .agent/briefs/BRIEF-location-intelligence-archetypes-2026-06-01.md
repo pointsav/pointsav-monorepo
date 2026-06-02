@@ -21,7 +21,7 @@ Three-letter codes ratified 2026-06-01.
 | Code | Name | Status | Anchor type |
 |---|---|---|---|
 | **PRO** | Retail Centres | Live — T1/T2/T3 rings + dedicated map mode | Grocery hypermarket + hardware ± price club / lifestyle / electronics |
-| **VWH** | Urban Fringe | Live — dedicated map mode, 440 sites, rings at drill-in | Hardware without grocery; 3–6 story urban logistics / light-manufacturing |
+| **VWH** | Urban Fringe | Live — dedicated map mode, 2,587 sites, rings at drill-in | Hardware without grocery OR industrial chain co-location; 3–6 story urban logistics / light-manufacturing |
 | **PKS** | Commuter | Live — dedicated map mode, 2,396 sites (commuter/metro expand pending) | Airport or transit station with park-and-ride catchment; last stops on metro/suburban rail |
 
 ---
@@ -476,9 +476,19 @@ MX and IS: airport-only (no intercity passenger rail).
 
 ## 10. Session state — 2026-06-02
 
-**Committed:** `438b37d6` — feat(map-ui): Urban Fringe + Commuter dedicated ring modes
+**Committed:** `6e84a3a4` — feat(vwh): enrichment-chain-led Urban Fringe detection — 440 → 2,587 sites
 
 **What shipped:**
+- VWH Pass 2: enrichment-chain-led detection. Pure-industrial chains (Würth, Fastenal,
+  Floor & Decor, United Rentals, Rexel, etc.) now seed VWH candidates without requiring
+  a hardware-store anchor. Root cause was that 3,296 industrial chain locations were
+  invisible (they never seed PRO DBSCAN clusters).
+- hilti-ch added to BRAND_FILL[mro_industrial] for all EU keys.
+- VWH: 440 → 2,587 (T1=423 T2=1978 T3=186). hardware-anchor=440, enrichment-led=2,147.
+  US=879 DE=771 FR=425 GB=285 MX=64 CA=52 NL=39 IT=35.
+- GeoJSON synced to gateway-orchestration-gis-1 www/data/archetype-vwh.geojson.
+
+**Previously shipped (438b37d6):**
 - VWH and PKS both have dedicated ring modes (not dot overlays). Toggling either hides
   Retail completely. Rings use standard T1/T2/T3 blue/green/gold. `activeArchetype` drives
   all layer dispatch.
