@@ -24,7 +24,12 @@ Engine-agnostic: all engines (Claude Code, Gemini CLI) read and write here.
 
 ## Active briefs
 
-*(none — all briefs in this archive are contamination from other sessions. See Archived section below.)*
+| File | Title | Updated |
+|---|---|---|
+| archive/BRIEF-slm-substrate-master.md | SLM Substrate Master — Yo-Yo + DataGraph + Learning Loop | 2026-06-02 |
+
+Note: this BRIEF was previously contamination-flagged (landed here via Stage-6 rebase from project-intelligence 2026-05-22).
+Reactivated 2026-06-02 — §10 Cloud Run migration plan added. Now confirmed correct location.
 
 Legitimate project-data briefs should be created here when GIS/data pipeline or JOURNAL
 programme work generates planning artifacts that span multiple sessions.

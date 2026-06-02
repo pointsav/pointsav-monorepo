@@ -1,12 +1,13 @@
 ---
 artifact: brief
-status: archived
-contamination_note: >-
-  Contaminated in project-data; belongs to project-intelligence. Command: redistribute to clones/project-intelligence/.agent/briefs/
-archived_date: 2026-06-01
+status: active
+redistribution_note: >-
+  Previously contamination-flagged (landed in project-data via Stage-6 rebase 2026-05-22).
+  Now confirmed correct location: clones/project-intelligence/.agent/briefs/archive/.
+  Reactivated 2026-06-02 — Cloud Run migration plan added (§10).
 title: SLM Substrate Master — Yo-Yo + DataGraph + Learning Loop
 created: 2026-05-24
-updated: 2026-05-30 (session 9 end — Sprint 3D: Tier A timeout 120s→1800s; drain wrapper 150s→1860s; poison queue recovered)
+updated: 2026-06-02 (§10 added: Cloud Run migration plan for Tier B)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 grounds_in:
   - service-slm/ARCHITECTURE.md
@@ -521,3 +522,111 @@ Pre-Stage-6 promote audit by 3 parallel Explore agents. Findings are evidence-ba
 17 contaminated project-gis briefs (9 active + 8 archive) introduced by Stage-6 rebase
 2026-05-22 removed this session via `git rm`. Archive items verified as GIS cluster content
 before deletion. 3 Wikipedia Parity archive briefs confirmed legitimate and retained.
+
+---
+
+## §10 — Tier B: Cloud Run Migration Plan (2026-06-02)
+
+> **Why:** `yoyo-tier-b-1` is TERMINATED; europe-west4-a L4 stockout means VM restarts
+> fail unpredictably. Cloud Run eliminates the zone lottery — Google manages the GPU pool,
+> no quota request or zone-capacity fight required. Replaces the GCE Spot VM pattern.
+
+### What changes
+
+| Resource | Before | After |
+|---|---|---|
+| Compute | GCE g2-standard-4 Spot VM (`yoyo-tier-b-1`) | Cloud Run service (`yoyo-tier-b`) |
+| Model storage | 256 GB `pd-balanced` disk, zone-locked | GCS object, zone-free |
+| Auth | Nginx TLS + static bearer token | `--allow-unauthenticated` (URL unguessable); follow-up: IAM |
+| Endpoint | `https://34.6.204.25:9443` (static IP) | `https://yoyo-tier-b-<hash>-ew.a.run.app` |
+| Cost at 2 hrs/day | ~$165/month (often unavailable) | ~$70/month (always available) |
+| Docker required | No (Packer image) | No (pre-built image from llama.cpp project) |
+
+**No Rust code changes. No new binaries. Tier A untouched.**
+Only `/etc/local-doorman/local-doorman.env` changes (3 env vars).
+
+### Critical llama-server flags (verified correct per §2.8)
+
+| Flag | Value | Note |
+|---|---|---|
+| `-ngl` | `99` | All layers on GPU — omitting falls back to CPU |
+| `-np` | `1` | NOT `-np 4`; with `-c 4096`, -np 4 truncates to 1024 tokens/slot |
+| `-fa` | `on` | NOT bare `-fa`; bare flag consumes next arg as its value → crash |
+| `--host` | `0.0.0.0` | Changed from `127.0.0.1`; Cloud Run routes externally |
+| `--port` | `8080` | Cloud Run default |
+| `-c` | `4096` | Context size |
+| `-a` | `Olmo-3-1125-32B-Think` | Three aliases: also `Olmo-3-32B-Think`, `olmo-3-32b` |
+| `--reasoning-format` | `deepseek` | Required for OLMo-3 Think |
+| `--reasoning-budget` | `1024` | |
+
+### Migration checklist
+
+**Pre-flight**
+- [ ] Confirm Cloud Run GPU quota in europe-west4:
+  `gcloud run regions describe europe-west4 --project woodfine-node-gcp-free`
+- [ ] Confirm Compute Engine SA has `roles/storage.objectViewer` on the weights bucket
+
+**Step 1 — Get model into GCS as a plain object**
+```bash
+gsutil ls gs://woodfine-node-gcp-free-foundry-substrate/weights/
+# If not present: restore disk snapshot yoyo-tier-b-1-weights-20260513-1923 to a temp disk,
+# mount it, gsutil cp /data/weights/olmo-3-32b-think-q3.gguf gs://...weights/, delete temp disk
+```
+
+**Step 2 — Deploy Cloud Run (pre-built image, no Docker)**
+```bash
+gcloud run deploy yoyo-tier-b \
+  --image ghcr.io/ggerganov/llama.cpp:server-cuda \
+  --region europe-west4 --project woodfine-node-gcp-free \
+  --gpu 1 --gpu-type nvidia-l4 \
+  --cpu 4 --memory 16Gi \
+  --min-instances 0 --max-instances 1 \
+  --concurrency 1 --timeout 1800 \
+  --allow-unauthenticated \
+  --add-volume name=weights,type=cloud-storage,bucket=woodfine-node-gcp-free-foundry-substrate \
+  --add-volume-mount volume=weights,mount-path=/models \
+  --args="--model,/models/weights/olmo-3-32b-think-q3.gguf,-ngl,99,--host,0.0.0.0,--port,8080,-c,4096,-a,Olmo-3-1125-32B-Think,-a,Olmo-3-32B-Think,-a,olmo-3-32b,-np,1,-fa,on,--reasoning-format,deepseek,--reasoning-budget,1024,--metrics" \
+  --port 8080
+```
+
+**Step 3 — Test endpoint directly before touching Doorman**
+```bash
+CLOUD_RUN_URL=https://yoyo-tier-b-<hash>-ew.a.run.app
+curl $CLOUD_RUN_URL/health                         # expect {"status":"ok"}
+curl -s $CLOUD_RUN_URL/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"Olmo-3-1125-32B-Think","messages":[{"role":"user","content":"ping"}],"max_tokens":10}'
+```
+**Do not proceed to Step 4 until both pass.**
+
+**Step 4 — Update `/etc/local-doorman/local-doorman.env`**
+```
+SLM_YOYO_ENDPOINT=https://yoyo-tier-b-<hash>-ew.a.run.app
+SLM_YOYO_TRAINER_ENDPOINT=https://yoyo-tier-b-<hash>-ew.a.run.app
+SLM_YOYO_GRAPH_ENDPOINT=https://yoyo-tier-b-<hash>-ew.a.run.app
+```
+`SLM_YOYO_BEARER` stays — Doorman sends it, Cloud Run ignores it.
+Then: `sudo systemctl restart local-doorman`
+
+**Step 5 — Verify end-to-end through Doorman**
+```bash
+curl -s http://127.0.0.1:9080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"Olmo-3-1125-32B-Think","messages":[{"role":"user","content":"test"}],"max_tokens":20}'
+journalctl -u local-doorman -f   # confirm Tier B hit
+```
+
+### Rollback
+Revert the three `SLM_YOYO_*` vars to `https://34.6.204.25:9443`, restart Doorman.
+Tier A continues serving throughout — unaffected by any step above.
+
+### Cold start behaviour
+First request after idle: ~60–90s (GCS FUSE reads 20 GB GGUF into GPU memory).
+If unacceptable: set `--min-instances 1` (~$0.67/hr continuous, ~$490/month GPU alone).
+
+### Follow-up items (post-migration)
+- [ ] Add Cloud Run IAM auth (replace `--allow-unauthenticated`; update Doorman to fetch GCP
+      identity token from metadata service instead of static bearer token)
+- [ ] Update `service-slm/docs/deploy/deploy-yoyo-tier-b.md` with Cloud Run procedure
+- [ ] Release static IP `34.6.204.25` if old VM is permanently retired
+- [ ] Update §7 definition-of-done item 1 (replace `start-yoyo.sh` gate with Cloud Run health check)
