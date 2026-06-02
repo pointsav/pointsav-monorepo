@@ -10,6 +10,60 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-intelligence
 to: command@claude-code
+re: URGENT — VM memory/swap critical, GIS process stuck 11h, load avg 28+
+created: 2026-06-02T16:12:00Z
+priority: high
+status: pending
+msg-id: project-intelligence-20260602-vm-memory-critical
+---
+
+**VM is in a degraded state and requires immediate operator intervention.**
+
+### Symptoms
+
+| Metric | Value |
+|---|---|
+| Load average | 28.75 / 28.21 / 19.23 |
+| iowait | 57–69% (system spending majority of time waiting on swap I/O) |
+| RAM used | 23 GiB / 31 GiB |
+| Swap used | 20.7 GiB / 24.2 GiB |
+| zram0 (15.7 GiB) | **100% full** — no compression headroom remaining |
+| Blocked processes | 19–20 simultaneously waiting on I/O |
+| Zombies | 39 |
+
+### Root cause
+
+**PID 4170894** — `python3` GIS pipeline script (project-gis, run as `mathew`) has been in
+uninterruptible D-state (`wchan: folio_` = page-fault wait) for **11 hours 12 minutes**
+(started 05:00 UTC, never completed). It holds **2.9 GiB RSS** and is waiting on pages it can
+never get because zram is full and the disk swapfiles cannot service the fault backlog.
+This process is the primary driver of the 57–69% iowait and the 19–20 blocked processes.
+
+Command: `python3 - clusters.geojson fema-sfha-merged.geojson`
+(`fema-sfha-merged.geojson` does not exist at the given path — process likely stuck from start.)
+
+Other large consumers: `llama-server` (7.5 GiB RSS), `service-content` (3.9 GiB RSS),
+multiple `claude` sessions (~1–1.8 GiB each across mathew + jennifer).
+
+### Recommended action
+
+1. **`sudo kill -9 4170894`** — kill the stuck GIS process. Frees 2.9 GiB, removes the
+   primary iowait source. The GIS pipeline can be restarted once memory recovers.
+2. Monitor load average ~2 min after kill — expect rapid drop toward baseline.
+3. If load remains high: `sudo systemctl stop local-slm` temporarily releases 7.5 GiB
+   until swap drains, then restart once load normalises.
+4. `sync && echo 3 | sudo tee /proc/sys/vm/drop_caches` after load drops.
+5. Investigate 39 zombie processes.
+
+### Services (were healthy before degradation)
+
+- `local-doorman.service` — active, drain live, `/healthz` ok
+- `local-slm.service` (llama-server OLMo 7B) — active, 7.5 GiB RSS (largest consumer)
+- `service-content.service` (LadybugDB) — active, 3.9 GiB RSS
+
+---
+from: totebox@project-intelligence
+to: command@claude-code
 re: status — binary deployed, drain live, stage6 pending (c9b78bdc)
 created: 2026-06-02T06:49:01Z
 priority: high
