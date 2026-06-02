@@ -205,11 +205,14 @@ _VWH_INDUSTRIAL_CHAINS: dict[str, list[str]] = {
                        "wurth-de", "hilti-ch"],
     "flooring":       ["floor-decor-us", "topps-tiles-uk"],
     "tool_rental":    ["united-rentals-us", "sunbelt-rentals-us",
-                       "loxam-fr", "kiloutou-fr", "boels-rental-nl"],
+                       "loxam-fr", "kiloutou-fr", "boels-rental-nl",
+                       "ramirent-fi", "cramo-fi",   # Nordic: FI/SE/NO/DK/PL
+                       "hss-hire-uk", "speedy-hire-uk"],  # UK
     "lumber":         ["84-lumber-us", "builders-firstsource-us",
                        "kent-building-supplies-ca"],
     "plumbing":       ["ferguson-us", "wolseley-uk"],
-    "electrical":     ["cef-uk", "rexel-fr"],
+    "electrical":     ["cef-uk", "rexel-fr",
+                       "ahlsell-se"],  # Nordic: SE/FI/NO/DK/PL + electrical/plumbing
     "welding":        ["boc-uk"],
 }
 
