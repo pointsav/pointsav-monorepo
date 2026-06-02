@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Proforma</title>
+<script>(function(){if(localStorage.getItem('wp-theme')==='light')document.documentElement.classList.add('light');})()</script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -130,6 +131,53 @@ body {
   font: 13px/22px ui-monospace, monospace;
   color: #ccc; min-width: 90px;
 }
+
+/* ── Theme toggle button ── */
+#theme-btn {
+  background: none; border: 1px solid #555; color: #888;
+  padding: 2px 7px; border-radius: 3px; cursor: pointer;
+  font-size: 13px; line-height: 1; margin-left: auto;
+}
+#theme-btn:hover { border-color: #888; color: #ccc; }
+
+/* ── Light mode overrides ── */
+html.light body          { background: #ffffff; color: #1a1a1a; }
+html.light #toolbar      { background: #f3f3f3; border-bottom-color: #d4d4d4; }
+html.light #subbar        { background: #f3f3f3; border-bottom-color: #d4d4d4; }
+html.light #fbar          { background: #f3f3f3; border-bottom-color: #d4d4d4; }
+html.light #title-input  { color: #1a1a1a; }
+html.light #title-input:focus { background: #e8e8e8; }
+html.light .tb-sep, html.light .tb-sep-sm { background: #d4d4d4; }
+html.light .tb-btn        { background: #e4e4e4; border-color: #bbb; color: #444; }
+html.light .tb-btn:hover  { background: #d8d8d8; border-color: #999; }
+html.light #save-status   { color: #666; }
+html.light #cell-ref      { color: #666; border-right-color: #d4d4d4; }
+html.light #fbar-eq       { color: #888; }
+html.light #formula-input { color: #1a1a1a; }
+html.light #grid-wrap     { background: #ffffff; }
+html.light #grid th, html.light #grid td { border-color: #d0d0d0; }
+html.light #grid .corner  { background: #f3f3f3; border-color: #d0d0d0; }
+html.light #grid .ch      { background: #f3f3f3; border-color: #d0d0d0; color: #555; }
+html.light #grid .rh      { background: #f3f3f3; border-color: #d0d0d0; color: #555; }
+html.light #grid td.cell  { color: #1a1a1a; }
+html.light #grid td.cell.num  { color: #0070c0; }
+html.light #grid td.cell.sel  { outline-color: #0078d4; background: #e3eefa; }
+html.light #grid th.ch.col-hl { background: #dce9fb; color: #1a1a1a; }
+html.light #grid th.rh.row-hl { background: #dce9fb; color: #1a1a1a; }
+html.light #edit-overlay  { background: #ffffff; border-color: #0078d4; color: #1a1a1a; }
+html.light .meta-label    { color: #888; }
+html.light .meta-input    { color: #333; }
+html.light .meta-input:hover { border-color: #aaa; }
+html.light .meta-input:focus  { background: #fff; border-color: #0078d4; color: #1a1a1a; }
+html.light .col-label-input   { color: #444; }
+html.light .col-label-input:focus { background: #dce9fb; }
+html.light .fmt-btn           { border-color: #bbb; color: #888; }
+html.light .fmt-btn:hover     { border-color: #888; color: #333; }
+html.light .fmt-btn[data-fmt="currency"] { color: #0d7377; border-color: #0d7377; }
+html.light .fmt-btn[data-fmt="percent"]  { color: #b06000; border-color: #b06000; }
+html.light .fmt-btn[data-fmt="number"]   { color: #0066aa; border-color: #0066aa; }
+html.light #theme-btn { border-color: #bbb; color: #555; }
+html.light #theme-btn:hover { border-color: #888; color: #111; }
 </style>
 </head>
 <body>
@@ -144,6 +192,7 @@ body {
   <div class="tb-sep"></div>
   <button id="save-btn">Save</button>
   <span id="save-status"></span>
+  <button id="theme-btn" title="Switch to light mode">☀</button>
 </div>
 
 <div id="subbar">
@@ -670,6 +719,23 @@ async function loadFile() {
 }
 
 loadFile();
+
+// ── Light / dark theme toggle ─────────────────────────────────────────────
+(function() {
+  const btn = document.getElementById('theme-btn');
+  let isLight = document.documentElement.classList.contains('light');
+  function applyTheme() {
+    document.documentElement.classList.toggle('light', isLight);
+    btn.textContent = isLight ? '🌙' : '☀';
+    btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+  }
+  applyTheme();
+  btn.addEventListener('click', function() {
+    isLight = !isLight;
+    localStorage.setItem('wp-theme', isLight ? 'light' : 'dark');
+    applyTheme();
+  });
+})();
 
 })();
 </script>
