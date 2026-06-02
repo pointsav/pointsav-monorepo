@@ -1798,31 +1798,6 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
         })
         .collect();
 
-    let svg_panels: String = items
-        .iter()
-        .enumerate()
-        .map(|(i, it)| {
-            let vis = if i == 0 { "" } else { " hidden" };
-            let plan_path = furn_lib.join(format!("{}-plan.svg", it.slug));
-            let content = if plan_path.exists() {
-                match fs::read_to_string(&plan_path) {
-                    Ok(raw) => {
-                        let start = raw.find("<svg").unwrap_or(0);
-                        raw[start..].to_string()
-                    }
-                    Err(_) => furn_cad_placeholder(&it.slug),
-                }
-            } else {
-                furn_cad_placeholder(&it.slug)
-            };
-            format!(
-                "<div class=\"furn-svg-panel{}\" data-slug=\"{}\">{}</div>",
-                vis,
-                esc(&it.slug),
-                content
-            )
-        })
-        .collect();
 
     let docs_panels: String = items
         .iter()
@@ -1846,7 +1821,6 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
                 ),
                 None => String::new(),
             };
-            let has_dxf     = furn_lib.join(format!("{}.dxf", it.slug)).exists();
             let has_dwg_local = furn_lib.join(format!("{}.dwg", it.slug)).exists();
             let has_rfa_local = furn_lib.join(format!("{}.rfa", it.slug)).exists();
             // DWG and RFA: local file takes priority; fall back to manufacturer page.
@@ -1872,11 +1846,6 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
             } else {
                 "<span class=\"furn-dl-unavail\" title=\"Not yet available\">RFA</span>".to_string()
             };
-            let dxf_btn = if has_dxf {
-                format!("<a class=\"furn-dl-btn\" href=\"/furniture/download/{}.dxf\">DXF</a>", esc(&it.slug))
-            } else {
-                "<span class=\"furn-dl-unavail\" title=\"Not yet available\">DXF</span>".to_string()
-            };
             format!(
                 "<div class=\"furn-docs-panel{}\" data-slug=\"{}\">\
                  <h2 class=\"furn-docs-title\">{}</h2>\
@@ -1891,7 +1860,7 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
                  {}\
                  </tbody></table>\
                  <div class=\"furn-dl-strip\">\
-                 {dwg}{dxf}{rfa}\
+                 {dwg}{rfa}\
                  <a class=\"furn-dl-btn furn-dl-ifc\" href=\"/furniture/download/{ifc_slug}.ifc\">IFC</a>\
                  </div>\
                  <p class=\"furn-docs-desc\">{desc}</p>\
@@ -1910,7 +1879,6 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
                 esc(&it.ifc_class),
                 mfr_row,
                 dwg = dwg_btn,
-                dxf = dxf_btn,
                 rfa = rfa_btn,
                 ifc_slug = esc(&it.slug),
                 desc = esc(&it.description),
@@ -1930,13 +1898,11 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
 </div>
 <div class="furn-layout">
   <div class="furn-col-sidebar">{sidebar}</div>
-  <div class="furn-col-viewer">{svgs}</div>
   <div class="furn-col-docs">{docs}</div>
 </div>
 {css}{js}"#,
         crumbs = breadcrumbs(&[("/", "Home")]),
         sidebar = sidebar_btns,
-        svgs = svg_panels,
         docs = docs_panels,
         css = FURN_CSS,
         js = FURN_JS,
@@ -2052,11 +2018,159 @@ async fn furniture_bundle_handler(State(state): State<Arc<AppState>>) -> Respons
         .unwrap()
 }
 
+// ─── Key Plans handlers ───────────────────────────────────────────────────────
+
+async fn key_plans_handler(State(state): State<Arc<AppState>>) -> Html<String> {
+    let kp_dir = state.library_dir.join("key-plans");
+
+    // Collect which IFC files are present
+    let available: std::collections::HashSet<String> = fs::read_dir(&kp_dir)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter_map(|e| {
+            let p = e.path();
+            if p.extension().and_then(|s| s.to_str()) == Some("ifc") {
+                p.file_name().map(|n| n.to_string_lossy().into_owned())
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    // Read PO Key Plans from woodfine-bim-library token file directly
+    let kp_token_path = state.library_dir.join("tokens").join("bim").join("key-plans.dtcg.json");
+    let kp_token: Option<serde_json::Value> = fs::read_to_string(&kp_token_path)
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok());
+
+    let kp_cards: String = if let Some(po) = kp_token
+        .as_ref()
+        .and_then(|v| v.get("bim"))
+        .and_then(|v| v.get("key-plan"))
+        .and_then(|v| v.get("private-office"))
+    {
+        ["small", "medium", "large"]
+            .iter()
+            .filter_map(|size| {
+                let v = po.get(size)?.get("$value")?;
+                let code     = v.get("internal_code")?.as_str()?;
+                let name     = v.get("display_name")?.as_str()?;
+                let area_m2  = v.get("area_m2")?.as_f64()?;
+                let area_sf  = v.get("area_sf")?.as_f64()?;
+                let z1       = v.get("zone1_depth_m")?.as_f64()?;
+                let z2       = v.get("zone2_depth_m")?.as_f64()?;
+                let z3       = v.get("zone3_depth_m")?.as_f64()?;
+                let fname    = format!("private-office-{}.ifc", &code[code.len()-1..]);
+                let ifc_btn  = if available.contains(&fname) {
+                    format!(
+                        "<a class=\"kp-dl-btn\" href=\"/key-plans/download/{}\">&#x2b07; IFC</a>",
+                        esc(&fname)
+                    )
+                } else {
+                    "<span class=\"kp-dl-unavail\">IFC pending</span>".to_string()
+                };
+                Some(format!(
+                    "<div class=\"kp-card\">\
+                     <div class=\"kp-card__head\">\
+                       <span class=\"kp-code\">{code}</span>\
+                       <span class=\"kp-name\">{name}</span>\
+                     </div>\
+                     <table class=\"kp-spec\"><tbody>\
+                       <tr><th>Area</th><td>{area_m2:.1} m² / {area_sf:.0} SF</td></tr>\
+                       <tr><th>Zone 1 (Habitat)</th><td>{z1:.1} m</td></tr>\
+                       <tr><th>Zone 2 (Magazine)</th><td>{z2:.1} m</td></tr>\
+                       <tr><th>Zone 3 (Corridor)</th><td>{z3:.1} m</td></tr>\
+                     </tbody></table>\
+                     <div class=\"kp-dl-strip\">{ifc_btn}</div>\
+                     </div>",
+                    code = esc(code),
+                    name = esc(name),
+                    area_m2 = area_m2,
+                    area_sf = area_sf,
+                    z1 = z1, z2 = z2, z3 = z3,
+                    ifc_btn = ifc_btn,
+                ))
+            })
+            .collect()
+    } else {
+        "<p>Key Plan token data not loaded.</p>".to_string()
+    };
+
+    let content = format!(
+        r#"{crumbs}
+<header class="bim-page-header">
+  <h1>Key Plans</h1>
+  <p class="bim-page-header__sub">Private Office series &mdash; IFC4 spatial compositions &mdash; ready for assembly in Bonsai / FreeCAD BIM / IfcOpenShell</p>
+</header>
+<p class="kp-intro">Each Key Plan is a complete IFC4 file containing an IfcSpace (room boundary) and
+IfcFurniture instances placed at 2D coordinates. Download and open in any IFC-compatible
+BIM tool. Assemblies are built from the Private Office furniture blocks on the
+<a href="/furniture">Furniture</a> page.</p>
+<div class="kp-grid">{cards}</div>
+{css}"#,
+        crumbs = breadcrumbs(&[("/", "Home")]),
+        cards  = kp_cards,
+        css    = KP_CSS,
+    );
+
+    Html(page_shell("Key Plans", "/key-plans", &content, &state))
+}
+
+async fn key_plans_download_handler(
+    State(state): State<Arc<AppState>>,
+    axum::extract::Path(filename): axum::extract::Path<String>,
+) -> Response {
+    let valid = filename.len() <= 64
+        && filename.ends_with(".ifc")
+        && filename
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.');
+    if !valid {
+        return Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body(Body::from("invalid filename"))
+            .unwrap();
+    }
+    let path = state.library_dir.join("key-plans").join(&filename);
+    match fs::read(&path) {
+        Ok(bytes) => {
+            let disp = format!("attachment; filename=\"{}\"", filename);
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/x-step")
+                .header("content-disposition", disp)
+                .body(Body::from(bytes))
+                .unwrap()
+        }
+        Err(_) => Response::builder()
+            .status(StatusCode::NOT_FOUND)
+            .body(Body::from("file not yet generated — run the pipeline"))
+            .unwrap(),
+    }
+}
+
+const KP_CSS: &str = r#"<style>
+.kp-intro{font-size:13px;color:var(--bim-text-muted,#6b7280);margin:.5rem 0 1.25rem;line-height:1.6;max-width:680px}
+.kp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:.5rem}
+.kp-card{border:1px solid var(--bim-border,#dde1e7);border-radius:6px;padding:16px;background:var(--bim-surface-2,#f5f7fa)}
+.kp-card__head{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.kp-code{font-size:18px;font-weight:700;color:var(--bim-accent,#1a3a5c)}
+.kp-name{font-size:13px;color:var(--bim-text-muted,#6b7280)}
+.kp-spec{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px}
+.kp-spec th{text-align:left;font-weight:500;color:var(--bim-text-muted,#6b7280);padding:3px 8px 3px 0;white-space:nowrap;width:50%}
+.kp-spec td{color:var(--bim-text,#1a1a2e);padding:3px 0}
+.kp-dl-strip{display:flex;gap:8px}
+.kp-dl-btn{display:inline-block;padding:6px 16px;background:var(--bim-accent,#1a3a5c);color:#fff;border-radius:4px;font-size:12px;font-weight:600;text-decoration:none}
+.kp-dl-btn:hover{opacity:.85}
+.kp-dl-unavail{display:inline-block;padding:6px 16px;border:1px solid #ccc;color:#bbb;border-radius:4px;font-size:12px;font-weight:600}
+</style>"#;
+
 const FURN_CSS: &str = r#"<style>
 .furn-bundle-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;margin-top:1.25rem;background:var(--bim-surface-2,#f5f7fa);border:1px solid var(--bim-border,#dde1e7);border-radius:6px;font-size:12px;color:var(--bim-text-muted,#6b7280)}
 .furn-bundle-btn{display:inline-block;padding:6px 16px;background:var(--bim-accent,#1a3a5c);color:#fff;border-radius:4px;font-size:12px;font-weight:600;text-decoration:none;letter-spacing:.03em;white-space:nowrap}
 .furn-bundle-btn:hover{opacity:.85}
-.furn-layout{display:grid;grid-template-columns:180px 1fr 280px;min-height:540px;border:1px solid var(--bim-border,#dde1e7);border-radius:6px;overflow:hidden;margin-top:.75rem}
+.furn-layout{display:grid;grid-template-columns:180px 1fr;min-height:540px;border:1px solid var(--bim-border,#dde1e7);border-radius:6px;overflow:hidden;margin-top:.75rem}
 .furn-col-sidebar{border-right:1px solid var(--bim-border,#dde1e7);background:var(--bim-surface-2,#f5f7fa);padding:12px 0}
 .furn-btn{display:block;width:100%;text-align:left;background:none;border:none;padding:8px 14px;font-size:13px;color:var(--bim-text,#1a1a2e);cursor:pointer;border-left:3px solid transparent;line-height:1.35}
 .furn-btn:hover{background:var(--bim-surface-3,#eaecf0)}
@@ -2311,14 +2425,10 @@ async fn main() {
         .route("/healthz", get(healthz_handler))
         .route("/readyz", get(readyz_handler))
         .route("/furniture", get(furniture_handler))
-        .route(
-            "/furniture/download/bundle.zip",
-            get(furniture_bundle_handler),
-        )
-        .route(
-            "/furniture/download/:filename",
-            get(furniture_download_handler),
-        )
+        .route("/furniture/download/bundle.zip", get(furniture_bundle_handler))
+        .route("/furniture/download/:filename", get(furniture_download_handler))
+        .route("/key-plans", get(key_plans_handler))
+        .route("/key-plans/download/:filename", get(key_plans_download_handler))
         .nest_service("/static", ServeDir::new(static_dir))
         .with_state(state);
 
