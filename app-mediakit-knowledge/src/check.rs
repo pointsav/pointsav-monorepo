@@ -106,8 +106,8 @@ pub async fn run_check(opts: &CheckOpts) -> std::io::Result<CheckReport> {
         }
 
         // Blueprint frontmatter validation.
-        if let Some(map) = yaml
-            .and_then(|y| serde_yaml::from_str::<BTreeMap<String, serde_yaml::Value>>(y).ok())
+        if let Some(map) =
+            yaml.and_then(|y| serde_yaml::from_str::<BTreeMap<String, serde_yaml::Value>>(y).ok())
         {
             let type_name = map
                 .get("type")
@@ -148,9 +148,17 @@ mod tests {
         std::fs::create_dir_all(&guide).unwrap();
 
         // (a) resolvable target in content
-        write(&content, "existing-page.md", "---\ntype: topic\ntitle: E\nslug: existing-page\n---\nbody\n");
+        write(
+            &content,
+            "existing-page.md",
+            "---\ntype: topic\ntitle: E\nslug: existing-page\n---\nbody\n",
+        );
         // (c) resolvable target only via the guide mount
-        write(&guide, "setup-guide.md", "---\ntype: guide\ntitle: S\nslug: setup-guide\n---\nbody\n");
+        write(
+            &guide,
+            "setup-guide.md",
+            "---\ntype: guide\ntitle: S\nslug: setup-guide\n---\nbody\n",
+        );
         // linker: one good link, one guide link, one dead link, one category facet (ignored)
         write(
             &content,
@@ -158,7 +166,11 @@ mod tests {
             "---\ntype: topic\ntitle: L\nslug: linker\n---\nSee [[Existing Page]], [[Setup Guide]], [[No Such Page]], and [[/category/governance]].\n",
         );
         // (d) page missing the required `slug` field
-        write(&content, "bad.md", "---\ntype: topic\ntitle: B\n---\nbody\n");
+        write(
+            &content,
+            "bad.md",
+            "---\ntype: topic\ntitle: B\n---\nbody\n",
+        );
 
         let report = run_check(&CheckOpts {
             content_dir: content.clone(),
@@ -171,7 +183,12 @@ mod tests {
 
         // Exactly one dead link: linker -> no-such-page. The good link, the guide
         // link, and the /category/ facet must NOT be flagged.
-        assert_eq!(report.dead_links.len(), 1, "dead_links: {:?}", report.dead_links);
+        assert_eq!(
+            report.dead_links.len(),
+            1,
+            "dead_links: {:?}",
+            report.dead_links
+        );
         assert_eq!(report.dead_links[0].target, "no-such-page");
         assert_eq!(report.dead_links[0].page, "linker");
 
@@ -193,8 +210,16 @@ mod tests {
         let base = std::env::temp_dir().join(format!("check-clean-{}", std::process::id()));
         let content = base.join("content");
         std::fs::create_dir_all(&content).unwrap();
-        write(&content, "a.md", "---\ntype: topic\ntitle: A\nslug: a\n---\nlink to [[B]]\n");
-        write(&content, "b.md", "---\ntype: topic\ntitle: B\nslug: b\n---\nlink to [[A]]\n");
+        write(
+            &content,
+            "a.md",
+            "---\ntype: topic\ntitle: A\nslug: a\n---\nlink to [[B]]\n",
+        );
+        write(
+            &content,
+            "b.md",
+            "---\ntype: topic\ntitle: B\nslug: b\n---\nlink to [[A]]\n",
+        );
         let report = run_check(&CheckOpts {
             content_dir: content.clone(),
             guide_dir: None,
