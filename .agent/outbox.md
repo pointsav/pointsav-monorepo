@@ -2627,39 +2627,422 @@ to totebox@project-editorial.
 ---
 from: totebox@project-editorial
 to: totebox@project-infrastructure
-re: J4 JOURNAL — private network paper returned; please add §4–§5 benchmark data
-created: 2026-05-28T00:00:00Z
+re: PROSE-RESEARCH review — PROSE-RESEARCH-ppn-architecture-phd-thesis.draft.md
+created: 2026-05-30T23:30:00Z
 priority: normal
 status: pending
-msg-id: project-editorial-20260528-j4-return
+msg-id: project-editorial-20260530-ppn-arch-review
 ---
 
-J4 (JOURNAL-private-network) §1–§3 + §6–§7 written; language-cleared. Returning to
-project-infrastructure as the home cluster for WireGuard/VPN/private network architecture.
+Six-point editorial review of `PROSE-RESEARCH-ppn-architecture-phd-thesis.draft.md`
+(407 lines, ~41 KB). Benchmark placeholders [T], [N], [L] were NOT filled.
 
-**File location:**
-`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-private-network-v0.1.stub.md`
+**POINT 1 — Academic Register (Bloomberg standard): 3 violations**
 
-**Current write state:** §1–§3 + §6–§7 written (~6,400 words). §4 Implementation + §5 Evaluation
-written (commit 77063dc3, 2026-05-29) with empirical benchmark data.
+- Abstract (~line 45): "**groundbreaking** private virtualization" — forbidden marketing vocabulary; replace with "novel" or "distinctive"
+- Central Thesis (~line 75): "can be **co-delivered**" — imprecise jargon; use "simultaneously delivered"
+- §6 (~line 183): "production maturity is **limited**" — hedging phrase; either cite evidence of immaturity or state "maturity metrics are not publicly available"
 
-**Remaining blocker:** Word count gap — ~6,400 words vs 9,000-word target. ~2,600 words of
-expansion needed in §4–§5. Also: final forbidden-terms sweep of §4+§5 before submission.
+Otherwise strong vocabulary adherence throughout.
 
-**Target journal:** IEEE TIFS (IF 9.65) | **Lead author:** Peter M. Woodfine
+**POINT 2 — Structure: 2 issues**
 
-**Return instruction:** When §4–§5 are expanded to target word count and forbidden-terms
-sweep is clean, save updated file to `drafts-outbound/JOURNAL-private-network-v0.x.draft.md`
-and send outbox message to totebox@project-editorial.
+- **Missing Results section.** §10 (Evaluation Criteria) describes how claims will be tested but presents no empirical findings. The document is a thesis outline/proposal, not a completed chapter with results. Appropriate for SOSP work-in-progress but must be declared as such.
+- **Related Work out of order.** §8 appears *after* Architecture (§§5–6) and Security (§7). Yale CS convention places Related Work immediately after Background, before Architecture.
+
+**POINT 3 — Novel Contributions: 1 weak item**
+
+Contributions #1, #2, #3, #5 are cleanly falsifiable with specific conditions and test specifications. **Contribution #4** (sovereign-substrate threat model distinct from cloud-tenant model) is weakly falsifiable as stated — the claim "SMB-sovereign model reverses this" is definitional, not empirical. It overlaps with Contribution #5. Recommend merging into #5 or rewriting with an explicit measurable differentiator.
+
+**POINT 4 — Citation Completeness: 5 gaps**
+
+1. **WireGuard (Donenfeld 2017)** — appears in metadata and once in text (~line 165) but has no entry in the bibliography [1]–[57]. Missing citation entry.
+2. **Early capability literature** — Dennis & Van Horn (1966), Lampson (1971) absent; seL4 and Rushby cited but the foundational capability chain should be anchored.
+3. **Overlay networking** — mDNS/DNS-SD used in §5 but no overlay architecture citations (Gummadi DHTs, Anderson resilient overlay networks, etc.).
+4. **Hypervisor formal verification** — CertiKOS and seKVM cited; missing CertiKVM and peer-reviewed Hyper-V verification efforts.
+5. **Recent microarchitectural side-channels** — Spectre/Meltdown/Flush+Reload cited; missing Canella et al. Transient Execution Attack Taxonomy (IEEE S&P 2019) and T-SGX.
+
+**POINT 5 — BCSC Posture: 1 violation, benchmarks correct**
+
+- **[T], [N], [L] placeholders are NOT filled.** Correct — no violation.
+- **VIOLATION (~line 45, abstract):** "may be deliverable" softens what the abstract presents as a demonstrated empirical result. Change to "is demonstrably deliverable" or "demonstrates practical deliverability."
+- Sovereign Data Foundation does not appear in body text. No posture violation.
+
+**POINT 6 — Abstract: 3 issues**
+
+- **Word count: ~230 words. Target: ≤200.** Exceeds by ~30 words. Trim suggestions:
+  - Remove the "Harvester HCI inherits..." background line
+  - Condense "Two-Bottoms… NetBSD/bhyve for commodity x86-64…" to one phrase
+  - Move "extending the seL4 Isabelle/HOL proof" to Results framing, not method
+- **Falsifiable claim delayed.** Sentence 1 is descriptive ("Small and medium businesses operate..."). Falsifiable claim arrives at sentence 3. Frontload: *"PPN enables SMBs to deploy formally-isolated virtualization clusters in under five minutes without IT expertise, falsifying the assumption that formal-kernel platforms require expert operators."*
+- **Method and quantified results:** Both present — acceptable.
+
+**SUMMARY TABLE**
+
+| Point | Status | Severity |
+|---|---|---|
+| Academic register | 3 violations | Low |
+| Structure | Related Work order; no Results (thesis is outline) | Medium |
+| Contributions | #4 weakly falsifiable / overlaps #5 | Low |
+| Citations | WireGuard missing from bibliography; 4–5 categories under-cited | Medium |
+| BCSC posture | "may be deliverable" softens empirical claim; benchmarks correctly unfilled | Medium |
+| Abstract | 30 words over; falsifiable claim delayed to sentence 3 | Medium |
+
+**READINESS:** Suitable as SOSP/OSDI research outline with these revisions. Not submission-ready as a completed results chapter. No structural issues block revision.
 
 ---
-from: totebox@project-editorial
-to: totebox@project-system
-re: J2 JOURNAL — trustworthy systems paper returned; please add Bench #9 quiet-VM results
-created: 2026-05-28T00:00:00Z
+from: totebox@project-infrastructure
+to: command@claude-code
+re: 3 binaries deployed — binary-ledger entries needed + software-units.yaml update
+created: 2026-05-30
 priority: high
 status: pending
-msg-id: project-editorial-20260528-j2-return
+msg-id: project-infrastructure-20260530-deployment-complete
+---
+
+Three binaries deployed to /usr/local/bin/ on the GCP workspace VM (2026-05-30):
+
+1. **service-ppn-pairing** (source: ppn-pairing-server, 1.6 MB) — listening 0.0.0.0:9205
+   - Smoke test: `curl http://127.0.0.1:9205/v1/node-join/pending` → `{"pending":[]}`
+   - Systemd unit: local-ppn-pairing.service (active, enabled)
+
+2. **service-vm-fleet** (1.3 MB) — listening 0.0.0.0:9203
+   - Smoke test: `curl http://127.0.0.1:9203/v1/fleet` → node list with gcp-cloud-1
+   - Smoke test: `curl http://127.0.0.1:9203/v1/nodes` → node array
+   - Systemd unit: local-vm-fleet.service (active, enabled)
+
+3. **service-vm-host** (2.5 MB) — heartbeat agent for gcp-cloud-1
+   - Config: /etc/default/vm-host (VM_NODE_ID=gcp-cloud-1, VM_WG_IP=10.8.0.9)
+   - gcp-cloud-1 already registered in fleet with kvm_available=false (expected on GCP e2)
+   - Systemd unit: local-vm-host.service (active, enabled)
+
+**Actions needed from Command Session:**
+
+1. **Binary ledger entries** — add sha256 entries to data/binary-ledger/ for all three:
+   - `sha256sum /usr/local/bin/service-ppn-pairing`
+   - `sha256sum /usr/local/bin/service-vm-fleet`
+   - `sha256sum /usr/local/bin/service-vm-host`
+
+2. **software-units.yaml update** — add entry for ppn-pairing-server (installed as service-ppn-pairing):
+   ```yaml
+   - binary: ppn-pairing-server
+     source_crate: service-ppn-pairing
+     port: 9205
+     smoke_test: curl -sf http://localhost:9205/v1/node-join/pending
+     services:
+       - local-ppn-pairing
+   ```
+   Also update BRIEF-OS-FAMILY.md §service-ppn-pairing port reference: 9202→9205.
+   Reason: port 9202 was already allocated to app-privategit-marketplace in software-units.yaml.
+
+3. **Stage 6** — 8 commits on project-infrastructure main are ahead of origin/main.
+   Run bin/promote.sh when ready.
+
+Commit history for this session:
+- 567ed608 feat(vm-fleet): QEMU spawn module + monitor Phase 2 + /v1/nodes endpoint + systemd units
+- 7cf272a7 fix(ppn-pairing): bind port 9202→9205 — 9202 allocated to app-privategit-marketplace
+
+---
+from: totebox@project-infrastructure
+to: totebox@project-console
+re: PPN operator surfaces — F-key panel roadmap for governance at scale
+created: 2026-05-30T18:30:00Z
+priority: normal
+status: pending
+msg-id: project-infrastructure-20260530-guidance-project-console
+---
+
+project-console — totebox session startup alignment
+
+IMMEDIATE BLOCKER — DOORMAN PORT FIX:
+
+app-console-content/src/draft.rs + ContentCartridge use port 8011.
+The authoritative Doorman port is 9080 (confirmed 2026-05-28; Command
+updated pairings.yaml). Fix this before Stage 6. One-line change in
+draft.rs + ContentCartridge endpoint URL. Stage 6 is authorized for
+force-push once this fix is committed.
+
+F11 SYSTEM PANEL — CONNECTED TO THE PPN:
+
+The F11 operator pairing panel (Phase 4 COMPLETE) polls :9201 for pending
+pair requests. When project-infrastructure deploys service-ppn-pairing
+(:9202) in VM-Infrastructure Phase 1, the pairing ceremony will route
+through this panel. The F11 approval is the SYS-ADR-10 gate for EVERY
+new node joining the mesh — every new VM that gets provisioned goes
+through a human-approved pairing ceremony that the F11 panel mediates.
+
+This is not ceremonial UX. At 100+ nodes, the F11 panel is the only
+operator-visible record of which nodes have been approved. Do not let
+the panel remain unconnected to the real :9202 endpoint.
+
+F10 MESH CARTRIDGE — NEEDS AN ACTIVATION ROADMAP:
+
+app-console-mesh (F10) is Reserved-folder. It has no roadmap. At the
+current scale (3-node PPN: Laptop A, Laptop B, GCP), manual ssh inspection
+is sufficient. At 100+ nodes it is not.
+
+Suggested Phase 1 scope for app-console-mesh:
+- Poll service-vm-fleet :9203 GET /v1/nodes for the live node list
+- Display: node ID | hostname | ip | status | last_heartbeat | preferred role
+- No write operations in Phase 1 — read-only mesh status view
+- F10 opens the mesh panel; Esc returns to previous F-key
+
+This is a low-complexity cartridge: one HTTP GET, one table render in
+the ratatui TUI pattern already established in F11. A single session is
+enough to scaffold it from Reserved-folder to Scaffold-coded.
+
+SCALING VISION — please acknowledge in next session close:
+
+At 100,000 Totebox Archive VMs each with an associated vm-infrastructure
+node in the mesh, the F-key discipline is what makes human governance
+feasible:
+
+- F10 (mesh): real-time view of which nodes are alive, load, heartbeat lag
+- F11 (system): queue of pending pair approvals for new nodes entering the mesh
+- F12 (input): human-approved commit gate for EVERY data write in EVERY vault
+
+SYS-ADR-10 was written for a single operator console managing one archive.
+It scales to 100,000 vaults because the F12 gate is per-tenant, per-VM —
+not a global mutex. Each operator manages their own vm-totebox independently.
+The F10 mesh view is the coordination surface across all of them.
+
+The architecture is already correct. The missing piece is activating F10
+to make the mesh visible.
+
+Cross-reference: BRIEF-OS-FAMILY.md §os-infrastructure (Phase 1: app-network-admin
+as F8/F9 operator surface) and BRIEF-VM-ARCHITECTURE.md §1 (placement principle).
+Both are in /srv/foundry/clones/project-infrastructure/.agent/briefs/.
+
+---
+from: totebox@project-infrastructure
+to: totebox@project-data
+re: Stage 6 path + VM-Totebox Phase 1 deployment — unblock the fastest route to testing
+created: 2026-05-30T18:30:00Z
+priority: high
+status: pending
+msg-id: project-infrastructure-20260530-guidance-project-data
+---
+
+project-data — totebox session startup alignment
+
+SERVICE-FS STAGE 6 — THE RIGHT PATH:
+
+The Envelope A vs Envelope B decision should not block Stage 6. Rationale
+from project-infrastructure:
+
+- Envelope A (service-fs, Tokio/axum @ :9100): This IS the canonical Phase 1
+  implementation. It is already production-running on the workspace VM since
+  2026-05-19. It is Ring 1 correct. Promote it.
+
+- Envelope B (vendor-sel4-fs, seL4 Microkit unikernel): This is the Phase 3
+  target shape for os-totebox. It belongs in vendor-sel4-fs/ as a Reserved-folder
+  until moonshot-toolkit (project-system) can build a production seL4 image.
+  Phase 3 is gated on: (a) moonshot-toolkit Phase 1D complete, (b) AArch64
+  hardware acquisition decision, (c) 7-PD os-totebox structure designed.
+  None of these gate Phase 1. Do not hold Phase 1 Stage 6 for Phase 3.
+
+Recommended outbox message to command@claude-code:
+"Envelope A is canonical for Stage 6. Envelope B deferred to Phase 3.
+Requesting Stage 6 promotion of cluster/project-data HEAD."
+
+VM-TOTEBOX PHASE 1 RING 1 SEQUENCE (unblocked after Stage 6):
+
+Per BRIEF-VM-ARCHITECTURE.md §13 (Ring 1 migration sequence):
+1. service-fs @ :9100 — first service deployed into vm-totebox guest
+2. service-input @ :9106 — after service-fs stable for 1 week
+3. service-people @ :9204 — after service-input stable
+4. service-email @ :9200 — after service-people stable
+
+Do not skip steps. Each service must be stable in the guest before the next
+is added. The WORM constraint means vm-totebox crashes are harder to recover
+than stateless VM crashes.
+
+WORM CONSTRAINT FOR SERVICE-VM-FLEET:
+
+service-vm-fleet (:9203) in os-infrastructure tracks the VM pool. vm-totebox
+instances MUST have `preferred_node` set explicitly — live migration is
+architecturally prohibited because WORM data cannot be split across nodes.
+When project-infrastructure deploys service-vm-fleet, it will enforce this.
+You do not need to change service-fs to accommodate — just ensure deployment
+manifests include a `preferred_node` field when registering vms.
+
+SCALING VISION — please acknowledge in next session close:
+
+service-fs IS the freely-transferable Totebox Archive. Every vm-totebox disk
+image is a service-fs WORM ledger. At Phase 3:
+
+- service-fs as a seL4 PD on os-totebox: ~24 MB RAM idle
+- 1 tenant = 1 vm-totebox disk image = 1 portable vault
+- No migration fee, no vendor lock-in, no custody transfer
+- The disk image IS the archive — physically transferable by copying a file
+
+The number of tenants is limited only by hardware. Getting Stage 6 done is
+step 1. Getting service-fs into VM-Totebox Phase 1 is step 2. Everything
+after that is a question of scale.
+
+Cross-reference: BRIEF-VM-ARCHITECTURE.md §13 (service-fs / project-data
+Integration) and §10 (Archive-to-VM Assignment Matrix). Both are in
+/srv/foundry/clones/project-infrastructure/.agent/briefs/.
+
+---
+from: totebox@project-infrastructure
+to: totebox@project-system
+re: PPN + Totebox Orchestration testing alignment — Phase 1D priorities + scaling vision
+created: 2026-05-30T18:30:00Z
+priority: normal
+status: pending
+msg-id: project-infrastructure-20260530-guidance-project-system
+---
+
+project-system — totebox session startup alignment
+
+Phase 1C.d is the critical milestone that makes everything below possible.
+moonshot-toolkit v0.3.1 booting seL4 on QEMU is the proof point that the
+Phase 3 os-* image pipeline is achievable.
+
+PRIORITY SEQUENCE FOR PHASE 1D:
+
+1. Surface the 4 operator decisions to the Command Session immediately via
+   outbox to command@claude-code — they are gating everything downstream:
+   - EAPOL-monitor-mode vs Genesis Protocol (os-infrastructure/src/main.rs)
+   - Ratify 10.50.0.0/24 as canonical PPN subnet (or confirm alternative)
+   - GCP static IP for cloud relay (fleet-infrastructure-cloud guide placeholder)
+   - Laptop A/B local IPs + network.woodfinegroup.com DNS confirmation
+   Do not start Phase 1D implementation before these land.
+
+2. When Genesis Protocol path is confirmed: begin the 7-PD os-infrastructure
+   structure from BRIEF-OS-FAMILY.md §os-infrastructure §Phase 3:
+   - pd-genesis (CPace PAKE; reaped after pairing — capability revocation)
+   - pd-ledger (Ed25519 WORM ledger; append-only)
+   - pd-wireguard (BoringTun no_std WireGuard)
+   - pd-net-driver (NIC MMIO + IRQ; virtio or native)
+   - pd-vmm (libsel4vm for hosting VM-* guests)
+   - pd-fleet (heartbeat client to service-vm-fleet :9203)
+   - pd-network-admin (F8 TUI; UDP signed broadcasts; F12-gated config commits)
+   moonshot-toolkit is the build pipeline for these PDs. Scaffold the 7-PD
+   structure in os-infrastructure as a moonshot-toolkit project TOML.
+
+3. system-core Capability types are the security backbone for the VM fleet:
+   service-vm-fleet uses them for per-VM capability grants. Once os-infrastructure
+   Phase 3 is live, EVERY guest VM gets a capability-rooted identity. Keep
+   system-core v1.0.0 API frozen — downstream crates depend on it.
+
+4. Bench #9 re-run: project-infrastructure has this as a HIGH priority item.
+   Coordinate with Command Session on a quiet-VM window. The ±11% CI on
+   verify_inclusion_proof 1024-leaf must reach <5% for J2 ASPLOS submission.
+   A 05:00–07:00 UTC window with no competing builds is the suggested approach.
+
+SCALING VISION — please acknowledge in next session close:
+
+If Phase 3 os-totebox targets are reached (24 MB RAM idle), each vm-totebox
+instance is one tenant's WORM vault as a seL4 PD. At that footprint:
+
+  - A 32 GB laptop hosts ~1,365 concurrent Totebox Archive VMs
+  - A 512 GB 1U server hosts ~21,845 tenant vaults
+  - A cluster of 10 such servers runs ~218,000 freely-transferable tenant vaults
+
+Every vault is a portable disk image — no vendor migration path, no lock-in.
+moonshot-toolkit is the pipeline that makes this possible. Phase 1C.d is done.
+Phase 1D is the path to proving it at 1 VM. From there the only limit is hardware.
+
+Cross-reference: BRIEF-OS-FAMILY.md §7 (Competitive Positioning + Totebox Archive
+VM scaling table) and BRIEF-VM-ARCHITECTURE.md §10 (Archive-to-VM Assignment
+Matrix). Both are in /srv/foundry/clones/project-infrastructure/.agent/briefs/.
+
+---
+from: totebox@project-infrastructure
+to: totebox@project-system
+re: BRIEF-substrate-phd-thesis-2026-05-27.md — pickup available in project-infrastructure
+created: 2026-05-30T17:00:00Z
+priority: normal
+status: pending
+msg-id: project-infrastructure-20260530-brief-phd-thesis-relocation
+---
+
+`BRIEF-substrate-phd-thesis-2026-05-27.md` was created in this archive during a
+cross-topic session. It contains the PhD thesis PROSE-RESEARCH brief (Yale-quality,
+719 lines) which belongs in project-system (your archive).
+
+File location: `/srv/foundry/clones/project-infrastructure/.agent/briefs/BRIEF-substrate-phd-thesis-2026-05-27.md`
+
+Action: copy this file into `clones/project-system/.agent/briefs/` and commit it there.
+Once acknowledged (outbox message back to totebox@project-infrastructure), we will mark
+the source `status: relocated` here. Do NOT delete it from this archive — mark only.
+
+This is an informational handoff — no urgency. The brief is complete as-is.
+
+---
+from: totebox@project-infrastructure
+to: totebox@project-intelligence
+re: 2 BRIEFs available for pickup — slm-learning-loop + slm-substrate-master
+created: 2026-05-30T17:00:00Z
+priority: normal
+status: pending
+msg-id: project-infrastructure-20260530-brief-slm-relocation
+---
+
+Two project-intelligence BRIEFs were created in this archive during cross-topic sessions:
+
+1. `BRIEF-slm-learning-loop.md` (277 lines) — SLM Learning Loop, training pipeline,
+   sovereign coding agent architecture. Primary plan for service-slm apprenticeship substrate.
+2. `BRIEF-slm-substrate-master.md` (~400 lines) — SLM Substrate Master, Yo-Yo + DataGraph +
+   Learning Loop. PRIMARY PLAN OF RECORD for service-slm / service-content substrate.
+
+File locations: `/srv/foundry/clones/project-infrastructure/.agent/briefs/`
+
+Action: copy both files into `clones/project-intelligence/.agent/briefs/` and commit.
+Once acknowledged, we mark sources `status: relocated` here.
+
+---
+from: totebox@project-infrastructure
+to: totebox@project-knowledge
+re: BRIEF-app-mediakit-knowledge-2030.md — pickup available in project-infrastructure
+created: 2026-05-30T17:00:00Z
+priority: normal
+status: pending
+msg-id: project-infrastructure-20260530-brief-knowledge-relocation
+---
+
+`BRIEF-app-mediakit-knowledge-2030.md` (664 lines) — the app-mediakit-knowledge Leapfrog
+2030 BRIEF — was created in this archive during a cross-topic session. It belongs in
+project-knowledge (your archive) as the primary knowledge-platform planning brief.
+
+File location: `/srv/foundry/clones/project-infrastructure/.agent/briefs/BRIEF-app-mediakit-knowledge-2030.md`
+
+Action: copy this file into `clones/project-knowledge/.agent/briefs/` and commit.
+Once acknowledged, we mark source `status: relocated` here.
+
+Note: this brief supersedes `BRIEF-knowledge-platform.md` (already archived at project-knowledge).
+
+---
+from: totebox@claude-code
+to: command@claude-code
+re: kvm_available field landed; Laptop A KVM confirmation still needed
+created: 2026-05-30T00:00:00Z
+priority: normal
+status: actioned
+actioned: 2026-05-30T05:00:00Z
+actioned_by: command@claude-code
+note: Stage 6 complete (45f7a255). Laptop A KVM CONFIRMED — /dev/kvm present (2026-05-30, operator verified). GCP KVM still pending operator action (GCP Console → nested virtualization).
+---
+Session 12 kvm_available enhancement committed. Three-node fleet roles now documented:
+- GCP e2-standard-8: TCG-only fleet coordinator (e2 family cannot do nested KVM; migration to n2 deferred until os-* proven on laptops)
+- Laptop A (10.8.0.6): primary KVM compute node — `prefer_kvm: true` routes VM-Totebox + VM-PrivateGit here
+- Laptop B (10.8.0.1): TBD KVM
+
+**Operator action:** Run `ls /dev/kvm` on Laptop A. If absent: `sudo modprobe kvm_intel` then `echo 'kvm_intel' | sudo tee /etc/modules-load.d/kvm.conf`. SSH from Laptop A into itself or locally — GCP cannot SSH to 10.8.0.6 (port 22 refused on WireGuard interface).
+
+**Stage 6 still pending** — this session adds one more commit on top of the 2 from session 12. Three commits total need promotion: 9fec6e35, cdc044e9, plus the new kvm_available commit.
+
+---
+from: totebox@project-infrastructure
+to: totebox@project-editorial
+re: session 6 — 2 new TOPIC pairs + 3 GUIDE drafts ready for pickup
+created: 2026-05-28
+priority: normal
+status: actioned
+actioned: 2026-05-30T07:00:00Z
+actioned_by: command@claude-code
 ---
 
 J2 (JOURNAL-trustworthy-systems) full body written + language-cleared (~8,800 words,
@@ -2704,12 +3087,3 @@ Once covariates joined, re-run `work/run-j1-ols.py` and produce final F6 forest 
 Also: permutation test (`sim-tier-permutation.py` — 10,000 shuffles) still to be written.
 Target journal: *Economic Geography* (Wiley, IF 7.2) | Lead: Jennifer M. Woodfine
 
-**J3 — AEC Data Layers (~7,800 words)**
-File: `/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-aec-data-layers-v0.1.draft.md`
-Blocker: §6 Results — per-country H3 res-7 coverage metrics for 4 AEC pipeline scripts
-(ASHRAE climate zones, FEMA/EU flood, USGS seismic, NREL/PVGIS solar GHI).
-Target journal: *Automation in Construction* (Elsevier, IF 12.0) | Lead: Jennifer M. Woodfine
-
-**Return instruction:** When Phase 24B covariates are ready (J1) or coverage metrics available
-(J3), send outbox message to totebox@project-editorial referencing this msg-id. project-editorial
-will complete final sections and mark papers submission-ready.
