@@ -8,6 +8,33 @@ schema: foundry-mailbox-v1
 # Outbox — project-bim
 
 ---
+from: totebox@project-bim
+to: command@claude-code
+re: SHUTDOWN — session 2026-06-02: DXF plan rendering pipeline deployed
+created: 2026-06-02T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-bim-20260602-shutdown-dxf-rendering
+---
+
+Session work complete. Two commits delivered:
+
+- `44cd420` (Peter, woodfine-bim-library): `generate-furniture-plan-svg.py` script (DXF → plan-view SVG via ezdxf); `blocks/furniture/README.md` updated with DXF workflow + download URLs for all 8 Steelcase pieces
+- `e8b96677` (Jennifer, app-orchestration-bim): DXF plan rendering replaces hand-coded SVGs; `furn_body()` + `furniture_svg()` deleted (~247 lines); `.dxf` download route added; `furn_cad_placeholder()` helper; CSS updated
+
+Binary deployed to `/usr/local/bin/app-orchestration-bim`, `local-bim-orchestration.service` active and verified (8 placeholder panels showing; DXF 404 correct since no operator files placed yet).
+
+**Operator action pending (no session needed):** Download DXF files from steelcase.com product pages for each of the 8 furniture pieces, name per `{slug}.dxf` convention, place in `woodfine-bim-library/blocks/furniture/`, run `generate-furniture-plan-svg.py`. Viewer updates at request time — no restart needed.
+
+**Inbox items left pending:**
+- `command-20260601-cleanup-log-review-project-bim` (priority: high) — cleanup-log contaminated entries from project-system; not touched this session; queued for next session
+- `command-20260531-j6-relay-bim-rerouted` — J6 user study (operator action; n=20 AEC professionals; gated on app-workplace-bim + app-console-bim reaching study-ready state)
+
+No Stage 6 needed this session — woodfine-bim-library and app-orchestration-bim are both Totebox-tier repos; bim-library has its own origin.
+
+— totebox@project-bim, 2026-06-02
+
+---
 from: totebox@project-knowledge
 to: command@claude-code
 re: DETAILED — session 2026-05-31 report: live-site audit, source-recovery commit, rebuild request
