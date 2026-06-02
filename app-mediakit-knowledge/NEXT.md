@@ -18,6 +18,74 @@
 - [ ] **Phases 2–5:** article surface (phone-first) · home · Cmd+K + motion · per-brand theming + DTCG back-port.
 - [ ] **Content docs** updated as drafts → project-editorial (see `.agent/drafts-outbound/`).
 
+## 2026-06-02 — Deferred / skipped (what the AUTO UX batch did NOT do)
+
+The browser-in-the-loop UX batch (HEAD `c5448dfb`) shipped the *visible* surface green + verified:
+Inter/Source-Serif, home, 3-col article shell + TOC-drawer fix, M1 tap-popovers, Cmd+K, per-brand
+accent fix. The items below were consciously scoped OUT and remain open. Grouped by owner.
+
+### Engine — Phase 0 federation landed ADDITIVE only (not yet load-bearing)
+- [ ] **Mounts not adopted engine-wide.** `src/mounts.rs` exists + tested, but `AppState` still
+      carries `{content_dir, guide_dir, guide_dir_2}`. The `{mounts: Vec<Mount>}` refactor across
+      `serve()`, the ~10 render call sites and the chrome fns was NOT done — `knowledge.toml` parses
+      but is not the live source of truth. `link_roots()` is the only adopted piece.
+- [ ] **Blueprints validate but don't drive rendering.** `src/blueprints.rs` registry + `check`
+      validation work; the `relates_to` rails (TOPIC "How-to guides" ↔ GUIDE "Background concepts")
+      are NOT wired into the page render. No blueprint-driven section routing yet.
+- [ ] **`regional-market` blueprint + structured infobox** (projects marquee) not built — metrics
+      still inline in markdown tables, not frontmatter. Matches staged
+      `DESIGN-regional-market-topic-template`; needs frontmatter promotion + infobox template.
+- [ ] **Provenance / edit-routing** ("Source: <mount> · History"; edit→editable-mount;
+      propose-change for read-only mounts) — not started.
+- [ ] **Slug normalization** (strip `topic-` prefix; synthesize section landing where `_index.md`
+      absent) — not done; corporate/projects keep `topic-*` slugs.
+
+### Content gate (`check`) — built, not fully wired or triaged
+- [ ] **`check --strict` not in CI / pre-promote gate** (Command to wire once editorial triages).
+- [ ] **Bilingual-integrity check** (`paired_with` .es siblings exist) — optional 2nd check, not added.
+- [ ] **17 real dead links + 6 missing-slug guides** → project-editorial content fixes
+      (findings: `.agent/drafts-outbound/CONTENT-AUDIT-dead-links-2026-06-01.md`).
+
+### Per-brand (Phase 5) — accent fixed; deeper differentiation deferred (DESIGN DECISION)
+- [ ] **~12-token "editorial gravitas" contract** (density, serif headings, scale-ratio, drop-cap/
+      pull-quote gating) beyond the accent. Specs currently share the blue palette → needs operator
+      brand-design direction before building. **This is the one item awaiting operator input.**
+- [ ] **DTCG back-port** of the CSS prototype: generic tokens → `pointsav-design-system`
+      (DESIGN-TOKEN-CHANGE + `master_cosign`); Woodfine tokens → `woodfine-media-assets`. Not done.
+
+### Mobile / interaction polish (functional, not yet refined)
+- [ ] **M8 drawer animation** — nav/TOC drawers toggle `display` (no slide/fade transition yet).
+- [ ] **Tap-popover positioning** — glossary tooltip anchors above the term; can clip at viewport top.
+- [ ] **Cmd+K polish** — no visible trigger affordance (keyboard-only discoverable); no grouped
+      results / mono shortcut hints / recent-when-empty (functional but basic).
+- [ ] **Hero lede tightening** — multi-paragraph; content/editorial concern.
+
+### Editorial docs (Phase −1 (c)/(d)) — STAGED as drafts, NOT committed (project-editorial owns)
+- [ ] `DIRECTIVE-knowledge-platform-doc-alignment.draft.md` action set: rewrite
+      `applications/app-mediakit-knowledge.md` to the federation model; new
+      `patterns/federation-via-content-mounts.md`; content-contract/naming-convention updates
+      (`type:guide`, blueprint, mount/provenance fields); design-system typography fix (IBM Plex→Inter);
+      `contribute.md` no-dead-links rule; + fleet-deployment GUIDE updates (knowledge.toml, Inter).
+- [ ] DESIGN drafts staged for project-design: `DESIGN-doc-header-component`,
+      `DESIGN-docs-sidenav-component` → commit to `pointsav-design-system`.
+
+### Command Session — operational / governance
+- [ ] **Promote + deploy HEAD `c5448dfb`** (whole UX batch) — `promote.sh` + `deploy-binary.sh`
+      (flagged in outbox `ux-batch-deploy`). Nothing is live until this runs.
+- [ ] **Metadata contamination** in this archive: top-level `NEXT.md`=project-gis,
+      `MEMORY.md`=project-infrastructure, `manifest.md`=project-bim, ~43 contaminated briefs —
+      cross-archive reconciliation.
+- [ ] **Content-dir divergence:** docs `277847a` vs live `4bd58eb`; projects live behind canonical
+      `294488f`. Repoint live services at canonical media-knowledge-* HEADs (or knowledge.toml once
+      mounts are adopted).
+- [ ] **§7 font-lock amendment** (Inter/Source-Serif supersedes L8) recorded in master brief —
+      Command awareness.
+- [ ] **Stale `.git/index.lock` sweep** across archives (from the earlier crash).
+
+### Test
+- [ ] **`wiki_page_renders_navigation_portlet`** — the 1 failing test; stale-chrome, needs updating
+      for the new chrome markup (pre-existing; not introduced by this batch).
+
 > Phase backlog below (7E…8) is the pre-consolidation record; the master brief's §14 is the
 > current plan. Older entries retained for history.
 
