@@ -102,7 +102,10 @@ async fn create_vm_handler(
     };
 
     // Capture kvm_available before releasing the lock.
-    let kvm = reg.get_node(&target).map(|n| n.kvm_available).unwrap_or(false);
+    let kvm = reg
+        .get_node(&target)
+        .map(|n| n.kvm_available)
+        .unwrap_or(false);
 
     let vm_id = format!("{}-{}", req.vm_type.to_lowercase(), Utc::now().timestamp());
     let record = VmRecord {

@@ -160,7 +160,10 @@ mod tests {
         std::env::set_var("VM_DISK_DIR", "/tmp/test-vm-fleet-idem");
         std::fs::create_dir_all("/tmp/test-vm-fleet-idem").unwrap();
         let path = disk_path_for("vm-idempotent");
-        std::fs::File::create(&path).unwrap().write_all(b"x").unwrap();
+        std::fs::File::create(&path)
+            .unwrap()
+            .write_all(b"x")
+            .unwrap();
         // Should return Ok without calling qemu-img.
         let result = create_blank_disk("vm-idempotent", 8);
         assert!(result.is_ok());

@@ -203,12 +203,14 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "app-console-keys",
+ "chrono",
  "crossterm",
  "image",
  "pdfium-render",
  "ratatui",
  "ratatui-image",
  "reqwest 0.12.28",
+ "rusqlite",
  "serde",
  "serde_json",
  "similar",
@@ -265,7 +267,11 @@ dependencies = [
 name = "app-console-slm"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "app-console-keys",
  "clap",
+ "crossterm",
+ "ratatui",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
@@ -319,6 +325,7 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tokio-util",
+ "toml",
  "tower 0.5.3",
  "tower-http 0.6.11",
  "tracing",
@@ -993,7 +1000,6 @@ dependencies = [
  "unicode-normalization",
 ]
 
-
 [[package]]
 name = "cassowary"
 version = "0.3.0"
@@ -1297,6 +1303,26 @@ dependencies = [
  "syntect",
  "typed-arena",
  "xdg",
+]
+
+[[package]]
+name = "console_error_panic_hook"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a06aeb73f470f66dcdbf7223caeebb85984942f22f1adb2a088cf9668146bbbc"
+dependencies = [
+ "cfg-if",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "console_log"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "be8aed40e4edbf4d3b4431ab260b63fdc40f5780a4766824329ea0f1eefe3c0f"
+dependencies = [
+ "log",
+ "web-sys",
 ]
 
 [[package]]
@@ -4434,6 +4460,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "libloading"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "754ca22de805bb5744484a5b151a9e1a8e837d5dc232c2d7d8c2e3492edc8b60"
+dependencies = [
+ "cfg-if",
+ "windows-link",
+]
+
+[[package]]
 name = "libm"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4621,6 +4657,12 @@ dependencies = [
  "quote",
  "syn",
 ]
+
+[[package]]
+name = "maybe-owned"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4facc753ae494aeb6e3c22f839b158aebd4f9270f55cd3c79906c45476c47ab4"
 
 [[package]]
 name = "md5"
@@ -7995,6 +8037,15 @@ name = "utf-8"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
+
+[[package]]
+name = "utf16string"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b62a1e85e12d5d712bf47a85f426b73d303e2d00a90de5f3004df3596e9d216"
+dependencies = [
+ "byteorder",
+]
 
 [[package]]
 name = "utf8-ranges"

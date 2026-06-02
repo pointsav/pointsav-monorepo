@@ -160,10 +160,10 @@ impl Cartridge for SystemCartridge {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(2),          // heading
-                Constraint::Fill(1),            // list
-                Constraint::Length(fp_height),  // fingerprint detail (0 when hidden)
-                Constraint::Length(1),          // feedback / hint
+                Constraint::Length(2),         // heading
+                Constraint::Fill(1),           // list
+                Constraint::Length(fp_height), // fingerprint detail (0 when hidden)
+                Constraint::Length(1),         // feedback / hint
             ])
             .split(inner);
 
@@ -241,7 +241,11 @@ impl Cartridge for SystemCartridge {
         }
 
         // Feedback / hint line (chunks[3])
-        let fp_hint = if self.show_fingerprint { "[?] hide fp  " } else { "[?] show fp  " };
+        let fp_hint = if self.show_fingerprint {
+            "[?] hide fp  "
+        } else {
+            "[?] show fp  "
+        };
         let hint = if let Some(msg) = &self.feedback {
             let (color, prefix) = if msg.starts_with("Error") {
                 (Color::Yellow, "")

@@ -21,7 +21,11 @@ pub fn render_page(path: &str, page_idx: u32) -> anyhow::Result<PdfPageData> {
 
     let total_pages = document.pages().len() as u32;
     if page_idx >= total_pages {
-        anyhow::bail!("page {} out of range (PDF has {} pages)", page_idx, total_pages);
+        anyhow::bail!(
+            "page {} out of range (PDF has {} pages)",
+            page_idx,
+            total_pages
+        );
     }
 
     let page = document

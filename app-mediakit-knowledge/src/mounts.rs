@@ -177,7 +177,10 @@ editable = false
         assert!(!m[1].editable);
         // link_roots excludes the primary content mount.
         let roots = link_roots(&m);
-        assert_eq!(roots, vec![Path::new("/srv/guide-a"), Path::new("/srv/guide-b")]);
+        assert_eq!(
+            roots,
+            vec![Path::new("/srv/guide-a"), Path::new("/srv/guide-b")]
+        );
     }
 
     #[test]

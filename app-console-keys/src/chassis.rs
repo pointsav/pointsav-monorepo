@@ -573,7 +573,11 @@ impl AppConsoleKeys {
         self.caps = TerminalCaps::detect(&self.picker);
         // Notify cartridges of probed capabilities so they can configure pixel rendering.
         let (kitty, sixel, truecolor) = (self.caps.kitty, self.caps.sixel, self.caps.truecolor);
-        let font_size = self.picker.as_ref().map(|p| p.font_size()).unwrap_or((10, 20));
+        let font_size = self
+            .picker
+            .as_ref()
+            .map(|p| p.font_size())
+            .unwrap_or((10, 20));
         for c in self.cartridges.values_mut() {
             c.set_graphics_caps(kitty, sixel, font_size, truecolor);
         }
