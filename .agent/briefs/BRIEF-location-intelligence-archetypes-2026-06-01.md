@@ -5,6 +5,7 @@ name: BRIEF-location-intelligence-archetypes-2026-06-01
 language_protocol: CODE-RESEARCH
 status: active
 created: 2026-06-01
+updated: 2026-06-02
 author: totebox@project-gis
 ---
 
@@ -19,9 +20,9 @@ Three-letter codes ratified 2026-06-01.
 
 | Code | Name | Status | Anchor type |
 |---|---|---|---|
-| **PRO** | Retail Centres | Live — T1/T2/T3 clusters | Grocery hypermarket + hardware ± price club / lifestyle / electronics |
-| **VWH** | Urban Fringe | Test data (360 sites) | Hardware without grocery; 3–6 story urban logistics / light-manufacturing |
-| **PKS** | Commuter | Test data (6,640 / 1,803 integrated) | Regional airport or intercity train station 15–150km from major metro |
+| **PRO** | Retail Centres | Live — T1/T2/T3 rings + dedicated map mode | Grocery hypermarket + hardware ± price club / lifestyle / electronics |
+| **VWH** | Urban Fringe | Live — dedicated map mode, 440 sites, rings at drill-in | Hardware without grocery; 3–6 story urban logistics / light-manufacturing |
+| **PKS** | Commuter | Live — dedicated map mode, 2,396 sites (commuter/metro expand pending) | Airport or transit station with park-and-ride catchment; last stops on metro/suburban rail |
 
 ---
 
@@ -111,14 +112,20 @@ To make VWH production-grade, add:
 
 ### Definition
 
-A 3–9 story car parking structure at a **regional** airport or intercity train station.
-Function: residents of a Regional Market (PRO cluster) park and fly/train to a Metro Market.
-The Regional Market **feeds** the Metro Market either by plane or by train.
+A 3–9 story car parking structure at a **transit node** where commuters park and ride into
+the metro core. Function: residents of a Regional Market (PRO cluster) park and
+fly/train/metro to a Metro Market. Three transit sub-types:
 
-"Regional" = 15–150km from the major metro centre.
-- ≤15km = suburb; the plane or train saves little over driving
-- 15–150km = sweet spot; 1–2 hours saved justifies park-and-transit behaviour
-- \>150km = standalone market; likely has its own metro without a feeder relationship
+| Sub-type | Metro distance | OSM class | Examples |
+|---|---|---|---|
+| Airport | 35–150 km | `airport` | Regional airports (not major hubs) |
+| Intercity rail | 35–150 km | `intercity` | Amtrak, VIA Rail, DB, SNCF, Renfe |
+| Suburban/commuter rail | 10–80 km | `suburban` | NJ Transit, LIRR, Metro-North, Metra, Transilien, S-Bahn |
+| Metro/subway last stops | 5–35 km | `subway` / `light_rail` | End-of-line and outer-ring fringe stations |
+
+"Last stops" on metro/subway lines are key PKS sites: residents drive to the terminus,
+park, and ride the rapid-transit line into the core. Geographic fringe (5–35 km from
+metro centroid) identifies these stations without needing route-relation parsing.
 
 ### Co-location signals (site selection)
 
@@ -208,37 +215,74 @@ Deployed to map:
 
 | Script | Purpose | Status |
 |---|---|---|
-| `test-cluster-archetypes.py` | Produces VWH and PKS GeoJSON from existing data | ✅ Done; runs in ~60s |
-| `ingest-osm-airports.py` | IATA-filtered commercial airport ingest (replaces Overture 20,841) | ✅ Done — 4,024 airports (3,774 w/ IATA); US tile gaps remain |
-| `ingest-osm-railway.py` | OSM intercity railway station ingest → service-places | ✅ Done — 18,107 intercity stations, 16 countries |
+| `test-cluster-archetypes.py` | Produces VWH and PKS GeoJSON; per-class metro distance ranges | ✅ Updated 2026-06-02 — loads commuter JSONL; per-class ranges |
+| `ingest-osm-airports.py` | IATA-filtered commercial airport ingest | ✅ Done — 4,024 airports |
+| `ingest-osm-railway.py` | OSM intercity railway station ingest | ✅ Done — 18,107 intercity stations, 16 countries |
+| `ingest-osm-railway-commuter.py` | Commuter/suburban rail + metro/subway station ingest | ✅ Written 2026-06-02 — **NOT YET RUN** |
 | `ingest-osm-industrial.py` | OSM `landuse=industrial` polygon ingest | ❌ Planned |
-| Chain YAMLs (see §3 production gaps) | Auto-parts, paint, car rental, logistics | ✅ Done — 19,242 records / 32 chains |
+| Chain YAMLs (auto-parts, paint, car rental) | VWH Tier A/B chains; PKS car rental | ✅ Done — 19,242 records / 32 chains |
 
-**Final PKS run (2026-06-01 08:10Z):** with real transit anchors (4,024 IATA airports +
-18,107 intercity rail), test produced **14,332 PKS candidates** (1,744 airport + 12,588 rail),
-**3,904 integrated** with a T1/T2 Regional Market (637 airport + 3,267 rail). Railway dominates —
-EU park-and-train pattern. Replaces the earlier 6,640-candidate Overture-airport-only proxy.
+**Current PKS GeoJSON (gateway):** 2,396 features (intercity rail + airports only; commuter/metro
+not yet included). Re-run `test-cluster-archetypes.py` after commuter ingest to expand.
 
 ---
 
-## 7. UI integration (updated 2026-06-01)
+## 7. UI integration (updated 2026-06-02)
 
-VWH and PKS toggle buttons placed under **★ Regional Markets** section in `index.html` layer control
-(not a separate Location Intelligence group — that concept was retired). PRO Retail Centres
-is the base map product and is NOT a toggle overlay alongside VWH/PKS.
+**All three modes are now first-class dedicated map modes.** Toggling Urban Fringe or Commuter
+gives a 100% dedicated view — Retail cluster nodes are fully hidden, not ghosted.
 
-State variables: `vwhActive`, `psActive`. Functions: `toggleVwhLayer(btn)`, `togglePsLayer(btn)`.
+### Mode architecture
 
-**Fade behaviour**: when VWH or PKS toggled on, cluster bubbles ghost to `circle-opacity: 0.10`
-(identical to rm-stars Top 400 fade behaviour — copies `applyRmStarsStyle()` pattern exactly).
-`applyLiOverlayStyle()` function handles this; restore branch guards against all active overlay
-states (`rmStarsActive`, `koppenActive`, `ecoregionsActive`, `vwhActive`, `psActive`).
+`activeArchetype` (null | `'VWH'` | `'PKS'`) drives all layer dispatch in `applyView()`.
 
-Layers persist across all view transitions (BentoBox, Retail View) — same behaviour as Köppen.
-BentoBox inspector is NOT modified — VWH/PKS remain map overlays only.
+| Mode | `activeArchetype` | Overview (zoom < 9) | Drill-in (zoom ≥ 9) |
+|---|---|---|---|
+| Retail | `null` | Retail cluster bubbles (T1/T2/T3 colors) | Retail rings + individual store dots |
+| Urban Fringe | `'VWH'` | VWH dots (T1/T2/T3 colors, no Retail nodes) | VWH rings (same proximity-* layers) |
+| Commuter | `'PKS'` | PKS dots (T1/T2/T3 colors, no Retail nodes) | PKS rings (2 km fixed radius) |
 
-Future: BentoBox cluster inspector shows nearby VWH/PKS as a "Location Intelligence context"
-panel — separate scope, touches `showClusterDetail()`.
+All three modes are mutually exclusive — `deactivateOverlayGroup()` enforces this; switching
+resets `activeArchetype` to null and restores Retail nodes before entering the new mode.
+
+### Ring colors — all three modes
+
+T1 = `#164679` (blue) / T2 = `#54924E` (green) / T3 = `#EAB308` (gold). Same across PRO, VWH, PKS.
+
+### Ring radius
+
+- PRO: `Math.max(1.0, span_km / 2 * 1.15)` km — matches cluster physical footprint
+- VWH: same formula (VWH candidates carry `span_km` from their source cluster)
+- PKS: fixed 2.0 km — transit nodes are single points with no cluster span
+
+### Ring data sources
+
+`buildProdRings()` dispatches to the right builder based on `activeArchetype`:
+- `_buildRetailRings()` — reads `clusterMeta` (loaded from `data/clusters-meta.json`)
+- `buildVwhRings()` — reads `vwhData` (fetched from `data/archetype-vwh.geojson`)
+- `buildPksRings()` — reads `pksData` (fetched from `data/archetype-pks.geojson`)
+
+### State variables (commit 438b37d6)
+
+```javascript
+let activeArchetype   = null;  // null | 'VWH' | 'PKS'
+let vwhData = null;  // GeoJSON FeatureCollection, fetched at startup
+let pksData = null;  // GeoJSON FeatureCollection, fetched at startup
+let urbanFringeActive = false;
+let commuterActive    = false;
+```
+
+### Layer control buttons
+
+Toggle buttons sit in the layer control panel; same `lc-active` class pattern as Retail.
+Labels: "Urban Fringe" / "Commuter". Switching deactivates the other mode automatically.
+
+### Individual store dots at drill-in — Phase 1 scope
+
+VWH and PKS drill-in shows rings but NOT individual chain dots (no VWH/PKS-specific PMTiles
+built yet). `all-locations` (Retail store dots from `layer1-locations.pmtiles`) is suppressed
+in archetype mode. Phase 2: build `layer-vwh-locations.pmtiles` and `layer-pks-locations.pmtiles`
+via `build-tiles.py` extension.
 
 ---
 
@@ -412,18 +456,42 @@ MX and IS: airport-only (no intercity passenger rail).
 | Indigo/Vinci Park | Q3559970 | FR/EU | Phase 2 |
 | SP+ | Q7598289 | US | Phase 2 |
 
-### Ingestion sequencing (recommended order)
+### Ingestion sequencing (remaining work)
 
-1. **Run existing YAMLs** — `ingest-osm.py --chain autozone-us oreilley-auto-us napa-us sherwin-williams-us halfords-uk`
-2. **Add Würth** — single biggest EU gap; YAML + `mro_industrial` category in taxonomy.py
-3. **Add Floor & Decor + United Rentals + Sunbelt** — clearest new retail/rental VWH signals
-4. **Write `ingest-osm-airports.py`** — fix 20,841 noise before adding car rental
-5. **Add car rental YAMLs** — Enterprise/Hertz/Avis/Sixt/Europcar once airports are clean
-6. **Write `ingest-osm-railway.py`** — EU intercity stations to service-places
-7. **Re-run `test-cluster-archetypes.py`** — updated VWH and PKS candidate counts
+1. **Run `ingest-osm-railway-commuter.py --all`** — after 22:00 Vancouver. Commuter/suburban/metro.
+   Output: `service-places/cleansed-civic-railway-commuter.jsonl`
+2. **Re-run `test-cluster-archetypes.py`** — picks up commuter JSONL automatically; updates
+   `work/archetype-pks.geojson` and `work/archetype-vwh.geojson`
+3. **Copy `archetype-pks.geojson` to gateway** —
+   `deployments/gateway-orchestration-gis-1/www/data/archetype-pks.geojson`
+4. **Stage 6** — promote commit `438b37d6` to canonical monorepo (Command Session)
 
-Editorial artifacts produced this session:
-- `BRIEF-location-intelligence-archetypes-2026-06-01.md` (this file) — active
-- `TOPIC-vertical-warehouse.draft.md` — dispatched to project-editorial
-- `TOPIC-parking-structures.draft.md` — dispatched to project-editorial
-- `GUIDE-location-intelligence-data-collection.draft.md` — dispatched to project-editorial
+**Items already completed (2026-06-01 and earlier):**
+- YAML chain ingests (auto-parts, paint, car rental, tool rental, MRO, flooring, lumber)
+- `ingest-osm-airports.py` (4,024 IATA airports)
+- `ingest-osm-railway.py` (18,107 intercity stations, 16 countries)
+- VWH rings + PKS rings live on gis.woodfinegroup.com (commit `438b37d6`)
+
+---
+
+## 10. Session state — 2026-06-02
+
+**Committed:** `438b37d6` — feat(map-ui): Urban Fringe + Commuter dedicated ring modes
+
+**What shipped:**
+- VWH and PKS both have dedicated ring modes (not dot overlays). Toggling either hides
+  Retail completely. Rings use standard T1/T2/T3 blue/green/gold. `activeArchetype` drives
+  all layer dispatch.
+- `ingest-osm-railway-commuter.py` written; covers commuter rail, suburban rail, metro/subway
+  last stops across 20 countries. NOT YET RUN.
+- `test-cluster-archetypes.py` updated for per-class metro distance ranges (subway 5–35 km,
+  suburban 10–80 km, intercity/airport 35–150 km).
+
+**Outstanding (see NEXT.md):**
+- Commuter ingest run (overnight, after 22:00 Vancouver)
+- Re-run archetypes script → updated PKS GeoJSON
+- Sync PKS GeoJSON to gateway
+- Stage 6 promotion (Command Session)
+
+**PKS GeoJSON on gateway:** 2,396 features (intercity+airport only, no commuter/metro yet).
+PKS rings are live on the map but show intercity stations only until the ingest runs.

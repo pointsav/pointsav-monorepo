@@ -1,6 +1,31 @@
 # NEXT.md — project-knowledge (app-mediakit-knowledge)
 
 Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
+> **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
+
+Last updated: 2026-06-02
+
+---
+
+## Urban Fringe + Commuter rings — outstanding after 2026-06-02 session
+
+- [ ] **Run commuter/metro rail ingest** — `python3 app-orchestration-gis/ingest-osm-railway-commuter.py --all`
+      after 22:00 Vancouver (05:00 UTC). 20 countries; ~60–90 min Overpass runtime.
+      Writes to `cluster-totebox-personnel-1/service-places/cleansed-civic-railway-commuter.jsonl`.
+      Scope: NJ Transit, LIRR, Metro-North, Metra, Caltrain, BART, Transilien, RER, S-Bahn,
+      Pendeltåg, and equivalents. Metro/subway end-of-line stations included. [2026-06-02 jwoodfine]
+
+- [ ] **Re-run `test-cluster-archetypes.py`** — after commuter ingest completes. Produces updated
+      `work/archetype-pks.geojson` with commuter+metro stations (expect 8,000–25,000 candidates
+      depending on operator filter coverage). [2026-06-02 jwoodfine]
+
+- [ ] **Sync updated archetype-pks.geojson to gateway** — copy to
+      `deployments/gateway-orchestration-gis-1/www/data/archetype-pks.geojson`. PKS rings in the
+      UI pull from that path. No code change needed — UI already supports the updated data.
+      [2026-06-02 jwoodfine]
+
+- [ ] **Stage 6** — promote commit `438b37d6` (feat: Urban Fringe + Commuter dedicated ring modes)
+      to canonical monorepo. Command Session runs `bin/promote.sh`. [2026-06-02 jwoodfine]
 
 ---
 
