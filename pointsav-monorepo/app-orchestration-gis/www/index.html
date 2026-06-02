@@ -1640,8 +1640,8 @@
 
     function applyUrbanFringeStyle() {
         activeArchetype = urbanFringeActive ? 'VWH' : null;
-        // Archetype dot overlay: visible only at GLOBAL zoom when active
-        const vis = (urbanFringeActive && prodView.mode === 'GLOBAL') ? 'visible' : 'none';
+        // Archetype dots: visible whenever active; paint opacity expression fades them at z>9
+        const vis = urbanFringeActive ? 'visible' : 'none';
         ['uf-t1', 'uf-t2', 'uf-t3'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
         });
@@ -1670,7 +1670,8 @@
 
     function applyCommuterStyle() {
         activeArchetype = commuterActive ? 'PKS' : null;
-        const vis = (commuterActive && prodView.mode === 'GLOBAL') ? 'visible' : 'none';
+        // Archetype dots: visible whenever active; paint opacity expression fades them at z>9
+        const vis = commuterActive ? 'visible' : 'none';
         ['cm-t1', 'cm-t2', 'cm-t3'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
         });
@@ -1810,11 +1811,12 @@
         setVis(['cluster-centroid'], false);
         setVis(['proximity-merged-label'], false);
 
-        // Archetype dot overlays at drill-in zoom: hide them (rings take over).
-        // At GLOBAL zoom, the toggle functions (applyUrbanFringeStyle/applyCommuterStyle)
-        // control visibility based on activeArchetype.
+        // Regional market stars: GLOBAL-only (no ring equivalent).
+        // Archetype dots (uf/cm): kept visible in LOCAL when active — opacity expression fades them.
         if (local) {
-            setVis(['rm-stars-glow', 'rm-stars-dot', 'uf-t1', 'uf-t2', 'uf-t3', 'cm-t1', 'cm-t2', 'cm-t3'], false);
+            setVis(['rm-stars-glow', 'rm-stars-dot'], false);
+            if (!urbanFringeActive) setVis(['uf-t1', 'uf-t2', 'uf-t3'], false);
+            if (!commuterActive)    setVis(['cm-t1', 'cm-t2', 'cm-t3'], false);
         }
     }
 
@@ -2548,9 +2550,9 @@
             filter: ['==', ['get', 'vwh_tier'], 1],
             layout: { visibility: 'none' },
             paint: {
-                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 5, 8, 9],
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 5, 8, 9, 10, 6, 12, 3],
                 'circle-color': '#164679',
-                'circle-opacity': 0.85,
+                'circle-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.85, 10, 0.50, 12, 0.15, 13, 0.0],
                 'circle-stroke-width': 1.5,
                 'circle-stroke-color': '#0A2040',
             },
@@ -2560,9 +2562,9 @@
             filter: ['==', ['get', 'vwh_tier'], 2],
             layout: { visibility: 'none' },
             paint: {
-                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 3, 8, 6],
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 3, 8, 6, 10, 4, 12, 2],
                 'circle-color': '#54924E',
-                'circle-opacity': 0.75,
+                'circle-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.75, 10, 0.45, 12, 0.12, 13, 0.0],
                 'circle-stroke-width': 1,
                 'circle-stroke-color': '#2D5228',
             },
@@ -2572,9 +2574,9 @@
             filter: ['==', ['get', 'vwh_tier'], 3],
             layout: { visibility: 'none' },
             paint: {
-                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 2, 8, 4],
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 2, 8, 4, 10, 3, 12, 2],
                 'circle-color': '#EAB308',
-                'circle-opacity': 0.65,
+                'circle-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.65, 10, 0.38, 12, 0.10, 13, 0.0],
                 'circle-stroke-width': 0.5,
                 'circle-stroke-color': '#854D0E',
             },
@@ -2587,9 +2589,9 @@
             filter: ['==', ['get', 'commuter_tier'], 1],
             layout: { visibility: 'none' },
             paint: {
-                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 5, 8, 9],
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 5, 8, 9, 10, 6, 12, 3],
                 'circle-color': '#164679',
-                'circle-opacity': 0.85,
+                'circle-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.85, 10, 0.50, 12, 0.15, 13, 0.0],
                 'circle-stroke-width': 1.5,
                 'circle-stroke-color': '#0A2040',
             },
@@ -2599,9 +2601,9 @@
             filter: ['==', ['get', 'commuter_tier'], 2],
             layout: { visibility: 'none' },
             paint: {
-                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 3, 8, 6],
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 3, 8, 6, 10, 4, 12, 2],
                 'circle-color': '#54924E',
-                'circle-opacity': 0.75,
+                'circle-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.75, 10, 0.45, 12, 0.12, 13, 0.0],
                 'circle-stroke-width': 1,
                 'circle-stroke-color': '#2D5228',
             },
@@ -2611,9 +2613,9 @@
             filter: ['==', ['get', 'commuter_tier'], 3],
             layout: { visibility: 'none' },
             paint: {
-                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 2, 8, 4],
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 2, 8, 4, 10, 3, 12, 2],
                 'circle-color': '#EAB308',
-                'circle-opacity': 0.65,
+                'circle-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.65, 10, 0.38, 12, 0.10, 13, 0.0],
                 'circle-stroke-width': 0.5,
                 'circle-stroke-color': '#854D0E',
             },
