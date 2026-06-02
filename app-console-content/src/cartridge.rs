@@ -163,7 +163,7 @@ impl ContentCartridge {
                 .timeout(std::time::Duration::from_secs(3))
                 .build()
                 .ok()
-                .and_then(|c| c.get(&format!("{}/readyz", slm_clone)).send().ok())
+                .and_then(|c| c.get(format!("{}/readyz", slm_clone)).send().ok())
                 .and_then(|r| {
                     if r.status().is_success() {
                         r.json::<serde_json::Value>().ok()
@@ -490,6 +490,7 @@ impl ContentCartridge {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn render_search_results(
         frame: &mut Frame,
         area: Rect,
