@@ -1,3 +1,6 @@
+/* VIEWPORT: meta viewport must be `width=device-width, initial-scale=1` —
+   NOT `width=1440`. Both deployed bundles corrected 2026-06-02. */
+
 /*
  * Woodfine marketing site — shared shell CSS
  *
@@ -221,7 +224,12 @@ body.fp-system           { --display: -apple-system, system-ui, sans-serif; --se
 /* 1200px: trim wide-screen padding */
 @media (max-width: 1200px) {
   .topnav { padding: 0 36px; }
+  .doc { margin: 0 36px; }
+  .compliance { margin: 0 36px; padding: 24px 80px 28px; }
   .footer { margin: 0 36px; padding: 20px 80px; }
+  footer { margin: 0 36px; }
+  .footer-nav { padding: 18px 80px; }
+  .footer-bottom-wrap { padding: 0 80px; }
   .copyright { margin: 12px 56px 40px; }
   .page-hero { margin: 0 36px; padding: 20px 80px; }
   .subpage-main { margin: 0 36px; padding: 40px 80px 60px; }
@@ -231,7 +239,12 @@ body.fp-system           { --display: -apple-system, system-ui, sans-serif; --se
 @media (max-width: 1024px) {
   .page { padding: 24px 0 0; }
   .topnav { padding: 0 24px; margin-bottom: 20px; }
+  .doc { margin: 0 24px; }
+  .compliance { margin: 0 24px; padding: 20px 48px 24px; }
   .footer { margin: 0 24px; padding: 18px 48px; }
+  footer { margin: 0 24px; }
+  .footer-nav { padding: 18px 48px; }
+  .footer-bottom-wrap { padding: 0 48px; }
   .copyright { margin: 10px 32px 32px; }
   .page-hero { margin: 0 24px; padding: 18px 48px; }
   .page-hero h1 { font-size: clamp(18px, 3vw, 22px); }
@@ -257,12 +270,17 @@ body.fp-system           { --display: -apple-system, system-ui, sans-serif; --se
     font-size: 10px;
   }
   .wordmark .logo-svg { width: 200px; height: 50px; }
+  .doc { margin: 0 12px; }
+  .compliance { margin: 0 12px; padding: 16px 20px 20px; }
   .footer {
     margin: 0 12px;
     padding: 16px 20px;
     grid-template-columns: 1fr;
     row-gap: 12px;
   }
+  footer { margin: 0 12px; }
+  .footer-nav { padding: 18px 20px; flex-direction: column; align-items: flex-start; gap: 12px; }
+  .footer-bottom-wrap { padding: 0 20px; }
   .footer .cities .sep { margin: 0 8px; }
   .footer .footnav { text-align: left; flex-direction: row; gap: 16px; flex-wrap: wrap; }
   .copyright { margin: 8px 20px 28px; }
@@ -277,7 +295,12 @@ body.fp-system           { --display: -apple-system, system-ui, sans-serif; --se
   .topnav { padding: 0 12px; gap: 8px; }
   .topnav .left, .topnav .right { gap: 12px; font-size: 9px; }
   .wordmark .logo-svg { width: 160px; height: 40px; }
+  .doc { margin: 0 8px; }
+  .compliance { margin: 0 8px; padding: 14px 16px 18px; }
   .footer { margin: 0 8px; padding: 14px 16px; }
+  footer { margin: 0 8px; }
+  .footer-nav { padding: 14px 16px; }
+  .footer-bottom-wrap { padding: 0 16px; }
   .copyright { margin: 8px 16px 24px; }
   .page-hero { margin: 0 8px; padding: 14px 16px; }
   .page-hero h1 { font-size: clamp(14px, 5vw, 18px); letter-spacing: 0.1em; }
