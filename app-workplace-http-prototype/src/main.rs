@@ -460,13 +460,18 @@ async fn create_proforma_file(
     match resolve_workspace_path(&state.workspace_dir, &rel_path) {
         Ok(abs) => {
             let skeleton = json!({
-                "schema": "proforma-v1.0",
-                "title": body.name,
-                "rows": 20,
-                "cols": 8,
-                "cells": {}
+                "schema":      "proforma-v2.0",
+                "title":       body.name,
+                "entity":      "",
+                "date":        "",
+                "analyst":     "",
+                "col_labels":  ["", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Year 7"],
+                "col_formats": ["text", "currency", "currency", "currency", "currency", "currency", "currency", "currency"],
+                "rows":        20,
+                "cols":        8,
+                "cells":       {}
             });
-            match std::fs::write(&abs, skeleton.to_string()) {
+            match std::fs::write(&abs, serde_json::to_string_pretty(&skeleton).unwrap_or_default()) {
                 Ok(_) => {
                     let _ = state.events_tx.send("changed".to_string());
                     (StatusCode::CREATED, Json(CreateResponse { path: rel_path }))
