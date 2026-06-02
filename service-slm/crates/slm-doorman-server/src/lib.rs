@@ -166,6 +166,7 @@ pub mod test_helpers {
                 contract_version: slm_doorman::YOYO_CONTRACT_VERSION.to_string(),
                 pricing: Default::default(),
                 zone: None,
+                health_path: "/health".to_string(),
             },
             std::sync::Arc::new(StaticBearer::new("test-bearer-token")),
         );
