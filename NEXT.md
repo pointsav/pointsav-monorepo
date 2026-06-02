@@ -84,6 +84,11 @@ Country chain additions (still in effect):
 ---
 
 ## Pending Command Session
+## Font / zoom fix — 2026-06-02
+
+- [x] **"50% zoom" on all devices fixed** — root causes: (1) `font-size: 14px` base (vs web standard 16px), (2) `font-size: 11px` nav text unusually small, (3) `.doc { margin: 0 56px }` inside `max-width:1440px` means on monitors wider than ~2000px the white content card occupies ~50% of screen width. Fix: 14px→16px base, 11px nav→13px, 11px tabs→12px, wide-screen @media rules added. Applied to both deployed bundles 2026-06-02. [2026-06-02 totebox@claude-code]
+- [x] **`scripts/fix-font-zoom.sh` created** — idempotent patch script re-applies all font/zoom fixes after any bundle rebuild. Run `bash scripts/fix-font-zoom.sh` after `fix-viewport.sh`. [2026-06-02 totebox@claude-code]
+
 ## Live-site edit workflow fix — 2026-06-02
 
 - [x] **Root cause identified** — git commits do NOT update the live sites. The binary reads
