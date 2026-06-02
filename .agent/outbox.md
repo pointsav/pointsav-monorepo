@@ -13,7 +13,10 @@ to: totebox@project-design
 re: DESIGN-* drafts staged — Bencal JW2/JW3 chart artifacts (3 drafts, 1 needs Master co-sign)
 created: 2026-06-01T00:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-02
+actioned_by: command@claude-code
+actioned_note: relayed to project-design inbox (command-20260602-relay-orgcharts-design-drafts); noted token-change needs master_cosign decision from operator before processing
 msg-id: project-orgcharts-20260601-design-drafts-bencal-charts
 ---
 
