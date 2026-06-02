@@ -33,6 +33,29 @@ companion:
 
 ## §0 — Resolved this session (2026-06-01) — read before picking work
 
+- ✅ **SLM substrate testing — ALL 4 LAYERS DONE (2026-06-02).** Neither recent bug was caught
+  by any existing test; now guarded.
+  - **Layer 1 (Rust regression):** `drain.rs` extracted from `main.rs` (testable
+    `classify_shadow_brief`); 3 unit tests + a wiremock test asserting the Tier A shadow request
+    carries `stop[]` + `max_tokens=512`. Commits `846cee97`, `b292aa15`.
+  - **Layer 2 (perf gate):** `scripts/perf-bench-llama-server.sh` — tok/s floor + cgroup
+    `memory.events high` thrash gate (the 16× regression signature).
+  - **Layer 3 (drain canary):** `scripts/health-check-drain.sh` — stale-lease (from lease
+    FILENAME ns-ts, not mtime), poison growth, drain liveness (fresh-lease signal).
+  - **Layer 4 (E2E):** `tests/drain_worker_integration.rs` — 4 tests incl. empty-diff→done
+    without dispatch (the 2.5h-stall regression). Commit `846cee97`.
+  - **Wiring:** `scripts/slm-canary.sh` + `scripts/systemd/foundry-slm-canary.{service,timer}`
+    (hourly; Command installs). Commits `84b82741`, `d6730770`. All verified live.
+  - **⚠️ Findings the canary surfaced (NEW fixes needed — not done):**
+    1. **Infinite-retry bug:** a persistently-failing brief (e.g. `0646F98D`, quarantined this
+       session) retries forever (~30-min cycle, no retry-count cap) and blocks the serial drain.
+       Fix: add a retry counter → move to poison after N fails. **Highest-priority drain fix.**
+    2. **Mild throttle under sustained load:** even with `--no-repack`, memory creeps to the
+       7.32 GiB `memory.high` watermark under continuous drain (~3 high-events/s). Stage 2 (raise
+       MemoryMax to ~11 G) would zero it. Sub-catastrophic; drain still ~4 tok/s.
+    3. **Stale lease not reaped:** a 30 h-old orphan lease persisted across restarts — the reaper
+       isn't reclaiming. Investigate reaper.
+
 - ✅ **Persistent `processed_ledgers` — DONE (commit `5ad06ec9`, binary deployed).** `load_processed_ledgers()` /
   `append_processed_ledger()` added to `service-content/src/main.rs`. Sidecar JSONL at
   `$SERVICE_CONTENT_GRAPH_DIR/processed_ledgers.jsonl`. 3,128 entries written on first drain.
