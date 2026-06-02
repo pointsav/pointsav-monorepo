@@ -1,0 +1,14 @@
+[Unit]
+Description=SLM canary timer — hourly throughput + drain health check
+Documentation=file:///srv/foundry/clones/project-intelligence/service-slm/scripts/slm-canary.sh
+
+[Timer]
+# Hourly, with jitter to avoid colliding with the top-of-hour drain/report load.
+OnCalendar=hourly
+RandomizedDelaySec=180
+# If the VM was off at a fire time, run once on next boot.
+Persistent=true
+Unit=foundry-slm-canary.service
+
+[Install]
+WantedBy=timers.target
