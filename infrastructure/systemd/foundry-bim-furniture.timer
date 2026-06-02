@@ -1,0 +1,11 @@
+[Unit]
+Description=Run BIM furniture pipeline nightly (regenerate DXF + SVG from tokens)
+Documentation=file:///srv/foundry/clones/project-bim/woodfine-bim-library/scripts/run-furniture-pipeline.sh
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
