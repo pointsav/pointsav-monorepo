@@ -76,7 +76,10 @@ impl DraftSave {
         if row.2.trim().is_empty() {
             return None;
         }
-        Some(SavedDraft { protocol: row.1, content: row.2 })
+        Some(SavedDraft {
+            protocol: row.1,
+            content: row.2,
+        })
     }
 
     /// Clear the saved draft (called on successful submission or explicit /clear).

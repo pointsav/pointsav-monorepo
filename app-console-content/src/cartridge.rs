@@ -182,7 +182,11 @@ impl ContentCartridge {
         let restored_hint = saved_draft.is_some();
         let protocol_idx = saved_draft
             .as_ref()
-            .and_then(|s| PROTOCOLS.iter().position(|(slug, _)| *slug == s.protocol.as_str()))
+            .and_then(|s| {
+                PROTOCOLS
+                    .iter()
+                    .position(|(slug, _)| *slug == s.protocol.as_str())
+            })
             .unwrap_or(DEFAULT_PROTOCOL_IDX);
         let mut ta: TextArea<'static> = if let Some(ref saved) = saved_draft {
             TextArea::from(saved.content.lines().map(String::from).collect::<Vec<_>>())
@@ -240,7 +244,11 @@ impl ContentCartridge {
 
     fn render_input(&mut self, frame: &mut Frame, area: Rect, protocol_idx: usize) {
         let (slug, display) = PROTOCOLS[protocol_idx];
-        let border_color = if self.offline { Color::DarkGray } else { self.accent_color() };
+        let border_color = if self.offline {
+            Color::DarkGray
+        } else {
+            self.accent_color()
+        };
         let outer = Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(border_color))
@@ -255,8 +263,16 @@ impl ContentCartridge {
 
         frame.render_widget(&self.textarea, chunks[0]);
 
-        let offline_note = if self.offline { "  [⚠ AI OFFLINE — /new disabled]" } else { "" };
-        let restored_note = if self.restored_hint { "  [restored]" } else { "" };
+        let offline_note = if self.offline {
+            "  [⚠ AI OFFLINE — /new disabled]"
+        } else {
+            ""
+        };
+        let restored_note = if self.restored_hint {
+            "  [restored]"
+        } else {
+            ""
+        };
         let hint = Paragraph::new(format!(
             " Protocol: {}  —  {}    [Tab: change  Ctrl-S: submit  /new: draft  /search: search  q/Ctrl-C: quit]{}{}",
             slug, display, offline_note, restored_note
@@ -562,10 +578,20 @@ impl ContentCartridge {
             .collect()
     }
 
-    fn render_pdf_view(&mut self, frame: &mut Frame, area: Rect, path: &str, page: u32, total: u32) {
+    fn render_pdf_view(
+        &mut self,
+        frame: &mut Frame,
+        area: Rect,
+        path: &str,
+        page: u32,
+        total: u32,
+    ) {
         let title = format!(
             " F4: Content — PDF: {}   page {}/{}    [j/k PgUp/PgDn: navigate  Esc: back] ",
-            std::path::Path::new(path).file_name().and_then(|n| n.to_str()).unwrap_or(path),
+            std::path::Path::new(path)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or(path),
             page + 1,
             total,
         );
@@ -584,15 +610,19 @@ impl ContentCartridge {
         };
         if let Some(e) = error_opt {
             frame.render_widget(
-                Paragraph::new(format!("  Error: {}", e))
-                    .style(Style::default().fg(Color::Red)),
+                Paragraph::new(format!("  Error: {}", e)).style(Style::default().fg(Color::Red)),
                 inner,
             );
             return;
         }
 
         // Loading indicator while first page renders
-        let loading = if let ContentState::PdfView { render_rx, current_image, .. } = &self.state {
+        let loading = if let ContentState::PdfView {
+            render_rx,
+            current_image,
+            ..
+        } = &self.state
+        {
             render_rx.is_some() && current_image.is_none()
         } else {
             false
@@ -694,7 +724,8 @@ impl ContentCartridge {
             if let Some(rest) = trimmed.strip_prefix("/new") {
                 if self.offline {
                     self.state = ContentState::Error {
-                        message: "AI unavailable — Doorman is offline. Check the F9 SLM panel.".into(),
+                        message: "AI unavailable — Doorman is offline. Check the F9 SLM panel."
+                            .into(),
                     };
                     return CartridgeAction::Consumed;
                 }
@@ -806,7 +837,10 @@ impl ContentCartridge {
                 lines: Vec::new(),
                 protocol_idx: DEFAULT_PROTOCOL_IDX,
             };
-            self.state = ContentState::MultiDraft { tabs: vec![tab1, tab2], active: 1 };
+            self.state = ContentState::MultiDraft {
+                tabs: vec![tab1, tab2],
+                active: 1,
+            };
             let mut ta = TextArea::default();
             ta.set_placeholder_text(PLACEHOLDER);
             self.textarea = ta;
@@ -958,7 +992,10 @@ impl ContentCartridge {
                 self.reset_textarea(DEFAULT_PROTOCOL_IDX);
             }
             KeyCode::Char('j') | KeyCode::Down => {
-                if let ContentState::SearchResults { selected, results, .. } = &mut self.state {
+                if let ContentState::SearchResults {
+                    selected, results, ..
+                } = &mut self.state
+                {
                     if *selected + 1 < results.len() {
                         *selected += 1;
                     }
@@ -978,7 +1015,10 @@ impl ContentCartridge {
         // Compute the requested page change, then kick off a render if it moved.
         let (path, page, total) = match &self.state {
             ContentState::PdfView {
-                path, page, total_pages, ..
+                path,
+                page,
+                total_pages,
+                ..
             } => (path.clone(), *page, *total_pages),
             _ => return CartridgeAction::Consumed,
         };
@@ -1055,7 +1095,8 @@ impl ContentCartridge {
         if key.code == KeyCode::Left && key.modifiers.contains(KeyModifiers::CONTROL) {
             if let ContentState::MultiDraft { tabs, active } = &mut self.state {
                 if *active > 0 {
-                    let lines: Vec<String> = self.textarea.lines().iter().map(String::from).collect();
+                    let lines: Vec<String> =
+                        self.textarea.lines().iter().map(String::from).collect();
                     tabs[*active].lines = lines;
                     *active -= 1;
                     let target = TextArea::from(tabs[*active].lines.clone());
@@ -1070,7 +1111,8 @@ impl ContentCartridge {
         if key.code == KeyCode::Right && key.modifiers.contains(KeyModifiers::CONTROL) {
             if let ContentState::MultiDraft { tabs, active } = &mut self.state {
                 if *active + 1 < tabs.len() {
-                    let lines: Vec<String> = self.textarea.lines().iter().map(String::from).collect();
+                    let lines: Vec<String> =
+                        self.textarea.lines().iter().map(String::from).collect();
                     tabs[*active].lines = lines;
                     *active += 1;
                     let target = TextArea::from(tabs[*active].lines.clone());
@@ -1110,17 +1152,29 @@ impl ContentCartridge {
         }
 
         // Forward to textarea
-        self.textarea.input(tui_textarea::Input::from(event.clone()));
+        self.textarea
+            .input(tui_textarea::Input::from(event.clone()));
         CartridgeAction::Consumed
     }
 
-    fn render_multidraft(&mut self, frame: &mut Frame, area: Rect, labels: &[String], active: usize, protocol_idx: usize) {
+    fn render_multidraft(
+        &mut self,
+        frame: &mut Frame,
+        area: Rect,
+        labels: &[String],
+        active: usize,
+        protocol_idx: usize,
+    ) {
         let (slug, display) = PROTOCOLS[protocol_idx];
 
         // Split: 1 row tab bar + rest for content
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Length(1), Constraint::Fill(1), Constraint::Length(1)])
+            .constraints([
+                Constraint::Length(1),
+                Constraint::Fill(1),
+                Constraint::Length(1),
+            ])
             .split(area);
 
         // Tab bar
@@ -1129,9 +1183,16 @@ impl ContentCartridge {
                 .iter()
                 .enumerate()
                 .flat_map(|(i, label)| {
-                    let (open, close) = if i == active { ("▶[", "]") } else { ("[", "]") };
+                    let (open, close) = if i == active {
+                        ("▶[", "]")
+                    } else {
+                        ("[", "]")
+                    };
                     let style = if i == active {
-                        Style::default().fg(Color::Black).bg(self.selection_bg()).add_modifier(Modifier::BOLD)
+                        Style::default()
+                            .fg(Color::Black)
+                            .bg(self.selection_bg())
+                            .add_modifier(Modifier::BOLD)
                     } else {
                         Style::default().fg(Color::DarkGray)
                     };
@@ -1140,17 +1201,26 @@ impl ContentCartridge {
                         Span::styled(format!("{}{}{}", open, label, close), style),
                     ]
                 })
-                .chain(std::iter::once(Span::raw("   [Ctrl-t: new  Ctrl-←/→: switch  Ctrl-w: close]")))
+                .chain(std::iter::once(Span::raw(
+                    "   [Ctrl-t: new  Ctrl-←/→: switch  Ctrl-w: close]",
+                )))
                 .collect::<Vec<_>>(),
         );
         frame.render_widget(Paragraph::new(tab_line), chunks[0]);
 
         // Content area (same as render_input)
-        let border_color = if self.offline { Color::DarkGray } else { self.accent_color() };
+        let border_color = if self.offline {
+            Color::DarkGray
+        } else {
+            self.accent_color()
+        };
         let outer = Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(border_color))
-            .title(format!(" {} ", labels.get(active).map(|s| s.as_str()).unwrap_or("Draft")));
+            .title(format!(
+                " {} ",
+                labels.get(active).map(|s| s.as_str()).unwrap_or("Draft")
+            ));
         let inner = outer.inner(chunks[1]);
         frame.render_widget(outer, chunks[1]);
 
@@ -1160,7 +1230,11 @@ impl ContentCartridge {
             .split(inner);
         frame.render_widget(&self.textarea, content_chunks[0]);
 
-        let offline_note = if self.offline { "  [⚠ AI OFFLINE — /new disabled]" } else { "" };
+        let offline_note = if self.offline {
+            "  [⚠ AI OFFLINE — /new disabled]"
+        } else {
+            ""
+        };
         let hint = Paragraph::new(format!(
             " Protocol: {}  —  {}    [Ctrl-S: submit  /search: search  q/Ctrl-C: quit]{}",
             slug, display, offline_note
@@ -1371,7 +1445,9 @@ impl Cartridge for ContentCartridge {
             ContentState::MultiDraft { tabs, active } => Cmd::MultiDraft(
                 tabs.iter().map(|t| t.label.clone()).collect(),
                 *active,
-                tabs.get(*active).map(|t| t.protocol_idx).unwrap_or(DEFAULT_PROTOCOL_IDX),
+                tabs.get(*active)
+                    .map(|t| t.protocol_idx)
+                    .unwrap_or(DEFAULT_PROTOCOL_IDX),
             ),
         };
 
@@ -1386,7 +1462,14 @@ impl Cartridge for ContentCartridge {
             }
             Cmd::Search(q, results, sel, sc, loading) => {
                 self.pending_hyperlinks = Self::render_search_results(
-                    frame, area, &q, &results, sel, sc, loading, self.selection_bg(),
+                    frame,
+                    area,
+                    &q,
+                    &results,
+                    sel,
+                    sc,
+                    loading,
+                    self.selection_bg(),
                     &self.content_endpoint,
                 );
             }
@@ -1461,7 +1544,13 @@ impl Cartridge for ContentCartridge {
         }
     }
 
-    fn set_graphics_caps(&mut self, kitty: bool, sixel: bool, font_size: (u16, u16), truecolor: bool) {
+    fn set_graphics_caps(
+        &mut self,
+        kitty: bool,
+        sixel: bool,
+        font_size: (u16, u16),
+        truecolor: bool,
+    ) {
         self.pdf_kitty = kitty;
         self.pdf_sixel = sixel;
         self.pdf_font_size = font_size;

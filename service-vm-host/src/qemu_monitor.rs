@@ -11,8 +11,7 @@ use system_vm_fleet_types::{VmRecord, VmState};
 /// For each socket: connects, exchanges QMP handshake, queries running state.
 /// Sockets that don't respond within 500 ms are skipped silently.
 pub fn poll_running_vms() -> Vec<VmRecord> {
-    let disk_dir = std::env::var("VM_DISK_DIR")
-        .unwrap_or_else(|_| "/var/lib/vm-fleet".to_string());
+    let disk_dir = std::env::var("VM_DISK_DIR").unwrap_or_else(|_| "/var/lib/vm-fleet".to_string());
 
     let read_dir = match std::fs::read_dir(&disk_dir) {
         Ok(rd) => rd,
@@ -45,7 +44,9 @@ fn query_qmp_socket(path: &std::path::Path, vm_id: &str) -> Option<VmRecord> {
     line.clear();
 
     // Negotiate capabilities.
-    writer.write_all(b"{\"execute\":\"qmp_capabilities\"}\n").ok()?;
+    writer
+        .write_all(b"{\"execute\":\"qmp_capabilities\"}\n")
+        .ok()?;
     reader.read_line(&mut line).ok()?;
     line.clear();
 

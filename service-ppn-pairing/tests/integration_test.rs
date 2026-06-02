@@ -36,7 +36,11 @@ fn start_server() -> TestServer {
         .spawn()
         .expect("failed to spawn ppn-pairing-server");
     std::thread::sleep(Duration::from_millis(300));
-    TestServer { child, port, _tmpdir: tmpdir }
+    TestServer {
+        child,
+        port,
+        _tmpdir: tmpdir,
+    }
 }
 
 fn url(port: u16, path: &str) -> String {
@@ -63,8 +67,7 @@ fn test_full_approve_flow() {
         .send_string(&join_body().to_string())
         .unwrap();
     assert_eq!(resp.status(), 200);
-    let body: serde_json::Value =
-        serde_json::from_str(&resp.into_string().unwrap()).unwrap();
+    let body: serde_json::Value = serde_json::from_str(&resp.into_string().unwrap()).unwrap();
     let request_id = body["request_id"].as_str().unwrap().to_string();
     let code = body["code"].as_str().unwrap().to_string();
     assert!(!request_id.is_empty());
@@ -75,16 +78,14 @@ fn test_full_approve_flow() {
         .send_string(&serde_json::json!({"code": code}).to_string())
         .unwrap();
     assert_eq!(approve.status(), 200);
-    let ab: serde_json::Value =
-        serde_json::from_str(&approve.into_string().unwrap()).unwrap();
+    let ab: serde_json::Value = serde_json::from_str(&approve.into_string().unwrap()).unwrap();
     assert_eq!(ab["status"], "approved");
 
     let status = ureq::get(&url(port, &format!("/v1/node-join/status/{request_id}")))
         .call()
         .unwrap();
     assert_eq!(status.status(), 200);
-    let sb: serde_json::Value =
-        serde_json::from_str(&status.into_string().unwrap()).unwrap();
+    let sb: serde_json::Value = serde_json::from_str(&status.into_string().unwrap()).unwrap();
     assert_eq!(sb["state"], "approved");
 }
 
@@ -99,8 +100,7 @@ fn test_deny_flow() {
         .send_string(&join_body().to_string())
         .unwrap();
     assert_eq!(resp.status(), 200);
-    let body: serde_json::Value =
-        serde_json::from_str(&resp.into_string().unwrap()).unwrap();
+    let body: serde_json::Value = serde_json::from_str(&resp.into_string().unwrap()).unwrap();
     let request_id = body["request_id"].as_str().unwrap().to_string();
     let code = body["code"].as_str().unwrap().to_string();
 
@@ -109,16 +109,14 @@ fn test_deny_flow() {
         .send_string(&serde_json::json!({"code": code}).to_string())
         .unwrap();
     assert_eq!(deny.status(), 200);
-    let db: serde_json::Value =
-        serde_json::from_str(&deny.into_string().unwrap()).unwrap();
+    let db: serde_json::Value = serde_json::from_str(&deny.into_string().unwrap()).unwrap();
     assert_eq!(db["status"], "denied");
 
     let status = ureq::get(&url(port, &format!("/v1/node-join/status/{request_id}")))
         .call()
         .unwrap();
     assert_eq!(status.status(), 200);
-    let sb: serde_json::Value =
-        serde_json::from_str(&status.into_string().unwrap()).unwrap();
+    let sb: serde_json::Value = serde_json::from_str(&status.into_string().unwrap()).unwrap();
     assert_eq!(sb["state"], "denied");
 }
 
@@ -157,16 +155,14 @@ fn test_pending_list() {
         .send_string(&join_body().to_string())
         .unwrap();
     assert_eq!(resp.status(), 200);
-    let body: serde_json::Value =
-        serde_json::from_str(&resp.into_string().unwrap()).unwrap();
+    let body: serde_json::Value = serde_json::from_str(&resp.into_string().unwrap()).unwrap();
     let request_id = body["request_id"].as_str().unwrap().to_string();
 
     let list = ureq::get(&url(port, "/v1/node-join/pending"))
         .call()
         .unwrap();
     assert_eq!(list.status(), 200);
-    let lb: serde_json::Value =
-        serde_json::from_str(&list.into_string().unwrap()).unwrap();
+    let lb: serde_json::Value = serde_json::from_str(&list.into_string().unwrap()).unwrap();
     let pending = lb["pending"].as_array().unwrap();
     assert!(
         pending.iter().any(|r| r["request_id"] == request_id),

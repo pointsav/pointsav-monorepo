@@ -1674,15 +1674,19 @@ struct FurnitureItem {
 
 fn furn_sidebar_label(product_slug: &str, model: &str) -> String {
     match product_slug {
-        "steelcase-migration-se-58x29"    => "Migration SE Desk".to_string(),
-        "steelcase-leap-v2"               => "Leap V2 Chair".to_string(),
-        "steelcase-groupwork-36"          => "Groupwork 36\u{22} Table".to_string(),
-        "steelcase-currency-credenza-72"  => "Currency Credenza".to_string(),
-        "steelcase-ts-mobile-pedestal"    => "TS Mobile Pedestal".to_string(),
-        "steelcase-currency-bookcase-36"  => "Currency Bookcase".to_string(),
-        "coalesse-wing-ch445"             => "Wing Chair CH445".to_string(),
-        "generic-coat-rack"               => "Coat Rack".to_string(),
-        _ => model.split(" \u{2014} ").next().unwrap_or(model).to_string(),
+        "steelcase-migration-se-58x29" => "Migration SE Desk".to_string(),
+        "steelcase-leap-v2" => "Leap V2 Chair".to_string(),
+        "steelcase-groupwork-36" => "Groupwork 36\u{22} Table".to_string(),
+        "steelcase-currency-credenza-72" => "Currency Credenza".to_string(),
+        "steelcase-ts-mobile-pedestal" => "TS Mobile Pedestal".to_string(),
+        "steelcase-currency-bookcase-36" => "Currency Bookcase".to_string(),
+        "coalesse-wing-ch445" => "Wing Chair CH445".to_string(),
+        "generic-coat-rack" => "Coat Rack".to_string(),
+        _ => model
+            .split(" \u{2014} ")
+            .next()
+            .unwrap_or(model)
+            .to_string(),
     }
 }
 
@@ -1697,7 +1701,15 @@ fn extract_furniture(tokens: &HashMap<String, Value>) -> Vec<FurnitureItem> {
     else {
         return items;
     };
-    let cat_order = ["desk", "task-chair", "table", "credenza", "storage", "lounge-chair", "utility"];
+    let cat_order = [
+        "desk",
+        "task-chair",
+        "table",
+        "credenza",
+        "storage",
+        "lounge-chair",
+        "utility",
+    ];
     for cat in cat_order {
         let Some(cat_obj) = furn_root.get(cat).and_then(|v| v.as_object()) else {
             continue;
@@ -1706,17 +1718,22 @@ fn extract_furniture(tokens: &HashMap<String, Value>) -> Vec<FurnitureItem> {
             let Some(val) = product_val.get("$value").and_then(|v| v.as_object()) else {
                 continue;
             };
-            let gs = |k: &str| val.get(k).and_then(|v| v.as_str()).unwrap_or("").to_string();
+            let gs = |k: &str| {
+                val.get(k)
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string()
+            };
             let gd = |obj: &serde_json::Map<String, Value>, k: &str| -> u32 {
                 obj.get(k).and_then(|v| v.as_f64()).unwrap_or(0.0) as u32
             };
             let dims = val.get("dimensions_mm").and_then(|v| v.as_object());
-            let clr  = val.get("clearance_mm").and_then(|v| v.as_object());
+            let clr = val.get("clearance_mm").and_then(|v| v.as_object());
             let w_mm = dims.map(|d| gd(d, "w")).unwrap_or(0);
             let d_mm = dims.map(|d| gd(d, "d")).unwrap_or(0);
             let h_min_mm = dims.map(|d| gd(d, "h_min")).unwrap_or(0);
             let clearance_front = clr.map(|c| gd(c, "front")).unwrap_or(0);
-            let clearance_side  = clr.map(|c| gd(c, "sides")).unwrap_or(0);
+            let clearance_side = clr.map(|c| gd(c, "sides")).unwrap_or(0);
             let model = gs("model");
             items.push(FurnitureItem {
                 slug: format!("{}-{}", cat, product_slug),
@@ -1724,8 +1741,14 @@ fn extract_furniture(tokens: &HashMap<String, Value>) -> Vec<FurnitureItem> {
                 manufacturer: gs("manufacturer"),
                 product_line: gs("product_line"),
                 model: model.clone(),
-                sku: val.get("sku").and_then(|v| v.as_str()).map(|s| s.to_string()),
-                sku_note: val.get("sku_note").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                sku: val
+                    .get("sku")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string()),
+                sku_note: val
+                    .get("sku_note")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string()),
                 w_mm,
                 d_mm,
                 h_min_mm,
@@ -1733,7 +1756,10 @@ fn extract_furniture(tokens: &HashMap<String, Value>) -> Vec<FurnitureItem> {
                 clearance_side,
                 weight_kg: val.get("weight_kg").and_then(|v| v.as_f64()),
                 ifc_class: gs("ifc_class"),
-                url: val.get("url").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                url: val
+                    .get("url")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string()),
                 description: product_val
                     .get("$description")
                     .and_then(|v| v.as_str())
@@ -1903,7 +1929,12 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
         js = FURN_JS,
     );
 
-    Html(page_shell("Private Office Furniture", "/furniture", &content, &state))
+    Html(page_shell(
+        "Private Office Furniture",
+        "/furniture",
+        &content,
+        &state,
+    ))
 }
 
 async fn furniture_download_handler(
@@ -2164,11 +2195,10 @@ fn load_state() -> AppState {
     let design_system_dir =
         PathBuf::from(env::var("BIM_DESIGN_SYSTEM_DIR").unwrap_or_else(|_| ".".to_string()));
     let vault_dir = PathBuf::from(env::var("BIM_VAULT_DIR").unwrap_or_else(|_| ".".to_string()));
-    let library_dir = PathBuf::from(
-        env::var("BIM_LIBRARY_DIR").unwrap_or_else(|_| {
+    let library_dir =
+        PathBuf::from(env::var("BIM_LIBRARY_DIR").unwrap_or_else(|_| {
             "/srv/foundry/clones/project-bim/woodfine-bim-library".to_string()
-        }),
-    );
+        }));
     let static_dir =
         PathBuf::from(env::var("BIM_STATIC_DIR").unwrap_or_else(|_| "./static".to_string()));
     let tenant = env::var("BIM_TENANT").unwrap_or_else(|_| "woodfine".to_string());
@@ -2266,8 +2296,14 @@ async fn main() {
         .route("/healthz", get(healthz_handler))
         .route("/readyz", get(readyz_handler))
         .route("/furniture", get(furniture_handler))
-        .route("/furniture/download/bundle.zip", get(furniture_bundle_handler))
-        .route("/furniture/download/:filename", get(furniture_download_handler))
+        .route(
+            "/furniture/download/bundle.zip",
+            get(furniture_bundle_handler),
+        )
+        .route(
+            "/furniture/download/:filename",
+            get(furniture_download_handler),
+        )
         .nest_service("/static", ServeDir::new(static_dir))
         .with_state(state);
 

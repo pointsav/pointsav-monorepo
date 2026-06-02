@@ -65,7 +65,14 @@ fn handle_join_request(req: &mut Request) -> BoxResp {
     let created_at = now.to_rfc3339();
     let expires_at = (now + chrono::Duration::seconds(600)).to_rfc3339();
 
-    if let Err(e) = insert_request(&conn, &request_id, &stored_code, &body, &created_at, &expires_at) {
+    if let Err(e) = insert_request(
+        &conn,
+        &request_id,
+        &stored_code,
+        &body,
+        &created_at,
+        &expires_at,
+    ) {
         return json_err(500, &format!("insert error: {e}"));
     }
 
