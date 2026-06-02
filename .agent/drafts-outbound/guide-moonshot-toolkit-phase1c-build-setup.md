@@ -1,6 +1,6 @@
 ---
 schema: foundry-draft-v1
-state: draft-pending-language-pass
+state: language-cleared
 originating_cluster: project-system
 target_repo: customer/woodfine-fleet-deployment
 target_path: project-system/

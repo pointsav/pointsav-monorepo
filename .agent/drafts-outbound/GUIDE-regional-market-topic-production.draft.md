@@ -8,6 +8,12 @@ version: "1.0"
 date: 2026-05-30
 title: "Guide: Producing Regional Market TOPIC Articles"
 routes_to: project-editorial
+state: language-cleared
+language_pass_date: 2026-06-02
+language_pass_by: totebox@project-editorial
+target_repo: woodfine-fleet-deployment
+target_path: gateway-orchestration-gis-1/
+target_filename: guide-regional-market-topic-production.md
 ---
 
 # Guide: Producing Regional Market TOPIC Articles
