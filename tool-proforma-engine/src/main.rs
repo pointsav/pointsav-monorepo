@@ -3,7 +3,7 @@ use proforma_engine::{
     compute,
     excel::{pclp1, titleco, wcp},
     html,
-    report::{d1_dev_classes, d2_direct_hold, d3_wcp},
+    report::{self, d1_dev_classes, d2_direct_hold, d3_wcp},
     spv::{ambassadors_d1, ambassadors_d2, audited_json, bencal},
     Assumptions,
 };
@@ -165,13 +165,21 @@ fn main() {
             let ad1_json = audited_json(&ad1, ambassadors_d1::derivation_json(&wcp_data));
             write_trio("ambassadors-d1", &ad1_md, &ad1.title, &ad1_json);
 
-            // BenCal Holdings Inc. — d3-wcp format
+            // Bencal Management Corp. — d3-wcp format (full cashflow + valuation report)
             let bc = bencal::derive(&wcp_data, &pclp_data);
             let bc_md = d3_wcp::render(&bc);
             let bc_json = audited_json(&bc, bencal::derivation_json(&wcp_data, &pclp_data));
             write_trio("bencal", &bc_md, &bc.entity, &bc_json);
 
-            eprintln!("wrote 9 files to {}", out_dir.display());
+            // Bencal Management Corp. — Block F (Y10 headline; side-by-side MOIC views,
+            // BRIEF §5f / Flag 3 lock 2026-06-02)
+            let bf = bencal::compute_block_f(&bc);
+            let bf_md = report::bencal::render(&bf);
+            let bf_title = format!("{} — Block F (Y10 Headline)", bc.entity);
+            let bf_json = serde_json::to_string_pretty(&bf).expect("BlockF serialisation failed");
+            write_trio("bencal-block-f", &bf_md, &bf_title, &bf_json);
+
+            eprintln!("wrote 12 files to {}", out_dir.display());
         }
         None => {
             // Legacy: JSON assumptions → sensitivity engine

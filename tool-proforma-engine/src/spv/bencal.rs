@@ -96,7 +96,9 @@ pub fn derivation_json(wcp: &WcpData, pclp: &Pclp1Data) -> serde_json::Value {
         },
         "pclp_exposure": {
             "via": "Bencal Special Purpose 2 (GP + LP)",
-            "implied_pclp_units": BENCAL_AD2_UNITS,
+            "spv2_pclp_units_held": AD2_PCLP_UNITS,
+            "bencal_ad2_stake": BENCAL_AD2_STAKE,
+            "implied_pclp_units_at_bm": BENCAL_AD2_UNITS,
             "pclp_diluted_units": pclp.assumptions.diluted_units,
             "pclp_scale_factor": pclp_sf,
             "source_entity": pclp.entity
@@ -440,5 +442,201 @@ mod tests {
         assert_eq!(AD2_WCP_STAKE, 0.06);
         // SPV2's WCP stake (6%) is exactly 2× SPV1's WCP stake (3%) per BRIEF §5c cap table
         assert!((AD2_WCP_STAKE - 2.0 * AD1_WCP_STAKE).abs() < 1e-9);
+    }
+
+    // ─── Integration sanity check (BRIEF v0.15.9 §5d–§5f) ─────────────────────────
+    //
+    // End-to-end check of derive() with synthetic round-number inputs whose
+    // expected output can be computed by hand from the BRIEF.
+
+    use crate::excel::pclp1::{Pclp1Assumptions, Pclp1Data, Pclp1Year};
+
+    fn synthetic_pclp1_year() -> Pclp1Year {
+        Pclp1Year {
+            year: 0,
+            noi: 0.0,
+            income_continuity: 0.0,
+            issue_costs: 0.0,
+            financing_costs: 0.0,
+            advisory_fees: 0.0,
+            admin_compliance: 0.0,
+            board_of_directors: 0.0,
+            total_expenses: 0.0,
+            ebitda: 0.0,
+            interest_net: 0.0,
+            funding_from_ops: 0.0,
+            interest_coverage: None,
+            debt_service_ratio: None,
+            opening_cash: 0.0,
+            new_equity: 0.0,
+            new_debt_gross: 0.0,
+            capex: 0.0,
+            debt_repayment: 0.0,
+            distributions: 0.0,
+            ending_cash: 0.0,
+            opening_debt: 0.0,
+            debt_additions: 0.0,
+            debt_payments: 0.0,
+            ending_debt: 0.0,
+            opening_assets: 0.0,
+            total_capital_assets: 0.0,
+            assets_generating_rent: 0.0,
+            buildings_under_construction: 0.0,
+            debt_to_dev_cost: 0.0,
+            asset_value_total: 0.0,
+            asset_value_per_unit: 0.0,
+            nav_total: 0.0,
+            nav_per_unit: 0.0,
+            distribution_yield: 0.0,
+            total_expense_ratio: 0.0,
+            distributions_to_lps: 0.0,
+            dist_per_unit: 0.0,
+            dist_yield_on_cost: 0.0,
+            ff_revenue_pu: 0.0,
+            ff_dist_pu: 0.0,
+            ff_dist_yield_on_cost: 0.0,
+            ff_asset_value_pu: 0.0,
+            ff_total_debt_pu: 0.0,
+            ff_nav_pu: 0.0,
+            ff_market_value_pu: 0.0,
+            ff_coverage: None,
+            ff_debt_to_dev_cost: 0.0,
+            ff_debt_to_av: 0.0,
+            ff_ter: 0.0,
+            ff_sqft: 0.0,
+        }
+    }
+
+    fn synthetic_pclp1(y10_nav_per_unit: f64) -> Pclp1Data {
+        let years: Vec<Pclp1Year> = (0..10)
+            .map(|i| {
+                let mut y = synthetic_pclp1_year();
+                y.year = (i + 1) as u32;
+                if i == 9 {
+                    y.nav_per_unit = y10_nav_per_unit;
+                }
+                y
+            })
+            .collect();
+        Pclp1Data {
+            title: "synthetic".to_string(),
+            entity: "Synthetic PCLP1".to_string(),
+            date: "Y0".to_string(),
+            assumptions: Pclp1Assumptions {
+                dev_yield: 0.0,
+                cap_rate: 0.0625,
+                total_equity: 0.0,
+                cost_per_unit: 100.0,
+                advisory_fee_pct: 0.0,
+                benetti_dilution: 0.0,
+                board_expense: 0.0,
+                admin_costs: 0.0,
+                debenture_interest_rate: 0.0,
+                interest_on_cash: 0.0,
+                debenture_buyback_pct: 0.0,
+                min_cash_balance: 0.0,
+                working_capital_reserve: 0.0,
+                diluted_units: 2_500_000.0,
+                year_labels: std::array::from_fn(|i| format!("Y{}", i + 1)),
+            },
+            years,
+            market_yield: 0.08,
+            compounded_return_y8: 0.0,
+        }
+    }
+
+    fn synthetic_wcp(y10_book_value: f64) -> WcpData {
+        let mut book_y = [0.0; 10];
+        book_y[9] = y10_book_value;
+        WcpData {
+            title: "synthetic".to_string(),
+            entity: "Synthetic WCP".to_string(),
+            date: "Y0".to_string(),
+            shares_outstanding: 10_000_000.0,
+            price_per_share: 20.00,
+            lps: vec![],
+            income: WcpIncome {
+                gross_income: [0.0; 10],
+                referral_fees: [0.0; 10],
+                wpi_consulting: [0.0; 10],
+                gna_nyc: [0.0; 10],
+                gna_berlin: [0.0; 10],
+                total_expenses: [0.0; 10],
+                ebitda: [0.0; 10],
+                ebitda_per_share: [0.0; 10],
+                taxes: [0.0; 10],
+                earnings: [0.0; 10],
+                earnings_per_share: [0.0; 10],
+            },
+            book: WcpBook {
+                cumulative_fcf_wci: [0.0; 10],
+                beneficial_ownership_lps: [0.0; 10],
+                book_value: book_y,
+                book_value_per_share: [0.0; 10],
+            },
+            market: WcpMarket {
+                earnings_valuation: [0.0; 10],
+                market_valuation: [0.0; 10],
+                pe_ratio: [0.0; 10],
+                market_value_per_share: [0.0; 10],
+            },
+            fair_div: WcpFairDiv {
+                fair_value_per_share: [0.0; 10],
+                dividend_valuation: [0.0; 10],
+                dividend_value_per_share: [0.0; 10],
+            },
+            gna_label_1: "L".to_string(),
+            gna_label_2: "A".to_string(),
+        }
+    }
+
+    #[test]
+    fn integration_bm_y10_book_value_matches_brief_hand_calc() {
+        // SANITY CHECK — BRIEF v0.15.9 §5d–§5f.
+        //
+        // Inputs (synthetic, round numbers):
+        //   WCP Y10 book_value          = $100,000,000
+        //   PCLP1 Y10 nav_per_unit       = $100.00
+        //
+        // Expected BM Y10 book_value (by hand from BRIEF):
+        //   via WCP lookthrough  = $100,000,000 × total_wcp_sf (0.009) =   $900,000
+        //   via PCLP1 lookthrough = $100 × BENCAL_AD2_UNITS (25,000)   = $2,500,000
+        //   ────────────────────────────────────────────────────────────────────────
+        //   Total                                                       $3,400,000
+        let wcp = synthetic_wcp(100_000_000.0);
+        let pclp = synthetic_pclp1(100.00);
+        let bm = derive(&wcp, &pclp);
+
+        // BM Y10 book_value should be exactly $3,400,000 (within float epsilon).
+        let actual = bm.book.book_value[9];
+        let expected = 3_400_000.0;
+        assert!(
+            (actual - expected).abs() < 1e-3,
+            "BM Y10 book_value: expected ${expected}, got ${actual} (diff {})",
+            (actual - expected).abs()
+        );
+
+        // Cross-checks on the LP rows:
+        // - 6 WCP LP fund rows (zero in synthetic WCP, but list should have 0 → still 1 entry
+        //   from the SPV2-LP push)
+        assert_eq!(bm.lps.len(), 1, "synthetic WCP has 0 LPs → only the SPV2-LP entry");
+        assert_eq!(
+            bm.lps[0].name,
+            "Bencal SPV2-LP — Professional Centres Canada LP lookthrough"
+        );
+
+        // Entity name + share-capital metadata correct
+        assert_eq!(bm.entity, "Bencal Management Corp.");
+        assert_eq!(bm.shares_outstanding, 2.0);
+        assert_eq!(bm.price_per_share, 5.00);
+
+        // No bonus income / commission stream in income (Flag 13)
+        for y in 0..10 {
+            // gross_income should equal wcp.income.gross_income (all 0) × wcp_sf (0.009)
+            // + pclp.years[y].noi (0) × pclp_sf
+            // + commission[y] (always 0 per Flag 13)
+            // = 0
+            assert_eq!(bm.income.gross_income[y], 0.0, "Y{} gross_income should be 0", y + 1);
+        }
     }
 }
