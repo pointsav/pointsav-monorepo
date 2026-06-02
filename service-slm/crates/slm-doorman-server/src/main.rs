@@ -200,7 +200,8 @@ async fn main() -> anyhow::Result<()> {
     //
     // Env vars:
     //   SLM_QUEUE_DRAIN_INTERVAL_SEC   drain poll interval; default 30s
-    //   SLM_QUEUE_LEASE_EXPIRY_SEC     lease age before reaper reclaims; default 300s
+    //   SLM_QUEUE_LEASE_EXPIRY_SEC     lease age before reaper reclaims; default 2100s
+    //   SLM_DRAIN_MAX_RETRIES          retries before a brief is poisoned; default 5
     {
         // Ensure queue directories exist at startup so the background tasks
         // can scan them immediately.  A creation failure is non-fatal (we log
@@ -215,6 +216,14 @@ async fn main() -> anyhow::Result<()> {
             .and_then(|s| s.parse().ok())
             .unwrap_or(30);
         let drain_interval = Duration::from_secs(drain_interval_secs);
+
+        // Maximum times a brief is retried before being moved to queue-poison/.
+        // A brief that always fails (scope-resolution error, unreachable files,
+        // etc.) would otherwise retry indefinitely and block the serial drain.
+        let max_retries: u32 = std::env::var("SLM_DRAIN_MAX_RETRIES")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(5);
 
         // Sprint 3C: hold queue when all Tier B nodes have been circuit-open
         // for longer than this threshold. Briefs stay in queue/ until circuit
@@ -413,6 +422,50 @@ async fn main() -> anyhow::Result<()> {
                             ReleaseOutcome::Retry
                         };
 
+                        // Retry counter: escalate Retry → Poison once a brief
+                        // has been retried too many times. Prevents a single
+                        // persistently-failing brief from blocking the serial
+                        // drain queue indefinitely.
+                        let outcome = if outcome == ReleaseOutcome::Retry {
+                            let attempts = slm_doorman_server::queue::bump_attempts(
+                                &drain_cfg,
+                                &brief_id,
+                            )
+                            .unwrap_or_else(|e| {
+                                tracing::warn!(
+                                    brief_id = %brief_id,
+                                    error = %e,
+                                    "drain worker: attempts counter I/O error; treating as 1"
+                                );
+                                1
+                            });
+                            if attempts >= max_retries {
+                                tracing::warn!(
+                                    brief_id = %brief_id,
+                                    attempts,
+                                    max_retries,
+                                    "drain worker: max retries reached — poisoning brief"
+                                );
+                                ReleaseOutcome::Poison
+                            } else {
+                                tracing::info!(
+                                    brief_id = %brief_id,
+                                    attempts,
+                                    max_retries,
+                                    "drain worker: brief retry {attempts}/{max_retries}"
+                                );
+                                ReleaseOutcome::Retry
+                            }
+                        } else {
+                            outcome
+                        };
+
+                        // Clear the attempts sidecar on terminal outcomes so
+                        // stale counters do not accumulate in queue-attempts/.
+                        if matches!(outcome, ReleaseOutcome::Done | ReleaseOutcome::Poison) {
+                            slm_doorman_server::queue::clear_attempts(&drain_cfg, &brief_id);
+                        }
+
                         if let Err(e) = release_shadow(&drain_cfg, &leased, outcome) {
                             tracing::warn!(
                                 brief_id = %brief_id,
@@ -445,10 +498,13 @@ async fn main() -> anyhow::Result<()> {
 
         // ── Reaper task ───────────────────────────────────────────────────
         let reap_interval = Duration::from_secs(60);
+        // 2100 s = dispatch timeout (1860 s) + 240 s buffer. Must be > the
+        // dispatch timeout or the reaper reclaims in-flight leases mid-dispatch,
+        // producing spurious retries. Was 300 s (too short).
         let lease_expiry_secs: u64 = std::env::var("SLM_QUEUE_LEASE_EXPIRY_SEC")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(300);
+            .unwrap_or(2_100);
         let lease_expiry = Duration::from_secs(lease_expiry_secs);
 
         let reap_cfg = queue_cfg.clone();
