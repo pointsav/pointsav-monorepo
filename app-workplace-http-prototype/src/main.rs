@@ -517,21 +517,22 @@ async fn create_bim_file(
     match resolve_workspace_path(&state.workspace_dir, &rel_path) {
         Ok(abs) => {
             let skeleton = json!({
-                "$schema": "bim-workspace-v1.0",
-                "project": {
-                    "title":    { "$value": body.name, "$type": "string" },
-                    "ifc-file": { "$value": "", "$type": "file-reference",
-                                  "$description": "path to .ifc file relative to workspace root" }
-                },
+                "$schema": "https://design-tokens.github.io/community-group/format/",
                 "element-styles": {
-                    "IfcWall":   { "color": { "$value": "#c8c8c8", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } },
-                    "IfcDoor":   { "color": { "$value": "#8b6914", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } },
-                    "IfcWindow": { "color": { "$value": "#88c8e8", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } },
-                    "IfcSlab":   { "color": { "$value": "#a0a0a0", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } },
-                    "IfcColumn": { "color": { "$value": "#b0b0b0", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } },
-                    "IfcBeam":   { "color": { "$value": "#909090", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } },
-                    "IfcStair":  { "color": { "$value": "#d4c08c", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } },
-                    "IfcRoof":   { "color": { "$value": "#8c6060", "$type": "color" }, "visible": { "$value": true, "$type": "boolean" } }
+                    "IfcWall":   { "$value": "#c8c8c8", "$type": "color", "$extensions": { "bim-workspace": { "visible": true } } },
+                    "IfcDoor":   { "$value": "#8b6914", "$type": "color", "$extensions": { "bim-workspace": { "visible": true } } },
+                    "IfcWindow": { "$value": "#88c8e8", "$type": "color", "$extensions": { "bim-workspace": { "visible": true } } },
+                    "IfcSlab":   { "$value": "#a0a0a0", "$type": "color", "$extensions": { "bim-workspace": { "visible": true } } },
+                    "IfcColumn": { "$value": "#b0b0b0", "$type": "color", "$extensions": { "bim-workspace": { "visible": true } } },
+                    "IfcBeam":   { "$value": "#909090", "$type": "color", "$extensions": { "bim-workspace": { "visible": true } } },
+                    "IfcStair":  { "$value": "#d4c08c", "$type": "color", "$extensions": { "bim-workspace": { "visible": true } } },
+                    "IfcRoof":   { "$value": "#8c6060", "$type": "color", "$extensions": { "bim-workspace": { "visible": true } } }
+                },
+                "$extensions": {
+                    "bim-workspace": {
+                        "version": "1.0",
+                        "project": { "title": body.name, "ifc-file": "" }
+                    }
                 }
             });
             match std::fs::write(&abs, serde_json::to_string_pretty(&skeleton).unwrap_or_default()) {
