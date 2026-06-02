@@ -1,2 +1,49 @@
 # Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock
+
+# Per-session rolling context — ephemeral, per-archive, NOT shared across cluster branches.
+# Cross-archive contamination root cause: these files were tracked in the monorepo git;
+# Stage-6 rebases brought another archive's session entries into this clone.
+# Untracked 2026-06-02 (Command Session — see ops(mailbox-system): hardening commit).
+# Each archive manages its own session-context.md locally without git.
+.agent/memory/session-context.md
+.agent/memory/session-context-archive.md
+
+# .agent/ scratch / research / audit files — per-archive operational scratch.
+# These accumulate during sessions and should never replicate across archives via rebase.
+# Pattern: uppercase-initial files in .agent/ root + archive/ subdir.
+.agent/AEC-*.md
+.agent/AUDIT-*.md
+.agent/BENCH-*.md
+.agent/CHECKLIST-*.md
+.agent/RESEARCH-*.md
+.agent/SKETCH-*.md
+.agent/STAGING-*.md
+.agent/SURVEY-*.md
+.agent/TODO-*.md
+.agent/AUTO-TODO.md
+.agent/archive/
+
+# Mailbox state — per-archive, never tracked in canonical
+# (canonical-tracked mailbox files were the root cause of cross-archive
+# contamination — see conventions/mailbox-scope-discipline.md)
+.agent/inbox.md
+.agent/outbox.md
+.agent/inbox-archive.md
+.agent/outbox-archive.md
+.agent/outbox_copy.md
+.agent/outbox/
+
+# Symlinks to external vendored sources — not committed
+vendor-sel4-project/tools
+vendor-sel4-project/kernel
+
+# vendor-sel4-tools build artifacts
+vendor-sel4-tools/elfloader-tool/build/
+
+# Standalone-workspace library crate lockfiles
+# Library crates don't commit Cargo.lock per Rust convention.
+# Binary crates (system-udp, moonshot-toolkit) DO commit their lockfiles.
+# Resolves 2026-05-30 cleanup-log open question.
+system-core/Cargo.lock
+system-ledger/Cargo.lock

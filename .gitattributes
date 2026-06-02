@@ -1,0 +1,17 @@
+# .gitattributes — merge strategies for conflict-prone files
+#
+# merge=union: combines both sides of a text conflict by taking all unique lines
+# from both parents. Correct for append-only log/open-item files where you
+# want ALL content, not one side winning over the other.
+#
+# This eliminates the manual --theirs conflict resolution loop we run on every
+# archive rebase. Added 2026-06-02 as part of Foundry hardening sweep.
+
+# .agent/ rules files — append-only logs; union merge keeps all entries
+.agent/rules/cleanup-log.md    merge=union
+.agent/rules/cleanup-log-archive.md merge=union
+.agent/rules/artifact-registry.md  merge=union
+
+# NEXT.md — open-items list; union merge keeps all items from both sides
+.agent/NEXT.md                 merge=union
+NEXT.md                        merge=union
