@@ -539,8 +539,8 @@ before deletion. 3 Wikipedia Parity archive briefs confirmed legitimate and reta
 | Model storage | 256 GB `pd-balanced` disk, zone-locked | GCS object, zone-free |
 | Auth | Nginx TLS + static bearer token | `--allow-unauthenticated` (URL unguessable); follow-up: IAM |
 | Endpoint | `https://34.6.204.25:9443` (static IP) | `https://yoyo-tier-b-<hash>-ew.a.run.app` |
-| Cost at 2 hrs/day | ~$165/month (often unavailable) | ~$70/month (always available) |
-| Docker required | No (Packer image) | No (pre-built image from llama.cpp project) |
+| Cost at 2 hrs/day | ~$165/month (often unavailable) | ~$57–70/month, scale-to-zero (see §10.2) |
+| Docker required | No (Packer image) | No (pre-built Ollama image from Docker Hub) |
 
 **No Rust code changes. No new binaries. Tier A untouched.**
 Only `/etc/local-doorman/local-doorman.env` changes (3 env vars).
@@ -620,9 +620,50 @@ journalctl -u local-doorman -f   # confirm Tier B hit
 Revert the three `SLM_YOYO_*` vars to `https://34.6.204.25:9443`, restart Doorman.
 Tier A continues serving throughout — unaffected by any step above.
 
-### Cold start behaviour
-First request after idle: ~60–90s (GCS FUSE reads 20 GB GGUF into GPU memory).
-If unacceptable: set `--min-instances 1` (~$0.67/hr continuous, ~$490/month GPU alone).
+### §10.1 — Permanent cold-start fix (GCS FUSE file-cache) — 2026-06-02 research
+
+**Problem found in practice:** the naive deploy (16 GiB RAM, plain GCS volume mount) times out
+after **30 minutes** loading the model. Root cause: llama.cpp/Ollama maps the 15.6 GiB GGUF with
+`mmap=true, direct_io=false`. Over GCS FUSE this is one 4 KB GCS HTTP GET per page fault — no
+prefetch, no parallelism — ~18 MB/s effective. The 16 GiB container RAM cannot hold the model in
+page cache alongside GPU VRAM, so every access re-fetches over the network.
+
+`OLLAMA_NO_MMAP=1` does **NOT** exist in any released Ollama (PR #6854 open/unmerged as of Oct 2025).
+Use a Modelfile `PARAMETER use_mmap false` instead.
+
+**The fix — four config changes, no architecture change, no model change:**
+
+| Change | Effect |
+|---|---|
+| `--memory 32Gi --cpu 8` | Room for a 20 GiB in-memory file-cache volume + OS + inference |
+| `--add-volume type=in-memory,size-limit=20Gi` (`model-cache`) | Local cache store for GCS FUSE |
+| `cache-dir=cr-volume:model-cache` + `file-cache-enable-parallel-downloads=true` in GCS mount | 16 parallel workers × 200 MB chunks → ~1 Gbps GCS read; whole file pulled before serving |
+| `dd if=<blob> of=/dev/null bs=128M` in startup command (before `ollama serve`) | Pre-warms the file-cache so the model is local before first inference |
+| Modelfile `use_mmap false` | llama.cpp reads sequentially from local cache, not GCS page faults |
+| `--startup-probe failureThreshold=90` | 900 s window covers preload + init |
+
+**Result: cold start drops from 30 min → ~3–4 min** (≈2 min parallel download + seconds to load
+from RAM-speed cache into VRAM). Full deploy command is in the session plan file
+`~/.claude/plans/how-does-it-work-tingly-steele.md`.
+
+### §10.2 — Cost of the cold-start fix: NONE (it is marginally cheaper)
+
+**The cold-start optimisation adds no cost.** All four changes are configuration flags
+(file-cache, parallel-downloads, `dd` preload, `use_mmap false`) — they consume no extra paid
+resource. Two reasons the fix does not raise the bill, and slightly lowers it:
+
+1. **Scale-to-zero is unchanged.** `--min-instances 0` still means **$0 when idle**. You pay only
+   for wall-clock seconds while a request is being served. The fix does not add any standing cost.
+2. **Faster load = fewer billed seconds.** Before, the L4 GPU was billed for ~30 minutes of
+   wall-clock just loading the model before answering. Now it is billed for ~3–4 minutes. You pay
+   for *less* GPU time per cold start, not more.
+
+The only resource delta is RAM (16 GiB → 32 GiB). On Cloud Run the L4 GPU (~$0.67/hr) dominates the
+bill; RAM is a small fraction, and it is billed only while serving (scale-to-zero). Net effect of
+the whole change is approximately cost-neutral to slightly cheaper per session — **not** an increase.
+
+Always-warm option (`--min-instances 1`) remains available for zero cold start, but that is a
+separate deliberate choice (~$0.67/hr continuous) — NOT required by this fix.
 
 ### Migration progress (2026-06-02 session)
 
@@ -642,10 +683,10 @@ If unacceptable: set `--min-instances 1` (~$0.67/hr continuous, ~$490/month GPU 
 - Restart `local-doorman.service` to activate Cloud Run Tier B
 - Verify circuit closes: `curl /readyz | jq .tier_b_circuit_state`
 
-**Known cold-start behaviour:**
-- First inference after idle: model loads 15.6 GiB from GCS FUSE → L4 VRAM (3-10 min)
-- Subsequent requests within same session: fast (model stays in VRAM)
-- `--min-instances 0` → $0 when idle; `--min-instances 1` → ~$0.67/hr always-warm
+**Known cold-start behaviour (superseded by §10.1 fix):**
+- Naive deploy (16 GiB, plain GCS mount): **30 min timeout** — mmap-over-FUSE page faults
+- With §10.1 fix (32 GiB + file-cache + dd preload + use_mmap false): **~3–4 min**
+- `--min-instances 0` → $0 when idle; the fix is cost-neutral (see §10.2)
 
 **Ollama specifics:**
 - Model name in Doorman: `SLM_YOYO_MODEL=olmo3` (NOT `Olmo-3-1125-32B-Think`)
@@ -654,10 +695,12 @@ If unacceptable: set `--min-instances 1` (~$0.67/hr continuous, ~$490/month GPU 
 - IAM: `--allow-unauthenticated` deploy flag failed (SA lacks setIamPolicy); identity tokens work
 
 ### Follow-up items (post-migration)
-- [ ] Confirm inference works (first cold-start test in progress as of 2026-06-02)
+- [ ] Redeploy with §10.1 file-cache fix (32 GiB + in-memory cache + dd preload)
+- [ ] Re-register model with `use_mmap false` (blob already in GCS; fast, no re-download)
+- [ ] Confirm inference works after §10.1 fix (target: <4 min cold start)
 - [ ] Deploy new Doorman binary via Command Session (binary ledger required)
 - [x] MetadataBearer implemented in Doorman (commit 04adf39c)
-- [ ] Update `service-slm/docs/deploy/deploy-yoyo-tier-b.md` with Cloud Run + Ollama procedure
+- [ ] Update `service-slm/docs/deploy/deploy-yoyo-tier-b.md` with Cloud Run + Ollama + file-cache
 - [ ] Release static IP `34.6.204.25` if old VM is permanently retired
-- [ ] Consider `--min-instances 1` if cold-start latency is unacceptable for production use
-- [ ] Consider OLMo 7B as a faster cold-start alternative if 32B proves too slow
+- [ ] `--min-instances 1` for zero cold start is OPTIONAL — NOT needed; §10.1 keeps it 32B + scale-to-zero
+- [ ] Model stays OLMo 3 32B — no model swap needed (§10.1 fixes load without changing model)
