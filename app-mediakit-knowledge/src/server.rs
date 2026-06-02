@@ -411,7 +411,8 @@ async fn wanted_page(
     let mut wanted: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for tf in &topic_files {
         if let Ok(text) = fs::read_to_string(&tf.path).await {
-            let html = crate::render::render_html_raw(&text, &state.content_dir, &state.link_roots());
+            let html =
+                crate::render::render_html_raw(&text, &state.content_dir, &state.link_roots());
             for cap in re.captures_iter(&html) {
                 let missing = cap[1].to_string();
                 wanted.entry(missing).or_default().push(tf.slug.clone());
@@ -1765,8 +1766,11 @@ async fn home_inner(
     .await?;
     let recent = recent_topics_by_last_edited(&buckets, 8);
     let stats = compute_home_stats(&buckets);
-    let home_html =
-        crate::render::render_html_raw(&home_parsed.body_md, &state.content_dir, &state.link_roots());
+    let home_html = crate::render::render_html_raw(
+        &home_parsed.body_md,
+        &state.content_dir,
+        &state.link_roots(),
+    );
     let home_html = crate::glossary::inject_glossary_tooltips(&home_html, &state.glossary);
     let featured = load_featured(&state.content_dir, &buckets).await;
     let dyk = load_dyk_localized(&state.content_dir, locale).await;
@@ -2184,10 +2188,8 @@ async fn static_asset(Path(path): Path<String>) -> Response {
             // deploy" problem. (A future enhancement is content-hashed asset URLs.)
             let ext = path.rsplit('.').next().unwrap_or("").to_ascii_lowercase();
             let cache = match ext.as_str() {
-                "woff2" | "woff" | "ttf" | "otf" | "png" | "svg" | "ico" | "jpg"
-                | "jpeg" | "webp" | "gif" | "avif" => {
-                    "public, max-age=31536000, immutable"
-                }
+                "woff2" | "woff" | "ttf" | "otf" | "png" | "svg" | "ico" | "jpg" | "jpeg"
+                | "webp" | "gif" | "avif" => "public, max-age=31536000, immutable",
                 "css" | "js" | "mjs" | "map" | "json" => "public, max-age=0, must-revalidate",
                 _ => "public, max-age=3600",
             };
@@ -3349,7 +3351,8 @@ async fn statistics_page(
                         most_recent = Some(le.clone());
                     }
                 }
-                let html = crate::render::render_html_raw(&text, &state.content_dir, &state.link_roots());
+                let html =
+                    crate::render::render_html_raw(&text, &state.content_dir, &state.link_roots());
                 redlink_count += re_redlink.find_iter(&html).count();
             }
         }

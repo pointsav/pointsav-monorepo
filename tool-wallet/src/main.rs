@@ -113,7 +113,11 @@ struct GenerateSeedArgs {
 
 #[derive(Parser)]
 struct ExportArgs {
-    #[arg(long, default_value = "csv", help = "Output format (only csv supported)")]
+    #[arg(
+        long,
+        default_value = "csv",
+        help = "Output format (only csv supported)"
+    )]
     format: String,
     #[arg(
         env = "RECEIPTS_DIR",
@@ -380,13 +384,14 @@ async fn watch(args: WatchArgs) -> Result<()> {
         tokio::time::sleep(std::time::Duration::from_secs(args.poll_secs)).await;
 
         // Get current block
-        let head_hex = match try_rpc_with_fallback(&client, &all_rpcs, "eth_blockNumber", json!([])).await {
-            Ok(v) => v,
-            Err(e) => {
-                tracing::warn!("eth_blockNumber failed: {e}");
-                continue;
-            }
-        };
+        let head_hex =
+            match try_rpc_with_fallback(&client, &all_rpcs, "eth_blockNumber", json!([])).await {
+                Ok(v) => v,
+                Err(e) => {
+                    tracing::warn!("eth_blockNumber failed: {e}");
+                    continue;
+                }
+            };
         let head_str = head_hex.as_str().unwrap_or("0x0").trim_start_matches("0x");
         let current_block = match u64::from_str_radix(head_str, 16) {
             Ok(n) => n,
@@ -824,8 +829,7 @@ fn run_export(args: ExportArgs) -> Result<()> {
 
     match args.output {
         Some(ref path) => {
-            fs::write(path, &out)
-                .with_context(|| format!("writing CSV to {}", path.display()))?;
+            fs::write(path, &out).with_context(|| format!("writing CSV to {}", path.display()))?;
             eprintln!("wrote {} receipts to {}", receipts.len(), path.display());
         }
         None => {

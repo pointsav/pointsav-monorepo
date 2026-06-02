@@ -146,7 +146,10 @@ impl Registry {
 
     /// Known type names (for diagnostics / build-gate listing).
     pub fn type_names(&self) -> Vec<&str> {
-        self.blueprints.iter().map(|b| b.type_name.as_str()).collect()
+        self.blueprints
+            .iter()
+            .map(|b| b.type_name.as_str())
+            .collect()
     }
 }
 

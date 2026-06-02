@@ -196,8 +196,8 @@ async fn main() -> Result<()> {
                 report.dead_links.len(),
                 report.missing_fields.len()
             );
-            let fail = !report.dead_links.is_empty()
-                || (strict && !report.missing_fields.is_empty());
+            let fail =
+                !report.dead_links.is_empty() || (strict && !report.missing_fields.is_empty());
             if fail {
                 std::process::exit(1);
             }
