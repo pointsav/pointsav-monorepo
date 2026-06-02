@@ -1,0 +1,14 @@
+[Unit]
+Description=BIM furniture DXF + SVG pipeline (regenerate from DTCG tokens)
+Documentation=file:///srv/foundry/clones/project-bim/woodfine-bim-library/scripts/run-furniture-pipeline.sh
+After=local-bim-orchestration.service
+
+[Service]
+Type=oneshot
+User=jennifer
+Group=foundry
+WorkingDirectory=/srv/foundry/clones/project-bim
+ExecStart=/usr/bin/bash woodfine-bim-library/scripts/run-furniture-pipeline.sh
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=bim-furniture-pipeline
