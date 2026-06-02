@@ -846,6 +846,7 @@
     let clusterMeta  = null;
     let clusterIndex = null; // Map: cluster_id → meta object
     let rmTop400     = {};   // rm_id → { rank, score, name, metro, dist_km, lat, lon, t1, t2, t3, cont }
+    let retailActive      = true;   // Retail is on by default (radio group floor)
     let rmStarsActive     = false;
     let urbanFringeActive = false;
     let commuterActive    = false;
@@ -1273,35 +1274,19 @@
         if (map.getSource('cluster-centroid-src')) {
             map.getSource('cluster-centroid-src').setData({ type: 'FeatureCollection', features: [] });
         }
-        // Compute live counts from clusterMeta filtered to current region
-        const regionKey = currentRegion;
-        const regionLabel = REGIONS[regionKey]?.label || regionKey;
-        let liveTotal = 0, liveT1 = 0, liveT2 = 0, liveT3 = 0;
-        if (clusterMeta) {
-            const regionISOs = regionKey === 'NA' ? ['US','CA','MX'] : null; // null = all non-NA
-            for (const c of clusterMeta) {
-                const inRegion = regionISOs ? regionISOs.includes(c.iso)
-                                            : !['US','CA','MX'].includes(c.iso);
-                if (!inRegion) continue;
-                liveTotal++;
-                if (c.t === 1) liveT1++;
-                else if (c.t === 2) liveT2++;
-                else if (c.t === 3) liveT3++;
-            }
-        }
         document.getElementById('inspector').innerHTML = `
             <div class="data-block" style="padding-top:16px;">
-                <div class="data-label">Coverage · ${escapeHtml(regionLabel)}</div>
-                <div class="data-value">${liveTotal ? liveTotal.toLocaleString() : '—'}</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">co-location clusters</div>
+                <div class="data-label" id="bento-mode-label">Retail · —</div>
+                <div class="data-value" id="bento-total">—</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;" id="bento-sublabel">co-location clusters</div>
                 ${activeChainFilter ? `<div class="chain-filter-pill">${escapeHtml(activeChainFilter)} <span onclick="clearChainFilter()" style="cursor:pointer;opacity:0.7;">×</span></div>` : ''}
             </div>
             <div class="data-block">
                 <div class="data-label">Quality Tiers</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;">
-                    <span class="tier-badge" style="background:#164679;color:#fff;font-size:11px;text-align:center;display:block;padding:4px 2px;">T1 ${liveT1.toLocaleString()}</span>
-                    <span class="tier-badge" style="background:#54924E;color:#fff;font-size:11px;text-align:center;display:block;padding:4px 2px;">T2 ${liveT2.toLocaleString()}</span>
-                    <span class="tier-badge" style="background:#EAB308;color:#111827;font-size:11px;text-align:center;display:block;padding:4px 2px;">T3 ${liveT3.toLocaleString()}</span>
+                    <span class="tier-badge" id="bento-t1" style="background:#164679;color:#fff;font-size:11px;text-align:center;display:block;padding:4px 2px;">T1 —</span>
+                    <span class="tier-badge" id="bento-t2" style="background:#54924E;color:#fff;font-size:11px;text-align:center;display:block;padding:4px 2px;">T2 —</span>
+                    <span class="tier-badge" id="bento-t3" style="background:#EAB308;color:#111827;font-size:11px;text-align:center;display:block;padding:4px 2px;">T3 —</span>
                 </div>
             </div>
             <div class="data-block">
@@ -1309,6 +1294,9 @@
                 <button class="lc-btn${rmStarsActive ? ' lc-active' : ''}" id="lc-rm-stars" onclick="toggleRmStars(this)">
                     <span class="lc-dot" style="background:#D97706"></span>Top 400 Highlight
                     <span class="lc-planned">800 markets</span>
+                </button>
+                <button class="lc-btn${retailActive ? ' lc-active' : ''}" id="lc-retail" onclick="toggleRetailLayer(this)" style="margin-top:4px;">
+                    <span class="lc-dot" style="background:#164679"></span>Retail
                 </button>
                 <button class="lc-btn${urbanFringeActive ? ' lc-active' : ''}" id="lc-urban-fringe" onclick="toggleUrbanFringeLayer(this)" style="margin-top:4px;">
                     <span class="lc-dot" style="background:#EA580C"></span>Urban Fringe
@@ -1319,13 +1307,10 @@
             </div>
             <div class="data-block">
                 <div class="data-label">Layers</div>
-                <button class="lc-btn lc-active" id="lc-clusters" onclick="toggleLayer('nodes', this)">
-                    <span class="lc-dot" style="background:#0A3070"></span>Co-location
-                </button>
-                <button class="lc-btn${koppenActive ? ' lc-active' : ''}" id="lc-koppen" onclick="toggleKoppenLayer(this)" style="margin-top:4px;">
+                <button class="lc-btn${koppenActive ? ' lc-active' : ''}" id="lc-koppen" onclick="toggleKoppenLayer(this)">
                     <span class="lc-dot" style="background:linear-gradient(135deg,#2563eb 30%,#16a34a 65%,#dc2626 100%)"></span><span class="lc-spinner"></span>Köppen-Geiger Climate
                 </button>
-                <button class="lc-btn${ecoregionsActive ? ' lc-active' : ''}" id="lc-ecoregions" onclick="toggleEcoregionsLayer(this)">
+                <button class="lc-btn${ecoregionsActive ? ' lc-active' : ''}" id="lc-ecoregions" onclick="toggleEcoregionsLayer(this)" style="margin-top:4px;">
                     <span class="lc-dot" style="background:linear-gradient(135deg,#1a9641 50%,#2c7bb6 100%)"></span><span class="lc-spinner"></span>Ecoregions (Biomes)
                 </button>
                 <div style="font-size:10px;color:var(--text-muted);font-style:italic;padding:4px 4px 0;margin-top:2px;">
@@ -1333,6 +1318,54 @@
                 </div>
             </div>
         `;
+        // Populate counts for the active mode
+        const _activeMode = urbanFringeActive ? 'VWH' : commuterActive ? 'PKS' : 'RETAIL';
+        renderTierCounts(_activeMode);
+    }
+
+    function renderTierCounts(mode) {
+        const regionISOs = currentRegion === 'NA' ? new Set(['US','CA','MX']) : null;
+        const inRegion = iso => regionISOs ? regionISOs.has(iso) : !['US','CA','MX'].includes(iso);
+        const regionLabel = REGIONS[currentRegion]?.label || currentRegion;
+        let total = 0, t1 = 0, t2 = 0, t3 = 0, label = '', sub = '';
+
+        if (mode === 'RETAIL' && clusterMeta) {
+            label = `Retail · ${regionLabel}`;  sub = 'co-location clusters';
+            for (const c of clusterMeta) {
+                if (!inRegion(c.iso)) continue;
+                total++; if (c.t===1) t1++; else if (c.t===2) t2++; else if (c.t===3) t3++;
+            }
+        } else if (mode === 'VWH') {
+            label = `Urban Fringe · ${regionLabel}`;  sub = 'industrial co-locations';
+            if (vwhData) {
+                for (const f of vwhData.features) {
+                    if (!inRegion(f.properties.iso)) continue;
+                    total++;
+                    const t = f.properties.vwh_tier;
+                    if (t===1) t1++; else if (t===2) t2++; else if (t===3) t3++;
+                }
+            } else { sub = 'loading…'; }
+        } else if (mode === 'PKS') {
+            label = `Commuter · ${regionLabel}`;  sub = 'transit co-locations';
+            if (pksData) {
+                for (const f of pksData.features) {
+                    if (!inRegion(f.properties.iso)) continue;
+                    total++;
+                    const t = f.properties.commuter_tier;
+                    if (t===1) t1++; else if (t===2) t2++; else if (t===3) t3++;
+                }
+            } else { sub = 'loading…'; }
+        } else if (mode === 'RETAIL') {
+            label = `Retail · ${regionLabel}`;  sub = 'loading…';
+        }
+
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        set('bento-mode-label', label);
+        set('bento-total', total ? total.toLocaleString() : '—');
+        set('bento-sublabel', sub);
+        set('bento-t1', `T1 ${t1.toLocaleString()}`);
+        set('bento-t2', `T2 ${t2.toLocaleString()}`);
+        set('bento-t3', `T3 ${t3.toLocaleString()}`);
     }
 
     // ── Retail Level: All Locations + proximity rings, no cluster bubbles ──────
@@ -1353,17 +1386,22 @@
         applyView();
         buildProdRings();
         applyChainFilterStyling();
-        renderRetailLevelInspector();
+        renderLocalModeInspector();
     }
 
-    function renderRetailLevelInspector() {
+    function renderLocalModeInspector() {
+        const modeLabel = urbanFringeActive ? 'Urban Fringe'
+                        : commuterActive    ? 'Commuter'
+                        : 'Retail';
+        const showCatchment = !urbanFringeActive && !commuterActive;
         document.getElementById('inspector').innerHTML = `
             <div class="data-block" style="padding-top:16px;">
-                <div class="data-label">Retail View</div>
+                <div class="data-label">${modeLabel} View</div>
                 <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
-                    Click a ring to inspect its cluster.
+                    Click a ring to explore.
                 </div>
             </div>
+            ${showCatchment ? `
             <div class="data-block">
                 <div class="data-label">Layers</div>
                 <div class="lc-group-label">Catchment (150 km)</div>
@@ -1372,7 +1410,7 @@
                     <span class="lc-dot" style="background:#f97316"></span>Population &amp; Spend Heatmap
                     ${!selectedClusterId ? '<span class="lc-planned">Pick a ring</span>' : ''}
                 </button>
-            </div>
+            </div>` : ''}
         `;
     }
 
@@ -1560,16 +1598,14 @@
         applyBubbleAecOverlayStyle();
     }
 
-    // ── Overlay group: Top400 / Urban Fringe / Commuter — mutually exclusive ─────
-    // Only one of the three may be active at a time. All ghost the Co-location
-    // bubbles to 10% opacity so the overlay layer reads as foreground.
+    // ── View mode radio group: Retail / Urban Fringe / Commuter — exactly one active ──
+    // Top 400 is an independent highlight overlay, NOT part of this group.
 
     function deactivateOverlayGroup() {
-        if (rmStarsActive) {
-            rmStarsActive = false;
-            document.getElementById('lc-rm-stars')?.classList.remove('lc-active');
-            ['rm-stars-glow', 'rm-stars-dot'].forEach(id =>
-                map.getLayer(id) && map.setLayoutProperty(id, 'visibility', 'none'));
+        // Deactivate Retail
+        if (retailActive) {
+            retailActive = false;
+            document.getElementById('lc-retail')?.classList.remove('lc-active');
         }
         if (urbanFringeActive) {
             urbanFringeActive = false;
@@ -1609,9 +1645,7 @@
 
     // ── Regional Markets star layer ───────────────────────────────────────────
     function toggleRmStars(btn) {
-        const turningOn = !rmStarsActive;
-        if (turningOn) deactivateOverlayGroup();
-        rmStarsActive = turningOn;
+        rmStarsActive = !rmStarsActive;
         if (btn) btn.classList.toggle('lc-active', rmStarsActive);
         applyRmStarsStyle();
     }
@@ -1632,10 +1666,16 @@
     // ── Urban Fringe layer ────────────────────────────────────────────────────
     function toggleUrbanFringeLayer(btn) {
         const turningOn = !urbanFringeActive;
-        if (turningOn) deactivateOverlayGroup();
-        urbanFringeActive = turningOn;
-        if (btn) btn.classList.toggle('lc-active', urbanFringeActive);
-        applyUrbanFringeStyle();
+        if (turningOn) {
+            deactivateOverlayGroup();
+            urbanFringeActive = true;
+            if (btn) btn.classList.add('lc-active');
+            applyUrbanFringeStyle();
+            renderTierCounts('VWH');
+        } else {
+            // Toggle off → switch back to Retail
+            toggleRetailLayer(null);
+        }
     }
 
     function applyUrbanFringeStyle() {
@@ -1662,10 +1702,16 @@
     // ── Commuter layer ────────────────────────────────────────────────────────
     function toggleCommuterLayer(btn) {
         const turningOn = !commuterActive;
-        if (turningOn) deactivateOverlayGroup();
-        commuterActive = turningOn;
-        if (btn) btn.classList.toggle('lc-active', commuterActive);
-        applyCommuterStyle();
+        if (turningOn) {
+            deactivateOverlayGroup();
+            commuterActive = true;
+            if (btn) btn.classList.add('lc-active');
+            applyCommuterStyle();
+            renderTierCounts('PKS');
+        } else {
+            // Toggle off → switch back to Retail
+            toggleRetailLayer(null);
+        }
     }
 
     function applyCommuterStyle() {
@@ -1685,6 +1731,16 @@
             if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'visible');
             _restoreNodesIfClear();
         }
+    }
+
+    // ── Retail toggle (radio group) ───────────────────────────────────────────
+    function toggleRetailLayer(btn) {
+        if (retailActive) return;          // already active — radio no-op
+        deactivateOverlayGroup();          // clears VWH/PKS, restores nodes
+        retailActive = true;
+        document.getElementById('lc-retail')?.classList.add('lc-active');
+        if (btn) btn.classList.add('lc-active');
+        renderTierCounts('RETAIL');
     }
 
     function applyBubbleAecOverlayStyle() {
@@ -2318,6 +2374,7 @@
             .then(d => {
                 vwhData = d;
                 if (activeArchetype === 'VWH' && prodView.mode === 'LOCAL') buildVwhRings();
+                if (urbanFringeActive && prodView.mode === 'GLOBAL') renderTierCounts('VWH');
             })
             .catch(() => {});
 
@@ -2326,6 +2383,7 @@
             .then(d => {
                 pksData = d;
                 if (activeArchetype === 'PKS' && prodView.mode === 'LOCAL') buildPksRings();
+                if (commuterActive && prodView.mode === 'GLOBAL') renderTierCounts('PKS');
             })
             .catch(() => {});
 
