@@ -235,6 +235,21 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') {
     e.preventDefault();
     saveFile();
+    return;
+  }
+  const editor = document.getElementById('memo-editor');
+  const inEditor = editor === document.activeElement || editor.contains(document.activeElement);
+  if (!inEditor) return;
+  if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+    if (e.key === 'b') { e.preventDefault(); fmt('bold'); }
+    else if (e.key === 'i') { e.preventDefault(); fmt('italic'); }
+    else if (e.key === 'u') { e.preventDefault(); fmt('underline'); }
+  }
+  if ((e.ctrlKey || e.metaKey) && e.altKey) {
+    if (e.key === '1') { e.preventDefault(); fmtBlock('h1'); }
+    else if (e.key === '2') { e.preventDefault(); fmtBlock('h2'); }
+    else if (e.key === '3') { e.preventDefault(); fmtBlock('h3'); }
+    else if (e.key === '0') { e.preventDefault(); fmtBlock('p'); }
   }
 });
 

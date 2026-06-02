@@ -17,7 +17,71 @@
   --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'Cascadia Code', 'Fira Code', 'Source Code Pro', monospace;
   --radius: 4px;
+
+  /* ── Workplace design token foundation (Leapfrog 2030) ── */
+  --wp-bg-base:    #1a1a1a;
+  --wp-bg-surface: #222222;
+  --wp-bg-raised:  #2a2a2a;
+  --wp-bg-overlay: #333333;
+
+  --wp-text-primary:   #e6e4dc;
+  --wp-text-secondary: #a09e98;
+  --wp-text-muted:     #6a6866;
+  --wp-text-inverse:   #1a1a1a;
+
+  /* Graphite bronze — replaces VS Code blue #007acc */
+  --wp-accent:       #c89a4a;
+  --wp-accent-hover: #d4aa5a;
+  --wp-accent-muted: rgba(200,154,74,0.15);
+
+  --wp-border:   rgba(255,255,255,0.08);
+  --wp-success:  #4caf50;
+  --wp-danger:   #f44336;
+  --wp-warning:  #ff9800;
+
+  /* Spacing — base-4 */
+  --wp-space-1: 4px;
+  --wp-space-2: 8px;
+  --wp-space-3: 12px;
+  --wp-space-4: 16px;
+  --wp-space-5: 24px;
+  --wp-space-6: 32px;
+  --wp-space-7: 48px;
+
+  /* Type — 6-step scale on 13px base (ratio 1.125) */
+  --wp-text-xs:   11px;
+  --wp-text-sm:   12px;
+  --wp-text-base: 13px;
+  --wp-text-md:   14px;
+  --wp-text-lg:   16px;
+  --wp-text-xl:   18px;
+
+  /* Z-index */
+  --wp-z-base:    0;
+  --wp-z-raised:  100;
+  --wp-z-overlay: 500;
+  --wp-z-modal:   1000;
+  --wp-z-toast:   2000;
+  --wp-z-top:     3000;
 }
+
+/* ── Unified button system ──────────────────────────────────────────────── */
+.wp-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--wp-bg-raised);
+  border: 1px solid var(--wp-border);
+  border-radius: var(--radius);
+  color: var(--wp-text-primary);
+  cursor: pointer; font-size: var(--wp-text-sm); padding: 4px 10px;
+  white-space: nowrap;
+}
+.wp-btn:hover { background: var(--wp-bg-overlay); }
+.wp-btn--primary { background: var(--wp-accent); border-color: var(--wp-accent); color: var(--wp-text-inverse); font-weight: 600; }
+.wp-btn--primary:hover { background: var(--wp-accent-hover); border-color: var(--wp-accent-hover); }
+.wp-btn--ghost { background: transparent; }
+.wp-btn--ghost:hover { background: var(--wp-accent-muted); color: var(--wp-accent); }
+.wp-btn--danger { background: var(--wp-danger); border-color: var(--wp-danger); color: #fff; }
+.wp-btn--danger:hover { opacity: 0.85; }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
