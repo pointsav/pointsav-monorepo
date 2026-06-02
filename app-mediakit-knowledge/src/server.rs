@@ -4432,10 +4432,9 @@ mod tests {
         );
     }
 
-    /// Verify that the navigation portlet and page tools render on article pages.
-    /// (Replaces the former breadcrumb test — breadcrumbs removed in the
-    /// Wikipedia-parity sprint; navigation portlet and right-rail tools portlet
-    /// are the Wikipedia-style replacement.)
+    /// Verify that the docs sidenav renders on article pages (product-docs layout).
+    /// (Replaces the former Wikipedia-chrome portlet test — Wikipedia chrome was removed
+    /// in the product-docs pivot; docs-sidenav with category navigation is the replacement.)
     #[tokio::test]
     async fn wiki_page_renders_navigation_portlet() {
         let dir = tempfile::tempdir().unwrap();
@@ -4480,12 +4479,8 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
-            html.contains("sidebar"),
-            "navigation sidebar should appear: {html}"
-        );
-        assert!(
-            html.contains("What links here"),
-            "page tools should appear in sidebar: {html}"
+            html.contains("docs-sidenav"),
+            "docs sidenav should appear in product-docs layout: {html}"
         );
         assert!(
             !html.contains("wiki-breadcrumb"),
