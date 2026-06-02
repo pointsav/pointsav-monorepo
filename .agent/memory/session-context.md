@@ -4,6 +4,26 @@ Rolling 3-session summary. Newest entry first. Keep 3 entries max; push oldest t
 
 ---
 
+## 2026-06-02 | totebox | claude-code
+
+**Done this session:**
+- Startup: role confirmed, lock written, 1 inbox (H-1..H-10 rollout). Actioned.
+- Browser-in-the-loop audit: Playwright 1.60.0 + axe-core. 24 PNG screenshots, 36 JSON files → `outputs/audit-2026-06-02/`.
+- Launched 3 competing Opus agents (parallel) — Alpha (accessibility), Beta (Leapfrog 2030 design), Gamma (mobile + performance).
+- Synthesis document written from all three agent outputs.
+- 4 DESIGN-RESEARCH drafts committed (`85099ed`, Peter Woodfine) + outbox to project-design.
+- Key findings: keyboard trap (Level A), mobile nav unusable at 375px, 10/12 touch targets fail WCAG 2.5.5, 2.4 MB bundle (24× over budget), 4–5 axe violations per site, no H1, all SVGs missing title, no skip link.
+
+**Pending / carry-forward:**
+- project-design to sweep 4 DESIGN-RESEARCH drafts + 10 prior Leapfrog 2030 drafts.
+- v0.0.2 sprint: ~17h closes all WCAG Level A/AA violations + mobile nav.
+- Bootstrap deploys + certbot TLS operator-gated (NEXT.md).
+
+**Operator preferences surfaced:**
+- Requested competing Opus agents for design audit — will use this pattern again.
+
+---
+
 ## 2026-06-01 | totebox | claude-code
 
 **Done this session:**
