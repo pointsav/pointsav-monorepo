@@ -139,7 +139,8 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 
 ### A21 — GUIDE: Location Intelligence Data Collection
 - **File:** `.agent/drafts-outbound/GUIDE-location-intelligence-data-collection.draft.md`
-- **Status:** STAGED (2026-06-01) — pending Command routing to `woodfine-fleet-deployment/gateway-orchestration-gis-1/guide-location-intelligence-data-collection.md` (routing msg in project-knowledge outbox: project-knowledge-20260602-guide-location-intelligence-route)
+- **Status:** LANGUAGE-CLEARED (2026-06-02) — pending Command routing to `woodfine-fleet-deployment/gateway-orchestration-gis-1/guide-location-intelligence-data-collection.md`; routing msgs: project-knowledge-20260602-guide-location-intelligence-route + project-editorial-20260602-guide-routing-batch
+- **Frontmatter fix applied:** `target_repo` corrected from media-knowledge-documentation → woodfine-fleet-deployment; `target_path: gateway-orchestration-gis-1/` added
 - **Content:** 7-step operational runbook: run existing YAML ingests, add Würth + new taxonomy
   categories, add Tier A VWH chains, write ingest-osm-airports.py, write ingest-osm-railway.py,
   add PKS car rental chains, re-run test-cluster-archetypes.py and deploy updated GeoJSON.
@@ -287,7 +288,7 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 
 ### A14 — GUIDE: moonshot-toolkit-phase1c-build-setup
 - **File:** `.agent/drafts-outbound/guide-moonshot-toolkit-phase1c-build-setup.md`
-- **Status:** STAGED — `fbde41fa` (2026-05-29) — pending Command Session routing to `woodfine-fleet-deployment/project-system/`
+- **Status:** LANGUAGE-CLEARED (2026-06-02) — pending Command Session routing to `woodfine-fleet-deployment/project-system/` (routing msg: project-editorial-20260602-guide-routing-batch)
 - **Source:** project-system drafts-outbound (Phase 1C v2)
 
 ### A15 — TOPIC: Regional Markets System landing article (bilingual) [GIS dispatch A7]
@@ -328,9 +329,9 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 
 ### A21 — GUIDE: Regional Market TOPIC production (EN-only) [GIS dispatch A14]
 - **File:** `.agent/drafts-outbound/GUIDE-regional-market-topic-production.draft.md`
-- **Status:** STAGED (2026-05-30) — pending Command Session routing to `woodfine-fleet-deployment/`
-- **Source:** project-gis GIS-4 corrected dispatch (GUIDE-regional-market-topic-production.draft.md); test-market references updated this session (Wichita→Plano TX, Nürnberg→Krefeld DE)
-- **Content:** Operational guide for producing Regional Market TOPIC articles; 11 sections; EN-only
+- **Status:** LANGUAGE-CLEARED (2026-06-02) — pending Command Session routing to `woodfine-fleet-deployment/gateway-orchestration-gis-1/guide-regional-market-topic-production.md` (routing msg: project-editorial-20260602-guide-routing-batch)
+- **Source:** project-gis GIS-4 corrected dispatch; test-market references updated (Wichita→Plano TX, Nürnberg→Krefeld DE); `target_repo/target_path/target_filename` added to frontmatter 2026-06-02
+- **Content:** Operational guide for producing Regional Market TOPIC articles; 11 sections; EN-only; audience: GIS Totebox operators
 
 ### A22 — DESIGN: Regional Market TOPIC template [GIS dispatch A13]
 - **File:** `project-gis/.agent/drafts-outbound/DESIGN-regional-market-topic-template.draft.md`
