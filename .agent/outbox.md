@@ -10,6 +10,216 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-intelligence
 to: command@claude-code
+re: ACTION REQUIRED — memory hardening + Stage 6 + binary rebuild (3 tracks)
+created: 2026-06-02T17:00:00Z
+priority: high
+status: pending
+msg-id: project-intelligence-20260602-hardening-command-brief
+---
+
+This message consolidates everything that happened in today's project-intelligence sessions
+and lists every action Command needs to take. Work is complete on this side; nothing is
+blocked waiting for code. All commits are on `main`.
+
+---
+
+## Background — what happened today
+
+At approximately 05:00 UTC a GIS python3 pipeline process (PID 4170894, run by `mathew`,
+outside the foundry cgroup) entered uninterruptible D-state and held 2.9 GiB of RAM for
+11+ hours. This exhausted the VM's zram swap (15.7 GiB, 100% full) and drove the load
+average to 28+ with 57–69% iowait. service-content hit its 4 GiB cgroup ceiling
+(`available: 0B`) and stopped responding on port 9081. Core flow (capture → drain →
+OLMo Tier A inference) survived; graph context enrichment went silent.
+
+Three bugs that enabled the incident:
+1. service-content had no `MemoryMin` — kernel could evict its pages freely under pressure.
+2. service-content had no OOM score adjustment — equally killable as a rogue research script.
+3. The Doorman's `GraphContextClient` made a full 5s blocking HTTP request on EVERY inference
+   call, even when service-content had been down for hours — wasting latency on every dispatch.
+
+All three are now fixed in code. None of the fixes are live yet — they need Command actions.
+
+---
+
+## Track 1 — Kill the stuck GIS process (if not done)
+
+If PID 4170894 is still alive (check with `ps -p 4170894`):
+
+```bash
+sudo kill -9 4170894
+```
+
+After kill: load average should drop from 28+ toward baseline within ~2 minutes.
+Run `free -h` to confirm swap starts draining.
+
+---
+
+## Track 2 — Install infrastructure drop-ins (3 files, no rebuild needed)
+
+Commit: `5c3c2aaf` — 3 new files in `infrastructure/systemd/`.
+
+### 2a. Raise service-content memory ceiling + add MemoryMin
+
+```bash
+sudo cp /srv/foundry/clones/project-intelligence/infrastructure/systemd/local-content-memory.conf \
+    /etc/systemd/system/local-content.service.d/memory.conf
+```
+
+What this does:
+- `MemoryMin=2G` — kernel must never reclaim below 2G from this cgroup, even under host OOM
+- `MemoryHigh` raised 3800M → 5500M (DataGraph was already touching the old ceiling)
+- `MemoryMax` raised 4G → 6G (hard ceiling with real headroom for entity growth)
+- `MemorySwapMax=0` — graph pages must never swap (a partially-swapped graph is useless)
+
+### 2b. Add OOM protection for service-content
+
+```bash
+sudo cp /srv/foundry/clones/project-intelligence/infrastructure/systemd/local-content-oom.conf \
+    /etc/systemd/system/local-content.service.d/oom.conf
+```
+
+What this does:
+- `OOMScoreAdjust=-200` — protects DataGraph from the OOM killer
+  (Doorman is -300, llama-server is +500; DataGraph slots in between — expensive to rebuild)
+- `Slice=foundry-services.slice` — required for the slice-level MemoryMin to be applied
+
+### 2c. Install the foundry-services slice reservation
+
+```bash
+sudo cp /srv/foundry/clones/project-intelligence/infrastructure/systemd/foundry-services.slice \
+    /etc/systemd/system/foundry-services.slice
+```
+
+What this does:
+- `MemoryMin=12G` — reserves 12 GiB for the entire foundry service stack at the slice level
+- Rogue processes outside the slice (GIS, research, Claude sessions) CANNOT evict memory
+  below this floor, regardless of how much RAM they consume
+
+### 2d. Apply all three and restart service-content
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart local-content.service
+
+# Verify:
+systemctl show local-content.service --property=MemoryMin,MemoryHigh,MemoryMax
+# Expected: MemoryMin=2147483648  MemoryHigh=5767168000  MemoryMax=6442450944
+curl -s http://127.0.0.1:9081/healthz
+# Expected: response (service is responding again)
+```
+
+### 2e. Fix Requires → Wants (while you have the unit file open)
+
+The current `local-content.service` has `Requires=local-doorman.service`. This propagates
+STOP — every Doorman restart silently kills service-content. Change it to `Wants=`:
+
+```bash
+sudo sed -i 's/^Requires=local-doorman\.service$/Wants=local-doorman.service/' \
+    /etc/systemd/system/local-content.service
+sudo systemctl daemon-reload
+```
+
+No restart needed for this change alone (it takes effect on the next start event).
+
+---
+
+## Track 3 — Stage 6 promote + binary rebuild (2 components)
+
+### 3a. Stage 6 promote
+
+Commits on project-intelligence `main` that need promotion to canonical pointsav-monorepo:
+
+| Commit | What |
+|---|---|
+| `c9b78bdc` | fix(slm): retry counter + reaper expiry fix — idempotent drain flow |
+| `44deadd3` | ops(mailbox): binary deployed + drain live — stage6 pending |
+| `9d485e6c` | ops(mailbox): URGENT — VM memory critical (this message) |
+| `5c3c2aaf` | feat(slm): graph context circuit breaker + service-content memory hardening |
+
+```bash
+cd ~/Foundry/clones/project-intelligence
+~/Foundry/bin/promote.sh
+```
+
+### 3b. Rebuild and deploy slm-doorman-server binary
+
+The circuit breaker (`graph.rs` changes in `5c3c2aaf`) is code — it needs a new binary to
+go live. The retry counter (`c9b78bdc`) was already manually deployed at 06:49 UTC today
+(binary sha256 `14875388...`). The new binary will bundle both fixes.
+
+```bash
+cd /srv/foundry/clones/project-intelligence/service-slm
+cargo build -p slm-doorman-server --release
+
+# Atomic swap + restart:
+sudo cp /srv/foundry/cargo-target/mathew/release/slm-doorman-server \
+    /usr/local/bin/slm-doorman-server.new
+sudo mv /usr/local/bin/slm-doorman-server.new /usr/local/bin/slm-doorman-server
+sudo systemctl restart local-doorman.service
+
+# After local-content restarts (Track 2d above), also restart it so it picks
+# up the new Wants= dependency and re-connects to the Doorman:
+sudo systemctl start local-content.service  # if stopped; or restart if running
+```
+
+Update the binary ledger:
+```bash
+sha256sum /usr/local/bin/slm-doorman-server
+# Append entry to /srv/foundry/data/binary-ledger/slm-doorman-server.jsonl
+# with source_commit: 5c3c2aaf
+```
+
+### 3c. Verify circuit breaker is live
+
+With the new binary running and service-content up:
+
+```bash
+# Stop service-content temporarily to trigger 3 failures:
+sudo systemctl stop local-content.service
+
+# Make 4 inference calls through the Doorman (use slm-chat.sh or curl):
+# Calls 1–3: graph context WARN in journalctl → "service-content graph unavailable"
+# Call 4+: graph context DEBUG → "graph context circuit open — skipping..."
+#           (no 5s wait; returns immediately)
+
+journalctl -u local-doorman.service -n 20 --no-pager | grep "graph context"
+
+# Restart service-content — circuit should reset on next inference call:
+sudo systemctl start local-content.service
+```
+
+---
+
+## Track 4 — Verify drain is healthy post-incident
+
+```bash
+bash /srv/foundry/clones/project-intelligence/service-slm/scripts/health-check-drain.sh
+# Expected: PASS, drain live, poison not growing
+
+# Current counts as of 17:00 UTC:
+# queue: 422 pending | done: 558 | poison: 3 (correct — retry counter caught 3 stuck briefs)
+# The 3 poison entries were legitimately looping under the old binary — not a bug.
+```
+
+---
+
+## Summary checklist
+
+- [ ] Track 1: Kill PID 4170894 if still running
+- [ ] Track 2a: Install local-content-memory.conf drop-in
+- [ ] Track 2b: Install local-content-oom.conf drop-in
+- [ ] Track 2c: Install foundry-services.slice
+- [ ] Track 2d: `daemon-reload` + restart local-content; verify healthz on 9081
+- [ ] Track 2e: Fix Requires→Wants in local-content.service
+- [ ] Track 3a: `bin/promote.sh` for commits c9b78bdc + 44deadd3 + 9d485e6c + 5c3c2aaf
+- [ ] Track 3b: Build + deploy new slm-doorman-server binary; update binary ledger
+- [ ] Track 3c: Verify circuit breaker in journalctl
+- [ ] Track 4: Run health-check-drain.sh; confirm PASS
+
+---
+from: totebox@project-intelligence
+to: command@claude-code
 re: URGENT — VM memory/swap critical, GIS process stuck 11h, load avg 28+
 created: 2026-06-02T16:12:00Z
 priority: high
