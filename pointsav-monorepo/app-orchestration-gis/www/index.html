@@ -1607,6 +1607,13 @@
             retailActive = false;
             document.getElementById('lc-retail')?.classList.remove('lc-active');
         }
+        // Deactivate Top 400 highlight
+        if (rmStarsActive) {
+            rmStarsActive = false;
+            document.getElementById('lc-rm-stars')?.classList.remove('lc-active');
+            ['rm-stars-glow', 'rm-stars-dot'].forEach(id =>
+                map.getLayer(id) && map.setLayoutProperty(id, 'visibility', 'none'));
+        }
         if (urbanFringeActive) {
             urbanFringeActive = false;
             document.getElementById('lc-urban-fringe')?.classList.remove('lc-active');
