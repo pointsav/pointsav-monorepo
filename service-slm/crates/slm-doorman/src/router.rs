@@ -636,6 +636,7 @@ mod tests {
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
                 pricing: crate::tier::PricingConfig::default(),
                 zone: None,
+                health_path: "/health".to_string(),
             },
             std::sync::Arc::new(crate::tier::StaticBearer::new("unused-in-selection-test")),
         );
@@ -666,6 +667,7 @@ mod tests {
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
                 pricing: crate::tier::PricingConfig::default(),
                 zone,
+                health_path: "/health".to_string(),
             },
             std::sync::Arc::new(crate::tier::StaticBearer::new("test")),
         )
