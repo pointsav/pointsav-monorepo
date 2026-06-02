@@ -1664,6 +1664,7 @@ struct FurnitureItem {
     d_mm: u32,
     h_min_mm: u32,
     clearance_front: u32,
+    #[allow(dead_code)]
     clearance_side: u32,
     weight_kg: Option<f64>,
     ifc_class: String,
@@ -1744,255 +1745,21 @@ fn extract_furniture(tokens: &HashMap<String, Value>) -> Vec<FurnitureItem> {
     items
 }
 
-fn furn_body(slug: &str, bx: f64, by: f64, bw: f64, bd: f64) -> String {
-    // Architectural linework style: white fill, near-black outline, grey detail lines
-    const OUT: &str = "#1a1a1a";   // primary outline stroke
-    const DET: &str = "#555555";   // detail lines (drawers, shelves, dividers)
-    const LT:  &str = "#888888";   // light detail (casters, fine marks)
-    match slug {
-        "desk-steelcase-migration-se-58x29" => {
-            // Sit-stand desk: clean rectangle + cable tray strip + C-leg posts at back corners
-            let ct = bd * 0.10; // cable tray depth
-            let lw = bw * 0.055;
-            let ld = bd * 0.12;
-            format!(
-                "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.5\"/>\
-                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#e8e8e8\" stroke=\"none\"/>\
-                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.7\"/>\
-                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#333\" stroke=\"none\" rx=\"1\"/>\
-                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#333\" stroke=\"none\" rx=\"1\"/>",
-                bx, by, bw, bd,
-                bx, by, bw, ct,          // cable tray fill
-                bx, by + ct, bx + bw, by + ct, // tray bottom edge
-                bx, by, lw, ld,          // left C-leg
-                bx + bw - lw, by, lw, ld, // right C-leg
-            )
-        }
-        "task-chair-steelcase-leap-v2" => {
-            // Classic architectural plan symbol: arc backrest + rounded-rect seat + arm stubs
-            let cx = bx + bw * 0.5;
-            let seat_top = by + bd * 0.36;
-            let seat_h = bd * 0.58;
-            let seat_x = bx + bw * 0.12;
-            let seat_w = bw * 0.76;
-            let back_bot = by + bd * 0.44; // where arc meets seat
-            let back_tip = by + bd * 0.04; // top of arc
-            let arm_y = by + bd * 0.44;
-            let arm_h = bd * 0.34;
-            let arm_w = bw * 0.10;
-            let sw = (bw * 0.14).max(5.0);
-            format!(
-                "<path d=\"M {:.1},{:.1} Q {:.1},{:.1} {:.1},{:.1}\" \
-                 fill=\"none\" stroke=\"{OUT}\" stroke-width=\"{:.1}\" stroke-linecap=\"round\"/>\
-                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" \
-                 fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.2\" rx=\"4\"/>\
-                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" \
-                 fill=\"#d0d0d0\" stroke=\"{OUT}\" stroke-width=\"0.8\" rx=\"2\"/>\
-                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" \
-                 fill=\"#d0d0d0\" stroke=\"{OUT}\" stroke-width=\"0.8\" rx=\"2\"/>",
-                bx + bw * 0.06, back_bot, cx, back_tip, bx + bw * 0.94, back_bot,
-                sw,
-                seat_x, seat_top, seat_w, seat_h,
-                bx, arm_y, arm_w, arm_h,
-                bx + bw - arm_w, arm_y, arm_w, arm_h,
-            )
-        }
-        "table-steelcase-groupwork-36" => {
-            // Round table: clean circle + centre cross (standard drafting convention)
-            let cx = bx + bw / 2.0;
-            let cy = by + bd / 2.0;
-            let r = bw.min(bd) / 2.0 * 0.90;
-            let tc = r * 0.12; // cross arm length
-            format!(
-                "<circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"{:.1}\" fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.5\"/>\
-                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\"/>\
-                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\"/>",
-                cx, cy, r,
-                cx, cy - tc, cx, cy + tc,  // vertical arm
-                cx - tc, cy, cx + tc, cy,  // horizontal arm
-            )
-        }
-        "credenza-steelcase-currency-credenza-72" => {
-            // Wide credenza: rect + 3 vertical section dividers + small door handle lines
-            let mut s = format!(
-                "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.5\"/>",
-                bx, by, bw, bd,
-            );
-            let n = 4u32;
-            let sw = bw / n as f64;
-            for i in 1..n {
-                let lx = bx + sw * i as f64;
-                s.push_str(&format!(
-                    "<line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\"/>",
-                    lx, by, lx, by + bd,
-                ));
-            }
-            // Door handle: short horizontal line near front edge of each section
-            let handle_y = by + bd * 0.82;
-            let handle_hw = sw * 0.25;
-            for i in 0..n {
-                let hx = bx + sw * (i as f64 + 0.5);
-                s.push_str(&format!(
-                    "<line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{LT}\" stroke-width=\"1.5\" stroke-linecap=\"round\"/>",
-                    hx - handle_hw, handle_y, hx + handle_hw, handle_y,
-                ));
-            }
-            s
-        }
-        "storage-steelcase-ts-mobile-pedestal" => {
-            // Mobile pedestal: rect + 2 drawer dividers + corner casters
-            let d1y = by + bd * 0.30;
-            let d2y = by + bd * 0.60;
-            let cr = 2.5_f64;
-            format!(
-                "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.5\" rx=\"1\"/>\
-                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\"/>\
-                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\"/>\
-                 <circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"{:.1}\" fill=\"{LT}\" stroke=\"none\"/>\
-                 <circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"{:.1}\" fill=\"{LT}\" stroke=\"none\"/>\
-                 <circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"{:.1}\" fill=\"{LT}\" stroke=\"none\"/>\
-                 <circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"{:.1}\" fill=\"{LT}\" stroke=\"none\"/>",
-                bx, by, bw, bd,
-                bx, d1y, bx + bw, d1y,
-                bx, d2y, bx + bw, d2y,
-                bx + cr, by + cr, cr,
-                bx + bw - cr, by + cr, cr,
-                bx + cr, by + bd - cr, cr,
-                bx + bw - cr, by + bd - cr, cr,
-            )
-        }
-        "storage-steelcase-currency-bookcase-36" => {
-            // Bookcase: rect + horizontal shelf lines + back panel shade
-            let bp = bw * 0.08; // back panel depth
-            let mut s = format!(
-                "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.5\"/>\
-                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#e4e4e4\" stroke=\"none\"/>",
-                bx, by, bw, bd,
-                bx + bw - bp, by, bp, bd,  // back panel
-            );
-            let n = 4u32;
-            let sd = bd / (n + 1) as f64;
-            for i in 1..=n {
-                let ly = by + sd * i as f64;
-                s.push_str(&format!(
-                    "<line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\"/>",
-                    bx, ly, bx + bw - bp, ly,
-                ));
-            }
-            s
-        }
-        "lounge-chair-coalesse-wing-ch445" => {
-            // Wing chair: outer rounded frame + back cushion + seat cushion
-            let cm = bw * 0.10;
-            let back_h = bd * 0.44;
-            let seat_h = bd * 0.40;
-            let gap = bd * 0.04;
-            let rx_out = bw * 0.18;
-            let rx_in = bw * 0.07;
-            format!(
-                "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" \
-                 fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.5\" rx=\"{:.1}\"/>\
-                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" \
-                 fill=\"#f0f0f0\" stroke=\"{DET}\" stroke-width=\"0.9\" rx=\"{:.1}\"/>\
-                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" \
-                 fill=\"#f0f0f0\" stroke=\"{DET}\" stroke-width=\"0.9\" rx=\"{:.1}\"/>",
-                bx, by, bw, bd, rx_out,
-                bx + cm, by + bd * 0.03, bw - 2.0 * cm, back_h, rx_in,
-                bx + cm, by + back_h + gap, bw - 2.0 * cm, seat_h, rx_in,
-            )
-        }
-        "utility-generic-coat-rack" => {
-            // Coat rack: footprint rect + solid pole circle + diagonal hook marks
-            let cx = bx + bw / 2.0;
-            let cy = by + bd / 2.0;
-            let pr = bw.min(bd) * 0.16;
-            let hr = bw.min(bd) * 0.38; // hook arm length
-            format!(
-                "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.2\" rx=\"2\"/>\
-                 <circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"{:.1}\" fill=\"#444\" stroke=\"none\"/>\
-                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\" stroke-opacity=\"0.5\"/>\
-                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\" stroke-opacity=\"0.5\"/>\
-                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\" stroke-opacity=\"0.5\"/>\
-                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\" stroke-opacity=\"0.5\"/>",
-                bx, by, bw, bd,
-                cx, cy, pr,
-                cx, cy - pr, cx, cy - pr - hr * 0.7,   // top hook arm
-                cx, cy + pr, cx, cy + pr + hr * 0.7,   // bottom hook arm
-                cx - pr, cy, cx - pr - hr * 0.7, cy,   // left hook arm
-                cx + pr, cy, cx + pr + hr * 0.7, cy,   // right hook arm
-            )
-        }
-        _ => format!(
-            "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.5\"/>",
-            bx, by, bw, bd
-        ),
-    }
-}
-
-fn furniture_svg(slug: &str, w_mm: u32, d_mm: u32, cl_front: u32, cl_side: u32) -> String {
-    const CW: f64 = 320.0;
-    const CH: f64 = 220.0;
-    const PAD: f64 = 36.0;
-    let tw = w_mm as f64 + 2.0 * cl_side as f64;
-    let th = d_mm as f64 + cl_front as f64;
-    let sx = (CW - 2.0 * PAD) / tw.max(1.0);
-    let sy = (CH - 2.0 * PAD) / th.max(1.0);
-    let sc = sx.min(sy).min(1.5);
-    let bw = w_mm as f64 * sc;
-    let bd = d_mm as f64 * sc;
-    let cfs = cl_front as f64 * sc;
-    let css = cl_side as f64 * sc;
-    let env_w = bw + 2.0 * css;
-    let env_h = bd + cfs;
-    let ex = (CW - env_w) / 2.0;
-    let ey = (CH - env_h) / 2.0;
-    let bx = ex + css;
-    let by = ey;
-    let clr_rect = if cl_front > 0 || cl_side > 0 {
-        format!(
-            "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"none\" stroke=\"#1a3a5c\" stroke-width=\"0.8\" stroke-dasharray=\"5,3\" rx=\"1\"/>",
-            ex, ey, env_w, env_h
-        )
-    } else {
-        String::new()
-    };
-    let wy = by + bd + 10.0;
-    let w_dim = format!(
-        "<line x1=\"{bx:.1}\" y1=\"{wy:.1}\" x2=\"{bx2:.1}\" y2=\"{wy:.1}\" stroke=\"#666\" stroke-width=\"0.8\"/>\
-         <line x1=\"{bx:.1}\" y1=\"{wyt:.1}\" x2=\"{bx:.1}\" y2=\"{wyb:.1}\" stroke=\"#666\" stroke-width=\"0.8\"/>\
-         <line x1=\"{bx2:.1}\" y1=\"{wyt:.1}\" x2=\"{bx2:.1}\" y2=\"{wyb:.1}\" stroke=\"#666\" stroke-width=\"0.8\"/>\
-         <text x=\"{wmx:.1}\" y=\"{wmy:.1}\" font-size=\"9\" fill=\"#444\" text-anchor=\"middle\" font-family=\"system-ui,sans-serif\">{w} mm</text>",
-        bx = bx, wy = wy, bx2 = bx + bw,
-        wyt = wy - 3.0, wyb = wy + 3.0,
-        wmx = bx + bw / 2.0, wmy = wy + 13.0, w = w_mm,
-    );
-    let dx = bx + bw + 10.0;
-    let dmx = dx + 12.0;
-    let dmy = by + bd / 2.0;
-    let d_dim = format!(
-        "<line x1=\"{dx:.1}\" y1=\"{by:.1}\" x2=\"{dx:.1}\" y2=\"{by2:.1}\" stroke=\"#666\" stroke-width=\"0.8\"/>\
-         <line x1=\"{dtx1:.1}\" y1=\"{by:.1}\" x2=\"{dtx2:.1}\" y2=\"{by:.1}\" stroke=\"#666\" stroke-width=\"0.8\"/>\
-         <line x1=\"{dtx1:.1}\" y1=\"{by2:.1}\" x2=\"{dtx2:.1}\" y2=\"{by2:.1}\" stroke=\"#666\" stroke-width=\"0.8\"/>\
-         <text x=\"{dmx:.1}\" y=\"{dmy:.1}\" font-size=\"9\" fill=\"#444\" text-anchor=\"middle\" font-family=\"system-ui,sans-serif\" transform=\"rotate(-90 {dmx:.1} {dmy:.1})\">{d} mm</text>",
-        dx = dx, by = by, by2 = by + bd,
-        dtx1 = dx - 3.0, dtx2 = dx + 3.0,
-        dmx = dmx, dmy = dmy, d = d_mm,
-    );
-    let body = furn_body(slug, bx, by, bw, bd);
+fn furn_cad_placeholder(slug: &str) -> String {
     format!(
-        "<svg viewBox=\"0 0 {cw} {ch}\" xmlns=\"http://www.w3.org/2000/svg\" aria-hidden=\"true\">\
-         <text x=\"{hx:.1}\" y=\"12\" font-size=\"8\" fill=\"#aaa\" text-anchor=\"middle\" font-family=\"system-ui,sans-serif\" letter-spacing=\"1\">PLAN VIEW</text>\
-         {clr}{body}{wd}{dd}\
-         </svg>",
-        cw = CW as u32, ch = CH as u32, hx = CW / 2.0,
-        clr = clr_rect,
-        body = body,
-        wd = w_dim, dd = d_dim,
+        "<div class=\"furn-cad-pending\">\
+         <p>CAD block not yet available</p>\
+         <code>{slug}.dxf</code>\
+         <p>Place DXF in blocks/furniture/ then run<br>\
+         generate-furniture-plan-svg.py</p>\
+         </div>"
     )
 }
 
 async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
     let items = extract_furniture(&state.tokens);
+
+    let furn_lib = state.library_dir.join("blocks").join("furniture");
 
     let sidebar_btns: String = items
         .iter()
@@ -2009,23 +1776,27 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
         .iter()
         .enumerate()
         .map(|(i, it)| {
-            let svg = if it.w_mm > 0 && it.d_mm > 0 {
-                furniture_svg(&it.slug, it.w_mm, it.d_mm, it.clearance_front, it.clearance_side)
-            } else {
-                "<p style=\"text-align:center;color:#aaa;margin:60px 0;font-size:12px\">No geometry data</p>"
-                    .to_string()
-            };
             let vis = if i == 0 { "" } else { " hidden" };
+            let plan_path = furn_lib.join(format!("{}-plan.svg", it.slug));
+            let content = if plan_path.exists() {
+                match fs::read_to_string(&plan_path) {
+                    Ok(raw) => {
+                        let start = raw.find("<svg").unwrap_or(0);
+                        raw[start..].to_string()
+                    }
+                    Err(_) => furn_cad_placeholder(&it.slug),
+                }
+            } else {
+                furn_cad_placeholder(&it.slug)
+            };
             format!(
                 "<div class=\"furn-svg-panel{}\" data-slug=\"{}\">{}</div>",
                 vis,
                 esc(&it.slug),
-                svg
+                content
             )
         })
         .collect();
-
-    let furn_lib = state.library_dir.join("blocks").join("furniture");
 
     let docs_panels: String = items
         .iter()
@@ -2051,6 +1822,7 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
             };
             let has_dwg = furn_lib.join(format!("{}.dwg", it.slug)).exists();
             let has_rfa = furn_lib.join(format!("{}.rfa", it.slug)).exists();
+            let has_dxf = furn_lib.join(format!("{}.dxf", it.slug)).exists();
             let dwg_btn = if has_dwg {
                 format!("<a class=\"furn-dl-btn\" href=\"/furniture/download/{}.dwg\">DWG</a>", esc(&it.slug))
             } else {
@@ -2060,6 +1832,11 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
                 format!("<a class=\"furn-dl-btn\" href=\"/furniture/download/{}.rfa\">RFA</a>", esc(&it.slug))
             } else {
                 "<span class=\"furn-dl-unavail\" title=\"Not yet available\">RFA</span>".to_string()
+            };
+            let dxf_btn = if has_dxf {
+                format!("<a class=\"furn-dl-btn\" href=\"/furniture/download/{}.dxf\">DXF</a>", esc(&it.slug))
+            } else {
+                "<span class=\"furn-dl-unavail\" title=\"Not yet available\">DXF</span>".to_string()
             };
             format!(
                 "<div class=\"furn-docs-panel{}\" data-slug=\"{}\">\
@@ -2075,7 +1852,7 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
                  {}\
                  </tbody></table>\
                  <div class=\"furn-dl-strip\">\
-                 {dwg}{rfa}\
+                 {dwg}{dxf}{rfa}\
                  <a class=\"furn-dl-btn furn-dl-ifc\" href=\"/furniture/download/{ifc_slug}.ifc\">IFC</a>\
                  </div>\
                  <p class=\"furn-docs-desc\">{desc}</p>\
@@ -2094,6 +1871,7 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
                 esc(&it.ifc_class),
                 mfr_row,
                 dwg = dwg_btn,
+                dxf = dxf_btn,
                 rfa = rfa_btn,
                 ifc_slug = esc(&it.slug),
                 desc = esc(&it.description),
@@ -2134,7 +1912,8 @@ async fn furniture_download_handler(
 ) -> Response {
     let valid_ext = filename.ends_with(".ifc")
         || filename.ends_with(".dwg")
-        || filename.ends_with(".rfa");
+        || filename.ends_with(".rfa")
+        || filename.ends_with(".dxf");
     let valid = valid_ext
         && filename.len() <= 128
         && !filename.contains('/')
@@ -2157,6 +1936,8 @@ async fn furniture_download_handler(
         "application/acad"
     } else if filename.ends_with(".rfa") {
         "application/octet-stream"
+    } else if filename.ends_with(".dxf") {
+        "application/dxf"
     } else {
         "application/x-step"
     };
@@ -2192,7 +1973,7 @@ async fn furniture_bundle_handler(State(state): State<Arc<AppState>>) -> Respons
                 let p = e.path();
                 matches!(
                     p.extension().and_then(|s| s.to_str()),
-                    Some("ifc") | Some("dwg") | Some("rfa")
+                    Some("ifc") | Some("dwg") | Some("rfa") | Some("dxf")
                 )
             });
         let mut count = 0u32;
@@ -2237,8 +2018,10 @@ const FURN_CSS: &str = r#"<style>
 .furn-btn:hover{background:var(--bim-surface-3,#eaecf0)}
 .furn-btn.active{border-left-color:var(--bim-accent,#1a3a5c);background:var(--bim-surface-3,#eaecf0);font-weight:600}
 .furn-col-viewer{display:flex;align-items:center;justify-content:center;padding:20px;background:#f9f9f7}
-.furn-svg-panel{width:100%;max-width:400px;background:#fff;border:1px solid #e0e0e0;border-radius:4px;padding:8px}
-.furn-svg-panel svg{width:100%;height:auto;display:block}
+.furn-svg-panel{width:100%;max-width:480px;background:#fff;border:1px solid #e0e0e0;border-radius:4px;padding:8px}
+.furn-svg-panel svg{width:100%;height:auto;display:block;max-height:480px}
+.furn-cad-pending{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:280px;color:#999;font-size:12px;text-align:center;gap:8px;border:1px dashed #ccc;border-radius:4px;background:#fafafa;padding:24px}
+.furn-cad-pending code{font-size:10px;background:#f0f0f0;padding:2px 8px;border-radius:3px;color:#555;font-family:monospace}
 .furn-col-docs{border-left:1px solid var(--bim-border,#dde1e7);background:var(--bim-surface-2,#f5f7fa);padding:18px 16px;overflow-y:auto;max-height:620px}
 .furn-docs-title{font-size:14px;font-weight:700;margin:0 0 4px;line-height:1.3}
 .furn-docs-mfr{font-size:11px;color:var(--bim-text-muted,#6b7280);margin:0 0 14px}
