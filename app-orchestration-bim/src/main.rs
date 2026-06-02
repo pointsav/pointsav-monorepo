@@ -14,7 +14,7 @@ use axum::{
 };
 use pulldown_cmark::{html as md_html, Options, Parser};
 use serde_json::{json, Value};
-use std::{collections::HashMap, env, fs, path::PathBuf, sync::Arc};
+use std::{collections::HashMap, env, fs, io::Cursor, path::PathBuf, sync::Arc};
 use tower_http::services::ServeDir;
 
 // ---------------------------------------------------------------------------
@@ -24,6 +24,7 @@ use tower_http::services::ServeDir;
 #[derive(Clone)]
 struct AppState {
     vault_dir: PathBuf,
+    library_dir: PathBuf,
     design_system_dir: PathBuf,
     static_dir: PathBuf,
     #[allow(dead_code)]
@@ -1743,7 +1744,192 @@ fn extract_furniture(tokens: &HashMap<String, Value>) -> Vec<FurnitureItem> {
     items
 }
 
-fn furniture_svg(w_mm: u32, d_mm: u32, cl_front: u32, cl_side: u32) -> String {
+fn furn_body(slug: &str, bx: f64, by: f64, bw: f64, bd: f64) -> String {
+    // Architectural linework style: white fill, near-black outline, grey detail lines
+    const OUT: &str = "#1a1a1a";   // primary outline stroke
+    const DET: &str = "#555555";   // detail lines (drawers, shelves, dividers)
+    const LT:  &str = "#888888";   // light detail (casters, fine marks)
+    match slug {
+        "desk-steelcase-migration-se-58x29" => {
+            // Sit-stand desk: clean rectangle + cable tray strip + C-leg posts at back corners
+            let ct = bd * 0.10; // cable tray depth
+            let lw = bw * 0.055;
+            let ld = bd * 0.12;
+            format!(
+                "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.5\"/>\
+                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#e8e8e8\" stroke=\"none\"/>\
+                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.7\"/>\
+                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#333\" stroke=\"none\" rx=\"1\"/>\
+                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#333\" stroke=\"none\" rx=\"1\"/>",
+                bx, by, bw, bd,
+                bx, by, bw, ct,          // cable tray fill
+                bx, by + ct, bx + bw, by + ct, // tray bottom edge
+                bx, by, lw, ld,          // left C-leg
+                bx + bw - lw, by, lw, ld, // right C-leg
+            )
+        }
+        "task-chair-steelcase-leap-v2" => {
+            // Classic architectural plan symbol: arc backrest + rounded-rect seat + arm stubs
+            let cx = bx + bw * 0.5;
+            let seat_top = by + bd * 0.36;
+            let seat_h = bd * 0.58;
+            let seat_x = bx + bw * 0.12;
+            let seat_w = bw * 0.76;
+            let back_bot = by + bd * 0.44; // where arc meets seat
+            let back_tip = by + bd * 0.04; // top of arc
+            let arm_y = by + bd * 0.44;
+            let arm_h = bd * 0.34;
+            let arm_w = bw * 0.10;
+            let sw = (bw * 0.14).max(5.0);
+            format!(
+                "<path d=\"M {:.1},{:.1} Q {:.1},{:.1} {:.1},{:.1}\" \
+                 fill=\"none\" stroke=\"{OUT}\" stroke-width=\"{:.1}\" stroke-linecap=\"round\"/>\
+                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" \
+                 fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.2\" rx=\"4\"/>\
+                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" \
+                 fill=\"#d0d0d0\" stroke=\"{OUT}\" stroke-width=\"0.8\" rx=\"2\"/>\
+                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" \
+                 fill=\"#d0d0d0\" stroke=\"{OUT}\" stroke-width=\"0.8\" rx=\"2\"/>",
+                bx + bw * 0.06, back_bot, cx, back_tip, bx + bw * 0.94, back_bot,
+                sw,
+                seat_x, seat_top, seat_w, seat_h,
+                bx, arm_y, arm_w, arm_h,
+                bx + bw - arm_w, arm_y, arm_w, arm_h,
+            )
+        }
+        "table-steelcase-groupwork-36" => {
+            // Round table: clean circle + centre cross (standard drafting convention)
+            let cx = bx + bw / 2.0;
+            let cy = by + bd / 2.0;
+            let r = bw.min(bd) / 2.0 * 0.90;
+            let tc = r * 0.12; // cross arm length
+            format!(
+                "<circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"{:.1}\" fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.5\"/>\
+                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\"/>\
+                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\"/>",
+                cx, cy, r,
+                cx, cy - tc, cx, cy + tc,  // vertical arm
+                cx - tc, cy, cx + tc, cy,  // horizontal arm
+            )
+        }
+        "credenza-steelcase-currency-credenza-72" => {
+            // Wide credenza: rect + 3 vertical section dividers + small door handle lines
+            let mut s = format!(
+                "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.5\"/>",
+                bx, by, bw, bd,
+            );
+            let n = 4u32;
+            let sw = bw / n as f64;
+            for i in 1..n {
+                let lx = bx + sw * i as f64;
+                s.push_str(&format!(
+                    "<line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\"/>",
+                    lx, by, lx, by + bd,
+                ));
+            }
+            // Door handle: short horizontal line near front edge of each section
+            let handle_y = by + bd * 0.82;
+            let handle_hw = sw * 0.25;
+            for i in 0..n {
+                let hx = bx + sw * (i as f64 + 0.5);
+                s.push_str(&format!(
+                    "<line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{LT}\" stroke-width=\"1.5\" stroke-linecap=\"round\"/>",
+                    hx - handle_hw, handle_y, hx + handle_hw, handle_y,
+                ));
+            }
+            s
+        }
+        "storage-steelcase-ts-mobile-pedestal" => {
+            // Mobile pedestal: rect + 2 drawer dividers + corner casters
+            let d1y = by + bd * 0.30;
+            let d2y = by + bd * 0.60;
+            let cr = 2.5_f64;
+            format!(
+                "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.5\" rx=\"1\"/>\
+                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\"/>\
+                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\"/>\
+                 <circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"{:.1}\" fill=\"{LT}\" stroke=\"none\"/>\
+                 <circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"{:.1}\" fill=\"{LT}\" stroke=\"none\"/>\
+                 <circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"{:.1}\" fill=\"{LT}\" stroke=\"none\"/>\
+                 <circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"{:.1}\" fill=\"{LT}\" stroke=\"none\"/>",
+                bx, by, bw, bd,
+                bx, d1y, bx + bw, d1y,
+                bx, d2y, bx + bw, d2y,
+                bx + cr, by + cr, cr,
+                bx + bw - cr, by + cr, cr,
+                bx + cr, by + bd - cr, cr,
+                bx + bw - cr, by + bd - cr, cr,
+            )
+        }
+        "storage-steelcase-currency-bookcase-36" => {
+            // Bookcase: rect + horizontal shelf lines + back panel shade
+            let bp = bw * 0.08; // back panel depth
+            let mut s = format!(
+                "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.5\"/>\
+                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#e4e4e4\" stroke=\"none\"/>",
+                bx, by, bw, bd,
+                bx + bw - bp, by, bp, bd,  // back panel
+            );
+            let n = 4u32;
+            let sd = bd / (n + 1) as f64;
+            for i in 1..=n {
+                let ly = by + sd * i as f64;
+                s.push_str(&format!(
+                    "<line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\"/>",
+                    bx, ly, bx + bw - bp, ly,
+                ));
+            }
+            s
+        }
+        "lounge-chair-coalesse-wing-ch445" => {
+            // Wing chair: outer rounded frame + back cushion + seat cushion
+            let cm = bw * 0.10;
+            let back_h = bd * 0.44;
+            let seat_h = bd * 0.40;
+            let gap = bd * 0.04;
+            let rx_out = bw * 0.18;
+            let rx_in = bw * 0.07;
+            format!(
+                "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" \
+                 fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.5\" rx=\"{:.1}\"/>\
+                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" \
+                 fill=\"#f0f0f0\" stroke=\"{DET}\" stroke-width=\"0.9\" rx=\"{:.1}\"/>\
+                 <rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" \
+                 fill=\"#f0f0f0\" stroke=\"{DET}\" stroke-width=\"0.9\" rx=\"{:.1}\"/>",
+                bx, by, bw, bd, rx_out,
+                bx + cm, by + bd * 0.03, bw - 2.0 * cm, back_h, rx_in,
+                bx + cm, by + back_h + gap, bw - 2.0 * cm, seat_h, rx_in,
+            )
+        }
+        "utility-generic-coat-rack" => {
+            // Coat rack: footprint rect + solid pole circle + diagonal hook marks
+            let cx = bx + bw / 2.0;
+            let cy = by + bd / 2.0;
+            let pr = bw.min(bd) * 0.16;
+            let hr = bw.min(bd) * 0.38; // hook arm length
+            format!(
+                "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.2\" rx=\"2\"/>\
+                 <circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"{:.1}\" fill=\"#444\" stroke=\"none\"/>\
+                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\" stroke-opacity=\"0.5\"/>\
+                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\" stroke-opacity=\"0.5\"/>\
+                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\" stroke-opacity=\"0.5\"/>\
+                 <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{DET}\" stroke-width=\"0.8\" stroke-opacity=\"0.5\"/>",
+                bx, by, bw, bd,
+                cx, cy, pr,
+                cx, cy - pr, cx, cy - pr - hr * 0.7,   // top hook arm
+                cx, cy + pr, cx, cy + pr + hr * 0.7,   // bottom hook arm
+                cx - pr, cy, cx - pr - hr * 0.7, cy,   // left hook arm
+                cx + pr, cy, cx + pr + hr * 0.7, cy,   // right hook arm
+            )
+        }
+        _ => format!(
+            "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#ffffff\" stroke=\"{OUT}\" stroke-width=\"1.5\"/>",
+            bx, by, bw, bd
+        ),
+    }
+}
+
+fn furniture_svg(slug: &str, w_mm: u32, d_mm: u32, cl_front: u32, cl_side: u32) -> String {
     const CW: f64 = 320.0;
     const CH: f64 = 220.0;
     const PAD: f64 = 36.0;
@@ -1770,7 +1956,6 @@ fn furniture_svg(w_mm: u32, d_mm: u32, cl_front: u32, cl_side: u32) -> String {
     } else {
         String::new()
     };
-    // Width dimension line (below body)
     let wy = by + bd + 10.0;
     let w_dim = format!(
         "<line x1=\"{bx:.1}\" y1=\"{wy:.1}\" x2=\"{bx2:.1}\" y2=\"{wy:.1}\" stroke=\"#666\" stroke-width=\"0.8\"/>\
@@ -1781,7 +1966,6 @@ fn furniture_svg(w_mm: u32, d_mm: u32, cl_front: u32, cl_side: u32) -> String {
         wyt = wy - 3.0, wyb = wy + 3.0,
         wmx = bx + bw / 2.0, wmy = wy + 13.0, w = w_mm,
     );
-    // Depth dimension line (right of body)
     let dx = bx + bw + 10.0;
     let dmx = dx + 12.0;
     let dmy = by + bd / 2.0;
@@ -1794,6 +1978,7 @@ fn furniture_svg(w_mm: u32, d_mm: u32, cl_front: u32, cl_side: u32) -> String {
         dtx1 = dx - 3.0, dtx2 = dx + 3.0,
         dmx = dmx, dmy = dmy, d = d_mm,
     );
+    let body = furn_body(slug, bx, by, bw, bd);
     format!(
         "<svg viewBox=\"0 0 {cw} {ch}\" xmlns=\"http://www.w3.org/2000/svg\" aria-hidden=\"true\">\
          <text x=\"{hx:.1}\" y=\"12\" font-size=\"8\" fill=\"#aaa\" text-anchor=\"middle\" font-family=\"system-ui,sans-serif\" letter-spacing=\"1\">PLAN VIEW</text>\
@@ -1801,10 +1986,7 @@ fn furniture_svg(w_mm: u32, d_mm: u32, cl_front: u32, cl_side: u32) -> String {
          </svg>",
         cw = CW as u32, ch = CH as u32, hx = CW / 2.0,
         clr = clr_rect,
-        body = format!(
-            "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#1a3a5c\" fill-opacity=\"0.15\" stroke=\"#1a3a5c\" stroke-width=\"1.5\" rx=\"1.5\"/>",
-            bx, by, bw, bd
-        ),
+        body = body,
         wd = w_dim, dd = d_dim,
     )
 }
@@ -1828,7 +2010,7 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
         .enumerate()
         .map(|(i, it)| {
             let svg = if it.w_mm > 0 && it.d_mm > 0 {
-                furniture_svg(it.w_mm, it.d_mm, it.clearance_front, it.clearance_side)
+                furniture_svg(&it.slug, it.w_mm, it.d_mm, it.clearance_front, it.clearance_side)
             } else {
                 "<p style=\"text-align:center;color:#aaa;margin:60px 0;font-size:12px\">No geometry data</p>"
                     .to_string()
@@ -1842,6 +2024,8 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
             )
         })
         .collect();
+
+    let furn_lib = state.library_dir.join("blocks").join("furniture");
 
     let docs_panels: String = items
         .iter()
@@ -1857,15 +2041,26 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
                 Some(w) => format!("<tr><th>Weight</th><td>{:.1} kg</td></tr>", w),
                 None => "<tr><th>Weight</th><td><em>Not published</em></td></tr>".to_string(),
             };
-            let src_row = match &it.url {
+            let mfr_row = match &it.url {
                 Some(u) => format!(
-                    "<tr><th>Source</th><td><a href=\"{}\" target=\"_blank\" rel=\"noopener\">steelcase.com</a></td></tr>",
-                    esc(u)
+                    "<tr><th>Manufacturer</th><td><a href=\"{}\" target=\"_blank\" rel=\"noopener\">{}</a></td></tr>",
+                    esc(u),
+                    esc(&it.manufacturer)
                 ),
                 None => String::new(),
             };
-            let dwg_href = it.url.as_deref().unwrap_or("https://www.steelcase.com");
-            let rfa_href = "https://www.steelcase.com/resources/revit/";
+            let has_dwg = furn_lib.join(format!("{}.dwg", it.slug)).exists();
+            let has_rfa = furn_lib.join(format!("{}.rfa", it.slug)).exists();
+            let dwg_btn = if has_dwg {
+                format!("<a class=\"furn-dl-btn\" href=\"/furniture/download/{}.dwg\">DWG</a>", esc(&it.slug))
+            } else {
+                "<span class=\"furn-dl-unavail\" title=\"Not yet available\">DWG</span>".to_string()
+            };
+            let rfa_btn = if has_rfa {
+                format!("<a class=\"furn-dl-btn\" href=\"/furniture/download/{}.rfa\">RFA</a>", esc(&it.slug))
+            } else {
+                "<span class=\"furn-dl-unavail\" title=\"Not yet available\">RFA</span>".to_string()
+            };
             format!(
                 "<div class=\"furn-docs-panel{}\" data-slug=\"{}\">\
                  <h2 class=\"furn-docs-title\">{}</h2>\
@@ -1880,11 +2075,10 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
                  {}\
                  </tbody></table>\
                  <div class=\"furn-dl-strip\">\
-                 <a class=\"furn-dl-btn\" href=\"{}\" target=\"_blank\" rel=\"noopener\">DWG</a>\
-                 <a class=\"furn-dl-btn\" href=\"{}\" target=\"_blank\" rel=\"noopener\">RFA</a>\
-                 <a class=\"furn-dl-btn furn-dl-ifc\" href=\"/furniture/download/{}.ifc\">IFC</a>\
+                 {dwg}{rfa}\
+                 <a class=\"furn-dl-btn furn-dl-ifc\" href=\"/furniture/download/{ifc_slug}.ifc\">IFC</a>\
                  </div>\
-                 <p class=\"furn-docs-desc\">{}</p>\
+                 <p class=\"furn-docs-desc\">{desc}</p>\
                  </div>",
                 vis,
                 esc(&it.slug),
@@ -1898,11 +2092,11 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
                 sku_row,
                 wt_row,
                 esc(&it.ifc_class),
-                src_row,
-                esc(dwg_href),
-                esc(rfa_href),
-                esc(&it.slug),
-                esc(&it.description),
+                mfr_row,
+                dwg = dwg_btn,
+                rfa = rfa_btn,
+                ifc_slug = esc(&it.slug),
+                desc = esc(&it.description),
             )
         })
         .collect();
@@ -1913,6 +2107,10 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
   <h1>Private Office Furniture</h1>
   <p class="bim-page-header__sub">8 BIM Objects &mdash; Steelcase FFE program &mdash; Key Plans PO-1 / PO-2 / PO-3</p>
 </header>
+<div class="furn-bundle-bar">
+  <span>Download all blocks as a ZIP archive</span>
+  <a class="furn-bundle-btn" href="/furniture/download/bundle.zip">&#x2b07; Download All (ZIP)</a>
+</div>
 <div class="furn-layout">
   <div class="furn-col-sidebar">{sidebar}</div>
   <div class="furn-col-viewer">{svgs}</div>
@@ -1934,7 +2132,10 @@ async fn furniture_download_handler(
     Path(filename): Path<String>,
     State(state): State<Arc<AppState>>,
 ) -> Response {
-    let valid = filename.ends_with(".ifc")
+    let valid_ext = filename.ends_with(".ifc")
+        || filename.ends_with(".dwg")
+        || filename.ends_with(".rfa");
+    let valid = valid_ext
         && filename.len() <= 128
         && !filename.contains('/')
         && !filename.contains("..")
@@ -1948,50 +2149,111 @@ async fn furniture_download_handler(
             .unwrap();
     }
     let path = state
-        .vault_dir
-        .join("downloads")
+        .library_dir
+        .join("blocks")
         .join("furniture")
         .join(&filename);
+    let content_type = if filename.ends_with(".dwg") {
+        "application/acad"
+    } else if filename.ends_with(".rfa") {
+        "application/octet-stream"
+    } else {
+        "application/x-step"
+    };
     match fs::read(&path) {
         Ok(bytes) => {
             let disp = format!("attachment; filename=\"{}\"", filename);
             Response::builder()
                 .status(StatusCode::OK)
-                .header("content-type", "application/x-step")
+                .header("content-type", content_type)
                 .header("content-disposition", disp)
                 .body(Body::from(bytes))
                 .unwrap()
         }
         Err(_) => Response::builder()
             .status(StatusCode::NOT_FOUND)
-            .body(Body::from("not found"))
+            .body(Body::from("file not yet available — contact administrator"))
             .unwrap(),
     }
 }
 
+async fn furniture_bundle_handler(State(state): State<Arc<AppState>>) -> Response {
+    let furn_dir = state.library_dir.join("blocks").join("furniture");
+    let mut buf = Cursor::new(Vec::new());
+    {
+        let mut zip = zip::ZipWriter::new(&mut buf);
+        let opts = zip::write::FileOptions::<()>::default()
+            .compression_method(zip::CompressionMethod::Deflated);
+        let entries = fs::read_dir(&furn_dir)
+            .into_iter()
+            .flatten()
+            .flatten()
+            .filter(|e| {
+                let p = e.path();
+                matches!(
+                    p.extension().and_then(|s| s.to_str()),
+                    Some("ifc") | Some("dwg") | Some("rfa")
+                )
+            });
+        let mut count = 0u32;
+        for entry in entries {
+            let Ok(bytes) = fs::read(entry.path()) else {
+                continue;
+            };
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            if zip.start_file(name.as_ref(), opts).is_ok() {
+                use std::io::Write;
+                let _ = zip.write_all(&bytes);
+                count += 1;
+            }
+        }
+        if count == 0 {
+            return Response::builder()
+                .status(StatusCode::NOT_FOUND)
+                .body(Body::from("no files available"))
+                .unwrap();
+        }
+        let _ = zip.finish();
+    }
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("content-type", "application/zip")
+        .header(
+            "content-disposition",
+            "attachment; filename=\"woodfine-private-office-furniture.zip\"",
+        )
+        .body(Body::from(buf.into_inner()))
+        .unwrap()
+}
+
 const FURN_CSS: &str = r#"<style>
-.furn-layout{display:grid;grid-template-columns:180px 1fr 280px;min-height:520px;border:1px solid var(--bim-border,#dde1e7);border-radius:6px;overflow:hidden;margin-top:1.5rem}
+.furn-bundle-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;margin-top:1.25rem;background:var(--bim-surface-2,#f5f7fa);border:1px solid var(--bim-border,#dde1e7);border-radius:6px;font-size:12px;color:var(--bim-text-muted,#6b7280)}
+.furn-bundle-btn{display:inline-block;padding:6px 16px;background:var(--bim-accent,#1a3a5c);color:#fff;border-radius:4px;font-size:12px;font-weight:600;text-decoration:none;letter-spacing:.03em;white-space:nowrap}
+.furn-bundle-btn:hover{opacity:.85}
+.furn-layout{display:grid;grid-template-columns:180px 1fr 280px;min-height:540px;border:1px solid var(--bim-border,#dde1e7);border-radius:6px;overflow:hidden;margin-top:.75rem}
 .furn-col-sidebar{border-right:1px solid var(--bim-border,#dde1e7);background:var(--bim-surface-2,#f5f7fa);padding:12px 0}
 .furn-btn{display:block;width:100%;text-align:left;background:none;border:none;padding:8px 14px;font-size:13px;color:var(--bim-text,#1a1a2e);cursor:pointer;border-left:3px solid transparent;line-height:1.35}
 .furn-btn:hover{background:var(--bim-surface-3,#eaecf0)}
 .furn-btn.active{border-left-color:var(--bim-accent,#1a3a5c);background:var(--bim-surface-3,#eaecf0);font-weight:600}
-.furn-col-viewer{display:flex;align-items:center;justify-content:center;padding:24px;background:#fff}
-.furn-svg-panel{width:100%;max-width:360px}
-.furn-svg-panel svg{width:100%;height:auto}
-.furn-col-docs{border-left:1px solid var(--bim-border,#dde1e7);background:var(--bim-surface-2,#f5f7fa);padding:18px 16px;overflow-y:auto;max-height:600px}
+.furn-col-viewer{display:flex;align-items:center;justify-content:center;padding:20px;background:#f9f9f7}
+.furn-svg-panel{width:100%;max-width:400px;background:#fff;border:1px solid #e0e0e0;border-radius:4px;padding:8px}
+.furn-svg-panel svg{width:100%;height:auto;display:block}
+.furn-col-docs{border-left:1px solid var(--bim-border,#dde1e7);background:var(--bim-surface-2,#f5f7fa);padding:18px 16px;overflow-y:auto;max-height:620px}
 .furn-docs-title{font-size:14px;font-weight:700;margin:0 0 4px;line-height:1.3}
 .furn-docs-mfr{font-size:11px;color:var(--bim-text-muted,#6b7280);margin:0 0 14px}
 .furn-spec-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px}
 .furn-spec-table th{text-align:left;font-weight:500;color:var(--bim-text-muted,#6b7280);padding:3px 8px 3px 0;white-space:nowrap;width:42%}
 .furn-spec-table td{color:var(--bim-text,#1a1a2e);padding:3px 0}
 .furn-spec-table code{font-size:10px;background:var(--bim-surface-3,#eaecf0);padding:1px 4px;border-radius:3px}
-.furn-dl-strip{display:flex;gap:8px;margin-bottom:14px}
+.furn-dl-strip{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .furn-dl-btn{display:inline-block;padding:5px 13px;border:1px solid var(--bim-accent,#1a3a5c);color:var(--bim-accent,#1a3a5c);border-radius:4px;font-size:12px;font-weight:600;text-decoration:none;letter-spacing:.03em}
 .furn-dl-btn:hover{background:var(--bim-accent,#1a3a5c);color:#fff}
 .furn-dl-ifc{background:var(--bim-accent,#1a3a5c);color:#fff}
 .furn-dl-ifc:hover{opacity:.85}
+.furn-dl-unavail{display:inline-block;padding:5px 13px;border:1px solid #ccc;color:#bbb;border-radius:4px;font-size:12px;font-weight:600;letter-spacing:.03em;cursor:not-allowed;user-select:none}
 .furn-docs-desc{font-size:11px;color:var(--bim-text-muted,#6b7280);line-height:1.5;margin:0;border-top:1px solid var(--bim-border,#dde1e7);padding-top:12px}
-@media(max-width:900px){.furn-layout{grid-template-columns:1fr}.furn-col-sidebar{border-right:none;border-bottom:1px solid var(--bim-border,#dde1e7);display:flex;flex-wrap:wrap;gap:4px;padding:10px}.furn-btn{width:auto;border-left:none;border:1px solid var(--bim-border,#dde1e7);padding:5px 10px;font-size:12px;border-radius:4px}.furn-btn.active{border-color:var(--bim-accent,#1a3a5c);background:var(--bim-accent,#1a3a5c);color:#fff}.furn-col-docs{border-left:none;border-top:1px solid var(--bim-border,#dde1e7);max-height:none}}
+@media(max-width:900px){.furn-bundle-bar{flex-direction:column;gap:8px;text-align:center}.furn-layout{grid-template-columns:1fr}.furn-col-sidebar{border-right:none;border-bottom:1px solid var(--bim-border,#dde1e7);display:flex;flex-wrap:wrap;gap:4px;padding:10px}.furn-btn{width:auto;border-left:none;border:1px solid var(--bim-border,#dde1e7);padding:5px 10px;font-size:12px;border-radius:4px}.furn-btn.active{border-color:var(--bim-accent,#1a3a5c);background:var(--bim-accent,#1a3a5c);color:#fff}.furn-col-docs{border-left:none;border-top:1px solid var(--bim-border,#dde1e7);max-height:none}}
 </style>"#;
 
 const FURN_JS: &str = r#"<script>
@@ -2119,6 +2381,11 @@ fn load_state() -> AppState {
     let design_system_dir =
         PathBuf::from(env::var("BIM_DESIGN_SYSTEM_DIR").unwrap_or_else(|_| ".".to_string()));
     let vault_dir = PathBuf::from(env::var("BIM_VAULT_DIR").unwrap_or_else(|_| ".".to_string()));
+    let library_dir = PathBuf::from(
+        env::var("BIM_LIBRARY_DIR").unwrap_or_else(|_| {
+            "/srv/foundry/clones/project-bim/woodfine-bim-library".to_string()
+        }),
+    );
     let static_dir =
         PathBuf::from(env::var("BIM_STATIC_DIR").unwrap_or_else(|_| "./static".to_string()));
     let tenant = env::var("BIM_TENANT").unwrap_or_else(|_| "woodfine".to_string());
@@ -2175,6 +2442,7 @@ fn load_state() -> AppState {
 
     AppState {
         vault_dir,
+        library_dir,
         design_system_dir,
         static_dir,
         tenant,
@@ -2215,6 +2483,7 @@ async fn main() {
         .route("/healthz", get(healthz_handler))
         .route("/readyz", get(readyz_handler))
         .route("/furniture", get(furniture_handler))
+        .route("/furniture/download/bundle.zip", get(furniture_bundle_handler))
         .route("/furniture/download/:filename", get(furniture_download_handler))
         .nest_service("/static", ServeDir::new(static_dir))
         .with_state(state);
