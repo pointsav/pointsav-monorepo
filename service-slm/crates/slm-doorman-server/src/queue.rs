@@ -121,6 +121,14 @@ impl QueueConfig {
         self.base_dir.join("queue-poison")
     }
 
+    /// Sidecar directory for per-brief retry attempt counters.
+    ///
+    /// Each file is named `<brief_id>.attempts` and contains a plain
+    /// decimal integer. Created lazily alongside the other queue dirs.
+    fn attempts_dir(&self) -> PathBuf {
+        self.base_dir.join("queue-attempts")
+    }
+
     /// Sentinel file used for `flock(2)` single-writer on dequeue / reap.
     fn lock_sentinel(&self) -> PathBuf {
         self.base_dir.join(".queue.lock")
@@ -210,7 +218,7 @@ pub enum ReleaseOutcome {
 
 // ── Directory bootstrap ───────────────────────────────────────────────────────
 
-/// Ensure all four queue subdirectories exist. Called at queue startup
+/// Ensure all queue subdirectories exist. Called at queue startup
 /// and by tests before first use.
 pub fn ensure_dirs(cfg: &QueueConfig) -> QueueResult<()> {
     for dir in [
@@ -218,6 +226,7 @@ pub fn ensure_dirs(cfg: &QueueConfig) -> QueueResult<()> {
         &cfg.in_flight_dir(),
         &cfg.done_dir(),
         &cfg.poison_dir(),
+        &cfg.attempts_dir(),
     ] {
         fs::create_dir_all(dir).map_err(|e| DoormanError::QueueIo {
             path: dir.display().to_string(),
@@ -671,6 +680,45 @@ pub fn release(cfg: &QueueConfig, lease: &LeasedBrief, outcome: ReleaseOutcome) 
         "brief released"
     );
     Ok(())
+}
+
+/// Read the current retry-attempt count for a brief.
+///
+/// Returns `0` if no sidecar file exists (fresh brief, never retried).
+/// Safe to call from any thread — reads are not lock-protected because
+/// only the drain worker writes to a given brief's sidecar while it
+/// holds that brief's lease.
+pub fn read_attempts(cfg: &QueueConfig, brief_id: &str) -> u32 {
+    let path = cfg.attempts_dir().join(format!("{brief_id}.attempts"));
+    fs::read_to_string(&path)
+        .ok()
+        .and_then(|s| s.trim().parse::<u32>().ok())
+        .unwrap_or(0)
+}
+
+/// Increment the retry-attempt counter for a brief and return the new value.
+///
+/// Creates `queue-attempts/<brief_id>.attempts` if absent. Callers use
+/// the returned value to decide whether to escalate `Retry` → `Poison`.
+pub fn bump_attempts(cfg: &QueueConfig, brief_id: &str) -> QueueResult<u32> {
+    ensure_dirs(cfg)?;
+    let path = cfg.attempts_dir().join(format!("{brief_id}.attempts"));
+    let next = read_attempts(cfg, brief_id).saturating_add(1);
+    fs::write(&path, next.to_string()).map_err(|e| DoormanError::QueueIo {
+        path: path.display().to_string(),
+        reason: format!("failed to write attempts sidecar: {e}"),
+    })?;
+    Ok(next)
+}
+
+/// Remove the retry-attempt sidecar for a brief.
+///
+/// Called when a brief reaches `Done` or `Poison` so stale counters do
+/// not accumulate in `queue-attempts/`. Best-effort — errors are silently
+/// ignored because the sidecar is disposable metadata.
+pub fn clear_attempts(cfg: &QueueConfig, brief_id: &str) {
+    let path = cfg.attempts_dir().join(format!("{brief_id}.attempts"));
+    let _ = fs::remove_file(&path);
 }
 
 /// Reap lease files older than `max_age` in `queue-in-flight/`, returning
@@ -1277,5 +1325,55 @@ mod tests {
         assert_eq!(leased.entry.brief.brief_id, old_id);
         // Legacy flat briefs get an empty actual_diff
         assert_eq!(leased.entry.actual_diff, "");
+    }
+
+    // ── Retry attempt counter ─────────────────────────────────────────────
+
+    /// A fresh brief has no sidecar; read_attempts returns 0.
+    #[test]
+    fn attempts_start_at_zero_for_new_brief() {
+        let cfg = tmp_queue("attempts-zero");
+        ensure_dirs(&cfg).expect("ensure dirs");
+        let id = "01J9ATTEMPTSTEST000000001";
+        assert_eq!(read_attempts(&cfg, id), 0);
+    }
+
+    /// bump_attempts increments by 1 on each call.
+    #[test]
+    fn retry_counter_increments_on_each_bump() {
+        let cfg = tmp_queue("attempts-incr");
+        ensure_dirs(&cfg).expect("ensure dirs");
+        let id = "01J9ATTEMPTSTEST000000002";
+
+        let a1 = bump_attempts(&cfg, id).expect("bump 1");
+        let a2 = bump_attempts(&cfg, id).expect("bump 2");
+        let a3 = bump_attempts(&cfg, id).expect("bump 3");
+
+        assert_eq!(a1, 1);
+        assert_eq!(a2, 2);
+        assert_eq!(a3, 3);
+        assert_eq!(read_attempts(&cfg, id), 3);
+    }
+
+    /// clear_attempts removes the sidecar; subsequent reads return 0.
+    #[test]
+    fn clear_removes_attempts_sidecar() {
+        let cfg = tmp_queue("attempts-clear");
+        ensure_dirs(&cfg).expect("ensure dirs");
+        let id = "01J9ATTEMPTSTEST000000003";
+
+        bump_attempts(&cfg, id).expect("bump");
+        assert_eq!(read_attempts(&cfg, id), 1, "counter must be 1 after bump");
+
+        clear_attempts(&cfg, id);
+        assert_eq!(
+            read_attempts(&cfg, id),
+            0,
+            "counter must reset to 0 after clear"
+        );
+
+        // Sidecar file must be gone.
+        let sidecar = cfg.attempts_dir().join(format!("{id}.attempts"));
+        assert!(!sidecar.exists(), "sidecar file must be absent after clear");
     }
 }
