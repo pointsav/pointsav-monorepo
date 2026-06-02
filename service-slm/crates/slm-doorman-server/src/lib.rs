@@ -9,6 +9,8 @@
 //!
 //! The `main.rs` binary target uses this library via `slm_doorman_server::http`.
 
+/// Drain-worker decision logic (empty-diff skip guard), extracted for unit tests.
+pub mod drain;
 pub mod http;
 pub mod idle_monitor;
 /// Brief Queue Substrate (apprenticeship-substrate.md §7C).
