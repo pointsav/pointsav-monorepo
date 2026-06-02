@@ -1045,6 +1045,84 @@ OK.
         assert_eq!(p.self_confidence, 0.0);
     }
 
+    /// Regression: the Tier A shadow request must carry stop sequences AND the
+    /// 512-token cap. Without stop sequences OLMo can run past EOS forever; the
+    /// 2048-token Tier B budget at ~4 tok/s CPU is a ~17-min serial block. Both
+    /// were the drain-stall fix (commit df118c47); this captures the actual
+    /// request body sent to llama-server and asserts the wire fields.
+    #[tokio::test]
+    async fn shadow_request_carries_stop_and_tier_a_token_cap() {
+        let server = MockServer::start().await;
+        let apprentice_response = "\
+---
+self_confidence: 0.7
+escalate: false
+---
+
+## Reasoning
+
+ok
+
+## Diff
+
+```diff
+--- a/x
++++ b/x
+@@ -1 +1 @@
+-a
++b
+```
+";
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_json(ok_completion(apprentice_response)),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let local = LocalTierClient::new(LocalTierConfig {
+            endpoint: server.uri(),
+            default_model: "olmo-3-1125-7b-q4".into(),
+        });
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: Some(local),
+                yoyo: std::collections::HashMap::new(),
+                external: None,
+                lark_validator: None,
+                graph_context_client: None,
+                tier_a_first: false,
+            },
+            ledger(),
+        );
+        let dir = tmp_dir("foundry");
+        let cfg = dispatcher_config(dir);
+        ApprenticeshipDispatcher::new(&doorman, cfg)
+            .dispatch_shadow(&brief_for("small brief"), "diff --git a/x b/x\n+y\n")
+            .await
+            .expect("shadow dispatch ok");
+
+        let reqs = server.received_requests().await.unwrap_or_default();
+        assert_eq!(reqs.len(), 1, "exactly one Tier A request expected");
+        let body: serde_json::Value =
+            serde_json::from_slice(&reqs[0].body).expect("request body is JSON");
+
+        // Fix 3: Tier A caps generation at 512 tokens.
+        assert_eq!(
+            body["max_tokens"].as_u64(),
+            Some(512),
+            "Tier A shadow request must cap max_tokens at 512"
+        );
+        // Fix 2: stop sequences present, including the diff-fence terminator.
+        let stop = body["stop"].as_array().expect("stop must be a top-level array");
+        assert!(
+            stop.iter().any(|s| s.as_str() == Some("```\n\n")),
+            "stop sequences must include the diff code-fence terminator; got {stop:?}"
+        );
+    }
+
     /// Unit: pick_tier_for_brief boundary.
     #[test]
     fn pick_tier_at_threshold() {
