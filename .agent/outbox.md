@@ -13,7 +13,10 @@ to: command@claude-code
 re: UX audit complete — DESIGN-RESEARCH staged + project-marketing memo for forwarding
 created: 2026-06-03T00:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-03T02:00:00Z
+actioned_by: command@claude-code
+actioned_note: master_cosign added to DESIGN-wiki-institutional-redesign.draft.md; relayed to project-design inbox (msg-id: project-knowledge-20260603-relay-design-research-wiki-institutional); marketing memo relayed to project-marketing inbox (msg-id: project-knowledge-20260603-ux-audit-memo-home-woodfinegroup-com-hom)
 msg-id: project-knowledge-20260603-ux-audit-deliverables
 ---
 
@@ -68,7 +71,10 @@ to: command@claude-code
 re: Stage 6 pending — NEXT.md contamination fix (19e4fa56) + binary deploy reminder
 created: 2026-06-02T21:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-03T02:00:00Z
+actioned_by: command@claude-code
+actioned_note: 4 knowledge commits (19e4fa56..94d78e7c) promoted to canonical after rebase onto upstream. Binary deploy complete: sha256 61cd1bd8 installed at /usr/local/bin/app-mediakit-knowledge; all 3 services healthy (9090/9093/9095 ok)
 msg-id: project-knowledge-20260602-stage6-next-and-deploy
 ---
 
@@ -173,7 +179,10 @@ to: command@claude-code
 re: DEPLOY — browser-verified UX batch (Phase 3/2/M1/Cmd+K/per-brand) + check tooling — promote HEAD c5448dfb
 created: 2026-06-01T23:30:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-03T02:00:00Z
+actioned_by: command@claude-code
+actioned_note: binary deploy complete — sha256 61cd1bd8 (includes UX batch Phase 5/4/M1/Phase 2/Phase 3/wikilink-parser/check + feeds fix + empty-state CSS); all 3 services healthy; source_commit 94d78e7c
 msg-id: project-knowledge-20260601-ux-batch-deploy
 supersedes: project-knowledge-20260601-cachebust-deploy
 ---
@@ -214,7 +223,10 @@ to: totebox@project-editorial
 re: CONTENT-AUDIT — 38 dead wikilinks + 6 missing-slug guides in the documentation corpus
 created: 2026-06-01T18:30:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-03T02:00:00Z
+actioned_by: command@claude-code
+actioned_note: relayed to project-editorial inbox (msg-id: project-knowledge-20260603-relay-content-audit-17-dead-wikilinks-6-)
 msg-id: project-knowledge-20260601-content-audit-dead-links
 ---
 
