@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#164679">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Woodfine GIS">
     <title>Woodfine Location Intelligence</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="lib/pmtiles.js"></script>
@@ -105,13 +109,21 @@
 
         /* ── Responsive ───────────────────────────────────────────── */
         @media (max-width: 768px) {
-            #data-panel      { top: auto; bottom: 0; left: 0; width: 100%; border-radius: 20px 20px 0 0; max-height: 45dvh; padding-bottom: env(safe-area-inset-bottom, 0px); }
-            .nav-cluster     { bottom: 52dvh; right: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+            #data-panel      { top: auto; bottom: 0; left: 0; width: 100%; border-radius: 20px 20px 0 0; max-height: 60dvh; padding-bottom: env(safe-area-inset-bottom, 0px); }
+            .nav-cluster     { bottom: 62dvh; right: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
             .nav-btn         { width: 80px; }
             .panel-collapse-btn { display: flex; }
             #data-panel.collapsed { max-height: 80px; overflow: hidden; }
             #data-panel.collapsed .panel-collapse-btn { transform: rotate(180deg); }
             .drawer-handle   { display: block; }
+            /* Readability floor — nothing below 12px on phones */
+            .panel-header p, .civic-box small, .lc-planned { font-size: 12px !important; }
+            .data-label, .lc-group-label, .chain-section-label { font-size: 12px !important; }
+        }
+
+        /* Landscape short-screen phones (e.g. iPhone SE rotated) — tighten side panel */
+        @media (orientation: landscape) and (max-height: 430px) {
+            #data-panel { width: 300px; max-height: 100%; }
         }
 
         /* ── Touch targets ────────────────────────────────────────── */
@@ -212,7 +224,7 @@
         .chain-search-input { width: 100%; padding: 12px 32px 12px 12px; border: 1px solid var(--border-soft); border-radius: 6px; font-size: 16px; color: var(--brand-primary); outline: none; box-sizing: border-box; background: #fff; }
         .chain-search-input:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 2px rgba(10,48,112,0.08); }
         .chain-search-input::placeholder { color: var(--text-muted); font-weight: 400; }
-        .chain-search-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 16px; line-height: 1; padding: 0 2px; }
+        .chain-search-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 16px; line-height: 1; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
         .chain-dropdown { position: absolute; left: 0; right: 0; top: calc(100% + 2px); background: #fff; border: 1px solid var(--border-soft); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); max-height: 260px; overflow-y: auto; -webkit-overflow-scrolling: touch; z-index: 20; }
         .chain-option { padding: 7px 12px; font-size: 13px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .chain-option:hover, .chain-option.focused { background: #EFF6FF; color: var(--brand-primary); font-weight: 700; }

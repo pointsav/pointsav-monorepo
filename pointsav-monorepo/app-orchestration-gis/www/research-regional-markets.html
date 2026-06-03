@@ -139,9 +139,42 @@
   .page-footer a { color: rgba(255,255,255,0.82); text-decoration: none; }
   .page-footer a:hover { color: #fff; text-decoration: underline; }
 
-  @media (max-width: 700px) {
+  @media (max-width: 768px) {
     .toc-sidebar { display: none; }
-    .page-wrapper { padding: 12px 10px 40px; gap: 0; }
+    .page-wrapper { padding: 0 0 40px; gap: 0; }
+    .doc-main, .pages-wrapper { overflow-x: visible; padding: 0; }
+    /* Unlock the fixed 10-inch print page → full-width responsive column */
+    .page {
+      width: 100% !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      padding: 14px 12px !important;
+      margin: 0 0 12px !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+    }
+    /* Stack every multi-column grid to a single column */
+    .region-grid, .eu-grid, .p2-top, .p2-bot, .kpi-row,
+    .cls-grid, .top5-wrap, .pipeline-grid {
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+    }
+    /* Readable type floor — scale the tiny print-point fonts up for phones */
+    .page, .page p, .cc-name, .region, .leader, .ctx { font-size: 14px !important; line-height: 1.5 !important; }
+    .pg-hd .ttl { font-size: 19px !important; }
+    .pg-hd .org, .pg-hd .meta { font-size: 12px !important; }
+    .stag { font-size: 13px !important; padding: 6px 8px !important; }
+    .region-hd { font-size: 14px !important; padding: 8px !important; }
+    .cc-name { font-size: 15px !important; font-weight: 700; }
+    .cc-iso, .km, .mt { font-size: 12px !important; }
+    .kpi-num, .kpi-val { font-size: 20px !important; }
+    .kpi-lbl { font-size: 12px !important; }
+    h4, .rank-table-box h4 { font-size: 14px !important; }
+    /* Tables scroll inside their own box, never the page */
+    .rank-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .rank-table th { font-size: 12px !important; }
+    .rank-table td { font-size: 13px !important; }
+    .rank-table td:last-child { font-size: 14px !important; }
   }
 }
 
@@ -406,8 +439,18 @@ body {
   line-height: 1.5;
 }
 </style>
+<link rel="stylesheet" href="lib/research-mobile.css">
 </head>
 <body>
+
+<nav class="research-nav" aria-label="Research papers">
+  <a href="/" class="rn-home">← Map</a>
+  <a href="/research.html">Overview</a>
+  <a href="/research-colocation.html">Co-location</a>
+  <a href="/research-regional-markets.html" aria-current="page">Regional Markets</a>
+  <a href="/research-aec.html">AEC</a>
+  <a href="/research-summary.html">Summary</a>
+</nav>
 
 <div class="page-wrapper">
 
