@@ -1332,6 +1332,58 @@
     initClaimRail();
     initTapPopovers();
     initCommandPalette();
+    initScrollElevation();
+    initCategoryFacets();
   });
 
 }());
+
+// Scroll elevation for topnav
+(function() {
+  var nav = document.querySelector('header.topnav');
+  if (!nav) return;
+  window.addEventListener('scroll', function() {
+    nav.classList.toggle('scrolled', window.scrollY > 8);
+  }, { passive: true });
+})();
+
+// Category page facet filter pills
+(function() {
+  document.querySelectorAll('.facet-bar').forEach(function(bar) {
+    bar.querySelectorAll('.facet-pill').forEach(function(pill) {
+      pill.addEventListener('click', function() {
+        var f = pill.dataset.filter;
+        bar.querySelectorAll('.facet-pill').forEach(function(p) {
+          p.classList.toggle('is-active', p === pill);
+        });
+        document.querySelectorAll('.wiki-cat-page-item').forEach(function(li) {
+          li.hidden = f !== 'all' && li.dataset.kind !== f;
+        });
+      });
+    });
+  });
+})();
+
+function initScrollElevation() {
+  var nav = document.querySelector('header.topnav');
+  if (!nav) return;
+  window.addEventListener('scroll', function() {
+    nav.classList.toggle('scrolled', window.scrollY > 8);
+  }, { passive: true });
+}
+
+function initCategoryFacets() {
+  document.querySelectorAll('.facet-bar').forEach(function(bar) {
+    bar.querySelectorAll('.facet-pill').forEach(function(pill) {
+      pill.addEventListener('click', function() {
+        var f = pill.dataset.filter;
+        bar.querySelectorAll('.facet-pill').forEach(function(p) {
+          p.classList.toggle('is-active', p === pill);
+        });
+        document.querySelectorAll('.wiki-cat-page-item').forEach(function(li) {
+          li.hidden = f !== 'all' && li.dataset.kind !== f;
+        });
+      });
+    });
+  });
+}

@@ -296,7 +296,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-@media (min-width: 640px) { body { font-size: var(--text-lg); } }  /* GOV.UK step-up */
+@media (min-width: 640px) { body { font-size: var(--text-lg); } .prose { font-size: var(--text-lg); } }  /* GOV.UK step-up */
 
 /* Custom selection tint (S-tier polish) */
 ::selection { background: var(--selection); }
@@ -358,6 +358,9 @@ kbd {
   top: 0;
   z-index: 50;
 }
+.topnav.scrolled {
+  box-shadow: 0 1px 0 var(--border), 0 4px 16px rgba(16,23,42,.07);
+}
 .topnav .left,
 .topnav .right {
   display: flex;
@@ -417,12 +420,12 @@ html[data-theme="dark"] .topnav .logo-svg { filter: invert(1) brightness(2); }
   align-items: center;
   gap: 6px;
   width: 100%;
-  max-width: 400px;
+  max-width: 520px;
 }
 .topnav-center input[type="search"],
 .topnav-search input[type="search"] {
   flex: 1;
-  height: 30px;
+  height: 38px;
   padding: 0 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -441,7 +444,7 @@ html[data-theme="dark"] .topnav .logo-svg { filter: invert(1) brightness(2); }
 }
 .topnav-center .topnav-search-btn,
 .topnav-search .topnav-search-btn {
-  height: 30px;
+  height: 38px;
   padding: 0 12px;
   background: var(--navy);
   color: #fff;
@@ -703,7 +706,8 @@ html[data-theme="dark"] .utility-row__signin { color: var(--link) !important; }
 /* Language toggle in utility row */
 a.lang-toggle {
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: 13px;
+  font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -806,11 +810,11 @@ a.lang-toggle:hover { color: var(--fg-1); }
 }
 .auth-nav-login {
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--navy);
-  font-weight: 600;
+  font-weight: 500;
 }
 html[data-theme="dark"] .auth-nav-login { color: var(--link); }
 
@@ -1123,15 +1127,18 @@ html[data-theme="dark"] .nav-row ul.nav-list li a.is-active {
 .nav-toggle-btn:hover { background: var(--bg-hover); }
 
 /* ---------- Layout shell ---------- */
-/* Single-column: sidenav removed (encyclopedia pattern uses right-rail TOC only). */
 .shell {
+  display: grid;
+  grid-template-columns: var(--sidenav-w) minmax(0, 1fr);
+  gap: 0;
   max-width: var(--content-max);
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-  gap: 0;
   padding: 0 28px;
+  align-items: start;
+}
+@media (max-width: 1024px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .docs-sidenav { display: none; }
 }
 .sidebar {
   display: none;
@@ -1235,11 +1242,7 @@ html[data-theme="dark"] .nav-row ul.nav-list li a.is-active {
 .doc-edit-link:hover { color: var(--link, var(--navy)); text-decoration: underline; }
 html[data-auth="anon"] .doc-edit-row { display: none; }
 
-/* Collapse the left nav below the tablet breakpoint — content goes full width */
-@media (max-width: 1023px) {
-  .shell { grid-template-columns: minmax(0, 1fr); }
-  .docs-sidenav { display: none; }
-}
+/* Collapse the left nav below the tablet breakpoint — handled by .shell media query above */
 
 .side-group { margin-bottom: 22px; }
 .side-group__title {
@@ -1576,8 +1579,8 @@ html[data-theme="dark"] .recent__cat {
   font-size: 13px;
   color: var(--fg-3);
 }
-.crumb a { color: var(--fg-3); font-weight: 600; }
-.crumb a:hover { color: var(--fg-1); }
+.crumb a { color: var(--link, var(--navy)); text-decoration: none; }
+.crumb a:hover { text-decoration: underline; }
 .crumb__sep { color: var(--fg-4); }
 .crumb__current { color: var(--fg-1); font-weight: 700; }
 
@@ -3115,6 +3118,56 @@ html[data-theme="dark"] .diff-rem { background: #2c0f0f; color: #fca5a5; }
 .wiki-cat-page-item-desc { display: none; } /* hide blurbs in category index */
 @media (max-width: 768px) { .wiki-cat-page-list { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 480px) { .wiki-cat-page-list { grid-template-columns: 1fr; } }
+
+/* Unified H1 across all page types — same register as .article__title */
+.wiki-cat-page-title,
+.search-page h1,
+.wiki-all-pages h1,
+.wiki-recent-changes h1,
+.wiki-statistics h1,
+.categories-page h1,
+.wanted-page h1,
+.wiki-page-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.15;
+  letter-spacing: -0.005em;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+/* Category page: collapse full index into details */
+.cat-full-index { margin-top: 32px; border-top: 1px solid var(--rule); padding-top: 16px; }
+.cat-full-index > summary { font-size: 0.875rem; color: var(--fg-3); cursor: pointer;
+  padding: 8px 0; list-style: none; user-select: none; }
+.cat-full-index > summary:hover { color: var(--fg-1); }
+.cat-full-index > summary::before { content: "▸ "; }
+.cat-full-index[open] > summary::before { content: "▾ "; }
+
+/* Facet filter pills on category pages */
+.facet-bar { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+.facet-pill { padding:6px 14px; border:1px solid var(--border); border-radius:9999px;
+  font-size:0.875rem; cursor:pointer; background:var(--bg); color:var(--fg-2);
+  transition:background .15s, color .15s, border-color .15s; }
+.facet-pill.is-active { background:var(--navy); color:#fff; border-color:var(--navy); }
+.facet-pill:hover:not(.is-active) { background:var(--bg-hover); }
+
+/* Kind badges (TOPIC / GUIDE) on list items */
+.kind-badge { display:inline-flex; align-items:center; font-size:10px; font-weight:700;
+  letter-spacing:.05em; text-transform:uppercase; padding:2px 6px; border-radius:4px;
+  white-space:nowrap; flex-shrink:0; }
+.kind-badge[data-type="guide"]  { background:#dcfce7; color:#166534; }
+.kind-badge[data-type="topic"]  { background:#dbeafe; color:#1e40af; }
+
+/* Start-here strip on homepage */
+.starthere-row { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:28px; }
+.starthere-chip { display:inline-flex; align-items:center; gap:6px; padding:8px 14px;
+  border:1px solid var(--border); border-radius:8px; text-decoration:none;
+  font-size:0.875rem; color:var(--fg-1); background:var(--bg-elevated);
+  transition:border-color .15s, background .15s; }
+.starthere-chip:hover { border-color:var(--navy); background:var(--bg-hover); }
 
 /* Editorial home layout (Wikipedia-pattern two-column front page) */
 .wiki-home-editorial { display: grid; grid-template-columns: 1fr 300px; gap: 28px; max-width: var(--content-max); margin: 0 auto; padding: 24px 28px; }
