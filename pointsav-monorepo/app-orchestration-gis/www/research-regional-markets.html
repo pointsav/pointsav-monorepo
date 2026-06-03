@@ -169,14 +169,45 @@
     .region-hd { font-size: 14px !important; padding: 8px !important; }
     .cc-name { font-size: 15px !important; font-weight: 700; }
     .cc-iso, .km, .mt { font-size: 12px !important; }
-    .kpi-num, .kpi-val { font-size: 20px !important; }
-    .kpi-lbl { font-size: 12px !important; }
+    .kpi-n, .kpi-num, .kpi-val { font-size: 22px !important; }   /* align to Summary */
+    .kpi-lbl, .kpi-sub { font-size: 12px !important; }
     h4, .rank-table-box h4 { font-size: 14px !important; }
     /* Tables scroll inside their own box, never the page */
     .rank-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .rank-table th { font-size: 12px !important; }
     .rank-table td { font-size: 13px !important; }
     .rank-table td:last-child { font-size: 14px !important; }
+
+    /* ── Page-unique nested classes the shared block didn't reach ───────── */
+    /* Rank-table inner spans */
+    .rank-table .rk { font-size: 13px !important; width: auto !important; }
+    .rank-table .mn { font-size: 14px !important; }
+    .rank-table .mt { font-size: 12px !important; }
+    .rank-table .km { font-size: 12px !important; }
+    /* Leader lists */
+    .leaders  { padding: 8px 10px !important; }
+    .lr-rank  { font-size: 13px !important; width: auto !important; }
+    .lr-name  { font-size: 14px !important; }
+    .lr-metro { font-size: 12px !important; }
+    .lr-score { font-size: 15px !important; }
+    /* Country-card secondary text */
+    .cc-iso   { font-size: 12px !important; }
+    .cc-count { font-size: 15px !important; }
+    .cc-sub   { font-size: 12px !important; }
+    .cc-pct   { font-size: 12px !important; }
+    .eu-grid .cc { padding: 8px 10px !important; }
+    /* Share bars — visible band */
+    .sb { height: 14px !important; }
+    /* Classification grid → stacked readable cards (display:contents defeats the 1fr stack) */
+    .cls-grid { display: block !important; overflow: visible !important; }
+    .cls-row  { display: block !important; border-bottom: 1px solid #e8ecf3; }
+    .cls-row:last-child { border-bottom: none; }
+    .cls-row > div { display: block !important; padding: 3px 8px !important;
+                     font-size: 13px !important; border-bottom: none !important; }
+    .cls-band  { font-size: 14px !important; white-space: normal !important; }
+    .cls-range { white-space: normal !important; }
+    /* Research-context paragraph */
+    .res-box .context-p { font-size: 13px !important; line-height: 1.5; }
   }
 }
 
