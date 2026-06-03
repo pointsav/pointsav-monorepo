@@ -1224,6 +1224,7 @@ fn home_chrome(
                                             @if let Some(cat) = t.slug.split_once('/').map(|(c, _)| c) {
                                                 span.recent__cat { (humanize_category(cat)) }
                                             }
+                                            span.kind-badge data-type=(item_type_key(&t.slug)) { (item_type_label(&t.slug)) }
                                             @if let Some(ref d) = t.last_edited {
                                                 span.recent__date { (d) }
                                             }
@@ -1245,6 +1246,27 @@ fn home_chrome(
                             @if !home_html.is_empty() {
                                 div.wiki-home-lede { (PreEscaped(home_html)) }
                             }
+                        }
+                    }
+
+                    // ── Start here strip ─────────────────────────────────────
+                    div.section-head { h2 { "New here? Start with these" } }
+                    div.starthere-row {
+                        a.starthere-chip href="/wiki/architecture/economic-model" {
+                            span.kind-badge data-type="topic" { "Topic" }
+                            " Platform business model"
+                        }
+                        a.starthere-chip href="/wiki/architecture/three-ring-architecture" {
+                            span.kind-badge data-type="topic" { "Topic" }
+                            " Three-ring architecture"
+                        }
+                        a.starthere-chip href="/wiki/architecture/compounding-substrate" {
+                            span.kind-badge data-type="topic" { "Topic" }
+                            " Compounding substrate"
+                        }
+                        a.starthere-chip href="/wiki/reference/nomenclature-taxonomy" {
+                            span.kind-badge data-type="topic" { "Topic" }
+                            " Naming conventions"
                         }
                     }
 
@@ -1367,6 +1389,16 @@ fn esc(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
+}
+
+/// Returns a display label ("Guide" or "Topic") based on the slug stem.
+fn item_type_label(slug: &str) -> &'static str {
+    if slug.rsplit('/').next().is_some_and(|s| s.starts_with("guide-")) { "Guide" } else { "Topic" }
+}
+
+/// Returns a CSS data-type key ("guide" or "topic") based on the slug stem.
+fn item_type_key(slug: &str) -> &'static str {
+    if slug.rsplit('/').next().is_some_and(|s| s.starts_with("guide-")) { "guide" } else { "topic" }
 }
 
 /// The categories that actually carry (non-stub) articles in `buckets`, in
@@ -1587,18 +1619,25 @@ async fn category_page(
                     p.wiki-empty-body { "Articles in this category will appear here." }
                 }
             } @else {
-                p.wiki-cat-page-count {
-                    (count) " article" @if count != 1 { "s" }
+                div.facet-bar role="group" aria-label="Filter by type" {
+                    button.facet-pill.is-active data-filter="all" { "All" }
+                    button.facet-pill data-filter="topic" { "Topics" }
+                    button.facet-pill data-filter="guide" { "Guides" }
                 }
-                ul.wiki-cat-page-list {
-                    @for t in topics {
-                        li.wiki-cat-page-item {
-                            a.wiki-cat-page-item-title href={ "/wiki/" (t.slug) } { (t.title) }
-                            @if let Some(ref d) = t.last_edited {
-                                span.wiki-cat-page-item-date { (d) }
-                            }
-                            @if let Some(ref desc) = t.short_description {
-                                p.wiki-cat-page-item-desc { (desc) }
+                details.cat-full-index {
+                    summary {
+                        "All " (count) " article" @if count != 1 { "s" } " in this area, A–Z"
+                    }
+                    ul.wiki-cat-page-list {
+                        @for t in topics {
+                            li.wiki-cat-page-item data-kind=(item_type_key(&t.slug)) {
+                                a.wiki-cat-page-item-title href={ "/wiki/" (t.slug) } { (t.title) }
+                                @if let Some(ref d) = t.last_edited {
+                                    span.wiki-cat-page-item-date { (d) }
+                                }
+                                @if let Some(ref desc) = t.short_description {
+                                    p.wiki-cat-page-item-desc { (desc) }
+                                }
                             }
                         }
                     }
@@ -2181,7 +2220,7 @@ fn wiki_chrome(
     printable: bool,
     _body_blake3: &str,
     claim_rail_html: &str,
-    _sidenav: &str,
+    sidenav: &str,
     prev_article: Option<&TopicSummary>,
     next_article: Option<&TopicSummary>,
 ) -> Markup {
@@ -2367,9 +2406,11 @@ fn wiki_chrome(
                     { "History" }
                 }
 
-                // Article layout: article body (+ optional claim-rail at ≥1280px)
-                // Sidenav removed: encyclopedia pattern uses right-rail TOC only.
+                // Article layout: sidenav + article body (+ optional claim-rail at ≥1280px)
                 div.shell {
+
+                    // Left docs sidenav (collapses at ≤1024px via CSS)
+                    (PreEscaped(sidenav))
 
                     // --- Article body column (two-column: prose + TOC) ---
                     main.article-wrap {
@@ -3912,6 +3953,7 @@ fn chrome(
                     }
                     nav.right {
                         (auth_nav_widget(user, pending_count))
+                        a.lang-toggle href="/es/" { "ES" }
                     }
                 }
                 main.site-main #main-content {
