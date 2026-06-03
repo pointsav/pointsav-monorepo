@@ -5,7 +5,7 @@ name: BRIEF-location-intelligence-archetypes-2026-06-01
 language_protocol: CODE-RESEARCH
 status: active
 created: 2026-06-01
-updated: 2026-06-02
+updated: 2026-06-03
 author: totebox@project-gis
 ---
 
@@ -21,8 +21,43 @@ Three-letter codes ratified 2026-06-01.
 | Code | Name | Status | Anchor type |
 |---|---|---|---|
 | **PRO** | Retail Centres | Live — T1/T2/T3 rings + dedicated map mode | Grocery hypermarket + hardware ± price club / lifestyle / electronics |
-| **VWH** | Urban Fringe | Live — dedicated map mode, 2,587 sites, rings at drill-in | Hardware without grocery OR industrial chain co-location; 3–6 story urban logistics / light-manufacturing |
-| **PKS** | Commuter | Live — dedicated map mode, 2,396 sites (commuter/metro expand pending) | Airport or transit station with park-and-ride catchment; last stops on metro/suburban rail |
+| **VWH** | Urban Fringe | Live — dedicated map mode, **7,028 sites** (Retail-density, 2026-06-03) | Light-industrial-fringe trade-supply co-location OR any lone STRONG/BROAD trade store |
+| **PKS** | Commuter | Live — dedicated map mode, **5,977 sites** (geometric airport-led, 2026-06-03) | Regional airport (park-and-fly) OR outer commuter-rail-belt station (drive-in park-and-ride) |
+
+---
+
+## 1b. Current production models (updated 2026-06-03)
+
+The §3–§4 detail below records the original research framing. The **live build models** are:
+
+**VWH — Urban Fringe (Retail-density, 7,028 features).** `qualify_vwh(cats)` in
+`build-vwh-clusters.py` admits a cluster when it has **≥2 distinct trade-supply categories**
+(a genuine co-location) **OR any single STRONG/BROAD trade-supply store** (lone hardware /
+mro_industrial / tool_rental / electrical / plumbing / lumber / flooring / welding) — a single
+trade store still marks the light-industrial fringe. Only lone WEAK stores (auto_parts-only,
+paint-only) are dropped. Tier: `tier_vwh(cats, n)` composition score
+`|cats| + 2·|cats∩STRONG| + (hardware?1) + min(n,8)` → T1 ≥10 / T2 ≥5 / T3 <5
+(T1 747 / T2 2,732 / T3 3,549; the T3 mass is single-store fringe markers).
+
+**PKS — Commuter (geometric park-and-ride, airport-led, 5,977 features).** Purely geometric,
+no metadata tags. A candidate is **either** a sized regional airport (park-and-fly node, within
+~600 km of a metro reference) **or** an outer commuter-rail-belt station (15–110 km ring,
+connected toward the metro core, ≤4 stops from the line end). **Airports lead deliberately —
+they are geographically distributed and fill the map where rail does not.** This fixed a spread
+problem: rail-only coverage was 96 North-America map cells; airport-led is **957** (≈10×). Tier:
+`tier_pks_geo(metro_d, inward, iso_km, outward, is_airport)` — regional airports in the 25–120 km
+drive-in band → T1; rail scored by ring proximity (peak ~45 km) + line connectivity + catchment
+isolation + terminus proximity (T1 1,317 / T2 3,183 / T3 1,477).
+
+**Both target ≈ Retail density (~6,500 bubbles)** so all three archetype maps read at the same
+fullness. A **simulation harness** (`tools/sim_spread.py`) clusters once and evaluates candidate
+qualify/tier rules instantly — used to tune both models.
+
+**Planned next (June 4 overnight ingest, scheduled in crontab):** four new VWH categories
+(builders' merchants, self-storage, trade counters, parcel depots → genuine co-locations) and a
+parking layer (`ingest-osm-parking.py`) that labels each PKS candidate **BUILT / PARTIAL /
+GREENFIELD** — the "no parkade yet" filter that turns the spread map into a ranked
+park-and-ride development-opportunity map.
 
 ---
 

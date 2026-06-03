@@ -75,6 +75,44 @@ Prior to Sprint 17 (May 2026), tiers were assigned by a composite score (V2: sum
 
 Hospital and university classification is sourced from OpenStreetMap. Hospitals are classified as `regional`, `district`, or `clinic` based on the OSM `healthcare` tag and mapped name patterns. Universities are classified as `regional`, `small`, or `excluded`. Per-tier civic counts (`hc_count_regional`, `hc_count_district`, `he_count_regional`, `he_count_small`) are computed within a 5 km tertiary ring around each cluster anchor.
 
+## 3b. Location Intelligence Archetypes (added 2026-06-03)
+
+Beyond the PRO/Retail tier system above, two additional co-location archetypes are published as
+GeoJSON layers loaded directly by the map (`gateway www/data/`, fetched with a `?v=` cache token).
+Both are built independently of the retail clusters and target a similar bubble density (~Retail
+scale) so all three archetype maps read at the same fullness.
+
+### Urban Fringe — `archetype-vwh.geojson` (`build-vwh-clusters.py`)
+
+The light-industrial fringe near demand — areas with industrial-ish zoning close enough to a
+retail/residential catchment to host the trades that need industrial space but customer proximity
+(JIT delivery depots, dry-clean plants, plumbers, painters, builders). Built from trade-supply
+chain point data (hardware, mro_industrial, tool_rental, auto_parts, electrical, flooring, lumber,
+plumbing, paint, welding) via two-pass DBSCAN. `qualify_vwh()` admits a cluster with ≥2 distinct
+categories OR any single STRONG/BROAD trade-supply store; tier by composition strength
+`tier_vwh(cats, n)`. **7,028 features** (2026-06-03). Feature properties: `vwh_tier`, `vwh_signal`
+(category list), `span_km`, `member_count`, `hardware_chains`, `enrichment_chains`, `metro_dist_km`,
+`nearest_metro`, `iso`.
+
+### Commuter — `archetype-pks.geojson` (`build-pks-clusters.py`)
+
+A park-and-ride development thesis: regional airports and outer commuter-rail termini where
+commuters drive in, that do not yet have the parking structures major metro hubs already have.
+Purely geometric (no metadata tags): a candidate is a sized regional airport (park-and-fly, within
+~600 km of a metro reference) OR an outer commuter-rail-belt station (15–110 km ring, connected
+toward the metro core, ≤4 stops from the line end). Airports lead — they are geographically
+distributed and fill the map where rail does not. Tier by `tier_pks_geo(metro_d, inward, iso_km,
+outward, is_airport)`. **5,977 features** (2026-06-03). Feature properties: `commuter_tier`,
+`transit_categories`, `multi_modal`, `car_rental`, `metro_dist_km`, `nearest_metro`, `node_count`, `iso`.
+
+### Planned source layers (June 4 overnight ingest)
+
+`cleansed-civic-parking.jsonl` (OSM `park_ride` + structured parking via `ingest-osm-parking.py`)
+labels each Commuter candidate BUILT / PARTIAL / GREENFIELD — the "no parkade yet" opportunity
+filter. `parcel-depot-osm.jsonl` (OSM `post_depot` + `office=logistics`) plus four new VWH brand
+categories (builders' merchants, self-storage, trade counters, parcel depots) add genuine
+co-locations to the Urban Fringe layer.
+
 ## 4. Disclaimers & Terms of Use
 
 The Woodfine Location Intelligence platform (`gis.woodfinegroup.com`) provides synthesized location intelligence metrics "as is." 
