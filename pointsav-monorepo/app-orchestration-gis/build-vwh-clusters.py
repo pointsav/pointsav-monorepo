@@ -336,28 +336,35 @@ _STRONG_CATS = frozenset({
 
 def tier_vwh(cats: frozenset) -> int:
     """
-    Strong enrichment: mro_industrial, tool_rental, electrical,
+    Strict co-location tiering — mirrors the Retail model: a co-location requires
+    2+ DISTINCT categories (enforced in build(); single-category clusters are dropped).
+    Tier reflects composition strength.
+
+    Strong industrial: mro_industrial, tool_rental, electrical,
                        plumbing, lumber, flooring, welding
+    Anchor:            hardware
     Weak signal:       auto_parts, paint  (common in US suburban strips)
 
-    T1: hardware + 1+ strong  (contractor supply zone)
-        OR 2+ strong without hardware  (pure industrial estate)
-        OR 3+ categories with at least 1 strong
-    T2: 2+ categories, none strong  (hardware + auto_parts/paint combos)
-        OR single strong + single weak
-    T3: single category  (homogeneous cluster, 2+ distinct chains required)
+    T1: 3+ distinct categories  (rich industrial node)
+        OR hardware + 2+ strong  (established contractor-supply zone)
+    T2: hardware + 1 strong      (solid industrial pair)
+        OR 2+ strong (no hardware)
+    T3: any other 2-category combo  (auto_parts+hardware, auto_parts+paint, hardware+paint)
     """
     strong = cats & _STRONG_CATS
     has_hw = "hardware" in cats
 
-    if has_hw and strong:
+    # T1 — rich industrial node
+    if len(cats) >= 3:
         return 1
-    if len(strong) >= 2:
+    if has_hw and len(strong) >= 2:
         return 1
-    if len(cats) >= 3 and strong:
-        return 1
-    if len(cats) >= 2:
+    # T2 — solid industrial pair
+    if has_hw and len(strong) >= 1:
         return 2
+    if len(strong) >= 2:
+        return 2
+    # T3 — basic 2-category pair
     return 3
 
 
@@ -377,27 +384,22 @@ def build(output_path: Path):
 
     print(f"VWH chain records: {len(all_recs):,} across {len(chain_counts)} chains")
 
-    # ── Load hypermarket records for disqualification ─────────────────────────
-    hyper_recs: list[dict] = []
-    for cid in HYPERMARKET_CHAINS:
-        hyper_recs.extend(load_jsonl(CHAIN_DIR / f"{cid}.jsonl"))
-    hyper_grid = build_grid(hyper_recs)
-    print(f"Hypermarket disqualifier records: {len(hyper_recs):,}")
-
     # ── Two-pass DBSCAN ───────────────────────────────────────────────────────
     print(f"Running two-pass DBSCAN (tight={EPS_TIGHT_KM} km, loose={EPS_LOOSE_KM} km)...")
     comp_list = two_pass_dbscan(all_recs)
     print(f"  Raw clusters: {len(comp_list):,}")
 
-    # ── Filter and tier ───────────────────────────────────────────────────────
+    # ── Filter and tier (STRICT co-location: 2+ distinct categories, like Retail) ──
+    # No metro-distance gate, no hypermarket disqualifier — same as the Retail model.
     features = []
-    n_skipped_single = n_skipped_metro = n_skipped_hyper = n_skipped_span = 0
+    n_skipped_single = n_skipped_span = 0
 
     for comp in comp_list:
         chains_in = set(all_recs[i]["chain_id"] for i in comp)
+        cats = frozenset(all_recs[i]["category"] for i in comp)
 
-        # Must have 2+ store locations (same or different chains) — single-location singletons excluded
-        if len(comp) < MIN_RECORDS:
+        # Strict co-location: require 2+ DISTINCT categories (mirrors Retail tier_of n>=2)
+        if len(cats) < 2:
             n_skipped_single += 1
             continue
 
@@ -422,18 +424,8 @@ def build(output_path: Path):
             n_skipped_span += 1
             continue
 
-        # Metro distance
+        # Metro distance kept for display/context only — NOT a filter
         metro_d, metro_name = nearest_metro(clat, clon)
-        if not (VWH_MIN_METRO_KM <= metro_d <= VWH_MAX_METRO_KM):
-            n_skipped_metro += 1
-            continue
-
-        # Hypermarket disqualifier
-        if any_within(clat, clon, hyper_recs, hyper_grid, HYPER_DISQUALIFY_KM):
-            n_skipped_hyper += 1
-            continue
-
-        cats = frozenset(all_recs[i]["category"] for i in comp)
         hardware_chains = [all_recs[i]["chain_id"] for i in comp
                            if all_recs[i]["category"] == "hardware"]
         enrichment_chains = [all_recs[i]["chain_id"] for i in comp
@@ -469,11 +461,9 @@ def build(output_path: Path):
     n_t2 = sum(1 for f in features if f["properties"]["vwh_tier"] == 2)
     n_t3 = sum(1 for f in features if f["properties"]["vwh_tier"] == 3)
 
-    print(f"  Skipped — single chain:     {n_skipped_single:,}")
+    print(f"  Skipped — single category (not a co-location): {n_skipped_single:,}")
     print(f"  Skipped — span > {VWH_SPAN_MAX_KM} km:    {n_skipped_span:,}")
-    print(f"  Skipped — metro distance:   {n_skipped_metro:,}")
-    print(f"  Skipped — hypermarket:      {n_skipped_hyper:,}")
-    print(f"  Valid VWH clusters: {len(features):,}  (T1={n_t1} T2={n_t2} T3={n_t3})")
+    print(f"  Valid VWH co-locations: {len(features):,}  (T1={n_t1} T2={n_t2} T3={n_t3})")
 
     iso_counts = Counter(f["properties"]["iso"] for f in features)
     print("\n  ISO   Count")

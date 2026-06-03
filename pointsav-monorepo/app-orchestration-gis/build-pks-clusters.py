@@ -233,32 +233,31 @@ def load_transit(path, category, transit_class_map=None):
     return nodes
 
 
-def tier_pks(transit_cats: frozenset, car_rental: bool) -> int:
+def tier_pks(all_cats: frozenset) -> int:
     """
-    T1: airport + any rail (multi-modal)  OR  airport + car_rental  OR  3+ transit cats
-    T2: airport alone  OR  any rail + car_rental  OR  2 rail categories
-    T3: intercity_rail alone in 15–80 km  OR  commuter/metro alone in 5–35 km
+    Strict co-location tiering — mirrors the Retail model. A Commuter co-location
+    requires 2+ DISTINCT categories (enforced in build(); single-category transit
+    nodes are dropped). `all_cats` includes car_rental when present.
+
+    Categories: airport, intercity_rail, commuter_rail, metro_subway, car_rental
+
+    T1: airport + any other category   (major intermodal hub)
+        OR 3+ distinct categories
+    T2: 2+ distinct RAIL types         (intercity + commuter, intercity + metro, …)
+    T3: single rail type + car_rental  (basic park-and-ride / station car hire)
     """
-    rail_cats = transit_cats & {"intercity_rail", "commuter_rail", "metro_subway"}
-    has_airport = "airport" in transit_cats
+    rail_cats = all_cats & {"intercity_rail", "commuter_rail", "metro_subway"}
+    has_airport = "airport" in all_cats
 
-    # T1
-    if has_airport and rail_cats:
+    # T1 — airport-anchored intermodal hub, or richly multi-modal
+    if has_airport and len(all_cats) >= 2:
         return 1
-    if has_airport and car_rental:
+    if len(all_cats) >= 3:
         return 1
-    if len(transit_cats) >= 3:
-        return 1
-
-    # T2
-    if has_airport:
-        return 2
-    if rail_cats and car_rental:
-        return 2
+    # T2 — multi-modal rail
     if len(rail_cats) >= 2:
         return 2
-
-    # T3
+    # T3 — single rail type + car rental
     return 3
 
 
@@ -326,37 +325,23 @@ def build(output_path: Path):
 
         transit_cats = frozenset(all_nodes[i]["category"] for i in comp)
 
-        # Metro distance filter — use most permissive range across present categories
+        # Metro distance kept for display/context only — NOT a filter (matches Retail model)
         metro_d, metro_name = nearest_metro(clat, clon)
-        ranges = []
-        if "airport" in transit_cats:
-            ranges.append(RANGE_AIRPORT)
-        if "intercity_rail" in transit_cats:
-            ranges.append(RANGE_INTERCITY)
-        if "commuter_rail" in transit_cats:
-            ranges.append(RANGE_COMMUTER)
-        if "metro_subway" in transit_cats:
-            ranges.append(RANGE_METRO)
-        if not ranges:
-            n_skipped += 1
-            continue
-        min_d = min(r[0] for r in ranges)
-        max_d = max(r[1] for r in ranges)
-        if not (min_d <= metro_d <= max_d):
-            n_skipped += 1
-            continue
 
         # Car rental enrichment
         car_rental = any_within(clat, clon, car_recs, car_grid, CAR_RENTAL_KM)
 
-        t = tier_pks(transit_cats, car_rental)
+        # Full category set (transit + car_rental)
+        all_cats = set(transit_cats)
+        if car_rental:
+            all_cats.add("car_rental")
 
-        # T3 quality filter: intercity alone must be within 15–80 km
-        if t == 3:
-            if "intercity_rail" in transit_cats and "airport" not in transit_cats:
-                if metro_d > T3_INTERCITY_MAX_KM:
-                    n_skipped += 1
-                    continue
+        # Strict co-location: require 2+ DISTINCT categories (mirrors Retail tier_of n>=2)
+        if len(all_cats) < 2:
+            n_skipped += 1
+            continue
+
+        t = tier_pks(frozenset(all_cats))
 
         # Representative name: prefer airport name > largest intercity station
         names = [all_nodes[i]["name"] for i in comp if all_nodes[i]["name"]]
@@ -390,7 +375,7 @@ def build(output_path: Path):
     n_t2 = sum(1 for f in features if f["properties"]["commuter_tier"] == 2)
     n_t3 = sum(1 for f in features if f["properties"]["commuter_tier"] == 3)
 
-    print(f"  Skipped (out of range / quality): {n_skipped:,}")
+    print(f"  Skipped — single category (not a co-location): {n_skipped:,}")
     print(f"  Valid PKS clusters: {len(features):,}  (T1={n_t1} T2={n_t2} T3={n_t3})")
 
     iso_counts = Counter(f["properties"]["iso"] for f in features)
