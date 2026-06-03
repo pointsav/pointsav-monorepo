@@ -1399,7 +1399,10 @@
         selectedClusterId = null;
         selectedClusterProps = null;
         selectedClusterCoords = null;
-        setNavContext(REGIONS[currentRegion]?.label || 'Overview', flyToOverview, 'Retail View');
+        const _viewLabel = urbanFringeActive ? 'Urban Fringe View'
+                         : commuterActive    ? 'Commuter View'
+                         : 'Retail View';
+        setNavContext(REGIONS[currentRegion]?.label || 'Overview', flyToOverview, _viewLabel);
 
         // Paint opacity before applyView (belt-and-suspenders — layout visibility follows)
         if (map.getLayer('nodes')) map.setPaintProperty('nodes', 'circle-opacity', 0);
@@ -3143,6 +3146,25 @@
             } else {
                 drillIntoCluster(metaToClusterProps(c), [c.lon, c.lat]);
             }
+        });
+
+        // ── Click handler: Urban Fringe / Commuter archetype dots ──────────────
+        // Mirror the Retail bubble drill-in: fly down to the dot's ring. The flyTo
+        // crosses RETAIL_ZOOM_THRESHOLD → zoomend switches GLOBAL→LOCAL → buildProdRings
+        // draws the VWH/PKS ring (dispatch keyed on activeArchetype).
+        function drillIntoArchetypeDot(e) {
+            const f = e.features && e.features[0];
+            if (!f) return;
+            const coords = f.geometry?.coordinates
+                || [f.properties?.lon, f.properties?.lat];
+            if (coords[0] == null || coords[1] == null) return;
+            map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 12), duration: 900, essential: true });
+            e.stopPropagation && e.stopPropagation();
+        }
+        ['uf-t1', 'uf-t2', 'uf-t3', 'cm-t1', 'cm-t2', 'cm-t3'].forEach(id => {
+            map.on('click', id, drillIntoArchetypeDot);
+            map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
+            map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
         });
 
         // Rebuild proximity rings after every pan in Retail Level
