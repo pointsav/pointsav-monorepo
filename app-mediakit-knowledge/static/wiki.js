@@ -838,6 +838,9 @@
     var href = link.getAttribute('href');
     if (!href || !href.startsWith('/wiki/')) return;
     if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+    // Only do AJAX swap when already on an article page that has #mw-content-text.
+    // From the homepage or category pages the element is absent; let the browser navigate normally.
+    if (!document.querySelector('#mw-content-text')) return;
     e.preventDefault();
     navigateTo(href);
   }
