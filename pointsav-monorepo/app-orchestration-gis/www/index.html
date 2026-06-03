@@ -120,15 +120,50 @@
 
         /* ── Responsive ───────────────────────────────────────────── */
         @media (max-width: 768px) {
-            /* Default = peek (~80% map visible). Grows to a half-sheet only when a feature is selected. */
-            #data-panel      { top: auto; bottom: 0; left: 0; width: 100%; border-radius: 20px 20px 0 0; max-height: 140px; padding-bottom: env(safe-area-inset-bottom, 0px); transition: max-height 0.25s ease; }
-            #data-panel.has-detail { max-height: 52dvh; }
-            .nav-cluster     { bottom: calc(152px + env(safe-area-inset-bottom, 0px)); right: 12px; padding-bottom: 0; transition: bottom 0.25s ease; }
-            .nav-cluster.has-detail-nav { bottom: calc(52dvh + 12px); }
+            /* ── Bottom-sheet ──────────────────────────────────────────
+               Overview: header-height sheet (search/tabs/counts visible).
+               Detail (.has-detail): a real 3-detent draggable sheet — peek/half/full —
+               whose height is driven by JS via the --sheet-h custom property. */
+            #data-panel {
+                top: auto; bottom: 0; left: 0; width: 100%;
+                border-radius: 20px 20px 0 0;
+                max-height: 56dvh;
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+                transition: height 0.30s cubic-bezier(.32,.72,0,1);
+            }
+            #data-panel.has-detail {
+                height: var(--sheet-h, 52dvh);
+                max-height: 90dvh;
+            }
+            #data-panel.dragging { transition: none; }   /* 1:1 finger tracking */
+            /* Detail hides the overview chrome (keeps the back strip + the summary) */
+            #data-panel.has-detail > .panel-header > h1,
+            #data-panel.has-detail > .panel-header > p,
+            #data-panel.has-detail > .panel-header > .region-switch,
+            #data-panel.has-detail > .panel-header > .chain-search-wrap { display: none; }
+            /* Peek detent: show only the summary; hide the scrollable detail body */
+            #data-panel.has-detail[data-detent="peek"] .detail-body { display: none; }
+
+            .nav-cluster     { bottom: calc(56dvh + 12px); right: 12px; padding-bottom: 0; transition: bottom 0.30s ease; }
+            .nav-cluster.has-detail-nav { bottom: calc(var(--sheet-h, 52dvh) + 12px); }
             .nav-btn         { width: 80px; }
-            .panel-collapse-btn { display: flex; }
-            #data-panel.collapsed { max-height: 96px; overflow: hidden; }
-            #data-panel.collapsed .panel-collapse-btn { transform: rotate(180deg); }
+
+            /* Real drag grabber + close button (detail mode only) */
+            .sheet-grabber { display: none; }
+            .sheet-close   { display: none; }
+            #data-panel.has-detail .sheet-grabber {
+                display: flex; align-items: center; justify-content: center;
+                height: 30px; cursor: grab; touch-action: none;
+                -webkit-tap-highlight-color: transparent;
+            }
+            #data-panel.has-detail .sheet-grabber:active { cursor: grabbing; }
+            #data-panel.has-detail .sheet-close {
+                display: flex; position: absolute; top: 8px; right: 12px; z-index: 4;
+                width: 32px; height: 32px; align-items: center; justify-content: center;
+                border: 0; border-radius: 50%; background: rgba(15,23,42,0.06);
+                color: var(--text-muted); font-size: 20px; line-height: 1; cursor: pointer;
+            }
+            .panel-collapse-btn { display: none; }   /* superseded by grabber + close */
             .drawer-handle   { display: block; }
             /* Readability floor — nothing below 12px on phones */
             .panel-header p, .civic-box small, .lc-planned { font-size: 12px !important; }
@@ -339,8 +374,13 @@
 <body>
     <div id="map"></div>
 
-    <aside id="data-panel">
-        <div class="drawer-handle" aria-hidden="true"></div>
+    <aside id="data-panel" role="region" aria-label="Location details">
+        <div class="sheet-grabber" role="button" tabindex="0"
+             aria-label="Resize panel — drag, or tap to cycle peek, half and full">
+            <span class="drawer-handle" aria-hidden="true"></span>
+        </div>
+        <button class="sheet-close" aria-label="Close panel"
+                onclick="flyToOverview()">×</button>
         <div class="panel-header">
             <button class="panel-collapse-btn"
                     onclick="document.getElementById('data-panel').classList.toggle('collapsed')"
@@ -597,13 +637,89 @@
         if (window.innerWidth > 768) return { top: 0, bottom: 0, left: 380, right: 0 };
         const panel = document.getElementById('data-panel');
         let bottom = panel ? panel.offsetHeight : 0;
-        // While the sheet is animating open (has-detail), offsetHeight is mid-transition —
-        // use the target half-detent height (52dvh) so the feature frames correctly.
         if (panel && panel.classList.contains('has-detail')) {
-            bottom = Math.max(bottom, Math.round(window.innerHeight * 0.52));
+            // Prefer the JS-driven detent target (--sheet-h) — offsetHeight is mid-transition.
+            const v = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sheet-h'));
+            bottom = !isNaN(v) ? v : Math.max(bottom, Math.round(window.innerHeight * 0.52));
         }
         return { top: 0, bottom, left: 0, right: 0 };
     }
+
+    // ── Bottom-sheet detent controller (peek / half / full) ────────────────────
+    // Drag the grabber, tap to cycle, arrow keys to step; swipe down past peek dismisses.
+    // Active only on mobile while a feature is selected (#data-panel.has-detail).
+    const SHEET = (() => {
+        const mq = window.matchMedia('(max-width: 768px)');
+        const panel = () => document.getElementById('data-panel');
+        const PEEK_PX = 132;
+        function px(name) {
+            const h = window.innerHeight;
+            return name === 'peek' ? PEEK_PX : name === 'half' ? Math.round(h * 0.52) : Math.round(h * 0.90);
+        }
+        let current = 'half';
+        const setVar = v => document.documentElement.style.setProperty('--sheet-h', v);
+        function reframe() {
+            if (typeof selectedClusterCoords !== 'undefined' && selectedClusterCoords) {
+                map.easeTo({ center: selectedClusterCoords, padding: sheetPad(), duration: 280, essential: true });
+            }
+        }
+        function snapTo(name, animate = true) {
+            const p = panel();
+            if (!mq.matches || !p || !p.classList.contains('has-detail')) return;
+            current = name;
+            if (!animate) { p.classList.add('dragging'); }
+            setVar(px(name) + 'px');
+            p.dataset.detent = name;
+            p.setAttribute('aria-expanded', name === 'peek' ? 'false' : 'true');
+            if (!animate) { requestAnimationFrame(() => p.classList.remove('dragging')); }
+            reframe();
+        }
+        function cycle() { snapTo(current === 'peek' ? 'half' : current === 'half' ? 'full' : 'peek'); }
+        function open() {                      // called when entering detail mode
+            current = 'half';
+            setVar(px('half') + 'px');
+            const p = panel();
+            if (p) { p.dataset.detent = 'half'; p.setAttribute('aria-expanded', 'true'); }
+            attach();
+        }
+        function attach() {
+            const p = panel(); if (!p) return;
+            const grab = p.querySelector('.sheet-grabber');
+            if (!grab || grab._wired) return; grab._wired = true;
+            let startY = 0, startH = 0, dragging = false, moved = false;
+            grab.addEventListener('pointerdown', e => {
+                if (!mq.matches || !p.classList.contains('has-detail')) return;
+                dragging = true; moved = false; startY = e.clientY;
+                startH = p.getBoundingClientRect().height;
+                p.classList.add('dragging');
+                try { grab.setPointerCapture(e.pointerId); } catch (_) {}
+            });
+            grab.addEventListener('pointermove', e => {
+                if (!dragging) return;
+                const dy = startY - e.clientY;
+                if (Math.abs(dy) > 4) moved = true;
+                const hgt = Math.min(px('full'), Math.max(60, startH + dy));
+                setVar(hgt + 'px');
+            });
+            function end() {
+                if (!dragging) return; dragging = false; p.classList.remove('dragging');
+                const hgt = p.getBoundingClientRect().height;
+                if (hgt < PEEK_PX * 0.55) { flyToOverview(); return; }   // swipe-down dismiss
+                const opts = [['peek', px('peek')], ['half', px('half')], ['full', px('full')]];
+                opts.sort((a, b) => Math.abs(a[1] - hgt) - Math.abs(b[1] - hgt));
+                snapTo(opts[0][0]);
+            }
+            grab.addEventListener('pointerup', end);
+            grab.addEventListener('pointercancel', end);
+            grab.addEventListener('click', () => { if (!moved) cycle(); });
+            grab.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cycle(); }
+                else if (e.key === 'ArrowUp')   { e.preventDefault(); snapTo(current === 'peek' ? 'half' : 'full'); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); snapTo(current === 'full' ? 'half' : 'peek'); }
+            });
+        }
+        return { snapTo, cycle, open, attach, isMobile: () => mq.matches, get current() { return current; } };
+    })();
 
     // Grow the mobile bottom sheet to the half detent when a feature is selected, so its stats
     // are visible (and the nav buttons ride above it). No-op on desktop.
@@ -613,11 +729,14 @@
         panel.classList.add('has-detail');
         panel.classList.remove('collapsed');
         document.querySelector('.nav-cluster')?.classList.add('has-detail-nav');
+        SHEET.open();   // initialise the detent to half + wire the grabber
     }
     function collapseSheet() {
         const panel = document.getElementById('data-panel');
         if (!panel) return;
         panel.classList.remove('has-detail');
+        panel.removeAttribute('data-detent');
+        document.documentElement.style.removeProperty('--sheet-h');
         document.querySelector('.nav-cluster')?.classList.remove('has-detail-nav');
     }
 
