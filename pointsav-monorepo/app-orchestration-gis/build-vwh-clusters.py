@@ -54,6 +54,7 @@ VWH_CHAINS: dict[str, list[str]] = {
     "hardware": [
         "home-depot-us", "home-depot-ca", "home-depot-mx",
         "lowes-us", "lowes-ca",
+        "rona-ca", "home-hardware-ca",  # Canada
         "bq-uk", "wickes-uk",
         "leroy-merlin-fr", "leroy-merlin-es", "leroy-merlin-it",
         "leroy-merlin-gr", "leroy-merlin-pl", "leroy-merlin-pt",
@@ -66,10 +67,12 @@ VWH_CHAINS: dict[str, list[str]] = {
     ],
     "mro_industrial": [
         "wurth-de", "fastenal-us", "grainger-us", "hilti-ch",
-        "princess-auto-ca",
+        "princess-auto-ca", "fastenal-ca",   # Canada
+        "truper-mx",                          # Mexico
     ],
     "tool_rental": [
         "united-rentals-us", "sunbelt-rentals-us",
+        "united-rentals-ca",                  # Canada
         "loxam-fr", "kiloutou-fr", "boels-rental-nl",
         "ramirent-fi", "cramo-fi",
         "hss-hire-uk", "speedy-hire-uk",
@@ -77,6 +80,7 @@ VWH_CHAINS: dict[str, list[str]] = {
     "auto_parts": [
         "autozone-us", "oreilly-auto-us", "napa-us",
         "napa-ca", "advance-auto-us", "autozone-mx",
+        "partsource-ca",                      # Canada
         "halfords-uk",
     ],
     "electrical": [
