@@ -197,7 +197,7 @@ pub fn first_image_url(body_md: &str) -> Option<String> {
 /// impl in chrono converts cleanly. Feed-level metadata is static; per-entry
 /// `<link>` URLs are relative (`/wiki/<slug>`) — aggregators resolve against
 /// their configured base URL.
-pub fn render_atom(items: &[FeedItem]) -> String {
+pub fn render_atom(items: &[FeedItem], site_title: &str) -> String {
     use atom_syndication::{Entry, Feed, FixedDateTime, Generator, Link, Person, Text};
 
     // Feed-level `<updated>` is the most-recent entry mtime, or epoch if empty.
@@ -232,10 +232,10 @@ pub fn render_atom(items: &[FeedItem]) -> String {
 
     let feed = Feed {
         id: "urn:pointsav:knowledge:feed".to_string(),
-        title: Text::plain("PointSav Knowledge"),
+        title: Text::plain(site_title),
         updated: feed_updated,
         authors: vec![Person {
-            name: "PointSav Knowledge".to_string(),
+            name: site_title.to_string(),
             ..Default::default()
         }],
         generator: Some(Generator {
@@ -254,7 +254,7 @@ pub fn render_atom(items: &[FeedItem]) -> String {
 /// Hand-rolled via `serde_json::json!` — no extra crate required.
 /// `home_page_url` is `/` (relative) so the feed is host-agnostic; consuming
 /// aggregators resolve it against the configured base URL.
-pub fn render_json_feed(items: &[FeedItem]) -> Value {
+pub fn render_json_feed(items: &[FeedItem], site_title: &str) -> Value {
     let feed_items: Vec<Value> = items
         .iter()
         .map(|item| {
@@ -270,7 +270,7 @@ pub fn render_json_feed(items: &[FeedItem]) -> Value {
 
     json!({
         "version": "https://jsonfeed.org/version/1.1",
-        "title": "PointSav Knowledge",
+        "title": site_title,
         "home_page_url": "/",
         "feed_url": "/feed.json",
         "items": feed_items,
@@ -283,7 +283,7 @@ pub fn render_json_feed(items: &[FeedItem]) -> Value {
 /// Atom document. Content-Type: `application/atom+xml; charset=utf-8`.
 pub async fn get_atom(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
     let items = collect_recent_items(&state.content_dir, 25).await?;
-    let xml = render_atom(&items);
+    let xml = render_atom(&items, &state.site_title);
     let mut resp = xml.into_response();
     resp.headers_mut().insert(
         header::CONTENT_TYPE,
@@ -299,7 +299,7 @@ pub async fn get_atom(State(state): State<Arc<AppState>>) -> Result<Response, Wi
 /// (`application/json`).
 pub async fn get_json_feed(State(state): State<Arc<AppState>>) -> Result<Json<Value>, WikiError> {
     let items = collect_recent_items(&state.content_dir, 25).await?;
-    let value = render_json_feed(&items);
+    let value = render_json_feed(&items, &state.site_title);
     Ok(Json(value))
 }
 
@@ -338,7 +338,7 @@ mod tests {
             updated: Utc::now(),
             summary: "A short summary.".to_string(),
         }];
-        let xml = render_atom(&items);
+        let xml = render_atom(&items, "Test Wiki");
         assert!(
             xml.contains("<feed"),
             "Atom output should contain <feed: {xml}"
@@ -348,7 +348,7 @@ mod tests {
             "Atom output should contain slug: {xml}"
         );
         assert!(
-            xml.contains("PointSav Knowledge"),
+            xml.contains("Test Wiki"),
             "Atom output should contain feed title: {xml}"
         );
     }
@@ -361,7 +361,7 @@ mod tests {
             updated: Utc::now(),
             summary: "Foo summary.".to_string(),
         }];
-        let value = render_json_feed(&items);
+        let value = render_json_feed(&items, "Test Wiki");
         assert_eq!(
             value["version"].as_str().unwrap(),
             "https://jsonfeed.org/version/1.1"
@@ -375,7 +375,7 @@ mod tests {
 
     #[test]
     fn render_atom_empty_feed_is_valid_xml() {
-        let xml = render_atom(&[]);
+        let xml = render_atom(&[], "Test Wiki");
         assert!(
             xml.contains("<feed"),
             "empty Atom feed should still be valid XML: {xml}"

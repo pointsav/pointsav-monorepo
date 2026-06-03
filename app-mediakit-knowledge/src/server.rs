@@ -1671,7 +1671,10 @@ async fn category_page(
                 }
             }
             @if count == 0 {
-                p.wiki-cat-page-empty { "No articles in this category yet." }
+                div.wiki-empty-state {
+                    p.wiki-empty-title { "This area is being built." }
+                    p.wiki-empty-body { "Articles in this category will appear here." }
+                }
             } @else {
                 p.wiki-cat-page-count {
                     (count) " article" @if count != 1 { "s" }
