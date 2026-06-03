@@ -464,6 +464,20 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 - **Status:** RELAYED (2026-06-03) — 10 DESIGN-RESEARCH/COMPONENT/TOKEN-CHANGE artifacts relayed to project-design via outbox; pending project-design pickup
 - **Source:** 7 from project-marketing (Leapfrog 2030 audit; commit 85099ed), 3 from project-orgcharts
 - **Content:** WCAG 2.2 audit, Leapfrog 2030 CSS techniques, mobile performance findings, synthesis; icon-tab component+token; woodfine blue tint token; orgchart component + bencal chart research + woodfine teal-red theme tokens
+### A37 — TOPIC: Yo-Yo Tier B Cloud Run Substrate (bilingual) [project-intelligence dispatch]
+- **File:** `.agent/drafts-outbound/TOPIC-yoyo-cloud-run-substrate.draft.md` + `.es.draft.md`
+- **Status:** STAGED (2026-06-03) — pending project-editorial
+- **Source:** project-intelligence — Cloud Run Tier B migration session 2026-06-03
+- **Destination:** media-knowledge-documentation/substrate/yoyo-cloud-run-substrate.md + .es.md
+- **Content:** Cloud Run as Tier B inference substrate; Ollama 0.24.0 on nvidia-l4; GCS FUSE file-cache cold-start fix (~5 min); scale-to-zero economics (~$57/month at 2hr/day); GCP identity token auth; health probe pattern; Doorman integration; 1-hour flow test results (15/15 HTTP 200, avg 72s, $0.41 total).
+
+### A38 — GUIDE: Cloud Run Tier B Deploy + Operate [project-intelligence dispatch]
+- **File:** `.agent/drafts-outbound/GUIDE-yoyo-cloud-run-deploy.draft.md`
+- **Status:** STAGED (2026-06-03) — pending project-editorial
+- **Source:** project-intelligence — Cloud Run Tier B migration session 2026-06-03
+- **Destination:** woodfine-fleet-deployment/cluster-totebox-intelligence/guide-yoyo-cloud-run-deploy.md
+- **Content:** 7-section operational guide: pre-flight (GCS blob verification); deploy YAML (image pinning, concurrency, file-cache volumes); Doorman wiring (build + binary swap + env vars); verification (readyz + flow test); cost management (min-instances); rollback; known constraints (image version, concurrency, ghcr.io block, identity tokens).
+- **Supersedes:** `service-slm/docs/deploy/deploy-yoyo-tier-b.md` (rewritten in-repo as quick reference 2026-06-03).
 
 ---
 

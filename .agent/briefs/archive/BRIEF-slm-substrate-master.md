@@ -701,12 +701,28 @@ separate deliberate choice (~$0.67/hr continuous) — NOT required by this fix.
 - IAM: `--allow-unauthenticated` deploy flag failed (SA lacks setIamPolicy); identity tokens work
 
 ### Follow-up items (post-migration)
-- [ ] Redeploy with §10.1 file-cache fix (32 GiB + in-memory cache + dd preload)
-- [ ] Re-register model with `use_mmap false` (blob already in GCS; fast, no re-download)
-- [ ] Confirm inference works after §10.1 fix (target: <4 min cold start)
-- [ ] Deploy new Doorman binary via Command Session (binary ledger required)
+- [x] Redeploy with §10.1 file-cache fix — deployed `ollama:0.24.0`, 32 GiB, file-cache, concurrency=4
+- [x] Confirm inference works — 1-hour test 15/15 HTTP 200, avg 72s (2026-06-03)
+- [x] Deploy new Doorman binary — binary swapped with `MetadataBearer` + health probe bearer auth
 - [x] MetadataBearer implemented in Doorman (commit 04adf39c)
-- [ ] Update `service-slm/docs/deploy/deploy-yoyo-tier-b.md` with Cloud Run + Ollama + file-cache
-- [ ] Release static IP `34.6.204.25` if old VM is permanently retired
-- [ ] `--min-instances 1` for zero cold start is OPTIONAL — NOT needed; §10.1 keeps it 32B + scale-to-zero
-- [ ] Model stays OLMo 3 32B — no model swap needed (§10.1 fixes load without changing model)
+- [x] Update `service-slm/docs/deploy/deploy-yoyo-tier-b.md` — rewritten for Cloud Run + Ollama (2026-06-03)
+- [x] Release static IP `34.6.204.25` — released (2026-06-03, VM + disks deleted)
+- [x] `use_mmap false` — not needed; GCS file-cache serves GGUF from in-memory volume at RAM speed
+- [x] Model stays OLMo 3 32B — confirmed, no model swap
+
+### Stage 6 status (2026-06-03)
+
+Two commits on `main` in this archive, not yet promoted to canonical:
+
+| SHA | Subject |
+|---|---|
+| `6a733688` | fix(service-slm): harden env validation, health probe bearer auth, clippy split_once, dead_code allow |
+| `77dbc91c` | fix(service-content): harden unwraps, CRM invariant, deferred retry bound; docs(slm): post-Cloud-Run NEXT+CLAUDE+BRIEF update |
+| `<pending>` | ops(intelligence): stage Cloud Run Tier B TOPIC+GUIDE; rewrite deploy doc; register A37+A38 |
+
+**Command Session action:** run `bin/promote.sh` from this archive to promote these commits.
+
+### Artifacts staged (2026-06-03)
+
+- `A37` — TOPIC-yoyo-cloud-run-substrate.draft.md + .es.draft.md → project-editorial → media-knowledge-documentation/substrate/
+- `A38` — GUIDE-yoyo-cloud-run-deploy.draft.md → project-editorial → woodfine-fleet-deployment/cluster-totebox-intelligence/
