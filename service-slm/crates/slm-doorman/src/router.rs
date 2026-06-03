@@ -100,11 +100,11 @@ impl Doorman {
     pub async fn route_async(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
         if let Some(ref orch) = self.orchestrator {
             info!(target: "slm_doorman::router", request_id = %req.request_id, "dispatching via orchestrator");
-            
+
             if let Some(node) = orch.registry.select_optimal(req).await {
                 info!(target: "slm_doorman::router", node_id = %node.id.0, "selected node");
                 // Here we would dispatch to node.endpoint
-                // For Phase 1, we continue to delegate to existing dispatch path 
+                // For Phase 1, we continue to delegate to existing dispatch path
                 // but node-aware dispatch logic goes here in future steps.
             }
         }
@@ -187,10 +187,7 @@ impl Doorman {
                 .unwrap_or_default();
 
             if !query.is_empty() {
-                if let Some(ctx) = gc
-                    .fetch_context(req.module_id.as_str(), &query, 5)
-                    .await
-                {
+                if let Some(ctx) = gc.fetch_context(req.module_id.as_str(), &query, 5).await {
                     let mut cloned = req.clone();
                     cloned.messages.insert(
                         0,
@@ -335,9 +332,10 @@ impl Doorman {
                     // If multiple are configured and no label is provided, the
                     // behavior is non-deterministic (HashMap order) but safe.
                     // Operator should always use labels for Multi-Yo-Yo.
-                    self.yoyo.values().next().ok_or_else(|| {
-                        DoormanError::TierUnavailable(Tier::Yoyo)
-                    })?
+                    self.yoyo
+                        .values()
+                        .next()
+                        .ok_or_else(|| DoormanError::TierUnavailable(Tier::Yoyo))?
                 };
 
                 // B4: fast-path health + circuit check before making any HTTP call.
@@ -581,7 +579,11 @@ mod tests {
     use slm_core::{ChatMessage, ModuleId, RequestId};
     use std::str::FromStr;
 
-    fn req(complexity: Complexity, hint: Option<Tier>, yoyo_label: Option<String>) -> ComputeRequest {
+    fn req(
+        complexity: Complexity,
+        hint: Option<Tier>,
+        yoyo_label: Option<String>,
+    ) -> ComputeRequest {
         ComputeRequest {
             request_id: RequestId::new(),
             module_id: ModuleId::from_str("foundry").unwrap(),
@@ -680,11 +682,19 @@ mod tests {
         // Simulate health probe failure + circuit open.
         yoyo.health_up.store(false, Ordering::Relaxed);
         // FAILURE_THRESHOLD is 5 — need 5 consecutive failures to open circuit
-        for _ in 0..5 { yoyo.circuit.record_failure(); }
+        for _ in 0..5 {
+            yoyo.circuit.record_failure();
+        }
 
         let mut map = HashMap::new();
         map.insert("default".to_string(), yoyo);
-        let doorman = Doorman::new(DoormanConfig { yoyo: map, ..Default::default() }, ledger());
+        let doorman = Doorman::new(
+            DoormanConfig {
+                yoyo: map,
+                ..Default::default()
+            },
+            ledger(),
+        );
         let status = doorman.tier_b_status();
         let info = status.get("default").unwrap();
         assert_eq!(info.reason, Some("health-probe-failures"));
@@ -698,11 +708,19 @@ mod tests {
         // health probe still up, but circuit tripped by request failures.
         yoyo.health_up.store(true, Ordering::Relaxed);
         // FAILURE_THRESHOLD is 5 — need 5 consecutive failures to open circuit
-        for _ in 0..5 { yoyo.circuit.record_failure(); }
+        for _ in 0..5 {
+            yoyo.circuit.record_failure();
+        }
 
         let mut map = HashMap::new();
         map.insert("default".to_string(), yoyo);
-        let doorman = Doorman::new(DoormanConfig { yoyo: map, ..Default::default() }, ledger());
+        let doorman = Doorman::new(
+            DoormanConfig {
+                yoyo: map,
+                ..Default::default()
+            },
+            ledger(),
+        );
         let status = doorman.tier_b_status();
         let info = status.get("default").unwrap();
         assert_eq!(info.reason, Some("request-failures"));
@@ -714,7 +732,13 @@ mod tests {
         let yoyo = make_yoyo(Some("us-central1-a".into()));
         let mut map = HashMap::new();
         map.insert("default".to_string(), yoyo);
-        let doorman = Doorman::new(DoormanConfig { yoyo: map, ..Default::default() }, ledger());
+        let doorman = Doorman::new(
+            DoormanConfig {
+                yoyo: map,
+                ..Default::default()
+            },
+            ledger(),
+        );
         let status = doorman.tier_b_status();
         let info = status.get("default").unwrap();
         assert_eq!(info.circuit, "closed");

@@ -87,15 +87,14 @@ use anyhow::Context;
 use slm_doorman::tier::{
     BearerTokenProvider, ExternalTierClient, ExternalTierConfig, LocalTierClient, LocalTierConfig,
     MetadataBearer, PricingConfig, StaticBearer, TierCPricing, TierCProvider, YoYoTierClient,
-    YoYoTierConfig,
-    FOUNDRY_DEFAULT_ALLOWLIST,
+    YoYoTierConfig, FOUNDRY_DEFAULT_ALLOWLIST,
 };
 use slm_doorman::{
     ApprenticeshipConfig, AuditLedger, AuditProxyClient, AuditProxyConfig, BriefCache, Doorman,
     DoormanConfig, GraphContextClient, LarkValidator, PromotionLedger, SshKeygenVerifier,
     VerdictDispatcher, VerdictVerifier, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
 };
-use tracing::info;
+use tracing::{info, warn};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -432,8 +431,7 @@ async fn main() -> anyhow::Result<()> {
                         // drain queue indefinitely.
                         let outcome = if outcome == ReleaseOutcome::Retry {
                             let attempts = slm_doorman_server::queue::bump_attempts(
-                                &drain_cfg,
-                                &brief_id,
+                                &drain_cfg, &brief_id,
                             )
                             .unwrap_or_else(|e| {
                                 tracing::warn!(
@@ -744,13 +742,10 @@ fn build_doorman() -> anyhow::Result<Doorman> {
     // When SERVICE_CONTENT_ENDPOINT is set, the Doorman queries the
     // service-content graph before each inference call and injects matching
     // entity rows as a system message. Non-fatal if absent.
-    let graph_context_client =
-        std::env::var("SERVICE_CONTENT_ENDPOINT")
-            .ok()
-            .map(|ep| {
-                info!("Graph context enabled; service-content endpoint: {}", ep);
-                GraphContextClient::new(ep)
-            });
+    let graph_context_client = std::env::var("SERVICE_CONTENT_ENDPOINT").ok().map(|ep| {
+        info!("Graph context enabled; service-content endpoint: {}", ep);
+        GraphContextClient::new(ep)
+    });
 
     Ok(Doorman::new(
         DoormanConfig {
@@ -776,6 +771,9 @@ fn build_yoyo_client(
             let use_gcp_auth = std::env::var("SLM_YOYO_GCP_AUTH")
                 .map(|v| v.eq_ignore_ascii_case("true"))
                 .unwrap_or(false);
+            if use_gcp_auth && std::env::var("SLM_YOYO_GCP_ZONE").is_err() {
+                warn!("SLM_YOYO_GCP_AUTH=true but SLM_YOYO_GCP_ZONE is unset; /readyz zone field will be empty");
+            }
             let bearer: Arc<dyn BearerTokenProvider> = if use_gcp_auth {
                 Arc::new(MetadataBearer::new(&endpoint))
             } else {
@@ -786,6 +784,15 @@ fn build_yoyo_client(
                 .ok()
                 .and_then(|s| s.parse::<f64>().ok())
                 .unwrap_or(0.0);
+            let health_path =
+                std::env::var("SLM_YOYO_HEALTH_PATH").unwrap_or_else(|_| "/health".to_string());
+            if !health_path.starts_with('/') {
+                eprintln!(
+                    "[FATAL] SLM_YOYO_HEALTH_PATH must start with '/' (got {:?})",
+                    health_path
+                );
+                std::process::exit(1);
+            }
             Some(YoYoTierClient::new(
                 YoYoTierConfig {
                     endpoint,
@@ -794,8 +801,7 @@ fn build_yoyo_client(
                     contract_version: slm_doorman::YOYO_CONTRACT_VERSION.to_string(),
                     pricing: PricingConfig { yoyo_hourly_usd },
                     zone: std::env::var("SLM_YOYO_GCP_ZONE").ok(),
-                    health_path: std::env::var("SLM_YOYO_HEALTH_PATH")
-                        .unwrap_or_else(|_| "/health".to_string()),
+                    health_path,
                 },
                 bearer,
             ))

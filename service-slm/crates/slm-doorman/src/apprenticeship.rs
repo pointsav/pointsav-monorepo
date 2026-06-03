@@ -139,7 +139,11 @@ impl<'a> ApprenticeshipDispatcher<'a> {
         brief: &ApprenticeshipBrief,
     ) -> Result<ApprenticeshipAttempt> {
         let prompt = apprentice_prompt(&self.config, brief);
-        let tier_hint = pick_tier_for_brief(brief, self.config.brief_tier_b_threshold_chars, self.config.tier_a_first);
+        let tier_hint = pick_tier_for_brief(
+            brief,
+            self.config.brief_tier_b_threshold_chars,
+            self.config.tier_a_first,
+        );
 
         let module_id = brief
             .scope
@@ -194,7 +198,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
                 "<|endoftext|>".to_string(),
                 "<|im_end|>".to_string(),
             ]),
-            };
+        };
 
         info!(
             target: "slm_doorman::apprenticeship",
@@ -251,7 +255,11 @@ impl<'a> ApprenticeshipDispatcher<'a> {
 
         // Same routing as dispatch_brief.
         let prompt = apprentice_prompt(&self.config, brief);
-        let tier_hint = pick_tier_for_brief(brief, self.config.brief_tier_b_threshold_chars, self.config.tier_a_first);
+        let tier_hint = pick_tier_for_brief(
+            brief,
+            self.config.brief_tier_b_threshold_chars,
+            self.config.tier_a_first,
+        );
         let module_id = brief
             .scope
             .cluster
@@ -304,7 +312,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
                 "<|endoftext|>".to_string(),
                 "<|im_end|>".to_string(),
             ]),
-            };
+        };
 
         info!(
             target: "slm_doorman::apprenticeship",
@@ -1117,7 +1125,9 @@ ok
             "Tier A shadow request must cap max_tokens at 512"
         );
         // Fix 2: stop sequences present, including the diff-fence terminator.
-        let stop = body["stop"].as_array().expect("stop must be a top-level array");
+        let stop = body["stop"]
+            .as_array()
+            .expect("stop must be a top-level array");
         assert!(
             stop.iter().any(|s| s.as_str() == Some("```\n\n")),
             "stop sequences must include the diff code-fence terminator; got {stop:?}"
