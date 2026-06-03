@@ -1412,10 +1412,22 @@
         applyView();
         buildProdRings();
         applyChainFilterStyling();
+        // Archetype modes: auto-select the strongest co-location at the view centre so the
+        // BentoBox fills with that location's data on drill-down (no extra click needed).
+        if (activeArchetype) {
+            const ctr = map.getCenter();
+            const feat = findStrongestArchetypeAt(ctr.lat, ctr.lng);
+            if (feat) { showArchetypeDetail(feat); return; }
+        }
         renderLocalModeInspector();
     }
 
     function renderLocalModeInspector() {
+        // Archetype modes: show the selected co-location's data instead of the generic message.
+        if (activeArchetype && isArchetypeProps(selectedClusterProps)) {
+            showArchetypeDetail(selectedClusterProps);
+            return;
+        }
         const modeLabel = urbanFringeActive ? 'Urban Fringe'
                         : commuterActive    ? 'Commuter'
                         : 'Retail';
@@ -1447,6 +1459,113 @@
             return;
         }
         toggleCatchmentMaster(btn);
+    }
+
+    // ── Archetype (Urban Fringe / Commuter) detail panel ───────────────────────
+    const VWH_CAT_LABELS = {
+        hardware: 'Hardware', mro_industrial: 'Industrial MRO', tool_rental: 'Tool Rental',
+        auto_parts: 'Auto Parts', electrical: 'Electrical', flooring: 'Flooring',
+        lumber: 'Lumber', plumbing: 'Plumbing', paint: 'Paint', welding: 'Welding',
+    };
+    const PKS_CAT_LABELS = {
+        airport: 'Airport', intercity_rail: 'Intercity Rail', commuter_rail: 'Commuter Rail',
+        metro_subway: 'Metro / Subway', car_rental: 'Car Rental',
+    };
+    const VWH_TIER_DESC = { 1: 'Established industrial node', 2: 'Industrial pair', 3: 'Emerging industrial node' };
+    const PKS_TIER_DESC = { 1: 'Intermodal hub', 2: 'Park-and-fly / multimodal rail', 3: 'Commuter station' };
+
+    function _asArray(v) {
+        if (Array.isArray(v)) return v;
+        if (typeof v === 'string') { try { return JSON.parse(v); } catch(_) { return v ? [v] : []; } }
+        return [];
+    }
+
+    // Find the strongest archetype co-location whose ring contains (lat, lon).
+    // Strongest = highest tier (T1>T2>T3), tie-broken by member/node count.
+    function findStrongestArchetypeAt(lat, lon) {
+        const data = activeArchetype === 'VWH' ? vwhData
+                   : activeArchetype === 'PKS' ? pksData : null;
+        if (!data) return null;
+        let best = null, bestScore = -1;
+        for (const f of data.features) {
+            const p = f.properties;
+            const km = activeArchetype === 'VWH' ? Math.max(1.0, (p.span_km || 0) / 2 * 1.15) : 2.0;
+            if (haversineKm(lon, lat, p.lon, p.lat) > km) continue;
+            const tier = (activeArchetype === 'VWH' ? p.vwh_tier : p.commuter_tier) || 3;
+            const cnt  = p.member_count || p.node_count || 0;
+            const score = (4 - tier) * 1000 + cnt;
+            if (score > bestScore) { bestScore = score; best = p; }
+        }
+        return best;
+    }
+
+    function isArchetypeProps(p) {
+        return !!p && (p.vwh_tier != null || p.commuter_tier != null);
+    }
+
+    // Render the BentoBox for one archetype co-location feature (mode from activeArchetype).
+    function showArchetypeDetail(p) {
+        if (!p) return;
+        const mode = activeArchetype; // 'VWH' | 'PKS'
+        selectedClusterProps  = p;
+        selectedClusterId     = p.id || p.name || null;
+        selectedClusterCoords = [p.lon, p.lat];
+
+        const tier = (mode === 'VWH' ? p.vwh_tier : p.commuter_tier) || 3;
+        const tc   = tierColor(4 - tier);
+        const archLabel = mode === 'VWH' ? 'Urban Fringe' : 'Commuter';
+        const desc = (mode === 'VWH' ? VWH_TIER_DESC : PKS_TIER_DESC)[tier] || '';
+        const labels = mode === 'VWH' ? VWH_CAT_LABELS : PKS_CAT_LABELS;
+
+        const cats = (mode === 'VWH' ? _asArray(p.vwh_signal) : _asArray(p.transit_categories));
+        const chips = cats.map(c => `<span class="bento-composition-chip">${escapeHtml(labels[c] || c)}</span>`).join(' ');
+
+        const metro = p.nearest_metro ? `~${Math.round(p.metro_dist_km || 0)} km from ${escapeHtml(p.nearest_metro)}` : '';
+        const countCount = mode === 'VWH' ? (p.member_count || 0) : (p.node_count || 0);
+        const countLabel = mode === 'VWH' ? 'co-located stores' : 'transit nodes';
+        const secondStat = mode === 'VWH'
+            ? `<div class="rank-num">${(p.span_km || 0).toFixed(2)}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">km span</div>`
+            : `<div class="rank-num">${p.multi_modal ? 'Yes' : 'No'}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">multi-modal</div>`;
+
+        // Chains / anchors
+        let anchorsHtml = '';
+        if (mode === 'VWH') {
+            const hw = _asArray(p.hardware_chains).map(id => `<div class="pill">${escapeHtml(chainName(id))}</div>`).join('');
+            const en = _asArray(p.enrichment_chains).map(id => `<div class="pill">${escapeHtml(chainName(id))}</div>`).join('');
+            anchorsHtml = `<div class="anchor-pills">${hw}${en}</div>`;
+        } else {
+            const tp = cats.filter(c => c !== 'car_rental').map(c => `<div class="pill">${escapeHtml(labels[c] || c)}</div>`).join('');
+            const cr = p.car_rental ? `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;font-style:italic;">Car rental on site</div>` : '';
+            anchorsHtml = `<div class="anchor-pills">${tp}</div>${cr}`;
+        }
+
+        document.getElementById('inspector').innerHTML = `
+            <div class="data-block" style="padding-top:16px;">
+                <div class="data-label">${archLabel} · ${escapeHtml(countryName(p.iso) || p.iso || '')}</div>
+                <div class="region-name-hero">${escapeHtml(p.nearest_metro || p.name || p.id || '')}</div>
+                ${metro ? `<div class="region-secondary-geo">${metro}</div>` : ''}
+            </div>
+            <div class="data-block bento-tier-cell">
+                <span class="tier-badge bento-tier-badge" style="background:${tc.fill};color:${tc.text};">T${tier}</span>
+                <div class="bento-composition-chip" style="background:none;border:none;padding-left:8px;">${escapeHtml(desc)}</div>
+            </div>
+            ${chips ? `<div class="data-block"><div class="data-label">Composition</div><div style="margin-top:6px;">${chips}</div></div>` : ''}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="data-block">
+                    <div class="data-label">${mode === 'VWH' ? 'Members' : 'Nodes'}</div>
+                    <div class="rank-num">${countCount}</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${countLabel}</div>
+                </div>
+                <div class="data-block">
+                    <div class="data-label">${mode === 'VWH' ? 'Span' : 'Multi-modal'}</div>
+                    ${secondStat}
+                </div>
+            </div>
+            <div class="data-block">
+                <div class="data-label">${mode === 'VWH' ? 'Chains' : 'Transit'}</div>
+                ${anchorsHtml}
+            </div>
+        `;
     }
 
     // Convert compact clusterMeta entry (§2 schema) to the property shape expected by showClusterDetail
@@ -3101,6 +3220,15 @@
             // Retailer dot on top — let all-locations / hit-layer handler take it
             const retailerHits = map.queryRenderedFeatures(e.point, { layers: ['all-locations', 'all-locations-hit', 'individual-points'] });
             if (retailerHits.length) return;
+
+            // Archetype modes: clicking a ring (not a retailer dot) shows the strongest
+            // co-location in that ring in the BentoBox.
+            if (activeArchetype) {
+                const feat = findStrongestArchetypeAt(e.lngLat.lat, e.lngLat.lng);
+                if (feat) showArchetypeDetail(feat);
+                e.stopPropagation();
+                return;
+            }
 
             const props = e.features[0]?.properties;
             if (!props) return;
