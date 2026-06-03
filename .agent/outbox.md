@@ -10,6 +10,61 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: UX audit complete — DESIGN-RESEARCH staged + project-marketing memo for forwarding
+created: 2026-06-03T00:00:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260603-ux-audit-deliverables
+---
+
+9-agent Opus browser-in-the-loop audit of all 5 live sites complete. Two deliverables ready.
+
+**1. DESIGN-RESEARCH artifact staged** (wiki redesign — project-design):
+- Path: `clones/project-knowledge/.agent/drafts-outbound/DESIGN-wiki-institutional-redesign.draft.md`
+- Routes to: project-design → pointsav-design-system
+- Action needed: **`master_cosign:` field must be populated** before project-design can commit the token changes (§4 Decision 5: `--color-interactive` → #0E3A66; body size 18px; nav minimum 14px). All other decisions are template-level CODE changes for project-knowledge to implement — no cosign needed.
+- Audit scope: documentation.pointsav.com, projects.woodfinegroup.com, corporate.woodfinegroup.com
+
+**2. project-marketing memo** (home sites — forward to project-marketing):
+Please route the following memo to project-marketing outbox as a new message.
+
+---
+
+MEMO — To: project-marketing | From: project-knowledge (via Command) | Re: Institutional hardening — home.woodfinegroup.com + home.pointsav.com | Priority: high
+
+Overall rating after Opus browser audit: **C-minus.** Strong infrastructure undercut by delivery issues. Five items:
+
+**1. Google Fonts CDN dependency.**
+Both contact pages (/page/contact) load 6–7 font families live from fonts.googleapis.com with `display=swap`, while the homepages self-host the same fonts. This is a render-blocking third-party dependency AND a GDPR exposure — acute given the advertised Berlin office. **Recommendation: self-host all fonts on every route exactly as the homepages do; remove all fonts.googleapis.com / fonts.gstatic.com references AND the dead preconnect hints on the homepages (they preconnect to an origin the page never calls). Subset to the 2–3 faces actually rendered.**
+
+**2. Nav text at 9–11px.**
+Header nav and labels bottom out at 9–11px — sub-legible on a 27-inch / 1440p monitor at institutional viewing distance. Institutional portals run nav at 13–15px. **Recommendation: raise nav/label minimum to 14px, weight 500; reserve 11px strictly for legal/footnote microcopy.**
+
+**3. SPA loading pattern.**
+First paint is a full-viewport flat fill (steel gray on pointsav, navy on woodfine) with a developer-facing pill reading "Unpacking N assets… / Rendering…". The entire 2.45 MB page base64-decodes and decompresses 59 inline fonts client-side before anything renders; with JS disabled the visitor gets only "This page requires JavaScript to display." A CFO's first impression is a blank loading screen exposing internal build vocabulary. **Recommendation: server-render the marketing HTML — the engine is already a Rust binary serving flat-file HTML, so serve the decoded template directly. Eliminate the "Unpacking/Rendering" text entirely; ship a real `<noscript>` fallback with the actual content. Also fix the no-cache/no-store header that forces a full re-download every visit.**
+
+**4. PointSav primary color #B4C5D5.**
+Steel gray is a light, low-chroma, low-confidence color to carry as a primary enterprise-technology brand. As a full-viewport loading fill it reads as unfinished, and it relegates the authoritative navy #164679 to a minor accent role. **Recommendation: promote navy #164679 to the dominant brand color (masthead, hero, primary buttons, loading background) and demote #B4C5D5 to a tint/surface role only.** The first full-screen color a buyer sees must be confident navy.
+
+**5. Top 3 priority changes per site:**
+
+*home.woodfinegroup.com:*
+- (1) Fix the hero grammar error — "**AN** real property developer" → "a real property developer" — and proof all hero copy. This is a P0 on the largest first-read text on the site.
+- (2) Add a real contact form on /page/contact (currently email-only on a securities issuer's contact page) and fix the dead `href="#"` "Contact us" anchor on the contact page itself.
+- (3) Label and de-collide the four "Development Classes" icons (currently unlabeled SVGs overlapping via `margin:0 -110px`). Add visible labels and one-line descriptors, or remove the band.
+
+*home.pointsav.com:*
+- (1) Fix the live product-heading typos "F\*KEYS CONSSOLE" and "DIGTIAL TWIN"; reconcile every product name against the canonical disclaimer block; add a build-time name-lint step.
+- (2) Introduce a true `<h1>` hero headline at clamp(40–64px) — the page currently has no h1/h2 and the largest text is a 19px paragraph.
+- (3) Server-render to kill the gray "Unpacking…" splash and promote navy over steel gray.
+
+Both sites additionally need: one shared global nav component (item sets currently differ page-to-page), the internal repo path removed from the public footer ("Source: factory-release-engineering/policies/DISCLAIMER.md"), and the 7-family font system collapsed to Inter + Source Serif 4.
+
+---
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: Stage 6 pending — NEXT.md contamination fix (19e4fa56) + binary deploy reminder
 created: 2026-06-02T21:00:00Z
 priority: normal
