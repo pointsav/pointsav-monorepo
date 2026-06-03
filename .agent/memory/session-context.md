@@ -1,13 +1,44 @@
 ---
 schema: foundry-session-context-v1
-archive: project-orgcharts
+archive: project-data
 ---
 
 # Session context — rolling 3-session summary
 
 ---
 
-## 2026-06-03 | Totebox | claude-code (GIS — gateway-orchestration-gis)
+## 2026-06-03 (later) | Totebox | claude-code (GIS — archetype model rework)
+
+**Done this session (large; all DEPLOYED live + committed `aec2187e`):**
+- **Simulation harness** `tools/sim_spread.py` — clusters once, evaluates qualify/tier rules
+  instantly. Used to tune both archetypes via Opus sub-agent sims.
+- **Commuter (PKS) redefined → geometric airport-led park-and-ride.** Candidate = sized regional
+  airport (park-and-fly, ≤600 km from a metro) OR outer commuter-rail-belt station (15–110 km
+  ring, connected toward core, ≤4 stops from line end). **Airports lead to spread the bubbles
+  across the map** — rail-only covered 96 NA map cells; airport-led covers 957 (≈10×). 5,977 live.
+- **Urban Fringe (VWH) → Retail-density.** `qualify_vwh()` admits ≥2-cat co-locations OR any lone
+  STRONG/BROAD trade store; composition-score `tier_vwh(cats,n)`. 7,028 live. Both ≈ Retail (~6,500).
+- **Mobile BentoBox footbar hardening** (visualViewport detent heights + resize re-snap,
+  `overscroll-behavior: contain`, modal `dvh`) verified via `tools/shoot.mjs` browser-in-the-loop;
+  **cache-busting `?v=` token** on archetype data URLs (fixed a stale-cache "not updating" report).
+- **June 4 overnight ingest SCHEDULED** (crontab 05:00 UTC): `run-overnight-ingests.sh` — parking
+  layer + parcel depots + 20 new VWH brand chains (builders'/self-storage/trade-counter). New
+  scripts `ingest-osm-parking.py`, `ingest-osm-parcel-depot.py`. Brand YAMLs in local-only data dir.
+- **All artifacts updated** (this entry): BRIEF, NEXT.md, artifact-registry, DATA-MANIFEST, memory.
+
+**Pending / carry-forward:** June 4 overnight ingest fires (review `overnight-ingests.log`); then
+wire parkade GREENFIELD filter into `build-pks-clusters.py` + new categories into `VWH_CHAINS`;
+bump `?v=` token on every data redeploy; Stage 6 promotion (Command Session); AEC builds still failing.
+
+**Operator preferences surfaced:** Wants both non-retail archetype maps at ~Retail bubble density
+and **geographically spread across the whole map** (airports are the spread lever, not rail). Tier
+counts shown are per-region (NA/EU tab), not global — clarify when numbers look low. Iterates fast
+("more bubbles" → "as many as Retail" → "spread them out"); prefers diagnosis-then-fix with verified
+numbers. Browser-in-the-loop verification valued. Cache-busting is mandatory on data redeploys.
+
+---
+
+## 2026-06-03 (earlier) | Totebox | claude-code (GIS — gateway-orchestration-gis)
 
 **Done this session (large):**
 - **Urban Fringe (VWH) + Commuter (PKS) made independent** of retail clustering — new
@@ -50,13 +81,3 @@ leave heavy work running unattended overnight (`at` unavailable → nohup detach
 - Tetrad customer leg and wiki leg: leg-pending (unchanged)
 
 **Operator preferences surfaced:** Operator asks direct questions about token coverage and pipeline state; prefers concise answers with a clear statement of what exists vs. what is still needed. Comfortable with session-layer explanations (Command vs. Totebox).
-
----
-
-## 2026-05-20 | Totebox | claude-code
-
-**Done this session:** Startup sequence only — confirmed role, wrote session lock, read manifest + inbox (empty) + session-start. No work performed.
-
-**Pending / carry-forward:** Tetrad customer leg and wiki leg both leg-pending (unchanged from prior state). No active plans.
-
-**Operator preferences surfaced:** None — session was startup + immediate shutdown.

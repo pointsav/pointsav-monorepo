@@ -7,20 +7,40 @@ Last updated: 2026-06-03
 
 ---
 
-## Commuter/metro rail ingest — RUNNING OVERNIGHT 2026-06-03 (autonomous)
+## Archetype model rework — 2026-06-03 (DEPLOYED LIVE)
 
-- [~] **Commuter ingest + PKS rebuild + gateway sync — running detached tonight.**
-      Launched 06:24 UTC (23:24 Vancouver) as `nohup run-commuter-build.sh &`
-      (PID 958517 `ingest-osm-railway-commuter.py --all`). The wrapper self-completes:
-      `ingest --all && build-pks-clusters.py && cp work/archetype-pks.geojson → gateway`.
-      `at`/`atq` is NOT installed on this VM → detached nohup is the overnight mechanism.
-      Survives session close; gateway is static nginx (copy-to-deploy, no restart).
-      Log: `app-orchestration-gis/commuter-ingest.log` (ends `=== DONE ===`). Flip to [x] in the
-      morning once the monitor confirms PKS T2 jumped. [2026-06-03 auto]
+- [x] **Commuter overnight ingest complete; PKS then redefined.** The commuter/metro ingest
+      finished; PKS was then **redefined as a geometric airport-led park-and-ride model**
+      (`build-pks-clusters.py`, commit `aec2187e`). Candidate = sized regional airport
+      (park-and-fly) OR outer commuter-rail-belt station (15–110 km ring, connected toward core,
+      ≤4 stops from line end). Airports lead → fixed map spread (NA cell coverage 96 → 957).
+      **5,977 features** live. [2026-06-03 totebox@claude-code]
+- [x] **Urban Fringe → Retail-density model.** `qualify_vwh()` admits ≥2-category co-locations OR
+      any lone STRONG/BROAD trade-supply store; composition-score `tier_vwh(cats,n)`.
+      **7,028 features** live. Both archetypes now ≈ Retail bubble density (~6,500). [2026-06-03]
+- [x] **Mobile BentoBox footbar hardening + cache-busting.** visualViewport detent heights +
+      resize re-snap, `overscroll-behavior: contain`, modal `dvh`; `?v=` cache token on archetype
+      data URLs (current `20260603d`). Verified via `tools/shoot.mjs` browser-in-the-loop. [2026-06-03]
 
-- [ ] **Stage 6** — promote this session's archive-local commits (VWH CA/MX/ES/IT chains, PKS
-      strict model, map UX, mobile + SEO) to canonical monorepo. Command Session runs
-      `bin/promote.sh`. Note: monorepo gitignores `.agent/`. [2026-06-03]
+- [ ] **June 4 05:00 UTC overnight ingest — SCHEDULED (crontab).** `run-overnight-ingests.sh`:
+      parking layer (`ingest-osm-parking.py`) + parcel depots (`ingest-osm-parcel-depot.py`) +
+      20 new VWH brand chains (builders' merchants, self-storage, trade counters via `ingest-osm.py`).
+      Brand YAMLs in the local-only deployment data dir. Log: `overnight-ingests.log`. [2026-06-03]
+- [ ] **After June 4 — wire the parkade GREENFIELD filter into `build-pks-clusters.py`.** Join
+      `cleansed-civic-parking.jsonl`: label each candidate BUILT (≤800 m of a multi-storey/garage
+      → exclude/down-weight) / PARTIAL (surface park_ride) / GREENFIELD (nothing). The "no parkade
+      yet" filter that ranks park-and-ride opportunity. [2026-06-03]
+- [ ] **After June 4 — wire new categories into `VWH_CHAINS`.** Add `builders_merchant`,
+      `self_storage`, `trade_counter`, `parcel_depot` (parcel via the `parcel-depot-osm`
+      pseudo-chain) once the ingest data lands. [2026-06-03]
+- [ ] **Cache-token convention.** Bump `?v=` in `index.html` on EVERY archetype-data rebuild +
+      redeploy (browser caches geojson as fresh; stale-cache trap otherwise). [2026-06-03]
+- [ ] **Tier-refinement / single-store density.** VWH T3 is now mostly single-store fringe markers
+      (3,549 of 7,028). Revisit once the June 4 categories add genuine co-locations — may tighten
+      back toward co-location-only. [2026-06-03]
+
+- [ ] **Stage 6** — promote this session's archive-local commits (`aec2187e` + the docs commit) to
+      canonical monorepo. Command Session runs `bin/promote.sh`. [2026-06-03]
 
 ---
 
@@ -37,7 +57,9 @@ Last updated: 2026-06-03
 ## Urban Fringe chain expansion — 2026-06-03 session
 
 Independent strict co-location model (≥2 distinct categories, no metro gate, no hypermarket
-disqualifier) — `build-vwh-clusters.py`. VWH total now **3,520**. Country chain additions:
+disqualifier) — `build-vwh-clusters.py`. VWH total was **3,520** under the strict model;
+**superseded 2026-06-03** by the Retail-density model (7,028; admits lone STRONG/BROAD stores).
+Country chain additions (still in effect):
 
 - [x] **CA/MX** — RONA, Home Hardware (469), Fastenal CA, United Rentals CA, PartSource, Truper MX,
       Enterprise CA, Hertz MX. CA 32→170, MX→72.
