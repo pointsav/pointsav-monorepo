@@ -633,19 +633,6 @@ const RATIFIED_CATEGORIES: &[&str] = &[
     "design-system",
 ];
 
-/// Homepage browse grid: 6 consolidated areas.
-/// Each entry: (display_name, primary_slug, all_slugs).
-/// `primary_slug` is the URL target; `all_slugs` are summed for the article count.
-/// Categories not listed here are still accessible via /category/<slug> and search.
-const HOMEPAGE_CATEGORIES: &[(&str, &str, &[&str])] = &[
-    ("Architecture",            "architecture",  &["architecture", "patterns"]),
-    ("Substrate & Systems",     "substrate",     &["substrate", "systems"]),
-    ("Services & Applications", "services",      &["services", "applications"]),
-    ("Infrastructure",          "infrastructure",&["infrastructure"]),
-    ("Reference",               "reference",     &["reference", "governance", "design-system"]),
-    ("Archetypes",              "archetypes",    &["archetypes"]),
-];
-
 // ─── Home-page helpers ──────────────────────────────────────────────────────
 
 /// A single topic file discovered during a recursive walk of `content_dir`.
@@ -990,7 +977,7 @@ fn compute_home_stats(buckets: &CategoryBuckets) -> HomeStats {
         .map(|s| s.to_string());
     HomeStats {
         article_count,
-        category_count: HOMEPAGE_CATEGORIES.len(),
+        category_count: RATIFIED_CATEGORIES.len(),
         last_updated,
     }
 }
@@ -1007,49 +994,38 @@ fn shell_footer(brand_instance: &str, view_source_slug: Option<&str>) -> maud::M
     html! {
         footer.shell-footer role="contentinfo" {
             div.footer-primary {
+                div.footer-cities { "Vancouver · New York · Berlin" }
                 nav.footer-nav aria-label="Footer navigation" {
                     a href="/wiki/disclaimers" { "Disclaimer" }
                     " · "
                     a href="/sitemap.xml" { "Sitemap" }
-                    " · "
-                    a href="/wiki/contact" { "Contact" }
-                    @if brand_instance == "documentation" {
-                        " · " a href="https://projects.woodfinegroup.com" { "Projects" }
-                        " · " a href="https://corporate.woodfinegroup.com" { "Corporate" }
-                    } @else if brand_instance == "projects" {
-                        " · " a href="https://documentation.pointsav.com" { "Documentation" }
-                        " · " a href="https://corporate.woodfinegroup.com" { "Corporate" }
-                    } @else if brand_instance == "corporate" {
-                        " · " a href="https://documentation.pointsav.com" { "Documentation" }
-                        " · " a href="https://projects.woodfinegroup.com" { "Projects" }
-                    }
                 }
                 p.footer-copyright-line.copyright { (copyright) }
-                p.footer-license {
-                    "Content is available under the "
-                    a href="https://creativecommons.org/licenses/by/4.0/" rel="license" {
-                        "Creative Commons Attribution 4.0 International License"
-                    }
-                    " unless otherwise noted."
-                }
-                @if let Some(slug) = view_source_slug {
+            }
+            details.footer-more {
+                summary { "More" }
+                div.footer-more-inner {
                     nav.footer-nav-more {
-                        a href={ "/git/" (slug) } { "View source" }
+                        a href="/wiki/contact" { "Contact" }
+                        @if let Some(slug) = view_source_slug {
+                            " · "
+                            a href={ "/git/" (slug) } { "View source" }
+                        }
                         " · "
                         a href="/wiki/pointsav-media-kit" { "Media kit" }
                     }
-                }
-                p.footer-trademark-line.trademark {
-                    "Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, "
-                    "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
-                    "Projects Inc. used in Canada, the United States, Latin America, and Europe."
-                }
-                @if brand_instance != "corporate" {
-                    div.footer-badges {
-                        a.footer-badge rel="license"
-                          href="https://creativecommons.org/licenses/by/4.0/"
-                          title="Content licensed under Creative Commons Attribution 4.0 International" {
-                            img src="/static/cc-by-4.svg" alt="CC BY 4.0" width="88" height="31";
+                    p.footer-trademark-line.trademark {
+                        "Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, "
+                        "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
+                        "Projects Inc. used in Canada, the United States, Latin America, and Europe."
+                    }
+                    @if brand_instance != "corporate" {
+                        div.footer-badges {
+                            a.footer-badge rel="license"
+                              href="https://creativecommons.org/licenses/by/4.0/"
+                              title="Content licensed under Creative Commons Attribution 4.0 International" {
+                                img src="/static/cc-by-4.svg" alt="CC BY 4.0" width="88" height="31";
+                            }
                         }
                     }
                 }
@@ -1060,8 +1036,8 @@ fn shell_footer(brand_instance: &str, view_source_slug: Option<&str>) -> maud::M
 
 // ─── Home-page chrome ───────────────────────────────────────────────────────
 
-const WORDMARK_SVG_WOODFINE: &str = r##"<svg class="logo-svg brand__svg" role="img" aria-label="Woodfine Capital Projects" viewBox="0 0 350 40" xmlns="http://www.w3.org/2000/svg"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="currentColor" letter-spacing="-0.03em">WOODFINE CAPITAL PROJECTS</text></svg>"##;
-const WORDMARK_SVG_POINTSAV: &str = r##"<svg class="logo-svg" role="img" aria-label="PointSav, Inc." viewBox="0 0 144 36" xmlns="http://www.w3.org/2000/svg" fill="#111827"><g transform="translate(-28.8654, -10.2516) scale(1.3911)"><defs id="defs2"></defs><path d="M 36.629983,15.88 V 12.4 h 0.7 q 1.44,0 1.44,1.74 0,0.9 -0.38,1.32 -0.36,0.42 -1.06,0.42 z m -3.72,-6.16 V 24 h 3.72 v -5.44 h 1.3 q 2.3,0 3.48,-1.1 1.2,-1.12 1.2,-3.34 0,-0.94 -0.24,-1.74 -0.24,-0.8 -0.76,-1.38 -0.5,-0.6 -1.28,-0.94 -0.78,-0.34 -1.84,-0.34 z m 14.300013,7.14 q 0,-1.44 0.04,-2.38 0.04,-0.96 0.16,-1.52 0.14,-0.56 0.38,-0.78 0.26,-0.22 0.68,-0.22 0.42,0 0.66,0.22 0.26,0.22 0.38,0.78 0.14,0.56 0.18,1.52 0.04,0.94 0.04,2.38 0,1.44 -0.04,2.4 -0.04,0.94 -0.18,1.5 -0.12,0.56 -0.38,0.78 -0.24,0.22 -0.66,0.22 -0.42,0 -0.68,-0.22 -0.24,-0.22 -0.38,-0.78 -0.12,-0.56 -0.16,-1.5 -0.04,-0.96 -0.04,-2.4 z m -3.84,0 q 0,2 0.26,3.42 0.26,1.4 0.86,2.3 0.6,0.88 1.58,1.26 0.98,0.38 2.4,0.38 1.42,0 2.4,-0.38 0.98,-0.38 1.58,-1.26 0.6,-0.9 0.86,-2.3 0.26,-1.42 0.26,-3.42 0,-2 -0.26,-3.4 -0.26,-1.42 -0.86,-2.3 -0.6,-0.9 -1.58,-1.3 -0.98,-0.42 -2.4,-0.42 -1.42,0 -2.4,0.42 -0.98,0.4 -1.58,1.3 -0.6,0.88 -0.86,2.3 -0.26,1.4 -0.26,3.4 z M 54.769991,9.72 V 24 h 3.72 V 9.72 Z m 5.340005,0 V 24 h 3.48 v -8.82 h 0.04 l 2.48,8.82 h 4.08 V 9.72 h -3.48 v 8.8 h -0.04 l -2.4,-8.8 z m 13.720019,3.16 V 24 h 3.72 V 12.88 h 2.8 V 9.72 h -9.28 v 3.16 z m 12.919998,0.96 h 3.48 q 0,-2.3 -1.1,-3.34 -1.08,-1.06 -3.52,-1.06 -2.36,0 -3.52,1.14 -1.16,1.14 -1.16,3.32 0,1.26 0.42,2.04 0.44,0.78 1.08,1.26 0.66,0.48 1.42,0.78 0.76,0.3 1.4,0.6 0.66,0.28 1.08,0.7 0.44,0.4 0.44,1.1 0,0.58 -0.32,0.98 -0.3,0.4 -0.88,0.4 -0.54,0 -0.88,-0.36 -0.34,-0.38 -0.34,-1.3 v -0.34 h -3.6 v 0.5 q 0,1.12 0.32,1.88 0.32,0.76 0.92,1.24 0.62,0.46 1.5,0.64 0.9,0.2 2.06,0.2 2.46,0 3.76,-1.02 1.3,-1.04 1.3,-3.32 0,-1.3 -0.46,-2.1 -0.44,-0.82 -1.12,-1.32 -0.68,-0.5 -1.46,-0.8 -0.78,-0.32 -1.46,-0.62 -0.68,-0.3 -1.14,-0.7 -0.44,-0.42 -0.44,-1.12 0,-0.48 0.28,-0.86 0.28,-0.4 0.88,-0.4 0.54,0 0.8,0.46 0.26,0.44 0.26,1.08 z m 9.840013,-1.2 -1.02,6.06 h 2.08 l -1.02,-6.06 z m 2.36,-2.92 3.480004,14.28 h -3.960004 l -0.38,-2.5 h -2.96 l -0.38,2.5 h -3.9 l 3.42,-14.28 z m 2.259984,0 3.02,14.28 h 4.8 l 3.08,-14.28 h -3.96 l -1.5,10.76 h -0.04 l -1.5,-10.76 z" id="text1" style="font-weight:900;font-size:20px;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;text-anchor:middle;fill:#111827;fill-rule:evenodd" aria-label="POINTSAV"></path><path d="m 36.767496,30.4389 v -2.25 h 0.56 q 0.29,0 0.485,0.085 0.2,0.08 0.32,0.235 0.12,0.155 0.17,0.375 0.055,0.215 0.055,0.485 0,0.295 -0.075,0.5 -0.075,0.205 -0.2,0.335 -0.125,0.125 -0.285,0.18 -0.16,0.055 -0.33,0.055 z m -0.785,-2.91 v 3.57 h 1.54 q 0.41,0 0.71,-0.135 0.305,-0.14 0.505,-0.38 0.205,-0.24 0.305,-0.57 0.1,-0.33 0.1,-0.72 0,-0.445 -0.125,-0.775 -0.12,-0.33 -0.34,-0.55 -0.215,-0.22 -0.515,-0.33 -0.295,-0.11 -0.64,-0.11 z m 5.704996,0 v 3.57 h 0.785 v -3.57 z m 6.055,3.165 0.08,0.405 h 0.5 v -1.93 h -1.5 v 0.585 h 0.79 q -0.035,0.375 -0.25,0.575 -0.21,0.195 -0.6,0.195 -0.265,0 -0.45,-0.1 -0.185,-0.105 -0.3,-0.275 -0.115,-0.17 -0.17,-0.38 -0.05,-0.215 -0.05,-0.44 0,-0.235 0.05,-0.455 0.055,-0.22 0.17,-0.39 0.115,-0.175 0.3,-0.275 0.185,-0.105 0.45,-0.105 0.285,0 0.485,0.15 0.2,0.15 0.27,0.45 h 0.75 q -0.03,-0.305 -0.165,-0.54 -0.135,-0.235 -0.345,-0.395 -0.205,-0.16 -0.465,-0.24 -0.255,-0.085 -0.53,-0.085 -0.41,0 -0.74,0.145 -0.325,0.145 -0.55,0.4 -0.225,0.255 -0.345,0.6 -0.12,0.34 -0.12,0.74 0,0.39 0.12,0.73 0.12,0.335 0.345,0.585 0.225,0.25 0.55,0.395 0.33,0.14 0.74,0.14 0.26,0 0.515,-0.105 0.255,-0.11 0.465,-0.38 z m 3.215004,-3.165 v 3.57 h 0.785 v -3.57 z m 4.265001,0.66 v 2.91 h 0.785 v -2.91 h 1.07 v -0.66 h -2.925 v 0.66 z m 4.705005,1.53 0.465,-1.31 h 0.01 l 0.45,1.31 z m 0.075,-2.19 -1.35,3.57 h 0.79 l 0.28,-0.795 h 1.335 l 0.27,0.795 h 0.815 l -1.335,-3.57 z m 4.449997,0 v 3.57 h 2.525 v -0.66 h -1.74 v -2.91 z m 8.890002,2.385 h -0.76 q -0.005,0.33 0.12,0.57 0.125,0.24 0.335,0.395 0.215,0.155 0.49,0.225 0.28,0.075 0.575,0.075 0.365,0 0.64,-0.085 0.28,-0.085 0.465,-0.235 0.19,-0.155 0.285,-0.365 0.095,-0.21 0.095,-0.455 0,-0.3 -0.13,-0.49 -0.125,-0.195 -0.3,-0.31 -0.175,-0.115 -0.355,-0.165 -0.175,-0.055 -0.275,-0.075 -0.335,-0.085 -0.545,-0.14 -0.205,-0.055 -0.325,-0.11 -0.115,-0.055 -0.155,-0.12 -0.04,-0.065 -0.04,-0.17 0,-0.115 0.05,-0.19 0.05,-0.075 0.125,-0.125 0.08,-0.05 0.175,-0.07 0.095,-0.02 0.19,-0.02 0.145,0 0.265,0.025 0.125,0.025 0.22,0.085 0.095,0.06 0.15,0.165 0.06,0.105 0.07,0.265 h 0.76 q 0,-0.31 -0.12,-0.525 -0.115,-0.22 -0.315,-0.36 -0.2,-0.14 -0.46,-0.2 -0.255,-0.065 -0.535,-0.065 -0.24,0 -0.48,0.065 -0.24,0.065 -0.43,0.2 -0.19,0.135 -0.31,0.34 -0.115,0.2 -0.115,0.475 0,0.245 0.09,0.42 0.095,0.17 0.245,0.285 0.15,0.115 0.34,0.19 0.19,0.07 0.39,0.12 0.195,0.055 0.385,0.1 0.19,0.045 0.34,0.105 0.15,0.06 0.24,0.15 0.095,0.09 0.095,0.235 0,0.135 -0.07,0.225 -0.07,0.085 -0.175,0.135 -0.105,0.05 -0.225,0.07 -0.12,0.015 -0.225,0.015 -0.155,0 -0.3,-0.035 -0.145,-0.04 -0.255,-0.115 -0.105,-0.08 -0.17,-0.205 -0.065,-0.125 -0.065,-0.305 z m 5.635002,-0.205 v 1.39 h 0.785 v -1.37 l 1.325,-2.2 h -0.875 l -0.83,1.41 -0.835,-1.41 h -0.88 z m 4.944999,0.205 h -0.76 q -0.005,0.33 0.12,0.57 0.125,0.24 0.335,0.395 0.215,0.155 0.49,0.225 0.28,0.075 0.575,0.075 0.365,0 0.64,-0.085 0.28,-0.085 0.465,-0.235 0.19,-0.155 0.285,-0.365 0.095,-0.21 0.095,-0.455 0,-0.3 -0.13,-0.49 -0.125,-0.195 -0.3,-0.31 -0.175,-0.115 -0.355,-0.165 -0.175,-0.055 -0.275,-0.075 -0.335,-0.085 -0.545,-0.14 -0.205,-0.055 -0.325,-0.11 -0.115,-0.055 -0.155,-0.12 -0.04,-0.065 -0.04,-0.17 0,-0.115 0.05,-0.19 0.05,-0.075 0.125,-0.125 0.08,-0.05 0.175,-0.07 0.095,-0.02 0.19,-0.02 0.145,0 0.265,0.025 0.125,0.025 0.22,0.085 0.095,0.06 0.15,0.165 0.06,0.105 0.07,0.265 h 0.76 q 0,-0.31 -0.12,-0.525 -0.115,-0.22 -0.315,-0.36 -0.2,-0.14 -0.46,-0.2 -0.255,-0.065 -0.535,-0.065 -0.24,0 -0.48,0.065 -0.24,0.065 -0.43,0.2 -0.19,0.135 -0.31,0.34 -0.115,0.2 -0.115,0.475 0,0.245 0.09,0.42 0.095,0.17 0.245,0.285 0.15,0.115 0.34,0.19 0.19,0.07 0.39,0.12 0.195,0.055 0.385,0.1 0.19,0.045 0.34,0.105 0.15,0.06 0.24,0.15 0.095,0.09 0.095,0.235 0,0.135 -0.07,0.225 -0.07,0.085 -0.175,0.135 -0.105,0.05 -0.225,0.07 -0.12,0.015 -0.225,0.015 -0.155,0 -0.3,-0.035 -0.145,-0.04 -0.255,-0.115 -0.105,-0.08 -0.17,-0.205 -0.065,-0.125 -0.065,-0.305 z m 5.499999,-1.725 v 2.91 h 0.785 v -2.91 h 1.07 v -0.66 h -2.925 v 0.66 z m 4.265001,-0.66 v 3.57 h 2.71 v -0.66 h -1.925 v -0.875 h 1.73 v -0.61 h -1.73 v -0.765 h 1.885 v -0.66 z m 5.240001,0 v 3.57 h 0.735 v -2.505 h 0.01 l 0.874997,2.505 h 0.605 l 0.875,-2.53 h 0.01 v 2.53 h 0.735 v -3.57 h -1.105 l -0.79,2.455 h -0.01 l -0.835,-2.455 z m 7.070007,2.385 h -0.76 q -0.005,0.33 0.12,0.57 0.125,0.24 0.335,0.395 0.215,0.155 0.49,0.225 0.28,0.075 0.575,0.075 0.365,0 0.64,-0.085 0.28,-0.085 0.465,-0.235 0.19,-0.155 0.285,-0.365 0.095,-0.21 0.095,-0.455 0,-0.3 -0.13,-0.49 -0.125,-0.195 -0.3,-0.31 -0.175,-0.115 -0.355,-0.165 -0.175,-0.055 -0.275,-0.075 -0.335,-0.085 -0.545,-0.14 -0.205,-0.055 -0.325,-0.11 -0.115,-0.055 -0.155,-0.12 -0.04,-0.065 -0.04,-0.17 0,-0.115 0.05,-0.19 0.05,-0.075 0.125,-0.125 0.08,-0.05 0.175,-0.07 0.095,-0.02 0.19,-0.02 0.145,0 0.265,0.025 0.125,0.025 0.22,0.085 0.095,0.06 0.15,0.165 0.06,0.105 0.07,0.265 h 0.76 q 0,-0.31 -0.12,-0.525 -0.115,-0.22 -0.315,-0.36 -0.2,-0.14 -0.46,-0.2 -0.255,-0.065 -0.535,-0.065 -0.24,0 -0.48,0.065 -0.24,0.065 -0.43,0.2 -0.19,0.135 -0.31,0.34 -0.115,0.2 -0.115,0.475 0,0.245 0.09,0.42 0.095,0.17 0.245,0.285 0.15,0.115 0.34,0.19 0.19,0.07 0.39,0.12 0.195,0.055 0.385,0.1 0.19,0.045 0.34,0.105 0.15,0.06 0.24,0.15 0.095,0.09 0.095,0.235 0,0.135 -0.07,0.225 -0.07,0.085 -0.175,0.135 -0.105,0.05 -0.225,0.07 -0.12,0.015 -0.225,0.015 -0.155,0 -0.3,-0.035 -0.145,-0.04 -0.255,-0.115 -0.105,-0.08 -0.17,-0.205 -0.065,-0.125 -0.065,-0.305 z" id="text2" style="font-weight:700;font-size:5px;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;letter-spacing:2;text-anchor:middle;fill:#111827;fill-rule:evenodd" aria-label="DIGITAL SYSTEMS"></path></g></svg>"##;
+const WORDMARK_SVG_WOODFINE: &str = r##"<svg class="logo-svg brand__svg" role="img" aria-label="Woodfine Capital Projects" viewBox="0 0 350 40" width="350" height="40" xmlns="http://www.w3.org/2000/svg"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="currentColor" letter-spacing="-0.03em">WOODFINE CAPITAL PROJECTS</text></svg>"##;
+const WORDMARK_SVG_POINTSAV: &str = r##"<svg class="logo-svg" role="img" aria-label="PointSav, Inc." viewBox="0 0 144 36" width="320" height="80" xmlns="http://www.w3.org/2000/svg" fill="#111827"><g transform="translate(-28.8654, -10.2516) scale(1.3911)"><defs id="defs2"></defs><path d="M 36.629983,15.88 V 12.4 h 0.7 q 1.44,0 1.44,1.74 0,0.9 -0.38,1.32 -0.36,0.42 -1.06,0.42 z m -3.72,-6.16 V 24 h 3.72 v -5.44 h 1.3 q 2.3,0 3.48,-1.1 1.2,-1.12 1.2,-3.34 0,-0.94 -0.24,-1.74 -0.24,-0.8 -0.76,-1.38 -0.5,-0.6 -1.28,-0.94 -0.78,-0.34 -1.84,-0.34 z m 14.300013,7.14 q 0,-1.44 0.04,-2.38 0.04,-0.96 0.16,-1.52 0.14,-0.56 0.38,-0.78 0.26,-0.22 0.68,-0.22 0.42,0 0.66,0.22 0.26,0.22 0.38,0.78 0.14,0.56 0.18,1.52 0.04,0.94 0.04,2.38 0,1.44 -0.04,2.4 -0.04,0.94 -0.18,1.5 -0.12,0.56 -0.38,0.78 -0.24,0.22 -0.66,0.22 -0.42,0 -0.68,-0.22 -0.24,-0.22 -0.38,-0.78 -0.12,-0.56 -0.16,-1.5 -0.04,-0.96 -0.04,-2.4 z m -3.84,0 q 0,2 0.26,3.42 0.26,1.4 0.86,2.3 0.6,0.88 1.58,1.26 0.98,0.38 2.4,0.38 1.42,0 2.4,-0.38 0.98,-0.38 1.58,-1.26 0.6,-0.9 0.86,-2.3 0.26,-1.42 0.26,-3.42 0,-2 -0.26,-3.4 -0.26,-1.42 -0.86,-2.3 -0.6,-0.9 -1.58,-1.3 -0.98,-0.42 -2.4,-0.42 -1.42,0 -2.4,0.42 -0.98,0.4 -1.58,1.3 -0.6,0.88 -0.86,2.3 -0.26,1.4 -0.26,3.4 z M 54.769991,9.72 V 24 h 3.72 V 9.72 Z m 5.340005,0 V 24 h 3.48 v -8.82 h 0.04 l 2.48,8.82 h 4.08 V 9.72 h -3.48 v 8.8 h -0.04 l -2.4,-8.8 z m 13.720019,3.16 V 24 h 3.72 V 12.88 h 2.8 V 9.72 h -9.28 v 3.16 z m 12.919998,0.96 h 3.48 q 0,-2.3 -1.1,-3.34 -1.08,-1.06 -3.52,-1.06 -2.36,0 -3.52,1.14 -1.16,1.14 -1.16,3.32 0,1.26 0.42,2.04 0.44,0.78 1.08,1.26 0.66,0.48 1.42,0.78 0.76,0.3 1.4,0.6 0.66,0.28 1.08,0.7 0.44,0.4 0.44,1.1 0,0.58 -0.32,0.98 -0.3,0.4 -0.88,0.4 -0.54,0 -0.88,-0.36 -0.34,-0.38 -0.34,-1.3 v -0.34 h -3.6 v 0.5 q 0,1.12 0.32,1.88 0.32,0.76 0.92,1.24 0.62,0.46 1.5,0.64 0.9,0.2 2.06,0.2 2.46,0 3.76,-1.02 1.3,-1.04 1.3,-3.32 0,-1.3 -0.46,-2.1 -0.44,-0.82 -1.12,-1.32 -0.68,-0.5 -1.46,-0.8 -0.78,-0.32 -1.46,-0.62 -0.68,-0.3 -1.14,-0.7 -0.44,-0.42 -0.44,-1.12 0,-0.48 0.28,-0.86 0.28,-0.4 0.88,-0.4 0.54,0 0.8,0.46 0.26,0.44 0.26,1.08 z m 9.840013,-1.2 -1.02,6.06 h 2.08 l -1.02,-6.06 z m 2.36,-2.92 3.480004,14.28 h -3.960004 l -0.38,-2.5 h -2.96 l -0.38,2.5 h -3.9 l 3.42,-14.28 z m 2.259984,0 3.02,14.28 h 4.8 l 3.08,-14.28 h -3.96 l -1.5,10.76 h -0.04 l -1.5,-10.76 z" id="text1" style="font-weight:900;font-size:20px;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;text-anchor:middle;fill:#111827;fill-rule:evenodd" aria-label="POINTSAV"></path><path d="m 36.767496,30.4389 v -2.25 h 0.56 q 0.29,0 0.485,0.085 0.2,0.08 0.32,0.235 0.12,0.155 0.17,0.375 0.055,0.215 0.055,0.485 0,0.295 -0.075,0.5 -0.075,0.205 -0.2,0.335 -0.125,0.125 -0.285,0.18 -0.16,0.055 -0.33,0.055 z m -0.785,-2.91 v 3.57 h 1.54 q 0.41,0 0.71,-0.135 0.305,-0.14 0.505,-0.38 0.205,-0.24 0.305,-0.57 0.1,-0.33 0.1,-0.72 0,-0.445 -0.125,-0.775 -0.12,-0.33 -0.34,-0.55 -0.215,-0.22 -0.515,-0.33 -0.295,-0.11 -0.64,-0.11 z m 5.704996,0 v 3.57 h 0.785 v -3.57 z m 6.055,3.165 0.08,0.405 h 0.5 v -1.93 h -1.5 v 0.585 h 0.79 q -0.035,0.375 -0.25,0.575 -0.21,0.195 -0.6,0.195 -0.265,0 -0.45,-0.1 -0.185,-0.105 -0.3,-0.275 -0.115,-0.17 -0.17,-0.38 -0.05,-0.215 -0.05,-0.44 0,-0.235 0.05,-0.455 0.055,-0.22 0.17,-0.39 0.115,-0.175 0.3,-0.275 0.185,-0.105 0.45,-0.105 0.285,0 0.485,0.15 0.2,0.15 0.27,0.45 h 0.75 q -0.03,-0.305 -0.165,-0.54 -0.135,-0.235 -0.345,-0.395 -0.205,-0.16 -0.465,-0.24 -0.255,-0.085 -0.53,-0.085 -0.41,0 -0.74,0.145 -0.325,0.145 -0.55,0.4 -0.225,0.255 -0.345,0.6 -0.12,0.34 -0.12,0.74 0,0.39 0.12,0.73 0.12,0.335 0.345,0.585 0.225,0.25 0.55,0.395 0.33,0.14 0.74,0.14 0.26,0 0.515,-0.105 0.255,-0.11 0.465,-0.38 z m 3.215004,-3.165 v 3.57 h 0.785 v -3.57 z m 4.265001,0.66 v 2.91 h 0.785 v -2.91 h 1.07 v -0.66 h -2.925 v 0.66 z m 4.705005,1.53 0.465,-1.31 h 0.01 l 0.45,1.31 z m 0.075,-2.19 -1.35,3.57 h 0.79 l 0.28,-0.795 h 1.335 l 0.27,0.795 h 0.815 l -1.335,-3.57 z m 4.449997,0 v 3.57 h 2.525 v -0.66 h -1.74 v -2.91 z m 8.890002,2.385 h -0.76 q -0.005,0.33 0.12,0.57 0.125,0.24 0.335,0.395 0.215,0.155 0.49,0.225 0.28,0.075 0.575,0.075 0.365,0 0.64,-0.085 0.28,-0.085 0.465,-0.235 0.19,-0.155 0.285,-0.365 0.095,-0.21 0.095,-0.455 0,-0.3 -0.13,-0.49 -0.125,-0.195 -0.3,-0.31 -0.175,-0.115 -0.355,-0.165 -0.175,-0.055 -0.275,-0.075 -0.335,-0.085 -0.545,-0.14 -0.205,-0.055 -0.325,-0.11 -0.115,-0.055 -0.155,-0.12 -0.04,-0.065 -0.04,-0.17 0,-0.115 0.05,-0.19 0.05,-0.075 0.125,-0.125 0.08,-0.05 0.175,-0.07 0.095,-0.02 0.19,-0.02 0.145,0 0.265,0.025 0.125,0.025 0.22,0.085 0.095,0.06 0.15,0.165 0.06,0.105 0.07,0.265 h 0.76 q 0,-0.31 -0.12,-0.525 -0.115,-0.22 -0.315,-0.36 -0.2,-0.14 -0.46,-0.2 -0.255,-0.065 -0.535,-0.065 -0.24,0 -0.48,0.065 -0.24,0.065 -0.43,0.2 -0.19,0.135 -0.31,0.34 -0.115,0.2 -0.115,0.475 0,0.245 0.09,0.42 0.095,0.17 0.245,0.285 0.15,0.115 0.34,0.19 0.19,0.07 0.39,0.12 0.195,0.055 0.385,0.1 0.19,0.045 0.34,0.105 0.15,0.06 0.24,0.15 0.095,0.09 0.095,0.235 0,0.135 -0.07,0.225 -0.07,0.085 -0.175,0.135 -0.105,0.05 -0.225,0.07 -0.12,0.015 -0.225,0.015 -0.155,0 -0.3,-0.035 -0.145,-0.04 -0.255,-0.115 -0.105,-0.08 -0.17,-0.205 -0.065,-0.125 -0.065,-0.305 z m 5.635002,-0.205 v 1.39 h 0.785 v -1.37 l 1.325,-2.2 h -0.875 l -0.83,1.41 -0.835,-1.41 h -0.88 z m 4.944999,0.205 h -0.76 q -0.005,0.33 0.12,0.57 0.125,0.24 0.335,0.395 0.215,0.155 0.49,0.225 0.28,0.075 0.575,0.075 0.365,0 0.64,-0.085 0.28,-0.085 0.465,-0.235 0.19,-0.155 0.285,-0.365 0.095,-0.21 0.095,-0.455 0,-0.3 -0.13,-0.49 -0.125,-0.195 -0.3,-0.31 -0.175,-0.115 -0.355,-0.165 -0.175,-0.055 -0.275,-0.075 -0.335,-0.085 -0.545,-0.14 -0.205,-0.055 -0.325,-0.11 -0.115,-0.055 -0.155,-0.12 -0.04,-0.065 -0.04,-0.17 0,-0.115 0.05,-0.19 0.05,-0.075 0.125,-0.125 0.08,-0.05 0.175,-0.07 0.095,-0.02 0.19,-0.02 0.145,0 0.265,0.025 0.125,0.025 0.22,0.085 0.095,0.06 0.15,0.165 0.06,0.105 0.07,0.265 h 0.76 q 0,-0.31 -0.12,-0.525 -0.115,-0.22 -0.315,-0.36 -0.2,-0.14 -0.46,-0.2 -0.255,-0.065 -0.535,-0.065 -0.24,0 -0.48,0.065 -0.24,0.065 -0.43,0.2 -0.19,0.135 -0.31,0.34 -0.115,0.2 -0.115,0.475 0,0.245 0.09,0.42 0.095,0.17 0.245,0.285 0.15,0.115 0.34,0.19 0.19,0.07 0.39,0.12 0.195,0.055 0.385,0.1 0.19,0.045 0.34,0.105 0.15,0.06 0.24,0.15 0.095,0.09 0.095,0.235 0,0.135 -0.07,0.225 -0.07,0.085 -0.175,0.135 -0.105,0.05 -0.225,0.07 -0.12,0.015 -0.225,0.015 -0.155,0 -0.3,-0.035 -0.145,-0.04 -0.255,-0.115 -0.105,-0.08 -0.17,-0.205 -0.065,-0.125 -0.065,-0.305 z m 5.499999,-1.725 v 2.91 h 0.785 v -2.91 h 1.07 v -0.66 h -2.925 v 0.66 z m 4.265001,-0.66 v 3.57 h 2.71 v -0.66 h -1.925 v -0.875 h 1.73 v -0.61 h -1.73 v -0.765 h 1.885 v -0.66 z m 5.240001,0 v 3.57 h 0.735 v -2.505 h 0.01 l 0.874997,2.505 h 0.605 l 0.875,-2.53 h 0.01 v 2.53 h 0.735 v -3.57 h -1.105 l -0.79,2.455 h -0.01 l -0.835,-2.455 z m 7.070007,2.385 h -0.76 q -0.005,0.33 0.12,0.57 0.125,0.24 0.335,0.395 0.215,0.155 0.49,0.225 0.28,0.075 0.575,0.075 0.365,0 0.64,-0.085 0.28,-0.085 0.465,-0.235 0.19,-0.155 0.285,-0.365 0.095,-0.21 0.095,-0.455 0,-0.3 -0.13,-0.49 -0.125,-0.195 -0.3,-0.31 -0.175,-0.115 -0.355,-0.165 -0.175,-0.055 -0.275,-0.075 -0.335,-0.085 -0.545,-0.14 -0.205,-0.055 -0.325,-0.11 -0.115,-0.055 -0.155,-0.12 -0.04,-0.065 -0.04,-0.17 0,-0.115 0.05,-0.19 0.05,-0.075 0.125,-0.125 0.08,-0.05 0.175,-0.07 0.095,-0.02 0.19,-0.02 0.145,0 0.265,0.025 0.125,0.025 0.22,0.085 0.095,0.06 0.15,0.165 0.06,0.105 0.07,0.265 h 0.76 q 0,-0.31 -0.12,-0.525 -0.115,-0.22 -0.315,-0.36 -0.2,-0.14 -0.46,-0.2 -0.255,-0.065 -0.535,-0.065 -0.24,0 -0.48,0.065 -0.24,0.065 -0.43,0.2 -0.19,0.135 -0.31,0.34 -0.115,0.2 -0.115,0.475 0,0.245 0.09,0.42 0.095,0.17 0.245,0.285 0.15,0.115 0.34,0.19 0.19,0.07 0.39,0.12 0.195,0.055 0.385,0.1 0.19,0.045 0.34,0.105 0.15,0.06 0.24,0.15 0.095,0.09 0.095,0.235 0,0.135 -0.07,0.225 -0.07,0.085 -0.175,0.135 -0.105,0.05 -0.225,0.07 -0.12,0.015 -0.225,0.015 -0.155,0 -0.3,-0.035 -0.145,-0.04 -0.255,-0.115 -0.105,-0.08 -0.17,-0.205 -0.065,-0.125 -0.065,-0.305 z" id="text2" style="font-weight:700;font-size:5px;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;letter-spacing:2;text-anchor:middle;fill:#111827;fill-rule:evenodd" aria-label="DIGITAL SYSTEMS"></path></g></svg>"##;
 
 #[allow(clippy::too_many_arguments)]
 fn home_chrome(
@@ -1146,6 +1122,10 @@ fn home_chrome(
             body {
                 a.skip-to-content href="#mp-main" { "Skip to content" }
                 header.topnav {
+                    nav.left {
+                        a href="/wiki/disclaimers" { "Disclaimer" }
+                        a href="/wiki/contact" { "Contact" }
+                    }
                     a.wordmark href="/" aria-label=(site_title) {
                         @if woodfine_theme {
                             (PreEscaped(WORDMARK_SVG_WOODFINE))
@@ -1153,20 +1133,20 @@ fn home_chrome(
                             (PreEscaped(WORDMARK_SVG_POINTSAV))
                         }
                     }
-                    div.topnav-center {
-                        form.topnav-search action="/search" method="get" role="search" {
-                            input #header-search-q
-                                type="search"
-                                name="q"
-                                placeholder="Search…"
-                                autocomplete="off"
-                                aria-label="Search this wiki"
-                                spellcheck="false";
-                            button.topnav-search-btn type="submit" aria-label="Search" { "→" }
-                        }
-                        div.ac-dropdown #search-autocomplete-dropdown {}
-                    }
                     nav.right {
+                        div.topnav-search-wrap {
+                            form.topnav-search action="/search" method="get" role="search" {
+                                input #header-search-q
+                                    type="search"
+                                    name="q"
+                                    placeholder="Search…"
+                                    autocomplete="off"
+                                    aria-label="Search this wiki"
+                                    spellcheck="false";
+                                button.topnav-search-btn type="submit" aria-label="Search" { "→" }
+                            }
+                            div.ac-dropdown #search-autocomplete-dropdown {}
+                        }
                         (auth_nav_widget(user, pending_count))
                         a.lang-toggle href=(match locale { Locale::En => "/es/", Locale::Es => "/?noredirect=1" }) {
                             (match locale { Locale::En => "ES", Locale::Es => "EN" })
@@ -1224,7 +1204,6 @@ fn home_chrome(
                                             @if let Some(cat) = t.slug.split_once('/').map(|(c, _)| c) {
                                                 span.recent__cat { (humanize_category(cat)) }
                                             }
-                                            span.kind-badge data-type=(item_type_key(&t.slug)) { (item_type_label(&t.slug)) }
                                             @if let Some(ref d) = t.last_edited {
                                                 span.recent__date { (d) }
                                             }
@@ -1239,8 +1218,8 @@ fn home_chrome(
                             div.wiki-home-stats {
                                 strong { (fmt_commas(stats.article_count)) }
                                 " articles across "
-                                strong { (HOMEPAGE_CATEGORIES.len()) }
-                                " areas"
+                                strong { (stats.category_count) }
+                                " categories"
                             }
                             // Home lede / intro text
                             @if !home_html.is_empty() {
@@ -1249,46 +1228,22 @@ fn home_chrome(
                         }
                     }
 
-                    // ── Start here strip ─────────────────────────────────────
-                    div.section-head { h2 { "New here? Start with these" } }
-                    div.starthere-row {
-                        a.starthere-chip href="/wiki/architecture/economic-model" {
-                            span.kind-badge data-type="topic" { "Topic" }
-                            " Platform business model"
-                        }
-                        a.starthere-chip href="/wiki/architecture/three-ring-architecture" {
-                            span.kind-badge data-type="topic" { "Topic" }
-                            " Three-ring architecture"
-                        }
-                        a.starthere-chip href="/wiki/architecture/compounding-substrate" {
-                            span.kind-badge data-type="topic" { "Topic" }
-                            " Compounding substrate"
-                        }
-                        a.starthere-chip href="/wiki/reference/nomenclature-taxonomy" {
-                            span.kind-badge data-type="topic" { "Topic" }
-                            " Naming conventions"
-                        }
-                    }
-
                     // ── Browse by area ───────────────────────────────────────
                     div.section-head {
                         h2 { "Browse by area" }
                     }
                     div.cat-grid {
-                        @for (display_name, primary_slug, slugs) in HOMEPAGE_CATEGORIES {
-                            @let count: usize = slugs.iter()
-                                .flat_map(|s| buckets.get(*s).map(|v| v.as_slice()).unwrap_or(&[]).iter())
+                        @for cat in ordered_categories(buckets) {
+                            @let count = buckets.get(&cat).map(|v| v.as_slice()).unwrap_or(&[]).iter()
                                 .filter(|t| t.status.as_deref() != Some("stub"))
                                 .count();
-                            @if count > 0 {
-                                a.cat-card href={ "/category/" (primary_slug) } {
-                                    div.cat-card__head {
-                                        span.cat-card__name { (display_name) }
-                                        span.cat-card__count { (count) }
-                                    }
-                                    @if let Some(desc) = cat_descriptions.get(*primary_slug) {
-                                        p.cat-card__desc { (desc) }
-                                    }
+                            a.cat-card href={ "/category/" (cat) } {
+                                div.cat-card__head {
+                                    span.cat-card__name { (humanize_category(&cat)) }
+                                    span.cat-card__count { (count) }
+                                }
+                                @if let Some(desc) = cat_descriptions.get(&cat) {
+                                    p.cat-card__desc { (desc) }
                                 }
                             }
                         }
@@ -1320,6 +1275,83 @@ fn home_chrome(
                         }
                     }
 
+                    // ── Sister surfaces (#mp-other) ──────────────────────────
+                    section #mp-other .wiki-home-sister {
+                        h2.wiki-home-section-title { "Sister surfaces" }
+                        ul.wiki-home-sister-grid {
+                            @if woodfine_projects {
+                                li {
+                                    a.wiki-home-sister-link href="https://corporate.woodfinegroup.com" {
+                                        span.wiki-home-sister-name { "Corporate Reference" }
+                                        span.wiki-home-sister-desc { "Woodfine Management Corp." }
+                                    }
+                                }
+                                li {
+                                    a.wiki-home-sister-link href="https://gis.woodfinegroup.com" {
+                                        span.wiki-home-sister-name { "Live Platform" }
+                                        span.wiki-home-sister-desc { "GIS co-location intelligence" }
+                                    }
+                                }
+                                li {
+                                    a.wiki-home-sister-link href="https://documentation.pointsav.com" {
+                                        span.wiki-home-sister-name { "Engineering Documentation" }
+                                        span.wiki-home-sister-desc { "PointSav platform reference" }
+                                    }
+                                }
+                                li {
+                                    a.wiki-home-sister-link href="/wiki/newsroom" {
+                                        span.wiki-home-sister-name { "Newsroom" }
+                                        span.wiki-home-sister-desc { "Announcements and updates" }
+                                    }
+                                }
+                            } @else if woodfine_theme {
+                                li {
+                                    a.wiki-home-sister-link href="https://projects.woodfinegroup.com" {
+                                        span.wiki-home-sister-name { "Projects Platform" }
+                                        span.wiki-home-sister-desc { "Woodfine co-location intelligence" }
+                                    }
+                                }
+                                li {
+                                    a.wiki-home-sister-link href="https://documentation.pointsav.com" {
+                                        span.wiki-home-sister-name { "Engineering Documentation" }
+                                        span.wiki-home-sister-desc { "PointSav platform reference" }
+                                    }
+                                }
+                                li {
+                                    a.wiki-home-sister-link href="/wiki/newsroom" {
+                                        span.wiki-home-sister-name { "Newsroom" }
+                                        span.wiki-home-sister-desc { "Announcements and updates" }
+                                    }
+                                }
+                            } @else {
+                                li {
+                                    a.wiki-home-sister-link href="https://projects.woodfinegroup.com" {
+                                        span.wiki-home-sister-name { "Projects Platform" }
+                                        span.wiki-home-sister-desc { "Woodfine co-location intelligence" }
+                                    }
+                                }
+                                li {
+                                    a.wiki-home-sister-link href="https://corporate.woodfinegroup.com" {
+                                        span.wiki-home-sister-name { "Corporate Reference" }
+                                        span.wiki-home-sister-desc { "Woodfine Management Corp." }
+                                    }
+                                }
+                                li {
+                                    a.wiki-home-sister-link href="https://github.com/pointsav/pointsav-design-system" {
+                                        span.wiki-home-sister-name { "Design System" }
+                                        span.wiki-home-sister-desc { "Tokens, components, recipes" }
+                                    }
+                                }
+                                li {
+                                    a.wiki-home-sister-link href="https://github.com/pointsav" {
+                                        span.wiki-home-sister-name { "PointSav on GitHub" }
+                                        span.wiki-home-sister-desc { "Canonical vendor-tier source" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                 }
 
                 // ── Stats one-liner (footer, subtle) ─────────────────────────
@@ -1327,8 +1359,8 @@ fn home_chrome(
                     p.home-stats-oneliner {
                         (fmt_commas(stats.article_count))
                         " articles · "
-                        (HOMEPAGE_CATEGORIES.len())
-                        " areas"
+                        (stats.category_count)
+                        " categories"
                         @if let Some(ref d) = stats.last_updated {
                             " · Updated " (d)
                         }
@@ -1391,20 +1423,14 @@ fn esc(s: &str) -> String {
         .replace('>', "&gt;")
 }
 
-/// Returns a display label ("Guide" or "Topic") based on the slug stem.
-fn item_type_label(slug: &str) -> &'static str {
-    if slug.rsplit('/').next().is_some_and(|s| s.starts_with("guide-")) { "Guide" } else { "Topic" }
-}
-
-/// Returns a CSS data-type key ("guide" or "topic") based on the slug stem.
-fn item_type_key(slug: &str) -> &'static str {
-    if slug.rsplit('/').next().is_some_and(|s| s.starts_with("guide-")) { "guide" } else { "topic" }
-}
-
 /// The categories that actually carry (non-stub) articles in `buckets`, in
-/// display order: only the ratified platform categories are returned.
-/// The `extras` block (all non-RATIFIED categories) is intentionally excluded
-/// to prevent internal deployment slugs from leaking into the homepage grid.
+/// display order: the ratified platform categories first (in their canonical
+/// order), then any other categories the content declares — `bim`, `company`,
+/// `operations`, etc. — alphabetically. The `uncategorised` bucket is omitted.
+///
+/// This is what makes the navigation correct across all three instances: the
+/// documentation wiki uses the ratified categories, while the Woodfine projects
+/// and corporate wikis declare their own (`bim`, `company`, `operations`, …).
 fn ordered_categories(buckets: &CategoryBuckets) -> Vec<String> {
     let has_real = |c: &str| {
         buckets
@@ -1412,11 +1438,22 @@ fn ordered_categories(buckets: &CategoryBuckets) -> Vec<String> {
             .map(|v| v.iter().any(|t| t.status.as_deref() != Some("stub")))
             .unwrap_or(false)
     };
-    RATIFIED_CATEGORIES
-        .iter()
-        .filter(|c| has_real(c))
-        .map(|c| (*c).to_string())
-        .collect()
+    let mut seen = std::collections::HashSet::new();
+    let mut out = Vec::new();
+    for c in RATIFIED_CATEGORIES {
+        if has_real(c) {
+            out.push((*c).to_string());
+            seen.insert((*c).to_string());
+        }
+    }
+    let mut extras: Vec<String> = buckets
+        .keys()
+        .filter(|k| k.as_str() != "uncategorised" && !seen.contains(*k) && has_real(k))
+        .cloned()
+        .collect();
+    extras.sort();
+    out.extend(extras);
+    out
 }
 
 /// Build the docs left-navigation HTML from the already-computed category
@@ -1619,25 +1656,18 @@ async fn category_page(
                     p.wiki-empty-body { "Articles in this category will appear here." }
                 }
             } @else {
-                div.facet-bar role="group" aria-label="Filter by type" {
-                    button.facet-pill.is-active data-filter="all" { "All" }
-                    button.facet-pill data-filter="topic" { "Topics" }
-                    button.facet-pill data-filter="guide" { "Guides" }
+                p.wiki-cat-page-count {
+                    (count) " article" @if count != 1 { "s" }
                 }
-                details.cat-full-index {
-                    summary {
-                        "All " (count) " article" @if count != 1 { "s" } " in this area, A–Z"
-                    }
-                    ul.wiki-cat-page-list {
-                        @for t in topics {
-                            li.wiki-cat-page-item data-kind=(item_type_key(&t.slug)) {
-                                a.wiki-cat-page-item-title href={ "/wiki/" (t.slug) } { (t.title) }
-                                @if let Some(ref d) = t.last_edited {
-                                    span.wiki-cat-page-item-date { (d) }
-                                }
-                                @if let Some(ref desc) = t.short_description {
-                                    p.wiki-cat-page-item-desc { (desc) }
-                                }
+                ul.wiki-cat-page-list {
+                    @for t in topics {
+                        li.wiki-cat-page-item {
+                            a.wiki-cat-page-item-title href={ "/wiki/" (t.slug) } { (t.title) }
+                            @if let Some(ref d) = t.last_edited {
+                                span.wiki-cat-page-item-date { (d) }
+                            }
+                            @if let Some(ref desc) = t.short_description {
+                                p.wiki-cat-page-item-desc { (desc) }
                             }
                         }
                     }
@@ -2038,12 +2068,6 @@ async fn wiki_page_inner(
     let headings = extract_headings(&raw_html);
     let body_html = inject_edit_pencils(&raw_html);
 
-    // CHANGE 14: Strip <!--claim…-->  / <!--/claim--> HTML comment markers
-    // from the final body HTML before serving. The claim extraction above has
-    // already consumed the structured data; shipping the markers to readers
-    // bloats page source and leaks internal annotation syntax.
-    let body_html = crate::claim::strip_claim_markers(&body_html);
-
     // §3.5: past-revision notice — minimal engine-side render.
     // Freshness-ribbon visual is project-design component `component-freshness-ribbon`.
     let body_html = if let Some(ref rev) = q.asof {
@@ -2099,28 +2123,9 @@ async fn wiki_page_inner(
     // Docs left-navigation, grouped by declared category (correct for all three
     // instances). Built from the same bucketing the home page uses, cached with
     // a short TTL so article pages stay fast.
-    let (sidenav_html, prev_article, next_article) = {
+    let sidenav_html = {
         let buckets = nav_buckets_cached(&state).await;
-        let sidenav = render_docs_sidenav(&buckets, &slug);
-        // P3: find prev/next articles in the same category for navigation.
-        let category = parsed.frontmatter.category.as_deref().unwrap_or_else(|| {
-            if let Some(slash) = slug.find('/') { &slug[..slash] } else { "" }
-        });
-        let (prev, next) = if category.is_empty() {
-            (None, None)
-        } else if let Some(articles) = buckets.get(category) {
-            // Articles are sorted by slug in bucket_topics_by_category.
-            if let Some(pos) = articles.iter().position(|t| t.slug == slug) {
-                let prev = if pos > 0 { Some(articles[pos - 1].clone()) } else { None };
-                let next = if pos + 1 < articles.len() { Some(articles[pos + 1].clone()) } else { None };
-                (prev, next)
-            } else {
-                (None, None)
-            }
-        } else {
-            (None, None)
-        };
-        (sidenav, prev, next)
+        render_docs_sidenav(&buckets, &slug)
     };
     Ok(wiki_chrome(
         effective_locale,
@@ -2139,8 +2144,6 @@ async fn wiki_page_inner(
         &body_fingerprint,
         &claim_rail_html,
         &sidenav_html,
-        prev_article.as_ref(),
-        next_article.as_ref(),
     )
     .into_response())
 }
@@ -2220,9 +2223,7 @@ fn wiki_chrome(
     printable: bool,
     _body_blake3: &str,
     claim_rail_html: &str,
-    sidenav: &str,
-    prev_article: Option<&TopicSummary>,
-    next_article: Option<&TopicSummary>,
+    _sidenav: &str,
 ) -> Markup {
     let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
     let _woodfine_projects = brand_theme == Some("woodfine-projects");
@@ -2292,6 +2293,10 @@ fn wiki_chrome(
                 div.reading-progress-bar aria-hidden="true" {}
                 a.skip-to-content href="#mw-content-text" { "Skip to content" }
                 header.topnav {
+                    nav.left {
+                        a href="/wiki/disclaimers" { "Disclaimer" }
+                        a href="/wiki/contact" { "Contact" }
+                    }
                     a.wordmark href="/" aria-label=(site_title) {
                         @if woodfine_theme {
                             (PreEscaped(WORDMARK_SVG_WOODFINE))
@@ -2299,41 +2304,37 @@ fn wiki_chrome(
                             (PreEscaped(WORDMARK_SVG_POINTSAV))
                         }
                     }
-                    div.topnav-center {
-                        form.topnav-search action="/search" method="get" role="search" {
-                            input #header-search-q
-                                type="search"
-                                name="q"
-                                placeholder="Search…"
-                                autocomplete="off"
-                                aria-label="Search this wiki"
-                                spellcheck="false";
-                            button.topnav-search-btn type="submit" aria-label="Search" { "→" }
-                        }
-                        div.ac-dropdown #search-autocomplete-dropdown {}
-                    }
                     nav.right {
+                        div.topnav-search-wrap {
+                            form.topnav-search action="/search" method="get" role="search" {
+                                input #header-search-q
+                                    type="search"
+                                    name="q"
+                                    placeholder="Search…"
+                                    autocomplete="off"
+                                    aria-label="Search this wiki"
+                                    spellcheck="false";
+                                button.topnav-search-btn type="submit" aria-label="Search" { "→" }
+                            }
+                            div.ac-dropdown #search-autocomplete-dropdown {}
+                        }
                         (auth_nav_widget(user, pending_count))
                         a.lang-toggle href=(match locale { Locale::En => format!("/es/wiki/{slug}"), Locale::Es => format!("/wiki/{slug}") }) {
                             (match locale { Locale::En => "ES", Locale::Es => "EN" })
                         }
-                    }
-                }
-                // Mobile-only toggle buttons placed outside topnav so the header
-                // height is consistent across all page types (P1 fix).
-                div.mobile-topnav-toggles {
-                    @if !numbered_headings.is_empty() {
-                        button.toc-toggle-btn.mobile-only #toc-toggle-btn
-                            aria-label="Contents"
+                        @if !numbered_headings.is_empty() {
+                            button.toc-toggle-btn.mobile-only #toc-toggle-btn
+                                aria-label="Contents"
+                                aria-expanded="false"
+                                aria-controls="mobile-toc-drawer"
+                            { "Contents" }
+                        }
+                        button.nav-toggle-btn.mobile-only #nav-toggle
+                            aria-label="Menu"
                             aria-expanded="false"
-                            aria-controls="mobile-toc-drawer"
-                        { "Contents" }
+                            aria-controls="mobile-nav-drawer"
+                        { "Menu" }
                     }
-                    button.nav-toggle-btn.mobile-only #nav-toggle
-                        aria-label="Menu"
-                        aria-expanded="false"
-                        aria-controls="mobile-nav-drawer"
-                    { "Menu" }
                 }
 
                 // Mobile nav drawer — hidden on desktop, toggled by hamburger button
@@ -2397,7 +2398,7 @@ fn wiki_chrome(
                     button.mobile-bar-btn #mobile-bar-toc aria-label="Contents" { "Contents" }
                     button.mobile-bar-btn #mobile-bar-share aria-label="Share" { "Share" }
                     a.mobile-bar-btn.tab-edit
-                        href={ "/edit/" (slug) }
+                        href={ "/wiki/" (slug) "?action=edit" }
                         aria-label="Edit this article"
                     { "Edit" }
                     a.mobile-bar-btn
@@ -2406,11 +2407,9 @@ fn wiki_chrome(
                     { "History" }
                 }
 
-                // Article layout: sidenav + article body (+ optional claim-rail at ≥1280px)
+                // Article layout: article body (+ optional claim-rail at ≥1280px)
+                // Sidenav removed: encyclopedia pattern uses right-rail TOC only.
                 div.shell {
-
-                    // Left docs sidenav (collapses at ≤1024px via CSS)
-                    (PreEscaped(sidenav))
 
                     // --- Article body column (two-column: prose + TOC) ---
                     main.article-wrap {
@@ -2424,9 +2423,11 @@ fn wiki_chrome(
                             nav.wiki-page-tabs aria-label="Page tabs" {
                                 a.wiki-tab aria-current="page" href={ "/wiki/" (slug) } { "Article" }
                                 a.wiki-tab href={ "/talk/" (slug) } { "Talk" }
-                                a.wiki-tab href={ "/edit/" (slug) } { "Edit" }
+                                a.wiki-tab href={ "/wiki/" (slug) "?action=edit" } { "Edit" }
                                 a.wiki-tab href={ "/history/" (slug) } { "History" }
                             }
+                            // Wikipedia "From <wiki>" tagline.
+                            p.wiki-tagline { "From the " (site_title) }
                             @if let Some(ref cat) = fm.category {
                                 @if cat != "root" {
                                     nav.crumb aria-label="breadcrumb" {
@@ -2440,21 +2441,21 @@ fn wiki_chrome(
                             }
                             div.doc-header__titlewrap {
                                 h1.article__title { (title) }
-                                // P4: content-type badge always visible; defaults to "topic".
-                                @let ct = fm.content_type.as_deref().unwrap_or("topic");
-                                @let badge_label = match ct {
-                                    "guide"     => "Guide",
-                                    "topic"     => "Topic",
-                                    "research"  => "Research",
-                                    "reference" => "Reference",
-                                    "category"  => "Category",
-                                    "article"   => "Article",
-                                    _           => "Topic",
-                                };
-                                span.content-type-badge data-type=(ct) { (badge_label) }
+                                @if let Some(ref ct) = fm.content_type {
+                                    @if ct != "article" {
+                                        span.content-type-badge data-type=(ct) {
+                                            @let label = match ct.as_str() {
+                                                "guide"    => "Guide",
+                                                "topic"    => "Topic",
+                                                "research" => "Research",
+                                                "category" => "Category",
+                                                other      => other,
+                                            };
+                                            (label)
+                                        }
+                                    }
+                                }
                             }
-                            // Wikipedia "From <wiki>" tagline.
-                            p.wiki-tagline { "From the " (site_title) }
                             @if let Some(ref desc) = fm.short_description {
                                 p.article__lede { (desc) }
                             }
@@ -2664,24 +2665,6 @@ fn wiki_chrome(
                                 }
                             }
 
-                        }
-
-                        // P3: Previous / Next article navigation
-                        @if prev_article.is_some() || next_article.is_some() {
-                            nav.article-nav aria-label="Article navigation" {
-                                @if let Some(ref prev) = prev_article {
-                                    a.article-nav__prev href={ "/wiki/" (prev.slug) } {
-                                        span.article-nav__label { "← Previous" }
-                                        span.article-nav__title { (prev.title) }
-                                    }
-                                }
-                                @if let Some(ref next) = next_article {
-                                    a.article-nav__next href={ "/wiki/" (next.slug) } {
-                                        span.article-nav__label { "Next →" }
-                                        span.article-nav__title { (next.title) }
-                                    }
-                                }
-                            }
                         }
                     }
 
@@ -3935,25 +3918,28 @@ fn chrome(
             body {
                 a.skip-to-content href="#main-content" { "Skip to content" }
                 header.topnav {
+                    nav.left {
+                        a href="/wiki/disclaimers" { "Disclaimer" }
+                        a href="/wiki/contact" { "Contact" }
+                    }
                     a.wordmark href="/" aria-label=(site_title) {
                         (PreEscaped(WORDMARK_SVG_POINTSAV))
                     }
-                    div.topnav-center {
-                        form.topnav-search action="/search" method="get" role="search" {
-                            input #header-search-q
-                                type="search"
-                                name="q"
-                                placeholder="Search…"
-                                autocomplete="off"
-                                aria-label="Search this wiki"
-                                spellcheck="false";
-                            button.topnav-search-btn type="submit" aria-label="Search" { "→" }
-                        }
-                        div.ac-dropdown #search-autocomplete-dropdown {}
-                    }
                     nav.right {
+                        div.topnav-search-wrap {
+                            form.topnav-search action="/search" method="get" role="search" {
+                                input #header-search-q
+                                    type="search"
+                                    name="q"
+                                    placeholder="Search…"
+                                    autocomplete="off"
+                                    aria-label="Search this wiki"
+                                    spellcheck="false";
+                                button.topnav-search-btn type="submit" aria-label="Search" { "→" }
+                            }
+                            div.ac-dropdown #search-autocomplete-dropdown {}
+                        }
                         (auth_nav_widget(user, pending_count))
-                        a.lang-toggle href="/es/" { "ES" }
                     }
                 }
                 main.site-main #main-content {
@@ -3967,20 +3953,22 @@ fn chrome(
 
 fn auth_nav_widget(user: Option<&User>, pending_count: i64) -> Markup {
     html! {
-        div.auth-nav-widget {
-            @if let Some(u) = user {
-                span.auth-nav-user { (u.username) }
-                @if u.is_admin() && pending_count > 0 {
-                    a.auth-nav-pending href="/special/pending-changes" {
-                        (pending_count) " pending"
-                    }
+        @if let Some(u) = user {
+            " · "
+            span.nav-username { (u.username) }
+            @if u.is_admin() && pending_count > 0 {
+                " "
+                a.pending-badge href="/special/pending-changes" {
+                    (pending_count) " pending"
                 }
-                form method="post" action="/special/logout" style="display:inline;" {
-                    button.nav-logout-btn type="submit" { "Log out" }
-                }
-            } @else {
-                a.auth-nav-login href="/special/login" { "Log in" }
             }
+            " · "
+            form method="post" action="/special/logout" style="display:inline;" {
+                button.nav-logout-btn type="submit" { "Log out" }
+            }
+        } @else {
+            " · "
+            a href="/special/login" { "Log in" }
         }
     }
 }
