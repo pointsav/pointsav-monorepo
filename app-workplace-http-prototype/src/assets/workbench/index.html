@@ -2743,7 +2743,7 @@ function wireDragOnItem(item) {
   if (type === 'file') {
     const href = item.dataset.href || '';
     // Only writable roots are draggable (same logic as context menu)
-    if (!href || href.startsWith('/_command/') || href.startsWith('/_clones/')) return;
+    if (!href || href.startsWith('/_command/')) return;
     item.draggable = true;
     item.addEventListener('dragstart', e => {
       e.dataTransfer.effectAllowed = 'move';
