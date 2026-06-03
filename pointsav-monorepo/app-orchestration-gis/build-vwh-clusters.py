@@ -77,6 +77,7 @@ VWH_CHAINS: dict[str, list[str]] = {
         "loxam-fr", "kiloutou-fr", "boels-rental-nl",
         "ramirent-fi", "cramo-fi",
         "hss-hire-uk", "speedy-hire-uk",
+        "loxam-es", "loxam-it", "kiloutou-es", "kiloutou-it",  # ES/IT
     ],
     "auto_parts": [
         "autozone-us", "oreilly-auto-us", "napa-us",
@@ -87,6 +88,7 @@ VWH_CHAINS: dict[str, list[str]] = {
     ],
     "electrical": [
         "cef-uk", "rexel-fr", "ahlsell-se",
+        "rexel-es", "rexel-it", "sonepar-es", "sonepar-it",  # ES/IT
     ],
     "flooring": [
         "floor-decor-us", "topps-tiles-uk",
