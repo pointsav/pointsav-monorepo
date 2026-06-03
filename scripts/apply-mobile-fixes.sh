@@ -9,6 +9,7 @@
 #   S2: Nav font 9→11px, gap 12→14px at ≤480px breakpoint
 #   S3: Nav links as 44px tap targets (min-height:44px)
 #   S4: Bottom divider on collapsed header at ≤768px
+#   S5: Hide .topnav .left (Disclaimer + Contact us) on mobile ≤768px; footer links remain
 #   W1: Strip redundant width="320" height="80" SVG attrs (Woodfine)
 #   P1: Remove empty <a href="#"> from PointSav right nav
 #   P2: Strip redundant width="320" height="80" SVG attrs (PointSav)
@@ -155,6 +156,18 @@ def apply_shared(template):
         applied.append('S4: already patched (skip)')
     else:
         applied.append('S4: WARN not found')
+
+    # S5 — Hide .topnav .left on mobile ≤768px; footer links remain visible
+    S5_OLD = '.topnav .left, .topnav .right { justify-content: center; gap: 20px; font-size: 10px; }'
+    S5_NEW = '.topnav .left { display: none; }\n    .topnav .right { justify-content: center; gap: 20px; font-size: 10px; }'
+    S5_MARKER = '.topnav .left { display: none; }'
+    if S5_OLD in template:
+        template = template.replace(S5_OLD, S5_NEW, 1)
+        applied.append('S5: .topnav .left hidden at ≤768px (Disclaimer/Contact moved to footer)')
+    elif S5_MARKER in template:
+        applied.append('S5: already patched (skip)')
+    else:
+        applied.append('S5: WARN not found')
 
     return template, applied
 
