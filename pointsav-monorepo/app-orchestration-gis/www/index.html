@@ -120,11 +120,14 @@
 
         /* ── Responsive ───────────────────────────────────────────── */
         @media (max-width: 768px) {
-            #data-panel      { top: auto; bottom: 0; left: 0; width: 100%; border-radius: 20px 20px 0 0; max-height: 60dvh; padding-bottom: env(safe-area-inset-bottom, 0px); }
-            .nav-cluster     { bottom: 62dvh; right: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+            /* Default = peek (~80% map visible). Grows to a half-sheet only when a feature is selected. */
+            #data-panel      { top: auto; bottom: 0; left: 0; width: 100%; border-radius: 20px 20px 0 0; max-height: 140px; padding-bottom: env(safe-area-inset-bottom, 0px); transition: max-height 0.25s ease; }
+            #data-panel.has-detail { max-height: 52dvh; }
+            .nav-cluster     { bottom: calc(152px + env(safe-area-inset-bottom, 0px)); right: 12px; padding-bottom: 0; transition: bottom 0.25s ease; }
+            .nav-cluster.has-detail-nav { bottom: calc(52dvh + 12px); }
             .nav-btn         { width: 80px; }
             .panel-collapse-btn { display: flex; }
-            #data-panel.collapsed { max-height: 80px; overflow: hidden; }
+            #data-panel.collapsed { max-height: 96px; overflow: hidden; }
             #data-panel.collapsed .panel-collapse-btn { transform: rotate(180deg); }
             .drawer-handle   { display: block; }
             /* Readability floor — nothing below 12px on phones */
@@ -588,6 +591,36 @@
         sync();
     }
 
+    // flyTo/easeTo padding so a tapped feature centres in the visible map band ABOVE the mobile
+    // bottom sheet (or to the right of the desktop side card). Reads the live panel height.
+    function sheetPad() {
+        if (window.innerWidth > 768) return { top: 0, bottom: 0, left: 380, right: 0 };
+        const panel = document.getElementById('data-panel');
+        let bottom = panel ? panel.offsetHeight : 0;
+        // While the sheet is animating open (has-detail), offsetHeight is mid-transition —
+        // use the target half-detent height (52dvh) so the feature frames correctly.
+        if (panel && panel.classList.contains('has-detail')) {
+            bottom = Math.max(bottom, Math.round(window.innerHeight * 0.52));
+        }
+        return { top: 0, bottom, left: 0, right: 0 };
+    }
+
+    // Grow the mobile bottom sheet to the half detent when a feature is selected, so its stats
+    // are visible (and the nav buttons ride above it). No-op on desktop.
+    function expandSheetForDetail() {
+        const panel = document.getElementById('data-panel');
+        if (!panel) return;
+        panel.classList.add('has-detail');
+        panel.classList.remove('collapsed');
+        document.querySelector('.nav-cluster')?.classList.add('has-detail-nav');
+    }
+    function collapseSheet() {
+        const panel = document.getElementById('data-panel');
+        if (!panel) return;
+        panel.classList.remove('has-detail');
+        document.querySelector('.nav-cluster')?.classList.remove('has-detail-nav');
+    }
+
     function setNavContext(backLabel, backFn, currentLabel) {
         const strip   = document.getElementById('context-strip');
         const tabs    = document.getElementById('region-tabs');
@@ -904,9 +937,12 @@
         attributionControl: false,
         maxBounds: [[-160.0, -5.0], [45.0, 80.0]],
         maxTileCacheSize: 500,
-        cooperativeGestures: window.matchMedia('(pointer: coarse)').matches,
+        // Full-screen map: one-finger pan is correct. cooperativeGestures (two-finger) is for
+        // maps embedded in scrolling pages — it made the mobile map feel unresponsive.
+        cooperativeGestures: false,
     });
     map.touchZoomRotate.disableRotation();
+    if (map.touchPitch) map.touchPitch.disable();   // 2D north-up map — no accidental tilt
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
 
     function updateRegionTabs(key) {
@@ -1274,6 +1310,7 @@
         selectedClusterProps  = null;
         selectedClusterCoords = null;
         catchmentActive = false;
+        collapseSheet();   // mobile: shrink sheet back to peek (resets map padding via observer)
         hideCatchment();
         applyView();
         if (map.getSource('proximity-circle-src')) map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: [] });
@@ -1510,6 +1547,7 @@
         selectedClusterProps  = p;
         selectedClusterId     = p.id || p.name || null;
         selectedClusterCoords = [p.lon, p.lat];
+        expandSheetForDetail();   // mobile: grow sheet so stats are visible
 
         const tier = (mode === 'VWH' ? p.vwh_tier : p.commuter_tier) || 3;
         const tc   = tierColor(4 - tier);
@@ -2140,6 +2178,7 @@
         if (props !== undefined) { selectedClusterProps = props; selectedClusterCoords = coords; }
         const p = selectedClusterProps;
         if (!p) return;
+        expandSheetForDetail();   // mobile: grow sheet so stats are visible
         const clusterName = p.display_name || (p.anchor_label + (p.city ? ', ' + p.city : ''));
         setNavContext(REGIONS[currentRegion].label, flyToOverview, clusterName);
         const tvKey  = effectiveTierKey(p);
@@ -3154,7 +3193,7 @@
             // Second-click street-level step is owned by the proximity-fill handler —
             // keeps drillIntoCluster deterministic regardless of caller zoom level.
             const targetZoom = Math.max(map.getZoom(), km === 1 ? 12 : 11);
-            map.flyTo({ center: coords, zoom: targetZoom, duration: 1200, essential: true });
+            map.flyTo({ center: coords, zoom: targetZoom, duration: 1200, essential: true, padding: sheetPad() });
         }
         // Expose on window so injected panel onclick handlers can call them
         window.drillIntoCluster = drillIntoCluster;
@@ -3252,6 +3291,7 @@
                     zoom: Math.max(z, streetZ),
                     duration: 800,
                     essential: true,
+                    padding: sheetPad(),
                 });
             }
             e.stopPropagation();
@@ -3269,7 +3309,7 @@
             const rmGroup  = clustersByRM?.get(rmKey);
             if (rmGroup && rmGroup.length > 1) {
                 showRegionalMarketPanel(rmKey);
-                map.flyTo({ center: [c.lon, c.lat], zoom: Math.max(map.getZoom(), 10), duration: 600, essential: true });
+                map.flyTo({ center: [c.lon, c.lat], zoom: Math.max(map.getZoom(), 10), duration: 600, essential: true, padding: sheetPad() });
             } else {
                 drillIntoCluster(metaToClusterProps(c), [c.lon, c.lat]);
             }
@@ -3285,7 +3325,7 @@
             const coords = f.geometry?.coordinates
                 || [f.properties?.lon, f.properties?.lat];
             if (coords[0] == null || coords[1] == null) return;
-            map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 12), duration: 900, essential: true });
+            map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 12), duration: 900, essential: true, padding: sheetPad() });
             e.stopPropagation && e.stopPropagation();
         }
         ['uf-t1', 'uf-t2', 'uf-t3', 'cm-t1', 'cm-t2', 'cm-t3'].forEach(id => {
