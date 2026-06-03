@@ -2936,6 +2936,11 @@ html[data-theme="dark"] .toc-rail a.toc-active { border-left-color: var(--link);
 /* Category listing */
 .wiki-category-list { padding: 24px 28px; max-width: var(--content-max); margin: 0 auto; }
 .wiki-category-list h2 { font-family: var(--font-display); font-size: 24px; font-weight: 400; margin-bottom: 16px; }
+
+/* Designed empty state — category pages with no articles */
+.wiki-empty-state { padding: 48px 0 48px; text-align: center; }
+.wiki-empty-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--fg-1); margin: 0 0 8px; }
+.wiki-empty-body { font-size: 15px; color: var(--fg-3); margin: 0; }
 .wiki-article-list { list-style: none; padding: 0; margin: 0; }
 .wiki-article-list li { border-bottom: 1px solid var(--rule); }
 .wiki-article-list li a { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; font-size: 14.5px; color: var(--fg-1); font-weight: 600; }
