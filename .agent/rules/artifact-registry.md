@@ -521,6 +521,19 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 
 ## C — Data Artifacts (pipeline outputs, not editorial)
 
+### Archetype models + scripts (2026-06-03; commit `aec2187e`)
+
+| Artifact | File | Status |
+|---|---|---|
+| archetype-vwh.geojson (Urban Fringe) | `work/` → gateway www/data/ | DONE (2026-06-03; **7,028 features**; Retail-density model; `qualify_vwh` admits ≥2-cat OR lone STRONG/BROAD; composition-score tier T1=747/T2=2,732/T3=3,549; served at `?v=20260603d`) |
+| archetype-pks.geojson (Commuter) | `work/` → gateway www/data/ | DONE (2026-06-03; **5,977 features**; geometric airport-led park-and-ride; regional airports + outer rail belt; NA map-cell coverage 96→957; tier T1=1,317/T2=3,183/T3=1,477; served at `?v=20260603d`) |
+| sim_spread.py (harness) | `app-orchestration-gis/tools/` | DONE (2026-06-03; clusters once + evaluates qualify/tier rules instantly; used to tune both archetypes) |
+| ingest-osm-parking.py | `app-orchestration-gis/` | DONE — scaffold (2026-06-03; park_ride + structured parking → `cleansed-civic-parking.jsonl`; runs June 4 overnight; BUILT/PARTIAL/GREENFIELD filter) |
+| ingest-osm-parcel-depot.py | `app-orchestration-gis/` | DONE — scaffold (2026-06-03; `post_depot`+`office=logistics` → `parcel-depot-osm.jsonl`; VWH enrichment; runs June 4) |
+| run-overnight-ingests.sh | `app-orchestration-gis/` | DONE (2026-06-03; crontab June 4 05:00 UTC; parking + parcel depots + 20 new VWH brand chains) |
+
+### Earlier data artifacts
+
 | Artifact | File | Status |
 |---|---|---|
 | O-D Summary (B3) | `service-fs/service-mobility/od-summary.jsonl` | DONE (2026-05-15) |
