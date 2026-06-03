@@ -441,6 +441,30 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 - **Content:** service-fs benchmark data from `ledger_bench.rs` (commit 7006b29f); three benchmark groups, 100 samples each; Criterion 0.5.1; GCE e2 VM hardware. Supplement to JOURNAL-NOTES-j2.md. Distinct from J2 Bench #9 (which is `verify_inclusion_proof` 1024-leaf needing a quiet n2 host).
 - **Next action:** When J2 returns from project-system with Bench #9 clean, merge this data into J2 §4 at the same time.
 
+### A37 — TOPIC: app-mediakit-marketing update [project-marketing dispatch]
+- **File:** `media-knowledge-documentation/applications/app-mediakit-marketing.md` + `.es.md`
+- **Status:** UPDATED (2026-06-03) — EN updated with expanded content from project-marketing draft; ES sibling flagged for refresh pass (quality: needs-update)
+- **Source draft archived:** `.agent/drafts-outbound/archived/TOPIC-app-mediakit-marketing.draft.md`
+- **Content:** WordPress-leapfrog architecture; Background, Architecture (binary/flat-file/multi-tenant/DataGraph), Tier 0 alignment, WORM-ledger (planned), Deployment pattern, live deployments, Roadmap table. Internal staging branch URL removed from Source section.
+
+### A38 — GUIDE: Provision a marketing landing site instance [project-marketing dispatch]
+- **File:** `.agent/drafts-outbound/GUIDE-provision-marketing-site.draft.md`
+- **Status:** LANGUAGE-CLEARED (2026-06-03) — pending Command routing to WFD (msg: project-editorial-20260603-guide-routing-batch-2)
+- **Destination:** `woodfine-fleet-deployment/media-marketing-landing/guide-provision-marketing-site.md` + `pointsav-fleet-deployment/media-marketing-landing/`
+- **Content:** 9-step provisioning runbook: system user, binary install, content dir, systemd unit, nginx vhost, DNS, TLS (certbot), MANIFEST, fleet catalog registration.
+
+### A39 — GUIDE: Deploy and update app-mediakit-marketing [project-marketing dispatch]
+- **File:** `.agent/drafts-outbound/GUIDE-deployment-marketing-site.draft.md`
+- **Status:** LANGUAGE-CLEARED (2026-06-03) — pending Command routing to WFD (msg: project-editorial-20260603-guide-routing-batch-2)
+- **Destination:** `woodfine-fleet-deployment/media-marketing-landing/guide-deployment-marketing-site.md` + `pointsav-fleet-deployment/media-marketing-landing/`
+- **Content:** Zero-downtime binary swap, content updates, rollback, configuration change, TLS renewal, log access. Companion to A38 provision guide.
+
+### A40 — DESIGN batch relay: 10 DESIGN artifacts [project-marketing + project-orgcharts dispatch]
+- **Files:** See outbox msg `project-editorial-20260603-design-batch-relay` for full list
+- **Status:** RELAYED (2026-06-03) — 10 DESIGN-RESEARCH/COMPONENT/TOKEN-CHANGE artifacts relayed to project-design via outbox; pending project-design pickup
+- **Source:** 7 from project-marketing (Leapfrog 2030 audit; commit 85099ed), 3 from project-orgcharts
+- **Content:** WCAG 2.2 audit, Leapfrog 2030 CSS techniques, mobile performance findings, synthesis; icon-tab component+token; woodfine blue tint token; orgchart component + bencal chart research + woodfine teal-red theme tokens
+
 ---
 
 ## B — Backlog (queued for future sessions)
