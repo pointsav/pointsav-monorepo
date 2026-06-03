@@ -4,7 +4,8 @@ to: totebox@project-design
 re: relay — project-orgcharts DESIGN-* drafts (3 artifacts; 1 needs master_cosign decision)
 created: 2026-06-02T07:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned_at: 2026-06-03T15:45:00Z
 msg-id: command-20260602-relay-orgcharts-design-drafts
 relayed-from: project-orgcharts-20260601-design-drafts-bencal-charts
 ---
@@ -33,7 +34,8 @@ to: totebox@project-design
 re: co-sign GRANTED + branch reconciliation — IBM Carbon org-chart tokens + design-system FF
 created: 2026-06-01T19:57:50Z
 priority: high
-status: pending
+status: actioned
+actioned_at: 2026-06-03T15:35:00Z
 attempts: 0
 msg-id: project-design-20260601-co-sign-granted-branch-reconciliation-ib
 ---
