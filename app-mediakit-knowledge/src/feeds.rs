@@ -170,13 +170,16 @@ pub fn first_paragraph_snippet(body_md: &str, max_chars: usize) -> String {
         .collect();
 
     let clean = clean.trim();
-    if clean.len() <= max_chars {
+    // Count Unicode characters (not bytes) to avoid slicing mid-codepoint on
+    // multi-byte sequences such as em-dashes (—, 3 bytes each).
+    let char_count = clean.chars().count();
+    if char_count <= max_chars {
         clean.to_string()
     } else {
-        // Break on a word boundary.
-        let truncated = &clean[..max_chars];
+        // Collect up to max_chars chars, then walk back to a word boundary.
+        let truncated: String = clean.chars().take(max_chars).collect();
         if let Some(last_space) = truncated.rfind(' ') {
-            format!("{}…", &clean[..last_space])
+            format!("{}…", &truncated[..last_space])
         } else {
             format!("{truncated}…")
         }
@@ -323,10 +326,25 @@ mod tests {
         let body = "A ".repeat(200);
         let s = first_paragraph_snippet(&body, 50);
         // Should be truncated (≤ 54 chars including the ellipsis + some slack).
+        // Use char count — the fix uses .chars().count() not .len() (bytes).
         assert!(
-            s.len() <= 55,
-            "snippet should be ≤50 chars: len={}",
-            s.len()
+            s.chars().count() <= 55,
+            "snippet should be ≤50 chars: char_count={}",
+            s.chars().count()
+        );
+    }
+
+    #[test]
+    fn first_paragraph_snippet_handles_multibyte_chars() {
+        // em-dash is 3 bytes but 1 char; slicing at byte 180 on a string of
+        // em-dashes would previously panic. This test confirms safety.
+        let body = "—".repeat(200);
+        let s = first_paragraph_snippet(&body, 180);
+        // Must not panic; char count must be ≤ 180 + ellipsis (1 char).
+        assert!(
+            s.chars().count() <= 181,
+            "snippet char_count out of range: {}",
+            s.chars().count()
         );
     }
 

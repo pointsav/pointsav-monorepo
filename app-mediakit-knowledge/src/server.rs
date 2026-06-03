@@ -1153,20 +1153,20 @@ fn home_chrome(
                             (PreEscaped(WORDMARK_SVG_POINTSAV))
                         }
                     }
-                    nav.right {
-                        div.topnav-search-wrap {
-                            form.topnav-search action="/search" method="get" role="search" {
-                                input #header-search-q
-                                    type="search"
-                                    name="q"
-                                    placeholder="Search…"
-                                    autocomplete="off"
-                                    aria-label="Search this wiki"
-                                    spellcheck="false";
-                                button.topnav-search-btn type="submit" aria-label="Search" { "→" }
-                            }
-                            div.ac-dropdown #search-autocomplete-dropdown {}
+                    div.topnav-center {
+                        form.topnav-search action="/search" method="get" role="search" {
+                            input #header-search-q
+                                type="search"
+                                name="q"
+                                placeholder="Search…"
+                                autocomplete="off"
+                                aria-label="Search this wiki"
+                                spellcheck="false";
+                            button.topnav-search-btn type="submit" aria-label="Search" { "→" }
                         }
+                        div.ac-dropdown #search-autocomplete-dropdown {}
+                    }
+                    nav.right {
                         (auth_nav_widget(user, pending_count))
                         a.lang-toggle href=(match locale { Locale::En => "/es/", Locale::Es => "/?noredirect=1" }) {
                             (match locale { Locale::En => "ES", Locale::Es => "EN" })
@@ -2060,9 +2060,28 @@ async fn wiki_page_inner(
     // Docs left-navigation, grouped by declared category (correct for all three
     // instances). Built from the same bucketing the home page uses, cached with
     // a short TTL so article pages stay fast.
-    let sidenav_html = {
+    let (sidenav_html, prev_article, next_article) = {
         let buckets = nav_buckets_cached(&state).await;
-        render_docs_sidenav(&buckets, &slug)
+        let sidenav = render_docs_sidenav(&buckets, &slug);
+        // P3: find prev/next articles in the same category for navigation.
+        let category = parsed.frontmatter.category.as_deref().unwrap_or_else(|| {
+            if let Some(slash) = slug.find('/') { &slug[..slash] } else { "" }
+        });
+        let (prev, next) = if category.is_empty() {
+            (None, None)
+        } else if let Some(articles) = buckets.get(category) {
+            // Articles are sorted by slug in bucket_topics_by_category.
+            if let Some(pos) = articles.iter().position(|t| t.slug == slug) {
+                let prev = if pos > 0 { Some(articles[pos - 1].clone()) } else { None };
+                let next = if pos + 1 < articles.len() { Some(articles[pos + 1].clone()) } else { None };
+                (prev, next)
+            } else {
+                (None, None)
+            }
+        } else {
+            (None, None)
+        };
+        (sidenav, prev, next)
     };
     Ok(wiki_chrome(
         effective_locale,
@@ -2081,6 +2100,8 @@ async fn wiki_page_inner(
         &body_fingerprint,
         &claim_rail_html,
         &sidenav_html,
+        prev_article.as_ref(),
+        next_article.as_ref(),
     )
     .into_response())
 }
@@ -2161,6 +2182,8 @@ fn wiki_chrome(
     _body_blake3: &str,
     claim_rail_html: &str,
     _sidenav: &str,
+    prev_article: Option<&TopicSummary>,
+    next_article: Option<&TopicSummary>,
 ) -> Markup {
     let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
     let _woodfine_projects = brand_theme == Some("woodfine-projects");
@@ -2237,37 +2260,41 @@ fn wiki_chrome(
                             (PreEscaped(WORDMARK_SVG_POINTSAV))
                         }
                     }
-                    nav.right {
-                        div.topnav-search-wrap {
-                            form.topnav-search action="/search" method="get" role="search" {
-                                input #header-search-q
-                                    type="search"
-                                    name="q"
-                                    placeholder="Search…"
-                                    autocomplete="off"
-                                    aria-label="Search this wiki"
-                                    spellcheck="false";
-                                button.topnav-search-btn type="submit" aria-label="Search" { "→" }
-                            }
-                            div.ac-dropdown #search-autocomplete-dropdown {}
+                    div.topnav-center {
+                        form.topnav-search action="/search" method="get" role="search" {
+                            input #header-search-q
+                                type="search"
+                                name="q"
+                                placeholder="Search…"
+                                autocomplete="off"
+                                aria-label="Search this wiki"
+                                spellcheck="false";
+                            button.topnav-search-btn type="submit" aria-label="Search" { "→" }
                         }
+                        div.ac-dropdown #search-autocomplete-dropdown {}
+                    }
+                    nav.right {
                         (auth_nav_widget(user, pending_count))
                         a.lang-toggle href=(match locale { Locale::En => format!("/es/wiki/{slug}"), Locale::Es => format!("/wiki/{slug}") }) {
                             (match locale { Locale::En => "ES", Locale::Es => "EN" })
                         }
-                        @if !numbered_headings.is_empty() {
-                            button.toc-toggle-btn.mobile-only #toc-toggle-btn
-                                aria-label="Contents"
-                                aria-expanded="false"
-                                aria-controls="mobile-toc-drawer"
-                            { "Contents" }
-                        }
-                        button.nav-toggle-btn.mobile-only #nav-toggle
-                            aria-label="Menu"
-                            aria-expanded="false"
-                            aria-controls="mobile-nav-drawer"
-                        { "Menu" }
                     }
+                }
+                // Mobile-only toggle buttons placed outside topnav so the header
+                // height is consistent across all page types (P1 fix).
+                div.mobile-topnav-toggles {
+                    @if !numbered_headings.is_empty() {
+                        button.toc-toggle-btn.mobile-only #toc-toggle-btn
+                            aria-label="Contents"
+                            aria-expanded="false"
+                            aria-controls="mobile-toc-drawer"
+                        { "Contents" }
+                    }
+                    button.nav-toggle-btn.mobile-only #nav-toggle
+                        aria-label="Menu"
+                        aria-expanded="false"
+                        aria-controls="mobile-nav-drawer"
+                    { "Menu" }
                 }
 
                 // Mobile nav drawer — hidden on desktop, toggled by hamburger button
@@ -2372,20 +2399,18 @@ fn wiki_chrome(
                             }
                             div.doc-header__titlewrap {
                                 h1.article__title { (title) }
-                                @if let Some(ref ct) = fm.content_type {
-                                    @if ct != "article" {
-                                        span.content-type-badge data-type=(ct) {
-                                            @let label = match ct.as_str() {
-                                                "guide"    => "Guide",
-                                                "topic"    => "Topic",
-                                                "research" => "Research",
-                                                "category" => "Category",
-                                                other      => other,
-                                            };
-                                            (label)
-                                        }
-                                    }
-                                }
+                                // P4: content-type badge always visible; defaults to "topic".
+                                @let ct = fm.content_type.as_deref().unwrap_or("topic");
+                                @let badge_label = match ct {
+                                    "guide"     => "Guide",
+                                    "topic"     => "Topic",
+                                    "research"  => "Research",
+                                    "reference" => "Reference",
+                                    "category"  => "Category",
+                                    "article"   => "Article",
+                                    _           => "Topic",
+                                };
+                                span.content-type-badge data-type=(ct) { (badge_label) }
                             }
                             // Wikipedia "From <wiki>" tagline.
                             p.wiki-tagline { "From the " (site_title) }
@@ -2598,6 +2623,24 @@ fn wiki_chrome(
                                 }
                             }
 
+                        }
+
+                        // P3: Previous / Next article navigation
+                        @if prev_article.is_some() || next_article.is_some() {
+                            nav.article-nav aria-label="Article navigation" {
+                                @if let Some(ref prev) = prev_article {
+                                    a.article-nav__prev href={ "/wiki/" (prev.slug) } {
+                                        span.article-nav__label { "← Previous" }
+                                        span.article-nav__title { (prev.title) }
+                                    }
+                                }
+                                @if let Some(ref next) = next_article {
+                                    a.article-nav__next href={ "/wiki/" (next.slug) } {
+                                        span.article-nav__label { "Next →" }
+                                        span.article-nav__title { (next.title) }
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -3851,27 +3894,23 @@ fn chrome(
             body {
                 a.skip-to-content href="#main-content" { "Skip to content" }
                 header.topnav {
-                    nav.left {
-                        a href="/wiki/disclaimers" { "Disclaimer" }
-                        a href="/wiki/contact" { "Contact" }
-                    }
                     a.wordmark href="/" aria-label=(site_title) {
                         (PreEscaped(WORDMARK_SVG_POINTSAV))
                     }
-                    nav.right {
-                        div.topnav-search-wrap {
-                            form.topnav-search action="/search" method="get" role="search" {
-                                input #header-search-q
-                                    type="search"
-                                    name="q"
-                                    placeholder="Search…"
-                                    autocomplete="off"
-                                    aria-label="Search this wiki"
-                                    spellcheck="false";
-                                button.topnav-search-btn type="submit" aria-label="Search" { "→" }
-                            }
-                            div.ac-dropdown #search-autocomplete-dropdown {}
+                    div.topnav-center {
+                        form.topnav-search action="/search" method="get" role="search" {
+                            input #header-search-q
+                                type="search"
+                                name="q"
+                                placeholder="Search…"
+                                autocomplete="off"
+                                aria-label="Search this wiki"
+                                spellcheck="false";
+                            button.topnav-search-btn type="submit" aria-label="Search" { "→" }
                         }
+                        div.ac-dropdown #search-autocomplete-dropdown {}
+                    }
+                    nav.right {
                         (auth_nav_widget(user, pending_count))
                     }
                 }
@@ -3886,22 +3925,20 @@ fn chrome(
 
 fn auth_nav_widget(user: Option<&User>, pending_count: i64) -> Markup {
     html! {
-        @if let Some(u) = user {
-            " · "
-            span.nav-username { (u.username) }
-            @if u.is_admin() && pending_count > 0 {
-                " "
-                a.pending-badge href="/special/pending-changes" {
-                    (pending_count) " pending"
+        div.auth-nav-widget {
+            @if let Some(u) = user {
+                span.auth-nav-user { (u.username) }
+                @if u.is_admin() && pending_count > 0 {
+                    a.auth-nav-pending href="/special/pending-changes" {
+                        (pending_count) " pending"
+                    }
                 }
+                form method="post" action="/special/logout" style="display:inline;" {
+                    button.nav-logout-btn type="submit" { "Log out" }
+                }
+            } @else {
+                a.auth-nav-login href="/special/login" { "Log in" }
             }
-            " · "
-            form method="post" action="/special/logout" style="display:inline;" {
-                button.nav-logout-btn type="submit" { "Log out" }
-            }
-        } @else {
-            " · "
-            a href="/special/login" { "Log in" }
         }
     }
 }
