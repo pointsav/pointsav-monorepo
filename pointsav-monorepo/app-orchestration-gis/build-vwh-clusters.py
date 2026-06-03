@@ -63,6 +63,8 @@ VWH_CHAINS: dict[str, list[str]] = {
         "hornbach-de", "bauhaus-de", "bauhaus-at",
         "bauhaus-dk", "bauhaus-fi", "bauhaus-no",
         "bauhaus-es", "brico-depot-es", "bricocenter-it",  # ES/IT density
+        "aki-es", "bricomart-es", "bricoman-es",           # Spain big-box
+        "brico-io-it", "bricoman-it",                      # Italy big-box
         "hellweg-de", "biltema-se", "praxis-nl", "gamma-nl",
         "mr-bricolage-fr", "alaska-industrial-hardware-us",
     ],
