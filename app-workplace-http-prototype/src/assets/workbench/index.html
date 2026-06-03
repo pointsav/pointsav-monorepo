@@ -129,6 +129,28 @@ header .tag {
 .tree-children { overflow: hidden; }
 .tree-children.collapsed { display: none; }
 
+/* ── Drag and drop ── */
+.tree-item[draggable="true"] { cursor: grab; }
+.tree-item.dragging { opacity: 0.45; pointer-events: none; }
+.tree-item.drag-over {
+  background: #1a4a6a !important;
+  outline: 1px solid #4d9fff;
+  border-radius: 3px;
+  color: #fff !important;
+}
+.viewer.drag-over-editor { outline: 2px solid #4d9fff; outline-offset: -3px; }
+#wb-toast {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+  background: #252526; border: 1px solid #3c3c3c; color: #ccc;
+  font-size: 12px; padding: 5px 14px; border-radius: 4px;
+  pointer-events: none; opacity: 0; transition: opacity 0.15s;
+  z-index: 9000; white-space: nowrap;
+}
+#wb-toast.show { opacity: 1; }
+html.light .tree-item.drag-over { background: #d0e7fc !important; outline-color: #0078d4; color: #1a1a1a !important; }
+html.light .viewer.drag-over-editor { outline-color: #0078d4; }
+html.light #wb-toast { background: #f3f3f3; border-color: #d4d4d4; color: #333; }
+
 .loading { padding: 4px 8px 4px 28px; color: #555; font-size: 11px; font-style: italic; }
 .empty   { padding: 4px 8px 4px 28px; color: #555; font-size: 11px; }
 .err     { padding: 4px 8px 4px 28px; color: #f85149; font-size: 11px; }
@@ -2700,7 +2722,125 @@ function wireItem(item, childrenEl, depth) {
     if (isOpen) await loadChildren(item, childrenEl, depth);
   });
   attachContextMenu(item);
+  wireDragOnItem(item);
 }
+
+// ── Drag and drop ─────────────────────────────────────────────────────────────
+
+function showWbToast(msg) {
+  const el = document.getElementById('wb-toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function wireDragOnItem(item) {
+  const type = item.dataset.type;
+  if (!type) return;
+
+  if (type === 'file') {
+    const href = item.dataset.href || '';
+    // Only writable roots are draggable (same logic as context menu)
+    if (!href || href.startsWith('/_command/') || href.startsWith('/_clones/')) return;
+    item.draggable = true;
+    item.addEventListener('dragstart', e => {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('application/x-wb-move', JSON.stringify({
+        path: href,
+        name: item.dataset.label || href.split('/').pop(),
+      }));
+      e.dataTransfer.setData('text/plain', item.dataset.label || '');
+      // Delay adding class so the drag ghost renders first
+      requestAnimationFrame(() => item.classList.add('dragging'));
+    });
+    item.addEventListener('dragend', () => item.classList.remove('dragging'));
+  }
+
+  if (type === 'dir') {
+    item.addEventListener('dragover', e => {
+      if (!e.dataTransfer.types.includes('application/x-wb-move')) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      item.classList.add('drag-over');
+    });
+    item.addEventListener('dragleave', e => {
+      if (!item.contains(e.relatedTarget)) item.classList.remove('drag-over');
+    });
+    item.addEventListener('drop', async e => {
+      e.preventDefault();
+      item.classList.remove('drag-over');
+      const raw = e.dataTransfer.getData('application/x-wb-move');
+      if (!raw) return;
+      const { path: srcPath, name: srcName } = JSON.parse(raw);
+      const destBrowse = item.dataset.browse || '';
+      await doWbMoveFile(srcPath, srcName, destBrowse);
+    });
+  }
+}
+
+async function doWbMoveFile(srcPath, srcName, destBrowsePath) {
+  const from = srcPath.replace(/^\//, '');
+  const to   = destBrowsePath.replace(/^\//, '').replace(/\/$/, '');
+  try {
+    const res = await fetch(
+      `/_api/edit/move?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+      { method: 'POST' }
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showWbToast(data.error || 'Move failed');
+      return;
+    }
+    // Refresh the tree so source folder removes the file and dest folder shows it
+    reloadAllExpandedDirs();
+    // If the moved file is open in a tab, update its recorded path
+    updateWbTabPath(srcPath, '/' + data.new_path);
+    showWbToast('Moved ' + srcName);
+  } catch(e) {
+    showWbToast('Move failed: ' + e.message);
+  }
+}
+
+function updateWbTabPath(oldPath, newPath) {
+  tabs.forEach((tab, i) => {
+    if (tab.path === oldPath) {
+      tab.path = newPath;
+      if (tab.editorPath) tab.editorPath = newPath.replace(/^\//, '');
+      if (i === activeTabIdx) {
+        currentPath = newPath;
+        if (typeof editorPath !== 'undefined') editorPath = tab.editorPath;
+        const bp = document.getElementById('bar-path');
+        if (bp) bp.textContent = newPath.split('/').pop();
+      }
+    }
+  });
+  if (typeof renderTabBar === 'function') renderTabBar();
+}
+
+// ── Drag-to-open on the viewer pane ──────────────────────────────────────────
+(function() {
+  const viewer = document.getElementById('viewer');
+  if (!viewer) return;
+  viewer.addEventListener('dragover', e => {
+    if (!e.dataTransfer.types.includes('application/x-wb-move')) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    viewer.classList.add('drag-over-editor');
+  });
+  viewer.addEventListener('dragleave', e => {
+    if (!viewer.contains(e.relatedTarget)) viewer.classList.remove('drag-over-editor');
+  });
+  viewer.addEventListener('drop', e => {
+    viewer.classList.remove('drag-over-editor');
+    const raw = e.dataTransfer.getData('application/x-wb-move');
+    if (!raw) return;
+    e.preventDefault();
+    const { path, name } = JSON.parse(raw);
+    openFile(path, name);
+  });
+})();
 
 // ── Wire pre-rendered items ───────────────────────────────────────────────────
 document.querySelectorAll('.tree-item[data-type]').forEach(item => {
@@ -4422,6 +4562,7 @@ setSurface(activeSurface);
 </script>
 
 <div id="ctx-menu"></div>
+<div id="wb-toast"></div>
 
 </body>
 </html>
