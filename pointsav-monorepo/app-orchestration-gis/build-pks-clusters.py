@@ -59,6 +59,15 @@ RANGE_METRO        = ( 3.0,  35.0)
 TRANSIT_GROUP_KM   = 3.0   # group adjacent transit nodes (multi-modal detection)
 CAR_RENTAL_KM      = 2.0   # car rental within this → enriched
 
+# ── Geometric park-and-ride model ─────────────────────────────────────────────
+# A Commuter candidate is an outer-ring node at the edge of the built transit
+# network (the last stop a commuter drives to). All geometry, no metadata tags.
+RING_MIN_KM        = 15.0  # inner edge of the commuter ring (skip the dense core)
+RING_MAX_KM        = 110.0 # outer edge of the daily-commute belt
+EDGE_KM            =  8.0  # in/out neighbour radius for the edge-of-network test
+NEIGH_KM           = 12.0  # radius for nearest-neighbour (catchment isolation)
+STATION_KM         =  1.5  # co-located nodes within this = one station (multi-modal)
+
 # Standalone (single-category) admission rules — make the map full without noise:
 #   - a significant airport is a park-and-fly Commuter node on its own
 #   - a standalone intercity-rail station counts within the daily commuter belt only.
@@ -262,31 +271,33 @@ def load_transit(path, category, transit_class_map=None):
     return nodes
 
 
-def tier_pks(all_cats: frozenset) -> int:
+def tier_pks_geo(metro_d: float, inward: int, iso_km: float, outward: int, is_airport: bool) -> int:
     """
-    Commuter tiering. `all_cats` includes car_rental when present.
-    Categories: airport, intercity_rail, commuter_rail, metro_subway, car_rental
+    Geometric park-and-ride / park-and-fly opportunity tier — no metadata tags.
 
-    T1: airport + any other category (intermodal hub)  OR  3+ distinct categories
-    T2: 2+ distinct RAIL types (intercity + commuter/metro)
-        OR a standalone significant airport             (park-and-fly node)
-    T3: single rail type + car_rental
-        OR a standalone intercity-rail station in the commuter belt   (base node)
+    Rail nodes — ranked by drive-in catchment along the commuter line:
+      ring    : prime-ring proximity, peaks at ~45 km, 0 at the core / 90 km out
+      inward  : line connectivity (nodes feeding toward the core = a real, busy line)
+      iso_km  : catchment isolation (empty drive-shed a parkade would serve)
+      terminus: proximity to the end of the line (full at the last stop, 0 by ~3 stops in)
+
+    Airports — park-and-fly nodes, geographically distributed:
+      a sized field in the regional drive-in band (≈25–120 km from a metro core) is the
+      prime case (T1); closer-in (urban, likely already parkaded) or very far → T2.
     """
-    rail_cats = all_cats & {"intercity_rail", "commuter_rail", "metro_subway"}
-    has_airport = "airport" in all_cats
-
-    # T1 — airport-anchored intermodal hub, or richly multi-modal
-    if has_airport and len(all_cats) >= 2:
-        return 1
-    if len(all_cats) >= 3:
-        return 1
-    # T2 — multi-modal rail, or a standalone sized airport (park-and-fly)
-    if len(rail_cats) >= 2:
+    ring = max(0.0, 1.0 - abs(metro_d - 45.0) / 45.0)
+    iso = min(iso_km, 8.0) / 8.0
+    if is_airport:
+        # Prime regional drive-in band scores highest; urban-adjacent / very remote lower.
+        if 25.0 <= metro_d <= 120.0:
+            return 1
         return 2
-    if has_airport:           # single-category significant airport (admitted in build())
+    terminus = max(0.0, 1.0 - outward / 3.0)
+    score = ring + min(inward, 4) / 4.0 + iso + terminus
+    if score >= 2.25:
+        return 1
+    if score >= 1.55:
         return 2
-    # T3 — rail + car_rental, or a standalone commuter-belt rail station
     return 3
 
 
@@ -334,78 +345,107 @@ def build(output_path: Path):
     car_grid = build_grid(car_recs)
     print(f"Car rental records: {len(car_recs):,}")
 
-    # ── Group adjacent transit nodes (multi-modal detection) ─────────────────
-    print(f"\nGrouping transit nodes within {TRANSIT_GROUP_KM} km ...")
-    comp_list = group_by_proximity(all_nodes, TRANSIT_GROUP_KM)
-    print(f"  Transit groups: {len(comp_list):,}")
+    # ── Geometric park-and-ride candidate selection ──────────────────────────
+    # A candidate is an OUTER-RING node at the EDGE of the built transit network:
+    # the last stop a commuter drives to. Purely geometric — no metadata tags, so
+    # outer regional airports/termini are kept and embedded metro hubs fall out.
+    #   - in the 20–100 km commuter ring (nearest-metro distance)
+    #   - no transit node within EDGE_KM that is FARTHER from the core (edge of net)
+    #   - at least one node within EDGE_KM CLOSER to the core (a real line, not a dot)
+    print(f"\nSelecting geometric park-and-ride candidates "
+          f"(ring {RING_MIN_KM}-{RING_MAX_KM} km, edge {EDGE_KM} km) ...")
 
-    # ── Score each transit group ──────────────────────────────────────────────
+    # Precompute metro distance per node + a coarse spatial grid for neighbour scans.
+    GS = 0.1
+    grid = defaultdict(list)
+    for idx, nd in enumerate(all_nodes):
+        nd["metro_d"], nd["metro_name"] = nearest_metro(nd["lat"], nd["lon"])
+        grid[(round(nd["lat"] / GS), round(nd["lon"] / GS))].append(idx)
+
+    def neighbours(nd, radius_km):
+        cr = int(radius_km / 111.0 / GS) + 1
+        ck, cl = round(nd["lat"] / GS), round(nd["lon"] / GS)
+        for a in range(ck - cr, ck + cr + 1):
+            for b in range(cl - cr, cl + cr + 1):
+                yield from grid.get((a, b), [])
+
     features = []
     n_skipped = 0
+    kept_pts: list[tuple[float, float]] = []   # for ~0.5 km de-dup of co-located termini
 
-    for comp in comp_list:
-        lats = [all_nodes[i]["lat"] for i in comp]
-        lons = [all_nodes[i]["lon"] for i in comp]
-        clat = sum(lats) / len(lats)
-        clon = sum(lons) / len(lons)
-
-        iso_counter = Counter(all_nodes[i]["iso"] for i in comp)
-        iso = iso_counter.most_common(1)[0][0]
-
-        transit_cats = frozenset(all_nodes[i]["category"] for i in comp)
-        has_major_airport = any(all_nodes[i]["category"] == "airport" and all_nodes[i].get("is_major")
-                                for i in comp)
-
-        # Metro distance kept for display/context; also gates standalone rail admission.
-        metro_d, metro_name = nearest_metro(clat, clon)
-
-        # Car rental enrichment
-        car_rental = any_within(clat, clon, car_recs, car_grid, CAR_RENTAL_KM)
-
-        # Full category set (transit + car_rental)
-        all_cats = set(transit_cats)
-        if car_rental:
-            all_cats.add("car_rental")
-
-        # Admission. Co-locations (2+ categories) always qualify. Single-category groups
-        # qualify only as: a sized standalone airport (park-and-fly), or a standalone
-        # intercity-rail station within the daily commuter belt.
-        if len(all_cats) < 2:
-            only = next(iter(all_cats)) if all_cats else None
-            if only == "airport" and has_major_airport:
-                pass  # park-and-fly node
-            elif only == "intercity_rail" and (STANDALONE_RAIL_MIN_KM <= metro_d <= STANDALONE_RAIL_MAX_KM):
-                pass  # commuter-belt rail node
-            else:
+    AIRPORT_MAX_MD = 600.0   # a sized airport farther than this from any metro ref is too remote
+    for i, nd in enumerate(all_nodes):
+        md = nd["metro_d"]
+        is_air = nd["category"] == "airport"
+        # Airports: sized regional/commercial fields are park-and-fly nodes, geographically
+        # distributed — they fill the map where rail does not. Admit broadly (not ring-gated).
+        if is_air:
+            if not nd.get("is_major") or md > AIRPORT_MAX_MD:
                 n_skipped += 1
                 continue
+        elif not (RING_MIN_KM <= md <= RING_MAX_KM):
+            n_skipped += 1
+            continue
 
-        t = tier_pks(frozenset(all_cats))
+        outward = inward = 0
+        iso_km = 999.0
+        local = [nd]                       # co-located nodes (≈ the same station)
+        for j in neighbours(nd, NEIGH_KM):
+            if j == i:
+                continue
+            m = all_nodes[j]
+            d = haversine(nd["lat"], nd["lon"], m["lat"], m["lon"])
+            if d > NEIGH_KM:
+                continue
+            if d < iso_km:
+                iso_km = d
+            if d <= STATION_KM:
+                local.append(m)
+            if d <= EDGE_KM:
+                if m["metro_d"] > md + 0.5:
+                    outward += 1
+                elif m["metro_d"] < md - 0.5:
+                    inward += 1
 
-        # Representative name: prefer airport name > largest intercity station
-        names = [all_nodes[i]["name"] for i in comp if all_nodes[i]["name"]]
-        iatas = [all_nodes[i]["iata"] for i in comp if all_nodes[i]["iata"]]
-        display_name = (iatas[0] if iatas else "") or (names[0] if names else "")
+        # Rail: keep outer-belt stations connected toward the core and near the line end
+        # (outward <= 2 stops beyond). Airports skip this gate (handled above).
+        if not is_air and (inward < 1 or outward > 4):
+            n_skipped += 1
+            continue
 
-        cats_list = sorted(transit_cats)
+        # De-dup co-located candidates (airport + rail at the same terminus → one dot).
+        if any(haversine(nd["lat"], nd["lon"], plat, plon) < 0.5 for plat, plon in kept_pts):
+            n_skipped += 1
+            continue
+        kept_pts.append((nd["lat"], nd["lon"]))
+
+        t = tier_pks_geo(md, inward, iso_km, outward, is_air)
+
+        # Station composition from co-located nodes (for display + multi-modal flag).
+        local_cats = set(n2["category"] for n2 in local)
+        car_rental = any_within(nd["lat"], nd["lon"], car_recs, car_grid, CAR_RENTAL_KM)
+        cats_list = sorted(local_cats)
         if car_rental:
             cats_list.append("car_rental")
+        iatas = [n2["iata"] for n2 in local if n2["iata"]]
+        names = [n2["name"] for n2 in local if n2["name"]]
+        display_name = (iatas[0] if iatas else "") or (names[0] if names else "")
 
         features.append({
             "type": "Feature",
-            "geometry": {"type": "Point", "coordinates": [round(clon, 6), round(clat, 6)]},
+            "geometry": {"type": "Point", "coordinates": [round(nd["lon"], 6), round(nd["lat"], 6)]},
             "properties": {
                 "name":              display_name,
-                "lat":               round(clat, 6),
-                "lon":               round(clon, 6),
-                "iso":               iso,
+                "lat":               round(nd["lat"], 6),
+                "lon":               round(nd["lon"], 6),
+                "iso":               nd["iso"],
                 "commuter_tier":     t,
                 "transit_categories":cats_list,
-                "multi_modal":       len(transit_cats) > 1,
+                "multi_modal":       len(local_cats) > 1,
                 "car_rental":        car_rental,
-                "metro_dist_km":     round(metro_d, 1),
-                "nearest_metro":     metro_name,
-                "node_count":        len(comp),
+                "metro_dist_km":     round(md, 1),
+                "nearest_metro":     nd["metro_name"],
+                "node_count":        len(local),
                 "archetype":         "commuter",
             },
         })
@@ -414,8 +454,8 @@ def build(output_path: Path):
     n_t2 = sum(1 for f in features if f["properties"]["commuter_tier"] == 2)
     n_t3 = sum(1 for f in features if f["properties"]["commuter_tier"] == 3)
 
-    print(f"  Skipped — single category (not a co-location): {n_skipped:,}")
-    print(f"  Valid PKS clusters: {len(features):,}  (T1={n_t1} T2={n_t2} T3={n_t3})")
+    print(f"  Skipped — outside ring / not edge-of-network / dup: {n_skipped:,}")
+    print(f"  Park-and-ride candidates: {len(features):,}  (T1={n_t1} T2={n_t2} T3={n_t3})")
 
     iso_counts = Counter(f["properties"]["iso"] for f in features)
     print("\n  ISO   Total  T1  T2  T3")
