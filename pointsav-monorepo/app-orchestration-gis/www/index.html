@@ -737,6 +737,7 @@
         }
         return { snapTo, cycle, open, attach, isMobile: () => mq.matches, get current() { return current; } };
     })();
+    window.SHEET = SHEET;   // debug / test harness handle (read-only use)
 
     // Grow the mobile bottom sheet to the half detent when a feature is selected, so its stats
     // are visible (and the nav buttons ride above it). No-op on desktop.
@@ -1091,6 +1092,7 @@
     });
     map.touchZoomRotate.disableRotation();
     if (map.touchPitch) map.touchPitch.disable();   // 2D north-up map — no accidental tilt
+    window.map = map;   // debug / test harness handle
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
 
     function updateRegionTabs(key) {
