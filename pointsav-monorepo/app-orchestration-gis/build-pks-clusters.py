@@ -59,8 +59,14 @@ RANGE_METRO        = ( 3.0,  35.0)
 TRANSIT_GROUP_KM   = 3.0   # group adjacent transit nodes (multi-modal detection)
 CAR_RENTAL_KM      = 2.0   # car rental within this → enriched
 
-# T3 quality filter: limit intercity_rail T3 to 15–80 km to avoid rural noise
-T3_INTERCITY_MAX_KM = 80.0
+# Standalone (single-category) admission rules — make the map full without noise:
+#   - a significant airport is a park-and-fly Commuter node on its own
+#   - a standalone intercity-rail station counts within the daily commuter belt only.
+#     Distance analysis: rail density is flat to ~60 km (genuine suburban commuter belt),
+#     then balloons as far regional stations inherit a distant "nearest metro". 60 km is the
+#     realistic daily rail-commute ceiling; tune down to 50 if the map reads too dense.
+STANDALONE_RAIL_MIN_KM = 3.0    # ≥3 km skips downtown termini (destinations, not origins)
+STANDALONE_RAIL_MAX_KM = 60.0   # daily commuter-belt ceiling
 
 CAR_RENTAL_CHAINS = [
     "enterprise-us", "hertz-us", "avis-us", "europcar-fr", "sixt-de",
@@ -203,6 +209,27 @@ def any_within(lat, lon, recs, grid, radius_km, gs=0.05):
     return False
 
 
+import re
+
+# Airport-name patterns: drop general-aviation / non-commercial fields, keep real airports.
+_AIRSTRIP_RE   = re.compile(r"airstrip|airfield|ultralight|glid|heliport|seaplane|balloon|model ", re.I)
+_COMMERCIAL_RE = re.compile(r"international|regional|municipal|airport", re.I)
+
+
+def is_significant_airport(rec: dict) -> bool:
+    """A 'sized' airport: a real commercial/regional field, not a tiny GA airstrip.
+    Park-and-fly only makes sense for airports of a certain size."""
+    name = rec.get("location_name") or rec.get("name") or ""
+    if _AIRSTRIP_RE.search(name):
+        return False
+    atype = (rec.get("aerodrome_type") or "")
+    if "international" in atype or "regional" in atype:
+        return True
+    if (rec.get("iata_code") or rec.get("iata")) and _COMMERCIAL_RE.search(name):
+        return True
+    return False
+
+
 def load_transit(path, category, transit_class_map=None):
     """Load transit node JSONL. transit_class_map: override category by transit_class field."""
     nodes = []
@@ -227,6 +254,8 @@ def load_transit(path, category, transit_class_map=None):
                     "name": r.get("location_name") or r.get("name") or "",
                     "iata": r.get("iata") or r.get("iata_code") or "",
                     "operator": r.get("operator") or "",
+                    # Mark sized airports; non-airport nodes default False (unused for them).
+                    "is_major": is_significant_airport(r) if cat == "airport" else False,
                 })
             except (json.JSONDecodeError, ValueError):
                 continue
@@ -235,16 +264,14 @@ def load_transit(path, category, transit_class_map=None):
 
 def tier_pks(all_cats: frozenset) -> int:
     """
-    Strict co-location tiering — mirrors the Retail model. A Commuter co-location
-    requires 2+ DISTINCT categories (enforced in build(); single-category transit
-    nodes are dropped). `all_cats` includes car_rental when present.
-
+    Commuter tiering. `all_cats` includes car_rental when present.
     Categories: airport, intercity_rail, commuter_rail, metro_subway, car_rental
 
-    T1: airport + any other category   (major intermodal hub)
-        OR 3+ distinct categories
-    T2: 2+ distinct RAIL types         (intercity + commuter, intercity + metro, …)
-    T3: single rail type + car_rental  (basic park-and-ride / station car hire)
+    T1: airport + any other category (intermodal hub)  OR  3+ distinct categories
+    T2: 2+ distinct RAIL types (intercity + commuter/metro)
+        OR a standalone significant airport             (park-and-fly node)
+    T3: single rail type + car_rental
+        OR a standalone intercity-rail station in the commuter belt   (base node)
     """
     rail_cats = all_cats & {"intercity_rail", "commuter_rail", "metro_subway"}
     has_airport = "airport" in all_cats
@@ -254,10 +281,12 @@ def tier_pks(all_cats: frozenset) -> int:
         return 1
     if len(all_cats) >= 3:
         return 1
-    # T2 — multi-modal rail
+    # T2 — multi-modal rail, or a standalone sized airport (park-and-fly)
     if len(rail_cats) >= 2:
         return 2
-    # T3 — single rail type + car rental
+    if has_airport:           # single-category significant airport (admitted in build())
+        return 2
+    # T3 — rail + car_rental, or a standalone commuter-belt rail station
     return 3
 
 
@@ -324,8 +353,10 @@ def build(output_path: Path):
         iso = iso_counter.most_common(1)[0][0]
 
         transit_cats = frozenset(all_nodes[i]["category"] for i in comp)
+        has_major_airport = any(all_nodes[i]["category"] == "airport" and all_nodes[i].get("is_major")
+                                for i in comp)
 
-        # Metro distance kept for display/context only — NOT a filter (matches Retail model)
+        # Metro distance kept for display/context; also gates standalone rail admission.
         metro_d, metro_name = nearest_metro(clat, clon)
 
         # Car rental enrichment
@@ -336,10 +367,18 @@ def build(output_path: Path):
         if car_rental:
             all_cats.add("car_rental")
 
-        # Strict co-location: require 2+ DISTINCT categories (mirrors Retail tier_of n>=2)
+        # Admission. Co-locations (2+ categories) always qualify. Single-category groups
+        # qualify only as: a sized standalone airport (park-and-fly), or a standalone
+        # intercity-rail station within the daily commuter belt.
         if len(all_cats) < 2:
-            n_skipped += 1
-            continue
+            only = next(iter(all_cats)) if all_cats else None
+            if only == "airport" and has_major_airport:
+                pass  # park-and-fly node
+            elif only == "intercity_rail" and (STANDALONE_RAIL_MIN_KM <= metro_d <= STANDALONE_RAIL_MAX_KM):
+                pass  # commuter-belt rail node
+            else:
+                n_skipped += 1
+                continue
 
         t = tier_pks(frozenset(all_cats))
 
