@@ -51,6 +51,11 @@ enum Command {
         /// Path to TitleCo 3 Excel file (.xlsx)
         xlsx: PathBuf,
     },
+    /// D1 v2 — Calibrated dev classes (10.5% dev yield, 6.25% cap rate) with floor variants per class.
+    /// Does not read any Excel; uses the locked configuration in src/report/d1_dev_classes_v2.rs.
+    DevClassesV2 {
+        // No xlsx — config is hardcoded per plan 2026-06-03
+    },
     /// SPV — BenCal / Ambassadors Direct 1 & 2: derive three reports from WCP + PCLP 1 Excel.
     SpvBencal {
         /// Path to PCLP 1 Excel file (.xlsx)
@@ -130,6 +135,12 @@ fn main() {
                 }
             };
             write_output(&out, cli.out.as_ref());
+        }
+        Some(Command::DevClassesV2 {}) => {
+            // Self-contained — no Excel input. Configuration is the const data in
+            // src/report/d1_dev_classes_v2.rs per plan 2026-06-03.
+            let html_out = report::d1_dev_classes_v2::render_html();
+            write_output(&html_out, cli.out.as_ref());
         }
         Some(Command::SpvBencal {
             pclp,
