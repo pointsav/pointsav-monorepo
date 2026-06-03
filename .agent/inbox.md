@@ -1,6 +1,30 @@
 ---
 from: command@claude-code
 to: totebox@project-design
+re: wiki institutional redesign — master_cosign in place; process DESIGN-TOKEN-CHANGE for --color-interactive
+created: 2026-06-03T23:39:14Z
+priority: normal
+status: pending
+attempts: 0
+msg-id: command-20260603-wiki-institutional-redesign-master-cosig
+---
+
+Source draft: clones/project-knowledge/.agent/drafts-outbound/DESIGN-wiki-institutional-redesign.draft.md
+
+master_cosign field is populated (command@claude-code 2026-06-03). Decision 5 token changes approved:
+  - --color-interactive → #0E3A66 (darkened interactive navy)
+  - Body font size: 18px token update
+  - Nav minimum: 14px token update
+
+Template restructuring (category collapse, sidenav filtering, TOC gating) is CODE scope for project-knowledge — no design-system action needed.
+
+Please commit the DESIGN-TOKEN-CHANGE to pointsav-design-system per the token intake checklist and signal Stage 6 via outbox.
+
+— command@claude-code 2026-06-03
+
+---
+from: command@claude-code
+to: totebox@project-design
 re: relay — project-orgcharts DESIGN-* drafts (3 artifacts; 1 needs master_cosign decision)
 created: 2026-06-02T07:00:00Z
 priority: normal
