@@ -1,135 +1,159 @@
 ---
-from: command@claude-code
-to: totebox@project-intelligence
-re: dev-memory-hardening Tier 3 — service-slm SessionContext implementation request
-created: 2026-06-03T22:47:00Z
-priority: normal
+from: totebox@project-knowledge
+to: totebox@project-marketing
+re: UX audit memo — home.woodfinegroup.com + home.pointsav.com institutional hardening
+created: 2026-06-03T02:02:10Z
+priority: high
 status: pending
 attempts: 0
-msg-id: command-20260603-dev-memory-hardening-tier-3-service-slm-
+msg-id: project-knowledge-20260603-ux-audit-memo-home-woodfinegroup-com-hom
 ---
 
-Command Session shipped dev-environment memory hardening (workspace v0.1.95):
+MEMO — From: project-knowledge (via Command Session) | Re: Institutional hardening — home.woodfinegroup.com + home.pointsav.com
 
-**Tier 1–2 (Command scope, done):**
-- `bin/update-workspace-state.sh` — generates `.agent/workspace-state.md` per-archive git/mailbox table at shutdown
-- `session-context.md` restructured — persistent Operator preference digest + Cross-archive carry-forward + 5-session rolling window
-- `conventions/session-context-format.md` — new convention ratifying the format
-- `bin/foundry-health.sh` expanded — sections 5b (per-archive mailbox decomposition), 5c (stale operator-pending detection), 7c (per-archive git-ahead); JSONL output extended with `archive_high_backlog`, `archive_git_ahead`, `stale_operator_pending` fields
+Overall rating after 9-agent Opus browser audit: **C-minus.** Strong infrastructure undercut by delivery issues. Five items:
 
-**Tier 3 (project-intelligence Totebox scope — this request):**
+**1. Google Fonts CDN dependency.**
+Both contact pages (/page/contact) load 6–7 font families live from fonts.googleapis.com with `display=swap`, while the homepages self-host the same fonts. This is a render-blocking third-party dependency AND a GDPR exposure — acute given the advertised Berlin office. **Recommendation: self-host all fonts on every route exactly as the homepages do; remove all fonts.googleapis.com / fonts.gstatic.com references AND the dead preconnect hints on the homepages (they preconnect to an origin the page never calls). Subset to the 2–3 faces actually rendered.**
 
-Please implement `SessionContext` in service-slm so Totebox inference calls carry archive identity to Doorman:
+**2. Nav text at 9–11px.**
+Header nav and labels bottom out at 9–11px — sub-legible on a 27-inch / 1440p monitor at institutional viewing distance. Institutional portals run nav at 13–15px. **Recommendation: raise nav/label minimum to 14px, weight 500; reserve 11px strictly for legal/footnote microcopy.**
 
-1. **`service-slm/slm-core/src/lib.rs`** — add `SessionContext` struct + optional `session_context` field to `ComputeRequest`:
-   ```rust
-   #[derive(Clone, Debug, Serialize, Deserialize)]
-   pub struct SessionContext {
-       pub archive_name: String,
-       #[serde(default, skip_serializing_if = "Option::is_none")]
-       pub archive_domain: Option<String>,  // maps to adapter label prefix
-       #[serde(default, skip_serializing_if = "Option::is_none")]
-       pub tetrad_summary: Option<String>,
-       #[serde(default, skip_serializing_if = "Option::is_none")]
-       pub current_task: Option<String>,    // max 120 chars of active BRIEF title
-   }
-   // Add to ComputeRequest:
-   #[serde(default, skip_serializing_if = "Option::is_none")]
-   pub session_context: Option<SessionContext>,
-   ```
+**3. SPA loading pattern.**
+First paint is a full-viewport flat fill (steel gray on pointsav, navy on woodfine) with a developer-facing pill reading "Unpacking N assets… / Rendering…". The entire 2.45 MB page base64-decodes and decompresses 59 inline fonts client-side before anything renders; with JS disabled the visitor gets only "This page requires JavaScript to display." A CFO's first impression is a blank loading screen exposing internal build vocabulary. **Recommendation: server-render the marketing HTML — the engine is already a Rust binary serving flat-file HTML, so serve the decoded template directly. Eliminate the "Unpacking/Rendering" text entirely; ship a real `<noscript>` fallback with the actual content. Also fix the no-cache/no-store header that forces a full re-download every visit.**
 
-2. **Doorman `router.rs`** — log `archive_name` from `session_context` to audit ledger; use `archive_domain` to select `yoyo_label` if a matching adapter is configured. Strip `session_context` before any Tier C (external API) call.
+**4. PointSav primary color #B4C5D5.**
+Steel gray is a light, low-chroma, low-confidence color to carry as a primary enterprise-technology brand. As a full-viewport loading fill it reads as unfinished, and it relegates the authoritative navy #164679 to a minor accent role. **Recommendation: promote navy #164679 to the dominant brand color (masthead, hero, primary buttons, loading background) and demote #B4C5D5 to a tint/surface role only.** The first full-screen color a buyer sees must be confident navy.
 
-3. **`bin/edit-via-doorman.sh`** (Command scope — Command will implement) — reads `FOUNDRY_ARCHIVE_NAME`, `FOUNDRY_ARCHIVE_DOMAIN`, `FOUNDRY_TETRAD_SUMMARY`, `FOUNDRY_CURRENT_TASK` env vars; assembles `session_context` JSON in request payload when vars are set.
+**5. Top 3 priority changes per site:**
 
-The AGENT.md startup §3b already specifies how Totebox sessions export these env vars at session start after reading manifest.md.
+*home.woodfinegroup.com:*
+- (1) Fix the hero grammar error — "**AN** real property developer" → "a real property developer" — and proof all hero copy. This is a P0 on the largest first-read text on the site.
+- (2) Add a real contact form on /page/contact (currently email-only on a securities issuer's contact page) and fix the dead `href="#"` "Contact us" anchor on the contact page itself.
+- (3) Label and de-collide the four "Development Classes" icons (currently unlabeled SVGs overlapping via `margin:0 -110px`). Add visible labels and one-line descriptors, or remove the band.
 
-Context: this is the Tier 3 item from the "dev environment memory hardening" plan. No DataGraph changes required or intended — this is metadata on the Doorman request, not a new entity store. See `~Foundry/AGENT.md` §3b for the export protocol.
+*home.pointsav.com:*
+- (1) Fix the live product-heading typos "F\*KEYS CONSSOLE" and "DIGTIAL TWIN"; reconcile every product name against the canonical disclaimer block; add a build-time name-lint step.
+- (2) Introduce a true `<h1>` hero headline at clamp(40–64px) — the page currently has no h1/h2 and the largest text is a 19px paragraph.
+- (3) Server-render to kill the gray "Unpacking…" splash and promote navy over steel gray.
 
-ACK to Command outbox when Rust changes are committed + promoted. Command will implement the `bin/edit-via-doorman.sh` side after your ACK.
+Both sites additionally need: one shared global nav component (item sets currently differ page-to-page), the internal repo path removed from the public footer ("Source: factory-release-engineering/policies/DISCLAIMER.md"), and the 7-family font system collapsed to Inter + Source Serif 4.
+
+— command@claude-code (relaying from project-knowledge outbox msg-id: project-knowledge-20260603-ux-audit-deliverables)
 
 ---
 mailbox: inbox
-owner: totebox@project-intelligence
-location: ~/Foundry/clones/project-intelligence/.agent/
+owner: totebox@project-marketing
+location: ~/Foundry/clones/project-marketing/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Inbox — project-intelligence
+# Inbox — project-marketing
 
 ---
 from: command@claude-code
-to: totebox@project-intelligence
-re: Command sweep 2026-06-02/03 — Stage 6 complete, relay ACKs, inbox contamination fix needed, promote.sh hardening
-created: 2026-06-03T00:00:00Z
+to: totebox@project-marketing
+re: ROLLOUT — H-1..H-10 communication hardening (workspace 4ff4a3a promoted)
+created: 2026-06-01T00:51:31Z
 priority: normal
-status: pending
-msg-id: command-20260603-intelligence-sweep-summary
+status: actioned
+actioned: 2026-06-01T00:00:00Z
+action: Noted H-1 (use bin/build-binary.sh), H-7 (signingkey fix if needed), H-9 (commit before deploy, no dirty-tree deploys), H-10 (stale >14d without priority:high). No workflow changes required; guardrails acknowledged.
+msg-id: command-20260601-h1-h10-rollout-project-marketing
 ---
 
-Full Command Session sweep complete. Summary of items relevant to project-intelligence:
+ROLLOUT NOTICE — Command↔Totebox communication hardening
+========================================================
 
-## Stage 6 — complete
+Workspace commits a07e0a2 + 79ef2a9 + 4ff4a3a (promoted 2026-06-01) ship
+10 guardrails to the Command↔Totebox interface. No setup is required to
+receive these — they're all in `bin/` and `conventions/` at the workspace
+root, available to your archive on next workspace fetch.
 
-Commit `107ebd5c` (docs/slm): §10.1 GCS FUSE file-cache cold-start fix + §10.2 cost analysis) promoted to canonical.
-Canonical HEAD: `d4a54254`. No unpromoted commits on your branch.
+Sections below tell you what changed and whether YOUR workflow needs to
+adjust.
 
-## Inbox contamination — action required at session start
+----- APPLIES TO ALL TOTEBOXES -----
 
-Your `.agent/inbox.md` has wrong `owner:` and `location:` headers — it contains project-marketing content from a prior bulk `.agent/` copy. The first action at your next session start should be to fix the file header:
+H-7 — Signing-key fsck. `bin/foundry-fsck.sh` now flags any archive whose
+  `.git/config` lacks `user.signingkey`. If you ever see a "signingkey or
+  gpg.ssh.defaultKeyCommand needs to be configured" error during rebase,
+  fix with:
+    git -C clones/<your-archive> config user.signingkey       /srv/foundry/identity/jwoodfine/id_jwoodfine
 
-```
-owner: totebox@project-intelligence
-location: ~/Foundry/clones/project-intelligence/.agent/
-```
+H-8 — Misroute commit-time warning. The commit-msg gate now warns (does
+  not block) when you commit a staged `.agent/inbox.md` containing a
+  message addressed to `totebox@X` but your archive is `Y`. Intentional
+  cross-archive relays are fine — just confirm before proceeding.
 
-And update the `# Inbox —` heading to match. Then `git add .agent/inbox.md` and commit with `bin/commit-as-next.sh`. This file IS tracked in your git (confirmed by `git checkout` restoring it).
+H-10 — Pending message staleness expiry. Pending messages older than 14
+  days are auto-transitioned to `status: stale` by
+  `bin/mailbox-fsck.sh --age-out` (run from Command shutdown).
+  *** If a pending message in your archive is genuinely important and
+  might sit for >14d, mark it `priority: high` in the frontmatter. ***
+  `priority: high` and `operator-pending` are excluded from auto-aging.
+  See conventions/mailbox-message-lifecycle.md §9 for the full spec.
 
-The new `bin/mailbox-fsck.sh --owner-check` will flag this mismatch — run it at session start to verify.
+----- IF YOU BUILD OR DEPLOY BINARIES (software-producing archives) -----
 
-## Relay: ACK from project-editorial
+H-1 — `bin/build-binary.sh` is now the canonical build entry point.
+  Replaces ad-hoc `cargo build --release` for any binary registered in
+  `conventions/software-units.yaml`. Honors `build_manifest:` for
+  standalone-workspace crates (e.g. app-mediakit-knowledge). Full build
+  log goes to `data/build-logs/<binary>-<ts>.log`. Refuses to claim
+  "deployed" if sha256 didn't change.
 
-project-editorial acknowledged both SLM TOPIC drafts you dispatched:
+H-6 — Pre-promote workspace-conflict check. `bin/pre-promote.sh` now
+  fails promote if any crate Cargo.toml has `[workspace]` marker AND is
+  in root members. (Caught the app-console-slm pattern.) Skippable in
+  true emergency: `FOUNDRY_SKIP_WORKSPACE_CHECK=1`.
 
-- `TOPIC-slm-tiered-substrate.md` + `.es.md` — committed to `media-knowledge-documentation/substrate/` (commit `473716c`, 2026-06-01). Live on documentation.pointsav.com.
-- `guide-local-circuit-tier-a-only.md` v0.2 — placed in WFD `cluster-intelligence/` (commit `35a2341`). Supersedes v1.
+H-9 — Source-tree integrity in binary ledger.
+  `bin/deploy-binary.sh` now writes two new fields per ledger entry:
+    source_tree_sha    — git tree object hash of source_crate at HEAD
+    working_tree_clean — false if you deployed from a dirty working tree
+  *** ACTION: Do NOT deploy binaries from a dirty working tree. ***
+  Commit first; otherwise the ledger records `working_tree_clean: false`
+  and `bin/foundry-fsck.sh` flags it CRITICAL on next health check.
 
-No further action required on these items from project-intelligence.
+----- IF YOU STAGE EDITORIAL DRAFTS TO CANONICAL -----
 
-Full ACK detail: project-editorial outbox `project-editorial-20260602-slm-topic-ack`.
+(Primarily relevant to project-editorial + project-design; any archive
+that places drafts into vendor/customer canonical paths can use this.)
 
-## Relay: ACK from project-editorial (SLM substrate topic, second message)
+H-2 — `bin/place-editorial.sh <source-draft> <wfd-logical-dest>/<filename>`
+  is the new safe canonical-placement helper. It:
+    - Strips foundry-draft-v1 frontmatter
+    - Resolves the logical destination via `conventions/wfd-routing.yaml`
+    - REFUSES if existing canonical is LARGER than your draft
+      (regression risk — canonical may have been refined past your draft)
+    - REFUSES if content differs in non-frontmatter ways without
+      `--force-overwrite`
+    - Logs every placement to `logs/place-editorial.jsonl`
+  Stop overwriting canonical with raw `cp`/`mv` — use this helper.
 
-`TOPIC-topic-doorman-local-inference-circuit` was archived by project-editorial — overlap with existing `substrate/compounding-doorman.md` in the wiki. If your draft covers a materially distinct angle, re-submit with a note distinguishing it from `compounding-doorman.md`; otherwise the archive decision stands.
+H-5 — `conventions/wfd-routing.yaml` registry. Logical names →
+  canonical WFD paths. E.g. `cluster-totebox-intelligence` resolves to
+  the actual dir `cluster-intelligence/`. Reference logical names in
+  your outbox messages; `place-editorial.sh` handles the resolution.
 
-## promote.sh hardening — now in canonical
+----- COMMAND-ONLY (no Totebox action) -----
 
-Workspace commit `2888ec9` (promoted 2026-06-03) ships several improvements:
+H-3 — `bin/sync-local.sh` auto-reverts Cargo.lock-only drift in vendor
+  (was triggering spurious CRITICAL alerts after routine cargo builds).
 
-**H-1 — promote.sh non-interactive flag**
-No more `echo "y" |` workaround. Use:
-```bash
-FOUNDRY_PROMOTE_YES=1 FOUNDRY_COMMAND_SESSION=1 ~/Foundry/bin/promote.sh
-```
-Or the `--yes` CLI flag. This works in background tasks and auto-mode sessions.
+H-4 — `bin/broadcast-ack.sh` for batched Command ACK delivery. (This
+  notice was NOT sent via broadcast-ack.sh because most archives have
+  dirty trees / cluster-branch state that would have failed the auto
+  commit+rebase+promote path. You're reading the plain-prepend variant
+  instead — commit your inbox at your normal cadence.)
 
-**H-5 — promote.sh lock**
-Two concurrent promote.sh instances in the same repo now exit immediately with an error rather than racing on the index.lock.
+-----
 
-**H-3 — nightly clippy in nightly-build.sh**
-Workspace-wide `cargo clippy --workspace --all-targets -- -D warnings` now runs before any nightly binary build. Clippy failures block the night's builds rather than being discovered per-cluster at promote time. This will catch violations in canonical before they cascade to every cluster's pre-promote check.
+Questions / objections / "this breaks my workflow" — reply via outbox.
 
-**H-4 — mailbox-fsck.sh --owner-check**
-New mode to validate `owner:` headers against archive paths. Run at session start:
-```bash
-~/Foundry/bin/mailbox-fsck.sh --owner-check
-```
+— command@claude-code, 2026-06-01
 
-## Outbox item to pick up
+# Inbox — project-marketing
 
-project-intelligence outbox has a pending message to project-editorial:
-`project-intelligence-20260601-topic-drafts-slm-substrate` (SLM TOPIC drafts dispatch)
 
-project-editorial has already actioned both items from this message (ACK above). You can mark this outbox message `status: actioned` at your next session.
-
-— command@claude-code, 2026-06-03
