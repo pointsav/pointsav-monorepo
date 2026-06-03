@@ -4,7 +4,73 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Memo — Workplace</title>
+<script>(function(){if(localStorage.getItem('wp-theme')==='light')document.documentElement.classList.add('light');})()</script>
 <link rel="stylesheet" href="/style.css">
+<style>
+/* ── Placeholder ── */
+#memo-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-dim);
+  pointer-events: none;
+  font-style: italic;
+}
+
+/* ── Ordered list ── */
+#memo-editor ol { margin: 0 0 0.6em 1.5em; padding: 0; }
+
+/* ── Crash recovery banner ── */
+#crash-banner {
+  background: #094771; color: #c8e1f4;
+  font-size: 12px; padding: 5px 12px;
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+#crash-banner.hidden { display: none; }
+#crash-banner span { flex: 1; }
+#crash-restore {
+  background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+  color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 3px; cursor: pointer;
+}
+#crash-restore:hover { background: rgba(255,255,255,0.28); }
+#crash-dismiss {
+  background: transparent; border: none;
+  color: rgba(255,255,255,0.55); font-size: 16px; line-height: 1;
+  cursor: pointer; padding: 0 4px;
+}
+#crash-dismiss:hover { color: #fff; }
+
+/* ── Light mode overrides ── */
+html.light body                       { background: #f0f0f0; color: #1a1a1a; }
+html.light #app-header                { background: #e8e8e8; border-bottom: 1px solid #d0d0d0; }
+html.light #app-header a              { color: #1a1a1a; }
+html.light .version                   { color: #555; }
+html.light #memo-toolbar              { background: #f3f3f3; border-bottom: 1px solid #d4d4d4; }
+html.light #memo-toolbar button       { background: #e4e4e4; border-color: #bbb; color: #444; }
+html.light #memo-toolbar button:hover { background: #d8d8d8; border-color: #999; }
+html.light #memo-toolbar button.active { background: #007acc; color: #fff; border-color: #007acc; }
+html.light #memo-toolbar .sep         { background: #d4d4d4; }
+html.light #memo-body                 { background: #f0f0f0; }
+html.light #memo-editor               { box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+html.light #memo-status               { background: #f3f3f3; border-top: 1px solid #d4d4d4; color: #555; }
+html.light #crash-banner              { background: #1c5f9a; }
+html.light #tok-panel                 { background: #f5f5f5; border-left: 1px solid #d4d4d4; }
+html.light #tok-panel-hdr             { background: #ebebeb; border-bottom: 1px solid #d4d4d4; color: #333; }
+html.light #tok-panel-hdr button      { background: #d8d8d8; border-color: #bbb; color: #555; }
+html.light #tok-panel-search input    { background: #fff; border-color: #c8c8c8; color: #1a1a1a; }
+html.light .tok-section-hdr           { background: #ebebeb; color: #555; }
+html.light .tok-chip                  { border-color: #d0d0d0; }
+html.light .tok-chip:hover            { background: #e0e0e0; }
+html.light .tok-chip-name             { color: #333; }
+html.light .tok-chip-val              { color: #777; }
+html.light .tok-type-chip             { border-color: #d0d0d0; }
+html.light .tok-type-chip:hover       { background: #e0e0e0; }
+html.light #open-menu                 { background: #f3f3f3; border-color: #d4d4d4; box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
+html.light #open-menu a               { color: #1a1a1a; }
+html.light #open-menu a:hover         { background: #e0e0e0; }
+html.light #open-menu button          { background: transparent; color: #333; }
+html.light #open-menu button:hover    { background: #e0e0e0; }
+html.light .menu-sep                  { background: #d4d4d4; }
+</style>
 </head>
 <body>
 <header id="app-header">
@@ -14,15 +80,30 @@
 
 <div id="memo-layout">
   <div id="memo-toolbar">
-    <button id="btn-bold"  title="Bold (Ctrl+B)"   onclick="fmt('bold')"><b>B</b></button>
-    <button id="btn-italic" title="Italic (Ctrl+I)" onclick="fmt('italic')"><i>I</i></button>
+    <!-- Inline formatting -->
+    <button id="btn-bold"      title="Bold (Ctrl+B)"               onclick="fmt('bold')"><b>B</b></button>
+    <button id="btn-italic"    title="Italic (Ctrl+I)"              onclick="fmt('italic')"><i>I</i></button>
+    <button id="btn-underline" title="Underline (Ctrl+U)"           onclick="fmt('underline')"><u>U</u></button>
+    <button id="btn-strike"    title="Strikethrough (Ctrl+Shift+X)" onclick="fmt('strikeThrough')"><s>S</s></button>
     <span class="sep"></span>
-    <button id="btn-h1" title="Heading 1" onclick="fmtBlock('h1')">H1</button>
-    <button id="btn-h2" title="Heading 2" onclick="fmtBlock('h2')">H2</button>
-    <button id="btn-h3" title="Heading 3" onclick="fmtBlock('h3')">H3</button>
+    <!-- Block formats -->
+    <button id="btn-h1"   title="Heading 1 (Ctrl+Alt+1)" onclick="fmtBlock('h1')">H1</button>
+    <button id="btn-h2"   title="Heading 2 (Ctrl+Alt+2)" onclick="fmtBlock('h2')">H2</button>
+    <button id="btn-h3"   title="Heading 3 (Ctrl+Alt+3)" onclick="fmtBlock('h3')">H3</button>
+    <button id="btn-para" title="Normal text (Ctrl+Alt+0)" onclick="fmtBlock('p')">P</button>
     <span class="sep"></span>
-    <button id="btn-ul" title="Bullet list" onclick="fmt('insertUnorderedList')">•</button>
+    <!-- Lists -->
+    <button id="btn-ul" title="Bullet list"                   onclick="fmt('insertUnorderedList')">•</button>
+    <button id="btn-ol" title="Numbered list (Ctrl+Shift+7)" onclick="fmt('insertOrderedList')">1.</button>
     <span class="sep"></span>
+    <!-- Alignment -->
+    <button id="btn-align-left"   title="Align left (Ctrl+Shift+L)"  onclick="fmt('justifyLeft')">≡L</button>
+    <button id="btn-align-center" title="Align center (Ctrl+E)"       onclick="fmt('justifyCenter')">≡C</button>
+    <button id="btn-align-right"  title="Align right (Ctrl+Shift+R)"  onclick="fmt('justifyRight')">≡R</button>
+    <span class="sep"></span>
+    <!-- Clear formatting -->
+    <button id="btn-clear" title="Clear formatting (Ctrl+\)" onclick="fmt('removeFormat')">clr</button>
+    <!-- Right-aligned controls: Save button has margin-left:auto from style.css -->
     <button id="btn-save" title="Save (Ctrl+S)" onclick="saveFile()">Save</button>
     <div class="open-wrap">
       <button id="btn-open-toggle" title="Open file" onclick="toggleOpenMenu()">Open ▾</button>
@@ -33,7 +114,14 @@
       </div>
     </div>
     <span class="sep"></span>
+    <button id="btn-theme" title="Toggle light/dark mode">☀</button>
     <button id="btn-tokens" title="Design Tokens" onclick="toggleTokenPanel()">Tokens</button>
+  </div>
+
+  <div id="crash-banner" class="hidden">
+    <span id="crash-msg">Unsaved draft found</span>
+    <button id="crash-restore">Restore</button>
+    <button id="crash-dismiss" title="Dismiss">✕</button>
   </div>
 
   <div id="memo-body">
@@ -65,12 +153,18 @@
 </div>
 
 <script>
-// ── State ────────────────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────────────────
 let currentPath = null;
 let dirty = false;
 let autoSaveTimer = null;
+let lastSaveTs = 0;
+let statusFilename = null;
+let wordDebounce = null;
+let draftTimer = null;
 
-// ── Init ─────────────────────────────────────────────────────────────────
+const editor = document.getElementById('memo-editor');
+
+// ── Init ──────────────────────────────────────────────────────────────────────
 (function init() {
   const params = new URLSearchParams(window.location.search);
   const path = params.get('path');
@@ -82,18 +176,21 @@ let autoSaveTimer = null;
   loadOpenMenuFiles();
 })();
 
-// ── File I/O ─────────────────────────────────────────────────────────────
+// ── File I/O ──────────────────────────────────────────────────────────────────
 async function loadFile(path) {
   try {
     const res = await fetch(`/api/files/read?path=${encodeURIComponent(path)}`);
     if (!res.ok) { setStatus('Error loading file.'); return; }
     const content = await res.text();
-    document.getElementById('memo-editor').innerHTML = content;
+    editor.innerHTML = content;
     currentPath = path;
     const name = path.split('/').pop();
-    setDirty(false);
+    statusFilename = name;
+    lastSaveTs = Date.now();
     document.title = `${name} — Memo`;
-    setStatus(name);
+    setDirty(false);
+    showFileStatus();
+    checkDraft();
   } catch {
     setStatus('Network error loading file.');
   }
@@ -117,7 +214,7 @@ async function saveFile() {
       setStatus('Network error creating file.'); return;
     }
   }
-  const content = document.getElementById('memo-editor').innerHTML;
+  const content = editor.innerHTML;
   try {
     const res = await fetch('/api/files/save', {
       method: 'PUT',
@@ -125,10 +222,14 @@ async function saveFile() {
       body: JSON.stringify({ path: currentPath, content }),
     });
     if (res.ok) {
+      lastSaveTs = Date.now();
+      localStorage.removeItem(draftKey());
       setDirty(false);
       const name = currentPath.split('/').pop();
+      statusFilename = name;
+      document.title = `${name} — Memo`;
       setStatus(`Saved — ${name}`);
-      setTimeout(() => setStatus(name), 2000);
+      setTimeout(() => showFileStatus(), 2000);
     } else {
       setStatus('Save failed.');
     }
@@ -170,34 +271,60 @@ async function loadOpenMenuFiles() {
   } catch { /* silent */ }
 }
 
-// ── Formatting ───────────────────────────────────────────────────────────
+// ── Formatting ────────────────────────────────────────────────────────────────
 function fmt(cmd) {
   document.execCommand(cmd, false, null);
-  document.getElementById('memo-editor').focus();
+  editor.focus();
   updateToolbarState();
 }
 
 function fmtBlock(tag) {
   document.execCommand('formatBlock', false, tag);
-  document.getElementById('memo-editor').focus();
+  editor.focus();
   updateToolbarState();
 }
 
 function updateToolbarState() {
-  document.getElementById('btn-bold').classList.toggle('active', document.queryCommandState('bold'));
-  document.getElementById('btn-italic').classList.toggle('active', document.queryCommandState('italic'));
-  document.getElementById('btn-ul').classList.toggle('active', document.queryCommandState('insertUnorderedList'));
+  const toggles = {
+    'btn-bold':         document.queryCommandState('bold'),
+    'btn-italic':       document.queryCommandState('italic'),
+    'btn-underline':    document.queryCommandState('underline'),
+    'btn-strike':       document.queryCommandState('strikeThrough'),
+    'btn-ul':           document.queryCommandState('insertUnorderedList'),
+    'btn-ol':           document.queryCommandState('insertOrderedList'),
+    'btn-align-left':   document.queryCommandState('justifyLeft'),
+    'btn-align-center': document.queryCommandState('justifyCenter'),
+    'btn-align-right':  document.queryCommandState('justifyRight'),
+  };
+  for (const [id, state] of Object.entries(toggles)) {
+    document.getElementById(id).classList.toggle('active', state);
+  }
   const block = document.queryCommandValue('formatBlock').toLowerCase();
-  ['h1','h2','h3'].forEach(t => {
+  ['h1', 'h2', 'h3'].forEach(t => {
     document.getElementById(`btn-${t}`).classList.toggle('active', block === t);
   });
+  document.getElementById('btn-para').classList.toggle('active', block === 'p' || block === 'div');
 }
 
-// ── Dirty tracking ───────────────────────────────────────────────────────
+// ── Status bar & word count ───────────────────────────────────────────────────
+function setStatus(msg) {
+  document.getElementById('memo-status').textContent = msg;
+}
+
+function showFileStatus() {
+  if (!statusFilename) return;
+  const text = editor.innerText.trim();
+  const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+  const chars = text.length;
+  document.getElementById('memo-status').textContent =
+    `${statusFilename}  ·  ${words} words  ·  ${chars} chars`;
+}
+
+// ── Dirty tracking ────────────────────────────────────────────────────────────
 function setDirty(val) {
   dirty = val;
   if (val) {
-    const base = currentPath ? currentPath.split('/').pop() : 'Untitled';
+    const base = statusFilename || 'Untitled';
     document.title = `• ${base} — Memo`;
   }
   if (autoSaveTimer) clearTimeout(autoSaveTimer);
@@ -206,7 +333,97 @@ function setDirty(val) {
   }
 }
 
-// ── Open menu ────────────────────────────────────────────────────────────
+// ── Crash recovery (localStorage draft) ──────────────────────────────────────
+function draftKey() {
+  return 'memo-crash:' + (currentPath || '__unsaved__');
+}
+
+function saveDraft() {
+  if (!dirty) return;
+  try {
+    localStorage.setItem(draftKey(), JSON.stringify({
+      content: editor.innerHTML,
+      path: currentPath,
+      ts: Date.now(),
+    }));
+  } catch { /* storage full — silent */ }
+}
+
+function checkDraft() {
+  const raw = localStorage.getItem(draftKey());
+  if (!raw) return;
+  try {
+    const draft = JSON.parse(raw);
+    // only show banner if draft is newer than last load/save (with 2s grace)
+    if (draft.ts <= lastSaveTs + 2000) {
+      localStorage.removeItem(draftKey());
+      return;
+    }
+    const ageSec = Math.round((Date.now() - draft.ts) / 1000);
+    const ageLabel = ageSec < 120
+      ? `${ageSec}s ago`
+      : `${Math.round(ageSec / 60)}m ago`;
+    document.getElementById('crash-msg').textContent =
+      `Unsaved draft found (${ageLabel}) — restore it?`;
+    const banner = document.getElementById('crash-banner');
+    banner.classList.remove('hidden');
+    document.getElementById('crash-restore').onclick = () => {
+      editor.innerHTML = draft.content;
+      setDirty(true);
+      showFileStatus();
+      banner.classList.add('hidden');
+      localStorage.removeItem(draftKey());
+    };
+    document.getElementById('crash-dismiss').onclick = () => {
+      banner.classList.add('hidden');
+      localStorage.removeItem(draftKey());
+    };
+  } catch {
+    localStorage.removeItem(draftKey());
+  }
+}
+
+// ── Paste sanitization ────────────────────────────────────────────────────────
+const PASTE_ALLOW = new Set([
+  'B','STRONG','I','EM','U','S','STRIKE','DEL',
+  'H1','H2','H3','H4','H5','H6',
+  'P','DIV','BR','BLOCKQUOTE','PRE','CODE',
+  'UL','OL','LI',
+  'TABLE','THEAD','TBODY','TR','TH','TD',
+]);
+
+function sanitizePasteHtml(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  function clean(node) {
+    const out = [];
+    for (const child of [...node.childNodes]) {
+      if (child.nodeType === 3) {
+        out.push(escHtml(child.textContent));
+      } else if (child.nodeType === 1) {
+        const tag = child.tagName.toUpperCase();
+        if (tag === 'A') {
+          const href = (child.getAttribute('href') || '').trim();
+          const inner = clean(child);
+          if (href && /^https?:\/\//i.test(href)) {
+            out.push(`<a href="${escAttr(href)}">${inner}</a>`);
+          } else {
+            out.push(inner);
+          }
+        } else if (PASTE_ALLOW.has(tag)) {
+          const lower = tag.toLowerCase();
+          out.push(`<${lower}>${clean(child)}</${lower}>`);
+        } else {
+          out.push(clean(child));
+        }
+      }
+    }
+    return out.join('');
+  }
+  return clean(doc.body);
+}
+
+// ── Open menu ─────────────────────────────────────────────────────────────────
 function toggleOpenMenu() {
   const menu = document.getElementById('open-menu');
   const isOpen = menu.classList.contains('open');
@@ -218,38 +435,77 @@ function hideOpenMenu() {
   document.getElementById('open-menu').classList.remove('open');
 }
 
-// ── Utility ──────────────────────────────────────────────────────────────
-function setStatus(msg) {
-  document.getElementById('memo-status').textContent = msg;
-}
-
+// ── Utility ───────────────────────────────────────────────────────────────────
 function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ── Event wiring ─────────────────────────────────────────────────────────
-document.getElementById('memo-editor').addEventListener('input', () => setDirty(true));
+function escAttr(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── Event wiring ──────────────────────────────────────────────────────────────
+editor.addEventListener('input', () => {
+  setDirty(true);
+  // word count: debounced 50ms
+  if (wordDebounce) clearTimeout(wordDebounce);
+  wordDebounce = setTimeout(showFileStatus, 50);
+  // draft save: throttled 2s
+  if (draftTimer) clearTimeout(draftTimer);
+  draftTimer = setTimeout(saveDraft, 2000);
+});
+
 document.addEventListener('selectionchange', updateToolbarState);
 
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-    e.preventDefault();
-    saveFile();
-    return;
+editor.addEventListener('paste', e => {
+  e.preventDefault();
+  const html = e.clipboardData.getData('text/html');
+  const text = e.clipboardData.getData('text/plain');
+  let sanitized;
+  if (html) {
+    sanitized = sanitizePasteHtml(html);
+  } else {
+    // plain text: wrap each line in <p>
+    sanitized = text
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .split('\n')
+      .map(l => `<p>${l || '<br>'}</p>`)
+      .join('');
   }
-  const editor = document.getElementById('memo-editor');
+  document.execCommand('insertHTML', false, sanitized);
+  setDirty(true);
+});
+
+document.addEventListener('keydown', e => {
+  const ctrl = e.ctrlKey || e.metaKey;
+
+  // Global shortcuts (work outside editor too)
+  if (ctrl && e.key === 's') { e.preventDefault(); saveFile(); return; }
+
+  // Editor-scoped shortcuts
   const inEditor = editor === document.activeElement || editor.contains(document.activeElement);
   if (!inEditor) return;
-  if ((e.ctrlKey || e.metaKey) && !e.altKey) {
-    if (e.key === 'b') { e.preventDefault(); fmt('bold'); }
-    else if (e.key === 'i') { e.preventDefault(); fmt('italic'); }
-    else if (e.key === 'u') { e.preventDefault(); fmt('underline'); }
+
+  if (ctrl && !e.altKey && !e.shiftKey) {
+    if (e.key === 'b')        { e.preventDefault(); fmt('bold'); }
+    else if (e.key === 'i')   { e.preventDefault(); fmt('italic'); }
+    else if (e.key === 'u')   { e.preventDefault(); fmt('underline'); }
+    else if (e.key === 'e')   { e.preventDefault(); fmt('justifyCenter'); }
+    else if (e.code === 'Backslash') { e.preventDefault(); fmt('removeFormat'); }
   }
-  if ((e.ctrlKey || e.metaKey) && e.altKey) {
-    if (e.key === '1') { e.preventDefault(); fmtBlock('h1'); }
-    else if (e.key === '2') { e.preventDefault(); fmtBlock('h2'); }
-    else if (e.key === '3') { e.preventDefault(); fmtBlock('h3'); }
-    else if (e.key === '0') { e.preventDefault(); fmtBlock('p'); }
+  if (ctrl && e.shiftKey && !e.altKey) {
+    if (e.code === 'Digit7')  { e.preventDefault(); fmt('insertOrderedList'); }
+    else if (e.code === 'KeyX') { e.preventDefault(); fmt('strikeThrough'); }
+    else if (e.code === 'KeyL') { e.preventDefault(); fmt('justifyLeft'); }
+    else if (e.code === 'KeyR') { e.preventDefault(); fmt('justifyRight'); }
+  }
+  if (ctrl && e.altKey && !e.shiftKey) {
+    if (e.key === '1')        { e.preventDefault(); fmtBlock('h1'); }
+    else if (e.key === '2')   { e.preventDefault(); fmtBlock('h2'); }
+    else if (e.key === '3')   { e.preventDefault(); fmtBlock('h3'); }
+    else if (e.key === '0')   { e.preventDefault(); fmtBlock('p'); }
   }
 });
 
@@ -257,7 +513,7 @@ document.addEventListener('click', e => {
   if (!e.target.closest('.open-wrap')) hideOpenMenu();
 });
 
-// ── Token panel ───────────────────────────────────────────────────────────
+// ── Token panel ────────────────────────────────────────────────────────────────
 let tokOpen = false;
 let tokLoaded = false;
 
@@ -303,7 +559,10 @@ function flattenTokGroup(group, prefix) {
 function renderTokColors(data) {
   const tokens = flattenTokGroup((data.primitive || {}).color || {}, '');
   const el = document.getElementById('tok-colors');
-  if (!tokens.length) { el.innerHTML = '<span style="color:var(--text-dim);font-size:11px;padding:8px 10px;display:block">No colors found.</span>'; return; }
+  if (!tokens.length) {
+    el.innerHTML = '<span style="color:var(--text-dim);font-size:11px;padding:8px 10px;display:block">No colors found.</span>';
+    return;
+  }
   el.innerHTML = tokens.map(t =>
     `<div class="tok-chip" draggable="true" data-value="${escAttr(t.value)}" data-type="color"
           title="${escAttr(t.name + ': ' + t.value + (t.desc ? '\n' + t.desc : ''))}"
@@ -331,12 +590,12 @@ function renderTokType(data) {
 }
 
 function applyTokColor(val) {
-  document.getElementById('memo-editor').focus();
+  editor.focus();
   document.execCommand('foreColor', false, val);
 }
 
 function applyTokFont(val) {
-  document.getElementById('memo-editor').focus();
+  editor.focus();
   document.execCommand('fontName', false, val);
 }
 
@@ -357,25 +616,18 @@ function filterTokens(q) {
   });
 }
 
-function escAttr(s) {
-  return String(s)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-
-// Real-time file list — refresh open menu whenever workspace changes
+// ── Real-time file list ───────────────────────────────────────────────────────
 const _fileEvents = new EventSource('/api/files/events');
 _fileEvents.onmessage = () => loadOpenMenuFiles();
 
-// Token drop on editor
-const _ed = document.getElementById('memo-editor');
-_ed.addEventListener('dragover', e => {
+// ── Token drop on editor ──────────────────────────────────────────────────────
+editor.addEventListener('dragover', e => {
   if (e.dataTransfer.types.includes('application/x-token')) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
   }
 });
-_ed.addEventListener('drop', e => {
+editor.addEventListener('drop', e => {
   const raw = e.dataTransfer.getData('application/x-token');
   if (!raw) return;
   e.preventDefault();
@@ -388,6 +640,23 @@ _ed.addEventListener('drop', e => {
     if (type === 'color') document.execCommand('foreColor', false, value);
   } catch { /* silent */ }
 });
+
+// ── Light / dark theme toggle ─────────────────────────────────────────────────
+(function() {
+  const btn = document.getElementById('btn-theme');
+  let isLight = document.documentElement.classList.contains('light');
+  function applyTheme() {
+    document.documentElement.classList.toggle('light', isLight);
+    btn.textContent = isLight ? '🌙' : '☀';
+    btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+  }
+  applyTheme();
+  btn.addEventListener('click', () => {
+    isLight = !isLight;
+    localStorage.setItem('wp-theme', isLight ? 'light' : 'dark');
+    applyTheme();
+  });
+})();
 </script>
 </body>
 </html>
