@@ -1147,19 +1147,6 @@ fn home_chrome(
                             }
                             div.ac-dropdown #search-autocomplete-dropdown {}
                         }
-                        @if woodfine_projects {
-                            a href="https://home.woodfinegroup.com" { "Home" }
-                            a href="https://projects.woodfinegroup.com" { "Projects" }
-                            a href="https://woodfinegroup.com" { "Newsroom" }
-                        } @else if woodfine_theme {
-                            a href="https://home.woodfinegroup.com" { "Home" }
-                            a href="https://corporate.woodfinegroup.com" { "Corporate" }
-                            a href="https://woodfinegroup.com" { "Newsroom" }
-                        } @else {
-                            a href="https://home.pointsav.com" { "Home" }
-                            a href="https://software.pointsav.com" target="_blank" rel="noopener" { "Software" }
-                            a href="https://pointsav.com" target="_blank" rel="noopener" { "Newsroom" }
-                        }
                         (auth_nav_widget(user, pending_count))
                         a.lang-toggle href=(match locale { Locale::En => "/es/", Locale::Es => "/?noredirect=1" }) {
                             (match locale { Locale::En => "ES", Locale::Es => "EN" })
@@ -1168,82 +1155,75 @@ fn home_chrome(
                 }
                 main.site-main #mp-main {
 
-                    // ── Hero banner ──────────────────────────────────────────
-                    section.hero #mp-topbanner {
-                        div.hero__eyebrow {
-                            (match brand_instance {
-                                "projects"  => "Projects",
-                                "corporate" => "Corporate",
-                                _           => "Documentation",
-                            })
-                        }
-                        h1.hero__title { (site_title) }
-                        @if !home_html.is_empty() {
-                            div.hero__lede { (PreEscaped(home_html)) }
-                        } @else {
-                            p.hero__lede {
-                                "The corporate knowledge wiki for the PointSav Digital Systems platform."
-                            }
-                        }
-                        div.wiki-home-search {
-                            form action="/search" method="get" {
-                                input type="search" name="q"
-                                      placeholder={ "Search " (fmt_commas(stats.article_count)) " articles" }
-                                      aria-label="Search the wiki" {}
-                                button type="submit" { "Search" }
-                            }
-                        }
-                    }
+                    // ── Editorial front page (Wikipedia-pattern two-column) ──
+                    div.wiki-home-editorial #mp-topbanner {
+                        div.wiki-home-editorial__left {
 
-                    // ── Featured article ─────────────────────────────────────
-                    @if let Some(ref featured) = featured {
-                        div.featured #mp-tfa {
-                            div.featured__row {
-                                span.dot {}
-                                "Featured article"
-                            }
-                            h2.featured__title {
-                                a href={ "/wiki/" (featured.slug) } { (featured.title) }
-                            }
-                            @if !featured.snippet.is_empty() {
-                                p.featured__excerpt { (featured.snippet) }
-                            }
-                            a.featured__cta href={ "/wiki/" (featured.slug) } {
-                                "Read the full article"
-                                (PreEscaped(r#"<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 7h12M8 2l5 5-5 5"/></svg>"#))
-                            }
-                            div.featured__row style="margin-top:16px;font-size:12px;gap:6px;" {
-                                a href="/special/all-pages" { "Archive" }
-                                " · "
-                                a href="/feed.atom" { "Subscribe" }
-                                " · "
-                                a href="/wiki/about" { "About" }
-                            }
-                        }
-                    }
-
-                    // ── Recently updated ─────────────────────────────────────
-                    @if !recent.is_empty() {
-                        div.section-head #mp-itn {
-                            h2 { "Recently updated" }
-                            a.section-head__hint href="/special/recent-changes" { "All changes →" }
-                        }
-                        div.recent {
-                            @for t in recent.iter().take(8) {
-                                a.recent__item href={ "/wiki/" (t.slug) } {
-                                    div {
-                                        span.recent__title { (t.title) }
-                                        @if let Some(cat) = t.slug.split_once('/').map(|(c, _)| c) {
-                                            span.recent__crumb { (humanize_category(cat)) }
-                                        }
+                            // Featured article
+                            @if let Some(ref featured) = featured {
+                                div.featured #mp-tfa {
+                                    div.featured__row {
+                                        span.dot {}
+                                        "Featured article"
                                     }
-                                    @if let Some(cat) = t.slug.split_once('/').map(|(c, _)| c) {
-                                        span.recent__cat { (humanize_category(cat)) }
+                                    h2.featured__title {
+                                        a href={ "/wiki/" (featured.slug) } { (featured.title) }
                                     }
-                                    @if let Some(ref d) = t.last_edited {
-                                        span.recent__date { (d) }
+                                    @if !featured.snippet.is_empty() {
+                                        p.featured__excerpt { (featured.snippet) }
+                                    }
+                                    a.featured__cta href={ "/wiki/" (featured.slug) } {
+                                        "Read the full article"
+                                        (PreEscaped(r#"<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 7h12M8 2l5 5-5 5"/></svg>"#))
+                                    }
+                                    div.featured__row style="margin-top:16px;font-size:12px;gap:6px;" {
+                                        a href="/special/all-pages" { "Archive" }
+                                        " · "
+                                        a href="/feed.atom" { "Subscribe" }
+                                        " · "
+                                        a href="/wiki/about" { "About" }
                                     }
                                 }
+                            }
+
+                            // Recently updated
+                            @if !recent.is_empty() {
+                                div.section-head #mp-itn {
+                                    h2 { "Recently updated" }
+                                    a.section-head__hint href="/special/recent-changes" { "All changes →" }
+                                }
+                                div.recent {
+                                    @for t in recent.iter().take(8) {
+                                        a.recent__item href={ "/wiki/" (t.slug) } {
+                                            div {
+                                                span.recent__title { (t.title) }
+                                                @if let Some(cat) = t.slug.split_once('/').map(|(c, _)| c) {
+                                                    span.recent__crumb { (humanize_category(cat)) }
+                                                }
+                                            }
+                                            @if let Some(cat) = t.slug.split_once('/').map(|(c, _)| c) {
+                                                span.recent__cat { (humanize_category(cat)) }
+                                            }
+                                            @if let Some(ref d) = t.last_edited {
+                                                span.recent__date { (d) }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        div.wiki-home-editorial__right {
+                            // Stats block
+                            div.wiki-home-stats {
+                                strong { (fmt_commas(stats.article_count)) }
+                                " articles across "
+                                strong { (stats.category_count) }
+                                " categories"
+                            }
+                            // Home lede / intro text
+                            @if !home_html.is_empty() {
+                                div.wiki-home-lede { (PreEscaped(home_html)) }
                             }
                         }
                     }
@@ -2243,10 +2223,10 @@ fn wiki_chrome(
     printable: bool,
     _body_blake3: &str,
     claim_rail_html: &str,
-    sidenav: &str,
+    _sidenav: &str,
 ) -> Markup {
     let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
-    let woodfine_projects = brand_theme == Some("woodfine-projects");
+    let _woodfine_projects = brand_theme == Some("woodfine-projects");
     let is_authenticated = user.is_some();
     let auth_attr = if is_authenticated { "user" } else { "anon" };
     let _talk_slug = format!("{slug}.talk");
@@ -2338,19 +2318,6 @@ fn wiki_chrome(
                             }
                             div.ac-dropdown #search-autocomplete-dropdown {}
                         }
-                        @if woodfine_projects {
-                            a href="https://home.woodfinegroup.com" { "Home" }
-                            a href="https://projects.woodfinegroup.com" { "Projects" }
-                            a href="https://woodfinegroup.com" { "Newsroom" }
-                        } @else if woodfine_theme {
-                            a href="https://home.woodfinegroup.com" { "Home" }
-                            a href="https://corporate.woodfinegroup.com" { "Corporate" }
-                            a href="https://woodfinegroup.com" { "Newsroom" }
-                        } @else {
-                            a href="https://home.pointsav.com" { "Home" }
-                            a href="https://software.pointsav.com" target="_blank" rel="noopener" { "Software" }
-                            a href="https://pointsav.com" target="_blank" rel="noopener" { "Newsroom" }
-                        }
                         (auth_nav_widget(user, pending_count))
                         a.lang-toggle href=(match locale { Locale::En => format!("/es/wiki/{slug}"), Locale::Es => format!("/wiki/{slug}") }) {
                             (match locale { Locale::En => "ES", Locale::Es => "EN" })
@@ -2440,11 +2407,9 @@ fn wiki_chrome(
                     { "History" }
                 }
 
-                // Article layout: docs side-nav + article body (+ optional claim-rail at ≥1280px)
+                // Article layout: article body (+ optional claim-rail at ≥1280px)
+                // Sidenav removed: encyclopedia pattern uses right-rail TOC only.
                 div.shell {
-
-                    // --- Docs left navigation: full category/article tree ---
-                    (PreEscaped(sidenav))
 
                     // --- Article body column (two-column: prose + TOC) ---
                     main.article-wrap {
@@ -2452,8 +2417,17 @@ fn wiki_chrome(
 
                         // Clean product-docs article header: breadcrumb, title,
                         // content-type badge, lede, language switcher, last-edited.
-                        // No Wikipedia tabs / quality badge / integrity fingerprint.
+                        // Encyclopedia article header: tabs + tagline + breadcrumb + title.
                         header.doc-header {
+                            // Wikipedia-pattern Article/Talk/Edit/History tab strip.
+                            nav.wiki-page-tabs aria-label="Page tabs" {
+                                a.wiki-tab aria-current="page" href={ "/wiki/" (slug) } { "Article" }
+                                a.wiki-tab href={ "/talk/" (slug) } { "Talk" }
+                                a.wiki-tab href={ "/wiki/" (slug) "?action=edit" } { "Edit" }
+                                a.wiki-tab href={ "/history/" (slug) } { "History" }
+                            }
+                            // Wikipedia "From <wiki>" tagline.
+                            p.wiki-tagline { "From the " (site_title) }
                             @if let Some(ref cat) = fm.category {
                                 @if cat != "root" {
                                     nav.crumb aria-label="breadcrumb" {
@@ -2588,6 +2562,33 @@ fn wiki_chrome(
                                 em {
                                     "This disambiguation page lists articles associated with the same title. "
                                     "If an internal link led you here, you may wish to change the link to point directly to the intended article."
+                                }
+                            }
+                        }
+
+                        // Frontmatter-driven infobox (float-right summary table).
+                        // Alternative to the code-fence infobox block in prose.
+                        @if let Some(ref ib) = fm.infobox {
+                            aside.infobox {
+                                @if let Some(ref t) = ib.title {
+                                    div.infobox-title { (t) }
+                                }
+                                @if let Some(ref img_src) = ib.image {
+                                    div.infobox-image {
+                                        img src=(img_src) alt=(ib.title.as_deref().unwrap_or("")) loading="lazy";
+                                    }
+                                }
+                                @if !ib.rows.is_empty() {
+                                    table.infobox-table {
+                                        tbody {
+                                            @for row in &ib.rows {
+                                                tr {
+                                                    th.infobox-label { (row.label) }
+                                                    td.infobox-data { (row.value) }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -3938,9 +3939,6 @@ fn chrome(
                             }
                             div.ac-dropdown #search-autocomplete-dropdown {}
                         }
-                        a href="https://home.pointsav.com" { "Home" }
-                        a href="https://software.pointsav.com" target="_blank" rel="noopener" { "Software" }
-                        a href="https://pointsav.com" target="_blank" rel="noopener" { "Newsroom" }
                         (auth_nav_widget(user, pending_count))
                     }
                 }
@@ -4114,10 +4112,9 @@ mod tests {
 
     // Phase 1.1 chrome tests — additive; all existing tests remain unchanged.
 
-    /// Verify the product-docs chrome: a docs left-navigation is emitted and the
-    /// Wikipedia article-tab bar is gone.
+    /// Verify the encyclopedia chrome: Article/Talk/Edit/History tabs are present.
     #[tokio::test]
-    async fn wiki_page_has_docs_sidenav() {
+    async fn wiki_page_has_encyclopedia_tabs() {
         let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
@@ -4133,22 +4130,16 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
-            html.contains("docs-sidenav"),
-            "docs left-navigation should be emitted: {html}"
+            html.contains("wiki-page-tabs"),
+            "encyclopedia tab strip should be emitted: {html}"
         );
         assert!(
             html.contains("View source"),
             "View source link should appear (edit row): {html}"
         );
-        // Wikipedia chrome must be gone.
-        assert!(
-            !html.contains("article-tabs") && !html.contains("wiki-page-tabs"),
-            "Wikipedia tab bars must not render: {html}"
-        );
     }
 
-    /// Verify the Wikipedia "From <site>" tagline is gone and the clean
-    /// product-docs header renders instead.
+    /// Verify the encyclopedia header: doc-header present + wiki-tagline present.
     #[tokio::test]
     async fn wiki_page_has_clean_header() {
         let (state, _dir, _state_dir) = fixture_state().await;
@@ -4166,11 +4157,11 @@ mod tests {
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
             html.contains("doc-header"),
-            "clean docs header should appear: {html}"
+            "encyclopedia docs header should appear: {html}"
         );
         assert!(
-            !html.contains("From PointSav Documentation"),
-            "Wikipedia tagline must not render: {html}"
+            html.contains("wiki-tagline"),
+            "Wikipedia-style tagline should render: {html}"
         );
     }
 
@@ -4435,9 +4426,9 @@ mod tests {
         );
     }
 
-    /// Verify that the docs sidenav renders on article pages (product-docs layout).
-    /// (Replaces the former Wikipedia-chrome portlet test — Wikipedia chrome was removed
-    /// in the product-docs pivot; docs-sidenav with category navigation is the replacement.)
+    /// Verify that the encyclopedia tab strip renders on article pages.
+    /// (The docs-sidenav was removed in the encyclopedia-chrome pivot; the
+    /// wiki-page-tabs strip — Article/Talk/Edit/History — is the replacement.)
     #[tokio::test]
     async fn wiki_page_renders_navigation_portlet() {
         let dir = tempfile::tempdir().unwrap();
@@ -4482,12 +4473,12 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
-            html.contains("docs-sidenav"),
-            "docs sidenav should appear in product-docs layout: {html}"
+            html.contains("wiki-page-tabs"),
+            "encyclopedia tab strip should appear on article pages: {html}"
         );
         assert!(
-            !html.contains("wiki-breadcrumb"),
-            "breadcrumb nav must not appear (removed in Wikipedia-parity sprint): {html}"
+            !html.contains("docs-sidenav"),
+            "docs sidenav must not appear (removed in encyclopedia-chrome pivot): {html}"
         );
     }
 

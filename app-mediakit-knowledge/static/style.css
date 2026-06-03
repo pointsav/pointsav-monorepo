@@ -529,8 +529,8 @@ nav.article-tabs {
 /* Auth-gating: Talk and Edit tabs hidden for anonymous users */
 [data-auth="anon"] .article-tab--talk { display: none; }
 [data-auth="anon"] .article-tab--edit { display: none; }
-/* Hide legacy wiki-page-tabs now that article-tabs provides this row */
-nav.wiki-page-tabs { display: none; }
+/* wiki-page-tabs: Article/Talk/Edit/History tab strip on article pages */
+/* (Previously hidden; now re-enabled for encyclopedia chrome) */
 /* Tools dropdown */
 details.tools-dropdown {
   position: relative;
@@ -1093,11 +1093,12 @@ html[data-theme="dark"] .nav-row ul.nav-list li a.is-active {
 .nav-toggle-btn:hover { background: var(--bg-hover); }
 
 /* ---------- Layout shell ---------- */
+/* Single-column: sidenav removed (encyclopedia pattern uses right-rail TOC only). */
 .shell {
   max-width: var(--content-max);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: var(--sidenav-w) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: 0;
   padding: 0 28px;
@@ -3073,6 +3074,26 @@ html[data-theme="dark"] .diff-rem { background: #2c0f0f; color: #fca5a5; }
 .page-info-table td { padding: 10px 14px; border-bottom: 1px solid var(--rule); }
 .page-info-table td:first-child { font-weight: 700; color: var(--fg-1); width: 40%; }
 .page-info-table td:last-child { color: var(--fg-2); }
+
+/* Category article list — compact 3-column alphabetical grid (encyclopedia pattern) */
+.wiki-cat-page-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 16px; list-style: none; padding: 0; margin: 1rem 0; }
+.wiki-cat-page-item-desc { display: none; } /* hide blurbs in category index */
+@media (max-width: 768px) { .wiki-cat-page-list { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .wiki-cat-page-list { grid-template-columns: 1fr; } }
+
+/* Editorial home layout (Wikipedia-pattern two-column front page) */
+.wiki-home-editorial { display: grid; grid-template-columns: 1fr 300px; gap: 28px; max-width: var(--content-max); margin: 0 auto; padding: 24px 28px; }
+.wiki-home-editorial__left { min-width: 0; }
+.wiki-home-editorial__right { min-width: 0; }
+.wiki-home-lede { font-size: 15px; color: var(--fg-2); line-height: 1.6; margin-top: 12px; }
+@media (max-width: 900px) { .wiki-home-editorial { grid-template-columns: 1fr; } }
+
+/* Infobox — frontmatter-driven float-right summary table */
+.infobox-table { width: 100%; border-collapse: collapse; }
+.infobox-label { padding: 5px 10px; font-weight: 600; color: var(--fg-2); vertical-align: top; width: 40%; border-bottom: 1px solid var(--rule); }
+.infobox-data { padding: 5px 10px; vertical-align: top; border-bottom: 1px solid var(--rule); }
+.infobox-image { text-align: center; padding: 8px; }
+.infobox-image img { max-width: 100%; height: auto; }
 
 /* Category index */
 .categories-index { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }

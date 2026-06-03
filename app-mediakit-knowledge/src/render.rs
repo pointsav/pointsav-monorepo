@@ -129,8 +129,32 @@ pub struct Frontmatter {
     #[serde(default)]
     pub content_type: Option<String>,
 
+    /// Frontmatter-driven infobox. Rendered as a float-right summary table
+    /// at the start of the article body, before the prose div. Alternative
+    /// to the code-fence infobox block (which remains supported).
+    #[serde(default)]
+    pub infobox: Option<Infobox>,
+
     #[serde(flatten)]
     pub extra: BTreeMap<String, serde_yaml::Value>,
+}
+
+/// A single row in a frontmatter-driven infobox table.
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
+pub struct InfoboxRow {
+    pub label: String,
+    pub value: String,
+}
+
+/// Frontmatter-driven infobox: title, optional image, and data rows.
+#[derive(Debug, Default, Deserialize, Serialize, Clone)]
+pub struct Infobox {
+    #[serde(default)]
+    pub title: Option<String>,
+    #[serde(default)]
+    pub image: Option<String>,
+    #[serde(default)]
+    pub rows: Vec<InfoboxRow>,
 }
 
 fn default_true() -> bool {
@@ -459,23 +483,23 @@ fn inject_wiki_prefixes(
             let norm_slug = decoded.trim().to_lowercase().replace(' ', "-");
 
             if page_exists(&norm_slug, content_dir, extra_roots) {
-                // Resolved → emit the routed anchor.
-                out.push_str(&before_marker[..href_pos + 6]); // up to and including href="
-                out.push_str("/wiki/");
+                // Resolved → emit the routed anchor with class="wikilink".
+                // Find the <a tag opening to inject the class attribute.
+                let a_open = before_marker[..href_pos].rfind("<a").unwrap_or(href_pos);
+                out.push_str(&before_marker[..a_open]);
+                out.push_str("<a class=\"wikilink\" href=\"/wiki/");
                 out.push_str(&norm_slug);
                 out.push_str("\" data-wikilink=\"true\">");
                 rest = after_marker;
             } else {
-                // Unresolved → unwrap to plain text (no dead link). Drop the <a …>
-                // opening tag and its matching </a>.
+                // Unresolved → render as class="wikilink-missing" anchor (red-link style).
+                // Find the <a tag opening so we can reconstruct it with the new class.
                 let a_open = before_marker[..href_pos].rfind("<a").unwrap_or(href_pos);
                 out.push_str(&before_marker[..a_open]);
-                if let Some(close) = after_marker.find("</a>") {
-                    out.push_str(&after_marker[..close]); // inner link text, unwrapped
-                    rest = &after_marker[close + 4..];
-                } else {
-                    rest = after_marker;
-                }
+                out.push_str("<a class=\"wikilink-missing\" href=\"/wiki/");
+                out.push_str(&norm_slug);
+                out.push_str("\" data-wikilink=\"true\">");
+                rest = after_marker;
             }
         } else {
             // Malformed marker — copy through verbatim.
@@ -865,7 +889,7 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join("other-page.md"), "# Other Page\n").unwrap();
 
-        // Existing target → routed anchor.
+        // Existing target → routed anchor with class="wikilink".
         let html = render_html("see [[Other Page]] for context", &dir, &[]);
         assert!(
             html.contains("Other Page"),
@@ -875,16 +899,24 @@ mod tests {
             html.contains("href=\"/wiki/other-page\""),
             "existing wikilink should produce a routed anchor: {html}"
         );
+        assert!(
+            html.contains("class=\"wikilink\""),
+            "existing wikilink anchor must carry class=wikilink: {html}"
+        );
 
-        // Missing target → plain text, never a dead link (L18).
+        // Missing target → red-link anchor with class="wikilink-missing".
         let html2 = render_html("see [[No Such Page]] here", &dir, &[]);
         assert!(
             html2.contains("No Such Page"),
-            "missing wikilink text should be retained as plain text: {html2}"
+            "missing wikilink text should be retained: {html2}"
         );
         assert!(
-            !html2.contains("/wiki/no-such-page"),
-            "missing wikilink must NOT render as a dead link: {html2}"
+            html2.contains("wikilink-missing"),
+            "missing wikilink must render as a red-link anchor: {html2}"
+        );
+        assert!(
+            html2.contains("/wiki/no-such-page"),
+            "missing wikilink red-link must include the target URL: {html2}"
         );
 
         // Target reachable only via an extra (guide) root → resolves (TOPIC↔GUIDE).
