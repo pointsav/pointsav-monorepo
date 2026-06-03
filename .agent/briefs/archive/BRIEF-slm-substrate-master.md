@@ -665,28 +665,34 @@ the whole change is approximately cost-neutral to slightly cheaper per session �
 Always-warm option (`--min-instances 1`) remains available for zero cold start, but that is a
 separate deliberate choice (~$0.67/hr continuous) — NOT required by this fix.
 
-### Migration progress (2026-06-02 session)
+### Migration progress (2026-06-03 session — COMPLETE)
 
 **Completed:**
-- Cloud Run service deployed: `yoyo-tier-b` in europe-west4 (revision 00003-jnd)
+- Cloud Run service deployed: `yoyo-tier-b` in europe-west4
 - Service URL: `https://yoyo-tier-b-369270631281.europe-west4.run.app`
-- Image: `docker.io/ollama/ollama:latest` (GPU: nvidia-l4, 4 vCPU, 16 GiB)
-- OLMo Q3 GGUF (15.6 GiB) copied to GCS: `ollama-store/blobs/sha256-06c420f9...`
-- Ollama model store in GCS: `ollama-store/` (blobs + manifests)
-- Model manifest written manually: `olmo3:latest` registered in Ollama
+- **Final image: `docker.io/ollama/ollama:0.24.0`** (8 vCPU, 32 GiB, nvidia-l4)
+  - `latest` (0.30.2) → CUDA kernel mismatch on Cloud Run L4 driver
+  - `0.5.1` → OLMo 3 architecture not supported
+  - `0.6.0` → wrong tensor shape expectations (GGUF format mismatch)
+  - `0.24.0` → **confirmed working: HTTP 200, 266s cold start** ✓
+- File-cache mount active (32 GiB in-memory + parallel GCS download) — §10.1 fix applied
+- Ollama default entrypoint used (no command override — command override broke GPU init)
+- OLMo Q3 GGUF (15.6 GiB) in GCS: `ollama-store/blobs/sha256-06c420f9...`
+- `olmo3:latest` manifest in GCS — confirmed visible via `/api/tags`
 - Doorman code: `MetadataBearer` + `SLM_YOYO_GCP_AUTH` + `SLM_YOYO_HEALTH_PATH` — committed `04adf39c`
 - New Doorman binary built (release): `service-slm/target/release/slm-doorman-server`
+- `/tmp/local-doorman-new.env` verified correct for Ollama 0.24.0
 
 **Pending (Command Session required):**
 - Deploy new Doorman binary (binary ledger + `bin/deploy-binary.sh`)
 - Apply `/tmp/local-doorman-new.env` → `/etc/local-doorman/local-doorman.env`
 - Restart `local-doorman.service` to activate Cloud Run Tier B
-- Verify circuit closes: `curl /readyz | jq .tier_b_circuit_state`
+- Verify circuit closes: `curl http://127.0.0.1:9080/readyz | jq .tier_b_circuit_state`
 
-**Known cold-start behaviour (superseded by §10.1 fix):**
-- Naive deploy (16 GiB, plain GCS mount): **30 min timeout** — mmap-over-FUSE page faults
-- With §10.1 fix (32 GiB + file-cache + dd preload + use_mmap false): **~3–4 min**
-- `--min-instances 0` → $0 when idle; the fix is cost-neutral (see §10.2)
+**Cold-start behaviour confirmed (2026-06-03):**
+- With §10.1 file-cache fix (32 GiB + in-memory cache + parallel GCS download): **~266s (~4.4 min)**
+- `--min-instances 0` → $0 when idle; scales up on demand
+- `OLLAMA_KEEP_ALIVE=-1` → model stays in VRAM between requests (no per-request reload)
 
 **Ollama specifics:**
 - Model name in Doorman: `SLM_YOYO_MODEL=olmo3` (NOT `Olmo-3-1125-32B-Think`)
