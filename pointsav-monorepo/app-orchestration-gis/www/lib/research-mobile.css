@@ -171,6 +171,9 @@
   .tb { height: 12px !important; }
   .cc { padding: 8px 10px !important; }
   .tc { gap: 10px !important; }
+
+  /* 6 — Drop the "Page N of N" print fragment on the reflowed single-column mobile view */
+  .pg-num { display: none !important; }
 }
 
 /* ── Desktop: sections always open, no toggle affordance ─────────────────────── */
