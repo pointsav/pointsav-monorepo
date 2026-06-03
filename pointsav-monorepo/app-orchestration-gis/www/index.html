@@ -53,7 +53,7 @@
         .panel-header { padding: 20px; border-bottom: 1px solid var(--border-soft); background: #fff; }
         .panel-header h1 { margin: 0; font-size: 16px; font-weight: 800; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.5px; }
         .panel-header p  { margin: 2px 0 0 0; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-        .panel-content { padding: 0 20px 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .panel-content { padding: 0 20px 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
         .data-block  { margin-bottom: 14px; }
         /* Mobile peek-summary: a one-row digest shown at the peek detent. Hidden on desktop. */
         .peek-summary { display: none; }
@@ -239,14 +239,14 @@
             display: none; align-items: center; justify-content: center; z-index: 1000; 
         }
         .modal-box { 
-            background: #fff; width: 90%; max-width: 500px; max-height: 80vh; 
+            background: #fff; width: 90%; max-width: 500px; max-height: 80dvh;
             border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); 
             display: flex; flex-direction: column; overflow: hidden;
         }
         .modal-header { padding: 20px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; }
         .modal-header h2 { margin: 0; font-size: 14px; font-weight: 800; color: var(--brand-primary); text-transform: uppercase; }
         .modal-close { border: none; background: transparent; font-size: 20px; cursor: pointer; color: var(--text-muted); }
-        .modal-body { padding: 24px; overflow-y: auto; -webkit-overflow-scrolling: touch; font-size: 13px; line-height: 1.6; color: var(--text-main); }
+        .modal-body { padding: 24px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; font-size: 13px; line-height: 1.6; color: var(--text-main); }
         .modal-body h3 { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--brand-primary); margin: 20px 0 8px 0; }
         .modal-body p { margin: 0 0 12px 0; }
         .modal-body ul { margin: 0 0 16px 0; padding-left: 20px; }
@@ -649,7 +649,8 @@
         if (panel && panel.classList.contains('has-detail')) {
             // Prefer the JS-driven detent target (--sheet-h) — offsetHeight is mid-transition.
             const v = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sheet-h'));
-            bottom = !isNaN(v) ? v : Math.max(bottom, Math.round(window.innerHeight * 0.52));
+            const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+            bottom = !isNaN(v) ? v : Math.max(bottom, Math.round(vh * 0.52));
         }
         return { top: 0, bottom, left: 0, right: 0 };
     }
@@ -662,7 +663,9 @@
         const panel = () => document.getElementById('data-panel');
         const PEEK_PX = 132;
         function px(name) {
-            const h = window.innerHeight;
+            // Visual viewport excludes the mobile browser's bottom toolbar; window.innerHeight
+            // (layout viewport) does NOT — using it would push the sheet behind the footbar.
+            const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
             return name === 'peek' ? PEEK_PX : name === 'half' ? Math.round(h * 0.52) : Math.round(h * 0.90);
         }
         let current = 'half';
@@ -725,6 +728,14 @@
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cycle(); }
                 else if (e.key === 'ArrowUp')   { e.preventDefault(); snapTo(current === 'peek' ? 'half' : 'full'); }
                 else if (e.key === 'ArrowDown') { e.preventDefault(); snapTo(current === 'full' ? 'half' : 'peek'); }
+            });
+        }
+        // When the mobile browser toolbar shows/hides, the visual viewport resizes — recompute
+        // the active detent in px so the sheet keeps its proportion and never hides behind the footbar.
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                const p = panel();
+                if (mq.matches && p && p.classList.contains('has-detail')) snapTo(current, false);
             });
         }
         return { snapTo, cycle, open, attach, isMobile: () => mq.matches, get current() { return current; } };
@@ -2716,7 +2727,7 @@
             .catch(() => { /* rings fall back to querySourceFeatures */ });
 
         // Load VWH and PKS archetype GeoJSON into JS so ring builders can access properties
-        fetch('data/archetype-vwh.geojson')
+        fetch('data/archetype-vwh.geojson?v=20260603d')
             .then(r => r.json())
             .then(d => {
                 vwhData = d;
@@ -2725,7 +2736,7 @@
             })
             .catch(() => {});
 
-        fetch('data/archetype-pks.geojson')
+        fetch('data/archetype-pks.geojson?v=20260603d')
             .then(r => r.json())
             .then(d => {
                 pksData = d;
@@ -2949,7 +2960,7 @@
         });
 
         // ── Urban Fringe overlay layers (T1/T2/T3 standard color palette) ─────────
-        map.addSource('uf-src', { type: 'geojson', data: 'data/archetype-vwh.geojson' });
+        map.addSource('uf-src', { type: 'geojson', data: 'data/archetype-vwh.geojson?v=20260603d' });
         map.addLayer({
             id: 'uf-t1', type: 'circle', source: 'uf-src',
             filter: ['==', ['get', 'vwh_tier'], 1],
@@ -2988,7 +2999,7 @@
         });
 
         // ── Commuter overlay layers (T1/T2/T3 standard color palette) ───────────
-        map.addSource('cm-src', { type: 'geojson', data: 'data/archetype-pks.geojson' });
+        map.addSource('cm-src', { type: 'geojson', data: 'data/archetype-pks.geojson?v=20260603d' });
         map.addLayer({
             id: 'cm-t1', type: 'circle', source: 'cm-src',
             filter: ['==', ['get', 'commuter_tier'], 1],
