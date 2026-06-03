@@ -64,6 +64,7 @@ T3_INTERCITY_MAX_KM = 80.0
 
 CAR_RENTAL_CHAINS = [
     "enterprise-us", "hertz-us", "avis-us", "europcar-fr", "sixt-de",
+    "enterprise-ca", "hertz-mx",   # Canada + Mexico
 ]
 
 # ── METRO REFERENCE POINTS ────────────────────────────────────────────────────
