@@ -339,38 +339,46 @@ _STRONG_CATS = frozenset({
     "plumbing", "lumber", "flooring", "welding",
 })
 
+# Broadly-distributed categories (present across many countries). A cluster with
+# 2+ of these qualifies even without a strong category.
+_BROAD_CATS = frozenset({
+    "hardware", "mro_industrial", "tool_rental", "electrical",
+})
 
-def tier_vwh(cats: frozenset) -> int:
+
+def qualify_vwh(cats: frozenset) -> bool:
+    """Admit a cluster as an Urban-Fringe co-location.
+
+    Density model (Retail-scale): admit any genuine co-location (2+ distinct
+    categories) OR any single trade-supply store in a STRONG or BROAD category
+    (lone hardware / mro / tool-rental / electrical / plumbing / etc.). A single
+    trade-supply store still marks the light-industrial fringe the archetype is
+    about. Only lone WEAK stores (auto_parts-only, paint-only) are dropped.
     """
-    Strict co-location tiering — mirrors the Retail model: a co-location requires
-    2+ DISTINCT categories (enforced in build(); single-category clusters are dropped).
-    Tier reflects composition strength.
+    return len(cats) >= 2 or bool(cats & (_STRONG_CATS | _BROAD_CATS))
 
-    Strong industrial: mro_industrial, tool_rental, electrical,
-                       plumbing, lumber, flooring, welding
-    Anchor:            hardware
-    Weak signal:       auto_parts, paint  (common in US suburban strips)
 
-    T1: 3+ distinct categories  (rich industrial node)
-        OR hardware + 2+ strong  (established contractor-supply zone)
-    T2: hardware + 1 strong      (solid industrial pair)
-        OR 2+ strong (no hardware)
-    T3: any other 2-category combo  (auto_parts+hardware, auto_parts+paint, hardware+paint)
+def tier_vwh(cats: frozenset, n: int) -> int:
     """
-    strong = cats & _STRONG_CATS
-    has_hw = "hardware" in cats
+    Composition-strength tiering tuned to a believable, even (Retail-shaped) split
+    (~26/36/38 across the qualifying set). Score blends category richness, how many
+    of them are STRONG trade-supply categories, an anchor bonus for hardware, and
+    cluster size (capped). Higher score = richer, larger contractor-supply node.
 
-    # T1 — rich industrial node
-    if len(cats) >= 3:
+        score = |cats| + 2·|cats ∩ STRONG| + (hardware ? 1 : 0) + min(n, 8)
+
+    T1 score >= 10   (rich, established industrial node)
+    T2 score >=  5   (solid industrial pair/cluster)
+    T3 otherwise     (lone strong store, or a thin pair)
+    """
+    score = len(cats) + 2 * len(cats & _STRONG_CATS)
+    if "hardware" in cats:
+        score += 1
+    score += min(n, 8)
+    if score >= 10:
         return 1
-    if has_hw and len(strong) >= 2:
-        return 1
-    # T2 — solid industrial pair
-    if has_hw and len(strong) >= 1:
+    if score >= 5:
         return 2
-    if len(strong) >= 2:
-        return 2
-    # T3 — basic 2-category pair
     return 3
 
 
@@ -404,8 +412,9 @@ def build(output_path: Path):
         chains_in = set(all_recs[i]["chain_id"] for i in comp)
         cats = frozenset(all_recs[i]["category"] for i in comp)
 
-        # Strict co-location: require 2+ DISTINCT categories (mirrors Retail tier_of n>=2)
-        if len(cats) < 2:
+        # Qualify: >=1 STRONG category OR >=2 BROAD categories (de-skews the US-heavy
+        # weak-only pairs; admits EU-distributed lone strong trade-supply stores).
+        if not qualify_vwh(cats):
             n_skipped_single += 1
             continue
 
@@ -437,7 +446,7 @@ def build(output_path: Path):
         enrichment_chains = [all_recs[i]["chain_id"] for i in comp
                              if all_recs[i]["category"] != "hardware"]
 
-        t = tier_vwh(cats)
+        t = tier_vwh(cats, len(comp))
         cid_str = f"vwh-{iso.lower()}-{round(clat, 4)}-{round(clon, 4)}"
 
         features.append({
