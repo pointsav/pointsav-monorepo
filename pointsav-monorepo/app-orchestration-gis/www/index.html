@@ -158,8 +158,9 @@
             #data-panel.has-detail > .panel-header > p,
             #data-panel.has-detail > .panel-header > .region-switch,
             #data-panel.has-detail > .panel-header > .chain-search-wrap { display: none; }
-            /* Peek detent: show only the summary; hide the scrollable detail body */
+            /* Peek detent: show only the summary; hide the scrollable detail body + back strip */
             #data-panel.has-detail[data-detent="peek"] .detail-body { display: none; }
+            #data-panel.has-detail[data-detent="peek"] .context-strip { display: none !important; }
 
             .nav-cluster     { bottom: calc(56dvh + 12px); right: 12px; padding-bottom: 0; transition: bottom 0.30s ease; }
             .nav-cluster.has-detail-nav { bottom: calc(var(--sheet-h, 52dvh) + 12px); }
