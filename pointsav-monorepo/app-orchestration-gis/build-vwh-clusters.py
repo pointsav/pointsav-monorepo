@@ -62,6 +62,7 @@ VWH_CHAINS: dict[str, list[str]] = {
         "obi-de", "obi-at", "obi-it", "obi-pl",
         "hornbach-de", "bauhaus-de", "bauhaus-at",
         "bauhaus-dk", "bauhaus-fi", "bauhaus-no",
+        "bauhaus-es", "brico-depot-es", "bricocenter-it",  # ES/IT density
         "hellweg-de", "biltema-se", "praxis-nl", "gamma-nl",
         "mr-bricolage-fr", "alaska-industrial-hardware-us",
     ],
@@ -82,6 +83,7 @@ VWH_CHAINS: dict[str, list[str]] = {
         "napa-ca", "advance-auto-us", "autozone-mx",
         "partsource-ca",                      # Canada
         "halfords-uk",
+        "norauto-es", "norauto-it", "feu-vert-es", "feu-vert-it",  # ES/IT
     ],
     "electrical": [
         "cef-uk", "rexel-fr", "ahlsell-se",
