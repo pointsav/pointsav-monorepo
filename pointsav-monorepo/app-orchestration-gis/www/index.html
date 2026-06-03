@@ -166,22 +166,15 @@
             .nav-cluster.has-detail-nav { bottom: calc(var(--sheet-h, 52dvh) + 12px); }
             .nav-btn         { width: 80px; }
 
-            /* Real drag grabber + close button (detail mode only) */
+            /* Real drag grabber (detail mode only). Dismiss = map "← Back" button + swipe-down. */
             .sheet-grabber { display: none; }
-            .sheet-close   { display: none; }
             #data-panel.has-detail .sheet-grabber {
                 display: flex; align-items: center; justify-content: center;
                 height: 30px; cursor: grab; touch-action: none;
                 -webkit-tap-highlight-color: transparent;
             }
             #data-panel.has-detail .sheet-grabber:active { cursor: grabbing; }
-            #data-panel.has-detail .sheet-close {
-                display: flex; position: absolute; top: 8px; right: 12px; z-index: 4;
-                width: 32px; height: 32px; align-items: center; justify-content: center;
-                border: 0; border-radius: 50%; background: rgba(15,23,42,0.06);
-                color: var(--text-muted); font-size: 20px; line-height: 1; cursor: pointer;
-            }
-            .panel-collapse-btn { display: none; }   /* superseded by grabber + close */
+            .panel-collapse-btn { display: none; }   /* superseded by grabber */
             .drawer-handle   { display: block; }
             /* Readability floor — nothing below 12px on phones */
             .panel-header p, .civic-box small, .lc-planned { font-size: 12px !important; }
@@ -397,8 +390,6 @@
              aria-label="Resize panel — drag, or tap to cycle peek, half and full">
             <span class="drawer-handle" aria-hidden="true"></span>
         </div>
-        <button class="sheet-close" aria-label="Close panel"
-                onclick="flyToOverview()">×</button>
         <div class="panel-header">
             <button class="panel-collapse-btn"
                     onclick="document.getElementById('data-panel').classList.toggle('collapsed')"
@@ -1698,6 +1689,9 @@
         selectedClusterProps  = p;
         selectedClusterId     = p.id || p.name || null;
         selectedClusterCoords = [p.lon, p.lat];
+        // Show the map "← Back" button (dismiss → overview), same as Retail panels.
+        setNavContext(REGIONS[currentRegion]?.label || 'Overview', flyToOverview,
+                      p.nearest_metro || p.name || p.id || '');
         expandSheetForDetail();   // mobile: grow sheet so stats are visible
 
         const tier = (mode === 'VWH' ? p.vwh_tier : p.commuter_tier) || 3;
