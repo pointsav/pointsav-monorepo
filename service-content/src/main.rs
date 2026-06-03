@@ -86,16 +86,25 @@ fn main() -> NotifyResult<()> {
     let crm_dir = format!("{}/service-people/ledgers", base_dir);
 
     if !Path::new(&corpus_dir).exists() {
-        fs::create_dir_all(&corpus_dir).unwrap();
+        fs::create_dir_all(&corpus_dir).unwrap_or_else(|e| {
+            eprintln!("[FATAL] Cannot create corpus dir {:?}: {e}", corpus_dir);
+            std::process::exit(1);
+        });
     }
     if !Path::new(&crm_dir).exists() {
-        fs::create_dir_all(&crm_dir).unwrap();
+        fs::create_dir_all(&crm_dir).unwrap_or_else(|e| {
+            eprintln!("[FATAL] Cannot create CRM dir {:?}: {e}", crm_dir);
+            std::process::exit(1);
+        });
     }
 
     // ── Graph store initialisation ────────────────────────────────────────────
     let graph_dir = std::env::var("SERVICE_CONTENT_GRAPH_DIR")
         .unwrap_or_else(|_| format!("{}/service-content/graph", base_dir));
-    fs::create_dir_all(&graph_dir).unwrap();
+    fs::create_dir_all(&graph_dir).unwrap_or_else(|e| {
+        eprintln!("[FATAL] Cannot create graph dir {:?}: {e}", graph_dir);
+        std::process::exit(1);
+    });
     let graph_db_path = format!("{}/entities.lbug", graph_dir);
 
     let graph_store: Arc<dyn GraphStore> = Arc::new(
@@ -198,14 +207,30 @@ fn main() -> NotifyResult<()> {
             processed_ledgers.len()
         );
     }
+    let max_defer_retries: u32 = std::env::var("SLM_MAX_DEFER_RETRIES")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(10);
     let mut deferred_ledgers: Vec<String> = Vec::new();
+    let mut deferred_counts: std::collections::HashMap<String, u32> =
+        std::collections::HashMap::new();
     let mut circuit_deferred_ledgers: Vec<String> = Vec::new();
 
     if let Ok(entries) = fs::read_dir(Path::new(&corpus_dir)) {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
-                let filename = path.file_name().unwrap().to_str().unwrap().to_string();
+                let Some(filename) = path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|s| s.to_string())
+                else {
+                    eprintln!(
+                        "[WARN] Skipping file with non-UTF8 or missing name: {:?}",
+                        path
+                    );
+                    continue;
+                };
                 if filename.starts_with("CORPUS_") {
                     if processed_ledgers.contains(&filename) {
                         continue;
@@ -250,7 +275,17 @@ fn main() -> NotifyResult<()> {
                 for path in paths {
                     if let Some(extension) = path.extension() {
                         if extension == "json" {
-                            let filename = path.file_name().unwrap().to_str().unwrap().to_string();
+                            let Some(filename) = path
+                                .file_name()
+                                .and_then(|n| n.to_str())
+                                .map(|s| s.to_string())
+                            else {
+                                eprintln!(
+                                    "[WARN] Skipping file with non-UTF8 or missing name: {:?}",
+                                    path
+                                );
+                                continue;
+                            };
                             if filename.starts_with("CORPUS_")
                                 && !processed_ledgers.contains(&filename)
                                 && !deferred_ledgers.contains(&filename)
@@ -319,7 +354,18 @@ fn main() -> NotifyResult<()> {
                             circuit_deferred_ledgers.push(filename);
                         }
                         ExtractResult::DeferTransient => {
-                            deferred_ledgers.push(filename);
+                            let count = deferred_counts.entry(filename.clone()).or_insert(0);
+                            *count += 1;
+                            if *count >= max_defer_retries {
+                                eprintln!(
+                                    "[WARN] {} reached max defer retries ({}); moving to dead-letter",
+                                    filename, max_defer_retries
+                                );
+                                append_processed_ledger(&processed_ledgers_path, &filename);
+                                processed_ledgers.push(filename);
+                            } else {
+                                deferred_ledgers.push(filename);
+                            }
                         }
                     }
                 }
@@ -740,7 +786,12 @@ fn process_corpus(
 
             // CRM write second — only reaches here if graph succeeded.
             let out_file = format!("{}/SEMANTIC_{}.json", crm_dir, worm_id);
-            fs::write(&out_file, semantic_ledger.to_string()).unwrap();
+            if let Err(e) = fs::write(&out_file, semantic_ledger.to_string()) {
+                eprintln!(
+                    "[ERROR] CRM write failed after graph upsert (orphaned entities possible): {e}"
+                );
+                return ExtractResult::Failed;
+            }
             println!(
                 "  -> [WATCHER] Semantic Integration Complete: {} Nodes Secured.",
                 enriched_crm.len()
