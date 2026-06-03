@@ -55,6 +55,23 @@
         .panel-header p  { margin: 2px 0 0 0; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
         .panel-content { padding: 0 20px 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .data-block  { margin-bottom: 14px; }
+        /* Mobile peek-summary: a one-row digest shown at the peek detent. Hidden on desktop. */
+        .peek-summary { display: none; }
+        @media (max-width: 768px) {
+            /* Peek-summary shows ONLY at the peek detent; half/full show the full detail body. */
+            #data-panel.has-detail[data-detent="peek"] .peek-summary {
+                display: flex; align-items: center; gap: 10px;
+                padding: 2px 0 12px; margin-bottom: 4px;
+                border-bottom: 1px solid var(--border-soft);
+            }
+            .peek-summary .ps-text { min-width: 0; flex: 1; }
+            .peek-summary .ps-name { font-size: 15px; font-weight: 800; color: var(--brand-primary);
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .peek-summary .ps-stat { font-size: 13px; color: var(--text-muted);
+                display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+            .peek-summary .ps-stat strong { color: #111827; }
+            .peek-summary .tier-badge { flex-shrink: 0; }
+        }
         .data-label  { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
         .data-value  { font-size: 18px; font-weight: 800; color: var(--text-main); }
         .tier-badge  { display: inline-block; padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 800; letter-spacing: 0.3px; }
@@ -738,6 +755,18 @@
         panel.removeAttribute('data-detent');
         document.documentElement.style.removeProperty('--sheet-h');
         document.querySelector('.nav-cluster')?.classList.remove('has-detail-nav');
+    }
+
+    // One-row digest shown at the peek detent on mobile (hidden on desktop via CSS).
+    // name: plain string; tierBadgeHTML + statHTML: pre-built safe HTML fragments.
+    function peekSummaryHTML(name, tierBadgeHTML, statHTML) {
+        return `<div class="peek-summary">
+            ${tierBadgeHTML || ''}
+            <div class="ps-text">
+                <div class="ps-name">${escapeHtml(name || '—')}</div>
+                <div class="ps-stat">${statHTML || ''}</div>
+            </div>
+        </div>`;
     }
 
     function setNavContext(backLabel, backFn, currentLabel) {
@@ -1696,7 +1725,13 @@
             anchorsHtml = `<div class="anchor-pills">${tp}</div>${cr}`;
         }
 
-        document.getElementById('inspector').innerHTML = `
+        const peek = peekSummaryHTML(
+            p.nearest_metro || p.name || p.id || '',
+            `<span class="tier-badge" style="background:${tc.fill};color:${tc.text};">T${tier}</span>`,
+            `<strong>${countCount}</strong> ${countLabel}`
+        );
+        document.getElementById('inspector').innerHTML = peek + `
+          <div class="detail-body">
             <div class="data-block" style="padding-top:16px;">
                 <div class="data-label">${archLabel} · ${escapeHtml(countryName(p.iso) || p.iso || '')}</div>
                 <div class="region-name-hero">${escapeHtml(p.nearest_metro || p.name || p.id || '')}</div>
@@ -1722,6 +1757,7 @@
                 <div class="data-label">${mode === 'VWH' ? 'Chains' : 'Transit'}</div>
                 ${anchorsHtml}
             </div>
+          </div>
         `;
     }
 
@@ -2344,7 +2380,11 @@
         const sourceBadgeTxt = catchmentSourceLabel(p, catchmentSubLayer);
 
 
-        document.getElementById('inspector').innerHTML = `
+        const _peekCluster = peekSummaryHTML(clusterName,
+            `<span class="tier-badge" style="background:${tc.fill};color:${tc.text};">${tc.name}</span>`,
+            `<strong>${p.member_count ?? p.count_3km ?? '—'}</strong> anchors`);
+        document.getElementById('inspector').innerHTML = _peekCluster + `
+            <div class="detail-body">
             <div class="data-block" style="padding-top:16px;">
                 <div class="data-label">Regional Market</div>
                 ${regionBlock}
@@ -2547,6 +2587,7 @@
                         return html;
                     })()}
                 </div>
+            </div>
             </div>
         `;
         loadCatchmentStats(p.cluster_id || p.id);
