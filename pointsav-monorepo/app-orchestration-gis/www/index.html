@@ -1713,8 +1713,8 @@
 
     function applyUrbanFringeStyle() {
         activeArchetype = urbanFringeActive ? 'VWH' : null;
-        // Archetype dots: visible whenever active; paint opacity expression fades them at z>9
-        const vis = urbanFringeActive ? 'visible' : 'none';
+        // Archetype dots: GLOBAL overview only — hidden in LOCAL so the ring has no centre dot.
+        const vis = (urbanFringeActive && prodView.mode === 'GLOBAL') ? 'visible' : 'none';
         ['uf-t1', 'uf-t2', 'uf-t3'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
         });
@@ -1749,8 +1749,8 @@
 
     function applyCommuterStyle() {
         activeArchetype = commuterActive ? 'PKS' : null;
-        // Archetype dots: visible whenever active; paint opacity expression fades them at z>9
-        const vis = commuterActive ? 'visible' : 'none';
+        // Archetype dots: GLOBAL overview only — hidden in LOCAL so the ring has no centre dot.
+        const vis = (commuterActive && prodView.mode === 'GLOBAL') ? 'visible' : 'none';
         ['cm-t1', 'cm-t2', 'cm-t3'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
         });
@@ -1900,12 +1900,11 @@
         setVis(['cluster-centroid'], false);
         setVis(['proximity-merged-label'], false);
 
-        // Regional market stars: GLOBAL-only (no ring equivalent).
-        // Archetype dots (uf/cm): kept visible in LOCAL when active — opacity expression fades them.
+        // GLOBAL-only overlays: rm-stars + archetype dots. In LOCAL (ring) mode they are all
+        // hidden so the ring stands alone with no centre dot — identical to Retail.
         if (local) {
-            setVis(['rm-stars-glow', 'rm-stars-dot'], false);
-            if (!urbanFringeActive) setVis(['uf-t1', 'uf-t2', 'uf-t3'], false);
-            if (!commuterActive)    setVis(['cm-t1', 'cm-t2', 'cm-t3'], false);
+            setVis(['rm-stars-glow', 'rm-stars-dot',
+                    'uf-t1', 'uf-t2', 'uf-t3', 'cm-t1', 'cm-t2', 'cm-t3'], false);
         }
     }
 
