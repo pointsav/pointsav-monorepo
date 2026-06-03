@@ -109,10 +109,21 @@ Add this to the shutdown checklist before the commit step. [2026-06-02 totebox@p
 
 ## Pending project-design
 
+- [ ] **DESIGN-wiki-institutional-redesign** — staged in `.agent/drafts-outbound/DESIGN-wiki-institutional-redesign.draft.md`; **`master_cosign:` required** before token changes committed (color #0E3A66, body 18px, nav 14px) [2026-06-03 totebox@claude-code]
 - [ ] **DESIGN-docs-sidenav-component** — staged in drafts-outbound; routed via outbox
       [2026-06-01 totebox@claude-code]
 - [ ] **DESIGN-doc-header-component** — staged in drafts-outbound; routed via outbox
       [2026-06-01 totebox@claude-code]
+
+## Institutional UX — P0 implementation (project-knowledge owns)
+
+From Opus browser audit 2026-06-03. Full brief: `.agent/drafts-outbound/DESIGN-wiki-institutional-redesign.draft.md`
+
+- [ ] **Build-time link checker** — add internal href validation to Rust render binary; fail build on any 404 in chrome or featured slots. Catches corporate slug bugs + projects footer 404s in CI [2026-06-03 totebox@claude-code]
+- [ ] **projects.woodfinegroup.com vendor brand leak** — nav/login/footer still leaks pointsav.com nav links + /wiki/pointsav-media-kit footer link; feeds.rs "PointSav Knowledge" DONE (86db62e9); server.rs nav/footer/wordmark fix is a separate large scope item [2026-06-03 totebox@claude-code]
+- [x] **Author Disclaimer + Contact pages for projects.woodfinegroup.com** — DONE 1cd2644 (4 files: contact.md + .es.md + disclaimers.md + .es.md); footer links now resolve [2026-06-03 totebox@claude-code]
+- [x] **Category empty state redesign** — DONE 86db62e9; `wiki-empty-state` div replaces bare `p.wiki-cat-page-empty`; CSS added; takes effect on next binary deploy [2026-06-03 totebox@claude-code]
+- [x] **corporate.woodfinegroup.com featured-article slug fix** — already fixed in commit 326d6e2 (2026-05-17); confirmed by content audit [2026-06-03 totebox@claude-code]
 
 ## Code fix needed
 
@@ -120,6 +131,10 @@ Add this to the shutdown checklist before the commit step. [2026-06-02 totebox@p
       and `POST /api/doorman/instruct` to return 501; both return 404 because the routes don't
       exist in server.rs. Add two minimal stub handlers returning `StatusCode::NOT_IMPLEMENTED`.
       Pre-existing gap; not a regression from UX batch. [2026-06-02 totebox@claude-code]
+- [ ] **Navigation portlet test failing** — `server::tests::wiki_page_renders_navigation_portlet`
+      asserts `html.contains("sidebar")` but article pages use `docs-sidenav` class (no "sidebar"
+      string unless TOC rail is present). Test was written for a planned Wikipedia-parity portlet
+      feature not yet implemented. Pre-existing gap. [2026-06-03 totebox@claude-code]
 
 ## Standing deferred
 
