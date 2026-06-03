@@ -3,50 +3,61 @@
 Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 
-Last updated: 2026-06-02
+Last updated: 2026-06-03
 
 ---
 
-## Urban Fringe + Commuter rings — outstanding after 2026-06-02 session
+## Commuter/metro rail ingest — RUNNING OVERNIGHT 2026-06-03 (autonomous)
 
-- [ ] **Run commuter/metro rail ingest** — `python3 app-orchestration-gis/ingest-osm-railway-commuter.py --all`
-      after 22:00 Vancouver (05:00 UTC). 20 countries; ~60–90 min Overpass runtime.
-      Writes to `cluster-totebox-personnel-1/service-places/cleansed-civic-railway-commuter.jsonl`.
-      Scope: NJ Transit, LIRR, Metro-North, Metra, Caltrain, BART, Transilien, RER, S-Bahn,
-      Pendeltåg, and equivalents. Metro/subway end-of-line stations included. [2026-06-02 jwoodfine]
+- [~] **Commuter ingest + PKS rebuild + gateway sync — running detached tonight.**
+      Launched 06:24 UTC (23:24 Vancouver) as `nohup run-commuter-build.sh &`
+      (PID 958517 `ingest-osm-railway-commuter.py --all`). The wrapper self-completes:
+      `ingest --all && build-pks-clusters.py && cp work/archetype-pks.geojson → gateway`.
+      `at`/`atq` is NOT installed on this VM → detached nohup is the overnight mechanism.
+      Survives session close; gateway is static nginx (copy-to-deploy, no restart).
+      Log: `app-orchestration-gis/commuter-ingest.log` (ends `=== DONE ===`). Flip to [x] in the
+      morning once the monitor confirms PKS T2 jumped. [2026-06-03 auto]
 
-- [ ] **Re-run `test-cluster-archetypes.py`** — after commuter ingest completes. Produces updated
-      `work/archetype-pks.geojson` with commuter+metro stations (expect 8,000–25,000 candidates
-      depending on operator filter coverage). [2026-06-02 jwoodfine]
-
-- [ ] **Sync updated archetype-pks.geojson to gateway** — copy to
-      `deployments/gateway-orchestration-gis-1/www/data/archetype-pks.geojson`. PKS rings in the
-      UI pull from that path. No code change needed — UI already supports the updated data.
-      [2026-06-02 jwoodfine]
-
-- [ ] **Stage 6** — promote commits `438b37d6` + `6e84a3a4` + `a1c0ffab` (Urban Fringe expansion
-      + BRIEF update) to canonical monorepo. Command Session runs `bin/promote.sh`. [2026-06-02 jwoodfine]
+- [ ] **Stage 6** — promote this session's archive-local commits (VWH CA/MX/ES/IT chains, PKS
+      strict model, map UX, mobile + SEO) to canonical monorepo. Command Session runs
+      `bin/promote.sh`. Note: monorepo gitignores `.agent/`. [2026-06-03]
 
 ---
 
-## VWH data quality — enrichment-chain JSONL iso_country_code mismatches
+## VWH data quality — iso_country_code mismatches — FIXED 2026-06-03
 
-Surfaced during the 2026-06-02 enrichment-chain-led VWH expansion. Affects `wurth-de.jsonl`
-and potentially other multi-country ingest files where the chain ID suffix (`-de`, `-fr`, etc.)
-is a chain identifier, not a country filter.
+- [x] **Coordinate-based ISO assignment** — `ingest-osm.py` now resolves `iso_country_code` from
+      the node's lat/lon via Shapely point-in-polygon for multi-country chains (instead of
+      defaulting to the YAML `country:` field). Re-ran wurth-de, rexel-fr, loxam-fr, kiloutou-fr.
+      Würth now correctly DE 411 / FI 72 / IT 59 / PL 52 / AT 44 / NL 29 / PT 27 … (was DE 847).
+      VWH per-country counts corrected (IT/FI/PL/AT/NL/PT all rose). [2026-06-03]
 
-- [ ] **`wurth-de.jsonl` — GR/PT/PL branches tagged `iso_country_code: DE`** — confirmed: Würth
-      branches at Thessaloniki (GR), Braga (PT), and Wrocław (PL) area coordinates have
-      `iso_country_code: DE`. Root cause: OSM ingest did not filter by geo-bounding-box per
-      country; all records defaulted to the YAML `country: DE` field. Coordinates are correct;
-      only the ISO attribute is wrong. Impact: these sites appear under DE in VWH country counts
-      instead of GR/PT/PL. Fix: re-run `ingest-osm.py --chain wurth-de` with per-country
-      geo-filtering, OR add a post-ingest ISO correction pass. [2026-06-02 pwoodfine]
+---
 
-- [ ] **Audit other `*-de` / `*-fr` multi-country chain YAMLs for the same issue** — candidates:
-      `rexel-fr.jsonl` (rexel-fr has GB/BE/DE/SE records — check their ISO codes), `loxam-fr.jsonl`,
-      `kiloutou-fr.jsonl`. If the YAML `country:` field drives `iso_country_code` rather than the
-      actual OSM node's country, all multi-country ingests have this defect. [2026-06-02 pwoodfine]
+## Urban Fringe chain expansion — 2026-06-03 session
+
+Independent strict co-location model (≥2 distinct categories, no metro gate, no hypermarket
+disqualifier) — `build-vwh-clusters.py`. VWH total now **3,520**. Country chain additions:
+
+- [x] **CA/MX** — RONA, Home Hardware (469), Fastenal CA, United Rentals CA, PartSource, Truper MX,
+      Enterprise CA, Hertz MX. CA 32→170, MX→72.
+- [x] **ES/IT** — Norauto + Feu Vert (auto parts), Bauhaus/Brico Dépôt/AKI (108)/Bricomart/Bricoman
+      ES hardware, Bricocenter/Brico io (72)/Bricoman IT hardware, Rexel/Sonepar electrical,
+      Loxam/Kiloutou tool rental. **Spain 6→69, Italy 11→44.**
+- [ ] **`bricomart-es` returns 0 in OSM** — brand:wikidata + name query both empty; ~55 stores
+      exist but are tagged differently (possibly under Leroy Merlin brand). Re-investigate tagging
+      or skip. Wired but contributes nothing. [2026-06-03]
+- [ ] **ES/IT B2B electrical/tool chains thinly mapped** — Loxam/Kiloutou/Rexel/Sonepar ES/IT
+      yielded only ~20 usable records (trade counters under-mapped in OSM). Low-priority backlog.
+      [2026-06-03]
+
+---
+
+## AEC builds — STILL FAILING — do NOT auto-run overnight
+
+- [ ] **Seismic + flood builds fail** (see JOURNAL J3 block below). Excluded from the overnight
+      run by design — a broken build must not run unattended. Daytime fix needed in
+      `build-aec-seismic.sh` / `build-aec-flood.sh` before scheduling. [2026-06-03]
 
 ---
 
