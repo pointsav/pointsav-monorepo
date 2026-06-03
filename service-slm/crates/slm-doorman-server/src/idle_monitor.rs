@@ -50,7 +50,9 @@ impl IdleMonitorConfig {
         if yoyo_endpoint.is_empty() {
             return None;
         }
-        let yoyo_bearer = std::env::var("SLM_YOYO_BEARER").ok().filter(|s| !s.is_empty());
+        let yoyo_bearer = std::env::var("SLM_YOYO_BEARER")
+            .ok()
+            .filter(|s| !s.is_empty());
         let idle_minutes: u64 = std::env::var("SLM_YOYO_IDLE_MINUTES")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -97,7 +99,14 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
     loop {
         tokio::time::sleep(POLL_INTERVAL).await;
 
-        match poll_active_slots(&client, &config.yoyo_endpoint, config.yoyo_bearer.as_deref(), &config.metrics_key).await {
+        match poll_active_slots(
+            &client,
+            &config.yoyo_endpoint,
+            config.yoyo_bearer.as_deref(),
+            &config.metrics_key,
+        )
+        .await
+        {
             Some(0) => {
                 // Metrics reachable, zero active slots — VM is up but idle.
                 // Let the idle clock run; fire stop if threshold exceeded.
@@ -173,7 +182,7 @@ async fn poll_active_slots(
     let text = resp.text().await.ok()?;
     for line in text.lines() {
         if line.starts_with(metrics_key) && !line.starts_with('#') {
-            if let Some(val) = line.splitn(2, ' ').nth(1) {
+            if let Some(val) = line.split_once(' ').map(|x| x.1) {
                 return val.trim().parse::<f64>().ok().map(|f| f as u64);
             }
         }
@@ -227,7 +236,10 @@ async fn stop_gcp_instance(
     if resp.status().is_success() {
         Ok(())
     } else {
-        Err(format!("GCP instances.stop returned HTTP {}", resp.status()))
+        Err(format!(
+            "GCP instances.stop returned HTTP {}",
+            resp.status()
+        ))
     }
 }
 
@@ -303,7 +315,7 @@ mod tests {
         let mut result: Option<u64> = None;
         for line in metrics_text.lines() {
             if line.starts_with("llama_active_slots_total") && !line.starts_with('#') {
-                if let Some(val) = line.splitn(2, ' ').nth(1) {
+                if let Some(val) = line.split_once(' ').map(|x| x.1) {
                     result = val.trim().parse::<f64>().ok().map(|f| f as u64);
                 }
             }
