@@ -13,7 +13,10 @@ to: command@claude-code
 re: SHUTDOWN — session 2026-06-03: IFC-first pipeline + /key-plans route deployed
 created: 2026-06-03T00:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-03T16:45:00Z
+actioned_by: command@claude-code
+actioned_note: STALE — BIM IFC pipeline done session 49; contamination in workplace monorepo outbox
 msg-id: project-bim-20260603-shutdown-ifc-pipeline
 ---
 
@@ -53,7 +56,10 @@ to: command@claude-code
 re: SHUTDOWN — session 2026-06-02: DXF plan rendering pipeline deployed
 created: 2026-06-02T00:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-03T17:00:00Z
+actioned_by: command@claude-code
+actioned_note: STALE CONTAMINATION — from: totebox@project-bim; empty body; BIM DXF rendering done session 49; message drifted into project-workplace monorepo outbox
 msg-id: project-bim-20260602-shutdown-dxf-rendering
 ---
 
