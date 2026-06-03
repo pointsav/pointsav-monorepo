@@ -116,6 +116,63 @@
   .sc-allctl { display: flex; }
 }
 
+/* ── Print-doc pages (Summary, Regional Markets) — mobile fixes ──────────────── */
+/* These two pages are built from a fixed 10-inch print template; the per-page reflow
+   unlocks width + stacks grids + scales primary fonts. This block fixes the second tier:
+   header/footer crush, remaining sub-12px text, fixed-inch widths, pipeline arrows, spacing.
+   Class names are unique to the print-doc pages — no collision with article pages. */
+@media (max-width: 768px) {
+  /* 1 — Header + footer stop crushing: stack the brand/title/meta vertically */
+  .pg-hd {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    border-bottom-width: 2px;
+  }
+  .pg-hd .org  { font-size: 12px !important; font-weight: 700; letter-spacing: 0.08em;
+                 text-transform: uppercase; color: #1a3a6b; }
+  .pg-hd .ttl  { font-size: 21px !important; font-weight: 800; line-height: 1.25; text-align: left; }
+  .pg-hd .meta { font-size: 12px !important; text-align: left !important; color: #666; }
+  .pg-ft {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 12px !important;
+  }
+
+  /* 2 — Complete the font floor (print-point text the reflow missed) */
+  .comp-lbl, .comp-pct, .comp-fill, .comp-note,
+  .res-box li, .res-box h4, .cites, .data-note p,
+  .pipe-body, .pipe-tag, .tc, .cc-mem {
+    font-size: 13px !important;
+    line-height: 1.45;
+  }
+
+  /* 3 — Unlock fixed-inch widths so the T2 composition rows wrap */
+  .comp-lbl { min-width: 0 !important; }
+  .comp-pct { width: auto !important; white-space: normal !important; }
+
+  /* 4 — Pipeline connector arrows: point DOWN between vertically-stacked stages */
+  .pipe-stage { position: relative; }
+  .pipe-stage::after {
+    content: "↓" !important;
+    right: 50% !important;
+    left: auto !important;
+    top: auto !important;
+    bottom: -8px !important;
+    transform: translateX(50%) !important;
+  }
+  .pipe-stage:last-child::after { display: none !important; }
+
+  /* 5 — Spacing / legibility polish */
+  .data-note { padding: 10px 12px !important; }
+  .tb { height: 12px !important; }
+  .cc { padding: 8px 10px !important; }
+  .tc { gap: 10px !important; }
+}
+
 /* ── Desktop: sections always open, no toggle affordance ─────────────────────── */
 @media (min-width: 769px) {
   .sc-toggle {
