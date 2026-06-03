@@ -1,4 +1,7 @@
 __pycache__/
 work/
-www/lib/
 *.pyc
+# Vendored third-party browser libs (restored at deploy) — not first-party source
+www/lib/maplibre-gl.js
+www/lib/maplibre-gl.css
+www/lib/pmtiles.js
