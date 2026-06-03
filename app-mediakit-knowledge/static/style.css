@@ -129,7 +129,7 @@
   --accent:      #C7A961; /* warm gold; featured rule, blockquote border */
 
   /* Light palette */
-  --bg:          #F7F9FA;
+  --bg:          #FBFAF7;
   --bg-elevated: #FFFFFF;
   --bg-subtle:   #EEF1F4;
   --bg-hover:    #E7ECF1;
@@ -291,7 +291,7 @@ body {
   font-family: var(--font-body);
   font-size: var(--text-base);   /* 17px */
   line-height: var(--leading-base);
-  color: var(--fg-2);
+  color: var(--fg-1);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -364,9 +364,9 @@ kbd {
   gap: 24px;
   align-items: center;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.08em;
   color: var(--navy, #164679);
   text-transform: uppercase;
 }
@@ -1214,8 +1214,8 @@ html[data-auth="anon"] .doc-edit-row { display: none; }
 .side-group__title {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 11px;
-  letter-spacing: 0.16em;
+  font-size: 12px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--fg-3);
   padding: 0 10px 8px;
@@ -1617,8 +1617,8 @@ html[data-theme="dark"] .recent__cat {
   max-width: var(--measure);
   font-family: var(--font-reading);   /* Source Serif 4 — institutional reading body (master §7) */
   font-size: var(--text-base);        /* 17px */
-  line-height: var(--leading-base);   /* 1.6 */
-  color: var(--fg-2);
+  line-height: var(--knowledge-editorial-reading-body-lh);  /* 1.70 — SpringerNature/Nature standard */
+  color: var(--fg-1);                 /* near-black #111827 — institutional ink, not mid-gray */
   text-wrap: pretty;                  /* avoid orphans / short last lines */
 }
 .prose > * + * { margin-top: 1.1em; }
@@ -1636,6 +1636,8 @@ html[data-theme="dark"] .recent__cat {
   margin-top: 2.2em;
   margin-bottom: 0.5em;
   padding-top: 0.3em;
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--rule);  /* encyclopedic section divider — Wikipedia/Nature/GOV.UK pattern */
 }
 .prose h3 {
   font-weight: 600;
