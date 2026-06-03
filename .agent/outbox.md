@@ -48,7 +48,10 @@ to: command@claude-code
 re: Stage 6 ready — pointsav-design-system 3 new commits (teal/red tokens + research + component)
 created: 2026-06-03T15:45:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-03T16:45:00Z
+actioned_by: command@claude-code
+actioned_note: origin-staging-p pushed (252a035); design-system promoted (3 commits: teal/red tokens + research + component); token sync ran; local-design.service reloaded.
 msg-id: project-design-20260603-stage6-signal
 ---
 
