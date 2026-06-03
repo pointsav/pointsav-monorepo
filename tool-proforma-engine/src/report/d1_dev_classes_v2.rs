@@ -312,47 +312,17 @@ pub fn render_html() -> String {
     let mut s = String::new();
     s.push_str(HEAD);
     s.push_str("<body>\n");
+    s.push_str("<h1>D1 Development Classes — Calibrated to 10.5% Dev Yield + 6.25% Cap Rate</h1>\n");
+    s.push_str("<p>PCLP 1 building portfolio per prior-work deliverables 2026-05-14 (<code>inputs/pclp1-portfolio-summary-v1.html</code> + <code>inputs/pclp1-building-class-proformas-v1.html</code>). Engine v3 supersedes the earlier <code>d1-dev-classes-2026-06-03-v2.html</code>.</p>\n");
+    s.push_str("<p>All amounts CAD. Forward-looking projections; planned / intended values per BCSC continuous-disclosure posture.</p>\n");
 
-    s.push_str(&render_cover());
-
-    s.push_str("<div class=\"page-break\">\n");
     s.push_str(&render_portfolio_allocation());
     s.push_str(&render_distribution_tables());
-    s.push_str("</div>\n");
-
-    s.push_str("<div class=\"page-break\">\n");
     s.push_str(&render_reference_proformas());
-    s.push_str("</div>\n");
-
-    s.push_str("<div class=\"page-break\">\n");
     s.push_str(&render_per_building_breakdown());
-    s.push_str("</div>\n");
-
     s.push_str(&render_assumptions_and_disclaimer());
 
     s.push_str("</body></html>\n");
-    s
-}
-
-// ─── Section 1 — Cover ──────────────────────────────────────────────────────
-
-fn render_cover() -> String {
-    let mut s = String::new();
-    s.push_str("<div class=\"no-print\">\n");
-    s.push_str("  <button class=\"print-btn\" onclick=\"window.print()\">Print / Save as PDF</button>\n");
-    s.push_str("  &nbsp; <em style=\"font-size:8pt;color:#666;\">Landscape · Letter · 0.75 in margins</em>\n");
-    s.push_str("</div>\n\n");
-
-    s.push_str("<div class=\"cover page-break-avoid\">\n");
-    s.push_str("  <h1>Woodfine Direct-Hold Solutions</h1>\n");
-    s.push_str("  <h2>Building Portfolio &amp; Class Proformas — PCLP 1</h2>\n");
-    s.push_str("  <div class=\"cover-meta\">\n");
-    s.push_str("    <span>Prepared by: Woodfine Management Corp.</span>\n");
-    s.push_str("    <span>Portfolio: 70 buildings · 3,894,100 sqft GLA</span>\n");
-    s.push_str("    <span>Yield target: 10.5% · Cap rate: 6.25%</span>\n");
-    s.push_str("    <span>Deliverable — 2026-06-03</span>\n");
-    s.push_str("  </div>\n");
-    s.push_str("</div>\n\n");
     s
 }
 
@@ -360,14 +330,18 @@ fn render_cover() -> String {
 
 fn render_portfolio_allocation() -> String {
     let mut s = String::new();
-    s.push_str("<h2 class=\"section\">Portfolio Allocation Summary</h2>\n");
-    s.push_str("<p class=\"stmt-note\">Four Development Classes. Geometric distribution — fewer total buildings than a uniform floor-count assumption, variety preserved across all classes. Floor plates: SO = 19,000 sqft/floor; PC = 21,000 sqft/floor.</p>\n");
+    s.push_str("<h2>Portfolio Allocation Summary</h2>\n");
+    s.push_str("<p class=\"note\">Four Development Classes. Geometric distribution — fewer total buildings than a uniform floor-count assumption, variety preserved across all classes. Floor plates: SO = 19,000 sqft/floor; PC = 21,000 sqft/floor.</p>\n");
 
-    s.push_str("<table class=\"alloc-table page-break-avoid\">\n");
-    s.push_str("<tr><th style=\"min-width:200px\">Development Class</th><th>Buildings</th><th>GLA (sqft)</th><th>% of Portfolio</th><th>Cost/sqft</th><th>Total Cost</th></tr>\n");
+    s.push_str("<table>\n");
+    s.push_str("<tr><th>Development Class</th><th>Buildings</th><th>GLA (sqft)</th><th>% of Portfolio</th><th>Cost/sqft</th><th>Total Cost</th><th>Rent (10.5%)</th><th>NOI (57%)</th><th>Asset Value (6.25%)</th><th>Depreciation (40yr)</th></tr>\n");
 
     let total_gla: f64 = ALL_CLASSES.iter().map(|c| c.class_gla()).sum();
     let total_cost: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_cost).sum();
+    let total_rent: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_rent).sum();
+    let total_noi: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_noi).sum();
+    let total_av: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_asset_value).sum();
+    let total_depr: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_depreciation).sum();
     let total_count: u32 = ALL_CLASSES.iter().map(|c| c.building_count()).sum();
 
     for class in ALL_CLASSES {
@@ -378,25 +352,33 @@ fn render_portfolio_allocation() -> String {
             format!("{}", r.building_count)
         };
         s.push_str(&format!(
-            "<tr><td><strong>{}</strong></td><td>{}</td><td>{}</td><td>{}</td><td>${:.0}</td><td>{}</td></tr>\n",
+            "<tr><td>{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">${:.0}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td></tr>\n",
             class.label,
             bldg_label,
             fmt_int(r.class_gla),
             fmt_pct(r.class_gla / total_gla),
             class.cost_per_sf_gla,
             fmt_money_m1(r.class_cost),
+            fmt_money_m_yr(r.class_rent),
+            fmt_money_m_yr(r.class_noi),
+            fmt_money_m1(r.class_asset_value),
+            fmt_money_m_yr(r.class_depreciation),
         ));
     }
     s.push_str(&format!(
-        "<tr class=\"total\"><td><strong>Total Portfolio</strong></td><td><strong>{}</strong></td><td><strong>{}</strong></td><td><strong>100%</strong></td><td>—</td><td><strong>{}</strong></td></tr>\n",
+        "<tr class=\"total\"><td>Total Portfolio</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">100%</td><td class=\"r\">—</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td></tr>\n",
         total_count,
         fmt_int(total_gla),
         fmt_money_m1(total_cost),
+        fmt_money_m_yr(total_rent),
+        fmt_money_m_yr(total_noi),
+        fmt_money_m1(total_av),
+        fmt_money_m_yr(total_depr),
     ));
     s.push_str("</table>\n");
 
     s.push_str(&format!(
-        "<p class=\"stmt-note\">Portfolio GLA: {} sqft (99.7% of 3,906,855 sqft base-case target). Construction cost does not scale linearly with GLA — revenue and balance sheet computations use total construction cost by class.</p>\n",
+        "<p class=\"note\">Portfolio GLA: {} sqft (99.7% of 3,906,855 sqft base-case target). Construction cost does not scale linearly with GLA — revenue and balance sheet computations use total construction cost by class.</p>\n",
         fmt_int(total_gla)
     ));
     s
@@ -425,7 +407,7 @@ fn render_distribution_for_class(class: &DevClassV2) -> String {
     } else {
         format!("{} — Distribution ({} Buildings)", class.label, class.building_count())
     };
-    s.push_str(&format!("<h2 class=\"section\" style=\"margin-top:24px\">{}</h2>\n", heading));
+    s.push_str(&format!("<h2>{}</h2>\n", heading));
 
     let note = match class.label {
         "Suburban Office" => "Floor plate: 19,000 sqft per floor. Geometric distribution: most 7-floor, many 6-floor, fewer 8-floor, some 9-floor.",
@@ -434,11 +416,11 @@ fn render_distribution_for_class(class: &DevClassV2) -> String {
         "Retail Select" => "Single-storey retail pads. Three size categories. Construction cost: $260/sqft.",
         _ => "",
     };
-    s.push_str(&format!("<p class=\"stmt-note\">{}</p>\n", note));
+    s.push_str(&format!("<p class=\"note\">{}</p>\n", note));
 
     if class.pairs {
-        s.push_str("<table class=\"detail-table page-break-avoid\">\n");
-        s.push_str("<tr><th style=\"min-width:180px\">Pair Type</th><th>Distribution</th><th>Pairs</th><th>Buildings</th><th>Sqft/Pair</th><th>GLA (sqft)</th></tr>\n");
+        s.push_str("<table>\n");
+        s.push_str("<tr><th>Pair Type</th><th>Distribution</th><th>Pairs</th><th>Buildings</th><th>Sqft/Pair</th><th>GLA (sqft)</th></tr>\n");
         for v in class.variants {
             let pairs = v.count / 2;
             let pair_label = if v.label.contains("Medium") {
@@ -448,7 +430,7 @@ fn render_distribution_for_class(class: &DevClassV2) -> String {
             };
             let pair_sqft = v.floor_plate_sf * 2.0;
             s.push_str(&format!(
-                "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>\n",
+                "<tr><td>{}</td><td>{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td></tr>\n",
                 pair_label,
                 v.distribution,
                 pairs,
@@ -459,7 +441,7 @@ fn render_distribution_for_class(class: &DevClassV2) -> String {
         }
         let avg_pair = class.class_gla() / (class.building_count() / 2) as f64;
         s.push_str(&format!(
-            "<tr class=\"total\"><td><strong>Total</strong></td><td>—</td><td><strong>{}</strong></td><td><strong>{}</strong></td><td>avg {}</td><td><strong>{}</strong></td></tr>\n",
+            "<tr class=\"total\"><td>Total</td><td>—</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">avg {}</td><td class=\"r\">{}</td></tr>\n",
             class.building_count() / 2,
             class.building_count(),
             fmt_int(avg_pair),
@@ -472,9 +454,9 @@ fn render_distribution_for_class(class: &DevClassV2) -> String {
         } else {
             "Floor Count"
         };
-        s.push_str("<table class=\"detail-table page-break-avoid\">\n");
+        s.push_str("<table>\n");
         s.push_str(&format!(
-            "<tr><th style=\"min-width:180px\">{}</th><th>Distribution</th><th>Buildings</th><th>Sqft/Building</th><th>GLA (sqft)</th></tr>\n",
+            "<tr><th>{}</th><th>Distribution</th><th>Buildings</th><th>Sqft/Building</th><th>GLA (sqft)</th></tr>\n",
             col1
         ));
         for v in class.variants {
@@ -484,7 +466,7 @@ fn render_distribution_for_class(class: &DevClassV2) -> String {
                 format!("{} floors", v.floors)
             };
             s.push_str(&format!(
-                "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>\n",
+                "<tr><td>{}</td><td>{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td></tr>\n",
                 row_label,
                 v.distribution,
                 v.count,
@@ -494,7 +476,7 @@ fn render_distribution_for_class(class: &DevClassV2) -> String {
         }
         let avg_bldg = class.class_gla() / class.building_count() as f64;
         s.push_str(&format!(
-            "<tr class=\"total\"><td><strong>Total</strong></td><td>—</td><td><strong>{}</strong></td><td>avg {}</td><td><strong>{}</strong></td></tr>\n",
+            "<tr class=\"total\"><td>Total</td><td>—</td><td class=\"r\">{}</td><td class=\"r\">avg {}</td><td class=\"r\">{}</td></tr>\n",
             class.building_count(),
             fmt_int(avg_bldg),
             fmt_int(class.class_gla()),
@@ -508,8 +490,8 @@ fn render_distribution_for_class(class: &DevClassV2) -> String {
 
 fn render_reference_proformas() -> String {
     let mut s = String::new();
-    s.push_str("<h2 class=\"section\">Reference Proformas by Development Class</h2>\n");
-    s.push_str("<p class=\"stmt-note\">Each proforma uses a reference building — the most common floor count or size within that class. Amounts per building unless noted. All figures are forward-looking management estimates prepared for internal planning purposes.</p>\n");
+    s.push_str("<h2>Reference Proformas by Development Class</h2>\n");
+    s.push_str("<p class=\"note\">Each proforma uses a reference building — the most common floor count or size within that class. Amounts per building unless noted. All figures are forward-looking management estimates prepared for internal planning purposes.</p>\n");
     for class in ALL_CLASSES {
         s.push_str(&render_reference_proforma_for_class(class));
     }
@@ -518,22 +500,17 @@ fn render_reference_proformas() -> String {
 
 fn render_reference_proforma_for_class(class: &DevClassV2) -> String {
     let mut s = String::new();
-    s.push_str("<div class=\"class-block\">\n");
-    s.push_str(&format!("<h3 class=\"subsection\">{}</h3>\n", class.label));
+    s.push_str(&format!("<h3>{}</h3>\n", class.label));
 
     let stmt_note = build_class_note(class);
-    s.push_str(&format!("<p class=\"stmt-note\">{}</p>\n", stmt_note));
+    s.push_str(&format!("<p class=\"note\">{}</p>\n", stmt_note));
 
     let n_variants = class.variants.len();
-    let table_width_class = match n_variants {
-        2 => "medium",
-        3 => "medium",
-        _ => "wide",
-    };
-    s.push_str(&format!("<table class=\"{}\">\n", table_width_class));
+    s.push_str("<table>\n");
+    let _ = n_variants;
 
     // Header row
-    s.push_str("<tr><th style=\"min-width:210px\">Item</th>");
+    s.push_str("<tr><th>Item</th>");
     for v in class.variants {
         let header = if class.pairs {
             if v.label.contains("Medium") {
@@ -551,7 +528,6 @@ fn render_reference_proforma_for_class(class: &DevClassV2) -> String {
             };
             format!("{} ({} sqft)", prefix, fmt_int(v.floor_plate_sf))
         } else {
-            // Office classes — show floors + total sqft
             let total_sqft = v.gla_per_building();
             let label = if v.label.contains("(reference)") {
                 format!("{}F — Reference", v.floors)
@@ -564,17 +540,17 @@ fn render_reference_proforma_for_class(class: &DevClassV2) -> String {
     }
     s.push_str("</tr>\n");
 
-    let span = n_variants + 1;
+    let span = class.variants.len() + 1;
 
-    // Construction
-    s.push_str(&format!("<tr class=\"section-hdr\"><td colspan=\"{}\">Construction</td></tr>\n", span));
+    // Construction group
+    s.push_str(&format!("<tr><td class=\"grp\" colspan=\"{}\">Construction</td></tr>\n", span));
     s.push_str(&format!(
         "<tr><td>Gross leasable area{}</td>",
         if class.pairs { " (pair)" } else { "" }
     ));
     for v in class.variants {
         let gla = if class.pairs { v.floor_plate_sf * 2.0 } else { v.gla_per_building() };
-        s.push_str(&format!("<td>{}</td>", fmt_sqft(gla)));
+        s.push_str(&format!("<td class=\"r\">{}</td>", fmt_sqft(gla)));
     }
     s.push_str("</tr>\n");
 
@@ -588,12 +564,12 @@ fn render_reference_proforma_for_class(class: &DevClassV2) -> String {
         } else {
             v.cost_per_building(class.cost_per_sf_gla)
         };
-        s.push_str(&format!("<td>{}</td>", fmt_money_m1(cost)));
+        s.push_str(&format!("<td class=\"r\">{}</td>", fmt_money_m1(cost)));
     }
     s.push_str("</tr>\n");
 
-    // Revenue & Yield
-    s.push_str(&format!("<tr class=\"section-hdr\"><td colspan=\"{}\">Revenue &amp; Yield</td></tr>\n", span));
+    // Revenue & Yield group
+    s.push_str(&format!("<tr><td class=\"grp\" colspan=\"{}\">Revenue &amp; Yield</td></tr>\n", span));
     s.push_str("<tr><td>Calibrated base rent (10.5% devYield)</td>");
     for v in class.variants {
         let rent = if class.pairs {
@@ -601,7 +577,7 @@ fn render_reference_proforma_for_class(class: &DevClassV2) -> String {
         } else {
             v.rent_per_building(class.cost_per_sf_gla)
         };
-        s.push_str(&format!("<td>{}</td>", fmt_money_m_yr(rent)));
+        s.push_str(&format!("<td class=\"r\">{}</td>", fmt_money_m_yr(rent)));
     }
     s.push_str("</tr>\n");
 
@@ -612,18 +588,18 @@ fn render_reference_proforma_for_class(class: &DevClassV2) -> String {
         } else {
             v.noi_per_building(class.cost_per_sf_gla)
         };
-        s.push_str(&format!("<td>{}</td>", fmt_money_m_yr(noi)));
+        s.push_str(&format!("<td class=\"r\">{}</td>", fmt_money_m_yr(noi)));
     }
     s.push_str("</tr>\n");
 
     s.push_str("<tr><td>Development yield target</td>");
     for _ in class.variants {
-        s.push_str("<td>10.5%</td>");
+        s.push_str("<td class=\"r\">10.5%</td>");
     }
     s.push_str("</tr>\n");
 
-    // Valuation
-    s.push_str(&format!("<tr class=\"section-hdr\"><td colspan=\"{}\">Valuation</td></tr>\n", span));
+    // Valuation group
+    s.push_str(&format!("<tr><td class=\"grp\" colspan=\"{}\">Valuation</td></tr>\n", span));
     s.push_str("<tr><td>Asset value at 6.25% cap rate</td>");
     for v in class.variants {
         let av = if class.pairs {
@@ -631,7 +607,7 @@ fn render_reference_proforma_for_class(class: &DevClassV2) -> String {
         } else {
             v.asset_value_per_building(class.cost_per_sf_gla)
         };
-        s.push_str(&format!("<td>{}</td>", fmt_money_m1(av)));
+        s.push_str(&format!("<td class=\"r\">{}</td>", fmt_money_m1(av)));
     }
     s.push_str("</tr>\n");
 
@@ -642,24 +618,23 @@ fn render_reference_proforma_for_class(class: &DevClassV2) -> String {
         } else {
             v.depreciation_per_building(class.cost_per_sf_gla)
         };
-        s.push_str(&format!("<td>{}</td>", fmt_money_m_yr(depr)));
+        s.push_str(&format!("<td class=\"r\">{}</td>", fmt_money_m_yr(depr)));
     }
     s.push_str("</tr>\n");
 
     // Portfolio count
-    s.push_str("<tr class=\"total\"><td><strong>Portfolio count</strong></td>");
+    s.push_str("<tr class=\"total\"><td>Portfolio count</td>");
     for v in class.variants {
         let cell = if class.pairs {
             format!("{} pairs ({} buildings)", v.count / 2, v.count)
         } else {
             format!("{} buildings", v.count)
         };
-        s.push_str(&format!("<td>{}</td>", cell));
+        s.push_str(&format!("<td class=\"r\">{}</td>", cell));
     }
     s.push_str("</tr>\n");
 
     s.push_str("</table>\n");
-    s.push_str("</div>\n");
     s
 }
 
@@ -713,8 +688,8 @@ fn build_class_note(class: &DevClassV2) -> String {
 
 fn render_per_building_breakdown() -> String {
     let mut s = String::new();
-    s.push_str("<h2 class=\"section\">Per-Building Financial Breakdown</h2>\n");
-    s.push_str("<p class=\"stmt-note\">Every building in the portfolio (70 total) shown as its own row. Class subtotals reconcile to the Portfolio Allocation Summary above; portfolio grand total at the bottom. Building IDs follow class table order: tallest first for office classes; reference (most common) first for TI/RS.</p>\n");
+    s.push_str("<h2>Per-Building Financial Breakdown</h2>\n");
+    s.push_str("<p class=\"note\">Every building in the portfolio (70 total) shown as its own row. Class subtotals reconcile to the Portfolio Allocation Summary above; portfolio grand total at the bottom. Building IDs follow class table order: tallest first for office classes; reference (most common) first for TI/RS.</p>\n");
 
     let mut portfolio_gla = 0.0;
     let mut portfolio_cost = 0.0;
@@ -734,16 +709,16 @@ fn render_per_building_breakdown() -> String {
         portfolio_depr += r.class_depreciation;
     }
 
-    s.push_str("<h3 class=\"subsection\">Portfolio Grand Total</h3>\n");
-    s.push_str("<table class=\"alloc-table page-break-avoid\">\n");
-    s.push_str("<tr><th style=\"min-width:200px\">Metric</th><th>Value</th></tr>\n");
-    s.push_str(&format!("<tr><td>Total buildings</td><td>{}</td></tr>\n", 70));
-    s.push_str(&format!("<tr><td>Total GLA</td><td>{} sqft</td></tr>\n", fmt_int(portfolio_gla)));
-    s.push_str(&format!("<tr><td>Total construction cost</td><td>{}</td></tr>\n", fmt_money_m(portfolio_cost)));
-    s.push_str(&format!("<tr><td>Total calibrated base rent</td><td>{}</td></tr>\n", fmt_money_m_yr(portfolio_rent)));
-    s.push_str(&format!("<tr><td>Total NOI (57%)</td><td>{}</td></tr>\n", fmt_money_m_yr(portfolio_noi)));
-    s.push_str(&format!("<tr class=\"total\"><td><strong>Total asset value at 6.25% cap</strong></td><td><strong>{}</strong></td></tr>\n", fmt_money_m(portfolio_av)));
-    s.push_str(&format!("<tr><td>Total annual depreciation</td><td>{}</td></tr>\n", fmt_money_m_yr(portfolio_depr)));
+    s.push_str("<h3>Portfolio Grand Total</h3>\n");
+    s.push_str("<table>\n");
+    s.push_str("<tr><th>Metric</th><th>Value</th></tr>\n");
+    s.push_str(&format!("<tr><td>Total buildings</td><td class=\"r\">{}</td></tr>\n", 70));
+    s.push_str(&format!("<tr><td>Total GLA</td><td class=\"r\">{} sqft</td></tr>\n", fmt_int(portfolio_gla)));
+    s.push_str(&format!("<tr><td>Total construction cost</td><td class=\"r\">{}</td></tr>\n", fmt_money_m(portfolio_cost)));
+    s.push_str(&format!("<tr><td>Total calibrated base rent</td><td class=\"r\">{}</td></tr>\n", fmt_money_m_yr(portfolio_rent)));
+    s.push_str(&format!("<tr><td>Total NOI (57%)</td><td class=\"r\">{}</td></tr>\n", fmt_money_m_yr(portfolio_noi)));
+    s.push_str(&format!("<tr class=\"total\"><td>Total asset value at 6.25% cap</td><td class=\"r\">{}</td></tr>\n", fmt_money_m(portfolio_av)));
+    s.push_str(&format!("<tr><td>Total annual depreciation</td><td class=\"r\">{}</td></tr>\n", fmt_money_m_yr(portfolio_depr)));
     s.push_str("</table>\n");
 
     s
@@ -753,13 +728,13 @@ fn render_per_building_table_for_class(class: &DevClassV2) -> String {
     let mut s = String::new();
     let prefix = class_id_prefix(class.label);
     s.push_str(&format!(
-        "<h3 class=\"subsection\">{} — Per-Building ({} buildings)</h3>\n",
+        "<h3>{} — Per-Building ({} buildings)</h3>\n",
         class.label,
         class.building_count(),
     ));
 
-    s.push_str("<table class=\"page-break-avoid\">\n");
-    s.push_str("<tr><th style=\"width:30px;text-align:right\">Row</th><th style=\"width:75px\">Building ID</th><th>Variant</th><th>GLA (sqft)</th><th>Construction Cost</th><th>Rent (10.5%)</th><th>NOI (57%)</th><th>Asset Value (6.25%)</th><th>Depreciation (40yr)</th></tr>\n");
+    s.push_str("<table>\n");
+    s.push_str("<tr><th>Row</th><th>Building ID</th><th>Variant</th><th>GLA (sqft)</th><th>Construction Cost</th><th>Rent (10.5%)</th><th>NOI (57%)</th><th>Asset Value (6.25%)</th><th>Depreciation (40yr)</th></tr>\n");
 
     let mut row = 0u32;
     let mut class_gla = 0.0;
@@ -792,7 +767,7 @@ fn render_per_building_table_for_class(class: &DevClassV2) -> String {
                     let av = v.asset_value_per_building(class.cost_per_sf_gla);
                     let depr = v.depreciation_per_building(class.cost_per_sf_gla);
                     s.push_str(&format!(
-                        "<tr><td style=\"text-align:right\">{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>\n",
+                        "<tr><td class=\"r\">{}</td><td>{}</td><td>{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td></tr>\n",
                         row, id, v.label,
                         fmt_int(gla),
                         fmt_money_m1(cost),
@@ -820,7 +795,7 @@ fn render_per_building_table_for_class(class: &DevClassV2) -> String {
                 let av = v.asset_value_per_building(class.cost_per_sf_gla);
                 let depr = v.depreciation_per_building(class.cost_per_sf_gla);
                 s.push_str(&format!(
-                    "<tr><td style=\"text-align:right\">{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>\n",
+                    "<tr><td class=\"r\">{}</td><td>{}</td><td>{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td></tr>\n",
                     row, id, v.label,
                     fmt_int(gla),
                     fmt_money_m1(cost),
@@ -840,7 +815,7 @@ fn render_per_building_table_for_class(class: &DevClassV2) -> String {
     }
 
     s.push_str(&format!(
-        "<tr class=\"subtotal\"><td colspan=\"3\"><strong>{} subtotal — {} buildings</strong></td><td><strong>{}</strong></td><td><strong>{}</strong></td><td><strong>{}</strong></td><td><strong>{}</strong></td><td><strong>{}</strong></td><td><strong>{}</strong></td></tr>\n",
+        "<tr class=\"subtotal\"><td colspan=\"3\">{} subtotal — {} buildings</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td></tr>\n",
         class.label,
         class.building_count(),
         fmt_int(class_gla),
@@ -858,88 +833,36 @@ fn render_per_building_table_for_class(class: &DevClassV2) -> String {
 
 fn render_assumptions_and_disclaimer() -> String {
     let mut s = String::new();
-    s.push_str("<div class=\"page-break\">\n");
-    s.push_str("<h2 class=\"section\">Proforma Assumptions</h2>\n");
-    s.push_str("<p class=\"stmt-note\">Construction cost per Development Class: Professional Centres and Suburban Office at $310/sqft; Tech Industrial and Retail Select at $260/sqft. All construction costs are capitalized as WIP during the construction phase and transferred to investment property on completion. Development yield = net operating income ÷ total construction cost. Net operating income = calibrated base rent × 57% (43% operating cost ratio applied uniformly across classes). Asset value = NOI ÷ 6.25% capitalization rate. Depreciation = straight-line over 40 years on building component (land excluded). All figures are forward-looking management estimates; actual results will depend on market conditions, leasing outcomes, and construction costs at specific Test Sites.</p>\n");
-
-    s.push_str("<div class=\"floor-note\" style=\"margin-top:20px\">\n");
-    s.push_str("  <strong>Floor plate assumptions:</strong> Suburban Office = 19,000 sqft per floor &nbsp;·&nbsp; Professional Centres = 21,000 sqft per floor &nbsp;·&nbsp; Tech Industrial = single-storey (7,200 or 8,400 sqft per building) &nbsp;·&nbsp; Retail Select = single-storey (4,500 / 6,700 / 7,700 sqft per building)\n");
-    s.push_str("</div>\n");
-
-    s.push_str("<div class=\"disclaimer page-break-avoid\" style=\"margin-top:24px\">\n");
-    s.push_str("  <strong>Forward-Looking Information — Notice under applicable securities legislation including the British Columbia Securities Commission (BCSC) and NI 51-102</strong><br>\n");
-    s.push_str("  This document contains forward-looking information within the meaning of applicable securities legislation. All per-building cost estimates, revenue projections, NOI figures, asset valuations, depreciation schedules, and development yield targets are management estimates based on planning assumptions as of the date of this document and are subject to material change. Actual results may differ materially from those projected. This document is prepared for internal planning purposes and does not constitute an offering memorandum, financial advice, or an offer to sell or solicitation to buy any security. Readers should not place undue reliance on forward-looking information.\n");
-    s.push_str("</div>\n");
-    s.push_str("</div>\n");
+    s.push_str("<h2>Proforma Assumptions</h2>\n");
+    s.push_str("<p>Construction cost per Development Class: Professional Centres and Suburban Office at $310/sqft; Tech Industrial and Retail Select at $260/sqft. All construction costs are capitalized as WIP during the construction phase and transferred to investment property on completion. Development yield = net operating income ÷ total construction cost. Net operating income = calibrated base rent × 57% (43% operating cost ratio applied uniformly across classes). Asset value = NOI ÷ 6.25% capitalization rate. Depreciation = straight-line over 40 years on building component (land excluded). All figures are forward-looking management estimates; actual results will depend on market conditions, leasing outcomes, and construction costs at specific Test Sites.</p>\n");
+    s.push_str("<p><strong>Floor plate assumptions:</strong> Suburban Office = 19,000 sqft per floor · Professional Centres = 21,000 sqft per floor · Tech Industrial = single-storey (7,200 or 8,400 sqft per building) · Retail Select = single-storey (4,500 / 6,700 / 7,700 sqft per building).</p>\n");
+    s.push_str("<p class=\"footer\"><strong>Forward-Looking Information — Notice under applicable securities legislation including the British Columbia Securities Commission (BCSC) and NI 51-102.</strong> This document contains forward-looking information within the meaning of applicable securities legislation. All per-building cost estimates, revenue projections, NOI figures, asset valuations, depreciation schedules, and development yield targets are management estimates based on planning assumptions as of the date of this document and are subject to material change. Actual results may differ materially from those projected. This document is prepared for internal planning purposes and does not constitute an offering memorandum, financial advice, or an offer to sell or solicitation to buy any security. Readers should not place undue reliance on forward-looking information.</p>\n");
     s
 }
 
 // ─── HTML head (CSS) ────────────────────────────────────────────────────────
 
-const HEAD: &str = r#"<!DOCTYPE html>
-<html lang="en">
-<head>
+const HEAD: &str = r#"<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PCLP 1 — Building Portfolio &amp; Class Proformas (v3)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>D1 Development Classes — v3 (v1-aligned PCLP 1 portfolio)</title>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 9pt; color: #1a1a1a; background: #fff; }
-@media print {
-  @page { size: letter landscape; margin: 0.75in 0.5in; }
-  body { font-size: 10pt; }
-  table { page-break-inside: avoid; }
-  h2, h3 { page-break-after: avoid; }
-  tr.total, tr.subtotal { page-break-inside: avoid; }
-  .class-block { page-break-inside: avoid; }
-  .disclaimer { page-break-inside: avoid; font-size: 8pt; }
-  .no-print { display: none !important; }
-  .page-break { page-break-before: always; }
-  .page-break-avoid { page-break-inside: avoid; }
-}
-.page-break { page-break-before: always; margin-top: 2em; }
-.page-break-avoid { page-break-inside: avoid; }
-.class-block { page-break-inside: avoid; margin-bottom: 28px; }
-.no-print { margin: 12px 0; }
-.cover { background: #1a2332; color: #fff; padding: 60px 48px; min-height: 180px; }
-.cover h1 { font-size: 22pt; font-weight: 700; margin-bottom: 8px; }
-.cover h2 { font-size: 13pt; font-weight: 400; color: #b0c4de; margin-bottom: 24px; }
-.cover-meta { font-size: 9pt; color: #8bafc0; border-top: 1px solid #2e4060; padding-top: 12px; margin-top: 12px; }
-.cover-meta span { margin-right: 32px; }
-h2.section { background: #1a2332; color: #fff; padding: 6px 10px; font-size: 10pt;
-             font-weight: 600; margin: 20px 0 8px; letter-spacing: .3px; }
-h3.subsection { border-bottom: 2px solid #1a2332; color: #1a2332; font-size: 9.5pt;
-                padding-bottom: 3px; margin: 16px 0 6px; }
-p.stmt-note { font-size: 7.5pt; color: #555; margin: 4px 0 10px; font-style: italic; }
-table { width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 8px; }
-th { background: #1a2332; color: #fff; text-align: right; padding: 4px 6px;
-     font-weight: 600; white-space: nowrap; }
-th:first-child { text-align: left; }
-td { padding: 3px 6px; border-bottom: 1px solid #e8e8e8; white-space: nowrap; }
-td:first-child { text-align: left; }
-td:not(:first-child) { text-align: right; }
-tr:nth-child(even) { background: #f7f9fc; }
-tr.total td { border-top: 2px solid #1a2332; font-weight: 700; background: #dce6f0; }
-tr.subtotal td { border-top: 1px solid #999; font-weight: 600; background: #eef2f7; }
-tr.section-hdr td { background: #e0e8f0; font-weight: 700; font-size: 7.5pt;
-                    color: #1a2332; text-transform: uppercase; letter-spacing: .4px; }
-.alloc-table { width: 85%; }
-.detail-table { width: 65%; }
-.narrow { width: 55%; }
-.medium { width: 65%; }
-.wide  { width: 80%; }
-.class-badge { display: inline-block; background: #e0e8f0; color: #1a2332;
-               border: 1px solid #1a2332; border-radius: 2px; padding: 2px 8px;
-               font-size: 7.5pt; font-weight: 700; margin-bottom: 6px; }
-.disclaimer { background: #f5f5f5; border: 1px solid #ccc; padding: 10px 14px;
-              font-size: 7pt; color: #555; margin-top: 16px; line-height: 1.6; }
-.print-btn { background: #1a2332; color: #fff; border: none; padding: 8px 20px;
-             border-radius: 4px; cursor: pointer; font-size: 9pt; }
-.print-btn:hover { background: #2e4060; }
-.floor-note { background: #e8f0fd; border-left: 3px solid #1a2332; padding: 8px 12px;
-              font-size: 8pt; color: #1a2332; margin: 12px 0; }
-</style>
-</head>
+body{font-family:system-ui,sans-serif;font-size:13px;margin:2rem;color:#111;max-width:1280px}
+h1{font-size:1.3rem;margin-bottom:0.25rem}
+h2{font-size:1rem;margin-top:1.5rem;margin-bottom:0.3rem;border-bottom:1px solid #ccc;padding-bottom:2px}
+h3{font-size:0.9rem;margin-top:1rem;margin-bottom:0.2rem;color:#333}
+p{margin:0.3rem 0;font-size:0.82rem;color:#444}
+p.note{font-size:0.78rem;color:#555;font-style:italic}
+table{border-collapse:collapse;margin:0.5rem 0 1rem;font-size:0.78rem;width:100%}
+th,td{border:1px solid #ccc;padding:4px 8px;text-align:left}
+th{background:#f5f5f5;text-align:center;font-weight:600}
+td.r{text-align:right;white-space:nowrap}
+td.grp{background:#f0f0f0;font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:.3px;color:#444}
+tr.total td{background:#eef2f7;font-weight:700;border-top:2px solid #888}
+tr.subtotal td{background:#f5f7fa;font-weight:600;border-top:1px solid #aaa}
+.footer{font-size:0.72rem;color:#666;margin-top:1.5rem;border-top:1px solid #ddd;padding-top:0.5rem}
+@media print{body{margin:0;font-size:11px;max-width:none}@page{size:letter landscape;margin:1.5cm}}
+</style></head>
 "#;
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
