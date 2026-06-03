@@ -142,3 +142,39 @@ From Opus browser audit 2026-06-03. Full brief: `.agent/drafts-outbound/DESIGN-w
 - Phase 5.1+ (ACLs/OIDC/webhooks): gated on BP5 clearance [2026-06-01]
 - Phase 6 (three-instance deployment split): gated on GitHub renames + Doctrine amendment [2026-06-01]
 - claim-rail nightly URL validator: gated on server infrastructure [2026-06-01]
+# NEXT.md — project-bim
+
+> **Scope: this archive only.** Cross-repo and workspace-level items live
+> at `~/Foundry/NEXT.md`.
+
+Last updated: 2026-06-03 [totebox@claude-code]
+
+---
+
+## Immediate — needs operator action
+
+- [ ] Install nightly BIM pipeline timer [2026-06-03 totebox@claude-code]
+  ```bash
+  sudo cp infrastructure/systemd/foundry-bim-furniture.{service,timer} /etc/systemd/system/
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now foundry-bim-furniture.timer
+  ```
+
+## Pending Command Session
+
+- [ ] Stage 6 promotion — app-orchestration-bim [2026-06-03 totebox@claude-code]
+  - `d412d9f8` feat: DWG/RFA external links + Cargo.lock fix
+  - `5acbab54` feat: /key-plans route + furniture page IFC-first
+- [ ] woodfine-bim-library push to origin (own remote, separate from Stage 6)
+
+## Next Totebox session
+
+- [ ] Extend `generate-key-plan-ifc.py` to additional Key Plan categories
+  beyond PO (Corporate Office, Medical, Business etc — 66 total in registry)
+- [ ] Resolve archive contamination: manifest.md (project-infrastructure),
+  briefs/ (project-knowledge, project-gis, project-console), NEXT.md (replaced)
+- [ ] app-workplace-bim Wave 3 scaffold — Tauri v1.7, Phase 1 AutoCAD muscle
+  memory, IfcOpenShell subprocess, EUPL-1.2 licence
+- [ ] BIM_DESIGN_SYSTEM_DIR decision: woodfine-bim-library tokens (key-plans,
+  spatial, etc.) are not loaded by the site — either extend token loading to
+  include library_dir/tokens, or keep reading directly per-handler
