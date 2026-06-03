@@ -88,6 +88,30 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-06-03 — Archetype model rework + artifact refresh
+
+- **Commuter (PKS) redefined as geometric airport-led park-and-ride** (`build-pks-clusters.py`).
+  Replaced the metadata/co-location tiering with a purely geometric model: candidate = sized
+  regional airport (park-and-fly, ≤600 km from a metro ref) OR outer commuter-rail-belt station
+  (15–110 km ring, connected toward core, ≤4 stops from line end). Airports lead because they are
+  the geographic-spread lever (rail-only covered 96 NA map cells; airport-led 957). `tier_pks_geo()`
+  scores ring/connectivity/isolation/terminus. **5,977 features** deployed.
+- **Urban Fringe (VWH) → Retail-density** (`build-vwh-clusters.py`). `qualify_vwh()` admits
+  ≥2-category co-locations OR lone STRONG/BROAD trade stores; composition-score `tier_vwh(cats,n)`.
+  **7,028 features** deployed. Both archetypes ≈ Retail bubble density.
+- **New scripts:** `tools/sim_spread.py` (simulation harness), `ingest-osm-parking.py`,
+  `ingest-osm-parcel-depot.py`, `run-overnight-ingests.sh` (crontab June 4 05:00 UTC). 20 new VWH
+  brand-chain YAMLs authored in the local-only deployment data dir (not committed).
+- **index.html:** mobile BentoBox footbar hardening (visualViewport detent heights + resize
+  re-snap, `overscroll-behavior: contain`, modal `dvh`); cache-busting `?v=` token on archetype
+  data URLs (fixed a stale-cache "not updating" report).
+- **Commits:** code `aec2187e` (7 source files); docs commit (BRIEF, NEXT.md, artifact-registry,
+  DATA-MANIFEST, session-context, archetypes memory, this log).
+- **Stale-label fixes:** `session-context.md` + `MEMORY.md` frontmatter/header `project-orgcharts`
+  / `project-infrastructure` → `project-data`. (`CLAUDE.md` mislabel left for operator — separate item.)
+
+---
+
 ## 2026-06-01 — Contaminated session entries removed
 
 All prior session entries in this file were copy-pasted from other archives during a past
