@@ -1,6 +1,30 @@
 # Session Context
 
 ---
+date: 2026-06-03
+role: totebox
+engine: claude-code
+---
+
+## Done this session
+
+- Mailbox review only: read `.agent/inbox.md`, `.agent/outbox.md`, inbox-archive, outbox-archive.
+- Inbox: one actioned message (H-1..H-10 rollout notice from Command, 2026-06-01). No pending items.
+- Outbox: empty.
+
+## Pending / carry-forward
+
+- ORCID IDs still needed for J1/J3/J6 JOURNAL papers before submission.
+- Agency Agreements folder still needs moving from Mac Desktop to `~/Foundry/vm/documents/inputs/`.
+- GIS white paper message in outbox-archive went stale (2026-06-01) — no Command response yet; may warrant follow-up.
+
+## Operator preferences surfaced
+
+- None new this session.
+
+---
+
+---
 date: 2026-05-30
 role: totebox
 engine: claude-code
