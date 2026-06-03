@@ -190,7 +190,16 @@ fn main() {
             let bf_json = serde_json::to_string_pretty(&bf).expect("BlockF serialisation failed");
             write_trio("bencal-block-f", &bf_md, &bf_title, &bf_json);
 
-            eprintln!("wrote 12 files to {}", out_dir.display());
+            // V1 — engine-canonical Bencal Forecast Summaries (supersedes JW1/JW3
+            // hand-typed placeholders 2026-06-03; engine reads PCLP 1 + WCP Excels).
+            let mgmt_v1 = report::bencal_forecast_v1::render_management(&pclp_data, &wcp_data);
+            let spv1_v1 = report::bencal_forecast_v1::render_spv1(&wcp_data);
+            let spv2_v1 = report::bencal_forecast_v1::render_spv2(&pclp_data, &wcp_data);
+            write_output(&mgmt_v1, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_03_Forecast_Bencal_Management_V1.html")));
+            write_output(&spv1_v1, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_03_Forecast_Bencal_SPV1_V1.html")));
+            write_output(&spv2_v1, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_03_Forecast_Bencal_SPV2_V1.html")));
+
+            eprintln!("wrote 15 files to {}", out_dir.display());
         }
         None => {
             // Legacy: JSON assumptions → sensitivity engine
