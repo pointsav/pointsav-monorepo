@@ -257,6 +257,29 @@ Last updated: 2026-06-03 [totebox@claude-code]
   sudo systemctl daemon-reload
   sudo systemctl enable --now foundry-bim-furniture.timer
   ```
+- [x] Apply SEO head block to `home.pointsav.com` + `home.woodfinegroup.com` — done 2026-05-24 [totebox@claude-code]
+- [x] Add `robots.txt` + `sitemap.xml` to both sites — done 2026-05-24 [totebox@claude-code]
+- [x] Add `<noscript>` content fallback to both sites — done 2026-06-03 [totebox@claude-code]
+- [x] Add Google Search Console verification meta tags to both sites — done 2026-06-03 [totebox@claude-code]
+- [ ] **GSC: submit sitemaps** — operator-gated; in GSC Sitemaps panel submit `https://home.woodfinegroup.com/sitemap.xml` and `https://home.pointsav.com/sitemap.xml` [2026-06-03 operator-pending]
+- [ ] **GSC: request indexing** — after sitemap submission; URL Inspection → Request Indexing for each homepage [2026-06-03 operator-pending]
+- [ ] **Bing Webmaster Tools** — optional; import from GSC at https://www.bing.com/webmasters [2026-06-03 operator-pending]
+- [ ] Confirm: any LinkedIn or social profiles to add to `sameAs` in JSON-LD? [2026-05-20 operator-pending]
+
+## UX audit — project-knowledge memo (HIGH, 2026-06-03)
+
+Inbox msg-id: `project-knowledge-20260603-ux-audit-memo-home-woodfinegroup-com-hom`. Five findings:
+
+- [ ] **Self-host all fonts on every route** — contact pages load 6–7 families from fonts.googleapis.com (GDPR exposure); homepages already self-host. Remove all CDN font refs + dead preconnect hints. Subset to Inter + Source Serif 4 only. [2026-06-03]
+- [ ] **Nav text minimum 14px** — current 9–11px is sub-legible at institutional viewing distance. Nav/label min: 14px weight 500. Reserve 11px for legal microcopy only. [2026-06-03]
+- [ ] **Server-render marketing HTML** — eliminate "Unpacking N assets…" splash; binary already serves flat-file HTML, so serve decoded template directly. Kill no-cache/no-store header. [2026-06-03]
+- [ ] **PointSav: promote navy #164679 as dominant brand color** — demote steel gray #B4C5D5 to surface/tint role only. [2026-06-03]
+- [ ] **Woodfine P0 typo** — "AN real property developer" → "a real property developer" in hero copy. [2026-06-03]
+- [ ] **PointSav P0 typos** — "F*KEYS CONSSOLE", "DIGTIAL TWIN" — fix product headings; add build-time name-lint. [2026-06-03]
+- [ ] **PointSav: add true `<h1>`** — largest text currently 19px paragraph; no h1/h2 present. [2026-06-03]
+- [ ] **Both: shared global nav** — item sets differ page-to-page; consolidate. [2026-06-03]
+- [ ] **Both: remove internal repo path from footer** — "Source: factory-release-engineering/policies/DISCLAIMER.md" is visible publicly. [2026-06-03]
+- [ ] **Both: add real contact form** on /page/contact (currently email-only); fix dead `href="#"` "Contact us" anchor. [2026-06-03]
 
 ## Pending Command Session
 
