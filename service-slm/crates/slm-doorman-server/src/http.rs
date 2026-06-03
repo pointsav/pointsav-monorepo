@@ -35,8 +35,8 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Json, Response};
 use axum::routing::{get, post};
 use axum::Router;
-use reqwest::Client as ReqwestClient;
 use chrono::Utc;
+use reqwest::Client as ReqwestClient;
 use serde::{Deserialize, Serialize};
 use slm_core::{
     ApprenticeshipAttempt, ApprenticeshipBrief, AuditCaptureRequest, AuditCaptureResponse,
@@ -488,9 +488,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
     // 2. Validate module_id.
     let module_id = match ModuleId::from_str(&req.module_id) {
         Ok(mid) => mid,
-        Err(e) => {
-            return ApiError::bad_request(format!("invalid module_id: {e}")).into_response()
-        }
+        Err(e) => return ApiError::bad_request(format!("invalid module_id: {e}")).into_response(),
     };
 
     // 3. Per-tenant concurrency permit (shared semaphore with audit endpoints).
@@ -1104,7 +1102,12 @@ async fn graph_query(
             .unwrap_or_else(|_| slm_core::ModuleId::from_str("unknown").unwrap()),
         event_type: "graph-query".to_string(),
         source: format!("graph-proxy:{}", body.q),
-        status: if sc_status.is_success() { "ok" } else { "upstream-error" }.to_string(),
+        status: if sc_status.is_success() {
+            "ok"
+        } else {
+            "upstream-error"
+        }
+        .to_string(),
         event_at: Utc::now(),
         captured_at: Utc::now(),
         payload: serde_json::json!({ "q": body.q, "limit": body.limit, "module_id": module_id }),
@@ -1178,7 +1181,12 @@ async fn graph_mutate(
             .unwrap_or_else(|_| slm_core::ModuleId::from_str("unknown").unwrap()),
         event_type: "graph-mutation".to_string(),
         source: "graph-proxy".to_string(),
-        status: if sc_status.is_success() { "ok" } else { "upstream-error" }.to_string(),
+        status: if sc_status.is_success() {
+            "ok"
+        } else {
+            "upstream-error"
+        }
+        .to_string(),
         event_at: Utc::now(),
         captured_at: Utc::now(),
         payload: serde_json::json!({ "module_id": module_id }),
@@ -1266,6 +1274,7 @@ impl AnthropicSystem {
 /// No `#[serde(deny_unknown_fields)]` — `cache_control`, `anthropic-beta`,
 /// and other SDK-injected fields must not 400.
 #[derive(Deserialize)]
+#[allow(dead_code)] // forward-compat: fields parsed for SDK pass-through, not yet consumed
 struct AnthropicMessagesBody {
     model: String,
     #[serde(default)]
@@ -1307,6 +1316,7 @@ enum AnthropicContent {
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)] // forward-compat: parsed for SDK pass-through
 struct AnthropicContentBlock {
     #[serde(rename = "type")]
     block_type: String,
@@ -1358,7 +1368,10 @@ fn anthropic_to_compute_request(
     if let Some(system) = body.system {
         let text = system.into_text();
         if !text.is_empty() {
-            messages.push(ChatMessage { role: "system".to_string(), content: text });
+            messages.push(ChatMessage {
+                role: "system".to_string(),
+                content: text,
+            });
         }
     }
 
@@ -1403,7 +1416,10 @@ fn anthropic_to_compute_request(
 /// Build a non-streaming Anthropic Messages API response body.
 /// When `resp.tool_calls` is present the content carries `tool_use` blocks
 /// and `stop_reason` is `"tool_use"` instead of `"end_turn"`.
-fn compute_to_anthropic_response(resp: &slm_core::ComputeResponse, model: &str) -> serde_json::Value {
+fn compute_to_anthropic_response(
+    resp: &slm_core::ComputeResponse,
+    model: &str,
+) -> serde_json::Value {
     let output_tokens = resp.content.split_whitespace().count() as u32;
     let (content, stop_reason) = build_anthropic_content(resp);
     serde_json::json!({
@@ -1427,35 +1443,44 @@ fn build_anthropic_content(resp: &slm_core::ComputeResponse) -> (serde_json::Val
     if let Some(tool_calls) = &resp.tool_calls {
         // OpenAI-format tool_calls → Anthropic tool_use content blocks.
         let blocks: Vec<serde_json::Value> = if let Some(arr) = tool_calls.as_array() {
-            arr.iter().enumerate().map(|(i, tc)| {
-                let id = tc.get("id")
-                    .and_then(|v| v.as_str())
-                    .map(|s| s.to_string())
-                    .unwrap_or_else(|| format!("toolu_{i:03}"));
-                let name = tc.get("function")
-                    .and_then(|f| f.get("name"))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("unknown")
-                    .to_string();
-                let input_str = tc.get("function")
-                    .and_then(|f| f.get("arguments"))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("{}");
-                let input: serde_json::Value = serde_json::from_str(input_str)
-                    .unwrap_or_else(|_| serde_json::json!({}));
-                serde_json::json!({
-                    "type": "tool_use",
-                    "id": id,
-                    "name": name,
-                    "input": input
+            arr.iter()
+                .enumerate()
+                .map(|(i, tc)| {
+                    let id = tc
+                        .get("id")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string())
+                        .unwrap_or_else(|| format!("toolu_{i:03}"));
+                    let name = tc
+                        .get("function")
+                        .and_then(|f| f.get("name"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("unknown")
+                        .to_string();
+                    let input_str = tc
+                        .get("function")
+                        .and_then(|f| f.get("arguments"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("{}");
+                    let input: serde_json::Value =
+                        serde_json::from_str(input_str).unwrap_or_else(|_| serde_json::json!({}));
+                    serde_json::json!({
+                        "type": "tool_use",
+                        "id": id,
+                        "name": name,
+                        "input": input
+                    })
                 })
-            }).collect()
+                .collect()
         } else {
             vec![]
         };
         (serde_json::Value::Array(blocks), "tool_use")
     } else {
-        (serde_json::json!([{"type": "text", "text": resp.content}]), "end_turn")
+        (
+            serde_json::json!([{"type": "text", "text": resp.content}]),
+            "end_turn",
+        )
     }
 }
 
@@ -1483,16 +1508,19 @@ fn anthropic_sse_body(resp: &slm_core::ComputeResponse, model: &str) -> String {
         // Emit tool_use content blocks for each tool call.
         let tool_calls_arr = tool_calls.as_array().map(|a| a.as_slice()).unwrap_or(&[]);
         for (i, tc) in tool_calls_arr.iter().enumerate() {
-            let id = tc.get("id")
+            let id = tc
+                .get("id")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string())
                 .unwrap_or_else(|| format!("toolu_{i:03}"));
-            let name = tc.get("function")
+            let name = tc
+                .get("function")
                 .and_then(|f| f.get("name"))
                 .and_then(|v| v.as_str())
                 .unwrap_or("unknown")
                 .to_string();
-            let input_str = tc.get("function")
+            let input_str = tc
+                .get("function")
                 .and_then(|f| f.get("arguments"))
                 .and_then(|v| v.as_str())
                 .unwrap_or("{}");
@@ -1524,9 +1552,9 @@ fn anthropic_sse_body(resp: &slm_core::ComputeResponse, model: &str) -> String {
         // Standard text response.
         let e_cb_start = serde_json::json!({"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}});
         let e_cb_delta = serde_json::json!({"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": resp.content}});
-        let e_cb_stop  = serde_json::json!({"type": "content_block_stop", "index": 0});
+        let e_cb_stop = serde_json::json!({"type": "content_block_stop", "index": 0});
         let e_msg_delta = serde_json::json!({"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": null}, "usage": {"output_tokens": output_tokens}});
-        let e_msg_stop  = serde_json::json!({"type": "message_stop"});
+        let e_msg_stop = serde_json::json!({"type": "message_stop"});
         events.push_str(&format!(
             "event: content_block_start\ndata: {e_cb_start}\n\n\
              event: content_block_delta\ndata: {e_cb_delta}\n\n\
@@ -1544,7 +1572,10 @@ fn anthropic_sse_body(resp: &slm_core::ComputeResponse, model: &str) -> String {
 /// before sending a request to check whether it fits in the context window.
 async fn anthropic_count_tokens(body: axum::body::Bytes) -> impl IntoResponse {
     let estimate = (body.len() as u32).saturating_div(4);
-    (StatusCode::OK, Json(serde_json::json!({"input_tokens": estimate})))
+    (
+        StatusCode::OK,
+        Json(serde_json::json!({"input_tokens": estimate})),
+    )
 }
 
 /// `GET /v1/models` — model list expected by Anthropic SDK clients.
@@ -1552,12 +1583,15 @@ async fn anthropic_count_tokens(body: axum::body::Bytes) -> impl IntoResponse {
 /// - `claude-haiku-4-5-20251001` → Tier A (OLMo 7B, local)
 /// - `claude-sonnet-4-6` → Tier B (Yo-Yo OLMo-3-32B-Think) with Tier A fallback
 async fn anthropic_models() -> impl IntoResponse {
-    (StatusCode::OK, Json(serde_json::json!({
-        "data": [
-            {"id": "claude-haiku-4-5-20251001", "object": "model", "created": 0},
-            {"id": "claude-sonnet-4-6",         "object": "model", "created": 0}
-        ]
-    })))
+    (
+        StatusCode::OK,
+        Json(serde_json::json!({
+            "data": [
+                {"id": "claude-haiku-4-5-20251001", "object": "model", "created": 0},
+                {"id": "claude-sonnet-4-6",         "object": "model", "created": 0}
+            ]
+        })),
+    )
 }
 
 async fn anthropic_messages(

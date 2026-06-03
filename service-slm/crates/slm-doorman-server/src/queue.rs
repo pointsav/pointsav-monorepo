@@ -1239,9 +1239,15 @@ mod tests {
         release_shadow(&cfg, &leased, ReleaseOutcome::Done).expect("release ok");
 
         let done_path = cfg.done_dir().join(&leased.base_filename);
-        assert!(done_path.exists(), "brief must be in queue-done/ after Done release");
+        assert!(
+            done_path.exists(),
+            "brief must be in queue-done/ after Done release"
+        );
         assert!(!leased.lease_path.exists(), "lease file must be gone");
-        assert!(!cfg.queue_dir().join(&leased.base_filename).exists(), "queue/ must be empty");
+        assert!(
+            !cfg.queue_dir().join(&leased.base_filename).exists(),
+            "queue/ must be empty"
+        );
     }
 
     /// release_shadow with Retry moves the lease file back to queue/.
@@ -1258,7 +1264,10 @@ mod tests {
         release_shadow(&cfg, &leased, ReleaseOutcome::Retry).expect("release ok");
 
         let queue_path = cfg.queue_dir().join(&leased.base_filename);
-        assert!(queue_path.exists(), "brief must be back in queue/ after Retry");
+        assert!(
+            queue_path.exists(),
+            "brief must be back in queue/ after Retry"
+        );
         assert!(!leased.lease_path.exists(), "lease file must be gone");
 
         // A second dequeue should see it again.
@@ -1282,7 +1291,10 @@ mod tests {
         release_shadow(&cfg, &leased, ReleaseOutcome::Poison).expect("release ok");
 
         let poison_path = cfg.poison_dir().join(&leased.base_filename);
-        assert!(poison_path.exists(), "brief must be in queue-poison/ after Poison");
+        assert!(
+            poison_path.exists(),
+            "brief must be in queue-poison/ after Poison"
+        );
         assert!(!leased.lease_path.exists(), "lease file must be gone");
     }
 

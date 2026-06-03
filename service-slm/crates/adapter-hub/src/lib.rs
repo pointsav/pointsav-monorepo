@@ -155,7 +155,11 @@ impl AdapterRegistry {
 
     /// Look up an adapter by canonical ID.
     pub fn get(&self, id: &str) -> Option<AdapterEntry> {
-        self.inner.read().expect("registry poisoned").get(id).cloned()
+        self.inner
+            .read()
+            .expect("registry poisoned")
+            .get(id)
+            .cloned()
     }
 
     /// Return every adapter currently in the registry, sorted by
@@ -180,8 +184,8 @@ impl AdapterRegistry {
     pub fn append(&self, mut entry: AdapterEntry) -> anyhow::Result<()> {
         let mut guard = self.inner.write().expect("registry poisoned");
         if entry.stage_changed_at.is_empty() {
-            entry.stage_changed_at = chrono::Utc::now()
-                .to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+            entry.stage_changed_at =
+                chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
         }
         let id = entry.id.clone();
         if id.is_empty() {
@@ -199,8 +203,8 @@ impl AdapterRegistry {
             .get_mut(id)
             .ok_or_else(|| anyhow::anyhow!("unknown adapter: {id}"))?;
         entry.stage = new_stage.to_string();
-        entry.stage_changed_at = chrono::Utc::now()
-            .to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+        entry.stage_changed_at =
+            chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
         write_registry(&self.path, &guard)?;
         Ok(())
     }
@@ -294,7 +298,10 @@ mod tests {
         assert_eq!(r.len(), 1);
         let got = r.get("coding-lora-v1").unwrap();
         assert_eq!(got.base_model, "OLMo-2-7B");
-        assert!(!got.stage_changed_at.is_empty(), "stage_changed_at auto-stamped");
+        assert!(
+            !got.stage_changed_at.is_empty(),
+            "stage_changed_at auto-stamped"
+        );
 
         let r2 = AdapterRegistry::open(&path).unwrap();
         assert_eq!(r2.len(), 1);
