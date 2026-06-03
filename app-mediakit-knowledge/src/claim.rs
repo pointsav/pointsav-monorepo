@@ -296,6 +296,34 @@ fn parse_list(v: &str) -> Result<Vec<String>, String> {
     inner.split(',').map(parse_bareword).collect()
 }
 
+/// Strip `<!--claim …-->` open markers and `<!--/claim-->` close markers
+/// from an HTML string, leaving only the inner prose. Called on the final
+/// rendered HTML before it is served to readers. The markers are inert for
+/// browsers but visible in page source and bloat payloads; removing them
+/// keeps public HTML clean without touching the extraction pipeline.
+///
+/// The function is a plain string-scan: it removes every occurrence of
+/// `<!--claim…-->` (including multi-line markers) and `<!--/claim-->`.
+/// It does not parse claim structure — `extract_claims` has already done
+/// that upstream.
+pub fn strip_claim_markers(html: &str) -> String {
+    let mut out = String::with_capacity(html.len());
+    let mut rest = html;
+    while let Some(pos) = rest.find("<!--claim") {
+        out.push_str(&rest[..pos]);
+        // Find the end of this HTML comment (could be open or close marker).
+        if let Some(end_rel) = rest[pos..].find("-->") {
+            rest = &rest[pos + end_rel + 3..];
+        } else {
+            // Unclosed comment — emit the remainder as-is and stop.
+            out.push_str(&rest[pos..]);
+            return out;
+        }
+    }
+    out.push_str(rest);
+    out
+}
+
 /// Whitespace-normalise a claim span so `content_hash` is stable across
 /// markdown reflow (line wrapping) but changes on any word edit.
 fn normalise(text: &str) -> String {
