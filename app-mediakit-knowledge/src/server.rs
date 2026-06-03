@@ -633,6 +633,19 @@ const RATIFIED_CATEGORIES: &[&str] = &[
     "design-system",
 ];
 
+/// Homepage browse grid: 6 consolidated areas.
+/// Each entry: (display_name, primary_slug, all_slugs).
+/// `primary_slug` is the URL target; `all_slugs` are summed for the article count.
+/// Categories not listed here are still accessible via /category/<slug> and search.
+const HOMEPAGE_CATEGORIES: &[(&str, &str, &[&str])] = &[
+    ("Architecture",            "architecture",  &["architecture", "patterns"]),
+    ("Substrate & Systems",     "substrate",     &["substrate", "systems"]),
+    ("Services & Applications", "services",      &["services", "applications"]),
+    ("Infrastructure",          "infrastructure",&["infrastructure"]),
+    ("Reference",               "reference",     &["reference", "governance", "design-system"]),
+    ("Archetypes",              "archetypes",    &["archetypes"]),
+];
+
 // ─── Home-page helpers ──────────────────────────────────────────────────────
 
 /// A single topic file discovered during a recursive walk of `content_dir`.
@@ -977,7 +990,7 @@ fn compute_home_stats(buckets: &CategoryBuckets) -> HomeStats {
         .map(|s| s.to_string());
     HomeStats {
         article_count,
-        category_count: RATIFIED_CATEGORIES.len(),
+        category_count: HOMEPAGE_CATEGORIES.len(),
         last_updated,
     }
 }
@@ -1218,8 +1231,8 @@ fn home_chrome(
                             div.wiki-home-stats {
                                 strong { (fmt_commas(stats.article_count)) }
                                 " articles across "
-                                strong { (stats.category_count) }
-                                " categories"
+                                strong { (HOMEPAGE_CATEGORIES.len()) }
+                                " areas"
                             }
                             // Home lede / intro text
                             @if !home_html.is_empty() {
@@ -1233,17 +1246,20 @@ fn home_chrome(
                         h2 { "Browse by area" }
                     }
                     div.cat-grid {
-                        @for cat in ordered_categories(buckets) {
-                            @let count = buckets.get(&cat).map(|v| v.as_slice()).unwrap_or(&[]).iter()
+                        @for (display_name, primary_slug, slugs) in HOMEPAGE_CATEGORIES {
+                            @let count: usize = slugs.iter()
+                                .flat_map(|s| buckets.get(*s).map(|v| v.as_slice()).unwrap_or(&[]).iter())
                                 .filter(|t| t.status.as_deref() != Some("stub"))
                                 .count();
-                            a.cat-card href={ "/category/" (cat) } {
-                                div.cat-card__head {
-                                    span.cat-card__name { (humanize_category(&cat)) }
-                                    span.cat-card__count { (count) }
-                                }
-                                @if let Some(desc) = cat_descriptions.get(&cat) {
-                                    p.cat-card__desc { (desc) }
+                            @if count > 0 {
+                                a.cat-card href={ "/category/" (primary_slug) } {
+                                    div.cat-card__head {
+                                        span.cat-card__name { (display_name) }
+                                        span.cat-card__count { (count) }
+                                    }
+                                    @if let Some(desc) = cat_descriptions.get(*primary_slug) {
+                                        p.cat-card__desc { (desc) }
+                                    }
                                 }
                             }
                         }
@@ -1275,23 +1291,12 @@ fn home_chrome(
                         }
                     }
 
-                    // ── Sister surfaces (#mp-other) ──────────────────────────
+                    // ── Related wikis (#mp-other) ──────────────────────────────────────
                     section #mp-other .wiki-home-sister {
-                        h2.wiki-home-section-title { "Sister surfaces" }
+                        h2.wiki-home-section-title { "Related wikis" }
                         ul.wiki-home-sister-grid {
                             @if woodfine_projects {
-                                li {
-                                    a.wiki-home-sister-link href="https://corporate.woodfinegroup.com" {
-                                        span.wiki-home-sister-name { "Corporate Reference" }
-                                        span.wiki-home-sister-desc { "Woodfine Management Corp." }
-                                    }
-                                }
-                                li {
-                                    a.wiki-home-sister-link href="https://gis.woodfinegroup.com" {
-                                        span.wiki-home-sister-name { "Live Platform" }
-                                        span.wiki-home-sister-desc { "GIS co-location intelligence" }
-                                    }
-                                }
+                                // Projects wiki → link to Documentation + Corporate
                                 li {
                                     a.wiki-home-sister-link href="https://documentation.pointsav.com" {
                                         span.wiki-home-sister-name { "Engineering Documentation" }
@@ -1299,18 +1304,13 @@ fn home_chrome(
                                     }
                                 }
                                 li {
-                                    a.wiki-home-sister-link href="/wiki/newsroom" {
-                                        span.wiki-home-sister-name { "Newsroom" }
-                                        span.wiki-home-sister-desc { "Announcements and updates" }
+                                    a.wiki-home-sister-link href="https://corporate.woodfinegroup.com" {
+                                        span.wiki-home-sister-name { "Corporate Reference" }
+                                        span.wiki-home-sister-desc { "Woodfine Management Corp." }
                                     }
                                 }
                             } @else if woodfine_theme {
-                                li {
-                                    a.wiki-home-sister-link href="https://projects.woodfinegroup.com" {
-                                        span.wiki-home-sister-name { "Projects Platform" }
-                                        span.wiki-home-sister-desc { "Woodfine co-location intelligence" }
-                                    }
-                                }
+                                // Corporate wiki → link to Documentation + Projects
                                 li {
                                     a.wiki-home-sister-link href="https://documentation.pointsav.com" {
                                         span.wiki-home-sister-name { "Engineering Documentation" }
@@ -1318,12 +1318,13 @@ fn home_chrome(
                                     }
                                 }
                                 li {
-                                    a.wiki-home-sister-link href="/wiki/newsroom" {
-                                        span.wiki-home-sister-name { "Newsroom" }
-                                        span.wiki-home-sister-desc { "Announcements and updates" }
+                                    a.wiki-home-sister-link href="https://projects.woodfinegroup.com" {
+                                        span.wiki-home-sister-name { "Projects Platform" }
+                                        span.wiki-home-sister-desc { "Woodfine co-location intelligence" }
                                     }
                                 }
                             } @else {
+                                // Documentation wiki → link to Projects + Corporate
                                 li {
                                     a.wiki-home-sister-link href="https://projects.woodfinegroup.com" {
                                         span.wiki-home-sister-name { "Projects Platform" }
@@ -1334,18 +1335,6 @@ fn home_chrome(
                                     a.wiki-home-sister-link href="https://corporate.woodfinegroup.com" {
                                         span.wiki-home-sister-name { "Corporate Reference" }
                                         span.wiki-home-sister-desc { "Woodfine Management Corp." }
-                                    }
-                                }
-                                li {
-                                    a.wiki-home-sister-link href="https://github.com/pointsav/pointsav-design-system" {
-                                        span.wiki-home-sister-name { "Design System" }
-                                        span.wiki-home-sister-desc { "Tokens, components, recipes" }
-                                    }
-                                }
-                                li {
-                                    a.wiki-home-sister-link href="https://github.com/pointsav" {
-                                        span.wiki-home-sister-name { "PointSav on GitHub" }
-                                        span.wiki-home-sister-desc { "Canonical vendor-tier source" }
                                     }
                                 }
                             }
@@ -1359,8 +1348,8 @@ fn home_chrome(
                     p.home-stats-oneliner {
                         (fmt_commas(stats.article_count))
                         " articles · "
-                        (stats.category_count)
-                        " categories"
+                        (HOMEPAGE_CATEGORIES.len())
+                        " areas"
                         @if let Some(ref d) = stats.last_updated {
                             " · Updated " (d)
                         }
@@ -1424,13 +1413,9 @@ fn esc(s: &str) -> String {
 }
 
 /// The categories that actually carry (non-stub) articles in `buckets`, in
-/// display order: the ratified platform categories first (in their canonical
-/// order), then any other categories the content declares — `bim`, `company`,
-/// `operations`, etc. — alphabetically. The `uncategorised` bucket is omitted.
-///
-/// This is what makes the navigation correct across all three instances: the
-/// documentation wiki uses the ratified categories, while the Woodfine projects
-/// and corporate wikis declare their own (`bim`, `company`, `operations`, …).
+/// display order: only the ratified platform categories are returned.
+/// The `extras` block (all non-RATIFIED categories) is intentionally excluded
+/// to prevent internal deployment slugs from leaking into the homepage grid.
 fn ordered_categories(buckets: &CategoryBuckets) -> Vec<String> {
     let has_real = |c: &str| {
         buckets
@@ -1438,22 +1423,11 @@ fn ordered_categories(buckets: &CategoryBuckets) -> Vec<String> {
             .map(|v| v.iter().any(|t| t.status.as_deref() != Some("stub")))
             .unwrap_or(false)
     };
-    let mut seen = std::collections::HashSet::new();
-    let mut out = Vec::new();
-    for c in RATIFIED_CATEGORIES {
-        if has_real(c) {
-            out.push((*c).to_string());
-            seen.insert((*c).to_string());
-        }
-    }
-    let mut extras: Vec<String> = buckets
-        .keys()
-        .filter(|k| k.as_str() != "uncategorised" && !seen.contains(*k) && has_real(k))
-        .cloned()
-        .collect();
-    extras.sort();
-    out.extend(extras);
-    out
+    RATIFIED_CATEGORIES
+        .iter()
+        .filter(|c| has_real(c))
+        .map(|c| (*c).to_string())
+        .collect()
 }
 
 /// Build the docs left-navigation HTML from the already-computed category
