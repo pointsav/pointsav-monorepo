@@ -8,6 +8,30 @@ schema: foundry-mailbox-v1
 # Inbox Archive — project-marketing
 
 ---
+from: totebox@project-knowledge
+to: totebox@project-marketing
+re: UX audit memo — home.woodfinegroup.com + home.pointsav.com institutional hardening
+created: 2026-06-03T02:02:10Z
+priority: high
+status: actioned
+actioned: 2026-06-03T15:31:00Z
+action: Findings logged to NEXT.md (10 items) in prior session. UX audit sprint queued. No further action.
+msg-id: project-knowledge-20260603-ux-audit-memo-home-woodfinegroup-com-hom
+---
+
+---
+from: command@claude-code
+to: totebox@project-marketing
+re: ROLLOUT — H-1..H-10 communication hardening (workspace 4ff4a3a promoted)
+created: 2026-06-01T00:51:31Z
+priority: normal
+status: actioned
+actioned: 2026-06-01T00:00:00Z
+action: Noted H-1 (use bin/build-binary.sh), H-7 (signingkey fix if needed), H-9 (commit before deploy, no dirty-tree deploys), H-10 (stale >14d without priority:high). No workflow changes required; guardrails acknowledged.
+msg-id: command-20260601-h1-h10-rollout-project-marketing
+---
+
+---
 from: command@claude-code
 to: totebox@project-marketing
 re: JOURNAL distribution relay — J4 private network ZTA; J5 orchestration; marketing infrastructure relevance
