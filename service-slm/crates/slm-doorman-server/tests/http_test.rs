@@ -2610,10 +2610,7 @@ async fn graph_mutate_proxies_to_service_content_returns_200() {
 
     Mock::given(method("POST"))
         .and(path("/v1/graph/mutate"))
-        .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_json(serde_json::json!({"loaded": 1})),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({"loaded": 1})))
         .mount(&mock_sc)
         .await;
 
@@ -2862,11 +2859,32 @@ async fn anthropic_messages_streaming_returns_sse_with_all_six_events() {
         .expect("read SSE body");
     let body_str = String::from_utf8(bytes.to_vec()).expect("SSE body is UTF-8");
 
-    assert!(body_str.contains("event: message_start"),       "missing message_start");
-    assert!(body_str.contains("event: content_block_start"), "missing content_block_start");
-    assert!(body_str.contains("event: content_block_delta"), "missing content_block_delta");
-    assert!(body_str.contains("event: content_block_stop"),  "missing content_block_stop");
-    assert!(body_str.contains("event: message_delta"),       "missing message_delta");
-    assert!(body_str.contains("event: message_stop"),        "missing message_stop");
-    assert!(body_str.contains("streamed response"),          "SSE body must contain the response text");
+    assert!(
+        body_str.contains("event: message_start"),
+        "missing message_start"
+    );
+    assert!(
+        body_str.contains("event: content_block_start"),
+        "missing content_block_start"
+    );
+    assert!(
+        body_str.contains("event: content_block_delta"),
+        "missing content_block_delta"
+    );
+    assert!(
+        body_str.contains("event: content_block_stop"),
+        "missing content_block_stop"
+    );
+    assert!(
+        body_str.contains("event: message_delta"),
+        "missing message_delta"
+    );
+    assert!(
+        body_str.contains("event: message_stop"),
+        "missing message_stop"
+    );
+    assert!(
+        body_str.contains("streamed response"),
+        "SSE body must contain the response text"
+    );
 }

@@ -52,12 +52,16 @@ fn messages_request_with_key(body: serde_json::Value, api_key: &str) -> Request<
 }
 
 async fn response_body(resp: axum::response::Response) -> serde_json::Value {
-    let bytes = axum::body::to_bytes(resp.into_body(), 1 << 20).await.unwrap();
+    let bytes = axum::body::to_bytes(resp.into_body(), 1 << 20)
+        .await
+        .unwrap();
     serde_json::from_slice(&bytes).unwrap_or(serde_json::Value::Null)
 }
 
 async fn response_text(resp: axum::response::Response) -> String {
-    let bytes = axum::body::to_bytes(resp.into_body(), 1 << 20).await.unwrap();
+    let bytes = axum::body::to_bytes(resp.into_body(), 1 << 20)
+        .await
+        .unwrap();
     String::from_utf8_lossy(&bytes).into_owned()
 }
 
@@ -107,7 +111,8 @@ async fn haiku_routes_to_tier_a_local() {
     let resp = app.oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
 
-    let tier = resp.headers()
+    let tier = resp
+        .headers()
         .get("x-foundry-tier-used")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
@@ -140,11 +145,15 @@ async fn sonnet_routes_to_tier_b_yoyo() {
     let resp = app.oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
 
-    let tier = resp.headers()
+    let tier = resp
+        .headers()
         .get("x-foundry-tier-used")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
-    assert!(tier.starts_with("yoyo"), "sonnet must route to Tier B, got: {tier}");
+    assert!(
+        tier.starts_with("yoyo"),
+        "sonnet must route to Tier B, got: {tier}"
+    );
 
     let body = response_body(resp).await;
     assert_eq!(body["content"][0]["text"], "YOYO PONG");
@@ -164,8 +173,11 @@ async fn opus_returns_503_when_tier_c_unconfigured() {
         "messages": [{"role": "user", "content": "ping"}]
     }));
     let resp = app.oneshot(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::SERVICE_UNAVAILABLE,
-        "opus without Tier C configured must return 503");
+    assert_eq!(
+        resp.status(),
+        StatusCode::SERVICE_UNAVAILABLE,
+        "opus without Tier C configured must return 503"
+    );
 }
 
 // ── SSE streaming: correct event order ───────────────────────────────────────
@@ -196,27 +208,59 @@ async fn stream_true_returns_sse_events_in_correct_order() {
     let resp = app.oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
     assert_eq!(
-        resp.headers().get("content-type").and_then(|v| v.to_str().ok()),
+        resp.headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok()),
         Some("text/event-stream; charset=utf-8")
     );
 
     let body = response_text(resp).await;
     // Verify event ordering: message_start < content_block_start < content_block_delta < content_block_stop < message_delta < message_stop
-    let pos_start     = body.find("event: message_start").expect("message_start missing");
-    let pos_cb_start  = body.find("event: content_block_start").expect("content_block_start missing");
-    let pos_cb_delta  = body.find("event: content_block_delta").expect("content_block_delta missing");
-    let pos_cb_stop   = body.find("event: content_block_stop").expect("content_block_stop missing");
-    let pos_msg_delta = body.find("event: message_delta").expect("message_delta missing");
-    let pos_msg_stop  = body.find("event: message_stop").expect("message_stop missing");
+    let pos_start = body
+        .find("event: message_start")
+        .expect("message_start missing");
+    let pos_cb_start = body
+        .find("event: content_block_start")
+        .expect("content_block_start missing");
+    let pos_cb_delta = body
+        .find("event: content_block_delta")
+        .expect("content_block_delta missing");
+    let pos_cb_stop = body
+        .find("event: content_block_stop")
+        .expect("content_block_stop missing");
+    let pos_msg_delta = body
+        .find("event: message_delta")
+        .expect("message_delta missing");
+    let pos_msg_stop = body
+        .find("event: message_stop")
+        .expect("message_stop missing");
 
-    assert!(pos_start < pos_cb_start, "message_start must precede content_block_start");
-    assert!(pos_cb_start < pos_cb_delta, "content_block_start must precede content_block_delta");
-    assert!(pos_cb_delta < pos_cb_stop, "content_block_delta must precede content_block_stop");
-    assert!(pos_cb_stop < pos_msg_delta, "content_block_stop must precede message_delta");
-    assert!(pos_msg_delta < pos_msg_stop, "message_delta must precede message_stop");
+    assert!(
+        pos_start < pos_cb_start,
+        "message_start must precede content_block_start"
+    );
+    assert!(
+        pos_cb_start < pos_cb_delta,
+        "content_block_start must precede content_block_delta"
+    );
+    assert!(
+        pos_cb_delta < pos_cb_stop,
+        "content_block_delta must precede content_block_stop"
+    );
+    assert!(
+        pos_cb_stop < pos_msg_delta,
+        "content_block_stop must precede message_delta"
+    );
+    assert!(
+        pos_msg_delta < pos_msg_stop,
+        "message_delta must precede message_stop"
+    );
 
     // Verify at least one delta carries text content
-    assert!(body.contains("hello"), "stream body must contain upstream token text");
+    assert!(
+        body.contains("hello"),
+        "stream body must contain upstream token text"
+    );
 }
 
 // ── tool_use content: Sprint 1 CanonicalMessage preserves all block types ────
@@ -246,8 +290,11 @@ async fn tool_use_blocks_pass_through_gateway() {
         }]
     }));
     let resp = app.oneshot(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::OK,
-        "tool_use request must pass through the gateway successfully");
+    assert_eq!(
+        resp.status(),
+        StatusCode::OK,
+        "tool_use request must pass through the gateway successfully"
+    );
 }
 
 // ── Auth: missing x-api-key → 401 ───────────────────────────────────────────
@@ -266,7 +313,11 @@ async fn missing_api_key_returns_401_when_token_configured() {
         "messages": [{"role": "user", "content": "ping"}]
     }));
     let resp = app.oneshot(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::UNAUTHORIZED, "missing api key must return 401");
+    assert_eq!(
+        resp.status(),
+        StatusCode::UNAUTHORIZED,
+        "missing api key must return 401"
+    );
 }
 
 // ── Auth: invalid x-api-key → 401 ────────────────────────────────────────────
@@ -286,11 +337,20 @@ async fn invalid_api_key_returns_401() {
         "wrong-token",
     );
     let resp = app.oneshot(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::UNAUTHORIZED, "wrong api key must return 401");
+    assert_eq!(
+        resp.status(),
+        StatusCode::UNAUTHORIZED,
+        "wrong api key must return 401"
+    );
 
     let body = response_body(resp).await;
-    assert!(body["error"]["type"].as_str().unwrap_or("").contains("authentication"),
-        "error body must identify authentication_error");
+    assert!(
+        body["error"]["type"]
+            .as_str()
+            .unwrap_or("")
+            .contains("authentication"),
+        "error body must identify authentication_error"
+    );
 }
 
 // ── Auth: correct x-api-key passes through ───────────────────────────────────
@@ -318,7 +378,11 @@ async fn correct_api_key_allows_request() {
         "secret-token",
     );
     let resp = app.oneshot(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::OK, "correct api key must succeed");
+    assert_eq!(
+        resp.status(),
+        StatusCode::OK,
+        "correct api key must succeed"
+    );
 }
 
 // ── Auth disabled when no gateway token set ───────────────────────────────────
@@ -343,7 +407,11 @@ async fn no_auth_when_gateway_token_not_configured() {
         "messages": [{"role": "user", "content": "ping"}]
     }));
     let resp = app.oneshot(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::OK, "auth disabled when no gateway token configured");
+    assert_eq!(
+        resp.status(),
+        StatusCode::OK,
+        "auth disabled when no gateway token configured"
+    );
 }
 
 // ── Tier A busy → 503 + Retry-After: 30 ─────────────────────────────────────
@@ -378,10 +446,14 @@ async fn tier_a_busy_returns_503_with_retry_after_header() {
         "messages": [{"role": "user", "content": "ping"}]
     }));
     let resp = app.oneshot(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::SERVICE_UNAVAILABLE,
-        "busy Tier A with no Tier B must return 503");
+    assert_eq!(
+        resp.status(),
+        StatusCode::SERVICE_UNAVAILABLE,
+        "busy Tier A with no Tier B must return 503"
+    );
 
-    let retry_after = resp.headers()
+    let retry_after = resp
+        .headers()
         .get("retry-after")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
@@ -399,8 +471,7 @@ async fn stream_true_with_tier_a_only_streams_real_sse() {
     Mock::given(method("GET"))
         .and(path("/health"))
         .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_json(json!({"status": "ok", "slots_idle": 1})),
+            ResponseTemplate::new(200).set_body_json(json!({"status": "ok", "slots_idle": 1})),
         )
         .mount(&mock)
         .await;
@@ -430,23 +501,43 @@ async fn stream_true_with_tier_a_only_streams_real_sse() {
     let resp = app.oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
 
-    let ct = resp.headers()
+    let ct = resp
+        .headers()
         .get("content-type")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
-    assert!(ct.contains("text/event-stream"), "Tier A stream response must have SSE content-type, got: {ct}");
+    assert!(
+        ct.contains("text/event-stream"),
+        "Tier A stream response must have SSE content-type, got: {ct}"
+    );
 
-    let tier = resp.headers()
+    let tier = resp
+        .headers()
         .get("x-foundry-tier-used")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
-    assert_eq!(tier, "local", "Tier A stream must report x-foundry-tier-used: local");
+    assert_eq!(
+        tier, "local",
+        "Tier A stream must report x-foundry-tier-used: local"
+    );
 
     let body = response_text(resp).await;
-    assert!(body.contains("real stream token"), "Tier A SSE body must include upstream token");
-    assert!(body.contains("message_start"), "Tier A SSE must include message_start event");
-    assert!(body.contains("message_stop"), "Tier A SSE must include message_stop event");
-    assert!(body.contains("content_block_delta"), "Tier A SSE must include per-token delta events");
+    assert!(
+        body.contains("real stream token"),
+        "Tier A SSE body must include upstream token"
+    );
+    assert!(
+        body.contains("message_start"),
+        "Tier A SSE must include message_start event"
+    );
+    assert!(
+        body.contains("message_stop"),
+        "Tier A SSE must include message_stop event"
+    );
+    assert!(
+        body.contains("content_block_delta"),
+        "Tier A SSE must include per-token delta events"
+    );
 }
 
 // ── Non-streaming response shape matches Anthropic spec ──────────────────────
@@ -457,18 +548,15 @@ async fn non_streaming_response_shape_matches_anthropic_spec() {
     Mock::given(method("GET"))
         .and(path("/health"))
         .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_json(json!({"status": "ok", "slots_idle": 1})),
+            ResponseTemplate::new(200).set_body_json(json!({"status": "ok", "slots_idle": 1})),
         )
         .mount(&mock)
         .await;
     Mock::given(method("POST"))
         .and(path("/v1/chat/completions"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(
-            json!({
-                "choices": [{"message": {"role": "assistant", "content": "hello"}}]
-            }),
-        ))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "choices": [{"message": {"role": "assistant", "content": "hello"}}]
+        })))
         .mount(&mock)
         .await;
 
@@ -485,14 +573,37 @@ async fn non_streaming_response_shape_matches_anthropic_spec() {
 
     let body = response_body(resp).await;
     assert_eq!(body["type"], "message", "response must have type: message");
-    assert_eq!(body["role"], "assistant", "response must have role: assistant");
-    assert_eq!(body["stop_reason"], "end_turn", "response must have stop_reason: end_turn");
-    assert!(body["id"].as_str().map(|s| s.starts_with("msg_")).unwrap_or(false),
-        "response id must start with msg_");
-    assert_eq!(body["content"][0]["type"], "text", "content block must have type: text");
-    assert_eq!(body["content"][0]["text"], "hello", "content block must carry upstream text");
-    assert!(body["usage"].is_object(), "response must include usage object");
-    assert!(body["usage"]["output_tokens"].is_number(), "usage must include output_tokens");
+    assert_eq!(
+        body["role"], "assistant",
+        "response must have role: assistant"
+    );
+    assert_eq!(
+        body["stop_reason"], "end_turn",
+        "response must have stop_reason: end_turn"
+    );
+    assert!(
+        body["id"]
+            .as_str()
+            .map(|s| s.starts_with("msg_"))
+            .unwrap_or(false),
+        "response id must start with msg_"
+    );
+    assert_eq!(
+        body["content"][0]["type"], "text",
+        "content block must have type: text"
+    );
+    assert_eq!(
+        body["content"][0]["text"], "hello",
+        "content block must carry upstream text"
+    );
+    assert!(
+        body["usage"].is_object(),
+        "response must include usage object"
+    );
+    assert!(
+        body["usage"]["output_tokens"].is_number(),
+        "usage must include output_tokens"
+    );
 }
 
 // ── system field threads into downstream POST body ────────────────────────────
@@ -503,8 +614,7 @@ async fn system_message_is_sent_to_tier_a_backend() {
     Mock::given(method("GET"))
         .and(path("/health"))
         .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_json(json!({"status": "ok", "slots_idle": 1})),
+            ResponseTemplate::new(200).set_body_json(json!({"status": "ok", "slots_idle": 1})),
         )
         .mount(&mock)
         .await;
@@ -529,15 +639,26 @@ async fn system_message_is_sent_to_tier_a_backend() {
     // Inspect the request received by the backend: system content must appear
     // as the first message in the messages array sent downstream.
     let reqs = mock.received_requests().await.unwrap();
-    let post_reqs: Vec<_> = reqs.iter().filter(|r| r.method.as_str() == "POST").collect();
+    let post_reqs: Vec<_> = reqs
+        .iter()
+        .filter(|r| r.method.as_str() == "POST")
+        .collect();
     assert_eq!(post_reqs.len(), 1, "exactly one POST must reach Tier A");
 
     let downstream: serde_json::Value = serde_json::from_slice(&post_reqs[0].body).unwrap();
-    let msgs = downstream["messages"].as_array().expect("messages must be an array");
+    let msgs = downstream["messages"]
+        .as_array()
+        .expect("messages must be an array");
     let first = &msgs[0];
-    assert_eq!(first["role"], "system", "first message must carry system role");
+    assert_eq!(
+        first["role"], "system",
+        "first message must carry system role"
+    );
     assert!(
-        first["content"].as_str().map(|s| s.contains("test assistant")).unwrap_or(false),
+        first["content"]
+            .as_str()
+            .map(|s| s.contains("test assistant"))
+            .unwrap_or(false),
         "system message content must match the system field value"
     );
 }
@@ -550,8 +671,7 @@ async fn tool_result_content_block_passes_through_gateway() {
     Mock::given(method("GET"))
         .and(path("/health"))
         .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_json(json!({"status": "ok", "slots_idle": 1})),
+            ResponseTemplate::new(200).set_body_json(json!({"status": "ok", "slots_idle": 1})),
         )
         .mount(&mock)
         .await;
@@ -580,8 +700,11 @@ async fn tool_result_content_block_passes_through_gateway() {
         ]
     }));
     let resp = app.oneshot(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::OK,
-        "tool_result content block must pass through gateway successfully");
+    assert_eq!(
+        resp.status(),
+        StatusCode::OK,
+        "tool_result content block must pass through gateway successfully"
+    );
 }
 
 // ── POST /v1/shadow-adapter — adapter A/B dual-dispatch ──────────────────────
@@ -595,8 +718,7 @@ async fn shadow_adapter_dual_dispatch_returns_both_arms() {
     Mock::given(method("GET"))
         .and(path("/health"))
         .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_json(json!({"status": "ok", "slots_idle": 2})),
+            ResponseTemplate::new(200).set_body_json(json!({"status": "ok", "slots_idle": 2})),
         )
         .mount(&mock)
         .await;
@@ -605,7 +727,7 @@ async fn shadow_adapter_dual_dispatch_returns_both_arms() {
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
             "choices": [{"message": {"role": "assistant", "content": "adapter response"}}]
         })))
-        .expect(2)  // one call per adapter arm
+        .expect(2) // one call per adapter arm
         .mount(&mock)
         .await;
 
@@ -616,22 +738,38 @@ async fn shadow_adapter_dual_dispatch_returns_both_arms() {
         .method("POST")
         .uri("/v1/shadow-adapter")
         .header("content-type", "application/json")
-        .body(Body::from(serde_json::to_vec(&json!({
-            "prompt": "What is 2 + 2?",
-            "adapter_a": "lora-v1",
-            "adapter_b": "lora-v2",
-            "max_tokens": 32
-        })).unwrap()))
+        .body(Body::from(
+            serde_json::to_vec(&json!({
+                "prompt": "What is 2 + 2?",
+                "adapter_a": "lora-v1",
+                "adapter_b": "lora-v2",
+                "max_tokens": 32
+            }))
+            .unwrap(),
+        ))
         .unwrap();
     let resp = app.oneshot(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::OK, "shadow-adapter must return 200");
+    assert_eq!(
+        resp.status(),
+        StatusCode::OK,
+        "shadow-adapter must return 200"
+    );
 
     let body = response_body(resp).await;
-    assert!(body["adapter_a"].is_object(), "response must contain adapter_a arm");
-    assert!(body["adapter_b"].is_object(), "response must contain adapter_b arm");
+    assert!(
+        body["adapter_a"].is_object(),
+        "response must contain adapter_a arm"
+    );
+    assert!(
+        body["adapter_b"].is_object(),
+        "response must contain adapter_b arm"
+    );
     assert_eq!(body["adapter_a"]["version"], "lora-v1");
     assert_eq!(body["adapter_b"]["version"], "lora-v2");
-    assert!(body["prompt_hash"].is_string(), "response must contain prompt_hash");
+    assert!(
+        body["prompt_hash"].is_string(),
+        "response must contain prompt_hash"
+    );
     let hash = body["prompt_hash"].as_str().unwrap();
     assert_eq!(hash.len(), 64, "prompt_hash must be a 64-char hex SHA-256");
 }
@@ -647,14 +785,21 @@ async fn shadow_adapter_rejects_empty_prompt() {
         .method("POST")
         .uri("/v1/shadow-adapter")
         .header("content-type", "application/json")
-        .body(Body::from(serde_json::to_vec(&json!({
-            "prompt": "",
-            "adapter_a": "lora-v1",
-            "adapter_b": "lora-v2"
-        })).unwrap()))
+        .body(Body::from(
+            serde_json::to_vec(&json!({
+                "prompt": "",
+                "adapter_a": "lora-v1",
+                "adapter_b": "lora-v2"
+            }))
+            .unwrap(),
+        ))
         .unwrap();
     let resp = app.oneshot(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::BAD_REQUEST, "empty prompt must return 400");
+    assert_eq!(
+        resp.status(),
+        StatusCode::BAD_REQUEST,
+        "empty prompt must return 400"
+    );
 }
 
 #[tokio::test]
@@ -668,14 +813,21 @@ async fn shadow_adapter_rejects_missing_adapter_ids() {
         .method("POST")
         .uri("/v1/shadow-adapter")
         .header("content-type", "application/json")
-        .body(Body::from(serde_json::to_vec(&json!({
-            "prompt": "test prompt",
-            "adapter_a": "lora-v1",
-            "adapter_b": ""
-        })).unwrap()))
+        .body(Body::from(
+            serde_json::to_vec(&json!({
+                "prompt": "test prompt",
+                "adapter_a": "lora-v1",
+                "adapter_b": ""
+            }))
+            .unwrap(),
+        ))
         .unwrap();
     let resp = app.oneshot(req).await.unwrap();
-    assert_eq!(resp.status(), StatusCode::BAD_REQUEST, "empty adapter_b must return 400");
+    assert_eq!(
+        resp.status(),
+        StatusCode::BAD_REQUEST,
+        "empty adapter_b must return 400"
+    );
 }
 
 // ── P1-1.7 — tool-use round-trip ─────────────────────────────────────────────
@@ -687,8 +839,7 @@ async fn tools_forwarded_to_backend_and_tool_use_response_emitted() {
     Mock::given(method("GET"))
         .and(path("/health"))
         .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_json(json!({"status": "ok", "slots_idle": 1})),
+            ResponseTemplate::new(200).set_body_json(json!({"status": "ok", "slots_idle": 1})),
         )
         .mount(&mock)
         .await;
@@ -716,26 +867,31 @@ async fn tools_forwarded_to_backend_and_tool_use_response_emitted() {
     let state = app_state_with_local(mock.uri());
     let app = router(state);
 
-    let resp = app.oneshot(messages_request(json!({
-        "model": "claude-haiku-4-5-20251001",
-        "max_tokens": 256,
-        "tools": [{
-            "name": "get_weather",
-            "description": "Get current weather",
-            "input_schema": {
-                "type": "object",
-                "properties": {"location": {"type": "string"}},
-                "required": ["location"]
-            }
-        }],
-        "messages": [{"role": "user", "content": "What is the weather in NYC?"}]
-    }))).await.unwrap();
+    let resp = app
+        .oneshot(messages_request(json!({
+            "model": "claude-haiku-4-5-20251001",
+            "max_tokens": 256,
+            "tools": [{
+                "name": "get_weather",
+                "description": "Get current weather",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {"location": {"type": "string"}},
+                    "required": ["location"]
+                }
+            }],
+            "messages": [{"role": "user", "content": "What is the weather in NYC?"}]
+        })))
+        .await
+        .unwrap();
 
     assert_eq!(resp.status(), StatusCode::OK);
     let body = response_body(resp).await;
     // Response must contain a tool_use content block
     let content = body["content"].as_array().expect("content array");
-    let tool_block = content.iter().find(|b| b["type"] == "tool_use")
+    let tool_block = content
+        .iter()
+        .find(|b| b["type"] == "tool_use")
         .expect("tool_use block in content");
     assert_eq!(tool_block["id"], "call_abc");
     assert_eq!(tool_block["name"], "get_weather");
@@ -753,8 +909,7 @@ async fn tool_use_response_stop_reason_is_tool_use() {
     Mock::given(method("GET"))
         .and(path("/health"))
         .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_json(json!({"status": "ok", "slots_idle": 1})),
+            ResponseTemplate::new(200).set_body_json(json!({"status": "ok", "slots_idle": 1})),
         )
         .mount(&mock)
         .await;
@@ -789,10 +944,14 @@ async fn tool_use_response_stop_reason_is_tool_use() {
 
     assert_eq!(resp.status(), StatusCode::OK);
     let body = response_body(resp).await;
-    assert_eq!(body["stop_reason"], "tool_use",
-        "tool_calls response must set stop_reason=tool_use");
+    assert_eq!(
+        body["stop_reason"], "tool_use",
+        "tool_calls response must set stop_reason=tool_use"
+    );
     let content = body["content"].as_array().unwrap();
-    let tool_block = content.iter().find(|b| b["type"] == "tool_use")
+    let tool_block = content
+        .iter()
+        .find(|b| b["type"] == "tool_use")
         .expect("tool_use block must be present");
     assert_eq!(tool_block["id"], "call_xyz");
     assert_eq!(tool_block["name"], "bash");

@@ -70,13 +70,16 @@ async fn micro_readyz_reports_node_class_tier_a_unavailable() {
     let json = body_json(resp).await;
 
     assert_eq!(json["node_class"], "micro");
-    assert_eq!(json["tier_a"], false,      "Tier A must be unavailable on Micro");
+    assert_eq!(json["tier_a"], false, "Tier A must be unavailable on Micro");
     assert_eq!(json["tier_a_reason"], "micro-node-class");
-    assert_eq!(json["ai_available"], false, "no AI tiers configured on bare Micro");
-    assert_eq!(json["has_local"],  false);
-    assert_eq!(json["has_yoyo"],   false);
+    assert_eq!(
+        json["ai_available"], false,
+        "no AI tiers configured on bare Micro"
+    );
+    assert_eq!(json["has_local"], false);
+    assert_eq!(json["has_yoyo"], false);
     assert_eq!(json["has_external"], false);
-    assert_eq!(json["ready"], true,         "Doorman is ready even without AI");
+    assert_eq!(json["ready"], true, "Doorman is ready even without AI");
 }
 
 /// An AI request on a Micro node must return 503 SERVICE_UNAVAILABLE —
@@ -132,7 +135,7 @@ async fn force_broker_mode_readyz_surfaces_override_reason() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
-        node_class: "hardware",        // detected as Hardware
+        node_class: "hardware",             // detected as Hardware
         tier_a_reason: "force-broker-mode", // but SLM_FORCE_BROKER_MODE=true overrode it
     });
 
@@ -144,10 +147,13 @@ async fn force_broker_mode_readyz_surfaces_override_reason() {
     assert_eq!(resp.status(), StatusCode::OK);
     let json = body_json(resp).await;
 
-    assert_eq!(json["node_class"],    "hardware");
-    assert_eq!(json["tier_a"],        false,  "force-broker disables Tier A even on Hardware");
+    assert_eq!(json["node_class"], "hardware");
+    assert_eq!(
+        json["tier_a"], false,
+        "force-broker disables Tier A even on Hardware"
+    );
     assert_eq!(json["tier_a_reason"], "force-broker-mode");
-    assert_eq!(json["ai_available"],  false);
+    assert_eq!(json["ai_available"], false);
 }
 
 /// The readyz response for a Hardware node with Tier A available must show
@@ -195,9 +201,9 @@ async fn hardware_readyz_shows_tier_a_available() {
     assert_eq!(resp.status(), StatusCode::OK);
     let json = body_json(resp).await;
 
-    assert_eq!(json["node_class"],    "hardware");
-    assert_eq!(json["tier_a"],        true);
+    assert_eq!(json["node_class"], "hardware");
+    assert_eq!(json["tier_a"], true);
     assert_eq!(json["tier_a_reason"], "available");
-    assert_eq!(json["ai_available"],  true);
-    assert_eq!(json["has_local"],     true);
+    assert_eq!(json["ai_available"], true);
+    assert_eq!(json["has_local"], true);
 }
