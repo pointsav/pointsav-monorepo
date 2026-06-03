@@ -1,0 +1,132 @@
+/* research-mobile.css — shared mobile accessibility layer for gis.woodfinegroup.com/research
+   Linked by all research-*.html pages. Pairs with section-collapse.js.
+   Desktop is unaffected; all rules are mobile-first or guarded by @media (max-width:768px). */
+
+/* Enable height:auto animation where the browser supports it (progressive enhancement). */
+:root { interpolate-size: allow-keywords; }
+
+/* ── Cross-page research navigation bar ──────────────────────────────────────── */
+.research-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #0f2a4a;
+  padding: 0 4px;
+  scrollbar-width: none;
+}
+.research-nav::-webkit-scrollbar { display: none; }
+.research-nav a {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  color: #cdd9ea;
+  text-decoration: none;
+  font: 600 13px/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+}
+.research-nav a:hover { color: #fff; }
+.research-nav a[aria-current="page"] {
+  color: #fff;
+  border-bottom-color: #f5b301;
+}
+.research-nav a.rn-home { color: #fff; font-weight: 700; }
+
+/* ── Collapsible sections (Wikipedia-mobile pattern) ─────────────────────────── */
+/* The toggle button replaces the section heading; the panel holds the section body.
+   On desktop the toggle renders as a plain heading and the panel is always shown. */
+.sc-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 12px 4px;
+  min-height: 44px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #d8dee6;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.sc-toggle:focus-visible {
+  outline: 2px solid #3366cc;
+  outline-offset: 2px;
+}
+.sc-toggle .sc-title { display: block; }
+.sc-chevron {
+  flex: none;
+  width: 0.6em;
+  height: 0.6em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);            /* points down when collapsed */
+  transition: transform 0.25s ease;
+  opacity: 0.6;
+}
+.sc-toggle[aria-expanded="true"] .sc-chevron {
+  transform: rotate(-135deg);          /* points up when expanded */
+}
+.sc-panel {
+  overflow: hidden;
+}
+.sc-panel[hidden] { display: none; }
+
+/* Expand-all / collapse-all control (mobile only) */
+.sc-allctl {
+  display: none;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+.sc-allctl button {
+  flex: 1;
+  min-height: 40px;
+  border: 1px solid #c8ccd1;
+  border-radius: 6px;
+  background: #f4f6f9;
+  color: #1f3a5f;
+  font: 600 13px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+/* ── Mobile-only adjustments ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Readability floor — nothing below 13px on phones */
+  .research-mobile, .research-mobile p, .research-mobile li { font-size: 17px; line-height: 1.6; }
+
+  /* Wide tables scroll inside their own box, never the page */
+  .research-mobile table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sc-allctl { display: flex; }
+}
+
+/* ── Desktop: sections always open, no toggle affordance ─────────────────────── */
+@media (min-width: 769px) {
+  .sc-toggle {
+    cursor: default;
+    border-bottom: none;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .sc-chevron { display: none; }
+  .sc-panel { display: block !important; }
+  .sc-allctl { display: none; }
+  /* The research nav is useful on desktop too, but render inline-block, not sticky-overlay */
+  .research-nav { position: static; }
+}
