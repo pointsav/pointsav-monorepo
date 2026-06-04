@@ -10,6 +10,7 @@
 #   S3: Nav links as 44px tap targets (min-height:44px)
 #   S4: Bottom divider on collapsed header at ≤768px
 #   S5: Hide .topnav .left (Disclaimer + Contact us) on mobile ≤768px; footer links remain
+#   S6: Stack Manifest/BIM Library/Location Intelligence vertically on mobile (Woodfine only)
 #   W1: Strip redundant width="320" height="80" SVG attrs (Woodfine)
 #   P1: Remove empty <a href="#"> from PointSav right nav
 #   P2: Strip redundant width="320" height="80" SVG attrs (PointSav)
@@ -181,6 +182,44 @@ if W1_OLD in t:
     log.append('W1: SVG width/height attrs removed')
 else:
     log.append('W1: already removed (skip)')
+# S6a — Woodfine HTML: remove <br> from Location Intelligence
+S6A_OLD = '>Location<br>Intelligence</a>'
+S6A_NEW = '>Location Intelligence</a>'
+if S6A_OLD in t:
+    t = t.replace(S6A_OLD, S6A_NEW, 1)
+    log.append('S6a: <br> removed from Location Intelligence')
+else:
+    log.append('S6a: already removed (skip)')
+
+# S6b — Woodfine CSS 768px: stack subnav vertically
+S6B_OLD = ('.subnav { padding: 10px 16px; }\n'
+           '    .subnav .tab { min-width: 100px; font-size: 10px; }')
+S6B_NEW = ('.subnav { padding: 10px 16px; }\n'
+           '    .subnav .tabs-right { flex-direction: column; }\n'
+           '    .subnav .tab, .subnav a.manifest-btn { width: 100%; min-width: unset; font-size: 11px; box-sizing: border-box; }')
+S6B_MARKER = '.subnav .tabs-right { flex-direction: column; }'
+if S6B_OLD in t:
+    t = t.replace(S6B_OLD, S6B_NEW, 1)
+    log.append('S6b: 768px subnav stacked layout applied')
+elif S6B_MARKER in t:
+    log.append('S6b: already patched (skip)')
+else:
+    log.append('S6b: WARN not found')
+
+# S6c — Woodfine CSS 480px: update subnav tab sizing
+S6C_OLD = ('.subnav { padding: 8px 12px; }\n'
+           '    .subnav .tab { min-width: 80px; padding: 6px 10px; font-size: 9px; }')
+S6C_NEW = ('.subnav { padding: 8px 12px; }\n'
+           '    .subnav .tab, .subnav a.manifest-btn { font-size: 11px; padding: 8px 14px; }')
+S6C_MARKER = '.subnav .tab, .subnav a.manifest-btn { font-size: 11px; padding: 8px 14px; }'
+if S6C_OLD in t:
+    t = t.replace(S6C_OLD, S6C_NEW, 1)
+    log.append('S6c: 480px subnav font/padding updated')
+elif S6C_MARKER in t:
+    log.append('S6c: already patched (skip)')
+else:
+    log.append('S6c: WARN not found')
+
 t_check = save_template(WOODFINE, src, t, si, ep)
 for l in log: print(f"  {'✓' if 'WARN' not in l else '!'} {l}")
 
