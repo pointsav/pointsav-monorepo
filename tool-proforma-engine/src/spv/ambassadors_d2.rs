@@ -338,7 +338,10 @@ mod tests {
 
     #[test]
     fn wcp_holding_post_listing_uses_lookthrough() {
-        let cfg = Ad2Config { wcp_listing_year: Some(3), ..Default::default() };
+        let cfg = Ad2Config {
+            wcp_listing_year: Some(3),
+            ..Default::default()
+        };
         let mut wcp = synthetic_wcp(0.0);
         // Set per-share book value at Y4+ to $10.00
         for y in 3..10 {
