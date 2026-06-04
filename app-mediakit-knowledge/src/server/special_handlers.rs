@@ -305,7 +305,7 @@ fn llms_txt_snippet(body_md: &str, max_chars: usize) -> String {
 
 /// `GET /git/{slug}.md` — raw Markdown source for `git clone`-style ingestion.
 ///
-/// Validates the slug via `crate::edit::validate_slug`, reads
+/// Validates the slug via `validate_slug`, reads
 /// `<content_dir>/<slug>.md` from disk, and returns the raw bytes with
 /// Content-Type `text/markdown; charset=utf-8`. Phase 4 upgrades this to a
 /// full read-only Git remote.
@@ -324,7 +324,7 @@ async fn git_markdown(
     let slug = raw.strip_suffix(".md").unwrap_or(&raw).to_string();
 
     // Slug validation rejects path traversal, uppercase, and other illegal forms.
-    crate::edit::validate_slug(&slug)?;
+    validate_slug(&slug)?;
 
     let path = state.content_dir.join(format!("{slug}.md"));
     let bytes = match fs::read(&path).await {
@@ -809,7 +809,7 @@ async fn history_page(
     Query(hp): Query<HistoryPageParams>,
     CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
-    crate::edit::validate_slug(&slug)?;
+    validate_slug(&slug)?;
     let path = state.content_dir.join(format!("{slug}.md"));
     if !path.is_file() {
         return Err(WikiError::NotFound(slug));
@@ -889,7 +889,7 @@ async fn blame_page(
     Path(slug): Path<String>,
     CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
-    crate::edit::validate_slug(&slug)?;
+    validate_slug(&slug)?;
     let path = state.content_dir.join(format!("{slug}.md"));
     if !path.is_file() {
         return Err(WikiError::NotFound(slug));
@@ -945,7 +945,7 @@ async fn diff_page(
     Query(query): Query<DiffQueryParams>,
     CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
-    crate::edit::validate_slug(&slug)?;
+    validate_slug(&slug)?;
     let a_sha = query.a.unwrap_or_default();
     let b_sha = query.b.unwrap_or_else(|| "HEAD".to_string());
 
