@@ -133,6 +133,8 @@ pub mod test_helpers {
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             temp_ledger(),
         );
@@ -180,6 +182,8 @@ pub mod test_helpers {
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             temp_ledger(),
         );
@@ -212,6 +216,8 @@ pub mod test_helpers {
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             temp_ledger(),
         );

@@ -873,6 +873,8 @@ Bumping MANIFEST.md per ni-51-102 forward-looking marker.
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             ledger(),
         );
@@ -943,6 +945,8 @@ I'm not sure how to apply this safely.
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             ledger(),
         );
@@ -1033,6 +1037,8 @@ OK.
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             ledger(),
         );
@@ -1115,6 +1121,8 @@ ok
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             ledger(),
         );
@@ -1210,6 +1218,8 @@ Shadow attempt for the apprentice.
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             ledger(),
         );
@@ -1279,6 +1289,8 @@ Shadow attempt for the apprentice.
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             ledger(),
         );

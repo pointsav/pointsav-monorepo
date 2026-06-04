@@ -747,6 +747,31 @@ fn build_doorman() -> anyhow::Result<Doorman> {
         GraphContextClient::new(ep)
     });
 
+    // Daily Tier B spend cap (P3-3.5-followup). Non-fatal if unavailable.
+    let foundry_root = std::env::var_os("FOUNDRY_ROOT")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| std::path::PathBuf::from("/srv/foundry"));
+    let cost_ledger_dir = foundry_root.join("data").join("cost-ledger");
+    let cost_ledger = match std::fs::create_dir_all(&cost_ledger_dir)
+        .and_then(|_| slm_doorman::cost_ledger::CostLedger::new(&cost_ledger_dir))
+    {
+        Ok(cl) => {
+            info!(dir = %cost_ledger_dir.display(), "cost ledger initialised");
+            Some(std::sync::Arc::new(cl))
+        }
+        Err(e) => {
+            tracing::warn!(error = %e, "cost ledger unavailable — no spend tracking or cap enforcement");
+            None
+        }
+    };
+    let daily_yoyo_cap_usd = std::env::var("SLM_YOYO_DAILY_CAP_USD")
+        .ok()
+        .and_then(|v| v.parse::<f64>().ok())
+        .filter(|&v| v > 0.0);
+    if let Some(cap) = daily_yoyo_cap_usd {
+        info!(cap_usd = cap, "daily Tier B spend cap configured (SLM_YOYO_DAILY_CAP_USD)");
+    }
+
     Ok(Doorman::new(
         DoormanConfig {
             local,
@@ -755,6 +780,8 @@ fn build_doorman() -> anyhow::Result<Doorman> {
             lark_validator,
             graph_context_client,
             tier_a_first,
+            daily_yoyo_cap_usd,
+            cost_ledger,
         },
         ledger,
     ))

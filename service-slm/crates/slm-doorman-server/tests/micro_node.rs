@@ -175,6 +175,8 @@ async fn hardware_readyz_shows_tier_a_available() {
             lark_validator: None,
             graph_context_client: None,
             tier_a_first: false,
+            daily_yoyo_cap_usd: None,
+            cost_ledger: None,
         },
         temp_ledger(),
     );
