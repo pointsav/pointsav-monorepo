@@ -1731,6 +1731,12 @@ impl From<DoormanError> for ApiError {
             DoormanError::TierBTimeout | DoormanError::TierBCircuitOpen => {
                 StatusCode::SERVICE_UNAVAILABLE
             }
+            // Flow gate closed (operator kill switch). 503 with Retry-After;
+            // the operator deliberately paused this tier. Caller should retry
+            // after the gate re-opens.
+            DoormanError::FlowGateClosed { .. } => StatusCode::SERVICE_UNAVAILABLE,
+            // Priority queue file-system fault — server-side.
+            DoormanError::PriorityQueueIo { .. } => StatusCode::INTERNAL_SERVER_ERROR,
         };
         Self {
             status,

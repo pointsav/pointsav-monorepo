@@ -522,6 +522,7 @@ fn process_corpus(
     let client = reqwest::blocking::Client::new();
     let res = client
         .post(&url)
+        .header("X-Foundry-Priority", "p1")
         .json(&body)
         .timeout(Duration::from_secs(300))
         .send();
