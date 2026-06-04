@@ -18,6 +18,7 @@
 #   P3: Equalise Monorepo + Design System button sizes at ≤768px and ≤480px (PointSav)
 #   P4: Stack Monorepo + Design System buttons vertically on mobile (PointSav)
 #   S8: 3-column icon grid at ≤480px; remove negative-margin overflow hack (both sites)
+#   S9: Single-column icon stack at ≤480px; 160px icons (both sites)
 #
 # Usage: bash scripts/apply-mobile-fixes.sh
 
@@ -236,6 +237,22 @@ def apply_shared(template):
         applied.append('S8: already patched (skip)')
     else:
         applied.append('S8: WARN not found')
+
+    # S9 — single-column icon stack at ≤480px; 160px icons (replaces S8's 3-col/96px)
+    S9_OLD = ('.classes { grid-template-columns: repeat(3, 1fr); padding: 0 8px; }\n'
+              '    .class .icon { height: 90px; }\n'
+              '    .class .icon svg, .class .icon .class-icon { width: 96px; height: 96px; margin: 0; }\n'
+              '    .class .label { font-size: 10px; }')
+    S9_NEW = ('.classes { grid-template-columns: 1fr; padding: 0 8px; }\n'
+              '    .class .icon { height: 160px; }\n'
+              '    .class .icon svg, .class .icon .class-icon { width: 160px; height: 160px; margin: 0; }')
+    if S9_OLD in template:
+        template = template.replace(S9_OLD, S9_NEW, 1)
+        applied.append('S9: single-column icon stack applied')
+    elif S9_NEW in template:
+        applied.append('S9: already patched (skip)')
+    else:
+        applied.append('S9: WARN not found')
 
     return template, applied
 
