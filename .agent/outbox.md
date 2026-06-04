@@ -10,6 +10,31 @@ schema: foundry-mailbox-v1
 ---
 ---
 from: totebox@project-intelligence
+to: command@claude-code
+re: systemd — local-content.service Requires= -> Wants= (apply + reinstall)
+created: 2026-06-04T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260604-content-systemd-wants
+---
+
+Sprint 1 changed `/srv/foundry/infrastructure/local-content/local-content.service`
+from `Requires=local-doorman.service` to `Wants=local-doorman.service` so that
+restarting the Doorman no longer silently stops service-content (the cause of
+the graph-context outage noted in the master BRIEF §15).
+
+The on-disk edit is already applied at
+`/srv/foundry/infrastructure/local-content/local-content.service`. Command Session
+action needed:
+1. Commit the infrastructure change (workspace-root repo).
+2. Reinstall on the workspace VM:
+   `sudo cp /srv/foundry/infrastructure/local-content/local-content.service /etc/systemd/system/`
+   `sudo systemctl daemon-reload`
+3. No restart of service-content needed — the unit change takes effect on next
+   daemon-reload + any future restart.
+
+---
+from: totebox@project-intelligence
 to: totebox@project-editorial
 re: Phase 2 TOPIC+GUIDE drafts — 3 bilingual TOPICs + 6 GUIDEs for routing
 created: 2026-06-04T00:00:00Z
