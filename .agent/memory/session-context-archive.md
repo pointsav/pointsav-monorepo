@@ -4,6 +4,27 @@ Entries pushed from session-context.md when rolling window exceeds 3.
 
 ---
 
+## 2026-06-01 | totebox | claude-code
+
+**Done this session:**
+- Startup: role confirmed, lock written, 1 inbox message (H-1..H-10 rollout). Actioned and archived.
+- Produced all outstanding artifacts for this cluster:
+  - `GUIDE-provision-marketing-site.draft.md` — provision a new instance from scratch (customer leg)
+  - `GUIDE-deployment-marketing-site.draft.md` — deploy/update binary on running instance (customer leg)
+  - `TOPIC-app-mediakit-marketing.draft.md` — WordPress-leapfrog architecture background (wiki leg; condition met: MVP running)
+  - All 3 staged to `.agent/drafts-outbound/` → gateway: project-editorial
+- Prior design drafts remain staged: 3 in `.agent/drafts-outbound/` (icon-tab component + 2 tokens), 10 in `.claude/drafts-outbound/leapfrog-2030/` (Leapfrog 2030 batch → project-design).
+
+**Pending / carry-forward:**
+- Bootstrap deploys + certbot TLS still operator-gated (NEXT.md).
+- Source-level `<title>` fix on next bundle rebuild (NEXT.md).
+- `TOPIC-app-mediakit-marketing.draft.md` needs bilingual pair (`.es.md`) — flagged in frontmatter.
+
+**Operator preferences surfaced:**
+- No new preferences this session.
+
+---
+
 ## 2026-05-28 | totebox | claude-code
 
 **Done this session:**
