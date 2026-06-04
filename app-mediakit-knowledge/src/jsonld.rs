@@ -11,6 +11,7 @@
 //! emit it inside `<head>` via `maud::PreEscaped`.
 
 use crate::render::Frontmatter;
+use crate::walker::Frontmatter as ArticleMeta;
 use serde_json::{json, Value};
 
 /// Build a `<script type="application/ld+json">…</script>` block for one TOPIC.
@@ -75,6 +76,54 @@ pub fn jsonld_for_topic(meta: &Frontmatter, slug: &str) -> String {
     // Forward-looking-information disclosure flag flows to JSON-LD as an
     // additionalProperty so AEO crawlers + downstream consumers see the
     // FLI label on the structured-data side, not just in rendered chrome.
+    if meta.forward_looking {
+        obj["additionalProperty"] = json!([{
+            "@type": "PropertyValue",
+            "name": "forward_looking",
+            "value": true
+        }]);
+    }
+
+    format!(
+        r#"<script type="application/ld+json">{}</script>"#,
+        serde_json::to_string(&obj).unwrap_or_default()
+    )
+}
+
+/// Build a `<script type="application/ld+json">…</script>` block for one article
+/// using the walker-layer `ArticleMeta` (which carries `summary`, `category`, etc.)
+/// and a fully-qualified base URL string.
+///
+/// Returns a schema.org `Article` object. This is the modular-pipeline counterpart
+/// to `jsonld_for_topic()`, which takes the render-layer `Frontmatter`. Both produce
+/// the same `<script>` wrapper and can be used interchangeably depending on which
+/// metadata type is available at the call site.
+///
+/// # Parameters
+/// - `meta` — walker `Frontmatter` from `walker::parse_frontmatter()`
+/// - `base_url` — instance base URL, e.g. `"https://documentation.pointsav.com"`.
+///   Must not have a trailing `/`.
+pub fn jsonld_for_article(meta: &ArticleMeta, base_url: &str) -> String {
+    let slug = meta.slug.as_deref().unwrap_or("");
+    let title = meta.title.as_deref().unwrap_or(slug);
+
+    let mut obj: Value = json!({
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": title,
+        "url": format!("{}/wiki/{}", base_url, slug),
+        "inLanguage": "en"
+    });
+
+    if let Some(desc) = &meta.summary {
+        obj["description"] = json!(desc);
+    }
+    if let Some(date) = &meta.last_edited {
+        obj["dateModified"] = json!(date);
+    }
+    if let Some(cat) = &meta.category {
+        obj["keywords"] = json!(cat);
+    }
     if meta.forward_looking {
         obj["additionalProperty"] = json!([{
             "@type": "PropertyValue",
