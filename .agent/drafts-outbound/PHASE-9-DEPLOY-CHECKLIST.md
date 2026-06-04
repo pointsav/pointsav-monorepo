@@ -21,10 +21,17 @@ content is edited in git, not in-browser.
   Confirmed per BRIEF §15 (2026-06-04).
 - [ ] Run: `cd /srv/foundry/clones/project-knowledge/pointsav-monorepo/app-mediakit-knowledge && cargo build --release`
   (binary already built 2026-06-04 at `/srv/foundry/cargo-target/mathew/release/`; re-run if source changed since)
-- [ ] **Dead-link gate must pass before promote (L18/L29).** Current state FAILS:
-  - `cargo xtask check-content /srv/foundry/clones/project-knowledge/content-wiki-documentation` → 4,568 dead links (MUST resolve)
-  - `cargo xtask check-content /srv/foundry/clones/project-knowledge/content-wiki-projects` → 396 dead links (MUST resolve)
-  - `cargo xtask check-content /srv/foundry/clones/project-knowledge/content-wiki-corporate` → 290 dead links (known-issue repo per BRIEF §9; deploy of corporate instance is provisional until its gate passes)
+- [x] **Dead-link gate passes (L18/L29) — all three repos clean (2026-06-04).**
+  The canonical gate is the binary's `check --strict` subcommand (it uses the
+  live `render::page_exists` resolver). Do NOT use `cargo xtask check-content` —
+  that hand-rolled duplicate over-reported by ~99.9% (path-slugs, reversed pipe,
+  scanned `.agent/` + code spans); fixed in monorepo `2d84b375` but the subcommand
+  is authoritative. Run before promote:
+  - `app-mediakit-knowledge check --content-dir /srv/foundry/clones/project-knowledge/content-wiki-documentation --strict` → 0 dead links (243 pages)
+  - `app-mediakit-knowledge check --content-dir /srv/foundry/clones/project-knowledge/content-wiki-projects --strict` → 0 dead links (48 pages)
+  - `app-mediakit-knowledge check --content-dir /srv/foundry/clones/project-knowledge/content-wiki-corporate --strict` → 0 dead links (20 pages)
+  The 6 genuine dead links were fixed in content commits `42df9a0` (documentation),
+  `c15ef8c` (projects), `b4c6b98` (corporate).
 - [ ] Confirm DESIGN-TOKEN-CHANGE draft has received master_cosign from project-design
   (file: `.agent/drafts-outbound/DESIGN-TOKEN-CHANGE-knowledge-platform-theming.draft.md`)
 - [ ] Stage 6 promote of `app-mediakit-knowledge` (Command Session) once gates clear
