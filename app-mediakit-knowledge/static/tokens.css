@@ -189,4 +189,14 @@
   --home-recent-date-column-width: 6rem;
   --home-recent-item-padding-y: 0.5rem;
 
+  /* Layout geometry — Phase 8 semantic tokens (DTCG primitive.layout source)
+   * These expose layout and safe-area values at the token layer so
+   * style.css can reference them without hardcoding. */
+  --nav-height:     48px;   /* primitive.layout.nav-h */
+  --sidebar-w:      272px;  /* primitive.layout.sidebar-w */
+  --bottom-bar-h:   56px;   /* mobile bottom-bar height (L24 safe-area gate) */
+  --measure:        68ch;   /* comfortable reading line length */
+  --safe-b:         env(safe-area-inset-bottom, 0px); /* L24: applied not merely defined */
+  --palette-z:      9000;   /* Cmd+K palette z-index; above all article chrome */
+
 }
