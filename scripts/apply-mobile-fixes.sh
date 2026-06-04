@@ -16,6 +16,7 @@
 #   P1: Remove empty <a href="#"> from PointSav right nav
 #   P2: Strip redundant width="320" height="80" SVG attrs (PointSav)
 #   P3: Equalise Monorepo + Design System button sizes at ≤768px and ≤480px (PointSav)
+#   P4: Stack Monorepo + Design System buttons vertically on mobile (PointSav)
 #
 # Usage: bash scripts/apply-mobile-fixes.sh
 
@@ -293,20 +294,40 @@ P3_OLD_768 = '.subnav .tab { min-width: 100px; font-size: 10px; }'
 P3_NEW_768 = '.subnav .tab, a.monorepo-btn { min-width: 100px; font-size: 10px; }'
 P3_OLD_480 = '.subnav .tab { min-width: 80px; padding: 6px 10px; font-size: 9px; }'
 P3_NEW_480 = '.subnav .tab, a.monorepo-btn { min-width: 80px; padding: 6px 10px; font-size: 9px; } a.monorepo-btn svg { width: 10px; height: 10px; }'
+P4_MARKER_768 = '.subnav .tabs-right { flex-direction: column; }'
+P4_MARKER_480 = '.subnav .tab, a.monorepo-btn { font-size: 11px; padding: 8px 14px; }'
 if P3_OLD_768 in t:
     t = t.replace(P3_OLD_768, P3_NEW_768, 1)
     log.append('P3: 768px monorepo-btn equalised with tab')
-elif P3_NEW_768 in t:
+elif P3_NEW_768 in t or P4_MARKER_768 in t:
     log.append('P3: 768px already patched (skip)')
 else:
     log.append('P3: 768px WARN not found')
 if P3_OLD_480 in t:
     t = t.replace(P3_OLD_480, P3_NEW_480, 1)
     log.append('P3: 480px monorepo-btn equalised with tab + icon scaled')
-elif P3_NEW_480 in t:
+elif P3_NEW_480 in t or P4_MARKER_480 in t:
     log.append('P3: 480px already patched (skip)')
 else:
     log.append('P3: 480px WARN not found')
+P4_OLD_768 = '.subnav .tab, a.monorepo-btn { min-width: 100px; font-size: 10px; }'
+P4_NEW_768 = '.subnav .tabs-right { flex-direction: column; }\n  .subnav .tab, a.monorepo-btn { width: 100%; min-width: unset; font-size: 11px; box-sizing: border-box; }'
+P4_OLD_480 = '.subnav .tab, a.monorepo-btn { min-width: 80px; padding: 6px 10px; font-size: 9px; } a.monorepo-btn svg { width: 10px; height: 10px; }'
+P4_NEW_480 = '.subnav .tab, a.monorepo-btn { font-size: 11px; padding: 8px 14px; }'
+if P4_OLD_768 in t:
+    t = t.replace(P4_OLD_768, P4_NEW_768, 1)
+    log.append('P4: 768px stacking applied')
+elif P4_NEW_768 in t:
+    log.append('P4: 768px already patched (skip)')
+else:
+    log.append('P4: 768px WARN not found')
+if P4_OLD_480 in t:
+    t = t.replace(P4_OLD_480, P4_NEW_480, 1)
+    log.append('P4: 480px stacking applied')
+elif P4_NEW_480 in t:
+    log.append('P4: 480px already patched (skip)')
+else:
+    log.append('P4: 480px WARN not found')
 t_check = save_template(POINTSAV, src, t, si, ep)
 for l in log: print(f"  {'✓' if 'WARN' not in l else '!'} {l}")
 
