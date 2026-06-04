@@ -19,6 +19,7 @@
 #   P4: Stack Monorepo + Design System buttons vertically on mobile (PointSav)
 #   S8: 3-column icon grid at ≤480px; remove negative-margin overflow hack (both sites)
 #   S9: Single-column icon stack at ≤480px; 160px icons (both sites)
+#   S10: White card + tinted icon chip + hover lift at ≤768px (both sites)
 #
 # Usage: bash scripts/apply-mobile-fixes.sh
 
@@ -233,7 +234,7 @@ def apply_shared(template):
     if S8_OLD in template:
         template = template.replace(S8_OLD, S8_NEW, 1)
         applied.append('S8: 3-col icon grid applied, negative margins removed')
-    elif S8_NEW in template:
+    elif S8_NEW in template or '.classes { grid-template-columns: 1fr; padding: 0 8px; }' in template:
         applied.append('S8: already patched (skip)')
     else:
         applied.append('S8: WARN not found')
@@ -253,6 +254,23 @@ def apply_shared(template):
         applied.append('S9: already patched (skip)')
     else:
         applied.append('S9: WARN not found')
+
+    # S10 — white card + tinted icon chip + hover lift at ≤768px (both sites)
+    S10_OLD = '.classes { grid-template-columns: repeat(2, 1fr); padding: 0 12px; }'
+    S10_NEW = ('.classes { grid-template-columns: repeat(2, 1fr); padding: 0 12px; gap: 12px; }\n'
+               '    .class { background: #fff; border: 1px solid #d1d5db; border-radius: 10px; '
+               'padding: 12px; box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.10); '
+               'transition: box-shadow .18s ease, transform .18s ease; }\n'
+               '    .class:hover, .class:active { transform: translateY(-2px); '
+               'box-shadow: 0 6px 16px rgba(16,24,40,.12); }\n'
+               '    .class .icon { background: rgba(22,70,121,.07); border-radius: 8px; }')
+    if S10_OLD in template:
+        template = template.replace(S10_OLD, S10_NEW, 1)
+        applied.append('S10: card + chip + hover applied')
+    elif S10_NEW in template:
+        applied.append('S10: already patched (skip)')
+    else:
+        applied.append('S10: WARN not found')
 
     return template, applied
 
