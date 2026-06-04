@@ -73,7 +73,7 @@ fn fmt_int_commas(v: f64) -> String {
     let bytes = s.as_bytes();
     let mut out = String::with_capacity(s.len() + s.len() / 3);
     for (i, b) in bytes.iter().enumerate() {
-        if i > 0 && (bytes.len() - i) % 3 == 0 {
+        if i > 0 && (bytes.len() - i).is_multiple_of(3) {
             out.push(',');
         }
         out.push(*b as char);
@@ -158,12 +158,17 @@ pub fn render_spv1(wcp_data: &WcpData) -> String {
     let mut s = String::new();
     s.push_str(&page_head("Bencal SPV1 — Forecast Summary V1"));
     s.push_str("<body>\n");
-    s.push_str(&page_intro("Bencal Special Purpose 1 Inc.", "WCP 42M Excel"));
+    s.push_str(&page_intro(
+        "Bencal Special Purpose 1 Inc.",
+        "WCP 42M Excel",
+    ));
 
     // Capital structure
     s.push_str("<h2>Capital Structure &amp; Investment Position</h2>\n");
     s.push_str("<table>\n");
-    s.push_str("<tr><th class=\"lbl\">Item</th><th>Shares/Units</th><th>Price</th><th>Capital</th></tr>\n");
+    s.push_str(
+        "<tr><th class=\"lbl\">Item</th><th>Shares/Units</th><th>Price</th><th>Capital</th></tr>\n",
+    );
     s.push_str(&format!(
         "<tr><td class=\"lbl\">SPV1 outstanding shares (investor pool)</td><td>{}</td><td>${:.2}</td><td>{}</td></tr>\n",
         fmt_int_commas(SPV1_INVESTOR_SHARES),
@@ -216,7 +221,9 @@ pub fn render_spv1(wcp_data: &WcpData) -> String {
 
     s.push_str("<h2>Investment Return Summary (Y10 endpoint)</h2>\n");
     s.push_str("<table>\n");
-    s.push_str("<tr><th class=\"lbl\">Metric</th><th>Aggregate</th><th>Per investor share</th></tr>\n");
+    s.push_str(
+        "<tr><th class=\"lbl\">Metric</th><th>Aggregate</th><th>Per investor share</th></tr>\n",
+    );
     s.push_str(&format!(
         "<tr><td class=\"lbl\">Capital invested (Y0)</td><td>{}</td><td>{}</td></tr>\n",
         fmt_money_full(SPV1_INVESTOR_SHARES * cost_basis_ps),
@@ -260,7 +267,7 @@ pub fn render_spv1(wcp_data: &WcpData) -> String {
     s.push_str("</table>\n");
 
     s.push_str(&bcsc_footer());
-    s.push_str(&LNUM_SCRIPT);
+    s.push_str(LNUM_SCRIPT);
     s.push_str("</body></html>\n");
     s
 }
@@ -273,12 +280,17 @@ pub fn render_spv2(pclp_data: &Pclp1Data, _wcp_data: &WcpData) -> String {
     let mut s = String::new();
     s.push_str(&page_head("Bencal SPV2 — Forecast Summary V1"));
     s.push_str("<body>\n");
-    s.push_str(&page_intro("Bencal Special Purpose 2 (GP + LP)", "PCLP 1 Excel + WCP 42M Excel"));
+    s.push_str(&page_intro(
+        "Bencal Special Purpose 2 (GP + LP)",
+        "PCLP 1 Excel + WCP 42M Excel",
+    ));
 
     // Capital structure
     s.push_str("<h2>Capital Structure &amp; Investment Position</h2>\n");
     s.push_str("<table>\n");
-    s.push_str("<tr><th class=\"lbl\">Item</th><th>Units</th><th>Price</th><th>Capital</th></tr>\n");
+    s.push_str(
+        "<tr><th class=\"lbl\">Item</th><th>Units</th><th>Price</th><th>Capital</th></tr>\n",
+    );
     s.push_str(&format!(
         "<tr><td class=\"lbl\">SPV2 outstanding investor units</td><td>{}</td><td>${:.2}</td><td>{}</td></tr>\n",
         fmt_int_commas(SPV2_INVESTOR_UNITS),
@@ -291,7 +303,8 @@ pub fn render_spv2(pclp_data: &Pclp1Data, _wcp_data: &WcpData) -> String {
         fmt_money_full(spv2.assumptions.total_equity),
     ));
     s.push_str("</table>\n");
-    let spv2_pclp_stake_pct = 100.0 * spv2.assumptions.diluted_units / pclp_data.assumptions.diluted_units;
+    let spv2_pclp_stake_pct =
+        100.0 * spv2.assumptions.diluted_units / pclp_data.assumptions.diluted_units;
     s.push_str(&format!(
         "<p class=\"note\">SPV2 holds {} PCLP 1 LP units = {:.1}% of PCLP 1 total outstanding ({} units per Excel). SPV2 also holds 600,000 WCP shares received as a founding capital contribution from the Strategic Partner block (Flag 15 path b; recorded at FMV against contributed surplus at Y0). The WCP component is shown separately in the Bencal Management Forecast.</p>\n",
         fmt_int_commas(spv2.assumptions.diluted_units),
@@ -311,7 +324,11 @@ pub fn render_spv2(pclp_data: &Pclp1Data, _wcp_data: &WcpData) -> String {
         let dist_per_unit = dist_total / SPV2_INVESTOR_UNITS;
         running += dist_per_unit;
         let nav_per_unit = spv2.years[y].nav_per_unit;
-        let event_class = if dist_per_unit > 0.01 { " class=\"event\"" } else { "" };
+        let event_class = if dist_per_unit > 0.01 {
+            " class=\"event\""
+        } else {
+            ""
+        };
         s.push_str(&format!(
             "<tr{}><td class=\"lbl\">Y{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>\n",
             event_class,
@@ -330,7 +347,9 @@ pub fn render_spv2(pclp_data: &Pclp1Data, _wcp_data: &WcpData) -> String {
     ));
 
     // Y10 Return Summary
-    let cumulative_cash_total = (0..10).map(|y| spv2.years[y].distributions_to_lps).sum::<f64>();
+    let cumulative_cash_total = (0..10)
+        .map(|y| spv2.years[y].distributions_to_lps)
+        .sum::<f64>();
     let cumulative_cash_per_unit = cumulative_cash_total / SPV2_INVESTOR_UNITS;
     let y10_nav_total = spv2.years[9].nav_total;
     let y10_nav_per_unit = spv2.years[9].nav_per_unit;
@@ -341,7 +360,9 @@ pub fn render_spv2(pclp_data: &Pclp1Data, _wcp_data: &WcpData) -> String {
 
     s.push_str("<h2>Investment Return Summary (Y10 endpoint)</h2>\n");
     s.push_str("<table>\n");
-    s.push_str("<tr><th class=\"lbl\">Metric</th><th>Aggregate</th><th>Per investor unit</th></tr>\n");
+    s.push_str(
+        "<tr><th class=\"lbl\">Metric</th><th>Aggregate</th><th>Per investor unit</th></tr>\n",
+    );
     s.push_str(&format!(
         "<tr><td class=\"lbl\">Capital invested (Y0)</td><td>{}</td><td>{}</td></tr>\n",
         fmt_money_full(cost_basis_total),
@@ -388,7 +409,7 @@ pub fn render_spv2(pclp_data: &Pclp1Data, _wcp_data: &WcpData) -> String {
     s.push_str("</table>\n");
 
     s.push_str(&bcsc_footer());
-    s.push_str(&LNUM_SCRIPT);
+    s.push_str(LNUM_SCRIPT);
     s.push_str("</body></html>\n");
     s
 }
@@ -402,12 +423,17 @@ pub fn render_management(pclp_data: &Pclp1Data, wcp_data: &WcpData) -> String {
     let mut s = String::new();
     s.push_str(&page_head("Bencal Management Corp. — Forecast Summary V1"));
     s.push_str("<body>\n");
-    s.push_str(&page_intro("Bencal Management Corp.", "PCLP 1 Excel + WCP 42M Excel (via 10% lookthrough at SPV1 + SPV2)"));
+    s.push_str(&page_intro(
+        "Bencal Management Corp.",
+        "PCLP 1 Excel + WCP 42M Excel (via 10% lookthrough at SPV1 + SPV2)",
+    ));
 
     // Capital structure
     s.push_str("<h2>Capital Structure &amp; Investment Position</h2>\n");
     s.push_str("<table>\n");
-    s.push_str("<tr><th class=\"lbl\">Item</th><th>Shares</th><th>Price</th><th>Capital</th></tr>\n");
+    s.push_str(
+        "<tr><th class=\"lbl\">Item</th><th>Shares</th><th>Price</th><th>Capital</th></tr>\n",
+    );
     s.push_str(&format!(
         "<tr><td class=\"lbl\">Bencal Management Corp. — common shares</td><td>{}</td><td>${:.2}</td><td>{}</td></tr>\n",
         BM_INVESTOR_SHARES as u32,
@@ -457,7 +483,10 @@ pub fn render_management(pclp_data: &Pclp1Data, wcp_data: &WcpData) -> String {
 
     // Block F Y10 summary (engine-canonical)
     s.push_str("<h2>Block F — Bencal Management Y10 Headline (engine compute_block_f)</h2>\n");
-    s.push_str(&format!("<p class=\"note\">{}</p>\n", bencal::BlockF::header_note()));
+    s.push_str(&format!(
+        "<p class=\"note\">{}</p>\n",
+        bencal::BlockF::header_note()
+    ));
     s.push_str("<table>\n");
     s.push_str("<tr><th class=\"lbl\">Metric</th><th>Aggregate</th><th>Per BM share</th></tr>\n");
     s.push_str(&format!(
@@ -476,13 +505,14 @@ pub fn render_management(pclp_data: &Pclp1Data, wcp_data: &WcpData) -> String {
     ));
     s.push_str(&format!(
         "<tr><td class=\"lbl\">CAGR Y0→Y10 (artifact)</td><td>{:.1}%</td><td>{:.1}%</td></tr>\n",
-        block_f.cagr_y10 * 100.0, block_f.cagr_y10 * 100.0,
+        block_f.cagr_y10 * 100.0,
+        block_f.cagr_y10 * 100.0,
     ));
     s.push_str("</table>\n");
     s.push_str("<p class=\"note\">MOIC and CAGR figures at Bencal Management level are mechanically extreme because the entity's paid-in capital is nominal ($10 total against multi-million-dollar lookthrough claims). Read alongside the aggregate column; the per-share view exists to surface the 10/90 manager/investor dilution mechanic per BRIEF §5d–§5f.</p>\n");
 
     s.push_str(&bcsc_footer());
-    s.push_str(&LNUM_SCRIPT);
+    s.push_str(LNUM_SCRIPT);
     s.push_str("</body></html>\n");
     s
 }
