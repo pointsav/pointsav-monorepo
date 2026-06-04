@@ -226,6 +226,7 @@ for i, c in enumerate(targets):
         "outputformat": "json",
         "pvcalculation": 0,
         "angle": 0, "aspect": 0,
+        "startyear": 2019, "endyear": 2019,
         "components": 1,
     })
     url = f"https://re.jrc.ec.europa.eu/api/v5_2/seriescalc?{params}"
@@ -234,9 +235,8 @@ for i, c in enumerate(targets):
             data = json.loads(resp.read())
         hourly = data.get("outputs", {}).get("hourly", [])
         if hourly:
-            n_years = len(hourly) / 8760          # PVGIS returns full dataset range
             annual_ghi = sum(h.get("Gb(i)", 0) + h.get("Gd(i)", 0)
-                             for h in hourly) / 1000.0 / n_years
+                             for h in hourly) / 1000.0
             ghi_map[c["id"]] = round(annual_ghi, 1)
     except Exception as e:
         print(f"  WARN: PVGIS error for {c.get('id','?')}: {e}")
@@ -284,6 +284,7 @@ for i, c in enumerate(targets):
         "outputformat": "json",
         "pvcalculation": 0,
         "angle": 0, "aspect": 0,
+        "startyear": 2015, "endyear": 2015,
         "components": 1,
     })
     url = f"https://re.jrc.ec.europa.eu/api/v5_2/seriescalc?{params}"
@@ -292,9 +293,8 @@ for i, c in enumerate(targets):
             data = json.loads(resp.read())
         hourly = data.get("outputs", {}).get("hourly", [])
         if hourly:
-            n_years = len(hourly) / 8760          # PVGIS returns full dataset range
             annual_ghi = sum(h.get("Gb(i)", 0) + h.get("Gd(i)", 0)
-                             for h in hourly) / 1000.0 / n_years
+                             for h in hourly) / 1000.0
             ghi_map[c["id"]] = round(annual_ghi, 1)
     except Exception as e:
         print(f"  WARN: PVGIS-NSRDB error for {c.get('id','?')}: {e}")
