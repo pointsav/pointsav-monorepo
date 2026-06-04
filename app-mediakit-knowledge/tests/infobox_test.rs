@@ -38,7 +38,6 @@ async fn build_state(content_dir: &Path) -> (AppState, tempfile::TempDir) {
         links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
         brand_theme: None,
         brand_instance: "documentation".to_string(),
-        db: None,
     };
     (state, state_dir)
 }
