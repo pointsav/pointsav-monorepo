@@ -262,7 +262,7 @@ src/
 ├── jsonld.rs            (Schema.org JSON-LD from frontmatter)
 ├── glossary.rs          (auto-linker)
 ├── citations.rs         (citation registry; hover card data)
-├── check.rs             (dead-link gate + frontmatter validator; cargo xtask target)
+├── check.rs             (dead-link gate + frontmatter validator; `check --strict` subcommand — canonical, uses render::page_exists)
 ├── chrome/
 │   ├── mod.rs           (base chrome; font preload L23; strings(locale) L22; dark-mode)
 │   ├── article.rs       (tabs; TOC; hatnote; infobox; status badge; related-articles)
@@ -425,7 +425,7 @@ Execute §11 items 1–10. No rebuild. ~3–4 days. Gate: all 10 committed, `car
 
 **Phase 1 — Foundation** (new codebase)
 New `src/` per §5; `config.rs`; `state.rs` with `Vec<Mount>` + `Vec<Blueprint>`; `mounts.rs`;
-`blueprints.rs`; `walker.rs`; `error.rs`; `check.rs` (`cargo xtask check-content`); `collab.rs`
+`blueprints.rs`; `walker.rs`; `error.rs`; `check.rs` (`check --strict` subcommand); `collab.rs`
 deleted (L26). Gate: `cargo check` passes; xtask runs; no file above 1,500 lines.
 
 **Phase 2 — Render Pipeline**
@@ -445,8 +445,8 @@ Gate: all GET routes 200; search returns results; Cmd+K queries live; feeds vali
 
 **Phase 5 — Git + Link Graph + Dead-Link Gate**
 `git.rs`; `history.rs`; `links.rs`; dead-link gate wired to all mount sets.
-Gate: git history renders; What-links-here works; `cargo xtask check-content` catches
-an intentional dead link and exits non-zero.
+Gate: git history renders; What-links-here works; `check --strict` (canonical
+subcommand, not the buggy `cargo xtask`) catches an intentional dead link and exits non-zero.
 
 **Phase 6 — Auth + Edit** (conditional on Q1)
 `auth.rs`; `users.rs`; `pending.rs`; edit routes; `static/editor.js` (editor-only load L25).
