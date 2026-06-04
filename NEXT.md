@@ -1,9 +1,9 @@
-# NEXT.md — project-knowledge (app-mediakit-knowledge)
+# NEXT.md — project-design
 
 Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 
-Last updated: 2026-06-03
+Last updated: 2026-06-04
 
 ---
 
@@ -30,36 +30,17 @@ requesting they push to GitHub at session end so both routes work.
 ---
 
 ## Content audit — 2026-06-01 batch (remaining items)
+## Stage 6 — pending Command Session
 
-- [x] **Commuter overnight ingest complete; PKS then redefined.** The commuter/metro ingest
-      finished; PKS was then **redefined as a geometric airport-led park-and-ride model**
-      (`build-pks-clusters.py`, commit `aec2187e`). Candidate = sized regional airport
-      (park-and-fly) OR outer commuter-rail-belt station (15–110 km ring, connected toward core,
-      ≤4 stops from line end). Airports lead → fixed map spread (NA cell coverage 96 → 957).
-      **5,977 features** live. [2026-06-03 totebox@claude-code]
-- [x] **Urban Fringe → Retail-density model.** `qualify_vwh()` admits ≥2-category co-locations OR
-      any lone STRONG/BROAD trade-supply store; composition-score `tier_vwh(cats,n)`.
-      **7,028 features** live. Both archetypes now ≈ Retail bubble density (~6,500). [2026-06-03]
-- [x] **Mobile BentoBox footbar hardening + cache-busting.** visualViewport detent heights +
-      resize re-snap, `overscroll-behavior: contain`, modal `dvh`; `?v=` cache token on archetype
-      data URLs (current `20260603d`). Verified via `tools/shoot.mjs` browser-in-the-loop. [2026-06-03]
+- [ ] **Promote pointsav-design-system to canonical** — 7 commits on `origin-staging-j` (jwoodfine)
+  awaiting `~/Foundry/bin/promote.sh` from Command Session.
+  Signal in outbox: `project-design-20260604-stage6-signal`.
+  After promote: `sync-local.sh --all` → `sync-design-tokens.sh` → `local-design.service` restarts
+  → `design.pointsav.com/tokens.full.json` updates automatically. [2026-06-04 totebox@claude-code]
 
-- [ ] **June 4 05:00 UTC overnight ingest — SCHEDULED (crontab).** `run-overnight-ingests.sh`:
-      parking layer (`ingest-osm-parking.py`) + parcel depots (`ingest-osm-parcel-depot.py`) +
-      20 new VWH brand chains (builders' merchants, self-storage, trade counters via `ingest-osm.py`).
-      Brand YAMLs in the local-only deployment data dir. Log: `overnight-ingests.log`. [2026-06-03]
-- [ ] **After June 4 — wire the parkade GREENFIELD filter into `build-pks-clusters.py`.** Join
-      `cleansed-civic-parking.jsonl`: label each candidate BUILT (≤800 m of a multi-storey/garage
-      → exclude/down-weight) / PARTIAL (surface park_ride) / GREENFIELD (nothing). The "no parkade
-      yet" filter that ranks park-and-ride opportunity. [2026-06-03]
-- [ ] **After June 4 — wire new categories into `VWH_CHAINS`.** Add `builders_merchant`,
-      `self_storage`, `trade_counter`, `parcel_depot` (parcel via the `parcel-depot-osm`
-      pseudo-chain) once the ingest data lands. [2026-06-03]
-- [ ] **Cache-token convention.** Bump `?v=` in `index.html` on EVERY archetype-data rebuild +
-      redeploy (browser caches geojson as fresh; stale-cache trap otherwise). [2026-06-03]
-- [ ] **Tier-refinement / single-store density.** VWH T3 is now mostly single-store fringe markers
-      (3,549 of 7,028). Revisit once the June 4 categories add genuine co-locations — may tighten
-      back toward co-location-only. [2026-06-03]
+- [ ] **Fix `origin-staging-p` (pwoodfine) publickey error** — all design-system commits are on
+  `origin-staging-j` only. Command should push or investigate the pwoodfine key in this environment.
+  [2026-06-03 totebox@claude-code]
 
 - [ ] **Stage 6** — promote this session's archive-local commits (`aec2187e` + the docs commit) to
       canonical monorepo. Command Session runs `bin/promote.sh`. [2026-06-03]
@@ -80,10 +61,16 @@ requesting they push to GitHub at session end so both routes work.
 ### Missing slug / type mismatch ~~DONE 2026-06-02~~
 
 - [x] All 6 flagged guide files in pointsav-fleet-deployment — `type: guide` + `slug:` added 2026-06-02
+## Binary rebuild — design.pointsav.com sidebar
 
----
+- [ ] **`app-privategit-design` nav rebuild** — "Org-chart tokens" page exists at
+  `/elements/org-chart-tokens/overview/` but is absent from the main sidebar (hardcoded binary).
+  Source of the binary is unknown (`source_commit: unknown-backfill` in ledger).
+  Two options: (a) find source + add nav entry, (b) implement dynamic nav in
+  `app-privategit-design-system/src/main.rs`. Awaiting operator decision.
+  Detail: outbox `project-design-20260603-design-binary-rebuild-request`. [2026-06-03 operator-pending]
 
-## VWH data quality — iso_country_code mismatches — FIXED 2026-06-03
+## Design token open questions
 
 - [x] **Coordinate-based ISO assignment** — `ingest-osm.py` now resolves `iso_country_code` from
       the node's lat/lon via Shapely point-in-polygon for multi-country chains (instead of
@@ -93,27 +80,24 @@ requesting they push to GitHub at session end so both routes work.
 - [x] **A19 TOPIC: Vertical Warehouse** — committed to archetypes/ 2026-06-02 (commit 9fb4e0e, Peter); live at documentation.pointsav.com/archetypes/vertical-warehouse
 - [x] **A20 TOPIC: Parking Structures** — committed to archetypes/ 2026-06-02 (commit 9fb4e0e, Peter); live at documentation.pointsav.com/archetypes/parking-structures
 - [x] **A21 GUIDE: Location Intelligence Data Collection** — routed to Command via outbox 2026-06-02 (msg-id: project-knowledge-20260602-guide-location-intelligence-route)
+- [ ] **`--wf-teal` / `--wf-red` Woodfine-institutional variants** — current values are
+  IBM Carbon-native (#005D5D / #A2191F). Institutional variants deferred per operator
+  2026-06-03. Revisit when Bencal chart authoring surfaces a need for differentiation.
+  [2026-06-03 totebox@claude-code]
 
----
+- [ ] **`--wf-gold` discrepancy** — `theme-woodfine.css` has `#C89211`; `MEMO-Woodfine-Color-Matrix.md`
+  documents `#F57F17` as 9-chart majority canon. Semantic YAML uses `#C89211`. Reconcile.
+  Noted in `tokens/charts/token-chart-semantic.yaml`. [2026-06-02 totebox@claude-code]
 
-## Urban Fringe chain expansion — 2026-06-03 session
+## Incoming drafts still in project-orgcharts drafts-outbound
 
-Independent strict co-location model (≥2 distinct categories, no metro gate, no hypermarket
-disqualifier) — `build-vwh-clusters.py`. VWH total was **3,520** under the strict model;
-**superseded 2026-06-03** by the Retail-density model (7,028; admits lone STRONG/BROAD stores).
-Country chain additions (still in effect):
+- [ ] **`ASSET-color-sample-palette-reference.draft.md`** — visual HTML palette reference;
+  target: `pointsav-design-system/assets/reference/woodfine-org-chart-color-sample.html`.
+  Already staged in this archive's `.agent/drafts-outbound/`. No master_cosign needed.
+  [2026-06-01 totebox@project-orgcharts → project-design-20260601-orgcharts-dispatch-ack: COMMITTED `d1f19b7`]
+  STATUS: already committed — remove from drafts-outbound on next session start.
 
-- [x] **CA/MX** — RONA, Home Hardware (469), Fastenal CA, United Rentals CA, PartSource, Truper MX,
-      Enterprise CA, Hertz MX. CA 32→170, MX→72.
-- [x] **ES/IT** — Norauto + Feu Vert (auto parts), Bauhaus/Brico Dépôt/AKI (108)/Bricomart/Bricoman
-      ES hardware, Bricocenter/Brico io (72)/Bricoman IT hardware, Rexel/Sonepar electrical,
-      Loxam/Kiloutou tool rental. **Spain 6→69, Italy 11→44.**
-- [ ] **`bricomart-es` returns 0 in OSM** — brand:wikidata + name query both empty; ~55 stores
-      exist but are tagged differently (possibly under Leroy Merlin brand). Re-investigate tagging
-      or skip. Wired but contributes nothing. [2026-06-03]
-- [ ] **ES/IT B2B electrical/tool chains thinly mapped** — Loxam/Kiloutou/Rexel/Sonepar ES/IT
-      yielded only ~20 usable records (trade counters under-mapped in OSM). Low-priority backlog.
-      [2026-06-03]
+## Note: NEXT.md was contaminated
 
 ---
 
@@ -346,3 +330,7 @@ Inbox msg-id: `project-knowledge-20260603-ux-audit-memo-home-woodfinegroup-com-h
 - [ ] BIM_DESIGN_SYSTEM_DIR decision: woodfine-bim-library tokens (key-plans,
   spatial, etc.) are not loaded by the site — either extend token loading to
   include library_dir/tokens, or keep reading directly per-handler
+Prior content was contaminated from project-knowledge, project-bim, and project-editorial
+sessions that ran in this archive directory. Replaced 2026-06-04. If any items from the
+prior content are relevant to project-design work, they belong in their owning archive's
+NEXT.md, not here.
