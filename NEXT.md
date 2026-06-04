@@ -7,6 +7,55 @@ Last updated: 2026-06-04
 
 ---
 
+## AEC passive-design data pipeline — Jun 4 2026
+
+### Done this session
+- [x] **nightly-rebuild.sh fix** — was deploying stale Jun 2 `-candidates.geojson`; now deploys
+      `work/archetype-vwh.geojson` / `work/archetype-pks.geojson` directly. Gateway restored:
+      VWH=10,261 / PKS=5,984. [2026-06-04 totebox@claude-code]
+- [x] **VWH 4 new categories** — `builders_merchant` (STRONG), `trade_counter` (STRONG),
+      `self_storage` (BROAD), `parcel_depot` (BROAD) wired into `build-vwh-clusters.py`.
+      VWH rebuilt: **10,261 features** (was 7,028). Cache token `?v=20260604c`. [2026-06-04]
+- [x] **PVGIS solar fix** — `PVGIS-SARAH3` → `PVGIS-SARAH2` (EU); dead NREL domain →
+      `PVGIS-NSRDB` (NA, no API key). Single-year params (SARAH2=2019, NSRDB=2015) to
+      avoid 14 MB multi-year responses. AEC global running overnight. [2026-06-04]
+- [x] **Parking ingest tiling** — US/CA/FR/DE/IT/PL/NO returned 0 records (Overpass OOM on
+      full-country bbox). Added `TILE_GRIDS` to `ingest-osm-parking.py`; `run-parking-rerun.sh`
+      scheduled Jun 5 05:00 UTC. [2026-06-04]
+- [x] **AEC scripts restored** — `build-aec-seismic.sh`, `build-aec-flood.sh`,
+      `build-aec-koppen-ecozones.sh` restored from git; seismic→flood chain queued to run
+      after AEC global finishes (~00:20 UTC Jun 5). [2026-06-04]
+
+### Wind + solar passive-design data — queued next session
+
+- [ ] **Download GWA wind direction raster** — Global Wind Atlas `wind-direction/10` GeoTIFF
+      (DTU/World Bank, CC BY 4.0, global coverage). Store at `work/aec/gwa-wind-direction-10m.tif`.
+      Add step [6/5] to `build-aec-global.sh`: sample with `gdallocationinfo` → `wind_direction_deg`
+      field in clusters-meta.json. Covers US + CA + MX + EU in one file. [2026-06-04]
+- [ ] **Download SRTM/NASADEM elevation raster** — 30m global DEM. Store at
+      `work/aec/nasadem-global.tif` or tile-based. Add `elevation_m` field.
+      Useful for drainage, flood risk context, earthworks cost. [2026-06-04]
+
+### Wind visualization on map — blocked on data
+
+- [ ] **Detail card: show `wind_speed_ms`** — one line in the cluster card template in
+      `index.html` when the field is populated. Blocked on next AEC global run
+      (current run writes GHI only; wind/temp/HDD/CDD queued for following run via
+      `wind_speed_ms is None` filter). [2026-06-04]
+- [ ] **Arrow layer: `wind_direction_deg`** — MapLibre GL `icon-rotate` symbol layer driven
+      by `wind_direction_deg` property. Add a second arrow for solar optimum azimuth
+      (180° NH / 0° SH from lat). Together = passive design conflict indicator per cluster.
+      Blocked on GWA raster download (above). Approx 1h UI work once data exists. [2026-06-04]
+
+### Computed fields — no new data needed, add to build-aec-global.sh
+
+- [ ] **`solar_optimal_azimuth_deg`** — 180° if lat > 0 (NH), 0° if lat < 0 (SH). Pure
+      geometry from lat. Add as post-processing step in `build-aec-global.sh` summary block.
+- [ ] **`heating_dominated`** — boolean from `koppen_class`: D\*/C\* = true (heating),
+      B\*/A\* = false (cooling). Already have Köppen; one dict lookup. [2026-06-04]
+
+---
+
 ## Archetype model rework — 2026-06-03 (DEPLOYED LIVE)
 ## Content sync protocol — standing session-start procedure
 
@@ -101,11 +150,17 @@ requesting they push to GitHub at session end so both routes work.
 
 ---
 
-## AEC builds — STILL FAILING — do NOT auto-run overnight
+## AEC builds — RESTORED + QUEUED Jun 4 2026
 
-- [ ] **Seismic + flood builds fail** (see JOURNAL J3 block below). Excluded from the overnight
-      run by design — a broken build must not run unattended. Daytime fix needed in
-      `build-aec-seismic.sh` / `build-aec-flood.sh` before scheduling. [2026-06-03]
+- [x] **Scripts restored** — `build-aec-seismic.sh` (seismic PGA + wetland TIF download) and
+      `build-aec-flood.sh` (Aqueduct + FEMA + EU INSPIRE + GWIS wildfire) restored from git index.
+      Chain queued: fires after AEC global finishes (~00:20 UTC Jun 5). [2026-06-04]
+- [ ] **Verify chain completed** — check `aec-overnight.log` Jun 5 morning; confirm
+      `seismic_pga`, `flood_hazard`, `wildfire_hazard`, `wetland_class` non-zero in clusters-meta.
+      `build-aec-seismic.sh` downloads the real GWL_FCS30 wetland TIF from Zenodo (fixes 15 KB
+      placeholder). [2026-06-04]
+- [ ] **`run-aec-overnight.sh` re-enable in crontab** — once chain verified clean, add to
+      weekly schedule (currently only `build-aec-global.sh` is on Monday cron). [2026-06-04]
 
 ---
 
