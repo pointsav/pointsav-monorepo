@@ -1,251 +1,364 @@
 ---
+schema: foundry-brief-v1
 artifact: brief
 status: active
-topic: app-mediakit-knowledge — knowledge platform master spec (federation + mobile-first + premium UX)
+topic: app-mediakit-knowledge — knowledge platform master spec (fresh build + three live sites)
 archive: project-knowledge
 created: 2026-06-01
+updated: 2026-06-04
 owner: totebox@project-knowledge
 supersedes:
   - BRIEF-app-mediakit-knowledge-2030.md
-  - archive/BRIEF-award-winning-wiki-overhaul.md
-  - archive/BRIEF-MASTER_STRATEGY_AWARD_WINNING_WIKI.md
-  - archive/BRIEF-WIKIPEDIA-PARITY-MASTER-PLAN.md
-  - archive/BRIEF-WIKIPEDIA-PARITY-FUNCTIONAL-INDEX.md
-  - archive/BRIEF-WIKIPEDIA-PARITY-RESEARCH-LOG.md
-  - archive/BRIEF-institutional-chrome-sprint.md
-  - archive/BRIEF-FINAL_AWARD_WINNING_WIKI_EXECUTION_PLAN.md
-  - archive/BRIEF-INPUT-KNOWLEDGE-PLATFORM-BLUEPRINT.md
-  - archive/BRIEF-knowledge-platform.md
-  - archive/BRIEF-gemini-handover-2026-05-30.md
-research_sources:
-  # 2026-05-28 swarm (carried forward from the 2030 brief)
-  - agent-home-page-ux-internet-research-2026-05-28
-  - agent-article-surface-internet-research-2026-05-28
-  - agent-codebase-synthesis-2026-05-28
-  # 2026-06-01 swarm (this consolidation)
-  - opus-premium-docs-sites-2026-06-01      # Stripe, Vercel, Linear, Apple, Tailwind, Supabase
-  - opus-editorial-craft-2026-06-01         # Economist, Stripe Press, GOV.UK, Tufte, Butterick
-  - opus-mobile-ux-2026-06-01               # Apple HIG, Material, GOV.UK, Minerva, web.dev viewport
-  - audit-current-css-chrome-2026-06-01
-  - audit-current-mobile-2026-06-01
-  - audit-content-repos-federation-2026-06-01
+  - BRIEF-knowledge-platform.md
+  - BRIEF-active-work-project-knowledge-2026-05-31.md
+  - BRIEF-award-winning-wiki-overhaul.md
+  - BRIEF-MASTER_STRATEGY_AWARD_WINNING_WIKI.md
+  - BRIEF-WIKIPEDIA-PARITY-MASTER-PLAN.md
+  - BRIEF-WIKIPEDIA-PARITY-FUNCTIONAL-INDEX.md
+  - BRIEF-WIKIPEDIA-PARITY-RESEARCH-LOG.md
+  - BRIEF-institutional-chrome-sprint.md
+  - BRIEF-FINAL_AWARD_WINNING_WIKI_EXECUTION_PLAN.md
+  - BRIEF-INPUT-KNOWLEDGE-PLATFORM-BLUEPRINT.md
+  - BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md
+  - BRIEF-gemini-handover-2026-05-30.md
+review_basis: >
+  Opus-panel verdict 2026-06-04 (Skeptic + Preservationist + Archaeologist + Synthesis judge).
+  Finding: 0 decisions rejected; 9 revised with enforcement clauses; 10 new decisions added
+  to close confirmed gaps. All 12 confirmed defects traced to silence or implementation drift,
+  not to wrong brief decisions. New BRIEF rule: every load-bearing decision carries its own
+  acceptance test and merge gate.
 ---
 
-# BRIEF — app-mediakit-knowledge: Knowledge Platform (master)
+# Knowledge Platform — Master BRIEF
 
-> **This is the single source of truth for the knowledge platform.** It supersedes the
-> 2030 brief and the historical "award-winning-wiki" / "WIKIPEDIA-PARITY" briefs (all
-> archived, see frontmatter `supersedes:`). It consolidates the 2026-05-28 research swarm
-> *and* the 2026-06-01 swarm (premium-docs UX, editorial craft, mobile UX) plus the
-> current-state, mobile, and content-federation audits. Nothing from the predecessors is
-> lost — still-valid decisions are carried forward verbatim below.
+> **This is the single source of truth for app-mediakit-knowledge and its three live sites.**
+> No other brief needs to be read. All superseded briefs are in `briefs/archive/`.
+> Superseded briefs are retained as historical record; do not delete them.
 
 ---
 
-## 0. What changed in the 2026-06-01 consolidation (read first)
+## §1. Mission
 
-The platform was assessed as **C+** and, critically, **fragile on mobile** where ~80% of
-traffic actually is. Four decisions reframe the work:
-
-1. **Mobile-first.** ~80% of traffic is phones. The base stylesheet IS the phone layout;
-   desktop is layered on with `min-width` queries. (Was: desktop-with-a-drawer.)
-2. **Fonts → premium pairing.** Retire Oswald + Nunito Sans + Roboto Slab → **Inter**
-   (UI + headings) + **Source Serif 4** (long-form reading body) + **system mono**.
-   **This supersedes locked decision L8** (see §2 + Decision Log).
-3. **Content federation.** Generalize the hardcoded one-content-dir + two-guide-dir model
-   into declarative **mounts + content-type blueprints** (Kirby-style flat-file CMS) so the
-   engine federates TOPICs/GUIDEs from many sources and works for external customers + community.
-4. **Wikipedia-DNA, Stripe/Linear craft.** Keep the knowledge-base information model
-   (wikilinks, history-as-talk, hatnotes, citations); render it in premium visual craft.
-   Zero dead links (operator hard rule) — the red-link path is removed.
-
-The full execution plan is §14. The design principle is §12. The federation architecture is §11.
+`app-mediakit-knowledge` is a sovereign, single-binary Rust wiki engine serving three live
+branded instances via Markdown files in Git. It implements the Wikipedia information model
+(wikilinks, Article/Talk/History tabs, hatnotes, TOC, bilingual routing) with modern
+practitioner UX additions (scroll-spy TOC, Cmd+K command palette, mobile-first layout).
+No MediaWiki. No cloud runtime dependency. No third-party CDN. Every database is derived,
+regenerable state; the Markdown+Git tree is the system of record. Doctrine #54 ("We Own It")
+governs all architectural choices.
 
 ---
 
-## 1. Product identity
+## §2. Three Live Sites
 
-`app-mediakit-knowledge` is a sovereign-data, git-native HTTP knowledge platform.
-Single Rust binary. Flat-file markdown content store. No PHP, no Node.js runtime, no
-MediaWiki, no Hugo, no database migration ladder. **It is already a flat-file CMS in the
-Kirby tradition** — this brief generalizes it into a federation platform.
+| URL | Service unit | Port | Content repo | Brand | Blueprints | DNS status |
+|---|---|---|---|---|---|---|
+| documentation.pointsav.com | local-knowledge-documentation.service | 9090 | media-knowledge-documentation | PointSav | TOPIC + GUIDE | Confirmed: documentation.pointsav.com (Q3, 2026-06-04) |
+| projects.woodfinegroup.com | local-knowledge-projects.service | 9093 | media-knowledge-projects | Woodfine | TOPIC only | Live |
+| corporate.woodfinegroup.com | local-knowledge-corporate.service | 9095 | media-knowledge-corporate | Woodfine | TOPIC only | Live |
 
-**Live instances:**
+**Blueprint rule (operator-confirmed 2026-06-04):**
+- Only the documentation instance serves GUIDEs. Projects and corporate serve TOPIC only.
+- No COMMS blueprint on any instance.
+- Cross-instance isolation is structural: never a global `[[slug]]` resolver. A `[[slug]]`
+  resolves only within the mount set of the instance that rendered it.
 
-| URL | Service unit | Port | Canonical content repo |
+---
+
+## §3. Locked Decisions (L1–L29)
+
+> **New BRIEF rule (from Opus-panel verdict):** Every load-bearing decision below carries
+> its own acceptance test or merge gate. A decision that can ship with its enforcement
+> mechanism unbuilt is an aspiration, not a lock.
+>
+> **[CARRY]** = verbatim from prior master; confirmed invariant by Opus panel.
+> **[REVISE]** = prior decision with enforcement clause added.
+> **[NEW]** = closes a gap the prior brief was silent on.
+
+---
+
+### Constitutional / ADR Hard Rules
+
+**L12 [CARRY]** SYS-ADR-07: No structured data passes through AI. Constitutional hard rule.
+
+**L13 [CARRY]** SYS-ADR-10: F12 mandatory. Every commit to a canonical content tree is an
+explicit human operator action. Dead-code removal of the collab module does not weaken this gate.
+
+**L14 [CARRY]** SYS-ADR-19: No automated AI publishing to verified ledgers without an
+explicit F12 commit action.
+
+---
+
+### Legal / Governance Invariants
+
+**L2 [CARRY]** Git-native flat-file content store. Markdown files in a Git tree are the
+system of record. All databases are derived state, deletable and rebuildable. 50-year-readable.
+
+**L5 [REVISE]** Self-hosted WOFF2 fonts, no CDN (GDPR Art. 44 — non-negotiable legal
+invariant). Self-hosting carries its own loading contract: each above-the-fold typeface MUST
+emit `<link rel="preload" as="font" type="font/woff2" crossorigin>` in `<head>` alongside a
+metric-override fallback. See L23.
+
+**L7 [CARRY]** Canonical footer trademark text is byte-for-byte locked (year field only
+updates). See §10 for exact text. Legal invariant.
+
+**L15 [CARRY]** Engine licence: Apache 2.0. Wiki content licence: CC BY 4.0.
+
+**L16 [CARRY]** Commit identity: `jwoodfine` or `pwoodfine` only, via `commit-as-next.sh`.
+
+---
+
+### Deployment and Runtime
+
+**L1 [REVISE]** Single Rust binary per instance (`cargo build --release`). Deployment unit
+is one binary (Doctrine #54). **Single binary ≠ single source file ≠ single JS bundle.**
+Internals MUST be modular per L20; client assets MUST be route-scoped per L25.
+
+**L10 [CARRY]** MCP JSON-RPC 2.0 native endpoint, optional behind `--enable-mcp`.
+
+**L11 [CARRY]** Claim-layer HTML comment markup format. In production; do not alter without
+a Decision-Log entry.
+
+---
+
+### Content and Data Model
+
+**L3 [REVISE]** `dtcg-bundle.json` is the single source of truth for all CSS custom
+properties. Per-brand outputs (`tokens.css`, `tokens-woodfine.css`) are GENERATED by
+`dtcg-to-css.py`. No hand-authored token or theme CSS may coexist with the generated bundle.
+`theme-woodfine.css` is folded into the vault and deleted in Phase 1. See L21.
+
+**L4 [REVISE]** Bilingual EN+ES via `.es.md` sibling on a single canonical slug. **Bilingual
+scope includes chrome.** All reader-visible strings come from a `strings(locale)` map; `/es/`
+MUST render the `.es` sibling title. Acceptance: `/es/` HTML contains zero hardcoded-English
+chrome strings. See L22.
+
+**L19 [REVISE]** Federation via declarative `Vec<Mount>` + content-type blueprints.
+**Completion-gated, not "locked-done":** `AppState` carries `mounts: Vec<Mount>`; the
+hardcoded `content_dir`, `guide_dir`, `guide_dir_2` fields are DELETED in the same commit
+that wires mounts. `blueprints.rs` drives chrome dispatch. `inject_wiki_prefixes` resolves
+across the full mount set (instance-scoped, not global). **Merge gate:** No Phase 2+ visual
+work reaches canonical while any instance still uses the old hardcoded path.
+
+---
+
+### UX and Information Architecture
+
+**L6 [REVISE]** Wikipedia Vector 2022 information-model conventions (wikilinks,
+Article/Talk/History, hatnotes). Visual language follows Stripe/Linear craft. **Chrome
+rendering lives in one parameterised `chrome.rs` emitter** — never multiple inline `*_chrome`
+copies in the same handler file.
+
+**L8 [CARRY]** Inter (UI + headings) + Source Serif 4 (reading body) + system monospace.
+WOFF2 only. Supersedes the retired Oswald/Nunito/Roboto Slab stack (2026-06-01 decision log).
+
+**L9 [CARRY]** Base palette: `--navy: #164679`; `--bg: #F7F9FA`; `--link: var(--navy)`.
+WCAG AA verified. Protected by L3 token vault.
+
+---
+
+### Mobile and Performance
+
+**L17 [REVISE]** Mobile-first: base stylesheet = phone; desktop via `min-width` only.
+**Per-release enforcement checklist:**
+- `env(safe-area-inset-bottom)` APPLIED (not merely defined) on all fixed/sticky chrome and body padding — see L24
+- `viewport-fit=cover` in viewport meta
+- All form inputs `font-size: ≥16px`
+- `dvh`/`svh` used; `100vh` prohibited
+- Phone smoke test required before every promote
+
+---
+
+### Content Quality Gate
+
+**L18 [REVISE — SPLIT]** Build-time wikilink resolver is a **hard promote gate**. Any
+unresolved `[[slug]]` across the mount set BLOCKS promote. The gate is a precondition of
+the "zero dead links" claim — it MUST exist and pass before `wikilink-missing` render is
+removed. Sequence: (1) build gate, (2) verify no false positives, (3) remove red-link
+emission. See L29.
+
+---
+
+### New Decisions — Closing Confirmed Gaps
+
+**L20 [NEW]** Source-file size discipline: no `.rs` file exceeds ~1,500 lines / 60 KB.
+`server.rs` decomposes into modules along concern boundaries before any feature code lands.
+Acceptance: `find src -name '*.rs' | xargs wc -l` — no file above 1,500 lines.
+
+**L21 [NEW]** Exactly three CSS artifacts: `style.css` (shared), `tokens.css` (PointSav),
+`tokens-woodfine.css` (Woodfine). Adding a fourth `.css` file requires a Decision-Log entry.
+`theme-woodfine.css` is deleted in Phase 1.
+
+**L22 [NEW]** Chrome strings are locale-keyed via `strings(locale)`. Acceptance test:
+`cargo test es_homepage_chrome_is_spanish` must pass before any `/es/` route ships.
+
+**L23 [NEW]** Font preload is mandatory in the base chrome `<head>`. Two
+`<link rel="preload" as="font" crossorigin>` tags — Inter latin-regular and Source Serif 4
+latin-regular — emitted unconditionally before stylesheet links. Acceptance: every rendered
+`<head>` contains exactly two font preload links.
+
+**L24 [NEW]** Safe-area insets APPLIED not merely defined. Every fixed/sticky bottom chrome
+uses `calc(N + env(safe-area-inset-bottom))`. Bare `padding-bottom: 56px` on bottom chrome
+is a lint error. Acceptance: phone smoke test confirms no Home Indicator overlap.
+
+**L25 [NEW]** Route-gated client bundles. `editor.js` (CodeMirror 6 + SAA) loads only on
+`/edit/*`. Article, home, category, and search pages load only `wiki.js`. Acceptance: article
+page HTML contains zero references to `editor.js`.
+
+**L26 [NEW]** Dead-code removal is a tracked deliverable. When a feature is superseded:
+its module, vendor bundle entries, routes, and tests are deleted in the same commit and logged
+in `cleanup-log.md`. Superseding briefs carry forward predecessor removal actions. Collab
+module dead code removed in Phase 1.
+
+> **Q1 resolution (2026-06-04):** In-browser editing is NOT required. The entire
+> auth/edit/CodeMirror stack — `auth.rs`, `users.rs`, `pending.rs`, edit/admin/auth routes,
+> `static/editor.js`, and both CodeMirror vendor bundles (`cm-collab.bundle.js`,
+> `cm-saa.bundle.js`) — is removed under the git-only content model. L25 (route-gated editor
+> bundle) and L26 (dead-code removal as tracked deliverable) govern this removal.
+
+**L27 [NEW]** List micro-layouts carry explicit separators in markup. Recently-changed title
+and date are in separate child elements, not a concatenated string. Acceptance: recently-changed
+HTML contains no `"{title}{date}"` text node concatenation.
+
+**L28 [NEW]** DNS provisioning is a named deliverable owned by the Command Session. The §2
+table carries a DNS-status field. The conflict between `documentation.pointsav.com` and
+`documentation.woodfinegroup.com` must be reconciled in a NEXT.md commit before DNS cutover.
+
+**L29 [NEW]** No article may reference an uncommitted slug. Same build-time resolver as L18:
+a `[[guide-slug]]` not present in any mount BLOCKS promote. Content-sequencing rule: guides
+committed before articles that reference them. This is one resolver serving both L18 and L29.
+
+---
+
+## §4. Fresh-Build Decision (Hybrid A+B)
+
+Source: competing-agent analysis 2026-06-04
+(`DESIGN-knowledge-platform-fresh-slate-analysis.draft.md`).
+
+**Hybrid A+B chosen.** From Architect A: full module decomposition (L20), mounts/blueprints
+wired from day 1 (L19), CSS consolidation (L21), related-articles sidebar card (blueprints
+`relates_to`), article status badge (`quality:` → chrome notice), three-way night-mode.
+From Architect B: scroll-spy right-rail TOC (L26 borrow), Cmd+K command palette (L27 borrow).
+Wikipedia tabs retained on all three instances. Architect C (static pipeline) deferred pending
+Q1 answer on in-browser editing.
+
+---
+
+## §5. Module Architecture (target from first commit)
+
+The full `src/` directory is replaced. No file from the prior `server.rs` monolith carries
+forward as-is. This tree is the day-1 target before any feature code lands.
+
+```
+src/
+├── main.rs              (~50 lines; CLI entry point + tokio bootstrap)
+├── config.rs            (CLI flags, env vars, knowledge.toml parse)
+├── state.rs             (AppState; mounts: Vec<Mount>; blueprints: Vec<Blueprint>)
+├── mounts.rs            (Mount struct; directory walk; content index — WIRED day 1)
+├── blueprints.rs        (Blueprint; YAML parse; content-type dispatch — WIRED day 1)
+├── walker.rs            (ContentWalker; frontmatter parse; bilingual pair detection)
+├── render.rs            (Markdown→HTML; comrak + wikilinks; blueprint-aware chrome call)
+├── error.rs             (WikiError; IntoResponse)
+├── jsonld.rs            (Schema.org JSON-LD from frontmatter)
+├── glossary.rs          (auto-linker)
+├── citations.rs         (citation registry; hover card data)
+├── check.rs             (dead-link gate + frontmatter validator; cargo xtask target)
+├── chrome/
+│   ├── mod.rs           (base chrome; font preload L23; strings(locale) L22; dark-mode)
+│   ├── article.rs       (tabs; TOC; hatnote; infobox; status badge; related-articles)
+│   ├── home.rs          (category grid; leapfrog facts; invariant panels)
+│   ├── palette.rs       (Cmd+K; <dialog>; keyboard shortcut)
+│   └── mobile.rs        (bottom bar; safe-area L24; thumb-zone nav)
+├── routes/
+│   ├── mod.rs           (router() assembly — all routes visible in one place)
+│   ├── wiki.rs          (GET /wiki/{slug}; GET /es/wiki/{slug})
+│   ├── home.rs          (GET /; GET /es/)
+│   ├── category.rs      (GET /category/{name})
+│   ├── search.rs        (GET /api/search; GET /api/complete)
+│   ├── feeds.rs         (GET /feed.atom; /feed.json; /sitemap.xml; /robots.txt; /llms.txt)
+│   ├── edit.rs          (GET /edit/{slug}; POST /api/edit/{slug})
+│   ├── admin.rs         (GET /admin/pending; POST /admin/pending/{id}/{action})
+│   ├── git.rs           (GET /git/{slug}; GET /git-server/...)
+│   ├── auth.rs          (GET+POST /auth/login; GET /auth/logout)
+│   └── mcp.rs           (POST /mcp; behind --enable-mcp)
+├── search.rs            (Tantivy 0.24 BM25; index rebuild; notify watcher)
+├── links.rs             (redb 4.1 wikilink graph; blake3 hashing)
+├── git.rs               (git2 write path; commit-on-edit)
+├── history.rs           (gix read path; blame; diff)
+├── auth.rs              (cookie sessions; auth extractors)
+├── users.rs             (rusqlite; argon2id)
+├── pending.rs           (edit review queue)
+├── feeds.rs             (Atom RFC 4287; JSON Feed v1; sitemap)
+└── mcp.rs               (MCP JSON-RPC 2.0; no vendor SDK)
+```
+
+---
+
+## §6. CSS Architecture (three files exactly — L21)
+
+```
+static/
+├── tokens.css           (PointSav DTCG output; generated from dtcg-bundle.json)
+├── tokens-woodfine.css  (Woodfine DTCG output; generated; theme-woodfine.css deleted)
+└── style.css            (shared; mobile-first; 9 sections:)
+    1. Custom properties (token var references; no hardcoded hex)
+    2. Reset and base
+    3. Layout grid and breakpoints
+    4. Chrome (header, tabs, TOC, palette, bottom bar)
+    5. Article surface (body, headings, infobox, hatnote, status badge)
+    6. Home surface (category grid, leapfrog, invariant panels)
+    7. Edit surface
+    8. Dark mode (prefers-color-scheme + [data-theme])
+    9. Print
+```
+
+---
+
+## §7. JavaScript Architecture (two files exactly — L25)
+
+```
+static/
+├── wiki.js    (scroll-spy TOC; Cmd+K palette; citation hover; theme toggle; TOC pin)
+└── editor.js  (CodeMirror 6 + SAA; loaded ONLY on /edit/* routes)
+```
+
+Predecessor files deleted: `toc-persistence.js`, `saa-init.js`.
+
+---
+
+## §8. Three-Instance Differentiation
+
+| Dimension | documentation.pointsav.com | projects.woodfinegroup.com | corporate.woodfinegroup.com |
 |---|---|---|---|
-| `documentation.pointsav.com` | `local-knowledge-documentation.service` | 9090 | `media-knowledge-documentation` (+ fleet-deployment guides) |
-| `projects.woodfinegroup.com` | `local-knowledge-projects.service` | 9093 | `media-knowledge-projects` |
-| `corporate.woodfinegroup.com` | `local-knowledge-corporate.service` | 9095 | `media-knowledge-corporate` |
-
-**One-sentence positioning:** A knowledge platform where every article is git-committed,
-every claim is citable and planned for machine-queryable verification, AI agents are
-first-class readers but never the author of record, and the entire stack runs on
-infrastructure the customer owns — not a third-party cloud.
-
-**Two usage modes (hybrid):** PointSav's own content keeps a curated editorial funnel
-(project-* → project-editorial → media-knowledge-*); the declarative mount/blueprint system
-is what external customers + community members use to federate their own git repos. One
-engine, two modes.
-
-**Why not MediaWiki (or a MediaWiki fork):** ~500K lines of PHP + MySQL; not customer-rooted;
-GitHub/DB becomes source of truth; no claim-layer; no modern tokenized CSS. The C+ assessment
-is 5 CSS properties + missing federation, not a platform problem. **Decided: do not adopt or
-fork MediaWiki.**
-
-**Why not Hugo:** static — no search-as-you-type, no auth-gated content, no edit workflow,
-no revision-history UI, no claim verification, no MCP API.
-
-**Market peer:** Q4 Inc. (Toronto; TSXV: QFOR) serves public-company IR. Gap: no
-customer-rooted claim layer, no bilingual structured content, no edit-review queue for
-regulatory disclosure text. Our differentiation: claim-layer citation verification,
-tamper-evident git-native audit trail, no vendor lock-in on the content store.
+| Token file | tokens.css | tokens-woodfine.css | tokens-woodfine.css |
+| Blueprints | **TOPIC + GUIDE** | **TOPIC only** | **TOPIC only** |
+| COMMS | No | No | No |
+| Guide mount | YES | None | None |
+| Site title | PointSav Documentation | Woodfine Projects | Woodfine Corporate |
+| Audience | Technical practitioners | Customer / GIS | Institutional |
+| Leapfrog YAML | Platform facts | GIS / Regional Markets | Corporate milestones |
+| Tab model | Article/Talk/Edit/History | Article/Talk/Edit/History | Article/Talk/Edit/History |
 
 ---
 
-## 2. What's locked (non-negotiable decisions)
+## §9. Content Repo Status (2026-06-04 audit)
 
-Decided. Do not revisit within a session without operator confirmation.
+**media-knowledge-documentation (~514 files):** ~98% frontmatter complete; bilingual coverage
+complete. Blocking: (1) missing `professional-centres` article (red link in production),
+(2) stale `featured-topic.yaml` path, (3) 62 guide-slug 404s. Conditionally publication-ready.
 
-| # | Decision | Rationale |
-|---|---|---|
-| L1 | Single Rust binary (`cargo build --release -p app-mediakit-knowledge`) | Customer-rooted; no runtime dependency |
-| L2 | Git-native flat-file content store (`.md` + `git2`) | Markdown + Git = 50-year readable, diffable, auditable |
-| L3 | DTCG token pipeline (`scripts/dtcg-bundle.json` → `dtcg-to-css.py` → `static/tokens.css`) | Single token vault, design-system aligned |
-| L4 | Bilingual routing (`.es.md` sibling, single canonical slug) | All public content ships EN + ES |
-| L5 | Self-hosted WOFF2 fonts — no CDN | GDPR Art. 44; `784ceea7` removed all Google Fonts CDN links |
-| L6 | Wikipedia Vector 2022 DOM conventions where they serve the information model | tooling compatibility; muscle memory — *visual* language is now Stripe/Linear (see §12) |
-| L7 | Canonical footer trademark text verbatim (see §9) | Legal; sourced from `wireframe-home-header-v2c.html` |
-| ~~L8~~ | ~~Oswald + Nunito Sans + Roboto Slab~~ → **SUPERSEDED 2026-06-01** | **New L8: Inter (UI+headings) + Source Serif 4 (reading body) + system mono.** See §7 + Decision Log. |
-| L9 | `--navy: #164679`; `--bg: #F7F9FA`; `--link: var(--navy)` | Core brand token triad; WCAG AA verified |
-| L10 | MCP JSON-RPC 2.0 native (`src/mcp.rs`) | Doctrine claim #54 ("We Own It"); no vendor SDK |
-| L11 | Claim-layer HTML comment markup (`<!--claim id=... confidence=... cites=[]-->`) | In production content; foundation for §13 |
-| L12 | SYS-ADR-07: no structured data through AI | deterministic pipelines only |
-| L13 | SYS-ADR-10: F12 mandatory; human commits only | edit-review queue enforces |
-| L14 | SYS-ADR-19: no automated AI publishing to verified ledgers | AI marginalia is ephemeral overlay |
-| L15 | Apache 2.0 licence | matches monorepo |
-| L16 | Commit identity `jwoodfine`/`pwoodfine` only; `commit-as-next.sh` only | pre-commit gate enforces |
-| **L17** | **Mobile-first** — base stylesheet = phone; desktop via `min-width`. ~80% traffic is mobile | 2026-06-01 mobile audit |
-| **L18** | **Zero dead links** — every `[[ ]]` resolves or is not a link; no red-links | operator hard rule 2026-06-01 |
-| **L19** | **Federation via declarative mounts + content-type blueprints** | hybrid platform decision 2026-06-01 |
+**media-knowledge-projects (~102 files):** 100% frontmatter complete; bilingual complete.
+Blocking: (1) `reference-invariants.yaml` slug prefix mismatch, (2) `[[about]]` dead link
+in `contact.md`. Conditionally publication-ready.
+
+**media-knowledge-corporate (~51 files):** 34/38 frontmatter complete. Blocking: (1) two stub
+articles linked from home page lede (`topic-perpetual-equity-model`,
+`topic-investment-units`), (2) same slug prefix mismatch, (3) 4 articles missing `last_edited:`.
+**NOT publication-ready.**
 
 ---
 
-## 3. Current implementation state (Phases 1–8 + Leapfrog design shipped, 2026-05-30)
-
-All commits promoted to canonical; later typography fix `dff4e2a7` deployed 2026-06-01.
-
-| Phase | Status | Notes |
-|---|---|---|
-| 1 / 1.1 — render + Wikipedia chrome | Shipped | `/wiki/{slug}`, TOC, hatnote, Article/Talk/History tabs, footer |
-| 2 — edit (Steps 1–7) | Shipped | JSON-LD, atomic edit, CodeMirror 6, SAA squiggles, citation autocomplete |
-| 3 — search + feeds | Shipped | Tantivy BM25, `/feed.atom`, `/sitemap.xml`, `/llms.txt` |
-| 4 — git sync + MCP + DTCG | Shipped | git2, redb link graph, blake3, MCP JSON-RPC 2.0, git smart-HTTP, OpenAPI 3.1; 157 oklch tokens |
-| 5 core — auth + edit review | Shipped | cookie sessions, argon2id, edit-review queue (`auth.rs`+`pending.rs`+`users.rs`) |
-| 5.1+ ACLs/OIDC/webhooks | Deferred | gated on BP5 |
-| 6A/6B/6C, 7A–7H, 8 | Shipped + deployed | AJAX nav, home caps, 80px topnav, article-tabs, reading mode, citation hover, mobile bottom bar, Tufte sidenotes, corporate auto-numbering, history surface |
-| Leapfrog design (fonts/layout/content-types) | Shipped + deployed | Source Serif 4 reading body; full-width single-column; Kirby `content_type:` blueprint seed |
-| Typography fix `dff4e2a7` | Deployed 2026-06-01 | (interim — superseded by the Inter migration in §7/Phase 1) |
-
-**Still open / corrections needed (Command Session):**
-- `.agent/manifest.md` + `briefs/README.md` are **contaminated** — they describe this archive as
-  project-intelligence/project-bim. project-knowledge metadata needs correction.
-- The briefs dir holds ~contamination from project-console/intelligence/infrastructure (see §15).
-- Live services read STALE/old-named content dirs (`content-wiki-*`) vs canonical `media-knowledge-*`;
-  projects is serving behind canonical. Resolved by the Phase 0 mount manifest (§11, §14).
-- UX-B.7 BLOCKED: `WORDMARK_WOODFINE` still placeholder — operator must provide Woodfine SVG wordmark.
-
----
-
-## 4. Three-instance differentiation
-
-One binary serves three editorial brands. Flags: `brand_theme: BrandTheme` + `brand_instance:
-BrandInstance`; `<html data-instance>` enables per-instance CSS scoping.
-
-| Instance | Domain | Brand | Token file | `data-instance` |
-|---|---|---|---|---|
-| documentation | documentation.pointsav.com | PointSav | tokens.css | `pointsav` |
-| projects | projects.woodfinegroup.com | Woodfine | tokens-woodfine.css | `woodfine-projects` |
-| corporate | corporate.woodfinegroup.com | Woodfine | tokens-woodfine.css | `woodfine-corporate` |
-
-**Per-brand contract (≤12 tokens, §16):** accent, optional display-accent font, scale-ratio,
-density/line-height, drop-cap & pull-quote gating. Shared craft engine is constant. Docs =
-denser technical; corporate/projects = editorial gravitas (institutional-finance register).
-
-**Cross-instance isolation is structural:** each instance mounts a disjoint source set + owns
-its link graph (`state` / `state-projects` / `state-corporate`). A `[[slug]]` resolves only
-within its instance. Never introduce a shared/global resolver (see §11, §12).
-
----
-
-## 5. Home / main page
-
-### Current state
-`home_chrome()` renders hero + featured + recent + category grid + sister-surface footer band.
-
-### Targets (mobile-first)
-Single-column phone layout first; step to 2-col @640, multi @1024. Search hero with instant
-autocomplete (`/api/complete` exists). Featured article via frontmatter `featured: true`.
-Category grid reads category from blueprint + frontmatter (+ mount `section`), auto-synthesizing
-a section landing where `_index.md` is absent. Real tap/hover card lift (<150ms). All targets ≥44px.
-"Did you know?" + reading paths are post-launch enhancements. Per-instance hero.
-
----
-
-## 6. Header + navigation
-
-### Current state
-Single-row `header.topnav` (80px, `1fr/auto/1fr`): wordmark · search · language toggle · user menu.
-Emitted three times (`home_chrome`/`wiki_chrome`/`chrome`).
-
-### Targets
-- **Mobile:** sticky 56px top bar `[☰] [wordmark] [🔍]`; sticky 56px **bottom action bar**
-  (thumb zone) `[Search] [On-this-page] [Menu] [Back-to-section]`, padded by `safe-area-inset-bottom`.
-- **Desktop (≥1024):** three-column shell — `docs-sidenav` 256px (active = accent text + 2px
-  left bar + tint, animated chevron) · prose @measure · right TOC rail.
-- **Command palette (Cmd/Ctrl-K):** full-screen overlay on mobile (svh-sized, input ≥16px,
-  results ≥44px, programmatic focus after open-animation); palette on desktop. Fuzzy over titles.
-- Article-tabs row (Article/Talk/Read/Edit*/History/Tools▾) on `wiki_chrome` only; History = git.
-- Per-section anchor-share `¶` + contributor edit pencil; language switcher resolves `.es` sibling.
-
----
-
-## 7. Article reading surface + typography
-
-### Font stack (NEW L8 — 2026-06-01)
-- **UI + headings:** **Inter** (400/500/600), self-hosted WOFF2 — already on disk.
-- **Long-form reading body:** **Source Serif 4** (400/700 + italic), self-hosted — already on disk.
-- **Code / labels:** system mono (`ui-monospace, "SF Mono", Menlo, Consolas`).
-- Retire Oswald + Nunito Sans + Roboto Slab. `@font-face` with metric-override fallback (kill CLS).
-- *Rationale:* the 2026-06-01 research found the three-voice display-condensed stack reads C+;
-  premium docs (Stripe/Vercel/Linear) use one humanist sans + a serif reading body + mono.
-
-### Reading targets (mobile-first)
-- Body **17px** mobile (step to 19px ≥640, GOV.UK pattern), line-height 1.6, 16px side gutters.
-- One measure token `--measure: 68ch` (degrades to ~38–42ch on a 390px phone naturally);
-  delete the conflicting `--reading-max: 595px` and `--knowledge-editorial-article-max: 720px`.
-- `text-wrap: pretty` body / `balance` headings; `scroll-margin-top` on headings for sticky-header
-  anchor jumps; oldstyle numerals in prose, lining+tabular in tables; hairline blockquote (2px);
-  figure/caption run-in `Fig. N —`.
-- Heading hierarchy by weight + space-above≫space-below (not size alone — h2/h3 currently collapse).
-- Code blocks: 1px border (not shadow), header bar w/ language label + copy button, lh ~1.6,
-  light/dark-adaptive, **never wrap code**, horizontal scroll + right-edge fade on mobile.
-- Reading mode (warm paper, hidden chrome, ~64ch) + density control (logged-in) retained as targets.
-- Tufte sidenotes for `layout: journal` at ≥1280px (serves the J1–J6 academic programme).
-
----
-
-## 8. Article toolbars
-Progressive disclosure: anonymous sees Read + Article; everything else in `Tools ▾` or
-contributor-only. Per-section `¶` anchor-share (all readers) + edit pencil (contributors).
-"View source" (not "View on GitHub" — We Own It) via `?action=raw`. Print/export via `@media print`.
-History surface: reverse-chron list, line-level diff, `article-integrity-bar` blake3 fingerprint.
-
----
-
-## 9. Footer — canonical text (verbatim — do not modify)
-
-Sourced from `wireframe-home-header-v2c.html`. All three instances:
+## §10. Canonical Footer Text (L7 — byte-for-byte locked)
 
 ```
 © 2026 Woodfine Capital Projects Inc. All rights reserved.
@@ -255,179 +368,344 @@ Projects Inc. used in Canada, the United States, Latin America, and Europe. All 
 trademarks are the property of their respective owners.
 ```
 
-Year field updates annually. Corporate instance adds `effective_date:`/`supersedes:` disclosure
-block under `h1`, auto-numbered sections, and suppresses the "Was this helpful?" widget (gate on
-`brand_instance`).
+---
+
+## §11. MVCC Cleanup (existing live sites — execute before or during fresh build)
+
+Ten commits, each via `commit-as-next.sh`, ordered by user-visible impact:
+
+1. Fix `/es/` homepage chrome language (L22 enforcement on old code)
+2. Add font preload tags to base chrome `<head>` (L23)
+3. Fix mobile safe-area: `calc(56px + env(safe-area-inset-bottom))` (L24)
+4. Fix stale `featured-topic.yaml` path in documentation repo
+5. Fix `reference-invariants.yaml` slug prefix in projects + corporate repos
+6. Fix recently-changed list title/date concatenation (L27)
+7. Create missing `professional-centres` stub article in documentation repo
+8. Expand `topic-perpetual-equity-model` + `topic-investment-units` to `status: active`
+9. Fix `[[about]]` dead link in projects `contact.md`
+10. Move CodeMirror to editor-only load (L25 enforcement on old code)
 
 ---
 
-## 10. Mobile — the headline fixes (80% of users)
+## §12. Open Questions (operator decisions before Phase 1 scoping)
 
-The 2026-06-01 mobile audit found these CRITICAL defects. All are L17 (mobile-first) scope.
-
-| # | Defect | Current | Fix |
+| # | Question | Gates | Resolution |
 |---|---|---|---|
-| M1 | Hover-only features dead on touch | hover cards, glossary, footnote + citation tooltips fire on `mouseenter` only | tap-to-open popover/bottom-sheet under `@media (hover:none)`; hover = desktop enhancement |
-| M2 | iOS zoom-on-focus | topnav search 12px / 28px | all inputs ≥16px on `pointer:coarse`; search → full-screen overlay |
-| M3 | Touch targets below floor | nav/TOC links 26–35px | 44px min (48px primary); pad hit-area |
-| M4 | No safe-area insets | bottom bar hides behind home indicator; no `viewport-fit` | `viewport-fit=cover` + `env(safe-area-inset-*)` on fixed chrome |
-| M5 | `100vh` layout shift | sidenav/toc-rail use `100vh` | `svh`/`dvh` dynamic viewport units |
-| M6 | Fragmented breakpoints | 640/767/768/875/1023/1100/1280 + orphan @760 | one ladder: base · 480 · 640 · 768 · 1024 · 1280 |
-| M7 | No tap feedback | no `-webkit-tap-highlight-color` | `transparent` + custom `:active` |
-| M8 | Drawers don't animate | `display:none` toggle | slide/fade + `overscroll-behavior:contain` |
-| M9 | Tables/code overflow unmarked | `overflow-x:auto` no affordance; code unhandled | edge-fade mask; sticky copy bar; never wrap code |
-
-Breakpoint reference: Minerva 320/720/1000 + GOV.UK 640. Bottom action bar = thumb-zone
-(NN/g: bottom nav beats hamburger 30–50% on discovery). TOC = bottom sheet, IntersectionObserver
-scroll-spy. `dvh` for full-height overlays (Baseline since 2025).
+| Q1 | Is in-browser editing (CodeMirror → git commit) required? | Phase 6 scope | **RESOLVED 2026-06-04** — git-only; auth + edit + CodeMirror removed |
+| Q2 | Corporate instance: Wikipedia tabs or Architect B left-rail? | Chrome model for corporate | **RESOLVED 2026-06-04** — Wikipedia tabs on all 3 instances |
+| Q3 | `documentation.pointsav.com` or `documentation.woodfinegroup.com`? | L28 DNS cutover | **RESOLVED 2026-06-04** — documentation.pointsav.com |
+| Q4 | Phase 6 GitHub renames + Doctrine amendment: current roadmap? | Content-repo naming | **RESOLVED 2026-06-04** — ran on auto |
 
 ---
 
-## 11. Content Federation Architecture — "flat-file mounts + content-type blueprints"
+## §13. Borrow List (from 2026-06-04 web benchmarking)
 
-**Decisions: Hybrid federation + full blueprint registry.** Generalizes the engine's two
-hardcoded assumptions (one `WIKI_CONTENT_DIR` + two `WIKI_GUIDE_DIR`s; free-text `type:`) into a
-real product for external customers + community.
-
-**1. Source mounts.** Per-instance `knowledge.toml`: list of `[[mount]]` `{ id, path,
-default_type, section?, editable }`. Engine builds ONE virtual content tree across all mounts →
-one per-instance slug namespace + link graph + search index. Generalizes the existing
-`collect_all_topic_files(content_dir, &[guide_dir, guide_dir_2])`. AppState
-`{content_dir, guide_dir, guide_dir_2}` → `{mounts: Vec<Mount>}`. The manifest **replaces** the
-stale `WIKI_CONTENT_DIR`/`WIKI_GUIDE_DIR` env wiring — writing it with canonical
-`media-knowledge-*` paths resolves the repoint as a side effect.
-
-**2. Content-type blueprints.** Flat YAML, git-tracked: `blueprints/<type>.yaml` =
-`{ required fields, section, template, relates_to[] }`. `topic` + `guide` built-in; customers add
-`regional-market` (structured infobox: rank/score/tier_counts/suburb_of/distance_km/climate/civic),
-`adr`, `changelog`. `relates_to` drives cross-link rails generically.
-
-**3. GUIDEs stay in fleet-deployment — DO NOT move them.** The engine already federates
-`WIKI_GUIDE_DIR`=`pointsav-fleet-deployment` + `WIKI_GUIDE_DIR_2`=`woodfine-fleet-deployment` on
-the documentation instance only; guides serve at `/wiki/<slug>` "just like TOPICs". §14 (Foundry
-taxonomy) honored, repo structure untouched. corporate/projects have no guide dirs → isolation intact.
-
-**4. Linking + zero dead links (L18).** **Engine gap to fix:** `inject_wiki_prefixes(html,
-content_dir)` (`render.rs:420`) only receives `content_dir`, so `[[guide-slug]]` from a TOPIC
-red-links today. Thread the full mount set so wikilinks resolve across topics+guides+all mounts.
-Build-time resolver = hard gate (unresolved `[[ ]]` blocks promote); render fallback = plain text;
-**remove the red-link path** (`render.rs:464`). Typed backlinks (`links.rs::backlinks`) power the
-TOPIC "How-to guides" rail ↔ GUIDE "Background concepts" rail.
-
-**5. Provenance + edit-routing.** Each article remembers source mount + git origin; UI shows
-"Source: <mount> · History"; Edit commits to editable mounts, "propose change in origin" for
-read-only. Contributors' content never leaves their repos.
-
-**Content-IA reconciliation:** the blueprint+mount model resolves the docs(subdirs+`_index`) vs
-corporate/projects(flat, `topic-` prefix) inconsistency toward **engine-adapts**: section comes
-from blueprint + frontmatter, no physical restructuring required. Still **normalize slugs** (strip
-`topic-` prefix) for clean URLs + wikilink consistency (`migrate_corpus.py` already does this for docs).
-
----
-
-## 12. Design principle — "Wikipedia model, Stripe/Linear craft"
-
-Keep knowledge-base DNA as tasteful, esoteric nods; render in premium craft. Asset for a
-Knowledge CMS — *if* restrained.
-- **Keep (DNA):** `[[wikilinks]]` (every one resolves — L18); Article/Talk/**History**(=git) tabs
-  as the engine's git-native identity; hatnotes; See-also; citation superscripts w/ hover-or-tap;
-  categories footer; "What links here" backlinks.
-- **Drop (C+ tells):** full-width serif at cramped leading; default-blue underlined links
-  everywhere; grey-gradient Vector rail; encyclopedia/puzzle-globe visual language; metadata
-  clutter; **red-links** (L18).
-- Foundation craft (from 2026-06-01 research): 8px spacing grid + 4px half-step; modular type
-  scale (~1.25 body) with size-dependent tracking; single neutral ramp, text not pure black, one
-  accent/brand, `::selection` tint; borders for flat surfaces + hue-matched layered shadows;
-  `:focus-visible` 2px accent on every interactive element; motion 150/200/280ms ease-out +
-  `prefers-reduced-motion` kill-switch; custom thin scrollbars; `text-underline-offset:2px`.
-- **Net: Wikipedia's information model, Stripe/Linear's visual language.**
-
----
-
-## 13. Differentiation (built + planned)
-
-**Already built (≈22):** native MCP JSON-RPC 2.0; claim-layer markup; redb wikilink graph +
-backlinks; blake3 hashes; Tantivy BM25 + autocomplete; git smart-HTTP; OpenAPI 3.1 + `/llms.txt`;
-bilingual `/es/`; edit-review queue; SAA squiggles; citation autocomplete; revision history + diff;
-DTCG tokens; self-hosted fonts; `data-auth`/`data-instance` state machine; feeds; argon2id auth.
-
-**Planned three:** (A) **claim-rail freshness sidebar** at ≥1280px (`citations` redb table +
-nightly URL validation); (B) **AI marginalia** opt-in ephemeral overlay (SYS-ADR-19 compliant,
-service-slm, never committed); (C) **cross-session reading state** (localStorage + optional
-self-hosted sync). Plus `query_claims(topic, asof)` MCP API — the planned regulated-industry moat.
-
----
-
-## 14. Execution plan
-
-**Phase −1 (documentation consolidation) is the FIRST step** — this brief + aligning the
-TOPIC/GUIDE/rules docs to the research, so it is the durable source of truth. (In progress now.)
-Governance: BRIEFs are permanent (archive, never delete); TOPIC/GUIDE content is editorial →
-stage to `.agent/drafts-outbound/` → route to project-editorial; generic tokens → project-design
-DESIGN-TOKEN-CHANGE w/ master_cosign; Woodfine tokens → woodfine-media-assets.
-
-- **Phase −1** — this master brief; archive predecessors; correct README; align content docs (drafts).
-- **Phase 0** — federation engine (Rust): `knowledge.toml` mounts; `blueprints/*.yaml` + `src/blueprints.rs`;
-  thread mounts into `inject_wiki_prefixes` (cross-mount resolution); build-time dead-link gate;
-  remove red-link path; typed TOPIC↔GUIDE backlinks; slug normalization; Regional-Market infobox blueprint.
-  Gates the nav/sidebar in Phases 2–3.
-- **Phase 1** — foundation: breakpoint ladder; mobile primitives (M4/M5/M7); 8px grid; modular type
-  scale; color/depth; motion+focus; Inter + Source Serif 4 `@font-face`; one `--measure` token.
-- **Phase 2** — article surface, phone reading first; bottom action bar; bottom sheets; tap-popovers
-  (M1); tables/code (M9); desktop three-column layer ≥1024.
-- **Phase 3** — home page, phone first.
-- **Phase 4** — Cmd+K palette (full-screen overlay on mobile) + animate the ~23 instant interactions.
-- **Phase 5** — per-brand theming (≤12-token contract) + DTCG back-port.
-
-CSS is embedded in the binary → each visual iteration = edit → `cargo build --release` →
-`deploy-binary.sh` → restart 3 services. Verify phone-first (DevTools @390px + a real phone),
-then desktop, all three instances, light + dark.
-
----
-
-## 15. Brief hygiene (this archive)
-
-The `.agent/briefs/` dir + `README.md` + `.agent/manifest.md` are **contaminated** by rebases —
-they describe this archive as project-intelligence/infrastructure/console. Genuine
-project-knowledge briefs: **this master** (active) + `BRIEF-active-work.md` (session queue) +
-the archived wiki predecessors. Flagged for their owning archives (do not action here):
-SLM (`BRIEF-slm-*`), intelligence (`BRIEF-project-intelligence-active-work`, `substrate-phd-thesis`),
-infrastructure (`BRIEF-PPN-*`, `totebox-transformation`, `vm-hardening`, `VM-ARCHITECTURE`, `OS-FAMILY`),
-console (`BRIEF-pairing-*`, `os-console-platform`, `cross-platform-release`, `tui-pivot`, `leapfrog-2030-coding`),
-editorial (`BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN`, `journal-phd-programme`, `framework-pointsav-products-services`,
-`overhaul-*`, `github-presence-elevation`, `publishing-tier-naming-cross-check`).
-
----
-
-## 16. Key files
-
-| File | Role |
-|---|---|
-| `src/main.rs` | mount-manifest loader (replaces guide_dir env args) |
-| `src/server.rs` | HTTP handler, routing, AppState `{mounts}`; `home_chrome`/`wiki_chrome`/`chrome` |
-| `src/render.rs` | `inject_wiki_prefixes` (cross-mount); remove red-link path @464 |
-| `src/links.rs` | redb link graph + `backlinks()` typed by blueprint |
-| `src/mcp.rs` / `src/auth.rs` / `src/pending.rs` / `src/claim.rs` | MCP, auth, edit-review, claims |
-| new `src/blueprints.rs` + `blueprints/*.yaml` | content-type schema registry |
-| new `knowledge.toml` (per instance) | declarative `[[mount]]` manifest |
-| `static/style.css` | mobile-first rewrite (tokens, scale, components, all surfaces) |
-| `static/wiki.js` | tap popovers, Cmd+K, animated drawers |
-| `static/fonts/Inter-*`, `Source-Serif-4-*` | present; new `@font-face` (drop Oswald/Nunito/Roboto Slab) |
-| `scripts/dtcg-bundle.json` / `dtcg-to-css.py` / `static/tokens.css` / `tokens-woodfine.css` | token pipeline + per-brand |
-| `ARCHITECTURE.md` / `NEXT.md` / `openapi.yaml` | phase plan, open items, API spec |
-
----
-
-## Decision Log
-
-| Date | Decision | Rationale / authority |
+| Pattern | Source | Priority |
 |---|---|---|
-| 2026-06-01 | **Supersede L8: Inter + Source Serif 4 + system mono** (was Oswald/Nunito/Roboto Slab) | Operator approved; 2026-06-01 premium-docs research found the 3-voice condensed stack reads C+. Surfaced as a BRIEF §7 conflict per workspace rules; logged here + NEXT.md + outbox to Command. |
-| 2026-06-01 | **L17 mobile-first** | ~80% traffic is mobile; mobile audit found 9 critical defects (§10) |
-| 2026-06-01 | **L18 zero dead links** | Operator hard rule "no links that go nowhere"; remove red-link path |
-| 2026-06-01 | **L19 federation via mounts + blueprints (hybrid)** | Operator chose Hybrid + full blueprint registry; makes the engine a platform for external customers/community |
-| 2026-06-01 | **Do not adopt/fork MediaWiki** | Operator question resolved; C+ is CSS + federation, not a platform problem |
-| 2026-06-01 | **GUIDEs stay in fleet-deployment, federated via guide-dirs** | corrects an in-session "bring guides into each repo" idea; §11.3 |
-| 2026-05-28 | Consolidated predecessors into the 2030 brief (now this master) | carried forward |
+| Scroll-spy right-rail TOC | Stripe + Vercel docs | P0 — L26 |
+| Cmd+K command palette | Tailwind CSS docs | P0 — L27 |
+| Font preload in `<head>` | rustdoc | P0 — L23 |
+| Mobile safe-area-inset | All audited sites | P0 — L24 |
+| Build-time wikilink resolver + frontmatter validation | Hugo + MkDocs | P0 — L18/L29 |
+| Sticky compact header on scroll | Wikipedia Vector | P1 |
+| Pinnable TOC via localStorage | Wikipedia Vector | P1 |
+| Article status badge (`quality:` → chrome notice) | ArchWiki | P1 |
+| Related-articles sidebar card (blueprints `relates_to`) | ArchWiki | P1 |
+| Three-way night-mode toggle (light/dark/system) | ArchWiki | P2 |
 
-*This master supersedes all predecessors listed in frontmatter `supersedes:`.*
+---
+
+## §14. Implementation Phases
+
+> Phase 0 is a hard merge gate: no Phase 2+ work reaches canonical while any Phase 0
+> item is incomplete.
+
+**Phase 0 — MVCC Sprint** (existing sites; parallel with Phase 1 setup)
+Execute §11 items 1–10. No rebuild. ~3–4 days. Gate: all 10 committed, `cargo test` still passes.
+
+**Phase 1 — Foundation** (new codebase)
+New `src/` per §5; `config.rs`; `state.rs` with `Vec<Mount>` + `Vec<Blueprint>`; `mounts.rs`;
+`blueprints.rs`; `walker.rs`; `error.rs`; `check.rs` (`cargo xtask check-content`); `collab.rs`
+deleted (L26). Gate: `cargo check` passes; xtask runs; no file above 1,500 lines.
+
+**Phase 2 — Render Pipeline**
+`render.rs`; `jsonld.rs`; `citations.rs`; `glossary.rs`.
+Gate: TOPIC article renders to valid HTML; JSON-LD validates.
+
+**Phase 3 — Chrome**
+`chrome/` modules; `static/style.css` (9-section); `static/tokens.css` + `tokens-woodfine.css`
+(generated); `theme-woodfine.css` deleted; `static/wiki.js` (merged from three predecessor
+files); `toc-persistence.js` + `saa-init.js` deleted.
+Gate: all three homepages render; Cmd+K opens; scroll-spy fires; `/es/` chrome fully Spanish
+(L22 test); font preloads in `<head>` (L23 test).
+
+**Phase 4 — Routes + Search**
+All `routes/` modules; `search.rs`; `feeds.rs`.
+Gate: all GET routes 200; search returns results; Cmd+K queries live; feeds validate.
+
+**Phase 5 — Git + Link Graph + Dead-Link Gate**
+`git.rs`; `history.rs`; `links.rs`; dead-link gate wired to all mount sets.
+Gate: git history renders; What-links-here works; `cargo xtask check-content` catches
+an intentional dead link and exits non-zero.
+
+**Phase 6 — Auth + Edit** (conditional on Q1)
+`auth.rs`; `users.rs`; `pending.rs`; edit routes; `static/editor.js` (editor-only load L25).
+Gate: login/logout works; edit → commit flow completes; article HTML contains zero `editor.js`
+references (L25 test).
+
+**Phase 7 — MCP + OpenAPI**
+`mcp.rs`; `openapi.yaml` regenerated.
+Gate: MCP returns valid JSON-RPC; openapi.yaml validates.
+
+**Phase 8 — Per-Brand Theming + DTCG Back-port**
+12-token brand contract confirmed; token vault updated; DTCG back-port via DESIGN-TOKEN-CHANGE
+artifact (requires `master_cosign:`); WCAG AA confirmed.
+
+**Phase 9 — Deploy**
+`cargo build --release`; binary installed; `knowledge.toml` per instance; systemd units
+updated; DNS reconciliation (L28); dead-link gate passes on all three live mount sets.
+Gate: all three instances HTTP 200; search works; font preloads in `<head>`; Cmd+K opens;
+safe-area confirmed on phone.
+
+---
+
+## §15. Deployment Configuration
+
+### knowledge.toml structure
+
+```toml
+# /etc/local-knowledge/documentation.toml
+[site]
+title     = "PointSav Documentation"
+brand     = "pointsav"
+bind      = "127.0.0.1:9090"
+state_dir = "/var/lib/local-knowledge/state"
+
+[[mount]]
+path          = "/srv/foundry/clones/project-knowledge/media-knowledge-documentation"
+role          = "primary"
+blueprint_set = ["TOPIC", "GUIDE"]
+
+[citations]
+path = "/srv/foundry/citations.yaml"
+```
+
+```toml
+# /etc/local-knowledge/projects.toml
+[site]
+title     = "Woodfine Projects"
+brand     = "woodfine"
+bind      = "127.0.0.1:9093"
+state_dir = "/var/lib/local-knowledge/state-projects"
+
+[[mount]]
+path          = "/srv/foundry/clones/project-knowledge/media-knowledge-projects"
+role          = "primary"
+blueprint_set = ["TOPIC"]
+
+[citations]
+path = "/srv/foundry/citations.yaml"
+```
+
+```toml
+# /etc/local-knowledge/corporate.toml
+[site]
+title     = "Woodfine Corporate"
+brand     = "woodfine"
+bind      = "127.0.0.1:9095"
+state_dir = "/var/lib/local-knowledge/state-corporate"
+
+[[mount]]
+path          = "/srv/foundry/clones/project-knowledge/media-knowledge-corporate"
+role          = "primary"
+blueprint_set = ["TOPIC"]
+
+[citations]
+path = "/srv/foundry/citations.yaml"
+```
+
+### Systemd unit change (per instance)
+```ini
+# Add:
+Environment="WIKI_KNOWLEDGE_TOML=/etc/local-knowledge/documentation.toml"
+# Remove: WIKI_CONTENT_DIR, WIKI_GUIDE_DIR, WIKI_GUIDE_DIR_2
+```
+
+---
+
+## §16. Archive References
+
+| Artifact | Location | Purpose |
+|---|---|---|
+| Fresh-slate UX analysis | `.agent/drafts-outbound/DESIGN-knowledge-platform-fresh-slate-analysis.draft.md` | Source of §4; route to project-design |
+| Opus brief review verdict | `.agent/drafts-outbound/BRIEF-REVIEW-old-brief-verdict.md` | Source of §3 REVISE/NEW decisions |
+| Superseded briefs | `.agent/briefs/archive/` | Historical record; do not delete |
+| ARCHITECTURE.md | `pointsav-monorepo/app-mediakit-knowledge/ARCHITECTURE.md` | Update after Phase 1 |
+| dtcg-bundle.json | `pointsav-monorepo/app-mediakit-knowledge/scripts/dtcg-bundle.json` | Source of truth for L3 token generation |
+| Staged DESIGN components | `.agent/drafts-outbound/DESIGN-doc-header-component.draft.md` + `DESIGN-docs-sidenav-component.draft.md` | Route to project-design for intake |
+
+---
+
+## §17. Navigation and Discovery Architecture
+
+### 17.1 The Core Problem Per Site
+
+**documentation.pointsav.com** — A practitioner arriving at this site almost always has a domain but not a destination. They know they are working on substrate architecture or network infrastructure, but they do not know whether the article they need exists or what it is called. The homepage must offer a credible entry into 514 articles without overwhelming, which means category-first navigation backed by a search bar that is immediately visible. "Great" for this audience means: a practitioner can reach the right category landing page in one click, find the article they approximately want in one more click, and from within that article navigate forward and backward through the relevant series without returning to the homepage.
+
+**projects.woodfinegroup.com** — Customers land here without knowing what the platform contains. They may have been sent a link by a project manager, or they may have discovered the site themselves. They do not know that "Regional Markets" and "Co-location Archetypes" are distinct bodies of content, and they cannot navigate a 102-article taxonomy they have never seen. The homepage must perform active editorial curation: tell the reader what the three or four most important bodies of knowledge are, give them a one-sentence reason to enter each one, and surface the single best starting article in each body. Discovery is the primary function of this homepage; it is not a table of contents.
+
+**corporate.woodfinegroup.com** — Institutional readers (investors, lawyers, due diligence teams) arrive with a specific question or a mandate to understand the company. A first-time visitor doing due diligence needs to know immediately which articles are authoritative disclosures and which are informational background. The homepage must present the content in two registers: "if you are here for due diligence, start here" and "if you are exploring the company, browse by subject." Quality signalling — which articles are complete, which are still being developed — is more important here than on either of the other two sites.
+
+---
+
+### 17.2 Homepage Architecture Per Instance
+
+| Instance | Primary entry point for "I don't know" visitors | Category landing page role | Featured/curated mechanism | "Start here" pattern |
+|---|---|---|---|---|
+| documentation.pointsav.com | Category grid (9 tiles, each with name + article count + one-line scope description) | Primary navigation surface — shows article cards with lede, sorted by `featured:` then recency | Featured article rotation from `featured: true` pool; renders as header card with thumbnail-equivalent status badge + first 200 chars of body | None — practitioners self-navigate via category |
+| projects.woodfinegroup.com | Three thematic clusters (Editorial story groups: "Location Intelligence," "Regional Markets," "Co-location Archetypes") each with 3–4 article cards | Secondary surface — readers arrive via cluster, not via direct category URL | Curated "Start here" card per cluster, editor-selected via `featured: true` within that category | Explicit "Start here" card in each cluster, linking to the foundational methodology article |
+| corporate.woodfinegroup.com | Two-column layout: left = "Due Diligence Path" (ordered sequence of 5 articles); right = "Browse by subject" (category links with counts) | Thin — institutional readers use the due-diligence path or search; category pages are secondary | No rotation; one static "Featured Disclosure" card, editor-selected, updated at each governance milestone | Explicit "If this is your first visit" sequence link at top of homepage |
+
+**documentation.pointsav.com:** The category grid is the homepage. Each tile names the category, shows the article count, and carries a one-sentence scope description authored in `content/category-config.yaml`. Practitioners scan the nine tiles, select the right domain, and land on the category page. The featured article rotation is a secondary strip below the grid — it surfaces content the editorial team considers exemplary, not necessarily the most recent.
+
+**projects.woodfinegroup.com:** Thematic clusters replace the category grid entirely. Each cluster is a card group with an editorial frame headline ("Understanding Where Commercial Anchors Cluster") and three to four article cards below it, each showing title and a one-sentence summary from the `summary:` frontmatter field. A customer who does not know what "VWH" means can read the cluster headline and decide whether to enter without needing to understand the taxonomy first.
+
+**corporate.woodfinegroup.com:** The due-diligence path is a numbered sequence of five articles rendered as an ordered list with sequence position numbers, article titles, and the `status:` badge for each. This tells an institutional reader exactly what to read in what order, and signals which articles are complete authoritative disclosures (status: complete → "Evergreen" badge) versus works in progress (status: pre-build → "In Development" badge).
+
+---
+
+### 17.3 Article-Level Discovery
+
+Every article page on all three sites renders the following mechanisms, implemented once in the shared article template:
+
+**Backlinks portlet** — Query `get_backlinks(slug)` from the redb graph at render time. Render as a sidebar section "Referenced by N articles" with linked titles. Hide conditionally if the backlink count is zero. This is the single highest-impact, lowest-effort change: the data already exists in redb; only the render step is missing. A practitioner reading about `genesis-protocol` and seeing that six other articles reference it immediately understands that this is a hub concept.
+
+**`relates_to` field rendered as "See Also"** — The `relates_to` field in frontmatter is already populated but not rendered. Render it as a "See Also" block at article bottom with article titles as links. This is the manual-curation layer complementing the automatic backlinks portlet.
+
+**Category membership** — Render the article's `category:` value as a clickable chip in the article header, linking to the category landing page. This is one line of maud HTML and gives every reader a one-click escape to the broader category.
+
+**Status badge** — Render the `status:` field as a visible badge in the article header. Map: `stub` → "Seedling," `pre-build` → "In Development," `active` → "Active," `complete` → "Evergreen." This calibrates reader expectations before they invest time, and is especially critical on corporate.woodfinegroup.com.
+
+**Next/previous within category** — At article bottom, render "Previous in [Category]" and "Next in [Category]" links based on the category-ordered article list. Order within a category is defined by `position:` in frontmatter (see §17.9); articles without `position:` sort alphabetically. This makes series navigation explicit without requiring sequence infrastructure.
+
+**Inline Markdown "## See Also" section** — Content convention, not an engine feature (see §17.10).
+
+---
+
+### 17.4 Category Landing Pages
+
+The existing `GET /category/{name}` route should render the following for all three sites:
+
+**Article cards with lede, not a bare list.** Each card shows: title (linked), status badge, category chip, and the first sentence of the article body auto-extracted at build time (fallback: the `summary:` field if present). No thumbnails — this is a text-first corpus. Cards are sorted: `featured: true` articles first, then by `updated:` descending.
+
+**Sub-category grouping on documentation.pointsav.com only.** The `content/category-config.yaml` file defines named cluster groups within each category (e.g., within "architecture": Protocols, Substrate, Network, BIM). The category page renders these as labeled sections with the relevant articles beneath each. Articles not assigned to a sub-category cluster appear in an "Other" section. This config file is editorial, not per-article frontmatter.
+
+**Count badge.** Render "N articles" in the category page header. This is a one-line addition that communicates the depth of a category to a browsing reader.
+
+**Featured article within category.** The `featured: true` article with the highest recency in that category renders as a header card above the cluster groups, with the auto-extracted lede displayed in full. One featured card per category page, not a rotation.
+
+**"New this month" signal.** Below the featured card, a "Recently updated" strip shows the three articles with the most recent `updated:` date, each as a compact one-line entry (title + relative date "updated 3 days ago"). This gives returning visitors an immediate signal that the category is active without scrolling the full list.
+
+---
+
+### 17.5 Hub Articles
+
+**Yes, support hub articles, but only for projects.woodfinegroup.com and documentation.pointsav.com.** The corpus sizes justify this: 102 articles (projects) and 514 articles (documentation) both have enough density that readers benefit from a curated map of a topic area. Corporate.woodfinegroup.com at 51 articles does not need hub articles — the category landing pages are sufficient at that scale.
+
+Signal with `hub: true` in frontmatter. This is preferable to a `type:` field because it does not replace the article's existing blueprint classification — a hub is still a TOPIC.
+
+The engine renders hub articles differently in two ways: (1) the article body may contain a `[[wikilink]]` list without surrounding prose and the engine renders these as article cards (title + lede) rather than inline links; (2) the backlinks portlet is suppressed on hub articles because their purpose is to route outward, not to surface inbound links. Category landing pages pin `hub: true` articles at the top of their section, above `featured: true` articles.
+
+On documentation.pointsav.com, the architecture and substrate categories each warrant one hub article. On projects.woodfinegroup.com, a "Location Intelligence Overview" hub article is the natural "start here" for new customers. Existing articles can be promoted to hub status with a single frontmatter field addition — no content rewrite required.
+
+---
+
+### 17.6 Search as Discovery
+
+The `/api/complete` autocomplete endpoint already exists. The search results page (currently missing) should render article cards identical to the category landing page format: title, status badge, category chip, auto-extracted lede. This means a reader who types a partial query and browses results gets the same information density as a reader browsing a category — they can assess relevance without clicking through.
+
+**Search results page layout:** Three sections in order — (1) Exact title matches (if any), rendered as a single highlighted card; (2) Full-text BM25 results, rendered as article cards; (3) "Browse by category" links if fewer than three results are returned, giving the reader an escape route.
+
+**Zero-result empty state:** Do not show "no results found" alone. Show: the query the user typed (to confirm it was received correctly), two or three category links ("You might find what you're looking for in: Architecture, Substrate, Systems"), and a prompt to try a shorter query. On projects.woodfinegroup.com, the zero-result state should surface the three thematic cluster entry points, since unfamiliar readers are most likely to search for terms that do not yet match article titles.
+
+**Topic suggestions:** Not recommended at this scale. Our corpus is too small and too domain-specific for useful "related searches" — the category navigation serves that function.
+
+---
+
+### 17.7 What NOT to Build
+
+**Algorithmic "readers also viewed" recommendations.** Our corpus is too small for collaborative filtering and we have no user analytics. The result would be low-quality or repetitive suggestions that erode trust rather than build it.
+
+**Infinite scroll on category pages.** Our largest category is ~100 articles. Pagination at 25 articles per page is sufficient and keeps the page weight constant. Infinite scroll adds JS complexity for a problem we do not have.
+
+**Social signals (view counts, likes, upvotes).** We have no analytics infrastructure and institutional readers on corporate.woodfinegroup.com would find engagement metrics inappropriate for governance disclosures. Quality is signalled by `status:` and `featured:`, both editorial decisions, not crowd signals.
+
+**Personalisation and reading history.** Requires login infrastructure, user data storage, and session management — none of which align with the single-binary, flat-file architecture. The LessWrong progress-tracking pattern is compelling but requires a session cookie at minimum; exclude from this build.
+
+**Date-anchored "On This Day" feature.** This requires a population of articles with historical event dates or corporate milestone dates. Our current corpus does not have this density, and forcing it would produce a mechanism that fires blank most days. Revisit if the corporate.woodfinegroup.com corpus grows to include a systematic timeline of corporate milestones.
+
+**Quiz or game-based discovery.** Appropriate for Khan Academy and Britannica's general-audience model. Wrong register for technical practitioners, project customers, and institutional investors.
+
+**Full LessWrong-style sequence system with progress tracking.** The sequence navigation pattern (prev/next within category, ordered by `position:`) captures the core benefit. The progress counter requires session state; omit it. Readers who want to track progress will bookmark.
+
+---
+
+### 17.8 New Routes Required
+
+| Route | Purpose | Requirement |
+|---|---|---|
+| `GET /hub/{slug}` | Render hub articles with card-expanded wikilinks | Nice-to-have; hub articles render adequately on the standard article route if the engine detects `hub: true` |
+| `GET /start` | Alias for the "start here" entry point on projects.woodfinegroup.com | Nice-to-have; the homepage serves this function |
+| `GET /search?q={query}` | Full search results page with article cards | **Hard requirement** — currently missing |
+| `GET /new` | "Recently updated" feed across all categories | Nice-to-have; useful for returning visitors on documentation.pointsav.com |
+| `GET /category/{name}?sort=recent` | Category page sorted by update date rather than featured-first | Nice-to-have; a sort query param on the existing route |
+
+The search results page is the only hard requirement. All others are enhancements to existing routes or optional aliases.
+
+---
+
+### 17.9 Frontmatter Schema Additions Required
+
+| Field | Type | Purpose | Sites | Gates |
+|---|---|---|---|---|
+| `summary` | String, ≤160 chars | One-sentence article description for category cards and cluster cards | projects.woodfinegroup.com (required), others (optional) | Article card lede on homepage clusters |
+| `hub` | Boolean | Marks article as a map-of-content hub; changes render behaviour | documentation.pointsav.com, projects.woodfinegroup.com | Hub article render path; category page pinning |
+| `position` | Integer | Order within category for next/previous navigation and category page sort | documentation.pointsav.com (priority), others optional | Next/previous article links; category page order |
+| `sequence` | Object `{name: string, position: int}` | Assigns article to a named reading sequence | projects.woodfinegroup.com, corporate.woodfinegroup.com | Sequence header on article pages (future phase) |
+
+`summary` is the highest-priority addition for projects.woodfinegroup.com — without it, cluster cards show auto-extracted first sentences that may not be reader-facing prose. `hub` and `position` are low-touch additions with high navigation payoff. `sequence` is scoped to a later phase.
+
+---
+
+### 17.10 Content Conventions (no engine changes required)
+
+**Every article includes a `## See Also` section in Markdown body.** This is the manually curated complement to the auto-generated backlinks portlet. Authors add this section; the engine renders it as standard Markdown. Convention: three to five links maximum; no links that are already in `relates_to` frontmatter to avoid duplication.
+
+**Hub articles exist as regular TOPICs.** No special engine treatment required initially — a hub article is a TOPIC with `hub: true` in frontmatter and a body composed primarily of `[[wikilinks]]` grouped under `##` subheadings. The wikilink expansion to card format is the only engine change needed, and that can be deferred.
+
+**Category-config clusters are editorial decisions.** The `content/category-config.yaml` file that defines sub-category groups within each category is maintained by editors, not generated. Adding a new sub-category group requires editing this YAML file and adding a `cluster:` field to affected articles' frontmatter — no engine deploy required.
+
+**The `summary:` field is populated for all articles on projects.woodfinegroup.com before the site launches.** This is a content authoring standard, not an engine enforcement. Articles without `summary:` fall back to auto-extracted first sentence — acceptable but lower quality.
+
+**Featured articles are rotated editorially, not algorithmically.** Editors set `featured: true` on articles they want surfaced. The engine selects from this pool (most recently updated featured article per category). Rotation is controlled by updating `updated:` in frontmatter, not by any automated schedule.
+
+---
+
+### 17.11 Implementation Priority
+
+| Mechanism | Phase | Effort | Primary beneficiary |
+|---|---|---|---|
+| Status badge in article header | Phase 1 (core article template) | 2 hours | corporate.woodfinegroup.com |
+| Category chip in article header | Phase 1 | 1 hour | All three sites |
+| `relates_to` rendered as "See Also" block | Phase 1 | 2 hours | documentation.pointsav.com |
+| Backlinks portlet (redb → render) | Phase 1 | 4 hours | documentation.pointsav.com |
+| Category landing page: article cards with lede | Phase 2 (category routes) | 1 day | All three sites |
+| Category landing page: featured card + "recently updated" strip | Phase 2 | 4 hours | documentation.pointsav.com |
+| Search results page with article cards | Phase 2 | 1 day | projects.woodfinegroup.com |
+| Next/previous within category (requires `position:` field) | Phase 2 | 4 hours | documentation.pointsav.com |
+| Homepage: thematic clusters (projects) | Phase 3 (homepage differentiation) | 1 day | projects.woodfinegroup.com |
+| Homepage: due-diligence path (corporate) | Phase 3 | 4 hours | corporate.woodfinegroup.com |
+| `content/category-config.yaml` sub-category groups | Phase 3 | 4 hours + editorial time | documentation.pointsav.com |
+| Hub article render path (`hub: true` detection) | Phase 4 | 4 hours | projects.woodfinegroup.com |
+| `GET /new` recently updated feed | Phase 4 | 4 hours | documentation.pointsav.com |
+| Sequence header on article pages | Phase 5 (post-launch) | 1 day | projects.woodfinegroup.com |
