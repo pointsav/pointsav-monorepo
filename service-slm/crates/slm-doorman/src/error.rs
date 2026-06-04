@@ -323,4 +323,18 @@ pub enum DoormanError {
         /// Human-readable description of the failure.
         reason: String,
     },
+
+    /// A GCP Compute Engine REST call (start/stop/status/operation poll) or
+    /// the metadata-server token fetch failed. Server-side; the VM lifecycle
+    /// monitor logs and retries, and the router falls back to Tier A. 502 when
+    /// surfaced via HTTP.
+    #[error("GCP Compute API error during {operation}: {reason}")]
+    GcpApi {
+        /// The operation that failed ("start", "stop", "status",
+        /// "wait-operation", "token").
+        operation: &'static str,
+        /// Human-readable description (status code, body excerpt, or transport
+        /// error).
+        reason: String,
+    },
 }
