@@ -68,6 +68,13 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// PCLP 1 V1 — Self-generating proforma from BRIEF v0.15.6 §5b inputs (no Excel).
+    /// Emits three files: full proforma HTML, summary HTML, JSON dump.
+    Pclp1V1 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
 }
 
 fn write_output(content: &str, out: Option<&PathBuf>) {
@@ -211,6 +218,18 @@ fn main() {
             );
 
             eprintln!("wrote 15 files to {}", out_dir.display());
+        }
+        Some(Command::Pclp1V1 { out_dir }) => {
+            // PCLP 1 V1 — engine self-generating proforma (no Excel input).
+            // Source: BRIEF v0.15.6 §5b inputs, hardcoded as Rust constants in
+            // src/spv/pclp1_proforma.rs.
+            let proforma_html = report::pclp1_proforma::render_proforma();
+            let summary_html = report::pclp1_proforma::render_summary();
+            let json_dump = report::pclp1_proforma::render_json();
+            write_output(&proforma_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_PCLP1_V1.html")));
+            write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_PCLP1_V1.html")));
+            write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_PCLP1_V1.json")));
+            eprintln!("wrote 3 files to {}", out_dir.display());
         }
         None => {
             // Legacy: JSON assumptions → sensitivity engine
