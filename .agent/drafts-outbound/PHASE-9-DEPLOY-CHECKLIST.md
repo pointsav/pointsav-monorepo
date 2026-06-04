@@ -1,34 +1,43 @@
 # Phase 9 — Deploy Checklist
 
-**Read NIGHT-BUILD-STATUS.md first — all phases must be green before deploying.**
+**Read NIGHT-BUILD-STATUS.md (git-verified) first.**
 
-Current status: Phases 0–5 and 8 PASS. Phases 6 and 7 are deferred
-(not blockers — functional equivalents from prior build are in production).
-`cargo build --release` PASS (7m 24s; 3 pre-existing warnings; no errors).
+Current status (git-verified 2026-06-04): Phases 1–8 committed (HEAD `e94bfa9d`).
+Auth/edit/CodeMirror removed (`0184fb16`, git-only workflow per Q1); openapi
+regenerated (`e94bfa9d`). `cargo build --release` PASS (8m 28s; 3 warnings; 0
+errors); binary 12M.
+
+**No authentication setup is required.** Auth was removed entirely (Q1 = git-only).
+There is no SQLite database to initialise, no admin user to seed, and no
+`--admin-username` / `WIKI_ADMIN_*` step. The binary serves read-only;
+content is edited in git, not in-browser.
 
 ---
 
 ## Pre-deploy
 
-- [ ] Resolve Q3: confirm public URL — `documentation.pointsav.com` or
-  `documentation.woodfinegroup.com`? Update BRIEF §2 DNS-status field
-  and NEXT.md before DNS cutover. (L28)
+- [x] Q3 resolved: public URL is **documentation.pointsav.com** (port 9090,
+  `local-knowledge-documentation.service`, brand PointSav, TOPIC + GUIDE).
+  Confirmed per BRIEF §15 (2026-06-04).
 - [ ] Run: `cd /srv/foundry/clones/project-knowledge/pointsav-monorepo/app-mediakit-knowledge && cargo build --release`
-  (binary already built 2026-06-04; re-run if any source has changed since)
-- [ ] Run: `cargo xtask check-content /srv/foundry/clones/project-knowledge/content-wiki-documentation` (must pass)
-- [ ] Run: `cargo xtask check-content /srv/foundry/clones/project-knowledge/content-wiki-projects` (must pass)
-- [ ] Run: `cargo xtask check-content /srv/foundry/clones/project-knowledge/content-wiki-corporate`
-  (expected: may fail due to 4 articles missing `last_edited:` + 2 stub stubs — note remaining issues;
-  deploy of corporate instance is provisional until content gate passes)
+  (binary already built 2026-06-04 at `/srv/foundry/cargo-target/mathew/release/`; re-run if source changed since)
+- [ ] **Dead-link gate must pass before promote (L18/L29).** Current state FAILS:
+  - `cargo xtask check-content /srv/foundry/clones/project-knowledge/content-wiki-documentation` → 4,568 dead links (MUST resolve)
+  - `cargo xtask check-content /srv/foundry/clones/project-knowledge/content-wiki-projects` → 396 dead links (MUST resolve)
+  - `cargo xtask check-content /srv/foundry/clones/project-knowledge/content-wiki-corporate` → 290 dead links (known-issue repo per BRIEF §9; deploy of corporate instance is provisional until its gate passes)
 - [ ] Confirm DESIGN-TOKEN-CHANGE draft has received master_cosign from project-design
   (file: `.agent/drafts-outbound/DESIGN-TOKEN-CHANGE-knowledge-platform-theming.draft.md`)
+- [ ] Stage 6 promote of `app-mediakit-knowledge` (Command Session) once gates clear
 
 ---
 
 ## Install binary
 
+The resolved workspace cargo target dir is `/srv/foundry/cargo-target/mathew/`
+(NOT a per-clone `app-mediakit-knowledge/target/`).
+
 ```bash
-sudo cp /srv/foundry/clones/project-knowledge/pointsav-monorepo/app-mediakit-knowledge/target/release/app-mediakit-knowledge \
+sudo cp /srv/foundry/cargo-target/mathew/release/app-mediakit-knowledge \
     /usr/local/bin/app-mediakit-knowledge
 sudo chmod 755 /usr/local/bin/app-mediakit-knowledge
 ```
@@ -47,9 +56,10 @@ sudo cp /srv/foundry/clones/project-knowledge/pointsav-monorepo/app-mediakit-kno
     /etc/local-knowledge/corporate.toml
 ```
 
-Review each .toml after copy — confirm `path =` points to correct content-repo checkouts
-for this host. The templates use `/srv/foundry/clones/project-knowledge/media-knowledge-*`
-which matches the current archive layout.
+Per BRIEF §15. Review each `.toml` after copy — confirm `[[mount]] path =`
+points to the correct content-repo checkout on this host (templates use
+`/srv/foundry/clones/project-knowledge/media-knowledge-*`). Bind ports:
+documentation 9090, projects 9093, corporate 9095 (nginx reverse-proxies).
 
 ---
 
@@ -58,10 +68,13 @@ which matches the current archive layout.
 For each of the three service unit files (`local-knowledge-documentation.service`,
 `local-knowledge-projects.service`, `local-knowledge-corporate.service`):
 
-- [ ] Add environment variable: `Environment="WIKI_KNOWLEDGE_TOML=/etc/local-knowledge/{instance}.toml"`
+- [ ] Add: `Environment="WIKI_KNOWLEDGE_TOML=/etc/local-knowledge/{instance}.toml"`
   substituting `documentation`, `projects`, or `corporate` for `{instance}`
-- [ ] Remove obsolete lines: `Environment="WIKI_CONTENT_DIR=..."` and any `WIKI_GUIDE_DIR` lines
-  (these are superseded by the knowledge.toml mount declaration)
+- [ ] Remove obsolete lines: `Environment="WIKI_CONTENT_DIR=..."` and any
+  `WIKI_GUIDE_DIR=...` lines — these legacy vars are superseded by the
+  knowledge.toml mount declaration (and are ignored when knowledge.toml is set)
+- [ ] No `WIKI_ADMIN_USERNAME` / `WIKI_ADMIN_PASSWORD_HASH` — auth removed; do
+  not add any admin env vars
 - [ ] Run: `sudo systemctl daemon-reload`
 
 Unit file locations: `/srv/foundry/infrastructure/local-knowledge-{documentation,projects,corporate}/`
@@ -85,63 +98,74 @@ sudo systemctl restart local-knowledge-projects
 sudo systemctl restart local-knowledge-corporate
 ```
 
-Wait 3 seconds after each restart before running verification curl.
+The server builds its Tantivy search index before binding the port (~10s on
+the documentation corpus). Wait ~12 seconds after each restart before running
+verification curls.
 
 ---
 
 ## Verify
 
 ```bash
-# Documentation instance — check title
-curl -s http://127.0.0.1:9090/ | grep "<title>"
+# Health
+curl -s http://127.0.0.1:9090/healthz
+# Expected: ok
+
+# Documentation instance — title
+curl -s http://127.0.0.1:9090/ | grep -o '<title>[^<]*</title>'
 # Expected: <title>PointSav Documentation</title>
 
-# Projects instance — check title
-curl -s http://127.0.0.1:9093/ | grep "<title>"
-# Expected: <title>Woodfine Projects</title>
+# Projects instance — title
+curl -s http://127.0.0.1:9093/ | grep -o '<title>[^<]*</title>'
 
-# Corporate instance — check title
-curl -s http://127.0.0.1:9095/ | grep "<title>"
-# Expected: <title>Woodfine Corporate</title>
+# Corporate instance — title
+curl -s http://127.0.0.1:9095/ | grep -o '<title>[^<]*</title>'
 
-# Search works on documentation
-curl -s 'http://127.0.0.1:9090/api/search?q=substrate' | head -5
-# Expected: JSON array with result objects
-
-# Font preloads in head (L23 — exactly 2)
-curl -s http://127.0.0.1:9090/ | grep 'rel="preload"' | wc -l
+# Font preloads in head (L23 — exactly 2). Both tags are on one line,
+# so use grep -o (NOT grep -c, which reports 1):
+curl -s http://127.0.0.1:9090/ | grep -o 'rel="preload"' | wc -l
 # Expected: 2
 
-# editor.js NOT on article pages (L25 — route-gated)
-curl -s http://127.0.0.1:9090/wiki/slm-tiered-substrate | grep 'editor.js'
-# Expected: no output (empty)
+# Search — endpoint is /search (HTML page) or /api/complete (JSON autocomplete).
+# There is NO /api/search route in this build.
+curl -s -o /dev/null -w "%{http_code}\n" 'http://127.0.0.1:9090/search?q=substrate'
+# Expected: 200
+curl -s 'http://127.0.0.1:9090/api/complete?q=substrate' | head -c 200
+# Expected: JSON array of {slug,title} autocomplete results
+
+# Article page — git-only workflow means NO editor surface.
+# Note /wiki/<slug> 301-redirects to the path-qualified canonical URL.
+curl -sL http://127.0.0.1:9090/wiki/slm-tiered-substrate | grep -c 'editor.js'
+# Expected: 0
+curl -sL http://127.0.0.1:9090/wiki/slm-tiered-substrate | grep -c 'cm-saa'
+# Expected: 0
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:9090/wiki/slm-tiered-substrate
+# Expected: 301 (redirect to /wiki/substrate/slm-tiered-substrate, which serves 200)
 
 # Mobile — verify on physical phone
-# Open http://<vm-ip>:9090/ on phone (via SSH tunnel or direct)
-# Check: no Home Indicator overlap on bottom chrome
-# Press Cmd+K: verify command palette opens
-# Navigate to /es/: verify navigation labels are in Spanish
+# Open http://<vm-ip>:9090/ on phone (via SSH tunnel or direct).
+# Check: no Home Indicator overlap on bottom chrome (L24 safe-area-inset).
+# Press Cmd+K: verify command palette opens. Navigate /es/: Spanish labels.
 ```
 
 ---
 
 ## Post-deploy
 
-- [ ] Update BRIEF §2 DNS status for documentation instance after Q3 resolved
+- [ ] Update BRIEF §15 DNS status for documentation instance after cutover
 - [ ] Route DESIGN-TOKEN-CHANGE draft to project-design for master_cosign
   (file: `.agent/drafts-outbound/DESIGN-TOKEN-CHANGE-knowledge-platform-theming.draft.md`)
 - [ ] Update binary ledger: add entry to `data/binary-ledger/app-mediakit-knowledge.jsonl`
   with sha256 of installed binary
   ```bash
   sha256sum /usr/local/bin/app-mediakit-knowledge
-  # Record SHA + install date + version in ledger
   ```
-- [ ] Update BRIEF §14 Phase 9 status to "deployed: 2026-06-04" (or actual deploy date)
+- [ ] Update BRIEF Phase 9 status to "deployed: 2026-06-04" (or actual deploy date)
 - [ ] Create session-end brief entry in `.agent/briefs/`
 
 ---
 
 ## All done?
 
-Update BRIEF status field to `deployed: 2026-06-05` (or actual date) and commit a
-session-end brief. Route DESIGN-TOKEN-CHANGE to project-design outbox.
+Update BRIEF status field to `deployed: <date>` and commit a session-end brief.
+Route DESIGN-TOKEN-CHANGE to project-design outbox.
