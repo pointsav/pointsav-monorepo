@@ -1,6 +1,12 @@
 ---
 artifact: brief
 schema: foundry-brief-v1
+status: archived
+archived_date: 2026-06-04
+contamination_note: >-
+  Correct home archive is project-console. Landed in project-intelligence via
+  Stage-6 rebase contamination 2026-05-22. Moved to archive; content intact
+  for project-console to verify presence in correct location.
 archive: project-console
 title: "project-console Master BRIEF"
 status: active
