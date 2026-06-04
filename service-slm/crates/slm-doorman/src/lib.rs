@@ -19,10 +19,13 @@ pub mod brief_cache;
 pub mod citations;
 pub mod cost_ledger;
 pub mod error;
+pub mod flow_gate;
+pub mod flow_policy;
 pub mod grammar_validation;
 pub mod graph;
 pub mod ledger;
 pub mod mesh;
+pub mod priority_queue;
 pub mod promotion_ledger;
 pub mod redact;
 pub mod router;
@@ -45,12 +48,17 @@ pub use audit_proxy::{
 };
 pub use brief_cache::{BriefCache, CachedBrief};
 pub use error::{DoormanError, Result};
+pub use flow_gate::{FlowGate, GLOBAL_LABEL};
+pub use flow_policy::{
+    Complexity, FlowPolicy, FlowPolicyState, RouteTarget, BATCH_LABEL, EXPRESS_LABEL,
+};
 pub use grammar_validation::LarkValidator;
 pub use graph::GraphContextClient;
 pub use ledger::{
     AuditCaptureEntry, AuditEntry, AuditLedger, AuditProxyEntry, AuditProxyStubEntry,
     ExtractionAuditEntry,
 };
+pub use priority_queue::{Priority, PriorityQueue, QueueDepth};
 pub use promotion_ledger::{PromotionLedger, PromotionOutcome, Stage, StatRow};
 pub use redact::sanitize;
 pub use router::{Doorman, DoormanConfig, TierBInfo};

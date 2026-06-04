@@ -117,15 +117,10 @@ impl CostLedger {
         let path = self.path_for(&row.ts);
         let line = match serde_json::to_string(row) {
             Ok(s) => s,
-            Err(e) => {
-                return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, e))
-            }
+            Err(e) => return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, e)),
         };
         let _guard = self.inner.lock().expect("cost ledger mutex poisoned");
-        let mut f = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&path)?;
+        let mut f = OpenOptions::new().create(true).append(true).open(&path)?;
         f.write_all(line.as_bytes())?;
         f.write_all(b"\n")?;
         f.flush()?;
