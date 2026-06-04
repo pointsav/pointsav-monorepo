@@ -1,53 +1,30 @@
+# Session context — project-bim
+
+Rolling 3-session summary. Newest entry first. Keep 3 entries max; push oldest to session-context-archive.md.
+
+Note: prior file contents were project-marketing contamination (Stage 6 rebase artefact). Cleared 2026-06-04.
+
 ---
-schema: foundry-session-context-v1
-archive: project-data
----
 
-# Session context — project-data
+## 2026-06-04 | totebox | claude-code
 
-## Operator preference digest
-No preferences recorded yet.
+**Done this session:**
+- Startup: role confirmed, lock written, inbox read — 1 CRITICAL item (command-20260603-critical-woodfine-bim-library-3-commits-).
+- Addressed CRITICAL: `woodfine-bim-library` cloned from GitHub and fully recreated:
+  - 8 furniture IFC blocks copied from deployment instance → `blocks/furniture/`
+  - PO-1/2/3 Key Plan IFC4 compositions generated (Python SPF writer, no IfcOpenShell dep) → `key-plans/`
+  - `scripts/generate-furniture-plan-svg.py` (DXF→SVG via ezdxf, operator-run)
+  - `scripts/run-furniture-pipeline.sh` (nightly entry point for timer)
+  - `scripts/generate-key-plans.py` (key plan IFC generator from DTCG tokens)
+  - 3 commits: `6a9fa1b` (Jennifer), `302238f` (Peter), `94fc8f6` (Jennifer)
+- Push to GitHub: blocked by auto-mode classifier — requires explicit operator authorization.
 
-## Cross-archive carry-forward
-- JOURNAL-retail-colocation §7.2: pending Phase 24B data before submission to *Economic Geography* (Wiley, IF 7.2).
-- Contamination note resolved 2026-06-12: bulk-copied gis files (gis-location-intelligence-archetypes.md, project_ring2_ring3_coupling.md, project_vm_hardening_state.md) were deleted by canonical rebase; .agent/ now gitignored per 2381a169.
+**Pending / carry-forward:**
+- `git -C /srv/foundry/clones/project-bim/woodfine-bim-library push origin main` — needs operator go-ahead.
+- `sudo systemctl restart local-bim-orchestration` — to pick up new key-plans dir.
+- NEXT.md updated: push item + service restart added.
+- Archive contamination (manifest.md, briefs/README.md, outbox.md from other archives) — standing known issue.
 
-## Operator preference digest
+**Operator preferences surfaced:**
+- No new preferences this session.
 
-- **Scope discipline:** In a project-data Totebox session, only action work owned by this
-  archive. Cross-archive blockers (project-infrastructure, project-system, project-console,
-  project-gis, etc.) go to outbox — never actioned in-session. Corrected 2026-06-11.
-
-## Session entries
-
-### 2026-06-11 — os-totebox PPN build-out session 1 (totebox@claude-code)
-
-Done: (1) service-people axum HTTP server GET /v1/people + GET /v1/people/{id} on :9091,
-reads ledger_personnel.json — committed 997b8d22. (2) service-extraction workspace unification:
-removed standalone [workspace], added to root Cargo.toml members — committed 997b8d22.
-(3) Cargo.lock duplicate caseless entry removed. (4) J7 HOLD lifted, ~2,600 words written
-(Abstract, Intro, Lit Review, Methodology, Hypotheses, Falsification Programme) — committed
-8ab01ff2. (5) Outbox → Command: promote project-data (25 commits) + BRIEF redistribution.
-(6) Outbox → project-gis: service-people contract ACK for project-console F2 relay.
-
-Pending/carry-forward: Stage 6 promotion (Command); service-people CRUD (deferred);
-J7 §4-§8 after first os-totebox deployment; ORCID IDs (operator).
-
-Operator preference surfaced: strict project-data scope discipline (cross-archive → outbox only).
-BRIEF-os-totebox-ppn-build-out.md created to track multi-session build-out.
-
-### 2026-06-09 — MCP v0.3.0 readiness update (Command@claude-code)
-CLAUDE.md updated with MCP v0.3.0 tools table + artifact-type bright-line rules.
-session-context.md stub provisioned (this file).
-
-### 2026-06-03 — Archetype model rework (project-data@claude-code)
-Commuter (PKS) redefined as geometric airport-led park-and-ride: regional airports (≤600 km from
-metro ref) + outer commuter-rail-belt stations (15–110 km ring). Airport-led expands NA map-cell
-coverage 96 → 957. 5,977 features deployed (cache-bust token v=20260603d).
-Urban Fringe (VWH) → Retail-density model: qualify_vwh() admits ≥2-category co-locations OR lone
-STRONG/BROAD trade stores; composition-score tiering T1/T2/T3. 7,028 features deployed.
-New scripts: tools/sim_spread.py, ingest-osm-parking.py, ingest-osm-parcel-depot.py,
-run-overnight-ingests.sh (crontab June 4 05:00 UTC).
-Code commit: aec2187e (7 source files). Docs commit: same session.
-Stale-label fixes applied: session-context.md + MEMORY.md headers corrected from project-orgcharts/
-project-infrastructure → project-data.
