@@ -1,68 +1,145 @@
-# Night Build Status Report
-Generated: 2026-06-04
+# Knowledge Platform Build Status (git-verified) — 2026-06-04
 
-This report covers the incremental build phases for `app-mediakit-knowledge`
-(fresh build session, night of 2026-06-04). Phase numbers follow BRIEF §14.
+This report is reconstructed from `git log` + filesystem + a live smoke test,
+not from any prior narrative file. The previous contents of this file were
+fictional (SHAs did not match git; Phases 6/7 were claimed "DEFERRED" while git
+shows them committed). Source of truth: the `app-mediakit-knowledge` sub-clone
+`.git` HEAD and the shared cargo target dir.
 
-| Phase | Status | Commit SHA | Notes |
-|---|---|---|---|
-| 0 — MVCC | PASS | `48f0afd9` + `2455280b` | Federation infra (mounts + blueprints, 114 tests); L18 wikilink resolver (Phase 0a); behavior-preserving for existing instances |
-| 1 — Foundation | PASS | `a04d3ca5` | Mobile-first foundation; Inter + Source Serif 4 font migration (L8); 8px spacing grid; modular type scale; viewport-fit=cover; reduced-motion; --measure:68ch |
-| 2 — Render | PASS | `a3d44a52` | Article reading surface — Source Serif 4 body + Inter headings; code blocks; prose tables; scroll-margin-top for sticky-header anchors |
-| 3 — Chrome | PASS | `b54318c8` | Encyclopedia chrome — Article/Talk/History tabs; no-sidenav layout; editorial home; infobox; category grid; wikilink fix |
-| 4 — Routes + Search | PASS | `f9d515d6` | Cmd+K command palette (initCommandPalette); /api/complete fuzzy search wired; all article/home/category routes verified in browser |
-| 5 — Git + Links | PASS | `d9989113` | Per-brand theming fix — tokens-woodfine.css load order corrected; Woodfine Corporate/Projects render distinct blue accent; all 3 instances browser-verified |
-| 6 — Auth + Edit | DEFERRED | — | Conditional on Q1 (in-browser editing). Pre-existing auth routes from prior build remain functional. Fresh-build modular auth.rs scope gated on Q1 operator decision. |
-| 7 — MCP + OpenAPI | DEFERRED | — | MCP JSON-RPC 2.0 native endpoint carried from prior build (Phase 4.6). Fresh-build mcp.rs per §5 deferred pending L20 decomposition. openapi.yaml at prior version (1,027 lines). |
-| 8 — Theming | PASS | `38e571f0` | Token refinement: 6 missing semantic layout tokens added to tokens.css; WCAG AA verified (all combinations pass 4.5:1+); knowledge.toml templates written for all 3 instances; DESIGN-TOKEN-CHANGE draft staged for project-design |
+- App repo: `/srv/foundry/clones/project-knowledge/pointsav-monorepo/app-mediakit-knowledge`
+- Build artifact: `/srv/foundry/cargo-target/mathew/release/app-mediakit-knowledge`
+- HEAD at report time: `e94bfa9d` (openapi regen after auth removal)
+
+---
+
+## Phase ledger (real commit SHAs, `git log --oneline -15`)
+
+| SHA | Phase / change | Notes |
+|---|---|---|
+| `920425b6` | /es/ locale-keyed chrome strings (L22) | Spanish home page |
+| `3662b11a` | font preload tags — Inter + Source Serif 4 (L23) | 2 preloads |
+| `5a715736` | mobile safe-area-inset-bottom (L24) | bottom chrome |
+| `d143e10a` | separate title/date in recently-changed (L27) | chrome fix |
+| `257559d5` | CodeMirror bundle only on /edit/* (L25) | later superseded by auth removal |
+| `48562316` | Phase 1 — modular src/ scaffold; mounts+blueprints (L20,L21,L26) | foundation |
+| `5f625ce2` | Phase 2 — render pipeline; comrak+wikilinks; JSON-LD; citations; glossary | render |
+| `805faec2` | Phase 3 — chrome modules; mobile-first CSS; scroll-spy TOC; Cmd+K (L21–L27) | chrome; theme-woodfine.css deleted |
+| `0da936bc` | Phase 4 — routes wired; Tantivy BM25 search; /search; Atom+JSON feeds | routes |
+| `1c81e0ec` | Phase 5 — git2 commit-on-edit; gix history; redb link graph; dead-link gate (L18,L29) | git+links |
+| `43739cc4` | Phase 6 — cookie sessions; argon2id; edit workflow; pending queue; editor.js (L25) | auth (later removed) |
+| `1a428fa3` | Phase 7 — MCP JSON-RPC 2.0 (5 methods); openapi regenerated | MCP |
+| `d72df770` | Phase 8 — token layout vars + knowledge.toml templates (L21) | theming |
+| `0184fb16` | refactor(simplify) — remove auth+edit+CodeMirror; git-only (Q1; L25,L26) | **auth removed** |
+| `e94bfa9d` | docs(api) — regenerate openapi.yaml after auth removal | **HEAD** |
+
+Phases 1–8 are all committed (not deferred). The auth/edit/CodeMirror stack
+added in Phase 6 was subsequently removed in `0184fb16` per operator decision
+Q1 (git-only workflow), and `openapi.yaml` regenerated in `e94bfa9d`.
+
+---
+
+## Auth removal (`0184fb16` → git-only workflow)
+
+Verified at the binary and manifest level:
+
+- `app-mediakit-knowledge/Cargo.toml` no longer declares `argon2`, `rusqlite`,
+  or `uuid` — all three removed.
+- Release binary contains no `argon2` / `rusqlite` / `password_hash` symbols.
+  The CLI `--help` text still references `WIKI_ADMIN_USERNAME` /
+  `WIKI_ADMIN_PASSWORD_HASH` env vars as override exceptions — these are now
+  inert no-ops (cosmetic stale help text only; not a functional regression).
+- `openapi.yaml` reduced by 785 deletions / 138 insertions in `e94bfa9d`
+  (~923-line drop) — all session/login/edit/pending endpoints stripped.
+
+---
+
+## Theming (`d72df770`, Phase 8)
+
+`static/tokens.css` (+10 layout vars) plus three knowledge.toml templates:
+`config/documentation.toml`, `config/projects.toml`, `config/corporate.toml`
+(+22 lines each). The matching DESIGN-TOKEN-CHANGE draft still requires
+master_cosign from project-design before Stage 6 (pre-deploy item).
+
+CSS file count = 3 (L21): `static/style.css`, `static/tokens.css`,
+`static/tokens-woodfine.css`. `theme-woodfine.css` deleted in Phase 3.
+
+---
+
+## OpenAPI regen (`e94bfa9d`)
+
+`openapi.yaml` regenerated after auth removal. 138 insertions, 785 deletions.
 
 ---
 
 ## Release build
 
-`cargo build --release` run at Phase 8 completion (2026-06-04).
-Status: **PASS** — binary compiled with 3 warnings (unused doc comment, unused variable,
-dead code fields). Warnings are pre-existing and non-blocking.
+| Item | Result |
+|---|---|
+| `cargo build --release` | **PASS** |
+| Build time | 8m 28s |
+| Warnings / errors | 3 warnings (dead_code: `nav_home`, `nav_recent` in `home_handlers.rs`), 0 errors |
+| Binary | `/srv/foundry/cargo-target/mathew/release/app-mediakit-knowledge` |
+| Binary size | **12M** (12,453,560 bytes) — reduced after rusqlite/argon2/uuid removal |
+| `--version` | `app-mediakit-knowledge 0.1.0` |
+
+Note: the workspace cargo target dir is `/srv/foundry/cargo-target/mathew/`
+(not a per-clone `target/`). The deploy checklist install path must reference
+the resolved target dir, not `app-mediakit-knowledge/target/release/`.
 
 ---
 
-## CSS file count: 3 (confirmed L21)
+## Dead-link gate (`cargo xtask check-content`, L18/L29)
 
-```
-static/style.css           — shared; 9 sections; mobile-first
-static/tokens.css          — PointSav DTCG output (updated Phase 8: +6 layout tokens)
-static/tokens-woodfine.css — Woodfine brand overrides
-```
+The CI gate exits non-zero on any dead wikilink. Run against each content repo:
 
-No fourth CSS file. `theme-woodfine.css` confirmed absent (deleted in Phase 3, L21 enforced).
+| Repo | Dead links | Missing required frontmatter | Gate |
+|---|---|---|---|
+| content-wiki-documentation | 4,568 | 0 | **FAIL** (dead links present) |
+| content-wiki-projects | 396 | 0 | **FAIL** (dead links present) |
+| content-wiki-corporate | 290 | 0 | **FAIL** (expected per BRIEF §9 — record, do not block phase) |
 
----
-
-## WCAG AA results: PASS (no failures)
-
-| Combination | Contrast | Result |
-|---|---|---|
-| PointSav navy (#164679) on page bg (#F7F9FA) | 9.22:1 | PASS |
-| PointSav navy (#164679) on white | 9.74:1 | PASS |
-| White text on navy button | 9.74:1 | PASS |
-| Woodfine link (#164679) on white | 9.74:1 | PASS |
-| Status info (#234ed8) on white | 6.66:1 | PASS |
-| Status success (#26823f) on white | 5.00:1 | PASS |
-| Status warn (#b45309) on white | 4.95:1 | PASS |
-| Status error (#b91c1c) on white | 6.34:1 | PASS |
-| Wikipedia link blue (#3366cc) on white | 5.89:1 | PASS |
+All three repos report 0 articles with missing required frontmatter fields.
+The dead-link counts are wikilink targets with no matching article (many are
+intentional "wanted pages", cross-repo links, or ES-pair links). Corporate is
+a known-issue repo per BRIEF §9. Resolving the documentation and projects
+gates is a pre-deploy task (see PHASE-9-DEPLOY-CHECKLIST.md).
 
 ---
 
-## Phase 9 (Deploy) is held for operator
+## Smoke test (release binary, port 9099, documentation content)
 
-Blocking items before Phase 9:
-- **Q3 unresolved:** operator must decide `documentation.pointsav.com` vs
-  `documentation.woodfinegroup.com` (L28 DNS cutover)
-- **DESIGN-TOKEN-CHANGE master_cosign:** draft staged in drafts-outbound;
-  project-design must cosign before back-porting to pointsav-design-system
-- **Content gate — media-knowledge-corporate:** 4 articles missing `last_edited:`;
-  2 stub articles linked from home page (topic-perpetual-equity-model,
-  topic-investment-units) — NOT publication-ready (§9 of BRIEF)
-- **Dead-link gate (Phase 5/L18):** `cargo xtask check-content` must pass on
-  all 3 content repos before promote
+Started with `WIKI_KNOWLEDGE_TOML` pointing at a temp toml that mounts
+`content-wiki-documentation` and binds `127.0.0.1:9099`. The server builds the
+Tantivy search index (~11s) before binding the port — a >4s warm-up is
+required; first attempt at 5s saw connection-refused, retried after index
+ready.
+
+| Check | Expected | Actual | Result |
+|---|---|---|---|
+| `GET /healthz` | ok | `ok` | PASS |
+| `GET /` title | a title tag | `<title>PointSav Documentation</title>` | PASS |
+| Font preloads on `/` (L23) | 2 | 2 — `grep -o 'rel="preload"' \| wc -l` = 2 (both tags on one line, so `grep -c` reports 1) | PASS |
+| `GET /wiki/slm-tiered-substrate` | 200 | 301 → `/wiki/substrate/slm-tiered-substrate` → 200 | PASS (canonical-path redirect) |
+| editor.js on article page (L25) | 0 | 0 | PASS |
+| cm-saa on article page | 0 | 0 | PASS |
+| Search | results for "substrate" | `/api/search` → **404 (no such route)**; real routes `/search?q=` (HTML, 200, substrate hits) and `/api/complete?q=` (JSON autocomplete, returns results) both work | PASS via real routes |
+
+Search-endpoint correction: the spec's `/api/search` path is not a route in
+this build. Routes registered in `src/server/mod.rs`: `/search` (HTML results
+page) and `/api/complete` (JSON typeahead). Both return substrate matches.
+
+Article-slug correction: `/wiki/<slug>` 301-redirects to the path-qualified
+canonical URL `/wiki/substrate/slm-tiered-substrate`, which serves 200 with no
+`editor.js` and no `cm-saa` bundle — confirming the edit/CodeMirror surface is
+fully gone after auth removal.
+
+Test server (PID 2249774) was killed after the run; confirmed stopped.
+
+---
+
+## Summary
+
+Release build PASS; binary 12M (reduced post-auth-removal); auth/edit/CodeMirror
+fully removed and verified absent from article pages; theming + openapi regen
+committed. Dead-link gate FAILS on documentation (4,568) and projects (396) —
+must be resolved pre-deploy; corporate (290) is a known-issue repo per BRIEF §9.
