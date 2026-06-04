@@ -88,21 +88,26 @@ the resolved target dir, not `app-mediakit-knowledge/target/release/`.
 
 ---
 
-## Dead-link gate (`cargo xtask check-content`, L18/L29)
+## Dead-link gate (L18/L29) — CORRECTED 2026-06-04
 
-The CI gate exits non-zero on any dead wikilink. Run against each content repo:
+The canonical gate is the binary's **`check --strict` subcommand** (uses the live
+`render::page_exists` resolver). The earlier `cargo xtask check-content` figures
+below the line were ~99.9% false positives from a hand-rolled duplicate with four
+bugs (path-slugs not bare frontmatter slugs; `[[target|display]]` split reversed;
+scanned `.agent/` rule docs and inline code spans). The xtask was fixed in monorepo
+`2d84b375`; the subcommand is authoritative.
 
-| Repo | Dead links | Missing required frontmatter | Gate |
+True counts (canonical resolver), after the 6 genuine dead links were fixed:
+
+| Repo | Pages | Dead links | Gate |
 |---|---|---|---|
-| content-wiki-documentation | 4,568 | 0 | **FAIL** (dead links present) |
-| content-wiki-projects | 396 | 0 | **FAIL** (dead links present) |
-| content-wiki-corporate | 290 | 0 | **FAIL** (expected per BRIEF §9 — record, do not block phase) |
+| content-wiki-documentation | 243 | 0 | **PASS** (fixed `42df9a0`) |
+| content-wiki-projects | 48 | 0 | **PASS** (fixed `c15ef8c`) |
+| content-wiki-corporate | 20 | 0 | **PASS** (fixed `b4c6b98`) |
 
-All three repos report 0 articles with missing required frontmatter fields.
-The dead-link counts are wikilink targets with no matching article (many are
-intentional "wanted pages", cross-repo links, or ES-pair links). Corporate is
-a known-issue repo per BRIEF §9. Resolving the documentation and projects
-gates is a pre-deploy task (see PHASE-9-DEPLOY-CHECKLIST.md).
+All three repos: 0 dead links, 0 articles with missing required frontmatter.
+~~Earlier xtask figures (now superseded): documentation 4,568 / projects 396 /
+corporate 290 — all false positives, not real dead links.~~
 
 ---
 
@@ -141,5 +146,6 @@ Test server (PID 2249774) was killed after the run; confirmed stopped.
 
 Release build PASS; binary 12M (reduced post-auth-removal); auth/edit/CodeMirror
 fully removed and verified absent from article pages; theming + openapi regen
-committed. Dead-link gate FAILS on documentation (4,568) and projects (396) —
-must be resolved pre-deploy; corporate (290) is a known-issue repo per BRIEF §9.
+committed. Dead-link gate (canonical `check --strict`) PASSES on all three repos —
+6 genuine dead links fixed (`42df9a0` / `c15ef8c` / `b4c6b98`); the earlier
+4,568/396/290 "FAIL" figures were xtask false positives (xtask fixed in `2d84b375`).
