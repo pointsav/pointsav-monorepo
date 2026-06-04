@@ -761,6 +761,8 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         DoormanError::TierBTimeout | DoormanError::TierBCircuitOpen => {
             StatusCode::SERVICE_UNAVAILABLE
         }
+        DoormanError::FlowGateClosed { .. } => StatusCode::SERVICE_UNAVAILABLE,
+        DoormanError::PriorityQueueIo { .. } => StatusCode::INTERNAL_SERVER_ERROR,
     }
 }
 

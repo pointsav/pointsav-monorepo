@@ -769,7 +769,10 @@ fn build_doorman() -> anyhow::Result<Doorman> {
         .and_then(|v| v.parse::<f64>().ok())
         .filter(|&v| v > 0.0);
     if let Some(cap) = daily_yoyo_cap_usd {
-        info!(cap_usd = cap, "daily Tier B spend cap configured (SLM_YOYO_DAILY_CAP_USD)");
+        info!(
+            cap_usd = cap,
+            "daily Tier B spend cap configured (SLM_YOYO_DAILY_CAP_USD)"
+        );
     }
 
     Ok(Doorman::new(
