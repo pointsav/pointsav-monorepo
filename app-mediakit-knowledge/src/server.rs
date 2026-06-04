@@ -1216,21 +1216,17 @@ fn home_chrome(
                                     h2 { (s.section_recent) }
                                     a.section-head__hint href="/special/recent-changes" { (s.recent_all_link) }
                                 }
-                                div.recent {
+                                ul.recent {
                                     @for t in recent.iter().take(8) {
-                                        a.recent__item href={ "/wiki/" (t.slug) } {
-                                            div {
-                                                span.recent__title { (t.title) }
-                                                @if let Some(cat) = t.slug.split_once('/').map(|(c, _)| c) {
-                                                    span.recent__crumb { (humanize_category(cat)) }
-                                                }
-                                            }
+                                        li.recent__item {
+                                            a.recent__title href={ "/wiki/" (t.slug) } { (t.title) }
                                             @if let Some(cat) = t.slug.split_once('/').map(|(c, _)| c) {
-                                                span.recent__cat { (humanize_category(cat)) }
+                                                span.recent__crumb { (humanize_category(cat)) }
                                             }
                                             span.kind-badge data-type=(item_type_key(&t.slug)) { (item_type_label(&t.slug)) }
                                             @if let Some(ref d) = t.last_edited {
-                                                span.recent__date { (d) }
+                                                " "
+                                                time.recent__date datetime=(d) { (d) }
                                             }
                                         }
                                     }
