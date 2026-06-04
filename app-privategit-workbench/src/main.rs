@@ -465,10 +465,17 @@ async fn move_file(State(state): State<AppState>, Query(q): Query<RenameQuery>) 
 
     // No-op: already in the right place
     if src_fs == final_path {
-        return Json(MoveResponse { ok: true, new_path: q.from.clone() }).into_response();
+        return Json(MoveResponse {
+            ok: true,
+            new_path: q.from.clone(),
+        })
+        .into_response();
     }
     if final_path.exists() {
-        return err(StatusCode::CONFLICT, "a file with that name already exists in destination");
+        return err(
+            StatusCode::CONFLICT,
+            "a file with that name already exists in destination",
+        );
     }
 
     // Atomic rename; fall back to copy+delete for cross-filesystem moves
@@ -480,11 +487,7 @@ async fn move_file(State(state): State<AppState>, Query(q): Query<RenameQuery>) 
     }
 
     let dest_prefix = q.to.trim_start_matches('/').trim_end_matches('/');
-    let new_path = format!(
-        "{}/{}",
-        dest_prefix,
-        filename.to_str().unwrap_or("")
-    );
+    let new_path = format!("{}/{}", dest_prefix, filename.to_str().unwrap_or(""));
     Json(MoveResponse { ok: true, new_path }).into_response()
 }
 
