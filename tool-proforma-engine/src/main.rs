@@ -104,6 +104,14 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// Legacy JV (D7) V1 — Self-generating apples-to-apples comparator to PCLP 1
+    /// per BRIEF v0.15.6 §5h. Traditional bank-debt JV ($250M equity + $750M debt =
+    /// $1B single-shot). Emits proforma + summary + JSON.
+    LegacyJvV1 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
 }
 
 fn write_output(content: &str, out: Option<&PathBuf>) {
@@ -292,6 +300,17 @@ fn main() {
             write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_BuildingPortfolio_V1.html")));
             write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_BuildingPortfolio_V1.json")));
             eprintln!("wrote 3 Building Portfolio V1 files to {}", out_dir.display());
+        }
+        Some(Command::LegacyJvV1 { out_dir }) => {
+            // Legacy JV (D7) V1 — engine self-generating comparator to PCLP 1.
+            // Source: BRIEF v0.15.6 §5h. Apples-to-apples 10-year return analysis.
+            let proforma_html = report::legacy_jv_proforma::render_proforma();
+            let summary_html = report::legacy_jv_proforma::render_summary();
+            let json_dump = report::legacy_jv_proforma::render_json();
+            write_output(&proforma_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_LegacyJV_V1.html")));
+            write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_LegacyJV_V1.html")));
+            write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_LegacyJV_V1.json")));
+            eprintln!("wrote 3 Legacy JV V1 files to {}", out_dir.display());
         }
         Some(Command::BencalAllV1 { out_dir }) => {
             // Bencal SPV1, SPV2, Management V1 — engine self-generating proformas.

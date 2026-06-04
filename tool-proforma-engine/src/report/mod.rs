@@ -5,5 +5,6 @@ pub mod d1_dev_classes;
 pub mod d1_dev_classes_v2;
 pub mod d2_direct_hold;
 pub mod d3_wcp;
+pub mod legacy_jv_proforma;
 pub mod pclp1_proforma;
 pub mod wcp_proforma;

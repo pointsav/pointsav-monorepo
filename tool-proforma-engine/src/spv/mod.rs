@@ -4,6 +4,7 @@ pub mod bencal;
 pub mod bencal_mgmt_proforma;
 pub mod bencal_spv1_proforma;
 pub mod bencal_spv2_proforma;
+pub mod legacy_jv_proforma;
 pub mod pclp1_proforma;
 pub mod wcp_proforma;
 
