@@ -154,6 +154,12 @@ pub fn breadcrumb(category: Option<&str>, title: &str, locale: Locale) -> Markup
 }
 
 /// Render the article page body — tabs, header, hatnote, body, see-also, backlinks, nav.
+///
+/// L25 gate: `is_edit_page` controls whether `/static/editor.js` (CodeMirror 6 + SAA)
+/// is emitted for this page. When `false` (standard article view), no `editor.js`
+/// reference appears in the output. When `true` (edit surface), the editor script
+/// tag is included. Acceptance: article page HTML contains zero references to
+/// `editor.js`; only the edit page HTML includes it.
 pub fn article_page(
     slug: &str,
     title: &str,
@@ -168,6 +174,9 @@ pub fn article_page(
     next_article: Option<(&str, &str)>,
     locale: Locale,
     is_authenticated: bool,
+    // L25: set to `true` only on the /edit/* route so `editor.js` loads.
+    // All other call sites pass `false` — no editor bundle on read pages.
+    is_edit_page: bool,
 ) -> Markup {
     let see_also_label = t(locale, "see_also");
     let backlinks_label = t(locale, "backlinks");
@@ -257,6 +266,13 @@ pub fn article_page(
 
                 // Right-rail TOC
                 (toc_sidebar(toc, locale))
+            }
+
+            // L25: editor.js loads ONLY on the edit page (is_edit_page = true).
+            // Standard article view (is_edit_page = false) emits no editor.js reference.
+            // Acceptance gate: grep for "editor.js" on article page HTML must return zero hits.
+            @if is_edit_page {
+                script src="/static/editor.js" defer {}
             }
         }
     }
