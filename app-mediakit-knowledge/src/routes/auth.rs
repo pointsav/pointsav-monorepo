@@ -1,46 +1,17 @@
 //! Authentication routes.
 //!
-//! Phase 6 target (gated on BP5 clearance).
+//! Phase 6: cookie session login/logout. Wires route stubs to real handler
+//! implementations in `crate::auth`.
 //!
-//! Routes owned by this module:
-//! - `GET  /auth/login`  — login page
-//! - `POST /auth/login`  — process login form (argon2id verification)
-//! - `GET  /auth/logout` — destroy session cookie
-//!
-//! NOTE: These routes are currently wired through `server::router()` via the
-//! delegation in `routes/mod.rs`. The real implementations live in
-//! `crate::auth`. Auth is currently mounted at `/special/login` and
-//! `/special/logout` in the server router; `/auth/*` is the Phase 6 target
-//! path. Phase 6 gates on Q1 and BP5.
+//! Routes owned by this module (registered in server::router at /special/*):
+//! - `GET  /special/login`          — login page
+//! - `POST /special/login`          — authenticate + set session cookie
+//! - `POST /special/logout`         — destroy session + clear cookie
+//! - `GET  /special/create-account` — admin-only account creation form
+//! - `POST /special/create-account` — create new user
 
-use axum::http::StatusCode;
-use axum::response::IntoResponse;
-
-/// Phase 6: GET /auth/login — login page.
-///
-/// Real implementation: `crate::auth::get_login`.
-#[allow(dead_code)]
-pub async fn login_page() -> impl IntoResponse {
-    // Phase 6: migrate get_login handler from crate::auth.
-    StatusCode::NOT_IMPLEMENTED
-}
-
-/// Phase 6: POST /auth/login — process login form.
-///
-/// Verifies argon2id password hash, sets session cookie.
-/// Real implementation: `crate::auth::post_login`.
-#[allow(dead_code)]
-pub async fn login_post() -> impl IntoResponse {
-    // Phase 6: migrate post_login handler from crate::auth.
-    StatusCode::NOT_IMPLEMENTED
-}
-
-/// Phase 6: GET /auth/logout — destroy session.
-///
-/// Clears the session cookie and redirects to /.
-/// Real implementation: `crate::auth::post_logout`.
-#[allow(dead_code)]
-pub async fn logout() -> impl IntoResponse {
-    // Phase 6: migrate post_logout handler from crate::auth.
-    StatusCode::NOT_IMPLEMENTED
-}
+pub use crate::auth::get_create_account;
+pub use crate::auth::get_login as login_page;
+pub use crate::auth::post_create_account;
+pub use crate::auth::post_login as login_post;
+pub use crate::auth::post_logout as logout;
