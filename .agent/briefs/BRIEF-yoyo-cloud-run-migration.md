@@ -2,7 +2,7 @@
 artifact: brief
 status: archived
 archived_date: 2026-06-02
-superseded_by: archive/BRIEF-slm-substrate-master.md §10
+superseded_by: BRIEF-project-intelligence-master.md §9
 title: Yo-Yo Tier B — Cloud Run Migration (No Docker)
 created: 2026-06-02
 updated: 2026-06-02

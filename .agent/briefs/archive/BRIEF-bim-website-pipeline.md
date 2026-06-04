@@ -1,6 +1,11 @@
 ---
 artifact: brief
-status: active
+status: archived
+archived_date: 2026-06-04
+contamination_note: >-
+  Correct home archive is project-bim. Landed in project-intelligence via
+  Stage-6 rebase contamination 2026-05-22. Moved to archive; content intact
+  for project-bim to verify presence in correct location.
 topic: bim.woodfinegroup.com IFC pipeline and website state
 archive: project-bim
 created: 2026-06-03
