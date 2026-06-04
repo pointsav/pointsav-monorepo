@@ -1737,6 +1737,8 @@ impl From<DoormanError> for ApiError {
             DoormanError::FlowGateClosed { .. } => StatusCode::SERVICE_UNAVAILABLE,
             // Priority queue file-system fault — server-side.
             DoormanError::PriorityQueueIo { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            // GCP Compute API failure — upstream provider fault. 502.
+            DoormanError::GcpApi { .. } => StatusCode::BAD_GATEWAY,
         };
         Self {
             status,

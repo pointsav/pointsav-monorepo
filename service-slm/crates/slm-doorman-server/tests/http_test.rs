@@ -763,6 +763,7 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         }
         DoormanError::FlowGateClosed { .. } => StatusCode::SERVICE_UNAVAILABLE,
         DoormanError::PriorityQueueIo { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+        DoormanError::GcpApi { .. } => StatusCode::BAD_GATEWAY,
     }
 }
 
