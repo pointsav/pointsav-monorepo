@@ -11,6 +11,7 @@
 #   S4: Bottom divider on collapsed header at ≤768px
 #   S5: Hide .topnav .left (Disclaimer + Contact us) on mobile ≤768px; footer links remain
 #   S6: Stack Manifest/BIM Library/Location Intelligence vertically on mobile (Woodfine only)
+#   S7: Collapsible disclaimer — <details>/<summary> on both sites; collapsed by default
 #   W1: Strip redundant width="320" height="80" SVG attrs (Woodfine)
 #   P1: Remove empty <a href="#"> from PointSav right nav
 #   P2: Strip redundant width="320" height="80" SVG attrs (PointSav)
@@ -169,6 +170,53 @@ def apply_shared(template):
         applied.append('S5: already patched (skip)')
     else:
         applied.append('S5: WARN not found')
+
+    # S7 — Collapsible disclaimer: <details>/<summary> wrapper + CSS (both sites)
+    import re as _re
+    S7_H4_OLD  = '<h4>Important Information</h4>'
+    S7_H4_NEW  = ('<details class="compliance-details">\n'
+                  '      <summary>Important Information</summary>')
+    S7_CSS_ANC = '.compliance p:last-child { margin-bottom: 0; }'
+    S7_CSS_ADD = ('\n  .compliance-details > summary {\n'
+                  '    display: block;\n'
+                  '    margin: 0;\n'
+                  '    font-family: var(--display);\n'
+                  '    font-size: 11px;\n'
+                  '    font-weight: 700;\n'
+                  '    letter-spacing: 0.22em;\n'
+                  '    text-transform: uppercase;\n'
+                  '    color: var(--ink-3);\n'
+                  '    cursor: pointer;\n'
+                  '    user-select: none;\n'
+                  '  }\n'
+                  '  .compliance-details > summary::marker,\n'
+                  '  .compliance-details > summary::-webkit-details-marker { display: none; }\n'
+                  "  .compliance-details > summary::after { content: ' \\u25be'; }\n"
+                  '  .compliance-details[open] > summary { margin-bottom: 14px; }\n'
+                  "  .compliance-details[open] > summary::after { content: ' \\u25b4'; }")
+    S7_MARKER  = 'class="compliance-details"'
+    if S7_MARKER in template:
+        applied.append('S7: already patched (skip)')
+    else:
+        if S7_H4_OLD in template:
+            template = template.replace(S7_H4_OLD, S7_H4_NEW, 1)
+            applied.append('S7a: <h4> → <details><summary>')
+        else:
+            applied.append('S7a: WARN — h4 not found')
+        before = len(template)
+        template = _re.sub(
+            r'(class="compliance-details">.*?</p>)\s*</section>',
+            r'\1\n    </details>\n  </section>',
+            template, flags=_re.DOTALL, count=1)
+        if len(template) != before:
+            applied.append('S7b: </details> inserted before </section>')
+        else:
+            applied.append('S7b: WARN — regex found no match')
+        if S7_CSS_ANC in template and S7_CSS_ADD not in template:
+            template = template.replace(S7_CSS_ANC, S7_CSS_ANC + S7_CSS_ADD, 1)
+            applied.append('S7c: summary CSS added')
+        else:
+            applied.append('S7c: CSS already present (skip)')
 
     return template, applied
 
