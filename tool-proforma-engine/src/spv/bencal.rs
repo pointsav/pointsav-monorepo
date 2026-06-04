@@ -419,7 +419,10 @@ mod tests {
         //   via SPV2: 10% × 6.0% = 0.60%   (NEW dual-asset, Flag 15 path b)
         //   total   = 0.90%
         let sf = total_wcp_sf();
-        assert!((sf - 0.009).abs() < 1e-9, "total wcp_sf should be 0.009 (0.9%)");
+        assert!(
+            (sf - 0.009).abs() < 1e-9,
+            "total wcp_sf should be 0.009 (0.9%)"
+        );
         // 0.9% on 10M outstanding → 90,000 implied shares at BM
         let implied_shares = sf * 10_000_000.0;
         assert!((implied_shares - 90_000.0).abs() < 1e-6);
@@ -619,7 +622,11 @@ mod tests {
         // Cross-checks on the LP rows:
         // - 6 WCP LP fund rows (zero in synthetic WCP, but list should have 0 → still 1 entry
         //   from the SPV2-LP push)
-        assert_eq!(bm.lps.len(), 1, "synthetic WCP has 0 LPs → only the SPV2-LP entry");
+        assert_eq!(
+            bm.lps.len(),
+            1,
+            "synthetic WCP has 0 LPs → only the SPV2-LP entry"
+        );
         assert_eq!(
             bm.lps[0].name,
             "Bencal SPV2-LP — Professional Centres Canada LP lookthrough"
@@ -636,7 +643,12 @@ mod tests {
             // + pclp.years[y].noi (0) × pclp_sf
             // + commission[y] (always 0 per Flag 13)
             // = 0
-            assert_eq!(bm.income.gross_income[y], 0.0, "Y{} gross_income should be 0", y + 1);
+            assert_eq!(
+                bm.income.gross_income[y],
+                0.0,
+                "Y{} gross_income should be 0",
+                y + 1
+            );
         }
     }
 }

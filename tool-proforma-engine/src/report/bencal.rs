@@ -132,8 +132,8 @@ fn html_escape(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::spv::bencal::{compute_block_f, BlockF};
     use crate::excel::wcp::{WcpBook, WcpData, WcpFairDiv, WcpIncome, WcpMarket};
+    use crate::spv::bencal::{compute_block_f, BlockF};
 
     fn synthetic(nav_y10: f64) -> WcpData {
         let book = WcpBook {

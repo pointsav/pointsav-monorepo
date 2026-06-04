@@ -94,7 +94,10 @@ impl DevClassV2 {
     }
 
     pub fn class_gla(&self) -> f64 {
-        self.variants.iter().map(|v| v.class_gla_contribution()).sum()
+        self.variants
+            .iter()
+            .map(|v| v.class_gla_contribution())
+            .sum()
     }
 
     pub fn rollup(&self) -> ClassRollup {
@@ -312,7 +315,9 @@ pub fn render_html() -> String {
     let mut s = String::new();
     s.push_str(HEAD);
     s.push_str("<body>\n");
-    s.push_str("<h1>D1 Development Classes — Calibrated to 10.5% Dev Yield + 6.25% Cap Rate</h1>\n");
+    s.push_str(
+        "<h1>D1 Development Classes — Calibrated to 10.5% Dev Yield + 6.25% Cap Rate</h1>\n",
+    );
     s.push_str("<p>PCLP 1 building portfolio per prior-work deliverables 2026-05-14 (<code>inputs/pclp1-portfolio-summary-v1.html</code> + <code>inputs/pclp1-building-class-proformas-v1.html</code>). Engine v3 supersedes the earlier <code>d1-dev-classes-2026-06-03-v2.html</code>.</p>\n");
     s.push_str("<p>All amounts CAD. Forward-looking projections; planned / intended values per BCSC continuous-disclosure posture.</p>\n");
 
@@ -340,8 +345,14 @@ fn render_portfolio_allocation() -> String {
     let total_cost: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_cost).sum();
     let total_rent: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_rent).sum();
     let total_noi: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_noi).sum();
-    let total_av: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_asset_value).sum();
-    let total_depr: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_depreciation).sum();
+    let total_av: f64 = ALL_CLASSES
+        .iter()
+        .map(|c| c.rollup().class_asset_value)
+        .sum();
+    let total_depr: f64 = ALL_CLASSES
+        .iter()
+        .map(|c| c.rollup().class_depreciation)
+        .sum();
     let total_count: u32 = ALL_CLASSES.iter().map(|c| c.building_count()).sum();
 
     for class in ALL_CLASSES {
@@ -405,7 +416,11 @@ fn render_distribution_for_class(class: &DevClassV2) -> String {
             class.building_count()
         )
     } else {
-        format!("{} — Distribution ({} Buildings)", class.label, class.building_count())
+        format!(
+            "{} — Distribution ({} Buildings)",
+            class.label,
+            class.building_count()
+        )
     };
     s.push_str(&format!("<h2>{}</h2>\n", heading));
 
@@ -543,13 +558,20 @@ fn render_reference_proforma_for_class(class: &DevClassV2) -> String {
     let span = class.variants.len() + 1;
 
     // Construction group
-    s.push_str(&format!("<tr><td class=\"grp\" colspan=\"{}\">Construction</td></tr>\n", span));
+    s.push_str(&format!(
+        "<tr><td class=\"grp\" colspan=\"{}\">Construction</td></tr>\n",
+        span
+    ));
     s.push_str(&format!(
         "<tr><td>Gross leasable area{}</td>",
         if class.pairs { " (pair)" } else { "" }
     ));
     for v in class.variants {
-        let gla = if class.pairs { v.floor_plate_sf * 2.0 } else { v.gla_per_building() };
+        let gla = if class.pairs {
+            v.floor_plate_sf * 2.0
+        } else {
+            v.gla_per_building()
+        };
         s.push_str(&format!("<td class=\"r\">{}</td>", fmt_sqft(gla)));
     }
     s.push_str("</tr>\n");
@@ -569,7 +591,10 @@ fn render_reference_proforma_for_class(class: &DevClassV2) -> String {
     s.push_str("</tr>\n");
 
     // Revenue & Yield group
-    s.push_str(&format!("<tr><td class=\"grp\" colspan=\"{}\">Revenue &amp; Yield</td></tr>\n", span));
+    s.push_str(&format!(
+        "<tr><td class=\"grp\" colspan=\"{}\">Revenue &amp; Yield</td></tr>\n",
+        span
+    ));
     s.push_str("<tr><td>Calibrated base rent (10.5% devYield)</td>");
     for v in class.variants {
         let rent = if class.pairs {
@@ -599,7 +624,10 @@ fn render_reference_proforma_for_class(class: &DevClassV2) -> String {
     s.push_str("</tr>\n");
 
     // Valuation group
-    s.push_str(&format!("<tr><td class=\"grp\" colspan=\"{}\">Valuation</td></tr>\n", span));
+    s.push_str(&format!(
+        "<tr><td class=\"grp\" colspan=\"{}\">Valuation</td></tr>\n",
+        span
+    ));
     s.push_str("<tr><td>Asset value at 6.25% cap rate</td>");
     for v in class.variants {
         let av = if class.pairs {
@@ -645,7 +673,15 @@ fn build_class_note(class: &DevClassV2) -> String {
         .iter()
         .map(|v| {
             if class.pairs {
-                format!("{}-pair × {}", if v.label.contains("Medium") { "Med" } else { "Lg" }, v.count / 2)
+                format!(
+                    "{}-pair × {}",
+                    if v.label.contains("Medium") {
+                        "Med"
+                    } else {
+                        "Lg"
+                    },
+                    v.count / 2
+                )
             } else if class.label == "Retail Select" {
                 format!("{} sqft × {}", fmt_int(v.floor_plate_sf), v.count)
             } else {
@@ -712,13 +748,34 @@ fn render_per_building_breakdown() -> String {
     s.push_str("<h3>Portfolio Grand Total</h3>\n");
     s.push_str("<table>\n");
     s.push_str("<tr><th>Metric</th><th>Value</th></tr>\n");
-    s.push_str(&format!("<tr><td>Total buildings</td><td class=\"r\">{}</td></tr>\n", 70));
-    s.push_str(&format!("<tr><td>Total GLA</td><td class=\"r\">{} sqft</td></tr>\n", fmt_int(portfolio_gla)));
-    s.push_str(&format!("<tr><td>Total construction cost</td><td class=\"r\">{}</td></tr>\n", fmt_money_m(portfolio_cost)));
-    s.push_str(&format!("<tr><td>Total calibrated base rent</td><td class=\"r\">{}</td></tr>\n", fmt_money_m_yr(portfolio_rent)));
-    s.push_str(&format!("<tr><td>Total NOI (57%)</td><td class=\"r\">{}</td></tr>\n", fmt_money_m_yr(portfolio_noi)));
-    s.push_str(&format!("<tr class=\"total\"><td>Total asset value at 6.25% cap</td><td class=\"r\">{}</td></tr>\n", fmt_money_m(portfolio_av)));
-    s.push_str(&format!("<tr><td>Total annual depreciation</td><td class=\"r\">{}</td></tr>\n", fmt_money_m_yr(portfolio_depr)));
+    s.push_str(&format!(
+        "<tr><td>Total buildings</td><td class=\"r\">{}</td></tr>\n",
+        70
+    ));
+    s.push_str(&format!(
+        "<tr><td>Total GLA</td><td class=\"r\">{} sqft</td></tr>\n",
+        fmt_int(portfolio_gla)
+    ));
+    s.push_str(&format!(
+        "<tr><td>Total construction cost</td><td class=\"r\">{}</td></tr>\n",
+        fmt_money_m(portfolio_cost)
+    ));
+    s.push_str(&format!(
+        "<tr><td>Total calibrated base rent</td><td class=\"r\">{}</td></tr>\n",
+        fmt_money_m_yr(portfolio_rent)
+    ));
+    s.push_str(&format!(
+        "<tr><td>Total NOI (57%)</td><td class=\"r\">{}</td></tr>\n",
+        fmt_money_m_yr(portfolio_noi)
+    ));
+    s.push_str(&format!(
+        "<tr class=\"total\"><td>Total asset value at 6.25% cap</td><td class=\"r\">{}</td></tr>\n",
+        fmt_money_m(portfolio_av)
+    ));
+    s.push_str(&format!(
+        "<tr><td>Total annual depreciation</td><td class=\"r\">{}</td></tr>\n",
+        fmt_money_m_yr(portfolio_depr)
+    ));
     s.push_str("</table>\n");
 
     s
@@ -961,12 +1018,36 @@ mod tests {
                 sum_av += v.asset_value_per_building(class.cost_per_sf_gla) * n;
                 sum_depr += v.depreciation_per_building(class.cost_per_sf_gla) * n;
             }
-            assert!((sum_gla - r.class_gla).abs() < 1.0, "{}: gla mismatch", class.label);
-            assert!((sum_cost - r.class_cost).abs() < 1.0, "{}: cost mismatch", class.label);
-            assert!((sum_rent - r.class_rent).abs() < 1.0, "{}: rent mismatch", class.label);
-            assert!((sum_noi - r.class_noi).abs() < 1.0, "{}: noi mismatch", class.label);
-            assert!((sum_av - r.class_asset_value).abs() < 1.0, "{}: av mismatch", class.label);
-            assert!((sum_depr - r.class_depreciation).abs() < 1.0, "{}: depr mismatch", class.label);
+            assert!(
+                (sum_gla - r.class_gla).abs() < 1.0,
+                "{}: gla mismatch",
+                class.label
+            );
+            assert!(
+                (sum_cost - r.class_cost).abs() < 1.0,
+                "{}: cost mismatch",
+                class.label
+            );
+            assert!(
+                (sum_rent - r.class_rent).abs() < 1.0,
+                "{}: rent mismatch",
+                class.label
+            );
+            assert!(
+                (sum_noi - r.class_noi).abs() < 1.0,
+                "{}: noi mismatch",
+                class.label
+            );
+            assert!(
+                (sum_av - r.class_asset_value).abs() < 1.0,
+                "{}: av mismatch",
+                class.label
+            );
+            assert!(
+                (sum_depr - r.class_depreciation).abs() < 1.0,
+                "{}: depr mismatch",
+                class.label
+            );
         }
     }
 }
