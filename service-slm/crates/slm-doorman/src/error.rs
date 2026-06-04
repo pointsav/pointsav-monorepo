@@ -300,4 +300,27 @@ pub enum DoormanError {
         /// Parse-error description.
         reason: String,
     },
+
+    /// A flow gate (per-label or global kill switch) is closed. The request
+    /// targeting the named label is refused; the caller should retry after
+    /// the operator re-opens the gate. 503 SERVICE_UNAVAILABLE with a
+    /// `Retry-After` header. The express lane returns this; nothing bypasses
+    /// the kill switch.
+    #[error("flow gate '{label}' is closed (operator kill switch); retry after it re-opens")]
+    FlowGateClosed {
+        /// The gate label that was closed ("global", "batch", "express",
+        /// "tier-c", or a custom node label).
+        label: String,
+    },
+
+    /// A priority queue directory operation failed (create, lease, rename,
+    /// or read). 500 INTERNAL when surfaced via HTTP; background drain
+    /// worker logs and continues to the next item.
+    #[error("priority queue I/O error at {path}: {reason}")]
+    PriorityQueueIo {
+        /// Path to the queue file or directory that failed.
+        path: String,
+        /// Human-readable description of the failure.
+        reason: String,
+    },
 }

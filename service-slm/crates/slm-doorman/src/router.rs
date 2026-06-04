@@ -466,10 +466,9 @@ impl Doorman {
         if let (Some(ref cost_ledger), Ok(resp)) = (&self.cost_ledger, result) {
             if resp.tier_used == Tier::Yoyo {
                 let row = CostRow {
-                    ts: entry.timestamp_utc.to_rfc3339_opts(
-                        chrono::SecondsFormat::Secs,
-                        true,
-                    ),
+                    ts: entry
+                        .timestamp_utc
+                        .to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
                     request_id: req.request_id.to_string(),
                     tier: "yoyo".to_string(),
                     model: resp.model.clone(),
@@ -646,6 +645,13 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         // server-side for unreachable service-content (UpstreamError).
         DoormanError::GraphProxyMissingModuleId => CompletionStatus::PolicyDenied,
         DoormanError::GraphProxyServiceUnavailable => CompletionStatus::UpstreamError,
+        // Flow gate closed (operator kill switch): the operator deliberately
+        // refused this tier. Classified as PolicyDenied — the request was
+        // rejected by an explicit policy decision, not an upstream fault.
+        // HTTP 503 with Retry-After in the HTTP layer.
+        DoormanError::FlowGateClosed { .. } => CompletionStatus::PolicyDenied,
+        // Priority queue I/O failure: server-side file-system fault.
+        DoormanError::PriorityQueueIo { .. } => CompletionStatus::UpstreamError,
     }
 }
 
@@ -871,9 +877,7 @@ mod tests {
         match result {
             // local is None, so confirm_tier_with_req(Local) → TierUnavailable(Local)
             Err(DoormanError::TierUnavailable(Tier::Local)) => {}
-            other => panic!(
-                "expected TierUnavailable(Local) after cap redirect, got {other:?}"
-            ),
+            other => panic!("expected TierUnavailable(Local) after cap redirect, got {other:?}"),
         }
     }
 
