@@ -49,14 +49,83 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::fs;
 
 use crate::assets::StaticAsset;
-use crate::auth::CurrentUser;
 use crate::error::WikiError;
 use crate::jsonld::jsonld_for_topic;
 use crate::render::{
     extract_headings, inject_edit_pencils, parse_page, render_html_raw, Frontmatter, TranslationMap,
 };
 use crate::search::{search as run_search, SearchIndex};
-use crate::users::User;
+
+// ── Read-only chrome placeholders (auth removed — git-only workflow) ────────
+//
+// Auth, sessions, edit review, and SQLite were removed when the wiki moved to a
+// git-only contribution workflow. The chrome layer still threads an optional
+// "current user" and a pending-edit count through every handler signature; to
+// avoid churning ~40 handlers, those names survive as inert placeholders:
+//
+//   * `User`           — never constructed; kept so handler signatures and the
+//                        nav widget compile. Always treated as anonymous.
+//   * `CurrentUser`    — an axum extractor that always yields `None`.
+//   * `pending_count_for` — always returns 0 (no review queue).
+//   * `validate_slug`  — conservative slug check (relocated from the old edit
+//                        module); used by the raw-markdown and history handlers.
+
+/// Inert user placeholder. Never constructed now that auth is removed; present
+/// only so handler signatures and the anonymous nav widget continue to compile.
+#[allow(dead_code)]
+pub struct User {
+    pub username: String,
+}
+
+impl User {
+    #[allow(dead_code)]
+    pub fn is_admin(&self) -> bool {
+        false
+    }
+}
+
+/// Request extractor that previously resolved the session cookie to a user.
+/// With auth removed it always yields `None` — every request is anonymous.
+pub struct CurrentUser(pub Option<User>);
+
+impl axum::extract::FromRequestParts<Arc<AppState>> for CurrentUser {
+    type Rejection = std::convert::Infallible;
+
+    async fn from_request_parts(
+        _parts: &mut axum::http::request::Parts,
+        _state: &Arc<AppState>,
+    ) -> Result<Self, Self::Rejection> {
+        Ok(CurrentUser(None))
+    }
+}
+
+/// Pending-edit count for the nav badge. No review queue exists in the git-only
+/// workflow, so this is always zero.
+async fn pending_count_for(_state: &AppState, _user: Option<&User>) -> i64 {
+    0
+}
+
+/// Validate a slug. Allowed: lowercase ASCII letters, digits, dots, hyphens,
+/// underscores, and `/` (for category-scoped slugs). Rejects empty, leading
+/// dot, `..` sequence, and anything else. Relocated from the removed edit module.
+pub fn validate_slug(slug: &str) -> Result<(), WikiError> {
+    if slug.is_empty() {
+        return Err(WikiError::SlugInvalid("empty".into()));
+    }
+    if slug.starts_with('.') {
+        return Err(WikiError::SlugInvalid(slug.into()));
+    }
+    if slug.contains("..") {
+        return Err(WikiError::SlugInvalid(slug.into()));
+    }
+    for c in slug.chars() {
+        match c {
+            'a'..='z' | '0'..='9' | '.' | '-' | '_' | '/' => {}
+            _ => return Err(WikiError::SlugInvalid(slug.into())),
+        }
+    }
+    Ok(())
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 enum Locale {
@@ -118,9 +187,6 @@ pub struct AppState {
     /// Phase 4 Steps 4.4+4.5: redb-backed wikilink graph and blake3 hashes.
     /// Always present; database file at `<state_dir>/links.redb`.
     pub links: Arc<crate::links::LinkGraph>,
-    /// Phase 5: SQLite connection for users/sessions/pending-edits.
-    /// None when auth is not configured (no WIKI_ADMIN_USERNAME set).
-    pub db: Option<Arc<Mutex<rusqlite::Connection>>>,
     /// Optional brand theme selector. When set to `"woodfine"`, BCSC
     /// forward-looking-statement disclaimer appears in all page footers.
     /// Set via `--brand-theme` / `WIKI_BRAND_THEME`.
@@ -158,18 +224,6 @@ pub fn router(state: AppState) -> Router {
         .route("/es/wiki/{*slug}", get(wiki_page_es))
         .route("/static/{*path}", get(static_asset))
         .route("/healthz", get(healthz))
-        // Phase 2 Step 2 — edit endpoint
-        .route(
-            "/edit/{*slug}",
-            get(crate::edit::get_edit).post(crate::edit::post_edit),
-        )
-        .route("/create", post(crate::edit::post_create))
-        // Phase 2 Step 4 — SAA squiggle rules (deterministic; Phase 9 CCA
-        // adds dynamic per-jurisdiction packs)
-        .route(
-            "/api/squiggle-rules",
-            get(crate::squiggle::get_squiggle_rules),
-        )
         // Phase 2 Step 5 — citation registry for autocomplete
         .route("/api/citations", get(crate::citations::get_citations))
         // D2: search autocomplete
@@ -200,33 +254,6 @@ pub fn router(state: AppState) -> Router {
         .route("/special/statistics", get(statistics_page))
         // Sprint C4 — Talk namespace
         .route("/talk/{*slug}", get(talk_page).post(talk_post))
-        // Phase 5 — auth + edit review
-        .route(
-            "/special/login",
-            get(crate::auth::get_login).post(crate::auth::post_login),
-        )
-        .route("/special/logout", post(crate::auth::post_logout))
-        .route(
-            "/special/create-account",
-            get(crate::auth::get_create_account).post(crate::auth::post_create_account),
-        )
-        .route(
-            "/special/pending-changes",
-            get(crate::pending::review_queue),
-        )
-        .route("/special/pending/{id}", get(crate::pending::review_detail))
-        .route(
-            "/special/pending/{id}/accept",
-            post(crate::pending::accept_edit),
-        )
-        .route(
-            "/special/pending/{id}/reject",
-            post(crate::pending::reject_edit),
-        )
-        .route(
-            "/special/contributions/{username}",
-            get(crate::pending::contributions),
-        )
         // Phase 4 Step 4.7 — read-only git remote (smart-HTTP)
         .route(
             "/git-server/{tenant}/info/refs",

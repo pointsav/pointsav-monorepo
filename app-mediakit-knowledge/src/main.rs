@@ -88,14 +88,6 @@ enum Command {
         #[arg(long, env = "WIKI_ENABLE_MCP")]
         enable_mcp: bool,
 
-        /// Admin username for initial seed (Phase 5).
-        #[arg(long, env = "WIKI_ADMIN_USERNAME")]
-        admin_username: Option<String>,
-
-        /// Pre-hashed argon2id password for the initial admin seed (Phase 5).
-        #[arg(long, env = "WIKI_ADMIN_PASSWORD_HASH")]
-        admin_password_hash: Option<String>,
-
         /// Brand theme selector ("woodfine" for Woodfine instances).
         #[arg(long, env = "WIKI_BRAND_THEME")]
         brand_theme: Option<String>,
@@ -140,8 +132,6 @@ async fn main() -> Result<()> {
             site_title,
             git_tenant,
             enable_mcp,
-            admin_username,
-            admin_password_hash,
             brand_theme,
         } => {
             // Resolve effective parameters: knowledge.toml takes precedence
@@ -206,8 +196,6 @@ async fn main() -> Result<()> {
                 eff_site_title,
                 git_tenant,
                 enable_mcp,
-                admin_username,
-                admin_password_hash,
                 eff_brand_theme,
             )
             .await
@@ -266,8 +254,6 @@ async fn serve(
     site_title: String,
     git_tenant: String,
     enable_mcp: bool,
-    admin_username: Option<String>,
-    admin_password_hash: Option<String>,
     brand_theme: Option<String>,
 ) -> Result<()> {
     if !content_dir.is_dir() {
@@ -385,21 +371,6 @@ async fn serve(
     let link_graph = Arc::new(link_graph);
     tracing::info!("link graph ready");
 
-    // Open SQLite DB when admin credentials are configured.
-    let db = if admin_username.is_some() || admin_password_hash.is_some() {
-        let db_path = state_dir.join("wiki.db");
-        tracing::info!(path = %db_path.display(), "opening auth database");
-        let conn = rusqlite::Connection::open(&db_path)?;
-        app_mediakit_knowledge::users::init_schema(&conn)?;
-        if let (Some(ref uname), Some(ref phash)) = (&admin_username, &admin_password_hash) {
-            app_mediakit_knowledge::users::seed_admin_if_empty(&conn, uname, phash)?;
-        }
-        Some(std::sync::Arc::new(std::sync::Mutex::new(conn)))
-    } else {
-        tracing::info!("auth not configured — running without login");
-        None
-    };
-
     tracing::info!(git_tenant = %git_tenant, "git remote enabled at /git-server/{}/info/refs", git_tenant);
     let brand_instance =
         std::env::var("WIKI_BRAND_INSTANCE").unwrap_or_else(|_| "documentation".to_string());
@@ -417,7 +388,6 @@ async fn serve(
         links: link_graph,
         brand_theme,
         brand_instance,
-        db,
     };
     let app = router(state);
     let listener = tokio::net::TcpListener::bind(bind).await?;

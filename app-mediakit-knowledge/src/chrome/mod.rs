@@ -206,7 +206,8 @@ pub fn nav_bar(locale: Locale, site_title: &str, _brand: &str) -> Markup {
 /// Render the full page shell.
 ///
 /// Emits DOCTYPE + html + head + nav + content + mobile chrome + footer +
-/// wiki.js script tag (L25: no editor.js on article/home/category pages).
+/// the wiki.js interaction script. The wiki is a read-only viewer — there is no
+/// in-browser editor script.
 pub fn base_page(
     page_head: Markup,
     nav: Markup,
@@ -247,7 +248,7 @@ pub fn base_page(
                     }
                 }
 
-                // L25: wiki.js only — never editor.js on article/home/category pages
+                // Read-only viewer: the single interaction script. No editor.
                 script src="/static/wiki.js" defer {}
             }
         }

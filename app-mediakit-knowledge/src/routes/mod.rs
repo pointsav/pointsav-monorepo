@@ -33,20 +33,10 @@
 //! GET  /llms.txt                    → feeds::llms_handler
 //! GET  /healthz                     → healthz (inline)
 //! GET  /git/*slug                   → git::raw_markdown
-//! GET  /edit/*slug                  → edit::edit_page  (Phase 6)
-//! POST /api/edit/*slug              → edit::submit_edit (Phase 6)
-//! GET  /admin/pending               → admin::pending_list (Phase 6)
-//! POST /admin/pending/:id/:action   → admin::pending_action (Phase 6)
-//! GET  /auth/login                  → auth::login_page (Phase 6)
-//! POST /auth/login                  → auth::login_post (Phase 6)
-//! GET  /auth/logout                 → auth::logout (Phase 6)
 //! POST /mcp                         → mcp::mcp_handler (Phase 7, behind --enable-mcp)
 //! GET  /static/*path                → ServeDir embedded via rust-embed
 
-pub mod admin;
-pub mod auth;
 pub mod category;
-pub mod edit;
 pub mod feeds;
 pub mod git;
 pub mod home;

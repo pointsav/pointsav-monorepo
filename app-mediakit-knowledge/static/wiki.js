@@ -1,12 +1,9 @@
 /**
- * wiki.js — Phase 3 merged interaction layer (L25: loaded ONLY on non-editor routes).
+ * wiki.js — Phase 3 merged interaction layer.
  *
- * L25 enforcement: this file is loaded on article, home, category, and search
- * pages. editor.js is loaded ONLY on /edit/* routes. Never cross-load.
- *
- * Merged from (Phase 3):
- *   - toc-persistence.js (was a stub; content already here)
- *   - saa-init.js moved → editor.js (Phase 6 scope)
+ * Loaded on every page (article, home, category, search). The wiki is a
+ * read-only viewer: there is no in-browser editor — contributions flow through
+ * git, and the Edit tab links to the raw Markdown source at /git/{slug}.
  *
  * Responsibilities:
  *   1.  TOC scroll-spy (IntersectionObserver; CSS .toc-entry.active)

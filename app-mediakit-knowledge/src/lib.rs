@@ -17,10 +17,8 @@ pub mod state;
 pub mod walker;
 
 // ── Feature modules (real implementations, live in production) ─────────────
-pub mod auth;
 pub mod citations;
 pub mod claim;
-pub mod edit;
 pub mod feeds;
 pub mod git;
 pub mod git_protocol;
@@ -29,11 +27,8 @@ pub mod history;
 pub mod jsonld;
 pub mod links;
 pub mod mcp;
-pub mod pending;
 pub mod render;
 pub mod search;
-pub mod squiggle;
-pub mod users;
 
 // ── Modular route layer (Phase 4 migration target) ─────────────────────────
 pub mod routes;

@@ -1,14 +1,15 @@
-//! Integration tests for Phase 4 Step 4.1 — git2 wiring + commit-on-edit.
+//! Integration tests for Phase 4 Step 4.1 — git2 wiring + commit layer.
+//!
+//! The HTTP write endpoints (`/create`, `/edit`) were removed when the wiki
+//! moved to a git-only contribution workflow. These tests now exercise the
+//! surviving git layer (`open_or_init`, `commit_topic`,
+//! `ensure_commit_identity_from_env`) directly — the same functions the engine
+//! uses internally.
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use tower::ServiceExt;
 
-use app_mediakit_knowledge::server::{router, AppState};
-use axum::{
-    body::Body,
-    http::{Request, StatusCode},
-};
+use app_mediakit_knowledge::server::AppState;
 
 async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
     let dir = tempfile::tempdir().unwrap();
@@ -34,87 +35,39 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
         brand_theme: None,
         brand_instance: "documentation".to_string(),
-        db: None,
     };
     (state, dir, state_dir)
+}
+
+/// Write `<slug>.md` to disk and commit it through the git layer.
+fn commit_topic(state: &AppState, slug: &str, body: &str, message: &str) {
+    std::fs::write(state.content_dir.join(format!("{slug}.md")), body).unwrap();
+    let repo = state.git.lock().unwrap();
+    let _ = app_mediakit_knowledge::git::ensure_commit_identity_from_env(&repo);
+    app_mediakit_knowledge::git::commit_topic(&repo, slug, body, "", "", message).unwrap();
+}
+
+fn last_commit_subject(dir: &std::path::Path) -> String {
+    let output = std::process::Command::new("git")
+        .args(["-C", dir.to_str().unwrap(), "log", "-1", "--format=%s"])
+        .output()
+        .expect("git log failed");
+    String::from_utf8_lossy(&output.stdout).trim().to_string()
 }
 
 #[tokio::test]
 async fn git_commit_on_create() {
     let (state, dir, _state_dir) = fixture_state().await;
-    let app = router(state);
-    let body = serde_json::json!({
-        "title": "Git Create Test",
-        "slug": "git-create"
-    })
-    .to_string();
-
-    let resp = app
-        .oneshot(
-            Request::builder()
-                .method("POST")
-                .uri("/create")
-                .header("content-type", "application/json")
-                .body(Body::from(body))
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-    assert_eq!(resp.status(), StatusCode::CREATED);
-
-    // Check git log
-    let output = std::process::Command::new("git")
-        .args([
-            "-C",
-            dir.path().to_str().unwrap(),
-            "log",
-            "-1",
-            "--format=%s",
-        ])
-        .output()
-        .expect("git log failed");
-    let msg = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    assert_eq!(msg, "create: git-create");
+    commit_topic(&state, "git-create", "# Git Create Test\n", "create: git-create");
+    assert_eq!(last_commit_subject(dir.path()), "create: git-create");
 }
 
 #[tokio::test]
 async fn git_commit_on_edit() {
     let (state, dir, _state_dir) = fixture_state().await;
-
-    // Create first file so it's ready for edit
-    tokio::fs::write(dir.path().join("git-edit.md"), "# Initial")
-        .await
-        .unwrap();
-
-    let app = router(state);
-    let new_content = "# Updated content";
-    let json_body = serde_json::json!({"body": new_content, "edit_summary": ""});
-    let resp = app
-        .oneshot(
-            Request::builder()
-                .method("POST")
-                .uri("/edit/git-edit")
-                .header("content-type", "application/json")
-                .body(Body::from(json_body.to_string()))
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-    assert_eq!(resp.status(), StatusCode::OK);
-
-    // Check git log
-    let output = std::process::Command::new("git")
-        .args([
-            "-C",
-            dir.path().to_str().unwrap(),
-            "log",
-            "-1",
-            "--format=%s",
-        ])
-        .output()
-        .expect("git log failed");
-    let msg = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    assert_eq!(msg, "edit: git-edit");
+    commit_topic(&state, "git-edit", "# Initial", "create: git-edit");
+    commit_topic(&state, "git-edit", "# Updated content", "edit: git-edit");
+    assert_eq!(last_commit_subject(dir.path()), "edit: git-edit");
 }
 
 #[tokio::test]
@@ -142,25 +95,9 @@ async fn git_identity_alternation() {
     let original_home = std::env::var("HOME").ok();
     std::env::set_var("HOME", home_dir.path());
 
-    let app = router(state);
-
-    // Test identity 0 (Jennifer)
+    // Identity 0 (Jennifer)
     std::fs::write(&toggle_path, "0").unwrap();
-    let _ = app
-        .clone()
-        .oneshot(
-            Request::builder()
-                .method("POST")
-                .uri("/create")
-                .header("content-type", "application/json")
-                .body(Body::from(
-                    serde_json::json!({"title": "T1", "slug": "t1"}).to_string(),
-                ))
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
+    commit_topic(&state, "t1", "# T1\n", "create: t1");
     let output = std::process::Command::new("git")
         .args([
             "-C",
@@ -176,22 +113,9 @@ async fn git_identity_alternation() {
         "Jennifer Woodfine <jwoodfine@users.noreply.github.com>"
     );
 
-    // Test identity 1 (Peter)
+    // Identity 1 (Peter)
     std::fs::write(&toggle_path, "1").unwrap();
-    let _ = app
-        .oneshot(
-            Request::builder()
-                .method("POST")
-                .uri("/create")
-                .header("content-type", "application/json")
-                .body(Body::from(
-                    serde_json::json!({"title": "T2", "slug": "t2"}).to_string(),
-                ))
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
+    commit_topic(&state, "t2", "# T2\n", "create: t2");
     let output = std::process::Command::new("git")
         .args([
             "-C",

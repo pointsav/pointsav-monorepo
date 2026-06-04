@@ -1,13 +1,11 @@
-//! Integration tests for Phase 3 Step 3.2 — search HTTP route +
-//! edit-triggers-reindex.
+//! Integration tests for Phase 3 Step 3.2 — search HTTP route + reindex.
 //!
 //! Verifies that:
 //! - `GET /search?q=...` returns an HTML page with results from the index
 //! - The empty `q=` case returns the form without errors
-//! - `POST /edit/{slug}` triggers a reindex so subsequent searches see the
-//!   new body
-//! - `POST /create` triggers a reindex so a freshly created TOPIC is
-//!   immediately searchable
+//! - `search::reindex_topic` updates the live index so subsequent searches see
+//!   the new body (the file-watcher path; the removed write endpoints used the
+//!   same function before the git-only workflow landed)
 
 use app_mediakit_knowledge::search;
 use app_mediakit_knowledge::server::{router, AppState};
@@ -59,7 +57,6 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
         brand_theme: None,
         brand_instance: "documentation".to_string(),
-        db: None,
     };
     (state, dir, state_dir)
 }
@@ -138,32 +135,20 @@ async fn search_returns_empty_for_no_match() {
 }
 
 #[tokio::test]
-async fn post_edit_triggers_reindex() {
+async fn reindex_topic_updates_live_index() {
     let (state, dir, _state_dir) = fixture_state().await;
-    let app = router(state);
 
-    // Edit topic-alpha to remove "substrate" and add a unique new keyword.
+    // Rewrite topic-alpha on disk: drop "substrate", add a unique new keyword,
+    // then reindex through the same function the file-watcher uses.
     let new_body = "---\ntitle: \"Alpha v2\"\nslug: topic-alpha\n---\nAlpha now discusses tangerines and quokkas.\n";
-    let json_body = serde_json::json!({"body": new_body, "edit_summary": ""});
-    let resp = app
-        .clone()
-        .oneshot(
-            Request::builder()
-                .method("POST")
-                .uri("/edit/topic-alpha")
-                .header("content-type", "application/json")
-                .body(Body::from(json_body.to_string()))
-                .unwrap(),
-        )
+    tokio::fs::write(dir.path().join("topic-alpha.md"), new_body)
         .await
         .unwrap();
-    assert_eq!(resp.status(), StatusCode::OK);
+    search::reindex_topic(&state.search, "topic-alpha", new_body)
+        .await
+        .unwrap();
 
-    // Confirm the file changed on disk.
-    let on_disk = tokio::fs::read_to_string(dir.path().join("topic-alpha.md"))
-        .await
-        .unwrap();
-    assert_eq!(on_disk, new_body);
+    let app = router(state);
 
     // Search for the new keyword — should hit topic-alpha.
     let resp = app
@@ -184,8 +169,7 @@ async fn post_edit_triggers_reindex() {
         "reindex should make new keyword searchable: {html}"
     );
 
-    // Search for the old keyword — topic-alpha should no longer hit
-    // (delete_term removed the prior body).
+    // Search for the old keyword — topic-alpha should no longer hit.
     let resp = app
         .oneshot(
             Request::builder()
@@ -198,7 +182,6 @@ async fn post_edit_triggers_reindex() {
     let html = std::str::from_utf8(&resp.into_body().collect().await.unwrap().to_bytes())
         .unwrap()
         .to_string();
-    // We only seeded topic-alpha with "substrate"; after reindex it's gone.
     assert!(
         html.contains("No results"),
         "old keyword should no longer match after reindex: {html}"
@@ -206,31 +189,20 @@ async fn post_edit_triggers_reindex() {
 }
 
 #[tokio::test]
-async fn post_create_triggers_reindex() {
-    let (state, _dir, _state_dir) = fixture_state().await;
-    let app = router(state);
+async fn reindex_topic_makes_new_topic_searchable() {
+    let (state, dir, _state_dir) = fixture_state().await;
 
-    // Create a brand-new TOPIC.
-    let body = serde_json::json!({
-        "title": "Brand New Topic",
-        "slug": "topic-brand-new"
-    })
-    .to_string();
-    let resp = app
-        .clone()
-        .oneshot(
-            Request::builder()
-                .method("POST")
-                .uri("/create")
-                .header("content-type", "application/json")
-                .body(Body::from(body))
-                .unwrap(),
-        )
+    // Add a brand-new TOPIC on disk and reindex it.
+    let new_body =
+        "---\ntitle: \"Brand New Topic\"\nslug: topic-brand-new\n---\nFresh content here.\n";
+    tokio::fs::write(dir.path().join("topic-brand-new.md"), new_body)
         .await
         .unwrap();
-    assert_eq!(resp.status(), StatusCode::CREATED);
+    search::reindex_topic(&state.search, "topic-brand-new", new_body)
+        .await
+        .unwrap();
 
-    // The created TOPIC's title should be immediately searchable.
+    let app = router(state);
     let resp = app
         .oneshot(
             Request::builder()
@@ -245,6 +217,6 @@ async fn post_create_triggers_reindex() {
         .to_string();
     assert!(
         html.contains("topic-brand-new"),
-        "newly-created TOPIC should be searchable by title: {html}"
+        "newly-indexed TOPIC should be searchable by title: {html}"
     );
 }

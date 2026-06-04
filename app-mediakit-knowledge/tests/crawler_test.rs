@@ -55,7 +55,6 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
         brand_theme: None,
         brand_instance: "documentation".to_string(),
-        db: None,
         site_title: "PointSav Knowledge".to_string(),
     };
 
