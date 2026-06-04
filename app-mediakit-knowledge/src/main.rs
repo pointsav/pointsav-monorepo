@@ -17,8 +17,9 @@ use tokio::signal;
 use tokio::sync::mpsc;
 use tracing_subscriber::EnvFilter;
 
+use app_mediakit_knowledge::routes::router;
 use app_mediakit_knowledge::search;
-use app_mediakit_knowledge::server::{router, AppState};
+use app_mediakit_knowledge::server::AppState;
 
 #[derive(Parser)]
 #[command(name = "app-mediakit-knowledge", version, about)]
