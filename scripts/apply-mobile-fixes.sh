@@ -17,6 +17,7 @@
 #   P2: Strip redundant width="320" height="80" SVG attrs (PointSav)
 #   P3: Equalise Monorepo + Design System button sizes at ≤768px and ≤480px (PointSav)
 #   P4: Stack Monorepo + Design System buttons vertically on mobile (PointSav)
+#   S8: 3-column icon grid at ≤480px; remove negative-margin overflow hack (both sites)
 #
 # Usage: bash scripts/apply-mobile-fixes.sh
 
@@ -219,6 +220,22 @@ def apply_shared(template):
             applied.append('S7c: summary CSS added')
         else:
             applied.append('S7c: CSS already present (skip)')
+
+    # S8 — 3-col icon grid at ≤480px; remove negative margin hack (both sites)
+    S8_OLD = ('.classes { grid-template-columns: repeat(2, 1fr); padding: 0 8px; }\n'
+              '    .class .icon { height: 120px; }\n'
+              '    .class .icon svg, .class .icon .class-icon { width: 160px; height: 160px; margin: 0 -60px; }')
+    S8_NEW = ('.classes { grid-template-columns: repeat(3, 1fr); padding: 0 8px; }\n'
+              '    .class .icon { height: 90px; }\n'
+              '    .class .icon svg, .class .icon .class-icon { width: 96px; height: 96px; margin: 0; }\n'
+              '    .class .label { font-size: 10px; }')
+    if S8_OLD in template:
+        template = template.replace(S8_OLD, S8_NEW, 1)
+        applied.append('S8: 3-col icon grid applied, negative margins removed')
+    elif S8_NEW in template:
+        applied.append('S8: already patched (skip)')
+    else:
+        applied.append('S8: WARN not found')
 
     return template, applied
 
