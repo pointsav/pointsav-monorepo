@@ -1,14 +1,22 @@
 openapi: "3.1.0"
 info:
   title: app-mediakit-knowledge
-  version: "0.1.0"
+  version: "0.2.0"
   description: |
     Wikipedia-pattern HTTP knowledge wiki engine for PointSav Documentation.
     Serves Markdown content at documentation.pointsav.com. Single Rust binary;
-    no database; no runtime dependencies beyond the compiled binary.
+    no runtime dependencies beyond the compiled binary.
 
-    MCP endpoint (Phase 4 Step 4.6) requires --enable-mcp flag.
-    Git remote (Phase 4 Step 4.7) requires --git-tenant flag.
+    Content is read directly from a Git working tree; revision history,
+    blame, and diff are served read-only. There is no write path: the engine
+    exposes no /auth, /edit, /admin, or /create routes. Editing is performed
+    out-of-band through Git, and the running engine renders the committed
+    Markdown. This regeneration follows the removal of the optional auth and
+    in-browser edit surfaces (Q1: git-only).
+
+    The MCP endpoint (POST /mcp) is mounted only when the binary is started
+    with --enable-mcp. When the flag is absent the route is not registered and
+    requests return 404.
 
   contact:
     name: PointSav Digital Systems
@@ -22,27 +30,33 @@ servers:
     description: Production
 
 tags:
-  - name: phase-1
-    description: "Phase 1 — render: article pages, static assets, health check"
-  - name: phase-1.1
-    description: "Phase 1.1 — Wikipedia chrome: TOC, hatnote, language switcher, tabs"
-  - name: phase-2
-    description: "Phase 2 — edit: JSON-LD, atomic edit, CodeMirror 6, SAA squiggles, citation autocomplete"
-  - name: phase-3
-    description: "Phase 3 — search + feeds: Tantivy BM25, Atom, JSON Feed, sitemap"
-  - name: phase-4
-    description: "Phase 4 — git sync + MCP: history, blame, diff, link graph, MCP, git remote"
-  - name: phase-5
-    description: "Phase 5 — bilingual /es/ routing: Spanish home and article pages with EN fallback, hreflang tags"
+  - name: render
+    description: "Article pages, home pages, static assets, health check"
+  - name: bilingual
+    description: "Spanish /es/ routing with English fallback and hreflang alternates"
+  - name: api
+    description: "JSON helper endpoints consumed by the navigation and preview UI"
+  - name: search
+    description: "Full-text search over the in-process index"
+  - name: feeds
+    description: "Syndication and crawler-discovery surfaces"
+  - name: git
+    description: "Read-only revision history, blame, diff, raw Markdown, and git smart-HTTP"
   - name: special
-    description: "Special pages: recent changes, all pages, statistics, login, pending edits, cite, page info, categories"
+    description: "Wikipedia-parity special pages (read-only)"
+  - name: talk
+    description: "Article discussion threads"
+  - name: mcp
+    description: "Model Context Protocol JSON-RPC endpoint (requires --enable-mcp)"
+  - name: meta
+    description: "This specification document"
 
 paths:
   /:
     get:
-      tags: [phase-1.1]
+      tags: [render]
       summary: Wiki home page
-      description: Renders index.md from the content directory. Returns the home page with featured article, leapfrog facts panel, and category grid.
+      description: Renders the home page (featured article, leapfrog facts panel, category grid).
       responses:
         "200":
           description: Home page HTML
@@ -51,34 +65,37 @@ paths:
               schema:
                 type: string
 
-  /healthz:
+  /es/:
     get:
-      tags: [phase-1]
-      summary: Health check
+      tags: [bilingual]
+      summary: Spanish wiki home page
+      description: |
+        Spanish-language home page. Serves the `.es` home variant if present,
+        else falls back to English. Sets `lang="es"` and includes an
+        `hreflang` alternate link for `en`.
       responses:
         "200":
-          description: OK
+          description: Spanish home page HTML
           content:
-            text/plain:
+            text/html:
               schema:
                 type: string
-                example: ok
 
   /wiki/{slug}:
     get:
-      tags: [phase-1]
+      tags: [render]
       summary: Render a wiki article
       description: |
-        Renders a Markdown article by slug. Supports category-scoped slugs
-        (e.g. `architecture/compounding-substrate`). Returns 404 when the slug
-        does not resolve to a file in the content directory.
+        Renders a Markdown article by slug. The slug is a wildcard capture,
+        so category-scoped slugs such as `architecture/compounding-substrate`
+        resolve. Returns 404 when the slug does not resolve to a file.
       parameters:
         - name: slug
           in: path
           required: true
           schema:
             type: string
-          example: compounding-substrate
+          example: architecture/compounding-substrate
       responses:
         "200":
           description: Article HTML
@@ -88,40 +105,22 @@ paths:
                 type: string
         "404":
           description: Article not found
-        "301":
-          description: Redirect to canonical lowercase slug form
-
-  /es/:
-    get:
-      tags: [phase-5]
-      summary: Spanish wiki home page
-      description: |
-        Spanish-language home page. Serves `index.es.md` if present, else
-        falls back to English. Sets `lang="es"` and includes `hreflang`
-        alternate link for `en`.
-      responses:
-        "200":
-          description: Spanish home page HTML
-          content:
-            text/html:
-              schema:
-                type: string
 
   /es/wiki/{slug}:
     get:
-      tags: [phase-5]
+      tags: [bilingual]
       summary: Spanish wiki article
       description: |
-        Renders the `.es.md` variant of the article if it exists; falls back
-        to the English `.md` file with a language toggle prompt. Sets
-        `lang="es"` and includes `hreflang` alternates for `en` and `es`.
+        Renders the `.es` variant of the article if it exists; otherwise falls
+        back to the English article. Sets `lang="es"` and includes `hreflang`
+        alternates for `en` and `es`.
       parameters:
         - name: slug
           in: path
           required: true
           schema:
             type: string
-          description: Article slug (may include category prefix, e.g. `architecture/compounding-substrate`)
+          example: architecture/compounding-substrate
       responses:
         "200":
           description: Spanish article HTML (or English fallback)
@@ -134,7 +133,7 @@ paths:
 
   /category/{name}:
     get:
-      tags: [phase-1.1]
+      tags: [render]
       summary: Category index page
       description: Lists all articles belonging to the given ratified category.
       parameters:
@@ -154,130 +153,11 @@ paths:
         "404":
           description: Unknown category
 
-  /talk/{slug}:
-    get:
-      tags: [phase-1.1]
-      summary: Article talk page
-      description: Renders the discussion thread for an article.
-      parameters:
-        - name: slug
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Talk page HTML
-          content:
-            text/html:
-              schema:
-                type: string
-    post:
-      tags: [phase-1.1]
-      summary: Post a talk page comment
-      parameters:
-        - name: slug
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                body:
-                  type: string
-                  description: Comment body in Markdown
-              required: [body]
-      responses:
-        "303":
-          description: Redirect to talk page after posting
-        "400":
-          description: Invalid request
-
-  /edit/{slug}:
-    get:
-      tags: [phase-2]
-      summary: Article editor page
-      parameters:
-        - name: slug
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Editor page HTML with CodeMirror 6
-          content:
-            text/html:
-              schema:
-                type: string
-    post:
-      tags: [phase-2]
-      summary: Save article edit
-      description: |
-        Atomically saves the updated article body. Reindexes the article in
-        Tantivy and updates the redb wikilink graph. Per SYS-ADR-10, requires
-        a verified human author (MBA auth when auth is configured).
-      parameters:
-        - name: slug
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                body:
-                  type: string
-                  description: Full replacement article body in Markdown
-                summary:
-                  type: string
-                  description: Edit summary
-              required: [body]
-      responses:
-        "303":
-          description: Redirect to article view after successful save
-        "400":
-          description: Invalid request body
-
-  /create:
-    post:
-      tags: [phase-2]
-      summary: Create a new article
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                slug:
-                  type: string
-                title:
-                  type: string
-                category:
-                  type: string
-                body:
-                  type: string
-              required: [slug, title, category, body]
-      responses:
-        "303":
-          description: Redirect to new article view
-        "400":
-          description: Validation error
-
   /search:
     get:
-      tags: [phase-3]
-      summary: Full-text search (BM25 via Tantivy)
+      tags: [search]
+      summary: Full-text search (HTML)
+      description: Renders the search results page over the in-process BM25 index.
       parameters:
         - name: q
           in: query
@@ -285,6 +165,7 @@ paths:
           schema:
             type: string
           description: Search query string
+          example: sovereign data
       responses:
         "200":
           description: Search results HTML page
@@ -293,44 +174,15 @@ paths:
               schema:
                 type: string
 
-  /api/citations:
-    get:
-      tags: [phase-2]
-      summary: Citation registry (for editor autocomplete)
-      description: Returns all entries from citations.yaml as JSON for CodeMirror `[` autocomplete.
-      responses:
-        "200":
-          description: Citation list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CitationEntry"
-
-  /api/squiggle-rules:
-    get:
-      tags: [phase-2]
-      summary: SAA squiggle rule set
-      description: Returns the 7 deterministic editorial rules used for in-editor squiggle linting.
-      responses:
-        "200":
-          description: Rule list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-
   /api/search:
     get:
-      tags: [phase-3]
-      summary: Full-text search API (JSON)
+      tags: [api, search]
+      summary: Full-text search (JSON)
       description: |
-        BM25 full-text search over the tantivy index. Returns JSON array of
-        hits with slug, title, snippet, and score. Backed by the same index
-        as `GET /search` (HTML) but returns machine-readable JSON.
+        Wikipedia-pattern Wikipedia-style search tabs are present on all three
+        instances (Q2). This endpoint returns BM25 hits over the in-process
+        index as a JSON array (slug, title, snippet, score), backed by the same
+        index as `GET /search`.
       parameters:
         - name: q
           in: query
@@ -338,7 +190,7 @@ paths:
           schema:
             type: string
           description: Search query string
-          example: "sovereign data"
+          example: sovereign data
         - name: limit
           in: query
           required: false
@@ -370,21 +222,64 @@ paths:
                           type: number
                           format: float
 
+  /api/complete:
+    get:
+      tags: [api]
+      summary: Title autocomplete for the search box
+      description: |
+        Returns a JSON array of `{title, slug}` objects whose titles or slugs
+        contain the query string (case-insensitive). Capped at 10 results.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Prefix or substring to match against article titles and slugs
+      responses:
+        "200":
+          description: Autocomplete hits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                    slug:
+                      type: string
+                  required: [title, slug]
+
+  /api/citations:
+    get:
+      tags: [api]
+      summary: Citation registry (JSON)
+      description: Returns all entries from the citation registry as JSON.
+      responses:
+        "200":
+          description: Citation list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CitationEntry"
+
   /api/history/{slug}:
     get:
-      tags: [phase-4]
+      tags: [api, git]
       summary: Article revision history (JSON)
       description: |
-        Returns the git commit history for the given article slug. Each entry
-        includes the commit SHA, author, date, and commit message. Uses the
-        git2 repository wired at startup.
+        Returns the Git commit history for the given article slug. Each entry
+        includes the commit identifier, author, date, and message.
       parameters:
         - name: slug
           in: path
           required: true
           schema:
             type: string
-          description: Article slug (may include category prefix)
           example: architecture/compounding-substrate
       responses:
         "200":
@@ -415,18 +310,17 @@ paths:
 
   /api/links/{slug}:
     get:
-      tags: [phase-4]
+      tags: [api, git]
       summary: Wikilink graph for an article (JSON)
       description: |
         Returns the forward and backward wikilink edges for the given article
-        slug. Backed by the redb link graph updated on every edit.
+        slug, backed by the in-process link graph.
       parameters:
         - name: slug
           in: path
           required: true
           schema:
             type: string
-          description: Article slug
           example: architecture/compounding-substrate
         - name: direction
           in: query
@@ -435,7 +329,7 @@ paths:
             type: string
             enum: [forward, backward, both]
             default: both
-          description: "Link direction: forward (articles this slug links to), backward (articles linking here), or both"
+          description: "Link direction: forward, backward, or both"
       responses:
         "200":
           description: Wikilink graph edges
@@ -457,73 +351,9 @@ paths:
         "404":
           description: Article not found
 
-  /api/complete:
-    get:
-      tags: [phase-2]
-      summary: Title autocomplete for search box
-      description: |
-        Returns a JSON array of `{title, slug}` objects whose titles or slugs
-        contain the query string (case-insensitive). Capped at 10 results.
-        Used by the CodeMirror editor and navigation search box.
-      parameters:
-        - name: q
-          in: query
-          required: true
-          schema:
-            type: string
-          description: Prefix or substring to match against article titles and slugs
-      responses:
-        "200":
-          description: Autocomplete hits
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    title:
-                      type: string
-                    slug:
-                      type: string
-                  required: [title, slug]
-
-  /api/preview/{slug}:
-    get:
-      tags: [phase-2]
-      summary: Article preview metadata
-      description: |
-        Returns title, first-paragraph snippet, first image URL, and slug for
-        an article. Used by the hover-preview popover on wikilinks.
-      parameters:
-        - name: slug
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Preview JSON
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  title:
-                    type: string
-                  snippet:
-                    type: string
-                  image_url:
-                    type: string
-                    nullable: true
-                  slug:
-                    type: string
-        "404":
-          description: Article not found
-
   /feed.atom:
     get:
-      tags: [phase-3]
+      tags: [feeds]
       summary: Atom syndication feed (RFC 4287)
       responses:
         "200":
@@ -535,7 +365,7 @@ paths:
 
   /feed.json:
     get:
-      tags: [phase-3]
+      tags: [feeds]
       summary: JSON Feed 1.1
       responses:
         "200":
@@ -547,7 +377,7 @@ paths:
 
   /sitemap.xml:
     get:
-      tags: [phase-3]
+      tags: [feeds]
       summary: XML sitemap (sitemaps.org)
       responses:
         "200":
@@ -559,11 +389,11 @@ paths:
 
   /robots.txt:
     get:
-      tags: [phase-3]
+      tags: [feeds]
       summary: Robots exclusion
       responses:
         "200":
-          description: Robots.txt
+          description: robots.txt
           content:
             text/plain:
               schema:
@@ -571,7 +401,7 @@ paths:
 
   /llms.txt:
     get:
-      tags: [phase-3]
+      tags: [feeds]
       summary: LLM discovery manifest (llmstxt.org)
       responses:
         "200":
@@ -583,15 +413,16 @@ paths:
 
   /git/{slug}:
     get:
-      tags: [phase-3]
+      tags: [git]
       summary: Raw Markdown source (git-clone-style ingestion)
-      description: Returns the raw Markdown source for a slug. An optional `.md` suffix is stripped.
+      description: Returns the raw Markdown source for a slug. An optional trailing `.md` suffix is stripped.
       parameters:
         - name: slug
           in: path
           required: true
           schema:
             type: string
+          example: architecture/compounding-substrate
       responses:
         "200":
           description: Raw Markdown
@@ -602,113 +433,31 @@ paths:
         "404":
           description: Slug not found
 
-  /history/{slug}:
+  /healthz:
     get:
-      tags: [phase-4]
-      summary: Article revision history
-      parameters:
-        - name: slug
-          in: path
-          required: true
-          schema:
-            type: string
+      tags: [render]
+      summary: Health check
       responses:
         "200":
-          description: History page HTML
+          description: OK
           content:
-            text/html:
+            text/plain:
               schema:
                 type: string
-
-  /blame/{slug}:
-    get:
-      tags: [phase-4]
-      summary: Article blame (per-line author attribution via gix)
-      parameters:
-        - name: slug
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Blame page HTML
-          content:
-            text/html:
-              schema:
-                type: string
-
-  /diff/{slug}:
-    get:
-      tags: [phase-4]
-      summary: Diff between two revisions
-      parameters:
-        - name: slug
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: from
-          in: query
-          schema:
-            type: string
-          description: From commit SHA (optional — defaults to HEAD~1)
-        - name: to
-          in: query
-          schema:
-            type: string
-          description: To commit SHA (optional — defaults to HEAD)
-      responses:
-        "200":
-          description: Diff page HTML
-          content:
-            text/html:
-              schema:
-                type: string
-
-  /special/whatlinkshere/{slug}:
-    get:
-      tags: [phase-4]
-      summary: Backlinks page (articles that link to this slug)
-      parameters:
-        - name: slug
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Backlinks page HTML
-          content:
-            text/html:
-              schema:
-                type: string
+                example: ok
 
   /mcp:
     post:
-      tags: [phase-4]
+      tags: [mcp]
       summary: MCP JSON-RPC 2.0 endpoint
       description: |
-        Model Context Protocol server over HTTP (JSON-RPC 2.0). Requires
-        --enable-mcp flag. Returns 404 when flag is absent.
+        Model Context Protocol server over HTTP (JSON-RPC 2.0). This route is
+        mounted only when the binary is started with --enable-mcp; otherwise it
+        is not registered and requests return 404.
 
-        Protocol methods:
-          initialize / initialized / notifications/initialized
-          tools/list · tools/call
-          resources/list · resources/read
-          prompts/list · prompts/get
-          query_claims (Phase 11)
-
-        Phase 7 wiki-query methods:
-          query_page    — fetch article metadata + HTML body by slug
-          search        — BM25 full-text search (params: query, limit?)
-          list_pages    — paginated article list (params: category?, status?, limit?)
-          get_links     — wikilink graph (params: slug, direction: forward|backward)
-          get_citations — citation registry lookup (params: ids: [String])
-
-        Tools: create_topic, propose_edit, link_citation.
-        Resources: wiki://topic/{slug}
-        Prompts: cite-this-page, summarize-topic, draft-related-topic
+        Wiki-query methods include query_page, search, list_pages, get_links,
+        and get_citations, alongside the standard MCP lifecycle and
+        tools/resources/prompts methods.
       requestBody:
         required: true
         content:
@@ -727,59 +476,14 @@ paths:
                     clientInfo:
                       name: my-client
                       version: "1.0"
-              tools_list:
-                value:
-                  jsonrpc: "2.0"
-                  id: 2
-                  method: tools/list
-                  params: {}
-              tools_call_link_citation:
-                value:
-                  jsonrpc: "2.0"
-                  id: 3
-                  method: tools/call
-                  params:
-                    name: link_citation
-                    arguments:
-                      query: ni-51-102
-              query_page:
-                value:
-                  jsonrpc: "2.0"
-                  id: 4
-                  method: query_page
-                  params:
-                    slug: architecture/compounding-substrate
               search:
                 value:
                   jsonrpc: "2.0"
-                  id: 5
+                  id: 2
                   method: search
                   params:
                     query: "sovereign data"
                     limit: 10
-              list_pages:
-                value:
-                  jsonrpc: "2.0"
-                  id: 6
-                  method: list_pages
-                  params:
-                    category: architecture
-                    limit: 50
-              get_links:
-                value:
-                  jsonrpc: "2.0"
-                  id: 7
-                  method: get_links
-                  params:
-                    slug: architecture/compounding-substrate
-                    direction: backward
-              get_citations:
-                value:
-                  jsonrpc: "2.0"
-                  id: 8
-                  method: get_citations
-                  params:
-                    ids: ["ni-51-102", "osc-sn-51-721"]
       responses:
         "200":
           description: JSON-RPC 2.0 response
@@ -790,359 +494,8 @@ paths:
         "404":
           description: Endpoint not mounted (--enable-mcp not set)
 
-  /git-server/{tenant}/info/refs:
-    get:
-      tags: [phase-4]
-      summary: Git smart-HTTP ref advertisement
-      description: Read-only git remote ref advertisement for `git clone` / `git fetch`.
-      parameters:
-        - name: tenant
-          in: path
-          required: true
-          schema:
-            type: string
-          example: pointsav
-        - name: service
-          in: query
-          required: true
-          schema:
-            type: string
-            enum: [git-upload-pack]
-      responses:
-        "200":
-          description: Ref advertisement
-          content:
-            application/x-git-upload-pack-advertisement:
-              schema:
-                type: string
-                format: binary
-        "400":
-          description: Invalid service parameter
-        "404":
-          description: Tenant not found
-
-  /git-server/{tenant}/git-upload-pack:
-    post:
-      tags: [phase-4]
-      summary: Git smart-HTTP upload-pack (pack data)
-      parameters:
-        - name: tenant
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/x-git-upload-pack-request:
-            schema:
-              type: string
-              format: binary
-      responses:
-        "200":
-          description: Pack data
-          content:
-            application/x-git-upload-pack-result:
-              schema:
-                type: string
-                format: binary
-
-  /openapi.yaml:
-    get:
-      tags: [phase-4]
-      summary: This OpenAPI 3.1 specification
-      responses:
-        "200":
-          description: OpenAPI YAML
-          content:
-            application/yaml:
-              schema:
-                type: string
-
-  /special/recent-changes:
-    get:
-      tags: [special]
-      summary: Recent changes feed (Wikipedia-pattern)
-      responses:
-        "200":
-          description: Recent changes HTML
-          content:
-            text/html:
-              schema:
-                type: string
-
-  /special/all-pages:
-    get:
-      tags: [special]
-      summary: All pages listing
-      responses:
-        "200":
-          description: All pages HTML
-          content:
-            text/html:
-              schema:
-                type: string
-
-  /special/statistics:
-    get:
-      tags: [special]
-      summary: Wiki statistics
-      responses:
-        "200":
-          description: Statistics page HTML
-          content:
-            text/html:
-              schema:
-                type: string
-
-  /wanted:
-    get:
-      tags: [special]
-      summary: Wanted articles (unresolved wikilinks)
-      responses:
-        "200":
-          description: Wanted articles HTML
-          content:
-            text/html:
-              schema:
-                type: string
-
-  /random:
-    get:
-      tags: [special]
-      summary: Redirect to a random article
-      responses:
-        "302":
-          description: Redirect to a random wiki article
-
-  /special/login:
-    get:
-      tags: [special]
-      summary: Login page
-      responses:
-        "200":
-          description: Login form HTML
-    post:
-      tags: [special]
-      summary: Process login
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                password:
-                  type: string
-      responses:
-        "303":
-          description: Redirect after login
-        "401":
-          description: Invalid credentials
-
-  /special/logout:
-    post:
-      tags: [special]
-      summary: Log out current session
-      responses:
-        "303":
-          description: Redirect to home after logout
-
-  /special/pending-changes:
-    get:
-      tags: [special]
-      summary: Pending edit review queue
-      description: Lists all edits awaiting moderator review. Requires authenticated moderator session.
-      responses:
-        "200":
-          description: Pending changes HTML
-          content:
-            text/html:
-              schema:
-                type: string
-        "403":
-          description: Not authorised
-
-  /special/pending/{id}:
-    get:
-      tags: [special]
-      summary: Pending edit detail
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Pending edit detail HTML
-          content:
-            text/html:
-              schema:
-                type: string
-        "404":
-          description: Pending edit not found
-
-  /special/pending/{id}/accept:
-    post:
-      tags: [special]
-      summary: Accept a pending edit
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "303":
-          description: Redirect to review queue
-        "403":
-          description: Not authorised
-        "404":
-          description: Pending edit not found
-
-  /special/pending/{id}/reject:
-    post:
-      tags: [special]
-      summary: Reject a pending edit
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "303":
-          description: Redirect to review queue
-        "403":
-          description: Not authorised
-        "404":
-          description: Pending edit not found
-
-  /special/contributions/{username}:
-    get:
-      tags: [special]
-      summary: User contribution history
-      parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Contributions page HTML
-          content:
-            text/html:
-              schema:
-                type: string
-        "404":
-          description: User not found
-
-  /special/pageinfo/{slug}:
-    get:
-      tags: [special]
-      summary: Article page information
-      description: Word count, revision count, authors, file size, and wikilink graph stats for an article.
-      parameters:
-        - name: slug
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Page info HTML
-          content:
-            text/html:
-              schema:
-                type: string
-        "404":
-          description: Article not found
-
-  /special/cite/{slug}:
-    get:
-      tags: [special]
-      summary: Citation generator for an article
-      description: Renders APA, MLA, and BibTeX citation formats for the article.
-      parameters:
-        - name: slug
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Citation page HTML
-          content:
-            text/html:
-              schema:
-                type: string
-        "404":
-          description: Article not found
-
-  /special/categories:
-    get:
-      tags: [special]
-      summary: Category index
-      description: Lists all 12 ratified categories with article counts.
-      responses:
-        "200":
-          description: Categories index HTML
-          content:
-            text/html:
-              schema:
-                type: string
-
 components:
   schemas:
-    ArticleFrontmatter:
-      type: object
-      description: YAML frontmatter schema for wiki articles (foundry-doc-v1)
-      properties:
-        title:
-          type: string
-        slug:
-          type: string
-          description: Must equal the filename stem; immortal after first publish
-        category:
-          type: string
-          enum: [architecture, substrate, patterns, services, systems, applications, governance, infrastructure, company, reference, help, design-system, root]
-        subcategory:
-          type: string
-        last_edited:
-          type: string
-          format: date
-        editor:
-          type: string
-        status:
-          type: string
-          enum: [stable, pre-build, draft, stub]
-        short_description:
-          type: string
-        references:
-          type: array
-          items:
-            $ref: "#/components/schemas/Reference"
-      required: [title, slug, category]
-
-    Reference:
-      type: object
-      properties:
-        id:
-          type: integer
-        text:
-          type: string
-        url:
-          type: string
-          format: uri
-        internal:
-          type: boolean
-        path:
-          type: string
-      required: [id, text]
-
     CitationEntry:
       type: object
       properties:
