@@ -652,6 +652,9 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         DoormanError::FlowGateClosed { .. } => CompletionStatus::PolicyDenied,
         // Priority queue I/O failure: server-side file-system fault.
         DoormanError::PriorityQueueIo { .. } => CompletionStatus::UpstreamError,
+        // GCP Compute API failure (VM start/stop/status): upstream provider
+        // fault; the lifecycle monitor retries and the router falls to Tier A.
+        DoormanError::GcpApi { .. } => CompletionStatus::UpstreamError,
     }
 }
 
