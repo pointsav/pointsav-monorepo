@@ -1086,6 +1086,7 @@ fn home_chrome(
     let woodfine_projects = brand_theme == Some("woodfine-projects");
     let _title = home_fm.title.as_deref().unwrap_or(site_title);
     let auth_attr = if user.is_some() { "user" } else { "anon" };
+    let s = strings(locale);
 
     // Articles in non-ratified buckets (not already shown as guides) so that
     // every TOPIC and GUIDE is reachable from the home page.
@@ -1169,7 +1170,7 @@ fn home_chrome(
                     nav.right {
                         (auth_nav_widget(user, pending_count))
                         a.lang-toggle href=(match locale { Locale::En => "/es/", Locale::Es => "/?noredirect=1" }) {
-                            (match locale { Locale::En => "ES", Locale::Es => "EN" })
+                            (s.lang_toggle_label)
                         }
                     }
                 }
@@ -1184,7 +1185,7 @@ fn home_chrome(
                                 div.featured #mp-tfa {
                                     div.featured__row {
                                         span.dot {}
-                                        "Featured article"
+                                        (s.section_featured)
                                     }
                                     h2.featured__title {
                                         a href={ "/wiki/" (featured.slug) } { (featured.title) }
@@ -1193,7 +1194,7 @@ fn home_chrome(
                                         p.featured__excerpt { (featured.snippet) }
                                     }
                                     a.featured__cta href={ "/wiki/" (featured.slug) } {
-                                        "Read the full article"
+                                        (s.featured_cta)
                                         (PreEscaped(r#"<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 7h12M8 2l5 5-5 5"/></svg>"#))
                                     }
                                     div.featured__row style="margin-top:16px;font-size:12px;gap:6px;" {
@@ -1209,8 +1210,8 @@ fn home_chrome(
                             // Recently updated
                             @if !recent.is_empty() {
                                 div.section-head #mp-itn {
-                                    h2 { "Recently updated" }
-                                    a.section-head__hint href="/special/recent-changes" { "All changes →" }
+                                    h2 { (s.section_recent) }
+                                    a.section-head__hint href="/special/recent-changes" { (s.recent_all_link) }
                                 }
                                 div.recent {
                                     @for t in recent.iter().take(8) {
@@ -1250,7 +1251,7 @@ fn home_chrome(
                     }
 
                     // ── Start here strip ─────────────────────────────────────
-                    div.section-head { h2 { "New here? Start with these" } }
+                    div.section-head { h2 { (s.section_start) } }
                     div.starthere-row {
                         a.starthere-chip href="/wiki/architecture/economic-model" {
                             span.kind-badge data-type="topic" { "Topic" }
@@ -1272,7 +1273,7 @@ fn home_chrome(
 
                     // ── Browse by area ───────────────────────────────────────
                     div.section-head {
-                        h2 { "Browse by area" }
+                        h2 { (s.section_browse) }
                     }
                     div.cat-grid {
                         @for (display_name, primary_slug, slugs) in HOMEPAGE_CATEGORIES {
@@ -1297,8 +1298,8 @@ fn home_chrome(
                     // ── Operational guides ───────────────────────────────────
                     @if !guides.is_empty() {
                         div.section-head {
-                            h2 { "Operational guides" }
-                            a.section-head__hint href="/special/all-pages" { "All guides →" }
+                            h2 { (s.section_guides) }
+                            a.section-head__hint href="/special/all-pages" { (s.guides_all_link) }
                         }
                         div.recent {
                             @for g in guides.iter().take(6) {
@@ -1340,6 +1341,56 @@ fn home_chrome(
                 script src="/static/wiki.js" defer="true" {}
             }
         }
+    }
+}
+
+/// Locale-keyed UI strings for the home-page chrome.
+///
+/// Returns a struct with labels for every string rendered by `home_chrome` so
+/// that the `/es/` route can render navigation labels, section headings, and
+/// list titles in Spanish without duplicating the template.
+struct HomeStrings {
+    nav_home: &'static str,
+    nav_recent: &'static str,
+    section_browse: &'static str,
+    section_featured: &'static str,
+    section_recent: &'static str,
+    lang_toggle_label: &'static str,
+    section_start: &'static str,
+    section_guides: &'static str,
+    featured_cta: &'static str,
+    recent_all_link: &'static str,
+    guides_all_link: &'static str,
+}
+
+fn strings(locale: Locale) -> HomeStrings {
+    match locale {
+        Locale::En => HomeStrings {
+            nav_home: "Home",
+            nav_recent: "Recent changes",
+            section_browse: "Browse by area",
+            section_featured: "Featured article",
+            section_recent: "Recently updated",
+            lang_toggle_label: "ES",
+            section_start: "New here? Start with these",
+            section_guides: "Operational guides",
+            featured_cta: "Read the full article",
+            recent_all_link: "All changes →",
+            guides_all_link: "All guides →",
+        },
+        Locale::Es => HomeStrings {
+            nav_home: "Inicio",
+            nav_recent: "Cambios recientes",
+            section_browse: "Explorar por área",
+            section_featured: "Artículo destacado",
+            section_recent: "Actualizado recientemente",
+            lang_toggle_label: "EN",
+            section_start: "¿Primera vez aquí? Empieza con estos",
+            section_guides: "Guías operacionales",
+            featured_cta: "Leer el artículo completo",
+            recent_all_link: "Todos los cambios →",
+            guides_all_link: "Todas las guías →",
+        },
     }
 }
 
