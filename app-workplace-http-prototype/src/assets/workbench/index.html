@@ -143,13 +143,22 @@ header .tag {
   position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
   background: #252526; border: 1px solid #3c3c3c; color: #ccc;
   font-size: 12px; padding: 5px 14px; border-radius: 4px;
-  pointer-events: none; opacity: 0; transition: opacity 0.15s;
+  opacity: 0; transition: opacity 0.15s;
   z-index: 9000; white-space: nowrap;
+  display: flex; align-items: center; gap: 10px;
 }
 #wb-toast.show { opacity: 1; }
+.wb-toast-action {
+  background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+  color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 3px; cursor: pointer; white-space: nowrap;
+}
+.wb-toast-action:hover { background: rgba(255,255,255,0.32); }
 html.light .tree-item.drag-over { background: #d0e7fc !important; outline-color: #0078d4; color: #1a1a1a !important; }
 html.light .viewer.drag-over-editor { outline-color: #0078d4; }
 html.light #wb-toast { background: #f3f3f3; border-color: #d4d4d4; color: #333; }
+html.light .wb-toast-action { background: rgba(0,0,0,0.08); border-color: rgba(0,0,0,0.22); color: #1a1a1a; }
+html.light .wb-toast-action:hover { background: rgba(0,0,0,0.15); }
 
 .loading { padding: 4px 8px 4px 28px; color: #555; font-size: 11px; font-style: italic; }
 .empty   { padding: 4px 8px 4px 28px; color: #555; font-size: 11px; }
@@ -2582,6 +2591,16 @@ window.addEventListener('keydown', e => {
     const btns = document.querySelectorAll('#surface-bar .surface-btn');
     if (idx < btns.length) { e.preventDefault(); btns[idx].click(); }
   }
+  // Ctrl+Z — undo last file move (only when not editing text)
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey && moveHistory.length > 0) {
+    const active = document.activeElement;
+    const isEditing = active && (
+      active.tagName === 'INPUT' ||
+      active.tagName === 'TEXTAREA' ||
+      active.isContentEditable
+    );
+    if (!isEditing) { e.preventDefault(); undoLastMove(); }
+  }
 });
 
 // ── Mark a tree item active ───────────────────────────────────────────────────
@@ -2727,13 +2746,33 @@ function wireItem(item, childrenEl, depth) {
 
 // ── Drag and drop ─────────────────────────────────────────────────────────────
 
-function showWbToast(msg) {
+// Move history for undo — [{from, dir, name}] where from = path after move, dir = original dir
+const moveHistory = [];
+const MOVE_HISTORY_CAP = 10;
+
+function showWbToast(msg, undoFn) {
   const el = document.getElementById('wb-toast');
   if (!el) return;
-  el.textContent = msg;
+  el.innerHTML = '';
+  const text = document.createElement('span');
+  text.textContent = msg;
+  el.appendChild(text);
+  if (undoFn) {
+    const btn = document.createElement('button');
+    btn.className = 'wb-toast-action';
+    btn.textContent = 'Undo';
+    btn.onclick = () => { el.classList.remove('show'); undoFn(); };
+    el.appendChild(btn);
+  }
   el.classList.add('show');
   clearTimeout(el._timer);
-  el._timer = setTimeout(() => el.classList.remove('show'), 2200);
+  el._timer = setTimeout(() => el.classList.remove('show'), undoFn ? 6000 : 2200);
+}
+
+function undoLastMove() {
+  const last = moveHistory.pop();
+  if (!last) return;
+  doWbMoveFile(last.from, last.name, last.dir, true);
 }
 
 function wireDragOnItem(item) {
@@ -2780,9 +2819,10 @@ function wireDragOnItem(item) {
   }
 }
 
-async function doWbMoveFile(srcPath, srcName, destBrowsePath) {
+async function doWbMoveFile(srcPath, srcName, destBrowsePath, isUndo = false) {
   const from = srcPath.replace(/^\//, '');
   const to   = destBrowsePath.replace(/^\//, '').replace(/\/$/, '');
+  const srcDir = srcPath.substring(0, srcPath.lastIndexOf('/'));
   try {
     const res = await fetch(
       `/_api/edit/move?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
@@ -2793,11 +2833,15 @@ async function doWbMoveFile(srcPath, srcName, destBrowsePath) {
       showWbToast(data.error || 'Move failed');
       return;
     }
-    // Refresh the tree so source folder removes the file and dest folder shows it
     reloadAllExpandedDirs();
-    // If the moved file is open in a tab, update its recorded path
     updateWbTabPath(srcPath, '/' + data.new_path);
-    showWbToast('Moved ' + srcName);
+    if (!isUndo) {
+      moveHistory.push({ from: '/' + data.new_path, dir: srcDir, name: srcName });
+      if (moveHistory.length > MOVE_HISTORY_CAP) moveHistory.shift();
+      showWbToast('Moved ' + srcName, undoLastMove);
+    } else {
+      showWbToast('Undone — ' + srcName + ' moved back');
+    }
   } catch(e) {
     showWbToast('Move failed: ' + e.message);
   }
