@@ -2741,7 +2741,7 @@ nav.mobile-bottom-bar {
   nav.mobile-bottom-bar {
     display: flex;
     position: fixed;
-    bottom: 0; left: 0; right: 0;
+    bottom: env(safe-area-inset-bottom, 0px); left: 0; right: 0;
     height: calc(56px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: var(--bg-elevated, var(--bg));
@@ -2767,7 +2767,7 @@ nav.mobile-bottom-bar {
   }
   .mobile-bar-btn:hover, .mobile-bar-btn:active { background: var(--bg-hover, var(--mw-color-base-10)); }
   [data-auth="anon"] .tab-edit { display: none; }
-  body { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+  body { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
   /* Mobile table scroll */
   .page-body table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   /* Tighter code font on mobile */
