@@ -195,9 +195,20 @@ fn main() {
             let mgmt_v1 = report::bencal_forecast_v1::render_management(&pclp_data, &wcp_data);
             let spv1_v1 = report::bencal_forecast_v1::render_spv1(&wcp_data);
             let spv2_v1 = report::bencal_forecast_v1::render_spv2(&pclp_data, &wcp_data);
-            write_output(&mgmt_v1, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_03_Forecast_Bencal_Management_V1.html")));
-            write_output(&spv1_v1, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_03_Forecast_Bencal_SPV1_V1.html")));
-            write_output(&spv2_v1, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_03_Forecast_Bencal_SPV2_V1.html")));
+            write_output(
+                &mgmt_v1,
+                Some(
+                    &out_dir.join("COMPLIANCE_MCorp_2026_06_03_Forecast_Bencal_Management_V1.html"),
+                ),
+            );
+            write_output(
+                &spv1_v1,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_03_Forecast_Bencal_SPV1_V1.html")),
+            );
+            write_output(
+                &spv2_v1,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_03_Forecast_Bencal_SPV2_V1.html")),
+            );
 
             eprintln!("wrote 15 files to {}", out_dir.display());
         }
