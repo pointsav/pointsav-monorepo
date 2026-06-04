@@ -2774,6 +2774,10 @@ fn wiki_chrome(
 
                 // Minimal JS: TOC collapse toggle + density preference persistence.
                 // Loaded last so HTML renders without it.
+                // NOTE: cm-saa.bundle.js (CodeMirror) is intentionally NOT included
+                // here — it is loaded only on the /edit/* route (see src/edit.rs).
+                // Loading the ~300 KB editor bundle on every article page wastes
+                // bandwidth for readers who never edit. (L25)
                 script src="/static/wiki.js" defer="true" {}
                 script src="/static/toc-persistence.js" defer="true" {}
             }
