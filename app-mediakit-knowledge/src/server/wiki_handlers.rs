@@ -1021,13 +1021,13 @@ fn wiki_chrome(
                         // P3: Previous / Next article navigation
                         @if prev_article.is_some() || next_article.is_some() {
                             nav.article-nav aria-label="Article navigation" {
-                                @if let Some(ref prev) = prev_article {
+                                @if let Some(prev) = prev_article {
                                     a.article-nav__prev href={ "/wiki/" (prev.slug) } {
                                         span.article-nav__label { "← Previous" }
                                         span.article-nav__title { (prev.title) }
                                     }
                                 }
-                                @if let Some(ref next) = next_article {
+                                @if let Some(next) = next_article {
                                     a.article-nav__next href={ "/wiki/" (next.slug) } {
                                         span.article-nav__label { "Next →" }
                                         span.article-nav__title { (next.title) }
