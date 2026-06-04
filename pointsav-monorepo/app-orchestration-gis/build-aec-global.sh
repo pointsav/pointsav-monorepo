@@ -212,10 +212,10 @@ META_P = os.environ["META_PATH"]
 with open(META_P) as f:
     clusters = json.load(f)
 
-targets = [c for c in clusters if c.get("cont") == "EU" and c.get("ghi_kwh_m2_yr") is None]
-print(f"  {len(targets)} EU clusters without GHI")
+targets = [c for c in clusters if c.get("cont") == "EU" and c.get("wind_speed_ms") is None]
+print(f"  {len(targets)} EU clusters without GHI/wind/temp")
 
-ghi_map = {}
+met_map = {}   # id → {ghi, wind, temp, hdd18, cdd18}
 for i, c in enumerate(targets):
     if i % 50 == 0:
         print(f"    {i}/{len(targets)} …", flush=True)
@@ -235,22 +235,37 @@ for i, c in enumerate(targets):
             data = json.loads(resp.read())
         hourly = data.get("outputs", {}).get("hourly", [])
         if hourly:
-            annual_ghi = sum(h.get("Gb(i)", 0) + h.get("Gd(i)", 0)
-                             for h in hourly) / 1000.0
-            ghi_map[c["id"]] = round(annual_ghi, 1)
+            n = len(hourly)
+            annual_ghi  = sum(h.get("Gb(i)", 0) + h.get("Gd(i)", 0) for h in hourly) / 1000.0
+            annual_wind = sum(h.get("WS10m", 0) for h in hourly) / n
+            annual_temp = sum(h.get("T2m",   0) for h in hourly) / n
+            hdd18 = sum(max(0.0, 18.0 - h.get("T2m", 18.0)) for h in hourly) / 24.0
+            cdd18 = sum(max(0.0, h.get("T2m", 18.0) - 18.0) for h in hourly) / 24.0
+            met_map[c["id"]] = {
+                "ghi":   round(annual_ghi, 1),
+                "wind":  round(annual_wind, 2),
+                "temp":  round(annual_temp, 1),
+                "hdd18": int(round(hdd18)),
+                "cdd18": int(round(cdd18)),
+            }
     except Exception as e:
         print(f"  WARN: PVGIS error for {c.get('id','?')}: {e}")
     time.sleep(0.5)
 
 for c in clusters:
-    if c["id"] in ghi_map:
-        c["ghi_kwh_m2_yr"] = ghi_map[c["id"]]
+    m = met_map.get(c["id"])
+    if m:
+        c["ghi_kwh_m2_yr"]     = m["ghi"]
+        c["wind_speed_ms"]      = m["wind"]
+        c["temp_annual_mean_c"] = m["temp"]
+        c["hdd18"]              = m["hdd18"]
+        c["cdd18"]              = m["cdd18"]
 
 tmp = META_P + ".tmp"
 with open(tmp, "w") as f:
     json.dump(clusters, f, separators=(",", ":"))
 os.replace(tmp, META_P)
-print(f"  EU solar GHI: {len(ghi_map)} clusters updated  ✓")
+print(f"  EU climate met: {len(met_map)} clusters updated  ✓")
 PYEOF
 
 echo "[3/5] EU solar GHI complete  ✓" | tee -a "$LOG"
@@ -266,10 +281,10 @@ META_P = os.environ["META_PATH"]
 with open(META_P) as f:
     clusters = json.load(f)
 
-targets = [c for c in clusters if c.get("cont") == "NA" and c.get("ghi_kwh_m2_yr") is None]
-print(f"  {len(targets)} NA clusters without GHI (US+CA+MX)")
+targets = [c for c in clusters if c.get("cont") == "NA" and c.get("wind_speed_ms") is None]
+print(f"  {len(targets)} NA clusters without GHI/wind/temp (US+CA+MX)")
 
-ghi_map = {}
+met_map = {}
 skipped = 0
 for i, c in enumerate(targets):
     if i % 50 == 0:
@@ -293,22 +308,37 @@ for i, c in enumerate(targets):
             data = json.loads(resp.read())
         hourly = data.get("outputs", {}).get("hourly", [])
         if hourly:
-            annual_ghi = sum(h.get("Gb(i)", 0) + h.get("Gd(i)", 0)
-                             for h in hourly) / 1000.0
-            ghi_map[c["id"]] = round(annual_ghi, 1)
+            n = len(hourly)
+            annual_ghi  = sum(h.get("Gb(i)", 0) + h.get("Gd(i)", 0) for h in hourly) / 1000.0
+            annual_wind = sum(h.get("WS10m", 0) for h in hourly) / n
+            annual_temp = sum(h.get("T2m",   0) for h in hourly) / n
+            hdd18 = sum(max(0.0, 18.0 - h.get("T2m", 18.0)) for h in hourly) / 24.0
+            cdd18 = sum(max(0.0, h.get("T2m", 18.0) - 18.0) for h in hourly) / 24.0
+            met_map[c["id"]] = {
+                "ghi":   round(annual_ghi, 1),
+                "wind":  round(annual_wind, 2),
+                "temp":  round(annual_temp, 1),
+                "hdd18": int(round(hdd18)),
+                "cdd18": int(round(cdd18)),
+            }
     except Exception as e:
         print(f"  WARN: PVGIS-NSRDB error for {c.get('id','?')}: {e}")
     time.sleep(0.5)
 
 for c in clusters:
-    if c["id"] in ghi_map:
-        c["ghi_kwh_m2_yr"] = ghi_map[c["id"]]
+    m = met_map.get(c["id"])
+    if m:
+        c["ghi_kwh_m2_yr"]     = m["ghi"]
+        c["wind_speed_ms"]      = m["wind"]
+        c["temp_annual_mean_c"] = m["temp"]
+        c["hdd18"]              = m["hdd18"]
+        c["cdd18"]              = m["cdd18"]
 
 tmp = META_P + ".tmp"
 with open(tmp, "w") as f:
     json.dump(clusters, f, separators=(",", ":"))
 os.replace(tmp, META_P)
-print(f"  NA solar GHI: {len(ghi_map)} clusters updated  {skipped} skipped (lat>60)  ✓")
+print(f"  NA climate met: {len(met_map)} clusters updated  {skipped} skipped (lat>60)  ✓")
 PYEOF
 echo "[4/5] NA solar GHI complete  ✓" | tee -a "$LOG"
 
