@@ -90,6 +90,13 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// Bencal SPV1/SPV2/Management V1 — Self-generating Bencal proformas.
+    /// Consumes PCLP 1 V2 + WCP V1 forecasts. Emits 9 files (3 entities × proforma/summary/JSON).
+    BencalAllV1 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
 }
 
 fn write_output(content: &str, out: Option<&PathBuf>) {
@@ -267,6 +274,25 @@ fn main() {
             write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_WCP_V1.html")));
             write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_WCP_V1.json")));
             eprintln!("wrote 3 WCP V1 files to {}", out_dir.display());
+        }
+        Some(Command::BencalAllV1 { out_dir }) => {
+            // Bencal SPV1, SPV2, Management V1 — engine self-generating proformas.
+            // Consumes PCLP 1 V2 + WCP V1. 9 files total (3 per entity).
+            use report::bencal_v1_proforma::*;
+            let pairs = [
+                ("Bencal_SPV1", render_proforma_spv1(), render_summary_spv1(), render_json_spv1()),
+                ("Bencal_SPV2", render_proforma_spv2(), render_summary_spv2(), render_json_spv2()),
+                ("Bencal_Management", render_proforma_mgmt(), render_summary_mgmt(), render_json_mgmt()),
+            ];
+            for (name, proforma, summary, json) in &pairs {
+                let proforma_path = out_dir.join(format!("COMPLIANCE_MCorp_2026_06_04_Proforma_{}_V1.html", name));
+                let summary_path = out_dir.join(format!("COMPLIANCE_MCorp_2026_06_04_Summary_{}_V1.html", name));
+                let json_path = out_dir.join(format!("COMPLIANCE_MCorp_2026_06_04_{}_V1.json", name));
+                write_output(proforma, Some(&proforma_path));
+                write_output(summary, Some(&summary_path));
+                write_output(json, Some(&json_path));
+            }
+            eprintln!("wrote 9 Bencal V1 files to {}", out_dir.display());
         }
         None => {
             // Legacy: JSON assumptions → sensitivity engine

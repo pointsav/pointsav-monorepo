@@ -1,6 +1,9 @@
 pub mod ambassadors_d1;
 pub mod ambassadors_d2;
 pub mod bencal;
+pub mod bencal_mgmt_proforma;
+pub mod bencal_spv1_proforma;
+pub mod bencal_spv2_proforma;
 pub mod pclp1_proforma;
 pub mod wcp_proforma;
 
