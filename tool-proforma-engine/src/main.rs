@@ -83,6 +83,13 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// WCP V1 — Self-generating proforma from BRIEF v0.15.6 §5c (no Excel).
+    /// Consumes PCLP 1 V2 forecast as LP1 source. Emits proforma HTML, summary HTML, JSON.
+    WcpV1 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
 }
 
 fn write_output(content: &str, out: Option<&PathBuf>) {
@@ -250,6 +257,16 @@ fn main() {
             write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_PCLP1_V2.html")));
             write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_PCLP1_V2.json")));
             eprintln!("wrote 3 V2 files to {}", out_dir.display());
+        }
+        Some(Command::WcpV1 { out_dir }) => {
+            // WCP V1 — engine self-generating proforma from BRIEF §5c. Consumes PCLP 1 V2.
+            let proforma_html = report::wcp_proforma::render_proforma();
+            let summary_html = report::wcp_proforma::render_summary();
+            let json_dump = report::wcp_proforma::render_json();
+            write_output(&proforma_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_WCP_V1.html")));
+            write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_WCP_V1.html")));
+            write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_WCP_V1.json")));
+            eprintln!("wrote 3 WCP V1 files to {}", out_dir.display());
         }
         None => {
             // Legacy: JSON assumptions → sensitivity engine
