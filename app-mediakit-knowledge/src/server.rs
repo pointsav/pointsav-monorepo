@@ -1123,6 +1123,9 @@ fn home_chrome(
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover";
                 title { (site_title) }
+                // Font preload — eliminates FOUT on first load
+                link rel="preload" as="font" type="font/woff2" crossorigin href="/static/fonts/Inter-400-normal-latin.woff2";
+                link rel="preload" as="font" type="font/woff2" crossorigin href="/static/fonts/Source-Serif-4-400-normal-latin.woff2";
                 link rel="stylesheet" href="/static/tokens.css";
                 link rel="stylesheet" href="/static/style.css";
                 @if woodfine_theme {
@@ -2313,6 +2316,9 @@ fn wiki_chrome(
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover";
                 title { (page_title) }
+                // Font preload — eliminates FOUT on first load
+                link rel="preload" as="font" type="font/woff2" crossorigin href="/static/fonts/Inter-400-normal-latin.woff2";
+                link rel="preload" as="font" type="font/woff2" crossorigin href="/static/fonts/Source-Serif-4-400-normal-latin.woff2";
                 link rel="stylesheet" href="/static/tokens.css";
                 link rel="stylesheet" href="/static/style.css";
                 @if woodfine_theme {
