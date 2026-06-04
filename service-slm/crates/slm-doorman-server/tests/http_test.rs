@@ -848,6 +848,8 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
             lark_validator: Some(lark_validator),
             graph_context_client: None,
             tier_a_first: false,
+            daily_yoyo_cap_usd: None,
+            cost_ledger: None,
         },
         temp_ledger(),
     );
@@ -1189,6 +1191,8 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
             lark_validator: Some(lark_validator),
             graph_context_client: None,
             tier_a_first: false,
+            daily_yoyo_cap_usd: None,
+            cost_ledger: None,
         },
         temp_ledger(),
     );
