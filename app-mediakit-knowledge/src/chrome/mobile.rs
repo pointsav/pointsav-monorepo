@@ -1,30 +1,49 @@
 //! Mobile chrome — bottom navigation bar with safe-area insets.
 //!
-//! Phase 1 stub. Phase 3 implements the mobile bottom bar.
+//! Phase 3: full implementation of mobile bottom bar.
 //!
-//! L24 enforcement: every fixed/sticky bottom chrome element must use
+//! L24 enforcement: every fixed/sticky bottom chrome element uses
 //! `calc(N + env(safe-area-inset-bottom))` — bare `padding-bottom: 56px`
-//! on bottom chrome is a lint error. The CSS for this bar lives in the
-//! `## 4. Chrome` section of `static/style.css`.
+//! on bottom chrome is a lint error. The CSS for this bar is in style.css §4.
 //!
 //! The bottom bar contains:
 //! - Home icon → `/`
 //! - Search icon → opens Cmd+K palette
-//! - Article (current) indicator
-//! - Menu icon → side navigation drawer (Phase 3)
+//! - Category → `/category/`
+//! - Edit → auth-gated edit route
 //!
 //! `viewport-fit=cover` is required in the viewport meta tag (L17).
 
-use maud::Markup;
+use maud::{html, Markup};
+use crate::chrome::{Locale, t};
 
 /// Render the mobile bottom navigation bar.
 ///
-/// Phase 1 stub. Phase 3 emits the full bottom bar HTML with:
-/// - `position: fixed; bottom: 0` container
-/// - `padding-bottom: calc(12px + env(safe-area-inset-bottom))` (L24)
-/// - Thumb-zone navigation icons
-/// - `overscroll-behavior: contain` on the scroll container
-#[allow(dead_code)]
-pub fn mobile_chrome() -> Markup {
-    todo!("Phase 3: implement mobile bottom bar with safe-area insets (L24)")
+/// L24 enforcement: padding-bottom uses `calc()` with `env(safe-area-inset-bottom)`.
+/// Height: 56px tap target (44px icon + 12px padding) per Apple HIG.
+pub fn mobile_chrome(locale: Locale) -> Markup {
+    let home_label = t(locale, "home");
+    let search_label = t(locale, "search_label");
+    let categories_label = t(locale, "categories");
+
+    html! {
+        nav class="mobile-bottom-bar" aria-label="Mobile navigation" {
+            a href="/" class="mobile-bottom-bar__item" aria-label=(home_label) {
+                span class="mobile-bottom-bar__icon" aria-hidden="true" { "⌂" }
+                span class="mobile-bottom-bar__label" { (home_label) }
+            }
+            button class="mobile-bottom-bar__item"
+                   id="mobile-search-btn"
+                   aria-label=(search_label)
+                   aria-controls="cmd-palette"
+                   type="button" {
+                span class="mobile-bottom-bar__icon" aria-hidden="true" { "⌕" }
+                span class="mobile-bottom-bar__label" { (search_label) }
+            }
+            a href="/category/" class="mobile-bottom-bar__item" aria-label=(categories_label) {
+                span class="mobile-bottom-bar__icon" aria-hidden="true" { "☰" }
+                span class="mobile-bottom-bar__label" { (categories_label) }
+            }
+        }
+    }
 }

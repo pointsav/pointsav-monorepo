@@ -1,28 +1,32 @@
-/* Woodfine brand token override layer.
- * Loaded after tokens.css, before style.css, when WIKI_BRAND_THEME=woodfine.
- * Overrides the DTCG semantic variables with Woodfine institutional values.
- * Phase 4.4: full token-set swap, not just --accent.
+/* ============================================================================
+ * Woodfine brand token override layer (Phase 3 — merged from theme-woodfine.css)
+ * Loaded after tokens.css, before style.css, when brand="woodfine".
+ * Overrides DTCG semantic variables with Woodfine institutional values.
  *
  * Source: Woodfine Management Corp. brand spec (woodfinegroup.com)
- * Hex → oklch conversion via scripts/dtcg-to-css.py algorithm.
- */
+ * Includes: previously separate theme-woodfine.css (deleted — L21 enforcement)
+ *
+ * L3: tokens-woodfine.css is GENERATED from dtcg-bundle.json + Woodfine
+ *     brand overrides. This file is the merged canonical output.
+ * L21: exactly 3 CSS files. theme-woodfine.css deleted, content merged here.
+ * ============================================================================ */
 
 :root {
-  /* Surface */
+  /* ---- Surface overrides ---- */
   --surface-background:   oklch(98.09% 0.0026 229.85); /* #F7F9FA unified canvas */
   --surface-layer:        oklch(100.0% 0.0001 263.28); /* #FFFFFF raised surfaces */
   --surface-layer-accent: oklch(96.21% 0.0097 252.90); /* #EEF3F9 Woodfine-tinted aside */
-  --surface-layer-hover:  oklch(92.58% 0.0128 252.70); /* hover state */
+  --surface-layer-hover:  oklch(92.58% 0.0128 252.70);
   --surface-inverse:      oklch(21.01% 0.0318 264.67); /* #111827 inverse */
 
-  /* Text */
+  /* ---- Text overrides ---- */
   --text-primary:     oklch(21.01% 0.0318 264.67); /* #111827 Deep Slate */
   --text-secondary:   oklch(55.10% 0.0234 264.37); /* #6B7280 muted */
-  --text-tertiary:    oklch(65.00% 0.0180 264.00); /* lighter muted */
+  --text-tertiary:    oklch(65.00% 0.0180 264.00);
   --text-placeholder: oklch(72.00% 0.0140 264.00);
   --text-disabled:    oklch(85.97% 0.0107 261.80);
 
-  /* Interactive — Woodfine Blue replaces IBM Blue */
+  /* ---- Interactive — Woodfine Blue replaces IBM Blue ---- */
   --interactive-link:           oklch(39.06% 0.1005 253.05); /* #164679 */
   --interactive-link-visited:   oklch(31.42% 0.0790 253.24); /* #0F3258 */
   --interactive-link-hover:     oklch(48.39% 0.1346 253.65); /* #1A5FA8 */
@@ -30,11 +34,28 @@
   --interactive-button-primary: oklch(39.06% 0.1005 253.05); /* #164679 */
   --interactive-focus-ring:     oklch(39.06% 0.1005 253.05); /* #164679 */
 
-  /* Border */
+  /* ---- Border overrides ---- */
   --border-interactive: oklch(39.06% 0.1005 253.05); /* #164679 */
 
-  /* Engine-specific alias — overrides steel-blue to Woodfine Blue */
-  --accent: #164679;
+  /* ---- Engine-level alias overrides (from theme-woodfine.css) ---- */
+  --bg:        #F7F9FA;
+  --bg-chrome: #FFFFFF;
+  --bg-aside:  #EEF3F9;
+  --fg:        #111827;
+  --fg-muted:  #6B7280;
+  --border:    rgba(17, 24, 39, 0.20);
+  --link:         #164679;
+  --link-visited: #0F3258;
+  --accent:       #164679;
+
+  /* System colour tokens (Tier-2 Semantic, from theme-woodfine.css) */
+  --sys-canvas:   #F7F9FA;
+  --sys-card:     #FFFFFF;
+  --sys-text:     #111827;
+  --sys-muted:    #6B7280;
+  --sys-border:   #111827;
+  --sys-hairline: rgba(17, 24, 39, 0.15);
+  --sys-accent:   #164679;
 }
 
 /* Dark mode — Woodfine Blue #164679 is 2.9:1 on #0B1220 (AA fail); lighten to 4.7:1 */
@@ -45,6 +66,7 @@ html[data-theme="dark"] {
   --interactive-button-primary: oklch(62% 0.14 250);
   --interactive-focus-ring:     oklch(62% 0.14 250);
   --border-interactive:         oklch(62% 0.14 250);
+  --link:   oklch(62% 0.14 250);
   --accent: oklch(62% 0.14 250);
 }
 
@@ -56,6 +78,7 @@ html[data-theme="dark"] {
     --interactive-button-primary: oklch(62% 0.14 250);
     --interactive-focus-ring:     oklch(62% 0.14 250);
     --border-interactive:         oklch(62% 0.14 250);
+    --link:   oklch(62% 0.14 250);
     --accent: oklch(62% 0.14 250);
   }
 }

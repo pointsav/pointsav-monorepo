@@ -1,29 +1,31 @@
 /**
- * wiki.js — Phase 3 interaction layer.
+ * wiki.js — Phase 3 merged interaction layer (L25: loaded ONLY on non-editor routes).
+ *
+ * L25 enforcement: this file is loaded on article, home, category, and search
+ * pages. editor.js is loaded ONLY on /edit/* routes. Never cross-load.
+ *
+ * Merged from (Phase 3):
+ *   - toc-persistence.js (was a stub; content already here)
+ *   - saa-init.js moved → editor.js (Phase 6 scope)
  *
  * Responsibilities:
- *   1.  TOC collapse toggle (Vector 2022 sticky TOC pattern).
- *   2.  TOC pin button — keep TOC always visible.
- *   3.  Reader density preference (Off / Exceptions only / All),
- *       persisted to localStorage. No machinery honours the setting
- *       until Phase 7; this script maintains the UI state only.
- *   4.  Page hover-card previews (wikilinks).
- *   5.  Glossary tooltips.
- *   6.  Mobile nav drawer.
- *   7.  Mobile TOC drawer.
- *   8.  Footnote hover tooltips.
- *   9.  Search autocomplete.
- *  10.  Navbox autocollapse.
- *  11.  Mobile collapsible h2 sections.
- *  12.  Sticky header (IntersectionObserver).
- *  13.  Active TOC section tracking (IntersectionObserver).
- *  14.  Keyboard shortcuts ('?' overlay; AccessKey attrs handled by HTML).
- *  15.  AJAX page navigation (fetch + DOM swap + pushState).
+ *   1.  TOC scroll-spy (IntersectionObserver; CSS .toc-entry.active)
+ *   2.  TOC pin/unpin (localStorage)
+ *   3.  Cmd+K command palette (fetch /api/complete; dialog open/close)
+ *   4.  Three-way theme toggle (light / dark / system; localStorage + html[data-theme])
+ *   5.  Citation hover cards (.citation-marker + data-citation-id → /api/citations)
+ *   6.  TOC collapse toggle
+ *   7.  Page hover-card previews (wikilinks)
+ *   8.  Glossary tooltips
+ *   9.  Mobile nav + TOC drawers
+ *  10.  Footnote hover tooltips
+ *  11.  Search autocomplete
+ *  12.  Navbox autocollapse
+ *  13.  Mobile collapsible h2 sections
+ *  14.  Keyboard shortcuts ('?' overlay)
+ *  15.  AJAX page navigation (fetch + DOM swap + pushState)
  *
- * No external dependencies. No module bundler. Loaded with `defer`
- * so HTML renders without it. Progressively enhances — if this script
- * fails to load, the page remains fully readable.
- *
+ * No external dependencies. No module bundler. Loaded with `defer`.
  * Bloomberg article standard: plain English, no marketing copy.
  */
 
@@ -939,6 +941,7 @@
     initToc();
     initTocPin();
     initAnchorShare();
+    initCitationMarkerCards();
   }
 
   /* ------------------------------------------------------------------ *
@@ -1016,6 +1019,60 @@
       var active = document.body.classList.toggle('reading-mode');
       btn.setAttribute('aria-pressed', active ? 'true' : 'false');
       localStorage.setItem(PREF, active ? '1' : '0');
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Citation marker hover cards (.citation-marker[data-citation-id])   *
+   * Fetches citation metadata from /api/citations?id=<id> and shows    *
+   * a positioned hover card. (Phase 3 — §7 wiki.js responsibilities)   *
+   * ------------------------------------------------------------------ */
+  function initCitationMarkerCards() {
+    var citationCard = null;
+    var citationTimer = null;
+
+    function getCitationCard() {
+      if (!citationCard) {
+        citationCard = document.createElement('div');
+        citationCard.className = 'cite-hover-card';
+        citationCard.style.display = 'none';
+        citationCard.style.position = 'absolute';
+        document.body.appendChild(citationCard);
+        citationCard.addEventListener('mouseenter', function () { clearTimeout(citationTimer); });
+        citationCard.addEventListener('mouseleave', function () {
+          citationTimer = setTimeout(function () { if (citationCard) citationCard.style.display = 'none'; }, 200);
+        });
+      }
+      return citationCard;
+    }
+
+    document.querySelectorAll('.citation-marker[data-citation-id]').forEach(function (el) {
+      el.addEventListener('mouseenter', function () {
+        clearTimeout(citationTimer);
+        var id = el.dataset.citationId;
+        if (!id) return;
+        var card = getCitationCard();
+        var rect = el.getBoundingClientRect();
+        card.style.left = (window.scrollX + rect.left) + 'px';
+        card.style.top  = (window.scrollY + rect.bottom + 4) + 'px';
+        card.innerHTML = '<em>Loading…</em>';
+        card.style.display = 'block';
+        fetch('/api/citations?id=' + encodeURIComponent(id))
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (data) {
+            if (!data) { card.style.display = 'none'; return; }
+            var parts = [];
+            if (data.title) parts.push('<strong>' + data.title + '</strong>');
+            if (data.authors) parts.push(data.authors);
+            if (data.year) parts.push(data.year);
+            if (data.url) parts.push('<a href="' + data.url + '" target="_blank" rel="noopener">' + data.url + '</a>');
+            card.innerHTML = parts.join(' · ');
+          })
+          .catch(function () { card.style.display = 'none'; });
+      });
+      el.addEventListener('mouseleave', function () {
+        citationTimer = setTimeout(function () { if (citationCard) citationCard.style.display = 'none'; }, 200);
+      });
     });
   }
 
@@ -1327,6 +1384,7 @@
     initAnchorShare();
     initReadingMode();
     initCitationHoverCards();
+    initCitationMarkerCards();
     initMobileBottomBar();
     initReadingProgress();
     initClaimRail();
