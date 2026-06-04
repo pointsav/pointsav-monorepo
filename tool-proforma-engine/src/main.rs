@@ -75,6 +75,14 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// PCLP 1 V2 — Self-generating proforma with 2026-06-04 operator corrections
+    /// (advisory fee on gross equity; Y7 capex bug fix; IC = EBITDA/NetInterest +
+    /// Key Ratios table; facility fee at commitment). No Excel.
+    Pclp1V2 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
 }
 
 fn write_output(content: &str, out: Option<&PathBuf>) {
@@ -230,6 +238,18 @@ fn main() {
             write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_PCLP1_V1.html")));
             write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_PCLP1_V1.json")));
             eprintln!("wrote 3 files to {}", out_dir.display());
+        }
+        Some(Command::Pclp1V2 { out_dir }) => {
+            // PCLP 1 V2 — engine self-generating proforma with 2026-06-04 operator
+            // corrections. Same module path as V1; engine is now V2 internally.
+            // Outputs at V2 versioning to preserve V1 audit trail.
+            let proforma_html = report::pclp1_proforma::render_proforma();
+            let summary_html = report::pclp1_proforma::render_summary();
+            let json_dump = report::pclp1_proforma::render_json();
+            write_output(&proforma_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_PCLP1_V2.html")));
+            write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_PCLP1_V2.html")));
+            write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_PCLP1_V2.json")));
+            eprintln!("wrote 3 V2 files to {}", out_dir.display());
         }
         None => {
             // Legacy: JSON assumptions → sensitivity engine

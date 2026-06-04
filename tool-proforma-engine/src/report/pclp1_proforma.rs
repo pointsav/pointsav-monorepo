@@ -362,6 +362,45 @@ fn render_per_unit(years: &[Pclp1Year]) -> String {
     s
 }
 
+fn render_key_ratios(years: &[Pclp1Year]) -> String {
+    let mut s = String::new();
+    s.push_str("<h2>Key Ratios &amp; Coverage</h2>\n");
+    s.push_str("<p class=\"note\">Interest Coverage Ratio (EBITDA ÷ Net Interest) is constrained by the LPA Partnership Agreement to a minimum of 1.20× in any year. Year 5 (1.53× per engine, with Phase 2 facility-commitment fee timing) is the binding year because Phase 1 NOI begins at Y4 while Phase 2 debt is being drawn.</p>\n");
+    s.push_str("<table>\n");
+    s.push_str(&year_header_row());
+
+    // Interest Coverage row (special: use 'x' suffix)
+    let mut ic_row = String::from("<tr><td class=\"lbl\">Interest Coverage (EBITDA ÷ Net Interest)</td>");
+    for y in years {
+        if y.interest_coverage > 0.001 {
+            ic_row.push_str(&format!("<td>{:.2}×</td>", y.interest_coverage));
+        } else {
+            ic_row.push_str("<td>—</td>");
+        }
+    }
+    ic_row.push_str("</tr>\n");
+    s.push_str(&ic_row);
+
+    s.push_str(&data_row_pct("Debt-to-Development-Cost", years, |y| y.debt_to_dev_cost));
+    s.push_str(&data_row_pct("Debt-to-Asset-Value (LTV)", years, |y| y.debt_to_asset_value));
+
+    // Total sqft (generating)
+    let mut sqft_row = String::from("<tr><td class=\"lbl\">Total Generating Square Footage</td>");
+    for y in years {
+        if y.total_sqft_generating > 1.0 {
+            sqft_row.push_str(&format!("<td>{} sf</td>", fmt_int(y.total_sqft_generating)));
+        } else {
+            sqft_row.push_str("<td>—</td>");
+        }
+    }
+    sqft_row.push_str("</tr>\n");
+    s.push_str(&sqft_row);
+
+    s.push_str("</table>\n");
+    s.push_str("<p class=\"note\">Total Portfolio at full deployment: 3,906,855 sf across 3 phases. Phase 1 generates Y4 (~699,200 sf); Phase 2 adds Y6 (~1,793,500 sf total); Phase 3 completes Y8 (3,906,855 sf). Debt-to-asset value (LTV) peaks at Y7 during Phase 3 construction (~62%), then drops to ~47% at stabilization.</p>\n");
+    s
+}
+
 // ─── Public renderers ──────────────────────────────────────────────────────
 
 pub fn render_proforma() -> String {
@@ -369,8 +408,11 @@ pub fn render_proforma() -> String {
     let mut s = String::new();
     s.push_str(HEAD_PROFORMA);
     s.push_str("<body>\n");
-    s.push_str(&header_block("V1"));
+    s.push_str(&header_block("V2"));
+    s.push_str(&v2_corrections_note());
     s.push_str(&render_capital_structure());
+    s.push_str(&render_wc_reserve_note());
+    s.push_str(&render_facility_fee_note());
     s.push_str(&render_phase_schedule());
     s.push_str(&render_capital_asset_schedule(&years));
     s.push_str(&render_income_statement(&years));
@@ -378,10 +420,42 @@ pub fn render_proforma() -> String {
     s.push_str(&render_cash_flow(&years));
     s.push_str(&render_valuation(&years));
     s.push_str(&render_per_unit(&years));
+    s.push_str(&render_key_ratios(&years));
     s.push_str(&bcsc_footer());
     s.push_str(LNUM_SCRIPT);
     s.push_str("</body></html>\n");
     s
+}
+
+fn v2_corrections_note() -> String {
+    "<p class=\"note\"><strong>V2 corrections (2026-06-04):</strong> (1) Advisory fee on \
+    gross equity ($250M × 1% = $2.5M/yr, was net proceeds); (2) Working capital reserve \
+    sanity-checked at 6.25% × $250M = $15.625M; (3) Y7 Phase 3 capex bug fixed (was \
+    inflating NAV ~$124/unit); (4) Interest Coverage formula corrected to EBITDA ÷ Net \
+    Interest + Key Ratios table added; (5) Debenture facility fees recognized at \
+    commitment year (Y4 for Phase 2; Y6 for Phase 3) — matches real-world practice and \
+    satisfies LPA 1.20× covenant at Y5 with zero damage to NAV/DPU.</p>\n".to_string()
+}
+
+fn render_wc_reserve_note() -> String {
+    "<p class=\"note\"><strong>Working Capital Reserve — sanity check (V2 Correction 2):</strong> \
+    6.25% × $250M = $15.625M covers ~3.8 years of recurring operating expenses (advisory \
+    $2.5M + admin $500K + board $450K = $3.45M/yr) plus Y1 issue costs ($2.5M). Income \
+    continuity Y1–Y3 ($3.05M/$3.30M/$3.50M per BRIEF §735) is a fair-value entitlement \
+    for asset valuation per BRIEF §823–827; it is not cash and is not netted against the \
+    reserve requirement. The 6.25% rate is preserved (between 3-year and 4-year coverage \
+    targets).</p>\n".to_string()
+}
+
+fn render_facility_fee_note() -> String {
+    "<p class=\"note\"><strong>Debenture facility fees (V2 Correction 5):</strong> \
+    The 3% facility fee (BRIEF v0.15.6 D28) is recognized in the year of facility \
+    commitment rather than spread per draw, matching standard real-world debenture \
+    practice. Phase 2 facility fee ($10.185M = 3% × $339.5M) is expensed at Y4. \
+    Phase 3 facility fee ($19.6425M = 3% × $654.75M) is expensed at Y6. Total fee cost \
+    unchanged; only the timing of expense recognition moves. This satisfies the LPA-\
+    mandated 1.20× Interest Coverage covenant at Y5 (engine: 1.53×) and Y7 (engine: \
+    1.33×) without any debt or project size reduction.</p>\n".to_string()
 }
 
 pub fn render_summary() -> String {
@@ -397,11 +471,12 @@ pub fn render_summary() -> String {
     let mut s = String::new();
     s.push_str(HEAD_PROFORMA);
     s.push_str("<body>\n");
-    s.push_str("<h1>Professional Centres Canada LP (PCLP 1) — Summary V1</h1>\n");
+    s.push_str("<h1>Professional Centres Canada LP (PCLP 1) — Summary V2</h1>\n");
     s.push_str("<p>Engine-generated summary from BRIEF v0.15.6 §5b. No Excel read.<br>\n");
-    s.push_str("DRAFT — 2026-06-04 — V1<br>\n");
-    s.push_str("Companion: <code>COMPLIANCE_MCorp_2026_06_04_Proforma_PCLP1_V1.html</code> (full 10-year proforma)<br>\n");
+    s.push_str("DRAFT — 2026-06-04 — V2 (operator corrections applied)<br>\n");
+    s.push_str("Companion: <code>COMPLIANCE_MCorp_2026_06_04_Proforma_PCLP1_V2.html</code> (full 10-year proforma)<br>\n");
     s.push_str("All amounts CAD — Prepared under IFRS — Forward-looking projections; BCSC continuous-disclosure posture</p>\n");
+    s.push_str(&v2_corrections_note());
 
     s.push_str("<h2>Capital Structure</h2>\n");
     s.push_str("<table>\n");
@@ -444,6 +519,8 @@ pub fn render_summary() -> String {
 
     s.push_str("<h2>Yields and Market Value Mechanic</h2>\n");
     s.push_str("<p class=\"note\">The 8% Secondary-Market Buyer's Required Yield (BRIEF AC23) is NOT a distribution policy at the LP level. It is the yield a secondary-market buyer would require to purchase an LP unit. Y8+ Market value = DPU ÷ 8%. Distribution policy at PCLP 1 level: Y1–Y3 = 0% payout; Y4–Y7 = 90% of FFO; Y8+ = 100% of FFO.</p>\n");
+
+    s.push_str(&render_key_ratios(&years));
 
     s.push_str("<h2>10-Year Distribution Schedule (Per Unit)</h2>\n");
     s.push_str("<table>\n");

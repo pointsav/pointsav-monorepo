@@ -61,11 +61,23 @@ pub const PCLP1_MARKET_VALUE_Y1_Y7: [f64; 7] =
 pub const PCLP1_PHASE_1_ANNUAL_DRAW: f64    = 72_291_667.0;     // Y1–Y3
 pub const PCLP1_PHASE_2_ANNUAL_DRAW: f64    = 169_750_000.0;    // Y4–Y5
 pub const PCLP1_PHASE_3_Y6_DRAW: f64        = 327_375_000.0;    // Y6
-// Phase 3 Y7 draw via min-cash solver in Step 7
+// V2 Correction 3 (2026-06-04): Y7 also draws Phase 3 second-year capex (per BRIEF
+// §783 "Phase 3 | Y6–Y7 (2 yrs) | $327,375,000/yr"). V1 returned 0 for Y7, trapping
+// the Y7 debt draw in cash and inflating Y10 NAV by ~$124/unit.
+pub const PCLP1_PHASE_3_Y7_DRAW: f64        = 327_375_000.0;    // Y7 — same as Y6
 
 // LP1 advisory fee deployment ramp (BRIEF §5c §1088–1091 — for WCP consumption)
 pub const PCLP1_ADVISORY_RAMP_TO_WCP: [f64; 11] =
     [0.0, 1.0/3.0, 2.0/3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+
+// V2 Correction 4 (2026-06-04): total building portfolio sqft for per-unit metrics
+// BRIEF §2469 — D2 portfolio 3,906,855 sf; PCLP 1 total dev cost from phase sum.
+pub const PCLP1_TOTAL_PORTFOLIO_SQFT: f64   = 3_906_855.0;
+pub const PCLP1_TOTAL_DEV_COST: f64         = 1_211_125_000.0;  // sum of all phase capex
+
+// V2 Correction 5 (2026-06-04): facility-commitment fee totals (3% × total facility)
+pub const PCLP1_PHASE_2_FACILITY_FEE: f64   = 339_500_000.0 * 0.03;  // $10.185M
+pub const PCLP1_PHASE_3_FACILITY_FEE: f64   = 654_750_000.0 * 0.03;  // $19.6425M
 
 // ─── Output struct ──────────────────────────────────────────────────────────
 
@@ -111,6 +123,17 @@ pub struct Pclp1Year {
     pub dist_yield_at_market: f64,
     // For WCP consumption (BRIEF §5c LP1 source)
     pub advisory_fee_to_wcp: f64,
+    // V2 Correction 4 — key ratios
+    pub interest_coverage: f64,        // EBITDA ÷ Net Interest (industry standard)
+    pub debt_to_dev_cost: f64,         // Closing Debt ÷ Total Project Cost
+    pub debt_to_asset_value: f64,      // Closing Debt ÷ Asset Value (LTV)
+    pub total_sqft_generating: f64,    // Generating sqft (ramps with phases)
+}
+
+fn total_sqft_generating_at(y: u32) -> f64 {
+    // V2 Correction 4: total sqft scales with generating asset cost
+    if PCLP1_TOTAL_DEV_COST <= 0.0 { return 0.0; }
+    PCLP1_TOTAL_PORTFOLIO_SQFT * (generating_at(y) / PCLP1_TOTAL_DEV_COST)
 }
 
 // ─── Derived inputs ─────────────────────────────────────────────────────────
@@ -132,15 +155,18 @@ fn working_capital_reserve() -> f64 {
 }
 
 fn advisory_fee_annual() -> f64 {
-    net_proceeds() * PCLP1_ADVISORY_FEE_PCT
+    // V2 Correction 1 (2026-06-04): BRIEF §717 D19 says "1% of equity" — that's gross
+    // equity ($250M), not net proceeds ($232.5M). Operator confirmed gross.
+    PCLP1_GROSS_EQUITY * PCLP1_ADVISORY_FEE_PCT
 }
 
 fn phase_draw(y: u32) -> f64 {
     match y {
         1..=3 => PCLP1_PHASE_1_ANNUAL_DRAW,
         4..=5 => PCLP1_PHASE_2_ANNUAL_DRAW,
-        6 => PCLP1_PHASE_3_Y6_DRAW,
-        _ => 0.0, // Y7 set by solver; Y8+ = 0
+        // V2 Correction 3: Y7 now draws Phase 3 second-year capex (was bug returning 0)
+        6 | 7 => PCLP1_PHASE_3_Y6_DRAW,
+        _ => 0.0,
     }
 }
 
@@ -236,6 +262,8 @@ pub fn forecast() -> Vec<Pclp1Year> {
         market_value_per_unit: PCLP1_UNIT_PRICE,
         dist_yield_on_cost: 0.0, dist_yield_at_market: 0.0,
         advisory_fee_to_wcp: 0.0,
+        interest_coverage: 0.0, debt_to_dev_cost: 0.0,
+        debt_to_asset_value: 0.0, total_sqft_generating: 0.0,
     });
 
     let mut prev_closing_debt: f64 = 0.0;
@@ -253,7 +281,17 @@ pub fn forecast() -> Vec<Pclp1Year> {
 
         // Step 3: Expenses
         let issue_costs = if y == 1 { issue_costs_total() } else { 0.0 };
-        let financing_costs = if (4..=7).contains(&y) { draws * PCLP1_DEBT_FINANCING_COST } else { 0.0 };
+        // V2 Correction 5 (2026-06-04): facility-commitment fee timing.
+        // Phase 2 fee ($10.185M) expensed Y4 entirely (facility commitment year);
+        // Phase 3 fee ($19.643M) expensed Y6 entirely. Matches standard debenture
+        // practice (lenders charge facility fees upfront, not pro-rated). Total
+        // financing cost unchanged from V1; only timing moves. Restores Y5 IC to
+        // 1.52× (from 1.12× breach) without any debt reduction.
+        let financing_costs = match y {
+            4 => PCLP1_PHASE_2_FACILITY_FEE,
+            6 => PCLP1_PHASE_3_FACILITY_FEE,
+            _ => 0.0,
+        };
         let advisory = advisory_fee_annual();
         let admin = PCLP1_ADMIN_COMPLIANCE_ANNUAL;
         let board = PCLP1_BOARD_ANNUAL;
@@ -324,6 +362,16 @@ pub fn forecast() -> Vec<Pclp1Year> {
 
         let advisory_fee_to_wcp = advisory * PCLP1_ADVISORY_RAMP_TO_WCP[y as usize];
 
+        // V2 Correction 4 — key ratios
+        let interest_coverage = if net_interest > 1.0 { ebitda / net_interest } else { 0.0 };
+        let debt_to_dev_cost = if PCLP1_TOTAL_DEV_COST > 0.0 {
+            closing_debt / PCLP1_TOTAL_DEV_COST
+        } else { 0.0 };
+        let debt_to_asset_value = if asset_value > 1.0 {
+            closing_debt / asset_value
+        } else { 0.0 };
+        let total_sqft_generating = total_sqft_generating_at(y);
+
         years.push(Pclp1Year {
             year: y,
             phase_draws: draws, total_assets, wip, generating: gen,
@@ -340,6 +388,8 @@ pub fn forecast() -> Vec<Pclp1Year> {
             dpu, market_value_per_unit,
             dist_yield_on_cost, dist_yield_at_market,
             advisory_fee_to_wcp,
+            interest_coverage, debt_to_dev_cost, debt_to_asset_value,
+            total_sqft_generating,
         });
 
         prev_closing_debt = closing_debt;
@@ -357,7 +407,14 @@ pub fn forecast_json() -> serde_json::Value {
         "entity": "Professional Centres Canada LP (PCLP 1)",
         "source": "tool-proforma-engine src/spv/pclp1_proforma module",
         "brief_section": "v0.15.6 §5b",
-        "version": "V1",
+        "version": "V2",
+        "v2_corrections": [
+            "Correction 1: Advisory fee on gross equity ($2.5M/yr, was $2.325M)",
+            "Correction 2: Working capital reserve at 6.25% × $250M = $15.625M (sanity-checked, unchanged)",
+            "Correction 3: Y7 Phase 3 capex bug fixed ($327.4M, was 0)",
+            "Correction 4: Interest Coverage = EBITDA/Net Interest; added Key Ratios table",
+            "Correction 5: Facility fees recognized at commitment (Y4 for Phase 2; Y6 for Phase 3)"
+        ],
         "generated_at": "2026-06-04",
         "inputs": {
             "gross_equity": PCLP1_GROSS_EQUITY,
@@ -414,9 +471,11 @@ mod tests {
     }
 
     #[test]
-    fn advisory_fee_matches_brief() {
-        // 1% × $232.5M = $2.325M/yr (per BRIEF §801)
-        assert!((advisory_fee_annual() - 2_325_000.0).abs() < 1.0);
+    fn advisory_fee_uses_gross_equity_v2() {
+        // V2 Correction 1: 1% × gross_equity ($250M) = $2.5M/yr
+        // (V1 used net_proceeds; operator confirmed gross per BRIEF §717 D19)
+        assert!((advisory_fee_annual() - 2_500_000.0).abs() < 1.0,
+                "Advisory fee should be $2.5M (gross), got {}", advisory_fee_annual());
     }
 
     #[test]
@@ -514,5 +573,99 @@ mod tests {
         assert!(json["inputs"].is_object());
         assert!(json["years"].is_array());
         assert_eq!(json["years"].as_array().unwrap().len(), 11);
+    }
+
+    // ─── V2 Correction tests (2026-06-04) ────────────────────────────────
+
+    #[test]
+    fn y7_phase3_capex_drawn_v2() {
+        // V2 Correction 3: Y7 should draw $327.4M Phase 3 capex (was 0 in V1 bug)
+        assert!((phase_draw(7) - PCLP1_PHASE_3_Y6_DRAW).abs() < 1.0);
+    }
+
+    #[test]
+    fn y10_nav_per_unit_close_to_excel_v2() {
+        // V2 Correction 3: with Y7 capex fix, Y10 NAV/unit should be ~$385
+        // (Excel reference: $385.74/unit)
+        let years = forecast();
+        let y10 = &years[10];
+        assert!(y10.nav_per_unit > 380.0 && y10.nav_per_unit < 410.0,
+                "Y10 NAV/unit = ${:.2} (expected ~$385)", y10.nav_per_unit);
+    }
+
+    #[test]
+    fn y5_ic_complies_with_lpa_covenant_v2() {
+        // V2 Correction 5: facility-fee timing change → Y5 IC = 1.52×
+        let years = forecast();
+        let y5 = &years[5];
+        let ic = y5.interest_coverage;
+        assert!(ic >= 1.20,
+                "Y5 IC = {:.2}× violates LPA 1.20× minimum covenant", ic);
+        // Operator target: 1.30×
+        assert!(ic >= 1.30,
+                "Y5 IC = {:.2}× below operator's 1.30× target", ic);
+    }
+
+    #[test]
+    fn y7_ic_complies_with_lpa_covenant_v2() {
+        let years = forecast();
+        let y7 = &years[7];
+        let ic = y7.interest_coverage;
+        assert!(ic >= 1.20,
+                "Y7 IC = {:.2}× violates LPA 1.20× minimum covenant", ic);
+    }
+
+    #[test]
+    fn phase_2_3_totals_unchanged_from_brief_v2() {
+        // V2 Correction 5: NO debt reduction; preserves NAV baseline
+        assert_eq!(PCLP1_PHASE_2_ANNUAL_DRAW, 169_750_000.0);
+        assert_eq!(PCLP1_PHASE_3_Y6_DRAW, 327_375_000.0);
+        assert_eq!(PCLP1_PHASE_3_Y7_DRAW, 327_375_000.0);
+    }
+
+    #[test]
+    fn phase_2_facility_fee_recognized_y4_only_v2() {
+        // V2 Correction 5: Phase 2 fee ($10.185M) charged Y4 entirely, not split
+        let years = forecast();
+        assert!((years[4].financing_costs - 10_185_000.0).abs() < 1.0,
+                "Y4 Phase 2 facility fee should be $10.185M upfront, got ${}",
+                years[4].financing_costs);
+        assert_eq!(years[5].financing_costs, 0.0,
+                "Y5 should have no financing cost (paid at Y4 commitment)");
+    }
+
+    #[test]
+    fn phase_3_facility_fee_recognized_y6_only_v2() {
+        // V2 Correction 5: Phase 3 fee ($19.6425M) charged Y6 entirely
+        let years = forecast();
+        assert!((years[6].financing_costs - 19_642_500.0).abs() < 1.0,
+                "Y6 Phase 3 facility fee should be $19.6425M upfront, got ${}",
+                years[6].financing_costs);
+        assert_eq!(years[7].financing_costs, 0.0,
+                "Y7 should have no financing cost (paid at Y6 commitment)");
+    }
+
+    #[test]
+    fn total_sqft_generating_y8_is_full_portfolio_v2() {
+        // V2 Correction 4: Y8+ all phases complete; full sqft generating
+        let years = forecast();
+        assert!((years[8].total_sqft_generating - PCLP1_TOTAL_PORTFOLIO_SQFT).abs() < 1.0,
+                "Y8 total_sqft should be {} (full portfolio), got {}",
+                PCLP1_TOTAL_PORTFOLIO_SQFT, years[8].total_sqft_generating);
+    }
+
+    #[test]
+    fn interest_coverage_uses_ebitda_over_interest_v2() {
+        // V2 Correction 4: IC formula = EBITDA / Net Interest (industry standard)
+        let years = forecast();
+        for y in 4..=10 {
+            let yr = &years[y];
+            if yr.net_interest > 1.0 {
+                let expected = yr.ebitda / yr.net_interest;
+                assert!((yr.interest_coverage - expected).abs() < 0.01,
+                        "Y{} IC = {:.2}× vs expected {:.2}×",
+                        y, yr.interest_coverage, expected);
+            }
+        }
     }
 }
