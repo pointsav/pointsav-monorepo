@@ -17,6 +17,7 @@ pub mod apprenticeship;
 pub mod audit_proxy;
 pub mod brief_cache;
 pub mod citations;
+pub mod cost_ledger;
 pub mod error;
 pub mod grammar_validation;
 pub mod graph;
