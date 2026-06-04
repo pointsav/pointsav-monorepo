@@ -126,6 +126,11 @@ Country chain additions (still in effect):
 ---
 
 ## Pending Command Session
+
+- [ ] Provision DNS A-record + nginx vhost for documentation.pointsav.com (Q3 confirmed 2026-06-04) [2026-06-04 totebox@claude-code]
+- [ ] Stage 6 promotion: promote night-build + auth-removal commits to canonical [2026-06-04 totebox@claude-code]
+- [ ] Route DESIGN-TOKEN-CHANGE-knowledge-platform-theming.draft.md to project-design for master_cosign [2026-06-04 totebox@claude-code]
+
 ## Font / zoom fix — 2026-06-02
 
 - [x] **"50% zoom" on all devices fixed** — root causes: (1) `font-size: 14px` base (vs web standard 16px), (2) `font-size: 11px` nav text unusually small, (3) `.doc { margin: 0 56px }` inside `max-width:1440px` means on monitors wider than ~2000px the white content card occupies ~50% of screen width. Fix: 14px→16px base, 11px nav→13px, 11px tabs→12px, wide-screen @media rules added. Applied to both deployed bundles 2026-06-02. [2026-06-02 totebox@claude-code]
