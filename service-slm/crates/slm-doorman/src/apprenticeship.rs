@@ -56,7 +56,12 @@ pub struct ApprenticeshipConfig {
     /// `pointsav` per `apprenticeship-substrate.md` §8.
     pub tenant: String,
     /// When `true`, shadow briefs route to Tier A regardless of size.
-    /// Mirrors `DoormanConfig::tier_a_first`. Set via `SLM_TIER_A_FIRST=true`.
+    /// Controlled by two env vars OR'd together:
+    ///   `SLM_TIER_A_FIRST=true`   — global Tier-A-first policy, OR
+    ///   `SLM_APPRENTICESHIP_TIER_A_ONLY` — defaults to `true`; set to `false`
+    ///     only when the operator explicitly wants shadow briefs on Tier B.
+    /// The default-true guard prevents git-commit briefs from auto-escalating
+    /// to Cloud Run and accruing GPU charges without operator intent.
     pub tier_a_first: bool,
 }
 
@@ -81,9 +86,16 @@ impl ApprenticeshipConfig {
         let doctrine_version =
             std::env::var("FOUNDRY_DOCTRINE_VERSION").unwrap_or_else(|_| "0.0.13".to_string());
         let tenant = std::env::var("FOUNDRY_TENANT").unwrap_or_else(|_| "pointsav".to_string());
-        let tier_a_first = std::env::var("SLM_TIER_A_FIRST")
+        let tier_a_first_global = std::env::var("SLM_TIER_A_FIRST")
             .map(|v| matches!(v.trim(), "true" | "1"))
             .unwrap_or(false);
+        // Default true: shadow briefs stay on Tier A unless the operator
+        // explicitly opts in. Prevents git-commit diffs from auto-escalating
+        // to Cloud Run (GPU) and accruing charges without operator intent.
+        let apprenticeship_tier_a_only = std::env::var("SLM_APPRENTICESHIP_TIER_A_ONLY")
+            .map(|v| !matches!(v.trim(), "false" | "0"))
+            .unwrap_or(true);
+        let tier_a_first = tier_a_first_global || apprenticeship_tier_a_only;
         Self {
             foundry_root,
             citations_path,
