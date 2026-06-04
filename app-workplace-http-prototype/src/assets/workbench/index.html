@@ -2545,6 +2545,19 @@ async function loadChildren(item, childrenEl, depth) {
   }
 }
 
+// ── Expanded-dir persistence ──────────────────────────────────────────────────
+function persistExpandedDirs(browsePath, expanded) {
+  let dirs;
+  try { dirs = JSON.parse(localStorage.getItem('wb-expanded-dirs') || '[]'); } catch(e) { dirs = []; }
+  if (expanded) {
+    if (!dirs.includes(browsePath)) dirs.push(browsePath);
+  } else {
+    dirs = dirs.filter(d => !d.startsWith(browsePath));
+  }
+  if (dirs.length > 100) dirs = dirs.slice(-100);
+  localStorage.setItem('wb-expanded-dirs', JSON.stringify(dirs));
+}
+
 // ── Wire click behaviour ──────────────────────────────────────────────────────
 function wireItem(item, childrenEl, depth) {
   item.addEventListener('click', async (e) => {
@@ -2556,6 +2569,7 @@ function wireItem(item, childrenEl, depth) {
     }
     const isOpen = item.classList.toggle('open');
     childrenEl.classList.toggle('collapsed', !isOpen);
+    if (item.dataset.browse) persistExpandedDirs(item.dataset.browse, isOpen);
     if (isOpen) await loadChildren(item, childrenEl, depth);
   });
   attachContextMenu(item);
@@ -3889,6 +3903,27 @@ async function scrollToActiveFile(path) {
   if (fileEl) fileEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+async function restoreExpandedDirs() {
+  let dirs;
+  try { dirs = JSON.parse(localStorage.getItem('wb-expanded-dirs') || '[]'); } catch(e) { return; }
+  if (!dirs.length) return;
+  dirs.sort((a, b) => a.split('/').length - b.split('/').length);
+  for (const dirPath of dirs) {
+    const dirItem = [...document.querySelectorAll('[data-browse]')]
+      .find(el => el.dataset.browse === dirPath);
+    if (!dirItem) continue;
+    if (!dirItem.classList.contains('open')) {
+      dirItem.classList.add('open');
+      const childrenEl = dirItem.nextElementSibling;
+      if (childrenEl) {
+        childrenEl.classList.remove('collapsed');
+        const depth = dirPath.split('/').filter(Boolean).length;
+        try { await loadChildren(dirItem, childrenEl, depth); } catch(e) {}
+      }
+    }
+  }
+}
+
 (async function restoreTabs() {
   let saved = [];
   try { saved = JSON.parse(localStorage.getItem('wb-tabs') || '[]'); } catch(e) {}
@@ -3898,6 +3933,7 @@ async function scrollToActiveFile(path) {
     const p = localStorage.getItem('wb-path');
     const n = localStorage.getItem('wb-name');
     if (p) await openFile(p, n || p.split('/').pop());
+    await restoreExpandedDirs();
     return;
   }
   for (const t of saved) {
@@ -3907,7 +3943,8 @@ async function scrollToActiveFile(path) {
     try { await switchTab(activeIdx); } catch(e) {}
   }
   const activeTab = tabs[activeTabIdx];
-  if (activeTab?.path) scrollToActiveFile(activeTab.path);
+  if (activeTab?.path) await scrollToActiveFile(activeTab.path);
+  await restoreExpandedDirs();
 })();
 
 // ── iframe → editor click navigation ─────────────────────────────────────────
