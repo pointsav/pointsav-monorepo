@@ -1,6 +1,12 @@
 ---
 artifact: brief
 schema: foundry-brief-v1
+status: archived
+archived_date: 2026-06-04
+contamination_note: >-
+  Correct home archive is project-data. Landed in project-intelligence via
+  Stage-6 rebase contamination 2026-05-22. Moved to archive; content intact
+  for project-data to verify presence in correct location.
 name: BRIEF-location-intelligence-archetypes-2026-06-01
 language_protocol: CODE-RESEARCH
 status: active

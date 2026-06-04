@@ -1,6 +1,8 @@
 ---
 artifact: brief
-status: active
+status: archived
+archived_date: 2026-06-04
+superseded_by: BRIEF-project-intelligence-master.md
 redistribution_note: >-
   Previously contamination-flagged (landed in project-data via Stage-6 rebase 2026-05-22).
   Now confirmed correct location: clones/project-intelligence/.agent/briefs/archive/.

@@ -1,6 +1,11 @@
 ---
 artifact: brief
-status: absorbed
+status: archived
+archived_date: 2026-06-04
+contamination_note: >-
+  Correct home archive is project-console. Landed in project-intelligence via
+  Stage-6 rebase contamination 2026-05-22. Previously absorbed by project-console
+  BRIEF. Moved to archive; content intact for project-console to verify.
 absorbed_by: BRIEF-project-console-master.md
 absorbed: 2026-05-31
 author: gemini (external audit)

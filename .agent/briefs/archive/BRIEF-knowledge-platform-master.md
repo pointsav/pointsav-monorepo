@@ -1,8 +1,13 @@
 ---
 schema: foundry-brief-v1
 artifact: brief
-status: active
-topic: app-mediakit-knowledge — knowledge platform master spec (fresh build + three live sites)
+status: archived
+archived_date: 2026-06-04
+contamination_note: >-
+  Correct home archive is project-knowledge. Landed in project-intelligence via
+  Stage-6 rebase contamination 2026-05-22. Moved to archive; content intact
+  for project-knowledge to verify presence in correct location.
+topic: app-mediakit-knowledge — knowledge platform master spec (federation + mobile-first + premium UX)
 archive: project-knowledge
 created: 2026-06-01
 updated: 2026-06-04
