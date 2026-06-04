@@ -323,6 +323,140 @@ paths:
                 items:
                   type: object
 
+  /api/search:
+    get:
+      tags: [phase-3]
+      summary: Full-text search API (JSON)
+      description: |
+        BM25 full-text search over the tantivy index. Returns JSON array of
+        hits with slug, title, snippet, and score. Backed by the same index
+        as `GET /search` (HTML) but returns machine-readable JSON.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query string
+          example: "sovereign data"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+          description: Maximum number of results to return
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        slug:
+                          type: string
+                        title:
+                          type: string
+                        snippet:
+                          type: string
+                        score:
+                          type: number
+                          format: float
+
+  /api/history/{slug}:
+    get:
+      tags: [phase-4]
+      summary: Article revision history (JSON)
+      description: |
+        Returns the git commit history for the given article slug. Each entry
+        includes the commit SHA, author, date, and commit message. Uses the
+        git2 repository wired at startup.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Article slug (may include category prefix)
+          example: architecture/compounding-substrate
+      responses:
+        "200":
+          description: Revision history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  slug:
+                    type: string
+                  commits:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        sha:
+                          type: string
+                        author:
+                          type: string
+                        date:
+                          type: string
+                          format: date-time
+                        message:
+                          type: string
+        "404":
+          description: Article not found
+
+  /api/links/{slug}:
+    get:
+      tags: [phase-4]
+      summary: Wikilink graph for an article (JSON)
+      description: |
+        Returns the forward and backward wikilink edges for the given article
+        slug. Backed by the redb link graph updated on every edit.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Article slug
+          example: architecture/compounding-substrate
+        - name: direction
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [forward, backward, both]
+            default: both
+          description: "Link direction: forward (articles this slug links to), backward (articles linking here), or both"
+      responses:
+        "200":
+          description: Wikilink graph edges
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  slug:
+                    type: string
+                  forward:
+                    type: array
+                    items:
+                      type: string
+                  backward:
+                    type: array
+                    items:
+                      type: string
+        "404":
+          description: Article not found
+
   /api/complete:
     get:
       tags: [phase-2]
@@ -555,12 +689,24 @@ paths:
       tags: [phase-4]
       summary: MCP JSON-RPC 2.0 endpoint
       description: |
-        Model Context Protocol server over HTTP. Requires --enable-mcp flag.
-        Implements: initialize, tools/list, tools/call, resources/list,
-        resources/read, prompts/list, prompts/get.
+        Model Context Protocol server over HTTP (JSON-RPC 2.0). Requires
+        --enable-mcp flag. Returns 404 when flag is absent.
+
+        Protocol methods:
+          initialize / initialized / notifications/initialized
+          tools/list · tools/call
+          resources/list · resources/read
+          prompts/list · prompts/get
+          query_claims (Phase 11)
+
+        Phase 7 wiki-query methods:
+          query_page    — fetch article metadata + HTML body by slug
+          search        — BM25 full-text search (params: query, limit?)
+          list_pages    — paginated article list (params: category?, status?, limit?)
+          get_links     — wikilink graph (params: slug, direction: forward|backward)
+          get_citations — citation registry lookup (params: ids: [String])
 
         Tools: create_topic, propose_edit, link_citation.
-
         Resources: wiki://topic/{slug}
         Prompts: cite-this-page, summarize-topic, draft-related-topic
       requestBody:
@@ -596,6 +742,44 @@ paths:
                     name: link_citation
                     arguments:
                       query: ni-51-102
+              query_page:
+                value:
+                  jsonrpc: "2.0"
+                  id: 4
+                  method: query_page
+                  params:
+                    slug: architecture/compounding-substrate
+              search:
+                value:
+                  jsonrpc: "2.0"
+                  id: 5
+                  method: search
+                  params:
+                    query: "sovereign data"
+                    limit: 10
+              list_pages:
+                value:
+                  jsonrpc: "2.0"
+                  id: 6
+                  method: list_pages
+                  params:
+                    category: architecture
+                    limit: 50
+              get_links:
+                value:
+                  jsonrpc: "2.0"
+                  id: 7
+                  method: get_links
+                  params:
+                    slug: architecture/compounding-substrate
+                    direction: backward
+              get_citations:
+                value:
+                  jsonrpc: "2.0"
+                  id: 8
+                  method: get_citations
+                  params:
+                    ids: ["ni-51-102", "osc-sn-51-721"]
       responses:
         "200":
           description: JSON-RPC 2.0 response

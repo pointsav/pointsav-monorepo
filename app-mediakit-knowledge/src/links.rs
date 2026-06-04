@@ -144,6 +144,34 @@ impl LinkGraph {
         Ok(())
     }
 
+    /// Returns the slugs of all articles that this slug links *to* (forward links).
+    ///
+    /// Prefix scan on the composite key `"slug\x00"` — O(outlinks-for-slug).
+    pub fn forward_links(&self, slug: &str) -> Result<Vec<String>, WikiError> {
+        let prefix = format!("{}\x00", slug);
+
+        let rtx = self
+            .db
+            .begin_read()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let table = rtx
+            .open_table(OUTLINKS)
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+
+        let results = table
+            .range(prefix.as_str()..)
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?
+            .filter_map(|r| r.ok())
+            .take_while(|(k, _)| k.value().starts_with(prefix.as_str()))
+            .filter_map(|(k, _)| {
+                let key = k.value();
+                key.find('\x00').map(|pos| key[pos + 1..].to_owned())
+            })
+            .collect();
+
+        Ok(results)
+    }
+
     /// Returns the slugs of all articles that contain a wikilink to `target`.
     ///
     /// Full-scan O(n) — corpus is small. Phase 7 adds a reverse-index table.
