@@ -75,6 +75,11 @@ async fn dispatch(state: &AppState, method: &str, params: &Value) -> Result<Valu
         "prompts/list" => prompts_list(),
         "prompts/get" => prompts_get(params),
         "query_claims" => query_claims(state, params),
+        "query_page" => query_page(state, params).await,
+        "search" => mcp_search(state, params).await,
+        "list_pages" => list_pages(state, params).await,
+        "get_links" => get_links(state, params).await,
+        "get_citations" => get_citations(state, params).await,
         _ => Err((-32601, format!("method not found: {method}"))),
     }
 }
@@ -364,6 +369,300 @@ fn prompts_get(params: &Value) -> Result<Value, (i32, String)> {
         }
         _ => Err((-32601, format!("unknown prompt: {name}"))),
     }
+}
+
+// ─── query_page ──────────────────────────────────────────────────────────────
+
+/// `query_page` — fetch a single article by slug.
+///
+/// params: `{ slug: String }`
+/// returns: `{ slug, title, category, status, summary, last_edited, html_body, relates_to, backlinks }`
+async fn query_page(state: &AppState, params: &Value) -> Result<Value, (i32, String)> {
+    let slug = params
+        .get("slug")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| (-32602i32, "missing param: slug".to_string()))?;
+    if slug.contains("..") {
+        return Err((-32602, "invalid slug".to_string()));
+    }
+
+    let topic_files = crate::server::collect_all_topic_files(
+        &state.content_dir,
+        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+    )
+    .await
+    .map_err(|e| (-32000i32, format!("io error: {e}")))?;
+
+    let tf = topic_files
+        .into_iter()
+        .find(|tf| tf.slug == slug)
+        .ok_or_else(|| (-32000i32, format!("page not found: {slug}")))?;
+
+    let text = tokio::fs::read_to_string(&tf.path)
+        .await
+        .map_err(|e| (-32000i32, format!("read error: {e}")))?;
+
+    let parsed = crate::render::parse_page(&text)
+        .map_err(|e| (-32000i32, format!("parse error: {e}")))?;
+
+    let title = parsed
+        .frontmatter
+        .title
+        .clone()
+        .unwrap_or_else(|| slug.to_string());
+    let category = parsed
+        .frontmatter
+        .category
+        .clone()
+        .unwrap_or_default();
+    let status = parsed
+        .frontmatter
+        .status
+        .clone()
+        .unwrap_or_else(|| "unknown".to_string());
+    let summary = crate::feeds::first_paragraph_snippet(&parsed.body_md, 300);
+    let last_edited = parsed
+        .frontmatter
+        .last_edited
+        .clone()
+        .unwrap_or_default();
+    let relates_to: Vec<String> = parsed
+        .frontmatter
+        .extra
+        .get("relates_to")
+        .and_then(|v| v.as_sequence())
+        .map(|seq| {
+            seq.iter()
+                .filter_map(|v| v.as_str())
+                .map(|s| s.to_string())
+                .collect()
+        })
+        .unwrap_or_default();
+    let extra_roots: Vec<&std::path::Path> = [
+        state.guide_dir.as_deref(),
+        state.guide_dir_2.as_deref(),
+    ]
+    .iter()
+    .flatten()
+    .copied()
+    .collect();
+    let html_body = crate::render::render_html_raw(
+        &parsed.body_md,
+        &state.content_dir,
+        &extra_roots,
+    );
+    let backlinks = state
+        .links
+        .backlinks(slug)
+        .unwrap_or_default();
+
+    Ok(json!({
+        "slug": slug,
+        "title": title,
+        "category": category,
+        "status": status,
+        "summary": summary,
+        "last_edited": last_edited,
+        "html_body": html_body,
+        "relates_to": relates_to,
+        "backlinks": backlinks,
+    }))
+}
+
+// ─── search ──────────────────────────────────────────────────────────────────
+
+/// `search` — full-text BM25 search over the wiki index.
+///
+/// params: `{ query: String, limit?: usize }`
+/// returns: `{ results: [{ slug, title, category, lede, score }] }`
+async fn mcp_search(state: &AppState, params: &Value) -> Result<Value, (i32, String)> {
+    let query = params
+        .get("query")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| (-32602i32, "missing param: query".to_string()))?;
+    let limit = params
+        .get("limit")
+        .and_then(|v| v.as_u64())
+        .map(|n| n as usize)
+        .unwrap_or(10);
+
+    let hits = crate::search::search(&state.search, query, limit)
+        .map_err(|e| (-32000i32, format!("search error: {e}")))?;
+
+    let results: Vec<Value> = hits
+        .into_iter()
+        .map(|h| {
+            json!({
+                "slug":  h.slug,
+                "title": h.title,
+                "lede":  h.snippet,
+                "score": h.score,
+            })
+        })
+        .collect();
+
+    Ok(json!({ "results": results }))
+}
+
+// ─── list_pages ───────────────────────────────────────────────────────────────
+
+/// `list_pages` — enumerate articles with optional category / status filter.
+///
+/// params: `{ category?: String, status?: String, limit?: usize }`
+/// returns: `{ articles: [{ slug, title, category, status, last_edited }] }`
+async fn list_pages(state: &AppState, params: &Value) -> Result<Value, (i32, String)> {
+    let filter_category = params
+        .get("category")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_lowercase());
+    let filter_status = params
+        .get("status")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_lowercase());
+    let limit = params
+        .get("limit")
+        .and_then(|v| v.as_u64())
+        .map(|n| n as usize)
+        .unwrap_or(100);
+
+    let topic_files = crate::server::collect_all_topic_files(
+        &state.content_dir,
+        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+    )
+    .await
+    .map_err(|e| (-32000i32, format!("io error: {e}")))?;
+
+    let mut articles = Vec::new();
+    for tf in topic_files {
+        if articles.len() >= limit {
+            break;
+        }
+        let text = match tokio::fs::read_to_string(&tf.path).await {
+            Ok(t) => t,
+            Err(_) => continue,
+        };
+        let parsed = match crate::render::parse_page(&text) {
+            Ok(p) => p,
+            Err(_) => continue,
+        };
+        let category = parsed
+            .frontmatter
+            .category
+            .clone()
+            .unwrap_or_default();
+        let status = parsed
+            .frontmatter
+            .status
+            .clone()
+            .unwrap_or_else(|| "unknown".to_string());
+
+        if let Some(ref fc) = filter_category {
+            if !category.to_lowercase().contains(fc.as_str()) {
+                continue;
+            }
+        }
+        if let Some(ref fs) = filter_status {
+            if status.to_lowercase() != fs.as_str() {
+                continue;
+            }
+        }
+        let title = parsed
+            .frontmatter
+            .title
+            .clone()
+            .unwrap_or_else(|| tf.slug.clone());
+        let last_edited = parsed
+            .frontmatter
+            .last_edited
+            .clone()
+            .unwrap_or_default();
+        articles.push(json!({
+            "slug":       tf.slug,
+            "title":      title,
+            "category":   category,
+            "status":     status,
+            "last_edited": last_edited,
+        }));
+    }
+
+    Ok(json!({ "articles": articles }))
+}
+
+// ─── get_links ───────────────────────────────────────────────────────────────
+
+/// `get_links` — return forward or backward wikilinks for a slug.
+///
+/// params: `{ slug: String, direction: "forward" | "backward" }`
+/// returns: `{ slug, links: [String] }`
+async fn get_links(state: &AppState, params: &Value) -> Result<Value, (i32, String)> {
+    let slug = params
+        .get("slug")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| (-32602i32, "missing param: slug".to_string()))?;
+    if slug.contains("..") {
+        return Err((-32602, "invalid slug".to_string()));
+    }
+    let direction = params
+        .get("direction")
+        .and_then(|v| v.as_str())
+        .unwrap_or("backward");
+
+    let links: Vec<String> = match direction {
+        "forward" => {
+            // Forward links: read outlinks stored in the link graph for this slug.
+            // The link graph stores keys as "from\x00to" — scan the prefix.
+            state
+                .links
+                .forward_links(slug)
+                .unwrap_or_default()
+        }
+        _ => {
+            // backward (default)
+            state
+                .links
+                .backlinks(slug)
+                .unwrap_or_default()
+        }
+    };
+
+    Ok(json!({ "slug": slug, "links": links }))
+}
+
+// ─── get_citations ────────────────────────────────────────────────────────────
+
+/// `get_citations` — look up citation registry entries by ID.
+///
+/// params: `{ ids: [String] }`
+/// returns: `{ citations: [{ id, title, authors, year, url }] }`
+async fn get_citations(state: &AppState, params: &Value) -> Result<Value, (i32, String)> {
+    let ids: Vec<String> = params
+        .get("ids")
+        .and_then(|v| v.as_array())
+        .ok_or_else(|| (-32602i32, "missing param: ids (array)".to_string()))?
+        .iter()
+        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+        .collect();
+
+    let registry = crate::citations::load_registry(&state.citations_yaml)
+        .await
+        .map_err(|e| (-32000i32, format!("citations error: {e}")))?;
+
+    let id_set: std::collections::HashSet<&str> = ids.iter().map(|s| s.as_str()).collect();
+    let citations: Vec<Value> = registry
+        .iter()
+        .filter(|c| id_set.contains(c.id.as_str()))
+        .map(|c| {
+            json!({
+                "id":      c.id,
+                "title":   c.title,
+                "url":     c.url,
+                "publisher": c.publisher,
+                "year":    c.extra.get("year").and_then(|v| v.as_str()),
+            })
+        })
+        .collect();
+
+    Ok(json!({ "citations": citations }))
 }
 
 // ─── query_claims ────────────────────────────────────────────────────────────
