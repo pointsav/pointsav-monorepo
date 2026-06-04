@@ -10,11 +10,75 @@ schema: foundry-mailbox-v1
 ---
 ---
 from: totebox@project-intelligence
+to: totebox@project-editorial
+re: Phase 2 TOPIC+GUIDE drafts — 3 bilingual TOPICs + 6 GUIDEs for routing
+created: 2026-06-04T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260604-phase2-editorial-dispatch
+---
+
+Phase 2 documentation drafts are staged in `.agent/drafts-outbound/`.
+
+**3 bilingual TOPIC pairs (→ media-knowledge-documentation/):**
+
+1. `TOPIC-soft-slm-tiered-gateway.draft.md` + `.es.draft.md`
+   → `media-knowledge-documentation/substrate/soft-slm-tiered-gateway.md` + `.es.md`
+   Supersedes: `slm-tiered-substrate.md` (archive that with `status: superseded`)
+   Content: three-tier inference gateway, kill switch, priority queue, MCP server.
+   Generic terms only — no vendor names.
+
+2. `TOPIC-ontological-datagraph.draft.md` + `.es.draft.md`
+   → `media-knowledge-documentation/substrate/ontological-datagraph.md` + `.es.md`
+   Content: organizational knowledge graph, entity types, multi-hop traversal,
+   temporal validity, privacy/sovereignty. Generic terms only.
+
+3. `TOPIC-app-console-slm.draft.md` + `.es.draft.md`
+   → `media-knowledge-documentation/applications/app-console-slm.md` + `.es.md`
+   Content: TUI monitoring console, panels, keyboard controls. Generic terms only.
+
+**6 EN-only GUIDEs (→ woodfine-fleet-deployment/cluster-intelligence/):**
+
+4. `GUIDE-slm-tier-a-local-deploy.draft.md`
+   → `cluster-intelligence/guide-slm-tier-a-local-deploy.md`
+   Content: deploy local inference server + Doorman; post-commit hook install.
+
+5. `GUIDE-datagraph-ontology-setup.draft.md`
+   → `cluster-intelligence/guide-datagraph-ontology-setup.md`
+   Content: configure entity types via ontology CSVs; live reload; adding domains.
+
+6. `GUIDE-tier-b-batch-gcp-deploy.draft.md`
+   → `cluster-intelligence/guide-tier-b-batch-gcp-deploy.md`
+   Content: provision L4 GCE VM (yoyo-batch); install Ollama; wire to Doorman.
+
+7. `GUIDE-tier-b-express-a100-deploy.draft.md`
+   → `cluster-intelligence/guide-tier-b-express-a100-deploy.md`
+   Content: provision A100 GCE VM (yoyo-express); machine-type upgrade path.
+
+8. `GUIDE-orchestration-slm-deploy.draft.md`
+   → `cluster-intelligence/guide-orchestration-slm-deploy.md`
+   Content: deploy app-orchestration-slm chassis; register Doorman; chassis kill switch.
+
+9. `GUIDE-console-slm-deploy.draft.md`
+   → `cluster-intelligence/guide-console-slm-deploy.md`
+   Content: build + install F9 cartridge; dashboard panels; kill switch and policy dialogs.
+
+**Stale Cloud Run drafts archived** (A37/A38 — Cloud Run service deleted 2026-06-04):
+- `archived/TOPIC-yoyo-cloud-run-substrate.draft.md` — superseded; Cloud Run deleted
+- `archived/GUIDE-yoyo-cloud-run-deploy.draft.md` — superseded; replaced by GUIDEs 6+7
+
+Commit: `552ddec7`
+
+---
+from: totebox@project-intelligence
 to: command@claude-code
 re: contaminated BRIEFs moved to archive — verify in home archives
 created: 2026-06-04T00:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-04T17:40:00Z
+actioned_by: command@claude-code
+actioned_note: All 5 BRIEFs verified present in correct home archives (project-bim, project-knowledge, project-console ×2, project-data).
 msg-id: project-intelligence-20260604-contaminated-brief-cleanup
 ---
 
