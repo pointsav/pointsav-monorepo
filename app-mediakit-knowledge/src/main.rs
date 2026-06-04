@@ -1,4 +1,9 @@
-//! Wiki engine binary entry.
+//! Wiki engine binary entry — Phase 1 modular refactor.
+//!
+//! Preferred startup path: set `WIKI_KNOWLEDGE_TOML` to a `knowledge.toml`
+//! instance file (see `config.rs` and §15 of the master BRIEF). Legacy path:
+//! set individual `WIKI_CONTENT_DIR`, `WIKI_BIND`, etc. env vars — these
+//! are synthesized into the same internal shape and continue to work unchanged.
 //!
 //! See ARCHITECTURE.md for the build-phase plan.
 
@@ -26,16 +31,23 @@ struct Cli {
 enum Command {
     /// Run the wiki engine HTTP server.
     Serve {
-        /// Path to the directory holding Markdown content.
-        #[arg(long, env = "WIKI_CONTENT_DIR")]
-        content_dir: PathBuf,
+        /// Path to a knowledge.toml instance configuration file.
+        /// When set, overrides all WIKI_* env vars except WIKI_ENABLE_MCP
+        /// and WIKI_ADMIN_USERNAME / WIKI_ADMIN_PASSWORD_HASH.
+        /// Set via env: WIKI_KNOWLEDGE_TOML=/etc/local-knowledge/documentation.toml
+        #[arg(long, env = "WIKI_KNOWLEDGE_TOML")]
+        knowledge_toml: Option<PathBuf>,
 
-        /// Address to bind. Defaults to loopback.
+        /// Path to the directory holding Markdown content (legacy).
+        /// Ignored when --knowledge-toml is set.
+        #[arg(long, env = "WIKI_CONTENT_DIR")]
+        content_dir: Option<PathBuf>,
+
+        /// Address to bind (legacy). Ignored when --knowledge-toml is set.
         #[arg(long, env = "WIKI_BIND", default_value = "127.0.0.1:9090")]
         bind: SocketAddr,
 
-        /// Path to the Foundry citation registry YAML file.
-        /// Exposed via GET /api/citations for SAA editor autocomplete.
+        /// Path to the Foundry citation registry YAML file (legacy).
         #[arg(
             long,
             env = "WIKI_CITATIONS_YAML",
@@ -43,9 +55,7 @@ enum Command {
         )]
         citations_yaml: PathBuf,
 
-        /// Path to the persistent state directory (search index, future KV).
-        /// Per Track D `guide-provision-node.md`, the canonical production
-        /// location is `/var/lib/local-knowledge/state`.
+        /// Path to the persistent state directory (legacy).
         #[arg(
             long,
             env = "WIKI_STATE_DIR",
@@ -53,21 +63,15 @@ enum Command {
         )]
         state_dir: PathBuf,
 
-        /// Optional extra directory of GUIDE-* Markdown files (e.g. a
-        /// fleet-deployment repo). When set, the engine walks this directory
-        /// alongside `content_dir` and serves files at `/wiki/<slug>` URLs,
-        /// appearing in categories on the home page just like TOPICs.
+        /// Optional extra guide directory (legacy).
         #[arg(long, env = "WIKI_GUIDE_DIR")]
         guide_dir: Option<PathBuf>,
 
-        /// Optional second guide directory (e.g. woodfine-fleet-deployment). When
-        /// set, the engine walks this alongside `guide_dir` and `content_dir`.
+        /// Optional second guide directory (legacy).
         #[arg(long, env = "WIKI_GUIDE_DIR_2")]
         guide_dir_2: Option<PathBuf>,
 
-        /// Display name shown in the browser tab, site header, and home-page
-        /// H1 fallback. Allows the same binary to serve multiple wiki
-        /// instances with different branding.
+        /// Display name shown in the browser tab and site header (legacy).
         #[arg(
             long,
             env = "WIKI_SITE_TITLE",
@@ -75,38 +79,29 @@ enum Command {
         )]
         site_title: String,
 
-        /// Phase 4 Step 4.7: tenant name for the read-only git remote.
-        /// Served at /git-server/{tenant}/...
+        /// Tenant name for the read-only git remote.
         #[arg(long, env = "WIKI_GIT_TENANT", default_value = "pointsav")]
         git_tenant: String,
 
-        /// Phase 4 Step 4.6: enable the MCP JSON-RPC 2.0 endpoint at
-        /// `POST /mcp`. Default off — the route is absent when unset.
+        /// Enable the MCP JSON-RPC 2.0 endpoint at POST /mcp.
         #[arg(long, env = "WIKI_ENABLE_MCP")]
         enable_mcp: bool,
 
-        /// Phase 5: admin username for initial seed. When set alongside
-        /// WIKI_ADMIN_PASSWORD_HASH and the users table is empty, creates
-        /// the first admin account automatically on startup.
+        /// Admin username for initial seed (Phase 5).
         #[arg(long, env = "WIKI_ADMIN_USERNAME")]
         admin_username: Option<String>,
 
-        /// Phase 5: pre-hashed argon2id password for the initial admin seed.
-        /// Generate with: `echo -n "password" | argon2 salt -id -e`
-        /// or via the argon2 crate's own CLI.
+        /// Pre-hashed argon2id password for the initial admin seed (Phase 5).
         #[arg(long, env = "WIKI_ADMIN_PASSWORD_HASH")]
         admin_password_hash: Option<String>,
 
-        /// Optional brand theme selector. Set to "woodfine" to activate the
-        /// BCSC forward-looking-statement disclaimer in all page footers.
+        /// Brand theme selector ("woodfine" for Woodfine instances).
         #[arg(long, env = "WIKI_BRAND_THEME")]
         brand_theme: Option<String>,
     },
 
-    /// Validate content without serving: report dead `[[wikilinks]]` and
-    /// frontmatter that violates its content-type blueprint. Exits non-zero on
-    /// dead links (a CI / pre-promote gate). With `--strict`, missing required
-    /// fields also fail.
+    /// Validate content without serving: report dead wikilinks and
+    /// frontmatter violations. Exits non-zero on dead links (CI gate).
     Check {
         #[arg(long, env = "WIKI_CONTENT_DIR")]
         content_dir: PathBuf,
@@ -114,10 +109,10 @@ enum Command {
         guide_dir: Option<PathBuf>,
         #[arg(long, env = "WIKI_GUIDE_DIR_2")]
         guide_dir_2: Option<PathBuf>,
-        /// Directory of customer `*.yaml` blueprints (built-ins used if absent).
+        /// Directory of customer *.yaml blueprints.
         #[arg(long)]
         blueprints_dir: Option<PathBuf>,
-        /// Treat missing-required-field findings as failures too.
+        /// Treat missing-required-field findings as failures.
         #[arg(long)]
         strict: bool,
     },
@@ -134,6 +129,7 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
         Command::Serve {
+            knowledge_toml,
             content_dir,
             bind,
             citations_yaml,
@@ -147,19 +143,71 @@ async fn main() -> Result<()> {
             admin_password_hash,
             brand_theme,
         } => {
+            // Resolve effective parameters: knowledge.toml takes precedence
+            // over legacy env vars when present.
+            let (eff_content_dir, eff_bind, eff_citations, eff_state_dir,
+                 eff_guide_dir, eff_guide_dir_2, eff_site_title, eff_brand_theme) =
+                if let Some(ref toml_path) = knowledge_toml {
+                    let cfg = app_mediakit_knowledge::config::load_config(toml_path)?;
+                    let parsed_bind: SocketAddr = cfg.site.bind.parse()?;
+                    // Primary mount is the first [[mount]] with role = "primary".
+                    let primary = cfg.mounts.iter()
+                        .find(|m| m.role == "primary")
+                        .ok_or_else(|| anyhow::anyhow!("knowledge.toml: no primary mount defined"))?;
+                    // Guide mount is the first [[mount]] with role = "guide".
+                    let guide = cfg.mounts.iter()
+                        .find(|m| m.role == "guide")
+                        .map(|m| m.path.clone());
+                    let guide2 = cfg.mounts.iter()
+                        .filter(|m| m.role == "guide")
+                        .nth(1)
+                        .map(|m| m.path.clone());
+                    let brand = if cfg.site.brand == "woodfine" {
+                        Some("woodfine".to_string())
+                    } else {
+                        None
+                    };
+                    tracing::info!(
+                        toml = %toml_path.display(),
+                        title = %cfg.site.title,
+                        brand = %cfg.site.brand,
+                        mounts = cfg.mounts.len(),
+                        "loaded knowledge.toml"
+                    );
+                    (
+                        primary.path.clone(),
+                        parsed_bind,
+                        cfg.citations.path.clone(),
+                        cfg.site.state_dir.clone(),
+                        guide,
+                        guide2,
+                        cfg.site.title.clone(),
+                        brand,
+                    )
+                } else {
+                    // Legacy env-var path.
+                    let cd = content_dir.ok_or_else(|| {
+                        anyhow::anyhow!(
+                            "either --knowledge-toml or --content-dir / WIKI_CONTENT_DIR is required"
+                        )
+                    })?;
+                    (cd, bind, citations_yaml, state_dir, guide_dir, guide_dir_2,
+                     site_title, brand_theme)
+                };
+
             serve(
-                content_dir,
-                guide_dir,
-                guide_dir_2,
-                bind,
-                citations_yaml,
-                state_dir,
-                site_title,
+                eff_content_dir,
+                eff_guide_dir,
+                eff_guide_dir_2,
+                eff_bind,
+                eff_citations,
+                eff_state_dir,
+                eff_site_title,
                 git_tenant,
                 enable_mcp,
                 admin_username,
                 admin_password_hash,
-                brand_theme,
+                eff_brand_theme,
             )
             .await
         }
@@ -246,12 +294,7 @@ async fn serve(
         tracing::info!(guide_dir_2 = %gd2.display(), "guide directory 2 enabled");
     }
 
-    // Phase 0 federation: resolve the content mount set. When a `knowledge.toml`
-    // manifest is present in the content root it is authoritative and its guide
-    // mounts override the env guide dirs; otherwise the env config is synthesized
-    // into the same mount shape (so existing instances are unchanged). The first
-    // two guide mounts map onto the current two-guide-dir AppState; >2 await the
-    // full mount-set AppState refactor (BRIEF §11).
+    // Phase 0 federation: resolve the content mount set.
     let mounts = app_mediakit_knowledge::mounts::resolve(
         &content_dir,
         guide_dir.as_deref(),
@@ -278,15 +321,13 @@ async fn serve(
         "starting wiki engine"
     );
 
-    // Phase 3 Step 3.1+3.2 — build the search index on startup. Tree walk
-    // over content_dir; on-disk index at <state_dir>/search/.
+    // Build the search index on startup.
     tracing::info!("building search index");
     let search_index = search::build_index(&content_dir, &state_dir).await?;
     tracing::info!("search index ready");
     let search_arc = Arc::new(search_index);
 
-    // Incremental search reindex: watch content_dir for .md changes and
-    // call reindex_topic() without restarting the server.
+    // Incremental search reindex: watch content_dir for .md changes.
     {
         let (tx, mut rx) = mpsc::channel::<notify::Result<notify::Event>>(64);
         let mut watcher: RecommendedWatcher = Watcher::new(
@@ -299,7 +340,7 @@ async fn serve(
         let idx = Arc::clone(&search_arc);
         let cdir = content_dir.clone();
         tokio::spawn(async move {
-            let _w = watcher; // keep alive in this task
+            let _w = watcher;
             while let Some(event) = rx.recv().await {
                 let Ok(ev) = event else { continue };
                 let is_write = matches!(ev.kind, EventKind::Create(_) | EventKind::Modify(_));
@@ -317,8 +358,6 @@ async fn serve(
                                 }
                             }
                         }
-                        // Remove events: the slug is gone; reindex with empty
-                        // body so it is deleted from the index.
                         if is_remove {
                             let _ = search::reindex_topic(&idx, &slug, "").await;
                         }
@@ -328,7 +367,7 @@ async fn serve(
         });
     }
 
-    // Phase 4 Step 4.1: open or init git repo. Fail fast if broken.
+    // Open or init git repo.
     tracing::info!("opening git repository");
     let _ = std::process::Command::new("git")
         .args(["config", "--global", "--add", "safe.directory", "*"])
@@ -338,14 +377,14 @@ async fn serve(
 
     let glossary = app_mediakit_knowledge::glossary::load_glossary(&content_dir);
 
-    // Phase 4 Steps 4.4+4.5: open or create the redb link graph.
+    // Open or create the redb link graph.
     tracing::info!("opening link graph");
     let link_graph =
         app_mediakit_knowledge::links::LinkGraph::open_or_create(&state_dir.join("links.redb"))?;
     let link_graph = Arc::new(link_graph);
     tracing::info!("link graph ready");
 
-    // Phase 5: open SQLite DB when admin credentials are configured.
+    // Open SQLite DB when admin credentials are configured.
     let db = if admin_username.is_some() || admin_password_hash.is_some() {
         let db_path = state_dir.join("wiki.db");
         tracing::info!(path = %db_path.display(), "opening auth database");
@@ -356,7 +395,7 @@ async fn serve(
         }
         Some(std::sync::Arc::new(std::sync::Mutex::new(conn)))
     } else {
-        tracing::info!("auth not configured (WIKI_ADMIN_USERNAME not set) — running without login");
+        tracing::info!("auth not configured — running without login");
         None
     };
 
@@ -389,10 +428,7 @@ async fn serve(
     Ok(())
 }
 
-/// Derive a search slug from an absolute filesystem path relative to
-/// content_dir. Strips the content_dir prefix and the `.md` extension.
-/// Returns the path stem joined with `/` for category-scoped articles
-/// (e.g. `architecture/compounding-substrate`).
+/// Derive a search slug from an absolute filesystem path relative to content_dir.
 fn content_path_to_slug(content_dir: &FsPath, path: &FsPath) -> String {
     path.strip_prefix(content_dir)
         .ok()
