@@ -27,7 +27,7 @@
 
 use axum::{extract::State, Json};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -238,6 +238,153 @@ pub fn resolve_claim_cites(claim: &Claim, registry: &[CitationEntry]) -> ClaimCi
         }
     }
     out
+}
+
+// ─── Phase 2 — CitationRegistry: HashMap-backed lookup with hover cards ────────
+
+/// An in-memory citation registry indexed for O(1) lookup by citation ID or
+/// alias. Built from a loaded `Vec<CitationEntry>` produced by `load_registry`.
+///
+/// The `CitationRegistry` is the authoritative runtime structure for the Phase 2
+/// render pipeline. Route handlers that need per-article citation resolution
+/// should call `CitationRegistry::load()` at startup and store the result in
+/// `AppState`, or load it lazily per request from the YAML path.
+#[derive(Debug, Default, Clone)]
+pub struct CitationRegistry {
+    /// All entries ordered by ID (for deterministic serialisation).
+    pub entries: Vec<CitationEntry>,
+    /// Fast lookup: id → index into `entries`. Aliases are also indexed here.
+    index: HashMap<String, usize>,
+}
+
+impl CitationRegistry {
+    /// Load and parse a citation YAML file, building the registry.
+    ///
+    /// This is a synchronous wrapper around `load_registry` for call sites that
+    /// do not have an async context (e.g. startup code or tests). Returns an
+    /// error when the file is absent or unparseable.
+    pub fn load(path: &Path) -> Result<Self, crate::error::WikiError> {
+        let raw = std::fs::read_to_string(path).map_err(|e| {
+            crate::error::WikiError::CitationLoadFailed(format!(
+                "cannot read {}: {e}",
+                path.display()
+            ))
+        })?;
+
+        // Strip optional YAML frontmatter block (same logic as the async loader).
+        let body: &str = if let Some(rest) = raw.strip_prefix("---\n") {
+            if let Some(end) = rest.find("\n---\n") {
+                &rest[end + "\n---\n".len()..]
+            } else {
+                raw.as_str()
+            }
+        } else {
+            raw.as_str()
+        };
+
+        let file: CitationFile = serde_yaml::from_str(body).map_err(|e| {
+            crate::error::WikiError::CitationLoadFailed(format!(
+                "cannot parse {}: {e}",
+                path.display()
+            ))
+        })?;
+
+        let mut entries: Vec<CitationEntry> = file
+            .citations
+            .into_iter()
+            .map(|(id, rec)| {
+                let last_verified = rec.last_verified.map(|v| match &v {
+                    serde_yaml::Value::String(s) => s.clone(),
+                    other => serde_yaml::to_string(other)
+                        .unwrap_or_default()
+                        .trim()
+                        .to_string(),
+                });
+                CitationEntry {
+                    id,
+                    title: rec.title,
+                    url: rec.url,
+                    publisher: rec.publisher,
+                    jurisdiction: rec.jurisdiction,
+                    entry_type: rec.entry_type,
+                    evidence_class: rec.evidence_class,
+                    last_verified,
+                    aliases: rec.aliases,
+                    extra: rec.extra,
+                }
+            })
+            .collect();
+        entries.sort_by(|a, b| a.id.cmp(&b.id));
+
+        // Build index: both primary id and aliases map to the entry position.
+        let mut index = HashMap::new();
+        for (i, e) in entries.iter().enumerate() {
+            index.insert(e.id.clone(), i);
+            for alias in &e.aliases {
+                index.entry(alias.clone()).or_insert(i);
+            }
+        }
+
+        Ok(CitationRegistry { entries, index })
+    }
+
+    /// Look up a citation by ID or alias.
+    pub fn get(&self, id: &str) -> Option<&CitationEntry> {
+        self.index.get(id).and_then(|&i| self.entries.get(i))
+    }
+
+    /// Return an HTML snippet for a citation hover card.
+    ///
+    /// The card is suitable for injection into a `<span data-citation-id="…">`
+    /// tooltip via JavaScript. Returns `None` when the ID is not in the registry.
+    ///
+    /// Card structure:
+    /// ```html
+    /// <div class="citation-hover-card">
+    ///   <div class="chc-title"><a href="…">Title</a></div>
+    ///   <div class="chc-meta">Publisher · jurisdiction · last_verified</div>
+    /// </div>
+    /// ```
+    pub fn hover_card_html(&self, id: &str) -> Option<String> {
+        let e = self.get(id)?;
+        let title_link = if let Some(ref url) = e.url {
+            format!(
+                r#"<a href="{}" target="_blank" rel="noopener">{}</a>"#,
+                escape_html(url),
+                escape_html(&e.title)
+            )
+        } else {
+            escape_html(&e.title)
+        };
+        let mut meta_parts = Vec::new();
+        if let Some(ref p) = e.publisher {
+            meta_parts.push(escape_html(p));
+        }
+        if let Some(ref j) = e.jurisdiction {
+            meta_parts.push(escape_html(j));
+        }
+        if let Some(ref lv) = e.last_verified {
+            meta_parts.push(format!("verified {}", escape_html(lv)));
+        }
+        let meta = if meta_parts.is_empty() {
+            String::new()
+        } else {
+            format!(
+                r#"<div class="chc-meta">{}</div>"#,
+                meta_parts.join(" · ")
+            )
+        };
+        Some(format!(
+            r#"<div class="citation-hover-card"><div class="chc-title">{title_link}</div>{meta}</div>"#,
+        ))
+    }
+}
+
+fn escape_html(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
 }
 
 #[cfg(test)]
