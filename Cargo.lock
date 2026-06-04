@@ -297,7 +297,6 @@ name = "app-mediakit-knowledge"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "argon2",
  "atom_syndication",
  "axum 0.8.9",
  "blake3",
@@ -314,7 +313,6 @@ dependencies = [
  "notify",
  "redb",
  "regex",
- "rusqlite",
  "rust-embed",
  "serde",
  "serde_json",
@@ -330,7 +328,6 @@ dependencies = [
  "tower-http 0.6.11",
  "tracing",
  "tracing-subscriber",
- "uuid",
 ]
 
 [[package]]

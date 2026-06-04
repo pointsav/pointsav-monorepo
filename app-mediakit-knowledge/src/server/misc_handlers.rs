@@ -52,43 +52,11 @@ fn chrome(
     }
 }
 
-fn auth_nav_widget(user: Option<&User>, pending_count: i64) -> Markup {
-    html! {
-        div.auth-nav-widget {
-            @if let Some(u) = user {
-                span.auth-nav-user { (u.username) }
-                @if u.is_admin() && pending_count > 0 {
-                    a.auth-nav-pending href="/special/pending-changes" {
-                        (pending_count) " pending"
-                    }
-                }
-                form method="post" action="/special/logout" style="display:inline;" {
-                    button.nav-logout-btn type="submit" { "Log out" }
-                }
-            } @else {
-                a.auth-nav-login href="/special/login" { "Log in" }
-            }
-        }
-    }
-}
-
-async fn pending_count_for(state: &AppState, user: Option<&User>) -> i64 {
-    let Some(u) = user else {
-        return 0;
-    };
-    if !u.is_admin() {
-        return 0;
-    }
-    let Some(db) = &state.db else {
-        return 0;
-    };
-    let db = db.clone();
-    tokio::task::spawn_blocking(move || {
-        let conn = db.lock().unwrap();
-        crate::pending::count_pending(&conn).unwrap_or(0)
-    })
-    .await
-    .unwrap_or(0)
+/// Anonymous read-only chrome — auth removed (git-only contribution workflow).
+/// The two parameters are retained so the many `chrome(...)` call sites compile
+/// unchanged; both are inert. Renders nothing.
+fn auth_nav_widget(_user: Option<&User>, _pending_count: i64) -> Markup {
+    html! {}
 }
 
 #[cfg(test)]
@@ -131,7 +99,6 @@ mod tests {
                 links: crate::links::LinkGraph::for_testing(),
                 brand_theme: None,
                 brand_instance: "documentation".to_string(),
-                db: None,
             },
             dir,
             state_dir,
@@ -315,7 +282,6 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
-            db: None,
         };
         let app = router(state);
         let resp = app
@@ -391,7 +357,6 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
-            db: None,
         };
         let app = router(state);
         let resp = app
@@ -444,7 +409,6 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
-            db: None,
         };
         let app = router(state);
         let resp = app
@@ -500,7 +464,6 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
-            db: None,
         };
         let app = router(state);
         let resp = app
@@ -556,7 +519,6 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
-            db: None,
         };
         let app = router(state);
         let resp = app
@@ -614,7 +576,6 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
-            db: None,
         };
         let app = router(state);
         let resp = app
@@ -673,7 +634,6 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
-            db: None,
         };
         let app = router(state);
         let resp = app
@@ -737,7 +697,6 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
-            db: None,
         };
         let app = router(state);
         let resp = app
@@ -798,7 +757,6 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
-            db: None,
         };
         let app = router(state);
         let resp = app
@@ -861,7 +819,6 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
-            db: None,
         };
         let app = router(state);
         let resp = app
@@ -917,7 +874,6 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
-            db: None,
         };
         let app = router(state);
         let resp = app
