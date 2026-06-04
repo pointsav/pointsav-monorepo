@@ -97,6 +97,13 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// Building Portfolio V1 — Reformatted v3 D1 dev-classes (70 buildings; 4 classes).
+    /// Self-generating from locked variant config. Emits proforma + summary + JSON.
+    BuildingPortfolioV1 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
 }
 
 fn write_output(content: &str, out: Option<&PathBuf>) {
@@ -274,6 +281,17 @@ fn main() {
             write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_WCP_V1.html")));
             write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_WCP_V1.json")));
             eprintln!("wrote 3 WCP V1 files to {}", out_dir.display());
+        }
+        Some(Command::BuildingPortfolioV1 { out_dir }) => {
+            // Building Portfolio V1 — v3 D1 dev-classes reformatted with proforma +
+            // summary + JSON outputs. Self-generating from locked Rust constants.
+            let proforma_html = report::d1_dev_classes_v2::render_proforma();
+            let summary_html = report::d1_dev_classes_v2::render_summary();
+            let json_dump = report::d1_dev_classes_v2::render_json();
+            write_output(&proforma_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_BuildingPortfolio_V1.html")));
+            write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_BuildingPortfolio_V1.html")));
+            write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_BuildingPortfolio_V1.json")));
+            eprintln!("wrote 3 Building Portfolio V1 files to {}", out_dir.display());
         }
         Some(Command::BencalAllV1 { out_dir }) => {
             // Bencal SPV1, SPV2, Management V1 — engine self-generating proformas.

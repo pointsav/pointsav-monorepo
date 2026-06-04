@@ -29,7 +29,7 @@ const DEPRECIATION_YRS: f64 = 40.0;
 
 // ─── Variant + Class definitions ────────────────────────────────────────────
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize)]
 pub struct BuildingVariant {
     pub label: &'static str,
     pub distribution: &'static str,
@@ -77,7 +77,7 @@ pub struct DevClassV2 {
     pub cost_source: &'static str,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct ClassRollup {
     pub building_count: u32,
     pub class_gla: f64,
@@ -921,6 +921,115 @@ tr.subtotal td{background:#f5f7fa;font-weight:600;border-top:1px solid #aaa}
 @media print{body{margin:0;font-size:11px;max-width:none}@page{size:letter landscape;margin:1.5cm}}
 </style></head>
 "#;
+
+// ─── V1 Building Portfolio API (Phase 4 wrapper functions) ───────────────────
+
+/// Render the full Building Portfolio proforma HTML (alias for the existing
+/// detailed render with all 6 sections). Used by `building-portfolio-v1` CLI.
+pub fn render_proforma() -> String {
+    render_html()
+}
+
+/// Render a single-page investor summary HTML for the Building Portfolio.
+pub fn render_summary() -> String {
+    let portfolio_gla: f64 = ALL_CLASSES.iter().map(|c| c.class_gla()).sum();
+    let portfolio_cost: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_cost).sum();
+    let portfolio_rent: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_rent).sum();
+    let portfolio_noi: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_noi).sum();
+    let portfolio_av: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_asset_value).sum();
+    let portfolio_depr: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_depreciation).sum();
+    let total_count: u32 = ALL_CLASSES.iter().map(|c| c.building_count()).sum();
+
+    let mut s = String::new();
+    s.push_str(HEAD);
+    s.push_str("<body>\n");
+    s.push_str("<h1>WMC LP Building Portfolio — Summary V1</h1>\n");
+    s.push_str("<p>Engine-generated portfolio summary from the v3 D1 dev-classes model.<br>\n");
+    s.push_str("DRAFT — 2026-06-04 — V1<br>\n");
+    s.push_str("Companion: <code>COMPLIANCE_MCorp_2026_06_04_Proforma_BuildingPortfolio_V1.html</code> (full proforma)<br>\n");
+    s.push_str("All amounts CAD — Forward-looking projections; BCSC continuous-disclosure posture</p>\n");
+
+    s.push_str("<h2>Portfolio Rollup (10.5% Dev Yield + 6.25% Cap Rate)</h2>\n");
+    s.push_str("<table>\n");
+    s.push_str("<tr><th>Metric</th><th>Value</th></tr>\n");
+    s.push_str(&format!("<tr><td>Total buildings</td><td class=\"r\">{}</td></tr>\n", total_count));
+    s.push_str(&format!("<tr><td>Total gross leasable area</td><td class=\"r\">{} sqft</td></tr>\n", fmt_int(portfolio_gla)));
+    s.push_str(&format!("<tr><td>Total construction cost</td><td class=\"r\">{}</td></tr>\n", fmt_money_m(portfolio_cost)));
+    s.push_str(&format!("<tr><td>Calibrated annual rent</td><td class=\"r\">{}</td></tr>\n", fmt_money_m_yr(portfolio_rent)));
+    s.push_str(&format!("<tr><td>Net operating income (57%)</td><td class=\"r\">{}</td></tr>\n", fmt_money_m_yr(portfolio_noi)));
+    s.push_str(&format!("<tr class=\"total\"><td>Asset value at 6.25% cap</td><td class=\"r\">{}</td></tr>\n", fmt_money_m(portfolio_av)));
+    s.push_str(&format!("<tr><td>Annual depreciation (40-yr SL)</td><td class=\"r\">{}</td></tr>\n", fmt_money_m_yr(portfolio_depr)));
+    s.push_str("</table>\n");
+
+    s.push_str("<h2>Per-Class Distribution</h2>\n");
+    s.push_str("<table>\n");
+    s.push_str("<tr><th>Class</th><th>Buildings</th><th>GLA</th><th>Cost</th><th>Rent</th><th>NOI</th><th>Asset Value</th></tr>\n");
+    for c in ALL_CLASSES {
+        let r = c.rollup();
+        s.push_str(&format!(
+            "<tr><td>{}</td><td class=\"r\">{}</td><td class=\"r\">{} sqft</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td><td class=\"r\">{}</td></tr>\n",
+            c.label, r.building_count, fmt_int(r.class_gla),
+            fmt_money_m(r.class_cost), fmt_money_m_yr(r.class_rent),
+            fmt_money_m_yr(r.class_noi), fmt_money_m(r.class_asset_value)
+        ));
+    }
+    s.push_str("</table>\n");
+    s.push_str("<p class=\"note\">PCLP 1 (D2) and Legacy JV (D7) entities draw on this Building Portfolio model for their NOI generation. See full proforma for per-building breakdown across all 70 buildings.</p>\n");
+
+    s.push_str("<p class=\"footer\"><strong>Forward-Looking Information — BCSC NI 51-102.</strong> Engine-generated portfolio summary. Forward-looking projections; planned / intended values per BCSC continuous-disclosure posture.</p>\n");
+
+    s.push_str("</body></html>\n");
+    s
+}
+
+/// Render the engine state as JSON for programmatic reference.
+pub fn render_json() -> String {
+    let portfolio_gla: f64 = ALL_CLASSES.iter().map(|c| c.class_gla()).sum();
+    let portfolio_cost: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_cost).sum();
+    let portfolio_rent: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_rent).sum();
+    let portfolio_noi: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_noi).sum();
+    let portfolio_av: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_asset_value).sum();
+    let portfolio_depr: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_depreciation).sum();
+    let total_count: u32 = ALL_CLASSES.iter().map(|c| c.building_count()).sum();
+
+    let classes: Vec<serde_json::Value> = ALL_CLASSES.iter().map(|c| {
+        let r = c.rollup();
+        serde_json::json!({
+            "label": c.label,
+            "cost_per_sf_gla": c.cost_per_sf_gla,
+            "pairs": c.pairs,
+            "cost_source": c.cost_source,
+            "variants": c.variants,
+            "rollup": r,
+        })
+    }).collect();
+
+    let json = serde_json::json!({
+        "entity": "WMC LP Building Portfolio (D1 Development Classes)",
+        "source": "tool-proforma-engine src/report/d1_dev_classes_v2 module",
+        "brief_section": "v0.15.6 §5a + v3 model (2026-06-03)",
+        "version": "V1",
+        "generated_at": "2026-06-04",
+        "model_constants": {
+            "target_dev_yield": TARGET_DEV_YIELD,
+            "target_cap_rate": TARGET_CAP_RATE,
+            "opex_rate": OPEX_RATE,
+            "depreciation_yrs": DEPRECIATION_YRS,
+        },
+        "portfolio_rollup": {
+            "total_buildings": total_count,
+            "total_gla_sqft": portfolio_gla,
+            "total_construction_cost": portfolio_cost,
+            "calibrated_annual_rent": portfolio_rent,
+            "net_operating_income": portfolio_noi,
+            "asset_value_at_cap_rate": portfolio_av,
+            "annual_depreciation_40yr_sl": portfolio_depr,
+        },
+        "classes": classes,
+        "note": "Per-building breakdown (all 70 buildings) appears in the full proforma HTML; available via render_proforma()."
+    });
+    serde_json::to_string_pretty(&json).expect("Building Portfolio JSON serialization failed")
+}
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
