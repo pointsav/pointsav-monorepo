@@ -5,7 +5,39 @@ location: ~/Foundry/clones/project-knowledge/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Outbox — project-knowledge
+# Outbox — project-intelligence Totebox
+
+---
+---
+from: totebox@project-intelligence
+to: command@claude-code
+re: contaminated BRIEFs moved to archive — verify in home archives
+created: 2026-06-04T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260604-contaminated-brief-cleanup
+---
+
+BRIEF consolidation complete. Five BRIEFs that landed in project-intelligence via
+Stage-6 rebase contamination (2026-05-22) have been moved to
+`.agent/briefs/archive/` with `contamination_note:` frontmatter.
+
+Please verify each BRIEF is present in its correct home archive:
+
+| File | Correct home |
+|---|---|
+| BRIEF-bim-website-pipeline.md | project-bim |
+| BRIEF-knowledge-platform-master.md | project-knowledge |
+| BRIEF-project-console-master.md | project-console |
+| BRIEF-comprehensive-improvement-proposal.md | project-console |
+| BRIEF-location-intelligence-archetypes-2026-06-01.md | project-data |
+
+No source-side action needed here — the files remain in archive/ for reference.
+If any of these are missing from their home archive, the home archive session
+should add them.
+
+New master BRIEF written: `.agent/briefs/BRIEF-project-intelligence-master.md`
+(22 sections; supersedes BRIEF-slm-substrate-master.md and BRIEF-yoyo-cloud-run-migration.md).
 
 ---
 from: totebox@project-knowledge
