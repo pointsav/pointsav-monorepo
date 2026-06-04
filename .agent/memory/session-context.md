@@ -1,67 +1,87 @@
-# Session Context — project-knowledge Totebox
+---
+schema: foundry-session-context-v1
+archive: project-orgcharts
+---
 
-Format spec: `~/Foundry/conventions/session-context-format.md`.
-Keep only the 5 most recent entries; push oldest to `session-context-archive.md`.
+# Session context — rolling 3-session summary
 
 ---
 
-## Operator preference digest
-
-- Auto mode preferred: batch all in-scope work, minimal interruptions, shut down clean.
-- "Keep going" = proceed with all remaining in-scope items without pausing.
-- NEXT.md scope: Totebox-executable items only; cross-archive items route to outbox immediately.
-- Stale toggle lock: if `.toggle.lock` held by dead PID, operator must remove manually (`rm -f`); agent cannot self-authorize `FOUNDRY_CONFIRM_DESTRUCTIVE=1`.
-
----
-
-## Cross-archive carry-forward
-
-- [ ] Command: promote archive ops commits (tip `a2e79f9e`) + promote sub-clone `/health` fix (`69095f85`) + binary rebuild + redeploy to 9090/9093/9095.
-- [ ] project-jennifer: MCP tasks blocked on jennifer:jennifer filesystem ownership.
-- [ ] project-console: manifest contamination — needs project-console Totebox.
-- [ ] project-bim: woodfine-bim-library Stage 6 — needs Command.
-- [ ] project-intelligence: residual commit fix — needs project-intelligence Totebox.
-- [ ] Phase E: TOKEN-CHANGE cosign propagation to editorial copy — Command-scope.
-
----
-
-## Rolling entries (newest first)
-
-### 2026-06-12 | totebox | claude-code | continuation after context compaction
+## 2026-06-04 | Totebox | claude-code (startup sweep — contamination cleanup)
 
 **Done this session:**
-- Added `/health` alias to `server/mod.rs` (1-line route — reuses `healthz` handler); 129 tests pass; committed `69095f85` (sub-clone).
-- Stripped project-data contamination from NEXT.md (lines 1–92 were project-data content); inbox message `command-20260613-app-mediakit-knowledge-nightly-smoke-tes` marked actioned; committed `f7295cf8` (archive).
-- Updated BRIEF tip hashes, session log, gate status — committed `a2e79f9e` (archive).
-- Stage 6 READY sent to Command for sub-clone `69095f85` (msg-id: `command-20260613-stage-6-ready-project-knowledge-sub-clon`).
+- Startup sweep: confirmed role (Totebox), wrote session lock, read manifest (contaminated —
+  project-marketing), read NOTAM (clear), read inbox.
+- **Inbox ACK'd:** Command message `command-20260603-ack-3-design-drafts-committed-green-toke`
+  — 3 DESIGN drafts committed + promoted to `pointsav-design-system` (commits 0e6f37e /
+  aca9646 / 252a035); `--wf-green` updated to `#198038` (IBM Carbon Green 70); green drift
+  fully resolved. Archived to inbox-archive.md.
+- **Mailbox headers corrected:** inbox.md, outbox.md, inbox-archive.md — all were
+  contaminated with project-marketing / project-intelligence owner headers. Committed `f3e20162`.
+- **Identity files restored:** CLAUDE.md (from git a721bf19), .agent/manifest.md (from git
+  34178889), session-start.md (rewritten), NEXT.md (rewritten), session-context.md
+  (rewritten), .agent/briefs/README.md (rewritten). 6 contaminated top-level BRIEFs
+  archived to .agent/briefs/archive/. Single commit this session.
+- Stage 6 pending for f3e20162 + identity restoration commit. Command Session to promote.
 
 **Pending / carry-forward:**
-- Command: promote archive ops + `/health` sub-clone commit → rebuild binary → redeploy 9090/9093/9095.
-- All other carry-forward: cross-archive; routed to outbox.
+- Stage 6 (two commits)
+- Bencal naming conflict: BPC vs BCL — operator decision needed
+- Customer leg + Wiki leg pending (see NEXT.md)
+- archive-2026-06-01/ disposition
 
-**Operator preferences surfaced:** none new.
+**Operator preferences surfaced:** N/A (startup-only session).
 
 ---
 
-### 2026-06-12 | totebox | claude-code | close-out
+## 2026-06-01 | Totebox | claude-code (Bencal JW2/JW3 chart audit + DESIGN drafts)
 
 **Done this session:**
-- Phase 0 gate verified: 689 articles / 0 dead links / 0 missing fields (exit 0). Dead link fixed by project-editorial.
-- Stage 6 confirmed: origin/main advanced to `9a1326df`.
-- Archive ops commits (4e2ddf95 → 76671ddd) committed; Stage 6 READY sent (msg-id: `command-20260612-stage-6-ready-project-knowledge-archive-`).
-- BRIEF Phase 0 → Complete 2026-06-12; completion test all three conditions DONE.
+- Moved all working files from `current-org-chart-html/` to `inputs/current-org-chart-html/`
+  (commit `7867b88d`) — single canonical location established.
+- Produced 3 DESIGN drafts from Bencal JW2/JW3 chart audit (commit `b1154623`):
+  1. `DESIGN-TOKEN-CHANGE`: `--wf-teal` + `--wf-red` custom properties (token-teal-red draft;
+     Master co-sign pending at time of staging)
+  2. `DESIGN-RESEARCH`: Bencal chart green value drift decision record
+  3. `DESIGN-COMPONENT`: `org-chart-node-pill` teal + grey modifier variants
+  All 3 dispatched to project-design via outbox.
+- Noted green drift issue: Bencal WCP charts use `#198038` but canonical `--wf-green` was
+  `#54924E`. Decision deferred to operator (resolved 2026-06-03 — see entry above).
+- JW3 marketing memo (pure IR overview) written and placed in `inputs/current-org-chart-html/`.
+- Bencal naming conflict surfaced: JW2 "Bencal Private Capital Inc." (BPC) vs JW3
+  "Bencal Corporation" (BCL) — unresolved, operator action needed.
+
+**Pending / carry-forward (all resolved by 2026-06-04):**
+- DESIGN drafts: all 3 committed + promoted ✓
+- Green token decision: resolved ✓
+- Inbox/outbox contamination: fixed this startup ✓
+
+**Operator preferences surfaced:** Prefers compliance doc (JW3) as source of truth for
+corporate names. Comfortable with staged multi-session workflows.
+
+---
+
+## 2026-05-22–23 | Totebox | claude-code (chart token coverage investigation)
+
+**Done this session:**
+- Investigated chart token coverage across design-system layers.
+- Confirmed `token-chart-semantic.yaml` + chart component CSS (nodes, connectors, panels,
+  governance, tiers, matrix, venn) already committed in `pointsav-design-system` sub-clone
+  at commit `ebdd101` (v0.2.0, 2026-05-21).
+- Identified that `tokens/charts/` does not yet exist in vendor canonical — Stage 6 pending.
+- Investigated `design.pointsav.com` pipeline: served by `app-privategit-design` reading from
+  `dtcg-vault/` (DTCG JSON format), separate from the YAML-canonical layer.
+- Wrote two outbox messages: (1) to `totebox@project-design` requesting DTCG conversion +
+  dtcg-vault component entries; (2) to `command@claude-code` requesting outbox sweep + Stage 6.
+- Command Session actioned both on 2026-05-22 (commit `537f15e`): project-design message
+  relayed; Stage 6 marked in-progress.
 
 **Pending / carry-forward:**
-- Command: promote archive ops + binary rebuild + redeploy.
+- `--gold` CSS variant in `nodes.css` has no entity-role in `token-chart-semantic.yaml` —
+  needs Master co-sign decision before DTCG entry.
+- 87 unstaged modified files in `pointsav-design-system` sub-clone working tree flagged to
+  Command Session — root cause unknown; may be drift from canonical.
 
----
-
-### 2026-06-12 | totebox | claude-code
-
-**Done this session:**
-- Phase 0 gate commit `9a1326df`: `scripts/stage6-gate.sh` wired; `wikilink-unresolved` span removed (L18 complete); cross-mount resolution confirmed.
-- Gate reported 1 dead link; fix sent to project-editorial.
-- Pre-promote code-fix items closed (Doorman stubs, navigation portlet test — both already implemented).
-- BRIEF §2 updated; L21/L25/M8 marked done.
-
-**Pending:** project-editorial content fix (1 dead link → fixed in follow-on session).
+**Operator preferences surfaced:** Asks direct questions about token coverage and pipeline
+state; prefers concise answers with clear statement of what exists vs. what is still needed;
+comfortable with session-layer explanations (Command vs. Totebox).
