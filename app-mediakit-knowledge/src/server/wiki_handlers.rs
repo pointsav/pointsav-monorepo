@@ -749,7 +749,7 @@ fn wiki_chrome(
                     button.mobile-bar-btn #mobile-bar-toc aria-label="Contents" { "Contents" }
                     button.mobile-bar-btn #mobile-bar-share aria-label="Share" { "Share" }
                     a.mobile-bar-btn.tab-edit
-                        href={ "/edit/" (slug) }
+                        href={ "/git/" (slug) }
                         aria-label="Edit this article"
                     { "Edit" }
                     a.mobile-bar-btn
@@ -776,7 +776,7 @@ fn wiki_chrome(
                             nav.wiki-page-tabs aria-label="Page tabs" {
                                 a.wiki-tab aria-current="page" href={ "/wiki/" (slug) } { "Article" }
                                 a.wiki-tab href={ "/talk/" (slug) } { "Talk" }
-                                a.wiki-tab href={ "/edit/" (slug) } { "Edit" }
+                                a.wiki-tab href={ "/git/" (slug) } { "Edit" }
                                 a.wiki-tab href={ "/history/" (slug) } { "History" }
                             }
                             @if let Some(ref cat) = fm.category {
@@ -1064,7 +1064,7 @@ fn wiki_chrome(
                 // "Edit this page" affordance — docs convention; auth-gated by CSS
                 // (hidden for `html[data-auth="anon"]`). No floating Wikipedia FAB.
                 div.doc-edit-row {
-                    a.doc-edit-link href={ "/edit/" (slug) } { "Edit this page" }
+                    a.doc-edit-link href={ "/git/" (slug) } { "Edit this page" }
                     " · "
                     a.doc-edit-link href={ "/git/" (slug) } { "View source" }
                 }
@@ -1072,11 +1072,9 @@ fn wiki_chrome(
                 (shell_footer(brand_instance, Some(slug)))
 
                 // Minimal JS: TOC collapse toggle + density preference persistence.
-                // Loaded last so HTML renders without it.
-                // NOTE: cm-saa.bundle.js (CodeMirror) is intentionally NOT included
-                // here — it is loaded only on the /edit/* route (see src/edit.rs).
-                // Loading the ~300 KB editor bundle on every article page wastes
-                // bandwidth for readers who never edit. (L25)
+                // Loaded last so HTML renders without it. No in-browser editor —
+                // contributions flow through git (the Edit tab links to the raw
+                // Markdown source at /git/{slug}).
                 script src="/static/wiki.js" defer="true" {}
                 script src="/static/toc-persistence.js" defer="true" {}
             }

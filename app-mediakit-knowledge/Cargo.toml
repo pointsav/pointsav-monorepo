@@ -60,11 +60,6 @@ regex = "1.10"
 # File-system watcher for incremental Tantivy search reindex.
 # The recommended backend on Linux is inotify (default); macos uses kqueue.
 notify = "6"
-# Phase 5: auth + edit review. argon2id password hashing; rusqlite (bundled
-# SQLite, no system dep) for users/sessions/pending edits; uuid for tokens.
-argon2 = "0.5"
-rusqlite = { version = "0.32", features = ["bundled"] }
-uuid = { version = "1", features = ["v4"] }
 # Phase 4 Steps 4.4+4.5: redb embedded key-value store for the wikilink
 # graph and blake3 content hashes. redb stores the link graph on disk at
 # <state_dir>/links.redb; blake3 provides the federation-seam baseline.
