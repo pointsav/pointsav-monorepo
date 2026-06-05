@@ -752,7 +752,7 @@ mod tests {
     fn summary_is_well_formed_html() {
         let html = render_summary();
         assert!(html.starts_with("<!DOCTYPE html>"));
-        assert!(html.contains("Summary V1"));
+        assert!(html.contains("Summary V2"));
         assert!(html.contains("Investment Return Summary"));
         assert!(html.contains("MOIC"));
         assert!(html.ends_with("</body></html>\n"));
@@ -762,7 +762,7 @@ mod tests {
     fn json_is_valid() {
         let json_str = render_json();
         let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
-        assert_eq!(parsed["version"], "V1");
+        assert_eq!(parsed["version"], "V2");
         assert!(parsed["years"].is_array());
     }
 }
