@@ -17,10 +17,10 @@ struct AppState {
 
 #[tokio::main]
 async fn main() {
-    let vault = PathBuf::from(
-        env::var("DESIGN_VAULT")
-            .unwrap_or_else(|_| "/srv/foundry/vendor/pointsav-design-system/elements/".to_string()),
-    );
+    let vault =
+        PathBuf::from(env::var("DESIGN_VAULT").unwrap_or_else(|_| {
+            "/srv/foundry/vendor/pointsav-design-system/elements/".to_string()
+        }));
     let bind = env::var("DESIGN_BIND").unwrap_or_else(|_| "127.0.0.1:9094".to_string());
 
     let elements = Arc::new(read_elements(&vault));
