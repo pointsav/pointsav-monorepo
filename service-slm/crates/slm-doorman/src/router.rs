@@ -235,7 +235,13 @@ impl Doorman {
         if self.tier_a_first {
             let yoyo_hint = req.tier_hint == Some(Tier::Yoyo);
             if yoyo_hint {
-                let label = req.yoyo_label.as_deref().unwrap_or("default");
+                let label = req.yoyo_label.as_deref()
+                    .or_else(|| {
+                        req.session_context.as_ref()
+                            .and_then(|sc| sc.archive_domain.as_deref())
+                            .filter(|domain| self.yoyo.contains_key(*domain))
+                    })
+                    .unwrap_or("default");
                 let yoyo_ready = self
                     .yoyo
                     .get(label)
@@ -412,10 +418,14 @@ impl Doorman {
                 }
             }
             Tier::External => {
+                // Strip session_context before forwarding to external Tier C.
+                // The field is internal Foundry metadata and must not leave the
+                // Totebox boundary.
+                let req_for_tier_c = ComputeRequest { session_context: None, ..req.clone() };
                 self.external
                     .as_ref()
                     .ok_or(DoormanError::TierUnavailable(Tier::External))?
-                    .complete(req)
+                    .complete(&req_for_tier_c)
                     .await
             }
         }
@@ -435,6 +445,7 @@ impl Doorman {
                 sanitised_outbound: req.sanitised_outbound,
                 completion_status: CompletionStatus::Ok,
                 error_message: None,
+                archive_name: req.session_context.as_ref().map(|sc| sc.archive_name.clone()),
             },
             Err(e) => AuditEntry {
                 entry_type: ENTRY_TYPE_CHAT_COMPLETION.to_string(),
@@ -448,6 +459,7 @@ impl Doorman {
                 sanitised_outbound: req.sanitised_outbound,
                 completion_status: classify_error(e),
                 error_message: Some(e.to_string()),
+                archive_name: req.session_context.as_ref().map(|sc| sc.archive_name.clone()),
             },
         };
         if let Err(write_err) = self.ledger.append(&entry) {
@@ -690,6 +702,7 @@ mod tests {
             graph_context_enabled: None,
             tools: None,
             stop_sequences: None,
+            session_context: None,
         }
     }
 

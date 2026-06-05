@@ -884,6 +884,7 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
         graph_context_enabled: None,
         tools: None,
         stop_sequences: None,
+        session_context: None,
     };
 
     // Call route() directly on the Doorman. The pre-validation step (PS.3
@@ -1227,6 +1228,7 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
         graph_context_enabled: None,
         tools: None,
         stop_sequences: None,
+        session_context: None,
     };
 
     let resp = doorman.route(&req).await;

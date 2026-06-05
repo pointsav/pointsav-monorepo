@@ -210,6 +210,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
                 "<|endoftext|>".to_string(),
                 "<|im_end|>".to_string(),
             ]),
+            session_context: None,
         };
 
         info!(
@@ -324,6 +325,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
                 "<|endoftext|>".to_string(),
                 "<|im_end|>".to_string(),
             ]),
+            session_context: None,
         };
 
         info!(
