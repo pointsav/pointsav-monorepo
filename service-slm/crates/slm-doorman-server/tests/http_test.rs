@@ -173,9 +173,11 @@ async fn smoke_healthz_returns_200_ok() {
     assert_eq!(&bytes[..], b"ok");
 }
 
-/// GET /readyz → 200 with JSON shape {ready, has_local, has_yoyo, has_external}.
+/// GET /readyz — no tiers configured → 503 with status:"closed" (P2-B).
+/// When all tiers are absent `ai_available` is false and the endpoint signals
+/// degraded state to clients via HTTP 503 + a structured `status`/`reason` body.
 #[tokio::test]
-async fn smoke_readyz_returns_200_with_tier_flags() {
+async fn smoke_readyz_returns_503_when_no_tiers() {
     let state = app_state_no_tiers();
     let app = router(state);
 
@@ -186,10 +188,13 @@ async fn smoke_readyz_returns_200_with_tier_flags() {
         .unwrap();
 
     let resp = app.oneshot(req).await.expect("oneshot");
-    assert_eq!(resp.status(), StatusCode::OK);
+    assert_eq!(resp.status(), StatusCode::SERVICE_UNAVAILABLE);
 
     let body = body_json(resp).await;
-    assert_eq!(body["ready"], true);
+    assert_eq!(body["ready"], false);
+    assert_eq!(body["status"], "closed");
+    assert_eq!(body["reason"], "no_tier_available");
+    assert_eq!(body["ai_available"], false);
     assert!(body["has_local"].is_boolean(), "has_local is bool");
     assert!(body["has_yoyo"].is_boolean(), "has_yoyo is bool");
     assert!(body["has_external"].is_boolean(), "has_external is bool");
@@ -197,6 +202,10 @@ async fn smoke_readyz_returns_200_with_tier_flags() {
     assert_eq!(body["has_local"], false);
     assert_eq!(body["has_yoyo"], false);
     assert_eq!(body["has_external"], false);
+    // Queue snapshot fields present (values depend on test environment).
+    assert!(body["queue_pending"].is_number(), "queue_pending is a number");
+    assert!(body["queue_done"].is_number(), "queue_done is a number");
+    assert!(body["queue_poison"].is_number(), "queue_poison is a number");
 }
 
 /// GET /v1/contract → 200 with {doorman_version, yoyo_contract_version, ...}.
