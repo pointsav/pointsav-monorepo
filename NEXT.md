@@ -3,37 +3,52 @@
 Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 
-Last updated: 2026-06-04
+Last updated: 2026-06-05
 
 ---
 
 ## Stage 6 pending
 
-- [ ] Promote mailbox startup sweep commit (`f3e20162`) + identity restoration commit
-      (this session) to canonical. Command Session runs `bin/promote.sh`.
-      [2026-06-04 totebox@claude-code]
+- [ ] Promote all project-orgcharts commits to canonical.
+      Outbox message sent to command@claude-code (2026-06-05, msg-id: project-orgcharts-20260605-stage6-3commits).
+      Command Session runs `bin/promote.sh`.
+      [2026-06-05 totebox@claude-code]
 
 ---
 
-## Bencal naming conflict — operator decision needed
+## Customer leg — awaiting Command + project-editorial
 
-- [ ] JW2 session (2026-05-31) uses "Bencal Private Capital Inc." with BPC prefix.
-      JW3 compliance doc (2026-05-31) uses "Bencal Corporation" with BCL prefix.
-      Operator to confirm canonical name before further Bencal chart commits.
-      [2026-05-31 totebox@claude-code]
+- [ ] Command Session to commit `MANIFEST.md` to `woodfine-fleet-deployment/cluster-totebox-corporate/`.
+      Outbox message sent (2026-06-05, msg-id: project-orgcharts-20260605-customer-leg-manifest).
+      [2026-06-05 totebox@claude-code]
+- [ ] project-editorial to deliver `GUIDE-orgchart-authoring.md` from drafts-outbound.
+      Draft staged: `.agent/drafts-outbound/GUIDE-orgchart-authoring.draft.md` (2026-06-05).
+      [2026-06-05 totebox@claude-code]
 
 ---
 
-## Tetrad legs pending
+## Wiki leg — milestone-gated
 
-- [ ] **Customer leg** — draft `GUIDE-orgchart-authoring.md` + `MANIFEST.md` for
-      `woodfine-fleet-deployment/cluster-totebox-corporate/`. [2026-04-26]
-- [ ] **Wiki leg** — `topic-corporate-chart-design-system.md` + `topic-pre-canon-vs-post-canon-drift.md`
+- [ ] `topic-corporate-chart-design-system.md` + `topic-pre-canon-vs-post-canon-drift.md`
       substance pending JW7+JW9 REVIEW milestones. [2026-05-01]
 
 ---
 
-## Untracked directory
+## archive-2026-06-01/ — deletion review 2026-07-01
 
-- [ ] `archive-2026-06-01/` — confirm whether to commit (with appropriate gitattributes
-      for any binary files) or add to `.gitignore`. [2026-06-04]
+- [ ] Directory gitignored (2026-06-05, commit `fe99d71b`). Contains misplaced repo
+      clones — no live references. Per README: safe to `rm -rf` after 2026-07-01.
+      [2026-06-04 totebox@claude-code]
+
+---
+
+## Resolved this session (2026-06-05)
+
+- [x] **Bencal naming conflict** — Operator confirmed: canonical is **BPC / Bencal Private Capital Inc.**
+      (2026-06-05). JW2 files already correct. No BCL files found in deployment instance
+      (grep confirmed). Decision recorded in memory + session-context. [2026-06-05 totebox@claude-code]
+- [x] **archive-2026-06-01/ gitignored** — commit `fe99d71b` (pwoodfine, 2026-06-05).
+      Deletion review 2026-07-01.
+- [x] **Stage 6 outbox sent** — commit `9c422878` (jwoodfine, 2026-06-05).
+- [x] **GUIDE-orgchart-authoring staged** — commit `fc7c720d` (pwoodfine, 2026-06-05).
+- [x] **Customer leg MANIFEST outbox sent** — commit `fc7c720d` (pwoodfine, 2026-06-05).
