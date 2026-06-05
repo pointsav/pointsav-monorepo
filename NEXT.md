@@ -10,7 +10,8 @@ Last updated: 2026-06-05
 ## Stage 6 pending
 
 - [ ] Promote all project-orgcharts commits to canonical.
-      Outbox message sent to command@claude-code (2026-06-05, msg-id: project-orgcharts-20260605-stage6-3commits).
+      Outbox message updated (2026-06-05, msg-id: project-orgcharts-20260605-stage6-registry-csv).
+      Includes: outbox commit, GUIDE draft commit, gitignore commit, and now registry CSV commit `19a7b705`.
       Command Session runs `bin/promote.sh`.
       [2026-06-05 totebox@claude-code]
 
@@ -39,6 +40,21 @@ Last updated: 2026-06-05
 - [ ] Directory gitignored (2026-06-05, commit `fe99d71b`). Contains misplaced repo
       clones — no live references. Per README: safe to `rm -rf` after 2026-07-01.
       [2026-06-04 totebox@claude-code]
+
+---
+
+## Registry CSV — follow-up items
+
+- [ ] Nodes 8, 10–14 (Ireland fund service providers: Issuer, AIFM, Depositary, Administrator,
+      Auditor, Transfer Agent): TOKEN_SHAPE left empty — these entities do not appear as t-node
+      elements in any current chart HTML. Add when a chart is created for the ETN/ICAV structure.
+- [ ] Nodes 51 (Global Management), 52 (Realty Solutions Common Shares), 53 (Holdings 1 Inc.),
+      54 (Holdings 1 LP): TOKEN_SHAPE left empty — not found in any current chart. Add when charts
+      are created for these entities.
+- [ ] `token-olive` class (management chart) — may not yet exist in `pointsav-design-system` token
+      bundle. Flag for project-design backfill.
+- [ ] Node 28 (Woodfine Management Corp.) uses `token-base` (no color) in JW9 Woodfine Group chart.
+      If a newer chart shows this entity with a color modifier, update TOKEN_SHAPE.
 
 ---
 
