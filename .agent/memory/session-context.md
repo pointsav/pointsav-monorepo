@@ -7,6 +7,35 @@ archive: project-orgcharts
 
 ---
 
+## 2026-06-05 | Totebox | claude-code (auto-mode NEXT.md cleanup pass)
+
+**Done this session:**
+- **Gitignored `archive-2026-06-01/`** — commit `fe99d71b` (pwoodfine). Directory contains
+  misplaced git repo clones (design-system + 2 media-assets); cannot be tracked. Per
+  archive README, deletion review 2026-07-01.
+- **Stage 6 outbox message sent** — commit `9c422878` (jwoodfine). 3 prior commits + this
+  session queued for Command Session promote. msg-id: project-orgcharts-20260605-stage6-3commits.
+- **Customer leg — GUIDE drafted + MANIFEST outboxed** — commit `fc7c720d` (pwoodfine).
+  `GUIDE-orgchart-authoring.draft.md` staged to drafts-outbound → project-editorial.
+  MANIFEST content sent to command via outbox; pending admin-tier commit to
+  `woodfine-fleet-deployment/cluster-totebox-corporate/MANIFEST.md`.
+- **Bencal naming resolved** — Operator confirmed BPC / "Bencal Private Capital Inc." is
+  canonical (2026-06-05). No BCL files found in deployment instance (grep confirmed).
+  Memory + NEXT.md updated.
+
+**Pending / carry-forward:**
+- Stage 6 — outbox sent; Command Session to act
+- Customer leg MANIFEST — outbox sent; Command Session to commit to woodfine-fleet-deployment
+- GUIDE-orgchart-authoring — staged to drafts-outbound; project-editorial to deliver
+- Wiki leg — milestone-gated (JW7+JW9 REVIEW)
+- archive-2026-06-01/ deletion — 2026-07-01
+
+**Operator preferences surfaced:**
+- BPC (Bencal Private Capital Inc.) confirmed as canonical Bencal name (2026-06-05).
+- Comfortable delegating housekeeping tasks to auto mode.
+
+---
+
 ## 2026-06-04 | Totebox | claude-code (startup sweep — contamination cleanup)
 
 **Done this session:**
