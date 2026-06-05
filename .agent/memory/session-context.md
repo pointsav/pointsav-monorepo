@@ -7,6 +7,37 @@ archive: project-orgcharts
 
 ---
 
+## 2026-06-05 | Totebox | claude-code (CSV TOKEN_SHAPE update pass)
+
+**Done this session:**
+- **WCP-MASTER-ENTITY-REGISTRY_V3.csv committed** — commit `19a7b705` (jwoodfine). 76 rows
+  (header + 75 data rows). Changes applied:
+  - Rows 4–59: TOKEN_SHAPE updated from ad-hoc human-readable labels to actual CSS token class
+    names (e.g. `token-base token-green`, `token-yellow`, `token-blue-ellipse-dotted`).
+    Verified by reading all 14 chart HTML files. Used highest-JW-number chart when classes conflict.
+  - Rows 70–93 (management chart): structural fix — CSS class moved from JURISDICTION column →
+    TOKEN_SHAPE; X/Y coordinates cleared from TOKEN_SHAPE and EXTRA_METADATA_LEGAL.
+  - Bottom 4 duplicate rows (NODE_IDs 17/32/33/34, chart-export artifact) removed.
+- **Nodes with empty TOKEN_SHAPE** (not found in any chart): 8, 10–14 (Ireland fund service
+  providers), 51 (Global Management), 52–54 (Holdings entities). Flagged in NEXT.md.
+- **Key class resolutions:** node 50 = `token-blue-ellipse-dotted` (not `token-blue-dashed`);
+  node 45 SPV Manager = `token-orange-solid` (JW21/JW19 win over JW11 purple); node 9 ELTIF =
+  `token-orange-ellipse-dashed`; node 31 Woodfine Buildings = `token-grey-solid` (JW21 wins).
+- **Stage 6 outbox updated** — new msg-id project-orgcharts-20260605-stage6-registry-csv.
+
+**Pending / carry-forward:**
+- Stage 6 — outbox updated (supersedes earlier message)
+- Customer leg MANIFEST — outbox still pending Command Session
+- GUIDE-orgchart-authoring — staged, project-editorial to deliver
+- Wiki leg — milestone-gated (JW7+JW9 REVIEW)
+- archive-2026-06-01/ deletion — 2026-07-01
+- TOKEN_SHAPE for 9 uncharted nodes — add when new charts created
+
+**Operator preferences surfaced:**
+- Comfortable running multi-step data tasks on auto mode.
+
+---
+
 ## 2026-06-05 | Totebox | claude-code (auto-mode NEXT.md cleanup pass)
 
 **Done this session:**

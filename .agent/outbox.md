@@ -10,6 +10,25 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-orgcharts
 to: command@claude-code
+re: Stage 6 — additional commit 19a7b705 (registry CSV)
+created: 2026-06-05T11:30:00-07:00
+priority: normal
+status: pending
+msg-id: project-orgcharts-20260605-stage6-registry-csv
+---
+
+Additional commit to include in the next Stage 6 promote run for project-orgcharts:
+
+- `19a7b705` — data(registry): add WCP-MASTER-ENTITY-REGISTRY_V3.csv with CSS token classes
+
+Please include this alongside the 3 earlier commits in msg-id project-orgcharts-20260605-stage6-3commits.
+This supersedes that earlier message — all 4 commits to be promoted together.
+
+ACK when promoted.
+
+---
+from: totebox@project-orgcharts
+to: command@claude-code
 re: Customer leg — please commit MANIFEST.md to woodfine-fleet-deployment/cluster-totebox-corporate/
 created: 2026-06-05T09:15:00-07:00
 priority: normal
