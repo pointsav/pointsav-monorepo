@@ -230,6 +230,11 @@ pub fn router(state: AppState) -> Router {
         .route("/api/complete", get(search_complete))
         // Leapfrog: Page Preview hover endpoint
         .route("/api/preview/{*slug}", get(preview_api))
+        // Doorman AI-assist endpoints — reserved, not implemented in this build.
+        // Return 501 (not 404) with a JSON envelope so clients can surface a
+        // clear "not available" message. See tests/doorman_test.rs.
+        .route("/api/doorman/complete", post(doorman_complete_stub))
+        .route("/api/doorman/instruct", post(doorman_instruct_stub))
         // Wave 5B — category listing pages
         .route("/category/{name}", get(category_page))
         // Phase 3 Step 3.2 — full-text search HTML page over the tantivy index
@@ -282,6 +287,27 @@ pub fn router(state: AppState) -> Router {
         r = r.route("/mcp", post(crate::mcp::handler));
     }
     r.with_state(Arc::new(state))
+}
+
+/// Doorman AI-assist stubs (Phase 4 reserved surface).
+///
+/// `/api/doorman/complete` and `/api/doorman/instruct` are reserved endpoints
+/// that are not implemented in this build. They return 501 Not Implemented with
+/// a JSON envelope (`phase`, `reason`) so a client can surface a clear
+/// "not available" message rather than a bare 404.
+async fn doorman_complete_stub() -> impl axum::response::IntoResponse {
+    doorman_not_implemented("Doorman completion assist is not implemented in this build")
+}
+
+async fn doorman_instruct_stub() -> impl axum::response::IntoResponse {
+    doorman_not_implemented("Doorman instruction assist is not implemented in this build")
+}
+
+fn doorman_not_implemented(reason: &str) -> impl axum::response::IntoResponse {
+    (
+        axum::http::StatusCode::NOT_IMPLEMENTED,
+        axum::Json(serde_json::json!({ "phase": 4, "reason": reason })),
+    )
 }
 
 /// D2: `GET /api/complete?q={prefix}` — title autocomplete for search box.
@@ -665,12 +691,28 @@ const RATIFIED_CATEGORIES: &[&str] = &[
 /// `primary_slug` is the URL target; `all_slugs` are summed for the article count.
 /// Categories not listed here are still accessible via /category/<slug> and search.
 const HOMEPAGE_CATEGORIES: &[(&str, &str, &[&str])] = &[
-    ("Architecture",            "architecture",  &["architecture", "patterns"]),
-    ("Substrate & Systems",     "substrate",     &["substrate", "systems"]),
-    ("Services & Applications", "services",      &["services", "applications"]),
-    ("Infrastructure",          "infrastructure",&["infrastructure"]),
-    ("Reference",               "reference",     &["reference", "governance", "design-system"]),
-    ("Archetypes",              "archetypes",    &["archetypes"]),
+    (
+        "Architecture",
+        "architecture",
+        &["architecture", "patterns"],
+    ),
+    (
+        "Substrate & Systems",
+        "substrate",
+        &["substrate", "systems"],
+    ),
+    (
+        "Services & Applications",
+        "services",
+        &["services", "applications"],
+    ),
+    ("Infrastructure", "infrastructure", &["infrastructure"]),
+    (
+        "Reference",
+        "reference",
+        &["reference", "governance", "design-system"],
+    ),
+    ("Archetypes", "archetypes", &["archetypes"]),
 ];
 
 // ─── Home-page helpers ──────────────────────────────────────────────────────
@@ -799,15 +841,12 @@ pub async fn collect_all_topic_files(
     Ok(files)
 }
 
-/// Walk `content_dir` (and optional `guide_dir`) recursively, parse every `.md`
-/// file, and group them into a `BTreeMap<category, Vec<TopicSummary>>`.
-///
-/// Descends into category subdirectories (`architecture/`, `services/`, etc.).
-/// Slugs for subdirectory TOPICs take the form `<category>/<stem>` so they
-/// resolve correctly in `/wiki/<slug>` routes.
-///
-/// Files with no `category:` frontmatter, or whose category is `root`, are
-/// bucketed under `"uncategorised"`.
+// Topic bucketing (implemented in the included handler files below): walks
+// `content_dir` (and optional `guide_dir`) recursively, parses every `.md`
+// file, and groups them into a `BTreeMap<category, Vec<TopicSummary>>`.
+// Descends into category subdirectories; subdirectory TOPIC slugs take the
+// form `<category>/<stem>`. Files with no `category:` frontmatter (or category
+// `root`) are bucketed under `"uncategorised"`.
 
 // Handler implementations split across subfiles for L20 line-count compliance.
 // Each subfile is `include!`d here rather than declared as a submodule so all

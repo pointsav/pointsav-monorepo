@@ -195,25 +195,13 @@ async fn home_renders_with_index_md_present() {
         &html[..html.len().min(500)]
     );
 
-    // All 12 ratified category names must appear in the grid (humanized: hyphens → spaces).
-    for cat in &[
-        "Architecture",
-        "Substrate",
-        "Patterns",
-        "Services",
-        "Systems",
-        "Applications",
-        "Governance",
-        "Infrastructure",
-        "Company",
-        "Reference",
-        "Help",
-        "Design System",
-    ] {
+    // The 3 consolidated areas that have content render in the browse grid.
+    // (Home page uses 6 consolidated areas, not 12 individual category names.)
+    for cat in &["Architecture", "Services &amp; Applications", "Reference"] {
         assert!(html.contains(cat), "category '{cat}' should appear in grid");
     }
 
-    // The 3 populated categories show articles, the 9 empty ones show placeholder.
+    // Populated-category article titles appear in the recently-updated section.
     assert!(
         html.contains("Arch One"),
         "architecture topic should appear"
@@ -433,14 +421,14 @@ async fn recent_feed_sorts_by_last_edited_desc() {
 
     assert_eq!(status, StatusCode::OK);
     assert!(
-        html.contains("wiki-home-recent"),
+        html.contains("mp-itn"),
         "recent feed must be present"
     );
 
     // Extract just the recent-feed section so positional assertions are clean.
-    // The recent list starts at class="wiki-home-recent".
+    // The recent list header has id="mp-itn".
     let recent_start = html
-        .find("wiki-home-recent")
+        .find("mp-itn")
         .expect("recent list must appear");
     let recent_section = &html[recent_start..];
 
@@ -524,19 +512,23 @@ async fn category_with_zero_articles_renders_placeholder() {
 
     assert_eq!(status, StatusCode::OK);
 
-    // Empty categories show "In preparation." (Wave 5C text).
+    // Populated areas render; empty areas are suppressed (no placeholder text).
+    // The fixture has 3 categories: architecture → Architecture,
+    // services → Services & Applications, governance → Reference.
     assert!(
-        html.contains("In preparation."),
-        "placeholder text must appear for empty categories: snippet={}",
+        html.contains("Architecture"),
+        "populated area Architecture must render: snippet={}",
         &html[..html.len().min(1500)]
     );
-
-    // Count occurrences — there should be exactly 9 (the 9 empty categories; 12 total, 3 populated).
-    let placeholder_count = html.matches("In preparation.").count();
-    assert_eq!(
-        placeholder_count, 9,
-        "expected 9 empty-category placeholders, got {placeholder_count}"
+    assert!(
+        html.contains("Services &amp; Applications"),
+        "populated area must render"
     );
+    assert!(html.contains("Reference"), "populated area must render");
+    // Areas with no articles are omitted — Substrate & Systems, Infrastructure,
+    // and Archetypes have no fixture content and must not appear in the grid.
+    assert!(!html.contains("Archetypes"), "empty area must not appear in grid");
+    assert!(!html.contains("Infrastructure"), "empty area must not appear in grid");
 }
 
 // ─── Test 8: substrate category buckets correctly + humanized heading ─────────

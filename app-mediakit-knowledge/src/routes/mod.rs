@@ -44,8 +44,8 @@ pub mod mcp;
 pub mod search;
 pub mod wiki;
 
-use axum::Router;
 use crate::state::AppState;
+use axum::Router;
 
 /// Assemble the full application router.
 ///
