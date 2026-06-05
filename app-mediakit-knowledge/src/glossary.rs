@@ -300,9 +300,8 @@ impl GlossaryYaml {
             let is_open_heading = tag_lower.starts_with("<h1")
                 || tag_lower.starts_with("<h2")
                 || tag_lower.starts_with("<h3");
-            let is_close_heading = tag_lower == "</h1>"
-                || tag_lower == "</h2>"
-                || tag_lower == "</h3>";
+            let is_close_heading =
+                tag_lower == "</h1>" || tag_lower == "</h2>" || tag_lower == "</h3>";
 
             if is_open_a || is_open_code || is_open_heading {
                 skip_depth += 1;

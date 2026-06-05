@@ -1798,7 +1798,6 @@ async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
         })
         .collect();
 
-
     let docs_panels: String = items
         .iter()
         .enumerate()
@@ -2039,7 +2038,11 @@ async fn key_plans_handler(State(state): State<Arc<AppState>>) -> Html<String> {
         .collect();
 
     // Read PO Key Plans from woodfine-bim-library token file directly
-    let kp_token_path = state.library_dir.join("tokens").join("bim").join("key-plans.dtcg.json");
+    let kp_token_path = state
+        .library_dir
+        .join("tokens")
+        .join("bim")
+        .join("key-plans.dtcg.json");
     let kp_token: Option<serde_json::Value> = fs::read_to_string(&kp_token_path)
         .ok()
         .and_then(|s| serde_json::from_str(&s).ok());
@@ -2054,15 +2057,15 @@ async fn key_plans_handler(State(state): State<Arc<AppState>>) -> Html<String> {
             .iter()
             .filter_map(|size| {
                 let v = po.get(size)?.get("$value")?;
-                let code     = v.get("internal_code")?.as_str()?;
-                let name     = v.get("display_name")?.as_str()?;
-                let area_m2  = v.get("area_m2")?.as_f64()?;
-                let area_sf  = v.get("area_sf")?.as_f64()?;
-                let z1       = v.get("zone1_depth_m")?.as_f64()?;
-                let z2       = v.get("zone2_depth_m")?.as_f64()?;
-                let z3       = v.get("zone3_depth_m")?.as_f64()?;
-                let fname    = format!("private-office-{}.ifc", &code[code.len()-1..]);
-                let ifc_btn  = if available.contains(&fname) {
+                let code = v.get("internal_code")?.as_str()?;
+                let name = v.get("display_name")?.as_str()?;
+                let area_m2 = v.get("area_m2")?.as_f64()?;
+                let area_sf = v.get("area_sf")?.as_f64()?;
+                let z1 = v.get("zone1_depth_m")?.as_f64()?;
+                let z2 = v.get("zone2_depth_m")?.as_f64()?;
+                let z3 = v.get("zone3_depth_m")?.as_f64()?;
+                let fname = format!("private-office-{}.ifc", &code[code.len() - 1..]);
+                let ifc_btn = if available.contains(&fname) {
                     format!(
                         "<a class=\"kp-dl-btn\" href=\"/key-plans/download/{}\">&#x2b07; IFC</a>",
                         esc(&fname)
@@ -2088,7 +2091,9 @@ async fn key_plans_handler(State(state): State<Arc<AppState>>) -> Html<String> {
                     name = esc(name),
                     area_m2 = area_m2,
                     area_sf = area_sf,
-                    z1 = z1, z2 = z2, z3 = z3,
+                    z1 = z1,
+                    z2 = z2,
+                    z3 = z3,
                     ifc_btn = ifc_btn,
                 ))
             })
@@ -2110,8 +2115,8 @@ BIM tool. Assemblies are built from the Private Office furniture blocks on the
 <div class="kp-grid">{cards}</div>
 {css}"#,
         crumbs = breadcrumbs(&[("/", "Home")]),
-        cards  = kp_cards,
-        css    = KP_CSS,
+        cards = kp_cards,
+        css = KP_CSS,
     );
 
     Html(page_shell("Key Plans", "/key-plans", &content, &state))
@@ -2425,10 +2430,19 @@ async fn main() {
         .route("/healthz", get(healthz_handler))
         .route("/readyz", get(readyz_handler))
         .route("/furniture", get(furniture_handler))
-        .route("/furniture/download/bundle.zip", get(furniture_bundle_handler))
-        .route("/furniture/download/:filename", get(furniture_download_handler))
+        .route(
+            "/furniture/download/bundle.zip",
+            get(furniture_bundle_handler),
+        )
+        .route(
+            "/furniture/download/:filename",
+            get(furniture_download_handler),
+        )
         .route("/key-plans", get(key_plans_handler))
-        .route("/key-plans/download/:filename", get(key_plans_download_handler))
+        .route(
+            "/key-plans/download/:filename",
+            get(key_plans_download_handler),
+        )
         .nest_service("/static", ServeDir::new(static_dir))
         .with_state(state);
 

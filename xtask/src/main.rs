@@ -115,7 +115,11 @@ fn check_content(paths: &[PathBuf]) -> (Vec<(String, String)>, Vec<(String, Stri
             .as_ref()
             .and_then(|m| m.get("slug").cloned())
             .unwrap_or_else(|| stem.clone());
-        articles.push(Article { report_slug, body, fields });
+        articles.push(Article {
+            report_slug,
+            body,
+            fields,
+        });
     }
 
     let mut dead_links: Vec<(String, String)> = Vec::new();
@@ -167,7 +171,10 @@ fn check_content(paths: &[PathBuf]) -> (Vec<(String, String)>, Vec<(String, Stri
 /// without a trailing `.es` language suffix. `architecture/genesis-protocol.md`
 /// and `architecture/genesis-protocol.es.md` both yield `genesis-protocol`.
 fn file_stem_slug(path: &Path) -> String {
-    let name = path.file_name().and_then(|n| n.to_str()).unwrap_or_default();
+    let name = path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or_default();
     let stem = name.strip_suffix(".md").unwrap_or(name);
     stem.strip_suffix(".es").unwrap_or(stem).to_string()
 }
@@ -176,8 +183,10 @@ fn file_stem_slug(path: &Path) -> String {
 /// wiki content. Their Markdown contains `[[slug]]`-style syntax examples that
 /// are not real wikilinks and must not be scanned.
 fn is_skipped_dir(name: &str) -> bool {
-    matches!(name, ".agent" | ".git" | ".claude" | "node_modules" | "target")
-        || name.starts_with('.')
+    matches!(
+        name,
+        ".agent" | ".git" | ".claude" | "node_modules" | "target"
+    ) || name.starts_with('.')
 }
 
 /// Recursively collect all published `.md` files under `dir`, skipping
@@ -207,7 +216,10 @@ fn collect_md_files(dir: &Path, out: &mut Vec<PathBuf>) {
 fn split_frontmatter(text: &str) -> (Option<&str>, String) {
     if let Some(rest) = text.strip_prefix("---\n") {
         if let Some(end) = rest.find("\n---\n") {
-            return (Some(&rest[..end]), rest[end + "\n---\n".len()..].to_string());
+            return (
+                Some(&rest[..end]),
+                rest[end + "\n---\n".len()..].to_string(),
+            );
         }
     }
     (None, text.to_string())
@@ -227,7 +239,11 @@ fn serde_yaml_simple_parse(yaml: &str) -> Option<BTreeMap<String, String>> {
             }
         }
     }
-    if map.is_empty() { None } else { Some(map) }
+    if map.is_empty() {
+        None
+    } else {
+        Some(map)
+    }
 }
 
 /// Blank out fenced code blocks (``` / ~~~) and inline code spans (backtick
@@ -350,7 +366,8 @@ mod tests {
     #[test]
     fn parses_display_text_wikilinks() {
         // Convention is `[[target|Display Text]]` — target before the pipe.
-        let body = "See [[sovereign-mesh|Sovereign Mesh]] and [[yoyo-compute-substrate|GPU compute]].";
+        let body =
+            "See [[sovereign-mesh|Sovereign Mesh]] and [[yoyo-compute-substrate|GPU compute]].";
         let links = parse_wikilinks(body);
         assert_eq!(links, vec!["sovereign-mesh", "yoyo-compute-substrate"]);
     }
@@ -358,7 +375,8 @@ mod tests {
     #[test]
     fn skips_wikilinks_in_code() {
         // Inline code span and fenced block must not yield wikilink targets.
-        let body = "Use `[[wikilink]]` syntax. Real: [[genesis-protocol]].\n```\n[[in-fence]]\n```\nDone.";
+        let body =
+            "Use `[[wikilink]]` syntax. Real: [[genesis-protocol]].\n```\n[[in-fence]]\n```\nDone.";
         let links = parse_wikilinks(body);
         assert_eq!(links, vec!["genesis-protocol"]);
     }
@@ -373,8 +391,14 @@ mod tests {
 
     #[test]
     fn file_stem_strips_md_and_es() {
-        assert_eq!(file_stem_slug(Path::new("a/b/genesis-protocol.md")), "genesis-protocol");
-        assert_eq!(file_stem_slug(Path::new("a/b/genesis-protocol.es.md")), "genesis-protocol");
+        assert_eq!(
+            file_stem_slug(Path::new("a/b/genesis-protocol.md")),
+            "genesis-protocol"
+        );
+        assert_eq!(
+            file_stem_slug(Path::new("a/b/genesis-protocol.es.md")),
+            "genesis-protocol"
+        );
     }
 
     #[test]
@@ -396,7 +420,10 @@ mod tests {
         .unwrap();
         let (dead, _missing, total) = check_content(&[tmp.clone()]);
         assert_eq!(total, 2);
-        assert!(dead.is_empty(), "bare + display-text links should resolve: {dead:?}");
+        assert!(
+            dead.is_empty(),
+            "bare + display-text links should resolve: {dead:?}"
+        );
         std::fs::remove_dir_all(&tmp).ok();
     }
 
@@ -416,8 +443,14 @@ mod tests {
         )
         .unwrap();
         let (dead, _missing, total) = check_content(&[tmp.clone()]);
-        assert_eq!(total, 1, "only the real article is counted, not .agent/ docs");
-        assert!(dead.is_empty(), "placeholder examples must not count: {dead:?}");
+        assert_eq!(
+            total, 1,
+            "only the real article is counted, not .agent/ docs"
+        );
+        assert!(
+            dead.is_empty(),
+            "placeholder examples must not count: {dead:?}"
+        );
         std::fs::remove_dir_all(&tmp).ok();
     }
 
@@ -444,8 +477,7 @@ mod tests {
 
     #[test]
     fn check_content_catches_dead_links() {
-        let tmp = std::env::temp_dir()
-            .join(format!("xtask-test-{}", std::process::id()));
+        let tmp = std::env::temp_dir().join(format!("xtask-test-{}", std::process::id()));
         std::fs::create_dir_all(&tmp).unwrap();
         std::fs::write(
             tmp.join("existing.md"),
@@ -467,15 +499,10 @@ mod tests {
 
     #[test]
     fn check_content_catches_missing_required_fields() {
-        let tmp = std::env::temp_dir()
-            .join(format!("xtask-miss-{}", std::process::id()));
+        let tmp = std::env::temp_dir().join(format!("xtask-miss-{}", std::process::id()));
         std::fs::create_dir_all(&tmp).unwrap();
         // Missing `slug` field.
-        std::fs::write(
-            tmp.join("bad.md"),
-            "---\ntitle: Bad Article\n---\nBody.\n",
-        )
-        .unwrap();
+        std::fs::write(tmp.join("bad.md"), "---\ntitle: Bad Article\n---\nBody.\n").unwrap();
         let (dead, missing, _) = check_content(&[tmp.clone()]);
         assert!(dead.is_empty());
         assert_eq!(missing.len(), 1);

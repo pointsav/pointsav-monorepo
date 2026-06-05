@@ -161,12 +161,10 @@ pub fn find_bilingual_pair(path: &Path) -> Option<PathBuf> {
     let name = path.file_name()?.to_str()?;
     let sibling_name = if name.ends_with(".es.md") {
         // ES → look for EN
-        name.strip_suffix(".es.md")
-            .map(|stem| format!("{stem}.md"))
+        name.strip_suffix(".es.md").map(|stem| format!("{stem}.md"))
     } else if name.ends_with(".md") {
         // EN → look for ES
-        name.strip_suffix(".md")
-            .map(|stem| format!("{stem}.es.md"))
+        name.strip_suffix(".md").map(|stem| format!("{stem}.es.md"))
     } else {
         return None;
     };

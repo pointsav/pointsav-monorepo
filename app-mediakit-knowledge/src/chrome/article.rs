@@ -10,10 +10,10 @@
 //! - Backlinks portlet ("Referenced by N articles" from redb graph stub)
 //! - Next/previous within category links (ordered by `position:`)
 
-use maud::{html, Markup, PreEscaped};
-use crate::chrome::{Locale, t};
+use crate::chrome::{t, Locale};
 use crate::mounts::Mount;
-use crate::render::{extract_headings, render_html_raw, inject_edit_pencils, Frontmatter};
+use crate::render::{extract_headings, inject_edit_pencils, render_html_raw, Frontmatter};
+use maud::{html, Markup, PreEscaped};
 
 /// Render output bundle produced by the render pipeline.
 pub struct RenderOutput {
@@ -158,6 +158,7 @@ pub fn breadcrumb(category: Option<&str>, title: &str, locale: Locale) -> Markup
 ///
 /// Read-only chrome: there is no in-browser editor. Contributions flow through
 /// git, and the Edit tab links to the raw Markdown source (`/git/{slug}`).
+#[allow(clippy::too_many_arguments)] // chrome renderer: each arg is a distinct content slot
 pub fn article_page(
     slug: &str,
     title: &str,
@@ -287,7 +288,11 @@ pub fn render_page(content: &str, meta: &Frontmatter, mounts: &[Mount]) -> Rende
 
     let _ = meta;
 
-    RenderOutput { html, toc, wikilinks }
+    RenderOutput {
+        html,
+        toc,
+        wikilinks,
+    }
 }
 
 /// Extract the set of unique wikilink target slugs from rendered HTML.

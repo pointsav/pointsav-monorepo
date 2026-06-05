@@ -369,10 +369,7 @@ impl CitationRegistry {
         let meta = if meta_parts.is_empty() {
             String::new()
         } else {
-            format!(
-                r#"<div class="chc-meta">{}</div>"#,
-                meta_parts.join(" · ")
-            )
+            format!(r#"<div class="chc-meta">{}</div>"#, meta_parts.join(" · "))
         };
         Some(format!(
             r#"<div class="citation-hover-card"><div class="chc-title">{title_link}</div>{meta}</div>"#,

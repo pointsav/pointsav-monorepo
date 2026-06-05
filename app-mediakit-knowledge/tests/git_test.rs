@@ -58,7 +58,12 @@ fn last_commit_subject(dir: &std::path::Path) -> String {
 #[tokio::test]
 async fn git_commit_on_create() {
     let (state, dir, _state_dir) = fixture_state().await;
-    commit_topic(&state, "git-create", "# Git Create Test\n", "create: git-create");
+    commit_topic(
+        &state,
+        "git-create",
+        "# Git Create Test\n",
+        "create: git-create",
+    );
     assert_eq!(last_commit_subject(dir.path()), "create: git-create");
 }
 

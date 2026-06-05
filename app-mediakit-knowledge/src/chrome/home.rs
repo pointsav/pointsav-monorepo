@@ -13,8 +13,8 @@
 //!   Two-column layout — "Due Diligence Path" (ordered 5-article sequence) +
 //!   "Browse by subject" (category links with counts).
 
+use crate::chrome::{t, Locale};
 use maud::{html, Markup};
-use crate::chrome::{Locale, t};
 
 /// A category tile for the documentation homepage grid.
 pub struct CategoryTile {

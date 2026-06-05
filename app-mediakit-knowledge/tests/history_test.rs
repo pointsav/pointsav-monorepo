@@ -50,8 +50,11 @@ fn seed_topic(state: &AppState, slug: &str, body: &str, message: &str) {
     std::fs::write(&path, body).unwrap();
     let repo = state.git.lock().unwrap();
     let _ = app_mediakit_knowledge::git::ensure_commit_identity_from_env(&repo);
-    let oid = app_mediakit_knowledge::git::commit_topic(&repo, slug, body, "", "", message).unwrap();
-    let _ = state.links.record_hash(slug, &oid.to_string(), body.as_bytes());
+    let oid =
+        app_mediakit_knowledge::git::commit_topic(&repo, slug, body, "", "", message).unwrap();
+    let _ = state
+        .links
+        .record_hash(slug, &oid.to_string(), body.as_bytes());
 }
 
 #[tokio::test]

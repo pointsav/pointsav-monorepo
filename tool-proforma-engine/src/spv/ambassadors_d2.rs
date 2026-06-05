@@ -326,8 +326,10 @@ mod tests {
         let h = derive_wcp_holding(&cfg, &wcp);
         // All years should sit at the Level 3 proxy value (constant).
         for y in 0..10 {
-            assert!((h.fair_value_by_year[y] - 2_730_000.0).abs() < 1e-3,
-                "y={y} fair value should be Level 3 proxy");
+            assert!(
+                (h.fair_value_by_year[y] - 2_730_000.0).abs() < 1e-3,
+                "y={y} fair value should be Level 3 proxy"
+            );
             assert_eq!(h.level_by_year[y], FairValueLevel::Level3Proxy);
         }
         // Stake: 600,000 / 10,000,000 = 6%
@@ -352,8 +354,10 @@ mod tests {
         // Y4+ (indices 3-9) should be Level 1 lookthrough = $10.00 × 600,000 = $6,000,000
         for y in 3..10 {
             assert_eq!(h.level_by_year[y], FairValueLevel::Level1Quoted);
-            assert!((h.fair_value_by_year[y] - 6_000_000.0).abs() < 1e-3,
-                "y={y} fair value should be Level 1 lookthrough");
+            assert!(
+                (h.fair_value_by_year[y] - 6_000_000.0).abs() < 1e-3,
+                "y={y} fair value should be Level 1 lookthrough"
+            );
         }
     }
 
