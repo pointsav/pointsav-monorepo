@@ -190,8 +190,7 @@ impl LegacyConfig {
                 .context("BIND_ADDR must be a valid socket address")?,
             site_title: std::env::var("SITE_TITLE")
                 .unwrap_or_else(|_| "PointSav Documentation".into()),
-            base_url: std::env::var("BASE_URL")
-                .unwrap_or_else(|_| "http://localhost:3000".into()),
+            base_url: std::env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:3000".into()),
         })
     }
 }
@@ -217,8 +216,7 @@ blueprint_set = ["TOPIC", "GUIDE"]
 [citations]
 path = "/srv/foundry/citations.yaml"
 "#;
-        let tmp = std::env::temp_dir()
-            .join(format!("config-test-{}", std::process::id()));
+        let tmp = std::env::temp_dir().join(format!("config-test-{}", std::process::id()));
         std::fs::create_dir_all(&tmp).unwrap();
         let p = tmp.join("knowledge.toml");
         std::fs::write(&p, toml).unwrap();
@@ -244,8 +242,7 @@ title = "Minimal"
 [[mount]]
 path = "/srv/content"
 "#;
-        let tmp = std::env::temp_dir()
-            .join(format!("config-min-{}", std::process::id()));
+        let tmp = std::env::temp_dir().join(format!("config-min-{}", std::process::id()));
         std::fs::create_dir_all(&tmp).unwrap();
         let p = tmp.join("knowledge.toml");
         std::fs::write(&p, toml).unwrap();

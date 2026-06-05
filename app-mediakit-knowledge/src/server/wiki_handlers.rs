@@ -445,12 +445,12 @@ async fn wiki_page_inner(
             format!("<aside class=\"claim-rail\" aria-label=\"Citation freshness\">{ticks}</aside>")
         }
     };
-    // Docs left-navigation, grouped by declared category (correct for all three
-    // instances). Built from the same bucketing the home page uses, cached with
-    // a short TTL so article pages stay fast.
-    let (sidenav_html, prev_article, next_article) = {
+    // Prev/next navigation within the declared category, built from the same
+    // bucketing the home page uses, cached with a short TTL so article pages
+    // stay fast. (The docs left-rail was removed in the encyclopedia-chrome
+    // pivot — Wikipedia tabs are the navigation model; BRIEF Q2.)
+    let (prev_article, next_article) = {
         let buckets = nav_buckets_cached(&state).await;
-        let sidenav = render_docs_sidenav(&buckets, &slug);
         // P3: find prev/next articles in the same category for navigation.
         let category = parsed.frontmatter.category.as_deref().unwrap_or_else(|| {
             if let Some(slash) = slug.find('/') { &slug[..slash] } else { "" }
@@ -469,7 +469,7 @@ async fn wiki_page_inner(
         } else {
             (None, None)
         };
-        (sidenav, prev, next)
+        (prev, next)
     };
     Ok(wiki_chrome(
         effective_locale,
@@ -487,7 +487,6 @@ async fn wiki_page_inner(
         q.printable,
         &body_fingerprint,
         &claim_rail_html,
-        &sidenav_html,
         prev_article.as_ref(),
         next_article.as_ref(),
     )
@@ -569,7 +568,6 @@ fn wiki_chrome(
     printable: bool,
     _body_blake3: &str,
     claim_rail_html: &str,
-    sidenav: &str,
     prev_article: Option<&TopicSummary>,
     next_article: Option<&TopicSummary>,
 ) -> Markup {
@@ -758,11 +756,9 @@ fn wiki_chrome(
                     { "History" }
                 }
 
-                // Article layout: sidenav + article body (+ optional claim-rail at ≥1280px)
+                // Article layout: article body (+ optional claim-rail at ≥1280px).
+                // No left docs sidenav — Wikipedia tabs are the navigation model (BRIEF Q2).
                 div.shell {
-
-                    // Left docs sidenav (collapses at ≤1024px via CSS)
-                    (PreEscaped(sidenav))
 
                     // --- Article body column (two-column: prose + TOC) ---
                     main.article-wrap {
