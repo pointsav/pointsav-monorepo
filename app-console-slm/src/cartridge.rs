@@ -72,6 +72,7 @@ impl SlmCartridge {
             .constraints([
                 Constraint::Length(6), // Doorman section
                 Constraint::Length(4), // Knowledge Graph section
+                Constraint::Length(5), // Brief Queue section
                 Constraint::Min(1),    // Controls hint
             ])
             .split(inner);
@@ -95,6 +96,16 @@ impl SlmCartridge {
         let graph_para = Paragraph::new(self.build_graph_lines());
         frame.render_widget(graph_para, graph_inner);
 
+        // Brief Queue section
+        let queue_block = Block::default()
+            .title(" Brief Queue ")
+            .borders(Borders::ALL);
+        let queue_inner = queue_block.inner(chunks[2]);
+        frame.render_widget(queue_block, chunks[2]);
+
+        let queue_para = Paragraph::new(self.build_queue_lines());
+        frame.render_widget(queue_para, queue_inner);
+
         // Controls hint
         let updated = self
             .last_updated
@@ -114,7 +125,7 @@ impl SlmCartridge {
                 Color::DarkGray
             }),
         );
-        frame.render_widget(hint, chunks[2]);
+        frame.render_widget(hint, chunks[3]);
     }
 
     fn build_doorman_lines(&self) -> Vec<Line<'static>> {
@@ -198,6 +209,34 @@ impl SlmCartridge {
                     ]),
                     Line::raw(format!("  Circuit:    {}", circuit)),
                     Line::raw(format!("  Active tier: {}", tier)),
+                ]
+            }
+        }
+    }
+
+    fn build_queue_lines(&self) -> Vec<Line<'static>> {
+        match &self.health {
+            None => vec![Line::raw("  —")],
+            Some(h) => {
+                let pending = h.queue_pending.unwrap_or(0);
+                let done = h.queue_done.unwrap_or(0);
+                let poison = h.queue_poison.unwrap_or(0);
+                let poison_style = if poison > 0 {
+                    if self.plain {
+                        Style::default()
+                    } else {
+                        Style::default().fg(Color::Red)
+                    }
+                } else {
+                    Style::default()
+                };
+                vec![
+                    Line::raw(format!("  Pending:  {}", pending)),
+                    Line::raw(format!("  Done:     {}", done)),
+                    Line::from(vec![
+                        Span::raw("  Poison:   "),
+                        Span::styled(poison.to_string(), poison_style),
+                    ]),
                 ]
             }
         }
