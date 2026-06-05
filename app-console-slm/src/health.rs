@@ -11,6 +11,24 @@ pub struct DoormanHealth {
     pub entity_count: Option<u64>,
     #[serde(default)]
     pub active_tier: Option<String>,
+    // P2-B: structured status fields
+    #[serde(default)]
+    pub status: String,
+    #[serde(default)]
+    pub reason: Option<String>,
+    #[serde(default)]
+    pub tier_a: bool,
+    #[serde(default)]
+    pub tier_a_reason: Option<String>,
+    #[serde(default)]
+    pub node_class: Option<String>,
+    // Sprint 5B: brief queue snapshot
+    #[serde(default)]
+    pub queue_pending: Option<u64>,
+    #[serde(default)]
+    pub queue_done: Option<u64>,
+    #[serde(default)]
+    pub queue_poison: Option<u64>,
 }
 
 pub fn fetch_readyz(endpoint: &str) -> anyhow::Result<DoormanHealth> {
@@ -19,9 +37,11 @@ pub fn fetch_readyz(endpoint: &str) -> anyhow::Result<DoormanHealth> {
         .build()?;
     let url = format!("{}/readyz", endpoint);
     let resp = client.get(&url).send()?;
-    if resp.status().is_success() {
+    let status = resp.status();
+    // Accept 200 (ok) and 503 (closed — no tier available); both return structured JSON.
+    if status.is_success() || status == reqwest::StatusCode::SERVICE_UNAVAILABLE {
         Ok(resp.json::<DoormanHealth>()?)
     } else {
-        anyhow::bail!("HTTP {}", resp.status())
+        anyhow::bail!("HTTP {}", status)
     }
 }

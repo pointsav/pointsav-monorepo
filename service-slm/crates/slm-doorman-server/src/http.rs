@@ -132,6 +132,10 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/audit/capture", post(audit_capture))
         .route("/v1/graph/query", post(graph_query))
         .route("/v1/graph/mutate", post(graph_mutate))
+        // Sprint 5A — operational status endpoints
+        .route("/v1/status/queue", get(status_queue))
+        .route("/v1/status/yoyo", get(status_yoyo))
+        .route("/v1/status/flow", get(status_flow))
         .with_state(state)
 }
 
@@ -143,18 +147,44 @@ async fn readyz(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     let has_local = state.doorman.has_local();
     let has_yoyo = state.doorman.has_yoyo();
     let has_external = state.doorman.has_external();
+    let ai_available = has_local || has_yoyo || has_external;
+
+    // Queue snapshot for console dashboard (Sprint 5B).
+    let base = &state.queue_config.base_dir;
+    let count_dir = |dir: std::path::PathBuf| -> u64 {
+        std::fs::read_dir(dir)
+            .ok()
+            .map(|rd| rd.filter_map(|e| e.ok()).count() as u64)
+            .unwrap_or(0)
+    };
+    let queue_pending = count_dir(base.join("queue"));
+    let queue_done = count_dir(base.join("queue-done"));
+    let queue_poison = count_dir(base.join("queue-poison"));
+
     let body = serde_json::json!({
-        "ready": true,
+        "ready": ai_available,
+        // P2-B: structured status + reason for app-console-slm
+        "status": if ai_available { "ok" } else { "closed" },
+        "reason": if ai_available { None::<&str> } else { Some("no_tier_available") },
         "node_class": state.node_class,
         "tier_a": has_local,
         "tier_a_reason": state.tier_a_reason,
-        "ai_available": has_local || has_yoyo || has_external,
+        "ai_available": ai_available,
         "has_local": has_local,
         "has_yoyo": has_yoyo,
         "has_external": has_external,
         "tier_b": state.doorman.tier_b_status(),
+        // Sprint 5B: queue snapshot for F9 dashboard
+        "queue_pending": queue_pending,
+        "queue_done": queue_done,
+        "queue_poison": queue_poison,
     });
-    (StatusCode::OK, Json(body))
+    let http_status = if ai_available {
+        StatusCode::OK
+    } else {
+        StatusCode::SERVICE_UNAVAILABLE
+    };
+    (http_status, Json(body))
 }
 
 #[derive(Serialize)]
@@ -1758,4 +1788,46 @@ impl IntoResponse for ApiError {
     fn into_response(self) -> axum::response::Response {
         (self.status, Json(self.body)).into_response()
     }
+}
+
+// ── Sprint 5A — operational status endpoints ──────────────────────────────────
+
+/// `GET /v1/status/queue` — brief queue depth across all four directories.
+async fn status_queue(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
+    let base = &state.queue_config.base_dir;
+    let count_dir = |dir: std::path::PathBuf| -> u64 {
+        std::fs::read_dir(dir)
+            .ok()
+            .map(|rd| rd.filter_map(|e| e.ok()).count() as u64)
+            .unwrap_or(0)
+    };
+    Json(serde_json::json!({
+        "pending":   count_dir(base.join("queue")),
+        "in_flight": count_dir(base.join("queue-in-flight")),
+        "done":      count_dir(base.join("queue-done")),
+        "poison":    count_dir(base.join("queue-poison")),
+    }))
+}
+
+/// `GET /v1/status/yoyo` — Yo-Yo (Tier B) node circuit states.
+async fn status_yoyo(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
+    Json(serde_json::json!({
+        "nodes":    state.doorman.tier_b_status(),
+        "has_yoyo": state.doorman.has_yoyo(),
+    }))
+}
+
+/// `GET /v1/status/flow` — routing tier availability and node class.
+async fn status_flow(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
+    let has_local = state.doorman.has_local();
+    let has_yoyo = state.doorman.has_yoyo();
+    let has_external = state.doorman.has_external();
+    Json(serde_json::json!({
+        "tier_a":       has_local,
+        "tier_b":       has_yoyo,
+        "tier_c":       has_external,
+        "ai_available": has_local || has_yoyo || has_external,
+        "node_class":   state.node_class,
+        "tier_a_reason": state.tier_a_reason,
+    }))
 }
