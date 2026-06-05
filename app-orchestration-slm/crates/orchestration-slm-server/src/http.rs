@@ -191,7 +191,9 @@ async fn dispatch_yoyo(
                 "application/json".parse().unwrap(),
             );
             resp_headers.insert(
-                "x-foundry-tier-used".parse::<axum::http::HeaderName>().unwrap(),
+                "x-foundry-tier-used"
+                    .parse::<axum::http::HeaderName>()
+                    .unwrap(),
                 "yoyo".parse().unwrap(),
             );
             (StatusCode::OK, resp_headers, bytes).into_response()
@@ -286,7 +288,12 @@ mod tests {
     async fn healthz_returns_ok() {
         let app = router(test_state());
         let resp = app
-            .oneshot(Request::builder().uri("/healthz").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/healthz")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         assert_eq!(resp.status(), StatusCode::OK);
@@ -296,7 +303,12 @@ mod tests {
     async fn fleet_list_empty() {
         let app = router(test_state());
         let resp = app
-            .oneshot(Request::builder().uri("/v1/fleet").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/fleet")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         assert_eq!(resp.status(), StatusCode::OK);

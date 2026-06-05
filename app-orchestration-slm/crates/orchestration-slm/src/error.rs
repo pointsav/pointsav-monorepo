@@ -26,4 +26,13 @@ pub enum ChassisError {
 
     #[error("serialisation error: {0}")]
     Json(#[from] serde_json::Error),
+
+    #[error("Yo-Yo node '{label}' circuit is open ({reason}); request refused")]
+    CircuitOpen { label: String, reason: String },
+
+    #[error("flow gate '{label}' is closed (operator kill switch)")]
+    FlowGateClosed { label: String },
+
+    #[error("license verification failed: {0}")]
+    License(String),
 }
