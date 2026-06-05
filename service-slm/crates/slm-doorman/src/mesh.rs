@@ -159,6 +159,7 @@ mod tests {
                 graph_context_enabled: None,
                 tools: None,
                 stop_sequences: None,
+                session_context: None,
             }
         };
         let selected = registry.select_optimal(&dummy_req).await;
@@ -195,6 +196,7 @@ mod tests {
                 graph_context_enabled: None,
                 tools: None,
                 stop_sequences: None,
+                session_context: None,
             }
         };
         let selected = registry.select_optimal(&dummy_req).await;
