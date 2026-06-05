@@ -1,6 +1,5 @@
 # Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock
-.agent/._claude_bkp/
 
 # Build artifacts — not committed
 build/
@@ -12,17 +11,5 @@ outputs/*
 # Legacy .claude directory (should be .agent symlink — to be fixed)
 .claude/
 
-# Sub-clones — managed separately via their own git repos
-pointsav-monorepo/
-pointsav-design-system/
-pointsav-fleet-deployment/
-woodfine-fleet-deployment/
-pointsav-media-assets/
-woodfine-media-assets/
-
-# Runtime state directories (redb/tantivy indexes from local wiki runs)
-state-*/
-
-# Recovered binaries and input documents — not committed to archive git
-app-privategit-design-recovered
-inputs/
+# Safety-net archive of misplaced repo clones (cannot be committed; deletion review 2026-07-01)
+archive-2026-06-01/
