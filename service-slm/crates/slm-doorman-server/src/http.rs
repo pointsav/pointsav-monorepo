@@ -136,6 +136,9 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/status/queue", get(status_queue))
         .route("/v1/status/yoyo", get(status_yoyo))
         .route("/v1/status/flow", get(status_flow))
+        // Sprint 6 — cost + tier-a status
+        .route("/v1/status/cost", get(status_cost))
+        .route("/v1/status/tier-a", get(status_tier_a))
         .with_state(state)
 }
 
@@ -1792,7 +1795,7 @@ impl IntoResponse for ApiError {
 
 // ── Sprint 5A — operational status endpoints ──────────────────────────────────
 
-/// `GET /v1/status/queue` — brief queue depth across all four directories.
+/// `GET /v1/status/queue` — brief queue depth across all apprenticeship directories.
 async fn status_queue(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
     let base = &state.queue_config.base_dir;
     let count_dir = |dir: std::path::PathBuf| -> u64 {
@@ -1802,10 +1805,12 @@ async fn status_queue(State(state): State<Arc<AppState>>) -> Json<serde_json::Va
             .unwrap_or(0)
     };
     Json(serde_json::json!({
-        "pending":   count_dir(base.join("queue")),
-        "in_flight": count_dir(base.join("queue-in-flight")),
-        "done":      count_dir(base.join("queue-done")),
-        "poison":    count_dir(base.join("queue-poison")),
+        "pending":    count_dir(base.join("queue")),
+        "in_flight":  count_dir(base.join("queue-in-flight")),
+        "paused":     count_dir(base.join("queue-paused")),
+        "done":       count_dir(base.join("queue-done")),
+        "poison":     count_dir(base.join("queue-poison")),
+        "quarantine": count_dir(base.join("quarantine")),
     }))
 }
 
@@ -1829,5 +1834,126 @@ async fn status_flow(State(state): State<Arc<AppState>>) -> Json<serde_json::Val
         "ai_available": has_local || has_yoyo || has_external,
         "node_class":   state.node_class,
         "tier_a_reason": state.tier_a_reason,
+    }))
+}
+
+/// `GET /v1/status/cost` — today's cost rollup from the daily cost ledger.
+///
+/// Reads `FOUNDRY_ROOT/data/cost-ledger/<today>.jsonl` and returns aggregated
+/// totals. Returns zeros for all fields when no ledger file exists for today
+/// (correct "no requests yet" answer). Non-fatal if the ledger directory is
+/// unavailable — returns zeros with `ledger_available: false`.
+async fn status_cost() -> Json<serde_json::Value> {
+    use slm_doorman::cost_ledger::CostLedger;
+
+    let today = Utc::now().format("%Y-%m-%d").to_string();
+    let ledger = match CostLedger::from_env() {
+        Ok(l) => l,
+        Err(_) => {
+            return Json(serde_json::json!({
+                "ledger_available": false,
+                "daily_usd": 0.0,
+                "local_usd": 0.0,
+                "yoyo_usd": 0.0,
+                "ext_usd": 0.0,
+                "vm_hours_usd": 0.0,
+                "request_count": 0_usize,
+            }));
+        }
+    };
+    match ledger.daily_rollup(&today) {
+        Ok(rollup) => {
+            let local_usd = rollup.by_tier.get("local").copied().unwrap_or(0.0);
+            let yoyo_usd = rollup.by_tier.get("yoyo").copied().unwrap_or(0.0);
+            let ext_usd = rollup.by_tier.get("external").copied().unwrap_or(0.0);
+            Json(serde_json::json!({
+                "ledger_available": true,
+                "daily_usd": rollup.total_cost_usd,
+                "local_usd": local_usd,
+                "yoyo_usd": yoyo_usd,
+                "ext_usd": ext_usd,
+                "vm_hours_usd": rollup.vm_hours_cost_usd,
+                "request_count": rollup.request_count,
+            }))
+        }
+        Err(_) => Json(serde_json::json!({
+            "ledger_available": true,
+            "daily_usd": 0.0,
+            "local_usd": 0.0,
+            "yoyo_usd": 0.0,
+            "ext_usd": 0.0,
+            "vm_hours_usd": 0.0,
+            "request_count": 0_usize,
+        })),
+    }
+}
+
+/// `GET /v1/status/tier-a` — llama-server health and throughput.
+///
+/// Fetches the Prometheus `/metrics` endpoint at `http://127.0.0.1:8080/metrics`
+/// and extracts key counters. Returns `reachable: false` when llama-server is
+/// down or starting — not an error condition, Tier A may be unavailable
+/// transiently.
+///
+/// Parsed metrics:
+/// - `llamacpp:predicted_tokens_seconds` → `tok_per_s`
+/// - `llamacpp:requests_processing` → `requests_processing`
+/// - `llamacpp:prompt_tokens_total` → `prompt_tokens_total`
+async fn status_tier_a() -> Json<serde_json::Value> {
+    let client = ReqwestClient::builder()
+        .timeout(std::time::Duration::from_secs(2))
+        .build()
+        .unwrap_or_default();
+
+    let resp = match client.get("http://127.0.0.1:8080/metrics").send().await {
+        Ok(r) => r,
+        Err(e) => {
+            return Json(serde_json::json!({ "reachable": false, "error": e.to_string() }));
+        }
+    };
+    let body = match resp.text().await {
+        Ok(t) => t,
+        Err(e) => {
+            return Json(serde_json::json!({ "reachable": false, "error": e.to_string() }));
+        }
+    };
+
+    let mut tok_per_s: Option<f64> = None;
+    let mut requests_processing: Option<u64> = None;
+    let mut prompt_tokens_total: Option<u64> = None;
+
+    for line in body.lines() {
+        if line.starts_with('#') {
+            continue;
+        }
+        // Prometheus text: `metric_name value` (no labels on these counters)
+        let mut parts = line.splitn(2, ' ');
+        let name = match parts.next() {
+            Some(n) => n,
+            None => continue,
+        };
+        let val = match parts.next() {
+            Some(v) => v.trim(),
+            None => continue,
+        };
+        match name {
+            "llamacpp:predicted_tokens_seconds" => {
+                tok_per_s = val.parse::<f64>().ok();
+            }
+            "llamacpp:requests_processing" => {
+                requests_processing = val.parse::<f64>().ok().map(|v| v as u64);
+            }
+            "llamacpp:prompt_tokens_total" => {
+                prompt_tokens_total = val.parse::<f64>().ok().map(|v| v as u64);
+            }
+            _ => {}
+        }
+    }
+
+    Json(serde_json::json!({
+        "reachable":           true,
+        "tok_per_s":           tok_per_s,
+        "requests_processing": requests_processing,
+        "prompt_tokens_total": prompt_tokens_total,
     }))
 }
