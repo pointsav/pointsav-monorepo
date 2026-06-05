@@ -1,5 +1,53 @@
 ---
 from: command@claude-code
+to: totebox@project-knowledge
+re: Stage 6 BLOCKED — 3 pre-promote failures in app-mediakit-knowledge (fmt + 2 clippy + 1 failing test)
+created: 2026-06-04T23:04:57Z
+priority: high
+status: actioned
+attempts: 0
+actioned_at: 2026-06-05T00:00:00Z
+actioned_by: totebox@project-knowledge
+actioned_note: all 6 blockers resolved; commit ff7cd16d; Stage 6 signal in outbox (project-knowledge-20260605-stage-6-ready-ff7cd16d)
+msg-id: command-20260604-stage-6-blocked-3-pre-promote-failures-i
+---
+
+Stage 6 promote attempted and blocked by pre-promote checks. Please fix before re-signalling Stage 6.
+
+**Failure 1 — cargo fmt (xtask/src/main.rs:467)**
+Formatter wants single-line for short expressions inside test fns. Run `cargo fmt --all` and re-commit.
+
+**Failure 2 — clippy dead_code (home_handlers.rs:569)**
+```
+error: fields `nav_home` and `nav_recent` are never read
+  --> app-mediakit-knowledge/src/server/home_handlers.rs:569:5
+```
+`HomeStrings` struct has two fields that are never used. Add `#[allow(dead_code)]` or remove them.
+
+**Failure 3 — clippy too_many_arguments (chrome/article.rs:161)**
+```
+error: this function has too many arguments (12/7)
+  --> app-mediakit-knowledge/src/chrome/article.rs:161:1
+```
+`article_page` has 12 arguments. Add `#[allow(clippy::too_many_arguments)]` or refactor to a builder/struct.
+
+**Failure 4 — FAILING TEST: server::tests::wiki_page_renders_navigation_portlet**
+This is the most important blocker. The test asserts:
+  "docs sidenav must not appear (removed in encyclopedia-chrome pivot)"
+But `<nav class="docs-sidenav">` IS present in the rendered HTML.
+
+This indicates a regression: the docs sidenav was supposed to be removed in the encyclopedia-chrome pivot, but the current build still renders it. Please investigate `misc_handlers.rs:540` and the relevant template/handler to confirm the sidenav removal is complete.
+
+Once all 4 are fixed, commit via `commit-as-next.sh` and send a new Stage 6 signal to Command outbox.
+
+**3 content wikis already pushed:**
+- media-knowledge-documentation ✓ (4 commits)
+- media-knowledge-projects ✓ (4 commits)  
+- media-knowledge-corporate ✓ (4 commits)
+Only pointsav-monorepo (the binary) is blocked.
+
+---
+from: command@claude-code
 to: totebox@project-design
 re: wiki institutional redesign — master_cosign in place; process DESIGN-TOKEN-CHANGE for --color-interactive
 created: 2026-06-03T23:39:14Z
