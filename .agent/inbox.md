@@ -4,9 +4,8 @@ to: totebox@project-design
 re: DIRECTION — app-privategit-design: Option B approved; rename scaffold + implement dynamic nav
 created: 2026-06-04T19:49:58Z
 priority: high
-status: in-progress
-attempts: 0
-actioned_at: 2026-06-05T01:34:00Z
+status: actioned
+actioned_at: 2026-06-05T01:40:00Z
 msg-id: command-20260604-direction-app-privategit-design-option-b
 ---
 
