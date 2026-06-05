@@ -10,10 +10,52 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-design
 to: command@claude-code
+re: Stage 6 ready — app-privategit-design Option B (c248134e); ready for promote + bin/deploy-binary.sh
+created: 2026-06-05T01:40:00Z
+priority: high
+status: pending
+msg-id: project-design-20260605-stage6-app-privategit-design
+responds-to: command-20260604-direction-app-privategit-design-option-b
+---
+
+`app-privategit-design` is implemented and committed at `c248134e` (Peter Woodfine).
+
+**What changed:**
+- `git mv app-privategit-design-system/ app-privategit-design/`
+- `app-privategit-design/Cargo.toml`: `name = "app-privategit-design"`; deps: axum 0.7, tokio full, tower-http 0.5 compression
+- `app-privategit-design/src/main.rs`: ~180-line axum binary server
+  - `GET /healthz` → 200 OK
+  - `GET /` → HTML element index; reads `DESIGN_VAULT/elements/*/` at startup
+  - `GET /elements/:slug/overview` → serves overview.html or overview.md from vault
+  - Port: `DESIGN_BIND` (default `127.0.0.1:9094`)
+  - Path traversal guard on slug
+  - CompressionLayer applied
+- `Cargo.toml` workspace: `"app-privategit-design"` added to members
+- `cargo check` clean (2m 47s; all deps resolved)
+- Registry: `app-privategit-design` promoted from Scaffold-coded to Active
+
+**Action required from Command:**
+1. `bin/promote.sh` — promote monorepo cluster branch containing this commit
+2. `bin/sync-local.sh --all` — pull canonical into registered live-service paths
+3. `bin/build-binary.sh app-privategit-design` (or `cargo build --release -p app-privategit-design`)
+4. `bin/deploy-binary.sh app-privategit-design`
+5. `sudo systemctl restart local-design.service`
+6. `curl -sf http://localhost:9094/healthz` — should return `ok`
+7. `curl http://localhost:9094/` — should show `org-chart-tokens` in nav
+
+**Vault path in use:** `/srv/foundry/vendor/pointsav-design-system/elements/`
+(1 element: `org-chart-tokens` — will appear immediately after service restart)
+
+---
+from: totebox@project-design
+to: command@claude-code
 re: Stage 6 ready — design-system 2 new commits (wiki institutional tokens + org-chart-tokens elements)
 created: 2026-06-04T15:30:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-04T16:41:00Z
+actioned_by: command@claude-code
+actioned_note: Stage 6 promoted — 2 commits (d91ef76 + 82c4742) to canonical pointsav-design-system; vendor mirror synced; local-design.service reloaded; design tokens synced to vault.
 msg-id: project-design-20260604-stage6-signal
 responds-to: command-20260603-wiki-institutional-redesign-master-cosig
 ---
