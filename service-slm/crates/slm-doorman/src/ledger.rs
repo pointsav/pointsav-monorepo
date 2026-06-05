@@ -97,6 +97,10 @@ pub struct AuditEntry {
     pub completion_status: CompletionStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error_message: Option<String>,
+    /// Originating Totebox archive name from `SessionContext`. Absent from
+    /// existing WORM rows; `Option` preserves backward compatibility.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub archive_name: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -419,6 +423,7 @@ mod tests {
             sanitised_outbound: true,
             completion_status: CompletionStatus::Ok,
             error_message: None,
+            archive_name: None,
         };
         ledger.append(&entry).unwrap();
         ledger.append(&entry).unwrap();
@@ -592,6 +597,7 @@ mod tests {
             sanitised_outbound: true,
             completion_status: CompletionStatus::Ok,
             error_message: None,
+            archive_name: None,
         };
 
         // Now make the directory read-only so subsequent file opens fail.
