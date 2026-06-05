@@ -191,6 +191,10 @@ struct ChatCompletionsBody {
     /// default), leaving tier routing behaviour unchanged.
     #[serde(default)]
     grammar: Option<GrammarConstraint>,
+    /// Calling Totebox session identity. Populated by `bin/edit-via-doorman.sh`
+    /// when present; absent from all existing callers (backward compatible).
+    #[serde(default)]
+    session_context: Option<slm_core::SessionContext>,
 }
 
 async fn chat_completions(
@@ -250,6 +254,7 @@ async fn chat_completions(
         graph_context_enabled: None,
         tools: None,
         stop_sequences: None,
+        session_context: body.session_context,
     };
 
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
@@ -542,6 +547,7 @@ Return a JSON array matching the schema exactly.".to_string(),
         graph_context_enabled: None,
         tools: None,
         stop_sequences: None,
+        session_context: None,
     };
 
     // 5. Route — no Tier A fallback.
@@ -1410,6 +1416,7 @@ fn anthropic_to_compute_request(
         graph_context_enabled: Some(false),
         tools: body.tools,
         stop_sequences: None,
+        session_context: None,
     }
 }
 
