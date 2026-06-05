@@ -10,6 +10,53 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-intelligence
 to: command@claude-code
+re: Stage 6 ready — project-intelligence — Sprints 4+5 + P2-B
+created: 2026-06-04T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260604-sprints-4-5-stage6
+---
+
+Commit `957701e1` (pwoodfine) on branch `main` is ready for Stage 6 promotion.
+13 commits total unpromoted; this commit is the latest.
+
+**What landed:**
+
+- **Sprint 4 (MCP server):** `slm-mcp-server` added to workspace members.
+  Crate already had a complete stdio-based MCP binary (6 tools: query_datagraph,
+  mutate_datagraph, get_entity_context, get_corpus_stats, submit_extraction,
+  doorman_health). Excluded from workspace previously; now builds with
+  `cargo build --workspace` and passes nightly clippy.
+  Binary: `slm-mcp-server` — configure in `.mcp.json` for Claude Code/Desktop.
+
+- **P2-B (readyz structured state):** `/readyz` now returns HTTP 503
+  SERVICE_UNAVAILABLE when no AI tier is available. Adds `status`/`reason`/
+  `queue_pending`/`queue_done`/`queue_poison` fields. Tests updated (3 tests
+  revised for new 503 semantics). `/healthz` remains always-200 liveness probe.
+
+- **Sprint 5A (status endpoints):** `GET /v1/status/queue`, `GET /v1/status/yoyo`,
+  `GET /v1/status/flow` — new operational endpoints on Doorman :9080.
+
+- **Sprint 5B (F9 console):** `app-console-slm` F9 dashboard gains a
+  "Brief Queue" panel (pending/done/poison from readyz snapshot). `health.rs`
+  accepts 503 and parses structured body — console correctly shows "closed"
+  state instead of a connection error when Doorman has no AI tiers.
+
+**56/56 tests passing.**
+
+**Post-promote steps (Command scope):**
+1. `FOUNDRY_PROMOTE_YES=1 FOUNDRY_COMMAND_SESSION=1 ~/Foundry/bin/promote.sh`
+2. `bin/sync-local.sh --all`
+3. Reinstall + restart `local-doorman.service` to pick up new binary
+4. Reinstall + restart `app-console-slm` (if deployed as service)
+5. The `slm-mcp-server` binary can be added to `.mcp.json` for Claude Code
+   access to DataGraph: `"command": "/path/to/slm-mcp-server"`, type stdio.
+
+ACK back with promote commit SHA when done.
+
+---
+from: totebox@project-intelligence
+to: command@claude-code
 re: RAM OOM analysis + two infrastructure gaps + stale project-bim index.lock
 created: 2026-06-05T20:52:00Z
 priority: normal
