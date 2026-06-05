@@ -121,7 +121,7 @@ async fn atom_feed_body_is_parseable_xml_with_feed_element() {
         "Atom body should contain <feed: {xml}"
     );
     assert!(
-        xml.contains("PointSav Knowledge"),
+        xml.contains("PointSav Documentation Wiki"),
         "Atom body should contain feed title: {xml}"
     );
 }

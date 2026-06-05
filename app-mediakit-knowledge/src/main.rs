@@ -136,55 +136,76 @@ async fn main() -> Result<()> {
         } => {
             // Resolve effective parameters: knowledge.toml takes precedence
             // over legacy env vars when present.
-            let (eff_content_dir, eff_bind, eff_citations, eff_state_dir,
-                 eff_guide_dir, eff_guide_dir_2, eff_site_title, eff_brand_theme) =
-                if let Some(ref toml_path) = knowledge_toml {
-                    let cfg = app_mediakit_knowledge::config::load_config(toml_path)?;
-                    let parsed_bind: SocketAddr = cfg.site.bind.parse()?;
-                    // Primary mount is the first [[mount]] with role = "primary".
-                    let primary = cfg.mounts.iter()
-                        .find(|m| m.role == "primary")
-                        .ok_or_else(|| anyhow::anyhow!("knowledge.toml: no primary mount defined"))?;
-                    // Guide mount is the first [[mount]] with role = "guide".
-                    let guide = cfg.mounts.iter()
-                        .find(|m| m.role == "guide")
-                        .map(|m| m.path.clone());
-                    let guide2 = cfg.mounts.iter()
-                        .filter(|m| m.role == "guide")
-                        .nth(1)
-                        .map(|m| m.path.clone());
-                    let brand = if cfg.site.brand == "woodfine" {
-                        Some("woodfine".to_string())
-                    } else {
-                        None
-                    };
-                    tracing::info!(
-                        toml = %toml_path.display(),
-                        title = %cfg.site.title,
-                        brand = %cfg.site.brand,
-                        mounts = cfg.mounts.len(),
-                        "loaded knowledge.toml"
-                    );
-                    (
-                        primary.path.clone(),
-                        parsed_bind,
-                        cfg.citations.path.clone(),
-                        cfg.site.state_dir.clone(),
-                        guide,
-                        guide2,
-                        cfg.site.title.clone(),
-                        brand,
-                    )
+            let (
+                eff_content_dir,
+                eff_bind,
+                eff_citations,
+                eff_state_dir,
+                eff_guide_dir,
+                eff_guide_dir_2,
+                eff_site_title,
+                eff_brand_theme,
+            ) = if let Some(ref toml_path) = knowledge_toml {
+                let cfg = app_mediakit_knowledge::config::load_config(toml_path)?;
+                let parsed_bind: SocketAddr = cfg.site.bind.parse()?;
+                // Primary mount is the first [[mount]] with role = "primary".
+                let primary = cfg
+                    .mounts
+                    .iter()
+                    .find(|m| m.role == "primary")
+                    .ok_or_else(|| anyhow::anyhow!("knowledge.toml: no primary mount defined"))?;
+                // Guide mount is the first [[mount]] with role = "guide".
+                let guide = cfg
+                    .mounts
+                    .iter()
+                    .find(|m| m.role == "guide")
+                    .map(|m| m.path.clone());
+                let guide2 = cfg
+                    .mounts
+                    .iter()
+                    .filter(|m| m.role == "guide")
+                    .nth(1)
+                    .map(|m| m.path.clone());
+                let brand = if cfg.site.brand == "woodfine" {
+                    Some("woodfine".to_string())
                 } else {
-                    // Legacy env-var path.
-                    let cd = content_dir.ok_or_else(|| {
-                        anyhow::anyhow!(
-                            "either --knowledge-toml or --content-dir / WIKI_CONTENT_DIR is required"
-                        )
-                    })?;
-                    (cd, bind, citations_yaml, state_dir, guide_dir, guide_dir_2,
-                     site_title, brand_theme)
+                    None
                 };
+                tracing::info!(
+                    toml = %toml_path.display(),
+                    title = %cfg.site.title,
+                    brand = %cfg.site.brand,
+                    mounts = cfg.mounts.len(),
+                    "loaded knowledge.toml"
+                );
+                (
+                    primary.path.clone(),
+                    parsed_bind,
+                    cfg.citations.path.clone(),
+                    cfg.site.state_dir.clone(),
+                    guide,
+                    guide2,
+                    cfg.site.title.clone(),
+                    brand,
+                )
+            } else {
+                // Legacy env-var path.
+                let cd = content_dir.ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "either --knowledge-toml or --content-dir / WIKI_CONTENT_DIR is required"
+                    )
+                })?;
+                (
+                    cd,
+                    bind,
+                    citations_yaml,
+                    state_dir,
+                    guide_dir,
+                    guide_dir_2,
+                    site_title,
+                    brand_theme,
+                )
+            };
 
             serve(
                 eff_content_dir,

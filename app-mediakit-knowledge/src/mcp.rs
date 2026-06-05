@@ -402,30 +402,22 @@ async fn query_page(state: &AppState, params: &Value) -> Result<Value, (i32, Str
         .await
         .map_err(|e| (-32000i32, format!("read error: {e}")))?;
 
-    let parsed = crate::render::parse_page(&text)
-        .map_err(|e| (-32000i32, format!("parse error: {e}")))?;
+    let parsed =
+        crate::render::parse_page(&text).map_err(|e| (-32000i32, format!("parse error: {e}")))?;
 
     let title = parsed
         .frontmatter
         .title
         .clone()
         .unwrap_or_else(|| slug.to_string());
-    let category = parsed
-        .frontmatter
-        .category
-        .clone()
-        .unwrap_or_default();
+    let category = parsed.frontmatter.category.clone().unwrap_or_default();
     let status = parsed
         .frontmatter
         .status
         .clone()
         .unwrap_or_else(|| "unknown".to_string());
     let summary = crate::feeds::first_paragraph_snippet(&parsed.body_md, 300);
-    let last_edited = parsed
-        .frontmatter
-        .last_edited
-        .clone()
-        .unwrap_or_default();
+    let last_edited = parsed.frontmatter.last_edited.clone().unwrap_or_default();
     let relates_to: Vec<String> = parsed
         .frontmatter
         .extra
@@ -438,23 +430,15 @@ async fn query_page(state: &AppState, params: &Value) -> Result<Value, (i32, Str
                 .collect()
         })
         .unwrap_or_default();
-    let extra_roots: Vec<&std::path::Path> = [
-        state.guide_dir.as_deref(),
-        state.guide_dir_2.as_deref(),
-    ]
-    .iter()
-    .flatten()
-    .copied()
-    .collect();
-    let html_body = crate::render::render_html_raw(
-        &parsed.body_md,
-        &state.content_dir,
-        &extra_roots,
-    );
-    let backlinks = state
-        .links
-        .backlinks(slug)
-        .unwrap_or_default();
+    let extra_roots: Vec<&std::path::Path> =
+        [state.guide_dir.as_deref(), state.guide_dir_2.as_deref()]
+            .iter()
+            .flatten()
+            .copied()
+            .collect();
+    let html_body =
+        crate::render::render_html_raw(&parsed.body_md, &state.content_dir, &extra_roots);
+    let backlinks = state.links.backlinks(slug).unwrap_or_default();
 
     Ok(json!({
         "slug": slug,
@@ -545,11 +529,7 @@ async fn list_pages(state: &AppState, params: &Value) -> Result<Value, (i32, Str
             Ok(p) => p,
             Err(_) => continue,
         };
-        let category = parsed
-            .frontmatter
-            .category
-            .clone()
-            .unwrap_or_default();
+        let category = parsed.frontmatter.category.clone().unwrap_or_default();
         let status = parsed
             .frontmatter
             .status
@@ -571,11 +551,7 @@ async fn list_pages(state: &AppState, params: &Value) -> Result<Value, (i32, Str
             .title
             .clone()
             .unwrap_or_else(|| tf.slug.clone());
-        let last_edited = parsed
-            .frontmatter
-            .last_edited
-            .clone()
-            .unwrap_or_default();
+        let last_edited = parsed.frontmatter.last_edited.clone().unwrap_or_default();
         articles.push(json!({
             "slug":       tf.slug,
             "title":      title,
@@ -611,17 +587,11 @@ async fn get_links(state: &AppState, params: &Value) -> Result<Value, (i32, Stri
         "forward" => {
             // Forward links: read outlinks stored in the link graph for this slug.
             // The link graph stores keys as "from\x00to" — scan the prefix.
-            state
-                .links
-                .forward_links(slug)
-                .unwrap_or_default()
+            state.links.forward_links(slug).unwrap_or_default()
         }
         _ => {
             // backward (default)
-            state
-                .links
-                .backlinks(slug)
-                .unwrap_or_default()
+            state.links.backlinks(slug).unwrap_or_default()
         }
     };
 

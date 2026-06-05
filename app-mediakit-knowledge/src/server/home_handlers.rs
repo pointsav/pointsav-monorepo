@@ -300,7 +300,6 @@ fn home_chrome(
     pending_count: i64,
 ) -> Markup {
     let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
-    let woodfine_projects = brand_theme == Some("woodfine-projects");
     let _title = home_fm.title.as_deref().unwrap_or(site_title);
     let auth_attr = if user.is_some() { "user" } else { "anon" };
     let s = strings(locale);
@@ -566,8 +565,6 @@ fn home_chrome(
 /// that the `/es/` route can render navigation labels, section headings, and
 /// list titles in Spanish without duplicating the template.
 struct HomeStrings {
-    nav_home: &'static str,
-    nav_recent: &'static str,
     section_browse: &'static str,
     section_featured: &'static str,
     section_recent: &'static str,
@@ -582,8 +579,6 @@ struct HomeStrings {
 fn strings(locale: Locale) -> HomeStrings {
     match locale {
         Locale::En => HomeStrings {
-            nav_home: "Home",
-            nav_recent: "Recent changes",
             section_browse: "Browse by area",
             section_featured: "Featured article",
             section_recent: "Recently updated",
@@ -595,8 +590,6 @@ fn strings(locale: Locale) -> HomeStrings {
             guides_all_link: "All guides →",
         },
         Locale::Es => HomeStrings {
-            nav_home: "Inicio",
-            nav_recent: "Cambios recientes",
             section_browse: "Explorar por área",
             section_featured: "Artículo destacado",
             section_recent: "Actualizado recientemente",
@@ -651,13 +644,6 @@ fn humanize_category(s: &str) -> String {
         .join(" ")
 }
 
-/// HTML-escape text destined for an attribute-free element body / nav label.
-fn esc(s: &str) -> String {
-    s.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-}
-
 /// Returns a display label ("Guide" or "Topic") based on the slug stem.
 fn item_type_label(slug: &str) -> &'static str {
     if slug.rsplit('/').next().is_some_and(|s| s.starts_with("guide-")) { "Guide" } else { "Topic" }
@@ -666,73 +652,6 @@ fn item_type_label(slug: &str) -> &'static str {
 /// Returns a CSS data-type key ("guide" or "topic") based on the slug stem.
 fn item_type_key(slug: &str) -> &'static str {
     if slug.rsplit('/').next().is_some_and(|s| s.starts_with("guide-")) { "guide" } else { "topic" }
-}
-
-/// The categories that actually carry (non-stub) articles in `buckets`, in
-/// display order: only the ratified platform categories are returned.
-/// The `extras` block (all non-RATIFIED categories) is intentionally excluded
-/// to prevent internal deployment slugs from leaking into the homepage grid.
-fn ordered_categories(buckets: &CategoryBuckets) -> Vec<String> {
-    let has_real = |c: &str| {
-        buckets
-            .get(c)
-            .map(|v| v.iter().any(|t| t.status.as_deref() != Some("stub")))
-            .unwrap_or(false)
-    };
-    RATIFIED_CATEGORIES
-        .iter()
-        .filter(|c| has_real(c))
-        .map(|c| (*c).to_string())
-        .collect()
-}
-
-/// Build the docs left-navigation HTML from the already-computed category
-/// buckets: every populated category with its articles, the active article
-/// highlighted, and the active category's section expanded. Article labels are
-/// the real frontmatter titles. Works uniformly across all three instances
-/// because it groups by declared category, not by physical subdirectory.
-fn render_docs_sidenav(buckets: &CategoryBuckets, active_slug: &str) -> String {
-    use std::fmt::Write as _;
-    let mut out = String::with_capacity(8192);
-    out.push_str("<nav class=\"docs-sidenav\" aria-label=\"Documentation\">");
-    out.push_str("<div class=\"docs-sidenav__inner\">");
-
-    for cat in ordered_categories(buckets) {
-        let Some(items) = buckets.get(&cat) else {
-            continue;
-        };
-        let mut articles: Vec<&TopicSummary> = items
-            .iter()
-            .filter(|t| t.status.as_deref() != Some("stub"))
-            .collect();
-        if articles.is_empty() {
-            continue;
-        }
-        articles.sort_by_key(|a| a.title.to_lowercase());
-        let any_active = articles.iter().any(|t| t.slug == active_slug);
-        let open = if any_active { " open" } else { "" };
-        let _ = write!(
-            out,
-            "<details class=\"docs-sidenav__cat\"{open}><summary>{}</summary><ul class=\"docs-sidenav__list\">",
-            esc(&humanize_category(&cat))
-        );
-        for t in &articles {
-            let active = if t.slug == active_slug {
-                " is-active\" aria-current=\"page"
-            } else {
-                ""
-            };
-            let _ = write!(
-                out,
-                "<li><a class=\"docs-sidenav__link{active}\" href=\"/wiki/{}\">{}</a></li>",
-                esc(&t.slug),
-                esc(&t.title)
-            );
-        }
-        out.push_str("</ul></details>");
-    }
-    out.push_str("</div></nav>");
-    out
 }
 
 /// Per-content-dir cache entry: (instant the bucket was computed, shared bucket).

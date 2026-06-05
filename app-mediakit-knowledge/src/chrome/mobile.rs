@@ -14,8 +14,8 @@
 //!
 //! `viewport-fit=cover` is required in the viewport meta tag (L17).
 
+use crate::chrome::{t, Locale};
 use maud::{html, Markup};
-use crate::chrome::{Locale, t};
 
 /// Render the mobile bottom navigation bar.
 ///

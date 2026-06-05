@@ -5,8 +5,8 @@
 //! JavaScript in wiki.js handles open/close and fetches from /api/search.
 //! Borrowed from Tailwind CSS docs pattern (§13 borrow list, P0).
 
+use crate::chrome::{t, Locale};
 use maud::{html, Markup};
-use crate::chrome::{Locale, t};
 
 /// Render the Cmd+K command palette `<dialog>` element.
 ///
