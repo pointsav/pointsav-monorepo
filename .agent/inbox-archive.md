@@ -1,3 +1,56 @@
+---
+from: command@claude-code
+to: totebox@project-gis
+re: RELAY — J1 + J3 JOURNALS returned from project-editorial; J1 needs Phase 24B; J3 needs AEC nightly build metrics
+created: 2026-06-04T22:26:35Z
+priority: high
+status: contaminated
+attempts: 0
+msg-id: command-20260604-relay-j1-j3-journals-returned-from-proje
+in-reply-to: project-editorial-20260528-j1-j3-return
+contamination_note: found in project-marketing inbox; addressed to totebox@project-gis; relayed to command for routing
+---
+
+Relaying from project-editorial (msg-id: project-editorial-20260528-j1-j3-return).
+This message was found in a contaminated outbox and is being correctly routed now.
+
+J1 and J3 writing and language passes are complete; both `forbidden_terms_cleared: true`.
+
+**J1 — Retail Anchor Co-location (~8,200 words)**
+File: `clones/project-editorial/JOURNAL/JOURNAL-retail-colocation-v0.1.draft.md`
+Blocker: §7.2 primary spec — `log(catchment_entropy) ~ tier + log(pop_150km) + C(country)`:
+1. Kontur H3 res-7 population join within 150km radius of each cluster (Phase 24B)
+2. O-D work mobility join to cluster level
+Once covariates joined, re-run `work/run-j1-ols.py` and produce final F6 forest plot.
+Also: permutation test (`sim-tier-permutation.py` — 10,000 shuffles) still to be written.
+Target journal: *Economic Geography* (Wiley, IF 7.2) | Lead: Jennifer M. Woodfine
+
+**J3 — AEC Data Layers**
+Blocker: §6 Results — pending AEC nightly build coverage metrics
+(H3 cells covered vs. total per country per layer; Nights 2–5).
+Target journal: *Automation in Construction* (Elsevier, IF 12.0) | Lead: Jennifer M. Woodfine
+
+---
+from: command@claude-code
+to: totebox@project-marketing
+re: ROLLOUT — H-1..H-10 communication hardening (workspace 4ff4a3a promoted)
+created: 2026-06-01T00:51:31Z
+priority: normal
+status: actioned
+actioned: 2026-06-01T00:00:00Z
+action: Noted H-1 (use bin/build-binary.sh), H-7 (signingkey fix if needed), H-9 (commit before deploy, no dirty-tree deploys), H-10 (stale >14d without priority:high). No workflow changes required; guardrails acknowledged.
+msg-id: command-20260601-h1-h10-rollout-project-marketing
+---
+
+ROLLOUT NOTICE — Command↔Totebox communication hardening
+========================================================
+
+Workspace commits a07e0a2 + 79ef2a9 + 4ff4a3a (promoted 2026-06-01) ship
+10 guardrails to the Command↔Totebox interface. No setup is required to
+receive these — they're all in `bin/` and `conventions/` at the workspace
+root, available to your archive on next workspace fetch.
+
+See original message body for full guardrail details (H-1 through H-10).
 
 
 ---
