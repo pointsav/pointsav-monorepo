@@ -168,7 +168,11 @@ impl YoyoProxyClient {
     /// Build downstream response headers — pass through content-type.
     pub fn passthrough_headers(upstream_headers: &HeaderMap) -> HeaderMap {
         let mut out = HeaderMap::new();
-        for name in &["content-type", "x-foundry-tier-used", "x-foundry-yoyo-version"] {
+        for name in &[
+            "content-type",
+            "x-foundry-tier-used",
+            "x-foundry-yoyo-version",
+        ] {
             if let Some(v) = upstream_headers.get(*name) {
                 if let Ok(k) = HeaderName::from_bytes(name.as_bytes()) {
                     out.insert(k, v.clone());

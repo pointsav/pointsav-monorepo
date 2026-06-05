@@ -126,7 +126,10 @@ mod tests {
     #[tokio::test]
     async fn authenticate_proxy_unregistered_is_401() {
         let reg = FleetRegistry::new();
-        let err = reg.authenticate_proxy("op::nobody::slm", None).await.unwrap_err();
+        let err = reg
+            .authenticate_proxy("op::nobody::slm", None)
+            .await
+            .unwrap_err();
         assert!(matches!(err, ChassisError::Unauthenticated));
     }
 
@@ -145,7 +148,10 @@ mod tests {
     async fn authenticate_proxy_not_subscribed_is_402() {
         let reg = FleetRegistry::new();
         reg.register(make_req("op::a::slm", false)).await;
-        let err = reg.authenticate_proxy("op::a::slm", None).await.unwrap_err();
+        let err = reg
+            .authenticate_proxy("op::a::slm", None)
+            .await
+            .unwrap_err();
         assert!(matches!(err, ChassisError::NotSubscribed(_)));
     }
 
