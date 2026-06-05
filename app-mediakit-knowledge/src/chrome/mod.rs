@@ -18,7 +18,7 @@ pub mod home;
 pub mod mobile;
 pub mod palette;
 
-use maud::{html, Markup, DOCTYPE, PreEscaped};
+use maud::{html, Markup, PreEscaped, DOCTYPE};
 
 /// Locale selector for bilingual chrome.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -290,7 +290,10 @@ mod tests {
             strings(Locale::En).iter().map(|(k, _)| *k).collect();
         let es_keys: std::collections::HashSet<&str> =
             strings(Locale::Es).iter().map(|(k, _)| *k).collect();
-        assert_eq!(en_keys, es_keys, "EN and ES string maps must have identical keys");
+        assert_eq!(
+            en_keys, es_keys,
+            "EN and ES string maps must have identical keys"
+        );
     }
 
     #[test]
@@ -322,18 +325,27 @@ mod tests {
         let inter_preload = markup.contains("Inter-400-normal-latin.woff2");
         let serif_preload = markup.contains("Source-Serif-4-400-normal-latin.woff2");
         assert!(inter_preload, "Inter latin font preload must be present");
-        assert!(serif_preload, "Source Serif 4 latin font preload must be present");
+        assert!(
+            serif_preload,
+            "Source Serif 4 latin font preload must be present"
+        );
     }
 
     #[test]
     fn head_emits_woodfine_tokens_for_woodfine_brand() {
         let markup = head("Test", "woodfine", Locale::En).into_string();
-        assert!(markup.contains("tokens-woodfine.css"), "Woodfine token CSS must be linked for woodfine brand");
+        assert!(
+            markup.contains("tokens-woodfine.css"),
+            "Woodfine token CSS must be linked for woodfine brand"
+        );
     }
 
     #[test]
     fn head_does_not_emit_woodfine_tokens_for_pointsav_brand() {
         let markup = head("Test", "pointsav", Locale::En).into_string();
-        assert!(!markup.contains("tokens-woodfine.css"), "Woodfine token CSS must not be linked for pointsav brand");
+        assert!(
+            !markup.contains("tokens-woodfine.css"),
+            "Woodfine token CSS must not be linked for pointsav brand"
+        );
     }
 }
