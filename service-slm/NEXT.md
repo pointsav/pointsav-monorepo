@@ -1,8 +1,27 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-06-03 — Tier B migrated to Cloud Run (Ollama 0.24.0); 1-hour flow test passed 15/15; orphaned GCE resources deleted; service-slm + service-content code hardening committed.
+> Last updated: 2026-06-05 — Sprint 4+5 endpoints: `/v1/status/cost`, `/v1/status/tier-a`, enhanced `/v1/status/queue`; app-console-slm F9 panel rebuilt (5 sections, tok/s, cost, queue breakdown); commit `1202e6ee`, Stage 6 pending.
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
+
+---
+
+## 🔴 Drain worker — payload size gate missing (2026-06-05) [jwoodfine@claude-code]
+
+18 new poison entries since 2026-06-04 — all large diffs (20–80 KB bulk commits, Cargo.lock churn).
+The drain worker has no size check: oversized payloads are silently poisoned with no error field,
+making diagnosis opaque.
+
+- [ ] Add `SLM_QUEUE_MAX_PAYLOAD_BYTES` env var (default 16 KB) — skip-to-poison with explicit `error: "payload too large"` JSON field
+- [ ] On poison: write reason into queue-poison entry (`{"error": "payload_too_large", "size_bytes": N}`)
+
+## 🔴 Drain worker — stale lease requeue missing (2026-06-05) [jwoodfine@claude-code]
+
+One in-flight entry (PID 65121) has held its lease for 3+ days. The lease expiry check
+(`SLM_QUEUE_LEASE_EXPIRY_SEC=2100`) is present but PID liveness check is unreliable across reboots.
+
+- [ ] On each drain cycle: if lease age > LEASE_TIMEOUT_SECS AND `kill -0 <pid>` returns non-zero, requeue to `queue/`
+- [ ] Log requeue as a structured warning: `{"event": "lease_expired_requeue", "file": ..., "lease_age_secs": ...}`
 
 ---
 
