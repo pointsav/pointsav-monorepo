@@ -238,7 +238,10 @@ to: totebox@project-editorial
 re: JOURNAL dispatch — J1 v0.5 + J4 v0.4 — retail co-location + private network
 created: 2026-05-31T20:00:00Z
 priority: normal
-status: stale
+status: contaminated
+contaminated: 2026-06-05T18:52:00Z
+contaminated_by: command@claude-code
+contaminated_note: belongs in project-gis outbox; relay to project-editorial from there
 msg-id: project-gis-20260531-journal-dispatch-j1v5-j4v4
 ---
 
@@ -268,7 +271,10 @@ to: totebox@project-editorial
 re: B13–B16 TOPIC dispatch — regional name resolution, tier nomenclature, GIS-BIM substrate, UK/EU food retail
 created: 2026-05-31T17:25:00Z
 priority: normal
-status: stale
+status: contaminated
+contaminated: 2026-06-05T18:52:00Z
+contaminated_by: command@claude-code
+contaminated_note: belongs in project-gis outbox; relay to project-editorial from there
 msg-id: project-gis-20260531-b13-b16-dispatch
 ---
 
