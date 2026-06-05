@@ -60,28 +60,32 @@ Vendor-specific names appear only in deployment GUIDEs.
 
 ---
 
-## §2 — Current Live State (2026-06-04)
+## §2 — Current Live State (2026-06-05)
 
 | Component | Status | Notes |
 |---|---|---|
-| `local-slm.service` | **ACTIVE PRIMARY** | OLMo 2 1124 7B Instruct Q4_K_M; Tier A; `SLM_TIER_A_FIRST=true` |
-| `local-doorman.service` | **ACTIVE** | Last built with MetadataBearer + bearer auth; sha256 in binary-ledger |
-| `local-content.service` | **ACTIVE** | 7,445 entities in LadybugDB; 43,107 processed ledger entries |
+| `local-slm.service` | **ACTIVE PRIMARY** | OLMo 2 1124 7B Instruct Q4_K_M; Tier A; 3.38 tok/s (`:8080/metrics` → `/v1/status/tier-a`) |
+| `local-doorman.service` | **ACTIVE** | Sprint 4+5 commit `1202e6ee`; `/v1/status/cost`, `/v1/status/tier-a`, enhanced `/v1/status/queue`; sha256 in binary-ledger |
+| `local-content.service` | **ACTIVE** | 7,445 entities in LadybugDB; 43,107 processed ledger entries; circuit breaker OPEN (Tier B offline) |
 | `yoyo-tier-b` (Cloud Run) | **DELETED (2026-06-04)** | Deleted — unpredictable per-second billing; see §9 |
 | `yoyo-tier-b-1` (GCE Spot) | **TERMINATED** | europe-west4-a L4 stockout; static IP `34.6.204.25` released |
 | `orchestration-slm-server` | **NOT YET DEPLOYED** | Code complete; Command Session install needed |
 
 **Tier routing (current):**
-- Tier A: **ENABLED PRIMARY** — OLMo 7B; all interactive + background routes here
-- Tier B: **OFFLINE** — both Cloud Run and GCE VM deleted/terminated
+- Tier A: **ENABLED PRIMARY** — OLMo 7B; all interactive + background routes here; 3.38 tok/s
+- Tier B: **OFFLINE** — both Cloud Run and GCE VM deleted/terminated; circuit breaker OPEN
 - Tier C: **NOT CONFIGURED** — never enable for training; opt-in only
 
-**Apprenticeship (2026-06-04):**
-- Queue pending: 391 briefs (up from 285 at last count; new commits added more)
-- Queue done: 799 dispatched
-- Queue poison: 11 malformed
-- Training corpus SFT: 77 good samples post-Fix-A at `/srv/foundry/data/corpus/sft/`
-- DPO corpus: 591 degenerate tuples (quarantined — empty rejected samples, harmful for DPO)
+**Apprenticeship (2026-06-05):**
+- Queue pending: 246  in-flight: 3  paused: 0
+- Queue done: 1,004  quarantine: 737  poison: 29
+- Training corpus SFT: 304 samples in `2026-06-01-train.jsonl` at `/srv/foundry/data/training-corpus/apprenticeship/`
+- DPO corpus: 591 degenerate tuples (Phase D quarantine pending)
+
+**New status endpoints (commit `1202e6ee`):**
+- `GET /v1/status/tier-a` → `{reachable, tok_per_s, requests_processing, prompt_tokens_total}` — llama-server Prometheus metrics
+- `GET /v1/status/cost` → `{daily_usd, local_usd, yoyo_usd, ext_usd, vm_hours_usd, request_count}` — cost ledger rollup
+- `GET /v1/status/queue` → `{pending, in_flight, paused, done, poison, quarantine}` — full queue breakdown
 
 ---
 
