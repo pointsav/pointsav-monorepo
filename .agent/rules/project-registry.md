@@ -66,7 +66,7 @@ Last updated: 2026-05-31.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
-| app-privategit-design-system | Scaffold-coded | app-privategit | 4 files |
+| app-privategit-design | Active | app-privategit | Renamed from app-privategit-design-system 2026-06-05; axum binary server; port 9094; dynamic nav from DESIGN_VAULT elements/ at startup; workspace member |
 | app-privategit-marketplace | Active | app-privategit | software.pointsav.com storefront; product catalog, license issuance, payment verification; v0.0.3 deployed on vault-privategit-source-1 port 9202; activated 2026-05-21 |
 | app-privategit-source | Active | app-privategit | Binary release server + Ed25519 license token verification; port 9201; v0.1.0 deployed; supersedes `app-privategit-source-control`; activated 2026-05-21 |
 | app-privategit-source-control | Scaffold-coded | app-privategit | Original scaffold (lib.rs stub, 4 files); superseded by `app-privategit-source`; pending cleanup |
@@ -197,10 +197,10 @@ Last updated: 2026-05-31.
 
 ---
 
-## Summary (2026-05-31)
+## Summary (2026-06-05)
 
-- **Active:** 10 (adds `app-privategit-marketplace`, `app-privategit-source`, `tool-wallet` 2026-05-31)
-- **Scaffold-coded:** 60 (adds `app-privategit-workbench` 2026-05-31; `app-privategit-source-control` retained as stale scaffold)
+- **Active:** 11 (adds `app-privategit-design` 2026-06-05; renamed from `app-privategit-design-system`)
+- **Scaffold-coded:** 59 (`app-privategit-design-system` promoted to Active + renamed; `app-privategit-source-control` retained as stale scaffold)
 - **Reserved-folder:** 39
 - **Defect:** 0
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
