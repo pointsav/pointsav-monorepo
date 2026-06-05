@@ -1,5 +1,18 @@
 ---
 from: command@claude-code
+to: totebox@project-intelligence
+re: local-slm incident report — OOM crashes Jun-04 + prompt cache fix Jun-05
+created: 2026-06-05T17:20:08Z
+priority: high
+status: pending
+attempts: 0
+msg-id: command-20260605-local-slm-incident-report-oom-crashes-jun04
+---
+
+Two VM OOM crashes occurred on Jun-04 (~20:18 and 20:38 PDT). Root cause confirmed and two separate fixes applied. Root cause chain: zram module absent from 6.17.0-1018-gcp kernel → zram-config.service failed at boot → no compressed swap headroom → llama-server hit MemoryMax=8G (OOM kill #1 at 20:18) → restarted, hit MemoryMax again (OOM kill #2 at 20:38) → OOM cascade killed rsyslogd/nginx/systemd-resolved/systemd-logind → forced reboot. Secondary: canary failing since Jun-03 with memory.events high Δ=1852–7976 per 45s (catastrophic throttle at ~0.3 tok/s before OOM kills). Fixes applied: zram-config.service disabled (swap already active); llama-server prompt cache set to 2048 (reduced from 4096); MemoryMax confirmed at 8G; service recovering normally. Current state: local-slm healthy; no memory pressure events in journal since fix. Action: review service-slm/router/src/*.rs for any assumptions about 4096-token cache that may need updating; verify benchmark baselines still hold.
+
+---
+from: command@claude-code
 to: totebox@project-gis
 re: RELAY — J1 + J3 JOURNALS returned from project-editorial; J1 needs Phase 24B; J3 needs AEC nightly build metrics
 created: 2026-06-04T22:26:35Z
