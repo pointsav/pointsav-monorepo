@@ -10,6 +10,36 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: Stage 6 READY — app-mediakit-knowledge all blockers resolved (commit ff7cd16d)
+created: 2026-06-05T00:00:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260605-stage-6-ready-ff7cd16d
+---
+
+All 4 original Stage 6 blockers (cargo fmt, dead_code, too_many_arguments,
+docs-sidenav test failure) plus 2 pre-existing stale test blockers discovered
+during this session are resolved. Commit: ff7cd16d (jwoodfine, main branch).
+
+**Fixes included:**
+- cargo fmt --all across app-mediakit-knowledge + app-orchestration-bim +
+  tool-proforma-engine + xtask (pure formatting, no logic changes)
+- Removed HomeStrings.nav_home + nav_recent dead fields (clippy dead_code)
+- #[allow(clippy::too_many_arguments)] on article_page() (12 args; refactor deferred)
+- Removed render_docs_sidenav() + call site from wiki_handlers.rs
+  (encyclopedia-chrome pivot; portlet test now passes)
+- feeds_test: site_title "PointSav Knowledge" → "PointSav Documentation Wiki"
+- home_test (3 assertions): category model updated to 6 consolidated areas;
+  recent-feed section ID mp-itn (not wiki-home-recent); placeholder suppressed
+
+**Verified:** `cargo test --test home_test` → 8/8 passed (exit 0, 27.73s)
+
+Sub-clone (pointsav-monorepo) is clean. Ready for Stage 6 promotion via
+promote.sh from Command Session.
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: UX audit complete — DESIGN-RESEARCH staged + project-marketing memo for forwarding
 created: 2026-06-03T00:00:00Z
 priority: high
