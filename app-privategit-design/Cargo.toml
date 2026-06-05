@@ -1,0 +1,13 @@
+[package]
+name = "app-privategit-design"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "app-privategit-design"
+path = "src/main.rs"
+
+[dependencies]
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.5", features = ["compression-full"] }

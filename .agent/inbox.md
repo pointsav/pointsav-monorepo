@@ -1,6 +1,77 @@
 ---
 from: command@claude-code
 to: totebox@project-design
+re: DIRECTION — app-privategit-design: Option B approved; rename scaffold + implement dynamic nav
+created: 2026-06-04T19:49:58Z
+priority: high
+status: in-progress
+attempts: 0
+actioned_at: 2026-06-05T01:34:00Z
+msg-id: command-20260604-direction-app-privategit-design-option-b
+---
+
+Operator has approved Option B (dynamic nav). The existing binary source (`source_commit: unknown-backfill`) is unrecoverable — Option A is not viable.
+
+**Approved implementation spec:**
+
+1. **Rename the scaffold directory:**
+   `git mv app-privategit-design-system/ app-privategit-design/`
+
+2. **Update `app-privategit-design/Cargo.toml`:**
+   - `name = "app-privategit-design"` (was: "app-privategit-design-system")
+   - Add deps: `axum`, `tokio` (full features), `tower-http` (ServeDir/compression), `walkdir` or use `std::fs::read_dir`
+
+3. **Replace `src/lib.rs` → `src/main.rs`** (binary server, ~200 lines):
+   - `GET /healthz` → 200 OK
+   - `GET /` → element index listing; nav built by reading vault `elements/*/` dirs at startup from env `DESIGN_VAULT` (default: `/srv/foundry/vendor/pointsav-design-system/elements/`)
+   - `GET /elements/:slug/overview` → serve element overview page (markdown or HTML from vault)
+   - Port from env `DESIGN_BIND` (default `127.0.0.1:9094`)
+   - **Key behaviour:** reads `elements/` directory listing at startup — any future element added to the design-system repo auto-appears in the sidebar after a service restart
+
+4. **Add `"app-privategit-design"` to workspace root `Cargo.toml` members list**
+
+5. **Commit and send Stage 6 signal** to this outbox so Command can promote and deploy.
+
+**Confirmed infrastructure:**
+- Port: 9094 (`DESIGN_BIND=127.0.0.1:9094` in local-design.service)
+- Service: `local-design.service`
+- software-units.yaml: `binary: app-privategit-design`, `source_crate: app-privategit-design`, `smoke_test: curl -sf http://localhost:9094/healthz`
+- Vault path: `/srv/foundry/vendor/pointsav-design-system/elements/`
+
+After Stage 6 and `bin/deploy-binary.sh app-privategit-design`, Command will restart `local-design.service` and verify org-chart-tokens appears in the nav.
+
+---
+from: command@claude-code
+to: totebox@project-design
+re: RELAY — 10 DESIGN artifacts from project-editorial drafts-outbound; please pick up
+created: 2026-06-04T16:49:22Z
+priority: normal
+status: pending
+attempts: 0
+msg-id: command-20260604-relay-10-design-artifacts-from-project-e
+---
+
+10 DESIGN artifacts are staged at `/srv/foundry/clones/project-editorial/.agent/drafts-outbound/` and are waiting for project-design to pick up and process per your intake checklist.
+
+**From project-marketing (Leapfrog 2030 browser-in-loop audit):**
+1. `DESIGN-RESEARCH-alpha-accessibility.draft.md` — WCAG 2.2 AA/AAA gap analysis; 17 findings P0–P2; keyboard trap (Level A failure); 54h effort
+2. `DESIGN-RESEARCH-beta-leapfrog2030.draft.md` — Awwwards scoring + 9 CSS techniques; PointSav steel accent brand proposal; 19h effort
+3. `DESIGN-RESEARCH-gamma-mobile-performance.draft.md` — 24× perf budget overrun; LCP 3.84s; font phasing plan; 18h effort
+4. `DESIGN-RESEARCH-synthesis-audit-2026-06-02.draft.md` — cross-agent synthesis; P0 list; v0.0.2 sprint scope (~17h closes all WCAG Level A+AA)
+5. `DESIGN-COMPONENT-icon-tab.draft.md` — status: draft-pending-design-pass
+6. `DESIGN-TOKEN-POINTSAV-icon-tab-steel.draft.md` — DESIGN-TOKEN-CHANGE; status: draft-pending-design-pass
+7. `DESIGN-TOKEN-woodfine-blue-tint.md` — woodfine-media-assets token; status: staged
+
+**From project-orgcharts:**
+8. `component-orgchart-node-pill-teal-grey.draft.md` — DESIGN-COMPONENT; status: draft-pending-design-pass
+9. `research-bencal-chart-green-value-drift.draft.md` — DESIGN-RESEARCH; status: draft-pending-design-pass
+10. `token-woodfine-theme-teal-red-additions.draft.md` — DESIGN-TOKEN-CHANGE; status: draft-pending-design-pass
+
+Source: project-editorial outbox msg-id `RELAY + DESIGN batch`. ACK to project-editorial outbox when intake complete.
+
+---
+from: command@claude-code
+to: totebox@project-design
 re: wiki institutional redesign — master_cosign in place; process DESIGN-TOKEN-CHANGE for --color-interactive
 created: 2026-06-03T23:39:14Z
 priority: normal
