@@ -38,6 +38,7 @@ pub struct BencalSpv1Year {
     pub year: u32,
     pub commission_rebate: f64,           // Y0 only
     pub wcp_crs_realised_gain: f64,       // Y4 cash dividend
+    pub wcp_annual_sale_gain: f64,        // Y5–Y10 opex-funding share sales
     pub wcp_fv_change: f64,               // FVTPL each year
     pub total_investment_income: f64,
     pub setup_costs: f64,                 // Y0
@@ -103,11 +104,18 @@ pub fn forecast(wcp: &[WcpYear]) -> Vec<BencalSpv1Year> {
             0.0
         };
 
+        // Y5–Y10: sell enough WCP shares to fund $18,360 opex after 27% tax
+        let annual_sale_gain = if y >= 5 {
+            SPV1_OPEX_ANNUAL / (1.0 - SPV1_TAX_RATE_CURRENT)
+        } else {
+            0.0
+        };
+
         // FV change vs prior year holding FV (net of any sale at FV)
         let wcp_fv_change = (shares_held * wcp_value_per_share + crs_cash)
                           - prev_wcp_fv;
 
-        let total_income = commission + crs_cash + wcp_fv_change;
+        let total_income = commission + crs_cash + annual_sale_gain + wcp_fv_change;
         let income_before_tax = total_income - setup - opex;
         let tax = if income_before_tax > 0.0 {
             income_before_tax * SPV1_TAX_RATE_CURRENT
@@ -130,6 +138,7 @@ pub fn forecast(wcp: &[WcpYear]) -> Vec<BencalSpv1Year> {
             year: y,
             commission_rebate: commission,
             wcp_crs_realised_gain: crs_cash,
+            wcp_annual_sale_gain: annual_sale_gain,
             wcp_fv_change,
             total_investment_income: total_income,
             setup_costs: setup,

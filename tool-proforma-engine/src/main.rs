@@ -313,23 +313,36 @@ fn main() {
             eprintln!("wrote 3 Legacy JV V1 files to {}", out_dir.display());
         }
         Some(Command::BencalAllV1 { out_dir }) => {
-            // Bencal SPV1, SPV2, Management V1 — engine self-generating proformas.
-            // Consumes PCLP 1 V2 + WCP V1. 9 files total (3 per entity).
+            // Bencal SPV1, SPV2, Management V2 — engine self-generating proformas.
+            // Consumes PCLP 1 V2 + WCP V1. 9 HTML/JSON files + 6 PDFs = 15 total.
             use report::bencal_v1_proforma::*;
             let pairs = [
                 ("Bencal_SPV1", render_proforma_spv1(), render_summary_spv1(), render_json_spv1()),
                 ("Bencal_SPV2", render_proforma_spv2(), render_summary_spv2(), render_json_spv2()),
                 ("Bencal_Management", render_proforma_mgmt(), render_summary_mgmt(), render_json_mgmt()),
             ];
+            let mut pdf_count = 0usize;
             for (name, proforma, summary, json) in &pairs {
-                let proforma_path = out_dir.join(format!("COMPLIANCE_MCorp_2026_06_04_Proforma_{}_V1.html", name));
-                let summary_path = out_dir.join(format!("COMPLIANCE_MCorp_2026_06_04_Summary_{}_V1.html", name));
-                let json_path = out_dir.join(format!("COMPLIANCE_MCorp_2026_06_04_{}_V1.json", name));
+                let proforma_path = out_dir.join(format!("COMPLIANCE_MCorp_2026_06_05_Proforma_{}_V2.html", name));
+                let summary_path = out_dir.join(format!("COMPLIANCE_MCorp_2026_06_05_Summary_{}_V2.html", name));
+                let json_path = out_dir.join(format!("COMPLIANCE_MCorp_2026_06_05_{}_V2.json", name));
                 write_output(proforma, Some(&proforma_path));
                 write_output(summary, Some(&summary_path));
                 write_output(json, Some(&json_path));
+                for html_path in &[&proforma_path, &summary_path] {
+                    let pdf_path = html_path.with_extension("pdf");
+                    let status = std::process::Command::new("weasyprint")
+                        .arg(html_path.as_os_str())
+                        .arg(pdf_path.as_os_str())
+                        .status();
+                    match status {
+                        Ok(s) if s.success() => { pdf_count += 1; }
+                        Ok(s) => eprintln!("weasyprint exited {} for {}", s, html_path.display()),
+                        Err(e) => eprintln!("weasyprint not found or failed: {e}"),
+                    }
+                }
             }
-            eprintln!("wrote 9 Bencal V1 files to {}", out_dir.display());
+            eprintln!("wrote 9 Bencal V2 files + {} PDFs to {}", pdf_count, out_dir.display());
         }
         None => {
             // Legacy: JSON assumptions → sensitivity engine
