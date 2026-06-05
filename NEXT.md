@@ -1,9 +1,9 @@
-# NEXT.md — project-design
+# NEXT.md — project-gis
 
 Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 
-Last updated: 2026-06-04
+Last updated: 2026-06-05
 
 ---
 
@@ -19,16 +19,52 @@ Last updated: 2026-06-04
 - [x] **Parking ingest full run** — PID 148899 running all 7 countries (US/CA/FR/DE/IT/PL/NO);
       CA at tile 10/12; FR–NO queued after. PKS rebuild pending completion. [2026-06-05]
 
-### Defects found tonight — fix next session
-- [ ] **ESHM20 EU seismic: only 1 feature extracted** — `eshm20-eu.geojson` has 1 polygon
-      (Iceland-area zone) instead of full EU seismic hazard zone grid. Step [8/9] produced 0
-      cluster PGA assignments. The seismic script's ESHM20 extraction is wrong (probably extracts
-      only a summary or single record). Fix: re-inspect `build-aec-seismic.sh` ESHM20 extraction
-      steps + verify field names against actual 343 MB tar.gz contents. [2026-06-05]
-- [ ] **GWL_FCS30 wetland tiles: all zip downloads failed** — `W0_W30.zip` "download failed or too
-      small"; `W65_W90.zip` "no TIF found in zip". Zenodo tile URL scheme may have changed.
-      Fix: verify Zenodo record 7340516 tile naming; update URL pattern in `build-aec-seismic.sh`.
-      [2026-06-05]
+### Defects — root causes diagnosed 2026-06-05 (fix next session)
+
+ALL THREE seismic sources in `build-aec-seismic.sh` produced 0 cluster assignments.
+0 US + 0 CA + 0 EU clusters have `seismic_pga_g` in `clusters-meta.json`.
+
+- [ ] **USGS NSHM 2023 [step 1]** — ScienceBase item `64ff886dd34ed30c2057b4d9` returns HTTP 404
+      (item was moved/deleted since script was written). Hardcoded direct URL also fails.
+      `usgs-nshm-pga-us.zip` is 752 bytes (error page, not data). 1822 US clusters missing PGA.
+      Fix: find new ScienceBase item ID for USGS NSHM 2023 PGA shapefile OR use USGS per-point
+      hazard API. [2026-06-05 totebox@claude-code]
+
+- [ ] **NRCan 2015 [step 2]** — GEOSCAN R=297378 redirects to empty body. Legacy interpolat URL
+      also fails. open.canada.ca dataset `b1bd3cf0` has only HTML tool links, no downloadable CSV.
+      Fix: find direct CSV download for NRCan 2015/2020 PGA grid OR use NRCan interpolation API
+      per-point. ~300 CA clusters missing PGA. [2026-06-05 totebox@claude-code]
+
+- [ ] **ESHM20 EU seismic [step 4]** — ETH GitLab `eshm20` repo is the **source model** (seismicity
+      parameters, tectonic zone geometries), NOT the hazard output (PGA maps). The tarball
+      (358 MB) contains only `eshm20_input_[a-n]_*.shp` — earthquake catalogues, fault models, etc.
+      None have PGA attributes. `eshm20-eu.geojson` (1974 bytes, 1 feature, Iceland zone) is wrong.
+      `eshm20-mhs-hazard-curves-maps` GitLab repo: 404 (doesn't exist). Pangaea 929292 requires
+      login. EFEHR maps API: 404. 2715 EU clusters (DE/FR/GB/ES/IT/PL...) missing PGA.
+      Fix: find freely downloadable ESHM20 hazard OUTPUT (PGA map), possibly via GEM OpenQuake
+      or a different EFEHR endpoint. [2026-06-05 totebox@claude-code]
+
+- [ ] **GWL_FCS30 wetland [step 6]** — ROOT CAUSE FOUND: 408 tile TIFs already exist in
+      `work/aec/gwl-tiles/` from a prior run (coordinate-encoded names e.g. `E0N10.tif`).
+      Script's cache check looks for consolidated `${TILE_NAME}.tif` (e.g. `E0_E30.tif`) —
+      never matches. After unzip, `find -name "${TILE_NAME}*.tif"` also fails (prefix `E0_E30`
+      doesn't match actual filenames `E0N10`). Additionally `W0_W30.zip` URL is wrong; correct
+      Zenodo filename is `W5_W30.zip` (confirmed via Zenodo API).
+      Fix: (a) add early-exit that detects existing tiles (`find gwl-tiles/ -name "GWL_FCS30_*.tif"
+      | wc -l` > 10 → skip download loop, collect all TIFs, build VRT); (b) fix URL
+      `W0_W30` → `W5_W30`; (c) fix post-unzip TIF search to use `GWL_FCS30_*.tif` glob, not
+      `${TILE_NAME}*.tif`. This is the easiest of the four fixes — no new data source needed.
+      [2026-06-05 totebox@claude-code]
+
+- [ ] **AEC flood Night 5** — flood build was killed at step [3/17] FEMA 1300/1822 cells.
+      `layer11-flood-global.pmtiles` (120 MB AQUEDUCT) deployed. FEMA/wildfire/EU-flood steps
+      incomplete. `.night5-complete` not written.
+      Fix: delete `.night4-complete` to allow Night 5 re-run; queue `build-aec-flood.sh` for
+      05:00 UTC. FEMA step has no checkpoint; will restart from 0/1822 (~3-4h). [2026-06-05]
+
+- [ ] **Parking DE/IT/PL** — Overpass timeouts on 2×2 tiles. US/CA/FR succeeded.
+      Fix: change DE/IT/PL TILE_GRIDS from `(2, 2, ...)` to `(3, 3, ...)` in
+      `ingest-osm-parking.py`. [2026-06-05]
 
 ---
 
