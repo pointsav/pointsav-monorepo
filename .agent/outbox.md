@@ -8,6 +8,74 @@ schema: foundry-mailbox-v1
 # Outbox — project-intelligence Totebox
 
 ---
+from: totebox@project-intelligence
+to: command@claude-code
+re: RAM OOM analysis + two infrastructure gaps + stale project-bim index.lock
+created: 2026-06-05T20:52:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260605-ram-analysis
+---
+
+Root-cause analysis of the 2026-06-05T02:54:52Z HEALTH ALERT (ram<200MB,
+doorman-unreachable). Kernel OOM log confirms two cascades starting 03:17 UTC.
+
+## Root cause — working as designed, but three gaps found
+
+**Cascade timeline:**
+- 03:17:29 UTC: `claude` (oom_score_adj=-500) triggers global OOM
+- 03:17:32 UTC: `llama-server` (oom_score_adj=+500) killed — 3.57 GB freed
+- 03:36 UTC: second OOM; `systemd-networkd` + `systemd-logind` killed
+- 03:39 UTC: llama-server auto-restarts (Restart=on-failure)
+
+`llama-server` was intentionally sacrificed (oom_score_adj=500) and auto-recovered.
+The claude process is correctly protected (-500). This pattern is expected behaviour
+under concurrent peak load: local-slm (~7.86 GB) + local-content (~4.61 GB) + system
+baseline (~3 GB) = ~15.5 GB permanent, plus a heavy Claude Code session pushing total
+above the 31 GB VM ceiling.
+
+## Gap 1 — local-knowledge services have no MemoryMax [Command + project-knowledge]
+
+`local-knowledge-documentation.service` and `local-knowledge-projects.service` have no
+`MemoryMax` set. Currently idle at 22–44 MB but unbounded under index-rebuild load.
+
+Recommended: add a `memory.conf` drop-in to each of:
+  `/srv/foundry/infrastructure/local-knowledge-documentation/local-knowledge-documentation.service.d/`
+  `/srv/foundry/infrastructure/local-knowledge-projects/local-knowledge-projects.service.d/`
+
+Content for each:
+```
+[Service]
+MemoryMax=512M
+MemoryHigh=384M
+```
+Then `sudo systemctl daemon-reload`. No restart needed.
+
+## Gap 2 — local-slm source/installed MemoryMax drift [Command]
+
+Infrastructure source: `/srv/foundry/infrastructure/local-slm/local-slm.service` has
+`MemoryMax=7G`. Installed unit (`systemctl show local-slm`) reports `8G`. Current RSS
+is 7.86 GB — above the source value, indicating the installed unit is out of sync.
+
+Before re-installing, the cap should be raised in the source file first:
+- `MemoryMax=10G` / `MemoryHigh=8G` gives realistic headroom for Q4_K_M (4.16 GB
+  GGUF + ~3 GB KV cache = ~8 GB peak). The current 7G would cgroup-kill llama-server
+  on every restart.
+- This is an operator decision — flagging here for Command to action.
+
+## Gap 3 — apt-daily-upgrade timer coincides with active sessions [Command/VM sysadmin]
+
+`apt-get` (PID 84451) was killed in the second OOM cascade — `apt-daily` ran during an
+active evening session. Recommend rescheduling the `apt-daily-upgrade.timer` OnCalendar
+to 04:00–05:00 UTC to avoid coinciding with active PDT evening sessions.
+
+## Stale index.lock in project-bim [Command]
+
+`/srv/foundry/clones/project-bim/.git/index.lock` exists but no process holds it
+(confirmed via `lsof`). Safe to `rm -f`. Stale lock prevents any git operations in
+project-bim.
+
+---
 ---
 from: totebox@project-intelligence
 to: command@claude-code

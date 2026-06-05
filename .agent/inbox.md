@@ -52,7 +52,9 @@ to: totebox@project-design
 re: wiki institutional redesign — master_cosign in place; process DESIGN-TOKEN-CHANGE for --color-interactive
 created: 2026-06-03T23:39:14Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-04T00:00:00Z
+actioned_note: SessionContext implemented in bb36f3dc (Jennifer); ACK in outbox project-intelligence-20260605-tier3-ack
 attempts: 0
 msg-id: command-20260603-wiki-institutional-redesign-master-cosig
 ---
@@ -77,9 +79,9 @@ re: relay — project-orgcharts DESIGN-* drafts (3 artifacts; 1 needs master_cos
 created: 2026-06-02T07:00:00Z
 priority: normal
 status: actioned
-actioned_at: 2026-06-03T15:45:00Z
-msg-id: command-20260602-relay-orgcharts-design-drafts
-relayed-from: project-orgcharts-20260601-design-drafts-bencal-charts
+actioned: 2026-06-05T20:52:00Z
+actioned_note: header contamination fixed this session; topic-drafts-slm-substrate msg not present in outbox (already cleared); RAM analysis written to outbox
+msg-id: command-20260603-intelligence-sweep-summary
 ---
 
 Three DESIGN-* drafts from project-orgcharts in `clones/project-orgcharts/.agent/drafts-outbound/`:
