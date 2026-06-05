@@ -6,10 +6,15 @@ use crate::spv::legacy_jv_proforma::{self, LegacyJvYear};
 // ─── Formatting helpers ─────────────────────────────────────────────────────
 
 fn fmt_m(v: f64) -> String {
-    if v.abs() < 1e-2 { "—".to_string() }
-    else if v.abs() >= 1_000_000.0 { format!("${:.2}M", v / 1_000_000.0) }
-    else if v.abs() >= 1_000.0 { format!("${:.0}K", v / 1_000.0) }
-    else { format!("${:.0}", v) }
+    if v.abs() < 1e-2 {
+        "—".to_string()
+    } else if v.abs() >= 1_000_000.0 {
+        format!("${:.2}M", v / 1_000_000.0)
+    } else if v.abs() >= 1_000.0 {
+        format!("${:.0}K", v / 1_000.0)
+    } else {
+        format!("${:.0}", v)
+    }
 }
 
 fn fmt_int(v: f64) -> String {
@@ -18,15 +23,27 @@ fn fmt_int(v: f64) -> String {
     let bytes = s.as_bytes();
     let mut out = String::with_capacity(s.len() + s.len() / 3);
     for (i, b) in bytes.iter().enumerate() {
-        if i > 0 && (bytes.len() - i) % 3 == 0 { out.push(','); }
+        if i > 0 && (bytes.len() - i).is_multiple_of(3) {
+            out.push(',');
+        }
         out.push(*b as char);
     }
-    if n < 0 { format!("-{out}") } else { out }
+    if n < 0 {
+        format!("-{out}")
+    } else {
+        out
+    }
 }
 
-fn fmt_full_dollar(v: f64) -> String { format!("${}", fmt_int(v)) }
-fn fmt_pct(v: f64) -> String { format!("{:.1}%", v * 100.0) }
-fn fmt_per_unit(v: f64) -> String { format!("${:.2}", v) }
+fn fmt_full_dollar(v: f64) -> String {
+    format!("${}", fmt_int(v))
+}
+fn fmt_pct(v: f64) -> String {
+    format!("{:.1}%", v * 100.0)
+}
+fn fmt_per_unit(v: f64) -> String {
+    format!("${:.2}", v)
+}
 
 const HEAD: &str = r#"<!DOCTYPE html>
 <html lang="en"><head>
@@ -69,28 +86,41 @@ const LNUM_SCRIPT: &str = r#"<script>
 </script>
 "#;
 
-fn head_with_title(title: &str) -> String { HEAD.replace("__TITLE__", title) }
+fn head_with_title(title: &str) -> String {
+    HEAD.replace("__TITLE__", title)
+}
 
 fn year_header() -> String {
     let mut s = String::from("<tr><th class=\"lbl\">Line</th>");
-    for y in 0..=10 { s.push_str(&format!("<th>Y{}</th>", y)); }
+    for y in 0..=10 {
+        s.push_str(&format!("<th>Y{}</th>", y));
+    }
     s.push_str("</tr>\n");
     s
 }
 
 fn data_row<F: Fn(&LegacyJvYear) -> f64>(label: &str, years: &[LegacyJvYear], pick: F) -> String {
     let mut s = format!("<tr><td class=\"lbl\">{}</td>", label);
-    for y in years { s.push_str(&format!("<td>{}</td>", fmt_m(pick(y)))); }
+    for y in years {
+        s.push_str(&format!("<td>{}</td>", fmt_m(pick(y))));
+    }
     s.push_str("</tr>\n");
     s
 }
 
-fn data_row_pct<F: Fn(&LegacyJvYear) -> f64>(label: &str, years: &[LegacyJvYear], pick: F) -> String {
+fn data_row_pct<F: Fn(&LegacyJvYear) -> f64>(
+    label: &str,
+    years: &[LegacyJvYear],
+    pick: F,
+) -> String {
     let mut s = format!("<tr><td class=\"lbl\">{}</td>", label);
     for y in years {
         let v = pick(y);
-        if v > 0.001 { s.push_str(&format!("<td>{}</td>", fmt_pct(v))); }
-        else { s.push_str("<td>—</td>"); }
+        if v > 0.001 {
+            s.push_str(&format!("<td>{}</td>", fmt_pct(v)));
+        } else {
+            s.push_str("<td>—</td>");
+        }
     }
     s.push_str("</tr>\n");
     s
@@ -100,8 +130,11 @@ fn data_row_x<F: Fn(&LegacyJvYear) -> f64>(label: &str, years: &[LegacyJvYear], 
     let mut s = format!("<tr><td class=\"lbl\">{}</td>", label);
     for y in years {
         let v = pick(y);
-        if v > 0.001 { s.push_str(&format!("<td>{:.2}×</td>", v)); }
-        else { s.push_str("<td>—</td>"); }
+        if v > 0.001 {
+            s.push_str(&format!("<td>{:.2}×</td>", v));
+        } else {
+            s.push_str("<td>—</td>");
+        }
     }
     s.push_str("</tr>\n");
     s
@@ -131,25 +164,76 @@ pub fn render_proforma() -> String {
     s.push_str("<table>\n");
     s.push_str("<tr><th class=\"lbl\">Parameter</th><th>Value</th><th>Notes</th></tr>\n");
     let rows = [
-        ("Equity contributions (LP)", fmt_full_dollar(LEGACY_JV_EQUITY), "Same \\$250M as PCLP 1"),
-        ("Bank debt (construction → permanent)", fmt_full_dollar(LEGACY_JV_BANK_DEBT), "3.0× D/E"),
-        ("Total capital deployed", fmt_full_dollar(LEGACY_JV_TOTAL_CAPITAL), "Single-shot"),
-        ("LP units (= equity / \\$100)", fmt_int(LEGACY_JV_LP_UNITS), ""),
-        ("Total portfolio sf", fmt_int(LEGACY_JV_TOTAL_SF), "BRIEF §2469"),
-        ("Construction cost / sf", format!("${:.2}", LEGACY_JV_COST_PER_SF), "BRIEF §2468"),
+        (
+            "Equity contributions (LP)",
+            fmt_full_dollar(LEGACY_JV_EQUITY),
+            "Same \\$250M as PCLP 1",
+        ),
+        (
+            "Bank debt (construction → permanent)",
+            fmt_full_dollar(LEGACY_JV_BANK_DEBT),
+            "3.0× D/E",
+        ),
+        (
+            "Total capital deployed",
+            fmt_full_dollar(LEGACY_JV_TOTAL_CAPITAL),
+            "Single-shot",
+        ),
+        (
+            "LP units (= equity / \\$100)",
+            fmt_int(LEGACY_JV_LP_UNITS),
+            "",
+        ),
+        (
+            "Total portfolio sf",
+            fmt_int(LEGACY_JV_TOTAL_SF),
+            "BRIEF §2469",
+        ),
+        (
+            "Construction cost / sf",
+            format!("${:.2}", LEGACY_JV_COST_PER_SF),
+            "BRIEF §2468",
+        ),
         ("Development yield", fmt_pct(LEGACY_JV_DEV_YIELD), "10.5%"),
         ("Cap rate", fmt_pct(LEGACY_JV_CAP_RATE), "6.25%"),
-        ("Stabilized gross rent", fmt_full_dollar(LEGACY_JV_GROSS_REV_STABILIZED), "10.5% × \\$750M debt; BRIEF §2528"),
-        ("Stabilized NOI", fmt_full_dollar(LEGACY_JV_NOI_STABILIZED), "Gross rent × (1 - 20% opex)"),
-        ("Stabilized asset value (IFRS FV)", fmt_full_dollar(LEGACY_JV_STABILIZED_AV), "= NOI / cap rate"),
-        ("Permanent loan interest rate", fmt_pct(LEGACY_JV_INTEREST_RATE), "5%"),
-        ("Operating expense ratio", fmt_pct(LEGACY_JV_OPEX_PCT), "~20% of gross"),
+        (
+            "Stabilized gross rent",
+            fmt_full_dollar(LEGACY_JV_GROSS_REV_STABILIZED),
+            "10.5% × \\$750M debt; BRIEF §2528",
+        ),
+        (
+            "Stabilized NOI",
+            fmt_full_dollar(LEGACY_JV_NOI_STABILIZED),
+            "Gross rent × (1 - 20% opex)",
+        ),
+        (
+            "Stabilized asset value (IFRS FV)",
+            fmt_full_dollar(LEGACY_JV_STABILIZED_AV),
+            "= NOI / cap rate",
+        ),
+        (
+            "Permanent loan interest rate",
+            fmt_pct(LEGACY_JV_INTEREST_RATE),
+            "5%",
+        ),
+        (
+            "Operating expense ratio",
+            fmt_pct(LEGACY_JV_OPEX_PCT),
+            "~20% of gross",
+        ),
         ("Annual G&amp;A", fmt_full_dollar(LEGACY_JV_GA_ANNUAL), ""),
-        ("Depreciation (ASPE 3061)", format!("{:.0}-yr SL", LEGACY_JV_DEPRECIATION_YRS), "Building only; land excluded"),
+        (
+            "Depreciation (ASPE 3061)",
+            format!("{:.0}-yr SL", LEGACY_JV_DEPRECIATION_YRS),
+            "Building only; land excluded",
+        ),
         ("LTV covenant", fmt_pct(LEGACY_JV_LTV_COVENANT), "65%"),
     ];
     for (l, v, n) in &rows {
-        s.push_str(&format!("<tr><td class=\"lbl\">{}</td><td>{}</td><td>{}</td></tr>\n", l, v, n));
+        s.push_str(&format!(
+            "<tr><td class=\"lbl\">{}</td><td>{}</td><td>{}</td></tr>\n",
+            l, v, n
+        ));
     }
     s.push_str("</table>\n");
 
@@ -157,43 +241,75 @@ pub fn render_proforma() -> String {
     s.push_str("<table>\n");
     s.push_str(&year_header());
     let mut phase_row = String::from("<tr><td class=\"lbl\">Phase</td>");
-    for y in &years { phase_row.push_str(&format!("<td>{}</td>", y.phase)); }
+    for y in &years {
+        phase_row.push_str(&format!("<td>{}</td>", y.phase));
+    }
     phase_row.push_str("</tr>\n");
     s.push_str(&phase_row);
     s.push_str(&data_row("Capex (S-curve 20/50/30)", &years, |y| y.capex));
-    s.push_str(&data_row("Cumulative capex", &years, |y| y.cumulative_capex));
-    s.push_str(&data_row("Debt outstanding", &years, |y| y.debt_outstanding));
+    s.push_str(&data_row("Cumulative capex", &years, |y| {
+        y.cumulative_capex
+    }));
+    s.push_str(&data_row("Debt outstanding", &years, |y| {
+        y.debt_outstanding
+    }));
     s.push_str("</table>\n");
 
     s.push_str("<h2>10-Year Income Statement (CAD; ASPE 3061)</h2>\n");
     s.push_str("<table>\n");
     s.push_str(&year_header());
-    s.push_str(&data_row("Gross rental revenue", &years, |y| y.gross_rental_revenue));
-    s.push_str(&data_row("Operating expenses (20%)", &years, |y| -y.operating_expenses));
+    s.push_str(&data_row("Gross rental revenue", &years, |y| {
+        y.gross_rental_revenue
+    }));
+    s.push_str(&data_row("Operating expenses (20%)", &years, |y| {
+        -y.operating_expenses
+    }));
     s.push_str(&data_row("Net Operating Income (NOI)", &years, |y| y.noi));
-    s.push_str(&data_row("Interest on $750M @ 5%", &years, |y| -y.interest_expense));
-    s.push_str(&data_row("Depreciation (50-yr SL)", &years, |y| -y.depreciation));
+    s.push_str(&data_row("Interest on $750M @ 5%", &years, |y| {
+        -y.interest_expense
+    }));
+    s.push_str(&data_row("Depreciation (50-yr SL)", &years, |y| {
+        -y.depreciation
+    }));
     s.push_str(&data_row("G&amp;A", &years, |y| -y.ga_expense));
     s.push_str("<tr class=\"subtotal\">");
     s.push_str("<td class=\"lbl\">Net income</td>");
-    for y in &years { s.push_str(&format!("<td>{}</td>", fmt_m(y.net_income))); }
+    for y in &years {
+        s.push_str(&format!("<td>{}</td>", fmt_m(y.net_income)));
+    }
     s.push_str("</tr>\n");
-    s.push_str(&data_row("Add back depreciation", &years, |y| y.depreciation));
+    s.push_str(&data_row("Add back depreciation", &years, |y| {
+        y.depreciation
+    }));
     s.push_str("<tr class=\"total\">");
     s.push_str("<td class=\"lbl\">Distributable cash</td>");
-    for y in &years { s.push_str(&format!("<td>{}</td>", fmt_m(y.distributable_cash))); }
+    for y in &years {
+        s.push_str(&format!("<td>{}</td>", fmt_m(y.distributable_cash)));
+    }
     s.push_str("</tr>\n");
-    s.push_str(&data_row("Distributions to LPs", &years, |y| y.distributions_to_lps));
-    s.push_str(&data_row("Cumulative distributions", &years, |y| y.cumulative_distributions));
+    s.push_str(&data_row("Distributions to LPs", &years, |y| {
+        y.distributions_to_lps
+    }));
+    s.push_str(&data_row("Cumulative distributions", &years, |y| {
+        y.cumulative_distributions
+    }));
     s.push_str("</table>\n");
     s.push_str("<p class=\"note\">Y1-Y3 construction phase: no revenue, no opex, no depreciation. Y4+ stabilized: gross rent $78.75M; opex (20%) $15.75M; NOI $63M; debt service $37.5M; depreciation $21.1M; G&A $2M; net income ~$2.4M; distributable cash ~$23.5M/yr; cumulative Y4–Y10 distributions ~$164M.</p>\n");
 
     s.push_str("<h2>Valuation &amp; Ratios</h2>\n");
     s.push_str("<table>\n");
     s.push_str(&year_header());
-    s.push_str(&data_row("Asset value (ASPE book)", &years, |y| y.asset_value_aspe));
-    s.push_str(&data_row("Equity value (asset − debt, book)", &years, |y| y.equity_value));
-    s.push_str(&data_row_pct("LTV (debt / book asset)", &years, |y| y.ltv_book));
+    s.push_str(&data_row("Asset value (ASPE book)", &years, |y| {
+        y.asset_value_aspe
+    }));
+    s.push_str(&data_row(
+        "Equity value (asset − debt, book)",
+        &years,
+        |y| y.equity_value,
+    ));
+    s.push_str(&data_row_pct("LTV (debt / book asset)", &years, |y| {
+        y.ltv_book
+    }));
     s.push_str(&data_row_x("DSCR (NOI / interest)", &years, |y| y.dscr));
     s.push_str(&data_row("DPU (per LP unit)", &years, |y| y.dpu));
     s.push_str("</table>\n");
@@ -220,22 +336,32 @@ fn render_endpoint_summary(y10: &LegacyJvYear) -> String {
     s.push_str("<h2>Investment Return Summary (Y10 endpoint)</h2>\n");
     s.push_str("<table>\n");
     s.push_str("<tr><th class=\"lbl\">Metric</th><th>Aggregate</th><th>Per LP unit</th></tr>\n");
-    s.push_str(&format!("<tr><td class=\"lbl\">Total LP equity invested (Y0)</td><td>{}</td><td>{}</td></tr>\n",
-                        fmt_full_dollar(LEGACY_JV_EQUITY),
-                        fmt_per_unit(LEGACY_JV_UNIT_PRICE)));
-    s.push_str(&format!("<tr><td class=\"lbl\">Cumulative distributions Y4–Y10</td><td>{}</td><td>{}</td></tr>\n",
-                        fmt_m(y10.cumulative_distributions),
-                        fmt_per_unit(y10.cumulative_distributions / LEGACY_JV_LP_UNITS)));
-    s.push_str(&format!("<tr><td class=\"lbl\">Y10 IFRS FV asset value</td><td>{}</td><td>—</td></tr>\n",
-                        fmt_m(LEGACY_JV_STABILIZED_AV)));
-    s.push_str(&format!("<tr><td class=\"lbl\">Y10 IFRS FV equity (asset − debt)</td><td>{}</td><td>{}</td></tr>\n",
-                        fmt_m(ifrs_fv_equity),
-                        fmt_per_unit(ifrs_fv_equity / LEGACY_JV_LP_UNITS)));
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">Total LP equity invested (Y0)</td><td>{}</td><td>{}</td></tr>\n",
+        fmt_full_dollar(LEGACY_JV_EQUITY),
+        fmt_per_unit(LEGACY_JV_UNIT_PRICE)
+    ));
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">Cumulative distributions Y4–Y10</td><td>{}</td><td>{}</td></tr>\n",
+        fmt_m(y10.cumulative_distributions),
+        fmt_per_unit(y10.cumulative_distributions / LEGACY_JV_LP_UNITS)
+    ));
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">Y10 IFRS FV asset value</td><td>{}</td><td>—</td></tr>\n",
+        fmt_m(LEGACY_JV_STABILIZED_AV)
+    ));
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">Y10 IFRS FV equity (asset − debt)</td><td>{}</td><td>{}</td></tr>\n",
+        fmt_m(ifrs_fv_equity),
+        fmt_per_unit(ifrs_fv_equity / LEGACY_JV_LP_UNITS)
+    ));
     s.push_str(&format!("<tr class=\"total\"><td class=\"lbl\">Total return (cumulative dist + Y10 equity)</td><td>{}</td><td>{}</td></tr>\n",
                         fmt_m(y10.cumulative_distributions + ifrs_fv_equity),
                         fmt_per_unit((y10.cumulative_distributions + ifrs_fv_equity) / LEGACY_JV_LP_UNITS)));
-    s.push_str(&format!("<tr><td class=\"lbl\">MOIC (pre-tax, gross)</td><td>{:.2}×</td><td>{:.2}×</td></tr>\n",
-                        moic_at_fv, moic_at_fv));
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">MOIC (pre-tax, gross)</td><td>{:.2}×</td><td>{:.2}×</td></tr>\n",
+        moic_at_fv, moic_at_fv
+    ));
     s.push_str("</table>\n");
     s.push_str(&format!("<p class=\"note\">Cash-on-cash yield ~9.4% on \\$250M equity (\\${:.1}M annual distributable / \\$250M = 9.4%). Per BRIEF §2536. MOIC computed at IFRS FV equity value; ASPE book equity value declines with depreciation but real-world investor value is the FV.</p>\n",
                         y10.distributable_cash / 1_000_000.0));
@@ -251,7 +377,9 @@ fn render_comparator_table() -> String {
     s.push_str(&format!("<tr><td class=\"lbl\">Total sf delivered</td><td>{} sf</td><td>3,906,855 sf</td><td>+70%</td></tr>\n",
                         fmt_int(LEGACY_JV_TOTAL_SF)));
     s.push_str("<tr><td class=\"lbl\">Total development capital</td><td>$1,000M</td><td>$1,211M</td><td>—</td></tr>\n");
-    s.push_str("<tr><td class=\"lbl\">Equity in</td><td>$250M</td><td>$250M</td><td>same</td></tr>\n");
+    s.push_str(
+        "<tr><td class=\"lbl\">Equity in</td><td>$250M</td><td>$250M</td><td>same</td></tr>\n",
+    );
     s.push_str(&format!("<tr><td class=\"lbl\">Stabilized asset value</td><td>{}</td><td>~$2,035M</td><td>+2×</td></tr>\n",
                         fmt_m(LEGACY_JV_STABILIZED_AV)));
     s.push_str("<tr><td class=\"lbl\">Equity value (asset − debt, IFRS FV)</td><td>$258M</td><td>~$1,090M</td><td>+4×</td></tr>\n");
@@ -274,7 +402,9 @@ pub fn render_summary() -> String {
     s.push_str("<h1>Legacy JV (D7) — Investor Summary V1</h1>\n");
     s.push_str("<p>Engine-generated comparator summary from BRIEF v0.15.6 §5h.<br>\n");
     s.push_str("DRAFT — 2026-06-04 — V1<br>\n");
-    s.push_str("Companion: <code>COMPLIANCE_MCorp_2026_06_04_Proforma_LegacyJV_V1.html</code></p>\n");
+    s.push_str(
+        "Companion: <code>COMPLIANCE_MCorp_2026_06_04_Proforma_LegacyJV_V1.html</code></p>\n",
+    );
 
     s.push_str("<p>Legacy JV (D7) is the traditional joint-venture comparator to PCLP 1 (D2). Same $250M LP equity but financed with $750M bank debt (3× leverage) at $1B total capital, single development round, 2,298,150 sf at $326/sf. Construction Y1-Y3 (S-curve 20/50/30), stabilized Y4+. ASPE 3061 cost model. No further development rounds possible due to LTV covenant constraint.</p>\n");
 

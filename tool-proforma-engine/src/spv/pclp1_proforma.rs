@@ -13,44 +13,43 @@ use serde::Serialize;
 // ─── Constants from BRIEF v0.15.6 §5b (lines 713–740) ──────────────────────
 
 // Capital structure
-pub const PCLP1_GROSS_EQUITY: f64           = 250_000_000.0;   // D15
-pub const PCLP1_UNIT_PRICE: f64             = 100.0;            // D16
-pub const PCLP1_DILUTED_UNITS: f64          = 2_777_777.0;      // D45 LPA-locked
-pub const PCLP1_INVESTOR_UNITS: f64         = 2_500_000.0;      // §741
-pub const PCLP1_BENETTI_UNITS: f64          = 277_777.0;        // §742
+pub const PCLP1_GROSS_EQUITY: f64 = 250_000_000.0; // D15
+pub const PCLP1_UNIT_PRICE: f64 = 100.0; // D16
+pub const PCLP1_DILUTED_UNITS: f64 = 2_777_777.0; // D45 LPA-locked
+pub const PCLP1_INVESTOR_UNITS: f64 = 2_500_000.0; // §741
+pub const PCLP1_BENETTI_UNITS: f64 = 277_777.0; // §742
 
 // Equity issuance costs
-pub const PCLP1_ISSUING_AGENTS_FEE_PCT: f64 = 0.06;             // D17 — 6% × gross_equity
-pub const PCLP1_ISSUE_COSTS_PCT: f64        = 0.01;             // D27 — 1% × gross_equity
+pub const PCLP1_ISSUING_AGENTS_FEE_PCT: f64 = 0.06; // D17 — 6% × gross_equity
+pub const PCLP1_ISSUE_COSTS_PCT: f64 = 0.01; // D27 — 1% × gross_equity
 
 // Operating expenses
-pub const PCLP1_ADVISORY_FEE_PCT: f64       = 0.01;             // D19 — 1% × net_proceeds annually
-pub const PCLP1_ADMIN_COMPLIANCE_ANNUAL: f64 = 500_000.0;        // D24
-pub const PCLP1_BOARD_ANNUAL: f64           = 450_000.0;        // D23
+pub const PCLP1_ADVISORY_FEE_PCT: f64 = 0.01; // D19 — 1% × net_proceeds annually
+pub const PCLP1_ADMIN_COMPLIANCE_ANNUAL: f64 = 500_000.0; // D24
+pub const PCLP1_BOARD_ANNUAL: f64 = 450_000.0; // D23
 
 // Yield + valuation
-pub const PCLP1_DEV_YIELD: f64              = 0.105;            // D10 — 10.5%
-pub const PCLP1_CAP_RATE: f64               = 0.0625;           // D12 — 6.25% Public Non-Listed
-pub const PCLP1_BUYER_TARGET_YIELD: f64     = 0.08;             // AC23 — secondary-market buyer
+pub const PCLP1_DEV_YIELD: f64 = 0.105; // D10 — 10.5%
+pub const PCLP1_CAP_RATE: f64 = 0.0625; // D12 — 6.25% Public Non-Listed
+pub const PCLP1_BUYER_TARGET_YIELD: f64 = 0.08; // AC23 — secondary-market buyer
 
 // Debt (debentures)
-pub const PCLP1_DEBT_RATE_DEBENTURE: f64    = 0.050;            // D29 — 5%
-pub const PCLP1_DEBT_FINANCING_COST: f64    = 0.030;            // D28 — 3% × draw (one-time)
-pub const PCLP1_CASH_INTEREST: f64          = 0.005;            // D30 — 0.5% EY-calibrated
-pub const PCLP1_DEBT_BUYBACK_PCT_FFO: f64   = 0.10;             // D31 — 10% × FFO Y8+
-pub const PCLP1_MIN_CASH_BALANCE: f64       = 250_000.0;        // D33
+pub const PCLP1_DEBT_RATE_DEBENTURE: f64 = 0.050; // D29 — 5%
+pub const PCLP1_DEBT_FINANCING_COST: f64 = 0.030; // D28 — 3% × draw (one-time)
+pub const PCLP1_CASH_INTEREST: f64 = 0.005; // D30 — 0.5% EY-calibrated
+pub const PCLP1_DEBT_BUYBACK_PCT_FFO: f64 = 0.10; // D31 — 10% × FFO Y8+
+pub const PCLP1_MIN_CASH_BALANCE: f64 = 250_000.0; // D33
 
 // Working capital reserve (deductive from gross equity)
-pub const PCLP1_WORKING_CAPITAL_PCT: f64    = 0.0625;           // D34 — 6.25%
+pub const PCLP1_WORKING_CAPITAL_PCT: f64 = 0.0625; // D34 — 6.25%
 
 // Income continuity Y1–Y3 (§735) — offering-doc backed; fair-value entitlement
-pub const PCLP1_INCOME_CONTINUITY: [f64; 3] =
-    [3_050_000.0, 3_300_000.0, 3_500_000.0];
+pub const PCLP1_INCOME_CONTINUITY: [f64; 3] = [3_050_000.0, 3_300_000.0, 3_500_000.0];
 
 // Distribution payout ratios (§775)
-pub const PCLP1_PAYOUT_Y1_Y3: f64           = 0.00;
-pub const PCLP1_PAYOUT_Y4_Y7: f64           = 0.90;
-pub const PCLP1_PAYOUT_Y8_PLUS: f64         = 1.00;
+pub const PCLP1_PAYOUT_Y1_Y3: f64 = 0.00;
+pub const PCLP1_PAYOUT_Y4_Y7: f64 = 0.90;
+pub const PCLP1_PAYOUT_Y8_PLUS: f64 = 1.00;
 
 // Hardcoded market value Y1–Y7 (BRIEF input table §736)
 // Y8+ computed as DPU / buyer_target_yield (§893–895)
@@ -58,26 +57,37 @@ pub const PCLP1_MARKET_VALUE_Y1_Y7: [f64; 7] =
     [100.00, 100.00, 100.00, 125.80, 132.10, 171.50, 177.30];
 
 // Phase schedule (§779–783)
-pub const PCLP1_PHASE_1_ANNUAL_DRAW: f64    = 72_291_667.0;     // Y1–Y3
-pub const PCLP1_PHASE_2_ANNUAL_DRAW: f64    = 169_750_000.0;    // Y4–Y5
-pub const PCLP1_PHASE_3_Y6_DRAW: f64        = 327_375_000.0;    // Y6
-// V2 Correction 3 (2026-06-04): Y7 also draws Phase 3 second-year capex (per BRIEF
-// §783 "Phase 3 | Y6–Y7 (2 yrs) | $327,375,000/yr"). V1 returned 0 for Y7, trapping
-// the Y7 debt draw in cash and inflating Y10 NAV by ~$124/unit.
-pub const PCLP1_PHASE_3_Y7_DRAW: f64        = 327_375_000.0;    // Y7 — same as Y6
+pub const PCLP1_PHASE_1_ANNUAL_DRAW: f64 = 72_291_667.0; // Y1–Y3
+pub const PCLP1_PHASE_2_ANNUAL_DRAW: f64 = 169_750_000.0; // Y4–Y5
+pub const PCLP1_PHASE_3_Y6_DRAW: f64 = 327_375_000.0; // Y6
+                                                      // V2 Correction 3 (2026-06-04): Y7 also draws Phase 3 second-year capex (per BRIEF
+                                                      // §783 "Phase 3 | Y6–Y7 (2 yrs) | $327,375,000/yr"). V1 returned 0 for Y7, trapping
+                                                      // the Y7 debt draw in cash and inflating Y10 NAV by ~$124/unit.
+pub const PCLP1_PHASE_3_Y7_DRAW: f64 = 327_375_000.0; // Y7 — same as Y6
 
 // LP1 advisory fee deployment ramp (BRIEF §5c §1088–1091 — for WCP consumption)
-pub const PCLP1_ADVISORY_RAMP_TO_WCP: [f64; 11] =
-    [0.0, 1.0/3.0, 2.0/3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+pub const PCLP1_ADVISORY_RAMP_TO_WCP: [f64; 11] = [
+    0.0,
+    1.0 / 3.0,
+    2.0 / 3.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+];
 
 // V2 Correction 4 (2026-06-04): total building portfolio sqft for per-unit metrics
 // BRIEF §2469 — D2 portfolio 3,906,855 sf; PCLP 1 total dev cost from phase sum.
-pub const PCLP1_TOTAL_PORTFOLIO_SQFT: f64   = 3_906_855.0;
-pub const PCLP1_TOTAL_DEV_COST: f64         = 1_211_125_000.0;  // sum of all phase capex
+pub const PCLP1_TOTAL_PORTFOLIO_SQFT: f64 = 3_906_855.0;
+pub const PCLP1_TOTAL_DEV_COST: f64 = 1_211_125_000.0; // sum of all phase capex
 
 // V2 Correction 5 (2026-06-04): facility-commitment fee totals (3% × total facility)
-pub const PCLP1_PHASE_2_FACILITY_FEE: f64   = 339_500_000.0 * 0.03;  // $10.185M
-pub const PCLP1_PHASE_3_FACILITY_FEE: f64   = 654_750_000.0 * 0.03;  // $19.6425M
+pub const PCLP1_PHASE_2_FACILITY_FEE: f64 = 339_500_000.0 * 0.03; // $10.185M
+pub const PCLP1_PHASE_3_FACILITY_FEE: f64 = 654_750_000.0 * 0.03; // $19.6425M
 
 // ─── Output struct ──────────────────────────────────────────────────────────
 
@@ -124,15 +134,17 @@ pub struct Pclp1Year {
     // For WCP consumption (BRIEF §5c LP1 source)
     pub advisory_fee_to_wcp: f64,
     // V2 Correction 4 — key ratios
-    pub interest_coverage: f64,        // EBITDA ÷ Net Interest (industry standard)
-    pub debt_to_dev_cost: f64,         // Closing Debt ÷ Total Project Cost
-    pub debt_to_asset_value: f64,      // Closing Debt ÷ Asset Value (LTV)
-    pub total_sqft_generating: f64,    // Generating sqft (ramps with phases)
+    pub interest_coverage: f64, // EBITDA ÷ Net Interest (industry standard)
+    pub debt_to_dev_cost: f64,  // Closing Debt ÷ Total Project Cost
+    pub debt_to_asset_value: f64, // Closing Debt ÷ Asset Value (LTV)
+    pub total_sqft_generating: f64, // Generating sqft (ramps with phases)
 }
 
 fn total_sqft_generating_at(y: u32) -> f64 {
     // V2 Correction 4: total sqft scales with generating asset cost
-    if PCLP1_TOTAL_DEV_COST <= 0.0 { return 0.0; }
+    if PCLP1_TOTAL_DEV_COST <= 0.0 {
+        return 0.0;
+    }
     PCLP1_TOTAL_PORTFOLIO_SQFT * (generating_at(y) / PCLP1_TOTAL_DEV_COST)
 }
 
@@ -197,7 +209,11 @@ fn wip_at(y: u32) -> f64 {
     }
     if y < generates_from(2) {
         // Phase 2 WIP through Y5
-        let drawn = if y >= 4 { PCLP1_PHASE_2_ANNUAL_DRAW * ((y - 3).min(2) as f64) } else { 0.0 };
+        let drawn = if y >= 4 {
+            PCLP1_PHASE_2_ANNUAL_DRAW * ((y - 3).min(2) as f64)
+        } else {
+            0.0
+        };
         wip += drawn;
     }
     if y < generates_from(3) {
@@ -247,23 +263,42 @@ pub fn forecast() -> Vec<Pclp1Year> {
     // Y0: pre-launch state (zero everywhere)
     years.push(Pclp1Year {
         year: 0,
-        phase_draws: 0.0, total_assets: 0.0, wip: 0.0, generating: 0.0,
-        net_proceeds_from_ops: 0.0, income_continuity: 0.0,
-        issue_costs: 0.0, financing_costs: 0.0, advisory_fee: 0.0,
-        admin_compliance: 0.0, board: 0.0, total_expenses: 0.0,
+        phase_draws: 0.0,
+        total_assets: 0.0,
+        wip: 0.0,
+        generating: 0.0,
+        net_proceeds_from_ops: 0.0,
+        income_continuity: 0.0,
+        issue_costs: 0.0,
+        financing_costs: 0.0,
+        advisory_fee: 0.0,
+        admin_compliance: 0.0,
+        board: 0.0,
+        total_expenses: 0.0,
         ebitda: 0.0,
-        opening_debt: 0.0, gross_debt_draw: 0.0, net_interest: 0.0,
-        ffo: 0.0, debt_repayment: 0.0, closing_debt: 0.0,
-        opening_cash: 0.0, new_equity: 0.0, distributions: 0.0,
+        opening_debt: 0.0,
+        gross_debt_draw: 0.0,
+        net_interest: 0.0,
+        ffo: 0.0,
+        debt_repayment: 0.0,
+        closing_debt: 0.0,
+        opening_cash: 0.0,
+        new_equity: 0.0,
+        distributions: 0.0,
         ending_cash: 0.0,
-        asset_value: 0.0, asset_value_per_unit: 0.0,
-        nav: 0.0, nav_per_unit: 0.0,
+        asset_value: 0.0,
+        asset_value_per_unit: 0.0,
+        nav: 0.0,
+        nav_per_unit: 0.0,
         dpu: 0.0,
         market_value_per_unit: PCLP1_UNIT_PRICE,
-        dist_yield_on_cost: 0.0, dist_yield_at_market: 0.0,
+        dist_yield_on_cost: 0.0,
+        dist_yield_at_market: 0.0,
         advisory_fee_to_wcp: 0.0,
-        interest_coverage: 0.0, debt_to_dev_cost: 0.0,
-        debt_to_asset_value: 0.0, total_sqft_generating: 0.0,
+        interest_coverage: 0.0,
+        debt_to_dev_cost: 0.0,
+        debt_to_asset_value: 0.0,
+        total_sqft_generating: 0.0,
     });
 
     let mut prev_closing_debt: f64 = 0.0;
@@ -323,7 +358,11 @@ pub fn forecast() -> Vec<Pclp1Year> {
         let net_interest = avg_debt * PCLP1_DEBT_RATE_DEBENTURE - avg_cash * PCLP1_CASH_INTEREST;
 
         let ffo = ebitda - net_interest;
-        let debt_repayment = if y >= 8 { ffo * PCLP1_DEBT_BUYBACK_PCT_FFO } else { 0.0 };
+        let debt_repayment = if y >= 8 {
+            ffo * PCLP1_DEBT_BUYBACK_PCT_FFO
+        } else {
+            0.0
+        };
         let closing_debt = opening_debt + gross_debt_draw - debt_repayment;
 
         // Step 6: Cash flow
@@ -332,8 +371,9 @@ pub fn forecast() -> Vec<Pclp1Year> {
         let distributions = (ffo * payout_ratio(y)) - debt_repayment;
         // Y1-Y3 working capital reserve is deductive from gross equity (held back from capex)
         let capex = draws;
-        let ending_cash = opening_cash + new_equity + gross_debt_draw
-            - capex - debt_repayment - distributions + ffo;
+        let ending_cash =
+            opening_cash + new_equity + gross_debt_draw - capex - debt_repayment - distributions
+                + ffo;
         // Note: ffo is added because it represents the cash generation;
         // this matches BRIEF §858-864 cash-flow formula
 
@@ -347,11 +387,15 @@ pub fn forecast() -> Vec<Pclp1Year> {
 
         // Step 10: Per-unit metrics
         let dpu = distributions / PCLP1_DILUTED_UNITS;
-        let market_value_per_unit = if y >= 1 && y <= 7 {
+        let market_value_per_unit = if (1..=7).contains(&y) {
             PCLP1_MARKET_VALUE_Y1_Y7[(y - 1) as usize]
         } else {
             // Y8+: DPU / buyer_target_yield (BRIEF §895)
-            if PCLP1_BUYER_TARGET_YIELD > 0.0 { dpu / PCLP1_BUYER_TARGET_YIELD } else { 0.0 }
+            if PCLP1_BUYER_TARGET_YIELD > 0.0 {
+                dpu / PCLP1_BUYER_TARGET_YIELD
+            } else {
+                0.0
+            }
         };
         let dist_yield_on_cost = dpu / PCLP1_UNIT_PRICE;
         let dist_yield_at_market = if market_value_per_unit > 0.0 {
@@ -363,32 +407,60 @@ pub fn forecast() -> Vec<Pclp1Year> {
         let advisory_fee_to_wcp = advisory * PCLP1_ADVISORY_RAMP_TO_WCP[y as usize];
 
         // V2 Correction 4 — key ratios
-        let interest_coverage = if net_interest > 1.0 { ebitda / net_interest } else { 0.0 };
+        let interest_coverage = if net_interest > 1.0 {
+            ebitda / net_interest
+        } else {
+            0.0
+        };
         let debt_to_dev_cost = if PCLP1_TOTAL_DEV_COST > 0.0 {
             closing_debt / PCLP1_TOTAL_DEV_COST
-        } else { 0.0 };
+        } else {
+            0.0
+        };
         let debt_to_asset_value = if asset_value > 1.0 {
             closing_debt / asset_value
-        } else { 0.0 };
+        } else {
+            0.0
+        };
         let total_sqft_generating = total_sqft_generating_at(y);
 
         years.push(Pclp1Year {
             year: y,
-            phase_draws: draws, total_assets, wip, generating: gen,
-            net_proceeds_from_ops, income_continuity,
-            issue_costs, financing_costs,
+            phase_draws: draws,
+            total_assets,
+            wip,
+            generating: gen,
+            net_proceeds_from_ops,
+            income_continuity,
+            issue_costs,
+            financing_costs,
             advisory_fee: advisory,
-            admin_compliance: admin, board, total_expenses,
+            admin_compliance: admin,
+            board,
+            total_expenses,
             ebitda,
-            opening_debt, gross_debt_draw, net_interest,
-            ffo, debt_repayment, closing_debt,
-            opening_cash, new_equity, distributions, ending_cash,
-            asset_value, asset_value_per_unit,
-            nav, nav_per_unit,
-            dpu, market_value_per_unit,
-            dist_yield_on_cost, dist_yield_at_market,
+            opening_debt,
+            gross_debt_draw,
+            net_interest,
+            ffo,
+            debt_repayment,
+            closing_debt,
+            opening_cash,
+            new_equity,
+            distributions,
+            ending_cash,
+            asset_value,
+            asset_value_per_unit,
+            nav,
+            nav_per_unit,
+            dpu,
+            market_value_per_unit,
+            dist_yield_on_cost,
+            dist_yield_at_market,
             advisory_fee_to_wcp,
-            interest_coverage, debt_to_dev_cost, debt_to_asset_value,
+            interest_coverage,
+            debt_to_dev_cost,
+            debt_to_asset_value,
             total_sqft_generating,
         });
 
@@ -458,6 +530,7 @@ pub fn forecast_json() -> serde_json::Value {
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
+#[allow(clippy::needless_range_loop)]
 mod tests {
     use super::*;
 
@@ -474,8 +547,11 @@ mod tests {
     fn advisory_fee_uses_gross_equity_v2() {
         // V2 Correction 1: 1% × gross_equity ($250M) = $2.5M/yr
         // (V1 used net_proceeds; operator confirmed gross per BRIEF §717 D19)
-        assert!((advisory_fee_annual() - 2_500_000.0).abs() < 1.0,
-                "Advisory fee should be $2.5M (gross), got {}", advisory_fee_annual());
+        assert!(
+            (advisory_fee_annual() - 2_500_000.0).abs() < 1.0,
+            "Advisory fee should be $2.5M (gross), got {}",
+            advisory_fee_annual()
+        );
     }
 
     #[test]
@@ -491,7 +567,11 @@ mod tests {
         // Phase 1 ($217M cumulative by Y3) generates rent starting Y4
         let years = forecast();
         let y4 = &years[4];
-        assert!(y4.generating > 200_000_000.0, "Y4 generating = {}", y4.generating);
+        assert!(
+            y4.generating > 200_000_000.0,
+            "Y4 generating = {}",
+            y4.generating
+        );
         assert!(y4.generating < 250_000_000.0);
     }
 
@@ -509,7 +589,11 @@ mod tests {
         // After Phase 3 (Y6-Y7), all $1.21B generating in Y8
         let years = forecast();
         let y8 = &years[8];
-        assert!(y8.generating > 1_200_000_000.0, "Y8 generating = {}", y8.generating);
+        assert!(
+            y8.generating > 1_200_000_000.0,
+            "Y8 generating = {}",
+            y8.generating
+        );
         assert!(y8.generating < 1_220_000_000.0);
         // NOI ≈ 10.5% × $1.21B = $127M
         assert!(y8.net_proceeds_from_ops > 125_000_000.0);
@@ -528,8 +612,12 @@ mod tests {
     fn y1_to_y7_market_value_hardcoded() {
         let years = forecast();
         for y in 1..=7 {
-            assert_eq!(years[y].market_value_per_unit, PCLP1_MARKET_VALUE_Y1_Y7[y - 1],
-                       "Y{} market value mismatch", y);
+            assert_eq!(
+                years[y].market_value_per_unit,
+                PCLP1_MARKET_VALUE_Y1_Y7[y - 1],
+                "Y{} market value mismatch",
+                y
+            );
         }
     }
 
@@ -541,8 +629,13 @@ mod tests {
             let yr = &years[y];
             if yr.dpu > 0.0 {
                 let expected = yr.dpu / PCLP1_BUYER_TARGET_YIELD;
-                assert!((yr.market_value_per_unit - expected).abs() < 0.01,
-                        "Y{} market value {} vs expected {}", y, yr.market_value_per_unit, expected);
+                assert!(
+                    (yr.market_value_per_unit - expected).abs() < 0.01,
+                    "Y{} market value {} vs expected {}",
+                    y,
+                    yr.market_value_per_unit,
+                    expected
+                );
             }
         }
     }
@@ -550,8 +643,11 @@ mod tests {
     #[test]
     fn y10_nav_per_unit_positive() {
         let years = forecast();
-        assert!(years[10].nav_per_unit > 0.0,
-                "Y10 NAV/unit = {}", years[10].nav_per_unit);
+        assert!(
+            years[10].nav_per_unit > 0.0,
+            "Y10 NAV/unit = {}",
+            years[10].nav_per_unit
+        );
     }
 
     #[test]
@@ -589,8 +685,11 @@ mod tests {
         // (Excel reference: $385.74/unit)
         let years = forecast();
         let y10 = &years[10];
-        assert!(y10.nav_per_unit > 380.0 && y10.nav_per_unit < 410.0,
-                "Y10 NAV/unit = ${:.2} (expected ~$385)", y10.nav_per_unit);
+        assert!(
+            y10.nav_per_unit > 380.0 && y10.nav_per_unit < 410.0,
+            "Y10 NAV/unit = ${:.2} (expected ~$385)",
+            y10.nav_per_unit
+        );
     }
 
     #[test]
@@ -599,11 +698,17 @@ mod tests {
         let years = forecast();
         let y5 = &years[5];
         let ic = y5.interest_coverage;
-        assert!(ic >= 1.20,
-                "Y5 IC = {:.2}× violates LPA 1.20× minimum covenant", ic);
+        assert!(
+            ic >= 1.20,
+            "Y5 IC = {:.2}× violates LPA 1.20× minimum covenant",
+            ic
+        );
         // Operator target: 1.30×
-        assert!(ic >= 1.30,
-                "Y5 IC = {:.2}× below operator's 1.30× target", ic);
+        assert!(
+            ic >= 1.30,
+            "Y5 IC = {:.2}× below operator's 1.30× target",
+            ic
+        );
     }
 
     #[test]
@@ -611,8 +716,11 @@ mod tests {
         let years = forecast();
         let y7 = &years[7];
         let ic = y7.interest_coverage;
-        assert!(ic >= 1.20,
-                "Y7 IC = {:.2}× violates LPA 1.20× minimum covenant", ic);
+        assert!(
+            ic >= 1.20,
+            "Y7 IC = {:.2}× violates LPA 1.20× minimum covenant",
+            ic
+        );
     }
 
     #[test]
@@ -627,31 +735,42 @@ mod tests {
     fn phase_2_facility_fee_recognized_y4_only_v2() {
         // V2 Correction 5: Phase 2 fee ($10.185M) charged Y4 entirely, not split
         let years = forecast();
-        assert!((years[4].financing_costs - 10_185_000.0).abs() < 1.0,
-                "Y4 Phase 2 facility fee should be $10.185M upfront, got ${}",
-                years[4].financing_costs);
-        assert_eq!(years[5].financing_costs, 0.0,
-                "Y5 should have no financing cost (paid at Y4 commitment)");
+        assert!(
+            (years[4].financing_costs - 10_185_000.0).abs() < 1.0,
+            "Y4 Phase 2 facility fee should be $10.185M upfront, got ${}",
+            years[4].financing_costs
+        );
+        assert_eq!(
+            years[5].financing_costs, 0.0,
+            "Y5 should have no financing cost (paid at Y4 commitment)"
+        );
     }
 
     #[test]
     fn phase_3_facility_fee_recognized_y6_only_v2() {
         // V2 Correction 5: Phase 3 fee ($19.6425M) charged Y6 entirely
         let years = forecast();
-        assert!((years[6].financing_costs - 19_642_500.0).abs() < 1.0,
-                "Y6 Phase 3 facility fee should be $19.6425M upfront, got ${}",
-                years[6].financing_costs);
-        assert_eq!(years[7].financing_costs, 0.0,
-                "Y7 should have no financing cost (paid at Y6 commitment)");
+        assert!(
+            (years[6].financing_costs - 19_642_500.0).abs() < 1.0,
+            "Y6 Phase 3 facility fee should be $19.6425M upfront, got ${}",
+            years[6].financing_costs
+        );
+        assert_eq!(
+            years[7].financing_costs, 0.0,
+            "Y7 should have no financing cost (paid at Y6 commitment)"
+        );
     }
 
     #[test]
     fn total_sqft_generating_y8_is_full_portfolio_v2() {
         // V2 Correction 4: Y8+ all phases complete; full sqft generating
         let years = forecast();
-        assert!((years[8].total_sqft_generating - PCLP1_TOTAL_PORTFOLIO_SQFT).abs() < 1.0,
-                "Y8 total_sqft should be {} (full portfolio), got {}",
-                PCLP1_TOTAL_PORTFOLIO_SQFT, years[8].total_sqft_generating);
+        assert!(
+            (years[8].total_sqft_generating - PCLP1_TOTAL_PORTFOLIO_SQFT).abs() < 1.0,
+            "Y8 total_sqft should be {} (full portfolio), got {}",
+            PCLP1_TOTAL_PORTFOLIO_SQFT,
+            years[8].total_sqft_generating
+        );
     }
 
     #[test]
@@ -662,9 +781,13 @@ mod tests {
             let yr = &years[y];
             if yr.net_interest > 1.0 {
                 let expected = yr.ebitda / yr.net_interest;
-                assert!((yr.interest_coverage - expected).abs() < 0.01,
-                        "Y{} IC = {:.2}× vs expected {:.2}×",
-                        y, yr.interest_coverage, expected);
+                assert!(
+                    (yr.interest_coverage - expected).abs() < 0.01,
+                    "Y{} IC = {:.2}× vs expected {:.2}×",
+                    y,
+                    yr.interest_coverage,
+                    expected
+                );
             }
         }
     }

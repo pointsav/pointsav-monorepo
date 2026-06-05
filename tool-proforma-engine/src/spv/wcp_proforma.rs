@@ -14,27 +14,26 @@
 //   LP5=WPC VW        $250M USD Y4   1× USD/EUR/USD ⚠ dist FX anomaly
 //   LP6=WPC PS        $250M USD Y5   1× USD/EUR/USD ⚠ dist FX anomaly
 
-use serde::Serialize;
 use crate::spv::pclp1_proforma::Pclp1Year;
+use serde::Serialize;
 
 // ─── Constants from BRIEF v0.15.6 §5c ────────────────────────────────────────
 
-pub const WCP_SHARES_OUTSTANDING: f64       = 10_000_000.0;
-pub const WCP_PRICE_PER_SHARE_Y0: f64       = 20.00;
-pub const WCP_CAD_USD: f64                  = 1.3372;
-pub const WCP_CAD_EUR: f64                  = 1.4657;
-pub const WCP_FINANCING_Y1: f64             = 20_000_000.0;
-pub const WCP_FINANCING_Y2: f64             = 22_000_000.0;
-pub const WCP_TAX_RATE: f64                 = 0.27;
-pub const WCP_PE_MULTIPLE: f64              = 10.72;
-pub const WCP_DIVIDEND_YIELD: f64           = 0.045;
+pub const WCP_SHARES_OUTSTANDING: f64 = 10_000_000.0;
+pub const WCP_PRICE_PER_SHARE_Y0: f64 = 20.00;
+pub const WCP_CAD_USD: f64 = 1.3372;
+pub const WCP_CAD_EUR: f64 = 1.4657;
+pub const WCP_FINANCING_Y1: f64 = 20_000_000.0;
+pub const WCP_FINANCING_Y2: f64 = 22_000_000.0;
+pub const WCP_TAX_RATE: f64 = 0.27;
+pub const WCP_PE_MULTIPLE: f64 = 10.72;
+pub const WCP_DIVIDEND_YIELD: f64 = 0.045;
 
 // WCP's beneficial ownership in each LP fund (10% per BRIEF §1075)
-pub const WCP_LP_BENEFICIAL_OWNERSHIP: f64  = 0.10;
+pub const WCP_LP_BENEFICIAL_OWNERSHIP: f64 = 0.10;
 
 // G&A ramp Y3-Y10 (BRIEF §1114) — advisory_fee_total × ga_ramp[y]
-pub const WCP_GA_RAMP_Y3_Y10: [f64; 8] =
-    [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55];
+pub const WCP_GA_RAMP_Y3_Y10: [f64; 8] = [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55];
 
 // Y1-Y2 G&A hardcoded (BRIEF §1112)
 pub const WCP_GA_NYC_Y1: f64 = 750_000.0;
@@ -51,20 +50,62 @@ pub const WCP_WPI_Y2: f64 = 8_500_000.0;
 #[derive(Debug, Clone, Copy)]
 pub struct WcpLpConfig {
     pub name: &'static str,
-    pub launch_year: u32,        // First year LP is active
-    pub size_factor: f64,        // Multiplier vs LP1
-    pub advisory_fx: f64,        // FX rate applied to advisory fee
-    pub dist_fx: f64,            // FX rate applied to distributions (⚠ LP5/LP6 use EUR despite USD fund)
-    pub nav_fx: f64,             // FX rate applied to NAV
+    pub launch_year: u32, // First year LP is active
+    pub size_factor: f64, // Multiplier vs LP1
+    pub advisory_fx: f64, // FX rate applied to advisory fee
+    pub dist_fx: f64,     // FX rate applied to distributions (⚠ LP5/LP6 use EUR despite USD fund)
+    pub nav_fx: f64,      // FX rate applied to NAV
 }
 
 pub const WCP_LPS: [WcpLpConfig; 6] = [
-    WcpLpConfig { name: "LP1 — WPC Canada",  launch_year: 1, size_factor: 1.0, advisory_fx: 1.0,         dist_fx: 1.0,         nav_fx: 1.0 },
-    WcpLpConfig { name: "LP2 — WPC US",      launch_year: 2, size_factor: 2.0, advisory_fx: WCP_CAD_USD, dist_fx: WCP_CAD_USD, nav_fx: WCP_CAD_USD },
-    WcpLpConfig { name: "LP3 — WPC Spain",   launch_year: 2, size_factor: 1.0, advisory_fx: WCP_CAD_EUR, dist_fx: WCP_CAD_EUR, nav_fx: WCP_CAD_EUR },
-    WcpLpConfig { name: "LP4 — WPC Mexico",  launch_year: 3, size_factor: 1.0, advisory_fx: WCP_CAD_USD, dist_fx: WCP_CAD_USD, nav_fx: WCP_CAD_USD },
-    WcpLpConfig { name: "LP5 — WPC VW",      launch_year: 4, size_factor: 1.0, advisory_fx: WCP_CAD_USD, dist_fx: WCP_CAD_EUR, nav_fx: WCP_CAD_USD },
-    WcpLpConfig { name: "LP6 — WPC PS",      launch_year: 5, size_factor: 1.0, advisory_fx: WCP_CAD_USD, dist_fx: WCP_CAD_EUR, nav_fx: WCP_CAD_USD },
+    WcpLpConfig {
+        name: "LP1 — WPC Canada",
+        launch_year: 1,
+        size_factor: 1.0,
+        advisory_fx: 1.0,
+        dist_fx: 1.0,
+        nav_fx: 1.0,
+    },
+    WcpLpConfig {
+        name: "LP2 — WPC US",
+        launch_year: 2,
+        size_factor: 2.0,
+        advisory_fx: WCP_CAD_USD,
+        dist_fx: WCP_CAD_USD,
+        nav_fx: WCP_CAD_USD,
+    },
+    WcpLpConfig {
+        name: "LP3 — WPC Spain",
+        launch_year: 2,
+        size_factor: 1.0,
+        advisory_fx: WCP_CAD_EUR,
+        dist_fx: WCP_CAD_EUR,
+        nav_fx: WCP_CAD_EUR,
+    },
+    WcpLpConfig {
+        name: "LP4 — WPC Mexico",
+        launch_year: 3,
+        size_factor: 1.0,
+        advisory_fx: WCP_CAD_USD,
+        dist_fx: WCP_CAD_USD,
+        nav_fx: WCP_CAD_USD,
+    },
+    WcpLpConfig {
+        name: "LP5 — WPC VW",
+        launch_year: 4,
+        size_factor: 1.0,
+        advisory_fx: WCP_CAD_USD,
+        dist_fx: WCP_CAD_EUR,
+        nav_fx: WCP_CAD_USD,
+    },
+    WcpLpConfig {
+        name: "LP6 — WPC PS",
+        launch_year: 5,
+        size_factor: 1.0,
+        advisory_fx: WCP_CAD_USD,
+        dist_fx: WCP_CAD_EUR,
+        nav_fx: WCP_CAD_USD,
+    },
 ];
 
 // ─── Output struct ───────────────────────────────────────────────────────────
@@ -119,7 +160,11 @@ fn lp1_advisory_at_year(pclp1: &[Pclp1Year], y: u32) -> f64 {
     // BRIEF §1088-1091: LP1 advisory = PCLP1.advisory_fee × deployment_ramp.
     // PCLP1 module already applies the ramp via advisory_fee_to_wcp[].
     let idx = y as usize;
-    if idx < pclp1.len() { pclp1[idx].advisory_fee_to_wcp } else { 0.0 }
+    if idx < pclp1.len() {
+        pclp1[idx].advisory_fee_to_wcp
+    } else {
+        0.0
+    }
 }
 
 fn lp1_distributions_at_year(pclp1: &[Pclp1Year], y: u32) -> f64 {
@@ -150,7 +195,7 @@ fn lp_at_year(lp: &WcpLpConfig, pclp1: &[Pclp1Year], y: u32) -> WcpLpYear {
             nav: 0.0,
         };
     }
-    let lag = lp.launch_year - 1;  // LP1 launches Y1 (lag = 0); LP2 launches Y2 (lag = 1); etc.
+    let lag = lp.launch_year - 1; // LP1 launches Y1 (lag = 0); LP2 launches Y2 (lag = 1); etc.
     let source_year = y - lag;
     WcpLpYear {
         lp_name: lp.name,
@@ -186,8 +231,8 @@ fn referral_fees(y: u32) -> f64 {
     // Y1 = $2M, Y2 = $2.2M, Y3+ = 0
     // (10% of financing tranche)
     match y {
-        1 => WCP_FINANCING_Y1 * 0.10,   // $2M
-        2 => WCP_FINANCING_Y2 * 0.10,   // $2.2M
+        1 => WCP_FINANCING_Y1 * 0.10, // $2M
+        2 => WCP_FINANCING_Y2 * 0.10, // $2.2M
         _ => 0.0,
     }
 }
@@ -260,17 +305,40 @@ pub fn forecast(pclp1: &[Pclp1Year]) -> Vec<WcpYear> {
     // Y0: empty / zeros
     years.push(WcpYear {
         year: 0,
-        lps: WCP_LPS.iter().map(|lp| WcpLpYear { lp_name: lp.name, advisory_fee: 0.0, distributions: 0.0, nav: 0.0 }).collect(),
-        advisory_fees_total: 0.0, distributions_total: 0.0, nav_total_lps: 0.0,
-        offering_costs: 0.0, gross_income: 0.0,
-        referral_fees: 0.0, wpi_consulting: 0.0,
-        gna_nyc: 0.0, gna_berlin: 0.0, gna_total: 0.0,
+        lps: WCP_LPS
+            .iter()
+            .map(|lp| WcpLpYear {
+                lp_name: lp.name,
+                advisory_fee: 0.0,
+                distributions: 0.0,
+                nav: 0.0,
+            })
+            .collect(),
+        advisory_fees_total: 0.0,
+        distributions_total: 0.0,
+        nav_total_lps: 0.0,
+        offering_costs: 0.0,
+        gross_income: 0.0,
+        referral_fees: 0.0,
+        wpi_consulting: 0.0,
+        gna_nyc: 0.0,
+        gna_berlin: 0.0,
+        gna_total: 0.0,
         total_opex: 0.0,
-        ebitda: 0.0, taxes: 0.0, earnings: 0.0, eps: 0.0,
-        financing_activity: 0.0, cumulative_fcf: 0.0,
-        lp_ownership_book: 0.0, book_value: 0.0, book_value_per_share: 0.0,
-        earnings_valuation: 0.0, market_valuation: 0.0, market_value_per_share: 0.0,
-        dividend_valuation: 0.0, dividend_value_per_share: 0.0,
+        ebitda: 0.0,
+        taxes: 0.0,
+        earnings: 0.0,
+        eps: 0.0,
+        financing_activity: 0.0,
+        cumulative_fcf: 0.0,
+        lp_ownership_book: 0.0,
+        book_value: 0.0,
+        book_value_per_share: 0.0,
+        earnings_valuation: 0.0,
+        market_valuation: 0.0,
+        market_value_per_share: 0.0,
+        dividend_valuation: 0.0,
+        dividend_value_per_share: 0.0,
         fair_value_per_share: 0.0,
     });
 
@@ -296,7 +364,11 @@ pub fn forecast(pclp1: &[Pclp1Year]) -> Vec<WcpYear> {
 
         // EBITDA / Tax / Earnings
         let ebitda = gross_income - total_opex;
-        let taxes = if ebitda > 0.0 { ebitda * WCP_TAX_RATE } else { 0.0 };
+        let taxes = if ebitda > 0.0 {
+            ebitda * WCP_TAX_RATE
+        } else {
+            0.0
+        };
         let earnings = ebitda - taxes;
         let eps = earnings / WCP_SHARES_OUTSTANDING;
 
@@ -323,21 +395,37 @@ pub fn forecast(pclp1: &[Pclp1Year]) -> Vec<WcpYear> {
         };
         let dividend_value_per_share = dividend_valuation / WCP_SHARES_OUTSTANDING;
         // Fair value per share: average of book, market, dividend
-        let fair_value_per_share = (book_value_per_share + market_value_per_share + dividend_value_per_share) / 3.0;
+        let fair_value_per_share =
+            (book_value_per_share + market_value_per_share + dividend_value_per_share) / 3.0;
 
         years.push(WcpYear {
             year: y,
             lps,
-            advisory_fees_total, distributions_total, nav_total_lps,
-            offering_costs: oc, gross_income,
-            referral_fees: referral, wpi_consulting: wpi,
-            gna_nyc: nyc, gna_berlin: berlin, gna_total,
+            advisory_fees_total,
+            distributions_total,
+            nav_total_lps,
+            offering_costs: oc,
+            gross_income,
+            referral_fees: referral,
+            wpi_consulting: wpi,
+            gna_nyc: nyc,
+            gna_berlin: berlin,
+            gna_total,
             total_opex,
-            ebitda, taxes, earnings, eps,
-            financing_activity: fa, cumulative_fcf,
-            lp_ownership_book: nav_total_lps, book_value, book_value_per_share,
-            earnings_valuation, market_valuation, market_value_per_share,
-            dividend_valuation, dividend_value_per_share,
+            ebitda,
+            taxes,
+            earnings,
+            eps,
+            financing_activity: fa,
+            cumulative_fcf,
+            lp_ownership_book: nav_total_lps,
+            book_value,
+            book_value_per_share,
+            earnings_valuation,
+            market_valuation,
+            market_value_per_share,
+            dividend_valuation,
+            dividend_value_per_share,
             fair_value_per_share,
         });
     }
@@ -349,16 +437,19 @@ pub fn forecast(pclp1: &[Pclp1Year]) -> Vec<WcpYear> {
 
 pub fn forecast_json(pclp1: &[Pclp1Year]) -> serde_json::Value {
     let years = forecast(pclp1);
-    let lp_definitions: Vec<serde_json::Value> = WCP_LPS.iter().map(|lp| {
-        serde_json::json!({
-            "name": lp.name,
-            "launch_year": lp.launch_year,
-            "size_factor": lp.size_factor,
-            "advisory_fx": lp.advisory_fx,
-            "dist_fx": lp.dist_fx,
-            "nav_fx": lp.nav_fx,
+    let lp_definitions: Vec<serde_json::Value> = WCP_LPS
+        .iter()
+        .map(|lp| {
+            serde_json::json!({
+                "name": lp.name,
+                "launch_year": lp.launch_year,
+                "size_factor": lp.size_factor,
+                "advisory_fx": lp.advisory_fx,
+                "dist_fx": lp.dist_fx,
+                "nav_fx": lp.nav_fx,
+            })
         })
-    }).collect();
+        .collect();
 
     serde_json::json!({
         "entity": "Woodfine Capital Projects Inc. (WCP)",
@@ -388,6 +479,7 @@ pub fn forecast_json(pclp1: &[Pclp1Year]) -> serde_json::Value {
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
+#[allow(clippy::needless_range_loop)]
 mod tests {
     use super::*;
     use crate::spv::pclp1_proforma;
@@ -408,8 +500,11 @@ mod tests {
         // Y4 should have LP1 advisory = PCLP1.advisory_fee × ramp (1.0 by Y4)
         // = $2.5M × 1.0 = $2.5M
         let lp1_y4 = &wcp[4].lps[0];
-        assert!((lp1_y4.advisory_fee - 2_500_000.0).abs() < 1.0,
-                "LP1 Y4 advisory should be $2.5M, got {}", lp1_y4.advisory_fee);
+        assert!(
+            (lp1_y4.advisory_fee - 2_500_000.0).abs() < 1.0,
+            "LP1 Y4 advisory should be $2.5M, got {}",
+            lp1_y4.advisory_fee
+        );
     }
 
     #[test]
@@ -420,9 +515,13 @@ mod tests {
         // LP1[Y2] advisory = $2.5M × 2/3 ramp = $1.667M
         // LP2[Y3] = $1.667M × 2 × 1.3372 = $4.458M
         let lp2_y3 = &wcp[3].lps[1];
-        let expected = 2_500_000.0 * (2.0/3.0) * 2.0 * WCP_CAD_USD;
-        assert!((lp2_y3.advisory_fee - expected).abs() < 100.0,
-                "LP2 Y3 advisory = {} (expected ~{})", lp2_y3.advisory_fee, expected);
+        let expected = 2_500_000.0 * (2.0 / 3.0) * 2.0 * WCP_CAD_USD;
+        assert!(
+            (lp2_y3.advisory_fee - expected).abs() < 100.0,
+            "LP2 Y3 advisory = {} (expected ~{})",
+            lp2_y3.advisory_fee,
+            expected
+        );
     }
 
     #[test]
@@ -436,8 +535,11 @@ mod tests {
         assert_eq!(wcp[2].lps[3].advisory_fee, 0.0);
         // LP6 launches Y5; Y1-Y4 should be 0
         for y in 1..=4 {
-            assert_eq!(wcp[y].lps[5].advisory_fee, 0.0,
-                       "LP6 Y{} should be 0 (launches Y5)", y);
+            assert_eq!(
+                wcp[y].lps[5].advisory_fee, 0.0,
+                "LP6 Y{} should be 0 (launches Y5)",
+                y
+            );
         }
     }
 
@@ -469,8 +571,16 @@ mod tests {
         let wcp = forecast(&pclp1);
         // Per BRIEF §1122: "EBITDA Y1=−$3.08M, Y2=−$2.30M (negative — capital raise period)"
         // Engine should produce similar negative EBITDA Y1-Y2 due to high WPI + Referral
-        assert!(wcp[1].ebitda < 0.0, "Y1 EBITDA should be negative, got {}", wcp[1].ebitda);
-        assert!(wcp[2].ebitda < 0.0, "Y2 EBITDA should be negative, got {}", wcp[2].ebitda);
+        assert!(
+            wcp[1].ebitda < 0.0,
+            "Y1 EBITDA should be negative, got {}",
+            wcp[1].ebitda
+        );
+        assert!(
+            wcp[2].ebitda < 0.0,
+            "Y2 EBITDA should be negative, got {}",
+            wcp[2].ebitda
+        );
     }
 
     #[test]
@@ -478,10 +588,17 @@ mod tests {
         let pclp1 = pclp1_proforma::forecast();
         let wcp = forecast(&pclp1);
         // Per BRIEF §1122: "Y3=$13.81M+ onward positive"
-        assert!(wcp[3].ebitda > 0.0,
-                "Y3 EBITDA should be positive, got {}", wcp[3].ebitda);
-        assert!(wcp[10].ebitda > wcp[3].ebitda,
-                "Y10 EBITDA should be larger than Y3, got {} vs {}", wcp[10].ebitda, wcp[3].ebitda);
+        assert!(
+            wcp[3].ebitda > 0.0,
+            "Y3 EBITDA should be positive, got {}",
+            wcp[3].ebitda
+        );
+        assert!(
+            wcp[10].ebitda > wcp[3].ebitda,
+            "Y10 EBITDA should be larger than Y3, got {} vs {}",
+            wcp[10].ebitda,
+            wcp[3].ebitda
+        );
     }
 
     #[test]
@@ -492,8 +609,13 @@ mod tests {
         for y in 3..=10 {
             let yr = &wcp[y];
             let expected = yr.ebitda * 0.73;
-            assert!((yr.earnings - expected).abs() < 100.0,
-                    "Y{} earnings = {} (expected {})", y, yr.earnings, expected);
+            assert!(
+                (yr.earnings - expected).abs() < 100.0,
+                "Y{} earnings = {} (expected {})",
+                y,
+                yr.earnings,
+                expected
+            );
         }
     }
 
@@ -505,8 +627,13 @@ mod tests {
         for y in 3..=10 {
             let yr = &wcp[y];
             let expected = yr.earnings * WCP_PE_MULTIPLE;
-            assert!((yr.earnings_valuation - expected).abs() < 1.0,
-                    "Y{} earnings valuation = {} (expected {})", y, yr.earnings_valuation, expected);
+            assert!(
+                (yr.earnings_valuation - expected).abs() < 1.0,
+                "Y{} earnings valuation = {} (expected {})",
+                y,
+                yr.earnings_valuation,
+                expected
+            );
         }
     }
 
@@ -517,8 +644,13 @@ mod tests {
         for y in 1..=10 {
             let yr = &wcp[y];
             let expected = yr.cumulative_fcf + yr.lp_ownership_book;
-            assert!((yr.book_value - expected).abs() < 1.0,
-                    "Y{} book value = {} (expected {})", y, yr.book_value, expected);
+            assert!(
+                (yr.book_value - expected).abs() < 1.0,
+                "Y{} book value = {} (expected {})",
+                y,
+                yr.book_value,
+                expected
+            );
         }
     }
 
@@ -529,7 +661,10 @@ mod tests {
         assert!(json["entity"].as_str().unwrap().contains("WCP"));
         assert!(json["brief_section"].as_str().unwrap().contains("5c"));
         assert!(json["inputs"]["lp_definitions"].is_array());
-        assert_eq!(json["inputs"]["lp_definitions"].as_array().unwrap().len(), 6);
+        assert_eq!(
+            json["inputs"]["lp_definitions"].as_array().unwrap().len(),
+            6
+        );
         assert_eq!(json["years"].as_array().unwrap().len(), 11);
     }
 }

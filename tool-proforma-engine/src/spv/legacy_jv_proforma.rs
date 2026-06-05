@@ -12,50 +12,50 @@ use serde::Serialize;
 // ─── Constants from BRIEF v0.15.6 §5h (lines 2456-2576) ──────────────────────
 
 // Capital structure
-pub const LEGACY_JV_EQUITY: f64           = 250_000_000.0;   // BRIEF §2464
-pub const LEGACY_JV_BANK_DEBT: f64        = 750_000_000.0;   // BRIEF §2465
-pub const LEGACY_JV_TOTAL_CAPITAL: f64    = 1_000_000_000.0; // BRIEF §2467
-pub const LEGACY_JV_DEBT_RATIO: f64       = 3.0;             // 3.0× D/E
+pub const LEGACY_JV_EQUITY: f64 = 250_000_000.0; // BRIEF §2464
+pub const LEGACY_JV_BANK_DEBT: f64 = 750_000_000.0; // BRIEF §2465
+pub const LEGACY_JV_TOTAL_CAPITAL: f64 = 1_000_000_000.0; // BRIEF §2467
+pub const LEGACY_JV_DEBT_RATIO: f64 = 3.0; // 3.0× D/E
 
 // LP cap structure (mirrors PCLP 1 unit price for like-for-like comparison)
-pub const LEGACY_JV_LP_UNITS: f64         = 2_500_000.0;     // $250M / $100/unit
-pub const LEGACY_JV_UNIT_PRICE: f64       = 100.0;
+pub const LEGACY_JV_LP_UNITS: f64 = 2_500_000.0; // $250M / $100/unit
+pub const LEGACY_JV_UNIT_PRICE: f64 = 100.0;
 
 // Building portfolio
-pub const LEGACY_JV_TOTAL_SF: f64         = 2_298_150.0;     // BRIEF §2469
-pub const LEGACY_JV_COST_PER_SF: f64      = 326.35;          // BRIEF §2468
+pub const LEGACY_JV_TOTAL_SF: f64 = 2_298_150.0; // BRIEF §2469
+pub const LEGACY_JV_COST_PER_SF: f64 = 326.35; // BRIEF §2468
 
 // Yield + valuation
-pub const LEGACY_JV_DEV_YIELD: f64        = 0.105;           // 10.5%
-pub const LEGACY_JV_CAP_RATE: f64         = 0.0625;          // 6.25%
+pub const LEGACY_JV_DEV_YIELD: f64 = 0.105; // 10.5%
+pub const LEGACY_JV_CAP_RATE: f64 = 0.0625; // 6.25%
 
 // Operating
 // BRIEF §2528 names "$78.75M = 10.5% × $750M debt" as the *gross* rental revenue
 // at stabilization. After 20% opex, NOI = $63M (matches BRIEF §2533 net income math).
 pub const LEGACY_JV_GROSS_REV_STABILIZED: f64 = 78_750_000.0;
-pub const LEGACY_JV_NOI_STABILIZED: f64       = 63_000_000.0; // = $78.75M × (1 - 20%)
-pub const LEGACY_JV_OPEX_PCT: f64             = 0.20;
-pub const LEGACY_JV_GA_ANNUAL: f64        = 2_000_000.0;     // BRIEF §2533
-pub const LEGACY_JV_INTEREST_RATE: f64    = 0.050;           // 5% permanent loan
-pub const LEGACY_JV_DEPRECIATION_YRS: f64 = 50.0;            // ASPE 3061
+pub const LEGACY_JV_NOI_STABILIZED: f64 = 63_000_000.0; // = $78.75M × (1 - 20%)
+pub const LEGACY_JV_OPEX_PCT: f64 = 0.20;
+pub const LEGACY_JV_GA_ANNUAL: f64 = 2_000_000.0; // BRIEF §2533
+pub const LEGACY_JV_INTEREST_RATE: f64 = 0.050; // 5% permanent loan
+pub const LEGACY_JV_DEPRECIATION_YRS: f64 = 50.0; // ASPE 3061
 pub const LEGACY_JV_BUILDING_COMPONENT: f64 = 1_055_000_000.0; // Building only (land excluded)
 
 // S-curve construction draw Y1-Y3 (BRIEF §2494)
-pub const LEGACY_JV_DRAW_Y1: f64          = 200_000_000.0;   // 20% of $1B
-pub const LEGACY_JV_DRAW_Y2: f64          = 500_000_000.0;   // 50%
-pub const LEGACY_JV_DRAW_Y3: f64          = 300_000_000.0;   // 30%
+pub const LEGACY_JV_DRAW_Y1: f64 = 200_000_000.0; // 20% of $1B
+pub const LEGACY_JV_DRAW_Y2: f64 = 500_000_000.0; // 50%
+pub const LEGACY_JV_DRAW_Y3: f64 = 300_000_000.0; // 30%
 
 // LTV covenant
-pub const LEGACY_JV_LTV_COVENANT: f64     = 0.65;            // 65% max
-pub const LEGACY_JV_STABILIZED_AV: f64    = 1_008_000_000.0; // = $63M NOI / 6.25% cap (IFRS FV)
+pub const LEGACY_JV_LTV_COVENANT: f64 = 0.65; // 65% max
+pub const LEGACY_JV_STABILIZED_AV: f64 = 1_008_000_000.0; // = $63M NOI / 6.25% cap (IFRS FV)
 
 // ─── Output struct ──────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize)]
 pub struct LegacyJvYear {
     pub year: u32,
-    pub phase: &'static str,             // "Construction" | "Stabilized"
-    pub capex: f64,                      // S-curve construction draws
+    pub phase: &'static str, // "Construction" | "Stabilized"
+    pub capex: f64,          // S-curve construction draws
     pub cumulative_capex: f64,
     pub debt_outstanding: f64,
     pub equity_contribution: f64,
@@ -70,12 +70,12 @@ pub struct LegacyJvYear {
     pub distributions_to_lps: f64,
     pub cumulative_distributions: f64,
     pub dpu: f64,
-    pub asset_value_aspe: f64,           // Book at cost minus accumulated depr
+    pub asset_value_aspe: f64, // Book at cost minus accumulated depr
     pub partners_capital: f64,
-    pub equity_value: f64,                // Asset value - debt
+    pub equity_value: f64, // Asset value - debt
     pub equity_value_per_unit: f64,
     pub ltv_book: f64,
-    pub dscr: f64,                        // NOI / debt service
+    pub dscr: f64, // NOI / debt service
 }
 
 // ─── Forecast ───────────────────────────────────────────────────────────────
@@ -99,15 +99,27 @@ pub fn forecast() -> Vec<LegacyJvYear> {
     years.push(LegacyJvYear {
         year: 0,
         phase: "Pre-launch",
-        capex: 0.0, cumulative_capex: 0.0,
-        debt_outstanding: 0.0, equity_contribution: 0.0,
-        gross_rental_revenue: 0.0, operating_expenses: 0.0, noi: 0.0,
-        interest_expense: 0.0, depreciation: 0.0, ga_expense: 0.0,
-        net_income: 0.0, distributable_cash: 0.0,
-        distributions_to_lps: 0.0, cumulative_distributions: 0.0, dpu: 0.0,
-        asset_value_aspe: 0.0, partners_capital: 0.0,
-        equity_value: 0.0, equity_value_per_unit: 0.0,
-        ltv_book: 0.0, dscr: 0.0,
+        capex: 0.0,
+        cumulative_capex: 0.0,
+        debt_outstanding: 0.0,
+        equity_contribution: 0.0,
+        gross_rental_revenue: 0.0,
+        operating_expenses: 0.0,
+        noi: 0.0,
+        interest_expense: 0.0,
+        depreciation: 0.0,
+        ga_expense: 0.0,
+        net_income: 0.0,
+        distributable_cash: 0.0,
+        distributions_to_lps: 0.0,
+        cumulative_distributions: 0.0,
+        dpu: 0.0,
+        asset_value_aspe: 0.0,
+        partners_capital: 0.0,
+        equity_value: 0.0,
+        equity_value_per_unit: 0.0,
+        ltv_book: 0.0,
+        dscr: 0.0,
     });
 
     for y in 1u32..=10 {
@@ -132,13 +144,19 @@ pub fn forecast() -> Vec<LegacyJvYear> {
 
         // Income statement (Y4+ stabilized; Y1-Y3 construction, no revenue)
         let phase = if y <= 3 { "Construction" } else { "Stabilized" };
-        let gross_rev = if y >= 4 { LEGACY_JV_GROSS_REV_STABILIZED } else { 0.0 };
+        let gross_rev = if y >= 4 {
+            LEGACY_JV_GROSS_REV_STABILIZED
+        } else {
+            0.0
+        };
         let opex = gross_rev * LEGACY_JV_OPEX_PCT;
         let noi = gross_rev - opex;
         let interest = debt_outstanding * LEGACY_JV_INTEREST_RATE;
         let depr = if y >= 4 {
             LEGACY_JV_BUILDING_COMPONENT / LEGACY_JV_DEPRECIATION_YRS
-        } else { 0.0 };
+        } else {
+            0.0
+        };
         cum_depr += depr;
         let ga = if y >= 4 { LEGACY_JV_GA_ANNUAL } else { 0.0 };
         let net_income = noi - interest - depr - ga;
@@ -153,13 +171,18 @@ pub fn forecast() -> Vec<LegacyJvYear> {
 
         // Partners' capital = Opening + Contributions - Distributions + Net Income
         // Y0=0; Y1+: cumulative_equity_contrib + cumulative_net_income - cumulative_distributions
-        let cum_equity = (cum_capex * (LEGACY_JV_EQUITY / LEGACY_JV_TOTAL_CAPITAL)).min(LEGACY_JV_EQUITY);
+        let cum_equity =
+            (cum_capex * (LEGACY_JV_EQUITY / LEGACY_JV_TOTAL_CAPITAL)).min(LEGACY_JV_EQUITY);
         let partners_capital = cum_equity + cum_distributions.min(0.0); // Simplification
 
         let equity_value = asset_value_aspe - debt_outstanding;
         let equity_value_per_unit = equity_value / LEGACY_JV_LP_UNITS;
 
-        let ltv_book = if asset_value_aspe > 0.0 { debt_outstanding / asset_value_aspe } else { 0.0 };
+        let ltv_book = if asset_value_aspe > 0.0 {
+            debt_outstanding / asset_value_aspe
+        } else {
+            0.0
+        };
         let dscr = if interest > 0.0 { noi / interest } else { 0.0 };
 
         years.push(LegacyJvYear {
@@ -245,6 +268,7 @@ pub fn forecast_json() -> serde_json::Value {
 }
 
 #[cfg(test)]
+#[allow(clippy::needless_range_loop)]
 mod tests {
     use super::*;
 
@@ -279,8 +303,12 @@ mod tests {
     fn y4_plus_stabilized_noi() {
         let f = forecast();
         for y in 4..=10 {
-            assert!((f[y].noi - 63_000_000.0).abs() < 100.0,
-                    "Y{} NOI = {} (expected ~$63M)", y, f[y].noi);
+            assert!(
+                (f[y].noi - 63_000_000.0).abs() < 100.0,
+                "Y{} NOI = {} (expected ~$63M)",
+                y,
+                f[y].noi
+            );
         }
     }
 
@@ -289,8 +317,12 @@ mod tests {
         // Per BRIEF §2536: ~$23.5M/yr distributable cash
         let f = forecast();
         for y in 4..=10 {
-            assert!(f[y].distributable_cash > 20_000_000.0 && f[y].distributable_cash < 27_000_000.0,
-                    "Y{} distributable cash = {} (expected ~$23.5M)", y, f[y].distributable_cash);
+            assert!(
+                f[y].distributable_cash > 20_000_000.0 && f[y].distributable_cash < 27_000_000.0,
+                "Y{} distributable cash = {} (expected ~$23.5M)",
+                y,
+                f[y].distributable_cash
+            );
         }
     }
 
@@ -299,8 +331,12 @@ mod tests {
         // Per BRIEF §2558: ~$164M cumulative Y4-Y10 (7 years × ~$23.5M)
         let f = forecast();
         let y10 = &f[10];
-        assert!(y10.cumulative_distributions > 150_000_000.0 && y10.cumulative_distributions < 180_000_000.0,
-                "Y10 cumulative distributions = {} (expected ~$164M)", y10.cumulative_distributions);
+        assert!(
+            y10.cumulative_distributions > 150_000_000.0
+                && y10.cumulative_distributions < 180_000_000.0,
+            "Y10 cumulative distributions = {} (expected ~$164M)",
+            y10.cumulative_distributions
+        );
     }
 
     #[test]
@@ -309,8 +345,12 @@ mod tests {
         // threshold typically 1.20× minimum; 1.68× is comfortable.
         let f = forecast();
         for y in 4..=10 {
-            assert!(f[y].dscr > 1.5,
-                    "Y{} DSCR = {} (expected ~1.68×)", y, f[y].dscr);
+            assert!(
+                f[y].dscr > 1.5,
+                "Y{} DSCR = {} (expected ~1.68×)",
+                y,
+                f[y].dscr
+            );
         }
     }
 

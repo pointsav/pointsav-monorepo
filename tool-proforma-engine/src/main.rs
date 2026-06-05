@@ -263,9 +263,18 @@ fn main() {
             let proforma_html = report::pclp1_proforma::render_proforma();
             let summary_html = report::pclp1_proforma::render_summary();
             let json_dump = report::pclp1_proforma::render_json();
-            write_output(&proforma_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_PCLP1_V1.html")));
-            write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_PCLP1_V1.html")));
-            write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_PCLP1_V1.json")));
+            write_output(
+                &proforma_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_PCLP1_V1.html")),
+            );
+            write_output(
+                &summary_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_PCLP1_V1.html")),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_PCLP1_V1.json")),
+            );
             eprintln!("wrote 3 files to {}", out_dir.display());
         }
         Some(Command::Pclp1V2 { out_dir }) => {
@@ -275,9 +284,18 @@ fn main() {
             let proforma_html = report::pclp1_proforma::render_proforma();
             let summary_html = report::pclp1_proforma::render_summary();
             let json_dump = report::pclp1_proforma::render_json();
-            write_output(&proforma_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_PCLP1_V2.html")));
-            write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_PCLP1_V2.html")));
-            write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_PCLP1_V2.json")));
+            write_output(
+                &proforma_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_PCLP1_V2.html")),
+            );
+            write_output(
+                &summary_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_PCLP1_V2.html")),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_PCLP1_V2.json")),
+            );
             eprintln!("wrote 3 V2 files to {}", out_dir.display());
         }
         Some(Command::WcpV1 { out_dir }) => {
@@ -285,9 +303,18 @@ fn main() {
             let proforma_html = report::wcp_proforma::render_proforma();
             let summary_html = report::wcp_proforma::render_summary();
             let json_dump = report::wcp_proforma::render_json();
-            write_output(&proforma_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_WCP_V1.html")));
-            write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_WCP_V1.html")));
-            write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_WCP_V1.json")));
+            write_output(
+                &proforma_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_WCP_V1.html")),
+            );
+            write_output(
+                &summary_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_WCP_V1.html")),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_WCP_V1.json")),
+            );
             eprintln!("wrote 3 WCP V1 files to {}", out_dir.display());
         }
         Some(Command::BuildingPortfolioV1 { out_dir }) => {
@@ -296,10 +323,26 @@ fn main() {
             let proforma_html = report::d1_dev_classes_v2::render_proforma();
             let summary_html = report::d1_dev_classes_v2::render_summary();
             let json_dump = report::d1_dev_classes_v2::render_json();
-            write_output(&proforma_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_BuildingPortfolio_V1.html")));
-            write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_BuildingPortfolio_V1.html")));
-            write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_BuildingPortfolio_V1.json")));
-            eprintln!("wrote 3 Building Portfolio V1 files to {}", out_dir.display());
+            write_output(
+                &proforma_html,
+                Some(
+                    &out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_BuildingPortfolio_V1.html"),
+                ),
+            );
+            write_output(
+                &summary_html,
+                Some(
+                    &out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_BuildingPortfolio_V1.html"),
+                ),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_BuildingPortfolio_V1.json")),
+            );
+            eprintln!(
+                "wrote 3 Building Portfolio V1 files to {}",
+                out_dir.display()
+            );
         }
         Some(Command::LegacyJvV1 { out_dir }) => {
             // Legacy JV (D7) V1 — engine self-generating comparator to PCLP 1.
@@ -307,9 +350,18 @@ fn main() {
             let proforma_html = report::legacy_jv_proforma::render_proforma();
             let summary_html = report::legacy_jv_proforma::render_summary();
             let json_dump = report::legacy_jv_proforma::render_json();
-            write_output(&proforma_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_LegacyJV_V1.html")));
-            write_output(&summary_html, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_LegacyJV_V1.html")));
-            write_output(&json_dump, Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_LegacyJV_V1.json")));
+            write_output(
+                &proforma_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_LegacyJV_V1.html")),
+            );
+            write_output(
+                &summary_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_LegacyJV_V1.html")),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_LegacyJV_V1.json")),
+            );
             eprintln!("wrote 3 Legacy JV V1 files to {}", out_dir.display());
         }
         Some(Command::BencalAllV1 { out_dir }) => {
@@ -317,15 +369,37 @@ fn main() {
             // Consumes PCLP 1 V2 + WCP V1. 9 HTML/JSON files + 6 PDFs = 15 total.
             use report::bencal_v1_proforma::*;
             let pairs = [
-                ("Bencal_SPV1", render_proforma_spv1(), render_summary_spv1(), render_json_spv1()),
-                ("Bencal_SPV2", render_proforma_spv2(), render_summary_spv2(), render_json_spv2()),
-                ("Bencal_Management", render_proforma_mgmt(), render_summary_mgmt(), render_json_mgmt()),
+                (
+                    "Bencal_SPV1",
+                    render_proforma_spv1(),
+                    render_summary_spv1(),
+                    render_json_spv1(),
+                ),
+                (
+                    "Bencal_SPV2",
+                    render_proforma_spv2(),
+                    render_summary_spv2(),
+                    render_json_spv2(),
+                ),
+                (
+                    "Bencal_Management",
+                    render_proforma_mgmt(),
+                    render_summary_mgmt(),
+                    render_json_mgmt(),
+                ),
             ];
             let mut pdf_count = 0usize;
             for (name, proforma, summary, json) in &pairs {
-                let proforma_path = out_dir.join(format!("COMPLIANCE_MCorp_2026_06_05_Proforma_{}_V2.html", name));
-                let summary_path = out_dir.join(format!("COMPLIANCE_MCorp_2026_06_05_Summary_{}_V2.html", name));
-                let json_path = out_dir.join(format!("COMPLIANCE_MCorp_2026_06_05_{}_V2.json", name));
+                let proforma_path = out_dir.join(format!(
+                    "COMPLIANCE_MCorp_2026_06_05_Proforma_{}_V2.html",
+                    name
+                ));
+                let summary_path = out_dir.join(format!(
+                    "COMPLIANCE_MCorp_2026_06_05_Summary_{}_V2.html",
+                    name
+                ));
+                let json_path =
+                    out_dir.join(format!("COMPLIANCE_MCorp_2026_06_05_{}_V2.json", name));
                 write_output(proforma, Some(&proforma_path));
                 write_output(summary, Some(&summary_path));
                 write_output(json, Some(&json_path));
@@ -336,13 +410,19 @@ fn main() {
                         .arg(pdf_path.as_os_str())
                         .status();
                     match status {
-                        Ok(s) if s.success() => { pdf_count += 1; }
+                        Ok(s) if s.success() => {
+                            pdf_count += 1;
+                        }
                         Ok(s) => eprintln!("weasyprint exited {} for {}", s, html_path.display()),
                         Err(e) => eprintln!("weasyprint not found or failed: {e}"),
                     }
                 }
             }
-            eprintln!("wrote 9 Bencal V2 files + {} PDFs to {}", pdf_count, out_dir.display());
+            eprintln!(
+                "wrote 9 Bencal V2 files + {} PDFs to {}",
+                pdf_count,
+                out_dir.display()
+            );
         }
         None => {
             // Legacy: JSON assumptions → sensitivity engine

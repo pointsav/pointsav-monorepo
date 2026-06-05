@@ -936,8 +936,14 @@ pub fn render_summary() -> String {
     let portfolio_cost: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_cost).sum();
     let portfolio_rent: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_rent).sum();
     let portfolio_noi: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_noi).sum();
-    let portfolio_av: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_asset_value).sum();
-    let portfolio_depr: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_depreciation).sum();
+    let portfolio_av: f64 = ALL_CLASSES
+        .iter()
+        .map(|c| c.rollup().class_asset_value)
+        .sum();
+    let portfolio_depr: f64 = ALL_CLASSES
+        .iter()
+        .map(|c| c.rollup().class_depreciation)
+        .sum();
     let total_count: u32 = ALL_CLASSES.iter().map(|c| c.building_count()).sum();
 
     let mut s = String::new();
@@ -947,18 +953,41 @@ pub fn render_summary() -> String {
     s.push_str("<p>Engine-generated portfolio summary from the v3 D1 dev-classes model.<br>\n");
     s.push_str("DRAFT — 2026-06-04 — V1<br>\n");
     s.push_str("Companion: <code>COMPLIANCE_MCorp_2026_06_04_Proforma_BuildingPortfolio_V1.html</code> (full proforma)<br>\n");
-    s.push_str("All amounts CAD — Forward-looking projections; BCSC continuous-disclosure posture</p>\n");
+    s.push_str(
+        "All amounts CAD — Forward-looking projections; BCSC continuous-disclosure posture</p>\n",
+    );
 
     s.push_str("<h2>Portfolio Rollup (10.5% Dev Yield + 6.25% Cap Rate)</h2>\n");
     s.push_str("<table>\n");
     s.push_str("<tr><th>Metric</th><th>Value</th></tr>\n");
-    s.push_str(&format!("<tr><td>Total buildings</td><td class=\"r\">{}</td></tr>\n", total_count));
-    s.push_str(&format!("<tr><td>Total gross leasable area</td><td class=\"r\">{} sqft</td></tr>\n", fmt_int(portfolio_gla)));
-    s.push_str(&format!("<tr><td>Total construction cost</td><td class=\"r\">{}</td></tr>\n", fmt_money_m(portfolio_cost)));
-    s.push_str(&format!("<tr><td>Calibrated annual rent</td><td class=\"r\">{}</td></tr>\n", fmt_money_m_yr(portfolio_rent)));
-    s.push_str(&format!("<tr><td>Net operating income (57%)</td><td class=\"r\">{}</td></tr>\n", fmt_money_m_yr(portfolio_noi)));
-    s.push_str(&format!("<tr class=\"total\"><td>Asset value at 6.25% cap</td><td class=\"r\">{}</td></tr>\n", fmt_money_m(portfolio_av)));
-    s.push_str(&format!("<tr><td>Annual depreciation (40-yr SL)</td><td class=\"r\">{}</td></tr>\n", fmt_money_m_yr(portfolio_depr)));
+    s.push_str(&format!(
+        "<tr><td>Total buildings</td><td class=\"r\">{}</td></tr>\n",
+        total_count
+    ));
+    s.push_str(&format!(
+        "<tr><td>Total gross leasable area</td><td class=\"r\">{} sqft</td></tr>\n",
+        fmt_int(portfolio_gla)
+    ));
+    s.push_str(&format!(
+        "<tr><td>Total construction cost</td><td class=\"r\">{}</td></tr>\n",
+        fmt_money_m(portfolio_cost)
+    ));
+    s.push_str(&format!(
+        "<tr><td>Calibrated annual rent</td><td class=\"r\">{}</td></tr>\n",
+        fmt_money_m_yr(portfolio_rent)
+    ));
+    s.push_str(&format!(
+        "<tr><td>Net operating income (57%)</td><td class=\"r\">{}</td></tr>\n",
+        fmt_money_m_yr(portfolio_noi)
+    ));
+    s.push_str(&format!(
+        "<tr class=\"total\"><td>Asset value at 6.25% cap</td><td class=\"r\">{}</td></tr>\n",
+        fmt_money_m(portfolio_av)
+    ));
+    s.push_str(&format!(
+        "<tr><td>Annual depreciation (40-yr SL)</td><td class=\"r\">{}</td></tr>\n",
+        fmt_money_m_yr(portfolio_depr)
+    ));
     s.push_str("</table>\n");
 
     s.push_str("<h2>Per-Class Distribution</h2>\n");
@@ -988,21 +1017,30 @@ pub fn render_json() -> String {
     let portfolio_cost: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_cost).sum();
     let portfolio_rent: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_rent).sum();
     let portfolio_noi: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_noi).sum();
-    let portfolio_av: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_asset_value).sum();
-    let portfolio_depr: f64 = ALL_CLASSES.iter().map(|c| c.rollup().class_depreciation).sum();
+    let portfolio_av: f64 = ALL_CLASSES
+        .iter()
+        .map(|c| c.rollup().class_asset_value)
+        .sum();
+    let portfolio_depr: f64 = ALL_CLASSES
+        .iter()
+        .map(|c| c.rollup().class_depreciation)
+        .sum();
     let total_count: u32 = ALL_CLASSES.iter().map(|c| c.building_count()).sum();
 
-    let classes: Vec<serde_json::Value> = ALL_CLASSES.iter().map(|c| {
-        let r = c.rollup();
-        serde_json::json!({
-            "label": c.label,
-            "cost_per_sf_gla": c.cost_per_sf_gla,
-            "pairs": c.pairs,
-            "cost_source": c.cost_source,
-            "variants": c.variants,
-            "rollup": r,
+    let classes: Vec<serde_json::Value> = ALL_CLASSES
+        .iter()
+        .map(|c| {
+            let r = c.rollup();
+            serde_json::json!({
+                "label": c.label,
+                "cost_per_sf_gla": c.cost_per_sf_gla,
+                "pairs": c.pairs,
+                "cost_source": c.cost_source,
+                "variants": c.variants,
+                "rollup": r,
+            })
         })
-    }).collect();
+        .collect();
 
     let json = serde_json::json!({
         "entity": "WMC LP Building Portfolio (D1 Development Classes)",

@@ -1424,13 +1424,8 @@ fn esc(s: &str) -> String {
 }
 
 /// The categories that actually carry (non-stub) articles in `buckets`, in
-/// display order: the ratified platform categories first (in their canonical
-/// order), then any other categories the content declares — `bim`, `company`,
-/// `operations`, etc. — alphabetically. The `uncategorised` bucket is omitted.
-///
-/// This is what makes the navigation correct across all three instances: the
-/// documentation wiki uses the ratified categories, while the Woodfine projects
-/// and corporate wikis declare their own (`bim`, `company`, `operations`, …).
+/// display order: ratified platform categories first, then any others alphabetically.
+/// The `uncategorised` bucket is omitted.
 fn ordered_categories(buckets: &CategoryBuckets) -> Vec<String> {
     let has_real = |c: &str| {
         buckets
@@ -1456,11 +1451,7 @@ fn ordered_categories(buckets: &CategoryBuckets) -> Vec<String> {
     out
 }
 
-/// Build the docs left-navigation HTML from the already-computed category
-/// buckets: every populated category with its articles, the active article
-/// highlighted, and the active category's section expanded. Article labels are
-/// the real frontmatter titles. Works uniformly across all three instances
-/// because it groups by declared category, not by physical subdirectory.
+/// Build the docs left-navigation HTML from the already-computed category buckets.
 fn render_docs_sidenav(buckets: &CategoryBuckets, active_slug: &str) -> String {
     use std::fmt::Write as _;
     let mut out = String::with_capacity(8192);
@@ -2120,9 +2111,6 @@ async fn wiki_page_inner(
             format!("<aside class=\"claim-rail\" aria-label=\"Citation freshness\">{ticks}</aside>")
         }
     };
-    // Docs left-navigation, grouped by declared category (correct for all three
-    // instances). Built from the same bucketing the home page uses, cached with
-    // a short TTL so article pages stay fast.
     let sidenav_html = {
         let buckets = nav_buckets_cached(&state).await;
         render_docs_sidenav(&buckets, &slug)

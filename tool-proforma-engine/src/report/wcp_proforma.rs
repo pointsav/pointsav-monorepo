@@ -11,10 +11,15 @@ use crate::spv::wcp_proforma::{self, WcpYear};
 // ─── Formatting helpers ─────────────────────────────────────────────────────
 
 fn fmt_m(v: f64) -> String {
-    if v.abs() < 1e-2 { "—".to_string() }
-    else if v.abs() >= 1_000_000.0 { format!("${:.2}M", v / 1_000_000.0) }
-    else if v.abs() >= 1_000.0 { format!("${:.0}K", v / 1_000.0) }
-    else { format!("${:.0}", v) }
+    if v.abs() < 1e-2 {
+        "—".to_string()
+    } else if v.abs() >= 1_000_000.0 {
+        format!("${:.2}M", v / 1_000_000.0)
+    } else if v.abs() >= 1_000.0 {
+        format!("${:.0}K", v / 1_000.0)
+    } else {
+        format!("${:.0}", v)
+    }
 }
 
 fn fmt_int(v: f64) -> String {
@@ -23,18 +28,32 @@ fn fmt_int(v: f64) -> String {
     let bytes = s.as_bytes();
     let mut out = String::with_capacity(s.len() + s.len() / 3);
     for (i, b) in bytes.iter().enumerate() {
-        if i > 0 && (bytes.len() - i) % 3 == 0 { out.push(','); }
+        if i > 0 && (bytes.len() - i).is_multiple_of(3) {
+            out.push(',');
+        }
         out.push(*b as char);
     }
-    if n < 0 { format!("-{out}") } else { out }
+    if n < 0 {
+        format!("-{out}")
+    } else {
+        out
+    }
 }
 
 fn fmt_full_dollar(v: f64) -> String {
-    if v.abs() < 1e-2 { "—".to_string() } else { format!("${}", fmt_int(v)) }
+    if v.abs() < 1e-2 {
+        "—".to_string()
+    } else {
+        format!("${}", fmt_int(v))
+    }
 }
 
 fn fmt_per_share(v: f64) -> String {
-    if v.abs() < 1e-4 { "—".to_string() } else { format!("${:.2}", v) }
+    if v.abs() < 1e-4 {
+        "—".to_string()
+    } else {
+        format!("${:.2}", v)
+    }
 }
 
 fn fmt_pct(v: f64) -> String {
@@ -111,19 +130,58 @@ fn render_inputs() -> String {
     s.push_str("<tr><th class=\"lbl\">Parameter</th><th>Value</th><th>BRIEF ref</th></tr>\n");
 
     let rows = [
-        ("Shares outstanding", fmt_int(wcp_proforma::WCP_SHARES_OUTSTANDING), "§1016"),
-        ("Price per share Y0", format!("${:.2}", wcp_proforma::WCP_PRICE_PER_SHARE_Y0), "§1017"),
-        ("Financing tranche Y1", fmt_full_dollar(wcp_proforma::WCP_FINANCING_Y1), "§1020"),
-        ("Financing tranche Y2", fmt_full_dollar(wcp_proforma::WCP_FINANCING_Y2), "§1020"),
-        ("CAD-USD rate", format!("{:.4}", wcp_proforma::WCP_CAD_USD), "§1018"),
-        ("CAD-EUR rate", format!("{:.4}", wcp_proforma::WCP_CAD_EUR), "§1019"),
+        (
+            "Shares outstanding",
+            fmt_int(wcp_proforma::WCP_SHARES_OUTSTANDING),
+            "§1016",
+        ),
+        (
+            "Price per share Y0",
+            format!("${:.2}", wcp_proforma::WCP_PRICE_PER_SHARE_Y0),
+            "§1017",
+        ),
+        (
+            "Financing tranche Y1",
+            fmt_full_dollar(wcp_proforma::WCP_FINANCING_Y1),
+            "§1020",
+        ),
+        (
+            "Financing tranche Y2",
+            fmt_full_dollar(wcp_proforma::WCP_FINANCING_Y2),
+            "§1020",
+        ),
+        (
+            "CAD-USD rate",
+            format!("{:.4}", wcp_proforma::WCP_CAD_USD),
+            "§1018",
+        ),
+        (
+            "CAD-EUR rate",
+            format!("{:.4}", wcp_proforma::WCP_CAD_EUR),
+            "§1019",
+        ),
         ("Tax rate", fmt_pct(wcp_proforma::WCP_TAX_RATE), "§1021"),
-        ("P/E multiple", format!("{:.2}×", wcp_proforma::WCP_PE_MULTIPLE), "§1022"),
-        ("Dividend yield", fmt_pct(wcp_proforma::WCP_DIVIDEND_YIELD), "§1023"),
-        ("LP beneficial ownership (each)", fmt_pct(wcp_proforma::WCP_LP_BENEFICIAL_OWNERSHIP), "§1075"),
+        (
+            "P/E multiple",
+            format!("{:.2}×", wcp_proforma::WCP_PE_MULTIPLE),
+            "§1022",
+        ),
+        (
+            "Dividend yield",
+            fmt_pct(wcp_proforma::WCP_DIVIDEND_YIELD),
+            "§1023",
+        ),
+        (
+            "LP beneficial ownership (each)",
+            fmt_pct(wcp_proforma::WCP_LP_BENEFICIAL_OWNERSHIP),
+            "§1075",
+        ),
     ];
     for (lbl, val, cell) in &rows {
-        s.push_str(&format!("<tr><td class=\"lbl\">{}</td><td>{}</td><td>{}</td></tr>\n", lbl, val, cell));
+        s.push_str(&format!(
+            "<tr><td class=\"lbl\">{}</td><td>{}</td><td>{}</td></tr>\n",
+            lbl, val, cell
+        ));
     }
     s.push_str("</table>\n");
 
@@ -143,21 +201,27 @@ fn render_inputs() -> String {
 
 fn year_header_row() -> String {
     let mut s = String::from("<tr><th class=\"lbl\">Line</th>");
-    for y in 0..=10 { s.push_str(&format!("<th>Y{}</th>", y)); }
+    for y in 0..=10 {
+        s.push_str(&format!("<th>Y{}</th>", y));
+    }
     s.push_str("</tr>\n");
     s
 }
 
 fn data_row<F: Fn(&WcpYear) -> f64>(label: &str, years: &[WcpYear], pick: F) -> String {
     let mut s = format!("<tr><td class=\"lbl\">{}</td>", label);
-    for y in years { s.push_str(&format!("<td>{}</td>", fmt_m(pick(y)))); }
+    for y in years {
+        s.push_str(&format!("<td>{}</td>", fmt_m(pick(y))));
+    }
     s.push_str("</tr>\n");
     s
 }
 
 fn data_row_ps<F: Fn(&WcpYear) -> f64>(label: &str, years: &[WcpYear], pick: F) -> String {
     let mut s = format!("<tr><td class=\"lbl\">{}</td>", label);
-    for y in years { s.push_str(&format!("<td>{}</td>", fmt_per_share(pick(y)))); }
+    for y in years {
+        s.push_str(&format!("<td>{}</td>", fmt_per_share(pick(y))));
+    }
     s.push_str("</tr>\n");
     s
 }
@@ -170,27 +234,39 @@ fn render_revenue_generator(years: &[WcpYear]) -> String {
     s.push_str("<table>\n");
     s.push_str(&year_header_row());
     for (i, lp) in wcp_proforma::WCP_LPS.iter().enumerate() {
-        s.push_str(&data_row(lp.name, years, move |y| y.lps.get(i).map(|l| l.advisory_fee).unwrap_or(0.0)));
+        s.push_str(&data_row(lp.name, years, move |y| {
+            y.lps.get(i).map(|l| l.advisory_fee).unwrap_or(0.0)
+        }));
     }
-    s.push_str(&data_row("Total advisory fees", years, |y| y.advisory_fees_total));
+    s.push_str(&data_row("Total advisory fees", years, |y| {
+        y.advisory_fees_total
+    }));
     s.push_str("</table>\n");
 
     s.push_str("<h3>Distributions by LP (WCP's 10% beneficial ownership)</h3>\n");
     s.push_str("<table>\n");
     s.push_str(&year_header_row());
     for (i, lp) in wcp_proforma::WCP_LPS.iter().enumerate() {
-        s.push_str(&data_row(lp.name, years, move |y| y.lps.get(i).map(|l| l.distributions).unwrap_or(0.0)));
+        s.push_str(&data_row(lp.name, years, move |y| {
+            y.lps.get(i).map(|l| l.distributions).unwrap_or(0.0)
+        }));
     }
-    s.push_str(&data_row("Total distributions", years, |y| y.distributions_total));
+    s.push_str(&data_row("Total distributions", years, |y| {
+        y.distributions_total
+    }));
     s.push_str("</table>\n");
 
     s.push_str("<h3>NAV by LP (WCP's 10% beneficial ownership)</h3>\n");
     s.push_str("<table>\n");
     s.push_str(&year_header_row());
     for (i, lp) in wcp_proforma::WCP_LPS.iter().enumerate() {
-        s.push_str(&data_row(lp.name, years, move |y| y.lps.get(i).map(|l| l.nav).unwrap_or(0.0)));
+        s.push_str(&data_row(lp.name, years, move |y| {
+            y.lps.get(i).map(|l| l.nav).unwrap_or(0.0)
+        }));
     }
-    s.push_str(&data_row("Total NAV (book ownership)", years, |y| y.nav_total_lps));
+    s.push_str(&data_row("Total NAV (book ownership)", years, |y| {
+        y.nav_total_lps
+    }));
     s.push_str("</table>\n");
 
     s
@@ -202,24 +278,40 @@ fn render_income_statement(years: &[WcpYear]) -> String {
     s.push_str("<table>\n");
     s.push_str(&year_header_row());
     s.push_str("<tr class=\"section-banner\"><td colspan=\"12\">Revenue</td></tr>\n");
-    s.push_str(&data_row("Advisory fees (total)", years, |y| y.advisory_fees_total));
-    s.push_str(&data_row("Distributions (lookthrough)", years, |y| y.distributions_total));
-    s.push_str(&data_row("Offering costs reimbursement", years, |y| y.offering_costs));
+    s.push_str(&data_row("Advisory fees (total)", years, |y| {
+        y.advisory_fees_total
+    }));
+    s.push_str(&data_row("Distributions (lookthrough)", years, |y| {
+        y.distributions_total
+    }));
+    s.push_str(&data_row("Offering costs reimbursement", years, |y| {
+        y.offering_costs
+    }));
     s.push_str(&data_row("Gross income", years, |y| y.gross_income));
     s.push_str("<tr class=\"section-banner\"><td colspan=\"12\">Operating Expenses</td></tr>\n");
-    s.push_str(&data_row("Referral fees (Y1-Y2)", years, |y| y.referral_fees));
-    s.push_str(&data_row("WPI consulting (Y1-Y2)", years, |y| y.wpi_consulting));
+    s.push_str(&data_row("Referral fees (Y1-Y2)", years, |y| {
+        y.referral_fees
+    }));
+    s.push_str(&data_row("WPI consulting (Y1-Y2)", years, |y| {
+        y.wpi_consulting
+    }));
     s.push_str(&data_row("G&amp;A — New York City", years, |y| y.gna_nyc));
     s.push_str(&data_row("G&amp;A — Berlin", years, |y| y.gna_berlin));
-    s.push_str(&data_row("Total operating expenses", years, |y| y.total_opex));
+    s.push_str(&data_row("Total operating expenses", years, |y| {
+        y.total_opex
+    }));
     s.push_str("<tr class=\"subtotal\">");
     s.push_str("<td class=\"lbl\">EBITDA</td>");
-    for y in years { s.push_str(&format!("<td>{}</td>", fmt_m(y.ebitda))); }
+    for y in years {
+        s.push_str(&format!("<td>{}</td>", fmt_m(y.ebitda)));
+    }
     s.push_str("</tr>\n");
     s.push_str(&data_row("Taxes (27%)", years, |y| -y.taxes));
     s.push_str("<tr class=\"total\">");
     s.push_str("<td class=\"lbl\">Earnings</td>");
-    for y in years { s.push_str(&format!("<td>{}</td>", fmt_m(y.earnings))); }
+    for y in years {
+        s.push_str(&format!("<td>{}</td>", fmt_m(y.earnings)));
+    }
     s.push_str("</tr>\n");
     s.push_str(&data_row_ps("EPS (per share)", years, |y| y.eps));
     s.push_str("</table>\n");
@@ -232,11 +324,17 @@ fn render_book_valuation(years: &[WcpYear]) -> String {
     s.push_str("<h2>Book Valuation</h2>\n");
     s.push_str("<table>\n");
     s.push_str(&year_header_row());
-    s.push_str(&data_row("Financing activity", years, |y| y.financing_activity));
+    s.push_str(&data_row("Financing activity", years, |y| {
+        y.financing_activity
+    }));
     s.push_str(&data_row("Cumulative FCF", years, |y| y.cumulative_fcf));
-    s.push_str(&data_row("LP ownership (10% of LP NAV)", years, |y| y.lp_ownership_book));
+    s.push_str(&data_row("LP ownership (10% of LP NAV)", years, |y| {
+        y.lp_ownership_book
+    }));
     s.push_str(&data_row("Book value", years, |y| y.book_value));
-    s.push_str(&data_row_ps("Book value per share", years, |y| y.book_value_per_share));
+    s.push_str(&data_row_ps("Book value per share", years, |y| {
+        y.book_value_per_share
+    }));
     s.push_str("</table>\n");
     s.push_str("<p class=\"note\">Book value = cumulative FCF (financing + earnings) + LP beneficial ownership (10% of each LP's NAV). Per BRIEF §1130.</p>\n");
     s
@@ -247,12 +345,28 @@ fn render_four_valuations(years: &[WcpYear]) -> String {
     s.push_str("<h2>Four Valuation Methods (per BRIEF §5c rows 80–102)</h2>\n");
     s.push_str("<table>\n");
     s.push_str(&year_header_row());
-    s.push_str(&data_row("Earnings valuation (× 10.72 P/E)", years, |y| y.earnings_valuation));
-    s.push_str(&data_row_ps("  per share", years, |y| y.market_value_per_share));
-    s.push_str(&data_row("Dividend valuation (÷ 4.5% yield)", years, |y| y.dividend_valuation));
-    s.push_str(&data_row_ps("  per share", years, |y| y.dividend_value_per_share));
-    s.push_str(&data_row_ps("Book value per share", years, |y| y.book_value_per_share));
-    s.push_str(&data_row_ps("Fair value per share (3-method avg)", years, |y| y.fair_value_per_share));
+    s.push_str(&data_row("Earnings valuation (× 10.72 P/E)", years, |y| {
+        y.earnings_valuation
+    }));
+    s.push_str(&data_row_ps("  per share", years, |y| {
+        y.market_value_per_share
+    }));
+    s.push_str(&data_row(
+        "Dividend valuation (÷ 4.5% yield)",
+        years,
+        |y| y.dividend_valuation,
+    ));
+    s.push_str(&data_row_ps("  per share", years, |y| {
+        y.dividend_value_per_share
+    }));
+    s.push_str(&data_row_ps("Book value per share", years, |y| {
+        y.book_value_per_share
+    }));
+    s.push_str(&data_row_ps(
+        "Fair value per share (3-method avg)",
+        years,
+        |y| y.fair_value_per_share,
+    ));
     s.push_str("</table>\n");
     s.push_str("<p class=\"note\">Four valuation methods per BRIEF §5c. Market = Earnings × 10.72 P/E. Dividend = Earnings / 4.5% target yield. Book = cumulative FCF + LP ownership. Fair value = simple average of the three (book + market + dividend per share).</p>\n");
     s
@@ -294,23 +408,41 @@ pub fn render_summary() -> String {
     s.push_str("<h2>Capital Structure</h2>\n");
     s.push_str("<table>\n");
     s.push_str("<tr><th class=\"lbl\">Item</th><th>Value</th></tr>\n");
-    s.push_str(&format!("<tr><td class=\"lbl\">Shares outstanding</td><td>{}</td></tr>\n",
-                        fmt_int(wcp_proforma::WCP_SHARES_OUTSTANDING)));
-    s.push_str(&format!("<tr><td class=\"lbl\">Price per share Y0</td><td>${:.2}</td></tr>\n",
-                        wcp_proforma::WCP_PRICE_PER_SHARE_Y0));
-    s.push_str(&format!("<tr><td class=\"lbl\">Y0 implied market cap</td><td>{}</td></tr>\n",
-                        fmt_full_dollar(wcp_proforma::WCP_SHARES_OUTSTANDING * wcp_proforma::WCP_PRICE_PER_SHARE_Y0)));
-    s.push_str(&format!("<tr><td class=\"lbl\">Total Y1-Y2 financing</td><td>{}</td></tr>\n",
-                        fmt_full_dollar(wcp_proforma::WCP_FINANCING_Y1 + wcp_proforma::WCP_FINANCING_Y2)));
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">Shares outstanding</td><td>{}</td></tr>\n",
+        fmt_int(wcp_proforma::WCP_SHARES_OUTSTANDING)
+    ));
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">Price per share Y0</td><td>${:.2}</td></tr>\n",
+        wcp_proforma::WCP_PRICE_PER_SHARE_Y0
+    ));
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">Y0 implied market cap</td><td>{}</td></tr>\n",
+        fmt_full_dollar(
+            wcp_proforma::WCP_SHARES_OUTSTANDING * wcp_proforma::WCP_PRICE_PER_SHARE_Y0
+        )
+    ));
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">Total Y1-Y2 financing</td><td>{}</td></tr>\n",
+        fmt_full_dollar(wcp_proforma::WCP_FINANCING_Y1 + wcp_proforma::WCP_FINANCING_Y2)
+    ));
     s.push_str("</table>\n");
 
     s.push_str("<h2>Y10 Endpoint Summary</h2>\n");
     s.push_str("<table>\n");
-    s.push_str("<tr><th class=\"lbl\">Metric</th><th>Aggregate</th><th>Per share (10M)</th></tr>\n");
-    s.push_str(&format!("<tr><td class=\"lbl\">Y10 Earnings</td><td>{}</td><td>{}</td></tr>\n",
-                        fmt_m(y10.earnings), fmt_per_share(y10.eps)));
-    s.push_str(&format!("<tr><td class=\"lbl\">Y10 Book value</td><td>{}</td><td>{}</td></tr>\n",
-                        fmt_m(y10.book_value), fmt_per_share(y10.book_value_per_share)));
+    s.push_str(
+        "<tr><th class=\"lbl\">Metric</th><th>Aggregate</th><th>Per share (10M)</th></tr>\n",
+    );
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">Y10 Earnings</td><td>{}</td><td>{}</td></tr>\n",
+        fmt_m(y10.earnings),
+        fmt_per_share(y10.eps)
+    ));
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">Y10 Book value</td><td>{}</td><td>{}</td></tr>\n",
+        fmt_m(y10.book_value),
+        fmt_per_share(y10.book_value_per_share)
+    ));
     s.push_str(&format!("<tr><td class=\"lbl\">Y10 Market value (Earnings × 10.72 P/E)</td><td>{}</td><td>{}</td></tr>\n",
                         fmt_m(y10.market_valuation), fmt_per_share(y10.market_value_per_share)));
     s.push_str(&format!("<tr><td class=\"lbl\">Y10 Dividend value (Earnings / 4.5%)</td><td>{}</td><td>{}</td></tr>\n",

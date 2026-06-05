@@ -29,24 +29,40 @@ fn fmt_int(v: f64) -> String {
     let bytes = s.as_bytes();
     let mut out = String::with_capacity(s.len() + s.len() / 3);
     for (i, b) in bytes.iter().enumerate() {
-        if i > 0 && (bytes.len() - i) % 3 == 0 {
+        if i > 0 && (bytes.len() - i).is_multiple_of(3) {
             out.push(',');
         }
         out.push(*b as char);
     }
-    if n < 0 { format!("-{out}") } else { out }
+    if n < 0 {
+        format!("-{out}")
+    } else {
+        out
+    }
 }
 
 fn fmt_full_dollar(v: f64) -> String {
-    if v.abs() < 1e-2 { "—".to_string() } else { format!("${}", fmt_int(v)) }
+    if v.abs() < 1e-2 {
+        "—".to_string()
+    } else {
+        format!("${}", fmt_int(v))
+    }
 }
 
 fn fmt_per_unit(v: f64) -> String {
-    if v.abs() < 1e-4 { "—".to_string() } else { format!("${:.2}", v) }
+    if v.abs() < 1e-4 {
+        "—".to_string()
+    } else {
+        format!("${:.2}", v)
+    }
 }
 
 fn fmt_pct(v: f64) -> String {
-    if v.abs() < 1e-6 { "—".to_string() } else { format!("{:.2}%", v * 100.0) }
+    if v.abs() < 1e-6 {
+        "—".to_string()
+    } else {
+        format!("{:.2}%", v * 100.0)
+    }
 }
 
 // ─── HTML scaffold ──────────────────────────────────────────────────────────
@@ -118,25 +134,104 @@ fn render_capital_structure() -> String {
     s.push_str("<tr><th class=\"lbl\">Parameter</th><th>Value</th><th>BRIEF cell</th></tr>\n");
 
     let rows = [
-        ("Gross equity raise", fmt_full_dollar(pclp1_proforma::PCLP1_GROSS_EQUITY), "D15"),
-        ("Unit price", format!("${:.2}", pclp1_proforma::PCLP1_UNIT_PRICE), "D16"),
-        ("Diluted LP units (LPA-locked)", fmt_int(pclp1_proforma::PCLP1_DILUTED_UNITS), "D45"),
-        ("Investor units", fmt_int(pclp1_proforma::PCLP1_INVESTOR_UNITS), "§741"),
-        ("Benetti units (manager dilution)", fmt_int(pclp1_proforma::PCLP1_BENETTI_UNITS), "§742"),
-        ("Issuing agents fee", format!("{:.0}%", pclp1_proforma::PCLP1_ISSUING_AGENTS_FEE_PCT * 100.0), "D17"),
-        ("Issue costs", format!("{:.0}%", pclp1_proforma::PCLP1_ISSUE_COSTS_PCT * 100.0), "D27"),
-        ("Advisory fee (annual % of net proceeds)", format!("{:.0}%", pclp1_proforma::PCLP1_ADVISORY_FEE_PCT * 100.0), "D19"),
-        ("Admin &amp; compliance (annual)", fmt_full_dollar(pclp1_proforma::PCLP1_ADMIN_COMPLIANCE_ANNUAL), "D24"),
-        ("Board of directors (annual)", fmt_full_dollar(pclp1_proforma::PCLP1_BOARD_ANNUAL), "D23"),
-        ("Development yield", fmt_pct(pclp1_proforma::PCLP1_DEV_YIELD), "D10"),
-        ("Cap rate (Public Non-Listed)", fmt_pct(pclp1_proforma::PCLP1_CAP_RATE), "D12"),
-        ("Secondary-market buyer's required yield", fmt_pct(pclp1_proforma::PCLP1_BUYER_TARGET_YIELD), "AC23"),
-        ("Debenture interest rate", fmt_pct(pclp1_proforma::PCLP1_DEBT_RATE_DEBENTURE), "D29"),
-        ("Debt financing cost (one-time per draw)", fmt_pct(pclp1_proforma::PCLP1_DEBT_FINANCING_COST), "D28"),
-        ("Cash interest rate", fmt_pct(pclp1_proforma::PCLP1_CASH_INTEREST), "D30"),
-        ("Debt buyback (% of FFO, Y8+)", fmt_pct(pclp1_proforma::PCLP1_DEBT_BUYBACK_PCT_FFO), "D31"),
-        ("Minimum cash balance", fmt_full_dollar(pclp1_proforma::PCLP1_MIN_CASH_BALANCE), "D33"),
-        ("Working capital reserve (% of gross)", fmt_pct(pclp1_proforma::PCLP1_WORKING_CAPITAL_PCT), "D34"),
+        (
+            "Gross equity raise",
+            fmt_full_dollar(pclp1_proforma::PCLP1_GROSS_EQUITY),
+            "D15",
+        ),
+        (
+            "Unit price",
+            format!("${:.2}", pclp1_proforma::PCLP1_UNIT_PRICE),
+            "D16",
+        ),
+        (
+            "Diluted LP units (LPA-locked)",
+            fmt_int(pclp1_proforma::PCLP1_DILUTED_UNITS),
+            "D45",
+        ),
+        (
+            "Investor units",
+            fmt_int(pclp1_proforma::PCLP1_INVESTOR_UNITS),
+            "§741",
+        ),
+        (
+            "Benetti units (manager dilution)",
+            fmt_int(pclp1_proforma::PCLP1_BENETTI_UNITS),
+            "§742",
+        ),
+        (
+            "Issuing agents fee",
+            format!(
+                "{:.0}%",
+                pclp1_proforma::PCLP1_ISSUING_AGENTS_FEE_PCT * 100.0
+            ),
+            "D17",
+        ),
+        (
+            "Issue costs",
+            format!("{:.0}%", pclp1_proforma::PCLP1_ISSUE_COSTS_PCT * 100.0),
+            "D27",
+        ),
+        (
+            "Advisory fee (annual % of net proceeds)",
+            format!("{:.0}%", pclp1_proforma::PCLP1_ADVISORY_FEE_PCT * 100.0),
+            "D19",
+        ),
+        (
+            "Admin &amp; compliance (annual)",
+            fmt_full_dollar(pclp1_proforma::PCLP1_ADMIN_COMPLIANCE_ANNUAL),
+            "D24",
+        ),
+        (
+            "Board of directors (annual)",
+            fmt_full_dollar(pclp1_proforma::PCLP1_BOARD_ANNUAL),
+            "D23",
+        ),
+        (
+            "Development yield",
+            fmt_pct(pclp1_proforma::PCLP1_DEV_YIELD),
+            "D10",
+        ),
+        (
+            "Cap rate (Public Non-Listed)",
+            fmt_pct(pclp1_proforma::PCLP1_CAP_RATE),
+            "D12",
+        ),
+        (
+            "Secondary-market buyer's required yield",
+            fmt_pct(pclp1_proforma::PCLP1_BUYER_TARGET_YIELD),
+            "AC23",
+        ),
+        (
+            "Debenture interest rate",
+            fmt_pct(pclp1_proforma::PCLP1_DEBT_RATE_DEBENTURE),
+            "D29",
+        ),
+        (
+            "Debt financing cost (one-time per draw)",
+            fmt_pct(pclp1_proforma::PCLP1_DEBT_FINANCING_COST),
+            "D28",
+        ),
+        (
+            "Cash interest rate",
+            fmt_pct(pclp1_proforma::PCLP1_CASH_INTEREST),
+            "D30",
+        ),
+        (
+            "Debt buyback (% of FFO, Y8+)",
+            fmt_pct(pclp1_proforma::PCLP1_DEBT_BUYBACK_PCT_FFO),
+            "D31",
+        ),
+        (
+            "Minimum cash balance",
+            fmt_full_dollar(pclp1_proforma::PCLP1_MIN_CASH_BALANCE),
+            "D33",
+        ),
+        (
+            "Working capital reserve (% of gross)",
+            fmt_pct(pclp1_proforma::PCLP1_WORKING_CAPITAL_PCT),
+            "D34",
+        ),
     ];
     for (lbl, val, cell) in &rows {
         s.push_str(&format!(
@@ -150,32 +245,54 @@ fn render_capital_structure() -> String {
     s.push_str("<table>\n");
     s.push_str("<tr><th class=\"lbl\">Item</th><th>Amount</th><th>Formula</th></tr>\n");
     let derived = [
-        ("Issuing agents fee", 250_000_000.0 * pclp1_proforma::PCLP1_ISSUING_AGENTS_FEE_PCT,
-         "gross_equity × 6%"),
-        ("Issue costs", 250_000_000.0 * pclp1_proforma::PCLP1_ISSUE_COSTS_PCT, "gross_equity × 1%"),
-        ("Net proceeds", 250_000_000.0
-            * (1.0 - pclp1_proforma::PCLP1_ISSUING_AGENTS_FEE_PCT
-                   - pclp1_proforma::PCLP1_ISSUE_COSTS_PCT),
-         "gross − fees"),
-        ("Working capital reserve", 250_000_000.0 * pclp1_proforma::PCLP1_WORKING_CAPITAL_PCT,
-         "gross_equity × 6.25%"),
-        ("Net equity for buildings (Phase 1 capex)",
-         250_000_000.0
-            * (1.0 - pclp1_proforma::PCLP1_ISSUING_AGENTS_FEE_PCT
-                   - pclp1_proforma::PCLP1_ISSUE_COSTS_PCT
-                   - pclp1_proforma::PCLP1_WORKING_CAPITAL_PCT),
-         "net_proceeds − working_capital"),
-        ("Advisory fee (annual)",
-         250_000_000.0
-            * (1.0 - pclp1_proforma::PCLP1_ISSUING_AGENTS_FEE_PCT
-                   - pclp1_proforma::PCLP1_ISSUE_COSTS_PCT)
-            * pclp1_proforma::PCLP1_ADVISORY_FEE_PCT,
-         "net_proceeds × 1%"),
+        (
+            "Issuing agents fee",
+            250_000_000.0 * pclp1_proforma::PCLP1_ISSUING_AGENTS_FEE_PCT,
+            "gross_equity × 6%",
+        ),
+        (
+            "Issue costs",
+            250_000_000.0 * pclp1_proforma::PCLP1_ISSUE_COSTS_PCT,
+            "gross_equity × 1%",
+        ),
+        (
+            "Net proceeds",
+            250_000_000.0
+                * (1.0
+                    - pclp1_proforma::PCLP1_ISSUING_AGENTS_FEE_PCT
+                    - pclp1_proforma::PCLP1_ISSUE_COSTS_PCT),
+            "gross − fees",
+        ),
+        (
+            "Working capital reserve",
+            250_000_000.0 * pclp1_proforma::PCLP1_WORKING_CAPITAL_PCT,
+            "gross_equity × 6.25%",
+        ),
+        (
+            "Net equity for buildings (Phase 1 capex)",
+            250_000_000.0
+                * (1.0
+                    - pclp1_proforma::PCLP1_ISSUING_AGENTS_FEE_PCT
+                    - pclp1_proforma::PCLP1_ISSUE_COSTS_PCT
+                    - pclp1_proforma::PCLP1_WORKING_CAPITAL_PCT),
+            "net_proceeds − working_capital",
+        ),
+        (
+            "Advisory fee (annual)",
+            250_000_000.0
+                * (1.0
+                    - pclp1_proforma::PCLP1_ISSUING_AGENTS_FEE_PCT
+                    - pclp1_proforma::PCLP1_ISSUE_COSTS_PCT)
+                * pclp1_proforma::PCLP1_ADVISORY_FEE_PCT,
+            "net_proceeds × 1%",
+        ),
     ];
     for (lbl, amount, formula) in &derived {
         s.push_str(&format!(
             "<tr><td class=\"lbl\">{}</td><td>{}</td><td>{}</td></tr>\n",
-            lbl, fmt_full_dollar(*amount), formula
+            lbl,
+            fmt_full_dollar(*amount),
+            formula
         ));
     }
     s.push_str("</table>\n");
@@ -265,7 +382,9 @@ fn render_capital_asset_schedule(years: &[Pclp1Year]) -> String {
     s.push_str("<table>\n");
     s.push_str(&year_header_row());
     s.push_str(&data_row("Phase draws (capex)", years, |y| y.phase_draws));
-    s.push_str(&data_row("Total assets (cumulative)", years, |y| y.total_assets));
+    s.push_str(&data_row("Total assets (cumulative)", years, |y| {
+        y.total_assets
+    }));
     s.push_str(&data_row("Work in progress (WIP)", years, |y| y.wip));
     s.push_str(&data_row("Generating assets", years, |y| y.generating));
     s.push_str("</table>\n");
@@ -278,18 +397,32 @@ fn render_income_statement(years: &[Pclp1Year]) -> String {
     s.push_str("<table>\n");
     s.push_str(&year_header_row());
     s.push_str("<tr class=\"section-banner\"><td colspan=\"12\">Revenue (engine: NOI = generating × 10.5% dev yield)</td></tr>\n");
-    s.push_str(&data_row("Net proceeds from ops (NOI)", years, |y| y.net_proceeds_from_ops));
-    s.push_str(&data_row("Income continuity (Y1–Y3 entitlement)", years, |y| y.income_continuity));
+    s.push_str(&data_row("Net proceeds from ops (NOI)", years, |y| {
+        y.net_proceeds_from_ops
+    }));
+    s.push_str(&data_row(
+        "Income continuity (Y1–Y3 entitlement)",
+        years,
+        |y| y.income_continuity,
+    ));
     s.push_str("<tr class=\"section-banner\"><td colspan=\"12\">Expenses</td></tr>\n");
     s.push_str(&data_row("Issue costs (Y1 only)", years, |y| y.issue_costs));
-    s.push_str(&data_row("Financing costs (3% × debt draw)", years, |y| y.financing_costs));
-    s.push_str(&data_row("Advisory fee (1% × net proceeds)", years, |y| y.advisory_fee));
-    s.push_str(&data_row("Admin &amp; compliance", years, |y| y.admin_compliance));
+    s.push_str(&data_row("Financing costs (3% × debt draw)", years, |y| {
+        y.financing_costs
+    }));
+    s.push_str(&data_row("Advisory fee (1% × net proceeds)", years, |y| {
+        y.advisory_fee
+    }));
+    s.push_str(&data_row("Admin &amp; compliance", years, |y| {
+        y.admin_compliance
+    }));
     s.push_str(&data_row("Board of directors", years, |y| y.board));
     s.push_str(&data_row("Total expenses", years, |y| y.total_expenses));
     s.push_str("<tr class=\"subtotal\">");
-    s.push_str(&format!("<td class=\"lbl\">EBITDA</td>"));
-    for y in years { s.push_str(&format!("<td>{}</td>", fmt_m(y.ebitda))); }
+    s.push_str("<td class=\"lbl\">EBITDA</td>");
+    for y in years {
+        s.push_str(&format!("<td>{}</td>", fmt_m(y.ebitda)));
+    }
     s.push_str("</tr>\n");
     s.push_str("</table>\n");
     s
@@ -302,11 +435,19 @@ fn render_debt_schedule(years: &[Pclp1Year]) -> String {
     s.push_str(&year_header_row());
     s.push_str(&data_row("Opening debt", years, |y| y.opening_debt));
     s.push_str(&data_row("Gross debt draw", years, |y| y.gross_debt_draw));
-    s.push_str(&data_row("Net interest (debt × 5% − cash × 0.5%)", years, |y| y.net_interest));
-    s.push_str(&data_row("Debt repayment (Y8+ = 10% × FFO)", years, |y| y.debt_repayment));
+    s.push_str(&data_row(
+        "Net interest (debt × 5% − cash × 0.5%)",
+        years,
+        |y| y.net_interest,
+    ));
+    s.push_str(&data_row("Debt repayment (Y8+ = 10% × FFO)", years, |y| {
+        y.debt_repayment
+    }));
     s.push_str("<tr class=\"subtotal\">");
     s.push_str("<td class=\"lbl\">Closing debt</td>");
-    for y in years { s.push_str(&format!("<td>{}</td>", fmt_m(y.closing_debt))); }
+    for y in years {
+        s.push_str(&format!("<td>{}</td>", fmt_m(y.closing_debt)));
+    }
     s.push_str("</tr>\n");
     s.push_str("</table>\n");
     s
@@ -321,11 +462,15 @@ fn render_cash_flow(years: &[Pclp1Year]) -> String {
     s.push_str(&data_row("New equity (Y1 only)", years, |y| y.new_equity));
     s.push_str(&data_row("Gross debt draw", years, |y| y.gross_debt_draw));
     s.push_str(&data_row("FFO (EBITDA − net interest)", years, |y| y.ffo));
-    s.push_str(&data_row("Distributions to LPs", years, |y| y.distributions));
+    s.push_str(&data_row("Distributions to LPs", years, |y| {
+        y.distributions
+    }));
     s.push_str(&data_row("Debt repayment", years, |y| y.debt_repayment));
     s.push_str("<tr class=\"subtotal\">");
     s.push_str("<td class=\"lbl\">Ending cash</td>");
-    for y in years { s.push_str(&format!("<td>{}</td>", fmt_m(y.ending_cash))); }
+    for y in years {
+        s.push_str(&format!("<td>{}</td>", fmt_m(y.ending_cash)));
+    }
     s.push_str("</tr>\n");
     s.push_str("</table>\n");
     s
@@ -336,11 +481,17 @@ fn render_valuation(years: &[Pclp1Year]) -> String {
     s.push_str("<h2>Valuation &amp; NAV</h2>\n");
     s.push_str("<table>\n");
     s.push_str(&year_header_row());
-    s.push_str(&data_row("Asset value (NOI/cap_rate + WIP + cash)", years, |y| y.asset_value));
+    s.push_str(&data_row(
+        "Asset value (NOI/cap_rate + WIP + cash)",
+        years,
+        |y| y.asset_value,
+    ));
     s.push_str(&data_row("Closing debt", years, |y| y.closing_debt));
     s.push_str("<tr class=\"subtotal\">");
     s.push_str("<td class=\"lbl\">NAV (asset − debt)</td>");
-    for y in years { s.push_str(&format!("<td>{}</td>", fmt_m(y.nav))); }
+    for y in years {
+        s.push_str(&format!("<td>{}</td>", fmt_m(y.nav)));
+    }
     s.push_str("</tr>\n");
     s.push_str("</table>\n");
     s
@@ -351,12 +502,24 @@ fn render_per_unit(years: &[Pclp1Year]) -> String {
     s.push_str("<h2>Per-Unit Metrics (2,777,777 diluted LP units)</h2>\n");
     s.push_str("<table>\n");
     s.push_str(&year_header_row());
-    s.push_str(&data_row_pu("Asset value per unit", years, |y| y.asset_value_per_unit));
+    s.push_str(&data_row_pu("Asset value per unit", years, |y| {
+        y.asset_value_per_unit
+    }));
     s.push_str(&data_row_pu("NAV per unit", years, |y| y.nav_per_unit));
-    s.push_str(&data_row_pu("Distribution per unit (DPU)", years, |y| y.dpu));
-    s.push_str(&data_row_pu("Market value per unit", years, |y| y.market_value_per_unit));
-    s.push_str(&data_row_pct("Distribution yield on cost ($100)", years, |y| y.dist_yield_on_cost));
-    s.push_str(&data_row_pct("Distribution yield at market", years, |y| y.dist_yield_at_market));
+    s.push_str(&data_row_pu("Distribution per unit (DPU)", years, |y| {
+        y.dpu
+    }));
+    s.push_str(&data_row_pu("Market value per unit", years, |y| {
+        y.market_value_per_unit
+    }));
+    s.push_str(&data_row_pct(
+        "Distribution yield on cost ($100)",
+        years,
+        |y| y.dist_yield_on_cost,
+    ));
+    s.push_str(&data_row_pct("Distribution yield at market", years, |y| {
+        y.dist_yield_at_market
+    }));
     s.push_str("</table>\n");
     s.push_str("<p class=\"note\">Market value Y1–Y7 hardcoded per BRIEF v0.15.6 §736. Y8+ computed as DPU ÷ buyer's required yield (8%): if a secondary-market buyer requires 8% distribution yield on cost, market price = DPU ÷ 0.08.</p>\n");
     s
@@ -370,7 +533,8 @@ fn render_key_ratios(years: &[Pclp1Year]) -> String {
     s.push_str(&year_header_row());
 
     // Interest Coverage row (special: use 'x' suffix)
-    let mut ic_row = String::from("<tr><td class=\"lbl\">Interest Coverage (EBITDA ÷ Net Interest)</td>");
+    let mut ic_row =
+        String::from("<tr><td class=\"lbl\">Interest Coverage (EBITDA ÷ Net Interest)</td>");
     for y in years {
         if y.interest_coverage > 0.001 {
             ic_row.push_str(&format!("<td>{:.2}×</td>", y.interest_coverage));
@@ -381,8 +545,12 @@ fn render_key_ratios(years: &[Pclp1Year]) -> String {
     ic_row.push_str("</tr>\n");
     s.push_str(&ic_row);
 
-    s.push_str(&data_row_pct("Debt-to-Development-Cost", years, |y| y.debt_to_dev_cost));
-    s.push_str(&data_row_pct("Debt-to-Asset-Value (LTV)", years, |y| y.debt_to_asset_value));
+    s.push_str(&data_row_pct("Debt-to-Development-Cost", years, |y| {
+        y.debt_to_dev_cost
+    }));
+    s.push_str(&data_row_pct("Debt-to-Asset-Value (LTV)", years, |y| {
+        y.debt_to_asset_value
+    }));
 
     // Total sqft (generating)
     let mut sqft_row = String::from("<tr><td class=\"lbl\">Total Generating Square Footage</td>");
@@ -434,7 +602,8 @@ fn v2_corrections_note() -> String {
     inflating NAV ~$124/unit); (4) Interest Coverage formula corrected to EBITDA ÷ Net \
     Interest + Key Ratios table added; (5) Debenture facility fees recognized at \
     commitment year (Y4 for Phase 2; Y6 for Phase 3) — matches real-world practice and \
-    satisfies LPA 1.20× covenant at Y5 with zero damage to NAV/DPU.</p>\n".to_string()
+    satisfies LPA 1.20× covenant at Y5 with zero damage to NAV/DPU.</p>\n"
+        .to_string()
 }
 
 fn render_wc_reserve_note() -> String {
@@ -444,7 +613,8 @@ fn render_wc_reserve_note() -> String {
     continuity Y1–Y3 ($3.05M/$3.30M/$3.50M per BRIEF §735) is a fair-value entitlement \
     for asset valuation per BRIEF §823–827; it is not cash and is not netted against the \
     reserve requirement. The 6.25% rate is preserved (between 3-year and 4-year coverage \
-    targets).</p>\n".to_string()
+    targets).</p>\n"
+        .to_string()
 }
 
 fn render_facility_fee_note() -> String {
@@ -455,7 +625,8 @@ fn render_facility_fee_note() -> String {
     Phase 3 facility fee ($19.6425M = 3% × $654.75M) is expensed at Y6. Total fee cost \
     unchanged; only the timing of expense recognition moves. This satisfies the LPA-\
     mandated 1.20× Interest Coverage covenant at Y5 (engine: 1.53×) and Y7 (engine: \
-    1.33×) without any debt or project size reduction.</p>\n".to_string()
+    1.33×) without any debt or project size reduction.</p>\n"
+        .to_string()
 }
 
 pub fn render_summary() -> String {
@@ -481,19 +652,29 @@ pub fn render_summary() -> String {
     s.push_str("<h2>Capital Structure</h2>\n");
     s.push_str("<table>\n");
     s.push_str("<tr><th class=\"lbl\">Item</th><th>Value</th></tr>\n");
-    s.push_str(&format!("<tr><td class=\"lbl\">Total equity raise</td><td>{}</td></tr>\n",
-                        fmt_full_dollar(pclp1_proforma::PCLP1_GROSS_EQUITY)));
-    s.push_str(&format!("<tr><td class=\"lbl\">Unit price</td><td>${:.2}</td></tr>\n",
-                        pclp1_proforma::PCLP1_UNIT_PRICE));
-    s.push_str(&format!("<tr><td class=\"lbl\">Investor LP units</td><td>{}</td></tr>\n",
-                        fmt_int(pclp1_proforma::PCLP1_INVESTOR_UNITS)));
-    s.push_str(&format!("<tr><td class=\"lbl\">Diluted LP units</td><td>{}</td></tr>\n",
-                        fmt_int(pclp1_proforma::PCLP1_DILUTED_UNITS)));
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">Total equity raise</td><td>{}</td></tr>\n",
+        fmt_full_dollar(pclp1_proforma::PCLP1_GROSS_EQUITY)
+    ));
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">Unit price</td><td>${:.2}</td></tr>\n",
+        pclp1_proforma::PCLP1_UNIT_PRICE
+    ));
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">Investor LP units</td><td>{}</td></tr>\n",
+        fmt_int(pclp1_proforma::PCLP1_INVESTOR_UNITS)
+    ));
+    s.push_str(&format!(
+        "<tr><td class=\"lbl\">Diluted LP units</td><td>{}</td></tr>\n",
+        fmt_int(pclp1_proforma::PCLP1_DILUTED_UNITS)
+    ));
     s.push_str("</table>\n");
 
     s.push_str("<h2>Investment Return Summary (Y10 endpoint)</h2>\n");
     s.push_str("<table>\n");
-    s.push_str("<tr><th class=\"lbl\">Metric</th><th>Aggregate</th><th>Per investor unit</th></tr>\n");
+    s.push_str(
+        "<tr><th class=\"lbl\">Metric</th><th>Aggregate</th><th>Per investor unit</th></tr>\n",
+    );
     s.push_str(&format!(
         "<tr><td class=\"lbl\">Capital invested (Y0)</td><td>{}</td><td>${:.2}</td></tr>\n",
         fmt_full_dollar(pclp1_proforma::PCLP1_GROSS_EQUITY),

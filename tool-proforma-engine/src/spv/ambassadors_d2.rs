@@ -247,6 +247,7 @@ fn scale_year(y: &Pclp1Year, sf: f64) -> Pclp1Year {
 }
 
 #[cfg(test)]
+#[allow(clippy::field_reassign_with_default)]
 mod tests {
     use super::*;
     use crate::excel::wcp::{WcpBook, WcpFairDiv, WcpIncome, WcpMarket};
