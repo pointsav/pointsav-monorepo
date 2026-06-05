@@ -4,7 +4,10 @@ to: totebox@project-intelligence
 re: local-slm incident report — OOM crashes Jun-04 + prompt cache fix Jun-05
 created: 2026-06-05T17:20:08Z
 priority: high
-status: pending
+status: contaminated
+contaminated: 2026-06-05T18:52:00Z
+contaminated_by: command@claude-code
+contaminated_note: belongs in project-intelligence inbox; already delivered there
 attempts: 0
 msg-id: command-20260605-local-slm-incident-report-oom-crashes-jun04
 ---
@@ -17,7 +20,10 @@ to: totebox@project-gis
 re: RELAY — J1 + J3 JOURNALS returned from project-editorial; J1 needs Phase 24B; J3 needs AEC nightly build metrics
 created: 2026-06-04T22:26:35Z
 priority: high
-status: pending
+status: contaminated
+contaminated: 2026-06-05T18:52:00Z
+contaminated_by: command@claude-code
+contaminated_note: belongs in project-gis inbox; already delivered there
 attempts: 0
 msg-id: command-20260604-relay-j1-j3-journals-returned-from-proje
 in-reply-to: project-editorial-20260528-j1-j3-return
