@@ -7,6 +7,31 @@ Last updated: 2026-06-04
 
 ---
 
+## AEC nightly builds — Jun 5 2026
+
+### Done tonight (Jun 4–5)
+- [x] **AEC seismic — Night 4 complete** — `layer10-seismic-eu.pmtiles` (76K) built; `.night4-complete`
+      written; `clusters-meta.json` updated (18.8 MB). EU seismic PGA assigned 0 clusters — see
+      defect below. GWL_FCS30 wetland skipped (all zip tiles failed download). [2026-06-05 totebox@claude-code]
+- [x] **AEC flood — build-aec-flood.sh running** — AQUEDUCT downloaded (88 MB ✓); numpy 2.x fix
+      applied (replaced `gdal_calc.py`/`gdal_polygonize.py` with pure-GDAL Python heredoc — struct
+      + `gdal.Polygonize`). Classification + polygonize in progress. [2026-06-05 totebox@claude-code]
+- [x] **Parking ingest full run** — PID 148899 running all 7 countries (US/CA/FR/DE/IT/PL/NO);
+      CA at tile 10/12; FR–NO queued after. PKS rebuild pending completion. [2026-06-05]
+
+### Defects found tonight — fix next session
+- [ ] **ESHM20 EU seismic: only 1 feature extracted** — `eshm20-eu.geojson` has 1 polygon
+      (Iceland-area zone) instead of full EU seismic hazard zone grid. Step [8/9] produced 0
+      cluster PGA assignments. The seismic script's ESHM20 extraction is wrong (probably extracts
+      only a summary or single record). Fix: re-inspect `build-aec-seismic.sh` ESHM20 extraction
+      steps + verify field names against actual 343 MB tar.gz contents. [2026-06-05]
+- [ ] **GWL_FCS30 wetland tiles: all zip downloads failed** — `W0_W30.zip` "download failed or too
+      small"; `W65_W90.zip` "no TIF found in zip". Zenodo tile URL scheme may have changed.
+      Fix: verify Zenodo record 7340516 tile naming; update URL pattern in `build-aec-seismic.sh`.
+      [2026-06-05]
+
+---
+
 ## AEC passive-design data pipeline — Jun 4 2026
 
 ### Done this session
