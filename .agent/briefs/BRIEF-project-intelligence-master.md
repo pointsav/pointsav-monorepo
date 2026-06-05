@@ -66,7 +66,8 @@ Vendor-specific names appear only in deployment GUIDEs.
 |---|---|---|
 | `local-slm.service` | **ACTIVE PRIMARY** | OLMo 2 1124 7B Instruct Q4_K_M; Tier A; 3.38 tok/s (`:8080/metrics` → `/v1/status/tier-a`) |
 | `local-doorman.service` | **ACTIVE** | Sprint 4+5 commit `1202e6ee`; `/v1/status/cost`, `/v1/status/tier-a`, enhanced `/v1/status/queue`; sha256 in binary-ledger |
-| `local-content.service` | **ACTIVE** | 7,445 entities in LadybugDB; 43,107 processed ledger entries; circuit breaker OPEN (Tier B offline) |
+| `local-content.service` | **ACTIVE** | 7,445 entities in LadybugDB (`module_id=woodfine`); 43,107 processed ledger entries; circuit breaker OPEN (Tier B offline) |
+| `slm-mcp-server` | **INSTALLED + WIRED** | `/usr/local/bin/slm-mcp-server`; `.mcp.json` at archive root; 6 tools; `SLM_MODULE_ID=woodfine` |
 | `yoyo-tier-b` (Cloud Run) | **DELETED (2026-06-04)** | Deleted — unpredictable per-second billing; see §9 |
 | `yoyo-tier-b-1` (GCE Spot) | **TERMINATED** | europe-west4-a L4 stockout; static IP `34.6.204.25` released |
 | `orchestration-slm-server` | **NOT YET DEPLOYED** | Code complete; Command Session install needed |
@@ -335,6 +336,39 @@ OLLAMA_MODELS=/tmp OLLAMA_KEEP_ALIVE=-1 ollama serve
 
 **Zone discipline (us-central1-a):** cheapest region for both L4 and A100.
 No zone fallback — if stockout, wait. Cost of waiting = $0.
+
+---
+
+## §9b — DataGraph Access from Claude Code (2026-06-05)
+
+**MCP server wired.** Claude Code sessions in `project-intelligence` now have direct access
+to LadybugDB via the `foundry` MCP server defined in `.mcp.json` at the archive root.
+
+**B3 root cause (resolved):** Entities are stored under `module_id="woodfine"` (written by
+the extraction pipeline). Prior queries used `module_id="jennifer"` or `"mcp-foundry"` —
+both returned `[]`. Fix: `.mcp.json` sets `SLM_MODULE_ID=woodfine`.
+
+**Confirmed live:**
+```bash
+curl "http://127.0.0.1:9081/v1/graph/context?q=a&module_id=woodfine&limit=3"
+# → Woodfine Capital Projects, Woodfine Management Corp., Peter M. Woodfine, ...
+```
+
+**6 MCP tools available in Claude Code sessions:**
+
+| Tool | What it does |
+|---|---|
+| `query_datagraph(q, limit?)` | Search entities by name substring — primary lookup |
+| `get_entity_context(entity)` | Convenience wrapper; top-5 hits for an entity name |
+| `mutate_datagraph(mutation)` | Create/update entities (proxied through Doorman) |
+| `submit_extraction(text, schema)` | Submit prose for entity extraction pipeline |
+| `get_corpus_stats()` | Corpus stats + daily cost summary |
+| `doorman_health()` | Tier availability, circuit state, entity count |
+
+**Path 1 (ANTHROPIC_BASE_URL automatic injection) — blocked until Sprint 1:**
+The shim at `http.rs:1273` (Sprint 0a) strips `tool_use`/`tool_result` content blocks —
+enabling it now would break all Claude Code tool calls. Also: `graph_context_enabled: Some(false)`
+at ~line 1449 must be removed. Sprint 1 (canonical IR) is the prerequisite.
 
 ---
 
