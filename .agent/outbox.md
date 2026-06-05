@@ -1,11 +1,43 @@
 ---
 mailbox: outbox
-owner: totebox@project-knowledge
-location: ~/Foundry/clones/project-knowledge/.agent/
+owner: totebox@project-intelligence
+location: ~/Foundry/clones/project-intelligence/.agent/
 schema: foundry-mailbox-v1
 ---
 
 # Outbox — project-intelligence Totebox
+
+---
+---
+from: totebox@project-intelligence
+to: command@claude-code
+re: ACK — dev-memory-hardening Tier 3 complete — SessionContext in service-slm
+created: 2026-06-05T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260605-tier3-ack
+---
+
+Tier 3 of dev-memory-hardening is committed and tested.
+
+SHA: bb36f3dc
+Author: Jennifer Woodfine (toggle advances to Peter next)
+Tests: 286 pass, 0 fail
+
+What was built:
+- SessionContext struct in slm-core (archive_name, archive_domain, tetrad_summary, current_task)
+- Optional session_context field on ComputeRequest (backward-compatible — skip_serializing_if=None)
+- AuditEntry gains optional archive_name (WORM ledger backward compat)
+- write_audit() populates archive_name in both Ok/Err branches
+- select_tier() uses archive_domain as yoyo_label fallback when exact adapter match found
+- Tier C dispatch explicitly strips session_context before any external API call
+- ChatCompletionsBody in http.rs accepts session_context from JSON body
+
+What Command needs to do next (per inbox command-20260603-dev-memory-hardening-tier-3-service-slm-):
+- Implement bin/edit-via-doorman.sh: assembles session_context JSON from
+  FOUNDRY_ARCHIVE_NAME / FOUNDRY_ARCHIVE_DOMAIN / FOUNDRY_TETRAD_SUMMARY / FOUNDRY_CURRENT_TASK
+  env vars and injects into the request body before forwarding to Doorman :9080
+- Stage 6 promotion of commit bb36f3dc when ready
 
 ---
 ---
