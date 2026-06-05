@@ -3398,6 +3398,17 @@ function attachContextMenu(item) {
       const api    = item.dataset.api || '';
       const isWritableDir = browse && !browse.startsWith('/_command/');
       items = [{ label: '📁 Pin folder', action: () => pinFolder(browse, name, api) }];
+      if (api) {
+        items.push('-');
+        items.push({ label: '⬇ Download as ZIP', action: () => {
+          const a = document.createElement('a');
+          a.href = '/workbench/download?path=' + encodeURIComponent(api);
+          a.download = name + '.zip';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }});
+      }
       if (isWritableDir) {
         items.push('-');
         items.push({ label: '📄 New file here', action: () => createFileInDir(item) });

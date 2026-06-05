@@ -35,6 +35,7 @@ pub fn router() -> Router<AppState> {
         .route("/document", get(get_document))
         .route("/pdf", get(get_pdf))
         .route("/events", get(get_workbench_events))
+        .route("/download", get(download_folder))
 }
 
 // ---------------------------------------------------------------------------
@@ -941,4 +942,107 @@ fn extract_json_string_field(json: &str, field: &str) -> Option<String> {
     let after = after.strip_prefix('"')?;
     let end = after.find('"')?;
     Some(after[..end].to_string())
+}
+
+// ---------------------------------------------------------------------------
+// Folder download as ZIP
+// ---------------------------------------------------------------------------
+
+// Translate /_api/<prefix>/... paths (from the file-browser data-api attributes) to a
+// filesystem path via the configured workbench roots.  The /_api/ layer uses bare names
+// like "command" and "clones" while the workbench roots use "_command" and "_clones", so
+// we try both the bare form and the underscore-prefixed form.
+fn resolve_download_path(roots: &[WorkbenchRoot], raw: &str) -> Result<PathBuf, String> {
+    let stripped = raw
+        .trim_start_matches('/')
+        .trim_start_matches("_api/");
+    if let Ok((p, _)) = resolve_path(roots, stripped) {
+        return Ok(p);
+    }
+    let with_underscore = format!("_{}", stripped);
+    resolve_path(roots, &with_underscore)
+        .map(|(p, _)| p)
+        .map_err(|_| format!("no matching root for download path: {}", raw))
+}
+
+async fn download_folder(
+    State(state): State<AppState>,
+    Query(q): Query<FileQuery>,
+) -> Response {
+    let fs_path = match resolve_download_path(&state.roots, &q.path) {
+        Ok(p) => p,
+        Err(e) => return (StatusCode::BAD_REQUEST, e).into_response(),
+    };
+    if !fs_path.is_dir() {
+        return (StatusCode::BAD_REQUEST, "path is not a directory").into_response();
+    }
+    let folder_name = fs_path
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_string();
+
+    let zip_bytes = match tokio::task::spawn_blocking(move || build_zip(&fs_path)).await {
+        Ok(Ok(b)) => b,
+        Ok(Err(e)) => return (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    };
+
+    Response::builder()
+        .header("Content-Type", "application/zip")
+        .header(
+            "Content-Disposition",
+            format!("attachment; filename=\"{}.zip\"", folder_name),
+        )
+        .body(axum::body::Body::from(zip_bytes))
+        .unwrap()
+}
+
+fn build_zip(root: &std::path::Path) -> Result<Vec<u8>, String> {
+    let cursor = std::io::Cursor::new(Vec::new());
+    let mut zip = zip::ZipWriter::new(cursor);
+    let options = zip::write::SimpleFileOptions::default()
+        .compression_method(zip::CompressionMethod::Deflated);
+    add_dir_to_zip(&mut zip, root, root, &options)?;
+    let cursor = zip.finish().map_err(|e| e.to_string())?;
+    Ok(cursor.into_inner())
+}
+
+fn add_dir_to_zip(
+    zip: &mut zip::ZipWriter<std::io::Cursor<Vec<u8>>>,
+    root: &std::path::Path,
+    dir: &std::path::Path,
+    options: &zip::write::SimpleFileOptions,
+) -> Result<(), String> {
+    use std::io::Write;
+    let mut entries: Vec<_> = std::fs::read_dir(dir)
+        .map_err(|e| e.to_string())?
+        .filter_map(|e| e.ok())
+        .collect();
+    entries.sort_by_key(|e| e.file_name());
+
+    for entry in entries {
+        let path = entry.path();
+        let fname = entry.file_name();
+        let fname_str = fname.to_string_lossy();
+        if fname_str.starts_with('.') || fname_str == "target" {
+            continue;
+        }
+        let rel = path.strip_prefix(root).map_err(|e| e.to_string())?;
+        let rel_str = rel.to_string_lossy().replace('\\', "/");
+
+        if path.is_dir() {
+            zip.add_directory(format!("{}/", rel_str), *options)
+                .map_err(|e| e.to_string())?;
+            add_dir_to_zip(zip, root, &path, options)?;
+        } else if path.is_file() {
+            if path.metadata().map(|m| m.len()).unwrap_or(0) > 50 * 1024 * 1024 {
+                continue;
+            }
+            zip.start_file(&rel_str, *options).map_err(|e| e.to_string())?;
+            let data = std::fs::read(&path).map_err(|e| e.to_string())?;
+            zip.write_all(&data).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
 }
