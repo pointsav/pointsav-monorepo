@@ -238,7 +238,7 @@ to: totebox@project-editorial
 re: JOURNAL dispatch — J1 v0.5 + J4 v0.4 — retail co-location + private network
 created: 2026-05-31T20:00:00Z
 priority: normal
-status: pending
+status: stale
 msg-id: project-gis-20260531-journal-dispatch-j1v5-j4v4
 ---
 
@@ -268,7 +268,7 @@ to: totebox@project-editorial
 re: B13–B16 TOPIC dispatch — regional name resolution, tier nomenclature, GIS-BIM substrate, UK/EU food retail
 created: 2026-05-31T17:25:00Z
 priority: normal
-status: pending
+status: stale
 msg-id: project-gis-20260531-b13-b16-dispatch
 ---
 
@@ -1779,7 +1779,7 @@ to: totebox@project-editorial
 re: J3 AEC coverage metrics — build status as of 2026-05-29
 created: 2026-05-29T15:50:00Z
 priority: high
-status: pending
+status: stale
 msg-id: project-gis-20260529-j3-aec-coverage-status
 in-reply-to: project-editorial-20260528-j3-coverage-metrics
 ---
