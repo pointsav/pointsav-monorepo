@@ -10,39 +10,127 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-intelligence
 to: command@claude-code
-re: AGENT.md update — add MCP tools guidance for all Foundry sessions
-created: 2026-06-05T18:00:00Z
+re: AGENT.md + CLAUDE.md — add MCP tools guidance; CLAUDE.md over size cap
+created: 2026-06-05T18:30:00Z
 priority: normal
 status: pending
-msg-id: project-intelligence-20260605-agent-md-mcp
+msg-id: project-intelligence-20260605-agent-md-mcp-v2
 ---
 
-The `foundry` MCP server (7 tools) is now registered globally in `~/.claude.json` and
-available in all 25+ Totebox archives + Command Session without per-session setup.
+## Summary
 
-project-intelligence/CLAUDE.md has been updated with a "MCP tools available" section
-(commit pending this session). AGENT.md has no mention of MCP tools — recommend adding
-a short paragraph so all agents across all archives know to use them.
+The `foundry` MCP server (7 tools) is registered globally in `~/.claude.json` and active
+in all 25+ Totebox archives + Command Session from 2026-06-05. Neither AGENT.md nor
+CLAUDE.md mentions it — agents in other archives will not know to use these tools.
 
-Suggested addition to AGENT.md (new section after "State directory", ~12 lines):
+`project-intelligence/CLAUDE.md` has already been updated (commit `8ffd309f`). This
+message requests the two workspace-level file changes below.
 
-```
+---
+
+## Action 1 — AGENT.md: insert new section after "State directory" (line 146)
+
+**File:** `~/Foundry/AGENT.md`
+**Current line count:** 335 (within 400-line cap — has room)
+**Insert after:** the `---` separator at line 146 (end of "State directory" section),
+before `## Mailbox protocol` at line 148.
+
+**Exact text to insert (17 lines including blank lines):**
+
+```markdown
 ## MCP capabilities — `foundry` server
 
-The `foundry` MCP server is registered in `~/.claude.json` and active in all sessions.
-Use these tools for live system queries before reaching for curl or shell commands:
+The `foundry` MCP server is registered in `~/.claude.json` and active in every session
+(Command and all Totebox archives) without per-session setup or approval prompts.
+Prefer these tools over `curl` or shell one-liners when querying live system state.
 
-- `query_datagraph(q)` — search LadybugDB entities (people, companies, projects)
-- `ask_local(prompt)` — submit prompt to local OLMo 7B; free, ADR-07-safe
-- `doorman_health()` — tier A/B/C state + circuit breaker
-- `get_corpus_stats()` — queue depth + cost summary
+| Tool | Use when |
+|---|---|
+| `query_datagraph(q, limit?)` | Looking up entities — people, companies, projects — before answering questions about system state |
+| `get_entity_context(entity)` | Full profile for one named entity |
+| `ask_local(prompt, max_tokens?)` | Submitting a prompt to the local OLMo 7B model; free, SYS-ADR-07-safe, no data leaves the VM |
+| `doorman_health()` | Checking Tier A/B/C availability or circuit breaker state before inference decisions |
+| `get_corpus_stats()` | Queue depth and daily cost summary |
+| `mutate_datagraph(mutation)` | Creating or updating graph entities — requires explicit operator intent |
+| `submit_extraction(text, schema)` | Queuing prose for entity extraction pipeline |
 
-Full tool list and known faults: project-intelligence CLAUDE.md § MCP tools available.
-Path 1 (ANTHROPIC_BASE_URL shim) — NOT ready; do not enable until Sprint 1 (canonical IR).
+**Known fault (2026-06-05):** `ask_local` does not receive DataGraph entity context before
+inference — the Doorman's `GraphContextClient` graph injection appears broken. Workaround:
+call `query_datagraph` first, then pass the relevant entity text manually in the prompt.
+Investigation steps are in `project-intelligence` BRIEF §9c.
+
+**Path 1 (ANTHROPIC_BASE_URL shim) — do NOT enable.** The shim at
+`slm-doorman-server/src/http.rs:1273` (Sprint 0a) strips `tool_use`/`tool_result` content
+blocks, which breaks all Claude Code tool calls. Blocked until Sprint 1 (canonical IR).
+
+---
 ```
 
-Also note: AGENT.md is at 335 lines (CLAUDE.md is at 411, over the 400-line cap per §Size
-discipline). Both may warrant a trim pass before adding new content.
+---
+
+## Action 2 — CLAUDE.md: trim §16 to make room, then add MCP section
+
+**File:** `~/Foundry/CLAUDE.md`
+**Current line count:** 411 — **11 lines over the 400-line cap** (§Size discipline violation).
+Must trim before adding.
+
+**Step A — trim §16 Citation discipline (lines 403–411, currently 9 lines).**
+Replace the current §16 body with a one-line pointer. The full spec is in
+`conventions/citation-substrate.md`; the section duplicates what is already there.
+
+Replace:
+```markdown
+## 16. Citation discipline
+
+Every doctrine clause, convention, and public-facing document declares
+citation dependencies in YAML frontmatter (`cites: [list]`), resolved
+against `~/Foundry/citations.yaml`. Inline: `[citation-id]` syntax.
+
+Adding a citation: update `citations.yaml` + document frontmatter +
+commit together. Full specification: `conventions/citation-substrate.md`.
+```
+
+With:
+```markdown
+## 16. Citation discipline
+
+`cites: [list]` frontmatter in every doctrine/convention/public doc, resolved against
+`~/Foundry/citations.yaml`. Inline: `[citation-id]`. Full spec: `conventions/citation-substrate.md`.
+```
+
+That saves 6 lines, bringing the file to 405. Then:
+
+**Step B — add §17 MCP capabilities at the end of the file (after §16), 18 lines:**
+
+```markdown
+## 17. MCP capabilities — `foundry` server
+
+The `foundry` MCP server is registered in `~/.claude.json` and active in every session.
+See `AGENT.md` §MCP capabilities for the full tool table and usage rules.
+
+Short reference:
+- `query_datagraph(q)` — entity lookup (people, companies, projects)
+- `ask_local(prompt)` — local OLMo 7B inference; free; ADR-07-safe
+- `doorman_health()` — Tier A/B/C + circuit state
+- `get_corpus_stats()` — queue + cost
+- Path 1 shim — NOT ready until Sprint 1 (canonical IR); do not enable
+```
+
+That brings the final line count to ~408. Still slightly over 400. If the trim in Step A
+can save 2 more lines (e.g. by shortening an existing bullet in §15 "Where to look next"),
+the file lands at or under 400. Operator discretion on the final trim.
+
+---
+
+## Background context
+
+- `~/.claude.json` modified 2026-06-05: `mcpServers.foundry` entry added pointing to
+  `/usr/local/bin/slm-mcp-server` with `SLM_MODULE_ID=woodfine`.
+- Binary at `/usr/local/bin/slm-mcp-server` — 7 tools including new `ask_local`
+  (commit `e7460446`, Stage 6 pending).
+- Entity count: 7,445 in LadybugDB under `module_id=woodfine`.
+- Graph injection fault and quarantine analysis logged in BRIEF §9c and §9b.
+- Stage 6 pending commits: `1202e6ee`, `3469bf81`, `cb571687`, `e7460446`, `b9fb845a`, `8ffd309f`.
 
 ---
 from: totebox@project-intelligence
