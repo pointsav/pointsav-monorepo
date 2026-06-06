@@ -10,9 +10,9 @@ Last updated: 2026-06-05
 ## Stage 6 pending
 
 - [ ] Promote all project-orgcharts commits to canonical.
-      Outbox message updated (2026-06-05, msg-id: project-orgcharts-20260605-stage6-jw6-series).
-      Includes: all 15 commits — outbox/GUIDE/gitignore/V3-V4-registry/V4-charts/JW3-JW4-JW5/
-      Transaction-1/2/3 JW31/20/17 / Cross-Border-2 JW21-JW22 / Mexico JW12 / Bencal JW6.
+      Outbox message updated (2026-06-05, msg-id: project-orgcharts-20260605-stage6-bencal-jw7-jw10).
+      Includes: all 21 commits — outbox/GUIDE/gitignore/V3-V4-registry/V4-charts/JW3-JW4-JW5/
+      Transaction-1/2/3 JW31/20/17 / Cross-Border-2 JW21-JW22 / Mexico JW12 / Bencal JW6-JW10.
       Command Session runs `bin/promote.sh`.
       [2026-06-05 totebox@claude-code]
 
@@ -55,6 +55,16 @@ Last updated: 2026-06-05
 - [ ] `token-olive` class (management chart) — may not yet exist in `pointsav-design-system` token
       bundle. Flag for project-design backfill.
 - [x] Node 28 (Woodfine Management Corp.) — updated to `token-base token-green` in JW10 (V4 change, 2026-06-05 commit `739e15e5`). TOKEN_SHAPE in V4 CSV also updated.
+
+---
+
+## Resolved this session (2026-06-05, JW10)
+
+- [x] **Bencal Organization JW10** — commit `cbc26742` (jwoodfine, 2026-06-05).
+      Boxes 105/106/107 populated with full three-zone structure.
+      Box 105 (SPV1 Shares): zone-top "SPV1 Shares" / zone-mid t-alias "Friends, Family and Business Associates (50)" + t-title "Accredited Investors (300)" / zone-bottom "(Global)".
+      Box 106 (WCP Shares): zone-top "WCP Shares" / zone-mid t-alias "Accredited Investors (300)" + t-alias "max CAD 100,000 per subscriber" / zone-bottom "(Global)".
+      Box 107 (SPV2 Investment Units): zone-top "SPV2 Investment Units" / zone-mid t-alias "Friends, Family and Business Associates (50)" + t-title "Accredited Investors (300)" / zone-bottom "(Global)".
 
 ---
 
