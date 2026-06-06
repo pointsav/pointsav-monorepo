@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction 2 - Right of First Refusal (Institutional V35 Final)</title>
+    <style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap');
+
+        /* ==========================================================================
+           TRANSACTION 2 - LEAPFROG 2030 (STRICT V7 PARITY SYNC - V35)
+           Target: US Letter Proportion (1056x816) - 100% Publishable
+           ========================================================================== */
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: #E2E8F0; 
+            display: flex; justify-content: center; padding: 40px; margin: 0;
+        }
+
+        .print-canvas {
+            position: relative; width: 1056px; height: 816px; background-color: #FFFFFF;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;
+        }
+
+        @media print {
+            @page { size: landscape; margin: 0; }
+            body { padding: 0; margin: 0; background: #FFFFFF; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-canvas { box-shadow: none; width: 1056px; height: 816px; page-break-after: avoid; }
+        }
+
+        /* ==========================================
+           INSTITUTIONAL TYPOGRAPHY (DS-ADR-08)
+           ========================================== */
+        .token-disclaimer { position: absolute; top: 20px; right: 40px; font-size: 9px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.08em; z-index: 5; }
+        .token-signature { position: absolute; bottom: 30px; right: 40px; font-size: 10px; line-height: 1.4; text-align: right; color: #000000; z-index: 5; }
+        
+        .title-container { position: absolute; top: 30px; left: 40px; width: 360px; z-index: 5; }
+        .t-kicker { font-family: 'Oswald', sans-serif; font-size: 11px; font-weight: 800; color: #0F172A; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 2px 0; }
+        .t-headline { font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 900; color: #000000; text-transform: uppercase; letter-spacing: -0.02em; padding-bottom: 6px; border-bottom: 1px solid #CBD5E1; margin: 0 0 6px 0; }
+        .t-preamble { font-size: 9px; line-height: 1.3; color: #475569; text-align: justify; margin: 0 0 6px 0; }
+        .t-preamble:last-child { margin-bottom: 0; }
+        .highlight-pro { background-color: #FEF08A; color: #854D0E; padding: 1px 4px; border-radius: 2px; font-weight: 600; }
+        /* ==========================================
+           DATA ZONES
+           ========================================== */
+        .zone-right-column {
+            position: absolute; top: 80px; left: 680px; width: 320px;
+            font-size: 11px; line-height: 1.4; color: #0F172A; z-index: 5;
+        }
+        .zone-right-column ul { margin: 0; padding-left: 18px; }
+        .zone-right-column li { margin-bottom: 10px; }
+
+        .zone-footer {
+            position: absolute; bottom: 30px; left: 40px; width: 976px;
+            font-size: 10px; line-height: 1.4; color: #475569; z-index: 5;
+        }
+
+        .zone-node-gfv {
+            position: absolute; width: 250px; font-size: 10px; font-weight: 700;
+            text-align: center; color: #334155; z-index: 5;
+        }
+
+        .boundary-text { font-family: 'Oswald', sans-serif;
+            position: absolute; color: #64748B; font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            text-align: left; z-index: 2; line-height: 1.2;
+        }
+
+        /* ==========================================
+           STRUCTURAL CSS (SVG, Tokens, Markers)
+           ========================================== */
+        .svg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+
+        .marker { font-family: 'Oswald', sans-serif;
+            position: absolute; background-color: #FFFFFF; color: #334155;
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            padding: 2px 4px; text-align: center; z-index: 3; line-height: 1.1;
+            transform: translate(-50%, -50%);
+        }
+
+        .action-label { 
+            position: absolute; font-size: 10px; font-weight: 600; color: #000000; 
+            z-index: 3; line-height: 1.3; text-align: center;
+            transform: translateX(-50%);
+        }
+
+        .token-base {
+            position: absolute; display: flex; flex-direction: column; width: 210px; height: 110px; 
+            padding: 10px; text-align: center; box-sizing: border-box; z-index: 4;
+            background-color: #EEF6EC; border: 2px solid #54924E; border-radius: 0;
+        }
+        
+        .token-blue { background-color: #E8EFF7; border: 2px solid #164679; }
+        .token-purple { background-color: #EEE6F1; border: 2px solid #7C468C; }
+
+        .token-yellow { 
+            position: absolute; display: flex; flex-direction: column; width: 250px; height: 110px;
+            padding: 12px; text-align: center; box-sizing: border-box; z-index: 4;
+            background-color: #FFFDE7; border: 2px dashed #F57F17; border-radius: 110px; 
+        }
+
+        .zone-top { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+        .zone-mid { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; gap: 2px; align-items: center; }
+        .zone-bottom { display: flex; flex-direction: column; align-items: center; }
+
+        .t-title { font-family: 'Oswald', sans-serif; font-weight: 800; font-size: 11px; color: #000000; margin: 0; line-height: 1.2; letter-spacing: -0.01em; }
+        .t-legal { font-size: 10px; color: #000000; margin: 0; line-height: 1.2; }
+        .t-code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 9px; color: #475569; margin: 0; }
+        .t-alias { font-style: italic; font-size: 10px; color: #000000; margin: 0; }
+        .t-country { font-size: 10px; color: #475569; margin: 0; }
+        
+        .t-node { position: absolute; bottom: 4px; right: 8px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; font-weight: 700; color: #9CA3AF; margin: 0; }
+        .token-yellow .t-node { bottom: 14px; right: 38px; }
+
+    
+
+    /* PRE-PRESS PRINT CALIBRATION (INJECTED) */
+    @media print {
+        @page { size: landscape; margin: 0; }
+        body { padding: 0; margin: 0; background: #FFFFFF; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .print-canvas { box-shadow: none; width: 1056px; height: 816px; page-break-after: avoid; }
+    }
+    svg { shape-rendering: geometricPrecision; }
+    path { shape-rendering: crispEdges; }
+    marker path { shape-rendering: geometricPrecision; }
+
+</style>
+</head>
+<body>
+
+<div class="print-canvas">
+
+    <div class="token-disclaimer">PRIVATE & CONFIDENTIAL — NOT FOR REDISTRIBUTION — INVESTMENT PROFESSIONALS ONLY</div>
+    
+    <div class="title-container">
+        <p class="t-kicker">TRANSACTION #2</p>
+        <p class="t-headline">RIGHT OF FIRST REFUSAL</p>
+        <p class="t-preamble">Woodfine Capital Projects, a Canadian corporation, is structured to offer for sale investment units across four distinct direct-hold solutions. While the Canadian limited partnership presently exists, the remaining three investment vehicles are scheduled to be formed within the United States, Spain, and Mexico.</p>
+        <p class="t-preamble">Woodfine Capital Projects acts as the promoter for the entire suite of solutions. Although established as closed-end investment vehicles with public, non-traded, and freely tradable units, the direct-hold solutions are engineered to meet all ongoing securities reporting requirements across their respective jurisdictions.</p>
+    </div>
+
+    <div class="zone-right-column">
+        <ul>
+            <li>In consideration for subscriptions of USD 10M in the Professional Centres Canada LP (Transaction 1), the Right of First Refusal (ROFR) will be made available for the initial subscriptions of USD 15M for the direct-hold solutions domiciled in the US, Spain, and Mexico.</li>
+            <li>For completing the initial funding in each of these direct-hold solutions, the Strategic Partner may receive a total of <span class="highlight-pro">•% of WCP’s fully diluted share capital.</span></li>
+        </ul>
+    </div>
+
+    <svg class="svg-layer" viewBox="0 0 1056 816">
+        <defs>
+            <marker id="arrow-green" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#54924E" /></marker>
+            <marker id="arrow-blue-thin" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#164679" /></marker>
+            <marker id="arrow-purple-thin" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7C468C" /></marker>
+            
+            <marker id="arrow-action-blue-premium" viewBox="0 0 24 24" refX="20" refY="12" markerWidth="20" markerHeight="20" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M 2 4 L 22 12 L 2 20 L 6 12 z" fill="#164679" stroke-linejoin="miter" />
+            </marker>
+            <marker id="arrow-action-purple-premium" viewBox="0 0 24 24" refX="20" refY="12" markerWidth="20" markerHeight="20" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M 2 4 L 22 12 L 2 20 L 6 12 z" fill="#7C468C" stroke-linejoin="miter" />
+            </marker>
+        </defs>
+
+        <path d="M 540 250 L 540 330" fill="none" stroke="#54924E" stroke-width="2"/>
+        <path d="M 260 330 L 820 330" fill="none" stroke="#54924E" stroke-width="2"/>
+        <path d="M 260 330 L 260 360" fill="none" stroke="#54924E" stroke-width="2" marker-end="url(#arrow-green)"/>
+        <path d="M 540 330 L 540 360" fill="none" stroke="#54924E" stroke-width="2" marker-end="url(#arrow-green)"/>
+        <path d="M 820 330 L 820 360" fill="none" stroke="#54924E" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+        <path d="M 435 685 L 80 685 L 80 195 L 435 195" fill="none" stroke="#7C468C" stroke-width="1.5" marker-end="url(#arrow-purple-thin)"/>
+
+        <path d="M 540 630 L 540 550" fill="none" stroke="#7C468C" stroke-width="3.5" marker-end="url(#arrow-action-purple-premium)"/>
+        <path d="M 540 600 L 260 600 L 260 550" fill="none" stroke="#7C468C" stroke-width="3.5" marker-end="url(#arrow-action-purple-premium)"/>
+        <path d="M 540 600 L 820 600 L 820 550" fill="none" stroke="#7C468C" stroke-width="3.5" marker-end="url(#arrow-action-purple-premium)"/>
+
+        <path d="M 950 360 L 960 360 L 960 470 L 950 470" fill="none" stroke="#9CA3AF" stroke-width="1.5"/>
+    </svg>
+
+    <div class="marker" style="left: 540px; top: 290px;">10%<br>BENEFICIAL<br>OWNERSHIP</div>
+    
+    <div class="marker" style="left: 80px; top: 440px;">BONUS<br>SHARES</div>
+
+    <div class="boundary-text" style="left: 970px; top: 415px; transform: translateY(-50%);">Yet to be<br>formed</div>
+
+    <div class="action-label" style="left: 260px; top: 510px; width: 190px;">
+        <span style="font-weight: 800;">ROFR</span> to subscribe for<br>USD 15M
+    </div>
+
+    <div class="action-label" style="left: 540px; top: 510px; width: 190px;">
+        <span style="font-weight: 800;">ROFR</span> to subscribe for<br>USD 15M
+    </div>
+    
+    <div class="action-label" style="left: 820px; top: 510px; width: 190px;">
+        <span style="font-weight: 800;">ROFR</span> to subscribe for<br>USD 15M
+    </div>
+
+    <div class="token-base token-green" style="left: 435px; top: 140px;">
+        <div class="zone-top"><p class="t-title">Woodfine Capital<br>Projects Inc.</p></div>
+        <div class="zone-mid"><p class="t-code">WCP-CA-01-HLD</p><p class="t-alias">"Parent Company"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
+        <p class="t-node">16</p>
+    </div>
+
+    <div class="token-yellow" style="left: 135px; top: 360px;">
+        <div class="zone-top"><p class="t-title" style="margin-top: 4px;">Woodfine Professional Centres 2<br>Limited Partnership</p></div>
+        <div class="zone-mid"><p class="t-code">PRO-US-02-AST</p><p class="t-alias">"Direct-Hold Solution"</p></div>
+        <div class="zone-bottom">
+            <p class="t-country" style="margin-top: 2px;">(United States)</p>
+        </div>
+        <p class="t-node">32</p>
+    </div>
+    <div class="zone-node-gfv" style="left: 135px; top: 476px;">USD 500M GFV</div>
+
+    <div class="token-yellow" style="left: 415px; top: 360px;">
+        <div class="zone-top"><p class="t-title" style="margin-top: 4px;">Woodfine Professional Centres 3 Sociedad Anónima Cotizada de Inversión Inmobiliaria</p></div>
+        <div class="zone-mid"><p class="t-code">PRO-ES-03-AST</p><p class="t-alias">"Direct-Hold Solution"</p></div>
+        <div class="zone-bottom">
+            <p class="t-country" style="margin-top: 2px;">(Spain)</p>
+        </div>
+        <p class="t-node">33</p>
+    </div>
+    <div class="zone-node-gfv" style="left: 415px; top: 476px;">EUR 250M GFV</div>
+
+    <div class="token-yellow" style="left: 695px; top: 360px;">
+        <div class="zone-top"><p class="t-title" style="margin-top: 4px;">Woodfine Professional Centres 4 Fideicomiso de Infraestructura en Bienes Raíces</p></div>
+        <div class="zone-mid"><p class="t-code">PRO-MX-04-AST</p><p class="t-alias">"Direct-Hold Solution"</p></div>
+        <div class="zone-bottom">
+            <p class="t-country" style="margin-top: 2px;">(Mexico)</p>
+        </div>
+        <p class="t-node">34</p>
+    </div>
+    <div class="zone-node-gfv" style="left: 695px; top: 476px;">MXN 5,000M GFV</div>
+
+    <div class="token-base token-purple" style="left: 435px; top: 630px;">
+        <div class="zone-top"><p class="t-title" style="margin-top: 5px;">Asset Manager/Broker-Dealer</p></div>
+        <div class="zone-mid">
+            <p class="t-legal">Initial funding for the direct-hold<br>solutions domiciled in the US, Spain,<br>and Mexico</p>
+        </div>
+        <div class="zone-bottom"></div>
+        <p class="t-node">36</p>
+    </div>
+
+    <div class="zone-footer">
+        <strong>GFV:</strong> Maximum gross funded value (gross proceeds from subscriptions for units).
+    </div>
+
+    <div class="token-signature">
+        April 8, 2026<br>
+        Prepared by Woodfine Management Corp.
+    </div>
+
+</div>
+
+<script>
+/* ── Org Chart Drag-Editor v1 ─────────────────────────────────────── */
+(function () {
+  'use strict';
+  const canvas = document.querySelector('.print-canvas') || document.querySelector('.sheet');
+  if (!canvas) return;
+
+  let editMode = false, dragging = null, selected = null, saveTimer = null;
+
+  /* ── Toolbar ──────────────────────────────────────────────────── */
+  const toolbar = document.createElement('div');
+  toolbar.setAttribute('data-drag-ui','1');
+  Object.assign(toolbar.style, {
+    position:'fixed', top:'12px', right:'12px', zIndex:'9999',
+    display:'flex', gap:'6px', alignItems:'center',
+    background:'#1e1e1e', border:'1px solid #444', borderRadius:'6px',
+    padding:'5px 10px', font:'700 11px/1 -apple-system,sans-serif',
+    color:'#ccc', userSelect:'none', boxShadow:'0 2px 8px rgba(0,0,0,0.4)',
+  });
+  const editBtn = document.createElement('button');
+  editBtn.textContent = '✏️ Edit Layout';
+  Object.assign(editBtn.style, {
+    background:'#333', border:'1px solid #555', color:'#ccc',
+    cursor:'pointer', borderRadius:'4px', padding:'4px 8px',
+    font:'700 11px/1 -apple-system,sans-serif',
+  });
+  const statusEl = document.createElement('span');
+  Object.assign(statusEl.style, { fontSize:'10px', color:'#666', minWidth:'70px' });
+  statusEl.setAttribute('data-drag-ui','1');
+  const dupBtn = document.createElement('button');
+  dupBtn.textContent = '⊕ Duplicate';
+  dupBtn.setAttribute('data-drag-ui','1');
+  Object.assign(dupBtn.style, {
+    background:'#333', border:'1px solid #555', color:'#666',
+    cursor:'pointer', borderRadius:'4px', padding:'4px 8px',
+    font:'700 11px/1 -apple-system,sans-serif',
+  });
+  const delBtn = document.createElement('button');
+  delBtn.textContent = '✕ Delete';
+  delBtn.setAttribute('data-drag-ui','1');
+  Object.assign(delBtn.style, {
+    background:'#333', border:'1px solid #555', color:'#666',
+    cursor:'pointer', borderRadius:'4px', padding:'4px 8px',
+    font:'700 11px/1 -apple-system,sans-serif',
+  });
+  toolbar.append(editBtn, dupBtn, delBtn, statusEl);
+  document.body.appendChild(toolbar);
+
+  /* print: hide toolbar */
+  const pStyle = document.createElement('style');
+  pStyle.setAttribute('data-drag-ui','1');
+  pStyle.textContent = '@media print{[data-drag-ui]{display:none!important}}';
+  document.head.appendChild(pStyle);
+
+  /* ── SVG path helpers ─────────────────────────────────────────── */
+  function parsePts(d) {
+    const re = /([ML])\s*([\d.+-]+)\s+([\d.+-]+)/g;
+    const pts = []; let m;
+    while ((m = re.exec(d)) !== null)
+      pts.push({ cmd:m[1], x:parseFloat(m[2]), y:parseFloat(m[3]) });
+    return pts;
+  }
+  function buildD(pts) { return pts.map(p => `${p.cmd} ${p.x} ${p.y}`).join(' '); }
+
+  /* ── Connected SVG paths (detected on pickup) ─────────────────── */
+  function findConnected(box) {
+    const svgEl = canvas.querySelector('svg');
+    if (!svgEl) return [];
+    const cs = window.getComputedStyle(box);
+    const bx=parseFloat(cs.left)||0, bw=parseFloat(cs.width)||0;
+    const by=parseFloat(cs.top)||0,  bh=parseFloat(cs.height)||0;
+    const PAD=30, result=[];
+    svgEl.querySelectorAll('path[d]').forEach(path => {
+      const pts = parsePts(path.getAttribute('d'));
+      if (pts.length < 2) return;
+      const s=pts[0], e=pts[pts.length-1];
+      const hitS = s.x>=bx-PAD&&s.x<=bx+bw+PAD&&s.y>=by-PAD&&s.y<=by+bh+PAD;
+      const hitE = e.x>=bx-PAD&&e.x<=bx+bw+PAD&&e.y>=by-PAD&&e.y<=by+bh+PAD;
+      if (hitS||hitE) result.push({path,origPts:pts.map(p=>({...p})),hitS,hitE});
+    });
+    return result;
+  }
+
+  /* ── Update connected path endpoints ──────────────────────────── */
+  function moveConnected(conn, dx, dy) {
+    conn.forEach(({path,origPts,hitS,hitE}) => {
+      const n=origPts.length, pts=origPts.map(p=>({...p}));
+      if (hitS) {
+        pts[0].x+=dx; pts[0].y+=dy;
+        if (n>1) {
+          if (Math.abs(origPts[1].y-origPts[0].y)<1) pts[1].y=pts[0].y;
+          else                                        pts[1].x=pts[0].x;
+        }
+      }
+      if (hitE) {
+        pts[n-1].x+=dx; pts[n-1].y+=dy;
+        if (n>1) {
+          if (Math.abs(origPts[n-1].y-origPts[n-2].y)<1) pts[n-2].y=pts[n-1].y;
+          else                                            pts[n-2].x=pts[n-1].x;
+        }
+      }
+      path.setAttribute('d', buildD(pts));
+    });
+  }
+
+  /* ── Selection highlight ──────────────────────────────────────── */
+  function select(el) {
+    if (selected===el) return;
+    deselect();
+    selected=el;
+    if (el.tagName.toLowerCase()==='path') {
+      el._sw = el.getAttribute('stroke-width')||'2';
+      el.setAttribute('stroke-width', parseFloat(el._sw)+2);
+      el.style.filter = 'drop-shadow(0 0 4px #4d9fff)';
+    } else {
+      el.style.outline = '2px solid #4d9fff';
+      el.style.boxShadow = '0 0 10px rgba(77,159,255,.35)';
+    }
+  }
+  function deselect() {
+    if (!selected) return;
+    const el=selected; selected=null;
+    if (el.tagName.toLowerCase()==='path') {
+      if (el._sw!==undefined) el.setAttribute('stroke-width',el._sw);
+      el.style.filter='';
+    } else { el.style.outline=''; el.style.boxShadow=''; }
+  }
+
+  /* ── Wire a box for drag ──────────────────────────────────────── */
+  function wireBox(el) {
+    el.addEventListener('mousedown', e => {
+      if (!editMode||e.button!==0) return;
+      e.stopPropagation();
+      select(el);
+      const cs=window.getComputedStyle(el);
+      dragging={el, startX:e.clientX, startY:e.clientY,
+        origLeft:parseFloat(cs.left)||0, origTop:parseFloat(cs.top)||0,
+        conn:findConnected(el), isPath:false};
+      el.style.cursor='grabbing';
+      e.preventDefault();
+    });
+  }
+
+  /* ── Wire a path for drag ─────────────────────────────────────── */
+  function wirePath(path) {
+    path.addEventListener('mousedown', e => {
+      if (!editMode||e.button!==0) return;
+      e.stopPropagation();
+      select(path);
+      dragging={el:path, startX:e.clientX, startY:e.clientY,
+        origPts:parsePts(path.getAttribute('d')).map(p=>({...p})), isPath:true};
+      path.style.cursor='grabbing';
+      e.preventDefault();
+    });
+  }
+
+  /* ── mousemove ────────────────────────────────────────────────── */
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dx=e.clientX-dragging.startX, dy=e.clientY-dragging.startY;
+    if (dragging.isPath) {
+      dragging.el.setAttribute('d', buildD(dragging.origPts.map(p=>({cmd:p.cmd,x:p.x+dx,y:p.y+dy}))));
+    } else {
+      dragging.el.style.left=(dragging.origLeft+dx)+'px';
+      dragging.el.style.top =(dragging.origTop +dy)+'px';
+      moveConnected(dragging.conn,dx,dy);
+    }
+  });
+
+  /* ── mouseup ──────────────────────────────────────────────────── */
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging.el.style.cursor='grab';
+    dragging=null;
+    scheduleSave();
+  });
+
+  /* ── Keyboard: escape to deselect, arrows to nudge ────────────── */
+  document.addEventListener('keydown', e => {
+    if (e.key==='Escape') { deselect(); return; }
+    if ((e.ctrlKey||e.metaKey)&&e.key==='d'&&editMode&&selected&&selected.tagName.toLowerCase()!=='path') { e.preventDefault(); duplicateSelected(); return; }
+    if ((e.key==='Delete'||e.key==='Backspace')&&editMode&&selected) { e.preventDefault(); deleteSelected(); return; }
+    if (!editMode||!selected||selected.tagName.toLowerCase()==='path') return;
+    const s=e.shiftKey?10:1;
+    const l=parseFloat(selected.style.left)||0, t=parseFloat(selected.style.top)||0;
+    const m={ArrowLeft:['left',l-s],ArrowRight:['left',l+s],ArrowUp:['top',t-s],ArrowDown:['top',t+s]};
+    if (m[e.key]) { selected.style[m[e.key][0]]=m[e.key][1]+'px'; e.preventDefault(); scheduleSave(); }
+  });
+
+  /* canvas background click → deselect */
+  canvas.addEventListener('mousedown', e => { if (e.target===canvas||e.target.tagName?.toLowerCase()==='svg') deselect(); });
+
+  /* ── Toggle edit mode ─────────────────────────────────────────── */
+  function setEditMode(on) {
+    editMode=on;
+    editBtn.textContent=on?'✅ Editing':'✏️ Edit Layout';
+    editBtn.style.color=on?'#89d185':'#ccc';
+    editBtn.style.borderColor=on?'#89d185':'#555';
+    const svgEl=canvas.querySelector('svg');
+    canvas.querySelectorAll('*').forEach(el => {
+    if (el.tagName.toLowerCase()==='svg') return;
+      if (window.getComputedStyle(el).position==='absolute')
+        el.style.cursor=on?'grab':'';
+    });
+    if (svgEl) {
+      svgEl.style.pointerEvents=on?'all':'';
+      svgEl.querySelectorAll('path[d]').forEach(p => {
+        p.style.cursor=on?'grab':'';
+        p.style.pointerEvents=on?'stroke':'';
+      });
+    }
+    dupBtn.style.color=on?'#ccc':'#666';
+    dupBtn.style.borderColor=on?'#555':'#444';
+    delBtn.style.color=on?'#ccc':'#666';
+    delBtn.style.borderColor=on?'#555':'#444';
+    if (!on) deselect();
+  }
+  editBtn.addEventListener('click', () => setEditMode(!editMode));
+
+  /* ── Wire up all abs-positioned elements + SVG paths ─────────── */
+  canvas.querySelectorAll('*').forEach(el => {
+    if (el.tagName.toLowerCase()==='svg') return;
+    if (window.getComputedStyle(el).position==='absolute') wireBox(el);
+  });
+  const svgEl=canvas.querySelector('svg');
+  if (svgEl) svgEl.querySelectorAll('path[d]').forEach(wirePath);
+
+  /* ── Auto-save ────────────────────────────────────────────────── */
+  /* ── Duplicate selected box ───────────────────────────────── */
+  function duplicateSelected() {
+    if (!selected||selected.tagName.toLowerCase()==='path') return;
+    const clone=selected.cloneNode(true);
+    clone.style.left=(parseFloat(selected.style.left)||0)+20+'px';
+    clone.style.top =(parseFloat(selected.style.top )||0)+20+'px';
+    canvas.appendChild(clone);
+    wireBox(clone);
+    deselect();
+    select(clone);
+    scheduleSave();
+  }
+  function deleteSelected() {
+    if (!selected) return;
+    if (selected.tagName.toLowerCase()==='path') {
+      selected.remove();
+      deselect();
+    } else {
+      findConnected(selected).forEach(({path}) => path.remove());
+      selected.remove();
+      deselect();
+    }
+    scheduleSave();
+  }
+  dupBtn.addEventListener('click', () => { if (editMode) duplicateSelected(); });
+  delBtn.addEventListener('click', () => { if (editMode) deleteSelected(); });
+
+  function scheduleSave() {
+    clearTimeout(saveTimer);
+    statusEl.textContent='unsaved…';
+    saveTimer=setTimeout(doSave,2000);
+  }
+
+  function doSave() {
+    deselect();
+    /* strip edit-mode inline styles temporarily before cloning */
+    const cleanup=[];
+    const strip = el => {
+      ['cursor','pointerEvents','filter','outline','boxShadow'].forEach(prop => {
+        const v=el.style[prop];
+        if (v) { cleanup.push([el,prop,v]); el.style[prop]=''; }
+      });
+    };
+    canvas.querySelectorAll('*').forEach(strip);
+    strip(canvas);
+
+    const clone=document.documentElement.cloneNode(true);
+    clone.querySelectorAll('[data-drag-ui]').forEach(el=>el.remove());
+    const html='<!DOCTYPE html>\n'+clone.outerHTML;
+
+    /* restore live DOM */
+    cleanup.forEach(([el,prop,val])=>el.style[prop]=val);
+
+    if (window.parent&&window.parent!==window) {
+      window.parent.postMessage({type:'wb-save-content',content:html},'*');
+      statusEl.textContent='saved ✓';
+      setTimeout(()=>{statusEl.textContent='';},3000);
+    } else {
+      /* standalone: download */
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+      a.download=(document.title||'chart')+'_edited.html';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+      statusEl.textContent='downloaded ✓';
+      setTimeout(()=>{statusEl.textContent='';},3000);
+    }
+  }
+})();
+</script>
+
+</body>
+</html>
