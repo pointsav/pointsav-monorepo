@@ -7,6 +7,34 @@ archive: project-orgcharts
 
 ---
 
+## 2026-06-05 | Totebox | claude-code (JW6 series — Transaction/Cross-Border/Mexico/Bencal)
+
+**Done this session:**
+- **7 new chart versions created** across 5 charts — all committed.
+  - Transaction-1 JW31 (`d9052752`): lines 36→17, 17→16 purple
+  - Transaction-3 JW17 (`a34d5361`): lines from Box 36 to 16/17/32/33/34 purple
+  - Transaction-2 JW20 (`b53fbf8d`): all lines from Box 36 purple
+  - Cross-Border-2 JW21 (`a955732f`): Box 45 → purple (match Box 36 Transaction-3 JW17)
+  - Cross-Border-2 JW22 (`5b1c069d`): lines 50↔45 → orange (#E65100, Box 50 color)
+  - Mexico JW12 (`7b42fa1b`): line 40↔39 → blue
+  - Bencal JW6 (`53978aac`): grey pill→dashed; Boxes 95/97/104→purple; 96/103→orange; 98→orange dashed pill
+- **Stage 6 outbox updated** — msg-id: project-orgcharts-20260605-stage6-jw6-series (15 commits total).
+- **NEXT.md updated** — JW6 series resolved; Stage 6 msg-id updated.
+
+**Pending / carry-forward:**
+- Stage 6 — 15 commits pending; outbox updated (msg-id: project-orgcharts-20260605-stage6-jw6-series)
+- Customer leg MANIFEST — outbox still pending Command Session
+- GUIDE-orgchart-authoring — staged, project-editorial to deliver
+- Wiki leg — milestone-gated
+- archive-2026-06-01/ deletion — 2026-07-01
+- TOKEN_SHAPE for nodes 95–104 entity titles — empty; add when Jennifer names them
+
+**Operator preferences surfaced:**
+- Box 17 in Woodfine-Group JW10 "dotted" style is CSS `2px dashed` (not `dotted`) — reference confirmed.
+- Line color convention: connecting lines match the source-box color (color from the box a line starts at).
+
+---
+
 ## 2026-06-05 | Totebox | claude-code (Bencal Organization JW3)
 
 **Done this session:**

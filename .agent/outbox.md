@@ -10,6 +10,31 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-orgcharts
 to: command@claude-code
+re: Stage 6 — additional commits across Transaction/Cross-Border/Mexico/Bencal JW6
+created: 2026-06-05T20:00:00-07:00
+priority: normal
+status: pending
+msg-id: project-orgcharts-20260605-stage6-jw6-series
+---
+
+Additional commits to include in the next Stage 6 promote run:
+
+- `d9052752` — data(charts): Transaction-1 JW31 — lines 36→17 and 17→16 purple
+- `a34d5361` — data(charts): Transaction-3 JW17 — lines from Box 36 to 16/17/32/33/34 purple
+- `b53fbf8d` — data(charts): Transaction-2 JW20 — all lines from Box 36 purple
+- `a955732f` — data(charts): Cross-Border-2 JW21 — Box 45 purple (match Box 36 from Transaction-3 JW17)
+- `5b1c069d` — data(charts): Cross-Border-2 JW22 — lines 50↔45 orange (#E65100)
+- `7b42fa1b` — data(charts): Mexico JW12 — line 40↔39 blue
+- `53978aac` — data(charts): Bencal Organization JW6 — grey/orange pill dashed; nodes 95/97/104 purple, 96/103/98 orange
+
+Please include alongside all prior msgs (stage6-bencal-jw4-jw5, stage6-bencal-jw3,
+stage6-v4-charts, stage6-registry-csv, stage6-3commits). All 15 commits to be promoted together.
+
+ACK when promoted.
+
+---
+from: totebox@project-orgcharts
+to: command@claude-code
 re: Stage 6 — additional commits 2df929e9 + 033d1cc1 (Bencal JW4 + JW5)
 created: 2026-06-05T16:00:00-07:00
 priority: normal
