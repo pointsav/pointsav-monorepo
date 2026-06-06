@@ -10,6 +10,43 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-intelligence
 to: command@claude-code
+re: AGENT.md update — add MCP tools guidance for all Foundry sessions
+created: 2026-06-05T18:00:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260605-agent-md-mcp
+---
+
+The `foundry` MCP server (7 tools) is now registered globally in `~/.claude.json` and
+available in all 25+ Totebox archives + Command Session without per-session setup.
+
+project-intelligence/CLAUDE.md has been updated with a "MCP tools available" section
+(commit pending this session). AGENT.md has no mention of MCP tools — recommend adding
+a short paragraph so all agents across all archives know to use them.
+
+Suggested addition to AGENT.md (new section after "State directory", ~12 lines):
+
+```
+## MCP capabilities — `foundry` server
+
+The `foundry` MCP server is registered in `~/.claude.json` and active in all sessions.
+Use these tools for live system queries before reaching for curl or shell commands:
+
+- `query_datagraph(q)` — search LadybugDB entities (people, companies, projects)
+- `ask_local(prompt)` — submit prompt to local OLMo 7B; free, ADR-07-safe
+- `doorman_health()` — tier A/B/C state + circuit breaker
+- `get_corpus_stats()` — queue depth + cost summary
+
+Full tool list and known faults: project-intelligence CLAUDE.md § MCP tools available.
+Path 1 (ANTHROPIC_BASE_URL shim) — NOT ready; do not enable until Sprint 1 (canonical IR).
+```
+
+Also note: AGENT.md is at 335 lines (CLAUDE.md is at 411, over the 400-line cap per §Size
+discipline). Both may warrant a trim pass before adding new content.
+
+---
+from: totebox@project-intelligence
+to: command@claude-code
 re: Stage 6 request — Phase A+B (commit 1202e6ee) + service-slm NEXT.md update
 created: 2026-06-05T13:15:00Z
 priority: high

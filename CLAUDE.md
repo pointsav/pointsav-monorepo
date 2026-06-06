@@ -50,6 +50,25 @@ DESIGN-* / ASSET-* → `.agent/drafts-outbound/` → project-design.
 BIM-* → `.agent/drafts-outbound/` → project-bim.
 CODE-* / SCRIPT-* / CONFIG-* / DATA-* → commit directly (self-contained).
 
+## MCP tools available — `foundry` server
+
+The `foundry` MCP server is registered globally (`~/.claude.json`) and active in every
+session without setup. Prefer these over curl/grep for live system state queries.
+
+| Tool | When to use |
+|---|---|
+| `query_datagraph(q, limit?)` | Look up entities before answering questions about people, companies, projects |
+| `get_entity_context(entity)` | Full profile for a specific named entity |
+| `ask_local(prompt, max_tokens?)` | Submit prompt to OLMo 7B — free, local, SYS-ADR-07-safe |
+| `doorman_health()` | Check tier / circuit state before inference decisions |
+| `get_corpus_stats()` | Queue depth + daily cost summary |
+| `mutate_datagraph(mutation)` | Create / update graph entities (requires explicit operator intent) |
+| `submit_extraction(text, schema)` | Queue prose for entity extraction pipeline |
+
+**Known fault (2026-06-05):** `ask_local` does not receive DataGraph entity context —
+graph injection in the Doorman appears broken. Workaround: `query_datagraph` first,
+then pass relevant entities in the prompt manually. Investigation steps: BRIEF §9c.
+
 ## Conflicts
 
 If a workspace rule conflicts with anything stated here, **stop and surface
