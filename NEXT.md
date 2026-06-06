@@ -59,6 +59,12 @@ Last updated: 2026-06-05
 
 ## Resolved this session (2026-06-05, continuation)
 
+- [x] **Bencal Organization JW3** — commit `c68593d4` (jwoodfine, 2026-06-05).
+      All 9 nodes (95–104, excluding 99 absent) updated to V4 registry token classes.
+      New CSS added: `token-green`, `token-blue` (210px × 110px, 10px padding, WCP palette).
+      Nodes 100/101 (Kiel Capital, Elzen Holdings) → `token-grey-solid` (already defined).
+      Nodes 95/96/97/102/103/104 → `token-base token-green`. Node 98 → `token-base token-blue`.
+      Node 104 had inline `border-style: dotted;` — matched exactly.
 - [x] **V4 TOKEN_SHAPE changes applied to 6 charts** — commit `739e15e5` (jwoodfine, 2026-06-05).
       Nodes 28/36/40/50 updated. New JW versions: JW10 (Woodfine-Group), JW11 (Mexico),
       JW20 (Cross-Border-2), JW30 (Transaction-1), JW19 (Transaction-2), JW16 (Transaction-3).
