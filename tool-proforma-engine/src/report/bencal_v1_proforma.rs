@@ -71,7 +71,7 @@ tr.subtotal td{background:#f5f7fa;font-weight:600;border-top:1px solid #aaa}
 @page{size:letter landscape;margin:1.5cm 2cm 1.8cm 1.5cm}
 @page{@bottom-center{content:"- " counter(page) " -";font-size:9px;color:#666}}
 @page :first{@bottom-center{content:""}}
-@media print{body{margin:0;font-size:11px;max-width:none}table.wide{table-layout:fixed}table.wide td.lbl,table.wide th.lbl{width:34%;white-space:normal;overflow-wrap:break-word}}
+@media print{body{margin:0;font-size:11px;max-width:none}table.wide{table-layout:fixed}table.wide td,table.wide th{padding:2px 4px}table.wide td.lbl,table.wide th.lbl{width:30%;white-space:normal;overflow-wrap:break-word}}
 </style></head>
 "#;
 
@@ -718,7 +718,7 @@ fn render_mgmt_annual_returns(years: &[BencalMgmtYear]) -> String {
         } else {
             s.push_str(&format!(
                 "<td>{}</td>",
-                fmt_full_dollar(period_cash / bencal_mgmt_proforma::BM_SHARES_OUTSTANDING)
+                fmt_m(period_cash / bencal_mgmt_proforma::BM_SHARES_OUTSTANDING)
             ));
         }
         prev_cum = yr.cumulative_cash;
@@ -729,7 +729,7 @@ fn render_mgmt_annual_returns(years: &[BencalMgmtYear]) -> String {
     for yr in years {
         s.push_str(&format!(
             "<td>{}</td>",
-            fmt_full_dollar(yr.portfolio_nav / bencal_mgmt_proforma::BM_SHARES_OUTSTANDING)
+            fmt_m(yr.portfolio_nav / bencal_mgmt_proforma::BM_SHARES_OUTSTANDING)
         ));
     }
     s.push_str("</tr>\n");
