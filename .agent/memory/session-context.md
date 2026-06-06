@@ -7,6 +7,34 @@ archive: project-orgcharts
 
 ---
 
+## 2026-06-05 | Totebox | claude-code (V4 chart apply + new JW versions)
+
+**Done this session:**
+- **V4 TOKEN_SHAPE changes applied to 6 charts** — commit `739e15e5` (jwoodfine). Four nodes changed:
+  - Node 28 (Woodfine Mgmt Corp.): `token-base` → `token-base token-green` in JW10 Woodfine-Group
+  - Node 36 (Asset Manager/Broker-Dealer, NEW node): `token-base token-purple` in JW30/JW19/JW16
+  - Node 40 (Deuda Privada Hipotecaria): `token-base token-tall token-orange` → `token-base token-tall token-blue` in JW11 Mexico
+  - Node 50 (Cross-Border Flow-Through): `token-blue-ellipse-dotted` → `token-orange-ellipse-dashed` in JW20 Cross-Border-2
+- **New CSS added** to each chart: `token-green` (JW10), `token-orange-ellipse-dashed` (JW20), `token-purple` (JW30/JW19/JW16).
+- **JW versioning applied** — Jennifer requested per-chart JW+1 bump. All affected charts created as new JW versions; originals retained.
+- **WCP-MASTER-ENTITY-REGISTRY_V4.csv committed** — nodes 36 (new, purple), 95–104 (new, most empty), plus nodes 28/40/50 updated. V4 was built from correct CSS-class V3; working-tree V3 had accidentally reverted to old labels (restored from git before staging).
+- **Stage 6 outbox updated** — msg-id project-orgcharts-20260605-stage6-v4-charts.
+
+**Pending / carry-forward:**
+- Stage 6 — outbox updated (5 commits total now)
+- Customer leg MANIFEST — outbox still pending Command Session
+- GUIDE-orgchart-authoring — staged, project-editorial to deliver
+- Wiki leg — milestone-gated
+- archive-2026-06-01/ deletion — 2026-07-01
+- TOKEN_SHAPE for nodes 95–104 — empty placeholders; add when Jennifer names these entities
+- Nodes 8, 10–14, 51–54 — still uncharted
+
+**Operator preferences surfaced:**
+- JW versioning: create new JW+1 file per chart rather than edit in place; increment per chart.
+- Comfortable with auto mode for chart data tasks.
+
+---
+
 ## 2026-06-05 | Totebox | claude-code (CSV TOKEN_SHAPE update pass)
 
 **Done this session:**
