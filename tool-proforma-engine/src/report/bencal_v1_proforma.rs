@@ -71,7 +71,7 @@ tr.subtotal td{background:#f5f7fa;font-weight:600;border-top:1px solid #aaa}
 @page{size:letter landscape;margin:1.5cm 2cm 1.8cm 1.5cm}
 @page{@bottom-center{content:"- " counter(page) " -";font-size:9px;color:#666}}
 @page :first{@bottom-center{content:""}}
-@media print{body{margin:0;font-size:11px;max-width:none}}
+@media print{body{margin:0;font-size:11px;max-width:none}table.wide{table-layout:fixed}table.wide td.lbl,table.wide th.lbl{width:34%;white-space:normal;overflow-wrap:break-word}}
 </style></head>
 "#;
 
