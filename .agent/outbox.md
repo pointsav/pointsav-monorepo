@@ -21,6 +21,7 @@ Commit to include in next Stage 6 promote run:
 
 - `fe5600e4` — data(charts): Mexico JW18 — investor-presentation title block (Oswald 24px navy, preamble right-column, footer removed, chart +25px)
 - `5a57eb61` — data(charts): Mexico JW19 — confidential removed, title one-line full-width, preamble below full-width, chart respaced
+- `963ffe9b` — data(charts): Mexico JW20 — Barlow Condensed replaces Oswald; 28px title, 0.01em tracking, navy rule below title, preamble at 56px
 
 Please include alongside all prior pending Stage 6 messages.
 
