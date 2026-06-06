@@ -10,8 +10,9 @@ Last updated: 2026-06-05
 ## Stage 6 pending
 
 - [ ] Promote all project-orgcharts commits to canonical.
-      Outbox message updated (2026-06-05, msg-id: project-orgcharts-20260605-stage6-v4-charts).
-      Includes: all 5 commits — outbox/GUIDE/gitignore/V3-registry/V4-charts-and-registry.
+      Outbox message updated (2026-06-05, msg-id: project-orgcharts-20260605-stage6-jw6-series).
+      Includes: all 15 commits — outbox/GUIDE/gitignore/V3-V4-registry/V4-charts/JW3-JW4-JW5/
+      Transaction-1/2/3 JW31/20/17 / Cross-Border-2 JW21-JW22 / Mexico JW12 / Bencal JW6.
       Command Session runs `bin/promote.sh`.
       [2026-06-05 totebox@claude-code]
 
@@ -54,6 +55,18 @@ Last updated: 2026-06-05
 - [ ] `token-olive` class (management chart) — may not yet exist in `pointsav-design-system` token
       bundle. Flag for project-design backfill.
 - [x] Node 28 (Woodfine Management Corp.) — updated to `token-base token-green` in JW10 (V4 change, 2026-06-05 commit `739e15e5`). TOKEN_SHAPE in V4 CSV also updated.
+
+---
+
+## Resolved this session (2026-06-05, JW6 series)
+
+- [x] **Transaction-1 JW31** — commit `d9052752` (jwoodfine). Lines 36→17, 17→16 purple.
+- [x] **Transaction-3 JW17** — commit `a34d5361` (jwoodfine). Lines from Box 36 to 16/17/32/33/34 purple.
+- [x] **Transaction-2 JW20** — commit `b53fbf8d` (pwoodfine). All lines from Box 36 purple.
+- [x] **Cross-Border-2 JW21** — commit `a955732f` (jwoodfine). Box 45 → purple (match Box 36 Transaction-3 JW17).
+- [x] **Cross-Border-2 JW22** — commit `5b1c069d` (pwoodfine). Lines 50↔45 → orange (#E65100).
+- [x] **Mexico JW12** — commit `7b42fa1b` (jwoodfine). Line 40↔39 → blue.
+- [x] **Bencal Organization JW6** — commit `53978aac` (pwoodfine). Grey pill → dashed; orange pill → dashed+orange; Boxes 95/97/104 → purple; Boxes 96/103 → orange; Box 98 → orange dashed pill.
 
 ---
 
