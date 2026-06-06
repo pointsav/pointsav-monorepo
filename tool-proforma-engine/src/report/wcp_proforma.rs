@@ -76,6 +76,7 @@ h3{font-size:0.9rem;margin-top:1rem;margin-bottom:0.2rem;color:#333}
 p{margin:0.3rem 0;font-size:0.82rem;color:#555}
 p.note{font-size:0.78rem;color:#555;font-style:italic}
 table{border-collapse:collapse;margin:0.5rem 0;font-size:0.76rem}
+table.wide{width:100%}
 th,td{border:1px solid #ccc;padding:3px 6px;text-align:right;white-space:nowrap}
 th{background:#f5f5f5;text-align:center;font-weight:600}
 td.lbl,th.lbl{text-align:left;min-width:230px}
@@ -85,7 +86,7 @@ tr.subtotal td{background:#f5f7fa;font-weight:600;border-top:1px solid #aaa}
 tr.section-banner td{background:#e3edf7;font-weight:700;font-size:0.74rem;text-transform:uppercase;letter-spacing:.3px;color:#1a2a44;text-align:left}
 .footer{font-size:0.72rem;color:#666;margin-top:1.5rem;border-top:1px solid #ddd;padding-top:0.5rem}
 @page{size:letter landscape;margin:1.5cm 2cm 1.5cm 1.5cm}
-@media print{body{margin:0;font-size:11px;max-width:none}table{break-inside:avoid;page-break-inside:avoid}h2,h3{break-after:avoid;page-break-after:avoid}td.lnum,th.lnum{-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#bbb!important;border-right-color:#ccc!important}}
+@media print{body{margin:0;font-size:11px;max-width:none}table{break-inside:avoid;page-break-inside:avoid}h2,h3{break-after:avoid;page-break-after:avoid}td.lnum,th.lnum{-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#bbb!important;border-right-color:#ccc!important}table.wide{table-layout:fixed;font-size:10px}table.wide td,table.wide th{padding:3px 6px}table.wide td.lbl,table.wide th.lbl{width:25%;white-space:normal;overflow-wrap:break-word}}
 </style>
 </head>
 "#;
@@ -231,7 +232,7 @@ fn render_revenue_generator(years: &[WcpYear]) -> String {
     s.push_str("<h2>Revenue Generator — 6 LP Funds (CAD-equivalent)</h2>\n");
 
     s.push_str("<h3>Advisory Fees by LP</h3>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     for (i, lp) in wcp_proforma::WCP_LPS.iter().enumerate() {
         s.push_str(&data_row(lp.name, years, move |y| {
@@ -244,7 +245,7 @@ fn render_revenue_generator(years: &[WcpYear]) -> String {
     s.push_str("</table>\n");
 
     s.push_str("<h3>Distributions by LP (WCP's 10% beneficial ownership)</h3>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     for (i, lp) in wcp_proforma::WCP_LPS.iter().enumerate() {
         s.push_str(&data_row(lp.name, years, move |y| {
@@ -257,7 +258,7 @@ fn render_revenue_generator(years: &[WcpYear]) -> String {
     s.push_str("</table>\n");
 
     s.push_str("<h3>NAV by LP (WCP's 10% beneficial ownership)</h3>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     for (i, lp) in wcp_proforma::WCP_LPS.iter().enumerate() {
         s.push_str(&data_row(lp.name, years, move |y| {
@@ -275,7 +276,7 @@ fn render_revenue_generator(years: &[WcpYear]) -> String {
 fn render_income_statement(years: &[WcpYear]) -> String {
     let mut s = String::new();
     s.push_str("<h2>10-Year Income Statement (CAD)</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     s.push_str("<tr class=\"section-banner\"><td colspan=\"12\">Revenue</td></tr>\n");
     s.push_str(&data_row("Advisory fees (total)", years, |y| {
@@ -322,7 +323,7 @@ fn render_income_statement(years: &[WcpYear]) -> String {
 fn render_book_valuation(years: &[WcpYear]) -> String {
     let mut s = String::new();
     s.push_str("<h2>Book Valuation</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     s.push_str(&data_row("Financing activity", years, |y| {
         y.financing_activity
@@ -343,7 +344,7 @@ fn render_book_valuation(years: &[WcpYear]) -> String {
 fn render_four_valuations(years: &[WcpYear]) -> String {
     let mut s = String::new();
     s.push_str("<h2>Four Valuation Methods (per BRIEF §5c rows 80–102)</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     s.push_str(&data_row("Earnings valuation (× 10.72 P/E)", years, |y| {
         y.earnings_valuation

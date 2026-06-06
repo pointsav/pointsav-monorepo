@@ -81,6 +81,7 @@ h3{font-size:0.9rem;margin-top:1rem;margin-bottom:0.2rem;color:#333}
 p{margin:0.3rem 0;font-size:0.82rem;color:#555}
 p.note{font-size:0.78rem;color:#555;font-style:italic}
 table{border-collapse:collapse;margin:0.5rem 0;font-size:0.76rem}
+table.wide{width:100%}
 th,td{border:1px solid #ccc;padding:3px 6px;text-align:right;white-space:nowrap}
 th{background:#f5f5f5;text-align:center;font-weight:600}
 td.lbl,th.lbl{text-align:left;min-width:230px}
@@ -90,7 +91,7 @@ tr.subtotal td{background:#f5f7fa;font-weight:600;border-top:1px solid #aaa}
 tr.section-banner td{background:#e3edf7;font-weight:700;font-size:0.74rem;text-transform:uppercase;letter-spacing:.3px;color:#1a2a44;text-align:left}
 .footer{font-size:0.72rem;color:#666;margin-top:1.5rem;border-top:1px solid #ddd;padding-top:0.5rem}
 @page{size:letter landscape;margin:1.5cm 2cm 1.5cm 1.5cm}
-@media print{body{margin:0;font-size:11px;max-width:none}table{break-inside:avoid;page-break-inside:avoid}h2,h3{break-after:avoid;page-break-after:avoid}td.lnum,th.lnum{-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#bbb!important;border-right-color:#ccc!important}}
+@media print{body{margin:0;font-size:11px;max-width:none}table{break-inside:avoid;page-break-inside:avoid}h2,h3{break-after:avoid;page-break-after:avoid}td.lnum,th.lnum{-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#bbb!important;border-right-color:#ccc!important}table.wide{table-layout:fixed;font-size:10px}table.wide td,table.wide th{padding:3px 6px}table.wide td.lbl,table.wide th.lbl{width:25%;white-space:normal;overflow-wrap:break-word}}
 </style>
 </head>
 "#;
@@ -379,7 +380,7 @@ where
 fn render_capital_asset_schedule(years: &[Pclp1Year]) -> String {
     let mut s = String::new();
     s.push_str("<h2>Capital Asset Schedule (10-Year)</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     s.push_str(&data_row("Phase draws (capex)", years, |y| y.phase_draws));
     s.push_str(&data_row("Total assets (cumulative)", years, |y| {
@@ -394,7 +395,7 @@ fn render_capital_asset_schedule(years: &[Pclp1Year]) -> String {
 fn render_income_statement(years: &[Pclp1Year]) -> String {
     let mut s = String::new();
     s.push_str("<h2>10-Year Income Statement (CAD)</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     s.push_str("<tr class=\"section-banner\"><td colspan=\"12\">Revenue (engine: NOI = generating × 10.5% dev yield)</td></tr>\n");
     s.push_str(&data_row("Net proceeds from ops (NOI)", years, |y| {
@@ -431,7 +432,7 @@ fn render_income_statement(years: &[Pclp1Year]) -> String {
 fn render_debt_schedule(years: &[Pclp1Year]) -> String {
     let mut s = String::new();
     s.push_str("<h2>Debt Schedule (Debentures @ 5%)</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     s.push_str(&data_row("Opening debt", years, |y| y.opening_debt));
     s.push_str(&data_row("Gross debt draw", years, |y| y.gross_debt_draw));
@@ -456,7 +457,7 @@ fn render_debt_schedule(years: &[Pclp1Year]) -> String {
 fn render_cash_flow(years: &[Pclp1Year]) -> String {
     let mut s = String::new();
     s.push_str("<h2>10-Year Cash Flow Statement</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     s.push_str(&data_row("Opening cash", years, |y| y.opening_cash));
     s.push_str(&data_row("New equity (Y1 only)", years, |y| y.new_equity));
@@ -479,7 +480,7 @@ fn render_cash_flow(years: &[Pclp1Year]) -> String {
 fn render_valuation(years: &[Pclp1Year]) -> String {
     let mut s = String::new();
     s.push_str("<h2>Valuation &amp; NAV</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     s.push_str(&data_row(
         "Asset value (NOI/cap_rate + WIP + cash)",
@@ -500,7 +501,7 @@ fn render_valuation(years: &[Pclp1Year]) -> String {
 fn render_per_unit(years: &[Pclp1Year]) -> String {
     let mut s = String::new();
     s.push_str("<h2>Per-Unit Metrics (2,777,777 diluted LP units)</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     s.push_str(&data_row_pu("Asset value per unit", years, |y| {
         y.asset_value_per_unit
@@ -529,7 +530,7 @@ fn render_key_ratios(years: &[Pclp1Year]) -> String {
     let mut s = String::new();
     s.push_str("<h2>Key Ratios &amp; Coverage</h2>\n");
     s.push_str("<p class=\"note\">Interest Coverage Ratio (EBITDA ÷ Net Interest) is constrained by the LPA Partnership Agreement to a minimum of 1.20× in any year. Year 5 (1.53× per engine, with Phase 2 facility-commitment fee timing) is the binding year because Phase 1 NOI begins at Y4 while Phase 2 debt is being drawn.</p>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
 
     // Interest Coverage row (special: use 'x' suffix)
