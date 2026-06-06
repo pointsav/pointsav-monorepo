@@ -393,13 +393,47 @@ leaves the VM (SYS-ADR-07 compliant).
 | Graph context | Injected automatically by Doorman before inference |
 | Cost | $0.00 (local inference) |
 
-**Status:** committed; binary rebuild + install required before tool is live.
+**Status:** LIVE — commit `e7460446`, binary installed at `/usr/local/bin/slm-mcp-server`.
 
-**Commit strategy:** `feat(slm-mcp-server): add ask_local tool — OLMo 7B via Doorman /v1/chat/completions`
+**Commit:** `feat(slm-mcp-server): add ask_local tool — OLMo 7B via Doorman /v1/chat/completions`
 
 **Sprint 1 connection:** Once Path 1 shim is fixed (canonical IR), DataGraph injection and
 OLMo routing become automatic for ALL Claude Code queries — not just explicit `ask_local`
 calls. `ask_local` will remain useful for explicit local-only invocations.
+
+---
+
+### FAULT LOG — Graph context not reaching OLMo (2026-06-05, unresolved)
+
+**Symptom:** T2 test (`ask_local` prompt: "List the Woodfine companies you know about") — OLMo
+invented a UK wood products company instead of citing the actual Woodfine entities in LadybugDB.
+Expected: response grounded in `[ENTITY CONTEXT]` injected by the Doorman's `GraphContextClient`.
+Actual: hallucinated response with no reference to Woodfine Capital Projects or Woodfine Management Corp.
+
+**What is confirmed working:**
+- `service-content` at `:9081` is up and returns correct entities directly:
+  `curl "http://127.0.0.1:9081/v1/graph/context?q=woodfine&module_id=woodfine&limit=3"` → 3 entities
+- `readyz` and `healthz` both healthy on Doorman at `:9080`
+- `ask_local` tool invocation succeeds end-to-end (tier=local, cost=$0.00)
+
+**Hypothesis (most likely):** The Doorman's `GraphContextClient` is calling service-content
+but either (a) using `module_id="foundry"` (its internal default) rather than `"woodfine"` — so
+the query returns 0 entities — or (b) failing silently and skipping injection (non-fatal by design).
+The circuit breaker being OPEN may also be suppressing the graph fetch.
+
+**Investigation steps for next session:**
+1. Grep `GraphContextClient` in `slm-doorman/src/` — find where `module_id` is set for the
+   graph context fetch call; confirm it uses the request's `X-Foundry-Module-ID`, not a hardcoded value.
+2. Add a `journalctl -u local-doorman -n 50` check during a `/v1/chat/completions` call —
+   look for graph context fetch log lines and any errors.
+3. Check `slm-doorman-server/src/http.rs` chat completions handler — confirm
+   `graph_context_enabled` is not being forced to `false` for this code path.
+4. If module_id is wrong: fix the `GraphContextClient` call to pass the request's module_id.
+5. If circuit breaker is suppressing it: check whether the circuit breaker state (OPEN for Tier B)
+   is incorrectly gating the graph context fetch, which routes to Tier A / service-content only.
+
+**Priority:** Medium — `ask_local` is functional; this fault reduces response quality but does
+not block the tool. Fix before relying on OLMo for Foundry-specific knowledge tasks.
 
 ---
 
