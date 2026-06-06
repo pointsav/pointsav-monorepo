@@ -59,7 +59,8 @@ h2{font-size:1rem;margin-top:1.5rem;margin-bottom:0.25rem;border-bottom:1px soli
 h3{font-size:0.9rem;margin-top:1rem;margin-bottom:0.2rem;color:#333}
 p{margin:0.3rem 0;font-size:0.82rem;color:#555}
 p.note{font-size:0.78rem;color:#555;font-style:italic}
-table{border-collapse:collapse;width:100%;margin:0.5rem 0;font-size:0.76rem}
+table{border-collapse:collapse;margin:0.5rem 0;font-size:0.76rem}
+table.wide{width:100%}
 th,td{border:1px solid #ccc;padding:3px 6px;text-align:right;white-space:nowrap}
 th{background:#f5f5f5;text-align:center;font-weight:600}
 td.lbl,th.lbl{text-align:left;min-width:230px}
@@ -148,7 +149,7 @@ pub fn render_proforma_spv1() -> String {
                         fmt_int(bencal_spv1_proforma::SPV1_INVESTOR_SHARES)));
 
     s.push_str("<h2>10-Year Income Statement &amp; Operating Reserve Drawdown (CAD)</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header());
     s.push_str(&data_row("Commission rebate (Y0)", &years, |y| {
         y.commission_rebate
@@ -305,7 +306,7 @@ pub fn render_proforma_spv2() -> String {
     s.push_str("</table>\n");
 
     s.push_str("<h2>10-Year Income Statement &amp; Operating Reserve Drawdown (CAD)</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header());
     s.push_str(&data_row_s2("Commission rebate (Y0)", &years, |y| {
         y.commission_rebate
@@ -460,7 +461,7 @@ pub fn render_proforma_mgmt() -> String {
     s.push_str("<p class=\"note\">Holds 10% manager-tier interests at Bencal SPV1 and SPV2 via dilution mechanics. Economic substance flows from these interests, not from the $10 paid-in share capital. Per-share MOIC will appear mechanically extreme; read alongside the aggregate column.</p>\n");
 
     s.push_str("<h2>10-Year Income Statement &amp; Operating Reserve Drawdown (CAD)</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header());
     let spv1_cash_label = format!(
         "SPV1 capital distribution received ({} shares)",
@@ -635,7 +636,7 @@ fn data_row_bm<F: Fn(&BencalMgmtYear) -> f64>(
 fn render_spv1_annual_returns(years: &[BencalSpv1Year]) -> String {
     let mut s = String::new();
     s.push_str("<h3>Annual Returns — per investor share</h3>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str("<tr><th class=\"lbl\">Metric</th>");
     for y in 0..=10 {
         s.push_str(&format!("<th>Y{}</th>", y));
@@ -668,7 +669,7 @@ fn render_spv1_annual_returns(years: &[BencalSpv1Year]) -> String {
 fn render_spv2_annual_returns(years: &[BencalSpv2Year]) -> String {
     let mut s = String::new();
     s.push_str("<h3>Annual Returns — per LP unit</h3>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str("<tr><th class=\"lbl\">Metric</th>");
     for y in 0..=10 {
         s.push_str(&format!("<th>Y{}</th>", y));
@@ -701,7 +702,7 @@ fn render_spv2_annual_returns(years: &[BencalSpv2Year]) -> String {
 fn render_mgmt_annual_returns(years: &[BencalMgmtYear]) -> String {
     let mut s = String::new();
     s.push_str("<h3>Annual Returns — Bencal Management Corp.</h3>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str("<tr><th class=\"lbl\">Metric</th>");
     for y in 0..=10 {
         s.push_str(&format!("<th>Y{}</th>", y));
