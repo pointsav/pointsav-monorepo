@@ -56,6 +56,14 @@ struct SubmitExtractionInput {
     module_id: Option<String>,
 }
 
+#[derive(Debug, Deserialize, JsonSchema)]
+struct AskLocalInput {
+    /// Prompt to send to the local OLMo model via the Doorman.
+    prompt: String,
+    /// Maximum tokens to generate (default 300; hard cap 400 — ~108 s at 3.7 tok/s).
+    max_tokens: Option<u32>,
+}
+
 // ── Server struct ─────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone)]
@@ -247,6 +255,49 @@ impl FoundryServer {
         };
 
         format!("/healthz: {hz}\n/readyz: {rz}\n\nContract:\n{ct}")
+    }
+
+    /// Submit a prompt to the local OLMo model and return its response.
+    ///
+    /// Calls `POST /v1/chat/completions` on the Doorman, which routes to Tier A
+    /// (local OLMo) and automatically injects DataGraph entity context before
+    /// inference. Data never leaves the VM (SYS-ADR-07 compliant).
+    #[tool(description = "Submit a prompt to the local OLMo 7B model via the Doorman. \
+        Returns the model response plus tier, inference time, and cost. \
+        DataGraph entity context is automatically injected before inference. \
+        Use for SYS-ADR-07-safe local-only queries — no data leaves the VM.")]
+    async fn ask_local(
+        &self,
+        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<AskLocalInput>,
+    ) -> String {
+        let max_tokens = p.max_tokens.unwrap_or(300).min(400);
+        let body = serde_json::json!({
+            "messages": [{"role": "user", "content": p.prompt}],
+            "stream": false,
+            "max_tokens": max_tokens,
+        });
+        match self
+            .client
+            .post(self.url("/v1/chat/completions"))
+            .timeout(std::time::Duration::from_secs(180))
+            .header("X-Foundry-Module-ID", &self.module_id)
+            .json(&body)
+            .send()
+            .await
+        {
+            Ok(resp) => match resp.json::<serde_json::Value>().await {
+                Ok(v) => {
+                    let content = v["content"].as_str().unwrap_or("").to_string();
+                    let tier = v["tier_used"].as_str().unwrap_or("?");
+                    let model = v["model"].as_str().unwrap_or("?");
+                    let ms = v["inference_ms"].as_u64().unwrap_or(0);
+                    let cost = v["cost_usd"].as_f64().unwrap_or(0.0);
+                    format!("{content}\n\n---\ntier={tier} model={model} inference={ms}ms cost=${cost:.6}")
+                }
+                Err(e) => format!("[ERROR] parse failed: {e}"),
+            },
+            Err(e) => format!("[ERROR] request failed: {e}"),
+        }
     }
 }
 
