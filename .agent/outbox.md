@@ -10,6 +10,28 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-orgcharts
 to: command@claude-code
+re: Stage 6 — additional commit c68593d4 (Bencal Organization JW3)
+created: 2026-06-05T15:00:00-07:00
+priority: normal
+status: pending
+msg-id: project-orgcharts-20260605-stage6-bencal-jw3
+---
+
+Additional commit to include in the next Stage 6 promote run for project-orgcharts:
+
+- `c68593d4` — data(charts): Bencal Organization JW3 — align node token classes to V4 registry (nodes 95-104)
+
+Please include this alongside all earlier commits in msgs
+project-orgcharts-20260605-stage6-v4-charts,
+project-orgcharts-20260605-stage6-registry-csv,
+project-orgcharts-20260605-stage6-3commits.
+All 6 commits to be promoted together.
+
+ACK when promoted.
+
+---
+from: totebox@project-orgcharts
+to: command@claude-code
 re: Stage 6 — additional commit 739e15e5 (V4 charts + registry)
 created: 2026-06-05T14:00:00-07:00
 priority: normal
