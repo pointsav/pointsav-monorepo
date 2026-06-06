@@ -10,8 +10,8 @@ Last updated: 2026-06-05
 ## Stage 6 pending
 
 - [ ] Promote all project-orgcharts commits to canonical.
-      Outbox message updated (2026-06-05, msg-id: project-orgcharts-20260605-stage6-registry-csv).
-      Includes: outbox commit, GUIDE draft commit, gitignore commit, and now registry CSV commit `19a7b705`.
+      Outbox message updated (2026-06-05, msg-id: project-orgcharts-20260605-stage6-v4-charts).
+      Includes: all 5 commits — outbox/GUIDE/gitignore/V3-registry/V4-charts-and-registry.
       Command Session runs `bin/promote.sh`.
       [2026-06-05 totebox@claude-code]
 
@@ -53,8 +53,21 @@ Last updated: 2026-06-05
       are created for these entities.
 - [ ] `token-olive` class (management chart) — may not yet exist in `pointsav-design-system` token
       bundle. Flag for project-design backfill.
-- [ ] Node 28 (Woodfine Management Corp.) uses `token-base` (no color) in JW9 Woodfine Group chart.
-      If a newer chart shows this entity with a color modifier, update TOKEN_SHAPE.
+- [x] Node 28 (Woodfine Management Corp.) — updated to `token-base token-green` in JW10 (V4 change, 2026-06-05 commit `739e15e5`). TOKEN_SHAPE in V4 CSV also updated.
+
+---
+
+## Resolved this session (2026-06-05, continuation)
+
+- [x] **V4 TOKEN_SHAPE changes applied to 6 charts** — commit `739e15e5` (jwoodfine, 2026-06-05).
+      Nodes 28/36/40/50 updated. New JW versions: JW10 (Woodfine-Group), JW11 (Mexico),
+      JW20 (Cross-Border-2), JW30 (Transaction-1), JW19 (Transaction-2), JW16 (Transaction-3).
+      New CSS added to charts: `token-green` (JW10), `token-orange-ellipse-dashed` (JW20),
+      `token-purple` (JW30/JW19/JW16).
+- [x] **WCP-MASTER-ENTITY-REGISTRY_V4.csv committed** — same commit `739e15e5`.
+      New nodes 36, 95–104 added. Working-tree V3 accidentally reverted to old labels during
+      Jennifer's V4 edit — restored from git (`git checkout -- inputs/V3.csv`); V4 built correctly
+      from committed V3 CSS classes.
 
 ---
 

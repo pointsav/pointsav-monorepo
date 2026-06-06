@@ -10,6 +10,27 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-orgcharts
 to: command@claude-code
+re: Stage 6 — additional commit 739e15e5 (V4 charts + registry)
+created: 2026-06-05T14:00:00-07:00
+priority: normal
+status: pending
+msg-id: project-orgcharts-20260605-stage6-v4-charts
+---
+
+Additional commit to include in the next Stage 6 promote run for project-orgcharts:
+
+- `739e15e5` — data(charts): apply V4 TOKEN_SHAPE changes — nodes 28/36/40/50;
+  add 6 new JW chart versions (JW10-JW30) + V4 registry CSV
+
+Please include this alongside the earlier commits in msg-id
+project-orgcharts-20260605-stage6-registry-csv (which itself supersedes
+project-orgcharts-20260605-stage6-3commits). All 5 commits to be promoted together.
+
+ACK when promoted.
+
+---
+from: totebox@project-orgcharts
+to: command@claude-code
 re: Stage 6 — additional commit 19a7b705 (registry CSV)
 created: 2026-06-05T11:30:00-07:00
 priority: normal
