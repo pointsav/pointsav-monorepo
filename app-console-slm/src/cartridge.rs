@@ -28,7 +28,7 @@ struct AllStatus {
 }
 
 enum BgMsg {
-    Status(AllStatus),
+    Status(Box<AllStatus>),
     Err(String),
 }
 
@@ -379,7 +379,7 @@ impl Cartridge for SlmCartridge {
         while let Ok(msg) = self.bg_rx.try_recv() {
             match msg {
                 BgMsg::Status(s) => {
-                    self.status = Some(s);
+                    self.status = Some(*s);
                     self.last_updated = Some(Instant::now());
                     self.error = None;
                 }
@@ -441,13 +441,13 @@ fn do_fetch(endpoint: &str, tx: &mpsc::Sender<BgMsg>) -> Result<(), ()> {
             let cost = fetch_cost(endpoint).ok();
             let tier_a = fetch_tier_a(endpoint).ok();
             let yoyo = fetch_yoyo(endpoint).ok();
-            BgMsg::Status(AllStatus {
+            BgMsg::Status(Box::new(AllStatus {
                 health,
                 queue,
                 cost,
                 tier_a,
                 yoyo,
-            })
+            }))
         }
     };
     tx.send(msg).map_err(|_| ())
