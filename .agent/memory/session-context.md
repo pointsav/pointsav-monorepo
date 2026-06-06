@@ -7,6 +7,29 @@ archive: project-orgcharts
 
 ---
 
+## 2026-06-05 | Totebox | claude-code (Bencal Organization JW3)
+
+**Done this session:**
+- **Bencal Organization JW3 created** — commit `c68593d4` (jwoodfine). All 9 present nodes
+  (95–104, excl. 99) updated to V4 registry token classes. Two new CSS definitions added:
+  `token-green` and `token-blue` (210×110px, 10px padding, WCP palette). Node 104 had an
+  extra `border-style: dotted;` inline — matched exactly; dotted preserved. Stage 6 outbox
+  prepended (msg-id: project-orgcharts-20260605-stage6-bencal-jw3).
+- NEXT.md updated to mark JW3 resolved.
+
+**Pending / carry-forward:**
+- Stage 6 — 6 commits total now pending; outbox updated (msg-id: project-orgcharts-20260605-stage6-bencal-jw3)
+- Customer leg MANIFEST — outbox still pending Command Session
+- GUIDE-orgchart-authoring — staged, project-editorial to deliver
+- Wiki leg — milestone-gated
+- archive-2026-06-01/ deletion — 2026-07-01
+- TOKEN_SHAPE for nodes 95–104 entity titles — currently empty in V4; add when Jennifer names them
+- Nodes 8, 10–14, 51–54 — still uncharted
+
+**Operator preferences surfaced:** (none new this session)
+
+---
+
 ## 2026-06-05 | Totebox | claude-code (V4 chart apply + new JW versions)
 
 **Done this session:**
