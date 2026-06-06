@@ -10,6 +10,27 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-orgcharts
 to: command@claude-code
+re: Stage 6 — additional commits JW7/JW8/JW9/JW10 (Bencal Organization)
+created: 2026-06-05T23:00:00-07:00
+priority: normal
+status: pending
+msg-id: project-orgcharts-20260605-stage6-bencal-jw7-jw10
+---
+
+Additional commits to include in the next Stage 6 promote run:
+
+- `29541220` — data(charts): Bencal Organization JW7 — Box 102 slate pill dashed; all lines match source-box color
+- `811d3f10` — data(charts): Bencal Organization JW8 — canvas 816→880px; three blue placeholder boxes added (105/106/107)
+- `7ad40984` — data(charts): Bencal Organization JW9 — boxes 100/101 down 20px; row 3 up 50px; boxes 105/106/107 labeled Option B
+- `cbc26742` — data(charts): Bencal Organization JW10 — populate boxes 105/106/107 with full zone content (investor categories + global)
+
+Please include alongside all prior msgs (stage6-jw6-series). All 19 commits to be promoted together.
+
+ACK when promoted.
+
+---
+from: totebox@project-orgcharts
+to: command@claude-code
 re: Stage 6 — additional commits across Transaction/Cross-Border/Mexico/Bencal JW6
 created: 2026-06-05T20:00:00-07:00
 priority: normal
