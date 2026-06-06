@@ -10,6 +10,24 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-orgcharts
 to: command@claude-code
+re: Stage 6 — Mexico JW18 title block redesign
+created: 2026-06-06T00:00:00-07:00
+priority: normal
+status: pending
+msg-id: project-orgcharts-20260606-stage6-mexico-jw18
+---
+
+Commit to include in next Stage 6 promote run:
+
+- `fe5600e4` — data(charts): Mexico JW18 — investor-presentation title block (Oswald 24px navy, preamble right-column, footer removed, chart +25px)
+
+Please include alongside all prior pending Stage 6 messages.
+
+ACK when promoted.
+
+---
+from: totebox@project-orgcharts
+to: command@claude-code
 re: Stage 6 — additional commits JW10/JW11 (Bencal Organization)
 created: 2026-06-05T23:30:00-07:00
 priority: normal
