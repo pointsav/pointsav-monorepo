@@ -370,6 +370,37 @@ The shim at `http.rs:1273` (Sprint 0a) strips `tool_use`/`tool_result` content b
 enabling it now would break all Claude Code tool calls. Also: `graph_context_enabled: Some(false)`
 at ~line 1449 must be removed. Sprint 1 (canonical IR) is the prerequisite.
 
+**User-level wiring (2026-06-05):** `~/.claude.json` `mcpServers` updated with the `foundry`
+server entry. All 25 Totebox archives + Command Session now have MCP access automatically —
+no per-archive `.mcp.json` approval required.
+
+---
+
+## §9c — ask_local Tool: OLMo 7B from Claude Code (2026-06-05)
+
+**Model confirmed:** OLMo 2 1124 7B Instruct Q4_K_M running at ~3.7 tok/s on Tier A.
+
+**New MCP tool:** `ask_local(prompt, max_tokens?)` added to `slm-mcp-server/src/main.rs`.
+Calls `POST /v1/chat/completions` on the Doorman — the same endpoint used by all inference
+routing. Doorman auto-injects DataGraph entity context before routing to OLMo. No data
+leaves the VM (SYS-ADR-07 compliant).
+
+| Field | Value |
+|---|---|
+| Endpoint | `POST /v1/chat/completions` on Doorman `:9080` |
+| Default max_tokens | 300 (hard cap 400 — ~108 s at 3.7 tok/s) |
+| Per-request timeout | 180 s (overrides client-level 120 s) |
+| Graph context | Injected automatically by Doorman before inference |
+| Cost | $0.00 (local inference) |
+
+**Status:** committed; binary rebuild + install required before tool is live.
+
+**Commit strategy:** `feat(slm-mcp-server): add ask_local tool — OLMo 7B via Doorman /v1/chat/completions`
+
+**Sprint 1 connection:** Once Path 1 shim is fixed (canonical IR), DataGraph injection and
+OLMo routing become automatic for ALL Claude Code queries — not just explicit `ask_local`
+calls. `ask_local` will remain useful for explicit local-only invocations.
+
 ---
 
 ## §10 — MCP Server (No-API-Key Entry Point)
