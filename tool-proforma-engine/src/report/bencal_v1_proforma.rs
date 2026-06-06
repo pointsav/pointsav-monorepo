@@ -59,7 +59,7 @@ h2{font-size:1rem;margin-top:1.5rem;margin-bottom:0.25rem;border-bottom:1px soli
 h3{font-size:0.9rem;margin-top:1rem;margin-bottom:0.2rem;color:#333}
 p{margin:0.3rem 0;font-size:0.82rem;color:#555}
 p.note{font-size:0.78rem;color:#555;font-style:italic}
-table{border-collapse:collapse;margin:0.5rem 0;font-size:0.76rem}
+table{border-collapse:collapse;width:100%;margin:0.5rem 0;font-size:0.76rem}
 th,td{border:1px solid #ccc;padding:3px 6px;text-align:right;white-space:nowrap}
 th{background:#f5f5f5;text-align:center;font-weight:600}
 td.lbl,th.lbl{text-align:left;min-width:230px}
@@ -118,7 +118,7 @@ pub fn render_proforma_spv1() -> String {
     s.push_str(&head_with_title("Bencal Special Purpose 1 — Proforma V2"));
     s.push_str("<body>\n");
     s.push_str("<h1>Bencal Special Purpose 1 Inc. — Proforma V2</h1>\n");
-    s.push_str("<p>Engine-generated proforma from BRIEF v0.15.6 §5e + Bencal cap table v0.15.9. Consumes WCP V1 forecast. No Excel.<br>\n");
+    s.push_str("<p>Engine-generated proforma from BRIEF v0.15.6 §5e + Bencal cap table v0.15.9. Consumes WCP V1 forecast.<br>\n");
     s.push_str("DRAFT — 2026-06-05 — V2<br>\n");
     s.push_str("All amounts CAD — Prepared under IFRS</p>\n");
 
@@ -707,22 +707,9 @@ fn render_mgmt_annual_returns(years: &[BencalMgmtYear]) -> String {
         s.push_str(&format!("<th>Y{}</th>", y));
     }
     s.push_str("</tr>\n");
-    // Cash distributions received — aggregate (per-period)
-    s.push_str("<tr><td class=\"lbl\">Cash distributions received — aggregate</td>");
-    let mut prev_cum: f64 = 0.0;
-    for yr in years {
-        let period_cash = yr.cumulative_cash - prev_cum;
-        if period_cash.abs() < 1e-2 {
-            s.push_str("<td>—</td>");
-        } else {
-            s.push_str(&format!("<td>{}</td>", fmt_m(period_cash)));
-        }
-        prev_cum = yr.cumulative_cash;
-    }
-    s.push_str("</tr>\n");
     // Cash distributions per Bencal Management share
     s.push_str("<tr><td class=\"lbl\">Cash distributions per Bencal Management share</td>");
-    prev_cum = 0.0;
+    let mut prev_cum: f64 = 0.0;
     for yr in years {
         let period_cash = yr.cumulative_cash - prev_cum;
         if period_cash.abs() < 1e-2 {
@@ -734,12 +721,6 @@ fn render_mgmt_annual_returns(years: &[BencalMgmtYear]) -> String {
             ));
         }
         prev_cum = yr.cumulative_cash;
-    }
-    s.push_str("</tr>\n");
-    // Portfolio NAV aggregate
-    s.push_str("<tr><td class=\"lbl\">Portfolio NAV — aggregate</td>");
-    for yr in years {
-        s.push_str(&format!("<td>{}</td>", fmt_m(yr.portfolio_nav)));
     }
     s.push_str("</tr>\n");
     // Portfolio NAV per Bencal Management share
