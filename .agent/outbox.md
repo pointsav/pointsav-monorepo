@@ -10,6 +10,26 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-orgcharts
 to: command@claude-code
+re: Stage 6 — additional commits 2df929e9 + 033d1cc1 (Bencal JW4 + JW5)
+created: 2026-06-05T16:00:00-07:00
+priority: normal
+status: pending
+msg-id: project-orgcharts-20260605-stage6-bencal-jw4-jw5
+---
+
+Additional commits to include in the next Stage 6 promote run:
+
+- `2df929e9` — data(charts): Bencal Organization JW4 — nodes 100/101 standard size, 98 blue pill, 102 green dotted ellipse, arrow 95→104 green
+- `033d1cc1` — data(charts): Bencal Organization JW5 — box 96 blue, box 102 grey ellipse, lines match source box color
+
+Please include alongside all prior msgs (stage6-bencal-jw3, stage6-v4-charts,
+stage6-registry-csv, stage6-3commits). All 8 commits to be promoted together.
+
+ACK when promoted.
+
+---
+from: totebox@project-orgcharts
+to: command@claude-code
 re: Stage 6 — additional commit c68593d4 (Bencal Organization JW3)
 created: 2026-06-05T15:00:00-07:00
 priority: normal
