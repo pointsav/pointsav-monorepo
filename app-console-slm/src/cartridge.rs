@@ -102,9 +102,7 @@ impl SlmCartridge {
         frame.render_widget(Paragraph::new(self.build_yoyo_lines()), yoyo_inner);
 
         // DataGraph section
-        let graph_block = Block::default()
-            .title(" DataGraph ")
-            .borders(Borders::ALL);
+        let graph_block = Block::default().title(" DataGraph ").borders(Borders::ALL);
         let graph_inner = graph_block.inner(chunks[2]);
         frame.render_widget(graph_block, chunks[2]);
         frame.render_widget(Paragraph::new(self.build_graph_lines()), graph_inner);
@@ -181,9 +179,17 @@ impl SlmCartridge {
         };
 
         let tier_a_icon = if h.tier_a {
-            if self.plain { "[A]" } else { "✓" }
+            if self.plain {
+                "[A]"
+            } else {
+                "✓"
+            }
         } else {
-            if self.plain { "[ ]" } else { "○" }
+            if self.plain {
+                "[ ]"
+            } else {
+                "○"
+            }
         };
         let tier_a_style = if h.tier_a {
             Style::default().fg(Color::Green)
@@ -315,14 +321,15 @@ impl SlmCartridge {
         };
 
         vec![
+            Line::from(vec![Span::raw(format!(
+                "  pending: {:4}  in-flight: {:2}  paused: {:3}",
+                q.pending, q.in_flight, q.paused
+            ))]),
             Line::from(vec![
                 Span::raw(format!(
-                    "  pending: {:4}  in-flight: {:2}  paused: {:3}",
-                    q.pending, q.in_flight, q.paused
+                    "  done: {:6}  quarantine: {:3}  poison: ",
+                    q.done, q.quarantine
                 )),
-            ]),
-            Line::from(vec![
-                Span::raw(format!("  done: {:6}  quarantine: {:3}  poison: ", q.done, q.quarantine)),
                 Span::styled(q.poison.to_string(), poison_style),
             ]),
         ]
