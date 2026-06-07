@@ -404,7 +404,7 @@ fn render_comparator_table() -> String {
     s.push_str("<h2>D7 Legacy JV vs D2 Professional Centres Canada LP — Headline Comparison (BRIEF §2564-2575)</h2>\n");
     s.push_str("<table class=\"wide\">\n");
     s.push_str("<tr><th class=\"lbl\">Metric (Y10)</th><th>D7 Legacy JV</th><th>D2 Professional Centres Canada LP</th><th>D2 advantage</th></tr>\n");
-    s.push_str(&format!("<tr><td class=\"lbl\">Total sf delivered</td><td>{} sf</td><td>3,906,855 sf</td><td>+70%</td></tr>\n",
+    s.push_str(&format!("<tr><td class=\"lbl\">Total sf delivered</td><td>{} sf</td><td>3,906,855 sf</td><td>+41% (LP additional vs LP total)</td></tr>\n",
                         fmt_int(LEGACY_JV_TOTAL_SF)));
     s.push_str("<tr><td class=\"lbl\">Total development capital</td><td>$990M (net)</td><td>$1,211M</td><td>+22% capital</td></tr>\n");
     s.push_str("<tr><td class=\"lbl\">Equity / partner contributions (gross)</td><td>$250M</td><td>$250M</td><td>same</td></tr>\n");
