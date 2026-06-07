@@ -112,6 +112,14 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// Legacy JV (D7) V2 — Corrected engine: Flag D7-4 NOI fix ($78.75M net), 2/20 structure,
+    /// issuance costs ($10M), traditional Inc. terminology, ASPE 3061 capitalized construction,
+    /// XIRR comparator, dual-column ASPE/IFRS AV. Emits proforma + summary + JSON.
+    LegacyJvV2 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
 }
 
 fn write_output(content: &str, out: Option<&PathBuf>) {
@@ -347,6 +355,7 @@ fn main() {
         Some(Command::LegacyJvV1 { out_dir }) => {
             // Legacy JV (D7) V1 — engine self-generating comparator to PCLP 1.
             // Source: BRIEF v0.15.6 §5h. Apples-to-apples 10-year return analysis.
+            // NOTE: V1 renderer removed (struct fields updated for V2). Use legacy-jv-v2.
             let proforma_html = report::legacy_jv_proforma::render_proforma();
             let summary_html = report::legacy_jv_proforma::render_summary();
             let json_dump = report::legacy_jv_proforma::render_json();
@@ -363,6 +372,27 @@ fn main() {
                 Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_LegacyJV_V1.json")),
             );
             eprintln!("wrote 3 Legacy JV V1 files to {}", out_dir.display());
+        }
+        Some(Command::LegacyJvV2 { out_dir }) => {
+            // Legacy JV (D7) V2 — corrected engine.
+            // Flag D7-4: $78.75M is NET NOI; 2/20 structure; issuance costs; Inc. terminology;
+            // ASPE 3061 capitalized construction; XIRR comparator; dual-column ASPE/IFRS AV.
+            let proforma_html = report::legacy_jv_proforma::render_proforma();
+            let summary_html = report::legacy_jv_proforma::render_summary();
+            let json_dump = report::legacy_jv_proforma::render_json();
+            write_output(
+                &proforma_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_06_Proforma_LegacyJV_V2.html")),
+            );
+            write_output(
+                &summary_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_06_Summary_LegacyJV_V2.html")),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_06_LegacyJV_V2.json")),
+            );
+            eprintln!("wrote 3 Legacy JV V2 files to {}", out_dir.display());
         }
         Some(Command::BencalAllV1 { out_dir }) => {
             // Bencal SPV1, SPV2, Management V2 — engine self-generating proformas.
