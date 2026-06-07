@@ -10,6 +10,22 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-orgcharts
 to: command@claude-code
+re: Stage 6 — Mexico JW12 Box 38 grey-solid fix
+created: 2026-06-06T00:01:00-07:00
+priority: normal
+status: pending
+msg-id: project-orgcharts-20260606-stage6-mexico-box38
+---
+
+Commit to include in next Stage 6 promote run:
+
+- `33ef8e5d` — data(charts): Mexico JW12 Box 38 token-grey-solid to match Canada JW13 Box 30
+
+Please include alongside all prior pending Stage 6 messages.
+
+ACK when promoted.
+
+---
 re: Stage 6 — color sweep + Box 102 fix (9 charts, 2026-06-06)
 created: 2026-06-06T00:00:00-07:00
 priority: normal
