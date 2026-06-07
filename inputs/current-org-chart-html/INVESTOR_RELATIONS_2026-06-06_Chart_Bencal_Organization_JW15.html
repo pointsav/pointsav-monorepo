@@ -21,7 +21,7 @@
         .print-canvas {
             position: relative;
             width: 1056px;
-            height: 880px;
+            height: 816px;
             background-color: #FFFFFF;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             overflow: hidden;
@@ -30,7 +30,7 @@
         @media print {
             @page { size: landscape; margin: 0; }
             body { padding: 0; margin: 0; background: #FFFFFF; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .print-canvas { box-shadow: none; width: 1056px; height: 880px; page-break-after: avoid; transform: scale(0.9273); transform-origin: top center; }
+            .print-canvas { box-shadow: none; width: 1056px; height: 816px; page-break-after: avoid; }
         }
 
 
@@ -51,7 +51,7 @@
 
         .token-signature {
             position: absolute;
-            bottom: 30px;
+            top: 762px;
             right: 40px;
             font-size: 10px;
             line-height: 1.4;
@@ -262,7 +262,7 @@
                      top edge  = top value
                      bottom edge = top + 110px
     ───────────────────────────────────────────────────────────── -->
-    <svg class="svg-layer" viewBox="0 0 1056 880" style="left: 3px; top: 1px;">
+    <svg class="svg-layer" viewBox="0 0 1056 816" style="left: 3px; top: 1px;">
         <defs>
             <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
                 <polygon points="0,0 10,5 0,10" fill="#F15F22"></polygon>
@@ -291,29 +291,29 @@
         </defs>
 
         <!-- Holdings (100, 101) → single vertical drop into Manager (95) -->
-        <path d="M 558 189 L 558 220 L 894 220 L 894 184" fill="none" stroke="#9CA3AF" stroke-width="2"></path>
-        <path d="M 734 220 L 734 254" fill="none" stroke="#9CA3AF" stroke-width="2"></path>
+        <path d="M 558 164 L 558 195 L 894 195 L 894 159" fill="none" stroke="#9CA3AF" stroke-width="2"></path>
+        <path d="M 734 195 L 734 229" fill="none" stroke="#9CA3AF" stroke-width="2"></path>
 
         <!-- Manager (95) → SPV-GPs: single vertical, horizontal bus, four drops -->
-        <path d="M 734 364 L 734 400" fill="none" stroke="#7C468C" stroke-width="2"></path>
-        <path d="M 143 400 L 933 400" fill="none" stroke="#7C468C" stroke-width="2"></path>
-        <path d="M 143 400 L 143 434" fill="none" stroke="#7C468C" stroke-width="2"></path>
-        <path d="M 396 400 L 396 438" fill="none" stroke="#7C468C" stroke-width="2"></path>
-        <path d="M 668 400 L 668 434" fill="none" stroke="#7C468C" stroke-width="2"></path>
-        <path d="M 933 400 L 933 430" fill="none" stroke="#7C468C" stroke-width="2"></path>
+        <path d="M 734 339 L 734 375" fill="none" stroke="#7C468C" stroke-width="2"></path>
+        <path d="M 143 375 L 933 375" fill="none" stroke="#7C468C" stroke-width="2"></path>
+        <path d="M 143 375 L 143 409" fill="none" stroke="#7C468C" stroke-width="2"></path>
+        <path d="M 396 375 L 396 413" fill="none" stroke="#7C468C" stroke-width="2"></path>
+        <path d="M 668 375 L 668 409" fill="none" stroke="#7C468C" stroke-width="2"></path>
+        <path d="M 933 375 L 933 405" fill="none" stroke="#7C468C" stroke-width="2"></path>
 
         <!-- Manager (95) → Future OpCo (104): horizontal arrow, same row -->
-        <path d="M 629 309 L 503 309" fill="none" stroke="#7C468C" stroke-width="2" marker-end="url(#arrow-purple)"></path>
+        <path d="M 629 284 L 503 284" fill="none" stroke="#7C468C" stroke-width="2" marker-end="url(#arrow-purple)"></path>
 
         <!-- SPV-GP (97) → SPV-LP (98) -->
-        <path d="M 396 548 L 396 579" fill="none" stroke="#7C468C" stroke-width="2"></path>
+        <path d="M 396 523 L 396 554" fill="none" stroke="#7C468C" stroke-width="2"></path>
 
         <!-- Box 96 → Box 105 -->
-        <path d="M 143 574 L 143 544" fill="none" stroke="#164679" stroke-width="2" marker-end="url(#arrow-blue)"></path>
+        <path d="M 143 549 L 143 519" fill="none" stroke="#164679" stroke-width="2" marker-end="url(#arrow-blue)"></path>
         <!-- Box 102 → Box 106 -->
-        <path d="M 668 574 L 668 544" fill="none" stroke="#164679" stroke-width="2" marker-end="url(#arrow-blue)"></path>
+        <path d="M 668 549 L 668 519" fill="none" stroke="#164679" stroke-width="2" marker-end="url(#arrow-blue)"></path>
         <!-- Box 98 → Box 107 -->
-        <path d="M 403 719 L 403 689" fill="none" stroke="#164679" stroke-width="2" marker-end="url(#arrow-blue)"></path>
+        <path d="M 403 694 L 403 664" fill="none" stroke="#164679" stroke-width="2" marker-end="url(#arrow-blue)"></path>
     </svg>
 
 
@@ -326,14 +326,14 @@
 
     <!-- ROW 1 — Holding Companies ──────────────────────────────── -->
 
-    <div class="token-base token-grey" style="left: 453px; top: 79px;">
+    <div class="token-base token-grey" style="left: 453px; top: 54px;">
         <div class="zone-top"><p class="t-title">Kiel Capital Inc.</p></div>
         <div class="zone-mid"><p class="t-code">BCL-CA-01-HLD</p><p class="t-alias">"Holding Company"</p></div>
         <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
         <p class="t-node">100</p>
     </div>
 
-    <div class="token-base token-grey" style="left: 789px; top: 74px;">
+    <div class="token-base token-grey" style="left: 789px; top: 49px;">
         <div class="zone-top"><p class="t-title">Elzen Holdings Inc.</p></div>
         <div class="zone-mid"><p class="t-code">BCL-CA-02-HLD</p><p class="t-alias">"Holding Company"</p></div>
         <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
@@ -343,14 +343,14 @@
 
     <!-- ROW 2 — Manager / Promoter ─────────────────────────────── -->
 
-    <div class="token-base token-purple" style="left: 291px; top: 254px;">
+    <div class="token-base token-purple" style="left: 291px; top: 229px;">
         <div class="zone-top"><p class="t-title">Bencal Investment Management Inc.</p></div>
         <div class="zone-mid"><p class="t-code">BCL-CA-02-OPR</p><p class="t-alias">"Future condiseration for operating company, employeees and licensing"</p></div>
         <div class="zone-bottom"><p class="t-country">(Yet to be formed)<br>(Canada)</p></div>
         <p class="t-node">104</p>
     </div>
 
-    <div class="token-base token-purple" style="left: 629px; top: 254px;">
+    <div class="token-base token-purple" style="left: 629px; top: 229px;">
         <div class="zone-top"><p class="t-title">Bencal Corporation</p></div>
         <div class="zone-mid"><p class="t-code">BCL-CA-01-OPR</p><p class="t-alias">"Promoter"</p></div>
         <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
@@ -360,28 +360,28 @@
 
     <!-- ROW 3 — SPV Entities ───────────────────────────────────── -->
 
-    <div class="token-base token-orange" style="left: 38px; top: 434px;">
+    <div class="token-base token-orange" style="left: 38px; top: 409px;">
         <div class="zone-top"><p class="t-title">Bencal Equity Partners 1 Inc.</p></div>
         <div class="zone-mid"><p class="t-code">BEP-CA-01-AST</p><p class="t-alias">"Bencal Equity Partners 1"</p></div>
         <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
         <p class="t-node">96</p>
     </div>
 
-    <div class="token-base token-purple" style="left: 291px; top: 438px;">
+    <div class="token-base token-purple" style="left: 291px; top: 413px;">
         <div class="zone-top"><p class="t-title">Bencal Real Assets 1 Inc.</p></div>
         <div class="zone-mid"><p class="t-code">BRA-CA-01-ADM</p><p class="t-alias">"Bencal Real Assets 1 GP"</p></div>
         <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
         <p class="t-node">97</p>
     </div>
 
-    <div class="token-base token-orange-pill-dashed" style="left: 543px; top: 434px;">
+    <div class="token-base token-orange-pill-dashed" style="left: 543px; top: 409px;">
         <div class="zone-top"><p class="t-title">WCP Allocation and Sales Agreement</p></div>
         <div class="zone-mid"><p class="t-alias">"WCP Common Shares"</p></div>
         <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
         <p class="t-node">102</p>
     </div>
 
-    <div class="token-base token-orange" style="left: 828px; top: 430px;">
+    <div class="token-base token-orange" style="left: 828px; top: 405px;">
         <div class="zone-top"><p class="t-title">Investment Stragety and Private Investment Vehicles</p></div>
         <div class="zone-mid"><p class="t-code">BCL-•-•-AST</p><p class="t-alias">"Bencal •"</p></div>
         <div class="zone-bottom"><p class="t-country">(Global)</p></div>
@@ -391,7 +391,7 @@
 
     <!-- ROW 4 — Limited Partnership ────────────────────────────── -->
 
-    <div class="token-base token-orange-pill-dashed" style="left: 278px; top: 579px;">
+    <div class="token-base token-orange-pill-dashed" style="left: 278px; top: 554px;">
         <div class="zone-top"><p class="t-title">Bencal Real Assets 1<br>Limited Partnership</p></div>
         <div class="zone-mid"><p class="t-code">BRA-CA-02-AST</p><p class="t-alias">"Bencal Real Assets 1 LP"</p></div>
         <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
@@ -401,21 +401,21 @@
 
     <!-- ROW 5 — New Blue Boxes ——————————————————— -->
 
-    <div class="token-base token-blue" style="left: 38px; top: 574px;">
+    <div class="token-base token-blue" style="left: 38px; top: 549px;">
         <div class="zone-top"><p class="t-title">SPV1 Shares</p></div>
         <div class="zone-mid"><p class="t-alias" style="margin-bottom: 6px;">Friends, Family and Business Associates (50 individuals)</p><p class="t-alias">Accredited Investors (300 individuals)</p></div>
         <div class="zone-bottom"><p class="t-country">(Global)</p></div>
         <p class="t-node">105</p>
     </div>
 
-    <div class="token-base token-blue" style="left: 563px; top: 574px;">
+    <div class="token-base token-blue" style="left: 563px; top: 549px;">
         <div class="zone-top"><p class="t-title">WCP Common Shares</p></div>
         <div class="zone-mid"><p class="t-alias" style="margin-bottom: 6px;">Accredited Investors (300 individuals)</p><p class="t-alias">max CAD 100,000 per subscriber</p></div>
         <div class="zone-bottom"><p class="t-country">(Global)</p></div>
         <p class="t-node">106</p>
     </div>
 
-    <div class="token-base token-blue" style="left: 298px; top: 719px;">
+    <div class="token-base token-blue" style="left: 298px; top: 694px;">
         <div class="zone-top"><p class="t-title">SPV2 Units</p></div>
         <div class="zone-mid"><p class="t-alias" style="margin-bottom: 6px;">Friends, Family and Business Associates (50 individuals)</p><p class="t-alias">Accredited Investors (300 individuals)</p></div>
         <div class="zone-bottom"><p class="t-country">(Global)</p></div>
@@ -428,19 +428,19 @@
     ───────────────────────────────────────────────────────────── -->
 
     <!-- Below Boxes 100 and 101 — on vertical lines dropping from Holdings to Manager -->
-    <div class="marker" style="left: 558px; top: 204px;">•%</div>
-    <div class="marker" style="left: 894px; top: 202px;">•%</div>
+    <div class="marker" style="left: 558px; top: 179px;">•%</div>
+    <div class="marker" style="left: 894px; top: 177px;">•%</div>
 
     <!-- Above Boxes 96, 97, 103 — ownership % on lines from Manager to SPV entities -->
-    <div class="marker" style="left: 143px; top: 417px;">10%</div>
-    <div class="marker" style="left: 396px; top: 419px;">10%</div>
-    <div class="marker" style="left: 933px; top: 415px;">10%</div>
+    <div class="marker" style="left: 143px; top: 392px;">10%</div>
+    <div class="marker" style="left: 396px; top: 394px;">10%</div>
+    <div class="marker" style="left: 933px; top: 390px;">10%</div>
 
     <!-- Above Box 102 — allocation amount on vertical from Manager -->
-    <div class="marker" style="left: 668px; top: 417px;">CDN 3 M</div>
+    <div class="marker" style="left: 668px; top: 392px;">CDN 3 M</div>
 
     <!-- Manager (95) → Future OpCo (104): ownership label centered on horizontal line -->
-    <div class="marker" style="left: 566px; top: 309px;">100%</div>
+    <div class="marker" style="left: 566px; top: 284px;">100%</div>
 
     <!-- ─────────────────────────────────────────────────────────────
          SIGNATURE BLOCK
