@@ -115,7 +115,7 @@ const LNUM_SCRIPT: &str = r#"<script>
 fn header_block(version_label: &str) -> String {
     format!(
         "<h1>Professional Centres Canada LP (PCLP 1) — Proforma {version_label}</h1>\n\
-         <p>Engine-generated proforma from BRIEF v0.15.6 §5b inputs. No Excel read.<br>\n\
+         <p>Engine-generated proforma from BRIEF v0.15.6 §5b inputs.<br>\n\
          DRAFT — 2026-06-04 — {version_label}<br>\n\
          All amounts CAD — Prepared under IFRS — Forward-looking projections; planned / intended values per BCSC continuous-disclosure posture<br>\n\
          Source: tool-proforma-engine <code>pclp1_proforma</code> module — engine-canonical</p>\n"
@@ -644,7 +644,7 @@ pub fn render_summary() -> String {
     s.push_str(HEAD_PROFORMA);
     s.push_str("<body>\n");
     s.push_str("<h1>Professional Centres Canada LP (PCLP 1) — Summary V2</h1>\n");
-    s.push_str("<p>Engine-generated summary from BRIEF v0.15.6 §5b. No Excel read.<br>\n");
+    s.push_str("<p>Engine-generated summary from BRIEF v0.15.6 §5b.<br>\n");
     s.push_str("DRAFT — 2026-06-04 — V2 (operator corrections applied)<br>\n");
     s.push_str("Companion: <code>COMPLIANCE_MCorp_2026_06_04_Proforma_PCLP1_V2.html</code> (full 10-year proforma)<br>\n");
     s.push_str("All amounts CAD — Prepared under IFRS — Forward-looking projections; BCSC continuous-disclosure posture</p>\n");

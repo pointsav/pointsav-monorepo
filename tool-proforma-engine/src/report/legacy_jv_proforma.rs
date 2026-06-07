@@ -193,11 +193,11 @@ pub fn render_proforma() -> String {
     let y10 = &years[10];
 
     let mut s = String::new();
-    s.push_str(&head_with_title("Legacy JV (D7) — Proforma V2"));
+    s.push_str(&head_with_title("Legacy JV (D7) — Proforma V4"));
     s.push_str("<body>\n");
-    s.push_str("<h1>Legacy JV (D7) — Traditional Joint Venture Proforma V2</h1>\n");
-    s.push_str("<p>Engine-generated comparator proforma from BRIEF v0.15.6 §5h. Apples-to-apples to PCLP 1 (D2). No Excel.<br>\n");
-    s.push_str("DRAFT — 2026-06-06 — V2<br>\n");
+    s.push_str("<h1>Legacy JV (D7) — Traditional Joint Venture Proforma V4</h1>\n");
+    s.push_str("<p>Engine-generated comparator proforma from BRIEF v0.15.6 §5h. Apples-to-apples to Professional Centres Canada LP (D2).<br>\n");
+    s.push_str("DRAFT — 2026-06-06 — V4<br>\n");
     s.push_str("Subtitle: 'Traditional J/V Financing vs. Woodfine Direct-Hold Solutions'<br>\n");
     s.push_str("All amounts CAD — ASPE 3061 cost model (50-yr SL depreciation on fully-capitalized building component)</p>\n");
 
@@ -305,7 +305,7 @@ pub fn render_proforma() -> String {
     // ── Single-Shot Constraint ─────────────────────────────────────────────
     s.push_str("<h2>Single-Shot Constraint (BRIEF §2498-2504)</h2>\n");
     s.push_str("<p>Stabilized IFRS FV = $1,260M. At 65% LTV covenant, maximum permanent debt = $819M. Existing $750M is $69M below that ceiling — <strong>$69M of headroom</strong>, not a covenant breach. However, a Phase 2 construction facility of comparable scale would require ~$750M, roughly 11× the available headroom. Structurally single-shot: cannot compound into a Phase 2 development without a new equity raise.</p>\n");
-    s.push_str("<p class=\"note\">By contrast, PCLP 1 (D2) issues debentures in 3 phases on a single fund and achieves 3.9M sf vs Legacy JV's 2.3M sf, with multi-round compounding capability built into the structure.</p>\n");
+    s.push_str("<p class=\"note\">By contrast, Professional Centres Canada LP (D2) issues debentures in 3 phases on a single fund and achieves 3.9M sf vs Legacy JV's 2.3M sf, with multi-round compounding capability built into the structure.</p>\n");
 
     s.push_str(&render_endpoint_summary(y10, &years));
     s.push_str(&render_comparator_table());
@@ -325,7 +325,7 @@ fn render_endpoint_summary(y10: &LegacyJvYear, years: &[LegacyJvYear]) -> String
 
     let mut s = String::new();
     s.push_str("<h2>Investment Return Summary (Y10 endpoint)</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str("<tr><th class=\"lbl\">Metric</th><th>Aggregate</th><th>Per share</th></tr>\n");
     s.push_str(&format!(
         "<tr><td class=\"lbl\">Total equity invested (Y0, gross)</td><td>{}</td><td>{}</td></tr>\n",
@@ -401,14 +401,17 @@ fn render_comparator_table() -> String {
     let irr_d2 = xirr_annual(&cfs_d2).unwrap_or(0.0);
 
     let mut s = String::new();
-    s.push_str("<h2>D7 Legacy JV vs D2 PCLP 1 — Headline Comparison (BRIEF §2564-2575)</h2>\n");
-    s.push_str("<table>\n");
-    s.push_str("<tr><th class=\"lbl\">Metric (Y10)</th><th>D7 Legacy JV</th><th>D2 PCLP 1 (V2)</th><th>D2 advantage</th></tr>\n");
+    s.push_str("<h2>D7 Legacy JV vs D2 Professional Centres Canada LP — Headline Comparison (BRIEF §2564-2575)</h2>\n");
+    s.push_str("<table class=\"wide\">\n");
+    s.push_str("<tr><th class=\"lbl\">Metric (Y10)</th><th>D7 Legacy JV</th><th>D2 Professional Centres Canada LP</th><th>D2 advantage</th></tr>\n");
     s.push_str(&format!("<tr><td class=\"lbl\">Total sf delivered</td><td>{} sf</td><td>3,906,855 sf</td><td>+70%</td></tr>\n",
                         fmt_int(LEGACY_JV_TOTAL_SF)));
     s.push_str("<tr><td class=\"lbl\">Total development capital</td><td>$990M (net)</td><td>$1,211M</td><td>+22% capital</td></tr>\n");
-    s.push_str("<tr><td class=\"lbl\">Equity in (gross)</td><td>$250M</td><td>$250M</td><td>same</td></tr>\n");
-    s.push_str("<tr><td class=\"lbl\">Leverage</td><td>$750M bank debt (3.1× net D/E)</td><td>Debentures (phased)</td><td>structural</td></tr>\n");
+    s.push_str("<tr><td class=\"lbl\">Equity / partner contributions (gross)</td><td>$250M</td><td>$250M</td><td>same</td></tr>\n");
+    s.push_str("<tr><td class=\"lbl\">Debt to partner contributions</td><td>3.0× ($750M / $250M)</td><td>~4.0× ($994M peak / $250M)</td><td>D2 higher leverage</td></tr>\n");
+    s.push_str(&format!("<tr><td class=\"lbl\">Partner contributions per SF (equity cost)</td><td>${:.2}/sf</td><td>$63.99/sf</td><td>LP $44.79/sf lower</td></tr>\n",
+                        LEGACY_JV_GROSS_EQUITY / LEGACY_JV_TOTAL_SF));
+    s.push_str("<tr><td class=\"lbl\">Leverage structure</td><td>$750M bank debt (3.0× gross D/E)</td><td>Debentures (phased)</td><td>structural</td></tr>\n");
 
     // Dual-column AV
     s.push_str(&format!("<tr><td class=\"lbl\">Stabilized asset value — ASPE book (Y10)</td><td>{}</td><td>N/A (IFRS FV only)</td><td>—</td></tr>\n",
@@ -424,7 +427,7 @@ fn render_comparator_table() -> String {
 
     s.push_str(&format!("<tr><td class=\"lbl\"><strong>MOIC — IFRS FV basis (pre-tax, gross)</strong></td><td><strong>{:.2}×</strong></td><td><strong>~4.0×</strong></td><td><strong>+{:.0}%</strong></td></tr>\n",
                         moic_d7, ((4.0 - moic_d7) / moic_d7) * 100.0));
-    s.push_str(&format!("<tr><td class=\"lbl\"><strong>IRR (pre-tax; IFRS FV terminal)</strong></td><td><strong>{:.1}%</strong></td><td><strong>{:.1}%</strong></td><td><strong>PCLP 1 higher</strong></td></tr>\n",
+    s.push_str(&format!("<tr><td class=\"lbl\"><strong>IRR (pre-tax; IFRS FV terminal)</strong></td><td><strong>{:.1}%</strong></td><td><strong>{:.1}%</strong></td><td><strong>Professional Centres Canada LP higher</strong></td></tr>\n",
                         irr_d7 * 100.0, irr_d2 * 100.0));
     s.push_str("<tr><td class=\"lbl\">Refinancing headroom at stabilization</td><td>$69M ($1,260M × 65% = $819M; debt $750M)</td><td>Phased (3 tranches)</td><td>structural</td></tr>\n");
     s.push_str("<tr><td class=\"lbl\">Continuous development rounds possible?</td><td>No (single-shot; $69M ≪ $750M needed)</td><td>Yes</td><td>compounding</td></tr>\n");
@@ -439,16 +442,16 @@ pub fn render_summary() -> String {
     let years = forecast();
     let y10 = &years[10];
     let mut s = String::new();
-    s.push_str(&head_with_title("Legacy JV (D7) — Summary V2"));
+    s.push_str(&head_with_title("Legacy JV (D7) — Summary V4"));
     s.push_str("<body>\n");
-    s.push_str("<h1>Legacy JV (D7) — Investor Summary V2</h1>\n");
+    s.push_str("<h1>Legacy JV (D7) — Investor Summary V4</h1>\n");
     s.push_str("<p>Engine-generated comparator summary from BRIEF v0.15.6 §5h.<br>\n");
-    s.push_str("DRAFT — 2026-06-06 — V2<br>\n");
+    s.push_str("DRAFT — 2026-06-06 — V4<br>\n");
     s.push_str(
-        "Companion: <code>COMPLIANCE_MCorp_2026_06_06_Proforma_LegacyJV_V2.html</code></p>\n",
+        "Companion: <code>COMPLIANCE_MCorp_2026_06_06_Proforma_LegacyJV_V4.html</code></p>\n",
     );
 
-    s.push_str("<p>Legacy JV (D7) is the traditional joint-venture comparator to PCLP 1 (D2). Same $250M gross equity but financed with $750M bank debt at $990M net capital. Traditional Inc. with shareholders agreement; 2/20 management fee structure. Construction Y1–Y3 (S-curve 20/50/30), stabilized Y4+. All construction-period costs capitalized under ASPE 3061; Y1–Y3 net income = $0. No further development rounds possible at scale — single-shot structure.</p>\n");
+    s.push_str("<p>Legacy JV (D7) is the traditional joint-venture comparator to Professional Centres Canada LP (D2). Same $250M gross equity but financed with $750M bank debt at $990M net capital. Traditional Inc. with shareholders agreement; 2/20 management fee structure. Construction Y1–Y3 (S-curve 20/50/30), stabilized Y4+. All construction-period costs capitalized under ASPE 3061; Y1–Y3 net income = $0. No further development rounds possible at scale — single-shot structure.</p>\n");
 
     s.push_str(&render_endpoint_summary(y10, &years));
     s.push_str(&render_comparator_table());
@@ -475,7 +478,7 @@ mod tests {
         assert!(html.contains("Capital Structure"));
         assert!(html.contains("Income Statement"));
         assert!(html.contains("Single-Shot Constraint"));
-        assert!(html.contains("D2 PCLP 1"));
+        assert!(html.contains("Professional Centres Canada LP"));
         assert!(html.ends_with("</body></html>\n"));
     }
 
@@ -498,7 +501,7 @@ mod tests {
     fn summary_well_formed() {
         let html = render_summary();
         assert!(html.starts_with("<!DOCTYPE html>"));
-        assert!(html.contains("Summary V2"));
+        assert!(html.contains("Legacy JV"));
         assert!(html.ends_with("</body></html>\n"));
     }
 

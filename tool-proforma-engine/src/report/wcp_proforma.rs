@@ -110,7 +110,7 @@ const LNUM_SCRIPT: &str = r#"<script>
 fn header_block(version: &str) -> String {
     format!(
         "<h1>Woodfine Capital Projects Inc. (WCP) — Proforma {version}</h1>\n\
-         <p>Engine-generated proforma from BRIEF v0.15.6 §5c inputs. No Excel read.<br>\n\
+         <p>Engine-generated proforma from BRIEF v0.15.6 §5c inputs.<br>\n\
          DRAFT — 2026-06-04 — {version}<br>\n\
          Consumes PCLP 1 V2 forecast (LP1 source per BRIEF §1088–1091).<br>\n\
          All amounts CAD — Prepared under IFRS — Forward-looking projections; BCSC continuous-disclosure posture<br>\n\
@@ -401,7 +401,7 @@ pub fn render_summary() -> String {
     s.push_str(HEAD);
     s.push_str("<body>\n");
     s.push_str("<h1>Woodfine Capital Projects Inc. (WCP) — Summary V1</h1>\n");
-    s.push_str("<p>Engine-generated summary from BRIEF v0.15.6 §5c. No Excel read.<br>\n");
+    s.push_str("<p>Engine-generated summary from BRIEF v0.15.6 §5c.<br>\n");
     s.push_str("DRAFT — 2026-06-04 — V1<br>\n");
     s.push_str("Companion: <code>COMPLIANCE_MCorp_2026_06_04_Proforma_WCP_V1.html</code> (full 10-year proforma)<br>\n");
     s.push_str("All amounts CAD — Prepared under IFRS — Forward-looking projections; BCSC continuous-disclosure posture</p>\n");

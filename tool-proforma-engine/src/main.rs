@@ -129,6 +129,15 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// Legacy JV (D7) V4 — V3 + comparator table: debt-to-contributions + equity-cost-per-SF
+    /// rows; "No Excel" removed; "PCLP 1" → "Professional Centres Canada LP" throughout;
+    /// wide-table overflow fix on comparator and return-summary tables.
+    /// Emits proforma HTML + JSON only (no summary HTML).
+    LegacyJvV4 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
 }
 
 fn write_output(content: &str, out: Option<&PathBuf>) {
@@ -418,6 +427,21 @@ fn main() {
                 Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_06_LegacyJV_V3.json")),
             );
             eprintln!("wrote 2 Legacy JV V3 files to {}", out_dir.display());
+        }
+        Some(Command::LegacyJvV4 { out_dir }) => {
+            // Legacy JV (D7) V4 — comparator table additions + terminology cleanup.
+            // No summary HTML for this version (proforma + JSON only).
+            let proforma_html = report::legacy_jv_proforma::render_proforma();
+            let json_dump = report::legacy_jv_proforma::render_json();
+            write_output(
+                &proforma_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_06_Proforma_LegacyJV_V4.html")),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_06_LegacyJV_V4.json")),
+            );
+            eprintln!("wrote 2 Legacy JV V4 files to {}", out_dir.display());
         }
         Some(Command::BencalAllV1 { out_dir }) => {
             // Bencal SPV1, SPV2, Management V2 — engine self-generating proformas.
