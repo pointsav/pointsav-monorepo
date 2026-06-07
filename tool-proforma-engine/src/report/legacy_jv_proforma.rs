@@ -63,7 +63,7 @@ p.note{font-size:0.78rem;color:#555;font-style:italic}
 table{border-collapse:collapse;margin:0.5rem 0;font-size:0.76rem}
 table.wide{width:100%;overflow-x:auto;display:block}
 table.wide td,table.wide th{white-space:normal;word-break:break-word}
-th,td{border:1px solid #ccc;padding:3px 6px;text-align:right;white-space:nowrap}
+th,td{border:1px solid #ccc;padding:3px 6px;text-align:right}
 th{background:#f5f5f5;text-align:center;font-weight:600}
 td.lbl,th.lbl{text-align:left;min-width:230px}
 td.lnum,th.lnum{width:32px;min-width:32px;font-family:'Courier New',monospace;font-size:9px;color:#aaa;text-align:right!important;background:white!important;font-weight:normal!important;border-right:2px solid #d0d0d0;padding:2px 5px 2px 2px;white-space:nowrap}

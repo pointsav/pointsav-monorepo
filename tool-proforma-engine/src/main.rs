@@ -138,6 +138,13 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// Legacy JV (D7) V5 — V4 + global white-space:nowrap removed from CSS so ALL tables
+    /// clip/wrap instead of bleeding; no structural content change from V4.
+    /// Emits proforma HTML + JSON only (no summary HTML).
+    LegacyJvV5 {
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
 }
 
 fn write_output(content: &str, out: Option<&PathBuf>) {
@@ -442,6 +449,19 @@ fn main() {
                 Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_06_LegacyJV_V4.json")),
             );
             eprintln!("wrote 2 Legacy JV V4 files to {}", out_dir.display());
+        }
+        Some(Command::LegacyJvV5 { out_dir }) => {
+            let proforma_html = report::legacy_jv_proforma::render_proforma();
+            let json_dump = report::legacy_jv_proforma::render_json();
+            write_output(
+                &proforma_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_06_Proforma_LegacyJV_V5.html")),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_06_LegacyJV_V5.json")),
+            );
+            eprintln!("wrote 2 Legacy JV V5 files to {}", out_dir.display());
         }
         Some(Command::BencalAllV1 { out_dir }) => {
             // Bencal SPV1, SPV2, Management V2 — engine self-generating proformas.
