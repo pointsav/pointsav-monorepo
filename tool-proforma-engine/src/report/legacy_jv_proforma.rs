@@ -61,7 +61,8 @@ h3{font-size:0.9rem;margin-top:1rem;margin-bottom:0.2rem;color:#333}
 p{margin:0.3rem 0;font-size:0.82rem;color:#555}
 p.note{font-size:0.78rem;color:#555;font-style:italic}
 table{border-collapse:collapse;margin:0.5rem 0;font-size:0.76rem}
-table.wide{width:100%}
+table.wide{width:100%;overflow-x:auto;display:block}
+table.wide td,table.wide th{white-space:normal;word-break:break-word}
 th,td{border:1px solid #ccc;padding:3px 6px;text-align:right;white-space:nowrap}
 th{background:#f5f5f5;text-align:center;font-weight:600}
 td.lbl,th.lbl{text-align:left;min-width:230px}
@@ -70,7 +71,7 @@ tr.total td{background:#eef2f7;font-weight:700;border-top:2px solid #888}
 tr.subtotal td{background:#f5f7fa;font-weight:600;border-top:1px solid #aaa}
 .footer{font-size:0.72rem;color:#666;margin-top:1.5rem;border-top:1px solid #ddd;padding-top:0.5rem}
 @page{size:letter landscape;margin:1.5cm 2cm 1.5cm 1.5cm}
-@media print{body{margin:0;font-size:11px;max-width:none}table{break-inside:avoid;page-break-inside:avoid}h2,h3{break-after:avoid;page-break-after:avoid}td.lnum,th.lnum{-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#bbb!important;border-right-color:#ccc!important}table.wide{table-layout:fixed;font-size:10px}table.wide td,table.wide th{padding:3px 6px}table.wide td.lbl,table.wide th.lbl{width:25%;white-space:normal;overflow-wrap:break-word}}
+@media print{body{margin:0;font-size:11px;max-width:none}table{break-inside:avoid;page-break-inside:avoid}h2,h3{break-after:avoid;page-break-after:avoid}p.note{break-before:avoid;page-break-before:avoid}td.lnum,th.lnum{-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#bbb!important;border-right-color:#ccc!important}table.wide{table-layout:fixed;font-size:10px}table.wide td,table.wide th{padding:3px 6px}table.wide td.lbl,table.wide th.lbl{width:25%;white-space:normal;overflow-wrap:break-word}}
 </style></head>
 "#;
 
@@ -197,7 +198,7 @@ pub fn render_proforma() -> String {
     s.push_str("<h1>Legacy JV (D7) — Traditional Joint Venture Proforma V2</h1>\n");
     s.push_str("<p>Engine-generated comparator proforma from BRIEF v0.15.6 §5h. Apples-to-apples to PCLP 1 (D2). No Excel.<br>\n");
     s.push_str("DRAFT — 2026-06-06 — V2<br>\n");
-    s.push_str("Subtitle: 'Traditional J/V Financing vs. the Woodfine LPs'<br>\n");
+    s.push_str("Subtitle: 'Traditional J/V Financing vs. Woodfine Direct-Hold Solutions'<br>\n");
     s.push_str("All amounts CAD — ASPE 3061 cost model (50-yr SL depreciation on fully-capitalized building component)</p>\n");
 
     // ── Capital Structure ──────────────────────────────────────────────────
@@ -208,11 +209,11 @@ pub fn render_proforma() -> String {
         ("Gross equity subscribed", fmt_full_dollar(LEGACY_JV_GROSS_EQUITY), "2,500,000 shares × $100"),
         ("Less: issuance costs (1% mortgage + 1% equity)", format!("({})", fmt_full_dollar(LEGACY_JV_ISSUANCE_COSTS)), ""),
         ("Net equity deployed", fmt_full_dollar(LEGACY_JV_NET_EQUITY), "Into project construction"),
-        ("Bank debt (construction → permanent)", fmt_full_dollar(LEGACY_JV_BANK_DEBT), "3.125× net D/E"),
-        ("Total construction capital", fmt_full_dollar(LEGACY_JV_TOTAL_CAPITAL), "Single-shot"),
+        ("Bank debt (construction → permanent)", fmt_full_dollar(LEGACY_JV_BANK_DEBT), "3.0× gross equity; 3.125× on net $240M deployed"),
+        ("Total construction capital", fmt_full_dollar(LEGACY_JV_TOTAL_CAPITAL), "Single-shot (net equity + bank debt)"),
         ("Shares (traditional Inc.)", fmt_int(LEGACY_JV_SHARES), "Shareholders' agreement"),
         ("Total portfolio sf", fmt_int(LEGACY_JV_TOTAL_SF), "BRIEF §2469"),
-        ("Construction cost / sf", format!("${:.2}", LEGACY_JV_COST_PER_SF), "BRIEF §2468"),
+        ("Bank debt / sf (construction)", format!("${:.2}", LEGACY_JV_COST_PER_SF), "= $750M / 2,298,150 sf; total capital/sf = $430.77"),
         ("Development yield", fmt_pct(LEGACY_JV_DEV_YIELD), "10.5%"),
         ("Cap rate", fmt_pct(LEGACY_JV_CAP_RATE), "6.25%"),
         ("Stabilized NOI (net; tenant CAM pass-through)", fmt_full_dollar(LEGACY_JV_NOI_STABILIZED), "Flag D7-4: NOI is net; no opex deduction"),
@@ -263,6 +264,7 @@ pub fn render_proforma() -> String {
     s.push_str(&data_row("Interest on $750M @ 5% (Y1–Y3 capitalized)", &years, |y| -y.interest_expense));
     s.push_str(&data_row("Depreciation (50-yr SL; ASPE 3061)", &years, |y| -y.depreciation));
     s.push_str(&data_row("Management fee (2%; Y1–Y3 capitalized)", &years, |y| -y.mgmt_fee));
+    s.push_str(&data_row("Capitalized construction costs (ASPE 3061 offset)", &years, |y| y.capitalized_costs));
     s.push_str("<tr class=\"subtotal\">");
     s.push_str("<td class=\"lbl\">Net income</td>");
     for y in &years {
@@ -285,7 +287,7 @@ pub fn render_proforma() -> String {
     s.push_str("</tr>\n");
     s.push_str(&data_row("Cumulative dividends", &years, |y| y.cumulative_dividends));
     s.push_str("</table>\n");
-    s.push_str("<p class=\"note\">Y1–Y3 construction: P&amp;L is zero — all interest and management fees capitalized under ASPE 3061 into the building component ($1,086.25M). Y4+ stabilized: NOI $78.75M (net; Flag D7-4 — tenant CAM is pass-through); debt service $37.5M; depreciation $21.7M; mgmt fee $5M; net income ~$14.5M; distributable cash ~$36.25M/yr; carry ~$3.25M/yr; net dividends to shareholders ~$33M/yr; cumulative Y4–Y10 dividends ~$231M.</p>\n");
+    s.push_str("<p class=\"note\">Y1–Y3 construction: interest and management fees accrue and are shown at gross cost, then offset by the \"Capitalized construction costs\" row (ASPE 3061) — net P&amp;L = $0. These costs consume construction capital: Y1 $12.5M, Y2 $31.25M, Y3 $42.5M capitalized into the building component ($1,086.25M total). Y4+ stabilized: NOI $78.75M (net; Flag D7-4 — tenant CAM is pass-through); debt service $37.5M; depreciation $21.7M; mgmt fee $5M; net income ~$14.5M; distributable cash ~$36.25M/yr; carry ~$3.25M/yr; net dividends to shareholders ~$33M/yr; cumulative Y4–Y10 dividends ~$231M.</p>\n");
 
     // ── Valuation & Ratios ─────────────────────────────────────────────────
     s.push_str("<h2>Valuation &amp; Ratios</h2>\n");

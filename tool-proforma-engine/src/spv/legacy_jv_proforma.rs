@@ -83,9 +83,10 @@ pub struct LegacyJvYear {
     pub debt_outstanding: f64,
     pub equity_contribution: f64,        // equity drawn proportional to capex
     pub noi: f64,                        // net NOI (Y4+ only; Flag D7-4)
-    pub interest_expense: f64,           // Y4+ only (Y1–Y3 capitalized)
+    pub interest_expense: f64,           // all years — Y1–Y3 capitalized (shown explicitly)
     pub depreciation: f64,               // Y4+ only (ASPE 3061)
-    pub mgmt_fee: f64,                   // Y4+ only (Y1–Y3 capitalized)
+    pub mgmt_fee: f64,                   // all years — Y1–Y3 capitalized (shown explicitly)
+    pub capitalized_costs: f64,          // = interest + mgmt_fee for Y1–Y3; 0 for Y4+
     pub net_income: f64,
     pub distributable_cash: f64,         // net_income + depreciation
     pub carry_to_mgmt: f64,              // 20% above 8% hurdle (Y4+)
@@ -128,6 +129,7 @@ pub fn forecast() -> Vec<LegacyJvYear> {
         interest_expense: 0.0,
         depreciation: 0.0,
         mgmt_fee: 0.0,
+        capitalized_costs: 0.0,
         net_income: 0.0,
         distributable_cash: 0.0,
         carry_to_mgmt: 0.0,
@@ -156,23 +158,20 @@ pub fn forecast() -> Vec<LegacyJvYear> {
 
         let phase = if y <= 3 { "Construction" } else { "Stabilized" };
 
-        // Y1–Y3: all costs capitalized per ASPE 3061 — P&L is zero.
-        // Y4+: stabilized operations commence.
+        // Interest and management fee accrue in ALL years.
+        // Y1–Y3: costs are capitalized into building component (ASPE 3061) — shown explicitly
+        //        as gross amounts with an offsetting `capitalized_costs` row; net_income = 0.
+        // Y4+:   costs hit the P&L normally.
         let noi = if y >= 4 { LEGACY_JV_NOI_STABILIZED } else { 0.0 };
-        let interest = if y >= 4 {
-            debt_outstanding * LEGACY_JV_INTEREST_RATE
-        } else {
-            0.0 // capitalized into building component
-        };
+        let interest = debt_outstanding * LEGACY_JV_INTEREST_RATE;
         let depr = if y >= 4 { LEGACY_JV_DEPRECIATION_ANNUAL } else { 0.0 };
         cum_depr += depr;
-        let mgmt_fee = if y >= 4 {
-            LEGACY_JV_MGMT_FEE
-        } else {
-            0.0 // capitalized into building component
-        };
+        let mgmt_fee = LEGACY_JV_MGMT_FEE;
 
-        let net_income = noi - interest - depr - mgmt_fee;
+        // ASPE 3061 offset: during construction the gross cost is capitalized, not expensed.
+        let capitalized_costs = if y < 4 { interest + mgmt_fee } else { 0.0 };
+
+        let net_income = noi - interest - depr - mgmt_fee + capitalized_costs;
         let distributable_cash = net_income + depr; // add back non-cash depreciation
 
         // 2/20 annual above-hurdle carry
@@ -214,6 +213,7 @@ pub fn forecast() -> Vec<LegacyJvYear> {
             interest_expense: interest,
             depreciation: depr,
             mgmt_fee,
+            capitalized_costs,
             net_income,
             distributable_cash,
             carry_to_mgmt: carry,
@@ -323,14 +323,43 @@ mod tests {
 
     #[test]
     fn construction_years_zero_pnl() {
-        // All Y1–Y3 costs are capitalized; P&L must be zero
+        // Y1–Y3: interest and mgmt_fee accrue at gross but are offset by capitalized_costs.
+        // Net P&L must still be zero; distributable cash and dividends also zero.
         let f = forecast();
         for y in 1..=3 {
-            assert_eq!(f[y].net_income, 0.0, "Y{y} net_income should be 0 (costs capitalized)");
+            assert_eq!(f[y].net_income, 0.0, "Y{y} net_income should be 0 (ASPE 3061 offset)");
             assert_eq!(f[y].distributable_cash, 0.0, "Y{y} distributable_cash should be 0");
             assert_eq!(f[y].dividends_to_shareholders, 0.0, "Y{y} dividends should be 0");
-            assert_eq!(f[y].interest_expense, 0.0, "Y{y} interest_expense should be 0 (capitalized)");
-            assert_eq!(f[y].mgmt_fee, 0.0, "Y{y} mgmt_fee should be 0 (capitalized)");
+            // Gross costs are now shown; capitalized_costs must equal interest + mgmt_fee
+            assert!(
+                f[y].interest_expense > 0.0,
+                "Y{y} interest_expense should be positive (shown at gross)"
+            );
+            assert!(
+                (f[y].capitalized_costs - (f[y].interest_expense + f[y].mgmt_fee)).abs() < 1.0,
+                "Y{y} capitalized_costs ({}) must equal interest ({}) + mgmt_fee ({})",
+                f[y].capitalized_costs,
+                f[y].interest_expense,
+                f[y].mgmt_fee
+            );
+        }
+    }
+
+    #[test]
+    fn construction_capitalized_costs_correct() {
+        let f = forecast();
+        // Y1: debt = $150M; interest = $7.5M; mgmt = $5M; capitalized = $12.5M
+        assert!((f[1].interest_expense - 7_500_000.0).abs() < 100.0, "Y1 interest = {}", f[1].interest_expense);
+        assert!((f[1].capitalized_costs - 12_500_000.0).abs() < 100.0, "Y1 cap_costs = {}", f[1].capitalized_costs);
+        // Y2: debt = $525M; interest = $26.25M; capitalized = $31.25M
+        assert!((f[2].interest_expense - 26_250_000.0).abs() < 100.0, "Y2 interest = {}", f[2].interest_expense);
+        assert!((f[2].capitalized_costs - 31_250_000.0).abs() < 100.0, "Y2 cap_costs = {}", f[2].capitalized_costs);
+        // Y3: debt = $750M; interest = $37.5M; capitalized = $42.5M
+        assert!((f[3].interest_expense - 37_500_000.0).abs() < 100.0, "Y3 interest = {}", f[3].interest_expense);
+        assert!((f[3].capitalized_costs - 42_500_000.0).abs() < 100.0, "Y3 cap_costs = {}", f[3].capitalized_costs);
+        // Y4+: capitalized_costs = 0
+        for y in 4..=10 {
+            assert_eq!(f[y].capitalized_costs, 0.0, "Y{y} capitalized_costs should be 0");
         }
     }
 

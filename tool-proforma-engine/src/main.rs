@@ -120,6 +120,15 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// Legacy JV (D7) V3 — V2 + Y1-Y3 capitalized cost transparency (interest + mgmt fee shown
+    /// gross with ASPE 3061 offset row), CSS timeline bleed fix, footnote pagination fix,
+    /// debt ratio aligned with Excel convention, "Woodfine Direct-Hold Solutions" rename.
+    /// Emits proforma HTML + JSON only (no summary HTML).
+    LegacyJvV3 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
 }
 
 fn write_output(content: &str, out: Option<&PathBuf>) {
@@ -393,6 +402,22 @@ fn main() {
                 Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_06_LegacyJV_V2.json")),
             );
             eprintln!("wrote 3 Legacy JV V2 files to {}", out_dir.display());
+        }
+        Some(Command::LegacyJvV3 { out_dir }) => {
+            // Legacy JV (D7) V3 — V2 + Y1-Y3 capitalized cost transparency; CSS bleed fix;
+            // footnote pagination; debt ratio note aligned with Excel; renamed subtitle.
+            // No summary HTML for this version (proforma + JSON only).
+            let proforma_html = report::legacy_jv_proforma::render_proforma();
+            let json_dump = report::legacy_jv_proforma::render_json();
+            write_output(
+                &proforma_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_06_Proforma_LegacyJV_V3.html")),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_06_LegacyJV_V3.json")),
+            );
+            eprintln!("wrote 2 Legacy JV V3 files to {}", out_dir.display());
         }
         Some(Command::BencalAllV1 { out_dir }) => {
             // Bencal SPV1, SPV2, Management V2 — engine self-generating proformas.
