@@ -10,6 +10,24 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-orgcharts
 to: command@claude-code
+re: Stage 6 — color sweep + Box 102 fix (9 charts, 2026-06-06)
+created: 2026-06-06T00:00:00-07:00
+priority: normal
+status: pending
+msg-id: project-orgcharts-20260606-stage6-color-sweep
+---
+
+Commit to include in next Stage 6 promote run:
+
+- `282b639b` — data(charts): color sweep — align 9 charts to color-sample.html canonical palette; Box 102 Bencal JW15 orange-pill-dashed to match Box 96
+
+Please include alongside all prior pending Stage 6 messages.
+
+ACK when promoted.
+
+---
+from: totebox@project-orgcharts
+to: command@claude-code
 re: Stage 6 — Mexico JW18 + JW19 title block redesign
 created: 2026-06-06T00:00:00-07:00
 priority: normal
