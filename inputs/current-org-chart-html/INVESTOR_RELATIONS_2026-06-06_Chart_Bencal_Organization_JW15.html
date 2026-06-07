@@ -28,57 +28,9 @@
         }
 
         @media print {
-            /* Letter landscape = 1056 x 816 px at 96dpi, 0 margins.
-               Canvas is 1056 x 880 px. To fit one page we scale by
-               816/880 = 0.92727 (height-bound). Scaled width is
-               1056 * 0.92727 = 979.2px, so 76.8px of horizontal slack
-               must be split evenly (38.4px per side) to center it.
-
-               We use transform: scale() rather than zoom because zoom
-               shrinks the visual render but Chrome's print path does NOT
-               reliably re-flow/center the zoomed block — the leftover
-               width collected on the right edge, pushing the chart left.
-               transform: scale() with a fixed transform-origin gives a
-               deterministic, centerable result. The wrapper margin
-               (auto + computed top/bottom) centers the UNSCALED box on
-               the page; transform-origin: center then scales about that
-               same center, so the result stays centered both axes. */
-            @page { size: 1056px 816px landscape; margin: 0; }
-            html {
-                padding: 0;
-                margin: 0;
-                width: 1056px;
-                height: 816px;
-                overflow: hidden;
-                background: #FFFFFF;
-            }
-            body {
-                padding: 0;
-                margin: 0;
-                width: 1056px;
-                height: 816px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                overflow: hidden;
-                background: #FFFFFF;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .print-canvas {
-                box-shadow: none;
-                /* keep intrinsic 1056x880 layout box; scale visually to fit */
-                transform: scale(0.92727);
-                transform-origin: center center;
-                /* flex centers the 1056x880 box on the 1056x816 page;
-                   the 64px vertical overflow is split top/bottom and the
-                   scale pulls it back inside the page bounds. */
-                flex: 0 0 auto;
-                page-break-after: avoid;
-                page-break-inside: avoid;
-                break-inside: avoid;
-                break-after: avoid;
-            }
+            @page { size: landscape; margin: 0; }
+            body { padding: 0; margin: 0; background: #FFFFFF; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-canvas { box-shadow: none; width: 1056px; height: 880px; page-break-after: avoid; }
         }
 
 
