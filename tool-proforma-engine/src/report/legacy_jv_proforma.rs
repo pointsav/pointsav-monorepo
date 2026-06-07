@@ -61,15 +61,16 @@ h3{font-size:0.9rem;margin-top:1rem;margin-bottom:0.2rem;color:#333}
 p{margin:0.3rem 0;font-size:0.82rem;color:#555}
 p.note{font-size:0.78rem;color:#555;font-style:italic}
 table{border-collapse:collapse;margin:0.5rem 0;font-size:0.76rem}
+table.wide{width:100%}
 th,td{border:1px solid #ccc;padding:3px 6px;text-align:right;white-space:nowrap}
 th{background:#f5f5f5;text-align:center;font-weight:600}
-td.lbl,th.lbl{text-align:left;min-width:200px}
+td.lbl,th.lbl{text-align:left;min-width:230px}
 td.lnum,th.lnum{width:32px;min-width:32px;font-family:'Courier New',monospace;font-size:9px;color:#aaa;text-align:right!important;background:white!important;font-weight:normal!important;border-right:2px solid #d0d0d0;padding:2px 5px 2px 2px;white-space:nowrap}
 tr.total td{background:#eef2f7;font-weight:700;border-top:2px solid #888}
 tr.subtotal td{background:#f5f7fa;font-weight:600;border-top:1px solid #aaa}
 .footer{font-size:0.72rem;color:#666;margin-top:1.5rem;border-top:1px solid #ddd;padding-top:0.5rem}
 @page{size:letter landscape;margin:1.5cm 2cm 1.5cm 1.5cm}
-@media print{body{margin:0;font-size:11px;max-width:none}table{break-inside:avoid}}
+@media print{body{margin:0;font-size:11px;max-width:none}table{break-inside:avoid;page-break-inside:avoid}h2,h3{break-after:avoid;page-break-after:avoid}td.lnum,th.lnum{-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#bbb!important;border-right-color:#ccc!important}table.wide{table-layout:fixed;font-size:10px}table.wide td,table.wide th{padding:3px 6px}table.wide td.lbl,table.wide th.lbl{width:25%;white-space:normal;overflow-wrap:break-word}}
 </style></head>
 "#;
 
@@ -240,7 +241,7 @@ pub fn render_proforma() -> String {
 
     // ── Construction Timeline ──────────────────────────────────────────────
     s.push_str("<h2>10-Year Timeline (BRIEF §2493-2496)</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header());
     let mut phase_row = String::from("<tr><td class=\"lbl\">Phase</td>");
     for y in &years {
@@ -256,7 +257,7 @@ pub fn render_proforma() -> String {
 
     // ── Income Statement ───────────────────────────────────────────────────
     s.push_str("<h2>10-Year Income Statement (CAD; ASPE 3061)</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header());
     s.push_str(&data_row("Net Operating Income (tenant CAM pass-through)", &years, |y| y.noi));
     s.push_str(&data_row("Interest on $750M @ 5% (Y1–Y3 capitalized)", &years, |y| -y.interest_expense));
@@ -288,7 +289,7 @@ pub fn render_proforma() -> String {
 
     // ── Valuation & Ratios ─────────────────────────────────────────────────
     s.push_str("<h2>Valuation &amp; Ratios</h2>\n");
-    s.push_str("<table>\n");
+    s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header());
     s.push_str(&data_row("Asset value (ASPE book)", &years, |y| y.asset_value_aspe));
     s.push_str(&data_row("Shareholders' equity (ASPE book)", &years, |y| y.shareholders_equity));
