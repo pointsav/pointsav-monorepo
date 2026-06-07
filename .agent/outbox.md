@@ -9,6 +9,42 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-orgcharts
+to: totebox@project-design
+re: design artifacts — 10 drafts staged for orgchart token system + woodfine brand assets
+created: 2026-06-06T11:00:00-07:00
+priority: normal
+status: pending
+msg-id: project-orgcharts-20260606-design-artifacts-orgchart
+---
+
+10 design artifact drafts staged in commit `e887420a`. All in `.agent/drafts-outbound/`. Route to pointsav-design-system or woodfine-media-assets per destination field in each draft's frontmatter.
+
+**Ready to commit immediately (8 drafts — no master_cosign needed):**
+
+| Draft ID | Type | Destination |
+|---|---|---|
+| DESIGN-RESEARCH-orgchart-token-system | DESIGN-RESEARCH | pointsav-design-system/dtcg-vault/research/ |
+| DESIGN-RESEARCH-orgchart-carbon-token-map | DESIGN-RESEARCH | pointsav-design-system/dtcg-vault/research/ |
+| DESIGN-COMPONENT-orgchart-node | DESIGN-COMPONENT | pointsav-design-system/components/orgchart-node/ |
+| DESIGN-COMPONENT-orgchart-connector | DESIGN-COMPONENT | pointsav-design-system/components/orgchart-connector/ |
+| DESIGN-COMPONENT-orgchart-canvas | DESIGN-COMPONENT | pointsav-design-system/components/orgchart-canvas/ |
+| DESIGN-TOKEN-CHANGE-woodfine-yellow-magenta | DESIGN-TOKEN-CHANGE | woodfine-media-assets/token-global-color.yaml |
+| DESIGN-TOKEN-CHANGE-woodfine-chart-css | DESIGN-TOKEN-CHANGE | woodfine-media-assets/css/theme-woodfine.css + theme-woodfine-light.css |
+| DESIGN-RESEARCH-orgchart-woodfine-brand-spec | DESIGN-RESEARCH | woodfine-media-assets/docs/orgchart-brand-spec.md |
+
+**Blocked on operator master_cosign (2 drafts — do not commit until cosign provided):**
+
+| Draft ID | Type | Destination | Blocker |
+|---|---|---|---|
+| DESIGN-TOKEN-CHANGE-orgchart-primitives | DESIGN-TOKEN-CHANGE | pointsav-design-system/tokens/dtcg-bundle.json | `master_cosign: null` — adds primitive.color.orgchart + semantic.orgchart namespace |
+| DESIGN-TOKEN-CHANGE-orgchart-layout-type | DESIGN-TOKEN-CHANGE | pointsav-design-system/tokens/dtcg-bundle.json | `master_cosign: null` — adds component.orgchart (canvas/node/connector/type/print tokens) |
+
+To unblock: operator updates both draft frontmatter fields to `master_cosign: "2026-06-06T<time> jwoodfine"` then notifies project-design.
+
+ACK when received.
+
+---
+from: totebox@project-orgcharts
 to: command@claude-code
 re: Stage 6 — yellow token update + prior print/line fixes (9 charts)
 created: 2026-06-06T10:00:00-07:00
