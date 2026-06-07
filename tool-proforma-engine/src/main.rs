@@ -151,6 +151,14 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// PCLP1 Sensitivity Analysis V7 — engine-sourced base case; no hardcoded financials;
+    /// "Professional Centres Canada LP" throughout; LP VS JV section removed; print CSS;
+    /// static audit section (IFRS 13 §93(h)(ii)); companion to tearsheet v6.
+    /// Emits: pclp1-sensitivity-v7.html + COMPLIANCE_MCorp_2026_06_07_Sensitivity_PCCL_V7.json
+    PclpSensitivityV7 {
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
 }
 
 fn write_output(content: &str, out: Option<&PathBuf>) {
@@ -541,6 +549,18 @@ fn main() {
                 pdf_count,
                 out_dir.display()
             );
+        }
+        Some(Command::PclpSensitivityV7 { out_dir }) => {
+            let (html, json) = report::pclp1_sensitivity_v7::render();
+            write_output(
+                &html,
+                Some(&out_dir.join("pclp1-sensitivity-v7.html")),
+            );
+            write_output(
+                &json,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_07_Sensitivity_PCCL_V7.json")),
+            );
+            eprintln!("wrote 2 PCLP1 Sensitivity V7 files to {}", out_dir.display());
         }
         None => {
             // Legacy: JSON assumptions → sensitivity engine

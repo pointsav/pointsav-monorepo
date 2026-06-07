@@ -7,4 +7,5 @@ pub mod d2_direct_hold;
 pub mod d3_wcp;
 pub mod legacy_jv_proforma;
 pub mod pclp1_proforma;
+pub mod pclp1_sensitivity_v7;
 pub mod wcp_proforma;
