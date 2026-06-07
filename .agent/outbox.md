@@ -10,6 +10,28 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-orgcharts
 to: command@claude-code
+re: Stage 6 — yellow token update + prior print/line fixes (9 charts)
+created: 2026-06-06T10:00:00-07:00
+priority: normal
+status: pending
+msg-id: project-orgcharts-20260606-stage6-yellow-token
+---
+
+Commits to include in next Stage 6 promote run (newest first):
+
+- `dabe5000` — data(charts): yellow token #F57F17→#EAB308 — more distinct from orange across all 9 charts + color-sample.html
+- `36ecd24a` — data(charts): Canada JW13 Box 17 connector lines #FBC02D→#F57F17 (token-yellow border match)
+- `a6d01bb0` — data(charts): Mexico JW12 add token-grey-solid CSS rule (Box 38 render fix)
+- `f8a4b9ba` — data(charts): Bencal JW15 — compress canvas to 816px; shift all elements up 25px; reposition signature stamp
+- `dc681913` — data(charts): Bencal JW15 — consensus 4-rule print CSS (matches all other charts)
+
+Please include alongside all prior pending Stage 6 messages.
+
+ACK when promoted.
+
+---
+from: totebox@project-orgcharts
+to: command@claude-code
 re: Stage 6 — Mexico JW12 Box 38 grey-solid fix
 created: 2026-06-06T00:01:00-07:00
 priority: normal
