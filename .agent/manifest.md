@@ -1,10 +1,8 @@
 ---
-schema: foundry-cluster-manifest-v1
-cluster: project-marketing
-cluster_name: project-marketing
-cluster_branch: cluster/project-marketing
-created: 2026-05-06
-state: active (v0.0.1 MVP shipped 2026-05-06; cargo check clean; bootstrap + deploy pending Master)
+schema: cluster-manifest-v1
+cluster: project-system
+opened: 2026-05-14
+state: active
 slm_endpoint: http://localhost:8011
 module_id: editorial
 doctrine_version: 0.0.14
@@ -16,7 +14,10 @@ working_pattern: editorial-pipeline
 
 tetrad:
   vendor:
-    status: leg-pending — no engineering crate in pointsav-monorepo; project-editorial is a pure editorial process archive
+    repo: pointsav-monorepo
+    branch: cluster/project-system
+    focus: [app-infrastructure-onprem, app-infrastructure-leased, app-infrastructure-cloud, app-network-admin, os-infrastructure, os-network-admin]
+    status: active
   customer:
     - fleet_deployment_repo: customer/woodfine-fleet-deployment
       catalog_subfolder: (varies per originating project)
@@ -46,7 +47,7 @@ session_role: totebox
 default_starting_dir: ~/Foundry/clones/project-editorial/
 ---
 
-# project-editorial — Editorial Pipeline Gateway
+# project-system — Cluster Manifest
 
 Editorial pipeline gateway for the Foundry ecosystem. Receives TOPIC/GUIDE/COMMS/JOURNAL/PROSE-RESEARCH drafts from all other Totebox archives, applies Bloomberg-register language and quality passes, and commits to canonical destinations.
 
@@ -63,8 +64,11 @@ Editorial pipeline gateway for the Foundry ecosystem. Receives TOPIC/GUIDE/COMMS
 
 ## Status (as of 2026-05-31 — from BRIEF-project-console-master.md)
 
-Active. Session context re-provisioned 2026-06-08 (contamination fix — was project-marketing header).
-Manifest rewritten 2026-06-10 (was wholesale project-marketing content).
+vendor:
+  repo: pointsav-monorepo
+  branch: cluster/project-system
+  focus: [app-infrastructure-onprem, app-infrastructure-leased, app-infrastructure-cloud, app-network-admin, os-infrastructure, os-network-admin]
+  status: active
 
 Running in production at `documentation.pointsav.com` (port 9090) and
 `projects.woodfinegroup.com` (port 9093) on vault-privategit-source-1.
