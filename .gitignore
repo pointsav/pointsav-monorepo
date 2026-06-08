@@ -20,3 +20,7 @@ pointsav-design-system/
 pointsav-fleet-deployment/
 pointsav-media-assets/
 woodfine-media-assets/
+
+# Recovered binaries and input documents — not committed to archive git
+app-privategit-design-recovered
+inputs/
