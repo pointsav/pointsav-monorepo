@@ -1,5 +1,6 @@
 ---
 schema: foundry-cluster-manifest-v1
+cluster: project-workplace
 cluster_name: project-workplace
 cluster_branch: cluster/project-workplace
 created: 2026-05-27
