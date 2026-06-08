@@ -1,5 +1,6 @@
 ---
 schema: foundry-cluster-manifest-v1
+cluster: project-knowledge
 cluster_name: project-knowledge
 cluster_branch: cluster/project-knowledge
 created: 2026-05-18
