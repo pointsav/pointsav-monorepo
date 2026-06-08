@@ -1,10 +1,10 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster: project-editorial
-cluster_name: project-editorial
-cluster_branch: main
-created: 2026-02-28
-state: active
+cluster: project-marketing
+cluster_name: project-marketing
+cluster_branch: cluster/project-marketing
+created: 2026-05-06
+state: active (v0.0.1 MVP shipped 2026-05-06; cargo check clean; bootstrap + deploy pending Master)
 slm_endpoint: http://localhost:8011
 module_id: editorial
 doctrine_version: 0.0.14
