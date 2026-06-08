@@ -1,6 +1,62 @@
 ---
 from: command@claude-code
 to: totebox@project-proforma
+re: Q5 — sub-clone .agent/ untracking — detailed instructions
+created: 2026-06-08T16:29:23Z
+priority: high
+status: pending
+attempts: 0
+msg-id: command-20260608-q5-sub-clone-agent-untracking-detailed-i
+---
+
+SUPPLEMENTAL INSTRUCTIONS — Sub-clone .agent/ untracking (Q5)
+
+This supplements the earlier terse relay (msg-id: command-20260608-sub-clone-agent-tracked-in-git-add-to-gi).
+Execute the steps below in your first session.
+
+Context: the pointsav-monorepo sub-clone at ./pointsav-monorepo/ has .agent/ files
+tracked in its git index. This causes a foundry-fsck CRITICAL. .agent/ must be
+untracked from the sub-clone git and added to .gitignore there.
+
+EXACT COMMANDS — run in order from ~/Foundry/clones/project-proforma/
+
+Step 1: Add .agent/ to sub-clone .gitignore
+  Check if .gitignore exists in the sub-clone:
+    ls ./pointsav-monorepo/.gitignore
+  If it exists, add the line .agent/ to it (check it's not already there):
+    grep -q '^\.agent/$' ./pointsav-monorepo/.gitignore || echo '.agent/' >> ./pointsav-monorepo/.gitignore
+  If it does NOT exist, create it:
+    echo '.agent/' > ./pointsav-monorepo/.gitignore
+
+Step 2: Untrack .agent/ from the sub-clone git index (files stay on disk)
+    git -C ./pointsav-monorepo rm --cached .agent/ -r --ignore-unmatch
+
+Step 3: Stage the .gitignore change
+    git -C ./pointsav-monorepo add .gitignore
+
+Step 4: Commit from the sub-clone directory
+    (cd ./pointsav-monorepo && ~/Foundry/bin/commit-as-next.sh "ops(gitignore): untrack .agent/ from sub-clone git index (foundry-fsck CRITICAL — mailbox-scope violation)")
+
+Step 5: Verify the untracking
+    git -C ./pointsav-monorepo ls-files .agent/ 2>/dev/null | head -5
+  Expected output: (empty) — all .agent/ files should now be untracked
+
+Step 6: Signal Command Session when done
+  Write to your outbox:
+    ~/Foundry/bin/mailbox-send.sh \
+      --to "command@claude-code" \
+      --re "signal — sub-clone .agent/ untracking complete — project-proforma" \
+      --priority high \
+      --body-stdin
+    (body: commit SHA from Step 4 + "Stage 6 pending — project-proforma sub-clone")
+
+Note: after this action, your .agent/inbox.md and .agent/outbox.md in the sub-clone
+will be untracked in the sub-clone git. That is correct — those files belong to the
+ARCHIVE ROOT git (~/Foundry/clones/project-proforma/.git/), not the sub-clone git.
+
+---
+from: command@claude-code
+to: totebox@project-proforma
 re: sub-clone .agent/ tracked in git — add to .gitignore + git rm --cached
 created: 2026-06-08T15:33:18Z
 priority: high
