@@ -29,6 +29,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -112,12 +113,15 @@ def upload_adapter_to_gcs(adapter_path: str, adapter_name: str) -> None:
     print(f"[gcs] adapter uploaded: {gcs_dest}")
 
 
-def run_training(records: list[dict], base_model: str, output_dir: str, dry_run: bool) -> None:
+def run_training(records: list[dict], base_model: str, output_dir: str, dry_run: bool,
+                 max_runtime_seconds: int = 0) -> None:
     """Fine-tune base_model with DPO on records, save adapter to output_dir."""
     print(f"[train] base model: {base_model}")
     print(f"[train] output dir: {output_dir}")
     print(f"[train] DPO pairs:  {len(records)}")
     print(f"[train] LoRA r={LORA_R} alpha={LORA_ALPHA} beta={BETA}")
+    if max_runtime_seconds:
+        print(f"[train] runtime cap: {max_runtime_seconds}s ({max_runtime_seconds // 3600}h {(max_runtime_seconds % 3600) // 60}m)")
 
     if dry_run:
         print("[train] DRY-RUN — skipping actual training")
@@ -128,7 +132,7 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
         import torch
         from datasets import Dataset
         from peft import LoraConfig, TaskType, get_peft_model
-        from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+        from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TrainerCallback
         from trl import DPOConfig, DPOTrainer
     except ImportError as e:
         print(f"[ERROR] Missing training library: {e}", file=sys.stderr)
@@ -172,6 +176,20 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
         bias="none",
     )
 
+    # Runtime cap callback — saves checkpoint and stops training cleanly if wall-clock limit hit
+    class RuntimeCapCallback(TrainerCallback):
+        def __init__(self, max_seconds: int, output_dir: str) -> None:
+            self._start = time.monotonic()
+            self._max = max_seconds
+            self._out = output_dir
+
+        def on_step_end(self, args, state, control, **kwargs):
+            if self._max and (time.monotonic() - self._start) >= self._max:
+                elapsed = int(time.monotonic() - self._start)
+                print(f"[train] runtime cap reached ({elapsed}s >= {self._max}s) — saving checkpoint and stopping")
+                control.should_save = True
+                control.should_training_stop = True
+
     dataset = Dataset.from_list(records)
     split = dataset.train_test_split(test_size=0.1, seed=42)
 
@@ -182,17 +200,20 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
         gradient_accumulation_steps=GRAD_ACCUM,
         learning_rate=LEARNING_RATE,
         beta=BETA,
-        max_prompt_length=MAX_PROMPT_LENGTH,
         max_length=MAX_LENGTH,
         logging_steps=10,
         save_steps=50,
         eval_steps=50,
-        evaluation_strategy="steps",
+        eval_strategy="steps",
         load_best_model_at_end=True,
         report_to="none",
         bf16=torch.cuda.is_available(),
         remove_unused_columns=False,
     )
+
+    callbacks = []
+    if max_runtime_seconds:
+        callbacks.append(RuntimeCapCallback(max_runtime_seconds, output_dir))
 
     trainer = DPOTrainer(
         model=model,
@@ -200,8 +221,9 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
         args=training_args,
         train_dataset=split["train"],
         eval_dataset=split["test"],
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         peft_config=peft_config,
+        callbacks=callbacks or None,
     )
 
     print(f"[train] starting DPO training on {len(split['train'])} pairs ...")
@@ -229,6 +251,9 @@ def main() -> None:
                         help="Upload trained adapter to GCS after training")
     parser.add_argument("--dry-run", action="store_true",
                         help="Load corpus and report counts without training")
+    parser.add_argument("--max-runtime-seconds", type=int, default=7200,
+                        help="Wall-clock training limit in seconds (default: 7200 = 2h). "
+                             "Saves checkpoint and exits cleanly when reached. 0 = no cap.")
     args = parser.parse_args()
 
     corpus_path = args.corpus
@@ -244,7 +269,8 @@ def main() -> None:
     date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
     output_dir = args.output_dir or f"./adapters/{args.adapter_name}-{date_str}"
 
-    run_training(records, args.base_model, output_dir, dry_run=args.dry_run)
+    run_training(records, args.base_model, output_dir, dry_run=args.dry_run,
+                 max_runtime_seconds=args.max_runtime_seconds)
 
     if args.upload_gcs and not args.dry_run:
         upload_adapter_to_gcs(output_dir, args.adapter_name)
