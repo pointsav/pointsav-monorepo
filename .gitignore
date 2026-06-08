@@ -1,3 +1,6 @@
+# Foundry workspace state — never commit to canonical monorepo
+.agent/
+
 # Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock
 
