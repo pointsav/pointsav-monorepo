@@ -3571,5 +3571,157 @@ searchInput.addEventListener('keydown', e => {
 
 <div id="ctx-menu"></div>
 
+<script>
+// ---------------------------------------------------------------------------
+// Live file-change notifications via SSE
+// Ported from app-workplace-http-prototype/src/assets/workbench/index.html
+// ---------------------------------------------------------------------------
+(function() {
+  var sseUrl = '/_api/edit/events';
+  var es;
+  var retryTimer = null;
+
+  function connect() {
+    if (es) { try { es.close(); } catch(e) {} }
+    es = new EventSource(sseUrl);
+
+    es.onmessage = function(e) {
+      var data;
+      try { data = JSON.parse(e.data); } catch(_) { return; }
+      if (!data || data.event !== 'changed') return;
+
+      var changedPath = (data.path || '').replace(/^\/+/, '');
+      var newMtime = data.mtime || 0;
+
+      // Walk open tabs and refresh any that match the changed path.
+      tabs.forEach(function(tab, idx) {
+        var tabPath = (tab.path || '').replace(/^\/+/, '');
+        if (tabPath !== changedPath && changedPath !== '') return;
+
+        if (tab.dirty) {
+          showChangeNotice(idx, changedPath);
+        } else {
+          reloadTabContent(idx, changedPath, newMtime);
+        }
+      });
+    };
+
+    es.onerror = function() {
+      es.close();
+      es = null;
+      if (retryTimer) clearTimeout(retryTimer);
+      retryTimer = setTimeout(connect, 5000);
+    };
+  }
+
+  function reloadTabContent(idx, path, mtime, preloadedData) {
+    var tab = tabs[idx];
+    if (!tab) return;
+    var apiPath = path.replace(/^\/+/, '');
+
+    function paintData(fileData) {
+      if (!fileData) return;
+      tab.content = fileData.content;
+      tab.editorMtime = fileData.mtime || mtime;
+      tab.dirty = false;
+      if (idx === activeTabIdx) {
+        if (editorPath && editorPath === apiPath) {
+          var ta = document.getElementById('editor-textarea');
+          if (ta) ta.value = fileData.content;
+          editorMtime = fileData.mtime || editorMtime;
+          setDirty(false);
+          if (typeof updateGutterLines === 'function') updateGutterLines();
+          if (typeof scheduleHighlight === 'function') scheduleHighlight();
+        }
+        if (viewMode === 'iframe') {
+          var frame = document.getElementById('preview-frame');
+          if (frame) {
+            if (frame.src && frame.src !== 'about:blank' && !frame.srcdoc) {
+              // Non-writable HTML loaded via frame.src — bust cache and reload
+              frame.src = '/_api/edit/file?path=' + encodeURIComponent(apiPath) + '&_t=' + Date.now();
+            } else {
+              frame.removeAttribute('src');
+              frame.srcdoc = fileData.content;
+            }
+          }
+        } else if (viewMode === 'text') {
+          var tc = document.getElementById('text-content');
+          if (tc) {
+            var ext = (tab.name || '').split('.').pop().toLowerCase();
+            if (ext === 'md') {
+              tc.className = 'md-view';
+              tc.innerHTML = mdToHtml(fileData.content);
+            } else {
+              tc.className = 'code-view';
+              tc.textContent = fileData.content;
+            }
+          }
+        }
+      }
+    }
+
+    if (preloadedData) {
+      paintData(preloadedData);
+    } else {
+      fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath))
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(paintData)
+        .catch(function() {});
+    }
+  }
+
+  // Poll the active tab every 30 s as a fallback for inotify misses.
+  function pollActiveTab() {
+    var idx = activeTabIdx;
+    var tab = tabs && tabs[idx];
+    if (!tab || !tab.path) return;
+    var apiPath = tab.path.replace(/^\/+/, '');
+    fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath))
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(data) {
+        if (!data || !data.mtime) return;
+        var stored = tab.editorMtime || 0;
+        if (data.mtime === stored) return;
+        if (tab.dirty) {
+          showChangeNotice(idx, apiPath);
+        } else {
+          reloadTabContent(idx, apiPath, data.mtime, data);
+        }
+      })
+      .catch(function() {});
+  }
+
+  setInterval(pollActiveTab, 30000);
+
+  function showChangeNotice(idx, path) {
+    var existing = document.getElementById('sse-change-notice');
+    if (existing) return;
+    var bar = document.createElement('div');
+    bar.id = 'sse-change-notice';
+    bar.style.cssText = [
+      'position:fixed', 'bottom:48px', 'left:50%', 'transform:translateX(-50%)',
+      'background:#2d4a6e', 'color:#e8f4ff', 'padding:8px 16px',
+      'border-radius:6px', 'font-size:12px', 'z-index:9999',
+      'box-shadow:0 2px 8px rgba(0,0,0,0.4)', 'cursor:pointer',
+      'white-space:nowrap'
+    ].join(';');
+    var filename = path.split('/').pop();
+    bar.textContent = '⚠️ ' + filename + ' changed on disk — click to reload';
+    bar.addEventListener('click', function() {
+      bar.remove();
+      reloadTabContent(idx, path, 0);
+    });
+    document.body.appendChild(bar);
+    setTimeout(function() { if (bar.parentNode) bar.remove(); }, 8000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', connect);
+  } else {
+    connect();
+  }
+})();
+</script>
+
 </body>
 </html>
