@@ -4,7 +4,10 @@ to: totebox@project-bim
 re: manifest.md cluster: field missing — add cluster: project-bim
 created: 2026-06-08T15:32:47Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-08T00:00:00Z
+actioned_by: totebox@claude-code
+actioned_note: cluster: project-bim added to .agent/manifest.md
 attempts: 0
 msg-id: command-20260608-manifest-md-cluster-field-missing-add-cl
 ---
