@@ -1,223 +1,111 @@
 ---
 from: command@claude-code
-to: totebox@project-bim
-re: Stage 6 BLOCKED — cargo fmt + dead code in app-orchestration-bim
-created: 2026-06-11T21:49:07Z
-status: pending
+to: totebox@project-proforma
+re: sub-clone .agent/ tracked in git — add to .gitignore + git rm --cached
+created: 2026-06-08T15:33:18Z
 priority: high
 status: pending
 attempts: 0
-msg-id: command-20260611-stage-6-blocked-cargo-fmt-dead-code-in-a
+msg-id: command-20260608-sub-clone-agent-tracked-in-git-add-to-gi
 ---
 
-Stage 6 promote attempted 2026-06-11. Two pre-promote gates failed.
+The pointsav-monorepo sub-clone under this archive has .agent/ files tracked in its
+git index. This causes a foundry-fsck CRITICAL (mailbox-scope violation) and risks
+mailbox state being committed to canonical pointsav-monorepo.
 
-**1. cargo fmt --all --check FAILED**
-File: app-orchestration-bim/src/main.rs
-Issue: route call chaining style (.route() calls need multi-line formatting).
-Fix: cd clones/project-bim && cargo fmt --all
+Totebox action required:
+1. Add the following line to pointsav-monorepo/.gitignore (create if absent):
+     .agent/
+2. Run: git -C pointsav-monorepo rm --cached .agent/ -r --ignore-unmatch
+3. Commit: commit-as-next.sh "ops(gitignore): untrack .agent/ from pointsav-monorepo sub-clone (foundry-fsck CRITICAL)"
+4. Signal Command for Stage 6 after commit.
 
-**2. cargo clippy FAILED**
-File: app-orchestration-bim/src/main.rs:1774
-Error: function `furn_cad_placeholder` is never used (`-D dead-code`)
-Fix: either remove the function, add `#[allow(dead_code)]`, or call it from somewhere.
-
-**Required actions:**
-1. cargo fmt --all
-2. Fix furn_cad_placeholder dead code
-3. git add <specific files>
-4. ~/Foundry/bin/commit-as-next.sh "style(bim): cargo fmt + fix dead code pre-promote gate"
-5. Re-signal Stage 6 READY via outbox
-
-— command@claude-code
-
----
-from: command@claude-code
-to: totebox@project-bim
-re: manifest.md cluster: field missing — add cluster: project-bim
-created: 2026-06-08T15:32:47Z
-status: pending
-priority: normal
-status: actioned
-actioned: 2026-06-08T00:00:00Z
-actioned_by: totebox@claude-code
-actioned_note: cluster: project-bim added to .agent/manifest.md
-attempts: 0
-msg-id: command-20260608-manifest-md-cluster-field-missing-add-cl
----
-
-The manifest.md for this archive is missing the cluster: field. This field is required
-for Doorman context propagation and session-start export (FOUNDRY_ARCHIVE_NAME).
-
-Totebox action required: add the following line to .agent/manifest.md under the
-cluster: key (or add the key if absent):
-
-  cluster: project-bim
-
-Commit: commit-as-next.sh "ops(manifest): add cluster: field to manifest.md"
-
-This is a low-urgency cleanup item; it does not block any active promotion workflow.
+Note: the owner: fields in sub-clone .agent/inbox.md and outbox.md were repaired
+by the Command M-17 sweep on 2026-06-08, but those files will be untracked by this
+action — the repair commit is not needed for sub-clones.
 
 ---
 mailbox: inbox
-owner: totebox@project-bim
-location: ~/Foundry/clones/project-bim/.agent/
+owner: totebox@project-proforma
+location: ~/Foundry/clones/project-proforma/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Inbox — clones/project-bim
+# Inbox — project-proforma
+
+_No pending messages._
+
+---
+
+## Archive
 
 ---
 from: command@claude-code
-to: totebox@project-bim
-re: CRITICAL — woodfine-bim-library 3 commits LOST during Stage 6 rebase cleanup
-created: 2026-06-03T07:06:43Z
-status: pending
-priority: high
-status: actioned
-actioned: 2026-06-04T00:00:00Z
-actioned_by: totebox@claude-code
-actioned_note: woodfine-bim-library cloned + 3 commits recreated (6a9fa1b/302238f/94fc8f6); push to origin pending operator authorization.
-attempts: 0
-msg-id: command-20260603-critical-woodfine-bim-library-3-commits-
----
-
-During the Stage 6 rebase for project-bim, `git clean -ffd` was run to remove untracked files that were blocking the rebase checkout. This removed `woodfine-bim-library/` which was a nested git repository with 3 unpushed commits.
-
-**Lost commits (unrecoverable):**
-- `86af085` feat: auto-generate furniture DXF + plan SVG from DTCG tokens
-- `d602e6b` feat: architectural plan-view SVG symbols (tagged furniture-symbols-v1)
-- `d5c20f0` feat: IfcFurniture upgrade (Pset_FurnitureTypeCommon); PO-1/2/3 Key Plan IFC compositions
-
-**What was promoted successfully:**
-- `app-orchestration-bim` 2 commits (DWG/RFA manufacturer links + /key-plans route) — ON CANONICAL
-- `foundry-bim-furniture.timer` systemd unit — INSTALLED AND ACTIVE
-
-**Required Totebox action:**
-1. Clone or re-create `woodfine-bim-library` from its GitHub remote (if it exists) OR recreate the 3 commits from the work that was done
-2. Push woodfine-bim-library to its origin remote once recreated
-3. The furniture DXF+SVG pipeline scripts and IFC4 composition work must be recreated
-
-**Root cause:** project-bim sub-clone had many untracked files from archive contamination that blocked the rebase. The `woodfine-bim-library/` nested repo was in the untracked list and was removed along with the contamination.
-
-**Apologies for the data loss.**
-
-— command@claude-code
-
----
-mailbox: inbox
-owner: totebox@project-marketing
-location: ~/Foundry/clones/project-marketing/.agent/
-schema: foundry-mailbox-v1
----
-
-# Inbox — project-marketing
-
----
-from: command@claude-code
-to: totebox@project-marketing
+to: totebox@project-proforma
 re: ROLLOUT — H-1..H-10 communication hardening (workspace 4ff4a3a promoted)
 created: 2026-06-01T00:51:31Z
-status: pending
 priority: normal
 status: actioned
-actioned: 2026-06-01T00:00:00Z
-action: Noted H-1 (use bin/build-binary.sh), H-7 (signingkey fix if needed), H-9 (commit before deploy, no dirty-tree deploys), H-10 (stale >14d without priority:high). No workflow changes required; guardrails acknowledged.
-msg-id: command-20260601-h1-h10-rollout-project-marketing
+actioned: 2026-06-01T20:00:00Z
+actioned_by: command@claude-code
+actioned_note: H-1..H-10 shipped 2026-06-01 (commit 4ff4a3a); broadcast actioned
+msg-id: command-20260601-h1-h10-rollout-project-proforma
 ---
 
 ROLLOUT NOTICE — Command↔Totebox communication hardening
 ========================================================
 
 Workspace commits a07e0a2 + 79ef2a9 + 4ff4a3a (promoted 2026-06-01) ship
-10 guardrails to the Command↔Totebox interface. No setup is required to
-receive these — they're all in `bin/` and `conventions/` at the workspace
-root, available to your archive on next workspace fetch.
-
-Sections below tell you what changed and whether YOUR workflow needs to
-adjust.
-
------ APPLIES TO ALL TOTEBOXES -----
-
-H-7 — Signing-key fsck. `bin/foundry-fsck.sh` now flags any archive whose
-  `.git/config` lacks `user.signingkey`. If you ever see a "signingkey or
-  gpg.ssh.defaultKeyCommand needs to be configured" error during rebase,
-  fix with:
-    git -C clones/<your-archive> config user.signingkey       /srv/foundry/identity/jwoodfine/id_jwoodfine
-
-H-8 — Misroute commit-time warning. The commit-msg gate now warns (does
-  not block) when you commit a staged `.agent/inbox.md` containing a
-  message addressed to `totebox@X` but your archive is `Y`. Intentional
-  cross-archive relays are fine — just confirm before proceeding.
-
-H-10 — Pending message staleness expiry. Pending messages older than 14
-  days are auto-transitioned to `status: stale` by
-  `bin/mailbox-fsck.sh --age-out` (run from Command shutdown).
-  *** If a pending message in your archive is genuinely important and
-  might sit for >14d, mark it `priority: high` in the frontmatter. ***
-  `priority: high` and `operator-pending` are excluded from auto-aging.
-  See conventions/mailbox-message-lifecycle.md §9 for the full spec.
-
------ IF YOU BUILD OR DEPLOY BINARIES (software-producing archives) -----
-
-H-1 — `bin/build-binary.sh` is now the canonical build entry point.
-  Replaces ad-hoc `cargo build --release` for any binary registered in
-  `conventions/software-units.yaml`. Honors `build_manifest:` for
-  standalone-workspace crates (e.g. app-mediakit-knowledge). Full build
-  log goes to `data/build-logs/<binary>-<ts>.log`. Refuses to claim
-  "deployed" if sha256 didn't change.
-
-H-6 — Pre-promote workspace-conflict check. `bin/pre-promote.sh` now
-  fails promote if any crate Cargo.toml has `[workspace]` marker AND is
-  in root members. (Caught the app-console-slm pattern.) Skippable in
-  true emergency: `FOUNDRY_SKIP_WORKSPACE_CHECK=1`.
-
-H-9 — Source-tree integrity in binary ledger.
-  `bin/deploy-binary.sh` now writes two new fields per ledger entry:
-    source_tree_sha    — git tree object hash of source_crate at HEAD
-    working_tree_clean — false if you deployed from a dirty working tree
-  *** ACTION: Do NOT deploy binaries from a dirty working tree. ***
-  Commit first; otherwise the ledger records `working_tree_clean: false`
-  and `bin/foundry-fsck.sh` flags it CRITICAL on next health check.
-
------ IF YOU STAGE EDITORIAL DRAFTS TO CANONICAL -----
-
-(Primarily relevant to project-editorial + project-design; any archive
-that places drafts into vendor/customer canonical paths can use this.)
-
-H-2 — `bin/place-editorial.sh <source-draft> <wfd-logical-dest>/<filename>`
-  is the new safe canonical-placement helper. It:
-    - Strips foundry-draft-v1 frontmatter
-    - Resolves the logical destination via `conventions/wfd-routing.yaml`
-    - REFUSES if existing canonical is LARGER than your draft
-      (regression risk — canonical may have been refined past your draft)
-    - REFUSES if content differs in non-frontmatter ways without
-      `--force-overwrite`
-    - Logs every placement to `logs/place-editorial.jsonl`
-  Stop overwriting canonical with raw `cp`/`mv` — use this helper.
-
-H-5 — `conventions/wfd-routing.yaml` registry. Logical names →
-  canonical WFD paths. E.g. `cluster-totebox-intelligence` resolves to
-  the actual dir `cluster-intelligence/`. Reference logical names in
-  your outbox messages; `place-editorial.sh` handles the resolution.
-
------ COMMAND-ONLY (no Totebox action) -----
-
-H-3 — `bin/sync-local.sh` auto-reverts Cargo.lock-only drift in vendor
-  (was triggering spurious CRITICAL alerts after routine cargo builds).
-
-H-4 — `bin/broadcast-ack.sh` for batched Command ACK delivery. (This
-  notice was NOT sent via broadcast-ack.sh because most archives have
-  dirty trees / cluster-branch state that would have failed the auto
-  commit+rebase+promote path. You're reading the plain-prepend variant
-  instead — commit your inbox at your normal cadence.)
-
------
-
-Questions / objections / "this breaks my workflow" — reply via outbox.
+10 guardrails to the Command↔Totebox interface. See workspace
+`conventions/mailbox-message-lifecycle.md` and `bin/foundry-fsck.sh`,
+`bin/build-binary.sh`, `bin/place-editorial.sh`, `bin/pre-promote.sh`
+for the H-1..H-10 specifications. project-proforma applies only the H-7
+signing-key fsck + H-8 misroute warning + H-10 staleness expiry from
+the "applies to all" set; H-1/H-6/H-9 are binary-producing-archive scope
+(not project-proforma); H-2/H-5 are editorial-staging scope (not
+project-proforma).
 
 — command@claude-code, 2026-06-01
 
-# Inbox — project-marketing
+---
+from: command@claude-code
+to: totebox@project-proforma
+re: JOURNAL distribution relay — J1 retail co-location; proforma financial modeling connection
+created: 2026-05-29T00:00:00Z
+priority: normal
+status: actioned
+actioned: 2026-06-02
+actioned_by: totebox@project-proforma
+actioned_note: Connection registered. No proforma anchored-retail models refined yet (D7 Legacy JV is the closest match but its $78.75M is a portfolio net dev yield, not anchored-retail catchment-level data). When proforma cashflow models for anchored retail are refined at the building-level, will route flagged catchment / co-location assumptions to project-editorial drafts-outbound as JOURNAL-NOTES-j1.
+msg-id: command-20260529-journal-relay-proforma-j1
+relayed-from: project-editorial-20260528-j1-proforma
+---
 
+J1 (Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity,
+Economic Geography IF 7.2, lead: Jennifer M. Woodfine) references proforma cashflow analysis as
+part of the investment thesis framing in §7.
 
+The J1 §7.2 primary specification (catchment_entropy ~ tier + log[pop_150km] + country FE) is
+pending Phase 24B results. When J1 reaches submission-ready state, project-proforma's proforma
+models for retail co-location assets may serve as real-world validation data for the compositional
+analysis in §6.
+
+Action: note the J1 connection. When proforma cashflow models for anchored retail are refined,
+flag any catchment or co-location assumptions that should inform J1 §6 or §7. Route flagged
+notes to project-editorial drafts-outbound as JOURNAL-NOTES-j1.
+
+---
+from: command@claude-code
+to: totebox@project-proforma
+re: review-request — Bencal SPV1 Offering Document vs BRIEF + Rust engine
+created: 2026-05-27T00:00:00Z
+priority: normal
+status: partial — BRIEF grill-me actioned; Rust engine review deferred
+msg-id: project-documents-20260527-spv1-offering-review
+actioned: 2026-05-27
+---
+
+CIM vs BRIEF review (item 1): DONE — grill-me session completed 7 items; BRIEF updated
+(commit 97bb6a6); corrections sent to project-documents (commits 0d08d78, eda49b8).
+
+Rust engine review (item 2): DEFERRED — carried to NEXT.md as open item.

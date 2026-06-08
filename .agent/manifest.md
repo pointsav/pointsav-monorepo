@@ -1,77 +1,79 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster: project-bim
-cluster_name: BIM Engineering
-cluster_branch: cluster/project-bim
-created: 2026-05-18
-state: active (research phase; four crates scaffold/reserved; IFC pipeline design complete)
-slm_endpoint: http://localhost:9080
-module_id: bim
-doctrine_version: 0.0.14
-doctrine_claims_codified: [10, 37]
-doctrine_claims_proposed: []
+cluster_name: project-proforma
+cluster_branch: cluster/project-proforma
+created: 2026-05-20
+state: active
+slm_endpoint: http://localhost:8011
+module_id: proforma
+doctrine_version: 0.0.10
+doctrine_claims_codified: [37]
+
+operator: jennifer
+working_pattern: domain-expert-tool-development
+input_shape: excel-files-plus-financial-models
+spec_via_operation: true
+
+# Jennifer Woodfine is the cluster operator. The proforma tooling
+# exists to model, stress-test, and present financial projections for
+# Woodfine Capital Projects real estate limited partnerships (PCLP series).
+# tool-proforma is an interactive HTML sensitivity analysis engine:
+# sliders drive yield rate, DSCR, LTV, and distribution caps; outputs
+# include market value, NAV, compounded return, and interest coverage.
+#
+# This is NOT bookkeeping software — it is a forward-looking financial
+# modelling tool. Project-bookkeeping owns the vault/ledger stack;
+# project-proforma owns the LP proforma + sensitivity tooling.
+#
+# BCSC note: all forward-looking projections carry planned/intended/target
+# language. No proforma output is to be published as a verified ledger
+# entry (SYS-ADR-19). The BCSC continuous-disclosure posture applies to
+# all content produced here (conventions/bcsc-disclosure-posture.md).
 
 tetrad:
-  vendor: pointsav-monorepo (cluster/project-bim) — service-bim, app-console-bim, app-workplace-bim, app-orchestration-bim
-  customer: woodfine-fleet-deployment/bim — leg-pending (no guide yet)
-  deployment: gateway-bim-1 — leg-pending (no instance provisioned)
-  wiki: content-wiki-documentation — BIM material handoff pending (see .agent/rules/handoffs-outbound.md)
+  vendor:
+    - repo: pointsav-monorepo
+      path: pointsav-monorepo/
+      upstream: vendor/pointsav-monorepo
+      focus: |
+        tool-proforma — LP financial sensitivity analysis + proforma engine
+          * Interactive HTML sensitivity dashboards (PCLP series)
+          * Tearsheet generators (mcorp-tearsheet-*)
+          * Reconciliation utilities (visa-recon-*)
+  customer:
+    - status: leg-pending
+      note: may never have customer-facing deliverables; operator decision 2026-05-20
+  deployment:
+    - status: leg-pending
+      note: tool-proforma is a local HTML tool; no server deployment planned at this time
+  wiki:
+    - repo: vendor/content-wiki-documentation
+      drafts_via: clones/project-proforma/.agent/drafts-outbound/
+      gateway: project-editorial
+      planned_topics: []
+      status: leg-pending
 
-datagraph_module_id: bim
+clones:
+  - repo: pointsav-monorepo
+    role: primary
+    path: pointsav-monorepo/
+    upstream: vendor/pointsav-monorepo
+    focus: tool-proforma
+
+adapter_routing:
+  trains:
+    - cluster-project-proforma
+    - tenant-woodfine
+  consumes:
+    - constitutional-doctrine
+    - engineering-pointsav
+    - cluster-project-proforma
+    - tenant-woodfine
+    - role-task
+
 cross_cluster_dependencies:
-  - project-design (DESIGN-* token and component artifacts for BIM UX)
-  - project-editorial (TOPIC-* wiki artifacts from BIM research handoff)
-
-provisioning_notes: |
-  Archive cloned from pointsav-monorepo cluster/project-bim branch.
-  Working in: ~/Foundry/clones/project-bim/
-  Sub-clone (monorepo): ~/Foundry/clones/project-bim/pointsav-monorepo/
-  Stage 6 promotion: bin/promote.sh from Command Session.
-
-session_role: totebox
-default_starting_dir: ~/Foundry/clones/project-bim/
----
-
-## Cluster mission
-
-Build and maintain the BIM (Building Information Modeling) product family — a four-component
-suite for managing construction and facilities data using open buildingSMART standards.
-
-### Product family
-
-| Crate | Layer | Host OS | Role |
-|---|---|---|---|
-| `service-bim` | Archive daemon | os-totebox | Flat-file BIM archive maintenance; ingestion pipeline; IFC validation |
-| `app-console-bim` | Coordination terminal | os-console | Query, coordinate, link work orders; Navisworks muscle memory |
-| `app-workplace-bim` | Editor | os-workplace | Author and edit BIM geometry; AutoCAD / Revit muscle memory |
-| `app-orchestration-bim` | Aggregation hub | os-orchestration | Multi-archive queries; glTF streaming; proprietary tier |
-
-### Canonical data contract
-
-All components read from and write to `cluster-totebox-property/service-bim/`.
-Canonical format: **IFC-SPF (ISO 16739-1:2024)** — plain ASCII, 50-year readable.
-`service-bim` is the only process that writes to `canonical/`; all other components
-write to `ingestion/queue/` only.
-Generated outputs (`cache/model.glb`) are never canonical.
-
-### Key standards
-
-- IFC-SPF: ISO 16739-1:2024 (geometry and semantics — canonical)
-- BCF 3.0: buildingSMART issue markup
-- IDS 1.0: buildingSMART handover validation (June 2024)
-- bSDD: buildingSMART Data Dictionary URIs for element classification
-- glTF 2.0 / ISO 12113:2022: 3D viewer cache only (non-canonical)
-
-### ADR hard rules (from .agent/rules/bim-product-family.md)
-
-- SYS-ADR-07: IFC structured data always through IfcOpenShell subprocess — never through AI layer
-- SYS-ADR-10 (F12): no file enters `canonical/` without explicit operator commit action
-- IfcOpenShell (LGPL-3.0): subprocess invocation only — do not link into any Rust binary
-
-### Current state
-
-All four crates are in research / reserved-folder state per project-registry.md.
-IFC pipeline design, data contract layout, muscle-memory targets, and licence split
-are documented in `.agent/rules/bim-product-family.md`.
-BIM research material handoff to `content-wiki-documentation` is pending
-(see `.agent/rules/handoffs-outbound.md`).
+  - cluster: project-bookkeeping
+    why: shared domain knowledge (Jennifer's financial operations); vault ledger data
+         feeds proforma assumptions; the two tools are operationally coupled but
+         architecturally separate
+    interface: no direct code dependency; knowledge transfer via operator sessions
