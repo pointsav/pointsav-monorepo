@@ -447,14 +447,17 @@ fn call_tier_a_extract(
         .post(&url)
         .header("X-Foundry-Complexity", "low")
         .json(&chat_body)
-        .timeout(Duration::from_secs(120))
+        .timeout(Duration::from_secs(180))
         .send()
     {
         Ok(r) if r.status().is_success() => r
             .json::<serde_json::Value>()
             .ok()
             .and_then(|v| {
-                let content = v["choices"][0]["message"]["content"].as_str()?;
+                // Doorman envelope: {"content": "...", "tier_used": "local", ...}
+                // OpenAI fallback: {"choices": [{"message": {"content": "..."}}]}
+                let content = v["content"].as_str()
+                    .or_else(|| v["choices"][0]["message"]["content"].as_str())?;
                 // Strip markdown fences the model may have added
                 let stripped = content.trim()
                     .strip_prefix("```json").unwrap_or(content.trim())
