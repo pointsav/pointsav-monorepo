@@ -1,4 +1,27 @@
 ---
+from: command@claude-code
+to: totebox@project-bim
+re: manifest.md cluster: field missing — add cluster: project-bim
+created: 2026-06-08T15:32:47Z
+priority: normal
+status: pending
+attempts: 0
+msg-id: command-20260608-manifest-md-cluster-field-missing-add-cl
+---
+
+The manifest.md for this archive is missing the cluster: field. This field is required
+for Doorman context propagation and session-start export (FOUNDRY_ARCHIVE_NAME).
+
+Totebox action required: add the following line to .agent/manifest.md under the
+cluster: key (or add the key if absent):
+
+  cluster: project-bim
+
+Commit: commit-as-next.sh "ops(manifest): add cluster: field to manifest.md"
+
+This is a low-urgency cleanup item; it does not block any active promotion workflow.
+
+---
 mailbox: inbox
 owner: totebox@project-bim
 location: ~/Foundry/clones/project-bim/.agent/
