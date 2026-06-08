@@ -193,7 +193,13 @@ impl Doorman {
         let req_ref: &ComputeRequest = if req.graph_context_enabled == Some(false) {
             req
         } else if let Some(ref gc) = self.graph_context_client {
-            let query = req
+            // Extract the last user message for entity lookup.
+            // service-content does substring matching on entity_name, so we must
+            // query individual tokens rather than the full sentence — a sentence
+            // like "List the Woodfine companies" never substring-matches any entity
+            // name, but "Woodfine" does. Try each word ≥4 chars (skip stop-words)
+            // and return the first query that produces entity results.
+            let user_text = req
                 .messages
                 .iter()
                 .rev()
@@ -201,21 +207,33 @@ impl Doorman {
                 .map(|m| m.content.chars().take(200).collect::<String>())
                 .unwrap_or_default();
 
-            if !query.is_empty() {
-                if let Some(ctx) = gc.fetch_context(req.module_id.as_str(), &query, 5).await {
-                    let mut cloned = req.clone();
-                    cloned.messages.insert(
-                        0,
-                        slm_core::ChatMessage {
-                            role: "system".to_string(),
-                            content: format!("[ENTITY CONTEXT]\n{}", ctx),
-                        },
-                    );
-                    effective_req = cloned;
-                    &effective_req
-                } else {
-                    req
+            let mut seen = std::collections::HashSet::new();
+            let candidates: Vec<String> = user_text
+                .split(|c: char| !c.is_alphanumeric())
+                .filter(|w| w.len() >= 4)
+                .filter(|w| seen.insert(w.to_lowercase()))
+                .map(|w| w.to_string())
+                .collect();
+
+            let mut ctx_opt: Option<String> = None;
+            for candidate in candidates.iter().take(6) {
+                if let Some(ctx) = gc.fetch_context(req.module_id.as_str(), candidate, 5).await {
+                    ctx_opt = Some(ctx);
+                    break;
                 }
+            }
+
+            if let Some(ctx) = ctx_opt {
+                let mut cloned = req.clone();
+                cloned.messages.insert(
+                    0,
+                    slm_core::ChatMessage {
+                        role: "system".to_string(),
+                        content: format!("[ENTITY CONTEXT]\n{}", ctx),
+                    },
+                );
+                effective_req = cloned;
+                &effective_req
             } else {
                 req
             }
