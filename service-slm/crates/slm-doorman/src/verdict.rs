@@ -530,15 +530,36 @@ fn sanitize_verdict(v: &ApprenticeshipVerdict) -> ApprenticeshipVerdict {
     clone
 }
 
+/// Read `brief.body` from the shadow corpus file. Returns empty string on miss.
+/// Used to populate the `prompt` field in DPO training pairs (TRL DPOTrainer format).
+fn read_brief_prompt_from_corpus(corpus_root: &Path, task_type: &str, brief_id: &str) -> String {
+    let path = corpus_root
+        .join("data")
+        .join("training-corpus")
+        .join("apprenticeship")
+        .join(task_type)
+        .join(format!("shadow-{brief_id}.jsonl"));
+    let content = match std::fs::read_to_string(&path) {
+        Ok(c) => c,
+        Err(_) => return String::new(),
+    };
+    let row: serde_json::Value = match serde_json::from_str(content.trim()) {
+        Ok(v) => v,
+        Err(_) => return String::new(),
+    };
+    row["brief"]["body"].as_str().unwrap_or("").to_string()
+}
+
 fn write_dpo_pair(
     corpus_root: &Path,
     task_type: &str,
     rejected_diff: &str,
-    corrected_diff: &str,
+    chosen_diff: &str,
     doctrine_violation_tag: &str,
     brief_id: &str,
     attempt_id: &str,
 ) -> Result<PathBuf> {
+    let prompt = read_brief_prompt_from_corpus(corpus_root, task_type, brief_id);
     let dir = corpus_root
         .join("data")
         .join("training-corpus")
@@ -553,13 +574,15 @@ fn write_dpo_pair(
         Uuid::now_v7().simple()
     );
     let path = dir.join(&filename);
+    // TRL DPOTrainer format: prompt + chosen (preferred) + rejected (dispreferred)
     let record = serde_json::json!({
         "tuple_type": "apprenticeship-feedback",
         "task_type": task_type,
         "brief_id": brief_id,
         "attempt_id": attempt_id,
-        "rejected_diff": sanitize(rejected_diff),
-        "corrected_diff": sanitize(corrected_diff),
+        "prompt": sanitize(&prompt),
+        "chosen": sanitize(chosen_diff),
+        "rejected": sanitize(rejected_diff),
         "doctrine_violation_tag": doctrine_violation_tag,
         "created": Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
     });
