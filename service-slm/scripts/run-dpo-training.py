@@ -52,9 +52,18 @@ BETA = 0.1  # DPO beta — higher = closer to reference model
 
 
 def load_feedback_files(corpus_path: str) -> list[dict]:
-    """Load all apprenticeship DPO feedback pairs from corpus_path."""
-    pattern = os.path.join(corpus_path, "apprenticeship-*.jsonl")
-    files = sorted(glob.glob(pattern))
+    """Load all DPO feedback pairs from corpus_path.
+
+    Reads two file families:
+      apprenticeship-*.jsonl  — human-commit shadow pairs (chosen=operator diff, rejected=OLMo diff)
+      enrichment-*.jsonl      — DataGraph enrichment pairs (chosen=Tier B entities, rejected=Tier A entities)
+    Both use the same TRL wire format: prompt / chosen / rejected.
+    """
+    patterns = [
+        os.path.join(corpus_path, "apprenticeship-*.jsonl"),
+        os.path.join(corpus_path, "enrichment-*.jsonl"),
+    ]
+    files = sorted(f for pattern in patterns for f in glob.glob(pattern))
     records = []
     skipped = 0
     for f in files:
