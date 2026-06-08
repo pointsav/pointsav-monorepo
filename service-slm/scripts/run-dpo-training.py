@@ -203,13 +203,14 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
         max_length=MAX_LENGTH,
         logging_steps=10,
         save_steps=50,
-        eval_steps=50,
-        eval_strategy="steps",
-        load_best_model_at_end=True,
+        eval_strategy="no",           # eval needs 2× VRAM (ref+trained); disabled on L4 24 GB
         report_to="none",
         bf16=torch.cuda.is_available(),
         remove_unused_columns=False,
     )
+
+    # expandable_segments avoids fragmentation-caused OOM on CUDA
+    os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
     callbacks = []
     if max_runtime_seconds:
@@ -220,7 +221,6 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
         ref_model=None,  # uses implicit reference (PEFT base model)
         args=training_args,
         train_dataset=split["train"],
-        eval_dataset=split["test"],
         processing_class=tokenizer,
         peft_config=peft_config,
         callbacks=callbacks or None,
