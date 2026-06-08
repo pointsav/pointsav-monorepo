@@ -144,11 +144,37 @@ def trigger_training_cycle(adapter_name: str, files: list, dry_run: bool = False
             check=True, capture_output=True
         )
         print(f"    [TRAIN] Corpus + feedback synced → gs://{gcs_bucket}/training-pending/{marker_path.name}")
+        _start_trainer_vm()
         return True
     except subprocess.CalledProcessError as e:
         print(f"    [TRAIN] GCS dispatch failed: {e}")
         print(f"    [TRAIN] Marker remains local: {marker_path}")
         return True  # local marker still allows manual pickup
+
+
+def _start_trainer_vm() -> None:
+    """Start yoyo-batch if it is stopped. No-op if already running."""
+    vm_name = os.environ.get("SLM_TRAINER_VM_NAME", "yoyo-batch")
+    vm_zone = os.environ.get("SLM_TRAINER_VM_ZONE", "us-central1-a")
+    if not vm_name:
+        return
+    try:
+        result = subprocess.run(
+            ["gcloud", "compute", "instances", "describe", vm_name,
+             "--zone", vm_zone, "--format=get(status)"],
+            check=True, capture_output=True, text=True
+        )
+        status = result.stdout.strip()
+        if status == "RUNNING":
+            print(f"    [VM] {vm_name} already RUNNING — startup script will drain GCS markers")
+            return
+        subprocess.run(
+            ["gcloud", "compute", "instances", "start", vm_name, "--zone", vm_zone],
+            check=True, capture_output=True
+        )
+        print(f"    [VM] {vm_name} started — will auto-run training on boot (80-min cap)")
+    except subprocess.CalledProcessError as e:
+        print(f"    [VM] Could not start {vm_name}: {e} — training must be triggered manually")
 
 
 def main() -> None:
