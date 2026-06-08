@@ -13,7 +13,7 @@
 
 use chrono::Utc;
 use slm_core::{Complexity, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 
 use crate::cost_ledger::{CostLedger, CostRow};
 use crate::error::{DoormanError, Result};
@@ -224,6 +224,7 @@ impl Doorman {
             }
 
             if let Some(ctx) = ctx_opt {
+                let entity_count = ctx.lines().count();
                 let mut cloned = req.clone();
                 cloned.messages.insert(
                     0,
@@ -233,8 +234,19 @@ impl Doorman {
                     },
                 );
                 effective_req = cloned;
+                info!(
+                    target: "slm_doorman::graph",
+                    module_id = %req.module_id,
+                    entity_count,
+                    "graph context injected"
+                );
                 &effective_req
             } else {
+                debug!(
+                    target: "slm_doorman::graph",
+                    module_id = %req.module_id,
+                    "graph context: no entities returned — skipping injection"
+                );
                 req
             }
         } else {
