@@ -1,13 +1,12 @@
-# Multi-agent session locks and engine state (ephemeral — not committed)
+# Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock
-.agent/._claude_bkp/
+.agent/locks/
 
 # Build artifacts — not committed
 build/
 
 # Generated outputs — not committed
-outputs/*
-!outputs/.gitkeep
+outputs/
 
 # Legacy .claude directory (should be .agent symlink — to be fixed)
 .claude/
@@ -18,11 +17,7 @@ pointsav-design-system/
 pointsav-fleet-deployment/
 pointsav-media-assets/
 woodfine-media-assets/
-woodfine-fleet-deployment/
 
-# Runtime data — not committed to archive git
-service-content/data/
-
-# Recovered binaries and input documents — not committed to archive git
-app-privategit-design-recovered
-inputs/
+# OS metadata
+.DS_Store
+~$*
