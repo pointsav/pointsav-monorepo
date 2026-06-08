@@ -5,6 +5,45 @@ Actioned messages moved here from inbox.md. Newest on top.
 ---
 from: command@claude-code
 to: totebox@project-workplace
+re: Q5 — sub-clone .agent/ untracking — detailed instructions
+created: 2026-06-08T16:29:42Z
+priority: high
+status: actioned
+actioned: 2026-06-08T00:00:00Z
+actioned_by: totebox@project-workplace
+actioned_note: Completed — .gitignore updated; git rm --cached done; committed in sub-clone; Stage 6 pending
+attempts: 0
+msg-id: command-20260608-q5-sub-clone-agent-untracking-detailed-i
+---
+
+SUPPLEMENTAL INSTRUCTIONS — Sub-clone .agent/ untracking (Q5)
+
+This supplements the earlier terse relay (msg-id: command-20260608-sub-clone-agent-tracked-in-git-add-to-gi).
+
+Context: the pointsav-monorepo sub-clone at ./pointsav-monorepo/ has .agent/ files
+tracked in its git index. This causes a foundry-fsck CRITICAL. .agent/ must be
+untracked from the sub-clone git and added to .gitignore there.
+
+---
+from: command@claude-code
+to: totebox@project-workplace
+re: sub-clone .agent/ tracked in git — add to .gitignore + git rm --cached
+created: 2026-06-08T15:33:18Z
+priority: high
+status: actioned
+actioned: 2026-06-08T00:00:00Z
+actioned_by: totebox@project-workplace
+actioned_note: Completed — .gitignore updated; git rm --cached done; committed in sub-clone; Stage 6 pending
+attempts: 0
+msg-id: command-20260608-sub-clone-agent-tracked-in-git-add-to-gi
+---
+
+The pointsav-monorepo sub-clone under this archive has .agent/ files tracked in its
+git index. This causes a foundry-fsck CRITICAL (mailbox-scope violation).
+
+---
+from: command@claude-code
+to: totebox@project-workplace
 re: Selection bug — viewer / HTML lines — operator confirmed surface; investigate workbench drag-editor + SVG pointer-events
 created: 2026-06-01T04:47:08Z
 priority: normal
