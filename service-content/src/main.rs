@@ -12,7 +12,7 @@ use std::path::Path;
 use std::sync::mpsc::RecvTimeoutError;
 use std::sync::Arc;
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 #[derive(Debug)]
 enum ExtractResult {
@@ -22,17 +22,17 @@ enum ExtractResult {
     Failed,
 }
 
-/// Config for the rate-limited Tier A extraction fallback (Sprint 3B).
-/// Active only when `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=true`.
-/// When the Yo-Yo circuit is open, the WATCHER can attempt extraction via
-/// Tier A (/v1/chat/completions with JSON schema grammar constraint) at most
-/// once per `interval_secs`. Quality is degraded vs Tier B but prevents
-/// WATCHER stalling indefinitely.
-#[derive(Clone)]
-struct TierAFallbackConfig {
-    enabled: bool,
-    interval_secs: u64,
-}
+/// System prompt shared between Tier A and Tier B extraction calls.
+const EXTRACTION_SYSTEM_PROMPT: &str = "Extract named entities from the text. Classify each entity into exactly one category.\n\
+Categories and examples:\n\
+  Person — named human individual. Example: \"Jane Smith\".\n\
+  Company — registered organisation or business. Example: \"Woodfine Management Corp.\".\n\
+  Project — named initiative, programme, or system. Example: \"service-slm\".\n\
+  Account — financial account, service account, or contract reference.\n\
+  Location — geographic place or address. Example: \"Vancouver\".\n\
+Omit: laws and regulations (not Location), dates and years (not Location), abstract concepts (not Company), regulatory bodies (not Company unless they are a named legal entity with a registered name).\n\
+If an entity does not clearly fit one category, omit it rather than guessing.\n\
+Return a JSON array matching the schema exactly.";
 
 fn main() -> NotifyResult<()> {
     println!("================================================================");
@@ -60,27 +60,14 @@ fn main() -> NotifyResult<()> {
             .unwrap_or_else(|| "ontology".to_string())
     });
 
-    let tier_a_fallback = TierAFallbackConfig {
-        enabled: std::env::var("SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED")
-            .map(|v| matches!(v.trim(), "true" | "1"))
-            .unwrap_or(false),
-        interval_secs: std::env::var("SERVICE_CONTENT_TIER_A_FALLBACK_INTERVAL_SECS")
-            .ok()
-            .and_then(|s| s.parse::<u64>().ok())
-            .unwrap_or(300),
-    };
-    let mut last_tier_a_attempt: Option<Instant> = None;
+    let feedback_dir = std::env::var("SERVICE_CONTENT_FEEDBACK_DIR")
+        .unwrap_or_else(|_| format!("{}/training-corpus/feedback", base_dir));
 
     println!("[SYSTEM] Doorman endpoint: {}", doorman_endpoint);
     println!("[SYSTEM] Base dir: {}", base_dir);
     println!("[SYSTEM] Module ID: {}", module_id);
     println!("[SYSTEM] Ontology dir: {}", ontology_dir);
-    if tier_a_fallback.enabled {
-        println!(
-            "[SYSTEM] Tier A fallback enabled — interval {}s (degraded quality)",
-            tier_a_fallback.interval_secs
-        );
-    }
+    println!("[SYSTEM] Feedback dir (enrichment DPO): {}", feedback_dir);
 
     let corpus_dir = format!("{}/service-content/ledgers", base_dir);
     let crm_dir = format!("{}/service-people/ledgers", base_dir);
@@ -148,6 +135,7 @@ fn main() -> NotifyResult<()> {
     let graph_for_http = Arc::clone(&graph_store);
     let doorman_for_http = doorman_endpoint.clone();
     let ontology_for_http = ontology_dir.clone();
+    let corpus_dir_for_http = corpus_dir.clone();
     std::thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().expect("Failed to build HTTP tokio runtime");
         rt.block_on(http::run_server(
@@ -155,6 +143,7 @@ fn main() -> NotifyResult<()> {
             http_bind,
             doorman_for_http,
             ontology_for_http,
+            corpus_dir_for_http,
         ));
     });
 
@@ -241,8 +230,7 @@ fn main() -> NotifyResult<()> {
                         &doorman_endpoint,
                         &module_id,
                         &graph_store,
-                        &tier_a_fallback,
-                        &mut last_tier_a_attempt,
+                        &feedback_dir,
                     ) {
                         ExtractResult::Success | ExtractResult::Failed => {
                             append_processed_ledger(&processed_ledgers_path, &filename);
@@ -302,8 +290,7 @@ fn main() -> NotifyResult<()> {
                                     &doorman_endpoint,
                                     &module_id,
                                     &graph_store,
-                                    &tier_a_fallback,
-                                    &mut last_tier_a_attempt,
+                                    &feedback_dir,
                                 ) {
                                     ExtractResult::Success | ExtractResult::Failed => {
                                         deferred_ledgers.retain(|f| f != &filename);
@@ -341,8 +328,7 @@ fn main() -> NotifyResult<()> {
                         &doorman_endpoint,
                         &module_id,
                         &graph_store,
-                        &tier_a_fallback,
-                        &mut last_tier_a_attempt,
+                        &feedback_dir,
                     ) {
                         ExtractResult::Success | ExtractResult::Failed => {
                             append_processed_ledger(&processed_ledgers_path, &filename);
@@ -387,8 +373,7 @@ fn main() -> NotifyResult<()> {
                         &doorman_endpoint,
                         &module_id,
                         &graph_store,
-                        &tier_a_fallback,
-                        &mut last_tier_a_attempt,
+                        &feedback_dir,
                     ) {
                         ExtractResult::DeferCircuitOpen => {
                             // Still down — keep it dormant.
@@ -440,14 +425,117 @@ fn append_processed_ledger(path: &Path, filename: &str) {
     }
 }
 
+// ── Enrichment cascade helpers ────────────────────────────────────────────────
+
+/// Call Tier A (OLMo 7B via /v1/chat/completions) and return raw entity JSON.
+/// Returns None when Tier A is unavailable or response is unparseable.
+fn call_tier_a_extract(
+    corpus_text: &str,
+    entity_schema: &serde_json::Value,
+    doorman_endpoint: &str,
+) -> Option<Vec<serde_json::Value>> {
+    let chat_body = serde_json::json!({
+        "messages": [
+            {"role": "system", "content": EXTRACTION_SYSTEM_PROMPT},
+            {"role": "user",   "content": corpus_text}
+        ],
+        "grammar": {"type": "json-schema", "value": entity_schema}
+    });
+    let url = format!("{}/v1/chat/completions", doorman_endpoint);
+    let client = reqwest::blocking::Client::new();
+    match client
+        .post(&url)
+        .header("X-Foundry-Complexity", "low")
+        .json(&chat_body)
+        .timeout(Duration::from_secs(120))
+        .send()
+    {
+        Ok(r) if r.status().is_success() => r
+            .json::<serde_json::Value>()
+            .ok()
+            .and_then(|v| {
+                let content = v["choices"][0]["message"]["content"].as_str()?;
+                // Strip markdown fences the model may have added
+                let stripped = content.trim()
+                    .strip_prefix("```json").unwrap_or(content.trim())
+                    .strip_prefix("```").unwrap_or(content.trim());
+                let stripped = stripped.strip_suffix("```").unwrap_or(stripped).trim();
+                serde_json::from_str(stripped).ok()
+            }),
+        _ => None,
+    }
+}
+
+/// Convert raw entity JSON values into `GraphEntity` structs.
+fn raw_entities_to_graph(
+    raw: &[serde_json::Value],
+    module_id: &str,
+    confidence: f64,
+) -> Vec<GraphEntity> {
+    raw.iter()
+        .filter_map(|ent| {
+            let entity_name = ent["entity_name"].as_str()?.to_string();
+            let classification = ent["classification"].as_str()?.to_string();
+            if entity_name.is_empty() || classification.is_empty() {
+                return None;
+            }
+            Some(GraphEntity {
+                entity_name,
+                classification,
+                role_vector: ent.get("role_vector").and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null").map(str::to_string),
+                location_vector: ent.get("location_vector").and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null").map(str::to_string),
+                contact_vector: ent.get("contact_vector").and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null").map(str::to_string),
+                module_id: module_id.to_string(),
+                confidence,
+            })
+        })
+        .collect()
+}
+
+/// Write a DPO training pair when Tier B improves on Tier A's extraction.
+/// Skipped when results are identical (no training signal) or Tier B is empty.
+fn write_enrichment_dpo_pair(
+    worm_id: &str,
+    corpus_text: &str,
+    tier_a_raw: &[serde_json::Value],
+    tier_b_raw: &[serde_json::Value],
+    feedback_dir: &str,
+) {
+    if tier_b_raw.is_empty() {
+        return;
+    }
+    let tier_a_json = serde_json::to_string(tier_a_raw).unwrap_or_default();
+    let tier_b_json = serde_json::to_string(tier_b_raw).unwrap_or_default();
+    if tier_a_json == tier_b_json {
+        return; // identical — no training delta
+    }
+    let prompt = format!("{}\n\nText:\n{}", EXTRACTION_SYSTEM_PROMPT, corpus_text);
+    let now = chrono::Utc::now();
+    let pair = serde_json::json!({
+        "prompt":      prompt,
+        "chosen":      tier_b_json,
+        "rejected":    tier_a_json,
+        "source_type": "datagraph-enrichment",
+        "worm_id":     worm_id,
+        "timestamp":   now.to_rfc3339(),
+    });
+    let _ = fs::create_dir_all(feedback_dir);
+    let filename = format!("{}/enrichment-{}-{}.jsonl", feedback_dir, worm_id, now.timestamp_millis());
+    if let Ok(mut f) = fs::OpenOptions::new().create(true).write(true).truncate(true).open(&filename) {
+        let _ = writeln!(f, "{}", pair);
+    }
+}
+
 fn process_corpus(
     filepath: &Path,
     crm_dir: &str,
     doorman_endpoint: &str,
     module_id: &str,
     graph_store: &Arc<dyn GraphStore>,
-    tier_a_fallback: &TierAFallbackConfig,
-    last_tier_a_attempt: &mut Option<Instant>,
+    feedback_dir: &str,
 ) -> ExtractResult {
     // SC-5: log read failures instead of silently returning
     let content = match fs::read_to_string(filepath) {
@@ -485,15 +573,7 @@ fn process_corpus(
         return ExtractResult::Failed;
     }
 
-    println!(
-        "  -> [WATCHER] Routing payload to Doorman ({})/v1/extract...",
-        doorman_endpoint
-    );
-
-    // POST /v1/extract — Tier B only (route_yoyo_only). Doorman returns
-    // {deferred: true} when Tier B is unavailable instead of falling back
-    // to Tier A. This prevents the KV-cache bloat and retry storm that
-    // caused VM crashes when Tier B was down for extended periods.
+    // ── Shared entity schema used by both tiers ───────────────────────────────
     let entity_schema = serde_json::json!({
         "type": "array",
         "items": {
@@ -512,6 +592,25 @@ fn process_corpus(
         }
     });
 
+    // ── Step 1: Tier A extraction (always first — fast local OLMo) ───────────
+    let tier_a_raw: Option<Vec<serde_json::Value>> = {
+        let result = call_tier_a_extract(corpus_text, &entity_schema, doorman_endpoint);
+        match &result {
+            Some(ents) => println!(
+                "  -> [TIER-A] {} entities extracted (module: {}).",
+                ents.len(), effective_module_id
+            ),
+            None => println!("  -> [TIER-A] Unavailable — proceeding to Tier B."),
+        }
+        result
+    };
+
+    // ── Step 2: Tier B extraction (OLMo 32B via /v1/extract) ─────────────────
+    println!(
+        "  -> [TIER-B] Routing to Doorman ({})/v1/extract...",
+        doorman_endpoint
+    );
+
     let body = serde_json::json!({
         "text": corpus_text,
         "schema": entity_schema,
@@ -527,243 +626,113 @@ fn process_corpus(
         .timeout(Duration::from_secs(300))
         .send();
 
+    // Helper: flush Tier A entities to graph when Tier B is unavailable.
+    let flush_tier_a = |tier_a: &Option<Vec<serde_json::Value>>, reason: &str| -> ExtractResult {
+        if let Some(ta_ents) = tier_a {
+            if !ta_ents.is_empty() {
+                let ge = raw_entities_to_graph(ta_ents, effective_module_id, 0.75);
+                match graph_store.upsert_entities(effective_module_id, &ge) {
+                    Ok(n) => {
+                        println!("  -> [TIER-A] {} entities written ({}).", n, reason);
+                        return ExtractResult::Success;
+                    }
+                    Err(e) => eprintln!("  -> [TIER-A] Graph write failed: {}", e),
+                }
+            }
+        }
+        ExtractResult::DeferCircuitOpen
+    };
+
     match res {
         Ok(response) => {
             if !response.status().is_success() {
-                println!(
-                    "  -> [SYS_HALT] Doorman rejected payload: {}",
-                    response.status()
-                );
-                return ExtractResult::Failed;
+                println!("  -> [SYS_HALT] Doorman rejected payload: {}", response.status());
+                return flush_tier_a(&tier_a_raw, "Tier B rejected");
             }
 
             let extract_resp = match response.json::<serde_json::Value>() {
                 Ok(v) => v,
                 Err(_) => {
-                    println!("  -> [SYS_HALT] Doorman returned invalid JSON format.");
-                    return ExtractResult::Failed;
+                    println!("  -> [SYS_HALT] Doorman returned invalid JSON.");
+                    return flush_tier_a(&tier_a_raw, "Tier B parse failed");
                 }
             };
 
-            // SC-2: differentiate defer reasons — circuit-open skips until restart,
-            // transient retries after 30 s backoff.
+            // SC-2: differentiate defer reasons.
             if extract_resp["deferred"].as_bool().unwrap_or(false) {
                 let reason = extract_resp["defer_reason"].as_str().unwrap_or("unknown");
                 return match reason {
                     "yoyo-circuit-open" => {
-                        if !tier_a_fallback.enabled {
-                            println!(
-                                "  -> [WATCHER] Extraction deferred (circuit-open): recovery probe active — will resume when Tier B returns."
-                            );
-                            return ExtractResult::DeferCircuitOpen;
-                        }
-                        // Rate limit: only attempt Tier A fallback once per interval.
-                        if let Some(last) = *last_tier_a_attempt {
-                            let elapsed = last.elapsed().as_secs();
-                            if elapsed < tier_a_fallback.interval_secs {
-                                println!(
-                                    "  -> [WATCHER-TIER-A] Tier A fallback rate-limited — next eligible in {}s",
-                                    tier_a_fallback.interval_secs.saturating_sub(elapsed)
-                                );
-                                return ExtractResult::DeferTransient;
-                            }
-                        }
-                        println!(
-                            "  -> [WATCHER-TIER-A] Tier A fallback extraction — degraded quality — next eligible in {}s",
-                            tier_a_fallback.interval_secs
-                        );
-                        *last_tier_a_attempt = Some(Instant::now());
-                        let chat_body = serde_json::json!({
-                            "messages": [
-                                {
-                                    "role": "system",
-                                    "content": "Extract named entities from the text. Classify each entity into exactly one category.\nCategories and examples:\n  Person — named human individual. Example: \"Jane Smith\".\n  Company — registered organisation or business. Example: \"Woodfine Management Corp.\".\n  Project — named initiative, programme, or system. Example: \"service-slm\".\n  Account — financial account, service account, or contract reference.\n  Location — geographic place or address. Example: \"Vancouver\".\nOmit: laws and regulations (not Location), dates and years (not Location), abstract concepts (not Company), regulatory bodies (not Company unless they are a named legal entity with a registered name).\nIf an entity does not clearly fit one category, omit it rather than guessing.\nReturn a JSON array matching the schema exactly."
-                                },
-                                {
-                                    "role": "user",
-                                    "content": corpus_text
-                                }
-                            ],
-                            "grammar": {
-                                "type": "json-schema",
-                                "value": entity_schema
-                            }
-                        });
-                        let chat_url = format!("{}/v1/chat/completions", doorman_endpoint);
-                        let chat_client = reqwest::blocking::Client::new();
-                        let chat_res = chat_client
-                            .post(&chat_url)
-                            .header("X-Foundry-Complexity", "low")
-                            .json(&chat_body)
-                            .timeout(Duration::from_secs(300))
-                            .send();
-                        let chat_entities: Vec<serde_json::Value> = match chat_res {
-                            Ok(r) if r.status().is_success() => {
-                                match r.json::<serde_json::Value>() {
-                                    Ok(v) => {
-                                        let content = v["choices"][0]["message"]["content"]
-                                            .as_str()
-                                            .unwrap_or("[]");
-                                        serde_json::from_str(content).unwrap_or_default()
-                                    }
-                                    Err(_) => {
-                                        println!(
-                                            "  -> [WATCHER-TIER-A] Tier A response parse failed."
-                                        );
-                                        return ExtractResult::DeferCircuitOpen;
-                                    }
-                                }
-                            }
-                            Ok(r) => {
-                                println!(
-                                    "  -> [WATCHER-TIER-A] Tier A chat call rejected: {}",
-                                    r.status()
-                                );
-                                return ExtractResult::DeferCircuitOpen;
-                            }
-                            Err(e) => {
-                                println!("  -> [WATCHER-TIER-A] Tier A chat call error: {}", e);
-                                return ExtractResult::DeferCircuitOpen;
-                            }
-                        };
-                        if chat_entities.is_empty() {
-                            println!("  -> [WATCHER-TIER-A] Tier A returned no entities.");
-                            return ExtractResult::DeferCircuitOpen;
-                        }
-                        let mut graph_entities_ta: Vec<GraphEntity> = Vec::new();
-                        for ent in &chat_entities {
-                            let entity_name = ent["entity_name"].as_str().unwrap_or("").to_string();
-                            let classification =
-                                ent["classification"].as_str().unwrap_or("").to_string();
-                            if entity_name.is_empty() || classification.is_empty() {
-                                continue;
-                            }
-                            graph_entities_ta.push(GraphEntity {
-                                entity_name,
-                                classification,
-                                role_vector: ent
-                                    .get("role_vector")
-                                    .and_then(|v| v.as_str())
-                                    .filter(|s| !s.is_empty() && *s != "null")
-                                    .map(str::to_string),
-                                location_vector: ent
-                                    .get("location_vector")
-                                    .and_then(|v| v.as_str())
-                                    .filter(|s| !s.is_empty() && *s != "null")
-                                    .map(str::to_string),
-                                contact_vector: ent
-                                    .get("contact_vector")
-                                    .and_then(|v| v.as_str())
-                                    .filter(|s| !s.is_empty() && *s != "null")
-                                    .map(str::to_string),
-                                module_id: effective_module_id.to_string(),
-                                confidence: 0.75,
-                            });
-                        }
-                        if let Err(e) =
-                            graph_store.upsert_entities(effective_module_id, &graph_entities_ta)
-                        {
-                            println!("  -> [WATCHER-TIER-A] Graph write failed: {}", e);
-                            return ExtractResult::DeferCircuitOpen;
-                        }
-                        println!(
-                            "  -> [WATCHER-TIER-A] {} entities written via Tier A fallback (module: {}).",
-                            graph_entities_ta.len(),
-                            effective_module_id
-                        );
-                        ExtractResult::Success
+                        println!("  -> [TIER-B] Circuit open — using Tier A results.");
+                        flush_tier_a(&tier_a_raw, "Tier B circuit-open")
                     }
                     _ => {
-                        println!(
-                            "  -> [WATCHER] Extraction deferred ({}): will retry in 30 s.",
-                            reason
-                        );
+                        // Transient: use Tier A if available, otherwise retry
+                        if let Some(ta_ents) = &tier_a_raw {
+                            if !ta_ents.is_empty() {
+                                let ge = raw_entities_to_graph(ta_ents, effective_module_id, 0.75);
+                                if let Ok(n) = graph_store.upsert_entities(effective_module_id, &ge) {
+                                    println!(
+                                        "  -> [TIER-A] {} entities written (Tier B transient; module: {}).",
+                                        n, effective_module_id
+                                    );
+                                    return ExtractResult::Success;
+                                }
+                            }
+                        }
+                        println!("  -> [TIER-B] Deferred ({}): retry in 30 s.", reason);
                         ExtractResult::DeferTransient
                     }
                 };
             }
 
             if !extract_resp["extraction_ok"].as_bool().unwrap_or(false) {
-                println!(
-                    "  -> [SYS_HALT] Extraction failed: extraction_ok false, no defer reason."
-                );
-                return ExtractResult::Failed;
+                println!("  -> [SYS_HALT] Extraction failed: extraction_ok false.");
+                return flush_tier_a(&tier_a_raw, "Tier B extraction_ok=false");
             }
 
+            // ── Tier B succeeded ─────────────────────────────────────────────
             let semantic_entities = extract_resp["entities"]
                 .as_array()
                 .cloned()
                 .unwrap_or_default();
 
-            let mut enriched_crm = Vec::new();
-            let mut graph_entities: Vec<GraphEntity> = Vec::new();
+            let graph_entities = raw_entities_to_graph(&semantic_entities, effective_module_id, 0.95);
 
+            // Write enrichment DPO pair: Tier A (rejected) vs Tier B (chosen)
+            if let Some(ref ta_ents) = tier_a_raw {
+                write_enrichment_dpo_pair(worm_id, corpus_text, ta_ents, &semantic_entities, feedback_dir);
+            }
+
+            // Build legacy CRM record
+            let mut enriched_crm = Vec::new();
             for ent in &semantic_entities {
                 let entity_name = ent["entity_name"].as_str().unwrap_or("").to_string();
                 let classification = ent["classification"].as_str().unwrap_or("").to_string();
-                let role_vector = ent
-                    .get("role_vector")
-                    .and_then(|v| v.as_str())
-                    .filter(|s| !s.is_empty() && *s != "null")
-                    .map(str::to_string);
-                let location_vector = ent
-                    .get("location_vector")
-                    .and_then(|v| v.as_str())
-                    .filter(|s| !s.is_empty() && *s != "null")
-                    .map(str::to_string);
-                let contact_vector = ent
-                    .get("contact_vector")
-                    .and_then(|v| v.as_str())
-                    .filter(|s| !s.is_empty() && *s != "null")
-                    .map(str::to_string);
+                let role_vector = ent.get("role_vector").and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null").map(str::to_string);
+                let location_vector = ent.get("location_vector").and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null").map(str::to_string);
+                let contact_vector = ent.get("contact_vector").and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null").map(str::to_string);
 
-                // Build GraphEntity for the graph write path
-                graph_entities.push(GraphEntity {
-                    entity_name: entity_name.clone(),
-                    classification: classification.clone(),
-                    role_vector: role_vector.clone(),
-                    location_vector: location_vector.clone(),
-                    contact_vector: contact_vector.clone(),
-                    module_id: effective_module_id.to_string(),
-                    confidence: 0.95,
-                });
-
-                // Build the legacy JSON CRM record
                 let mut new_ent = serde_json::Map::new();
                 new_ent.insert("entity_name".to_string(), serde_json::json!(entity_name));
-                new_ent.insert(
-                    "classification".to_string(),
-                    serde_json::json!(classification),
-                );
+                new_ent.insert("classification".to_string(), serde_json::json!(classification));
                 new_ent.insert(
                     "role_vector".to_string(),
-                    role_vector
-                        .as_deref()
-                        .map(|s| serde_json::json!(s))
-                        .unwrap_or(serde_json::json!("UNVERIFIED")),
+                    role_vector.as_deref().map(|s| serde_json::json!(s)).unwrap_or(serde_json::json!("UNVERIFIED")),
                 );
                 new_ent.insert("confidence".to_string(), serde_json::json!(0.95));
-                new_ent.insert(
-                    "context_anchor".to_string(),
-                    serde_json::json!("SLM NEURAL INFERENCE"),
-                );
-
-                let loc = location_vector
-                    .as_deref()
-                    .map(|s| serde_json::json!(s))
-                    .unwrap_or(serde_json::json!("UNVERIFIED"));
+                new_ent.insert("context_anchor".to_string(), serde_json::json!("SLM NEURAL INFERENCE"));
+                let loc = location_vector.as_deref().map(|s| serde_json::json!(s)).unwrap_or(serde_json::json!("UNVERIFIED"));
                 new_ent.insert("location_vector".to_string(), loc);
-
                 let mut latent = Vec::new();
                 if let Some(contact) = contact_vector.as_deref() {
-                    if contact.contains('@') {
-                        latent.push(format!("mailto:{}", contact));
-                    } else {
-                        latent.push(format!("tel:{}", contact));
-                    }
+                    if contact.contains('@') { latent.push(format!("mailto:{}", contact)); }
+                    else { latent.push(format!("tel:{}", contact)); }
                 }
                 new_ent.insert("latent_vectors".to_string(), serde_json::json!(latent));
-
                 enriched_crm.push(Value::Object(new_ent));
             }
 
@@ -773,24 +742,19 @@ fn process_corpus(
                 "extracted_crm_entities": enriched_crm
             });
 
-            // SC-3e: graph write first — if it fails, CRM is not written,
-            // keeping the two stores consistent.
+            // Graph write first; CRM second — keeps stores consistent.
             if let Err(e) = graph_store.upsert_entities(effective_module_id, &graph_entities) {
                 println!("  -> [GRAPH] Write failed: {}", e);
                 return ExtractResult::Failed;
             }
             println!(
                 "  -> [GRAPH] {} entities written to graph (module: {}).",
-                graph_entities.len(),
-                effective_module_id
+                graph_entities.len(), effective_module_id
             );
 
-            // CRM write second — only reaches here if graph succeeded.
             let out_file = format!("{}/SEMANTIC_{}.json", crm_dir, worm_id);
             if let Err(e) = fs::write(&out_file, semantic_ledger.to_string()) {
-                eprintln!(
-                    "[ERROR] CRM write failed after graph upsert (orphaned entities possible): {e}"
-                );
+                eprintln!("[ERROR] CRM write failed after graph upsert: {e}");
                 return ExtractResult::Failed;
             }
             println!(
@@ -801,16 +765,14 @@ fn process_corpus(
             ExtractResult::Success
         }
         Err(e) => {
-            // Transport error (Doorman unreachable, or the call interrupted —
-            // e.g. Tier B preempted and the Doorman timed the request out) is
-            // transient, not a permanent parse failure. Defer for retry rather
-            // than marking the file processed, so an interrupted in-flight
-            // extraction is never silently lost.
-            println!(
-                "  -> [SYS_HALT] Doorman routing failed (transient — will retry): {}",
-                e
-            );
-            ExtractResult::DeferTransient
+            // Transport error — Tier B unreachable. Use Tier A to avoid losing the document.
+            println!("  -> [SYS_HALT] Doorman routing failed (transient): {}", e);
+            let result = flush_tier_a(&tier_a_raw, &format!("Tier B transport error: {}", e));
+            if matches!(result, ExtractResult::DeferCircuitOpen) {
+                ExtractResult::DeferTransient
+            } else {
+                result
+            }
         }
     }
 }

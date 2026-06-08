@@ -18,6 +18,7 @@ pub struct HttpState {
     pub graph: Arc<dyn GraphStore>,
     pub doorman_endpoint: String,
     pub ontology_dir: String,
+    pub corpus_dir: String,
 }
 
 // ── request / response types ──────────────────────────────────────────────────
@@ -78,6 +79,23 @@ pub struct DraftResponse {
 pub struct HealthResponse {
     pub status: &'static str,
     pub entity_count: usize,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct IngestRequest {
+    pub text: String,
+    #[serde(default)]
+    pub module_id: String,
+    #[serde(default)]
+    pub doc_id: String,
+    #[serde(default)]
+    pub source_type: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct IngestResponse {
+    pub doc_id: String,
+    pub queued: bool,
 }
 
 // ── handlers ──────────────────────────────────────────────────────────────────
@@ -245,6 +263,66 @@ async fn draft_generate(
     }))
 }
 
+/// `POST /v1/ingest` — submit a document for DataGraph enrichment.
+///
+/// Writes a `CORPUS_<doc_id>_<ts>.json` file to the watched corpus directory.
+/// The file watcher picks it up within milliseconds and routes it through the
+/// Tier A → Tier B enrichment cascade, writing extracted entities to LadybugDB.
+///
+/// Returns 202 Accepted with `{ "doc_id": "...", "queued": true }`.
+async fn ingest_document(
+    State(state): State<Arc<HttpState>>,
+    Json(body): Json<IngestRequest>,
+) -> Result<(axum::http::StatusCode, Json<IngestResponse>), (axum::http::StatusCode, String)> {
+    if body.text.trim().is_empty() {
+        return Err((axum::http::StatusCode::BAD_REQUEST, "text must not be empty".to_string()));
+    }
+
+    let doc_id = if body.doc_id.is_empty() {
+        format!(
+            "{:x}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .subsec_nanos()
+        )
+    } else {
+        // Sanitise: allow only alphanumeric + hyphens/underscores
+        body.doc_id
+            .chars()
+            .filter(|c| c.is_alphanumeric() || *c == '-' || *c == '_')
+            .collect()
+    };
+
+    let module_id = if body.module_id.is_empty() { "woodfine" } else { body.module_id.as_str() };
+    let source_type = if body.source_type.is_empty() { "ingest-api" } else { body.source_type.as_str() };
+
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+
+    let worm_id = format!("DOC_{}_{}", doc_id, ts);
+    let corpus_json = serde_json::json!({
+        "worm_id": worm_id,
+        "corpus": body.text,
+        "module_id": module_id,
+        "source_type": source_type,
+    });
+
+    let filename = format!("CORPUS_{}_{}.json", doc_id, ts);
+    let path = std::path::Path::new(&state.corpus_dir).join(&filename);
+
+    tokio::fs::write(&path, corpus_json.to_string())
+        .await
+        .map_err(|e| (
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            format!("failed to write corpus file: {e}"),
+        ))?;
+
+    Ok((axum::http::StatusCode::ACCEPTED, Json(IngestResponse { doc_id, queued: true })))
+}
+
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 fn format_entity_block(entities: &[GraphEntity]) -> String {
@@ -275,11 +353,13 @@ pub async fn run_server(
     bind_addr: String,
     doorman_endpoint: String,
     ontology_dir: String,
+    corpus_dir: String,
 ) {
     let state = Arc::new(HttpState {
         graph: store,
         doorman_endpoint,
         ontology_dir,
+        corpus_dir,
     });
 
     let app = Router::new()
@@ -287,6 +367,7 @@ pub async fn run_server(
         .route("/v1/graph/context", get(graph_context))
         .route("/v1/graph/mutate", post(graph_mutate))
         .route("/v1/draft/generate", post(draft_generate))
+        .route("/v1/ingest", post(ingest_document))
         .merge(config_routes())
         .with_state(state);
 
