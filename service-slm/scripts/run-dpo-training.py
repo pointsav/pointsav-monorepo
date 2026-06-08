@@ -102,15 +102,30 @@ def sync_from_gcs(adapter_name: str, local_corpus: str) -> str:
 
 
 def upload_adapter_to_gcs(adapter_path: str, adapter_name: str) -> None:
+    """Upload adapter to GCS.
+
+    yoyo-batch VMs do not have GCS write permissions — only the workspace VM
+    holds ADC with cloud-platform scope. The startup script on yoyo-batch
+    must rsync the adapter to the workspace VM which then runs this upload,
+    OR the workspace pulls the adapter via rsync and uploads directly.
+
+    When run directly on the workspace VM (e.g. during testing), this works
+    without any special setup.
+    """
     if not GCS_BUCKET:
         return
     gcs_dest = f"gs://{GCS_BUCKET}/adapters/{os.path.basename(adapter_path)}/"
     print(f"[gcs] uploading adapter → {gcs_dest}")
-    subprocess.run(
-        ["gcloud", "storage", "cp", "-r", adapter_path + "/", gcs_dest],
-        check=True,
-    )
-    print(f"[gcs] adapter uploaded: {gcs_dest}")
+    try:
+        subprocess.run(
+            ["gcloud", "storage", "rsync", adapter_path + "/", gcs_dest],
+            check=True,
+        )
+        print(f"[gcs] adapter uploaded: {gcs_dest}")
+    except subprocess.CalledProcessError as e:
+        print(f"[gcs] upload failed (likely no ADC on this VM): {e}")
+        print(f"[gcs] adapter saved locally at: {adapter_path}")
+        print(f"[gcs] pull from workspace: rsync -a yoyo-batch:{adapter_path}/ /tmp/adapter/ then upload")
 
 
 def run_training(records: list[dict], base_model: str, output_dir: str, dry_run: bool,
