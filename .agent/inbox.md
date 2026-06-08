@@ -1,4 +1,13 @@
 ---
+mailbox: inbox
+owner: totebox@project-bim
+location: ~/Foundry/clones/project-bim/.agent/
+schema: foundry-mailbox-v1
+---
+
+# Inbox — clones/project-bim
+
+---
 from: command@claude-code
 to: totebox@project-bim
 re: CRITICAL — woodfine-bim-library 3 commits LOST during Stage 6 rebase cleanup
