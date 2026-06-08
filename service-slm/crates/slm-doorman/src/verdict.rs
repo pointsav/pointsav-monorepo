@@ -351,12 +351,15 @@ impl VerdictDispatcher {
         let promotion = self.ledger.append_verdict(row, &event_block)?;
 
         // DPO pair on refine / reject. We need the attempt diff for this;
-        // read from the corpus tuple if needed (cache miss path).
+        // prefer the BriefCache (in-flight); fall back to the on-disk corpus
+        // tuple (post-restart recovery path).
         let attempt_diff = self
             .cache
             .get(&parsed.brief_id, &attempt_id)
             .map(|c| c.attempt.diff.clone())
-            .unwrap_or_default();
+            .unwrap_or_else(|| {
+                read_attempt_diff_from_corpus(&self.corpus_root, &task_type, &parsed.brief_id)
+            });
 
         let dpo_pair_path = if parsed.verdict.produces_dpo_pair() {
             Some(write_dpo_pair(
@@ -706,6 +709,30 @@ fn locate_corpus_tuple_by_brief_id(
         }
     }
     None
+}
+
+/// Read the `attempt.diff` field from the on-disk corpus tuple for a given
+/// `brief_id` under `<corpus_root>/data/training-corpus/apprenticeship/<task_type>/`.
+///
+/// Used as the BriefCache fallback path: when the Doorman restarts the in-memory
+/// cache is empty, so verdicts posted against existing tuples need to recover the
+/// attempt diff from disk before generating DPO pairs.
+fn read_attempt_diff_from_corpus(corpus_root: &Path, task_type: &str, brief_id: &str) -> String {
+    let path = corpus_root
+        .join("data")
+        .join("training-corpus")
+        .join("apprenticeship")
+        .join(task_type)
+        .join(format!("shadow-{brief_id}.jsonl"));
+    let content = match std::fs::read_to_string(&path) {
+        Ok(c) => c,
+        Err(_) => return String::new(),
+    };
+    let row: serde_json::Value = match serde_json::from_str(content.trim()) {
+        Ok(v) => v,
+        Err(_) => return String::new(),
+    };
+    row["attempt"]["diff"].as_str().unwrap_or("").to_string()
 }
 
 #[cfg(test)]
