@@ -1,6 +1,8 @@
 ---
 artifact: brief
-status: active
+status: archived
+contaminated_note: "bulk-.agent/-copy from project-intelligence; archived 2026-06-08"
+correct_archive: project-intelligence
 created: 2026-06-01
 updated: 2026-06-02
 author: totebox@project-intelligence (claude-sonnet-4-6)
