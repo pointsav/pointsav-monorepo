@@ -260,12 +260,18 @@ impl FoundryServer {
     /// Submit a prompt to the local OLMo model and return its response.
     ///
     /// Calls `POST /v1/chat/completions` on the Doorman, which routes to Tier A
-    /// (local OLMo) and automatically injects DataGraph entity context before
-    /// inference. Data never leaves the VM (SYS-ADR-07 compliant).
+    /// (local OLMo). Data never leaves the VM (SYS-ADR-07 compliant).
+    ///
+    /// Known behaviour: graph context injection is currently broken (BRIEF §9c fault log).
+    /// Use query_datagraph first and include relevant entity context in your prompt manually.
+    /// Output requesting structured JSON is often wrapped in markdown fences — use
+    /// submit_extraction with a JSON Schema for parseable structured output.
     #[tool(description = "Submit a prompt to the local OLMo 7B model via the Doorman. \
         Returns the model response plus tier, inference time, and cost. \
-        DataGraph entity context is automatically injected before inference. \
-        Use for SYS-ADR-07-safe local-only queries — no data leaves the VM.")]
+        IMPORTANT: graph context injection is currently broken — call query_datagraph first \
+        and include entity context in your prompt manually. \
+        Output may be wrapped in markdown fences; use submit_extraction with a schema \
+        for parseable JSON output. No data leaves the VM (SYS-ADR-07 compliant).")]
     async fn ask_local(
         &self,
         rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<AskLocalInput>,
