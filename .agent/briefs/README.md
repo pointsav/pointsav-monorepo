@@ -3,10 +3,6 @@
 `BRIEF-*.md` files are **permanent git-tracked artifacts** — not temp files.
 Engine-agnostic: all engines (Claude Code, Gemini CLI) read and write here.
 
-> **This archive is project-orgcharts** — the Woodfine corporate org chart authoring
-> cluster (N=3: pointsav-design-system primary + 2 media-assets siblings). Genuine
-> briefs here describe org-chart authoring work and design-system backfill decisions.
-
 ## Rules
 
 - **Never delete a brief.** Supersede by editing `status: archived`, or
@@ -18,52 +14,41 @@ Engine-agnostic: all engines (Claude Code, Gemini CLI) read and write here.
 
 ## Active briefs
 
-*(none — create BRIEF-<topic>.md here when org-chart or design-system work warrants a
-multi-session planning artifact)*
+| File | Subject | Status |
+|---|---|---|
+| BRIEF-substrate-phd-thesis-2026-05-27.md | JOURNAL J2 / ASPLOS — Trustworthy Systems from Verified Primitives; seL4/NetBSD; system-ledger benchmarks | active |
+| BRIEF-totebox-transformation.md | VM fabric implementation — hypervisor setup, os-infrastructure, Genesis Protocol | active |
 
 ## Archived briefs
 
-### Archived 2026-06-04 — contamination sweep (foreign archives)
-
-Six top-level BRIEFs moved to `archive/` this session — all were contamination from
-other archives that entered via Stage-6 rebase or bulk `.agent/` copy operations.
-None describe project-orgcharts work.
-
-| File | Origin archive |
-|---|---|
-| `archive/BRIEF-bim-website-pipeline.md` | project-bim |
-| `archive/BRIEF-comprehensive-improvement-proposal.md` | project-knowledge |
-| `archive/BRIEF-knowledge-platform-master.md` | project-knowledge |
-| `archive/BRIEF-location-intelligence-archetypes-2026-06-01.md` | project-gis |
-| `archive/BRIEF-project-console-master.md` | project-console |
-| `archive/BRIEF-yoyo-cloud-run-migration.md` | project-intelligence |
-
-Earlier `archive/` contents (51 files) are from prior contamination sweeps — retained
-per standing discipline.
+| File | Archived | Notes |
+|---|---|---|
+| archive/BRIEF-LEAPFROG-2030.md | — | os-* resource targets, Phase 2/3 disk/RAM targets |
+| archive/BRIEF-OS-FAMILY.md | — | os-* family reference — five os-* types, placement principle |
+| archive/BRIEF-VM-ARCHITECTURE.md | — | VM-* to os-* canonical mapping, deployment model |
+| archive/BRIEF-PPN-ARCHITECTURE.md | — | PPN PhD-thesis-quality architecture — formally-isolated virtualisation |
+| archive/BRIEF-PPN-DEV-BOOTSTRAP.md | — | PPN dev-environment bootstrap — dogfood principle, WireGuard mesh |
 
 ## Non-brief files kept here
 
 | File | Role |
 |---|---|
-| `audit-foundry-wide-2026-05-16.md` | Foundry-wide vocabulary / trademark / file-hygiene audit |
+| domain-map.tsv | Domain-map data (cross-archive) |
+| vocabulary-baseline.tsv | Vocabulary-baseline data (cross-archive) |
+| archive/ | Archived and superseded briefs |
 
-## Lifecycle
+## Contamination cleanup — 2026-06-08
 
-| Stage | Action |
+A bulk `.agent/` provisioning pass had copied ~42 foreign briefs and ~22 foreign
+drafts-outbound files into this archive. All were removed this session and routed to
+their home archives via outbox messages:
+
+| Destination | msg-id |
 |---|---|
-| Plan | Create `BRIEF-<topic>.md` here with `artifact: brief` + `status: active` |
-| Implement | Reference brief during implementation; update as decisions land |
-| Milestone | Promote to artifact(s) via `drafts-outbound/` — see routing table below |
-| Supersede | Edit `status: archived`, or `git mv` to `archive/` — never delete |
+| project-intelligence | project-infrastructure-20260608-brief-relocation-5-orphaned-briefs-ai-au |
+| project-console | project-infrastructure-20260608-brief-relocation-10-orphaned-briefs-4-dr |
+| project-knowledge | project-infrastructure-20260608-brief-relocation-9-orphaned-briefs-4-wik |
+| project-gis | project-infrastructure-20260608-brief-relocation-2-orphaned-briefs-8-gis |
+| project-editorial | project-infrastructure-20260608-brief-relocation-15-orphaned-archive-bri |
 
-## Artifact routing (at milestone)
-
-| Artifact type | Gateway project | Destination |
-|---|---|---|
-| TOPIC-* | project-editorial | content-wiki-documentation / -projects / -corporate |
-| GUIDE-* | project-editorial | woodfine-fleet-deployment/\<cluster\>/ |
-| COMMS-*, LEGAL-* | project-editorial | varies |
-| DESIGN-COMPONENT, DESIGN-RESEARCH | project-design | pointsav-design-system |
-| DESIGN-TOKEN-* (generic) | project-design | pointsav-design-system (requires master_cosign) |
-| DESIGN-TOKEN-* (branded) | project-design | pointsav-media-assets / woodfine-media-assets |
-| ASSET-* | project-design | pointsav-media-assets or woodfine-media-assets |
+Content recoverable from git history: `git show HEAD~1:.agent/briefs/<filename>`
