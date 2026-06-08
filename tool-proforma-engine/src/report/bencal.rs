@@ -67,7 +67,7 @@ pub fn render(block: &BlockF) -> String {
         fmt_pct(block.cagr_y10),
         fmt_pct(block.cagr_y10),
     ));
-    out.push_str("\n");
+    out.push('\n');
     out.push_str(
         "*Aggregate and per-share MOIC are mathematically equal; both columns are shown so \
          readers can read the per-share figure in context of the entity's nominal $10 paid-in \

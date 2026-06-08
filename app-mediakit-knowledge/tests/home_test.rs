@@ -420,16 +420,11 @@ async fn recent_feed_sorts_by_last_edited_desc() {
     let (status, html) = get_home(state).await;
 
     assert_eq!(status, StatusCode::OK);
-    assert!(
-        html.contains("mp-itn"),
-        "recent feed must be present"
-    );
+    assert!(html.contains("mp-itn"), "recent feed must be present");
 
     // Extract just the recent-feed section so positional assertions are clean.
     // The recent list header has id="mp-itn".
-    let recent_start = html
-        .find("mp-itn")
-        .expect("recent list must appear");
+    let recent_start = html.find("mp-itn").expect("recent list must appear");
     let recent_section = &html[recent_start..];
 
     // All three topics must appear within the recent section (they're not given
@@ -527,8 +522,14 @@ async fn category_with_zero_articles_renders_placeholder() {
     assert!(html.contains("Reference"), "populated area must render");
     // Areas with no articles are omitted — Substrate & Systems, Infrastructure,
     // and Archetypes have no fixture content and must not appear in the grid.
-    assert!(!html.contains("Archetypes"), "empty area must not appear in grid");
-    assert!(!html.contains("Infrastructure"), "empty area must not appear in grid");
+    assert!(
+        !html.contains("Archetypes"),
+        "empty area must not appear in grid"
+    );
+    assert!(
+        !html.contains("Infrastructure"),
+        "empty area must not appear in grid"
+    );
 }
 
 // ─── Test 8: substrate category buckets correctly + humanized heading ─────────
