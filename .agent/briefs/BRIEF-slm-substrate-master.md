@@ -512,6 +512,11 @@ Full plan: `/home/mathew/.claude/plans/make-plan-for-what-fluffy-whale.md`
 - [x] **Circuit resilience Sprint 3B** ✓ — WATCHER Tier A fallback enabled (300s rate limit) — 2026-05-29
 - [x] **Circuit resilience Sprint 3C** ✓ — drain worker holds queue when Tier B open >1h — 2026-05-29
 - [x] **service-content rebuilt + deployed** ✓ sha256=`2362ea5c580a9869c5e307b645d60219cb9535dbf4218bd8762da870a4c62f7b` — 2026-05-29
+- [x] **service-content enrichment cascade deployed** ✓ sha256=`eee853dad48dcbc106ad975b29b981c57e6893421e73272111d190691f44df7f` commit `008d06ad` — 2026-06-08
+  Tier A always-first cascade; POST /v1/ingest endpoint; DPO pairs to enrichment-*.jsonl
+- [x] **service-content Tier A response parsing fix** ✓ sha256=`37bf10f9f4d69358e009f3afbe2e957e9563bc204651b99dde2594c1347aa34a` commit `4559b9fc` — 2026-06-08
+  call_tier_a_extract() parsed OpenAI .choices[]; Doorman returns .content envelope; fix + 180s timeout
+  Smoke: entity_count 8172→8182+ (3 entities from test doc; 7 from BRIEF chunk)
 - [x] **slm-doorman-server rebuilt + deployed** ✓ sha256=`81b8629cf474104fe33274244c6db832a1f2f5dca898c80a98cd524bf3269e2f` — 2026-05-29
 - [x] **Binary ledger updated** ✓ both entries appended to `data/binary-ledger/*.jsonl` — 2026-05-29
 
