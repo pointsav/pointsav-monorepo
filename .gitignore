@@ -10,3 +10,6 @@ outputs/*
 
 # Legacy .claude directory (should be .agent symlink — to be fixed)
 .claude/
+
+# Totebox session state — archive-root git tracks these, not sub-clone
+.agent/
