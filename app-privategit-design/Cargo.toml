@@ -11,3 +11,4 @@ path = "src/main.rs"
 axum = "0.7"
 tokio = { version = "1", features = ["full"] }
 tower-http = { version = "0.5", features = ["compression-full"] }
+pulldown-cmark = { version = "0.11", default-features = false, features = ["html"] }
