@@ -35,7 +35,7 @@ Last updated: 2026-05-31.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-mediakit-distributions | Scaffold-coded | app-mediakit | 4 files |
-| app-mediakit-knowledge | Scaffold-coded | app-mediakit | 4 files |
+| app-mediakit-knowledge | Active | app-mediakit | Phases 1–5 shipped; Phase 6 gated on content-wiki-* rename + Doctrine amendment; deployed at documentation.pointsav.com (port 9090) + projects.woodfinegroup.com (port 9093); Stage 6 promote pending (ff7cd16d) |
 | app-mediakit-marketing | Scaffold-coded | app-mediakit | 4 files |
 | app-mediakit-telemetry | Scaffold-coded | app-mediakit | 14 files; MaxMind `.mmdb` pending move to build-time fetch |
 
@@ -199,12 +199,12 @@ Last updated: 2026-05-31.
 
 ## Summary (2026-05-31)
 
-- **Active:** 10 (adds `app-privategit-marketplace`, `app-privategit-source`, `tool-wallet` 2026-05-31)
-- **Scaffold-coded:** 60 (adds `app-privategit-workbench` 2026-05-31; `app-privategit-source-control` retained as stale scaffold)
+- **Active:** 11 (adds `app-mediakit-knowledge` 2026-06-07)
+- **Scaffold-coded:** 59 (removes `app-mediakit-knowledge` 2026-06-07)
 - **Reserved-folder:** 39
 - **Defect:** 0
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 112 (added `app-privategit-marketplace`, `app-privategit-source`, `app-privategit-workbench`, `tool-wallet` 2026-05-31). Last updated: 2026-05-31.
+**Total rows:** 112. Last updated: 2026-06-07.
