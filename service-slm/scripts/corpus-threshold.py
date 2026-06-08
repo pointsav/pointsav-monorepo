@@ -129,12 +129,21 @@ def trigger_training_cycle(adapter_name: str, files: list, dry_run: bool = False
              f"gs://{gcs_bucket}/training-corpus/{corpus_prefix}/"],
             check=True, capture_output=True
         )
+        # Sync DPO feedback pairs (chosen/rejected/prompt) alongside shadow corpus
+        feedback_dir = CORPUS_ROOT / "feedback"
+        if feedback_dir.exists():
+            subprocess.run(
+                ["gcloud", "storage", "rsync",
+                 str(feedback_dir),
+                 f"gs://{gcs_bucket}/training-corpus/feedback/"],
+                check=True, capture_output=True
+            )
         subprocess.run(
             ["gcloud", "storage", "cp", str(marker_path),
              f"gs://{gcs_bucket}/training-pending/{marker_path.name}"],
             check=True, capture_output=True
         )
-        print(f"    [TRAIN] Corpus synced + marker → gs://{gcs_bucket}/training-pending/{marker_path.name}")
+        print(f"    [TRAIN] Corpus + feedback synced → gs://{gcs_bucket}/training-pending/{marker_path.name}")
         return True
     except subprocess.CalledProcessError as e:
         print(f"    [TRAIN] GCS dispatch failed: {e}")
