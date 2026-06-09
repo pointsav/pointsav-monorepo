@@ -3,7 +3,7 @@ artifact: brief
 status: active
 title: SLM Learning Loop — Training Pipeline + Sovereign Coding Agent
 created: 2026-05-29
-updated: 2026-06-09 (session — daily Yo-Yo cycle automation verified; ML libs plan added §11-§12)
+updated: 2026-06-09 (session — timer consolidation + kill switch; §13 as-built record added)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 companion: BRIEF-slm-substrate-master.md
 grounds_in:
@@ -744,3 +744,117 @@ The GCS bucket approach (`SLM_YOYO_WEIGHTS_GCS_BUCKET`) vs. SSH-direct:
   or if adapters need to be accessible from multiple machines. Can be added later.
 
 For Phase 1, SSH-direct is the right call. GCS is a Phase 2+ concern.
+
+---
+
+## §13 — As-Built Record
+
+> **Purpose:** A living snapshot of what is actually deployed and working as of the date
+> shown. Updated whenever a component is added, changed, or removed. Not a plan — a record
+> of physical reality. Reconcile against this when something breaks before checking the
+> design sections.
+>
+> **Last updated:** 2026-06-09 — timer consolidation + kill switch
+
+---
+
+### System diagram (current state)
+
+```
+WORKSPACE VM (foundry-workspace, vault-privategit-source-1)
+  │
+  ├── local-doorman.service          :9080  Tier A (OLMo 2 7B, llama-server :8080)
+  │     └── Tier B circuit → yoyo-batch (CLOSED when VM running; OPEN when TERMINATED)
+  │
+  ├── local-content.service          :9081  service-content (LadybugDB entity graph)
+  │     └── enrichment-*.jsonl → feedback dir (continuous write)
+  │
+  ├── local-yoyo-daily.timer   ──────────── 17:00 UTC daily (→ 02:30 UTC after monitoring)
+  │     └── yoyo-daily-cycle.sh             THE single VM lifecycle controller
+  │           Phase 1:  gcloud instances start yoyo-batch
+  │           Phase 2:  wait llama-server health (~170s)
+  │           Phase 3:  wait Doorman Tier B circuit close
+  │           Phase 4:  enrichment drain (80% of 90-min budget)
+  │           Phase 5:  corpus-threshold.py → training markers
+  │           Phase 7:  GCS sync (when SLM_YOYO_WEIGHTS_GCS_BUCKET set — currently OFF)
+  │           Phase 6:  SSH stop llama-server → gcloud instances stop → verify TERMINATED
+  │
+  ├── yoyo-idle-monitor.timer  ──────────── every 5 min
+  │     └── yoyo-idle-monitor.sh            safety backstop: stops yoyo-batch if idle ≥30 min
+  │           targets: yoyo-batch / us-central1-a / 10.128.0.24
+  │
+  └── local-corpus-threshold.timer   ────── MASKED (→ /dev/null)
+        was: 02:00 UTC daily corpus check + VM start
+        now: permanently disabled; daily cycle owns this work
+
+YOYO-BATCH VM (us-central1-a, g2-standard-4, L4 24GB)
+  └── llama-server.service       :8080  OLMo-3-32B-Think (loaded at boot, inference-ready)
+        started by: startup-script (systemctl start llama-server.service)
+        stopped by: yoyo-daily-cycle.sh Phase 6 (SSH sudo systemctl stop)
+        cost:       ~$0.71/hr running; TERMINATED = $0.00
+
+KILL SWITCH
+  file: /srv/foundry/data/yoyo-disabled
+  scope: checked by yoyo-daily-cycle.sh (Phase 0) AND corpus-threshold.py _start_trainer_vm()
+  activate:   touch /srv/foundry/data/yoyo-disabled
+  deactivate: rm /srv/foundry/data/yoyo-disabled
+  effect:     no gcloud instances start issued from any automated path
+```
+
+---
+
+### Deployed components inventory
+
+| Component | Path | Status | Notes |
+|---|---|---|---|
+| `yoyo-daily-cycle.sh` | `/srv/foundry/bin/` | **DEPLOYED** | Full VM lifecycle; commit `3f0f3c0` |
+| `local-yoyo-daily.service` | `/etc/systemd/system/` | **ACTIVE** | oneshot, User=mathew |
+| `local-yoyo-daily.timer` | `/etc/systemd/system/` | **ACTIVE** | 17:00 UTC, RandomDelay=120s |
+| `yoyo-idle-monitor.sh` | `/srv/foundry/bin/` | **ACTIVE** | Fixed target: yoyo-batch/us-central1-a |
+| `yoyo-idle-monitor.timer` | `/etc/systemd/system/` | **ACTIVE** | every 5 min; 30 min idle threshold |
+| `local-corpus-threshold.timer` | `/etc/systemd/system/` | **MASKED** | → /dev/null; backup at `.timer.bkp` |
+| `corpus-threshold.py` | `service-slm/scripts/` | **DEPLOYED** | kill switch added; commit `5ca1e6e0` |
+| `lora-update.sh` | `service-slm/scripts/` | deployed (disabled) | Fixed VM/zone defaults; commit `5ca1e6e0` |
+| `git-post-commit-hook.sh` | `service-slm/scripts/` | deployed | Install per archive; no archive has it yet |
+| `capture-edit.py` | `/srv/foundry/bin/` | **ACTIVE** | Fix A deployed; real diffs in queue |
+| `run-dpo-training.py` | `service-slm/scripts/` | code-complete | ML libs NOT on yoyo-batch yet |
+| `export-sft.sh` | `service-slm/scripts/` | **NOT WRITTEN** | §10.5 Phase A; ~40 LOC needed |
+
+---
+
+### Training corpus inventory (as of 2026-06-09)
+
+| Dataset | Location | Count | Quality | Use |
+|---|---|---|---|---|
+| Engineering SFT tuples | `data/training-corpus/engineering/*/` | 1,410 | pre-Fix-A diffs empty — DO NOT USE raw | needs filter via `export-sft.sh` |
+| Apprenticeship DPO tuples | `data/training-corpus/apprenticeship/shadow-capture/` | 225 valid | post-Fix-A; some still empty-diff | filter before use |
+| Enrichment DPO pairs | `feedback/enrichment-*.jsonl` | 31 files | Tier B vs Tier A entity extraction | TRL-compatible; accumulating daily |
+| Training markers | `data/training-pending/*.json` | 14 (local) | today-dated; idempotent | waiting for GCS bucket + ML libs |
+| Poison/degenerate | `queue-poison/` | ~78 | empty diffs, never dispatched | EXCLUDE from all training runs |
+
+---
+
+### What is NOT yet built (next steps, in order)
+
+| # | What | Blocks |
+|---|---|---|
+| 1 | Install ML libs on yoyo-batch (`trl`, `peft`, `transformers`, `bitsandbytes`) | All training runs |
+| 2 | Write `export-sft.sh` (~40 LOC) | First SFT LoRA run |
+| 3 | First manual training run (SSH-direct, operator-supervised, ~2h) | Adapter v1 |
+| 4 | Uncomment `SLM_YOYO_WEIGHTS_GCS_BUCKET` in `local-yoyo-daily.service` | GCS sync in daily cycle |
+| 5 | Wire Phase 7 training trigger into `yoyo-daily-cycle.sh` (SSH `run-dpo-training.py`) | Automated training |
+| 6 | Move timer to 02:30 UTC (after 1-2 weeks operator monitoring at 17:00 UTC) | Night-time operation |
+| 7 | Eval gate + adapter registration (`eval-adapter.sh` + `data/adapters/registry.yaml`) | Safe promotion |
+| 8 | Install `git-post-commit-hook.sh` in each active Totebox archive | Continuous SFT capture |
+
+---
+
+### Cost and budget reference
+
+| Item | Rate | Notes |
+|---|---|---|
+| yoyo-batch RUNNING | ~$0.71/hr | g2-standard-4 + L4 spot, us-central1-a |
+| Daily 90-min cycle | ~$1.07/day | when running; $0 when TERMINATED |
+| Monthly (daily cycles) | ~$32/month | 30 days × $1.07 |
+| Kill switch `yoyo-disabled` | $0 | instant cost control; one file |
+| Unexpected 02:00 UTC run (pre-fix) | ~$0.85/event | root cause: corpus-threshold.timer (now masked) |
