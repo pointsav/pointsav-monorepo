@@ -8,7 +8,7 @@ author: totebox@project-orgcharts
 gateway: project-design
 destination: pointsav-design-system/tokens/dtcg-bundle.json
 target_path: tokens/dtcg-bundle.json
-master_cosign: "command@claude-code 2026-06-09T16:35:12Z"
+master_cosign: "2026-06-09T16:36:52Z jwoodfine"
 master_cosign_required: true
 research_done_count: 3
 research_suggested_count: 1
@@ -16,7 +16,8 @@ open_questions_count: 0
 research_provenance: direct-observation
 research_inline: true
 notes_for_designer: |
-  BLOCKED on master_cosign. Additive only — adds component.orgchart group.
+  Cosigned 2026-06-09T16:36:52Z by jwoodfine (operator approval). Ready for commit.
+  Additive only — adds component.orgchart group.
   Values measured from production HTML charts (9 files, 15 JW iterations).
   Canvas dimensions are US Letter landscape at 96dpi (11" × 8.5" = 1056×816px).
   Box dimensions do NOT derive from Carbon $spacing-* scale — see carbon-token-map research.
