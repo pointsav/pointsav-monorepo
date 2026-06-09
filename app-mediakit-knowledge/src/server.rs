@@ -1099,7 +1099,7 @@ fn home_chrome(
     pending_count: i64,
 ) -> Markup {
     let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
-    let woodfine_projects = brand_theme == Some("woodfine-projects");
+    let _woodfine_projects = brand_theme == Some("woodfine-projects");
     let _title = home_fm.title.as_deref().unwrap_or(site_title);
     let auth_attr = if user.is_some() { "user" } else { "anon" };
 
@@ -2713,13 +2713,13 @@ fn wiki_chrome(
                         // P3: Previous / Next article navigation
                         @if prev_article.is_some() || next_article.is_some() {
                             nav.article-nav aria-label="Article navigation" {
-                                @if let Some(ref prev) = prev_article {
+                                @if let Some(prev) = prev_article {
                                     a.article-nav__prev href={ "/wiki/" (prev.slug) } {
                                         span.article-nav__label { "← Previous" }
                                         span.article-nav__title { (prev.title) }
                                     }
                                 }
-                                @if let Some(ref next) = next_article {
+                                @if let Some(next) = next_article {
                                     a.article-nav__next href={ "/wiki/" (next.slug) } {
                                         span.article-nav__label { "Next →" }
                                         span.article-nav__title { (next.title) }
