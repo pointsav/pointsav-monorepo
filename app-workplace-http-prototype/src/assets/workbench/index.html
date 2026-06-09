@@ -281,6 +281,11 @@ html.light .wb-toast-action:hover { background: rgba(0,0,0,0.15); }
   position: relative;
 }
 #editor-panel.visible { display: flex; }
+#editor-panel.ep-collapsed { width: 32px !important; min-width: 32px; }
+#editor-panel.ep-collapsed > *:not(.editor-bar) { visibility: hidden; pointer-events: none; overflow: hidden; }
+#editor-panel.ep-collapsed .editor-bar { justify-content: center; padding: 0 4px; }
+#editor-panel.ep-collapsed .editor-bar > *:not(#ep-toggle-btn) { display: none; }
+#ep-toggle-btn { flex-shrink: 0; }
 
 .editor-bar {
   background: #252526; border-bottom: 1px solid #333; border-left: 1px solid #333;
@@ -912,6 +917,7 @@ html.light .recent-show-more:hover { color: #004fa0; }
 
     <div id="editor-panel">
       <div class="editor-bar">
+        <button id="ep-toggle-btn" class="bar-btn" title="Collapse editor panel" onclick="toggleEditorCollapse()">‹</button>
         <span class="editor-title">Editor</span>
         <span id="editor-cursor"></span>
         <span id="editor-dirty" style="display:none" title="Unsaved changes">●</span>
@@ -985,6 +991,7 @@ const gitStatus  = new Map();
 
 // Sidebar collapse state
 let sidebarPinnedWidth = parseInt(localStorage.getItem('wb-sidebar-w') || '300');
+let editorPinnedWidth  = parseInt(localStorage.getItem('wb-editor-w')  || '440');
 
 // Hidden-files toggle (persists across reloads)
 let showHidden = localStorage.getItem('wb-show-hidden') === '1';
@@ -1104,6 +1111,34 @@ function expandSidebar() {
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
   if (sb.classList.contains('sb-collapsed')) expandSidebar(); else collapseSidebar();
+}
+
+// ── Editor panel collapse ─────────────────────────────────────────────────────
+function collapseEditorPanel() {
+  const panel = document.getElementById('editor-panel');
+  const w = panel.offsetWidth;
+  if (w > 36) { editorPinnedWidth = w; localStorage.setItem('wb-editor-w', w); }
+  panel.style.width = '32px';
+  panel.classList.add('ep-collapsed');
+  document.getElementById('resizer2').style.display = 'none';
+  localStorage.setItem('wb-editor-collapsed', '1');
+  const btn = document.getElementById('ep-toggle-btn');
+  if (btn) btn.textContent = '›';
+}
+function expandEditorPanel() {
+  const panel = document.getElementById('editor-panel');
+  const savedW = parseInt(localStorage.getItem('wb-editor-w')) || 440;
+  editorPinnedWidth = savedW;
+  panel.style.width = savedW + 'px';
+  panel.classList.remove('ep-collapsed');
+  if (panel.classList.contains('visible')) document.getElementById('resizer2').style.display = 'block';
+  localStorage.setItem('wb-editor-collapsed', '0');
+  const btn = document.getElementById('ep-toggle-btn');
+  if (btn) btn.textContent = '‹';
+}
+function toggleEditorCollapse() {
+  const panel = document.getElementById('editor-panel');
+  if (panel.classList.contains('ep-collapsed')) expandEditorPanel(); else collapseEditorPanel();
 }
 
 // ── Hidden-files toggle ───────────────────────────────────────────────────────
@@ -1262,7 +1297,7 @@ function showEditorPanel(content) {
   const r2    = document.getElementById('resizer2');
   const ta    = document.getElementById('editor-textarea');
   panel.classList.add('visible');
-  r2.style.display = 'block';
+  if (!panel.classList.contains('ep-collapsed')) r2.style.display = 'block';
   ta.value = content;
   setDirty(false);
   showEditorStatus('', null, 0);
@@ -1818,6 +1853,7 @@ function updateBar(name, path) {
   bar.appendChild(printBtn);
 
   const dlBtn = document.createElement('a');
+  dlBtn.id = 'bar-dl-btn';
   dlBtn.className = 'bar-btn';
   dlBtn.href = path;
   dlBtn.download = name;
@@ -1952,6 +1988,8 @@ async function renameCurrent() {
   saveBarBtn.textContent = '💾 Save';
   saveBarBtn.addEventListener('click', saveFile);
   document.getElementById('bar-path').insertAdjacentElement('afterend', saveBarBtn);
+  const dlEl = document.getElementById('bar-dl-btn');
+  if (dlEl) saveBarBtn.insertAdjacentElement('afterend', dlEl);
   addRenameDuplicateButtons();
   patchTreeItemAfterRename(oldBrowsePath, newBrowsePath, newDisplayName);
 
@@ -2126,6 +2164,8 @@ async function openFile(path, name) {
       saveBarBtn.textContent = '💾 Save';
       saveBarBtn.addEventListener('click', saveFile);
       document.getElementById('bar-path').insertAdjacentElement('afterend', saveBarBtn);
+      const dlEl = document.getElementById('bar-dl-btn');
+      if (dlEl) saveBarBtn.insertAdjacentElement('afterend', dlEl);
       addRenameDuplicateButtons();
       showEditorPanel(editorData.content);
       maybeShowRecoveryBar(apiPath, editorData.mtime || 0);
