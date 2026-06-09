@@ -234,7 +234,6 @@ pub enum DoormanError {
     },
 
     // ── Tier B resilience ────────────────────────────────────────────────
-
     /// Tier B (Yo-Yo) request timed out. The 180-second outer deadline
     /// (tokio::time::timeout) fired before the response completed — including
     /// any 503 Retry-After cold-start sleep. The router treats this as a
@@ -299,6 +298,43 @@ pub enum DoormanError {
         /// Path of the malformed brief file (original location).
         path: String,
         /// Parse-error description.
+        reason: String,
+    },
+
+    /// A flow gate (per-label or global kill switch) is closed. The request
+    /// targeting the named label is refused; the caller should retry after
+    /// the operator re-opens the gate. 503 SERVICE_UNAVAILABLE with a
+    /// `Retry-After` header. The express lane returns this; nothing bypasses
+    /// the kill switch.
+    #[error("flow gate '{label}' is closed (operator kill switch); retry after it re-opens")]
+    FlowGateClosed {
+        /// The gate label that was closed ("global", "batch", "express",
+        /// "tier-c", or a custom node label).
+        label: String,
+    },
+
+    /// A priority queue directory operation failed (create, lease, rename,
+    /// or read). 500 INTERNAL when surfaced via HTTP; background drain
+    /// worker logs and continues to the next item.
+    #[error("priority queue I/O error at {path}: {reason}")]
+    PriorityQueueIo {
+        /// Path to the queue file or directory that failed.
+        path: String,
+        /// Human-readable description of the failure.
+        reason: String,
+    },
+
+    /// A GCP Compute Engine REST call (start/stop/status/operation poll) or
+    /// the metadata-server token fetch failed. Server-side; the VM lifecycle
+    /// monitor logs and retries, and the router falls back to Tier A. 502 when
+    /// surfaced via HTTP.
+    #[error("GCP Compute API error during {operation}: {reason}")]
+    GcpApi {
+        /// The operation that failed ("start", "stop", "status",
+        /// "wait-operation", "token").
+        operation: &'static str,
+        /// Human-readable description (status code, body excerpt, or transport
+        /// error).
         reason: String,
     },
 }

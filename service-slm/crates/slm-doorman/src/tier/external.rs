@@ -409,6 +409,7 @@ mod tests {
             graph_context_enabled: None,
             tools: None,
             stop_sequences: None,
+            session_context: None,
         }
     }
 

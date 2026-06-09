@@ -56,7 +56,12 @@ pub struct ApprenticeshipConfig {
     /// `pointsav` per `apprenticeship-substrate.md` §8.
     pub tenant: String,
     /// When `true`, shadow briefs route to Tier A regardless of size.
-    /// Mirrors `DoormanConfig::tier_a_first`. Set via `SLM_TIER_A_FIRST=true`.
+    /// Controlled by two env vars OR'd together:
+    ///   `SLM_TIER_A_FIRST=true`   — global Tier-A-first policy, OR
+    ///   `SLM_APPRENTICESHIP_TIER_A_ONLY` — defaults to `true`; set to `false`
+    ///     only when the operator explicitly wants shadow briefs on Tier B.
+    /// The default-true guard prevents git-commit briefs from auto-escalating
+    /// to Cloud Run and accruing GPU charges without operator intent.
     pub tier_a_first: bool,
 }
 
@@ -81,9 +86,16 @@ impl ApprenticeshipConfig {
         let doctrine_version =
             std::env::var("FOUNDRY_DOCTRINE_VERSION").unwrap_or_else(|_| "0.0.13".to_string());
         let tenant = std::env::var("FOUNDRY_TENANT").unwrap_or_else(|_| "pointsav".to_string());
-        let tier_a_first = std::env::var("SLM_TIER_A_FIRST")
+        let tier_a_first_global = std::env::var("SLM_TIER_A_FIRST")
             .map(|v| matches!(v.trim(), "true" | "1"))
             .unwrap_or(false);
+        // Default true: shadow briefs stay on Tier A unless the operator
+        // explicitly opts in. Prevents git-commit diffs from auto-escalating
+        // to Cloud Run (GPU) and accruing charges without operator intent.
+        let apprenticeship_tier_a_only = std::env::var("SLM_APPRENTICESHIP_TIER_A_ONLY")
+            .map(|v| !matches!(v.trim(), "false" | "0"))
+            .unwrap_or(true);
+        let tier_a_first = tier_a_first_global || apprenticeship_tier_a_only;
         Self {
             foundry_root,
             citations_path,
@@ -139,7 +151,11 @@ impl<'a> ApprenticeshipDispatcher<'a> {
         brief: &ApprenticeshipBrief,
     ) -> Result<ApprenticeshipAttempt> {
         let prompt = apprentice_prompt(&self.config, brief);
-        let tier_hint = pick_tier_for_brief(brief, self.config.brief_tier_b_threshold_chars, self.config.tier_a_first);
+        let tier_hint = pick_tier_for_brief(
+            brief,
+            self.config.brief_tier_b_threshold_chars,
+            self.config.tier_a_first,
+        );
 
         let module_id = brief
             .scope
@@ -194,7 +210,8 @@ impl<'a> ApprenticeshipDispatcher<'a> {
                 "<|endoftext|>".to_string(),
                 "<|im_end|>".to_string(),
             ]),
-            };
+            session_context: None,
+        };
 
         info!(
             target: "slm_doorman::apprenticeship",
@@ -251,7 +268,11 @@ impl<'a> ApprenticeshipDispatcher<'a> {
 
         // Same routing as dispatch_brief.
         let prompt = apprentice_prompt(&self.config, brief);
-        let tier_hint = pick_tier_for_brief(brief, self.config.brief_tier_b_threshold_chars, self.config.tier_a_first);
+        let tier_hint = pick_tier_for_brief(
+            brief,
+            self.config.brief_tier_b_threshold_chars,
+            self.config.tier_a_first,
+        );
         let module_id = brief
             .scope
             .cluster
@@ -304,7 +325,8 @@ impl<'a> ApprenticeshipDispatcher<'a> {
                 "<|endoftext|>".to_string(),
                 "<|im_end|>".to_string(),
             ]),
-            };
+            session_context: None,
+        };
 
         info!(
             target: "slm_doorman::apprenticeship",
@@ -853,6 +875,8 @@ Bumping MANIFEST.md per ni-51-102 forward-looking marker.
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             ledger(),
         );
@@ -923,6 +947,8 @@ I'm not sure how to apply this safely.
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             ledger(),
         );
@@ -1013,6 +1039,8 @@ OK.
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             ledger(),
         );
@@ -1095,6 +1123,8 @@ ok
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             ledger(),
         );
@@ -1117,7 +1147,9 @@ ok
             "Tier A shadow request must cap max_tokens at 512"
         );
         // Fix 2: stop sequences present, including the diff-fence terminator.
-        let stop = body["stop"].as_array().expect("stop must be a top-level array");
+        let stop = body["stop"]
+            .as_array()
+            .expect("stop must be a top-level array");
         assert!(
             stop.iter().any(|s| s.as_str() == Some("```\n\n")),
             "stop sequences must include the diff code-fence terminator; got {stop:?}"
@@ -1188,6 +1220,8 @@ Shadow attempt for the apprentice.
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             ledger(),
         );
@@ -1257,6 +1291,8 @@ Shadow attempt for the apprentice.
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             ledger(),
         );

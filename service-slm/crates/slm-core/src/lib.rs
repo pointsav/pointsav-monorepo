@@ -64,6 +64,22 @@ pub enum GrammarConstraint {
     JsonSchema(serde_json::Value),
 }
 
+/// Metadata attached by the calling Totebox session. Populated by
+/// `bin/edit-via-doorman.sh` from `FOUNDRY_*` env vars exported at session
+/// start (AGENT.md §3b). Doorman uses this for audit-ledger tagging and
+/// Yo-Yo routing fallback; it is stripped before any Tier C (external API)
+/// call.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SessionContext {
+    pub archive_name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub archive_domain: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tetrad_summary: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub current_task: Option<String>,
+}
+
 /// Request crossing the Doorman boundary.
 ///
 /// `request_id` and `module_id` are mandatory — they tag every audit-ledger
@@ -126,6 +142,11 @@ pub struct ComputeRequest {
     /// when `None` so existing callers are unaffected.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stop_sequences: Option<Vec<String>>,
+    /// Calling Totebox archive identity. Populated by `bin/edit-via-doorman.sh`
+    /// from `FOUNDRY_*` env vars; absent from all existing requests. Stripped
+    /// before Tier C (external API) calls. See `SessionContext`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub session_context: Option<SessionContext>,
 }
 
 #[cfg(test)]
@@ -156,6 +177,7 @@ mod tests {
             graph_context_enabled: None,
             tools: None,
             stop_sequences: None,
+            session_context: None,
         }
     }
 
@@ -267,6 +289,52 @@ mod tests {
             req2.grammar.is_none(),
             "grammar must default to None when absent from JSON"
         );
+    }
+
+    #[test]
+    fn session_context_absent_when_none() {
+        let req = minimal_request();
+        let json = serde_json::to_string(&req).unwrap();
+        assert!(
+            !json.contains("session_context"),
+            "session_context must not appear in serialised form when None; got: {json}"
+        );
+        let req2: ComputeRequest = serde_json::from_str(&json).unwrap();
+        assert!(req2.session_context.is_none());
+    }
+
+    #[test]
+    fn session_context_round_trip() {
+        let mut req = minimal_request();
+        req.session_context = Some(SessionContext {
+            archive_name: "project-intelligence".to_string(),
+            archive_domain: Some("intelligence".to_string()),
+            tetrad_summary: None,
+            current_task: Some("feat(service-slm): SessionContext".to_string()),
+        });
+        let json = serde_json::to_string(&req).unwrap();
+        assert!(
+            json.contains("project-intelligence"),
+            "archive_name must appear in serialised form; got: {json}"
+        );
+        assert!(
+            !json.contains("tetrad_summary"),
+            "tetrad_summary must be absent when None; got: {json}"
+        );
+        let req2: ComputeRequest = serde_json::from_str(&json).unwrap();
+        let sc = req2.session_context.expect("session_context must survive round-trip");
+        assert_eq!(sc.archive_name, "project-intelligence");
+        assert_eq!(sc.archive_domain.as_deref(), Some("intelligence"));
+        assert!(sc.tetrad_summary.is_none());
+    }
+
+    #[test]
+    fn session_context_backward_compat_missing_field() {
+        // A JSON payload without session_context (existing callers) must
+        // deserialise successfully with session_context: None.
+        let json = r#"{"request_id":"00000000-0000-0000-0000-000000000000","module_id":"test-module","messages":[{"role":"user","content":"hi"}]}"#;
+        let req: ComputeRequest = serde_json::from_str(json).unwrap();
+        assert!(req.session_context.is_none());
     }
 }
 

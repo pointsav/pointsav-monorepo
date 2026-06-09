@@ -89,7 +89,12 @@ impl GraphContextClient {
     /// - no entities match the query
     ///
     /// `limit` is capped at 10 to bound context injection size.
-    pub async fn fetch_context(&self, module_id: &str, query: &str, limit: usize) -> Option<String> {
+    pub async fn fetch_context(
+        &self,
+        module_id: &str,
+        query: &str,
+        limit: usize,
+    ) -> Option<String> {
         let now_secs = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map(|d| d.as_secs())
@@ -191,7 +196,8 @@ impl GraphContextClient {
         let failures = self.consecutive_failures.fetch_add(1, Ordering::Relaxed) + 1;
         if failures >= GRAPH_CIRCUIT_THRESHOLD {
             let open_until = now_secs + GRAPH_CIRCUIT_OPEN_SECS;
-            self.circuit_open_until_secs.store(open_until, Ordering::Relaxed);
+            self.circuit_open_until_secs
+                .store(open_until, Ordering::Relaxed);
             warn!(
                 target: "slm_doorman::graph",
                 consecutive_failures = failures,
@@ -205,8 +211,12 @@ impl GraphContextClient {
     #[cfg(test)]
     fn new_with_state(endpoint: String, failures: u32, open_until_secs: u64) -> Self {
         let client = Self::new(endpoint);
-        client.consecutive_failures.store(failures, Ordering::Relaxed);
-        client.circuit_open_until_secs.store(open_until_secs, Ordering::Relaxed);
+        client
+            .consecutive_failures
+            .store(failures, Ordering::Relaxed);
+        client
+            .circuit_open_until_secs
+            .store(open_until_secs, Ordering::Relaxed);
         client
     }
 }
@@ -399,7 +409,10 @@ mod tests {
 
         // The circuit window has expired — must probe and succeed.
         let r = client.fetch_context("m", "q", 5).await;
-        assert!(r.is_some(), "expired circuit must allow probe and return Some on success");
+        assert!(
+            r.is_some(),
+            "expired circuit must allow probe and return Some on success"
+        );
         assert_eq!(
             client.consecutive_failures.load(Ordering::Relaxed),
             0,

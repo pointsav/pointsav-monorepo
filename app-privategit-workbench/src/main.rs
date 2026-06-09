@@ -419,6 +419,79 @@ async fn rename_file(State(state): State<AppState>, Query(q): Query<RenameQuery>
 }
 
 // ---------------------------------------------------------------------------
+// Move
+// ---------------------------------------------------------------------------
+
+#[derive(Serialize)]
+struct MoveResponse {
+    ok: bool,
+    new_path: String,
+}
+
+/// POST /move?from=<file_url_path>&to=<dest_dir_url_path>
+/// Moves a file into a different directory. `to` must resolve to an existing
+/// directory. Both source and destination must be in writable roots.
+async fn move_file(State(state): State<AppState>, Query(q): Query<RenameQuery>) -> Response {
+    let (src_fs, src_writable) = match resolve_path(&state.roots, &q.from) {
+        Ok(v) => v,
+        Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
+    };
+    if !src_fs.exists() {
+        return err(StatusCode::NOT_FOUND, "source file not found");
+    }
+    if !src_fs.is_file() {
+        return err(StatusCode::BAD_REQUEST, "source is not a file");
+    }
+    if !src_writable {
+        return err(StatusCode::FORBIDDEN, "source path is not writable");
+    }
+
+    let (dst_fs, dst_writable) = match resolve_path(&state.roots, &q.to) {
+        Ok(v) => v,
+        Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
+    };
+    if !dst_writable {
+        return err(StatusCode::FORBIDDEN, "destination is not writable");
+    }
+    if !dst_fs.is_dir() {
+        return err(StatusCode::BAD_REQUEST, "destination is not a directory");
+    }
+
+    let filename = match src_fs.file_name() {
+        Some(n) => n.to_owned(),
+        None => return err(StatusCode::BAD_REQUEST, "cannot determine filename"),
+    };
+    let final_path = dst_fs.join(&filename);
+
+    // No-op: already in the right place
+    if src_fs == final_path {
+        return Json(MoveResponse {
+            ok: true,
+            new_path: q.from.clone(),
+        })
+        .into_response();
+    }
+    if final_path.exists() {
+        return err(
+            StatusCode::CONFLICT,
+            "a file with that name already exists in destination",
+        );
+    }
+
+    // Atomic rename; fall back to copy+delete for cross-filesystem moves
+    if fs::rename(&src_fs, &final_path).is_err() {
+        if let Err(e) = fs::copy(&src_fs, &final_path) {
+            return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string());
+        }
+        let _ = fs::remove_file(&src_fs);
+    }
+
+    let dest_prefix = q.to.trim_start_matches('/').trim_end_matches('/');
+    let new_path = format!("{}/{}", dest_prefix, filename.to_str().unwrap_or(""));
+    Json(MoveResponse { ok: true, new_path }).into_response()
+}
+
+// ---------------------------------------------------------------------------
 // Duplicate
 // ---------------------------------------------------------------------------
 
@@ -1174,6 +1247,7 @@ async fn main() -> Result<()> {
         .route("/", get(get_spa))
         .route("/file", get(get_file).put(put_file))
         .route("/rename", post(rename_file))
+        .route("/move", post(move_file))
         .route("/duplicate", post(duplicate_file))
         .route("/create", post(create_file))
         .route("/delete", post(delete_file))

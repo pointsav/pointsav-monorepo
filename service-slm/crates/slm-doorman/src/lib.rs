@@ -17,16 +17,23 @@ pub mod apprenticeship;
 pub mod audit_proxy;
 pub mod brief_cache;
 pub mod citations;
+pub mod cost_ledger;
 pub mod error;
+pub mod express_lane;
+pub mod flow_gate;
+pub mod flow_policy;
+pub mod gcp;
 pub mod grammar_validation;
 pub mod graph;
 pub mod ledger;
 pub mod mesh;
+pub mod priority_queue;
 pub mod promotion_ledger;
 pub mod redact;
 pub mod router;
 pub mod tier;
 pub mod verdict;
+pub mod vm_lifecycle;
 
 // Adapter registry and fuse-at-build composition — lives in the adapter-hub crate.
 // Re-exported here so callers that already depend on slm-doorman don't need to add
@@ -44,12 +51,19 @@ pub use audit_proxy::{
 };
 pub use brief_cache::{BriefCache, CachedBrief};
 pub use error::{DoormanError, Result};
+pub use express_lane::{ExpressDecision, ExpressLane, ExpressSlot, JobState};
+pub use flow_gate::{FlowGate, GLOBAL_LABEL};
+pub use flow_policy::{
+    Complexity, FlowPolicy, FlowPolicyState, RouteTarget, BATCH_LABEL, EXPRESS_LABEL,
+};
+pub use gcp::{GcpComputeClient, InstanceStatus};
 pub use grammar_validation::LarkValidator;
 pub use graph::GraphContextClient;
 pub use ledger::{
     AuditCaptureEntry, AuditEntry, AuditLedger, AuditProxyEntry, AuditProxyStubEntry,
     ExtractionAuditEntry,
 };
+pub use priority_queue::{Priority, PriorityQueue, QueueDepth};
 pub use promotion_ledger::{PromotionLedger, PromotionOutcome, Stage, StatRow};
 pub use redact::sanitize;
 pub use router::{Doorman, DoormanConfig, TierBInfo};
@@ -61,6 +75,7 @@ pub use tier::{
 pub use verdict::{
     SshKeygenVerifier, VerdictDispatchOutcome, VerdictDispatcher, VerdictVerifier, VerdictWireBody,
 };
+pub use vm_lifecycle::{VmLifecycle, VmState};
 
 /// Wire version of the Yo-Yo HTTP API contract this Doorman speaks
 /// (`infrastructure/slm-yoyo/CONTRACT.md`). Sent in
