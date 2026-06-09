@@ -8,7 +8,7 @@ author: totebox@project-orgcharts
 gateway: project-design
 destination: pointsav-design-system/tokens/dtcg-bundle.json
 target_path: tokens/dtcg-bundle.json
-master_cosign: null
+master_cosign: "command@claude-code 2026-06-09T16:35:12Z"
 master_cosign_required: true
 research_done_count: 4
 research_suggested_count: 1
