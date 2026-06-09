@@ -419,7 +419,7 @@ mod tests {
             "---\ntitle: Other\nslug: other\n---\nSee [[genesis-protocol]] and [[Genesis Protocol|the protocol]].\n",
         )
         .unwrap();
-        let (dead, _missing, total) = check_content(&[tmp.clone()]);
+        let (dead, _missing, total) = check_content(std::slice::from_ref(&tmp));
         assert_eq!(total, 2);
         assert!(
             dead.is_empty(),
@@ -443,7 +443,7 @@ mod tests {
             "---\ntitle: Real\nslug: real\n---\nBody.\n",
         )
         .unwrap();
-        let (dead, _missing, total) = check_content(&[tmp.clone()]);
+        let (dead, _missing, total) = check_content(std::slice::from_ref(&tmp));
         assert_eq!(
             total, 1,
             "only the real article is counted, not .agent/ docs"
@@ -490,7 +490,7 @@ mod tests {
             "---\ntitle: Linker\nslug: linker\n---\nSee [[existing]] and [[missing-page]].\n",
         )
         .unwrap();
-        let (dead, missing, total) = check_content(&[tmp.clone()]);
+        let (dead, missing, total) = check_content(std::slice::from_ref(&tmp));
         assert_eq!(total, 2);
         assert_eq!(dead.len(), 1);
         assert_eq!(dead[0].1, "missing-page");
@@ -504,7 +504,7 @@ mod tests {
         std::fs::create_dir_all(&tmp).unwrap();
         // Missing `slug` field.
         std::fs::write(tmp.join("bad.md"), "---\ntitle: Bad Article\n---\nBody.\n").unwrap();
-        let (dead, missing, _) = check_content(&[tmp.clone()]);
+        let (dead, missing, _) = check_content(std::slice::from_ref(&tmp));
         assert!(dead.is_empty());
         assert_eq!(missing.len(), 1);
         assert_eq!(missing[0].1, "slug");
