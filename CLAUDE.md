@@ -1,6 +1,6 @@
 @~/Foundry/AGENT.md
 
-# project-orgcharts — Archive Guide
+# project-system — Archive Guide
 
 > **State:** active | **Last updated:** 2026-05-18
 > **Cluster manifest:** `.agent/manifest.md`
@@ -10,7 +10,7 @@
 
 ## Cluster mission
 
-Author Woodfine corporate org charts (and over time, other corporate visualizations) using the PointSav design system. Every UI pattern that emerges during chart authoring — node shapes, hierarchy connectors, role badges, brand placement — is **backfilled as a reusable component into `pointsav-de...
+See `.agent/manifest.md` for full mission statement.
 
 ## Tetrad
 
@@ -24,7 +24,7 @@ Per `~/Foundry/AGENT.md` § Session roles:
 1. Confirm role: `~/Foundry/bin/foundry-role.sh` (Totebox Session expected)
 2. Write session lock: `.agent/engines/<engine-id>/session.lock`
 3. Read `.agent/manifest.md` — cluster mission + tetrad
-4. Call `get_session_brief(role="totebox", archive="project-orgcharts")` — replaces inbox, NOTAM, session-context reads
+4. Call `get_session_brief(role="totebox", archive="project-infrastructure")` — replaces inbox, NOTAM, session-context reads
 5. Read `~/Foundry/NOTAM.md` — workspace warnings
 6. Read `.agent/rules/*.md` if present (may be absent for newer archives)
 
@@ -57,7 +57,7 @@ the conflict via outbox to command session** — do not silently override.
 
 ## MCP tools — `foundry` server (use at startup)
 
-`get_session_brief(role="totebox", archive="project-orgcharts")` replaces manually reading
+`get_session_brief(role="totebox", archive="project-infrastructure")` replaces manually reading
 inbox.md, outbox.md, NOTAM.md, session-context.md. Call it first.
 `send_mailbox_message()` replaces hand-editing YAML frontmatter.
 
