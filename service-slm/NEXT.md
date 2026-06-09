@@ -29,6 +29,7 @@ ssh -i ~/.ssh/google_compute_engine mathew@10.128.0.24 \
 - `~/training-venv` is on yoyo-batch's persistent disk — survives VM stop/start ✓
 - Training budget: 20 min (`TRAINING_SECS = 45% of 45 min`); `--resume` accumulates daily checkpoints
 - Phase 6 skips silently if any gate fails — check cycle log if training didn't run
+- ✅ VRAM fix committed (workspace `6d749df`): Phase 6 now stops llama-server (frees ~16 GB) before loading the 7B training model
 
 ---
 
