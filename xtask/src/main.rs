@@ -73,6 +73,7 @@ fn main() {
 ///
 /// `dead_links` is a list of `(source_slug, target_slug)` pairs.
 /// `missing_fields` is a list of `(slug, field_name)` pairs.
+#[allow(clippy::type_complexity)]
 fn check_content(paths: &[PathBuf]) -> (Vec<(String, String)>, Vec<(String, String)>, usize) {
     // Collect all article files across all mounts (skipping infrastructure
     // directories such as `.agent/`, `.git/`, which hold rule docs whose
