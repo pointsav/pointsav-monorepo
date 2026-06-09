@@ -4,6 +4,39 @@ Entries pushed from session-context.md when file exceeds 3 entries. Newest on to
 
 ---
 
+## 2026-06-03/04 — Totebox@claude-code (Session 6)
+
+**Done this session:**
+- Startup: inbox all actioned; NOTAM clear; session lock written.
+- Workbench file browser — drag-and-drop file move (commit `d451dcd2`):
+  - Backend: `POST /move` added to main.rs (port 9210); deployed + restarted
+  - Frontend: `wireDragOnItem()`, `doWbMoveFile()`, drag CSS, `#wb-toast`; drag-to-open on `#viewer`
+- Drag-drop bug fix (commit `7870683f`): handler was in wrong service (9110 vs 9210); dead code removed
+- Workbench undo last file move (commit `6866eb3a`): `moveHistory` stack (cap 10); 6s Undo button; Ctrl+Z
+- Stage 6 all complete: `d451dcd2` + `7870683f` + `6866eb3a` → canonical 810a2277; ledger 75d5c068
+
+---
+
+## 2026-06-03 — Totebox@claude-code (Session 5)
+
+**Done this session:**
+- Memo Session 1 feature set shipped (commit `3768ba89`, promoted da8025b2):
+  toolbar (Underline, Strikethrough, Normal, OL, Align ×3, Clear fmt), light/dark toggle, word count,
+  paste sanitization, crash recovery draft, placeholder CSS; 11 keyboard shortcuts added
+
+---
+
+## 2026-06-02/03 — Totebox@claude-code (Session 4)
+
+**Done this session:**
+- BIM schema → W3C DTCG: `$schema` URI, flat tokens, `$extensions.bim-workspace`. Commit dfb07944 → 5aa88c3f.
+- Proforma v2.0: entity/date/analyst metadata subbar, editable column labels, per-column format badge. Commit 8d8049c6 → 4a7e3499.
+- Proforma light/dark theme toggle: wp-theme localStorage key. Commit 683fc671 → promoted.
+- Proforma formula functions: AVERAGE/AVG/MIN/MAX/COUNT + AutoSum Σ (Alt+=). Commit 3ffaa8f6 → promoted.
+- Operator preference confirmed: dark mode hard to see; new surfaces default light + ☀/🌙 toggle from day one.
+
+---
+
 ## 2026-05-31 — Totebox@claude-code (Session 3)
 
 **Done this session:**

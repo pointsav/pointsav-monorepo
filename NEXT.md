@@ -7,10 +7,16 @@ Backlog (lower priority) at `.agent/next-backlog.md`.
 
 ## Hot items
 
-- [ ] **Stage 6**: commits `d451dcd2` (workbench drag-drop) + `7870683f` (drag-drop fix) +
-  `6866eb3a` (undo) unpromoted — Command Session run `bin/promote.sh` + update binary ledger
-  for `app-privategit-workbench` (locally deployed this session; ledger entry missing).
-  [2026-06-04 totebox@claude-code]
+- [ ] **Stage 6**: commits `923b5171` (sub-clone .agent/ untrack) + `7152333f` (live reload) +
+  `f00e676a` (cargo fmt) + `ec305edc` (clippy strip_prefix) + `646462ec` (folder ZIP, Session 8)
+  unpromoted — Command Session signal received; run `bin/promote.sh` + binary ledger entry for
+  `app-privategit-workbench`. [2026-06-09 totebox@claude-code]
+
+- [ ] **Nginx vhost (operator/Command)**: add SSE proxy block for live reload:
+  `location /_api/edit/events { proxy_buffering off; proxy_read_timeout 3600s;`
+  `proxy_set_header Connection ''; proxy_http_version 1.1; }` [2026-06-09 totebox@claude-code]
+
+- [x] **Stage 6**: `d451dcd2` + `7870683f` + `6866eb3a` (workbench drag+undo) — promoted 810a2277. [2026-06-04]
 
 - [x] **Stage 6**: `683fc671` + `3ffaa8f6` (proforma) — promoted. [2026-06-03]
 
