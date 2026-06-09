@@ -1305,8 +1305,8 @@ async fn main() -> Result<()> {
                 .iter()
                 .find_map(|(prefix, base)| {
                     let base = base.trim_end_matches('/');
-                    if path_str.starts_with(base) {
-                        let rest = path_str[base.len()..].trim_start_matches('/');
+                    if let Some(rest_stripped) = path_str.strip_prefix(base) {
+                        let rest = rest_stripped.trim_start_matches('/');
                         Some(format!("{}/{}", prefix, rest))
                     } else {
                         None
