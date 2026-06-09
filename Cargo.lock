@@ -348,7 +348,7 @@ name = "app-orchestration-bim"
 version = "0.0.2"
 dependencies = [
  "axum 0.7.9",
- "pulldown-cmark",
+ "pulldown-cmark 0.12.2",
  "serde_json",
  "tokio",
  "tower-http 0.5.2",
@@ -360,6 +360,7 @@ name = "app-privategit-design"
 version = "0.1.0"
 dependencies = [
  "axum 0.7.9",
+ "pulldown-cmark 0.11.3",
  "tokio",
  "tower-http 0.5.2",
 ]
@@ -410,9 +411,11 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "axum 0.8.9",
+ "notify",
  "serde",
  "serde_json",
  "tokio",
+ "tokio-stream",
  "toml",
  "tower-http 0.6.11",
 ]
@@ -5262,7 +5265,7 @@ dependencies = [
  "console_error_panic_hook",
  "console_log",
  "image",
- "itertools 0.13.0",
+ "itertools 0.14.0",
  "js-sys",
  "libloading",
  "log",
@@ -5633,6 +5636,18 @@ dependencies = [
  "bytesize",
  "human_format",
  "parking_lot",
+]
+
+[[package]]
+name = "pulldown-cmark"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "679341d22c78c6c649893cbd6c3278dcbe9fc4faa62fea3a9296ae2b50c14625"
+dependencies = [
+ "bitflags 2.11.1",
+ "memchr",
+ "pulldown-cmark-escape",
+ "unicase",
 ]
 
 [[package]]
@@ -7549,6 +7564,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-stream"
+version = "0.1.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32da49809aab5c3bc678af03902d4ccddea2a87d028d86392a4b1560c6906c70"
+dependencies = [
+ "futures-core",
+ "pin-project-lite",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
 name = "tokio-tungstenite"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7671,7 +7698,7 @@ version = "0.1.0"
 dependencies = [
  "calamine",
  "clap",
- "pulldown-cmark",
+ "pulldown-cmark 0.12.2",
  "serde",
  "serde_json",
 ]
