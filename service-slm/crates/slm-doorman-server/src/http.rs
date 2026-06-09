@@ -35,8 +35,8 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Json, Response};
 use axum::routing::{get, post};
 use axum::Router;
-use reqwest::Client as ReqwestClient;
 use chrono::Utc;
+use reqwest::Client as ReqwestClient;
 use serde::{Deserialize, Serialize};
 use slm_core::{
     ApprenticeshipAttempt, ApprenticeshipBrief, AuditCaptureRequest, AuditCaptureResponse,
@@ -132,6 +132,13 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/audit/capture", post(audit_capture))
         .route("/v1/graph/query", post(graph_query))
         .route("/v1/graph/mutate", post(graph_mutate))
+        // Sprint 5A — operational status endpoints
+        .route("/v1/status/queue", get(status_queue))
+        .route("/v1/status/yoyo", get(status_yoyo))
+        .route("/v1/status/flow", get(status_flow))
+        // Sprint 6 — cost + tier-a status
+        .route("/v1/status/cost", get(status_cost))
+        .route("/v1/status/tier-a", get(status_tier_a))
         .with_state(state)
 }
 
@@ -143,18 +150,44 @@ async fn readyz(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     let has_local = state.doorman.has_local();
     let has_yoyo = state.doorman.has_yoyo();
     let has_external = state.doorman.has_external();
+    let ai_available = has_local || has_yoyo || has_external;
+
+    // Queue snapshot for console dashboard (Sprint 5B).
+    let base = &state.queue_config.base_dir;
+    let count_dir = |dir: std::path::PathBuf| -> u64 {
+        std::fs::read_dir(dir)
+            .ok()
+            .map(|rd| rd.filter_map(|e| e.ok()).count() as u64)
+            .unwrap_or(0)
+    };
+    let queue_pending = count_dir(base.join("queue"));
+    let queue_done = count_dir(base.join("queue-done"));
+    let queue_poison = count_dir(base.join("queue-poison"));
+
     let body = serde_json::json!({
-        "ready": true,
+        "ready": ai_available,
+        // P2-B: structured status + reason for app-console-slm
+        "status": if ai_available { "ok" } else { "closed" },
+        "reason": if ai_available { None::<&str> } else { Some("no_tier_available") },
         "node_class": state.node_class,
         "tier_a": has_local,
         "tier_a_reason": state.tier_a_reason,
-        "ai_available": has_local || has_yoyo || has_external,
+        "ai_available": ai_available,
         "has_local": has_local,
         "has_yoyo": has_yoyo,
         "has_external": has_external,
         "tier_b": state.doorman.tier_b_status(),
+        // Sprint 5B: queue snapshot for F9 dashboard
+        "queue_pending": queue_pending,
+        "queue_done": queue_done,
+        "queue_poison": queue_poison,
     });
-    (StatusCode::OK, Json(body))
+    let http_status = if ai_available {
+        StatusCode::OK
+    } else {
+        StatusCode::SERVICE_UNAVAILABLE
+    };
+    (http_status, Json(body))
 }
 
 #[derive(Serialize)]
@@ -191,6 +224,10 @@ struct ChatCompletionsBody {
     /// default), leaving tier routing behaviour unchanged.
     #[serde(default)]
     grammar: Option<GrammarConstraint>,
+    /// Calling Totebox session identity. Populated by `bin/edit-via-doorman.sh`
+    /// when present; absent from all existing callers (backward compatible).
+    #[serde(default)]
+    session_context: Option<slm_core::SessionContext>,
 }
 
 async fn chat_completions(
@@ -250,6 +287,7 @@ async fn chat_completions(
         graph_context_enabled: None,
         tools: None,
         stop_sequences: None,
+        session_context: body.session_context,
     };
 
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
@@ -488,9 +526,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
     // 2. Validate module_id.
     let module_id = match ModuleId::from_str(&req.module_id) {
         Ok(mid) => mid,
-        Err(e) => {
-            return ApiError::bad_request(format!("invalid module_id: {e}")).into_response()
-        }
+        Err(e) => return ApiError::bad_request(format!("invalid module_id: {e}")).into_response(),
     };
 
     // 3. Per-tenant concurrency permit (shared semaphore with audit endpoints).
@@ -544,6 +580,7 @@ Return a JSON array matching the schema exactly.".to_string(),
         graph_context_enabled: None,
         tools: None,
         stop_sequences: None,
+        session_context: None,
     };
 
     // 5. Route — no Tier A fallback.
@@ -1104,7 +1141,12 @@ async fn graph_query(
             .unwrap_or_else(|_| slm_core::ModuleId::from_str("unknown").unwrap()),
         event_type: "graph-query".to_string(),
         source: format!("graph-proxy:{}", body.q),
-        status: if sc_status.is_success() { "ok" } else { "upstream-error" }.to_string(),
+        status: if sc_status.is_success() {
+            "ok"
+        } else {
+            "upstream-error"
+        }
+        .to_string(),
         event_at: Utc::now(),
         captured_at: Utc::now(),
         payload: serde_json::json!({ "q": body.q, "limit": body.limit, "module_id": module_id }),
@@ -1178,7 +1220,12 @@ async fn graph_mutate(
             .unwrap_or_else(|_| slm_core::ModuleId::from_str("unknown").unwrap()),
         event_type: "graph-mutation".to_string(),
         source: "graph-proxy".to_string(),
-        status: if sc_status.is_success() { "ok" } else { "upstream-error" }.to_string(),
+        status: if sc_status.is_success() {
+            "ok"
+        } else {
+            "upstream-error"
+        }
+        .to_string(),
         event_at: Utc::now(),
         captured_at: Utc::now(),
         payload: serde_json::json!({ "module_id": module_id }),
@@ -1266,6 +1313,7 @@ impl AnthropicSystem {
 /// No `#[serde(deny_unknown_fields)]` — `cache_control`, `anthropic-beta`,
 /// and other SDK-injected fields must not 400.
 #[derive(Deserialize)]
+#[allow(dead_code)] // forward-compat: fields parsed for SDK pass-through, not yet consumed
 struct AnthropicMessagesBody {
     model: String,
     #[serde(default)]
@@ -1307,6 +1355,7 @@ enum AnthropicContent {
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)] // forward-compat: parsed for SDK pass-through
 struct AnthropicContentBlock {
     #[serde(rename = "type")]
     block_type: String,
@@ -1358,7 +1407,10 @@ fn anthropic_to_compute_request(
     if let Some(system) = body.system {
         let text = system.into_text();
         if !text.is_empty() {
-            messages.push(ChatMessage { role: "system".to_string(), content: text });
+            messages.push(ChatMessage {
+                role: "system".to_string(),
+                content: text,
+            });
         }
     }
 
@@ -1397,13 +1449,17 @@ fn anthropic_to_compute_request(
         graph_context_enabled: Some(false),
         tools: body.tools,
         stop_sequences: None,
+        session_context: None,
     }
 }
 
 /// Build a non-streaming Anthropic Messages API response body.
 /// When `resp.tool_calls` is present the content carries `tool_use` blocks
 /// and `stop_reason` is `"tool_use"` instead of `"end_turn"`.
-fn compute_to_anthropic_response(resp: &slm_core::ComputeResponse, model: &str) -> serde_json::Value {
+fn compute_to_anthropic_response(
+    resp: &slm_core::ComputeResponse,
+    model: &str,
+) -> serde_json::Value {
     let output_tokens = resp.content.split_whitespace().count() as u32;
     let (content, stop_reason) = build_anthropic_content(resp);
     serde_json::json!({
@@ -1427,35 +1483,44 @@ fn build_anthropic_content(resp: &slm_core::ComputeResponse) -> (serde_json::Val
     if let Some(tool_calls) = &resp.tool_calls {
         // OpenAI-format tool_calls → Anthropic tool_use content blocks.
         let blocks: Vec<serde_json::Value> = if let Some(arr) = tool_calls.as_array() {
-            arr.iter().enumerate().map(|(i, tc)| {
-                let id = tc.get("id")
-                    .and_then(|v| v.as_str())
-                    .map(|s| s.to_string())
-                    .unwrap_or_else(|| format!("toolu_{i:03}"));
-                let name = tc.get("function")
-                    .and_then(|f| f.get("name"))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("unknown")
-                    .to_string();
-                let input_str = tc.get("function")
-                    .and_then(|f| f.get("arguments"))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("{}");
-                let input: serde_json::Value = serde_json::from_str(input_str)
-                    .unwrap_or_else(|_| serde_json::json!({}));
-                serde_json::json!({
-                    "type": "tool_use",
-                    "id": id,
-                    "name": name,
-                    "input": input
+            arr.iter()
+                .enumerate()
+                .map(|(i, tc)| {
+                    let id = tc
+                        .get("id")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string())
+                        .unwrap_or_else(|| format!("toolu_{i:03}"));
+                    let name = tc
+                        .get("function")
+                        .and_then(|f| f.get("name"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("unknown")
+                        .to_string();
+                    let input_str = tc
+                        .get("function")
+                        .and_then(|f| f.get("arguments"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("{}");
+                    let input: serde_json::Value =
+                        serde_json::from_str(input_str).unwrap_or_else(|_| serde_json::json!({}));
+                    serde_json::json!({
+                        "type": "tool_use",
+                        "id": id,
+                        "name": name,
+                        "input": input
+                    })
                 })
-            }).collect()
+                .collect()
         } else {
             vec![]
         };
         (serde_json::Value::Array(blocks), "tool_use")
     } else {
-        (serde_json::json!([{"type": "text", "text": resp.content}]), "end_turn")
+        (
+            serde_json::json!([{"type": "text", "text": resp.content}]),
+            "end_turn",
+        )
     }
 }
 
@@ -1483,16 +1548,19 @@ fn anthropic_sse_body(resp: &slm_core::ComputeResponse, model: &str) -> String {
         // Emit tool_use content blocks for each tool call.
         let tool_calls_arr = tool_calls.as_array().map(|a| a.as_slice()).unwrap_or(&[]);
         for (i, tc) in tool_calls_arr.iter().enumerate() {
-            let id = tc.get("id")
+            let id = tc
+                .get("id")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string())
                 .unwrap_or_else(|| format!("toolu_{i:03}"));
-            let name = tc.get("function")
+            let name = tc
+                .get("function")
                 .and_then(|f| f.get("name"))
                 .and_then(|v| v.as_str())
                 .unwrap_or("unknown")
                 .to_string();
-            let input_str = tc.get("function")
+            let input_str = tc
+                .get("function")
                 .and_then(|f| f.get("arguments"))
                 .and_then(|v| v.as_str())
                 .unwrap_or("{}");
@@ -1524,9 +1592,9 @@ fn anthropic_sse_body(resp: &slm_core::ComputeResponse, model: &str) -> String {
         // Standard text response.
         let e_cb_start = serde_json::json!({"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}});
         let e_cb_delta = serde_json::json!({"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": resp.content}});
-        let e_cb_stop  = serde_json::json!({"type": "content_block_stop", "index": 0});
+        let e_cb_stop = serde_json::json!({"type": "content_block_stop", "index": 0});
         let e_msg_delta = serde_json::json!({"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": null}, "usage": {"output_tokens": output_tokens}});
-        let e_msg_stop  = serde_json::json!({"type": "message_stop"});
+        let e_msg_stop = serde_json::json!({"type": "message_stop"});
         events.push_str(&format!(
             "event: content_block_start\ndata: {e_cb_start}\n\n\
              event: content_block_delta\ndata: {e_cb_delta}\n\n\
@@ -1544,7 +1612,10 @@ fn anthropic_sse_body(resp: &slm_core::ComputeResponse, model: &str) -> String {
 /// before sending a request to check whether it fits in the context window.
 async fn anthropic_count_tokens(body: axum::body::Bytes) -> impl IntoResponse {
     let estimate = (body.len() as u32).saturating_div(4);
-    (StatusCode::OK, Json(serde_json::json!({"input_tokens": estimate})))
+    (
+        StatusCode::OK,
+        Json(serde_json::json!({"input_tokens": estimate})),
+    )
 }
 
 /// `GET /v1/models` — model list expected by Anthropic SDK clients.
@@ -1552,12 +1623,15 @@ async fn anthropic_count_tokens(body: axum::body::Bytes) -> impl IntoResponse {
 /// - `claude-haiku-4-5-20251001` → Tier A (OLMo 7B, local)
 /// - `claude-sonnet-4-6` → Tier B (Yo-Yo OLMo-3-32B-Think) with Tier A fallback
 async fn anthropic_models() -> impl IntoResponse {
-    (StatusCode::OK, Json(serde_json::json!({
-        "data": [
-            {"id": "claude-haiku-4-5-20251001", "object": "model", "created": 0},
-            {"id": "claude-sonnet-4-6",         "object": "model", "created": 0}
-        ]
-    })))
+    (
+        StatusCode::OK,
+        Json(serde_json::json!({
+            "data": [
+                {"id": "claude-haiku-4-5-20251001", "object": "model", "created": 0},
+                {"id": "claude-sonnet-4-6",         "object": "model", "created": 0}
+            ]
+        })),
+    )
 }
 
 async fn anthropic_messages(
@@ -1697,6 +1771,14 @@ impl From<DoormanError> for ApiError {
             DoormanError::TierBTimeout | DoormanError::TierBCircuitOpen => {
                 StatusCode::SERVICE_UNAVAILABLE
             }
+            // Flow gate closed (operator kill switch). 503 with Retry-After;
+            // the operator deliberately paused this tier. Caller should retry
+            // after the gate re-opens.
+            DoormanError::FlowGateClosed { .. } => StatusCode::SERVICE_UNAVAILABLE,
+            // Priority queue file-system fault — server-side.
+            DoormanError::PriorityQueueIo { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            // GCP Compute API failure — upstream provider fault. 502.
+            DoormanError::GcpApi { .. } => StatusCode::BAD_GATEWAY,
         };
         Self {
             status,
@@ -1709,4 +1791,169 @@ impl IntoResponse for ApiError {
     fn into_response(self) -> axum::response::Response {
         (self.status, Json(self.body)).into_response()
     }
+}
+
+// ── Sprint 5A — operational status endpoints ──────────────────────────────────
+
+/// `GET /v1/status/queue` — brief queue depth across all apprenticeship directories.
+async fn status_queue(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
+    let base = &state.queue_config.base_dir;
+    let count_dir = |dir: std::path::PathBuf| -> u64 {
+        std::fs::read_dir(dir)
+            .ok()
+            .map(|rd| rd.filter_map(|e| e.ok()).count() as u64)
+            .unwrap_or(0)
+    };
+    Json(serde_json::json!({
+        "pending":    count_dir(base.join("queue")),
+        "in_flight":  count_dir(base.join("queue-in-flight")),
+        "paused":     count_dir(base.join("queue-paused")),
+        "done":       count_dir(base.join("queue-done")),
+        "poison":     count_dir(base.join("queue-poison")),
+        "quarantine": count_dir(base.join("quarantine")),
+    }))
+}
+
+/// `GET /v1/status/yoyo` — Yo-Yo (Tier B) node circuit states.
+async fn status_yoyo(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
+    Json(serde_json::json!({
+        "nodes":    state.doorman.tier_b_status(),
+        "has_yoyo": state.doorman.has_yoyo(),
+    }))
+}
+
+/// `GET /v1/status/flow` — routing tier availability and node class.
+async fn status_flow(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
+    let has_local = state.doorman.has_local();
+    let has_yoyo = state.doorman.has_yoyo();
+    let has_external = state.doorman.has_external();
+    Json(serde_json::json!({
+        "tier_a":       has_local,
+        "tier_b":       has_yoyo,
+        "tier_c":       has_external,
+        "ai_available": has_local || has_yoyo || has_external,
+        "node_class":   state.node_class,
+        "tier_a_reason": state.tier_a_reason,
+    }))
+}
+
+/// `GET /v1/status/cost` — today's cost rollup from the daily cost ledger.
+///
+/// Reads `FOUNDRY_ROOT/data/cost-ledger/<today>.jsonl` and returns aggregated
+/// totals. Returns zeros for all fields when no ledger file exists for today
+/// (correct "no requests yet" answer). Non-fatal if the ledger directory is
+/// unavailable — returns zeros with `ledger_available: false`.
+async fn status_cost() -> Json<serde_json::Value> {
+    use slm_doorman::cost_ledger::CostLedger;
+
+    let today = Utc::now().format("%Y-%m-%d").to_string();
+    let ledger = match CostLedger::from_env() {
+        Ok(l) => l,
+        Err(_) => {
+            return Json(serde_json::json!({
+                "ledger_available": false,
+                "daily_usd": 0.0,
+                "local_usd": 0.0,
+                "yoyo_usd": 0.0,
+                "ext_usd": 0.0,
+                "vm_hours_usd": 0.0,
+                "request_count": 0_usize,
+            }));
+        }
+    };
+    match ledger.daily_rollup(&today) {
+        Ok(rollup) => {
+            let local_usd = rollup.by_tier.get("local").copied().unwrap_or(0.0);
+            let yoyo_usd = rollup.by_tier.get("yoyo").copied().unwrap_or(0.0);
+            let ext_usd = rollup.by_tier.get("external").copied().unwrap_or(0.0);
+            Json(serde_json::json!({
+                "ledger_available": true,
+                "daily_usd": rollup.total_cost_usd,
+                "local_usd": local_usd,
+                "yoyo_usd": yoyo_usd,
+                "ext_usd": ext_usd,
+                "vm_hours_usd": rollup.vm_hours_cost_usd,
+                "request_count": rollup.request_count,
+            }))
+        }
+        Err(_) => Json(serde_json::json!({
+            "ledger_available": true,
+            "daily_usd": 0.0,
+            "local_usd": 0.0,
+            "yoyo_usd": 0.0,
+            "ext_usd": 0.0,
+            "vm_hours_usd": 0.0,
+            "request_count": 0_usize,
+        })),
+    }
+}
+
+/// `GET /v1/status/tier-a` — llama-server health and throughput.
+///
+/// Fetches the Prometheus `/metrics` endpoint at `http://127.0.0.1:8080/metrics`
+/// and extracts key counters. Returns `reachable: false` when llama-server is
+/// down or starting — not an error condition, Tier A may be unavailable
+/// transiently.
+///
+/// Parsed metrics:
+/// - `llamacpp:predicted_tokens_seconds` → `tok_per_s`
+/// - `llamacpp:requests_processing` → `requests_processing`
+/// - `llamacpp:prompt_tokens_total` → `prompt_tokens_total`
+async fn status_tier_a() -> Json<serde_json::Value> {
+    let client = ReqwestClient::builder()
+        .timeout(std::time::Duration::from_secs(2))
+        .build()
+        .unwrap_or_default();
+
+    let resp = match client.get("http://127.0.0.1:8080/metrics").send().await {
+        Ok(r) => r,
+        Err(e) => {
+            return Json(serde_json::json!({ "reachable": false, "error": e.to_string() }));
+        }
+    };
+    let body = match resp.text().await {
+        Ok(t) => t,
+        Err(e) => {
+            return Json(serde_json::json!({ "reachable": false, "error": e.to_string() }));
+        }
+    };
+
+    let mut tok_per_s: Option<f64> = None;
+    let mut requests_processing: Option<u64> = None;
+    let mut prompt_tokens_total: Option<u64> = None;
+
+    for line in body.lines() {
+        if line.starts_with('#') {
+            continue;
+        }
+        // Prometheus text: `metric_name value` (no labels on these counters)
+        let mut parts = line.splitn(2, ' ');
+        let name = match parts.next() {
+            Some(n) => n,
+            None => continue,
+        };
+        let val = match parts.next() {
+            Some(v) => v.trim(),
+            None => continue,
+        };
+        match name {
+            "llamacpp:predicted_tokens_seconds" => {
+                tok_per_s = val.parse::<f64>().ok();
+            }
+            "llamacpp:requests_processing" => {
+                requests_processing = val.parse::<f64>().ok().map(|v| v as u64);
+            }
+            "llamacpp:prompt_tokens_total" => {
+                prompt_tokens_total = val.parse::<f64>().ok().map(|v| v as u64);
+            }
+            _ => {}
+        }
+    }
+
+    Json(serde_json::json!({
+        "reachable":           true,
+        "tok_per_s":           tok_per_s,
+        "requests_processing": requests_processing,
+        "prompt_tokens_total": prompt_tokens_total,
+    }))
 }

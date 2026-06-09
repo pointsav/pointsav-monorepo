@@ -130,19 +130,24 @@ impl BearerTokenProvider for MetadataBearer {
             "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience={}",
             self.audience
         );
-        let token = self.client
+        let token = self
+            .client
             .get(&url)
             .header("Metadata-Flavor", "Google")
             .send()
             .await
-            .map_err(|e| crate::error::DoormanError::UpstreamShape(
-                format!("metadata identity fetch failed: {e}")
-            ))?
+            .map_err(|e| {
+                crate::error::DoormanError::UpstreamShape(format!(
+                    "metadata identity fetch failed: {e}"
+                ))
+            })?
             .text()
             .await
-            .map_err(|e| crate::error::DoormanError::UpstreamShape(
-                format!("metadata identity read failed: {e}")
-            ))?;
+            .map_err(|e| {
+                crate::error::DoormanError::UpstreamShape(format!(
+                    "metadata identity read failed: {e}"
+                ))
+            })?;
         Ok(token.trim().to_string())
     }
 
@@ -239,7 +244,12 @@ impl YoYoTierClient {
             let health_up_clone = Arc::clone(&health_up);
             let endpoint = config.endpoint.clone();
             let health_path = config.health_path.clone();
-            handle.spawn(run_health_probe(endpoint, health_path, health_up_clone));
+            handle.spawn(run_health_probe(
+                endpoint,
+                health_path,
+                health_up_clone,
+                bearer.clone(),
+            ));
         }
 
         let zone = config.zone.clone();
@@ -532,7 +542,13 @@ impl YoYoTierClient {
 /// Polls `<endpoint><health_path>` every 30 s with a 2 s timeout.
 /// Three consecutive failures set `health_up` to false; one recovery resets.
 /// `health_path` defaults to `/health` (llama-server); set to `/` for Ollama.
-async fn run_health_probe(endpoint: String, health_path: String, health_up: Arc<AtomicBool>) {
+/// If bearer produces a token it is sent as `Authorization: Bearer <token>`.
+async fn run_health_probe(
+    endpoint: String,
+    health_path: String,
+    health_up: Arc<AtomicBool>,
+    bearer: Arc<dyn BearerTokenProvider>,
+) {
     let http = reqwest::Client::builder()
         .timeout(HEALTH_PROBE_TIMEOUT)
         .danger_accept_invalid_certs(true)
@@ -552,8 +568,13 @@ async fn run_health_probe(endpoint: String, health_path: String, health_up: Arc<
     loop {
         tokio::time::sleep(HEALTH_PROBE_INTERVAL).await;
 
-        let ok = http
-            .get(&url)
+        let mut req = http.get(&url);
+        if let Ok(token) = bearer.token().await {
+            if !token.is_empty() {
+                req = req.bearer_auth(&token);
+            }
+        }
+        let ok = req
             .send()
             .await
             .map(|r| r.status().is_success())
@@ -676,6 +697,7 @@ mod tests {
             graph_context_enabled: None,
             tools: None,
             stop_sequences: None,
+            session_context: None,
         }
     }
 
@@ -922,8 +944,14 @@ mod tests {
         let body = captured.lock().unwrap().clone().expect("body captured");
         // llama.cpp top-level grammar field (not vLLM extra_body).
         assert_eq!(body["grammar"], serde_json::json!("start: /[a-z]+/"));
-        assert!(body.get("json_schema").is_none(), "json_schema absent for Lark");
-        assert!(body.get("extra_body").is_none(), "no extra_body without tools");
+        assert!(
+            body.get("json_schema").is_none(),
+            "json_schema absent for Lark"
+        );
+        assert!(
+            body.get("extra_body").is_none(),
+            "no extra_body without tools"
+        );
     }
 
     #[tokio::test]
@@ -956,9 +984,18 @@ mod tests {
 
         let body = captured.lock().unwrap().clone().expect("body captured");
         // llama.cpp top-level grammar field (not vLLM extra_body).
-        assert_eq!(body["grammar"], serde_json::json!(r#"root ::= "yes" | "no""#));
-        assert!(body.get("json_schema").is_none(), "json_schema absent for GBNF");
-        assert!(body.get("extra_body").is_none(), "no extra_body without tools");
+        assert_eq!(
+            body["grammar"],
+            serde_json::json!(r#"root ::= "yes" | "no""#)
+        );
+        assert!(
+            body.get("json_schema").is_none(),
+            "json_schema absent for GBNF"
+        );
+        assert!(
+            body.get("extra_body").is_none(),
+            "no extra_body without tools"
+        );
     }
 
     #[tokio::test]
@@ -999,8 +1036,14 @@ mod tests {
         // llama.cpp top-level json_schema field (not vLLM extra_body) — this is what
         // actually constrains the deployed Tier B server. Confirmed live 2026-06-01.
         assert_eq!(body["json_schema"], schema);
-        assert!(body.get("grammar").is_none(), "grammar absent for JsonSchema");
-        assert!(body.get("extra_body").is_none(), "no extra_body without tools");
+        assert!(
+            body.get("grammar").is_none(),
+            "grammar absent for JsonSchema"
+        );
+        assert!(
+            body.get("extra_body").is_none(),
+            "no extra_body without tools"
+        );
     }
 
     #[tokio::test]
@@ -1077,7 +1120,10 @@ mod tests {
             .expect_err("failing bearer must return error");
         match err {
             DoormanError::BearerToken(msg) => {
-                assert!(msg.contains("offline"), "error message should preserve provider detail: {msg}");
+                assert!(
+                    msg.contains("offline"),
+                    "error message should preserve provider detail: {msg}"
+                );
             }
             other => panic!("expected BearerToken error, got {other:?}"),
         }
@@ -1124,7 +1170,10 @@ mod tests {
             .expect_err("empty bearer leading to repeated 401 must return error");
         match err {
             DoormanError::UpstreamShape(msg) => {
-                assert!(msg.contains("401"), "UpstreamShape message should mention the status: {msg}");
+                assert!(
+                    msg.contains("401"),
+                    "UpstreamShape message should mention the status: {msg}"
+                );
             }
             other => panic!("expected UpstreamShape from failed auth retry, got {other:?}"),
         }
