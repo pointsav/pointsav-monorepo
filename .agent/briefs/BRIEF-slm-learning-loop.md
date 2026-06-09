@@ -3,7 +3,7 @@ artifact: brief
 status: active
 title: SLM Learning Loop — Training Pipeline + Sovereign Coding Agent
 created: 2026-05-29
-updated: 2026-05-31 (session 14 — corpus audit + research findings; drain paused)
+updated: 2026-06-09 (session — daily Yo-Yo cycle automation verified; ML libs plan added §11-§12)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 companion: BRIEF-slm-substrate-master.md
 grounds_in:
@@ -552,3 +552,195 @@ The local 7B's best uses, in priority order:
    training data. The 32B-on-GPU is the generator/teacher; the 7B-on-CPU is the student.
 
 It should NOT be: a batch DPO-critique generator on CPU. That was the mistake — fixed here.
+
+---
+
+## §11 — Daily Yo-Yo enrichment cycle (deployed 2026-06-09)
+
+### What was built
+
+`/srv/foundry/bin/yoyo-daily-cycle.sh` — a fully automated daily batch script:
+
+```
+TERMINATED VM
+  → gcloud instances start
+  → wait for llama-server health (~170s consistent)
+  → wait for Doorman Tier B circuit to close
+  → 80% of budget window: DataGraph enrichment drain
+  → corpus-threshold.py check + training markers
+  → SSH stop llama-server
+  → gcloud instances stop
+  → verify TERMINATED
+```
+
+**Systemd automation:**
+- Service: `/etc/systemd/system/local-yoyo-daily.service`
+- Timer: `/etc/systemd/system/local-yoyo-daily.timer`
+- Schedule: `*-*-* 17:00 UTC` = 10:00 AM PDT (Vancouver daytime for monitoring)
+- Planned move: `02:30 UTC` after 1-2 weeks once operator confirms stability
+- Next fire: 2026-06-09 10:01 AM PDT
+
+### 3-cycle test results (2026-06-09 00:04–00:24 UTC)
+
+| Cycle | Duration | Entities | Enrichment DPO pairs | VM final |
+|---|---|---|---|---|
+| 1 | 10m 43s | 8239→8246 (+7) | 12→18 (+6) | TERMINATED ✓ |
+| 2 | 9m 12s | 8246→8254 (+8) | 18→22 (+4) | TERMINATED ✓ |
+| 3 | 10m 38s | 8254→8276 (+22) | 23→31 (+8) | TERMINATED ✓ |
+
+GPU captured in cycle 3: 99% utilization, 16151/23034 MB VRAM, 73°C L4 — confirmed working.
+
+Total elapsed may slightly exceed 600s test cap because the VM stop sequence adds ~90s after
+the enrichment window ends. Enrichment stops at the cap; stop sequence is outside the cap.
+This is expected and acceptable.
+
+### Enrichment DPO pair format (TRL-compatible, verified)
+
+```json
+{
+  "prompt": "<document chunk — 1,711 chars average>",
+  "chosen": "[{\"classification\":\"Project\",\"entity_name\":\"service-slm\"}]",
+  "rejected": "[]",
+  "source_type": "datagraph-enrichment"
+}
+```
+
+- `chosen` = Tier B (OLMo 32B, L4) entity extraction — richer, more complete
+- `rejected` = Tier A (OLMo 7B, CPU) entity extraction — often empty or fewer entities
+- Pair is only written when Tier B finds entities AND Tier A result differs
+- `run-dpo-training.py::load_feedback_files()` reads both `enrichment-*.jsonl` and
+  `apprenticeship-*.jsonl` with the same TRL field format — confirmed compatible
+
+### Corpus state as of 2026-06-09
+
+| Adapter | Count | Threshold | Status |
+|---|---|---|---|
+| engineering-pointsav (SFT) | 1,410 tuples | 50 | READY |
+| apprenticeship-pointsav (DPO) | 225 valid tuples | 50 | READY |
+| enrichment DPO pairs | 31 files | (feeds apprenticeship run) | ACCUMULATING |
+
+Training markers (local, today-dated): `engineering-pointsav-2026-06-09.json` +
+`apprenticeship-pointsav-2026-06-09.json` — both written. `SLM_YOYO_WEIGHTS_GCS_BUCKET`
+not set → markers are local only; no auto-trigger to yoyo-batch yet.
+
+### Cycle log location
+
+```
+/srv/foundry/data/yoyo-cycle-logs/cycle-YYYYMMDD-HHMMSS.log
+```
+
+Real-time diagnostics (when cycle is running):
+```bash
+journalctl -u local-yoyo-daily          # cycle service output
+journalctl -u local-doorman             # Tier B circuit events
+journalctl -u local-content             # entity extraction + enrichment writes
+ssh -i ~/.ssh/google_compute_engine mathew@10.128.0.24 nvidia-smi  # GPU stats
+```
+
+---
+
+## §12 — ML libraries installation plan (NEXT: complete the training pipeline)
+
+### Current gap
+
+`run-dpo-training.py` requires HuggingFace ML libraries that are **not installed** on
+the yoyo-batch VM. The daily cycle drains enrichment and writes training markers, but
+cannot trigger actual LoRA training until these are in place:
+
+```
+Required on yoyo-batch:
+  pip install trl>=0.8 peft>=0.10 transformers>=4.40 datasets bitsandbytes
+```
+
+These install once to the persistent disk and survive VM stop/start cycles. Total ~6 GB
+disk, ~8-10 min first install.
+
+### Also note: `lora-update.sh` config drift
+
+`lora-update.sh` references `TRAINER_INSTANCE=yoyo-tier-b-1` and `TRAINER_ZONE=europe-west4-a`.
+The actual VM is `yoyo-batch` in `us-central1-a`. Must be corrected before any training run.
+
+### Phased plan — in order
+
+**Step 1 — Install ML libs on yoyo-batch (one-time, ~10 min)**
+
+Start the VM, SSH in, install libraries, verify with dry-run, stop:
+
+```bash
+# Start VM
+gcloud compute instances start yoyo-batch --zone us-central1-a
+
+# Wait for SSH to be ready (~60s after start)
+ssh -i ~/.ssh/google_compute_engine mathew@10.128.0.24 \
+  "pip install --quiet trl>=0.8 peft>=0.10 transformers>=4.40 datasets bitsandbytes \
+  && echo 'INSTALL OK'"
+
+# Dry-run — verifies imports and corpus loading without training
+ssh -i ~/.ssh/google_compute_engine mathew@10.128.0.24 \
+  "python3 /srv/foundry/clones/project-intelligence/service-slm/scripts/run-dpo-training.py \
+   --dry-run \
+   --corpus /home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer/service-fs/data/training-corpus/feedback/"
+
+# Stop VM
+gcloud compute instances stop yoyo-batch --zone us-central1-a
+```
+
+Expected dry-run output: corpus scan, pair count, hyperparameter summary, no actual training.
+
+**Step 2 — Fix lora-update.sh config (~5 min)**
+
+Update `TRAINER_INSTANCE` and `TRAINER_ZONE` defaults in `lora-update.sh` to match
+actual VM (`yoyo-batch`, `us-central1-a`).
+
+**Step 3 — First real training run (manual, operator-supervised, ~2h on L4)**
+
+Requires an operator session while the VM is running. Set:
+```bash
+SLM_LORA_AUTO_ENABLE=true
+echo "first-run" > /srv/foundry/data/training-approved/coding-lora-$(date +%Y-%m-%d).tag
+```
+
+Then run the training directly via SSH to yoyo-batch:
+```bash
+ssh -i ~/.ssh/google_compute_engine mathew@10.128.0.24 \
+  "python3 /srv/foundry/clones/project-intelligence/service-slm/scripts/run-dpo-training.py \
+   --corpus <feedback-dir> \
+   --base-model allenai/OLMo-2-1124-7B-Instruct \
+   --max-runtime-seconds 5400"   # 90 min hard cap
+```
+
+Monitor: `journalctl -u local-doorman` for circuit state; SSH to yoyo-batch for nvidia-smi.
+
+**Step 4 — Wire training trigger into the daily cycle (~30 min code)**
+
+Add a Phase 7 to `yoyo-daily-cycle.sh`: after the threshold check, if training markers
+exist AND the ML libs are confirmed installed, SSH-trigger `run-dpo-training.py` on yoyo-batch
+with a time budget equal to remaining cycle time (up to 90 min total cap).
+
+The VM is already running at this point in the cycle — no extra cost or start latency.
+
+**Step 5 — Eval gate + adapter registration (deferred until after first training run)**
+
+`eval-adapter.sh` and `data/adapters/registry.yaml` are already designed; wire up after
+the first adapter is produced and manually inspected.
+
+### Dependency summary
+
+| Step | Dependency | Time estimate |
+|---|---|---|
+| 1. Install ML libs | yoyo-batch must be RUNNING | 10 min |
+| 2. Fix lora-update.sh config | None (edit only) | 5 min |
+| 3. First training run | Step 1 + operator session | 2h VM time |
+| 4. Wire training into daily cycle | Step 1 complete | 30 min code |
+| 5. Eval gate | Step 3 adapter produced | 1 session |
+
+### One thing to decide (operator)
+
+The GCS bucket approach (`SLM_YOYO_WEIGHTS_GCS_BUCKET`) vs. SSH-direct:
+- **SSH-direct (recommended for now):** no GCS setup needed; the daily cycle already SSHes
+  into yoyo-batch; training runs on the same VM, adapter written to local disk, then `scp`
+  back to workspace. Simpler, fully operator-observable.
+- **GCS:** needed if training runs asynchronously (VM continues while workspace is offline)
+  or if adapters need to be accessible from multiple machines. Can be added later.
+
+For Phase 1, SSH-direct is the right call. GCS is a Phase 2+ concern.
