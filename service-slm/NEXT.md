@@ -8,17 +8,25 @@
 
 ## 🔴 REMINDER — Arm Phase 6 before 17:00 UTC on 2026-06-10 [pwoodfine@claude-code]
 
-**Run this before 10:00 AM PDT tomorrow (2026-06-10) or the training window will be skipped:**
+⛔ **DO NOT create the approval tag yet.** Two service-content fixes must land first (see CRITICAL items below). Training with the current corpus will produce a broken model.
 
+**After service-content fixes are committed and corpus is regenerated (~50 cycles = ~50 days at 2 new genuine pairs/cycle to reach 1000), then run:**
 ```bash
 echo "supervised run" > /srv/foundry/data/training-approved/coding-lora-$(date +%Y-%m-%d).tag
 ```
 
-- [ ] Create approval tag before 17:00 UTC 2026-06-10
-- [ ] Confirm: `ls /srv/foundry/data/training-approved/` shows today's tag
-- [ ] Watch the run: `journalctl -u yoyo-daily-cycle -f`
+- [ ] ~~Create approval tag before 17:00 UTC 2026-06-10~~ BLOCKED — see CRITICAL items below
+- [ ] Fix service-content: empty-rejected guard + prompt example injection (see 🔴 items below)
+- [ ] Discard current 91-pair corpus and regenerate with fixed prompt
+- [ ] When genuine pairs reach 1000, create approval tag and arm Phase 6
 
-This is the first supervised training run. Phase 6 will stop llama-server, load OLMo 7B 4-bit into the full 24 GB L4, and train for ~20 min. Adapter lands at `/home/mathew/adapters/apprenticeship-pointsav-incremental/`.
+**run-dpo-training.py fixes already committed (135ce9ac):**
+- LR 1e-4 → 5e-6 ✅
+- beta 0.1 → 0.5 ✅
+- output_dir date-stamp → fixed `-wip` suffix (resume now works) ✅
+- empty-rejected filter: 71/91 degenerate pairs now skipped ✅
+- apprenticeship/enrichment corpus mixing prevented ✅
+- save_steps 50 → 5 ✅
 
 ---
 
@@ -46,6 +54,54 @@ ssh -i ~/.ssh/google_compute_engine mathew@10.128.0.24 \
 - Training budget: 20 min (`TRAINING_SECS = 45% of 45 min`); `--resume` accumulates daily checkpoints
 - Phase 6 skips silently if any gate fails — check cycle log if training didn't run
 - ✅ VRAM fix committed (workspace `6d749df`): Phase 6 now stops llama-server (frees ~16 GB) before loading the 7B training model
+
+---
+
+## 🔴 CRITICAL: service-content — fix extraction prompt example injection (2026-06-09) [pwoodfine@claude-code]
+
+Adversarial review found: 86% of enrichment DPO pairs are corrupted because the extraction system prompt contains named examples (`"Jane Smith"`, `"Woodfine Management Corp."`, `"service-slm"`, `"Vancouver"`) and Tier B (OLMo 32B) extracts these examples instead of entities from the actual text. The model is taught to hallucinate the prompt's own examples as "preferred output."
+
+**Fix in `service-content` — `EXTRACTION_SYSTEM_PROMPT` constant:**
+
+Replace all named examples with structural descriptions only:
+```
+Person — named human individual appearing in the text (not an example name).
+Company — registered organisation or business named in the text.
+Project — named software crate, infrastructure service, or engineering initiative named in the text.
+Account — financial account, service account reference, or contract identifier named in the text.
+Location — named geographic place appearing in the text.
+```
+
+Also add omit rule:
+```
+Omit: shell environment variables ($VAR_NAME), command-line flags (--flag), statistical notation (β, γ, R²), and any entity that appears only in these instructions.
+```
+
+- [ ] Find `EXTRACTION_SYSTEM_PROMPT` in service-content source
+- [ ] Remove all named entity examples; replace with structural descriptions
+- [ ] Add omit rule for env vars / statistical notation
+- [ ] After commit + deploy: discard all 91 current pairs (`rm feedback/enrichment-*.jsonl`) and let the next Yo-Yo cycles regenerate clean pairs
+- [ ] **Blocks first training run**
+
+---
+
+## 🔴 CRITICAL: service-content — filter empty-rejected enrichment pairs (2026-06-09) [pwoodfine@claude-code]
+
+In `write_enrichment_dpo_pair()`: when Tier A returns an empty extraction `[]` and Tier B returns something, the pair is written with `rejected="[]"`. TRL receives 71/91 pairs where `rejected` is 2 characters vs `chosen` averaging 271 characters. DPO learns verbosity preference, not extraction accuracy.
+
+**Fix in `service-content` — `write_enrichment_dpo_pair()`:**
+```rust
+// Before writing the pair, check Tier A actually found something
+if tier_a_raw.is_empty() {
+    return; // No genuine preference signal — Tier A found nothing to contrast against
+}
+```
+
+Also add schema normalization: strip `role_vector`, `location_vector`, `contact_vector` from Tier A output before serializing to `rejected`. These extra fields appear in 13/20 non-empty pairs and make DPO learn schema cleaning instead of extraction quality.
+
+- [ ] Add empty-rejected guard before `write_enrichment_dpo_pair()` writes
+- [ ] Strip extra vector fields from Tier A output before serializing
+- [ ] **Blocks first training run**
 
 ---
 
