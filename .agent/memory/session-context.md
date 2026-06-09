@@ -9,6 +9,27 @@ archive: project-orgcharts
 
 ---
 
+## 2026-06-09 | Totebox | claude-code (auto-mode cleanup — cosigns + outbox consolidation)
+
+**Done this session:**
+- **DESIGN-TOKEN-CHANGE cosigns (A3 + A4)** — fixed prior session's wrong identity (`command@claude-code` → `2026-06-09T16:36:52Z jwoodfine`); cleared "BLOCKED" note from both drafts. Commit `5d3484cc` (pwoodfine).
+- **project-design notified** — outbox message `project-orgcharts-20260609-cosign-done-a3-a4` prepended; project-design can now commit both token changes to `pointsav-design-system/tokens/dtcg-bundle.json`.
+- **Outbox cleanup** — 13 messages archived (12 superseded Stage 6 accumulation signals → stale; 1 already-actioned design-artifacts routing msg). Contaminated project-marketing content in outbox-archive.md cleared and replaced with proper project-orgcharts header + archived messages. Active outbox reduced to 5 messages.
+- **NEXT.md** — resolved section added for cosigns + outbox cleanup.
+
+**Pending / carry-forward:**
+- Stage 6 — HIGH signal still pending Command (`project-orgcharts-20260608-stage6-clean-76-commits`); 82 commits now ahead of origin.
+- project-design ACK needed for A3+A4 after they commit to dtcg-bundle.json.
+- Customer leg MANIFEST — pending Command admin-tier commit.
+- Wiki leg — milestone-gated (JW7+JW9 REVIEW).
+- archive-2026-06-01/ — deletion review 2026-07-01.
+- Nodes 8, 10–14, 51–54 — TOKEN_SHAPE empty; add when charts are created.
+
+**Operator preferences surfaced:**
+- *(none new this session)*
+
+---
+
 ## 2026-06-09 | Totebox | claude-code (color-sample cleanup + WCP JW3 green patch + SHUTDOWN)
 
 **Done this session:**
