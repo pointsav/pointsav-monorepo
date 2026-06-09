@@ -18,7 +18,7 @@ struct AppState {
     nav: Arc<HashMap<String, Vec<String>>>,
 }
 
-fn discover_nav(vault: &PathBuf) -> HashMap<String, Vec<String>> {
+fn discover_nav(vault: &std::path::Path) -> HashMap<String, Vec<String>> {
     let mut nav = HashMap::new();
     for section in SECTIONS {
         let dir = vault.join(section);
@@ -37,7 +37,7 @@ fn discover_nav(vault: &PathBuf) -> HashMap<String, Vec<String>> {
     nav
 }
 
-fn discover_tabs(vault: &PathBuf, section: &str, slug: &str) -> Vec<String> {
+fn discover_tabs(vault: &std::path::Path, section: &str, slug: &str) -> Vec<String> {
     let dir = vault.join(section).join(slug);
     let Ok(entries) = fs::read_dir(&dir) else {
         return Vec::new();
@@ -85,10 +85,16 @@ fn render_markdown(md: &str) -> String {
     out
 }
 
-fn render_nav(nav: &HashMap<String, Vec<String>>, active_section: &str, active_slug: &str) -> String {
+fn render_nav(
+    nav: &HashMap<String, Vec<String>>,
+    active_section: &str,
+    active_slug: &str,
+) -> String {
     let mut out = String::new();
     for section in SECTIONS {
-        let Some(slugs) = nav.get(*section) else { continue };
+        let Some(slugs) = nav.get(*section) else {
+            continue;
+        };
         out.push_str("<div class=\"nav-section\">");
         out.push_str(&format!(
             "<span class=\"nav-section-title\">{}</span>",
@@ -117,7 +123,11 @@ fn render_tab_bar(section: &str, slug: &str, tabs: &[String], active_tab: &str) 
     }
     let mut out = String::from("<nav class=\"tab-bar\">");
     for tab in tabs {
-        let class_attr = if tab == active_tab { " class=\"active\"" } else { "" };
+        let class_attr = if tab == active_tab {
+            " class=\"active\""
+        } else {
+            ""
+        };
         let href = format!("/{}/{}/{}", section, slug, tab);
         out.push_str(&format!(
             "<a href=\"{}\"{}>{}</a>",
@@ -241,7 +251,10 @@ async fn element_redirect(Path(slug): Path<String>, State(state): State<AppState
         return (StatusCode::BAD_REQUEST, "invalid").into_response();
     }
     let tabs = discover_tabs(&state.vault, "elements", &slug);
-    let first = tabs.into_iter().next().unwrap_or_else(|| "overview".to_string());
+    let first = tabs
+        .into_iter()
+        .next()
+        .unwrap_or_else(|| "overview".to_string());
     Redirect::permanent(&format!("/elements/{}/{}", slug, first)).into_response()
 }
 
