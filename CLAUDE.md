@@ -27,7 +27,7 @@ Per `~/Foundry/AGENT.md` § Session roles:
 1. Confirm role: `~/Foundry/bin/foundry-role.sh` (Totebox Session expected)
 2. Write session lock: `.agent/engines/<engine-id>/session.lock`
 3. Read `.agent/manifest.md` — cluster mission + tetrad
-4. Read `.agent/inbox.md` — pending messages
+4. Call `get_session_brief(role="totebox", archive="project-workplace")` — replaces inbox, NOTAM, session-context reads
 5. Read `~/Foundry/NOTAM.md` — workspace warnings
 6. Read `.agent/rules/*.md` if present
 
@@ -54,3 +54,32 @@ Stage 6 promotion via `~/Foundry/bin/promote.sh` from Command Session.
 ## Conflicts
 
 Surface conflicts via outbox to Command Session — do not silently override.
+
+## MCP tools — `foundry` server (use at startup)
+
+`get_session_brief(role="totebox", archive="project-workplace")` replaces manually reading
+inbox.md, outbox.md, NOTAM.md, session-context.md. Call it first.
+`send_mailbox_message()` replaces hand-editing YAML frontmatter.
+
+| Tool | When to use |
+|---|---|
+| `get_session_brief` | **First call at startup** — inbox, outbox, NOTAM, session-context |
+| `send_mailbox_message` | Send any mailbox message (M-2/M-10 audit compliant) |
+| `query_mailbox` | Sweep archives — scope="all" in one call |
+| `get_doorman_status` | Tier A/B/C + circuit state |
+| `get_service_status` | Apprenticeship queue + audit-ledger counts |
+| `query_datagraph` | Entity lookup before answering about people/projects |
+| `ask_local` | OLMo 7B local inference — free, SYS-ADR-07-safe; graph context auto-injected |
+| `cast_apprenticeship_verdict` | Sign + submit verdict on a shadow-captured attempt |
+| `mutate_datagraph` | Create/update graph entities (requires explicit operator intent) |
+| `submit_extraction` | Queue prose for entity extraction pipeline |
+
+## Artifact types — bright-line rules
+
+TOPIC = explains WHAT/WHY; public wiki; bilingual EN+ES; survives decommission; reader has no login.
+GUIDE = instructs HOW-NOW; woodfine-fleet-deployment/<name>/; English-only; dies with deployment.
+SOFT  = Ed25519 license key + marketplace listing + price → software.pointsav.com.
+CODE  = runs our systems; no customer license; internal deploy only (published OSS with no key = CODE).
+Split rule: declaratives → TOPIC, imperatives → GUIDE; same slug, different prefix, no shared sentences.
+Cash register test: licensable + marketplace-listed → SOFT; everything else → CODE.
+Storefront (app-privategit-marketplace) is CODE; the merchandise it sells is SOFT.
