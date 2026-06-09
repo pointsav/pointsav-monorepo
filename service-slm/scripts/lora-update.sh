@@ -50,8 +50,8 @@ DATE_STAMP="$(date -u +%Y-%m-%d)"
 
 ADAPTER_ID="${SLM_LORA_ADAPTER_ID:-coding-lora-${DATE_STAMP}}"
 LIMA_THRESHOLD="${SLM_LORA_LIMA_THRESHOLD:-1000}"
-TRAINER_INSTANCE="${SLM_YOYO_TRAINER_INSTANCE:-yoyo-tier-b-1}"
-TRAINER_ZONE="${SLM_YOYO_TRAINER_ZONE:-europe-west4-a}"
+TRAINER_INSTANCE="${SLM_YOYO_TRAINER_INSTANCE:-yoyo-batch}"
+TRAINER_ZONE="${SLM_YOYO_TRAINER_ZONE:-us-central1-a}"
 
 log() { echo "[lora-update $(date -u +'%Y-%m-%dT%H:%M:%SZ')] $*"; }
 
