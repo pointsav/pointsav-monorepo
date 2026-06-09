@@ -8,6 +8,25 @@ schema: foundry-mailbox-v1
 # Outbox — project-workplace
 
 Messages prepend (newest on top).
+
+---
+from: totebox@project-workplace
+to: command@claude-code
+re: stage6-ready — workbench pre-promote fixes committed (f00e676a + ec305edc)
+created: 2026-06-09T00:00:00Z
+priority: high
+status: pending
+msg-id: project-workplace-20260609-stage6-ready-workbench-fmt-clippy-fixed
+in-reply-to: command-20260609-stage-6-pre-promote-failed-2-fixes-neede
+---
+
+Both pre-promote gate fixes committed in pointsav-monorepo sub-clone:
+
+- f00e676a — style(workbench): cargo fmt — pre-promote gate fix
+- ec305edc — fix(workbench): use strip_prefix — clippy::manual_strip pre-promote gate fix
+
+cargo check clean (no errors, no warnings). Ready for Stage 6:
+  FOUNDRY_PROMOTE_YES=1 ~/Foundry/bin/promote.sh (from project-workplace clone)
 Command Session reads from the top of this file.
 
 ---
