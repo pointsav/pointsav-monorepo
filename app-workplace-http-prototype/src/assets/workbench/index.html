@@ -1724,11 +1724,16 @@ function refreshViewerFromEditor() {
   const fname = (currentPath.split('/').pop() || '').toLowerCase();
   const ext = fname.split('.').pop();
 
+  if (activeTabIdx >= 0) tabs[activeTabIdx].content = content;
+
   if (viewMode === 'iframe') {
     const frame = document.getElementById('preview-frame');
     if (frame) {
-      frame.removeAttribute('src');
-      frame.srcdoc = content;
+      if (frame.src && frame.src.includes('/_api/edit/document?')) {
+        frame.src = '/_api/edit/document?path=' + encodeURIComponent(editorPath) + '&_cb=' + Date.now();
+      } else {
+        frame.src = cacheBust(currentPath);
+      }
     }
   } else if (viewMode === 'text') {
     const tc = document.getElementById('text-content');
@@ -1742,6 +1747,37 @@ function refreshViewerFromEditor() {
     }
   }
   // image mode: editor doesn't author binary images; nothing to refresh
+}
+
+// ── Reload current viewer without reloading the SPA ──────────────────────────
+function reloadCurrentFile() {
+  if (!currentPath) { location.reload(); return; }
+  const frame = document.getElementById('preview-frame');
+  const tc    = document.getElementById('text-content');
+  if (viewMode === 'iframe') {
+    if (frame) {
+      if (frame.src && frame.src.includes('/_api/edit/document?')) {
+        frame.src = '/_api/edit/document?path=' + encodeURIComponent(editorPath) + '&_cb=' + Date.now();
+      } else {
+        frame.src = cacheBust(currentPath);
+      }
+    }
+  } else if (viewMode === 'image') {
+    const img = document.getElementById('image-el');
+    if (img) img.src = cacheBust(currentPath);
+  } else if (viewMode === 'text') {
+    fetch(cacheBust(currentPath), { cache: 'no-store' })
+      .then(r => r.ok ? r.text() : null)
+      .then(text => {
+        if (!text || !tc) return;
+        const ext = (currentPath.split('.').pop() || '').toLowerCase();
+        if (ext === 'md') { tc.className = 'md-view'; tc.innerHTML = mdToHtml(text); }
+        else              { tc.className = 'code-view'; tc.textContent = text; }
+      })
+      .catch(() => {});
+  } else {
+    location.reload();
+  }
 }
 
 // ── Autosave (every 30 s while dirty) ────────────────────────────────────────
@@ -1871,8 +1907,8 @@ function updateBar(name, path) {
   const reloadBtn = document.createElement('button');
   reloadBtn.className = 'bar-btn';
   reloadBtn.textContent = '↻ Reload';
-  reloadBtn.title = 'Reload page — reopens this file automatically';
-  reloadBtn.addEventListener('click', () => location.reload());
+  reloadBtn.title = 'Reload this file in the viewer';
+  reloadBtn.addEventListener('click', reloadCurrentFile);
   bar.appendChild(reloadBtn);
 
   const closeBtn = document.createElement('button');
@@ -4432,7 +4468,13 @@ setSurface(activeSurface);
         }
         if (viewMode === 'iframe') {
           var frame = document.getElementById('preview-frame');
-          if (frame) { frame.removeAttribute('src'); frame.srcdoc = fileData.content; }
+          if (frame) {
+            if (frame.src && frame.src.includes('/_api/edit/document?')) {
+              frame.src = '/_api/edit/document?path=' + encodeURIComponent(apiPath) + '&_cb=' + Date.now();
+            } else {
+              frame.src = cacheBust(path);
+            }
+          }
         } else if (viewMode === 'text') {
           var tc = document.getElementById('text-content');
           if (tc) {
@@ -4453,7 +4495,7 @@ setSurface(activeSurface);
       paintData(preloadedData);
     } else {
       // /_api/edit/file is the local-intranet-editor (nginx → 9210); reads from disk.
-      fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath))
+      fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath), { cache: 'no-store' })
         .then(function(r) { return r.ok ? r.json() : null; })
         .then(paintData)
         .catch(function() {});
@@ -4467,7 +4509,7 @@ setSurface(activeSurface);
     var tab = tabs && tabs[idx];
     if (!tab || !tab.path) return;
     var apiPath = tab.path.replace(/^\/+/, '');
-    fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath))
+    fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath), { cache: 'no-store' })
       .then(function(r) { return r.ok ? r.json() : null; })
       .then(function(data) {
         if (!data || !data.mtime) return;
