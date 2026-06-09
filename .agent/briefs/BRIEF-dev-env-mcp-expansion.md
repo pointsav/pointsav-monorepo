@@ -1,6 +1,6 @@
 ---
 artifact: brief
-status: active
+status: archived
 created: 2026-06-09
 session: command@claude-code
 related_briefs:
@@ -111,13 +111,20 @@ to reflect the confirmed-working state.
 
 ---
 
-## Session 3 — Pending
+## Session 3 — Status (2026-06-09) COMPLETE
 
 ### Track 3 — DataGraph enrichment
 
-1. **Graph mutation audit** (~10 LOC) — `http.rs` POST /v1/graph/mutate handler; add
-   `event_type: "graph-mutation"` audit write after successful proxy
-2. **NEXT.md** — add Option B migration sprint item
+1. **Graph mutation audit** — PRE-COMPLETE. `slm-doorman-server/src/http.rs`
+   `graph_mutate()` handler (lines 1215–1234) already calls
+   `state.doorman.ledger().append_capture_entry(&entry)` with
+   `event_type: "graph-mutation"`, module_id, source: "graph-proxy", and
+   status ok/upstream-error. Implemented during PS.4 (audit substrate sprint).
+   No code change needed.
+
+2. **NEXT.md Option B migration** — ADDED. See NEXT.md §Session 63 item:
+   wire `query_mailbox` + `send_mailbox_message` through `app-orchestration-command`
+   after Phase 3 ships (`GET /archives` + `POST /v1/message` endpoints live).
 
 ---
 
