@@ -1,3 +1,6 @@
+# Foundry workspace state — never commit to canonical monorepo
+.agent/
+
 # Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock
 
@@ -18,5 +21,6 @@ pointsav-fleet-deployment/
 pointsav-media-assets/
 woodfine-media-assets/
 
-# Totebox session state — archive-root git tracks these, not sub-clone
-.agent/
+# Recovered binaries and input documents — not committed to archive git
+app-privategit-design-recovered
+inputs/
