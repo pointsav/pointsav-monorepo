@@ -108,6 +108,7 @@ See BRIEF-os-totebox-ppn-build-out.md for full state.
 - J1 Phase 24B — Kontur H3 population join; operator must initiate data acquisition.
 - CBRE/JLL leasing data — Year 2 research; operator action.
 # NEXT.md — project-knowledge
+# NEXT.md — project-marketing
 
 Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
 > **Scope: this archive only.** Cross-repo items live at `~/Foundry/NEXT.md`.
@@ -179,3 +180,73 @@ git -C content-wiki-corporate pull /srv/foundry/clones/project-editorial/media-k
 ## In scope — project-editorial
 
 - [ ] **Phase F+G scoping** — BRIEF-phase-fg-institutional-redesign.md written 2026-06-11; 6 GUIDEs + DESIGN-wiki-institutional-redesign; awaiting operator go-ahead before any content work
+Last updated: 2026-06-08
+
+---
+
+## Operator-gated (browser action required)
+
+- [ ] **GSC: submit sitemaps** — in GSC Sitemaps panel submit:
+      `https://home.woodfinegroup.com/sitemap.xml` and `https://home.pointsav.com/sitemap.xml`
+      [2026-06-08 operator-pending]
+- [ ] **GSC: request indexing** — after sitemap submission; URL Inspection → Request Indexing
+      for each homepage [2026-06-03 operator-pending]
+- [ ] **Bing Webmaster Tools** — optional; import from GSC at https://www.bing.com/webmasters
+      [2026-06-03 operator-pending]
+- [ ] **`sameAs` social profiles** — any LinkedIn or company profile URLs to add to JSON-LD?
+      [2026-05-20 operator-pending]
+
+---
+
+## UX audit sprint (from 2026-06-03 project-knowledge memo)
+
+Ten items, none yet actioned. Most impactful first:
+
+- [ ] **Server-render marketing HTML** — eliminate "Unpacking N assets…" splash; binary already serves
+      flat-file HTML, serve decoded template directly. Kill no-cache/no-store header. [2026-06-03]
+- [ ] **Woodfine P0 typo** — "AN real property developer" → "a real property developer" in hero copy. [2026-06-03]
+- [ ] **PointSav P0 typos** — "F*KEYS CONSSOLE", "DIGTIAL TWIN" in product headings. [2026-06-03]
+- [ ] **PointSav: add true `<h1>`** — largest text currently 19px paragraph; no h1/h2 present. [2026-06-03]
+- [ ] **Nav text minimum 14px** — current 9–11px sub-legible. Nav/label min: 14px weight 500. [2026-06-03]
+- [ ] **Self-host all fonts on every route** — contact pages load from fonts.googleapis.com (GDPR).
+      Subset to Inter + Source Serif 4 only. [2026-06-03]
+- [ ] **PointSav: promote navy #164679 as dominant brand color** — demote steel gray to tint role. [2026-06-03]
+- [ ] **Both: shared global nav** — item sets differ page-to-page; consolidate. [2026-06-03]
+- [ ] **Both: remove internal repo path from footer** — "Source: factory-release-engineering/…" visible publicly. [2026-06-03]
+- [ ] **Both: real contact form** on /page/contact (currently email-only); fix dead `href="#"` anchor. [2026-06-03]
+
+---
+
+## Future mobile improvements (from 2026-06-04 hyperscaler research)
+
+- [ ] Hero photography — Apollo/Brookfield pattern; full-bleed image under hero text
+- [ ] Hamburger nav — collapse to icon at <768px; current nav wraps badly
+- [ ] Full-width CTAs repeated beneath each feature card
+- [ ] Persistent Enquire / click-to-call button (fixed footer on mobile)
+
+---
+
+## Mailbox contamination — ongoing issue
+
+Inbox, outbox, and NEXT.md have been overwritten by Stage 6 rebase operations three times
+since 2026-06-05. Each time content from other archives (project-console, project-knowledge,
+project-gis, project-intelligence) overwrites this archive's files. Command Session should
+investigate the Stage 6/sync-local.sh path that is causing this.
+
+Relay message in outbox: `project-marketing-20260608-contamination-relay` [2026-06-08]
+
+---
+
+## Completed this sprint
+
+- [x] robots.txt deployed to both sites [2026-05-24]
+- [x] sitemap.xml deployed to both sites [2026-05-24]
+- [x] SEO head block applied to both sites [2026-05-24]
+- [x] `<noscript>` content fallback added [2026-06-03]
+- [x] GSC verification meta tags added [2026-06-03]
+- [x] Hero description font standardized 19px (PointSav inline 20px override removed) [2026-06-05]
+- [x] Mobile improvements S1–S10, W1, P1–P4 applied across both sites [2026-06-04/05]
+- [x] `<link rel="canonical">` added to both sites [2026-06-08]
+- [x] JSON-LD Organization/SoftwareApplication structured data added to both sites [2026-06-08]
+- [x] `<lastmod>` dates added to all sitemap URLs [2026-06-08]
+- [x] TLS (certbot) confirmed live on both domains [2026-06-08]
