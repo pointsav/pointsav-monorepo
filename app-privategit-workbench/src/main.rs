@@ -3,13 +3,16 @@ use axum::{
     body::Bytes,
     extract::{Query, State},
     http::{HeaderMap, StatusCode},
+    response::sse::{Event, KeepAlive, Sse},
     response::{Html, IntoResponse, Json, Redirect, Response},
     routing::{get, post},
     Router,
 };
+use notify::{recommended_watcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
+    convert::Infallible,
     fs,
     io::Write,
     net::SocketAddr,
@@ -20,6 +23,8 @@ use std::{
     time::{Duration, UNIX_EPOCH},
 };
 use tokio::net::TcpListener;
+use tokio::sync::broadcast;
+use tokio_stream::{wrappers::BroadcastStream, StreamExt as _};
 
 const SPA_HTML: &str = include_str!("assets/index.html");
 
@@ -70,6 +75,7 @@ struct AppState {
     roots: Arc<Vec<RootEntry>>,
     max_bytes: usize,
     spa_html: Arc<String>,
+    events_tx: broadcast::Sender<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -339,10 +345,29 @@ async fn put_file(
         .map(|d| d.as_secs())
         .unwrap_or(0);
 
+    // Notify other open tabs that this file changed.
+    let event_json = format!(
+        r#"{{"event":"changed","path":"{}","mtime":{}}}"#,
+        q.path, new_mtime
+    );
+    let _ = state.events_tx.send(event_json);
+
     let mut resp_map = HashMap::new();
     resp_map.insert("ok", serde_json::Value::Bool(true));
     resp_map.insert("mtime", serde_json::Value::Number(new_mtime.into()));
     Json(resp_map).into_response()
+}
+
+// ---------------------------------------------------------------------------
+// GET /events — SSE stream for real-time file change notifications
+// ---------------------------------------------------------------------------
+
+async fn get_events(State(state): State<AppState>) -> impl IntoResponse {
+    let rx = state.events_tx.subscribe();
+    let stream = BroadcastStream::new(rx)
+        .filter_map(|r| r.ok())
+        .map(|data| Ok::<_, Infallible>(Event::default().data(data)));
+    Sse::new(stream).keep_alive(KeepAlive::default())
 }
 
 // ---------------------------------------------------------------------------
@@ -1237,10 +1262,76 @@ async fn main() -> Result<()> {
         1,
     );
 
+    // SSE broadcast channel + inotify watcher.
+    // Watches ALL configured roots so inotify fires for external writes
+    // (e.g. Claude Code editing files in _clones/).
+    let (events_tx, _) = broadcast::channel::<String>(64);
+    let watcher_tx = events_tx.clone();
+    let root_mappings: Vec<(String, String)> = config
+        .roots
+        .iter()
+        .map(|r| (r.url_prefix.clone(), r.fs_path.clone()))
+        .collect();
+    let roots_for_watcher = root_mappings.clone();
+    tokio::spawn(async move {
+        let (inner_tx, mut inner_rx) = tokio::sync::mpsc::channel::<String>(8);
+        let mut watcher = match recommended_watcher(move |res: notify::Result<notify::Event>| {
+            if let Ok(event) = res {
+                let path_str = event
+                    .paths
+                    .first()
+                    .and_then(|p| p.to_str())
+                    .unwrap_or("")
+                    .to_string();
+                let _ = inner_tx.blocking_send(path_str);
+            }
+        }) {
+            Ok(w) => w,
+            Err(e) => {
+                eprintln!("warning: file watcher init failed: {}", e);
+                return;
+            }
+        };
+        for (_, fs_path) in &roots_for_watcher {
+            if let Err(e) = watcher.watch(std::path::Path::new(fs_path), RecursiveMode::Recursive) {
+                eprintln!("warning: could not watch {:?}: {}", fs_path, e);
+            }
+        }
+        while let Some(path_str) = inner_rx.recv().await {
+            if path_str.is_empty() {
+                continue;
+            }
+            let rel = roots_for_watcher
+                .iter()
+                .find_map(|(prefix, base)| {
+                    let base = base.trim_end_matches('/');
+                    if let Some(rest_stripped) = path_str.strip_prefix(base) {
+                        let rest = rest_stripped.trim_start_matches('/');
+                        Some(format!("{}/{}", prefix, rest))
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or_else(|| path_str.clone());
+            let mtime = std::fs::metadata(&path_str)
+                .ok()
+                .and_then(|m| m.modified().ok())
+                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                .map(|d| d.as_secs())
+                .unwrap_or(0);
+            let msg = format!(
+                r#"{{"event":"changed","path":"{}","mtime":{}}}"#,
+                rel, mtime
+            );
+            let _ = watcher_tx.send(msg);
+        }
+    });
+
     let state = AppState {
         roots: Arc::new(config.roots),
         max_bytes: config.max_bytes,
         spa_html: Arc::new(spa_html),
+        events_tx,
     };
 
     let app = Router::new()
@@ -1254,6 +1345,7 @@ async fn main() -> Result<()> {
         .route("/git-status", get(git_status))
         .route("/document", get(get_document))
         .route("/pdf", get(get_pdf))
+        .route("/events", get(get_events))
         .with_state(state);
 
     let addr: SocketAddr = config.bind.parse().context("parsing bind address")?;
