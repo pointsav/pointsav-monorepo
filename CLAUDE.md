@@ -1,8 +1,8 @@
 @~/Foundry/AGENT.md
 
-# project-knowledge — Archive Guide
+# project-data — Archive Guide
 
-> **State:** active | **Last updated:** 2026-06-02
+> **State:** active | **Last updated:** 2026-06-01
 > **Cluster manifest:** `.agent/manifest.md`
 > **Workspace AGENT.md takes precedence on conflict.**
 
@@ -24,7 +24,7 @@ Per `~/Foundry/AGENT.md` § Session roles:
 1. Confirm role: `~/Foundry/bin/foundry-role.sh` (Totebox Session expected)
 2. Write session lock: `.agent/engines/<engine-id>/session.lock`
 3. Read `.agent/manifest.md` — cluster mission + tetrad
-4. Call `get_session_brief(role="totebox", archive="project-intelligence")` — replaces inbox, NOTAM, session-context reads
+4. Call `get_session_brief(role="totebox", archive="project-data")` — replaces inbox, NOTAM, session-context reads
 5. Read `~/Foundry/NOTAM.md` — workspace warnings
 6. Read `.agent/rules/*.md` if present (may be absent for newer archives)
 
@@ -50,9 +50,14 @@ DESIGN-* / ASSET-* → `.agent/drafts-outbound/` → project-design.
 BIM-* → `.agent/drafts-outbound/` → project-bim.
 CODE-* / SCRIPT-* / CONFIG-* / DATA-* → commit directly (self-contained).
 
+## Conflicts
+
+If a workspace rule conflicts with anything stated here, **stop and surface
+the conflict via outbox to command session** — do not silently override.
+
 ## MCP tools — `foundry` server (use at startup)
 
-`get_session_brief(role="totebox", archive="project-intelligence")` replaces manually reading
+`get_session_brief(role="totebox", archive="project-data")` replaces manually reading
 inbox.md, outbox.md, NOTAM.md, session-context.md. Call it first.
 `send_mailbox_message()` replaces hand-editing YAML frontmatter.
 
@@ -78,8 +83,3 @@ CODE  = runs our systems; no customer license; internal deploy only (published O
 Split rule: declaratives → TOPIC, imperatives → GUIDE; same slug, different prefix, no shared sentences.
 Cash register test: licensable + marketplace-listed → SOFT; everything else → CODE.
 Storefront (app-privategit-marketplace) is CODE; the merchandise it sells is SOFT.
-
-## Conflicts
-
-If a workspace rule conflicts with anything stated here, **stop and surface
-the conflict via outbox to command session** — do not silently override.
