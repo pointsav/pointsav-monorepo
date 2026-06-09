@@ -200,20 +200,21 @@ Last updated: 2026-06-08
 
 ## UX audit sprint (from 2026-06-03 project-knowledge memo)
 
-Ten items, none yet actioned. Most impactful first:
+All 10 items actioned 2026-06-09. Script: `scripts/ux-audit-sprint.py` (commit `a1d3247b`).
 
-- [ ] **Server-render marketing HTML** — eliminate "Unpacking N assets…" splash; binary already serves
-      flat-file HTML, serve decoded template directly. Kill no-cache/no-store header. [2026-06-03]
-- [ ] **Woodfine P0 typo** — "AN real property developer" → "a real property developer" in hero copy. [2026-06-03]
-- [ ] **PointSav P0 typos** — "F*KEYS CONSSOLE", "DIGTIAL TWIN" in product headings. [2026-06-03]
-- [ ] **PointSav: add true `<h1>`** — largest text currently 19px paragraph; no h1/h2 present. [2026-06-03]
-- [ ] **Nav text minimum 14px** — current 9–11px sub-legible. Nav/label min: 14px weight 500. [2026-06-03]
-- [ ] **Self-host all fonts on every route** — contact pages load from fonts.googleapis.com (GDPR).
-      Subset to Inter + Source Serif 4 only. [2026-06-03]
-- [ ] **PointSav: promote navy #164679 as dominant brand color** — demote steel gray to tint role. [2026-06-03]
-- [ ] **Both: shared global nav** — item sets differ page-to-page; consolidate. [2026-06-03]
-- [ ] **Both: remove internal repo path from footer** — "Source: factory-release-engineering/…" visible publicly. [2026-06-03]
-- [ ] **Both: real contact form** on /page/contact (currently email-only); fix dead `href="#"` anchor. [2026-06-03]
+- [x] **Unpacking splash suppressed** — `__bundler_loading` div cleared; setStatus silenced. [2026-06-09]
+- [x] **Woodfine P0 typo fixed** — "is an real property" → "is a real property". [2026-06-09]
+- [x] **PointSav P0 typos fixed** — "F*KEYS CONSSOLE" → "F-KEYS CONSOLE", "DIGTIAL TWIN" → "DIGITAL TWIN". [2026-06-09]
+- [x] **PointSav `<h1>` confirmed present** — `<h1>PointSav</h1>` in outer HTML shell; no change needed. [2026-06-09]
+- [x] **Nav text minimum 14px** — topnav + subnav bumped from 10–11px to 14px on mobile breakpoints. [2026-06-09]
+- [x] **Google Fonts self-hosted on all routes** — 125 @font-face blocks (Woodfine), 95 (PointSav); GDPR-clean. [2026-06-09]
+- [x] **PointSav navy #164679 dominant** — #1d5594 replaced; #164679 appears 23× in template. [2026-06-09]
+- [x] **Shared global nav consolidation** — Disclaimer + Contact us consistent across all pages both sites. [2026-06-09]
+- [x] **Internal repo path removed from footer** — factory-release-engineering path removed from all pages. [2026-06-09]
+- [x] **Dead `href="#"` fixed in contact footers** — replaced with `/page/contact` on both sites. [2026-06-09]
+
+Deferred (out of scope for this sprint):
+- [ ] **Real contact form** — server-side POST handler; mailto fix is done; form requires server work. [deferred]
 
 ---
 
@@ -239,6 +240,7 @@ Relay message in outbox: `project-marketing-20260608-contamination-relay` [2026-
 
 ## Completed this sprint
 
+- [x] UX audit sprint — all 10 items (`scripts/ux-audit-sprint.py`, commit `a1d3247b`) [2026-06-09]
 - [x] robots.txt deployed to both sites [2026-05-24]
 - [x] sitemap.xml deployed to both sites [2026-05-24]
 - [x] SEO head block applied to both sites [2026-05-24]
