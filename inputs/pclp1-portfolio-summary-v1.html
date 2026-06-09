@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCLP 1 — Portfolio Summary</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 9pt; color: #1a1a1a; background: #fff; }
+@media print {
+  @page { size: letter landscape; margin: 0.75in 0.5in; }
+  body { font-size: 10pt; }
+  table { page-break-inside: avoid; }
+  h2, h3 { page-break-after: avoid; }
+  tr.total, tr.subtotal { page-break-inside: avoid; }
+  .disclaimer { page-break-inside: avoid; font-size: 8pt; }
+  .no-print { display: none !important; }
+  .page-break { page-break-before: always; }
+  .page-break-avoid { page-break-inside: avoid; }
+}
+.page-break { page-break-before: always; margin-top: 2em; }
+.page-break-avoid { page-break-inside: avoid; }
+.no-print { margin: 12px 0; }
+.cover { background: #1a2332; color: #fff; padding: 60px 48px; min-height: 180px; }
+.cover h1 { font-size: 22pt; font-weight: 700; margin-bottom: 8px; }
+.cover h2 { font-size: 13pt; font-weight: 400; color: #b0c4de; margin-bottom: 24px; }
+.cover-meta { font-size: 9pt; color: #8bafc0; border-top: 1px solid #2e4060; padding-top: 12px; margin-top: 12px; }
+.cover-meta span { margin-right: 32px; }
+h2.section { background: #1a2332; color: #fff; padding: 6px 10px; font-size: 10pt;
+             font-weight: 600; margin: 20px 0 8px; letter-spacing: .3px; }
+h3.subsection { border-bottom: 2px solid #1a2332; color: #1a2332; font-size: 9.5pt;
+                padding-bottom: 3px; margin: 16px 0 6px; }
+p.stmt-note { font-size: 7.5pt; color: #555; margin: 4px 0 10px; font-style: italic; }
+table { width: 100%; border-collapse: collapse; font-size: 8pt; }
+th { background: #1a2332; color: #fff; text-align: right; padding: 4px 6px;
+     font-weight: 600; white-space: nowrap; }
+th:first-child { text-align: left; }
+td { padding: 3px 6px; border-bottom: 1px solid #e8e8e8; white-space: nowrap; }
+td:first-child { text-align: left; }
+td:not(:first-child) { text-align: right; }
+tr:nth-child(even) { background: #f7f9fc; }
+tr.total td { border-top: 2px solid #1a2332; font-weight: 700; background: #dce6f0; }
+tr.subtotal td { border-top: 1px solid #999; font-weight: 600; background: #eef2f7; }
+.alloc-table { width: 85%; }
+.detail-table { width: 65%; }
+.detail-table-narrow { width: 55%; }
+.disclaimer { background: #f5f5f5; border: 1px solid #ccc; padding: 10px 14px;
+              font-size: 7pt; color: #555; margin-top: 16px; line-height: 1.6; }
+.print-btn { background: #1a2332; color: #fff; border: none; padding: 8px 20px;
+             border-radius: 4px; cursor: pointer; font-size: 9pt; }
+.print-btn:hover { background: #2e4060; }
+.floor-note { background: #e8f0fd; border-left: 3px solid #1a2332; padding: 8px 12px;
+              font-size: 8pt; color: #1a2332; margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+  &nbsp; <em style="font-size:8pt;color:#666;">Landscape · Letter · 0.75 in margins</em>
+</div>
+
+<!-- COVER -->
+<div class="cover page-break-avoid">
+  <h1>Woodfine Direct-Hold Solutions</h1>
+  <h2>Portfolio Summary — PCLP 1</h2>
+  <div class="cover-meta">
+    <span>Prepared by: Woodfine Management Corp.</span>
+    <span>Total portfolio: 70 buildings · 3,894,100 sq ft GLA</span>
+    <span>Floor plates: Suburban Office 19,000 sqft/floor · Professional Centres 21,000 sqft/floor</span>
+    <span>Deliverable ###12 — 2026-05-14</span>
+  </div>
+</div>
+
+<!-- PORTFOLIO ALLOCATION -->
+<div class="page-break">
+<h2 class="section">Portfolio Allocation Summary</h2>
+<p class="stmt-note">Four Development Classes. Geometric distribution — fewer total buildings than a uniform floor-count assumption, variety preserved across all classes. Floor plates: SO = 19,000 sqft/floor; PC = 21,000 sqft/floor.</p>
+
+<table class="alloc-table page-break-avoid">
+  <tr>
+    <th style="min-width:200px">Development Class</th>
+    <th>Buildings</th><th>GLA (sqft)</th><th>% of Portfolio</th><th>Cost/sqft</th>
+  </tr>
+  <tr>
+    <td><strong>Suburban Office</strong></td>
+    <td>19</td><td>2,546,000</td><td>65.4%</td><td>$310</td>
+  </tr>
+  <tr>
+    <td><strong>Professional Centres</strong></td>
+    <td>12</td><td>1,071,000</td><td>27.5%</td><td>$310</td>
+  </tr>
+  <tr>
+    <td><strong>Tech Industrial</strong></td>
+    <td>12 pairs (24 bldg)</td><td>182,400</td><td>4.7%</td><td>$260</td>
+  </tr>
+  <tr>
+    <td><strong>Retail Select</strong></td>
+    <td>15</td><td>94,700</td><td>2.4%</td><td>$260</td>
+  </tr>
+  <tr class="total">
+    <td><strong>Total Portfolio</strong></td>
+    <td><strong>70</strong></td><td><strong>3,894,100</strong></td><td><strong>100%</strong></td><td>—</td>
+  </tr>
+</table>
+
+<p class="stmt-note">Portfolio GLA: 3,894,100 sqft (99.7% of 3,906,855 sqft base-case target). Construction cost does not scale linearly with GLA — revenue and balance sheet computations use total construction cost by class.</p>
+
+<!-- SUBURBAN OFFICE DETAIL -->
+<h2 class="section" style="margin-top:24px">Suburban Office — Floor Distribution (19 Buildings)</h2>
+<p class="stmt-note">Floor plate: 19,000 sqft per floor. Geometric distribution: most 7-floor, many 6-floor, fewer 8-floor, some 9-floor.</p>
+
+<table class="detail-table page-break-avoid">
+  <tr>
+    <th style="min-width:180px">Floor Count</th>
+    <th>Distribution</th><th>Buildings</th><th>Sqft/Building</th><th>GLA (sqft)</th>
+  </tr>
+  <tr>
+    <td>9 floors</td><td>some</td><td>2</td><td>171,000</td><td>342,000</td>
+  </tr>
+  <tr>
+    <td>8 floors</td><td>fewer</td><td>3</td><td>152,000</td><td>456,000</td>
+  </tr>
+  <tr>
+    <td>7 floors</td><td>most</td><td>8</td><td>133,000</td><td>1,064,000</td>
+  </tr>
+  <tr>
+    <td>6 floors</td><td>many</td><td>6</td><td>114,000</td><td>684,000</td>
+  </tr>
+  <tr class="total">
+    <td><strong>Total</strong></td><td>—</td><td><strong>19</strong></td><td>avg 134,000</td><td><strong>2,546,000</strong></td>
+  </tr>
+</table>
+
+<!-- PROFESSIONAL CENTRES DETAIL -->
+<h2 class="section" style="margin-top:24px">Professional Centres — Floor Distribution (12 Buildings)</h2>
+<p class="stmt-note">Floor plate: 21,000 sqft per floor. Geometric distribution: quite a few 5-floor, some 4-floor, barely 3-floor.</p>
+
+<table class="detail-table page-break-avoid">
+  <tr>
+    <th style="min-width:180px">Floor Count</th>
+    <th>Distribution</th><th>Buildings</th><th>Sqft/Building</th><th>GLA (sqft)</th>
+  </tr>
+  <tr>
+    <td>5 floors</td><td>quite a few</td><td>5</td><td>105,000</td><td>525,000</td>
+  </tr>
+  <tr>
+    <td>4 floors</td><td>some</td><td>5</td><td>84,000</td><td>420,000</td>
+  </tr>
+  <tr>
+    <td>3 floors</td><td>barely</td><td>2</td><td>63,000</td><td>126,000</td>
+  </tr>
+  <tr class="total">
+    <td><strong>Total</strong></td><td>—</td><td><strong>12</strong></td><td>avg 89,250</td><td><strong>1,071,000</strong></td>
+  </tr>
+</table>
+
+<!-- TECH INDUSTRIAL DETAIL -->
+<h2 class="section" style="margin-top:24px">Tech Industrial — Pair Distribution (12 Pairs · 24 Buildings)</h2>
+<p class="stmt-note">Single-storey paired buildings. Always constructed and leased in pairs. Medium = 2 × 7,200 sqft; Large = 2 × 8,400 sqft. Construction cost: $260/sqft.</p>
+
+<table class="detail-table page-break-avoid">
+  <tr>
+    <th style="min-width:180px">Pair Type</th>
+    <th>Distribution</th><th>Pairs</th><th>Buildings</th><th>Sqft/Pair</th><th>GLA (sqft)</th>
+  </tr>
+  <tr>
+    <td>Medium (2 × 7,200 sqft)</td><td>most</td><td>8</td><td>16</td><td>14,400</td><td>115,200</td>
+  </tr>
+  <tr>
+    <td>Large (2 × 8,400 sqft)</td><td>some</td><td>4</td><td>8</td><td>16,800</td><td>67,200</td>
+  </tr>
+  <tr class="total">
+    <td><strong>Total</strong></td><td>—</td><td><strong>12 pairs</strong></td><td><strong>24</strong></td><td>avg 15,300</td><td><strong>182,400</strong></td>
+  </tr>
+</table>
+
+<!-- RETAIL SELECT DETAIL -->
+<h2 class="section" style="margin-top:24px">Retail Select — Size Distribution (15 Buildings)</h2>
+<p class="stmt-note">Single-storey retail pads. Three size categories. Construction cost: $260/sqft.</p>
+
+<table class="detail-table page-break-avoid">
+  <tr>
+    <th style="min-width:180px">Building Size</th>
+    <th>Distribution</th><th>Buildings</th><th>Sqft/Building</th><th>GLA (sqft)</th>
+  </tr>
+  <tr>
+    <td>6,700 sqft</td><td>most</td><td>8</td><td>6,700</td><td>53,600</td>
+  </tr>
+  <tr>
+    <td>4,500 sqft</td><td>some</td><td>4</td><td>4,500</td><td>18,000</td>
+  </tr>
+  <tr>
+    <td>7,700 sqft</td><td>few</td><td>3</td><td>7,700</td><td>23,100</td>
+  </tr>
+  <tr class="total">
+    <td><strong>Total</strong></td><td>—</td><td><strong>15</strong></td><td>avg 6,313</td><td><strong>94,700</strong></td>
+  </tr>
+</table>
+
+<!-- FLOOR PLATE NOTE -->
+<div class="floor-note" style="margin-top:20px">
+  <strong>Floor plate assumptions:</strong> Suburban Office = 19,000 sqft per floor &nbsp;·&nbsp; Professional Centres = 21,000 sqft per floor &nbsp;·&nbsp; Tech Industrial = single-storey (7,200 or 8,400 sqft per building) &nbsp;·&nbsp; Retail Select = single-storey (4,500 / 6,700 / 7,700 sqft per building)
+</div>
+
+<!-- DISCLAIMER -->
+<div class="disclaimer page-break-avoid" style="margin-top:24px">
+  <strong>Forward-Looking Information — Notice under applicable securities legislation including the British Columbia Securities Commission (BCSC) and NI 51-102</strong><br>
+  This document contains forward-looking information. Portfolio building counts, gross leasable area figures, floor distributions, and construction cost estimates are management estimates based on planning assumptions as of the date of this document. Actual portfolio composition may differ materially from those projected. This document is prepared for internal planning purposes and does not constitute an offering memorandum or financial advice. Words such as "planned," "intended," "target," and "projected" identify forward-looking statements. Readers should not place undue reliance on forward-looking information.
+</div>
+</div>
+
+</body>
+</html>

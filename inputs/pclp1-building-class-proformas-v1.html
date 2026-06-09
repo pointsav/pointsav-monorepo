@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCLP 1 — Building Class Proformas</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 9pt; color: #1a1a1a; background: #fff; }
+@media print {
+  @page { size: letter landscape; margin: 0.75in 0.5in; }
+  body { font-size: 10pt; }
+  table { page-break-inside: avoid; }
+  h2, h3 { page-break-after: avoid; }
+  tr.total, tr.subtotal { page-break-inside: avoid; }
+  .class-block { page-break-inside: avoid; }
+  .disclaimer { page-break-inside: avoid; font-size: 8pt; }
+  .no-print { display: none !important; }
+  .page-break { page-break-before: always; }
+  .page-break-avoid { page-break-inside: avoid; }
+}
+.page-break { page-break-before: always; margin-top: 2em; }
+.page-break-avoid { page-break-inside: avoid; }
+.class-block { page-break-inside: avoid; margin-bottom: 28px; }
+.no-print { margin: 12px 0; }
+.cover { background: #1a2332; color: #fff; padding: 60px 48px; min-height: 180px; }
+.cover h1 { font-size: 22pt; font-weight: 700; margin-bottom: 8px; }
+.cover h2 { font-size: 13pt; font-weight: 400; color: #b0c4de; margin-bottom: 24px; }
+.cover-meta { font-size: 9pt; color: #8bafc0; border-top: 1px solid #2e4060; padding-top: 12px; margin-top: 12px; }
+.cover-meta span { margin-right: 32px; }
+h2.section { background: #1a2332; color: #fff; padding: 6px 10px; font-size: 10pt;
+             font-weight: 600; margin: 20px 0 8px; letter-spacing: .3px; }
+h3.subsection { border-bottom: 2px solid #1a2332; color: #1a2332; font-size: 9.5pt;
+                padding-bottom: 3px; margin: 16px 0 6px; }
+p.stmt-note { font-size: 7.5pt; color: #555; margin: 4px 0 10px; font-style: italic; }
+table { width: 100%; border-collapse: collapse; font-size: 8pt; }
+th { background: #1a2332; color: #fff; text-align: right; padding: 4px 6px;
+     font-weight: 600; white-space: nowrap; }
+th:first-child { text-align: left; }
+td { padding: 3px 6px; border-bottom: 1px solid #e8e8e8; white-space: nowrap; }
+td:first-child { text-align: left; }
+td:not(:first-child) { text-align: right; }
+tr:nth-child(even) { background: #f7f9fc; }
+tr.total td { border-top: 2px solid #1a2332; font-weight: 700; background: #dce6f0; }
+tr.subtotal td { border-top: 1px solid #999; font-weight: 600; background: #eef2f7; }
+tr.section-hdr td { background: #e0e8f0; font-weight: 700; font-size: 7.5pt;
+                    color: #1a2332; text-transform: uppercase; letter-spacing: .4px; }
+.narrow { width: 55%; }
+.medium { width: 65%; }
+.wide  { width: 80%; }
+.class-badge { display: inline-block; background: #e0e8f0; color: #1a2332;
+               border: 1px solid #1a2332; border-radius: 2px; padding: 2px 8px;
+               font-size: 7.5pt; font-weight: 700; margin-bottom: 6px; }
+.disclaimer { background: #f5f5f5; border: 1px solid #ccc; padding: 10px 14px;
+              font-size: 7pt; color: #555; margin-top: 16px; line-height: 1.6; }
+.print-btn { background: #1a2332; color: #fff; border: none; padding: 8px 20px;
+             border-radius: 4px; cursor: pointer; font-size: 9pt; }
+.print-btn:hover { background: #2e4060; }
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+  &nbsp; <em style="font-size:8pt;color:#666;">Landscape · Letter · 0.75 in margins</em>
+</div>
+
+<!-- COVER -->
+<div class="cover page-break-avoid">
+  <h1>Woodfine Direct-Hold Solutions</h1>
+  <h2>Building Class Proformas — PCLP 1</h2>
+  <div class="cover-meta">
+    <span>Prepared by: Woodfine Management Corp.</span>
+    <span>Development yield target: 10.5% across all classes</span>
+    <span>Construction: PC &amp; SO at $310/sqft · TI &amp; RS at $260/sqft</span>
+    <span>Deliverable ###11 — 2026-05-14</span>
+  </div>
+</div>
+
+<!-- INTRO -->
+<div class="page-break">
+<h2 class="section">Reference Proformas by Development Class</h2>
+<p class="stmt-note">Four Development Classes. Each proforma uses a reference building — the most common floor count or size within that class. Amounts per building unless noted. All figures are forward-looking management estimates prepared for internal planning purposes.</p>
+
+<!-- PROFESSIONAL CENTRES -->
+<div class="class-block">
+<h3 class="subsection">Professional Centres</h3>
+<p class="stmt-note">12 buildings total (5F × 5, 4F × 5, 3F × 2). Reference building: 4-floor, 84,000 sqft. Floor plate: 21,000 sqft/floor.</p>
+<table class="medium">
+  <tr>
+    <th style="min-width:210px">Item</th>
+    <th>3F (63,000 sqft)</th>
+    <th>4F — Reference (84,000 sqft)</th>
+    <th>5F (105,000 sqft)</th>
+  </tr>
+  <tr class="section-hdr"><td colspan="4">Construction</td></tr>
+  <tr><td>Gross leasable area</td><td>63,000 sqft</td><td>84,000 sqft</td><td>105,000 sqft</td></tr>
+  <tr><td>Construction cost ($310/sqft)</td><td>$19.5M</td><td>$26.0M</td><td>$32.6M</td></tr>
+  <tr class="section-hdr"><td colspan="4">Revenue &amp; Yield</td></tr>
+  <tr><td>Calibrated base rent (10.5% devYield)</td><td>$2.05M/yr</td><td>$2.73M/yr</td><td>$3.41M/yr</td></tr>
+  <tr><td>Net operating income (calibrated)</td><td>$1.17M/yr</td><td>$1.56M/yr</td><td>$1.95M/yr</td></tr>
+  <tr><td>Development yield target</td><td>10.5%</td><td>10.5%</td><td>10.5%</td></tr>
+  <tr class="section-hdr"><td colspan="4">Valuation</td></tr>
+  <tr><td>Asset value at 6.25% cap rate</td><td>$18.7M</td><td>$24.9M</td><td>$31.1M</td></tr>
+  <tr><td>Annual depreciation (40-yr SL)</td><td>$0.49M/yr</td><td>$0.65M/yr</td><td>$0.81M/yr</td></tr>
+  <tr class="total"><td><strong>Portfolio count</strong></td><td>2 buildings</td><td>5 buildings</td><td>5 buildings</td></tr>
+</table>
+</div>
+
+<!-- SUBURBAN OFFICE -->
+<div class="class-block">
+<h3 class="subsection">Suburban Office</h3>
+<p class="stmt-note">19 buildings total (9F × 2, 8F × 3, 7F × 8, 6F × 6). Reference building: 7-floor, 133,000 sqft. Floor plate: 19,000 sqft/floor.</p>
+<table class="wide">
+  <tr>
+    <th style="min-width:210px">Item</th>
+    <th>6F (114,000 sqft)</th>
+    <th>7F — Reference (133,000 sqft)</th>
+    <th>8F (152,000 sqft)</th>
+    <th>9F (171,000 sqft)</th>
+  </tr>
+  <tr class="section-hdr"><td colspan="5">Construction</td></tr>
+  <tr><td>Gross leasable area</td><td>114,000 sqft</td><td>133,000 sqft</td><td>152,000 sqft</td><td>171,000 sqft</td></tr>
+  <tr><td>Construction cost ($310/sqft)</td><td>$35.3M</td><td>$41.2M</td><td>$47.1M</td><td>$53.0M</td></tr>
+  <tr class="section-hdr"><td colspan="5">Revenue &amp; Yield</td></tr>
+  <tr><td>Calibrated base rent (10.5% devYield)</td><td>$3.71M/yr</td><td>$4.33M/yr</td><td>$4.95M/yr</td><td>$5.57M/yr</td></tr>
+  <tr><td>Net operating income (calibrated)</td><td>$2.12M/yr</td><td>$2.47M/yr</td><td>$2.83M/yr</td><td>$3.18M/yr</td></tr>
+  <tr><td>Development yield target</td><td>10.5%</td><td>10.5%</td><td>10.5%</td><td>10.5%</td></tr>
+  <tr class="section-hdr"><td colspan="5">Valuation</td></tr>
+  <tr><td>Asset value at 6.25% cap rate</td><td>$33.9M</td><td>$39.5M</td><td>$45.2M</td><td>$50.8M</td></tr>
+  <tr><td>Annual depreciation (40-yr SL)</td><td>$0.88M/yr</td><td>$1.03M/yr</td><td>$1.18M/yr</td><td>$1.33M/yr</td></tr>
+  <tr class="total"><td><strong>Portfolio count</strong></td><td>6 buildings</td><td>8 buildings</td><td>3 buildings</td><td>2 buildings</td></tr>
+</table>
+</div>
+</div>
+
+<!-- TI + RS PAGE -->
+<div class="page-break">
+<!-- TECH INDUSTRIAL -->
+<div class="class-block">
+<h3 class="subsection">Tech Industrial</h3>
+<p class="stmt-note">12 pairs · 24 buildings total (8 medium pairs + 4 large pairs). Single-storey. Always constructed and leased in pairs. Construction cost: $260/sqft.</p>
+<table class="medium">
+  <tr>
+    <th style="min-width:210px">Item</th>
+    <th>Medium Pair — Reference (2 × 7,200 sqft)</th>
+    <th>Large Pair (2 × 8,400 sqft)</th>
+  </tr>
+  <tr class="section-hdr"><td colspan="3">Construction</td></tr>
+  <tr><td>Gross leasable area (pair)</td><td>14,400 sqft</td><td>16,800 sqft</td></tr>
+  <tr><td>Construction cost ($260/sqft)</td><td>$3.74M</td><td>$4.37M</td></tr>
+  <tr class="section-hdr"><td colspan="3">Revenue &amp; Yield</td></tr>
+  <tr><td>Calibrated base rent (10.5% devYield)</td><td>$0.39M/yr</td><td>$0.46M/yr</td></tr>
+  <tr><td>Net operating income (calibrated)</td><td>$0.22M/yr</td><td>$0.26M/yr</td></tr>
+  <tr><td>Development yield target</td><td>10.5%</td><td>10.5%</td></tr>
+  <tr class="section-hdr"><td colspan="3">Valuation</td></tr>
+  <tr><td>Asset value at 6.25% cap rate</td><td>$3.57M</td><td>$4.16M</td></tr>
+  <tr><td>Annual depreciation (40-yr SL)</td><td>$0.09M/yr</td><td>$0.11M/yr</td></tr>
+  <tr class="total"><td><strong>Portfolio count</strong></td><td>8 pairs (16 buildings)</td><td>4 pairs (8 buildings)</td></tr>
+</table>
+</div>
+
+<!-- RETAIL SELECT -->
+<div class="class-block">
+<h3 class="subsection">Retail Select</h3>
+<p class="stmt-note">15 buildings total (6,700 sqft × 8, 4,500 sqft × 4, 7,700 sqft × 3). Single-storey retail pads. Construction cost: $260/sqft.</p>
+<table class="medium">
+  <tr>
+    <th style="min-width:210px">Item</th>
+    <th>Small (4,500 sqft)</th>
+    <th>Medium — Reference (6,700 sqft)</th>
+    <th>Large (7,700 sqft)</th>
+  </tr>
+  <tr class="section-hdr"><td colspan="4">Construction</td></tr>
+  <tr><td>Gross leasable area</td><td>4,500 sqft</td><td>6,700 sqft</td><td>7,700 sqft</td></tr>
+  <tr><td>Construction cost ($260/sqft)</td><td>$1.17M</td><td>$1.74M</td><td>$2.00M</td></tr>
+  <tr class="section-hdr"><td colspan="4">Revenue &amp; Yield</td></tr>
+  <tr><td>Calibrated base rent (10.5% devYield)</td><td>$0.12M/yr</td><td>$0.18M/yr</td><td>$0.21M/yr</td></tr>
+  <tr><td>Net operating income (calibrated)</td><td>$0.07M/yr</td><td>$0.10M/yr</td><td>$0.12M/yr</td></tr>
+  <tr><td>Development yield target</td><td>10.5%</td><td>10.5%</td><td>10.5%</td></tr>
+  <tr class="section-hdr"><td colspan="4">Valuation</td></tr>
+  <tr><td>Asset value at 6.25% cap rate</td><td>$1.12M</td><td>$1.67M</td><td>$1.92M</td></tr>
+  <tr><td>Annual depreciation (40-yr SL)</td><td>$0.03M/yr</td><td>$0.04M/yr</td><td>$0.05M/yr</td></tr>
+  <tr class="total"><td><strong>Portfolio count</strong></td><td>4 buildings</td><td>8 buildings</td><td>3 buildings</td></tr>
+</table>
+</div>
+
+<!-- PROFORMA NOTES -->
+<h2 class="section">Proforma Assumptions</h2>
+<p class="stmt-note">Construction cost per Development Class: Professional Centres and Suburban Office at $310/sqft; Tech Industrial and Retail Select at $260/sqft. All construction costs are capitalized as WIP during the construction phase and transferred to investment property on completion. Development yield = net operating income ÷ total construction cost. Net operating income = calibrated base rent × 57% (43% operating cost ratio applied uniformly across classes). Asset value = NOI ÷ 6.25% capitalization rate. Depreciation = straight-line over 40 years on building component (land excluded). All figures are forward-looking management estimates; actual results will depend on market conditions, leasing outcomes, and construction costs at specific Test Sites.</p>
+
+<!-- DISCLAIMER -->
+<div class="disclaimer page-break-avoid">
+  <strong>Forward-Looking Information — Notice under applicable securities legislation including the British Columbia Securities Commission (BCSC) and NI 51-102</strong><br>
+  This document contains forward-looking information within the meaning of applicable securities legislation. All per-building cost estimates, revenue projections, NOI figures, asset valuations, depreciation schedules, and development yield targets are management estimates based on planning assumptions as of the date of this document and are subject to material change. Actual results may differ materially from those projected. This document is prepared for internal planning purposes and does not constitute an offering memorandum, financial advice, or an offer to sell or solicitation to buy any security. Readers should not place undue reliance on forward-looking information.
+</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Narrow Banking, Perpetual Equity, and Capital Efficiency in Regional-Market Real Estate Development</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        /* Institutional Typography & Layout */
+        :root {
+            --header-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            --body-font: "EB Garamond", Garamond, Georgia, serif;
+            --line-height: 1.5;
+            --page-margin: 1in;
+        }
+
+        body {
+            font-family: var(--body-font);
+            color: #000;
+            background: #fff;
+            line-height: var(--line-height);
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: var(--page-margin);
+            font-size: 11.5pt;
+            text-align: justify;
+        }
+
+        /* Goldman Sachs Style Headers */
+        h1, h2, h3, h4, th {
+            font-family: var(--header-font);
+            font-weight: 700;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        h1 {
+            font-size: 24pt;
+            border-bottom: 2.5px solid #000;
+            padding-bottom: 0.5rem;
+            line-height: 1.1;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 14pt;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #000;
+            padding-bottom: 0.2rem;
+        }
+
+        h3 {
+            font-size: 12pt;
+            margin-top: 1.5rem;
+        }
+
+        /* Thesis Style Elements */
+        .subtitle {
+            font-family: var(--header-font);
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 0.5rem;
+        }
+
+        .date-line {
+            font-family: var(--body-font);
+            font-style: italic;
+            margin-bottom: 2rem;
+        }
+
+        .abstract-container {
+            margin: 2rem 0;
+            padding: 0 0.5in;
+            font-size: 10.5pt;
+        }
+
+        .abstract-header {
+            font-family: var(--header-font);
+            font-weight: bold;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        /* Table Formatting - Institutional Standard */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-family: var(--header-font);
+            font-size: 9.5pt;
+        }
+
+        th {
+            border-top: 2px solid #000;
+            border-bottom: 1px solid #000;
+            padding: 8px;
+            background: #f9f9f9;
+        }
+
+        td {
+            border-bottom: 0.5px solid #ccc;
+            padding: 8px;
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: 2px solid #000;
+        }
+
+        .table-note {
+            font-size: 8.5pt;
+            font-style: italic;
+            margin-top: -1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Print Optimization */
+        @media print {
+            body {
+                padding: 0;
+                width: 100%;
+                font-size: 11pt;
+            }
+            @page {
+                margin: 1in;
+                size: letter;
+            }
+            h2, h3 {
+                page-break-after: avoid;
+            }
+            table {
+                page-break-inside: avoid;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid #000;
+            margin: 2rem 0;
+        }
+
+        .math-block {
+            text-align: center;
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Narrow Banking, Perpetual Equity, and Capital Efficiency in Regional-Market Real Estate Development</h1>
+    <div class="subtitle">A Tear Sheet on the Direct-Hold Solutions Architecture</div>
+    <div class="date-line">Third draft, 2026-05-14. Prepared by Management for review.</div>
+
+    <hr>
+
+    <div class="abstract-container">
+        <span class="abstract-header">Abstract</span>
+        Regional Class A office construction in North America has been structurally underserved by traditional commercial real estate financing. The conventional Joint Venture model — which couples investor equity with bank-mortgage debt at a 60% loan-to-value ceiling — is constrained by pre-leasing requirements that regional markets cannot satisfy at scale. This paper documents the <strong>Direct-Hold Solutions</strong> architecture pioneered by Woodfine Capital Projects: a Limited Partnership structure that finances tangible institutional-grade real estate through perpetual equity and exchange-traded First Secured Mortgage Debentures, modeled on the narrow-banking literature initiated by Friedman (1960) and reviewed comprehensively by Pennacchi (2012). We show that, holding investor equity constant at $250 million, the Direct-Hold structure deploys $1.275 billion of total capital against the Joint Venture's $1.000 billion — producing 70% more institutional-grade gross leasable area per dollar of investor equity at identical per-square-foot construction cost. We argue that the architecture is best understood as a real-asset analogue of the narrow-banking model: long-term savers fund a debenture instrument backed by tangible buildings, with secondary-market liquidity replacing the demand-deposit redemption mechanic. Beyond the static capital-efficiency advantage, the architecture exhibits a deployment-velocity property arising from the geometric reinvestment of distributable income — a real-asset transposition of the Berkshire Hathaway perpetual-equity framework.
+    </div>
+
+    <hr>
+
+    <h2>1. Introduction</h2>
+    <p>The premise of this paper is institutional rather than promotional. We document an existing financial architecture and analyze its capital-efficiency properties relative to the conventional alternatives. The architecture has been deployed since 2012 across several Canadian provinces and is being extended to the United States, Spain, and Mexico through equivalent flow-through vehicles in each domestic jurisdiction (Woodfine Capital Projects 2026, Direct-Hold Solutions Memo, paragraphs 19-69).</p>
+
+    <h3>1.1 The market gap</h3>
+    <p>Regional markets in North America have long lagged metropolitan centres in institutional real estate development. Three structural factors explain this gap.</p>
+    <p>First, regional markets cannot support the pre-leasing thresholds that bank-mortgage construction loans require. Commercial banks typically demand 60-70% pre-leasing before funds are released; in regional markets, the prospective tenant base is dispersed across smaller users who cannot sign in advance.</p>
+    <p>Second, institutional investors have historically concentrated capital allocations in metropolitan centres, leaving regional construction to local developers using local financing. This produces a quality gap: regional Class A office buildings, where they exist at all, are often constructed at lower specifications than would attract national tenants.</p>
+    <p>Third, national retailers have themselves expanded into regional markets through what Walmart's CEO described as a plan to "build or remodel about 800 stores in the coming years as the world's largest retailer seeks to reach more customers" (cited in Avison Young Canada 2026, p. 17). National professional-services firms — accounting, legal, engineering, and medical practices — face parallel expansion pressure but have lacked the institutional-quality real estate that anchors their metropolitan footprints.</p>
+
+    <h3>1.2 The Direct-Hold response</h3>
+    <p>The Direct-Hold Solutions architecture addresses this gap through three reinforcing efficiencies, identified in the Woodfine Management Corp. (2026) <strong>Study in Efficiency</strong>:</p>
+    <ol>
+        <li><strong>Co-Location Blueprint</strong>: Building sites are selected exclusively adjacent to a 60,000-square-foot national retailer such as Walmart or Home Depot. The retailer's site-selection research validates the regional market's economic strength.</li>
+        <li><strong>Repeatable Building Program</strong>: Standardized Fixed Floor Plates enable a Rollout Program of substantively identical buildings across markets. The geometry permits buying-program savings on materials, design, and contractor selection.</li>
+        <li><strong>Perpetual Equity Financing</strong>: Construction is financed through equity rather than debt. The bank-mortgage loan, with its associated capitalized interest costs and pre-leasing constraints, is replaced by exchange-traded First Secured Mortgage Debentures issued only after each building is cash-flow-stable.</li>
+    </ol>
+    <p>The third efficiency is the structural innovation. We turn to it next.</p>
+
+    <hr>
+
+    <h2>2. The Three Efficiencies in Detail</h2>
+
+    <h3>2.1 The Co-Location Blueprint</h3>
+    <p>National retailers conduct extensive demographic and traffic-flow analysis before committing to a regional site. The presence of a Walmart, Home Depot, or Costco within a defined radius validates the regional economy's depth and durability. Avison Young Canada (2026, p. 20) confirms "an influx of investor demand for retail centres," driven by "consistent, daily foot traffic" that creates resilient tenant economics.</p>
+    <p>By siting Woodfine Buildings adjacent to these proven retail anchors, the Direct-Hold Solution leverages the retailer's investment in market analysis. Professional services tenants — Academic, Business, Civic, Laboratory, and Medical (the ABCLM tenant categories) — gain location convenience for their employees and clients without the developer needing to replicate the retailer's site-selection effort. The Power Centre serves as both a validated economic indicator and a daily traffic generator that sustains the office tenants' operations.</p>
+
+    <h3>2.2 The Repeatable Building Program</h3>
+    <p>Professional Centres are constructed at 3-5 storeys with a 10,000-square-foot main floor and average upper-floor plates of 21,000 square feet of net leasable area. Suburban Offices extend the pattern to 6-15 storeys with 19,000-square-foot upper-floor plates. Both classes are certified to LEED Core and Shell standards (Woodfine Capital Projects 2026, Direct-Hold Solutions Memo).</p>
+    <p>Two ancillary classes complete the campus template. Tech Industrial buildings provide single-storey light-industrial space at 11,300 square feet per building, deployed in pairs. Retail Select buildings provide single-storey strip-retail space at 33,000 combined square feet across a small (10,950 sq ft) and large (22,050 sq ft) building. Both ancillary classes are constructed at $260 per square foot versus $310 for the office classes.</p>
+    <p>Standardized geometry produces three procurement advantages. Material specifications are identical across markets, enabling bulk purchasing. Design fees are amortized across the full Rollout Program rather than reincurred per site. Construction contractors gain learning-curve efficiency from repetition.</p>
+    <p>The architectural standardization extends to the campus footprint itself. The reference design (the "Woodfine Campus") aggregates one Suburban Office (221,300 sqft, 12 storeys), one Professional Centre (66,340 sqft, 4 storeys), four Tech Industrial buildings (11,300 sqft each), and one Retail Select pair (33,000 sqft total) on a 17.5-acre site — a single site with five distinct building classes that nonetheless share standardized envelope specifications, signage, parking layouts, and landscaping. The full Rollout Program targets eleven campus equivalents across the Canadian Direct-Hold Solution, each sized to approximately the same 365,000-square-foot footprint.</p>
+
+    <h3>2.3 Perpetual Equity Financing</h3>
+    <p>The third efficiency is the structural feature that distinguishes Direct-Hold from the conventional alternatives. Its mechanics warrant fuller description.</p>
+
+    <h4>2.3.1 The conventional sequence</h4>
+    <p>Conventional commercial real estate development begins with the maximum debt the project can support; equity is the residual that closes the financing gap. The bank approves a construction loan up to a stated loan-to-value ratio (typically 60-65% in metro markets, lower in regional markets); the developer contributes equity to fund the remainder. Capitalized interest accrues on the construction loan during the build period, before any rental cash flow exists, and must be serviced either from cash reserves or from additional debt drawdowns. The interest-accrual mechanism creates a feedback loop: longer construction periods produce more capitalized interest, which produces more debt service, which can require additional debt drawdowns. In stressed markets, the loop can lead to project failure (Woodfine Management Corp. 2026, p. 2).</p>
+    <p>The structural property of the conventional sequence is that <em>the project is fully encumbered from inception</em>. The developer's equity is junior to the bank's first lien throughout the build period. To realize equity returns, the developer must either complete construction and sell the encumbered asset (transferring the lien to the buyer) or refinance the construction loan with permanent debt at the same encumbrance level. In either case, the cash flow that funds the developer's earnings has been encumbered before it ever existed.</p>
+
+    <h4>2.3.2 The Direct-Hold sequence</h4>
+    <p>Direct-Hold inverts this sequence. The first buildings are constructed entirely with equity drawn from the LP investors. No construction loan exists during the build period; no interest accrues; no encumbrance attaches to the title. Once the buildings are cash-flow-stable, First Secured Mortgage Debentures are issued at a 1.20× interest coverage ratio and up to 100% of development cost. The debentures are exchange-traded with daily liquidity, <em>pari passu</em> on title, and interest-only with no amortization until the buildings are stabilized.</p>
+    <p>The structural property of the Direct-Hold sequence is that <em>the building is unencumbered when constructed</em>. Debt is subsequently overlaid on the unencumbered asset, but it is overlaid by choice — at terms negotiated against an asset whose value is already established by lease income — rather than imposed as a financing precondition. The investor's equity is in first position on title throughout the build period and remains in first position thereafter (the debentures are subordinated to the LP investors per the Universal Governing Bylaws).</p>
+
+    <h4>2.3.3 The Berkshire Hathaway analogue</h4>
+    <p>The Direct-Hold model can be understood as a real-asset analogue of Berkshire Hathaway's perpetual-equity framework. Berkshire has compounded book value at approximately 19% annually for over five decades by paying cash up-front for unencumbered future cash flows and reinvesting those flows into additional unencumbered acquisitions (Woodfine Management Corp. 2026, p. 2). Private Equity, by contrast, relies heavily on debt and requires the eventual sale of encumbered cash flows to generate fund returns; the structural geometry does not permit comparable compounding.</p>
+    <p>Direct-Hold transposes the Berkshire framework to regional real estate. Each cash-flow-stable building generates distributable income; ten percent of those distributions repurchase outstanding debentures, incrementally reducing debt and freeing future cash flow for reinvestment. The reinvestment proceeds construct additional unencumbered buildings, which generate additional distributions, which repurchase additional debentures. The geometric pattern produces structural compounding.</p>
+    <p>Formally, let $C_t$ denote total deployable capital at the end of year $t$, $d$ denote the distribution-yield rate on capital, and $r$ denote the fraction of distributions retained for debenture repurchase. The unencumbered-capital recursion is approximately:</p>
+    <div class="math-block">
+        $$ C_{t+1} = C_t \cdot (1 + r \cdot d) $$
+    </div>
+    <p>For $d = 0.10$ and $r = 0.10$ (the Direct-Hold parameters), this gives $C_{t+1} \approx C_t \cdot (1 + 0.01)$, or about 1% annual unencumbered-capital growth from debenture repurchase alone — independent of any new equity issuance. Compounded over a development cycle of 7-10 years, the ratio of unencumbered to total capital migrates from approximately 50% (at peak debt) toward 100% (full debenture redemption). This is the geometric pattern that the Memo describes as "the heart of what we describe as perpetual equity" (Woodfine Management Corp. 2026, p. 2).</p>
+
+    <hr>
+
+    <h2>3. Capital Efficiency: A Quantitative Tear Sheet</h2>
+    <p>The structural difference between Direct-Hold and the Legacy Joint Venture model is best demonstrated by holding investor equity constant and observing the resulting capital deployment.</p>
+
+    <h3>3.1 Static comparison</h3>
+    <p><strong>Table 1 — Direct-Hold (Woodfine LP) vs Legacy Joint Venture</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Metric</th>
+                <th>Direct-Hold</th>
+                <th>Legacy JV</th>
+                <th>Variance</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Investor equity</td>
+                <td>$250M</td>
+                <td>$250M</td>
+                <td>identical</td>
+            </tr>
+            <tr>
+                <td>Borrowing capacity</td>
+                <td>$1,025M</td>
+                <td>$750M</td>
+                <td>+$275M</td>
+            </tr>
+            <tr>
+                <td>Total capital deployed</td>
+                <td>$1,275M</td>
+                <td>$1,000M</td>
+                <td>+$275M</td>
+            </tr>
+            <tr>
+                <td>Debt to investor equity</td>
+                <td>4.10×</td>
+                <td>3.00×</td>
+                <td>+1.10×</td>
+            </tr>
+            <tr>
+                <td>Debt to asset value</td>
+                <td>0.62</td>
+                <td>0.5952</td>
+                <td>comparable</td>
+            </tr>
+            <tr>
+                <td>Construction cost per square foot</td>
+                <td>$326.35</td>
+                <td>$326.35</td>
+                <td>identical</td>
+            </tr>
+            <tr>
+                <td>Square feet built</td>
+                <td>3,906,855</td>
+                <td>2,298,150</td>
+                <td><strong>+1,608,705 (+70%)</strong></td>
+            </tr>
+            <tr>
+                <td>Equity per square foot built</td>
+                <td><strong>$63.99</strong></td>
+                <td>$108.78</td>
+                <td><strong>−$44.79 (−41%)</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>The mechanism is structural rather than operational. Both architectures construct buildings of identical specification at identical per-square-foot cost. The Legacy JV is constrained by the bank-mortgage Loan-to-Value ceiling — typically 60% of stabilized asset value — which caps total debt at $750 million on a $1.0 billion asset base. The Direct-Hold structure substitutes First Secured Mortgage Debentures for bank mortgages; the debentures are subordinated to the LP investors and are not subject to the bank-mortgage LTV constraint. This permits debt of $1,025 million on a $1,275 million asset base, producing an asset-level leverage ratio (0.62) that is comparable to the Legacy JV's (0.5952), but achieved through a different debt instrument that does not impose the same capacity ceiling.</p>
+    <p>The institutional implication is that, for the same dollar of investor equity, the Direct-Hold structure produces 70% more institutional-grade gross leasable area at identical building quality. Equivalently, the Direct-Hold model purchases one square foot of productive asset for $63.99 of investor equity, where the Legacy JV requires $108.78. The 41% capital-efficiency advantage compounds over the development cycle, as Section 3.2 shows.</p>
+
+    <h3>3.2 Deployment velocity</h3>
+    <p>The static comparison understates the architectural difference. Direct-Hold's capital efficiency is deployed across multiple rounds, each round building cash-flow-stable buildings before the next is funded. The Use of Proceeds for the prototype Canadian Direct-Hold Solution illustrates the mechanic.</p>
+    <p><strong>Table 2 — Round-by-Round Deployment, $250M Direct-Hold Solution</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Round</th>
+                <th>Funding source</th>
+                <th>Sites</th>
+                <th>Sqft built</th>
+                <th>Capital deployed</th>
+                <th>Cumulative</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Setup</td>
+                <td>LP equity (gross)</td>
+                <td>—</td>
+                <td>—</td>
+                <td>$250.0M</td>
+                <td>—</td>
+            </tr>
+            <tr>
+                <td>Setup deductions</td>
+                <td>(Agent fee 6% + Issue costs 1% + WC reserve 6.25%)</td>
+                <td>—</td>
+                <td>—</td>
+                <td>($33.1M)</td>
+                <td>$216.9M net</td>
+            </tr>
+            <tr>
+                <td>Round 1</td>
+                <td>Net LP equity</td>
+                <td>4 sites</td>
+                <td>518,475 sqft</td>
+                <td>$158.6M</td>
+                <td>73.1% deployed</td>
+            </tr>
+            <tr>
+                <td>Round 2</td>
+                <td>Net LP equity (overspends $27.2M)</td>
+                <td>4 sites</td>
+                <td>611,535 sqft</td>
+                <td>$185.8M</td>
+                <td>LP exhausted</td>
+            </tr>
+            <tr>
+                <td>Round 2 bridge</td>
+                <td>First Secured Mortgage Debenture A ($175M gross, 3% upfront)</td>
+                <td>—</td>
+                <td>—</td>
+                <td>$169.8M net</td>
+                <td>—</td>
+            </tr>
+            <tr>
+                <td>Round 3</td>
+                <td>Debenture proceeds + retained earnings</td>
+                <td>balance</td>
+                <td>balance</td>
+                <td>$142.6M</td>
+                <td>toward target</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>Two structural features distinguish this from the Legacy JV deployment cadence. First, Round 1 and Round 2 are equity-funded — each completes a cash-flow-stable cluster of buildings before any debenture is issued. The buildings in Round 1 are generating distributions before the Round 2 sites break ground. Second, the debenture is issued at the end of Round 2 against the established cash flow of the Round 1 + 2 buildings, rather than at the beginning of any round against projected cash flows. The interest-coverage ratio at debenture issuance reflects realized rental income, not forecast lease-up curves.</p>
+    <p>The Legacy JV cadence imposes a different geometry: each individual site requires its own pre-leasing and bank financing, and capital cannot be redeployed from completed sites until the bank loan is refinanced or the site is sold. The aggregate deployment is therefore slower and more lumpy than the Direct-Hold rollout, even when total available capital is comparable.</p>
+
+    <h3>3.3 Mid-cycle and stabilization</h3>
+    <p>Once Round 2 + 3 are complete, the prototype Direct-Hold Solution holds approximately 3.9 million square feet of stabilized institutional-grade real estate, against approximately $987 million of outstanding debentures and $250 million of LP equity. The asset-level leverage ratio is approximately 0.50, well below typical mortgage-finance covenants. The cash-flow profile from this point is distribution-driven: 90% of distributable income is paid to LP investors, 10% is retained for debenture repurchase, and the unencumbered fraction of the capital base grows year over year per the recursion in Section 2.3.3.</p>
+
+    <hr>
+
+    <h2>4. The Narrow-Banking Architecture</h2>
+    <p>Pennacchi (2012) provides a comprehensive review of narrow-banking proposals from Friedman (1960) through Ricks (2011). The literature identifies five canonical narrow-bank models, each defined by the matching of asset characteristics (credit risk, maturity, liquidity) against liability characteristics (demandability, insurance, capital structure). The shared principle is asset-liability matching: liabilities that are demandable should be backed by assets that can be liquidated at predictable values; longer-maturity or higher-credit-risk assets should be funded with equity capital rather than demandable claims (Pennacchi 2012, pp. 1-2).</p>
+
+    <h3>4.1 The five canonical models</h3>
+    <p>Pennacchi (2012, pp. 1-2) classifies narrow-banking proposals into five structures:</p>
+    <ol>
+        <li><strong>100% Reserve Bank (RB)</strong> — Assets are central-bank reserves or high-powered money; liabilities are non-interest-bearing demand deposits. Friedman (1960) is the canonical advocate.</li>
+        <li><strong>Treasury Money Market Mutual Fund (TMMMF)</strong> — Assets are Treasury bills; liabilities are redeemable equity shares with computable net asset value.</li>
+        <li><strong>Prime Money Market Mutual Fund (PMMMF)</strong> — Assets include short-term agency securities and commercial paper; liabilities are equity shares.</li>
+        <li><strong>Collateralized Demand Deposit Bank (CDDB)</strong> — Assets are low-credit-risk money-market instruments; demand deposits are secured claims at or below collateral value. Pollock (1993) advanced this model.</li>
+        <li><strong>Utility Bank (UB)</strong> — Asset side as CDDB plus retail loans; deposits insured for essential payment functions. King (2009) advocated this framework.</li>
+    </ol>
+    <p>The structures differ on the asset side (what counts as "narrow") and the liability side (whether the demandable instrument is a deposit or a tradable equity share). The shared principle remains constant: the demandable claim is structurally protected from credit and maturity risk.</p>
+
+    <h3>4.2 Modern proposals</h3>
+    <p>Pennacchi (2012) traces the modern narrow-banking literature through several distinct proposals, each addressing a different aspect of the asset-liability matching problem:</p>
+    <p><strong>Tobin (1987)</strong> proposed Deposited Currency Accounts at the Federal Reserve, backed by short-term Treasuries. Risky lending would migrate to uninsured "investment banks" funded by debt and equity rather than demand deposits.</p>
+    <p><strong>Litan (1987)</strong> proposed that nontraditional banking services (underwriting, proprietary trading) require uninsured funding; traditional banks remain narrow. Holding companies could combine both functions if lending and deposit-taking remained in a narrow-bank subsidiary.</p>
+    <p><strong>Bryan (1988)</strong> proposed risk-free depositories holding only AAA-rated securities and government obligations; risky assets would be segregated into affiliates funded by uninsured liabilities.</p>
+    <p><strong>Pierce (1991)</strong> proposed a "Monetary Service Company" (MSC) — a CDDB with ultra-low-risk assets supervised by the Federal Reserve and offering insured deposits.</p>
+    <p><strong>Pollock (1993)</strong> proposed "collateralized money": demand deposits secured at 100% by liquid marketable assets under SEC Rule 15c3-3, marked to market daily.</p>
+    <p><strong>Merton &amp; Bodie (1993)</strong> proposed equity-backed deposits collateralized at 100% by US Treasuries; non-deposit liabilities uninsured.</p>
+    <p><strong>King (2009)</strong> advocated the Utility Bank framework, allowing narrow-bank deposits to fund only essential payment functions and routine retail loans.</p>
+    <p><strong>Kotlikoff (2010)</strong> proposed "Limited Purpose Banking" — narrow banks as 100%-reserve RBs providing payments; risky lending financed via mutual funds.</p>
+    <p><strong>Ricks (2011)</strong> proposed a risk-based CDDB framework with progressive asset-class loosening as the institution accumulates risk capital.</p>
+    <p>The proposals share an institutional disposition toward <strong>separation</strong>: the safe, demandable claim should be insulated from the risky, longer-maturity claim by structural means (subsidiary segregation, asset restrictions, or capital requirements) rather than through ex-post insurance.</p>
+
+    <h3>4.3 The Direct-Hold mapping</h3>
+    <p>Direct-Hold Solutions can be mapped onto the narrow-bank framework as follows:</p>
+    <p>The <strong>asset side</strong> of the LP balance sheet consists of institutional-quality buildings on long-term leases. These are inherently long-maturity, low-credit-risk assets — analogous to the long-duration, high-quality assets that populate the asset side of the Bryan, Pollock, and Merton-Bodie variants. The Power Centre adjacency requirement is a credit-quality filter: by siting on validated retail traffic flows, the rental income is anchored to economic activity that is observable and durable.</p>
+    <p>The <strong>equity capital</strong> side consists of LP units issued to long-term savers (the Memo's "Qualified Private Capital"). Equity absorbs the development-period risk and is the funding source for buildings that are not yet cash-flow-stable. This corresponds to the equity-tranche framework in Gorton &amp; Pennacchi (1990), where equity-side investors absorb the information-sensitive component of the underlying asset cash flows.</p>
+    <p>The <strong>debenture side</strong> consists of First Secured Mortgage Debentures, issued only after the buildings are cash-flow-stable, exchange-traded, and <em>pari passu</em> on title. The debentures are interest-only with no amortization; they function as a long-duration fixed-income instrument backed by the tangible asset. This corresponds most closely to the Pollock (1993) "collateralized money" structure — except that the collateral is real estate rather than money-market instruments, and the unit of demandability is a tradable security rather than a deposit.</p>
+    <p>The <strong>liquidity mechanism</strong> is the secondary market for the debentures. Where a traditional bank meets demand-deposit redemption requests by liquidating short-term assets, the Direct-Hold investor seeking liquidity sells the debenture on the exchange. The exchange replaces the redemption queue with continuous price discovery; the asset itself never needs to be liquidated to satisfy investor liquidity. This is the institutional resolution to the Diamond &amp; Dybvig (1983) maturity-transformation problem: the asset side does not transform maturities, and the liability side achieves liquidity through trading rather than redemption.</p>
+
+    <h3>4.4 Historical and theoretical precedent</h3>
+    <p>The Louisiana Banking Act of 1842 (Hammond 1957; Bodenhorn 2000, 2003) is the most successful formal narrow-banking legislation in United States history. Banks under the Act held specie and short-maturity bills of 65-90 days against demandable deposits, with longer-maturity loans funded exclusively from equity capital. Hammond (1957, p. 683) credited the Act with "distinguished success"; the system continued in operation until the Civil War. Bodenhorn (2003) documents from the Black River Bank of Watertown, New York that during the 1857-58 panic, the bank's borrower count fell by 75% but its long-term, high-quality borrowers retained credit access — evidence that the narrow-bank discipline survived market stress.</p>
+    <p>The theoretical case for narrow banking rests on Gorton &amp; Pennacchi (1990, 1993), who showed that splitting a financial firm's cash flows into "safe" liabilities (deposits or their equivalent) and "risky" liabilities (equity) makes the safe portion information-insensitive — a property that supports the safe portion's use as a transaction medium or store of value. The Direct-Hold debenture structure inherits this property: the debenture's value is anchored to the rent-paying capacity of the underlying buildings, which is observable and slow-moving, while the equity side absorbs the variance.</p>
+
+    <h3>4.5 Direct-Hold as an extension of the framework</h3>
+    <p>The narrow-banking literature has historically focused on monetary instruments — Treasury bills, commercial paper, federal-funds reserves — as the "narrow" asset class. Direct-Hold Solutions extend the framework to institutional-quality real estate as the narrow asset. The buildings are tangible, geographically diversified across regional markets, anchored to validated economic activity through the Co-Location Blueprint, and stabilized through long-term leases to ABCLM tenants. The asset class is information-insensitive in the relevant sense: the value of a Woodfine Building in a stabilized regional market is largely independent of broader credit-market conditions, particularly when the rent base is anchored to professional-service tenants whose business models do not contract sharply in monetary stress.</p>
+    <p>The debenture instrument also extends the Pollock (1993) "collateralized money" framework. Where Pollock proposed daily mark-to-market of money-market collateral under SEC Rule 15c3-3, the Direct-Hold debenture is collateralized by real estate whose value updates on a slower cycle — typically annual appraisal or transaction-based revaluation. The slower revaluation cycle is appropriate for the longer-duration asset; the secondary market for the debenture itself provides the high-frequency price discovery that Pollock's mark-to-market mechanism would otherwise serve.</p>
+
+    <hr>
+
+    <h2>5. Tax and Regulatory Posture</h2>
+    <p>The Direct-Hold structure carries tax and regulatory characteristics that institutional investors and their advisors should understand. We document the Canadian framework (the prototype jurisdiction) and note the parallel structures in the United States, Spain, and Mexico.</p>
+
+    <h3>5.1 Canadian tax framework</h3>
+    <p>The Canadian Direct-Hold Solution is organized as a Limited Partnership under the laws of British Columbia. Limited Partnerships are flow-through entities for Canadian income tax purposes: the partnership itself does not pay tax, and income, losses, and tax preferences flow through to the partners on a pro-rata basis (Income Tax Act (Canada), section 96).</p>
+    <p>Investment properties held by the Partnership are Class 1 capital assets subject to Capital Cost Allowance (CCA) at a 4% declining-balance rate, with the half-year rule applying in the first year of each acquisition. Partners receive a T5013 statement annually showing their pro-rata share of partnership income, losses, and CCA. Partners may deduct their share of CCA against other taxable income, subject to LP at-risk rules under section 96(2.1) of the Income Tax Act.</p>
+    <p>At full portfolio deployment, the prototype Canadian Direct-Hold Solution generates approximately $42 million per annum of CCA available for partner-level deduction (computed as the depreciable cost base of approximately $1,066 million multiplied by the 4% declining-balance rate). The CCA pass-through is a tax characteristic of the Limited Partnership form; it is not an IFRS accounting expense and does not reduce IFRS net income or distributable cash flow.</p>
+
+    <h3>5.2 Multi-jurisdictional flow-through equivalents</h3>
+    <p>The Direct-Hold architecture is being extended to four jurisdictions through equivalent flow-through vehicles, each adapted to the local regulatory framework (Woodfine Capital Projects 2026, Direct-Hold Solutions Memo, paragraphs 19-69):</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Jurisdiction</th>
+                <th>Vehicle</th>
+                <th>Flow-through basis</th>
+                <th>Disclosure repository</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Canada</td>
+                <td>Limited Partnership</td>
+                <td>Non-SIFT exemption</td>
+                <td>SEDAR+</td>
+            </tr>
+            <tr>
+                <td>United States</td>
+                <td>Limited Partnership</td>
+                <td>90% qualifying-income test</td>
+                <td>EDGAR</td>
+            </tr>
+            <tr>
+                <td>Spain</td>
+                <td>SOCIMI</td>
+                <td>SOCIMI Rule (statutory)</td>
+                <td>Sede Electrónica (CNMV)</td>
+            </tr>
+            <tr>
+                <td>Mexico</td>
+                <td>Private FIBRA</td>
+                <td>FIBRA status (statutory)</td>
+                <td>STIV-2 (CNBV)</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>In each jurisdiction, the vehicle is a Regulated Reporting Entity subject to ongoing public oversight and continuous disclosure obligations. The terminology differs; the institutional substance — pass-through taxation, Reporting Issuer status, flow-through of distributable income, and exchange-traded debt — is uniform across jurisdictions.</p>
+
+    <h3>5.3 Securities and Exchange Commission posture (United States)</h3>
+    <p>Shares in Woodfine Capital Projects Inc. and units in the Woodfine LPs have not been and will not be registered under the United States Securities Act of 1933, as amended. The securities may not be offered or sold in the United States absent registration or an applicable exemption. The Direct-Hold Memo notes that for international investors seeking exposure to multiple jurisdictions, a Special Purpose Vehicle established in the domicile of the Direct-Hold Solution permits jurisdictional diversification while preserving the local flow-through tax characteristics (Direct-Hold Solutions Memo, paragraph 238).</p>
+
+    <hr>
+
+    <h2>6. Conclusion</h2>
+    <p>The Direct-Hold Solutions architecture documented in this paper is operating at scale in Canada and is being extended to equivalent flow-through vehicles in the United States, Spain, and Mexico, with target Gross Funded Values of US$500 million, €250 million, and MN$5,000 million respectively.</p>
+    <p>The institutional case rests on three legs. First, the Co-Location Blueprint and Repeatable Building Program identify and capture a structurally underserved real estate niche — regional Class A office space anchored to validated retail traffic flows. Second, perpetual-equity financing delivers measurable capital efficiency relative to the Legacy Joint Venture model: 70% more gross leasable area per dollar of investor equity at identical per-square-foot construction cost, with a deployment cadence that builds cash-flow-stable buildings before subsequent rounds are funded. Third, the asset-liability structure has theoretical and historical lineage in the narrow-banking literature, with the secondary debenture market substituting for the demand-deposit redemption mechanic in a manner consistent with the post-Diamond-Dybvig theoretical framework.</p>
+    <p>The architecture's distinctive contribution to the narrow-banking framework is the extension of the "narrow asset" class from monetary instruments to institutional-quality real estate, with secondary-market debenture trading providing the liquidity mechanism that demand-deposit redemption serves in the monetary case. This extension is consistent with Gorton &amp; Pennacchi's information-insensitivity framework: tangible buildings on long-term leases to professional-service tenants in regional markets exhibit slower-moving valuations than the credit-market cycles that affect banking-system liabilities.</p>
+    <p>This document constitutes forward-looking information within the meaning of OSC Staff Notice 51-721 and National Instrument 51-102. Forward-looking information is based on assumptions and estimates that management considers reasonable as of the date hereof, including but not limited to occupancy rates, capitalization rates, construction costs, interest rates, development yields, and market conditions in the jurisdictions where Direct-Hold Solutions are or may be deployed. Actual results may differ materially from those expressed or implied. Readers are cautioned not to place undue reliance on forward-looking information.</p>
+
+    <hr>
+
+    <h2>References</h2>
+    <p style="font-size: 10pt; line-height: 1.4;">
+        Avison Young Canada (2026). <em>Canada Office Market Report</em>. Cited in Direct-Hold Solutions Memo.<br>
+        Bodenhorn, H. (2000). <em>A History of Banking in Antebellum America</em>. Cambridge University Press.<br>
+        Bodenhorn, H. (2003). <em>State Banking in Early America: A New Economic History</em>. Oxford University Press.<br>
+        Bryan, L. L. (1988). <em>Breaking Up the Bank: Rethinking an Industry Under Siege</em>. Dow Jones-Irwin.<br>
+        CBRE Research (2026). <em>Canada Real Estate Market Outlook</em>.<br>
+        Cushman &amp; Wakefield Canada (2026). <em>Canadian Capital Markets Forecast</em>.<br>
+        Diamond, D. W. and Dybvig, P. H. (1983). "Bank Runs, Deposit Insurance, and Liquidity." <em>Journal of Political Economy</em> 91(3): 401-419.<br>
+        Friedman, M. (1960). <em>A Program for Monetary Stability</em>. Fordham University Press.<br>
+        Gorton, G. and Pennacchi, G. (1990). "Financial Intermediaries and Liquidity Creation." <em>Journal of Finance</em> 45(1): 49-71.<br>
+        Gorton, G. and Pennacchi, G. (1993). "Money Market Funds and Finance Companies: Are They the Banks of the Future?" In M. Klausner and L. White, eds., <em>Structural Change in Banking</em>. Business One Irwin.<br>
+        Hammond, B. (1957). <em>Banks and Politics in America from the Revolution to the Civil War</em>. Princeton University Press.<br>
+        Income Tax Act (Canada), R.S.C. 1985, c. 1 (5th Supp.), as amended.<br>
+        Jacklin, C. J. (1987). "Demand Deposits, Trading Restrictions, and Risk Sharing." In E. Prescott and N. Wallace, eds., <em>Contractual Arrangements for Intertemporal Trade</em>. University of Minnesota Press.<br>
+        King, M. (2009). Speech to the Scottish Business Organisations, Edinburgh, 20 October.<br>
+        Kotlikoff, L. J. (2010). <em>Jimmy Stewart Is Dead: Ending the World's Ongoing Financial Plague with Limited Purpose Banking</em>. John Wiley &amp; Sons.<br>
+        Litan, R. E. (1987). <em>What Should Banks Do?</em> Brookings Institution.<br>
+        Merton, R. C. and Bodie, Z. (1993). "Deposit Insurance Reform: A Functional Approach." <em>Carnegie-Rochester Conference Series on Public Policy</em> 38: 1-34.<br>
+        Pennacchi, G. (2006). "Deposit Insurance, Bank Regulation, and Financial System Risks." <em>Journal of Monetary Economics</em> 53(1): 1-30.<br>
+        Pennacchi, G. (2012). "Narrow Banking." <em>Annual Review of Financial Economics</em> 4: 1-36.<br>
+        Pierce, J. L. (1991). <em>The Future of Banking</em>. Yale University Press.<br>
+        Pollock, A. J. (1993). "Collateralized Money: An Idea Whose Time Has Come Again?" <em>Challenge</em> 36(5): 62-64.<br>
+        Ricks, M. (2011). "Regulating Money Creation After the Crisis." <em>Harvard Business Law Review</em> 1: 75-143.<br>
+        Tobin, J. (1987). "The Case for Preserving Regulatory Distinctions." In <em>Restructuring the Financial System</em>. Federal Reserve Bank of Kansas City.<br>
+        Woodfine Capital Projects (2026). <em>Direct-Hold Solutions Overview and Canadian Market Research</em>. Internal Memorandum, Direct-Hold Solutions Overview JW3, April 2026.<br>
+        Woodfine Capital Projects (2026). <em>Use of Proceeds, Professional Centres LP, Canada</em>. Internal Document, January 2026.<br>
+        Woodfine Management Corp. (2026). <em>The Woodfine LPs: A Study in Efficiency</em>. Press Release, January 6, 2026.<br>
+        Woodfine Management Corp. (2026). <em>Tear Sheet — Alternative Real Estate</em>. V3, January 6, 2026.
+    </p>
+
+    <hr>
+
+    <h2>Changes from v1</h2>
+    <ol>
+        <li><strong>§2.3 Perpetual Equity Financing</strong> (was 1 paragraph): split into three subsections covering the conventional sequence, the Direct-Hold sequence, and the Berkshire Hathaway analogue. Adds a formal recursion equation for unencumbered-capital growth from debenture repurchase.</li>
+        <li><strong>§3 Capital Efficiency</strong>: split into three subsections — static comparison (was the entire section in v1), deployment velocity (NEW; uses the Use of Proceeds round-by-round table), and mid-cycle stabilization framing (NEW). Table 2 added showing Round 1 + Round 2 + debenture bridge.</li>
+        <li><strong>§4 Narrow-Banking Architecture</strong> (was 3 subsections): now 5 subsections. New §4.1 enumerates the five canonical narrow-bank models from Pennacchi (2012). New §4.2 traces the modern proposals chain (Tobin, Litan, Bryan, Pierce, Pollock, Merton-Bodie, King, Kotlikoff, Ricks). §4.3 maps Direct-Hold against the framework with reference to specific model variants. §4.4 (was §4.2) keeps the historical precedent (Louisiana 1842, Black River Bank). §4.5 (was §4.3) reframed from "contribution to the literature" to "extension of the framework," per the v1 drafting note flagging the more conservative framing.</li>
+        <li><strong>NEW §5 Tax and Regulatory Posture</strong>: documents the Canadian flow-through framework (CCA Class 1 4% declining balance, T5013, partner-level deduction, at-risk rules), the multi-jurisdictional equivalents (Non-SIFT / 90% test / SOCIMI Rule / FIBRA Status), and the United States securities-law disclosure. Incorporates the Note 12 elevation that landed in the engine report at C.2.</li>
+        <li><strong>§6 Conclusion</strong>: reordered to surface the three institutional legs explicitly, then the architectural-extension framing, then the forward-looking-information disclaimer.</li>
+        <li><strong>References</strong>: expanded from ~16 to ~22 entries to support the deepened §4 modern-proposals chain (added Bryan 1988, Litan 1987, Pierce 1991, Pollock 1993, Kotlikoff 2010, Ricks 2011, Income Tax Act).</li>
+        <li><strong>Comparative posture</strong>: maintained throughout — Legacy JV and Private Equity remain structural reference points, not adversaries. Berkshire Hathaway invoked as the perpetual-equity exemplar. No editorialising language.</li>
+        <li>Source attributions removed from Table 1 and Table 2.</li>
+    </ol>
+
+    <div class="date-line" style="margin-top: 2rem;">End of v3 draft. Output: ~3,950 words. File: narrow-banking-tear-sheet-v3-DRAFT.html.</div>
+
+</body>
+</html>
