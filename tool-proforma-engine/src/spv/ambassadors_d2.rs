@@ -247,6 +247,7 @@ fn scale_year(y: &Pclp1Year, sf: f64) -> Pclp1Year {
 }
 
 #[cfg(test)]
+#[allow(clippy::field_reassign_with_default)]
 mod tests {
     use super::*;
     use crate::excel::wcp::{WcpBook, WcpFairDiv, WcpIncome, WcpMarket};
@@ -338,7 +339,10 @@ mod tests {
 
     #[test]
     fn wcp_holding_post_listing_uses_lookthrough() {
-        let cfg = Ad2Config { wcp_listing_year: Some(3), ..Default::default() };
+        let cfg = Ad2Config {
+            wcp_listing_year: Some(3),
+            ..Default::default()
+        };
         let mut wcp = synthetic_wcp(0.0);
         // Set per-share book value at Y4+ to $10.00
         for y in 3..10 {

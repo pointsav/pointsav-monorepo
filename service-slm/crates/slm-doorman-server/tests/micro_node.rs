@@ -56,6 +56,8 @@ async fn body_json(resp: axum::response::Response) -> Value {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 /// /readyz must truthfully report Micro class and Tier A unavailability.
+/// P2-B: returns 503 SERVICE_UNAVAILABLE when no AI tier is available so
+/// callers can distinguish "Doorman alive but degraded" from connection errors.
 /// A Micro node must NEVER attempt a model-load; this probe verifies the
 /// Doorman reports accurately from the node-class probe, not from a
 /// model-load attempt (DOCTRINE.md claim #54).
@@ -66,17 +68,22 @@ async fn micro_readyz_reports_node_class_tier_a_unavailable() {
         .await
         .unwrap();
 
-    assert_eq!(resp.status(), StatusCode::OK);
+    assert_eq!(resp.status(), StatusCode::SERVICE_UNAVAILABLE);
     let json = body_json(resp).await;
 
     assert_eq!(json["node_class"], "micro");
-    assert_eq!(json["tier_a"], false,      "Tier A must be unavailable on Micro");
+    assert_eq!(json["tier_a"], false, "Tier A must be unavailable on Micro");
     assert_eq!(json["tier_a_reason"], "micro-node-class");
-    assert_eq!(json["ai_available"], false, "no AI tiers configured on bare Micro");
-    assert_eq!(json["has_local"],  false);
-    assert_eq!(json["has_yoyo"],   false);
+    assert_eq!(
+        json["ai_available"], false,
+        "no AI tiers configured on bare Micro"
+    );
+    assert_eq!(json["has_local"], false);
+    assert_eq!(json["has_yoyo"], false);
     assert_eq!(json["has_external"], false);
-    assert_eq!(json["ready"], true,         "Doorman is ready even without AI");
+    assert_eq!(json["ready"], false);
+    assert_eq!(json["status"], "closed");
+    assert_eq!(json["reason"], "no_tier_available");
 }
 
 /// An AI request on a Micro node must return 503 SERVICE_UNAVAILABLE —
@@ -132,7 +139,7 @@ async fn force_broker_mode_readyz_surfaces_override_reason() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
-        node_class: "hardware",        // detected as Hardware
+        node_class: "hardware",             // detected as Hardware
         tier_a_reason: "force-broker-mode", // but SLM_FORCE_BROKER_MODE=true overrode it
     });
 
@@ -141,13 +148,18 @@ async fn force_broker_mode_readyz_surfaces_override_reason() {
         .await
         .unwrap();
 
-    assert_eq!(resp.status(), StatusCode::OK);
+    // P2-B: no AI available → 503 SERVICE_UNAVAILABLE
+    assert_eq!(resp.status(), StatusCode::SERVICE_UNAVAILABLE);
     let json = body_json(resp).await;
 
-    assert_eq!(json["node_class"],    "hardware");
-    assert_eq!(json["tier_a"],        false,  "force-broker disables Tier A even on Hardware");
+    assert_eq!(json["node_class"], "hardware");
+    assert_eq!(
+        json["tier_a"], false,
+        "force-broker disables Tier A even on Hardware"
+    );
     assert_eq!(json["tier_a_reason"], "force-broker-mode");
-    assert_eq!(json["ai_available"],  false);
+    assert_eq!(json["ai_available"], false);
+    assert_eq!(json["status"], "closed");
 }
 
 /// The readyz response for a Hardware node with Tier A available must show
@@ -169,6 +181,8 @@ async fn hardware_readyz_shows_tier_a_available() {
             lark_validator: None,
             graph_context_client: None,
             tier_a_first: false,
+            daily_yoyo_cap_usd: None,
+            cost_ledger: None,
         },
         temp_ledger(),
     );
@@ -195,9 +209,9 @@ async fn hardware_readyz_shows_tier_a_available() {
     assert_eq!(resp.status(), StatusCode::OK);
     let json = body_json(resp).await;
 
-    assert_eq!(json["node_class"],    "hardware");
-    assert_eq!(json["tier_a"],        true);
+    assert_eq!(json["node_class"], "hardware");
+    assert_eq!(json["tier_a"], true);
     assert_eq!(json["tier_a_reason"], "available");
-    assert_eq!(json["ai_available"],  true);
-    assert_eq!(json["has_local"],     true);
+    assert_eq!(json["ai_available"], true);
+    assert_eq!(json["has_local"], true);
 }

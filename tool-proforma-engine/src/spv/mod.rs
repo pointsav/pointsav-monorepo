@@ -1,6 +1,12 @@
 pub mod ambassadors_d1;
 pub mod ambassadors_d2;
 pub mod bencal;
+pub mod bencal_mgmt_proforma;
+pub mod bencal_spv1_proforma;
+pub mod bencal_spv2_proforma;
+pub mod legacy_jv_proforma;
+pub mod pclp1_proforma;
+pub mod wcp_proforma;
 
 /// Merge a `_derivation` block into the top-level JSON object for audit purposes.
 pub fn audited_json<T: serde::Serialize>(data: &T, derivation: serde_json::Value) -> String {

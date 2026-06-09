@@ -37,6 +37,8 @@ members = [
     "service-vm-host",
     # Knowledge wiki engine
     "app-mediakit-knowledge",
+    # Design system browser (port 9094)
+    "app-privategit-design",
 ]
 
 [profile.dev]

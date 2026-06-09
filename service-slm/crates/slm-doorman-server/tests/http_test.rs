@@ -173,9 +173,11 @@ async fn smoke_healthz_returns_200_ok() {
     assert_eq!(&bytes[..], b"ok");
 }
 
-/// GET /readyz → 200 with JSON shape {ready, has_local, has_yoyo, has_external}.
+/// GET /readyz — no tiers configured → 503 with status:"closed" (P2-B).
+/// When all tiers are absent `ai_available` is false and the endpoint signals
+/// degraded state to clients via HTTP 503 + a structured `status`/`reason` body.
 #[tokio::test]
-async fn smoke_readyz_returns_200_with_tier_flags() {
+async fn smoke_readyz_returns_503_when_no_tiers() {
     let state = app_state_no_tiers();
     let app = router(state);
 
@@ -186,10 +188,13 @@ async fn smoke_readyz_returns_200_with_tier_flags() {
         .unwrap();
 
     let resp = app.oneshot(req).await.expect("oneshot");
-    assert_eq!(resp.status(), StatusCode::OK);
+    assert_eq!(resp.status(), StatusCode::SERVICE_UNAVAILABLE);
 
     let body = body_json(resp).await;
-    assert_eq!(body["ready"], true);
+    assert_eq!(body["ready"], false);
+    assert_eq!(body["status"], "closed");
+    assert_eq!(body["reason"], "no_tier_available");
+    assert_eq!(body["ai_available"], false);
     assert!(body["has_local"].is_boolean(), "has_local is bool");
     assert!(body["has_yoyo"].is_boolean(), "has_yoyo is bool");
     assert!(body["has_external"].is_boolean(), "has_external is bool");
@@ -197,6 +202,10 @@ async fn smoke_readyz_returns_200_with_tier_flags() {
     assert_eq!(body["has_local"], false);
     assert_eq!(body["has_yoyo"], false);
     assert_eq!(body["has_external"], false);
+    // Queue snapshot fields present (values depend on test environment).
+    assert!(body["queue_pending"].is_number(), "queue_pending is a number");
+    assert!(body["queue_done"].is_number(), "queue_done is a number");
+    assert!(body["queue_poison"].is_number(), "queue_poison is a number");
 }
 
 /// GET /v1/contract → 200 with {doorman_version, yoyo_contract_version, ...}.
@@ -761,6 +770,9 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         DoormanError::TierBTimeout | DoormanError::TierBCircuitOpen => {
             StatusCode::SERVICE_UNAVAILABLE
         }
+        DoormanError::FlowGateClosed { .. } => StatusCode::SERVICE_UNAVAILABLE,
+        DoormanError::PriorityQueueIo { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+        DoormanError::GcpApi { .. } => StatusCode::BAD_GATEWAY,
     }
 }
 
@@ -848,6 +860,8 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
             lark_validator: Some(lark_validator),
             graph_context_client: None,
             tier_a_first: false,
+            daily_yoyo_cap_usd: None,
+            cost_ledger: None,
         },
         temp_ledger(),
     );
@@ -879,6 +893,7 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
         graph_context_enabled: None,
         tools: None,
         stop_sequences: None,
+        session_context: None,
     };
 
     // Call route() directly on the Doorman. The pre-validation step (PS.3
@@ -1189,6 +1204,8 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
             lark_validator: Some(lark_validator),
             graph_context_client: None,
             tier_a_first: false,
+            daily_yoyo_cap_usd: None,
+            cost_ledger: None,
         },
         temp_ledger(),
     );
@@ -1220,6 +1237,7 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
         graph_context_enabled: None,
         tools: None,
         stop_sequences: None,
+        session_context: None,
     };
 
     let resp = doorman.route(&req).await;
@@ -2610,10 +2628,7 @@ async fn graph_mutate_proxies_to_service_content_returns_200() {
 
     Mock::given(method("POST"))
         .and(path("/v1/graph/mutate"))
-        .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_json(serde_json::json!({"loaded": 1})),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({"loaded": 1})))
         .mount(&mock_sc)
         .await;
 
@@ -2862,11 +2877,32 @@ async fn anthropic_messages_streaming_returns_sse_with_all_six_events() {
         .expect("read SSE body");
     let body_str = String::from_utf8(bytes.to_vec()).expect("SSE body is UTF-8");
 
-    assert!(body_str.contains("event: message_start"),       "missing message_start");
-    assert!(body_str.contains("event: content_block_start"), "missing content_block_start");
-    assert!(body_str.contains("event: content_block_delta"), "missing content_block_delta");
-    assert!(body_str.contains("event: content_block_stop"),  "missing content_block_stop");
-    assert!(body_str.contains("event: message_delta"),       "missing message_delta");
-    assert!(body_str.contains("event: message_stop"),        "missing message_stop");
-    assert!(body_str.contains("streamed response"),          "SSE body must contain the response text");
+    assert!(
+        body_str.contains("event: message_start"),
+        "missing message_start"
+    );
+    assert!(
+        body_str.contains("event: content_block_start"),
+        "missing content_block_start"
+    );
+    assert!(
+        body_str.contains("event: content_block_delta"),
+        "missing content_block_delta"
+    );
+    assert!(
+        body_str.contains("event: content_block_stop"),
+        "missing content_block_stop"
+    );
+    assert!(
+        body_str.contains("event: message_delta"),
+        "missing message_delta"
+    );
+    assert!(
+        body_str.contains("event: message_stop"),
+        "missing message_stop"
+    );
+    assert!(
+        body_str.contains("streamed response"),
+        "SSE body must contain the response text"
+    );
 }

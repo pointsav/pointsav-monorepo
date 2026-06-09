@@ -11,5 +11,12 @@ outputs/*
 # Legacy .claude directory (should be .agent symlink — to be fixed)
 .claude/
 
+# Sub-clones — managed separately via their own git repos
+pointsav-monorepo/
+pointsav-design-system/
+pointsav-fleet-deployment/
+pointsav-media-assets/
+woodfine-media-assets/
+
 # Totebox session state — archive-root git tracks these, not sub-clone
 .agent/

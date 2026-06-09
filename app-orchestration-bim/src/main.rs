@@ -1771,6 +1771,7 @@ fn extract_furniture(tokens: &HashMap<String, Value>) -> Vec<FurnitureItem> {
     items
 }
 
+#[allow(dead_code)]
 fn furn_cad_placeholder(slug: &str) -> String {
     format!(
         "<div class=\"furn-cad-pending\">\

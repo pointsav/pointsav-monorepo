@@ -1,6 +1,6 @@
 # CLAUDE.md — service-slm
 
-> **State:** Active  —  **Last updated:** 2026-05-07
+> **State:** Active  —  **Last updated:** 2026-06-03
 > **Registry row:** `pointsav-monorepo/.agent/rules/project-registry.md`
 >
 > When state changes, update this header AND the registry row in the

@@ -68,6 +68,50 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// PCLP 1 V1 — Self-generating proforma from BRIEF v0.15.6 §5b inputs (no Excel).
+    /// Emits three files: full proforma HTML, summary HTML, JSON dump.
+    Pclp1V1 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
+    /// PCLP 1 V2 — Self-generating proforma with 2026-06-04 operator corrections
+    /// (advisory fee on gross equity; Y7 capex bug fix; IC = EBITDA/NetInterest +
+    /// Key Ratios table; facility fee at commitment). No Excel.
+    Pclp1V2 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
+    /// WCP V1 — Self-generating proforma from BRIEF v0.15.6 §5c (no Excel).
+    /// Consumes PCLP 1 V2 forecast as LP1 source. Emits proforma HTML, summary HTML, JSON.
+    WcpV1 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
+    /// Bencal SPV1/SPV2/Management V1 — Self-generating Bencal proformas.
+    /// Consumes PCLP 1 V2 + WCP V1 forecasts. Emits 9 files (3 entities × proforma/summary/JSON).
+    BencalAllV1 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
+    /// Building Portfolio V1 — Reformatted v3 D1 dev-classes (70 buildings; 4 classes).
+    /// Self-generating from locked variant config. Emits proforma + summary + JSON.
+    BuildingPortfolioV1 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
+    /// Legacy JV (D7) V1 — Self-generating apples-to-apples comparator to PCLP 1
+    /// per BRIEF v0.15.6 §5h. Traditional bank-debt JV ($250M equity + $750M debt =
+    /// $1B single-shot). Emits proforma + summary + JSON.
+    LegacyJvV1 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
 }
 
 fn write_output(content: &str, out: Option<&PathBuf>) {
@@ -190,7 +234,195 @@ fn main() {
             let bf_json = serde_json::to_string_pretty(&bf).expect("BlockF serialisation failed");
             write_trio("bencal-block-f", &bf_md, &bf_title, &bf_json);
 
-            eprintln!("wrote 12 files to {}", out_dir.display());
+            // V1 — engine-canonical Bencal Forecast Summaries (supersedes JW1/JW3
+            // hand-typed placeholders 2026-06-03; engine reads PCLP 1 + WCP Excels).
+            let mgmt_v1 = report::bencal_forecast_v1::render_management(&pclp_data, &wcp_data);
+            let spv1_v1 = report::bencal_forecast_v1::render_spv1(&wcp_data);
+            let spv2_v1 = report::bencal_forecast_v1::render_spv2(&pclp_data, &wcp_data);
+            write_output(
+                &mgmt_v1,
+                Some(
+                    &out_dir.join("COMPLIANCE_MCorp_2026_06_03_Forecast_Bencal_Management_V1.html"),
+                ),
+            );
+            write_output(
+                &spv1_v1,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_03_Forecast_Bencal_SPV1_V1.html")),
+            );
+            write_output(
+                &spv2_v1,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_03_Forecast_Bencal_SPV2_V1.html")),
+            );
+
+            eprintln!("wrote 15 files to {}", out_dir.display());
+        }
+        Some(Command::Pclp1V1 { out_dir }) => {
+            // PCLP 1 V1 — engine self-generating proforma (no Excel input).
+            // Source: BRIEF v0.15.6 §5b inputs, hardcoded as Rust constants in
+            // src/spv/pclp1_proforma.rs.
+            let proforma_html = report::pclp1_proforma::render_proforma();
+            let summary_html = report::pclp1_proforma::render_summary();
+            let json_dump = report::pclp1_proforma::render_json();
+            write_output(
+                &proforma_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_PCLP1_V1.html")),
+            );
+            write_output(
+                &summary_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_PCLP1_V1.html")),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_PCLP1_V1.json")),
+            );
+            eprintln!("wrote 3 files to {}", out_dir.display());
+        }
+        Some(Command::Pclp1V2 { out_dir }) => {
+            // PCLP 1 V2 — engine self-generating proforma with 2026-06-04 operator
+            // corrections. Same module path as V1; engine is now V2 internally.
+            // Outputs at V2 versioning to preserve V1 audit trail.
+            let proforma_html = report::pclp1_proforma::render_proforma();
+            let summary_html = report::pclp1_proforma::render_summary();
+            let json_dump = report::pclp1_proforma::render_json();
+            write_output(
+                &proforma_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_PCLP1_V2.html")),
+            );
+            write_output(
+                &summary_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_PCLP1_V2.html")),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_PCLP1_V2.json")),
+            );
+            eprintln!("wrote 3 V2 files to {}", out_dir.display());
+        }
+        Some(Command::WcpV1 { out_dir }) => {
+            // WCP V1 — engine self-generating proforma from BRIEF §5c. Consumes PCLP 1 V2.
+            let proforma_html = report::wcp_proforma::render_proforma();
+            let summary_html = report::wcp_proforma::render_summary();
+            let json_dump = report::wcp_proforma::render_json();
+            write_output(
+                &proforma_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_WCP_V1.html")),
+            );
+            write_output(
+                &summary_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_WCP_V1.html")),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_WCP_V1.json")),
+            );
+            eprintln!("wrote 3 WCP V1 files to {}", out_dir.display());
+        }
+        Some(Command::BuildingPortfolioV1 { out_dir }) => {
+            // Building Portfolio V1 — v3 D1 dev-classes reformatted with proforma +
+            // summary + JSON outputs. Self-generating from locked Rust constants.
+            let proforma_html = report::d1_dev_classes_v2::render_proforma();
+            let summary_html = report::d1_dev_classes_v2::render_summary();
+            let json_dump = report::d1_dev_classes_v2::render_json();
+            write_output(
+                &proforma_html,
+                Some(
+                    &out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_BuildingPortfolio_V1.html"),
+                ),
+            );
+            write_output(
+                &summary_html,
+                Some(
+                    &out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_BuildingPortfolio_V1.html"),
+                ),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_BuildingPortfolio_V1.json")),
+            );
+            eprintln!(
+                "wrote 3 Building Portfolio V1 files to {}",
+                out_dir.display()
+            );
+        }
+        Some(Command::LegacyJvV1 { out_dir }) => {
+            // Legacy JV (D7) V1 — engine self-generating comparator to PCLP 1.
+            // Source: BRIEF v0.15.6 §5h. Apples-to-apples 10-year return analysis.
+            let proforma_html = report::legacy_jv_proforma::render_proforma();
+            let summary_html = report::legacy_jv_proforma::render_summary();
+            let json_dump = report::legacy_jv_proforma::render_json();
+            write_output(
+                &proforma_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_LegacyJV_V1.html")),
+            );
+            write_output(
+                &summary_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_LegacyJV_V1.html")),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_LegacyJV_V1.json")),
+            );
+            eprintln!("wrote 3 Legacy JV V1 files to {}", out_dir.display());
+        }
+        Some(Command::BencalAllV1 { out_dir }) => {
+            // Bencal SPV1, SPV2, Management V2 — engine self-generating proformas.
+            // Consumes PCLP 1 V2 + WCP V1. 9 HTML/JSON files + 6 PDFs = 15 total.
+            use report::bencal_v1_proforma::*;
+            let pairs = [
+                (
+                    "Bencal_SPV1",
+                    render_proforma_spv1(),
+                    render_summary_spv1(),
+                    render_json_spv1(),
+                ),
+                (
+                    "Bencal_SPV2",
+                    render_proforma_spv2(),
+                    render_summary_spv2(),
+                    render_json_spv2(),
+                ),
+                (
+                    "Bencal_Management",
+                    render_proforma_mgmt(),
+                    render_summary_mgmt(),
+                    render_json_mgmt(),
+                ),
+            ];
+            let mut pdf_count = 0usize;
+            for (name, proforma, summary, json) in &pairs {
+                let proforma_path = out_dir.join(format!(
+                    "COMPLIANCE_MCorp_2026_06_05_Proforma_{}_V2.html",
+                    name
+                ));
+                let summary_path = out_dir.join(format!(
+                    "COMPLIANCE_MCorp_2026_06_05_Summary_{}_V2.html",
+                    name
+                ));
+                let json_path =
+                    out_dir.join(format!("COMPLIANCE_MCorp_2026_06_05_{}_V2.json", name));
+                write_output(proforma, Some(&proforma_path));
+                write_output(summary, Some(&summary_path));
+                write_output(json, Some(&json_path));
+                for html_path in &[&proforma_path, &summary_path] {
+                    let pdf_path = html_path.with_extension("pdf");
+                    let status = std::process::Command::new("weasyprint")
+                        .arg(html_path.as_os_str())
+                        .arg(pdf_path.as_os_str())
+                        .status();
+                    match status {
+                        Ok(s) if s.success() => {
+                            pdf_count += 1;
+                        }
+                        Ok(s) => eprintln!("weasyprint exited {} for {}", s, html_path.display()),
+                        Err(e) => eprintln!("weasyprint not found or failed: {e}"),
+                    }
+                }
+            }
+            eprintln!(
+                "wrote 9 Bencal V2 files + {} PDFs to {}",
+                pdf_count,
+                out_dir.display()
+            );
         }
         None => {
             // Legacy: JSON assumptions → sensitivity engine

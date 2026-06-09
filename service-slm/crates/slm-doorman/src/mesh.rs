@@ -133,9 +133,7 @@ mod tests {
         let provider = Arc::new(StaticConfigProvider::new(nodes));
         // Seed the registry directly (bypass the background ticker interval)
         let registry = DynamicRegistry {
-            nodes: Arc::new(RwLock::new(
-                provider.poll_nodes().await.unwrap(),
-            )),
+            nodes: Arc::new(RwLock::new(provider.poll_nodes().await.unwrap())),
         };
         let dummy_req = {
             use slm_core::{ChatMessage, Complexity, ModuleId, RequestId};
@@ -144,7 +142,10 @@ mod tests {
                 request_id: RequestId::new(),
                 module_id: ModuleId::from_str("foundry").unwrap(),
                 model: None,
-                messages: vec![ChatMessage { role: "user".into(), content: "hi".into() }],
+                messages: vec![ChatMessage {
+                    role: "user".into(),
+                    content: "hi".into(),
+                }],
                 complexity: Complexity::High,
                 tier_hint: None,
                 stream: false,
@@ -158,6 +159,7 @@ mod tests {
                 graph_context_enabled: None,
                 tools: None,
                 stop_sequences: None,
+                session_context: None,
             }
         };
         let selected = registry.select_optimal(&dummy_req).await;
@@ -177,7 +179,10 @@ mod tests {
                 request_id: RequestId::new(),
                 module_id: ModuleId::from_str("foundry").unwrap(),
                 model: None,
-                messages: vec![ChatMessage { role: "user".into(), content: "hi".into() }],
+                messages: vec![ChatMessage {
+                    role: "user".into(),
+                    content: "hi".into(),
+                }],
                 complexity: Complexity::Medium,
                 tier_hint: None,
                 stream: false,
@@ -191,10 +196,10 @@ mod tests {
                 graph_context_enabled: None,
                 tools: None,
                 stop_sequences: None,
+                session_context: None,
             }
         };
         let selected = registry.select_optimal(&dummy_req).await;
         assert!(selected.is_none());
     }
 }
-

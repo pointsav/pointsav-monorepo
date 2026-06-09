@@ -5,6 +5,7 @@ members = [
     "crates/slm-doorman",
     "crates/slm-doorman-server",
     "crates/adapter-hub",
+    "crates/slm-mcp-server",
 ]
 exclude = [
     "cognitive-forge",
