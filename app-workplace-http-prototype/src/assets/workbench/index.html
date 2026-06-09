@@ -143,13 +143,22 @@ header .tag {
   position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
   background: #252526; border: 1px solid #3c3c3c; color: #ccc;
   font-size: 12px; padding: 5px 14px; border-radius: 4px;
-  pointer-events: none; opacity: 0; transition: opacity 0.15s;
+  opacity: 0; transition: opacity 0.15s;
   z-index: 9000; white-space: nowrap;
+  display: flex; align-items: center; gap: 10px;
 }
 #wb-toast.show { opacity: 1; }
+.wb-toast-action {
+  background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+  color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 3px; cursor: pointer; white-space: nowrap;
+}
+.wb-toast-action:hover { background: rgba(255,255,255,0.32); }
 html.light .tree-item.drag-over { background: #d0e7fc !important; outline-color: #0078d4; color: #1a1a1a !important; }
 html.light .viewer.drag-over-editor { outline-color: #0078d4; }
 html.light #wb-toast { background: #f3f3f3; border-color: #d4d4d4; color: #333; }
+html.light .wb-toast-action { background: rgba(0,0,0,0.08); border-color: rgba(0,0,0,0.22); color: #1a1a1a; }
+html.light .wb-toast-action:hover { background: rgba(0,0,0,0.15); }
 
 .loading { padding: 4px 8px 4px 28px; color: #555; font-size: 11px; font-style: italic; }
 .empty   { padding: 4px 8px 4px 28px; color: #555; font-size: 11px; }
@@ -325,29 +334,6 @@ html.light #wb-toast { background: #f3f3f3; border-color: #d4d4d4; color: #333; 
 }
 .find-btn:hover { background: #4a4a4a; color: #eee; }
 
-/* ── Document Outline panel ────────────────────────────────────────────── */
-#outline-panel {
-  display: none; position: absolute; top: 33px; right: 8px;
-  width: 300px; max-height: 360px;
-  background: #252526; border: 1px solid #555; border-radius: 4px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.65);
-  flex-direction: column; z-index: 100;
-}
-#outline-panel.visible { display: flex; }
-#outline-filter {
-  background: #3c3c3c; border: none; border-bottom: 1px solid #444;
-  color: #eee; font-size: 12px; padding: 5px 10px; outline: none;
-  border-radius: 4px 4px 0 0; width: 100%; box-sizing: border-box;
-}
-#outline-list { overflow-y: auto; flex: 1; }
-.outline-item {
-  padding: 4px 10px; font-size: 12px; color: #ccc; cursor: pointer;
-  display: flex; align-items: baseline; gap: 6px;
-  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-}
-.outline-item:hover, .outline-item.outline-focused { background: #094771; color: #eee; }
-.outline-depth { color: #569cd6; font-size: 10px; width: 22px; flex-shrink: 0; text-align: right; }
-.outline-empty { padding: 10px; font-size: 11px; color: #555; text-align: center; }
 
 #editor-wrap {
   flex: 1;
@@ -720,12 +706,6 @@ html.light #find-count { color: #888; }
 html.light .find-btn { color: #555; background: #e4e4e4; border-color: #cccccc; }
 html.light .find-btn:hover { background: #d4d4d4; color: #111; }
 
-html.light #outline-panel { background: #f3f3f3; border-color: #d0d0d0; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
-html.light #outline-filter { background: #e8e8e8; border-bottom-color: #d0d0d0; color: #333; }
-html.light .outline-item { color: #444; }
-html.light .outline-item:hover, html.light .outline-item.outline-focused { background: #d6e8fa; color: #111; }
-html.light .outline-depth { color: #0066cc; }
-html.light .outline-empty { color: #aaa; }
 
 html.light #editor-gutter { background: #f0f0f0; border-left-color: #d0d0d0; border-right-color: #e0e0e0; color: #bbb; }
 html.light #editor-gutter .gl-active { color: #444; }
@@ -842,10 +822,10 @@ html.light .recent-show-more:hover { color: #004fa0; }
       </div>
       <div class="section-body" id="section-sandboxes">
         <div class="tree-node">
-          <div class="tree-item open" data-api="/_api/sandbox-jennifer/" data-browse="/_sandbox-jennifer/" data-type="dir" style="padding-left:14px">
+          <div class="tree-item" data-api="/_api/sandbox-jennifer/" data-browse="/_sandbox-jennifer/" data-type="dir" style="padding-left:14px">
             <span class="arrow">▶</span><span class="icon">📁</span><span class="label">Jennifer</span>
           </div>
-          <div class="tree-children" style="padding-left:12px"></div>
+          <div class="tree-children collapsed" style="padding-left:12px"></div>
         </div>
         <div class="tree-node">
           <div class="tree-item" data-api="/_api/sandbox-mathew/" data-browse="/_sandbox-mathew/" data-type="dir" style="padding-left:14px">
@@ -936,8 +916,6 @@ html.light .recent-show-more:hover { color: #004fa0; }
         <span id="editor-cursor"></span>
         <span id="editor-dirty" style="display:none" title="Unsaved changes">●</span>
         <span id="editor-status"></span>
-        <button class="bar-btn" id="outline-btn" onclick="showOutline()" title="Document outline (Cmd+Shift+O)">Outline</button>
-        <button class="bar-btn" id="comment-btn" onclick="toggleLineComment()" title="Toggle line comment">Comment</button>
         <input id="ln-jump-input" type="text" inputmode="numeric" placeholder="Ln" title="Go to line (Enter)" autocomplete="off">
         <button class="bar-btn" id="save-btn" onclick="saveFile()">Save</button>
       </div>
@@ -945,10 +923,6 @@ html.light .recent-show-more:hover { color: #004fa0; }
         <span class="goto-label">Go to line:</span>
         <input id="goto-input" type="number" min="1" placeholder="…" autocomplete="off">
         <span class="goto-hint">↵ jump · Esc close</span>
-      </div>
-      <div id="outline-panel">
-        <input id="outline-filter" type="text" placeholder="Filter symbols…" autocomplete="off" spellcheck="false">
-        <div id="outline-list"></div>
       </div>
       <div id="find-bar">
         <div class="find-row">
@@ -1010,7 +984,7 @@ let activeTabIdx = -1;
 const gitStatus  = new Map();
 
 // Sidebar collapse state
-let sidebarPinnedWidth = parseInt(sessionStorage.getItem('wb-sidebar-w') || '300');
+let sidebarPinnedWidth = parseInt(localStorage.getItem('wb-sidebar-w') || '300');
 
 // Hidden-files toggle (persists across reloads)
 let showHidden = localStorage.getItem('wb-show-hidden') === '1';
@@ -1118,7 +1092,7 @@ function esc(s) {
 function collapseSidebar() {
   const sb = document.getElementById('sidebar');
   const w = sb.offsetWidth;
-  if (w > 36) { sidebarPinnedWidth = w; sessionStorage.setItem('wb-sidebar-w', w); }
+  if (w > 36) { sidebarPinnedWidth = w; localStorage.setItem('wb-sidebar-w', w); }
   sb.style.width = '32px';
   sb.classList.add('sb-collapsed');
 }
@@ -1772,8 +1746,8 @@ function closeFile() {
   if (activeTabIdx >= 0) {
     closeTab(activeTabIdx);
   } else {
-    sessionStorage.removeItem('wb-path');
-    sessionStorage.removeItem('wb-name');
+    localStorage.removeItem('wb-path');
+    localStorage.removeItem('wb-name');
     currentPath = null;
     viewMode    = 'none';
     hideEditorPanel();
@@ -1967,8 +1941,8 @@ async function renameCurrent() {
     tabs[activeTabIdx].editorPath = newApiPath;
     renderTabBar();
   }
-  sessionStorage.setItem('wb-path', newBrowsePath);
-  sessionStorage.setItem('wb-name', newDisplayName);
+  localStorage.setItem('wb-path', newBrowsePath);
+  localStorage.setItem('wb-name', newDisplayName);
 
   // Rebuild the viewer bar with the new name + path, then re-attach the
   // writable-only buttons (Save / Rename / Duplicate).
@@ -2060,8 +2034,8 @@ async function openFile(path, name) {
 
   currentPath = path;
   const fname = fname0;
-  sessionStorage.setItem('wb-path', path);
-  sessionStorage.setItem('wb-name', fname);
+  localStorage.setItem('wb-path', path);
+  localStorage.setItem('wb-name', fname);
   const mode = fileMode(fname);
   const apiPath = path.replace(/^\//, '');
   hideViewerContent();
@@ -2419,148 +2393,6 @@ document.getElementById('replace-all-btn').addEventListener('click', () => {
   buildFindMatches(); findIdx = -1; updateFindCount();
 });
 
-// ── Toggle line comment ───────────────────────────────────────────────────────
-function commentPrefix() {
-  if (!editorPath) return '# ';
-  const ext = editorPath.split('.').pop().toLowerCase();
-  return ['rs','js','ts','jsx','tsx','css','scss','go','java','c','cpp','h','hpp'].includes(ext)
-    ? '// ' : '# ';
-}
-
-function toggleLineComment() {
-  const ta     = document.getElementById('editor-textarea');
-  const val    = ta.value;
-  const ss     = ta.selectionStart;
-  const se     = ta.selectionEnd;
-  const prefix = commentPrefix();
-  const marker = prefix.trimEnd();
-
-  const lineStart = val.lastIndexOf('\n', ss - 1) + 1;
-  const lineEndRaw = val.indexOf('\n', se);
-  const blockEnd  = lineEndRaw === -1 ? val.length : lineEndRaw;
-
-  const lines = val.substring(lineStart, blockEnd).split('\n');
-  const nonEmpty = lines.filter(l => l.trim());
-  const allCommented = nonEmpty.length > 0 && nonEmpty.every(l => l.trimStart().startsWith(marker));
-
-  const newLines = lines.map(l => {
-    if (allCommented) {
-      const trimmed = l.trimStart();
-      const lead    = l.slice(0, l.length - trimmed.length);
-      if (trimmed.startsWith(prefix))  return lead + trimmed.slice(prefix.length);
-      if (trimmed.startsWith(marker))  return lead + trimmed.slice(marker.length);
-      return l;
-    } else {
-      if (!l.trim()) return l;
-      const lead = l.slice(0, l.length - l.trimStart().length);
-      return lead + prefix + l.trimStart();
-    }
-  });
-
-  const newBlock = newLines.join('\n');
-  ta.focus(); ta.selectionStart = lineStart; ta.selectionEnd = blockEnd;
-  document.execCommand('insertText', false, newBlock);
-
-  const delta = newBlock.length - (blockEnd - lineStart);
-  ta.selectionStart = lineStart;
-  ta.selectionEnd   = Math.max(lineStart, se + delta);
-  setDirty(true); schedulePreview(); updateGutterLines(); updateEditorPos();
-}
-
-// ── Document Outline (Cmd+Shift+O) ───────────────────────────────────────────
-let outlineRawItems = [];
-let outlineFocusIdx = -1;
-
-function buildOutlineRaw() {
-  const ta  = document.getElementById('editor-textarea');
-  const ext = editorPath ? editorPath.split('.').pop().toLowerCase() : '';
-  const lines = ta.value.split('\n');
-  outlineRawItems = [];
-  let offset = 0;
-  for (const line of lines) {
-    if (ext === 'toml') {
-      const m = line.match(/^\[([\w. -]+)\]$/);
-      if (m) outlineRawItems.push({ label: '[' + m[1] + ']', depth: -1, offset });
-    } else {
-      const m = line.match(/^(#{1,6})\s+(.+)/);
-      if (m) outlineRawItems.push({ label: m[2].trim(), depth: m[1].length, offset });
-    }
-    offset += line.length + 1;
-  }
-}
-
-function renderOutline(filter) {
-  const list  = document.getElementById('outline-list');
-  const lower = (filter || '').toLowerCase();
-  const shown = outlineRawItems.filter(it => !lower || it.label.toLowerCase().includes(lower));
-  list.innerHTML = '';
-  if (!shown.length) {
-    list.innerHTML = '<div class="outline-empty">No symbols found</div>';
-    outlineFocusIdx = -1;
-    return;
-  }
-  shown.forEach(item => {
-    const div   = document.createElement('div');
-    div.className = 'outline-item';
-    const tag   = item.depth < 0 ? '§' : 'H' + item.depth;
-    const indent = item.depth > 1 ? (item.depth - 1) * 10 : 0;
-    div.style.paddingLeft = (10 + indent) + 'px';
-    div.innerHTML = `<span class="outline-depth">${tag}</span><span>${item.label}</span>`;
-    div.addEventListener('click', () => {
-      const ta = document.getElementById('editor-textarea');
-      ta.focus();
-      ta.selectionStart = ta.selectionEnd = item.offset;
-      const lineNum = ta.value.substring(0, item.offset).split('\n').length - 1;
-      ta.scrollTop = Math.max(0, lineNum * 12 * 1.6 - ta.clientHeight / 3);
-      hideOutline();
-      updateEditorPos();
-    });
-    list.appendChild(div);
-  });
-  outlineFocusIdx = -1;
-}
-
-function showOutline() {
-  buildOutlineRaw();
-  const panel = document.getElementById('outline-panel');
-  panel.classList.add('visible');
-  const inp = document.getElementById('outline-filter');
-  inp.value = '';
-  renderOutline('');
-  inp.focus();
-}
-
-function hideOutline() {
-  document.getElementById('outline-panel').classList.remove('visible');
-  document.getElementById('editor-textarea').focus();
-}
-
-document.getElementById('outline-filter').addEventListener('input', e => {
-  renderOutline(e.target.value);
-});
-
-document.getElementById('outline-filter').addEventListener('keydown', e => {
-  const list  = document.getElementById('outline-list');
-  const items = list.querySelectorAll('.outline-item');
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    if (outlineFocusIdx >= 0) items[outlineFocusIdx].classList.remove('outline-focused');
-    outlineFocusIdx = Math.min(outlineFocusIdx + 1, items.length - 1);
-    if (outlineFocusIdx >= 0) { items[outlineFocusIdx].classList.add('outline-focused'); items[outlineFocusIdx].scrollIntoView({ block: 'nearest' }); }
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    if (outlineFocusIdx >= 0) items[outlineFocusIdx].classList.remove('outline-focused');
-    outlineFocusIdx = Math.max(outlineFocusIdx - 1, 0);
-    if (outlineFocusIdx >= 0) { items[outlineFocusIdx].classList.add('outline-focused'); items[outlineFocusIdx].scrollIntoView({ block: 'nearest' }); }
-  } else if (e.key === 'Enter') {
-    e.preventDefault();
-    const focused = list.querySelector('.outline-focused') || list.querySelector('.outline-item');
-    if (focused) focused.click();
-  } else if (e.key === 'Escape') {
-    e.preventDefault();
-    hideOutline();
-  }
-});
 
 // ── Keyboard shortcuts ────────────────────────────────────────────────────────
 window.addEventListener('keydown', e => {
@@ -2571,16 +2403,21 @@ window.addEventListener('keydown', e => {
       e.preventDefault(); showFindBar();
     }
   }
-  if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'O') {
-    if (document.getElementById('editor-panel').classList.contains('visible')) {
-      e.preventDefault(); showOutline();
-    }
-  }
   // Ctrl+1..9 surface switching
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key >= '1' && e.key <= '9') {
     const idx = parseInt(e.key, 10) - 1;
     const btns = document.querySelectorAll('#surface-bar .surface-btn');
     if (idx < btns.length) { e.preventDefault(); btns[idx].click(); }
+  }
+  // Ctrl+Z — undo last file move (only when not editing text)
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey && moveHistory.length > 0) {
+    const active = document.activeElement;
+    const isEditing = active && (
+      active.tagName === 'INPUT' ||
+      active.tagName === 'TEXTAREA' ||
+      active.isContentEditable
+    );
+    if (!isEditing) { e.preventDefault(); undoLastMove(); }
   }
 });
 
@@ -2708,6 +2545,19 @@ async function loadChildren(item, childrenEl, depth) {
   }
 }
 
+// ── Expanded-dir persistence ──────────────────────────────────────────────────
+function persistExpandedDirs(browsePath, expanded) {
+  let dirs;
+  try { dirs = JSON.parse(localStorage.getItem('wb-expanded-dirs') || '[]'); } catch(e) { dirs = []; }
+  if (expanded) {
+    if (!dirs.includes(browsePath)) dirs.push(browsePath);
+  } else {
+    dirs = dirs.filter(d => !d.startsWith(browsePath));
+  }
+  if (dirs.length > 100) dirs = dirs.slice(-100);
+  localStorage.setItem('wb-expanded-dirs', JSON.stringify(dirs));
+}
+
 // ── Wire click behaviour ──────────────────────────────────────────────────────
 function wireItem(item, childrenEl, depth) {
   item.addEventListener('click', async (e) => {
@@ -2719,6 +2569,7 @@ function wireItem(item, childrenEl, depth) {
     }
     const isOpen = item.classList.toggle('open');
     childrenEl.classList.toggle('collapsed', !isOpen);
+    if (item.dataset.browse) persistExpandedDirs(item.dataset.browse, isOpen);
     if (isOpen) await loadChildren(item, childrenEl, depth);
   });
   attachContextMenu(item);
@@ -2727,13 +2578,33 @@ function wireItem(item, childrenEl, depth) {
 
 // ── Drag and drop ─────────────────────────────────────────────────────────────
 
-function showWbToast(msg) {
+// Move history for undo — [{from, dir, name}] where from = path after move, dir = original dir
+const moveHistory = [];
+const MOVE_HISTORY_CAP = 10;
+
+function showWbToast(msg, undoFn) {
   const el = document.getElementById('wb-toast');
   if (!el) return;
-  el.textContent = msg;
+  el.innerHTML = '';
+  const text = document.createElement('span');
+  text.textContent = msg;
+  el.appendChild(text);
+  if (undoFn) {
+    const btn = document.createElement('button');
+    btn.className = 'wb-toast-action';
+    btn.textContent = 'Undo';
+    btn.onclick = () => { el.classList.remove('show'); undoFn(); };
+    el.appendChild(btn);
+  }
   el.classList.add('show');
   clearTimeout(el._timer);
-  el._timer = setTimeout(() => el.classList.remove('show'), 2200);
+  el._timer = setTimeout(() => el.classList.remove('show'), undoFn ? 6000 : 2200);
+}
+
+function undoLastMove() {
+  const last = moveHistory.pop();
+  if (!last) return;
+  doWbMoveFile(last.from, last.name, last.dir, true);
 }
 
 function wireDragOnItem(item) {
@@ -2743,7 +2614,7 @@ function wireDragOnItem(item) {
   if (type === 'file') {
     const href = item.dataset.href || '';
     // Only writable roots are draggable (same logic as context menu)
-    if (!href || href.startsWith('/_command/') || href.startsWith('/_clones/')) return;
+    if (!href || href.startsWith('/_command/')) return;
     item.draggable = true;
     item.addEventListener('dragstart', e => {
       e.dataTransfer.effectAllowed = 'move';
@@ -2780,9 +2651,10 @@ function wireDragOnItem(item) {
   }
 }
 
-async function doWbMoveFile(srcPath, srcName, destBrowsePath) {
+async function doWbMoveFile(srcPath, srcName, destBrowsePath, isUndo = false) {
   const from = srcPath.replace(/^\//, '');
   const to   = destBrowsePath.replace(/^\//, '').replace(/\/$/, '');
+  const srcDir = srcPath.substring(0, srcPath.lastIndexOf('/'));
   try {
     const res = await fetch(
       `/_api/edit/move?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
@@ -2793,11 +2665,15 @@ async function doWbMoveFile(srcPath, srcName, destBrowsePath) {
       showWbToast(data.error || 'Move failed');
       return;
     }
-    // Refresh the tree so source folder removes the file and dest folder shows it
     reloadAllExpandedDirs();
-    // If the moved file is open in a tab, update its recorded path
     updateWbTabPath(srcPath, '/' + data.new_path);
-    showWbToast('Moved ' + srcName);
+    if (!isUndo) {
+      moveHistory.push({ from: '/' + data.new_path, dir: srcDir, name: srcName });
+      if (moveHistory.length > MOVE_HISTORY_CAP) moveHistory.shift();
+      showWbToast('Moved ' + srcName, undoLastMove);
+    } else {
+      showWbToast('Undone — ' + srcName + ' moved back');
+    }
   } catch(e) {
     showWbToast('Move failed: ' + e.message);
   }
@@ -2898,7 +2774,7 @@ resizer.addEventListener('mousedown', () => {
   const sb = document.getElementById('sidebar');
   if (sb.classList.contains('sb-collapsed')) expandSidebar();
   const w = sb.offsetWidth;
-  if (w > 36) { sidebarPinnedWidth = w; sessionStorage.setItem('wb-sidebar-w', w); }
+  if (w > 36) { sidebarPinnedWidth = w; localStorage.setItem('wb-sidebar-w', w); }
 });
 document.addEventListener('mousemove', e => {
   if (!resizing1) return;
@@ -2914,7 +2790,7 @@ document.addEventListener('mouseup', () => {
   document.getElementById('preview-frame').style.pointerEvents = '';
   // Persist the new width as the sidebar restore target.
   const w = document.getElementById('sidebar').offsetWidth;
-  if (w > 36) { sidebarPinnedWidth = w; sessionStorage.setItem('wb-sidebar-w', w); }
+  if (w > 36) { sidebarPinnedWidth = w; localStorage.setItem('wb-sidebar-w', w); }
 });
 
 // ── Resize viewer/editor (resizer2) ──────────────────────────────────────────
@@ -3062,8 +2938,8 @@ function renderTabBar() {
 
 function persistTabs() {
   try {
-    sessionStorage.setItem('wb-tabs', JSON.stringify(tabs.map(t => ({ path: t.path, name: t.name }))));
-    sessionStorage.setItem('wb-active-tab', String(activeTabIdx));
+    localStorage.setItem('wb-tabs', JSON.stringify(tabs.map(t => ({ path: t.path, name: t.name }))));
+    localStorage.setItem('wb-active-tab', String(activeTabIdx));
   } catch(e) {}
 }
 
@@ -3139,8 +3015,8 @@ async function switchTab(idx) {
     hideEditorPanel();
   }
   setDirty(!!tab.dirty);
-  sessionStorage.setItem('wb-path', tab.path);
-  sessionStorage.setItem('wb-name', tab.name);
+  localStorage.setItem('wb-path', tab.path);
+  localStorage.setItem('wb-name', tab.name);
   renderTabBar();
 }
 
@@ -3159,8 +3035,8 @@ async function closeTab(idx) {
     document.getElementById('image-viewer').style.display = 'none';
     document.getElementById('bar-path').textContent = 'No file selected';
     document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
-    sessionStorage.removeItem('wb-path');
-    sessionStorage.removeItem('wb-name');
+    localStorage.removeItem('wb-path');
+    localStorage.removeItem('wb-name');
     setTreeActive(null);
     renderTabBar();
   } else {
@@ -3588,8 +3464,8 @@ async function deleteFileByPath(path, name, treeItem) {
           document.getElementById('image-viewer').style.display = 'none';
           document.getElementById('bar-path').textContent = 'No file selected';
           document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
-          sessionStorage.removeItem('wb-path');
-          sessionStorage.removeItem('wb-name');
+          localStorage.removeItem('wb-path');
+          localStorage.removeItem('wb-name');
         }
       } else if (activeTabIdx > tabIdx) {
         activeTabIdx--;
@@ -3633,8 +3509,8 @@ async function deleteFolderByPath(browsePath, name, treeItem) {
       document.getElementById('image-viewer').style.display = 'none';
       document.getElementById('bar-path').textContent = 'No file selected';
       document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
-      sessionStorage.removeItem('wb-path');
-      sessionStorage.removeItem('wb-name');
+      localStorage.removeItem('wb-path');
+      localStorage.removeItem('wb-name');
     } else {
       renderTabBar();
     }
@@ -3670,8 +3546,8 @@ async function renameByPath(path, name) {
         tabs[activeTabIdx].name = data.new_name;
         tabs[activeTabIdx].editorPath = data.new_path;
       }
-      sessionStorage.setItem('wb-path', currentPath);
-      sessionStorage.setItem('wb-name', data.new_name);
+      localStorage.setItem('wb-path', currentPath);
+      localStorage.setItem('wb-name', data.new_name);
       updateBar(data.new_name, currentPath);
       const saveBarBtn = document.createElement('button');
       saveBarBtn.className = 'bar-btn';
@@ -4004,15 +3880,60 @@ function refreshGitStatusForCurrent() {
 // ─────────────────────────────────────────────────────────────────────────────
 renderPinnedSection();
 
+async function scrollToActiveFile(path) {
+  if (!path) return;
+  const parts = path.split('/').filter(Boolean);
+  if (parts.length < 2) return;
+  let current = '/';
+  for (let i = 0; i < parts.length - 1; i++) {
+    current += parts[i] + '/';
+    const dirItem = [...document.querySelectorAll('[data-browse]')]
+      .find(el => el.dataset.browse === current);
+    if (!dirItem) break;
+    if (!dirItem.classList.contains('open')) {
+      dirItem.classList.add('open');
+      const childrenEl = dirItem.nextElementSibling;
+      if (childrenEl) {
+        childrenEl.classList.remove('collapsed');
+        await loadChildren(dirItem, childrenEl, i + 1);
+      }
+    }
+  }
+  const fileEl = document.querySelector('[data-href="' + CSS.escape(path) + '"]');
+  if (fileEl) fileEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function restoreExpandedDirs() {
+  let dirs;
+  try { dirs = JSON.parse(localStorage.getItem('wb-expanded-dirs') || '[]'); } catch(e) { return; }
+  if (!dirs.length) return;
+  dirs.sort((a, b) => a.split('/').length - b.split('/').length);
+  for (const dirPath of dirs) {
+    const dirItem = [...document.querySelectorAll('[data-browse]')]
+      .find(el => el.dataset.browse === dirPath);
+    if (!dirItem) continue;
+    if (!dirItem.classList.contains('open')) {
+      dirItem.classList.add('open');
+      const childrenEl = dirItem.nextElementSibling;
+      if (childrenEl) {
+        childrenEl.classList.remove('collapsed');
+        const depth = dirPath.split('/').filter(Boolean).length;
+        try { await loadChildren(dirItem, childrenEl, depth); } catch(e) {}
+      }
+    }
+  }
+}
+
 (async function restoreTabs() {
   let saved = [];
-  try { saved = JSON.parse(sessionStorage.getItem('wb-tabs') || '[]'); } catch(e) {}
-  let activeIdx = parseInt(sessionStorage.getItem('wb-active-tab') || '0', 10);
+  try { saved = JSON.parse(localStorage.getItem('wb-tabs') || '[]'); } catch(e) {}
+  let activeIdx = parseInt(localStorage.getItem('wb-active-tab') || '0', 10);
   if (!saved.length) {
     // Legacy fallback: single-file restoration
-    const p = sessionStorage.getItem('wb-path');
-    const n = sessionStorage.getItem('wb-name');
+    const p = localStorage.getItem('wb-path');
+    const n = localStorage.getItem('wb-name');
     if (p) await openFile(p, n || p.split('/').pop());
+    await restoreExpandedDirs();
     return;
   }
   for (const t of saved) {
@@ -4021,6 +3942,9 @@ renderPinnedSection();
   if (activeIdx >= 0 && activeIdx < tabs.length && activeIdx !== activeTabIdx) {
     try { await switchTab(activeIdx); } catch(e) {}
   }
+  const activeTab = tabs[activeTabIdx];
+  if (activeTab?.path) await scrollToActiveFile(activeTab.path);
+  await restoreExpandedDirs();
 })();
 
 // ── iframe → editor click navigation ─────────────────────────────────────────

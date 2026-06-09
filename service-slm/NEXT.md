@@ -1,8 +1,48 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-06-01 — Yo-Yo Tier B live test: stockout cleared; truncation fixed (-np 1); 2 Packer-template bugs found; REAL blocker = /v1/extract grammar not constraining 32B output (code fix). Prior: Sessions 13+14 corpus audit; CPU drain paused; SFT-first; P1 readyz reason+zone; Sprint 4a status.
+> Last updated: 2026-06-05 — Sprint 4+5 endpoints: `/v1/status/cost`, `/v1/status/tier-a`, enhanced `/v1/status/queue`; app-console-slm F9 panel rebuilt (5 sections, tok/s, cost, queue breakdown); commit `1202e6ee`, Stage 6 pending.
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
+
+---
+
+## 🔴 Drain worker — payload size gate missing (2026-06-05) [jwoodfine@claude-code]
+
+18 new poison entries since 2026-06-04 — all large diffs (20–80 KB bulk commits, Cargo.lock churn).
+The drain worker has no size check: oversized payloads are silently poisoned with no error field,
+making diagnosis opaque.
+
+- [ ] Add `SLM_QUEUE_MAX_PAYLOAD_BYTES` env var (default 16 KB) — skip-to-poison with explicit `error: "payload too large"` JSON field
+- [ ] On poison: write reason into queue-poison entry (`{"error": "payload_too_large", "size_bytes": N}`)
+
+## 🔴 Drain worker — stale lease requeue missing (2026-06-05) [jwoodfine@claude-code]
+
+One in-flight entry (PID 65121) has held its lease for 3+ days. The lease expiry check
+(`SLM_QUEUE_LEASE_EXPIRY_SEC=2100`) is present but PID liveness check is unreliable across reboots.
+
+- [ ] On each drain cycle: if lease age > LEASE_TIMEOUT_SECS AND `kill -0 <pid>` returns non-zero, requeue to `queue/`
+- [ ] Log requeue as a structured warning: `{"event": "lease_expired_requeue", "file": ..., "lease_age_secs": ...}`
+
+---
+
+## ✅ Tier B Cloud Run — LIVE (2026-06-03)
+
+- **Cloud Run service:** `yoyo-tier-b` — `ollama:0.24.0`, 8 vCPU / 32 GiB / nvidia-l4, europe-west4
+- **Model:** OLMo 3 32B Think Q3 GGUF in GCS (`ollama-store/blobs/sha256-06c420f9...`)
+- **Doorman:** new binary deployed with `MetadataBearer` + `SLM_YOYO_HEALTH_PATH=/` + health probe bearer auth fix
+- **1-hour flow test:** 15/15 HTTP 200, `tier=yoyo`, avg 72s, $0.41 total
+- **Cost cleanup:** old GCE VM + 256 GB disk + static IP deleted → saves ~$38/month
+- **What changed vs original plan:**
+  - Ollama (not llama.cpp server-cuda) — ghcr.io blocked by Cloud Run allowlist
+  - `ollama:0.24.0` (not latest) — latest has CUDA kernel mismatch on Cloud Run L4
+  - `concurrency=4` (not 1) — health probes fail during inference at concurrency=1
+  - Health probe needed bearer auth — `run_health_probe` lacked token injection
+
+**Pending next session:**
+- [ ] Commit the health probe bearer auth fix + env validation (`cargo fmt` first, then `commit-as-next.sh`)
+- [ ] Rewrite `docs/deploy/deploy-yoyo-tier-b.md` for Cloud Run + Ollama (old GCE/Packer content is obsolete)
+- [ ] Activate 480 queued briefs drain through Tier B once extract path is validated end-to-end
+- [ ] Stage TOPIC-yoyo-cloud-run-substrate + GUIDE-yoyo-cloud-run-deploy to drafts-outbound
 
 ---
 
