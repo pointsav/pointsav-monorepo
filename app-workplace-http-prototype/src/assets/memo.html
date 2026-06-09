@@ -70,6 +70,44 @@ html.light #open-menu a:hover         { background: #e0e0e0; }
 html.light #open-menu button          { background: transparent; color: #333; }
 html.light #open-menu button:hover    { background: #e0e0e0; }
 html.light .menu-sep                  { background: #d4d4d4; }
+
+/* ── Save-As modal ── */
+#save-as-modal {
+  position: fixed; inset: 0; z-index: 900;
+  background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+}
+#save-as-modal.hidden { display: none; }
+#save-as-box {
+  background: #1e1e1e; border: 1px solid #444; border-radius: 6px;
+  padding: 20px 24px; min-width: 320px; max-width: 440px; width: 90%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+html.light #save-as-box { background: #f5f5f5; border-color: #ccc; }
+#save-as-title { font-size: 14px; font-weight: 600; margin-bottom: 14px; color: var(--text); }
+.save-as-row { margin-bottom: 10px; }
+.save-as-row label { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 3px; }
+.save-as-row select,
+.save-as-row input[type=text] {
+  width: 100%; box-sizing: border-box;
+  background: #2a2a2a; border: 1px solid #555; border-radius: 3px;
+  color: var(--text); font-size: 13px; padding: 5px 8px;
+}
+html.light .save-as-row select,
+html.light .save-as-row input[type=text] { background: #fff; border-color: #bbb; }
+.save-as-row select:focus,
+.save-as-row input[type=text]:focus { outline: 1px solid #007acc; border-color: #007acc; }
+#save-as-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+#save-as-btns button {
+  font-size: 12px; padding: 5px 14px; border-radius: 3px; cursor: pointer;
+  border: 1px solid #555;
+}
+#save-modal-ok { background: #007acc; border-color: #007acc; color: #fff; }
+#save-modal-ok:hover { background: #0069b0; }
+#save-modal-cancel { background: transparent; color: var(--text-dim); }
+#save-modal-cancel:hover { background: rgba(255,255,255,0.08); }
+html.light #save-modal-cancel { color: #555; }
+html.light #save-modal-cancel:hover { background: #e0e0e0; }
 </style>
 </head>
 <body>
@@ -108,6 +146,7 @@ html.light .menu-sep                  { background: #d4d4d4; }
     <div class="open-wrap">
       <button id="btn-open-toggle" title="Open file" onclick="toggleOpenMenu()">Open ▾</button>
       <div id="open-menu">
+        <button onclick="saveFileAs()">Save As…</button>
         <button onclick="promptNewDocument()">+ New document</button>
         <div class="menu-sep"></div>
         <div id="open-menu-files"></div>
@@ -116,6 +155,24 @@ html.light .menu-sep                  { background: #d4d4d4; }
     <span class="sep"></span>
     <button id="btn-theme" title="Toggle light/dark mode">☀</button>
     <button id="btn-tokens" title="Design Tokens" onclick="toggleTokenPanel()">Tokens</button>
+  </div>
+
+  <div id="save-as-modal" class="hidden">
+    <div id="save-as-box">
+      <div id="save-as-title">Save document</div>
+      <div class="save-as-row">
+        <label>Folder</label>
+        <select id="save-dir-select"><option value="memo">memo</option></select>
+      </div>
+      <div class="save-as-row">
+        <label>Document name</label>
+        <input id="save-name-input" type="text" placeholder="my-document" autocomplete="off">
+      </div>
+      <div id="save-as-btns">
+        <button id="save-modal-cancel">Cancel</button>
+        <button id="save-modal-ok">Save</button>
+      </div>
+    </div>
   </div>
 
   <div id="crash-banner" class="hidden">
@@ -198,13 +255,13 @@ async function loadFile(path) {
 
 async function saveFile() {
   if (!currentPath) {
-    const name = prompt('Save as (document name):');
-    if (!name || !name.trim()) return;
+    let choice;
+    try { choice = await showSaveAsModal(''); } catch { return; }
     try {
       const res = await fetch('/api/files/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim() }),
+        body: JSON.stringify({ name: choice.name, dir: choice.dir }),
       });
       if (!res.ok) { setStatus('Failed to create file.'); return; }
       const { path } = await res.json();
@@ -240,20 +297,97 @@ async function saveFile() {
 
 async function promptNewDocument() {
   hideOpenMenu();
-  const name = prompt('Document name:');
-  if (!name || !name.trim()) return;
+  let choice;
+  try { choice = await showSaveAsModal(''); } catch { return; }
   try {
     const res = await fetch('/api/files/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: name.trim() }),
+      body: JSON.stringify({ name: choice.name, dir: choice.dir }),
     });
-    if (!res.ok) { alert('Failed to create document.'); return; }
+    if (!res.ok) { setStatus('Failed to create document.'); return; }
     const { path } = await res.json();
     window.location = `/memo?path=${encodeURIComponent(path)}`;
   } catch {
-    alert('Network error.');
+    setStatus('Network error.');
   }
+}
+
+async function saveFileAs() {
+  hideOpenMenu();
+  const defaultName = currentPath ? currentPath.split('/').pop().replace(/\.html$/, '') : '';
+  const defaultDir = currentPath ? currentPath.split('/').slice(0, -1).join('/') : 'memo';
+  let choice;
+  try { choice = await showSaveAsModal(defaultName, defaultDir); } catch { return; }
+  try {
+    const res = await fetch('/api/files/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: choice.name, dir: choice.dir }),
+    });
+    if (!res.ok) { setStatus('Failed to create document.'); return; }
+    const { path } = await res.json();
+    // Copy current content into the new file then navigate
+    await fetch('/api/files/save', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path, content: editor.innerHTML }),
+    });
+    window.location = `/memo?path=${encodeURIComponent(path)}`;
+  } catch {
+    setStatus('Network error.');
+  }
+}
+
+// Returns Promise<{name, dir}> — rejects if cancelled
+async function showSaveAsModal(defaultName, defaultDir) {
+  return new Promise((resolve, reject) => {
+    const modal = document.getElementById('save-as-modal');
+    const select = document.getElementById('save-dir-select');
+    const input = document.getElementById('save-name-input');
+    const okBtn = document.getElementById('save-modal-ok');
+    const cancelBtn = document.getElementById('save-modal-cancel');
+
+    // Populate dir list
+    select.innerHTML = '';
+    fetch('/api/memo/dirs').then(r => r.json()).then(data => {
+      (data.dirs || ['memo']).forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d; opt.textContent = d;
+        if (d === (defaultDir || 'memo')) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }).catch(() => {
+      const opt = document.createElement('option');
+      opt.value = 'memo'; opt.textContent = 'memo'; select.appendChild(opt);
+    });
+
+    input.value = defaultName || '';
+    modal.classList.remove('hidden');
+    input.focus();
+    input.select();
+
+    function cleanup() {
+      modal.classList.add('hidden');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      document.removeEventListener('keydown', onKey);
+    }
+    function onOk() {
+      const name = input.value.trim();
+      if (!name) { input.focus(); return; }
+      cleanup();
+      resolve({ name, dir: select.value });
+    }
+    function onCancel() { cleanup(); reject(); }
+    function onKey(e) {
+      if (e.key === 'Enter') { e.preventDefault(); onOk(); }
+      else if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
+    }
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    document.addEventListener('keydown', onKey);
+  });
 }
 
 async function loadOpenMenuFiles() {
@@ -482,7 +616,8 @@ document.addEventListener('keydown', e => {
   const ctrl = e.ctrlKey || e.metaKey;
 
   // Global shortcuts (work outside editor too)
-  if (ctrl && e.key === 's') { e.preventDefault(); saveFile(); return; }
+  if (ctrl && e.key === 's' && !e.shiftKey) { e.preventDefault(); saveFile(); return; }
+  if (ctrl && e.shiftKey && e.key === 'S') { e.preventDefault(); saveFileAs(); return; }
 
   // Editor-scoped shortcuts
   const inEditor = editor === document.activeElement || editor.contains(document.activeElement);
