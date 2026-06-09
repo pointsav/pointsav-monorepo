@@ -154,6 +154,11 @@ def trigger_training_cycle(adapter_name: str, files: list, dry_run: bool = False
 
 def _start_trainer_vm() -> None:
     """Start yoyo-batch if it is stopped. No-op if already running."""
+    # Kill switch: touch /srv/foundry/data/yoyo-disabled to suppress all VM starts.
+    kill_switch = Path("/srv/foundry/data/yoyo-disabled")
+    if kill_switch.exists():
+        print(f"    [VM] kill switch present ({kill_switch}) — VM start suppressed")
+        return
     vm_name = os.environ.get("SLM_TRAINER_VM_NAME", "yoyo-batch")
     vm_zone = os.environ.get("SLM_TRAINER_VM_ZONE", "us-central1-a")
     if not vm_name:
