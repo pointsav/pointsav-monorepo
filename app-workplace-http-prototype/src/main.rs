@@ -219,6 +219,7 @@ async fn main() {
         .route("/api/files/read", get(read_file))
         .route("/api/files/save", put(save_file))
         .route("/api/files/create", post(create_file))
+        .route("/api/memo/dirs", get(list_memo_dirs))
         .route("/api/proforma/files", get(list_proforma_files))
         .route("/api/proforma/create", post(create_proforma_file))
         .route("/bim", get(serve_bim))
@@ -281,24 +282,76 @@ struct FileEntry {
     path: String,
 }
 
+fn collect_memo_html(dir: &Path, workspace: &Path, entries: &mut Vec<FileEntry>) {
+    let Ok(rd) = std::fs::read_dir(dir) else { return };
+    for entry in rd.flatten() {
+        let path = entry.path();
+        if path.is_file() {
+            if path.extension().and_then(|e| e.to_str()) == Some("html") {
+                if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                    if let Ok(rel) = path.strip_prefix(workspace) {
+                        entries.push(FileEntry {
+                            name: name.to_string(),
+                            path: rel.to_string_lossy().replace('\\', "/"),
+                        });
+                    }
+                }
+            }
+        } else if path.is_dir() {
+            let fname = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            if !fname.starts_with('.') {
+                collect_memo_html(&path, workspace, entries);
+            }
+        }
+    }
+}
+
 async fn list_files(State(state): State<AppState>) -> impl IntoResponse {
     let memo_dir = state.workspace_dir.join("memo");
     let mut entries: Vec<FileEntry> = Vec::new();
+    collect_memo_html(&memo_dir, &state.workspace_dir, &mut entries);
+    entries.sort_by(|a, b| a.path.cmp(&b.path));
+    Json(entries)
+}
+
+#[derive(Serialize)]
+struct DirsResponse {
+    dirs: Vec<String>,
+}
+
+async fn list_memo_dirs(State(state): State<AppState>) -> impl IntoResponse {
+    let memo_dir = state.workspace_dir.join("memo");
+    let mut dirs: Vec<String> = vec!["memo".to_string()];
     if let Ok(rd) = std::fs::read_dir(&memo_dir) {
         for entry in rd.flatten() {
             let path = entry.path();
-            if path.extension().and_then(|e| e.to_str()) == Some("html") {
-                if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                    entries.push(FileEntry {
-                        name: name.to_string(),
-                        path: format!("memo/{name}"),
-                    });
+            if !path.is_dir() { continue; }
+            let name = match path.file_name().and_then(|n| n.to_str()) {
+                Some(n) => n.to_string(),
+                None => continue,
+            };
+            if name.starts_with('.') { continue; }
+            let rel = format!("memo/{name}");
+            dirs.push(rel.clone());
+            if let Ok(rd2) = std::fs::read_dir(&path) {
+                for entry2 in rd2.flatten() {
+                    let p2 = entry2.path();
+                    if !p2.is_dir() { continue; }
+                    let n2 = match p2.file_name().and_then(|n| n.to_str()) {
+                        Some(n) => n.to_string(),
+                        None => continue,
+                    };
+                    if !n2.starts_with('.') {
+                        dirs.push(format!("{rel}/{n2}"));
+                    }
                 }
             }
         }
     }
-    entries.sort_by(|a, b| a.name.cmp(&b.name));
-    Json(entries)
+    dirs.sort();
+    dirs.retain(|d| d != "memo");
+    dirs.insert(0, "memo".to_string());
+    Json(DirsResponse { dirs })
 }
 
 #[derive(Deserialize)]
@@ -349,6 +402,7 @@ async fn save_file(
 #[derive(Deserialize)]
 struct CreateBody {
     name: String,
+    dir: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -366,9 +420,17 @@ async fn create_file(
     } else {
         format!("{safe_name}.html")
     };
-    let rel_path = format!("memo/{filename}");
+    let dir = body.dir
+        .as_deref()
+        .map(sanitize_dir)
+        .filter(|d| !d.is_empty())
+        .unwrap_or_else(|| "memo".to_string());
+    let rel_path = format!("{dir}/{filename}");
     match resolve_workspace_path(&state.workspace_dir, &rel_path) {
         Ok(abs) => {
+            if let Some(parent) = abs.parent() {
+                let _ = std::fs::create_dir_all(parent);
+            }
             let skeleton = format!(
                 "<h1>{}</h1>\n<p></p>\n",
                 html_escape(&body.name)
@@ -413,6 +475,15 @@ fn sanitize_filename(name: &str) -> String {
         .collect::<String>()
         .trim_matches('-')
         .to_string()
+}
+
+fn sanitize_dir(dir: &str) -> String {
+    // Allow alphanumeric, hyphens, underscores, forward slashes (for nested dirs).
+    // Dots are excluded so ".." cannot form, preventing path traversal.
+    let clean: String = dir.chars()
+        .map(|c| if c.is_alphanumeric() || c == '-' || c == '_' || c == '/' { c } else { '-' })
+        .collect();
+    clean.trim_matches('/').to_string()
 }
 
 fn html_escape(s: &str) -> String {
