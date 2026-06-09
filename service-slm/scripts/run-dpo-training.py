@@ -138,7 +138,7 @@ def upload_adapter_to_gcs(adapter_path: str, adapter_name: str) -> None:
 
 
 def run_training(records: list[dict], base_model: str, output_dir: str, dry_run: bool,
-                 max_runtime_seconds: int = 0) -> None:
+                 max_runtime_seconds: int = 0, resume: bool = False) -> None:
     """Fine-tune base_model with DPO on records, save adapter to output_dir."""
     print(f"[train] base model: {base_model}")
     print(f"[train] output dir: {output_dir}")
@@ -146,6 +146,13 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
     print(f"[train] LoRA r={LORA_R} alpha={LORA_ALPHA} beta={BETA}")
     if max_runtime_seconds:
         print(f"[train] runtime cap: {max_runtime_seconds}s ({max_runtime_seconds // 3600}h {(max_runtime_seconds % 3600) // 60}m)")
+    if resume:
+        import glob as _glob
+        checkpoints = sorted(_glob.glob(os.path.join(output_dir, "checkpoint-*")))
+        if checkpoints:
+            print(f"[train] resuming from checkpoint: {checkpoints[-1]}")
+        else:
+            print(f"[train] --resume set but no checkpoint found in {output_dir} — starting fresh")
 
     if dry_run:
         print("[train] DRY-RUN — skipping actual training")
@@ -251,7 +258,8 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
     )
 
     print(f"[train] starting DPO training on {len(split['train'])} pairs ...")
-    trainer.train()
+    resume_ckpt = True if resume else None
+    trainer.train(resume_from_checkpoint=resume_ckpt)
 
     print(f"[train] saving adapter to {output_dir}")
     trainer.save_model(output_dir)
@@ -278,6 +286,9 @@ def main() -> None:
     parser.add_argument("--max-runtime-seconds", type=int, default=7200,
                         help="Wall-clock training limit in seconds (default: 7200 = 2h). "
                              "Saves checkpoint and exits cleanly when reached. 0 = no cap.")
+    parser.add_argument("--resume", action="store_true",
+                        help="Resume training from the latest checkpoint in output_dir. "
+                             "Pass on every daily run to accumulate training incrementally.")
     args = parser.parse_args()
 
     corpus_path = args.corpus
@@ -294,7 +305,8 @@ def main() -> None:
     output_dir = args.output_dir or f"./adapters/{args.adapter_name}-{date_str}"
 
     run_training(records, args.base_model, output_dir, dry_run=args.dry_run,
-                 max_runtime_seconds=args.max_runtime_seconds)
+                 max_runtime_seconds=args.max_runtime_seconds,
+                 resume=args.resume)
 
     if args.upload_gcs and not args.dry_run:
         upload_adapter_to_gcs(output_dir, args.adapter_name)
