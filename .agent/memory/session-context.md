@@ -3,224 +3,32 @@ schema: foundry-session-context-v1
 archive: project-orgcharts
 ---
 
-# Session context — rolling 3-session summary
+# Session context — project-orgcharts
+
+*Re-provisioned 2026-06-09 — schema correction per command-20260609-cleanup-status-session-context-fix-stage (ITEM 1).*
 
 ---
 
-## 2026-06-05 | Totebox | claude-code (JW6 series — Transaction/Cross-Border/Mexico/Bencal)
+## 2026-06-09 | Totebox | claude-code (color-sample cleanup + WCP JW3 green patch + SHUTDOWN)
 
 **Done this session:**
-- **7 new chart versions created** across 5 charts — all committed.
-  - Transaction-1 JW31 (`d9052752`): lines 36→17, 17→16 purple
-  - Transaction-3 JW17 (`a34d5361`): lines from Box 36 to 16/17/32/33/34 purple
-  - Transaction-2 JW20 (`b53fbf8d`): all lines from Box 36 purple
-  - Cross-Border-2 JW21 (`a955732f`): Box 45 → purple (match Box 36 Transaction-3 JW17)
-  - Cross-Border-2 JW22 (`5b1c069d`): lines 50↔45 → orange (#E65100, Box 50 color)
-  - Mexico JW12 (`7b42fa1b`): line 40↔39 → blue
-  - Bencal JW6 (`53978aac`): grey pill→dashed; Boxes 95/97/104→purple; 96/103→orange; 98→orange dashed pill
-- **Stage 6 outbox updated** — msg-id: project-orgcharts-20260605-stage6-jw6-series (15 commits total).
-- **NEXT.md updated** — JW6 series resolved; Stage 6 msg-id updated.
+- **color-sample.html** — removed Legacy Tokens section (h2, note paragraph, 4 sample boxes: magenta/Bencal Corporation, teal/Bencal Real Assets, blue-solid/12345 Holdings, orange-solid/SPV Manager) and 2 CSS rules (`.c-magenta`, `.c-teal`). Commit `e047ff2d`.
+- **WCP JW3 green patch** — `#198038 → #54924E` (4 occurrences) + `#F57F17 → #EAB308` (2 occurrences) in `INVESTOR_RELATIONS_2026-06-08_Chart_Bencal_WCP_JW3.html`. Operator approved 2026-06-08. Superseded JW3 file (2026-05-27) retired. Commit `b3857a45`.
+- **Working tree cleanup** — CSV V3+V4 updates, 50+ superseded chart deletions, `.DS_Store` gitignored + untracked, backup dirs gitignored, 6 corporate PDFs + tear sheet DOCX added, manifest.md `cluster:` field added. Commits `95ea3408`, `0aad0877`, `b3857a45`, `7db5ff11`.
+- **Mailbox** — fixed malformed outbox `from:` field on color-sweep msg, archived 5 inbox messages, sent HIGH Stage 6 signal (76+ commits ready). Commits `6eac979a`, `a5cf67fe`.
+- **10 design artifacts staged** — 7× pointsav-design-system + 3× woodfine-media-assets; drafted + committed to `.agent/drafts-outbound/`; 8 of 10 committed by project-design (57de61a / 3336d8f); 2 blocked on master_cosign (A3 + A4). Commit `e887420a`.
+- **Session-context re-provisioned** — schema correction per Command inbox ITEM 1.
 
 **Pending / carry-forward:**
-- Stage 6 — 15 commits pending; outbox updated (msg-id: project-orgcharts-20260605-stage6-jw6-series)
-- Customer leg MANIFEST — outbox still pending Command Session
-- GUIDE-orgchart-authoring — staged, project-editorial to deliver
-- Wiki leg — milestone-gated
-- archive-2026-06-01/ deletion — 2026-07-01
-- TOKEN_SHAPE for nodes 95–104 entity titles — empty; add when Jennifer names them
+- Stage 6 — HIGH signal sent (msg-id: `project-orgcharts-20260608-stage6-clean-76-commits`). Command to run `promote.sh`.
+- DESIGN-TOKEN-CHANGE cosigns (A3 + A4) — operator must add `master_cosign:` to primitives + layout-type drafts; Command flagged.
+- Customer leg MANIFEST — pending Command admin-tier commit to `woodfine-fleet-deployment/cluster-totebox-corporate/`.
+- Wiki leg — milestone-gated (JW7+JW9 REVIEW).
+- archive-2026-06-01/ — deletion review 2026-07-01.
+- Nodes 8, 10–14, 51–54 — TOKEN_SHAPE empty; add when charts are created.
 
 **Operator preferences surfaced:**
-- Box 17 in Woodfine-Group JW10 "dotted" style is CSS `2px dashed` (not `dotted`) — reference confirmed.
-- Line color convention: connecting lines match the source-box color (color from the box a line starts at).
+- Bencal WCP green: canonical `#54924E` wins over prior Bencal-specific `#198038` (operator-approved override 2026-06-08).
+- Yellow token: `#EAB308` / `#FFFDE7` is canonical (sweeps applied across all charts this session).
 
 ---
-
-## 2026-06-05 | Totebox | claude-code (Bencal Organization JW3)
-
-**Done this session:**
-- **Bencal Organization JW3 created** — commit `c68593d4` (jwoodfine). All 9 present nodes
-  (95–104, excl. 99) updated to V4 registry token classes. Two new CSS definitions added:
-  `token-green` and `token-blue` (210×110px, 10px padding, WCP palette). Node 104 had an
-  extra `border-style: dotted;` inline — matched exactly; dotted preserved. Stage 6 outbox
-  prepended (msg-id: project-orgcharts-20260605-stage6-bencal-jw3).
-- NEXT.md updated to mark JW3 resolved.
-
-**Pending / carry-forward:**
-- Stage 6 — 6 commits total now pending; outbox updated (msg-id: project-orgcharts-20260605-stage6-bencal-jw3)
-- Customer leg MANIFEST — outbox still pending Command Session
-- GUIDE-orgchart-authoring — staged, project-editorial to deliver
-- Wiki leg — milestone-gated
-- archive-2026-06-01/ deletion — 2026-07-01
-- TOKEN_SHAPE for nodes 95–104 entity titles — currently empty in V4; add when Jennifer names them
-- Nodes 8, 10–14, 51–54 — still uncharted
-
-**Operator preferences surfaced:** (none new this session)
-
----
-
-## 2026-06-05 | Totebox | claude-code (V4 chart apply + new JW versions)
-
-**Done this session:**
-- **V4 TOKEN_SHAPE changes applied to 6 charts** — commit `739e15e5` (jwoodfine). Four nodes changed:
-  - Node 28 (Woodfine Mgmt Corp.): `token-base` → `token-base token-green` in JW10 Woodfine-Group
-  - Node 36 (Asset Manager/Broker-Dealer, NEW node): `token-base token-purple` in JW30/JW19/JW16
-  - Node 40 (Deuda Privada Hipotecaria): `token-base token-tall token-orange` → `token-base token-tall token-blue` in JW11 Mexico
-  - Node 50 (Cross-Border Flow-Through): `token-blue-ellipse-dotted` → `token-orange-ellipse-dashed` in JW20 Cross-Border-2
-- **New CSS added** to each chart: `token-green` (JW10), `token-orange-ellipse-dashed` (JW20), `token-purple` (JW30/JW19/JW16).
-- **JW versioning applied** — Jennifer requested per-chart JW+1 bump. All affected charts created as new JW versions; originals retained.
-- **WCP-MASTER-ENTITY-REGISTRY_V4.csv committed** — nodes 36 (new, purple), 95–104 (new, most empty), plus nodes 28/40/50 updated. V4 was built from correct CSS-class V3; working-tree V3 had accidentally reverted to old labels (restored from git before staging).
-- **Stage 6 outbox updated** — msg-id project-orgcharts-20260605-stage6-v4-charts.
-
-**Pending / carry-forward:**
-- Stage 6 — outbox updated (5 commits total now)
-- Customer leg MANIFEST — outbox still pending Command Session
-- GUIDE-orgchart-authoring — staged, project-editorial to deliver
-- Wiki leg — milestone-gated
-- archive-2026-06-01/ deletion — 2026-07-01
-- TOKEN_SHAPE for nodes 95–104 — empty placeholders; add when Jennifer names these entities
-- Nodes 8, 10–14, 51–54 — still uncharted
-
-**Operator preferences surfaced:**
-- JW versioning: create new JW+1 file per chart rather than edit in place; increment per chart.
-- Comfortable with auto mode for chart data tasks.
-
----
-
-## 2026-06-05 | Totebox | claude-code (CSV TOKEN_SHAPE update pass)
-
-**Done this session:**
-- **WCP-MASTER-ENTITY-REGISTRY_V3.csv committed** — commit `19a7b705` (jwoodfine). 76 rows
-  (header + 75 data rows). Changes applied:
-  - Rows 4–59: TOKEN_SHAPE updated from ad-hoc human-readable labels to actual CSS token class
-    names (e.g. `token-base token-green`, `token-yellow`, `token-blue-ellipse-dotted`).
-    Verified by reading all 14 chart HTML files. Used highest-JW-number chart when classes conflict.
-  - Rows 70–93 (management chart): structural fix — CSS class moved from JURISDICTION column →
-    TOKEN_SHAPE; X/Y coordinates cleared from TOKEN_SHAPE and EXTRA_METADATA_LEGAL.
-  - Bottom 4 duplicate rows (NODE_IDs 17/32/33/34, chart-export artifact) removed.
-- **Nodes with empty TOKEN_SHAPE** (not found in any chart): 8, 10–14 (Ireland fund service
-  providers), 51 (Global Management), 52–54 (Holdings entities). Flagged in NEXT.md.
-- **Key class resolutions:** node 50 = `token-blue-ellipse-dotted` (not `token-blue-dashed`);
-  node 45 SPV Manager = `token-orange-solid` (JW21/JW19 win over JW11 purple); node 9 ELTIF =
-  `token-orange-ellipse-dashed`; node 31 Woodfine Buildings = `token-grey-solid` (JW21 wins).
-- **Stage 6 outbox updated** — new msg-id project-orgcharts-20260605-stage6-registry-csv.
-
-**Pending / carry-forward:**
-- Stage 6 — outbox updated (supersedes earlier message)
-- Customer leg MANIFEST — outbox still pending Command Session
-- GUIDE-orgchart-authoring — staged, project-editorial to deliver
-- Wiki leg — milestone-gated (JW7+JW9 REVIEW)
-- archive-2026-06-01/ deletion — 2026-07-01
-- TOKEN_SHAPE for 9 uncharted nodes — add when new charts created
-
-**Operator preferences surfaced:**
-- Comfortable running multi-step data tasks on auto mode.
-
----
-
-## 2026-06-05 | Totebox | claude-code (auto-mode NEXT.md cleanup pass)
-
-**Done this session:**
-- **Gitignored `archive-2026-06-01/`** — commit `fe99d71b` (pwoodfine). Directory contains
-  misplaced git repo clones (design-system + 2 media-assets); cannot be tracked. Per
-  archive README, deletion review 2026-07-01.
-- **Stage 6 outbox message sent** — commit `9c422878` (jwoodfine). 3 prior commits + this
-  session queued for Command Session promote. msg-id: project-orgcharts-20260605-stage6-3commits.
-- **Customer leg — GUIDE drafted + MANIFEST outboxed** — commit `fc7c720d` (pwoodfine).
-  `GUIDE-orgchart-authoring.draft.md` staged to drafts-outbound → project-editorial.
-  MANIFEST content sent to command via outbox; pending admin-tier commit to
-  `woodfine-fleet-deployment/cluster-totebox-corporate/MANIFEST.md`.
-- **Bencal naming resolved** — Operator confirmed BPC / "Bencal Private Capital Inc." is
-  canonical (2026-06-05). No BCL files found in deployment instance (grep confirmed).
-  Memory + NEXT.md updated.
-
-**Pending / carry-forward:**
-- Stage 6 — outbox sent; Command Session to act
-- Customer leg MANIFEST — outbox sent; Command Session to commit to woodfine-fleet-deployment
-- GUIDE-orgchart-authoring — staged to drafts-outbound; project-editorial to deliver
-- Wiki leg — milestone-gated (JW7+JW9 REVIEW)
-- archive-2026-06-01/ deletion — 2026-07-01
-
-**Operator preferences surfaced:**
-- BPC (Bencal Private Capital Inc.) confirmed as canonical Bencal name (2026-06-05).
-- Comfortable delegating housekeeping tasks to auto mode.
-
----
-
-## 2026-06-04 | Totebox | claude-code (startup sweep — contamination cleanup)
-
-**Done this session:**
-- Startup sweep: confirmed role (Totebox), wrote session lock, read manifest (contaminated —
-  project-marketing), read NOTAM (clear), read inbox.
-- **Inbox ACK'd:** Command message `command-20260603-ack-3-design-drafts-committed-green-toke`
-  — 3 DESIGN drafts committed + promoted to `pointsav-design-system` (commits 0e6f37e /
-  aca9646 / 252a035); `--wf-green` updated to `#198038` (IBM Carbon Green 70); green drift
-  fully resolved. Archived to inbox-archive.md.
-- **Mailbox headers corrected:** inbox.md, outbox.md, inbox-archive.md — all were
-  contaminated with project-marketing / project-intelligence owner headers. Committed `f3e20162`.
-- **Identity files restored:** CLAUDE.md (from git a721bf19), .agent/manifest.md (from git
-  34178889), session-start.md (rewritten), NEXT.md (rewritten), session-context.md
-  (rewritten), .agent/briefs/README.md (rewritten). 6 contaminated top-level BRIEFs
-  archived to .agent/briefs/archive/. Single commit this session.
-- Stage 6 pending for f3e20162 + identity restoration commit. Command Session to promote.
-
-**Pending / carry-forward:**
-- Stage 6 (two commits)
-- Bencal naming conflict: BPC vs BCL — operator decision needed
-- Customer leg + Wiki leg pending (see NEXT.md)
-- archive-2026-06-01/ disposition
-
-**Operator preferences surfaced:** N/A (startup-only session).
-
----
-
-## 2026-06-01 | Totebox | claude-code (Bencal JW2/JW3 chart audit + DESIGN drafts)
-
-**Done this session:**
-- Moved all working files from `current-org-chart-html/` to `inputs/current-org-chart-html/`
-  (commit `7867b88d`) — single canonical location established.
-- Produced 3 DESIGN drafts from Bencal JW2/JW3 chart audit (commit `b1154623`):
-  1. `DESIGN-TOKEN-CHANGE`: `--wf-teal` + `--wf-red` custom properties (token-teal-red draft;
-     Master co-sign pending at time of staging)
-  2. `DESIGN-RESEARCH`: Bencal chart green value drift decision record
-  3. `DESIGN-COMPONENT`: `org-chart-node-pill` teal + grey modifier variants
-  All 3 dispatched to project-design via outbox.
-- Noted green drift issue: Bencal WCP charts use `#198038` but canonical `--wf-green` was
-  `#54924E`. Decision deferred to operator (resolved 2026-06-03 — see entry above).
-- JW3 marketing memo (pure IR overview) written and placed in `inputs/current-org-chart-html/`.
-- Bencal naming conflict surfaced: JW2 "Bencal Private Capital Inc." (BPC) vs JW3
-  "Bencal Corporation" (BCL) — unresolved, operator action needed.
-
-**Pending / carry-forward (all resolved by 2026-06-04):**
-- DESIGN drafts: all 3 committed + promoted ✓
-- Green token decision: resolved ✓
-- Inbox/outbox contamination: fixed this startup ✓
-
-**Operator preferences surfaced:** Prefers compliance doc (JW3) as source of truth for
-corporate names. Comfortable with staged multi-session workflows.
-
----
-
-## 2026-05-22–23 | Totebox | claude-code (chart token coverage investigation)
-
-**Done this session:**
-- Investigated chart token coverage across design-system layers.
-- Confirmed `token-chart-semantic.yaml` + chart component CSS (nodes, connectors, panels,
-  governance, tiers, matrix, venn) already committed in `pointsav-design-system` sub-clone
-  at commit `ebdd101` (v0.2.0, 2026-05-21).
-- Identified that `tokens/charts/` does not yet exist in vendor canonical — Stage 6 pending.
-- Investigated `design.pointsav.com` pipeline: served by `app-privategit-design` reading from
-  `dtcg-vault/` (DTCG JSON format), separate from the YAML-canonical layer.
-- Wrote two outbox messages: (1) to `totebox@project-design` requesting DTCG conversion +
-  dtcg-vault component entries; (2) to `command@claude-code` requesting outbox sweep + Stage 6.
-- Command Session actioned both on 2026-05-22 (commit `537f15e`): project-design message
-  relayed; Stage 6 marked in-progress.
-
-**Pending / carry-forward:**
-- `--gold` CSS variant in `nodes.css` has no entity-role in `token-chart-semantic.yaml` —
-  needs Master co-sign decision before DTCG entry.
-- 87 unstaged modified files in `pointsav-design-system` sub-clone working tree flagged to
-  Command Session — root cause unknown; may be drift from canonical.
-
-**Operator preferences surfaced:** Asks direct questions about token coverage and pipeline
-state; prefers concise answers with clear statement of what exists vs. what is still needed;
-comfortable with session-layer explanations (Command vs. Totebox).

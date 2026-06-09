@@ -3,18 +3,18 @@
 Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 
-Last updated: 2026-06-05
+Last updated: 2026-06-09
 
 ---
 
 ## Stage 6 pending
 
 - [ ] Promote all project-orgcharts commits to canonical.
-      Outbox message updated (2026-06-05, msg-id: project-orgcharts-20260605-stage6-bencal-jw7-jw10).
-      Includes: all 21 commits — outbox/GUIDE/gitignore/V3-V4-registry/V4-charts/JW3-JW4-JW5/
-      Transaction-1/2/3 JW31/20/17 / Cross-Border-2 JW21-JW22 / Mexico JW12 / Bencal JW6-JW10.
-      Command Session runs `bin/promote.sh`.
-      [2026-06-05 totebox@claude-code]
+      HIGH outbox signal sent (2026-06-08, msg-id: project-orgcharts-20260608-stage6-clean-76-commits).
+      76+ commits total — includes color-sample.html cleanup, WCP JW3 green patch (#198038→#54924E),
+      CSV V3+V4, 10 design artifact drafts, and all 2026-06-05 chart JW commits.
+      Command Session runs `FOUNDRY_PROMOTE_YES=1 bin/promote.sh`.
+      [2026-06-09 totebox@claude-code]
 
 ---
 
