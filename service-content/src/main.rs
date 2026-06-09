@@ -23,16 +23,22 @@ enum ExtractResult {
 }
 
 /// System prompt shared between Tier A and Tier B extraction calls.
-const EXTRACTION_SYSTEM_PROMPT: &str = "Extract named entities from the text. Classify each entity into exactly one category.\n\
-Categories and examples:\n\
-  Person — named human individual. Example: \"Jane Smith\".\n\
-  Company — registered organisation or business. Example: \"Woodfine Management Corp.\".\n\
-  Project — named initiative, programme, or system. Example: \"service-slm\".\n\
-  Account — financial account, service account, or contract reference.\n\
-  Location — geographic place or address. Example: \"Vancouver\".\n\
-Omit: laws and regulations (not Location), dates and years (not Location), abstract concepts (not Company), regulatory bodies (not Company unless they are a named legal entity with a registered name).\n\
+const EXTRACTION_SYSTEM_PROMPT: &str = "Extract named entities from the text below. Classify each entity into exactly one category.\n\
+Categories:\n\
+  Person    — a named human individual who appears in the text.\n\
+  Company   — a registered organisation or business named in the text.\n\
+  Project   — a named software crate, infrastructure service, or engineering initiative named in the text.\n\
+  Account   — a named financial account, service account reference, or contract identifier in the text.\n\
+  Location  — a named geographic place or address that appears in the text.\n\
+Omit:\n\
+  - Shell environment variables ($VAR_NAME) and command-line flags (--flag).\n\
+  - Statistical notation (α, β, γ, R², p-value) and mathematical symbols.\n\
+  - Laws, regulations, and dates.\n\
+  - Abstract concepts and generic role descriptions (not named entities).\n\
+  - Any entity whose name appears only in these instructions, not in the text.\n\
 If an entity does not clearly fit one category, omit it rather than guessing.\n\
-Return a JSON array matching the schema exactly.";
+Return only a JSON array. Each element must have exactly two fields: \"classification\" and \"entity_name\".\n\
+If no entities are found, return an empty array [].";
 
 fn main() -> NotifyResult<()> {
     println!("================================================================");
@@ -499,7 +505,14 @@ fn raw_entities_to_graph(
 }
 
 /// Write a DPO training pair when Tier B improves on Tier A's extraction.
-/// Skipped when results are identical (no training signal) or Tier B is empty.
+/// Skipped when: Tier B empty, Tier A empty (no rejected = degenerate pair),
+/// or both sides normalize to the same output (no training signal).
+///
+/// Normalization strips auxiliary hydration fields (role_vector, location_vector,
+/// contact_vector) from Tier A output before comparison and serialization.
+/// These fields appear in Tier A's GraphStore-hydrated path but are absent from
+/// Tier B's raw JSON response — without stripping them almost all pairs appear
+/// to differ even when the core extraction result is identical, polluting the corpus.
 fn write_enrichment_dpo_pair(
     worm_id: &str,
     corpus_text: &str,
@@ -510,10 +523,21 @@ fn write_enrichment_dpo_pair(
     if tier_b_raw.is_empty() {
         return;
     }
-    let tier_a_json = serde_json::to_string(tier_a_raw).unwrap_or_default();
+    if tier_a_raw.is_empty() {
+        return; // no rejected signal — DPO pair would teach verbosity, not accuracy
+    }
+    // Normalize Tier A to {classification, entity_name} only — strips role_vector,
+    // location_vector, contact_vector that are absent in Tier B's raw response.
+    let tier_a_normalized: Vec<serde_json::Value> = tier_a_raw.iter().map(|e| {
+        serde_json::json!({
+            "classification": e.get("classification").unwrap_or(&serde_json::Value::Null),
+            "entity_name":    e.get("entity_name").unwrap_or(&serde_json::Value::Null),
+        })
+    }).collect();
+    let tier_a_json = serde_json::to_string(&tier_a_normalized).unwrap_or_default();
     let tier_b_json = serde_json::to_string(tier_b_raw).unwrap_or_default();
     if tier_a_json == tier_b_json {
-        return; // identical — no training delta
+        return; // identical after normalization — no training delta
     }
     let prompt = format!("{}\n\nText:\n{}", EXTRACTION_SYSTEM_PROMPT, corpus_text);
     let now = chrono::Utc::now();
