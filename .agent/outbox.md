@@ -10,6 +10,63 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-bim
 to: command@claude-code
+re: SHUTDOWN — session 2026-06-09: contamination cleanup + 18 Key Plan IFCs + Tiles registry
+created: 2026-06-09T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-bim-20260609-shutdown-key-plans-tiles
+---
+
+Session complete. Work spans two repos (project-bim archive + woodfine-bim-library sub-repo).
+
+**woodfine-bim-library (3 commits — push to origin still pending operator auth):**
+- `868be90` (Jennifer) — feat: extend key-plan IFC generator — 18 IFC files (PO-1/2/3 + M-1/2/3 + B-1/2/3 + L-1/2/3 + A-1/2/3 + C-1/2/3); new furniture types (exam_table, exam_stool, waiting_chair, lab_bench, lab_stool, conf_table, seminar_table, podium, judge_bench, conf_bench); zone dimensions from V3 spatial taxonomy PDF
+- `c050103` (Jennifer) — feat: tiles-registry.md — Deliverable 2; Tile algebra (T_Basic / T_Compound / T_Special), Floor Plate composition rule, development class targets, availability percentages, WELL compliance note
+
+**project-bim archive (4 commits):**
+- `97747c2e` (Jennifer) — ops(cleanup): remove archive contamination from NEXT.md, outbox, briefs README
+- `8ec38100` (Jennifer) — ops(briefs): BRIEF-bim-objects-system.md created (4-part architecture overview)
+- `61dfdd77` (Jennifer) — ops(next): NEXT.md completed items closed with SHAs
+
+**BIM Objects deliverables status:**
+- Deliverable 1 (Key Plans): 18 IFC files committed — PO + Medical + Business + Laboratory + Academic + Civic ✓
+- Deliverable 2 (Tiles): tiles-registry.md committed ✓
+- Deliverable 3 (Floor Plates): deferred — blocked on Corporate Office KP sizes from architect
+- Deliverable 4 (Building Width Calculator): deferred — Phase 4
+
+**Still pending — Command Session scope:**
+- Stage 6 promotion for app-orchestration-bim: `d412d9f8` (DWG/RFA links) + `5acbab54` (/key-plans route + IFC-first)
+- woodfine-bim-library push to origin (3 commits ahead: 868be90, c050103, plus prior session's commits): `git -C /srv/foundry/clones/project-bim/woodfine-bim-library push origin main`
+
+— totebox@project-bim, 2026-06-09
+
+---
+from: totebox@project-bim
+to: command@claude-code
+re: inputs/ contamination — 4 corporate-project files need return to cluster-totebox-corporate-1
+created: 2026-06-09T00:00:00Z
+priority: low
+status: pending
+msg-id: project-bim-20260609-inputs-contamination
+---
+
+Four files in `inputs/` belong to the org chart project (cluster-totebox-corporate-1),
+not to project-bim. They were placed here during a past session cross-copy.
+
+Files to return:
+- `inputs/README.md` — org chart project README
+- `inputs/spv.html` — SPV org chart HTML
+- `inputs/tokens-woodfine.css` — Woodfine CSS tokens (corporate branding)
+- `inputs/current-org-chart-html/` — current org chart HTML directory
+
+These must NOT be deleted. Return them to cluster-totebox-corporate-1 before removing
+from this archive. Flagged in NEXT.md under "Next Totebox session".
+
+— totebox@project-bim, 2026-06-09
+
+---
+from: totebox@project-bim
+to: command@claude-code
 re: SHUTDOWN — session 2026-06-04: woodfine-bim-library recreated (push pending operator auth)
 created: 2026-06-04T00:00:00Z
 priority: high
