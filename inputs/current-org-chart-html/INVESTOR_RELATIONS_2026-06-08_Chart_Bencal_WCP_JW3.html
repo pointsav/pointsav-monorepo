@@ -1,14 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mexican Operations - Master Assembly (Institutional V8 Final)</title>
+    <title>Club Deals and Private SPVs - Master Assembly (Institutional V19 Final)</title>
     <style>
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap');
-
         /* ==========================================================================
-           10-NODE FULL ASSEMBLY - LEAPFROG 2030
+           CLUB DEALS & PRIVATE SPVS - LEAPFROG 2030 
            Target: US Letter Proportion (1056x816) - 100% Publishable
            Focus: Universal Print Calibration & Typographic Parity
            ========================================================================== */
@@ -44,46 +41,48 @@
         .token-signature { position: absolute; bottom: 30px; right: 40px; font-size: 10px; line-height: 1.4; text-align: right; color: #000000; z-index: 5; }
         
         .title-container { position: absolute; top: 30px; left: 40px; width: 360px; z-index: 5; }
-        .t-kicker { font-family: 'Oswald', sans-serif; font-size: 11px; font-weight: 800; color: #0F172A; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 2px 0; }
-        .t-headline { font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 900; color: #000000; text-transform: uppercase; letter-spacing: -0.02em; margin: 0 0 4px 0; }
+        .t-kicker { font-size: 11px; font-weight: 800; color: #0F172A; letter-spacing: 0.06em; margin: 0 0 2px 0; } 
+        .t-headline { font-size: 14px; font-weight: 900; color: #000000; text-transform: uppercase; letter-spacing: -0.02em; margin: 0 0 4px 0; }
         .t-subtitle { font-size: 12px; font-style: italic; color: #334155; padding-bottom: 6px; border-bottom: 1px solid #CBD5E1; margin: 0 0 6px 0; }
         .t-preamble { font-size: 9px; line-height: 1.3; color: #475569; text-align: justify; margin: 0; }
 
         /* ==========================================
-           STRUCTURAL ROUTING API (Native to Canvas)
+           LEDGER BLOCKS (Hanging Indent)
+           ========================================== */
+        .ledger-block { position: absolute; font-size: 10px; line-height: 1.4; color: #334155; z-index: 5; padding-left: 12px; }
+        .ledger-block p { margin: 0 0 4px 0; position: relative; }
+        .ledger-block p::before { content: "•"; position: absolute; left: -12px; color: #64748B; }
+        .highlight-pro { background-color: #FEF08A; color: #854D0E; padding: 1px 4px; border-radius: 2px; font-weight: 600; }
+
+        /* ==========================================
+           STRUCTURAL CSS (SVG, Tokens, Markers)
            ========================================== */
         .svg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
-        .marker { font-family: 'Oswald', sans-serif; position: absolute; background-color: #FFFFFF; color: #334155; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 4px; text-align: center; z-index: 3; line-height: 1.2; transform: translate(-50%, -50%); }
+        .marker { position: absolute; background-color: #FFFFFF; color: #334155; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 2px 4px; text-align: center; z-index: 3; line-height: 1.2; max-width: 135px; transform: translate(-50%, -50%); }
 
-        /* ==========================================
-           POINT SAV DESIGN SYSTEM (DS-ADR-08)
-           ========================================== */
-        .token-base { position: absolute; display: flex; flex-direction: column; width: 210px; height: 110px; padding: 10px; text-align: center; box-sizing: border-box; z-index: 2; }
-        .token-tall { height: 145px; }
-        .token-short { height: 80px; }
+        .token-base, .token-yellow, .token-blue-dashed, .token-blue-solid, .token-orange-solid, .token-grey-dashed, .token-grey-solid, .token-magenta, .token-teal, .token-green, .token-red, .token-warm-gray { position: absolute; display: flex; flex-direction: column; text-align: center; box-sizing: border-box; z-index: 4; }
 
-        .token-yellow { position: absolute; display: flex; flex-direction: column; width: 250px; height: 110px; padding: 12px; text-align: center; box-sizing: border-box; background-color: #FFFDE7; border: 2px dashed #F57F17; border-radius: 110px; z-index: 2; }
-
-        .token-green { background-color: #EEF6EC; border: 2px solid #54924E; border-radius: 0; }
-        .token-blue { background-color: #E8EFF7; border: 2px solid #164679; border-radius: 0; }
-        .token-orange { background-color: #FDE8DD; border: 2px solid #F15F22; border-radius: 0; }
-        .token-gray-dark { background-color: #E6E7E8; border: 2px solid #374151; border-radius: 0; }
-        .token-grey-solid { background-color: #E6E7E8; border: 2px solid #9CA3AF; border-radius: 4px; }
-        .token-gray-light { background-color: #E6E7E8; border: 2px solid #9CA3AF; border-radius: 12px; }
+        .token-blue-dashed { width: 250px; height: 110px; padding: 12px; background-color: #E3F2FD; border: 2px dashed #1565C0; border-radius: 110px; }
+        .token-blue-solid { width: 210px; height: 110px; padding: 10px; background-color: #E3F2FD; border: 2px solid #1565C0; }
+        .token-orange-solid { width: 210px; height: 110px; padding: 10px; background-color: #FFF3E0; border: 2px solid #E65100; }
+        .token-grey-dashed { width: 210px; height: 110px; padding: 10px; background-color: #F8FAFC; border: 2px dashed #94A3B8; }
+        .token-yellow { width: 250px; height: 110px; padding: 12px; background-color: #FFFDE7; border: 2px dashed #EAB308; border-radius: 110px; }
+        .token-grey-solid { width: 210px; height: 80px; padding: 10px; background-color: #EEEEEE; border: 2px solid #757575; border-radius: 12px; }
+        .token-magenta   { width: 210px; height: 110px; padding: 10px; background-color: #FFD6E8; border: 2px solid #9F1853; }
+        .token-teal      { width: 210px; height: 110px; padding: 10px; background-color: #9EF0F0; border: 2px solid #005D5D; }
+        .token-green     { width: 210px; height: 110px; padding: 10px; background-color: #DEFBE6; border: 2px solid #54924E; }
 
         .zone-top { display: flex; flex-direction: column; gap: 2px; align-items: center; }
         .zone-mid { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; gap: 2px; align-items: center; }
         .zone-bottom { display: flex; flex-direction: column; align-items: center; }
 
-        .t-title { font-family: 'Nunito Sans', sans-serif; font-weight: 800; font-size: 12px; color: #000000; margin: 0; line-height: 1.2; letter-spacing: -0.01em; }
-        .t-legal { font-size: 10px; color: #000000; margin: 0; line-height: 1.2; }
+        .t-title { font-weight: 800; font-size: 12px; color: #000000; margin: 0; line-height: 1.2; letter-spacing: -0.01em; }
         .t-code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 9px; color: #475569; margin: 0; }
-        .t-alias { font-family: 'Nunito Sans', sans-serif; font-style: italic; font-size: 10px; color: #000000; margin: 0; }
-        .t-country { font-family: 'Nunito Sans', sans-serif; font-size: 10px; color: #475569; margin: 0; }
-        
-        .t-node { position: absolute; bottom: 4px; right: 8px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; font-weight: 700; color: #9CA3AF; margin: 0; }
-        .token-yellow .t-node { bottom: 14px; right: 38px; }
+        .t-alias { font-style: italic; font-size: 10px; color: #000000; margin: 0; }
+        .t-country { font-size: 10px; color: #475569; margin: 0; }
+        .t-node { position: absolute; bottom: 4px; right: 8px; font-family: ui-monospace, monospace; font-size: 10px; font-weight: 700; color: #94A3B8; margin: 0; }
+        .token-yellow .t-node, .token-blue-dashed .t-node { bottom: 14px; right: 38px; }
 
     
 
@@ -102,125 +101,129 @@
 <body>
 
 <div class="print-canvas">
+    <div class="token-disclaimer" style="">PRIVATE &amp; CONFIDENTIAL — NOT FOR REDISTRIBUTION — INVESTMENT PROFESSIONALS ONLY</div>
 
-    <div class="token-disclaimer">PRIVATE & CONFIDENTIAL — NOT FOR REDISTRIBUTION — INVESTMENT PROFESSIONALS ONLY</div>
-    
-    <div class="title-container">
-        <p class="t-kicker">WOODFINE PROFESSIONAL CENTRES MEXICO FIBRA</p>
-        <p class="t-headline">THE BUSINESS OF THE TRUST</p>
-        <p class="t-subtitle">Intercorporate Relationships</p>
-        <p class="t-preamble">Subscription Agreements must be presented by a licensed broker-dealer authorized in the jurisdiction of the direct-hold solution (CIRO/BCSC in Canada, FINRA/SEC in the US, CNMV in Spain and AMIB/CNBV in Mexico) and approved by the auditor of the investment vehicle. Referrals must be paid exclusively through licensed professionals in strict compliance with local securities regulations.</p>
+    <div class="title-container" style="">
+        <p class="t-kicker">CLUB DEALS AND PRIVATE SPVs</p>
+        <p class="t-headline">BENCAL CORPORATION</p>
+        <p class="t-subtitle">Woodfine Capital Projects Inc. <br>pre-IPO equity financing</p>
+        <p class="t-preamble">Subscription Agreements must be presented by a licensed broker-dealer authorized in the jurisdiction of the investment strategy and private investment vehicles (CIRO/BCSC in Canada, FINRA/SEC in the US, CNMV in Spain and AMIB/CNBV in Mexico) and approved by the auditor of the investment vehicle. Referrals must be paid exclusively through licensed professionals in strict compliance with local securities regulations.</p>
     </div>
 
-    <svg class="svg-layer" viewBox="0 0 1056 816">
+    
+
+    
+
+    
+
+   <svg class="svg-layer" viewBox="0 0 1056 816" style="left: 2px; top: 51px;">
         <defs>
-            <marker id="arrow-green" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#54924E" /></marker>
-            <marker id="arrow-amber" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#F57F17" /></marker>
-            <marker id="arrow-blue" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#164679" /></marker>
-            <marker id="arrow-orange" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#F15F22" /></marker>
-            <marker id="arrow-grey" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#374151" /></marker>
+            <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><polygon points="0,0 10,5 0,10" fill="#E65100"></polygon></marker>
+            <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><polygon points="0,0 10,5 0,10" fill="#1565C0"></polygon></marker>
+            <marker id="arrow-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><polygon points="0,0 10,5 0,10" fill="#757575"></polygon></marker>
+            <marker id="arrow-yellow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><polygon points="0,0 10,5 0,10" fill="#FBC02D"></polygon></marker>
+            <marker id="arrow-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><polygon points="0,0 10,5 0,10" fill="#EAB308"></polygon></marker>
+            <marker id="arrow-magenta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><polygon points="0,0 10,5 0,10" fill="#9F1853"></polygon></marker>
+            <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><polygon points="0,0 10,5 0,10" fill="#54924E"></polygon></marker>
+            <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><polygon points="0,0 10,5 0,10" fill="#005D5D"></polygon></marker>
         </defs>
 
-        <path d="M 528 165 L 528 185 L 175 185 L 175 225" fill="none" stroke="#54924E" stroke-width="2" marker-end="url(#arrow-green)"/>
-        <path d="M 528 165 L 528 225" fill="none" stroke="#54924E" stroke-width="2" marker-end="url(#arrow-green)"/>
-        <path d="M 528 165 L 528 185 L 881 185 L 881 225" fill="none" stroke="#54924E" stroke-width="2" marker-end="url(#arrow-green)"/>
+        <path d="M 772 272 L 247 272" fill="none" stroke="#005D5D" stroke-width="2" marker-end="url(#arrow-teal)" style=""></path>
 
-        <path d="M 528 335 L 528 385" fill="none" stroke="#54924E" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#arrow-green)"/>
-        <path d="M 175 335 L 175 440 L 403 440" fill="none" stroke="#54924E" stroke-width="2" marker-end="url(#arrow-green)"/>
-        <path d="M 776 440 L 653 440" fill="none" stroke="#164679" stroke-width="2" marker-end="url(#arrow-blue)"/>
-
-        <path d="M 528 495 L 528 555" fill="none" stroke="#F57F17" stroke-width="2" marker-end="url(#arrow-amber)"/>
-        <path d="M 528 525 L 175 525 L 175 555" fill="none" stroke="#F57F17" stroke-width="2" marker-end="url(#arrow-amber)"/>
-        
-        <path d="M 423 610 L 280 610" fill="none" stroke="#F15F22" stroke-width="2" marker-end="url(#arrow-orange)"/>
-        <path d="M 776 610 L 633 610" fill="none" stroke="#164679" stroke-width="2" marker-end="url(#arrow-blue)"/>
-        <path d="M 175 665 L 175 705" fill="none" stroke="#374151" stroke-width="2" marker-end="url(#arrow-grey)"/>
+        <path d="M 90 325 L 90 505" fill="none" stroke="#757575" stroke-width="2" marker-end="url(#arrow-grey)" style=""></path>
+        <path d="M 191 508 L 191 325" fill="none" stroke="#757575" stroke-width="2" marker-end="url(#arrow-grey)" style=""></path>
+        <path d="M 773 590 L 248 590" fill="none" stroke="#54924E" stroke-width="2" marker-end="url(#arrow-green)" style=""></path>
+        <path d="M 929 509 L 929 327" fill="none" stroke="#54924E" stroke-width="2" marker-end="url(#arrow-green)" style=""></path>
+        <path d="M 248 555 L 512 555 L 512 420 L 855 420 L 855 325" fill="none" stroke="#757575" stroke-width="2" marker-end="url(#arrow-grey)" style=""></path>
     </svg>
 
-    <div class="marker" style="left: 175px; top: 198px;">100%</div>
-    <div class="marker" style="left: 528px; top: 198px;">100%</div>
-    <div class="marker" style="left: 881px; top: 198px;">100%</div>
     
-    <div class="marker" style="left: 528px; top: 360px;">ADMINISTRATOR</div>
-    <div class="marker" style="left: 289px; top: 440px;">10%<br>BENEFICIAL<br>OWNER</div>
-    <div class="marker" style="left: 714px; top: 440px;">90%<br>BENEFICIAL<br>OWNER</div>
-    
-    <div class="marker" style="left: 351px; top: 525px;">100%<br>BENEFICIAL<br>OWNER</div>
+    <div class="marker" style="left: 504px; top: 322px; white-space: nowrap;"><span class="highlight-pro">10% SHARE-BASED COMPENSATION</span></div>
+    <div class="marker" style="left: 91px; top: 468px;">Referral<br>Agreement</div>
+    <div class="marker" style="left: 202px; top: 474px;">COMMISSIONS<br>REBATE<br>AGREEMENT</div>
+    <div class="marker" style="left: 931px; top: 470px;">Common<br>Shares</div>
+    <div class="marker" style="left: 527px; top: 643px;">6% COMMISSIONS</div>
+    <div class="marker" style="left: 669px; top: 470px;">COMMISSIONS REBATE<br>AGREEMENT</div>
 
-    <div class="token-base token-green" style="left: 423px; top: 55px;">
-        <div class="zone-top"><p class="t-title">Woodfine Capital<br>Projects Inc.</p></div>
-        <div class="zone-mid"><p class="t-code">WCP-CA-01-HLD</p><p class="t-alias">"Parent Company"</p></div>
+    <div class="token-magenta" style="left: 40px; top: 270px;">
+        <div class="zone-top"><p class="t-title">Bencal Corporation</p></div>
+        <div class="zone-mid"><p class="t-code">BCL-CA-01-OPR</p><p class="t-alias">"Promoter"</p></div>
         <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
-        <p class="t-node">16</p>
+        <p class="t-node" style="">95</p>
     </div>
 
-    <div class="token-base token-green" style="left: 70px; top: 225px;">
-        <div class="zone-top"><p class="t-title">Benetti Holdings 4<br>Sociedad de Responsabilidad<br>Limitada (S.RL)</p></div>
-        <div class="zone-mid"><p class="t-code">BEN-MX-04-AST</p><p class="t-alias">"Woodfine SPV"</p></div>
-        <div class="zone-bottom"><p class="t-country">(Mexico)</p></div>
-        <p class="t-node">41</p>
-    </div>
-
-    <div class="token-base token-green" style="left: 423px; top: 225px;">
-        <div class="zone-top"><p class="t-title">Woodfine Professional Centres 4<br>Sociedad Anónima (S.A.)</p></div>
-        <div class="zone-mid"><p class="t-code">PRO-MX-04-ADM</p><p class="t-alias">"Administrator"</p></div>
-        <div class="zone-bottom"><p class="t-country">(Mexico)</p></div>
-        <p class="t-node">42</p>
-    </div>
-
-    <div class="token-base token-green" style="left: 776px; top: 225px;">
-        <div class="zone-top"><p class="t-title">Woodfine Advisors Inc.</p></div>
-        <div class="zone-mid"><p class="t-code">ADV-CA-01-OPR</p><p class="t-alias">"Advisor"</p></div>
+    <div class="token-teal" style="left: 775px; top: 270px;">
+        <div class="zone-top"><p class="t-title">Bencal Real Assets 1 Inc</p></div>
+        <div class="zone-mid"><p class="t-code">BCL-CA-01-AST</p><p class="t-alias">"Bencal Real Assets 1"</p></div>
         <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
-        <p class="t-node">27</p>
+        <p class="t-node" style="">97</p>
     </div>
 
-    <div class="token-yellow" style="left: 403px; top: 385px;">
-        <div class="zone-top"><p class="t-title" style="margin-top: 4px;">Woodfine Professional Centres 4 Fideicomiso de Infraestructura en Bienes Raíces</p></div>
-        <div class="zone-mid"><p class="t-code">PRO-MX-04-AST</p><p class="t-alias">"Direct-Hold Solution"</p></div>
-        <div class="zone-bottom"><p class="t-country">(Mexico)</p></div>
-        <p class="t-node">34</p>
+    <div class="token-grey-dashed" style="left: 40px; top: 560px;">
+        <div class="zone-top"><p class="t-title"> Altas One Digital<br>Securities Inc.</p></div>
+        <div class="zone-mid"><p class="t-code">AOD-CA-01-OPR</p><p class="t-alias">"Exempt Market Dealer"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Qualified Jurisdictions)</p></div>
+        <p class="t-node" style="">99</p>
     </div>
 
-    <div class="token-base token-tall token-blue" style="left: 776px; top: 385px;">
-        <div class="zone-top"><p class="t-title">Certificados Bursátiles Fiduciarios<br>Inmobiliarios (CBFIs)</p></div>
-        <div class="zone-mid"><p class="t-legal">Inscrita (CNBV)<br>Emisora Inscrita (Unlisted)</p><p class="t-legal" style="margin-top: 2px;">Basic / Sophisticated<br>Qualified Investor</p></div>
-        <div class="zone-bottom"><p class="t-country">(Residents of Mexico Only)</p></div>
-        <p class="t-node">37</p>
-    </div>
-
-    <div class="token-base token-grey-solid" style="left: 70px; top: 555px;">
-        <div class="zone-top"><p class="t-title">WCP Titleco • Sociedad de<br>Responsabilidad Limitada (S.RL)</p></div>
-        <div class="zone-mid"><p class="t-code">TCO-MX-04-AST</p><p class="t-alias">"Real Property"</p></div>
-        <div class="zone-bottom"><p class="t-country">(Mexico)</p></div>
-        <p class="t-node">38</p>
-    </div>
-
-    <div class="token-base token-orange" style="left: 423px; top: 555px;">
-        <div class="zone-top"><p class="t-title">Trustee Bank</p></div>
-        <div class="zone-mid"><p class="t-code">PRO-MX-04-ADM</p><p class="t-alias">"Trustee"</p></div>
-        <div class="zone-bottom"><p class="t-country">(Mexico)</p></div>
-        <p class="t-node">39</p>
-    </div>
-
-    <div class="token-base token-tall token-blue" style="left: 776px; top: 555px;">
-        <div class="zone-top"><p class="t-title">Deuda Privada Hipotecaria</p><p class="t-legal">Negociada en Bolsa<br>(Exchange-Traded)</p></div>
-        <div class="zone-mid"><p class="t-legal">1.2 Interest Coverage Ratio<br>100% Debt to Development Cost</p><p class="t-legal" style="margin-top: 2px;">Mass Affluent</p></div>
-        <div class="zone-bottom"><p class="t-country">(Global)</p></div>
-        <p class="t-node">40</p>
-    </div>
-
-    <div class="token-base token-short token-gray-light" style="left: 70px; top: 705px;">
-        <div class="zone-top"><p class="t-title">Woodfine Buildings</p></div>
-        <div class="zone-mid"><p class="t-alias">"Qualified Investments"</p></div>
-        <div class="zone-bottom"><p class="t-country">(Mexico)</p></div>
-        <p class="t-node">49</p>
-    </div>
-
-    <div class="token-signature">
-        April 8, 2026<br>
+    <div class="token-signature" style="">
+        May 30, 2026<br>
         Prepared by Woodfine Management Corp.
     </div>
+
+<div class="token-green" style="left: 775px; top: 560px;">
+        <div class="zone-top"><p class="t-title">Woodfine Capital Project Inc.</p></div>
+        <div class="zone-mid"><p class="t-code">WCP-CA-01-HLD</p><p class="t-alias">"WCP"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
+        <p class="t-node" style="">16</p>
+    </div>
+
+    <!-- Use of Net Proceeds -->
+    
+
+    <!-- Features of WCP Shareholders Agreement -->
+    
+
+    <!-- WCP Common Shares -->
+    <div style="position: absolute; left: 625px; top: 706px; width: 258px; z-index: 5;">
+        <p style="font-size: 9px; font-weight: 800; color: #0F172A; letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 4px 0;">WCP Common Shares</p>
+        <div class="ledger-block" style="position: relative;">
+            <p>2,100,000 common shares at C$20.00</p>
+            <p>~27% fully-diluted float</p>
+            <p>C$42M gross subscriptions</p>
+        </div>
+    </div>
+
+    <!-- WCP Revenue and Cash Flow -->
+
+
+    <!-- Private Placement -->
+    <div style="position: absolute; left: 782px; top: 66px; width: 245px; z-index: 5;">
+        <p style="font-size: 9px; font-weight: 800; color: #0F172A; letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 4px 0;">Unrestricted pre-IPO</p>
+        <div class="ledger-block" style="position: relative;">
+            <p>Unrestricted C$3.0M tranche</p>
+            <p>Minimum ticket: C$•</p>
+            <p>Reporting issuer; freely transferable</p>
+            <p>No dilution pre-listing</p>
+            <p>Capped salary and bonus; no options</p>
+            <p>Independent-majority board, arm's length</p>
+        </div>
+    </div>
+
+    <!-- Exchange Listing Requirements -->
+    <div style="position: absolute; left: 444px; top: 63px; width: 310px; z-index: 5;">
+        <p style="font-size: 9px; font-weight: 800; color: #0F172A; letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 4px 0;">Exchange Listing Requirements</p>
+        <div class="ledger-block" style="position: relative;">
+            <p>Minimum 400 shareholders</p>
+            <p>C$42M minus unrestricted to date</p>
+            <p>Minimum ticket: C$5,000</p>
+            <p>Exchange listing</p>
+            <p>~80% of net proceeds: LP land deposits</p>
+            <p>Advisory, offering and LP unit revenue</p>
+            <p>~C$4B AUM target in 6–8 years</p>
+        </div>
+    </div>
+
 
 </div>
 
@@ -414,7 +417,7 @@
   });
 
   /* canvas background click → deselect */
-  canvas.addEventListener('mousedown', e => { if (e.target===canvas||e.target.tagName?.toLowerCase()==='svg') deselect(); });
+  canvas.addEventListener('mousedown', e => { if (e.target===canvas) deselect(); });
 
   /* ── Toggle edit mode ─────────────────────────────────────────── */
   function setEditMode(on) {
@@ -424,7 +427,6 @@
     editBtn.style.borderColor=on?'#89d185':'#555';
     const svgEl=canvas.querySelector('svg');
     canvas.querySelectorAll('*').forEach(el => {
-    if (el.tagName.toLowerCase()==='svg') return;
       if (window.getComputedStyle(el).position==='absolute')
         el.style.cursor=on?'grab':'';
     });
@@ -445,7 +447,6 @@
 
   /* ── Wire up all abs-positioned elements + SVG paths ─────────── */
   canvas.querySelectorAll('*').forEach(el => {
-    if (el.tagName.toLowerCase()==='svg') return;
     if (window.getComputedStyle(el).position==='absolute') wireBox(el);
   });
   const svgEl=canvas.querySelector('svg');
@@ -485,7 +486,7 @@
     saveTimer=setTimeout(doSave,2000);
   }
 
-  function doSave() {
+  async function doSave() {
     deselect();
     /* strip edit-mode inline styles temporarily before cloning */
     const cleanup=[];
@@ -505,12 +506,35 @@
     /* restore live DOM */
     cleanup.forEach(([el,prop,val])=>el.style[prop]=val);
 
+    /* write-through to disk via intranet edit API — keeps Claude Code edits and
+       drag-editor saves in sync; path derived from the served URL automatically */
+    if (window.location.protocol !== 'file:') {
+      const apiPath = window.location.pathname.replace(/^\//, '');
+      try {
+        const res = await fetch(
+          '/_api/edit/file?path=' + encodeURIComponent(apiPath),
+          { method:'PUT', headers:{'Content-Type':'text/plain; charset=utf-8','X-Foundry-Editor':'1'}, body:html }
+        );
+        if (res.ok) {
+          statusEl.textContent='saved ✓';
+          setTimeout(()=>{statusEl.textContent='';},3000);
+        } else {
+          statusEl.textContent='disk err';
+          console.error('wb-save disk write failed:', await res.text());
+        }
+      } catch(e) {
+        statusEl.textContent='disk err';
+        console.error('wb-save disk write error:', e);
+      }
+    }
+
+    /* also sync Workbench in-memory state if running inside an iframe */
     if (window.parent&&window.parent!==window) {
       window.parent.postMessage({type:'wb-save-content',content:html},'*');
-      statusEl.textContent='saved ✓';
-      setTimeout(()=>{statusEl.textContent='';},3000);
-    } else {
-      /* standalone: download */
+    }
+
+    /* file:// fallback — download */
+    if (window.location.protocol==='file:') {
       const a=document.createElement('a');
       a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));
       a.download=(document.title||'chart')+'_edited.html';
@@ -523,5 +547,5 @@
 })();
 </script>
 
-</body>
-</html>
+
+</body></html>
