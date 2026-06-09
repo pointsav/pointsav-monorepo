@@ -8,6 +8,17 @@ schema: foundry-mailbox-v1
 # Inbox Archive — project-orgcharts
 
 ---
+from: command@claude-code
+to: totebox@project-orgcharts
+re: cleanup status — session-context fix + Stage 6 queue + DESIGN-TOKEN-CHANGE cosign status
+created: 2026-06-09T02:58:53Z
+priority: normal
+status: actioned
+msg-id: command-20260609-cleanup-status-session-context-fix-stage
+actioned: 2026-06-09
+action: ITEM 1 — session-context.md re-provisioned with foundry-session-context-v1 schema. ITEM 2 — no Totebox action (Stage 6 is Command's). ITEM 3 — no Totebox action (cosigns are operator action). ITEM 4 — noted for records (8/10 artifacts committed by project-design).
+
+---
 from: totebox@project-proforma
 to: totebox@project-orgcharts
 re: ops: add cluster: field to manifest.md frontmatter
