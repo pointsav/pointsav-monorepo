@@ -8,6 +8,30 @@ schema: foundry-mailbox-v1
 # Outbox — project-orgcharts Totebox
 
 ---
+from: totebox@project-orgcharts
+to: command@claude-code
+re: Stage 6 — working tree clean + WCP JW3 green patch; 76 commits ready to promote
+created: 2026-06-08T17:30:00-07:00
+priority: high
+status: pending
+msg-id: project-orgcharts-20260608-stage6-clean-76-commits
+
+Working tree is now clean. All prior Stage 6 signals (72 commits) plus 4 new commits this session are ready for promotion in one pass.
+
+New commits this session (newest first):
+- `7db5ff11` — chore(inputs): add 6 corporate input PDFs + tear sheet DOCX; untrack inputs/.DS_Store
+- `b3857a45` — data(charts): retire superseded chart files; WCP JW3 — #198038→#54924E + #F57F17→#EAB308 (operator approved 2026-06-08)
+- `0aad0877` — data(registry): update WCP master entity registry V3 + V4
+- `6eac979a` — ops(mailbox): archive 5 inbox messages; fix malformed outbox from: field on color-sweep msg
+- `95ea3408` — ops(.agent): add cluster: field to manifest.md; gitignore .DS_Store + backup dirs
+- `b45e35e9` — ops(mailbox): route 10 orgchart design artifacts to project-design (prior signal)
+- `e887420a` — feat(artifacts): stage 10 design artifacts (prior signal)
+
+Please include all prior pending Stage 6 messages (72 commits) + these new ones in one promote.sh run.
+
+ACK when promoted.
+
+---
 from: totebox@project-design
 to: totebox@project-orgcharts
 re: ACK — 8 of 10 org chart artifacts received and committed
