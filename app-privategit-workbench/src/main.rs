@@ -3,8 +3,8 @@ use axum::{
     body::Bytes,
     extract::{Query, State},
     http::{HeaderMap, StatusCode},
-    response::{Html, IntoResponse, Json, Redirect, Response},
     response::sse::{Event, KeepAlive, Sse},
+    response::{Html, IntoResponse, Json, Redirect, Response},
     routing::{get, post},
     Router,
 };
@@ -346,7 +346,10 @@ async fn put_file(
         .unwrap_or(0);
 
     // Notify other open tabs that this file changed.
-    let event_json = format!(r#"{{"event":"changed","path":"{}","mtime":{}}}"#, q.path, new_mtime);
+    let event_json = format!(
+        r#"{{"event":"changed","path":"{}","mtime":{}}}"#,
+        q.path, new_mtime
+    );
     let _ = state.events_tx.send(event_json);
 
     let mut resp_map = HashMap::new();
@@ -1284,7 +1287,10 @@ async fn main() -> Result<()> {
             }
         }) {
             Ok(w) => w,
-            Err(e) => { eprintln!("warning: file watcher init failed: {}", e); return; }
+            Err(e) => {
+                eprintln!("warning: file watcher init failed: {}", e);
+                return;
+            }
         };
         for (_, fs_path) in &roots_for_watcher {
             if let Err(e) = watcher.watch(std::path::Path::new(fs_path), RecursiveMode::Recursive) {
@@ -1292,23 +1298,31 @@ async fn main() -> Result<()> {
             }
         }
         while let Some(path_str) = inner_rx.recv().await {
-            if path_str.is_empty() { continue; }
-            let rel = roots_for_watcher.iter().find_map(|(prefix, base)| {
-                let base = base.trim_end_matches('/');
-                if path_str.starts_with(base) {
-                    let rest = path_str[base.len()..].trim_start_matches('/');
-                    Some(format!("{}/{}", prefix, rest))
-                } else {
-                    None
-                }
-            }).unwrap_or_else(|| path_str.clone());
+            if path_str.is_empty() {
+                continue;
+            }
+            let rel = roots_for_watcher
+                .iter()
+                .find_map(|(prefix, base)| {
+                    let base = base.trim_end_matches('/');
+                    if path_str.starts_with(base) {
+                        let rest = path_str[base.len()..].trim_start_matches('/');
+                        Some(format!("{}/{}", prefix, rest))
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or_else(|| path_str.clone());
             let mtime = std::fs::metadata(&path_str)
                 .ok()
                 .and_then(|m| m.modified().ok())
                 .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
                 .map(|d| d.as_secs())
                 .unwrap_or(0);
-            let msg = format!(r#"{{"event":"changed","path":"{}","mtime":{}}}"#, rel, mtime);
+            let msg = format!(
+                r#"{{"event":"changed","path":"{}","mtime":{}}}"#,
+                rel, mtime
+            );
             let _ = watcher_tx.send(msg);
         }
     });
