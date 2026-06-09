@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 //
-// slm-mcp-server — Foundry MCP server (Sprint 3 + Sprint 4)
+// slm-mcp-server — Foundry MCP server (Sprint 3 + Sprint 4 + Sprint 5)
 //
 // Exposes Foundry capabilities as MCP tools over stdio.
 // Requires a running slm-doorman-server (default: http://127.0.0.1:9080).
@@ -109,6 +109,35 @@ struct QueryMailboxInput {
     limit: Option<u32>,
     /// Include 300-char body preview in results (default false)
     include_body: Option<bool>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+struct CastVerdictInput {
+    /// UUID of the apprenticeship brief being reviewed
+    brief_id: String,
+    /// UUID of the shadow-captured attempt being judged
+    attempt_id: String,
+    /// Verdict: "accept" | "refine" | "reject" | "defer-tier-c"
+    verdict: String,
+    /// Optional human-readable review notes (single line)
+    notes: Option<String>,
+    /// Optional SHA256 of the corrected diff (for accept/refine verdicts)
+    final_diff_sha: Option<String>,
+    /// Optional free-form prose appended after the YAML frontmatter in the signed body
+    prose: Option<String>,
+    /// Senior identity override: "jwoodfine" or "pwoodfine".
+    /// Defaults to the currently active identity from identity/.toggle.
+    senior_identity: Option<String>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+struct GetServiceStatusInput {
+    /// Include apprenticeship queue counts from Doorman GET /v1/status/queue (default true)
+    include_apprenticeship: Option<bool>,
+    /// Include filesystem-level directory counts for cross-verification (default false)
+    include_fs_counts: Option<bool>,
+    /// Include audit-ledger entry count for the current calendar month (default false)
+    include_audit_summary: Option<bool>,
 }
 
 // ── Mailbox parsing helper ────────────────────────────────────────────────────
@@ -426,15 +455,13 @@ impl FoundryServer {
     ///
     /// Calls `POST /v1/chat/completions` on the Doorman, which routes to Tier A
     /// (local OLMo). Data never leaves the VM (SYS-ADR-07 compliant).
-    ///
-    /// Known behaviour: graph context injection is currently broken (BRIEF §9c fault log).
-    /// Use query_datagraph(format_for_prompt=true) first and include the context block
-    /// in your prompt manually.
+    /// Graph context injection is active — the Doorman automatically injects
+    /// [ENTITY CONTEXT] from service-content before forwarding to the model.
     #[tool(description = "Submit a prompt to the local OLMo 7B model via the Doorman. \
         Returns the model response plus tier, inference time, and cost. \
-        IMPORTANT: graph context injection is currently broken — call \
-        query_datagraph(format_for_prompt=true) first and include the context block \
-        in your prompt manually. No data leaves the VM (SYS-ADR-07 compliant).")]
+        Graph context injection is active — the Doorman automatically prepends \
+        [ENTITY CONTEXT] from the DataGraph before routing to the model. \
+        No data leaves the VM (SYS-ADR-07 compliant).")]
     async fn ask_local(
         &self,
         rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<AskLocalInput>,
@@ -853,12 +880,221 @@ impl FoundryServer {
         }))
         .unwrap_or_else(|e| format!("[ERROR] {e}"))
     }
+
+    // ── Sprint 5: Apprenticeship verdict + service status ─────────────────────
+
+    /// Cast a signed apprenticeship verdict on a shadow-captured attempt.
+    ///
+    /// Builds the YAML verdict body, signs it with the active staging identity key
+    /// via `ssh-keygen -Y sign`, base64-encodes the signature, and POSTs the
+    /// `VerdictWireBody` to `POST /v1/verdict` on the Doorman.
+    ///
+    /// On success, the Doorman writes a DPO corpus tuple and optionally promotes
+    /// the attempt to LoRA training queue. Returns the dispatch outcome.
+    #[tool(description = "Cast a signed apprenticeship verdict (accept|refine|reject|defer-tier-c) \
+        on a shadow-captured attempt. Signs the verdict body with the active staging identity key \
+        and POSTs to Doorman POST /v1/verdict. Returns DPO pair status and promotion outcome. \
+        Use query_mailbox or get_session_brief to find pending brief_id/attempt_id values.")]
+    async fn cast_apprenticeship_verdict(
+        &self,
+        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<CastVerdictInput>,
+    ) -> String {
+        use base64::Engine as _;
+
+        const VALID_VERDICTS: &[&str] = &["accept", "refine", "reject", "defer-tier-c"];
+        if !VALID_VERDICTS.contains(&p.verdict.as_str()) {
+            return format!(
+                "[ERROR] invalid verdict '{}'; must be one of: accept, refine, reject, defer-tier-c",
+                p.verdict
+            );
+        }
+
+        // Determine senior identity from toggle or override
+        let identity: String = if let Some(ref id) = p.senior_identity {
+            if id != "jwoodfine" && id != "pwoodfine" {
+                return format!(
+                    "[ERROR] invalid senior_identity '{}'; must be 'jwoodfine' or 'pwoodfine'",
+                    id
+                );
+            }
+            id.clone()
+        } else {
+            let toggle = read_file_opt(&self.foundry_root.join("identity").join(".toggle"))
+                .unwrap_or_default();
+            if toggle.trim() == "1" { "pwoodfine".into() } else { "jwoodfine".into() }
+        };
+
+        let key_path = self.foundry_root
+            .join("identity")
+            .join(&identity)
+            .join(format!("id_{}", identity));
+        if !key_path.exists() {
+            return format!("[ERROR] identity key not found at {}", key_path.display());
+        }
+
+        // Build ISO 8601 timestamp
+        let created = chrono::Utc::now()
+            .to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+
+        // Build YAML body matching parse_verdict_body in slm-doorman/src/verdict.rs
+        let notes = p.notes.as_deref().unwrap_or("");
+        let sha = p.final_diff_sha.as_deref().unwrap_or("");
+        let mut body = format!(
+            "---\nbrief_id: {}\nattempt_id: {}\nverdict: {}\ncreated: {}\n\
+             senior_identity: {}\nfinal_diff_sha: {}\nnotes: {}\n---\n",
+            p.brief_id, p.attempt_id, p.verdict, created, identity, sha, notes
+        );
+        if let Some(ref prose) = p.prose {
+            body.push_str(prose);
+            body.push('\n');
+        }
+
+        // Write body to temp file (ssh-keygen reads from a file, not stdin)
+        let tmp_body = std::env::temp_dir()
+            .join(format!("slm-verdict-{}.txt", std::process::id()));
+        if let Err(e) = std::fs::write(&tmp_body, body.as_bytes()) {
+            return format!("[ERROR] failed to write body to temp file: {e}");
+        }
+
+        // Sign with ssh-keygen — creates <tmp_body>.sig
+        let sign_out = tokio::process::Command::new("ssh-keygen")
+            .arg("-Y").arg("sign")
+            .arg("-f").arg(&key_path)
+            .arg("-n").arg("apprenticeship-verdict-v1")
+            .arg(&tmp_body)
+            .output()
+            .await;
+
+        let sign_ok = match sign_out {
+            Err(e) => {
+                let _ = std::fs::remove_file(&tmp_body);
+                return format!("[ERROR] failed to spawn ssh-keygen: {e}");
+            }
+            Ok(out) => out,
+        };
+
+        if !sign_ok.status.success() {
+            let _ = std::fs::remove_file(&tmp_body);
+            let stderr = String::from_utf8_lossy(&sign_ok.stderr);
+            return format!("[ERROR] ssh-keygen -Y sign failed: {stderr}");
+        }
+
+        // Read the .sig file ssh-keygen created
+        let mut sig_path_str = tmp_body.to_string_lossy().to_string();
+        sig_path_str.push_str(".sig");
+        let sig_path = PathBuf::from(&sig_path_str);
+
+        let pem_bytes = match std::fs::read(&sig_path) {
+            Ok(b) => b,
+            Err(e) => {
+                let _ = std::fs::remove_file(&tmp_body);
+                return format!("[ERROR] could not read sig file {}: {e}", sig_path.display());
+            }
+        };
+
+        let _ = std::fs::remove_file(&tmp_body);
+        let _ = std::fs::remove_file(&sig_path);
+
+        let signature_b64 = base64::engine::general_purpose::STANDARD.encode(&pem_bytes);
+
+        // POST VerdictWireBody to Doorman
+        let wire = serde_json::json!({
+            "body": body,
+            "signature": signature_b64,
+            "senior_identity": identity,
+        });
+
+        match self.client
+            .post(self.url("/v1/verdict"))
+            .header("X-Foundry-Module-ID", &self.module_id)
+            .json(&wire)
+            .send()
+            .await
+        {
+            Err(e) => format!("[ERROR] POST /v1/verdict failed: {e}"),
+            Ok(resp) => {
+                let status = resp.status().as_u16();
+                match resp.json::<serde_json::Value>().await {
+                    Ok(v) => {
+                        format!("HTTP {status}\n{}", serde_json::to_string_pretty(&v).unwrap_or_else(|_| "{}".into()))
+                    }
+                    Err(e) => format!("[ERROR] HTTP {status} — response parse error: {e}"),
+                }
+            }
+        }
+    }
+
+    /// Get Foundry service status: apprenticeship queue, extraction state, audit ledger.
+    ///
+    /// Calls `GET /v1/status/queue` for Doorman-side queue counts.
+    /// Optionally reads filesystem directory entry counts as verification.
+    /// Optionally counts audit-ledger entries for the current calendar month.
+    #[tool(description = "Get Foundry service status: apprenticeship queue counts from \
+        Doorman GET /v1/status/queue, optional filesystem directory verification, \
+        and optional audit-ledger entry count for the current month. \
+        Set include_fs_counts=true to cross-check Doorman counts against disk.")]
+    async fn get_service_status(
+        &self,
+        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<GetServiceStatusInput>,
+    ) -> String {
+        let include_apprenticeship = p.include_apprenticeship.unwrap_or(true);
+        let include_fs = p.include_fs_counts.unwrap_or(false);
+        let include_audit = p.include_audit_summary.unwrap_or(false);
+
+        let mut result = serde_json::json!({});
+
+        if include_apprenticeship {
+            let resp = self.client
+                .get(self.url("/v1/status/queue"))
+                .timeout(std::time::Duration::from_secs(5))
+                .send()
+                .await;
+            result["apprenticeship_queue"] = match resp {
+                Ok(r) => r.json::<serde_json::Value>().await
+                    .unwrap_or_else(|e| serde_json::json!({ "parse_error": e.to_string() })),
+                Err(e) => serde_json::json!({ "error": e.to_string() }),
+            };
+        }
+
+        if include_fs {
+            let base = self.foundry_root.join("data").join("apprenticeship");
+            let count_dir = |sub: &str| -> usize {
+                std::fs::read_dir(base.join(sub))
+                    .map(|e| e.count())
+                    .unwrap_or(0)
+            };
+            result["fs_queue_counts"] = serde_json::json!({
+                "queue": count_dir("queue"),
+                "queue_done": count_dir("queue-done"),
+                "queue_poison": count_dir("queue-poison"),
+                "queue_in_flight": count_dir("queue-in-flight"),
+                "queue_paused": count_dir("queue-paused"),
+            });
+        }
+
+        if include_audit {
+            let month = chrono::Utc::now().format("%Y-%m").to_string();
+            let ledger = self.foundry_root
+                .join("data").join("audit-ledger").join("workspace")
+                .join(format!("{}.jsonl", month));
+            let count = read_file_opt(&ledger)
+                .map(|c| c.lines().filter(|l| !l.trim().is_empty()).count())
+                .unwrap_or(0);
+            result["audit_ledger"] = serde_json::json!({
+                "month": month,
+                "entry_count": count,
+                "path": ledger.display().to_string(),
+            });
+        }
+
+        serde_json::to_string_pretty(&result).unwrap_or_else(|e| format!("[ERROR] {e}"))
+    }
 }
 
 #[tool_handler(
     name = "slm-mcp-server",
-    version = "0.2.0",
-    instructions = "Foundry MCP server — DataGraph, corpus, Doorman, and mailbox tools"
+    version = "0.3.0",
+    instructions = "Foundry MCP server — DataGraph, corpus, Doorman, mailbox, and apprenticeship tools"
 )]
 impl ServerHandler for FoundryServer {}
 

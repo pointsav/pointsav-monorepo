@@ -76,39 +76,38 @@ Effect: every `commit-as-next.sh` commit now fires `POST /v1/shadow` with diff �
 
 ---
 
-## Session 2 — Pending
+## Session 2 — Status (2026-06-09) COMPLETE
 
-### Track 1 P1 tools
+### Track 1 P1 tools — SHIPPED
 
-**`get_service_status`** (new tool)
-- Sources: `GET /v1/status/queue` + filesystem counts on `data/apprenticeship/queue/`,
-  `queue-done/`, `queue-poison/` + audit-ledger line count
-- Inputs: `include_apprenticeship: bool`, `include_extraction: bool`, `include_audit_summary: bool`
+Binary: `slm-mcp-server v0.3.0` at `/usr/local/bin/slm-mcp-server`
+SHA256: `1eab9b954c866db917340b302d35fcaf582571cbb06307cb4780bf2e4619d6a1`
 
-### Track 2 Gap B — Graph context injection fix (~20 LOC)
+**New tools added:**
 
-**File:** `service-slm/crates/slm-doorman/src/router.rs` ~line 195
+| Tool | Purpose |
+|---|---|
+| `cast_apprenticeship_verdict` | Builds + SSH-signs verdict body; POSTs `VerdictWireBody` to `POST /v1/verdict` |
+| `get_service_status` | `GET /v1/status/queue` + optional fs counts + audit-ledger line count |
 
-`GraphContextClient::fetch_context()` is called but its `Option<String>` return value is
-discarded. Fix: prepend fetched context to the first system `ChatMessage` before tier routing.
+### Track 2 Gap B — CONFIRMED WORKING (not broken)
 
-```rust
-if let Some(ctx) = self.graph_client.fetch_context(&q, &self.module_id).await {
-    messages.insert(0, ChatMessage {
-        role: "system".to_string(),
-        content: format!("[ENTITY CONTEXT]\n{}\n[/ENTITY CONTEXT]", ctx),
-    });
-}
-```
+Re-investigated `router.rs` code + live Doorman logs. The graph context injection IS
+correct and operational. Log confirmed: "graph context injected module_id=woodfine
+entity_count=5". The BRIEF fault note from 2026-06-05 was stale — `service-content`
+at port 9081 with 9,688 entities was already wired and `SERVICE_CONTENT_ENDPOINT`
+IS set in local-doorman.env. No code change needed. `ask_local` description updated
+to reflect the confirmed-working state.
 
-This fixes `ask_local()` AND every customer Totebox. Closes the documented fault in AGENT.md §MCP.
+### Track 2 Gap C — SHIPPED
 
-### Track 2 Gap C — `cast_apprenticeship_verdict` MCP tool (~100 LOC)
-
-Input struct: `brief_id`, `attempt_id`, `verdict` (accept|refine|reject|defer-tier-c),
-`notes`, `final_diff_sha`, `signature_base64`
-Posts to `POST /v1/verdict`. Doorman verifies against `identity/allowed_signers`.
-Output: `{ "verdict_received": true, "promotion_triggered": false, "new_stage": "review" }`
+`cast_apprenticeship_verdict` implemented in Sprint 5:
+- Reads `identity/.toggle` → determines signing identity (jwoodfine/pwoodfine)
+- Builds YAML body matching `parse_verdict_body` in `slm-doorman/src/verdict.rs`
+- Signs via `ssh-keygen -Y sign -f {key_path} -n apprenticeship-verdict-v1 {body_file}`
+- Base64-encodes PEM `.sig` output
+- POSTs `VerdictWireBody { body, signature, senior_identity }` to `POST /v1/verdict`
+- Returns dispatch outcome (`VerdictDispatchOutcome` JSON)
 
 ---
 
@@ -136,13 +135,16 @@ Blocks all LoRA training runs regardless of pipeline completeness.
 
 | Fact | Verified |
 |---|---|
-| Binary v0.2.0 at `/usr/local/bin/slm-mcp-server` | ✓ 2026-06-09 |
-| sha256: `eb24a38...` in binary-ledger | ✓ 2026-06-09 |
+| Binary v0.3.0 at `/usr/local/bin/slm-mcp-server` | ✓ 2026-06-09 |
+| sha256: `1eab9b95...` in binary-ledger | ✓ 2026-06-09 |
+| Binary v0.2.0 sha256: `eb24a38...` (Session 1 record) | ✓ 2026-06-09 |
 | FOUNDRY_ROOT in ~/.claude.json | ✓ 2026-06-09 |
 | Post-commit hook: 4 archives | ✓ 2026-06-09 |
-| Apprenticeship enabled (SLM_APPRENTICESHIP_ENABLED=true) | ✓ verified before this session |
-| Graph injection broken (router.rs ~195 return discarded) | ✓ verified before this session |
-| 95% mailbox sends bypass mailbox-send.sh | ✓ verified before this session |
+| Apprenticeship enabled (SLM_APPRENTICESHIP_ENABLED=true) | ✓ verified |
+| Graph injection IS WORKING (log: "entity_count=5") | ✓ 2026-06-09 |
+| identity/.toggle = 0 → jwoodfine at session start | ✓ 2026-06-09 |
+| identity key at identity/jwoodfine/id_jwoodfine readable by mathew | ✓ 2026-06-09 |
+| apprenticeship queue dirs: queue, queue-done, queue-poison, queue-in-flight, queue-paused | ✓ 2026-06-09 |
 
 ---
 
