@@ -30,7 +30,7 @@ import os
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+
 from pathlib import Path
 
 
@@ -46,26 +46,27 @@ MAX_PROMPT_LENGTH = 512
 MAX_LENGTH = 1024
 BATCH_SIZE = 2
 GRAD_ACCUM = 4
-LEARNING_RATE = 1e-4
+LEARNING_RATE = 5e-6  # DPO standard; 1e-4 (SFT rate) overfits in <10 steps at small corpus sizes
 NUM_EPOCHS = 1
-BETA = 0.1  # DPO beta — higher = closer to reference model
+BETA = 0.5  # Raised from 0.1: 78% of rejected are empty "[]" — low beta causes hallucination bias
 
 
 def load_feedback_files(corpus_path: str) -> list[dict]:
-    """Load all DPO feedback pairs from corpus_path.
+    """Load enrichment DPO pairs from corpus_path.
 
-    Reads two file families:
-      apprenticeship-*.jsonl  — human-commit shadow pairs (chosen=operator diff, rejected=OLMo diff)
-      enrichment-*.jsonl      — DataGraph enrichment pairs (chosen=Tier B entities, rejected=Tier A entities)
-    Both use the same TRL wire format: prompt / chosen / rejected.
+    Only reads enrichment-*.jsonl (DataGraph pairs: chosen=Tier B entities, rejected=Tier A entities).
+    Apprenticeship code-diff pairs (apprenticeship-*.jsonl) are NOT loaded here — they have different
+    semantics (chosen=operator diff, rejected=OLMo diff) and mixing them produces opposing gradients.
+    When a code-diff DPO corpus is ready, it should be trained in a separate run.
+
+    Filters: skips pairs where rejected is empty ("[]") — these are length-bias degenerate pairs,
+    not genuine preference signal (Tier A returned nothing; contrast is verbosity not accuracy).
     """
-    patterns = [
-        os.path.join(corpus_path, "apprenticeship-*.jsonl"),
-        os.path.join(corpus_path, "enrichment-*.jsonl"),
-    ]
-    files = sorted(f for pattern in patterns for f in glob.glob(pattern))
+    pattern = os.path.join(corpus_path, "enrichment-*.jsonl")
+    files = sorted(glob.glob(pattern))
     records = []
     skipped = 0
+    skipped_empty_rejected = 0
     for f in files:
         try:
             d = json.load(open(f))
@@ -73,16 +74,20 @@ def load_feedback_files(corpus_path: str) -> list[dict]:
             print(f"[WARN] skip {f}: {e}", file=sys.stderr)
             skipped += 1
             continue
-        # Require TRL fields
-        if not d.get("prompt") or not d.get("chosen") or not d.get("rejected"):
+        if not d.get("prompt") or not d.get("chosen"):
             skipped += 1
+            continue
+        rejected = d.get("rejected", "")
+        # Skip degenerate pairs where Tier A returned nothing — not genuine preference signal
+        if not rejected or rejected == "[]":
+            skipped_empty_rejected += 1
             continue
         records.append({
             "prompt": d["prompt"],
             "chosen": d["chosen"],
-            "rejected": d["rejected"],
+            "rejected": rejected,
         })
-    print(f"[corpus] loaded {len(records)} DPO pairs ({skipped} skipped)")
+    print(f"[corpus] loaded {len(records)} DPO pairs ({skipped} format-skipped, {skipped_empty_rejected} empty-rejected filtered)")
     return records
 
 
@@ -232,8 +237,8 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
         learning_rate=LEARNING_RATE,
         beta=BETA,
         max_length=MAX_LENGTH,
-        logging_steps=10,
-        save_steps=50,
+        logging_steps=5,
+        save_steps=5,  # checkpoint every 5 steps (corpus is small; 50 was never reached in 1 epoch)
         eval_strategy="no",           # eval needs 2× VRAM (ref+trained); disabled on L4 24 GB
         report_to="none",
         bf16=torch.cuda.is_available(),
@@ -301,8 +306,9 @@ def main() -> None:
         print("[ERROR] No valid DPO pairs found — check corpus path and field names", file=sys.stderr)
         sys.exit(1)
 
-    date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
-    output_dir = args.output_dir or f"./adapters/{args.adapter_name}-{date_str}"
+    # Use a fixed -wip suffix so --resume finds the same checkpoint directory each day.
+    # Only rename to a dated path when promoting the adapter to the registry.
+    output_dir = args.output_dir or f"./adapters/{args.adapter_name}-wip"
 
     run_training(records, args.base_model, output_dir, dry_run=args.dry_run,
                  max_runtime_seconds=args.max_runtime_seconds,
