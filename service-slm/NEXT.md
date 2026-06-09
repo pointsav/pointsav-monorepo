@@ -1,8 +1,34 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-06-05 — Sprint 4+5 endpoints: `/v1/status/cost`, `/v1/status/tier-a`, enhanced `/v1/status/queue`; app-console-slm F9 panel rebuilt (5 sections, tok/s, cost, queue breakdown); commit `1202e6ee`, Stage 6 pending.
+> Last updated: 2026-06-09 — Phase 6 training trigger wired; ML libs installed on yoyo-batch (~/training-venv); approval tag needed to arm first training run.
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
+
+---
+
+## 🟡 Phase 6 training — arm for tomorrow's run (2026-06-09) [pwoodfine@claude-code]
+
+All three gates are now in place. To fire Phase 6 on the next daily cycle:
+
+```bash
+# 1. Create tomorrow's approval tag (run on the morning of the target date)
+echo "supervised run" > /srv/foundry/data/training-approved/coding-lora-$(date +%Y-%m-%d).tag
+
+# 2. Verify all three gates before 17:00 UTC
+ls /srv/foundry/data/training-pending/*.json | wc -l           # must be > 0
+ls /srv/foundry/data/training-approved/coding-lora-$(date +%Y-%m-%d).tag  # must exist
+ssh -i ~/.ssh/google_compute_engine mathew@10.128.0.24 \
+  "~/training-venv/bin/python3 -c 'import trl; print(trl.__version__)'"   # must print version
+```
+
+- [ ] Create approval tag on the day you want training to run
+- [ ] Monitor Phase 6 in the cycle log: `journalctl -u yoyo-daily-cycle -f`
+- [ ] After first run: check adapter at `/home/mathew/adapters/apprenticeship-pointsav-incremental/`
+
+**Notes:**
+- `~/training-venv` is on yoyo-batch's persistent disk — survives VM stop/start ✓
+- Training budget: 20 min (`TRAINING_SECS = 45% of 45 min`); `--resume` accumulates daily checkpoints
+- Phase 6 skips silently if any gate fails — check cycle log if training didn't run
 
 ---
 
