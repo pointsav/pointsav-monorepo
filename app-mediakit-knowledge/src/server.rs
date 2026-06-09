@@ -2264,7 +2264,7 @@ fn wiki_chrome(
     printable: bool,
     _body_blake3: &str,
     claim_rail_html: &str,
-    sidenav: &str,
+    _sidenav: &str,
     prev_article: Option<&TopicSummary>,
     next_article: Option<&TopicSummary>,
 ) -> Markup {
@@ -2450,11 +2450,8 @@ fn wiki_chrome(
                     { "History" }
                 }
 
-                // Article layout: sidenav + article body (+ optional claim-rail at ≥1280px)
+                // Article layout: article body (+ optional claim-rail at ≥1280px)
                 div.shell {
-
-                    // Left docs sidenav (collapses at ≤1024px via CSS)
-                    (PreEscaped(sidenav))
 
                     // --- Article body column (two-column: prose + TOC) ---
                     main.article-wrap {
