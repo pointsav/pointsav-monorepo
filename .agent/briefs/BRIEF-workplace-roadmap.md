@@ -143,6 +143,34 @@ HTTP surface with the corresponding native Tauri app spec in
 ## 3. Session Log (newest on top)
 
 ```
+2026-06-08 — Totebox@claude-code: Workbench live file-reload + ops fixes (Session 9)
+  Ops: pointsav-monorepo sub-clone had 84 .agent/ files tracked in git (fsck CRITICAL).
+  Fixed: .agent/ added to pointsav-monorepo/.gitignore (replacing session.lock-only exclusion);
+  git rm --cached .agent/ -r removed all tracked .agent/ files. Commit 923b5171.
+  Feature: live file-reload via inotify SSE in app-privategit-workbench (port 9210).
+  Problem: external writes (Claude Code, text editor) never triggered a browser refresh —
+  tab.content[] cache + iframe.srcdoc snapshots never updated.
+  Solution: port of complete inotify→SSE→EventSource mechanism from app-workplace-http-prototype.
+  Server (main.rs): broadcast::channel(64) + recommended_watcher over all config.roots;
+  path normalised from absolute to url_prefix/rel; /events SSE route (BroadcastStream);
+  put_file() now broadcasts changed event after atomic rename.
+  Frontend (index.html): EventSource('/_api/edit/events') consumer; reloadTabContent()
+  silently repaints iframe.srcdoc or frame.src (cache-busted) or editor textarea;
+  dirty-tab guard shows "changed on disk" banner instead of clobbering unsaved edits;
+  30s pollActiveTab() fallback for inotify misses; auto-reconnect on error.
+  Cargo.toml: notify = "6" + tokio-stream = "0.1" added. Build clean (0 errors).
+  Commit 7152333f (Stage 6 pending). Nginx action needed: location /_api/edit/events
+  block with proxy_buffering off + proxy_read_timeout 3600s.
+  Manifest fix: cluster: project-workplace added to .agent/manifest.md. Commit 9cd73a4.
+
+2026-06-05 — Totebox@claude-code: Workbench folder download as ZIP (Session 8)
+  Added zip = "2" dependency to app-privategit-workbench/Cargo.toml.
+  New GET /workbench/download route in workbench.rs (port 9210).
+  resolve_download_path: translates /_api/command/ → /_command/, /_clones/ → _clones/.
+  build_zip + add_dir_to_zip: Deflated compression; skips dotfiles + target/ + files >50MB.
+  "⬇ Download as ZIP" added to folder right-click context menu.
+  Build verified clean. Service restarted. Commit 646462ec (Stage 6 pending).
+
 2026-06-03/04 — Totebox@claude-code: Workbench drag-drop + undo (Sessions 5/6)
   Drag-to-move: POST /move added to app-privategit-workbench (port 9210); binary deployed.
   Frontend: wireDragOnItem() wired in wireItem(); .dragging/.drag-over/.drag-over-editor CSS;
