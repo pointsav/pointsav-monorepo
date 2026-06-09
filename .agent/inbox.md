@@ -7,4 +7,4 @@ schema: foundry-mailbox-v1
 
 # Inbox — project-orgcharts
 
-*(clean — last actioned 2026-06-08)*
+*(clean — last actioned 2026-06-09)*
