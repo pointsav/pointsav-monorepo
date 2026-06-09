@@ -7,6 +7,19 @@ Last updated: 2026-06-09
 
 ---
 
+## Resolved 2026-06-09 — DESIGN-TOKEN-CHANGE cosigns + outbox cleanup
+
+- [x] **A3 DESIGN-TOKEN-CHANGE-orgchart-primitives** — master_cosign added
+      `"2026-06-09T16:36:52Z jwoodfine"`. project-design notified (msg-id:
+      project-orgcharts-20260609-cosign-done-a3-a4). [2026-06-09 totebox@claude-code]
+- [x] **A4 DESIGN-TOKEN-CHANGE-orgchart-layout-type** — same cosign. Ready for commit
+      to pointsav-design-system/tokens/dtcg-bundle.json. [2026-06-09 totebox@claude-code]
+- [x] **Outbox cleanup** — 13 superseded Stage 6 accumulation signals archived to
+      outbox-archive.md (status: stale); contaminated project-marketing content in
+      outbox-archive.md cleared. Active outbox: 5 messages. [2026-06-09 totebox@claude-code]
+
+---
+
 ## Stage 6 pending
 
 - [ ] Promote all project-orgcharts commits to canonical.

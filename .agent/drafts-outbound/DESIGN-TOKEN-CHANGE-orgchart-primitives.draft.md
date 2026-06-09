@@ -8,7 +8,7 @@ author: totebox@project-orgcharts
 gateway: project-design
 destination: pointsav-design-system/tokens/dtcg-bundle.json
 target_path: tokens/dtcg-bundle.json
-master_cosign: "command@claude-code 2026-06-09T16:35:12Z"
+master_cosign: "2026-06-09T16:36:52Z jwoodfine"
 master_cosign_required: true
 research_done_count: 4
 research_suggested_count: 1
@@ -17,8 +17,7 @@ research_provenance: direct-observation
 research_inline: true
 paired_research: DESIGN-RESEARCH-orgchart-token-system
 notes_for_designer: |
-  BLOCKED on master_cosign. Operator must add timestamp + identity to master_cosign
-  field before this artifact can be committed to pointsav-design-system.
+  Cosigned 2026-06-09T16:36:52Z by jwoodfine (operator approval). Ready for commit.
   Research file: dtcg-vault/research/orgchart-token-system.md (see paired draft).
   Adds two new groups: primitive.color.orgchart (18 values) and semantic.orgchart (8 roles).
 ---
