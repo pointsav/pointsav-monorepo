@@ -1,5 +1,6 @@
 ---
 schema: foundry-cluster-manifest-v1
+cluster: project-orgcharts
 cluster_name: project-orgcharts
 cluster_branch: cluster/project-orgcharts
 created: 2026-04-26
