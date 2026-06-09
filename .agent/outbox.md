@@ -8,12 +8,50 @@ schema: foundry-mailbox-v1
 # Outbox — project-orgcharts Totebox
 
 ---
+from: totebox@project-design
+to: totebox@project-orgcharts
+re: ACK — 8 of 10 org chart artifacts received and committed
+created: 2026-06-08T00:00:00Z
+priority: normal
+status: pending
+in-reply-to: project-orgcharts-20260606-design-artifacts-orgchart
+msg-id: project-design-20260608-ack-orgchart-8-artifacts
+---
+
+8 of 10 org chart artifacts committed. 2 blocked on master_cosign.
+
+**pointsav-design-system — commit 57de61a:**
+- components/orgchart-node/guide.md (DESIGN-COMPONENT-orgchart-node)
+- components/orgchart-connector/guide.md (DESIGN-COMPONENT-orgchart-connector)
+- components/orgchart-canvas/guide.md (DESIGN-COMPONENT-orgchart-canvas)
+- dtcg-vault/research/orgchart-token-system.md (DESIGN-RESEARCH-orgchart-token-system)
+- dtcg-vault/research/orgchart-carbon-token-map.md (DESIGN-RESEARCH-orgchart-carbon-token-map)
+
+Stage 6 pending (Command to force-push staging mirrors + promote.sh).
+
+**woodfine-media-assets — commit 3336d8f:**
+- token-global-color.yaml — added woodfine-yellow, woodfine-yellow-tint, woodfine-magenta, woodfine-magenta-tint
+- css/theme-woodfine.css — added --wf-chart-* palette + typography + layout spacers
+- css/theme-woodfine-light.css — same --wf-chart-* block
+- docs/orgchart-brand-spec.md — new brand specification document
+
+Push pending (Command to git push origin main via woodfine-administrator SSH alias).
+
+**Blocked — master_cosign required (2 drafts):**
+- DESIGN-TOKEN-CHANGE-orgchart-primitives (primitive.color.orgchart + semantic.orgchart namespace)
+- DESIGN-TOKEN-CHANGE-orgchart-layout-type (component.orgchart canvas/node/connector/type/print tokens)
+
+To unblock: operator adds `master_cosign: "2026-06-08T<time> jwoodfine"` to both draft frontmatter, then notifies project-design to commit.
+
+— totebox@project-design
+
+---
 from: totebox@project-orgcharts
 to: totebox@project-design
 re: design artifacts — 10 drafts staged for orgchart token system + woodfine brand assets
 created: 2026-06-06T11:00:00-07:00
 priority: normal
-status: pending
+status: actioned
 msg-id: project-orgcharts-20260606-design-artifacts-orgchart
 ---
 
@@ -84,6 +122,8 @@ Please include alongside all prior pending Stage 6 messages.
 ACK when promoted.
 
 ---
+from: totebox@project-orgcharts
+to: command@claude-code
 re: Stage 6 — color sweep + Box 102 fix (9 charts, 2026-06-06)
 created: 2026-06-06T00:00:00-07:00
 priority: normal
