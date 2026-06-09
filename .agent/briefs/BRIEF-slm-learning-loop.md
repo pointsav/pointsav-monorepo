@@ -3,7 +3,7 @@ artifact: brief
 status: active
 title: SLM Learning Loop — Training Pipeline + Sovereign Coding Agent
 created: 2026-05-29
-updated: 2026-06-09 (session — timer consolidation + kill switch; §13 as-built record added)
+updated: 2026-06-09 (session 2 — 45-min cap; Phase 6 training trigger wired; --resume flag; §13 reconciled)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 companion: BRIEF-slm-substrate-master.md
 grounds_in:
@@ -754,7 +754,7 @@ For Phase 1, SSH-direct is the right call. GCS is a Phase 2+ concern.
 > of physical reality. Reconcile against this when something breaks before checking the
 > design sections.
 >
-> **Last updated:** 2026-06-09 — timer consolidation + kill switch
+> **Last updated:** 2026-06-09 (session 2) — 45-min cap + Phase 6 training trigger + --resume flag
 
 ---
 
@@ -770,14 +770,15 @@ WORKSPACE VM (foundry-workspace, vault-privategit-source-1)
   │     └── enrichment-*.jsonl → feedback dir (continuous write)
   │
   ├── local-yoyo-daily.timer   ──────────── 17:00 UTC daily (→ 02:30 UTC after monitoring)
-  │     └── yoyo-daily-cycle.sh             THE single VM lifecycle controller
+  │     └── yoyo-daily-cycle.sh             THE single VM lifecycle controller (45-min cap)
   │           Phase 1:  gcloud instances start yoyo-batch
   │           Phase 2:  wait llama-server health (~170s)
   │           Phase 3:  wait Doorman Tier B circuit close
-  │           Phase 4:  enrichment drain (80% of 90-min budget)
+  │           Phase 4:  enrichment drain (40% of budget = 18 min at 45-min cap)
   │           Phase 5:  corpus-threshold.py → training markers
+  │           Phase 6:  LoRA training trigger (45% budget = 20 min) — 3-gate: markers+ML+approval
   │           Phase 7:  GCS sync (when SLM_YOYO_WEIGHTS_GCS_BUCKET set — currently OFF)
-  │           Phase 6:  SSH stop llama-server → gcloud instances stop → verify TERMINATED
+  │           Phase 8:  SSH stop llama-server → gcloud instances stop → verify TERMINATED
   │
   ├── yoyo-idle-monitor.timer  ──────────── every 5 min
   │     └── yoyo-idle-monitor.sh            safety backstop: stops yoyo-batch if idle ≥30 min
@@ -807,8 +808,8 @@ KILL SWITCH
 
 | Component | Path | Status | Notes |
 |---|---|---|---|
-| `yoyo-daily-cycle.sh` | `/srv/foundry/bin/` | **DEPLOYED** | Full VM lifecycle; commit `3f0f3c0` |
-| `local-yoyo-daily.service` | `/etc/systemd/system/` | **ACTIVE** | oneshot, User=mathew |
+| `yoyo-daily-cycle.sh` | `/srv/foundry/bin/` | **DEPLOYED** | 45-min cap; 40/45 split; Phase 6 training trigger; commit `2e04bcf` (workspace) |
+| `local-yoyo-daily.service` | `/etc/systemd/system/` | **ACTIVE** | 45-min cap; TimeoutStartSec=3600; commit `2e04bcf` |
 | `local-yoyo-daily.timer` | `/etc/systemd/system/` | **ACTIVE** | 17:00 UTC, RandomDelay=120s |
 | `yoyo-idle-monitor.sh` | `/srv/foundry/bin/` | **ACTIVE** | Fixed target: yoyo-batch/us-central1-a |
 | `yoyo-idle-monitor.timer` | `/etc/systemd/system/` | **ACTIVE** | every 5 min; 30 min idle threshold |
@@ -817,8 +818,9 @@ KILL SWITCH
 | `lora-update.sh` | `service-slm/scripts/` | deployed (disabled) | Fixed VM/zone defaults; commit `5ca1e6e0` |
 | `git-post-commit-hook.sh` | `service-slm/scripts/` | deployed | Install per archive; no archive has it yet |
 | `capture-edit.py` | `/srv/foundry/bin/` | **ACTIVE** | Fix A deployed; real diffs in queue |
-| `run-dpo-training.py` | `service-slm/scripts/` | code-complete | ML libs NOT on yoyo-batch yet |
-| `export-sft.sh` | `service-slm/scripts/` | **NOT WRITTEN** | §10.5 Phase A; ~40 LOC needed |
+| `run-dpo-training.py` | `service-slm/scripts/` | **code-complete** | `--resume` flag added commit `4a96c4ff`; ML libs NOT on yoyo-batch yet |
+| `export-sft.sh` | `service-slm/scripts/` | **COMPLETE** | Already existed; exports Alpaca SFT JSONL; `--dry-run` supported |
+| `SLM_DRAIN_PAUSED` env var | `slm-doorman-server/src/main.rs` lines 244–290 | **DEPLOYED** | Drain loop checks unconditionally; already in production |
 
 ---
 
@@ -838,14 +840,12 @@ KILL SWITCH
 
 | # | What | Blocks |
 |---|---|---|
-| 1 | Install ML libs on yoyo-batch (`trl`, `peft`, `transformers`, `bitsandbytes`) | All training runs |
-| 2 | Write `export-sft.sh` (~40 LOC) | First SFT LoRA run |
-| 3 | First manual training run (SSH-direct, operator-supervised, ~2h) | Adapter v1 |
-| 4 | Uncomment `SLM_YOYO_WEIGHTS_GCS_BUCKET` in `local-yoyo-daily.service` | GCS sync in daily cycle |
-| 5 | Wire Phase 7 training trigger into `yoyo-daily-cycle.sh` (SSH `run-dpo-training.py`) | Automated training |
-| 6 | Move timer to 02:30 UTC (after 1-2 weeks operator monitoring at 17:00 UTC) | Night-time operation |
-| 7 | Eval gate + adapter registration (`eval-adapter.sh` + `data/adapters/registry.yaml`) | Safe promotion |
-| 8 | Install `git-post-commit-hook.sh` in each active Totebox archive | Continuous SFT capture |
+| 1 | Install ML libs on yoyo-batch (`trl`, `peft`, `transformers`, `bitsandbytes`) — **blocked: STOCKOUT** | All training runs |
+| 2 | Create approval tag + first supervised training run (Phase 6 already wired; gates on tag + libs) | Adapter v1 |
+| 3 | Uncomment `SLM_YOYO_WEIGHTS_GCS_BUCKET` in `local-yoyo-daily.service` | GCS sync in daily cycle |
+| 4 | Move timer to 02:30 UTC (after 1-2 weeks operator monitoring at 17:00 UTC) | Night-time operation |
+| 5 | Eval gate + adapter registration (`eval-adapter.sh` + `data/adapters/registry.yaml`) | Safe promotion |
+| 6 | Install `git-post-commit-hook.sh` in each active Totebox archive | Continuous SFT capture |
 
 ---
 
