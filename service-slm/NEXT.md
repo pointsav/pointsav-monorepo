@@ -6,6 +6,22 @@
 
 ---
 
+## 🔴 REMINDER — Arm Phase 6 before 17:00 UTC on 2026-06-10 [pwoodfine@claude-code]
+
+**Run this before 10:00 AM PDT tomorrow (2026-06-10) or the training window will be skipped:**
+
+```bash
+echo "supervised run" > /srv/foundry/data/training-approved/coding-lora-$(date +%Y-%m-%d).tag
+```
+
+- [ ] Create approval tag before 17:00 UTC 2026-06-10
+- [ ] Confirm: `ls /srv/foundry/data/training-approved/` shows today's tag
+- [ ] Watch the run: `journalctl -u yoyo-daily-cycle -f`
+
+This is the first supervised training run. Phase 6 will stop llama-server, load OLMo 7B 4-bit into the full 24 GB L4, and train for ~20 min. Adapter lands at `/home/mathew/adapters/apprenticeship-pointsav-incremental/`.
+
+---
+
 ## 🟡 Phase 6 training — arm for tomorrow's run (2026-06-09) [pwoodfine@claude-code]
 
 All three gates are now in place. To fire Phase 6 on the next daily cycle:
