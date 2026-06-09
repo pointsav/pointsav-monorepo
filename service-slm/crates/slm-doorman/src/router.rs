@@ -15,6 +15,7 @@ use chrono::Utc;
 use slm_core::{Complexity, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
 use tracing::{info, warn};
 
+use crate::cost_ledger::{CostLedger, CostRow};
 use crate::error::{DoormanError, Result};
 use crate::grammar_validation::LarkValidator;
 use crate::graph::GraphContextClient;
@@ -24,6 +25,7 @@ use crate::tier::{ExternalTierClient, LocalTierClient, YoYoTierClient};
 
 use serde::Serialize;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Runtime observability snapshot for a single Tier B node.
 /// Serialized into `GET /readyz` under the `tier_b` key.
@@ -66,6 +68,15 @@ pub struct DoormanConfig {
     /// AND health probe is up. Set via `SLM_TIER_A_FIRST=true`. Mutually
     /// exclusive with `SLM_FORCE_BROKER_MODE=true`.
     pub tier_a_first: bool,
+    /// Optional per-day Tier B spend cap in USD. When `Some(cap)` and the
+    /// cost ledger reports today's total (per-request + VM-hours) ≥ cap,
+    /// all Tier B dispatches are refused and fall back to Tier A.
+    /// Set via `SLM_YOYO_DAILY_CAP_USD`. Absent = no cap.
+    pub daily_yoyo_cap_usd: Option<f64>,
+    /// Cost ledger used for per-request writes and daily-cap checks.
+    /// `None` disables both (no billing records, no cap enforcement).
+    /// Injected via `DoormanConfig`; the server wires it from FOUNDRY_ROOT.
+    pub cost_ledger: Option<Arc<CostLedger>>,
 }
 
 pub struct Orchestrator {
@@ -81,6 +92,8 @@ pub struct Doorman {
     graph_context_client: Option<GraphContextClient>,
     pub orchestrator: Option<Orchestrator>,
     tier_a_first: bool,
+    daily_yoyo_cap_usd: Option<f64>,
+    cost_ledger: Option<Arc<CostLedger>>,
 }
 
 impl Doorman {
@@ -94,17 +107,19 @@ impl Doorman {
             graph_context_client: config.graph_context_client,
             orchestrator: None,
             tier_a_first: config.tier_a_first,
+            daily_yoyo_cap_usd: config.daily_yoyo_cap_usd,
+            cost_ledger: config.cost_ledger,
         }
     }
 
     pub async fn route_async(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
         if let Some(ref orch) = self.orchestrator {
             info!(target: "slm_doorman::router", request_id = %req.request_id, "dispatching via orchestrator");
-            
+
             if let Some(node) = orch.registry.select_optimal(req).await {
                 info!(target: "slm_doorman::router", node_id = %node.id.0, "selected node");
                 // Here we would dispatch to node.endpoint
-                // For Phase 1, we continue to delegate to existing dispatch path 
+                // For Phase 1, we continue to delegate to existing dispatch path
                 // but node-aware dispatch logic goes here in future steps.
             }
         }
@@ -187,10 +202,7 @@ impl Doorman {
                 .unwrap_or_default();
 
             if !query.is_empty() {
-                if let Some(ctx) = gc
-                    .fetch_context(req.module_id.as_str(), &query, 5)
-                    .await
-                {
+                if let Some(ctx) = gc.fetch_context(req.module_id.as_str(), &query, 5).await {
                     let mut cloned = req.clone();
                     cloned.messages.insert(
                         0,
@@ -223,7 +235,13 @@ impl Doorman {
         if self.tier_a_first {
             let yoyo_hint = req.tier_hint == Some(Tier::Yoyo);
             if yoyo_hint {
-                let label = req.yoyo_label.as_deref().unwrap_or("default");
+                let label = req.yoyo_label.as_deref()
+                    .or_else(|| {
+                        req.session_context.as_ref()
+                            .and_then(|sc| sc.archive_domain.as_deref())
+                            .filter(|domain| self.yoyo.contains_key(*domain))
+                    })
+                    .unwrap_or("default");
                 let yoyo_ready = self
                     .yoyo
                     .get(label)
@@ -255,7 +273,41 @@ impl Doorman {
         self.confirm_tier_with_req(preferred, req)
     }
 
+    /// Returns `true` when today's Tier B spend (per-request + VM-hours) has
+    /// reached or exceeded the configured `daily_yoyo_cap_usd`. Always
+    /// returns `false` when no cap is configured or the cost ledger is absent.
+    fn daily_cap_exceeded(&self) -> bool {
+        let Some(cap) = self.daily_yoyo_cap_usd else {
+            return false;
+        };
+        let Some(ref ledger) = self.cost_ledger else {
+            return false;
+        };
+        let today = Utc::now().format("%Y-%m-%d").to_string();
+        let Ok(rollup) = ledger.daily_rollup(&today) else {
+            return false;
+        };
+        let total = rollup.total_cost_usd + rollup.vm_hours_cost_usd;
+        if total >= cap {
+            warn!(
+                target: "slm_doorman::router",
+                daily_spend_usd = total,
+                cap_usd = cap,
+                "daily Tier B spend cap reached — refusing Tier B dispatch, falling back to Tier A"
+            );
+            return true;
+        }
+        false
+    }
+
     fn confirm_tier_with_req(&self, tier: Tier, req: &ComputeRequest) -> Result<Tier> {
+        // Daily spend cap: intercept Tier B before circuit check. When the cap
+        // is exceeded, silently downgrade to Tier A so the request still completes.
+        let tier = if tier == Tier::Yoyo && self.daily_cap_exceeded() {
+            Tier::Local
+        } else {
+            tier
+        };
         let configured = match tier {
             Tier::Local => self.local.is_some(),
             Tier::Yoyo => {
@@ -335,9 +387,10 @@ impl Doorman {
                     // If multiple are configured and no label is provided, the
                     // behavior is non-deterministic (HashMap order) but safe.
                     // Operator should always use labels for Multi-Yo-Yo.
-                    self.yoyo.values().next().ok_or_else(|| {
-                        DoormanError::TierUnavailable(Tier::Yoyo)
-                    })?
+                    self.yoyo
+                        .values()
+                        .next()
+                        .ok_or_else(|| DoormanError::TierUnavailable(Tier::Yoyo))?
                 };
 
                 // B4: fast-path health + circuit check before making any HTTP call.
@@ -365,10 +418,14 @@ impl Doorman {
                 }
             }
             Tier::External => {
+                // Strip session_context before forwarding to external Tier C.
+                // The field is internal Foundry metadata and must not leave the
+                // Totebox boundary.
+                let req_for_tier_c = ComputeRequest { session_context: None, ..req.clone() };
                 self.external
                     .as_ref()
                     .ok_or(DoormanError::TierUnavailable(Tier::External))?
-                    .complete(req)
+                    .complete(&req_for_tier_c)
                     .await
             }
         }
@@ -388,6 +445,7 @@ impl Doorman {
                 sanitised_outbound: req.sanitised_outbound,
                 completion_status: CompletionStatus::Ok,
                 error_message: None,
+                archive_name: req.session_context.as_ref().map(|sc| sc.archive_name.clone()),
             },
             Err(e) => AuditEntry {
                 entry_type: ENTRY_TYPE_CHAT_COMPLETION.to_string(),
@@ -401,6 +459,7 @@ impl Doorman {
                 sanitised_outbound: req.sanitised_outbound,
                 completion_status: classify_error(e),
                 error_message: Some(e.to_string()),
+                archive_name: req.session_context.as_ref().map(|sc| sc.archive_name.clone()),
             },
         };
         if let Err(write_err) = self.ledger.append(&entry) {
@@ -412,6 +471,32 @@ impl Doorman {
                 request_id = %req.request_id,
                 "failed to append audit entry"
             );
+        }
+
+        // Write to cost ledger for successful Tier B responses (P3-3.5-followup).
+        // Non-fatal: cost tracking must never block the response path.
+        if let (Some(ref cost_ledger), Ok(resp)) = (&self.cost_ledger, result) {
+            if resp.tier_used == Tier::Yoyo {
+                let row = CostRow {
+                    ts: entry
+                        .timestamp_utc
+                        .to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+                    request_id: req.request_id.to_string(),
+                    tier: "yoyo".to_string(),
+                    model: resp.model.clone(),
+                    cost_usd: resp.cost_usd,
+                    inference_ms: resp.inference_ms,
+                    adapter_version: None,
+                };
+                if let Err(e) = cost_ledger.append(&row) {
+                    warn!(
+                        target: "slm_doorman::cost_ledger",
+                        error = %e,
+                        request_id = %req.request_id,
+                        "cost ledger write failed (non-fatal)"
+                    );
+                }
+            }
         }
     }
 }
@@ -572,6 +657,16 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         // server-side for unreachable service-content (UpstreamError).
         DoormanError::GraphProxyMissingModuleId => CompletionStatus::PolicyDenied,
         DoormanError::GraphProxyServiceUnavailable => CompletionStatus::UpstreamError,
+        // Flow gate closed (operator kill switch): the operator deliberately
+        // refused this tier. Classified as PolicyDenied — the request was
+        // rejected by an explicit policy decision, not an upstream fault.
+        // HTTP 503 with Retry-After in the HTTP layer.
+        DoormanError::FlowGateClosed { .. } => CompletionStatus::PolicyDenied,
+        // Priority queue I/O failure: server-side file-system fault.
+        DoormanError::PriorityQueueIo { .. } => CompletionStatus::UpstreamError,
+        // GCP Compute API failure (VM start/stop/status): upstream provider
+        // fault; the lifecycle monitor retries and the router falls to Tier A.
+        DoormanError::GcpApi { .. } => CompletionStatus::UpstreamError,
     }
 }
 
@@ -581,7 +676,11 @@ mod tests {
     use slm_core::{ChatMessage, ModuleId, RequestId};
     use std::str::FromStr;
 
-    fn req(complexity: Complexity, hint: Option<Tier>, yoyo_label: Option<String>) -> ComputeRequest {
+    fn req(
+        complexity: Complexity,
+        hint: Option<Tier>,
+        yoyo_label: Option<String>,
+    ) -> ComputeRequest {
         ComputeRequest {
             request_id: RequestId::new(),
             module_id: ModuleId::from_str("foundry").unwrap(),
@@ -603,6 +702,7 @@ mod tests {
             graph_context_enabled: None,
             tools: None,
             stop_sequences: None,
+            session_context: None,
         }
     }
 
@@ -650,6 +750,8 @@ mod tests {
                 lark_validator: None,
                 graph_context_client: None,
                 tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
             },
             ledger(),
         );
@@ -680,11 +782,19 @@ mod tests {
         // Simulate health probe failure + circuit open.
         yoyo.health_up.store(false, Ordering::Relaxed);
         // FAILURE_THRESHOLD is 5 — need 5 consecutive failures to open circuit
-        for _ in 0..5 { yoyo.circuit.record_failure(); }
+        for _ in 0..5 {
+            yoyo.circuit.record_failure();
+        }
 
         let mut map = HashMap::new();
         map.insert("default".to_string(), yoyo);
-        let doorman = Doorman::new(DoormanConfig { yoyo: map, ..Default::default() }, ledger());
+        let doorman = Doorman::new(
+            DoormanConfig {
+                yoyo: map,
+                ..Default::default()
+            },
+            ledger(),
+        );
         let status = doorman.tier_b_status();
         let info = status.get("default").unwrap();
         assert_eq!(info.reason, Some("health-probe-failures"));
@@ -698,11 +808,19 @@ mod tests {
         // health probe still up, but circuit tripped by request failures.
         yoyo.health_up.store(true, Ordering::Relaxed);
         // FAILURE_THRESHOLD is 5 — need 5 consecutive failures to open circuit
-        for _ in 0..5 { yoyo.circuit.record_failure(); }
+        for _ in 0..5 {
+            yoyo.circuit.record_failure();
+        }
 
         let mut map = HashMap::new();
         map.insert("default".to_string(), yoyo);
-        let doorman = Doorman::new(DoormanConfig { yoyo: map, ..Default::default() }, ledger());
+        let doorman = Doorman::new(
+            DoormanConfig {
+                yoyo: map,
+                ..Default::default()
+            },
+            ledger(),
+        );
         let status = doorman.tier_b_status();
         let info = status.get("default").unwrap();
         assert_eq!(info.reason, Some("request-failures"));
@@ -714,11 +832,112 @@ mod tests {
         let yoyo = make_yoyo(Some("us-central1-a".into()));
         let mut map = HashMap::new();
         map.insert("default".to_string(), yoyo);
-        let doorman = Doorman::new(DoormanConfig { yoyo: map, ..Default::default() }, ledger());
+        let doorman = Doorman::new(
+            DoormanConfig {
+                yoyo: map,
+                ..Default::default()
+            },
+            ledger(),
+        );
         let status = doorman.tier_b_status();
         let info = status.get("default").unwrap();
         assert_eq!(info.circuit, "closed");
         assert!(info.reason.is_none());
         assert_eq!(info.zone.as_deref(), Some("us-central1-a"));
+    }
+
+    /// When today's spend in the cost ledger meets or exceeds the daily cap,
+    /// `select_tier` must redirect a High-complexity request to Tier A even
+    /// when the Tier B circuit is closed and endpoints are configured.
+    #[test]
+    fn daily_cap_exceeded_blocks_tier_b_falls_back_to_local() {
+        let cost_dir = std::env::temp_dir().join(format!(
+            "slm-cap-test-exceeded-{}",
+            chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0)
+        ));
+        let cost_ledger = Arc::new(CostLedger::new(&cost_dir).unwrap());
+
+        // Write a row dated today that puts spend over the $20 cap.
+        let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
+        cost_ledger
+            .append(&CostRow {
+                ts: format!("{}T00:00:00Z", today),
+                request_id: "test-req-1".to_string(),
+                tier: "yoyo".to_string(),
+                model: "olmo3".to_string(),
+                cost_usd: 21.00,
+                inference_ms: 72_000,
+                adapter_version: None,
+            })
+            .unwrap();
+
+        let mut yoyo_map = HashMap::new();
+        yoyo_map.insert("default".to_string(), make_yoyo(None));
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: None,
+                yoyo: yoyo_map,
+                external: None,
+                lark_validator: None,
+                graph_context_client: None,
+                tier_a_first: false,
+                daily_yoyo_cap_usd: Some(20.0),
+                cost_ledger: Some(cost_ledger),
+            },
+            ledger(),
+        );
+        // Tier A is not configured (local: None), so if the cap logic is
+        // working it will redirect to Local — which is then TierUnavailable
+        // because no local client exists. That's the expected signal.
+        let result = doorman.select_tier(&req(Complexity::High, None, None));
+        match result {
+            // local is None, so confirm_tier_with_req(Local) → TierUnavailable(Local)
+            Err(DoormanError::TierUnavailable(Tier::Local)) => {}
+            other => panic!("expected TierUnavailable(Local) after cap redirect, got {other:?}"),
+        }
+    }
+
+    /// When today's spend is below the daily cap, Tier B is selected normally.
+    #[test]
+    fn daily_cap_not_exceeded_allows_tier_b() {
+        let cost_dir = std::env::temp_dir().join(format!(
+            "slm-cap-test-ok-{}",
+            chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0)
+        ));
+        let cost_ledger = Arc::new(CostLedger::new(&cost_dir).unwrap());
+
+        // Write a row that puts spend well below the $20 cap.
+        let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
+        cost_ledger
+            .append(&CostRow {
+                ts: format!("{}T00:00:00Z", today),
+                request_id: "test-req-2".to_string(),
+                tier: "yoyo".to_string(),
+                model: "olmo3".to_string(),
+                cost_usd: 1.50,
+                inference_ms: 72_000,
+                adapter_version: None,
+            })
+            .unwrap();
+
+        let mut yoyo_map = HashMap::new();
+        yoyo_map.insert("default".to_string(), make_yoyo(None));
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: None,
+                yoyo: yoyo_map,
+                external: None,
+                lark_validator: None,
+                graph_context_client: None,
+                tier_a_first: false,
+                daily_yoyo_cap_usd: Some(20.0),
+                cost_ledger: Some(cost_ledger),
+            },
+            ledger(),
+        );
+        let picked = doorman
+            .select_tier(&req(Complexity::High, None, None))
+            .expect("cap not exceeded — should pick yoyo");
+        assert_eq!(picked, Tier::Yoyo);
     }
 }

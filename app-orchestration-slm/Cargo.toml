@@ -34,6 +34,11 @@ chrono = { version = "0.4", default-features = false, features = ["clock", "serd
 anyhow = "1"
 thiserror = "2"
 
+# License token verification — Ed25519 signature over a base64 payload.
+# This is the commercial gate for the proprietary chassis.
+ed25519-dalek = "2"
+base64 = "0.22"
+
 # Observability
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }

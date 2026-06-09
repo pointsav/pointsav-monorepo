@@ -74,10 +74,7 @@ mod tests {
     #[test]
     fn classify_empty_diff_skips() {
         // The exact 2.5h-stall regression: empty actual_diff must never reach OLMo.
-        assert_eq!(
-            classify_shadow_brief(&entry_with("")),
-            DrainDecision::Skip
-        );
+        assert_eq!(classify_shadow_brief(&entry_with("")), DrainDecision::Skip);
     }
 
     #[test]

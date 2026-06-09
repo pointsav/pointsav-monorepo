@@ -34,12 +34,7 @@ impl MeteringLedger {
         Arc::new(Self::default())
     }
 
-    pub async fn record(
-        &self,
-        module_id: &str,
-        inference_ms: Option<u64>,
-        hourly_usd_rate: f64,
-    ) {
+    pub async fn record(&self, module_id: &str, inference_ms: Option<u64>, hourly_usd_rate: f64) {
         let ms = inference_ms.unwrap_or(0);
         let cost = hourly_usd_rate * (ms as f64 / 3_600_000.0);
 

@@ -39,8 +39,8 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use anyhow::Context;
-use orchestration_slm::{FleetRegistry, MeteringLedger, YoyoProxyClient};
 use orchestration_slm::yoyo_proxy::YoyoEndpoints;
+use orchestration_slm::{FleetRegistry, MeteringLedger, YoyoProxyClient};
 use tracing::info;
 
 mod http;
@@ -82,9 +82,8 @@ async fn main() -> anyhow::Result<()> {
 
 fn init_tracing() {
     use tracing_subscriber::{fmt, prelude::*, EnvFilter};
-    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-        EnvFilter::new("orchestration_slm=info,orchestration_slm_server=info")
-    });
+    let filter = EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| EnvFilter::new("orchestration_slm=info,orchestration_slm_server=info"));
     tracing_subscriber::registry()
         .with(filter)
         .with(fmt::layer())
