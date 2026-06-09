@@ -3,7 +3,7 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live
 > at `~/Foundry/NEXT.md`.
 
-Last updated: 2026-06-09 [totebox@claude-code]
+Last updated: 2026-06-09 [totebox@claude-code] — contamination cleanup + 18 Key Plan IFCs + tiles-registry + BRIEF
 
 ---
 
@@ -37,8 +37,8 @@ Last updated: 2026-06-09 [totebox@claude-code]
 
 - [x] Deliverable 1: Key Plans registry (`key-plans-registry.md`) — 66 entries, 18 with confirmed dimensions [2026-05-21]
 - [x] Deliverable 1: PO-1/2/3 IFC files generated [2026-06-04]
-- [x] Deliverable 1: Medical (M-1/2/3), Business (B-1/2/3), Laboratory (L-1/2/3), Academic (A-1/2/3), Civic (C-1/2/3) IFC files generated [2026-06-09 totebox@claude-code]
-- [x] Deliverable 2: Tiles registry (`tiles/tiles-registry.md`) [2026-06-09 totebox@claude-code]
+- [x] Deliverable 1: Medical (M-1/2/3), Business (B-1/2/3), Laboratory (L-1/2/3), Academic (A-1/2/3), Civic (C-1/2/3) IFC files generated — 868be90 [2026-06-09 totebox@claude-code]
+- [x] Deliverable 2: Tiles registry (`tiles/tiles-registry.md`) — c050103 [2026-06-09 totebox@claude-code]
 - [ ] Deliverable 2: Tiles IFC generation (tile-*.ifc files) — deferred to after tiles-registry is ratified
 - [ ] Deliverable 3: Floor Plate composition matrix — Rust engine; Phase 4; deferred
 - [ ] Deliverable 4: Building Width Calculator — Rust engine; Phase 4; deferred
