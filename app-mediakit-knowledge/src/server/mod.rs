@@ -324,12 +324,9 @@ async fn search_complete(
     if q.is_empty() {
         return Json(json!([]));
     }
-    let topic_files = collect_all_topic_files(
-        state.primary_path(),
-        &state.guide_dirs_arr(),
-    )
-    .await
-    .unwrap_or_default();
+    let topic_files = collect_all_topic_files(state.primary_path(), &state.guide_dirs_arr())
+        .await
+        .unwrap_or_default();
 
     let mut hits = Vec::new();
     for tf in &topic_files {
@@ -428,11 +425,8 @@ struct WikiPageQuery {
 /// crate needed), and issues a 302 redirect to `/wiki/<slug>`. Returns 404
 /// when the content directory is empty.
 async fn random_page(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
-    let topic_files = collect_all_topic_files(
-        state.primary_path(),
-        &state.guide_dirs_arr(),
-    )
-    .await?;
+    let topic_files =
+        collect_all_topic_files(state.primary_path(), &state.guide_dirs_arr()).await?;
     let slugs: Vec<String> = topic_files.into_iter().map(|tf| tf.slug).collect();
     if slugs.is_empty() {
         return Err(WikiError::NotFound("random".into()));
@@ -457,11 +451,8 @@ async fn wanted_page(
     let re = Regex::new(r#"href="/wiki/([^"]+)"[^>]*class="wiki-redlink""#).expect("static regex");
 
     // Walk all topic files and collect redlinks.
-    let topic_files = collect_all_topic_files(
-        state.primary_path(),
-        &state.guide_dirs_arr(),
-    )
-    .await?;
+    let topic_files =
+        collect_all_topic_files(state.primary_path(), &state.guide_dirs_arr()).await?;
 
     let mut wanted: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for tf in &topic_files {

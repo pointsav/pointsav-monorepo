@@ -122,7 +122,7 @@ async fn home_inner(
 async fn resolve_bare_slug(state: &AppState, bare_slug: &str) -> Option<String> {
     let guide_dirs = state.link_roots();
     let dirs: Vec<&std::path::Path> = std::iter::once(state.primary_path())
-        .chain(guide_dirs.into_iter())
+        .chain(guide_dirs)
         .collect();
 
     let mut found: Option<String> = None;
