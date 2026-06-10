@@ -216,12 +216,10 @@ async fn tool_link_citation(state: &AppState, args: &Value) -> Result<String, (i
 // ─── resources/list ─────────────────────────────────────────────────────────
 
 async fn resources_list(state: &AppState) -> Result<Value, (i32, String)> {
-    let topic_files = crate::server::collect_all_topic_files(
-        state.primary_path(),
-        &state.guide_dirs_arr(),
-    )
-    .await
-    .map_err(|e| (-32000i32, format!("io error: {e}")))?;
+    let topic_files =
+        crate::server::collect_all_topic_files(state.primary_path(), &state.guide_dirs_arr())
+            .await
+            .map_err(|e| (-32000i32, format!("io error: {e}")))?;
 
     let resources: Vec<Value> = topic_files
         .iter()
@@ -250,12 +248,10 @@ async fn resources_read(state: &AppState, params: &Value) -> Result<Value, (i32,
     if slug.contains("..") {
         return Err((-32602, "invalid slug".to_string()));
     }
-    let topic_files = crate::server::collect_all_topic_files(
-        state.primary_path(),
-        &state.guide_dirs_arr(),
-    )
-    .await
-    .map_err(|e| (-32000i32, format!("io error: {e}")))?;
+    let topic_files =
+        crate::server::collect_all_topic_files(state.primary_path(), &state.guide_dirs_arr())
+            .await
+            .map_err(|e| (-32000i32, format!("io error: {e}")))?;
     let tf = topic_files
         .into_iter()
         .find(|tf| tf.slug == slug)
@@ -386,12 +382,10 @@ async fn query_page(state: &AppState, params: &Value) -> Result<Value, (i32, Str
         return Err((-32602, "invalid slug".to_string()));
     }
 
-    let topic_files = crate::server::collect_all_topic_files(
-        state.primary_path(),
-        &state.guide_dirs_arr(),
-    )
-    .await
-    .map_err(|e| (-32000i32, format!("io error: {e}")))?;
+    let topic_files =
+        crate::server::collect_all_topic_files(state.primary_path(), &state.guide_dirs_arr())
+            .await
+            .map_err(|e| (-32000i32, format!("io error: {e}")))?;
 
     let tf = topic_files
         .into_iter()
@@ -503,12 +497,10 @@ async fn list_pages(state: &AppState, params: &Value) -> Result<Value, (i32, Str
         .map(|n| n as usize)
         .unwrap_or(100);
 
-    let topic_files = crate::server::collect_all_topic_files(
-        state.primary_path(),
-        &state.guide_dirs_arr(),
-    )
-    .await
-    .map_err(|e| (-32000i32, format!("io error: {e}")))?;
+    let topic_files =
+        crate::server::collect_all_topic_files(state.primary_path(), &state.guide_dirs_arr())
+            .await
+            .map_err(|e| (-32000i32, format!("io error: {e}")))?;
 
     let mut articles = Vec::new();
     for tf in topic_files {
