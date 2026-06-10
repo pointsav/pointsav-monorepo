@@ -10,7 +10,7 @@ impact_factor: "2.9"
 alternate_venue: "Journal of Economic Geography (OUP, ~4.5 Q1); Urban Studies (SAGE, Q1)"
 authors:
   - name: "Jennifer M. Woodfine"
-    affiliation: "Woodfine Management Corp., New York, NY, USA"
+    affiliation: "Woodfine Management Corp., New York, New York"
     email: corporate.secretary@woodfinegroup.com
     orcid: ""
     credit_roles:
@@ -20,7 +20,7 @@ authors:
       - Writing – Original Draft
       - Writing – Review & Editing
   - name: "Peter M. Woodfine"
-    affiliation: "Woodfine Management Corp., New York, NY, USA"
+    affiliation: "Woodfine Management Corp., New York, New York"
     email: ""
     orcid: ""
     credit_roles:
@@ -28,7 +28,7 @@ authors:
       - Validation
       - Writing – Review & Editing
   - name: "Mathew Woodfine"
-    affiliation: "Woodfine Management Corp., New York, NY, USA"
+    affiliation: "Woodfine Management Corp., New York, New York"
     email: ""
     orcid: ""
     credit_roles:

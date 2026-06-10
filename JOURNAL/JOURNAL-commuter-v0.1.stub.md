@@ -10,7 +10,7 @@ impact_factor: "6.88"
 alternate_venue: "Transportation Research Part A: Policy and Practice (Elsevier, Q1); Journal of Transport and Land Use (Q1)"
 authors:
   - name: "Peter M. Woodfine"
-    affiliation: "Woodfine Management Corp., New York, NY, USA"
+    affiliation: "Woodfine Management Corp., New York, New York"
     email: corporate.secretary@woodfinegroup.com
     orcid: ""
     credit_roles:
@@ -20,7 +20,7 @@ authors:
       - Writing – Original Draft
       - Writing – Review & Editing
   - name: "Jennifer M. Woodfine"
-    affiliation: "Woodfine Management Corp., New York, NY, USA"
+    affiliation: "Woodfine Management Corp., New York, New York"
     email: ""
     orcid: ""
     credit_roles:
@@ -28,7 +28,7 @@ authors:
       - Validation
       - Writing – Review & Editing
   - name: "Mathew Woodfine"
-    affiliation: "Woodfine Management Corp., New York, NY, USA"
+    affiliation: "Woodfine Management Corp., New York, New York"
     email: ""
     orcid: ""
     credit_roles:
