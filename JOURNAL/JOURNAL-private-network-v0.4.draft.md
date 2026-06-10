@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.5"
+version: "0.5.1"
 title: "Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody"
 target_journal: "IEEE Transactions on Information Forensics and Security"
 target_publisher: "IEEE Signal Processing Society"
@@ -54,12 +54,12 @@ word_count_body: 6400
 word_count_target: 9000
 submission_status: not-submitted
 writing_pass_date: 2026-05-29
-language_pass_date: 2026-05-28
+language_pass_date: 2026-06-10
 preprint_posted: true
 preprint_posted_date: 2026-05-28
 doi: ""
 license: "CC BY 4.0"
-cite_as: "Woodfine, Peter M., Woodfine, Mathew, & Woodfine, Jennifer M. (2026). Customer-Rooted Mesh Architecture for Distributed Operational Systems. Working Paper v0.5, 30 May 2026. Woodfine Management Corp., New York, NY."
+cite_as: "Woodfine, Peter M., Woodfine, Mathew, & Woodfine, Jennifer M. (2026). Customer-Rooted Mesh Architecture for Distributed Operational Systems. Working Paper v0.5.1, 10 June 2026. Woodfine Management Corp., New York, NY."
 revision_history:
   - version: "0.1"
     date: "2026-05-27"
@@ -76,6 +76,9 @@ revision_history:
   - version: "0.5"
     date: "2026-05-30"
     changes: "Readability pass: VPN, NIST/SP, NAT, AES/AES-NI first-use expansions in §1.2, §2.1, §3.1, §5.3"
+  - version: "0.5.1"
+    date: "2026-06-10"
+    changes: "Language pass §4–§5 (project-editorial): commercial product names genericized in §5.5 (no-competitive-comparisons-by-name rule); forbidden_terms_cleared confirmed for full document."
 cites:
   - donenfeld-2017-wireguard
   - rose-2020-nist-800-207
@@ -562,7 +565,7 @@ Table 1 compares the CRMA prototype's tunnel establishment latency against the W
 
 The CRMA measurements are higher than the Mackey et al. WireGuard baseline for two reasons. First, the co-located namespace environment runs on shared cloud hardware where hypervisor scheduling adds latency variance not present in bare-metal measurements. Second, the first several CRMA trials show cold-start effects from kernel crypto JIT warm-up; excluding the first five trials gives a mean of 38 ms, closer to the Mackey et al. baseline. The principal finding from this comparison is that the CRMA's WireGuard-based tunnel establishment remains an order of magnitude faster than OpenVPN across both measurement environments, and that the CRMA's key-custody properties (P1–P4, Section 3) are achieved without adding protocol-level latency: the CRMA uses the same Noise_IKpsk2 handshake as a plain WireGuard deployment.
 
-Policy-change propagation (8 ms mean for `wg set`) has no direct analogue in the Mackey et al. study, which focused on steady-state throughput and initial connection establishment. Commercial ZTA products (Cloudflare Zero Trust, Zscaler Private Access) do not publish policy-propagation latency metrics in peer-reviewed literature; the absence of comparable published figures is itself a motivating factor for this study's empirical approach.
+Policy-change propagation (8 ms mean for `wg set`) has no direct analogue in the Mackey et al. study, which focused on steady-state throughput and initial connection establishment. Commercial zero-trust access products do not publish policy-propagation latency metrics in peer-reviewed literature; the absence of comparable published figures is itself a motivating factor for this study's empirical approach.
 
 ---
 
