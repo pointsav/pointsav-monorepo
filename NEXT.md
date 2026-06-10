@@ -101,9 +101,9 @@ Last updated: 2026-06-10 [totebox@claude-code]
 
 ## Phase 9 — Production Deploy (Command-gated)
 
-- [ ] Gate 1: Stage 6 promote — sub-clone tip ca6ae410; outbox signal
-      `project-knowledge-20260608-stage-6-ready-ca6ae410` sent; awaiting Command.
-      [2026-06-08 totebox@claude-code]
+- [ ] Gate 1: Stage 6 promote — sub-clone tip dea5e8ae; Stage 6 READY signal sent
+      (msg-id: command-20260610-stage-6-ready-sub-clone-tip-dea5e8ae-pha); awaiting Command.
+      [2026-06-10 totebox@claude-code]
 - [x] Gate 2: DESIGN-TOKEN-CHANGE master_cosign — CLEARED 2026-06-09; af51d86;
       tokens committed by totebox@project-design. [2026-06-09]
 - [x] Binary rebuild — rebuilt 2026-06-10 from tip ca6ae410. [2026-06-10 totebox@claude-code]
@@ -114,8 +114,8 @@ Last updated: 2026-06-10 [totebox@claude-code]
 
 ## Phase 0 — Federation Engine (next unblocked milestone)
 
-- [ ] Refactor `AppState` to `mounts: Vec<Mount>`; delete hardcoded content/guide dir fields [2026-06-08]
-- [ ] Wire `blueprints.rs` into render pipeline [2026-06-08]
+- [x] Refactor `AppState` to `mounts: Vec<Mount>`; delete hardcoded content/guide dir fields — dea5e8ae [2026-06-10]
+- [x] Wire `blueprints.rs` into render pipeline — dea5e8ae [2026-06-10]
 - [ ] Implement `inject_wiki_prefixes` cross-mount resolution [2026-06-08]
 - [ ] Dead-link gate (`check --strict` 0 dead links as CI gate) [2026-06-08]
 
