@@ -21,7 +21,7 @@
 //       "type": "stdio"
 //   } } }
 
-use rmcp::{ServerHandler, ServiceExt, tool, tool_handler, tool_router};
+use rmcp::{tool, tool_handler, tool_router, ServerHandler, ServiceExt};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -198,7 +198,8 @@ fn parse_mailbox(content: &str) -> Vec<MailboxMsg> {
         } else if in_fm {
             if let Some(ref mut msg) = cur {
                 if let Some((k, v)) = line.split_once(": ") {
-                    msg.fields.insert(k.trim().to_string(), v.trim().to_string());
+                    msg.fields
+                        .insert(k.trim().to_string(), v.trim().to_string());
                 }
             }
         } else if let Some(ref mut msg) = cur {
@@ -238,7 +239,12 @@ impl FoundryServer {
             .timeout(std::time::Duration::from_secs(120))
             .build()
             .expect("reqwest client init");
-        Self { client, doorman_url, module_id, foundry_root }
+        Self {
+            client,
+            doorman_url,
+            module_id,
+            foundry_root,
+        }
     }
 
     fn url(&self, path: &str) -> String {
@@ -263,12 +269,16 @@ impl FoundryServer {
     /// Returns a JSON array of entity context objects.
     /// Set format_for_prompt=true to get a pre-formatted [ENTITY CONTEXT] block
     /// for direct injection into ask_local prompts.
-    #[tool(description = "Query the Foundry DataGraph for entity context. Returns matching entities \
+    #[tool(
+        description = "Query the Foundry DataGraph for entity context. Returns matching entities \
         and their attributes. Set format_for_prompt=true to get a pre-formatted [ENTITY CONTEXT] \
-        block ready to include in an ask_local prompt.")]
+        block ready to include in an ask_local prompt."
+    )]
     async fn query_datagraph(
         &self,
-        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<QueryDatagraphInput>,
+        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<
+            QueryDatagraphInput,
+        >,
     ) -> String {
         let limit = p.limit.unwrap_or(10);
         let body = serde_json::json!({ "q": p.q, "limit": limit });
@@ -315,10 +325,14 @@ impl FoundryServer {
     /// Mutate the Foundry DataGraph (create / update / delete entities).
     ///
     /// Forwards `mutation` payload to `POST /v1/graph/mutate` on the Doorman.
-    #[tool(description = "Mutate the Foundry DataGraph. Provide a mutation object matching the service-content mutate schema.")]
+    #[tool(
+        description = "Mutate the Foundry DataGraph. Provide a mutation object matching the service-content mutate schema."
+    )]
     async fn mutate_datagraph(
         &self,
-        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<MutateDatagraphInput>,
+        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<
+            MutateDatagraphInput,
+        >,
     ) -> String {
         match self
             .client
@@ -331,7 +345,10 @@ impl FoundryServer {
             Ok(resp) => {
                 let status = resp.status().as_u16();
                 match resp.json::<serde_json::Value>().await {
-                    Ok(v) => format!("HTTP {status}\n{}", serde_json::to_string_pretty(&v).unwrap_or_else(|_| "{}".into())),
+                    Ok(v) => format!(
+                        "HTTP {status}\n{}",
+                        serde_json::to_string_pretty(&v).unwrap_or_else(|_| "{}".into())
+                    ),
                     Err(e) => format!("[ERROR] HTTP {status} — failed to parse response: {e}"),
                 }
             }
@@ -342,10 +359,14 @@ impl FoundryServer {
     /// Fetch rich entity enrichment context by entity name.
     ///
     /// Convenience wrapper around query_datagraph scoped to a single entity.
-    #[tool(description = "Fetch full entity enrichment context from the DataGraph by entity name or identifier.")]
+    #[tool(
+        description = "Fetch full entity enrichment context from the DataGraph by entity name or identifier."
+    )]
     async fn get_entity_context(
         &self,
-        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<GetEntityContextInput>,
+        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<
+            GetEntityContextInput,
+        >,
     ) -> String {
         let body = serde_json::json!({ "q": p.entity, "limit": 5 });
         match self
@@ -357,7 +378,11 @@ impl FoundryServer {
             .await
         {
             Ok(resp) => match resp.json::<serde_json::Value>().await {
-                Ok(v) => format!("Entity context for '{}':\n{}", p.entity, serde_json::to_string_pretty(&v).unwrap_or_else(|_| "[]".into())),
+                Ok(v) => format!(
+                    "Entity context for '{}':\n{}",
+                    p.entity,
+                    serde_json::to_string_pretty(&v).unwrap_or_else(|_| "[]".into())
+                ),
                 Err(e) => format!("[ERROR] failed to parse entity context: {e}"),
             },
             Err(e) => format!("[ERROR] entity context fetch failed: {e}"),
@@ -365,7 +390,9 @@ impl FoundryServer {
     }
 
     /// [deprecated: use get_doorman_status] Get training corpus statistics and daily cost.
-    #[tool(description = "[deprecated: use get_doorman_status] Retrieve Foundry corpus statistics and daily inference cost summary from the Doorman.")]
+    #[tool(
+        description = "[deprecated: use get_doorman_status] Retrieve Foundry corpus statistics and daily inference cost summary from the Doorman."
+    )]
     async fn get_corpus_stats(&self) -> String {
         let health_fut = self.client.get(self.url("/healthz")).send();
         let cost_fut = self.client.get(self.url("/v1/cost/daily")).send();
@@ -391,10 +418,14 @@ impl FoundryServer {
     /// Forwards to `POST /v1/extract` on the Doorman.
     /// Requires a JSON Schema that constrains the output entity array.
     /// Returns extracted entities or a deferred status if Yo-Yo is unavailable.
-    #[tool(description = "Submit a prose document for entity extraction via the Foundry pipeline. Requires a JSON Schema for the output entity array.")]
+    #[tool(
+        description = "Submit a prose document for entity extraction via the Foundry pipeline. Requires a JSON Schema for the output entity array."
+    )]
     async fn submit_extraction(
         &self,
-        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<SubmitExtractionInput>,
+        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<
+            SubmitExtractionInput,
+        >,
     ) -> String {
         let module_id = p.module_id.as_deref().unwrap_or(&self.module_id);
         let body = serde_json::json!({
@@ -412,7 +443,10 @@ impl FoundryServer {
             Ok(resp) => {
                 let status = resp.status().as_u16();
                 match resp.json::<serde_json::Value>().await {
-                    Ok(v) => format!("HTTP {status}\n{}", serde_json::to_string_pretty(&v).unwrap_or_else(|_| "{}".into())),
+                    Ok(v) => format!(
+                        "HTTP {status}\n{}",
+                        serde_json::to_string_pretty(&v).unwrap_or_else(|_| "{}".into())
+                    ),
                     Err(e) => format!("[ERROR] HTTP {status} — parse error: {e}"),
                 }
             }
@@ -421,7 +455,9 @@ impl FoundryServer {
     }
 
     /// [deprecated: use get_doorman_status] Check Doorman health: tier availability and circuit state.
-    #[tool(description = "[deprecated: use get_doorman_status] Check Doorman health including tier availability (A/B/C), readiness, and circuit breaker state.")]
+    #[tool(
+        description = "[deprecated: use get_doorman_status] Check Doorman health including tier availability (A/B/C), readiness, and circuit breaker state."
+    )]
     async fn doorman_health(&self) -> String {
         let healthz_fut = self.client.get(self.url("/healthz")).send();
         let readyz_fut = self.client.get(self.url("/readyz")).send();
@@ -457,14 +493,18 @@ impl FoundryServer {
     /// (local OLMo). Data never leaves the VM (SYS-ADR-07 compliant).
     /// Graph context injection is active — the Doorman automatically injects
     /// [ENTITY CONTEXT] from service-content before forwarding to the model.
-    #[tool(description = "Submit a prompt to the local OLMo 7B model via the Doorman. \
+    #[tool(
+        description = "Submit a prompt to the local OLMo 7B model via the Doorman. \
         Returns the model response plus tier, inference time, and cost. \
         Graph context injection is active — the Doorman automatically prepends \
         [ENTITY CONTEXT] from the DataGraph before routing to the model. \
-        No data leaves the VM (SYS-ADR-07 compliant).")]
+        No data leaves the VM (SYS-ADR-07 compliant)."
+    )]
     async fn ask_local(
         &self,
-        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<AskLocalInput>,
+        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<
+            AskLocalInput,
+        >,
     ) -> String {
         let max_tokens = p.max_tokens.unwrap_or(300).min(400);
         let body = serde_json::json!({
@@ -503,13 +543,17 @@ impl FoundryServer {
     /// Returns inbox pending count + first N messages, outbox summary, NOTAM status,
     /// session context digest, and workspace state flags. Saves 3,000–8,000 tokens
     /// per session by avoiding raw file reads.
-    #[tool(description = "Get a structured session brief at startup. Returns inbox pending count, \
+    #[tool(
+        description = "Get a structured session brief at startup. Returns inbox pending count, \
         first N messages with body previews, outbox summary, NOTAM status, session context digest, \
         and workspace state flags. Use instead of reading inbox.md, outbox.md, NOTAM.md, \
-        session-context.md, and workspace-state.md separately.")]
+        session-context.md, and workspace-state.md separately."
+    )]
     async fn get_session_brief(
         &self,
-        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<GetSessionBriefInput>,
+        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<
+            GetSessionBriefInput,
+        >,
     ) -> String {
         let role = p.role.as_deref().unwrap_or("command");
         let archive = p.archive.as_deref();
@@ -520,14 +564,16 @@ impl FoundryServer {
         // Read inbox
         let inbox_content = read_file_opt(&agent.join("inbox.md")).unwrap_or_default();
         let all_inbox = parse_mailbox(&inbox_content);
-        let pending_inbox: Vec<&MailboxMsg> = all_inbox.iter()
+        let pending_inbox: Vec<&MailboxMsg> = all_inbox
+            .iter()
             .filter(|m| {
                 let s = m.get("status");
                 s == "pending" || s == "in-progress" || s == "operator-pending"
             })
             .collect();
         let inbox_pending_count = pending_inbox.len();
-        let messages_json: Vec<serde_json::Value> = pending_inbox.iter()
+        let messages_json: Vec<serde_json::Value> = pending_inbox
+            .iter()
             .take(limit)
             .map(|m| m.to_json(true))
             .collect();
@@ -536,14 +582,13 @@ impl FoundryServer {
         // Read outbox
         let outbox_content = read_file_opt(&agent.join("outbox.md")).unwrap_or_default();
         let all_outbox = parse_mailbox(&outbox_content);
-        let pending_outbox: Vec<&MailboxMsg> = all_outbox.iter()
+        let pending_outbox: Vec<&MailboxMsg> = all_outbox
+            .iter()
             .filter(|m| m.get("status") == "pending")
             .collect();
         let outbox_pending_count = pending_outbox.len();
-        let outbox_subjects: Vec<&str> = pending_outbox.iter()
-            .take(5)
-            .map(|m| m.get("re"))
-            .collect();
+        let outbox_subjects: Vec<&str> =
+            pending_outbox.iter().take(5).map(|m| m.get("re")).collect();
 
         // Read NOTAM
         let notam_active = read_file_opt(&self.foundry_root.join("NOTAM.md"))
@@ -551,18 +596,19 @@ impl FoundryServer {
             .unwrap_or(false);
 
         // Read session-context digest (first 600 chars of last session entry)
-        let session_context_digest = read_file_opt(
-            &agent.join("memory").join("session-context.md")
-        ).map(|c| {
-            c.chars().take(600).collect::<String>()
-        }).unwrap_or_else(|| "(not found)".into());
+        let session_context_digest =
+            read_file_opt(&agent.join("memory").join("session-context.md"))
+                .map(|c| c.chars().take(600).collect::<String>())
+                .unwrap_or_else(|| "(not found)".into());
 
         // Read workspace-state flags (command only)
         let workspace_state_flags: Vec<String> = if role == "command" {
             read_file_opt(&agent.join("workspace-state.md"))
                 .map(|c| {
                     c.lines()
-                        .filter(|l| l.contains("CRITICAL") || l.contains("outbox=") || l.contains("⚠"))
+                        .filter(|l| {
+                            l.contains("CRITICAL") || l.contains("outbox=") || l.contains("⚠")
+                        })
                         .take(10)
                         .map(|l| l.trim().to_string())
                         .collect()
@@ -604,13 +650,17 @@ impl FoundryServer {
     /// Writes the message to the target archive's inbox.md with proper YAML frontmatter
     /// and appends an audit entry to data/mailbox-ledger.jsonl (M-10).
     /// This is the canonical write path — use it instead of hand-editing mailbox files.
-    #[tool(description = "Send a mailbox message to a Command or Totebox archive inbox. \
+    #[tool(
+        description = "Send a mailbox message to a Command or Totebox archive inbox. \
         Routes through bin/mailbox-send.sh for M-2 misroute validation and M-10 audit ledger. \
         Use this instead of manually composing YAML frontmatter. \
-        to must be 'command@claude-code' or 'totebox@<archive-name>'.")]
+        to must be 'command@claude-code' or 'totebox@<archive-name>'."
+    )]
     async fn send_mailbox_message(
         &self,
-        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<SendMailboxMessageInput>,
+        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<
+            SendMailboxMessageInput,
+        >,
     ) -> String {
         let script = self.foundry_root.join("bin").join("mailbox-send.sh");
         if !script.exists() {
@@ -620,9 +670,12 @@ impl FoundryServer {
         let priority = p.priority.as_deref().unwrap_or("normal");
         let mut cmd = tokio::process::Command::new("bash");
         cmd.arg(script.as_os_str())
-            .arg("--to").arg(&p.to)
-            .arg("--re").arg(&p.re)
-            .arg("--priority").arg(priority)
+            .arg("--to")
+            .arg(&p.to)
+            .arg("--re")
+            .arg(&p.re)
+            .arg("--priority")
+            .arg(priority)
             .arg("--body-stdin")
             .current_dir(&self.foundry_root)
             .stdin(std::process::Stdio::piped())
@@ -652,7 +705,8 @@ impl FoundryServer {
                                 output.status.code().unwrap_or(-1));
                         }
                         // Parse msg-id from output: "  ✓ <archive> (msg-id: <ID>)"
-                        let msg_id = stdout.lines()
+                        let msg_id = stdout
+                            .lines()
                             .find(|l| l.contains("msg-id:"))
                             .and_then(|l| {
                                 let start = l.find("msg-id:")? + 7;
@@ -663,10 +717,16 @@ impl FoundryServer {
                             .unwrap_or_else(|| "(unknown)".into());
 
                         let dest_file = match p.to.as_str() {
-                            "command@claude-code" => self.foundry_root.join(".agent").join("inbox.md"),
+                            "command@claude-code" => {
+                                self.foundry_root.join(".agent").join("inbox.md")
+                            }
                             to if to.starts_with("totebox@") => {
                                 let archive = &to["totebox@".len()..];
-                                self.foundry_root.join("clones").join(archive).join(".agent").join("inbox.md")
+                                self.foundry_root
+                                    .join("clones")
+                                    .join(archive)
+                                    .join(".agent")
+                                    .join("inbox.md")
                             }
                             _ => PathBuf::from("(unknown)"),
                         };
@@ -689,23 +749,29 @@ impl FoundryServer {
     ///
     /// Replaces calling doorman_health() and get_corpus_stats() separately.
     /// Handles /readyz returning 404 gracefully (known bug; binary rebuild pending).
-    #[tool(description = "Get comprehensive Doorman status: tier A/B/C availability, queue depths, \
+    #[tool(
+        description = "Get comprehensive Doorman status: tier A/B/C availability, queue depths, \
         daily cost, and throughput in one call. Replaces doorman_health() + get_corpus_stats(). \
-        Degrades gracefully if /readyz returns 404 (known bug; binary rebuild pending).")]
+        Degrades gracefully if /readyz returns 404 (known bug; binary rebuild pending)."
+    )]
     async fn get_doorman_status(&self) -> String {
-        let healthz_fut = self.client
+        let healthz_fut = self
+            .client
             .get(self.url("/healthz"))
             .timeout(std::time::Duration::from_secs(5))
             .send();
-        let readyz_fut = self.client
+        let readyz_fut = self
+            .client
             .get(self.url("/readyz"))
             .timeout(std::time::Duration::from_secs(5))
             .send();
-        let flow_fut = self.client
+        let flow_fut = self
+            .client
             .get(self.url("/v1/status/flow"))
             .timeout(std::time::Duration::from_secs(5))
             .send();
-        let cost_fut = self.client
+        let cost_fut = self
+            .client
             .get(self.url("/v1/status/cost"))
             .timeout(std::time::Duration::from_secs(5))
             .send();
@@ -738,31 +804,40 @@ impl FoundryServer {
         };
 
         // Extract well-known fields with fallbacks
-        let tier_a_ready = flow_val.get("tier_a_ready")
+        let tier_a_ready = flow_val
+            .get("tier_a_ready")
             .and_then(|v| v.as_bool())
             .unwrap_or(doorman_reachable);
-        let tier_b_ready = flow_val.get("tier_b_ready")
+        let tier_b_ready = flow_val
+            .get("tier_b_ready")
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
-        let tier_b_reason = flow_val.get("tier_b_reason")
+        let tier_b_reason = flow_val
+            .get("tier_b_reason")
             .and_then(|v| v.as_str())
             .unwrap_or(if tier_b_ready { "up" } else { "not available" });
-        let tier_c_ready = flow_val.get("tier_c_ready")
+        let tier_c_ready = flow_val
+            .get("tier_c_ready")
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
-        let queue_pending = flow_val.get("queue_pending")
+        let queue_pending = flow_val
+            .get("queue_pending")
             .and_then(|v| v.as_u64())
             .unwrap_or(0);
-        let queue_poison = flow_val.get("queue_poison")
+        let queue_poison = flow_val
+            .get("queue_poison")
             .and_then(|v| v.as_u64())
             .unwrap_or(0);
-        let tok_per_s = flow_val.get("tier_a_tok_per_s")
+        let tok_per_s = flow_val
+            .get("tier_a_tok_per_s")
             .and_then(|v| v.as_f64())
             .unwrap_or(0.0);
-        let daily_usd = cost_val.get("daily_usd")
+        let daily_usd = cost_val
+            .get("daily_usd")
             .and_then(|v| v.as_f64())
             .unwrap_or(0.0);
-        let daily_requests = cost_val.get("daily_request_count")
+        let daily_requests = cost_val
+            .get("daily_request_count")
             .and_then(|v| v.as_u64())
             .unwrap_or(0);
 
@@ -788,12 +863,16 @@ impl FoundryServer {
     /// Query mailboxes across archives — replaces 23+ Read calls for a full sweep.
     ///
     /// scope="all" scans every archive clone. priority_filter="high" surfaces urgent items.
-    #[tool(description = "Query mailboxes across one or all archives. scope='all' returns messages \
+    #[tool(
+        description = "Query mailboxes across one or all archives. scope='all' returns messages \
         from every archive in one call. Filters by status (default: pending) and priority. \
-        Replaces 23+ Read tool calls for a full Command Session sweep.")]
+        Replaces 23+ Read tool calls for a full Command Session sweep."
+    )]
     async fn query_mailbox(
         &self,
-        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<QueryMailboxInput>,
+        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<
+            QueryMailboxInput,
+        >,
     ) -> String {
         let scope = p.scope.as_deref().unwrap_or("workspace");
         let mailbox_target = p.mailbox.as_deref().unwrap_or("inbox");
@@ -823,7 +902,11 @@ impl FoundryServer {
                 }
             }
             archive_name => {
-                let agent = self.foundry_root.join("clones").join(archive_name).join(".agent");
+                let agent = self
+                    .foundry_root
+                    .join("clones")
+                    .join(archive_name)
+                    .join(".agent");
                 agent_paths.push((archive_name.to_string(), agent));
             }
         }
@@ -891,13 +974,17 @@ impl FoundryServer {
     ///
     /// On success, the Doorman writes a DPO corpus tuple and optionally promotes
     /// the attempt to LoRA training queue. Returns the dispatch outcome.
-    #[tool(description = "Cast a signed apprenticeship verdict (accept|refine|reject|defer-tier-c) \
+    #[tool(
+        description = "Cast a signed apprenticeship verdict (accept|refine|reject|defer-tier-c) \
         on a shadow-captured attempt. Signs the verdict body with the active staging identity key \
         and POSTs to Doorman POST /v1/verdict. Returns DPO pair status and promotion outcome. \
-        Use query_mailbox or get_session_brief to find pending brief_id/attempt_id values.")]
+        Use query_mailbox or get_session_brief to find pending brief_id/attempt_id values."
+    )]
     async fn cast_apprenticeship_verdict(
         &self,
-        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<CastVerdictInput>,
+        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<
+            CastVerdictInput,
+        >,
     ) -> String {
         use base64::Engine as _;
 
@@ -921,10 +1008,15 @@ impl FoundryServer {
         } else {
             let toggle = read_file_opt(&self.foundry_root.join("identity").join(".toggle"))
                 .unwrap_or_default();
-            if toggle.trim() == "1" { "pwoodfine".into() } else { "jwoodfine".into() }
+            if toggle.trim() == "1" {
+                "pwoodfine".into()
+            } else {
+                "jwoodfine".into()
+            }
         };
 
-        let key_path = self.foundry_root
+        let key_path = self
+            .foundry_root
             .join("identity")
             .join(&identity)
             .join(format!("id_{}", identity));
@@ -933,8 +1025,7 @@ impl FoundryServer {
         }
 
         // Build ISO 8601 timestamp
-        let created = chrono::Utc::now()
-            .to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+        let created = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
 
         // Build YAML body matching parse_verdict_body in slm-doorman/src/verdict.rs
         let notes = p.notes.as_deref().unwrap_or("");
@@ -950,17 +1041,19 @@ impl FoundryServer {
         }
 
         // Write body to temp file (ssh-keygen reads from a file, not stdin)
-        let tmp_body = std::env::temp_dir()
-            .join(format!("slm-verdict-{}.txt", std::process::id()));
+        let tmp_body = std::env::temp_dir().join(format!("slm-verdict-{}.txt", std::process::id()));
         if let Err(e) = std::fs::write(&tmp_body, body.as_bytes()) {
             return format!("[ERROR] failed to write body to temp file: {e}");
         }
 
         // Sign with ssh-keygen — creates <tmp_body>.sig
         let sign_out = tokio::process::Command::new("ssh-keygen")
-            .arg("-Y").arg("sign")
-            .arg("-f").arg(&key_path)
-            .arg("-n").arg("apprenticeship-verdict-v1")
+            .arg("-Y")
+            .arg("sign")
+            .arg("-f")
+            .arg(&key_path)
+            .arg("-n")
+            .arg("apprenticeship-verdict-v1")
             .arg(&tmp_body)
             .output()
             .await;
@@ -988,7 +1081,10 @@ impl FoundryServer {
             Ok(b) => b,
             Err(e) => {
                 let _ = std::fs::remove_file(&tmp_body);
-                return format!("[ERROR] could not read sig file {}: {e}", sig_path.display());
+                return format!(
+                    "[ERROR] could not read sig file {}: {e}",
+                    sig_path.display()
+                );
             }
         };
 
@@ -1004,7 +1100,8 @@ impl FoundryServer {
             "senior_identity": identity,
         });
 
-        match self.client
+        match self
+            .client
             .post(self.url("/v1/verdict"))
             .header("X-Foundry-Module-ID", &self.module_id)
             .json(&wire)
@@ -1016,7 +1113,10 @@ impl FoundryServer {
                 let status = resp.status().as_u16();
                 match resp.json::<serde_json::Value>().await {
                     Ok(v) => {
-                        format!("HTTP {status}\n{}", serde_json::to_string_pretty(&v).unwrap_or_else(|_| "{}".into()))
+                        format!(
+                            "HTTP {status}\n{}",
+                            serde_json::to_string_pretty(&v).unwrap_or_else(|_| "{}".into())
+                        )
                     }
                     Err(e) => format!("[ERROR] HTTP {status} — response parse error: {e}"),
                 }
@@ -1029,13 +1129,17 @@ impl FoundryServer {
     /// Calls `GET /v1/status/queue` for Doorman-side queue counts.
     /// Optionally reads filesystem directory entry counts as verification.
     /// Optionally counts audit-ledger entries for the current calendar month.
-    #[tool(description = "Get Foundry service status: apprenticeship queue counts from \
+    #[tool(
+        description = "Get Foundry service status: apprenticeship queue counts from \
         Doorman GET /v1/status/queue, optional filesystem directory verification, \
         and optional audit-ledger entry count for the current month. \
-        Set include_fs_counts=true to cross-check Doorman counts against disk.")]
+        Set include_fs_counts=true to cross-check Doorman counts against disk."
+    )]
     async fn get_service_status(
         &self,
-        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<GetServiceStatusInput>,
+        rmcp::handler::server::wrapper::Parameters(p): rmcp::handler::server::wrapper::Parameters<
+            GetServiceStatusInput,
+        >,
     ) -> String {
         let include_apprenticeship = p.include_apprenticeship.unwrap_or(true);
         let include_fs = p.include_fs_counts.unwrap_or(false);
@@ -1044,13 +1148,16 @@ impl FoundryServer {
         let mut result = serde_json::json!({});
 
         if include_apprenticeship {
-            let resp = self.client
+            let resp = self
+                .client
                 .get(self.url("/v1/status/queue"))
                 .timeout(std::time::Duration::from_secs(5))
                 .send()
                 .await;
             result["apprenticeship_queue"] = match resp {
-                Ok(r) => r.json::<serde_json::Value>().await
+                Ok(r) => r
+                    .json::<serde_json::Value>()
+                    .await
                     .unwrap_or_else(|e| serde_json::json!({ "parse_error": e.to_string() })),
                 Err(e) => serde_json::json!({ "error": e.to_string() }),
             };
@@ -1074,8 +1181,11 @@ impl FoundryServer {
 
         if include_audit {
             let month = chrono::Utc::now().format("%Y-%m").to_string();
-            let ledger = self.foundry_root
-                .join("data").join("audit-ledger").join("workspace")
+            let ledger = self
+                .foundry_root
+                .join("data")
+                .join("audit-ledger")
+                .join("workspace")
                 .join(format!("{}.jsonl", month));
             let count = read_file_opt(&ledger)
                 .map(|c| c.lines().filter(|l| !l.trim().is_empty()).count())

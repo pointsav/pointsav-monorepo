@@ -1,0 +1,15 @@
+# Adapter registry — updated by eval-adapter.sh after each eval gate.
+# Each entry is written atomically by eval-adapter.sh when an adapter
+# passes the pass@5 eval gate against the held-out set.
+#
+# Field reference:
+#   name:          slug identifying this adapter (e.g. coding-lora-2026-06-10)
+#   version:       monotonic integer, incremented per entry
+#   adapter_dir:   absolute path to the PEFT checkpoint directory
+#   base_model:    HuggingFace model ID used as the LoRA base
+#   trained_on:    ISO 8601 date of the training run
+#   corpus_pairs:  number of DPO pairs used in training
+#   eval_pass_at5: pass@5 score on the held-out set (0.0–1.0)
+#   promoted:      true once the adapter is the active production adapter
+#   notes:         free-form operator notes
+adapters: []
