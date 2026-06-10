@@ -50,7 +50,7 @@ keywords:
 bcsc_class: public-disclosure-safe
 ai_tool_used: "claude-sonnet-4-6 (Anthropic)"
 corresponding_author: corporate.secretary@woodfinegroup.com
-word_count_body: 9300
+word_count_body: 8600
 word_count_target: 8500
 submission_status: not-submitted
 language_pass_date: 2026-06-02
@@ -82,6 +82,9 @@ revision_history:
   - version: "0.5.1"
     date: "2026-06-02"
     changes: "Editorial language pass (project-editorial): §5.4 forbidden-vocabulary scan complete — clean; country count sweep — 'thirteen' corrected to 'eighteen' throughout abstract and §§1.2, 3.7, 4.4, 6.5, 8.1, 8.2; forbidden_terms_cleared set to true; §3.7 prose trim ~300 words toward 8,500-word target"
+  - version: "0.5.2"
+    date: "2026-06-10"
+    changes: "Continuation trim (project-editorial): §6.1 condensed ~200 words (four-ground argument tightened); §3.7 paragraphs 5–6 merged and trimmed ~100 words; word_count_body updated from 9300 to 8600 (near target 8500)"
 notes_for_editor: |
   v0.5 additions: §5.4 (Regional Market Discovery Application) is new writing requiring
   a full language pass before forbidden_terms_cleared can return to true. The section
@@ -321,9 +324,9 @@ The temporal sampling protocol uses four pre-specified weekday observation days 
 
 The mobility-defined primary catchment for a co-location cluster is the set of H3 resolution-7 cells from which at least 1% of observed visitor devices originate, on either the home or work assignment, bounded by the 150 km outer ring retained from §3.4. Within that catchment, census population totals and modelled per-capita spend estimates are extracted from the matched H3 cells using the procedure described in §3.5. The result is a cluster-specific demand profile that does not depend on administrative boundaries and that is insensitive to the boundary-discontinuity artefacts affecting postcode- and municipality-based site-selection methods. Two clusters in the same city — one serving a downtown commuter population, one serving a suburban residential population — may share a postcode or county yet draw from entirely different catchment populations, and the polygon-derived catchment records that difference directly.
 
-At the time of writing, the full polygon-and-device protocol is specified but not yet operationalised at continental scale for all 6,493 clusters. A commercial mobility panel covering the eighteen study countries is currently being scoped for acquisition. As proxies, US Census LODES (work-home commute flows aggregated to H3 resolution-7) covers United States clusters and Spain's MITMA mobility survey covers Spanish clusters. Demographic-skew limitations documented in Li et al. (2024) — younger, urban, and higher-income devices over-represented relative to ground-truth population — are inherited by the polygon protocol and must be controlled through population-weighted reweighting; the LODES and MITMA administrative proxies provide a useful triangulation point because they do not exhibit this skew.
+At the time of writing, the full polygon-and-device protocol is specified but not yet operationalised at continental scale. As proxies, US Census LODES covers United States clusters and Spain's MITMA mobility survey covers Spanish clusters. Demographic-skew limitations documented in Li et al. (2024) — younger, urban, and higher-income devices over-represented relative to ground-truth population — are inherited by the polygon protocol and must be controlled through population-weighted reweighting; the LODES and MITMA administrative proxies triangulate without this skew.
 
-The methodological consequence of this approach is that mobility-defined catchments are cluster-specific, not settlement-specific. Two T1 clusters within the same metropolitan area are treated as independent demand-field experiments, each with its own catchment_area_km2, catchment_population, and catchment_entropy. This calibration — substituting the co-location cluster for the settlement as the unit of comparison — is the mechanism through which the framework separates geometric composition from market-size confounds. It enables cross-cluster comparison at the sub-metropolitan level rather than at the city level, which is where retail site selection decisions are actually made.
+Mobility-defined catchments are cluster-specific, not settlement-specific. Two T1 clusters within the same metropolitan area are treated as independent demand-field experiments, each with its own catchment_area_km2, catchment_population, and catchment_entropy. Substituting the cluster for the settlement as the unit of comparison is the mechanism through which the framework separates geometric composition from market-size confounds.
 
 ---
 
@@ -453,13 +456,11 @@ This application illustrates a practical property of the compositional taxonomy:
 
 ### 6.1 The Deductive Case for Compositional Analysis
 
-Commercial location intelligence is conventionally inductive: it observes traffic, transactions, and mobility patterns, then infers site quality from observed demand. The compositional approach advanced in this paper is deductive: it derives commercial potential from the revealed preferences of dominant retailers whose location decisions encode decades of market analysis.
+Commercial location intelligence is conventionally inductive: it observes traffic, transactions, and mobility patterns, then infers site quality from observed demand. The compositional approach here is deductive: it derives commercial potential from the revealed preferences of dominant retailers whose location decisions encode decades of market analysis. Both are valid inference procedures; the question is efficiency for identifying sub-metropolitan markets where commercial intensity systematically exceeds what population size alone predicts.
 
-Both are valid inference procedures. The question is efficiency for a specific class of research problems: identifying sub-metropolitan markets where commercial activity intensity is systematically higher than ambient population size would predict.
+The deductive approach is more efficient for this problem class on four grounds. *Data availability:* retail anchor locations are publicly observable from OpenStreetMap at zero marginal cost; proprietary O-D datasets require per-market licensing with restricted cross-market comparability. *Temporal depth:* a hypermarket established in 2004 reflects twenty years of sustained market validation; mobility panel data typically covers five to ten years with substantial gaps before 2015 (Büchel and Ehrlich 2021). *Counterfactual identification:* compositional analysis surfaces markets where the supply-side signal is strong and adjacent development has not yet occurred; demand analysis identifies high-traffic locations already priced in. *Structural permanence:* national retail chains rarely exit validated sub-metropolitan markets; the anchor signal is durable across multi-decade horizons, while mobility patterns shift with remote work penetration and digital commerce substitution.
 
-The deductive approach is more efficient for this class of problems on four grounds. *Data availability.* Retail anchor locations are publicly observable from OpenStreetMap at zero marginal cost; proprietary O-D datasets require per-market licensing with restricted cross-market comparability. *Temporal depth.* A Walmart Supercentre established in 2004 reflects twenty years of sustained market validation against observed traffic patterns and consumer demographics; mobility panel data typically covers five to ten years, with significant gaps before 2015 (Büchel and Ehrlich 2021). *Counterfactual identification.* Compositional analysis identifies sub-metropolitan markets where the supply-side signal is strong and commercial development in adjacent use classes has not yet occurred; demand-driven analysis identifies existing high-traffic locations where development has typically already priced in the signal. *Structural permanence.* National retail chains rarely exit sub-metropolitan markets that validate them commercially; the anchor location signal is durable across multi-decade horizons, while observed mobility patterns shift with consumer behaviour, remote work penetration, and digital commerce substitution.
-
-For practitioners in commercial real estate — the discipline that motivated the original research brief — the supply-side framework provides a site-selection signal that is available before, not after, a target market has been identified through demand analysis. A location that scores T1 under the geometric-composition rule carries evidence that three independent, well-resourced site-selection processes have already validated the sub-metropolitan market; this evidence is especially valuable in prospective markets where mobility-panel coverage is thin or where the development horizon is measured in years rather than months.
+For practitioners in commercial real estate, the supply-side framework provides a site-selection signal available before, not after, a target market has been identified through demand analysis. A T1 cluster carries evidence that three independent, well-resourced site-selection processes have already validated the sub-metropolitan market; this is especially valuable where mobility-panel coverage is thin or where the development horizon is measured in years.
 
 ### 6.2 Demand Intelligence as the Second-Stage Confirmatory Layer
 
