@@ -1,10 +1,10 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster: project-knowledge
-cluster_name: project-knowledge
-cluster_branch: cluster/project-knowledge
-created: 2026-05-18
-state: active (Phases 1–8 shipped; Phase 9 deploy pending Stage 6 + DESIGN-TOKEN-CHANGE cosign)
+cluster: project-console
+cluster_name: project-marketing
+cluster_branch: cluster/project-marketing
+created: 2026-05-06
+state: active (v0.0.1 MVP shipped 2026-05-06; cargo check clean; bootstrap + deploy pending Master)
 slm_endpoint: http://localhost:8011
 module_id: knowledge
 doctrine_version: 0.0.14
