@@ -101,8 +101,8 @@ Last updated: 2026-06-10 [totebox@claude-code]
 
 ## Phase 9 — Production Deploy (Command-gated)
 
-- [ ] Gate 1: Stage 6 promote — sub-clone tip dea5e8ae; Stage 6 READY signal sent
-      (msg-id: command-20260610-stage-6-ready-sub-clone-tip-dea5e8ae-pha); awaiting Command.
+- [ ] Gate 1: Stage 6 promote — sub-clone tip df6d46d7; Stage 6 READY signal sent
+      (msg-id: command-20260610-stage-6-ready-sub-clone-tip-df6d46d7-fmt); awaiting Command.
       [2026-06-10 totebox@claude-code]
 - [x] Gate 2: DESIGN-TOKEN-CHANGE master_cosign — CLEARED 2026-06-09; af51d86;
       tokens committed by totebox@project-design. [2026-06-09]
