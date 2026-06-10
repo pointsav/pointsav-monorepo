@@ -285,7 +285,7 @@ pub fn render_json_feed(items: &[FeedItem], site_title: &str) -> Value {
 /// Collects the 25 most-recently-modified TOPICs and renders an RFC 4287
 /// Atom document. Content-Type: `application/atom+xml; charset=utf-8`.
 pub async fn get_atom(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
-    let items = collect_recent_items(&state.content_dir, 25).await?;
+    let items = collect_recent_items(state.primary_path(), 25).await?;
     let xml = render_atom(&items, &state.site_title);
     let mut resp = xml.into_response();
     resp.headers_mut().insert(
@@ -301,7 +301,7 @@ pub async fn get_atom(State(state): State<Arc<AppState>>) -> Result<Response, Wi
 /// document. Content-Type is set automatically by axum's `Json` extractor
 /// (`application/json`).
 pub async fn get_json_feed(State(state): State<Arc<AppState>>) -> Result<Json<Value>, WikiError> {
-    let items = collect_recent_items(&state.content_dir, 25).await?;
+    let items = collect_recent_items(state.primary_path(), 25).await?;
     let value = render_json_feed(&items, &state.site_title);
     Ok(Json(value))
 }

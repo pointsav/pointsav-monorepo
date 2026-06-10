@@ -47,12 +47,12 @@ async fn home_inner(
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     // Prefer locale-specific index (index.es.md) when available.
     let home_path = state
-        .content_dir
+        .primary_path()
         .join(format!("index{}.md", locale.suffix()));
     let home_path = if home_path.exists() {
         home_path
     } else {
-        state.content_dir.join("index.md")
+        state.primary_path().join("index.md")
     };
     if !home_path.exists() {
         return placeholder_index(&state, maybe_user.as_ref(), pending_count).await;
@@ -60,25 +60,26 @@ async fn home_inner(
 
     let home_text = fs::read_to_string(&home_path).await?;
     let home_parsed = crate::render::parse_page(&home_text)?;
+    let gds = state.guide_dirs_arr();
     let buckets = bucket_topics_by_category(
-        &state.content_dir,
-        state.guide_dir.as_deref(),
-        state.guide_dir_2.as_deref(),
+        state.primary_path(),
+        gds[0],
+        gds[1],
     )
     .await?;
     let recent = recent_topics_by_last_edited(&buckets, 8);
     let stats = compute_home_stats(&buckets);
     let home_html = crate::render::render_html_raw(
         &home_parsed.body_md,
-        &state.content_dir,
+        state.primary_path(),
         &state.link_roots(),
     );
     let home_html = crate::glossary::inject_glossary_tooltips(&home_html, &state.glossary);
-    let featured = load_featured(&state.content_dir, &buckets).await;
-    let dyk = load_dyk_localized(&state.content_dir, locale).await;
-    let ref_inv = load_reference_invariants(&state.content_dir).await;
+    let featured = load_featured(state.primary_path(), &buckets).await;
+    let dyk = load_dyk_localized(state.primary_path(), locale).await;
+    let ref_inv = load_reference_invariants(state.primary_path()).await;
     let cat_descriptions =
-        load_category_descriptions(&state.content_dir, RATIFIED_CATEGORIES).await;
+        load_category_descriptions(state.primary_path(), RATIFIED_CATEGORIES).await;
 
     let mut guide_summaries: Vec<TopicSummary> = buckets
         .values()
@@ -114,22 +115,18 @@ async fn home_inner(
     ))
 }
 
-/// Search category subdirectories of `state.content_dir` (and guide dirs)
-/// for a file whose stem matches `bare_slug`. Returns the path-qualified
+/// Search category subdirectories of the primary content dir (and any guide
+/// dirs) for a file whose stem matches `bare_slug`. Returns the path-qualified
 /// slug (`"category/bare_slug"`) when exactly one match is found, or
 /// `None` if zero or more than one match exist (ambiguous).
 async fn resolve_bare_slug(state: &AppState, bare_slug: &str) -> Option<String> {
-    let dirs: Vec<&PathBuf> = [
-        Some(&state.content_dir),
-        state.guide_dir.as_ref(),
-        state.guide_dir_2.as_ref(),
-    ]
-    .into_iter()
-    .flatten()
-    .collect();
+    let guide_dirs = state.link_roots();
+    let dirs: Vec<&std::path::Path> = std::iter::once(state.primary_path())
+        .chain(guide_dirs.into_iter())
+        .collect();
 
     let mut found: Option<String> = None;
-    for dir in dirs {
+    for dir in &dirs {
         let mut entries = match fs::read_dir(dir).await {
             Ok(e) => e,
             Err(_) => continue,
@@ -208,7 +205,7 @@ async fn wiki_page_inner(
     let mut effective_locale = Locale::En;
     if locale == Locale::Es && q.asof.is_none() {
         let es_path = state
-            .content_dir
+            .primary_path()
             .join(format!("{slug}{}.md", Locale::Es.suffix()));
         if es_path.exists() {
             effective_locale = Locale::Es;
@@ -217,14 +214,14 @@ async fn wiki_page_inner(
 
     // Try content_dir first; if not found, try guide_dir then guide_dir_2.
     let primary_path = state
-        .content_dir
+        .primary_path()
         .join(format!("{slug}{}.md", effective_locale.suffix()));
 
     // §3.5: past-revision view — read from git history when ?asof= is set.
     // Only content_dir is git-tracked; guide_dir articles always use the
     // disk path. Any git error (unknown rev, empty repo) becomes a 404.
     let text = if let Some(ref rev) = q.asof {
-        match crate::history::get_file_at_rev(&state.content_dir, &slug, rev) {
+        match crate::history::get_file_at_rev(state.primary_path(), &slug, rev) {
             Ok(t) if !t.is_empty() => t,
             _ => return Err(WikiError::NotFound(slug)),
         }
@@ -232,10 +229,9 @@ async fn wiki_page_inner(
         match fs::read_to_string(&primary_path).await {
             Ok(t) => t,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-                let guide_dirs: &[Option<&PathBuf>] =
-                    &[state.guide_dir.as_ref(), state.guide_dir_2.as_ref()];
+                let guide_dirs_arr = state.guide_dirs_arr();
                 let mut found: Option<String> = None;
-                for gd in guide_dirs.iter().flatten() {
+                for gd in guide_dirs_arr.iter().flatten() {
                     let gp = gd.join(format!("{slug}.md"));
                     if let Ok(t) = fs::read_to_string(&gp).await {
                         found = Some(t);
@@ -249,7 +245,7 @@ async fn wiki_page_inner(
                         // spaces, try the lowercase+hyphenated form and redirect.
                         let norm = slug.to_lowercase().replace(' ', "-");
                         if norm != slug {
-                            let norm_path = state.content_dir.join(format!("{norm}.md"));
+                            let norm_path = state.primary_path().join(format!("{norm}.md"));
                             if norm_path.exists() {
                                 let location = format!("/wiki/{norm}");
                                 return Ok(Response::builder()
@@ -318,7 +314,7 @@ async fn wiki_page_inner(
         if is_es {
             // Case B: we're on an ES article; offer EN link.
             let base_slug = slug.trim_end_matches(".es");
-            let base_path = state.content_dir.join(format!("{base_slug}.md"));
+            let base_path = state.primary_path().join(format!("{base_slug}.md"));
             if base_path.exists() {
                 let mut map = TranslationMap::new();
                 map.insert("en".to_string(), base_slug.to_string());
@@ -327,7 +323,7 @@ async fn wiki_page_inner(
         } else {
             // Case A: we're on an EN article; offer ES link if sibling exists.
             let es_slug = format!("{slug}.es");
-            let es_path = state.content_dir.join(format!("{es_slug}.md"));
+            let es_path = state.primary_path().join(format!("{es_slug}.md"));
             if es_path.exists() {
                 let mut map = TranslationMap::new();
                 map.insert("es".to_string(), es_slug);
@@ -345,7 +341,7 @@ async fn wiki_page_inner(
         .count() as u32;
     let mut claims = crate::claim::extract_claims(&parsed.body_md, &slug).claims;
     if q.asof.is_none() {
-        crate::history::blame_published_at(&state.content_dir, &slug, fm_line_count, &mut claims);
+        crate::history::blame_published_at(state.primary_path(), &slug, fm_line_count, &mut claims);
     }
 
     // §3.7: JSON content-negotiation — return structured JSON when the client
@@ -360,7 +356,7 @@ async fn wiki_page_inner(
         .unwrap_or(false);
     if wants_json {
         let blake3_hex = blake3::hash(text.as_bytes()).to_hex().to_string();
-        let revision_sha = crate::history::topic_history(&state.content_dir, &slug, 1)
+        let revision_sha = crate::history::topic_history(state.primary_path(), &slug, 1)
             .ok()
             .and_then(|mut h| h.drain(..).next())
             .map(|e| e.sha)
@@ -379,7 +375,7 @@ async fn wiki_page_inner(
 
     // Two-step render: extract headings from clean comrak output (no edit pencils),
     // then inject pencils for the final body HTML. This keeps TOC text clean.
-    let raw_html = render_html_raw(&parsed.body_md, &state.content_dir, &state.link_roots());
+    let raw_html = render_html_raw(&parsed.body_md, state.primary_path(), &state.link_roots());
     let raw_html = crate::glossary::inject_glossary_tooltips(&raw_html, &state.glossary);
     let raw_html = crate::render::inject_citation_markers(&raw_html);
     let is_journal = parsed.frontmatter.layout.as_deref() == Some("journal");

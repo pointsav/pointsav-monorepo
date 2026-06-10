@@ -23,9 +23,7 @@ async fn build_state(content_dir: &Path) -> (AppState, tempfile::TempDir) {
         .unwrap();
     let repo = app_mediakit_knowledge::git::open_or_init(content_dir).unwrap();
     let state = AppState {
-        content_dir: content_dir.to_path_buf(),
-        guide_dir: None,
-        guide_dir_2: None,
+        mounts: app_mediakit_knowledge::mounts::resolve(content_dir, None, None),
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         git: Arc::new(Mutex::new(repo)),
@@ -36,6 +34,7 @@ async fn build_state(content_dir: &Path) -> (AppState, tempfile::TempDir) {
         links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
         brand_theme: None,
         brand_instance: "documentation".to_string(),
+        blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
     };
     (state, state_dir)
 }

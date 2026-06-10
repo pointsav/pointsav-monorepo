@@ -60,7 +60,7 @@ async fn page_info(
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
 
     // Load the article file to extract frontmatter.
-    let md_path = state.content_dir.join(format!("{slug}.md"));
+    let md_path = state.primary_path().join(format!("{slug}.md"));
     let (title, category, status, last_edited, word_count) = if md_path.exists() {
         let raw = tokio::fs::read_to_string(&md_path)
             .await
@@ -116,7 +116,7 @@ async fn cite_page(
 ) -> Result<Markup, WikiError> {
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
 
-    let md_path = state.content_dir.join(format!("{slug}.md"));
+    let md_path = state.primary_path().join(format!("{slug}.md"));
     let (title, last_edited) = if md_path.exists() {
         let raw = tokio::fs::read_to_string(&md_path)
             .await
@@ -169,8 +169,8 @@ async fn cite_page(
 /// `*.es.md` bilingual siblings). Content-Type: `application/xml; charset=utf-8`.
 async fn sitemap_xml(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
     let topic_files = collect_all_topic_files(
-        &state.content_dir,
-        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+        state.primary_path(),
+        &state.guide_dirs_arr(),
     )
     .await?;
     let mut slugs: Vec<String> = topic_files.into_iter().map(|tf| tf.slug).collect();
@@ -215,8 +215,8 @@ async fn robots_txt() -> Response {
 /// `text/markdown; charset=utf-8`.
 async fn llms_txt(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
     let topic_files = collect_all_topic_files(
-        &state.content_dir,
-        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+        state.primary_path(),
+        &state.guide_dirs_arr(),
     )
     .await?;
     let mut tf_list: Vec<(String, PathBuf)> = topic_files
@@ -326,7 +326,7 @@ async fn git_markdown(
     // Slug validation rejects path traversal, uppercase, and other illegal forms.
     validate_slug(&slug)?;
 
-    let path = state.content_dir.join(format!("{slug}.md"));
+    let path = state.primary_path().join(format!("{slug}.md"));
     let bytes = match fs::read(&path).await {
         Ok(b) => b,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
@@ -353,7 +353,7 @@ async fn recent_changes_page(
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
 
     let entries = {
-        let repo = gix::open(&state.content_dir)
+        let repo = gix::open(state.primary_path())
             .map_err(|e| WikiError::WriteFailed(format!("gix open: {e}")))?;
         let head = match repo.head() {
             Ok(h) => h,
@@ -466,8 +466,8 @@ async fn all_pages_page(
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
 
     let topic_files = collect_all_topic_files(
-        &state.content_dir,
-        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+        state.primary_path(),
+        &state.guide_dirs_arr(),
     )
     .await?;
 
@@ -537,8 +537,8 @@ async fn categories_index_page(
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
 
     let topic_files = collect_all_topic_files(
-        &state.content_dir,
-        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+        state.primary_path(),
+        &state.guide_dirs_arr(),
     )
     .await?;
 
@@ -621,8 +621,8 @@ async fn statistics_page(
     let re_redlink = Regex::new(r#"class="wiki-redlink""#).expect("static regex");
 
     let topic_files = collect_all_topic_files(
-        &state.content_dir,
-        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+        state.primary_path(),
+        &state.guide_dirs_arr(),
     )
     .await?;
 
@@ -644,7 +644,7 @@ async fn statistics_page(
                     }
                 }
                 let html =
-                    crate::render::render_html_raw(&text, &state.content_dir, &state.link_roots());
+                    crate::render::render_html_raw(&text, state.primary_path(), &state.link_roots());
                 redlink_count += re_redlink.find_iter(&html).count();
             }
         }
@@ -688,7 +688,7 @@ async fn talk_page(
         return Err(WikiError::NotFound(slug));
     }
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    let talk_path = talk_file_path(&state.content_dir, &slug);
+    let talk_path = talk_file_path(state.primary_path(), &slug);
     let talk_md = if talk_path.is_file() {
         fs::read_to_string(&talk_path).await.unwrap_or_default()
     } else {
@@ -697,7 +697,7 @@ async fn talk_page(
     let body_html = if talk_md.is_empty() {
         String::new()
     } else {
-        crate::render::render_html(&talk_md, &state.content_dir, &state.link_roots())
+        crate::render::render_html(&talk_md, state.primary_path(), &state.link_roots())
     };
 
     let article_url = format!("/wiki/{slug}");
@@ -775,9 +775,9 @@ async fn talk_post(
         ));
     }
 
-    let talk_dir = state.content_dir.join("talk");
+    let talk_dir = state.primary_path().join("talk");
     tokio::fs::create_dir_all(&talk_dir).await?;
-    let talk_path = talk_file_path(&state.content_dir, &slug);
+    let talk_path = talk_file_path(state.primary_path(), &slug);
 
     let existing = if talk_path.is_file() {
         tokio::fs::read_to_string(&talk_path)
@@ -810,14 +810,14 @@ async fn history_page(
     CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     validate_slug(&slug)?;
-    let path = state.content_dir.join(format!("{slug}.md"));
+    let path = state.primary_path().join(format!("{slug}.md"));
     if !path.is_file() {
         return Err(WikiError::NotFound(slug));
     }
 
     const PER_PAGE: usize = 25;
     let page = hp.page.unwrap_or(1).max(1) as usize;
-    let all_history = crate::history::topic_history(&state.content_dir, &slug, 500)?;
+    let all_history = crate::history::topic_history(state.primary_path(), &slug, 500)?;
     let total = all_history.len();
     let start = (page - 1) * PER_PAGE;
     let history: Vec<_> = all_history.into_iter().skip(start).take(PER_PAGE).collect();
@@ -890,11 +890,11 @@ async fn blame_page(
     CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     validate_slug(&slug)?;
-    let path = state.content_dir.join(format!("{slug}.md"));
+    let path = state.primary_path().join(format!("{slug}.md"));
     if !path.is_file() {
         return Err(WikiError::NotFound(slug));
     }
-    let blame = crate::history::topic_blame(&state.content_dir, &slug)?;
+    let blame = crate::history::topic_blame(state.primary_path(), &slug)?;
 
     let body = html! {
         h1 { "Blame: " (slug) }
@@ -950,7 +950,7 @@ async fn diff_page(
     let b_sha = query.b.unwrap_or_else(|| "HEAD".to_string());
 
     // Retrieve file content at both revisions (blocking — run on threadpool).
-    let content_dir = state.content_dir.clone();
+    let content_dir = state.primary_path().to_path_buf();
     let slug2 = slug.clone();
     let a2 = a_sha.clone();
     let b2 = b_sha.clone();

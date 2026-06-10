@@ -101,9 +101,7 @@ async fn whatlinkshere_returns_backlinks_from_graph() {
         .unwrap();
 
     let state = AppState {
-        content_dir: content_dir.path().to_path_buf(),
-        guide_dir: None,
-        guide_dir_2: None,
+        mounts: app_mediakit_knowledge::mounts::resolve(content_dir.path(), None, None),
         citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         git: Arc::new(Mutex::new(repo)),
@@ -114,6 +112,7 @@ async fn whatlinkshere_returns_backlinks_from_graph() {
         links,
         brand_theme: None,
         brand_instance: "documentation".to_string(),
+        blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
     };
 
     let app = router(state);

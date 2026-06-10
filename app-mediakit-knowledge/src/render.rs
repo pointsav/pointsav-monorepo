@@ -492,14 +492,20 @@ fn inject_wiki_prefixes(
                 out.push_str("\" data-wikilink=\"true\">");
                 rest = after_marker;
             } else {
-                // Unresolved → render as class="wikilink-missing" anchor (red-link style).
-                // Find the <a tag opening so we can reconstruct it with the new class.
+                // Unresolved wikilink: emit link text as plain inline span (L18).
+                // Dead-link gate (check --strict) prevents unresolved slugs from
+                // reaching canonical, so no red-link affordance is needed in production.
                 let a_open = before_marker[..href_pos].rfind("<a").unwrap_or(href_pos);
                 out.push_str(&before_marker[..a_open]);
-                out.push_str("<a class=\"wikilink-missing\" href=\"/wiki/");
-                out.push_str(&norm_slug);
-                out.push_str("\" data-wikilink=\"true\">");
-                rest = after_marker;
+                out.push_str("<span class=\"wikilink-unresolved\">");
+                if let Some(close_pos) = after_marker.find("</a>") {
+                    out.push_str(&after_marker[..close_pos]);
+                    out.push_str("</span>");
+                    rest = &after_marker[close_pos + 4..];
+                } else {
+                    out.push_str("</span>");
+                    rest = after_marker;
+                }
             }
         } else {
             // Malformed marker — copy through verbatim.
@@ -904,19 +910,23 @@ mod tests {
             "existing wikilink anchor must carry class=wikilink: {html}"
         );
 
-        // Missing target → red-link anchor with class="wikilink-missing".
+        // Missing target → plain inline span (L18 gate removes red-link affordance).
         let html2 = render_html("see [[No Such Page]] here", &dir, &[]);
         assert!(
             html2.contains("No Such Page"),
             "missing wikilink text should be retained: {html2}"
         );
         assert!(
-            html2.contains("wikilink-missing"),
-            "missing wikilink must render as a red-link anchor: {html2}"
+            html2.contains("wikilink-unresolved"),
+            "missing wikilink must render as a plain wikilink-unresolved span: {html2}"
         );
         assert!(
-            html2.contains("/wiki/no-such-page"),
-            "missing wikilink red-link must include the target URL: {html2}"
+            !html2.contains("wikilink-missing"),
+            "red-link class must be absent (L18 gate active): {html2}"
+        );
+        assert!(
+            !html2.contains("href=\"/wiki/no-such-page\""),
+            "unresolved wikilink must not produce a dead anchor: {html2}"
         );
 
         // Target reachable only via an extra (guide) root → resolves (TOPIC↔GUIDE).

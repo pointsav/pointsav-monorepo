@@ -151,16 +151,10 @@ impl Locale {
 
 #[derive(Clone)]
 pub struct AppState {
-    pub content_dir: PathBuf,
-    /// Optional extra directory of GUIDE-* Markdown files (e.g. a fleet-deployment
-    /// repo). When set, the engine walks this dir alongside `content_dir` and
-    /// serves files at `/wiki/<slug>` just like TOPICs.
-    /// Set via `--guide-dir` / `WIKI_GUIDE_DIR`.
-    pub guide_dir: Option<PathBuf>,
-    /// Second optional guide directory. Allows a documentation wiki to serve
-    /// guides from two separate fleet-deployment repos simultaneously.
-    /// Set via `--guide-dir-2` / `WIKI_GUIDE_DIR_2`.
-    pub guide_dir_2: Option<PathBuf>,
+    /// Phase 0: declarative mount set. Index 0 is always the primary (editable)
+    /// content mount; subsequent entries are read-only guide/fleet mounts.
+    /// Replaces the former `content_dir`, `guide_dir`, `guide_dir_2` flat fields.
+    pub mounts: Vec<crate::mounts::Mount>,
     /// Path to the workspace citation registry YAML file.
     /// Defaults to `/srv/foundry/citations.yaml`; overridable via
     /// `--citations-yaml` / `WIKI_CITATIONS_YAML`.
@@ -196,21 +190,29 @@ pub struct AppState {
     /// `corporate`. Set via `WIKI_BRAND_INSTANCE`; default
     /// `"documentation"`.
     pub brand_instance: String,
+    /// Phase 0: content-type blueprint registry. Built-ins (topic, guide) plus
+    /// any customer `blueprints/*.yaml` files loaded from the primary mount.
+    /// Wires blueprints.rs into the render pipeline at dispatch time.
+    pub blueprints: crate::blueprints::Registry,
 }
 
 impl AppState {
-    /// Extra content roots (federated guide dirs) checked alongside `content_dir`
-    /// when resolving wikilinks, so TOPIC↔GUIDE links resolve across mounts and
-    /// don't dead-link. Generalizes to the full mount set in the Phase 0 refactor.
-    fn link_roots(&self) -> Vec<&std::path::Path> {
-        let mut v = Vec::new();
-        if let Some(p) = self.guide_dir.as_deref() {
-            v.push(p);
-        }
-        if let Some(p) = self.guide_dir_2.as_deref() {
-            v.push(p);
-        }
-        v
+    /// Primary content directory — mount 0's path.
+    pub fn primary_path(&self) -> &std::path::Path {
+        &self.mounts[0].path
+    }
+
+    /// Non-primary mount paths checked alongside the primary when resolving
+    /// wikilinks (TOPIC↔GUIDE cross-mount resolution).
+    pub fn link_roots(&self) -> Vec<&std::path::Path> {
+        crate::mounts::link_roots(&self.mounts)
+    }
+
+    /// Two-slot array of optional guide paths, compatible with legacy callers
+    /// that take `(Option<&Path>, Option<&Path>)` or `&[Option<&Path>]`.
+    pub fn guide_dirs_arr(&self) -> [Option<&std::path::Path>; 2] {
+        let roots = crate::mounts::link_roots(&self.mounts);
+        [roots.first().copied(), roots.get(1).copied()]
     }
 }
 
@@ -323,8 +325,8 @@ async fn search_complete(
         return Json(json!([]));
     }
     let topic_files = collect_all_topic_files(
-        &state.content_dir,
-        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+        state.primary_path(),
+        &state.guide_dirs_arr(),
     )
     .await
     .unwrap_or_default();
@@ -358,7 +360,7 @@ async fn preview_api(
         return Err(WikiError::NotFound(slug));
     }
 
-    let path = state.content_dir.join(format!("{slug}.md"));
+    let path = state.primary_path().join(format!("{slug}.md"));
     let text = match fs::read_to_string(&path).await {
         Ok(t) => t,
         Err(_) => return Err(WikiError::NotFound(slug)),
@@ -427,8 +429,8 @@ struct WikiPageQuery {
 /// when the content directory is empty.
 async fn random_page(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
     let topic_files = collect_all_topic_files(
-        &state.content_dir,
-        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+        state.primary_path(),
+        &state.guide_dirs_arr(),
     )
     .await?;
     let slugs: Vec<String> = topic_files.into_iter().map(|tf| tf.slug).collect();
@@ -456,8 +458,8 @@ async fn wanted_page(
 
     // Walk all topic files and collect redlinks.
     let topic_files = collect_all_topic_files(
-        &state.content_dir,
-        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+        state.primary_path(),
+        &state.guide_dirs_arr(),
     )
     .await?;
 
@@ -465,7 +467,7 @@ async fn wanted_page(
     for tf in &topic_files {
         if let Ok(text) = fs::read_to_string(&tf.path).await {
             let html =
-                crate::render::render_html_raw(&text, &state.content_dir, &state.link_roots());
+                crate::render::render_html_raw(&text, state.primary_path(), &state.link_roots());
             for cap in re.captures_iter(&html) {
                 let missing = cap[1].to_string();
                 wanted.entry(missing).or_default().push(tf.slug.clone());

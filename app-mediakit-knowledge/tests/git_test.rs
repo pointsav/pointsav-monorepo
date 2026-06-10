@@ -21,10 +21,9 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
     let index = app_mediakit_knowledge::search::build_index(dir.path(), state_dir.path())
         .await
         .unwrap();
+    let mounts = app_mediakit_knowledge::mounts::resolve(dir.path(), None, None);
     let state = AppState {
-        content_dir: dir.path().to_path_buf(),
-        guide_dir: None,
-        guide_dir_2: None,
+        mounts,
         citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         git: Arc::new(Mutex::new(repo)),
@@ -35,13 +34,14 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
         brand_theme: None,
         brand_instance: "documentation".to_string(),
+        blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
     };
     (state, dir, state_dir)
 }
 
 /// Write `<slug>.md` to disk and commit it through the git layer.
 fn commit_topic(state: &AppState, slug: &str, body: &str, message: &str) {
-    std::fs::write(state.content_dir.join(format!("{slug}.md")), body).unwrap();
+    std::fs::write(state.primary_path().join(format!("{slug}.md")), body).unwrap();
     let repo = state.git.lock().unwrap();
     let _ = app_mediakit_knowledge::git::ensure_commit_identity_from_env(&repo);
     app_mediakit_knowledge::git::commit_topic(&repo, slug, body, "", "", message).unwrap();
