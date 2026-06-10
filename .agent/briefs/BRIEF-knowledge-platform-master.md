@@ -3,7 +3,7 @@ artifact: brief
 status: active
 title: Knowledge Platform — Master Brief
 cluster: project-knowledge
-updated: 2026-06-08
+updated: 2026-06-10
 supersedes: archive/BRIEF-knowledge-platform-master.md
 verdict_source: .agent/drafts-outbound/BRIEF-REVIEW-old-brief-verdict.md
 ---
@@ -36,7 +36,7 @@ Single Rust binary. No runtime system dependencies. Apache 2.0.
 
 ---
 
-## §2 — Status Snapshot (2026-06-08)
+## §2 — Status Snapshot (2026-06-10)
 
 | Phase | Label | State | Notes |
 |---|---|---|---|
@@ -51,7 +51,7 @@ Single Rust binary. No runtime system dependencies. Apache 2.0.
 | Phase 0 | Federation engine | NEXT MILESTONE | Unblocked; see §4 |
 | Phase 9 | Production deploy | Command-gated | Stage 6 promote + DESIGN-TOKEN-CHANGE cosign; see §4 |
 
-Sub-clone tip: `2381a169` (22 commits ahead of canonical; rebase aborted — conflict report in outbox).
+Sub-clone tip: `8480f68e` (merged `origin/main` at `ca6ae410`; up-to-date with remote; clean working tree).
 
 ---
 
@@ -202,11 +202,12 @@ Completion test: `knowledge.toml` is the live source of truth for all three inst
 
 ### Phase 9 — Production deploy (Command-gated)
 
-Gate 1: Stage 6 promote — outbox signal `project-knowledge-20260608-stage-6-ready-2381a169`
-(rebase conflict report also in outbox; Command must choose resolution strategy A/B/C/D first).
+Gate 1: Stage 6 promote — outbox signal `project-knowledge-20260608-stage-6-ready-updated`
+(post-merge tip `ca6ae410`; rebase superseded by merge strategy; conflict report resolved).
 
-Gate 2: DESIGN-TOKEN-CHANGE `master_cosign` from Command Session on
-`.agent/drafts-outbound/DESIGN-TOKEN-CHANGE-knowledge-platform-theming.draft.md`.
+Gate 2: **CLEARED** — DESIGN-TOKEN-CHANGE committed by project-design at `af51d86`
+(2026-06-09); ACK received in inbox and actioned 2026-06-10. Tokens: nav-h, sidebar-w,
+bottom-bar-h, reading-measure, safe-area-bottom.
 
 Checklist: `.agent/drafts-outbound/PHASE-9-DEPLOY-CHECKLIST.md`.
 Note: `/etc/local-knowledge/` does NOT yet exist on host — must be created before deploy steps.
@@ -234,8 +235,7 @@ should be deleted before or after production deploy.
 **`check --strict` as pre-promote gate** — Command can wire once project-editorial has triaged
 the 17 dead links + 6 missing-slug guides surfaced by the June 2026 content audit.
 
-**Sub-clone rebase** — 4 resolution options in outbox (msg-id: `project-knowledge-20260608-rebase-conflict-report`).
-Command must choose strategy before Stage 6 promote.
+**Sub-clone rebase** — ~~Resolved 2026-06-10~~. Merge strategy chosen; post-merge tip `ca6ae410` → `8480f68e`; Stage 6 signal updated in outbox. No further action needed.
 
 **DNS reconciliation (L28)** — `documentation.pointsav.com` is live; `documentation.woodfinegroup.com`
 status unknown. Confirm target domain per instance before Phase 6 cutover.
