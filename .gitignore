@@ -26,3 +26,7 @@ service-content/data/
 # Recovered binaries and input documents — not committed to archive git
 app-privategit-design-recovered
 inputs/
+
+# Agent session directory — local session state; never committed to canonical
+# Foundry-fsck CRITICAL fix 2026-06-10: untracked 334 files via git rm -r --cached .agent/
+.agent/
