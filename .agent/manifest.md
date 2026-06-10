@@ -1,5 +1,6 @@
 ---
 schema: foundry-cluster-manifest-v1
+cluster: project-orchestration
 cluster_name: project-orchestration
 cluster_branch: cluster/project-orchestration
 created: 2026-05-08
