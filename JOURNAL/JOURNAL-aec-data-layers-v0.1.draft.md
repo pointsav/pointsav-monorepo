@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.5"
+version: "0.6"
 title: "Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis: A Continental Coverage Assessment Across Sixteen Countries"
 target_journal: "Automation in Construction"
 target_publisher: "Elsevier"
@@ -10,7 +10,7 @@ impact_factor: "12.0"
 alternate_venue: "Journal of Computing in Civil Engineering (ASCE, IF 6.04); Buildings (MDPI, open access)"
 authors:
   - name: "Jennifer M. Woodfine"
-    affiliation: "Woodfine Management Corp., New York, NY, USA"
+    affiliation: "Woodfine Management Corp., New York, New York"
     email: corporate.secretary@woodfinegroup.com
     orcid: ""
     credit_roles:
@@ -21,7 +21,7 @@ authors:
       - Writing – Original Draft
       - Writing – Review & Editing
   - name: "Peter M. Woodfine"
-    affiliation: "Woodfine Management Corp., New York, NY, USA"
+    affiliation: "Woodfine Management Corp., New York, New York"
     email: ""
     orcid: ""
     credit_roles:
@@ -29,7 +29,7 @@ authors:
       - Validation
       - Writing – Review & Editing
   - name: "Mathew Woodfine"
-    affiliation: "Woodfine Management Corp., New York, NY, USA"
+    affiliation: "Woodfine Management Corp., New York, New York"
     email: ""
     orcid: ""
     credit_roles:
@@ -51,7 +51,7 @@ keywords:
 bcsc_class: public-disclosure-safe
 ai_tool_used: "claude-sonnet-4-6 (Anthropic)"
 corresponding_author: corporate.secretary@woodfinegroup.com
-word_count_body: 7800
+word_count_body: 8085
 word_count_target: 8000
 submission_status: not-submitted
 language_pass_date: 2026-05-28
@@ -66,7 +66,7 @@ preprint_posted: true
 preprint_posted_date: 2026-05-28
 doi: ""
 license: "CC BY 4.0"
-cite_as: "Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis. Working Paper v0.5, 30 May 2026. Woodfine Management Corp., New York, NY."
+cite_as: "Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis. Working Paper v0.6, 10 June 2026. Woodfine Management Corp., New York, NY."
 revision_history:
   - version: "0.1"
     date: "2026-05-27"
@@ -83,6 +83,9 @@ revision_history:
   - version: "0.5"
     date: "2026-05-30"
     changes: "Readability pass: 18 first-use abbreviation expansions; 6 topic sentences added; tippecanoe and WFS explained; LAWA/BfG expanded; parenthetical burst in §3.2 reduced; CONABIO, NECB, ACCA written out; Table 2 symbol key moved before table"
+  - version: "0.6"
+    date: "2026-06-10"
+    changes: "JOURNAL-NOTES incorporation (project-workplace): added §5.5 BIM Workspace Integration — DTCG-based IFC element styling schema; bim-workspace-v1.0; 8 IFC element types; API surface; compositional contribution claim"
 notes_for_editor: |
   All sections complete. §6 reports preliminary documentary coverage findings; per-country
   H3-level pipeline counts are a pre-submission deliverable (see §7.5 Limitations).
@@ -282,6 +285,16 @@ Layers with continuous scalar values at cluster centroids — solar GHI, seismic
 ### 5.4 API Call-Time Lookups: Copyright-Constrained Layers
 
 Some AEC-relevant data layers are not available for open redistribution and must be accessed through licensed API interfaces at query time; this section describes the architecture for such layers. ASCE 7-22 design wind speed and ground snow load maps are copyrighted by the American Society of Civil Engineers. Redistribution of these maps as GIS layers requires a commercial licence from ASCE; no open-licence version exists. The ATC Hazards by Location API (Applied Technology Council) returns design wind speed (Vult in mph), site-amplified ground snow load (Pg), and seismic design parameters at any US coordinate via a structured JSON response. The ATC API is queried at cluster-selection time; values are returned for display without being stored as a redistributed layer. This architecture is appropriate for point-lookup use cases and avoids ASCE copyright exposure; it introduces API latency and an external dependency that bulk-downloaded raster layers do not.
+
+### 5.5 BIM Workspace Integration: DTCG-Based Element Styling Schema
+
+The integration pipeline described in §§5.1–5.4 delivers regulatory-grade layer values to cluster-level metadata and tile layers. A complementary implementation path exposes these layer values at the building-element level through a schema — bim-workspace-v1.0 — that applies the W3C Design Token Community Group (DTCG) interchange format to IFC element visual configuration.
+
+DTCG defines a JSON schema for design token interchange using `$value`, `$type`, and `$description` fields. The format achieves broad toolchain adoption in user interface design systems and digital product development pipelines. Applying it to IFC element styling — where the token values are climate-zone-aware colour assignments, flood-risk visual overlays, or seismic-zone stroke weights rather than brand palette entries — extends DTCG into an open-licence AEC interchange role for which no prior open-source tooling appears to have been published.
+
+The bim-workspace-v1.0 schema covers eight IFC element types: IfcWall, IfcDoor, IfcWindow, IfcSlab, IfcColumn, IfcBeam, IfcStair, and IfcRoof. Each type carries a DTCG token block configurable through a split-panel browser interface — a left-panel token editor and a right-panel live JSON preview. The API surface is minimal: a POST endpoint accepts a JSON body conforming to the schema and writes a named workspace file; a GET index endpoint returns all stored workspaces. Create, list, and read-back round trips are verified at prototype implementation level.
+
+The contribution is compositional: DTCG provides the interchange contract that transforms locally stored layer values into machine-readable building-element configurations. Downstream toolchains — including IFC authoring environments that accept JSON-format style overrides — can consume these files without bespoke adapters, extending the open-licence coverage assessment in §4 to the building element as the unit of analysis.
 
 ---
 
