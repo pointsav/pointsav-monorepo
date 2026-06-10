@@ -256,6 +256,15 @@ async fn main() -> anyhow::Result<()> {
             .map(|v| v.eq_ignore_ascii_case("true") || v == "1")
             .unwrap_or(false);
 
+        // Payload size gate: briefs exceeding this byte limit are poisoned without
+        // dispatch. Prevents oversized payloads (large diffs, injected data) from
+        // wedging OLMo or consuming unbounded tokens. Default 16 KiB.
+        // Env var: SLM_QUEUE_MAX_PAYLOAD_BYTES
+        let max_payload_bytes: usize = std::env::var("SLM_QUEUE_MAX_PAYLOAD_BYTES")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(16 * 1024);
+
         // Clone only what the drain worker needs.
         let drain_cfg = queue_cfg.clone();
         let drain_doorman_arc = Arc::clone(&state);
@@ -321,6 +330,30 @@ async fn main() -> anyhow::Result<()> {
                     }
                     Ok(Some(leased)) => {
                         let brief_id = leased.entry.brief.brief_id.clone();
+
+                        // Payload size gate: poison oversized briefs immediately so
+                        // they never reach OLMo or the dispatch path.
+                        let payload_size = serde_json::to_vec(&leased.entry)
+                            .map(|v| v.len())
+                            .unwrap_or(usize::MAX);
+                        if payload_size > max_payload_bytes {
+                            tracing::warn!(
+                                brief_id = %brief_id,
+                                size_bytes = payload_size,
+                                max_bytes = max_payload_bytes,
+                                "drain worker: oversized payload — poisoning without dispatch"
+                            );
+                            if let Err(e) =
+                                release_shadow(&drain_cfg, &leased, ReleaseOutcome::Poison)
+                            {
+                                tracing::warn!(
+                                    brief_id = %brief_id,
+                                    error = %e,
+                                    "drain worker: release_shadow failed for oversized entry"
+                                );
+                            }
+                            continue;
+                        }
 
                         // P0 guard: skip briefs with an empty actual_diff. These
                         // carry no ground-truth reference, so dispatching them to
