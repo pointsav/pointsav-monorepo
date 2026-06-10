@@ -1,122 +1,75 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster: project-console
-cluster_name: project-console
+cluster: project-editorial
+cluster_name: project-editorial
 cluster_branch: main
-created: 2026-05-06
-state: active (v0.0.1 MVP shipped 2026-05-06; cargo check clean; bootstrap + deploy pending Master)
+created: 2026-02-28
+state: active
 slm_endpoint: http://localhost:8011
-module_id: console
+module_id: editorial
 doctrine_version: 0.0.14
-doctrine_claims_codified: [29]
+doctrine_claims_codified: []
+doctrine_claims_proposed: []
 
 operator: pointsav (Mathew, Jennifer)
-working_pattern: production-first-mvp
-input_shape: app-mediakit-knowledge-wikipedia-pattern-wiki
-
-# Cluster mission: build and maintain app-mediakit-knowledge — the
-# Wikipedia-pattern HTTP knowledge wiki for os-mediakit. Serves three
-# content-wiki-* repositories as fully navigable wikis:
-#
-#   - documentation.pointsav.com (content-wiki-documentation, port 9090)
-#   - projects.woodfinegroup.com  (content-wiki-projects,      port 9093)
-#   - corporate.woodfinegroup.com (content-wiki-corporate,     port 9095, planned)
-#
-# Single Rust binary; optional SQLite auth DB (bundled; no runtime system
-# dependencies). Substrate substitution for MediaWiki per Doctrine claim #29.
-#
-# Phase 6 (three-instance deployment split) is gated on content-wiki-*
-# GitHub rename + MASTER Doctrine amendment. Phases 1–8 are shipped.
-# Phase 9 (production deploy of Phase 8 binary) is the next milestone.
-#
-# Deploy targets: vault-privategit-source-1 (GCE VM, same host as other
-# local-* services). Systemd units: local-knowledge-documentation.service
-# (port 9090), local-knowledge-projects.service (port 9093),
-# local-knowledge-corporate.service (port 9095, planned).
+working_pattern: editorial-pipeline
 
 tetrad:
   vendor:
-    - source_repo: pointsav-monorepo
-      project_path: app-mediakit-knowledge/
-      status: Active — Phases 1–8 shipped; sub-clone cluster branch pending Stage 6 promote
-        (commit chain ff7cd16d → 64f07900 → dc15a93f on local main; Command to promote)
+    status: leg-pending — no engineering crate in pointsav-monorepo; project-editorial is a pure editorial process archive
   customer:
-    - fleet_deployment_repo: woodfine-fleet-deployment
-      catalog_subfolder: gateway-knowledge-documentation-1/
-      status: active — guide-knowledge-wiki-deployment.md staged; pending Command routing
-    - fleet_deployment_repo: woodfine-fleet-deployment
-      catalog_subfolder: gateway-knowledge-projects-1/
-      status: leg-pending — no catalog entry yet; Phase 6 milestone
-    - fleet_deployment_repo: woodfine-fleet-deployment
-      catalog_subfolder: gateway-knowledge-corporate-1/
-      status: leg-pending — no catalog entry yet; Phase 6 milestone
+    - fleet_deployment_repo: customer/woodfine-fleet-deployment
+      catalog_subfolder: (varies per originating project)
+      status: active — GUIDEs committed here each session; checked out as sibling repo
   deployment:
-    - unit: local-knowledge-documentation.service
-      host: vault-privategit-source-1
-      port: 9090
-      domain: documentation.pointsav.com
-      status: running (Phase 5 binary); Phase 9 binary pending Stage 6 promote
-    - unit: local-knowledge-projects.service
-      host: vault-privategit-source-1
-      port: 9093
-      domain: projects.woodfinegroup.com
-      status: running (Phase 5 binary); Phase 9 binary pending Stage 6 promote
-    - unit: local-knowledge-corporate.service
-      host: vault-privategit-source-1
-      port: 9095
-      domain: corporate.woodfinegroup.com
-      status: planned — Phase 6 milestone (gated on content-wiki-* rename + Doctrine amendment)
+    status: leg-pending — no running service; editorial is a Totebox process, not a deployed binary
   wiki:
-    - target: pointsav-monorepo (content-wiki-documentation sub-clone)
-      mount_role: primary — TOPIC + GUIDE blueprints
-      status: active — served at documentation.pointsav.com
-    - target: pointsav-monorepo (content-wiki-projects sub-clone)
-      mount_role: primary — projects wiki
-      status: active — served at projects.woodfinegroup.com
-    - target: pointsav-monorepo (content-wiki-corporate sub-clone)
-      mount_role: primary — corporate wiki
-      status: planned — Phase 6 milestone
-
-datagraph_module_id: knowledge
+    - target: media-knowledge-documentation
+      status: active — TOPIC drafts committed each session; checked out as sibling repo
+    - target: media-knowledge-corporate
+      status: active — COMMS/corporate content committed here; checked out as sibling repo
+    - target: media-knowledge-projects
+      status: active — project-narrative topics committed here; checked out as sibling repo
 
 datagraph_module_id: data
 cross_cluster_dependencies:
-  - project-design: DESIGN-TOKEN-CHANGE cosign required before Phase 9 deploy
-  - project-editorial: TOPIC/GUIDE drafts from this archive route to project-editorial
+  all-archives: drafts routed to project-editorial via .agent/drafts-outbound/ handoff pattern
 
 provisioning_notes:
-  - pointsav-monorepo sub-clone: provisioned on cluster/project-knowledge branch (3 remotes)
-  - content-wiki-documentation: sub-clone present; serves as primary wiki mount
-  - content-wiki-projects: sub-clone present; serves as secondary wiki mount
-  - content-wiki-corporate: sub-clone present; Phase 6 tertiary mount (planned)
+  - media-knowledge-documentation: checked out as sibling directory (canonical per DOCTRINE §IV.e)
+  - media-knowledge-corporate: checked out as sibling directory (canonical per DOCTRINE §IV.e)
+  - media-knowledge-projects: checked out as sibling directory (canonical per DOCTRINE §IV.e)
+  - woodfine-fleet-deployment: checked out as sibling directory
+  - factory-release-engineering: checked out as sibling directory
 
-session_role: task
-default_starting_dir: ~/Foundry/clones/project-console/
+session_role: totebox
+default_starting_dir: ~/Foundry/clones/project-editorial/
 ---
 
-# project-console — SSH TUI console gateway to the Totebox platform
+# project-editorial — Editorial Pipeline Gateway
 
-This cluster owns the `app-console-*` cartridge ecosystem and `os-console` — the Rust
-SSH server that delivers the operator TUI for Totebox deployments. The console connects
-to every running service through a set of F-key cartridges (F1–F12), each scoped to one
-domain: keys (F1), content (F2), email (F3), SLM/Doorman (F9), system/pairing (F11).
+Editorial pipeline gateway for the Foundry ecosystem. Receives TOPIC/GUIDE/COMMS/JOURNAL/PROSE-RESEARCH drafts from all other Totebox archives, applies Bloomberg-register language and quality passes, and commits to canonical destinations.
+
+## Artifact routing
+
+| Artifact type | Source | Destination |
+|---|---|---|
+| TOPIC-* | any archive | media-knowledge-documentation / media-knowledge-projects |
+| GUIDE-* | any archive | woodfine-fleet-deployment/<cluster>/ |
+| COMMS-* | any archive | media-knowledge-corporate |
+| JOURNAL-* | any archive | JOURNAL/ (this archive) |
+| PROSE-RESEARCH | any archive | review + return or accept |
+| DESIGN-* / ASSET-* | (pass-through) | relay to project-design |
 
 ## Status (as of 2026-05-31 — from BRIEF-project-console-master.md)
 
-Phases C–E and 6–7 complete:
-- Phase C: app-console-email F3 lib crate — inbox list, read, compose/send, plain mode
-- Phase D: app-console-slm F9 lib crate — Doorman health dashboard, circuit state, 10s poll
-- Phase E: Orchestration wiring audited; clean mba_client; added to ConsoleConfig
-- Phase 6: Offline mode + Tantivy search (/readyz poll; greyed widgets; /search command)
-- Phase 7: PDF viewing via pdfium-render → Kitty/Sixel; text fallback; /pdf command
-
-Pending: pairing-server systemd unit (port 9201); first internet-facing SSH deployment
-to vm-intelligence (WireGuard 10.42.1.1) provisioned by project-infrastructure.
+Active. Session context re-provisioned 2026-06-08 (contamination fix — was project-marketing header).
+Manifest rewritten 2026-06-10 (was wholesale project-marketing content).
 
 Running in production at `documentation.pointsav.com` (port 9090) and
 `projects.woodfinegroup.com` (port 9093) on vault-privategit-source-1.
 
-- `BRIEF-project-console-master.md` — living state tracker; read before each session
-- `BRIEF-os-console-platform.md` — F-key map, Cartridge trait, MBA topology, platform targets
-- `conventions/orchestration-architecture.md` — Cartridge composition pattern
-- `conventions/datagraph-access-discipline.md` — entity lookups via Doorman :9080
+- `~/Foundry/AGENT.md` §Artifacts — full artifact-type routing table
+- `conventions/artifact-classification.yaml` — machine-readable routing
+- `conventions/cluster-wiki-draft-pipeline.md` — full editorial pipeline spec
+- `.agent/rules/journal-artifact-discipline.md` — JOURNAL manuscript rules
