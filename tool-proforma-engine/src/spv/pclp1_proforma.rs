@@ -334,7 +334,11 @@ fn wip_scaled_at(y: u32, s2: f64, s3: f64) -> f64 {
     }
     if y < generates_from(3) && y >= 6 {
         let drawn_y6 = PCLP1_PHASE_3_Y6_DRAW * s3;
-        let drawn_y7 = if y >= 7 { PCLP1_PHASE_3_Y6_DRAW * s3 } else { 0.0 };
+        let drawn_y7 = if y >= 7 {
+            PCLP1_PHASE_3_Y6_DRAW * s3
+        } else {
+            0.0
+        };
         wip += drawn_y6 + drawn_y7;
     }
     wip
@@ -379,17 +383,23 @@ fn ramped_noi_at(y: u32, s2: f64, s3: f64, p: &ForecastParams) -> f64 {
     let mut noi = 0.0;
     if y >= generates_from(1) {
         let amt = PCLP1_PHASE_1_ANNUAL_DRAW * 3.0;
-        noi += amt * p.dev_yield * p.occupancy_pct
+        noi += amt
+            * p.dev_yield
+            * p.occupancy_pct
             * noi_ramp_factor(generates_from(1), y, p.lease_up_months);
     }
     if y >= generates_from(2) {
         let amt = PCLP1_PHASE_2_ANNUAL_DRAW * 2.0 * s2;
-        noi += amt * p.dev_yield * p.occupancy_pct
+        noi += amt
+            * p.dev_yield
+            * p.occupancy_pct
             * noi_ramp_factor(generates_from(2), y, p.lease_up_months);
     }
     if y >= generates_from(3) {
         let amt = PCLP1_PHASE_3_Y6_DRAW * 2.0 * s3;
-        noi += amt * p.dev_yield * p.occupancy_pct
+        noi += amt
+            * p.dev_yield
+            * p.occupancy_pct
             * noi_ramp_factor(generates_from(3), y, p.lease_up_months);
     }
     noi
@@ -436,9 +446,7 @@ pub fn forecast_with_params(p: &ForecastParams) -> Vec<Pclp1Year> {
 pub fn forecast_full(p: &ForecastParams) -> (Vec<Pclp1Year>, ForecastMeta) {
     match p.mode {
         ModelMode::CovenantCure { shock_year } => forecast_covenant_cure(p, shock_year),
-        ModelMode::ManagedDownside | ModelMode::SingleInputStress => {
-            forecast_managed_or_static(p)
-        }
+        ModelMode::ManagedDownside | ModelMode::SingleInputStress => forecast_managed_or_static(p),
     }
 }
 
@@ -516,7 +524,11 @@ fn forecast_managed_or_static(p: &ForecastParams) -> (Vec<Pclp1Year>, ForecastMe
             let proj_ebitda_y5 = proj_noi_y5 - fixed_operating_expenses();
             let p2_total = PCLP1_PHASE_2_ANNUAL_DRAW * 2.0;
             let denom = p.dscr_floor * 0.75 * p2_total * p.debt_rate;
-            let max_s2 = if denom > 0.0 { proj_ebitda_y5 / denom } else { 1.0 };
+            let max_s2 = if denom > 0.0 {
+                proj_ebitda_y5 / denom
+            } else {
+                1.0
+            };
             phase2_scale = max_s2.clamp(0.0, 1.0);
             if phase2_scale < 1.0 {
                 triggered_year = triggered_year.or(Some(5));
@@ -536,7 +548,11 @@ fn forecast_managed_or_static(p: &ForecastParams) -> (Vec<Pclp1Year>, ForecastMe
             let p3_total = PCLP1_PHASE_3_Y6_DRAW * 2.0;
             let lhs = proj_ebitda_y7 / p.dscr_floor - phase2_scale * p2_total * p.debt_rate;
             let rhs = 0.75 * p3_total * p.debt_rate;
-            let max_s3 = if rhs > 0.0 && lhs > 0.0 { (lhs / rhs).min(1.0) } else { 0.0 };
+            let max_s3 = if rhs > 0.0 && lhs > 0.0 {
+                (lhs / rhs).min(1.0)
+            } else {
+                0.0
+            };
             phase3_scale = max_s3.clamp(0.0, 1.0);
             if phase3_scale < 1.0 {
                 triggered_year = triggered_year.or(Some(7));
@@ -552,7 +568,11 @@ fn forecast_managed_or_static(p: &ForecastParams) -> (Vec<Pclp1Year>, ForecastMe
         let total_assets = wip + gen;
 
         // Step 2: Revenue (occupancy + dev-yield + lease-up applied via ramped_noi_at)
-        let net_proceeds_from_ops = if y <= 3 { 0.0 } else { ramped_noi_at(y, s2, s3, p) };
+        let net_proceeds_from_ops = if y <= 3 {
+            0.0
+        } else {
+            ramped_noi_at(y, s2, s3, p)
+        };
         let income_continuity = stabilized_income_at(y, s2, s3, p);
 
         // Step 3: Expenses. Facility-commitment fees scale with the committed
@@ -754,7 +774,11 @@ fn forecast_covenant_cure(p: &ForecastParams, shock_year: u32) -> (Vec<Pclp1Year
     } else {
         f64::INFINITY
     };
-    let mv_gen = if p.cap_rate > 0.0 { noi_gen / p.cap_rate } else { 0.0 };
+    let mv_gen = if p.cap_rate > 0.0 {
+        noi_gen / p.cap_rate
+    } else {
+        0.0
+    };
     let k = p.dscr_floor;
 
     // 4. Solve the minimum corrective disposition.
@@ -811,7 +835,8 @@ fn forecast_covenant_cure(p: &ForecastParams, shock_year: u32) -> (Vec<Pclp1Year
     let nav_per_unit_post = nav_post / PCLP1_DILUTED_UNITS;
 
     // Income still available to holders after debt service on the retained portfolio.
-    let dist_per_unit_post_cure = (ebitda_remaining - interest_remaining).max(0.0) / PCLP1_DILUTED_UNITS;
+    let dist_per_unit_post_cure =
+        (ebitda_remaining - interest_remaining).max(0.0) / PCLP1_DILUTED_UNITS;
 
     let disposition = Pclp1DispositionEvent {
         shock_year,
@@ -844,15 +869,27 @@ fn forecast_covenant_cure(p: &ForecastParams, shock_year: u32) -> (Vec<Pclp1Year
         let ebitda = net_proceeds_from_ops - total_expenses;
         let net_interest = debt_remaining * p.debt_rate;
         let ffo = ebitda - net_interest;
-        let debt_repayment = if y >= 8 { ffo * PCLP1_DEBT_BUYBACK_PCT_FFO } else { 0.0 };
+        let debt_repayment = if y >= 8 {
+            ffo * PCLP1_DEBT_BUYBACK_PCT_FFO
+        } else {
+            0.0
+        };
         let closing_debt = (debt_remaining - debt_repayment).max(0.0);
         let distributions = (ffo * payout_ratio(y)) - debt_repayment;
         let income_continuity = net_proceeds_from_ops; // stabilised (no ramp post-shock)
         let asset_value = income_continuity / p.cap_rate;
         let nav = asset_value - closing_debt;
         let dpu = distributions / PCLP1_DILUTED_UNITS;
-        let market_value_per_unit = if p.market_yield > 0.0 { dpu / p.market_yield } else { 0.0 };
-        let interest_coverage = if net_interest > 1.0 { ebitda / net_interest } else { 0.0 };
+        let market_value_per_unit = if p.market_yield > 0.0 {
+            dpu / p.market_yield
+        } else {
+            0.0
+        };
+        let interest_coverage = if net_interest > 1.0 {
+            ebitda / net_interest
+        } else {
+            0.0
+        };
         let total_sqft_generating = if PCLP1_TOTAL_DEV_COST > 0.0 {
             PCLP1_TOTAL_PORTFOLIO_SQFT * (gen / PCLP1_TOTAL_DEV_COST)
         } else {
@@ -1271,8 +1308,16 @@ mod tests {
         // Backward compatibility: at default params neither issuance constraint
         // binds, so both scales clamp to 1.0 and no disposition is produced.
         let (_y, meta) = forecast_full(&ForecastParams::default());
-        assert!((meta.phase2_scale - 1.0).abs() < 1e-9, "s2={}", meta.phase2_scale);
-        assert!((meta.phase3_scale - 1.0).abs() < 1e-9, "s3={}", meta.phase3_scale);
+        assert!(
+            (meta.phase2_scale - 1.0).abs() < 1e-9,
+            "s2={}",
+            meta.phase2_scale
+        );
+        assert!(
+            (meta.phase3_scale - 1.0).abs() < 1e-9,
+            "s3={}",
+            meta.phase3_scale
+        );
         assert_eq!(meta.dscr_constraint_triggered_year, None);
         assert!(meta.disposition.is_none());
     }
@@ -1513,7 +1558,3 @@ mod tests {
         }
     }
 }
-
-
-
-

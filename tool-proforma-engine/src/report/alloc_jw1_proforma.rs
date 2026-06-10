@@ -2,7 +2,9 @@
 // CSS, HEAD, LNUM_SCRIPT, and formatting helpers are verbatim copies from
 // bencal_v1_proforma.rs to keep this module self-contained.
 
-use crate::spv::{alloc_jw1_proforma, alloc_jw1_proforma::AllocJw1Year, pclp1_proforma, wcp_proforma};
+use crate::spv::{
+    alloc_jw1_proforma, alloc_jw1_proforma::AllocJw1Year, pclp1_proforma, wcp_proforma,
+};
 
 // ─── Formatting helpers ─────────────────────────────────────────────────────
 
@@ -29,7 +31,11 @@ fn fmt_int(v: f64) -> String {
         }
         out.push(*b as char);
     }
-    if n < 0 { format!("-{out}") } else { out }
+    if n < 0 {
+        format!("-{out}")
+    } else {
+        out
+    }
 }
 
 fn fmt_full_dollar(v: f64) -> String {
@@ -126,7 +132,11 @@ fn int_row_jw1<F: Fn(&AllocJw1Year) -> f64>(
     let mut s = format!("<tr><td class=\"lbl\">{}</td>", label);
     for y in years {
         let v = pick(y);
-        let cell = if v.abs() < 1e-2 { "—".to_string() } else { fmt_int(v) };
+        let cell = if v.abs() < 1e-2 {
+            "—".to_string()
+        } else {
+            fmt_int(v)
+        };
         s.push_str(&format!("<td>{}</td>", cell));
     }
     s.push_str("</tr>\n");
@@ -217,7 +227,9 @@ pub fn render_proforma_jw1() -> String {
         s.push_str(&format!("<td>{}</td>", fmt_m(y.total_investment_income)));
     }
     s.push_str("</tr>\n");
-    s.push_str(&data_row_jw1("Income (loss) before tax", &years, |y| y.income_before_tax));
+    s.push_str(&data_row_jw1("Income (loss) before tax", &years, |y| {
+        y.income_before_tax
+    }));
     s.push_str(&data_row_jw1("Tax (27%)", &years, |y| -y.tax));
     s.push_str("<tr class=\"total\">");
     s.push_str("<td class=\"lbl\">Net income (loss)</td>");
@@ -230,11 +242,9 @@ pub fn render_proforma_jw1() -> String {
         &years,
         |y| y.loan_receivable_closing,
     ));
-    s.push_str(&int_row_jw1(
-        "WCP shares held — closing",
-        &years,
-        |y| y.wcp_shares_held,
-    ));
+    s.push_str(&int_row_jw1("WCP shares held — closing", &years, |y| {
+        y.wcp_shares_held
+    }));
     s.push_str("</table>\n");
     s.push_str(
         "<p class=\"note\">Y0 unrealised FV change of approximately \u{2212}$45,025 reflects \
@@ -261,8 +271,7 @@ fn render_jw1_summary_section(years: &[AllocJw1Year], cost_basis: f64) -> String
     let y10 = &years[10];
     let total_interest = years[1].interest_income + years[2].interest_income;
     let equity_return = y3.realised_gain_crs + y10.residual_nav;
-    let total_return =
-        total_interest + alloc_jw1_proforma::JW1_LOAN_PRINCIPAL + equity_return;
+    let total_return = total_interest + alloc_jw1_proforma::JW1_LOAN_PRINCIPAL + equity_return;
     let moic = equity_return / cost_basis;
 
     let mut s = String::new();
@@ -270,9 +279,7 @@ fn render_jw1_summary_section(years: &[AllocJw1Year], cost_basis: f64) -> String
         "<h2 style=\"page-break-before:always;break-before:page\">Allocation Return Summary (Y10 endpoint)</h2>\n",
     );
     s.push_str("<table>\n");
-    s.push_str(
-        "<tr><th class=\"lbl\">Metric</th><th>Aggregate</th><th>Per WCP share</th></tr>\n",
-    );
+    s.push_str("<tr><th class=\"lbl\">Metric</th><th>Aggregate</th><th>Per WCP share</th></tr>\n");
     s.push_str(&format!(
         "<tr><td class=\"lbl\">Total equity cost basis (Y0)</td><td>{}</td><td>{}</td></tr>\n",
         fmt_full_dollar(cost_basis),
@@ -336,7 +343,11 @@ fn render_jw1_annual_returns(years: &[AllocJw1Year], cost_basis: f64) -> String 
     // Cash receipts per $1.00 invested: interest (Y1/Y2) + loan principal (Y2) + CRS (Y3)
     s.push_str("<tr><td class=\"lbl\">Cash receipts per $1.00 invested</td>");
     for yr in years {
-        let principal_ret = if yr.year == 2 { alloc_jw1_proforma::JW1_LOAN_PRINCIPAL } else { 0.0 };
+        let principal_ret = if yr.year == 2 {
+            alloc_jw1_proforma::JW1_LOAN_PRINCIPAL
+        } else {
+            0.0
+        };
         let cash = yr.interest_income + yr.realised_gain_crs + principal_ret;
         if cash.abs() < 1e-2 {
             s.push_str("<td>\u{2014}</td>");
@@ -349,7 +360,10 @@ fn render_jw1_annual_returns(years: &[AllocJw1Year], cost_basis: f64) -> String 
     // WCP NAV per share (engine output — unchanged)
     s.push_str("<tr><td class=\"lbl\">WCP NAV per share</td>");
     for yr in years {
-        s.push_str(&format!("<td>{}</td>", fmt_per_share(yr.wcp_per_share_value)));
+        s.push_str(&format!(
+            "<td>{}</td>",
+            fmt_per_share(yr.wcp_per_share_value)
+        ));
     }
     s.push_str("</tr>\n");
 

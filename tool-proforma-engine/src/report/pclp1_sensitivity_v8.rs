@@ -54,25 +54,129 @@ pub fn render() -> (String, String) {
     // ── Scenario matrix ──────────────────────────────────────────────────────
     // Mode 1 — Management Response (ManagedDownside): the LP adapts issuance.
     let managed: Vec<Scn> = vec![
-        Scn { key: "base", label: "Base", p: base_with(ModelMode::ManagedDownside) },
-        Scn { key: "rate_60", label: "Coupon 6.0%", p: ForecastParams { debt_rate: 0.060, ..base_with(ModelMode::ManagedDownside) } },
-        Scn { key: "rate_70", label: "Coupon 7.0%", p: ForecastParams { debt_rate: 0.070, ..base_with(ModelMode::ManagedDownside) } },
-        Scn { key: "rate_80", label: "Coupon 8.0%", p: ForecastParams { debt_rate: 0.080, ..base_with(ModelMode::ManagedDownside) } },
-        Scn { key: "occ_90", label: "Occupancy 90%", p: ForecastParams { occupancy_pct: 0.90, ..base_with(ModelMode::ManagedDownside) } },
-        Scn { key: "occ_85", label: "Occupancy 85%", p: ForecastParams { occupancy_pct: 0.85, ..base_with(ModelMode::ManagedDownside) } },
-        Scn { key: "lease_18", label: "Lease-up 18 mo", p: ForecastParams { lease_up_months: 18.0, ..base_with(ModelMode::ManagedDownside) } },
-        Scn { key: "lease_24", label: "Lease-up 24 mo", p: ForecastParams { lease_up_months: 24.0, ..base_with(ModelMode::ManagedDownside) } },
-        Scn { key: "bear", label: "Bear (combined)", p: ForecastParams { occupancy_pct: 0.88, dev_yield: 0.098, debt_rate: 0.070, cap_rate: 0.075, lease_up_months: 18.0, ..base_with(ModelMode::ManagedDownside) } },
-        Scn { key: "bull", label: "Bull", p: ForecastParams { debt_rate: 0.045, cap_rate: 0.0575, ..base_with(ModelMode::ManagedDownside) } },
+        Scn {
+            key: "base",
+            label: "Base",
+            p: base_with(ModelMode::ManagedDownside),
+        },
+        Scn {
+            key: "rate_60",
+            label: "Coupon 6.0%",
+            p: ForecastParams {
+                debt_rate: 0.060,
+                ..base_with(ModelMode::ManagedDownside)
+            },
+        },
+        Scn {
+            key: "rate_70",
+            label: "Coupon 7.0%",
+            p: ForecastParams {
+                debt_rate: 0.070,
+                ..base_with(ModelMode::ManagedDownside)
+            },
+        },
+        Scn {
+            key: "rate_80",
+            label: "Coupon 8.0%",
+            p: ForecastParams {
+                debt_rate: 0.080,
+                ..base_with(ModelMode::ManagedDownside)
+            },
+        },
+        Scn {
+            key: "occ_90",
+            label: "Occupancy 90%",
+            p: ForecastParams {
+                occupancy_pct: 0.90,
+                ..base_with(ModelMode::ManagedDownside)
+            },
+        },
+        Scn {
+            key: "occ_85",
+            label: "Occupancy 85%",
+            p: ForecastParams {
+                occupancy_pct: 0.85,
+                ..base_with(ModelMode::ManagedDownside)
+            },
+        },
+        Scn {
+            key: "lease_18",
+            label: "Lease-up 18 mo",
+            p: ForecastParams {
+                lease_up_months: 18.0,
+                ..base_with(ModelMode::ManagedDownside)
+            },
+        },
+        Scn {
+            key: "lease_24",
+            label: "Lease-up 24 mo",
+            p: ForecastParams {
+                lease_up_months: 24.0,
+                ..base_with(ModelMode::ManagedDownside)
+            },
+        },
+        Scn {
+            key: "bear",
+            label: "Bear (combined)",
+            p: ForecastParams {
+                occupancy_pct: 0.88,
+                dev_yield: 0.098,
+                debt_rate: 0.070,
+                cap_rate: 0.075,
+                lease_up_months: 18.0,
+                ..base_with(ModelMode::ManagedDownside)
+            },
+        },
+        Scn {
+            key: "bull",
+            label: "Bull",
+            p: ForecastParams {
+                debt_rate: 0.045,
+                cap_rate: 0.0575,
+                ..base_with(ModelMode::ManagedDownside)
+            },
+        },
     ];
 
     // Mode 2 — Single-Input Sensitivity (SingleInputStress): ceteris paribus.
     let stat: Vec<Scn> = vec![
-        Scn { key: "base", label: "Base", p: base_with(ModelMode::SingleInputStress) },
-        Scn { key: "rate_70", label: "Coupon 7.0%", p: ForecastParams { debt_rate: 0.070, ..base_with(ModelMode::SingleInputStress) } },
-        Scn { key: "rate_90", label: "Coupon 9.0%", p: ForecastParams { debt_rate: 0.090, ..base_with(ModelMode::SingleInputStress) } },
-        Scn { key: "occ_85", label: "Occupancy 85%", p: ForecastParams { occupancy_pct: 0.85, ..base_with(ModelMode::SingleInputStress) } },
-        Scn { key: "dev_95", label: "Dev yield 9.5%", p: ForecastParams { dev_yield: 0.095, ..base_with(ModelMode::SingleInputStress) } },
+        Scn {
+            key: "base",
+            label: "Base",
+            p: base_with(ModelMode::SingleInputStress),
+        },
+        Scn {
+            key: "rate_70",
+            label: "Coupon 7.0%",
+            p: ForecastParams {
+                debt_rate: 0.070,
+                ..base_with(ModelMode::SingleInputStress)
+            },
+        },
+        Scn {
+            key: "rate_90",
+            label: "Coupon 9.0%",
+            p: ForecastParams {
+                debt_rate: 0.090,
+                ..base_with(ModelMode::SingleInputStress)
+            },
+        },
+        Scn {
+            key: "occ_85",
+            label: "Occupancy 85%",
+            p: ForecastParams {
+                occupancy_pct: 0.85,
+                ..base_with(ModelMode::SingleInputStress)
+            },
+        },
+        Scn {
+            key: "dev_95",
+            label: "Dev yield 9.5%",
+            p: ForecastParams {
+                dev_yield: 0.095,
+                ..base_with(ModelMode::SingleInputStress)
+            },
+        },
     ];
 
     // Mode 3 — Covenant Cure (CovenantCure): combined shocks AFTER the portfolio is
@@ -81,11 +185,60 @@ pub fn render() -> (String, String) {
     // (halt issuance), since debt funding work-in-progress cannot be cured by selling
     // completed buildings. A clean curable→incurable spread:
     let cure: Vec<Scn> = vec![
-        Scn { key: "cc_moderate", label: "Coupon+cap+occ", p: ForecastParams { occupancy_pct: 0.80, debt_rate: 0.085, cap_rate: 0.095, mode: ModelMode::CovenantCure { shock_year: 8 }, ..Default::default() } },
-        Scn { key: "cc_coupon_led", label: "Coupon-led 9.0%", p: ForecastParams { occupancy_pct: 0.82, debt_rate: 0.090, cap_rate: 0.090, mode: ModelMode::CovenantCure { shock_year: 8 }, ..Default::default() } },
-        Scn { key: "cc_deep", label: "Deep combined", p: ForecastParams { occupancy_pct: 0.78, debt_rate: 0.088, cap_rate: 0.092, mode: ModelMode::CovenantCure { shock_year: 8 }, ..Default::default() } },
-        Scn { key: "cc_cap_blowout", label: "Cap blowout (incurable)", p: ForecastParams { occupancy_pct: 0.78, debt_rate: 0.090, cap_rate: 0.105, mode: ModelMode::CovenantCure { shock_year: 8 }, ..Default::default() } },
-        Scn { key: "cc_income_collapse", label: "Income collapse (incurable)", p: ForecastParams { occupancy_pct: 0.50, dev_yield: 0.07, mode: ModelMode::CovenantCure { shock_year: 8 }, ..Default::default() } },
+        Scn {
+            key: "cc_moderate",
+            label: "Coupon+cap+occ",
+            p: ForecastParams {
+                occupancy_pct: 0.80,
+                debt_rate: 0.085,
+                cap_rate: 0.095,
+                mode: ModelMode::CovenantCure { shock_year: 8 },
+                ..Default::default()
+            },
+        },
+        Scn {
+            key: "cc_coupon_led",
+            label: "Coupon-led 9.0%",
+            p: ForecastParams {
+                occupancy_pct: 0.82,
+                debt_rate: 0.090,
+                cap_rate: 0.090,
+                mode: ModelMode::CovenantCure { shock_year: 8 },
+                ..Default::default()
+            },
+        },
+        Scn {
+            key: "cc_deep",
+            label: "Deep combined",
+            p: ForecastParams {
+                occupancy_pct: 0.78,
+                debt_rate: 0.088,
+                cap_rate: 0.092,
+                mode: ModelMode::CovenantCure { shock_year: 8 },
+                ..Default::default()
+            },
+        },
+        Scn {
+            key: "cc_cap_blowout",
+            label: "Cap blowout (incurable)",
+            p: ForecastParams {
+                occupancy_pct: 0.78,
+                debt_rate: 0.090,
+                cap_rate: 0.105,
+                mode: ModelMode::CovenantCure { shock_year: 8 },
+                ..Default::default()
+            },
+        },
+        Scn {
+            key: "cc_income_collapse",
+            label: "Income collapse (incurable)",
+            p: ForecastParams {
+                occupancy_pct: 0.50,
+                dev_yield: 0.07,
+                mode: ModelMode::CovenantCure { shock_year: 8 },
+                ..Default::default()
+            },
+        },
     ];
 
     let managed_json: Vec<Value> = managed.iter().map(scn_json).collect();
@@ -95,7 +248,10 @@ pub fn render() -> (String, String) {
     // Base ManagedDownside series — pre-shock reference overlay for Covenant Cure charts.
     let (base_years, _) = eng::forecast_full(&ForecastParams::default());
     let base_nav: Vec<f64> = base_years[1..=10].iter().map(|y| y.nav_per_unit).collect();
-    let base_cov: Vec<f64> = base_years[1..=10].iter().map(|y| y.interest_coverage).collect();
+    let base_cov: Vec<f64> = base_years[1..=10]
+        .iter()
+        .map(|y| y.interest_coverage)
+        .collect();
 
     // ── Type-2 break-even thresholds (the IFRS 13 §93(h)(ii) disclosure) ──────
     let yr7 = &base_years[7];
@@ -571,7 +727,12 @@ mod tests {
     #[test]
     fn forbidden_terms_absent() {
         let (html, json) = render();
-        for term in ["Hard Reset", "hard reset", "forced liquidation", "fire sale"] {
+        for term in [
+            "Hard Reset",
+            "hard reset",
+            "forced liquidation",
+            "fire sale",
+        ] {
             assert!(!html.contains(term), "forbidden term in html: {term}");
             assert!(!json.contains(term), "forbidden term in json: {term}");
         }
@@ -594,8 +755,7 @@ mod tests {
         let mut curable = 0;
         for s in cure {
             let d = &s["meta"]["disposition"];
-            if d["incurable"].as_bool() == Some(false)
-                && d["fraction_sold"].as_f64().unwrap() > 0.0
+            if d["incurable"].as_bool() == Some(false) && d["fraction_sold"].as_f64().unwrap() > 0.0
             {
                 curable += 1;
                 let dscr = d["dscr_post_cure"].as_f64().unwrap();
@@ -604,7 +764,10 @@ mod tests {
             // Invariant across every scenario.
             assert_eq!(d["nav_curable_by_disposition"].as_bool(), Some(false));
         }
-        assert!(curable >= 2, "expected ≥2 curable cure scenarios, got {curable}");
+        assert!(
+            curable >= 2,
+            "expected ≥2 curable cure scenarios, got {curable}"
+        );
     }
 
     #[test]

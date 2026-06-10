@@ -33,7 +33,9 @@ const LBL_JV: &str = "Legacy JV";
 const LBL_LP: &str = "Direct-Hold";
 
 fn jv_at(v: &[LegacyJvYear], y: u32) -> &LegacyJvYear {
-    v.iter().find(|r| r.year == y).expect("legacy JV year present")
+    v.iter()
+        .find(|r| r.year == y)
+        .expect("legacy JV year present")
 }
 fn lp_at(v: &[Pclp1Year], y: u32) -> &Pclp1Year {
     v.iter().find(|r| r.year == y).expect("PCLP1 year present")
@@ -168,7 +170,13 @@ fn series() -> Series {
         // IFRS fair-value LTV: fixed $750M bank debt ÷ $1,260M stabilised value = ~59.5% flat (Y4+).
         // (Both structures now on IFRS fair value; the JV's ASPE book LTV — which rose artificially as
         // the depreciating book asset shrank against fixed debt — is no longer used.)
-        ltv_jv: g(&|y| if y >= 4 { LEGACY_JV_BANK_DEBT / LEGACY_JV_STABILIZED_AV } else { 0.0 }),
+        ltv_jv: g(&|y| {
+            if y >= 4 {
+                LEGACY_JV_BANK_DEBT / LEGACY_JV_STABILIZED_AV
+            } else {
+                0.0
+            }
+        }),
         ltv_lp: g(&|y| lp_at(&lp, y).debt_to_asset_value),
         dscr_jv: g(&|y| jv_at(&jv, y).dscr),
         icr_lp: g(&|y| lp_at(&lp, y).interest_coverage),
@@ -232,7 +240,8 @@ fn figures(s: &Series) -> Figures {
 
     let jv_y10 = jv_at(&jv, 10);
     let lp_y10 = lp_at(&lp, 10);
-    let moic_jv = (jv_y10.cumulative_dividends + jv_y10.equity_value_ifrs_fv) / LEGACY_JV_GROSS_EQUITY;
+    let moic_jv =
+        (jv_y10.cumulative_dividends + jv_y10.equity_value_ifrs_fv) / LEGACY_JV_GROSS_EQUITY;
     let lp_dist_sum: f64 = lp
         .iter()
         .filter(|y| (1..=10).contains(&y.year))
@@ -256,7 +265,8 @@ fn figures(s: &Series) -> Figures {
         sf_jv_total: LEGACY_JV_TOTAL_SF,
         sf_lp_total: PCLP1_TOTAL_PORTFOLIO_SQFT,
         sf_delta: PCLP1_TOTAL_PORTFOLIO_SQFT - LEGACY_JV_TOTAL_SF,
-        sf_pct_lp_denom: (PCLP1_TOTAL_PORTFOLIO_SQFT - LEGACY_JV_TOTAL_SF) / PCLP1_TOTAL_PORTFOLIO_SQFT
+        sf_pct_lp_denom: (PCLP1_TOTAL_PORTFOLIO_SQFT - LEGACY_JV_TOTAL_SF)
+            / PCLP1_TOTAL_PORTFOLIO_SQFT
             * 100.0,
         moic_jv,
         moic_lp,
@@ -269,7 +279,8 @@ fn figures(s: &Series) -> Figures {
         y20_nav: y20.nav_per_unit,
         y20_debt: y20.debt,
         ext_cov_min: ext.iter().map(|e| e.coverage).fold(f64::INFINITY, f64::min),
-        y20_sf_growth_pct: (y20.sqft - PCLP1_TOTAL_PORTFOLIO_SQFT) / PCLP1_TOTAL_PORTFOLIO_SQFT * 100.0,
+        y20_sf_growth_pct: (y20.sqft - PCLP1_TOTAL_PORTFOLIO_SQFT) / PCLP1_TOTAL_PORTFOLIO_SQFT
+            * 100.0,
     }
 }
 
@@ -895,8 +906,10 @@ mod tests {
     #[test]
     fn all_series_length_10() {
         let s = series();
-        for v in [&s.de_jv, &s.de_lp, &s.sqft_jv, &s.sqft_lp, &s.ltv_jv, &s.ltv_lp, &s.dscr_jv,
-            &s.icr_lp, &s.nav_jv, &s.nav_lp, &s.div_jv, &s.dist_lp] {
+        for v in [
+            &s.de_jv, &s.de_lp, &s.sqft_jv, &s.sqft_lp, &s.ltv_jv, &s.ltv_lp, &s.dscr_jv,
+            &s.icr_lp, &s.nav_jv, &s.nav_lp, &s.div_jv, &s.dist_lp,
+        ] {
             assert_eq!(v.len(), 10);
         }
         assert_eq!(s.labels.len(), 10);
@@ -918,7 +931,12 @@ mod tests {
         let s = series();
         assert_eq!(s.ltv_jv[0], 0.0); // construction → null
         for i in 3..10 {
-            assert!((s.ltv_jv[i] - 0.5952).abs() < 0.002, "JV LTV Y{} {}", i + 1, s.ltv_jv[i]);
+            assert!(
+                (s.ltv_jv[i] - 0.5952).abs() < 0.002,
+                "JV LTV Y{} {}",
+                i + 1,
+                s.ltv_jv[i]
+            );
         }
     }
 
@@ -956,7 +974,10 @@ mod tests {
         assert!(f.moic_lp > 3.3 && f.moic_lp < 5.2, "LP MOIC {}", f.moic_lp);
         assert!(f.irr_jv > 0.08 && f.irr_jv < 0.20, "JV IRR {}", f.irr_jv);
         assert!(f.irr_lp > 0.10 && f.irr_lp < 0.24, "LP IRR {}", f.irr_lp);
-        assert!(f.moic_lp > f.moic_jv && f.irr_lp > f.irr_jv, "DH should lead on return");
+        assert!(
+            f.moic_lp > f.moic_jv && f.irr_lp > f.irr_jv,
+            "DH should lead on return"
+        );
     }
 
     #[test]
@@ -965,13 +986,21 @@ mod tests {
         let ext = extend_y11_y20(lp_at(&lp, 10));
         assert_eq!(ext.len(), 10);
         // square footage grows past Y10
-        assert!(ext[9].sqft > PCLP1_TOTAL_PORTFOLIO_SQFT, "Y20 sqft {}", ext[9].sqft);
+        assert!(
+            ext[9].sqft > PCLP1_TOTAL_PORTFOLIO_SQFT,
+            "Y20 sqft {}",
+            ext[9].sqft
+        );
         // coverage stays comfortably above the 1.20× covenant every year
         for e in &ext {
             assert!(e.coverage >= 1.8, "Y{} coverage {}", e.year, e.coverage);
         }
         // NAV keeps compounding
-        assert!(ext[9].nav_per_unit > lp_at(&lp, 10).nav_per_unit, "Y20 NAV {}", ext[9].nav_per_unit);
+        assert!(
+            ext[9].nav_per_unit > lp_at(&lp, 10).nav_per_unit,
+            "Y20 NAV {}",
+            ext[9].nav_per_unit
+        );
     }
 
     #[test]
@@ -987,10 +1016,23 @@ mod tests {
         assert!(html.starts_with("<!DOCTYPE html>"));
         assert!(html.ends_with("</html>\n"));
         for n in 1..=6 {
-            assert!(html.contains(&format!("Section {n} of 6")), "missing section {n}");
+            assert!(
+                html.contains(&format!("Section {n} of 6")),
+                "missing section {n}"
+            );
         }
-        for id in ["cv-scale", "cv-leverage", "cv-value", "cv-ltv", "cv-cash", "cv-coverage",
-            "cv-moic", "cv-irr", "cv-ext-scale", "cv-ext-coverage"] {
+        for id in [
+            "cv-scale",
+            "cv-leverage",
+            "cv-value",
+            "cv-ltv",
+            "cv-cash",
+            "cv-coverage",
+            "cv-moic",
+            "cv-irr",
+            "cv-ext-scale",
+            "cv-ext-coverage",
+        ] {
             assert!(html.contains(id), "missing chart {id}");
         }
         assert!(html.contains("generated June 2026 · V2"));
@@ -1024,6 +1066,8 @@ mod tests {
         assert_eq!(v["version"], "V2");
         assert!(v["series"]["navLP"].as_array().unwrap().len() == 10);
         assert!(v["extension_y11_y20"]["rows"].as_array().unwrap().len() == 10);
-        assert!(v["figures"]["moic_lp"].as_f64().unwrap() > v["figures"]["moic_jv"].as_f64().unwrap());
+        assert!(
+            v["figures"]["moic_lp"].as_f64().unwrap() > v["figures"]["moic_jv"].as_f64().unwrap()
+        );
     }
 }

@@ -40,7 +40,10 @@ mod tests {
         // $1,000 invested; $1,100 back in 1 year → IRR = 10%
         let cfs = [-1000.0_f64, 1100.0_f64];
         let irr = xirr_annual(&cfs).unwrap();
-        assert!((irr - 0.10).abs() < 0.0001, "IRR = {irr:.4} (expected 0.10)");
+        assert!(
+            (irr - 0.10).abs() < 0.0001,
+            "IRR = {irr:.4} (expected 0.10)"
+        );
     }
 
     #[test]
@@ -48,7 +51,10 @@ mod tests {
         // $1,000 invested; $0 in Y1; $1,210 in Y2 → IRR = 10%
         let cfs = [-1000.0_f64, 0.0, 1210.0_f64];
         let irr = xirr_annual(&cfs).unwrap();
-        assert!((irr - 0.10).abs() < 0.0001, "IRR = {irr:.4} (expected 0.10)");
+        assert!(
+            (irr - 0.10).abs() < 0.0001,
+            "IRR = {irr:.4} (expected 0.10)"
+        );
     }
 
     #[test]
@@ -58,9 +64,7 @@ mod tests {
         // Expected IRR ~12–14%.
         let mut cfs = vec![-250_000_000.0_f64; 1];
         cfs.extend([0.0, 0.0, 0.0]);
-        for _ in 4..=9 {
-            cfs.push(32_970_000.0);
-        }
+        cfs.extend([32_970_000.0; 6]); // Y4–Y9 annual dividends
         cfs.push(32_970_000.0 + 510_000_000.0); // Y10: dividend + FV terminal
         assert_eq!(cfs.len(), 11);
         let irr = xirr_annual(&cfs).unwrap();

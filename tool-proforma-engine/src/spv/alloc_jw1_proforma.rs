@@ -27,8 +27,8 @@ pub const JW1_TAX_RATE: f64 = 0.27;
 pub struct AllocJw1Year {
     pub year: u32,
     pub interest_income: f64,
-    pub realised_gain_crs: f64,   // Y3: 25K × WCP Y3 bvps
-    pub wcp_fv_change: f64,       // FVTPL each year; Y0 ≈ −$45K
+    pub realised_gain_crs: f64, // Y3: 25K × WCP Y3 bvps
+    pub wcp_fv_change: f64,     // FVTPL each year; Y0 ≈ −$45K
     pub total_investment_income: f64,
     pub income_before_tax: f64,
     pub tax: f64,
@@ -214,30 +214,42 @@ mod tests {
         let years = forecast(&get_wcp());
         // Level 3 $4.55 × 100K = $455,000 vs cost ≈$500,024.92 → loss ≈$45,025
         assert!(years[0].wcp_fv_change < 0.0);
-        assert!((years[0].wcp_fv_change + 45_025.0).abs() < 1.0,
-            "expected ≈ -$45,025, got {}", years[0].wcp_fv_change);
+        assert!(
+            (years[0].wcp_fv_change + 45_025.0).abs() < 1.0,
+            "expected ≈ -$45,025, got {}",
+            years[0].wcp_fv_change
+        );
     }
 
     #[test]
     fn y1_interest_correct() {
         let years = forecast(&get_wcp());
-        assert!((years[1].interest_income - 35_000.0).abs() < 0.01,
-            "expected $35,000, got {}", years[1].interest_income);
+        assert!(
+            (years[1].interest_income - 35_000.0).abs() < 0.01,
+            "expected $35,000, got {}",
+            years[1].interest_income
+        );
     }
 
     #[test]
     fn y2_cumulative_cash_includes_principal() {
         let years = forecast(&get_wcp());
         // $35K (Y1) + $17.5K (Y2) + $500K (principal) = $552,500
-        assert!((years[2].cumulative_cash_received - 552_500.0).abs() < 1.0,
-            "expected $552,500, got {}", years[2].cumulative_cash_received);
+        assert!(
+            (years[2].cumulative_cash_received - 552_500.0).abs() < 1.0,
+            "expected $552,500, got {}",
+            years[2].cumulative_cash_received
+        );
     }
 
     #[test]
     fn y3_crs_positive() {
         let years = forecast(&get_wcp());
-        assert!(years[3].realised_gain_crs > 0.0,
-            "Y3 CRS proceeds should be positive, got {}", years[3].realised_gain_crs);
+        assert!(
+            years[3].realised_gain_crs > 0.0,
+            "Y3 CRS proceeds should be positive, got {}",
+            years[3].realised_gain_crs
+        );
     }
 
     #[test]
@@ -249,8 +261,11 @@ mod tests {
     #[test]
     fn y10_residual_nav_positive() {
         let years = forecast(&get_wcp());
-        assert!(years[10].residual_nav > 0.0,
-            "Y10 residual NAV should be positive, got {}", years[10].residual_nav);
+        assert!(
+            years[10].residual_nav > 0.0,
+            "Y10 residual NAV should be positive, got {}",
+            years[10].residual_nav
+        );
     }
 
     #[test]

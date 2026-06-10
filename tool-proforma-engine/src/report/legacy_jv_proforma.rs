@@ -161,8 +161,8 @@ fn legacy_jv_irr_cash_flows(years: &[LegacyJvYear]) -> Vec<f64> {
         }
     }
     // Y10 terminal: investor exits at IFRS FV equity
-    cfs[10] += legacy_jv_proforma::LEGACY_JV_STABILIZED_AV
-        - legacy_jv_proforma::LEGACY_JV_BANK_DEBT;
+    cfs[10] +=
+        legacy_jv_proforma::LEGACY_JV_STABILIZED_AV - legacy_jv_proforma::LEGACY_JV_BANK_DEBT;
     cfs
 }
 
@@ -206,21 +206,73 @@ pub fn render_proforma() -> String {
     s.push_str("<table>\n");
     s.push_str("<tr><th class=\"lbl\">Parameter</th><th>Value</th><th>Notes</th></tr>\n");
     let cap_rows: &[(&str, String, &str)] = &[
-        ("Gross equity subscribed", fmt_full_dollar(LEGACY_JV_GROSS_EQUITY), "2,500,000 shares × $100"),
-        ("Less: issuance costs (1% mortgage + 1% equity)", format!("({})", fmt_full_dollar(LEGACY_JV_ISSUANCE_COSTS)), ""),
-        ("Net equity deployed", fmt_full_dollar(LEGACY_JV_NET_EQUITY), "Into project construction"),
-        ("Bank debt (construction → permanent)", fmt_full_dollar(LEGACY_JV_BANK_DEBT), "3.0× gross equity; 3.125× on net $240M deployed"),
-        ("Total construction capital", fmt_full_dollar(LEGACY_JV_TOTAL_CAPITAL), "Single-shot (net equity + bank debt)"),
-        ("Shares (traditional Inc.)", fmt_int(LEGACY_JV_SHARES), "Shareholders' agreement"),
-        ("Total portfolio sf", fmt_int(LEGACY_JV_TOTAL_SF), "BRIEF §2469"),
-        ("Bank debt / sf (construction)", format!("${:.2}", LEGACY_JV_COST_PER_SF), "= $750M / 2,298,150 sf; total capital/sf = $430.77"),
+        (
+            "Gross equity subscribed",
+            fmt_full_dollar(LEGACY_JV_GROSS_EQUITY),
+            "2,500,000 shares × $100",
+        ),
+        (
+            "Less: issuance costs (1% mortgage + 1% equity)",
+            format!("({})", fmt_full_dollar(LEGACY_JV_ISSUANCE_COSTS)),
+            "",
+        ),
+        (
+            "Net equity deployed",
+            fmt_full_dollar(LEGACY_JV_NET_EQUITY),
+            "Into project construction",
+        ),
+        (
+            "Bank debt (construction → permanent)",
+            fmt_full_dollar(LEGACY_JV_BANK_DEBT),
+            "3.0× gross equity; 3.125× on net $240M deployed",
+        ),
+        (
+            "Total construction capital",
+            fmt_full_dollar(LEGACY_JV_TOTAL_CAPITAL),
+            "Single-shot (net equity + bank debt)",
+        ),
+        (
+            "Shares (traditional Inc.)",
+            fmt_int(LEGACY_JV_SHARES),
+            "Shareholders' agreement",
+        ),
+        (
+            "Total portfolio sf",
+            fmt_int(LEGACY_JV_TOTAL_SF),
+            "BRIEF §2469",
+        ),
+        (
+            "Bank debt / sf (construction)",
+            format!("${:.2}", LEGACY_JV_COST_PER_SF),
+            "= $750M / 2,298,150 sf; total capital/sf = $430.77",
+        ),
         ("Development yield", fmt_pct(LEGACY_JV_DEV_YIELD), "10.5%"),
         ("Cap rate", fmt_pct(LEGACY_JV_CAP_RATE), "6.25%"),
-        ("Stabilized NOI (net; tenant CAM pass-through)", fmt_full_dollar(LEGACY_JV_NOI_STABILIZED), "Flag D7-4: NOI is net; no opex deduction"),
-        ("Stabilized asset value (IFRS FV)", fmt_full_dollar(LEGACY_JV_STABILIZED_AV), "= NOI / cap rate = $78.75M / 6.25%"),
-        ("Permanent loan interest rate", fmt_pct(LEGACY_JV_INTEREST_RATE), "5%"),
-        ("Building component (ASPE 3061)", fmt_full_dollar(LEGACY_JV_BUILDING_COMPONENT), "$990M + $71.25M cap'd interest + $15M cap'd fees"),
-        ("Depreciation (50-yr SL)", format!("{:.0}-yr SL", LEGACY_JV_DEPRECIATION_YRS), "Building only; land excluded; $21.7M/yr"),
+        (
+            "Stabilized NOI (net; tenant CAM pass-through)",
+            fmt_full_dollar(LEGACY_JV_NOI_STABILIZED),
+            "Flag D7-4: NOI is net; no opex deduction",
+        ),
+        (
+            "Stabilized asset value (IFRS FV)",
+            fmt_full_dollar(LEGACY_JV_STABILIZED_AV),
+            "= NOI / cap rate = $78.75M / 6.25%",
+        ),
+        (
+            "Permanent loan interest rate",
+            fmt_pct(LEGACY_JV_INTEREST_RATE),
+            "5%",
+        ),
+        (
+            "Building component (ASPE 3061)",
+            fmt_full_dollar(LEGACY_JV_BUILDING_COMPONENT),
+            "$990M + $71.25M cap'd interest + $15M cap'd fees",
+        ),
+        (
+            "Depreciation (50-yr SL)",
+            format!("{:.0}-yr SL", LEGACY_JV_DEPRECIATION_YRS),
+            "Building only; land excluded; $21.7M/yr",
+        ),
         ("LTV covenant", fmt_pct(LEGACY_JV_LTV_COVENANT), "65% max"),
     ];
     for (l, v, n) in cap_rows {
@@ -250,42 +302,82 @@ pub fn render_proforma() -> String {
     }
     phase_row.push_str("</tr>\n");
     s.push_str(&phase_row);
-    s.push_str(&data_row("Capex (S-curve 20/50/30 on $990M)", &years, |y| y.capex));
-    s.push_str(&data_row("Equity contribution (24.24% of capex)", &years, |y| y.equity_contribution));
-    s.push_str(&data_row("Cumulative capex", &years, |y| y.cumulative_capex));
-    s.push_str(&data_row("Debt outstanding", &years, |y| y.debt_outstanding));
+    s.push_str(&data_row(
+        "Capex (S-curve 20/50/30 on $990M)",
+        &years,
+        |y| y.capex,
+    ));
+    s.push_str(&data_row(
+        "Equity contribution (24.24% of capex)",
+        &years,
+        |y| y.equity_contribution,
+    ));
+    s.push_str(&data_row("Cumulative capex", &years, |y| {
+        y.cumulative_capex
+    }));
+    s.push_str(&data_row("Debt outstanding", &years, |y| {
+        y.debt_outstanding
+    }));
     s.push_str("</table>\n");
 
     // ── Income Statement ───────────────────────────────────────────────────
     s.push_str("<h2>10-Year Income Statement (CAD; ASPE 3061)</h2>\n");
     s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header());
-    s.push_str(&data_row("Net Operating Income (tenant CAM pass-through)", &years, |y| y.noi));
-    s.push_str(&data_row("Interest on $750M @ 5% (Y1–Y3 capitalized)", &years, |y| -y.interest_expense));
-    s.push_str(&data_row("Depreciation (50-yr SL; ASPE 3061)", &years, |y| -y.depreciation));
-    s.push_str(&data_row("Management fee (2%; Y1–Y3 capitalized)", &years, |y| -y.mgmt_fee));
-    s.push_str(&data_row("Capitalized construction costs (ASPE 3061 offset)", &years, |y| y.capitalized_costs));
+    s.push_str(&data_row(
+        "Net Operating Income (tenant CAM pass-through)",
+        &years,
+        |y| y.noi,
+    ));
+    s.push_str(&data_row(
+        "Interest on $750M @ 5% (Y1–Y3 capitalized)",
+        &years,
+        |y| -y.interest_expense,
+    ));
+    s.push_str(&data_row(
+        "Depreciation (50-yr SL; ASPE 3061)",
+        &years,
+        |y| -y.depreciation,
+    ));
+    s.push_str(&data_row(
+        "Management fee (2%; Y1–Y3 capitalized)",
+        &years,
+        |y| -y.mgmt_fee,
+    ));
+    s.push_str(&data_row(
+        "Capitalized construction costs (ASPE 3061 offset)",
+        &years,
+        |y| y.capitalized_costs,
+    ));
     s.push_str("<tr class=\"subtotal\">");
     s.push_str("<td class=\"lbl\">Net income</td>");
     for y in &years {
         s.push_str(&format!("<td>{}</td>", fmt_m(y.net_income)));
     }
     s.push_str("</tr>\n");
-    s.push_str(&data_row("Add back depreciation (non-cash)", &years, |y| y.depreciation));
+    s.push_str(&data_row("Add back depreciation (non-cash)", &years, |y| {
+        y.depreciation
+    }));
     s.push_str("<tr class=\"total\">");
     s.push_str("<td class=\"lbl\">Distributable cash</td>");
     for y in &years {
         s.push_str(&format!("<td>{}</td>", fmt_m(y.distributable_cash)));
     }
     s.push_str("</tr>\n");
-    s.push_str(&data_row("Carry to Management Co. (20% above 8% hurdle)", &years, |y| -y.carry_to_mgmt));
+    s.push_str(&data_row(
+        "Carry to Management Co. (20% above 8% hurdle)",
+        &years,
+        |y| -y.carry_to_mgmt,
+    ));
     s.push_str("<tr class=\"total\">");
     s.push_str("<td class=\"lbl\">Net dividends to shareholders</td>");
     for y in &years {
         s.push_str(&format!("<td>{}</td>", fmt_m(y.dividends_to_shareholders)));
     }
     s.push_str("</tr>\n");
-    s.push_str(&data_row("Cumulative dividends", &years, |y| y.cumulative_dividends));
+    s.push_str(&data_row("Cumulative dividends", &years, |y| {
+        y.cumulative_dividends
+    }));
     s.push_str("</table>\n");
     s.push_str("<p class=\"note\">Y1–Y3 construction: interest and management fees accrue and are shown at gross cost, then offset by the \"Capitalized construction costs\" row (ASPE 3061) — net P&amp;L = $0. These costs consume construction capital: Y1 $12.5M, Y2 $31.25M, Y3 $42.5M capitalized into the building component ($1,086.25M total). Y4+ stabilized: NOI $78.75M (net; Flag D7-4 — tenant CAM is pass-through); debt service $37.5M; depreciation $21.7M; mgmt fee $5M; net income ~$14.5M; distributable cash ~$36.25M/yr; carry ~$3.25M/yr; net dividends to shareholders ~$33M/yr; cumulative Y4–Y10 dividends ~$231M.</p>\n");
 
@@ -293,10 +385,18 @@ pub fn render_proforma() -> String {
     s.push_str("<h2>Valuation &amp; Ratios</h2>\n");
     s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header());
-    s.push_str(&data_row("Asset value (ASPE book)", &years, |y| y.asset_value_aspe));
-    s.push_str(&data_row("Shareholders' equity (ASPE book)", &years, |y| y.shareholders_equity));
-    s.push_str(&data_row("Equity value (IFRS FV; Y4+ only)", &years, |y| y.equity_value_ifrs_fv));
-    s.push_str(&data_row_pct("LTV (debt / ASPE book asset)", &years, |y| y.ltv_book));
+    s.push_str(&data_row("Asset value (ASPE book)", &years, |y| {
+        y.asset_value_aspe
+    }));
+    s.push_str(&data_row("Shareholders' equity (ASPE book)", &years, |y| {
+        y.shareholders_equity
+    }));
+    s.push_str(&data_row("Equity value (IFRS FV; Y4+ only)", &years, |y| {
+        y.equity_value_ifrs_fv
+    }));
+    s.push_str(&data_row_pct("LTV (debt / ASPE book asset)", &years, |y| {
+        y.ltv_book
+    }));
     s.push_str(&data_row_x("DSCR (NOI / interest)", &years, |y| y.dscr));
     s.push_str(&data_row("Dividend per share (DPS)", &years, |y| y.dps));
     s.push_str("</table>\n");
@@ -318,7 +418,8 @@ pub fn render_proforma() -> String {
 fn render_endpoint_summary(y10: &LegacyJvYear, years: &[LegacyJvYear]) -> String {
     use legacy_jv_proforma::*;
     let moic_at_fv = (y10.cumulative_dividends + y10.equity_value_ifrs_fv) / LEGACY_JV_GROSS_EQUITY;
-    let moic_at_book = (y10.cumulative_dividends + y10.shareholders_equity) / LEGACY_JV_GROSS_EQUITY;
+    let moic_at_book =
+        (y10.cumulative_dividends + y10.shareholders_equity) / LEGACY_JV_GROSS_EQUITY;
 
     let cfs = legacy_jv_irr_cash_flows(years);
     let irr_pct = xirr_annual(&cfs).unwrap_or(0.0);
@@ -486,9 +587,18 @@ mod tests {
     fn proforma_v2_terminology() {
         let html = render_proforma();
         // V2 should use Inc./shareholder terminology
-        assert!(html.contains("shareholders"), "Should use 'shareholders' not 'LP'");
-        assert!(html.contains("Management Co."), "Should reference Management Co.");
-        assert!(!html.contains("distributions_to_lps"), "Old field name must not appear");
+        assert!(
+            html.contains("shareholders"),
+            "Should use 'shareholders' not 'LP'"
+        );
+        assert!(
+            html.contains("Management Co."),
+            "Should reference Management Co."
+        );
+        assert!(
+            !html.contains("distributions_to_lps"),
+            "Old field name must not appear"
+        );
         // V2 should reference corrected NOI
         assert!(html.contains("78.75"), "NOI should be $78.75M");
         // V2 should reference IRR

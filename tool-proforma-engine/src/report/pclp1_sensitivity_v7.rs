@@ -3,9 +3,8 @@
 // Companion to mcorp-tearsheet-alternative-re-v6.html.
 
 use crate::spv::pclp1_proforma::{
-    self, PCLP1_GROSS_EQUITY, PCLP1_DILUTED_UNITS, PCLP1_CAP_RATE,
-    PCLP1_DEV_YIELD, PCLP1_DEBT_RATE_DEBENTURE, PCLP1_BUYER_TARGET_YIELD,
-    PCLP1_ADVISORY_FEE_PCT,
+    self, PCLP1_ADVISORY_FEE_PCT, PCLP1_BUYER_TARGET_YIELD, PCLP1_CAP_RATE,
+    PCLP1_DEBT_RATE_DEBENTURE, PCLP1_DEV_YIELD, PCLP1_DILUTED_UNITS, PCLP1_GROSS_EQUITY,
 };
 
 /// Model assumption constants not stored in the V2 engine.
@@ -89,8 +88,7 @@ pub fn render() -> (String, String) {
     // Cap rate → NAV = $100/unit at Y8
     // navPU = (cash + NOI/capRate + wip - debt) / DILUTED = 100
     // capRate = NOI / (100*DILUTED - cash - wip + debt)
-    let cap_denom =
-        100.0 * PCLP1_DILUTED_UNITS - yr8.ending_cash - yr8.wip + yr8.closing_debt;
+    let cap_denom = 100.0 * PCLP1_DILUTED_UNITS - yr8.ending_cash - yr8.wip + yr8.closing_debt;
     let cap_rate_nav100 = yr8.net_proceeds_from_ops / cap_denom;
 
     // Debenture rate → DSCR = 1.20 at Y7
@@ -101,12 +99,12 @@ pub fn render() -> (String, String) {
     // Occupancy → DSCR = 1.20 at Y7 (devYield held at base)
     // noi = BASE_noi7 * occF;  ebitda = noi - expenses7;  1.20 = ebitda / interest7
     let expenses_y7 = yr7.net_proceeds_from_ops - yr7.ebitda;
-    let occ_dscr120 = BASE_OCC_PCT * (1.20 * yr7.net_interest + expenses_y7)
-        / yr7.net_proceeds_from_ops;
+    let occ_dscr120 =
+        BASE_OCC_PCT * (1.20 * yr7.net_interest + expenses_y7) / yr7.net_proceeds_from_ops;
 
     // Dev yield → DSCR = 1.20 at Y7 (occupancy held at base)
-    let dev_dscr120 = base_dev * (1.20 * yr7.net_interest + expenses_y7)
-        / yr7.net_proceeds_from_ops;
+    let dev_dscr120 =
+        base_dev * (1.20 * yr7.net_interest + expenses_y7) / yr7.net_proceeds_from_ops;
 
     // ── Slider bounds ────────────────────────────────────────────────────────
     let cap_h = (cap_rate_nav100 - base_cap).abs();
@@ -168,8 +166,8 @@ pub fn render() -> (String, String) {
     let base_tot_dist: f64 = dist_pu.iter().sum();
 
     // ── JSON ─────────────────────────────────────────────────────────────────
-    let years_json = serde_json::to_string_pretty(&years[1..=10])
-        .unwrap_or_else(|_| "[]".to_string());
+    let years_json =
+        serde_json::to_string_pretty(&years[1..=10]).unwrap_or_else(|_| "[]".to_string());
 
     let json = format!(
         r#"{{
@@ -283,12 +281,14 @@ pub fn render() -> (String, String) {
     // ── HTML ─────────────────────────────────────────────────────────────────
     let mut h = String::with_capacity(120 * 1024);
 
-    h.push_str(r#"<!DOCTYPE html>
+    h.push_str(
+        r#"<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-"#);
+"#,
+    );
     h.push_str("<title>Professional Centres Canada LP — Sensitivity Analysis V7</title>\n");
     h.push_str(r#"<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>

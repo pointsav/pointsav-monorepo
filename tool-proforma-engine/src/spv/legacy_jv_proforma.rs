@@ -37,8 +37,8 @@ pub const LEGACY_JV_COST_PER_SF: f64 = 326.35; // BRIEF §2468
 // Yield + valuation
 pub const LEGACY_JV_DEV_YIELD: f64 = 0.105; // 10.5%
 pub const LEGACY_JV_CAP_RATE: f64 = 0.0625; // 6.25%
-// Flag D7-4: $78.75M is the NET development yield — tenant CAM pass-through means
-// building-level opex is already netted. Engine MUST NOT deduct opex again.
+                                            // Flag D7-4: $78.75M is the NET development yield — tenant CAM pass-through means
+                                            // building-level opex is already netted. Engine MUST NOT deduct opex again.
 pub const LEGACY_JV_NOI_STABILIZED: f64 = 78_750_000.0; // net NOI; Flag D7-4
 pub const LEGACY_JV_STABILIZED_AV: f64 = 1_260_000_000.0; // $78.75M / 6.25% cap rate
 
@@ -77,27 +77,27 @@ pub const LEGACY_JV_LTV_COVENANT: f64 = 0.65; // 65% max
 #[derive(Debug, Clone, Serialize)]
 pub struct LegacyJvYear {
     pub year: u32,
-    pub phase: &'static str,             // "Pre-launch" | "Construction" | "Stabilized"
-    pub capex: f64,                      // S-curve draw (Y1–Y3 only)
+    pub phase: &'static str, // "Pre-launch" | "Construction" | "Stabilized"
+    pub capex: f64,          // S-curve draw (Y1–Y3 only)
     pub cumulative_capex: f64,
     pub debt_outstanding: f64,
-    pub equity_contribution: f64,        // equity drawn proportional to capex
-    pub noi: f64,                        // net NOI (Y4+ only; Flag D7-4)
-    pub interest_expense: f64,           // all years — Y1–Y3 capitalized (shown explicitly)
-    pub depreciation: f64,               // Y4+ only (ASPE 3061)
-    pub mgmt_fee: f64,                   // all years — Y1–Y3 capitalized (shown explicitly)
-    pub capitalized_costs: f64,          // = interest + mgmt_fee for Y1–Y3; 0 for Y4+
+    pub equity_contribution: f64, // equity drawn proportional to capex
+    pub noi: f64,                 // net NOI (Y4+ only; Flag D7-4)
+    pub interest_expense: f64,    // all years — Y1–Y3 capitalized (shown explicitly)
+    pub depreciation: f64,        // Y4+ only (ASPE 3061)
+    pub mgmt_fee: f64,            // all years — Y1–Y3 capitalized (shown explicitly)
+    pub capitalized_costs: f64,   // = interest + mgmt_fee for Y1–Y3; 0 for Y4+
     pub net_income: f64,
-    pub distributable_cash: f64,         // net_income + depreciation
-    pub carry_to_mgmt: f64,              // 20% above 8% hurdle (Y4+)
-    pub dividends_to_shareholders: f64,  // distributable_cash − carry
+    pub distributable_cash: f64,        // net_income + depreciation
+    pub carry_to_mgmt: f64,             // 20% above 8% hurdle (Y4+)
+    pub dividends_to_shareholders: f64, // distributable_cash − carry
     pub cumulative_dividends: f64,
-    pub dps: f64,                        // dividends per share
-    pub asset_value_aspe: f64,           // cumulative_capex − accumulated_depreciation
-    pub shareholders_equity: f64,        // asset_value_aspe − debt (ASPE book)
-    pub equity_value_ifrs_fv: f64,       // STABILIZED_AV − debt (Y4+ only)
-    pub ltv_book: f64,                   // debt / asset_value_aspe
-    pub dscr: f64,                       // noi / interest_expense
+    pub dps: f64,                  // dividends per share
+    pub asset_value_aspe: f64,     // cumulative_capex − accumulated_depreciation
+    pub shareholders_equity: f64,  // asset_value_aspe − debt (ASPE book)
+    pub equity_value_ifrs_fv: f64, // STABILIZED_AV − debt (Y4+ only)
+    pub ltv_book: f64,             // debt / asset_value_aspe
+    pub dscr: f64,                 // noi / interest_expense
 }
 
 // ─── Forecast ─────────────────────────────────────────────────────────────────
@@ -162,9 +162,17 @@ pub fn forecast() -> Vec<LegacyJvYear> {
         // Y1–Y3: costs are capitalized into building component (ASPE 3061) — shown explicitly
         //        as gross amounts with an offsetting `capitalized_costs` row; net_income = 0.
         // Y4+:   costs hit the P&L normally.
-        let noi = if y >= 4 { LEGACY_JV_NOI_STABILIZED } else { 0.0 };
+        let noi = if y >= 4 {
+            LEGACY_JV_NOI_STABILIZED
+        } else {
+            0.0
+        };
         let interest = debt_outstanding * LEGACY_JV_INTEREST_RATE;
-        let depr = if y >= 4 { LEGACY_JV_DEPRECIATION_ANNUAL } else { 0.0 };
+        let depr = if y >= 4 {
+            LEGACY_JV_DEPRECIATION_ANNUAL
+        } else {
+            0.0
+        };
         cum_depr += depr;
         let mgmt_fee = LEGACY_JV_MGMT_FEE;
 
@@ -234,8 +242,7 @@ pub fn forecast_json() -> serde_json::Value {
     let years = forecast();
     let y10 = &years[10];
 
-    let moic_at_fv =
-        (y10.cumulative_dividends + y10.equity_value_ifrs_fv) / LEGACY_JV_GROSS_EQUITY;
+    let moic_at_fv = (y10.cumulative_dividends + y10.equity_value_ifrs_fv) / LEGACY_JV_GROSS_EQUITY;
     let moic_at_book =
         (y10.cumulative_dividends + y10.shareholders_equity) / LEGACY_JV_GROSS_EQUITY;
 
@@ -327,9 +334,18 @@ mod tests {
         // Net P&L must still be zero; distributable cash and dividends also zero.
         let f = forecast();
         for y in 1..=3 {
-            assert_eq!(f[y].net_income, 0.0, "Y{y} net_income should be 0 (ASPE 3061 offset)");
-            assert_eq!(f[y].distributable_cash, 0.0, "Y{y} distributable_cash should be 0");
-            assert_eq!(f[y].dividends_to_shareholders, 0.0, "Y{y} dividends should be 0");
+            assert_eq!(
+                f[y].net_income, 0.0,
+                "Y{y} net_income should be 0 (ASPE 3061 offset)"
+            );
+            assert_eq!(
+                f[y].distributable_cash, 0.0,
+                "Y{y} distributable_cash should be 0"
+            );
+            assert_eq!(
+                f[y].dividends_to_shareholders, 0.0,
+                "Y{y} dividends should be 0"
+            );
             // Gross costs are now shown; capitalized_costs must equal interest + mgmt_fee
             assert!(
                 f[y].interest_expense > 0.0,
@@ -349,17 +365,44 @@ mod tests {
     fn construction_capitalized_costs_correct() {
         let f = forecast();
         // Y1: debt = $150M; interest = $7.5M; mgmt = $5M; capitalized = $12.5M
-        assert!((f[1].interest_expense - 7_500_000.0).abs() < 100.0, "Y1 interest = {}", f[1].interest_expense);
-        assert!((f[1].capitalized_costs - 12_500_000.0).abs() < 100.0, "Y1 cap_costs = {}", f[1].capitalized_costs);
+        assert!(
+            (f[1].interest_expense - 7_500_000.0).abs() < 100.0,
+            "Y1 interest = {}",
+            f[1].interest_expense
+        );
+        assert!(
+            (f[1].capitalized_costs - 12_500_000.0).abs() < 100.0,
+            "Y1 cap_costs = {}",
+            f[1].capitalized_costs
+        );
         // Y2: debt = $525M; interest = $26.25M; capitalized = $31.25M
-        assert!((f[2].interest_expense - 26_250_000.0).abs() < 100.0, "Y2 interest = {}", f[2].interest_expense);
-        assert!((f[2].capitalized_costs - 31_250_000.0).abs() < 100.0, "Y2 cap_costs = {}", f[2].capitalized_costs);
+        assert!(
+            (f[2].interest_expense - 26_250_000.0).abs() < 100.0,
+            "Y2 interest = {}",
+            f[2].interest_expense
+        );
+        assert!(
+            (f[2].capitalized_costs - 31_250_000.0).abs() < 100.0,
+            "Y2 cap_costs = {}",
+            f[2].capitalized_costs
+        );
         // Y3: debt = $750M; interest = $37.5M; capitalized = $42.5M
-        assert!((f[3].interest_expense - 37_500_000.0).abs() < 100.0, "Y3 interest = {}", f[3].interest_expense);
-        assert!((f[3].capitalized_costs - 42_500_000.0).abs() < 100.0, "Y3 cap_costs = {}", f[3].capitalized_costs);
+        assert!(
+            (f[3].interest_expense - 37_500_000.0).abs() < 100.0,
+            "Y3 interest = {}",
+            f[3].interest_expense
+        );
+        assert!(
+            (f[3].capitalized_costs - 42_500_000.0).abs() < 100.0,
+            "Y3 cap_costs = {}",
+            f[3].capitalized_costs
+        );
         // Y4+: capitalized_costs = 0
         for y in 4..=10 {
-            assert_eq!(f[y].capitalized_costs, 0.0, "Y{y} capitalized_costs should be 0");
+            assert_eq!(
+                f[y].capitalized_costs, 0.0,
+                "Y{y} capitalized_costs should be 0"
+            );
         }
     }
 
@@ -409,8 +452,7 @@ mod tests {
         let f = forecast();
         let y10 = &f[10];
         assert!(
-            y10.cumulative_dividends > 210_000_000.0
-                && y10.cumulative_dividends < 250_000_000.0,
+            y10.cumulative_dividends > 210_000_000.0 && y10.cumulative_dividends < 250_000_000.0,
             "Y10 cumulative dividends = {} (expected ~$231M)",
             y10.cumulative_dividends
         );

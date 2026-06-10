@@ -588,15 +588,15 @@ fn main() {
         }
         Some(Command::PclpSensitivityV7 { out_dir }) => {
             let (html, json) = report::pclp1_sensitivity_v7::render();
-            write_output(
-                &html,
-                Some(&out_dir.join("pclp1-sensitivity-v7.html")),
-            );
+            write_output(&html, Some(&out_dir.join("pclp1-sensitivity-v7.html")));
             write_output(
                 &json,
                 Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_07_Sensitivity_PCCL_V7.json")),
             );
-            eprintln!("wrote 2 PCLP1 Sensitivity V7 files to {}", out_dir.display());
+            eprintln!(
+                "wrote 2 PCLP1 Sensitivity V7 files to {}",
+                out_dir.display()
+            );
         }
         Some(Command::PclpSensitivityV8 { out_dir }) => {
             let (html, json) = report::pclp1_sensitivity_v8::render();
@@ -605,31 +605,51 @@ fn main() {
                 &json,
                 Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_07_Sensitivity_PCCL_V8.json")),
             );
-            eprintln!("wrote 2 PCLP1 Sensitivity V8 files to {}", out_dir.display());
+            eprintln!(
+                "wrote 2 PCLP1 Sensitivity V8 files to {}",
+                out_dir.display()
+            );
         }
         Some(Command::DirectHoldSensitivity { out_dir }) => {
             let (html, json) = report::direct_hold_sensitivity::render();
-            write_output(&html, Some(&out_dir.join("direct-hold-sensitivity-v1.html")));
+            write_output(
+                &html,
+                Some(&out_dir.join("direct-hold-sensitivity-v1.html")),
+            );
             write_output(
                 &json,
-                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_07_DirectHoldSensitivity_DHS_V1.json")),
+                Some(
+                    &out_dir.join("COMPLIANCE_MCorp_2026_06_07_DirectHoldSensitivity_DHS_V1.json"),
+                ),
             );
-            eprintln!("wrote 2 Direct-Hold Sensitivity files to {}", out_dir.display());
+            eprintln!(
+                "wrote 2 Direct-Hold Sensitivity files to {}",
+                out_dir.display()
+            );
         }
         Some(Command::TearsheetAltReV2 { out_dir }) => {
             let (html, json) = report::tearsheet_alt_re_v2::render();
-            write_output(&html, Some(&out_dir.join("mcorp-tearsheet-alternative-re-v2.html")));
-            write_output(&json, Some(&out_dir.join("mcorp-tearsheet-alternative-re-v2.json")));
-            eprintln!("wrote 2 Alternative-RE tear sheet V2 files to {}", out_dir.display());
+            write_output(
+                &html,
+                Some(&out_dir.join("mcorp-tearsheet-alternative-re-v2.html")),
+            );
+            write_output(
+                &json,
+                Some(&out_dir.join("mcorp-tearsheet-alternative-re-v2.json")),
+            );
+            eprintln!(
+                "wrote 2 Alternative-RE tear sheet V2 files to {}",
+                out_dir.display()
+            );
         }
         Some(Command::AllocationJw1 { out_dir }) => {
             use report::alloc_jw1_proforma::{render_json_jw1, render_proforma_jw1};
             let html = render_proforma_jw1();
             let json = render_json_jw1();
-            let html_path = out_dir
-                .join("COMPLIANCE_MCorp_2026_06_09_Proforma_Allocation_JW1.html");
-            let json_path = out_dir
-                .join("COMPLIANCE_MCorp_2026_06_09_Proforma_Allocation_JW1.json");
+            let html_path =
+                out_dir.join("COMPLIANCE_MCorp_2026_06_09_Proforma_Allocation_JW1.html");
+            let json_path =
+                out_dir.join("COMPLIANCE_MCorp_2026_06_09_Proforma_Allocation_JW1.json");
             write_output(&html, Some(&html_path));
             write_output(&json, Some(&json_path));
             let pdf_path = html_path.with_extension("pdf");

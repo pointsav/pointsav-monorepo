@@ -29,7 +29,10 @@ const UNITS: f64 = PCLP1_DILUTED_UNITS;
 const BASE_OCC: f64 = 95.0;
 
 fn base_with(mode: ModelMode) -> ForecastParams {
-    ForecastParams { mode, ..Default::default() }
+    ForecastParams {
+        mode,
+        ..Default::default()
+    }
 }
 
 /// Physical occupancy %  →  engine occupancy_pct multiplier (base 95% = 1.0).
@@ -68,7 +71,13 @@ fn min_icr(years: &[Pclp1Year]) -> f64 {
 fn cov_path(years: &[Pclp1Year]) -> Vec<Value> {
     years[1..=10]
         .iter()
-        .map(|y| if y.interest_coverage > 0.0 { json!(y.interest_coverage) } else { Value::Null })
+        .map(|y| {
+            if y.interest_coverage > 0.0 {
+                json!(y.interest_coverage)
+            } else {
+                Value::Null
+            }
+        })
         .collect()
 }
 
@@ -93,7 +102,11 @@ pub fn render() -> (String, String) {
     let base_min_icr_year = base_years
         .iter()
         .filter(|y| y.interest_coverage > 0.0)
-        .min_by(|a, b| a.interest_coverage.partial_cmp(&b.interest_coverage).unwrap())
+        .min_by(|a, b| {
+            a.interest_coverage
+                .partial_cmp(&b.interest_coverage)
+                .unwrap()
+        })
         .map(|y| y.year)
         .unwrap_or(7);
     let base_run = json!({
@@ -102,9 +115,21 @@ pub fn render() -> (String, String) {
 
     // ── Page 2: Management Response to the three COVERAGE drivers ─────────────
     // (interest rate, occupancy, development yield — each held at 1.20× by building less)
-    let (yr_r2, mr2) = eng::forecast_full(&ForecastParams { debt_rate: 0.07, mode: md, ..Default::default() });
-    let (yr_o75, mo75) = eng::forecast_full(&ForecastParams { occupancy_pct: occ_eng(75.0), mode: md, ..Default::default() });
-    let (yr_d85, md85) = eng::forecast_full(&ForecastParams { dev_yield: 0.085, mode: md, ..Default::default() });
+    let (yr_r2, mr2) = eng::forecast_full(&ForecastParams {
+        debt_rate: 0.07,
+        mode: md,
+        ..Default::default()
+    });
+    let (yr_o75, mo75) = eng::forecast_full(&ForecastParams {
+        occupancy_pct: occ_eng(75.0),
+        mode: md,
+        ..Default::default()
+    });
+    let (yr_d85, md85) = eng::forecast_full(&ForecastParams {
+        dev_yield: 0.085,
+        mode: md,
+        ..Default::default()
+    });
 
     let coverage_held = json!({
         "rate200": cov_path(&yr_r2),
@@ -121,7 +146,11 @@ pub fn render() -> (String, String) {
     let mut lever = Vec::new();
     for i in 20..=36 {
         let c = i as f64 * 0.0025;
-        let (years, m) = eng::forecast_full(&ForecastParams { debt_rate: c, mode: md, ..Default::default() });
+        let (years, m) = eng::forecast_full(&ForecastParams {
+            debt_rate: c,
+            mode: md,
+            ..Default::default()
+        });
         lever.push(json!({ "ratePct": c * 100.0, "builtPct": m.buildings_built_pct, "minICR": min_icr(&years) }));
     }
 
@@ -129,7 +158,11 @@ pub fn render() -> (String, String) {
     let mut headroom = Vec::new();
     for i in 20..=44 {
         let c = i as f64 * 0.0025; // 5.00–11.00%
-        let y8 = eng::forecast_with_params(&ForecastParams { debt_rate: c, mode: ss, ..Default::default() })[8]
+        let y8 = eng::forecast_with_params(&ForecastParams {
+            debt_rate: c,
+            mode: ss,
+            ..Default::default()
+        })[8]
             .interest_coverage;
         headroom.push(json!({ "ratePct": c * 100.0, "y8cov": y8 }));
     }
@@ -138,15 +171,32 @@ pub fn render() -> (String, String) {
         let (mut lo, mut hi) = (PCLP1_DEBT_RATE_DEBENTURE, 0.20);
         for _ in 0..40 {
             let mid = (lo + hi) / 2.0;
-            let icr8 = eng::forecast_with_params(&ForecastParams { debt_rate: mid, ..base_p })[8].interest_coverage;
-            if icr8 > 1.20 { lo = mid; } else { hi = mid; }
+            let icr8 = eng::forecast_with_params(&ForecastParams {
+                debt_rate: mid,
+                ..base_p
+            })[8]
+                .interest_coverage;
+            if icr8 > 1.20 {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
         }
         (lo + hi) / 2.0
     };
 
     // NAV resilience: base vs a named bear / bull.
-    let nav_bear = nav_path(&ForecastParams { cap_rate: 0.0775, occupancy_pct: occ_eng(88.0), mode: ss, ..Default::default() });
-    let nav_bull = nav_path(&ForecastParams { cap_rate: 0.0575, mode: ss, ..Default::default() });
+    let nav_bear = nav_path(&ForecastParams {
+        cap_rate: 0.0775,
+        occupancy_pct: occ_eng(88.0),
+        mode: ss,
+        ..Default::default()
+    });
+    let nav_bull = nav_path(&ForecastParams {
+        cap_rate: 0.0575,
+        mode: ss,
+        ..Default::default()
+    });
 
     // ── Capital preservation under a MAXIMAL, research-grounded combined shock ──
     // A single internally-consistent "severely adverse" shock across all three drivers
@@ -173,7 +223,11 @@ pub fn render() -> (String, String) {
         let (mut lo, mut hi) = (PCLP1_CAP_RATE, 0.15);
         for _ in 0..48 {
             let mid = (lo + hi) / 2.0;
-            let nav = eng::forecast_full(&cure_p_at(mid)).1.disposition.unwrap().nav_per_unit_post_cure;
+            let nav = eng::forecast_full(&cure_p_at(mid))
+                .1
+                .disposition
+                .unwrap()
+                .nav_per_unit_post_cure;
             if nav > cure_nav_target {
                 lo = mid;
             } else {
@@ -182,7 +236,10 @@ pub fn render() -> (String, String) {
         }
         (lo + hi) / 2.0
     };
-    let cure_disp = eng::forecast_full(&cure_p_at(cure_cap)).1.disposition.unwrap();
+    let cure_disp = eng::forecast_full(&cure_p_at(cure_cap))
+        .1
+        .disposition
+        .unwrap();
     let before_cov = eng::forecast_with_params(&ForecastParams {
         occupancy_pct: cure_occ,
         debt_rate: cure_rate,
@@ -211,7 +268,12 @@ pub fn render() -> (String, String) {
 
     // ── Page 4: §93(h)(ii) two-sided ±25 bps reasonably-possible disclosure ──
     let base_nav8 = base_years[8].nav_per_unit;
-    let probe2 = |driver: &str, adv: &str, fav: &str, p_adv: ForecastParams, p_fav: ForecastParams| -> Value {
+    let probe2 = |driver: &str,
+                  adv: &str,
+                  fav: &str,
+                  p_adv: ForecastParams,
+                  p_fav: ForecastParams|
+     -> Value {
         let na = eng::forecast_with_params(&p_adv);
         let nf = eng::forecast_with_params(&p_fav);
         json!({
@@ -222,14 +284,58 @@ pub fn render() -> (String, String) {
         })
     };
     let oneway = json!([
-        probe2("Cap rate", "+25 bps → 6.50%", "−25 bps → 6.00%",
-            ForecastParams { cap_rate: 0.065, ..base_p }, ForecastParams { cap_rate: 0.060, ..base_p }),
-        probe2("Interest rate", "+25 bps → 5.25%", "−25 bps → 4.75%",
-            ForecastParams { debt_rate: 0.0525, ..base_p }, ForecastParams { debt_rate: 0.0475, ..base_p }),
-        probe2("Occupancy", "−2.5 pp → 92.5%", "+2.5 pp → 97.5%",
-            ForecastParams { occupancy_pct: occ_eng(92.5), ..base_p }, ForecastParams { occupancy_pct: occ_eng(97.5), ..base_p }),
-        probe2("Development yield", "−25 bps → 10.25%", "+25 bps → 10.75%",
-            ForecastParams { dev_yield: 0.1025, ..base_p }, ForecastParams { dev_yield: 0.1075, ..base_p }),
+        probe2(
+            "Cap rate",
+            "+25 bps → 6.50%",
+            "−25 bps → 6.00%",
+            ForecastParams {
+                cap_rate: 0.065,
+                ..base_p
+            },
+            ForecastParams {
+                cap_rate: 0.060,
+                ..base_p
+            }
+        ),
+        probe2(
+            "Interest rate",
+            "+25 bps → 5.25%",
+            "−25 bps → 4.75%",
+            ForecastParams {
+                debt_rate: 0.0525,
+                ..base_p
+            },
+            ForecastParams {
+                debt_rate: 0.0475,
+                ..base_p
+            }
+        ),
+        probe2(
+            "Occupancy",
+            "−2.5 pp → 92.5%",
+            "+2.5 pp → 97.5%",
+            ForecastParams {
+                occupancy_pct: occ_eng(92.5),
+                ..base_p
+            },
+            ForecastParams {
+                occupancy_pct: occ_eng(97.5),
+                ..base_p
+            }
+        ),
+        probe2(
+            "Development yield",
+            "−25 bps → 10.25%",
+            "+25 bps → 10.75%",
+            ForecastParams {
+                dev_yield: 0.1025,
+                ..base_p
+            },
+            ForecastParams {
+                dev_yield: 0.1075,
+                ..base_p
+            }
+        ),
     ]);
 
     // Analytic break-even thresholds — appendix "stress reference" only.
@@ -470,7 +576,13 @@ mod tests {
                     "whole-word 'fund' at byte {i}"
                 );
             }
-            for t in ["professional centres", "pclp", "lp units", "hard reset", "forced liquidation"] {
+            for t in [
+                "professional centres",
+                "pclp",
+                "lp units",
+                "hard reset",
+                "forced liquidation",
+            ] {
                 assert!(!lower.contains(t), "forbidden term '{t}'");
             }
         }
@@ -502,13 +614,25 @@ mod tests {
         let (_h, j) = render();
         let v: Value = serde_json::from_str(&j).unwrap();
         let ow = v["ifrs13_93h_ii_reasonably_possible"].as_array().unwrap();
-        let names: Vec<String> = ow.iter().map(|o| o["driver"].as_str().unwrap().to_string()).collect();
-        for d in ["Cap rate", "Interest rate", "Occupancy", "Development yield"] {
+        let names: Vec<String> = ow
+            .iter()
+            .map(|o| o["driver"].as_str().unwrap().to_string())
+            .collect();
+        for d in [
+            "Cap rate",
+            "Interest rate",
+            "Occupancy",
+            "Development yield",
+        ] {
             assert!(names.iter().any(|n| n == d), "missing driver {d}");
         }
         // Management response covers the three coverage drivers.
-        let mr: Vec<String> = v["management_response"].as_array().unwrap()
-            .iter().map(|o| o["driver"].as_str().unwrap().to_string()).collect();
+        let mr: Vec<String> = v["management_response"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|o| o["driver"].as_str().unwrap().to_string())
+            .collect();
         for d in ["Interest rate", "Occupancy", "Development yield"] {
             assert!(mr.iter().any(|n| n == d), "missing managed driver {d}");
         }
@@ -520,10 +644,19 @@ mod tests {
         let (_h, j) = render();
         let v: Value = serde_json::from_str(&j).unwrap();
         for o in v["management_response"].as_array().unwrap() {
-            assert!(o["y8dist"].as_f64().map(|x| x.is_finite()).unwrap_or(false), "fourStress missing y8dist");
+            assert!(
+                o["y8dist"].as_f64().map(|x| x.is_finite()).unwrap_or(false),
+                "fourStress missing y8dist"
+            );
         }
         for o in v["ifrs13_93h_ii_reasonably_possible"].as_array().unwrap() {
-            assert!(o["distAdverse"].as_f64().map(|x| x.is_finite()).unwrap_or(false), "oneway missing distAdverse");
+            assert!(
+                o["distAdverse"]
+                    .as_f64()
+                    .map(|x| x.is_finite())
+                    .unwrap_or(false),
+                "oneway missing distAdverse"
+            );
         }
     }
 
@@ -534,7 +667,11 @@ mod tests {
         let v: Value = serde_json::from_str(&j).unwrap();
         for o in v["management_response"].as_array().unwrap() {
             let mi = o["minICR"].as_f64().unwrap();
-            assert!(mi >= 1.19, "managed min coverage {mi} below covenant for {}", o["driver"]);
+            assert!(
+                mi >= 1.19,
+                "managed min coverage {mi} below covenant for {}",
+                o["driver"]
+            );
         }
     }
 
@@ -550,14 +687,38 @@ mod tests {
         let after = c["after"].as_f64().unwrap();
         let navpu = c["navpu"].as_f64().unwrap();
         let frac = c["frac"].as_f64().unwrap();
-        assert!(before < 1.20, "the combined shock should breach coverage, got {before}");
-        assert!((after - 1.20).abs() < 0.02, "post-cure coverage should be ~1.20x, got {after}");
-        assert!(frac > 0.0 && frac < 1.0, "a partial disposition should cure, got frac {frac}");
-        assert!((navpu - 105.0).abs() < 3.0, "preserved NAV should be ~$105, got {navpu}");
-        assert!(navpu > 100.0, "preserved NAV should hold above the $100 floor, got {navpu}");
+        assert!(
+            before < 1.20,
+            "the combined shock should breach coverage, got {before}"
+        );
+        assert!(
+            (after - 1.20).abs() < 0.02,
+            "post-cure coverage should be ~1.20x, got {after}"
+        );
+        assert!(
+            frac > 0.0 && frac < 1.0,
+            "a partial disposition should cure, got frac {frac}"
+        );
+        assert!(
+            (navpu - 105.0).abs() < 3.0,
+            "preserved NAV should be ~$105, got {navpu}"
+        );
+        assert!(
+            navpu > 100.0,
+            "preserved NAV should hold above the $100 floor, got {navpu}"
+        );
         // The shock is violent across all three drivers.
-        assert!(c["shockRateBps"].as_f64().unwrap() >= 400.0, "rate shock too mild");
-        assert!(c["shockCapBps"].as_f64().unwrap() >= 200.0, "cap shock too mild");
-        assert!(c["shockOccPp"].as_f64().unwrap() >= 5.0, "occupancy shock too mild");
+        assert!(
+            c["shockRateBps"].as_f64().unwrap() >= 400.0,
+            "rate shock too mild"
+        );
+        assert!(
+            c["shockCapBps"].as_f64().unwrap() >= 200.0,
+            "cap shock too mild"
+        );
+        assert!(
+            c["shockOccPp"].as_f64().unwrap() >= 5.0,
+            "occupancy shock too mild"
+        );
     }
 }
