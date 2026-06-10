@@ -763,15 +763,36 @@ pub fn reap_expired_leases(cfg: &QueueConfig, max_age: Duration) -> QueueResult<
             if age_nanos >= max_age_nanos {
                 // Extract the base filename by stripping `.lease.<worker_id>.<ts>`.
                 if let Some(base) = extract_base_filename(&fname_str) {
+                    // PID liveness: if the worker that holds this lease is still
+                    // running, skip requeue — the lease is legitimately in-flight.
+                    // Only requeue when the worker PID is dead (crashed or exited).
+                    // Worker IDs have the form "drain-<pid>"; skip the check for
+                    // any other format (non-drain workers, tests).
+                    if let Some(worker_id) = extract_worker_id(&fname_str) {
+                        if let Some(pid_str) = worker_id.strip_prefix("drain-") {
+                            if let Ok(pid) = pid_str.parse::<u32>() {
+                                if is_pid_alive(pid) {
+                                    debug!(
+                                        lease_file = %fname_str,
+                                        pid,
+                                        age_secs = age_nanos / 1_000_000_000,
+                                        "expired lease skipped — worker PID still alive"
+                                    );
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+
                     let lease_path = cfg.in_flight_dir().join(&fname_str);
                     let queue_path = cfg.queue_dir().join(&base);
                     match fs::rename(&lease_path, &queue_path) {
                         Ok(()) => {
                             reclaimed += 1;
-                            info!(
+                            warn!(
                                 lease_file = %fname_str,
                                 age_secs = age_nanos / 1_000_000_000,
-                                "expired lease reclaimed to queue"
+                                "expired lease requeued — worker PID dead"
                             );
                         }
                         Err(e) => {
@@ -826,6 +847,24 @@ fn acquire_lock(cfg: &QueueConfig) -> QueueResult<File> {
 
 /// Sanitise a worker ID so it is safe to embed in a filename.
 /// Replace path-separator characters and other unsafe chars with `_`.
+/// Extract the worker_id segment from a lease filename.
+///
+/// Format: `<base>.lease.<worker_id>.<ts_nanos>`
+fn extract_worker_id(lease_filename: &str) -> Option<&str> {
+    let after_lease = lease_filename.split(".lease.").nth(1)?;
+    // worker_id is everything except the last `.`-delimited ts component.
+    let dot_pos = after_lease.rfind('.')?;
+    Some(&after_lease[..dot_pos])
+}
+
+/// Check whether a PID is alive on Linux by probing `/proc/<pid>`.
+///
+/// Returns `true` if the process exists, `false` if it does not. Non-Linux
+/// targets always return `false` (conservatively allow requeue).
+fn is_pid_alive(pid: u32) -> bool {
+    std::path::Path::new(&format!("/proc/{pid}")).exists()
+}
+
 fn sanitise_worker_id(worker_id: &str) -> String {
     worker_id
         .chars()

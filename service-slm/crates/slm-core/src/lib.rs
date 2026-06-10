@@ -322,7 +322,9 @@ mod tests {
             "tetrad_summary must be absent when None; got: {json}"
         );
         let req2: ComputeRequest = serde_json::from_str(&json).unwrap();
-        let sc = req2.session_context.expect("session_context must survive round-trip");
+        let sc = req2
+            .session_context
+            .expect("session_context must survive round-trip");
         assert_eq!(sc.archive_name, "project-intelligence");
         assert_eq!(sc.archive_domain.as_deref(), Some("intelligence"));
         assert!(sc.tetrad_summary.is_none());
