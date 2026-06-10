@@ -5,6 +5,19 @@
 
 ---
 
+## Alternative Real Estate tear sheet V2 (2026-06-09)
+
+- [ ] **Commit + Stage 6** — tear-sheet V2 is complete + verified (12 tests, clippy clean) but
+  **held uncommitted pending operator review**. When approved, stage ONLY these three monorepo-clone
+  files via `~/Foundry/bin/commit-as-next.sh`: `tool-proforma-engine/src/main.rs`,
+  `src/report/mod.rs`, `src/report/tearsheet_alt_re_v2.rs` (CODE-* self-contained). Then Stage 6
+  promote from the Command Session. Deliverables: `outputs/mcorp-tearsheet-alternative-re-v2.{html,json}`.
+  Full record: `.agent/briefs/BRIEF-tearsheet-alt-re-v2.md`. `[2026-06-09 totebox@opus-4.8]`
+- [ ] Optional — tune Y11–20 pace (`EXT_RECYCLE_FFO_PCT`, currently 0.50) if +121% SF reads too aggressive.
+- [ ] Optional — emit a PDF deliverable into `outputs/` (currently HTML+JSON only).
+
+---
+
 ## V2 Bencal proforma outputs (2026-06-05)
 
 - [x] `feat(bencal-v2)` — `729b6083` — committed to monorepo `main` (author: pwoodfine).
