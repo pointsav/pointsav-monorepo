@@ -289,9 +289,7 @@ pub fn render() -> (String, String) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 "#);
-    h.push_str(&format!(
-        "<title>Professional Centres Canada LP — Sensitivity Analysis V7</title>\n"
-    ));
+    h.push_str("<title>Professional Centres Canada LP — Sensitivity Analysis V7</title>\n");
     h.push_str(r#"<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root {
@@ -668,6 +666,8 @@ footer { max-width: var(--page-w); margin: 16px auto; padding: 0 32px 24px; bord
     ));
 
     // Audit section
+    let occ_nav100_str = format!("{:.1}%", BASE_OCC_PCT * (1.0 - cap_hbps / 10000.0 * 2.0));
+    let dev_nav100_str = format!("{:.2}%", dev_dscr120 * 100.0 * 0.67);
     h.push_str(&format!(
         r#"  <div class="audit-section">
     <span class="stitle">Sensitivity Analysis — Static Audit Reference (IFRS 13 §93(h)(ii))</span>
@@ -774,8 +774,8 @@ footer { max-width: var(--page-w); margin: 16px auto; padding: 0 32px 24px; bord
         occ_hpp_r = occ_hpp,
         base_occ = BASE_OCC_PCT,
         occ_dscr120_pct = occ_dscr120,
-        occ_nav100_str = format!("{:.1}%", BASE_OCC_PCT * (1.0 - cap_hbps / 10000.0 * 2.0)), // estimate; NAV=100 occupancy not separately computed
-        dev_nav100_str = format!("{:.2}%", dev_dscr120 * 100.0 * 0.67), // rough estimate
+        occ_nav100_str = occ_nav100_str,
+        dev_nav100_str = dev_nav100_str,
         dev_dscr120_pct = dev_dscr120 * 100.0,
         dev_hbps_r = dev_hbps,
         base_dev_pct = base_dev * 100.0,
