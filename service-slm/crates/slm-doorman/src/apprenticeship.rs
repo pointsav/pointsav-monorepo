@@ -179,6 +179,14 @@ impl<'a> ApprenticeshipDispatcher<'a> {
                     role: "user".into(),
                     content: prompt,
                 },
+                // Assistant pre-fill: force the model to start with the YAML fence.
+                // Without this, instruct models begin with prose reasoning and never
+                // write the frontmatter, causing parse_attempt_content to default
+                // escalate=true and blank the diff.
+                ChatMessage {
+                    role: "assistant".into(),
+                    content: "---\n".to_string(),
+                },
             ],
             complexity: match tier_hint {
                 Tier::Yoyo => Complexity::High,
@@ -187,12 +195,12 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             tier_hint: Some(tier_hint),
             stream: false,
             // Tier B (OLMo 3 32B-Think): 2048 tokens ≈ 228 s at 9 tok/s.
-            // Tier A (OLMo 2 7B Q4): capped at 512 tokens ≈ 4 min at 2 tok/s.
-            // The cap prevents a single brief from blocking the drain queue for
-            // 17–60 min while the model generates a long diff no one needs yet.
+            // Tier A (OLMo 2 7B Q4): raised from 512 → 1024.
+            // 512 was too tight: the 7B model used ~230 tokens for reasoning,
+            // leaving only 280 for the diff — not enough for non-trivial diffs.
             max_tokens: Some(match tier_hint {
                 Tier::Yoyo => 2048,
-                _ => 512,
+                _ => 1024,
             }),
             temperature: None,
             sanitised_outbound: true,
@@ -202,9 +210,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             speculation: None,
             graph_context_enabled: None,
             tools: None,
-            // Stop at the natural end of the diff code block. Without stop
-            // sequences, OLMo may never emit EOS for out-of-distribution prompts,
-            // causing the generation to run until max_tokens is reached.
+            // Stop at the natural end of the diff code block.
             stop_sequences: Some(vec![
                 "```\n\n".to_string(),
                 "<|endoftext|>".to_string(),
@@ -222,7 +228,14 @@ impl<'a> ApprenticeshipDispatcher<'a> {
         );
 
         let resp = self.doorman.route(&req).await?;
-        let parsed = parse_attempt_content(&resp.content);
+        // Reattach the assistant pre-fill when llama-server returns only the continuation.
+        // Mock tests return full content (starts with ---); skip prepend to avoid doubling.
+        let full_content = if resp.content.trim_start().starts_with("---") {
+            resp.content.clone()
+        } else {
+            format!("---\n{}", resp.content)
+        };
+        let parsed = parse_attempt_content(&full_content);
         let attempt = build_attempt(brief, &resp, parsed);
         if let Some(cache) = &self.cache {
             cache.insert(brief.clone(), attempt.clone());
@@ -294,6 +307,10 @@ impl<'a> ApprenticeshipDispatcher<'a> {
                     role: "user".into(),
                     content: prompt,
                 },
+                ChatMessage {
+                    role: "assistant".into(),
+                    content: "---\n".to_string(),
+                },
             ],
             complexity: match tier_hint {
                 Tier::Yoyo => Complexity::High,
@@ -301,13 +318,9 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             },
             tier_hint: Some(tier_hint),
             stream: false,
-            // Tier B (OLMo 3 32B-Think): 2048 tokens ≈ 228 s at 9 tok/s.
-            // Tier A (OLMo 2 7B Q4): capped at 512 tokens ≈ 4 min at 2 tok/s.
-            // The cap prevents a single brief from blocking the drain queue for
-            // 17–60 min while the model generates a long diff no one needs yet.
             max_tokens: Some(match tier_hint {
                 Tier::Yoyo => 2048,
-                _ => 512,
+                _ => 1024,
             }),
             temperature: None,
             sanitised_outbound: true,
@@ -317,9 +330,6 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             speculation: None,
             graph_context_enabled: None,
             tools: None,
-            // Stop at the natural end of the diff code block. Without stop
-            // sequences, OLMo may never emit EOS for out-of-distribution prompts,
-            // causing the generation to run until max_tokens is reached.
             stop_sequences: Some(vec![
                 "```\n\n".to_string(),
                 "<|endoftext|>".to_string(),
@@ -337,7 +347,12 @@ impl<'a> ApprenticeshipDispatcher<'a> {
         );
 
         let resp = self.doorman.route(&req).await?;
-        let parsed = parse_attempt_content(&resp.content);
+        let full_content = if resp.content.trim_start().starts_with("---") {
+            resp.content.clone()
+        } else {
+            format!("---\n{}", resp.content)
+        };
+        let parsed = parse_attempt_content(&full_content);
         let attempt = build_attempt(brief, &resp, parsed);
 
         write_shadow_tuple(
@@ -377,14 +392,16 @@ fn write_shadow_tuple(
     doctrine_version: &str,
     tenant: &str,
 ) -> Result<()> {
-    // Degenerate tuple guard: if Tier A escalated but produced no diff, this tuple
-    // carries no DPO signal (rejected sample is empty string). Skip rather than
-    // writing noise into the training corpus.
-    if attempt.escalate && attempt.diff.is_empty() {
+    // Degenerate tuple guard: skip only when the model produced NOTHING at all
+    // (no reasoning and no diff). A tuple where the model wrote reasoning-but-no-diff
+    // still carries DPO signal — the actual_diff is the chosen sample and the empty
+    // diff + escalate=true is a valid negative. Blanking on escalate alone caused all
+    // 7B tuples to be dropped because frontmatter failures force escalate=true.
+    if attempt.diff.is_empty() && attempt.reasoning.is_empty() {
         warn!(
             target: "slm_doorman::apprenticeship",
             brief_id = %brief.brief_id,
-            "shadow tuple skipped — Tier A escalated with empty diff; awaiting Tier B"
+            "shadow tuple skipped — model produced no content at all"
         );
         return Ok(());
     }
@@ -490,32 +507,35 @@ fn sanitize_attempt_for_corpus(a: &ApprenticeshipAttempt) -> ApprenticeshipAttem
 /// role per Doctrine claim #32 and pins the response shape so the
 /// parser has a stable target.
 pub const APPRENTICE_SYSTEM_PROMPT: &str = "\
-You are a code-editing assistant. You will receive a brief describing a software change \
-to make. Your response MUST begin with YAML frontmatter — the very first characters \
-must be ---. Do not write any introductory text before the opening ---.\n\
+You are a code-editing assistant. Output ONLY the structured response below — no prose before it.\n\
 \n\
-Respond in exactly this format:\n\
+REQUIRED FORMAT (copy exactly, fill in values):\n\
 \n\
 ---\n\
-self_confidence: <float 0.0–1.0>\n\
-escalate: <true or false>\n\
+self_confidence: 0.7\n\
+escalate: false\n\
 ---\n\
 \n\
 ## Reasoning\n\
-<explain what the change does and why>\n\
+One sentence: what changed and why.\n\
 \n\
 ## Diff\n\
 ```diff\n\
-<unified diff: --- a/file  +++ b/file  @@ ... @@  context lines>\n\
+--- a/path/to/file\n\
++++ b/path/to/file\n\
+@@ -1,3 +1,3 @@\n\
+ context line\n\
+-old line\n\
++new line\n\
 ```\n\
 \n\
 Rules:\n\
-- Set escalate: false and write a real unified diff when you can make the change.\n\
-- Set escalate: true and leave the Diff block empty when the task is ambiguous, \
-files are missing, or you cannot safely make the change.\n\
-- self_confidence is your confidence in the diff (0.0 = none, 1.0 = certain).\n\
-- If self_confidence is below 0.5, you must set escalate: true.\n\
-- The diff must follow standard unified diff format.";
+- The VERY FIRST characters of your response must be ---\n\
+- Write reasoning in ONE sentence only — brevity leaves tokens for the diff.\n\
+- Set escalate: false and write the unified diff when you can make the change.\n\
+- Set escalate: true and leave Diff empty only when the task is truly ambiguous.\n\
+- self_confidence: your certainty (0.0 = none, 1.0 = certain).\n\
+- The diff MUST be a valid unified diff (--- a/ +++ b/ @@ lines).";
 
 /// Build the apprentice user-prompt body from a brief.
 pub fn apprentice_prompt(cfg: &ApprenticeshipConfig, brief: &ApprenticeshipBrief) -> String {
@@ -666,8 +686,9 @@ pub fn parse_attempt_content(content: &str) -> ParsedAttempt {
     }
 
     let reasoning = extract_section(content, "## Reasoning");
+    // Keep whatever diff the model generated — the escalate flag already signals quality.
+    // Blanking the diff here caused all 7B corpus tuples to be dropped by write_shadow_tuple.
     let diff = extract_diff_block(content).unwrap_or_default();
-    let diff = if escalate { String::new() } else { diff };
 
     ParsedAttempt {
         self_confidence,
@@ -965,7 +986,12 @@ I'm not sure how to apply this safely.
             attempt.escalate,
             "Doorman MUST force escalate=true when self_confidence < {APPRENTICE_ESCALATE_THRESHOLD}"
         );
-        assert_eq!(attempt.diff, "", "diff MUST be emptied on escalate");
+        // Diff is preserved even when escalate=true — the corpus needs the attempted diff
+        // to compute DPO signal against the actual_diff. The escalate flag carries the quality signal.
+        assert!(
+            !attempt.diff.is_empty(),
+            "diff must be preserved even on threshold-forced escalate (model wrote a diff)"
+        );
         assert!((attempt.self_confidence - 0.21).abs() < 1e-3);
     }
 
@@ -1140,11 +1166,11 @@ ok
         let body: serde_json::Value =
             serde_json::from_slice(&reqs[0].body).expect("request body is JSON");
 
-        // Fix 3: Tier A caps generation at 512 tokens.
+        // Tier A caps generation at 1024 tokens (raised from 512 — 7B needs room for diff).
         assert_eq!(
             body["max_tokens"].as_u64(),
-            Some(512),
-            "Tier A shadow request must cap max_tokens at 512"
+            Some(1024),
+            "Tier A shadow request must cap max_tokens at 1024"
         );
         // Fix 2: stop sequences present, including the diff-fence terminator.
         let stop = body["stop"]
