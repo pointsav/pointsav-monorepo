@@ -1,19 +1,40 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-06-09 (session 3) — service-content corpus quality fixes deployed; corpus reset to 0; before-next-run checklist added.
+> Last updated: 2026-06-10 (session 4) — apprenticeship quality fix (7B format compliance); 143 good DPO pairs; approval tag created; yoyo-batch STOCKOUT.
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
+## ✅ DONE (2026-06-10) — Apprenticeship quality fix + training gate armed [pwoodfine@claude-code]
+
+**Status:** 
+- git-commit shadow corpus: **401 tuples** in `data/training-corpus/apprenticeship/git-commit/`
+- DPO feedback pairs: **300 total, 143 good** (non-placeholder rejected) in `data/training-corpus/feedback/`
+- Approval tag: **CREATED** at `data/training-approved/coding-lora-2026-06-10.tag`
+- yoyo-batch: **STOCKOUT** (us-central1-a L4 exhausted); Phase 6 will run next time VM starts
+
+**Fix commit `b84f8310`:**
+- `APPRENTICE_SYSTEM_PROMPT`: tighter format, concrete example
+- `dispatch_brief/dispatch_shadow`: assistant pre-fill `---\n` → model starts in frontmatter
+- `parse_attempt_content`: conditional prepend (`---\n`) when model returns continuation
+- Removed diff-blanking when `escalate=true` (was dropping all 7B tuples)
+- `write_shadow_tuple` guard: now skips only fully-empty (no reasoning AND no diff)
+- max_tokens Tier A: 512 → 1024 (7B needs more room for diff after reasoning)
+
+**Note:** corpus gate logic was correct — the 7B model WAS generating reasoning but never
+writing frontmatter → `escalate=true` forced → diff blanked → corpus write skipped. Fix
+unblocks corpus accumulation for the next training cycle.
+
+---
+
 ## ⚠️ BEFORE NEXT TRAINING RUN — read this first [pwoodfine@claude-code 2026-06-09]
 
-**Context:** All corpus quality fixes are deployed as of today. The 91 contaminated pairs have
-been deleted. Corpus = 0 on a clean start. Tonight's 17:00 UTC cycle will generate the first
-genuine post-fix pairs.
+**Context:** 143 good DPO pairs as of 2026-06-10. Approval tag created. Waiting for yoyo-batch
+VM capacity. Phase 6 will auto-fire at 17:00 UTC on next day that yoyo-batch is running.
 
-**DO NOT create the approval tag yet.** The corpus needs time to rebuild. One cycle generates
-~5–10 genuine pairs. Minimum meaningful training batch: ~50–100 pairs.
+**yoyo-batch:** STOCKOUT in us-central1-a as of 2026-06-10 17:31 UTC. Do NOT use zone fallback.
+Retry `gcloud compute instances start yoyo-batch --zone us-central1-a` when capacity returns.
 
 ---
 
