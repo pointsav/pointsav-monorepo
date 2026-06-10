@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Woodfine Direct-Hold Solutions — Sensitivity Analysis</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* Woodfine Color Matrix (MEMO-04): deep-slate text (no pure black), off-white canvas,
+   wf-blue primary, wf-green finance accent, wf-gold Direct-Hold marker, wf-red alerts. */
+:root{
+  --ink:#111827; --ink2:#374151; --ink3:#6B7280; --ink4:#9CA3AF;
+  --paper:#ffffff; --canvas:#F7F9FA; --panel:#EEF2F6; --border:#E6E7E8; --rule:#E6E7E8;
+  --wf-blue:#164679; --wf-green:#54924E; --wf-gold:#F57F17; --wf-orange:#F15F22; --wf-red:#ED1B2F;
+  --accent:#54924E; --accent-tint:#EEF6EC; --gold-tint:#FFFDE7; --floor:#ED1B2F; --pos:#54924E;
+  --page-w:1180px; --radius:8px;
+  --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);font-size:13px;background:var(--canvas);color:var(--ink);line-height:1.55;}
+
+.appbar{background:var(--wf-blue);color:#fff;padding:12px 28px;display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:30;border-bottom:3px solid var(--wf-gold);}
+.appbar-title{font-size:15px;font-weight:600;white-space:nowrap;}
+.appbar-meta{font-size:11.5px;color:#cbd5e1;}
+.print-now{margin-left:auto;padding:7px 16px;border:1.5px solid #fff;border-radius:6px;background:transparent;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);}
+.print-now:hover{background:#fff;color:var(--wf-blue);}
+/* Print-only title + running header (screen hides them; the appbar is the screen title). */
+.report-title,.pg-runhead{display:none;}
+
+.keymsg{max-width:var(--page-w);margin:18px auto 4px;padding:0 28px;}
+.keymsg-h{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+.keymsg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.km{background:var(--paper);border:1px solid var(--border);border-left:3px solid var(--wf-gold);border-radius:0 var(--radius) var(--radius) 0;padding:13px 16px;}
+.km .kt{display:block;font-size:12px;color:var(--ink);margin-bottom:6px;}
+.km p{font-size:11.5px;color:var(--ink2);line-height:1.55;}
+.km b{color:var(--ink);}
+
+.chapter{display:block;max-width:var(--page-w);margin:18px auto;padding:0 28px;}
+.chapter-head{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius);padding:16px 22px;margin-bottom:14px;}
+.ch-mast{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--wf-green);}
+.ch-sec{font-size:18px;font-weight:700;color:var(--ink);margin-top:3px;}
+.ch-term{font-size:12px;color:var(--ink2);margin-top:1px;}
+.basis{font-size:11px;color:var(--ink3);margin-top:9px;line-height:1.5;border-top:1px solid var(--rule);padding-top:8px;}
+.basis b{color:var(--ink2);}
+.lead{font-size:12.5px;color:var(--ink2);line-height:1.6;margin-bottom:14px;}
+
+.cards{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:14px;}
+.card{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;}
+.card .lab{font-size:11px;color:var(--ink3);margin-bottom:5px;}
+.card .val{font-size:21px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1;}
+.card .val.down{color:var(--floor);}
+.card .sub{font-size:10.5px;color:var(--ink4);margin-top:4px;}
+
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.chart-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px;}
+.chart-card h3{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:10px;}
+.chart-card canvas{max-width:100%;}
+.cap{font-size:11px;color:var(--ink3);line-height:1.5;margin-top:9px;}
+
+.cure-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.cure-mini{margin-bottom:0;}
+.cure-card{background:var(--canvas);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
+.cure-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:10px;}
+.cure-grid .kv{display:flex;flex-direction:column;gap:2px;}
+.cure-grid .kv b{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;}
+.cure-grid .kv span{font-size:10.5px;color:var(--ink3);}
+
+.stitle{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--wf-green);margin:18px 0 9px;}
+.table-wrap{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius);overflow-x:auto;margin-bottom:14px;}
+table.wide{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+table.wide th{background:var(--ink);color:#fff;padding:7px 9px;text-align:right;font-weight:500;font-size:10.5px;white-space:nowrap;}
+table.wide td{padding:5px 9px;text-align:right;border-bottom:1px solid var(--rule);white-space:nowrap;font-variant-numeric:tabular-nums;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;}
+/* Left-gutter line numbers (conference-call reference). */
+table.wide th.lnum,table.wide td.lnum{width:26px;min-width:26px;text-align:right;font-family:var(--mono);font-size:9px;font-weight:normal;color:var(--ink4);background:var(--paper);border-right:1.5px solid var(--border);padding:5px 6px 5px 3px;white-space:nowrap;}
+table.wide th:nth-child(2){text-align:left;}
+table.wide td:nth-child(2){text-align:left;font-weight:600;color:#333;font-family:var(--font);}
+#tbl-base th:nth-child(2),#tbl-base td:nth-child(2){width:21%;}
+/* Four labelled sub-sections of the forecast (tear-sheet style). */
+table.wide tr.section-head td.section-head-cell{text-align:left;background:var(--accent-tint);color:var(--wf-green);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:5px 9px;font-family:var(--font);border-bottom:1px solid var(--border);}
+table.wide tr.sep td{height:5px;padding:0;border-bottom:1px solid var(--rule);background:var(--canvas);}
+table.wide td.binding{color:var(--floor);font-weight:700;}
+table.wide td .d{color:var(--ink4);font-size:10.5px;}
+table.wide.narrow{table-layout:auto;}
+
+.tblock{border-left:3px solid var(--wf-green);padding:12px 16px;margin-bottom:14px;background:var(--canvas);border-radius:0 4px 4px 0;}
+.tblock h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);margin-bottom:7px;}
+.tblock p{font-size:12px;color:var(--ink2);line-height:1.6;margin-bottom:7px;}
+.tblock p:last-child{margin-bottom:0;}
+.tblock b{color:var(--ink);}
+.fofi{border:1px solid #cdd6e0;background:#f4f7fb;border-radius:var(--radius);padding:16px 20px;margin-bottom:14px;}
+.fofi h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin-bottom:8px;}
+.fofi p{font-size:11.5px;color:var(--ink2);line-height:1.6;}
+.chapter-foot{font-size:10.5px;color:var(--ink4);border-top:1px solid var(--rule);padding-top:9px;margin-top:4px;}
+
+/* ── Print: a dense, professional handout — content flows, minimal white space ── */
+@media print{
+  @page{size:letter landscape;margin:0.4in;}
+  body{background:#fff !important;font-size:9px;}
+  .appbar,.print-now,button{display:none !important;}
+  /* Print-only document title (page 1) + per-page running header. */
+  .report-title{display:block;border-bottom:2.5px solid var(--wf-gold);padding-bottom:6px;margin-bottom:10px;}
+  .report-title .rt-title{font-size:15px;font-weight:700;color:var(--wf-blue);}
+  .report-title .rt-meta{font-size:10px;color:var(--ink3);margin-top:2px;}
+  .pg-runhead{display:block;font-size:9px;font-weight:700;color:var(--wf-blue);border-bottom:1.5px solid var(--wf-gold);padding-bottom:4px;margin-bottom:8px;}
+  .keymsg{max-width:100%;margin:0 0 8px;padding:0;page-break-after:avoid;}
+  .keymsg-grid{gap:8px;}
+  .km{padding:8px 11px;}
+  .km p{font-size:9px;}
+  /* Explicit page breaks (R5): Sections 2/3/4 + the forecast table + Basis of preparation. */
+  .chapter{max-width:100%;margin:0;padding:0;}
+  .chapter:not(:first-of-type){page-break-before:always;}
+  .pagebreak{page-break-before:always;}
+  .chapter + .chapter{margin-top:7px;}
+  .chapter-head{padding:8px 13px;margin-bottom:8px;}
+  .ch-sec{font-size:13px;} .ch-mast{font-size:9px;} .ch-term{font-size:9.5px;}
+  .basis,.lead{font-size:9px;margin-bottom:7px;line-height:1.45;}
+  .cards{gap:7px;margin-bottom:8px;grid-template-columns:repeat(6,1fr);}
+  .card{padding:7px 9px;} .card .val{font-size:15px;} .card .lab{font-size:9px;} .card .sub{font-size:8.5px;}
+  .chart-row,.cure-wrap{gap:9px;margin-bottom:8px;}
+  .chart-card{padding:8px 11px;margin-bottom:8px;}
+  .chart-card h3{margin-bottom:6px;} .cap{font-size:8.5px;margin-top:6px;line-height:1.4;}
+  .stitle{margin:9px 0 5px;}
+  .table-wrap{overflow:visible !important;margin-bottom:8px;}
+  table.wide td,table.wide th{font-size:8.5px;padding:2.5px 5px;}
+  .tblock,.fofi{padding:8px 13px;margin-bottom:8px;}
+  .tblock p,.fofi p{font-size:9px;margin-bottom:5px;line-height:1.45;}
+  .chapter-foot{font-size:8.5px;padding-top:6px;}
+  /* keep blocks whole; pages pack tight */
+  .chapter-head,.card,.chart-card,.tblock,.fofi,.km,.cure-card,.chart-row,.cure-wrap{box-shadow:none !important;border-color:#ccc !important;break-inside:avoid;page-break-inside:avoid;}
+  tr{page-break-inside:avoid;}
+  thead{display:table-header-group;}
+  .stitle,h3,h4,.ch-sec{page-break-after:avoid;}
+  .chart-card canvas{max-width:100% !important;}
+}
+</style>
+</head>
+<body>
+<div class="appbar">
+  <div class="appbar-title">Woodfine Direct-Hold Solutions — Sensitivity Analysis</div>
+  <div class="appbar-meta">$250M · 2777K Investment Units @ $100.00 · Y1–Y10 · June 2026</div>
+  <button class="print-now" onclick="window.print()">⎙ Print / PDF</button>
+</div>
+<div class="report-title">
+  <div class="rt-title">Woodfine Direct-Hold Solutions — Sensitivity Analysis</div>
+  <div class="rt-meta">$250M · 2777K Investment Units @ $100.00 · Y1–Y10 · June 2026</div>
+</div>
+<div class="keymsg">
+  <div class="keymsg-h">How the structure behaves when conditions worsen</div>
+  <div class="keymsg-grid">
+    <div class="km"><span class="kt">If costs rise <b>while we build</b></span><p>Woodfine Direct-Hold Solutions issue less debenture and build fewer Investment Units of space, holding interest coverage at the <b>1.20× covenant — no breach</b>. At a +200 bps coupon, about <b>77%</b> of the programme is built.</p></div>
+    <div class="km"><span class="kt">Once <b>built</b></span><p>Stabilised coverage is <b>2.49×</b> (Year 8). It would take roughly <b>+538 bps</b> (a coupon near 10.4%) before coverage reaches the covenant. The built structure absorbs large increases.</p></div>
+    <div class="km"><span class="kt">What this means for <b>your capital</b></span><p>Across both regimes the <b>$100.00</b> capital-preservation reference per Investment Unit holds and the covenant is never breached. The structure adapts; it does not break.</p></div>
+  </div>
+</div>
+
+<section class="chapter" id="chap-base">
+  <div class="chapter-head">
+    <div class="ch-mast">Woodfine Direct-Hold Solutions — Sensitivity Analysis</div>
+    <div class="ch-sec">Section 1 of 4 — What we expect to happen</div>
+    <div class="ch-term">Base case · 10-year forecast per Investment Unit</div>
+    <div class="basis">All figures generated by the forecast engine. Base assumptions: development yield 10.50% (net of 5% vacancy ⇒ <b>95% occupancy</b>) · cap rate 6.25% · debenture 5.00% · buyer yield 8.00% · coverage covenant 1.20× · capital-preservation reference $100.00/Investment Unit.</div>
+  </div>
+  <div class="cards" id="cards-base"></div>
+  <div class="chart-row">
+    <div class="chart-card"><h3>NAV per Investment Unit ($100 invested)</h3><canvas id="cv-base-nav"></canvas><div class="cap">NAV rises from ~$100 at issue to ~$392 by Year 10. The $100 capital-preservation reference is shown.</div></div>
+    <div class="chart-card"><h3>Interest Coverage — covenant floor 1.20×</h3><canvas id="cv-base-cov"></canvas><div class="cap">Coverage is tightest mid-build (Year 7) and rises after stabilisation. It stays on or above the 1.20× covenant.</div></div>
+  </div>
+  <div class="pg-runhead pagebreak">Woodfine Direct-Hold Solutions — Sensitivity Analysis</div>
+  <div class="stitle">Financial Forecast — Per Investment Unit (engine-generated)</div>
+  <div class="table-wrap"><table class="wide" id="tbl-base"><thead></thead><tbody></tbody></table></div>
+  <div class="chapter-foot">Forward-looking information (FOFI) — assumptions as at June 2026; actual results will vary. See Section 4.</div>
+</section>
+
+<section class="chapter" id="chap-managed">
+  <div class="chapter-head">
+    <div class="ch-mast">Woodfine Direct-Hold Solutions — Sensitivity Analysis</div>
+    <div class="ch-sec">Section 2 of 4 — If conditions worsen while we build, we build less</div>
+    <div class="ch-term">Management Response · the covenant is held across cap-cost, occupancy and yield stress</div>
+  </div>
+  <div class="lead">The forecasts reflect the structure as it is actually managed. If financing costs or operating conditions deteriorate during build-out, the issuer constrains debenture issuance and builds fewer Investment Units of space, holding interest coverage at the 1.20× covenant. A static path that froze every management lever — holding issuance and build-out at plan while costs rose — is not a realistic operating scenario: under the debenture terms a sustained covenant breach would transfer control of the assets to the secured lenders. Because that no-response path does not represent how the structure would be operated, it is not presented here as a scenario.</div>
+  <div class="chart-row">
+    <div class="chart-card"><h3>Coverage is held — across interest rate, occupancy and development yield</h3><canvas id="cv-coverage-held"></canvas><div class="cap">Base and three coverage-driver stresses (interest +200 bps, occupancy 90%, development yield 9.50%), all managed. Every line sits on or above the 1.20× covenant — no breach, Y1–Y10.</div></div>
+    <div class="chart-card"><h3>The adaptive lever — build less as financing cost rises</h3><canvas id="cv-lever"></canvas><div class="cap">As the coupon rises the issuer dials the programme down (left axis) while minimum coverage stays pinned at 1.20× (right axis): at +200 bps ~77% built; at +400 bps ~57%.</div></div>
+  </div>
+  <div class="stitle">Management response to the three coverage drivers (engine-computed)</div>
+  <div class="table-wrap"><table class="wide narrow" id="tbl-fourstress"><thead>
+    <tr><th class="lnum"></th><th>Stress (one driver, all else at base)</th><th>Programme built</th><th>Minimum coverage</th><th>Y8 NAV / Unit (value)</th><th>Y8 Income Yield on Capital</th></tr>
+  </thead><tbody></tbody></table></div>
+  <div class="chapter-foot">Cap rate is a valuation input only (it does not change operating coverage) and is shown in Section 3 and Section 4.</div>
+</section>
+
+<section class="chapter" id="chap-after">
+  <div class="chapter-head">
+    <div class="ch-mast">Woodfine Direct-Hold Solutions — Sensitivity Analysis</div>
+    <div class="ch-sec">Section 3 of 4 — Once built, the structure absorbs large shocks</div>
+    <div class="ch-term">Post-construction coverage headroom · corrective disposition of last resort</div>
+  </div>
+  <div class="lead">After construction, stabilised coverage is high — Year-8 coverage is 2.49×, reaching the 1.20× covenant only near a 10.4% coupon (+538 bps), so a corrective disposition is rarely needed. To size the downside, the exhibit below applies a single <b>maximal combined shock</b> — a Great Financial Crisis (GFC) / 2022–23-scale recession hitting financing cost, valuation and occupancy at once — and shows the initial capital is preserved even then.</div>
+  <div class="chart-row">
+    <div class="chart-card"><h3>Post-construction headroom — Year-8 coverage vs coupon</h3><canvas id="cv-headroom"></canvas><div class="cap">Stabilised Year-8 coverage starts at 2.49× and reaches the 1.20× covenant only near a 10.4% coupon (≈ +538 bps).</div></div>
+    <div class="chart-card"><h3>NAV resilience — base vs bear and bull</h3><canvas id="cv-nav-resilience"></canvas><div class="cap">NAV/unit climbs to ~$392 by Year 10. Even the bear case (cap +150 bps, occupancy 88%) stays well above the $100 capital-preservation reference — and the distribution yield on initial capital moves with NAV, so the income and value sensitivities track together.</div></div>
+  </div>
+  <div class="stitle">Capital preservation under a maximal combined shock (Great Financial Crisis / 2022–23 scale)</div>
+  <div class="cure-wrap"><div class="chart-card cure-mini"><h3>Coverage: at the combined shock vs after the minimum disposition</h3><canvas id="cv-cure"></canvas></div>
+  <div class="cure-card" id="cure-card"></div></div>
+  <div class="chapter-foot">Shock magnitudes are grounded in severe-downturn evidence (office cap-rate expansion +300–330 bps in 2008–09 and 2022–23; refinancing moves of +450–500 bps). A forced sale could realise <b>15–30% below the stressed appraisal</b>; the disposition is measured at the stressed orderly-transaction value (IFRS 13 §15–§24). Forward-looking (FOFI) — see Section 4.</div>
+</section>
+
+<section class="chapter" id="chap-basis">
+  <div class="chapter-head">
+    <div class="ch-mast">Woodfine Direct-Hold Solutions — Sensitivity Analysis</div>
+    <div class="ch-sec">Section 4 of 4 — Measurement sensitivity, assumptions & caveats</div>
+    <div class="ch-term">IFRS 13 §93(h)(ii) reasonably-possible disclosure · forward-looking statements</div>
+  </div>
+  <div class="stitle">IFRS 13 §93(h)(ii) — reasonably-possible (±25 bps) measurement sensitivity</div>
+  <div class="table-wrap"><table class="wide narrow" id="tbl-oneway"><thead>
+    <tr><th class="lnum"></th><th>Unobservable input</th><th>Adverse move</th><th>Favourable move</th><th>Y8 NAV / Unit (adverse)</th><th>Y8 NAV / Unit (favourable)</th><th>Y8 Income Yield (adverse)</th><th>Min coverage (adverse)</th></tr>
+  </thead><tbody></tbody></table></div>
+  <div class="lead">Within the reasonably-possible range, the measurement is not sensitive to a degree that threatens the $100 capital-preservation reference or the 1.20× covenant; the dollar effects are small and shown above. Moves larger than this range are stress scenarios outside the §93(h)(ii) disclosure (for reference, NAV reaches $100 per Unit only if the cap rate widened to about 10.26%, ≈ +401 bps — far beyond reasonably possible).</div>
+  <div class="chart-card"><h3>Ranked reasonably-possible effect on Year-8 NAV per Unit (±25 bps)</h3><canvas id="cv-tornado"></canvas></div>
+  <div class="pg-runhead pagebreak">Woodfine Direct-Hold Solutions — Sensitivity Analysis</div>
+  <div class="tblock"><h4>Basis of preparation</h4>
+    <p>All figures are generated by the forecast engine; the interface performs no independent calculation. The 10.50% development yield is net of 5% vacancy, so the base reflects <b>95% occupancy</b>.</p>
+    <p>The forecasts reflect the structure as actually managed (Section 2). A static no-response projection is not presented because, under the debenture terms, a sustained covenant breach would transfer control of the assets to the secured lenders — it is not an operating scenario. Woodfine Direct-Hold Solutions issue Investment Units and are direct-hold structures; they do not offer unit redemption or carry the reserve features of redeemable collective-investment vehicles.</p>
+  </div>
+  <div class="fofi"><h4>Forward-Looking Information (FOFI)</h4>
+    <p>This analysis is future-oriented financial information prepared on the stated assumptions as at June 2026. The management-response and corrective-disposition exhibits are forward-looking illustrations, not fair-value measurement inputs. Actual results, measurements and outcomes will differ — potentially materially — and readers should not place undue reliance on them. Prepared and presented consistent with NI 51-102 and ISAE 3400.</p>
+  </div>
+  <div class="chapter-foot">Woodfine Direct-Hold Solutions · Sensitivity Analysis · engine June 2026 build · generated June 2026 · V2</div>
+</section>
+<script>
+const DATA = {"base":{"minICR":1.327472748804497,"minICRyear":7,"run":{"years":[{"avpu":105.42602951928826,"dav":0.0,"ddc":0.0,"debt":0.0,"dpu":-0.0,"dyb":-0.0,"fopex":3450000.0,"icr":0.0,"mvpu":100.0,"navpu":105.42602951928826,"noi":0.0,"sqft":0.0},{"avpu":105.93319466069451,"dav":0.0,"ddc":0.0,"debt":0.0,"dpu":-0.0,"dyb":-0.0,"fopex":3450000.0,"icr":0.0,"mvpu":100.0,"navpu":105.93319466069451,"noi":0.0,"sqft":0.0},{"avpu":106.01757050811675,"dav":0.0,"ddc":0.0,"debt":0.0,"dpu":-0.0,"dyb":-0.0,"fopex":3450000.0,"icr":0.0,"mvpu":100.0,"navpu":106.01757050811675,"noi":0.0,"sqft":0.0},{"avpu":200.23864090882805,"dav":0.3051859363080135,"ddc":0.1401589431313861,"debt":169750000.0,"dpu":1.6203944198148243,"dyb":0.012880718758464423,"fopex":3450000.0,"icr":2.2092911313524217,"mvpu":125.8,"navpu":139.12862379802326,"noi":22771875.105,"sqft":699596.8063014594},{"avpu":261.58990188307973,"dav":0.46722000100843747,"ddc":0.2803178862627722,"debt":339500000.0,"dpu":2.171194771021975,"dyb":0.016435993724617525,"fopex":3450000.0,"icr":1.5309720190107263,"mvpu":132.1,"navpu":139.36986766147015,"noi":22771875.105,"sqft":699596.8063014594},{"avpu":462.9246901746169,"dav":0.5186050178711825,"ddc":0.5506244194447312,"debt":666875000.0,"dpu":3.3311881929016782,"dyb":0.019423837859485003,"fopex":3450000.0,"icr":1.4105116563171558,"mvpu":171.5,"navpu":222.8496229535981,"noi":58419375.105000004,"sqft":1794758.1418366022},{"avpu":581.2678952944699,"dav":0.6157747625801714,"ddc":0.82093095262669,"debt":994250000.0,"dpu":4.393549083992811,"dyb":0.02478031068241856,"fopex":3450000.0,"icr":1.327472748804497,"mvpu":177.3,"navpu":223.3377950740418,"noi":58419375.105000004,"sqft":1794758.1418366022},{"avpu":741.5507401736664,"dav":0.4790789714810819,"ddc":0.8148100742657829,"debt":986836851.1951463,"dpu":24.01860885293645,"dyb":0.08,"fopex":3450000.0,"icr":2.4949892238936324,"mvpu":300.2326106617056,"navpu":386.2893742702313,"noi":127168125.105,"sqft":3906855.0032258066},{"avpu":741.5507401736664,"dav":0.47546212121949394,"ddc":0.8086585915130712,"debt":979386636.6462684,"dpu":24.138701897201127,"dyb":0.08,"fopex":3450000.0,"icr":2.5137795908917666,"mvpu":301.7337737150141,"navpu":388.97145225880917,"noi":127168125.105,"sqft":3906855.0032258066},{"avpu":741.5507401736664,"dav":0.471827186706598,"ddc":0.802476351346596,"debt":971899171.024646,"dpu":24.259395406687133,"dyb":0.08,"fopex":3450000.0,"icr":2.5329512403536234,"mvpu":303.24244258358914,"navpu":391.66694063732996,"noi":127168125.105,"sqft":3906855.0032258066}]},"y10nav":391.66694063732996,"y8mv":300.2326106617056,"y8nav":386.2893742702313},"baseCov":[null,null,null,2.2092911313524217,1.5309720190107263,1.4105116563171558,1.327472748804497,2.4949892238936324,2.5137795908917666,2.5329512403536234],"baseNav":[105.42602951928826,105.93319466069451,106.01757050811675,139.12862379802326,139.36986766147015,222.8496229535981,223.3377950740418,386.2893742702313,388.97145225880917,391.66694063732996],"baseOcc":95.0,"coverageHeld":{"dev85":[null,null,null,1.2319934560764803,1.210524231782595,1.2057285101663628,1.2037450774191214,2.057778990139609,2.0687202341403608,2.07983403773929],"occ75":[null,null,null,1.2330266182821543,1.2108566996918617,1.2059571015943351,1.2039220374530537,2.022408494465158,2.032800255710103,2.043352128715318],"rate200":[null,null,null,1.924471595712712,1.2082937777873548,1.3768246272724904,1.2032945220103568,1.890314696833733,1.9021694024578628,1.9142582993201966]},"cure":{"after":1.1999999999999997,"before":1.1509947650327916,"distPerUnitBase":24.01860885293645,"distPerUnitPostCure":6.052832053531706,"floor":100.0,"frac":0.11432583120150337,"navpu":105.00000000000004,"retired":146165968.03698835,"sale":146165968.03698835,"shockCapBps":296.37290262664595,"shockCapPct":9.21372902626646,"shockOccPct":88.0,"shockOccPp":7.0,"shockRateBps":500.0,"shockRatePct":10.0},"fourStress":[{"builtPct":76.99453021933685,"driver":"Interest rate","minICR":1.2032945220103568,"move":"+200 bps → 7.00%","y8dist":0.14414978568110565,"y8nav":316.7304104774322},{"builtPct":84.7812335250662,"driver":"Occupancy","minICR":1.2039220374530537,"move":"75% (from 95%)","y8dist":0.13376627216145395,"y8nav":208.50646626738683},{"builtPct":88.1692237480283,"driver":"Development yield","minICR":1.2037450774191214,"move":"8.50% (from 10.50%)","y8dist":0.14542429100851179,"y8nav":226.427322116076}],"headroom":[{"ratePct":5.0,"y8cov":2.4949892238936324},{"ratePct":5.25,"y8cov":2.3757975783715146},{"ratePct":5.5,"y8cov":2.2674748428995612},{"ratePct":5.75,"y8cov":2.1685991659736352},{"ratePct":6.0,"y8cov":2.0779863388712263},{"ratePct":6.25,"y8cov":1.9946421385826398},{"ratePct":6.5,"y8cov":1.9177256971175087},{"ratePct":6.75,"y8cov":1.8465210313411178},{"ratePct":7.000000000000001,"y8cov":1.780414688284232},{"ratePct":7.249999999999999,"y8cov":1.718878026338106},{"ratePct":7.5,"y8cov":1.6614530481918788},{"ratePct":7.75,"y8cov":1.6077409817580897},{"ratePct":8.0,"y8cov":1.5573930066948483},{"ratePct":8.25,"y8cov":1.510102670466411},{"ratePct":8.5,"y8cov":1.4655996454049538},{"ratePct":8.75,"y8cov":1.4236445580556998},{"ratePct":9.0,"y8cov":1.3840246819146893},{"ratePct":9.25,"y8cov":1.3465503299164703},{"ratePct":9.5,"y8cov":1.31105181754133},{"ratePct":9.75,"y8cov":1.2773768939458139},{"ratePct":10.0,"y8cov":1.2453885590741978},{"ratePct":10.25,"y8cov":1.2149632007431799},{"ratePct":10.5,"y8cov":1.1859889982851968},{"ratePct":10.75,"y8cov":1.1583645492889485},{"ratePct":11.0,"y8cov":1.1319976838899417}],"lever":[{"builtPct":100.0,"minICR":1.327472748804497,"ratePct":5.0},{"builtPct":100.0,"minICR":1.2640560278153428,"ratePct":5.25},{"builtPct":100.0,"minICR":1.2064221969671471,"ratePct":5.5},{"builtPct":96.26739439175816,"minICR":1.2030708509854944,"ratePct":5.75},{"builtPct":92.61304359504891,"minICR":1.2030697009799565,"ratePct":6.0},{"builtPct":89.25104086207641,"minICR":1.2030671525493166,"ratePct":6.25},{"builtPct":85.03604137038504,"minICR":1.203127810486092,"ratePct":6.5},{"builtPct":80.80402047238007,"minICR":1.2032126030534782,"ratePct":6.75},{"builtPct":76.99453021933685,"minICR":1.2032945220103568,"ratePct":7.000000000000001},{"builtPct":73.55185049841305,"minICR":1.2033737432722307,"ratePct":7.249999999999999},{"builtPct":70.42923850664538,"minICR":1.2034504253966327,"ratePct":7.5},{"builtPct":67.58723918044387,"minICR":1.2035247120041341,"ratePct":7.75},{"builtPct":64.99235630707275,"minICR":1.2035967337733358,"ratePct":8.0},{"builtPct":62.61599878245055,"minICR":1.2036666100978366,"ratePct":8.25},{"builtPct":60.43363866725351,"minICR":1.2037344504726841,"ratePct":8.5},{"builtPct":58.42413366058095,"minICR":1.2038003556625914,"ratePct":8.75},{"builtPct":56.56917822429669,"minICR":1.2038644186927518,"ratePct":9.0}],"marketYield":0.08,"navBear":[102.02577050269963,102.25422588864777,102.11563393170354,105.8869967182467,106.06780496705872,137.4500576933862,137.7831267579288,200.22238307521246,202.56522757121726,204.9197862897021],"navBull":[106.95368212094404,107.58606468871551,107.77061447722994,150.5343661746572,150.77561003810408,252.11011815564984,252.59829027609354,449.9840356355885,452.6661136241664,455.3616020026872],"oneway":[{"adverse":"+25 bps → 6.50%","distAdverse":0.2401860885293645,"distBase":0.2401860885293645,"driver":"Cap rate","favorable":"−25 bps → 6.00%","minICRAdverse":1.327472748804497,"navAdverse":358.1167355894001,"navBase":386.2893742702313,"navFavorable":416.80973284113173},{"adverse":"+25 bps → 5.25%","distAdverse":0.23212588204368942,"distBase":0.2401860885293645,"driver":"Interest rate","favorable":"−25 bps → 4.75%","minICRAdverse":1.2640560278153428,"navAdverse":386.049166848937,"navBase":386.2893742702313,"navFavorable":386.52958169152555},{"adverse":"−2.5 pp → 92.5%","distAdverse":0.2293364032658325,"distBase":0.2401860885293645,"driver":"Occupancy","favorable":"+2.5 pp → 97.5%","minICRAdverse":1.29030411299193,"navAdverse":366.7388885488051,"navBase":386.2893742702313,"navFavorable":405.8398599916576},{"adverse":"−25 bps → 10.25%","distAdverse":0.23036970662426406,"distBase":0.2401860885293645,"driver":"Development yield","favorable":"+25 bps → 10.75%","minICRAdverse":1.2938438772361278,"navAdverse":368.6008395698933,"navBase":386.2893742702313,"navFavorable":403.97790897056933}],"resilience":{"built200":76.99453021933685,"postBreakevenBps":537.7600517269909,"postBreakevenPct":10.37760051726991,"y8CovBase":2.4949892238936324},"thresholds":{"cap_headroom_bps":401.0111320561803,"cap_nav100_pct":10.260111320561803},"units":2777777.0};
+/* Woodfine Direct-Hold Solutions — Sensitivity Analysis (client).
+   Slider-free: a fixed set of pre-set charts + tables drawn once from engine pre-computed data.
+   No financial recomputation here. */
+const FLOOR = 1.20, PAR = 100.0, U = DATA.units, OCC = DATA.baseOcc;
+const charts = {};
+// Woodfine brand palette (MEMO-Woodfine-Color-Matrix): ink/grey neutrals,
+// green=finance accent, orange=stress/highlight, red=covenant/alert, gold=Direct-Hold marker.
+const INK = '#111827', GREY = '#9CA3AF', RED = '#ED1B2F', AMBER = '#F15F22', POS = '#54924E', GOLD = '#F57F17', BLUE = '#164679';
+const WASH = 'rgba(237,27,47,0.07)';
+const dash = '—';
+
+/* ── formatters ─────────────────────────────────────────────────────── */
+function usd2(v) { if (v == null) return dash; if (Math.abs(v) < 0.005) return dash; return v < 0 ? '($' + Math.abs(v).toFixed(2) + ')' : '$' + v.toFixed(2); }
+function usd0(v) { return '$' + Math.round(v); }
+function pct2(v) { if (v == null) return dash; if (Math.abs(v) < 1e-9) return dash; return (v * 100).toFixed(2) + '%'; }
+function ratio(v) { return (v != null && v > 0) ? v.toFixed(2) + '×' : dash; }
+function kfmt(v) { return (v != null && v > 0) ? (v / 1000).toFixed(1) + 'K' : dash; }
+function fM(v) { return '$' + (v / 1e6).toFixed(1) + 'M'; }
+const labels10 = Array.from({ length: 10 }, (_, i) => 'Y' + (i + 1));
+
+/* ── per-Investment-Unit forecast table ─────────────────────────────── */
+function rowsFor(years) {
+  const cr = Math.pow(years[7].mvpu / PAR, 1 / 8) - 1;
+  const R = [];
+  const head = (t) => R.push({ head: t });
+  const row = (label, fn, cls) => R.push({ label, cells: years.map((y, i) => fn(y, i)), cls });
+  head('Revenue');
+  row('Revenue (per Unit)', y => usd2(y.noi / U));
+  row('Distributions (per Unit)', y => usd2(y.dpu));
+  row('Distribution Yield on Initial Capital', y => pct2(y.dpu / PAR));
+  head('Asset Valuation (6.25% Cap Rate)');
+  row('Asset Value (per Unit)', y => usd2(y.avpu));
+  row('Total Debt (per Unit)', y => usd2(y.debt / U));
+  row('Net Asset Value (NAV) per Unit', y => usd2(y.navpu));
+  head('Selling in the Secondary Market (20% Discount to Net Asset Value)');
+  row('Market Value per Unit', y => usd2(y.mvpu));
+  // Discount/Premium vs NAV is "—" for Y1–Y3 (no secondary market during construction).
+  row('Discount / Premium vs NAV', (y, i) => i < 3 ? dash : (y.navpu > 0 ? pct2((y.mvpu - y.navpu) / y.navpu) : dash));
+  row('Compounded Annual Return (Y8)', (y, i) => i === 7 ? pct2(cr) : dash);
+  row('Distribution Yield to Buyers at Market', y => pct2(y.dyb));
+  head('Operating Metrics');
+  row('Interest Coverage Ratio', y => ratio(y.icr), y => (y.icr > 0 && y.icr < FLOOR) ? 'binding' : '');
+  row('Debt vs Development Cost', y => pct2(y.ddc));
+  row('Debt to Asset Value', y => pct2(y.dav));
+  row('Total Expense Ratio', y => y.navpu > 0 ? pct2(y.fopex / (y.navpu * U)) : dash);
+  row('Sqft (stabilised)', y => kfmt(y.sqft));
+  return R;
+}
+/* Continuous left-gutter line numbers across all tables (conference-call reference). */
+let lineNo = 1;
+function gnum() { return '<td class="lnum">' + (lineNo++) + '</td>'; }
+function ghead() { return '<th class="lnum"></th>'; }
+function gblank() { return '<td class="lnum"></td>'; }
+function renderTable() {
+  const years = DATA.base.run.years, t = document.getElementById('tbl-base');
+  t.querySelector('thead').innerHTML = '<tr>' + ghead() + '<th>Per Investment Unit</th>' + labels10.map(l => '<th>' + l + '</th>').join('') + '</tr>';
+  t.querySelector('tbody').innerHTML = rowsFor(years).map(r => {
+    if (r.head) return '<tr class="section-head">' + gblank() + '<td class="section-head-cell" colspan="11">' + r.head + '</td></tr>';
+    return '<tr>' + gnum() + '<td>' + r.label + '</td>' + r.cells.map((c, i) => {
+      const k = r.cls ? r.cls(years[i]) : '';
+      return '<td' + (k ? ' class="' + k + '"' : '') + '>' + c + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+}
+
+/* ── cards + summary tables ─────────────────────────────────────────── */
+function card(lab, val, sub, down) {
+  return '<div class="card"><div class="lab">' + lab + '</div><div class="val' + (down ? ' down' : '') + '">' + val + '</div><div class="sub">' + (sub || '') + '</div></div>';
+}
+function renderCards() {
+  const b = DATA.base, ys = b.run.years;
+  document.getElementById('cards-base').innerHTML =
+    card('Y8 NAV / Unit', usd2(b.y8nav), 'the value · on $100 invested') +
+    card('Y8 Income Yield on Capital', pct2(ys[7].dpu / PAR), 'the income · on $100 invested') +
+    card('Y10 NAV / Unit', usd2(b.y10nav), 'capital growth') +
+    card('Y8 Market Value / Unit', usd2(b.y8mv), 'distribution ÷ 8% buyer yield') +
+    card('Min Interest Coverage', ratio(b.minICR), 'Year ' + b.minICRyear + ' (covenant 1.20×)') +
+    card('Stabilised Occupancy', OCC.toFixed(0) + '%', 'net of 5% vacancy');
+}
+function renderFourStress() {
+  const t = document.getElementById('tbl-fourstress');
+  t.querySelector('tbody').innerHTML = DATA.fourStress.map(s =>
+    '<tr>' + gnum() + '<td>' + s.driver + ' · ' + s.move + '</td><td>' + s.builtPct.toFixed(0) + '%</td><td' +
+    (s.minICR < FLOOR - 0.005 ? ' class="binding"' : '') + '>' + ratio(s.minICR) + '</td><td>' + usd2(s.y8nav) + '</td><td>' + pct2(s.y8dist) + '</td></tr>'
+  ).join('');
+}
+function renderOneway() {
+  const t = document.getElementById('tbl-oneway');
+  t.querySelector('tbody').innerHTML = DATA.oneway.map(o => {
+    const dn = o.navAdverse - o.navBase, up = o.navFavorable - o.navBase;
+    const di = o.distAdverse - o.distBase;
+    return '<tr>' + gnum() + '<td>' + o.driver + '</td><td>' + o.adverse + '</td><td>' + o.favorable + '</td><td>' +
+      usd2(o.navAdverse) + ' <span class="d">(' + (dn < 0 ? '−$' + Math.abs(dn).toFixed(2) : '+$' + dn.toFixed(2)) + ')</span></td><td>' +
+      usd2(o.navFavorable) + ' <span class="d">(' + (up < 0 ? '−$' + Math.abs(up).toFixed(2) : '+$' + up.toFixed(2)) + ')</span></td><td>' +
+      pct2(o.distAdverse) + ' <span class="d">(' + (di < 0 ? '−' : '+') + (Math.abs(di) * 100).toFixed(2) + ' pp)</span></td><td' +
+      (o.minICRAdverse < FLOOR ? ' class="binding"' : '') + '>' + ratio(o.minICRAdverse) + '</td></tr>';
+  }).join('');
+}
+function renderCureCard() {
+  const c = DATA.cure;
+  document.getElementById('cure-card').innerHTML =
+    '<div class="cure-grid">' +
+    kvb(c.shockRatePct.toFixed(2) + '%', 'Refinancing rate (+' + c.shockRateBps.toFixed(0) + ' bps)') +
+    kvb(c.shockCapPct.toFixed(2) + '%', 'Cap rate (+' + c.shockCapBps.toFixed(0) + ' bps)') +
+    kvb(c.shockOccPct.toFixed(0) + '%', 'Occupancy (−' + c.shockOccPp.toFixed(0) + ' pp)') +
+    kvb(usd2(c.navpu), 'NAV / unit preserved') +
+    kvb(usd2(c.distPerUnitPostCure), 'Distribution / unit post-cure') +
+    kvb((c.frac * 100).toFixed(1) + '%', 'Minimum disposition') +
+    '</div>' +
+    '<p class="cap">Under a maximal, internally-consistent combined shock — refinancing rate <b>+' + c.shockRateBps.toFixed(0) + ' bps</b> (to ' +
+    c.shockRatePct.toFixed(2) + '%), cap rate <b>+' + c.shockCapBps.toFixed(0) + ' bps</b> (to ' + c.shockCapPct.toFixed(2) + '%) and occupancy <b>−' +
+    c.shockOccPp.toFixed(0) + ' pp</b> (to ' + c.shockOccPct.toFixed(0) + '%) at once — unit NAV is <b>preserved at ' + usd2(c.navpu) + '</b>, above the $' +
+    c.floor.toFixed(0) + ' of initial capital. Selling the minimum ≈' + (c.frac * 100).toFixed(0) +
+    '% of the portfolio at its stressed value lifts coverage from ' + ratio(c.before) + ' back to the 1.20× covenant (a market-value sale, so NAV is unchanged). ' +
+    'Income compresses with coverage held at the covenant — the distribution per unit falls from <b>' + usd2(c.distPerUnitBase) +
+    '</b> to <b>' + usd2(c.distPerUnitPostCure) + '</b>, but stays positive.</p>';
+}
+function kvb(b, s) { return '<div class="kv"><b>' + b + '</b><span>' + s + '</span></div>'; }
+
+/* ── charts ─────────────────────────────────────────────────────────── */
+function mk(id, cfg) {
+  const c = document.getElementById(id); if (!c) return;
+  if (charts[id]) charts[id].destroy();
+  cfg.options = cfg.options || {};
+  cfg.options.animation = false;
+  cfg.options.responsive = true;
+  if (cfg.options.aspectRatio == null) cfg.options.aspectRatio = 2.4; // deterministic shape for print
+  charts[id] = new Chart(c, cfg);
+}
+function legend(on) { return { display: on, labels: { boxWidth: 12, font: { size: 10 } } }; }
+function covenantSets() {
+  return [
+    { label: 'Breach zone', data: labels10.map(() => FLOOR), borderColor: 'transparent', backgroundColor: WASH, pointRadius: 0, fill: 'start' },
+    { label: 'Covenant 1.20×', data: labels10.map(() => FLOOR), borderColor: RED, borderDash: [3, 3], pointRadius: 0, fill: false },
+  ];
+}
+
+function chartBaseNav() {
+  mk('cv-base-nav', { type: 'line', data: { labels: labels10, datasets: [
+    { label: 'NAV / unit', data: DATA.baseNav, borderColor: BLUE, borderWidth: 2, pointRadius: 2, tension: .25, fill: false },
+    { label: 'Capital reference $100', data: labels10.map(() => PAR), borderColor: RED, borderDash: [3, 3], pointRadius: 0, fill: false },
+  ] }, options: { plugins: { legend: legend(true) }, scales: { y: { min: 0, suggestedMax: 450, ticks: { font: { size: 10 }, callback: v => '$' + v } }, x: { ticks: { font: { size: 10 } } } } } });
+}
+function chartBaseCov() {
+  mk('cv-base-cov', { type: 'line', data: { labels: labels10, datasets: [
+    ...covenantSets(),
+    { label: 'Interest coverage', data: DATA.baseCov, borderColor: BLUE, borderWidth: 2, pointRadius: 2, tension: .25, spanGaps: true, fill: false },
+  ] }, options: { plugins: { legend: legend(true) }, scales: { y: { min: 0, max: 3.0, ticks: { font: { size: 10 }, callback: v => v.toFixed(1) + '×' } }, x: { ticks: { font: { size: 10 } } } } } });
+}
+function chartCoverageHeld() {
+  const ch = DATA.coverageHeld;
+  mk('cv-coverage-held', { type: 'line', data: { labels: labels10, datasets: [
+    ...covenantSets(),
+    { label: 'Base (5.00%, 95% occ)', data: DATA.baseCov, borderColor: BLUE, borderWidth: 2, pointRadius: 0, tension: .25, spanGaps: true, fill: false },
+    { label: 'Interest +200 bps', data: ch.rate200, borderColor: AMBER, borderDash: [6, 3], borderWidth: 1.6, pointRadius: 0, tension: .25, spanGaps: true, fill: false },
+    { label: 'Occupancy 75%', data: ch.occ75, borderColor: POS, borderDash: [3, 3], borderWidth: 1.6, pointRadius: 0, tension: .25, spanGaps: true, fill: false },
+    { label: 'Dev yield 8.50%', data: ch.dev85, borderColor: GOLD, borderDash: [2, 4], borderWidth: 1.6, pointRadius: 0, tension: .25, spanGaps: true, fill: false },
+  ] }, options: { plugins: { legend: legend(true) }, scales: { y: { min: 0, max: 3.0, ticks: { font: { size: 10 }, callback: v => v.toFixed(1) + '×' } }, x: { ticks: { font: { size: 10 } } } } } });
+}
+function chartLever() {
+  const L = DATA.lever;
+  mk('cv-lever', { type: 'line', data: { labels: L.map(l => l.ratePct.toFixed(2) + '%'), datasets: [
+    { label: '% of programme built', data: L.map(l => l.builtPct), borderColor: BLUE, backgroundColor: 'rgba(22,70,121,0.08)', borderWidth: 2, pointRadius: 0, tension: .2, fill: true, yAxisID: 'y' },
+    { label: 'min coverage', data: L.map(l => l.minICR), borderColor: RED, borderWidth: 2, pointRadius: 0, tension: .2, fill: false, yAxisID: 'y1' },
+  ] }, options: { plugins: { legend: legend(true) }, scales: {
+    y: { min: 0, max: 100, position: 'left', title: { display: true, text: '% built', font: { size: 10 } }, ticks: { font: { size: 10 }, callback: v => v + '%' } },
+    y1: { min: 0, max: 2.0, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'min coverage ×', font: { size: 10 } }, ticks: { font: { size: 10 }, callback: v => v.toFixed(1) + '×' } },
+    x: { title: { display: true, text: 'debenture coupon', font: { size: 10 } }, ticks: { font: { size: 9 }, maxRotation: 0, autoSkip: true } } } } });
+}
+function chartHeadroom() {
+  const H = DATA.headroom;
+  mk('cv-headroom', { type: 'line', data: { labels: H.map(h => h.ratePct.toFixed(2) + '%'), datasets: [
+    { label: 'Breach zone', data: H.map(() => FLOOR), borderColor: 'transparent', backgroundColor: WASH, pointRadius: 0, fill: 'start' },
+    { label: 'Covenant 1.20×', data: H.map(() => FLOOR), borderColor: RED, borderDash: [3, 3], pointRadius: 0, fill: false },
+    { label: 'Year-8 coverage', data: H.map(h => h.y8cov), borderColor: BLUE, borderWidth: 2, pointRadius: 0, tension: .15, fill: false },
+  ] }, options: { plugins: { legend: legend(true) }, scales: { y: { min: 0, suggestedMax: 3.0, ticks: { font: { size: 10 }, callback: v => v.toFixed(1) + '×' } }, x: { title: { display: true, text: 'debenture coupon', font: { size: 10 } }, ticks: { font: { size: 9 }, maxRotation: 0, autoSkip: true } } } } });
+}
+function chartNavResilience() {
+  mk('cv-nav-resilience', { type: 'line', data: { labels: labels10, datasets: [
+    { label: 'Base', data: DATA.baseNav, borderColor: BLUE, borderWidth: 2, pointRadius: 0, tension: .25, fill: false },
+    { label: 'Bear (cap +150 bps, occ 88%)', data: DATA.navBear, borderColor: AMBER, borderDash: [3, 3], borderWidth: 1.6, pointRadius: 0, tension: .25, fill: false },
+    { label: 'Bull (cap −50 bps)', data: DATA.navBull, borderColor: POS, borderDash: [6, 3], borderWidth: 1.6, pointRadius: 0, tension: .25, fill: false },
+    { label: 'Capital reference $100', data: labels10.map(() => PAR), borderColor: RED, borderDash: [3, 3], pointRadius: 0, fill: false },
+  ] }, options: { plugins: { legend: legend(true) }, scales: { y: { min: 0, suggestedMax: 450, ticks: { font: { size: 10 }, callback: v => '$' + v } }, x: { ticks: { font: { size: 10 } } } } } });
+}
+function chartCure() {
+  const c = DATA.cure;
+  mk('cv-cure', { type: 'bar', data: { labels: ['At shock', 'After disposition'], datasets: [
+    { label: 'Interest coverage', data: [c.before, c.after], backgroundColor: [RED, POS] },
+  ] }, options: { aspectRatio: 4.5, indexAxis: 'y', plugins: { legend: legend(false) }, scales: { x: { min: 0, suggestedMax: 1.6, ticks: { font: { size: 10 }, callback: v => v.toFixed(2) + '×' }, grid: { color: ctx => ctx.tick.value === 1.2 ? RED : 'rgba(0,0,0,0.06)' } }, y: { ticks: { font: { size: 10 } } } } } });
+}
+function chartTornado() {
+  const ow = DATA.oneway.map(o => ({ driver: o.driver, delta: o.navAdverse - o.navBase })).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+  mk('cv-tornado', { type: 'bar', data: { labels: ow.map(o => o.driver), datasets: [
+    { label: 'Δ Y8 NAV/unit (adverse ±25 bps)', data: ow.map(o => o.delta), backgroundColor: ow.map(o => o.delta < 0 ? 'rgba(241,95,34,0.85)' : 'rgba(84,146,78,0.85)') },
+  ] }, options: { aspectRatio: 3.4, indexAxis: 'y', plugins: { legend: legend(false) }, scales: { x: { ticks: { font: { size: 10 }, callback: v => '$' + v.toFixed(0) }, title: { display: true, text: 'effect on Year-8 NAV per Investment Unit (adverse ±25 bps move)', font: { size: 10 } } }, y: { ticks: { font: { size: 10 } } } } } });
+}
+
+/* ── draw everything once ───────────────────────────────────────────── */
+function renderAll() {
+  lineNo = 1; // restart the continuous row numbering
+  renderCards(); renderTable(); renderFourStress(); renderOneway(); renderCureCard();
+  chartBaseNav(); chartBaseCov(); chartCoverageHeld(); chartLever();
+  chartHeadroom(); chartNavResilience(); chartCure(); chartTornado();
+}
+renderAll();
+window.addEventListener('beforeprint', () => { Object.values(charts).forEach(c => c.resize()); });
+</script>
+</body>
+</html>
