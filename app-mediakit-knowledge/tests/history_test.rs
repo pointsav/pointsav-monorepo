@@ -21,9 +21,7 @@ async fn fixture_state() -> (AppState, TempDir, TempDir) {
 
     (
         AppState {
-            content_dir: content_dir.path().to_path_buf(),
-            guide_dir: None,
-            guide_dir_2: None,
+            mounts: app_mediakit_knowledge::mounts::resolve(content_dir.path(), None, None),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(search),
             git: Arc::new(Mutex::new(repo)),
@@ -34,6 +32,7 @@ async fn fixture_state() -> (AppState, TempDir, TempDir) {
             brand_theme: None,
             brand_instance: "documentation".to_string(),
             site_title: "Test Wiki".to_string(),
+            blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
         },
         content_dir,
         state_dir,
@@ -46,7 +45,7 @@ async fn fixture_state() -> (AppState, TempDir, TempDir) {
 /// setup. `message` becomes the commit subject; the blake3 hash is recorded so
 /// the hash-lookup index sees it.
 fn seed_topic(state: &AppState, slug: &str, body: &str, message: &str) {
-    let path = state.content_dir.join(format!("{slug}.md"));
+    let path = state.primary_path().join(format!("{slug}.md"));
     std::fs::write(&path, body).unwrap();
     let repo = state.git.lock().unwrap();
     let _ = app_mediakit_knowledge::git::ensure_commit_identity_from_env(&repo);

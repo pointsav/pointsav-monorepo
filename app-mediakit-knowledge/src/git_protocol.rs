@@ -32,7 +32,7 @@ pub async fn info_refs(
 
     let mut cmd = tokio::process::Command::new("git");
     cmd.args(["upload-pack", "--stateless-rpc", "--advertise-refs"])
-        .arg(&state.content_dir)
+        .arg(state.primary_path())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
 
@@ -82,7 +82,7 @@ pub async fn upload_pack(
 
     let mut child = match tokio::process::Command::new("git")
         .args(["upload-pack", "--stateless-rpc"])
-        .arg(&state.content_dir)
+        .arg(state.primary_path())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()

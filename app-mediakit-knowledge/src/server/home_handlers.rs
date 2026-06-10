@@ -675,24 +675,25 @@ async fn nav_buckets_cached(state: &AppState) -> Arc<CategoryBuckets> {
         NAV_CACHE.get_or_init(|| tokio::sync::RwLock::new(std::collections::HashMap::new()));
     {
         let r = cache.read().await;
-        if let Some((built, buckets)) = r.get(&state.content_dir) {
+        if let Some((built, buckets)) = r.get(state.primary_path()) {
             if built.elapsed() < NAV_TTL {
                 return buckets.clone();
             }
         }
     }
+    let gds = state.guide_dirs_arr();
     let buckets = Arc::new(
         bucket_topics_by_category(
-            &state.content_dir,
-            state.guide_dir.as_deref(),
-            state.guide_dir_2.as_deref(),
+            state.primary_path(),
+            gds[0],
+            gds[1],
         )
         .await
         .unwrap_or_default(),
     );
     let mut w = cache.write().await;
     w.insert(
-        state.content_dir.clone(),
+        state.primary_path().to_path_buf(),
         (std::time::Instant::now(), buckets.clone()),
     );
     buckets
@@ -707,7 +708,7 @@ async fn placeholder_index(
     user: Option<&User>,
     pending_count: i64,
 ) -> Result<Markup, WikiError> {
-    let mut entries = fs::read_dir(&state.content_dir).await?;
+    let mut entries = fs::read_dir(state.primary_path()).await?;
     let mut pages: Vec<String> = Vec::new();
     while let Some(entry) = entries.next_entry().await? {
         let name = entry.file_name();
@@ -756,10 +757,11 @@ async fn category_page(
     CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    let gds = state.guide_dirs_arr();
     let buckets = bucket_topics_by_category(
-        &state.content_dir,
-        state.guide_dir.as_deref(),
-        state.guide_dir_2.as_deref(),
+        state.primary_path(),
+        gds[0],
+        gds[1],
     )
     .await?;
     let empty: Vec<TopicSummary> = Vec::new();
@@ -769,14 +771,14 @@ async fn category_page(
 
     // Render _index.md MOC prose above the auto-list when present.
     let moc_html: Option<String> = {
-        let index_path = state.content_dir.join(&name).join("_index.md");
+        let index_path = state.primary_path().join(&name).join("_index.md");
         if index_path.exists() {
             match fs::read_to_string(&index_path).await {
                 Ok(text) => {
                     if let Ok(parsed) = crate::render::parse_page(&text) {
                         Some(crate::render::render_html_raw(
                             &parsed.body_md,
-                            &state.content_dir,
+                            state.primary_path(),
                             &state.link_roots(),
                         ))
                     } else {

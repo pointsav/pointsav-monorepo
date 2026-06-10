@@ -31,9 +31,7 @@ async fn citation_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
     let repo = app_mediakit_knowledge::git::open_or_init(dir.path()).unwrap();
     (
         AppState {
-            content_dir: dir.path().to_path_buf(),
-            guide_dir: None,
-            guide_dir_2: None,
+            mounts: app_mediakit_knowledge::mounts::resolve(dir.path(), None, None),
             citations_yaml: PathBuf::from("/srv/foundry/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
@@ -44,6 +42,7 @@ async fn citation_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
             brand_theme: None,
             brand_instance: "documentation".to_string(),
             site_title: "PointSav Documentation Wiki".to_string(),
+            blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
         },
         dir,
         state_dir,

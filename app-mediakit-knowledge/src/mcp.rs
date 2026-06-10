@@ -217,8 +217,8 @@ async fn tool_link_citation(state: &AppState, args: &Value) -> Result<String, (i
 
 async fn resources_list(state: &AppState) -> Result<Value, (i32, String)> {
     let topic_files = crate::server::collect_all_topic_files(
-        &state.content_dir,
-        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+        state.primary_path(),
+        &state.guide_dirs_arr(),
     )
     .await
     .map_err(|e| (-32000i32, format!("io error: {e}")))?;
@@ -251,8 +251,8 @@ async fn resources_read(state: &AppState, params: &Value) -> Result<Value, (i32,
         return Err((-32602, "invalid slug".to_string()));
     }
     let topic_files = crate::server::collect_all_topic_files(
-        &state.content_dir,
-        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+        state.primary_path(),
+        &state.guide_dirs_arr(),
     )
     .await
     .map_err(|e| (-32000i32, format!("io error: {e}")))?;
@@ -387,8 +387,8 @@ async fn query_page(state: &AppState, params: &Value) -> Result<Value, (i32, Str
     }
 
     let topic_files = crate::server::collect_all_topic_files(
-        &state.content_dir,
-        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+        state.primary_path(),
+        &state.guide_dirs_arr(),
     )
     .await
     .map_err(|e| (-32000i32, format!("io error: {e}")))?;
@@ -430,14 +430,8 @@ async fn query_page(state: &AppState, params: &Value) -> Result<Value, (i32, Str
                 .collect()
         })
         .unwrap_or_default();
-    let extra_roots: Vec<&std::path::Path> =
-        [state.guide_dir.as_deref(), state.guide_dir_2.as_deref()]
-            .iter()
-            .flatten()
-            .copied()
-            .collect();
     let html_body =
-        crate::render::render_html_raw(&parsed.body_md, &state.content_dir, &extra_roots);
+        crate::render::render_html_raw(&parsed.body_md, state.primary_path(), &state.link_roots());
     let backlinks = state.links.backlinks(slug).unwrap_or_default();
 
     Ok(json!({
@@ -510,8 +504,8 @@ async fn list_pages(state: &AppState, params: &Value) -> Result<Value, (i32, Str
         .unwrap_or(100);
 
     let topic_files = crate::server::collect_all_topic_files(
-        &state.content_dir,
-        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+        state.primary_path(),
+        &state.guide_dirs_arr(),
     )
     .await
     .map_err(|e| (-32000i32, format!("io error: {e}")))?;
