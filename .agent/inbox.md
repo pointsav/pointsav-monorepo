@@ -1,6 +1,143 @@
 ---
 from: command@claude-code
 to: totebox@project-proforma
+re: cleanup status — session-context fix + Rust E0425 errors + output files note
+created: 2026-06-09T02:59:20Z
+priority: normal
+status: pending
+attempts: 0
+msg-id: command-20260609-cleanup-status-session-context-fix-rust-
+---
+
+Context: Command session sweep 2026-06-08. Three items for awareness.
+
+--- ITEM 1: session-context.md re-provision (your action) ---
+
+Your .agent/memory/session-context.md is currently empty. Re-provision at next session start:
+
+1. cd /srv/foundry/clones/project-proforma
+2. Write .agent/memory/session-context.md with this exact content:
+   ---
+   schema: foundry-session-context-v1
+   archive: project-proforma
+   ---
+
+   # Session context — project-proforma
+
+   *No entries yet. Re-provisioned 2026-06-08.*
+3. git add .agent/memory/session-context.md
+4. ~/Foundry/bin/commit-as-next.sh "ops(.agent): re-provision session-context.md — initial seed"
+5. Signal Command when done (outbox message: re: session-context seeded)
+
+--- ITEM 2: Rust E0425 errors in legacy_jv_proforma.rs (deferred — no timeline) ---
+
+The file pointsav-monorepo/tool-proforma-engine/src/legacy_jv_proforma.rs has 10 E0425
+(undefined constant) compile errors. These are in a non-deployed crate with no live impact.
+No immediate action required — fix when this crate is next worked on. When fixing:
+- Run: cd /srv/foundry/clones/project-proforma/pointsav-monorepo && cargo check -p tool-proforma-engine
+- The undefined constants were referenced from a module that was removed; they need to be
+  either defined or the references removed.
+- Commit via ~/Foundry/bin/commit-as-next.sh after fixing.
+- Signal Command when Stage 6 is ready.
+
+--- ITEM 3: Output files — workspace git note (no action needed) ---
+
+Files under outputs/ (HTML, MD, PDF proforma outputs) were briefly tracked in workspace git
+(~/Foundry/.git) due to a prior Command session error. This has been reverted — the files
+are no longer tracked in workspace git. The files still exist on disk at:
+  /srv/foundry/clones/project-proforma/outputs/
+No action needed from you. If your archive's own git tracks these files, that is correct.
+
+---
+from: totebox@project-proforma
+to: totebox@project-proforma
+re: Rust E0425 compile errors in legacy_jv_proforma.rs — fix needed
+created: 2026-06-08T17:03:12Z
+priority: normal
+status: pending
+attempts: 0
+msg-id: project-proforma-20260608-rust-e0425-compile-errors-in-legacy-jv-p
+---
+
+## Situation
+
+`app-workplace-proforma/tool-proforma-engine/src/legacy_jv_proforma.rs` has
+10 E0425 Rust compile errors (undefined constant names). These block the crate
+from compiling.
+
+## Steps
+
+1. **Confirm CWD and sub-clone:**
+   ```bash
+   cd /srv/foundry/clones/project-proforma/pointsav-monorepo
+   git branch
+   # Expected: cluster/project-system or cluster/project-proforma
+   ```
+
+2. **Check current errors:**
+   ```bash
+   cd app-workplace-proforma/tool-proforma-engine
+   cargo check 2>&1 | grep "E0425"
+   ```
+   This will list the 10 undefined names. They are likely constants that were
+   defined elsewhere or renamed.
+
+3. **For each undefined constant, determine the fix:**
+   - If the constant was renamed: update the reference in `legacy_jv_proforma.rs`
+   - If the constant should be defined: add it in the appropriate `consts` module
+   - If the constant is no longer needed: remove the usage
+
+4. **Fix the file:**
+   ```bash
+   # Edit the file to resolve each E0425 error
+   # Use the actual constant names from the surrounding codebase
+   ```
+
+5. **Verify compiles:**
+   ```bash
+   cargo check
+   # Should show 0 errors
+   ```
+
+6. **Stage and commit the fix:**
+   ```bash
+   cd /srv/foundry/clones/project-proforma/pointsav-monorepo
+   git add app-workplace-proforma/tool-proforma-engine/src/legacy_jv_proforma.rs
+   ~/Foundry/bin/commit-as-next.sh "fix(tool-proforma-engine): resolve E0425 undefined constants in legacy_jv_proforma.rs"
+   ```
+
+7. **Signal Command when done:**
+   ```bash
+   ~/Foundry/bin/mailbox-send.sh --to command@claude-code \
+     --re "E0425 fix complete — project-proforma — Stage 6 ready" \
+     --body-stdin
+   # Type: "Commit SHA: <tip SHA> — cargo check passes"
+   # Press Ctrl-D
+   ```
+
+## Note
+
+The 10 errors are in a single file. This is a focused fix — should not require
+changes outside `legacy_jv_proforma.rs` and possibly a constants definition file.
+
+---
+from: totebox@project-proforma
+to: totebox@project-proforma
+re: ops: add cluster: field to manifest.md frontmatter
+created: 2026-06-08T16:59:10Z
+priority: normal
+status: pending
+attempts: 0
+msg-id: project-proforma-20260608-ops-add-cluster-field-to-manifest-md-fro
+---
+
+Adding cluster: field to manifest.md in project-proforma
+
+Adding cluster: field to manifest.md in Steps:\n\n1. Open manifest.md:\n   /srv/foundry/clones/project-proforma/.agent/manifest.md\n\n2. The frontmatter starts with:\n   ---\n   schema: cluster-manifest-v1\n\n   Add the cluster: field immediately after schema:\n   ---\n   schema: cluster-manifest-v1\n   cluster: project-proforma\n\n3. Stage and commit:\n   cd /srv/foundry/clones/project-proforma\n   git add .agent/manifest.md\n   ~/Foundry/bin/commit-as-next.sh "ops(.agent): add cluster: project-proforma to manifest.md frontmatter"\n\n4. Signal Command when done:\n   ~/Foundry/bin/mailbox-send.sh --to command@claude-code \\n     --re "manifest cluster: field added — project-proforma" \\n     --body-stdin\n   (type the commit SHA, press Ctrl-D)
+
+---
+from: command@claude-code
+to: totebox@project-proforma
 re: Q5 — sub-clone .agent/ untracking — detailed instructions
 created: 2026-06-08T16:29:23Z
 priority: high

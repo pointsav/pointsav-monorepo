@@ -2,6 +2,35 @@
 
 ---
 
+## Session: 2026-06-08–09 | Totebox | Opus 4.8 (Session 7)
+
+### Done this session
+
+**Alternative Real Estate tear sheet (V2)** — engine-built two-sided comparison; **NOT committed** (operator review pending)
+- New Rust report module `tool-proforma-engine/src/report/tearsheet_alt_re_v2.rs` (~1029 lines); CLI `tearsheet-alt-re-v2`; emits `outputs/mcorp-tearsheet-alternative-re-v2.{html,json}`. Companion (V2) to the JW3 Sensitivity Analysis.
+- Evolved: single 4-curve chart (v6 draft) → multi-chart redesign (10 single-message charts, 6 sections) → operator revision round.
+- Headline: SF 2.30M vs 3.91M (+41%); MOIC 2.96×/4.76×; IRR 13.1%/17.5%; both on IFRS fair value (JV LTV flat ~59.5%, DH 62%→47%).
+- Added **Years 11–20 illustrative continuation** (`extend_y11_y20()`, debenture-recycling profile): SF→8.64M, coverage 2.57×→2.96× (far above the 1.20× covenant), NAV→$901, debt→$1.85B. A forward projection from the Y10 row — NOT a `pclp1_proforma` re-run.
+- 12 tests pass, clippy clean. Full resumable record in `.agent/briefs/BRIEF-tearsheet-alt-re-v2.md` (status: active).
+
+### State at shutdown
+- **Uncommitted, deliberately (operator review pending):** monorepo clone `M src/main.rs`, `M src/report/mod.rs`, `?? src/report/tearsheet_alt_re_v2.rs`; deliverables in `outputs/`. No commits made this session.
+- New `.agent/briefs/BRIEF-tearsheet-alt-re-v2.md` + this session-context + NEXT.md entry — written, not committed.
+- Superseded v6 single-chart module backed up at `~/sandbox/v6-superseded/`; render/PDF verification artifacts in `~/sandbox/v2b/`.
+
+### Operator preferences surfaced
+- Version the tear sheet **V2** to match the sensitivity-analysis companion (leave the v5/v6 marketing lineage behind).
+- Both structures on **IFRS fair value** (apples-to-apples); do not reintroduce the ASPE asymmetry / rising book LTV.
+- Naming: "D2 Direct-Hold Solutions" (never "Professional Centres Canada LP"); displayed code-ref `pro-01_proforma` (real module stays `pclp1_proforma`); never call it a "fund"; "Direct-Hold Solutions" formal / "Direct-Hold" shorthand.
+- For Y11–20, chose **debenture-recycling/compounding** over conservative self-funding.
+- "Use multiple OPUS AGENTS" to research/design substantial changes; review outputs holistically (incl. the PDF) before finalizing.
+
+### Pending / next
+- Commit the 3 files + outputs when operator approves; then Stage 6 promote (Command Session). Optional: tune Y11–20 pace (`EXT_RECYCLE_FFO_PCT`); emit a PDF deliverable into `outputs/`.
+- Operator paused the tear sheet to switch to **other Rust-engine work** (not yet specified).
+
+---
+
 ## Session: 2026-05-26 | Totebox | claude-sonnet-4-6 (Session 6)
 
 ### Done this session
@@ -74,13 +103,4 @@
 
 ---
 
-## Session: 2026-05-26 | Totebox | claude-sonnet-4-6 (Session 4)
-
-### Done this session
-- BRIEF v0.15.4 → v0.15.6 — 2% Work Fee numbers; director fee $4,373.37/yr/director
-- SPV operating budget v2 generated: `outputs/spv-operating-budget.md` + `.html`
-
-**Key v0.15.6 values (now superseded by v6 rebalance):**
-- Director fee rebalanced to $5,285.88/yr/director in HTML (BRIEF not yet updated)
-- BM reserve: $47,185; SPV1 reserve: $63,046; SPV2 reserve: $67,311 (3-year, from commission rebates)
-- Commission waterfall zero-balance verified ($0 ✓)
+> Session 4 (2026-05-26) pushed to `session-context-archive.md` to keep the rolling-3 window.
