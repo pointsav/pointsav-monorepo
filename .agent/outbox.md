@@ -1,6 +1,38 @@
 ---
 from: totebox@claude-code
 to: command@claude-code
+re: project-intelligence 2026-06-10 — service-content 0-entities fix + binary rebuild needed
+created: 2026-06-10T19:30:00Z
+priority: high
+status: pending
+msg-id: project-intelligence-20260610-svc-content-prefill
+---
+
+**Root cause of 0-entities enrichment blocker confirmed and fixed (session 5).**
+
+The entity extraction function in `service-content/src/main.rs` used a JSON schema grammar
+constraint without an assistant pre-fill. Testing proved: the grammar constraint causes
+llama-server to override any pre-fill and return `[]` regardless of content. Fix committed:
+grammar constraint removed from Tier A path; assistant pre-fill `[{"` added instead.
+Pre-fill-only test confirmed 4 entities extracted from known entity-rich text.
+
+**Action required — Command Session:**
+1. Rebuild service-content: `cargo build --release --manifest-path service-content/Cargo.toml`
+   (from `/srv/foundry/clones/project-intelligence/`)
+2. Deploy with `bin/deploy-binary.sh service-content ...` + ledger update
+3. `sudo systemctl restart local-content.service`
+
+Monitor logs after restart: should see `[TIER-A] N entities extracted` (N > 0) instead of 0.
+If 0 persists: the corpus documents may be non-English or have no named entities — check
+`journalctl -u local-content.service` for the actual text being extracted.
+
+Commits staged for Stage 6 after this message:
+- `2525598c` fix(gitignore) + outbox SHA correction
+- `<next>` fix(service-content): 0-entities — pre-fill + no grammar constraint for Tier A
+
+---
+from: totebox@claude-code
+to: command@claude-code
 re: project-intelligence 2026-06-10 — Command-scope items + Stage 6 pending (updated)
 created: 2026-06-10T17:40:00Z
 priority: high
