@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.4"
+version: "0.5"
 title: "Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration: A Keystroke-Economy Framework"
 target_journal: "ACM Transactions on Computer-Human Interaction"
 target_publisher: "ACM"
@@ -51,7 +51,7 @@ keywords:
 bcsc_class: public-disclosure-safe
 ai_tool_used: "claude-sonnet-4-6 (Anthropic)"
 corresponding_author: corporate.secretary@woodfinegroup.com
-word_count_body: 5200
+word_count_body: 5950
 word_count_target: 8000
 submission_status: not-submitted
 writing_pass_date: 2026-05-28
@@ -72,7 +72,7 @@ preprint_posted: true
 preprint_posted_date: 2026-05-28
 doi: ""
 license: "CC BY 4.0"
-cite_as: "Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration. Working Paper v0.4, 30 May 2026. Woodfine Management Corp., New York, NY."
+cite_as: "Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration. Working Paper v0.5, 10 June 2026. Woodfine Management Corp., New York, NY."
 revision_history:
   - version: "0.1"
     date: "2026-05-27"
@@ -86,6 +86,9 @@ revision_history:
   - version: "0.4"
     date: "2026-05-30"
     changes: "Readability pass: AEC, IFC, BIM, CAD, NASA-TLX first-use expansions in §1.1 and §5"
+  - version: "0.5"
+    date: "2026-06-10"
+    changes: "JOURNAL-NOTES incorporation (project-workplace): added §3.4 Principle 4 (application-category keyboard convention matching); added §4.7 document/proforma/workbench navigation keyboard mappings; updated §4 intro to four practice profiles; zero-retraining principle introduced"
 notes_for_editor: |
   Writing pass 2026-05-28: §1–§5 body written (~5,200 words). §6 Results pending user
   study execution. §7 Discussion written with formal hypotheses and falsification
@@ -101,10 +104,10 @@ notes_for_editor: |
   participants will satisfy TOCHI's empirical contribution requirement.
 ---
 
-> **Working Paper · Version 0.4 · 2026-05-30 · CC BY 4.0**
+> **Working Paper · Version 0.5 · 2026-06-10 · CC BY 4.0**
 > This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. Correspondence: corporate.secretary@woodfinegroup.com.
 >
-> *Cite as:* Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration. Working Paper v0.4, 30 May 2026. Woodfine Management Corp., New York, NY.
+> *Cite as:* Woodfine, Jennifer M., Woodfine, Peter M., & Woodfine, Mathew (2026). Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration. Working Paper v0.5, 10 June 2026. Woodfine Management Corp., New York, NY.
 
 > **Forward-Looking Statements**
 > Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially. Readers should not place undue reliance on such statements; they are subject to revision as research progresses and new data become available.
