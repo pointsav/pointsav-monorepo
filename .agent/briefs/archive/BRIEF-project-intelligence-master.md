@@ -1,7 +1,11 @@
 ---
 artifact: brief
 schema: foundry-brief-v1
-status: active
+status: archived
+contamination: true
+contamination_note: belongs to project-intelligence; found in project-knowledge briefs/ during 2026-06-10 session; git mv'd to archive/; outbox signal sent
+archived_date: 2026-06-10
+archive: project-intelligence
 title: "project-intelligence Master BRIEF — Sovereign AI Platform for SMBs"
 created: 2026-06-04
 updated: 2026-06-04

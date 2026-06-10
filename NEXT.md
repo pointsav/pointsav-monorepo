@@ -90,3 +90,69 @@ See BRIEF-os-totebox-ppn-build-out.md for full state.
 - J1/J2/J3/J4/J6 — ORCID IDs required for submission; operator action.
 - J1 Phase 24B — Kontur H3 population join; operator must initiate data acquisition.
 - CBRE/JLL leasing data — Year 2 research; operator action.
+# NEXT.md — project-knowledge
+
+Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
+> **Scope: this archive only.** Cross-repo items live at `~/Foundry/NEXT.md`.
+
+Last updated: 2026-06-10 [totebox@claude-code]
+
+---
+
+## Phase 9 — Production Deploy (Command-gated)
+
+- [ ] Gate 1: Stage 6 promote — sub-clone tip ca6ae410; outbox signal
+      `project-knowledge-20260608-stage-6-ready-ca6ae410` sent; awaiting Command.
+      [2026-06-08 totebox@claude-code]
+- [x] Gate 2: DESIGN-TOKEN-CHANGE master_cosign — CLEARED 2026-06-09; af51d86;
+      tokens committed by totebox@project-design. [2026-06-09]
+- [x] Binary rebuild — rebuilt 2026-06-10 from tip ca6ae410. [2026-06-10 totebox@claude-code]
+- [ ] Phase 9 execute — blocked on Gate 1.
+      See `.agent/drafts-outbound/PHASE-9-DEPLOY-CHECKLIST.md`. [2026-06-10 totebox@claude-code]
+
+---
+
+## Phase 0 — Federation Engine (next unblocked milestone)
+
+- [ ] Refactor `AppState` to `mounts: Vec<Mount>`; delete hardcoded content/guide dir fields [2026-06-08]
+- [ ] Wire `blueprints.rs` into render pipeline [2026-06-08]
+- [ ] Implement `inject_wiki_prefixes` cross-mount resolution [2026-06-08]
+- [ ] Dead-link gate (`check --strict` 0 dead links as CI gate) [2026-06-08]
+
+---
+
+## Code fixes — pre-promote
+
+- [ ] Doorman stub routes: `POST /api/doorman/complete` + `POST /api/doorman/instruct` return 404
+      but tests expect 501; add two minimal stub handlers. [2026-06-02]
+- [ ] Navigation portlet test: asserts `html.contains("sidebar")` but article pages use
+      `docs-sidenav`; pre-existing gap. [2026-06-03]
+
+---
+
+## Content sync — standing session-start procedure
+
+```bash
+git -C content-wiki-documentation pull --no-rebase /srv/foundry/clones/project-editorial/media-knowledge-documentation main
+git -C content-wiki-projects pull /srv/foundry/clones/project-editorial/media-knowledge-projects main
+git -C content-wiki-corporate pull /srv/foundry/clones/project-editorial/media-knowledge-corporate main
+```
+
+---
+
+## Standing deferred
+
+- Phase 12 (AI marginalia): gated on BP5 + SYS-ADR-07/10/19 review [2026-06-01]
+- Phase 5.1+ (ACLs/OIDC/webhooks): gated on BP5 clearance [2026-06-01]
+- Phase 6 (three-instance split): gated on GitHub renames + Doctrine amendment [2026-06-01]
+
+---
+
+## Carry-forward — blocked cross-archive
+
+- [ ] project-jennifer MCP tasks — blocked: jennifer:jennifer filesystem ownership;
+      needs Command or jennifer session [2026-06-10 totebox@claude-code]
+- [ ] project-console manifest contamination — needs project-console Totebox [2026-06-10]
+- [ ] project-bim woodfine-bim-library Stage 6 — needs Command [2026-06-10]
+- [ ] project-intelligence residual commit fix — needs project-intelligence Totebox [2026-06-10]
+- [ ] Phase E: TOKEN-CHANGE cosign propagation to editorial copy — Command-scope [2026-06-10]
