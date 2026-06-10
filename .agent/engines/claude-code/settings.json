@@ -1,0 +1,42 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "/srv/foundry/bin/hooks/pretool-chmod-identity-block.sh" },
+          { "type": "command", "command": "/srv/foundry/bin/hooks/pretool-cargo-load-guard.sh" },
+          { "type": "command", "command": "/srv/foundry/bin/hooks/pretool-destructive-confirm.sh" }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "/srv/foundry/bin/hooks/pretool-scope-check.sh" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "/srv/foundry/bin/hooks/posttool-edit-size-warn.sh" },
+          { "type": "command", "command": "/srv/foundry/bin/hooks/posttool-write-bilingual-warn.sh" }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "/srv/foundry/bin/hooks/posttool-bash-audit.sh" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "/srv/foundry/bin/hooks/stop-trajectory-capture.sh" }
+        ]
+      }
+    ]
+  }
+}
