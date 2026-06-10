@@ -317,15 +317,15 @@ fn render_jw1_summary_section(years: &[AllocJw1Year], cost_basis: f64) -> String
         (sale price and NAV respectively). All other per-share values use 100,000 total shares \
         as denominator.</p>\n",
     );
-    s.push_str(&render_jw1_annual_returns(years));
+    s.push_str(&render_jw1_annual_returns(years, cost_basis));
     s
 }
 
 // ─── Annual Returns (Section 4) ─────────────────────────────────────────────
 
-fn render_jw1_annual_returns(years: &[AllocJw1Year]) -> String {
+fn render_jw1_annual_returns(years: &[AllocJw1Year], cost_basis: f64) -> String {
     let mut s = String::new();
-    s.push_str("<h3>Annual Returns \u{2014} per WCP share</h3>\n");
+    s.push_str("<h3>Annual Returns \u{2014} per $1.00 Invested (cost basis: $500,024.92)</h3>\n");
     s.push_str("<table class=\"wide\">\n");
     s.push_str("<tr><th class=\"lbl\">Metric</th>");
     for y in 0..=10 {
@@ -333,27 +333,20 @@ fn render_jw1_annual_returns(years: &[AllocJw1Year]) -> String {
     }
     s.push_str("</tr>\n");
 
-    // Cash receipts per share: interest (Y1/Y2) + loan principal (Y2) + CRS (Y3)
-    s.push_str("<tr><td class=\"lbl\">Cash receipts per WCP share</td>");
+    // Cash receipts per $1.00 invested: interest (Y1/Y2) + loan principal (Y2) + CRS (Y3)
+    s.push_str("<tr><td class=\"lbl\">Cash receipts per $1.00 invested</td>");
     for yr in years {
-        let principal_ret = if yr.year == 2 {
-            alloc_jw1_proforma::JW1_LOAN_PRINCIPAL
-        } else {
-            0.0
-        };
+        let principal_ret = if yr.year == 2 { alloc_jw1_proforma::JW1_LOAN_PRINCIPAL } else { 0.0 };
         let cash = yr.interest_income + yr.realised_gain_crs + principal_ret;
         if cash.abs() < 1e-2 {
             s.push_str("<td>\u{2014}</td>");
         } else {
-            s.push_str(&format!(
-                "<td>{}</td>",
-                fmt_per_share(cash / alloc_jw1_proforma::JW1_WCP_TOTAL_SHARES)
-            ));
+            s.push_str(&format!("<td>${:.4}</td>", cash / cost_basis));
         }
     }
     s.push_str("</tr>\n");
 
-    // WCP NAV per share
+    // WCP NAV per share (engine output — unchanged)
     s.push_str("<tr><td class=\"lbl\">WCP NAV per share</td>");
     for yr in years {
         s.push_str(&format!("<td>{}</td>", fmt_per_share(yr.wcp_per_share_value)));
@@ -361,6 +354,14 @@ fn render_jw1_annual_returns(years: &[AllocJw1Year]) -> String {
     s.push_str("</tr>\n");
 
     s.push_str("</table>\n");
+    s.push_str(
+        "<p class=\"note\">Cash receipts show all cash returned to the investor in that year \
+        (interest, loan principal, CRS proceeds) divided by the total cost basis of $500,024.92. \
+        A value of $1.0350 in Y2 means the investor received $1.035 back for every dollar \
+        originally deployed that year (principal return plus half-year interest). \
+        WCP NAV per share is the WCP engine book value; \
+        the Y3 figure is the Capital Recovery Sale price per share.</p>\n",
+    );
     s
 }
 

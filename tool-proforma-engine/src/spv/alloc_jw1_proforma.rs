@@ -179,6 +179,17 @@ pub fn forecast_json(wcp: &[WcpYear]) -> serde_json::Value {
             "cumulative_cash_received": y10.cumulative_cash_received,
             "equity_return": equity_return,
             "moic_equity": moic,
+        },
+        "per_dollar_invested": {
+            "denominator": cost_basis,
+            "denominator_note": "total equity cost basis; loan principal excluded as cash-neutral round-trip",
+            "annual_cash_receipts": years.iter().map(|yr| {
+                let principal_ret = if yr.year == 2 { JW1_LOAN_PRINCIPAL } else { 0.0 };
+                let cash = yr.interest_income + yr.realised_gain_crs + principal_ret;
+                cash / cost_basis
+            }).collect::<Vec<_>>(),
+            "y10_residual_nav_per_dollar": y10.residual_nav / cost_basis,
+            "moic_equity_per_dollar": moic,
         }
     })
 }
