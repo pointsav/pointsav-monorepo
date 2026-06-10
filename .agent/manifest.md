@@ -1,12 +1,12 @@
 ---
 schema: foundry-cluster-manifest-v1
 cluster: project-console
-cluster_name: project-marketing
-cluster_branch: cluster/project-marketing
+cluster_name: project-console
+cluster_branch: main
 created: 2026-05-06
 state: active (v0.0.1 MVP shipped 2026-05-06; cargo check clean; bootstrap + deploy pending Master)
 slm_endpoint: http://localhost:8011
-module_id: knowledge
+module_id: console
 doctrine_version: 0.0.14
 doctrine_claims_codified: [29]
 
@@ -90,8 +90,8 @@ provisioning_notes:
   - content-wiki-projects: sub-clone present; serves as secondary wiki mount
   - content-wiki-corporate: sub-clone present; Phase 6 tertiary mount (planned)
 
-session_role: totebox
-default_starting_dir: ~/Foundry/clones/project-knowledge/
+session_role: task
+default_starting_dir: ~/Foundry/clones/project-console/
 ---
 
 # project-knowledge — Wikipedia-pattern knowledge wiki
