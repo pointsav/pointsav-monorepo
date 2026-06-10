@@ -437,15 +437,18 @@ fn append_processed_ledger(path: &Path, filename: &str) {
 /// Returns None when Tier A is unavailable or response is unparseable.
 fn call_tier_a_extract(
     corpus_text: &str,
-    entity_schema: &serde_json::Value,
+    _entity_schema: &serde_json::Value,
     doorman_endpoint: &str,
 ) -> Option<Vec<serde_json::Value>> {
+    // Grammar constraint is intentionally OMITTED for Tier A: llama-server's grammar
+    // mode overrides the assistant pre-fill and causes OLMo 7B to return [] regardless
+    // of content. Pre-fill alone produces correct entities; serde_json validates format.
     let chat_body = serde_json::json!({
         "messages": [
             {"role": "system", "content": EXTRACTION_SYSTEM_PROMPT},
-            {"role": "user",   "content": corpus_text}
-        ],
-        "grammar": {"type": "json-schema", "value": entity_schema}
+            {"role": "user",   "content": corpus_text},
+            {"role": "assistant", "content": "[{\""}
+        ]
     });
     let url = format!("{}/v1/chat/completions", doorman_endpoint);
     let client = reqwest::blocking::Client::new();
@@ -462,6 +465,14 @@ fn call_tier_a_extract(
             let content = v["content"]
                 .as_str()
                 .or_else(|| v["choices"][0]["message"]["content"].as_str())?;
+            // Reattach assistant pre-fill when llama-server returns only the continuation.
+            let owned;
+            let content = if content.trim_start().starts_with('[') {
+                content
+            } else {
+                owned = format!("[{{\"{}", content);
+                owned.as_str()
+            };
             // Strip markdown fences the model may have added
             let stripped = content
                 .trim()
