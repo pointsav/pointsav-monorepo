@@ -89,6 +89,130 @@ pub const PCLP1_TOTAL_DEV_COST: f64 = 1_211_125_000.0; // sum of all phase capex
 pub const PCLP1_PHASE_2_FACILITY_FEE: f64 = 339_500_000.0 * 0.03; // $10.185M
 pub const PCLP1_PHASE_3_FACILITY_FEE: f64 = 654_750_000.0 * 0.03; // $19.6425M
 
+// ─── Three-mode scenario types (V3 engine — sensitivity V8) ──────────────────
+//
+// The engine supports three professionally-distinct scenario constructions.
+// Terminology confirmed against Big-4 assurance vocabulary; see audit notes in
+// report/pclp1_sensitivity_v8.rs.
+//
+//   1. ManagedDownside    — "Management Response Scenario." The LP re-runs the
+//      proforma from Y0 under stressed inputs and CONSTRAINS debenture issuance
+//      + development scale so interest coverage never drops below the covenant
+//      floor. Returns fall; no breach; no dispositions. (MD&A, forward-looking.)
+//
+//   2. SingleInputStress  — "Single-Input Sensitivity / Break-even Analysis"
+//      (IFRS 13 §93(h)(ii)). One unobservable input moves; everything else is
+//      held constant (ceteris paribus). Shows the exact breach threshold. No
+//      management response is assumed.
+//
+//   3. CovenantCure { shock_year } — "Covenant Cure (Corrective Disposition)
+//      Scenario." The portfolio is built out under base conditions, then a
+//      combined shock lands at `shock_year`. The LP disposes of the MINIMUM
+//      portfolio fraction, valued at STRESSED cap rates, required to restore the
+//      coverage covenant. (MD&A; carries the orderly-transaction caveat.)
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Default)]
+pub enum ModelMode {
+    /// LP constrains debenture issuance + development scale to hold coverage ≥ floor.
+    #[default]
+    ManagedDownside,
+    /// Ceteris paribus: one input changes, all else held constant. Shows breach.
+    SingleInputStress,
+    /// Post-construction combined shock; minimum corrective disposition at stressed values.
+    CovenantCure { shock_year: u32 },
+}
+
+/// Full input set for one forecast run. All fields default to the engine base
+/// constants; stressed scenarios override individual fields.
+#[derive(Debug, Clone, Copy, Serialize)]
+pub struct ForecastParams {
+    /// Stabilised occupancy multiplier. 1.0 = engine base; 0.95 = 95% occupancy.
+    pub occupancy_pct: f64,
+    /// Development yield on cost. Base PCLP1_DEV_YIELD = 0.105.
+    pub dev_yield: f64,
+    /// Debenture coupon. Base PCLP1_DEBT_RATE_DEBENTURE = 0.050.
+    pub debt_rate: f64,
+    /// Capitalisation rate for valuation (and stressed disposition value). Base 0.0625.
+    pub cap_rate: f64,
+    /// Months to stabilised occupancy. Base 12.0 (≤12 ⇒ no lease-up drag).
+    pub lease_up_months: f64,
+    /// Secondary-market buyer target yield (Y8+ market value). Base 0.080.
+    pub market_yield: f64,
+    /// Interest-coverage covenant floor. Base 1.20×.
+    pub dscr_floor: f64,
+    /// Scenario construction mode.
+    pub mode: ModelMode,
+}
+
+impl Default for ForecastParams {
+    fn default() -> Self {
+        ForecastParams {
+            occupancy_pct: 1.0,
+            dev_yield: PCLP1_DEV_YIELD,
+            debt_rate: PCLP1_DEBT_RATE_DEBENTURE,
+            cap_rate: PCLP1_CAP_RATE,
+            lease_up_months: 12.0,
+            market_yield: PCLP1_BUYER_TARGET_YIELD,
+            dscr_floor: 1.20,
+            mode: ModelMode::ManagedDownside,
+        }
+    }
+}
+
+/// Which covenant drove a corrective disposition.
+#[derive(Debug, Clone, Copy, Serialize)]
+pub enum DispositionTrigger {
+    /// Interest-coverage (DSCR) covenant.
+    Dscr,
+    /// NAV-per-unit floor (informational only — never curable by disposition).
+    NavFloor,
+}
+
+/// Result of a covenant-cure corrective-disposition solve at the shock year.
+#[derive(Debug, Clone, Copy, Serialize)]
+pub struct Pclp1DispositionEvent {
+    pub shock_year: u32,
+    /// Minimum generating-asset fraction sold, s ∈ [0, 1]. 1.0 when incurable.
+    pub fraction_sold: f64,
+    /// True when full-portfolio disposition cannot restore the covenant.
+    pub incurable: bool,
+    pub trigger: DispositionTrigger,
+    /// s × (stressed market value of generating assets).
+    pub sale_value_total: f64,
+    /// Debt retired by the disposition (= sale_value_total; all proceeds deleverage).
+    pub debt_retired: f64,
+    /// Coverage after the cure (≈ floor when curable; pre-cure value when not).
+    pub dscr_post_cure: f64,
+    /// NAV/unit after the cure (equals the stressed NAV/unit — see note below).
+    pub nav_per_unit_post_cure: f64,
+    /// Generating portfolio retained, (1 − s) × 100.
+    pub buildings_remaining_pct: f64,
+    /// Distributable cash per unit after debt service on the retained portfolio
+    /// (post-shock, post-disposition) = (EBITDA_remaining − interest_remaining) / units,
+    /// floored at 0. The income a holder still sees once the shock and the cure have run.
+    pub dist_per_unit_post_cure: f64,
+    /// ALWAYS false. NAV = MV − Debt is invariant to the sale fraction when assets
+    /// are sold at market value (the s·MV terms in assets and proceeds cancel).
+    /// The binding cure mechanism is therefore always the coverage covenant.
+    pub nav_curable_by_disposition: bool,
+}
+
+/// Metadata describing how a forecast run resolved (scales, trigger year, disposition).
+#[derive(Debug, Clone, Copy, Serialize)]
+pub struct ForecastMeta {
+    /// Phase 2 issuance scale actually drawn, s2 ∈ [0, 1].
+    pub phase2_scale: f64,
+    /// Phase 3 issuance scale actually drawn, s3 ∈ [0, 1].
+    pub phase3_scale: f64,
+    /// First year at which a management-response constraint bound (scale < 1).
+    pub dscr_constraint_triggered_year: Option<u32>,
+    /// Generating portfolio built relative to the full base programme, ×100.
+    pub buildings_built_pct: f64,
+    pub mode: ModelMode,
+    /// Populated only in CovenantCure mode.
+    pub disposition: Option<Pclp1DispositionEvent>,
+}
+
 // ─── Output struct ──────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize)]
@@ -138,14 +262,10 @@ pub struct Pclp1Year {
     pub debt_to_dev_cost: f64,  // Closing Debt ÷ Total Project Cost
     pub debt_to_asset_value: f64, // Closing Debt ÷ Asset Value (LTV)
     pub total_sqft_generating: f64, // Generating sqft (ramps with phases)
-}
-
-fn total_sqft_generating_at(y: u32) -> f64 {
-    // V2 Correction 4: total sqft scales with generating asset cost
-    if PCLP1_TOTAL_DEV_COST <= 0.0 {
-        return 0.0;
-    }
-    PCLP1_TOTAL_PORTFOLIO_SQFT * (generating_at(y) / PCLP1_TOTAL_DEV_COST)
+    // V3 (three-mode engine): issuance scales actually drawn this run.
+    // Both 1.0 in the base/default run — preserves backward compatibility.
+    pub phase2_scale: f64,
+    pub phase3_scale: f64,
 }
 
 // ─── Derived inputs ─────────────────────────────────────────────────────────
@@ -172,16 +292,6 @@ fn advisory_fee_annual() -> f64 {
     PCLP1_GROSS_EQUITY * PCLP1_ADVISORY_FEE_PCT
 }
 
-fn phase_draw(y: u32) -> f64 {
-    match y {
-        1..=3 => PCLP1_PHASE_1_ANNUAL_DRAW,
-        4..=5 => PCLP1_PHASE_2_ANNUAL_DRAW,
-        // V2 Correction 3: Y7 now draws Phase 3 second-year capex (was bug returning 0)
-        6 | 7 => PCLP1_PHASE_3_Y6_DRAW,
-        _ => 0.0,
-    }
-}
-
 fn payout_ratio(y: u32) -> f64 {
     match y {
         1..=3 => PCLP1_PAYOUT_Y1_Y3,
@@ -199,69 +309,142 @@ fn generates_from(phase: u32) -> u32 {
     }
 }
 
-fn wip_at(y: u32) -> f64 {
-    // WIP = assets not yet generating rent
-    let mut wip = 0.0;
-    if y < generates_from(1) {
-        // Phase 1 still WIP through Y3; in Y4 it moves to generating
-        let drawn = PCLP1_PHASE_1_ANNUAL_DRAW * (y.min(3) as f64);
-        wip += drawn;
-    }
-    if y < generates_from(2) {
-        // Phase 2 WIP through Y5
-        let drawn = if y >= 4 {
-            PCLP1_PHASE_2_ANNUAL_DRAW * ((y - 3).min(2) as f64)
-        } else {
-            0.0
-        };
-        wip += drawn;
-    }
-    if y < generates_from(3) {
-        // Phase 3 WIP through Y7
-        if y >= 6 {
-            // Y6 = $327.4M; Y7 = solver (TBD; approximate as same as Y6 for now)
-            let drawn_y6 = PCLP1_PHASE_3_Y6_DRAW;
-            let drawn_y7 = if y >= 7 { PCLP1_PHASE_3_Y6_DRAW } else { 0.0 };
-            wip += drawn_y6 + drawn_y7;
-        }
-    }
-    wip
-}
+// ─── Scaled / parameterised helpers (V3 three-mode engine) ───────────────────
+//
+// Each mirrors its unscaled counterpart above but accepts Phase 2 / Phase 3
+// issuance scales (s2, s3). At s2 = s3 = 1.0 the scaled output equals the
+// unscaled output exactly — this is what preserves backward compatibility.
 
-fn generating_at(y: u32) -> f64 {
-    // Generating = cumulative draws from completed phases
-    let mut gen = 0.0;
-    if y >= generates_from(1) {
-        gen += PCLP1_PHASE_1_ANNUAL_DRAW * 3.0; // Y1+Y2+Y3 total
-    }
-    if y >= generates_from(2) {
-        gen += PCLP1_PHASE_2_ANNUAL_DRAW * 2.0; // Y4+Y5 total
-    }
-    if y >= generates_from(3) {
-        gen += PCLP1_PHASE_3_Y6_DRAW * 2.0; // Y6+Y7 total (approximating Y7=Y6)
-    }
-    gen
-}
-
-fn total_assets_at(y: u32) -> f64 {
-    wip_at(y) + generating_at(y)
-}
-
-fn income_continuity_at(y: u32) -> f64 {
+fn phase_draw_scaled(y: u32, s2: f64, s3: f64) -> f64 {
     match y {
-        1..=3 => PCLP1_INCOME_CONTINUITY[(y - 1) as usize],
-        4.. => generating_at(y) * PCLP1_DEV_YIELD,
+        1..=3 => PCLP1_PHASE_1_ANNUAL_DRAW,
+        4..=5 => PCLP1_PHASE_2_ANNUAL_DRAW * s2,
+        6 | 7 => PCLP1_PHASE_3_Y6_DRAW * s3,
         _ => 0.0,
     }
 }
 
+fn wip_scaled_at(y: u32, s2: f64, s3: f64) -> f64 {
+    let mut wip = 0.0;
+    if y < generates_from(1) {
+        wip += PCLP1_PHASE_1_ANNUAL_DRAW * (y.min(3) as f64);
+    }
+    if y < generates_from(2) && y >= 4 {
+        wip += PCLP1_PHASE_2_ANNUAL_DRAW * s2 * ((y - 3).min(2) as f64);
+    }
+    if y < generates_from(3) && y >= 6 {
+        let drawn_y6 = PCLP1_PHASE_3_Y6_DRAW * s3;
+        let drawn_y7 = if y >= 7 { PCLP1_PHASE_3_Y6_DRAW * s3 } else { 0.0 };
+        wip += drawn_y6 + drawn_y7;
+    }
+    wip
+}
+
+fn generating_scaled_at(y: u32, s2: f64, s3: f64) -> f64 {
+    let mut gen = 0.0;
+    if y >= generates_from(1) {
+        gen += PCLP1_PHASE_1_ANNUAL_DRAW * 3.0;
+    }
+    if y >= generates_from(2) {
+        gen += PCLP1_PHASE_2_ANNUAL_DRAW * 2.0 * s2;
+    }
+    if y >= generates_from(3) {
+        gen += PCLP1_PHASE_3_Y6_DRAW * 2.0 * s3;
+    }
+    gen
+}
+
+/// Average in-place occupancy during generating-year `cur_year` for a phase that
+/// began generating in `gen_start`, under a linear lease-up of `months`.
+/// Returns 1.0 for `months ≤ 12` (engine base ⇒ no lease-up drag), preserving
+/// backward compatibility. Applied to operating NOI only — never to the
+/// stabilised valuation input (avoids double-penalising NAV for a timing effect).
+fn noi_ramp_factor(gen_start: u32, cur_year: u32, months: f64) -> f64 {
+    if cur_year < gen_start {
+        return 0.0;
+    }
+    if months <= 12.0 {
+        return 1.0;
+    }
+    let stabilize_years = months / 12.0;
+    let k = (cur_year - gen_start) as f64; // 0 = first generating year
+    let start = (k / stabilize_years).min(1.0);
+    let end = ((k + 1.0) / stabilize_years).min(1.0);
+    (start + end) / 2.0
+}
+
+/// Operating NOI at year `y` with occupancy, dev-yield, and lease-up ramp applied
+/// per phase. Drives `net_proceeds_from_ops` (the cash NOI line).
+fn ramped_noi_at(y: u32, s2: f64, s3: f64, p: &ForecastParams) -> f64 {
+    let mut noi = 0.0;
+    if y >= generates_from(1) {
+        let amt = PCLP1_PHASE_1_ANNUAL_DRAW * 3.0;
+        noi += amt * p.dev_yield * p.occupancy_pct
+            * noi_ramp_factor(generates_from(1), y, p.lease_up_months);
+    }
+    if y >= generates_from(2) {
+        let amt = PCLP1_PHASE_2_ANNUAL_DRAW * 2.0 * s2;
+        noi += amt * p.dev_yield * p.occupancy_pct
+            * noi_ramp_factor(generates_from(2), y, p.lease_up_months);
+    }
+    if y >= generates_from(3) {
+        let amt = PCLP1_PHASE_3_Y6_DRAW * 2.0 * s3;
+        noi += amt * p.dev_yield * p.occupancy_pct
+            * noi_ramp_factor(generates_from(3), y, p.lease_up_months);
+    }
+    noi
+}
+
+/// Stabilised income for valuation at year `y`: scaled generating × dev-yield ×
+/// occupancy, WITHOUT the lease-up ramp (valuation uses stabilised, not timing-
+/// discounted, income). Y1–Y3 use the contractual income-continuity entitlements.
+fn stabilized_income_at(y: u32, s2: f64, s3: f64, p: &ForecastParams) -> f64 {
+    match y {
+        1..=3 => PCLP1_INCOME_CONTINUITY[(y - 1) as usize],
+        4.. => generating_scaled_at(y, s2, s3) * p.dev_yield * p.occupancy_pct,
+        _ => 0.0,
+    }
+}
+
+/// Fixed operating expenses (do not scale with portfolio): advisory + admin + board.
+fn fixed_operating_expenses() -> f64 {
+    advisory_fee_annual() + PCLP1_ADMIN_COMPLIANCE_ANNUAL + PCLP1_BOARD_ANNUAL
+}
+
+/// Full generating base at stabilisation (Y8, all phases, unscaled) — the
+/// denominator for `buildings_built_pct`.
+fn full_generating_base() -> f64 {
+    PCLP1_PHASE_1_ANNUAL_DRAW * 3.0 + PCLP1_PHASE_2_ANNUAL_DRAW * 2.0 + PCLP1_PHASE_3_Y6_DRAW * 2.0
+}
+
 // ─── Main forecast ──────────────────────────────────────────────────────────
 
+/// Backward-compatible entry point: base parameters, ManagedDownside mode.
+/// At default params both issuance scales clamp to 1.0 and the lease-up ramp is
+/// inert (12-month base), so this reproduces the V2 hardcoded forecast exactly.
 pub fn forecast() -> Vec<Pclp1Year> {
-    let mut years: Vec<Pclp1Year> = Vec::with_capacity(11);
+    forecast_full(&ForecastParams::default()).0
+}
 
-    // Y0: pre-launch state (zero everywhere)
-    years.push(Pclp1Year {
+/// Run the forecast under arbitrary parameters; return the year series only.
+pub fn forecast_with_params(p: &ForecastParams) -> Vec<Pclp1Year> {
+    forecast_full(p).0
+}
+
+/// Run the forecast and return both the 11-year series and resolution metadata.
+/// Dispatches on `p.mode`.
+pub fn forecast_full(p: &ForecastParams) -> (Vec<Pclp1Year>, ForecastMeta) {
+    match p.mode {
+        ModelMode::CovenantCure { shock_year } => forecast_covenant_cure(p, shock_year),
+        ModelMode::ManagedDownside | ModelMode::SingleInputStress => {
+            forecast_managed_or_static(p)
+        }
+    }
+}
+
+/// Builds an empty Y0 pre-launch row (zero everywhere; market value at par).
+fn y0_row() -> Pclp1Year {
+    Pclp1Year {
         year: 0,
         phase_draws: 0.0,
         total_assets: 0.0,
@@ -299,32 +482,85 @@ pub fn forecast() -> Vec<Pclp1Year> {
         debt_to_dev_cost: 0.0,
         debt_to_asset_value: 0.0,
         total_sqft_generating: 0.0,
-    });
+        phase2_scale: 1.0,
+        phase3_scale: 1.0,
+    }
+}
+
+/// ManagedDownside + SingleInputStress modes. The only difference: ManagedDownside
+/// constrains Phase 2/3 issuance scales to hold interest coverage ≥ floor;
+/// SingleInputStress fixes both scales at 1.0 and lets the breach surface.
+fn forecast_managed_or_static(p: &ForecastParams) -> (Vec<Pclp1Year>, ForecastMeta) {
+    let adaptive = p.mode == ModelMode::ManagedDownside;
+    let mut years: Vec<Pclp1Year> = Vec::with_capacity(11);
+    years.push(y0_row());
+
+    let mut phase2_scale: f64 = 1.0;
+    let mut phase3_scale: f64 = 1.0;
+    let mut triggered_year: Option<u32> = None;
 
     let mut prev_closing_debt: f64 = 0.0;
     let mut prev_ending_cash: f64 = 0.0;
 
     for y in 1u32..=10 {
-        let draws = phase_draw(y);
-        let wip = wip_at(y);
-        let gen = generating_at(y);
-        let total_assets = total_assets_at(y);
+        // ── Management-response issuance decisions (taken before drawing) ──
+        // Phase 2 sized at Y4 to hold projected Y5 coverage ≥ floor.
+        // avg_debt_Y5 = 1.5·s2·P2_ANNUAL = 0.75·s2·P2_TOTAL ⇒ the 0.75 coefficient.
+        // The projection uses the LEASE-UP-ADJUSTED income the LP will actually earn
+        // (the covenant is tested on actual, not stabilised, NOI). A slower lease-up
+        // depresses decision-year coverage ⇒ debt issued more slowly ⇒ fewer buildings.
+        if y == 4 && adaptive {
+            let p1_gen = PCLP1_PHASE_1_ANNUAL_DRAW * 3.0;
+            let ramp_p1_y5 = noi_ramp_factor(generates_from(1), 5, p.lease_up_months);
+            let proj_noi_y5 = p1_gen * p.dev_yield * p.occupancy_pct * ramp_p1_y5;
+            let proj_ebitda_y5 = proj_noi_y5 - fixed_operating_expenses();
+            let p2_total = PCLP1_PHASE_2_ANNUAL_DRAW * 2.0;
+            let denom = p.dscr_floor * 0.75 * p2_total * p.debt_rate;
+            let max_s2 = if denom > 0.0 { proj_ebitda_y5 / denom } else { 1.0 };
+            phase2_scale = max_s2.clamp(0.0, 1.0);
+            if phase2_scale < 1.0 {
+                triggered_year = triggered_year.or(Some(5));
+            }
+        }
+        // Phase 3 sized at Y6 to hold projected Y7 coverage ≥ floor, net of the Phase 2
+        // debt already committed. Lease-up-adjusted income, per the Phase 2 note above.
+        if y == 6 && adaptive {
+            let p1_gen = PCLP1_PHASE_1_ANNUAL_DRAW * 3.0;
+            let p2_gen_scaled = PCLP1_PHASE_2_ANNUAL_DRAW * 2.0 * phase2_scale;
+            let ramp_p1_y7 = noi_ramp_factor(generates_from(1), 7, p.lease_up_months);
+            let ramp_p2_y7 = noi_ramp_factor(generates_from(2), 7, p.lease_up_months);
+            let proj_noi_y7 =
+                (p1_gen * ramp_p1_y7 + p2_gen_scaled * ramp_p2_y7) * p.dev_yield * p.occupancy_pct;
+            let proj_ebitda_y7 = proj_noi_y7 - fixed_operating_expenses();
+            let p2_total = PCLP1_PHASE_2_ANNUAL_DRAW * 2.0;
+            let p3_total = PCLP1_PHASE_3_Y6_DRAW * 2.0;
+            let lhs = proj_ebitda_y7 / p.dscr_floor - phase2_scale * p2_total * p.debt_rate;
+            let rhs = 0.75 * p3_total * p.debt_rate;
+            let max_s3 = if rhs > 0.0 && lhs > 0.0 { (lhs / rhs).min(1.0) } else { 0.0 };
+            phase3_scale = max_s3.clamp(0.0, 1.0);
+            if phase3_scale < 1.0 {
+                triggered_year = triggered_year.or(Some(7));
+            }
+        }
 
-        // Step 2: Revenue
-        let net_proceeds_from_ops = if y <= 3 { 0.0 } else { gen * PCLP1_DEV_YIELD };
-        let income_continuity = income_continuity_at(y);
+        let s2 = phase2_scale;
+        let s3 = phase3_scale;
 
-        // Step 3: Expenses
+        let draws = phase_draw_scaled(y, s2, s3);
+        let wip = wip_scaled_at(y, s2, s3);
+        let gen = generating_scaled_at(y, s2, s3);
+        let total_assets = wip + gen;
+
+        // Step 2: Revenue (occupancy + dev-yield + lease-up applied via ramped_noi_at)
+        let net_proceeds_from_ops = if y <= 3 { 0.0 } else { ramped_noi_at(y, s2, s3, p) };
+        let income_continuity = stabilized_income_at(y, s2, s3, p);
+
+        // Step 3: Expenses. Facility-commitment fees scale with the committed
+        // facility (s2 / s3); at base scale they equal the V2 amounts.
         let issue_costs = if y == 1 { issue_costs_total() } else { 0.0 };
-        // V2 Correction 5 (2026-06-04): facility-commitment fee timing.
-        // Phase 2 fee ($10.185M) expensed Y4 entirely (facility commitment year);
-        // Phase 3 fee ($19.643M) expensed Y6 entirely. Matches standard debenture
-        // practice (lenders charge facility fees upfront, not pro-rated). Total
-        // financing cost unchanged from V1; only timing moves. Restores Y5 IC to
-        // 1.52× (from 1.12× breach) without any debt reduction.
         let financing_costs = match y {
-            4 => PCLP1_PHASE_2_FACILITY_FEE,
-            6 => PCLP1_PHASE_3_FACILITY_FEE,
+            4 => PCLP1_PHASE_2_FACILITY_FEE * s2,
+            6 => PCLP1_PHASE_3_FACILITY_FEE * s3,
             _ => 0.0,
         };
         let advisory = advisory_fee_annual();
@@ -335,27 +571,17 @@ pub fn forecast() -> Vec<Pclp1Year> {
         // Step 4: EBITDA
         let ebitda = net_proceeds_from_ops - total_expenses;
 
-        // Step 5: Debt schedule
+        // Step 5: Debt schedule (draws scale with issuance decisions)
         let opening_debt = prev_closing_debt;
-        let gross_debt_draw = if (4..=7).contains(&y) {
-            // Phase 2 funded by debt Y4-Y5; Phase 3 by debt Y6-Y7
-            if y == 7 {
-                // Y7 min-cash solver — approximate as Phase 3 Y7 draw
-                PCLP1_PHASE_3_Y6_DRAW
-            } else if y == 4 || y == 5 {
-                PCLP1_PHASE_2_ANNUAL_DRAW
-            } else {
-                // y == 6: Phase 3 Y6
-                PCLP1_PHASE_3_Y6_DRAW
-            }
-        } else {
-            0.0
+        let gross_debt_draw = match y {
+            4 | 5 => PCLP1_PHASE_2_ANNUAL_DRAW * s2,
+            6 | 7 => PCLP1_PHASE_3_Y6_DRAW * s3,
+            _ => 0.0,
         };
 
         let avg_debt = opening_debt + gross_debt_draw / 2.0;
-        // Cash interest depends on avg_cash; iterate once with prev_ending_cash as proxy
         let avg_cash = prev_ending_cash;
-        let net_interest = avg_debt * PCLP1_DEBT_RATE_DEBENTURE - avg_cash * PCLP1_CASH_INTEREST;
+        let net_interest = avg_debt * p.debt_rate - avg_cash * PCLP1_CASH_INTEREST;
 
         let ffo = ebitda - net_interest;
         let debt_repayment = if y >= 8 {
@@ -369,16 +595,13 @@ pub fn forecast() -> Vec<Pclp1Year> {
         let opening_cash = prev_ending_cash;
         let new_equity = if y == 1 { PCLP1_GROSS_EQUITY } else { 0.0 };
         let distributions = (ffo * payout_ratio(y)) - debt_repayment;
-        // Y1-Y3 working capital reserve is deductive from gross equity (held back from capex)
         let capex = draws;
         let ending_cash =
             opening_cash + new_equity + gross_debt_draw - capex - debt_repayment - distributions
                 + ffo;
-        // Note: ffo is added because it represents the cash generation;
-        // this matches BRIEF §858-864 cash-flow formula
 
-        // Step 8: Asset valuation
-        let asset_value = income_continuity / PCLP1_CAP_RATE + wip + ending_cash;
+        // Step 8: Asset valuation (cap rate is a stressed input)
+        let asset_value = income_continuity / p.cap_rate + wip + ending_cash;
         let asset_value_per_unit = asset_value / PCLP1_DILUTED_UNITS;
 
         // Step 9: NAV
@@ -389,13 +612,10 @@ pub fn forecast() -> Vec<Pclp1Year> {
         let dpu = distributions / PCLP1_DILUTED_UNITS;
         let market_value_per_unit = if (1..=7).contains(&y) {
             PCLP1_MARKET_VALUE_Y1_Y7[(y - 1) as usize]
+        } else if p.market_yield > 0.0 {
+            dpu / p.market_yield
         } else {
-            // Y8+: DPU / buyer_target_yield (BRIEF §895)
-            if PCLP1_BUYER_TARGET_YIELD > 0.0 {
-                dpu / PCLP1_BUYER_TARGET_YIELD
-            } else {
-                0.0
-            }
+            0.0
         };
         let dist_yield_on_cost = dpu / PCLP1_UNIT_PRICE;
         let dist_yield_at_market = if market_value_per_unit > 0.0 {
@@ -406,7 +626,6 @@ pub fn forecast() -> Vec<Pclp1Year> {
 
         let advisory_fee_to_wcp = advisory * PCLP1_ADVISORY_RAMP_TO_WCP[y as usize];
 
-        // V2 Correction 4 — key ratios
         let interest_coverage = if net_interest > 1.0 {
             ebitda / net_interest
         } else {
@@ -422,7 +641,11 @@ pub fn forecast() -> Vec<Pclp1Year> {
         } else {
             0.0
         };
-        let total_sqft_generating = total_sqft_generating_at(y);
+        let total_sqft_generating = if PCLP1_TOTAL_DEV_COST > 0.0 {
+            PCLP1_TOTAL_PORTFOLIO_SQFT * (gen / PCLP1_TOTAL_DEV_COST)
+        } else {
+            0.0
+        };
 
         years.push(Pclp1Year {
             year: y,
@@ -462,13 +685,254 @@ pub fn forecast() -> Vec<Pclp1Year> {
             debt_to_dev_cost,
             debt_to_asset_value,
             total_sqft_generating,
+            phase2_scale: s2,
+            phase3_scale: s3,
         });
 
         prev_closing_debt = closing_debt;
         prev_ending_cash = ending_cash;
     }
 
-    years
+    let buildings_built_pct = {
+        let base = full_generating_base();
+        if base > 0.0 {
+            (generating_scaled_at(10, phase2_scale, phase3_scale) / base) * 100.0
+        } else {
+            0.0
+        }
+    };
+
+    let meta = ForecastMeta {
+        phase2_scale,
+        phase3_scale,
+        dscr_constraint_triggered_year: triggered_year,
+        buildings_built_pct,
+        mode: p.mode,
+        disposition: None,
+    };
+
+    (years, meta)
+}
+
+/// Covenant Cure (Corrective Disposition) Scenario.
+///
+/// The portfolio is built out under BASE conditions (the LP did not foresee the
+/// shock), then a combined shock — carried in `p` — lands at `shock_year`. The LP
+/// disposes of the minimum generating-asset fraction, valued at the STRESSED cap
+/// rate, required to restore the interest-coverage covenant.
+///
+/// Curability turns on the financing-versus-yield regime, NOT on a fixed
+/// rate/cap threshold:
+///   selling_helps  ⇔  EBITDA_stressed > cap_rate × debt_at_shock.
+/// Economically: disposition deleverages, retiring debt that costs `debt_rate`
+/// while shedding income that yields `cap_rate`. It improves coverage only when
+/// the retained-asset yield no longer covers the covenant-scaled debt service —
+/// i.e. in HIGH financing-cost regimes. When debt is cheap relative to asset
+/// yield, the assets are "too good to sell": disposition lowers coverage and the
+/// breach is incurable by disposition (the binding response is a Management
+/// Response Scenario instead).
+fn forecast_covenant_cure(p: &ForecastParams, shock_year: u32) -> (Vec<Pclp1Year>, ForecastMeta) {
+    // 1. Base build (unstressed, ManagedDownside) — the pre-shock portfolio.
+    let base = ForecastParams::default();
+    let (base_years, _) = forecast_managed_or_static(&base);
+
+    let sy = shock_year.clamp(1, 10) as usize;
+
+    // 2. Pre-shock state at the shock year.
+    let gen_at_shock = base_years[sy].generating; // only completed phases generate
+    let debt_at_shock = base_years[sy].closing_debt;
+    let fixed_exp = fixed_operating_expenses();
+
+    // 3. Stressed coverage on the existing portfolio (instantaneous shock on
+    //    stabilised assets — no lease-up ramp; cash-interest credit ignored,
+    //    conservative).
+    let noi_gen = gen_at_shock * p.dev_yield * p.occupancy_pct;
+    let ebitda_stressed = noi_gen - fixed_exp;
+    let interest_stressed = debt_at_shock * p.debt_rate;
+    let dscr_stressed = if interest_stressed > 0.0 {
+        ebitda_stressed / interest_stressed
+    } else {
+        f64::INFINITY
+    };
+    let mv_gen = if p.cap_rate > 0.0 { noi_gen / p.cap_rate } else { 0.0 };
+    let k = p.dscr_floor;
+
+    // 4. Solve the minimum corrective disposition.
+    let selling_helps = ebitda_stressed > p.cap_rate * debt_at_shock;
+    let (fraction_sold, incurable) = if dscr_stressed >= k {
+        // Covenant already met under the shock — no disposition required.
+        (0.0_f64, false)
+    } else if !selling_helps {
+        // Cheap-debt / income-collapse regime: disposition cannot restore the
+        // covenant (selling sheds more coverage than debt-service relief).
+        (0.0_f64, true)
+    } else {
+        let numerator = noi_gen - fixed_exp - k * p.debt_rate * debt_at_shock;
+        let denominator = noi_gen - k * p.debt_rate * mv_gen;
+        if denominator == 0.0 {
+            (1.0_f64, true)
+        } else {
+            let s = numerator / denominator;
+            if !s.is_finite() || s >= 1.0 {
+                (1.0_f64, true) // full-portfolio sale still insufficient
+            } else {
+                (s.max(0.0), false)
+            }
+        }
+    };
+
+    // Applied disposition: zero when incurable (the breach stands and is shown).
+    let applied_frac = if incurable { 0.0 } else { fraction_sold };
+    let sale_value_total = applied_frac * mv_gen;
+    let debt_retired = sale_value_total;
+    let gen_remaining = (1.0 - applied_frac) * gen_at_shock;
+    let debt_remaining = (debt_at_shock - debt_retired).max(0.0);
+
+    // Post-cure coverage and NAV (stressed).
+    let noi_remaining = gen_remaining * p.dev_yield * p.occupancy_pct;
+    let ebitda_remaining = noi_remaining - fixed_exp;
+    let interest_remaining = debt_remaining * p.debt_rate;
+    let dscr_post_cure = if interest_remaining > 0.0 {
+        ebitda_remaining / interest_remaining
+    } else if ebitda_remaining > 0.0 {
+        f64::INFINITY
+    } else {
+        0.0
+    };
+    let dscr_post_cure = if dscr_post_cure.is_finite() {
+        dscr_post_cure
+    } else {
+        99.99 // debt fully retired with positive income — cap for display/JSON
+    };
+
+    // NAV is invariant to sale fraction at market value: selling s of MV both
+    // removes s·MV of assets and retires s·MV of debt. Report it honestly.
+    let nav_post = noi_remaining / p.cap_rate - debt_remaining;
+    let nav_per_unit_post = nav_post / PCLP1_DILUTED_UNITS;
+
+    // Income still available to holders after debt service on the retained portfolio.
+    let dist_per_unit_post_cure = (ebitda_remaining - interest_remaining).max(0.0) / PCLP1_DILUTED_UNITS;
+
+    let disposition = Pclp1DispositionEvent {
+        shock_year,
+        fraction_sold: if incurable { 1.0 } else { fraction_sold },
+        incurable,
+        trigger: DispositionTrigger::Dscr,
+        sale_value_total,
+        debt_retired,
+        dscr_post_cure,
+        nav_per_unit_post_cure: nav_per_unit_post,
+        buildings_remaining_pct: (1.0 - applied_frac) * 100.0,
+        dist_per_unit_post_cure,
+        nav_curable_by_disposition: false,
+    };
+
+    // 5. Year series: base build up to the shock; stressed reduced portfolio after.
+    let mut years: Vec<Pclp1Year> = Vec::with_capacity(11);
+    for (idx, by) in base_years.iter().enumerate() {
+        if idx < sy {
+            years.push(by.clone());
+            continue;
+        }
+        // Post-shock projection: portfolio frozen at the (reduced) generating base,
+        // no further phase draws, stressed inputs in force.
+        let y = idx as u32;
+        let gen = gen_remaining;
+        let net_proceeds_from_ops = gen * p.dev_yield * p.occupancy_pct;
+        let advisory = advisory_fee_annual();
+        let total_expenses = advisory + PCLP1_ADMIN_COMPLIANCE_ANNUAL + PCLP1_BOARD_ANNUAL;
+        let ebitda = net_proceeds_from_ops - total_expenses;
+        let net_interest = debt_remaining * p.debt_rate;
+        let ffo = ebitda - net_interest;
+        let debt_repayment = if y >= 8 { ffo * PCLP1_DEBT_BUYBACK_PCT_FFO } else { 0.0 };
+        let closing_debt = (debt_remaining - debt_repayment).max(0.0);
+        let distributions = (ffo * payout_ratio(y)) - debt_repayment;
+        let income_continuity = net_proceeds_from_ops; // stabilised (no ramp post-shock)
+        let asset_value = income_continuity / p.cap_rate;
+        let nav = asset_value - closing_debt;
+        let dpu = distributions / PCLP1_DILUTED_UNITS;
+        let market_value_per_unit = if p.market_yield > 0.0 { dpu / p.market_yield } else { 0.0 };
+        let interest_coverage = if net_interest > 1.0 { ebitda / net_interest } else { 0.0 };
+        let total_sqft_generating = if PCLP1_TOTAL_DEV_COST > 0.0 {
+            PCLP1_TOTAL_PORTFOLIO_SQFT * (gen / PCLP1_TOTAL_DEV_COST)
+        } else {
+            0.0
+        };
+
+        years.push(Pclp1Year {
+            year: y,
+            phase_draws: 0.0,
+            total_assets: gen,
+            wip: 0.0,
+            generating: gen,
+            net_proceeds_from_ops,
+            income_continuity,
+            issue_costs: 0.0,
+            financing_costs: 0.0,
+            advisory_fee: advisory,
+            admin_compliance: PCLP1_ADMIN_COMPLIANCE_ANNUAL,
+            board: PCLP1_BOARD_ANNUAL,
+            total_expenses,
+            ebitda,
+            opening_debt: debt_remaining,
+            gross_debt_draw: 0.0,
+            net_interest,
+            ffo,
+            debt_repayment,
+            closing_debt,
+            opening_cash: 0.0,
+            new_equity: 0.0,
+            distributions,
+            ending_cash: 0.0,
+            asset_value,
+            asset_value_per_unit: asset_value / PCLP1_DILUTED_UNITS,
+            nav,
+            nav_per_unit: nav / PCLP1_DILUTED_UNITS,
+            dpu,
+            market_value_per_unit,
+            dist_yield_on_cost: dpu / PCLP1_UNIT_PRICE,
+            dist_yield_at_market: if market_value_per_unit > 0.0 {
+                dpu / market_value_per_unit
+            } else {
+                0.0
+            },
+            advisory_fee_to_wcp: advisory,
+            interest_coverage,
+            debt_to_dev_cost: if PCLP1_TOTAL_DEV_COST > 0.0 {
+                closing_debt / PCLP1_TOTAL_DEV_COST
+            } else {
+                0.0
+            },
+            debt_to_asset_value: if asset_value > 1.0 {
+                closing_debt / asset_value
+            } else {
+                0.0
+            },
+            total_sqft_generating,
+            phase2_scale: 1.0,
+            phase3_scale: 1.0,
+        });
+    }
+
+    let buildings_built_pct = {
+        let full = full_generating_base();
+        if full > 0.0 {
+            (gen_at_shock / full) * 100.0
+        } else {
+            0.0
+        }
+    };
+
+    let meta = ForecastMeta {
+        phase2_scale: 1.0,
+        phase3_scale: 1.0,
+        dscr_constraint_triggered_year: Some(shock_year),
+        buildings_built_pct,
+        mode: p.mode,
+        disposition: Some(disposition),
+    };
+
+    (years, meta)
 }
 
 // ─── JSON dump ──────────────────────────────────────────────────────────────
@@ -676,7 +1140,8 @@ mod tests {
     #[test]
     fn y7_phase3_capex_drawn_v2() {
         // V2 Correction 3: Y7 should draw $327.4M Phase 3 capex (was 0 in V1 bug)
-        assert!((phase_draw(7) - PCLP1_PHASE_3_Y6_DRAW).abs() < 1.0);
+        // (V3: phase_draw superseded by phase_draw_scaled; base scale = 1.0)
+        assert!((phase_draw_scaled(7, 1.0, 1.0) - PCLP1_PHASE_3_Y6_DRAW).abs() < 1.0);
     }
 
     #[test]
@@ -791,4 +1256,264 @@ mod tests {
             }
         }
     }
+
+    // ─── V3 three-mode engine tests ──────────────────────────────────────
+
+    fn static_base() -> ForecastParams {
+        ForecastParams {
+            mode: ModelMode::SingleInputStress,
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn base_case_scales_are_unity() {
+        // Backward compatibility: at default params neither issuance constraint
+        // binds, so both scales clamp to 1.0 and no disposition is produced.
+        let (_y, meta) = forecast_full(&ForecastParams::default());
+        assert!((meta.phase2_scale - 1.0).abs() < 1e-9, "s2={}", meta.phase2_scale);
+        assert!((meta.phase3_scale - 1.0).abs() < 1e-9, "s3={}", meta.phase3_scale);
+        assert_eq!(meta.dscr_constraint_triggered_year, None);
+        assert!(meta.disposition.is_none());
+    }
+
+    #[test]
+    fn default_and_managed_base_match() {
+        // forecast() must equal ManagedDownside at base params, year by year.
+        let a = forecast();
+        let b = forecast_with_params(&ForecastParams::default());
+        assert_eq!(a.len(), b.len());
+        for (ya, yb) in a.iter().zip(b.iter()) {
+            assert!((ya.nav_per_unit - yb.nav_per_unit).abs() < 1e-6);
+            assert!((ya.closing_debt - yb.closing_debt).abs() < 1e-6);
+            assert!((ya.interest_coverage - yb.interest_coverage).abs() < 1e-9);
+        }
+    }
+
+    #[test]
+    fn static_base_equals_managed_base() {
+        // No constraint binds at base ⇒ SingleInputStress ≡ ManagedDownside.
+        let m = forecast_with_params(&ForecastParams::default());
+        let s = forecast_with_params(&static_base());
+        for (ym, ys) in m.iter().zip(s.iter()) {
+            assert!(
+                (ym.nav_per_unit - ys.nav_per_unit).abs() < 1e-6,
+                "Y{} nav mismatch",
+                ym.year
+            );
+        }
+    }
+
+    #[test]
+    fn high_rate_managed_reduces_phase3() {
+        // At a 7% coupon the LP cannot fully fund Phase 3 at the covenant floor.
+        let p = ForecastParams {
+            debt_rate: 0.07,
+            mode: ModelMode::ManagedDownside,
+            ..Default::default()
+        };
+        let (_y, meta) = forecast_full(&p);
+        assert!(meta.phase2_scale < 1.0, "s2={}", meta.phase2_scale);
+        assert!(meta.phase3_scale < 1.0, "s3={}", meta.phase3_scale);
+        assert!(meta.dscr_constraint_triggered_year.is_some());
+    }
+
+    #[test]
+    fn managed_meta_triggered_year_set_under_mild_stress() {
+        let p = ForecastParams {
+            debt_rate: 0.065,
+            mode: ModelMode::ManagedDownside,
+            ..Default::default()
+        };
+        let (_y, meta) = forecast_full(&p);
+        assert_eq!(meta.dscr_constraint_triggered_year, Some(5));
+    }
+
+    #[test]
+    fn extreme_rate_collapses_both_phase_scales() {
+        // Phase 2 starved ⇒ Phase 3 (funded after Phase 2) near zero.
+        let p = ForecastParams {
+            debt_rate: 0.20,
+            mode: ModelMode::ManagedDownside,
+            ..Default::default()
+        };
+        let (_y, meta) = forecast_full(&p);
+        assert!(meta.phase2_scale < 0.40, "s2={}", meta.phase2_scale);
+        assert!(meta.phase3_scale < 0.10, "s3={}", meta.phase3_scale);
+    }
+
+    #[test]
+    fn high_rate_static_breaches_coverage() {
+        // SingleInputStress: no management response ⇒ the breach surfaces.
+        let p = ForecastParams {
+            debt_rate: 0.09,
+            mode: ModelMode::SingleInputStress,
+            ..Default::default()
+        };
+        let years = forecast_with_params(&p);
+        let breached = years
+            .iter()
+            .any(|y| y.year >= 5 && y.interest_coverage > 0.0 && y.interest_coverage < 1.20);
+        assert!(breached, "expected a coverage breach at 9% static");
+    }
+
+    #[test]
+    fn occupancy_scales_operating_noi() {
+        let p = ForecastParams {
+            occupancy_pct: 0.90,
+            ..static_base()
+        };
+        let years = forecast_with_params(&p);
+        let base = forecast_with_params(&static_base());
+        // Y8: all phases stabilised, no lease-up ⇒ NOI scales linearly with occupancy.
+        let r = years[8].net_proceeds_from_ops / base[8].net_proceeds_from_ops;
+        assert!((r - 0.90).abs() < 1e-6, "ratio={}", r);
+    }
+
+    #[test]
+    fn leaseup_24mo_reduces_first_generating_year_noi() {
+        // 24-month lease-up ⇒ Phase 1's first generating year (Y4) averages 25%
+        // in-place occupancy (linear-ramp midpoint) vs 100% at the 12-month base.
+        let p = ForecastParams {
+            lease_up_months: 24.0,
+            ..static_base()
+        };
+        let years = forecast_with_params(&p);
+        let base = forecast_with_params(&static_base());
+        let r = years[4].net_proceeds_from_ops / base[4].net_proceeds_from_ops;
+        assert!((r - 0.25).abs() < 1e-6, "Y4 lease-up ratio={}", r);
+        // Stabilised valuation income is unaffected by the timing discount.
+        assert!((years[4].income_continuity - base[4].income_continuity).abs() < 1.0);
+    }
+
+    #[test]
+    fn managed_longer_leaseup_reduces_issuance() {
+        // Jennifer's ask #2: a slower lease-up ⇒ debt issued more slowly ⇒ fewer
+        // buildings. A 24-month lease-up must constrain Phase 2/3 below the 12-mo base.
+        let p = ForecastParams {
+            lease_up_months: 24.0,
+            mode: ModelMode::ManagedDownside,
+            ..Default::default()
+        };
+        let (_y, meta) = forecast_full(&p);
+        assert!(meta.phase2_scale < 1.0, "s2={}", meta.phase2_scale);
+        assert!(meta.phase3_scale < 1.0, "s3={}", meta.phase3_scale);
+        assert!(meta.buildings_built_pct < 100.0);
+        // 12-month base remains fully built (backward compatibility of the ramp).
+        let (_yb, mb) = forecast_full(&ForecastParams::default());
+        assert!((mb.phase2_scale - 1.0).abs() < 1e-9);
+        assert!((mb.phase3_scale - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn covenant_cure_no_sale_when_coverage_holds() {
+        // A single occupancy stress does not breach ⇒ no corrective disposition.
+        let p = ForecastParams {
+            occupancy_pct: 0.90,
+            mode: ModelMode::CovenantCure { shock_year: 8 },
+            ..Default::default()
+        };
+        let (_y, meta) = forecast_full(&p);
+        let d = meta.disposition.expect("disposition event present");
+        assert!(!d.incurable);
+        assert!(
+            d.fraction_sold.abs() < 1e-9,
+            "expected no sale, got {}",
+            d.fraction_sold
+        );
+    }
+
+    #[test]
+    fn covenant_cure_combined_stress_produces_disposition() {
+        // Combined post-construction shock at Y8 (high coupon + cap expansion +
+        // occupancy decline) breaches coverage; high financing cost makes the
+        // breach curable by minimum disposition.
+        let p = ForecastParams {
+            occupancy_pct: 0.80,
+            debt_rate: 0.085,
+            cap_rate: 0.095,
+            mode: ModelMode::CovenantCure { shock_year: 8 },
+            ..Default::default()
+        };
+        let (_y, meta) = forecast_full(&p);
+        let d = meta.disposition.expect("disposition");
+        assert!(!d.incurable, "expected curable, got incurable");
+        assert!(
+            d.fraction_sold > 0.0 && d.fraction_sold < 1.0,
+            "fraction_sold={}",
+            d.fraction_sold
+        );
+        assert!(
+            (d.dscr_post_cure - 1.20).abs() < 0.02,
+            "post-cure coverage={} (target 1.20×)",
+            d.dscr_post_cure
+        );
+        assert!(d.sale_value_total > 0.0);
+        assert!((d.debt_retired - d.sale_value_total).abs() < 1.0);
+    }
+
+    #[test]
+    fn covenant_cure_incurable_cheap_debt_income_collapse() {
+        // Cheap debt (5%) + income collapse (50% occ, 7% yield): the retained
+        // assets out-yield the debt, so disposition lowers coverage — incurable.
+        let p = ForecastParams {
+            occupancy_pct: 0.50,
+            dev_yield: 0.07,
+            mode: ModelMode::CovenantCure { shock_year: 8 },
+            ..Default::default()
+        };
+        let (_y, meta) = forecast_full(&p);
+        let d = meta.disposition.expect("disposition");
+        assert!(
+            d.incurable,
+            "cheap-debt income collapse must be incurable by disposition"
+        );
+    }
+
+    #[test]
+    fn nav_curable_by_disposition_always_false() {
+        // NAV = MV − Debt is invariant to the sale fraction at market value.
+        for sy in [6u32, 7, 8] {
+            for &(occ, rate, cap) in &[
+                (0.82, 0.085, 0.095),
+                (0.50, 0.05, 0.0625),
+                (0.90, 0.06, 0.070),
+            ] {
+                let p = ForecastParams {
+                    occupancy_pct: occ,
+                    debt_rate: rate,
+                    cap_rate: cap,
+                    mode: ModelMode::CovenantCure { shock_year: sy },
+                    ..Default::default()
+                };
+                let (_y, meta) = forecast_full(&p);
+                let d = meta.disposition.expect("disposition");
+                assert!(!d.nav_curable_by_disposition);
+            }
+        }
+    }
+
+    #[test]
+    fn covenant_cure_outputs_are_finite() {
+        // JSON must never carry NaN/Infinity.
+        let p = ForecastParams {
+            occupancy_pct: 0.50,
+            dev_yield: 0.07,
+            mode: ModelMode::CovenantCure { shock_year: 8 },
+            ..Default::default()
+        };
+        let (years, meta) = forecast_full(&p);
+        let d = meta.disposition.unwrap();
+        assert!(d.dscr_post_cure.is_finite());
+        assert!(d.fraction_sold.is_finite());
+        assert!(d.sale_value_total.is_finite());
+        assert!(d.nav_per_unit_post_cure.is_finite());
+        for y in &years {
+            assert!(y.nav_per_unit.is_finite() && y.interest_coverage.is_finite());
+        }
+    }
 }
+
+
+
+

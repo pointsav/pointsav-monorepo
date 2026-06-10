@@ -1,11 +1,15 @@
+pub mod alloc_jw1_proforma;
 pub mod bencal;
 pub mod bencal_forecast_v1;
 pub mod bencal_v1_proforma;
 pub mod d1_dev_classes;
 pub mod d1_dev_classes_v2;
 pub mod d2_direct_hold;
+pub mod direct_hold_sensitivity;
 pub mod d3_wcp;
 pub mod legacy_jv_proforma;
 pub mod pclp1_proforma;
 pub mod pclp1_sensitivity_v7;
+pub mod pclp1_sensitivity_v8;
+pub mod tearsheet_alt_re_v2;
 pub mod wcp_proforma;

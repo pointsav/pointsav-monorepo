@@ -159,6 +159,42 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// PCLP1 Sensitivity Analysis V8 — three-mode dynamic engine. Rust pre-computes every
+    /// scenario; the page only selects among them. Modes: Management Response Scenario
+    /// (constrained issuance, no breach), Single-Input Sensitivity (IFRS 13 §93(h)(ii)
+    /// break-even), and Covenant Cure (Corrective Disposition) Scenario (minimum portfolio
+    /// sale at stressed values to restore the 1.20× coverage covenant).
+    /// Emits: pclp1-sensitivity-v8.html + COMPLIANCE_MCorp_2026_06_07_Sensitivity_PCCL_V8.json
+    PclpSensitivityV8 {
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
+    /// Woodfine Direct-Hold Solutions — Sensitivity Analysis. Engine-driven; four stackable
+    /// chapters (Single-Input / Management Response / Covenant Cure / Basis & Caveats);
+    /// AA12:AN35 per-unit table form; overlay charts; landscape US-Letter print.
+    /// Emits: direct-hold-sensitivity-v1.html + COMPLIANCE_MCorp_2026_06_07_DirectHoldSensitivity_DHS_V1.json
+    DirectHoldSensitivity {
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
+    /// Alternative Real Estate tear sheet V2 — two-sided "Legacy Joint Ventures vs. Direct-Hold
+    /// Solutions", told across five sections with focused single-message charts (scale, leverage,
+    /// value, LTV, cash timing, coverage, MOIC/IRR scoreboard). Companion to the Direct-Hold
+    /// Sensitivity Analysis (V2); engine-built, no Excel source.
+    /// Emits: mcorp-tearsheet-alternative-re-v2.html + mcorp-tearsheet-alternative-re-v2.json
+    TearsheetAltReV2 {
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
+    /// WCP $500,000 Common Share Allocation V1 (JW1) — individual allocation proforma.
+    /// $500K loan to Woodfine Properties Inc. at 7%, 18-month term; 25K allocated shares
+    /// at $20 + 75K 4:1 bonus shares; Y3 Capital Recovery Sale. Engine self-generating;
+    /// consumes PCLP 1 V2 + WCP V1 forecasts.
+    /// Emits: COMPLIANCE_MCorp_2026_06_09_Proforma_Allocation_JW1.html + .json
+    AllocationJw1 {
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
 }
 
 fn write_output(content: &str, out: Option<&PathBuf>) {
@@ -561,6 +597,62 @@ fn main() {
                 Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_07_Sensitivity_PCCL_V7.json")),
             );
             eprintln!("wrote 2 PCLP1 Sensitivity V7 files to {}", out_dir.display());
+        }
+        Some(Command::PclpSensitivityV8 { out_dir }) => {
+            let (html, json) = report::pclp1_sensitivity_v8::render();
+            write_output(&html, Some(&out_dir.join("pclp1-sensitivity-v8.html")));
+            write_output(
+                &json,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_07_Sensitivity_PCCL_V8.json")),
+            );
+            eprintln!("wrote 2 PCLP1 Sensitivity V8 files to {}", out_dir.display());
+        }
+        Some(Command::DirectHoldSensitivity { out_dir }) => {
+            let (html, json) = report::direct_hold_sensitivity::render();
+            write_output(&html, Some(&out_dir.join("direct-hold-sensitivity-v1.html")));
+            write_output(
+                &json,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_07_DirectHoldSensitivity_DHS_V1.json")),
+            );
+            eprintln!("wrote 2 Direct-Hold Sensitivity files to {}", out_dir.display());
+        }
+        Some(Command::TearsheetAltReV2 { out_dir }) => {
+            let (html, json) = report::tearsheet_alt_re_v2::render();
+            write_output(&html, Some(&out_dir.join("mcorp-tearsheet-alternative-re-v2.html")));
+            write_output(&json, Some(&out_dir.join("mcorp-tearsheet-alternative-re-v2.json")));
+            eprintln!("wrote 2 Alternative-RE tear sheet V2 files to {}", out_dir.display());
+        }
+        Some(Command::AllocationJw1 { out_dir }) => {
+            use report::alloc_jw1_proforma::{render_json_jw1, render_proforma_jw1};
+            let html = render_proforma_jw1();
+            let json = render_json_jw1();
+            let html_path = out_dir
+                .join("COMPLIANCE_MCorp_2026_06_09_Proforma_Allocation_JW1.html");
+            let json_path = out_dir
+                .join("COMPLIANCE_MCorp_2026_06_09_Proforma_Allocation_JW1.json");
+            write_output(&html, Some(&html_path));
+            write_output(&json, Some(&json_path));
+            let pdf_path = html_path.with_extension("pdf");
+            let status = std::process::Command::new("weasyprint")
+                .arg(html_path.as_os_str())
+                .arg(pdf_path.as_os_str())
+                .status();
+            let pdf_note = match status {
+                Ok(s) if s.success() => " + 1 PDF".to_string(),
+                Ok(s) => {
+                    eprintln!("weasyprint exited {} for {}", s, html_path.display());
+                    String::new()
+                }
+                Err(e) => {
+                    eprintln!("weasyprint not found or failed: {e}");
+                    String::new()
+                }
+            };
+            eprintln!(
+                "wrote 2{} JW1 Allocation files to {}",
+                pdf_note,
+                out_dir.display()
+            );
         }
         None => {
             // Legacy: JSON assumptions → sensitivity engine
