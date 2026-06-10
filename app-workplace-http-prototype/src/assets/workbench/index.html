@@ -980,6 +980,7 @@ let hlTimer      = null;   // syntax-highlight debounce
 let gutterTimer  = null;   // gutter-lines rebuild debounce
 let typingTimer  = null;   // typing-burst tracker for highlight hide
 let autosaveRunning = false; // dedup guard for concurrent autosave calls
+let orgEditMode = false;     // org-chart visual editing mode
 
 // Tab state — each tab caches its file content so switching is instant.
 // {path, name, content, mtime, dirty, editorPath, editorMtime, viewMode, scrollTop, writable}
@@ -1841,6 +1842,7 @@ function hideViewerContent() {
 }
 
 function updateBar(name, path) {
+  orgEditMode = false;
   document.getElementById('bar-path').textContent = name;
   const bar = document.getElementById('viewer-bar');
   bar.querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
@@ -1880,6 +1882,17 @@ function updateBar(name, path) {
     pdfBtn.title = 'Download PDF (platform rendering)';
     pdfBtn.addEventListener('click', () => showPdfDialog(apiPath, name));
     bar.appendChild(pdfBtn);
+  }
+
+  // Org-chart edit mode — HTML/HTM files only
+  if (new Set(['html','htm']).has(barExt)) {
+    const editBtn = document.createElement('button');
+    editBtn.className = 'bar-btn';
+    editBtn.id = 'org-edit-btn';
+    editBtn.textContent = '✏ Edit';
+    editBtn.title = 'Click boxes to select, then delete or duplicate';
+    editBtn.addEventListener('click', toggleOrgEditMode);
+    bar.appendChild(editBtn);
   }
 
   const printBtn = document.createElement('button');
@@ -4033,6 +4046,108 @@ async function restoreExpandedDirs() {
   if (activeTab?.path) await scrollToActiveFile(activeTab.path);
   await restoreExpandedDirs();
 })();
+
+// ── Org-chart edit overlay ────────────────────────────────────────────────────
+function injectOrgEditOverlay(html) {
+  // Strip any previously injected overlay before re-injecting
+  const markerIdx = html.indexOf('<!--_oc_edit-->');
+  if (markerIdx >= 0) html = html.slice(0, markerIdx) + '</body>\n</html>';
+  const script = `<!--_oc_edit--><script>
+(function() {
+  var sel = null;
+  var bar = document.createElement('div');
+  bar.style.cssText = 'position:fixed;top:10px;right:10px;z-index:99999;display:none;gap:6px;align-items:center;padding:6px 10px;background:#1e1e1e;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.5);font-family:system-ui,sans-serif;';
+  bar.innerHTML = '<span style="color:#9ca3af;font-size:11px;margin-right:2px;user-select:none">selected</span>'
+    + '<button id="_b_del" style="background:#da3633;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:600">\\u2715 Delete</button>'
+    + '<button id="_b_dup" style="background:#388bfd;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:600">\\u29c9 Duplicate</button>'
+    + '<button id="_b_can" style="background:#555;color:#fff;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:12px">Cancel</button>';
+  document.body.appendChild(bar);
+
+  function wireBox(el) {
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (sel) sel.style.outline = '';
+      sel = this;
+      sel.style.outline = '3px solid #388bfd';
+      bar.style.display = 'flex';
+    });
+  }
+  document.querySelectorAll('.token-base').forEach(wireBox);
+
+  document.body.addEventListener('click', function() {
+    if (sel) { sel.style.outline = ''; sel = null; }
+    bar.style.display = 'none';
+  });
+
+  function emit() {
+    if (sel) sel.style.outline = '';
+    window.parent.postMessage({ type: 'orgchart-edit-update', html: '<!DOCTYPE html>\\n' + document.documentElement.outerHTML }, '*');
+  }
+
+  document.getElementById('_b_del').addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (!sel) return;
+    sel.remove(); sel = null; bar.style.display = 'none';
+    emit();
+  });
+
+  document.getElementById('_b_dup').addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (!sel) return;
+    var clone = sel.cloneNode(true);
+    var l = parseInt(sel.style.left) || 0;
+    var t = parseInt(sel.style.top)  || 0;
+    clone.style.left = (l + 20) + 'px';
+    clone.style.top  = (t + 20) + 'px';
+    var nd = clone.querySelector('.t-node');
+    if (nd) nd.textContent = '?';
+    sel.parentNode.appendChild(clone);
+    wireBox(clone);
+    sel.style.outline = '';
+    sel = clone;
+    sel.style.outline = '3px solid #388bfd';
+    emit();
+  });
+
+  document.getElementById('_b_can').addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (sel) { sel.style.outline = ''; sel = null; }
+    bar.style.display = 'none';
+  });
+})();
+<\/script>`;
+  return html.replace(/<\/body>/i, script + '\n</body>');
+}
+
+function toggleOrgEditMode() {
+  orgEditMode = !orgEditMode;
+  const btn = document.getElementById('org-edit-btn');
+  if (btn) btn.textContent = orgEditMode ? '✏ Editing' : '✏ Edit';
+  const frame = document.getElementById('preview-frame');
+  if (!frame) return;
+  const ta = document.getElementById('editor-textarea');
+  const src = (ta && ta.value) ? ta.value : '';
+  frame.removeAttribute('src');
+  frame.srcdoc = orgEditMode ? injectOrgEditOverlay(src) : src;
+}
+
+// ── Org-chart edit overlay: receive updated HTML ──────────────────────────────
+window.addEventListener('message', e => {
+  if (!e.data || e.data.type !== 'orgchart-edit-update') return;
+  if (typeof e.data.html !== 'string') return;
+  const ta = document.getElementById('editor-textarea');
+  if (ta) {
+    ta.value = e.data.html;
+    setDirty(true);
+    if (activeTabIdx >= 0) tabs[activeTabIdx].content = e.data.html;
+    showEditorStatus('Edit applied — Ctrl+S to save', '#c89a4a', 3000);
+  }
+  if (orgEditMode) {
+    const frame = document.getElementById('preview-frame');
+    if (frame) frame.srcdoc = injectOrgEditOverlay(e.data.html);
+  }
+});
 
 // ── iframe → editor click navigation ─────────────────────────────────────────
 window.addEventListener('message', e => {
