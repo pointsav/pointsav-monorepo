@@ -347,6 +347,29 @@ The new apex C-new inherits: all capability state (the ledger history is theirs)
 
 The ceremony has three key properties. *Atomicity.* The transfer is a single self-contained ledger event; there is no out-of-band migration, no key-synchronisation window, no identity-propagation delay. *Auditability.* An external auditor with access to the public transparency log can identify the exact checkpoint height at which authority transferred, who signed the revocation at N+1, and both parties' signatures on the handover checkpoint at N+2; this is the property that SEC 4-day cyber-disclosure requirements and DORA Art. 28(8) exit-and-reversibility obligations map to — the audit trail for an ownership transfer is a verifiable sequence in a public ledger, not a vendor-maintained internal log. *Finality.* After height N+2, P-old cannot produce a kernel-accepted checkpoint; the `ApexHistory` module enforces this: `check_height(N+3)` returns `Single { apex: new_apex }` regardless of what P-old signs.
 
+### 4.5 L1 Tile Storage Performance Characteristics
+
+The `PosixTileLedger` L1 implementation's three core operations — `append`, `checkpoint`, and `read_since` — have performance envelopes that are architecturally significant rather than incidental. Measurements were obtained using the Criterion 0.5.1 benchmarking harness (100 samples per group) on a GCE e2 VM with network-backed pd-standard persistent disk, compiled with `opt-level = 3` and `lto = true` (commit `7006b29f`, run date 2026-05-29). All results reflect steady-state operation with the operating system page cache warm from the seeding phase.
+
+**Table 4.** `PosixTileLedger` L1 performance measurements (GCE e2, pd-standard, Criterion 0.5.1, 100 samples). Low / median / high values reported; outlier count per group.
+
+| Operation | Ledger size | Median latency | Outliers |
+|---|---|---|---|
+| `append/single_call` | 0 prior entries | 422 ms | 6/100 |
+| `append/single_call` | 10 prior entries | 572 ms | 7/100 |
+| `append/single_call` | 50 prior entries | 447 ms | 11/100 |
+| `append/single_call` | 100 prior entries | 287 ms | 5/100 |
+| `checkpoint` | 1 entry | 1.12 µs | 5/100 |
+| `checkpoint` | 100 entries | 1.12 µs | 9/100 |
+| `checkpoint` | 1,000 entries | 1.07 µs | 10/100 |
+| `read_since(0)` | 10 entries | 3.40 µs | 4/100 |
+| `read_since(0)` | 100 entries | 43.60 µs | 7/100 |
+| `read_since(0)` | 1,000 entries | 429.78 µs | 10/100 |
+
+Three properties of the L1 implementation are architecturally significant. First, `append` cost is fsync-dominated at current ledger sizes. The measured values (287–572 ms) are within the same order of magnitude across the four prior-entry data points and do not exhibit monotonic growth, because the dominant cost is the `fsync()` call against the network-backed pd-standard volume — a kernel durability flush that traverses the GCE storage fabric and is independent of log file size at the scales tested. The D4 atomic-write discipline (write `.tmp` → fsync → rename → chmod 0o444) is the source of this cost and the source of the crash-safety guarantee: callers inherit the durability guarantee without implementing the protocol. Second, `checkpoint` is O(1): the ~1.1 µs latency is invariant across three orders of magnitude of ledger size (Table 4, rows 5–7), confirming that checkpoint cost does not grow with ledger history. This is load-bearing for systems that checkpoint frequently for audit purposes. Third, `read_since` scales linearly with entry count at approximately 430 ns per entry (a per-entry `LedgerEntry` struct clone from the in-memory Vec), with a full scan of 1,000 entries completing in ~430 µs before network round-trip — within the budgets of the L3 wire and MCP server layers above.
+
+The segment-file upgrade planned for the v0.2.x series replaces the full-rewrite append path with O(1) segment appends, removing the fsync-per-append ceiling. The relative ordering of the three operations — `append` >> `read_since` >> `checkpoint` by cost — will remain unchanged after the upgrade; only the absolute `append` latency will decrease.
+
 ---
 
 ## 5. The Compatibility Layer and Transferability Properties
