@@ -3,8 +3,8 @@ artifact: brief
 name: BRIEF-tool-proforma-leapfrog-2030
 status: active
 created: 2026-05-23
-updated: 2026-06-02
-version: 0.15.9
+updated: 2026-06-08
+version: 0.16.0
 owner: totebox@project-proforma
 supersedes:
   - BRIEF-proforma-engine (.agent/briefs/ — archived below)
@@ -2681,6 +2681,56 @@ Key sensitivity dimensions: exit cap rate, rent growth, vacancy, lease-up veloci
 construction cost overrun, interest rate stress (+200 bps), TI/LC at rollover,
 opex inflation vs. rent inflation spread.
 
+### 8a. Direct-Hold Solutions — Sensitivity Analysis (DELIVERED, ahead of Phase C)
+
+A standalone EY / IFRS 13 §93(h)(ii)-grade sensitivity report for **Woodfine Direct-Hold
+Solutions** — the customer-facing rebrand of the D2 / PCLP 1 $250M model (investors hold
+**Investment Units** at $100.00; 2,777,777 diluted units). Built and iterated **R1→R8** from
+operator review of printed output. This is a curated, narrated, **slider-free** deliverable —
+distinct from the generic Phase-C tornado / Monte-Carlo harness (C1–C4), which remains Not started.
+
+**Engine + module.** Uses `pclp1_proforma::forecast_full` three modes — `SingleInputStress`,
+`ManagedDownside`, `CovenantCure { shock_year }`. Report: `src/report/direct_hold_sensitivity.rs`
++ `direct_hold_head.html` + `direct_hold_app.js`. Every figure is pre-computed in Rust and embedded
+as `const DATA` JSON; Chart.js renders; the browser performs no financial recomputation. Subcommand:
+`direct-hold-sensitivity --out-dir`. (`pclp1_sensitivity_v7/v8.rs` are superseded audit predecessors;
+`direct_hold_sensitivity.rs` is canonical.)
+
+**Four stacked landscape sections, each on its own print page:**
+1. **Base case** — per-Unit forecast in AA12:AN35 *form* (numbers engine-generated), NAV + coverage
+   charts; base occupancy **95%** (10.5% dev yield is net of 5% vacancy ⇒ `occupancy_pct = 1.0`).
+2. **Adapting as we build** — Management Response holds the 1.20× covenant by issuing less / building
+   less; four-stress summary (interest +200 bps · occupancy 75% · dev yield 8.50%). The "no-response
+   breach" is **not** presented — it is receivership, not an operating scenario.
+3. **Once built** — post-construction headroom (Y8 ≈ 2.49×; covenant only near +540 bps) + the
+   **capital-preservation exhibit** (below).
+4. **Basis & §93(h)(ii)** — two-sided ±25 bps reasonably-possible disclosure + tornado + FOFI
+   (NI 51-102 / ISAE 3400).
+
+**Capital-preservation exhibit (R7).** A single internally-consistent maximal combined shock —
+refinancing rate **+500 bps → 10.0%** (drives the breach; rate moves coverage, not NAV), cap rate
+**solved ≈ +296 bps → 9.21%**, occupancy **−7 pp → 88%** — calibrated by binary search on the cap
+rate (in the report) so stressed Year-8 NAV/unit lands just above par at **$105**. Coverage breaches
+to 1.15× and the **minimum disposition (11.4%)** restores 1.20× (NAV-neutral market-value sale;
+`nav_curable_by_disposition` is always false). Magnitudes grounded in severe-downturn evidence (office
+cap +300–330 bps in the Great Financial Crisis and 2022–23; refi +450–500 bps). Post-shock income is
+shown as **distribution per Unit**: $24.02 → **$6.05** (engine field
+`Pclp1DispositionEvent.dist_per_unit_post_cure`, added R7).
+
+**Regulatory terminology.** The word "fund" (entity noun) is FORBIDDEN — Direct-Hold Solutions are
+not investment funds under the Investment Funds Act (no redemption / reserve features); also barred:
+Professional Centres / PCLP / LP units. Enforced by the `forbidden_terms_absent` test. No old-Excel
+provenance wording appears in the emitted document or audit JSON (R8).
+
+**Deliverable set (JW3, 2026-06-08):** `Woodfine Direct-Hold Solutions — Sensitivity Analysis_JW3.{html,pdf,json}`
+in `outputs/` (+ archive HTML in `tool-proforma/html/`). PDF is 6-page US-Letter landscape, chart-complete,
+rendered via snap chromium (`--headless=new --print-to-pdf`; staged in a **non-hidden** home dir — the snap
+`home` interface blocks dotfiles and cannot reach `/srv/foundry/`). Footer carries a face-of-document version
+marker `· V2`, a separate axis from the JW-series deliverable tag. Engine unchanged by R3–R8 except the R8
+addition of `dist_per_unit_post_cure`. Tests: 132 lib + 7 integration green; report tests cover forbidden-terms,
+base-occupancy-95, four-drivers, income-present, managed-holds-covenant, and
+`cure_preserves_capital_under_combined_shock`.
+
 ---
 
 ## 9. Output format requirements
@@ -2821,7 +2871,8 @@ lingua franca — "ARGUS-fidelity outputs with modern UX" is the exact positioni
 | WORM audit ledger | Not started | Phase B |
 | `DevClassConfig` TOML | Not started | Phase A gate |
 | Dual NOI output | Not started | Phase A (fields added, values identical until IFRS 16) |
-| Sensitivity / tornado | Not started | Phase C |
+| Direct-Hold Solutions Sensitivity Analysis report | **Delivered (JW3, 2026-06-08)** | §8a; EY / IFRS 13 §93(h)(ii)-grade; slider-free; capital-preservation exhibit; `direct-hold-sensitivity` subcommand |
+| Generic sensitivity / tornado / Monte Carlo | Not started | Phase C (C1–C4) |
 | axum server | Not started | Phase D |
 | Svelte SPA | Not started | Phase D |
 | Calculation snapshot (`src/snapshot/`) | Not started | Phase B |
