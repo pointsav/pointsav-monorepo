@@ -1,45 +1,83 @@
-# Jennifer's Sandbox
+@~/Foundry/AGENT.md
 
-This is your personal scratch space. **It is not Foundry.** None of
-the rules in `/srv/foundry/CLAUDE.md` or `/srv/foundry/DOCTRINE.md`
-apply here. There is no mailbox protocol, no scope geometry, no
-versioning rules, no NOTAM to read. Do whatever the user asks.
+# project-jennifer — Archive Guide
 
-## What lives here
+> **State:** active | **Last updated:** 2026-06-10
+> **Cluster manifest:** `.agent/manifest.md`
+> **Workspace AGENT.md takes precedence on conflict.**
 
-- `CLAUDE.md` (this file) — orienting note. Brief.
-- `NEXT.md` — your personal todo list. Add to it freely; remove items
-  as you complete them. Not the Foundry NEXT.
-- `MEMORY.md` — pointer to the auto-memory location for this sandbox.
-- Any other files jennifer chooses to keep here.
+---
 
-## Persistent memory
+## Cluster mission
 
-Claude Code auto-creates and maintains a per-project memory store at:
+See `.agent/manifest.md` for full mission statement.
 
-```
-~/.claude/projects/-home-jennifer-sandbox/memory/
-```
+## Tetrad
 
-That directory is **separate** from any other Claude session memory
-on this VM. Save sandbox-relevant memories there. Keep an `MEMORY.md`
-index file inside the memory directory listing the entries (one line
-each) for fast recall.
+See `.agent/manifest.md` `tetrad:` block for the canonical declaration
+across vendor / customer / deployment / wiki legs.
 
-## Hard rule — keep Foundry separate
+## At session start
 
-If the user asks you to touch anything under `/srv/foundry/`,
-`~/Foundry/`, or any Foundry-tier identity, **stop**. Tell jennifer
-she should switch to a Foundry-rooted Claude session for that work
-(open a new terminal, `cd ~/Foundry`, start `claude`). Sandbox is
-the wrong place; the doctrine's geometric scope rule depends on
-which directory the session opened in.
+Per `~/Foundry/AGENT.md` § Session roles:
 
-## Suggested uses
+1. Confirm role: `~/Foundry/bin/foundry-role.sh` (Totebox Session expected)
+2. Write session lock: `.agent/engines/<engine-id>/session.lock`
+3. Read `.agent/manifest.md` — cluster mission + tetrad
+4. Call `get_session_brief(role="totebox", archive="project-jennifer")` — replaces inbox, NOTAM, session-context reads
+5. Read `~/Foundry/NOTAM.md` — workspace warnings
+6. Read `.agent/rules/*.md` if present (may be absent for newer archives)
 
-- Quick scratch code, one-off scripts.
-- Research notes outside the Bloomberg-article-standard discipline.
-- Personal todo tracking.
-- Prototyping ideas before they earn a place in Foundry.
-- Anything that does not need Foundry's audit trail, signed commits,
-  or cross-realm coordination.
+## Hard rules (workspace-level, do not duplicate; reference only)
+
+- `~/Foundry/AGENT.md` § Hard rules — identity store immutable, never
+  chmod; preview before writing; edit in place (no _V2 files);
+  one session per repo; Bloomberg standard; BCSC posture; SYS-ADR-07/10/19.
+- `~/Foundry/CLAUDE.md` § Size discipline — per-archive CLAUDE.md ≤ 150 lines.
+
+## Commit + promote
+
+- Commits via `~/Foundry/bin/commit-as-next.sh "<message>"`. Direct
+  `git commit` is blocked by the pre-commit gate (Phase 1.13).
+- This archive is local-only (no staging mirrors, no promote flow).
+
+## Artifacts produced here
+
+For each piece of work, classify per `~/Foundry/conventions/artifact-classification.yaml`:
+TOPIC-* / GUIDE-* / COMMS-* → `.agent/drafts-outbound/` → project-editorial.
+DESIGN-* / ASSET-* → `.agent/drafts-outbound/` → project-design.
+CODE-* / SCRIPT-* / CONFIG-* / DATA-* → commit directly (self-contained).
+
+## Conflicts
+
+If a workspace rule conflicts with anything stated here, **stop and surface
+the conflict via outbox to command session** — do not silently override.
+
+## MCP tools — `foundry` server (use at startup)
+
+`get_session_brief(role="totebox", archive="project-jennifer")` replaces manually reading
+inbox.md, outbox.md, NOTAM.md, session-context.md. Call it first.
+`send_mailbox_message()` replaces hand-editing YAML frontmatter.
+
+| Tool | When to use |
+|---|---|
+| `get_session_brief` | **First call at startup** — inbox, outbox, NOTAM, session-context |
+| `send_mailbox_message` | Send any mailbox message (M-2/M-10 audit compliant) |
+| `query_mailbox` | Sweep archives — scope="all" in one call |
+| `get_doorman_status` | Tier A/B/C + circuit state |
+| `get_service_status` | Apprenticeship queue + audit-ledger counts |
+| `query_datagraph` | Entity lookup before answering about people/projects |
+| `ask_local` | OLMo 7B local inference — free, SYS-ADR-07-safe |
+| `cast_apprenticeship_verdict` | Sign + submit verdict on a shadow-captured attempt |
+| `mutate_datagraph` | Create/update graph entities (requires explicit operator intent) |
+| `submit_extraction` | Queue prose for entity extraction pipeline |
+
+## Artifact types — bright-line rules
+
+TOPIC = explains WHAT/WHY; public wiki; bilingual EN+ES; survives decommission; reader has no login.
+GUIDE = instructs HOW-NOW; woodfine-fleet-deployment/<name>/; English-only; dies with deployment.
+SOFT  = Ed25519 license key + marketplace listing + price → software.pointsav.com.
+CODE  = runs our systems; no customer license; internal deploy only (published OSS with no key = CODE).
+Split rule: declaratives → TOPIC, imperatives → GUIDE; same slug, different prefix, no shared sentences.
+Cash register test: licensable + marketplace-listed → SOFT; everything else → CODE.
+Storefront (app-privategit-marketplace) is CODE; the merchandise it sells is SOFT.
