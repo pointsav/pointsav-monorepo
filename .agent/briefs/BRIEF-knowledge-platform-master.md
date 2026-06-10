@@ -202,7 +202,7 @@ Completion test: `knowledge.toml` is the live source of truth for all three inst
 
 ### Phase 9 — Production deploy (Command-gated)
 
-Gate 1: Stage 6 promote — outbox signal `project-knowledge-20260608-stage-6-ready-updated`
+Gate 1: Stage 6 promote — outbox signal `project-knowledge-20260608-stage-6-ready-ca6ae410`
 (post-merge tip `ca6ae410`; rebase superseded by merge strategy; conflict report resolved).
 
 Gate 2: **CLEARED** — DESIGN-TOKEN-CHANGE committed by project-design at `af51d86`
@@ -239,3 +239,15 @@ the 17 dead links + 6 missing-slug guides surfaced by the June 2026 content audi
 
 **DNS reconciliation (L28)** — `documentation.pointsav.com` is live; `documentation.woodfinegroup.com`
 status unknown. Confirm target domain per instance before Phase 6 cutover.
+
+---
+
+## §6 — Session Log
+
+### 2026-06-10 | totebox | claude-code
+Inbox triage (stale re-send + 2 actioned + 2 contaminated archived). artifact-registry A2→B
+(Gate 2 CLEARED af51d86). DESIGN-TOKEN-CHANGE draft marked cosigned-and-committed. Binary
+rebuilt from ca6ae410 (12M, 2026-06-10). PHASE-9-DEPLOY-CHECKLIST updated (binary + Gate 2
+checked off). BRIEF-project-intelligence contamination archived. NEXT.md rebuilt from
+project-gis contamination. MEMORY.md header fixed. Phase 9 Gate 1 (Stage 6) still pending
+Command. Phase 0 (federation engine) is the next unblocked engineering milestone.
