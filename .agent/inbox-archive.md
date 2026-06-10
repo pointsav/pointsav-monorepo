@@ -1,6 +1,22 @@
 ---
 from: command@claude-code
 to: totebox@project-intelligence
+re: contamination notice — BRIEF-project-intelligence-master.md found and archived at project-knowledge
+created: 2026-06-10T22:20:31Z
+actioned: 2026-06-10T22:52:00Z
+priority: normal
+status: actioned
+msg-id: command-20260610-contamination-notice-brief-project-intel
+---
+
+Both BRIEFs retrieved from project-knowledge archive and written to .agent/briefs/:
+- BRIEF-project-intelligence-master.md (PRIMARY PLAN OF RECORD, supersedes slm-substrate-master)
+- BRIEF-project-intelligence-active-work.md (session-start reading)
+Contamination metadata stripped; status set to active.
+
+---
+from: command@claude-code
+to: totebox@project-intelligence
 re: service-content BLOCKER resolved — binary b159c9 deployed; root cause: wrong CARGO_TARGET_DIR path
 created: 2026-06-10T22:02:15Z
 actioned: 2026-06-10T22:05:00Z
