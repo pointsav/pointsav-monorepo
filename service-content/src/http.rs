@@ -275,7 +275,10 @@ async fn ingest_document(
     Json(body): Json<IngestRequest>,
 ) -> Result<(axum::http::StatusCode, Json<IngestResponse>), (axum::http::StatusCode, String)> {
     if body.text.trim().is_empty() {
-        return Err((axum::http::StatusCode::BAD_REQUEST, "text must not be empty".to_string()));
+        return Err((
+            axum::http::StatusCode::BAD_REQUEST,
+            "text must not be empty".to_string(),
+        ));
     }
 
     let doc_id = if body.doc_id.is_empty() {
@@ -294,8 +297,16 @@ async fn ingest_document(
             .collect()
     };
 
-    let module_id = if body.module_id.is_empty() { "woodfine" } else { body.module_id.as_str() };
-    let source_type = if body.source_type.is_empty() { "ingest-api" } else { body.source_type.as_str() };
+    let module_id = if body.module_id.is_empty() {
+        "woodfine"
+    } else {
+        body.module_id.as_str()
+    };
+    let source_type = if body.source_type.is_empty() {
+        "ingest-api"
+    } else {
+        body.source_type.as_str()
+    };
 
     let ts = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -315,12 +326,20 @@ async fn ingest_document(
 
     tokio::fs::write(&path, corpus_json.to_string())
         .await
-        .map_err(|e| (
-            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-            format!("failed to write corpus file: {e}"),
-        ))?;
+        .map_err(|e| {
+            (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                format!("failed to write corpus file: {e}"),
+            )
+        })?;
 
-    Ok((axum::http::StatusCode::ACCEPTED, Json(IngestResponse { doc_id, queued: true })))
+    Ok((
+        axum::http::StatusCode::ACCEPTED,
+        Json(IngestResponse {
+            doc_id,
+            queued: true,
+        }),
+    ))
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────

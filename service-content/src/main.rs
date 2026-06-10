@@ -456,21 +456,22 @@ fn call_tier_a_extract(
         .timeout(Duration::from_secs(180))
         .send()
     {
-        Ok(r) if r.status().is_success() => r
-            .json::<serde_json::Value>()
-            .ok()
-            .and_then(|v| {
-                // Doorman envelope: {"content": "...", "tier_used": "local", ...}
-                // OpenAI fallback: {"choices": [{"message": {"content": "..."}}]}
-                let content = v["content"].as_str()
-                    .or_else(|| v["choices"][0]["message"]["content"].as_str())?;
-                // Strip markdown fences the model may have added
-                let stripped = content.trim()
-                    .strip_prefix("```json").unwrap_or(content.trim())
-                    .strip_prefix("```").unwrap_or(content.trim());
-                let stripped = stripped.strip_suffix("```").unwrap_or(stripped).trim();
-                serde_json::from_str(stripped).ok()
-            }),
+        Ok(r) if r.status().is_success() => r.json::<serde_json::Value>().ok().and_then(|v| {
+            // Doorman envelope: {"content": "...", "tier_used": "local", ...}
+            // OpenAI fallback: {"choices": [{"message": {"content": "..."}}]}
+            let content = v["content"]
+                .as_str()
+                .or_else(|| v["choices"][0]["message"]["content"].as_str())?;
+            // Strip markdown fences the model may have added
+            let stripped = content
+                .trim()
+                .strip_prefix("```json")
+                .unwrap_or(content.trim())
+                .strip_prefix("```")
+                .unwrap_or(content.trim());
+            let stripped = stripped.strip_suffix("```").unwrap_or(stripped).trim();
+            serde_json::from_str(stripped).ok()
+        }),
         _ => None,
     }
 }
@@ -491,12 +492,21 @@ fn raw_entities_to_graph(
             Some(GraphEntity {
                 entity_name,
                 classification,
-                role_vector: ent.get("role_vector").and_then(|v| v.as_str())
-                    .filter(|s| !s.is_empty() && *s != "null").map(str::to_string),
-                location_vector: ent.get("location_vector").and_then(|v| v.as_str())
-                    .filter(|s| !s.is_empty() && *s != "null").map(str::to_string),
-                contact_vector: ent.get("contact_vector").and_then(|v| v.as_str())
-                    .filter(|s| !s.is_empty() && *s != "null").map(str::to_string),
+                role_vector: ent
+                    .get("role_vector")
+                    .and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null")
+                    .map(str::to_string),
+                location_vector: ent
+                    .get("location_vector")
+                    .and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null")
+                    .map(str::to_string),
+                contact_vector: ent
+                    .get("contact_vector")
+                    .and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null")
+                    .map(str::to_string),
                 module_id: module_id.to_string(),
                 confidence,
             })
@@ -528,12 +538,15 @@ fn write_enrichment_dpo_pair(
     }
     // Normalize Tier A to {classification, entity_name} only — strips role_vector,
     // location_vector, contact_vector that are absent in Tier B's raw response.
-    let tier_a_normalized: Vec<serde_json::Value> = tier_a_raw.iter().map(|e| {
-        serde_json::json!({
-            "classification": e.get("classification").unwrap_or(&serde_json::Value::Null),
-            "entity_name":    e.get("entity_name").unwrap_or(&serde_json::Value::Null),
+    let tier_a_normalized: Vec<serde_json::Value> = tier_a_raw
+        .iter()
+        .map(|e| {
+            serde_json::json!({
+                "classification": e.get("classification").unwrap_or(&serde_json::Value::Null),
+                "entity_name":    e.get("entity_name").unwrap_or(&serde_json::Value::Null),
+            })
         })
-    }).collect();
+        .collect();
     let tier_a_json = serde_json::to_string(&tier_a_normalized).unwrap_or_default();
     let tier_b_json = serde_json::to_string(tier_b_raw).unwrap_or_default();
     if tier_a_json == tier_b_json {
@@ -550,8 +563,18 @@ fn write_enrichment_dpo_pair(
         "timestamp":   now.to_rfc3339(),
     });
     let _ = fs::create_dir_all(feedback_dir);
-    let filename = format!("{}/enrichment-{}-{}.jsonl", feedback_dir, worm_id, now.timestamp_millis());
-    if let Ok(mut f) = fs::OpenOptions::new().create(true).write(true).truncate(true).open(&filename) {
+    let filename = format!(
+        "{}/enrichment-{}-{}.jsonl",
+        feedback_dir,
+        worm_id,
+        now.timestamp_millis()
+    );
+    if let Ok(mut f) = fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(&filename)
+    {
         let _ = writeln!(f, "{}", pair);
     }
 }
@@ -625,7 +648,8 @@ fn process_corpus(
         match &result {
             Some(ents) => println!(
                 "  -> [TIER-A] {} entities extracted (module: {}).",
-                ents.len(), effective_module_id
+                ents.len(),
+                effective_module_id
             ),
             None => println!("  -> [TIER-A] Unavailable — proceeding to Tier B."),
         }
@@ -673,7 +697,10 @@ fn process_corpus(
     match res {
         Ok(response) => {
             if !response.status().is_success() {
-                println!("  -> [SYS_HALT] Doorman rejected payload: {}", response.status());
+                println!(
+                    "  -> [SYS_HALT] Doorman rejected payload: {}",
+                    response.status()
+                );
                 return flush_tier_a(&tier_a_raw, "Tier B rejected");
             }
 
@@ -698,7 +725,8 @@ fn process_corpus(
                         if let Some(ta_ents) = &tier_a_raw {
                             if !ta_ents.is_empty() {
                                 let ge = raw_entities_to_graph(ta_ents, effective_module_id, 0.75);
-                                if let Ok(n) = graph_store.upsert_entities(effective_module_id, &ge) {
+                                if let Ok(n) = graph_store.upsert_entities(effective_module_id, &ge)
+                                {
                                     println!(
                                         "  -> [TIER-A] {} entities written (Tier B transient; module: {}).",
                                         n, effective_module_id
@@ -724,11 +752,18 @@ fn process_corpus(
                 .cloned()
                 .unwrap_or_default();
 
-            let graph_entities = raw_entities_to_graph(&semantic_entities, effective_module_id, 0.95);
+            let graph_entities =
+                raw_entities_to_graph(&semantic_entities, effective_module_id, 0.95);
 
             // Write enrichment DPO pair: Tier A (rejected) vs Tier B (chosen)
             if let Some(ref ta_ents) = tier_a_raw {
-                write_enrichment_dpo_pair(worm_id, corpus_text, ta_ents, &semantic_entities, feedback_dir);
+                write_enrichment_dpo_pair(
+                    worm_id,
+                    corpus_text,
+                    ta_ents,
+                    &semantic_entities,
+                    feedback_dir,
+                );
             }
 
             // Build legacy CRM record
@@ -736,28 +771,52 @@ fn process_corpus(
             for ent in &semantic_entities {
                 let entity_name = ent["entity_name"].as_str().unwrap_or("").to_string();
                 let classification = ent["classification"].as_str().unwrap_or("").to_string();
-                let role_vector = ent.get("role_vector").and_then(|v| v.as_str())
-                    .filter(|s| !s.is_empty() && *s != "null").map(str::to_string);
-                let location_vector = ent.get("location_vector").and_then(|v| v.as_str())
-                    .filter(|s| !s.is_empty() && *s != "null").map(str::to_string);
-                let contact_vector = ent.get("contact_vector").and_then(|v| v.as_str())
-                    .filter(|s| !s.is_empty() && *s != "null").map(str::to_string);
+                let role_vector = ent
+                    .get("role_vector")
+                    .and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null")
+                    .map(str::to_string);
+                let location_vector = ent
+                    .get("location_vector")
+                    .and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null")
+                    .map(str::to_string);
+                let contact_vector = ent
+                    .get("contact_vector")
+                    .and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null")
+                    .map(str::to_string);
 
                 let mut new_ent = serde_json::Map::new();
                 new_ent.insert("entity_name".to_string(), serde_json::json!(entity_name));
-                new_ent.insert("classification".to_string(), serde_json::json!(classification));
+                new_ent.insert(
+                    "classification".to_string(),
+                    serde_json::json!(classification),
+                );
                 new_ent.insert(
                     "role_vector".to_string(),
-                    role_vector.as_deref().map(|s| serde_json::json!(s)).unwrap_or(serde_json::json!("UNVERIFIED")),
+                    role_vector
+                        .as_deref()
+                        .map(|s| serde_json::json!(s))
+                        .unwrap_or(serde_json::json!("UNVERIFIED")),
                 );
                 new_ent.insert("confidence".to_string(), serde_json::json!(0.95));
-                new_ent.insert("context_anchor".to_string(), serde_json::json!("SLM NEURAL INFERENCE"));
-                let loc = location_vector.as_deref().map(|s| serde_json::json!(s)).unwrap_or(serde_json::json!("UNVERIFIED"));
+                new_ent.insert(
+                    "context_anchor".to_string(),
+                    serde_json::json!("SLM NEURAL INFERENCE"),
+                );
+                let loc = location_vector
+                    .as_deref()
+                    .map(|s| serde_json::json!(s))
+                    .unwrap_or(serde_json::json!("UNVERIFIED"));
                 new_ent.insert("location_vector".to_string(), loc);
                 let mut latent = Vec::new();
                 if let Some(contact) = contact_vector.as_deref() {
-                    if contact.contains('@') { latent.push(format!("mailto:{}", contact)); }
-                    else { latent.push(format!("tel:{}", contact)); }
+                    if contact.contains('@') {
+                        latent.push(format!("mailto:{}", contact));
+                    } else {
+                        latent.push(format!("tel:{}", contact));
+                    }
                 }
                 new_ent.insert("latent_vectors".to_string(), serde_json::json!(latent));
                 enriched_crm.push(Value::Object(new_ent));
@@ -776,7 +835,8 @@ fn process_corpus(
             }
             println!(
                 "  -> [GRAPH] {} entities written to graph (module: {}).",
-                graph_entities.len(), effective_module_id
+                graph_entities.len(),
+                effective_module_id
             );
 
             let out_file = format!("{}/SEMANTIC_{}.json", crm_dir, worm_id);
