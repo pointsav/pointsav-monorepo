@@ -203,7 +203,10 @@ async fn smoke_readyz_returns_503_when_no_tiers() {
     assert_eq!(body["has_yoyo"], false);
     assert_eq!(body["has_external"], false);
     // Queue snapshot fields present (values depend on test environment).
-    assert!(body["queue_pending"].is_number(), "queue_pending is a number");
+    assert!(
+        body["queue_pending"].is_number(),
+        "queue_pending is a number"
+    );
     assert!(body["queue_done"].is_number(), "queue_done is a number");
     assert!(body["queue_poison"].is_number(), "queue_poison is a number");
 }

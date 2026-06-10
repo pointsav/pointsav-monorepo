@@ -137,22 +137,17 @@ Both CRITICAL items resolved in commit `62df887e`:
 
 ---
 
-## 🔴 Drain worker — payload size gate missing (2026-06-05) [jwoodfine@claude-code]
+## ✅ Drain worker — payload size gate added (2026-06-10) [jwoodfine@claude-code]
 
-18 new poison entries since 2026-06-04 — all large diffs (20–80 KB bulk commits, Cargo.lock churn).
-The drain worker has no size check: oversized payloads are silently poisoned with no error field,
-making diagnosis opaque.
+- [x] `SLM_QUEUE_MAX_PAYLOAD_BYTES` env var (default 16 KiB) — oversized payloads poisoned with structured warn log
+- [x] Warn log: `size_bytes`, `max_bytes`, `brief_id` fields
+- Note: NEXT step is to write reason into the poison file itself (not yet done)
 
-- [ ] Add `SLM_QUEUE_MAX_PAYLOAD_BYTES` env var (default 16 KB) — skip-to-poison with explicit `error: "payload too large"` JSON field
-- [ ] On poison: write reason into queue-poison entry (`{"error": "payload_too_large", "size_bytes": N}`)
+## ✅ Drain worker — stale lease PID liveness check added (2026-06-10) [jwoodfine@claude-code]
 
-## 🔴 Drain worker — stale lease requeue missing (2026-06-05) [jwoodfine@claude-code]
-
-One in-flight entry (PID 65121) has held its lease for 3+ days. The lease expiry check
-(`SLM_QUEUE_LEASE_EXPIRY_SEC=2100`) is present but PID liveness check is unreliable across reboots.
-
-- [ ] On each drain cycle: if lease age > LEASE_TIMEOUT_SECS AND `kill -0 <pid>` returns non-zero, requeue to `queue/`
-- [ ] Log requeue as a structured warning: `{"event": "lease_expired_requeue", "file": ..., "lease_age_secs": ...}`
+- [x] `reap_expired_leases()` now checks `/proc/<pid>` before requeueing — skips if worker still alive
+- [x] Log includes `age_secs` and notes whether PID was dead or alive
+- Format: `drain-<pid>` worker IDs are auto-detected; other formats bypass the check conservatively
 
 ---
 

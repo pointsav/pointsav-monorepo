@@ -842,11 +842,11 @@ KILL SWITCH
 | # | What | Blocks |
 |---|---|---|
 | 1 | ~~Install ML libs on yoyo-batch~~ — **DONE** (2026-06-09): `~/training-venv` with trl 1.5.1 + peft 0.19.1 + transformers 5.10.2 + bitsandbytes; added ephemeral external IP for pip/HuggingFace internet access | ~~All training runs~~ |
-| 2 | Create approval tag + first supervised training run (Phase 6 already wired; gates on tag + libs) | Adapter v1 |
-| 3 | Uncomment `SLM_YOYO_WEIGHTS_GCS_BUCKET` in `local-yoyo-daily.service` | GCS sync in daily cycle |
-| 4 | Move timer to 02:30 UTC (after 1-2 weeks operator monitoring at 17:00 UTC) | Night-time operation |
-| 5 | Eval gate + adapter registration (`eval-adapter.sh` + `data/adapters/registry.yaml`) | Safe promotion |
-| 6 | Install `git-post-commit-hook.sh` in each active Totebox archive | Continuous SFT capture |
+| 2 | Create approval tag + first supervised training run (Phase 6 already wired; gates on tag + ≥50 genuine pairs) | Adapter v1 |
+| 3 | ~~Uncomment `SLM_YOYO_WEIGHTS_GCS_BUCKET`~~ — **DONE**: already set in `/etc/local-doorman/local-doorman.env` | ~~GCS sync~~ |
+| 4 | Move timer to 02:30 UTC (Command Session `/etc/` scope) | Night-time operation |
+| 5 | ~~Eval gate + adapter registration (`eval-adapter.sh` + `data/adapters/registry.yaml`)~~ — **SCAFFOLDED 2026-06-10**: both files created; full pass@5 GPU eval in Phase 2 | ~~Safe promotion~~ |
+| 6 | ~~Install `git-post-commit-hook.sh` in each active Totebox archive~~ — **DONE**: symlink at `.git/hooks/post-commit → /srv/foundry/bin/capture-edit.py` | ~~SFT capture~~ |
 
 ---
 
