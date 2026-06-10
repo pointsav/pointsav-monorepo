@@ -82,9 +82,7 @@ mod tests {
         let repo = crate::git::open_or_init(dir.path()).unwrap();
         (
             AppState {
-                content_dir: dir.path().to_path_buf(),
-                guide_dir: None,
-                guide_dir_2: None,
+                mounts: crate::mounts::resolve(dir.path(), None, None),
                 // Use a path that does not exist; citation tests live in
                 // tests/citations_test.rs where they control this path.
                 // Server tests do not exercise /api/citations so the missing
@@ -99,6 +97,7 @@ mod tests {
                 links: crate::links::LinkGraph::for_testing(),
                 brand_theme: None,
                 brand_instance: "documentation".to_string(),
+                blueprints: crate::blueprints::Registry::builtin(),
             },
             dir,
             state_dir,
@@ -269,9 +268,7 @@ mod tests {
             .unwrap();
         let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
-            content_dir: dir.path().to_path_buf(),
-            guide_dir: None,
-            guide_dir_2: None,
+            mounts: crate::mounts::resolve(dir.path(), None, None),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
@@ -282,6 +279,7 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
+            blueprints: crate::blueprints::Registry::builtin(),
         };
         let app = router(state);
         let resp = app
@@ -344,9 +342,7 @@ mod tests {
             .unwrap();
         let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
-            content_dir: dir.path().to_path_buf(),
-            guide_dir: None,
-            guide_dir_2: None,
+            mounts: crate::mounts::resolve(dir.path(), None, None),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
@@ -357,6 +353,7 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
+            blueprints: crate::blueprints::Registry::builtin(),
         };
         let app = router(state);
         let resp = app
@@ -396,9 +393,7 @@ mod tests {
             .unwrap();
         let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
-            content_dir: dir.path().to_path_buf(),
-            guide_dir: None,
-            guide_dir_2: None,
+            mounts: crate::mounts::resolve(dir.path(), None, None),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
@@ -409,6 +404,7 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
+            blueprints: crate::blueprints::Registry::builtin(),
         };
         let app = router(state);
         let resp = app
@@ -451,9 +447,7 @@ mod tests {
             .unwrap();
         let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
-            content_dir: dir.path().to_path_buf(),
-            guide_dir: None,
-            guide_dir_2: None,
+            mounts: crate::mounts::resolve(dir.path(), None, None),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
@@ -464,6 +458,7 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
+            blueprints: crate::blueprints::Registry::builtin(),
         };
         let app = router(state);
         let resp = app
@@ -506,9 +501,7 @@ mod tests {
             .unwrap();
         let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
-            content_dir: dir.path().to_path_buf(),
-            guide_dir: None,
-            guide_dir_2: None,
+            mounts: crate::mounts::resolve(dir.path(), None, None),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
@@ -519,6 +512,7 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
+            blueprints: crate::blueprints::Registry::builtin(),
         };
         let app = router(state);
         let resp = app
@@ -563,9 +557,7 @@ mod tests {
             .unwrap();
         let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
-            content_dir: dir.path().to_path_buf(),
-            guide_dir: None,
-            guide_dir_2: None,
+            mounts: crate::mounts::resolve(dir.path(), None, None),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
@@ -576,6 +568,7 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
+            blueprints: crate::blueprints::Registry::builtin(),
         };
         let app = router(state);
         let resp = app
@@ -621,9 +614,7 @@ mod tests {
             .unwrap();
         let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
-            content_dir: dir.path().to_path_buf(),
-            guide_dir: None,
-            guide_dir_2: None,
+            mounts: crate::mounts::resolve(dir.path(), None, None),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
@@ -634,6 +625,7 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
+            blueprints: crate::blueprints::Registry::builtin(),
         };
         let app = router(state);
         let resp = app
@@ -684,9 +676,7 @@ mod tests {
             .unwrap();
         let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
-            content_dir: dir.path().to_path_buf(),
-            guide_dir: None,
-            guide_dir_2: None,
+            mounts: crate::mounts::resolve(dir.path(), None, None),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
@@ -697,6 +687,7 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
+            blueprints: crate::blueprints::Registry::builtin(),
         };
         let app = router(state);
         let resp = app
@@ -744,9 +735,7 @@ mod tests {
             .unwrap();
         let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
-            content_dir: dir.path().to_path_buf(),
-            guide_dir: None,
-            guide_dir_2: None,
+            mounts: crate::mounts::resolve(dir.path(), None, None),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
@@ -757,6 +746,7 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
+            blueprints: crate::blueprints::Registry::builtin(),
         };
         let app = router(state);
         let resp = app
@@ -806,9 +796,7 @@ mod tests {
             .unwrap();
         let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
-            content_dir: dir.path().to_path_buf(),
-            guide_dir: None,
-            guide_dir_2: None,
+            mounts: crate::mounts::resolve(dir.path(), None, None),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
@@ -819,6 +807,7 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
+            blueprints: crate::blueprints::Registry::builtin(),
         };
         let app = router(state);
         let resp = app
@@ -861,9 +850,7 @@ mod tests {
             .unwrap();
         let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
-            content_dir: dir.path().to_path_buf(),
-            guide_dir: None,
-            guide_dir_2: None,
+            mounts: crate::mounts::resolve(dir.path(), None, None),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
@@ -874,6 +861,7 @@ mod tests {
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
             brand_instance: "documentation".to_string(),
+            blueprints: crate::blueprints::Registry::builtin(),
         };
         let app = router(state);
         let resp = app

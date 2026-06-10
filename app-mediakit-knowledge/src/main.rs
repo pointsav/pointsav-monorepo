@@ -308,15 +308,8 @@ async fn serve(
         guide_dir.as_deref(),
         guide_dir_2.as_deref(),
     );
-    let manifest_present = content_dir.join("knowledge.toml").exists();
-    let (guide_dir, guide_dir_2) = if manifest_present {
-        app_mediakit_knowledge::mounts::guide_dirs_from(&mounts)
-    } else {
-        (guide_dir, guide_dir_2)
-    };
     tracing::info!(
         mounts = mounts.len(),
-        manifest = manifest_present,
         ids = ?mounts.iter().map(|m| m.id.as_str()).collect::<Vec<_>>(),
         "content mounts resolved"
     );
@@ -384,6 +377,8 @@ async fn serve(
     tracing::info!("git repository ready");
 
     let glossary = app_mediakit_knowledge::glossary::load_glossary(&content_dir);
+    let blueprints =
+        app_mediakit_knowledge::blueprints::Registry::load(&content_dir.join("blueprints"));
 
     // Open or create the redb link graph.
     tracing::info!("opening link graph");
@@ -396,9 +391,7 @@ async fn serve(
     let brand_instance =
         std::env::var("WIKI_BRAND_INSTANCE").unwrap_or_else(|_| "documentation".to_string());
     let state = AppState {
-        content_dir,
-        guide_dir,
-        guide_dir_2,
+        mounts,
         citations_yaml,
         search: search_arc,
         git: Arc::new(std::sync::Mutex::new(git_repo)),
@@ -409,6 +402,7 @@ async fn serve(
         links: link_graph,
         brand_theme,
         brand_instance,
+        blueprints,
     };
     let app = router(state);
     let listener = tokio::net::TcpListener::bind(bind).await?;
