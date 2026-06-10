@@ -56,7 +56,7 @@ After promote, deploy new slm-doorman-server binary:
 ```bash
 bin/deploy-binary.sh slm-doorman-server \
   /srv/foundry/cargo-target/mathew/release/slm-doorman-server
-# sha256: 0cfbb9d9010e9b09d5bd204bf9d18c55c9bb8ed856398d8b652515a0b9db6c84
+# sha256: cf8838ef44a7d3905c980ddeb52a5db8f75d3d5a1bc5120e18c54c13e55f27b5
 sudo systemctl restart local-doorman.service
 sudo systemctl start local-content.service
 ```
