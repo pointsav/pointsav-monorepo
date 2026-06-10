@@ -870,6 +870,63 @@ KILL SWITCH
 
 ---
 
+### 2026-06-10 — Session 4 Quality Audit (apprenticeship + enrichment corpus inspection)
+
+**Method:** Live inspection of all corpus directories, log analysis, root cause tracing.
+
+#### What was tested
+
+| Test | Method | Result |
+|---|---|---|
+| Apprenticeship git-commit corpus count | `ls data/training-corpus/apprenticeship/git-commit/ \| wc -l` | 401 tuples present |
+| Apprenticeship diff quality | Python quality check on 20 recent files | 143/300 DPO pairs have real diffs (48%) |
+| OLMo 7B format compliance | Read corpus tuple + check reasoning/diff/escalate | **PARTIAL FAIL: reasoning present, diff often missing** |
+| Corpus write guard | Trace `write_shadow_tuple` with escalate/diff state | **FAIL: `escalate && diff.is_empty()` guard was silently dropping tuples** |
+| DPO feedback pairs | `ls data/training-corpus/feedback/*.jsonl \| wc -l` | 300 pairs |
+| run-dpo-training.py dry-run | `--dry-run --corpus data/training-corpus/feedback/` | **FAIL: 0 pairs loaded (enrichment-only; apprenticeship files not loaded)** |
+| Enrichment pairs | `ls .../feedback/enrichment-*.jsonl` | **0 files** |
+| service-content extraction | `journalctl -u local-content.service` | **FAIL: `[TIER-A] 0 entities extracted` every cycle** |
+| yoyo-batch availability | `gcloud compute instances start yoyo-batch --zone us-central1-a` | **STOCKOUT** |
+
+#### Apprenticeship corpus tuple drop — FIXED
+
+Root cause: OLMo 2 7B Instruct writes `## Reasoning` but skips the YAML frontmatter.
+`parse_attempt_content` defaults `self_confidence=0.0` → `escalate=true` → blanks diff.
+`write_shadow_tuple` guard: `escalate && diff.is_empty()` → skips corpus write.
+Result: 100% of recent tuples silently dropped.
+
+**Fix: commit `b84f8310`** — three-part fix:
+1. Assistant pre-fill `---\n` → model continues from frontmatter
+2. Remove diff-blanking when escalate is threshold-forced
+3. Change write_shadow_tuple guard: skip only if reasoning AND diff are both empty
+
+Also: max_tokens 512 → 1024 (7B uses ~230 tokens for reasoning; 512 was insufficient for diffs).
+
+#### Enrichment corpus 0 entities — OPEN BLOCKER
+
+`[TIER-A] 0 entities extracted` every cycle. Cause: OLMo 7B entity extraction prompt
+produces no valid entities when Tier A runs the extraction via the Doorman.
+When Tier B (yoyo-batch) is available, extraction works (4 entities written at 10:15 UTC).
+But Tier B is STOCKOUT, and Tier A fallback gives 0 entities → no enrichment DPO pairs.
+
+**This blocks all enrichment training.** The `run-dpo-training.py` only trains on `enrichment-*.jsonl`
+files. With 0 files, Phase 6 will report 0 pairs and skip training.
+
+**Investigation needed (service-content scope):**
+- Why does OLMo 7B return 0 entities for service-content extraction requests?
+- Is it the same format-compliance issue as apprenticeship? (missing JSON/YAML structure)
+- Can the extraction request use assistant pre-fill or grammar constraint to force valid JSON?
+
+**Workaround:** Wait for yoyo-batch L4 capacity to return; Tier B extraction works correctly.
+
+#### Approval tag
+
+Created: `data/training-approved/coding-lora-2026-06-10.tag` (143 good apprenticeship pairs).
+NOTE: This tag is premature for enrichment training (0 enrichment pairs). Phase 6 will skip.
+Useful for future: once enrichment pairs accumulate, tag is already in place.
+
+---
+
 ### 2026-06-09 — Session 3 Quality Audit (adversarial agent review + corpus inspection)
 
 **Method:** Adversarial agents (Opus) independently reviewed the training pipeline for defects.
