@@ -4,7 +4,7 @@
       "command": "/usr/local/bin/slm-mcp-server",
       "args": ["--doorman", "http://127.0.0.1:9080"],
       "env": {
-        "SLM_MODULE_ID": "proforma",
+        "SLM_MODULE_ID": "workplace",
         "RUST_LOG": "warn",
         "FOUNDRY_ROOT": "/srv/foundry"
       },
