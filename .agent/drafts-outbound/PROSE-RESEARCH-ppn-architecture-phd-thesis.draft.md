@@ -32,7 +32,9 @@ research_sources: >
   Kantee 2012 rump kernels, CPace (Haase/Labrique IRTF CFRG), Vaudenay CRYPTO 2005
 research_inline: true
 bcsc_reviewed: true
-operator_approved: false
+operator_approved: true
+operator_approved_date: 2026-06-11
+operator_approved_note: "v0.2 approved. Editorial fix (robust→reliable, line 173) applied and committed. Ready for project-editorial pickup and journal-submission workflow."
 ---
 
 > **Status of this Document:** This is a working thesis outline and proposal. Section 10 (Evaluation Criteria) describes planned measurements and experiments — no empirical results have been collected. The Implementation Roadmap (Section 9) reflects codebase state as of 2026-05-27. This document is suitable for SOSP/OSDI work-in-progress review; it does not constitute a completed results chapter.
