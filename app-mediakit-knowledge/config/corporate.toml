@@ -14,7 +14,7 @@ bind      = "127.0.0.1:9095"
 state_dir = "/var/lib/local-knowledge/state-corporate"
 
 [[mount]]
-path          = "/srv/foundry/clones/project-knowledge/media-knowledge-corporate"
+path          = "/srv/foundry/clones/project-editorial/media-knowledge-corporate"
 role          = "primary"
 blueprint_set = ["TOPIC"]
 
