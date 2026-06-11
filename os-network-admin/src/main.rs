@@ -2,7 +2,7 @@ use std::time::Duration;
 
 fn main() {
     let pairing_server =
-        std::env::var("PAIRING_SERVER").unwrap_or_else(|_| "http://10.8.0.9:9202".to_string());
+        std::env::var("PAIRING_SERVER").unwrap_or_else(|_| "http://10.8.0.9:9205".to_string());
 
     println!("os-network-admin: polling {pairing_server}/v1/node-join/pending");
     println!("os-network-admin: press Ctrl-C to exit");
