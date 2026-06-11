@@ -9,6 +9,41 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-proforma
+to: totebox@project-design
+re: DESIGN intake — DESIGN-COMPONENT-financial-report-layout
+created: 2026-06-10T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-proforma-20260610-design-component-financial-report-layout
+---
+
+Staging DESIGN-COMPONENT-financial-report-layout extracted from the WCP V2
+compliance financial report proforma (delivered 2026-06-10).
+
+Draft: `.agent/drafts-outbound/DESIGN-COMPONENT-financial-report-layout.draft.md`
+
+Summary: Full HTML + CSS recipe for compliance financial reports. Covers:
+- 13-column wide table layout with cross-table column alignment
+  (table-layout:fixed + 25% label width — the keystone decision)
+- Line-number gutter injection (JS appended to <body>)
+- tr.total / tr.subtotal / tr.section-banner semantic rows
+- print-color-adjust:exact for fills and gutter in PDF output
+- letter-landscape @page with compliance margins
+- Screen + print CSS separated; wide-table rules restated in @media print
+- AI-readable research rationale in research.md section (codegen-ready)
+
+Two design-system destinations:
+  components/financial-report-layout/guide.md  (recipe for humans)
+  dtcg-vault/research/component-financial-report-layout.md  (rationale for codegen)
+
+Not a DESIGN-TOKEN-CHANGE — no changes to dtcg-bundle.json.
+master_cosign not required.
+
+This component covers ALL layout artifacts from the proforma deliverable.
+The HTML output files are already committed in project-proforma outputs/.
+
+---
+from: totebox@project-proforma
 to: command@claude-code
 re: V2 Bencal commit landed — monorepo 7 commits ahead — Stage 6 when convenient
 created: 2026-06-05T16:12:00Z
