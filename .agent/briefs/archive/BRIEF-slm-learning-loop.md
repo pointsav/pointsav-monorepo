@@ -759,7 +759,7 @@ For Phase 1, SSH-direct is the right call. GCS is a Phase 2+ concern.
 > of physical reality. Reconcile against this when something breaks before checking the
 > design sections.
 >
-> **Last updated:** 2026-06-09 (session 3) — corpus quality fixes; service-content prompt-injection fix; ML libs installed on yoyo-batch; §14 Testing added
+> **Last updated:** 2026-06-11 (session 5) — mission-critical 2hr shutdown hardening; start-yoyo.sh kill-switch integration; BRIEF §13/§14 updated with Opus + Fable audit findings
 
 ---
 
@@ -774,16 +774,21 @@ WORKSPACE VM (foundry-workspace, vault-privategit-source-1)
   ├── local-content.service          :9081  service-content (LadybugDB entity graph)
   │     └── enrichment-*.jsonl → feedback dir (continuous write)
   │
-  ├── local-yoyo-daily.timer   ──────────── 17:00 UTC daily (→ 02:30 UTC after monitoring)
-  │     └── yoyo-daily-cycle.sh             THE single VM lifecycle controller (45-min cap)
+  ├── local-yoyo-daily.timer   ──────────── 02:30 UTC daily [HARDENED 2026-06-11]
+  │     └── yoyo-daily-cycle.sh             THE single VM lifecycle controller (120-min cap)
+  │           Pre-gate: check training gates → if skip, enrichment gets 90% of budget
   │           Phase 1:  gcloud instances start yoyo-batch
   │           Phase 2:  wait llama-server health (~170s)
   │           Phase 3:  wait Doorman Tier B circuit close
-  │           Phase 4:  enrichment drain (40% of budget = 18 min at 45-min cap)
+  │           Phase 4:  enrichment drain (40% or 90% of budget per pre-gate)
   │           Phase 5:  corpus-threshold.py → training markers
-  │           Phase 6:  LoRA training trigger (45% budget = 20 min) — 3-gate: markers+ML+approval
+  │           Phase 6:  LoRA training trigger — 3-gate: markers+ML+approval; SSH wrapped timeout+ServerAlive
   │           Phase 7:  GCS sync (when SLM_YOYO_WEIGHTS_GCS_BUCKET set — currently OFF)
-  │           Phase 8:  SSH stop llama-server → gcloud instances stop → verify TERMINATED
+  │           Phase 8:  SSH stop llama-server → gcloud instances stop → exit 3 if not TERMINATED
+  │     systemd: RuntimeMaxSec=7800; KillMode=control-group; ExecStopPost=gcloud stop (independent authority)
+  │
+  ├── start-yoyo.sh [HARDENED 2026-06-11] — kill_switch_aware_sleep; race fix post-start
+  ├── stockout-retry loop (on-demand background nohup; 20 cycles × 10min; kill-switch aware)
   │
   ├── yoyo-idle-monitor.timer  ──────────── every 5 min
   │     └── yoyo-idle-monitor.sh            safety backstop: stops yoyo-batch if idle ≥30 min
@@ -801,7 +806,8 @@ YOYO-BATCH VM (us-central1-a, g2-standard-4, L4 24GB)
 
 KILL SWITCH
   file: /srv/foundry/data/yoyo-disabled
-  scope: checked by yoyo-daily-cycle.sh (Phase 0) AND corpus-threshold.py _start_trainer_vm()
+  scope: checked by yoyo-daily-cycle.sh (Phase 0), corpus-threshold.py _start_trainer_vm(),
+         AND start-yoyo.sh retry loop (KILL_SWITCH var + kill_switch_aware_sleep + post-start race fix)
   activate:   touch /srv/foundry/data/yoyo-disabled
   deactivate: rm /srv/foundry/data/yoyo-disabled
   effect:     no gcloud instances start issued from any automated path
@@ -827,6 +833,9 @@ KILL SWITCH
 | `export-sft.sh` | `service-slm/scripts/` | **COMPLETE** | Already existed; exports Alpaca SFT JSONL; `--dry-run` supported |
 | `SLM_DRAIN_PAUSED` env var | `slm-doorman-server/src/main.rs` lines 244–290 | **DEPLOYED** | Drain loop checks unconditionally; already in production |
 | `service-content` binary | `/usr/local/bin/service-content` | **REDEPLOYED 2026-06-09** | Prompt-injection fix + schema normalization commit `62df887e`; sha256 `89c219d9`; 10/10 tests pass; 9,692 entities healthy |
+| `start-yoyo.sh` | `service-slm/scripts/` | **HARDENED 2026-06-11** | KILL_SWITCH var + kill_switch_aware_sleep() (30s poll); kill-switch check at retry-loop top; post-start race fix (stop VM if kill switch activated while gcloud start in-flight) |
+| `local-yoyo-daily.service` | `/etc/systemd/system/` | **HARDENED 2026-06-11** | --max-minutes 120 (2hr budget); TimeoutStartSec=7800 (hard kill for oneshot — RuntimeMaxSec has no effect); KillMode=control-group; TimeoutStopSec=120; ExecStopPost=/snap/bin/gcloud stop (independent kill authority — fires on OOM/hang/SIGKILL) |
+| `yoyo-daily-cycle.sh` | `/srv/foundry/bin/` | **HARDENED 2026-06-11** | Phase 4 curl --max-time 5 (lines 132,150,179); Phase 6 SSH: timeout+ServerAliveInterval=30/CountMax=3; Phase 8: exit 3 + final gcloud stop on non-TERMINATED; pre-gate check: 90% enrichment when training gates skip |
 
 ---
 
@@ -872,6 +881,49 @@ KILL SWITCH
 > **Purpose:** Document what was tested, what passed, what failed, and what was fixed. Entries
 > are added at session end whenever quality work is done. Read before any training run to understand
 > the current health of the pipeline. Newest entries on top.
+
+---
+
+### 2026-06-11 — Session 5: Opus shutdown audit + Fable holistic review
+
+**Method:** Opus agent audited shutdown safety; Fable agent reviewed end-to-end pipeline correctness
+against BRIEF design intent. All 5 Opus showstoppers fixed this session. Fable open items tracked below.
+
+#### 5 showstoppers found and fixed (shutdown safety)
+
+| # | Showstopper | Fix |
+|---|---|---|
+| 1 | No hard kill timeout — OOM/hang leaves VM running indefinitely | `TimeoutStartSec=7800` + `KillMode=control-group` (RuntimeMaxSec has no effect on oneshot — TimeoutStartSec is the correct mechanism) |
+| 2 | No independent stop authority — OOM-killed script means Phase 8 never runs | `ExecStopPost=/snap/bin/gcloud compute instances stop yoyo-batch --zone us-central1-a --quiet` (absolute path mandatory for snap) |
+| 3 | Phase 4 curl hang — 3 `$CONTENT/healthz` calls had no `--max-time` | `--max-time 5` added to lines 132, 150, 179 |
+| 4 | Phase 6 training SSH hang — no client-side wall clock; NCCL/GPU deadlock blocks forever | `timeout $((TRAINING_SECS+120)) ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=3` |
+| 5 | Phase 8 silent exit 0 — non-TERMINATED VM indistinguishable from success | Retry gcloud stop + `exit 3`; ExecStopPost fires as backstop |
+
+#### Fable pipeline review — open items (service-content + Phase 2 scope)
+
+- **First broken link — Tier A 0-entity extraction** (OPEN): `write_enrichment_dpo_pair()` guard (commit
+  `62df887e`) skips pairs when `tier_a_raw.is_empty()`. Tier A returns 0 entities every cycle. Combined:
+  zero enrichment DPO pairs written → `run-dpo-training.py` loads 0 pairs → Phase 6 always skips.
+  Root cause same class as apprenticeship fix `b84f8310` (format compliance). Fix in service-content scope:
+  Tier A extraction prompt needs pre-fill or grammar constraint. Track in `service-content/NEXT.md`.
+
+- **Corpus transport gap** (OPEN): Phase 6 SSH passes `--corpus $FEEDBACK_DIR` (workspace VM path). Nothing
+  copies pairs to yoyo-batch before training; GCS sync is Phase 7 (after Phase 6). Add pre-training rsync
+  step OR confirm path is network-mounted (currently undocumented).
+
+- **Adapter-to-serving link not built** (OPEN — Phase 2): No PEFT→GGUF conversion, no llama-server
+  `/lora-adapters` hot-swap wiring. Trained adapters land in `~/adapters/` on yoyo-batch and go nowhere.
+  Also: `LORA_TARGET_MODULES` uses LLaMA-style names — verify against OLMo-2 architecture before first run.
+
+- **Budget split corrected** (ACTIONED): Daily default changed to 90% enrichment / 10% overhead when
+  training gates fail (implemented as dynamic pre-gate check). Weekly dedicated training day: 45/47/8 split.
+  Training daily on a tiny corpus wastes spot time on load/checkpoint overhead; weekly `--resume` runs
+  are strictly more efficient.
+
+- **Signal starvation risk** (OPEN — strategic): At 4–8 enrichment pairs/cycle, corpus accumulation rate
+  may not reach ~2K quality pairs by month 12. Automated quality gate between capture and training is a
+  prerequisite for a sustained flywheel. app-orchestration-slm is NOT needed for the daily cycle —
+  it is a multi-tenant broker for a later phase.
 
 ---
 
