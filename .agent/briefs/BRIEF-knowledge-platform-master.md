@@ -49,7 +49,7 @@ Single Rust binary. No runtime system dependencies. Apache 2.0.
 | Phase 7 | MCP federation | Designed | ActivityPub + cross-instance queries |
 | Phase 8 | Token theming | Shipped | DTCG token layout vars + `knowledge.toml` templates |
 | Phase 0 | Federation engine | NEXT MILESTONE | Unblocked; see §4 |
-| Phase 9 | Production deploy | Command-gated | Stage 6 promote + DESIGN-TOKEN-CHANGE cosign; see §4 |
+| Phase 9 | Production deploy | **Shipped 2026-06-11** | WIKI_KNOWLEDGE_TOML migration; /etc/local-knowledge/; all 3 instances healthy |
 
 Sub-clone tip: `8480f68e` (merged `origin/main` at `ca6ae410`; up-to-date with remote; clean working tree).
 
@@ -200,17 +200,25 @@ Scope:
 Completion test: `knowledge.toml` is the live source of truth for all three instances;
 `check --strict` passes with 0 dead links; red-link path absent from source.
 
-### Phase 9 — Production deploy (Command-gated)
+### Phase 9 — Production deploy — **DEPLOYED 2026-06-11**
 
-Gate 1: Stage 6 promote — outbox signal `project-knowledge-20260610-stage-6-ready-0e18aff3`
-(tip `0e18aff3`; Phase 0 mounts refactor + fmt/clippy fixes on top of ca6ae410).
+Gate 1: Stage 6 promote — **CONFIRMED** in canonical (git log origin/main..HEAD = 0); tip `0e18aff3`.
 
 Gate 2: **CLEARED** — DESIGN-TOKEN-CHANGE committed by project-design at `af51d86`
 (2026-06-09); ACK received in inbox and actioned 2026-06-10. Tokens: nav-h, sidebar-w,
 bottom-bar-h, reading-measure, safe-area-bottom.
 
-Checklist: `.agent/drafts-outbound/PHASE-9-DEPLOY-CHECKLIST.md`.
-Note: `/etc/local-knowledge/` does NOT yet exist on host — must be created before deploy steps.
+**Deployed 2026-06-11 by Command Session:**
+- `/etc/local-knowledge/` created; documentation.toml + projects.toml + corporate.toml installed
+  (mount paths corrected to `project-editorial/media-knowledge-*`)
+- 3 unit files rewritten: `WIKI_KNOWLEDGE_TOML` env var added; old env vars removed
+- `wiki-content-repoint.conf` drop-ins removed from all 3 `.service.d/` dirs
+- All 3 instances restarted and verified: 9090 (PointSav Documentation), 9093 (Woodfine Projects),
+  9095 (Woodfine Corporate) — healthz=ok, font preloads=2, search=200
+- Binary ledger entry: sha256 `e5e8995efc7d6da2f1eba10c235161a90e6c4290aa2b65951c54eb92948c8cd1`
+
+**Remaining Totebox work:** fix TOML template paths in sub-clone (`config/*.toml` still reference
+`project-knowledge/media-knowledge-*` — should be `project-editorial/`).
 
 ### Post Phase 9 (after production verify)
 
@@ -243,6 +251,17 @@ status unknown. Confirm target domain per instance before Phase 6 cutover.
 ---
 
 ## §6 — Session Log
+
+### 2026-06-11 | command | claude-code
+
+Phase 9 production deploy complete. Stage 6 confirmed in canonical (tip 0e18aff3). `/etc/local-knowledge/`
+created; 3 TOML configs installed with corrected `project-editorial/` mount paths; 3 unit files rewritten
+to `WIKI_KNOWLEDGE_TOML`; `wiki-content-repoint.conf` drop-ins removed; all 3 instances restarted and
+verified healthy (9090/9093/9095). Binary ledger entry appended. Outbox contamination alert actioned;
+Stage 6 READY outbox actioned. artifact-registry A1 → DEPLOYED. BRIEF §4 Phase 9 updated.
+NEXT.md Phase 9 carry-forward cleared.
+
+---
 
 ### 2026-06-10 | totebox | claude-code (continuation — post-compaction)
 Inbox triage (stale re-send + 2 actioned + 2 contaminated archived). artifact-registry A2→B
