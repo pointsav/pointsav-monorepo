@@ -759,7 +759,7 @@ For Phase 1, SSH-direct is the right call. GCS is a Phase 2+ concern.
 > of physical reality. Reconcile against this when something breaks before checking the
 > design sections.
 >
-> **Last updated:** 2026-06-11 (session 7) — Opus deep audit; preemption-resilient rewrite with day-budget ledger; idle-monitor DISABLED (race eliminated); AUTONOMOUS_ENABLED training gate
+> **Last updated:** 2026-06-11 (session 8) — Continuous service model: timer removed; `start_vm_with_retry()` retries indefinitely; `budget_file()` dynamic date for midnight-crossing safety; idle-monitor source files deleted
 
 ---
 
@@ -774,11 +774,11 @@ WORKSPACE VM (foundry-workspace, vault-privategit-source-1)
   ├── local-content.service          :9081  service-content (LadybugDB entity graph)
   │     └── enrichment-*.jsonl → feedback dir (continuous write when Tier B is up)
   │
-  ├── local-yoyo-daily.timer   ──────────── 02:30 UTC daily (once per day is sufficient)
+  ├── local-yoyo-daily.service ──────────── continuous (Type=simple; Restart=always; RestartSec=600s)
   │     └── yoyo-daily-cycle.sh             THE single VM lifecycle controller [REWRITTEN 2026-06-11]
-  │           Day-budget ledger: /srv/foundry/data/yoyo-budget/<date>.consumed
-  │           main() outer loop: reads ledger; retries if budget remains; stops when spent
-  │           start_vm_with_retry(): STOCKOUT → ks_sleep(600s) → retry up to 22h; kill-switch aware
+  │           Day-budget ledger: /srv/foundry/data/yoyo-budget/<date>.consumed (dynamic date; midnight-safe)
+  │           main() outer loop: reads ledger; retries if budget remains; stops when spent → systemd restarts
+  │           start_vm_with_retry(): STOCKOUT → ks_sleep(600s) → retry indefinitely; kill-switch aware
   │           run_stint(budget_secs) → Phases 1–8:
   │             Phase 1:  start_vm_with_retry (STOCKOUT retry internal)
   │             Phase 2:  wait llama-server health; anchor ENRICHMENT_END to VM:READY (not stint start)
@@ -789,13 +789,13 @@ WORKSPACE VM (foundry-workspace, vault-privategit-source-1)
   │             Phase 7:  GCS sync (when SLM_YOYO_WEIGHTS_GCS_BUCKET set)
   │             Phase 8:  SSH stop llama-server → gcloud stop → debit_seconds(VM-on time)
   │           Return codes: 0=clean, 7=stall-exit, 8=preempted→main recovers, 9=VM unavailable
-  │     systemd: TimeoutStartSec=7800; KillMode=control-group; ExecStopPost=gcloud stop (sole independent authority)
-  │     env:    YOYO_DAY_BUDGET_MIN=120; YOYO_RETRY_DEADLINE_HOURS=22
+  │     systemd: Type=simple; Restart=always; RestartSec=600; RuntimeMaxSec=28800; KillMode=control-group; ExecStopPost=gcloud stop (sole independent authority)
+  │     env:    YOYO_DAY_BUDGET_MIN=120
   │
-  ├── [DISABLED 2026-06-11] yoyo-idle-monitor.timer — unit files archived to
-  │     /srv/foundry/data/yoyo-idle-monitor-archive/; script retained at bin/yoyo-idle-monitor.sh
-  │     REASON: raced yoyo-daily-cycle.sh Phase 4 (between-batch lull read as idle → VM killed mid-enrichment)
-  │     REPLACED BY: Phase 4 stall detector + ExecStopPost as sole backstop
+  ├── [DELETED 2026-06-11 session 8] local-yoyo-daily.timer — removed; Restart=always replaces it
+  ├── [DELETED 2026-06-11 session 8] yoyo-idle-monitor source files — bin/yoyo-idle-monitor.sh,
+  │     infrastructure/yoyo-manual/yoyo-idle-monitor.{timer,service}, yoyo-idle-check.sh
+  │     REASON: idle-monitor was disabled session-7; source files deleted to prevent future confusion
   │
   └── local-corpus-threshold.timer   ────── MASKED (→ /dev/null)
         was: 02:00 UTC daily corpus check + VM start
@@ -833,11 +833,10 @@ TRAINING AUTHORIZATION
 
 | Component | Path | Status | Notes |
 |---|---|---|---|
-| `yoyo-daily-cycle.sh` | `/srv/foundry/bin/` | **REWRITTEN 2026-06-11 session-7** | Day-budget ledger (`/srv/foundry/data/yoyo-budget/<date>.consumed`); `run_stint()` wrapper (Phases 1–8); `main()` outer loop (budget check → retry on preemption → stop when spent); `start_vm_with_retry()` (STOCKOUT retry up to 22h with ks_sleep); Phase 4 stall+preemption detector; enrichment budget anchored to VM:READY (not stint start); `AUTONOMOUS_ENABLED` training gate + daily receipt; commit `53f8765` |
-| `local-yoyo-daily.service` | `/etc/systemd/system/` | **UPDATED 2026-06-11** | 120-min cap; TimeoutStartSec=7800; KillMode=control-group; ExecStopPost; YOYO_DAY_BUDGET_MIN=120; YOYO_RETRY_DEADLINE_HOURS=22; commit `53f8765` |
-| `local-yoyo-daily.timer` | `/etc/systemd/system/` | **ACTIVE** | 02:30 UTC, RandomDelay=120s, Persistent=true |
-| `yoyo-idle-monitor.sh` | `/srv/foundry/bin/` | **SUPERSEDED** (script retained) | Replaced by Phase 4 stall detector + ExecStopPost; no longer called by any timer |
-| `yoyo-idle-monitor.timer` | — | **DISABLED 2026-06-11** | Unit files archived to `/srv/foundry/data/yoyo-idle-monitor-archive/`; was racing Phase 4 between-batch lulls |
+| `yoyo-daily-cycle.sh` | `/srv/foundry/bin/` | **UPDATED 2026-06-11 session-8** | `budget_file()` dynamic date (midnight-safe); `RETRY_DEADLINE_SECS` removed; `start_vm_with_retry()` retries indefinitely (no deadline); systemd `Restart=always` is the day-boundary mechanism; earlier: day-budget ledger; `run_stint()` + `main()` loop; Phase 4 stall+preemption; `AUTONOMOUS_ENABLED` gate; commit `53f8765` + this session |
+| `local-yoyo-daily.service` | `/etc/systemd/system/` | **UPDATED 2026-06-11 session-8** | Type=simple; Restart=always; RestartSec=600; RuntimeMaxSec=28800; KillMode=control-group; ExecStopPost; YOYO_DAY_BUDGET_MIN=120; enabled via WantedBy=multi-user.target |
+| `local-yoyo-daily.timer` | — | **DELETED 2026-06-11 session-8** | Removed from source + /etc/; `Restart=always` in service replaces it |
+| `yoyo-idle-monitor.sh` | — | **DELETED 2026-06-11 session-8** | Was: bin/yoyo-idle-monitor.sh; idle-monitor source files in infrastructure/yoyo-manual/ also deleted; installed units archived to /srv/foundry/data/yoyo-idle-monitor-archive/ |
 | `local-corpus-threshold.timer` | `/etc/systemd/system/` | **MASKED** | → /dev/null; backup at `.timer.bkp` |
 | `corpus-threshold.py` | `service-slm/scripts/` | **DEPLOYED** | kill switch added; commit `5ca1e6e0` |
 | `lora-update.sh` | `service-slm/scripts/` | deployed (disabled) | Fixed VM/zone defaults; commit `5ca1e6e0` |
