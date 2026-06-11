@@ -11,6 +11,9 @@ edition = "2021"
 system-substrate-broadcom = { path = "../system-substrate-broadcom" }
 system-network-interface = { path = "../system-network-interface" }
 
+[profile.dev]
+panic = "abort"
+
 [profile.release]
 panic = "abort"
 lto = true
