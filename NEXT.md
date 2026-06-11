@@ -123,3 +123,61 @@ Last updated: 2026-06-09
 - [x] **Stage 6 outbox sent** — commit `9c422878` (jwoodfine, 2026-06-05).
 - [x] **GUIDE-orgchart-authoring staged** — commit `fc7c720d` (pwoodfine, 2026-06-05).
 - [x] **Customer leg MANIFEST outbox sent** — commit `fc7c720d` (pwoodfine, 2026-06-05).
+12 TOPIC pairs + 4 GUIDEs in `.agent/drafts-outbound/`. Pickup notice sent to project-editorial.
+
+**PROSE-RESEARCH:** v0.2 operator_approved 2026-06-11. "robust" → "reliable" fix applied (line 173).
+Editorial pickup message sent (msg-id: command-20260611-prose-research-ppn-architecture-phd-thes).
+
+---
+
+## Code — Genesis Protocol (all Q2–Q6 resolved 2026-06-11)
+
+- [x] Rewrite `os-infrastructure/src/main.rs` — Genesis Protocol boot sequence (Step 1) ✓ 2026-06-11
+- [ ] Implement `system-substrate-broadcom/src/lib.rs` — silicon_ping() (Step 2)
+- [ ] Implement `system-network-interface/src/lib.rs` — WireGuard/mDNS substrate (Step 3)
+- [ ] Short-code pairing ceremony for node join (Step 4)
+- [ ] Replace F8 Gateway subprocess with HTTP to localhost:9080 (Step 5, gated on Q5)
+- [ ] Replace JSON mesh payloads with 16-byte binary protocol (Step 6)
+- [ ] Add focus crates to root `Cargo.toml` workspace members (Step 8)
+
+---
+
+## Blocking — all resolved 2026-06-11
+
+- [x] **Q2: Canonical PPN subnet — `10.8.0.0/24`** (ratified 2026-05-30; replaces 10.50.0.0/24)
+- [x] **Q3: GCP cloud relay static IP — `34.53.65.203`** (reserved 2026-05-30)
+- [x] **Q4: Laptop B LAN IP — `10.0.0.224`; DNS stable** (no config change; Jennifer VPN stays stable)
+- [x] **Q5: Doorman at `localhost:9080` — active** (local-doorman systemctl verified 2026-06-11)
+- [x] **Q6: Stage 6 confirmed; editorial pickup confirmed** (6 TOPIC pairs relayed 2026-05-30)
+
+---
+
+## GUIDE leg — cross-repo fix (Command Session scope)
+
+- [ ] `fleet-infrastructure-leased/guide-deploy-vpn.md` — fix hardcoded path
+  `$HOME/Foundry/pointsav-monorepo/` → `/srv/foundry/vendor/pointsav-monorepo/`
+  Lives in `customer/woodfine-fleet-deployment` — Command Session admin-tier.
+
+---
+
+## Completed this cluster (archived for reference)
+
+- [x] Sweep project-intelligence contamination from archive (session 1)
+- [x] Fix session-start.md, manifest.md, NEXT.md, memory init (session 1)
+- [x] Stage sovereign-mesh.md + .es.md drafts (session 2)
+- [x] Fix os-infrastructure/Makefile + forge_iso.sh paths (session 2)
+- [x] Gitignore build artifacts in os-infrastructure/ and os-network-admin/ (session 2)
+- [x] Create app-infrastructure-onprem/-leased/-cloud/ Reserved-folder scaffolds (session 2)
+- [x] PPN architecture: BRIEF-PPN-ARCHITECTURE.md (385 lines, 57 citations) (session 7)
+- [x] vm-prove.sh Alpine TCG proof: virtio_balloon confirmed (session 7)
+- [x] service-ppn-pairing deployed :9205 (session 13-14)
+- [x] service-vm-fleet + service-vm-host deployed on GCP (session 13-14)
+- [x] vm_spawn module + QEMU monitor Phase 2 (session 13-14)
+- [x] PROSE-RESEARCH v0.2 editorial revision (session 15)
+- [x] service-ppn-pairing normalize bug fix + 4 integration tests (session 15)
+- [x] service-ppn-pairing fixed binary deployed to :9205 (session 16)
+- [x] Commit carried-over cleanup: CLAUDE.md title fix, reliable fix, stale outbox, memory decontamination (session 17)
+- [x] Action all inbox messages — 6 messages archived (session 17)
+- [x] PROSE-RESEARCH PPN thesis v0.2 operator approved; editorial pickup message sent (session 17)
+- [x] Q2–Q6 all resolved; confirmed values recorded; subnet corrected 10.50→10.8.0.0/24 (session 17)
+- [x] Genesis Protocol Step 1: os-infrastructure/src/main.rs rewritten; build-std config added (session 17)
