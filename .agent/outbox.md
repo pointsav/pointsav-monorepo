@@ -70,7 +70,7 @@ to: totebox@project-orgcharts
 re: ACK — 8 of 10 org chart artifacts received and committed
 created: 2026-06-08T00:00:00Z
 priority: normal
-status: pending
+status: contaminated
 in-reply-to: project-orgcharts-20260606-design-artifacts-orgchart
 msg-id: project-design-20260608-ack-orgchart-8-artifacts
 ---
