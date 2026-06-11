@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bencal Management Corp. — Share Capital Proforma V1</title>
+<style>
+body{font-family:system-ui,sans-serif;font-size:13px;margin:2rem;color:#111;max-width:1400px}
+h1{font-size:1.25rem;margin-bottom:0.25rem}
+h2{font-size:1rem;margin-top:1.5rem;margin-bottom:0.25rem;border-bottom:1px solid #ccc;padding-bottom:2px}
+h3{font-size:0.9rem;margin-top:1rem;margin-bottom:0.2rem;color:#333}
+p{margin:0.3rem 0;font-size:0.82rem;color:#555}
+p.note{font-size:0.78rem;color:#555;font-style:italic}
+table{border-collapse:collapse;margin:0.5rem 0;font-size:0.76rem}
+th,td{border:1px solid #ccc;padding:3px 6px;text-align:right;white-space:nowrap}
+th{background:#f5f5f5;text-align:center;font-weight:600}
+td.lbl,th.lbl{text-align:left;min-width:230px}
+table.wide{width:100%;table-layout:fixed}
+table.wide td.lbl,table.wide th.lbl{width:25%;white-space:normal;overflow-wrap:break-word}
+td.lnum,th.lnum{width:32px;min-width:32px;font-family:'Courier New',monospace;font-size:9px;color:#aaa;text-align:right!important;background:white!important;font-weight:normal!important;border-right:2px solid #d0d0d0;padding:2px 5px 2px 2px;white-space:nowrap}
+tr.total td{background:#eef2f7;font-weight:700;border-top:2px solid #888}
+tr.subtotal td{background:#f5f7fa;font-weight:600;border-top:1px solid #aaa}
+tr.section-banner td{background:#e3edf7;font-weight:700;font-size:0.74rem;text-transform:uppercase;letter-spacing:.3px;color:#1a2a44;text-align:left}
+.footer{font-size:0.72rem;color:#666;margin-top:1.5rem;border-top:1px solid #ddd;padding-top:0.5rem}
+.charts-row{display:flex;gap:3rem;margin:0.75rem 0;align-items:flex-start;flex-wrap:wrap}
+.chart-unit{display:flex;gap:1rem;align-items:center}
+.chart-legend{font-size:0.73rem;border-collapse:collapse}
+.chart-legend td{border:none;padding:2px 5px;white-space:nowrap}
+.chart-legend .swatch{width:12px;height:12px;display:inline-block;border:1px solid #999;vertical-align:middle;margin-right:3px}
+@page{size:letter landscape;margin:1.5cm 2cm 1.5cm 1.5cm}
+@media print{
+  body{margin:0;font-size:11px;max-width:none}
+  table{break-inside:avoid;page-break-inside:avoid}
+  h2,h3{break-after:avoid;page-break-after:avoid}
+  td.lnum,th.lnum{-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#bbb!important;border-right-color:#ccc!important}
+  table.wide{table-layout:fixed;font-size:10px}
+  table.wide td,table.wide th{padding:3px 6px}
+  table.wide td.lbl,table.wide th.lbl{width:25%;white-space:normal;overflow-wrap:break-word}
+  .charts-row{gap:2rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════ PAGE 1 -->
+
+<h1>Bencal Management Corp. — Share Capital Proforma V1</h1>
+<p>DRAFT &middot; 2026-06-10 &middot; V1<br>
+All amounts CAD &middot; IFRS 10.27 investment entity (FVTPL) &middot; 1,000,000 shares authorised and planned<br>
+Forward-looking projections; planned/intended values per BCSC continuous-disclosure posture &middot; Source: proforma engine BRIEF §5f</p>
+
+<h2>Share Capital Structure</h2>
+
+<div class="charts-row">
+
+  <!-- Pre-sale block -->
+  <div>
+    <h3>Pre-Sale — Kiel Capital and Elzen Holdings hold float shares</h3>
+    <div class="chart-unit">
+      <!-- Pre-sale pie chart: Kiel 37.5%, Elzen 37.5%, Strategic 18%, D&O 7% -->
+      <!-- Paths computed clockwise from 12 o'clock (cx=110,cy=110,r=90) -->
+      <!-- Kiel  135° end: (173.64,173.64); Elzen 135° end: (20,110) -->
+      <!-- Strategic 64.8° end: (71.68,28.57); D&O 25.2° closes to top -->
+      <svg viewBox="0 0 220 220" width="170" height="170" aria-label="Pre-sale capital structure pie chart">
+        <path d="M110,110 L110,20 A90,90 0 0,1 173.64,173.64 Z" fill="#1a3a6a" stroke="white" stroke-width="1"/>
+        <path d="M110,110 L173.64,173.64 A90,90 0 0,1 20,110 Z" fill="#2a5a3a" stroke="white" stroke-width="1"/>
+        <path d="M110,110 L20,110 A90,90 0 0,1 71.68,28.57 Z" fill="#6a7a8a" stroke="white" stroke-width="1"/>
+        <path d="M110,110 L71.68,28.57 A90,90 0 0,1 110,20 Z" fill="#7a4a8a" stroke="white" stroke-width="1"/>
+      </svg>
+      <table class="chart-legend">
+        <tr><td><span class="swatch" style="background:#1a3a6a"></span>Kiel Capital Inc.</td><td>375,000</td><td>37.5%</td></tr>
+        <tr><td><span class="swatch" style="background:#2a5a3a"></span>Elzen Holdings Inc.</td><td>375,000</td><td>37.5%</td></tr>
+        <tr><td><span class="swatch" style="background:#6a7a8a"></span>Strategic partners</td><td>180,000</td><td>18.0%</td></tr>
+        <tr><td><span class="swatch" style="background:#7a4a8a"></span>Directors, officers &amp; other</td><td>70,000</td><td>7.0%</td></tr>
+        <tr style="border-top:1px solid #ccc;font-weight:700"><td>Total</td><td>1,000,000</td><td>100%</td></tr>
+      </table>
+    </div>
+    <table>
+      <tr><th class="lbl">Shareholder</th><th>Shares</th><th>%</th><th>Consideration</th></tr>
+      <tr><td class="lbl">Kiel Capital Inc.</td><td>375,000</td><td>37.5%</td><td>Includes 105,000 float shares</td></tr>
+      <tr><td class="lbl">Elzen Holdings Inc.</td><td>375,000</td><td>37.5%</td><td>Includes 105,000 float shares</td></tr>
+      <tr><td class="lbl">Strategic partners</td><td>180,000</td><td>18.0%</td><td>Nominal</td></tr>
+      <tr><td class="lbl">Directors, officers &amp; other</td><td>70,000</td><td>7.0%</td><td>TBD</td></tr>
+      <tr class="total"><td class="lbl">Total</td><td>1,000,000</td><td>100%</td><td>—</td></tr>
+    </table>
+  </div>
+
+  <!-- Post-sale block -->
+  <div>
+    <h3>Post-Sale — 210,000 float shares distributed to public investors</h3>
+    <div class="chart-unit">
+      <!-- Post-sale pie chart: Kiel 27%, Elzen 27%, Float 21%, Strategic 18%, D&O 7% -->
+      <!-- Kiel 97.2° end: (199.3,121.3); Elzen 97.2° end: (87.6,197.2) -->
+      <!-- Float 75.6° end: (20,110); Strategic 64.8° end: (71.68,28.57); D&O closes -->
+      <svg viewBox="0 0 220 220" width="170" height="170" aria-label="Post-sale capital structure pie chart">
+        <path d="M110,110 L110,20 A90,90 0 0,1 199.3,121.3 Z" fill="#1a3a6a" stroke="white" stroke-width="1"/>
+        <path d="M110,110 L199.3,121.3 A90,90 0 0,1 87.6,197.2 Z" fill="#2a5a3a" stroke="white" stroke-width="1"/>
+        <path d="M110,110 L87.6,197.2 A90,90 0 0,1 20,110 Z" fill="#b07a20" stroke="white" stroke-width="1"/>
+        <path d="M110,110 L20,110 A90,90 0 0,1 71.68,28.57 Z" fill="#6a7a8a" stroke="white" stroke-width="1"/>
+        <path d="M110,110 L71.68,28.57 A90,90 0 0,1 110,20 Z" fill="#7a4a8a" stroke="white" stroke-width="1"/>
+      </svg>
+      <table class="chart-legend">
+        <tr><td><span class="swatch" style="background:#1a3a6a"></span>Kiel Capital Inc.</td><td>270,000</td><td>27.0%</td></tr>
+        <tr><td><span class="swatch" style="background:#2a5a3a"></span>Elzen Holdings Inc.</td><td>270,000</td><td>27.0%</td></tr>
+        <tr><td><span class="swatch" style="background:#b07a20"></span>Float (public)</td><td>210,000</td><td>21.0%</td></tr>
+        <tr><td><span class="swatch" style="background:#6a7a8a"></span>Strategic partners</td><td>180,000</td><td>18.0%</td></tr>
+        <tr><td><span class="swatch" style="background:#7a4a8a"></span>Directors, officers &amp; other</td><td>70,000</td><td>7.0%</td></tr>
+        <tr style="border-top:1px solid #ccc;font-weight:700"><td>Total</td><td>1,000,000</td><td>100%</td></tr>
+      </table>
+    </div>
+    <table>
+      <tr><th class="lbl">Shareholder</th><th>Shares</th><th>%</th><th>Notes</th></tr>
+      <tr><td class="lbl">Kiel Capital Inc.</td><td>270,000</td><td>27.0%</td><td>Residual after float sale (105K sold)</td></tr>
+      <tr><td class="lbl">Elzen Holdings Inc.</td><td>270,000</td><td>27.0%</td><td>Residual after float sale (105K sold)</td></tr>
+      <tr><td class="lbl">Float (public investors)</td><td>210,000</td><td>21.0%</td><td>105K from Kiel + 105K from Elzen</td></tr>
+      <tr><td class="lbl">Strategic partners</td><td>180,000</td><td>18.0%</td><td>Nominal consideration; unchanged</td></tr>
+      <tr><td class="lbl">Directors, officers &amp; other</td><td>70,000</td><td>7.0%</td><td>Unchanged</td></tr>
+      <tr class="total"><td class="lbl">Total</td><td>1,000,000</td><td>100%</td><td>—</td></tr>
+    </table>
+  </div>
+
+</div>
+<p class="note">Strategic partner allocation at nominal consideration, consistent with manager-tier precedent. Float shares originally held by Kiel Capital Inc. and Elzen Holdings Inc.; sold via secondary market (proceeds to sellers, not to Bencal). Shares outstanding: 1,000,000 planned.</p>
+
+<h2>Market Capitalisation — NAV Roll-Forward (Y0–Y10)</h2>
+<table class="wide">
+  <tr>
+    <th class="lbl">Metric</th>
+    <th>Y0</th><th>Y1</th><th>Y2</th><th>Y3</th><th>Y4</th><th>Y5</th>
+    <th>Y6</th><th>Y7</th><th>Y8</th><th>Y9</th><th>Y10</th>
+  </tr>
+  <tr class="section-banner"><td colspan="12">MARKET CAPITALISATION = NAV (FVTPL ENTITY; IFRS 10.27)</td></tr>
+  <tr>
+    <td class="lbl">Portfolio NAV — aggregate (= market cap)</td>
+    <td>$410K</td><td>$3.05M</td><td>$3.06M</td><td>$3.06M</td><td>$5.72M</td><td>$6.42M</td>
+    <td>$8.88M</td><td>$9.82M</td><td>$14.71M</td><td>$16.70M</td><td>$13.59M</td>
+  </tr>
+  <tr>
+    <td class="lbl">NAV per share (÷ 1,000,000)</td>
+    <td>$0.41</td><td>$3.05</td><td>$3.06</td><td>$3.06</td><td>$5.72</td><td>$6.42</td>
+    <td>$8.88</td><td>$9.82</td><td>$14.71</td><td>$16.70</td><td>$13.59</td>
+  </tr>
+  <tr>
+    <td class="lbl">Year-over-year change (%)</td>
+    <td>—</td><td>+643.6%</td><td>+0.4%</td><td>+0.1%</td><td>+87.0%</td><td>+12.1%</td>
+    <td>+38.5%</td><td>+10.5%</td><td>+49.8%</td><td>+13.5%</td><td>−18.6%</td>
+  </tr>
+  <tr class="subtotal">
+    <td class="lbl">Float value (210,000 shares)</td>
+    <td>$86.0K</td><td>$640K</td><td>$642K</td><td>$643K</td><td>$1.20M</td><td>$1.35M</td>
+    <td>$1.87M</td><td>$2.06M</td><td>$3.09M</td><td>$3.51M</td><td>$2.85M</td>
+  </tr>
+  <tr class="subtotal">
+    <td class="lbl">Strategic partner value (180,000 shares)</td>
+    <td>$73.7K</td><td>$548K</td><td>$550K</td><td>$551K</td><td>$1.03M</td><td>$1.15M</td>
+    <td>$1.60M</td><td>$1.77M</td><td>$2.65M</td><td>$3.01M</td><td>$2.45M</td>
+  </tr>
+</table>
+<p class="note">Market cap = NAV for an IFRS 10.27 FVTPL investment entity; IFRS book equity per share collapses to NAV per share. Y10 contraction reflects planned distributions of $5M+ paid out; total return including distributions is higher. Holding-company discount (10–30% range for illiquid Level-3 interests) is not applied to this base case; see Valuation section below.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ PAGE 2 -->
+<h2 style="page-break-before:always;break-before:page">Valuation — Three Methods and Indicated Fair Value</h2>
+<p class="note">Mirrors WCP V2 valuation structure. Primary method: book value / NAV per share. Earnings yield method is included for comparability only — it is N/M in loss years and mechanically high in FVTPL remeasurement years; do not use as primary basis. Indicated FMV = simple average across all applicable methods.</p>
+<table class="wide">
+  <tr>
+    <th class="lbl">Valuation method</th>
+    <th>Y0</th><th>Y1</th><th>Y2</th><th>Y3</th><th>Y4</th><th>Y5</th>
+    <th>Y6</th><th>Y7</th><th>Y8</th><th>Y9</th><th>Y10</th>
+  </tr>
+  <tr class="section-banner"><td colspan="12">VALUATION — THREE METHODS (PER SHARE, 1,000,000-SHARE BASIS)</td></tr>
+  <tr>
+    <td class="lbl">Book value / NAV per share (primary)</td>
+    <td>$0.41</td><td>$3.05</td><td>$3.06</td><td>$3.06</td><td>$5.72</td><td>$6.42</td>
+    <td>$8.88</td><td>$9.82</td><td>$14.71</td><td>$16.70</td><td>$13.59</td>
+  </tr>
+  <tr>
+    <td class="lbl">Earnings yield per share (net income ÷ 4.5%)</td>
+    <td>N/M</td><td>$42.49</td><td>N/M</td><td>N/M</td><td>$58.22</td><td>$11.91</td>
+    <td>$41.11</td><td>$16.76</td><td>$88.89</td><td>$41.78</td><td>$95.56</td>
+  </tr>
+  <tr>
+    <td class="lbl">NAV at −15% holding-company discount</td>
+    <td>$0.35</td><td>$2.59</td><td>$2.60</td><td>$2.60</td><td>$4.86</td><td>$5.46</td>
+    <td>$7.55</td><td>$8.35</td><td>$12.50</td><td>$14.20</td><td>$11.55</td>
+  </tr>
+  <tr class="subtotal">
+    <td class="lbl">Indicated FMV / share (avg excl. N/M years)</td>
+    <td>$0.38</td><td>$16.04</td><td>$2.83</td><td>$2.83</td><td>$22.93</td><td>$7.93</td>
+    <td>$19.18</td><td>$11.64</td><td>$38.70</td><td>$24.23</td><td>$40.23</td>
+  </tr>
+</table>
+<p class="note">Earnings yield: net income per share on 1,000,000-share basis capitalised at 4.5%. N/M = not meaningful (loss year or negligible income). Holding-company discount: 10–30% typical range for illiquid Level-3 minority interests; −15% used as base case. Indicated FMV = simple average of NAV, earnings yield (where applicable), and NAV-at-discount.</p>
+
+<h2>Float Sale Scenarios</h2>
+<p class="note">Two delivery mechanisms for the 21% float (210,000 shares). Scenario A: secondary market sale — Kiel Capital Inc. and Elzen Holdings Inc. sell existing shares; proceeds flow to sellers; Bencal Management Corp. financial statements are unaffected. Scenario B: primary market issuance — Bencal issues new shares and receives proceeds into treasury.</p>
+
+<h3>Scenario A — Secondary Market Sale (Existing Shares; Proceeds to Kiel and Elzen)</h3>
+
+<p><strong>A1 — Single IPO: all 210,000 float shares sold at once</strong></p>
+<table>
+  <tr><th class="lbl">IPO timing</th><th>NAV / share</th><th>Float raise (210K shares)</th><th>Seller MOIC</th><th>Seller CAGR</th><th>Strategic value at date</th></tr>
+  <tr><td class="lbl">Y0 (immediately)</td><td>$0.41</td><td>$86,100</td><td>1.0×</td><td>0.0%</td><td>$73,710</td></tr>
+  <tr><td class="lbl">Y4</td><td>$5.72</td><td>$1,201,200</td><td>13.95×</td><td>93.3%</td><td>$1,029,885</td></tr>
+  <tr><td class="lbl">Y8 (portfolio peak)</td><td>$14.71</td><td>$3,089,100</td><td>35.9×</td><td>56.5%</td><td>$2,648,307</td></tr>
+  <tr class="subtotal"><td class="lbl">Y10</td><td>$13.59</td><td>$2,853,900</td><td>33.2×</td><td>41.9%</td><td>$2,446,442</td></tr>
+</table>
+<p class="note">Seller MOIC and CAGR computed from Y0 cost basis ($0.41/share = Y0 NAV; 210,000-share float cost = $86,100). Proceeds flow to Kiel Capital Inc. (~$1.43M) and Elzen Holdings Inc. (~$1.43M) at Y10 IPO. Bencal Management Corp. receives $0.</p>
+
+<p><strong>A2 — Gradual sale: 21,000 shares per year, priced at prior year-end NAV</strong></p>
+<table>
+  <tr><th class="lbl">Year of tranche</th><th>Shares sold</th><th>Price (prior-yr NAV)</th><th>Tranche proceeds</th><th>Cumulative proceeds</th></tr>
+  <tr><td class="lbl">Y1 (priced at Y0 NAV $0.41)</td><td>21,000</td><td>$0.41</td><td>$8,610</td><td>$8,610</td></tr>
+  <tr><td class="lbl">Y2 (priced at Y1 NAV $3.05)</td><td>21,000</td><td>$3.05</td><td>$64,050</td><td>$72,660</td></tr>
+  <tr><td class="lbl">Y3 (priced at Y2 NAV $3.06)</td><td>21,000</td><td>$3.06</td><td>$64,260</td><td>$136,920</td></tr>
+  <tr><td class="lbl">Y4 (priced at Y3 NAV $3.06)</td><td>21,000</td><td>$3.06</td><td>$64,260</td><td>$201,180</td></tr>
+  <tr><td class="lbl">Y5 (priced at Y4 NAV $5.72)</td><td>21,000</td><td>$5.72</td><td>$120,120</td><td>$321,300</td></tr>
+  <tr><td class="lbl">Y6 (priced at Y5 NAV $6.42)</td><td>21,000</td><td>$6.42</td><td>$134,820</td><td>$456,120</td></tr>
+  <tr><td class="lbl">Y7 (priced at Y6 NAV $8.88)</td><td>21,000</td><td>$8.88</td><td>$186,480</td><td>$642,600</td></tr>
+  <tr><td class="lbl">Y8 (priced at Y7 NAV $9.82)</td><td>21,000</td><td>$9.82</td><td>$206,220</td><td>$848,820</td></tr>
+  <tr><td class="lbl">Y9 (priced at Y8 NAV $14.71)</td><td>21,000</td><td>$14.71</td><td>$308,910</td><td>$1,157,730</td></tr>
+  <tr><td class="lbl">Y10 (priced at Y9 NAV $16.70)</td><td>21,000</td><td>$16.70</td><td>$350,700</td><td>$1,508,430</td></tr>
+  <tr class="total"><td class="lbl">10-year total (A2)</td><td>210,000</td><td>—</td><td>—</td><td>$1,508,430</td></tr>
+</table>
+<p class="note">A2 total proceeds of $1,508,430 vs. A1 Y10 single IPO of $2,853,900 — the lump-sum IPO at Y10 generates approximately 89% more in total proceeds. Gradual sale provides price discovery and staged liquidity rather than proceeds maximisation. Both are secondary-market transactions; Bencal financial statements are unaffected in either case.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════ PAGE 3 -->
+<h2 style="page-break-before:always;break-before:page">Scenario B — Primary Capital Raise (Bencal Issues New Shares)</h2>
+<p>Bencal Management Corp. issues 210,000 new shares. Proceeds flow into Bencal treasury and are intended to fund additional SPV investments. Total shares become 1,210,000. No dilution if issued at or above NAV per share (IAS 32.37: issuance costs deducted from equity).</p>
+
+<h3>Primary Issuance at NAV — No Dilution</h3>
+<table>
+  <tr><th class="lbl">Metric</th><th>Y4 issuance</th><th>Y10 issuance</th></tr>
+  <tr><td class="lbl">Shares issued (primary)</td><td>210,000</td><td>210,000</td></tr>
+  <tr><td class="lbl">Issue price (= NAV/share)</td><td>$5.72</td><td>$13.59</td></tr>
+  <tr><td class="lbl">Gross proceeds to Bencal</td><td>$1,201,200</td><td>$2,853,900</td></tr>
+  <tr><td class="lbl">Pre-issuance total shares</td><td>1,000,000</td><td>1,000,000</td></tr>
+  <tr><td class="lbl">Post-issuance total shares</td><td>1,210,000</td><td>1,210,000</td></tr>
+  <tr><td class="lbl">Post-issuance aggregate NAV</td><td>$6,922,783</td><td>$16,445,244</td></tr>
+  <tr class="subtotal"><td class="lbl">Post-issuance NAV / share</td><td>$5.72</td><td>$13.59</td></tr>
+  <tr><td class="lbl">Dilution to existing holders</td><td>None</td><td>None</td></tr>
+</table>
+<p class="note">At-NAV issuance: post-issuance NAV/share = (pre-issuance NAV + gross proceeds) ÷ 1,210,000 = pre-issuance NAV/share. No value transferred from existing holders.</p>
+
+<h3>Below-NAV Issuance — Dilution Analysis (Illustrative; Y10)</h3>
+<table>
+  <tr><th class="lbl">Metric</th><th>At NAV ($13.59)</th><th>At −15% discount ($11.55)</th><th>Difference</th></tr>
+  <tr><td class="lbl">Issue price / share</td><td>$13.59</td><td>$11.55</td><td>−$2.04</td></tr>
+  <tr><td class="lbl">Gross proceeds to Bencal</td><td>$2,853,900</td><td>$2,425,500</td><td>−$428,400</td></tr>
+  <tr><td class="lbl">Post-issuance aggregate NAV</td><td>$16,445,244</td><td>$16,016,844</td><td>−$428,400</td></tr>
+  <tr class="subtotal"><td class="lbl">Post-issuance NAV / share (1,210,000 shares)</td><td>$13.59</td><td>$13.24</td><td>−$0.35</td></tr>
+  <tr><td class="lbl">Dilution to existing holders</td><td>—</td><td>−2.57%</td><td>—</td></tr>
+  <tr><td class="lbl">Decline in strategic partner value (180,000 shares)</td><td>—</td><td>−$63,000</td><td>—</td></tr>
+</table>
+<p class="note">Below-NAV issuance constitutes a value transfer from existing holders to new subscribers. The −15% scenario is illustrative only. Issue price should be set at or above prevailing NAV/share to protect existing holders. Holding-company discount range (10–30%) is separate from the issuance discount.</p>
+
+<h3>Deployment of Proceeds — Incremental Return on $2,854K Invested</h3>
+<table class="wide">
+  <tr>
+    <th class="lbl">Deployment scenario</th>
+    <th>Base deployed</th><th>Annual rate</th><th>5-yr FV</th><th>10-yr FV</th><th>5-yr MOIC</th><th>10-yr MOIC</th><th colspan="5">Basis / notes</th>
+  </tr>
+  <tr>
+    <td class="lbl">A — Proportional IRR (engine portfolio CAGR Y1–Y10)</td>
+    <td>$2,854K</td><td>18.08%</td><td>$6,556K</td><td>$15,058K</td><td>2.30×</td><td>5.28×</td>
+    <td colspan="5">Engine-computed Y1–Y10 portfolio CAGR; Bencal invests proceeds proportionally across existing SPV structure</td>
+  </tr>
+  <tr>
+    <td class="lbl">B — Conservative floor (private RE hurdle rate)</td>
+    <td>$2,854K</td><td>8.00%</td><td>$4,195K</td><td>$6,161K</td><td>1.47×</td><td>2.16×</td>
+    <td colspan="5">Conservative private real estate IRR floor; stress-test scenario</td>
+  </tr>
+  <tr class="subtotal">
+    <td class="lbl">C — Hypothetical SPV3 target (illustrative)</td>
+    <td>$2,854K</td><td>15.00%</td><td>$5,741K</td><td>$11,551K</td><td>2.01×</td><td>4.05×</td>
+    <td colspan="5">Illustrative only; no SPV3 transaction is planned. Based on planned target return for a hypothetical third SPV vehicle</td>
+  </tr>
+</table>
+<p class="note">FV = gross future value of $2,854K proceeds, excluding issuance costs (IAS 32.37). MOIC = (1 + annual rate)^n. Deployment returns are incremental to existing Bencal SPV1 and SPV2 returns shown in the V2 proforma. All amounts planned/intended; actual results may differ.</p>
+
+<h3>Secondary vs. Primary — Side-by-Side Comparison (Y10 Basis)</h3>
+<table>
+  <tr><th class="lbl">Dimension</th><th>Scenario A — Secondary market</th><th>Scenario B — Primary issuance (at NAV)</th></tr>
+  <tr class="section-banner"><td colspan="3">STRUCTURAL MECHANICS</td></tr>
+  <tr><td class="lbl">Proceeds recipient</td><td>Kiel Capital Inc. + Elzen Holdings Inc. (~$1.43M each)</td><td>Bencal Management Corp. ($2,854K treasury)</td></tr>
+  <tr><td class="lbl">Cash received by Bencal</td><td>$0</td><td>$2,854K</td></tr>
+  <tr><td class="lbl">Shares outstanding after</td><td>1,000,000 (unchanged)</td><td>1,210,000</td></tr>
+  <tr><td class="lbl">NAV / share after</td><td>$13.59 (unchanged)</td><td>$13.59 (no dilution at NAV)</td></tr>
+  <tr><td class="lbl">Impact on Bencal FVTPL proforma</td><td>None — Bencal financial statements unaffected</td><td>Incremental: additional SPV investments funded from proceeds</td></tr>
+  <tr class="section-banner"><td colspan="3">RETURN TO ORIGINAL SHAREHOLDERS</td></tr>
+  <tr><td class="lbl">Kiel + Elzen combined gain (vs. Y0 cost $86K)</td><td>$2,767,800 combined (32.2× MOIC)</td><td>$0 — no sale, no proceeds</td></tr>
+  <tr><td class="lbl">Kiel + Elzen residual equity value (270K shares each)</td><td>$3,669,300 each at $13.59</td><td>$3,669,300 each at $13.59 (unchanged)</td></tr>
+  <tr class="subtotal"><td class="lbl">Best scenario for sellers (Kiel/Elzen)</td><td>Scenario A — realises capital gain</td><td>Scenario A — Kiel/Elzen receive nothing in B</td></tr>
+  <tr class="subtotal"><td class="lbl">Best scenario for Bencal growth</td><td>Scenario A leaves Bencal capitalisation unchanged</td><td>Scenario B — Bencal deploys $2.85M into new investments</td></tr>
+</table>
+<p class="note">The two scenarios are not mutually exclusive. Kiel and Elzen may execute a secondary sale (Scenario A) while Bencal separately issues additional shares to new investors (Scenario B) if authorised capital is expanded. Each scenario requires independent approvals and documentation.</p>
+
+<p class="footer">
+<strong>Forward-Looking Information — BCSC NI 51-102.</strong>
+This document contains forward-looking information, including planned net asset values, projected distributions, fair market value estimates, and share-capital scenarios. These projections are based on the FVTPL proforma prepared under IFRS 10.27 using planned/intended portfolio returns. Actual results may differ materially.
+<br><br>
+<strong>Valuation basis.</strong> NAV per share is the primary valuation method, applied consistently with IFRS 10.27 investment entity accounting (all holdings carried at fair value through profit or loss). Earnings yield and holding-company-discount methods are included for comparative purposes only; neither method is a primary basis of value. FVTPL remeasurement gains are recognised in the income statement and create mechanically high earnings-yield readings in favourable years — read alongside the NAV primary method.
+<br><br>
+<strong>Related-party disclosure (IAS 24).</strong> Kiel Capital Inc. and Elzen Holdings Inc. are related parties of Bencal Management Corp. Strategic partner share allocations described herein are at nominal consideration, consistent with manager-tier precedent. All terms are subject to final agreement between the parties.
+<br><br>
+<strong>Primary issuance.</strong> If Bencal Management Corp. were to issue new shares in a primary market transaction, the proceeds indicated are gross amounts. Issuance costs would be deducted directly from equity under IAS 32.37 and are not reflected in the incremental return scenarios above.
+<br><br>
+<strong>Below-NAV dilution.</strong> The below-NAV issuance dilution analysis is illustrative only and does not constitute a recommendation to issue shares at any particular price or at any discount. Any issuance decision is subject to board approval and applicable securities law.
+<br><br>
+<strong>SPV3 hypothetical.</strong> The Scenario B — Method C incremental return projection refers to a hypothetical SPV3 vehicle. No SPV3 transaction is planned or intended. This projection is illustrative only and does not constitute an offer to sell or a solicitation to buy any security.
+<br><br>
+<strong>No solicitation.</strong> Nothing in this document constitutes an offer to sell or a solicitation to buy any security. This document is prepared for internal compliance review purposes only. DRAFT — 2026-06-10 — V1.
+</p>
+
+<script>
+(function(){
+  var n=1;
+  document.querySelectorAll('table').forEach(function(tbl){
+    if(tbl.classList.contains('chart-legend')){return;}
+    tbl.querySelectorAll('tr').forEach(function(row){
+      var allTh=Array.from(row.children).every(function(c){return c.tagName==='TH';});
+      var cell=document.createElement(allTh?'th':'td');
+      cell.className='lnum';
+      cell.textContent=n++;
+      row.insertBefore(cell,row.firstChild);
+    });
+  });
+})();
+</script>
+</body>
+</html>
