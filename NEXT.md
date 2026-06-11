@@ -4,6 +4,12 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > **Note: content below the horizontal rule is contaminated from other archives — cleanup needed.**
 Last updated: 2026-06-11 [Jennifer Woodfine / claude-code]
+# NEXT.md — project-system (cluster/project-system branch)
+
+> **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
+> Architecture: VM-* naming mirrors the os-* product lineup exactly. See `BRIEF-VM-ARCHITECTURE.md`.
+
+Last updated: 2026-06-11 (session 18 — contamination cleanup complete: 23 GIS drafts removed, artifact-registry.md replaced with project-system-native, 3 GIS memory files removed, BRIEF-substrate-phd-thesis picked up, inbox cleared, Stage 6 pending notice sent to Command).
 
 ---
 
@@ -151,6 +157,19 @@ Last updated: 2026-06-12 (close-out) [totebox@claude-code]
 ---
 
 ## Content sync — standing session-start procedure
+## Archive cleanup — pending Command action
+
+- [x] **Command: relay project-gis contamination files** — COMPLETE 2026-06-11 session 18.
+  23 GIS drafts removed from drafts-outbound/, 3 GIS memory files removed, artifact-registry.md replaced.
+- [x] **Replace `.agent/rules/artifact-registry.md`** — COMPLETE 2026-06-11 session 18.
+  project-system-native version written covering J2, J5, A1, and routing rules.
+- [ ] **Uncommitted code in sub-clone** — `app-network-admin/`, `system-gateway-mba/`, `system-udp/`
+  have modified Cargo.toml + src files. Review and commit or discard before next Stage 6.
+- [ ] **`app-mediakit-telemetry/assets/GeoLite2-City.mmdb`** — deleted on disk but not committed in sub-clone.
+- [ ] **Untracked in sub-clone** — `app-orchestration-gis/.gitignore` + `app-orchestration-gis/SCORING-METHODOLOGY.md`
+  and 27+ Python/shell scripts. Decide: commit or gitignore.
+
+## Completed this cluster (archived for reference)
 
 ```bash
 git -C content-wiki-documentation pull --no-rebase /srv/foundry/clones/project-editorial/media-knowledge-documentation main
