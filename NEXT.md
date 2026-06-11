@@ -9,7 +9,7 @@ Last updated: 2026-06-11 [Jennifer Woodfine / claude-code]
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Architecture: VM-* naming mirrors the os-* product lineup exactly. See `BRIEF-VM-ARCHITECTURE.md`.
 
-Last updated: 2026-06-11 (session 19 — Phase 0 seL4 no_std port complete: system-core + system-ledger build on x86_64-unknown-none; commit ba4e1de8 Version 1.1.0; Stage 6 pending notice sent to Command).
+Last updated: 2026-06-11 (session 20 — Phase 1A NetBSD image pipeline: system-ledger-proto + system-ledger-server + system-substrate-netbsd + os-totebox scripts; commit 8b0b491e Version 1.2.0; Stage 6 pending).
 
 ---
 
@@ -186,7 +186,21 @@ under `--test` mode.
 - [x] `sha2/force-soft` in both `sel4` features (bypasses SHA-NI intrinsics on bare-metal)
 - [ ] **Stage 6 pending** — Command Session to promote sub-clone commit `ba4e1de8` (Version 1.1.0)
 
-**Phase 1 — seL4 PD binary (blocked on Microkit SDK download)**
+**Phase 1A — NetBSD compat-bottom pipeline — COMPLETE 2026-06-11 (session 20)**
+
+Commit `8b0b491e` in sub-clone, Version 1.2.0. Stage 6 pending.
+
+- [x] `system-ledger-proto` — no_std ConsultRequest/ConsultResponse; ckpt_wire (C2SP signed-note); 6 tests
+- [x] `system-ledger-server` — Unix socket daemon; tokio; 5 tests; deterministic readiness channel
+- [x] `system-substrate-netbsd` — NetBSD 10.1 constants; workspace member
+- [x] `os-totebox/src/lib.rs` — build metadata constants; os-totebox-release.img removed from git
+- [x] `os-totebox/scripts/build-image.sh` — nbmakefs + Veriexec + rc.d install
+- [x] `os-totebox/scripts/provision-data-disk.sh` — 8 GiB OLMo data QCOW2
+- [x] `os-totebox/scripts/rc.d/{system_ledger,doorman,service_content,llama_server}`
+- [x] `os-interface/scripts/build-image.sh` + `rc.d/orchestration_slm`
+- [ ] **Stage 6 pending** — Command to promote `8b0b491e` (Version 1.2.0)
+
+**Phase 1B — seL4 PD binary (blocked on Microkit SDK download)**
 
 Prerequisite: download Microkit SDK v2.1.0 or v2.2.0 from seL4 Foundation
 GitHub (`seL4/microkit` releases). Makefile will use `SDK_PATH ?= $(error ...)`.
@@ -195,11 +209,15 @@ GitHub (`seL4/microkit` releases). Makefile will use `SDK_PATH ?= $(error ...)`.
 - [ ] `system-substrate/src/lib.rs` — define `CapabilityInvoker` trait + `VerdictWire` wire type
 - [ ] New `system-ledger-pd/` — thin PD binary; `init()`/`protected()`/`notified()`;
   `linked_list_allocator` 512 KiB arena; `ledger.system` XML; `Makefile` with `SDK_PATH ?=`
-- [ ] New `system-substrate-netbsd/` — scaffold crate for compat bottom (parallel to `system-substrate-freebsd`)
-- [ ] Add both new crates to root `Cargo.toml` workspace members
 - [ ] Fix `system-security/Makefile` — `SDK_PATH :=` (hardcoded) → `SDK_PATH ?= $(error ...)`
 - [ ] Minimum viable milestone: 2-PD system boots; `client_pd` → `system_ledger` PPC channel 1;
   `VERDICT: Allow` via `microkit_dbg_puts`
+
+**Phase 1C — pre-flight spike (Laptop A, before full VM deploy)**
+
+- [ ] Boot NetBSD 10.1 QCOW2 with llama-server + OLMo 7B weights
+- [ ] Verify FFS mmap for large model files, throughput parity vs Linux, wg(4) peer to GCP
+- [ ] Cross-compile `system-ledger-server` for `x86_64-unknown-netbsd` target
 
 ---
 
@@ -321,3 +339,6 @@ Relay message in outbox: `project-marketing-20260608-contamination-relay` [2026-
 - [x] service-ppn-pairing fixed binary deployed to :9205 (session 16)
 - [x] system-core + system-ledger no_std port — Phase 0 seL4 substrate; 13 files; W1 witness verifier;
   curve25519-dalek fiat backend; sha2/force-soft; ciborium CBOR; Version 1.1.0 (session 19)
+- [x] Phase 1A NetBSD pipeline — system-ledger-proto (6 tests) + system-ledger-server (5 tests) +
+  system-substrate-netbsd + os-totebox image builder scripts + rc.d + os-totebox-release.img removed;
+  root cause: SignedCheckpoint no serde → ckpt_wire (C2SP wire format); Version 1.2.0 (session 20)
