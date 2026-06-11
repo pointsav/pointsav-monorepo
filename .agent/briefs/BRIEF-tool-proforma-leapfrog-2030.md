@@ -1069,29 +1069,29 @@ The Excel mislabels two columns "Y0". **Corrected mapping:**
 
 **10-year display scope: columns G:P (corrected Y1–Y10 only).**
 
-#### Revenue Generator C17:R53 — "Revenue and Assets from the Woodfine LPs"
+#### Revenue Generator C17:R53 — "Revenue and Assets from the Direct-Hold Solutions"
 
-Six LP funds, each contributing three rows: Advisory Fee, Distributions, Net Asset Value.
-WCP holds 10% beneficial ownership in each LP; LP1 (WPC Canada) is the seed fund from which all others are derived.
+Six direct-hold solutions (DHS), each contributing three rows: Advisory Fee, Distributions, Net Asset Value.
+WCP holds 10% beneficial ownership in each DHS; DHS1 (Professional Centres Canada LP) is the seed fund from which all others are derived.
 
-| LP | Fund name | GFV | Currency | Launch | Size vs LP1 | Advisory FX | Dist FX | NAV FX |
-|---|---|---|---|---|---|---|---|---|
-| LP1 | WPC Canada | C$250M | CAD | Y1 | 1× | ×1 | ×1 | ×1 |
-| LP2 | WPC US | US$500M | USD | Y2 | 2× | ×CAD-USD | ×CAD-USD | ×CAD-USD |
-| LP3 | WPC Spain | EUR$250M | EUR | Y2 | 1× | ×CAD-EUR | ×CAD-EUR | ×CAD-EUR |
-| LP4 | WPC Mexico | US$250M | USD | Y3 | 1× | ×CAD-USD | ×CAD-USD | ×CAD-USD |
-| LP5 | WPC Vertical Warehouse | US$250M | USD | Y4 | 1× | ×CAD-USD | ×CAD-EUR ⚠ | ×CAD-USD |
-| LP6 | WPC Parking Structures | US$250M | USD | Y5 | 1× | ×CAD-USD | ×CAD-EUR ⚠ | ×CAD-USD |
+| DHS | Fund name | Asset code | GFV | Currency | Launch | Size vs DHS1 | Advisory FX | Dist FX | NAV FX |
+|---|---|---|---|---|---|---|---|---|---|
+| DHS1 | Professional Centres Canada LP | PRO-CA-01-AST | C$250M | CAD | Y1 | 1× | ×1 | ×1 | ×1 |
+| DHS2 | Professional Centres United States LP | PRO-US-02-AST | US$500M | USD | Y2 | 2× | ×CAD-USD | ×CAD-USD | ×CAD-USD |
+| DHS3 | Professional Centres Spain SOCIMI | PRO-ES-03-ADM | EUR$250M | EUR | Y2 | 1× | ×CAD-EUR | ×CAD-EUR | ×CAD-EUR |
+| DHS4 | Professional Centres Mexico FIBRA | PRO-MX-04-AST | US$250M | USD | Y3 | 1× | ×CAD-USD | ×CAD-USD | ×CAD-USD |
+| DHS5 | Vertical Warehouse United States LP | VWH-US-01-AST | US$250M | USD | Y4 | 1× | ×CAD-USD | ×CAD-USD | ×CAD-USD |
+| DHS6 | Parking Structure United States LP | PKS-US-01-AST | US$250M | USD | Y5 | 1× | ×CAD-USD | ×CAD-USD | ×CAD-USD |
 
-⚠ LP5 and LP6 distribution rows use the EUR rate (F12) despite being USD funds — confirmed Excel anomaly. Engine replicates exactly and emits `metadata.distribution_fx_anomalies: ["LP5","LP6"]` in JSON output.
+Note (V1 → V2 correction): V1 used the EUR rate for DHS5 and DHS6 distributions — a carry-over from the source Excel. Corrected to CAD-USD in V2. The `metadata.distribution_fx_anomalies` JSON field was removed in V2.
 
-**LP1 Advisory Fee source:** `PCLP1.advisory_fees[y]` from INPUT_PCLP1 row 63 with deployment ramp:
+**DHS1 Advisory Fee source:** `PCLP1.advisory_fees[y]` from INPUT_PCLP1 row 63 with deployment ramp:
 - Y1: × 1/3 (partial capital call)
 - Y2: × 2/3
 - Y3+: × 3/3 (fully deployed)
 
-**LP2–LP6 lag:** each LP sources values from LP1 shifted back by its launch lag:
-`LP_n[y] = LP1[y − lag_n] × size_factor × fx_rate`
+**DHS2–DHS6 lag:** each direct-hold solution sources values from DHS1 shifted back by its launch lag:
+`DHS_n[y] = DHS1[y − lag_n] × size_factor × fx_rate`
 
 **Offering Costs Reimbursement (row 53):** WCP fronts LP launch costs; LPs reimburse from advisory fees as they ramp. Closed form (first-difference analytical — no rolling accumulator):
 
@@ -2954,21 +2954,21 @@ lingua franca — "ARGUS-fidelity outputs with modern UX" is the exact positioni
 ### Phase A-D3 — D3 WCP engine (new, researched 2026-05-23)
 
 - [ ] **A-D3-1** `WcpConfig` TOML: FX rates, P/E multiple, dividend yield, tax rate, LP fund configs (stagger, FX, size factor)
-- [ ] **A-D3-2** LP1 from PCLP1 output: advisory_fee × deployment_ramp (1/3, 2/3, 1.0); distributions × 1/10; NAV × 1/10
-- [ ] **A-D3-3** LP2–LP6 cascade: `LP_n[y] = LP1[y − lag] × size_factor × fx_rate` via `checked_sub` bounds-safe indexing
+- [ ] **A-D3-2** DHS1 from PCLP1 output: advisory_fee × deployment_ramp (1/3, 2/3, 1.0); distributions × 1/10; NAV × 1/10
+- [ ] **A-D3-3** DHS2–DHS6 cascade: `DHS_n[y] = DHS1[y − lag] × size_factor × fx_rate` via `checked_sub` bounds-safe indexing
 - [ ] **A-D3-4** Offering Costs Reimbursement: first-difference closed form (no rolling accumulator), cutoff after Y6
 - [ ] **A-D3-5** G&A ramp: hardcoded Y1–Y2; Y3–Y10 = advisory_fee_total × ramp_pct (20%–55%)
-- [ ] **A-D3-6** IS: Gross Income → Referral Fees → WPI → G&A → Total OpEx → EBITDA → Taxes (27%) → Earnings
-- [ ] **A-D3-7** Cumulative FCF: prefix scan of (financing_activity + earnings)
-- [ ] **A-D3-8** 10% LP ownership NAV rollup: sum of all 6 LP NAVs per year
-- [ ] **A-D3-9** Book Valuation: CumFCF + LP ownership; per-share
-- [ ] **A-D3-10** Market Valuation: earnings × 10.72 + CumFCF; per-share
+- [ ] **A-D3-6** IS: Gross Income → Referral Fees → WPI compensation agreement → G&A → Total OpEx → EBITDA → Taxes (27%) → Earnings
+- [ ] **A-D3-7** Cumulative free cash flow: prefix scan of (financing_activity + earnings)
+- [ ] **A-D3-8** 10% DHS ownership NAV rollup: sum of all 6 DHS NAVs per year
+- [ ] **A-D3-9** Book Valuation: cumulative free cash flow + DHS ownership; per-share
+- [ ] **A-D3-10** Market Valuation: earnings × 10.72 + cumulative free cash flow; per-share
 - [ ] **A-D3-11** Fair Valuation: PEG formula with FCF floor; forward moving average edge case (Y9/Y10); negative-eps warning flag
 - [ ] **A-D3-12** Dividend Valuation: earnings / 4.5%; per-share
 - [ ] **A-D3-13** Comparative ratios: MV/BV, MV/FV, MV/DV, RONTE (Y1 = n/a)
-- [ ] **A-D3-14** C17:R53 Revenue Generator renderer (exact 6-LP layout, Y1–Y10 col scope)
-- [ ] **A-D3-15** WCP IS + valuation section renderer (4 methods + comparables block rows 105-117)
-- [ ] **A-D3-16** LP5/LP6 distribution FX anomaly: replicate Excel exactly; emit `metadata.distribution_fx_anomalies` in JSON
+- [ ] **A-D3-14** C17:R53 Revenue Generator renderer (6 direct-hold solutions, Y1–Y10 col scope)
+- [ ] **A-D3-15** WCP IS + valuation section renderer (3 methods + fair value composite + comparables block rows 105-117)
+- [x] **A-D3-16** ~~LP5/LP6 distribution FX anomaly~~ — corrected to USD in V2; `metadata.distribution_fx_anomalies` removed
 - [ ] **A-D3-17** Left-gutter row IDs on all D3 output rows (consistent with D1/D2 convention)
 
 ### Phase A-D4 — D4 investor SPV engine (Bencal SPV2, researched 2026-05-23)
@@ -3501,17 +3501,17 @@ not new information. Render it as a percentage; leave Y1–Y7 blank.
 Three opus agents (accounting, finance, data science) analysed the WCP 42M Excel workbook
 cell-by-cell. The following findings are authoritative for the Rust engine implementation.
 
-### 15a. LP cascade — the core derivation chain
+### 15a. DHS cascade — the core derivation chain
 
-LP1 (WPC Canada C$250M) is the seed fund; every other LP is a FX/size/lag transform of it.
-LP1 itself derives from PCLP1 (`INPUT_PCLP 1_250M` tab = mirror of the PCLP1 workbook):
-- `advisory_fee_LP1[y]` = PCLP1 row 63 × deployment_ramp[y]
-- `distributions_LP1[y]` = PCLP1 row 120 × 0.10 (WCP holds 10% of PCLP1)
-- `nav_LP1[y]` = PCLP1 row 114 × 0.10 (row 114 = Asset_Value − Debt, total not per-unit)
+DHS1 (Professional Centres Canada LP, C$250M) is the seed fund; every other direct-hold solution is a FX/size/lag transform of it.
+DHS1 itself derives from PCLP1 (`INPUT_PCLP 1_250M` tab = mirror of the PCLP1 workbook):
+- `advisory_fee_DHS1[y]` = PCLP1 row 63 × deployment_ramp[y]
+- `distributions_DHS1[y]` = PCLP1 row 120 × 0.10 (WCP holds 10% of PCLP1)
+- `nav_DHS1[y]` = PCLP1 row 114 × 0.10 (row 114 = Asset_Value − Debt, total not per-unit)
 
-Derivation for LP2–LP6: `LP_n[y] = LP1[y − launch_lag_n] × size_factor_n × fx_rate_n`
+Derivation for DHS2–DHS6: `DHS_n[y] = DHS1[y − launch_lag_n] × size_factor_n × fx_rate_n`
 
-The lag means LP2 in Y2 pulls LP1's Y1 value — each LP effectively re-runs LP1's 3-year
+The lag means DHS2 in Y2 pulls DHS1's Y1 value — each direct-hold solution effectively re-runs DHS1's 3-year
 deployment ramp from its own launch year. Out-of-bounds (pre-launch): array index = 0.
 
 ### 15b. Advisory fee deployment ramp — economic basis
