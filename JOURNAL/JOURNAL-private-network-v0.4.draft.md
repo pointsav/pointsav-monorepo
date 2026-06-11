@@ -10,7 +10,7 @@ impact_factor: "9.65"
 alternate_venue: "Computers & Security (Elsevier, IF 7.98); IEEE Transactions on Network and Service Management (IEEE, IF 6.44)"
 authors:
   - name: "Peter M. Woodfine"
-    affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
+    affiliation: "Woodfine Management Corp., New York, NY, USA"
     email: jmwoodfine@gmail.com
     orcid: ""
     credit_roles:
@@ -19,7 +19,7 @@ authors:
       - Writing – Original Draft
       - Writing – Review & Editing
   - name: "Mathew Woodfine"
-    affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
+    affiliation: "Woodfine Management Corp., New York, NY, USA"
     email: ""
     orcid: ""
     credit_roles:
@@ -27,7 +27,7 @@ authors:
       - Formal Analysis
       - Writing – Review & Editing
   - name: "Jennifer M. Woodfine"
-    affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
+    affiliation: "Woodfine Management Corp., New York, NY, USA"
     email: ""
     orcid: ""
     credit_roles:
@@ -110,7 +110,7 @@ notes_for_editor: |
 # Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody
 
 **Woodfine Management Corp.**
-Vancouver, British Columbia, Canada
+New York, NY, USA
 
 *Corresponding author:* jmwoodfine@gmail.com
 
