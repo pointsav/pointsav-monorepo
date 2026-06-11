@@ -111,6 +111,14 @@ impl NodeRegistry {
         }
         false
     }
+
+    /// Return the wg_ip of the node that owns the given VM, if any.
+    pub fn find_vm_node_wg_ip(&self, vm_id: &str) -> Option<String> {
+        self.nodes
+            .values()
+            .find(|e| e.vms.contains_key(vm_id))
+            .map(|e| e.record.wg_ip.clone())
+    }
 }
 
 #[cfg(test)]

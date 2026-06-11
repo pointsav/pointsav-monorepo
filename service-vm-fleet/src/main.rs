@@ -4,22 +4,24 @@ use axum::{
     routing::{delete, get, post},
     Json, Router,
 };
-use chrono::Utc;
 use std::{net::SocketAddr, sync::Arc};
 use system_vm_fleet_types::{
-    CreateVmRequest, FleetStatus, NodeHeartbeat, NodeId, NodeRecord, VmId, VmRecord, VmState,
+    CreateVmRequest, FleetStatus, NodeHeartbeat, NodeId, NodeRecord, VmId, VmRecord,
 };
 use tokio::sync::RwLock;
 
 mod fleet;
 mod placement;
-mod vm_spawn;
 
 use fleet::NodeRegistry;
 
 #[derive(Clone)]
 struct AppState {
     registry: Arc<RwLock<NodeRegistry>>,
+    /// HTTP client for delegating spawn/destroy to each node's service-vm-host.
+    http: reqwest::Client,
+    /// Port on which each node's service-vm-host spawn server listens.
+    host_spawn_port: u16,
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -30,8 +32,15 @@ async fn main() {
         )
         .init();
 
+    let host_spawn_port: u16 = std::env::var("VM_HOST_SPAWN_PORT")
+        .unwrap_or_else(|_| "9204".into())
+        .parse()
+        .expect("VM_HOST_SPAWN_PORT must be a valid port");
+
     let state = AppState {
         registry: Arc::new(RwLock::new(NodeRegistry::new())),
+        http: reqwest::Client::new(),
+        host_spawn_port,
     };
 
     let app = Router::new()
@@ -76,86 +85,114 @@ async fn node_handler(
     }
 }
 
+/// POST /v1/vms — advisory placement then delegate spawn to the target node's vm-host.
+///
+/// The fleet picks the best node based on available RAM and KVM preference, then
+/// forwards the CreateVmRequest to `http://{node.wg_ip}:{VM_HOST_SPAWN_PORT}/v1/spawn`.
+/// The node's service-vm-host handles disk creation, cloud-init, and QEMU launch.
 async fn create_vm_handler(
     State(state): State<AppState>,
     Json(req): Json<CreateVmRequest>,
 ) -> Result<Json<VmRecord>, (StatusCode, String)> {
-    let mut reg = state.registry.write().await;
-    reg.evict_stale();
+    let (target, node_wg_ip) = {
+        let mut reg = state.registry.write().await;
+        reg.evict_stale();
 
-    let target = if let Some(pref) = &req.preferred_node {
-        // Caller-specified node (required for VmTotebox)
-        if reg.get_node(pref).is_none() {
-            return Err((
-                StatusCode::UNPROCESSABLE_ENTITY,
-                format!("preferred_node '{pref}' is not registered"),
-            ));
-        }
-        pref.clone()
-    } else {
-        placement::select_node(&reg, req.ram_mb, req.prefer_kvm).ok_or_else(|| {
-            (
-                StatusCode::SERVICE_UNAVAILABLE,
-                "insufficient RAM on all registered nodes".to_string(),
-            )
-        })?
+        let target = if let Some(pref) = &req.preferred_node {
+            if reg.get_node(pref).is_none() {
+                return Err((
+                    StatusCode::UNPROCESSABLE_ENTITY,
+                    format!("preferred_node '{pref}' is not registered"),
+                ));
+            }
+            pref.clone()
+        } else {
+            placement::select_node(&reg, req.ram_mb, req.prefer_kvm).ok_or_else(|| {
+                (
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    "insufficient RAM on all registered nodes".to_string(),
+                )
+            })?
+        };
+
+        let wg_ip = reg
+            .get_node(&target)
+            .map(|n| n.wg_ip.clone())
+            .unwrap_or_default();
+
+        (target, wg_ip)
     };
 
-    // Capture kvm_available before releasing the lock.
-    let kvm = reg
-        .get_node(&target)
-        .map(|n| n.kvm_available)
-        .unwrap_or(false);
+    let spawn_url = format!("http://{}:{}/v1/spawn", node_wg_ip, state.host_spawn_port);
 
-    let vm_id = format!("{}-{}", req.vm_type.to_lowercase(), Utc::now().timestamp());
-    let record = VmRecord {
-        vm_id: vm_id.clone(),
-        vm_type: req.vm_type.clone(),
-        state: VmState::Provisioning,
-        ram_alloc_mb: req.ram_mb,
-        vcpu_count: req.vcpu_count,
-        started_at: None,
-    };
-
-    reg.register_vm(&target, record.clone());
     tracing::info!(
-        vm_id = %vm_id,
         node = %target,
+        wg_ip = %node_wg_ip,
+        vm_type = %req.vm_type,
         ram_mb = req.ram_mb,
-        kvm,
-        "VM provisioning dispatched"
+        "delegating VM spawn to node"
     );
 
-    // Release the lock before the blocking QEMU spawn.
-    drop(reg);
+    let resp = state
+        .http
+        .post(&spawn_url)
+        .json(&req)
+        .send()
+        .await
+        .map_err(|e| {
+            (
+                StatusCode::BAD_GATEWAY,
+                format!("cannot reach vm-host at {spawn_url}: {e}"),
+            )
+        })?;
 
-    let spawn_record = record.clone();
-    let disk_size_gb = (req.ram_mb / 1024).max(8) as u32;
-    drop(tokio::task::spawn_blocking(
-        move || match vm_spawn::create_blank_disk(&spawn_record.vm_id, disk_size_gb) {
-            Ok(_) => {
-                if let Err(e) = vm_spawn::spawn_qemu(&spawn_record, kvm) {
-                    tracing::warn!(vm_id = %spawn_record.vm_id, error = %e, "QEMU spawn failed");
-                }
-            }
-            Err(e) => {
-                tracing::warn!(vm_id = %spawn_record.vm_id, error = %e, "disk creation failed");
-            }
-        },
-    ));
+    if !resp.status().is_success() {
+        let status = resp.status();
+        let body = resp.text().await.unwrap_or_default();
+        return Err((
+            StatusCode::BAD_GATEWAY,
+            format!("vm-host {target} returned {status}: {body}"),
+        ));
+    }
 
+    let record: VmRecord = resp.json().await.map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("vm-host response not a VmRecord: {e}"),
+        )
+    })?;
+
+    {
+        let mut reg = state.registry.write().await;
+        reg.register_vm(&target, record.clone());
+    }
+
+    tracing::info!(vm_id = %record.vm_id, node = %target, "VM spawn accepted");
     Ok(Json(record))
 }
 
-async fn destroy_vm_handler(State(state): State<AppState>, Path(vm_id): Path<VmId>) -> StatusCode {
+/// DELETE /v1/vms/:vm_id — find the owning node, delegate destroy, then remove from registry.
+async fn destroy_vm_handler(
+    State(state): State<AppState>,
+    Path(vm_id): Path<VmId>,
+) -> StatusCode {
+    let node_wg_ip = {
+        let reg = state.registry.read().await;
+        reg.find_vm_node_wg_ip(&vm_id)
+    };
+
+    if let Some(wg_ip) = node_wg_ip {
+        let destroy_url = format!(
+            "http://{}:{}/v1/vms/{}",
+            wg_ip, state.host_spawn_port, vm_id
+        );
+        if let Err(e) = state.http.delete(&destroy_url).send().await {
+            tracing::warn!(vm_id = %vm_id, error = %e, "failed to reach vm-host for destroy");
+        }
+    }
+
     let mut reg = state.registry.write().await;
     if reg.remove_vm(&vm_id) {
-        tracing::info!(vm_id = %vm_id, "VM destroyed");
-        drop(reg);
-        let id = vm_id.clone();
-        drop(tokio::task::spawn_blocking(move || {
-            vm_spawn::kill_qemu(&id)
-        }));
         StatusCode::NO_CONTENT
     } else {
         StatusCode::NOT_FOUND
