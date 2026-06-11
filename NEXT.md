@@ -39,6 +39,10 @@ Last updated: 2026-06-09
 - [ ] project-editorial to deliver `GUIDE-orgchart-authoring.md` from drafts-outbound.
       Draft staged: `.agent/drafts-outbound/GUIDE-orgchart-authoring.draft.md` (2026-06-05).
       [2026-06-05 totebox@claude-code]
+- [x] **Provision VM-Orchestration** — `infrastructure/virt/provision-vm-orchestration.sh` implemented ✓ 2026-06-11; SSH :10023; ports 19096/19097/19180
+- [ ] **app-orchestration-bim (9096)** — depends on VM-Totebox service-fs
+- [ ] **app-orchestration-gis instance**
+- [ ] **app-orchestration-slm instance (:9180)**
 
 ---
 
@@ -71,9 +75,8 @@ Last updated: 2026-06-09
 - [x] Alpine Linux TCG proof-of-concept (`vm-prove.sh`) — virtio_balloon confirmed [session 7]
 - [x] `service-ppn-pairing` deployed :9205 [session 13-14]
 - [x] `service-ppn-pairing` normalize bug fix deployed (approve/deny working) [session 16]
-- [ ] **Build + copy `os-network-admin` to Laptop A** — `cargo build --release -p os-network-admin`
-  then `scp target/release/os-network-admin mathew@10.8.0.6:~/bin/`.
-  Run with `PAIRING_SERVER=http://10.8.0.9:9205 ~/bin/os-network-admin`.
+- [x] **Build `os-network-admin` release binary** — built 2026-06-11; binary at `/srv/foundry/cargo-target/mathew/release/os-network-admin` (1.7 MB); port 9202→9205 fixed
+- [ ] **Copy `os-network-admin` to Laptop A** — `scp /srv/foundry/cargo-target/mathew/release/os-network-admin mathew@10.8.0.6:~/bin/`; then `PAIRING_SERVER=http://10.8.0.9:9205 ~/bin/os-network-admin` (operator action)
 - [x] **`provision-vm-infrastructure-cloud.sh --genesis`** — implemented; ppn_join ceremony; port 9205; --status ✓ 2026-06-11
 - [x] **`provision-vm-infrastructure-onprem.sh`** — implemented; --genesis (Laptop A), --genesis-hub (Laptop B), --join, --status ✓ 2026-06-11
 - [ ] **Fill PLACEHOLDER_* pubkeys** in /etc/wireguard/wg0.conf on each node after running --genesis
