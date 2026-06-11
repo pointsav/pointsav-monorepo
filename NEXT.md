@@ -133,12 +133,13 @@ Editorial pickup message sent (msg-id: command-20260611-prose-research-ppn-archi
 ## Code — Genesis Protocol (all Q2–Q6 resolved 2026-06-11)
 
 - [x] Rewrite `os-infrastructure/src/main.rs` — Genesis Protocol boot sequence (Step 1) ✓ 2026-06-11
-- [ ] Implement `system-substrate-broadcom/src/lib.rs` — silicon_ping() (Step 2)
-- [ ] Implement `system-network-interface/src/lib.rs` — WireGuard/mDNS substrate (Step 3)
-- [ ] Short-code pairing ceremony for node join (Step 4)
-- [ ] Replace F8 Gateway subprocess with HTTP to localhost:9080 (Step 5, gated on Q5)
-- [ ] Replace JSON mesh payloads with 16-byte binary protocol (Step 6)
-- [ ] Add focus crates to root `Cargo.toml` workspace members (Step 8)
+- [x] Implement `system-substrate-broadcom/src/lib.rs` — real PCI scan for BCM57765 (Step 2) ✓ 2026-06-11
+- [x] Implement `system-network-interface/src/lib.rs` — mDNS + CPace skeleton; GCP relay fallback (Step 3) ✓ 2026-06-11
+- [x] Short-code pairing ceremony skeleton — `conduct_pairing_ceremony()` stub (Step 4) ✓ 2026-06-11
+- [x] Replace F8 Gateway subprocess with HTTP to localhost:9080 (Step 5) — already done (pre-existing) ✓
+- [x] Replace JSON mesh payloads with 16-byte binary protocol (Step 6) ✓ 2026-06-11
+- [x] Add focus crates to root `Cargo.toml` workspace members (Step 8) — already done (pre-existing) ✓
+- [ ] **Step 3-full (NIC driver):** BCM57765 MMIO init + DMA rings + Ethernet TX/RX — required before Steps 3–4 go live over the wire
 
 ---
 
