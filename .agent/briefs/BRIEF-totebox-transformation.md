@@ -376,6 +376,86 @@ once both gaps are closed.
 
 ---
 
+## 14. os-network-admin as PPN Control Plane
+
+### What it is today
+
+`os-network-admin` (`app-network-admin` in the monorepo, deploying as the `F8 Terminal`) is
+currently a simulation of a WireGuard routing authority. It does three things in the current
+stub implementation:
+
+1. `handle_translation()` — HTTP POST to Doorman (`localhost:9080/v1/translate`): routes
+   intent expressions to the correct target node ID (F5 Gateway)
+2. `handle_authorization()` — emits a 16-byte binary mesh frame: `op_code u16 BE` (ping=0x0001,
+   isolate=0x0002) + `target_node u16 BE` + `timestamp u32 BE` + `reserved [u8;8]`
+3. Polls `service-ppn-pairing` at `:9205` for pending join requests
+
+It runs as a CLI process today. The binary is built at
+`/srv/foundry/cargo-target/mathew/release/os-network-admin`.
+
+### What it should become
+
+os-network-admin is the **PPN control plane** — the authoritative routing authority for the
+WireGuard mesh. In the target architecture it owns:
+
+| Responsibility | Current state | Target state |
+|---|---|---|
+| WireGuard peer table | Managed manually via `wg set` | os-network-admin writes peer configs programmatically |
+| Node join approval | CLI poll + curl to approve | os-network-admin TUI (ratatui) with keyboard approve/deny |
+| Mesh frame routing | 16-byte binary frame stub over UDP | Real delivery via WireGuard TAP or UDP on 10.8.0.0/24 |
+| Fleet coordination | Not connected | os-network-admin notifies `service-vm-fleet` when a new node joins |
+| Fault isolation | `isolate` op_code stub | os-network-admin issues `wg set` to remove a peer on ISOLATE |
+
+### Simulation strategy — how it becomes a real component
+
+The simulation discipline is: **write the real interfaces now, substitute real I/O when
+the NIC driver and WireGuard bindings are ready.**
+
+**Phase S1 (today — in place):** os-network-admin emits correctly-framed 16-byte binary
+mesh frames and polls the pairing server. The binary protocol is real; the transport is
+simulated (frames printed/logged, not transmitted over wire).
+
+**Phase S2 (next):** Add a UDP socket on `0.0.0.0:9206` inside os-network-admin.
+Send and receive mesh frames over the PPN WireGuard mesh (10.8.0.0/24). No NIC driver
+needed — WireGuard is already up and UDP works on it. Nodes on Laptop A and B can receive
+these frames. This makes os-network-admin a real network peer without requiring os-infrastructure
+to be deployed bare-metal.
+
+**Phase S3 (after Laptop A/B vm-host deployed):** os-network-admin watches
+`service-vm-fleet /v1/fleet` for node changes. When a new node heartbeats in, os-network-admin
+validates the WireGuard public key against the pairing ceremony (via service-ppn-pairing) and
+updates the WireGuard peer table. This closes the join→run lifecycle.
+
+**Phase S4 (Genesis Protocol milestone):** os-infrastructure boots on Laptop A bare-metal.
+`system-network-interface::conduct_pairing_ceremony()` contacts os-network-admin's UDP server
+directly. os-network-admin issues `wg addconf` to live-add the new peer. From this point, the
+Genesis Protocol and the F8 control plane are integrated — the simulation dissolves into the
+real thing.
+
+### Where os-network-admin fits in the BRIEF
+
+os-network-admin belongs in the project-infrastructure archive's scope (it ships with the
+infrastructure OS tier). Its role in the VM fabric:
+
+- **Gate for Part C Step 1 (vm-intelligence):** The WireGuard peer for vm-intelligence must be
+  approved via os-network-admin's join approval before the VM can participate in the mesh.
+  Currently this is a manual `wg set` step — os-network-admin Phase S3 automates it.
+- **Isolation authority:** If vm-intelligence is compromised, os-network-admin Phase S3 can
+  remove its peer entry from all nodes' WireGuard configs by sending an ISOLATE frame.
+- **Audit ledger:** Every mesh-frame op (join, isolate, ping) should write to a WORM ledger
+  via `service-fs` — gives the BCSC-posture audit trail for all PPN topology changes.
+
+### BRIEF update: os-network-admin next steps
+
+- [ ] **Phase S2:** Add UDP server on :9206 to os-network-admin; send/receive 16-byte frames
+      over WireGuard mesh. Verify frames received by Laptop A and B once vm-host is deployed.
+- [ ] **Phase S3:** Subscribe os-network-admin to fleet changes; automate peer-table updates
+      on join approval. Write each topology change to `service-fs` WORM ledger.
+- [ ] **Phase S4:** Wire `system-network-interface::conduct_pairing_ceremony()` to os-network-admin
+      UDP server. Test Genesis Protocol end-to-end on Laptop A (bare metal boot, not VM).
+
+---
+
 ## 12. Cross-References
 
 - `BRIEF-sovereign-os-family-master-plan.md §R–§W` — governance layer (which folders move where)
