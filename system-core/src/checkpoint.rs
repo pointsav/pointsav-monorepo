@@ -42,6 +42,13 @@ use crate::consistency_proof::{ConsistencyProof, ConsistencyVerifyError};
 use crate::inclusion_proof::{InclusionProof, InclusionVerifyError};
 use crate::Hash256;
 
+#[cfg(not(feature = "std"))]
+use alloc::{
+    format,
+    string::{String, ToString},
+    vec::Vec,
+};
+
 /// One C2SP signed-note checkpoint body. Maps to a Merkle log state
 /// at a specific tree size.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -80,7 +87,7 @@ impl Checkpoint {
 
     /// Parse a checkpoint body from its canonical bytes.
     pub fn parse_body(body: &[u8]) -> Result<Self, ParseError> {
-        let text = std::str::from_utf8(body).map_err(|_| ParseError::NotUtf8)?;
+        let text = core::str::from_utf8(body).map_err(|_| ParseError::NotUtf8)?;
         let mut lines = text.split_inclusive('\n');
 
         let origin = lines

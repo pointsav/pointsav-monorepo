@@ -27,6 +27,8 @@
 use sha2::{Digest, Sha256};
 
 use crate::Hash256;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
 /// SHA-256 of `(0x00 || leaf_data)` per RFC 9162 §2.1. Use this when
 /// computing the leaf hash that gets committed to a transparency

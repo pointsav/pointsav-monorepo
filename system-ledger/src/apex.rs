@@ -19,6 +19,9 @@
 //! [`system_core::SignedCheckpoint`]) happens in the
 //! [`crate::LedgerConsumer`] impl in `lib.rs`.
 
+#[cfg(not(feature = "std"))]
+use alloc::{string::{String, ToString}, vec::Vec};
+
 /// One apex identity in the ledger's history.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ApexEntry {
