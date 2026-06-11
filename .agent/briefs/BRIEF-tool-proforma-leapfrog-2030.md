@@ -1072,26 +1072,26 @@ The Excel mislabels two columns "Y0". **Corrected mapping:**
 #### Revenue Generator C17:R53 — "Revenue and Assets from the Direct-Hold Solutions"
 
 Six direct-hold solutions (DHS), each contributing three rows: Advisory Fee, Distributions, Net Asset Value.
-WCP holds 10% beneficial ownership in each DHS; DHS1 (Professional Centres Canada LP) is the seed fund from which all others are derived.
+WCP holds 10% beneficial ownership in each DHS; DHS-01 (Professional Centres Canada LP) is the seed fund from which all others are derived.
 
-| DHS | Fund name | Asset code | GFV | Currency | Launch | Size vs DHS1 | Advisory FX | Dist FX | NAV FX |
+| DHS | Fund name | Asset code | GFV | Currency | Launch | Size vs DHS-01 | Advisory FX | Dist FX | NAV FX |
 |---|---|---|---|---|---|---|---|---|---|
-| DHS1 | Professional Centres Canada LP | PRO-CA-01-AST | C$250M | CAD | Y1 | 1× | ×1 | ×1 | ×1 |
-| DHS2 | Professional Centres United States LP | PRO-US-02-AST | US$500M | USD | Y2 | 2× | ×CAD-USD | ×CAD-USD | ×CAD-USD |
-| DHS3 | Professional Centres Spain SOCIMI | PRO-ES-03-ADM | EUR$250M | EUR | Y2 | 1× | ×CAD-EUR | ×CAD-EUR | ×CAD-EUR |
-| DHS4 | Professional Centres Mexico FIBRA | PRO-MX-04-AST | US$250M | USD | Y3 | 1× | ×CAD-USD | ×CAD-USD | ×CAD-USD |
-| DHS5 | Vertical Warehouse United States LP | VWH-US-01-AST | US$250M | USD | Y4 | 1× | ×CAD-USD | ×CAD-USD | ×CAD-USD |
-| DHS6 | Parking Structure United States LP | PKS-US-01-AST | US$250M | USD | Y5 | 1× | ×CAD-USD | ×CAD-USD | ×CAD-USD |
+| DHS-01 | Professional Centres Canada LP | PRO-CA-01-AST | C$250M | CAD | Y1 | 1× | ×1 | ×1 | ×1 |
+| DHS-02 | Professional Centres United States LP | PRO-US-02-AST | US$500M | USD | Y2 | 2× | ×CAD-USD | ×CAD-USD | ×CAD-USD |
+| DHS-03 | Professional Centres Spain SOCIMI | PRO-ES-03-ADM | EUR$250M | EUR | Y2 | 1× | ×CAD-EUR | ×CAD-EUR | ×CAD-EUR |
+| DHS-04 | Professional Centres Mexico FIBRA | PRO-MX-04-AST | US$250M | USD | Y3 | 1× | ×CAD-USD | ×CAD-USD | ×CAD-USD |
+| DHS-05 | Vertical Warehouse United States LP | VWH-US-01-AST | US$250M | USD | Y4 | 1× | ×CAD-USD | ×CAD-USD | ×CAD-USD |
+| DHS-06 | Parking Structure United States LP | PKS-US-01-AST | US$250M | USD | Y5 | 1× | ×CAD-USD | ×CAD-USD | ×CAD-USD |
 
-Note (V1 → V2 correction): V1 used the EUR rate for DHS5 and DHS6 distributions — a carry-over from the source Excel. Corrected to CAD-USD in V2. The `metadata.distribution_fx_anomalies` JSON field was removed in V2.
+Note (V1 → V2 correction): V1 used the EUR rate for DHS-05 and DHS-06 distributions — a carry-over from the source Excel. Corrected to CAD-USD in V2. The `metadata.distribution_fx_anomalies` JSON field was removed in V2.
 
-**DHS1 Advisory Fee source:** `PCLP1.advisory_fees[y]` from INPUT_PCLP1 row 63 with deployment ramp:
+**DHS-01 Advisory Fee source:** `PCLP1.advisory_fees[y]` from INPUT_PCLP1 row 63 with deployment ramp:
 - Y1: × 1/3 (partial capital call)
 - Y2: × 2/3
 - Y3+: × 3/3 (fully deployed)
 
-**DHS2–DHS6 lag:** each direct-hold solution sources values from DHS1 shifted back by its launch lag:
-`DHS_n[y] = DHS1[y − lag_n] × size_factor × fx_rate`
+**DHS-02 through DHS-06 lag:** each direct-hold solution sources values from DHS-01 shifted back by its launch lag:
+`DHS_n[y] = DHS-01[y − lag_n] × size_factor × fx_rate`
 
 **Offering Costs Reimbursement (row 53):** WCP fronts LP launch costs; LPs reimburse from advisory fees as they ramp. Closed form (first-difference analytical — no rolling accumulator):
 
@@ -2954,8 +2954,8 @@ lingua franca — "ARGUS-fidelity outputs with modern UX" is the exact positioni
 ### Phase A-D3 — D3 WCP engine (new, researched 2026-05-23)
 
 - [ ] **A-D3-1** `WcpConfig` TOML: FX rates, P/E multiple, dividend yield, tax rate, LP fund configs (stagger, FX, size factor)
-- [ ] **A-D3-2** DHS1 from PCLP1 output: advisory_fee × deployment_ramp (1/3, 2/3, 1.0); distributions × 1/10; NAV × 1/10
-- [ ] **A-D3-3** DHS2–DHS6 cascade: `DHS_n[y] = DHS1[y − lag] × size_factor × fx_rate` via `checked_sub` bounds-safe indexing
+- [ ] **A-D3-2** DHS-01 from PCLP1 output: advisory_fee × deployment_ramp (1/3, 2/3, 1.0); distributions × 1/10; NAV × 1/10
+- [ ] **A-D3-3** DHS-02 through DHS-06 cascade: `DHS_n[y] = DHS-01[y − lag] × size_factor × fx_rate` via `checked_sub` bounds-safe indexing
 - [ ] **A-D3-4** Offering Costs Reimbursement: first-difference closed form (no rolling accumulator), cutoff after Y6
 - [ ] **A-D3-5** G&A ramp: hardcoded Y1–Y2; Y3–Y10 = advisory_fee_total × ramp_pct (20%–55%)
 - [ ] **A-D3-6** IS: Gross Income → Referral Fees → WPI compensation agreement → G&A → Total OpEx → EBITDA → Taxes (27%) → Earnings
@@ -3503,15 +3503,15 @@ cell-by-cell. The following findings are authoritative for the Rust engine imple
 
 ### 15a. DHS cascade — the core derivation chain
 
-DHS1 (Professional Centres Canada LP, C$250M) is the seed fund; every other direct-hold solution is a FX/size/lag transform of it.
-DHS1 itself derives from PCLP1 (`INPUT_PCLP 1_250M` tab = mirror of the PCLP1 workbook):
+DHS-01 (Professional Centres Canada LP, C$250M) is the seed fund; every other direct-hold solution is a FX/size/lag transform of it.
+DHS-01 itself derives from PCLP1 (`INPUT_PCLP 1_250M` tab = mirror of the PCLP1 workbook):
 - `advisory_fee_DHS1[y]` = PCLP1 row 63 × deployment_ramp[y]
 - `distributions_DHS1[y]` = PCLP1 row 120 × 0.10 (WCP holds 10% of PCLP1)
 - `nav_DHS1[y]` = PCLP1 row 114 × 0.10 (row 114 = Asset_Value − Debt, total not per-unit)
 
-Derivation for DHS2–DHS6: `DHS_n[y] = DHS1[y − launch_lag_n] × size_factor_n × fx_rate_n`
+Derivation for DHS-02 through DHS-06: `DHS_n[y] = DHS-01[y − launch_lag_n] × size_factor_n × fx_rate_n`
 
-The lag means DHS2 in Y2 pulls DHS1's Y1 value — each direct-hold solution effectively re-runs DHS1's 3-year
+The lag means DHS-02 in Y2 pulls DHS-01's Y1 value — each direct-hold solution effectively re-runs DHS-01's 3-year
 deployment ramp from its own launch year. Out-of-bounds (pre-launch): array index = 0.
 
 ### 15b. Advisory fee deployment ramp — economic basis
