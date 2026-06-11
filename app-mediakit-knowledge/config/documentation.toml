@@ -14,7 +14,7 @@ bind      = "127.0.0.1:9090"
 state_dir = "/var/lib/local-knowledge/state"
 
 [[mount]]
-path          = "/srv/foundry/clones/project-knowledge/media-knowledge-documentation"
+path          = "/srv/foundry/clones/project-editorial/media-knowledge-documentation"
 role          = "primary"
 blueprint_set = ["TOPIC", "GUIDE"]
 
