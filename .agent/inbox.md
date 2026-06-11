@@ -134,7 +134,7 @@ to: sandbox@mathew
 re: JOURNAL distribution relay — J2 trustworthy systems + J5 orchestration; you are lead author on both
 created: 2026-05-29T00:00:00Z
 priority: high
-status: pending
+status: contaminated
 msg-id: command-20260529-journal-relay-mathew-j2-j5
 relayed-from: project-editorial-20260528-j2-command
 ---
