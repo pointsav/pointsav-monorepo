@@ -24,11 +24,10 @@ The browser-in-the-loop UX batch (HEAD `c5448dfb`) shipped the *visible* surface
 Inter/Source-Serif, home, 3-col article shell + TOC-drawer fix, M1 tap-popovers, Cmd+K, per-brand
 accent fix. The items below were consciously scoped OUT and remain open. Grouped by owner.
 
-### Engine — Phase 0 federation landed ADDITIVE only (not yet load-bearing)
-- [ ] **Mounts not adopted engine-wide.** `src/mounts.rs` exists + tested, but `AppState` still
-      carries `{content_dir, guide_dir, guide_dir_2}`. The `{mounts: Vec<Mount>}` refactor across
-      `serve()`, the ~10 render call sites and the chrome fns was NOT done — `knowledge.toml` parses
-      but is not the live source of truth. `link_roots()` is the only adopted piece.
+### Engine — Phase 0 federation (partially complete)
+- [x] **Mounts adopted engine-wide.** `AppState.mounts: Vec<Mount>` replaces old flat fields;
+      `primary_path()` + `link_roots()` wired; all render call sites use `state.link_roots()`;
+      `knowledge.toml` is the live source of truth for all 3 instances (deployed 2026-06-11).
 - [ ] **Blueprints validate but don't drive rendering.** `src/blueprints.rs` registry + `check`
       validation work; the `relates_to` rails (TOPIC "How-to guides" ↔ GUIDE "Background concepts")
       are NOT wired into the page render. No blueprint-driven section routing yet.
@@ -70,8 +69,7 @@ accent fix. The items below were consciously scoped OUT and remain open. Grouped
       `DESIGN-docs-sidenav-component` → commit to `pointsav-design-system`.
 
 ### Command Session — operational / governance
-- [ ] **Promote + deploy HEAD `c5448dfb`** (whole UX batch) — `promote.sh` + `deploy-binary.sh`
-      (flagged in outbox `ux-batch-deploy`). Nothing is live until this runs.
+- [x] **Promote + deploy HEAD `c5448dfb`** — Phase 9 deployed 2026-06-11; all 3 instances live.
 - [ ] **Metadata contamination** in this archive: top-level `NEXT.md`=project-gis,
       `MEMORY.md`=project-infrastructure, `manifest.md`=project-bim, ~43 contaminated briefs —
       cross-archive reconciliation.
@@ -83,8 +81,7 @@ accent fix. The items below were consciously scoped OUT and remain open. Grouped
 - [ ] **Stale `.git/index.lock` sweep** across archives (from the earlier crash).
 
 ### Test
-- [ ] **`wiki_page_renders_navigation_portlet`** — the 1 failing test; stale-chrome, needs updating
-      for the new chrome markup (pre-existing; not introduced by this batch).
+- [x] **`wiki_page_renders_navigation_portlet`** — passes (128/128 lib tests green 2026-06-11).
 
 > Phase backlog below (7E…8) is the pre-consolidation record; the master brief's §14 is the
 > current plan. Older entries retained for history.
