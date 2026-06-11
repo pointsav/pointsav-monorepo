@@ -63,6 +63,7 @@ WAIT_READY=0       # 0 = no wait, >0 = poll seconds before exiting
 AUTO_SNAPSHOT=false
 RETRY_CYCLES=1
 RETRY_WAIT=300
+RETRY_UNTIL_EPOCH=0   # 0 = disabled; >0 = Unix epoch deadline, exit before this
 RUNTIME_SECS=0     # 0 = no auto-stop; >0 = stop VM this many seconds after ready
 WEIGHTS_GCS_BUCKET="${SLM_YOYO_WEIGHTS_GCS_BUCKET:-woodfine-node-gcp-free-foundry-substrate}"
 while [[ $# -gt 0 ]]; do
@@ -72,6 +73,7 @@ while [[ $# -gt 0 ]]; do
         --auto-snapshot)        AUTO_SNAPSHOT=true; shift ;;
         --retry-cycles=*)       RETRY_CYCLES="${1#*=}"; shift ;;
         --retry-wait-seconds=*) RETRY_WAIT="${1#*=}"; shift ;;
+        --retry-until-epoch=*)  RETRY_UNTIL_EPOCH="${1#*=}"; shift ;;
         --runtime=*)
             _rt="${1#*=}"
             if   [[ "${_rt}" =~ ^([0-9]+)h$ ]]; then RUNTIME_SECS=$(( ${BASH_REMATCH[1]} * 3600 ))
@@ -99,18 +101,22 @@ log() {
     fi
 }
 
-# Interruptible sleep: checks kill switch every 30s so the retry loop
-# can be stopped within half a minute if the operator activates the switch.
+# Interruptible sleep: checks kill switch every 30s. If deadline epoch is passed as
+# $2 (>0), returns 1 when deadline is reached so caller can exit before timer fires.
 kill_switch_aware_sleep() {
-    local total="$1" elapsed=0
+    local total="$1" deadline="${2:-0}" elapsed=0
     while [[ "${elapsed}" -lt "${total}" ]]; do
         if [[ -e "${KILL_SWITCH}" ]]; then
             log "KILL SWITCH ACTIVE (${KILL_SWITCH}) — aborting during sleep."
             exit 0
         fi
+        if [[ "${deadline}" -gt 0 ]] && [[ "$(date +%s)" -ge "${deadline}" ]]; then
+            return 1
+        fi
         sleep 30
         elapsed=$(( elapsed + 30 ))
     done
+    return 0
 }
 
 # UTC offsets for L4-capable GCP zones (integer hours; DST ignored — 1h precision
@@ -453,19 +459,26 @@ attempt_start_once() {
 # Main — retry-cycle loop wraps Mode 1 + Mode 2; then optional wait-ready + snapshot
 # ─────────────────────────────────────────────────────────────────────────────
 
-log "Session start. instance=${INSTANCE} primary_zone=${PRIMARY_ZONE} retry_cycles=${RETRY_CYCLES} retry_wait=${RETRY_WAIT}s wait_ready=${WAIT_READY}s auto_snapshot=${AUTO_SNAPSHOT}"
+log "Session start. instance=${INSTANCE} primary_zone=${PRIMARY_ZONE} retry_cycles=${RETRY_CYCLES} retry_wait=${RETRY_WAIT}s wait_ready=${WAIT_READY}s auto_snapshot=${AUTO_SNAPSHOT} retry_until_epoch=${RETRY_UNTIL_EPOCH}"
 
 STARTED_ZONE=""
 _SCRIPT_START=$(date +%s)
 cycle=0
-while [[ "${cycle}" -lt "${RETRY_CYCLES}" ]]; do
+while [[ "${RETRY_UNTIL_EPOCH}" -gt 0 ]] || [[ "${cycle}" -lt "${RETRY_CYCLES}" ]]; do
     if [[ -e "${KILL_SWITCH}" ]]; then
         log "KILL SWITCH ACTIVE (${KILL_SWITCH}) — aborting retry loop."
         exit 0
     fi
+    if [[ "${RETRY_UNTIL_EPOCH}" -gt 0 ]] && [[ "$(date +%s)" -ge "${RETRY_UNTIL_EPOCH}" ]]; then
+        log "[RETRY:DEADLINE] Approaching systemd timer (epoch ${RETRY_UNTIL_EPOCH}) — exiting before it fires. VM not started."
+        exit 3
+    fi
     if [[ "${cycle}" -gt 0 ]]; then
-        log "Stockout retry cycle ${cycle}/${RETRY_CYCLES} — sleeping ${RETRY_WAIT}s before next attempt..."
-        kill_switch_aware_sleep "${RETRY_WAIT}"
+        log "Stockout retry cycle ${cycle} — sleeping ${RETRY_WAIT}s before next attempt..."
+        if ! kill_switch_aware_sleep "${RETRY_WAIT}" "${RETRY_UNTIL_EPOCH}"; then
+            log "[RETRY:DEADLINE] Timer deadline reached mid-sleep — exiting before timer fires. VM not started."
+            exit 3
+        fi
     fi
 
     attempt_start_once
