@@ -1,0 +1,19 @@
+#!/bin/sh
+#
+# PROVIDE: doorman
+# REQUIRE: NETWORKING system_ledger
+# KEYWORD: shutdown
+#
+# Add the following to /etc/rc.conf to enable:
+#   doorman=YES
+
+. /etc/rc.subr
+
+name="doorman"
+rcvar=$name
+command="/usr/bin/slm-doorman-server"
+command_args=""
+pidfile="/var/run/doorman.pid"
+
+load_rc_config $name
+run_rc_command "$1"

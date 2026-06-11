@@ -1,5 +1,13 @@
 [workspace]
 resolver = "2"
+# system-core, system-ledger, system-ledger-proto are standalone workspaces
+# (own [workspace] + Cargo.lock). Exclude them so path deps from
+# system-ledger-server do not trigger "multiple workspace roots" errors.
+exclude = [
+    "system-core",
+    "system-ledger",
+    "system-ledger-proto",
+]
 members = [
     "service-people",
     "service-content",
@@ -39,8 +47,12 @@ members = [
     "app-mediakit-knowledge",
     # Design system browser (port 9094)
     "app-privategit-design",
-    # Extraction pipeline
-    "service-extraction",
+    # Capability Ledger transport shell (compat bottom: NetBSD + seL4)
+    "system-ledger-server",
+    # NetBSD 10.1 compat-bottom substrate shim
+    "system-substrate-netbsd",
+    # Guest OS image builders (NetBSD 10.1 compat bottom)
+    "os-totebox",
 ]
 
 [profile.dev]

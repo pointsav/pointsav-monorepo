@@ -1,0 +1,30 @@
+[package]
+name = "system-ledger-proto"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.73"
+description = "Transport-agnostic wire types for Capability Ledger consultation. ConsultRequest and ConsultResponse are serialized via postcard over a Unix socket (NetBSD compat bottom) or PPC shared-memory ring (seL4 native bottom) — same bytes, different carrier."
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/pointsav/pointsav-monorepo"
+keywords = ["capability", "ledger", "postcard", "no_std", "substrate"]
+categories = ["cryptography", "data-structures"]
+
+[workspace]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[features]
+default = ["std"]
+std   = ["postcard/use-std", "serde/std", "system-core/std"]
+alloc = ["postcard/alloc", "serde/alloc", "system-core/alloc"]
+sel4  = ["alloc", "system-core/sel4"]
+
+[dependencies]
+postcard    = { version = "1", default-features = false }
+serde       = { version = "1", default-features = false, features = ["derive"] }
+system-core = { path = "../system-core", default-features = false }

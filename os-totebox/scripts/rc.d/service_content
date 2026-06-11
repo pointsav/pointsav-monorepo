@@ -1,0 +1,19 @@
+#!/bin/sh
+#
+# PROVIDE: service_content
+# REQUIRE: NETWORKING doorman
+# KEYWORD: shutdown
+#
+# Add the following to /etc/rc.conf to enable:
+#   service_content=YES
+
+. /etc/rc.subr
+
+name="service_content"
+rcvar=$name
+command="/usr/bin/service-content"
+command_args=""
+pidfile="/var/run/service-content.pid"
+
+load_rc_config $name
+run_rc_command "$1"

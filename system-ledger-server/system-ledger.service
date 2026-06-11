@@ -1,0 +1,12 @@
+[Unit]
+Description=Capability Ledger Server
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/system-ledger-server
+Restart=on-failure
+RuntimeDirectory=system-ledger
+Environment=LEDGER_SOCK=/run/system-ledger/ledger.sock
+
+[Install]
+WantedBy=multi-user.target
