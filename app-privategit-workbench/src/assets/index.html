@@ -548,6 +548,23 @@ header .tag {
 #pdf-dialog-cancel { background: #3a3a3a; color: #ccc; }
 #pdf-dialog-cancel:hover { background: #4a4a4a; }
 .pdf-dialog-status { font-size: 11px; color: #89d185; margin-top: 6px; min-height: 14px; }
+
+/* ── Toast notification ────────────────────────────────────────────── */
+#wb-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #323232; color: #e8e8e8; border-radius: 4px;
+  padding: 8px 16px; font-size: 13px; display: flex; align-items: center;
+  gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.5);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 9999;
+}
+#wb-toast.show { opacity: 1; pointer-events: auto; }
+.wb-toast-action {
+  background: none; border: 1px solid #aaa; color: #e8e8e8;
+  border-radius: 3px; padding: 2px 10px; cursor: pointer; font-size: 12px;
+}
+.wb-toast-action:hover { background: #444; }
 </style>
 </head>
 <body>
@@ -757,6 +774,28 @@ let sidebarPinnedWidth = parseInt(sessionStorage.getItem('wb-sidebar-w') || '300
 
 // Hidden-files toggle (persists across reloads)
 let showHidden = localStorage.getItem('wb-show-hidden') === '1';
+
+// Last undo function — set by showWbToast when an undoFn is provided; cleared on dismiss.
+let lastUndoFn = null;
+
+function showWbToast(msg, undoFn) {
+  const el = document.getElementById('wb-toast');
+  el.innerHTML = '';
+  const text = document.createElement('span');
+  text.textContent = msg;
+  el.appendChild(text);
+  lastUndoFn = undoFn || null;
+  if (undoFn) {
+    const btn = document.createElement('button');
+    btn.className = 'wb-toast-action';
+    btn.textContent = 'Undo';
+    btn.onclick = () => { el.classList.remove('show'); lastUndoFn = null; undoFn(); };
+    el.appendChild(btn);
+  }
+  el.classList.add('show');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.classList.remove('show'); lastUndoFn = null; }, undoFn ? 6000 : 2200);
+}
 
 // ── File type routing ─────────────────────────────────────────────────────────
 const IFRAME_EXTS = new Set(['html','htm','pdf']);
@@ -2228,6 +2267,16 @@ window.addEventListener('keydown', e => {
       e.preventDefault(); showOutline();
     }
   }
+  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'z') {
+    const isEditing = document.activeElement === document.getElementById('editor-textarea');
+    if (!isEditing && lastUndoFn) {
+      e.preventDefault();
+      const fn = lastUndoFn;
+      lastUndoFn = null;
+      document.getElementById('wb-toast').classList.remove('show');
+      fn();
+    }
+  }
 });
 
 // ── Mark a tree item active ───────────────────────────────────────────────────
@@ -2972,10 +3021,9 @@ async function createFileInDir(dirItem) {
 }
 
 async function deleteFileByPath(path, name, treeItem) {
-  if (!confirm('Delete "' + name + '"?\nThis cannot be undone.')) return;
   const apiPath = path.replace(/^\//, '');
   try {
-    const res = await fetch('/_api/edit/delete?path=' + encodeURIComponent(apiPath), { method: 'POST' });
+    const res = await fetch('/_api/edit/trash?path=' + encodeURIComponent(apiPath), { method: 'POST' });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) { alert(data.error || 'Delete failed'); return; }
     // Close any open tab for this file
@@ -3008,14 +3056,39 @@ async function deleteFileByPath(path, name, treeItem) {
     const node = treeItem.closest('.tree-node');
     if (node) node.remove();
     else treeItem.remove();
+    // Offer undo via toast
+    const trashKey = data.trash_key;
+    const origPath = data.original_path;
+    showWbToast('Deleted "' + name + '"', async () => {
+      const r = await fetch(
+        '/_api/edit/restore?trash_key=' + encodeURIComponent(trashKey) +
+        '&original_path=' + encodeURIComponent(origPath),
+        { method: 'POST' }
+      );
+      if (!r.ok) { const d = await r.json().catch(() => ({})); alert(d.error || 'Undo failed'); return; }
+      // Reload the parent folder in the tree
+      const parentPath = '/' + origPath.split('/').slice(0, -1).join('/');
+      const parentItem = document.querySelector(`.tree-item[data-api="${parentPath.replace(/^\//, '') + '/'}"], .tree-item[data-browse="${parentPath}/"]`);
+      if (parentItem) {
+        const childrenEl = parentItem.closest('.tree-node')?.querySelector('.tree-children');
+        if (childrenEl) {
+          parentItem.dataset.loaded = '';
+          childrenEl.innerHTML = '';
+          childrenEl.classList.remove('collapsed');
+          parentItem.classList.add('open');
+          const depth = Math.round((parseInt(parentItem.style.paddingLeft) - 14) / 14) + 1;
+          await loadChildren(parentItem, childrenEl, depth);
+        }
+      }
+      showWbToast('Restored "' + name + '"');
+    });
   } catch(e) { alert('Delete failed: ' + e.message); }
 }
 
 async function deleteFolderByPath(browsePath, name, treeItem) {
-  if (!confirm('Delete folder "' + name + '" and all its contents?\nThis cannot be undone.')) return;
   const apiPath = browsePath.replace(/^\//, '').replace(/\/$/, '');
   try {
-    const res = await fetch('/_api/edit/delete?path=' + encodeURIComponent(apiPath), { method: 'POST' });
+    const res = await fetch('/_api/edit/trash?path=' + encodeURIComponent(apiPath), { method: 'POST' });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) { alert(data.error || 'Delete failed'); return; }
     // Close any tabs whose paths start with this folder
@@ -3049,6 +3122,31 @@ async function deleteFolderByPath(browsePath, name, treeItem) {
     const node = treeItem.closest('.tree-node');
     if (node) node.remove();
     else treeItem.remove();
+    // Offer undo via toast
+    const trashKey = data.trash_key;
+    const origPath = data.original_path;
+    showWbToast('Deleted folder "' + name + '"', async () => {
+      const r = await fetch(
+        '/_api/edit/restore?trash_key=' + encodeURIComponent(trashKey) +
+        '&original_path=' + encodeURIComponent(origPath),
+        { method: 'POST' }
+      );
+      if (!r.ok) { const d = await r.json().catch(() => ({})); alert(d.error || 'Undo failed'); return; }
+      const parentPath = '/' + origPath.split('/').slice(0, -1).join('/');
+      const parentItem = document.querySelector(`.tree-item[data-api="${parentPath.replace(/^\//, '') + '/'}"], .tree-item[data-browse="${parentPath}/"]`);
+      if (parentItem) {
+        const childrenEl = parentItem.closest('.tree-node')?.querySelector('.tree-children');
+        if (childrenEl) {
+          parentItem.dataset.loaded = '';
+          childrenEl.innerHTML = '';
+          childrenEl.classList.remove('collapsed');
+          parentItem.classList.add('open');
+          const depth = Math.round((parseInt(parentItem.style.paddingLeft) - 14) / 14) + 1;
+          await loadChildren(parentItem, childrenEl, depth);
+        }
+      }
+      showWbToast('Restored folder "' + name + '"');
+    });
   } catch(e) { alert('Delete failed: ' + e.message); }
 }
 
@@ -3090,6 +3188,34 @@ async function renameByPath(path, name) {
       renderTabBar();
     }
     patchTreeItemAfterRename(path, '/' + data.new_path, data.new_name);
+    // Offer undo: rename back to original name
+    const newApiPath = data.new_path;
+    const newName = data.new_name;
+    showWbToast('Renamed to "' + newName + '"', async () => {
+      const r = await fetch(
+        '/_api/edit/rename?from=' + encodeURIComponent(newApiPath) +
+        '&to=' + encodeURIComponent(name),
+        { method: 'POST' }
+      );
+      const rd = await r.json().catch(() => ({}));
+      if (!r.ok) { alert(rd.error || 'Undo rename failed'); return; }
+      if (currentPath === '/' + newApiPath) {
+        currentPath = '/' + rd.new_path;
+        editorPath = rd.new_path;
+        if (activeTabIdx >= 0) {
+          tabs[activeTabIdx].path = currentPath;
+          tabs[activeTabIdx].name = rd.new_name;
+          tabs[activeTabIdx].editorPath = rd.new_path;
+        }
+        sessionStorage.setItem('wb-path', currentPath);
+        sessionStorage.setItem('wb-name', rd.new_name);
+        updateBar(rd.new_name, currentPath);
+        addRenameDuplicateButtons();
+        renderTabBar();
+      }
+      patchTreeItemAfterRename('/' + newApiPath, '/' + rd.new_path, rd.new_name);
+      showWbToast('Renamed back to "' + name + '"');
+    });
   } catch(e) { alert('Rename failed: ' + e.message); }
 }
 
@@ -3722,6 +3848,8 @@ searchInput.addEventListener('keydown', e => {
   }
 })();
 </script>
+
+<div id="wb-toast"></div>
 
 </body>
 </html>
