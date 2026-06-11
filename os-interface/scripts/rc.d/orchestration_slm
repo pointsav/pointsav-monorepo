@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# PROVIDE: orchestration_slm
+# REQUIRE: NETWORKING
+# KEYWORD: shutdown
+#
+# app-orchestration-slm — commercial Yo-Yo SLM broker (:9180).
+#
+# Add the following to /etc/rc.conf to enable:
+#   orchestration_slm=YES
+
+. /etc/rc.subr
+
+name="orchestration_slm"
+rcvar=$name
+command="/usr/bin/orchestration-slm-server"
+command_args=""
+pidfile="/var/run/orchestration-slm.pid"
+
+load_rc_config $name
+run_rc_command "$1"
