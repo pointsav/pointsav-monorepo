@@ -836,6 +836,7 @@ KILL SWITCH
 | `start-yoyo.sh` | `service-slm/scripts/` | **HARDENED 2026-06-11** | KILL_SWITCH var + kill_switch_aware_sleep() (30s poll); kill-switch check at retry-loop top; post-start race fix (stop VM if kill switch activated while gcloud start in-flight) |
 | `local-yoyo-daily.service` | `/etc/systemd/system/` | **HARDENED 2026-06-11** | --max-minutes 120 (2hr budget); TimeoutStartSec=7800 (hard kill for oneshot — RuntimeMaxSec has no effect); KillMode=control-group; TimeoutStopSec=120; ExecStopPost=/snap/bin/gcloud stop (independent kill authority — fires on OOM/hang/SIGKILL) |
 | `yoyo-daily-cycle.sh` | `/srv/foundry/bin/` | **HARDENED 2026-06-11** | Phase 4 curl --max-time 5 (lines 132,150,179); Phase 6 SSH: timeout+ServerAliveInterval=30/CountMax=3; Phase 8: exit 3 + final gcloud stop on non-TERMINATED; pre-gate check: 90% enrichment when training gates skip |
+| Logging (all 3 scripts) | `start-yoyo.sh`, `stop-yoyo.sh`, `yoyo-daily-cycle.sh` | **ADDED 2026-06-11 session-6** | LIFECYCLE_LOG → `/srv/foundry/data/yoyo-lifecycle.log` (was /var/log/ root:root unwritable); `[PHASE:START elapsed=]`; `[RATE entities=+N/60s pairs=+N/60s]`; `[TRAIN:STEP step= loss= epoch=]`; `[VM:START/READY/STOP online_secs= cost_est=]`; `[RETRY:ATTEMPT cycle= elapsed= result=]`; `[STOP:SSH type=CLEAN\|SSH_CONN_FAIL\|SSH_OTHER]` |
 
 ---
 
