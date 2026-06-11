@@ -9,7 +9,7 @@ Last updated: 2026-06-11 [Jennifer Woodfine / claude-code]
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Architecture: VM-* naming mirrors the os-* product lineup exactly. See `BRIEF-VM-ARCHITECTURE.md`.
 
-Last updated: 2026-06-11 (session 18 — contamination cleanup complete: 23 GIS drafts removed, artifact-registry.md replaced with project-system-native, 3 GIS memory files removed, BRIEF-substrate-phd-thesis picked up, inbox cleared, Stage 6 pending notice sent to Command).
+Last updated: 2026-06-11 (session 19 — Phase 0 seL4 no_std port complete: system-core + system-ledger build on x86_64-unknown-none; commit ba4e1de8 Version 1.1.0; Stage 6 pending notice sent to Command).
 
 ---
 
@@ -169,6 +169,40 @@ Last updated: 2026-06-12 (close-out) [totebox@claude-code]
 - [ ] **Untracked in sub-clone** — `app-orchestration-gis/.gitignore` + `app-orchestration-gis/SCORING-METHODOLOGY.md`
   and 27+ Python/shell scripts. Decide: commit or gitignore.
 
+## Capability Ledger Substrate — seL4 porting
+
+**Phase 0 — no_std port — COMPLETE 2026-06-11 (session 19)**
+
+Commit `ba4e1de8` in sub-clone `pointsav-monorepo`, Version 1.1.0.
+13 files across `system-core` and `system-ledger`. Both crates build
+clean on `x86_64-unknown-none --features sel4`. All tests pass:
+62+1 (system-core) + 47 (system-ledger). All 12 bench functions pass
+under `--test` mode.
+
+- [x] `system-core`: `sel4`/`alloc` feature gates; ciborium CBOR hash; no_std headers
+- [x] `system-ledger`: `sel4` feature; BTreeSet/BTreeMap aliases; `tempfile` optional
+- [x] `system-ledger/src/witness.rs`: std shellout preserved + no_std W1 in-process Ed25519 verifier
+- [x] `.cargo/config.toml`: fiat backend for curve25519-dalek on `x86_64-unknown-none`
+- [x] `sha2/force-soft` in both `sel4` features (bypasses SHA-NI intrinsics on bare-metal)
+- [ ] **Stage 6 pending** — Command Session to promote sub-clone commit `ba4e1de8` (Version 1.1.0)
+
+**Phase 1 — seL4 PD binary (blocked on Microkit SDK download)**
+
+Prerequisite: download Microkit SDK v2.1.0 or v2.2.0 from seL4 Foundation
+GitHub (`seL4/microkit` releases). Makefile will use `SDK_PATH ?= $(error ...)`.
+
+- [ ] **Download Microkit SDK** — operator action; set `SDK_PATH` env var
+- [ ] `system-substrate/src/lib.rs` — define `CapabilityInvoker` trait + `VerdictWire` wire type
+- [ ] New `system-ledger-pd/` — thin PD binary; `init()`/`protected()`/`notified()`;
+  `linked_list_allocator` 512 KiB arena; `ledger.system` XML; `Makefile` with `SDK_PATH ?=`
+- [ ] New `system-substrate-netbsd/` — scaffold crate for compat bottom (parallel to `system-substrate-freebsd`)
+- [ ] Add both new crates to root `Cargo.toml` workspace members
+- [ ] Fix `system-security/Makefile` — `SDK_PATH :=` (hardcoded) → `SDK_PATH ?= $(error ...)`
+- [ ] Minimum viable milestone: 2-PD system boots; `client_pd` → `system_ledger` PPC channel 1;
+  `VERDICT: Allow` via `microkit_dbg_puts`
+
+---
+
 ## Completed this cluster (archived for reference)
 
 ```bash
@@ -271,3 +305,19 @@ Relay message in outbox: `project-marketing-20260608-contamination-relay` [2026-
 - [x] JSON-LD Organization/SoftwareApplication structured data added to both sites [2026-06-08]
 - [x] `<lastmod>` dates added to all sitemap URLs [2026-06-08]
 - [x] TLS (certbot) confirmed live on both domains [2026-06-08]
+- [x] Sweep project-intelligence contamination from archive (session 1)
+- [x] Fix session-start.md, manifest.md, NEXT.md, memory init (session 1)
+- [x] Stage sovereign-mesh.md + .es.md drafts (session 2)
+- [x] Fix os-infrastructure/Makefile + forge_iso.sh paths (session 2)
+- [x] Gitignore build artifacts in os-infrastructure/ and os-network-admin/ (session 2)
+- [x] Create app-infrastructure-onprem/-leased/-cloud/ Reserved-folder scaffolds (session 2)
+- [x] PPN architecture: BRIEF-PPN-ARCHITECTURE.md (385 lines, 57 citations) (session 7)
+- [x] vm-prove.sh Alpine TCG proof: virtio_balloon confirmed (session 7)
+- [x] service-ppn-pairing deployed :9205 (session 13-14)
+- [x] service-vm-fleet + service-vm-host deployed on GCP (session 13-14)
+- [x] vm_spawn module + QEMU monitor Phase 2 (session 13-14)
+- [x] PROSE-RESEARCH v0.2 editorial revision (session 15)
+- [x] service-ppn-pairing normalize bug fix + 4 integration tests (session 15)
+- [x] service-ppn-pairing fixed binary deployed to :9205 (session 16)
+- [x] system-core + system-ledger no_std port — Phase 0 seL4 substrate; 13 files; W1 witness verifier;
+  curve25519-dalek fiat backend; sha2/force-soft; ciborium CBOR; Version 1.1.0 (session 19)
