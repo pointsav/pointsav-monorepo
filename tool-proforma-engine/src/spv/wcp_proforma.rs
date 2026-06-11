@@ -1,23 +1,23 @@
 // WCP Inc. (Woodfine Capital Projects Inc.) — self-generating proforma engine module.
 //
-// Implements BRIEF v0.15.6 §5c from declared Rust constants. No Excel read.
-// Consumes PCLP 1 forecast as LP1 source (per BRIEF §1088-1091).
+// Implements declared Rust constants. No Excel read.
+// Consumes PCLP 1 forecast as DHS1 source.
 //
-// LP fund derivation (BRIEF §1093-1094):
-//   LP_n[y] = LP1[y - lag_n] × size_factor × fx_rate
+// DHS fund derivation:
+//   DHS_n[y] = DHS1[y - lag_n] × size_factor × fx_rate
 //
-// Six LPs (LP1 = WPC Canada seed; LP2-LP6 derived):
-//   LP1=WPC Canada    $250M CAD Y1   1× CAD/CAD/CAD
-//   LP2=WPC US        $500M USD Y2   2× USD/USD/USD
-//   LP3=WPC Spain     EUR$250M Y2    1× EUR/EUR/EUR
-//   LP4=WPC Mexico    $250M USD Y3   1× USD/USD/USD
-//   LP5=WPC VW        $250M USD Y4   1× USD/EUR/USD ⚠ dist FX anomaly
-//   LP6=WPC PS        $250M USD Y5   1× USD/EUR/USD ⚠ dist FX anomaly
+// Six direct-hold solutions (DHS1 = seed; DHS2-DHS6 derived):
+//   DHS1=Professional Centres Canada LP   (PRO-CA-01-AST) C$250M CAD Y1  1× CAD/CAD/CAD
+//   DHS2=Professional Centres United States LP (PRO-US-02-AST) $500M USD Y2  2× USD/USD/USD
+//   DHS3=Professional Centres Spain SOCIMI    (PRO-ES-03-ADM) EUR$250M Y2  1× EUR/EUR/EUR
+//   DHS4=Professional Centres Mexico FIBRA   (PRO-MX-04-AST) $250M USD Y3  1× USD/USD/USD
+//   DHS5=Vertical Warehouse United States LP  (VWH-US-01-AST) $250M USD Y4  1× USD/USD/USD
+//   DHS6=Parking Structure United States LP   (PKS-US-01-AST) $250M USD Y5  1× USD/USD/USD
 
 use crate::spv::pclp1_proforma::Pclp1Year;
 use serde::Serialize;
 
-// ─── Constants from BRIEF v0.15.6 §5c ────────────────────────────────────────
+// ─── Constants ───────────────────────────────────────────────────────────────
 
 pub const WCP_SHARES_OUTSTANDING: f64 = 10_000_000.0;
 pub const WCP_PRICE_PER_SHARE_Y0: f64 = 20.00;
@@ -29,19 +29,19 @@ pub const WCP_TAX_RATE: f64 = 0.27;
 pub const WCP_PE_MULTIPLE: f64 = 10.72;
 pub const WCP_DIVIDEND_YIELD: f64 = 0.045;
 
-// WCP's beneficial ownership in each LP fund (10% per BRIEF §1075)
+// WCP's beneficial ownership in each DHS fund (10%)
 pub const WCP_LP_BENEFICIAL_OWNERSHIP: f64 = 0.10;
 
-// G&A ramp Y3-Y10 (BRIEF §1114) — advisory_fee_total × ga_ramp[y]
+// G&A ramp Y3-Y10 — advisory_fee_total × ga_ramp[y]
 pub const WCP_GA_RAMP_Y3_Y10: [f64; 8] = [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55];
 
-// Y1-Y2 G&A hardcoded (BRIEF §1112)
+// Y1-Y2 G&A hardcoded
 pub const WCP_GA_NYC_Y1: f64 = 750_000.0;
 pub const WCP_GA_NYC_Y2: f64 = 750_000.0;
 pub const WCP_GA_BERLIN_Y1: f64 = 0.0;
 pub const WCP_GA_BERLIN_Y2: f64 = 250_000.0;
 
-// WPI Consulting Y1-Y2 (BRIEF §1111)
+// WPI compensation agreement Y1-Y2
 pub const WCP_WPI_Y1: f64 = 2_000_000.0;
 pub const WCP_WPI_Y2: f64 = 8_500_000.0;
 
@@ -50,16 +50,16 @@ pub const WCP_WPI_Y2: f64 = 8_500_000.0;
 #[derive(Debug, Clone, Copy)]
 pub struct WcpLpConfig {
     pub name: &'static str,
-    pub launch_year: u32, // First year LP is active
-    pub size_factor: f64, // Multiplier vs LP1
+    pub launch_year: u32, // First year DHS is active
+    pub size_factor: f64, // Multiplier vs DHS1
     pub advisory_fx: f64, // FX rate applied to advisory fee
-    pub dist_fx: f64,     // FX rate applied to distributions (⚠ LP5/LP6 use EUR despite USD fund)
+    pub dist_fx: f64,     // FX rate applied to distributions
     pub nav_fx: f64,      // FX rate applied to NAV
 }
 
 pub const WCP_LPS: [WcpLpConfig; 6] = [
     WcpLpConfig {
-        name: "LP1 — WPC Canada",
+        name: "DHS1 — Professional Centres Canada LP | PRO-CA-01-AST (CAD)",
         launch_year: 1,
         size_factor: 1.0,
         advisory_fx: 1.0,
@@ -67,7 +67,7 @@ pub const WCP_LPS: [WcpLpConfig; 6] = [
         nav_fx: 1.0,
     },
     WcpLpConfig {
-        name: "LP2 — WPC US",
+        name: "DHS2 — Professional Centres United States LP | PRO-US-02-AST (USD)",
         launch_year: 2,
         size_factor: 2.0,
         advisory_fx: WCP_CAD_USD,
@@ -75,7 +75,7 @@ pub const WCP_LPS: [WcpLpConfig; 6] = [
         nav_fx: WCP_CAD_USD,
     },
     WcpLpConfig {
-        name: "LP3 — WPC Spain",
+        name: "DHS3 — Professional Centres Spain SOCIMI | PRO-ES-03-ADM (EUR)",
         launch_year: 2,
         size_factor: 1.0,
         advisory_fx: WCP_CAD_EUR,
@@ -83,7 +83,7 @@ pub const WCP_LPS: [WcpLpConfig; 6] = [
         nav_fx: WCP_CAD_EUR,
     },
     WcpLpConfig {
-        name: "LP4 — WPC Mexico",
+        name: "DHS4 — Professional Centres Mexico FIBRA | PRO-MX-04-AST (USD)",
         launch_year: 3,
         size_factor: 1.0,
         advisory_fx: WCP_CAD_USD,
@@ -91,19 +91,19 @@ pub const WCP_LPS: [WcpLpConfig; 6] = [
         nav_fx: WCP_CAD_USD,
     },
     WcpLpConfig {
-        name: "LP5 — WPC VW",
+        name: "DHS5 — Vertical Warehouse United States LP | VWH-US-01-AST (USD)",
         launch_year: 4,
         size_factor: 1.0,
         advisory_fx: WCP_CAD_USD,
-        dist_fx: WCP_CAD_EUR,
+        dist_fx: WCP_CAD_USD,
         nav_fx: WCP_CAD_USD,
     },
     WcpLpConfig {
-        name: "LP6 — WPC PS",
+        name: "DHS6 — Parking Structure United States LP | PKS-US-01-AST (USD)",
         launch_year: 5,
         size_factor: 1.0,
         advisory_fx: WCP_CAD_USD,
-        dist_fx: WCP_CAD_EUR,
+        dist_fx: WCP_CAD_USD,
         nav_fx: WCP_CAD_USD,
     },
 ];
@@ -454,10 +454,9 @@ pub fn forecast_json(pclp1: &[Pclp1Year]) -> serde_json::Value {
     serde_json::json!({
         "entity": "Woodfine Capital Projects Inc. (WCP)",
         "source": "tool-proforma-engine src/spv/wcp_proforma module",
-        "brief_section": "v0.15.6 §5c",
-        "version": "V1",
-        "generated_at": "2026-06-04",
-        "consumes": "PCLP 1 forecast (LP1 source per BRIEF §1088-1091)",
+        "version": "V2",
+        "generated_at": "2026-06-10",
+        "consumes": "PCLP 1 forecast (DHS1 source)",
         "inputs": {
             "shares_outstanding": WCP_SHARES_OUTSTANDING,
             "price_per_share_y0": WCP_PRICE_PER_SHARE_Y0,
@@ -659,7 +658,7 @@ mod tests {
         let pclp1 = pclp1_proforma::forecast();
         let json = forecast_json(&pclp1);
         assert!(json["entity"].as_str().unwrap().contains("WCP"));
-        assert!(json["brief_section"].as_str().unwrap().contains("5c"));
+        assert!(json["version"].as_str().unwrap().contains("V2"));
         assert!(json["inputs"]["lp_definitions"].is_array());
         assert_eq!(
             json["inputs"]["lp_definitions"].as_array().unwrap().len(),

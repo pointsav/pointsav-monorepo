@@ -67,7 +67,7 @@ const HEAD: &str = r#"<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Woodfine Capital Projects Inc. (WCP) — Proforma V1</title>
+<title>Woodfine Capital Projects Inc. (WCP) — Proforma V2</title>
 <style>
 body{font-family:system-ui,sans-serif;font-size:13px;margin:2rem;color:#111;max-width:1400px}
 h1{font-size:1.25rem;margin-bottom:0.25rem}
@@ -110,16 +110,15 @@ const LNUM_SCRIPT: &str = r#"<script>
 fn header_block(version: &str) -> String {
     format!(
         "<h1>Woodfine Capital Projects Inc. (WCP) — Proforma {version}</h1>\n\
-         <p>Engine-generated proforma from BRIEF v0.15.6 §5c inputs.<br>\n\
-         DRAFT — 2026-06-04 — {version}<br>\n\
-         Consumes PCLP 1 V2 forecast (LP1 source per BRIEF §1088–1091).<br>\n\
+         <p>Engine-generated proforma from declared inputs.<br>\n\
+         DRAFT — 2026-06-10 — {version}<br>\n\
          All amounts CAD — Prepared under IFRS — Forward-looking projections; BCSC continuous-disclosure posture<br>\n\
          Source: tool-proforma-engine <code>wcp_proforma</code> module — engine-canonical</p>\n"
     )
 }
 
 fn bcsc_footer() -> String {
-    "<p class=\"footer\"><strong>Forward-Looking Information — Notice under applicable securities legislation including the British Columbia Securities Commission (BCSC) and NI 51-102.</strong> This document contains forward-looking information. All amounts shown are computed by the tool-proforma-engine from BRIEF v0.15.6 §5c inputs and the PCLP 1 §5b forecast. Actual results may differ materially.</p>\n".to_string()
+    "<p class=\"footer\"><strong>Forward-Looking Information — Notice under applicable securities legislation including the British Columbia Securities Commission (BCSC) and NI 51-102.</strong> This document contains forward-looking information. All amounts shown are computed by the tool-proforma-engine from declared inputs and the DHS1 (Professional Centres Canada LP) forecast. Actual results may differ materially.</p>\n".to_string()
 }
 
 // ─── Section renderers ──────────────────────────────────────────────────────
@@ -128,7 +127,7 @@ fn render_inputs() -> String {
     let mut s = String::new();
     s.push_str("<h2>Capital Structure &amp; Key Inputs</h2>\n");
     s.push_str("<table>\n");
-    s.push_str("<tr><th class=\"lbl\">Parameter</th><th>Value</th><th>BRIEF ref</th></tr>\n");
+    s.push_str("<tr><th class=\"lbl\">Parameter</th><th>Value</th><th>Ref</th></tr>\n");
 
     let rows = [
         (
@@ -173,7 +172,7 @@ fn render_inputs() -> String {
             "§1023",
         ),
         (
-            "LP beneficial ownership (each)",
+            "DHS beneficial ownership (each)",
             fmt_pct(wcp_proforma::WCP_LP_BENEFICIAL_OWNERSHIP),
             "§1075",
         ),
@@ -186,9 +185,9 @@ fn render_inputs() -> String {
     }
     s.push_str("</table>\n");
 
-    s.push_str("<h3>Six LP Funds (Revenue Generator)</h3>\n");
+    s.push_str("<h3>Six Direct-Hold Solutions (Revenue Generator)</h3>\n");
     s.push_str("<table>\n");
-    s.push_str("<tr><th class=\"lbl\">LP</th><th>Launch</th><th>Size factor</th><th>Advisory FX</th><th>Dist FX</th><th>NAV FX</th></tr>\n");
+    s.push_str("<tr><th class=\"lbl\">Direct-Hold Solution</th><th>Launch</th><th>Size factor</th><th>Advisory FX</th><th>Dist FX</th><th>NAV FX</th></tr>\n");
     for lp in wcp_proforma::WCP_LPS.iter() {
         s.push_str(&format!(
             "<tr><td class=\"lbl\">{}</td><td>Y{}</td><td>{:.0}×</td><td>{:.4}</td><td>{:.4}</td><td>{:.4}</td></tr>\n",
@@ -196,7 +195,7 @@ fn render_inputs() -> String {
         ));
     }
     s.push_str("</table>\n");
-    s.push_str("<p class=\"note\">LP1 = PCLP 1 lookthrough. LP2–LP6 derived from LP1 with size factor × FX × launch lag (BRIEF §1093–1094). ⚠ LP5 and LP6 distributions use EUR rate despite being USD funds — BRIEF §1086 documented anomaly; engine replicates exactly.</p>\n");
+    s.push_str("<p class=\"note\">DHS1 = Professional Centres Canada LP look-through. DHS2–DHS6 derived from DHS1 with size factor × FX × launch lag. Distribution FX rates for USD-denominated direct-hold solutions are stated at the CAD-USD rate (revised in V2).</p>\n");
     s
 }
 
@@ -229,9 +228,9 @@ fn data_row_ps<F: Fn(&WcpYear) -> f64>(label: &str, years: &[WcpYear], pick: F) 
 
 fn render_revenue_generator(years: &[WcpYear]) -> String {
     let mut s = String::new();
-    s.push_str("<h2>Revenue Generator — 6 LP Funds (CAD-equivalent)</h2>\n");
+    s.push_str("<h2>Revenue Generator — 6 Direct-Hold Solutions (CAD-equivalent)</h2>\n");
 
-    s.push_str("<h3>Advisory Fees by LP</h3>\n");
+    s.push_str("<h3>Advisory Fees by direct-hold solution</h3>\n");
     s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     for (i, lp) in wcp_proforma::WCP_LPS.iter().enumerate() {
@@ -244,7 +243,7 @@ fn render_revenue_generator(years: &[WcpYear]) -> String {
     }));
     s.push_str("</table>\n");
 
-    s.push_str("<h3>Distributions by LP (WCP's 10% beneficial ownership)</h3>\n");
+    s.push_str("<h3>Distributions by direct-hold solution (WCP's 10% beneficial ownership)</h3>\n");
     s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     for (i, lp) in wcp_proforma::WCP_LPS.iter().enumerate() {
@@ -257,7 +256,7 @@ fn render_revenue_generator(years: &[WcpYear]) -> String {
     }));
     s.push_str("</table>\n");
 
-    s.push_str("<h3>NAV by LP (WCP's 10% beneficial ownership)</h3>\n");
+    s.push_str("<h3>NAV by direct-hold solution (WCP's 10% beneficial ownership)</h3>\n");
     s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     for (i, lp) in wcp_proforma::WCP_LPS.iter().enumerate() {
@@ -282,7 +281,7 @@ fn render_income_statement(years: &[WcpYear]) -> String {
     s.push_str(&data_row("Advisory fees (total)", years, |y| {
         y.advisory_fees_total
     }));
-    s.push_str(&data_row("Distributions (lookthrough)", years, |y| {
+    s.push_str(&data_row("Distributions from DHS holdings", years, |y| {
         y.distributions_total
     }));
     s.push_str(&data_row("Offering costs reimbursement", years, |y| {
@@ -293,7 +292,7 @@ fn render_income_statement(years: &[WcpYear]) -> String {
     s.push_str(&data_row("Referral fees (Y1-Y2)", years, |y| {
         y.referral_fees
     }));
-    s.push_str(&data_row("WPI consulting (Y1-Y2)", years, |y| {
+    s.push_str(&data_row("WPI compensation agreement (Y1-Y2)", years, |y| {
         y.wpi_consulting
     }));
     s.push_str(&data_row("G&amp;A — New York City", years, |y| y.gna_nyc));
@@ -316,7 +315,7 @@ fn render_income_statement(years: &[WcpYear]) -> String {
     s.push_str("</tr>\n");
     s.push_str(&data_row_ps("EPS (per share)", years, |y| y.eps));
     s.push_str("</table>\n");
-    s.push_str("<p class=\"note\">EBITDA is negative in Y1-Y2 (capital raise period; high WPI consulting and referral fees). Becomes positive Y3+ as LP advisory fees ramp. Taxes at 27%; earnings = EBITDA × 0.73 (post-tax).</p>\n");
+    s.push_str("<p class=\"note\">EBITDA is negative in Y1–Y2 (capital raise period; high WPI compensation agreement and referral fees). Projected to turn positive from Y3 as DHS advisory fees increase. Taxes at 27%; earnings = EBITDA × (1 − 0.27).</p>\n");
     s
 }
 
@@ -328,8 +327,8 @@ fn render_book_valuation(years: &[WcpYear]) -> String {
     s.push_str(&data_row("Financing activity", years, |y| {
         y.financing_activity
     }));
-    s.push_str(&data_row("Cumulative FCF", years, |y| y.cumulative_fcf));
-    s.push_str(&data_row("LP ownership (10% of LP NAV)", years, |y| {
+    s.push_str(&data_row("Cumulative Free Cash Flow", years, |y| y.cumulative_fcf));
+    s.push_str(&data_row("Direct-hold solution ownership (10% of DHS NAV)", years, |y| {
         y.lp_ownership_book
     }));
     s.push_str(&data_row("Book value", years, |y| y.book_value));
@@ -337,13 +336,13 @@ fn render_book_valuation(years: &[WcpYear]) -> String {
         y.book_value_per_share
     }));
     s.push_str("</table>\n");
-    s.push_str("<p class=\"note\">Book value = cumulative FCF (financing + earnings) + LP beneficial ownership (10% of each LP's NAV). Per BRIEF §1130.</p>\n");
+    s.push_str("<p class=\"note\">Book value = cumulative free cash flow (financing + earnings) + DHS beneficial ownership (10% of each DHS's NAV).</p>\n");
     s
 }
 
 fn render_four_valuations(years: &[WcpYear]) -> String {
     let mut s = String::new();
-    s.push_str("<h2>Four Valuation Methods (per BRIEF §5c rows 80–102)</h2>\n");
+    s.push_str("<h2>Valuation — Three Methods and Fair Value Composite</h2>\n");
     s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     s.push_str(&data_row("Earnings valuation (× 10.72 P/E)", years, |y| {
@@ -364,12 +363,12 @@ fn render_four_valuations(years: &[WcpYear]) -> String {
         y.book_value_per_share
     }));
     s.push_str(&data_row_ps(
-        "Fair value per share (3-method avg)",
+        "Fair value per share (3-method average)",
         years,
         |y| y.fair_value_per_share,
     ));
     s.push_str("</table>\n");
-    s.push_str("<p class=\"note\">Four valuation methods per BRIEF §5c. Market = Earnings × 10.72 P/E. Dividend = Earnings / 4.5% target yield. Book = cumulative FCF + LP ownership. Fair value = simple average of the three (book + market + dividend per share).</p>\n");
+    s.push_str("<p class=\"note\">Three valuation methods: Earnings valuation (× 10.72 P/E); Dividend valuation (÷ 4.5% target yield); Book value (cumulative free cash flow + DHS ownership). Fair value composite = simple average of the three per-share values.</p>\n");
     s
 }
 
@@ -381,7 +380,7 @@ pub fn render_proforma() -> String {
     let mut s = String::new();
     s.push_str(HEAD);
     s.push_str("<body>\n");
-    s.push_str(&header_block("V1"));
+    s.push_str(&header_block("V2"));
     s.push_str(&render_inputs());
     s.push_str(&render_revenue_generator(&years));
     s.push_str(&render_income_statement(&years));
@@ -398,12 +397,15 @@ pub fn render_summary() -> String {
     let years = wcp_proforma::forecast(&pclp1);
     let y10 = &years[10];
     let mut s = String::new();
-    s.push_str(HEAD);
+    s.push_str(&HEAD.replace(
+        "<title>Woodfine Capital Projects Inc. (WCP) — Proforma V2</title>",
+        "<title>Woodfine Capital Projects Inc. (WCP) — Summary V2</title>",
+    ));
     s.push_str("<body>\n");
-    s.push_str("<h1>Woodfine Capital Projects Inc. (WCP) — Summary V1</h1>\n");
-    s.push_str("<p>Engine-generated summary from BRIEF v0.15.6 §5c.<br>\n");
-    s.push_str("DRAFT — 2026-06-04 — V1<br>\n");
-    s.push_str("Companion: <code>COMPLIANCE_MCorp_2026_06_04_Proforma_WCP_V1.html</code> (full 10-year proforma)<br>\n");
+    s.push_str("<h1>Woodfine Capital Projects Inc. (WCP) — Summary V2</h1>\n");
+    s.push_str("<p>Engine-generated summary from declared inputs.<br>\n");
+    s.push_str("DRAFT — 2026-06-10 — V2<br>\n");
+    s.push_str("Companion: <code>COMPLIANCE_MCorp_2026_06_04_Proforma_WCP_V2.html</code> (full 10-year proforma)<br>\n");
     s.push_str("All amounts CAD — Prepared under IFRS — Forward-looking projections; BCSC continuous-disclosure posture</p>\n");
 
     s.push_str("<h2>Capital Structure</h2>\n");
@@ -448,7 +450,7 @@ pub fn render_summary() -> String {
                         fmt_m(y10.market_valuation), fmt_per_share(y10.market_value_per_share)));
     s.push_str(&format!("<tr><td class=\"lbl\">Y10 Dividend value (Earnings / 4.5%)</td><td>{}</td><td>{}</td></tr>\n",
                         fmt_m(y10.dividend_valuation), fmt_per_share(y10.dividend_value_per_share)));
-    s.push_str(&format!("<tr class=\"total\"><td class=\"lbl\">Y10 Fair value per share (3-method avg)</td><td>—</td><td>{}</td></tr>\n",
+    s.push_str(&format!("<tr class=\"total\"><td class=\"lbl\">Y10 Fair value per share (3-method average)</td><td>—</td><td>{}</td></tr>\n",
                         fmt_per_share(y10.fair_value_per_share)));
     s.push_str("</table>\n");
 
@@ -492,7 +494,7 @@ mod tests {
         assert!(html.contains("Revenue Generator"));
         assert!(html.contains("10-Year Income Statement"));
         assert!(html.contains("Book Valuation"));
-        assert!(html.contains("Four Valuation Methods"));
+        assert!(html.contains("Valuation — Three Methods"));
         assert!(html.ends_with("</body></html>\n"));
     }
 
@@ -500,7 +502,7 @@ mod tests {
     fn summary_well_formed() {
         let html = render_summary();
         assert!(html.starts_with("<!DOCTYPE html>"));
-        assert!(html.contains("Summary V1"));
+        assert!(html.contains("Summary V2"));
         assert!(html.contains("Y10 Endpoint Summary"));
         assert!(html.ends_with("</body></html>\n"));
     }
@@ -509,7 +511,7 @@ mod tests {
     fn json_valid() {
         let json_str = render_json();
         let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
-        assert_eq!(parsed["version"], "V1");
+        assert_eq!(parsed["version"], "V2");
         assert!(parsed["years"].is_array());
     }
 }

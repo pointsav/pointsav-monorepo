@@ -90,6 +90,13 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// WCP V2 — DHS canonical names; institutional terminology pass.
+    /// Emits proforma HTML, summary HTML, JSON with V2 naming.
+    WcpV2 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
     /// Bencal SPV1/SPV2/Management V1 — Self-generating Bencal proformas.
     /// Consumes PCLP 1 V2 + WCP V1 forecasts. Emits 9 files (3 entities × proforma/summary/JSON).
     BencalAllV1 {
@@ -407,6 +414,24 @@ fn main() {
                 Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_WCP_V1.json")),
             );
             eprintln!("wrote 3 WCP V1 files to {}", out_dir.display());
+        }
+        Some(Command::WcpV2 { out_dir }) => {
+            let proforma_html = report::wcp_proforma::render_proforma();
+            let summary_html = report::wcp_proforma::render_summary();
+            let json_dump = report::wcp_proforma::render_json();
+            write_output(
+                &proforma_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_WCP_V2.html")),
+            );
+            write_output(
+                &summary_html,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_WCP_V2.html")),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_WCP_V2.json")),
+            );
+            eprintln!("wrote 3 WCP V2 files to {}", out_dir.display());
         }
         Some(Command::BuildingPortfolioV1 { out_dir }) => {
             // Building Portfolio V1 — v3 D1 dev-classes reformatted with proforma +
