@@ -45,7 +45,7 @@ Single Rust binary. No runtime system dependencies. Apache 2.0.
 | Phase 3 | Search + feeds | Shipped | Tantivy BM25, `/feed.atom`, `/feed.json`, `/sitemap.xml`, `/robots.txt`, `/llms.txt` |
 | Phase 4 | Git sync + MCP | Shipped | `git2`, history/blame/diff, redb wikilink graph, blake3; MCP JSON-RPC 2.0; git smart-HTTP; OpenAPI 3.1 |
 | Phase 5 | Auth + edit review | Shipped (core) | Cookie sessions, argon2id, edit review queue; ACLs/SSO/webhooks deferred (BP5) |
-| Phase 6 | Three-instance split | Gated | Awaits: content-wiki-* GitHub rename + MASTER Doctrine amendment |
+| Phase 6 | Three-instance split | Authorized | Doctrine v0.1.2 §IV.g committed 2026-06-11; check --strict: 248 pages / 0 dead links; wire xtask gate + remove wikilink-unresolved fallback (project-knowledge Totebox) |
 | Phase 7 | MCP federation | Designed | ActivityPub + cross-instance queries |
 | Phase 8 | Token theming | Shipped | DTCG token layout vars + `knowledge.toml` templates |
 | Phase 0 | Federation engine | NEXT MILESTONE | Unblocked; see §4 |
@@ -239,8 +239,7 @@ differentiation can proceed.
 **`tokens.css` / `config/*.toml` deletion intent** — ~~RESOLVED 2026-06-11~~: operator chose
 "delete tokens.css only; keep config/*.toml as templates." Committed at ece90408.
 
-**`check --strict` as pre-promote gate** — Command can wire once project-editorial has triaged
-the 17 dead links + 6 missing-slug guides surfaced by the June 2026 content audit.
+**`check --strict` as pre-promote gate** — CLEARED 2026-06-11: gate passes (248 pages / 0 dead links); project-editorial content is clean. project-knowledge Totebox to wire as xtask gate and remove `wikilink-unresolved` fallback from render.rs.
 
 **Sub-clone rebase** — ~~Resolved 2026-06-10~~. Merge strategy chosen; post-merge tip `ca6ae410` → `8480f68e`; Stage 6 signal updated in outbox. No further action needed.
 
