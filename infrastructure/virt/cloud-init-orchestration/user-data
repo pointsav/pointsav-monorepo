@@ -1,11 +1,36 @@
 #cloud-config
-# VM-Orchestration guest cloud-init — stub.
-# TODO: populate when provision-vm-orchestration.sh is implemented.
-# Reference: infrastructure/virt/cloud-init-mediakit/user-data for the MediaKit pattern.
+# VM-Orchestration guest cloud-init — Phase 1 (Ubuntu 24.04)
+# Stateless multi-archive aggregator hosting app-orchestration-{bim,gis,slm}.
+# See BRIEF-VM-ARCHITECTURE.md §6 "VM-Orchestration Phase 1" for context.
+
 hostname: vm-orchestration
+fqdn: vm-orchestration.local
+manage_etc_hosts: true
+
 users:
   - name: foundry
-    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: [sudo, systemd-journal]
     shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
     ssh_authorized_keys:
-      - "# TODO: insert foundry-vm-key.pub contents here"
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMC1LpWcHrYhlSOrpyqcsOaNfAJ+nwjeMgmamGMzRS4f foundry@vm-orchestration
+
+ssh_pwauth: false
+disable_root: true
+
+# Packages installed manually after SSH is up (avoids long cloud-init block on TCG/SLIRP).
+# Run: sudo apt-get update && sudo apt-get install -y curl ca-certificates socat
+
+runcmd:
+  - mkdir -p /opt/orchestration/bin /opt/orchestration/data /etc/orchestration
+  - chown -R foundry:foundry /opt/orchestration
+  - chmod 755 /opt/orchestration/bin /opt/orchestration/data
+
+final_message: |
+  vm-orchestration cloud-init complete.
+  SSH: ssh -p 10023 -i infrastructure/virt/work/foundry-vm-key foundry@localhost
+  Services:
+    app-orchestration-bim  :9096  (requires service-fs in VM-Totebox at :9100)
+    app-orchestration-gis  :9097
+    app-orchestration-slm  :9180
+  Install binaries via: ./infrastructure/virt/migrate-service-to-vm.sh <service> <port>
