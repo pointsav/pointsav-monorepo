@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+# PROVIDE: system_ledger
+# REQUIRE: NETWORKING
+# KEYWORD: shutdown
+#
+# Add the following to /etc/rc.conf to enable:
+#   system_ledger=YES
+
+. /etc/rc.subr
+
+name="system_ledger"
+rcvar=$name
+command="/usr/bin/system-ledger-server"
+command_args=""
+pidfile="/var/run/system-ledger.pid"
+required_dirs="/run/system-ledger"
+start_precmd="${name}_precmd"
+
+system_ledger_precmd()
+{
+    mkdir -p /run/system-ledger
+}
+
+load_rc_config $name
+run_rc_command "$1"

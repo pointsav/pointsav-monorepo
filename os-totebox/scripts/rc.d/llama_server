@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# PROVIDE: llama_server
+# REQUIRE: NETWORKING
+# KEYWORD: shutdown
+#
+# OLMo 7B inference via llama.cpp server (pkgsrc build).
+# Weights are on the data disk at /data/weights/.
+# Requires the data disk to be mounted and weights transferred before
+# first use — see scripts/provision-data-disk.sh.
+#
+# Add the following to /etc/rc.conf to enable:
+#   llama_server=YES
+
+. /etc/rc.subr
+
+name="llama_server"
+rcvar=$name
+command="/usr/bin/llama-server"
+command_args="--model /data/weights/OLMo-7B-Instruct-Q4_K_M.gguf \
+    --host 127.0.0.1 --port 11434 \
+    --n-gpu-layers 0 \
+    --ctx-size 4096 \
+    --threads 4"
+pidfile="/var/run/llama-server.pid"
+required_files="/data/weights/OLMo-7B-Instruct-Q4_K_M.gguf"
+
+load_rc_config $name
+run_rc_command "$1"
