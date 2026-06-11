@@ -56,6 +56,7 @@ WEIGHTS_DISK="${INSTANCE}-weights"
 # Set this after uploading weights: create-yoyo-snapshot.sh → SLM_YOYO_WEIGHTS_SNAPSHOT
 WEIGHTS_SNAPSHOT="${SLM_YOYO_WEIGHTS_SNAPSHOT:-}"
 LIFECYCLE_LOG="${SLM_YOYO_LIFECYCLE_LOG:-/var/log/yoyo-lifecycle.log}"
+KILL_SWITCH="${SLM_YOYO_KILL_SWITCH:-/srv/foundry/data/yoyo-disabled}"
 
 # ── Flag parsing ─────────────────────────────────────────────────────────────
 WAIT_READY=0       # 0 = no wait, >0 = poll seconds before exiting
@@ -96,6 +97,20 @@ log() {
     if [[ -w "$(dirname "${LIFECYCLE_LOG}")" ]] || [[ -w "${LIFECYCLE_LOG}" ]] 2>/dev/null; then
         echo "${msg}" >> "${LIFECYCLE_LOG}" 2>/dev/null || true
     fi
+}
+
+# Interruptible sleep: checks kill switch every 30s so the retry loop
+# can be stopped within half a minute if the operator activates the switch.
+kill_switch_aware_sleep() {
+    local total="$1" elapsed=0
+    while [[ "${elapsed}" -lt "${total}" ]]; do
+        if [[ -e "${KILL_SWITCH}" ]]; then
+            log "KILL SWITCH ACTIVE (${KILL_SWITCH}) — aborting during sleep."
+            exit 0
+        fi
+        sleep 30
+        elapsed=$(( elapsed + 30 ))
+    done
 }
 
 # UTC offsets for L4-capable GCP zones (integer hours; DST ignored — 1h precision
@@ -443,14 +458,24 @@ log "Session start. instance=${INSTANCE} primary_zone=${PRIMARY_ZONE} retry_cycl
 STARTED_ZONE=""
 cycle=0
 while [[ "${cycle}" -lt "${RETRY_CYCLES}" ]]; do
+    if [[ -e "${KILL_SWITCH}" ]]; then
+        log "KILL SWITCH ACTIVE (${KILL_SWITCH}) — aborting retry loop."
+        exit 0
+    fi
     if [[ "${cycle}" -gt 0 ]]; then
         log "Stockout retry cycle ${cycle}/${RETRY_CYCLES} — sleeping ${RETRY_WAIT}s before next attempt..."
-        sleep "${RETRY_WAIT}"
+        kill_switch_aware_sleep "${RETRY_WAIT}"
     fi
 
     attempt_start_once
     rc=$?
     if [[ "${rc}" -eq 0 ]]; then
+        # Re-check kill switch — may have been activated while gcloud start was in-flight
+        if [[ -e "${KILL_SWITCH}" ]]; then
+            log "KILL SWITCH ACTIVE (${KILL_SWITCH}) — stopping VM that was just started."
+            gcloud compute instances stop "${INSTANCE}" --zone "${STARTED_ZONE:-${PRIMARY_ZONE}}" --quiet || true
+            exit 0
+        fi
         break
     elif [[ "${rc}" -eq 1 ]]; then
         log "Hard failure during start attempt — aborting (exit 1)."
