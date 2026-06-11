@@ -68,6 +68,16 @@ Last updated: 2026-06-09
 - [ ] `token-olive` class (management chart) — may not yet exist in `pointsav-design-system` token
       bundle. Flag for project-design backfill.
 - [x] Node 28 (Woodfine Management Corp.) — updated to `token-base token-green` in JW10 (V4 change, 2026-06-05 commit `739e15e5`). TOKEN_SHAPE in V4 CSV also updated.
+- [x] Alpine Linux TCG proof-of-concept (`vm-prove.sh`) — virtio_balloon confirmed [session 7]
+- [x] `service-ppn-pairing` deployed :9205 [session 13-14]
+- [x] `service-ppn-pairing` normalize bug fix deployed (approve/deny working) [session 16]
+- [ ] **Build + copy `os-network-admin` to Laptop A** — `cargo build --release -p os-network-admin`
+  then `scp target/release/os-network-admin mathew@10.8.0.6:~/bin/`.
+  Run with `PAIRING_SERVER=http://10.8.0.9:9205 ~/bin/os-network-admin`.
+- [x] **`provision-vm-infrastructure-cloud.sh --genesis`** — implemented; ppn_join ceremony; port 9205; --status ✓ 2026-06-11
+- [x] **`provision-vm-infrastructure-onprem.sh`** — implemented; --genesis (Laptop A), --genesis-hub (Laptop B), --join, --status ✓ 2026-06-11
+- [ ] **Fill PLACEHOLDER_* pubkeys** in /etc/wireguard/wg0.conf on each node after running --genesis
+- [ ] **Deferred: os-network-admin ratatui TUI** — keyboard approve/deny; QR; expiry countdown
 
 ---
 
