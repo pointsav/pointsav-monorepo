@@ -35,6 +35,7 @@ Engine-agnostic: all engines (Claude Code, Gemini CLI) read and write here.
 |---|---|
 | domain-map.tsv | Domain-map data (cross-archive) |
 | vocabulary-baseline.tsv | Vocabulary-baseline data (cross-archive) |
+| archive/audit-foundry-wide-2026-05-16.md | Foundry-wide vocabulary/trademark/file-hygiene audit (one-time artifact; archived 2026-06-10) |
 | archive/ | Archived and superseded briefs |
 
 ## Contamination cleanup — 2026-06-08
