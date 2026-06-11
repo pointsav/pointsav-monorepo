@@ -759,7 +759,7 @@ For Phase 1, SSH-direct is the right call. GCS is a Phase 2+ concern.
 > of physical reality. Reconcile against this when something breaks before checking the
 > design sections.
 >
-> **Last updated:** 2026-06-11 (session 5) — mission-critical 2hr shutdown hardening; start-yoyo.sh kill-switch integration; BRIEF §13/§14 updated with Opus + Fable audit findings
+> **Last updated:** 2026-06-11 (session 7) — Opus deep audit; preemption-resilient rewrite with day-budget ledger; idle-monitor DISABLED (race eliminated); AUTONOMOUS_ENABLED training gate
 
 ---
 
@@ -772,27 +772,30 @@ WORKSPACE VM (foundry-workspace, vault-privategit-source-1)
   │     └── Tier B circuit → yoyo-batch (CLOSED when VM running; OPEN when TERMINATED)
   │
   ├── local-content.service          :9081  service-content (LadybugDB entity graph)
-  │     └── enrichment-*.jsonl → feedback dir (continuous write)
+  │     └── enrichment-*.jsonl → feedback dir (continuous write when Tier B is up)
   │
-  ├── local-yoyo-daily.timer   ──────────── 02:30 UTC daily [HARDENED 2026-06-11]
-  │     └── yoyo-daily-cycle.sh             THE single VM lifecycle controller (120-min cap)
-  │           Pre-gate: check training gates → if skip, enrichment gets 90% of budget
-  │           Phase 1:  gcloud instances start yoyo-batch
-  │           Phase 2:  wait llama-server health (~170s)
-  │           Phase 3:  wait Doorman Tier B circuit close
-  │           Phase 4:  enrichment drain (40% or 90% of budget per pre-gate)
-  │           Phase 5:  corpus-threshold.py → training markers
-  │           Phase 6:  LoRA training trigger — 3-gate: markers+ML+approval; SSH wrapped timeout+ServerAlive
-  │           Phase 7:  GCS sync (when SLM_YOYO_WEIGHTS_GCS_BUCKET set — currently OFF)
-  │           Phase 8:  SSH stop llama-server → gcloud instances stop → exit 3 if not TERMINATED
-  │     systemd: RuntimeMaxSec=7800; KillMode=control-group; ExecStopPost=gcloud stop (independent authority)
+  ├── local-yoyo-daily.timer   ──────────── 02:30 UTC daily (once per day is sufficient)
+  │     └── yoyo-daily-cycle.sh             THE single VM lifecycle controller [REWRITTEN 2026-06-11]
+  │           Day-budget ledger: /srv/foundry/data/yoyo-budget/<date>.consumed
+  │           main() outer loop: reads ledger; retries if budget remains; stops when spent
+  │           start_vm_with_retry(): STOCKOUT → ks_sleep(600s) → retry up to 22h; kill-switch aware
+  │           run_stint(budget_secs) → Phases 1–8:
+  │             Phase 1:  start_vm_with_retry (STOCKOUT retry internal)
+  │             Phase 2:  wait llama-server health; anchor ENRICHMENT_END to VM:READY (not stint start)
+  │             Phase 3:  wait Doorman Tier B circuit close
+  │             Phase 4:  enrichment drain + stall/preemption detector (return 8 if VM vanishes)
+  │             Phase 5:  corpus-threshold.py → training markers
+  │             Phase 6:  LoRA training: AUTONOMOUS_ENABLED OR manual tag; daily receipt prevents double-run
+  │             Phase 7:  GCS sync (when SLM_YOYO_WEIGHTS_GCS_BUCKET set)
+  │             Phase 8:  SSH stop llama-server → gcloud stop → debit_seconds(VM-on time)
+  │           Return codes: 0=clean, 7=stall-exit, 8=preempted→main recovers, 9=VM unavailable
+  │     systemd: TimeoutStartSec=7800; KillMode=control-group; ExecStopPost=gcloud stop (sole independent authority)
+  │     env:    YOYO_DAY_BUDGET_MIN=120; YOYO_RETRY_DEADLINE_HOURS=22
   │
-  ├── start-yoyo.sh [HARDENED 2026-06-11] — kill_switch_aware_sleep; race fix post-start
-  ├── stockout-retry loop (on-demand background nohup; 20 cycles × 10min; kill-switch aware)
-  │
-  ├── yoyo-idle-monitor.timer  ──────────── every 5 min
-  │     └── yoyo-idle-monitor.sh            safety backstop: stops yoyo-batch if idle ≥30 min
-  │           targets: yoyo-batch / us-central1-a / 10.128.0.24
+  ├── [DISABLED 2026-06-11] yoyo-idle-monitor.timer — unit files archived to
+  │     /srv/foundry/data/yoyo-idle-monitor-archive/; script retained at bin/yoyo-idle-monitor.sh
+  │     REASON: raced yoyo-daily-cycle.sh Phase 4 (between-batch lull read as idle → VM killed mid-enrichment)
+  │     REPLACED BY: Phase 4 stall detector + ExecStopPost as sole backstop
   │
   └── local-corpus-threshold.timer   ────── MASKED (→ /dev/null)
         was: 02:00 UTC daily corpus check + VM start
@@ -801,16 +804,27 @@ WORKSPACE VM (foundry-workspace, vault-privategit-source-1)
 YOYO-BATCH VM (us-central1-a, g2-standard-4, L4 24GB)
   └── llama-server.service       :8080  OLMo-3-32B-Think (loaded at boot, inference-ready)
         started by: startup-script (systemctl start llama-server.service)
-        stopped by: yoyo-daily-cycle.sh Phase 6 (SSH sudo systemctl stop)
+        stopped by: yoyo-daily-cycle.sh Phase 8 (SSH sudo systemctl stop)
         cost:       ~$0.71/hr running; TERMINATED = $0.00
 
 KILL SWITCH
   file: /srv/foundry/data/yoyo-disabled
-  scope: checked by yoyo-daily-cycle.sh (Phase 0), corpus-threshold.py _start_trainer_vm(),
-         AND start-yoyo.sh retry loop (KILL_SWITCH var + kill_switch_aware_sleep + post-start race fix)
+  scope: checked by main() outer loop, ks_sleep() (30s granularity), and every 10s in Phase 4 loop
   activate:   touch /srv/foundry/data/yoyo-disabled
   deactivate: rm /srv/foundry/data/yoyo-disabled
-  effect:     no gcloud instances start issued from any automated path
+  effect:     VM lifecycle stops within 30s; in-flight stint exits cleanly
+
+DAY-BUDGET LEDGER
+  file: /srv/foundry/data/yoyo-budget/<UTC-date>.consumed  (integer seconds)
+  written: after each stint's VM:STOP (debit_seconds = vm_stop_epoch - vm_start_epoch)
+  reset:   natural (date in filename; new day → new file)
+  safety:  if consumed >= DAY_BUDGET_SECS-300s → exit; no VM started; prevents overspend on retries
+
+TRAINING AUTHORIZATION
+  Autonomous: touch /srv/foundry/data/training-approved/AUTONOMOUS_ENABLED  (set once; persists)
+  Manual:     echo 'supervised' > /srv/foundry/data/training-approved/coding-lora-$(date -u +%Y-%m-%d).tag
+  Receipt:    written to coding-lora-<date>.ran after each training run (SYS-ADR-19 traceability)
+  Double-run guard: receipt checked before Phase 6; today's run skipped if receipt exists
 ```
 
 ---
@@ -819,11 +833,11 @@ KILL SWITCH
 
 | Component | Path | Status | Notes |
 |---|---|---|---|
-| `yoyo-daily-cycle.sh` | `/srv/foundry/bin/` | **DEPLOYED** | 45-min cap; 40/45 split; Phase 6 training trigger; Phase 6 venv path fix (`~/training-venv/bin/python3`) commit `2f5c672`; Phase 6 VRAM fix (stop llama-server before training) commit `6d749df` |
-| `local-yoyo-daily.service` | `/etc/systemd/system/` | **ACTIVE** | 45-min cap; TimeoutStartSec=3600; commit `2e04bcf` |
-| `local-yoyo-daily.timer` | `/etc/systemd/system/` | **ACTIVE** | 17:00 UTC, RandomDelay=120s |
-| `yoyo-idle-monitor.sh` | `/srv/foundry/bin/` | **ACTIVE** | Fixed target: yoyo-batch/us-central1-a |
-| `yoyo-idle-monitor.timer` | `/etc/systemd/system/` | **ACTIVE** | every 5 min; 30 min idle threshold |
+| `yoyo-daily-cycle.sh` | `/srv/foundry/bin/` | **REWRITTEN 2026-06-11 session-7** | Day-budget ledger (`/srv/foundry/data/yoyo-budget/<date>.consumed`); `run_stint()` wrapper (Phases 1–8); `main()` outer loop (budget check → retry on preemption → stop when spent); `start_vm_with_retry()` (STOCKOUT retry up to 22h with ks_sleep); Phase 4 stall+preemption detector; enrichment budget anchored to VM:READY (not stint start); `AUTONOMOUS_ENABLED` training gate + daily receipt; commit `53f8765` |
+| `local-yoyo-daily.service` | `/etc/systemd/system/` | **UPDATED 2026-06-11** | 120-min cap; TimeoutStartSec=7800; KillMode=control-group; ExecStopPost; YOYO_DAY_BUDGET_MIN=120; YOYO_RETRY_DEADLINE_HOURS=22; commit `53f8765` |
+| `local-yoyo-daily.timer` | `/etc/systemd/system/` | **ACTIVE** | 02:30 UTC, RandomDelay=120s, Persistent=true |
+| `yoyo-idle-monitor.sh` | `/srv/foundry/bin/` | **SUPERSEDED** (script retained) | Replaced by Phase 4 stall detector + ExecStopPost; no longer called by any timer |
+| `yoyo-idle-monitor.timer` | — | **DISABLED 2026-06-11** | Unit files archived to `/srv/foundry/data/yoyo-idle-monitor-archive/`; was racing Phase 4 between-batch lulls |
 | `local-corpus-threshold.timer` | `/etc/systemd/system/` | **MASKED** | → /dev/null; backup at `.timer.bkp` |
 | `corpus-threshold.py` | `service-slm/scripts/` | **DEPLOYED** | kill switch added; commit `5ca1e6e0` |
 | `lora-update.sh` | `service-slm/scripts/` | deployed (disabled) | Fixed VM/zone defaults; commit `5ca1e6e0` |
@@ -882,6 +896,51 @@ KILL SWITCH
 > **Purpose:** Document what was tested, what passed, what failed, and what was fixed. Entries
 > are added at session end whenever quality work is done. Read before any training run to understand
 > the current health of the pipeline. Newest entries on top.
+
+---
+
+### 2026-06-11 — Session 7: Opus deep audit + preemption-resilient rewrite
+
+**Method:** Opus agent performed full on-disk audit of all scripts (not from prompts/summaries).
+Key corrections from the audit:
+
+#### Ground-truth corrections from Opus audit (vs prior session summaries)
+
+| Prior belief | Reality on disk (Opus verified) |
+|---|---|
+| start-yoyo.sh retry loop deployed | NOT in bin/; lives only in service-slm/scripts/ (never installed) |
+| Two separate "worlds" to reconcile | No separate runner existed; one cycle script + one unmentioned idle-monitor |
+| "0 DPO pairs" is a pipeline bug | Correct behavior: Tier A/B agree after normalization → no signal; fix = more Tier-B-up minutes |
+| No source↔installed unit drift | Unit files were byte-identical; no drift |
+| Idle-monitor was not mentioned | **CRITICAL FIND: yoyo-idle-monitor.timer ACTIVE, firing every 5min**, racing Phase 4 enrichment |
+
+#### Five root causes found and fixed
+
+| # | Problem | Fix |
+|---|---|---|
+| 1 | STOCKOUT fatal, not retried — 24h gap on failure | `start_vm_with_retry()`: ks_sleep(600s) + retry loop up to 22h |
+| 2 | No day-budget ledger — retries would overspend ($4.26 for 3 attempts) | `/srv/foundry/data/yoyo-budget/<date>.consumed`; debited after each stint |
+| 3 | No preemption recovery — mid-cycle preemption burns budget with no work | Phase 4 stall+VM-status detector (return 8); `main()` recovers with remaining budget |
+| 4 | Idle-monitor races Phase 4 — between-batch lull triggers VM kill mid-enrichment | Disabled + archived; replaced by in-cycle stall detector (STALL_LIMIT=6) |
+| 5 | Training gate blocks autonomous training — daily tag never auto-created | `AUTONOMOUS_ENABLED` flag (set once) + daily receipt for SYS-ADR-19 traceability |
+
+#### Session-7 cycle output
+
+- 02:31 UTC Jun 11 timer: STOCKOUT; 0 work. `cycle-20260611-023119.log` (45-min old unit).
+- No yoyo-batch VM started successfully today; STOCKOUT since at least Jun 10 19:31 UTC.
+- Retry loop (start-yoyo.sh --retry-until-epoch, PID 852424) was running but starts VM only — no enrichment.
+- Tonight's timer (02:31 UTC Jun 12) will use the new rewritten script.
+
+#### Verified post-implementation
+
+| Test | Result |
+|---|---|
+| `bash -n yoyo-daily-cycle.sh` | PASS |
+| Depleted budget → exits before gcloud | PASS (`Day budget spent 7500s/7200s`) |
+| Kill switch → exits immediately | PASS |
+| Unit file `systemd-analyze verify` | PASS |
+| Timer still active after changes | PASS (next fire 19:30 PDT Jun 11 = 02:30 UTC Jun 12) |
+| Only `local-yoyo-daily.timer` in systemctl list-timers | PASS (idle-monitor gone) |
 
 ---
 
