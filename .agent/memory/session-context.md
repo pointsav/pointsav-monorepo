@@ -29,6 +29,30 @@
 
 ## Session entries
 
+### 2026-06-11 — Opus audit + preemption-resilient yoyo rewrite
+
+**Role:** totebox | **Engine:** claude-code
+
+**Done this session:**
+- Opus agent deep audit of all yoyo scripts on disk (not from summaries) — found 5 root causes
+- Key finding: `yoyo-idle-monitor.timer` ACTIVE (every 5min), racing Phase 4 enrichment; disabled and archived
+- Key finding: `start-yoyo.sh` never installed in bin/ — prior "two worlds" framing was wrong
+- Key finding: STOCKOUT has no retry — confirmed Jun 11 root cause (0 work all day)
+- Rewrote `bin/yoyo-daily-cycle.sh` (commit `53f8765`): day-budget ledger + `run_stint()` + `main()` outer loop + `start_vm_with_retry()` (22h STOCKOUT retry) + Phase 4 stall/preemption detector
+- Added `AUTONOMOUS_ENABLED` training gate (replaces per-day tag that was never auto-created)
+- Updated `infrastructure/local-yoyo-daily.service`: `YOYO_DAY_BUDGET_MIN=120` + `YOYO_RETRY_DEADLINE_HOURS=22`
+- BRIEF updated with session-7 As-Built and Opus audit findings (commit `1cce73ee`)
+- Tonight's timer (02:30 UTC Jun 12) will use new rewritten script for first real test
+
+**Carry-forward:**
+- STOCKOUT still active — us-central1-a L4; timer fires 02:30 UTC Jun 12; new script will retry all day if needed
+- Training gate: AUTONOMOUS_ENABLED not yet created; create when first genuine training run desired
+- AUTONOMOUS_ENABLED arm: `echo 'operator-authorized' > /srv/foundry/data/training-approved/AUTONOMOUS_ENABLED`
+- Corpus transport gap (Phase 6): SSH passes workspace path; rsync needed before training can read pairs
+- Adapter-to-serving link still missing (PEFT→GGUF + llama-server hot-swap)
+
+---
+
 ### 2026-06-10 — Inbox clear + BRIEF retrieval + VM start attempts
 
 **Role:** totebox | **Engine:** claude-code
