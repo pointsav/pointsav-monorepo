@@ -1,2 +1,8 @@
 [alias]
 xtask = "run --package xtask --"
+
+# Force the portable fiat-crypto backend for curve25519-dalek when building for
+# bare-metal x86_64. The SIMD backend selects AVX2 intrinsics that LLVM cannot
+# lower for the x86_64-unknown-none target (no OS SIMD context save/restore).
+[target.x86_64-unknown-none]
+rustflags = ["--cfg", "curve25519_dalek_backend=\"fiat\""]

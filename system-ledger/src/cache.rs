@@ -13,6 +13,8 @@
 //! oracle, not the source of truth.
 
 use system_core::{Hash256, SignedCheckpoint};
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
 /// Bounded checkpoint cache with LRU eviction. Order: most-recent
 /// at the back; oldest at the front. Eviction pops the front when

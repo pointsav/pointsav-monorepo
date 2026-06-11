@@ -12,6 +12,12 @@
 //! consistency proofs for ledger-mirror catch-up and multi-witness
 //! checkpoint advancement.
 
+#![cfg_attr(feature = "sel4", no_std)]
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+#[cfg(not(feature = "std"))]
+use alloc::{string::String, vec::Vec};
+
 pub mod checkpoint;
 pub mod consistency_proof;
 pub mod inclusion_proof;
@@ -99,9 +105,10 @@ pub struct Capability {
 }
 
 impl Capability {
-    /// Canonical SHA-256 hash for witness-record binding. v0.1.x:
-    /// serde JSON; future MINOR may swap to canonical CBOR per
-    /// `worm-ledger-design.md` §3 D3.
+    /// Canonical SHA-256 hash for witness-record binding. Serialises
+    /// via canonical CBOR (ciborium) per `worm-ledger-design.md` §3 D3.
+    /// Produces identical bytes in both std and no_std (sel4) builds,
+    /// satisfying H₂ (identical wire semantics on both OS bottoms).
     ///
     /// # Examples
     ///
@@ -123,9 +130,10 @@ impl Capability {
     /// assert_eq!(h1, h2); // deterministic
     /// ```
     pub fn hash(&self) -> Hash256 {
-        let bytes = serde_json::to_vec(self).expect("Capability serializable");
+        let mut buf = Vec::new();
+        ciborium::into_writer(self, &mut buf).expect("Capability serializable");
         let mut hasher = Sha256::new();
-        hasher.update(&bytes);
+        hasher.update(&buf);
         hasher.finalize().into()
     }
 }

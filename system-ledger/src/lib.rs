@@ -24,12 +24,29 @@
 //! [`InMemoryLedger`] as the concrete impl; future MINOR may add
 //! `MoonshotDatabaseLedger` once `moonshot-database` ships.
 
+#![cfg_attr(feature = "sel4", no_std)]
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+#[cfg(not(feature = "std"))]
+use alloc::{
+    format,
+    string::{String, ToString},
+    vec::Vec,
+    collections::BTreeSet,
+};
+#[cfg(feature = "std")]
+use std::collections::HashSet;
+
 pub mod apex;
 pub mod cache;
 pub mod revocation;
 pub mod witness;
 
-use std::collections::HashSet;
+#[cfg(feature = "std")]
+type WitnessedSet = HashSet<system_core::Hash256>;
+#[cfg(not(feature = "std"))]
+type WitnessedSet = BTreeSet<system_core::Hash256>;
+
 use system_core::{
     Capability, CheckpointInclusionError, Hash256, InclusionProof, SignedCheckpoint, WitnessRecord,
 };
@@ -201,7 +218,7 @@ pub struct InMemoryLedger {
     /// [`InMemoryLedger::apply_witness_record_unchecked`] shortcut
     /// preserves backward compatibility for tests that don't
     /// construct full proofs.
-    witnessed: HashSet<Hash256>,
+    witnessed: WitnessedSet,
     /// The current ledger root checkpoint. Set by
     /// [`set_current_checkpoint`] when a normal checkpoint lands;
     /// also set by [`apply_apex_handover`] when a handover lands.
@@ -222,7 +239,7 @@ impl InMemoryLedger {
             cache: cache::CheckpointCache::with_capacity(64),
             revocations: revocation::RevocationSet::new(),
             apex: apex::ApexHistory::new(),
-            witnessed: HashSet::new(),
+            witnessed: WitnessedSet::new(),
             current_checkpoint: None,
             witness_identity: "witness".to_string(),
         }
@@ -242,8 +259,9 @@ impl InMemoryLedger {
     /// the value that gets committed to the ledger's Merkle tree
     /// AND used as the lookup key in [`witnessed`].
     fn witness_record_leaf_hash(record: &WitnessRecord) -> Hash256 {
-        let bytes = serde_json::to_vec(record).expect("WitnessRecord serializable");
-        system_core::rfc9162_leaf_hash(&bytes)
+        let mut buf = Vec::new();
+        ciborium::into_writer(record, &mut buf).expect("WitnessRecord serializable");
+        system_core::rfc9162_leaf_hash(&buf)
     }
 
     fn is_witness_logged(&self, record: &WitnessRecord) -> bool {
@@ -743,8 +761,9 @@ mod tests {
     }
 
     fn witness_leaf_hash(record: &WitnessRecord) -> [u8; 32] {
-        let bytes = serde_json::to_vec(record).expect("serializable");
-        rfc9162_leaf_hash(&bytes)
+        let mut buf = Vec::new();
+        ciborium::into_writer(record, &mut buf).expect("serializable");
+        rfc9162_leaf_hash(&buf)
     }
 
     #[test]

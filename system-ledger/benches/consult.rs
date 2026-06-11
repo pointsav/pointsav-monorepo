@@ -263,8 +263,9 @@ fn bench_apply_witness_record_with_proof(c: &mut Criterion) {
         new_expiry_t: 5000,
         signature: vec![],
     };
-    // Compute leaf hash matching InMemoryLedger::witness_record_leaf_hash.
-    let bytes = serde_json::to_vec(&witness).expect("serializable");
+    // Compute leaf hash matching InMemoryLedger::witness_record_leaf_hash (ciborium CBOR).
+    let mut bytes = Vec::new();
+    ciborium::into_writer(&witness, &mut bytes).expect("serializable");
     let witness_leaf = rfc9162_leaf_hash(&bytes);
 
     // Build a 1024-leaf tree with our witness at index 512.
