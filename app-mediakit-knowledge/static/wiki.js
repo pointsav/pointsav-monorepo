@@ -254,7 +254,12 @@
         _glossaryTip.style.display = 'block';
         var rect = term.getBoundingClientRect();
         _glossaryTip.style.left = rect.left + window.scrollX + 'px';
-        _glossaryTip.style.top  = (rect.top + window.scrollY - _glossaryTip.offsetHeight - 5) + 'px';
+        // Flip below term when near viewport top to avoid clipping.
+        if (rect.top < 110) {
+          _glossaryTip.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+        } else {
+          _glossaryTip.style.top = (rect.top + window.scrollY - _glossaryTip.offsetHeight - 5) + 'px';
+        }
       });
       term.addEventListener('mouseleave', function () {
         _glossaryTip.style.display = 'none';
@@ -1174,6 +1179,7 @@
       document.body.style.overflow = 'hidden';
       setTimeout(function () { input.focus(); }, 40);
     }
+    window.openCmdK = open;
     function close() {
       overlay.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
@@ -1363,8 +1369,6 @@
   document.addEventListener('DOMContentLoaded', function () {
     initAppearanceMenu();
     initMoreMenu();
-    initToc();
-    initTocPin();
     initDensityToggle();
     initHoverCards();
     initGlossaryTooltips();
