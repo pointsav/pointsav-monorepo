@@ -3,7 +3,7 @@ artifact: brief
 status: active
 title: Knowledge Platform — Master Brief
 cluster: project-knowledge
-updated: 2026-06-10
+updated: 2026-06-11
 supersedes: archive/BRIEF-knowledge-platform-master.md
 verdict_source: .agent/drafts-outbound/BRIEF-REVIEW-old-brief-verdict.md
 ---
@@ -48,10 +48,10 @@ Single Rust binary. No runtime system dependencies. Apache 2.0.
 | Phase 6 | Three-instance split | Authorized | Doctrine v0.1.2 §IV.g committed 2026-06-11; check --strict: 248 pages / 0 dead links; wire xtask gate + remove wikilink-unresolved fallback (project-knowledge Totebox) |
 | Phase 7 | MCP federation | Designed | ActivityPub + cross-instance queries |
 | Phase 8 | Token theming | Shipped | DTCG token layout vars + `knowledge.toml` templates |
-| Phase 0 | Federation engine | NEXT MILESTONE | Unblocked; see §4 |
+| Phase 0 | Federation engine | In progress | tokens.css, blueprints rail, slug normalization, L25 editor route done (bd435cc3, 7a2b9b42); inject_wiki_prefixes + check gate + wikilink-unresolved removal remaining |
 | Phase 9 | Production deploy | **Shipped 2026-06-11** | WIKI_KNOWLEDGE_TOML migration; /etc/local-knowledge/; all 3 instances healthy |
 
-Sub-clone tip: `8480f68e` (merged `origin/main` at `ca6ae410`; up-to-date with remote; clean working tree).
+Sub-clone tip: `7a2b9b42` (2 commits ahead of `origin/main`; Stage 6 READY sent 2026-06-11, msg-id: `command-20260611-stage-6-ready-project-knowledge-sub-clon`).
 
 ---
 
@@ -184,21 +184,25 @@ exists. Same mechanism as L18 gate; the resolver is implemented once and referen
 
 ## §4 — Phase Roadmap
 
-### Phase 0 — Federation engine (NEXT UNBLOCKED milestone)
+### Phase 0 — Federation engine (in progress)
 
 **Hard merge gate: no Phase 2+ feature or visual work reaches canonical while any Phase 0
 item is incomplete.**
 
 Scope:
-- Refactor `AppState` to `mounts: Vec<Mount>`; delete hardcoded `content_dir`/`guide_dir`/`guide_dir_2`
-- Wire `blueprints.rs` into render pipeline
-- Implement `inject_wiki_prefixes` cross-mount resolution
-- Build-time dead-link gate (`check --strict` passes; any unresolved `[[ ]]` blocks promote)
-- Slug normalization across all mounts
-- Remove red-link render path (`render.rs` — `wikilink-missing` emission) after gate exists
+- ~~Refactor `AppState` to `mounts: Vec<Mount>`; delete hardcoded `content_dir`/`guide_dir`/`guide_dir_2`~~ — DONE dea5e8ae
+- ~~Wire `blueprints.rs` into render pipeline (AppState loading + `relates_to` rail in `wiki_page_inner`)~~ — DONE dea5e8ae + bd435cc3
+- ~~`tokens.css` regenerated from `dtcg-bundle.json`; added back to git tracking~~ — DONE bd435cc3
+- ~~Slug normalization: `/wiki/topic-foo` → 301 → `/wiki/foo`; `topic-foo.md` file fallback; ES-locale aware~~ — DONE bd435cc3
+- ~~L25: `/edit/{slug}` route stub; CodeMirror 6 bundle; `toc-persistence.js` extracted; conditional chrome load~~ — DONE bd435cc3 + 7a2b9b42
+- ~~M8/M5: Mobile drawer animations; tap-popover viewport flip; Cmd+K visible trigger~~ — DONE 7a2b9b42
+- Implement `inject_wiki_prefixes` cross-mount resolution — TODO (unblocked Totebox work)
+- Wire `check --strict` as xtask CI gate (blocks promote on any unresolved `[[ ]]`) — TODO; gate passes (0 dead links per §5); wiring is Totebox work
+- Remove red-link render path (`render.rs` — `wikilink-missing` emission) — TODO; blocked until gate is wired
 
-Completion test: `knowledge.toml` is the live source of truth for all three instances;
-`check --strict` passes with 0 dead links; red-link path absent from source.
+Completion test: `knowledge.toml` is the live source of truth for all three instances (**DONE** — Phase 9);
+`check --strict` passes with 0 dead links (**DONE** — 248 pages / 0 dead links per §5);
+red-link path absent from source — **REMAINING**.
 
 ### Phase 9 — Production deploy — **DEPLOYED 2026-06-11**
 
@@ -249,6 +253,21 @@ status unknown. Confirm target domain per instance before Phase 6 cutover.
 ---
 
 ## §6 — Session Log
+
+### 2026-06-11 | totebox | claude-code
+
+Phase 0 work committed in two commits (bd435cc3 + 7a2b9b42). Covered: tokens.css
+regenerated and re-tracked; blueprints `relates_to` rail wired into `wiki_page_inner`;
+topic- slug normalization (301 locale-aware redirect + `topic-foo.md` file fallback,
+including `topic-foo.es.md` for ES locale); `/edit/{slug}` route stub; CodeMirror 6
+bundle built (`cm-saa.bundle.js`); `editor.js` init script; `toc-persistence.js` extracted
+from `wiki.js`; conditional chrome loading (editor assets on `/edit/*` only); M8 mobile
+drawer CSS (transform + transition; `:not([aria-hidden])` open state; overlay fade-in);
+tap-popover viewport flip; Cmd+K visible trigger button + `window.openCmdK` exposure.
+129 tests green. Clippy clean. Stage 6 READY sent to Command
+(msg-id: `command-20260611-stage-6-ready-project-knowledge-sub-clon`).
+
+---
 
 ### 2026-06-11 | command | claude-code
 

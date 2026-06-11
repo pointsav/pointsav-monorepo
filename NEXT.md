@@ -95,29 +95,30 @@ See BRIEF-os-totebox-ppn-build-out.md for full state.
 Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
 > **Scope: this archive only.** Cross-repo items live at `~/Foundry/NEXT.md`.
 
-Last updated: 2026-06-10 [totebox@claude-code]
+Last updated: 2026-06-11 [totebox@claude-code]
 
 ---
 
-## Phase 9 — Production Deploy (Command-gated)
+## Phase 9 — Production Deploy — **DEPLOYED 2026-06-11**
 
-- [ ] Gate 1: Stage 6 promote — sub-clone tip 0e18aff3; Stage 6 READY signal sent
-      (msg-id: project-knowledge-20260610-stage-6-ready-0e18aff3); awaiting Command.
-      [2026-06-10 totebox@claude-code]
-- [x] Gate 2: DESIGN-TOKEN-CHANGE master_cosign — CLEARED 2026-06-09; af51d86;
-      tokens committed by totebox@project-design. [2026-06-09]
-- [x] Binary rebuild — rebuilt 2026-06-10 from tip ca6ae410. [2026-06-10 totebox@claude-code]
-- [ ] Phase 9 execute — blocked on Gate 1.
-      See `.agent/drafts-outbound/PHASE-9-DEPLOY-CHECKLIST.md`. [2026-06-10 totebox@claude-code]
+- [x] Gate 1: Stage 6 promote — tip 0e18aff3 promoted by Command 2026-06-11. [2026-06-11]
+- [x] Gate 2: DESIGN-TOKEN-CHANGE master_cosign — CLEARED 2026-06-09; af51d86. [2026-06-09]
+- [x] Binary rebuild and deploy — all 3 instances healthy (9090/9093/9095). [2026-06-11]
 
 ---
 
-## Phase 0 — Federation Engine (next unblocked milestone)
+## Phase 0 — Federation Engine (in progress)
 
 - [x] Refactor `AppState` to `mounts: Vec<Mount>`; delete hardcoded content/guide dir fields — dea5e8ae [2026-06-10]
-- [x] Wire `blueprints.rs` into render pipeline — dea5e8ae [2026-06-10]
+- [x] Wire `blueprints.rs` into render pipeline — AppState loading (dea5e8ae); `relates_to` rail in `wiki_page_inner` (bd435cc3) [2026-06-11]
+- [x] `tokens.css` regenerated from `dtcg-bundle.json`; added back to git tracking — bd435cc3 [2026-06-11]
+- [x] Slug normalization: `/wiki/topic-foo` → 301 → `/wiki/foo`; `topic-foo.md` fallback; ES-locale aware — bd435cc3 [2026-06-11]
+- [x] L25: `/edit/{slug}` route stub + CodeMirror 6 bundle + `toc-persistence.js` + conditional chrome load — bd435cc3 + 7a2b9b42 [2026-06-11]
+- [x] M8/M5: Mobile drawer animations + tap-popover flip + Cmd+K trigger — 7a2b9b42 [2026-06-11]
+- [ ] Stage 6 promote for Phase 0 commits — Stage 6 READY sent (msg-id: command-20260611-stage-6-ready-project-knowledge-sub-clon); tip 7a2b9b42; awaiting Command. [2026-06-11 totebox@claude-code]
 - [ ] Implement `inject_wiki_prefixes` cross-mount resolution [2026-06-08]
-- [ ] Dead-link gate (`check --strict` 0 dead links as CI gate) [2026-06-08]
+- [ ] Wire `check --strict` as xtask CI gate (gate passes 248/0; wiring is Totebox work) [2026-06-11]
+- [ ] Remove `wikilink-unresolved` render path from `render.rs` — blocked until xtask gate wired [2026-06-11]
 
 ---
 
