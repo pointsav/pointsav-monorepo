@@ -217,8 +217,8 @@ bottom-bar-h, reading-measure, safe-area-bottom.
   9095 (Woodfine Corporate) — healthz=ok, font preloads=2, search=200
 - Binary ledger entry: sha256 `e5e8995efc7d6da2f1eba10c235161a90e6c4290aa2b65951c54eb92948c8cd1`
 
-**Remaining Totebox work:** fix TOML template paths in sub-clone (`config/*.toml` still reference
-`project-knowledge/media-knowledge-*` — should be `project-editorial/`).
+**Remaining Totebox work:** ~~fix TOML template paths in sub-clone~~ — DONE 2026-06-11 (ece90408):
+config/*.toml corrected; static/tokens.css removed; NEXT.md updated.
 
 ### Post Phase 9 (after production verify)
 
@@ -236,9 +236,8 @@ bottom-bar-h, reading-measure, safe-area-bottom.
 serif headings, drop-cap gating. Needs brand-design direction before Phase 5 instance
 differentiation can proceed.
 
-**`tokens.css` / `config/*.toml` deletion intent** — restored from git HEAD in commit `ff7cd16d`
-(both are referenced in source and needed for Phase 9 deploy per checklist). Confirm if these
-should be deleted before or after production deploy.
+**`tokens.css` / `config/*.toml` deletion intent** — ~~RESOLVED 2026-06-11~~: operator chose
+"delete tokens.css only; keep config/*.toml as templates." Committed at ece90408.
 
 **`check --strict` as pre-promote gate** — Command can wire once project-editorial has triaged
 the 17 dead links + 6 missing-slug guides surfaced by the June 2026 content audit.
