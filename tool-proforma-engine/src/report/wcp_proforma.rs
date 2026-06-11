@@ -76,7 +76,8 @@ h3{font-size:0.9rem;margin-top:1rem;margin-bottom:0.2rem;color:#333}
 p{margin:0.3rem 0;font-size:0.82rem;color:#555}
 p.note{font-size:0.78rem;color:#555;font-style:italic}
 table{border-collapse:collapse;margin:0.5rem 0;font-size:0.76rem}
-table.wide{width:100%}
+table.wide{width:100%;table-layout:fixed}
+table.wide td.lbl,table.wide th.lbl{width:25%;white-space:normal;overflow-wrap:break-word}
 th,td{border:1px solid #ccc;padding:3px 6px;text-align:right;white-space:nowrap}
 th{background:#f5f5f5;text-align:center;font-weight:600}
 td.lbl,th.lbl{text-align:left;min-width:230px}
@@ -110,15 +111,13 @@ const LNUM_SCRIPT: &str = r#"<script>
 fn header_block(version: &str) -> String {
     format!(
         "<h1>Woodfine Capital Projects Inc. (WCP) — Proforma {version}</h1>\n\
-         <p>Engine-generated proforma from declared inputs.<br>\n\
-         DRAFT — 2026-06-10 — {version}<br>\n\
-         All amounts CAD — Prepared under IFRS — Forward-looking projections; BCSC continuous-disclosure posture<br>\n\
-         Source: tool-proforma-engine <code>wcp_proforma</code> module — engine-canonical</p>\n"
+         <p>DRAFT — 2026-06-10 — {version}<br>\n\
+         All amounts CAD — Prepared under IFRS — Forward-looking projections; BCSC continuous-disclosure posture</p>\n"
     )
 }
 
 fn bcsc_footer() -> String {
-    "<p class=\"footer\"><strong>Forward-Looking Information — Notice under applicable securities legislation including the British Columbia Securities Commission (BCSC) and NI 51-102.</strong> This document contains forward-looking information. All amounts shown are computed by the tool-proforma-engine from declared inputs and the DHS1 (Professional Centres Canada LP) forecast. Actual results may differ materially.</p>\n".to_string()
+    "<p class=\"footer\"><strong>Forward-Looking Information — Notice under applicable securities legislation including the British Columbia Securities Commission (BCSC) and NI 51-102.</strong> This document contains forward-looking information. All amounts shown are computed from declared inputs and the DHS-01 (Professional Centres Canada LP) forecast. Actual results may differ materially.</p>\n".to_string()
 }
 
 // ─── Section renderers ──────────────────────────────────────────────────────
@@ -167,7 +166,7 @@ fn render_inputs() -> String {
             "§1022",
         ),
         (
-            "Dividend yield",
+            "Earnings yield",
             fmt_pct(wcp_proforma::WCP_DIVIDEND_YIELD),
             "§1023",
         ),
@@ -187,7 +186,7 @@ fn render_inputs() -> String {
 
     s.push_str("<h3>Six Direct-Hold Solutions (Revenue Generator)</h3>\n");
     s.push_str("<table>\n");
-    s.push_str("<tr><th class=\"lbl\">Direct-Hold Solution</th><th>Launch</th><th>Size factor</th><th>Advisory FX</th><th>Dist FX</th><th>NAV FX</th></tr>\n");
+    s.push_str("<tr><th class=\"lbl\">Direct-Hold Solution</th><th>Launch</th><th>Size factor</th><th>Advisory FX</th><th>Distribution FX</th><th>NAV FX</th></tr>\n");
     for lp in wcp_proforma::WCP_LPS.iter() {
         s.push_str(&format!(
             "<tr><td class=\"lbl\">{}</td><td>Y{}</td><td>{:.0}×</td><td>{:.4}</td><td>{:.4}</td><td>{:.4}</td></tr>\n",
@@ -195,7 +194,7 @@ fn render_inputs() -> String {
         ));
     }
     s.push_str("</table>\n");
-    s.push_str("<p class=\"note\">DHS1 = Professional Centres Canada LP look-through. DHS2–DHS6 derived from DHS1 with size factor × FX × launch lag. Distribution FX rates for USD-denominated direct-hold solutions are stated at the CAD-USD rate (revised in V2).</p>\n");
+    s.push_str("<p class=\"note\">DHS-01 = Professional Centres Canada LP look-through. DHS-02 through DHS-06 derived from DHS-01 with size factor × FX × launch lag. Distribution FX rates for USD-denominated direct-hold solutions are stated at the CAD-USD rate (revised in V2).</p>\n");
     s
 }
 
@@ -228,9 +227,9 @@ fn data_row_ps<F: Fn(&WcpYear) -> f64>(label: &str, years: &[WcpYear], pick: F) 
 
 fn render_revenue_generator(years: &[WcpYear]) -> String {
     let mut s = String::new();
-    s.push_str("<h2>Revenue Generator — 6 Direct-Hold Solutions (CAD-equivalent)</h2>\n");
+    s.push_str("<h2>Revenue Generator — Six Direct-Hold Solutions (CAD-equivalent)</h2>\n");
 
-    s.push_str("<h3>Advisory Fees by direct-hold solution</h3>\n");
+    s.push_str("<h3>Advisory fees by direct-hold solution</h3>\n");
     s.push_str("<table class=\"wide\">\n");
     s.push_str(&year_header_row());
     for (i, lp) in wcp_proforma::WCP_LPS.iter().enumerate() {
@@ -289,10 +288,10 @@ fn render_income_statement(years: &[WcpYear]) -> String {
     }));
     s.push_str(&data_row("Gross income", years, |y| y.gross_income));
     s.push_str("<tr class=\"section-banner\"><td colspan=\"12\">Operating Expenses</td></tr>\n");
-    s.push_str(&data_row("Referral fees (Y1-Y2)", years, |y| {
+    s.push_str(&data_row("Referral fees (Y1–Y2)", years, |y| {
         y.referral_fees
     }));
-    s.push_str(&data_row("WPI compensation agreement (Y1-Y2)", years, |y| {
+    s.push_str(&data_row("WPI compensation agreement (Y1–Y2)", years, |y| {
         y.wpi_consulting
     }));
     s.push_str(&data_row("G&amp;A — New York City", years, |y| y.gna_nyc));
@@ -313,7 +312,7 @@ fn render_income_statement(years: &[WcpYear]) -> String {
         s.push_str(&format!("<td>{}</td>", fmt_m(y.earnings)));
     }
     s.push_str("</tr>\n");
-    s.push_str(&data_row_ps("EPS (per share)", years, |y| y.eps));
+    s.push_str(&data_row_ps("EPS", years, |y| y.eps));
     s.push_str("</table>\n");
     s.push_str("<p class=\"note\">EBITDA is negative in Y1–Y2 (capital raise period; high WPI compensation agreement and referral fees). Projected to turn positive from Y3 as DHS advisory fees increase. Taxes at 27%; earnings = EBITDA × (1 − 0.27).</p>\n");
     s
@@ -327,7 +326,7 @@ fn render_book_valuation(years: &[WcpYear]) -> String {
     s.push_str(&data_row("Financing activity", years, |y| {
         y.financing_activity
     }));
-    s.push_str(&data_row("Cumulative Free Cash Flow", years, |y| y.cumulative_fcf));
+    s.push_str(&data_row("Cumulative free cash flow", years, |y| y.cumulative_fcf));
     s.push_str(&data_row("Direct-hold solution ownership (10% of DHS NAV)", years, |y| {
         y.lp_ownership_book
     }));
@@ -352,7 +351,7 @@ fn render_four_valuations(years: &[WcpYear]) -> String {
         y.market_value_per_share
     }));
     s.push_str(&data_row(
-        "Dividend valuation (÷ 4.5% yield)",
+        "Earnings yield valuation (÷ 4.5%)",
         years,
         |y| y.dividend_valuation,
     ));
@@ -368,7 +367,7 @@ fn render_four_valuations(years: &[WcpYear]) -> String {
         |y| y.fair_value_per_share,
     ));
     s.push_str("</table>\n");
-    s.push_str("<p class=\"note\">Three valuation methods: Earnings valuation (× 10.72 P/E); Dividend valuation (÷ 4.5% target yield); Book value (cumulative free cash flow + DHS ownership). Fair value composite = simple average of the three per-share values.</p>\n");
+    s.push_str("<p class=\"note\">Three valuation methods: Earnings valuation (× 10.72 P/E); Earnings yield valuation (÷ 4.5% target yield); Book value (cumulative free cash flow + DHS ownership). Fair value composite = simple average of the three per-share values.</p>\n");
     s
 }
 
@@ -403,8 +402,7 @@ pub fn render_summary() -> String {
     ));
     s.push_str("<body>\n");
     s.push_str("<h1>Woodfine Capital Projects Inc. (WCP) — Summary V2</h1>\n");
-    s.push_str("<p>Engine-generated summary from declared inputs.<br>\n");
-    s.push_str("DRAFT — 2026-06-10 — V2<br>\n");
+    s.push_str("<p>DRAFT — 2026-06-10 — V2<br>\n");
     s.push_str("Companion: <code>COMPLIANCE_MCorp_2026_06_04_Proforma_WCP_V2.html</code> (full 10-year proforma)<br>\n");
     s.push_str("All amounts CAD — Prepared under IFRS — Forward-looking projections; BCSC continuous-disclosure posture</p>\n");
 
@@ -426,7 +424,7 @@ pub fn render_summary() -> String {
         )
     ));
     s.push_str(&format!(
-        "<tr><td class=\"lbl\">Total Y1-Y2 financing</td><td>{}</td></tr>\n",
+        "<tr><td class=\"lbl\">Total Y1–Y2 financing</td><td>{}</td></tr>\n",
         fmt_full_dollar(wcp_proforma::WCP_FINANCING_Y1 + wcp_proforma::WCP_FINANCING_Y2)
     ));
     s.push_str("</table>\n");
@@ -446,9 +444,9 @@ pub fn render_summary() -> String {
         fmt_m(y10.book_value),
         fmt_per_share(y10.book_value_per_share)
     ));
-    s.push_str(&format!("<tr><td class=\"lbl\">Y10 Market value (Earnings × 10.72 P/E)</td><td>{}</td><td>{}</td></tr>\n",
+    s.push_str(&format!("<tr><td class=\"lbl\">Y10 Earnings valuation (× 10.72 P/E)</td><td>{}</td><td>{}</td></tr>\n",
                         fmt_m(y10.market_valuation), fmt_per_share(y10.market_value_per_share)));
-    s.push_str(&format!("<tr><td class=\"lbl\">Y10 Dividend value (Earnings / 4.5%)</td><td>{}</td><td>{}</td></tr>\n",
+    s.push_str(&format!("<tr><td class=\"lbl\">Y10 Earnings yield value (Earnings / 4.5%)</td><td>{}</td><td>{}</td></tr>\n",
                         fmt_m(y10.dividend_valuation), fmt_per_share(y10.dividend_value_per_share)));
     s.push_str(&format!("<tr class=\"total\"><td class=\"lbl\">Y10 Fair value per share (3-method average)</td><td>—</td><td>{}</td></tr>\n",
                         fmt_per_share(y10.fair_value_per_share)));
@@ -456,7 +454,7 @@ pub fn render_summary() -> String {
 
     s.push_str("<h2>10-Year Earnings &amp; Per-Share Progression</h2>\n");
     s.push_str("<table>\n");
-    s.push_str("<tr><th class=\"lbl\">Year</th><th>EBITDA</th><th>Earnings</th><th>EPS</th><th>Book/share</th><th>Market/share</th><th>Dividend/share</th></tr>\n");
+    s.push_str("<tr><th class=\"lbl\">Year</th><th>EBITDA</th><th>Earnings</th><th>EPS</th><th>Book/share</th><th>Market/share</th><th>Yield/shr</th></tr>\n");
     for y in &years {
         s.push_str(&format!(
             "<tr><td class=\"lbl\">Y{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>\n",

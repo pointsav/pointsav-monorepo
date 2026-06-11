@@ -6,13 +6,13 @@
 // DHS fund derivation:
 //   DHS_n[y] = DHS1[y - lag_n] × size_factor × fx_rate
 //
-// Six direct-hold solutions (DHS1 = seed; DHS2-DHS6 derived):
-//   DHS1=Professional Centres Canada LP   (PRO-CA-01-AST) C$250M CAD Y1  1× CAD/CAD/CAD
-//   DHS2=Professional Centres United States LP (PRO-US-02-AST) $500M USD Y2  2× USD/USD/USD
-//   DHS3=Professional Centres Spain SOCIMI    (PRO-ES-03-ADM) EUR$250M Y2  1× EUR/EUR/EUR
-//   DHS4=Professional Centres Mexico FIBRA   (PRO-MX-04-AST) $250M USD Y3  1× USD/USD/USD
-//   DHS5=Vertical Warehouse United States LP  (VWH-US-01-AST) $250M USD Y4  1× USD/USD/USD
-//   DHS6=Parking Structure United States LP   (PKS-US-01-AST) $250M USD Y5  1× USD/USD/USD
+// Six direct-hold solutions (DHS-01 = seed; DHS-02 through DHS-06 derived):
+//   DHS-01=Professional Centres Canada LP   (PRO-CA-01-AST) C$250M CAD Y1  1× CAD/CAD/CAD
+//   DHS-02=Professional Centres United States LP (PRO-US-02-AST) $500M USD Y2  2× USD/USD/USD
+//   DHS-03=Professional Centres Spain SOCIMI    (PRO-ES-03-ADM) EUR$250M Y2  1× EUR/EUR/EUR
+//   DHS-04=Professional Centres Mexico FIBRA   (PRO-MX-04-AST) $250M USD Y3  1× USD/USD/USD
+//   DHS-05=Vertical Warehouse United States LP  (VWH-US-01-AST) $250M USD Y4  1× USD/USD/USD
+//   DHS-06=Parking Structure United States LP   (PKS-US-01-AST) $250M USD Y5  1× USD/USD/USD
 
 use crate::spv::pclp1_proforma::Pclp1Year;
 use serde::Serialize;
@@ -59,7 +59,7 @@ pub struct WcpLpConfig {
 
 pub const WCP_LPS: [WcpLpConfig; 6] = [
     WcpLpConfig {
-        name: "DHS1 — Professional Centres Canada LP | PRO-CA-01-AST (CAD)",
+        name: "DHS-01 — Professional Centres Canada LP",
         launch_year: 1,
         size_factor: 1.0,
         advisory_fx: 1.0,
@@ -67,7 +67,7 @@ pub const WCP_LPS: [WcpLpConfig; 6] = [
         nav_fx: 1.0,
     },
     WcpLpConfig {
-        name: "DHS2 — Professional Centres United States LP | PRO-US-02-AST (USD)",
+        name: "DHS-02 — Professional Centres United States LP",
         launch_year: 2,
         size_factor: 2.0,
         advisory_fx: WCP_CAD_USD,
@@ -75,7 +75,7 @@ pub const WCP_LPS: [WcpLpConfig; 6] = [
         nav_fx: WCP_CAD_USD,
     },
     WcpLpConfig {
-        name: "DHS3 — Professional Centres Spain SOCIMI | PRO-ES-03-ADM (EUR)",
+        name: "DHS-03 — Professional Centres Spain SOCIMI",
         launch_year: 2,
         size_factor: 1.0,
         advisory_fx: WCP_CAD_EUR,
@@ -83,7 +83,7 @@ pub const WCP_LPS: [WcpLpConfig; 6] = [
         nav_fx: WCP_CAD_EUR,
     },
     WcpLpConfig {
-        name: "DHS4 — Professional Centres Mexico FIBRA | PRO-MX-04-AST (USD)",
+        name: "DHS-04 — Professional Centres Mexico FIBRA",
         launch_year: 3,
         size_factor: 1.0,
         advisory_fx: WCP_CAD_USD,
@@ -91,7 +91,7 @@ pub const WCP_LPS: [WcpLpConfig; 6] = [
         nav_fx: WCP_CAD_USD,
     },
     WcpLpConfig {
-        name: "DHS5 — Vertical Warehouse United States LP | VWH-US-01-AST (USD)",
+        name: "DHS-05 — Vertical Warehouse United States LP",
         launch_year: 4,
         size_factor: 1.0,
         advisory_fx: WCP_CAD_USD,
@@ -99,7 +99,7 @@ pub const WCP_LPS: [WcpLpConfig; 6] = [
         nav_fx: WCP_CAD_USD,
     },
     WcpLpConfig {
-        name: "DHS6 — Parking Structure United States LP | PKS-US-01-AST (USD)",
+        name: "DHS-06 — Parking Structure United States LP",
         launch_year: 5,
         size_factor: 1.0,
         advisory_fx: WCP_CAD_USD,
