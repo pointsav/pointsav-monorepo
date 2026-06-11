@@ -1,0 +1,447 @@
+{
+  "_schema": "proforma-audit-trail-v1",
+  "_purpose": "Provenance document for COMPLIANCE_MCorp_2026_06_10_Proforma_Bencal_ShareCapital_V1. For every number in the HTML/JSON companion, this file shows: the exact source field, the exact source value, the formula applied, and the computed result. Intended for auditor review under NI 51-102.",
+  "_how_to_read": "Each derived value has four fields: source_file (where the input came from), source_field (exact field path), source_value (the number from that file, full precision), formula (the operation applied), result (the output shown in the proforma).",
+  "entity": "Bencal Management Corp.",
+  "document": "Share Capital Proforma V1",
+  "date": "2026-06-10",
+  "currency": "CAD",
+
+  "source_files": {
+    "engine_json": {
+      "path": "outputs/COMPLIANCE_MCorp_2026_06_05_Bencal_Management_V2.json",
+      "generated_by": "tool-proforma-engine src/spv/bencal_mgmt_proforma.rs",
+      "brief": "BRIEF v0.15.6 §5f",
+      "computation_source": "pointsav-monorepo/tool-proforma-engine/src/spv/bencal_mgmt_proforma.rs",
+      "note": "Engine runs on 2-share / $10 paid-in capital basis. All NAV figures in this file are aggregate (entity-level). The share capital proforma divides by 1,000,000 planned shares."
+    },
+    "rust_source": {
+      "path": "pointsav-monorepo/tool-proforma-engine/src/spv/bencal_mgmt_proforma.rs",
+      "key_constants": {
+        "BM_SHARES_OUTSTANDING": 2.0,
+        "BM_SHARE_PRICE": 5.00,
+        "BM_PAID_IN_CAPITAL": 10.00,
+        "BM_LOOKTHROUGH_STAKE_SPV1": 0.10,
+        "BM_LOOKTHROUGH_STAKE_SPV2": 0.10,
+        "BM_COMMISSION_REBATE_Y0_GROSS": 64637.0,
+        "BM_OPEX_ANNUAL": 13870.0,
+        "BM_SETUP_COSTS_Y0": 5575.0,
+        "BM_TAX_RATE_CURRENT": 0.27
+      },
+      "portfolio_nav_formula": "spv1_nav_lookthrough + spv2_nav_lookthrough",
+      "spv1_nav_formula_y0_to_y9": "spv1.wcp_holding_fv * 0.10",
+      "spv1_nav_formula_y10": "spv1.residual_nav * 0.10",
+      "spv2_nav_formula": "(spv2.pclp1_nav_total + spv2.wcp_holding_fv) * 0.10",
+      "net_income_formula": "income_before_tax - tax",
+      "tax_formula": "income_before_tax * 0.27 (if income_before_tax > 0, else 0)"
+    }
+  },
+
+  "planning_assumptions": {
+    "planned_shares_outstanding": {
+      "value": 1000000,
+      "source": "Share capital proforma plan (management decision, not engine-computed)",
+      "note": "The engine models 2 shares at $5 nominal. The 1,000,000-share structure is a planned recapitalisation for the purposes of this proforma."
+    },
+    "float_shares": {
+      "value": 210000,
+      "source": "Plan: 21% of 1,000,000 planned shares",
+      "formula": "1,000,000 × 0.21 = 210,000"
+    },
+    "float_cost_basis_per_share": {
+      "source_file": "engine_json",
+      "source_field": "years[0].portfolio_nav",
+      "source_value": 409500.0,
+      "formula": "years[0].portfolio_nav ÷ 1,000,000 planned shares",
+      "result": 0.4095,
+      "note": "Y0 NAV per share used as cost basis for sellers (Kiel/Elzen). They are deemed to have acquired float shares at Y0 book value."
+    },
+    "float_cost_basis_aggregate": {
+      "formula": "210,000 float shares × $0.4095 cost basis per share",
+      "result": 85995.0
+    },
+    "holding_company_discount": {
+      "value": 0.15,
+      "basis": "Typical holding-company discount range 10–30% for illiquid Level-3 minority interests. 15% used as base case (midpoint of 10–20% range for partially-active manager)."
+    },
+    "earnings_capitalisation_rate": {
+      "value": 0.045,
+      "basis": "4.5% cap rate applied to normalised net income per share. Used for comparability with WCP V2 valuation section."
+    },
+    "portfolio_cagr_y1_y10": {
+      "source_file": "engine_json",
+      "source_field": "years[0].portfolio_nav and years[10].portfolio_nav",
+      "source_value_y0": 409500.0,
+      "source_value_y10": 13591344.081096116,
+      "formula": "(years[10].portfolio_nav / years[0].portfolio_nav)^(1/10) - 1",
+      "computation": "(13591344.081096116 / 409500.0)^0.10 - 1 = 33.191^0.10 - 1",
+      "result": 0.1808,
+      "result_pct": "18.08%"
+    }
+  },
+
+  "nav_rollforward_derivations": {
+    "note": "All portfolio_nav values sourced from engine_json years[n].portfolio_nav (full precision). Per-share = aggregate ÷ 1,000,000 planned shares.",
+    "shares_divisor": 1000000,
+    "years": [
+      {
+        "year": 0,
+        "portfolio_nav_source_value": 409500.0,
+        "nav_per_share": { "formula": "409500.0 ÷ 1,000,000", "result": 0.4095 },
+        "yoy_pct": { "formula": "N/A — base year", "result": null },
+        "float_value_210k": { "formula": "409500.0 × (210,000 ÷ 1,000,000)", "result": 85995.0 },
+        "strategic_value_180k": { "formula": "409500.0 × (180,000 ÷ 1,000,000)", "result": 73710.0 },
+        "net_income_source_value": -2331462.9172500004
+      },
+      {
+        "year": 1,
+        "portfolio_nav_source_value": 3045150.7379822065,
+        "nav_per_share": { "formula": "3045150.7379822065 ÷ 1,000,000", "result": 3.045150738 },
+        "yoy_pct": { "formula": "(3045150.74 - 409500.0) / 409500.0", "result": 6.4359, "result_pct": "+643.6%" },
+        "float_value_210k": { "formula": "3045150.7379822065 × 0.21", "result": 639481.655 },
+        "strategic_value_180k": { "formula": "3045150.7379822065 × 0.18", "result": 548127.133 },
+        "net_income_source_value": 1913899.9387270107
+      },
+      {
+        "year": 2,
+        "portfolio_nav_source_value": 3057829.866517363,
+        "nav_per_share": { "formula": "3057829.866517363 ÷ 1,000,000", "result": 3.057829867 },
+        "yoy_pct": { "formula": "(3057829.87 - 3045150.74) / 3045150.74", "result": 0.00416, "result_pct": "+0.4%" },
+        "float_value_210k": { "formula": "3057829.866517363 × 0.21", "result": 642244.272 },
+        "strategic_value_180k": { "formula": "3057829.866517363 × 0.18", "result": 550409.376 },
+        "net_income_source_value": -1190.8714648436744
+      },
+      {
+        "year": 3,
+        "portfolio_nav_source_value": 3059939.262702919,
+        "nav_per_share": { "formula": "3059939.262702919 ÷ 1,000,000", "result": 3.059939263 },
+        "yoy_pct": { "formula": "(3059939.26 - 3057829.87) / 3057829.87", "result": 0.000690, "result_pct": "+0.1%" },
+        "float_value_210k": { "formula": "3059939.262702919 × 0.21", "result": 642587.245 },
+        "strategic_value_180k": { "formula": "3059939.262702919 × 0.18", "result": 550789.067 },
+        "net_income_source_value": -11760.603814443946
+      },
+      {
+        "year": 4,
+        "portfolio_nav_source_value": 5721583.076589291,
+        "nav_per_share": { "formula": "5721583.076589291 ÷ 1,000,000", "result": 5.721583077 },
+        "yoy_pct": { "formula": "(5721583.08 - 3059939.26) / 3059939.26", "result": 0.8699, "result_pct": "+87.0%" },
+        "float_value_210k": { "formula": "5721583.076589291 × 0.21", "result": 1201532.446 },
+        "strategic_value_180k": { "formula": "5721583.076589291 × 0.18", "result": 1029884.954 },
+        "net_income_source_value": 2617510.386937175
+      },
+      {
+        "year": 5,
+        "portfolio_nav_source_value": 6415733.895881991,
+        "nav_per_share": { "formula": "6415733.895881991 ÷ 1,000,000", "result": 6.415733896 },
+        "yoy_pct": { "formula": "(6415733.90 - 5721583.08) / 5721583.08", "result": 0.1213, "result_pct": "+12.1%" },
+        "float_value_210k": { "formula": "6415733.895881991 × 0.21", "result": 1347304.118 },
+        "strategic_value_180k": { "formula": "6415733.895881991 × 0.18", "result": 1154832.101 },
+        "net_income_source_value": 536229.3026548221
+      },
+      {
+        "year": 6,
+        "portfolio_nav_source_value": 8884304.515574956,
+        "nav_per_share": { "formula": "8884304.515574956 ÷ 1,000,000", "result": 8.884304516 },
+        "yoy_pct": { "formula": "(8884304.52 - 6415733.90) / 6415733.90", "result": 0.3849, "result_pct": "+38.5%" },
+        "float_value_210k": { "formula": "8884304.515574956 × 0.21", "result": 1865703.948 },
+        "strategic_value_180k": { "formula": "8884304.515574956 × 0.18", "result": 1599174.813 },
+        "net_income_source_value": 1852725.6368963192
+      },
+      {
+        "year": 7,
+        "portfolio_nav_source_value": 9821547.043418324,
+        "nav_per_share": { "formula": "9821547.043418324 ÷ 1,000,000", "result": 9.821547043 },
+        "yoy_pct": { "formula": "(9821547.04 - 8884304.52) / 8884304.52", "result": 0.1055, "result_pct": "+10.5%" },
+        "float_value_210k": { "formula": "9821547.043418324 × 0.21", "result": 2062524.879 },
+        "strategic_value_180k": { "formula": "9821547.043418324 × 0.18", "result": 1767878.468 },
+        "net_income_source_value": 754244.2161085276
+      },
+      {
+        "year": 8,
+        "portfolio_nav_source_value": 14712817.251655187,
+        "nav_per_share": { "formula": "14712817.251655187 ÷ 1,000,000", "result": 14.712817252 },
+        "yoy_pct": { "formula": "(14712817.25 - 9821547.04) / 9821547.04", "result": 0.4981, "result_pct": "+49.8%" },
+        "float_value_210k": { "formula": "14712817.251655187 × 0.21", "result": 3089691.623 },
+        "strategic_value_180k": { "formula": "14712817.251655187 × 0.18", "result": 2648307.105 },
+        "net_income_source_value": 3998841.7635790026
+      },
+      {
+        "year": 9,
+        "portfolio_nav_source_value": 16697314.347117333,
+        "nav_per_share": { "formula": "16697314.347117333 ÷ 1,000,000", "result": 16.697314347 },
+        "yoy_pct": { "formula": "(16697314.35 - 14712817.25) / 14712817.25", "result": 0.1349, "result_pct": "+13.5%" },
+        "float_value_210k": { "formula": "16697314.347117333 × 0.21", "result": 3506436.013 },
+        "strategic_value_180k": { "formula": "16697314.347117333 × 0.18", "result": 3005516.582 },
+        "net_income_source_value": 1879089.0893112859
+      },
+      {
+        "year": 10,
+        "portfolio_nav_source_value": 13591344.081096116,
+        "nav_per_share": { "formula": "13591344.081096116 ÷ 1,000,000", "result": 13.591344081 },
+        "yoy_pct": { "formula": "(13591344.08 - 16697314.35) / 16697314.35", "result": -0.1860, "result_pct": "−18.6%" },
+        "float_value_210k": { "formula": "13591344.081096116 × 0.21", "result": 2854182.257 },
+        "strategic_value_180k": { "formula": "13591344.081096116 × 0.18", "result": 2446441.935 },
+        "net_income_source_value": 4299145.423274402,
+        "y10_contraction_note": "NAV decline from Y9 to Y10 caused by $4.807M SPV2 cash distributions paid out in Y10 (source: engine_json years[10].spv2_lookthrough_cash = 4807782.72852187 at entity level before 10% lookthrough adjustment). Total return including distributions is higher than NAV alone."
+      }
+    ]
+  },
+
+  "valuation_three_methods_derivations": {
+    "note": "Each method is derived from engine_json net_income and portfolio_nav for the relevant year.",
+    "method_1_nav_per_share": "See nav_rollforward_derivations above. Source: years[n].portfolio_nav ÷ 1,000,000.",
+    "method_2_earnings_yield": {
+      "formula": "(years[n].net_income ÷ 1,000,000 planned shares) ÷ 0.045 cap rate",
+      "rationale": "Capitalised earnings approach: net income per share treated as perpetual yield, capitalised at 4.5%"
+    },
+    "method_3_nav_at_discount": {
+      "formula": "nav_per_share × (1 - 0.15)",
+      "rationale": "15% holding-company discount applied to NAV/share to reflect illiquidity and minority position"
+    },
+    "indicated_fmv": {
+      "formula": "Simple average of all applicable methods (earnings yield excluded in N/M years)",
+      "nm_condition": "net_income ≤ 0 OR net_income < 1000 (negligible)"
+    },
+    "years": [
+      {
+        "year": 0,
+        "net_income_source_value": -2331462.9172500004,
+        "nav_per_share_source": 0.4095,
+        "method_1_nav": 0.4095,
+        "method_2_earnings_yield": { "net_income_per_share": -2.33146, "result": null, "note": "N/M — loss year (net_income < 0)" },
+        "method_3_nav_at_discount": { "formula": "0.4095 × 0.85", "result": 0.34808 },
+        "indicated_fmv": { "formula": "(0.4095 + 0.34808) ÷ 2", "result": 0.37879, "methods_used": ["method_1","method_3"] }
+      },
+      {
+        "year": 1,
+        "net_income_source_value": 1913899.9387270107,
+        "nav_per_share_source": 3.045150738,
+        "method_1_nav": 3.045150738,
+        "method_2_earnings_yield": { "net_income_per_share": 1.913899939, "formula": "1.913899939 ÷ 0.045", "result": 42.531 },
+        "method_3_nav_at_discount": { "formula": "3.045150738 × 0.85", "result": 2.58838 },
+        "indicated_fmv": { "formula": "(3.04515 + 42.531 + 2.58838) ÷ 3", "result": 16.0548, "methods_used": ["method_1","method_2","method_3"] }
+      },
+      {
+        "year": 2,
+        "net_income_source_value": -1190.8714648436744,
+        "nav_per_share_source": 3.057829867,
+        "method_1_nav": 3.057829867,
+        "method_2_earnings_yield": { "net_income_per_share": -0.001191, "result": null, "note": "N/M — net loss" },
+        "method_3_nav_at_discount": { "formula": "3.057829867 × 0.85", "result": 2.59915 },
+        "indicated_fmv": { "formula": "(3.05783 + 2.59915) ÷ 2", "result": 2.82849, "methods_used": ["method_1","method_3"] }
+      },
+      {
+        "year": 3,
+        "net_income_source_value": -11760.603814443946,
+        "nav_per_share_source": 3.059939263,
+        "method_1_nav": 3.059939263,
+        "method_2_earnings_yield": { "net_income_per_share": -0.011761, "result": null, "note": "N/M — net loss" },
+        "method_3_nav_at_discount": { "formula": "3.059939263 × 0.85", "result": 2.60094 },
+        "indicated_fmv": { "formula": "(3.05994 + 2.60094) ÷ 2", "result": 2.83044, "methods_used": ["method_1","method_3"] }
+      },
+      {
+        "year": 4,
+        "net_income_source_value": 2617510.386937175,
+        "nav_per_share_source": 5.721583077,
+        "method_1_nav": 5.721583077,
+        "method_2_earnings_yield": { "net_income_per_share": 2.617510387, "formula": "2.617510387 ÷ 0.045", "result": 58.1669 },
+        "method_3_nav_at_discount": { "formula": "5.721583077 × 0.85", "result": 4.86335 },
+        "indicated_fmv": { "formula": "(5.72158 + 58.1669 + 4.86335) ÷ 3", "result": 22.9173, "methods_used": ["method_1","method_2","method_3"] }
+      },
+      {
+        "year": 5,
+        "net_income_source_value": 536229.3026548221,
+        "nav_per_share_source": 6.415733896,
+        "method_1_nav": 6.415733896,
+        "method_2_earnings_yield": { "net_income_per_share": 0.536229303, "formula": "0.536229303 ÷ 0.045", "result": 11.9162 },
+        "method_3_nav_at_discount": { "formula": "6.415733896 × 0.85", "result": 5.45338 },
+        "indicated_fmv": { "formula": "(6.41573 + 11.9162 + 5.45338) ÷ 3", "result": 7.92844, "methods_used": ["method_1","method_2","method_3"] }
+      },
+      {
+        "year": 6,
+        "net_income_source_value": 1852725.6368963192,
+        "nav_per_share_source": 8.884304516,
+        "method_1_nav": 8.884304516,
+        "method_2_earnings_yield": { "net_income_per_share": 1.852725637, "formula": "1.852725637 ÷ 0.045", "result": 41.1717 },
+        "method_3_nav_at_discount": { "formula": "8.884304516 × 0.85", "result": 7.55166 },
+        "indicated_fmv": { "formula": "(8.88430 + 41.1717 + 7.55166) ÷ 3", "result": 19.2026, "methods_used": ["method_1","method_2","method_3"] }
+      },
+      {
+        "year": 7,
+        "net_income_source_value": 754244.2161085276,
+        "nav_per_share_source": 9.821547043,
+        "method_1_nav": 9.821547043,
+        "method_2_earnings_yield": { "net_income_per_share": 0.754244216, "formula": "0.754244216 ÷ 0.045", "result": 16.7610 },
+        "method_3_nav_at_discount": { "formula": "9.821547043 × 0.85", "result": 8.34831 },
+        "indicated_fmv": { "formula": "(9.82155 + 16.7610 + 8.34831) ÷ 3", "result": 11.6436, "methods_used": ["method_1","method_2","method_3"] }
+      },
+      {
+        "year": 8,
+        "net_income_source_value": 3998841.7635790026,
+        "nav_per_share_source": 14.712817252,
+        "method_1_nav": 14.712817252,
+        "method_2_earnings_yield": { "net_income_per_share": 3.998841764, "formula": "3.998841764 ÷ 0.045", "result": 88.8631 },
+        "method_3_nav_at_discount": { "formula": "14.712817252 × 0.85", "result": 12.5059 },
+        "indicated_fmv": { "formula": "(14.71282 + 88.8631 + 12.5059) ÷ 3", "result": 38.6939, "methods_used": ["method_1","method_2","method_3"] }
+      },
+      {
+        "year": 9,
+        "net_income_source_value": 1879089.0893112859,
+        "nav_per_share_source": 16.697314347,
+        "method_1_nav": 16.697314347,
+        "method_2_earnings_yield": { "net_income_per_share": 1.879089089, "formula": "1.879089089 ÷ 0.045", "result": 41.7576 },
+        "method_3_nav_at_discount": { "formula": "16.697314347 × 0.85", "result": 14.1927 },
+        "indicated_fmv": { "formula": "(16.69731 + 41.7576 + 14.1927) ÷ 3", "result": 24.2159, "methods_used": ["method_1","method_2","method_3"] }
+      },
+      {
+        "year": 10,
+        "net_income_source_value": 4299145.423274402,
+        "nav_per_share_source": 13.591344081,
+        "method_1_nav": 13.591344081,
+        "method_2_earnings_yield": { "net_income_per_share": 4.299145423, "formula": "4.299145423 ÷ 0.045", "result": 95.5366 },
+        "method_3_nav_at_discount": { "formula": "13.591344081 × 0.85", "result": 11.5526 },
+        "indicated_fmv": { "formula": "(13.59134 + 95.5366 + 11.5526) ÷ 3", "result": 40.2268, "methods_used": ["method_1","method_2","method_3"] }
+      }
+    ]
+  },
+
+  "scenario_a_derivations": {
+    "float_cost_basis_per_share": 0.4095,
+    "float_cost_basis_aggregate": 85995.0,
+    "float_cost_basis_derivation": "Y0 portfolio_nav (409500.0) ÷ 1,000,000 = $0.4095/share; × 210,000 float shares = $85,995",
+
+    "a1_ipo_timing": {
+      "formula_float_raise": "nav_per_share × 210,000",
+      "formula_moic": "nav_per_share ÷ y0_nav_per_share  =  nav_per_share ÷ 0.4095",
+      "formula_cagr": "(moic)^(1 ÷ year) − 1",
+      "rows": [
+        {
+          "year": 0,
+          "nav_source_value": 409500.0,
+          "nav_per_share": 0.4095,
+          "float_raise": { "formula": "0.4095 × 210,000", "result": 85995.0 },
+          "moic": { "formula": "0.4095 ÷ 0.4095", "result": 1.000 },
+          "cagr": { "formula": "1.000^(1/0) — immediate; by definition 0%", "result": 0.0 },
+          "strategic_value": { "source_value": 409500.0, "formula": "409500.0 × 0.18", "result": 73710.0 }
+        },
+        {
+          "year": 4,
+          "nav_source_value": 5721583.076589291,
+          "nav_per_share": 5.721583077,
+          "float_raise": { "formula": "5.721583077 × 210,000", "result": 1201532.446 },
+          "moic": { "formula": "5.721583077 ÷ 0.4095", "result": 13.970 },
+          "cagr": { "formula": "13.970^(1/4) − 1 = e^(ln(13.970)/4) − 1 = e^(2.6366/4) − 1 = e^0.6592 − 1", "result": 0.9328, "result_pct": "93.3%" },
+          "strategic_value": { "source_value": 5721583.076589291, "formula": "5721583.076589291 × 0.18", "result": 1029884.954 }
+        },
+        {
+          "year": 8,
+          "nav_source_value": 14712817.251655187,
+          "nav_per_share": 14.712817252,
+          "float_raise": { "formula": "14.712817252 × 210,000", "result": 3089691.623 },
+          "moic": { "formula": "14.712817252 ÷ 0.4095", "result": 35.929 },
+          "cagr": { "formula": "35.929^(1/8) − 1 = e^(ln(35.929)/8) − 1 = e^(3.5815/8) − 1 = e^0.44769 − 1", "result": 0.5649, "result_pct": "56.5%" },
+          "strategic_value": { "source_value": 14712817.251655187, "formula": "14712817.251655187 × 0.18", "result": 2648307.105 }
+        },
+        {
+          "year": 10,
+          "nav_source_value": 13591344.081096116,
+          "nav_per_share": 13.591344081,
+          "float_raise": { "formula": "13.591344081 × 210,000", "result": 2854182.257 },
+          "moic": { "formula": "13.591344081 ÷ 0.4095", "result": 33.191 },
+          "cagr": { "formula": "33.191^(1/10) − 1 = e^(ln(33.191)/10) − 1 = e^(3.5027/10) − 1 = e^0.35027 − 1", "result": 0.4193, "result_pct": "41.9%" },
+          "strategic_value": { "source_value": 13591344.081096116, "formula": "13591344.081096116 × 0.18", "result": 2446441.935 }
+        }
+      ]
+    },
+
+    "a2_gradual_tranches": {
+      "shares_per_tranche": 21000,
+      "formula": "tranche_proceeds = 21,000 × (prior_year portfolio_nav ÷ 1,000,000)",
+      "rows": [
+        { "year": 1, "prior_year": 0, "prior_nav_source_value": 409500.0,        "price_per_share": 0.40950,  "tranche_proceeds": 8599.50,  "cumulative": 8599.50  },
+        { "year": 2, "prior_year": 1, "prior_nav_source_value": 3045150.7379822065, "price_per_share": 3.04515, "tranche_proceeds": 63948.19, "cumulative": 72547.69 },
+        { "year": 3, "prior_year": 2, "prior_nav_source_value": 3057829.866517363,  "price_per_share": 3.05783, "tranche_proceeds": 64214.42, "cumulative": 136762.11 },
+        { "year": 4, "prior_year": 3, "prior_nav_source_value": 3059939.262702919,  "price_per_share": 3.05994, "tranche_proceeds": 64258.75, "cumulative": 201020.86 },
+        { "year": 5, "prior_year": 4, "prior_nav_source_value": 5721583.076589291,  "price_per_share": 5.72158, "tranche_proceeds": 120153.22,"cumulative": 321174.08 },
+        { "year": 6, "prior_year": 5, "prior_nav_source_value": 6415733.895881991,  "price_per_share": 6.41573, "tranche_proceeds": 134730.32,"cumulative": 455904.40 },
+        { "year": 7, "prior_year": 6, "prior_nav_source_value": 8884304.515574956,  "price_per_share": 8.88430, "tranche_proceeds": 186570.35,"cumulative": 642474.75 },
+        { "year": 8, "prior_year": 7, "prior_nav_source_value": 9821547.043418324,  "price_per_share": 9.82155, "tranche_proceeds": 206252.48,"cumulative": 848727.23 },
+        { "year": 9, "prior_year": 8, "prior_nav_source_value": 14712817.251655187, "price_per_share": 14.71282,"tranche_proceeds": 308969.22,"cumulative": 1157696.45},
+        { "year": 10,"prior_year": 9, "prior_nav_source_value": 16697314.347117333, "price_per_share": 16.69731,"tranche_proceeds": 350643.58,"cumulative": 1508340.03}
+      ],
+      "total_proceeds": 1508340.03,
+      "comparison": {
+        "y10_single_ipo": 2854182.257,
+        "a2_total": 1508340.03,
+        "ipo_premium": { "formula": "(2854182.257 - 1508340.03) / 1508340.03", "result": 0.8924, "result_pct": "~89%" }
+      }
+    }
+  },
+
+  "scenario_b_derivations": {
+    "new_shares": 210000,
+    "post_issuance_shares": 1210000,
+
+    "at_nav_y10": {
+      "nav_source_value": 13591344.081096116,
+      "issue_price_per_share": { "formula": "13591344.081096116 ÷ 1,000,000", "result": 13.591344081 },
+      "gross_proceeds": { "formula": "210,000 × 13.591344081", "result": 2854182.257 },
+      "post_issuance_nav": { "formula": "13591344.081096116 + 2854182.257", "result": 16445526.338 },
+      "post_issuance_nav_per_share": { "formula": "16445526.338 ÷ 1,210,000", "result": 13.591344081 },
+      "dilution": { "formula": "(13.591344 − 13.591344) ÷ 13.591344", "result": 0.0, "result_pct": "0% — no dilution" }
+    },
+
+    "below_nav_y10": {
+      "nav_per_share": 13.591344081,
+      "discount_applied": 0.15,
+      "discounted_price": { "formula": "13.591344081 × (1 − 0.15) = 13.591344081 × 0.85", "result": 11.552642469 },
+      "gross_proceeds_at_discount": { "formula": "210,000 × 11.552642469", "result": 2426054.918 },
+      "proceeds_shortfall_vs_nav": { "formula": "2854182.257 − 2426054.918", "result": 428127.339 },
+      "post_issuance_nav_at_discount": { "formula": "13591344.081096116 + 2426054.918", "result": 16017399.0 },
+      "post_issuance_nav_per_share_at_discount": { "formula": "16017399.0 ÷ 1,210,000", "result": 13.237520661 },
+      "dilution_pct": { "formula": "(13.591344081 − 13.237520661) ÷ 13.591344081", "result": 0.02603, "result_pct": "2.60%" },
+      "strategic_value_decline": {
+        "shares": 180000,
+        "nav_loss_per_share": { "formula": "13.591344081 − 13.237520661", "result": 0.353823420 },
+        "total_decline": { "formula": "180,000 × 0.353823420", "result": 63688.22 }
+      }
+    },
+
+    "deployment_of_proceeds": {
+      "base": 2854182.257,
+      "base_derivation": "Gross proceeds from 210,000 shares issued at Y10 NAV per share (13.591344081)",
+      "formula_fv": "base × (1 + annual_rate)^n",
+      "formula_moic": "(1 + annual_rate)^n",
+      "scenarios": [
+        {
+          "label": "A — 18.08% (engine portfolio CAGR Y1–Y10)",
+          "annual_rate": 0.1808,
+          "rate_derivation": "engine_json: (years[10].portfolio_nav / years[0].portfolio_nav)^(1/10) − 1 = (13591344.08/409500.0)^0.1 − 1",
+          "fv_5yr": { "formula": "2854182.257 × (1.1808)^5 = 2854182.257 × 2.29644", "result": 6554741.0 },
+          "fv_10yr": { "formula": "2854182.257 × (1.1808)^10 = 2854182.257 × 5.27364", "result": 15048982.0 },
+          "moic_5yr": { "formula": "(1.1808)^5", "result": 2.29644 },
+          "moic_10yr": { "formula": "(1.1808)^10", "result": 5.27364 }
+        },
+        {
+          "label": "B — 8.00% (conservative private RE hurdle)",
+          "annual_rate": 0.08,
+          "fv_5yr": { "formula": "2854182.257 × (1.08)^5 = 2854182.257 × 1.469328", "result": 4194862.0 },
+          "fv_10yr": { "formula": "2854182.257 × (1.08)^10 = 2854182.257 × 2.158925", "result": 6161097.0 },
+          "moic_5yr": { "formula": "(1.08)^5", "result": 1.469328 },
+          "moic_10yr": { "formula": "(1.08)^10", "result": 2.158925 }
+        },
+        {
+          "label": "C — 15.00% (hypothetical SPV3 target; illustrative only)",
+          "annual_rate": 0.15,
+          "fv_5yr": { "formula": "2854182.257 × (1.15)^5 = 2854182.257 × 2.011357", "result": 5741021.0 },
+          "fv_10yr": { "formula": "2854182.257 × (1.15)^10 = 2854182.257 × 4.045558", "result": 11550003.0 },
+          "moic_5yr": { "formula": "(1.15)^5", "result": 2.011357 },
+          "moic_10yr": { "formula": "(1.15)^10", "result": 4.045558 }
+        }
+      ]
+    }
+  },
+
+  "rounding_policy": "Source values carried at full float64 precision from engine JSON. Results displayed in HTML/companion JSON are rounded to 2 decimal places (currency) or 1 decimal place (percentages). This file retains full precision in source_value fields.",
+  "bcsc_note": "Forward-looking projections per BCSC NI 51-102 continuous-disclosure posture. Planned/intended values only. Actual results may differ materially."
+}
