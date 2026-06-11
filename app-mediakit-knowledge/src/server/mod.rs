@@ -275,6 +275,8 @@ pub fn router(state: AppState) -> Router {
         // the handler strips an optional trailing `.md` for the
         // git-clone-style UX (`/git/topic-foo.md` or `/git/topic-foo`).
         .route("/git/{*slug}", get(git_markdown))
+        // L25: editor route stub — loads CodeMirror only on /edit/* (route-gated bundle)
+        .route("/edit/{*slug}", get(edit_page))
         // Wikipedia-parity special pages
         .route("/special/whatlinkshere/{*slug}", get(what_links_here))
         .route("/special/pageinfo/{*slug}", get(page_info))
