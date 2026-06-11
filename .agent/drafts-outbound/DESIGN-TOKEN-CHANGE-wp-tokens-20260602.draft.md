@@ -6,7 +6,7 @@ state: draft-pending-master-cosign
 originating_cluster: project-workplace
 created: 2026-06-02
 to: project-design
-master_cosign: command@claude-code 2026-06-02
+master_cosign: jwoodfine 2026-06-11
 research_trail:
   source_files:
     - app-workplace-http-prototype/src/assets/style.css
