@@ -55,7 +55,7 @@ WEIGHTS_DISK="${INSTANCE}-weights"
 # When set, new weights disks are restored from this snapshot instead of created empty.
 # Set this after uploading weights: create-yoyo-snapshot.sh → SLM_YOYO_WEIGHTS_SNAPSHOT
 WEIGHTS_SNAPSHOT="${SLM_YOYO_WEIGHTS_SNAPSHOT:-}"
-LIFECYCLE_LOG="${SLM_YOYO_LIFECYCLE_LOG:-/var/log/yoyo-lifecycle.log}"
+LIFECYCLE_LOG="${SLM_YOYO_LIFECYCLE_LOG:-/srv/foundry/data/yoyo-lifecycle.log}"
 KILL_SWITCH="${SLM_YOYO_KILL_SWITCH:-/srv/foundry/data/yoyo-disabled}"
 
 # ── Flag parsing ─────────────────────────────────────────────────────────────
@@ -456,6 +456,7 @@ attempt_start_once() {
 log "Session start. instance=${INSTANCE} primary_zone=${PRIMARY_ZONE} retry_cycles=${RETRY_CYCLES} retry_wait=${RETRY_WAIT}s wait_ready=${WAIT_READY}s auto_snapshot=${AUTO_SNAPSHOT}"
 
 STARTED_ZONE=""
+_SCRIPT_START=$(date +%s)
 cycle=0
 while [[ "${cycle}" -lt "${RETRY_CYCLES}" ]]; do
     if [[ -e "${KILL_SWITCH}" ]]; then
@@ -469,6 +470,12 @@ while [[ "${cycle}" -lt "${RETRY_CYCLES}" ]]; do
 
     attempt_start_once
     rc=$?
+    _attempt_elapsed=$(( $(date +%s) - _SCRIPT_START ))
+    if   [[ "${rc}" -eq 0 ]]; then _result="SUCCESS"
+    elif [[ "${rc}" -eq 1 ]]; then _result="HARD_FAIL"
+    else                           _result="STOCKOUT"
+    fi
+    log "[RETRY:ATTEMPT cycle=$(( cycle + 1 ))/${RETRY_CYCLES} elapsed=${_attempt_elapsed}s result=${_result}]"
     if [[ "${rc}" -eq 0 ]]; then
         # Re-check kill switch — may have been activated while gcloud start was in-flight
         if [[ -e "${KILL_SWITCH}" ]]; then
