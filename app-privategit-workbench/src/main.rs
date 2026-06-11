@@ -86,6 +86,15 @@ struct AppState {
 /// canonical fs path, checking that it stays within the declared root.
 /// Returns (fs_path, writable).
 fn resolve_path(roots: &[RootEntry], url_path: &str) -> Result<(PathBuf, bool)> {
+    resolve_path_with_root(roots, url_path).map(|(p, w, _)| (p, w))
+}
+
+/// Like `resolve_path` but also returns the canonicalised root fs path.
+/// Returns (fs_path, writable, root_canonical).
+fn resolve_path_with_root(
+    roots: &[RootEntry],
+    url_path: &str,
+) -> Result<(PathBuf, bool, PathBuf)> {
     let url_path = url_path.trim_start_matches('/');
 
     for root in roots {
@@ -120,7 +129,7 @@ fn resolve_path(roots: &[RootEntry], url_path: &str) -> Result<(PathBuf, bool)> 
             return Err(anyhow!("path traversal attempt"));
         }
 
-        return Ok((canonical, root.writable));
+        return Ok((canonical, root.writable, root_canonical));
     }
 
     Err(anyhow!("no matching root for path: {}", url_path))
@@ -691,6 +700,110 @@ async fn delete_file(State(state): State<AppState>, Query(q): Query<FileQuery>) 
         fs::remove_file(&fs_path)
     };
     if let Err(e) = result {
+        return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string());
+    }
+
+    let mut resp_map = HashMap::new();
+    resp_map.insert("ok", serde_json::Value::Bool(true));
+    Json(resp_map).into_response()
+}
+
+// ---------------------------------------------------------------------------
+// Trash (soft-delete) + Restore
+// ---------------------------------------------------------------------------
+
+#[derive(Serialize)]
+struct TrashResponse {
+    ok: bool,
+    trash_key: String,
+    original_path: String,
+}
+
+/// POST /trash?path=<url_path>
+/// Moves the item into <root>/.wb-trash/<timestamp_ms>_<leaf> instead of
+/// permanently deleting it. Returns {ok, trash_key, original_path} so the
+/// frontend can offer an Undo button that calls /restore.
+async fn trash_file(State(state): State<AppState>, Query(q): Query<FileQuery>) -> Response {
+    let (fs_path, writable, root_canonical) =
+        match resolve_path_with_root(&state.roots, &q.path) {
+            Ok(v) => v,
+            Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
+        };
+
+    if !writable {
+        return err(StatusCode::FORBIDDEN, "path is not writable");
+    }
+
+    if !fs_path.exists() {
+        return err(StatusCode::NOT_FOUND, "file not found");
+    }
+
+    let trash_dir = root_canonical.join(".wb-trash");
+    if let Err(e) = fs::create_dir_all(&trash_dir) {
+        return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string());
+    }
+
+    let ts = std::time::SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+
+    let leaf = fs_path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("deleted");
+    let trash_key = format!("{ts}_{leaf}");
+    let trash_path = trash_dir.join(&trash_key);
+
+    if let Err(e) = fs::rename(&fs_path, &trash_path) {
+        return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string());
+    }
+
+    Json(TrashResponse {
+        ok: true,
+        trash_key,
+        original_path: q.path.trim_start_matches('/').to_string(),
+    })
+    .into_response()
+}
+
+#[derive(Deserialize)]
+struct RestoreQuery {
+    trash_key: String,
+    original_path: String,
+}
+
+/// POST /restore?trash_key=<key>&original_path=<url_path>
+/// Moves an item from <root>/.wb-trash/<key> back to its original location.
+async fn restore_file(
+    State(state): State<AppState>,
+    Query(q): Query<RestoreQuery>,
+) -> Response {
+    let (fs_dest, writable, root_canonical) =
+        match resolve_path_with_root(&state.roots, &q.original_path) {
+            Ok(v) => v,
+            Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
+        };
+
+    if !writable {
+        return err(StatusCode::FORBIDDEN, "path is not writable");
+    }
+
+    if q.trash_key.contains('/') || q.trash_key.contains("..") || q.trash_key.is_empty() {
+        return err(StatusCode::BAD_REQUEST, "invalid trash key");
+    }
+
+    let trash_path = root_canonical.join(".wb-trash").join(&q.trash_key);
+
+    if !trash_path.exists() {
+        return err(StatusCode::NOT_FOUND, "trash entry not found");
+    }
+
+    if fs_dest.exists() {
+        return err(StatusCode::CONFLICT, "destination already exists");
+    }
+
+    if let Err(e) = fs::rename(&trash_path, &fs_dest) {
         return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string());
     }
 
@@ -1342,6 +1455,8 @@ async fn main() -> Result<()> {
         .route("/duplicate", post(duplicate_file))
         .route("/create", post(create_file))
         .route("/delete", post(delete_file))
+        .route("/trash", post(trash_file))
+        .route("/restore", post(restore_file))
         .route("/git-status", get(git_status))
         .route("/document", get(get_document))
         .route("/pdf", get(get_pdf))
