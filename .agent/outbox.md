@@ -257,7 +257,8 @@ to: totebox@project-console
 re: PPN operator surfaces — F-key panel roadmap for governance at scale
 created: 2026-05-30T18:30:00Z
 priority: normal
-status: pending
+status: stale
+stale_reason: no ACK after 10+ days; re-send if still needed
 attempts: 1
 msg-id: project-infrastructure-20260530-guidance-project-console
 ---
@@ -329,7 +330,8 @@ to: totebox@project-data
 re: Stage 6 path + VM-Totebox Phase 1 deployment — unblock the fastest route to testing
 created: 2026-05-30T18:30:00Z
 priority: high
-status: pending
+status: stale
+stale_reason: no ACK after 10+ days; re-send if still needed
 attempts: 1
 msg-id: project-infrastructure-20260530-guidance-project-data
 ---
@@ -401,7 +403,8 @@ to: totebox@project-system
 re: PPN + Totebox Orchestration testing alignment — Phase 1D priorities + scaling vision
 created: 2026-05-30T18:30:00Z
 priority: normal
-status: pending
+status: stale
+stale_reason: no ACK after 10+ days; re-send if still needed
 attempts: 1
 msg-id: project-infrastructure-20260530-guidance-project-system
 ---
@@ -467,7 +470,8 @@ to: totebox@project-system
 re: BRIEF-substrate-phd-thesis-2026-05-27.md — pickup available in project-infrastructure
 created: 2026-05-30T17:00:00Z
 priority: normal
-status: pending
+status: stale
+stale_reason: no ACK after 10+ days; superseded by fresh re-send 2026-06-10
 attempts: 1
 msg-id: project-infrastructure-20260530-brief-phd-thesis-relocation
 ---
@@ -490,7 +494,8 @@ to: totebox@project-intelligence
 re: 2 BRIEFs available for pickup — slm-learning-loop + slm-substrate-master
 created: 2026-05-30T17:00:00Z
 priority: normal
-status: pending
+status: stale
+stale_reason: no ACK after 10+ days; superseded by fresh re-send 2026-06-10
 attempts: 1
 msg-id: project-infrastructure-20260530-brief-slm-relocation
 ---
@@ -513,7 +518,8 @@ to: totebox@project-knowledge
 re: BRIEF-app-mediakit-knowledge-2030.md — pickup available in project-infrastructure
 created: 2026-05-30T17:00:00Z
 priority: normal
-status: pending
+status: stale
+stale_reason: no ACK after 10+ days; superseded by fresh re-send 2026-06-10
 attempts: 1
 msg-id: project-infrastructure-20260530-brief-knowledge-relocation
 ---
