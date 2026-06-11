@@ -124,10 +124,11 @@ mod tests {
     async fn renders_known_page() {
         let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
+        // Canonical clean slug (topic- prefix stripped); topic-test.md served via fallback.
         let resp = app
             .oneshot(
                 Request::builder()
-                    .uri("/wiki/topic-test")
+                    .uri("/wiki/test")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -140,6 +141,27 @@ mod tests {
         assert!(
             html.contains("Heading"),
             "body heading should appear: {html}"
+        );
+    }
+
+    /// /wiki/topic-test 301-redirects to the clean canonical slug /wiki/test.
+    #[tokio::test]
+    async fn wiki_page_topic_prefix_redirects_to_clean_slug() {
+        let (state, _dir, _state_dir) = fixture_state().await;
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/wiki/topic-test")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::MOVED_PERMANENTLY);
+        assert_eq!(
+            resp.headers().get("location").and_then(|v| v.to_str().ok()),
+            Some("/wiki/test")
         );
     }
 
@@ -185,7 +207,7 @@ mod tests {
         let resp = app
             .oneshot(
                 Request::builder()
-                    .uri("/wiki/topic-test")
+                    .uri("/wiki/test")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -212,7 +234,7 @@ mod tests {
         let resp = app
             .oneshot(
                 Request::builder()
-                    .uri("/wiki/topic-test")
+                    .uri("/wiki/test")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -238,7 +260,7 @@ mod tests {
         let resp = app
             .oneshot(
                 Request::builder()
-                    .uri("/wiki/topic-test")
+                    .uri("/wiki/test")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -312,7 +334,7 @@ mod tests {
         let resp = app
             .oneshot(
                 Request::builder()
-                    .uri("/wiki/topic-test")
+                    .uri("/wiki/test")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -890,7 +912,7 @@ mod tests {
         let resp = app
             .oneshot(
                 Request::builder()
-                    .uri("/wiki/topic-test")
+                    .uri("/wiki/test")
                     .header("accept", "application/json")
                     .body(Body::empty())
                     .unwrap(),
@@ -930,7 +952,7 @@ mod tests {
         let resp = app
             .oneshot(
                 Request::builder()
-                    .uri("/wiki/topic-test?asof=deadbeefdeadbeef")
+                    .uri("/wiki/test?asof=deadbeefdeadbeef")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -1010,7 +1032,7 @@ mod tests {
         let resp = app
             .oneshot(
                 Request::builder()
-                    .uri("/es/wiki/topic-test")
+                    .uri("/es/wiki/test")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -1035,7 +1057,7 @@ mod tests {
         let resp = app
             .oneshot(
                 Request::builder()
-                    .uri("/es/wiki/topic-test")
+                    .uri("/es/wiki/test")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -1109,7 +1131,7 @@ mod tests {
         let resp = app
             .oneshot(
                 Request::builder()
-                    .uri("/es/wiki/topic-test")
+                    .uri("/es/wiki/test")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -1119,8 +1141,8 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
-            html.contains(r#"href="/wiki/topic-test""#),
-            "ES article nav should link to EN article: {html}"
+            html.contains(r#"href="/wiki/test""#),
+            "ES article nav should link to EN article at clean slug: {html}"
         );
     }
 
@@ -1138,7 +1160,7 @@ mod tests {
         let resp = app
             .oneshot(
                 Request::builder()
-                    .uri("/es/wiki/topic-test")
+                    .uri("/es/wiki/test")
                     .body(Body::empty())
                     .unwrap(),
             )
