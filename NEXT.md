@@ -1,6 +1,20 @@
 # NEXT.md — project-data
+# NEXT.md — project-editorial
 
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
+> **Note: content below the horizontal rule is contaminated from other archives — cleanup needed.**
+
+---
+
+## Carry-forward — 2026-06-11
+
+- [ ] **B19/B20/B21 dispatch** — operator-pending; relay from Command references files that don't exist in project-gis drafts-outbound; query sent to Command (msg-id: command-20260611-unable-to-action-b19-b20-b21-relay-sourc). Wait for Command response before actioning. [2026-06-11 totebox@claude-code]
+- [ ] **J3 §6 Results** — blocked on Night 4 seismic re-run + Night 5 flood build at project-gis [2026-05-28 totebox@project-editorial]
+- [ ] **J6 §6 Results** — blocked on user study execution (project-bim scope) [2026-05-28 totebox@project-editorial]
+- [ ] **J1 §7.2 primary spec** — blocked on Phase 24B Kontur population join (project-gis scope) [2026-05-28 totebox@project-editorial]
+- [ ] **NEXT.md full rewrite** — file is contaminated with project-design, project-bim, project-knowledge content; needs replacement with project-editorial-only content [2026-06-11 totebox@claude-code]
+
+---
 
 Last updated: 2026-06-01
 
