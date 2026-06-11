@@ -1,0 +1,300 @@
+{
+  "entity": "Bencal Management Corp.",
+  "document": "Share Capital Proforma V1",
+  "generated_at": "2026-06-10",
+  "version": "V1",
+  "status": "draft",
+  "currency": "CAD",
+  "accounting_standard": "IFRS 10.27 — investment entity (FVTPL)",
+  "source_proforma": "COMPLIANCE_MCorp_2026_06_05_Bencal_Management_V2.json (engine-precise NAV figures)",
+  "brief_section": "v0.15.6 §5f",
+  "html_companion": "COMPLIANCE_MCorp_2026_06_10_Proforma_Bencal_ShareCapital_V1.html",
+  "notes": [
+    "All NAV figures are derived from the engine-generated V2 proforma (÷ 1,000,000 shares).",
+    "Market cap = NAV for a FVTPL investment entity; IFRS book equity per share = NAV per share.",
+    "Float shares (210,000) are originally held by Kiel Capital Inc. and Elzen Holdings Inc.",
+    "Strategic partner shares allocated at nominal consideration.",
+    "Holding-company discount range 10–30%; −15% used as base case in valuation."
+  ],
+
+  "share_capital": {
+    "total_shares_authorised_planned": 1000000,
+    "pre_sale": {
+      "description": "Kiel Capital and Elzen Holdings hold float shares",
+      "shareholders": [
+        { "name": "Kiel Capital Inc.",          "shares": 375000, "pct": 0.375, "consideration": "includes 105,000 float shares" },
+        { "name": "Elzen Holdings Inc.",         "shares": 375000, "pct": 0.375, "consideration": "includes 105,000 float shares" },
+        { "name": "Strategic partners",          "shares": 180000, "pct": 0.180, "consideration": "nominal" },
+        { "name": "Directors, officers & other", "shares":  70000, "pct": 0.070, "consideration": "TBD" }
+      ],
+      "total": { "shares": 1000000, "pct": 1.0 }
+    },
+    "post_sale": {
+      "description": "210,000 float shares distributed to public investors",
+      "shareholders": [
+        { "name": "Kiel Capital Inc.",          "shares": 270000, "pct": 0.270, "notes": "residual after 105,000 float shares sold" },
+        { "name": "Elzen Holdings Inc.",         "shares": 270000, "pct": 0.270, "notes": "residual after 105,000 float shares sold" },
+        { "name": "Float (public investors)",    "shares": 210000, "pct": 0.210, "notes": "105,000 from Kiel + 105,000 from Elzen" },
+        { "name": "Strategic partners",          "shares": 180000, "pct": 0.180, "notes": "unchanged; nominal consideration" },
+        { "name": "Directors, officers & other", "shares":  70000, "pct": 0.070, "notes": "unchanged" }
+      ],
+      "total": { "shares": 1000000, "pct": 1.0 }
+    },
+    "float_shares": 210000,
+    "float_cost_basis_per_share": 0.41,
+    "float_cost_basis_aggregate": 86100
+  },
+
+  "nav_rollforward": {
+    "shares": 1000000,
+    "note": "Engine-precise aggregate NAV sourced from V2 proforma; per-share = aggregate ÷ 1,000,000",
+    "years": [
+      { "year": 0,  "nav_aggregate": 409500.0,        "nav_per_share": 0.4095,  "yoy_pct": null,    "float_value_210k": 85995.0,   "strategic_value_180k": 73710.0  },
+      { "year": 1,  "nav_aggregate": 3045150.74,       "nav_per_share": 3.04515, "yoy_pct": 6.436,   "float_value_210k": 639481.65, "strategic_value_180k": 548127.13 },
+      { "year": 2,  "nav_aggregate": 3057829.87,       "nav_per_share": 3.05783, "yoy_pct": 0.004,   "float_value_210k": 642144.23, "strategic_value_180k": 550409.37 },
+      { "year": 3,  "nav_aggregate": 3059938.74,       "nav_per_share": 3.05994, "yoy_pct": 0.001,   "float_value_210k": 642587.14, "strategic_value_180k": 550789.17 },
+      { "year": 4,  "nav_aggregate": 5721583.0,        "nav_per_share": 5.72158, "yoy_pct": 0.870,   "float_value_210k": 1201532.43,"strategic_value_180k": 1029884.94 },
+      { "year": 5,  "nav_aggregate": 6415734.0,        "nav_per_share": 6.41573, "yoy_pct": 0.121,   "float_value_210k": 1347304.14,"strategic_value_180k": 1154832.12 },
+      { "year": 6,  "nav_aggregate": 8884305.0,        "nav_per_share": 8.88431, "yoy_pct": 0.385,   "float_value_210k": 1865704.05,"strategic_value_180k": 1599174.90 },
+      { "year": 7,  "nav_aggregate": 9821547.0,        "nav_per_share": 9.82155, "yoy_pct": 0.105,   "float_value_210k": 2062524.87,"strategic_value_180k": 1767878.46 },
+      { "year": 8,  "nav_aggregate": 14712817.0,       "nav_per_share": 14.71282,"yoy_pct": 0.498,   "float_value_210k": 3089691.57,"strategic_value_180k": 2648307.06 },
+      { "year": 9,  "nav_aggregate": 16697314.0,       "nav_per_share": 16.69731,"yoy_pct": 0.135,   "float_value_210k": 3506435.94,"strategic_value_180k": 3005516.52 },
+      { "year": 10, "nav_aggregate": 13591344.08,      "nav_per_share": 13.59134,"yoy_pct": -0.186,  "float_value_210k": 2854182.12,"strategic_value_180k": 2446441.82 }
+    ]
+  },
+
+  "valuation_three_methods": {
+    "note": "Mirrors WCP V2 valuation structure. Primary method: NAV/share. Earnings yield N/M in loss/negligible-income years. Indicated FMV = simple average across applicable methods.",
+    "capitalization_rate": 0.045,
+    "holding_co_discount": 0.15,
+    "years": [
+      {
+        "year": 0,
+        "nav_per_share": 0.41,
+        "earnings_yield_per_share": null,
+        "earnings_yield_note": "N/M — loss year",
+        "nav_at_discount": 0.35,
+        "indicated_fmv_avg": 0.38,
+        "net_income_aggregate": -2331462.92
+      },
+      {
+        "year": 1,
+        "nav_per_share": 3.05,
+        "earnings_yield_per_share": 42.49,
+        "nav_at_discount": 2.59,
+        "indicated_fmv_avg": 16.04,
+        "net_income_aggregate": 1913899.94
+      },
+      {
+        "year": 2,
+        "nav_per_share": 3.06,
+        "earnings_yield_per_share": null,
+        "earnings_yield_note": "N/M — negligible net loss",
+        "nav_at_discount": 2.60,
+        "indicated_fmv_avg": 2.83,
+        "net_income_aggregate": -1190.87
+      },
+      {
+        "year": 3,
+        "nav_per_share": 3.06,
+        "earnings_yield_per_share": null,
+        "earnings_yield_note": "N/M — negligible net loss",
+        "nav_at_discount": 2.60,
+        "indicated_fmv_avg": 2.83,
+        "net_income_aggregate": -12186.87
+      },
+      {
+        "year": 4,
+        "nav_per_share": 5.72,
+        "earnings_yield_per_share": 58.22,
+        "nav_at_discount": 4.86,
+        "indicated_fmv_avg": 22.93,
+        "net_income_aggregate": 2619000.0
+      },
+      {
+        "year": 5,
+        "nav_per_share": 6.42,
+        "earnings_yield_per_share": 11.91,
+        "nav_at_discount": 5.46,
+        "indicated_fmv_avg": 7.93,
+        "net_income_aggregate": 536000.0
+      },
+      {
+        "year": 6,
+        "nav_per_share": 8.88,
+        "earnings_yield_per_share": 41.11,
+        "nav_at_discount": 7.55,
+        "indicated_fmv_avg": 19.18,
+        "net_income_aggregate": 1850000.0
+      },
+      {
+        "year": 7,
+        "nav_per_share": 9.82,
+        "earnings_yield_per_share": 16.76,
+        "nav_at_discount": 8.35,
+        "indicated_fmv_avg": 11.64,
+        "net_income_aggregate": 754000.0
+      },
+      {
+        "year": 8,
+        "nav_per_share": 14.71,
+        "earnings_yield_per_share": 88.89,
+        "nav_at_discount": 12.50,
+        "indicated_fmv_avg": 38.70,
+        "net_income_aggregate": 4000000.0
+      },
+      {
+        "year": 9,
+        "nav_per_share": 16.70,
+        "earnings_yield_per_share": 41.78,
+        "nav_at_discount": 14.20,
+        "indicated_fmv_avg": 24.23,
+        "net_income_aggregate": 1880000.0
+      },
+      {
+        "year": 10,
+        "nav_per_share": 13.59,
+        "earnings_yield_per_share": 95.56,
+        "nav_at_discount": 11.55,
+        "indicated_fmv_avg": 40.23,
+        "net_income_aggregate": 4300000.0
+      }
+    ]
+  },
+
+  "scenario_a_secondary_market": {
+    "description": "Kiel Capital Inc. and Elzen Holdings Inc. sell existing shares. Proceeds flow to sellers. Bencal Management Corp. financial statements unaffected.",
+    "float_shares": 210000,
+    "float_cost_basis_per_share": 0.41,
+    "float_cost_basis_aggregate": 86100,
+
+    "a1_single_ipo": {
+      "description": "All 210,000 float shares sold at once at prevailing NAV",
+      "tranches": [
+        { "timing": "Y0", "nav_per_share": 0.41,  "float_raise": 86100,   "seller_moic": 1.00, "seller_cagr": 0.000, "strategic_value_at_date": 73710    },
+        { "timing": "Y4", "nav_per_share": 5.72,  "float_raise": 1201200, "seller_moic": 13.95,"seller_cagr": 0.933, "strategic_value_at_date": 1029885   },
+        { "timing": "Y8", "nav_per_share": 14.71, "float_raise": 3089100, "seller_moic": 35.88,"seller_cagr": 0.565, "strategic_value_at_date": 2648307   },
+        { "timing": "Y10","nav_per_share": 13.59, "float_raise": 2853900, "seller_moic": 33.18,"seller_cagr": 0.419, "strategic_value_at_date": 2446442   }
+      ],
+      "note": "Seller MOIC and CAGR from Y0 cost basis ($0.41/share). Kiel and Elzen each sell 105,000 shares."
+    },
+
+    "a2_gradual_tranches": {
+      "description": "21,000 shares per year (Y1–Y10), each priced at prior year-end audited NAV",
+      "shares_per_tranche": 21000,
+      "tranches": [
+        { "year": 1,  "price_prior_yr_nav": 0.41,  "tranche_proceeds": 8610,   "cumulative_proceeds": 8610   },
+        { "year": 2,  "price_prior_yr_nav": 3.05,  "tranche_proceeds": 64050,  "cumulative_proceeds": 72660  },
+        { "year": 3,  "price_prior_yr_nav": 3.06,  "tranche_proceeds": 64260,  "cumulative_proceeds": 136920 },
+        { "year": 4,  "price_prior_yr_nav": 3.06,  "tranche_proceeds": 64260,  "cumulative_proceeds": 201180 },
+        { "year": 5,  "price_prior_yr_nav": 5.72,  "tranche_proceeds": 120120, "cumulative_proceeds": 321300 },
+        { "year": 6,  "price_prior_yr_nav": 6.42,  "tranche_proceeds": 134820, "cumulative_proceeds": 456120 },
+        { "year": 7,  "price_prior_yr_nav": 8.88,  "tranche_proceeds": 186480, "cumulative_proceeds": 642600 },
+        { "year": 8,  "price_prior_yr_nav": 9.82,  "tranche_proceeds": 206220, "cumulative_proceeds": 848820 },
+        { "year": 9,  "price_prior_yr_nav": 14.71, "tranche_proceeds": 308910, "cumulative_proceeds": 1157730},
+        { "year": 10, "price_prior_yr_nav": 16.70, "tranche_proceeds": 350700, "cumulative_proceeds": 1508430}
+      ],
+      "total_proceeds": 1508430,
+      "comparison_vs_y10_ipo": {
+        "y10_ipo_proceeds": 2853900,
+        "a2_proceeds": 1508430,
+        "ipo_premium_pct": 0.892,
+        "note": "Single Y10 IPO generates ~89% more proceeds than gradual sale; gradual provides price discovery and staged liquidity."
+      }
+    }
+  },
+
+  "scenario_b_primary_issuance": {
+    "description": "Bencal Management Corp. issues 210,000 new shares. Proceeds flow to Bencal treasury for additional SPV investment.",
+    "new_shares_issued": 210000,
+    "pre_issuance_shares": 1000000,
+    "post_issuance_shares": 1210000,
+
+    "at_nav_no_dilution": [
+      {
+        "timing": "Y4",
+        "issue_price_per_share": 5.72158,
+        "gross_proceeds": 1201531.80,
+        "pre_issuance_nav": 5721583.0,
+        "post_issuance_nav": 6923114.80,
+        "post_issuance_nav_per_share": 5.72158,
+        "dilution_pct": 0.0
+      },
+      {
+        "timing": "Y10",
+        "issue_price_per_share": 13.59134,
+        "gross_proceeds": 2854181.40,
+        "pre_issuance_nav": 13591344.08,
+        "post_issuance_nav": 16445525.48,
+        "post_issuance_nav_per_share": 13.59134,
+        "dilution_pct": 0.0
+      }
+    ],
+
+    "below_nav_dilution_y10": {
+      "discount_pct": 0.15,
+      "at_nav_per_share": 13.59134,
+      "discounted_price_per_share": 11.55264,
+      "gross_proceeds_at_nav": 2854181.40,
+      "gross_proceeds_at_discount": 2426054.40,
+      "proceeds_shortfall": 428127.0,
+      "post_issuance_nav_at_nav_price": 16445525.48,
+      "post_issuance_nav_at_discount": 16017398.48,
+      "post_issuance_nav_per_share_at_nav": 13.59134,
+      "post_issuance_nav_per_share_at_discount": 13.23752,
+      "dilution_pct": 0.0257,
+      "strategic_partner_value_decline": {
+        "shares": 180000,
+        "nav_per_share_loss": 0.35382,
+        "total_value_decline": 63688
+      }
+    },
+
+    "deployment_of_proceeds": {
+      "base_deployed": 2854181.40,
+      "note": "FV = gross future value of proceeds. MOIC = (1 + annual_rate)^n. All amounts planned/intended.",
+      "scenarios": [
+        {
+          "label": "A — Proportional IRR (engine portfolio CAGR Y1–Y10)",
+          "annual_rate": 0.1808,
+          "fv_5yr": 6555600,
+          "fv_10yr": 15056000,
+          "moic_5yr": 2.297,
+          "moic_10yr": 5.276,
+          "basis": "Engine-computed Y1–Y10 portfolio CAGR; proceeds reinvested proportionally across existing SPV structure"
+        },
+        {
+          "label": "B — Conservative floor (private RE hurdle)",
+          "annual_rate": 0.08,
+          "fv_5yr": 4195000,
+          "fv_10yr": 6161000,
+          "moic_5yr": 1.469,
+          "moic_10yr": 2.159,
+          "basis": "Conservative private real estate IRR floor; stress-test scenario"
+        },
+        {
+          "label": "C — Hypothetical SPV3 target (illustrative)",
+          "annual_rate": 0.15,
+          "fv_5yr": 5741000,
+          "fv_10yr": 11551000,
+          "moic_5yr": 2.011,
+          "moic_10yr": 4.046,
+          "basis": "Illustrative only; no SPV3 transaction is planned"
+        }
+      ]
+    }
+  },
+
+  "scenario_comparison_y10": {
+    "description": "Secondary (A) vs. primary (B) at Y10 basis",
+    "dimensions": [
+      { "dimension": "Proceeds recipient",           "scenario_a": "Kiel/Elzen (~$1.43M each)",        "scenario_b": "Bencal treasury ($2,854K)" },
+      { "dimension": "Cash received by Bencal",      "scenario_a": 0,                                   "scenario_b": 2854181 },
+      { "dimension": "Shares outstanding after",     "scenario_a": 1000000,                             "scenario_b": 1210000 },
+      { "dimension": "NAV/share after (at NAV)",     "scenario_a": 13.59134,                            "scenario_b": 13.59134 },
+      { "dimension": "Impact on Bencal P&L",         "scenario_a": "None — secondary sale",             "scenario_b": "Incremental return on invested proceeds" },
+      { "dimension": "Kiel+Elzen combined gain",     "scenario_a": 2767800,                             "scenario_b": 0 },
+      { "dimension": "Kiel+Elzen residual equity",   "scenario_a": 3669662,                             "scenario_b": 3669662 }
+    ]
+  }
+}
