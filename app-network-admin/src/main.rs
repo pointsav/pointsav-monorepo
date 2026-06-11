@@ -16,12 +16,34 @@ struct AuthorizedPayload {
     intent: String,
     target: String,
 }
-#[derive(Serialize, Debug)]
-struct MeshPayload {
-    sender_id: String,
-    intent: String,
-    target: String,
-    timestamp: String,
+
+// 16-byte binary mesh frame (Genesis Protocol wire format).
+// [0..2]  op_code: u16 BE  — PING=0x0001, ISOLATE=0x0002, unknown=0x0000
+// [2..4]  target_node: u16 BE — 0x0001=NODE-CLOUD-RELAY, 0x0002=NODE-LAPTOP-A,
+//                               0x0003=NODE-IMAC-12, 0xFFFF=broadcast
+// [4..8]  timestamp: u32 BE  — Unix seconds
+// [8..16] reserved: [u8; 8]  — zeroed
+fn build_mesh_frame(intent: &str, target: &str) -> [u8; 16] {
+    let op: u16 = match intent {
+        "ping" => 0x0001,
+        "isolate" => 0x0002,
+        _ => 0x0000,
+    };
+    let node: u16 = match target {
+        "NODE-CLOUD-RELAY" => 0x0001,
+        "NODE-LAPTOP-A" => 0x0002,
+        "NODE-IMAC-12" => 0x0003,
+        _ => 0xFFFF,
+    };
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as u32;
+    let mut frame = [0u8; 16];
+    frame[0..2].copy_from_slice(&op.to_be_bytes());
+    frame[2..4].copy_from_slice(&node.to_be_bytes());
+    frame[4..8].copy_from_slice(&ts.to_be_bytes());
+    frame
 }
 #[derive(Serialize)]
 struct TerminalResponse {
@@ -157,16 +179,10 @@ async fn handle_translation(req: TranslateRequest) -> Result<impl warp::Reply, w
 async fn handle_authorization(
     auth: AuthorizedPayload,
     socket: Arc<Mutex<UdpSocket>>,
-    node_id: String,
+    _node_id: String,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     let timestamp = Utc::now().to_rfc3339();
-    let payload = MeshPayload {
-        sender_id: node_id,
-        intent: auth.intent.clone(),
-        target: auth.target.clone(),
-        timestamp: timestamp.clone(),
-    };
-    let data = serde_json::to_string(&payload).unwrap();
+    let frame = build_mesh_frame(&auth.intent, &auth.target);
     let sock = socket.lock().await;
     let mut success_count = 0;
 
@@ -179,7 +195,7 @@ async fn handle_authorization(
 
     for ip in target_ips {
         let target_addr = format!("{}:{}", ip, MESH_PORT);
-        if sock.send_to(data.as_bytes(), &target_addr).is_ok() {
+        if sock.send_to(&frame, &target_addr).is_ok() {
             success_count += 1;
         }
     }
