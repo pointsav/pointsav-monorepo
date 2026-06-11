@@ -11,6 +11,8 @@
 
 use crate::inclusion_proof::rfc9162_internal_hash;
 use crate::Hash256;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
 /// RFC 9162 v2 consistency proof between two tree states.
 ///

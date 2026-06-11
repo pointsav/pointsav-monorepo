@@ -11,8 +11,15 @@
 //! deliberate: ledger streams may re-deliver entries during
 //! recovery / replication.
 
-use std::collections::{HashMap, HashSet};
 use system_core::Hash256;
+
+#[cfg(feature = "std")]
+use std::collections::{HashMap, HashSet};
+#[cfg(not(feature = "std"))]
+use alloc::{
+    collections::{BTreeMap as HashMap, BTreeSet as HashSet},
+    string::String,
+};
 
 /// One revocation entry — the audit detail behind a "this capability
 /// is no longer honored" decision.
