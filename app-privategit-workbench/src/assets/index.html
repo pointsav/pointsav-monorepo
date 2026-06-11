@@ -778,6 +778,14 @@ let showHidden = localStorage.getItem('wb-show-hidden') === '1';
 // Last undo function — set by showWbToast when an undoFn is provided; cleared on dismiss.
 let lastUndoFn = null;
 
+function logActivity(action, path, meta) {
+  fetch('/_api/edit/activity', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, path: path || null, meta: meta || {} }),
+  }).catch(() => {});
+}
+
 function showWbToast(msg, undoFn) {
   const el = document.getElementById('wb-toast');
   el.innerHTML = '';
@@ -848,6 +856,7 @@ function toggleSidebar() {
 function toggleHiddenFiles() {
   showHidden = !showHidden;
   localStorage.setItem('wb-show-hidden', showHidden ? '1' : '0');
+  logActivity('toggle-hidden', null, { show: showHidden });
   const btn = document.getElementById('sb-hidden-btn');
   if (btn) btn.classList.toggle('active', showHidden);
   // Reload all expanded directory nodes so the new filter applies.
@@ -1223,7 +1232,7 @@ function applyGotoLine(n) {
 document.getElementById('goto-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const n = parseInt(document.getElementById('goto-input').value, 10);
-    if (!isNaN(n)) applyGotoLine(n);
+    if (!isNaN(n)) { logActivity('goto-line', currentPath, {}); applyGotoLine(n); }
     hideGotoBar();
   }
   if (e.key === 'Escape') hideGotoBar();
@@ -1368,6 +1377,7 @@ async function saveFile() {
   }
 
   if (res.status === 409) {
+    logActivity('mtime-conflict', editorPath, {});
     showEditorStatus('', null, 0);
     if (!confirm('This file was modified on disk since you opened it.\nOverwrite the disk version with your edits?')) return;
     const h2 = { 'Content-Type': 'text/plain; charset=utf-8', 'X-Foundry-Editor': '1' };
@@ -1394,6 +1404,7 @@ async function saveFile() {
   if (!res.ok) {
     let msg = 'Save failed';
     try { const d = await res.json(); msg = d.error || msg; } catch(e) {}
+    logActivity('save-error', editorPath, { error: msg.slice(0, 120) });
     showEditorStatus(msg, '#f85149', 4000);
     return;
   }
@@ -1745,7 +1756,7 @@ async function openFile(path, name) {
   }
   // Push the new tab
   const fname0 = name || path.split('/').pop();
-  tabs.push({ path, name: fname0, dirty: false });
+  tabs.push({ path, name: fname0, dirty: false, openedAt: Date.now() });
   activeTabIdx = tabs.length - 1;
   renderTabBar();
 
@@ -1787,7 +1798,7 @@ async function openFile(path, name) {
     hideEditorPanel();
     // Fire viewer + editor fetches in parallel — saves one sequential round-trip
     const viewerP = fetch(cacheBust(path), { cache: 'no-store' }).then(r => r.ok ? r.text() : null).catch(() => null);
-    const editorP = fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath)).then(r => r.ok ? r.json() : null).catch(() => null);
+    const editorP = fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath), { headers: { 'X-WB-Source': 'user' } }).then(r => r.ok ? r.json() : null).catch(() => null);
     const [viewerText, editorData] = await Promise.all([viewerP, editorP]);
     if (viewerText !== null) {
       const ext = fname.split('.').pop().toLowerCase();
@@ -1908,6 +1919,7 @@ async function openFile(path, name) {
 
 // ── PDF print configuration dialog ───────────────────────────────────────────
 function showPdfDialog(apiPath, fileName) {
+  logActivity('pdf-dialog', apiPath, {});
   document.getElementById('pdf-dialog-overlay')?.remove();
 
   const overlay = document.createElement('div');
@@ -2048,6 +2060,7 @@ function findGo(dir) {
 }
 
 function showFindBar() {
+  logActivity('find-open', currentPath, { ext: (currentPath || '').split('.').pop() });
   const bar = document.getElementById('find-bar');
   bar.classList.add('visible');
   const inp = document.getElementById('find-input');
@@ -2070,7 +2083,7 @@ document.getElementById('find-input').addEventListener('input', () => {
   if (findMatches.length) findGo(1); else updateFindCount();
 });
 document.getElementById('find-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter')  { e.preventDefault(); findGo(e.shiftKey ? -1 : 1); }
+  if (e.key === 'Enter')  { e.preventDefault(); logActivity('find-exec', currentPath, { results: findMatches.length }); findGo(e.shiftKey ? -1 : 1); }
   if (e.key === 'Escape') { e.preventDefault(); hideFindBar(); }
 });
 document.getElementById('replace-input').addEventListener('keydown', e => {
@@ -2103,11 +2116,13 @@ document.getElementById('replace-all-btn').addEventListener('click', () => {
   if (!findVal || !findMatches.length) return;
   const ta     = document.getElementById('editor-textarea');
   const repVal = document.getElementById('replace-input').value;
+  const count  = findMatches.length;
   const newVal = ta.value.replace(new RegExp(escapeRegex(findVal), 'gi'), repVal);
   ta.focus(); ta.select();
   document.execCommand('insertText', false, newVal);
   setDirty(true); schedulePreview(); updateGutterLines();
   buildFindMatches(); findIdx = -1; updateFindCount();
+  logActivity('replace-all', currentPath, { count });
 });
 
 // ── Toggle line comment ───────────────────────────────────────────────────────
@@ -2212,6 +2227,7 @@ function renderOutline(filter) {
 }
 
 function showOutline() {
+  logActivity('outline-open', currentPath, { ext: (currentPath || '').split('.').pop() });
   buildOutlineRaw();
   const panel = document.getElementById('outline-panel');
   panel.classList.add('visible');
@@ -2394,7 +2410,7 @@ function wireItem(item, childrenEl, depth) {
     }
     const isOpen = item.classList.toggle('open');
     childrenEl.classList.toggle('collapsed', !isOpen);
-    if (isOpen) await loadChildren(item, childrenEl, depth);
+    if (isOpen) { logActivity('tree-expand', item.dataset.browse || item.dataset.href || '', { depth }); await loadChildren(item, childrenEl, depth); }
   });
   attachContextMenu(item);
 }
@@ -2415,6 +2431,7 @@ document.querySelectorAll('.section-header').forEach(hdr => {
   hdr.addEventListener('click', () => {
     const open = hdr.classList.toggle('open');
     body.classList.toggle('collapsed', !open);
+    if (open) logActivity('section-expand', null, { section: hdr.dataset.section || hdr.textContent.trim().slice(0, 30) });
   });
 });
 
@@ -2704,6 +2721,7 @@ async function switchTab(idx) {
 async function closeTab(idx) {
   if (idx < 0 || idx >= tabs.length) return;
   if (tabs[idx].dirty && !confirm('Close "' + tabs[idx].name + '"? Unsaved changes will be lost.')) return;
+  logActivity('tab-close', tabs[idx].path, { duration_s: Math.round((Date.now() - (tabs[idx].openedAt || Date.now())) / 1000), dirty: tabs[idx].dirty });
   tabs.splice(idx, 1);
   if (tabs.length === 0) {
     activeTabIdx = -1;
@@ -2772,6 +2790,7 @@ function maybeShowRecoveryBar(apiPath, fileMtimeSecs) {
     'Unsaved backup from ' + (mins < 1 ? 'just now' : (mins + ' min ago')) + ' found.';
   bar.classList.add('visible');
   document.getElementById('recovery-restore').onclick = () => {
+    logActivity('crash-restore', apiPath, { backup_age_s: Math.round((Date.now() - bk.ts) / 1000) });
     const ta = document.getElementById('editor-textarea');
     ta.value = bk.content;
     setDirty(true);
@@ -2782,6 +2801,7 @@ function maybeShowRecoveryBar(apiPath, fileMtimeSecs) {
     localStorage.removeItem('wb-crash:' + apiPath);
   };
   document.getElementById('recovery-discard').onclick = () => {
+    logActivity('crash-discard', apiPath, {});
     bar.classList.remove('visible');
     localStorage.removeItem('wb-crash:' + apiPath);
   };
@@ -2888,6 +2908,7 @@ function pinFile(path, name) {
   pins.push({ path, name, alias: alias || name, isDir: false });
   savePins(pins);
   renderPinnedSection();
+  logActivity('pin', path, {});
 }
 
 function pinFolder(browsePath, name, apiPath) {
@@ -2951,7 +2972,7 @@ function attachContextMenu(item) {
             if (pins2[idx]) { pins2[idx].alias = alias || name; savePins(pins2); renderPinnedSection(); }
           }},
         { label: 'Unpin', action: () => {
-            const pins2 = loadPins(); pins2.splice(idx, 1); savePins(pins2); renderPinnedSection();
+            const pins2 = loadPins(); const unpinPath = pins2[idx] && pins2[idx].path; pins2.splice(idx, 1); savePins(pins2); renderPinnedSection(); logActivity('unpin', unpinPath || '', {});
           }},
       ];
       if (pin && pin.isDir) {
@@ -2986,7 +3007,7 @@ function attachContextMenu(item) {
         items.push({ label: '🗑 Delete folder', action: () => deleteFolderByPath(browse, name, item) });
       }
     }
-    if (items.length) showCtxMenu(e.clientX, e.clientY, items);
+    if (items.length) { logActivity('ctx-menu', path || '', { type: isDir ? 'dir' : 'file', writable: !!writable }); showCtxMenu(e.clientX, e.clientY, items); }
   });
 }
 
@@ -3555,6 +3576,7 @@ renderPinnedSection();
   if (activeIdx >= 0 && activeIdx < tabs.length && activeIdx !== activeTabIdx) {
     try { await switchTab(activeIdx); } catch(e) {}
   }
+  logActivity('session-start', null, { tabs: tabs.length });
 })();
 
 // ── iframe → editor click navigation ─────────────────────────────────────────
@@ -3644,13 +3666,25 @@ function renderSearch() {
       searchResults.querySelectorAll('.search-result.active').forEach(el => el.classList.remove('active'));
       div.classList.add('active');
       setTreeActive(null);
+      logActivity('search-open', m.path, { query: q.slice(0, 80), rank: matches.indexOf(m), results: matches.length });
       openFile(m.path, m.name);
     });
     searchResults.appendChild(div);
   });
 }
 
-searchInput.addEventListener('input', renderSearch);
+let searchLogTimer = null;
+searchInput.addEventListener('input', () => {
+  renderSearch();
+  clearTimeout(searchLogTimer);
+  const q = searchInput.value.trim();
+  if (q) {
+    searchLogTimer = setTimeout(() => {
+      const matches = searchIndex.filter(f => f.key.includes(q.toLowerCase())).slice(0, 80);
+      logActivity('search', null, { query: q.slice(0, 80), results: matches.length });
+    }, 600);
+  }
+});
 searchInput.addEventListener('keydown', e => {
   if (e.key === 'Escape') { searchInput.value = ''; renderSearch(); searchInput.blur(); }
 });
@@ -3747,6 +3781,7 @@ searchInput.addEventListener('keydown', e => {
 
     function paintData(fileData) {
       if (!fileData) return;
+      logActivity('external-reload', path, {});
       tab.content = fileData.content;
       tab.editorMtime = fileData.mtime || mtime;
       tab.dirty = false;
@@ -3822,6 +3857,7 @@ searchInput.addEventListener('keydown', e => {
   function showChangeNotice(idx, path) {
     var existing = document.getElementById('sse-change-notice');
     if (existing) return;
+    logActivity('external-change', path, { dirty: tabs[idx] && tabs[idx].dirty });
     var bar = document.createElement('div');
     bar.id = 'sse-change-notice';
     bar.style.cssText = [

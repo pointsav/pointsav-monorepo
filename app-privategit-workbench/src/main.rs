@@ -47,6 +47,7 @@ struct Config {
     max_bytes: usize,
     #[serde(default = "default_module_id")]
     module_id: String,
+    log_dir: Option<String>,
     #[serde(rename = "root")]
     roots: Vec<RootEntry>,
 }
@@ -76,6 +77,7 @@ struct AppState {
     max_bytes: usize,
     spa_html: Arc<String>,
     events_tx: broadcast::Sender<String>,
+    log_dir: Option<PathBuf>,
 }
 
 // ---------------------------------------------------------------------------
@@ -217,8 +219,36 @@ fn err(status: StatusCode, msg: impl Into<String>) -> Response {
     (status, Json(ErrorBody { error: msg.into() })).into_response()
 }
 
+/// Append one JSONL record to the daily activity log (fire-and-forget; errors are silent).
+fn log_activity(log_dir: &Option<PathBuf>, action: &str, path: &str, meta: serde_json::Value) {
+    let Some(dir) = log_dir else { return };
+    let now = std::time::SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default();
+    let ts_ms = now.as_millis() as u64;
+    let days = now.as_secs() / 86400;
+    let filename = format!("activity-{days}.jsonl");
+    let record = serde_json::json!({"ts": ts_ms, "action": action, "path": path, "meta": meta});
+    let mut line = record.to_string();
+    line.push('\n');
+    let fpath = dir.join(filename);
+    let _ = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&fpath)
+        .and_then(|mut f| { use std::io::Write; f.write_all(line.as_bytes()) });
+}
+
 /// GET /file?path=<url_path>
-async fn get_file(State(state): State<AppState>, Query(q): Query<FileQuery>) -> Response {
+async fn get_file(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Query(q): Query<FileQuery>,
+) -> Response {
+    if headers.get("x-wb-source").and_then(|v| v.to_str().ok()) == Some("user") {
+        let ext = q.path.rsplit('.').next().unwrap_or("").to_string();
+        log_activity(&state.log_dir, "open", &q.path, serde_json::json!({"ext": ext}));
+    }
     let (fs_path, writable) = match resolve_path(&state.roots, &q.path) {
         Ok(v) => v,
         Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
@@ -361,6 +391,8 @@ async fn put_file(
     );
     let _ = state.events_tx.send(event_json);
 
+    log_activity(&state.log_dir, "save", &q.path, serde_json::json!({"bytes": body.len()}));
+
     let mut resp_map = HashMap::new();
     resp_map.insert("ok", serde_json::Value::Bool(true));
     resp_map.insert("mtime", serde_json::Value::Number(new_mtime.into()));
@@ -444,6 +476,7 @@ async fn rename_file(State(state): State<AppState>, Query(q): Query<RenameQuery>
     }
 
     let new_url_path = join_parent_url(&q.from, new_name);
+    log_activity(&state.log_dir, "rename", &q.from, serde_json::json!({"new_name": new_name}));
     Json(RenameResponse {
         ok: true,
         new_path: new_url_path,
@@ -522,6 +555,7 @@ async fn move_file(State(state): State<AppState>, Query(q): Query<RenameQuery>) 
 
     let dest_prefix = q.to.trim_start_matches('/').trim_end_matches('/');
     let new_path = format!("{}/{}", dest_prefix, filename.to_str().unwrap_or(""));
+    log_activity(&state.log_dir, "move", &q.from, serde_json::json!({"to": &q.to}));
     Json(MoveResponse { ok: true, new_path }).into_response()
 }
 
@@ -612,6 +646,7 @@ async fn duplicate_file(State(state): State<AppState>, Query(q): Query<FileQuery
     }
 
     let new_url_path = join_parent_url(&q.path, &new_name);
+    log_activity(&state.log_dir, "duplicate", &q.path, serde_json::json!({"new_name": &new_name}));
     Json(DuplicateResponse {
         ok: true,
         new_path: new_url_path,
@@ -665,6 +700,7 @@ async fn create_file(State(state): State<AppState>, Query(q): Query<FileQuery>) 
         .unwrap_or("")
         .to_string();
 
+    log_activity(&state.log_dir, "create", &q.path, serde_json::json!({}));
     Json(CreateResponse {
         ok: true,
         path: q.path.trim_start_matches('/').to_string(),
@@ -703,6 +739,7 @@ async fn delete_file(State(state): State<AppState>, Query(q): Query<FileQuery>) 
         return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string());
     }
 
+    log_activity(&state.log_dir, "delete", &q.path, serde_json::json!({}));
     let mut resp_map = HashMap::new();
     resp_map.insert("ok", serde_json::Value::Bool(true));
     Json(resp_map).into_response()
@@ -759,10 +796,12 @@ async fn trash_file(State(state): State<AppState>, Query(q): Query<FileQuery>) -
         return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string());
     }
 
+    let original_path = q.path.trim_start_matches('/').to_string();
+    log_activity(&state.log_dir, "trash", &original_path, serde_json::json!({"key": &trash_key}));
     Json(TrashResponse {
         ok: true,
         trash_key,
-        original_path: q.path.trim_start_matches('/').to_string(),
+        original_path,
     })
     .into_response()
 }
@@ -807,9 +846,35 @@ async fn restore_file(
         return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string());
     }
 
+    log_activity(&state.log_dir, "restore", &q.original_path, serde_json::json!({}));
     let mut resp_map = HashMap::new();
     resp_map.insert("ok", serde_json::Value::Bool(true));
     Json(resp_map).into_response()
+}
+
+// ---------------------------------------------------------------------------
+// Activity log — client-side events
+// ---------------------------------------------------------------------------
+
+#[derive(Deserialize)]
+struct ActivityBody {
+    action: String,
+    path: Option<String>,
+    meta: Option<serde_json::Value>,
+}
+
+/// POST /activity
+/// Receives client-side-only events (search, tab switch, keyboard shortcuts, etc.)
+/// and appends them to the activity log.
+async fn post_activity(State(state): State<AppState>, Json(body): Json<ActivityBody>) -> Response {
+    log_activity(
+        &state.log_dir,
+        &body.action,
+        body.path.as_deref().unwrap_or(""),
+        body.meta
+            .unwrap_or(serde_json::Value::Object(Default::default())),
+    );
+    Json(serde_json::json!({"ok": true})).into_response()
 }
 
 // ---------------------------------------------------------------------------
@@ -1440,11 +1505,17 @@ async fn main() -> Result<()> {
         }
     });
 
+    let log_dir: Option<PathBuf> = config.log_dir.as_deref().map(PathBuf::from);
+    if let Some(ref d) = log_dir {
+        let _ = fs::create_dir_all(d);
+    }
+
     let state = AppState {
         roots: Arc::new(config.roots),
         max_bytes: config.max_bytes,
         spa_html: Arc::new(spa_html),
         events_tx,
+        log_dir,
     };
 
     let app = Router::new()
@@ -1457,6 +1528,7 @@ async fn main() -> Result<()> {
         .route("/delete", post(delete_file))
         .route("/trash", post(trash_file))
         .route("/restore", post(restore_file))
+        .route("/activity", post(post_activity))
         .route("/git-status", get(git_status))
         .route("/document", get(get_document))
         .route("/pdf", get(get_pdf))
