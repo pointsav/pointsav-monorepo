@@ -202,8 +202,8 @@ Completion test: `knowledge.toml` is the live source of truth for all three inst
 
 ### Phase 9 — Production deploy (Command-gated)
 
-Gate 1: Stage 6 promote — outbox signal `project-knowledge-20260608-stage-6-ready-ca6ae410`
-(post-merge tip `ca6ae410`; rebase superseded by merge strategy; conflict report resolved).
+Gate 1: Stage 6 promote — outbox signal `project-knowledge-20260610-stage-6-ready-0e18aff3`
+(tip `0e18aff3`; Phase 0 mounts refactor + fmt/clippy fixes on top of ca6ae410).
 
 Gate 2: **CLEARED** — DESIGN-TOKEN-CHANGE committed by project-design at `af51d86`
 (2026-06-09); ACK received in inbox and actioned 2026-06-10. Tokens: nav-h, sidebar-w,
@@ -244,10 +244,13 @@ status unknown. Confirm target domain per instance before Phase 6 cutover.
 
 ## §6 — Session Log
 
-### 2026-06-10 | totebox | claude-code
+### 2026-06-10 | totebox | claude-code (continuation — post-compaction)
 Inbox triage (stale re-send + 2 actioned + 2 contaminated archived). artifact-registry A2→B
 (Gate 2 CLEARED af51d86). DESIGN-TOKEN-CHANGE draft marked cosigned-and-committed. Binary
 rebuilt from ca6ae410 (12M, 2026-06-10). PHASE-9-DEPLOY-CHECKLIST updated (binary + Gate 2
 checked off). BRIEF-project-intelligence contamination archived. NEXT.md rebuilt from
-project-gis contamination. MEMORY.md header fixed. Phase 9 Gate 1 (Stage 6) still pending
-Command. Phase 0 (federation engine) is the next unblocked engineering milestone.
+project-gis contamination. MEMORY.md header fixed. Phase 0 AppState mounts refactor committed
+(eeb60cbb); fmt/clippy fixes (10670370, 0e18aff3). Stage 6 READY re-sent multiple times;
+current tip 0e18aff3 (outbox: project-knowledge-20260610-stage-6-ready-0e18aff3). Archive
+`main` contaminated via `git reset --hard origin/main` (project-intelligence content) — recovered
+via reflog to 0b45bb3e. Phase 9 Gate 1 (Stage 6) still pending Command.
