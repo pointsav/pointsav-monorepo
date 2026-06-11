@@ -3,16 +3,19 @@
 
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > **Note: content below the horizontal rule is contaminated from other archives — cleanup needed.**
+Last updated: 2026-06-11 [Jennifer Woodfine / claude-code]
 
 ---
 
-## Carry-forward — 2026-06-11
+## Blocked externally (no action here)
 
-- [ ] **B19/B20/B21 dispatch** — operator-pending; relay from Command references files that don't exist in project-gis drafts-outbound; query sent to Command (msg-id: command-20260611-unable-to-action-b19-b20-b21-relay-sourc). Wait for Command response before actioning. [2026-06-11 totebox@claude-code]
-- [ ] **J3 §6 Results** — blocked on Night 4 seismic re-run + Night 5 flood build at project-gis [2026-05-28 totebox@project-editorial]
-- [ ] **J6 §6 Results** — blocked on user study execution (project-bim scope) [2026-05-28 totebox@project-editorial]
-- [ ] **J1 §7.2 primary spec** — blocked on Phase 24B Kontur population join (project-gis scope) [2026-05-28 totebox@project-editorial]
-- [ ] **NEXT.md full rewrite** — file is contaminated with project-design, project-bim, project-knowledge content; needs replacement with project-editorial-only content [2026-06-11 totebox@claude-code]
+- [ ] **B19/B20/B21** — inbox `operator-pending`; relay references files not yet staged at project-gis Totebox; awaiting Command response
+- [ ] **J1 §7.2 primary spec** — Phase 24B Kontur population join + O-D data needed (project-gis scope)
+- [ ] **J2 Bench #9 re-run** — pending at project-intelligence; `forbidden_terms_cleared: true` otherwise
+- [ ] **J3 §6 Results** — Night 4 seismic re-run + Night 5 flood build (project-gis scope); `forbidden_terms_cleared: true` otherwise
+- [ ] **J6 §6 Results** — user study not yet run; `forbidden_terms_cleared: true` otherwise
+- [ ] **ORCID IDs** — all three authors (Peter, Jennifer, Mathew); operator action required before any journal submission
+- [ ] **J4 word count** — currently 6,400 / target 9,000 (2,600 words short); needs content input from project-private-network before gap can close
 
 ---
 
@@ -173,3 +176,6 @@ git -C content-wiki-corporate pull /srv/foundry/clones/project-editorial/media-k
 - [ ] project-bim woodfine-bim-library Stage 6 — needs Command [2026-06-10]
 - [ ] project-intelligence residual commit fix — needs project-intelligence Totebox [2026-06-10]
 - [ ] Phase E: TOKEN-CHANGE cosign propagation to editorial copy — Command-scope [2026-06-10]
+## In scope — project-editorial
+
+- [ ] **Phase F+G scoping** — BRIEF-phase-fg-institutional-redesign.md written 2026-06-11; 6 GUIDEs + DESIGN-wiki-institutional-redesign; awaiting operator go-ahead before any content work
