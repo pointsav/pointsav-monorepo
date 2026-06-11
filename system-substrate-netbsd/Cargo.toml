@@ -1,0 +1,11 @@
+[package]
+name = "system-substrate-netbsd"
+version = "0.1.0"
+edition = "2021"
+description = "NetBSD 10.1 compat-bottom substrate shim. Generates Veriexec policy manifests and exposes build-time constants for os-totebox and os-orchestration image builders."
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/pointsav/pointsav-monorepo"
+keywords = ["netbsd", "substrate", "veriexec", "image-builder"]
+categories = ["os"]
+
+[dependencies]
