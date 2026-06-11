@@ -200,6 +200,30 @@ async fn wiki_page_inner(
         }
     }
 
+    // Phase 0 slug normalization: /wiki/topic-foo → /wiki/foo (301).
+    // Content files use topic-*.md names; the canonical URL drops the prefix.
+    // Category-scoped slugs (cat/topic-foo) are handled by stripping from the
+    // last path component only. Locale prefix is preserved in the Location header.
+    {
+        let bare = slug.rsplit('/').next().unwrap_or(&slug);
+        if let Some(stripped) = bare.strip_prefix("topic-") {
+            let clean = if let Some(pos) = slug.rfind('/') {
+                format!("{}/{}", &slug[..pos], stripped)
+            } else {
+                stripped.to_string()
+            };
+            let location = match locale {
+                Locale::Es => format!("/es/wiki/{clean}"),
+                Locale::En => format!("/wiki/{clean}"),
+            };
+            return Ok(Response::builder()
+                .status(StatusCode::MOVED_PERMANENTLY)
+                .header(header::LOCATION, location)
+                .body(axum::body::Body::empty())
+                .unwrap());
+        }
+    }
+
     // For ES locale, try the .es.md sibling first (before the EN file).
     // `effective_locale` reflects what was actually served; used for lang= and hreflang.
     let mut effective_locale = Locale::En;
@@ -269,7 +293,36 @@ async fn wiki_page_inner(
                                     .unwrap());
                             }
                         }
-                        return Err(WikiError::NotFound(slug));
+                        // topic- filename fallback: content repos name files as
+                        // topic-foo.md; serve them at /wiki/foo (canonical slug).
+                        // For ES locale, try topic-foo.es.md first before the EN file.
+                        {
+                            if locale == Locale::Es {
+                                let es_topic = state.primary_path().join(
+                                    format!("topic-{slug}{}.md", Locale::Es.suffix()),
+                                );
+                                if let Ok(t) = fs::read_to_string(&es_topic).await {
+                                    effective_locale = Locale::Es;
+                                    t
+                                } else {
+                                    let topic_path =
+                                        state.primary_path().join(format!("topic-{slug}.md"));
+                                    if let Ok(t) = fs::read_to_string(&topic_path).await {
+                                        t
+                                    } else {
+                                        return Err(WikiError::NotFound(slug));
+                                    }
+                                }
+                            } else {
+                                let topic_path =
+                                    state.primary_path().join(format!("topic-{slug}.md"));
+                                if let Ok(t) = fs::read_to_string(&topic_path).await {
+                                    t
+                                } else {
+                                    return Err(WikiError::NotFound(slug));
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -467,6 +520,33 @@ async fn wiki_page_inner(
         };
         (prev, next)
     };
+    // Phase 0 — blueprint relates_to rails.
+    // Each rail is (human label, vec of related slugs). Empty when the page
+    // type has no blueprint or no backlinks/forward-links of the related type.
+    let relates_to_rails: Vec<(String, Vec<String>)> = {
+        let ct = parsed.frontmatter.content_type.as_deref().unwrap_or("topic");
+        let mut rails: Vec<(String, Vec<String>)> = Vec::new();
+        if let Some(bp) = state.blueprints.find(ct) {
+            for rel in &bp.relates_to {
+                let candidates: Vec<String> = match rel.via.as_str() {
+                    "link" => state.links.forward_links(&slug).unwrap_or_default(),
+                    _ => state.links.backlinks(&slug).unwrap_or_default(),
+                };
+                let type_prefix = format!("{}-", rel.r#type);
+                let filtered: Vec<String> = candidates
+                    .into_iter()
+                    .filter(|s| {
+                        s.rsplit('/').next().unwrap_or(s).starts_with(&type_prefix)
+                    })
+                    .take(8)
+                    .collect();
+                if !filtered.is_empty() {
+                    rails.push((rel.as_label.clone(), filtered));
+                }
+            }
+        }
+        rails
+    };
     Ok(wiki_chrome(
         effective_locale,
         &title,
@@ -485,6 +565,7 @@ async fn wiki_page_inner(
         &claim_rail_html,
         prev_article.as_ref(),
         next_article.as_ref(),
+        &relates_to_rails,
     )
     .into_response())
 }
@@ -566,6 +647,7 @@ fn wiki_chrome(
     claim_rail_html: &str,
     prev_article: Option<&TopicSummary>,
     next_article: Option<&TopicSummary>,
+    relates_to_rails: &[(String, Vec<String>)],
 ) -> Markup {
     let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
     let _woodfine_projects = brand_theme == Some("woodfine-projects");
@@ -660,6 +742,10 @@ fn wiki_chrome(
                     }
                     nav.right {
                         (auth_nav_widget(user, pending_count))
+                        button.search-trigger
+                            aria-label="Search"
+                            onclick="if(window.openCmdK)window.openCmdK()"
+                        { "🔍" }
                         a.lang-toggle href=(match locale { Locale::En => format!("/es/wiki/{slug}"), Locale::Es => format!("/wiki/{slug}") }) {
                             (match locale { Locale::En => "ES", Locale::Es => "EN" })
                         }
@@ -1010,6 +1096,26 @@ fn wiki_chrome(
 
                         }
 
+                        // Phase 0 — blueprint relates_to rails (e.g. "How-to guides" on topics).
+                        @for (label, slugs) in relates_to_rails {
+                            @if !slugs.is_empty() {
+                                section.relates-to-rail aria-label=(label) {
+                                    h3.relates-to-rail__heading { (label) }
+                                    ul.relates-to-rail__list {
+                                        @for related_slug in slugs {
+                                            @let display = related_slug.rsplit('/').next().unwrap_or(related_slug)
+                                                .trim_start_matches("guide-")
+                                                .trim_start_matches("topic-")
+                                                .replace('-', " ");
+                                            li {
+                                                a href={ "/wiki/" (related_slug) } { (display) }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         // P3: Previous / Next article navigation
                         @if prev_article.is_some() || next_article.is_some() {
                             nav.article-nav aria-label="Article navigation" {
@@ -1072,4 +1178,80 @@ fn wiki_chrome(
             }
         }
     }
+}
+
+// ─── /edit/{*slug} stub (L25: route-gated editor bundle) ────────────────────
+//
+// Phase 0 stub: shows the raw Markdown in a CodeMirror editor view. The
+// form submission (POST /edit/{slug}) is Phase 2 Step 3 work — this handler
+// renders the editor surface only, proving the bundle loads on the correct
+// route. See BRIEF L25.
+
+async fn edit_page(
+    State(state): State<Arc<AppState>>,
+    Path(slug): Path<String>,
+) -> Result<Response, WikiError> {
+    if slug.contains("..") || slug.is_empty() {
+        return Err(WikiError::NotFound(slug));
+    }
+
+    // Read the current Markdown content; empty string if the file doesn't exist yet.
+    let md_path = state.primary_path().join(format!("{slug}.md"));
+    let content = fs::read_to_string(&md_path).await.unwrap_or_default();
+
+    let woodfine_theme = matches!(state.brand_theme.as_deref(), Some("woodfine") | Some("woodfine-projects"));
+    let page_title = format!("Edit: {slug} — {}", state.site_title);
+
+    let markup = html! {
+        (DOCTYPE)
+        html lang="en" data-instance=(&state.brand_instance) {
+            head {
+                meta charset="utf-8";
+                meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover";
+                title { (page_title) }
+                link rel="preload" as="font" type="font/woff2" crossorigin href="/static/fonts/Inter-400-normal-latin.woff2";
+                link rel="preload" as="font" type="font/woff2" crossorigin href="/static/fonts/Source-Serif-4-400-normal-latin.woff2";
+                link rel="stylesheet" href="/static/tokens.css";
+                link rel="stylesheet" href="/static/style.css";
+                @if woodfine_theme {
+                    link rel="stylesheet" href="/static/tokens-woodfine.css";
+                }
+            }
+            body {
+                header.topnav {
+                    a.wordmark href="/" aria-label=(&state.site_title) {
+                        @if woodfine_theme {
+                            (PreEscaped(WORDMARK_SVG_WOODFINE))
+                        } @else {
+                            (PreEscaped(WORDMARK_SVG_POINTSAV))
+                        }
+                    }
+                }
+                div.edit-page-wrap {
+                    nav.edit-page-crumb {
+                        a href={ "/wiki/" (&slug) } { "← Back to article" }
+                    }
+                    h1.edit-page-title { "Edit: " (&slug) }
+                    p.edit-page-note {
+                        "Contributions flow through git. This editor view is a read-only "
+                        "preview surface — submit changes via "
+                        a href={ "/git/" (&slug) } { "git" }
+                        "."
+                    }
+                    // L25: textarea for CodeMirror to attach to.
+                    // editor.js mounts on #wikitext on DOMContentLoaded.
+                    form.edit-page-form method="post" action={ "/edit/" (&slug) } {
+                        textarea #wikitext name="content" rows="30" {
+                            (content)
+                        }
+                    }
+                }
+                (shell_footer(&state.brand_instance, Some(&slug)))
+                // L25: editor assets loaded only on /edit/* routes.
+                script src="/static/vendor/cm-saa.bundle.js" defer="true" {}
+                script src="/static/editor.js" defer="true" {}
+            }
+        }
+    };
+    Ok(markup.into_response())
 }
