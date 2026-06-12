@@ -6,13 +6,9 @@ Deferred, blocked, and follow-up items. Attribution: `[YYYY-MM-DD role@engine]`.
 
 ## PKS Commuter archetype — overnight data tasks
 
-- [ ] **Fix crontab** `[2026-06-11 totebox@claude-sonnet-4-6]`
-  Run as mathew: `crontab -l | sed 's|project-orgcharts|project-gis|g' | crontab -`
-  Fixes entries 1 (nightly-rebuild.sh) and 3 (build-aec-global.sh) from project-orgcharts → project-gis.
-  Entry 2 (run-overnight-ingests.sh June 4) is past — ignore.
-  **URGENT:** Until this is fixed, the nightly rebuild at 05:00 UTC overwrites calibrated VWH/PKS
-  gateway files with uncalibrated project-orgcharts output. VWH/PKS manually redeployed 2026-06-12
-  after nightly-rebuild.sh from project-orgcharts produced wrong data (VWH=7,028/PKS=6,215).
+- [x] **Fix crontab** `[2026-06-11 totebox@claude-sonnet-4-6]` DONE 2026-06-12
+  All 3 entries updated: project-orgcharts → project-gis. Nightly rebuild now runs calibrated
+  build-vwh-clusters.py and build-pks-clusters.py from project-gis.
 
 - [x] **Park-and-ride ingest for US/CA/DE/FR/IT/PL/NO** `[2026-06-11 totebox@claude-sonnet-4-6]` DONE
   17,721 park_ride records. Result: 6,649 features T1=462/T2=2,451/T3=3,736.
