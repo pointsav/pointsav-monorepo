@@ -10,6 +10,9 @@ Deferred, blocked, and follow-up items. Attribution: `[YYYY-MM-DD role@engine]`.
   Run as mathew: `crontab -l | sed 's|project-orgcharts|project-gis|g' | crontab -`
   Fixes entries 1 (nightly-rebuild.sh) and 3 (build-aec-global.sh) from project-orgcharts → project-gis.
   Entry 2 (run-overnight-ingests.sh June 4) is past — ignore.
+  **URGENT:** Until this is fixed, the nightly rebuild at 05:00 UTC overwrites calibrated VWH/PKS
+  gateway files with uncalibrated project-orgcharts output. VWH/PKS manually redeployed 2026-06-12
+  after nightly-rebuild.sh from project-orgcharts produced wrong data (VWH=7,028/PKS=6,215).
 
 - [x] **Park-and-ride ingest for US/CA/DE/FR/IT/PL/NO** `[2026-06-11 totebox@claude-sonnet-4-6]` DONE
   17,721 park_ride records. Result: 6,649 features T1=462/T2=2,451/T3=3,736.
@@ -28,6 +31,15 @@ Deferred, blocked, and follow-up items. Attribution: `[YYYY-MM-DD role@engine]`.
   Key insight: park-and-ride (23,117 records) is the discrete geographic anchor; EPS_LOOSE=2.5km
   prevents rail network collapse. Scripts: analyze-parkade-colocation.py + sim-pks-colocation.py.
   Gateway deployed: /srv/foundry/deployments/gateway-orchestration-gis-1/www/data/archetype-pks.geojson
+- [x] **PKS `hotel` property added to GeoJSON output** `[2026-06-12 totebox@claude-sonnet-4-6]` DONE
+  `build-pks-clusters.py` line 604 was missing `"hotel": "hotel" in cats` in the properties dict.
+  Hotel enrichment affected tier logic but was not written to the output file. Added, re-ran, redeployed.
+  Final: hotel=1,221 / car_rental=1,311 of 6,953 clusters.
+- [x] **VWH/PKS gateway redeployment after nightly-rebuild overwrite** `[2026-06-12 totebox@claude-sonnet-4-6]` DONE
+  Nightly rebuild at 05:00 UTC Jun 12 ran from project-orgcharts (old uncalibrated scripts) and
+  overwrote gateway: VWH=7,028 (wrong), PKS=6,215 (wrong). Redeployed correct work/ files:
+  VWH=6,368 (T1=852/T2=1,327/T3=4,189; retail_contamination=3,048 ✓)
+  PKS=6,953 (T1=691/T2=2,658/T3=3,604; hotel=1,221 ✓)
 
 - [ ] **PKS opportunity scoring (next step)** `[2026-06-11 totebox@claude-sonnet-4-6]`
   With T1/T2/T3 co-locations established, add opportunity class per cluster:
