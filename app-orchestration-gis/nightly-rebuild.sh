@@ -23,6 +23,16 @@ DRY_RUN=0
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG="$SCRIPT_DIR/nightly-rebuild.log"
+
+# ── deploy-guard: abort if this clone is not the declared gateway owner ───────
+DEPLOY_TARGET="gateway-orchestration-gis-1"
+SELF_ARCHIVE="$(echo "$SCRIPT_DIR" | sed -n 's|^/srv/foundry/clones/\([^/]*\)/.*|\1|p')"
+OWNER="$(cat "/srv/foundry/deployments/$DEPLOY_TARGET/.owner" 2>/dev/null)"
+if [[ -z "$OWNER" || "$SELF_ARCHIVE" != "$OWNER" ]]; then
+    echo "DEPLOY-GUARD: $SELF_ARCHIVE is not declared owner of $DEPLOY_TARGET (owner: ${OWNER:-UNDECLARED}) — aborting" | tee -a "$LOG"
+    exit 78
+fi
+# ─────────────────────────────────────────────────────────────────────────────
 STAMP="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 
 echo "──────────────────────────────────────────────" | tee -a "$LOG"
@@ -93,20 +103,31 @@ META_SIZE=$(du -sh "$META_OUT" | cut -f1)
 echo "  → $TILES_OUT ($TILES_SIZE)  ✓" | tee -a "$LOG"
 echo "  → $META_OUT ($META_SIZE)  ✓" | tee -a "$LOG"
 
-# ── step 3 — Location Intelligence: VWH + PKS archetype candidates ─────────
-# Depends on fresh cluster data (PKS integration scoring uses T1/T2 proximity;
-# VWH enrichment reads the new chain members). ~60s. Non-fatal on error.
+# ── step 3 — Location Intelligence: VWH archetype rebuild ─────────────────
+# VWH (Intercity Fringe) depends on fresh cluster chain membership.
+# ~60s. Non-fatal on error.
 
 echo "" | tee -a "$LOG"
-echo "[3/3] test-cluster-archetypes.py (VWH + PKS)" | tee -a "$LOG"
-if python3 test-cluster-archetypes.py >> "$LOG" 2>&1; then
-    WWW_DATA="/srv/foundry/deployments/gateway-orchestration-gis-1/www/data"
-    cp work/archetype-vwh-candidates.geojson "$WWW_DATA/archetype-vwh.geojson" 2>/dev/null \
+echo "[3a/4] build-vwh-clusters.py (VWH Intercity Fringe)" | tee -a "$LOG"
+WWW_DATA="/srv/foundry/deployments/gateway-orchestration-gis-1/www/data"
+if python3 build-vwh-clusters.py >> "$LOG" 2>&1; then
+    cp work/archetype-vwh.geojson "$WWW_DATA/archetype-vwh.geojson" \
         && echo "  → archetype-vwh.geojson deployed  ✓" | tee -a "$LOG"
-    cp work/archetype-pks-candidates.geojson "$WWW_DATA/archetype-pks.geojson" 2>/dev/null \
+else
+    echo "  WARNING: VWH rebuild failed — archetype-vwh.geojson not refreshed" | tee -a "$LOG"
+fi
+
+# ── step 4 — PKS archetype rebuild ─────────────────────────────────────────
+# PKS (Commuter) depends on fresh transit JSONL + car_rental data.
+# ~90s. Non-fatal on error.
+
+echo "" | tee -a "$LOG"
+echo "[3b/4] build-pks-clusters.py (PKS Commuter)" | tee -a "$LOG"
+if python3 build-pks-clusters.py >> "$LOG" 2>&1; then
+    cp work/archetype-pks.geojson "$WWW_DATA/archetype-pks.geojson" \
         && echo "  → archetype-pks.geojson deployed  ✓" | tee -a "$LOG"
 else
-    echo "  WARNING: archetype test failed — VWH/PKS overlays not refreshed" | tee -a "$LOG"
+    echo "  WARNING: PKS rebuild failed — archetype-pks.geojson not refreshed" | tee -a "$LOG"
 fi
 
 # ── summary ───────────────────────────────────────────────────────────────
