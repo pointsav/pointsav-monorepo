@@ -52,6 +52,15 @@ Deferred, blocked, and follow-up items. Attribution: `[YYYY-MM-DD role@engine]`.
 
 ---
 
+## Artifact registry cleanup
+
+- [ ] **Remove stale J1 v0.1 EN stub from JOURNAL/** `[2026-06-12 totebox@claude-sonnet-4-6]`
+  `JOURNAL/JOURNAL-retail-colocation-v0.1.draft.md` is superseded by v0.5 in same directory.
+  ES sibling `JOURNAL-retail-colocation-v0.1.es.draft.md` is intentionally still v0.1 (ES version not yet updated to v0.5 content).
+  Removal: `git rm JOURNAL/JOURNAL-retail-colocation-v0.1.draft.md` (file is git-tracked — confirmed).
+
+---
+
 ## Stage 6 and promotion
 
 - [ ] **Promote commit 91b354ff** `[2026-06-11 totebox@claude-sonnet-4-6]`
@@ -64,7 +73,8 @@ Deferred, blocked, and follow-up items. Attribution: `[YYYY-MM-DD role@engine]`.
 
 - [ ] **B19/B20/B21 relay** `[2026-06-11 totebox@claude-sonnet-4-6]`
   Files confirmed in drafts-outbound/; outbox msg-id project-gis-20260609-editorial-dispatch-b19-b20-b21 present.
-  Command Session needs to pick up and relay to project-editorial.
+  Now registered as A22 (TOPIC-location-intelligence-archetypes EN+ES), A23 (GUIDE-gis-aec-pipeline-repair),
+  A24 (GUIDE-gis-nightly-build-operations). Command Session needs to pick up and relay to project-editorial.
 
 ---
 
