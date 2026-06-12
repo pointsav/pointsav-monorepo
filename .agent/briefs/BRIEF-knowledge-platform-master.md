@@ -48,10 +48,10 @@ Single Rust binary. No runtime system dependencies. Apache 2.0.
 | Phase 6 | Three-instance split | Authorized | Doctrine v0.1.2 §IV.g committed 2026-06-11; check --strict: 248 pages / 0 dead links; wire xtask gate + remove wikilink-unresolved fallback (project-knowledge Totebox) |
 | Phase 7 | MCP federation | Designed | ActivityPub + cross-instance queries |
 | Phase 8 | Token theming | Shipped | DTCG token layout vars + `knowledge.toml` templates |
-| Phase 0 | Federation engine | **Totebox code complete** | All scope items complete (bd435cc3 + 7a2b9b42 + 9a1326df); 1 dead link pending project-editorial fix; Stage 6 READY at 9a1326df |
+| Phase 0 | Federation engine | **Complete 2026-06-12** | All scope items done; gate 689 articles / 0 dead links; Stage 6 at 9a1326df; archive ops pending Stage 6 |
 | Phase 9 | Production deploy | **Shipped 2026-06-11** | WIKI_KNOWLEDGE_TOML migration; /etc/local-knowledge/; all 3 instances healthy |
 
-Sub-clone tip: `9a1326df` (Stage 6 READY sent 2026-06-12, msg-id: `command-20260612-stage-6-ready-project-knowledge-sub-clon`). Archive tip: `4e2ddf95` (NEXT.md ops cleanup).
+Sub-clone tip: `9a1326df` — **CANONICAL** (origin/main confirmed 2026-06-12). Archive tip: `e6d01e9c` (+4 ops commits ahead of canonical; Stage 6 READY pending this session close-out).
 
 ---
 
@@ -184,7 +184,7 @@ exists. Same mechanism as L18 gate; the resolver is implemented once and referen
 
 ## §4 — Phase Roadmap
 
-### Phase 0 — Federation engine (in progress)
+### Phase 0 — Federation engine — **COMPLETE 2026-06-12**
 
 **Hard merge gate: no Phase 2+ feature or visual work reaches canonical while any Phase 0
 item is incomplete.**
@@ -201,7 +201,7 @@ Scope:
 - ~~Remove red-link render path (`render.rs` — `wikilink-missing` emission)~~ — DONE 9a1326df (display text only; gate active; L18 complete)
 
 Completion test: `knowledge.toml` is the live source of truth for all three instances (**DONE** — Phase 9);
-`check --strict` passes with 0 dead links — **1 dead link remaining** in `substrate-without-inference-base-case.es.md` (content fix sent to project-editorial; gate passes once fixed);
+`check --strict` passes with 0 dead links — **DONE 2026-06-12** (689 articles / 0 dead links / 0 missing fields; project-editorial fix applied);
 red-link path absent from source — **DONE 9a1326df**.
 
 ### Phase 9 — Production deploy — **DEPLOYED 2026-06-11**
@@ -253,6 +253,17 @@ status unknown. Confirm target domain per instance before Phase 6 cutover.
 ---
 
 ## §6 — Session Log
+
+### 2026-06-12 | totebox | claude-code (close-out)
+
+Phase 0 complete. Stage 6 confirmed at 9a1326df (origin/main updated). Dead link fix applied by
+project-editorial (`substrate-without-inference-base-case.es.md` line 26). Gate verified:
+689 articles / 0 dead links / 0 missing fields (exit 0). BRIEF Phase 0 → Complete; completion
+test all three conditions DONE. NEXT.md Phase 0 section marked COMPLETE. Archive ops commits
+(4e2ddf95 → e6d01e9c) Stage 6 READY sent to Command. Binary rebuild + redeploy to 9090/9093/9095
+required from Command after archive ops promote.
+
+---
 
 ### 2026-06-12 | totebox | claude-code
 
