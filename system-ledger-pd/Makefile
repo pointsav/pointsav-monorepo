@@ -10,15 +10,17 @@
 # CI (no SDK required — catches std-creep in upstream crates):
 #   cargo build --no-default-features --features sel4 --target x86_64-unknown-none
 
-SDK_PATH ?= $(error Set SDK_PATH to your Microkit SDK directory, e.g. SDK_PATH=~/microkit-sdk-2.1.0 make)
+SDK_PATH ?=
 
 BOARD     := x86_64_generic
 CONFIG    := debug
-MICROKIT  := $(SDK_PATH)/bin/microkit
-LIB_PATH  := $(SDK_PATH)/board/$(BOARD)/$(CONFIG)/lib
-INC_PATH  := $(SDK_PATH)/board/$(BOARD)/$(CONFIG)/include
+MICROKIT  = $(if $(SDK_PATH),$(SDK_PATH)/bin/microkit,$(error Set SDK_PATH to your Microkit SDK directory, e.g. SDK_PATH=~/microkit-sdk-2.1.0 make))
+LIB_PATH  = $(if $(SDK_PATH),$(SDK_PATH)/board/$(BOARD)/$(CONFIG)/lib,$(error Set SDK_PATH))
+INC_PATH  = $(if $(SDK_PATH),$(SDK_PATH)/board/$(BOARD)/$(CONFIG)/include,$(error Set SDK_PATH))
 BUILD_DIR := build
-TARGET_DIR := ../target/x86_64-unknown-none/debug
+# Honour CARGO_TARGET_DIR if set (workspace-wide redirect); fall back to local target/.
+_CARGO_TARGET := $(if $(CARGO_TARGET_DIR),$(CARGO_TARGET_DIR),target)
+TARGET_DIR    := $(_CARGO_TARGET)/x86_64-unknown-none/debug
 
 CC := gcc
 LD := x86_64-linux-gnu-ld
@@ -52,7 +54,7 @@ $(BUILD_DIR)/system_ledger.elf: $(TARGET_DIR)/libsystem_ledger_pd.a $(BUILD_DIR)
 
 $(BUILD_DIR)/client_pd.elf: src/client_pd.c $(BUILD_DIR)/shim.o
 	@mkdir -p $(BUILD_DIR)
-	$(CC) -ffreestanding -nostdlib -I$(INC_PATH) \
+	$(CC) -ffreestanding -nostdlib -no-pie -I$(INC_PATH) \
 		src/client_pd.c $(BUILD_DIR)/shim.o \
 		$(LIB_PATH)/libmicrokit.a \
 		-T $(LIB_PATH)/microkit.ld \
@@ -60,7 +62,7 @@ $(BUILD_DIR)/client_pd.elf: src/client_pd.c $(BUILD_DIR)/shim.o
 
 # ── Microkit image assembly ───────────────────────────────────────────────────
 
-$(BUILD_DIR)/final_image.elf: $(BUILD_DIR)/system_ledger.elf ledger.system
+$(BUILD_DIR)/final_image.elf: $(BUILD_DIR)/system_ledger.elf $(BUILD_DIR)/client_pd.elf ledger.system
 	$(MICROKIT) ledger.system \
 		--search-path $(BUILD_DIR) \
 		--board $(BOARD) --config $(CONFIG) \
