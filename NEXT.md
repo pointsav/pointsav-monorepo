@@ -95,7 +95,7 @@ See BRIEF-os-totebox-ppn-build-out.md for full state.
 Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
 > **Scope: this archive only.** Cross-repo items live at `~/Foundry/NEXT.md`.
 
-Last updated: 2026-06-11 [totebox@claude-code]
+Last updated: 2026-06-12 [totebox@claude-code]
 
 ---
 
@@ -126,10 +126,8 @@ Last updated: 2026-06-11 [totebox@claude-code]
 
 ## Code fixes — pre-promote
 
-- [ ] Doorman stub routes: `POST /api/doorman/complete` + `POST /api/doorman/instruct` return 404
-      but tests expect 501; add two minimal stub handlers. [2026-06-02]
-- [ ] Navigation portlet test: asserts `html.contains("sidebar")` but article pages use
-      `docs-sidenav`; pre-existing gap. [2026-06-03]
+- [x] Doorman stub routes: stubs implemented at server/mod.rs:302-315; return 501 NOT_IMPLEMENTED + JSON. All 129 tests pass. [2026-06-12 totebox@claude-code]
+- [x] Navigation portlet test: `wiki_page_renders_navigation_portlet` passes; correctly asserts `wiki-page-tabs` (not `sidebar`). [2026-06-12 totebox@claude-code]
 
 ---
 
@@ -147,7 +145,8 @@ git -C content-wiki-corporate pull /srv/foundry/clones/project-editorial/media-k
 
 - Phase 12 (AI marginalia): gated on BP5 + SYS-ADR-07/10/19 review [2026-06-01]
 - Phase 5.1+ (ACLs/OIDC/webhooks): gated on BP5 clearance [2026-06-01]
-- Phase 6 (three-instance split): gated on GitHub renames + Doctrine amendment [2026-06-01]
+- Phase 6 code refactor (mounts: Vec<Mount>): DONE — dea5e8ae [2026-06-10]
+- Phase 6 content-tier GitHub renames + Doctrine amendment: gated on Command + MASTER scope [2026-06-01]
 
 ---
 
