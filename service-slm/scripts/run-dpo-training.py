@@ -52,21 +52,26 @@ BETA = 0.5  # Raised from 0.1: 78% of rejected are empty "[]" — low beta cause
 
 
 def load_feedback_files(corpus_path: str) -> list[dict]:
-    """Load enrichment DPO pairs from corpus_path.
+    """Load DPO pairs from corpus_path.
 
-    Only reads enrichment-*.jsonl (DataGraph pairs: chosen=Tier B entities, rejected=Tier A entities).
-    Apprenticeship code-diff pairs (apprenticeship-*.jsonl) are NOT loaded here — they have different
-    semantics (chosen=operator diff, rejected=OLMo diff) and mixing them produces opposing gradients.
-    When a code-diff DPO corpus is ready, it should be trained in a separate run.
+    Reads all pair files:
+    - apprenticeship-*.jsonl: git-commit shadow captures (chosen=operator diff, rejected=OLMo diff)
+    - enrichment-*.jsonl: DataGraph disagreement pairs (chosen=Tier B, rejected=Tier A)
 
-    Filters: skips pairs where rejected is empty ("[]") — these are length-bias degenerate pairs,
-    not genuine preference signal (Tier A returned nothing; contrast is verbosity not accuracy).
+    Filters applied:
+    - Skips pairs where rejected is empty ("[]") — length-bias degenerate pairs.
+    - Skips pairs where auto_verdict=False (explicitly rejected by operator or verdict pipeline).
+      Pairs with no auto_verdict field (most) are accepted.
     """
-    pattern = os.path.join(corpus_path, "enrichment-*.jsonl")
-    files = sorted(glob.glob(pattern))
+    files = []
+    for pat in ["apprenticeship-*.jsonl", "enrichment-*.jsonl"]:
+        files.extend(glob.glob(os.path.join(corpus_path, pat)))
+    files = sorted(set(files))
+    print(f"[corpus] found {len(files)} pair files in {corpus_path}")
     records = []
     skipped = 0
     skipped_empty_rejected = 0
+    skipped_verdict = 0
     for f in files:
         try:
             d = json.load(open(f))
@@ -82,12 +87,17 @@ def load_feedback_files(corpus_path: str) -> list[dict]:
         if not rejected or rejected == "[]":
             skipped_empty_rejected += 1
             continue
+        # Skip pairs explicitly rejected by verdict pipeline
+        verdict = d.get("auto_verdict")
+        if verdict is not None and verdict is not True:
+            skipped_verdict += 1
+            continue
         records.append({
             "prompt": d["prompt"],
             "chosen": d["chosen"],
             "rejected": rejected,
         })
-    print(f"[corpus] loaded {len(records)} DPO pairs ({skipped} format-skipped, {skipped_empty_rejected} empty-rejected filtered)")
+    print(f"[corpus] loaded {len(records)} DPO pairs ({skipped} format-skipped, {skipped_empty_rejected} empty-rejected filtered, {skipped_verdict} verdict-rejected filtered)")
     return records
 
 
@@ -193,6 +203,7 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
     tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = "right"  # prevents causal mask misalignment with OLMo-2 DPO batches
 
     print("[train] loading model (4-bit) ...")
     model = AutoModelForCausalLM.from_pretrained(
@@ -229,14 +240,24 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
     dataset = Dataset.from_list(records)
     split = dataset.train_test_split(test_size=0.1, seed=42)
 
+    # 32B memory guardrails: gradient_checkpointing + smaller batch + shorter sequences
+    is_32b = "32B" in base_model or "32b" in base_model
+    _batch_size = 1 if is_32b else BATCH_SIZE
+    _grad_accum = 4 if is_32b else GRAD_ACCUM
+    _max_length = 512 if is_32b else MAX_LENGTH
+    if is_32b:
+        print(f"[train] 32B memory mode: batch=1, grad_ckpt=True, max_len={_max_length}, grad_accum={_grad_accum}")
+
     training_args = DPOConfig(
         output_dir=output_dir,
         num_train_epochs=NUM_EPOCHS,
-        per_device_train_batch_size=BATCH_SIZE,
-        gradient_accumulation_steps=GRAD_ACCUM,
+        per_device_train_batch_size=_batch_size,
+        gradient_accumulation_steps=_grad_accum,
+        gradient_checkpointing=is_32b,
         learning_rate=LEARNING_RATE,
         beta=BETA,
-        max_length=MAX_LENGTH,
+        max_length=_max_length,
+        max_prompt_length=_max_length // 2,
         logging_steps=5,
         save_steps=5,  # checkpoint every 5 steps (corpus is small; 50 was never reached in 1 epoch)
         eval_strategy="no",           # eval needs 2× VRAM (ref+trained); disabled on L4 24 GB
