@@ -1,6 +1,6 @@
 @~/Foundry/AGENT.md
 
-# project-gis — Archive Guide
+# project-software — Archive Guide
 
 > **State:** active | **Last updated:** 2026-06-01
 > **Cluster manifest:** `.agent/manifest.md`
@@ -24,7 +24,7 @@ Per `~/Foundry/AGENT.md` § Session roles:
 1. Confirm role: `~/Foundry/bin/foundry-role.sh` (Totebox Session expected)
 2. Write session lock: `.agent/engines/<engine-id>/session.lock`
 3. Read `.agent/manifest.md` — cluster mission + tetrad
-4. Call `get_session_brief(role="totebox", archive="project-gis")` — replaces inbox, NOTAM, session-context reads
+4. Call `get_session_brief(role="totebox", archive="project-software")` — replaces inbox, NOTAM, session-context reads
 5. Read `~/Foundry/NOTAM.md` — workspace warnings
 6. Read `.agent/rules/*.md` if present (may be absent for newer archives)
 
@@ -52,7 +52,7 @@ CODE-* / SCRIPT-* / CONFIG-* / DATA-* → commit directly (self-contained).
 
 ## MCP tools — `foundry` server (use at startup)
 
-`get_session_brief(role="totebox", archive="project-gis")` replaces manually reading
+`get_session_brief(role="totebox", archive="project-software")` replaces manually reading
 inbox.md, outbox.md, NOTAM.md, session-context.md. Call it first.
 `send_mailbox_message()` replaces hand-editing YAML frontmatter.
 
