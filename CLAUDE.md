@@ -1,6 +1,6 @@
 @~/Foundry/AGENT.md
 
-# project-console — Archive Guide
+# project-editorial — Archive Guide
 
 > **State:** active | **Last updated:** 2026-06-01
 > **Cluster manifest:** `.agent/manifest.md`
