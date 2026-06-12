@@ -33,7 +33,7 @@ async fn main() {
         .init();
 
     let host_spawn_port: u16 = std::env::var("VM_HOST_SPAWN_PORT")
-        .unwrap_or_else(|_| "9204".into())
+        .unwrap_or_else(|_| "9220".into())
         .parse()
         .expect("VM_HOST_SPAWN_PORT must be a valid port");
 
