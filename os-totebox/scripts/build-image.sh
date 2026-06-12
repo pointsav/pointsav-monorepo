@@ -18,43 +18,56 @@ NETBSD_VER="10.1"
 ARCH="amd64"
 SETS_URL="https://cdn.netbsd.org/pub/NetBSD/NetBSD-${NETBSD_VER}/${ARCH}/binary/sets"
 TOOLS_DIR="${TOOLS_DIR:-build/netbsd-tools}"
-BINARIES_DIR="${BINARIES_DIR:-../../target/x86_64-unknown-netbsd/release}"
+# CARGO_TARGET_DIR is workspace-wide redirect (e.g. /srv/foundry/cargo-target/mathew).
+# Fall back to local target/ if not set.
+_CARGO_RELEASE="${CARGO_TARGET_DIR:-../../target}/x86_64-unknown-netbsd/release"
+BINARIES_DIR="${BINARIES_DIR:-${_CARGO_RELEASE}}"
 BUILD_DIR="build"
 OVERLAY="${BUILD_DIR}/overlay"
 IMAGE_RAW="${BUILD_DIR}/os-totebox.img"
 IMAGE_QCOW2="${BUILD_DIR}/os-totebox.qcow2"
-IMAGE_SIZE="4g"
+# Ubuntu makefs 20190105-3 has a 32-bit off_t overflow bug; fails on images > 2GB.
+# 1GB is sufficient for the base server rootfs (253 MB used after pruning + runtime overhead).
+# Data (audit JSONL, graph DB, etc.) lives on the separate data disk (provision-data-disk.sh).
+IMAGE_SIZE="1g"
 
 # ── 1. Preflight ─────────────────────────────────────────────────────────────
 command -v qemu-img >/dev/null || { echo "error: qemu-img not found on PATH"; exit 1; }
-[ -d "${TOOLS_DIR}" ] || {
-    echo "error: TOOLS_DIR=${TOOLS_DIR} not found"
-    echo "  Build NetBSD cross tools first:"
-    echo "    cd netbsd-src && ./build.sh -U -T ${TOOLS_DIR} tools"
-    exit 1
-}
-NBMAKEFS="${TOOLS_DIR}/bin/nbmakefs"
+
+# makefs: prefer nbmakefs (NetBSD cross tools) for reproducibility.
+# Fall back to the Ubuntu/Debian makefs package (apt install makefs).
 NBINSTALLBOOT="${TOOLS_DIR}/bin/nbinstallboot"
-[ -x "${NBMAKEFS}" ] || { echo "error: nbmakefs not found in TOOLS_DIR"; exit 1; }
+if [ -x "${TOOLS_DIR}/bin/nbmakefs" ]; then
+    NBMAKEFS="${TOOLS_DIR}/bin/nbmakefs"
+elif command -v makefs >/dev/null 2>&1; then
+    NBMAKEFS="makefs"
+    echo "  note: using host makefs (nbmakefs not found in TOOLS_DIR=${TOOLS_DIR})"
+else
+    echo "error: makefs not found. Install via: apt install makefs"
+    echo "  Or build NetBSD cross tools: cd netbsd-src && ./build.sh -U -T ${TOOLS_DIR} tools"
+    exit 1
+fi
 
 # ── 2. Download official NetBSD binary sets ───────────────────────────────────
+# NetBSD CDN uses .tar.xz format (not .tgz) as of NetBSD 10.x.
 mkdir -p "${BUILD_DIR}/sets"
 for SET in base etc kern-GENERIC; do
-    DEST="${BUILD_DIR}/sets/${SET}.tgz"
-    [ -f "${DEST}" ] && { echo "  cached: ${SET}.tgz"; continue; }
-    echo "  fetching: ${SET}.tgz"
-    curl -fSL --output "${DEST}" "${SETS_URL}/${SET}.tgz"
+    DEST="${BUILD_DIR}/sets/${SET}.tar.xz"
+    [ -f "${DEST}" ] && { echo "  cached: ${SET}.tar.xz"; continue; }
+    echo "  fetching: ${SET}.tar.xz"
+    curl -fSL --output "${DEST}" "${SETS_URL}/${SET}.tar.xz"
 done
 
 # ── 3. Assemble rootfs overlay ───────────────────────────────────────────────
-rm -rf "${OVERLAY}"
+# Use sudo rm in case a prior build left root-owned files (SSH keys, etc.).
+sudo rm -rf "${OVERLAY}"
 mkdir -p "${OVERLAY}"
 echo "  extracting base set..."
-tar -xzf "${BUILD_DIR}/sets/base.tgz"    -C "${OVERLAY}"
+tar -xJf "${BUILD_DIR}/sets/base.tar.xz"         -C "${OVERLAY}"
 echo "  extracting etc set..."
-tar -xzf "${BUILD_DIR}/sets/etc.tgz"     -C "${OVERLAY}"
+tar -xJf "${BUILD_DIR}/sets/etc.tar.xz"          -C "${OVERLAY}"
 echo "  extracting kernel..."
-tar -xzf "${BUILD_DIR}/sets/kern-GENERIC.tgz" -C "${OVERLAY}"
+tar -xJf "${BUILD_DIR}/sets/kern-GENERIC.tar.xz" -C "${OVERLAY}"
 
 # ── 4. Install our binaries (cross-compiled for x86_64-unknown-netbsd) ───────
 echo "  installing binaries..."
@@ -90,18 +103,39 @@ install -D -m 0755 scripts/rc.d/llama_server    "${OVERLAY}/etc/rc.d/llama_serve
 
 # ── 6. Configure rc.conf ─────────────────────────────────────────────────────
 cat >> "${OVERLAY}/etc/rc.conf" << 'EOF'
+rc_configured=YES
 # os-totebox services
 sshd=YES
 system_ledger=YES
 doorman=YES
-service_content=YES
-llama_server=YES
+service_content=NO  # binary not in base image; deployment-time injection
+llama_server=NO     # inference weights are deployment-time injection; not in base image
 EOF
 
-# ── 7. Configure WireGuard interface (wg0) ───────────────────────────────────
-# Actual keys are injected at deployment time by project-infrastructure.
-# This file is a template; project-infrastructure replaces <PPN_PRIVATE_KEY>
-# and <GCP_PUBLIC_KEY> via cloud-init or a provisioning script.
+# ── 6b. Generate /etc/fstab ──────────────────────────────────────────────────
+# Root FFS2 is on dk1 (NetBSD GPT partition device naming: dk0=ESP, dk1=FFS2 root).
+# Listing it with pass=1 allows fsck -p to verify the FS; the kernel already mounted it.
+# Without this file, NetBSD rc drops to a rescue shell with "cannot open /etc/fstab".
+cat > "${OVERLAY}/etc/fstab" << 'FSTAB_EOF'
+# /etc/fstab — os-totebox base image
+# Root FFS2 is mounted by kernel from dk1 (GPT partition 2 of wd0 under QEMU IDE).
+/dev/dk1        /       ffs     rw              1 1
+FSTAB_EOF
+
+# ── 7. Configure network interfaces ──────────────────────────────────────────
+# em0: QEMU e1000 (test) and bare-metal first Ethernet (production).
+# Static IP for QEMU SLIRP testing (10.0.2.15, GW 10.0.2.2).
+# In hardware deployment, replace with dhcpcd or site-specific static config.
+# The "!command" prefix runs the command after ifconfig completes.
+cat > "${OVERLAY}/etc/ifconfig.em0" << 'NET_EOF'
+inet 10.0.2.15 netmask 255.255.255.0
+!route add default 10.0.2.2
+NET_EOF
+
+# wg0: WireGuard tunnel. Actual keys are injected at deployment time by
+# project-infrastructure. This file is a template; project-infrastructure
+# replaces <PPN_PRIVATE_KEY> and <GCP_PUBLIC_KEY> via cloud-init or a
+# provisioning script.
 cat > "${OVERLAY}/etc/ifconfig.wg0" << 'EOF'
 create
 !wgconfig wg0 set private-key /etc/wireguard/private.key
@@ -113,6 +147,45 @@ EOF
 chmod 0600 "${OVERLAY}/etc/ifconfig.wg0"
 mkdir -p "${OVERLAY}/etc/wireguard"
 chmod 0700 "${OVERLAY}/etc/wireguard"
+
+# ── 7b. Pre-generate SSH host keys ───────────────────────────────────────────
+# sshd skips host keys not owned by uid=0. makefs captures the source uid/gid,
+# so the keys must be owned by root on the host BEFORE makefs runs.
+# This step requires sudo for the chown. To skip chown (e.g. when running this
+# script under sudo already), set SKIP_SSH_CHOWN=1.
+echo "  generating SSH host keys..."
+mkdir -p "${OVERLAY}/etc/ssh"
+for TYPE in ed25519 ecdsa rsa; do
+    KEY="${OVERLAY}/etc/ssh/ssh_host_${TYPE}_key"
+    [ -f "${KEY}" ] && continue  # keep existing key on re-runs
+    ssh-keygen -q -t "${TYPE}" -f "${KEY}" -N ""
+done
+if [ "${SKIP_SSH_CHOWN:-0}" != "1" ]; then
+    sudo chown 0:0 \
+        "${OVERLAY}/etc/ssh/ssh_host_ed25519_key" \
+        "${OVERLAY}/etc/ssh/ssh_host_ed25519_key.pub" \
+        "${OVERLAY}/etc/ssh/ssh_host_ecdsa_key" \
+        "${OVERLAY}/etc/ssh/ssh_host_ecdsa_key.pub" \
+        "${OVERLAY}/etc/ssh/ssh_host_rsa_key" \
+        "${OVERLAY}/etc/ssh/ssh_host_rsa_key.pub" \
+        "${OVERLAY}/var/chroot/sshd"
+fi
+
+# ── 7c. Root authorized_keys for smoke testing ───────────────────────────────
+# Inject a test pubkey so SSH smoke tests can connect as root without a password.
+# TEST_PUBKEY_FILE defaults to /tmp/totebox-ssh-test.pub; set to "" to skip (production).
+TEST_PUBKEY_FILE="${TEST_PUBKEY_FILE:-/tmp/totebox-ssh-test.pub}"
+if [ -n "${TEST_PUBKEY_FILE}" ] && [ -f "${TEST_PUBKEY_FILE}" ]; then
+    echo "  injecting smoke-test SSH pubkey into root authorized_keys..."
+    sudo mkdir -p "${OVERLAY}/root/.ssh"
+    sudo chmod 0700 "${OVERLAY}/root/.ssh"
+    cat "${TEST_PUBKEY_FILE}" | sudo tee "${OVERLAY}/root/.ssh/authorized_keys" > /dev/null
+    sudo chmod 0600 "${OVERLAY}/root/.ssh/authorized_keys"
+    sudo chown -R 0:0 "${OVERLAY}/root/.ssh"
+    # Allow root login via pubkey; append to override any commented-out default.
+    printf '\nPermitRootLogin yes\nPasswordAuthentication no\n' \
+        >> "${OVERLAY}/etc/ssh/sshd_config"
+fi
 
 # ── 8. Veriexec manifest (OS-level binary signing) ───────────────────────────
 # Generate SHA-256 fingerprints for all installed binaries.
@@ -133,9 +206,34 @@ done
 # Enable Veriexec enforcement at boot.
 echo "veriexec=YES" >> "${OVERLAY}/etc/security.conf"
 
+# ── 8b. Strip non-server content (server image only needs runtime, not docs) ──
+echo "  pruning non-server content..."
+# Strip all of /usr/share/ except zoneinfo (needed for localtime(3)) and
+# tabset/nls (referenced by some NetBSD rc scripts).
+# This saves ~60 MB and avoids a known Ubuntu makefs 20190105-3 EINVAL bug
+# that triggers on files > ~90 KB during FFS2 image population.
+if [ -d "${OVERLAY}/usr/share" ]; then
+    find "${OVERLAY}/usr/share" -mindepth 1 -maxdepth 1 \
+        ! -name "zoneinfo" ! -name "tabset" ! -name "nls" \
+        -exec rm -rf {} \;
+fi
+rm -rf "${OVERLAY}/usr/games" "${OVERLAY}/usr/share/games"
+
 # ── 9. Build FFS2 disk image using NetBSD cross-makefs ───────────────────────
+# Set correct ownership before image capture. tar extraction runs as mathew
+# (uid=1001) so extracted files are owned by uid=1001. PAM, login(1), and
+# sshd enforce that /etc/login.conf, /etc/pam.d/*, and other system files must
+# be owned by root (uid=0); boot fails with "insecure ownership" otherwise.
+# This must run AFTER all file writes (rc.conf, fstab, Veriexec manifest, etc.)
+# and BEFORE makefs so the image captures correct uid=0 ownership.
+echo "  fixing overlay ownership (chown -R 0:0)..."
+sudo chown -R 0:0 "${OVERLAY}"
+# Fix any execute-only directories created by NetBSD tarball extraction —
+# makefs cannot opendir() them.
+sudo find "${OVERLAY}" -type d ! -readable -exec chmod u+rx {} \;
 echo "  building FFS2 image (${IMAGE_SIZE})..."
-"${NBMAKEFS}" -t ffs -s "${IMAGE_SIZE}" -o version=2 "${IMAGE_RAW}" "${OVERLAY}"
+sudo "${NBMAKEFS}" -t ffs -s "${IMAGE_SIZE}" -o version=2 "${IMAGE_RAW}" "${OVERLAY}"
+sudo chown "$(id -un):$(stat -c '%G' "${OVERLAY}")" "${IMAGE_RAW}"
 
 # Install bootloader (NetBSD BIOS GPT/MBR boot).
 if [ -f "${OVERLAY}/usr/mdec/biosboot" ] && [ -x "${NBINSTALLBOOT}" ]; then
