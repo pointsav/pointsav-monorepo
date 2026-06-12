@@ -227,7 +227,7 @@ config/*.toml corrected; static/tokens.css removed; NEXT.md updated.
 ### Post Phase 9 (after production verify)
 
 - ~~L21: Fold `theme-woodfine.css` into DTCG vault~~ — DONE; exactly 3 CSS files (style.css, tokens.css, tokens-woodfine.css); theme-woodfine.css removed
-- L20: Decompose `server.rs` along concern boundaries (routes, chrome, state, pages, walker)
+- ~~L20: Decompose `server.rs` along concern boundaries~~ — DONE; server/ (mod.rs + 4 handlers), chrome/, routes/, state.rs, walker.rs; all files ≤1,287 lines
 - ~~L25: Audit + gate CodeMirror/editor bundle to `/edit/*` only~~ — DONE (7a2b9b42); editor.js + cm-saa.bundle.js load only on `/edit/*`
 - ~~Mobile polish: M8 drawer animation, tap-popover positioning, Cmd+K affordance~~ — DONE (7a2b9b42)
 - Phase 6 (three-instance split): gated on content-wiki-* GitHub rename + Doctrine amendment
