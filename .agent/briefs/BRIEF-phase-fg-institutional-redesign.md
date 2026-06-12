@@ -1,7 +1,8 @@
 ---
 artifact: brief
-status: active
-status_note: scoping — interpretation unconfirmed; no content work until operator confirms scope and sends go-ahead
+status: archived
+status_note: content absorbed into BRIEF-artifact-style-guide.md §13 (2026-06-11); open operator questions documented there; no standalone content
+archived: 2026-06-11
 created: 2026-06-11
 updated: 2026-06-11
 author: totebox@project-editorial (claude-sonnet-4-6)
