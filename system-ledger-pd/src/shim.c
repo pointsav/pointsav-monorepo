@@ -1,17 +1,9 @@
 /*
- * shim.c — expose Microkit inline/macro functions as linkable C symbols.
+ * shim.c — supplementary C stubs for system-ledger-pd.
  *
- * microkit.h defines microkit_dbg_puts as an inline function that Rust's
- * `extern "C"` declarations cannot reach directly. This file wraps it so
- * the linker can resolve the symbol from the Rust staticlib.
+ * microkit_dbg_puts, microkit_ppcall, and all Microkit protocol functions
+ * are provided by libmicrokit.a — do not re-declare them here.
  *
- * Only the functions used by system-ledger-pd are exposed here.
- * system-ledger-pd is the server side of the PPC protocol; it does not
- * call microkit_ppcall or microkit_notify — those are client-side only.
+ * Add stubs here only for symbols required by the Rust staticlib that are
+ * absent from both libmicrokit.a and the standard freestanding headers.
  */
-
-#include <microkit.h>
-
-void microkit_dbg_puts(const char *s) {
-    microkit_dbg_puts(s);
-}
