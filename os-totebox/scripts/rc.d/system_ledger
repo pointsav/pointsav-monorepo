@@ -14,12 +14,19 @@ rcvar=$name
 command="/usr/bin/system-ledger-server"
 command_args=""
 pidfile="/var/run/system-ledger.pid"
-required_dirs="/run/system-ledger"
 start_precmd="${name}_precmd"
+start_cmd="${name}_start"
 
 system_ledger_precmd()
 {
     mkdir -p /run/system-ledger
+}
+
+system_ledger_start()
+{
+    echo "Starting ${name}."
+    ${command} ${command_args} &
+    echo $! > "${pidfile}"
 }
 
 load_rc_config $name

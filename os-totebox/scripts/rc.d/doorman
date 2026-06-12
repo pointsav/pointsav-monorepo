@@ -14,6 +14,30 @@ rcvar=$name
 command="/usr/bin/slm-doorman-server"
 command_args=""
 pidfile="/var/run/doorman.pid"
+start_precmd="${name}_precmd"
+start_cmd="${name}_start"
+
+# Tier-0-only baseline: doorman starts with no inference tier configured.
+# /healthz → 200; /readyz → 503 {"reason":"no_tier_available"} — this is correct.
+# Inference tiers (A/B/C) are provisioned at deployment time, not baked into the image.
+# See project-intelligence outbox msg: project-system-20260611-tier0-language-proposal.
+export SLM_FORCE_BROKER_MODE=true
+export SLM_BIND_ADDR=0.0.0.0:9080
+export SLM_AUDIT_DIR=/var/db/doorman/audit
+export FOUNDRY_ROOT=/var/foundry
+
+doorman_precmd()
+{
+    mkdir -p /var/db/doorman/audit
+    mkdir -p /var/foundry
+}
+
+doorman_start()
+{
+    echo "Starting ${name}."
+    ${command} ${command_args} &
+    echo $! > "${pidfile}"
+}
 
 load_rc_config $name
 run_rc_command "$1"

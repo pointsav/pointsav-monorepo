@@ -6,3 +6,19 @@ xtask = "run --package xtask --"
 # lower for the x86_64-unknown-none target (no OS SIMD context save/restore).
 [target.x86_64-unknown-none]
 rustflags = ["--cfg", "curve25519_dalek_backend=\"fiat\""]
+
+# Cross-compile for NetBSD 10.1 amd64 (os-totebox base image binaries).
+# Prerequisites:
+#   rustup target add x86_64-unknown-netbsd
+#   sudo apt-get install -y clang lld
+#   Extract NetBSD 10.1 amd64 base.tgz + comp.tgz to $NETBSD_SYSROOT
+# Build:
+#   RUSTFLAGS="-C link-arg=--sysroot=/path/to/netbsd-sysroot" \
+#   cargo build --release --target x86_64-unknown-netbsd -p <crate>
+[target.x86_64-unknown-netbsd]
+linker = "clang"
+rustflags = [
+  "-C", "link-arg=--target=x86_64--netbsd",
+  "-C", "link-arg=--sysroot=/srv/foundry/build/netbsd-sysroot",
+  "-C", "link-arg=-fuse-ld=lld",
+]
