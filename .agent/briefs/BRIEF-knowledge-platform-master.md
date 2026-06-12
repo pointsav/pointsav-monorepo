@@ -48,10 +48,10 @@ Single Rust binary. No runtime system dependencies. Apache 2.0.
 | Phase 6 | Three-instance split | Authorized | Doctrine v0.1.2 §IV.g committed 2026-06-11; check --strict: 248 pages / 0 dead links; wire xtask gate + remove wikilink-unresolved fallback (project-knowledge Totebox) |
 | Phase 7 | MCP federation | Designed | ActivityPub + cross-instance queries |
 | Phase 8 | Token theming | Shipped | DTCG token layout vars + `knowledge.toml` templates |
-| Phase 0 | Federation engine | In progress | tokens.css, blueprints rail, slug normalization, L25 editor route done (bd435cc3, 7a2b9b42); inject_wiki_prefixes + check gate + wikilink-unresolved removal remaining |
+| Phase 0 | Federation engine | **Totebox code complete** | All scope items complete (bd435cc3 + 7a2b9b42 + 9a1326df); 1 dead link pending project-editorial fix; Stage 6 READY at 9a1326df |
 | Phase 9 | Production deploy | **Shipped 2026-06-11** | WIKI_KNOWLEDGE_TOML migration; /etc/local-knowledge/; all 3 instances healthy |
 
-Sub-clone tip: `7a2b9b42` (2 commits ahead of `origin/main`; Stage 6 READY sent 2026-06-11, msg-id: `command-20260611-stage-6-ready-project-knowledge-sub-clon`).
+Sub-clone tip: `9a1326df` (Stage 6 READY sent 2026-06-12, msg-id: `command-20260612-stage-6-ready-project-knowledge-sub-clon`). Archive tip: `4e2ddf95` (NEXT.md ops cleanup).
 
 ---
 
@@ -196,13 +196,13 @@ Scope:
 - ~~Slug normalization: `/wiki/topic-foo` → 301 → `/wiki/foo`; `topic-foo.md` file fallback; ES-locale aware~~ — DONE bd435cc3
 - ~~L25: `/edit/{slug}` route stub; CodeMirror 6 bundle; `toc-persistence.js` extracted; conditional chrome load~~ — DONE bd435cc3 + 7a2b9b42
 - ~~M8/M5: Mobile drawer animations; tap-popover viewport flip; Cmd+K visible trigger~~ — DONE 7a2b9b42
-- Implement `inject_wiki_prefixes` cross-mount resolution — TODO (unblocked Totebox work)
-- Wire `check --strict` as xtask CI gate (blocks promote on any unresolved `[[ ]]`) — TODO; gate passes (0 dead links per §5); wiring is Totebox work
-- Remove red-link render path (`render.rs` — `wikilink-missing` emission) — TODO; blocked until gate is wired
+- ~~Implement `inject_wiki_prefixes` cross-mount resolution~~ — DONE (already present at all call sites; confirmed this session)
+- ~~Wire `check --strict` as xtask CI gate (blocks promote on any unresolved `[[ ]]`)~~ — DONE 9a1326df (`scripts/stage6-gate.sh`; xtask check-content across 3 mounts)
+- ~~Remove red-link render path (`render.rs` — `wikilink-missing` emission)~~ — DONE 9a1326df (display text only; gate active; L18 complete)
 
 Completion test: `knowledge.toml` is the live source of truth for all three instances (**DONE** — Phase 9);
-`check --strict` passes with 0 dead links (**DONE** — 248 pages / 0 dead links per §5);
-red-link path absent from source — **REMAINING**.
+`check --strict` passes with 0 dead links — **1 dead link remaining** in `substrate-without-inference-base-case.es.md` (content fix sent to project-editorial; gate passes once fixed);
+red-link path absent from source — **DONE 9a1326df**.
 
 ### Phase 9 — Production deploy — **DEPLOYED 2026-06-11**
 
@@ -226,10 +226,10 @@ config/*.toml corrected; static/tokens.css removed; NEXT.md updated.
 
 ### Post Phase 9 (after production verify)
 
-- L21: Fold `theme-woodfine.css` into DTCG vault (DESIGN-TOKEN-CHANGE pipeline to project-design)
+- ~~L21: Fold `theme-woodfine.css` into DTCG vault~~ — DONE; exactly 3 CSS files (style.css, tokens.css, tokens-woodfine.css); theme-woodfine.css removed
 - L20: Decompose `server.rs` along concern boundaries (routes, chrome, state, pages, walker)
-- L25: Audit + gate CodeMirror/editor bundle to `/edit/*` only
-- Mobile polish: M8 drawer animation, tap-popover positioning, Cmd+K affordance
+- ~~L25: Audit + gate CodeMirror/editor bundle to `/edit/*` only~~ — DONE (7a2b9b42); editor.js + cm-saa.bundle.js load only on `/edit/*`
+- ~~Mobile polish: M8 drawer animation, tap-popover positioning, Cmd+K affordance~~ — DONE (7a2b9b42)
 - Phase 6 (three-instance split): gated on content-wiki-* GitHub rename + Doctrine amendment
 
 ---
@@ -243,7 +243,7 @@ differentiation can proceed.
 **`tokens.css` / `config/*.toml` deletion intent** — ~~RESOLVED 2026-06-11~~: operator chose
 "delete tokens.css only; keep config/*.toml as templates." Committed at ece90408.
 
-**`check --strict` as pre-promote gate** — CLEARED 2026-06-11: gate passes (248 pages / 0 dead links); project-editorial content is clean. project-knowledge Totebox to wire as xtask gate and remove `wikilink-unresolved` fallback from render.rs.
+**`check --strict` as pre-promote gate** — DONE 9a1326df: `scripts/stage6-gate.sh` wired; `wikilink-unresolved` span removed from render.rs (L18 complete). Gate currently reports 1 dead link (`substrate-without-inference-base-case.es.md` → fix sent to project-editorial).
 
 **Sub-clone rebase** — ~~Resolved 2026-06-10~~. Merge strategy chosen; post-merge tip `ca6ae410` → `8480f68e`; Stage 6 signal updated in outbox. No further action needed.
 
@@ -253,6 +253,20 @@ status unknown. Confirm target domain per instance before Phase 6 cutover.
 ---
 
 ## §6 — Session Log
+
+### 2026-06-12 | totebox | claude-code
+
+Phase 0 gate commit (9a1326df): `scripts/stage6-gate.sh` xtask runner; `wikilink-unresolved` span
+removed from render.rs (display text only; L18 complete); `inject_wiki_prefixes` cross-mount wiring
+confirmed already present at all call sites. Gate reports 1 dead link in project-editorial content
+(`substrate-without-inference-base-case.es.md`); fix sent to project-editorial (msg-id:
+command-20260612-dead-link-fix-needed-substrate-without-i). Stage 6 READY sent (msg-id:
+command-20260612-stage-6-ready-project-knowledge-sub-clon). NEXT.md pre-promote code-fix items
+closed (both already implemented; 129 tests pass); Phase 6 standing deferred split into code/content
+entries (4e2ddf95). BRIEF §2 tip + Phase 0 scope + completion test + Post Phase 9 updated. L21/L25/M8
+marked done. Only remaining Phase 0 item: project-editorial content fix (1 dead link).
+
+---
 
 ### 2026-06-11 | totebox | claude-code
 
