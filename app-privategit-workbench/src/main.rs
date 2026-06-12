@@ -93,10 +93,7 @@ fn resolve_path(roots: &[RootEntry], url_path: &str) -> Result<(PathBuf, bool)> 
 
 /// Like `resolve_path` but also returns the canonicalised root fs path.
 /// Returns (fs_path, writable, root_canonical).
-fn resolve_path_with_root(
-    roots: &[RootEntry],
-    url_path: &str,
-) -> Result<(PathBuf, bool, PathBuf)> {
+fn resolve_path_with_root(roots: &[RootEntry], url_path: &str) -> Result<(PathBuf, bool, PathBuf)> {
     let url_path = url_path.trim_start_matches('/');
 
     for root in roots {
@@ -236,7 +233,10 @@ fn log_activity(log_dir: &Option<PathBuf>, action: &str, path: &str, meta: serde
         .create(true)
         .append(true)
         .open(&fpath)
-        .and_then(|mut f| { use std::io::Write; f.write_all(line.as_bytes()) });
+        .and_then(|mut f| {
+            use std::io::Write;
+            f.write_all(line.as_bytes())
+        });
 }
 
 /// GET /file?path=<url_path>
@@ -247,7 +247,12 @@ async fn get_file(
 ) -> Response {
     if headers.get("x-wb-source").and_then(|v| v.to_str().ok()) == Some("user") {
         let ext = q.path.rsplit('.').next().unwrap_or("").to_string();
-        log_activity(&state.log_dir, "open", &q.path, serde_json::json!({"ext": ext}));
+        log_activity(
+            &state.log_dir,
+            "open",
+            &q.path,
+            serde_json::json!({"ext": ext}),
+        );
     }
     let (fs_path, writable) = match resolve_path(&state.roots, &q.path) {
         Ok(v) => v,
@@ -391,7 +396,12 @@ async fn put_file(
     );
     let _ = state.events_tx.send(event_json);
 
-    log_activity(&state.log_dir, "save", &q.path, serde_json::json!({"bytes": body.len()}));
+    log_activity(
+        &state.log_dir,
+        "save",
+        &q.path,
+        serde_json::json!({"bytes": body.len()}),
+    );
 
     let mut resp_map = HashMap::new();
     resp_map.insert("ok", serde_json::Value::Bool(true));
@@ -476,7 +486,12 @@ async fn rename_file(State(state): State<AppState>, Query(q): Query<RenameQuery>
     }
 
     let new_url_path = join_parent_url(&q.from, new_name);
-    log_activity(&state.log_dir, "rename", &q.from, serde_json::json!({"new_name": new_name}));
+    log_activity(
+        &state.log_dir,
+        "rename",
+        &q.from,
+        serde_json::json!({"new_name": new_name}),
+    );
     Json(RenameResponse {
         ok: true,
         new_path: new_url_path,
@@ -555,7 +570,12 @@ async fn move_file(State(state): State<AppState>, Query(q): Query<RenameQuery>) 
 
     let dest_prefix = q.to.trim_start_matches('/').trim_end_matches('/');
     let new_path = format!("{}/{}", dest_prefix, filename.to_str().unwrap_or(""));
-    log_activity(&state.log_dir, "move", &q.from, serde_json::json!({"to": &q.to}));
+    log_activity(
+        &state.log_dir,
+        "move",
+        &q.from,
+        serde_json::json!({"to": &q.to}),
+    );
     Json(MoveResponse { ok: true, new_path }).into_response()
 }
 
@@ -646,7 +666,12 @@ async fn duplicate_file(State(state): State<AppState>, Query(q): Query<FileQuery
     }
 
     let new_url_path = join_parent_url(&q.path, &new_name);
-    log_activity(&state.log_dir, "duplicate", &q.path, serde_json::json!({"new_name": &new_name}));
+    log_activity(
+        &state.log_dir,
+        "duplicate",
+        &q.path,
+        serde_json::json!({"new_name": &new_name}),
+    );
     Json(DuplicateResponse {
         ok: true,
         new_path: new_url_path,
@@ -761,11 +786,10 @@ struct TrashResponse {
 /// permanently deleting it. Returns {ok, trash_key, original_path} so the
 /// frontend can offer an Undo button that calls /restore.
 async fn trash_file(State(state): State<AppState>, Query(q): Query<FileQuery>) -> Response {
-    let (fs_path, writable, root_canonical) =
-        match resolve_path_with_root(&state.roots, &q.path) {
-            Ok(v) => v,
-            Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
-        };
+    let (fs_path, writable, root_canonical) = match resolve_path_with_root(&state.roots, &q.path) {
+        Ok(v) => v,
+        Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
+    };
 
     if !writable {
         return err(StatusCode::FORBIDDEN, "path is not writable");
@@ -797,7 +821,12 @@ async fn trash_file(State(state): State<AppState>, Query(q): Query<FileQuery>) -
     }
 
     let original_path = q.path.trim_start_matches('/').to_string();
-    log_activity(&state.log_dir, "trash", &original_path, serde_json::json!({"key": &trash_key}));
+    log_activity(
+        &state.log_dir,
+        "trash",
+        &original_path,
+        serde_json::json!({"key": &trash_key}),
+    );
     Json(TrashResponse {
         ok: true,
         trash_key,
@@ -814,10 +843,7 @@ struct RestoreQuery {
 
 /// POST /restore?trash_key=<key>&original_path=<url_path>
 /// Moves an item from <root>/.wb-trash/<key> back to its original location.
-async fn restore_file(
-    State(state): State<AppState>,
-    Query(q): Query<RestoreQuery>,
-) -> Response {
+async fn restore_file(State(state): State<AppState>, Query(q): Query<RestoreQuery>) -> Response {
     let (fs_dest, writable, root_canonical) =
         match resolve_path_with_root(&state.roots, &q.original_path) {
             Ok(v) => v,
@@ -846,7 +872,12 @@ async fn restore_file(
         return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string());
     }
 
-    log_activity(&state.log_dir, "restore", &q.original_path, serde_json::json!({}));
+    log_activity(
+        &state.log_dir,
+        "restore",
+        &q.original_path,
+        serde_json::json!({}),
+    );
     let mut resp_map = HashMap::new();
     resp_map.insert("ok", serde_json::Value::Bool(true));
     Json(resp_map).into_response()
