@@ -933,6 +933,51 @@ TRAINING AUTHORIZATION
 
 ---
 
+### 2026-06-12 — Session 8 Quality Audit: first full automation cycle (00:52 stint, PID 1137652)
+
+**Cycle verdict: PARTIAL.** The first complete yoyo-batch automation cycle ran CLEAN end-to-end — no crash, no force-kill, graceful `TERMINATED` shutdown — but produced near-zero training value: **+22 entities** (all from the ingestion sweep, not enrichment), **0 enrichment DPO pairs, 0 training runs**, for **$0.804 and ~68min billable GPU time**. The plumbing works; the yield does not. The system paid for a GPU and never trained on it.
+
+**Two brief premises VERIFIED FALSE this session:**
+- **Enrichment pairs are NOT zero.** 418 valid DPO pairs exist at `/srv/foundry/data/training-corpus/feedback/apprenticeship-git-commit-*.jsonl`. The brief's `find` for `enrichment-*.jsonl` returned 0 because **that filename prefix does not exist anywhere on the box** (verified: 0 files).
+- **Markers are NOT zero.** `corpus-threshold.py` wrote fresh markers for BOTH adapters today — engineering **1410 SFT tuples @02:12Z**, apprenticeship **418 DPO tuples @02:17Z**. **20 markers** now accumulate in `training-pending/`.
+
+**Phase 4b results — 400 commits ingested, 0 pairs (BY DESIGN, not a sweep bug):**
+- Sweep ingested **400 commits** (foundry 1–200, project-intelligence 201–400); wrote 400 SHAs to `/srv/foundry/data/yoyo-datagraph-sweep.ledger`.
+- service-content returns **202 Accepted immediately**; the Tier A→Tier B enrichment cascade runs **asynchronously** afterward via the file watcher.
+- With Tier B Terminated, logged `[TIER-B] Circuit open — using Tier A results` ×5. A bare Tier A baseline is not a preference pair → **0 DPO pairs BY DESIGN**.
+- **Two compounding code faults:**
+  1. `yoyo-daily-cycle.sh:171` writes SHA to the ledger on the **202-QUEUE ACK**, not enrichment success — all 400 commits are permanently marked swept and will **NEVER re-enrich when Tier B returns**.
+  2. **60s wait-for-pairs** (6×10s) far too short for an async cascade at ~1.7–2 tok/s — `new_pairs=0` is meaningless.
+
+**Training result — SKIPPED (cause is NOT "zero markers"):**
+- Phase 6 of the 00:52 stint got **0s budget** — earlier 1738s + slow boot + dead 25min enrichment + 31min sweep exhausted the 7200s/day window before Phase 6. Two adapters READY (1410 SFT + 418 DPO, 8–28× over threshold) and nothing trained.
+- Separate 02:32 training cycle hit **3× STOCKOUT** (02:36/02:48/03:00, 600s backoff).
+- **`SLM_YOYO_WEIGHTS_GCS_BUCKET` unset everywhere in `infrastructure/`** (verified 0 grep hits) — `corpus-threshold.py` takes the `marker local only` branch; 20 markers pile up with no consumer even without stockout.
+
+**Root cause — zero pairs:** Tier B (yoyo-batch L4) was Terminated the entire window. Doorman logged `consecutive_failures=102`, `route_yoyo_only: circuit not allowing request`. A Tier-A-only sweep **cannot produce DPO pairs by design**. The `/readyz` `circuit: closed` field is misleading — `health_up` is false.
+
+**Additional findings:**
+- Stall early-exit fired at **12/6, not 6/6** — ~15min burned past stall point on dead GPU (0% util, `metrics:n/a`).
+- `entities=?` read failure on cycle log line 34 — unguarded healthz parse error.
+- 8080 drain-worker upstream fault: `/health` ok but `/metrics` + `/v1/chat/completions` fail; **737-entry quarantine, 9 poison** blocking apprenticeship shadow-capture.
+- **709/1127 apprenticeship tuples (63%) degenerate** (empty `attempt.diff`, Tier B unavailable at capture).
+- VM `timedatectl` is America/Vancouver (PDT/-0700) — `journalctl --since` UTC queries return "No entries"; recurring 7h off-by analysis trap.
+
+**Action items:**
+1. **[BLOCKER — operator/Command]** Restore Tier B GPU endpoint. No DPO pairs and no training without it. No `--enable-zone-fallback`.
+2. **[HIGH]** Fix Phase 4b ledger (`yoyo-daily-cycle.sh:171`) to write SHA on enrichment **success**, not 202-queue ACK — 400 commits poisoned.
+3. **[HIGH]** Set `SLM_YOYO_WEIGHTS_GCS_BUCKET` or document that training dispatch is manual pre-D4.
+4. **[HIGH]** Reserve a training-budget floor when adapters reach READY.
+5. **[MED]** Fix stall early-exit to fire at 6/6; guard `entities=?` read failure.
+6. **[MED — Command]** Fix 8080 drain-worker; audit 737-entry quarantine for replayability.
+7. **[S improvement]** Expand `SWEEP_REPOS` to glob the 23 `clones/*/.git` (project-bim ~2532 commits, etc.).
+8. **[S improvement]** Decouple Phase 4b `new_pairs` from the meaningless 60s wait (fire-and-forget).
+9. **[S improvement]** Set VM clock to UTC (kills the recurring 7h off-by journalctl trap).
+
+**Next-cycle forecast:** Another low-yield clean run — 0 DPO pairs (Tier B Terminated), 0 training (markers pile to 22+, no GCS bucket, stockout), ~$0.80 wasted. Entity yield will **shrink** (400 SHAs now permanently skipped). To make the next cycle productive, ALL THREE must hold: (1) yoyo-batch up in an L4-capacity zone; (2) 202-queue ledger bug fixed; (3) `SLM_YOYO_WEIGHTS_GCS_BUCKET` set OR training-budget floor reserved.
+
+---
+
 ### 2026-06-11 — Session 7: Opus deep audit + preemption-resilient rewrite
 
 **Method:** Opus agent performed full on-disk audit of all scripts (not from prompts/summaries).
