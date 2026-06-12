@@ -6,7 +6,7 @@ title: "SLM Learning Loop — DPO Training Pipeline"
 status: archived
 owner: project-intelligence
 created: 2026-05-29
-updated: 2026-06-12
+updated: 2026-06-12 (session 8 — continuous service model; Phase 4b DataGraph sweep fallback; training rsync+receipt fixes)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 moved_to: project-intelligence
 archived: 2026-06-12
@@ -759,7 +759,7 @@ For Phase 1, SSH-direct is the right call. GCS is a Phase 2+ concern.
 > of physical reality. Reconcile against this when something breaks before checking the
 > design sections.
 >
-> **Last updated:** 2026-06-11 (session 8) — Continuous service model: timer removed; `start_vm_with_retry()` retries indefinitely; `budget_file()` dynamic date for midnight-crossing safety; idle-monitor source files deleted
+> **Last updated:** 2026-06-12 (session 8) — Continuous service: timer removed; `Restart=always`+`RestartSec=600` is the day-boundary mechanism; Phase 4b DataGraph sweep fallback (fires when corpus stalls, ingests git history → /v1/ingest); training Phase 6 fixed: rsync script+corpus to remote VM before SSH; receipt only written on rc=0
 
 ---
 
@@ -784,8 +784,13 @@ WORKSPACE VM (foundry-workspace, vault-privategit-source-1)
   │             Phase 2:  wait llama-server health; anchor ENRICHMENT_END to VM:READY (not stint start)
   │             Phase 3:  wait Doorman Tier B circuit close
   │             Phase 4:  enrichment drain + stall/preemption detector (return 8 if VM vanishes)
+  │             Phase 4b: [NEW] DataGraph sweep — fires on STINT_RETURN=7 (stall); ingests git commit
+  │                        history (90 days, 200 commits/repo, 2 repos) to /v1/ingest → Tier A+B
+  │                        extraction → DPO pairs on disagreement; SHA ledger prevents re-processing;
+  │                        resets STINT_RETURN=0 so Phase 5+ runs normally
   │             Phase 5:  corpus-threshold.py → training markers
-  │             Phase 6:  LoRA training: AUTONOMOUS_ENABLED OR manual tag; daily receipt prevents double-run
+  │             Phase 6:  LoRA training: rsync script+corpus to yoyo-batch → SSH training → receipt
+  │                        ONLY written on rc=0; failure logs and clears path for next cycle retry
   │             Phase 7:  GCS sync (when SLM_YOYO_WEIGHTS_GCS_BUCKET set)
   │             Phase 8:  SSH stop llama-server → gcloud stop → debit_seconds(VM-on time)
   │           Return codes: 0=clean, 7=stall-exit, 8=preempted→main recovers, 9=VM unavailable
@@ -833,7 +838,7 @@ TRAINING AUTHORIZATION
 
 | Component | Path | Status | Notes |
 |---|---|---|---|
-| `yoyo-daily-cycle.sh` | `/srv/foundry/bin/` | **UPDATED 2026-06-11 session-8** | `budget_file()` dynamic date (midnight-safe); `RETRY_DEADLINE_SECS` removed; `start_vm_with_retry()` retries indefinitely (no deadline); systemd `Restart=always` is the day-boundary mechanism; earlier: day-budget ledger; `run_stint()` + `main()` loop; Phase 4 stall+preemption; `AUTONOMOUS_ENABLED` gate; commit `53f8765` + this session |
+| `yoyo-daily-cycle.sh` | `/srv/foundry/bin/` | **UPDATED 2026-06-12 session-8** | Phase 4b DataGraph sweep (commit `c89e78e`): fires on stall, ingests git history to /v1/ingest, SHA ledger `/srv/foundry/data/yoyo-datagraph-sweep.ledger`; Phase 6 training fixes (commit `78ce725`): rsync script to `/home/mathew/run-dpo-training.py` + corpus to `/home/mathew/training-corpus/feedback/` on remote before SSH; receipt only on rc=0; earlier session-8: `budget_file()` dynamic date; `RETRY_DEADLINE_SECS` removed; `Restart=always` day-boundary mechanism; set-e fix (commit `9341778`) |
 | `local-yoyo-daily.service` | `/etc/systemd/system/` | **UPDATED 2026-06-11 session-8** | Type=simple; Restart=always; RestartSec=600; RuntimeMaxSec=28800; KillMode=control-group; ExecStopPost; YOYO_DAY_BUDGET_MIN=120; enabled via WantedBy=multi-user.target |
 | `local-yoyo-daily.timer` | — | **DELETED 2026-06-11 session-8** | Removed from source + /etc/; `Restart=always` in service replaces it |
 | `yoyo-idle-monitor.sh` | — | **DELETED 2026-06-11 session-8** | Was: bin/yoyo-idle-monitor.sh; idle-monitor source files in infrastructure/yoyo-manual/ also deleted; installed units archived to /srv/foundry/data/yoyo-idle-monitor-archive/ |
@@ -895,6 +900,36 @@ TRAINING AUTHORIZATION
 > **Purpose:** Document what was tested, what passed, what failed, and what was fixed. Entries
 > are added at session end whenever quality work is done. Read before any training run to understand
 > the current health of the pipeline. Newest entries on top.
+
+---
+
+### 2026-06-12 — Session 8: Continuous service model; Phase 4b; training path fixes
+
+**Changes shipped:**
+- `local-yoyo-daily.timer` deleted from source and `/etc/`; `Restart=always RestartSec=600` replaces it
+- `RETRY_DEADLINE_SECS` (22h cap) removed; `start_vm_with_retry()` now retries STOCKOUT indefinitely
+- `budget_file()` made dynamic (re-evaluates UTC date on each call; midnight-crossing safe)
+- Five idle-monitor source files deleted (were already disabled session-7; source cleanup prevents confusion)
+- Phase 4b added: DataGraph sweep fallback when corpus stalls — ingests 90-day git commit history from
+  2 repos to `/v1/ingest`; SHA ledger `/srv/foundry/data/yoyo-datagraph-sweep.ledger` prevents double-ingest
+- Phase 6 bug 1 fixed: `set -e` killed `main()` on STINT_RETURN=7 before `rc=$?` captured it; fixed with
+  `run_stint "$stint_cap" && rc=$? || rc=$?` (commit `9341778`)
+- Phase 6 bug 2 fixed: training SSH ran remote path `/srv/foundry/...` which doesn't exist on yoyo-batch;
+  fixed by rsyncing script+corpus to remote before SSH (commit `78ce725`)
+- Phase 6 bug 3 fixed: receipt written even on SSH failure (pipe always exits 0 from `while` loop);
+  fixed with `{ ssh... } | while... && training_rc=0 || training_rc=$?`; receipt only on rc=0
+
+**Test result (2026-06-12 00:14 UTC, PID 1085006):**
+- Phase 4 stall detected correctly at 1570s elapsed (12 zero-delta intervals)
+- Phase 4b did NOT fire — script loaded from pre-commit version; confirmed expected (bash compiles
+  function defs at startup; Phase 4b was committed AFTER this PID launched)
+- Phase 5+6 ran normally; training attempted but SSH failed (script not on remote) — no receipt (fixed)
+- Receipt deletion: false `coding-lora-2026-06-12.ran` manually deleted; next cycle will retry
+
+**Current state (2026-06-12 00:52 UTC, PID 1137652):**
+- New PID loaded fully fixed script (Phase 4b + rsync fixes)
+- STOCKOUT on us-central1-a L4; retrying every 600s indefinitely
+- Budget: 1738s consumed / 7200s daily; ~5462s remaining for Jun 12
 
 ---
 
