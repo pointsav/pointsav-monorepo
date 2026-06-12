@@ -200,18 +200,18 @@ Commit `8b0b491e` in sub-clone, Version 1.2.0. Stage 6 pending.
 - [x] `os-interface/scripts/build-image.sh` + `rc.d/orchestration_slm`
 - [ ] **Stage 6 pending** — Command to promote `8b0b491e` (Version 1.2.0)
 
-**Phase 1B — seL4 PD binary (blocked on Microkit SDK download)**
+**Phase 1B — seL4 PD scaffold — COMPLETE 2026-06-11 (session 21)**
 
-Prerequisite: download Microkit SDK v2.1.0 or v2.2.0 from seL4 Foundation
-GitHub (`seL4/microkit` releases). Makefile will use `SDK_PATH ?= $(error ...)`.
+Commit `428b5086` in sub-clone, Version 1.3.0. Stage 6 pending.
 
-- [ ] **Download Microkit SDK** — operator action; set `SDK_PATH` env var
-- [ ] `system-substrate/src/lib.rs` — define `CapabilityInvoker` trait + `VerdictWire` wire type
-- [ ] New `system-ledger-pd/` — thin PD binary; `init()`/`protected()`/`notified()`;
-  `linked_list_allocator` 512 KiB arena; `ledger.system` XML; `Makefile` with `SDK_PATH ?=`
-- [ ] Fix `system-security/Makefile` — `SDK_PATH :=` (hardcoded) → `SDK_PATH ?= $(error ...)`
+- [x] `system-substrate/src/lib.rs` — `CapabilityInvoker` trait + `VerdictWire`; 3 tests; workspace member
+- [x] `system-ledger-pd/` — standalone workspace; `init()`/`protected()`/`notified()`;
+  `linked_list_allocator` (use_spin); 512 KiB heap; `ledger.system` XML; `Makefile` with `SDK_PATH ?=`
+- [x] Fix `system-security/Makefile` — `SDK_PATH :=` → `SDK_PATH ?= $(error ...)`
+- [x] CI check: `cargo build --no-default-features --features sel4 --target x86_64-unknown-none` clean
+- [ ] **Download Microkit SDK** — operator action; needed for `make` + QEMU boot test
 - [ ] Minimum viable milestone: 2-PD system boots; `client_pd` → `system_ledger` PPC channel 1;
-  `VERDICT: Allow` via `microkit_dbg_puts`
+  `VERDICT: Allow` via `microkit_dbg_puts` (write `src/client_pd.c` test harness)
 
 **Phase 1C — pre-flight spike (Laptop A, before full VM deploy)**
 
@@ -342,3 +342,6 @@ Relay message in outbox: `project-marketing-20260608-contamination-relay` [2026-
 - [x] Phase 1A NetBSD pipeline — system-ledger-proto (6 tests) + system-ledger-server (5 tests) +
   system-substrate-netbsd + os-totebox image builder scripts + rc.d + os-totebox-release.img removed;
   root cause: SignedCheckpoint no serde → ckpt_wire (C2SP wire format); Version 1.2.0 (session 20)
+- [x] Phase 1B seL4 PD scaffold — system-ledger-pd (standalone workspace; PPC shared-memory ring;
+  CI clean on x86_64-unknown-none); system-substrate CapabilityInvoker + VerdictWire (3 tests);
+  system-security Makefile SDK_PATH guard; Version 1.3.0 (session 21)
