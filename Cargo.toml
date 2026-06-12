@@ -1,12 +1,13 @@
 [workspace]
 resolver = "2"
-# system-core, system-ledger, system-ledger-proto are standalone workspaces
-# (own [workspace] + Cargo.lock). Exclude them so path deps from
-# system-ledger-server do not trigger "multiple workspace roots" errors.
+# Standalone workspaces (own [workspace] + Cargo.lock).
+# Must be excluded so path deps from workspace members do not trigger
+# "multiple workspace roots" errors.
 exclude = [
     "system-core",
     "system-ledger",
     "system-ledger-proto",
+    "system-ledger-pd",   # seL4 bare-metal PD; own workspace root
 ]
 members = [
     "service-people",
@@ -53,6 +54,8 @@ members = [
     "system-substrate-netbsd",
     # Guest OS image builders (NetBSD 10.1 compat bottom)
     "os-totebox",
+    # Transport-agnostic capability invocation substrate (CapabilityInvoker trait)
+    "system-substrate",
 ]
 
 [profile.dev]

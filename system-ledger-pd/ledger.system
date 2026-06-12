@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    ledger.system — Microkit system description for the Capability Ledger PD.
+
+    Two PDs:
+      system_ledger  (priority 254) — wraps InMemoryLedger; receives PPC on ch 1.
+      client_pd      (priority 200) — test harness; writes ConsultRequest to CAP_REQUEST_MR,
+                                      issues PPC on ch 1, reads ConsultResponse from CAP_RESPONSE_MR.
+
+    Two shared memory regions carry the request/response:
+      cap_request_mr  (16 KiB) — client writes ConsultRequest  before PPC.
+      cap_response_mr  (4 KiB) — ledger writes ConsultResponse before returning.
+
+    Both MRs use 4-byte LE length-prefix framing (same as the Unix socket transport
+    in system-ledger-server). Transport changes; wire format does not.
+
+    Channel 1 (CONSULT_CH) carries the PPC from client_pd → system_ledger.
+-->
+<system>
+    <!-- ── Shared memory regions ──────────────────────────────────────── -->
+    <memory_region name="cap_request_mr"  size="0x4000" />   <!-- 16 KiB -->
+    <memory_region name="cap_response_mr" size="0x1000" />   <!--  4 KiB -->
+
+    <!-- ── system_ledger PD ───────────────────────────────────────────── -->
+    <protection_domain name="system_ledger" priority="254">
+        <program_image path="system_ledger.elf" />
+        <!-- Read request written by client; write response read by client. -->
+        <map mr="cap_request_mr"  vaddr="0x4001000" perms="r"  />
+        <map mr="cap_response_mr" vaddr="0x4005000" perms="rw" />
+    </protection_domain>
+
+    <!-- ── client_pd (test harness) ──────────────────────────────────── -->
+    <protection_domain name="client_pd" priority="200">
+        <program_image path="client_pd.elf" />
+        <!-- Write request; read response. -->
+        <map mr="cap_request_mr"  vaddr="0x4001000" perms="rw" />
+        <map mr="cap_response_mr" vaddr="0x4005000" perms="r"  />
+    </protection_domain>
+
+    <!-- ── Channel 1: CONSULT PPC ─────────────────────────────────────── -->
+    <channel>
+        <end pd="client_pd"      id="1" />
+        <end pd="system_ledger"  id="1" />
+    </channel>
+</system>
