@@ -9,7 +9,7 @@ Last updated: 2026-06-11 [Jennifer Woodfine / claude-code]
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Architecture: VM-* naming mirrors the os-* product lineup exactly. See `BRIEF-VM-ARCHITECTURE.md`.
 
-Last updated: 2026-06-11 (session 22 — Phase 1B client_pd.c complete; app-orchestration-gis pipeline scripts committed; GeoLite2 mmdb stale item closed; commit cb03d930 Version 1.4.0; Stage 6 pending).
+Last updated: 2026-06-11 (session 23 — Phase 1B QEMU boot COMPLETE; 2-PD seL4 milestone: LEDGER PD online + CLIENT PPC round-trip verified; commit 6fabe58e Version 1.5.0; Stage 6 pending).
 
 ---
 
@@ -209,9 +209,12 @@ Commit `428b5086` in sub-clone, Version 1.3.0. Stage 6 pending.
 - [x] Fix `system-security/Makefile` — `SDK_PATH :=` → `SDK_PATH ?= $(error ...)`
 - [x] CI check: `cargo build --no-default-features --features sel4 --target x86_64-unknown-none` clean
 - [x] Write `src/client_pd.c` test harness — committed in cb03d930 Version 1.4.0. Closed 2026-06-11 session 22.
-- [ ] **Download Microkit SDK** — operator action; needed for `make` + QEMU boot test
-- [ ] Minimum viable milestone: 2-PD system boots; `client_pd` → `system_ledger` PPC channel 1;
-  `VERDICT: Error, code=1` via `microkit_dbg_puts` (SDK download required; then `SDK_PATH=... make`)
+- [x] **Download Microkit SDK** — complete; SDK at ~/microkit-sdk-2.1.0.
+- [x] **2-PD QEMU boot milestone COMPLETE** — commit 6fabe58e Version 1.5.0; session 23.
+  QEMU boot: `-cpu max` required (fsgsbase); pp="true" on client_pd <end>; -no-pie for gcc.
+  Output: "LEDGER PD: online / CLIENT: sending ConsultRequest / response[0] = 0x03 (Error, code=0x01) / CLIENT: done"
+- [ ] **Stage 6 pending** — Command to promote sub-clone commits in order:
+  fc245ee (moonshot-toolkit v0.3.0) → ba4e1de8 (v1.1.0) → 8b0b491e (v1.2.0) → 428b5086 (v1.3.0) → cb03d930 (v1.4.0) → 6fabe58e (v1.5.0)
 
 **Phase 1C — pre-flight spike (Laptop A, before full VM deploy)**
 
