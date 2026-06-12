@@ -94,27 +94,29 @@ session_role: task
 default_starting_dir: ~/Foundry/clones/project-console/
 ---
 
-# project-knowledge — Wikipedia-pattern knowledge wiki
+# project-console — SSH TUI console gateway to the Totebox platform
 
-This cluster owns `app-mediakit-knowledge` source — the Rust binary serving
-`content-wiki-documentation`, `content-wiki-projects`, and `content-wiki-corporate`
-as fully navigable Wikipedia-pattern wikis. Substrate substitution for MediaWiki
-per Doctrine claim #29.
+This cluster owns the `app-console-*` cartridge ecosystem and `os-console` — the Rust
+SSH server that delivers the operator TUI for Totebox deployments. The console connects
+to every running service through a set of F-key cartridges (F1–F12), each scoped to one
+domain: keys (F1), content (F2), email (F3), SLM/Doorman (F9), system/pairing (F11).
 
-### Pipeline overview
+## Status (as of 2026-05-31 — from BRIEF-project-console-master.md)
 
-Phases 1–8 shipped. Phase 9 (production deploy) is the next milestone, gated on:
-1. Stage 6 promote of sub-clone commit chain (ff7cd16d → 64f07900 → dc15a93f)
-2. DESIGN-TOKEN-CHANGE master_cosign from Command
+Phases C–E and 6–7 complete:
+- Phase C: app-console-email F3 lib crate — inbox list, read, compose/send, plain mode
+- Phase D: app-console-slm F9 lib crate — Doorman health dashboard, circuit state, 10s poll
+- Phase E: Orchestration wiring audited; clean mba_client; added to ConsoleConfig
+- Phase 6: Offline mode + Tantivy search (/readyz poll; greyed widgets; /search command)
+- Phase 7: PDF viewing via pdfium-render → Kitty/Sixel; text fallback; /pdf command
+
+Pending: pairing-server systemd unit (port 9201); first internet-facing SSH deployment
+to vm-intelligence (WireGuard 10.42.1.1) provisioned by project-infrastructure.
 
 Running in production at `documentation.pointsav.com` (port 9090) and
 `projects.woodfinegroup.com` (port 9093) on vault-privategit-source-1.
 
-Output format: **pmtiles** (Protocol Buffers + Map Tiles) served via
-`gateway-orchestration-gis-1` at `gis.woodfinegroup.com`.
-
-- `app-mediakit-knowledge/CLAUDE.md` — project-level state + phase table
-- `app-mediakit-knowledge/ARCHITECTURE.md` — phase plan, conventions
-- `.agent/drafts-outbound/PHASE-9-DEPLOY-CHECKLIST.md` — Phase 9 deploy procedure
-- `.agent/drafts-outbound/DESIGN-TOKEN-CHANGE-knowledge-platform-theming.draft.md` — pending cosign
-- `conventions/compounding-substrate.md` — sovereign + Tier 0 + optional intelligence
+- `BRIEF-project-console-master.md` — living state tracker; read before each session
+- `BRIEF-os-console-platform.md` — F-key map, Cartridge trait, MBA topology, platform targets
+- `conventions/orchestration-architecture.md` — Cartridge composition pattern
+- `conventions/datagraph-access-discipline.md` — entity lookups via Doorman :9080
