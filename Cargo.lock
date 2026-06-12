@@ -7685,6 +7685,10 @@ name = "system-security"
 version = "0.1.0"
 
 [[package]]
+name = "system-substrate"
+version = "0.1.0"
+
+[[package]]
 name = "system-substrate-broadcom"
 version = "0.1.0"
 
