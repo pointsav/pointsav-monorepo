@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retail Co-location Engine — Coverage Portfolio &amp; Analytics · Woodfine Management Corp.</title>
+<style>
+/* ─── Print setup ──────────────────────────────────────────────────── */
+@page { size: letter landscape; margin: 0.45in 0.5in 0.38in 0.5in; }
+
+/* ─── Reset ────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── Document variables ───────────────────────────────────────────── */
+:root {
+  --brand-primary: #164679;
+  --text-main: #1a202c;
+  --text-muted: #64748b;
+  --border-soft: #e2e8f0;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+}
+
+/* ─── Screen layout ────────────────────────────────────────────────── */
+@media screen {
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text-main);
+    background: var(--bg);
+  }
+  a { color: var(--brand-primary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Outer wrapper: sidebar + doc-main */
+  .page-wrapper {
+    display: flex;
+    gap: 28px;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 28px 20px 48px;
+    align-items: flex-start;
+  }
+
+  /* Sidebar */
+  .toc-sidebar {
+    flex: 0 0 200px;
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    font-size: 13px;
+    padding-right: 8px;
+  }
+  .toc-label {
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .back-link {
+    display: block;
+    padding: 4px 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brand-primary);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border-soft);
+    margin-bottom: 10px;
+  }
+  .back-link:hover { text-decoration: underline; }
+  .toc ul { list-style: none; padding: 0; }
+  .toc li { margin: 3px 0; }
+  .toc li a {
+    color: var(--text-muted);
+    font-size: 11.5px;
+    line-height: 1.4;
+    display: block;
+    padding: 2px 0;
+  }
+  .toc li a:hover { color: var(--brand-primary); text-decoration: none; }
+  .toc-divider {
+    border: none;
+    border-top: 1px solid var(--border-soft);
+    margin: 12px 0;
+  }
+  .sidebar-print-btn {
+    display: block;
+    width: 100%;
+    background: var(--brand-primary);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    letter-spacing: 0.01em;
+    transition: opacity 0.15s;
+    margin-top: 8px;
+  }
+  .sidebar-print-btn:hover { opacity: 0.85; }
+  .sidebar-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  /* Doc main — contains the print pages as screen cards */
+  .doc-main {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+  }
+  .pages-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-bottom: 4px;
+  }
+  .page {
+    background: #fff;
+    box-shadow: 0 2px 18px rgba(0,0,0,0.10);
+    border-radius: 4px;
+  }
+
+  /* Footer */
+  .page-footer {
+    background: var(--brand-primary);
+    color: #fff;
+    padding: 14px 20px;
+    text-align: center;
+    font-size: 12px;
+    font-family: 'Inter', system-ui, sans-serif;
+    margin-top: 8px;
+  }
+  .page-footer a { color: rgba(255,255,255,0.82); text-decoration: none; }
+  .page-footer a:hover { color: #fff; text-decoration: underline; }
+
+  /* Mobile: hide sidebar, allow horizontal scroll on pages */
+  @media (max-width: 700px) {
+    .toc-sidebar { display: none; }
+    .page-wrapper { padding: 12px 10px 40px; gap: 0; }
+  }
+}
+
+/* ─── Print ─────────────────────────────────────────────────────────── */
+@media print {
+  .toc-sidebar,
+  .page-footer { display: none !important; }
+  .page-wrapper { display: block; padding: 0; }
+  .doc-main { overflow: visible; }
+  .pages-wrapper { padding: 0; gap: 0; display: block; }
+  .page { box-shadow: none; border-radius: 0; }
+}
+
+/* ─── Print-document base typography ────────────────────────────────── */
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #111;
+  font-size: 7.6pt;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ─── Page shell ─────────────────────────────────────────────────────── */
+.page {
+  width: 10in;
+  min-height: 7.52in;
+  page-break-after: always;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.page:last-child { page-break-after: auto; }
+
+/* ─── Page header / footer ───────────────────────────────────────────── */
+.pg-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1.5pt solid #111;
+  padding-bottom: 3pt;
+  margin-bottom: 5pt;
+  flex-shrink: 0;
+}
+.pg-hd .org  { font-size: 6.8pt; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.pg-hd .ttl  { font-size: 9pt; font-weight: 800; }
+.pg-hd .meta { font-size: 6pt; color: #666; text-align: right; line-height: 1.4; }
+.pg-ft {
+  border-top: 0.5pt solid #ccc;
+  margin-top: 4pt;
+  padding-top: 2.5pt;
+  display: flex;
+  justify-content: space-between;
+  font-size: 5.5pt;
+  color: #aaa;
+  flex-shrink: 0;
+}
+
+/* ─── Section tags ───────────────────────────────────────────────────── */
+.stag {
+  font-size: 5.8pt;
+  font-weight: 700;
+  color: #bbb;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 2pt;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   PAGE 1 — GEOGRAPHIC COVERAGE
+══════════════════════════════════════════════════════════════════════ */
+.p1-subtitle {
+  font-size: 7pt;
+  color: #555;
+  margin-bottom: 5pt;
+  flex-shrink: 0;
+}
+.p1-subtitle strong { color: #111; font-weight: 700; }
+
+.region-grid {
+  display: grid;
+  grid-template-columns: 1.18fr 2fr;
+  gap: 8pt;
+  flex: 1;
+  overflow: hidden;
+}
+.region-col { display: flex; flex-direction: column; gap: 5pt; overflow: hidden; }
+.region { display: flex; flex-direction: column; gap: 4pt; overflow: hidden; }
+.region-hd {
+  color: #fff;
+  padding: 3pt 6pt;
+  font-size: 6.5pt;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border-radius: 2pt;
+  flex-shrink: 0;
+}
+
+/* Country card */
+.cc {
+  border: 0.5pt solid #d0d0d0;
+  border-radius: 2pt;
+  padding: 4pt 5pt;
+  break-inside: avoid;
+  flex-shrink: 0;
+}
+.cc.grow { flex: 1; }
+.cc-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3pt; }
+.cc-name  { font-size: 7.5pt; font-weight: 700; }
+.cc-iso   { font-size: 5.8pt; color: #888; letter-spacing: 0.07em; margin-left: 2pt; }
+.cc-count { font-size: 8.5pt; font-weight: 800; color: #111; }
+.cc-mem   { font-size: 5.8pt; color: #999; display: block; margin-bottom: 2pt; }
+
+/* Tier bar */
+.tb { display: flex; height: 9pt; border-radius: 2pt; overflow: hidden; margin-bottom: 3pt; }
+.tb-1 { background: #1a3a6b; }
+.tb-2 { background: #3d6ea8; }
+.tb-3 { background: #7a9cc5; }
+
+/* Tier counts */
+.tc { display: flex; gap: 7pt; font-size: 6.5pt; color: #555; }
+.tc b { color: #111; font-weight: 800; font-size: 7pt; }
+
+/* EU 2-col mini-grid */
+.eu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3pt; flex: 1; overflow: hidden; }
+.eu-grid .cc { padding: 3pt 4pt; }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   PAGE 2 — ANALYTICS + METHODOLOGY
+══════════════════════════════════════════════════════════════════════ */
+
+/* Top band: KPIs left, T2 composition right */
+.p2-top {
+  display: grid;
+  grid-template-columns: 1fr 2.35in;
+  gap: 7pt;
+  margin-bottom: 6pt;
+  flex-shrink: 0;
+}
+
+/* KPI cards */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5pt; }
+.kpi { border: 0.5pt solid #d0d0d0; border-radius: 2pt; padding: 6pt 7pt 5pt; text-align: center; }
+.kpi.k-all { border-top: 2.5pt solid #111; }
+.kpi.k-t1  { border-top: 2.5pt solid #1a3a6b; }
+.kpi.k-t2  { border-top: 2.5pt solid #3d6ea8; }
+.kpi.k-t3  { border-top: 2.5pt solid #7a9cc5; }
+.kpi-n   { font-size: 19pt; font-weight: 800; line-height: 1; color: #111; }
+.kpi-lbl { font-size: 5.8pt; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-top: 2pt; }
+.kpi-sub { font-size: 6.5pt; font-weight: 600; color: #555; margin-top: 1pt; }
+
+/* T2 composition box */
+.comp-box {
+  border: 0.5pt solid #d0d0d0;
+  border-left: 3pt solid #1a3a6b;
+  border-radius: 2pt;
+  padding: 6pt 8pt;
+}
+.comp-box h4 { font-size: 6.8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5pt; }
+.comp-row { display: flex; align-items: center; gap: 4pt; margin-bottom: 6pt; }
+.comp-lbl { font-size: 6.5pt; color: #444; min-width: 1.4in; font-weight: 600; }
+.comp-track { flex: 1; height: 11pt; background: #e4e8ee; border-radius: 2pt; overflow: hidden; }
+.comp-fill  { height: 100%; border-radius: 2pt; background: #1a3a6b; }
+.comp-fill.s { background: #3d6ea8; }
+.comp-pct  { font-size: 7pt; font-weight: 800; width: 1.1in; text-align: right; white-space: nowrap; }
+.comp-note { font-size: 5.5pt; color: #999; line-height: 1.4; margin-top: 3pt; }
+
+/* Bottom band: pipeline + research */
+.p2-bot {
+  display: grid;
+  grid-template-columns: 1fr 2.35in;
+  gap: 7pt;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Build pipeline grid ─── */
+.pipeline-wrap { display: flex; flex-direction: column; overflow: hidden; }
+.pipeline-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5pt;
+  margin-top: 2pt;
+  flex: 1;
+}
+.pipe-stage {
+  border: 0.5pt solid #d0d0d0;
+  border-radius: 2pt;
+  padding: 6pt 6pt 5pt;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+.pipe-stage::after {
+  content: '→';
+  position: absolute;
+  right: -4pt;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 8pt;
+  color: #bbb;
+  font-weight: 400;
+}
+.pipe-stage:last-child::after { display: none; }
+.pipe-num {
+  font-size: 16pt;
+  font-weight: 800;
+  color: #e8eff7;
+  line-height: 1;
+  margin-bottom: 3pt;
+}
+.pipe-title {
+  font-size: 6.8pt;
+  font-weight: 700;
+  color: #1a3a6b;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 3pt;
+}
+.pipe-body {
+  font-size: 6pt;
+  color: #444;
+  line-height: 1.5;
+  flex: 1;
+}
+.pipe-body b { color: #111; font-weight: 700; }
+.pipe-tag {
+  display: inline-block;
+  margin-top: 4pt;
+  font-size: 5.5pt;
+  font-weight: 700;
+  color: #888;
+  background: #f3f4f6;
+  border-radius: 2pt;
+  padding: 1pt 4pt;
+  letter-spacing: 0.06em;
+}
+
+/* Data note callout inside pipeline-wrap */
+.data-note {
+  border-left: 3pt solid #1a3a6b;
+  background: #f0f4f8;
+  border-radius: 0 2pt 2pt 0;
+  padding: 5pt 7pt;
+  margin-top: 5pt;
+  flex-shrink: 0;
+}
+.data-note p {
+  font-size: 6pt;
+  color: #333;
+  line-height: 1.5;
+}
+.data-note p strong { color: #111; }
+
+/* Research box */
+.res-box {
+  border: 0.5pt solid #d0d0d0;
+  border-radius: 2pt;
+  padding: 7pt 8pt;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.res-box h4 { font-size: 6.8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #5c1f1f; margin-bottom: 5pt; }
+.res-box ul { list-style: none; display: flex; flex-direction: column; gap: 5pt; flex: 1; }
+.res-box li { font-size: 6.3pt; line-height: 1.45; padding-left: 9pt; position: relative; }
+.res-box li::before { content: '—'; position: absolute; left: 0; color: #5c1f1f; font-weight: 700; }
+.res-box li strong { color: #111; }
+.cites {
+  font-size: 5.5pt;
+  color: #aaa;
+  border-top: 0.5pt solid #eee;
+  padding-top: 4pt;
+  margin-top: 5pt;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- ── Sidebar (screen only) ── -->
+  <aside class="toc-sidebar">
+    <a href="/research.html" class="back-link">← Research Papers</a>
+    <button class="sidebar-print-btn" onclick="window.print()">Print / Save PDF</button>
+    <hr class="toc-divider">
+    <div class="toc-label">Contents</div>
+    <nav class="toc">
+      <ul>
+        <li><a href="#">§1 Geographic Coverage</a></li>
+        <li><a href="#">§2 Platform Scale</a></li>
+        <li><a href="#">§3 T2 Anchor Pattern</a></li>
+        <li><a href="#">§4 Build Pipeline</a></li>
+        <li><a href="#">§5 Research Validation</a></li>
+      </ul>
+    </nav>
+    <hr class="toc-divider">
+    <div class="sidebar-meta">v0.4 · May 2026</div>
+  </aside>
+
+  <!-- ── Document main ── -->
+  <div class="doc-main">
+  <div class="pages-wrapper">
+
+  <!-- ═══════════════════════ PAGE 1 ═══════════════════════════════════ -->
+  <div class="page">
+
+    <div class="pg-hd">
+      <div class="org">Woodfine Management Corp.</div>
+      <div class="ttl">Retail Co-location Engine — Coverage Portfolio</div>
+      <div class="meta">PointSav GIS Platform · v0.4 · 29 May 2026<br>Page 1 of 2</div>
+    </div>
+
+    <div class="stag" style="margin-bottom:3pt">
+      §1 &nbsp;·&nbsp; Geographic Coverage Portfolio &nbsp;·&nbsp;
+      <strong style="color:#111">6,493 clusters &nbsp;·&nbsp; 18 countries &nbsp;·&nbsp; 24,403 anchor members</strong>
+    </div>
+
+    <div class="region-grid">
+
+      <!-- ── LEFT COLUMN: AMERICAS + UK ──────────────────────────────── -->
+      <div class="region-col">
+
+        <div class="region">
+          <div class="region-hd" style="background:#1a3a6b">North America &nbsp;·&nbsp; 3,765 clusters</div>
+
+          <div class="cc">
+            <div class="cc-top">
+              <div><span class="cc-name">United States</span><span class="cc-iso">US</span></div>
+              <span class="cc-count">3,104</span>
+            </div>
+            <span class="cc-mem">10,011 anchor members</span>
+            <div class="tb">
+              <div class="tb-1" style="width:28.6%"></div>
+              <div class="tb-2" style="width:57.3%"></div>
+              <div class="tb-3" style="width:14.1%"></div>
+            </div>
+            <div class="tc"><span>T1 <b>889</b></span><span>T2 <b>1,545</b></span><span>T3 <b>670</b></span></div>
+          </div>
+
+          <div class="cc">
+            <div class="cc-top">
+              <div><span class="cc-name">Canada</span><span class="cc-iso">CA</span></div>
+              <span class="cc-count">375</span>
+            </div>
+            <span class="cc-mem">1,168 anchor members</span>
+            <div class="tb">
+              <div class="tb-1" style="width:17.1%"></div>
+              <div class="tb-2" style="width:75.5%"></div>
+              <div class="tb-3" style="width:7.4%"></div>
+            </div>
+            <div class="tc"><span>T1 <b>64</b></span><span>T2 <b>253</b></span><span>T3 <b>58</b></span></div>
+          </div>
+
+          <div class="cc">
+            <div class="cc-top">
+              <div><span class="cc-name">Mexico</span><span class="cc-iso">MX</span></div>
+              <span class="cc-count">286</span>
+            </div>
+            <span class="cc-mem">1,028 anchor members</span>
+            <div class="tb">
+              <div class="tb-1" style="width:23.8%"></div>
+              <div class="tb-2" style="width:16.8%"></div>
+              <div class="tb-3" style="width:59.4%"></div>
+            </div>
+            <div class="tc"><span>T1 <b>68</b></span><span>T2 <b>33</b></span><span>T3 <b>185</b></span></div>
+          </div>
+        </div>
+
+        <div class="region">
+          <div class="region-hd" style="background:#003153">United Kingdom &nbsp;·&nbsp; 457 clusters</div>
+          <div class="cc">
+            <div class="cc-top">
+              <div><span class="cc-name">Great Britain</span><span class="cc-iso">GB</span></div>
+              <span class="cc-count">457</span>
+            </div>
+            <span class="cc-mem">3,543 anchor members</span>
+            <div class="tb">
+              <div class="tb-1" style="width:4.8%"></div>
+              <div class="tb-2" style="width:87.5%"></div>
+              <div class="tb-3" style="width:7.7%"></div>
+            </div>
+            <div class="tc"><span>T1 <b>22</b></span><span>T2 <b>191</b></span><span>T3 <b>244</b></span></div>
+          </div>
+        </div>
+
+      </div><!-- /region-col left -->
+
+      <!-- ── RIGHT COLUMN: CONTINENTAL EUROPE + NORDIC ──────────────── -->
+      <div class="region-col">
+
+        <div class="region">
+          <div class="region-hd" style="background:#5c1f1f">Continental Europe &nbsp;·&nbsp; 2,111 clusters</div>
+          <div class="eu-grid">
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Germany</span><span class="cc-iso">DE</span></div><span class="cc-count">722</span></div>
+              <div class="tb"><div class="tb-1" style="width:31.4%"></div><div class="tb-2" style="width:46.8%"></div><div class="tb-3" style="width:21.7%"></div></div>
+              <div class="tc"><span>T1 <b>227</b></span><span>T2 <b>282</b></span><span>T3 <b>213</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">France</span><span class="cc-iso">FR</span></div><span class="cc-count">624</span></div>
+              <div class="tb"><div class="tb-1" style="width:39.6%"></div><div class="tb-2" style="width:25.8%"></div><div class="tb-3" style="width:34.6%"></div></div>
+              <div class="tc"><span>T1 <b>247</b></span><span>T2 <b>138</b></span><span>T3 <b>239</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Spain</span><span class="cc-iso">ES</span></div><span class="cc-count">218</span></div>
+              <div class="tb"><div class="tb-1" style="width:28.4%"></div><div class="tb-2" style="width:29.4%"></div><div class="tb-3" style="width:42.2%"></div></div>
+              <div class="tc"><span>T1 <b>62</b></span><span>T2 <b>40</b></span><span>T3 <b>116</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Italy</span><span class="cc-iso">IT</span></div><span class="cc-count">177</span></div>
+              <div class="tb"><div class="tb-1" style="width:24.3%"></div><div class="tb-2" style="width:19.8%"></div><div class="tb-3" style="width:55.9%"></div></div>
+              <div class="tc"><span>T1 <b>43</b></span><span>T2 <b>25</b></span><span>T3 <b>109</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Poland</span><span class="cc-iso">PL</span></div><span class="cc-count">164</span></div>
+              <div class="tb"><div class="tb-1" style="width:32.3%"></div><div class="tb-2" style="width:58.5%"></div><div class="tb-3" style="width:9.1%"></div></div>
+              <div class="tc"><span>T1 <b>53</b></span><span>T2 <b>74</b></span><span>T3 <b>37</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Netherlands</span><span class="cc-iso">NL</span></div><span class="cc-count">76</span></div>
+              <div class="tb"><div class="tb-1" style="width:25.0%"></div><div class="tb-2" style="width:25.0%"></div><div class="tb-3" style="width:50.0%"></div></div>
+              <div class="tc"><span>T1 <b>19</b></span><span>T2 <b>16</b></span><span>T3 <b>41</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Austria</span><span class="cc-iso">AT</span></div><span class="cc-count">64</span></div>
+              <div class="tb"><div class="tb-1" style="width:32.8%"></div><div class="tb-2" style="width:12.5%"></div><div class="tb-3" style="width:54.7%"></div></div>
+              <div class="tc"><span>T1 <b>21</b></span><span>T2 <b>7</b></span><span>T3 <b>36</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Portugal</span><span class="cc-iso">PT</span></div><span class="cc-count">41</span></div>
+              <div class="tb"><div class="tb-1" style="width:19.5%"></div><div class="tb-2" style="width:51.2%"></div><div class="tb-3" style="width:29.3%"></div></div>
+              <div class="tc"><span>T1 <b>8</b></span><span>T2 <b>18</b></span><span>T3 <b>15</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Greece</span><span class="cc-iso">GR</span></div><span class="cc-count">22</span></div>
+              <div class="tb"><div class="tb-1" style="width:22.7%"></div><div class="tb-2" style="width:50.0%"></div><div class="tb-3" style="width:27.3%"></div></div>
+              <div class="tc"><span>T1 <b>5</b></span><span>T2 <b>4</b></span><span>T3 <b>13</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Iceland</span><span class="cc-iso">IS</span></div><span class="cc-count">3</span></div>
+              <div class="tb"><div class="tb-2" style="width:66.7%"></div><div class="tb-3" style="width:33.3%"></div></div>
+              <div class="tc"><span>T1 <b>0</b></span><span>T2 <b>0</b></span><span>T3 <b>3</b></span></div>
+            </div>
+
+          </div><!-- /eu-grid -->
+        </div>
+
+        <div class="region">
+          <div class="region-hd" style="background:#1a4a2e">Nordic &nbsp;·&nbsp; 160 clusters</div>
+          <div class="eu-grid">
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Sweden</span><span class="cc-iso">SE</span></div><span class="cc-count">28</span></div>
+              <div class="tb"><div class="tb-1" style="width:39.3%"></div><div class="tb-2" style="width:28.6%"></div><div class="tb-3" style="width:32.1%"></div></div>
+              <div class="tc"><span>T1 <b>11</b></span><span>T2 <b>5</b></span><span>T3 <b>12</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Denmark</span><span class="cc-iso">DK</span></div><span class="cc-count">67</span></div>
+              <div class="tb"><div class="tb-1" style="width:6.0%"></div><div class="tb-2" style="width:92.5%"></div><div class="tb-3" style="width:1.5%"></div></div>
+              <div class="tc"><span>T1 <b>4</b></span><span>T2 <b>47</b></span><span>T3 <b>16</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Finland</span><span class="cc-iso">FI</span></div><span class="cc-count">55</span></div>
+              <div class="tb"><div class="tb-1" style="width:3.6%"></div><div class="tb-2" style="width:94.5%"></div><div class="tb-3" style="width:1.8%"></div></div>
+              <div class="tc"><span>T1 <b>2</b></span><span>T2 <b>42</b></span><span>T3 <b>11</b></span></div>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Norway</span><span class="cc-iso">NO</span></div><span class="cc-count">10</span></div>
+              <div class="tb"><div class="tb-1" style="width:10.0%"></div><div class="tb-2" style="width:60.0%"></div><div class="tb-3" style="width:30.0%"></div></div>
+              <div class="tc"><span>T1 <b>1</b></span><span>T2 <b>6</b></span><span>T3 <b>3</b></span></div>
+            </div>
+
+          </div><!-- /nordic-grid -->
+        </div>
+
+      </div><!-- /region-col right -->
+
+    </div><!-- /region-grid -->
+
+    <div class="pg-ft">
+      <span>Source: PointSav GIS Platform · gis.woodfinegroup.com · OpenStreetMap (ODbL), Kontur Population (CC BY 4.0), US Census LODES 2021, GISCO LAU2 2021, StatCan 2021</span>
+      <span>T1 Regional &nbsp;■ &nbsp;T2 District &nbsp;■ &nbsp;T3 Local</span>
+    </div>
+
+  </div><!-- /page 1 -->
+
+
+  <!-- ═══════════════════════ PAGE 2 ═══════════════════════════════════ -->
+  <div class="page">
+
+    <div class="pg-hd">
+      <div class="org">Woodfine Management Corp.</div>
+      <div class="ttl">Retail Co-location Engine — Methodology &amp; Research Validation</div>
+      <div class="meta">PointSav GIS Platform · v0.4 · 29 May 2026<br>Page 2 of 2</div>
+    </div>
+
+    <!-- §2 KPIs + §3 T2 composition -->
+    <div class="p2-top">
+
+      <div>
+        <div class="stag">§2 &nbsp;·&nbsp; Platform Scale</div>
+        <div class="kpi-row">
+          <div class="kpi k-all">
+            <div class="kpi-n">6,493</div>
+            <div class="kpi-lbl">Co-location Clusters</div>
+            <div class="kpi-sub">18 countries · 24,403 members</div>
+          </div>
+          <div class="kpi k-t1">
+            <div class="kpi-n">1,746</div>
+            <div class="kpi-lbl">T1 Regional</div>
+            <div class="kpi-sub">Hyper + Hardware + Price Club</div>
+          </div>
+          <div class="kpi k-t2">
+            <div class="kpi-n">2,726</div>
+            <div class="kpi-lbl">T2 District</div>
+            <div class="kpi-sub">Hypermarket + Hardware</div>
+          </div>
+          <div class="kpi k-t3">
+            <div class="kpi-n">2,021</div>
+            <div class="kpi-lbl">T3 Local</div>
+            <div class="kpi-sub">Single-format anchor</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-box">
+        <div class="stag">§3 &nbsp;·&nbsp; T2 Anchor Pattern</div>
+        <h4>T2 District Composition (2,726 clusters)</h4>
+        <div class="comp-row">
+          <div class="comp-lbl">Hypermarket + Hardware</div>
+          <div class="comp-track"><div class="comp-fill" style="width:95%"></div></div>
+          <div class="comp-pct">2,590 &nbsp;·&nbsp; 95.0%</div>
+        </div>
+        <div class="comp-row">
+          <div class="comp-lbl">Hyper + Hardware + Sport</div>
+          <div class="comp-track"><div class="comp-fill s" style="width:5%"></div></div>
+          <div class="comp-pct">136 &nbsp;·&nbsp; 5.0%</div>
+        </div>
+        <div class="comp-note">95% of T2 clusters converge on a single anchor pair — Hypermarket + Hardware. This uniformity emerged from the geometry, not from a rule. It is a supply-side signal available before any demand panel is commissioned.</div>
+      </div>
+
+    </div><!-- /p2-top -->
+
+    <!-- §4 pipeline + §5 research -->
+    <div class="p2-bot">
+
+      <div class="pipeline-wrap">
+        <div class="stag">§4 &nbsp;·&nbsp; Build Pipeline — Four Stages From Open Data to Ranked Cluster Index</div>
+
+        <div class="pipeline-grid">
+
+          <div class="pipe-stage">
+            <div class="pipe-num">1</div>
+            <div class="pipe-title">POI Ingest</div>
+            <div class="pipe-body">
+              Anchor retailers ingested from <b>OpenStreetMap</b> and <b>Overture Maps</b> using chain-specific Wikidata Q-codes and name-query fallbacks. Each chain validated against bounding-polygon and country-ISO filters to eliminate ghost records and cross-border contamination.
+              <span class="pipe-tag">24,403 anchor POIs · 130 chains</span>
+            </div>
+          </div>
+
+          <div class="pipe-stage">
+            <div class="pipe-num">2</div>
+            <div class="pipe-title">DBSCAN Clustering</div>
+            <div class="pipe-body">
+              Haversine DBSCAN (ε = 300 m, min-samples = 2) groups anchor POIs into co-location clusters. The 300 m radius is calibrated to the median parking-lot diameter in the NA retail park typology — tight enough to exclude strip-mall adjacency, generous enough to capture split-lot campus layouts.
+              <span class="pipe-tag">6,493 clusters across 18 countries</span>
+            </div>
+          </div>
+
+          <div class="pipe-stage">
+            <div class="pipe-num">3</div>
+            <div class="pipe-title">Tier Assignment</div>
+            <div class="pipe-body">
+              Each cluster is assigned a tier by <b>anchor composition</b> — the specific combination of format categories present. T1 requires Hypermarket + Hardware + Price Club; T2 requires Hypermarket + Hardware; T3 requires any single anchor category. Tier is a function of the supply-side mix, not of size or catchment.
+              <span class="pipe-tag">T1 1,746 · T2 2,726 · T3 2,021</span>
+            </div>
+          </div>
+
+          <div class="pipe-stage">
+            <div class="pipe-num">4</div>
+            <div class="pipe-title">Rank &amp; Enrich</div>
+            <div class="pipe-body">
+              Within each tier, clusters are ranked by <b>geometric span</b> (convex-hull diameter) — smaller span = tighter co-location = higher rank. AEC data layers (ASHRAE climate zones, FEMA/EU flood, seismic SDC, solar irradiance, Köppen eco-regions) are joined at H3 resolution 7 (1.22 km²/cell).
+              <span class="pipe-tag">8 AEC layers · 16 countries · open-licence</span>
+            </div>
+          </div>
+
+        </div><!-- /pipeline-grid -->
+
+        <div class="data-note">
+          <p><strong>Open-data advantage:</strong> The cluster index is derived entirely from open-licence inputs — OpenStreetMap, Kontur Population (CC BY 4.0), US Census LODES, GISCO LAU2, StatCan. No proprietary mobility panel is required. The pipeline produces a supply-side location signal available before any demand data is commissioned, across 18 countries simultaneously.</p>
+        </div>
+      </div>
+
+      <div class="res-box">
+        <div class="stag">§5 &nbsp;·&nbsp; Research Validation</div>
+        <h4>Peer-Review Pipeline</h4>
+        <ul>
+          <li><strong>Regression-validated taxonomy:</strong> R² = 0.503, N = 6,481 clusters, country fixed effects, ISO-clustered standard errors. T1 clusters are statistically 63% larger by span than T3 (β = 0.489, p &lt; 0.001).</li>
+          <li><strong>Seven-test falsification programme:</strong> span gate, catchment-size test, composition stability test, permutation test, cross-country replication, AEC co-variance check, and hold-out tier recovery. Full protocol in Working Paper v0.4.2.</li>
+          <li><strong>128-cell open-data audit</strong> (16 countries × 8 AEC layer types): the United States achieves regulatory-grade open coverage on all four Tier 1 AEC layers — climate zone, flood hazard, seismic design category, and solar resource.</li>
+          <li><strong>Multi-vertical substrate:</strong> the same cluster index serves retail site selection, AEC site analysis, commercial real estate due diligence, and civic infrastructure planning — a single proprietary dataset with four addressable markets.</li>
+          <li><strong>Two manuscripts in preparation</strong> for intended submission to peer-reviewed journals — Economic Geography and Construction Technology.</li>
+        </ul>
+        <div class="cites">
+          <div>Woodfine, J. M., Woodfine, P. M., &amp; Woodfine, M. (2026). <em>Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity.</em> Working Paper v0.4.2. Woodfine Management Corp., New York, New York.</div>
+          <div style="margin-top:5pt;">Woodfine, J. M., Woodfine, P. M., &amp; Woodfine, M. (2026). <em>Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis.</em> Working Paper v0.2. Woodfine Management Corp., New York, New York.</div>
+        </div>
+      </div>
+
+    </div><!-- /p2-bot -->
+
+    <div class="pg-ft">
+      <span>Source: PointSav GIS Platform · gis.woodfinegroup.com · Data: OpenStreetMap (ODbL), Kontur Population (CC BY 4.0), US Census LODES 2021, GISCO LAU2 2021, StatCan 2021</span>
+      <span>All figures preliminary · Working papers in preparation for intended submission · CC BY 4.0</span>
+    </div>
+
+  </div><!-- /page 2 -->
+
+  </div><!-- /pages-wrapper -->
+  </div><!-- /doc-main -->
+
+</div><!-- /page-wrapper -->
+
+<div class="page-footer">
+  Woodfine Management Corp. &nbsp;·&nbsp; New York, New York &nbsp;·&nbsp;
+  <a href="/">gis.woodfinegroup.com</a> &nbsp;·&nbsp;
+  <a href="/research.html">Research Papers</a> &nbsp;·&nbsp;
+  v0.4 · May 2026
+</div>
+
+</body>
+</html>
