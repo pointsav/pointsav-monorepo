@@ -39,6 +39,8 @@ members = [
     "app-mediakit-knowledge",
     # Design system browser (port 9094)
     "app-privategit-design",
+    # Extraction pipeline
+    "service-extraction",
 ]
 
 [profile.dev]
