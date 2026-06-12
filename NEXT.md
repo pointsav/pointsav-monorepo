@@ -88,6 +88,38 @@ Deferred, blocked, and follow-up items. Attribution: `[YYYY-MM-DD role@engine]`.
 
 ## Infrastructure
 
+- [x] **Nightly rebuild decontamination — Phases 1a + 1d** `[2026-06-12 totebox@claude-sonnet-4-6]` DONE
+  Phase 1a: deploy-guard inserted into project-orgcharts, project-system, project-command nightly-rebuild.sh.
+  Phase 1d: build-clusters.py, build-tiles.py, taxonomy.py copied from orgcharts into project-gis.
+  .owner file created: deployments/gateway-orchestration-gis-1/.owner = project-gis.
+
+- [x] **AEC coordinate-based merge in build-tiles.py (Phase 2)** `[2026-06-12 totebox@claude-sonnet-4-6]` DONE
+  Added _load_existing_aec() + AEC_FIELDS merge into build_clusters_meta() in project-gis build-tiles.py.
+  Key: (round(lat,3), round(lon,3)) ≈ 300m tolerance; atomic write via .tmp + Path.replace().
+  AEC fields are now preserved across nightly runs; will show "AEC preserved: N/6,493 records" in log.
+
+- [x] **deploy-guard + flock + ERR trap in project-gis scripts (Phase 3)** `[2026-06-12 totebox@claude-sonnet-4-6]` DONE
+  nightly-rebuild.sh: deploy-guard + flock on .rebuild.lock + ERR trap with line number.
+  build-aec-global.sh: deploy-guard + flock on same .rebuild.lock (prevents Monday race).
+  Both scripts now abort with exit 78 if SELF_ARCHIVE != declared .owner.
+
+- [ ] **Operator crontab timing fix** `[2026-06-12 totebox@claude-sonnet-4-6]`
+  REQUIRED: `0 5 * * *` fires at 05:00 PDT = 12:00 UTC (noon). Should be `0 22 * * *` (10pm PDT = 05:00 UTC).
+  AEC Monday: `0 5 * * 1` → `0 23 * * 1` (must run after nightly completes; 1h gap).
+  Annual entry: `0 5 4 6 *` → run-overnight-ingests.sh not present in project-gis; remove or copy.
+  Operator action: `crontab -e`
+
+- [ ] **Phase 4 — AEC backfill (overnight)** `[2026-06-12 totebox@claude-sonnet-4-6]`
+  Once nightly timing is fixed and one clean nightly run confirmed:
+  Trigger: `bash build-aec-global.sh` (Mon schedule or manual) — restores Köppen/ecoregion/GHI (~2h).
+  Then verify fields survive next nightly run (check `clusters-meta.json` for koppen_class).
+
+- [ ] **Phase 5 — Governance layer (Command Session)** `[2026-06-12 totebox@claude-sonnet-4-6]`
+  5a: pairings.yaml — add owns_deployments + scheduled_jobs blocks for project-gis
+  5b: .owner files for all active gateways (project-bim, project-knowledge, project-design)
+  5c: bin/cron-audit.sh (new validation script) — parses pairings.yaml vs crontab -l
+  5d: AGENT.md step 9b + Hard rules row
+
 - [ ] **app-orchestration-gis scripts version control** `[2026-06-11 totebox@claude-sonnet-4-6]`
   Scripts in gitignored `pointsav-monorepo/app-orchestration-gis/` are unversioned.
   Options: (a) git init the subdirectory as a standalone repo, or
