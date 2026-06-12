@@ -21,13 +21,45 @@
 - [ ] **Stage 6 remaining archives** — 24 archives have doc-only CLAUDE.md changes from Phase C; promote in batch from Command Session
 - [ ] **Option B migration** — wire mailbox tools through app-orchestration-command after Phase 3 (arch decision pending)
 - [x] ~~service-content DataGraph enrichment~~ — binary b159c9 deployed 2026-06-10; 0-entities fix live
-- [ ] **yoyo-batch VM STOCKOUT** — us-central1-a L4 exhausted; daily timer retry 02:30 UTC; no zone fallback
+- [ ] **yoyo-batch VM STOCKOUT** — us-central1-a L4 exhausted; **BLOCKER: no DPO pairs + no training without Tier B**; no zone fallback; operator/Command action required
+- [ ] **Phase 4b ledger bug** — 400 commits marked swept on 202-queue ACK, not enrichment success; all 400 permanently skipped; fix `yoyo-daily-cycle.sh:171` BEFORE next cycle or the fix is moot
+- [ ] **SLM_YOYO_WEIGHTS_GCS_BUCKET unset** — 20 training markers pile up with no consumer; set in `infrastructure/local-yoyo-daily.service` or document as manual-dispatch pre-D4
+- [ ] **8080 drain-worker fault + 737-entry quarantine** — `/metrics` + `/v1/chat/completions` fail; blocks apprenticeship shadow-capture; quarantine purge outside Totebox scope → surface to Command
+- [ ] **Stage 6 pending — workspace commits** — `c89e78e`, `9341778`, `78ce725` (yoyo Phase 4b + set-e fix + training rsync fix); promote from Command Session
 - [ ] **local-slm OOM incident review** — M-17 relay from project-system (2026-06-11): two OOM kills Jun-04; fixes applied (zram disabled, cache→2048); action: review service-slm/router/src/*.rs for 4096-token cache assumptions + verify benchmarks
 - [ ] **local-content.service Requires→Wants** — Command scope; in outbox; Doorman restart silently kills content service
 
 ---
 
 ## Session entries
+
+### 2026-06-12 — Session 8: first full yoyo-batch cycle; Opus audit; Phase 4b + training fixes
+
+**Role:** totebox | **Engine:** claude-code (sonnet-4-6 main loop, opus workflow agents for audit)
+
+**Done this session:**
+- Diagnosed Phase 4b not triggering in prior run (old PID loaded pre-commit script; next PID fixed)
+- Deleted false training receipt `coding-lora-2026-06-12.ran` (written despite SSH failure)
+- **Phase 6 training fixes** (Fable agent, commit `78ce725`): rsync `run-dpo-training.py` + corpus to yoyo-batch before SSH; receipt only written on `training_rc=0`
+- **BRIEF §13 and §14 updated** with session-8 as-built + full Opus audit entry (commit `6769b3b0` + this session)
+- **First complete yoyo-batch cycle ran** (00:52 stint, PID 1137652): CLEAN end-to-end; +22 entities, 0 DPO pairs, 0 training, $0.804
+- **Opus deep audit (8-agent workflow)** of the full cycle; falsified two BRIEF premises:
+  - 418 valid DPO pairs DO exist at `feedback/apprenticeship-git-commit-*.jsonl` (NOT `enrichment-*.jsonl` — that prefix doesn't exist)
+  - Markers ARE being generated (20 in `training-pending/`, daily since 06-08)
+- Root cause verified: Tier B Terminated entire window; Doorman `consecutive_failures=102`; Tier-A-only sweep cannot produce DPO pairs by design
+- Two code faults found: Phase 4b ledger records 202-queue ACK not enrichment success (400 commits poisoned); 60s wait-for-pairs meaningless for async cascade
+- `SLM_YOYO_WEIGHTS_GCS_BUCKET` verified unset everywhere — 20 markers have no consumer
+
+**Carry-forward:**
+- BLOCKER: restore Tier B GPU endpoint (operator/Command)
+- Fix Phase 4b ledger bug BEFORE next cycle (`yoyo-daily-cycle.sh:171`)
+- Set `SLM_YOYO_WEIGHTS_GCS_BUCKET` or document manual dispatch
+- Reserve training-budget floor when adapters reach READY
+- Fix stall early-exit to fire at 6/6 (currently 12/6); guard `entities=?` read failure
+- Fix 8080 drain-worker + audit 737-entry quarantine (Command scope)
+- Expand `SWEEP_REPOS` to glob all 23 `clones/*/.git`
+
+---
 
 ### 2026-06-11 — Opus audit + preemption-resilient yoyo rewrite
 
