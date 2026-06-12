@@ -2,5 +2,12 @@
 name = "system-substrate"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.73"
+license = "AGPL-3.0-or-later"
+description = "Transport-agnostic capability invocation substrate — CapabilityInvoker trait and VerdictWire type. No external dependencies; all encoded inputs are pre-serialized opaque bytes."
+
+[features]
+default = ["std"]
+std = []
 
 [dependencies]
