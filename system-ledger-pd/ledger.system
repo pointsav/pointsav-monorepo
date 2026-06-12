@@ -39,7 +39,7 @@
 
     <!-- ── Channel 1: CONSULT PPC ─────────────────────────────────────── -->
     <channel>
-        <end pd="client_pd"      id="1" />
+        <end pd="client_pd"      id="1" pp="true" />
         <end pd="system_ledger"  id="1" />
     </channel>
 </system>

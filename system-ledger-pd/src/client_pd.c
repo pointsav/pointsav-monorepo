@@ -33,7 +33,7 @@
  */
 
 #include <microkit.h>
-#include <string.h>
+#include <stdint.h>
 
 /* Channel and memory region addresses — must match ledger.system. */
 #define CONSULT_CH          1
@@ -49,6 +49,8 @@ static const uint8_t TEST_FRAME[] = {
     0x00,                     /* witness_cbor: None (0x00) */
 };
 
+static void client_run(void);
+
 static void print(const char *s) {
     microkit_dbg_puts(s);
 }
@@ -63,14 +65,14 @@ static void print_hex_byte(uint8_t b) {
 }
 
 void init(void) {
-    /* Nothing to initialise — this PD is stateless. */
+    client_run();
 }
 
 void notified(microkit_channel ch) {
     (void)ch;
 }
 
-seL4_MessageInfo_t protected(microkit_channel ch, seL4_MessageInfo_t msginfo) {
+microkit_msginfo protected(microkit_channel ch, microkit_msginfo msginfo) {
     (void)ch;
     (void)msginfo;
     return seL4_MessageInfo_new(0, 0, 0, 0);
