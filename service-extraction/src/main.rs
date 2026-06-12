@@ -1,14 +1,14 @@
-use notify::{Watcher, RecursiveMode, Result as NotifyResult, Event};
+use base64::{engine::general_purpose::STANDARD as BASE64_STD, Engine as _};
+use mailparse::{parse_mail, MailHeaderMap};
+use notify::{Event, RecursiveMode, Result as NotifyResult, Watcher};
+use regex::Regex;
+use serde_json::Value;
+use std::collections::HashSet;
+use std::fs;
 use std::path::Path;
 use std::sync::mpsc::channel;
-use std::fs;
 use std::thread;
 use std::time::Duration;
-use serde_json::Value;
-use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64_STD};
-use mailparse::{parse_mail, MailHeaderMap};
-use regex::Regex;
-use std::collections::HashSet;
 
 #[derive(serde::Serialize, Clone)]
 struct ExtractedEntity {
@@ -29,8 +29,12 @@ fn main() -> NotifyResult<()> {
 
     let base_dir = std::env::var("EXTRACTION_BASE_DIR")
         .unwrap_or_else(|_| "/home/mathew/deployments/woodfine-fleet-deployment".to_string());
-    let watch_dir = std::env::var("EXTRACTION_WATCH_DIR")
-        .unwrap_or_else(|_| format!("{}/cluster-totebox-personnel-1/service-fs/data/service-people/source", base_dir));
+    let watch_dir = std::env::var("EXTRACTION_WATCH_DIR").unwrap_or_else(|_| {
+        format!(
+            "{}/cluster-totebox-personnel-1/service-fs/data/service-people/source",
+            base_dir
+        )
+    });
     // Optional: emit CORPUS_*.json for service-content DataGraph ingestion
     let corpus_emit_dir = std::env::var("EXTRACTION_EMIT_CORPUS_DIR").ok();
     // Optional: set module_id in emitted CORPUS JSON (falls back to SERVICE_CONTENT_MODULE_ID env var in service-content)
@@ -39,11 +43,18 @@ fn main() -> NotifyResult<()> {
     println!("[SYSTEM] Base dir: {}", base_dir);
     println!("[SYSTEM] Watch dir: {}", watch_dir);
     if let Some(dir) = &corpus_emit_dir {
-        println!("[SYSTEM] Corpus emit dir: {} (module_id: {})", dir,
-            corpus_module_id.as_deref().unwrap_or("(from service-content env)"));
+        println!(
+            "[SYSTEM] Corpus emit dir: {} (module_id: {})",
+            dir,
+            corpus_module_id
+                .as_deref()
+                .unwrap_or("(from service-content env)")
+        );
     }
 
-    if !Path::new(&watch_dir).exists() { fs::create_dir_all(&watch_dir).unwrap(); }
+    if !Path::new(&watch_dir).exists() {
+        fs::create_dir_all(&watch_dir).unwrap();
+    }
 
     let mut processed_ledgers: Vec<String> = Vec::new();
 
@@ -52,7 +63,12 @@ fn main() -> NotifyResult<()> {
             let path = entry.path();
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 let filename = path.file_name().unwrap().to_str().unwrap().to_string();
-                if process_payload(&path, &base_dir, corpus_emit_dir.as_deref(), corpus_module_id.as_deref()) {
+                if process_payload(
+                    &path,
+                    &base_dir,
+                    corpus_emit_dir.as_deref(),
+                    corpus_module_id.as_deref(),
+                ) {
                     processed_ledgers.push(filename);
                 }
             }
@@ -75,14 +91,19 @@ fn main() -> NotifyResult<()> {
                             let filename = path.file_name().unwrap().to_str().unwrap().to_string();
                             if !processed_ledgers.contains(&filename) {
                                 thread::sleep(Duration::from_millis(250));
-                                if process_payload(&path, &base_dir, corpus_emit_dir.as_deref(), corpus_module_id.as_deref()) {
+                                if process_payload(
+                                    &path,
+                                    &base_dir,
+                                    corpus_emit_dir.as_deref(),
+                                    corpus_module_id.as_deref(),
+                                ) {
                                     processed_ledgers.push(filename);
                                 }
                             }
                         }
                     }
                 }
-            },
+            }
             Ok(_) => {}
             Err(_) => {}
         }
@@ -95,23 +116,45 @@ fn process_payload(
     corpus_emit_dir: Option<&str>,
     corpus_module_id: Option<&str>,
 ) -> bool {
-    let content = match fs::read_to_string(filepath) { Ok(c) => c, Err(_) => return false };
-    let payload: Value = match serde_json::from_str(&content) { Ok(v) => v, Err(_) => return false };
+    let content = match fs::read_to_string(filepath) {
+        Ok(c) => c,
+        Err(_) => return false,
+    };
+    let payload: Value = match serde_json::from_str(&content) {
+        Ok(v) => v,
+        Err(_) => return false,
+    };
 
     let file_obj = &payload["file"];
     let original_filename = file_obj["filename"].as_str().unwrap_or("unknown_asset");
     let base64_data = file_obj["data"].as_str().unwrap_or("");
 
-    let b64_str = if let Some(idx) = base64_data.find(',') { &base64_data[idx + 1..] } else { base64_data };
-    let raw_bytes = match BASE64_STD.decode(b64_str) { Ok(b) => b, Err(_) => return false };
+    let b64_str = if let Some(idx) = base64_data.find(',') {
+        &base64_data[idx + 1..]
+    } else {
+        base64_data
+    };
+    let raw_bytes = match BASE64_STD.decode(b64_str) {
+        Ok(b) => b,
+        Err(_) => return false,
+    };
 
-    let dest_archive = payload["destination_archive"].as_str().unwrap_or("cluster-totebox-personnel-1");
-    let target_service = payload["target_service"].as_str().unwrap_or("service-people");
+    let dest_archive = payload["destination_archive"]
+        .as_str()
+        .unwrap_or("cluster-totebox-personnel-1");
+    let target_service = payload["target_service"]
+        .as_str()
+        .unwrap_or("service-people");
     let worm_id = filepath.file_stem().unwrap().to_str().unwrap();
 
-    let parsed_mail = match parse_mail(&raw_bytes) { Ok(m) => m, Err(_) => return false };
+    let parsed_mail = match parse_mail(&raw_bytes) {
+        Ok(m) => m,
+        Err(_) => return false,
+    };
     let headers = parsed_mail.get_headers();
-    let sender = headers.get_first_value("From").unwrap_or_else(|| "Unknown".to_string());
+    let sender = headers
+        .get_first_value("From")
+        .unwrap_or_else(|| "Unknown".to_string());
 
     let mut graph_entities: Vec<ExtractedEntity> = Vec::new();
     let mut seen_names = HashSet::new();
@@ -154,7 +197,10 @@ fn process_payload(
     if let Some(edge_entities) = payload.get("edge_entities").and_then(|v| v.as_array()) {
         for ent in edge_entities {
             let name = ent["entity_name"].as_str().unwrap_or("").trim().to_string();
-            let class = ent["classification"].as_str().unwrap_or("UNKNOWN").to_string();
+            let class = ent["classification"]
+                .as_str()
+                .unwrap_or("UNKNOWN")
+                .to_string();
             let conf = ent["confidence"].as_f64().unwrap_or(0.9) as f32;
 
             if name.len() > 2 && !seen_names.contains(&name) {
@@ -174,7 +220,10 @@ fn process_payload(
     }
 
     let write_ledger = |service: &str, suffix: &str, content: &str| {
-        let dir = format!("{}/{}/service-fs/data/{}/ledgers", base_dir, dest_archive, service);
+        let dir = format!(
+            "{}/{}/service-fs/data/{}/ledgers",
+            base_dir, dest_archive, service
+        );
         fs::create_dir_all(&dir).unwrap();
         fs::write(format!("{}/{}_{}.json", dir, suffix, worm_id), content).unwrap();
     };
@@ -186,7 +235,10 @@ fn process_payload(
             "extracted_crm_entities": graph_entities,
         });
         write_ledger(target_service, "CRM", &people_ledger.to_string());
-        println!("  -> [VAULT] Successfully secured {} entities evaluated by Edge AI.", graph_entities.len());
+        println!(
+            "  -> [VAULT] Successfully secured {} entities evaluated by Edge AI.",
+            graph_entities.len()
+        );
     }
 
     // ── CORPUS bridge ─────────────────────────────────────────────────────────
@@ -205,7 +257,10 @@ fn process_payload(
             }
             let out_path = format!("{}/CORPUS_{}.json", emit_dir, worm_id);
             match fs::write(&out_path, corpus_json.to_string()) {
-                Ok(_) => println!("  -> [CORPUS] Emitted CORPUS_{}.json for DataGraph ingestion.", worm_id),
+                Ok(_) => println!(
+                    "  -> [CORPUS] Emitted CORPUS_{}.json for DataGraph ingestion.",
+                    worm_id
+                ),
                 Err(e) => println!("  -> [CORPUS] Write failed ({}): {}", out_path, e),
             }
         }
