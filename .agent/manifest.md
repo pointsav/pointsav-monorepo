@@ -1,6 +1,6 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster_name: project-proforma
+cluster: project-proforma
 cluster_branch: cluster/project-proforma
 created: 2026-05-20
 state: active
