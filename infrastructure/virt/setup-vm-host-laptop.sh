@@ -20,7 +20,7 @@ WG_IP="${WG_IP:?WG_IP must be set (e.g. 10.8.0.6)}"
 FLEET_ENDPOINT="${FLEET_ENDPOINT:-http://10.8.0.9:9203}"
 SPAWN_PORT="${SPAWN_PORT:-9220}"
 BASE_IMAGE_DIR="${BASE_IMAGE_DIR:-/var/lib/vm-fleet}"
-GCP_IP="10.8.0.9"
+GCP_IP="${GCP_IP:-10.8.0.9}"
 
 FLEET_SSH_PUBKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM8cK5fafqK4ZMqoLuAQC8hory12qPTW1jCqBTYMRgBq fleet-automation@gcp-cloud-1"
 
@@ -36,21 +36,20 @@ echo "[2] Creating disk directory ${BASE_IMAGE_DIR}..."
 sudo mkdir -p "$BASE_IMAGE_DIR"
 sudo chown "$(id -un):$(id -gn)" "$BASE_IMAGE_DIR"
 
-# --- 3. Ubuntu base image ---
+# --- 3. Ubuntu base image (served from GCP over WireGuard mesh) ---
 BASE_IMAGE="${BASE_IMAGE_DIR}/ubuntu-24.04-server-cloudimg-amd64.img"
 if [[ ! -f "$BASE_IMAGE" ]]; then
-    echo "[3] Downloading Ubuntu 24.04 cloud image (~630 MB)..."
-    curl -fL --progress-bar \
-        "https://cloud-images.ubuntu.com/releases/noble/release/ubuntu-24.04-server-cloudimg-amd64.img" \
-        -o "$BASE_IMAGE"
+    echo "[3] Downloading Ubuntu 24.04 cloud image from GCP mesh (~630 MB)..."
+    wget --progress=bar:force \
+        "http://${GCP_IP}:9299/ubuntu-24.04-server-cloudimg-amd64.img" \
+        -O "$BASE_IMAGE"
 else
     echo "[3] Base image already present: $BASE_IMAGE"
 fi
 
 # --- 4. Binary ---
-echo "[4] Fetching service-vm-host binary from GCP fleet..."
-scp -i ~/.ssh/fleet-automation_ed25519 -o StrictHostKeyChecking=no \
-    "mathew@${GCP_IP}:/usr/local/bin/service-vm-host" /tmp/service-vm-host
+echo "[4] Fetching service-vm-host binary from GCP fleet (HTTP)..."
+wget -q "http://${GCP_IP}:9299/service-vm-host" -O /tmp/service-vm-host
 sudo install -m 755 /tmp/service-vm-host /usr/local/bin/service-vm-host
 echo "    installed at /usr/local/bin/service-vm-host"
 
