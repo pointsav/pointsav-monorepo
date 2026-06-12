@@ -115,10 +115,12 @@ Last updated: 2026-06-11 [totebox@claude-code]
 - [x] Slug normalization: `/wiki/topic-foo` → 301 → `/wiki/foo`; `topic-foo.md` fallback; ES-locale aware — bd435cc3 [2026-06-11]
 - [x] L25: `/edit/{slug}` route stub + CodeMirror 6 bundle + `toc-persistence.js` + conditional chrome load — bd435cc3 + 7a2b9b42 [2026-06-11]
 - [x] M8/M5: Mobile drawer animations + tap-popover flip + Cmd+K trigger — 7a2b9b42 [2026-06-11]
-- [ ] Stage 6 promote for Phase 0 commits — Stage 6 READY sent (msg-id: command-20260611-stage-6-ready-project-knowledge-sub-clon); tip 7a2b9b42; awaiting Command. [2026-06-11 totebox@claude-code]
-- [ ] Implement `inject_wiki_prefixes` cross-mount resolution [2026-06-08]
-- [ ] Wire `check --strict` as xtask CI gate (gate passes 248/0; wiring is Totebox work) [2026-06-11]
-- [ ] Remove `wikilink-unresolved` render path from `render.rs` — blocked until xtask gate wired [2026-06-11]
+- [x] Stage 6 promote for bd435cc3 + 7a2b9b42 — CONFIRMED; origin/main at 7a2b9b42 [2026-06-11]
+- [x] `inject_wiki_prefixes` cross-mount resolution — ALREADY DONE; link_roots() used at all call sites [2026-06-11]
+- [x] Wire `check --strict` as xtask CI gate — `scripts/stage6-gate.sh` committed 9a1326df [2026-06-11]
+- [x] Remove `wikilink-unresolved` render path from `render.rs` — DONE 9a1326df; display text only (L18 complete) [2026-06-11]
+- [ ] Stage 6 promote for 9a1326df — Stage 6 READY pending; awaiting Command. [2026-06-11 totebox@claude-code]
+- [ ] Content fix blocking full 3-mount gate pass — `media-knowledge-documentation/substrate/substrate-without-inference-base-case.es.md` line ~26: `[[service-fs|...]]` → `[[service-fs-architecture|service-fs]]`; flagged to project-editorial (msg-id: command-20260612-dead-link-fix-needed-substrate-without-i) [2026-06-11]
 
 ---
 
