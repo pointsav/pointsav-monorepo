@@ -492,18 +492,15 @@ fn inject_wiki_prefixes(
                 out.push_str("\" data-wikilink=\"true\">");
                 rest = after_marker;
             } else {
-                // Unresolved wikilink: emit link text as plain inline span (L18).
-                // Dead-link gate (check --strict) prevents unresolved slugs from
-                // reaching canonical, so no red-link affordance is needed in production.
+                // Unresolved wikilink: gate active — emit display text only, no anchor.
+                // cargo xtask check-content blocks any promote that has dead links,
+                // so this branch only fires in dev/test. No wrapper element (L18).
                 let a_open = before_marker[..href_pos].rfind("<a").unwrap_or(href_pos);
                 out.push_str(&before_marker[..a_open]);
-                out.push_str("<span class=\"wikilink-unresolved\">");
                 if let Some(close_pos) = after_marker.find("</a>") {
                     out.push_str(&after_marker[..close_pos]);
-                    out.push_str("</span>");
                     rest = &after_marker[close_pos + 4..];
                 } else {
-                    out.push_str("</span>");
                     rest = after_marker;
                 }
             }
@@ -910,15 +907,15 @@ mod tests {
             "existing wikilink anchor must carry class=wikilink: {html}"
         );
 
-        // Missing target → plain inline span (L18 gate removes red-link affordance).
+        // Missing target → display text only; no anchor, no wrapper (L18 gate active).
         let html2 = render_html("see [[No Such Page]] here", &dir, &[]);
         assert!(
             html2.contains("No Such Page"),
             "missing wikilink text should be retained: {html2}"
         );
         assert!(
-            html2.contains("wikilink-unresolved"),
-            "missing wikilink must render as a plain wikilink-unresolved span: {html2}"
+            !html2.contains("wikilink-unresolved"),
+            "gate-active: unresolved wikilink must not emit span wrapper: {html2}"
         );
         assert!(
             !html2.contains("wikilink-missing"),
