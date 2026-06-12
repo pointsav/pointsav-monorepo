@@ -95,7 +95,7 @@ See BRIEF-os-totebox-ppn-build-out.md for full state.
 Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
 > **Scope: this archive only.** Cross-repo items live at `~/Foundry/NEXT.md`.
 
-Last updated: 2026-06-12 [totebox@claude-code]
+Last updated: 2026-06-12 (close-out) [totebox@claude-code]
 
 ---
 
@@ -107,7 +107,7 @@ Last updated: 2026-06-12 [totebox@claude-code]
 
 ---
 
-## Phase 0 — Federation Engine (in progress)
+## Phase 0 — Federation Engine — **COMPLETE 2026-06-12**
 
 - [x] Refactor `AppState` to `mounts: Vec<Mount>`; delete hardcoded content/guide dir fields — dea5e8ae [2026-06-10]
 - [x] Wire `blueprints.rs` into render pipeline — AppState loading (dea5e8ae); `relates_to` rail in `wiki_page_inner` (bd435cc3) [2026-06-11]
@@ -116,11 +116,12 @@ Last updated: 2026-06-12 [totebox@claude-code]
 - [x] L25: `/edit/{slug}` route stub + CodeMirror 6 bundle + `toc-persistence.js` + conditional chrome load — bd435cc3 + 7a2b9b42 [2026-06-11]
 - [x] M8/M5: Mobile drawer animations + tap-popover flip + Cmd+K trigger — 7a2b9b42 [2026-06-11]
 - [x] Stage 6 promote for bd435cc3 + 7a2b9b42 — CONFIRMED; origin/main at 7a2b9b42 [2026-06-11]
-- [x] `inject_wiki_prefixes` cross-mount resolution — ALREADY DONE; link_roots() used at all call sites [2026-06-11]
+- [x] `inject_wiki_prefixes` cross-mount resolution — DONE; link_roots() used at all call sites [2026-06-11]
 - [x] Wire `check --strict` as xtask CI gate — `scripts/stage6-gate.sh` committed 9a1326df [2026-06-11]
 - [x] Remove `wikilink-unresolved` render path from `render.rs` — DONE 9a1326df; display text only (L18 complete) [2026-06-11]
-- [ ] Stage 6 promote for 9a1326df — Stage 6 READY pending; awaiting Command. [2026-06-11 totebox@claude-code]
-- [ ] Content fix blocking full 3-mount gate pass — `media-knowledge-documentation/substrate/substrate-without-inference-base-case.es.md` line ~26: `[[service-fs|...]]` → `[[service-fs-architecture|service-fs]]`; flagged to project-editorial (msg-id: command-20260612-dead-link-fix-needed-substrate-without-i) [2026-06-11]
+- [x] Stage 6 promote for 9a1326df — CONFIRMED; origin/main at 9a1326df [2026-06-12]
+- [x] Content dead link fix — project-editorial applied fix; gate passes 0 dead links [2026-06-12]
+- [ ] Archive ops Stage 6 — 4e2ddf95 → e6d01e9c (+ this commit) pending Command promote; binary rebuild + redeploy required after. [2026-06-12 totebox@claude-code]
 
 ---
 
