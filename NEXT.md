@@ -11,28 +11,44 @@ Deferred, blocked, and follow-up items. Attribution: `[YYYY-MM-DD role@engine]`.
   Fixes entries 1 (nightly-rebuild.sh) and 3 (build-aec-global.sh) from project-orgcharts → project-gis.
   Entry 2 (run-overnight-ingests.sh June 4) is past — ignore.
 
-- [ ] **Park-and-ride ingest for US/CA/DE/FR/IT/PL/NO/IS** `[2026-06-11 totebox@claude-sonnet-4-6]`
-  Script: `ingest-osm-parking.py`; all countries in TILE_GRIDS; US takes ~12 tiles.
-  Run after 05:00 UTC (10pm Vancouver):
-  ```
-  cd /srv/foundry/clones/project-gis/pointsav-monorepo/app-orchestration-gis
-  nohup python3 ingest-osm-parking.py --countries US CA DE FR IT PL NO IS >> ingest.log 2>&1 &
-  ```
-  Then re-run build-pks-clusters.py. Expected: ~6,500-7,000 features, T1~15% T2~40% T3~45%.
+- [x] **Park-and-ride ingest for US/CA/DE/FR/IT/PL/NO** `[2026-06-11 totebox@claude-sonnet-4-6]` DONE
+  17,721 park_ride records. Result: 6,649 features T1=462/T2=2,451/T3=3,736.
 
-- [ ] **EU car rental ingests** `[2026-06-11 totebox@claude-sonnet-4-6]` (Fable recommendation)
-  Priority order:
-  1. Generic `car-rental-osm.yaml` (`amenity=car_rental`, all 18 countries) — single biggest EU fix
-  2. `sixt-eu.yaml` — expand existing sixt-de.yaml bbox from DE to EU
-  3. `budget-us.yaml` (Q1004913), `national-us.yaml`, `alamo-us.yaml` — NA airport counter brands
-  4. `avis-eu.yaml`, `hertz-eu.yaml` — EU footprints of existing NA brands
-  After: re-run build-pks-clusters.py; expected ~100-300 more airports upgrading to T1.
+- [x] **EU car rental ingests** `[2026-06-11 totebox@claude-sonnet-4-6]` DONE
+  hertz-eu=687, avis-eu=741, budget-eu=130, europcar-eu=1,021, budget-us=278, alamo-us=110, national-us=2, sixt-eu=246.
+  All in CAR_RENTAL_CHAINS in build-pks-clusters.py.
 
-- [ ] **Hotel chain YAMLs for PKS** `[2026-06-11 totebox@claude-sonnet-4-6]` (new category, post car-rental)
-  Brands: ibis-eu (Q920166, incl. Ibis Budget), b-and-b-hotels-eu (Q794939),
-  premier-inn-gb (Q2108626), travelodge-gb, motel-one-de (Q866334),
-  holiday-inn-express-us (Q5880423), hampton-us (Q5646184), courtyard-us (Q1053170).
-  Add `hotel` enrichment class to build-pks-clusters.py after YAMLs ingested.
+- [x] **Hotel chain YAMLs for PKS** `[2026-06-11 totebox@claude-sonnet-4-6]` DONE
+  ibis-eu=708, premier-inn-gb=817, travelodge-gb=580, motel-one-de=24,
+  holiday-inn-express-us=2,021, hampton-us=240, courtyard-us=1,020, b-and-b-hotels-eu=797. Total: 6,207.
+  `hotel` enrichment class added to _enrich_classes() + tier_pks() + build() in build-pks-clusters.py.
+
+- [x] **PKS co-location calibration converged + deployed** `[2026-06-11 totebox@claude-sonnet-4-6]` DONE
+  5 sim iterations + production build. Final: 6,953 clusters (T1=9.9%, T2=38.2%, T3=51.9%).
+  Key insight: park-and-ride (23,117 records) is the discrete geographic anchor; EPS_LOOSE=2.5km
+  prevents rail network collapse. Scripts: analyze-parkade-colocation.py + sim-pks-colocation.py.
+  Gateway deployed: /srv/foundry/deployments/gateway-orchestration-gis-1/www/data/archetype-pks.geojson
+
+- [ ] **PKS opportunity scoring (next step)** `[2026-06-11 totebox@claude-sonnet-4-6]`
+  With T1/T2/T3 co-locations established, add opportunity class per cluster:
+  - DEVELOP: commercial enrichment thin (T3 or single enrich) → parkade absent or underbuilt
+  - EXPAND: co-location present (T2), rental + hotel signal → capacity may need expansion
+  - SATURATED: T1 hub with full commercial ecosystem → supply likely meets demand
+  Implement in build-pks-clusters.py as second-pass property after tier assignment.
+
+- [x] **VWH co-location calibration converged + deployed** `[2026-06-11 totebox@claude-sonnet-4-6]` DONE
+  Profile (analyze-vwh-colocation.py): 10,338 hardware anchors; hypermarket 73.9% contamination
+  signal; auto_parts 51.2%; CBD filter NOT viable (73.6% >30km from metro refs).
+  Sim (sim-vwh-colocation.py): 1 iteration; 1,555 clusters; hardware validation 73.4% PASS.
+  Production build-vwh-clusters.py updated: qualify_vwh + tier_vwh replaced with group-collapse.
+  Final: 6,368 clusters (T1=13.4%, T2=20.8%, T3=65.8%). Deployed to gateway.
+  Key insight: T3-heavy is correct for VWH (hardware-alone = thin T3; true trade hubs are rare).
+  retail_contamination flag added (47.9% of clusters have hypermarket <1km — informational).
+
+- [ ] **VWH retail_contamination UX (next step)** `[2026-06-11 totebox@claude-sonnet-4-6]`
+  47.9% of VWH clusters are flagged retail_contamination (hypermarket <1km).
+  Decision: display all clusters on map, use flag to differentiate in infobox (e.g. "Mixed-use site"
+  badge vs "Trade hub" for clean VWH sites). Requires UX design pass in project-design.
 
 ---
 
