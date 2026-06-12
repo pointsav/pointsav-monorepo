@@ -1,79 +1,67 @@
 ---
-schema: cluster-manifest-v1
-cluster: project-system
-opened: 2026-05-14
-state: active
-slm_endpoint: http://localhost:8011
-module_id: editorial
+schema: foundry-cluster-manifest-v1
+cluster: project-software
+cluster_name: Software Distribution
+cluster_branch: cluster/project-software
+created: 2026-05-21
+state: active (v0.1.0 source + v0.0.3 marketplace + v0.0.3 wallet deployed 2026-05-21)
+slm_endpoint: http://localhost:9080
+module_id: software
 doctrine_version: 0.0.14
-doctrine_claims_codified: []
+doctrine_claims_codified: [37]
 doctrine_claims_proposed: []
 
-operator: pointsav (Mathew, Jennifer)
-working_pattern: editorial-pipeline
-
 tetrad:
-  vendor:
-    repo: pointsav-monorepo
-    branch: cluster/project-system
-    focus: [app-infrastructure-onprem, app-infrastructure-leased, app-infrastructure-cloud, app-network-admin, os-infrastructure, os-network-admin]
-    status: active
-  customer:
-    - fleet_deployment_repo: customer/woodfine-fleet-deployment
-      catalog_subfolder: (varies per originating project)
-      status: active — GUIDEs committed here each session; checked out as sibling repo
-  deployment:
-    status: leg-pending — no running service; editorial is a Totebox process, not a deployed binary
-  wiki:
-    - target: media-knowledge-documentation
-      status: active — TOPIC drafts committed each session; checked out as sibling repo
-    - target: media-knowledge-corporate
-      status: active — COMMS/corporate content committed here; checked out as sibling repo
-    - target: media-knowledge-projects
-      status: active — project-narrative topics committed here; checked out as sibling repo
+  vendor: pointsav-monorepo (cluster/project-software) — app-privategit-source, app-privategit-marketplace, tool-wallet
+  customer: woodfine-fleet-deployment/software — leg-pending
+  deployment: vault-privategit-source-1 (live; software.pointsav.com; ports 9201 + 9202)
+  wiki: content-wiki-documentation — leg-pending
 
-datagraph_module_id: data
+datagraph_module_id: software
 cross_cluster_dependencies:
-  all-archives: drafts routed to project-editorial via .agent/drafts-outbound/ handoff pattern
+  - project-system (infrastructure; OS layer)
 
-provisioning_notes:
-  - media-knowledge-documentation: checked out as sibling directory (canonical per DOCTRINE §IV.e)
-  - media-knowledge-corporate: checked out as sibling directory (canonical per DOCTRINE §IV.e)
-  - media-knowledge-projects: checked out as sibling directory (canonical per DOCTRINE §IV.e)
-  - woodfine-fleet-deployment: checked out as sibling directory
-  - factory-release-engineering: checked out as sibling directory
+provisioning_notes: |
+  Archive cloned from pointsav-monorepo cluster/project-software branch.
+  Working in: ~/Foundry/clones/project-software/
+  Sub-clone (monorepo): ~/Foundry/clones/project-software/pointsav-monorepo/
+  Stage 6 promotion: bin/promote.sh from Command Session.
+  Deployed on: vault-privategit-source-1 (this VM).
 
 session_role: totebox
-default_starting_dir: ~/Foundry/clones/project-editorial/
+default_starting_dir: ~/Foundry/clones/project-software/
 ---
 
-# project-system — Cluster Manifest
+## Cluster mission
 
-Editorial pipeline gateway for the Foundry ecosystem. Receives TOPIC/GUIDE/COMMS/JOURNAL/PROSE-RESEARCH drafts from all other Totebox archives, applies Bloomberg-register language and quality passes, and commits to canonical destinations.
+Build and maintain the PointSav software distribution substrate — the storefront,
+binary release server, and payment infrastructure at `software.pointsav.com`.
 
-## Artifact routing
+### Deployed components
 
-| Artifact type | Source | Destination |
+| Crate | Port | Version | Role |
+|---|---|---|---|
+| `app-privategit-source` | 9201 | v0.1.0 | Binary release server; Ed25519 license token verification |
+| `app-privategit-marketplace` | 9202 | v0.0.3 | Software storefront; product catalog; license issuance; payment verification |
+| `tool-wallet` | — | v0.0.3 | Polygon USDC payment watcher; BIP-39/BIP-32 HD address derivation; Ed25519 keygen |
+
+### Pricing model (ratified 2026-05-22)
+
+| Tier | Price | Licence |
 |---|---|---|
-| TOPIC-* | any archive | media-knowledge-documentation / media-knowledge-projects |
-| GUIDE-* | any archive | woodfine-fleet-deployment/<cluster>/ |
-| COMMS-* | any archive | media-knowledge-corporate |
-| JOURNAL-* | any archive | JOURNAL/ (this archive) |
-| PROSE-RESEARCH | any archive | review + return or accept |
-| DESIGN-* / ASSET-* | (pass-through) | relay to project-design |
+| Open source | $1 | Apache 2.0 |
+| Commercial | $19 | FSL (Functional Source Licence) |
 
-## Status (as of 2026-05-31 — from BRIEF-project-console-master.md)
+Payment: Polygon USDC only. No subscriptions. One-time purchase per licence key.
+BC tax posture: below $30k threshold.
 
-vendor:
-  repo: pointsav-monorepo
-  branch: cluster/project-system
-  focus: [app-infrastructure-onprem, app-infrastructure-leased, app-infrastructure-cloud, app-network-admin, os-infrastructure, os-network-admin]
-  status: active
+### Licence key format
 
-Running in production at `documentation.pointsav.com` (port 9090) and
-`projects.woodfinegroup.com` (port 9093) on vault-privategit-source-1.
+Ed25519 signature over `{product_id}:{customer_id}:{expiry}`.
+Verification in `app-privategit-source` at `/verify` endpoint.
 
-- `~/Foundry/AGENT.md` §Artifacts — full artifact-type routing table
-- `conventions/artifact-classification.yaml` — machine-readable routing
-- `conventions/cluster-wiki-draft-pipeline.md` — full editorial pipeline spec
-- `.agent/rules/journal-artifact-discipline.md` — JOURNAL manuscript rules
+### Architecture note
+
+`app-privategit-marketplace` (the storefront) is **CODE** — it runs our systems.
+The software products it sells are **SOFT** — they carry Ed25519 licence keys and
+marketplace listings. Do not conflate the storefront with the merchandise.
