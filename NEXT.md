@@ -9,7 +9,7 @@ Last updated: 2026-06-11 [Jennifer Woodfine / claude-code]
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Architecture: VM-* naming mirrors the os-* product lineup exactly. See `BRIEF-VM-ARCHITECTURE.md`.
 
-Last updated: 2026-06-11 (session 20 — Phase 1A NetBSD image pipeline: system-ledger-proto + system-ledger-server + system-substrate-netbsd + os-totebox scripts; commit 8b0b491e Version 1.2.0; Stage 6 pending).
+Last updated: 2026-06-11 (session 22 — Phase 1B client_pd.c complete; app-orchestration-gis pipeline scripts committed; GeoLite2 mmdb stale item closed; commit cb03d930 Version 1.4.0; Stage 6 pending).
 
 ---
 
@@ -165,9 +165,8 @@ Last updated: 2026-06-12 (close-out) [totebox@claude-code]
   project-system-native version written covering J2, J5, A1, and routing rules.
 - [ ] **Uncommitted code in sub-clone** — `app-network-admin/`, `system-gateway-mba/`, `system-udp/`
   have modified Cargo.toml + src files. Review and commit or discard before next Stage 6.
-- [ ] **`app-mediakit-telemetry/assets/GeoLite2-City.mmdb`** — deleted on disk but not committed in sub-clone.
-- [ ] **Untracked in sub-clone** — `app-orchestration-gis/.gitignore` + `app-orchestration-gis/SCORING-METHODOLOGY.md`
-  and 27+ Python/shell scripts. Decide: commit or gitignore.
+- [x] **`app-mediakit-telemetry/assets/GeoLite2-City.mmdb`** — confirmed not tracked and not on disk; item was stale. Closed 2026-06-11 session 22.
+- [x] **Untracked in sub-clone** — `app-orchestration-gis/` pipeline scripts committed: 83 files (`.gitignore`, 50+ Python/shell pipeline scripts, `www/` HTML research files, `utils/`, `legacy/`, `archive/`) in commit `cb03d930` Version 1.4.0. Closed 2026-06-11 session 22.
 
 ## Capability Ledger Substrate — seL4 porting
 
@@ -209,9 +208,10 @@ Commit `428b5086` in sub-clone, Version 1.3.0. Stage 6 pending.
   `linked_list_allocator` (use_spin); 512 KiB heap; `ledger.system` XML; `Makefile` with `SDK_PATH ?=`
 - [x] Fix `system-security/Makefile` — `SDK_PATH :=` → `SDK_PATH ?= $(error ...)`
 - [x] CI check: `cargo build --no-default-features --features sel4 --target x86_64-unknown-none` clean
+- [x] Write `src/client_pd.c` test harness — committed in cb03d930 Version 1.4.0. Closed 2026-06-11 session 22.
 - [ ] **Download Microkit SDK** — operator action; needed for `make` + QEMU boot test
 - [ ] Minimum viable milestone: 2-PD system boots; `client_pd` → `system_ledger` PPC channel 1;
-  `VERDICT: Allow` via `microkit_dbg_puts` (write `src/client_pd.c` test harness)
+  `VERDICT: Error, code=1` via `microkit_dbg_puts` (SDK download required; then `SDK_PATH=... make`)
 
 **Phase 1C — pre-flight spike (Laptop A, before full VM deploy)**
 
@@ -345,3 +345,7 @@ Relay message in outbox: `project-marketing-20260608-contamination-relay` [2026-
 - [x] Phase 1B seL4 PD scaffold — system-ledger-pd (standalone workspace; PPC shared-memory ring;
   CI clean on x86_64-unknown-none); system-substrate CapabilityInvoker + VerdictWire (3 tests);
   system-security Makefile SDK_PATH guard; Version 1.3.0 (session 21)
+- [x] Phase 1B complete — client_pd.c test harness added; client writes hardcoded ConsultRequest to
+  CAP_REQUEST_MR, calls microkit_ppcall(1,...), reads ConsultResponse from CAP_RESPONSE_MR, prints
+  verdict; QEMU boot milestone ready once SDK downloaded; app-orchestration-gis 83 pipeline scripts
+  committed; Version 1.4.0 (session 22)
