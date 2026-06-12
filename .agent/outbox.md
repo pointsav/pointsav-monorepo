@@ -9,6 +9,32 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-infrastructure
+to: operator
+re: two pending operator steps on Laptop B — WireGuard persistence + Laptop A direct path
+created: 2026-06-11T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-infrastructure-20260611-laptop-b-pending-steps
+
+Laptop B peer table has laptop-a-1 added at runtime (via `wg set`) but this is not persisted and will be lost on reboot. Two operator steps needed when convenient:
+
+1. **Persist peer table on Laptop B:**
+   ```
+   sudo wg-quick save wg0
+   ```
+   This writes the current runtime peer table (including laptop-a-1 at 10.8.0.6) into `/etc/wireguard/wg0.conf` so it survives reboots.
+
+2. **Add direct WireGuard path Laptop B → Laptop A** (optional, improves latency):
+   ```
+   sudo wg set wg0 peer 1Oa2ePQyKmk9KsrScbbX3BcnVD53vx1F47OolWXFZ1s= endpoint 10.0.0.65:51821 allowed-ips 10.8.0.6/32 persistent-keepalive 25
+   sudo wg-quick save wg0
+   ```
+   Currently Laptop B → Laptop A traffic routes through GCP hub. With a direct endpoint, the two laptops communicate over LAN when on the same network (faster spawn delegation).
+
+No urgency — pool is functional without these steps. Run when at Laptop B terminal.
+
+---
+from: totebox@project-infrastructure
 to: command@claude-code
 re: service-ppn-pairing binary updated on GCP — binary-ledger SHA256 needed (H-9)
 created: 2026-06-01T18:21:00Z
