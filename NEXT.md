@@ -9,7 +9,49 @@ Last updated: 2026-06-11 [Jennifer Woodfine / claude-code]
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Architecture: VM-* naming mirrors the os-* product lineup exactly. See `BRIEF-VM-ARCHITECTURE.md`.
 
-Last updated: 2026-06-11 (session 23 — Phase 1B QEMU boot COMPLETE; 2-PD seL4 milestone: LEDGER PD online + CLIENT PPC round-trip verified; commit 6fabe58e Version 1.5.0; Stage 6 pending).
+Last updated: 2026-06-12 (session 26 — Phase 1 smoke test PASSED; 4 monorepo files committed 92692800; Stage 6 outbox pending).
+
+---
+
+## Phase 1 — os-totebox Boot Milestone [2026-06-11 totebox@claude-code]
+
+**MILESTONE COMPLETE 2026-06-12** — NetBSD 10.1 boots to multiuser under GCP TCG; 2-service baseline confirmed.
+
+- [x] **rustup target add x86_64-unknown-netbsd** — done 2026-06-11
+- [x] **NetBSD sysroot** — `build/netbsd-sysroot/` 836MB at `/srv/foundry/build/netbsd-sysroot`
+- [x] **Cross-compile system-ledger-server** — 502K NetBSD ELF, 5/5 tests passing
+- [~] **Cross-compile service-content** — deferred; `service_content=NO` in rc.conf; Phase 2 item
+- [x] **Cross-compile slm-doorman-server** — 8.6M NetBSD ELF; in overlay
+- [x] **Patch rc.d/doorman** — SLM_FORCE_BROKER_MODE=true + SLM_AUDIT_DIR + FOUNDRY_ROOT + precmd
+- [x] **Patch build-image.sh** — llama_server=NO; service_content=NO; PAM uid=0 fix (chown -R 0:0 overlay)
+- [x] **Create monorepo `.cargo/config.toml`** — clang+lld, sysroot=/srv/foundry/build/netbsd-sysroot
+- [x] **Host makefs fallback** — nbmakefs absent; host makefs works
+- [x] **Build UEFI QCOW2** — GPT disk; OVMF UEFI + startup.nsh; stale NvVars deleted; efiboot confirmed
+- [x] **Boot under GCP TCG** — QEMU 13 (PID 1543740) booted to multiuser; 2 services + sshd confirmed
+- [~] **SSH access from host** — console login works (PAM fix confirmed); SSH from host times out at banner
+  under heavy TCG load; not blocking for COLD baseline; deferred to Phase 2 optimization
+- [x] **Smoke test PASSED** — via in-VM console (VGA + QEMU monitor sendkey) [2026-06-12 totebox@claude-code]
+  - `kern.veriexec.strict = 0` (observe mode — Phase 2: raise to 1 for IDS mode)
+  - `/healthz` → `ok` (HTTP 200) ✓
+  - `/readyz` → 503 Service Unavailable (COLD mode — correct) ✓
+  - `/run/system-ledger/ledger.sock` present ✓
+  - system-ledger-server PID 931 ✓ | slm-doorman-server PID 1142 ✓ | sshd PID 937 ✓
+- [x] **Commit patches** — 92692800 `feat(os-totebox): Phase 1 boot milestone` (4 files) [2026-06-12]
+- [ ] **Stage 6 outbox** — pending: send to Command Session for promotion [2026-06-12 totebox@claude-code]
+- [ ] **seL4 signing oracle** — Phase 2 item: configure `system-ledger-pd` on separate QEMU; test PPC
+
+**Known issues (2026-06-12):**
+- Kernel serial console: NetBSD GENERIC on UEFI does not output to COM1 after kernel jump. SSH is the console workaround.
+- system-ledger-server has NO HTTP; only Unix socket at `/run/system-ledger/ledger.sock`. Port :8011 not used.
+- SSH host key uid must be 0; build-image.sh now generates + sudo chowns keys. makefs must run as sudo.
+- service-content not cross-compiled; excluded from Phase 1 image.
+
+**Architecture notes (do not re-derive):**
+- seL4-as-VMM for NetBSD: NOT viable on x86_64 (libvmm x86_64 is unmerged PR #198)
+- Phase 3 (AArch64): seL4 as hypervisor hosting NetBSD/evbarm — first-of-kind; hardware TBD
+- service-fs: seL4 PD stub (no_std); NOT in os-totebox image; Phase 3 artifact
+- Doorman COLD state (readyz 503) is CORRECT for base image — not an error
+- Tier 0 language proposed to project-intelligence (outbox msg-id: project-system-20260611-tier0-language-proposal)
 
 ---
 
