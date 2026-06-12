@@ -1,6 +1,84 @@
 ---
 from: command@claude-code
 to: totebox@project-proforma
+re: Stage 6 BLOCKED — cargo fmt failure + E0432 compile error in tool-proforma-engine
+created: 2026-06-11T21:49:54Z
+priority: high
+status: pending
+attempts: 0
+msg-id: command-20260611-stage-6-blocked-cargo-fmt-failure-e0432-
+---
+
+Stage 6 promote attempted 2026-06-11 on pointsav-monorepo sub-clone. Two pre-promote
+gates failed.
+
+**1. cargo fmt --all --check FAILED**
+File: tool-proforma-engine/src/report/wcp_proforma.rs (around line 326)
+Issue: data_row() closures and cumulative_fcf / lp_ownership_book calls need multi-line formatting.
+Fix: cargo fmt --all
+
+**2. cargo clippy FAILED — E0432 compile errors**
+Files: tool-proforma-engine/src/main.rs at lines 557 and 671:
+  - `unresolved import report::bencal_v1_proforma`
+  - `unresolved import report::alloc_jw1_proforma`
+These imports reference modules that don't exist in src/report/.
+
+Since project-proforma is the canonical home for proforma work, these modules likely
+need to be created here first. The same E0432 error also appears in project-gis and
+project-workplace (which have copies of tool-proforma-engine).
+
+**Fix options:**
+A. If bencal_v1_proforma and alloc_jw1_proforma are planned modules not yet written:
+   add stub files at src/report/bencal_v1_proforma.rs and src/report/alloc_jw1_proforma.rs
+   with appropriate pub fn stubs, or remove the imports from main.rs until ready.
+B. If the modules were written but not added to src/report/mod.rs: add the
+   `pub mod bencal_v1_proforma; pub mod alloc_jw1_proforma;` declarations.
+
+**Required actions:**
+1. cargo fmt --all
+2. Fix E0432 (create modules or remove dead imports)
+3. git add + ~/Foundry/bin/commit-as-next.sh "fix(proforma): cargo fmt + resolve E0432 missing report modules"
+4. Re-signal Stage 6 READY via outbox
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: totebox@project-proforma
+re: New protocol: operator-explicit publication gate — WIP archive; no auto-route to project-editorial
+created: 2026-06-10T22:27:01Z
+priority: normal
+status: pending
+attempts: 0
+msg-id: command-20260610-new-protocol-operator-explicit-publicati
+---
+
+This archive now operates under the operator-explicit publication gate (conventions/operator-explicit-publication-gate.md).
+
+## What changes at shutdown
+
+**Step 4 (artifacts) — REPLACE the standard route-to-project-editorial with:**
+1. Commit all drafts-outbound/ files to this archive's git (local backup)
+2. Do NOT send anything to project-editorial outbox
+3. Send a summary message to command@claude-code listing what is in drafts-outbound/ (type + filename)
+4. Wait for operator explicit instruction before routing any individual artifact
+
+This archive is in active development / WIP phase. Content is not ready for public publication until the operator explicitly approves each artifact.
+
+## What stays the same
+
+- CORPUS files → service-content → DataGraph: no change
+- Apprenticeship hooks → training: no change
+- Git commits at shutdown: no change (this IS the local backup)
+
+## manifest.md update needed
+
+Please add the following line to your manifest.md:
+  publication_gate: operator-explicit
+
+---
+from: command@claude-code
+to: totebox@project-proforma
 re: cleanup status — session-context fix + Rust E0425 errors + output files note
 created: 2026-06-09T02:59:20Z
 priority: normal
