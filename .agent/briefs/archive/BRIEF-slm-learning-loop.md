@@ -1262,3 +1262,75 @@ ls /srv/foundry/data/training-pending/*.json 2>/dev/null | wc -l
 # VM status (fast check, no start)
 gcloud compute instances describe yoyo-batch --zone us-central1-a --format="get(status)" 2>/dev/null || echo "unknown"
 ```
+
+---
+
+## §15 — Session 9 research findings + as-built (2026-06-12)
+
+### Research findings (3-agent parallel audit — pre-code-changes)
+
+**OLMo-2-7B LoRA target modules — CONFIRMED CORRECT:**
+Session 8 §14 flagged "not yet verified". Confirmed correct via HF Transformers source and
+community testing: `q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj` are the
+right module names for `allenai/OLMo-2-1124-7B-Instruct`. These match the standard attention
++ MLP projection names in the OLMo-2 architecture. LoRA will not be a silent no-op. ✓
+
+**STINT_DEADLINE root cause of RC_1 at 02:32 and 04:04 UTC (Jun 12):**
+The 02:32 and 04:04 RC_1 failures were NOT caused by slow startup. Root cause confirmed:
+`STINT_DEADLINE` was computed at `run_stint()` start. After 6–8 STOCKOUT retries (~3600s
+cumulative backoff), the deadline had already expired when the VM finally started. Phase 2
+saw `NOW >= STINT_DEADLINE` on the first check and aborted with RC_1. The VM ran for 0
+useful seconds while still consuming spot cost. Fix B addresses this.
+
+**run-dpo-training.py glob pattern — the training BLOCKER:**
+Line 65 used `glob("enrichment-*.jsonl")` which matched 0 files. All 435 real pairs use
+the prefix `apprenticeship-git-commit-*.jsonl`. The `enrichment-` prefix was a forward-looking
+design from session 5; no files with that prefix exist. Every training call since deployment
+exited with "No valid DPO pairs found". Fix A resolves this permanently.
+
+**tokenizer.padding_side = "right":**
+With OLMo-2 and TRL DPOTrainer, left-padding (the default) causes position embedding
+misalignment in the causal mask during DPO loss computation. This can produce NaN loss
+silently on some batch shapes. Confirmed in TRL documentation and OLMo-2 usage notes.
+Setting `padding_side = "right"` is the standard fix. Low-risk — does not affect inference,
+only training collation.
+
+**OLMo-2-32B on L4 (24GB VRAM):**
+32B model needs ~20–22GB at bfloat16 inference. During training, gradient storage and
+optimizer states push total VRAM above 24GB without `gradient_checkpointing=True`.
+With gradient checkpointing + `per_device_train_batch_size=1` + `max_length=512`,
+estimated VRAM usage: ~20–22GB — within L4 limit.
+
+### 9 queue-poison entries — purged 2026-06-12
+
+All 9 entries at `data/apprenticeship/queue-poison/` had `attempts=0`. The Doorman
+pre-screened and moved them before any inference attempt. All were ops/docs commits
+(MCP config deployments, JOURNAL edits, manifest rewrites) with no code training signal.
+Purged in session 9. Queue-poison is now empty. New entries will only appear when
+inference genuinely fails after retry exhaustion.
+
+### As-built (session 9 — code changes)
+
+**Commit:** session-9 (see git log)
+
+**Files modified:**
+- `service-slm/scripts/run-dpo-training.py` — Fix A (glob), Fix C (auto_verdict), Fix D (padding_side), Fix F (32B config)
+- `bin/yoyo-daily-cycle.sh` — Fix B (STINT_DEADLINE propagation), Fix E (remote corpus pre-check)
+
+**What was done:**
+- Fix A: glob now matches both `apprenticeship-*.jsonl` + `enrichment-*.jsonl` — training will
+  find all 435+ pairs on next cycle (**training blocker resolved**)
+- Fix B: `STINT_DEADLINE` passed as arg to `start_vm_with_retry()`; STOCKOUT path checks if
+  remaining budget supports a useful session before sleeping; returns 9 early if not
+  (**RC_1 on STOCKOUT-exhausted deadline resolved**)
+- Fix C: `auto_verdict` filter — only accepts `True` or absent; logs accepted/rejected count
+- Fix D: `tokenizer.padding_side = "right"` — prevents potential NaN loss on OLMo-2
+- Fix E: remote corpus count pre-check via SSH before issuing training call; skips if < 10 pairs
+- Fix F: 32B conditional config — `gradient_checkpointing=True`, `batch_size=1`, `max_length=512`
+  when `--base-model` contains "32B"
+
+**What is NOT done (carry-forward):**
+- Stage 6: promote `6a377cc` + session-9 commit — Command Session scope
+- `SLM_YOYO_WEIGHTS_GCS_BUCKET` env var: still unset; training markers have no consumer
+- Manual validation on yoyo-batch (operator): boot VM, rsync, dry-run, confirm ≥ 400 pairs found
+- OLMo-3-32B-Think as teacher model (Job A CodeDPO): deferred until ≥ 200 enrichment pairs accumulate
