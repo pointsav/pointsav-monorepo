@@ -1,0 +1,41 @@
+[workspace]
+
+[package]
+name = "system-ledger-pd"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.73"
+license = "AGPL-3.0-or-later"
+description = "seL4 Microkit Protection Domain wrapping InMemoryLedger. Receives ConsultRequest via PPC shared-memory ring; returns ConsultResponse on the same ring. Same wire format as system-ledger-server (Unix socket compat bottom)."
+publish = false
+
+[lib]
+crate-type = ["staticlib"]
+# panic_handler conflicts with the test harness — disable tests in this crate;
+# protocol logic is tested in system-ledger and system-ledger-proto.
+test = false
+
+[features]
+default = []
+# Enable when building for x86_64-unknown-none (seL4 Microkit target).
+# Activates no_std in all transitive dependencies.
+sel4 = [
+    "system-core/sel4",
+    "system-ledger/sel4",
+    "system-ledger-proto/sel4",
+]
+
+[dependencies]
+system-core         = { path = "../system-core",         default-features = false }
+system-ledger       = { path = "../system-ledger",       default-features = false }
+system-ledger-proto = { path = "../system-ledger-proto", default-features = false, features = ["alloc"] }
+ciborium = { version = "0.2", default-features = false }
+linked_list_allocator = { version = "0.10", default-features = false, features = ["use_spin"] }
+postcard = { version = "1", default-features = false, features = ["alloc"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
