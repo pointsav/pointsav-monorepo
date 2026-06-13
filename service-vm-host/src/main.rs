@@ -167,7 +167,9 @@ async fn spawn_handler(
 
 /// DELETE /v1/vms/:vm_id — terminate a QEMU VM by pid file.
 async fn destroy_handler(Path(vm_id): Path<VmId>) -> StatusCode {
-    drop(tokio::task::spawn_blocking(move || vm_spawn::kill_qemu(&vm_id)));
+    drop(tokio::task::spawn_blocking(move || {
+        vm_spawn::kill_qemu(&vm_id)
+    }));
     StatusCode::NO_CONTENT
 }
 
