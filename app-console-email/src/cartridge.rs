@@ -63,6 +63,7 @@ pub struct EmailCartridge {
     compose_focus: ComposeField,
     status: String,
     plain: bool,
+    truecolor: bool,
     refresh_tx: mpsc::SyncSender<()>,
     bg_tx: mpsc::Sender<BgMsg>,
     bg_rx: mpsc::Receiver<BgMsg>,
@@ -97,6 +98,7 @@ impl EmailCartridge {
             compose_focus: ComposeField::To,
             status: "Loading inbox...".into(),
             plain,
+            truecolor: false,
             refresh_tx,
             bg_tx,
             bg_rx,
@@ -206,6 +208,14 @@ impl EmailCartridge {
         self.compose_focus = ComposeField::To;
     }
 
+    fn accent_color(&self) -> Color {
+        if self.truecolor { Color::Rgb(32, 178, 170) } else { Color::Cyan }
+    }
+
+    fn selection_bg(&self) -> Color {
+        if self.truecolor { Color::Rgb(0, 95, 135) } else { Color::DarkGray }
+    }
+
     fn render_inbox(&mut self, frame: &mut Frame, area: Rect) {
         let block = Block::default()
             .title(" Email — Inbox ")
@@ -239,7 +249,7 @@ impl EmailCartridge {
                     Span::styled(
                         marker,
                         if !m.read && !self.plain {
-                            Style::default().fg(Color::Cyan)
+                            Style::default().fg(self.accent_color())
                         } else {
                             Style::default()
                         },
@@ -264,7 +274,7 @@ impl EmailCartridge {
                     Style::default().add_modifier(Modifier::REVERSED)
                 } else {
                     Style::default()
-                        .bg(Color::DarkGray)
+                        .bg(self.selection_bg())
                         .add_modifier(Modifier::BOLD)
                 })
                 .highlight_symbol("> ");
@@ -512,6 +522,10 @@ impl Cartridge for EmailCartridge {
 
     fn title(&self) -> &str {
         "Email"
+    }
+
+    fn set_graphics_caps(&mut self, _kitty: bool, _sixel: bool, _font_size: (u16, u16), truecolor: bool) {
+        self.truecolor = truecolor;
     }
 
     fn tick(&mut self) {
