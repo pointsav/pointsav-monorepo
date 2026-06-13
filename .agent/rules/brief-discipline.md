@@ -1,4 +1,4 @@
-# BRIEF discipline — project-gis
+# BRIEF discipline — project-editorial
 
 Rules for BRIEF-*.md files in this archive.
 Full specification: `/srv/foundry/conventions/brief-discipline.md`
