@@ -5,7 +5,7 @@ brief-id: project-intelligence-active-work
 owner: project-intelligence
 status: active
 created: 2026-06-01
-updated: 2026-06-13
+updated: 2026-06-13 (session 10 — Opus audit; training fixes committed; BRIEF-slm-learning-loop reactivated)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 replaces: BRIEF-active-work.md (missing — never existed on disk)
 companion:
@@ -70,16 +70,16 @@ made a full 5s blocking HTTP request even when service-content was obviously dow
 
 ---
 
-## Current service state (2026-06-01)
+## Current service state (2026-06-13)
 
 | Service | State | Note |
 |---|---|---|
-| `local-doorman.service` | **active** | New binary `2c96603b` (Tier B grammar fix); Tier A primary; `/healthz` returns plain `ok` (no entity_count — known gap); `/readyz` OK incl. P1 zone field |
-| `local-slm.service` (Tier A) | **active** | OLMo 2 7B Q4_K_M; idle ~2% (wedge fixed — was 69 h stuck); serves interactive in ~2–4s |
-| `service-content` | **active** | 7,445 entities; fallback OFF; processed_ledgers.jsonl live |
-| `yoyo-tier-b-1` (Tier B) | **TERMINATED** | L4 stockout; `start-yoyo.sh` to bring up when capacity returns |
-| Apprenticeship drain | **ACTIVE (Tier A)** | `SLM_DRAIN_PAUSED=false` — drain running; 209 real briefs + 76 empty-diff pending; routing to OLMo 7B |
-| Apprenticeship queue | **285 pending / 553 done / 0 poison** | Local flow verified 2026-06-01: Tier A dispatch confirmed, no poison |
+| `local-doorman.service` | **active** | Tier A primary; Tier B circuit OPEN (yoyo-batch TERMINATED, all endpoints down) |
+| `local-slm.service` (Tier A) | **active** | OLMo 2 7B Q4_K_M; serves interactive |
+| `service-content` | **active** | ~9,692 entities (on-disk last verified); `processed_ledgers.jsonl` live |
+| `yoyo-batch` (Tier B) | **TERMINATED** | Day budget consumed Jun 13; next window Jun 14 00:00 UTC; us-central1-a L4 spot |
+| Apprenticeship queue | **289 pending / 2,093 done / 1 poison / 737 quarantine** | Live Doorman `GET /v1/status/queue` Jun 13 |
+| `local-yoyo-daily.service` | **active** | Restart=always, RestartSec=600; single VM lifecycle controller |
 | `local-orchestration-slm.service` | **inactive** | Operator deploy pending (§3) |
 
 ---
@@ -104,17 +104,24 @@ artifacts → recovered). **queue-poison now 0.**
 
 ---
 
-## §2 — Next items: short-term queue (updated 2026-06-01)
+## §2 — Next items: short-term queue (updated 2026-06-13)
 
-- [ ] **SFT extraction script** — `service-slm/scripts/extract-sft-pairs.py`
-  Extract 544 ground-truth pairs from `queue-done/*.jsonl` for LoRA training.
+- [ ] **First successful LoRA training run** — Jun 14 00:00 UTC cycle; all known code bugs fixed
+  (commits `2b48bc75`, `06435048`, `3eed6cc4`, `a6ccdf04`). See `BRIEF-slm-learning-loop.md` §16.
 
-- [ ] **Stage 6** — commits pending promote after this session's work
+- [ ] **Tokenization mismatch verification** — confirm the conversational-format fix eliminates
+  TRL mismatch warnings on first real training pass.
 
-- [ ] **Disabled systemd unit cleanup** — check/remove `drain-apprenticeship.service`/timer
+- [ ] **Stage 6 promote** — `2b48bc75`, `06435048`, `3eed6cc4`, `a6ccdf04` (project-intelligence)
+  + workspace `d94043f`, `0a0e9f9` — Command Session scope.
 
-- [ ] **Yo-Yo 1h test** — when us-central1-a L4 capacity returns:
-  `service-slm/scripts/start-yoyo.sh --wait-ready=120 --runtime=1h`
+- [ ] **Phase 4b ledger bug** — SHA written on 202-ACK not Tier-B-completion; 1,281 commits
+  permanently unreachable for enrichment pairs. Fix in `yoyo-daily-cycle.sh` Phase 4b.
+
+- [ ] **Tier B GPU restoration** — BLOCKER for enrichment DPO pairs; operator/Command scope;
+  no `--enable-zone-fallback`.
+
+- [ ] **Disabled systemd unit cleanup** — check/remove `drain-apprenticeship.service`/timer.
 
 ---
 
@@ -128,18 +135,21 @@ artifacts → recovered). **queue-poison now 0.**
 
 ---
 
-## §4 — Medium-term (sessions 16–20)
+## §4 — Medium-term
 
 - [ ] P3: orchestration-slm persistence (Redb/SQLite)
-- [ ] SFT extraction script → first LoRA fine-tuning run
-- [ ] CodeDPO scaffold (GPU-gated)
-- [ ] Exclude corrupt DPO tuples (548 empty-OLMo-diff entries)
+- [ ] SFT-first path: `export-sft.sh` → SFT training on chosen diffs (higher EV than DPO at 472 pairs)
+- [ ] CodeDPO scaffold (GPU-gated; needs Tier B + execution-validated pairs)
+- [ ] Enrichment canonical-set comparison: fix string compare in service-content/src/main.rs
 - [ ] drain-apprenticeship.service/timer cleanup
+- [ ] `num_train_epochs` decision: bump vs fresh-run-on-corpus-growth
 
 ---
 
 ## §5 — What NOT to do
 
-- Do NOT train on the 548 existing shadow-capture tuples (empty OLMo diffs — harmful)
-- Do NOT run CPU drain for DPO — OLMo 7B cannot generate useful code critique
-- Do NOT combine SFT+DPO at this data scale (<5K samples)
+- Do NOT run CPU drain for DPO — OLMo 7B cannot reliably critique code on CPU; GPU (Tier B) only
+- Do NOT include empty-rejected / empty-diff tuples in training — corpus filter already handles this
+- Do NOT combine SFT+DPO at current scale (<5K pairs) — DPO below ~1,410 pairs is outperformed by SFT alone (arxiv 2603.20100)
+- Do NOT suggest `--enable-zone-fallback` for yoyo-batch — zone migration cost too high
+- Do NOT enable Tier C for training — Anthropic ToS §2.c: Claude outputs may not train OLMo
