@@ -1,0 +1,35 @@
+[Unit]
+Description=os-console (SSH TUI operator gateway, port 2222)
+Documentation=https://documentation.pointsav.com/wiki/os-console-architecture
+After=network-online.target local-doorman.service
+Wants=network-online.target
+# Pair service must be up before the console so pairing ceremony can complete.
+Requires=local-pairing-server.service
+
+[Service]
+Type=simple
+User=foundry
+Group=foundry
+
+WorkingDirectory=/opt/console/data
+
+Environment="HOME=/opt/console/data"
+Environment="RUST_LOG=info"
+# ConsoleConfig loads from $HOME/.config/os-console/config.toml
+# Port 2222 is hardcoded in the ssh-server feature build.
+
+ExecStart=/opt/console/bin/os-console
+
+Restart=on-failure
+RestartSec=5s
+
+MemoryMax=256M
+CPUQuota=100%
+
+NoNewPrivileges=true
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
