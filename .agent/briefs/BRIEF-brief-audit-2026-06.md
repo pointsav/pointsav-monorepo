@@ -1,10 +1,10 @@
 ---
 artifact: brief
 schema: foundry-brief-v1
-brief-id: project-design-brief-audit-2026-06
-title: "BRIEF audit — project-design — 2026-06"
+brief-id: project-intelligence-brief-audit-2026-06
+title: "BRIEF audit — project-intelligence — 2026-06"
 status: active
-owner: project-design
+owner: project-intelligence
 created: 2026-06-12
 updated: 2026-06-12
 ---
@@ -13,9 +13,9 @@ updated: 2026-06-12
 Automated BRIEF audit run 2026-06-12 (command@claude-code, Phase D governance sprint).
 Applies governance rules from `conventions/brief-discipline.md` (committed 2026-06-12).
 
-project-design has one legitimate active BRIEF (app-privategit-design), but four contaminated project-intelligence BRIEFs remain at root level instead of being moved to archive/ as the README documents they should be; all BRIEFs are missing required schema/brief-id/title/owner frontmatter fields.
+project-intelligence has 4–5 active BRIEFs (one, BRIEF-slm-substrate-master, is declared superseded by BRIEF-project-intelligence-master but still carries status: active); every BRIEF is missing multiple required frontmatter fields (schema, brief-id, owner); the README.md active-briefs table is empty; and AI-AUDIT-baseline-2026-05-31.md lacks the BRIEF- filename prefix and foundry-brief-v1 schema.
 
-Active: 1 / Total: 5
+Active: 4 / Total: 8
 
 ## Scope
 Review all existing BRIEFs in this archive against the Phase A governance spec.
@@ -32,46 +32,49 @@ Out of scope: content quality review; this is structural + schema compliance onl
 
 | File | Current status | Recommended action | Reason |
 |------|---------------|-------------------|--------|
-| `/srv/foundry/clones/project-design/.agent/briefs/BRIEF-app-privategit-design.md` | active | fix-schema | Missing required frontmatter fields: schema (foundry-brief-v1), brief-id (project-design-app-privategit-design), title (in body H1 but not frontmatter), owner. Also updated value '2026-06-08-b' is a non-standard date suffix — should be ISO 8601 date only. |
-| `/srv/foundry/clones/project-design/.agent/briefs/BRIEF-slm-learning-loop.md` | active | migrate-to-archive → /srv/foundry/clones/project-design/.agent/briefs/archive/BRIEF-slm-learning-loop.md | Belongs to project-intelligence (SLM/DPO training pipeline). README archived-briefs table already lists it as a contamination artifact to redistribute to project-intelligence, but the file was never physically moved to archive/. Status should be changed to 'archived' and file git-mv'd to briefs/archive/. |
-| `/srv/foundry/clones/project-design/.agent/briefs/BRIEF-slm-substrate-master.md` | active | migrate-to-archive → /srv/foundry/clones/project-design/.agent/briefs/archive/BRIEF-slm-substrate-master.md | Belongs to project-intelligence (Yo-Yo VM + Doorman + tier routing). README archived-briefs table already lists it as contamination to redistribute to project-intelligence, but the file was never physically moved to archive/. Status should be changed to 'archived' and file git-mv'd to briefs/archive/. |
-| `/srv/foundry/clones/project-design/.agent/briefs/BRIEF-dev-env-mcp-expansion.md` | archived | migrate-to-archive → /srv/foundry/clones/project-design/.agent/briefs/archive/BRIEF-dev-env-mcp-expansion.md | Status is correctly 'archived' but file remains at briefs/ root level rather than briefs/archive/. Content covers slm-mcp-server MCP expansion — project-intelligence scope. Should be git-mv'd to archive/ to match the README archived table intent. Also missing schema, brief-id, title, owner frontmatter. |
-| `/srv/foundry/clones/project-design/.agent/briefs/AI-AUDIT-baseline-2026-05-31.md` | active | migrate-to-archive → /srv/foundry/clones/project-design/.agent/briefs/archive/AI-AUDIT-baseline-2026-05-31.md | Not a BRIEF (missing BRIEF- filename prefix). Belongs to project-intelligence (audit of service-slm/service-content/app-orchestration-slm). README archived table lists it as contamination. Status should change to 'archived', file renamed to BRIEF-ai-audit-baseline-2026-05-31.md and git-mv'd to archive/. Missing schema, brief-id, title, owner frontmatter. |
+| `BRIEF-slm-substrate-master.md` | active | rename-status | BRIEF-project-intelligence-master.md explicitly lists this in its supersedes: field and declares itself PRIMARY PLAN OF RECORD. The substrate master predates the master BRIEF and covers a subset of the same domain. It should carry status: superseded, not status: active, so it does not count against the soft cap. |
+| `BRIEF-project-intelligence-active-work.md` | active | fix-schema | Missing required frontmatter fields: schema (must be foundry-brief-v1), brief-id (must be project-intelligence-<slug>), title, and owner. Body does not follow the required section order (Context → Scope → Decisions locked → Decisions open → Work log → Carry-forward). |
+| `BRIEF-project-intelligence-master.md` | active | fix-schema | Missing required frontmatter fields: brief-id (must be project-intelligence-<slug>) and owner. Schema field is present. This is the primary plan of record and should be the first BRIEF corrected. |
+| `BRIEF-slm-learning-loop.md` | active | fix-schema | Missing required frontmatter fields: schema (must be foundry-brief-v1), brief-id (must be project-intelligence-<slug>), and owner. The updated field is present and current (2026-06-12). |
+| `BRIEF-dev-env-mcp-expansion.md` | archived | fix-schema | Missing required frontmatter fields: schema, brief-id, title, and owner. Even archived BRIEFs are permanent git-tracked artifacts and should carry complete frontmatter per brief-discipline.md. |
+| `AI-AUDIT-baseline-2026-05-31.md` | active | fix-schema | This file does not follow the BRIEF-*.md naming convention, uses the wrong schema (no schema field; frontmatter is gemini-cli authored and lacks foundry-brief-v1 structure), and is missing brief-id, title, owner, and updated fields. It should be renamed to BRIEF-ai-audit-baseline-2026-05-31.md and its frontmatter brought into compliance, or superseded by a properly formed BRIEF if its content has been absorbed elsewhere. |
+| `BRIEF-vm-hardening-and-consolidation.md` | archived | keep-active | Already archived with a contamination note and absorbed_into reference. Frontmatter is incomplete (missing schema, brief-id, owner) but the BRIEF is correctly retired. No action required beyond noting the missing fields in a future fix-schema pass. |
+| `BRIEF-substrate-phd-thesis-2026-05-27.md` | archived | fix-schema | Uses schema: foundry-journal-v1 and artifact_type: JOURNAL rather than artifact: brief / schema: foundry-brief-v1. Correctly marked archived. Missing brief-id and owner. If this is intended as an archived BRIEF it needs the correct schema; if it is a JOURNAL artifact it should be routed to project-editorial drafts-outbound, not stored in .agent/briefs/. |
 
 ## Consolidation opportunities
 
-_No consolidation opportunities identified._
+**Suggested: "project-intelligence Master BRIEF — Sovereign AI Platform for SMBs (with integrated work log)"**
+- Files: BRIEF-project-intelligence-active-work.md, BRIEF-project-intelligence-master.md
+- Reason: Both files cover project-intelligence session state and active work planning. BRIEF-project-intelligence-master.md is the declared plan of record (§15 open items, §2 live state, §16 sprint plan). BRIEF-project-intelligence-active-work.md duplicates live state (§mem memory incident, §0 resolved items, §2 next items) that belongs in the master BRIEF's work log. The active-work BRIEF should be folded into the master as a Work log section and then archived.
 
 ## Missing governance
 
-- BRIEF-app-privategit-design.md: missing frontmatter field schema (required: foundry-brief-v1)
-- BRIEF-app-privategit-design.md: missing frontmatter field brief-id (required: project-design-app-privategit-design)
-- BRIEF-app-privategit-design.md: missing frontmatter field title (title present in H1 body but not in frontmatter)
-- BRIEF-app-privategit-design.md: missing frontmatter field owner
-- BRIEF-app-privategit-design.md: updated field value '2026-06-08-b' is non-standard — ISO 8601 date only required
-- BRIEF-slm-learning-loop.md: missing frontmatter fields schema, brief-id, title, owner
-- BRIEF-slm-learning-loop.md: file at briefs/ root but README documents it as archived/moved to archive/ — file never physically relocated
-- BRIEF-slm-substrate-master.md: missing frontmatter fields schema, brief-id, title, owner
-- BRIEF-slm-substrate-master.md: file at briefs/ root but README documents it as archived/moved to archive/ — file never physically relocated
-- BRIEF-dev-env-mcp-expansion.md: missing frontmatter fields schema, brief-id, title, owner
-- BRIEF-dev-env-mcp-expansion.md: status is 'archived' but file remains at briefs/ root level instead of briefs/archive/
-- AI-AUDIT-baseline-2026-05-31.md: non-canonical filename — missing BRIEF- prefix required by brief-discipline.md
-- AI-AUDIT-baseline-2026-05-31.md: missing frontmatter fields schema, brief-id, title, owner
-- README.md: active-briefs table is accurate (lists only BRIEF-app-privategit-design.md) but archived-briefs table references files not yet moved to archive/ — divergence between README state and actual filesystem state
+- README.md active-briefs table is empty — no rows; all active BRIEFs are unlisted
+- brief-id field absent from all BRIEFs: BRIEF-project-intelligence-active-work.md, BRIEF-project-intelligence-master.md, BRIEF-slm-learning-loop.md, BRIEF-slm-substrate-master.md, BRIEF-dev-env-mcp-expansion.md, AI-AUDIT-baseline-2026-05-31.md, BRIEF-vm-hardening-and-consolidation.md, BRIEF-substrate-phd-thesis-2026-05-27.md
+- owner field absent from all BRIEFs (same 8 files)
+- schema field absent from: BRIEF-project-intelligence-active-work.md, BRIEF-slm-learning-loop.md, BRIEF-slm-substrate-master.md, BRIEF-dev-env-mcp-expansion.md, AI-AUDIT-baseline-2026-05-31.md, BRIEF-vm-hardening-and-consolidation.md
+- AI-AUDIT-baseline-2026-05-31.md does not follow BRIEF-*.md filename convention
+- BRIEF-slm-substrate-master.md carries status: active despite being declared superseded by BRIEF-project-intelligence-master.md
+- BRIEF-substrate-phd-thesis-2026-05-27.md uses schema: foundry-journal-v1 instead of schema: foundry-brief-v1 — wrong artifact type stored in briefs/
 
 ## New BRIEFs needed
 
-- **BRIEF-design-token-intake-pipeline**: Inbox shows 3 pending DESIGN-TOKEN-CHANGE dispatches from project-documents, project-orgcharts, and project-workplace — each requiring master_cosign verification and commit to pointsav-design-system. Session context shows this is a recurring cross-archive workflow with multi-session continuity requirements (blocked drafts, cosign tracking, Stage 6 pending). A BRIEF would track the token intake queue, cosign state, and pending Stage 6 promotes across sessions, replacing ad-hoc tracking in session-context.md.
+- **Tier B GPU restoration and zone strategy**: BRIEF-slm-learning-loop.md §14 (2026-06-12 audit) identifies restoring Tier B GPU as the single blocker for DPO pairs and training. This is a multi-session infrastructure decision (zone selection, yoyo-batch reprovisioning, fallback policy) that is orthogonal to the learning loop BRIEF's training pipeline scope and warrants its own trackable artifact.
+- **Phase 4b DataGraph sweep ledger bug and enrichment pipeline correctness**: BRIEF-slm-learning-loop.md §14 (2026-06-12 audit) identifies two high-priority code faults — SHA ledger written on 202-queue ACK instead of enrichment success (permanently poisoning 400 commits) and SLM_YOYO_WEIGHTS_GCS_BUCKET unset. These are distinct from the training pipeline design (learning loop BRIEF) and from infrastructure (Tier B BRIEF), and have enough open decisions (ledger fix, GCS bucket setup, training budget floor) to warrant a dedicated BRIEF for multi-session tracking.
 
 ## Work log
 
-2026-06-12 command@claude-code: Automated audit run. 1 active, 5 total BRIEFs reviewed.
+2026-06-12 command@claude-code: Automated audit run. 4 active, 8 total BRIEFs reviewed.
 
 ## Carry-forward
 
-- [ ] fix-schema: `/srv/foundry/clones/project-design/.agent/briefs/BRIEF-app-privategit-design.md` — Missing required frontmatter fields: schema (foundry-brief-v1), brief-id (project-design-app-privategit-design), title (in body H1 but not frontmatter), owner. Also updated value '2026-06-08-b' is a non-standard date suffix — should be ISO 8601 date only.
-- [ ] migrate-to-archive: `/srv/foundry/clones/project-design/.agent/briefs/BRIEF-slm-learning-loop.md` — Belongs to project-intelligence (SLM/DPO training pipeline). README archived-briefs table already lists it as a contamination artifact to redistribute to project-intelligence, but the file was never physically moved to archive/. Status should be changed to 'archived' and file git-mv'd to briefs/archive/.
-- [ ] migrate-to-archive: `/srv/foundry/clones/project-design/.agent/briefs/BRIEF-slm-substrate-master.md` — Belongs to project-intelligence (Yo-Yo VM + Doorman + tier routing). README archived-briefs table already lists it as contamination to redistribute to project-intelligence, but the file was never physically moved to archive/. Status should be changed to 'archived' and file git-mv'd to briefs/archive/.
-- [ ] migrate-to-archive: `/srv/foundry/clones/project-design/.agent/briefs/BRIEF-dev-env-mcp-expansion.md` — Status is correctly 'archived' but file remains at briefs/ root level rather than briefs/archive/. Content covers slm-mcp-server MCP expansion — project-intelligence scope. Should be git-mv'd to archive/ to match the README archived table intent. Also missing schema, brief-id, title, owner frontmatter.
-- [ ] migrate-to-archive: `/srv/foundry/clones/project-design/.agent/briefs/AI-AUDIT-baseline-2026-05-31.md` — Not a BRIEF (missing BRIEF- filename prefix). Belongs to project-intelligence (audit of service-slm/service-content/app-orchestration-slm). README archived table lists it as contamination. Status should change to 'archived', file renamed to BRIEF-ai-audit-baseline-2026-05-31.md and git-mv'd to archive/. Missing schema, brief-id, title, owner frontmatter.
-- [ ] Create BRIEF for: BRIEF-design-token-intake-pipeline
+- [ ] rename-status: `BRIEF-slm-substrate-master.md` — BRIEF-project-intelligence-master.md explicitly lists this in its supersedes: field and declares itself PRIMARY PLAN OF RECORD. The substrate master predates the master BRIEF and covers a subset of the same domain. It should carry status: superseded, not status: active, so it does not count against the soft cap.
+- [ ] fix-schema: `BRIEF-project-intelligence-active-work.md` — Missing required frontmatter fields: schema (must be foundry-brief-v1), brief-id (must be project-intelligence-<slug>), title, and owner. Body does not follow the required section order (Context → Scope → Decisions locked → Decisions open → Work log → Carry-forward).
+- [ ] fix-schema: `BRIEF-project-intelligence-master.md` — Missing required frontmatter fields: brief-id (must be project-intelligence-<slug>) and owner. Schema field is present. This is the primary plan of record and should be the first BRIEF corrected.
+- [ ] fix-schema: `BRIEF-slm-learning-loop.md` — Missing required frontmatter fields: schema (must be foundry-brief-v1), brief-id (must be project-intelligence-<slug>), and owner. The updated field is present and current (2026-06-12).
+- [ ] fix-schema: `BRIEF-dev-env-mcp-expansion.md` — Missing required frontmatter fields: schema, brief-id, title, and owner. Even archived BRIEFs are permanent git-tracked artifacts and should carry complete frontmatter per brief-discipline.md.
+- [ ] fix-schema: `AI-AUDIT-baseline-2026-05-31.md` — This file does not follow the BRIEF-*.md naming convention, uses the wrong schema (no schema field; frontmatter is gemini-cli authored and lacks foundry-brief-v1 structure), and is missing brief-id, title, owner, and updated fields. It should be renamed to BRIEF-ai-audit-baseline-2026-05-31.md and its frontmatter brought into compliance, or superseded by a properly formed BRIEF if its content has been absorbed elsewhere.
+- [ ] fix-schema: `BRIEF-substrate-phd-thesis-2026-05-27.md` — Uses schema: foundry-journal-v1 and artifact_type: JOURNAL rather than artifact: brief / schema: foundry-brief-v1. Correctly marked archived. Missing brief-id and owner. If this is intended as an archived BRIEF it needs the correct schema; if it is a JOURNAL artifact it should be routed to project-editorial drafts-outbound, not stored in .agent/briefs/.
+- [ ] Consolidate BRIEF-project-intelligence-active-work.md + BRIEF-project-intelligence-master.md → "project-intelligence Master BRIEF — Sovereign AI Platform for SMBs (with integrated work log)"
+- [ ] Create BRIEF for: Tier B GPU restoration and zone strategy
+- [ ] Create BRIEF for: Phase 4b DataGraph sweep ledger bug and enrichment pipeline correctness
