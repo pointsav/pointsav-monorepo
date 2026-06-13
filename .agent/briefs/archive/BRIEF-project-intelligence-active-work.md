@@ -1,13 +1,19 @@
 ---
 artifact: brief
-status: active
+schema: foundry-brief-v1
+brief-id: project-intelligence-active-work
+title: "project-intelligence Active Work — Memory Hardening + Drain"
+status: archived
+owner: project-intelligence
 created: 2026-06-01
-updated: 2026-06-02
+updated: 2026-06-12
 author: totebox@project-intelligence (claude-sonnet-4-6)
 replaces: BRIEF-active-work.md (missing — never existed on disk)
 companion:
   - BRIEF-slm-substrate-master.md
   - BRIEF-slm-learning-loop.md
+moved_to: project-intelligence
+archived: 2026-06-12
 ---
 
 # BRIEF — project-intelligence Active Work

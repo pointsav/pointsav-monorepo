@@ -1,11 +1,15 @@
 ---
 artifact: brief
 schema: foundry-brief-v1
-status: active
+brief-id: project-intelligence-master
 title: "project-intelligence Master BRIEF — Sovereign AI Platform for SMBs"
+status: archived
+owner: project-intelligence
 created: 2026-06-04
-updated: 2026-06-04
+updated: 2026-06-12
 author: totebox@project-intelligence (claude-sonnet-4-6)
+moved_to: project-intelligence
+archived: 2026-06-12
 supersedes:
   - BRIEF-slm-substrate-master.md
   - BRIEF-yoyo-cloud-run-migration.md

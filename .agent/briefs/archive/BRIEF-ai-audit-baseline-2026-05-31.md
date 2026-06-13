@@ -1,9 +1,16 @@
 ---
 artifact: brief
-status: active
+schema: foundry-brief-v1
+brief-id: project-intelligence-ai-audit-baseline-2026-05
+title: "AI Audit Baseline — project-intelligence Ecosystem 2026-05"
+status: archived
+owner: project-intelligence
 created: 2026-05-31
+updated: 2026-06-12
 author: gemini-cli (totebox@project-intelligence)
 reviewed: 2026-06-01 claude-sonnet-4-6
+moved_to: project-intelligence
+archived: 2026-06-12
 ---
 
 # AI-Auditable Baseline Brief: project-intelligence Ecosystem
