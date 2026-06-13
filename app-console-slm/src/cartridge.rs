@@ -73,15 +73,27 @@ impl SlmCartridge {
     }
 
     fn accent_color(&self) -> Color {
-        if self.truecolor { Color::Rgb(32, 178, 170) } else { Color::Cyan }
+        if self.truecolor {
+            Color::Rgb(32, 178, 170)
+        } else {
+            Color::Cyan
+        }
     }
 
     fn ok_color(&self) -> Color {
-        if self.truecolor { Color::Rgb(0, 200, 83) } else { Color::Green }
+        if self.truecolor {
+            Color::Rgb(0, 200, 83)
+        } else {
+            Color::Green
+        }
     }
 
     fn warn_color(&self) -> Color {
-        if self.truecolor { Color::Rgb(255, 165, 0) } else { Color::Yellow }
+        if self.truecolor {
+            Color::Rgb(255, 165, 0)
+        } else {
+            Color::Yellow
+        }
     }
 
     fn render_dashboard(&self, frame: &mut Frame, area: Rect) {
@@ -390,7 +402,13 @@ impl Cartridge for SlmCartridge {
         "SLM"
     }
 
-    fn set_graphics_caps(&mut self, _kitty: bool, _sixel: bool, _font_size: (u16, u16), truecolor: bool) {
+    fn set_graphics_caps(
+        &mut self,
+        _kitty: bool,
+        _sixel: bool,
+        _font_size: (u16, u16),
+        truecolor: bool,
+    ) {
         self.truecolor = truecolor;
     }
 

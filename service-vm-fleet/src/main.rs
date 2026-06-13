@@ -176,10 +176,7 @@ async fn create_vm_handler(
 }
 
 /// DELETE /v1/vms/:vm_id — find the owning node, delegate destroy, then remove from registry.
-async fn destroy_vm_handler(
-    State(state): State<AppState>,
-    Path(vm_id): Path<VmId>,
-) -> StatusCode {
+async fn destroy_vm_handler(State(state): State<AppState>, Path(vm_id): Path<VmId>) -> StatusCode {
     let node_wg_ip = {
         let reg = state.registry.read().await;
         reg.find_vm_node_wg_ip(&vm_id)
