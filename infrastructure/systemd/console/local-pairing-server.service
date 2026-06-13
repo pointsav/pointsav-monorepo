@@ -1,0 +1,32 @@
+[Unit]
+Description=pairing-server (MBA pairing ceremony HTTP API, port 9201)
+Documentation=https://documentation.pointsav.com/wiki/os-console-architecture
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=foundry
+Group=foundry
+
+WorkingDirectory=/opt/console/data
+
+Environment="HOME=/opt/console/data"
+Environment="RUST_LOG=info"
+
+# Binds to 0.0.0.0:9201 — accessible only from paired peers on the WireGuard subnet.
+ExecStart=/opt/console/bin/pairing-server 0.0.0.0:9201
+
+Restart=on-failure
+RestartSec=5s
+
+MemoryMax=64M
+CPUQuota=25%
+
+NoNewPrivileges=true
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
