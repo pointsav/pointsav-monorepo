@@ -29,10 +29,10 @@
 extern crate alloc;
 #[cfg(not(feature = "std"))]
 use alloc::{
+    collections::BTreeSet,
     format,
     string::{String, ToString},
     vec::Vec,
-    collections::BTreeSet,
 };
 #[cfg(feature = "std")]
 use std::collections::HashSet;
