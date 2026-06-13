@@ -1,3 +1,3 @@
-# Memory Index — project-infrastructure
+# Memory Index — project-gis
 
-- [Session Context](session-context.md) — rolling 3-session summary: done, pending, operator preferences
+- [Session Context](session-context.md) — rolling session summary: done, pending, operator preferences
