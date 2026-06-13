@@ -19,6 +19,11 @@ pub struct NodeHeartbeat {
     pub cpu_load_pct: f32,
     /// Whether /dev/kvm is present on this node (hardware-accelerated virtualization).
     pub kvm_available: bool,
+    /// When true, this node is reserved for other purposes and should only receive
+    /// VM placement as a last resort (all non-reserved nodes are exhausted first).
+    /// Set via VM_RESERVED=true in the node's environment.
+    #[serde(default)]
+    pub reserved: bool,
     pub vms: Vec<VmRecord>,
     pub boot_id: String,
     pub timestamp_utc: DateTime<Utc>,
@@ -70,6 +75,9 @@ pub struct NodeRecord {
     pub vm_count: u32,
     /// Whether /dev/kvm is present on this node, as last reported by its heartbeat.
     pub kvm_available: bool,
+    /// Node is reserved for other purposes; only used as last-resort placement fallback.
+    #[serde(default)]
+    pub reserved: bool,
     pub last_heartbeat: DateTime<Utc>,
 }
 
@@ -103,6 +111,7 @@ mod tests {
             cpu_cores: 4,
             cpu_load_pct: 12.5,
             kvm_available: true,
+            reserved: false,
             vms: vec![],
             boot_id: "abc-123".to_string(),
             timestamp_utc: Utc::now(),
@@ -146,6 +155,7 @@ mod tests {
                 ram_available_mb: 6144,
                 vm_count: 0,
                 kvm_available: true,
+                reserved: false,
                 last_heartbeat: Utc::now(),
             }],
             last_updated: Utc::now(),

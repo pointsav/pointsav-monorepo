@@ -33,6 +33,11 @@ async fn main() {
         .unwrap_or_else(|_| "9204".into())
         .parse()
         .expect("VM_SPAWN_PORT must be a valid port number");
+    // When true, this node requests last-resort-only placement (won't receive VMs unless
+    // all non-reserved nodes are exhausted). Set VM_RESERVED=true for nodes in active use.
+    let node_reserved: bool = std::env::var("VM_RESERVED")
+        .map(|v| v.eq_ignore_ascii_case("true") || v == "1")
+        .unwrap_or(false);
 
     let hostname = read_file_trimmed("/etc/hostname");
     let boot_id = read_file_trimmed("/proc/sys/kernel/random/boot_id");
@@ -72,6 +77,7 @@ async fn main() {
             hb_hostname,
             hb_boot_id,
             interval_secs,
+            node_reserved,
         ),
     );
 }
@@ -83,6 +89,7 @@ async fn heartbeat_loop(
     hostname: String,
     boot_id: String,
     interval_secs: u64,
+    reserved: bool,
 ) {
     let client = reqwest::Client::new();
     loop {
@@ -98,6 +105,7 @@ async fn heartbeat_loop(
             cpu_cores: stats.cpu_cores,
             cpu_load_pct: stats.cpu_load_pct,
             kvm_available: stats.kvm_available,
+            reserved,
             vms,
             boot_id: boot_id.clone(),
             timestamp_utc: Utc::now(),
