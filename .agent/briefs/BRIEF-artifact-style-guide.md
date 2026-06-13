@@ -389,6 +389,26 @@ facets. Enforce on every article touched.
 **Reader:** dual — engineer and institutional/financial reader; secondary audience must
 survive the first paragraph of every section.
 
+**Diátaxis alignment (diataxis.fr):** TOPIC operates across two quadrants — Explanation
+(WHY/HOW) and Reference (lookup what). To serve both reader modes without splitting the
+file, use this two-section internal convention when both are present:
+
+```
+## Understanding <X>   ← narrative explanatory lead (WHY / HOW it works)
+## <Body sections>
+## Reference           ← structured lookup table / field inventory (when needed)
+```
+
+A purely explanatory TOPIC omits the Reference section. A purely reference-lookup TOPIC
+omits the Understanding section. A GUIDE must not re-explain concepts (link back to
+the TOPIC instead). A TOPIC must not contain environment-specific commands, hostnames,
+or one-time procedures (those belong in the GUIDE). Enforce at PR review; future CI gate.
+
+**Bilingual staleness:** add `l10n.sourceCommit: <SHA>` to every ES TOPIC frontmatter,
+pointing at the EN commit it was translated from. Diff `git log <sha>..HEAD` on the EN file
+to detect substantive edits not yet translated. Until CI enforces this, the field is the
+audit surface for staleness detection.
+
 ### 9.3 JOURNAL — additions to existing 22-section skeleton
 
 Keep the full 22-section mandatory structure from `journal-artifact-discipline.md`. Add:
@@ -513,10 +533,27 @@ web-ifc 0.77) so when a standard version changes, there is one canonical place t
 
 ## §10 — Language Protocol standards
 
+### Tracking state (three files, partially inconsistent)
+
+The language protocol enum is currently tracked across three loosely-coupled files:
+
+1. `~/Foundry/conventions/artifact-classification.yaml` — machine-readable routing;
+   uses wildcard families (`COMMS-*`, `LEGAL-*`, `TRANSLATE-*`, `BIM-*`), NOT leaf values
+2. **This section (§10)** — closed leaf enum; authoritative for editorial decisions
+3. `substrate/language-protocol-substrate.md` (+`.es.md`) — conceptual architecture;
+   not an enum registry
+
+**No dedicated BRIEF is needed** — the gap is the machine-readable closed enum, not the
+editorial documentation. Command Session should expand `artifact-classification.yaml` with
+explicit leaf values matching the enum below, then this section's claim "From
+`artifact-classification.yaml`" will be accurate. Until that update lands, §10 is the
+single authority for valid values.
+
 ### Canonical `language_protocol:` enum
 
-From `artifact-classification.yaml`. All other values are normalization targets —
-normalize on the next substantive edit to that file.
+From `artifact-classification.yaml` (pending expansion to closed leaf values — see above).
+All other values are normalization targets — normalize on the next substantive edit to
+that file.
 
 ```
 PROSE-TOPIC        PROSE-GUIDE        PROSE-README       PROSE-RESEARCH
@@ -558,7 +595,9 @@ objetivo*, *podría*, *está planificado/a*, *se anticipa*. Never bare future te
 (*será*, *estará*) for forward-looking claims — it removes the hedge.
 
 **Staleness check:** `paired_with:` field + matching `last_edited` date. When the EN
-article updates, the ES pair must update in the same session.
+article updates, the ES pair must update in the same session. Add
+`l10n.sourceCommit: <SHA>` to ES article frontmatter (see §9.2 bilingual staleness) to
+enable commit-based staleness detection independent of date fields.
 
 **Tooling gap — `GLOSSARY.es.md` does not exist.** This is the enforcement mechanism for
 terminology consistency across ES articles. Per DOCTRINE §XII roadmap item. Create the stub;
@@ -800,11 +839,92 @@ per site.
 
 | Brief | Action | Date |
 |---|---|---|
-| `BRIEF-artifact-style-guide.md` | Master BRIEF — expanded with §9–§13 above | 2026-06-11 |
+| `BRIEF-artifact-style-guide.md` | Master BRIEF — expanded with §9–§15 | 2026-06-12 |
 | `BRIEF-phase-fg-institutional-redesign.md` | Content absorbed into §13; `status: archived` | 2026-06-11 |
 | `BRIEF-regional-markets-system.md` | Retained as domain reference artifact — not editorial workflow | 2026-06-11 |
 | `audit-foundry-wide-2026-05-16.md` | Retained as audit log artifact — not a BRIEF | 2026-06-11 |
-| `archive/BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` | `status: archived` — work complete per 2026-05-22 close-out | 2026-06-11 |
+| `BRIEF-brief-audit-2026-06.md` | Retained — project-editorial self-audit artifact | 2026-06-12 |
+| `BRIEF-cross-platform-release.md` | `status: contaminated` (project-console); archived in prior session | 2026-06-12 |
+| `BRIEF-dev-env-mcp-expansion.md` | `status: archived` (prior session) | 2026-06-12 |
+| `BRIEF-knowledge-platform-master.md` | `status: contaminated` (cluster: project-knowledge) | 2026-06-12 |
+| `BRIEF-os-totebox-ppn-build-out.md` | `status: contaminated` (archive: project-data) | 2026-06-12 |
+| `BRIEF-project-console-master.md` | `status: contaminated` (project-console); archived in prior session | 2026-06-12 |
+| `BRIEF-project-intelligence-active-work.md` | `status: contaminated` (project-intelligence) | 2026-06-12 |
+
+---
+
+## §15 — Writing quality programme (C- → publishable)
+
+### The diagnosis
+
+Generation and enforcement currently occur in the same pass. Claude drafts and validates
+in one step. The result is technically accurate prose that is: abstract, passive-voice
+heavy, rhythmically monotone, opener/closer heavy, and filled with filler hedges. The
+Bloomberg standard rule exists in §10 prose but has no enforcement mechanism.
+
+### The fix: two-pass architecture
+
+**Pass 1 — Generation with a style-anchored prompt:**
+The system prompt must name a specific register AND provide 2–3 actual Bloomberg/Economist
+exemplar sentences as few-shot examples. "Write like Bloomberg" is not a constraint —
+specific examples are. Supply the per-artifact rhetorical-move template from §9 as the
+structural scaffold before generating.
+
+**Pass 2 — Deterministic audit (use the `.claude/skills/editorial-audit.md` skill):**
+Run a separate vocabulary and structure check after generation, before committing. The
+skill (`invoke: /editorial-audit`) checks:
+
+**Tier 1 forbidden (always flag):**
+leverage, robust, seamless, utilize, cutting-edge, next-generation, groundbreaking,
+revolutionary, transformative, game-changing, state-of-the-art, unprecedented, innovative,
+"deploy" used as metaphor, "harness" used as metaphor
+
+**AI writing tells (flag on clustering):**
+"In today's rapidly evolving", "It's worth noting that", "When it comes to", "Let's explore",
+"Consider this", bold-label paragraphs ("**Term.** Explanation."), summary-closer that
+restates the opener verbatim, uniform sentence length (every sentence 20–25 words is
+rhythmically wrong, same as all 8-word sentences)
+
+**Per-artifact structural checks:**
+
+| Artifact | Check |
+|---|---|
+| TOPIC | Lede carries concrete claim in sentence 1? ≥1 diagram for architecture topics? "See also" exists with rationale? |
+| GUIDE | Scope paragraph names time-to-complete? Procedure has blast-radius statement? Verification section has expected output? |
+| JOURNAL | Abstract ≤250 words with magnitude in sentence 1? Results section has actual data (not "pending")? All cited DOIs verified against real papers? |
+| COMMS | Sub-type declared (not bare `COMMS`)? Lede carries the ask in sentence 1? |
+
+### Core prose rules (Bloomberg/Economist synthesis)
+
+1. **Open with a hard fact or datum.** Never "Consider/Imagine/In a world where."
+2. **State the claim; do not hedge by default.** Only hedge where epistemic precision requires it.
+3. **Concrete nouns and vivid verbs** over abstract noun phrases.
+4. **One idea per sentence; active voice; cut every unnecessary word.**
+5. **Narrative, not textbook.** Write as if the reader will keep reading, not scan for bullets.
+6. **First sentence of each paragraph is the standalone claim.** Body is evidence. Closer is implication, not restatement.
+
+### JOURNAL-specific: chain-draft pattern
+
+Draft 0 → adversarial self-critique (list every refutable claim, every passive-voice
+sentence, every filler hedge, every sentence that requires internal context to understand)
+→ rewrite → compress 30–50%. Single-pass generation should never be the submission
+draft. This adds approximately one session per paper but eliminates the primary failure
+modes.
+
+**Citation fabrication:** never let Claude generate DOIs or citation metadata. Claude
+produces plausible-but-false DOIs. Verify every reference independently before submission.
+
+### Skills infrastructure
+
+`.claude/skills/editorial-audit.md` — create this file. The skill is invoked by the
+operator with `/editorial-audit` and runs the Tier 1 and structural checks above against
+the current draft. It outputs a severity-tagged list of violations and suggests
+replacements for Tier 1 terms.
+
+The separation of generation (Pass 1) and enforcement (Pass 2) is the consistent finding
+from all production-grade editorial quality systems reviewed: the LLM alone does not reliably
+enforce its own style rules. The deterministic audit pass is not optional — it is the
+mechanism by which the "Bloomberg standard" becomes real rather than aspirational.
 
 ---
 
@@ -812,5 +932,6 @@ per site.
 
 | Date | What |
 |---|---|
+| 2026-06-12 | §9.2 Diátaxis alignment + l10n.sourceCommit added; §10 language-protocol fragmentation note + l10n.sourceCommit in TRANSLATE-ES; §14 updated with contaminated BRIEF entries; §15 Writing Quality Programme added (Opus web research + UCSB paper-writing-skill findings) |
 | 2026-06-11 | §9–§14 added — layout conventions, language protocols, DataGraph feedback loop, better-writing framework, Phase F+G pending work, BRIEF consolidation (three Fable agents + consolidation of BRIEF-phase-fg-institutional-redesign.md) |
 | 2026-06-11 | Created — populated from three-agent corpus audit across 717 articles + 8 JOURNALs |
