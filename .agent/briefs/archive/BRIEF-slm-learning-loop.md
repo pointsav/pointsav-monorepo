@@ -1,10 +1,15 @@
 ---
 artifact: brief
-status: active
-title: SLM Learning Loop — Training Pipeline + Sovereign Coding Agent
+schema: foundry-brief-v1
+brief-id: project-intelligence-slm-learning-loop
+title: "SLM Learning Loop — DPO Training Pipeline"
+status: archived
+owner: project-intelligence
 created: 2026-05-29
-updated: 2026-06-09 (session 3 — corpus quality fixes; service-content prompt-injection fix; ML libs installed; §14 Testing added)
+updated: 2026-06-12
 author: totebox@project-intelligence (claude-sonnet-4-6)
+moved_to: project-intelligence
+archived: 2026-06-12
 companion: BRIEF-slm-substrate-master.md
 grounds_in:
   - service-slm/ARCHITECTURE.md §Apprenticeship Substrate
