@@ -1,0 +1,36 @@
+/*
+ * app-mediakit-shell — default design tokens (DTCG fallback).
+ *
+ * These tokens are the BUILT-IN fallback. In production the canonical
+ * bundle is emitted by Style Dictionary from `pointsav-design-system`
+ * (DTCG `dtcg-bundle.json`) and injected ahead of this block, overriding
+ * the values here without any HTML change. Source of truth for the token
+ * names is the design system, not this file.
+ *
+ * Ported from `templates/shell.css` :root block (2026-05-09 Woodfine shell).
+ * Light-mode only — no dark-mode toggle on Woodfine/PointSav properties
+ * (operator preference, recorded 2026-05-09).
+ */
+:root {
+  --paper:    #FFFFFF;
+  --paper-2:  #F7F9FA;
+  --paper-3:  #E6E7E8;
+
+  --ink:         #111827;
+  --ink-2:       #374151;
+  --ink-3:       #6B7280;
+  --ink-4:       #9CA3AF;
+  --rule:        #E6E7E8;
+  --rule-strong: #9CA3AF;
+
+  --wf-blue:      #164679;
+  --wf-blue-tint: #E8EFF7;
+
+  --accent:      var(--wf-blue);
+  --accent-tint: var(--wf-blue-tint);
+
+  /* Brand-aligned 3-font system (Google substitutes for Trade Gothic / Caecilia / Avenir) */
+  --display: "Oswald", "Trade Gothic LT Std", "Barlow Condensed", "Helvetica Neue", Arial, sans-serif;
+  --serif:   "Roboto Slab", "Caecilia LT Std", "Zilla Slab", Georgia, serif;
+  --sans:    "Nunito Sans", "Avenir LT Std", "Avenir Next", "Mulish", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+}
