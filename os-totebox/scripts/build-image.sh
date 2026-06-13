@@ -171,6 +171,11 @@ if [ "${SKIP_SSH_CHOWN:-0}" != "1" ]; then
         "${OVERLAY}/var/chroot/sshd"
 fi
 
+# Disable reverse-DNS lookup on connecting IPs. Under SLIRP the host appears
+# as 10.0.2.2 which has no PTR record; sshd hangs at banner exchange waiting
+# for a DNS timeout before sending the SSH version string.
+printf '\nUseDNS no\n' >> "${OVERLAY}/etc/ssh/sshd_config"
+
 # ── 7c. Root authorized_keys for smoke testing ───────────────────────────────
 # Inject a test pubkey so SSH smoke tests can connect as root without a password.
 # TEST_PUBKEY_FILE defaults to /tmp/totebox-ssh-test.pub; set to "" to skip (production).
