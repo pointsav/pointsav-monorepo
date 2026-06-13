@@ -19,6 +19,7 @@ fn inner_main() -> anyhow::Result<()> {
     use app_console_email::EmailCartridge;
     use app_console_input::InputCartridge;
     use app_console_keys::{pairing, AppConsoleKeys, ConsoleConfig};
+    use app_console_people::PeopleCartridge;
     use app_console_slm::SlmCartridge;
     use app_console_system::SystemCartridge;
 
@@ -72,6 +73,7 @@ fn inner_main() -> anyhow::Result<()> {
         }
     }
 
+    chassis.register(Box::new(PeopleCartridge::new(&p.people_endpoint, p.plain_mode)));
     chassis.register(Box::new(EmailCartridge::new_for(
         &p.email_endpoint,
         p.plain_mode,

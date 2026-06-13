@@ -38,6 +38,7 @@ pub struct SlmCartridge {
     last_updated: Option<Instant>,
     error: Option<String>,
     plain: bool,
+    truecolor: bool,
     refresh_tx: mpsc::SyncSender<()>,
     bg_rx: mpsc::Receiver<BgMsg>,
     show_help: bool,
@@ -59,6 +60,7 @@ impl SlmCartridge {
             last_updated: None,
             error: None,
             plain,
+            truecolor: false,
             refresh_tx,
             bg_rx,
             show_help: false,
@@ -68,6 +70,18 @@ impl SlmCartridge {
     fn trigger_refresh(&mut self) {
         let _ = self.refresh_tx.try_send(());
         self.error = None;
+    }
+
+    fn accent_color(&self) -> Color {
+        if self.truecolor { Color::Rgb(32, 178, 170) } else { Color::Cyan }
+    }
+
+    fn ok_color(&self) -> Color {
+        if self.truecolor { Color::Rgb(0, 200, 83) } else { Color::Green }
+    }
+
+    fn warn_color(&self) -> Color {
+        if self.truecolor { Color::Rgb(255, 165, 0) } else { Color::Yellow }
     }
 
     fn render_dashboard(&self, frame: &mut Frame, area: Rect) {
@@ -166,7 +180,7 @@ impl SlmCartridge {
                 "● running"
             },
             Style::default()
-                .fg(Color::Green)
+                .fg(self.ok_color())
                 .add_modifier(Modifier::BOLD),
         );
 
@@ -192,7 +206,7 @@ impl SlmCartridge {
             }
         };
         let tier_a_style = if h.tier_a {
-            Style::default().fg(Color::Green)
+            Style::default().fg(self.ok_color())
         } else {
             Style::default().fg(Color::DarkGray)
         };
@@ -243,7 +257,7 @@ impl SlmCartridge {
                         .and_then(|v| v.as_str())
                         .unwrap_or("unknown");
                     let state_style = match state {
-                        "Available" => Style::default().fg(Color::Green),
+                        "Available" => Style::default().fg(self.ok_color()),
                         "Stopped" | "FailedStart" | "Zombie" => {
                             Style::default().fg(Color::DarkGray)
                         }
@@ -275,7 +289,7 @@ impl SlmCartridge {
             })
             .unwrap_or_else(|| "—".into());
         let circuit_style = if h.tier_b_circuit_state == "open" {
-            Style::default().fg(Color::Yellow)
+            Style::default().fg(self.warn_color())
         } else {
             Style::default()
         };
@@ -373,6 +387,10 @@ impl Cartridge for SlmCartridge {
 
     fn title(&self) -> &str {
         "SLM"
+    }
+
+    fn set_graphics_caps(&mut self, _kitty: bool, _sixel: bool, _font_size: (u16, u16), truecolor: bool) {
+        self.truecolor = truecolor;
     }
 
     fn tick(&mut self) {
