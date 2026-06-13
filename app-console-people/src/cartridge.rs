@@ -78,27 +78,45 @@ impl PeopleCartridge {
     }
 
     fn accent_color(&self) -> Color {
-        if self.truecolor { Color::Rgb(32, 178, 170) } else { Color::Cyan }
+        if self.truecolor {
+            Color::Rgb(32, 178, 170)
+        } else {
+            Color::Cyan
+        }
     }
 
     fn selection_bg(&self) -> Color {
-        if self.truecolor { Color::Rgb(0, 95, 135) } else { Color::DarkGray }
+        if self.truecolor {
+            Color::Rgb(0, 95, 135)
+        } else {
+            Color::DarkGray
+        }
     }
 
     fn move_up(&mut self) {
-        if self.contacts.is_empty() { return; }
+        if self.contacts.is_empty() {
+            return;
+        }
         let i = self.list_state.selected().unwrap_or(0);
-        self.list_state.select(Some(if i == 0 { self.contacts.len() - 1 } else { i - 1 }));
+        self.list_state.select(Some(if i == 0 {
+            self.contacts.len() - 1
+        } else {
+            i - 1
+        }));
     }
 
     fn move_down(&mut self) {
-        if self.contacts.is_empty() { return; }
+        if self.contacts.is_empty() {
+            return;
+        }
         let i = self.list_state.selected().unwrap_or(0);
         self.list_state.select(Some((i + 1) % self.contacts.len()));
     }
 
     fn selected_contact(&self) -> Option<&Contact> {
-        self.list_state.selected().and_then(|i| self.contacts.get(i))
+        self.list_state
+            .selected()
+            .and_then(|i| self.contacts.get(i))
     }
 
     fn render_list(&mut self, frame: &mut Frame, area: Rect) {
@@ -143,7 +161,9 @@ impl PeopleCartridge {
                 .highlight_style(if self.plain {
                     Style::default().add_modifier(Modifier::REVERSED)
                 } else {
-                    Style::default().bg(self.selection_bg()).add_modifier(Modifier::BOLD)
+                    Style::default()
+                        .bg(self.selection_bg())
+                        .add_modifier(Modifier::BOLD)
                 })
                 .highlight_symbol("> ");
             frame.render_stateful_widget(list, chunks[0], &mut self.list_state);
@@ -201,9 +221,7 @@ impl PeopleCartridge {
     }
 
     fn render_loading(&self, frame: &mut Frame, area: Rect) {
-        let block = Block::default()
-            .title(" F2: People ")
-            .borders(Borders::ALL);
+        let block = Block::default().title(" F2: People ").borders(Borders::ALL);
         let inner = block.inner(area);
         frame.render_widget(block, area);
         frame.render_widget(
@@ -223,7 +241,10 @@ impl PeopleCartridge {
             Paragraph::new(vec![
                 Line::from(""),
                 Line::from(Span::styled(
-                    format!("  {} service-people unavailable", if self.plain { "[!]" } else { "⚠" }),
+                    format!(
+                        "  {} service-people unavailable",
+                        if self.plain { "[!]" } else { "⚠" }
+                    ),
                     Style::default().fg(Color::Yellow),
                 )),
                 Line::from(""),
@@ -246,7 +267,13 @@ impl Cartridge for PeopleCartridge {
         "People"
     }
 
-    fn set_graphics_caps(&mut self, _kitty: bool, _sixel: bool, _font_size: (u16, u16), truecolor: bool) {
+    fn set_graphics_caps(
+        &mut self,
+        _kitty: bool,
+        _sixel: bool,
+        _font_size: (u16, u16),
+        truecolor: bool,
+    ) {
         self.truecolor = truecolor;
     }
 
@@ -339,16 +366,14 @@ fn fetch_contacts(endpoint: &str, tx: &mpsc::Sender<BgMsg>) {
     };
     let url = format!("{}/v1/people", endpoint);
     match client.get(&url).send() {
-        Ok(resp) if resp.status().is_success() => {
-            match resp.json::<ContactsResponse>() {
-                Ok(r) => {
-                    let _ = tx.send(BgMsg::Contacts(r.contacts));
-                }
-                Err(e) => {
-                    let _ = tx.send(BgMsg::Err(format!("parse: {e}")));
-                }
+        Ok(resp) if resp.status().is_success() => match resp.json::<ContactsResponse>() {
+            Ok(r) => {
+                let _ = tx.send(BgMsg::Contacts(r.contacts));
             }
-        }
+            Err(e) => {
+                let _ = tx.send(BgMsg::Err(format!("parse: {e}")));
+            }
+        },
         Ok(resp) => {
             let _ = tx.send(BgMsg::Err(format!("HTTP {}", resp.status())));
         }

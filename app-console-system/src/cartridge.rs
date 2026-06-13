@@ -50,11 +50,19 @@ impl SystemCartridge {
     }
 
     fn accent_color(&self) -> Color {
-        if self.truecolor { Color::Rgb(32, 178, 170) } else { Color::Cyan }
+        if self.truecolor {
+            Color::Rgb(32, 178, 170)
+        } else {
+            Color::Cyan
+        }
     }
 
     fn selection_bg(&self) -> Color {
-        if self.truecolor { Color::Rgb(40, 40, 60) } else { Color::DarkGray }
+        if self.truecolor {
+            Color::Rgb(40, 40, 60)
+        } else {
+            Color::DarkGray
+        }
     }
 
     fn spawn_poller(base_url: String) -> mpsc::Receiver<Vec<PendingRequest>> {
@@ -154,7 +162,13 @@ impl Cartridge for SystemCartridge {
         self.pending_count()
     }
 
-    fn set_graphics_caps(&mut self, _kitty: bool, _sixel: bool, _font_size: (u16, u16), truecolor: bool) {
+    fn set_graphics_caps(
+        &mut self,
+        _kitty: bool,
+        _sixel: bool,
+        _font_size: (u16, u16),
+        truecolor: bool,
+    ) {
         self.truecolor = truecolor;
     }
 
@@ -212,7 +226,10 @@ impl Cartridge for SystemCartridge {
                     let marker = if i == self.selected { ">" } else { " " };
                     let ts = req.created_at.get(..19).unwrap_or(&req.created_at);
                     let line = Line::from(vec![
-                        Span::styled(format!(" {marker} "), Style::default().fg(self.accent_color())),
+                        Span::styled(
+                            format!(" {marker} "),
+                            Style::default().fg(self.accent_color()),
+                        ),
                         Span::styled(
                             format!("{:<14}", req.code),
                             Style::default()

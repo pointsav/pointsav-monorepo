@@ -12,7 +12,7 @@ use tokio::sync::Mutex;
 mod quota;
 mod tenant;
 
-use tenant::{TenantRegistry, extract_bearer};
+use tenant::{extract_bearer, TenantRegistry};
 
 #[derive(Clone)]
 struct AppState {
@@ -37,8 +37,8 @@ async fn main() {
         tracing::warn!("TENANT_IDS not set — no tenants registered; all requests will 401");
     }
 
-    let fleet_url = std::env::var("FLEET_URL")
-        .unwrap_or_else(|_| "http://127.0.0.1:9203".to_string());
+    let fleet_url =
+        std::env::var("FLEET_URL").unwrap_or_else(|_| "http://127.0.0.1:9203".to_string());
     let port: u16 = std::env::var("VM_TENANT_PORT")
         .unwrap_or_else(|_| "9221".to_string())
         .parse()
@@ -93,7 +93,11 @@ async fn create_vm_handler(
                 format!("VM limit reached ({current}/{max})"),
             ));
         }
-        quota::QuotaCheck::RamLimitExceeded { current_mb, requested_mb, max_mb } => {
+        quota::QuotaCheck::RamLimitExceeded {
+            current_mb,
+            requested_mb,
+            max_mb,
+        } => {
             return Err((
                 StatusCode::TOO_MANY_REQUESTS,
                 format!(
@@ -121,10 +125,12 @@ async fn create_vm_handler(
         return Err((StatusCode::BAD_GATEWAY, format!("fleet {status}: {body}")));
     }
 
-    let record: VmRecord = resp
-        .json()
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("fleet response invalid: {e}")))?;
+    let record: VmRecord = resp.json().await.map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("fleet response invalid: {e}"),
+        )
+    })?;
 
     audit(
         &state.audit_path,
@@ -227,10 +233,12 @@ fn authenticate<'a>(
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
     let token = extract_bearer(auth);
-    state
-        .tenants
-        .authenticate(token)
-        .ok_or_else(|| (StatusCode::UNAUTHORIZED, "invalid or missing Bearer token".to_string()))
+    state.tenants.authenticate(token).ok_or_else(|| {
+        (
+            StatusCode::UNAUTHORIZED,
+            "invalid or missing Bearer token".to_string(),
+        )
+    })
 }
 
 async fn fetch_tenant_vms(
@@ -244,9 +252,12 @@ async fn fetch_tenant_vms(
         .send()
         .await
         .map_err(|e| (StatusCode::BAD_GATEWAY, format!("fleet unreachable: {e}")))?;
-    resp.json()
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("fleet response invalid: {e}")))
+    resp.json().await.map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("fleet response invalid: {e}"),
+        )
+    })
 }
 
 /// Append a WORM audit entry to the configured log path.
@@ -270,4 +281,3 @@ async fn audit(path: &str, tenant_id: &str, action: &str, vm_id: &str) {
         Err(e) => tracing::warn!(error = %e, path, "audit file open failed"),
     }
 }
-

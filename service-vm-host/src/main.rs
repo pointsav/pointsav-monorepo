@@ -41,7 +41,10 @@ async fn main() {
 
     let hostname = read_file_trimmed("/etc/hostname");
     let boot_id = read_file_trimmed("/proc/sys/kernel/random/boot_id");
-    let heartbeat_url = format!("{}/v1/nodes/heartbeat", fleet_endpoint.trim_end_matches('/'));
+    let heartbeat_url = format!(
+        "{}/v1/nodes/heartbeat",
+        fleet_endpoint.trim_end_matches('/')
+    );
 
     tracing::info!(
         node_id = %node_id,
@@ -129,7 +132,11 @@ async fn spawn_handler(
     let kvm_available = std::path::Path::new("/dev/kvm").exists();
     let kvm = req.prefer_kvm && kvm_available;
 
-    let vm_id = format!("{}-{}", req.vm_type.to_lowercase(), chrono::Utc::now().timestamp());
+    let vm_id = format!(
+        "{}-{}",
+        req.vm_type.to_lowercase(),
+        chrono::Utc::now().timestamp()
+    );
     let disk_size_gb = (req.ram_mb / 1024).max(8) as u32;
     let record = vm_spawn::provisioning_record(&vm_id, &req.vm_type, req.ram_mb, req.vcpu_count);
 
