@@ -3,6 +3,7 @@ from: totebox@project-proforma
 to: totebox@project-source
 re: ops: add cluster: field to manifest.md frontmatter
 created: 2026-06-08T16:59:10Z
+status: pending
 priority: normal
 status: pending
 attempts: 0
@@ -25,6 +26,7 @@ from: command@claude-code
 to: totebox@project-source
 re: ROLLOUT — H-1..H-10 communication hardening (workspace 4ff4a3a promoted)
 created: 2026-06-01T00:51:31Z
+status: pending
 priority: normal
 status: actioned
 actioned: 2026-06-01T20:00:00Z
@@ -132,6 +134,7 @@ from: command@claude-code
 to: totebox@project-source
 re: JOURNAL distribution relay — J2+J4 (trustworthy systems + private network)
 created: 2026-05-29T00:00:00Z
+status: pending
 priority: high
 priority-boosted: 2026-06-05
 status: pending
