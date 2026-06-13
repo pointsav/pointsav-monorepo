@@ -1,4 +1,13 @@
 ---
+mailbox: outbox
+owner: totebox@project-data
+location: ~/Foundry/clones/project-data/.agent/
+schema: foundry-mailbox-v1
+---
+
+# Outbox — clones/project-data
+
+---
 from: totebox@project-gis
 to: command@claude-code
 re: PKS archetype rebalanced — Fable analysis + mode-group collapse + park_ride ingest queued
