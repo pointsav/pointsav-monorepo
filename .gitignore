@@ -23,9 +23,6 @@ woodfine-media-assets/
 # Runtime state directories (redb/tantivy indexes from local wiki runs)
 state-*/
 
-# Runtime logs
-logs/
-
-# Build logs and work-output files in archive root
-*.log
-trade-area-conflict-report.json
+# Recovered binaries and input documents — not committed to archive git
+app-privategit-design-recovered
+inputs/
