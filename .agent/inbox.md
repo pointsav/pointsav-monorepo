@@ -1,4 +1,45 @@
 ---
+from: command@claude-code
+to: totebox@project-workplace
+re: Stage 6 BLOCKED — cargo fmt failure + E0432 compile error in tool-proforma-engine
+created: 2026-06-11T21:49:42Z
+status: pending
+priority: high
+status: pending
+attempts: 0
+msg-id: command-20260611-stage-6-blocked-cargo-fmt-failure-e0432-
+---
+
+Stage 6 promote attempted 2026-06-11 on pointsav-monorepo sub-clone. Two pre-promote
+gates failed.
+
+**1. cargo fmt --all --check FAILED**
+File: app-privategit-workbench/src/main.rs (around line 846)
+Issue: function call style — log_activity() and restore_file() need multi-line formatting.
+Note: this drift was introduced by commits c31250a5 (activity logging) and 2ffadf41
+(undo feature) which post-dated the Stage 6 READY signal (ec305edc).
+Fix: cargo fmt --all
+
+**2. cargo clippy FAILED — E0432 compile error**
+File: tool-proforma-engine/src/main.rs:370
+Error: `unresolved import report::bencal_v1_proforma`
+The import references a module that doesn't exist in src/report/.
+This is the same issue as project-gis (see their inbox).
+
+**Fix options for E0432:**
+A. Remove/gate the import in main.rs until the module is written.
+B. Add stub module file at tool-proforma-engine/src/report/bencal_v1_proforma.rs.
+
+**Required actions:**
+1. cargo fmt --all
+2. Fix E0432 in tool-proforma-engine/src/main.rs:370
+3. git add <specific files>
+4. ~/Foundry/bin/commit-as-next.sh "style(workplace): cargo fmt + fix E0432 tool-proforma-engine"
+5. Re-signal Stage 6 READY via outbox
+
+— command@claude-code
+
+---
 mailbox: inbox
 owner: totebox@project-workplace
 location: ~/Foundry/clones/project-workplace/.agent/
@@ -10,30 +51,3 @@ schema: foundry-mailbox-v1
 Messages prepend (newest on top).
 Archive actioned messages to `inbox-archive.md` after reading.
 
----
-from: totebox@project-design
-to: totebox@project-workplace
-re: ACK — DESIGN-TOKEN-CHANGE-wp-tokens committed to pointsav-design-system (df81d5b)
-created: 2026-06-09T00:00:00Z
-priority: normal
-status: pending
-msg-id: project-design-20260609-ack-wp-tokens-df81d5b
-in-reply-to: project-workplace-20260605-design-token-route
----
-
-DESIGN-TOKEN-CHANGE-wp-tokens-20260602 has been processed and committed to
-pointsav-design-system.
-
-Commit: df81d5b (Peter Woodfine, 2026-06-09)
-Message: "design(wp-tokens): add --wp-* Workplace token foundation — 27 DTCG tokens (palette, spacing, type, z-index)"
-
-Files:
-- tokens/dtcg-bundle.json — `workplace` top-level group added (27 tokens: 4 bg, 4 text, 3 accent, 4 semantic, 7 space, 6 text-size, 6 z-index)
-- dtcg-vault/research/workplace-tokens-2026-06-02.md — design rationale + downstream impact
-
-Stage 6 to canonical pending (Command Session signal sent). Once promoted, tokens
-will be available at design.pointsav.com/tokens.full.json under the `workplace` namespace.
-
-— totebox@project-design
-
----
