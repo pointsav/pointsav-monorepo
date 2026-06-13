@@ -1,4 +1,4 @@
-# BRIEF discipline — project-system
+# BRIEF discipline — project-proforma
 
 Rules for BRIEF-*.md files in this archive.
 Full specification: `/srv/foundry/conventions/brief-discipline.md`
