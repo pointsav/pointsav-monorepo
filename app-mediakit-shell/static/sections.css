@@ -1,0 +1,110 @@
+/*
+ * app-mediakit-shell — section component CSS.
+ *
+ * THE LOAD-BEARING FILE for "how the platform absorbs CSS": every typed
+ * section component owns its responsive CSS here, referencing only design
+ * tokens. Content manifests carry ZERO CSS — an AI author selects a section
+ * type and binds data; it never writes a style rule. Mobile correctness is a
+ * tested property of these components, not regenerated per page.
+ *
+ * Mobile-first. Desktop is the enhancement (min-width queries). Encodes the
+ * hyperscaler/institutional patterns from the 2026-06-04 mobile research:
+ *   - statement headline + one support line
+ *   - single-column stacking; equal-weight cards
+ *   - body ≥16px; full-width CTA above the fold and repeated under sections
+ */
+
+.landing-main {
+  margin: 0 56px;
+}
+@media (max-width: 1024px) { .landing-main { margin: 0 24px; } }
+@media (max-width: 768px)  { .landing-main { margin: 0 12px; } }
+@media (max-width: 480px)  { .landing-main { margin: 0 8px; } }
+
+.section { margin: 0 0 32px; }
+
+/* ── Hero ─────────────────────────────────────────────────────────── */
+.section-hero {
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  padding: 40px 24px 48px;
+  text-align: center;
+}
+.section-hero .hero-headline {
+  margin: 0 0 12px;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(28px, 7vw, 56px);
+  line-height: 1.08;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+.section-hero .hero-subhead {
+  margin: 0 auto 28px;
+  max-width: 46ch;
+  font-family: var(--serif);
+  font-size: clamp(17px, 2.4vw, 21px);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+/* ── CTA button (shared; used in hero + standalone cta section) ────── */
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 28px;
+  width: 100%;                 /* full-width on mobile (research §5) */
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  transition: opacity 160ms ease;
+}
+.cta-button:hover { opacity: 0.88; }
+
+.section-cta {
+  background: var(--accent-tint);
+  padding: 40px 24px;
+  text-align: center;
+}
+.section-cta .cta-heading {
+  margin: 0 0 20px;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(22px, 4vw, 32px);
+  color: var(--ink);
+}
+
+/* ── Prose ────────────────────────────────────────────────────────── */
+.section-prose {
+  background: var(--paper);
+  padding: 32px 24px;
+}
+.section-prose .prose-body {
+  max-width: 68ch;
+  margin: 0 auto;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+.section-prose .prose-body h2 {
+  font-family: var(--display);
+  font-size: clamp(20px, 3vw, 26px);
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+.section-prose .prose-body a { color: var(--accent); text-decoration: underline; }
+
+/* ── Desktop enhancements ─────────────────────────────────────────── */
+@media (min-width: 769px) {
+  .section-hero { padding: 72px 140px 80px; }
+  .cta-button   { width: auto; }    /* inline button on desktop */
+  .section-cta  { padding: 56px 24px; }
+  .section-prose { padding: 48px 140px; }
+}
