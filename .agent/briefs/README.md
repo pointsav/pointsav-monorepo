@@ -7,18 +7,12 @@
 
 | File | brief-id | Title | Status | Updated |
 |------|----------|-------|--------|---------|
-| `BRIEF-location-intelligence-archetypes-2026-06-01.md` | A18 | Location Intelligence Archetypes (PRO / VWH / PKS) | active | 2026-06-13 |
-| `BRIEF-pks-fable-analysis-2026-06-11.md` | A25 | PKS Commuter Archetype — Fable Model Analysis | active | 2026-06-11 |
-| `BRIEF-gis-nightly-rebuild-aec-2026-06-12.md` | A26 | GIS Nightly Rebuild + AEC Layer Infrastructure | active | 2026-06-13 |
+| `BRIEF-marketing-platform-master.md` | project-marketing-platform-master | Marketing Platform — Master Brief (app-mediakit-marketing + app-mediakit-shell) | active | 2026-06-13 |
+| `BRIEF-brief-audit-2026-06.md` | project-marketing-brief-audit-2026-06 | BRIEF audit — project-marketing — 2026-06 | active | 2026-06-12 |
 
-**Note — contamination (Command Session action required):** 10 non-GIS BRIEFs are present in this
-directory from a prior project-knowledge contamination event. These must NOT be deleted.
-Command Session to `git mv` them to their correct archive `briefs/` directories.
-Contaminated files: `BRIEF-artifact-style-guide.md`, `BRIEF-brief-audit-2026-06.md`,
-`BRIEF-crypto-license-payment-architecture.md`, `BRIEF-dev-env-mcp-expansion.md`,
-`BRIEF-os-totebox-ppn-build-out.md`, `BRIEF-ostotebox-phase1-deployment.md`,
-`BRIEF-phase-fg-institutional-redesign.md`, `BRIEF-software-distribution-substrate.md`,
-`BRIEF-substrate-phd-thesis-2026-05-27.md`, `BRIEF-totebox-transformation.md`
+> Cross-archive strays still at `briefs/` root (project-software / -data / -system
+> scope) are tracked for cleanup by `BRIEF-brief-audit-2026-06.md`; they are not
+> project-marketing briefs.
 
 ## Artifact routing
 When a BRIEF graduates to a deliverable, it routes here:
