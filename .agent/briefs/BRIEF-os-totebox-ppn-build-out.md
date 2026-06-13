@@ -1,10 +1,12 @@
 ---
 artifact: brief
-status: active
+status: contaminated
 schema: foundry-brief-v1
 archive: project-data
+contaminated_from: project-data
+contaminated_note: "Belongs to project-data archive. Copied into project-editorial during past bulk-copy event. Not active editorial guidance for this archive."
 created: 2026-06-11
-updated: 2026-06-11
+updated: 2026-06-12
 ---
 
 # BRIEF — os-totebox PPN Build-Out
