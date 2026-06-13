@@ -28,6 +28,9 @@ Last updated: 2026-06-09
       CSV V3+V4, 10 design artifact drafts, and all 2026-06-05 chart JW commits.
       Command Session runs `FOUNDRY_PROMOTE_YES=1 bin/promote.sh`.
       [2026-06-09 totebox@claude-code]
+- [x] **Remove stale J1 v0.1 EN stub from JOURNAL/** `[2026-06-12 totebox@claude-sonnet-4-6]` RESOLVED
+  EN stub not present in working tree — already removed in a prior session.
+  ES v0.1 lives in `JOURNAL/archive/` intentionally (not yet updated to v0.5 content).
 
 ---
 
