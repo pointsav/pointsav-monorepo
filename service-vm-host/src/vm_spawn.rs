@@ -241,5 +241,6 @@ pub fn provisioning_record(vm_id: &str, vm_type: &str, ram_mb: u64, vcpu_count: 
         ram_alloc_mb: ram_mb,
         vcpu_count,
         started_at: None,
+        tenant_id: None,
     }
 }
