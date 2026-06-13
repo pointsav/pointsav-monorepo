@@ -1,4 +1,4 @@
-# BRIEF discipline — project-design
+# BRIEF discipline — project-intelligence
 
 Rules for BRIEF-*.md files in this archive.
 Full specification: `/srv/foundry/conventions/brief-discipline.md`
