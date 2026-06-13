@@ -47,7 +47,7 @@ MAX_LENGTH = 1024
 BATCH_SIZE = 2
 GRAD_ACCUM = 4
 LEARNING_RATE = 1e-5   # LoRA-DPO: higher than full-FT DPO (1e-7..1e-6); 47 steps needs signal
-NUM_EPOCHS = 1
+NUM_EPOCHS = 3  # 3 epochs via --resume across nightly cycles; epoch 1 alone was a resume no-op
 BETA = 0.1  # DPO default. Prior 0.5 justification (empty-"[]" rejected) is obsolete — those pairs are now filtered.
 
 
