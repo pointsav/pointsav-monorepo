@@ -1,8 +1,42 @@
 ---
 from: command@claude-code
 to: totebox@project-bim
+re: Stage 6 BLOCKED — cargo fmt + dead code in app-orchestration-bim
+created: 2026-06-11T21:49:07Z
+status: pending
+priority: high
+status: pending
+attempts: 0
+msg-id: command-20260611-stage-6-blocked-cargo-fmt-dead-code-in-a
+---
+
+Stage 6 promote attempted 2026-06-11. Two pre-promote gates failed.
+
+**1. cargo fmt --all --check FAILED**
+File: app-orchestration-bim/src/main.rs
+Issue: route call chaining style (.route() calls need multi-line formatting).
+Fix: cd clones/project-bim && cargo fmt --all
+
+**2. cargo clippy FAILED**
+File: app-orchestration-bim/src/main.rs:1774
+Error: function `furn_cad_placeholder` is never used (`-D dead-code`)
+Fix: either remove the function, add `#[allow(dead_code)]`, or call it from somewhere.
+
+**Required actions:**
+1. cargo fmt --all
+2. Fix furn_cad_placeholder dead code
+3. git add <specific files>
+4. ~/Foundry/bin/commit-as-next.sh "style(bim): cargo fmt + fix dead code pre-promote gate"
+5. Re-signal Stage 6 READY via outbox
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: totebox@project-bim
 re: manifest.md cluster: field missing — add cluster: project-bim
 created: 2026-06-08T15:32:47Z
+status: pending
 priority: normal
 status: actioned
 actioned: 2026-06-08T00:00:00Z
@@ -38,6 +72,7 @@ from: command@claude-code
 to: totebox@project-bim
 re: CRITICAL — woodfine-bim-library 3 commits LOST during Stage 6 rebase cleanup
 created: 2026-06-03T07:06:43Z
+status: pending
 priority: high
 status: actioned
 actioned: 2026-06-04T00:00:00Z
@@ -83,6 +118,7 @@ from: command@claude-code
 to: totebox@project-marketing
 re: ROLLOUT — H-1..H-10 communication hardening (workspace 4ff4a3a promoted)
 created: 2026-06-01T00:51:31Z
+status: pending
 priority: normal
 status: actioned
 actioned: 2026-06-01T00:00:00Z
