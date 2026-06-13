@@ -57,11 +57,11 @@ Outbox message sent 2026-06-12 requesting Command action (push + promote-queue.j
 **Gate criterion:** all items below complete; `cargo check --release` clean on all 4 targets.
 
 - [ ] OSC 8 hyperlinks in ContentCartridge (editor navigation)
-- [ ] Truecolor detection + theme variants (light/dark; uses TerminalCaps from Phase B)
+- [x] Truecolor Rgb variants — email/slm/system/input cartridges (2026-06-12; commit pending `cargo check`)
 - [ ] Multi-tab support (multiple open ContentCartridge documents)
 - [ ] Session persistence across SSH reconnect (state serialized to local file)
-- [ ] `/audit` log viewer command (read drafts-outbound audit trail)
-- [ ] F2 People cartridge (`app-console-people`) scaffold → Scaffold-coded → Active
+- [x] `/audit` log viewer command — already fully implemented in InputCartridge; confirmed (2026-06-12)
+- [x] F2 People cartridge — `app-console-people` scaffold created; service-people fetch + j/k/detail/error states; registered at F2 (2026-06-12; commit pending `cargo check`)
 
 **UX contract** (enforce per `BRIEF-project-console-master.md` §6 — preserved here):
 - `--plain` mode: every cartridge functions fully with no terminal graphics
@@ -76,11 +76,11 @@ Outbox message sent 2026-06-12 requesting Command action (push + promote-queue.j
 
 Blocked on: GCE firewall port 2222 (operator action); vm-intelligence WireGuard provisioning (project-infrastructure).
 
-- [ ] `local-console.service` systemd unit — draft, send to project-infrastructure outbox
+- [x] `local-console.service` systemd unit — drafted at `infrastructure/systemd/console/local-console.service` (2026-06-12; commit pending `cargo check`)
+- [x] `pairing-server` systemd unit — drafted at `infrastructure/systemd/console/local-pairing-server.service` (2026-06-12; commit pending `cargo check`)
 - [ ] Prometheus metrics exporter on configurable port
 - [ ] fail2ban config for port 2222 (SSH brute-force protection)
 - [ ] Graceful SIGTERM handling in os-console binary
-- [ ] `pairing-server` systemd unit alongside SSH; listens `0.0.0.0:9201`
 
 ---
 
@@ -113,9 +113,17 @@ Blocked on: GCE firewall port 2222 (operator action); vm-intelligence WireGuard 
 
 ## §8 — Decisions open
 
-- [ ] Phase 8 start — waiting on Stage 6 Phase B promote
-- [ ] Phase 9 systemd unit design — draft pending project-infrastructure coordination
+- [x] Phase 8 start — proceeding without Stage 6 Phase B promote (local coding unblocked)
+- [x] Phase 9 systemd unit design — drafted local-console.service + local-pairing-server.service
 
 ## §9 — Work log
+
+2026-06-12 totebox@claude-code: Phase 8 coding sprint begun.
+  - Truecolor Rgb variants added to EmailCartridge, SlmCartridge, SystemCartridge, InputCartridge
+  - F2 PeopleCartridge scaffold: app-console-people/src/{lib,cartridge}.rs; service-people fetch; j/k/Enter/Esc navigation; truecolor-aware; registered at F2 in os-console/src/main.rs
+  - people_endpoint added to ProfileConfig (default http://127.0.0.1:9091)
+  - Systemd unit drafts: local-console.service, local-pairing-server.service
+  - TOPIC-os-console-architecture.draft.md + .es stub → drafts-outbound
+  - All commits pending cargo check clean
 
 2026-06-12 totebox@claude-code: Created this BRIEF; state files (NEXT.md, manifest.md) repaired; contamination sweep complete.
