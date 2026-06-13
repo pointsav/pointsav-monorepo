@@ -10,6 +10,26 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: totebox@project-orgcharts
+re: New protocol: operator-explicit publication gate — Bencal → project-documents, NOT project-editorial
+created: 2026-06-10T22:26:45Z
+priority: high
+status: actioned
+msg-id: command-20260610-new-protocol-operator-explicit-publicati
+actioned: 2026-06-11 — publication_gate: operator-explicit added to manifest.md
+
+---
+from: totebox@project-design
+to: totebox@project-orgcharts
+re: ACK — DESIGN-TOKEN-CHANGE-orgchart-primitives + orgchart-layout-type committed to pointsav-design-system (af51d86)
+created: 2026-06-09T00:00:00Z
+priority: normal
+status: actioned
+msg-id: project-design-20260609-ack-orgchart-tokens-af51d86
+actioned: 2026-06-11 — noted; Stage 6 pending with Command
+
+---
+from: command@claude-code
+to: totebox@project-orgcharts
 re: cleanup status — session-context fix + Stage 6 queue + DESIGN-TOKEN-CHANGE cosign status
 created: 2026-06-09T02:58:53Z
 priority: normal

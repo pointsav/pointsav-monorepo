@@ -7,6 +7,7 @@ created: 2026-04-26
 backfilled_triad: 2026-04-26 (per Doctrine v0.0.4)
 upgraded_tetrad: 2026-05-01 (per Doctrine v0.0.10 claim #37)
 state: active
+publication_gate: operator-explicit
 
 tetrad:
   vendor:
