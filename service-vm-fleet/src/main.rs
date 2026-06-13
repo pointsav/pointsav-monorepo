@@ -1,9 +1,10 @@
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     routing::{delete, get, post},
     Json, Router,
 };
+use serde::Deserialize;
 use std::{net::SocketAddr, sync::Arc};
 use system_vm_fleet_types::{
     CreateVmRequest, FleetStatus, NodeHeartbeat, NodeId, NodeRecord, VmId, VmRecord,
@@ -48,7 +49,7 @@ async fn main() {
         .route("/v1/fleet", get(fleet_handler))
         .route("/v1/nodes", get(nodes_handler))
         .route("/v1/nodes/:node_id", get(node_handler))
-        .route("/v1/vms", post(create_vm_handler))
+        .route("/v1/vms", post(create_vm_handler).get(list_vms_handler))
         .route("/v1/vms/:vm_id", delete(destroy_vm_handler))
         .with_state(state);
 
@@ -155,12 +156,15 @@ async fn create_vm_handler(
         ));
     }
 
-    let record: VmRecord = resp.json().await.map_err(|e| {
+    let mut record: VmRecord = resp.json().await.map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             format!("vm-host response not a VmRecord: {e}"),
         )
     })?;
+
+    // Propagate tenant_id from request into the stored record so list queries can filter.
+    record.tenant_id = req.tenant_id.clone();
 
     {
         let mut reg = state.registry.write().await;
@@ -203,4 +207,19 @@ async fn nodes_handler(State(state): State<AppState>) -> Json<Vec<NodeRecord>> {
     let mut reg = state.registry.write().await;
     reg.evict_stale();
     Json(reg.all_nodes())
+}
+
+#[derive(Deserialize)]
+struct ListVmsQuery {
+    tenant_id: Option<String>,
+}
+
+/// GET /v1/vms?tenant_id=<id> — list all VMs, optionally filtered by tenant.
+/// Used by service-vm-tenant to enforce namespace isolation.
+async fn list_vms_handler(
+    State(state): State<AppState>,
+    Query(q): Query<ListVmsQuery>,
+) -> Json<Vec<VmRecord>> {
+    let reg = state.registry.read().await;
+    Json(reg.all_vms(q.tenant_id.as_deref()))
 }

@@ -121,6 +121,18 @@ impl NodeRegistry {
             .find(|e| e.vms.contains_key(vm_id))
             .map(|e| e.record.wg_ip.clone())
     }
+
+    /// All VMs across all nodes, optionally filtered by tenant_id.
+    pub fn all_vms(&self, tenant_filter: Option<&str>) -> Vec<VmRecord> {
+        self.nodes
+            .values()
+            .flat_map(|e| e.vms.values().cloned())
+            .filter(|vm| match tenant_filter {
+                Some(t) => vm.tenant_id.as_deref() == Some(t),
+                None => true,
+            })
+            .collect()
+    }
 }
 
 #[cfg(test)]
@@ -195,6 +207,7 @@ mod tests {
             ram_alloc_mb: 2048,
             vcpu_count: 2,
             started_at: None,
+            tenant_id: None,
         };
         reg.register_vm("node-a", vm);
         assert_eq!(reg.get_node("node-a").unwrap().vm_count, 1);

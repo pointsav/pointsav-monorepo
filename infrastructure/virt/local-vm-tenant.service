@@ -1,0 +1,28 @@
+[Unit]
+Description=PPN VM tenant proxy — authenticated customer API (:9221)
+Documentation=https://github.com/pointsav/pointsav-monorepo
+After=network-online.target local-vm-fleet.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mathew
+ExecStart=/usr/local/bin/service-vm-tenant
+Restart=on-failure
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=local-vm-tenant
+Environment=RUST_LOG=service_vm_tenant=info
+Environment=FLEET_URL=http://127.0.0.1:9203
+Environment=VM_TENANT_PORT=9221
+Environment=VM_TENANT_AUDIT_LOG=/var/log/vm-tenant-audit.jsonl
+# Configure tenants via env file:
+#   /etc/default/vm-tenant
+#   TENANT_IDS=alice,bob,community
+#   TENANT_ALICE_MAX_VMS=5
+#   TENANT_ALICE_MAX_RAM_MB=8192
+EnvironmentFile=-/etc/default/vm-tenant
+
+[Install]
+WantedBy=multi-user.target
