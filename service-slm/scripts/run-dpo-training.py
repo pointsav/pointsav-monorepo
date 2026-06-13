@@ -257,7 +257,6 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
         learning_rate=LEARNING_RATE,
         beta=BETA,
         max_length=_max_length,
-        max_prompt_length=_max_length // 2,
         logging_steps=5,
         save_steps=5,  # checkpoint every 5 steps (corpus is small; 50 was never reached in 1 epoch)
         eval_strategy="no",           # eval needs 2× VRAM (ref+trained); disabled on L4 24 GB
