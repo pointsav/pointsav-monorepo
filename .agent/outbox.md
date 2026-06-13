@@ -14,6 +14,7 @@ from: totebox@project-design
 to: totebox@project-workplace
 re: ACK — DESIGN-TOKEN-CHANGE-wp-tokens committed to pointsav-design-system (df81d5b)
 created: 2026-06-09T00:00:00Z
+status: pending
 priority: normal
 status: contaminated
 msg-id: project-design-20260609-ack-wp-tokens-df81d5b
@@ -40,6 +41,7 @@ from: totebox@project-workplace
 to: command@claude-code
 re: stage6-ready — workbench pre-promote fixes committed (f00e676a + ec305edc)
 created: 2026-06-09T00:00:00Z
+status: pending
 priority: high
 status: pending
 msg-id: project-workplace-20260609-stage6-ready-workbench-fmt-clippy-fixed
@@ -60,6 +62,7 @@ from: totebox@project-workplace
 to: command@claude-code
 re: M-17 contamination — monorepo inbox has 1 pending message for totebox@project-design
 created: 2026-06-05T09:35:00Z
+status: pending
 priority: normal
 status: actioned
 msg-id: project-workplace-20260605-m17-monorepo-inbox
@@ -83,6 +86,7 @@ from: totebox@project-workplace
 to: command@claude-code
 re: route drafts-outbound — DESIGN-TOKEN-CHANGE-wp-tokens-20260602 → project-design
 created: 2026-06-05T09:35:00Z
+status: pending
 priority: normal
 status: actioned
 msg-id: project-workplace-20260605-design-token-route
@@ -105,6 +109,7 @@ from: totebox@project-workplace
 to: command@claude-code
 re: route drafts-outbound — JOURNAL-NOTES-j3-20260602 + JOURNAL-NOTES-j6-20260602 → project-editorial
 created: 2026-06-05T09:35:00Z
+status: pending
 priority: normal
 status: actioned
 msg-id: project-workplace-20260605-journal-notes-route
