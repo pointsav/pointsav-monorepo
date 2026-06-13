@@ -502,13 +502,13 @@ The substrate owns the kernel, system layer, applications, capability ledger, id
 
 **Scaffold state.** All eight `os-*` directories in `pointsav-monorepo` are currently scaffold-coded. The substrate architecture and its Rust implementation are complete; the os-* runtimes that consume the substrate are not yet Active. Production claims for the os-* layer are forward-looking.
 
-**AArch64 cross-compilation.** The `moonshot-toolkit build` subcommand is a validated stub. The existing `vendor-sel4-kernel/build/` artefact is an x86_64/pc99 kernel built via the legacy Python+CMake+Ninja path, not via `moonshot-toolkit`. AArch64 seL4 cross-compilation via `moonshot-toolkit` is a planned Phase 1C deliverable pending three operator decisions: cross-compile toolchain, seL4 source vendoring strategy, and toolchain installation ownership.
+**AArch64 cross-compilation.** ~~The `moonshot-toolkit build` subcommand is a validated stub.~~ **[UPDATED 2026-06-11: Phase 1C COMPLETE.]** `moonshot-toolkit` v0.3.0 (commit `fc245ee`) delivers a working `AssembleImage` pipeline producing a bootable seL4 AArch64 elfloader.elf. QEMU AArch64 boot confirmed (`d550217`). Three operator decisions resolved: Microkit SDK v2.1.0 is the toolchain; `vendor-sel4-kernel` tree is the source; GCP workspace VM is the build host. The `build` subcommand is no longer a stub. x86_64 Phase 1B COMPLETE: `system-ledger-pd` + `client_pd` 2-PD PPC ring boots under `qemu-system-x86_64 -cpu max` (commit `6fabe58e`, version 1.5.0). Boot output verified: `LEDGER PD: online → CLIENT: sending ConsultRequest → response[0] = 0x03 (Error, code=0x01) → CLIENT: done`.
 
 **Multicore.** seL4 multicore (SMP) verification is an open research problem. The substrate targets single-core or multikernel-pending configurations until multicore seL4 verification completes (SRI international target: Q3/2028).
 
 **ARM Cortex-A performance.** The benchmark measurements (Table B.1) are from an Intel Xeon n2-class host. ARM Cortex-A Ed25519 verification is approximately 10–50× slower. The 358,000× cache-to-verify ratio on x86 narrows to approximately 10,000–35,000× on ARM, which remains load-bearing for the cache discipline but narrows the operating window for non-cached paths.
 
-**NetBSD shim crate.** `system-substrate-netbsd` does not yet exist. The `system-substrate/`, `system-substrate-broadcom/`, and `system-substrate-freebsd/` crates are scaffold-coded. The shim crate location is an open architectural decision (§8.2 open questions).
+**NetBSD shim crate.** ~~`system-substrate-netbsd` does not yet exist.~~ **[UPDATED 2026-06-11]** `system-substrate-netbsd` v0.1.0 is committed (`8b0b491e`) and is a workspace member. Contains NetBSD 10.1 compat-bottom constants: Veriexec policy constants, `OS_TOTEBOX_BINARIES` array (3 binaries: `system-ledger-server`, `slm-doorman-server`, `service-content`), binary path definitions. The §8.2 open architectural question — extension of `system-substrate/` vs. separate sibling — is resolved: separate sibling crate, parallel to `system-substrate-broadcom/`. `os-totebox` is promoted from Scaffold-coded to ACTIVE as of `8b0b491e` (2026-06-11).
 
 **Bench #9 CI.** `verify_inclusion_proof` composed, 1024-leaf tree: 22 outliers, ±11% CI — load-sensitive and not publication-quality. A quiet-VM re-run (load average < 1.0) is the pre-publication prerequisite for this entry.
 
@@ -535,6 +535,140 @@ H₂ is falsified if: the compiled outputs of the `native` and `compat` feature-
 3. What is the minimum trustworthy configuration for the Coreboot/Heads boot path on commodity AArch64 boards?
 4. Does `system-substrate-netbsd` belong as an extension to the existing `system-substrate/` crate (already in Scaffold-coded state, role: hardware bridge) or as a new sibling parallel to `system-substrate-broadcom/`?
 5. What is the right image-signing key for Veriexec `signatures.veriexec`: the workspace `ps-administrator` SSH key or a dedicated image-signing key in the customer's identity store?
+
+### 7.5 Implementation Status and Strategic Corrections — June 2026
+
+*This subsection is a BRIEF-internal update record, not part of the JOURNAL manuscript body.
+It must be stripped before submission. It documents decisions made and research completed
+in sessions 19–23 (2026-06-11), which supersede the original May 2026 draft statements.*
+
+#### 7.5.1 Phase Milestone Summary
+
+| Phase | Status | Commit | Notes |
+|---|---|---|---|
+| Phase 0 — no_std seL4 | COMPLETE | `ba4e1de8` v1.1.0 | `system-core` + `system-ledger` build clean on `x86_64-unknown-none --features sel4` |
+| Phase 1A — NetBSD image pipeline | COMPLETE | `8b0b491e` v1.2.0 | `build-image.sh` + rc.d + `system-substrate-netbsd` + `system-ledger-server` 5 tests |
+| Phase 1B — seL4 PD scaffold | COMPLETE | `428b5086` v1.3.0 | `system-ledger-pd` Microkit PD + `system-substrate` CapabilityInvoker trait |
+| Phase 1B — client_pd test harness | COMPLETE | `cb03d930` v1.4.0 | C test harness PD; hardcoded ConsultRequest; GIS pipeline scripts |
+| Phase 1B — QEMU boot verified | COMPLETE | `6fabe58e` v1.5.0 | 2-PD PPC ring boots on x86_64_generic; `-cpu max`; PPC round-trip confirmed |
+| Phase 1C — moonshot-toolkit build | COMPLETE | `fc245ee` v0.3.0 | `AssembleImage` → bootable AArch64 elfloader.elf; QEMU AArch64 boot confirmed |
+| Phase 1 os-totebox — boot milestone | IN PROGRESS | — | Cross-compile 3 binaries + run build-image.sh + TCG smoke test (current work) |
+| Phase 2 — MICROVM kernel + Laptop A KVM | PLANNED | — | Custom TOTEBOX kernel config; netbsd-current MICROVM (9–15 ms boot on KVM) |
+| Phase 3 — seL4 as hypervisor (AArch64) | PLANNED | — | libvmm AArch64; NetBSD as seL4 guest; first-of-kind; hardware TBD |
+
+All Stage 6 promotions (6 sub-clone commits) are pending Command Session action.
+
+#### 7.5.2 Precision Corrections for the JOURNAL Manuscript
+
+**seL4 x86_64 has no functional correctness proof.** The formal verification properties
+cited in §1.1 and §2.1 — functional correctness, integrity, confidentiality — apply to
+ARMv7, RISC-V, and AArch64 only. x86_64 has no machine-checked proof. Every sentence in
+the manuscript that asserts "formally verified" must be constrained to AArch64 hardware
+with a confirmed verified configuration (MCS + hypervisor extensions). Replace
+"formally verified microkernel" with "verification-pedigree microkernel with a minimal,
+auditable TCB" when describing x86_64 Phase 1 work. This is a BCSC disclosure requirement:
+overstating the proof scope would constitute a forward-looking claim presented as fact.
+
+**seL4 sits above the guest, not below.** The phrase "seL4 protecting the record keeping
+for the virtualization layer below it" inverts the architecture. seL4 is the most privileged
+layer; the VMM and NetBSD guest are deprivileged user-level protection domains. The correct
+formulation: the ledger is held in a PD whose only external interface is a single typed PPC
+endpoint; the VMM hosting the guest holds exactly one capability to that endpoint; the
+kernel's capability discipline means there is no instruction sequence available to the guest
+or its VMM that reaches the ledger's memory or signing key.
+
+**Tamper-evidence, not tamper-proofness.** H₁ (§7.4) as currently worded may overstate the
+transferability guarantee. seL4 provides isolation, not attestation. The achievable property
+is tamper-evidence of history: retroactive forgery or forking is detectable given
+distributed/witnessed checkpoints. Tamper-proofness against live equivocation by a fully
+malicious host operator would additionally require measured boot or external witnesses. The
+H₁ falsification condition "(c) a post-recovery audit by an independent party requires access
+to vendor-controlled infrastructure" is correct; the general statement "the ledger cannot be
+forged by the host operator" must be qualified to "retroactively."
+
+#### 7.5.3 Prior Art to Acknowledge (Do Not Claim as Novel)
+
+The following works occupy adjacent design space. All must be cited in §2 before
+peer submission; any of them cited but not discussed produces a desk-rejection risk.
+
+- **CertiKOS/mC2** (Gu et al., OSDI 2016) — formally verified concurrent kernel hosting
+  Linux VMs. The structural shape (verified kernel, deprivileged guest, security service
+  from privileged component) is directly comparable. The substrate differentiates on:
+  customer-rooted transparency log rather than kernel-internal isolation, and ownership
+  transfer as a first-class operation.
+- **seKVM** (Li et al., IEEE S&P 2021) — verified KVM security core protecting VM integrity
+  and confidentiality from the hypervisor. Comparison on: cloud-hosted vs customer-portable;
+  hardware attestation root vs reproducible software anchor.
+- **COCONUT-SVSM** (AMD SEV-SNP, 2024) — a privileged component at VMPL0 serving a
+  deprivileged guest; exports vTPM semantics. The structural pattern is identical. The
+  substrate differentiates on: application-defined WORM ledger semantics vs TPM command
+  set; open-source kernel vs opaque vendor firmware TCB; portable vs hardware-bound.
+- **rumprun-on-seL4** — NetBSD anykernel components have run on seL4 before (Data61 era).
+  The accurate claim is "full multi-process NetBSD as a virtualized seL4 guest has not been
+  publicly demonstrated on any architecture," not "NetBSD and seL4 have never been combined."
+- **CCF (Microsoft Confidential Consortium Framework)** — integrity-protected distributed
+  ledger rooted in hardware TEE. Differentiate on: network service vs portable capsule;
+  hardware-identity root vs reproducible software anchor; multi-party vs single-customer-apex.
+
+#### 7.5.4 Freely Transferable Totebox Archive — BRIEF-Ready Framing
+
+The following paragraph is cleared for insertion into §7.1 or §1.2 of the JOURNAL
+manuscript after a full forbidden-vocabulary pass. It incorporates the precision corrections
+from §7.5.2 and positions against the prior art from §7.5.3.
+
+> A Totebox Archive is a self-contained virtual machine capsule whose operational record
+> is maintained as an append-only capability ledger with cryptographically signed
+> checkpoints, such that the record's integrity is verifiable by any party from the
+> capsule's artifacts alone, independent of the hardware identity of any host that has
+> run it. Unlike TPM- or TEE-rooted approaches, which bind trust to non-transferable
+> per-platform secrets and vendor attestation services, the archive's trust anchor is
+> reproducible software: a minimal ledger component isolated from the guest operating
+> system — in the current x86_64 phase by physical process separation, and in the
+> planned AArch64 phase by seL4 capability isolation, under which a fully compromised
+> guest retains no addressable path to the ledger's memory or signing key. The guarantee
+> delivered is tamper-evidence of history across transfers — retroactive forgery or
+> forking is detectable against the signed checkpoint chain — rather than
+> tamper-proofness against a live malicious host, which would additionally require
+> measured boot or external witnessing. The composition of a verification-pedigree
+> microkernel, a commodity BSD guest with mandatory binary verification, and
+> transparency-log checkpointing is, to the best of our knowledge, previously
+> undemonstrated; the constituent mechanisms individually are not.
+
+#### 7.5.5 seL4 VMM x86_64 vs AArch64 Timeline
+
+**x86_64 seL4-as-hypervisor: not viable in the near term.** libvmm x86_64 is a single open
+PR (#198, March–June 2026) that boots Linux+Buildroot only, no PCI/virtio, Intel VT-x only
+(AMD-V not supported by seL4 kernel), not merged as of 2026-06-11. Build nothing on x86_64
+VMM until the PR merges and virtio lands. Track upstream.
+
+**AArch64 seL4-as-hypervisor: Phase 3, first-of-kind.** libvmm AArch64 v0.1.0 (released
+2025-03-26) is the mature path. FreeBSD 15.0/AArch64 under libvmm is in progress (agentOS,
+May 2026). NetBSD/evbarm GENERIC64 as a virtualized seL4 guest has never been publicly
+demonstrated. Phase 3 path: AArch64 hardware → Linux guest first (de-risks VMM) → swap to
+NetBSD/evbarm. Hardware options: GCP C4A Arm (Axion/Ampere) or dedicated AArch64 board
+from libvmm's support list (QEMU ARM virt, TX2, ZCU102).
+
+**Unikernel survey: all options eliminated.** Rumprun dead (Rust target removed from rustc
+2021, PR #82594). Hermit OS has no AF_UNIX sockets (system-ledger-server requires them).
+Unikraft, Nanos, OSv are Linux-ABI-based, violating the "no Linux in trust chain" constraint.
+Minimal NetBSD 10.1 is the only viable compat-bottom path that satisfies: Veriexec +
+Unix domain sockets + tokio Rust binaries. The unikernel and Veriexec requirements are in
+direct conflict; Veriexec wins because it IS the reason NetBSD was chosen.
+
+**os-totebox Phase 1 service stack (3 binaries, not the originally planned 4):**
+- `system-ledger-server` — tokio Unix socket daemon; 5 tests; workspace member
+- `slm-doorman-server` — doorman in Tier-0-only baseline (COLD state); /readyz 503 `no_tier_available`
+- `service-content` — 7,445 entities in LadybugDB; fully functional on workspace
+- `service-fs` — EXCLUDED from Phase 1; it is a seL4 PD stub (`#![no_std]` bare-metal); Phase 3 artifact
+- `llama-server` — EXCLUDED from base image; inference weights are deployment-time injection
+
+**seL4 signing oracle (Phase 1 transferability demonstration):** The already-working
+`system-ledger-pd` (`6fabe58e`) runs as a signing oracle on a separate QEMU process/host.
+The Ed25519 signing key is generated inside the PD and never exported. NetBSD obtains only
+the public key via PPC. Archive egress requires a PD-signed checkpoint over the ledger
+snapshot hash. This is the "physical process separation" described in the framing paragraph
+above — honest for Phase 1 x86_64. Phase 3 relocates the oracle into the seL4 isolation
+boundary on the same machine.
 
 ---
 
