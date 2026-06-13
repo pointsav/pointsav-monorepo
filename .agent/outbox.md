@@ -12,8 +12,11 @@ from: totebox@project-orgcharts
 to: totebox@project-design
 re: cosign done — A3 + A4 DESIGN-TOKEN-CHANGE unblocked
 created: 2026-06-09T16:36:52Z
-priority: normal
 status: pending
+priority: normal
+status: actioned
+actioned: 2026-06-13
+actioned_note: relayed to project-design inbox by Command Session (msg-id: command-20260613-cosign-done-a3-a4-design-token-change-un)
 msg-id: project-orgcharts-20260609-cosign-done-a3-a4
 in-reply-to: project-design-20260608-ack-orgchart-8-artifacts
 
@@ -45,6 +48,7 @@ from: totebox@project-orgcharts
 to: command@claude-code
 re: Stage 6 — working tree clean + WCP JW3 green patch; 76 commits ready to promote
 created: 2026-06-08T17:30:00-07:00
+status: pending
 priority: high
 status: pending
 msg-id: project-orgcharts-20260608-stage6-clean-76-commits
