@@ -2,6 +2,39 @@
 
 Open items, deferred work, and follow-ups. Attribution: `[YYYY-MM-DD role@engine]`.
 Backlog (lower priority) at `.agent/next-backlog.md`.
+# NEXT.md — project-gis
+
+Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
+> **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
+
+Last updated: 2026-06-13
+
+---
+
+## Resolved 2026-06-13 — VWH UX + BRIEF audit + outbox
+
+- [x] **VWH retail_contamination badge** — `showArchetypeDetail()` in `gateway-orchestration-gis-1/www/index.html`
+      now renders "Mixed-use site — hypermarket within 1 km" badge (reusing `.rm-badge` CSS) for
+      3,048 / 6,368 VWH clusters where `retail_contamination === true`. [2026-06-13 totebox@claude-sonnet-4-6]
+- [x] **A26 BRIEF updated** — §4 operator crontab checkboxes ticked; first clean run documented
+      (2026-06-13T05:48Z, 48 min, all 4 steps); AEC backfill metrics; config.py+utils/ copy noted;
+      AEC timing explanation added. [2026-06-13 totebox@claude-sonnet-4-6]
+- [x] **A18 BRIEF §7 updated** — retail_contamination badge recorded as implemented 2026-06-13.
+      [2026-06-13 totebox@claude-sonnet-4-6]
+- [x] **Briefs README.md populated** — 3 GIS-specific BRIEFs listed; contamination note added
+      (10 misrouted BRIEFs needing Command Session `git mv`). [2026-06-13 totebox@claude-sonnet-4-6]
+- [x] **Root disk + BRIEF contamination outbox sent** — HIGH priority message to Command Session
+      (msg-id: project-gis-20260613-disk-brief-contamination). [2026-06-13 totebox@claude-sonnet-4-6]
+
+## Command Session pending (do not action from Totebox)
+
+- [ ] Root disk at 87% — audit and free space before next ingest run
+      (msg-id: project-gis-20260613-disk-brief-contamination)
+- [ ] BRIEF contamination — `git mv` 10 non-GIS BRIEFs to correct archives
+      (msg-id: project-gis-20260613-disk-brief-contamination)
+- [ ] Stage 6 promotion — 10+ commits ahead of origin; Command runs `bin/promote.sh`
+- [ ] pairings.yaml + .owner files for all gateways (A26 §4 Command scope)
+- [ ] bin/cron-audit.sh new validation script (A26 §4 Command scope)
 
 ---
 
