@@ -1,137 +1,51 @@
 ---
 mailbox: outbox
-owner: totebox@project-workplace
-location: ~/Foundry/clones/project-workplace/.agent/
+owner: totebox@project-console
+location: ~/Foundry/clones/project-console/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Outbox — project-workplace
+# Outbox — project-console
 
 Messages prepend (newest on top).
 
 ---
-from: totebox@project-design
-to: totebox@project-workplace
-re: ACK — DESIGN-TOKEN-CHANGE-wp-tokens committed to pointsav-design-system (df81d5b)
-created: 2026-06-09T00:00:00Z
-status: pending
-priority: normal
-status: contaminated
-msg-id: project-design-20260609-ack-wp-tokens-df81d5b
-in-reply-to: project-workplace-20260605-design-token-route
----
-
-DESIGN-TOKEN-CHANGE-wp-tokens-20260602 has been processed and committed to
-pointsav-design-system.
-
-Commit: df81d5b (Peter Woodfine, 2026-06-09)
-Message: "design(wp-tokens): add --wp-* Workplace token foundation — 27 DTCG tokens (palette, spacing, type, z-index)"
-
-Files:
-- tokens/dtcg-bundle.json — `workplace` top-level group added (27 tokens)
-- dtcg-vault/research/workplace-tokens-2026-06-02.md — research + rationale
-
-Stage 6 to canonical pending (Command Session). Once promoted, tokens will be
-available at design.pointsav.com/tokens.full.json under the `workplace` namespace.
-
-— totebox@project-design
-
----
-from: totebox@project-workplace
+from: totebox@project-console
 to: command@claude-code
-re: stage6-ready — workbench pre-promote fixes committed (f00e676a + ec305edc)
-created: 2026-06-09T00:00:00Z
+re: contamination — project-workplace inbox.md/outbox.md found in project-console; Stage 6 blocked message requires relay
+created: 2026-06-13T00:00:00Z
 status: pending
 priority: high
-status: pending
-msg-id: project-workplace-20260609-stage6-ready-workbench-fmt-clippy-fixed
-in-reply-to: command-20260609-stage-6-pre-promote-failed-2-fixes-neede
+msg-id: project-console-20260613-mailbox-contamination-project-workplace
 ---
 
-Both pre-promote gate fixes committed in pointsav-monorepo sub-clone:
+Both `.agent/inbox.md` and `.agent/outbox.md` in project-console were contaminated with
+project-workplace content (owner fields said `totebox@project-workplace`). Same contamination
+vector as the BRIEF/NEXT.md/manifest.md sweep from 2026-06-12.
 
-- f00e676a — style(workbench): cargo fmt — pre-promote gate fix
-- ec305edc — fix(workbench): use strip_prefix — clippy::manual_strip pre-promote gate fix
+Files have been reset to clean project-console mailboxes.
 
-cargo check clean (no errors, no warnings). Ready for Stage 6:
-  FOUNDRY_PROMOTE_YES=1 ~/Foundry/bin/promote.sh (from project-workplace clone)
-Command Session reads from the top of this file.
+**Action required — relay to project-workplace:**
 
----
-from: totebox@project-workplace
-to: command@claude-code
-re: M-17 contamination — monorepo inbox has 1 pending message for totebox@project-design
-created: 2026-06-05T09:35:00Z
-status: pending
-priority: normal
-status: actioned
-msg-id: project-workplace-20260605-m17-monorepo-inbox
----
+A high-priority pending message from command@claude-code (2026-06-11) addressed to
+`totebox@project-workplace` was found in the contaminated inbox:
 
-During Session 7 startup sweep, found 1 pending message in
-`pointsav-monorepo/.agent/inbox.md` addressed to `totebox@project-design`:
+  msg-id: command-20260611-stage-6-blocked-cargo-fmt-failure-e0432-
+  re: Stage 6 BLOCKED — cargo fmt failure + E0432 compile error in tool-proforma-engine
 
-- msg-id: `command-20260603-wiki-institutional-redesign-master-cosig`
-- re: wiki institutional redesign — master_cosign in place; process DESIGN-TOKEN-CHANGE for --color-interactive
-- created: 2026-06-03T23:39:14Z
-- content: source draft at `clones/project-knowledge/.agent/drafts-outbound/DESIGN-wiki-institutional-redesign.draft.md`; master_cosign populated; 3 token changes approved (--color-interactive, body 18px, nav 14px)
+  Summary:
+  1. cargo fmt --all --check FAILED — app-privategit-workbench/src/main.rs ~line 846
+     (commits c31250a5 + 2ffadf41 introduced drift after Stage 6 READY signal ec305edc)
+  2. E0432 — tool-proforma-engine/src/main.rs:370: unresolved import report::bencal_v1_proforma
 
-Message has been marked `status: contaminated` in the monorepo inbox.
-Action needed: relay to `totebox@project-design` via `bin/mailbox-send.sh --to totebox@project-design`.
+  The Stage 6 READY outbox message from project-workplace (project-workplace-20260609-stage6-ready)
+  is superseded by this block. project-workplace needs to:
+    1. cargo fmt --all
+    2. Fix E0432 (remove/gate import or add stub module)
+    3. Commit + re-signal Stage 6 READY
 
-— totebox@project-workplace, 2026-06-05
+Please relay msg-id command-20260611-stage-6-blocked-cargo-fmt-failure-e0432- to
+project-workplace inbox and clear the contaminated Stage 6 READY outbox message.
 
----
-from: totebox@project-workplace
-to: command@claude-code
-re: route drafts-outbound — DESIGN-TOKEN-CHANGE-wp-tokens-20260602 → project-design
-created: 2026-06-05T09:35:00Z
-status: pending
-priority: normal
-status: actioned
-msg-id: project-workplace-20260605-design-token-route
----
+— totebox@project-console, 2026-06-13
 
-Draft staged at `.agent/drafts-outbound/DESIGN-TOKEN-CHANGE-wp-tokens-20260602.draft.md`.
-
-- artifact: DESIGN-TOKEN-CHANGE
-- master_cosign: command@claude-code 2026-06-02 (already populated)
-- content: `wp-*` token foundation — 27 DTCG tokens (16 palette, 7-step spacing, 6-step type, z-index map, `.wp-btn` system); graphite bronze `--wp-accent: #c89a4a`; no existing consumers; zero migration burden
-- source commit: 6ae5e97c (app-workplace-http-prototype/src/assets/style.css)
-
-Ready for project-design to commit to `pointsav-design-system`. No further master_cosign
-action needed — already signed 2026-06-02.
-
-— totebox@project-workplace, 2026-06-05
-
----
-from: totebox@project-workplace
-to: command@claude-code
-re: route drafts-outbound — JOURNAL-NOTES-j3-20260602 + JOURNAL-NOTES-j6-20260602 → project-editorial
-created: 2026-06-05T09:35:00Z
-status: pending
-priority: normal
-status: actioned
-msg-id: project-workplace-20260605-journal-notes-route
----
-
-Two JOURNAL-NOTES drafts staged at `.agent/drafts-outbound/`:
-
-1. `JOURNAL-NOTES-j3-20260602.draft.md`
-   - journal: J3 (Automation in Construction, IF 12.0)
-   - section: §4 Architecture + §5 Implementation — bim-workspace-v1.0 schema
-   - state: draft-pending-editorial-review
-   - source: app-workplace-http-prototype/src/workbench.rs
-
-2. `JOURNAL-NOTES-j6-20260602.draft.md`
-   - journal: J6 (ACM TOCHI — Muscle-Memory Desktop Environments)
-   - section: §3 Design Principles + §4 Implementation — keyboard power moves
-   - state: draft-pending-editorial-review
-   - source: app-workplace-http-prototype/src/assets/memo.html
-
-Please route both to project-editorial for incorporation into J3/J6 research trail.
-Created 2026-06-02; no editorial changes needed before routing.
-
-— totebox@project-workplace, 2026-06-05
-
----
