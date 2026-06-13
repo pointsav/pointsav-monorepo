@@ -1,14 +1,5 @@
 [workspace]
 resolver = "2"
-# Standalone workspaces (own [workspace] + Cargo.lock).
-# Must be excluded so path deps from workspace members do not trigger
-# "multiple workspace roots" errors.
-exclude = [
-    "system-core",
-    "system-ledger",
-    "system-ledger-proto",
-    "system-ledger-pd",   # seL4 bare-metal PD; own workspace root
-]
 members = [
     "service-people",
     "service-content",
@@ -44,18 +35,9 @@ members = [
     "system-vm-fleet-types",
     "service-vm-fleet",
     "service-vm-host",
+    "service-vm-tenant",
     # Knowledge wiki engine
     "app-mediakit-knowledge",
-    # Design system browser (port 9094)
-    "app-privategit-design",
-    # Capability Ledger transport shell (compat bottom: NetBSD + seL4)
-    "system-ledger-server",
-    # NetBSD 10.1 compat-bottom substrate shim
-    "system-substrate-netbsd",
-    # Guest OS image builders (NetBSD 10.1 compat bottom)
-    "os-totebox",
-    # Transport-agnostic capability invocation substrate (CapabilityInvoker trait)
-    "system-substrate",
 ]
 
 [profile.dev]
@@ -74,13 +56,3 @@ strip = true        # Strip debug symbols from output binary
 [profile.release.package.app-mediakit-knowledge]
 opt-level = 3
 strip = "symbols"
-
-# Patch tantivy-common to replace a blanket From<B> impl that conflicts with
-# time >= 0.3.36 under rustc 1.85+ coherence checks (E0119). The blanket impl
-# is replaced with explicit impls for Vec<u8> and &'static [u8], which cover
-# all call sites in tantivy 0.24.x. Remove this patch once tantivy-common
-# publishes a version with the upstream fix.
-[patch.crates-io]
-tantivy-common = { path = "vendor-tantivy-common" }
-tantivy-columnar = { path = "vendor-tantivy-columnar" }
-tantivy = { path = "vendor-tantivy" }
