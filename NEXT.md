@@ -34,24 +34,32 @@ Outbox sent this session requesting Command action. See `BRIEF-os-console-active
 
 ---
 
-## Phase 8 — Polish (next coding phase)
+## Phase 8 — Polish (in progress)
 
 See `BRIEF-os-console-active-dev.md` §Phase 8 for full scope.
 
 - [ ] OSC 8 hyperlinks in ContentCartridge
-- [ ] Truecolor detection + theme variants
+- [x] Truecolor Rgb variants — email/slm/system/input cartridges (2026-06-12)
 - [ ] Multi-tab support
 - [ ] Session persistence across reconnect
-- [ ] `/audit` log viewer command
-- [ ] F2 People cartridge (`app-console-people`)
+- [x] `/audit` log viewer — already implemented in InputCartridge (confirmed 2026-06-12)
+- [x] F2 People cartridge — scaffold complete; pending cargo check + commit (2026-06-12)
+
+**Pending commit group (blocked on cargo check --workspace clean):**
+- `feat(truecolor): extend Rgb color variants to email/slm/system/input cartridges`
+- `feat(f2): scaffold PeopleCartridge — read-only contact list from service-people`
+- `ops(systemd): draft local-console.service + local-pairing-server.service units`
+- `docs(topic): TOPIC-os-console-architecture EN+ES draft → drafts-outbound`
+- `ops(brief): Phase 8 progress — truecolor + F2 + systemd units + TOPIC draft`
 
 ---
 
-## Phase 9 — Operations (follows Phase 8)
+## Phase 9 — Operations (drafts ready; deployment blocked)
 
 See `BRIEF-os-console-active-dev.md` §Phase 9 for full scope.
 
-- [ ] `local-console.service` systemd unit draft → project-infrastructure outbox
+- [x] `local-console.service` systemd unit — drafted (2026-06-12)
+- [x] `local-pairing-server.service` systemd unit — drafted (2026-06-12)
 - [ ] Prometheus metrics exporter
 - [ ] fail2ban config for port 2222
 - [ ] Graceful SIGTERM handling

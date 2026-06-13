@@ -26,6 +26,7 @@ pub struct SystemCartridge {
     last_manual_refresh: Instant,
     // Whether the fingerprint detail block is visible for the selected request.
     show_fingerprint: bool,
+    truecolor: bool,
 }
 
 impl SystemCartridge {
@@ -40,11 +41,20 @@ impl SystemCartridge {
             poll_rx,
             last_manual_refresh: Instant::now(),
             show_fingerprint: false,
+            truecolor: false,
         }
     }
 
     pub fn pending_count(&self) -> u16 {
         self.pending.len() as u16
+    }
+
+    fn accent_color(&self) -> Color {
+        if self.truecolor { Color::Rgb(32, 178, 170) } else { Color::Cyan }
+    }
+
+    fn selection_bg(&self) -> Color {
+        if self.truecolor { Color::Rgb(40, 40, 60) } else { Color::DarkGray }
     }
 
     fn spawn_poller(base_url: String) -> mpsc::Receiver<Vec<PendingRequest>> {
@@ -144,6 +154,10 @@ impl Cartridge for SystemCartridge {
         self.pending_count()
     }
 
+    fn set_graphics_caps(&mut self, _kitty: bool, _sixel: bool, _font_size: (u16, u16), truecolor: bool) {
+        self.truecolor = truecolor;
+    }
+
     fn render(&mut self, frame: &mut Frame, area: Rect) {
         let block = Block::default()
             .borders(Borders::ALL)
@@ -198,11 +212,11 @@ impl Cartridge for SystemCartridge {
                     let marker = if i == self.selected { ">" } else { " " };
                     let ts = req.created_at.get(..19).unwrap_or(&req.created_at);
                     let line = Line::from(vec![
-                        Span::styled(format!(" {marker} "), Style::default().fg(Color::Cyan)),
+                        Span::styled(format!(" {marker} "), Style::default().fg(self.accent_color())),
                         Span::styled(
                             format!("{:<14}", req.code),
                             Style::default()
-                                .fg(Color::Cyan)
+                                .fg(self.accent_color())
                                 .add_modifier(Modifier::BOLD),
                         ),
                         Span::styled(
@@ -212,7 +226,7 @@ impl Cartridge for SystemCartridge {
                         Span::styled(ts.to_string(), Style::default().fg(Color::DarkGray)),
                     ]);
                     if i == self.selected {
-                        ListItem::new(line).style(Style::default().bg(Color::DarkGray))
+                        ListItem::new(line).style(Style::default().bg(self.selection_bg()))
                     } else {
                         ListItem::new(line)
                     }
@@ -230,7 +244,7 @@ impl Cartridge for SystemCartridge {
                 .unwrap_or("(not yet returned by server)");
             let fp_widget = Paragraph::new(Line::from(vec![
                 Span::styled("  Fingerprint: ", Style::default().fg(Color::DarkGray)),
-                Span::styled(fp_text, Style::default().fg(Color::Cyan)),
+                Span::styled(fp_text, Style::default().fg(self.accent_color())),
             ]))
             .block(
                 Block::default()

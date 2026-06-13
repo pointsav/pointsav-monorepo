@@ -156,6 +156,7 @@ pub struct InputCartridge {
     ingest_endpoint: String,
     state: InputState,
     path_input: PathInput,
+    truecolor: bool,
 }
 
 impl InputCartridge {
@@ -174,12 +175,17 @@ impl InputCartridge {
             ingest_endpoint: ingest_endpoint.into(),
             state: InputState::Entry,
             path_input: PathInput::new(),
+            truecolor: false,
         }
     }
 
     fn reset(&mut self) {
         self.state = InputState::Entry;
         self.path_input = PathInput::new();
+    }
+
+    fn anchor_color(&self) -> Color {
+        if self.truecolor { Color::Rgb(210, 0, 210) } else { Color::Magenta }
     }
 
     fn render_modal(frame: &mut Frame, area: Rect) -> Rect {
@@ -210,7 +216,7 @@ impl InputCartridge {
             .borders(Borders::ALL)
             .border_style(
                 Style::default()
-                    .fg(Color::Magenta)
+                    .fg(self.anchor_color())
                     .add_modifier(Modifier::BOLD),
             )
             .title(" F12: Input Machine — The Anchor (SYS-ADR-10) ");
@@ -442,6 +448,10 @@ impl Cartridge for InputCartridge {
 
     fn title(&self) -> &str {
         "Input"
+    }
+
+    fn set_graphics_caps(&mut self, _kitty: bool, _sixel: bool, _font_size: (u16, u16), truecolor: bool) {
+        self.truecolor = truecolor;
     }
 
     fn render(&mut self, frame: &mut Frame, area: Rect) {
