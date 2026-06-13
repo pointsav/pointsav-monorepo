@@ -12,9 +12,9 @@
 //! is the consumer's responsibility; this cache is a fast positive
 //! oracle, not the source of truth.
 
-use system_core::{Hash256, SignedCheckpoint};
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use system_core::{Hash256, SignedCheckpoint};
 
 /// Bounded checkpoint cache with LRU eviction. Order: most-recent
 /// at the back; oldest at the front. Eviction pops the front when

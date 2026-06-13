@@ -23,9 +23,7 @@ use ciborium::from_reader as cbor_from;
 use postcard::{from_bytes, to_allocvec};
 use system_core::{Capability, SignedCheckpoint, WitnessRecord};
 use system_ledger::{InMemoryLedger, LedgerConsumer, RefuseReason, Verdict};
-use system_ledger_proto::{
-    error_code, reason_code, ConsultRequest, ConsultResponse,
-};
+use system_ledger_proto::{error_code, reason_code, ConsultRequest, ConsultResponse};
 
 fn ledger_sock_path() -> PathBuf {
     std::env::var("LEDGER_SOCK")
@@ -76,28 +74,48 @@ fn write_frame(stream: &mut UnixStream, payload: &[u8]) -> std::io::Result<()> {
 fn handle_request(ledger: &InMemoryLedger, req_bytes: &[u8]) -> ConsultResponse {
     let req: ConsultRequest = match from_bytes(req_bytes) {
         Ok(r) => r,
-        Err(_) => return ConsultResponse::Error { code: error_code::DECODE_CAP },
+        Err(_) => {
+            return ConsultResponse::Error {
+                code: error_code::DECODE_CAP,
+            }
+        }
     };
 
     let cap: Capability = match cbor_from(req.cap_cbor.as_slice()) {
         Ok(c) => c,
-        Err(_) => return ConsultResponse::Error { code: error_code::DECODE_CAP },
+        Err(_) => {
+            return ConsultResponse::Error {
+                code: error_code::DECODE_CAP,
+            }
+        }
     };
 
     let ckpt_str = match std::str::from_utf8(&req.ckpt_wire) {
         Ok(s) => s,
-        Err(_) => return ConsultResponse::Error { code: error_code::DECODE_CKPT },
+        Err(_) => {
+            return ConsultResponse::Error {
+                code: error_code::DECODE_CKPT,
+            }
+        }
     };
     let ckpt: SignedCheckpoint = match SignedCheckpoint::parse(ckpt_str) {
         Ok(c) => c,
-        Err(_) => return ConsultResponse::Error { code: error_code::DECODE_CKPT },
+        Err(_) => {
+            return ConsultResponse::Error {
+                code: error_code::DECODE_CKPT,
+            }
+        }
     };
 
     let witness: Option<WitnessRecord> = match req.witness_cbor {
         None => None,
         Some(ref b) => match cbor_from(b.as_slice()) {
             Ok(w) => Some(w),
-            Err(_) => return ConsultResponse::Error { code: error_code::DECODE_WITNESS },
+            Err(_) => {
+                return ConsultResponse::Error {
+                    code: error_code::DECODE_WITNESS,
+                }
+            }
         },
     };
 
@@ -118,7 +136,9 @@ fn handle_request(ledger: &InMemoryLedger, req_bytes: &[u8]) -> ConsultResponse 
             };
             ConsultResponse::Refuse { reason_code: code }
         }
-        Err(_) => ConsultResponse::Error { code: error_code::INTERNAL },
+        Err(_) => ConsultResponse::Error {
+            code: error_code::INTERNAL,
+        },
     }
 }
 
@@ -252,8 +272,8 @@ mod tests {
 
     #[test]
     fn no_apex_returns_refuse() {
+        use ed25519_dalek::{Signer, SigningKey};
         use system_core::{Checkpoint, NoteSignature, SignedCheckpoint};
-        use ed25519_dalek::{SigningKey, Signer};
 
         let path = temp_sock_path();
         let _h = spawn_server(path.clone());
@@ -341,8 +361,8 @@ mod tests {
 
     #[test]
     fn multiple_requests_on_one_connection() {
+        use ed25519_dalek::{Signer, SigningKey};
         use system_core::{Checkpoint, NoteSignature, SignedCheckpoint};
-        use ed25519_dalek::{SigningKey, Signer};
 
         let path = temp_sock_path();
         let _h = spawn_server(path.clone());
@@ -363,7 +383,11 @@ mod tests {
             let sig = sk.sign(&body).to_bytes();
             SignedCheckpoint {
                 checkpoint: cp,
-                signatures: vec![NoteSignature { signer_name: "apex".to_string(), key_hash, signature: sig }],
+                signatures: vec![NoteSignature {
+                    signer_name: "apex".to_string(),
+                    key_hash,
+                    signature: sig,
+                }],
             }
         };
 
@@ -376,7 +400,10 @@ mod tests {
             };
             let resp = send_request(&mut stream, &req);
             // No apex → Refuse; 3 times in a row on the same connection.
-            assert!(matches!(resp, ConsultResponse::Refuse { .. }), "request {n}: expected Refuse");
+            assert!(
+                matches!(resp, ConsultResponse::Refuse { .. }),
+                "request {n}: expected Refuse"
+            );
         }
     }
 }

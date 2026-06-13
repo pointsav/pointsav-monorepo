@@ -13,13 +13,13 @@
 
 use system_core::Hash256;
 
-#[cfg(feature = "std")]
-use std::collections::{HashMap, HashSet};
 #[cfg(not(feature = "std"))]
 use alloc::{
     collections::{BTreeMap as HashMap, BTreeSet as HashSet},
     string::String,
 };
+#[cfg(feature = "std")]
+use std::collections::{HashMap, HashSet};
 
 /// One revocation entry — the audit detail behind a "this capability
 /// is no longer honored" decision.

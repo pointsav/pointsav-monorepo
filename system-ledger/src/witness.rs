@@ -29,11 +29,7 @@
 
 // ── alloc imports (no_std path) ──────────────────────────────────────────────
 #[cfg(not(feature = "std"))]
-use alloc::{
-    format,
-    string::String,
-    vec::Vec,
-};
+use alloc::{format, string::String, vec::Vec};
 
 /// Namespace tag bound to the `-n` flag of `ssh-keygen -Y sign /
 /// verify`. Cross-namespace replay against commit-signing or
@@ -280,9 +276,9 @@ fn parse_openssh_ed25519_key(openssh: &str) -> Result<[u8; 32], WitnessVerifyErr
     use base64::Engine as _;
     let mut parts = openssh.trim().splitn(3, ' ');
     let algo = parts.next().unwrap_or("");
-    let b64 = parts.next().ok_or_else(|| {
-        WitnessVerifyError::ParseError("invalid pubkey: missing key data".into())
-    })?;
+    let b64 = parts
+        .next()
+        .ok_or_else(|| WitnessVerifyError::ParseError("invalid pubkey: missing key data".into()))?;
     if algo != "ssh-ed25519" {
         return Err(WitnessVerifyError::ParseError(format!(
             "expected ssh-ed25519, got {algo}"

@@ -20,7 +20,10 @@
 //! [`crate::LedgerConsumer`] impl in `lib.rs`.
 
 #[cfg(not(feature = "std"))]
-use alloc::{string::{String, ToString}, vec::Vec};
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
 
 /// One apex identity in the ledger's history.
 #[derive(Debug, Clone, PartialEq, Eq)]
