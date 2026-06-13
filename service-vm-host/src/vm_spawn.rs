@@ -87,8 +87,7 @@ pub fn create_boot_disk(vm_id: &str, size_gb: u32) -> Result<PathBuf, String> {
 /// VM_SSH_PUBKEY env var so the fleet controller can SSH into spawned VMs.
 pub fn build_seed_iso(vm_id: &str, vm_type: &str) -> Result<PathBuf, String> {
     let work_dir = disk_dir();
-    fs::create_dir_all(&work_dir)
-        .map_err(|e| format!("cannot create disk dir: {e}"))?;
+    fs::create_dir_all(&work_dir).map_err(|e| format!("cannot create disk dir: {e}"))?;
 
     let meta_path = work_dir.join(format!("{vm_id}-meta-data"));
     let user_path = work_dir.join(format!("{vm_id}-user-data"));
@@ -114,10 +113,8 @@ pub fn build_seed_iso(vm_id: &str, vm_type: &str) -> Result<PathBuf, String> {
         )
     };
 
-    fs::write(&meta_path, meta.as_bytes())
-        .map_err(|e| format!("cannot write meta-data: {e}"))?;
-    fs::write(&user_path, user.as_bytes())
-        .map_err(|e| format!("cannot write user-data: {e}"))?;
+    fs::write(&meta_path, meta.as_bytes()).map_err(|e| format!("cannot write meta-data: {e}"))?;
+    fs::write(&user_path, user.as_bytes()).map_err(|e| format!("cannot write user-data: {e}"))?;
 
     let status = Command::new("genisoimage")
         .args([
@@ -131,7 +128,9 @@ pub fn build_seed_iso(vm_id: &str, vm_type: &str) -> Result<PathBuf, String> {
             user_path.to_str().unwrap(),
         ])
         .status()
-        .map_err(|e| format!("genisoimage not found (install: sudo apt install genisoimage): {e}"))?;
+        .map_err(|e| {
+            format!("genisoimage not found (install: sudo apt install genisoimage): {e}")
+        })?;
 
     if status.success() {
         // Temp files no longer needed once ISO is built
@@ -234,12 +233,7 @@ pub fn kill_qemu(vm_id: &str) {
 }
 
 /// Synthesise a VmRecord representing a VM that has just been accepted for provisioning.
-pub fn provisioning_record(
-    vm_id: &str,
-    vm_type: &str,
-    ram_mb: u64,
-    vcpu_count: u32,
-) -> VmRecord {
+pub fn provisioning_record(vm_id: &str, vm_type: &str, ram_mb: u64, vcpu_count: u32) -> VmRecord {
     VmRecord {
         vm_id: vm_id.to_string(),
         vm_type: vm_type.to_string(),

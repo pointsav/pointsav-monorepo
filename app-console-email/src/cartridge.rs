@@ -209,11 +209,19 @@ impl EmailCartridge {
     }
 
     fn accent_color(&self) -> Color {
-        if self.truecolor { Color::Rgb(32, 178, 170) } else { Color::Cyan }
+        if self.truecolor {
+            Color::Rgb(32, 178, 170)
+        } else {
+            Color::Cyan
+        }
     }
 
     fn selection_bg(&self) -> Color {
-        if self.truecolor { Color::Rgb(0, 95, 135) } else { Color::DarkGray }
+        if self.truecolor {
+            Color::Rgb(0, 95, 135)
+        } else {
+            Color::DarkGray
+        }
     }
 
     fn render_inbox(&mut self, frame: &mut Frame, area: Rect) {
@@ -524,7 +532,13 @@ impl Cartridge for EmailCartridge {
         "Email"
     }
 
-    fn set_graphics_caps(&mut self, _kitty: bool, _sixel: bool, _font_size: (u16, u16), truecolor: bool) {
+    fn set_graphics_caps(
+        &mut self,
+        _kitty: bool,
+        _sixel: bool,
+        _font_size: (u16, u16),
+        truecolor: bool,
+    ) {
         self.truecolor = truecolor;
     }
 

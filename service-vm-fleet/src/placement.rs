@@ -36,11 +36,18 @@ pub fn select_node(registry: &NodeRegistry, ram_mb: u64, prefer_kvm: bool) -> Op
 
 /// Inner selection helper. `reserved_tier` selects only reserved (true) or only
 /// non-reserved (false) nodes.
-fn pick(registry: &NodeRegistry, required: u64, prefer_kvm: bool, reserved_tier: bool) -> Option<NodeId> {
+fn pick(
+    registry: &NodeRegistry,
+    required: u64,
+    prefer_kvm: bool,
+    reserved_tier: bool,
+) -> Option<NodeId> {
     if prefer_kvm {
         let kvm_choice = registry
             .nodes_iter()
-            .filter(|n| n.reserved == reserved_tier && n.ram_available_mb >= required && n.kvm_available)
+            .filter(|n| {
+                n.reserved == reserved_tier && n.ram_available_mb >= required && n.kvm_available
+            })
             .max_by_key(|n| n.ram_available_mb)
             .map(|n| n.node_id.clone());
         if kvm_choice.is_some() {
@@ -179,7 +186,7 @@ mod tests {
         let mut reg = NodeRegistry::new();
         // Non-reserved node exists but has insufficient RAM
         reg.update_node(&make_heartbeat_full("gcp", 4096, 3900, false, false)); // 196 MB free < 512+512
-        // Reserved node has plenty of RAM
+                                                                                // Reserved node has plenty of RAM
         reg.update_node(&make_heartbeat_full("laptop-b", 8192, 2048, true, true));
         // Should fall back to laptop-b (reserved) since gcp can't satisfy request
         let result = select_node(&reg, 512, false);
