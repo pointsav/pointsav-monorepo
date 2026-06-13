@@ -3,7 +3,7 @@ artifact: brief
 status: active
 title: Knowledge Platform — Master Brief
 cluster: project-knowledge
-updated: 2026-06-11
+updated: 2026-06-12
 supersedes: archive/BRIEF-knowledge-platform-master.md
 verdict_source: .agent/drafts-outbound/BRIEF-REVIEW-old-brief-verdict.md
 ---
@@ -51,7 +51,7 @@ Single Rust binary. No runtime system dependencies. Apache 2.0.
 | Phase 0 | Federation engine | **Complete 2026-06-12** | All scope items done; gate 689 articles / 0 dead links; Stage 6 at 9a1326df; archive ops pending Stage 6 |
 | Phase 9 | Production deploy | **Shipped 2026-06-11** | WIKI_KNOWLEDGE_TOML migration; /etc/local-knowledge/; all 3 instances healthy |
 
-Sub-clone tip: `9a1326df` — **CANONICAL** (origin/main confirmed 2026-06-12). Archive tip: `e6d01e9c` (+4 ops commits ahead of canonical; Stage 6 READY pending this session close-out).
+Sub-clone tip: `69095f85` — Stage 6 READY sent 2026-06-12 (origin/main still `9a1326df`; rebuild + redeploy required after promote). Archive tip: `f7295cf8`.
 
 ---
 
@@ -243,7 +243,7 @@ differentiation can proceed.
 **`tokens.css` / `config/*.toml` deletion intent** — ~~RESOLVED 2026-06-11~~: operator chose
 "delete tokens.css only; keep config/*.toml as templates." Committed at ece90408.
 
-**`check --strict` as pre-promote gate** — DONE 9a1326df: `scripts/stage6-gate.sh` wired; `wikilink-unresolved` span removed from render.rs (L18 complete). Gate currently reports 1 dead link (`substrate-without-inference-base-case.es.md` → fix sent to project-editorial).
+**`check --strict` as pre-promote gate** — DONE 9a1326df: `scripts/stage6-gate.sh` wired; `wikilink-unresolved` span removed from render.rs (L18 complete). Gate passes clean 689 articles / 0 dead links / 0 missing fields (project-editorial applied fix 2026-06-12).
 
 **Sub-clone rebase** — ~~Resolved 2026-06-10~~. Merge strategy chosen; post-merge tip `ca6ae410` → `8480f68e`; Stage 6 signal updated in outbox. No further action needed.
 
@@ -253,6 +253,15 @@ status unknown. Confirm target domain per instance before Phase 6 cutover.
 ---
 
 ## §6 — Session Log
+
+### 2026-06-12 | totebox | claude-code (continuation)
+
+Resumed after context compaction. Resolved two post-Phase-0 items:
+1. NEXT.md contamination (project-data content prepended to project-knowledge NEXT.md) — stripped; correct content-only file committed at `f7295cf8`.
+2. Nightly smoke test false failure — `/health` alias added to `server/mod.rs` (1-line route alias reusing `healthz` handler); 129 tests pass; committed at `69095f85`. Stage 6 READY sent to Command (msg-id: `command-20260613-stage-6-ready-project-knowledge-sub-clon`); binary rebuild + redeploy to 9090/9093/9095 required.
+Inbox message `command-20260613-app-mediakit-knowledge-nightly-smoke-tes` actioned. BRIEF tip hashes updated.
+
+---
 
 ### 2026-06-12 | totebox | claude-code (close-out)
 
