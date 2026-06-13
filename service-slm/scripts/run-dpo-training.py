@@ -283,7 +283,14 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
     )
 
     print(f"[train] starting DPO training on {len(split['train'])} pairs ...")
-    resume_ckpt = True if resume else None
+    resume_ckpt = None
+    if resume:
+        checkpoints = sorted(glob.glob(os.path.join(output_dir, "checkpoint-*")))
+        if checkpoints:
+            resume_ckpt = checkpoints[-1]
+            print(f"[train] resuming from checkpoint: {resume_ckpt}")
+        else:
+            print(f"[train] no checkpoint in {output_dir} — starting fresh")
     trainer.train(resume_from_checkpoint=resume_ckpt)
 
     print(f"[train] saving adapter to {output_dir}")
