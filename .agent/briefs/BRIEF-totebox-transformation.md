@@ -524,6 +524,193 @@ The simulation discipline (Phases S1→S4 in §14) is the path. Phase S4 closes 
 
 ---
 
+## 16. Customer Virtualization Layer — service-vm-tenant
+
+*Architectural review by claude-fable-5, 2026-06-12.*
+
+### What the layer does
+
+`service-vm-tenant` (:9221) is a thin authenticated proxy in front of the fleet controller,
+`service-vm-fleet` (:9203). It follows the pattern established by `app-orchestration-slm`:
+Bearer module-id authentication, a stateless tenant registry (environment-seeded for MVP),
+and server-side injection of the validated tenant identity into every forwarded request —
+the tenant id is never trusted from a request body. Four routes cover the tenant surface:
+create VM, list VMs, destroy VM, and usage/quota status.
+
+The layer holds no placement logic and no node state. Placement, heartbeat tracking, and
+spawn delegation remain in the fleet controller, which stays a uniform internal API for
+operator tooling; the tenant layer decides only whether a request is permitted and which
+slice of fleet state a caller may see.
+
+Stack after implementation:
+```
+Customer (Bearer: <module-id>)
+  → service-vm-tenant :9221   — auth, tenant namespace, quotas
+  → service-vm-fleet  :9203   — internal, placement, delegation
+  → service-vm-host   :9220   — internal, QEMU spawn per node
+```
+
+### Isolation model today
+
+Three properties are guaranteed once service-vm-tenant is deployed:
+- **Namespace isolation** — an authenticated tenant cannot enumerate or destroy another
+  tenant's VMs.
+- **Process isolation** — each VM is a separate QEMU/KVM process.
+- **Per-VM network containment** — user-mode (SLIRP) networking gives each guest a private
+  NAT'd stack with no inbound path and no visibility of other guests or the host LAN.
+
+Two properties are explicitly not guaranteed:
+- No per-tenant subnet — all VMs egress through the host indistinguishably.
+- No isolation from the node operator — anyone with root on a physical node can read
+  guest disk images and memory.
+
+Additionally: `:9203` and `:9220` must be firewalled to accept traffic only from
+service-vm-tenant (loopback or mesh-internal). Otherwise the auth layer is bypassable from
+any mesh participant.
+
+### Design corrections (Fable review)
+
+1. **tenant_id must persist via heartbeats.** Pure statelessness breaks `DELETE` ownership
+   checks after a fleet restart. The fleet VM record carries `tenant_id`; service-vm-host
+   echoes it back in heartbeats so the fleet registry rebuilds correctly. This is the
+   correctness requirement, not a hardening item.
+
+2. **Bearer token should be opaque.** `TENANT_IDS=alice` means knowing a tenant name is
+   full account takeover. The env var should map random tokens → tenant ids from the start.
+   Route shape does not change.
+
+3. **Quota enforcement needs serialization.** Concurrent `POST /v1/vms` can both pass the
+   quota check before either VM registers. A single mutex in the proxy is sufficient at this
+   scale.
+
+4. **SLIRP has no inbound path.** A tenant can create a VM but cannot reach it directly.
+   Interim fix: return SLIRP `hostfwd` port mappings in the VmRecord create response.
+
+5. **Audit trail.** Tenant lifecycle ops (create/destroy) should write to the `service-fs`
+   WORM ledger, consistent with the BCSC-posture audit-trail direction.
+
+### Network-level isolation path (os-network-admin Phase S3+)
+
+API-layer isolation ships now. Network-layer isolation (per-tenant WireGuard subnets so
+tenant VMs are cryptographically unreachable from other tenants, not merely API-hidden) is
+gated on os-network-admin Phase S3 (automated peer-table management) and seL4 Mode B (see
+§17). Until then, describe the isolation boundary honestly: API-level isolation is the
+shipped capability.
+
+---
+
+## 17. os-network-admin — Control Plane Role Definition
+
+*Architectural research by claude-fable-5, 2026-06-12. Comparison with OpenStack and CloudStack.*
+
+### The comparison
+
+**OpenStack** separates four concerns:
+- **Neutron (network control plane)** — REST API + per-node agents. Owns tenant network
+  objects, subnet/CIDR allocation (IPAM), and port objects. A port is the key abstraction:
+  the IP address belongs to the port record, not to any hypervisor. When a VM moves nodes,
+  the port binding moves with it — the IP is stable because it was never a property of the
+  physical node. Neutron is not user-facing in the UI sense; tenants reach it only through
+  its API, and its agents program the data path (OVS/OVN, VXLAN/GENEVE tunnels) invisibly.
+- **Nova (compute control plane)** — scheduler + conductor; per-node nova-compute agents.
+  The PPN already has this split: `service-vm-fleet` ≈ Nova controller, `service-vm-host`
+  ≈ nova-compute.
+- **Horizon (portal)** — pure presentation layer with no state and no authority. It calls
+  Keystone-authenticated Nova/Neutron APIs. OpenStack's lesson: the portal is thin and
+  replaceable; the control plane is the product.
+- **Overlay networking** — "one IP space regardless of physical node" is delivered by
+  tunneling tenant traffic (VXLAN) over the provider underlay, with Neutron programming
+  forwarding tables on each node.
+
+**CloudStack** introduces System VMs: appliances the Management Server spawns *inside* the
+cloud it manages — notably the Virtual Router (per-tenant DHCP, DNS, NAT, firewall) plus
+Console Proxy and Secondary Storage VMs. Customers never log into System VMs; they are
+infrastructure that implements the tenant data path. This validates the "os-network-admin
+as a system VM inside the PPN" model: CloudStack proves the pattern of control-plane-spawned,
+non-customer-facing network appliances.
+
+### Role determination
+
+**os-network-admin is the Neutron/Management-Server-equivalent network control plane.**
+
+This is Option A: a *system VM* running inside the PPN, managing peer tables, IP address
+allocation, and tenant WireGuard subnets. It is not customer-facing.
+
+- **Option B (Horizon-equivalent portal) is wrong.** Both reference architectures keep
+  portal and control plane separate. Folding customer access into os-network-admin would put
+  tenant identity and session handling inside the component doctrine defines as a blind
+  transport/control layer.
+- **Option C (local operator console)** is already absorbed by `app-network-admin` —
+  the F8 Terminal that runs on top of os-network-admin. It is the os-console analogue for
+  the PPN node operator, not for external customers.
+- The customer portal is a planned separate thin component (an `app-*` surface) that
+  consumes the control plane API — the way Horizon consumes Neutron.
+
+Resulting division:
+```
+service-vm-fleet       ≈ Nova          (compute placement)
+os-network-admin       ≈ Neutron       (peer tables, tenant IPAM, subnet allocation)
+app-network-admin      ≈ operator TUI  (F8 Terminal — local operator only)
+<planned portal>       ≈ Horizon       (customer-facing thin app)
+```
+
+### What "customers see one IP space" requires technically
+
+The current 10.8.0.0/24 WireGuard mesh is the **node underlay** (OpenStack: provider
+network). Tenant IP space must be a **separate overlay**:
+
+1. **Port abstraction + IPAM datastore** — tenant IPs bound to port records owned by
+   os-network-admin, never to nodes. This is the single most important structural decision;
+   it is what makes IPs stable across node changes.
+2. **Overlay transport** — either VXLAN tunneled over the WireGuard underlay, or nested
+   per-tenant WireGuard interfaces (WG-in-WG, one subnet per tenant). The latter is simpler
+   at 3 nodes and self-similar to existing PPN tooling; VXLAN scales better for many tenants.
+3. **Per-node programming agent** — when `service-vm-host` spawns a VM, it must attach it
+   to the tenant overlay (bridge/tap/peer entry) on instructions from os-network-admin.
+4. **Migration = peer-table update** — stable IP across nodes means os-network-admin
+   re-programs AllowedIPs/forwarding on hub and hosts when a port re-binds.
+
+### Phase boundary — prerequisites for tenant-visible stable IPs
+
+None of the following exist today:
+
+1. IPAM datastore with subnet pools and port records (persistent, owned by os-network-admin).
+2. Ratified overlay decision (VXLAN-over-WG vs nested WG) — blocks everything downstream.
+3. Spawn-time port allocation: `service-vm-fleet` requests a port from os-network-admin
+   *before* boot, so the VM receives its IP via cloud-init/QEMU args.
+4. Per-node network programming agent (current `service-vm-host` does spawn + heartbeat
+   only; current os-network-admin is a 44-line simulation poller).
+5. Hub routing of overlay traffic between spokes on the GCP relay.
+6. A tenant identity model — "log in and see your resources" requires authN before any
+   portal is meaningful (service-vm-tenant provides this at the API layer; a portal is a
+   separate Phase 3 item).
+
+These gate on os-network-admin Phase S3 (live peer-table automation) and, for the full
+isolation guarantee, seL4 Mode B (§15).
+
+---
+
+## 18. Placement Policy — Laptop B Reserved
+
+*Implemented 2026-06-12.*
+
+Laptop B (`laptop-b-1`, 10.8.0.1) is reserved for VP use. The `VM_RESERVED=true` flag was
+added to `service-vm-host` and the placement algorithm updated to two-pass logic:
+
+**Pass 1 — non-reserved nodes only:** Laptop A (10.8.0.6, KVM) and GCP (10.8.0.9, no KVM)
+are selected in this pass. Laptop A is preferred for KVM workloads; GCP for TCG/non-KVM.
+
+**Pass 2 — reserved nodes (last resort):** Laptop B is included only when Pass 1 finds no
+node with sufficient RAM. A `WARN` log is emitted when the fleet falls back to a reserved node.
+
+Implementation: `reserved: bool` field added to `NodeHeartbeat` and `NodeRecord` (serde
+default false — no breaking change to existing nodes). Placement algorithm in
+`service-vm-fleet/src/placement.rs` uses the `pick()` helper with `reserved_tier` flag.
+
+To mark Laptop B reserved: `VM_RESERVED=true` in `/etc/default/vm-host` on Laptop B.
+
+---
+
 ## 12. Cross-References
 
 - `BRIEF-sovereign-os-family-master-plan.md §R–§W` — governance layer (which folders move where)
