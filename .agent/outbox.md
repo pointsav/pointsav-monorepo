@@ -13,25 +13,11 @@ to: operator
 re: two pending operator steps on Laptop B — WireGuard persistence + Laptop A direct path
 created: 2026-06-11T00:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-06-12T23:10:00Z
+actioned_by: totebox@claude-code
+actioned_note: wg-quick save wg0 confirmed on Laptop B. Laptop A now routes via Laptop B LAN relay (ppn.conf peer changed to Laptop B key + endpoint 10.0.0.1:51820). GCP direct peer removed. All 3 nodes in fleet — commit caeef1cc.
 msg-id: project-infrastructure-20260611-laptop-b-pending-steps
-
-Laptop B peer table has laptop-a-1 added at runtime (via `wg set`) but this is not persisted and will be lost on reboot. Two operator steps needed when convenient:
-
-1. **Persist peer table on Laptop B:**
-   ```
-   sudo wg-quick save wg0
-   ```
-   This writes the current runtime peer table (including laptop-a-1 at 10.8.0.6) into `/etc/wireguard/wg0.conf` so it survives reboots.
-
-2. **Add direct WireGuard path Laptop B → Laptop A** (optional, improves latency):
-   ```
-   sudo wg set wg0 peer 1Oa2ePQyKmk9KsrScbbX3BcnVD53vx1F47OolWXFZ1s= endpoint 10.0.0.65:51821 allowed-ips 10.8.0.6/32 persistent-keepalive 25
-   sudo wg-quick save wg0
-   ```
-   Currently Laptop B → Laptop A traffic routes through GCP hub. With a direct endpoint, the two laptops communicate over LAN when on the same network (faster spawn delegation).
-
-No urgency — pool is functional without these steps. Run when at Laptop B terminal.
 
 ---
 from: totebox@project-infrastructure
@@ -840,26 +826,3 @@ actioned: 2026-05-30T06:00:00Z
 actioned_by: command@claude-code
 note: relayed to project-editorial inbox (msg-id command-20260530-infrastructure-sessions2-7-topic-relay); editor note: update 10.50.0.0/24 → 10.8.0.0/24 (operator ratified)
 ---
-
-Two drafts staged at `.agent/drafts-outbound/` in the project-infrastructure archive:
-
-- `topic-sovereign-mesh.draft.md` — English
-- `topic-sovereign-mesh.es.draft.md` — Spanish
-
-**Target:** `content-wiki-documentation/infrastructure/sovereign-mesh.md` (+ `.es.md` pair)
-
-**What it does:** Expands the existing one-sentence stub to a full PPN architecture topic.
-Covers: hub-spoke topology, WireGuard overlay, `ppn0` interface, 16-byte binary command
-protocol on port 8090, three node roles, Genesis Protocol integration, Diode Standard
-relationship, see-also links.
-
-**Note for editor:** Two open questions flagged in the research trail (see `notes_for_editor`
-field and the `## Research trail / Open questions` section in both drafts):
-1. Canonical PPN subnet — uses `10.50.0.0/24` / `.1/.2/.3` with planned language pending
-   operator ratification.
-2. Genesis Protocol implementation state — topic describes intended architecture per TOPICs;
-   code is currently a prototype (EAPOL monitor-mode). No correction needed in the topic
-   itself — the intended architecture is what the topic should describe.
-
-Archive path: `/srv/foundry/clones/project-infrastructure/.agent/drafts-outbound/`
-
