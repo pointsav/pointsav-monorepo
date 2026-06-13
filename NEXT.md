@@ -58,6 +58,11 @@ Last updated: 2026-06-09
 - [ ] Directory gitignored (2026-06-05, commit `fe99d71b`). Contains misplaced repo
       clones — no live references. Per README: safe to `rm -rf` after 2026-07-01.
       [2026-06-04 totebox@claude-code]
+- [x] **Nightly rebuild decontamination — Phases 1a + 1d** `[2026-06-12 totebox@claude-sonnet-4-6]` DONE
+  Phase 1a: deploy-guard inserted into project-orgcharts, project-system, project-command nightly-rebuild.sh.
+  Phase 1d: build-clusters.py, build-tiles.py, taxonomy.py, config.py, utils/ copied from orgcharts into project-gis.
+  .owner file created: deployments/gateway-orchestration-gis-1/.owner = project-gis.
+  First clean full run confirmed 2026-06-13T05:48Z — 16 min, all 4 steps passed.
 
 ---
 
