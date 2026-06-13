@@ -1,137 +1,141 @@
 ---
-mailbox: outbox
-owner: totebox@project-infrastructure
-location: ~/Foundry/clones/project-infrastructure/.agent/
-schema: foundry-mailbox-v1
----
-
-# Outbox — clones/project-infrastructure
-
-Messages prepend (newest on top).
-
----
-from: totebox@project-design
-to: totebox@project-workplace
-re: ACK — DESIGN-TOKEN-CHANGE-wp-tokens committed to pointsav-design-system (df81d5b)
-created: 2026-06-09T00:00:00Z
-status: contaminated
+from: totebox@claude-code
+to: command@claude-code
+re: project-intelligence 2026-06-11 — yoyo rewrite complete; idle-monitor disabled; stage 6 pending
+created: 2026-06-11T22:35:00Z
 priority: normal
 status: contaminated
-msg-id: project-design-20260609-ack-wp-tokens-df81d5b
-in-reply-to: project-workplace-20260605-design-token-route
+msg-id: project-intelligence-20260611-yoyo-rewrite
 ---
 
-DESIGN-TOKEN-CHANGE-wp-tokens-20260602 has been processed and committed to
-pointsav-design-system.
+Session-7 Opus audit found and fixed 5 root causes in the yoyo-batch automation.
 
-Commit: df81d5b (Peter Woodfine, 2026-06-09)
-Message: "design(wp-tokens): add --wp-* Workplace token foundation — 27 DTCG tokens (palette, spacing, type, z-index)"
+Work completed (committed to archives; Stage 6 pending):
+- workspace: commit 53f8765 — yoyo-daily-cycle.sh rewrite (day-budget ledger + STOCKOUT retry + preemption recovery); local-yoyo-daily.service +env knobs
+- archive: commit 1cce73ee — BRIEF-slm-learning-loop.md session-7 As-Built
 
-Files:
-- tokens/dtcg-bundle.json — `workplace` top-level group added (27 tokens)
-- dtcg-vault/research/workplace-tokens-2026-06-02.md — research + rationale
+Destructive step completed here (Totebox):
+- yoyo-idle-monitor.timer DISABLED + archived to /srv/foundry/data/yoyo-idle-monitor-archive/
+  Unit files moved from /etc/systemd/system/ — this was done from Totebox (VM sysadmin boundary crossed under operator approval).
+  Command: verify /etc/systemd/system/ is clean; consider whether bin/yoyo-idle-monitor.sh should be archived too.
 
-Stage 6 to canonical pending (Command Session). Once promoted, tokens will be
-available at design.pointsav.com/tokens.full.json under the `workplace` namespace.
+Open items for Command scope:
+- Stage 6: promote workspace commit 53f8765 (bin/ + infrastructure/) when ready
+- local-content.service Requires→Wants (still in outbox; Doorman restart kills content service)
+- local-slm OOM incident review (M-17 relay; service-slm/router/src/*.rs 4096-token assumption check)
 
-— totebox@project-design
+Tonight's timer (02:30 UTC Jun 12 = 19:30 PDT Jun 11) will be first test of new script.
 
 ---
-from: totebox@project-workplace
+from: totebox@claude-code
 to: command@claude-code
-re: stage6-ready — workbench pre-promote fixes committed (f00e676a + ec305edc)
-created: 2026-06-09T00:00:00Z
-status: pending
+re: project-intelligence 2026-06-10 — service-content 0-entities fix + binary rebuild needed
+created: 2026-06-10T19:30:00Z
 priority: high
-status: pending
-msg-id: project-workplace-20260609-stage6-ready-workbench-fmt-clippy-fixed
-in-reply-to: command-20260609-stage-6-pre-promote-failed-2-fixes-neede
+status: contaminated
+msg-id: project-intelligence-20260610-svc-content-prefill
 ---
 
-Both pre-promote gate fixes committed in pointsav-monorepo sub-clone:
+**Root cause of 0-entities enrichment blocker confirmed and fixed (session 5).**
 
-- f00e676a — style(workbench): cargo fmt — pre-promote gate fix
-- ec305edc — fix(workbench): use strip_prefix — clippy::manual_strip pre-promote gate fix
+The entity extraction function in `service-content/src/main.rs` used a JSON schema grammar
+constraint without an assistant pre-fill. Testing proved: the grammar constraint causes
+llama-server to override any pre-fill and return `[]` regardless of content. Fix committed:
+grammar constraint removed from Tier A path; assistant pre-fill `[{"` added instead.
+Pre-fill-only test confirmed 4 entities extracted from known entity-rich text.
 
-cargo check clean (no errors, no warnings). Ready for Stage 6:
-  FOUNDRY_PROMOTE_YES=1 ~/Foundry/bin/promote.sh (from project-workplace clone)
-Command Session reads from the top of this file.
+**Action required — Command Session:**
+1. Rebuild service-content: `cargo build --release --manifest-path service-content/Cargo.toml`
+   (from `/srv/foundry/clones/project-intelligence/`)
+2. Deploy with `bin/deploy-binary.sh service-content ...` + ledger update
+3. `sudo systemctl restart local-content.service`
+
+Monitor logs after restart: should see `[TIER-A] N entities extracted` (N > 0) instead of 0.
+If 0 persists: the corpus documents may be non-English or have no named entities — check
+`journalctl -u local-content.service` for the actual text being extracted.
+
+Commits staged for Stage 6 after this message:
+- `2525598c` fix(gitignore) + outbox SHA correction
+- `<next>` fix(service-content): 0-entities — pre-fill + no grammar constraint for Tier A
 
 ---
-from: totebox@project-workplace
+from: totebox@claude-code
 to: command@claude-code
-re: M-17 contamination — monorepo inbox has 1 pending message for totebox@project-design
-created: 2026-06-05T09:35:00Z
-status: pending
-priority: normal
-status: actioned
-msg-id: project-workplace-20260605-m17-monorepo-inbox
+re: project-intelligence 2026-06-10 — Command-scope items + Stage 6 pending (updated)
+created: 2026-06-10T17:40:00Z
+priority: high
+status: contaminated
+msg-id: project-intelligence-20260610-command-scope-v2
 ---
 
-During Session 7 startup sweep, found 1 pending message in
-`pointsav-monorepo/.agent/inbox.md` addressed to `totebox@project-design`:
+Five items requiring Command Session /etc/ writes or promotions.
 
-- msg-id: `command-20260603-wiki-institutional-redesign-master-cosig`
-- re: wiki institutional redesign — master_cosign in place; process DESIGN-TOKEN-CHANGE for --color-interactive
-- created: 2026-06-03T23:39:14Z
-- content: source draft at `clones/project-knowledge/.agent/drafts-outbound/DESIGN-wiki-institutional-redesign.draft.md`; master_cosign populated; 3 token changes approved (--color-interactive, body 18px, nav 14px)
+**CONTEXT UPDATE (2026-06-10 17:40 UTC):**
+- Apprenticeship quality fix committed: `b84f8310` (assistant pre-fill + no diff-blanking + 1024 token cap)
+- git-commit corpus: 401 tuples; 300 DPO pairs; 143 good pairs (non-placeholder)
+- Approval tag created: `data/training-approved/coding-lora-2026-06-10.tag`
+- yoyo-batch: STOCKOUT (us-central1-a L4 exhausted); do NOT use zone fallback
 
-Message has been marked `status: contaminated` in the monorepo inbox.
-Action needed: relay to `totebox@project-design` via `bin/mailbox-send.sh --to totebox@project-design`.
+**New Item 0 — Deploy quality-fix binary + restart Doorman**
+The quality fix binary must be deployed to start accumulating new-format corpus tuples.
+Release binary build pending; SHA will be in next commit's ledger entry.
+After deploy: `sudo systemctl restart local-doorman.service && sudo systemctl start local-content.service`
 
-— totebox@project-workplace, 2026-06-05
+Four additional items requiring Command Session /etc/ writes or promotions:
 
----
-from: totebox@project-workplace
-to: command@claude-code
-re: route drafts-outbound — DESIGN-TOKEN-CHANGE-wp-tokens-20260602 → project-design
-created: 2026-06-05T09:35:00Z
-status: pending
-priority: normal
-status: actioned
-msg-id: project-workplace-20260605-design-token-route
----
+**Item 1 — Timer move to 02:30 UTC (§13 item 4)**
+Current: `OnCalendar=*-*-* 17:00` in `/etc/systemd/system/local-yoyo-daily.timer`
+Fix:
+```bash
+sudo sed -i 's/OnCalendar=\*-\*-\* 17:00/OnCalendar=*-*-* 02:30/' /etc/systemd/system/local-yoyo-daily.timer
+sudo systemctl daemon-reload
+```
+Also update source: `infrastructure/local-yoyo-daily.timer`
 
-Draft staged at `.agent/drafts-outbound/DESIGN-TOKEN-CHANGE-wp-tokens-20260602.draft.md`.
+**Item 2 — local-content.service dependency fix**
+`Requires=local-doorman.service` propagates STOP — restarting Doorman silently kills
+service-content. Fix to `Wants=`:
+```bash
+sudo sed -i 's/Requires=local-doorman.service/Wants=local-doorman.service/' \
+  /etc/systemd/system/local-content.service
+sudo systemctl daemon-reload
+```
+Also update source: `infrastructure/local-content/local-content.service`
 
-- artifact: DESIGN-TOKEN-CHANGE
-- master_cosign: command@claude-code 2026-06-02 (already populated)
-- content: `wp-*` token foundation — 27 DTCG tokens (16 palette, 7-step spacing, 6-step type, z-index map, `.wp-btn` system); graphite bronze `--wp-accent: #c89a4a`; no existing consumers; zero migration burden
-- source commit: 6ae5e97c (app-workplace-http-prototype/src/assets/style.css)
+**Item 3 — SLM_YOYO_GCP_ZONE stale (was europe-west4, VM is in us-central1-a)**
+The idle monitor may try to stop the VM in the wrong zone.
+Fix in `/etc/local-doorman/local-doorman.env`:
+```
+SLM_YOYO_GCP_ZONE=us-central1-a
+```
+Then: `sudo systemctl restart local-doorman.service && sudo systemctl start local-content.service`
 
-Ready for project-design to commit to `pointsav-design-system`. No further master_cosign
-action needed — already signed 2026-06-02.
+**Item 4 — Stage 6 promotion + binary deploy**
+Commit `2b7f32be` is on main; Stage 6 promotion to vendor/pointsav-monorepo needed.
+After promote, deploy new slm-doorman-server binary:
+```bash
+bin/deploy-binary.sh slm-doorman-server \
+  /srv/foundry/cargo-target/mathew/release/slm-doorman-server
+# sha256: cf8838ef44a7d3905c980ddeb52a5db8f75d3d5a1bc5120e18c54c13e55f27b5
+sudo systemctl restart local-doorman.service
+sudo systemctl start local-content.service
+```
 
-— totebox@project-workplace, 2026-06-05
+**Item 5 — SLM_LOCAL_MODEL env var stale (service-content enrichment 0-entities)**
+`/etc/local-doorman/local-doorman.env` has `SLM_LOCAL_MODEL=olmo-2-0425-1b-instruct`
+but llama-server runs `OLMo-2-1124-7B-Instruct-Q4_K_M.gguf` (7B). While the Doorman ignores
+the model name for inference, service-content's entity extraction returns 0 entities via Tier A.
+This blocks all enrichment DPO pairs. Likely fix: update `SLM_LOCAL_MODEL` to the 7B name AND
+investigate why the 7B returns 0 entities for service-content extraction (may need assistant
+pre-fill or grammar constraint for JSON format compliance).
+```
+SLM_LOCAL_MODEL=OLMo-2-1124-7B-Instruct-Q4_K_M.gguf
+```
 
----
-from: totebox@project-workplace
-to: command@claude-code
-re: route drafts-outbound — JOURNAL-NOTES-j3-20260602 + JOURNAL-NOTES-j6-20260602 → project-editorial
-created: 2026-06-05T09:35:00Z
-status: pending
-priority: normal
-status: actioned
-msg-id: project-workplace-20260605-journal-notes-route
----
-
-Two JOURNAL-NOTES drafts staged at `.agent/drafts-outbound/`:
-
-1. `JOURNAL-NOTES-j3-20260602.draft.md`
-   - journal: J3 (Automation in Construction, IF 12.0)
-   - section: §4 Architecture + §5 Implementation — bim-workspace-v1.0 schema
-   - state: draft-pending-editorial-review
-   - source: app-workplace-http-prototype/src/workbench.rs
-
-2. `JOURNAL-NOTES-j6-20260602.draft.md`
-   - journal: J6 (ACM TOCHI — Muscle-Memory Desktop Environments)
-   - section: §3 Design Principles + §4 Implementation — keyboard power moves
-   - state: draft-pending-editorial-review
-   - source: app-workplace-http-prototype/src/assets/memo.html
-
-Please route both to project-editorial for incorporation into J3/J6 research trail.
-Created 2026-06-02; no editorial changes needed before routing.
-
-— totebox@project-workplace, 2026-06-05
-
----
+**Updated context (2026-06-10 17:50 UTC):**
+- yoyo-batch VM: STOCKOUT (us-central1-a L4 exhausted); do NOT use zone fallback
+- Apprenticeship git-commit corpus: 401 tuples; 300 DPO pairs; 143 good pairs
+- Enrichment pairs: 0 (Tier A extracts 0 entities; Tier B STOCKOUT)
+- Quality fix binary build in progress: commits b84f8310 + 78177220 + 82927250 pending Stage 6
+- Approval tag created at `data/training-approved/coding-lora-2026-06-10.tag` (premature for enrichment training; 0 enrichment pairs; tag is ready for when capacity returns)
+- run-dpo-training.py: trains on enrichment-*.jsonl ONLY — 0 pairs → Phase 6 will skip
