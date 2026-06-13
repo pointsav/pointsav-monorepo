@@ -103,11 +103,9 @@ Deferred, blocked, and follow-up items. Attribution: `[YYYY-MM-DD role@engine]`.
   build-aec-global.sh: deploy-guard + flock on same .rebuild.lock (prevents Monday race).
   Both scripts now abort with exit 78 if SELF_ARCHIVE != declared .owner.
 
-- [ ] **Operator crontab timing fix** `[2026-06-12 totebox@claude-sonnet-4-6]`
-  REQUIRED: `0 5 * * *` fires at 05:00 PDT = 12:00 UTC (noon). Should be `0 22 * * *` (10pm PDT = 05:00 UTC).
-  AEC Monday: `0 5 * * 1` → `0 23 * * 1` (must run after nightly completes; 1h gap).
-  Annual entry: `0 5 4 6 *` → run-overnight-ingests.sh not present in project-gis; remove or copy.
-  Operator action: `crontab -e`
+- [x] **Operator crontab timing fix** `[2026-06-12 totebox@claude-sonnet-4-6]` DONE
+  `0 5 * * *` → `0 22 * * *` (10pm PDT = 05:00 UTC). AEC Monday: `0 5 * * 1` → `0 23 * * 1`.
+  Annual entry `0 5 4 6 *` removed (run-overnight-ingests.sh missing from project-gis; Jun 4 2026 passed).
 
 - [ ] **Phase 4 — AEC backfill (overnight)** `[2026-06-12 totebox@claude-sonnet-4-6]`
   Once nightly timing is fixed and one clean nightly run confirmed:
