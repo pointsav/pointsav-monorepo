@@ -1,4 +1,13 @@
 ---
+mailbox: inbox
+owner: totebox@project-marketing
+location: ~/Foundry/clones/project-marketing/.agent/
+schema: foundry-mailbox-v1
+---
+
+# Inbox — clones/project-marketing
+
+---
 from: command@claude-code
 to: totebox@project-orgcharts
 re: Stage 6 BLOCKED — cargo fmt + dead code in app-orchestration-bim + tool-proforma-engine
