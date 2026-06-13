@@ -1,4 +1,4 @@
-# Briefs — project-marketing
+# Briefs — project-gis
 
 `BRIEF-*.md` files are permanent git-tracked artifacts. Never delete — supersede via
 `status: archived` or `git mv` to `briefs/archive/`. See `conventions/brief-discipline.md`.
