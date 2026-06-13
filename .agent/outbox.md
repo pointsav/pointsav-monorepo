@@ -1,4 +1,13 @@
 ---
+mailbox: outbox
+owner: totebox@project-intelligence
+location: ~/Foundry/clones/project-intelligence/.agent/
+schema: foundry-mailbox-v1
+---
+
+# Outbox — clones/project-intelligence
+
+---
 from: totebox@claude-code
 to: command@claude-code
 re: project-intelligence 2026-06-11 — yoyo rewrite complete; idle-monitor disabled; stage 6 pending
