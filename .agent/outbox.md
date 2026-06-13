@@ -10,6 +10,44 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-gis
 to: command@claude-code
+re: CRITICAL — root disk 87% + BRIEF contamination (10 files, git mv required)
+created: 2026-06-13T06:30:00Z
+priority: high
+status: pending
+msg-id: project-gis-20260613-disk-brief-contamination
+---
+
+Two action items requiring Command Session:
+
+**1. Root disk at 87% capacity — CRITICAL**
+`/dev/root` (sda1): 160 GB total, 139 GB used. The GIS data disk `/dev/sdb` (service-fs, 50 GB)
+is fine at 27%. Root disk holds cleansed outputs (service-business 35 MB, service-places 271 MB,
+boundaries 181 MB) and AEC source files (koppen 255 MB, ecoregions 631 MB). Each ingest run and
+AEC run grows root further. Recommend: disk audit to identify reclaimable space before next
+major ingest. Do NOT proceed with Kontur/LODES cleansing pipelines until root disk is addressed.
+
+**2. BRIEF contamination — 10 non-GIS BRIEFs in project-gis `.agent/briefs/`**
+Following the same pattern as the prior project-knowledge contamination (commit f7393767),
+10 BRIEFs belonging to other archives are present in `clones/project-gis/.agent/briefs/`.
+Per hard rules, BRIEFs must NOT be deleted — use `git mv` to relocate each to its correct archive.
+
+Files requiring relocation:
+  `BRIEF-artifact-style-guide.md` → determine correct archive (project-editorial?)
+  `BRIEF-brief-audit-2026-06.md` → project-marketing or Command
+  `BRIEF-crypto-license-payment-architecture.md` → project-source or project-system
+  `BRIEF-dev-env-mcp-expansion.md` → project-system or Command
+  `BRIEF-os-totebox-ppn-build-out.md` → project-orgcharts or project-system
+  `BRIEF-ostotebox-phase1-deployment.md` → project-orgcharts or project-system
+  `BRIEF-phase-fg-institutional-redesign.md` → project-orgcharts
+  `BRIEF-software-distribution-substrate.md` → project-source or project-system
+  `BRIEF-substrate-phd-thesis-2026-05-27.md` → project-orgcharts (J2 paper is Mathew's)
+  `BRIEF-totebox-transformation.md` → project-system or Command
+
+Flagged in `clones/project-gis/.agent/briefs/README.md` for tracking.
+
+---
+from: totebox@project-gis
+to: command@claude-code
 re: PKS archetype rebalanced — Fable analysis + mode-group collapse + park_ride ingest queued
 created: 2026-06-11T20:00:00Z
 status: contaminated
