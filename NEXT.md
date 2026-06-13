@@ -1,205 +1,193 @@
-# NEXT.md — project-orgcharts
+# NEXT.md — project-editorial
+
+> **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
+> **Note: content below the second horizontal rule is contaminated from project-data — cleanup in a dedicated session.**
+Last updated: 2026-06-12 [Peter Woodfine / claude-code]
+
+---
+
+## 2026-06-12 — BRIEF audit + writing quality programme complete
+
+- [x] BRIEF-artifact-style-guide.md: §9.2 Diátaxis + §10 LP fragmentation + §14 contaminated log + §15 Writing Quality Programme [2026-06-12@pwoodfine]
+- [x] 3 contaminated BRIEFs marked: os-totebox-ppn-build-out (project-data), project-intelligence-active-work, knowledge-platform-master [2026-06-12@pwoodfine]
+- [x] .agent/briefs/README.md populated with active/archived/contaminated tables [2026-06-12@pwoodfine]
+- [x] .agent/skills/editorial-audit.md created — Tier 1/2/3 vocabulary + structure audit skill [2026-06-12@pwoodfine]
+- [x] 4 outbox messages sent: project-intelligence (×3), command (×1) [2026-06-12@pwoodfine]
+- [ ] **DataGraph pre-write protocol** — implement §11 pre-write query at session startup; BLOCKED on project-intelligence P0 MCP module_id fix [2026-06-12@pwoodfine]
+- [ ] **submit_extraction post-commit** — add to shutdown checklist after project-intelligence confirms schema [2026-06-12@pwoodfine]
+- [ ] **NEXT.md contamination cleanup** — content below second HR is project-data content; needs dedicated cleanup session [2026-06-12@pwoodfine]
+
+---
+
+## Blocked externally (no action here)
+
+- [ ] **B19/B20/B21** — inbox `operator-pending`; relay references files not yet staged at project-gis Totebox; awaiting Command response
+- [ ] **J1 §7.2 primary spec** — Phase 24B Kontur population join + O-D data needed (project-gis scope)
+- [ ] **J2 Bench #9 re-run** — pending at project-intelligence; `forbidden_terms_cleared: true` otherwise
+- [ ] **J3 §6 Results** — Night 4 seismic re-run + Night 5 flood build (project-gis scope); `forbidden_terms_cleared: true` otherwise
+- [ ] **J6 §6 Results** — user study not yet run; `forbidden_terms_cleared: true` otherwise
+- [ ] **ORCID IDs** — all three authors (Peter, Jennifer, Mathew); operator action required before any journal submission
+- [ ] **J4 word count** — currently 6,400 / target 9,000 (2,600 words short); needs content input from project-private-network before gap can close
+
+---
+
+Last updated: 2026-06-01
+
+---
+
+## State files — repaired 2026-06-01
+
+- [x] **cleanup-log.md contamination** — 9 entries from other archives removed. Committed `59373c45`.
+- [x] **Briefs sweep** — 10 contaminated briefs archived (project-intelligence x6, project-knowledge x2,
+      project-console x1, project-infrastructure x1). README rewritten.
+- [x] **CLAUDE.md title** — corrected to project-data.
+- [x] **session-start.md** — replaced with project-data orientation.
+- [x] **manifest.md** — replaced with project-data GIS/JOURNAL tetrad.
+- [x] **session-context.md** — rewritten with correct project-data context.
+- [x] **NEXT.md** — this file; contaminated project-gis items removed.
+
+---
+
+## os-totebox PPN build-out (active — session 1 complete 2026-06-11)
+
+- [x] service-people HTTP API v0.1 — GET /v1/people + GET /v1/people/{id}, port :9091 (997b8d22) [2026-06-11]
+- [x] service-extraction workspace unification — added to root Cargo.toml members (997b8d22) [2026-06-11]
+- [ ] **Stage 6 promotion** — Command must run bin/promote.sh (25 commits ahead); outbox sent 2026-06-11
+- [ ] service-people CRUD — POST /v1/people, PATCH /v1/people/{id}; deferred; unblock after F2 cartridge validates read-only
+- [ ] os-totebox startup script — `os-totebox/scripts/start-stack.sh` ordered service startup
+- [ ] service-people ledger enrichment — join substrate/ledger_personnel.jsonl email fields into API response
+- [ ] J7 §4 Implementation — fill after first os-totebox deployment; §5 Evaluation after benchmark harness built
+See BRIEF-os-totebox-ppn-build-out.md for full state.
+
+---
+
+## JOURNAL programme — active blockers
+
+- [x] **J7 HOLD lifted** — Abstract, Introduction, Literature Review, Methodology, Hypotheses, Falsification
+      Programme written (~2,600 words); committed 8ab01ff2. §4-§8 stubs pending implementation evidence. [2026-06-11]
+- [ ] **J7 language pass** — forbidden_terms_cleared: false; language pass required before submission.
+- [ ] **J1 §7.2 OLS regression** — `log(catchment_entropy) ~ tier + log(pop_150km) + C(country)`.
+      Blocked on Phase 24B: Kontur H3 population join to `work/clusters-ols.csv`. [2026-05-28]
+- [ ] **J1 permutation test** — `sim-tier-permutation.py`; 10,000 spatial shuffles, one-tailed p-value. [2026-05-28]
+- [ ] **J3 §6 Results** — AEC flood + seismic build coverage metrics required. [2026-05-29]
+      AEC build results checked 2026-06-01:
+      - **Seismic (cron 2026-06-01T05:00Z): partial — EXIT 0, but 3 layers skipped:**
+        USGS NSHM CONUS (curl empty reply from ScienceBase), ESHM20 EU (GeoJSON not produced),
+        GWL_FCS30 wetland (download failed). EU + wetland skip → coverage incomplete for J3.
+        Ran twice (05:00Z + 05:12Z); second run also stuck at [1/9]. Needs fix in project-gis.
+      - **Flood (cron 2026-06-01T05:18Z): FAILED at step [15/17]** — Python `$META_PATH`
+        env var not expanded (`Path('$META_PATH').read_text()` literal, not `os.environ`).
+        Needs fix in project-gis `build-aec-flood.sh`. Outbox flagged to Command.
+      Coverage metrics still blocked. Will unblock after fixes + re-runs.
+- [ ] **J3 coverage metrics export** — write `export-aec-coverage.py` additions after both builds complete and produce valid data.
+- [ ] **J4 §4–§5 language pass** — at project-editorial (outbox ref: 952b2b09). [2026-05-29]
+
+---
+
+## Stage 6
+
+- **2026-06-11: monorepo code changes require promotion.** Commits 997b8d22 and 8ab01ff2 include
+  service-people/src/bin/server.rs, service-people/Cargo.toml, service-extraction/Cargo.toml,
+  Cargo.toml (root), Cargo.lock, and JOURNAL/. Total 25 commits ahead of canonical main.
+  Outbox sent to Command (msg-id: command-20260612-promote-project-data-contaminated-brief-).
+- Prior archive-local-only commits (59373c45, 005cc299, 161efbd1) also included in the 25.
+
+---
+
+## Command actions pending
+
+- [ ] **Brief redistribution** — 6 project-intelligence briefs archived in this archive need
+      Command to copy to `clones/project-intelligence/.agent/briefs/`:
+      BRIEF-slm-substrate-master, BRIEF-slm-learning-loop, BRIEF-project-intelligence-active-work,
+      AI-AUDIT-baseline-2026-05-31, BRIEF-substrate-phd-thesis-2026-05-27, BRIEF-vm-hardening-and-consolidation.
+      Outbox message `project-data-20260601-brief-redistribution` queued.
+
+---
+
+## Regional Markets (editorial — dispatched to project-editorial)
+
+- [ ] **294488f gap** — re-dispatch signal sent to project-editorial
+      (outbox `project-gis-20260531-rm-redispatch-294488f`). Command to verify
+      content-wiki-projects after project-editorial re-commits.
+- [ ] **A10/A11/A12** — hold pending revision (methodology correction applies; project-gis archive
+      handles the data verification; this archive tracks JOURNAL dependency only).
+
+---
+
+## Operator-blocked (no Totebox action until input received)
+
+- J1/J2/J3/J4/J6 — ORCID IDs required for submission; operator action.
+- J1 Phase 24B — Kontur H3 population join; operator must initiate data acquisition.
+- CBRE/JLL leasing data — Year 2 research; operator action.
+# NEXT.md — project-knowledge
 
 Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
-> **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
+> **Scope: this archive only.** Cross-repo items live at `~/Foundry/NEXT.md`.
 
-Last updated: 2026-06-09
-
----
-
-## Resolved 2026-06-09 — DESIGN-TOKEN-CHANGE cosigns + outbox cleanup
-
-- [x] **A3 DESIGN-TOKEN-CHANGE-orgchart-primitives** — master_cosign added
-      `"2026-06-09T16:36:52Z jwoodfine"`. project-design notified (msg-id:
-      project-orgcharts-20260609-cosign-done-a3-a4). [2026-06-09 totebox@claude-code]
-- [x] **A4 DESIGN-TOKEN-CHANGE-orgchart-layout-type** — same cosign. Ready for commit
-      to pointsav-design-system/tokens/dtcg-bundle.json. [2026-06-09 totebox@claude-code]
-- [x] **Outbox cleanup** — 13 superseded Stage 6 accumulation signals archived to
-      outbox-archive.md (status: stale); contaminated project-marketing content in
-      outbox-archive.md cleared. Active outbox: 5 messages. [2026-06-09 totebox@claude-code]
+Last updated: 2026-06-12 (close-out) [totebox@claude-code]
 
 ---
 
-## Stage 6 pending
+## Phase 9 — Production Deploy — **DEPLOYED 2026-06-11**
 
-- [ ] Promote all project-orgcharts commits to canonical.
-      HIGH outbox signal sent (2026-06-08, msg-id: project-orgcharts-20260608-stage6-clean-76-commits).
-      76+ commits total — includes color-sample.html cleanup, WCP JW3 green patch (#198038→#54924E),
-      CSV V3+V4, 10 design artifact drafts, and all 2026-06-05 chart JW commits.
-      Command Session runs `FOUNDRY_PROMOTE_YES=1 bin/promote.sh`.
-      [2026-06-09 totebox@claude-code]
-- [x] **Remove stale J1 v0.1 EN stub from JOURNAL/** `[2026-06-12 totebox@claude-sonnet-4-6]` RESOLVED
-  EN stub not present in working tree — already removed in a prior session.
-  ES v0.1 lives in `JOURNAL/archive/` intentionally (not yet updated to v0.5 content).
+- [x] Gate 1: Stage 6 promote — tip 0e18aff3 promoted by Command 2026-06-11. [2026-06-11]
+- [x] Gate 2: DESIGN-TOKEN-CHANGE master_cosign — CLEARED 2026-06-09; af51d86. [2026-06-09]
+- [x] Binary rebuild and deploy — all 3 instances healthy (9090/9093/9095). [2026-06-11]
 
 ---
 
-## Customer leg — awaiting Command + project-editorial
+## Phase 0 — Federation Engine — **COMPLETE 2026-06-12**
 
-- [ ] Command Session to commit `MANIFEST.md` to `woodfine-fleet-deployment/cluster-totebox-corporate/`.
-      Outbox message sent (2026-06-05, msg-id: project-orgcharts-20260605-customer-leg-manifest).
-      [2026-06-05 totebox@claude-code]
-- [ ] project-editorial to deliver `GUIDE-orgchart-authoring.md` from drafts-outbound.
-      Draft staged: `.agent/drafts-outbound/GUIDE-orgchart-authoring.draft.md` (2026-06-05).
-      [2026-06-05 totebox@claude-code]
-- [x] **Provision VM-Orchestration** — `infrastructure/virt/provision-vm-orchestration.sh` implemented ✓ 2026-06-11; SSH :10023; ports 19096/19097/19180
-- [ ] **app-orchestration-bim (9096)** — depends on VM-Totebox service-fs
-- [ ] **app-orchestration-gis instance**
-- [ ] **app-orchestration-slm instance (:9180)**
-
----
-
-## Wiki leg — milestone-gated
-
-- [ ] `topic-corporate-chart-design-system.md` + `topic-pre-canon-vs-post-canon-drift.md`
-      substance pending JW7+JW9 REVIEW milestones. [2026-05-01]
+- [x] Refactor `AppState` to `mounts: Vec<Mount>`; delete hardcoded content/guide dir fields — dea5e8ae [2026-06-10]
+- [x] Wire `blueprints.rs` into render pipeline — AppState loading (dea5e8ae); `relates_to` rail in `wiki_page_inner` (bd435cc3) [2026-06-11]
+- [x] `tokens.css` regenerated from `dtcg-bundle.json`; added back to git tracking — bd435cc3 [2026-06-11]
+- [x] Slug normalization: `/wiki/topic-foo` → 301 → `/wiki/foo`; `topic-foo.md` fallback; ES-locale aware — bd435cc3 [2026-06-11]
+- [x] L25: `/edit/{slug}` route stub + CodeMirror 6 bundle + `toc-persistence.js` + conditional chrome load — bd435cc3 + 7a2b9b42 [2026-06-11]
+- [x] M8/M5: Mobile drawer animations + tap-popover flip + Cmd+K trigger — 7a2b9b42 [2026-06-11]
+- [x] Stage 6 promote for bd435cc3 + 7a2b9b42 — CONFIRMED; origin/main at 7a2b9b42 [2026-06-11]
+- [x] `inject_wiki_prefixes` cross-mount resolution — DONE; link_roots() used at all call sites [2026-06-11]
+- [x] Wire `check --strict` as xtask CI gate — `scripts/stage6-gate.sh` committed 9a1326df [2026-06-11]
+- [x] Remove `wikilink-unresolved` render path from `render.rs` — DONE 9a1326df; display text only (L18 complete) [2026-06-11]
+- [x] Stage 6 promote for 9a1326df — CONFIRMED; origin/main at 9a1326df [2026-06-12]
+- [x] Content dead link fix — project-editorial applied fix; gate passes 0 dead links [2026-06-12]
+- [ ] Archive ops Stage 6 — 4e2ddf95 → e6d01e9c (+ this commit) pending Command promote; binary rebuild + redeploy required after. [2026-06-12 totebox@claude-code]
 
 ---
 
-## archive-2026-06-01/ — deletion review 2026-07-01
+## Code fixes — pre-promote
 
-- [ ] Directory gitignored (2026-06-05, commit `fe99d71b`). Contains misplaced repo
-      clones — no live references. Per README: safe to `rm -rf` after 2026-07-01.
-      [2026-06-04 totebox@claude-code]
-- [x] **Nightly rebuild decontamination — Phases 1a + 1d** `[2026-06-12 totebox@claude-sonnet-4-6]` DONE
-  Phase 1a: deploy-guard inserted into project-orgcharts, project-system, project-command nightly-rebuild.sh.
-  Phase 1d: build-clusters.py, build-tiles.py, taxonomy.py, config.py, utils/ copied from orgcharts into project-gis.
-  .owner file created: deployments/gateway-orchestration-gis-1/.owner = project-gis.
-  First clean full run confirmed 2026-06-13T05:48Z — 16 min, all 4 steps passed.
+- [x] Doorman stub routes: stubs implemented at server/mod.rs:302-315; return 501 NOT_IMPLEMENTED + JSON. All 129 tests pass. [2026-06-12 totebox@claude-code]
+- [x] Navigation portlet test: `wiki_page_renders_navigation_portlet` passes; correctly asserts `wiki-page-tabs` (not `sidebar`). [2026-06-12 totebox@claude-code]
 
 ---
 
-## Registry CSV — follow-up items
+## Content sync — standing session-start procedure
 
-- [ ] Nodes 8, 10–14 (Ireland fund service providers: Issuer, AIFM, Depositary, Administrator,
-      Auditor, Transfer Agent): TOKEN_SHAPE left empty — these entities do not appear as t-node
-      elements in any current chart HTML. Add when a chart is created for the ETN/ICAV structure.
-- [ ] Nodes 51 (Global Management), 52 (Realty Solutions Common Shares), 53 (Holdings 1 Inc.),
-      54 (Holdings 1 LP): TOKEN_SHAPE left empty — not found in any current chart. Add when charts
-      are created for these entities.
-- [ ] `token-olive` class (management chart) — may not yet exist in `pointsav-design-system` token
-      bundle. Flag for project-design backfill.
-- [x] Node 28 (Woodfine Management Corp.) — updated to `token-base token-green` in JW10 (V4 change, 2026-06-05 commit `739e15e5`). TOKEN_SHAPE in V4 CSV also updated.
-- [x] Alpine Linux TCG proof-of-concept (`vm-prove.sh`) — virtio_balloon confirmed [session 7]
-- [x] `service-ppn-pairing` deployed :9205 [session 13-14]
-- [x] `service-ppn-pairing` normalize bug fix deployed (approve/deny working) [session 16]
-- [x] **Build `os-network-admin` release binary** — built 2026-06-11; binary at `/srv/foundry/cargo-target/mathew/release/os-network-admin` (1.7 MB); port 9202→9205 fixed
-- [ ] **Copy `os-network-admin` to Laptop A** — `scp /srv/foundry/cargo-target/mathew/release/os-network-admin mathew@10.8.0.6:~/bin/`; then `PAIRING_SERVER=http://10.8.0.9:9205 ~/bin/os-network-admin` (operator action)
-- [x] **`provision-vm-infrastructure-cloud.sh --genesis`** — implemented; ppn_join ceremony; port 9205; --status ✓ 2026-06-11
-- [x] **`provision-vm-infrastructure-onprem.sh`** — implemented; --genesis (Laptop A), --genesis-hub (Laptop B), --join, --status ✓ 2026-06-11
-- [ ] **Fill PLACEHOLDER_* pubkeys** in /etc/wireguard/wg0.conf on each node after running --genesis
-- [ ] **Deferred: os-network-admin ratatui TUI** — keyboard approve/deny; QR; expiry countdown
+```bash
+git -C content-wiki-documentation pull --no-rebase /srv/foundry/clones/project-editorial/media-knowledge-documentation main
+git -C content-wiki-projects pull /srv/foundry/clones/project-editorial/media-knowledge-projects main
+git -C content-wiki-corporate pull /srv/foundry/clones/project-editorial/media-knowledge-corporate main
+```
 
 ---
 
-## Resolved this session (2026-06-05, JW10)
+## Standing deferred
 
-- [x] **Bencal Organization JW10** — commit `cbc26742` (jwoodfine, 2026-06-05).
-      Boxes 105/106/107 populated with full three-zone structure.
-      Box 105 (SPV1 Shares): zone-top "SPV1 Shares" / zone-mid t-alias "Friends, Family and Business Associates (50)" + t-title "Accredited Investors (300)" / zone-bottom "(Global)".
-      Box 106 (WCP Shares): zone-top "WCP Shares" / zone-mid t-alias "Accredited Investors (300)" + t-alias "max CAD 100,000 per subscriber" / zone-bottom "(Global)".
-      Box 107 (SPV2 Investment Units): zone-top "SPV2 Investment Units" / zone-mid t-alias "Friends, Family and Business Associates (50)" + t-title "Accredited Investors (300)" / zone-bottom "(Global)".
-
----
-
-## Resolved this session (2026-06-05, JW6 series)
-
-- [x] **Transaction-1 JW31** — commit `d9052752` (jwoodfine). Lines 36→17, 17→16 purple.
-- [x] **Transaction-3 JW17** — commit `a34d5361` (jwoodfine). Lines from Box 36 to 16/17/32/33/34 purple.
-- [x] **Transaction-2 JW20** — commit `b53fbf8d` (pwoodfine). All lines from Box 36 purple.
-- [x] **Cross-Border-2 JW21** — commit `a955732f` (jwoodfine). Box 45 → purple (match Box 36 Transaction-3 JW17).
-- [x] **Cross-Border-2 JW22** — commit `5b1c069d` (pwoodfine). Lines 50↔45 → orange (#E65100).
-- [x] **Mexico JW12** — commit `7b42fa1b` (jwoodfine). Line 40↔39 → blue.
-- [x] **Bencal Organization JW6** — commit `53978aac` (pwoodfine). Grey pill → dashed; orange pill → dashed+orange; Boxes 95/97/104 → purple; Boxes 96/103 → orange; Box 98 → orange dashed pill.
+- Phase 12 (AI marginalia): gated on BP5 + SYS-ADR-07/10/19 review [2026-06-01]
+- Phase 5.1+ (ACLs/OIDC/webhooks): gated on BP5 clearance [2026-06-01]
+- Phase 6 code refactor (mounts: Vec<Mount>): DONE — dea5e8ae [2026-06-10]
+- Phase 6 content-tier GitHub renames + Doctrine amendment: gated on Command + MASTER scope [2026-06-01]
 
 ---
 
-## Resolved this session (2026-06-05, continuation)
+## Carry-forward — blocked cross-archive
 
-- [x] **Bencal Organization JW3** — commit `c68593d4` (jwoodfine, 2026-06-05).
-      All 9 nodes (95–104, excluding 99 absent) updated to V4 registry token classes.
-      New CSS added: `token-green`, `token-blue` (210px × 110px, 10px padding, WCP palette).
-      Nodes 100/101 (Kiel Capital, Elzen Holdings) → `token-grey-solid` (already defined).
-      Nodes 95/96/97/102/103/104 → `token-base token-green`. Node 98 → `token-base token-blue`.
-      Node 104 had inline `border-style: dotted;` — matched exactly.
-- [x] **V4 TOKEN_SHAPE changes applied to 6 charts** — commit `739e15e5` (jwoodfine, 2026-06-05).
-      Nodes 28/36/40/50 updated. New JW versions: JW10 (Woodfine-Group), JW11 (Mexico),
-      JW20 (Cross-Border-2), JW30 (Transaction-1), JW19 (Transaction-2), JW16 (Transaction-3).
-      New CSS added to charts: `token-green` (JW10), `token-orange-ellipse-dashed` (JW20),
-      `token-purple` (JW30/JW19/JW16).
-- [x] **WCP-MASTER-ENTITY-REGISTRY_V4.csv committed** — same commit `739e15e5`.
-      New nodes 36, 95–104 added. Working-tree V3 accidentally reverted to old labels during
-      Jennifer's V4 edit — restored from git (`git checkout -- inputs/V3.csv`); V4 built correctly
-      from committed V3 CSS classes.
+- [ ] project-jennifer MCP tasks — blocked: jennifer:jennifer filesystem ownership;
+      needs Command or jennifer session [2026-06-10 totebox@claude-code]
+- [ ] project-console manifest contamination — needs project-console Totebox [2026-06-10]
+- [ ] project-bim woodfine-bim-library Stage 6 — needs Command [2026-06-10]
+- [ ] project-intelligence residual commit fix — needs project-intelligence Totebox [2026-06-10]
+- [ ] Phase E: TOKEN-CHANGE cosign propagation to editorial copy — Command-scope [2026-06-10]
+## In scope — project-editorial
 
----
-
-## Resolved this session (2026-06-05)
-
-- [x] **Bencal naming conflict** — Operator confirmed: canonical is **BPC / Bencal Private Capital Inc.**
-      (2026-06-05). JW2 files already correct. No BCL files found in deployment instance
-      (grep confirmed). Decision recorded in memory + session-context. [2026-06-05 totebox@claude-code]
-- [x] **archive-2026-06-01/ gitignored** — commit `fe99d71b` (pwoodfine, 2026-06-05).
-      Deletion review 2026-07-01.
-- [x] **Stage 6 outbox sent** — commit `9c422878` (jwoodfine, 2026-06-05).
-- [x] **GUIDE-orgchart-authoring staged** — commit `fc7c720d` (pwoodfine, 2026-06-05).
-- [x] **Customer leg MANIFEST outbox sent** — commit `fc7c720d` (pwoodfine, 2026-06-05).
-12 TOPIC pairs + 4 GUIDEs in `.agent/drafts-outbound/`. Pickup notice sent to project-editorial.
-
-**PROSE-RESEARCH:** v0.2 operator_approved 2026-06-11. "robust" → "reliable" fix applied (line 173).
-Editorial pickup message sent (msg-id: command-20260611-prose-research-ppn-architecture-phd-thes).
-
----
-
-## Code — Genesis Protocol (all Q2–Q6 resolved 2026-06-11)
-
-- [x] Rewrite `os-infrastructure/src/main.rs` — Genesis Protocol boot sequence (Step 1) ✓ 2026-06-11
-- [x] Implement `system-substrate-broadcom/src/lib.rs` — real PCI scan for BCM57765 (Step 2) ✓ 2026-06-11
-- [x] Implement `system-network-interface/src/lib.rs` — mDNS + CPace skeleton; GCP relay fallback (Step 3) ✓ 2026-06-11
-- [x] Short-code pairing ceremony skeleton — `conduct_pairing_ceremony()` stub (Step 4) ✓ 2026-06-11
-- [x] Replace F8 Gateway subprocess with HTTP to localhost:9080 (Step 5) — already done (pre-existing) ✓
-- [x] Replace JSON mesh payloads with 16-byte binary protocol (Step 6) ✓ 2026-06-11
-- [x] Add focus crates to root `Cargo.toml` workspace members (Step 8) — already done (pre-existing) ✓
-- [ ] **Step 3-full (NIC driver):** BCM57765 MMIO init + DMA rings + Ethernet TX/RX — required before Steps 3–4 go live over the wire
-
----
-
-## Blocking — all resolved 2026-06-11
-
-- [x] **Q2: Canonical PPN subnet — `10.8.0.0/24`** (ratified 2026-05-30; replaces 10.50.0.0/24)
-- [x] **Q3: GCP cloud relay static IP — `34.53.65.203`** (reserved 2026-05-30)
-- [x] **Q4: Laptop B LAN IP — `10.0.0.224`; DNS stable** (no config change; Jennifer VPN stays stable)
-- [x] **Q5: Doorman at `localhost:9080` — active** (local-doorman systemctl verified 2026-06-11)
-- [x] **Q6: Stage 6 confirmed; editorial pickup confirmed** (6 TOPIC pairs relayed 2026-05-30)
-
----
-
-## GUIDE leg — cross-repo fix (Command Session scope)
-
-- [ ] `fleet-infrastructure-leased/guide-deploy-vpn.md` — fix hardcoded path
-  `$HOME/Foundry/pointsav-monorepo/` → `/srv/foundry/vendor/pointsav-monorepo/`
-  Lives in `customer/woodfine-fleet-deployment` — Command Session admin-tier.
-
----
-
-## Completed this cluster (archived for reference)
-
-- [x] Sweep project-intelligence contamination from archive (session 1)
-- [x] Fix session-start.md, manifest.md, NEXT.md, memory init (session 1)
-- [x] Stage sovereign-mesh.md + .es.md drafts (session 2)
-- [x] Fix os-infrastructure/Makefile + forge_iso.sh paths (session 2)
-- [x] Gitignore build artifacts in os-infrastructure/ and os-network-admin/ (session 2)
-- [x] Create app-infrastructure-onprem/-leased/-cloud/ Reserved-folder scaffolds (session 2)
-- [x] PPN architecture: BRIEF-PPN-ARCHITECTURE.md (385 lines, 57 citations) (session 7)
-- [x] vm-prove.sh Alpine TCG proof: virtio_balloon confirmed (session 7)
-- [x] service-ppn-pairing deployed :9205 (session 13-14)
-- [x] service-vm-fleet + service-vm-host deployed on GCP (session 13-14)
-- [x] vm_spawn module + QEMU monitor Phase 2 (session 13-14)
-- [x] PROSE-RESEARCH v0.2 editorial revision (session 15)
-- [x] service-ppn-pairing normalize bug fix + 4 integration tests (session 15)
-- [x] service-ppn-pairing fixed binary deployed to :9205 (session 16)
-- [x] Commit carried-over cleanup: CLAUDE.md title fix, reliable fix, stale outbox, memory decontamination (session 17)
-- [x] Action all inbox messages — 6 messages archived (session 17)
-- [x] PROSE-RESEARCH PPN thesis v0.2 operator approved; editorial pickup message sent (session 17)
-- [x] Q2–Q6 all resolved; confirmed values recorded; subnet corrected 10.50→10.8.0.0/24 (session 17)
-- [x] Genesis Protocol Step 1: os-infrastructure/src/main.rs rewritten; build-std config added (session 17)
+- [ ] **Phase F+G scoping** — BRIEF-phase-fg-institutional-redesign.md written 2026-06-11; 6 GUIDEs + DESIGN-wiki-institutional-redesign; awaiting operator go-ahead before any content work
