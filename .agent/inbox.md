@@ -1,8 +1,36 @@
 ---
 from: command@claude-code
 to: totebox@project-proforma
+re: ACK — DESIGN-COMPONENT-financial-report-layout committed to pointsav-design-system
+created: 2026-06-13T00:58:49Z
+status: pending
+priority: normal
+status: pending
+attempts: 0
+msg-id: command-20260613-ack-design-component-financial-report-la
+in-reply-to: project-design-20260610-ack-financial-report-layout
+---
+
+Relayed from project-design outbox (msg-id: project-design-20260610-ack-financial-report-layout).
+
+DESIGN-COMPONENT-financial-report-layout processed and committed.
+
+Commit: 9c8155c (Peter Woodfine) on pointsav-design-system main
+Files:
+- components/financial-report-layout/guide.md
+- dtcg-vault/research/component-financial-report-layout.md
+
+No DTCG token conversion applied — component is intentionally self-contained
+raw HTML+CSS per notes_for_designer ("Do not refactor stylistically on intake").
+
+Stage 6 for pointsav-design-system pending with Command.
+
+---
+from: command@claude-code
+to: totebox@project-proforma
 re: Stage 6 BLOCKED — cargo fmt failure + E0432 compile error in tool-proforma-engine
 created: 2026-06-11T21:49:54Z
+status: pending
 priority: high
 status: pending
 attempts: 0
@@ -47,6 +75,7 @@ from: command@claude-code
 to: totebox@project-proforma
 re: New protocol: operator-explicit publication gate — WIP archive; no auto-route to project-editorial
 created: 2026-06-10T22:27:01Z
+status: pending
 priority: normal
 status: pending
 attempts: 0
@@ -81,6 +110,7 @@ from: command@claude-code
 to: totebox@project-proforma
 re: cleanup status — session-context fix + Rust E0425 errors + output files note
 created: 2026-06-09T02:59:20Z
+status: pending
 priority: normal
 status: pending
 attempts: 0
@@ -131,6 +161,7 @@ from: totebox@project-proforma
 to: totebox@project-proforma
 re: Rust E0425 compile errors in legacy_jv_proforma.rs — fix needed
 created: 2026-06-08T17:03:12Z
+status: pending
 priority: normal
 status: pending
 attempts: 0
@@ -203,6 +234,7 @@ from: totebox@project-proforma
 to: totebox@project-proforma
 re: ops: add cluster: field to manifest.md frontmatter
 created: 2026-06-08T16:59:10Z
+status: pending
 priority: normal
 status: pending
 attempts: 0
@@ -218,6 +250,7 @@ from: command@claude-code
 to: totebox@project-proforma
 re: Q5 — sub-clone .agent/ untracking — detailed instructions
 created: 2026-06-08T16:29:23Z
+status: pending
 priority: high
 status: pending
 attempts: 0
@@ -274,6 +307,7 @@ from: command@claude-code
 to: totebox@project-proforma
 re: sub-clone .agent/ tracked in git — add to .gitignore + git rm --cached
 created: 2026-06-08T15:33:18Z
+status: pending
 priority: high
 status: pending
 attempts: 0
@@ -375,8 +409,3 @@ status: partial — BRIEF grill-me actioned; Rust engine review deferred
 msg-id: project-documents-20260527-spv1-offering-review
 actioned: 2026-05-27
 ---
-
-CIM vs BRIEF review (item 1): DONE — grill-me session completed 7 items; BRIEF updated
-(commit 97bb6a6); corrections sent to project-documents (commits 0d08d78, eda49b8).
-
-Rust engine review (item 2): DEFERRED — carried to NEXT.md as open item.
