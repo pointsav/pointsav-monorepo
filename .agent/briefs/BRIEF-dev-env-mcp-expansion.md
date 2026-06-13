@@ -1,10 +1,10 @@
 ---
 artifact: brief
 schema: foundry-brief-v1
-brief-id: project-intelligence-dev-env-mcp-expansion
-title: "Dev Env MCP Expansion — slm-mcp-server v0.2.0"
+brief-id: project-console-dev-env-mcp-expansion
+owner: project-console
+title: "Foundry Dev Environment as First Totebox Deployment — MCP Expansion"
 status: archived
-owner: project-intelligence
 created: 2026-06-09
 updated: 2026-06-12
 session: command@claude-code
@@ -12,8 +12,6 @@ related_briefs:
   - BRIEF-slm-substrate-master.md
   - BRIEF-slm-learning-loop.md
 doctrine_claims: [22, 32, 40, 43, 44, 46, 48]
-moved_to: project-intelligence
-archived: 2026-06-12
 ---
 
 # BRIEF: Foundry Development Environment as First Totebox Deployment

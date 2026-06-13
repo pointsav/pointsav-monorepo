@@ -7,6 +7,8 @@
 
 | File | brief-id | Title | Status | Updated |
 |------|----------|-------|--------|---------|
+| `BRIEF-os-console-active-dev.md` | project-console-os-console-active-dev | os-console Active Development — Phases 8–10 | active | 2026-06-12 |
+| `BRIEF-brief-audit-2026-06.md` | project-console-brief-audit-2026-06 | BRIEF audit — project-console — 2026-06 | active | 2026-06-12 |
 
 ## Artifact routing
 When a BRIEF graduates to a deliverable, it routes here:

@@ -1,96 +1,74 @@
 ---
-schema: cluster-manifest-v1
-cluster: project-infrastructure
-opened: 2026-05-14
-state: active
-slm_endpoint: http://localhost:8011
-module_id: infrastructure
+schema: foundry-cluster-manifest-v1
+cluster: project-console
+cluster_name: project-console
+cluster_branch: main
+created: 2026-05-06
+state: active (Phases C/D/E/6/7/A/B complete; Phase 8+ pending; Phase B Stage 6 promote pending Command)
+slm_endpoint: http://localhost:9080
+module_id: console
+doctrine_version: 0.0.14
+doctrine_claims_codified: [45, 49, 54]
 
-tetrad:                                # added 2026-05-18 — Phase 4.4 hardening; canonical declaration parallel to the prose `## Tetrad` section below
+operator: pointsav (Mathew, Jennifer)
+working_pattern: production-first-mvp
+
+tetrad:
   vendor:
-    repo: pointsav-monorepo
-    branch: cluster/project-infrastructure
-    focus: [app-infrastructure-onprem, app-infrastructure-leased, app-infrastructure-cloud, app-network-admin, os-infrastructure, os-network-admin]
-    status: active
+    - source_repo: pointsav-monorepo
+      project_path: app-console-* / os-console/
+      cluster_branch: cluster/project-console
+      status: Active — Phases C/D/E/6/7/A/B complete; Phase B commits (6f21f580 + 2 ops) pending Stage 6 promote
   customer:
-    repo: woodfine-fleet-deployment
-    focus: [fleet-infrastructure-onprem, fleet-infrastructure-leased, fleet-infrastructure-cloud, route-network-admin]
-    status: leg-pending
+    - fleet_deployment_repo: woodfine-fleet-deployment
+      catalog_subfolder: vm-intelligence-1/
+      status: leg-pending — deployment guide pending Phase 9 milestone
   deployment:
-    instances: [fleet-infrastructure-onprem-1, fleet-infrastructure-leased-1, fleet-infrastructure-cloud-1, route-network-admin-1]
-    status: leg-pending — gated on WireGuard Part A
+    - unit: os-console SSH server
+      host: vm-intelligence (WireGuard 10.42.1.1)
+      port: 2222
+      status: planned — blocked on project-infrastructure WireGuard provisioning + GCE firewall port 2222
+    - unit: pairing-server
+      host: vm-intelligence
+      port: 9201
+      status: planned — systemd unit not yet authored
   wiki:
-    target: content-wiki-documentation
-    planned_topics:
-      published: [infrastructure-os.md, os-network-admin.md]
-      staged_for_pickup:
-        - sovereign-mesh.md
-        - genesis-protocol.md
-        - ppn-command-protocol.md
-        - service-pointsav-link.md
-        - ppn-hypervisor-resource-pool.md
-        - totebox-archive.md
-        - ppn-architecture-overview.md
-        - vm-architecture.md
-        - os-infrastructure-ppn-node.md
-    guides_staged_for_pickup:
-      - guide-ppn-first-deployment.md
-      - guide-node-join-ceremony.md
-      - guide-vm-prove-balloon-demo.md
-      - guide-vm-infrastructure-resource-pool.md
-    status: leg-active   # upgraded 2026-05-29: 8 topics + 4 guides staged (session 12)
+    - target: content-wiki-documentation
+      status: leg-pending — TOPIC-os-console-architecture not yet authored
+
+datagraph_module_id: console
+cross_cluster_dependencies:
+  - project-infrastructure: WireGuard provisioning for vm-intelligence (port 2222 deployment gate)
+  - project-editorial: TOPIC/GUIDE drafts from this archive route to project-editorial
+
+session_role: task
+default_starting_dir: ~/Foundry/clones/project-console/
 ---
 
-# project-infrastructure — Cluster Manifest
+# project-console — SSH TUI console gateway to the Totebox platform
 
-## Mission
+This cluster owns the `app-console-*` cartridge ecosystem and `os-console` — the Rust
+SSH server that delivers the operator TUI for Totebox deployments. The console connects
+to every running service through a set of F-key cartridges (F1–F12), each scoped to one
+domain: keys (F1), content (F2), email (F3), SLM/Doorman (F9), system/pairing (F11).
 
-PPN cartridges and network OS work — the software layer that constitutes the
-PointSav Private Network and the infrastructure nodes that run it.
+## Status (as of 2026-06-12)
 
-This cluster is the dedicated Totebox Session for all work on the
-`app-infrastructure-*`, `app-network-admin`, `os-infrastructure`, and
-`os-network-admin` crates.
+Phases C–E, 6–7, and cross-platform A–B complete:
+- Phase C: app-console-email F3 lib crate — inbox list, read, compose/send, plain mode
+- Phase D: app-console-slm F9 lib crate — Doorman health dashboard, circuit state, 10s poll
+- Phase E: Orchestration wiring audited; clean mba_client; added to ConsoleConfig
+- Phase 6: Offline mode + Tantivy search (/readyz poll; greyed widgets; /search command)
+- Phase 7: PDF viewing via pdfium-render → Kitty/Sixel; text fallback; /pdf command
+- Phase A: Doorman port 9080 fix; configurable endpoints; GitHub Actions Linux CI
+- Phase B: 4-target release matrix (Linux musl, macOS Intel, ARM, universal); rustls-tls; TerminalCaps probe
 
-## Tetrad
+Pending: Phase 8 (Polish) + Phase 9 (Operations); pairing-server + os-console systemd units;
+first internet-facing SSH deployment to vm-intelligence provisioned by project-infrastructure.
 
-vendor:
-  repo: pointsav-monorepo
-  branch: cluster/project-infrastructure
-  focus: [app-infrastructure-onprem, app-infrastructure-leased, app-infrastructure-cloud, app-network-admin, os-infrastructure, os-network-admin]
-  status: active
+Stage 6 (Phase B): commits 6f21f580 + 2 ops commits pending Command promote (authorized 2026-05-28).
 
-customer:
-  repo: woodfine-fleet-deployment
-  focus: [fleet-infrastructure-onprem, fleet-infrastructure-leased, fleet-infrastructure-cloud, route-network-admin]
-  status: leg-pending
-
-deployment:
-  instances: [fleet-infrastructure-onprem-1, fleet-infrastructure-leased-1, fleet-infrastructure-cloud-1, route-network-admin-1]
-  status: leg-pending — gated on WireGuard Part A
-
-wiki:
-  target: content-wiki-documentation
-  planned_topics:
-    published: [infrastructure-os.md, os-network-admin.md]
-    staged_for_pickup:
-      - sovereign-mesh.md
-      - genesis-protocol.md
-      - ppn-command-protocol.md
-      - service-pointsav-link.md
-      - ppn-hypervisor-resource-pool.md
-      - totebox-archive.md
-      - ppn-architecture-overview.md
-  guides_staged_for_pickup:
-    - guide-ppn-first-deployment.md
-    - guide-node-join-ceremony.md
-    - guide-vm-prove-balloon-demo.md
-  status: leg-active   # upgraded 2026-05-28: 7 topics + 3 guides staged
-
-## Notes
-
-- WireGuard Part A gates the full three-node topology
-- Master key authority resides physically on Laptop A — never delegated to cloud
-- Layer 3 instance configs in ~/Foundry/deployments/fleet-infrastructure-*-1/ are local-only, gitignored
-- New crates (app-infrastructure-*, app-network-admin) scaffolded in project-intelligence
-  commit 0cbf81d (2026-05-14) — this cluster is the intended working home going forward
+- `BRIEF-os-console-active-dev.md` — active state tracker for Phases 8–10; read before each session
+- `BRIEF-os-console-platform.md` — F-key map, Cartridge trait, MBA topology, platform targets (in monorepo sub-clone)
+- `conventions/orchestration-architecture.md` — Cartridge composition pattern
+- `.agent/rules/datagraph-discipline.md` — entity lookups via Doorman :9080
