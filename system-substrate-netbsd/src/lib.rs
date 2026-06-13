@@ -25,7 +25,5 @@ pub const OS_TOTEBOX_BINARIES: &[&str] = &[
 ];
 
 /// Well-known binaries installed by os-orchestration.
-pub const OS_ORCHESTRATION_BINARIES: &[&str] = &[
-    "/usr/bin/orchestration-slm-server",
-    "/usr/sbin/nginx",
-];
+pub const OS_ORCHESTRATION_BINARIES: &[&str] =
+    &["/usr/bin/orchestration-slm-server", "/usr/sbin/nginx"];
