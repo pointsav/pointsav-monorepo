@@ -1,0 +1,29 @@
+title: Home
+slug: home
+description: Woodfine Capital Projects — disciplined real estate development across North America.
+lang: en
+sections:
+  - type: hero
+    headline: Real assets, built with discipline
+    subhead: Woodfine Capital Projects develops and holds commercial real estate in Vancouver and New York.
+    cta:
+      label: Contact us
+      href: /page/contact
+
+  - type: prose
+    body: |
+      ## What we do
+
+      We acquire, develop, and operate commercial property. Our work is
+      grounded in site-level analysis, long holding periods, and direct
+      ownership of the assets we build.
+
+      The platform underlying our reporting and operations is being built
+      in-house; additional capabilities are planned and will be announced as
+      they are delivered.
+
+  - type: cta
+    heading: Enquire about a project
+    cta:
+      label: Get in touch
+      href: /page/contact

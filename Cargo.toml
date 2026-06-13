@@ -46,6 +46,9 @@ members = [
     "service-extraction",
     # BIM Object schema vault + MCP server
     "app-privategit-bim",
+    # Marketing platform: shared chrome chassis + the marketing app
+    "app-mediakit-shell",
+    "app-mediakit-marketing",
 ]
 
 [profile.dev]
@@ -62,5 +65,11 @@ strip = true        # Strip debug symbols from output binary
 # not the bare-metal size-optimised defaults. Preserves the standalone Cargo.toml
 # [profile.release] settings (moved here on workspace integration 2026-05-31).
 [profile.release.package.app-mediakit-knowledge]
+opt-level = 3
+strip = "symbols"
+
+# app-mediakit-marketing is a runtime HTTP server — speed-optimised, like the
+# knowledge engine, not the bare-metal size-optimised workspace default.
+[profile.release.package.app-mediakit-marketing]
 opt-level = 3
 strip = "symbols"
