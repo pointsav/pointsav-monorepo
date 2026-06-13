@@ -1,51 +1,53 @@
 ---
-schema: session-context-v1
-archive: project-editorial
+schema: foundry-session-context-v1
+archive: project-data
 ---
 
-# Session context — project-editorial
+# Session context — project-data
+
+## Operator preference digest
+No preferences recorded yet.
+
+## Cross-archive carry-forward
+- JOURNAL-retail-colocation §7.2: pending Phase 24B data before submission to *Economic Geography* (Wiley, IF 7.2).
+- Contamination note resolved 2026-06-12: bulk-copied gis files (gis-location-intelligence-archetypes.md, project_ring2_ring3_coupling.md, project_vm_hardening_state.md) were deleted by canonical rebase; .agent/ now gitignored per 2381a169.
 
 ## Operator preference digest
 
-- AUTO execution mode active: on an approved plan, execute autonomously; commit per track; surface only real blockers; report at end
-- No personal names (Jennifer/Mathew/Peter) in TOPIC/GUIDE body text or filenames — use role nouns
-- Concise responses; no trailing summaries
-- Opus model preferred for planning/research agents
+- **Scope discipline:** In a project-data Totebox session, only action work owned by this
+  archive. Cross-archive blockers (project-infrastructure, project-system, project-console,
+  project-gis, etc.) go to outbox — never actioned in-session. Corrected 2026-06-11.
 
----
+## Session entries
 
-## Rolling session entries (5 most recent)
+### 2026-06-11 — os-totebox PPN build-out session 1 (totebox@claude-code)
 
-### 2026-06-12 — Totebox | claude-sonnet-4-6
+Done: (1) service-people axum HTTP server GET /v1/people + GET /v1/people/{id} on :9091,
+reads ledger_personnel.json — committed 997b8d22. (2) service-extraction workspace unification:
+removed standalone [workspace], added to root Cargo.toml members — committed 997b8d22.
+(3) Cargo.lock duplicate caseless entry removed. (4) J7 HOLD lifted, ~2,600 words written
+(Abstract, Intro, Lit Review, Methodology, Hypotheses, Falsification Programme) — committed
+8ab01ff2. (5) Outbox → Command: promote project-data (25 commits) + BRIEF redistribution.
+(6) Outbox → project-gis: service-people contract ACK for project-console F2 relay.
 
-**Done this session:**
-- BRIEF-artifact-style-guide.md: §9.2 Diátaxis alignment + l10n.sourceCommit; §10 language-protocol fragmentation note; §14 contaminated BRIEF entries (11 rows); §15 Writing Quality Programme (two-pass architecture, Tier 1 forbidden vocab, per-artifact structural checks, JOURNAL chain-draft, citation fabrication warning)
-- Changelog updated to 2026-06-12
-- 3 contaminated BRIEFs marked: BRIEF-os-totebox-ppn-build-out.md (project-data), BRIEF-project-intelligence-active-work.md (project-intelligence), BRIEF-knowledge-platform-master.md (project-knowledge)
-- .agent/briefs/README.md populated: 2 active, 5 archived, 3 contaminated
-- .agent/skills/editorial-audit.md created — Tier 1/2/3 editorial audit skill with per-artifact structural checks
-- 4 outbox messages sent via MCP send_mailbox_message:
-  - project-intelligence: P0 MCP module_id fix + ask_local transport + contradictory doorman health (HIGH)
-  - project-intelligence: submit_extraction schema request + entity enrichment
-  - project-intelligence: editorial-context API proposal + __nomenclature__ class
-  - command@claude-code: artifact-classification.yaml closed enum expansion + skills directory governance
-- Commit: 6bd53472 (pwoodfine, 2026-06-12)
+Pending/carry-forward: Stage 6 promotion (Command); service-people CRUD (deferred);
+J7 §4-§8 after first os-totebox deployment; ORCID IDs (operator).
 
-**Pending/carry-forward:**
-- Stage 6 for 4 content repos (media-knowledge-*) — waiting for Command Session
-- B19/B20/B21 from project-gis — operator-pending; source files not found on disk
-- J2/J4/J6 preprint decision — waiting for operator
-- ORCID IDs for JOURNAL authors — operator action required
-- 3 missing project-software TOPICs — project-software Totebox must re-author (software dispatch hold: msg project-editorial-20260603-software-dispatch-hold)
+Operator preference surfaced: strict project-data scope discipline (cross-archive → outbox only).
+BRIEF-os-totebox-ppn-build-out.md created to track multi-session build-out.
 
-**Operator preferences surfaced:** none new this session
+### 2026-06-09 — MCP v0.3.0 readiness update (Command@claude-code)
+CLAUDE.md updated with MCP v0.3.0 tools table + artifact-type bright-line rules.
+session-context.md stub provisioned (this file).
 
----
-
-## Cross-archive carry-forward
-
-- [ ] Command Session: expand `conventions/artifact-classification.yaml` closed enum for `language_protocol:` (message sent 2026-06-12; msg-id: command-20260613-artifact-classification-yaml-expand-lang)
-- [ ] project-intelligence: MCP module_id P0 fix — blocks DataGraph pre-write protocol (message sent 2026-06-12; msg-id: command-20260613-p0-mcp-module-id-fix-ask-local-transport)
-- [ ] project-intelligence: submit_extraction schema confirmation needed before post-commit protocol can be implemented (message sent 2026-06-12)
-- [ ] Stage 6 pending: media-knowledge-documentation, media-knowledge-projects, media-knowledge-corporate, woodfine-fleet-deployment — Command Session
-- [ ] JOURNAL preprint decision: J2 (retail-colocation), J4 (private-network), J6 (desktop-environment) — operator action
+### 2026-06-03 — Archetype model rework (project-data@claude-code)
+Commuter (PKS) redefined as geometric airport-led park-and-ride: regional airports (≤600 km from
+metro ref) + outer commuter-rail-belt stations (15–110 km ring). Airport-led expands NA map-cell
+coverage 96 → 957. 5,977 features deployed (cache-bust token v=20260603d).
+Urban Fringe (VWH) → Retail-density model: qualify_vwh() admits ≥2-category co-locations OR lone
+STRONG/BROAD trade stores; composition-score tiering T1/T2/T3. 7,028 features deployed.
+New scripts: tools/sim_spread.py, ingest-osm-parking.py, ingest-osm-parcel-depot.py,
+run-overnight-ingests.sh (crontab June 4 05:00 UTC).
+Code commit: aec2187e (7 source files). Docs commit: same session.
+Stale-label fixes applied: session-context.md + MEMORY.md headers corrected from project-orgcharts/
+project-infrastructure → project-data.
