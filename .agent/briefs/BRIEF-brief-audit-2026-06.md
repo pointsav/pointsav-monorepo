@@ -62,13 +62,16 @@ _No consolidation opportunities identified._
 ## Work log
 
 2026-06-12 command@claude-code: Automated audit run. 4 active, 5 total BRIEFs reviewed.
+2026-06-12 totebox@project-software (claude-sonnet-4-6): All carry-forward items executed.
 
 ## Carry-forward
 
-- [ ] fix-schema: `BRIEF-dev-env-mcp-expansion.md` — Missing required frontmatter fields: schema, brief-id, title, owner, updated. Also covers project-intelligence scope (slm-mcp-server, service-slm crates) — not the project-software mission (software.pointsav.com storefront). Likely M-17 scope contamination. Status is already archived, so fix-schema is the minimum; operator should confirm whether this belongs in project-intelligence briefs/ instead.
-- [ ] migrate-to-archive: `BRIEF-project-intelligence-active-work.md` — Entirely project-intelligence scope: covers Doorman circuit breaker, service-content memory hardening, GIS python3 incident, apprenticeship queue drain — none of which belong to project-software (storefront/marketplace/wallet). Missing required frontmatter: schema, brief-id, title, owner. Appears to be M-17 scope contamination. Should be migrated to clones/project-intelligence/.agent/briefs/ and removed from this archive.
-- [ ] migrate-to-archive: `BRIEF-project-intelligence-master.md` — Entirely project-intelligence scope: covers service-slm, service-content, app-orchestration-slm, OLMo tier routing, DataGraph, Yo-Yo GPU infrastructure. Missing required frontmatter: brief-id, owner. This is the primary plan-of-record for project-intelligence engineering — it should live in that archive, not project-software. M-17 scope contamination.
-- [ ] migrate-to-archive: `BRIEF-slm-learning-loop.md` — Entirely project-intelligence scope: covers OLMo LoRA training pipeline, DPO corpus quality, Yo-Yo enrichment cycles, apprenticeship substrate — unrelated to software distribution. Missing required frontmatter: schema, brief-id, owner. M-17 scope contamination. Should live in clones/project-intelligence/.agent/briefs/.
-- [ ] migrate-to-archive: `AI-AUDIT-baseline-2026-05-31.md` — Not named BRIEF-*.md (convention violation). Covers project-intelligence ecosystem audit (service-slm, service-content, app-orchestration-slm). Missing required frontmatter: schema, brief-id, title (in frontmatter), owner, updated. M-17 scope contamination. Should be renamed BRIEF-ai-audit-baseline-2026-05-31.md and migrated to clones/project-intelligence/.agent/briefs/.
-- [ ] Create BRIEF for: software-distribution-substrate
-- [ ] Create BRIEF for: crypto-license-payment-architecture
+- [x] fix-schema: `BRIEF-dev-env-mcp-expansion.md` — Added schema, brief-id, title, owner, updated, moved_to, archived fields. Kept status: archived.
+- [x] migrate-to-archive: `BRIEF-project-intelligence-active-work.md` — Frontmatter fixed; git mv'd to briefs/archive/; status: archived; moved_to: project-intelligence.
+- [x] migrate-to-archive: `BRIEF-project-intelligence-master.md` — Frontmatter fixed; git mv'd to briefs/archive/; status: archived; moved_to: project-intelligence.
+- [x] migrate-to-archive: `BRIEF-slm-learning-loop.md` — Frontmatter fixed; git mv'd to briefs/archive/; status: archived; moved_to: project-intelligence.
+- [x] migrate-to-archive: `AI-AUDIT-baseline-2026-05-31.md` — Frontmatter fixed; renamed to BRIEF-ai-audit-baseline-2026-05-31.md; git mv'd to briefs/archive/; status: archived; moved_to: project-intelligence.
+- [x] Create BRIEF for: software-distribution-substrate — created BRIEF-software-distribution-substrate.md
+- [x] Create BRIEF for: crypto-license-payment-architecture — created BRIEF-crypto-license-payment-architecture.md
+
+Relay outbox message sent to Command (msg-id: project-software-20260612-brief-relay-project-intelligence) requesting re-staging of 4 contaminated BRIEFs in project-intelligence/.agent/briefs/.
