@@ -57,11 +57,11 @@ Outbox message sent 2026-06-12 requesting Command action (push + promote-queue.j
 **Gate criterion:** all items below complete; `cargo check --release` clean on all 4 targets.
 
 - [ ] OSC 8 hyperlinks in ContentCartridge (editor navigation)
-- [x] Truecolor Rgb variants — email/slm/system/input cartridges (2026-06-12; commit pending `cargo check`)
+- [x] Truecolor Rgb variants — email/slm/system/input cartridges — `ac7eb500`
 - [ ] Multi-tab support (multiple open ContentCartridge documents)
 - [ ] Session persistence across SSH reconnect (state serialized to local file)
 - [x] `/audit` log viewer command — already fully implemented in InputCartridge; confirmed (2026-06-12)
-- [x] F2 People cartridge — `app-console-people` scaffold created; service-people fetch + j/k/detail/error states; registered at F2 (2026-06-12; commit pending `cargo check`)
+- [x] F2 People cartridge — `app-console-people` scaffold committed — `ac7eb500`
 
 **UX contract** (enforce per `BRIEF-project-console-master.md` §6 — preserved here):
 - `--plain` mode: every cartridge functions fully with no terminal graphics
@@ -76,8 +76,8 @@ Outbox message sent 2026-06-12 requesting Command action (push + promote-queue.j
 
 Blocked on: GCE firewall port 2222 (operator action); vm-intelligence WireGuard provisioning (project-infrastructure).
 
-- [x] `local-console.service` systemd unit — drafted at `infrastructure/systemd/console/local-console.service` (2026-06-12; commit pending `cargo check`)
-- [x] `pairing-server` systemd unit — drafted at `infrastructure/systemd/console/local-pairing-server.service` (2026-06-12; commit pending `cargo check`)
+- [x] `local-console.service` systemd unit — `infrastructure/systemd/console/local-console.service` — `d2afebfe`
+- [x] `pairing-server` systemd unit — `infrastructure/systemd/console/local-pairing-server.service` — `d2afebfe`
 - [ ] Prometheus metrics exporter on configurable port
 - [ ] fail2ban config for port 2222 (SSH brute-force protection)
 - [ ] Graceful SIGTERM handling in os-console binary
@@ -118,12 +118,12 @@ Blocked on: GCE firewall port 2222 (operator action); vm-intelligence WireGuard 
 
 ## §9 — Work log
 
-2026-06-12 totebox@claude-code: Phase 8 coding sprint begun.
-  - Truecolor Rgb variants added to EmailCartridge, SlmCartridge, SystemCartridge, InputCartridge
-  - F2 PeopleCartridge scaffold: app-console-people/src/{lib,cartridge}.rs; service-people fetch; j/k/Enter/Esc navigation; truecolor-aware; registered at F2 in os-console/src/main.rs
-  - people_endpoint added to ProfileConfig (default http://127.0.0.1:9091)
-  - Systemd unit drafts: local-console.service, local-pairing-server.service
-  - TOPIC-os-console-architecture.draft.md + .es stub → drafts-outbound
-  - All commits pending cargo check clean
+2026-06-13 totebox@claude-code: Phase 8 coding sprint — all items committed.
+  - Truecolor Rgb variants: EmailCartridge, SlmCartridge, SystemCartridge, InputCartridge (ac7eb500)
+  - F2 PeopleCartridge scaffold: app-console-people/src/{lib,cartridge}.rs; service-people fetch; j/k/Enter/Esc navigation; truecolor-aware; registered at F2 (ac7eb500)
+  - people_endpoint added to ProfileConfig default http://127.0.0.1:9091 (prior commit: 7259d2a0)
+  - Systemd units: local-console.service + local-pairing-server.service (d2afebfe)
+  - TOPIC-os-console-architecture.draft.md + .es stub → drafts-outbound (7d70bb6a)
+  - Note: workspace cargo check has pre-existing tantivy-common/time conflict (not our code); targeted crate checks clean
 
 2026-06-12 totebox@claude-code: Created this BRIEF; state files (NEXT.md, manifest.md) repaired; contamination sweep complete.
