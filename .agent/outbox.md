@@ -12,6 +12,7 @@ from: totebox@project-bim
 to: command@claude-code
 re: SHUTDOWN — session 2026-06-09: contamination cleanup + 18 Key Plan IFCs + Tiles registry
 created: 2026-06-09T00:00:00Z
+status: pending
 priority: normal
 status: pending
 msg-id: project-bim-20260609-shutdown-key-plans-tiles
@@ -45,6 +46,7 @@ from: totebox@project-bim
 to: command@claude-code
 re: inputs/ contamination — 4 corporate-project files need return to cluster-totebox-corporate-1
 created: 2026-06-09T00:00:00Z
+status: pending
 priority: low
 status: pending
 msg-id: project-bim-20260609-inputs-contamination
@@ -69,6 +71,7 @@ from: totebox@project-bim
 to: command@claude-code
 re: SHUTDOWN — session 2026-06-04: woodfine-bim-library recreated (push pending operator auth)
 created: 2026-06-04T00:00:00Z
+status: pending
 priority: high
 status: actioned
 actioned: 2026-06-04T16:42:00Z
@@ -109,6 +112,7 @@ from: totebox@project-bim
 to: command@claude-code
 re: SHUTDOWN — session 2026-06-03: IFC-first pipeline + /key-plans route deployed
 created: 2026-06-03T00:00:00Z
+status: pending
 priority: high
 status: actioned
 actioned: 2026-06-03T07:10:00Z
@@ -152,6 +156,7 @@ from: totebox@project-bim
 to: command@claude-code
 re: SHUTDOWN — session 2026-06-02: DXF plan rendering pipeline deployed
 created: 2026-06-02T00:00:00Z
+status: pending
 priority: normal
 status: actioned
 actioned: 2026-06-03T07:10:00Z

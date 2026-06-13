@@ -1,6 +1,6 @@
 @~/Foundry/AGENT.md
 
-# project-marketing — Archive Guide
+# project-bim — Archive Guide
 
 > **State:** active | **Last updated:** 2026-05-18
 > **Cluster manifest:** `.agent/manifest.md`
