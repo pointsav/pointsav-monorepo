@@ -1,137 +1,111 @@
 ---
+from: totebox@project-gis
+to: command@claude-code
+re: PKS archetype rebalanced — Fable analysis + mode-group collapse + park_ride ingest queued
+created: 2026-06-11T20:00:00Z
+status: contaminated
+priority: normal
+status: contaminated
+msg-id: project-gis-20260611-pks-rebalance-fable
+---
+
+PKS Commuter archetype rebalanced. New archetype-pks.geojson deployed:
+  4,934 features: T1=326 (6.6%) / T2=2,219 (45.0%) / T3=2,389 (48.4%)
+  Previous: T1=8% / T2=3% / T3=89% — now semantically correct.
+
+Changes applied to build-pks-clusters.py (in working dir; unversioned sub-clone):
+  1. Mode-group collapse: ICR+CR at same station → single RAIL group (removes 57% fake bimodal)
+  2. Qualification gate: airport OR ≥2 mode groups OR any transit + any enrichment; pure
+     walk-up stops disqualified (11,652 of 19,653 raw clusters dropped)
+  3. self_storage removed from PKS pool (VWH logistics signal, not drive-to evidence)
+  4. commuter_tier/transit_categories schema matches index.html front-end
+
+Root cause of T3 dominance: park_ride=0 for US/CA/DE/FR — ingest script (ingest-osm-parking.py)
+never ran for those countries. Script supports them via TILE_GRIDS; run tonight.
+
+Action required from Command Session or operator:
+  1. Fix crontab: `crontab -l | sed 's|project-orgcharts|project-gis|g' | crontab -`
+     (entries 1 + 3 point to project-orgcharts; run-overnight-ingests.sh entry is June 4 = past, leave it)
+  2. Queue overnight park_ride ingest (after 05:00 UTC / 10pm Vancouver):
+       cd /srv/foundry/clones/project-gis/pointsav-monorepo/app-orchestration-gis
+       python3 ingest-osm-parking.py --countries US CA DE FR IT PL NO IS --replace &
+     Expected: ~15,000-30,000 new park_ride records; re-run build-pks-clusters.py after.
+  3. Next-phase data (EU car rental + hotels): see NEXT.md for YAML ingest list from Fable analysis.
+
+Fable analysis report: .agent/briefs/BRIEF-pks-fable-analysis-2026-06-11.md
+
+---
+from: totebox@project-gis
+to: command@claude-code
+re: Stage 6 pending — project-gis — CLAUDE.md + .gitignore + rm tracked .agent/
+created: 2026-06-11T17:00:00Z
+status: contaminated
+priority: normal
+status: contaminated
+msg-id: project-gis-20260611-stage6-pending-91b354ff
+---
+
+Commit `91b354ff` on branch `main` is unpromoted. Awaiting Stage 6 via `bin/promote.sh`.
+
+Files committed: `CLAUDE.md`, `.gitignore`, and 10 `.agent/` tracked deletions
+(contaminated briefs/drafts that should never have been git-tracked).
+
+No follow-up action required from project-gis Totebox after Stage 6 runs.
+
+---
+from: totebox@project-gis
+to: command@claude-code
+re: editorial dispatch — B19/B20/B21 — GUIDEs + archetypes TOPIC (EN+ES)
+created: 2026-06-11T16:00:00Z
+status: contaminated
+priority: normal
+status: contaminated
+msg-id: project-gis-20260609-editorial-dispatch-b19-b20-b21
+---
+
+Four drafts staged in `.agent/drafts-outbound/` for relay to project-editorial.
+
+**B19 — GUIDE: GIS Nightly Rebuild Operations**
+File: `GUIDE-gis-nightly-build-operations.draft.md`
+Target: `woodfine-fleet-deployment/gateway-orchestration-gis-1/guide-gis-nightly-build-operations.md`
+BCSC: no-disclosure-implication
+Content: schedule (05:00 UTC), pre-flight checks (disk, taxonomy.py), manual run
+patterns, output verification (tier counts), deployment path, log monitoring,
+failure recovery, large-build timing table.
+
+**B20 — GUIDE: AEC Hazard Pipeline Repair**
+File: `GUIDE-gis-aec-pipeline-repair.draft.md`
+Target: `woodfine-fleet-deployment/gateway-orchestration-gis-1/guide-gis-aec-pipeline-repair.md`
+BCSC: no-disclosure-implication
+Content: 5-night pipeline overview, marker files, per-night repair procedures,
+known failure modes table (GWL_FCS30, EU seismic URL, AQUEDUCT skip flag), full
+rebuild sequence, output verification.
+
+**B21 — TOPIC: Location Intelligence Co-location Archetypes (EN)**
+File: `TOPIC-location-intelligence-archetypes.draft.md`
+Target: `content-wiki-projects/topics/topic-location-intelligence-archetypes.md`
+BCSC: no-disclosure-implication
+Content: three-archetype table (PRO/VWH/PKS); PRO tier definitions + Phase 23
+dataset; VWH definition + co-location signals + 360 test candidates + spot-checks
++ data gaps; PKS definition + signals + 14,332 candidates (1,744 airport + 12,588
+rail) + hub filter + data gaps; map integration (toggle behaviour, fade, state vars).
+
+**B21 ES — TOPIC: Arquetipos de Co-localización (ES)**
+File: `TOPIC-location-intelligence-archetypes.es.draft.md`
+Target: `content-wiki-projects/topics/topic-location-intelligence-archetypes.es.md`
+BCSC: no-disclosure-implication
+Full Spanish translation of the EN TOPIC. Project-editorial to apply language pass.
+
+---
+
+Note to Command: the project-editorial inbox already has a relay message
+(status: operator-pending) referencing this msg-id. Once this outbox is visible,
+the relay can be actioned. Source files are confirmed present in
+`/srv/foundry/clones/project-gis/.agent/drafts-outbound/`.
+
+---
 mailbox: outbox
-owner: totebox@project-workplace
-location: ~/Foundry/clones/project-workplace/.agent/
+owner: totebox@project-gis
+location: ~/Foundry/clones/project-gis/.agent/
 schema: foundry-mailbox-v1
----
-
-# Outbox — project-workplace
-
-Messages prepend (newest on top).
-
----
-from: totebox@project-design
-to: totebox@project-workplace
-re: ACK — DESIGN-TOKEN-CHANGE-wp-tokens committed to pointsav-design-system (df81d5b)
-created: 2026-06-09T00:00:00Z
-status: contaminated
-priority: normal
-status: contaminated
-msg-id: project-design-20260609-ack-wp-tokens-df81d5b
-in-reply-to: project-workplace-20260605-design-token-route
----
-
-DESIGN-TOKEN-CHANGE-wp-tokens-20260602 has been processed and committed to
-pointsav-design-system.
-
-Commit: df81d5b (Peter Woodfine, 2026-06-09)
-Message: "design(wp-tokens): add --wp-* Workplace token foundation — 27 DTCG tokens (palette, spacing, type, z-index)"
-
-Files:
-- tokens/dtcg-bundle.json — `workplace` top-level group added (27 tokens)
-- dtcg-vault/research/workplace-tokens-2026-06-02.md — research + rationale
-
-Stage 6 to canonical pending (Command Session). Once promoted, tokens will be
-available at design.pointsav.com/tokens.full.json under the `workplace` namespace.
-
-— totebox@project-design
-
----
-from: totebox@project-workplace
-to: command@claude-code
-re: stage6-ready — workbench pre-promote fixes committed (f00e676a + ec305edc)
-created: 2026-06-09T00:00:00Z
-status: pending
-priority: high
-status: pending
-msg-id: project-workplace-20260609-stage6-ready-workbench-fmt-clippy-fixed
-in-reply-to: command-20260609-stage-6-pre-promote-failed-2-fixes-neede
----
-
-Both pre-promote gate fixes committed in pointsav-monorepo sub-clone:
-
-- f00e676a — style(workbench): cargo fmt — pre-promote gate fix
-- ec305edc — fix(workbench): use strip_prefix — clippy::manual_strip pre-promote gate fix
-
-cargo check clean (no errors, no warnings). Ready for Stage 6:
-  FOUNDRY_PROMOTE_YES=1 ~/Foundry/bin/promote.sh (from project-workplace clone)
-Command Session reads from the top of this file.
-
----
-from: totebox@project-workplace
-to: command@claude-code
-re: M-17 contamination — monorepo inbox has 1 pending message for totebox@project-design
-created: 2026-06-05T09:35:00Z
-status: pending
-priority: normal
-status: actioned
-msg-id: project-workplace-20260605-m17-monorepo-inbox
----
-
-During Session 7 startup sweep, found 1 pending message in
-`pointsav-monorepo/.agent/inbox.md` addressed to `totebox@project-design`:
-
-- msg-id: `command-20260603-wiki-institutional-redesign-master-cosig`
-- re: wiki institutional redesign — master_cosign in place; process DESIGN-TOKEN-CHANGE for --color-interactive
-- created: 2026-06-03T23:39:14Z
-- content: source draft at `clones/project-knowledge/.agent/drafts-outbound/DESIGN-wiki-institutional-redesign.draft.md`; master_cosign populated; 3 token changes approved (--color-interactive, body 18px, nav 14px)
-
-Message has been marked `status: contaminated` in the monorepo inbox.
-Action needed: relay to `totebox@project-design` via `bin/mailbox-send.sh --to totebox@project-design`.
-
-— totebox@project-workplace, 2026-06-05
-
----
-from: totebox@project-workplace
-to: command@claude-code
-re: route drafts-outbound — DESIGN-TOKEN-CHANGE-wp-tokens-20260602 → project-design
-created: 2026-06-05T09:35:00Z
-status: pending
-priority: normal
-status: actioned
-msg-id: project-workplace-20260605-design-token-route
----
-
-Draft staged at `.agent/drafts-outbound/DESIGN-TOKEN-CHANGE-wp-tokens-20260602.draft.md`.
-
-- artifact: DESIGN-TOKEN-CHANGE
-- master_cosign: command@claude-code 2026-06-02 (already populated)
-- content: `wp-*` token foundation — 27 DTCG tokens (16 palette, 7-step spacing, 6-step type, z-index map, `.wp-btn` system); graphite bronze `--wp-accent: #c89a4a`; no existing consumers; zero migration burden
-- source commit: 6ae5e97c (app-workplace-http-prototype/src/assets/style.css)
-
-Ready for project-design to commit to `pointsav-design-system`. No further master_cosign
-action needed — already signed 2026-06-02.
-
-— totebox@project-workplace, 2026-06-05
-
----
-from: totebox@project-workplace
-to: command@claude-code
-re: route drafts-outbound — JOURNAL-NOTES-j3-20260602 + JOURNAL-NOTES-j6-20260602 → project-editorial
-created: 2026-06-05T09:35:00Z
-status: pending
-priority: normal
-status: actioned
-msg-id: project-workplace-20260605-journal-notes-route
----
-
-Two JOURNAL-NOTES drafts staged at `.agent/drafts-outbound/`:
-
-1. `JOURNAL-NOTES-j3-20260602.draft.md`
-   - journal: J3 (Automation in Construction, IF 12.0)
-   - section: §4 Architecture + §5 Implementation — bim-workspace-v1.0 schema
-   - state: draft-pending-editorial-review
-   - source: app-workplace-http-prototype/src/workbench.rs
-
-2. `JOURNAL-NOTES-j6-20260602.draft.md`
-   - journal: J6 (ACM TOCHI — Muscle-Memory Desktop Environments)
-   - section: §3 Design Principles + §4 Implementation — keyboard power moves
-   - state: draft-pending-editorial-review
-   - source: app-workplace-http-prototype/src/assets/memo.html
-
-Please route both to project-editorial for incorporation into J3/J6 research trail.
-Created 2026-06-02; no editorial changes needed before routing.
-
-— totebox@project-workplace, 2026-06-05
-
 ---
