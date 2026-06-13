@@ -560,8 +560,26 @@ fn write_enrichment_dpo_pair(
         .collect();
     let tier_a_json = serde_json::to_string(&tier_a_normalized).unwrap_or_default();
     let tier_b_json = serde_json::to_string(tier_b_raw).unwrap_or_default();
-    if tier_a_json == tier_b_json {
-        return; // identical after normalization — no training delta
+    // Canonical comparison: normalize Tier B to same {classification, entity_name} schema and
+    // sort both arrays before equality check. Raw string compare fails when models return the
+    // same entities in different order → false DPO pair. Pair content (tier_a_json/tier_b_json)
+    // is written as-is so training sees the actual model outputs, not the sorted forms.
+    let mut tier_b_normalized_cmp: Vec<serde_json::Value> = tier_b_raw
+        .iter()
+        .map(|e| {
+            serde_json::json!({
+                "classification": e.get("classification").unwrap_or(&serde_json::Value::Null),
+                "entity_name":    e.get("entity_name").unwrap_or(&serde_json::Value::Null),
+            })
+        })
+        .collect();
+    let mut tier_a_sorted_cmp = tier_a_normalized.clone();
+    tier_a_sorted_cmp.sort_by(|x, y| x.to_string().cmp(&y.to_string()));
+    tier_b_normalized_cmp.sort_by(|x, y| x.to_string().cmp(&y.to_string()));
+    if serde_json::to_string(&tier_a_sorted_cmp).unwrap_or_default()
+        == serde_json::to_string(&tier_b_normalized_cmp).unwrap_or_default()
+    {
+        return; // identical after normalization + sort — no training delta
     }
     let prompt = format!("{}\n\nText:\n{}", EXTRACTION_SYSTEM_PROMPT, corpus_text);
     let now = chrono::Utc::now();
