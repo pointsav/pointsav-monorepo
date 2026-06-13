@@ -87,7 +87,8 @@ impl SlmCartridge {
     fn render_dashboard(&self, frame: &mut Frame, area: Rect) {
         let outer = Block::default()
             .title(" F9 — SLM Infrastructure ")
-            .borders(Borders::ALL);
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(self.accent_color()));
         let inner = outer.inner(area);
         frame.render_widget(outer, area);
 
