@@ -226,6 +226,7 @@ pub fn router(state: AppState) -> Router {
         .route("/es/wiki/{*slug}", get(wiki_page_es))
         .route("/static/{*path}", get(static_asset))
         .route("/healthz", get(healthz))
+        .route("/health", get(healthz))
         // Phase 2 Step 5 — citation registry for autocomplete
         .route("/api/citations", get(crate::citations::get_citations))
         // D2: search autocomplete
