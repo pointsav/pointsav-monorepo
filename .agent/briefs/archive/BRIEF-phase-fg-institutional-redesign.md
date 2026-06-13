@@ -6,6 +6,7 @@ archived: 2026-06-11
 created: 2026-06-11
 updated: 2026-06-11
 author: totebox@project-editorial (claude-sonnet-4-6)
+contaminated_note: "M-17 contamination — belongs to project-editorial; archived from project-gis 2026-06-13 by command@claude-code"
 ---
 
 # BRIEF — Phase F+G: Institutional Redesign Follow-through

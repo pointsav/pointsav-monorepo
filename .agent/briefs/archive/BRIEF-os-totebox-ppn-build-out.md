@@ -1,13 +1,11 @@
 ---
 artifact: brief
-schema: foundry-brief-v1
-brief-id: os-totebox-ppn-build-out
-owner: project-data
 status: archived
-contaminated_note: "contamination artifact — content belongs to project-data; archived 2026-06-12 by project-console Totebox; outbox sent to Command for redistribution"
+schema: foundry-brief-v1
 archive: project-data
 created: 2026-06-11
-updated: 2026-06-12
+updated: 2026-06-11
+contaminated_note: "M-17 contamination — belongs to project-data; archived from project-gis 2026-06-13 by command@claude-code"
 ---
 
 # BRIEF — os-totebox PPN Build-Out

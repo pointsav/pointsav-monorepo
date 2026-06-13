@@ -3,10 +3,11 @@ artifact: brief
 schema: foundry-brief-v1
 brief-id: project-software-crypto-license-payment-architecture
 title: "Crypto License Payment Architecture — Polygon USDC + Ed25519"
-status: active
+status: archived
 owner: project-software
 created: 2026-06-12
 updated: 2026-06-12
+contaminated_note: "M-17 contamination — belongs to project-software; archived from project-gis 2026-06-13 by command@claude-code"
 ---
 
 # Crypto License Payment Architecture — Polygon USDC + Ed25519
