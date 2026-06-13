@@ -1,12 +1,6 @@
-# OS metadata — never commit
-.DS_Store
-**/.DS_Store
-
-# Input backup directories — local-only scratch; not committed
-inputs/current-org-chart-html-backup-*/
-
-# Multi-agent session locks (ephemeral — not committed)
+# Multi-agent session locks and engine state (ephemeral — not committed)
 .agent/engines/*/session.lock
+.agent/._claude_bkp/
 
 # Build artifacts — not committed
 build/
@@ -18,5 +12,17 @@ outputs/*
 # Legacy .claude directory (should be .agent symlink — to be fixed)
 .claude/
 
-# Safety-net archive of misplaced repo clones (cannot be committed; deletion review 2026-07-01)
-archive-2026-06-01/
+# Sub-clones — managed separately via their own git repos
+pointsav-monorepo/
+pointsav-design-system/
+pointsav-fleet-deployment/
+pointsav-media-assets/
+woodfine-media-assets/
+woodfine-fleet-deployment/
+
+# Runtime data — not committed to archive git
+service-content/data/
+
+# Recovered binaries and input documents — not committed to archive git
+app-privategit-design-recovered
+inputs/
