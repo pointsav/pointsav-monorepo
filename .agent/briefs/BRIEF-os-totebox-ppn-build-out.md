@@ -1,10 +1,10 @@
 ---
 artifact: brief
-brief-id: BRIEF-os-totebox-ppn-build-out
-title: "os-totebox PPN Build-Out"
-owner: totebox@project-data
-status: active
 schema: foundry-brief-v1
+brief-id: os-totebox-ppn-build-out
+owner: project-data
+status: archived
+contaminated_note: "contamination artifact — content belongs to project-data; archived 2026-06-12 by project-console Totebox; outbox sent to Command for redistribution"
 archive: project-data
 created: 2026-06-11
 updated: 2026-06-12
@@ -47,24 +47,16 @@ and route inference requests through the tiered gateway.
 - **Microkit SDK** — seL4 Phase 1 PD blocked on operator downloading SDK v2.1.0 or v2.2.0.
   In project-system scope. Not actionable here.
 
-## Session 2 (2026-06-12) — completed
-
-- `os-totebox/scripts/start-stack.sh` — ordered startup script for os-totebox service stack.
-  Dependency ordering: service-slm → service-content → service-people → service-extraction.
-  Health-check waits for HTTP services; seL4 service-fs noted as microkernel-managed.
-- `service-people/src/bin/server.rs` — enriched Contact with `email: Option<String>`;
-  reads `substrate/ledger_personnel.jsonl` at startup; joins on lowercased name;
-  env `SERVICE_PEOPLE_SUBSTRATE_PATH` overrides default path; 4 unit tests added.
-- `JOURNAL/JOURNAL-totebox-orchestration-v0.1.stub.md` — language pass complete;
-  two internal system-name references removed from stub annotations;
-  `forbidden_terms_cleared: true`; bumped to v0.3.
-
 ## Next session actions (project-data scope)
 
 1. **service-people CRUD** — POST /v1/people, PATCH /v1/people/{id} for console F2 create/edit.
-   Deferred; add after read-only is validated in F2 cartridge.
-2. **J7 §4 Implementation** — fill after first os-totebox deployment provides architecture evidence.
-3. **J7 §5 Evaluation + §6 Discussion + §8 Conclusion** — after benchmark harness is built.
+   Deferred from session 1; add after read-only is validated in F2 cartridge.
+2. **os-totebox startup script** — `os-totebox/scripts/start-stack.sh` — ordered startup of
+   service-slm, service-fs, service-people, service-extraction, service-content.
+3. **J7 §4 Implementation** — fill after first os-totebox deployment provides architecture evidence.
+4. **J7 §5 Evaluation + §6 Discussion + §8 Conclusion** — after benchmark harness is built.
+5. **service-people ledger enrichment** — join `substrate/ledger_personnel.jsonl` email fields
+   to contact records for console display of `email` field.
 
 ## Architecture diagram (intended)
 

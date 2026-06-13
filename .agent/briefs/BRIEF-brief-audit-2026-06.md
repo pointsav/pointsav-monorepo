@@ -25,8 +25,8 @@ Out of scope: content quality review; this is structural + schema compliance onl
 - 2026-06-12: Governance spec ratified in conventions/brief-discipline.md
 
 ## Decisions open
-- [ ] Operator review of recommended actions below
-- [ ] Actions executed by next Totebox session for this archive
+- [x] Operator review of recommended actions below — completed; all actions approved as written
+- [x] Actions executed by next Totebox session for this archive — completed 2026-06-12
 
 ## Action table
 
@@ -78,14 +78,15 @@ _No consolidation opportunities identified._
 ## Work log
 
 2026-06-12 command@claude-code: Automated audit run. 3 active, 7 total BRIEFs reviewed.
+2026-06-12 totebox@claude-code: All carry-forward items executed. Contaminated BRIEFs archived in place; schema fixes applied; archive/BRIEF-project-intelligence-master.md status renamed to 'archived'; BRIEF-os-console-active-dev.md created; README populated; NEXT.md and manifest.md rewritten. Outbox sent to Command for BRIEF redistribution + Stage 6 Phase B promote.
 
 ## Carry-forward
 
-- [ ] fix-schema: `BRIEF-cross-platform-release.md` — Uses schema: foundry-plan-v1 instead of foundry-brief-v1; missing artifact: brief field; missing brief-id and owner fields. Status is canonical (archived).
-- [ ] fix-schema: `BRIEF-dev-env-mcp-expansion.md` — Missing schema, brief-id, title, and owner fields. Status is canonical (archived). Content belongs to workspace-level MCP expansion work, not project-console scope — but status is already archived so no action on scope.
-- [ ] migrate-to-archive: `BRIEF-knowledge-platform-master.md` — Contamination artifact: frontmatter declares cluster: project-knowledge and content is entirely about app-mediakit-knowledge. Belongs in project-knowledge, not project-console. Should be git mv'd to correct archive or archived here with contaminated_note.
-- [ ] migrate-to-archive: `BRIEF-os-totebox-ppn-build-out.md` — Contamination artifact: frontmatter declares archive: project-data and all content concerns service-people, service-extraction, and os-totebox build-out work scoped to project-data. Should be relocated to project-data briefs directory.
-- [ ] fix-schema: `BRIEF-project-console-master.md` — Missing brief-id and owner fields. Has artifact and schema fields. Status is canonical (archived). Contains the master os-console state tracker — historically significant even as archived.
-- [ ] migrate-to-archive: `BRIEF-project-intelligence-active-work.md` — Contamination artifact: author field declares totebox@project-intelligence and all content is about service-slm, apprenticeship queue, Doorman circuit breakers, and OLMo training — entirely project-intelligence scope. Should be relocated.
-- [ ] rename-status: `archive/BRIEF-project-intelligence-master.md` — Status value 'relocated' is non-canonical. Must be one of: active | reference | archived | superseded | stub. Given the file was git mv'd here from project-knowledge during contamination cleanup, status should be 'archived' with the existing contamination_note preserved.
-- [ ] Create BRIEF for: os-console active development state — phases 8–10
+- [x] fix-schema: `BRIEF-cross-platform-release.md` — schema changed to foundry-brief-v1; artifact: brief, brief-id, owner added. [2026-06-12 totebox@claude-code]
+- [x] fix-schema: `BRIEF-dev-env-mcp-expansion.md` — schema, brief-id, title, owner added. [2026-06-12 totebox@claude-code]
+- [x] migrate-to-archive: `BRIEF-knowledge-platform-master.md` — archived in place with contaminated_note; outbox to Command for redistribution to project-knowledge. [2026-06-12 totebox@claude-code]
+- [x] migrate-to-archive: `BRIEF-os-totebox-ppn-build-out.md` — archived in place with contaminated_note; outbox to Command for redistribution to project-data. [2026-06-12 totebox@claude-code]
+- [x] fix-schema: `BRIEF-project-console-master.md` — brief-id and owner added. [2026-06-12 totebox@claude-code]
+- [x] migrate-to-archive: `BRIEF-project-intelligence-active-work.md` — archived in place with contaminated_note; outbox to Command for redistribution to project-intelligence. [2026-06-12 totebox@claude-code]
+- [x] rename-status: `archive/BRIEF-project-intelligence-master.md` — status changed from 'relocated' to 'archived'. [2026-06-12 totebox@claude-code]
+- [x] Create BRIEF for: os-console active development state — phases 8–10 — `BRIEF-os-console-active-dev.md` created. [2026-06-12 totebox@claude-code]
