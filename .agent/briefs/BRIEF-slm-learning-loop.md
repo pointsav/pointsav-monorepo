@@ -6,7 +6,7 @@ title: "SLM Learning Loop — DPO Training Pipeline"
 status: active
 owner: project-intelligence
 created: 2026-05-29
-updated: 2026-06-13 (session 10 — tokenization fix; BETA/LR corrections; cycle script hardening; Phase 4b ledger bug confirmed)
+updated: 2026-06-13 (session 10b — Q&A decisions: sweep ledger cleared, NUM_EPOCHS 1→3, enrichment sort fix committed, SFT deferred)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 companion: BRIEF-slm-substrate-master.md
 grounds_in:
@@ -1417,11 +1417,26 @@ The learning loop pipeline engineering is mature. The training recipe has three 
 
 ### Carry-forward (open items)
 
-- [ ] **Stage 6**: promote `2b48bc75`, `06435048`, `3eed6cc4`, `a6ccdf04` (project-intelligence) + workspace `d94043f`, `0a0e9f9` — Command Session scope
-- [ ] **Phase 4b ledger bug (P0-enrichment)**: stop writing SHA on 202-ACK; add Tier-B-completion reconciliation in service-content or bash; 1,281 commits currently unreachable for enrichment
-- [ ] **Enrichment string comparison**: fix canonical entity-set comparison in service-content/src/main.rs (sort before `==`)
-- [ ] **num_train_epochs decision**: operator to decide: bump epochs vs fresh-run-on-corpus-growth
-- [ ] **SFT-first path**: run `export-sft.sh` → SFT training on chosen diffs before trusting the DPO adapter
-- [ ] **Misrouted BRIEFs**: Command Session to relocate 5 foreign BRIEFs from this archive to owning archives
+- [ ] **Stage 6**: promote `2b48bc75`, `06435048`, `3eed6cc4`, `a6ccdf04`, `2f8a6e9a` (project-intelligence) + workspace `d94043f`, `0a0e9f9` — Command Session scope; must land before Jun 14 00:00 UTC cycle
+- [ ] **Phase 4b ledger root-cause fix**: sweep ledger cleared (session 10b) — 1,281 commits re-eligible; **root cause** (SHA written on 202-ACK before Tier B runs) still unaddressed; add per-document Tier-B-completion tracking in service-content/bash so SHAs are only permanently ledgered after Tier B enrichment completes
+- [ ] **service-content binary rebuild + deploy**: after Stage 6; enrichment canonical sort fix (`2f8a6e9a`) not live until binary redeployed — Command scope (`deploy-binary.sh`)
+- [ ] **SFT-first path**: deferred by operator (session 10b Q&A: plumbing milestone first); revisit after first DPO receipt + eval-adapter.sh baseline shows signal
+- [ ] **Misrouted BRIEFs**: Command Session to relocate 6 foreign BRIEFs from this archive to owning archives (outbox sent)
 - [ ] **`SLM_YOYO_WEIGHTS_GCS_BUCKET`**: set in service unit when GCS bucket ready
-- [ ] **Tier B GPU restoration**: Tier B offline; enrichment pairs accrue at ~5-6/day; primary constraint on enrichment quality
+- [ ] **Tier B GPU restoration**: Tier B offline; enrichment pairs accrue slowly without GPU; primary constraint on enrichment quality and DPO pair volume
+- [x] ~~**Enrichment string comparison**: fix canonical entity-set comparison in service-content/src/main.rs (sort before `==`)~~ — DONE commit `2f8a6e9a`
+- [x] ~~**num_train_epochs decision**: operator to decide: bump epochs vs fresh-run-on-corpus-growth~~ — DONE: bumped to 3, commit `2f8a6e9a`; fresh-run-on-corpus-growth deferred until ~200+ enrichment pairs
+
+### Session 10b — Operator Q&A decisions (2026-06-13)
+
+Five outstanding design decisions resolved via structured Q&A with recommendations:
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| Phase 4b SHA ledger (1,281 commits blocked from enrichment) | **Clear it** — `rm /srv/foundry/data/yoyo-datagraph-sweep.ledger` | Ingest via `service-content` is idempotent (`worm_id` dedup); re-ingest is safe; commits become re-eligible for Tier B enrichment on next cycle |
+| `num_train_epochs` accumulation (epoch 1 completes → `--resume` is a no-op) | **Bump to 3** — `NUM_EPOCHS = 3` in `run-dpo-training.py` | After epoch 1, `global_step == max_steps`; Trainer returns immediately on every subsequent nightly resume; 3 epochs = 3× gradient exposure same corpus; checkpoint lineage continues |
+| SFT vs DPO at current corpus scale (472 pairs) | **Stay DPO** — deferred SFT | Plumbing milestone first; validate receipt + eval before switching training strategy; SFT path (`export-sft.sh`) remains code-complete and available |
+| Enrichment canonical sort (false DPO pairs from array-order variance) | **Fix now** — committed `2f8a6e9a` | Only 11 enrichment pairs exist; cheap to fix before accumulation; normalization + sort prevents "same entities, different order" from producing spurious training signal |
+| Misrouted BRIEFs (6 foreign BRIEFs in this archive) | **Leave to Command** | Cross-archive scope; outbox sent; Totebox must not write to other archives' `.agent/` |
+
+**Epoch accumulation strategy (locked):** checkpoint lineage continues to epoch 3 via nightly `--resume`; trigger fresh-run-on-corpus-growth when enrichment pairs reach ~200+ (prevents `train_test_split(seed=42)` max_steps mismatch mid-lineage).
