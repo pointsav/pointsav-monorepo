@@ -18,8 +18,15 @@ impl QuotaStatus {
 
 pub enum QuotaCheck {
     Ok,
-    VmLimitExceeded { current: u32, max: u32 },
-    RamLimitExceeded { current_mb: u64, requested_mb: u64, max_mb: u64 },
+    VmLimitExceeded {
+        current: u32,
+        max: u32,
+    },
+    RamLimitExceeded {
+        current_mb: u64,
+        requested_mb: u64,
+        max_mb: u64,
+    },
 }
 
 pub fn check(config: &TenantConfig, vms: &[VmRecord], requested_ram_mb: u64) -> QuotaCheck {
