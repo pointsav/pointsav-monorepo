@@ -1,7 +1,7 @@
 use anyhow::Result;
 use axum::{
     body::Body,
-    extract::{Path, Query, State},
+    extract::{ConnectInfo, Path, Query, State},
     http::{header, HeaderMap, StatusCode},
     response::{IntoResponse, Json, Redirect, Response},
     routing::{get, post},
@@ -14,6 +14,7 @@ use serde_json::{json, Value};
 use std::{
     collections::HashSet,
     fs,
+    net::SocketAddr,
     path::PathBuf,
     sync::{Arc, RwLock},
 };
@@ -82,19 +83,37 @@ fn load_verify_key(val: &str) -> Option<VerifyingKey> {
     VerifyingKey::from_bytes(&arr).ok()
 }
 
-fn load_revocation_list(path: &str) -> HashSet<String> {
-    fs::read_to_string(path)
-        .unwrap_or_default()
+// Deploy note: update this file atomically (write to .tmp then rename) to avoid
+// partial reads during live reloads.
+fn load_revocation_list(path: &str) -> std::io::Result<HashSet<String>> {
+    let content = fs::read_to_string(path)?;
+    let set = content
         .lines()
-        .map(|l| l.trim().to_lowercase())
-        .filter(|l| !l.is_empty() && !l.starts_with('#'))
-        .collect()
+        .filter_map(|l| {
+            let l = l.trim();
+            if l.is_empty() || l.starts_with('#') {
+                return None;
+            }
+            let lower = l.to_lowercase();
+            if lower.len() != 64 || !lower.chars().all(|c| c.is_ascii_hexdigit()) {
+                tracing::warn!(
+                    line = l,
+                    "revocation list: skipping non-fingerprint line (expected 64-char SHA256 hex; \
+                     did you paste a raw token instead of its fingerprint?)"
+                );
+                return None;
+            }
+            Some(lower)
+        })
+        .collect();
+    Ok(set)
 }
 
 fn token_fingerprint(raw_b64: &str) -> String {
     use sha2::{Digest, Sha256};
-    let hash = Sha256::digest(raw_b64.as_bytes());
-    hex::encode(&hash[..8])
+    // Fingerprint is SHA256 of the canonical URL_SAFE_NO_PAD base64url token string.
+    // Stored fingerprints must use the same encoding — see tool-wallet fingerprint subcommand.
+    hex::encode(Sha256::digest(raw_b64.as_bytes()))
 }
 
 // ── Version helpers ───────────────────────────────────────────────────────────
@@ -157,7 +176,7 @@ fn verify_license_key(
     vk: &VerifyingKey,
     key_b64: &str,
     product_id: &str,
-    revoked_tokens: Option<&Arc<RwLock<HashSet<String>>>>,
+    revoked_tokens: &RwLock<HashSet<String>>,
 ) -> Result<LicensePayload, LicenseVerifyErr> {
     use LicenseVerifyErr::*;
     let token_bytes = URL_SAFE_NO_PAD
@@ -177,15 +196,16 @@ fn verify_license_key(
     if payload.product != product_id {
         return Err(WrongProduct);
     }
+    // Revocation check before expiry: a revoked key returns Revoked regardless of expiry date
+    {
+        let revoked = revoked_tokens.read().unwrap();
+        if !revoked.is_empty() && revoked.contains(&token_fingerprint(key_b64)) {
+            return Err(Revoked);
+        }
+    }
     let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
     if payload.channel_expiry < today {
         return Err(ChannelExpired(payload.channel_expiry.clone()));
-    }
-    if let Some(revoked) = revoked_tokens {
-        let fp = token_fingerprint(key_b64);
-        if revoked.read().unwrap().contains(&fp) {
-            return Err(Revoked);
-        }
     }
     Ok(payload)
 }
@@ -360,7 +380,7 @@ async fn binary(
     };
 
     let key_fp = hex::encode(&vk.as_bytes()[..4]);
-    match verify_license_key(vk, &key_b64, &product, Some(&state.revoked_tokens)) {
+    match verify_license_key(vk, &key_b64, &product, &state.revoked_tokens) {
         Err(e) => {
             let log_result = if e.status() == StatusCode::UNAUTHORIZED {
                 "unauthorized"
@@ -435,7 +455,7 @@ async fn verify_key_endpoint(
     };
     let key_fp = hex::encode(&vk.as_bytes()[..4]);
 
-    match verify_license_key(vk, &req.license_key_b64, &req.product_id, Some(&state.revoked_tokens)) {
+    match verify_license_key(vk, &req.license_key_b64, &req.product_id, &state.revoked_tokens) {
         Err(ref e @ LicenseVerifyErr::ChannelExpired(ref expired)) => {
             tracing::info!(product_id = %req.product_id, key_fp = %key_fp, result = "forbidden", reason = "channel-expired", expired = %expired, "verify-key");
             (
@@ -471,8 +491,17 @@ async fn verify_key_endpoint(
     }
 }
 
-// Localhost only — add auth before any public network exposure
-async fn reload_revocation_list(State(state): State<Arc<AppState>>) -> Response {
+async fn reload_revocation_list(
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    State(state): State<Arc<AppState>>,
+) -> Response {
+    if !addr.ip().is_loopback() {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(json!({"error": "admin endpoints are localhost-only"})),
+        )
+            .into_response();
+    }
     let Some(ref path) = state.revocation_list_path else {
         return (
             StatusCode::NOT_FOUND,
@@ -480,10 +509,26 @@ async fn reload_revocation_list(State(state): State<Arc<AppState>>) -> Response 
         )
             .into_response();
     };
-    let fresh = load_revocation_list(path);
-    let count = fresh.len();
-    *state.revoked_tokens.write().unwrap() = fresh;
-    Json(json!({"reloaded": count})).into_response()
+    match load_revocation_list(path) {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "revocation list file not found"})),
+        )
+            .into_response(),
+        Err(e) => {
+            tracing::warn!("reload_revocation_list failed: {e}");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": e.to_string()})),
+            )
+                .into_response()
+        }
+        Ok(fresh) => {
+            let count = fresh.len();
+            *state.revoked_tokens.write().unwrap() = fresh;
+            Json(json!({"reloaded": count})).into_response()
+        }
+    }
 }
 
 async fn verify_key_pub(State(state): State<Arc<AppState>>) -> Response {
@@ -529,13 +574,26 @@ async fn main() -> Result<()> {
         tracing::warn!("VERIFY_KEY_PUB not set — /verify-key will return 503");
     }
 
-    let revocation_list_path = std::env::var("REVOCATION_LIST_PATH").ok();
-    let revoked_tokens = Arc::new(RwLock::new(
-        revocation_list_path
-            .as_deref()
-            .map(load_revocation_list)
-            .unwrap_or_default(),
-    ));
+    let revocation_list_path = std::env::var("REVOCATION_LIST_PATH")
+        .ok()
+        .filter(|p| !p.is_empty());
+    let revoked_tokens = Arc::new(RwLock::new(match &revocation_list_path {
+        None => HashSet::new(),
+        Some(path) => match load_revocation_list(path) {
+            Ok(set) => {
+                tracing::info!("loaded {} revoked token fingerprints", set.len());
+                set
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                tracing::warn!("REVOCATION_LIST_PATH file not found: {e}");
+                HashSet::new()
+            }
+            Err(e) => {
+                tracing::warn!("REVOCATION_LIST_PATH unreadable: {e}");
+                HashSet::new()
+            }
+        },
+    }));
 
     let state = Arc::new(AppState {
         releases_dir,
@@ -560,6 +618,6 @@ async fn main() -> Result<()> {
 
     tracing::info!("app-privategit-source listening on {bind_addr}");
     let listener = tokio::net::TcpListener::bind(&bind_addr).await?;
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?;
     Ok(())
 }
