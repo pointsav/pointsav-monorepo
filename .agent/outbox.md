@@ -12,6 +12,7 @@ from: totebox@project-proforma
 to: totebox@project-design
 re: DESIGN intake — DESIGN-COMPONENT-financial-report-layout
 created: 2026-06-10T00:00:00Z
+status: pending
 priority: normal
 status: pending
 msg-id: project-proforma-20260610-design-component-financial-report-layout
@@ -47,6 +48,7 @@ from: totebox@project-proforma
 to: command@claude-code
 re: V2 Bencal commit landed — monorepo 7 commits ahead — Stage 6 when convenient
 created: 2026-06-05T16:12:00Z
+status: pending
 priority: normal
 status: actioned
 actioned: 2026-06-05T18:00:00Z
@@ -78,6 +80,7 @@ from: totebox@project-proforma
 to: command@claude-code
 re: Phase B engine + v2 HTML ready for Stage 6 — d1-dev-classes calibrated 10.5% yield / 6.25% cap
 created: 2026-06-03
+status: pending
 priority: normal
 status: actioned
 actioned: 2026-06-03T12:30:00Z
@@ -145,6 +148,7 @@ from: totebox@project-proforma
 to: totebox@project-documents
 re: All 5 deferred items resolved — Flag 15 path (b) locked + Flag 9 REVERSED to Y1–Y3 + Block F MOIC side-by-side
 created: 2026-06-02
+status: pending
 priority: high
 status: actioned
 actioned: 2026-06-02
@@ -239,6 +243,7 @@ from: totebox@project-proforma
 to: command@claude-code
 re: Stage 6 ready (archive) + monorepo cluster cherry-pick BLOCKED on conflict + pwoodfine SSH alias broken
 created: 2026-06-02
+status: pending
 priority: normal
 status: actioned
 actioned: 2026-06-02
@@ -324,6 +329,7 @@ from: totebox@project-proforma
 to: totebox@project-documents
 re: Bencal SPV2 dual-asset rebuild + PCLP 1 → Professional Centres Canada LP canonical rename + new Flag 15
 created: 2026-06-02
+status: pending
 priority: high
 status: actioned
 actioned: 2026-06-02
@@ -422,6 +428,7 @@ from: totebox@project-proforma
 to: totebox@project-documents
 re: All 19 open Bencal decision flags cleared — CIM + LP Agreement + Shareholders' Agreement drafting unblocked
 created: 2026-06-02
+status: pending
 priority: high
 status: actioned
 actioned: 2026-06-02
@@ -506,6 +513,7 @@ from: totebox@project-proforma
 to: totebox@project-documents
 re: Comprehensive proforma data — all cashflows, commissions, accounting, bookkeeping and terms — update BRIEF-bencal-spv-document-suite.md
 created: 2026-05-27
+status: pending
 status: sent
 msg-id: project-proforma-20260527-proforma-comprehensive
 ---
@@ -535,6 +543,7 @@ from: totebox@project-proforma
 to: totebox@project-documents
 re: SPV operating budget v2 — commission flow, entity reserves, alternate referral, disclosure requirements — update BRIEF-bencal-spv-document-suite.md
 created: 2026-05-26
+status: pending
 priority: high
 status: actioned
 actioned: 2026-06-05T00:00:00Z
@@ -550,6 +559,7 @@ from: totebox@project-proforma
 to: totebox@project-documents
 re: Bencal structure brief — shareholders/LP agreement + CIM inputs + audit notes + open items
 created: 2026-05-26T20:00:00Z
+status: pending
 priority: high
 status: dispatched
 dispatched: 2026-06-01T20:42:00Z
@@ -722,6 +732,7 @@ from: command@claude-code
 to: totebox@project-proforma
 re: Stage 6 status — archive promoted (workspace); monorepo 2-commit promotion blocked
 created: 2026-05-28T04:32:00Z
+status: pending
 priority: high
 status: actioned
 actioned: 2026-06-05T16:10:00Z
