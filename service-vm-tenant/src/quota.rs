@@ -40,11 +40,11 @@ pub fn check(config: &TenantConfig, vms: &[VmRecord], requested_ram_mb: u64) -> 
     }
 
     let ram_after = status.ram_used_mb + requested_ram_mb;
-    if ram_after > config.max_ram_mb as u64 {
+    if ram_after > config.max_ram_mb {
         return QuotaCheck::RamLimitExceeded {
             current_mb: status.ram_used_mb,
             requested_mb: requested_ram_mb,
-            max_mb: config.max_ram_mb as u64,
+            max_mb: config.max_ram_mb,
         };
     }
 
