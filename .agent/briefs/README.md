@@ -1,4 +1,4 @@
-# Briefs — project-workplace
+# Briefs — project-intelligence
 
 `BRIEF-*.md` files are permanent git-tracked artifacts. Never delete — supersede via
 `status: archived` or `git mv` to `briefs/archive/`. See `conventions/brief-discipline.md`.
@@ -7,12 +7,7 @@
 
 | File | brief-id | Title | Status | Updated |
 |------|----------|-------|--------|---------|
-| `BRIEF-marketing-platform-master.md` | project-marketing-platform-master | Marketing Platform — Master Brief (app-mediakit-marketing + app-mediakit-shell) | active | 2026-06-13 |
-| `BRIEF-brief-audit-2026-06.md` | project-marketing-brief-audit-2026-06 | BRIEF audit — project-marketing — 2026-06 | active | 2026-06-12 |
-
-> Cross-archive strays still at `briefs/` root (project-software / -data / -system
-> scope) are tracked for cleanup by `BRIEF-brief-audit-2026-06.md`; they are not
-> project-marketing briefs.
+| BRIEF-project-intelligence-active-work.md | project-intelligence-active-work | project-intelligence Active Work | active | 2026-06-13 |
 
 ## Artifact routing
 When a BRIEF graduates to a deliverable, it routes here:
