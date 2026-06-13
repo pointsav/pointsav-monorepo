@@ -46,9 +46,9 @@ MAX_PROMPT_LENGTH = 512
 MAX_LENGTH = 1024
 BATCH_SIZE = 2
 GRAD_ACCUM = 4
-LEARNING_RATE = 5e-6  # DPO standard; 1e-4 (SFT rate) overfits in <10 steps at small corpus sizes
+LEARNING_RATE = 1e-5   # LoRA-DPO: higher than full-FT DPO (1e-7..1e-6); 47 steps needs signal
 NUM_EPOCHS = 1
-BETA = 0.5  # Raised from 0.1: 78% of rejected are empty "[]" — low beta causes hallucination bias
+BETA = 0.1  # DPO default. Prior 0.5 justification (empty-"[]" rejected) is obsolete — those pairs are now filtered.
 
 
 def load_feedback_files(corpus_path: str) -> list[dict]:
@@ -92,10 +92,14 @@ def load_feedback_files(corpus_path: str) -> list[dict]:
         if verdict is not None and verdict is not True:
             skipped_verdict += 1
             continue
+        # Conversational format: TRL applies OLMo-2 chat template correctly, avoiding
+        # the "Mismatch between tokenized prompt and start of tokenized prompt+chosen"
+        # warnings that fire with raw-string format (EOS token handling in standalone vs
+        # concatenated tokenization differs, breaking DPO loss boundary detection).
         records.append({
-            "prompt": d["prompt"],
-            "chosen": d["chosen"],
-            "rejected": rejected,
+            "prompt":   [{"role": "user",      "content": d["prompt"]}],
+            "chosen":   [{"role": "assistant", "content": d["chosen"]}],
+            "rejected": [{"role": "assistant", "content": rejected}],
         })
     print(f"[corpus] loaded {len(records)} DPO pairs ({skipped} format-skipped, {skipped_empty_rejected} empty-rejected filtered, {skipped_verdict} verdict-rejected filtered)")
     return records
@@ -258,7 +262,8 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
         beta=BETA,
         max_length=_max_length,
         logging_steps=5,
-        save_steps=5,  # checkpoint every 5 steps (corpus is small; 50 was never reached in 1 epoch)
+        save_steps=5,        # checkpoint every 5 steps (corpus is small; 50 was never reached in 1 epoch)
+        save_total_limit=2,  # keep only 2 most recent; avoids disk fill on spot VM across days
         eval_strategy="no",           # eval needs 2× VRAM (ref+trained); disabled on L4 24 GB
         report_to="none",
         bf16=torch.cuda.is_available(),
