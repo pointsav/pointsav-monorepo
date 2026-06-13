@@ -141,7 +141,7 @@ async fn spawn_handler(
     let record = vm_spawn::provisioning_record(&vm_id, &req.vm_type, req.ram_mb, req.vcpu_count);
 
     let spawn_record = record.clone();
-    let _ = tokio::task::spawn_blocking(move || {
+    drop(tokio::task::spawn_blocking(move || {
         let id = &spawn_record.vm_id;
         match vm_spawn::create_boot_disk(id, disk_size_gb) {
             Err(e) => {
@@ -160,14 +160,14 @@ async fn spawn_handler(
         if let Err(e) = vm_spawn::spawn_qemu(&spawn_record, kvm) {
             tracing::warn!(vm_id = %id, error = %e, "QEMU spawn failed");
         }
-    });
+    }));
 
     Ok(Json(record))
 }
 
 /// DELETE /v1/vms/:vm_id — terminate a QEMU VM by pid file.
 async fn destroy_handler(Path(vm_id): Path<VmId>) -> StatusCode {
-    let _ = tokio::task::spawn_blocking(move || vm_spawn::kill_qemu(&vm_id));
+    drop(tokio::task::spawn_blocking(move || vm_spawn::kill_qemu(&vm_id)));
     StatusCode::NO_CONTENT
 }
 
