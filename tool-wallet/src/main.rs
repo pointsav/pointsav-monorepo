@@ -24,7 +24,7 @@ use sha3::Keccak256;
 use std::{
     collections::HashMap,
     fs,
-    io::{Read, Write},
+    io::Write,
     os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
 };
@@ -700,29 +700,33 @@ fn assign_order_index(index_path: &str, order_id: &str) -> Result<u32> {
         }
     }
 
-    let file = OpenOptions::new()
-        .read(true)
+    // Lock a stable sidecar file; the index file itself may be replaced by atomic rename,
+    // which would break fd_lock mutual exclusion if we locked the index fd directly.
+    let lock_path = format!("{index_path}.lock");
+    let lock_file = OpenOptions::new()
         .write(true)
         .create(true)
-        .truncate(false)
-        .open(index_path)
-        .with_context(|| format!("opening order index: {index_path}"))?;
+        .open(&lock_path)
+        .with_context(|| format!("opening order index lock: {lock_path}"))?;
+    let mut flock = RwLock::new(lock_file);
+    let _guard = flock.write().context("acquiring order index write lock")?;
 
-    let mut lock = RwLock::new(file);
-    let mut guard = lock.write().context("acquiring order index write lock")?;
-
-    let mut content = String::new();
-    guard
-        .read_to_string(&mut content)
-        .context("reading order index")?;
+    let content = fs::read_to_string(index_path).unwrap_or_default();
 
     let mut index: OrderIndex = if content.trim().is_empty() {
         OrderIndex::default()
     } else {
-        serde_json::from_str(&content).unwrap_or_else(|e| {
-            eprintln!("warn: order index corrupted ({e}); starting fresh");
-            OrderIndex::default()
-        })
+        match serde_json::from_str(&content) {
+            Ok(idx) => idx,
+            Err(e) => {
+                tracing::warn!("order index at {index_path} corrupt ({e}); trying .bak");
+                let bak = format!("{index_path}.bak");
+                let bak_content = fs::read_to_string(&bak)
+                    .with_context(|| format!("reading .bak: {bak}"))?;
+                serde_json::from_str(&bak_content)
+                    .with_context(|| format!("parsing .bak: {bak}"))?
+            }
+        }
     };
 
     // Idempotent: same order_id returns the cached derivation slot
@@ -735,12 +739,27 @@ fn assign_order_index(index_path: &str, order_id: &str) -> Result<u32> {
     index.orders.insert(order_id.to_string(), assigned);
 
     let new_json = serde_json::to_string_pretty(&index)?;
-    // Backup current file (best-effort; ignore error)
-    let _ = fs::copy(index_path, format!("{index_path}.bak"));
-    // Atomic write: temp file then rename (crash-safe on Linux)
+    // Backup current file before overwriting
+    if let Err(e) = fs::copy(index_path, format!("{index_path}.bak")) {
+        tracing::warn!("order index: backup failed ({e}); continuing with atomic write");
+    } else {
+        let _ = fs::set_permissions(
+            format!("{index_path}.bak"),
+            fs::Permissions::from_mode(0o600),
+        );
+    }
+    // Atomic write: temp file then rename (crash-safe on Linux when on the same filesystem)
+    // Note: rename(2) requires src and dest on the same filesystem (EXDEV otherwise)
     let tmp_path = format!("{index_path}.tmp");
-    fs::write(&tmp_path, new_json.as_bytes()).context("writing order index tmp")?;
-    fs::rename(&tmp_path, index_path).context("renaming order index tmp")?;
+    let write_result = (|| -> Result<()> {
+        fs::write(&tmp_path, new_json.as_bytes()).context("writing order index tmp")?;
+        let _ = fs::set_permissions(&tmp_path, fs::Permissions::from_mode(0o600));
+        fs::rename(&tmp_path, index_path).context("renaming order index tmp")
+    })();
+    if let Err(e) = write_result {
+        let _ = fs::remove_file(&tmp_path);
+        return Err(e);
+    }
 
     Ok(assigned)
 }
