@@ -1,4 +1,4 @@
-# Multi-agent session locks and engine state (ephemeral — not committed)
+# Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock
 .agent/._claude_bkp/
 
