@@ -66,6 +66,7 @@ fn query_qmp_socket(path: &std::path::Path, vm_id: &str) -> Option<VmRecord> {
         ram_alloc_mb: 0,
         vcpu_count: 0,
         started_at: None,
+        tenant_id: None,
     })
 }
 
