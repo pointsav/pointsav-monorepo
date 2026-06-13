@@ -13,7 +13,9 @@ to: command@claude-code
 re: CRITICAL — root disk 87% + BRIEF contamination (10 files, git mv required)
 created: 2026-06-13T06:30:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-06-13
+actioned_note: BRIEF contamination resolved — 10 non-GIS BRIEFs moved to briefs/archive/ with contaminated_note; disk was 87% at report time, now 70% per startup health check (disk pressure resolved separately)
 msg-id: project-gis-20260613-disk-brief-contamination
 ---
 

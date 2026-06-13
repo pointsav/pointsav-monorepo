@@ -6,7 +6,7 @@ owner: totebox@project-system
 relocation_pending: project-intelligence
 relocation_note: "This BRIEF belongs to the PhD research cluster (project-intelligence). Pending relocation when project-system reduces active BRIEF count. Do NOT move until BRIEF-ostotebox-phase1-deployment.md related_briefs pointer is updated."
 title: "Composing Trustworthy Systems from Verified Primitives: A Substrate Architecture for Customer-Sovereign Capability Ledgers on a Two-Bottom Operating System Stack"
-status: active
+status: archived
 created: 2026-05-27
 updated: 2026-06-12
 author: task@claude-code (claude-sonnet-4-6)
@@ -69,6 +69,7 @@ notes_for_editor: |
 
 version: v0.1
 version_date: 2026-05-27
+contaminated_note: "M-17 contamination — belongs to project-system; archived from project-gis 2026-06-13 by command@claude-code"
 ---
 
 # Composing Trustworthy Systems from Verified Primitives: A Substrate Architecture for Customer-Sovereign Capability Ledgers on a Two-Bottom Operating System Stack

@@ -1,11 +1,12 @@
 ---
 artifact: brief
-status: active
+status: archived
 title: "Artifact Style Guide — Internal/External Voice Discipline"
 created: 2026-06-11
 updated: 2026-06-11
 owner: project-editorial
 covers: TOPIC, GUIDE, JOURNAL, COMMS, TEXT
+contaminated_note: "M-17 contamination — belongs to project-editorial; archived from project-gis 2026-06-13 by command@claude-code"
 ---
 
 # Artifact Style Guide — Internal/External Voice Discipline

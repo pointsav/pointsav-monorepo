@@ -1,14 +1,10 @@
 ---
 artifact: brief
-schema: foundry-brief-v1
-brief-id: project-system-ostotebox-phase1
-owner: totebox@project-system
+schema: foundry-draft-v1
 title: "os-totebox Phase 1 Boot Milestone — Service Stack Deployment Plan"
 status: archived
-archived: 2026-06-12
-archived_note: "Phase 1 COMPLETE (commit 92692800). Phase 2 items tracked in NEXT.md. Superseded by Phase 2 BRIEF when Phase 2 begins."
 created: 2026-06-11
-updated: 2026-06-12 (smoke test PASSED; commit 92692800; archived)
+updated: 2026-06-12 (smoke test PASSED; commit 92692800)
 author: totebox@claude-code (claude-sonnet-4-6)
 authored_with: claude-sonnet-4-6
 language_protocol: CODE
@@ -25,6 +21,7 @@ related_briefs:
 notes_for_editor: |
   Engineering planning BRIEF. Not for editorial pipeline. Self-contained build plan
   for Phase 1 os-totebox boot milestone. Research findings from 2026-06-11 Fable analysis.
+contaminated_note: "M-17 contamination — belongs to project-data; archived from project-gis 2026-06-13 by command@claude-code"
 ---
 
 # os-totebox Phase 1 Boot Milestone

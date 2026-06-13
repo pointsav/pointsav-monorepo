@@ -1,9 +1,10 @@
 ---
 artifact: brief
-status: active
+status: archived
 created: 2026-05-28 (totebox@project-infrastructure)
 supersedes: nothing — new document
 cross-ref: /srv/foundry/.agent/briefs/BRIEF-sovereign-os-family-master-plan.md §R–§W
+contaminated_note: "M-17 contamination — belongs to project-infrastructure; archived from project-gis 2026-06-13 by command@claude-code"
 ---
 
 # Totebox Transformation — VM Fabric Implementation
