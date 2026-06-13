@@ -12,6 +12,7 @@ from: command@claude-code
 to: totebox@project-jennifer
 re: ROLLOUT — H-1..H-10 communication hardening (workspace 4ff4a3a promoted)
 created: 2026-06-01T00:51:31Z
+status: pending
 priority: normal
 status: actioned
 actioned: 2026-06-01T20:00:00Z
