@@ -185,7 +185,11 @@ impl InputCartridge {
     }
 
     fn anchor_color(&self) -> Color {
-        if self.truecolor { Color::Rgb(210, 0, 210) } else { Color::Magenta }
+        if self.truecolor {
+            Color::Rgb(210, 0, 210)
+        } else {
+            Color::Magenta
+        }
     }
 
     fn render_modal(frame: &mut Frame, area: Rect) -> Rect {
@@ -450,7 +454,13 @@ impl Cartridge for InputCartridge {
         "Input"
     }
 
-    fn set_graphics_caps(&mut self, _kitty: bool, _sixel: bool, _font_size: (u16, u16), truecolor: bool) {
+    fn set_graphics_caps(
+        &mut self,
+        _kitty: bool,
+        _sixel: bool,
+        _font_size: (u16, u16),
+        truecolor: bool,
+    ) {
         self.truecolor = truecolor;
     }
 

@@ -123,7 +123,11 @@ pub fn send_genesis_handshake(_peer_addr: [u8; 4], short_code: &[u8]) -> bool {
         node_id: [0u8; 16], // TODO: derive from WireGuard pubkey hash
         reserved: [0u8; 4],
     };
-    let copy_len = if short_code.len() < 8 { short_code.len() } else { 8 };
+    let copy_len = if short_code.len() < 8 {
+        short_code.len()
+    } else {
+        8
+    };
     frame.short_code[..copy_len].copy_from_slice(&short_code[..copy_len]);
     // TODO: transmit frame via NIC MMIO to _peer_addr:PAIRING_PORT
     let _ = frame;
