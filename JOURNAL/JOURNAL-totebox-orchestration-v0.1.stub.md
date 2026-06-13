@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.2"
+version: "0.3"
 title: "Capability-Secured Session Orchestration: A Runtime Architecture for Multi-Tenant AI Workload Isolation"
 target_journal: "MLSys (ACM Conference on Machine Learning and Systems)"
 target_publisher: "ACM"
@@ -54,12 +54,12 @@ word_count_body: 2614
 word_count_target: 9500
 submission_status: not-submitted
 cites: []
-forbidden_terms_cleared: false
+forbidden_terms_cleared: true
 preprint_posted: true
 preprint_posted_date: 2026-06-11
 doi: ""
 license: "CC BY 4.0"
-cite_as: "Woodfine, Mathew, Woodfine, Peter M., & Woodfine, Jennifer M. (2026). Capability-Secured Session Orchestration: A Runtime Architecture for Multi-Tenant AI Workload Isolation. Working Paper v0.2, 11 June 2026. Woodfine Management Corp., New York, NY."
+cite_as: "Woodfine, Mathew, Woodfine, Peter M., & Woodfine, Jennifer M. (2026). Capability-Secured Session Orchestration: A Runtime Architecture for Multi-Tenant AI Workload Isolation. Working Paper v0.3, 12 June 2026. Woodfine Management Corp., New York, NY."
 revision_history:
   - version: "0.1"
     date: "2026-05-28"
@@ -67,6 +67,9 @@ revision_history:
   - version: "0.2"
     date: "2026-06-11"
     changes: "HOLD lifted; Abstract, Introduction, Literature Review, Methodology, Limitations, Formal Hypotheses, and Falsification Programme written; remaining sections stubbed for completion after implementation evidence is gathered"
+  - version: "0.3"
+    date: "2026-06-12"
+    changes: "Language pass complete; two internal system-name references removed from stub annotations; forbidden_terms_cleared: true"
 notes_for_editor: |
   Working draft — core argument sections written; evaluation results and conclusion
   pending implementation evidence (latency benchmarks and concurrent-session isolation tests).
@@ -76,10 +79,10 @@ notes_for_editor: |
   ORCID IDs required before submission; word count target 9,500 words; current body ~2,600.
 ---
 
-> **Working Paper · Version 0.2 · 2026-06-11 · CC BY 4.0**
+> **Working Paper · Version 0.3 · 2026-06-12 · CC BY 4.0**
 > This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. Correspondence: corporate.secretary@woodfinegroup.com.
 >
-> *Cite as:* Woodfine, Mathew, Woodfine, Peter M., & Woodfine, Jennifer M. (2026). Capability-Secured Session Orchestration: A Runtime Architecture for Multi-Tenant AI Workload Isolation. Working Paper v0.2, 11 June 2026. Woodfine Management Corp., New York, NY.
+> *Cite as:* Woodfine, Mathew, Woodfine, Peter M., & Woodfine, Jennifer M. (2026). Capability-Secured Session Orchestration: A Runtime Architecture for Multi-Tenant AI Workload Isolation. Working Paper v0.3, 12 June 2026. Woodfine Management Corp., New York, NY.
 
 > **Forward-Looking Statements**
 > Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially. Readers should not place undue reliance on such statements; they are subject to revision as research progresses and new data become available.
@@ -150,7 +153,7 @@ The startup sequence is deterministic and sequentially ordered. A session reads 
 
 ## 4. Implementation
 
-*[Stub — pending completion alongside os-totebox deployment.]*
+*[Stub — pending completion; section will be filled when implementation evidence is gathered from the reference deployment described in §3.1–§3.4.]*
 
 The implementation consists of four components: the manifest validator, the session lock writer, the mailbox router, and the inference gateway. The manifest validator is a shell script that confirms the archive identifier and tetrad declarations are present before allowing the session to proceed. The session lock writer is an atomic file-creation operation. The mailbox router is a coordination-tier binary that sweeps archive outboxes on a configurable interval. The inference gateway is a Rust binary that accepts HTTP requests from co-located session processes, routes them to the appropriate tier, and appends the invocation record to the archive's transparency log.
 
@@ -248,5 +251,5 @@ The session-orchestration runtime implementation described in this paper is inte
 
 *Version 0.2 draft — 2026-06-11*
 *Sections 1–3, 7, 9–10 written. Sections 4, 5, 6, 8 stubbed pending implementation evidence.*
-*HOLD lifted 2026-06-11: os-totebox build-out provides implementation material for §4.*
-*Language pass required before submission: forbidden_terms_cleared: false.*
+*HOLD lifted 2026-06-11: implementation material for §4 is being gathered alongside the reference deployment described in §3.1–§3.4.*
+*Language pass complete 2026-06-12: forbidden_terms_cleared: true.*
