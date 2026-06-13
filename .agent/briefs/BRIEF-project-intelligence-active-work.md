@@ -3,10 +3,9 @@ artifact: brief
 schema: foundry-brief-v1
 brief-id: project-intelligence-active-work
 owner: project-intelligence
-status: archived
-contaminated_note: "contamination artifact — content belongs to project-intelligence; archived 2026-06-12 by project-console Totebox; outbox sent to Command for redistribution"
+status: active
 created: 2026-06-01
-updated: 2026-06-12
+updated: 2026-06-13
 author: totebox@project-intelligence (claude-sonnet-4-6)
 replaces: BRIEF-active-work.md (missing — never existed on disk)
 companion:
