@@ -48,6 +48,10 @@ pub struct VmRecord {
     pub ram_alloc_mb: u64,
     pub vcpu_count: u32,
     pub started_at: Option<DateTime<Utc>>,
+    /// Tenant namespace set by service-vm-tenant when the VM was created.
+    /// None for VMs created directly via fleet API (no tenant proxy).
+    #[serde(default)]
+    pub tenant_id: Option<String>,
 }
 
 /// Advisory placement result returned by service-vm-fleet.
@@ -94,6 +98,10 @@ pub struct CreateVmRequest {
     pub prefer_kvm: bool,
     /// If Some, skip advisory placement and dispatch directly to this node.
     pub preferred_node: Option<NodeId>,
+    /// Tenant namespace injected by service-vm-tenant before forwarding to fleet.
+    /// Direct fleet callers leave this None; the tenant proxy always sets it.
+    #[serde(default)]
+    pub tenant_id: Option<String>,
 }
 
 #[cfg(test)]
@@ -137,6 +145,7 @@ mod tests {
             ram_alloc_mb: 2048,
             vcpu_count: 2,
             started_at: None,
+            tenant_id: None,
         };
         let json = serde_json::to_string(&rec).unwrap();
         assert!(
@@ -174,6 +183,7 @@ mod tests {
             vcpu_count: 2,
             prefer_kvm: true,
             preferred_node: Some("laptop-a-1".to_string()),
+            tenant_id: None,
         };
         let without_pref = CreateVmRequest {
             vm_type: "VmMediaKit".to_string(),
@@ -181,6 +191,7 @@ mod tests {
             vcpu_count: 2,
             prefer_kvm: false,
             preferred_node: None,
+            tenant_id: None,
         };
         let j1 = serde_json::to_string(&with_pref).unwrap();
         let j2 = serde_json::to_string(&without_pref).unwrap();
