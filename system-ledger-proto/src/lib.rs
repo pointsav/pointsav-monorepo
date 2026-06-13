@@ -118,25 +118,46 @@ mod tests {
 
     #[test]
     fn consult_response_refuse_roundtrip() {
-        let resp = ConsultResponse::Refuse { reason_code: reason_code::EXPIRED };
+        let resp = ConsultResponse::Refuse {
+            reason_code: reason_code::EXPIRED,
+        };
         let encoded = postcard::to_allocvec(&resp).expect("encode");
         let decoded: ConsultResponse = postcard::from_bytes(&encoded).expect("decode");
-        assert_eq!(decoded, ConsultResponse::Refuse { reason_code: reason_code::EXPIRED });
+        assert_eq!(
+            decoded,
+            ConsultResponse::Refuse {
+                reason_code: reason_code::EXPIRED
+            }
+        );
     }
 
     #[test]
     fn consult_response_extend_roundtrip() {
-        let resp = ConsultResponse::ExtendThenAllow { new_expiry_t: 1_900_000_000 };
+        let resp = ConsultResponse::ExtendThenAllow {
+            new_expiry_t: 1_900_000_000,
+        };
         let encoded = postcard::to_allocvec(&resp).expect("encode");
         let decoded: ConsultResponse = postcard::from_bytes(&encoded).expect("decode");
-        assert_eq!(decoded, ConsultResponse::ExtendThenAllow { new_expiry_t: 1_900_000_000 });
+        assert_eq!(
+            decoded,
+            ConsultResponse::ExtendThenAllow {
+                new_expiry_t: 1_900_000_000
+            }
+        );
     }
 
     #[test]
     fn consult_response_error_roundtrip() {
-        let resp = ConsultResponse::Error { code: error_code::INTERNAL };
+        let resp = ConsultResponse::Error {
+            code: error_code::INTERNAL,
+        };
         let encoded = postcard::to_allocvec(&resp).expect("encode");
         let decoded: ConsultResponse = postcard::from_bytes(&encoded).expect("decode");
-        assert_eq!(decoded, ConsultResponse::Error { code: error_code::INTERNAL });
+        assert_eq!(
+            decoded,
+            ConsultResponse::Error {
+                code: error_code::INTERNAL
+            }
+        );
     }
 }
