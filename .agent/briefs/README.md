@@ -1,4 +1,4 @@
-# Briefs — project-data
+# Briefs — project-console
 
 `BRIEF-*.md` files are permanent git-tracked artifacts. Never delete — supersede via
 `status: archived` or `git mv` to `briefs/archive/`. See `conventions/brief-discipline.md`.
@@ -7,8 +7,6 @@
 
 | File | brief-id | Title | Status | Updated |
 |------|----------|-------|--------|---------|
-| BRIEF-os-totebox-ppn-build-out.md | BRIEF-os-totebox-ppn-build-out | os-totebox PPN Build-Out | active | 2026-06-12 |
-| BRIEF-journal-programme.md | BRIEF-journal-programme | JOURNAL Programme — J1–J7 | active | 2026-06-12 |
 
 ## Artifact routing
 When a BRIEF graduates to a deliverable, it routes here:

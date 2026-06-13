@@ -1,10 +1,10 @@
 ---
 artifact: brief
 schema: foundry-brief-v1
-brief-id: project-data-brief-audit-2026-06
-title: "BRIEF audit — project-data — 2026-06"
+brief-id: project-console-brief-audit-2026-06
+title: "BRIEF audit — project-console — 2026-06"
 status: active
-owner: project-data
+owner: project-console
 created: 2026-06-12
 updated: 2026-06-12
 ---
@@ -13,9 +13,9 @@ updated: 2026-06-12
 Automated BRIEF audit run 2026-06-12 (command@claude-code, Phase D governance sprint).
 Applies governance rules from `conventions/brief-discipline.md` (committed 2026-06-12).
 
-project-data has 4 BRIEFs (1 archived, 3 active); 2 of the active BRIEFs are scope-contamination from project-intelligence and need redistribution per NEXT.md; all BRIEFs are missing multiple required frontmatter fields and the README active-briefs table is entirely empty.
+project-console briefs directory has zero legitimate active BRIEFs for its own work — all three active BRIEFs are contamination artifacts from project-knowledge, project-data, and project-intelligence; both archived native BRIEFs (cross-platform-release and project-console-master) have schema defects; the archive/BRIEF-project-intelligence-master.md uses the non-canonical status value 'relocated'; and the README active-briefs table is entirely unpopulated.
 
-Active: 3 / Total: 4
+Active: 3 / Total: 7
 
 ## Scope
 Review all existing BRIEFs in this archive against the Phase A governance spec.
@@ -32,10 +32,13 @@ Out of scope: content quality review; this is structural + schema compliance onl
 
 | File | Current status | Recommended action | Reason |
 |------|---------------|-------------------|--------|
-| `BRIEF-dev-env-mcp-expansion.md` | archived | fix-schema | Missing required frontmatter fields: schema, brief-id, title, owner, updated. Status is canonical (archived) so no rename needed, but the schema is incomplete for an archived artifact — should be corrected before any future reference. |
-| `BRIEF-os-totebox-ppn-build-out.md` | active | fix-schema | Missing required frontmatter fields: brief-id (should be project-data-os-totebox-ppn-build-out), title, owner. Has artifact, schema, archive, created, updated. Also the active-briefs table in README.md is empty and must be updated to include this BRIEF. |
-| `BRIEF-project-intelligence-active-work.md` | active | migrate-to-archive → clones/project-intelligence/.agent/briefs/BRIEF-project-intelligence-active-work.md | This BRIEF belongs to project-intelligence, not project-data. NEXT.md §Command actions pending explicitly lists it as one of six project-intelligence briefs contaminated into this archive that need redistribution to project-intelligence. Also missing schema, brief-id, title, owner fields. |
-| `BRIEF-project-intelligence-master.md` | active | migrate-to-archive → clones/project-intelligence/.agent/briefs/BRIEF-project-intelligence-master.md | This BRIEF belongs to project-intelligence, not project-data. NEXT.md §Command actions pending lists it as contaminated into this archive (referenced indirectly via BRIEF-slm-substrate-master which this supersedes, plus author field shows totebox@project-intelligence). Missing brief-id and owner fields. Should be relocated and status set to archived in project-data after the copy is confirmed. |
+| `BRIEF-cross-platform-release.md` | archived | fix-schema | Uses schema: foundry-plan-v1 instead of foundry-brief-v1; missing artifact: brief field; missing brief-id and owner fields. Status is canonical (archived). |
+| `BRIEF-dev-env-mcp-expansion.md` | archived | fix-schema | Missing schema, brief-id, title, and owner fields. Status is canonical (archived). Content belongs to workspace-level MCP expansion work, not project-console scope — but status is already archived so no action on scope. |
+| `BRIEF-knowledge-platform-master.md` | active | migrate-to-archive → clones/project-knowledge/.agent/briefs/ | Contamination artifact: frontmatter declares cluster: project-knowledge and content is entirely about app-mediakit-knowledge. Belongs in project-knowledge, not project-console. Should be git mv'd to correct archive or archived here with contaminated_note. |
+| `BRIEF-os-totebox-ppn-build-out.md` | active | migrate-to-archive → clones/project-data/.agent/briefs/ | Contamination artifact: frontmatter declares archive: project-data and all content concerns service-people, service-extraction, and os-totebox build-out work scoped to project-data. Should be relocated to project-data briefs directory. |
+| `BRIEF-project-console-master.md` | archived | fix-schema | Missing brief-id and owner fields. Has artifact and schema fields. Status is canonical (archived). Contains the master os-console state tracker — historically significant even as archived. |
+| `BRIEF-project-intelligence-active-work.md` | active | migrate-to-archive → clones/project-intelligence/.agent/briefs/ | Contamination artifact: author field declares totebox@project-intelligence and all content is about service-slm, apprenticeship queue, Doorman circuit breakers, and OLMo training — entirely project-intelligence scope. Should be relocated. |
+| `archive/BRIEF-project-intelligence-master.md` | relocated | rename-status | Status value 'relocated' is non-canonical. Must be one of: active | reference | archived | superseded | stub. Given the file was git mv'd here from project-knowledge during contamination cleanup, status should be 'archived' with the existing contamination_note preserved. |
 
 ## Consolidation opportunities
 
@@ -43,34 +46,46 @@ _No consolidation opportunities identified._
 
 ## Missing governance
 
-- README.md active-briefs table is empty — no rows despite 3 active BRIEFs present (BRIEF-os-totebox-ppn-build-out.md, BRIEF-project-intelligence-active-work.md, BRIEF-project-intelligence-master.md)
+- README.md active-briefs table is empty — no rows populated despite 3 active BRIEFs present in the directory
+- BRIEF-cross-platform-release.md: missing artifact: brief field
+- BRIEF-cross-platform-release.md: schema uses non-canonical foundry-plan-v1 instead of foundry-brief-v1
+- BRIEF-cross-platform-release.md: missing brief-id field
+- BRIEF-cross-platform-release.md: missing owner field
+- BRIEF-dev-env-mcp-expansion.md: missing schema field
 - BRIEF-dev-env-mcp-expansion.md: missing brief-id field
 - BRIEF-dev-env-mcp-expansion.md: missing title field
 - BRIEF-dev-env-mcp-expansion.md: missing owner field
-- BRIEF-dev-env-mcp-expansion.md: missing updated field
-- BRIEF-dev-env-mcp-expansion.md: missing schema field
+- BRIEF-knowledge-platform-master.md: missing schema field
+- BRIEF-knowledge-platform-master.md: missing brief-id field
+- BRIEF-knowledge-platform-master.md: missing owner field
 - BRIEF-os-totebox-ppn-build-out.md: missing brief-id field
-- BRIEF-os-totebox-ppn-build-out.md: missing title field
+- BRIEF-os-totebox-ppn-build-out.md: missing title field (only in body heading, not frontmatter)
 - BRIEF-os-totebox-ppn-build-out.md: missing owner field
+- BRIEF-project-console-master.md: missing brief-id field
+- BRIEF-project-console-master.md: missing owner field
 - BRIEF-project-intelligence-active-work.md: missing schema field
 - BRIEF-project-intelligence-active-work.md: missing brief-id field
 - BRIEF-project-intelligence-active-work.md: missing title field
 - BRIEF-project-intelligence-active-work.md: missing owner field
-- BRIEF-project-intelligence-master.md: missing brief-id field
-- BRIEF-project-intelligence-master.md: missing owner field
+- archive/BRIEF-project-intelligence-master.md: non-canonical status value 'relocated' (must be: active | reference | archived | superseded | stub)
+- NEXT.md title reads 'project-data' instead of 'project-console' — contamination from bulk .agent/ copy
+- manifest.md frontmatter is contaminated with project-knowledge YAML fields (cluster_name, datagraph_module_id blocks from project-knowledge schema)
 
 ## New BRIEFs needed
 
-- **JOURNAL programme — multi-paper research pipeline**: NEXT.md has an active §JOURNAL programme section with 6+ open items across J1, J3, J4, J7 (language passes, OLS regression, AEC coverage metrics, §4-§8 stubs). These span multiple sessions and are too substantial for NEXT.md alone. A dedicated BRIEF-journal-programme.md would carry decisions locked (e.g. J7 hold lifted, committed body), open items (OLS regression, AEC build blockers, ORCID requirement), and carry-forward context — reducing session startup overhead.
+- **os-console active development state — phases 8–10**: BRIEF-project-console-master.md is archived (status: archived). Phases 8–10 (polish, operations, BIM/mesh/watchdog) have no active BRIEF tracking them. The archive has no legitimate active BRIEF for its own work. A new master BRIEF for the current development frontier is needed so sessions have a durable artifact for in-progress decisions.
 
 ## Work log
 
-2026-06-12 command@claude-code: Automated audit run. 3 active, 4 total BRIEFs reviewed.
+2026-06-12 command@claude-code: Automated audit run. 3 active, 7 total BRIEFs reviewed.
 
 ## Carry-forward
 
-- [ ] fix-schema: `BRIEF-dev-env-mcp-expansion.md` — Missing required frontmatter fields: schema, brief-id, title, owner, updated. Status is canonical (archived) so no rename needed, but the schema is incomplete for an archived artifact — should be corrected before any future reference.
-- [ ] fix-schema: `BRIEF-os-totebox-ppn-build-out.md` — Missing required frontmatter fields: brief-id (should be project-data-os-totebox-ppn-build-out), title, owner. Has artifact, schema, archive, created, updated. Also the active-briefs table in README.md is empty and must be updated to include this BRIEF.
-- [ ] migrate-to-archive: `BRIEF-project-intelligence-active-work.md` — This BRIEF belongs to project-intelligence, not project-data. NEXT.md §Command actions pending explicitly lists it as one of six project-intelligence briefs contaminated into this archive that need redistribution to project-intelligence. Also missing schema, brief-id, title, owner fields.
-- [ ] migrate-to-archive: `BRIEF-project-intelligence-master.md` — This BRIEF belongs to project-intelligence, not project-data. NEXT.md §Command actions pending lists it as contaminated into this archive (referenced indirectly via BRIEF-slm-substrate-master which this supersedes, plus author field shows totebox@project-intelligence). Missing brief-id and owner fields. Should be relocated and status set to archived in project-data after the copy is confirmed.
-- [ ] Create BRIEF for: JOURNAL programme — multi-paper research pipeline
+- [ ] fix-schema: `BRIEF-cross-platform-release.md` — Uses schema: foundry-plan-v1 instead of foundry-brief-v1; missing artifact: brief field; missing brief-id and owner fields. Status is canonical (archived).
+- [ ] fix-schema: `BRIEF-dev-env-mcp-expansion.md` — Missing schema, brief-id, title, and owner fields. Status is canonical (archived). Content belongs to workspace-level MCP expansion work, not project-console scope — but status is already archived so no action on scope.
+- [ ] migrate-to-archive: `BRIEF-knowledge-platform-master.md` — Contamination artifact: frontmatter declares cluster: project-knowledge and content is entirely about app-mediakit-knowledge. Belongs in project-knowledge, not project-console. Should be git mv'd to correct archive or archived here with contaminated_note.
+- [ ] migrate-to-archive: `BRIEF-os-totebox-ppn-build-out.md` — Contamination artifact: frontmatter declares archive: project-data and all content concerns service-people, service-extraction, and os-totebox build-out work scoped to project-data. Should be relocated to project-data briefs directory.
+- [ ] fix-schema: `BRIEF-project-console-master.md` — Missing brief-id and owner fields. Has artifact and schema fields. Status is canonical (archived). Contains the master os-console state tracker — historically significant even as archived.
+- [ ] migrate-to-archive: `BRIEF-project-intelligence-active-work.md` — Contamination artifact: author field declares totebox@project-intelligence and all content is about service-slm, apprenticeship queue, Doorman circuit breakers, and OLMo training — entirely project-intelligence scope. Should be relocated.
+- [ ] rename-status: `archive/BRIEF-project-intelligence-master.md` — Status value 'relocated' is non-canonical. Must be one of: active | reference | archived | superseded | stub. Given the file was git mv'd here from project-knowledge during contamination cleanup, status should be 'archived' with the existing contamination_note preserved.
+- [ ] Create BRIEF for: os-console active development state — phases 8–10
