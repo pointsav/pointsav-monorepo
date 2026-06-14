@@ -57,7 +57,10 @@ pub async fn mcp_handler(
             Err(e) => JsonRpcResponse {
                 jsonrpc: "2.0".into(),
                 result: None,
-                error: Some(JsonRpcError { code: -32603, message: e }),
+                error: Some(JsonRpcError {
+                    code: -32603,
+                    message: e,
+                }),
                 id,
             },
         },

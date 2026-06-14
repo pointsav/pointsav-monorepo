@@ -14,7 +14,12 @@ pub async fn research_index_handler(
     if is_fragment(&headers) {
         Html(content)
     } else {
-        Html(render::shell::page_shell("Research", "/research", &content, &state))
+        Html(render::shell::page_shell(
+            "Research",
+            "/research",
+            &content,
+            &state,
+        ))
     }
 }
 

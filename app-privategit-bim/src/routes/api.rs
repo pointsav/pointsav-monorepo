@@ -36,10 +36,7 @@ pub async fn validate_handler(
     Json(body): Json<Value>,
 ) -> impl IntoResponse {
     match validator::validate_dtcg(&body) {
-        Ok(()) => (
-            StatusCode::OK,
-            Json(json!({ "valid": true, "errors": [] })),
-        ),
+        Ok(()) => (StatusCode::OK, Json(json!({ "valid": true, "errors": [] }))),
         Err(errors) => (
             StatusCode::UNPROCESSABLE_ENTITY,
             Json(json!({ "valid": false, "errors": errors })),

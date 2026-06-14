@@ -54,11 +54,14 @@ pub fn validate_dtcg(doc: &Value) -> Result<(), Vec<String>> {
                 None => continue,
             };
             for (slug, entity) in entities {
-                if slug.starts_with('$') { continue; }
+                if slug.starts_with('$') {
+                    continue;
+                }
                 let path = format!("bim.{cat}.{slug}");
                 if let Some(v) = entity.get("$value") {
                     if let Some(obj) = v.as_object() {
-                        let has_ifc = obj.contains_key("ifc_class") || obj.contains_key("ifc_anchor");
+                        let has_ifc =
+                            obj.contains_key("ifc_class") || obj.contains_key("ifc_anchor");
                         let has_zone = obj.contains_key("zone1_depth_m");
                         let has_name = obj.contains_key("display_name");
                         if !has_ifc && !has_zone && !has_name {
@@ -74,5 +77,9 @@ pub fn validate_dtcg(doc: &Value) -> Result<(), Vec<String>> {
         errors.push("missing required top-level 'bim' object".into());
     }
 
-    if errors.is_empty() { Ok(()) } else { Err(errors) }
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(errors)
+    }
 }
