@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PointSav — Design Slides</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* PointSav / Woodfine palette — primary swapped to teal */
+    --blue:#0E7C84;          /* PointSav teal (proposed — confirm exact hex) */
+    --blue-deep:#0A5C63;
+    --green:#54924E;
+    --orange:#F15F22;
+    --grey:#E6E7E8;
+    --ink-100:#111827;
+    --ink-200:#374151;
+    --ink-300:#6B7280;
+    --ink-400:#9CA3AF;
+    --paper-100:#FFFFFF;
+    --paper-200:#F7F9FA;
+    --paper-300:#E6E7E8;
+    --highlight-50:#FDE8DD;
+    --rule:#E6E7E8;
+
+    /* type scale (1920x1080) */
+    --type-display:124px;
+    --type-title:72px;
+    --type-eyebrow:26px;
+    --type-label:27px;
+    --type-sub:38px;
+    --type-num:24px;
+    --type-foot:24px;
+
+    --pad-x:120px;
+    --pad-top:80px;
+    --pad-bottom:68px;
+
+    --font-display:"Space Grotesk", system-ui, sans-serif;
+    --font-text:"Hanken Grotesk", system-ui, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#0b1b2e;}
+  deck-stage:not(:defined){visibility:hidden;}
+
+  section{
+    font-family:var(--font-text);
+    color:var(--ink-100);
+    background:var(--paper-100);
+    overflow:hidden;
+  }
+
+  /* ---------- icon styling (inline SVG, document CSS reaches slotted light DOM) ---------- */
+  .icon-svg{
+    display:block;
+    width:100%;height:100%;
+    overflow:visible;
+    --ico-fill:rgba(14,124,132,0.06);
+    --ico-stroke:var(--blue);
+    --ico-sw:3;
+  }
+  .icon-svg > *{
+    fill:var(--ico-fill);
+    stroke:var(--ico-stroke);
+    stroke-width:var(--ico-sw);
+    stroke-linejoin:round;
+    stroke-linecap:round;
+  }
+
+  /* ============ COVER ============ */
+  .cover{
+    background:var(--blue);
+    color:#fff;
+    padding:var(--pad-top) var(--pad-x) var(--pad-bottom);
+    display:flex;
+    flex-direction:column;
+  }
+  .cover .top-row{
+    display:flex;align-items:center;gap:18px;
+  }
+  .cover .wordmark{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:34px;
+    letter-spacing:0.5px;
+  }
+  .cover .wordmark .sav{color:#93d2d6;}
+  .cover .divider-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.5);}
+  .cover .kicker{
+    font-size:var(--type-eyebrow);
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:#93d2d6;
+    font-weight:600;
+  }
+  .cover .headline{margin-top:auto;}
+  .cover .eyebrow{
+    font-size:var(--type-eyebrow);
+    letter-spacing:5px;
+    text-transform:uppercase;
+    color:#93d2d6;
+    font-weight:600;
+    margin-bottom:26px;
+  }
+  .cover h1{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:var(--type-display);
+    line-height:0.96;
+    letter-spacing:-2px;
+    margin:0;
+  }
+  .cover .sub{
+    margin-top:30px;
+    font-size:var(--type-sub);
+    color:#cdeced;
+    font-weight:400;
+    letter-spacing:0.3px;
+  }
+  .cover .icon-strip{
+    margin-top:58px;
+    display:grid;
+    grid-template-columns:repeat(9,1fr);
+    border-top:1px solid rgba(255,255,255,0.20);
+    padding-top:42px;
+  }
+  .cover .strip-cell{
+    display:flex;align-items:center;justify-content:center;
+    height:86px;
+  }
+  .cover .strip-cell .icon-svg{width:70px;height:70px;}
+  .cover .icon-strip .icon-svg{
+    --ico-stroke:#a7dadd;
+    --ico-fill:transparent;
+    --ico-sw:3.4;
+  }
+  .cover .foot{
+    position:absolute;
+    top:var(--pad-top);
+    right:var(--pad-x);
+    font-size:var(--type-foot);
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:#93d2d6;
+    font-weight:600;
+    text-align:right;
+    line-height:1.4;
+    white-space:nowrap;
+  }
+
+  /* ============ INDEX SLIDE ============ */
+  .index{
+    padding:var(--pad-top) var(--pad-x) var(--pad-bottom);
+    display:flex;
+    flex-direction:column;
+  }
+  .index .head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    margin-bottom:32px;
+  }
+  .index .head .eyebrow{
+    font-size:var(--type-eyebrow);
+    letter-spacing:4px;
+    text-transform:uppercase;
+    color:var(--orange);
+    font-weight:600;
+    margin-bottom:16px;
+  }
+  .index .head h2{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:var(--type-title);
+    letter-spacing:-1px;
+    margin:0;
+    color:var(--ink-100);
+  }
+  .index .head .meta{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:8px;
+  }
+  .index .head .meta .count{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:30px;
+    letter-spacing:1px;
+    color:var(--blue);
+  }
+  .index .head .meta .ctx{
+    font-size:var(--type-foot);
+    color:var(--ink-300);
+    letter-spacing:0.5px;
+  }
+
+  .grid{
+    flex:1;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    grid-template-rows:repeat(3,1fr);
+    background:var(--rule);
+    gap:1px;
+    border:1px solid var(--rule);
+  }
+  .cell{
+    background:var(--paper-100);
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:20px;
+    padding:16px 24px;
+  }
+  .cell .num{
+    position:absolute;
+    top:22px;left:26px;
+    font-family:var(--font-display);
+    font-size:var(--type-num);
+    font-weight:600;
+    letter-spacing:2px;
+    color:var(--ink-400);
+  }
+  .cell .icon-box{
+    width:110px;height:110px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .cell .labels{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+  }
+  .cell .label{
+    font-family:var(--font-display);
+    font-size:var(--type-label);
+    font-weight:600;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--ink-100);
+    text-align:center;
+    white-space:nowrap;
+  }
+  .cell .label.alt{
+    color:var(--ink-300);
+    font-weight:600;
+  }
+
+  /* ============ SCALING SLIDES (shared) ============ */
+  .scaling{
+    padding:54px 88px 46px;
+    display:flex;
+    flex-direction:column;
+  }
+  .scaling .head{ margin-bottom:24px; flex:0 0 auto; }
+  .scaling .head .eyebrow{
+    font-size:24px; letter-spacing:4px; text-transform:uppercase;
+    color:var(--orange); font-weight:600; margin-bottom:10px;
+  }
+  .scaling .head h2{
+    font-family:var(--font-display); font-weight:600; font-size:58px;
+    letter-spacing:-1px; margin:0; color:var(--ink-100);
+  }
+  .scaling .head .crumb{
+    font-family:var(--font-text); font-size:24px; color:var(--ink-300);
+    margin-top:8px; letter-spacing:0.4px;
+  }
+
+  /* node primitives */
+  .node-label{
+    font-family:var(--font-display); font-weight:600; font-size:18px;
+    letter-spacing:0.4px; text-transform:uppercase; color:var(--blue-deep);
+    text-align:center; line-height:1.08;
+  }
+  .vm{ font-family:var(--font-text); font-size:14px; font-style:italic; color:var(--ink-400); }
+  .ico-line{ fill:rgba(14,124,132,0.04); stroke:var(--blue); stroke-width:2.5; stroke-linejoin:round; }
+
+  /* console (arch) */
+  .console{ position:relative; width:166px; height:112px; }
+  .console svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .console .node-label{ position:absolute; left:8px; right:8px; top:36px; }
+  .console .vm{ position:absolute; right:16px; bottom:9px; }
+
+  /* virtualization bar */
+  .vbar{
+    border:2.5px solid var(--blue); border-radius:2px; min-height:46px;
+    display:flex; align-items:center; justify-content:center;
+    padding:6px 12px; background:var(--paper-100); text-align:center;
+  }
+  .vbar .node-label{ font-size:16px; color:var(--ink-200); white-space:nowrap; }
+
+  /* totebox (square) */
+  .totebox{
+    position:relative; border:2.5px solid var(--blue); border-radius:2px;
+    background:rgba(14,124,132,0.04); display:flex; align-items:center; justify-content:center;
+    padding:8px;
+  }
+  .totebox .node-label{ font-size:17px; }
+  .totebox .vm{ position:absolute; right:10px; bottom:6px; }
+
+  /* hexagon (interface) */
+  .hexagon{ position:relative; }
+  .hexagon svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .hexagon .node-label{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 30px; }
+  .hexagon .vm{ position:absolute; right:30%; bottom:18%; }
+
+  /* diamond */
+  .diamond{ position:relative; display:flex; align-items:center; justify-content:center; }
+  .diamond .shape{ position:absolute; left:14%; top:14%; right:14%; bottom:14%; transform:rotate(45deg); border:2.5px solid var(--blue); background:rgba(14,124,132,0.04); }
+  .diamond .node-label{ position:relative; font-size:15px; }
+
+  /* parallelogram */
+  .para{ position:relative; display:flex; align-items:center; justify-content:center; }
+  .para .shape{ position:absolute; inset:0; transform:skewX(-16deg); border:2.5px solid var(--blue); background:rgba(14,124,132,0.04); }
+  .para .node-label{ position:relative; font-size:15px; }
+
+  /* cloud */
+  .cloud{ position:relative; }
+  .cloud svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .cloud .node-label{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:40% 14% 6%; font-size:12px; line-height:1.05; }
+
+  /* port badge */
+  .badge{
+    width:42px; height:42px; border-radius:50%; border:2.5px solid var(--blue);
+    background:var(--paper-100); display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:600; font-size:16px; color:var(--blue-deep);
+  }
+
+  /* backend pill */
+  .backend{
+    border:2.5px solid var(--blue); border-radius:2px; min-height:42px;
+    display:flex; align-items:center; justify-content:center; padding:6px 14px;
+    font-family:var(--font-display); font-weight:600; font-size:15px; letter-spacing:0.5px;
+    text-transform:uppercase; color:var(--ink-100); background:var(--paper-100); text-align:center;
+  }
+
+  /* ---- TIERS slide ---- */
+  .tiers{ flex:1; display:flex; align-items:center; }
+  .tier{ flex:1; display:flex; flex-direction:column; align-items:center; gap:30px; padding:6px 26px 0; align-self:stretch; justify-content:center; }
+  .tier + .tier{ border-left:1px solid var(--rule); }
+  .tier-head{
+    font-family:var(--font-display); font-weight:600; font-size:30px; letter-spacing:3px;
+    text-transform:uppercase; color:var(--ink-100); border-bottom:3px solid var(--blue);
+    padding-bottom:10px;
+  }
+  .people{ display:flex; flex-wrap:wrap; gap:10px 16px; justify-content:center; align-items:flex-end; max-width:320px; min-height:58px; }
+  .people .person{ width:38px; height:54px; }
+  .people .person svg{ width:100%; height:100%; overflow:visible; }
+  .units{ display:flex; gap:38px; justify-content:center; align-items:flex-start; margin-top:18px; }
+  .stack-unit{ display:flex; flex-direction:column; align-items:center; }
+  .stack-unit .vbar{ width:204px; margin-top:-2px; }
+
+  /* ---- COMPOSITION slide ---- */
+  .canvas{ position:relative; flex:1; }
+  .canvas .wire{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
+  .canvas .wire line, .canvas .wire path, .canvas .wire polyline{ stroke:var(--blue); stroke-width:2; fill:none; }
+  .canvas .wire .divider{ stroke:var(--blue); stroke-width:1.5; stroke-dasharray:7 8; opacity:0.4; }
+  .canvas .wire .dot{ fill:var(--blue); stroke:none; }
+  .node{ position:absolute; }
+  .zone-label{
+    position:absolute; font-family:var(--font-display); font-weight:600; font-size:24px;
+    letter-spacing:1px; color:var(--ink-100); line-height:1.1;
+  }
+  .zone-label small{ display:block; font-size:24px; color:var(--orange); letter-spacing:3px; text-transform:uppercase; font-weight:600; }
+  .ps-bar{
+    border:3px solid var(--blue); border-radius:2px; background:rgba(14,124,132,0.05);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:600; font-size:22px; letter-spacing:0.5px; color:var(--blue-deep);
+  }
+
+  /* ---- PRIVATE NETWORK (Orchestration) slide ---- */
+  .privnet .canvas{ position:relative; flex:1; }
+  .pnet-boundary{
+    position:absolute; border:2.5px dashed var(--blue); border-radius:16px;
+    background:rgba(14,124,132,0.025);
+  }
+  .pnet-cap{
+    position:absolute; top:-15px; left:0; right:0; text-align:center;
+    font-family:var(--font-display); font-weight:600; font-size:23px; letter-spacing:0.4px; color:var(--blue-deep);
+  }
+  .pnet-cap span{ display:inline-block; background:var(--paper-100); padding:0 20px; }
+  .pnet-cap small{
+    display:block; font-size:15px; color:var(--ink-400); text-transform:uppercase;
+    letter-spacing:3px; font-weight:600; margin-top:3px;
+  }
+  .annot{
+    position:absolute; font-family:var(--font-text); font-style:italic; font-size:18px; color:var(--ink-400);
+    white-space:nowrap;
+  }
+  .privnet .backend.col{ flex-direction:column; line-height:1.12; }
+
+  /* ---- SERVICES — BOOKKEEPING (Database vs File System) slide ---- */
+  .dbfs .cmp2{ flex:1; display:grid; grid-template-columns:1fr 1px 1fr; gap:0 70px; }
+  .dbfs .cmp-div{ background:var(--rule); }
+  .dbfs .cmp-head{ display:flex; align-items:center; gap:18px; padding-bottom:16px; margin-bottom:30px; border-bottom:3px solid var(--blue); }
+  .dbfs .cmp-head .ch-ico{ width:50px; height:50px; flex:0 0 auto; }
+  .dbfs .cmp-head .ch-ico svg{ width:100%; height:100%; overflow:visible; }
+  .dbfs .cmp-head .ch-ico svg *{ fill:rgba(14,124,132,0.06); stroke:var(--blue); stroke-width:5; stroke-linejoin:round; }
+  .dbfs .cmp-head .ch-t{ font-family:var(--font-display); font-weight:600; font-size:34px; text-transform:uppercase; letter-spacing:0.5px; color:var(--ink-100); white-space:nowrap; }
+  .dbfs .cmp-item{ display:flex; align-items:baseline; gap:15px; margin-bottom:22px; font-family:var(--font-text); font-size:27px; color:var(--ink-200); line-height:1.25; }
+  .dbfs .cmp-item::before{ content:""; width:9px; height:9px; border-radius:50%; background:var(--blue); transform:translateY(-5px); flex:0 0 auto; }
+  .dbfs .cmp-item.lead{ font-family:var(--font-display); font-weight:600; color:var(--ink-100); }
+  .dbfs .cmp-sub{ margin:-10px 0 24px 36px; display:flex; gap:14px; }
+  .dbfs .cmp-sub .s{
+    font-family:var(--font-text); font-size:20px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-400); font-weight:600;
+    border:2px solid var(--ink-300); border-radius:999px; padding:5px 18px;
+  }
+  .dbfs .cmp-rules{ margin-top:30px; display:flex; flex-direction:column; gap:16px; }
+  .dbfs .cmp-rule{
+    display:flex; align-items:flex-start; gap:14px; border-left:5px solid var(--orange); background:var(--highlight-50);
+    padding:14px 20px; border-radius:0 6px 6px 0;
+  }
+  .dbfs .cmp-rule .rk{ color:var(--orange); font-family:var(--font-display); font-weight:600; font-size:24px; line-height:1.1; flex:0 0 auto; }
+  .dbfs .cmp-rule .rt{ font-family:var(--font-text); font-size:24px; color:#7a2e10; line-height:1.3; }
+  .dbfs .cmp-rule .rt b{ font-family:var(--font-display); font-weight:600; }
+  .dbfs .filechips{ display:flex; flex-direction:column; gap:22px; margin-top:6px; }
+  .dbfs .filechip{ display:flex; align-items:center; gap:20px; }
+  .dbfs .filechip .fc-ico{ width:42px; height:52px; flex:0 0 auto; }
+  .dbfs .filechip .fc-ico svg{ width:100%; height:100%; overflow:visible; }
+  .dbfs .filechip .fc-ico svg *{ fill:var(--paper-100); stroke:var(--blue); stroke-width:5; stroke-linejoin:round; }
+  .dbfs .filechip .fc-t{ font-family:var(--font-display); font-weight:600; font-size:28px; letter-spacing:0.3px; color:var(--blue-deep); }
+  .dbfs .filechip .fc-d{ font-family:var(--font-text); font-size:21px; color:var(--ink-400); }
+
+  /* ---- TOTEBOX SERVICES (ladder) slide ---- */
+  .svcladder .stage{ flex:1; position:relative; }
+  .tb-square{
+    position:absolute; left:60px; top:8px; width:300px; height:172px;
+    border:2.5px solid var(--blue); border-radius:3px; background:rgba(14,124,132,0.05);
+    display:flex; align-items:center; justify-content:center; position:absolute;
+  }
+  .tb-square .tb-kick{
+    position:absolute; top:16px; left:0; right:0; text-align:center;
+    font-family:var(--font-text); font-style:italic; font-size:19px; color:var(--ink-400);
+  }
+  .tb-square .tb-nm{ font-family:var(--font-display); font-weight:600; font-size:38px; letter-spacing:0.4px; color:var(--blue-deep); }
+  .tb-stem{ position:absolute; left:198px; top:180px; width:24px; height:30px; border-left:2.5px solid var(--blue); border-right:2.5px solid var(--blue); background:rgba(14,124,132,0.05); }
+  .svc-ladder{
+    position:absolute; left:80px; top:210px; width:336px;
+    border:2.5px solid var(--blue); border-radius:3px; background:var(--paper-100); overflow:hidden;
+  }
+  .svc-ladder .rung{
+    height:66px; display:flex; align-items:center; gap:16px; padding-left:24px; border-bottom:2px solid var(--blue);
+    font-family:var(--font-display); font-weight:600; font-size:24px; letter-spacing:0.3px; color:var(--blue-deep);
+  }
+  .svc-ladder .rung:last-child{ border-bottom:none; }
+  .svc-ladder .rung .rn{
+    flex:0 0 auto; width:26px; height:26px; border-radius:50%; border:2px solid var(--ink-300);
+    display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--ink-300); font-weight:600;
+  }
+  .svc-brace{ position:absolute; left:428px; top:210px; width:54px; height:402px; }
+  .svc-brace svg{ width:100%; height:100%; overflow:visible; }
+  .svc-brace svg path{ fill:none; stroke:var(--blue); stroke-width:2.5; }
+  .svc-brace-label{
+    position:absolute; left:496px; top:392px; font-family:var(--font-display); font-weight:600;
+    font-size:30px; letter-spacing:1px; color:var(--ink-100);
+  }
+  .future-callout{
+    position:absolute; left:790px; top:262px; width:870px;
+    border:2.5px solid var(--orange); border-left-width:10px; border-radius:8px; background:var(--highlight-50);
+    padding:36px 44px;
+  }
+  .future-callout .fc-kick{ font-family:var(--font-display); font-weight:600; font-size:18px; letter-spacing:3px; text-transform:uppercase; color:var(--orange); margin-bottom:16px; }
+  .future-callout .fc-text{ font-family:var(--font-text); font-size:32px; line-height:1.4; color:#7a2e10; }
+  .future-callout .fc-text b{ font-family:var(--font-display); font-weight:600; }
+
+  /* ---- TOTEBOX ARCHIVE (Personnel vs Corporate vs Real Property) slide ---- */
+  .archive .head{ position:relative; }
+  .cat-tag{
+    position:absolute; top:2px; right:0; border:2.5px solid var(--ink-300); border-radius:5px;
+    padding:9px 24px; font-family:var(--font-display); font-weight:600; font-size:20px;
+    letter-spacing:5px; text-transform:uppercase; color:var(--ink-300);
+  }
+  .arch-compare{
+    flex:0 0 auto; display:grid; grid-template-columns:1fr auto 1fr auto 1fr; align-items:stretch; margin-bottom:30px;
+  }
+  .arch-card{
+    height:236px; border:2.5px solid var(--blue); border-radius:4px; background:rgba(14,124,132,0.035);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; position:relative;
+  }
+  .arch-card .ac-kicker{
+    position:absolute; top:16px; left:0; right:0; text-align:center;
+    font-family:var(--font-text); font-size:15px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-400); font-weight:600;
+  }
+  .arch-card .ac-sq{ width:46px; height:46px; border:2.5px solid var(--blue); background:var(--paper-100); }
+  .arch-card .ac-name{ font-family:var(--font-display); font-weight:600; font-size:34px; letter-spacing:0.3px; color:var(--ink-100); }
+  .vs-sep{ display:flex; align-items:center; justify-content:center; padding:0 26px;
+    font-family:var(--font-text); font-style:italic; font-size:28px; color:var(--ink-300); }
+  .arch-why{ display:grid; grid-template-columns:1fr auto 1fr auto 1fr; flex:1; }
+  .arch-why .why{ padding-top:4px; }
+  .arch-why .why .wt{ font-family:var(--font-text); font-size:23px; color:var(--ink-200); line-height:1.4; }
+  .arch-why .why .wt b{ font-family:var(--font-display); font-weight:600; color:var(--ink-100); }
+  .arch-why .buy{ display:flex; flex-direction:column; gap:9px; margin-top:16px; }
+  .arch-why .buy .opt{
+    display:flex; align-items:center; gap:12px; font-family:var(--font-display); font-weight:600; font-size:21px; color:var(--blue-deep);
+  }
+  .arch-why .buy .opt::before{
+    content:""; width:14px; height:14px; flex:0 0 auto; border:2.5px solid var(--blue); background:rgba(14,124,132,0.06);
+  }
+  .arch-why .buy .orsep{ font-family:var(--font-text); font-style:italic; font-size:17px; color:var(--ink-400); padding-left:26px; }
+  .archive .notes-strip{
+    flex:0 0 auto; display:flex; align-items:flex-start; gap:30px; margin-top:auto; padding-top:18px; border-top:1px solid var(--rule);
+  }
+  .archive .notes-strip > b{ color:var(--orange); font-family:var(--font-display); font-weight:600; font-size:15px; letter-spacing:2px; text-transform:uppercase; flex:0 0 auto; padding-top:3px; }
+  .archive .notes-strip .nlist{ display:flex; gap:40px; flex:1; }
+  .archive .notes-strip span{ display:flex; align-items:baseline; gap:9px; flex:1; font-family:var(--font-text); font-size:20px; color:var(--ink-300); line-height:1.3; }
+  .archive .notes-strip span::before{ content:""; width:7px; height:7px; border-radius:50%; background:var(--blue); flex:0 0 auto; transform:translateY(-3px); }
+
+  /* ---- TOTEBOX SERVICES AS CONTAINERS slide ---- */
+  .tbsvc .stage{ flex:1; display:grid; grid-template-columns:660px 1fr; gap:0 70px; align-items:center; }
+  .cube{ position:relative; width:600px; height:500px; }
+  .cube svg.box{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .cube svg.box path{ fill:rgba(14,124,132,0.04); stroke:var(--blue); stroke-width:2.5; stroke-linejoin:round; }
+  .cube svg.box path.top{ fill:rgba(14,124,132,0.07); }
+  .cube svg.box path.side{ fill:rgba(14,124,132,0.11); }
+  .cube-cyl{
+    position:absolute; width:96px; height:150px; border:2.5px solid var(--blue);
+    border-radius:50% / 18px; background:rgba(14,124,132,0.06);
+  }
+  .cube-cyl::before{
+    content:""; position:absolute; left:-2.5px; right:-2.5px; top:-2.5px; height:24px;
+    border:2.5px solid var(--blue); border-radius:50%; background:var(--paper-100);
+  }
+  .cube-top-label{
+    position:absolute; left:150px; top:8px; font-family:var(--font-display); font-weight:600;
+    font-size:26px; letter-spacing:0.4px; color:var(--blue-deep);
+  }
+  .cube-face-label{
+    position:absolute; left:40px; top:418px; width:420px; text-align:center;
+    font-family:var(--font-display); font-weight:600; font-size:24px; letter-spacing:1px;
+    text-transform:uppercase; color:var(--blue-deep);
+  }
+  .cube-tag{
+    position:absolute; left:548px; top:150px; width:140px;
+    font-family:var(--font-text); font-style:italic; font-size:21px; color:var(--ink-400); line-height:1.3;
+  }
+  .cube-tag b{ font-family:var(--font-display); font-style:normal; font-weight:600; color:var(--orange); }
+
+  .tbsvc-points{ display:flex; flex-direction:column; gap:24px; }
+  .tbsvc-pt{ display:flex; gap:16px; align-items:flex-start; }
+  .tbsvc-pt .mk{ flex:0 0 auto; font-family:var(--font-display); font-weight:600; font-size:24px; color:var(--orange); line-height:1.2; }
+  .tbsvc-pt .tx{ font-family:var(--font-text); font-size:27px; color:var(--ink-200); line-height:1.32; }
+  .tbsvc-pt .tx b{ font-family:var(--font-display); font-weight:600; color:var(--ink-100); }
+  .tbsvc-ex{
+    margin-top:8px; border:2.5px solid var(--orange); border-radius:6px; background:var(--highlight-50);
+    padding:20px 26px; display:flex; align-items:baseline; gap:14px;
+  }
+  .tbsvc-ex .ex-k{ font-family:var(--font-display); font-weight:600; font-size:17px; letter-spacing:2px; text-transform:uppercase; color:var(--orange); flex:0 0 auto; }
+  .tbsvc-ex .ex-t{ font-family:var(--font-text); font-size:24px; color:#7a2e10; line-height:1.3; }
+  .tbsvc-ex .ex-t b{ font-family:var(--font-display); font-weight:600; }
+
+  .tbsvc .notes-strip{
+    flex:0 0 auto; display:flex; align-items:flex-start; gap:30px; margin-top:14px; padding-top:16px; border-top:1px solid var(--rule);
+    font-family:var(--font-text); font-size:19px; color:var(--ink-300);
+  }
+  .tbsvc .notes-strip > b{ color:var(--orange); font-family:var(--font-display); font-weight:600; font-size:15px; letter-spacing:2px; text-transform:uppercase; flex:0 0 auto; padding-top:2px; }
+  .tbsvc .notes-strip .nlist{ display:flex; gap:30px; flex:1; }
+  .tbsvc .notes-strip span{ display:flex; align-items:baseline; gap:8px; flex:1; }
+  .tbsvc .notes-strip span::before{ content:""; width:7px; height:7px; border-radius:50%; background:var(--blue); flex:0 0 auto; transform:translateY(-3px); }
+
+  /* ---- VM vs CONTAINERS comparison slide ---- */
+  .vmcon .vc-cols{ flex:1; display:grid; grid-template-columns:repeat(3,1fr); gap:0 64px; align-items:start; }
+  .vmcon .vc-col{ display:flex; flex-direction:column; height:100%; position:relative; }
+  .vmcon .vc-col + .vc-col::before{ content:""; position:absolute; left:-32px; top:6px; bottom:64px; width:1px; background:var(--rule); }
+  .vmcon .vc-title{
+    display:flex; align-items:center; gap:13px; padding-bottom:12px; margin-bottom:22px; border-bottom:3px solid var(--blue); white-space:nowrap;
+  }
+  .vmcon .vc-title .vt-n{
+    flex:0 0 auto; width:38px; height:38px; border-radius:50%; border:2.5px solid var(--blue); background:var(--paper-100);
+    display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:600; font-size:19px; color:var(--blue-deep);
+  }
+  .vmcon .vc-title .vt-t{ font-family:var(--font-display); font-weight:600; font-size:23px; letter-spacing:0.2px; text-transform:uppercase; color:var(--ink-100); }
+  /* layered stack */
+  .vc-stack{ height:332px; display:flex; flex-direction:column; justify-content:flex-end; gap:14px; }
+  .slab{
+    height:58px; flex:0 0 auto; border:2.5px solid var(--blue); border-radius:2px; background:var(--paper-100);
+    display:flex; align-items:center; justify-content:center; text-align:center; line-height:1.1;
+    font-family:var(--font-display); font-weight:600; font-size:21px; letter-spacing:0.3px; color:var(--blue-deep);
+  }
+  .slab.big{ height:150px; }
+  .slab.metal{ background:var(--paper-300); color:var(--ink-200); border-color:var(--ink-300); }
+  .slab.os{ background:rgba(14,124,132,0.06); }
+  .slab.docker{ background:var(--highlight-50,#FDE8DD); border-color:var(--orange); color:#9a3a14; }
+  /* container cylinder */
+  .vc-cyl{
+    position:relative; height:150px; flex:0 0 auto; margin-top:22px;
+    border:2.5px solid var(--blue); border-radius:50% / 22px; background:rgba(14,124,132,0.05);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .vc-cyl::before{
+    content:""; position:absolute; left:-2.5px; right:-2.5px; top:-2.5px; height:30px;
+    border:2.5px solid var(--blue); border-radius:50%; background:var(--paper-100);
+  }
+  .vc-cyl .cyl-l{
+    position:relative; z-index:1; padding-top:16px; text-align:center; line-height:1.15;
+    font-family:var(--font-display); font-weight:600; font-size:20px; color:var(--blue-deep); letter-spacing:0.2px;
+  }
+  .vc-cyl .cyl-l small{ display:block; font-family:var(--font-text); font-size:14px; letter-spacing:2.5px; text-transform:uppercase; color:var(--ink-400); font-weight:600; margin-top:6px; }
+  /* virtualizes caption */
+  .vc-virt{
+    display:flex; align-items:baseline; gap:9px; margin:22px 0 18px; min-height:48px;
+    font-family:var(--font-text); font-size:19px; color:var(--ink-200); line-height:1.25;
+  }
+  .vc-virt b{ color:var(--orange); font-family:var(--font-display); font-weight:600; }
+  /* verdict chip + note */
+  .vc-verdict{
+    display:inline-flex; align-items:center; gap:10px; align-self:flex-start; padding:8px 18px; border-radius:999px;
+    border:2px solid var(--ink-300); font-family:var(--font-display); font-weight:600; font-size:17px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-300);
+  }
+  .vc-verdict::before{ content:""; width:11px; height:11px; border-radius:50%; background:currentColor; }
+  .vc-verdict.good{ color:var(--green); border-color:var(--green); }
+  .vc-verdict.warn{ color:var(--orange); border-color:var(--orange); }
+  .vc-note{ margin-top:14px; font-family:var(--font-text); font-size:18px; color:var(--ink-300); line-height:1.35; max-width:90%; }
+  .vmcon .vc-foot{
+    flex:0 0 auto; margin-top:18px; padding-top:16px; border-top:1px solid var(--rule);
+    font-family:var(--font-text); font-size:20px; color:var(--ink-300);
+  }
+  .vmcon .vc-foot b{ font-family:var(--font-display); font-weight:600; color:var(--orange); font-size:15px; letter-spacing:2px; text-transform:uppercase; margin-right:10px; }
+  .vmcon .vc-foot strong{ color:var(--ink-100); font-weight:600; }
+
+  /* ---- TOTEBOXES (deployment scale + services) slide ---- */
+  .toteboxes .canvas{ position:relative; flex:1; }
+  /* deployment scale spectrum */
+  .vmscale{ position:absolute; left:0; top:30px; width:1050px; height:260px; }
+  .vmscale .axis{ position:absolute; left:0; right:0; bottom:34px; height:2.5px; background:var(--blue); }
+  .vmscale .axis::before, .vmscale .axis::after{
+    content:""; position:absolute; top:50%; width:14px; height:14px; border-top:2.5px solid var(--blue); border-right:2.5px solid var(--blue);
+  }
+  .vmscale .axis::before{ left:-2px; transform:translateY(-50%) rotate(-135deg); }
+  .vmscale .axis::after{ right:-2px; transform:translateY(-50%) rotate(45deg); }
+  .vmstep{ position:absolute; bottom:34px; display:flex; flex-direction:column; align-items:center; }
+  .vmstep .sq{ border:2.5px solid var(--blue); border-radius:2px; background:rgba(14,124,132,0.05); }
+  .vmstep .vlabel{
+    font-family:var(--font-display); font-weight:600; font-size:23px; letter-spacing:0.4px; color:var(--blue-deep);
+    margin-bottom:16px; white-space:nowrap;
+  }
+  .vmscale .scale-cap{
+    position:absolute; left:0; top:-6px; font-family:var(--font-text); font-size:18px; letter-spacing:3px;
+    text-transform:uppercase; color:var(--ink-400); font-weight:600;
+  }
+  .vmscale .transfer{
+    position:absolute; left:0; bottom:-46px; display:flex; align-items:center; gap:12px;
+    font-family:var(--font-text); font-style:italic; font-size:22px; color:var(--orange);
+  }
+  .vmscale .transfer b{ font-family:var(--font-display); font-style:normal; font-weight:600; font-size:24px; }
+
+  /* totebox services card */
+  .tbservices{
+    position:absolute; right:0; top:344px; width:430px; height:300px;
+    border:2.5px solid var(--blue); border-radius:4px; background:rgba(14,124,132,0.035);
+    display:flex; flex-direction:column;
+  }
+  .tbservices .tbs-head{ display:flex; align-items:center; gap:16px; padding:24px 28px 0; }
+  .tbservices .tbs-sq{ width:34px; height:34px; flex:0 0 auto; border:2.5px solid var(--blue); background:var(--paper-100); }
+  .tbservices .tbs-t{ font-family:var(--font-display); font-weight:600; font-size:30px; letter-spacing:0.3px; color:var(--ink-100); }
+  .tbservices .tbs-body{ flex:1; display:flex; align-items:center; justify-content:center; }
+  .tbservices .tbs-vm{
+    width:170px; height:120px; border:2.5px dashed var(--blue); border-radius:3px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:600; font-size:24px; color:var(--blue-deep); letter-spacing:0.4px;
+  }
+  .tbservices .tbs-foot{
+    padding:0 28px 22px; font-family:var(--font-text); font-size:15px; letter-spacing:3px;
+    text-transform:uppercase; color:var(--ink-400); font-weight:600; text-align:center;
+  }
+  /* service list */
+  .svclist{ position:absolute; left:40px; top:356px; display:flex; flex-direction:column; gap:14px; }
+  .svcrow{ display:flex; align-items:center; gap:16px; }
+  .svcrow .sname{
+    font-family:var(--font-display); font-weight:600; font-size:25px; letter-spacing:0.3px; color:var(--blue-deep);
+    border-bottom:2.5px solid var(--blue); padding:2px 14px 8px; min-width:360px;
+  }
+  .svcrow .snum{
+    flex:0 0 auto; width:30px; height:30px; border-radius:50%; border:2px solid var(--ink-300);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--ink-300);
+  }
+
+  /* ---- CONSOLE OS — SYSTEM ADMINISTRATION slide ---- */
+  .sysadmin .canvas{ position:relative; flex:1; }
+  .adminwin{
+    position:absolute; border:2.5px solid var(--blue); border-radius:5px; background:var(--paper-100);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .adminwin .aw-head{ display:flex; align-items:center; gap:16px; background:var(--blue); padding:15px 24px; }
+  .adminwin .aw-ico{ width:38px; height:28px; flex:0 0 auto; }
+  .adminwin .aw-ico svg{ width:100%; height:100%; overflow:visible; }
+  .adminwin .aw-ico svg *{ fill:none; stroke:#fff; stroke-width:6; stroke-linejoin:round; }
+  .adminwin .aw-t{ font-family:var(--font-display); font-weight:600; font-size:25px; letter-spacing:0.3px; color:#fff; line-height:1.05; }
+  .adminwin .aw-t small{ display:block; font-size:15px; letter-spacing:3px; text-transform:uppercase; opacity:0.85; font-weight:600; margin-top:2px; }
+  .adminwin .aw-body{ flex:1; display:flex; gap:28px; padding:24px 28px; }
+  .adminwin .aw-caps{ flex:0 0 auto; display:flex; flex-direction:column; gap:18px; justify-content:center; }
+  .adminwin .aw-cap{ display:flex; align-items:center; gap:14px; font-family:var(--font-display); font-weight:600; font-size:24px; color:var(--ink-100); letter-spacing:0.3px; }
+  .adminwin .aw-cap::before{ content:""; width:10px; height:10px; border-radius:50%; background:var(--blue); flex:0 0 auto; }
+  .adminwin .aw-preview{ flex:1; border:2px solid var(--blue); border-radius:3px; background:repeating-linear-gradient(135deg,var(--paper-200),var(--paper-200) 10px,rgba(14,124,132,0.05) 10px,rgba(14,124,132,0.05) 20px); }
+  .restapi-label{
+    position:absolute; transform:translate(-50%,-50%); background:var(--paper-100); padding:0 18px;
+    font-family:var(--font-display); font-weight:600; font-size:22px; letter-spacing:5px; text-transform:uppercase; color:var(--blue-deep);
+  }
+  .node-label small{ display:block; font-size:13px; color:var(--ink-400); letter-spacing:2px; font-weight:600; margin-top:5px; text-transform:uppercase; }
+  /* command-center cluster boundary */
+  .cluster{ position:absolute; border:2px solid var(--blue); border-radius:16px; background:rgba(14,124,132,0.025); }
+  .cluster-tag{
+    position:absolute; top:-13px; left:30px; background:var(--paper-100); padding:0 14px;
+    font-family:var(--font-display); font-weight:600; font-size:16px; letter-spacing:3px; text-transform:uppercase; color:var(--blue-deep);
+  }
+
+  /* ---- INPUT MACHINE slide ---- */
+  .inmac .canvas{ position:relative; flex:1; }
+  .inmac .wire .arrowdot{ fill:var(--blue); }
+  /* document box */
+  .doc{
+    position:absolute; border:2.5px solid var(--blue); border-radius:3px; background:var(--paper-100);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .doc .doc-t{
+    flex:1; display:flex; align-items:center; justify-content:center; text-align:center; padding:8px 10px;
+    font-family:var(--font-display); font-weight:600; font-size:19px; letter-spacing:0.3px; color:var(--blue-deep); line-height:1.12;
+  }
+  .doc .doc-meta{
+    border-top:2px solid var(--blue); padding:6px; text-align:center;
+    font-family:var(--font-text); font-size:14px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-400); font-weight:600;
+  }
+  .metabox{
+    position:absolute; border:2px solid var(--blue); border-radius:3px; background:var(--paper-200);
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:var(--font-text); font-size:15px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-300); font-weight:600;
+  }
+  /* console-os input panel (arch) */
+  .inpanel{ position:absolute; }
+  .inpanel svg.shell{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .inpanel .ip-title{
+    position:absolute; left:0; right:0; top:24px; text-align:center;
+    font-family:var(--font-display); font-weight:600; font-size:21px; color:var(--blue-deep); letter-spacing:0.3px;
+  }
+  .inpanel .ip-tag{
+    position:absolute; left:0; right:0; top:50px; text-align:center;
+    font-family:var(--font-text); font-size:14px; letter-spacing:3px; text-transform:uppercase; color:var(--ink-400); font-weight:600;
+  }
+  .inpanel .ip-fields{ position:absolute; left:14%; right:14%; top:78px; display:flex; gap:10px; }
+  .inpanel .ip-fields i{ flex:1; height:26px; border:2px solid var(--blue); border-radius:2px; display:block; }
+  .inpanel .ip-text{ position:absolute; left:14%; right:14%; top:118px; height:30px; border:2px solid var(--blue); border-radius:2px;
+    display:flex; align-items:center; padding:0 10px; font-family:var(--font-text); font-size:13px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-400); }
+  .inpanel .ip-plus{
+    position:absolute; right:-16px; bottom:8px; width:42px; height:42px; border-radius:50%; border:2.5px solid var(--blue);
+    background:var(--paper-100); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:600; font-size:26px; color:var(--blue-deep); line-height:1;
+  }
+  /* totebox archive card */
+  .arch{
+    position:absolute; border:2.5px solid var(--blue); border-radius:3px; background:rgba(14,124,132,0.035);
+    display:flex; flex-direction:column; padding:14px 22px 16px;
+  }
+  .arch-head{ display:flex; align-items:center; gap:13px; margin-bottom:14px; }
+  .arch-head .sq{ width:26px; height:26px; flex:0 0 auto; border:2.5px solid var(--blue); background:var(--paper-100); }
+  .arch-head .at{ font-family:var(--font-display); font-weight:600; font-size:23px; letter-spacing:0.3px; color:var(--ink-100); }
+  .arch-head .at small{ display:block; font-size:15px; letter-spacing:3px; text-transform:uppercase; color:var(--orange); font-weight:600; }
+  .arch-body{ flex:1; display:grid; grid-template-columns:1fr 1fr; gap:16px 28px; align-items:center; }
+  .db{ display:flex; align-items:center; gap:14px; }
+  .db .cyl{ width:46px; height:56px; flex:0 0 auto; }
+  .db .cyl svg{ width:100%; height:100%; overflow:visible; }
+  .db .cyl svg *{ fill:rgba(14,124,132,0.06); stroke:var(--blue); stroke-width:5; }
+  .db .dbn{ font-family:var(--font-display); font-weight:600; font-size:19px; color:var(--blue-deep); line-height:1.1; }
+  .db .dbs{ font-family:var(--font-text); font-size:13.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-400); margin-top:3px; }
+  .db .pb{
+    flex:0 0 auto; width:30px; height:30px; border-radius:50%; border:2px solid var(--blue); margin-left:auto;
+    display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--blue-deep);
+  }
+  /* notes strip */
+  .inmac .notes-strip{
+    flex:0 0 auto; display:flex; align-items:center; gap:30px; margin-top:14px; padding-top:14px; border-top:1px solid var(--rule);
+    font-family:var(--font-text); font-size:19px; color:var(--ink-300);
+  }
+  .inmac .notes-strip b{ color:var(--orange); font-family:var(--font-display); font-weight:600; font-size:15px; letter-spacing:2px; text-transform:uppercase; margin-right:4px; }
+  .inmac .notes-strip span{ display:flex; align-items:baseline; gap:8px; }
+  .inmac .notes-strip span::before{ content:""; width:7px; height:7px; border-radius:50%; background:var(--blue); flex:0 0 auto; transform:translateY(-3px); }
+
+  /* ---- PRODUCTS & SERVICES (Orchestration) slide ---- */
+  .products{ padding:42px 88px 36px; }
+  .products .head{ margin-bottom:14px; }
+  .products .stage{ position:relative; width:100%; height:240px; flex:0 0 auto; margin:0 0 12px; }
+  .products .stage svg.wire{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; }
+  .products .stage svg.wire path{ stroke:var(--blue); stroke-width:2.5; fill:none; }
+  .pnode{ position:absolute; }
+  .pnode .glyph{ position:absolute; inset:0; }
+  .pnode .glyph svg{ width:100%; height:100%; overflow:visible; }
+  .pnode .glyph svg > *{ fill:rgba(14,124,132,0.05); stroke:var(--blue); stroke-width:2.5; stroke-linejoin:round; }
+  .pnode .pname{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:600; font-size:26px; letter-spacing:0.4px;
+    color:var(--blue-deep); text-align:center; line-height:1.1;
+  }
+  .pnode .pvm{ position:absolute; font-family:var(--font-text); font-style:italic; font-size:18px; color:var(--ink-400); }
+  .pnode .pbadge{
+    position:absolute; width:40px; height:40px; border-radius:50%; border:2.5px solid var(--blue);
+    background:var(--paper-100); display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:600; font-size:20px; color:var(--blue-deep); z-index:2;
+  }
+
+  .products .cols{ flex:1; display:grid; grid-template-columns:repeat(3,1fr); gap:0 56px; }
+  .products .col{ position:relative; padding-left:14px; }
+  .products .col + .col{ border-left:1px solid var(--rule); padding-left:44px; }
+  .products .col-head{
+    display:flex; align-items:center; gap:14px; padding-bottom:10px; margin-bottom:12px;
+    border-bottom:3px solid var(--blue);
+  }
+  .products .col-head .ch-badge{
+    flex:0 0 auto; width:38px; height:38px; border-radius:50%; border:2.5px solid var(--blue);
+    background:var(--paper-100); display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:600; font-size:19px; color:var(--blue-deep);
+  }
+  .products .col-head .ch-name{
+    font-family:var(--font-display); font-weight:600; font-size:27px; letter-spacing:0.4px;
+    text-transform:uppercase; color:var(--ink-100); white-space:nowrap;
+  }
+  .products .col-kicker{
+    font-family:var(--font-text); font-size:18px; letter-spacing:2px; text-transform:uppercase;
+    color:var(--ink-400); font-weight:600; margin-bottom:8px;
+  }
+  .products .svc{ display:flex; align-items:baseline; gap:14px; padding:3.5px 0; }
+  .products .svc .n{
+    flex:0 0 auto; width:30px; height:30px; border-radius:50%; border:2px solid var(--ink-300);
+    display:flex; align-items:center; justify-content:center; transform:translateY(3px);
+    font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--ink-300);
+  }
+  .products .svc .t{
+    font-family:var(--font-text); font-size:25px; color:var(--ink-200); line-height:1.15; font-weight:500;
+  }
+
+  /* ============ TABLE OF CONTENTS ============ */
+  .toc{ padding:var(--pad-top) var(--pad-x) var(--pad-bottom); display:flex; flex-direction:column; }
+  .toc .head{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:26px; flex:0 0 auto; }
+  .toc .head .eyebrow{ font-size:var(--type-eyebrow); letter-spacing:4px; text-transform:uppercase; color:var(--orange); font-weight:600; margin-bottom:14px; }
+  .toc .head h2{ font-family:var(--font-display); font-weight:600; font-size:var(--type-title); letter-spacing:-1px; margin:0; color:var(--ink-100); }
+  .toc .head .ver{ font-family:var(--font-display); font-weight:600; font-size:26px; letter-spacing:2px; text-transform:uppercase; color:var(--blue); }
+
+  .toc-list{ flex:1; display:flex; flex-direction:column; justify-content:center; position:relative; }
+  .toc-row{ display:grid; grid-template-columns:74px 1fr; align-items:baseline; column-gap:30px; padding:13px 0; border-bottom:1px solid var(--rule); }
+  .toc-row:first-child{ border-top:1px solid var(--rule); }
+  .toc-num{ font-family:var(--font-display); font-weight:600; font-size:34px; color:var(--blue); letter-spacing:0.5px; }
+  .toc-title{ font-family:var(--font-display); font-weight:600; font-size:30px; letter-spacing:0.8px; text-transform:uppercase; color:var(--ink-100); line-height:1.12; }
+  .toc-title .star{ color:var(--orange); margin-left:8px; font-size:20px; vertical-align:0.22em; }
+
+  /* Totebox Orchestration bracket spanning grouped rows (3–7) */
+  .toc-cluster{ position:relative; }
+  .toc-cluster::before{ content:""; position:absolute; left:-34px; top:9px; bottom:9px; width:5px; border-radius:3px; background:var(--orange); }
+  .toc-cluster .glabel{ position:absolute; left:-46px; top:50%; transform:translateY(-50%) rotate(180deg); writing-mode:vertical-rl; font-family:var(--font-display); font-weight:600; font-size:15px; letter-spacing:2.5px; text-transform:uppercase; color:var(--orange); white-space:nowrap; }
+  .toc-cluster .toc-row:first-child{ border-top:none; }
+
+  .toc-foot{ flex:0 0 auto; margin-top:22px; display:flex; align-items:center; gap:10px; font-family:var(--font-text); font-size:20px; color:var(--ink-300); letter-spacing:0.4px; }
+  .toc-foot .star{ color:var(--orange); font-weight:700; font-size:22px; }
+  .toc-foot .swatch{ display:inline-block; width:18px; height:5px; border-radius:3px; background:var(--orange); }
+
+  /* subtle entrance — transform only; opacity stays 1 so content is never hidden */
+  @media (prefers-reduced-motion:no-preference){
+    [data-deck-active].index .cell{animation:rise .5s ease both;}
+    [data-deck-active].index .cell:nth-child(2){animation-delay:.05s}
+    [data-deck-active].index .cell:nth-child(3){animation-delay:.10s}
+    [data-deck-active].index .cell:nth-child(4){animation-delay:.05s}
+    [data-deck-active].index .cell:nth-child(5){animation-delay:.10s}
+    [data-deck-active].index .cell:nth-child(6){animation-delay:.15s}
+    [data-deck-active].index .cell:nth-child(7){animation-delay:.10s}
+    [data-deck-active].index .cell:nth-child(8){animation-delay:.15s}
+    [data-deck-active].index .cell:nth-child(9){animation-delay:.20s}
+    @keyframes rise{from{transform:translateY(14px)}to{transform:none}}
+  }
+</style>
+</head>
+<body>
+
+<deck-stage width="1920" height="1080">
+
+  <!-- ===================== COVER ===================== -->
+  <section class="cover" data-label="Cover" data-screen-label="Cover">
+    <div class="foot">Design System<br>V5</div>
+    <div class="top-row">
+      <span class="wordmark">Point<span class="sav">Sav</span></span>
+      <span class="divider-dot"></span>
+      <span class="kicker">Design System</span>
+    </div>
+
+    <div class="headline">
+      <div class="eyebrow">Onboarding · Architecture · Components</div>
+      <h1>Design Slides</h1>
+      <div class="sub">The visual language and architecture patterns of the PointSav platform.</div>
+    </div>
+  </section>
+
+  <!-- ===================== TABLE OF CONTENTS ===================== -->
+  <section class="toc" data-label="Contents" data-screen-label="Table of Contents">
+    <div class="head">
+      <div class="titles">
+        <div class="eyebrow">PointSav Design Slides</div>
+        <h2>Table of Contents</h2>
+      </div>
+      <div class="ver">Version 13</div>
+    </div>
+
+    <div class="toc-list">
+      <div class="toc-row">
+        <span class="toc-num">01</span>
+        <span class="toc-title">Contributors</span>
+      </div>
+      <div class="toc-row">
+        <span class="toc-num">02</span>
+        <span class="toc-title">Documentation</span>
+      </div>
+
+      <div class="toc-cluster">
+        <span class="glabel">Totebox Orchestration</span>
+        <div class="toc-row">
+          <span class="toc-num">03</span>
+          <span class="toc-title">Console Construction <span class="star">✦</span></span>
+        </div>
+        <div class="toc-row">
+          <span class="toc-num">04</span>
+          <span class="toc-title">Totebox Services <span class="star">✦</span></span>
+        </div>
+        <div class="toc-row">
+          <span class="toc-num">05</span>
+          <span class="toc-title">Scaling and Interfaces <span class="star">✦</span></span>
+        </div>
+        <div class="toc-row">
+          <span class="toc-num">06</span>
+          <span class="toc-title">Pairing as Permission <span class="star">✦</span></span>
+        </div>
+        <div class="toc-row">
+          <span class="toc-num">07</span>
+          <span class="toc-title">Cross-System Rendering Design <span class="star">✦</span></span>
+        </div>
+      </div>
+
+      <div class="toc-row">
+        <span class="toc-num">08</span>
+        <span class="toc-title">Small to Medium Business (SMB) Environment</span>
+      </div>
+      <div class="toc-row">
+        <span class="toc-num">09</span>
+        <span class="toc-title">Sample Use Case Deployment Scenarios</span>
+      </div>
+    </div>
+
+    <div class="toc-foot">
+      <span class="swatch"></span>
+      <span><span class="star">✦</span> Totebox Orchestration</span>
+    </div>
+  </section>
+
+  <!-- ===================== ICON INDEX ===================== -->
+  <section class="index" data-label="Icon Index">
+    <div class="head">
+      <div class="titles">
+        <div class="eyebrow">Design System — Elements</div>
+        <h2>Icon Index</h2>
+      </div>
+      <div class="meta">
+        <span class="count">9 elements</span>
+        <span class="ctx">Architecture &amp; deployment shapes</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="cell">
+        <span class="num">01</span>
+        <div class="icon-box"><svg class="icon-svg" viewBox="0 0 100 100"><circle cx="50" cy="25" r="13"></circle><path d="M50,40 L24,86 L76,86 Z"></path></svg></div>
+        <div class="labels"><span class="label">User</span></div>
+      </div>
+      <div class="cell">
+        <span class="num">02</span>
+        <div class="icon-box"><svg class="icon-svg" viewBox="0 0 100 100"><rect x="22" y="22" width="56" height="56"></rect></svg></div>
+        <div class="labels"><span class="label">Totebox OS</span></div>
+      </div>
+      <div class="cell">
+        <span class="num">03</span>
+        <div class="icon-box"><svg class="icon-svg" viewBox="0 0 100 100"><polygon points="12,50 32,18 68,18 88,50 68,82 32,82"></polygon></svg></div>
+        <div class="labels"><span class="label">Interface OS</span></div>
+      </div>
+
+      <div class="cell">
+        <span class="num">04</span>
+        <div class="icon-box"><svg class="icon-svg" viewBox="0 0 100 100"><path d="M22,88 L22,46 A28,28 0 0 1 78,46 L78,88 Z"></path></svg></div>
+        <div class="labels"><span class="label">Console OS</span></div>
+      </div>
+      <div class="cell">
+        <span class="num">05</span>
+        <div class="icon-box"><svg class="icon-svg" viewBox="0 0 100 100"><rect x="12" y="36" width="76" height="28"></rect></svg></div>
+        <div class="labels"><span class="label">Virtualization</span></div>
+      </div>
+      <div class="cell">
+        <span class="num">06</span>
+        <div class="icon-box"><svg class="icon-svg" viewBox="0 0 100 100"><polygon points="50,14 86,50 50,86 14,50"></polygon></svg></div>
+        <div class="labels">
+          <span class="label">Media Kit OS</span>
+          <span class="label alt">Private Git OS</span>
+        </div>
+      </div>
+
+      <div class="cell">
+        <span class="num">07</span>
+        <div class="icon-box"><svg class="icon-svg" viewBox="0 0 100 100"><polygon points="30,24 86,24 70,80 14,80"></polygon></svg></div>
+        <div class="labels"><span class="label">Infostructure OS</span></div>
+      </div>
+      <div class="cell">
+        <span class="num">08</span>
+        <div class="icon-box"><svg class="icon-svg" viewBox="0 0 100 100"><path d="M26,72 C11,72 10,50 27,50 C22,33 49,29 51,47 C57,30 84,34 76,52 C93,53 89,72 73,72 Z"></path></svg></div>
+        <div class="labels"><span class="label">Public Cloud</span></div>
+      </div>
+      <div class="cell">
+        <span class="num">09</span>
+        <div class="icon-box"><svg class="icon-svg" viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></div>
+        <div class="labels"><span class="label">Container</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SCALING — USER TIERS ===================== -->
+  <section class="scaling" data-label="Scaling — Tiers" data-screen-label="Scaling — User Tiers">
+    <div class="head">
+      <div class="eyebrow">Design System — Architecture</div>
+      <h2>Scaling</h2>
+      <div class="crumb">Console OS provisioning across user tiers — Individual · Group · Organization</div>
+    </div>
+
+    <div class="tiers">
+
+      <!-- INDIVIDUAL -->
+      <div class="tier">
+        <div class="tier-head">Individual</div>
+        <div class="people">
+          <span class="person"><svg viewBox="0 0 40 56"><circle class="ico-line" cx="20" cy="14" r="9"></circle><path class="ico-line" d="M20,24 L7,52 L33,52 Z"></path></svg></span>
+        </div>
+        <div class="units">
+          <div class="stack-unit">
+            <div class="console">
+              <svg viewBox="0 0 166 112"><path class="ico-line" d="M8,108 L8,50 Q8,8 83,8 Q158,8 158,50 L158,108 Z"></path></svg>
+              <span class="node-label">Console OS</span>
+              <span class="vm">vm</span>
+            </div>
+            <div class="vbar"><span class="node-label">Type II /<br>Workplace OS</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GROUP -->
+      <div class="tier">
+        <div class="tier-head">Group</div>
+        <div class="people">
+          <span class="person"><svg viewBox="0 0 40 56"><circle class="ico-line" cx="20" cy="14" r="9"></circle><path class="ico-line" d="M20,24 L7,52 L33,52 Z"></path></svg></span>
+          <span class="person"><svg viewBox="0 0 40 56"><circle class="ico-line" cx="20" cy="14" r="9"></circle><path class="ico-line" d="M20,24 L7,52 L33,52 Z"></path></svg></span>
+          <span class="person"><svg viewBox="0 0 40 56"><circle class="ico-line" cx="20" cy="14" r="9"></circle><path class="ico-line" d="M20,24 L7,52 L33,52 Z"></path></svg></span>
+        </div>
+        <div class="units">
+          <div class="stack-unit">
+            <div class="console">
+              <svg viewBox="0 0 166 112"><path class="ico-line" d="M8,108 L8,50 Q8,8 83,8 Q158,8 158,50 L158,108 Z"></path></svg>
+              <span class="node-label">Console OS</span>
+              <span class="vm">vm</span>
+            </div>
+            <div class="vbar"><span class="node-label">Type II /<br>Workplace OS</span></div>
+          </div>
+          <div class="stack-unit">
+            <div class="console">
+              <svg viewBox="0 0 166 112"><path class="ico-line" d="M8,108 L8,50 Q8,8 83,8 Q158,8 158,50 L158,108 Z"></path></svg>
+              <span class="node-label">Console OS</span>
+              <span class="vm">vm</span>
+            </div>
+            <div class="vbar"><span class="node-label">Type II</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORGANIZATION -->
+      <div class="tier">
+        <div class="tier-head">Organization</div>
+        <div class="people">
+          <span class="person"><svg viewBox="0 0 40 56"><circle class="ico-line" cx="20" cy="14" r="9"></circle><path class="ico-line" d="M20,24 L7,52 L33,52 Z"></path></svg></span>
+          <span class="person"><svg viewBox="0 0 40 56"><circle class="ico-line" cx="20" cy="14" r="9"></circle><path class="ico-line" d="M20,24 L7,52 L33,52 Z"></path></svg></span>
+          <span class="person"><svg viewBox="0 0 40 56"><circle class="ico-line" cx="20" cy="14" r="9"></circle><path class="ico-line" d="M20,24 L7,52 L33,52 Z"></path></svg></span>
+          <span class="person"><svg viewBox="0 0 40 56"><circle class="ico-line" cx="20" cy="14" r="9"></circle><path class="ico-line" d="M20,24 L7,52 L33,52 Z"></path></svg></span>
+          <span class="person"><svg viewBox="0 0 40 56"><circle class="ico-line" cx="20" cy="14" r="9"></circle><path class="ico-line" d="M20,24 L7,52 L33,52 Z"></path></svg></span>
+          <span class="person"><svg viewBox="0 0 40 56"><circle class="ico-line" cx="20" cy="14" r="9"></circle><path class="ico-line" d="M20,24 L7,52 L33,52 Z"></path></svg></span>
+          <span class="person"><svg viewBox="0 0 40 56"><circle class="ico-line" cx="20" cy="14" r="9"></circle><path class="ico-line" d="M20,24 L7,52 L33,52 Z"></path></svg></span>
+        </div>
+        <div class="units">
+          <div class="stack-unit">
+            <div class="console">
+              <svg viewBox="0 0 166 112"><path class="ico-line" d="M8,108 L8,50 Q8,8 83,8 Q158,8 158,50 L158,108 Z"></path></svg>
+              <span class="node-label">Console OS</span>
+              <span class="vm">vm</span>
+            </div>
+            <div class="vbar"><span class="node-label">Workplace OS</span></div>
+          </div>
+          <div class="stack-unit">
+            <div class="console">
+              <svg viewBox="0 0 166 112"><path class="ico-line" d="M8,108 L8,50 Q8,8 83,8 Q158,8 158,50 L158,108 Z"></path></svg>
+              <span class="node-label">Console OS</span>
+              <span class="vm">vm</span>
+            </div>
+            <div class="vbar"><span class="node-label">Type II</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== SCALING — COMPOSITION ===================== -->
+  <section class="scaling" data-label="Scaling — Composition" data-screen-label="Scaling — Composition">
+    <div class="head">
+      <div class="eyebrow">Design System — Architecture</div>
+      <h2>Composition</h2>
+      <div class="crumb">Building up the stack — Add Totebox → Add Interfaces → Add Infostructure</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 806" preserveAspectRatio="none">
+        <!-- diagonal zone dividers -->
+        <line class="divider" x1="500" y1="806" x2="580" y2="44"></line>
+        <line class="divider" x1="1150" y1="806" x2="1230" y2="44"></line>
+
+        <!-- ZONE 1: totebox -> bar, diamonds -> bars -->
+        <line x1="250" y1="198" x2="250" y2="208"></line>
+        <line x1="120" y1="436" x2="120" y2="450"></line>
+        <line x1="365" y1="436" x2="365" y2="450"></line>
+
+        <!-- ZONE 2: interface --p4--> toteboxes -->
+        <polyline points="808,206 815,186 975,144"></polyline>
+        <polyline points="808,250 815,286 975,356"></polyline>
+        <line x1="712" y1="322" x2="712" y2="332"></line>
+        <line x1="1047" y1="198" x2="1047" y2="208"></line>
+        <line x1="1047" y1="418" x2="1047" y2="428"></line>
+        <circle class="dot" cx="975" cy="144" r="4"></circle>
+        <circle class="dot" cx="975" cy="356" r="4"></circle>
+
+        <!-- ZONE 3: interface --p4--> toteboxes -->
+        <polyline points="1422,190 1430,162 1558,122"></polyline>
+        <polyline points="1422,236 1430,246 1582,252"></polyline>
+        <circle class="dot" cx="1558" cy="122" r="4"></circle>
+        <circle class="dot" cx="1582" cy="252" r="4"></circle>
+
+        <!-- ZONE 3: everything feeds the PointSav bar (top edge y=470) -->
+        <line x1="1332" y1="290" x2="1332" y2="470"></line>
+        <line x1="1312" y1="424" x2="1312" y2="470"></line>
+        <line x1="1467" y1="424" x2="1467" y2="470"></line>
+        <line x1="1650" y1="310" x2="1650" y2="470"></line>
+        <circle class="dot" cx="1332" cy="470" r="4"></circle>
+        <circle class="dot" cx="1312" cy="470" r="4"></circle>
+        <circle class="dot" cx="1467" cy="470" r="4"></circle>
+        <circle class="dot" cx="1650" cy="470" r="4"></circle>
+
+        <!-- bar (bottom edge y=524) feeds infostructure backends -->
+        <line x1="1318" y1="524" x2="1318" y2="582"></line>
+        <line x1="1488" y1="524" x2="1488" y2="582"></line>
+        <line x1="1658" y1="524" x2="1658" y2="578"></line>
+        <!-- backends to deployment pills -->
+        <line x1="1318" y1="664" x2="1318" y2="686"></line>
+        <line x1="1488" y1="664" x2="1488" y2="686"></line>
+        <line x1="1658" y1="672" x2="1658" y2="686"></line>
+      </svg>
+
+      <!-- ===== ZONE 1 — ADD TOTEBOX ===== -->
+      <div class="zone-label" style="left:0; top:6px;"><small>Add</small>Totebox</div>
+
+      <div class="node totebox" style="left:172px; top:80px; width:156px; height:118px;">
+        <span class="node-label">Totebox OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:300px; top:66px;">P</div>
+      <div class="node vbar" style="left:160px; top:208px; width:180px;"><span class="node-label">Virtualization</span></div>
+
+      <div class="node diamond" style="left:48px; top:316px; width:144px; height:124px;">
+        <span class="shape"></span><span class="node-label">Media Kit OS</span>
+      </div>
+      <div class="node vbar" style="left:48px; top:450px; width:144px;"><span class="node-label">Virtualization</span></div>
+      <div class="node diamond" style="left:296px; top:316px; width:144px; height:124px;">
+        <span class="shape"></span><span class="node-label">Private Git OS</span>
+      </div>
+      <div class="node vbar" style="left:296px; top:450px; width:144px;"><span class="node-label">Virtualization</span></div>
+
+      <!-- ===== ZONE 2 — ADD INTERFACES ===== -->
+      <div class="zone-label" style="left:626px; top:6px;"><small>Add</small>Interfaces</div>
+
+      <div class="node hexagon" style="left:606px; top:148px; width:212px; height:178px;">
+        <svg viewBox="0 0 212 178"><polygon class="ico-line" points="10,89 56,16 156,16 202,89 156,162 56,162"></polygon></svg>
+        <span class="node-label">Interface OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:618px; top:332px; width:188px;"><span class="node-label">Virtualization</span></div>
+      <div class="node badge" style="left:794px; top:165px;">P4</div>
+      <div class="node badge" style="left:794px; top:265px;">P4</div>
+
+      <div class="node totebox" style="left:975px; top:90px; width:144px; height:108px;">
+        <span class="node-label">Totebox OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:970px; top:208px; width:156px;"><span class="node-label">Virtualization</span></div>
+      <div class="node totebox" style="left:975px; top:310px; width:144px; height:108px;">
+        <span class="node-label">Totebox OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:970px; top:428px; width:156px;"><span class="node-label">Virtualization</span></div>
+
+      <!-- ===== ZONE 3 — ADD INFOSTRUCTURE ===== -->
+      <div class="zone-label" style="left:1232px; top:6px;"><small>Add</small>Infostructure</div>
+
+      <div class="node hexagon" style="left:1238px; top:130px; width:196px; height:164px;">
+        <svg viewBox="0 0 196 164"><polygon class="ico-line" points="9,82 52,15 144,15 187,82 144,149 52,149"></polygon></svg>
+        <span class="node-label">Interface OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:1402px; top:140px;">P4</div>
+      <div class="node badge" style="left:1402px; top:224px;">P4</div>
+
+      <div class="node totebox" style="left:1556px; top:72px; width:132px; height:100px;">
+        <span class="node-label">Totebox OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node totebox" style="left:1580px; top:202px; width:132px; height:100px;">
+        <span class="node-label">Totebox OS</span>
+        <span class="vm">vm</span>
+      </div>
+
+      <div class="node diamond" style="left:1252px; top:312px; width:120px; height:112px;">
+        <span class="shape"></span><span class="node-label">Media Kit OS</span>
+      </div>
+      <div class="node diamond" style="left:1408px; top:312px; width:120px; height:112px;">
+        <span class="shape"></span><span class="node-label">Private Git OS</span>
+      </div>
+
+      <!-- PointSav virtualization bar + network admin -->
+      <div class="node ps-bar" style="left:1238px; top:470px; width:362px; height:54px;">PointSav&nbsp;—&nbsp;Virtualization</div>
+      <div class="node backend" style="left:1604px; top:454px; width:118px; height:86px; flex-direction:column; line-height:1.15;">Network<br>Admin OS</div>
+
+      <!-- Infostructure backends -->
+      <div class="node para" style="left:1252px; top:582px; width:150px; height:82px;">
+        <span class="shape"></span><span class="node-label">Infostructure OS</span>
+      </div>
+      <div class="node backend" style="left:1262px; top:686px; width:130px;">On Prem</div>
+
+      <div class="node para" style="left:1422px; top:582px; width:150px; height:82px;">
+        <span class="shape"></span><span class="node-label">Infostructure OS</span>
+      </div>
+      <div class="node backend" style="left:1428px; top:686px; width:138px;">Leased Server</div>
+
+      <div class="node cloud" style="left:1582px; top:566px; width:160px; height:106px;">
+        <svg viewBox="0 0 100 100"><path class="ico-line" d="M26,72 C11,72 10,50 27,50 C22,33 49,29 51,47 C57,30 84,34 76,52 C93,53 89,72 73,72 Z"></path></svg>
+        <span class="node-label">Infostructure OS</span>
+      </div>
+      <div class="node backend" style="left:1598px; top:686px; width:126px;">Public Cloud</div>
+
+    </div>
+  </section>
+
+  <!-- ===================== PRIVATE NETWORK — TOTEBOX ORCHESTRATION ===================== -->
+  <section class="scaling privnet" data-label="Private Network" data-screen-label="Private Network — Totebox Orchestration">
+    <div class="head">
+      <div class="eyebrow">Design System — Architecture</div>
+      <h2>Private Network</h2>
+      <div class="crumb">Totebox orchestration across a distributed private network — Console &amp; Interface OS pair to Totebox VMs, all virtualized on PointSav Infostructure.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 806" preserveAspectRatio="none">
+        <!-- LEFT deployment stack -->
+        <line x1="130" y1="132" x2="130" y2="148"></line>
+        <line x1="130" y1="194" x2="130" y2="206"></line>
+        <line x1="130" y1="254" x2="130" y2="276"></line>
+        <line x1="130" y1="436" x2="130" y2="448"></line>
+        <!-- Interface OS --P4--> private network -->
+        <polyline points="236,330 270,318 430,236"></polyline>
+        <polyline points="236,372 270,392 700,360"></polyline>
+        <circle class="dot" cx="430" cy="236" r="4"></circle>
+        <circle class="dot" cx="700" cy="360" r="4"></circle>
+
+        <!-- RIGHT deployment stack -->
+        <line x1="1605" y1="132" x2="1605" y2="148"></line>
+        <line x1="1605" y1="190" x2="1605" y2="212"></line>
+        <line x1="1605" y1="320" x2="1605" y2="344"></line>
+        <!-- Type II / Totebox pair --> into network -->
+        <polyline points="1530,266 1340,266 1140,236"></polyline>
+        <circle class="dot" cx="1140" cy="236" r="4"></circle>
+
+        <!-- network + stacks feed the foundation bar (top edge y=498) -->
+        <line x1="510" y1="428" x2="510" y2="498"></line>
+        <line x1="780" y1="404" x2="780" y2="498"></line>
+        <line x1="1060" y1="404" x2="1060" y2="498"></line>
+        <line x1="130" y1="490" x2="130" y2="498"></line>
+        <line x1="1620" y1="418" x2="1620" y2="498"></line>
+        <circle class="dot" cx="510" cy="498" r="4"></circle>
+        <circle class="dot" cx="780" cy="498" r="4"></circle>
+        <circle class="dot" cx="1060" cy="498" r="4"></circle>
+
+        <!-- foundation bar (bottom edge y=556) feeds infostructure backends -->
+        <line x1="560" y1="556" x2="560" y2="592"></line>
+        <line x1="880" y1="556" x2="880" y2="592"></line>
+        <line x1="1195" y1="556" x2="1195" y2="578"></line>
+        <line x1="560" y1="666" x2="560" y2="680"></line>
+        <line x1="880" y1="666" x2="880" y2="680"></line>
+        <line x1="1195" y1="672" x2="1195" y2="680"></line>
+      </svg>
+
+      <!-- ===== LEFT DEPLOYMENT ===== -->
+      <div class="zone-label" style="left:0; top:4px;"><small>Deploy</small>Native</div>
+
+      <div class="node console" style="left:30px; top:24px; width:200px; height:108px;">
+        <svg viewBox="0 0 200 108"><path class="ico-line" d="M10,104 L10,52 Q10,8 100,8 Q190,8 190,52 L190,104 Z"></path></svg>
+        <span class="node-label" style="top:40px;">Console OS</span>
+      </div>
+      <div class="node badge" style="left:198px; top:14px;">1</div>
+      <div class="node vbar" style="left:50px; top:148px; width:160px;"><span class="node-label">Native</span></div>
+      <div class="node backend" style="left:50px; top:206px; width:160px; height:48px;">Workplace OS</div>
+
+      <div class="node hexagon" style="left:24px; top:276px; width:212px; height:160px;">
+        <svg viewBox="0 0 212 160"><polygon class="ico-line" points="10,80 56,14 156,14 202,80 156,146 56,146"></polygon></svg>
+        <span class="node-label">Interface OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:204px; top:286px;">2</div>
+      <div class="node vbar" style="left:36px; top:448px; width:188px;"><span class="node-label">AWS · Virtualization</span></div>
+
+      <!-- ===== CENTRE — DISTRIBUTED PRIVATE NETWORK ===== -->
+      <div class="pnet-boundary" style="left:300px; top:24px; width:1040px; height:404px;"></div>
+      <div class="pnet-cap" style="left:300px; width:1040px;"><span>Distributed Private Network<small>Not a cloud</small></span></div>
+
+      <div class="node totebox" style="left:430px; top:150px; width:160px; height:118px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node totebox" style="left:700px; top:96px; width:160px; height:118px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node totebox" style="left:700px; top:286px; width:160px; height:118px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node totebox" style="left:980px; top:170px; width:160px; height:118px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:250px; top:300px;">P4</div>
+
+      <!-- ===== RIGHT DEPLOYMENT ===== -->
+      <div class="zone-label" style="left:1500px; top:4px; text-align:right;"><small>Pair</small>Type&nbsp;II</div>
+
+      <div class="node console" style="left:1500px; top:24px; width:210px; height:108px;">
+        <svg viewBox="0 0 210 108"><path class="ico-line" d="M10,104 L10,52 Q10,8 105,8 Q200,8 200,52 L200,104 Z"></path></svg>
+        <span class="node-label" style="top:40px;">Console OS</span>
+      </div>
+      <div class="node badge" style="left:1678px; top:14px;">1</div>
+      <div class="node vbar" style="left:1520px; top:148px; width:170px;"><span class="node-label">Type II</span></div>
+      <div class="node totebox" style="left:1530px; top:212px; width:150px; height:108px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:1672px; top:222px;">3</div>
+      <span class="annot" style="left:1352px; top:248px;">pair to Totebox</span>
+      <div class="node backend col" style="left:1535px; top:344px; width:150px; height:74px;">Network<br>Admin OS</div>
+      <div class="node badge" style="left:1678px; top:336px;">S</div>
+
+      <!-- ===== FOUNDATION ===== -->
+      <div class="node ps-bar" style="left:30px; top:498px; width:1680px; height:58px;">PointSav&nbsp;·&nbsp;Infostructure OS&nbsp;—&nbsp;Virtualization</div>
+      <div class="node badge" style="left:18px; top:500px;">4</div>
+
+      <!-- ===== INFOSTRUCTURE BACKENDS ===== -->
+      <div class="node para" style="left:470px; top:592px; width:180px; height:74px;">
+        <span class="shape"></span><span class="node-label">Infostructure OS</span>
+      </div>
+      <div class="node backend" style="left:480px; top:680px; width:160px;">On-Prem</div>
+
+      <div class="node para" style="left:790px; top:592px; width:180px; height:74px;">
+        <span class="shape"></span><span class="node-label">Infostructure OS</span>
+      </div>
+      <div class="node backend" style="left:796px; top:680px; width:168px;">Leased Server</div>
+
+      <div class="node cloud" style="left:1110px; top:578px; width:170px; height:104px;">
+        <svg viewBox="0 0 100 100"><path class="ico-line" d="M26,72 C11,72 10,50 27,50 C22,33 49,29 51,47 C57,30 84,34 76,52 C93,53 89,72 73,72 Z"></path></svg>
+        <span class="node-label">Infostructure OS</span>
+      </div>
+      <div class="node backend" style="left:1118px; top:680px; width:154px;">Google Cloud</div>
+      <div class="node badge" style="left:1262px; top:566px;">B</div>
+
+    </div>
+  </section>
+
+  <!-- ===================== INPUT MACHINE ===================== -->
+  <section class="scaling inmac" data-label="Input Machine" data-screen-label="Input Machine">
+    <div class="head">
+      <div class="eyebrow">Design System — Workflow</div>
+      <h2>Input Machine</h2>
+      <div class="crumb">Source PDFs are ingested through the Console OS panel, aggregated by Interface OS, and filed into Totebox archive databases as file-system folders.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 720" preserveAspectRatio="none">
+        <defs>
+          <marker id="im-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0E7C84" stroke="none"></path>
+          </marker>
+        </defs>
+        <!-- source docs drop into panel -->
+        <line x1="91" y1="140" x2="91" y2="216" marker-end="url(#im-arrow)"></line>
+        <line x1="279" y1="140" x2="279" y2="216" marker-end="url(#im-arrow)"></line>
+        <!-- panel down to interface -->
+        <line x1="200" y1="368" x2="200" y2="418"></line>
+        <!-- interface / console-os out to documents -->
+        <path d="M320,484 C420,484 410,170 470,113"></path>
+        <path d="M320,510 C420,510 430,280 470,233"></path>
+        <path d="M320,536 C420,536 440,380 470,339"></path>
+        <circle class="dot" cx="470" cy="113" r="4"></circle>
+        <circle class="dot" cx="470" cy="233" r="4"></circle>
+        <circle class="dot" cx="470" cy="339" r="4"></circle>
+
+        <!-- documents to archives -->
+        <path d="M670,113 C840,113 840,146 980,146"></path>
+        <path d="M670,233 C840,233 840,360 980,360"></path>
+        <path d="M670,339 C880,339 860,574 980,574"></path>
+        <path d="M670,424 C800,424 860,178 980,178"></path>
+        <path d="M670,486 C820,486 860,392 980,392"></path>
+        <circle class="dot" cx="980" cy="146" r="4"></circle>
+        <circle class="dot" cx="980" cy="360" r="4"></circle>
+        <circle class="dot" cx="980" cy="574" r="4"></circle>
+      </svg>
+
+      <!-- ===== ZONE 1 — INPUT MACHINE ===== -->
+      <div class="zone-label" style="left:0; top:-4px;"><small>Ingest</small>Sources</div>
+
+      <div class="doc" style="left:16px; top:48px; width:150px; height:92px;"><span class="doc-t">Invoice PDF</span></div>
+      <div class="doc" style="left:196px; top:48px; width:166px; height:92px;"><span class="doc-t">Agreement PDF</span></div>
+
+      <div class="inpanel" style="left:30px; top:216px; width:340px; height:152px;">
+        <svg class="shell" viewBox="0 0 340 152"><path class="ico-line" d="M8,148 L8,70 Q8,8 170,8 Q332,8 332,70 L332,148 Z"></path></svg>
+        <div class="ip-title">Input Machine Panel</div>
+        <div class="ip-tag">Console OS</div>
+        <div class="ip-fields"><i></i><i></i></div>
+        <div class="ip-text">Text box</div>
+        <div class="ip-plus">+</div>
+      </div>
+      <div class="node badge" style="left:348px; top:220px;">6</div>
+
+      <div class="node hexagon" style="left:80px; top:418px; width:240px; height:176px;">
+        <svg viewBox="0 0 240 176"><polygon class="ico-line" points="11,88 63,16 177,16 229,88 177,160 63,160"></polygon></svg>
+        <span class="node-label">Interface OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:300px; top:428px;">2</div>
+      <span class="annot" style="left:336px; top:474px;">console o/s</span>
+
+      <!-- ===== ZONE 2 — DOCUMENTS ===== -->
+      <div class="zone-label" style="left:470px; top:-4px;"><small>Extract</small>Documents</div>
+
+      <div class="doc" style="left:470px; top:54px; width:200px; height:118px;">
+        <span class="doc-t">Agreement PDF</span><span class="doc-meta">Metadata</span>
+      </div>
+      <div class="doc" style="left:470px; top:188px; width:200px; height:90px;"><span class="doc-t">Invoice PDF #1</span></div>
+      <div class="doc" style="left:470px; top:294px; width:200px; height:90px;"><span class="doc-t">Invoice PDF #2</span></div>
+      <div class="metabox" style="left:470px; top:400px; width:200px; height:48px;">Metadata</div>
+      <div class="metabox" style="left:470px; top:462px; width:200px; height:48px;">Metadata · 70 / 30</div>
+
+      <!-- ===== ZONE 3 — TOTEBOX ARCHIVES ===== -->
+      <div class="arch" style="left:980px; top:48px; width:740px; height:196px;">
+        <div class="arch-head"><span class="sq"></span><span class="at"><small>Totebox Archive</small>Corporate</span></div>
+        <div class="arch-body">
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Minute Book D/B</span><span class="dbs">‹ file-system folder</span></span>
+            <span class="pb">1</span>
+          </div>
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Bookkeeping D/B</span><span class="dbs">‹ file-system folder</span></span>
+            <span class="pb">2</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch" style="left:980px; top:262px; width:740px; height:196px;">
+        <div class="arch-head"><span class="sq"></span><span class="at"><small>Totebox Archive</small>Real Property · Building A</span></div>
+        <div class="arch-body">
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Minute Book D/B</span><span class="dbs">‹ file-system folder</span></span>
+            <span class="pb">1</span>
+          </div>
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Bookkeeping D/B</span><span class="dbs">‹ file-system folder</span></span>
+            <span class="pb">2</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch" style="left:980px; top:476px; width:740px; height:196px;">
+        <div class="arch-head"><span class="sq"></span><span class="at"><small>Totebox Archive</small>Real Property · Building B</span></div>
+        <div class="arch-body">
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Minute Book D/B</span><span class="dbs">‹ file-system folder</span></span>
+            <span class="pb">1</span>
+          </div>
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Bookkeeping D/B</span><span class="dbs">‹ file-system folder</span></span>
+            <span class="pb">2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Notes</b>
+      <span>Example: a corporation that owns two buildings</span>
+      <span>All consoles pair directly to individual Toteboxes</span>
+      <span>Interfaces are for aggregation</span>
+      <span>Metadata split — two payments ± %</span>
+    </div>
+  </section>
+
+  <!-- ===================== CONSOLE OS — SYSTEM ADMINISTRATION ===================== -->
+  <section class="scaling sysadmin" data-label="System Administration" data-screen-label="Console OS — System Administration">
+    <div class="head">
+      <div class="eyebrow">Design System — Console OS</div>
+      <h2>System Administration</h2>
+      <div class="crumb">The Console OS admin panel pairs with the Interface OS and every Totebox OS to handle pairing, updates, configuration and networking — all over a shared REST API.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 760" preserveAspectRatio="none">
+        <defs>
+          <marker id="sa-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0E7C84" stroke="none"></path>
+          </marker>
+        </defs>
+
+        <!-- P2 — console panel down-left to Interface OS -->
+        <line x1="1060" y1="300" x2="220" y2="476" marker-end="url(#sa-arrow)"></line>
+        <!-- top bus across the Totebox fleet + up to console (P2 right) -->
+        <line x1="1490" y1="368" x2="1490" y2="452"></line>
+        <polyline points="545,486 545,452 1490,452"></polyline>
+        <line x1="915" y1="452" x2="915" y2="486"></line>
+        <line x1="1315" y1="452" x2="1315" y2="486"></line>
+        <line x1="1490" y1="452" x2="1490" y2="486" marker-end="url(#sa-arrow)"></line>
+        <circle class="dot" cx="545" cy="452" r="4"></circle>
+        <circle class="dot" cx="915" cy="452" r="4"></circle>
+        <circle class="dot" cx="1315" cy="452" r="4"></circle>
+        <circle class="dot" cx="1490" cy="452" r="4"></circle>
+        <!-- P4 — Interface OS to Totebox fleet -->
+        <line x1="280" y1="556" x2="430" y2="556" marker-end="url(#sa-arrow)"></line>
+
+        <!-- REST API rail (bottom, double headed) -->
+        <line x1="40" y1="716" x2="1430" y2="716" marker-start="url(#sa-arrow)" marker-end="url(#sa-arrow)"></line>
+        <line x1="155" y1="694" x2="155" y2="716"></line>
+        <line x1="545" y1="694" x2="545" y2="716"></line>
+        <line x1="915" y1="694" x2="915" y2="716"></line>
+        <line x1="1315" y1="694" x2="1315" y2="716"></line>
+      </svg>
+
+      <!-- ===== CONSOLE OS — ADMIN PANEL ===== -->
+      <div class="adminwin" style="left:1060px; top:8px; width:660px; height:298px;">
+        <div class="aw-head">
+          <span class="aw-ico"><svg viewBox="0 0 100 70"><path d="M6,66 L6,40 A44,34 0 0 1 94,40 L94,66"></path></svg></span>
+          <span class="aw-t">Console OS<small>Systems Administration Panel</small></span>
+        </div>
+        <div class="aw-body">
+          <div class="aw-caps">
+            <span class="aw-cap">Pairing</span>
+            <span class="aw-cap">Updates</span>
+            <span class="aw-cap">Configure</span>
+            <span class="aw-cap">Network</span>
+          </div>
+          <div class="aw-preview"></div>
+        </div>
+      </div>
+      <div class="node vbar" style="left:1060px; top:316px; width:660px; height:52px;"><span class="node-label">Type II / Workplace OS</span></div>
+      <div class="node badge" style="left:600px; top:362px;">P2</div>
+      <div class="node badge" style="left:1469px; top:404px;">P2</div>
+
+      <!-- ===== INTERFACE OS ===== -->
+      <div class="node hexagon" style="left:40px; top:476px; width:240px; height:160px;">
+        <svg viewBox="0 0 240 160"><polygon class="ico-line" points="11,80 63,16 177,16 229,80 177,144 63,144"></polygon></svg>
+        <span class="node-label">Interface OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:50px; top:648px; width:220px; height:46px;"><span class="node-label">Virtualization</span></div>
+      <div class="node badge" style="left:334px; top:528px;">P4</div>
+
+      <!-- ===== TOTEBOX FLEET ===== -->
+      <div class="node totebox" style="left:430px; top:486px; width:230px; height:150px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:435px; top:648px; width:220px; height:46px;"><span class="node-label">Virtualization</span></div>
+
+      <div class="node totebox" style="left:800px; top:486px; width:230px; height:150px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:805px; top:648px; width:220px; height:46px;"><span class="node-label">Virtualization</span></div>
+
+      <div class="node totebox" style="left:1200px; top:486px; width:230px; height:150px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:1205px; top:648px; width:220px; height:46px;"><span class="node-label">Virtualization</span></div>
+
+      <div class="restapi-label" style="left:735px; top:716px;">REST API</div>
+    </div>
+  </section>
+
+  <!-- ===================== F*KEYS CONSOLE — COMMAND CENTER ===================== -->
+  <section class="scaling sysadmin" data-label="Command Center" data-screen-label="F*KEYS Console — Command Center">
+    <div class="head">
+      <div class="eyebrow">Design System — Console OS</div>
+      <h2>F✲KEYS Command Center</h2>
+      <div class="crumb">The F✲KEYS Console drives the command center — F-key shortcuts for command bar, synchronization and people — pairing across the Interface OS and clustered Console OS instances.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 740" preserveAspectRatio="none">
+        <defs>
+          <marker id="cc-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0E7C84" stroke="none"></path>
+          </marker>
+        </defs>
+        <!-- P3 — console panel down-left to Interface OS -->
+        <line x1="1060" y1="300" x2="230" y2="470" marker-end="url(#cc-arrow)"></line>
+        <!-- top bus across the Console OS fleet + up to panel (P3 right) -->
+        <polyline points="560,486 560,452 1450,452"></polyline>
+        <line x1="854" y1="452" x2="854" y2="486"></line>
+        <line x1="1450" y1="452" x2="1450" y2="368"></line>
+        <line x1="1450" y1="452" x2="1450" y2="486" marker-end="url(#cc-arrow)"></line>
+        <circle class="dot" cx="560" cy="452" r="4"></circle>
+        <circle class="dot" cx="854" cy="452" r="4"></circle>
+        <circle class="dot" cx="1450" cy="452" r="4"></circle>
+        <!-- P4 — Interface OS to Console cluster -->
+        <line x1="280" y1="548" x2="412" y2="548" marker-end="url(#cc-arrow)"></line>
+      </svg>
+
+      <!-- ===== F*KEYS CONSOLE — PANEL ===== -->
+      <div class="adminwin" style="left:1060px; top:8px; width:660px; height:298px;">
+        <div class="aw-head">
+          <span class="aw-ico"><svg viewBox="0 0 100 70"><path d="M6,66 L6,40 A44,34 0 0 1 94,40 L94,66"></path></svg></span>
+          <span class="aw-t">Console OS<small>F✲KEYS Console</small></span>
+        </div>
+        <div class="aw-body">
+          <div class="aw-caps">
+            <span class="aw-cap">F1 · Command Bar</span>
+            <span class="aw-cap">F2 · Synchronization</span>
+            <span class="aw-cap">F3 · People</span>
+          </div>
+          <div class="aw-preview"></div>
+        </div>
+      </div>
+      <div class="node vbar" style="left:1060px; top:316px; width:660px; height:52px;"><span class="node-label">Type II / Workplace OS</span></div>
+      <div class="node badge" style="left:594px; top:340px;">P3</div>
+      <div class="node badge" style="left:1429px; top:404px;">P3</div>
+
+      <!-- ===== INTERFACE OS — COMMAND CENTER ===== -->
+      <div class="node hexagon" style="left:40px; top:470px; width:240px; height:158px;">
+        <svg viewBox="0 0 240 158"><polygon class="ico-line" points="11,79 63,16 177,16 229,79 177,142 63,142"></polygon></svg>
+        <span class="node-label">Interface OS<small>Command Center</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:50px; top:640px; width:220px; height:46px;"><span class="node-label">Virtualization</span></div>
+      <div class="node badge" style="left:344px; top:524px;">P4</div>
+
+      <!-- ===== CLUSTERED CONSOLE OS ===== -->
+      <div class="cluster" style="left:410px; top:456px; width:600px; height:214px;"></div>
+      <div class="cluster-tag" style="left:440px; top:443px;">Command Cluster</div>
+
+      <div class="node console" style="left:436px; top:486px; width:248px; height:120px;">
+        <svg viewBox="0 0 248 120"><path class="ico-line" d="M10,116 L10,60 Q10,8 124,8 Q238,8 238,60 L238,116 Z"></path></svg>
+        <span class="node-label" style="top:54px;">Console OS</span>
+      </div>
+      <div class="node vbar" style="left:446px; top:616px; width:228px; height:44px;"><span class="node-label">Virtualization</span></div>
+
+      <div class="node console" style="left:730px; top:486px; width:248px; height:120px;">
+        <svg viewBox="0 0 248 120"><path class="ico-line" d="M10,116 L10,60 Q10,8 124,8 Q238,8 238,60 L238,116 Z"></path></svg>
+        <span class="node-label" style="top:54px;">Console OS</span>
+      </div>
+      <div class="node vbar" style="left:740px; top:616px; width:228px; height:44px;"><span class="node-label">Virtualization</span></div>
+
+      <!-- ===== STANDALONE CONSOLE OS ===== -->
+      <div class="node console" style="left:1326px; top:486px; width:248px; height:120px;">
+        <svg viewBox="0 0 248 120"><path class="ico-line" d="M10,116 L10,60 Q10,8 124,8 Q238,8 238,60 L238,116 Z"></path></svg>
+        <span class="node-label" style="top:54px;">Console OS</span>
+      </div>
+      <div class="node vbar" style="left:1336px; top:616px; width:228px; height:44px;"><span class="node-label">Virtualization</span></div>
+    </div>
+  </section>
+
+  <!-- ===================== TOTEBOXES — DEPLOYMENT SCALE & SERVICES ===================== -->
+  <section class="scaling toteboxes" data-label="Toteboxes" data-screen-label="Toteboxes">
+    <div class="head">
+      <div class="eyebrow">Design System — Totebox OS</div>
+      <h2>Toteboxes</h2>
+      <div class="crumb">A Totebox runs anywhere on the deployment scale — from full VM down to unikernel — and is freely transferable. Totebox Services ship as a micro VM.</div>
+    </div>
+
+    <div class="canvas">
+      <!-- deployment scale spectrum -->
+      <div class="vmscale">
+        <div class="scale-cap">Deployment Scale</div>
+        <div class="vmstep" style="left:0;">
+          <span class="vlabel">vm</span><span class="sq" style="width:118px; height:118px;"></span>
+        </div>
+        <div class="vmstep" style="left:330px;">
+          <span class="vlabel">micro vm</span><span class="sq" style="width:90px; height:90px;"></span>
+        </div>
+        <div class="vmstep" style="left:640px;">
+          <span class="vlabel">nano vm</span><span class="sq" style="width:64px; height:64px;"></span>
+        </div>
+        <div class="vmstep" style="left:910px;">
+          <span class="vlabel">unikernel</span><span class="sq" style="width:40px; height:40px;"></span>
+        </div>
+        <div class="axis"></div>
+        <div class="transfer"><b>✲</b> Freely transferable across the scale</div>
+      </div>
+
+      <!-- service list -->
+      <div class="svclist">
+        <div class="svcrow"><span class="snum">1</span><span class="sname">Minute Book</span></div>
+        <div class="svcrow"><span class="snum">2</span><span class="sname">Bookkeeping</span></div>
+        <div class="svcrow"><span class="snum">3</span><span class="sname">Geo-Spatial</span></div>
+        <div class="svcrow"><span class="snum">4</span><span class="sname">Communications</span></div>
+        <div class="svcrow"><span class="snum">5</span><span class="sname">Calendar</span></div>
+        <div class="svcrow"><span class="snum">6</span><span class="sname">IoT Devices / IoT Sensors</span></div>
+      </div>
+
+      <!-- connector from list into services card -->
+      <svg class="wire" viewBox="0 0 1740 700" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none;">
+        <defs>
+          <marker id="tb-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0E7C84" stroke="none"></path>
+          </marker>
+        </defs>
+        <line x1="800" y1="494" x2="1300" y2="494" stroke="#0E7C84" stroke-width="2.5" marker-end="url(#tb-arrow)"></line>
+        <circle cx="800" cy="494" r="4" fill="#0E7C84"></circle>
+      </svg>
+
+      <!-- totebox services card -->
+      <div class="tbservices">
+        <div class="tbs-head"><span class="tbs-sq"></span><span class="tbs-t">Totebox Services</span></div>
+        <div class="tbs-body"><span class="tbs-vm">micro vm</span></div>
+        <div class="tbs-foot">Aggregates the service list</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== VM vs CONTAINERS ===================== -->
+  <section class="scaling vmcon" data-label="VM vs Containers" data-screen-label="VM vs Containers">
+    <div class="head">
+      <div class="eyebrow">Design System — Virtualization</div>
+      <h2>VM vs Containers</h2>
+      <div class="crumb">Where each model draws its virtualization boundary — and what that means for the transferability of a Totebox.</div>
+    </div>
+
+    <div class="vc-cols">
+      <!-- COLUMN 1 — VIRTUAL MACHINE -->
+      <div class="vc-col">
+        <div class="vc-title"><span class="vt-n">1</span><span class="vt-t">Virtual Machine</span></div>
+        <div class="vc-stack">
+          <div class="slab os">Operating System</div>
+          <div class="slab big">VM</div>
+          <div class="slab metal">Bare Metal</div>
+        </div>
+        <div class="vc-virt"><b>✲</b><span>Virtualizes the <strong>bare metal</strong></span></div>
+        <div class="vc-verdict good">Freely transferable</div>
+        <div class="vc-note">A VM carries its own operating system, so it moves anywhere.</div>
+      </div>
+
+      <!-- COLUMN 2 — CONTAINER -->
+      <div class="vc-col">
+        <div class="vc-title"><span class="vt-n">2</span><span class="vt-t">Container</span></div>
+        <div class="vc-stack">
+          <div class="vc-cyl"><span class="cyl-l">OS-Level Virtualization<small>Container</small></span></div>
+          <div class="slab os">Operating System</div>
+          <div class="slab metal">Bare Metal</div>
+        </div>
+        <div class="vc-virt"><b>✲</b><span>Virtualizes the <strong>operating system</strong></span></div>
+        <div class="vc-verdict warn">Same OS only</div>
+        <div class="vc-note">Only freely transferable within the same operating system.</div>
+      </div>
+
+      <!-- COLUMN 3 — CONTAINER + DOCKER -->
+      <div class="vc-col">
+        <div class="vc-title"><span class="vt-n">3</span><span class="vt-t">Container + Docker</span></div>
+        <div class="vc-stack">
+          <div class="vc-cyl"><span class="cyl-l">Platform for Containerized Apps<small>Container</small></span></div>
+          <div class="slab docker">Docker</div>
+          <div class="slab os">Operating System</div>
+        </div>
+        <div class="vc-virt"><b>✲</b><span>Runs on the <strong>Docker</strong> runtime</span></div>
+        <div class="vc-verdict good">Transferable with Docker</div>
+        <div class="vc-note">Becomes freely transferable so long as Docker is in place.</div>
+      </div>
+    </div>
+
+    <div class="vc-foot"><b>Notes</b><strong>Virtual machine = freely transferable.</strong> &nbsp;The Totebox model favours the VM boundary for portability.</div>
+  </section>
+
+  <!-- ===================== TOTEBOX SERVICES AS CONTAINERS ===================== -->
+  <section class="scaling tbsvc" data-label="Totebox Services" data-screen-label="Totebox Services — Containers">
+    <div class="head">
+      <div class="eyebrow">Design System — Totebox OS</div>
+      <h2>Totebox Services &nbsp;⇒&nbsp; Containers</h2>
+      <div class="crumb">A Totebox is a micro / nano VM that hosts its services as containers — each service plays its own role inside the box.</div>
+    </div>
+
+    <div class="stage">
+      <!-- isometric Totebox cube -->
+      <div class="cube">
+        <svg class="box" viewBox="0 0 600 500" preserveAspectRatio="xMidYMid meet">
+          <path class="top" d="M40,140 L120,60 L540,60 L460,140 Z"></path>
+          <path class="side" d="M460,140 L540,60 L540,380 L460,460 Z"></path>
+          <path class="front" d="M40,140 L460,140 L460,460 L40,460 Z"></path>
+        </svg>
+        <div class="cube-cyl" style="left:73px; top:212px;"></div>
+        <div class="cube-cyl" style="left:202px; top:212px;"></div>
+        <div class="cube-cyl" style="left:331px; top:212px;"></div>
+        <div class="cube-top-label">Totebox</div>
+        <div class="cube-face-label">Totebox Services</div>
+        <div class="cube-tag"><b>✲</b> a micro vm or nano vm</div>
+      </div>
+
+      <!-- explanatory points -->
+      <div class="tbsvc-points">
+        <div class="tbsvc-pt"><span class="mk">✲</span><span class="tx">A Totebox can run <b>different services</b>, each in its own container.</span></div>
+        <div class="tbsvc-pt"><span class="mk">✲</span><span class="tx">Totebox Services <b>don't have to be transferable</b> — only the Totebox itself does.</span></div>
+        <div class="tbsvc-ex">
+          <span class="ex-k">Ex</span>
+          <span class="ex-t"><b>Firecracker (AWS)</b> — a micro VM that still lets you run containers inside.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Notes</b>
+      <div class="nlist">
+        <span>Build the Totebox like Firecracker — each service in a separate container</span>
+        <span>Use the prototype to create a unikernel as the Totebox Archive</span>
+        <span>Get full services running first</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TOTEBOX ARCHIVE — TEMPLATES ===================== -->
+  <section class="scaling archive" data-label="Totebox Archive" data-screen-label="Totebox Archive">
+    <div class="head">
+      <span class="cat-tag">Data</span>
+      <div class="eyebrow">Design System — Record Keeping</div>
+      <h2>Totebox Archive</h2>
+      <div class="crumb">Archive templates relate to record keeping — the question is who they are freely transferable for.</div>
+    </div>
+
+    <div class="arch-compare">
+      <div class="arch-card">
+        <span class="ac-kicker">Totebox Archive</span>
+        <span class="ac-sq"></span>
+        <span class="ac-name">Personnel</span>
+      </div>
+      <div class="vs-sep">vs.</div>
+      <div class="arch-card">
+        <span class="ac-kicker">Totebox Archive</span>
+        <span class="ac-sq"></span>
+        <span class="ac-name">Corporate</span>
+      </div>
+      <div class="vs-sep">vs.</div>
+      <div class="arch-card">
+        <span class="ac-kicker">Totebox Archive</span>
+        <span class="ac-sq"></span>
+        <span class="ac-name">Real Property</span>
+      </div>
+    </div>
+
+    <div class="arch-why">
+      <div class="why">
+        <div class="wt"><b>Personnel</b> stay separate from companies — people come and go over time.</div>
+      </div>
+      <div></div>
+      <div class="why">
+        <div class="wt"><b>Corporate</b> entities stay separate because they can:</div>
+        <div class="buy">
+          <span class="opt">Buy a company</span>
+          <span class="orsep">or</span>
+          <span class="opt">Buy a building</span>
+          <span class="orsep">or</span>
+          <span class="opt">Both — company &amp; building</span>
+        </div>
+      </div>
+      <div></div>
+      <div class="why">
+        <div class="wt"><b>Real Property</b> is the building or physical asset — held as its own archive.</div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Notes</b>
+      <div class="nlist">
+        <span>Template Totebox Archives for real-asset managers</span>
+        <span>Individuals could build their own templates from the services</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TOTEBOX SERVICES — LADDER ===================== -->
+  <section class="scaling svcladder" data-label="Totebox Services" data-screen-label="Totebox Services — Ladder">
+    <div class="head">
+      <span class="cat-tag">Data</span>
+      <div class="eyebrow">Design System — Totebox OS</div>
+      <h2>Totebox Services</h2>
+      <div class="crumb">A Totebox is a micro VM that hosts the full set of services — each one set up independently.</div>
+    </div>
+
+    <div class="stage">
+      <!-- Totebox (micro vm) -->
+      <div class="tb-square">
+        <span class="tb-kick">micro vm</span>
+        <span class="tb-nm">Totebox</span>
+      </div>
+      <div class="tb-stem"></div>
+
+      <!-- service ladder -->
+      <div class="svc-ladder">
+        <div class="rung"><span class="rn">1</span>Minute Book</div>
+        <div class="rung"><span class="rn">2</span>Bookkeeping</div>
+        <div class="rung"><span class="rn">3</span>Geo-Spatial</div>
+        <div class="rung"><span class="rn">4</span>Communications</div>
+        <div class="rung"><span class="rn">5</span>Calendar</div>
+        <div class="rung"><span class="rn">6</span>IoT Devices</div>
+      </div>
+
+      <!-- brace -->
+      <div class="svc-brace">
+        <svg viewBox="0 0 54 402" preserveAspectRatio="none">
+          <path d="M16,2 Q34,2 34,40 L34,182 Q34,201 50,201 Q34,201 34,220 L34,362 Q34,400 16,400"></path>
+        </svg>
+      </div>
+      <div class="svc-brace-label">Services</div>
+
+      <!-- future direction callout -->
+      <div class="future-callout">
+        <div class="fc-kick">Future Direction</div>
+        <div class="fc-text">Set each service up <b>independently</b> — so Totebox OS can later be re-written with a <b>unified programming language &amp; protocols</b>.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SERVICES — BOOKKEEPING (DATABASE vs FILE SYSTEM) ===================== -->
+  <section class="scaling dbfs" data-label="Bookkeeping" data-screen-label="Services — Bookkeeping & Minute Books">
+    <div class="head">
+      <span class="cat-tag">Data</span>
+      <div class="eyebrow">Design System — Services</div>
+      <h2>Bookkeeping &amp; Minute Books</h2>
+      <div class="crumb">How the bookkeeping and minute-book services store records — structured data in a database versus source files in the file system.</div>
+    </div>
+
+    <div class="cmp2">
+      <!-- DATABASE -->
+      <div class="cmp-col">
+        <div class="cmp-head">
+          <span class="ch-ico"><svg viewBox="0 0 100 100"><ellipse cx="50" cy="24" rx="34" ry="12"></ellipse><path d="M16,24 L16,76 A34,12 0 0 0 84,76 L84,24"></path></svg></span>
+          <span class="ch-t">Database</span>
+        </div>
+        <div class="cmp-item lead">Data lives in the database</div>
+        <div class="cmp-item">Chart of Accounts</div>
+        <div class="cmp-sub"><span class="s">Name</span><span class="s">Date</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt"><b>No reference numbers</b> — use file names instead</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The <b>Input Machine</b> assigns file names</span></div>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <!-- FILE SYSTEM -->
+      <div class="cmp-col">
+        <div class="cmp-head">
+          <span class="ch-ico"><svg viewBox="0 0 100 100"><path d="M22,8 L62,8 L82,28 L82,92 L22,92 Z"></path><path d="M62,8 L62,28 L82,28"></path></svg></span>
+          <span class="ch-t">File System</span>
+        </div>
+        <div class="cmp-item lead">Files live in the file system</div>
+        <div class="filechips">
+          <div class="filechip">
+            <span class="fc-ico"><svg viewBox="0 0 80 100"><path d="M14,6 L50,6 L68,24 L68,94 L14,94 Z"></path><path d="M50,6 L50,24 L68,24"></path></svg></span>
+            <span class="fc-t">PDF</span><span class="fc-d">source documents</span>
+          </div>
+          <div class="filechip">
+            <span class="fc-ico"><svg viewBox="0 0 80 100"><path d="M14,6 L50,6 L68,24 L68,94 L14,94 Z"></path><path d="M50,6 L50,24 L68,24"></path></svg></span>
+            <span class="fc-t">ODT</span><span class="fc-d">text documents</span>
+          </div>
+          <div class="filechip">
+            <span class="fc-ico"><svg viewBox="0 0 80 100"><path d="M14,6 L50,6 L68,24 L68,94 L14,94 Z"></path><path d="M50,6 L50,24 L68,24"></path></svg></span>
+            <span class="fc-t">ODS</span><span class="fc-d">spreadsheets</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PRODUCTS & SERVICES — ORCHESTRATION ===================== -->
+  <section class="scaling products" data-label="Products &amp; Services" data-screen-label="Products & Services">
+    <div class="head">
+      <div class="eyebrow">Totebox Orchestration</div>
+      <h2>Products &amp; Services</h2>
+      <div class="crumb">Three operating systems orchestrate the platform — Console OS dispatches to Interface OS and Totebox OS</div>
+    </div>
+
+    <!-- orchestration diagram -->
+    <div class="stage">
+      <svg class="wire" viewBox="0 0 1744 240" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0E7C84" stroke="none"></path>
+          </marker>
+        </defs>
+        <!-- Console -> Interface -->
+        <path d="M946,128 Q780,184 628,152" marker-end="url(#ah)"></path>
+        <!-- Console -> Totebox -->
+        <path d="M1042,128 Q1052,138 1062,146" marker-end="url(#ah)"></path>
+        <!-- Interface -> Totebox -->
+        <path d="M624,188 L978,191" marker-end="url(#ah)"></path>
+      </svg>
+
+      <!-- Console OS (arch) -->
+      <div class="pnode" style="left:922px; top:0; width:208px; height:128px;">
+        <div class="glyph"><svg viewBox="0 0 166 112"><path d="M8,108 L8,50 Q8,8 83,8 Q158,8 158,50 L158,108 Z"></path></svg></div>
+        <div class="pname">Console&nbsp;OS</div>
+        <span class="pvm" style="right:16px; bottom:11px;">vm</span>
+        <span class="pbadge" style="top:-12px; right:-12px;">1</span>
+      </div>
+
+      <!-- Interface OS (hexagon) -->
+      <div class="pnode" style="left:384px; top:118px; width:240px; height:122px;">
+        <div class="glyph"><svg viewBox="0 0 126 75"><polygon points="6,37.5 28,6 98,6 120,37.5 98,69 28,69"></polygon></svg></div>
+        <div class="pname">Interface&nbsp;OS</div>
+        <span class="pvm" style="right:38px; bottom:12px;">vm</span>
+        <span class="pbadge" style="top:-12px; right:22px;">2</span>
+      </div>
+
+      <!-- Totebox OS (square) -->
+      <div class="pnode" style="left:980px; top:132px; width:160px; height:108px;">
+        <div class="glyph"><svg viewBox="0 0 100 100"><rect x="6" y="6" width="88" height="88"></rect></svg></div>
+        <div class="pname">Totebox&nbsp;OS</div>
+        <span class="pvm" style="right:14px; bottom:10px;">vm</span>
+        <span class="pbadge" style="top:-12px; right:-12px;">3</span>
+      </div>
+    </div>
+
+    <!-- service columns -->
+    <div class="cols">
+      <div class="col">
+        <div class="col-head"><span class="ch-badge">1</span><span class="ch-name">Console OS</span></div>
+        <div class="col-kicker">Services</div>
+        <div class="svc"><span class="n">06</span><span class="t">Input Machine</span></div>
+        <div class="svc"><span class="n">07</span><span class="t">F*KEYS Console</span></div>
+        <div class="svc"><span class="n">08</span><span class="t">BIM Console</span></div>
+        <div class="svc"><span class="n">09</span><span class="t">Maps Console</span></div>
+        <div class="svc"><span class="n">10</span><span class="t">Building Preferences Console</span></div>
+      </div>
+
+      <div class="col">
+        <div class="col-head"><span class="ch-badge">2</span><span class="ch-name">Interface OS</span></div>
+        <div class="col-kicker">Services</div>
+        <div class="svc"><span class="n">11</span><span class="t">Command Center</span></div>
+        <div class="svc"><span class="n">12</span><span class="t">BIM Server</span></div>
+        <div class="svc"><span class="n">13</span><span class="t">GIS Engine</span></div>
+        <div class="svc"><span class="n">14</span><span class="t">IoT Connect</span></div>
+      </div>
+
+      <div class="col">
+        <div class="col-head"><span class="ch-badge">3</span><span class="ch-name">Totebox OS</span></div>
+        <div class="col-kicker">Services</div>
+        <div class="svc"><span class="n">15</span><span class="t">BIM Database</span></div>
+        <div class="svc"><span class="n">16</span><span class="t">Materials Database</span></div>
+        <div class="svc"><span class="n">17</span><span class="t">People</span></div>
+        <div class="svc"><span class="n">18</span><span class="t">Businesses</span></div>
+        <div class="svc"><span class="n">19</span><span class="t">Places</span></div>
+        <div class="svc"><span class="n">20</span><span class="t">Parking IoTs</span></div>
+        <div class="svc"><span class="n">21</span><span class="t">IoT Device Library</span></div>
+        <div class="svc"><span class="n">22</span><span class="t">IoT Sensor Library</span></div>
+        <div class="svc"><span class="n">23</span><span class="t">Minute Book</span></div>
+        <div class="svc"><span class="n">24</span><span class="t">Bookkeeping</span></div>
+        <div class="svc"><span class="n">25</span><span class="t">Email</span></div>
+      </div>
+    </div>
+
+  </section>
+
+</deck-stage>
+
+<script src="deck-stage.js"></script>
+</body>
+</html>
