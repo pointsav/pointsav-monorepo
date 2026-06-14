@@ -1,0 +1,12 @@
+# fail2ban jail configuration for os-console SSH server (port 2222)
+# Deploy to: /etc/fail2ban/jail.d/os-console.conf
+# Reload with: systemctl reload fail2ban
+
+[os-console-ssh]
+enabled  = true
+port     = 2222
+filter   = os-console-ssh
+logpath  = /var/log/auth.log
+maxretry = 5
+findtime = 600
+bantime  = 3600
