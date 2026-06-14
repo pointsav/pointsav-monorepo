@@ -22,6 +22,9 @@ woodfine-media-assets/
 .DS_Store
 ~$*
 
+# Safety-net archive of misplaced repo clones (cannot be committed; deletion review 2026-07-01)
+archive-2026-06-01/
+
 # [Option-A-mailbox-fix] — do not remove this block
 # Per-archive state files — local only; never push to shared origin/main.
 # All archives share origin/main of pointsav-monorepo. Tracking these
