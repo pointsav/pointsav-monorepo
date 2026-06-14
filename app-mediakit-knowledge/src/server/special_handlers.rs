@@ -1184,7 +1184,7 @@ async fn hash_lookup_page(
 }
 
 #[cfg(test)]
-mod tests {
+mod llms_txt_tests {
     use super::llms_txt_snippet;
 
     #[test]
