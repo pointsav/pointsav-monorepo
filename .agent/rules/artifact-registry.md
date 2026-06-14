@@ -627,6 +627,56 @@ Committed to `pointsav-monorepo` feature branch; Stage 6 pending.
 | Extraction SFT pairs (human-curated) | `/srv/foundry/data/training-corpus/extraction/jennifer-sft-*.jsonl` | 182 pairs | provenance: human-curated; RAFT-style entity candidates injected from people.csv (9,575 names); metric/theme labels from jennifer-1 human-curated YAML ledgers (461 files); entity labels sparse (YAML corpus is metric/theme-dominant) |
 | DPO enrichment pairs (Tier B vs Tier A) | `cluster-totebox-jennifer/service-fs/data/training-corpus/feedback/enrichment-DOC_*.jsonl` | 4 pairs (2026-06-14) | chosen=Tier B (OLMo 32B), rejected=Tier A (OLMo 7B); P1+P3 clean, P2 contaminated (ops(slm) commit-prefix in chosen), P4 ambiguous; do NOT train as-is; pre-save validator needed; minimum 200–300 genre-diverse pairs before LoRA; provenance: olmo-self |
 | Apprenticeship SFT corpus (git-commit activity) | `/srv/foundry/data/training-corpus/feedback/apprenticeship-git-commit-*.jsonl` | 834 pairs | Separate artifact type from DPO enrichment pairs; SFT from commit activity; provenance: human-curated (commits are human-authored) |
+## D — Design Artifacts (staged → project-design)
+
+DESIGN-* artifacts in `.agent/drafts-outbound/` routing to project-design.
+All carry `foundry-draft-v1` frontmatter. TOKEN-CHANGE artifacts require Master co-sign.
+
+### D1 — Knowledge Platform design artifacts (native to this archive)
+
+| ID | File | Type | Subject | Status |
+|----|------|------|---------|--------|
+| D1a | `DESIGN-knowledge-platform-fresh-slate-analysis.draft.md` | DESIGN-RESEARCH | Visual + information architecture analysis for knowledge wiki engine — benchmarks against Wikipedia Vector 2022, Stripe Docs, Linear, MDN | STAGED — pending dispatch to project-design |
+| D1b | `knowledge-platform-rewrite-analysis.draft.md` | DESIGN-RESEARCH | Companion analysis — schema: foundry-draft-v1; artifact_type: DESIGN-RESEARCH | STAGED — unclassified filename (no DESIGN- prefix); pending rename + dispatch |
+| D1c | `DESIGN-doc-header-component.draft.md` | DESIGN-COMPONENT | Document header component spec for knowledge platform chrome | STAGED — pending dispatch to project-design |
+| D1d | `DESIGN-docs-sidenav-component.draft.md` | DESIGN-COMPONENT | Sidebar navigation component spec for knowledge platform | STAGED — pending dispatch to project-design |
+| D1e | `DESIGN-wireframe-home-header-v2c.draft.html` | DESIGN-COMPONENT | Home page header wireframe v2c (HTML) | STAGED — pending dispatch to project-design |
+
+### D2 — Org chart design artifacts (originating_cluster: project-orgcharts / project-proforma)
+
+These files landed in this archive's drafts-outbound from project-orgcharts work. They belong to project-orgcharts / project-design pipeline. Tracked here only for completeness; relay to correct archive or project-design directly.
+
+| ID | File | Type | Subject | Status |
+|----|------|------|---------|--------|
+| D2a | `DESIGN-COMPONENT-orgchart-canvas.draft.md` | DESIGN-COMPONENT | Org chart canvas component | STAGED — relay to project-design (originated project-orgcharts) |
+| D2b | `DESIGN-COMPONENT-orgchart-connector.draft.md` | DESIGN-COMPONENT | Org chart connector component | STAGED — relay to project-design |
+| D2c | `DESIGN-COMPONENT-orgchart-node.draft.md` | DESIGN-COMPONENT | Org chart node component | STAGED — relay to project-design |
+| D2d | `DESIGN-RESEARCH-orgchart-carbon-token-map.draft.md` | DESIGN-RESEARCH | Carbon token mapping for org chart | STAGED — relay to project-design |
+| D2e | `DESIGN-RESEARCH-orgchart-token-system.draft.md` | DESIGN-RESEARCH | Org chart token system design | STAGED — relay to project-design |
+| D2f | `DESIGN-RESEARCH-orgchart-woodfine-brand-spec.draft.md` | DESIGN-RESEARCH | Woodfine brand spec for org chart | STAGED — relay to project-design |
+| D2g | `DESIGN-TOKEN-CHANGE-orgchart-layout-type.draft.md` | DESIGN-TOKEN-CHANGE | Org chart layout type tokens | STAGED — relay to project-design |
+| D2h | `DESIGN-TOKEN-CHANGE-orgchart-primitives.draft.md` | DESIGN-TOKEN-CHANGE | Org chart primitive tokens | STAGED — relay to project-design |
+| D2i | `DESIGN-TOKEN-CHANGE-woodfine-chart-css.draft.md` | DESIGN-TOKEN-CHANGE | Woodfine chart CSS tokens | STAGED — relay to project-design |
+| D2j | `DESIGN-TOKEN-CHANGE-woodfine-yellow-magenta.draft.md` | DESIGN-TOKEN-CHANGE | Woodfine yellow/magenta palette tokens | STAGED — relay to project-design |
+| D2k | `DESIGN-TOKEN-CHANGE-wp-tokens-20260602.draft.md` | DESIGN-TOKEN-CHANGE | Woodfine platform token set 2026-06-02; `state: draft-pending-master-cosign` (originated project-workplace) | STAGED — relay to project-design |
+| D2l | `DESIGN-COMPONENT-financial-report-layout.draft.md` | DESIGN-COMPONENT | Financial report layout component (originated project-proforma) | STAGED — relay to project-design |
+| D2m | `GUIDE-orgchart-authoring.draft.md` | GUIDE | Org chart authoring runbook (originated project-orgcharts) | STAGED — relay to project-editorial |
+
+---
+
+## X — Cross-Archive Contamination (staged here from other archives)
+
+Files in `.agent/drafts-outbound/` that explicitly declare `originating_cluster: project-orgcharts`.
+These are NOT artifacts of this archive. Tracked here to surface for cleanup.
+Action: relay to project-orgcharts outbox or delete after confirming project-orgcharts has copies.
+
+| File | Originating Archive | Type | Action |
+|------|---------------------|------|--------|
+| `COMMS-bencal-nature-of-business.md` (+ .html, -copy.html, .pdf) | project-orgcharts | COMMS | Relay to project-orgcharts or project-editorial; confirm originator has canonical copy |
+| `RESEARCH-bencal-naming-conventions.md` (+ .pdf) | project-orgcharts | RESEARCH | Relay to project-orgcharts; confirm originator has canonical copy |
+
+---
+
 ## E — Engine Code Artifacts (app-mediakit-knowledge)
 
 CODE artifacts that run the knowledge wiki engine. Committed to sub-clone `pointsav-monorepo/`

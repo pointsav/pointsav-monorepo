@@ -35,7 +35,7 @@ Last updated: 2026-06-14.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-mediakit-distributions | Scaffold-coded | app-mediakit | 4 files |
-| app-mediakit-knowledge | Scaffold-coded | app-mediakit | 4 files |
+| app-mediakit-knowledge | Active | app-mediakit | Single Rust binary Wikipedia-pattern wiki; Apache 2.0; 3 live instances (ports 9090/9093/9095); Phases 0–9 shipped; Phase 7 ActivityPub scaffold committed; WCAG 2.2 + ES i18n + sitemap repairs committed 2026-06-14; Stage 6 pending (E5–E7) |
 | app-mediakit-marketing | Scaffold-coded | app-mediakit | 4 files |
 | app-mediakit-telemetry | Scaffold-coded | app-mediakit | 14 files; MaxMind `.mmdb` pending move to build-time fetch |
 
