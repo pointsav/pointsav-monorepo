@@ -321,6 +321,17 @@ Flag to Command for correct routing when next Command sweep runs.
 | Parkade co-location profile | `work/parkade-colocation-profile.json` | DONE (2026-06-11; commuter_rail 64.7% / car_rental 44.7% / hotel 36.2% / airport 4.1% within 3km of built structures) |
 | archetype-pks.geojson (calibrated) | `gateway-orchestration-gis-1/www/data/archetype-pks.geojson` | DONE (2026-06-14 Phase 5b; 7,045 features; T1=692/T2=2,665/T3=3,688; MX=177; false US clusters removed; lon-scoped coord override; deployed) |
 
+### PKS Phase 5b — MX Fix + OXXO GULF-MID (2026-06-14)
+
+Bug-fix pass + OXXO gap coverage. See BRIEF §10.14 for methodology. Commits a18f9240, f8e8f7f5, 469c10b9, 74f6e782.
+
+| Artifact | File | Status |
+|---|---|---|
+| _coord_override_iso US rules | `app-orchestration-gis/build-pks-clusters.py` | DONE (a18f9240 + f8e8f7f5; 3 US-detection rules with lon bounds [-118.5, -86.0]; removes Fort Worth TX / Shreveport LA / Tucson AZ / San Diego CA false MX clusters) |
+| OXXO GULF-MID gap ingest | `app-orchestration-gis/ingest-oxxo-gulfmid.py` | DONE (469c10b9; 6 sub-bboxes; 30s back-off; 110 new Tampico/Cd.Victoria records appended) |
+| OXXO spatial audit script | `app-orchestration-gis/ingest-oxxo-mx-extend.py` | DONE (469c10b9; 4-bbox gap audit; confirmed most areas already covered) |
+| oxxo-mx.jsonl (extended) | `service-fs/service-business/oxxo-mx.jsonl` | DONE (6,427 → 6,537 records; +110 GULF-MID; total ≈29% of ~22,000 MX stores) |
+
 **EU car rental chain ingests (2026-06-11):**
 
 | File | Records |
