@@ -39,6 +39,9 @@ members = [
     "service-vm-tenant",
     # Knowledge wiki engine
     "app-mediakit-knowledge",
+    # Jennifer ingest pipeline
+    "service-input",
+    "service-extraction",
 ]
 
 [profile.dev]
