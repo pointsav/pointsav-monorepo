@@ -574,8 +574,8 @@ fn write_enrichment_dpo_pair(
         })
         .collect();
     let mut tier_a_sorted_cmp = tier_a_normalized.clone();
-    tier_a_sorted_cmp.sort_by(|x, y| x.to_string().cmp(&y.to_string()));
-    tier_b_normalized_cmp.sort_by(|x, y| x.to_string().cmp(&y.to_string()));
+    tier_a_sorted_cmp.sort_by_key(|x| x.to_string());
+    tier_b_normalized_cmp.sort_by_key(|x| x.to_string());
     if serde_json::to_string(&tier_a_sorted_cmp).unwrap_or_default()
         == serde_json::to_string(&tier_b_normalized_cmp).unwrap_or_default()
     {
