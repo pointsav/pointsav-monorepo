@@ -1,14 +1,14 @@
 ---
 schema: foundry-artifact-registry-v1
 project: project-editorial
+project: project-system
 last_updated: 2026-06-14
 ---
 
-# project-editorial Artifact Registry
+# project-system Artifact Registry
 
-Persistent record of all editorial, design, data, and JOURNAL artifacts being built
-for this project. Updated as artifacts are staged, dispatched, or completed.
-Companion to `tasks.md` (sprint history) and `outstanding-todo.md` (backlog).
+Persistent record of editorial, design, data, and JOURNAL artifacts produced
+by this archive. Updated as artifacts are staged, dispatched, or completed.
 
 Routing:
 - TOPIC / GUIDE / TEXT / PROSE → `project-editorial`
@@ -124,6 +124,10 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 - ~~§7 investment thesis~~ DONE 2026-06-14 (integration rate by country; demand drivers; T1 hub analysis; risk factors)
 - Map figure — pending project-gis (archetype-pks.geojson deployed; needs rendering)
 - §5 integration rate regression — requires external rail-frequency data (long-term)
+Routing per `~/Foundry/conventions/artifact-classification.yaml`:
+- TOPIC / GUIDE / TEXT → `.agent/drafts-outbound/` → project-editorial
+- DESIGN-* / ASSET-* → `.agent/drafts-outbound/` → project-design
+- CODE / SCRIPT / CONFIG / DATA → commit directly (self-contained)
 
 ---
 
@@ -559,11 +563,24 @@ Produced as part of the PKS co-location calibration process. See BRIEF §10.12 f
 | Kontur integration plan | `work/kontur-integration-plan.md` | DONE (2026-05-17; H3 res-8 available; CC BY 4.0; HDX download) |
 | Storage report | `work/storage-report.md` | DONE (2026-05-17; root 65%; stale backups 35M removable) |
 | SafeGraph export | `export-safegraph.py` | DONE adbb5d42 (2026-05-17; --sample 100 verified) |
+| ID | File | Title | Destination | Status |
+|----|------|-------|-------------|--------|
+| A1 | `drafts-outbound/GUIDE-ppn-node-setup.draft.md` | PPN Node Setup Guide | project-editorial | staged |
+| A2 | `drafts-outbound/TOPIC-ppn-small-business-compute.draft.md` | PPN Small-Business Compute | project-editorial | staged |
+| A3 | `drafts-outbound/TOPIC-os-console-architecture.draft.md` | OS Console Architecture | project-editorial | staged |
+| A4 | `drafts-outbound/TOPIC-software-distribution-substrate.draft.md` | Software Distribution Substrate | project-editorial | staged |
+| A5 | `drafts-outbound/TOPIC-crypto-license-sales-architecture.draft.md` | Crypto License Sales Architecture | project-editorial | staged |
+| A6 | `drafts-outbound/TOPIC-private-git-paid-customer-endpoint.draft.md` | Private Git Paid Customer Endpoint | project-editorial | staged |
+| A7 | `drafts-outbound/JOURNAL-ppn-pooled-compute-v0.1.draft.md` | PPN Pooled Compute (JOURNAL) | project-editorial | staged |
+| A8 | `drafts-outbound/PROSE-RESEARCH-ppn-architecture-phd-thesis.draft.md` | PPN Architecture PhD Thesis prose | project-editorial | staged |
+
+## B — Backlog
+
+*(No backlog items at this time.)*
 
 ---
 
 ## Maintenance
 
-- When an artifact is dispatched to project-editorial/project-design, update status to DISPATCHED + commit hash
-- When an artifact is returned (approved/rejected), update status
-- Add new artifacts here at the time they are planned — do not wait until staging
+- Add artifacts when planned; update status when dispatched or returned.
+- Cross-check with `.agent/briefs/README.md` for BRIEF-linked artifact chains.
