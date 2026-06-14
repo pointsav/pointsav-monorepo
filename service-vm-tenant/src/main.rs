@@ -22,6 +22,9 @@ struct AppState {
     /// Serializes VM creation quota checks to prevent TOCTOU races.
     create_lock: Arc<Mutex<()>>,
     audit_path: String,
+    /// Base URL of the service-fs WORM ledger (default: http://127.0.0.1:9100).
+    /// Audit entries are fire-and-forget posted here in addition to the local file.
+    service_fs_url: String,
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -45,6 +48,8 @@ async fn main() {
         .expect("VM_TENANT_PORT must be a valid port");
     let audit_path = std::env::var("VM_TENANT_AUDIT_LOG")
         .unwrap_or_else(|_| "/var/log/vm-tenant-audit.jsonl".to_string());
+    let service_fs_url = std::env::var("SERVICE_FS_URL")
+        .unwrap_or_else(|_| "http://127.0.0.1:9100".to_string());
 
     let state = AppState {
         tenants: Arc::new(tenants),
@@ -52,6 +57,7 @@ async fn main() {
         http: reqwest::Client::new(),
         create_lock: Arc::new(Mutex::new(())),
         audit_path,
+        service_fs_url,
     };
 
     let app = Router::new()
@@ -134,6 +140,8 @@ async fn create_vm_handler(
 
     audit(
         &state.audit_path,
+        &state.service_fs_url,
+        &state.http,
         &tenant.tenant_id,
         "create",
         &record.vm_id,
@@ -185,7 +193,15 @@ async fn destroy_vm_handler(
         .await
         .map_err(|e| (StatusCode::BAD_GATEWAY, format!("fleet unreachable: {e}")))?;
 
-    audit(&state.audit_path, &tenant.tenant_id, "destroy", &vm_id).await;
+    audit(
+        &state.audit_path,
+        &state.service_fs_url,
+        &state.http,
+        &tenant.tenant_id,
+        "destroy",
+        &vm_id,
+    )
+    .await;
 
     tracing::info!(tenant_id = %tenant.tenant_id, vm_id = %vm_id, "VM destroyed");
 
@@ -260,13 +276,26 @@ async fn fetch_tenant_vms(
     })
 }
 
-/// Append a WORM audit entry to the configured log path.
-async fn audit(path: &str, tenant_id: &str, action: &str, vm_id: &str) {
+/// Append a WORM audit entry to the local log file and fire-and-forget to service-fs.
+///
+/// The local file is the primary WORM record.  The service-fs POST is best-effort:
+/// if service-fs is unavailable the entry is logged as WARN and the request succeeds.
+async fn audit(
+    path: &str,
+    service_fs_url: &str,
+    http: &reqwest::Client,
+    tenant_id: &str,
+    action: &str,
+    vm_id: &str,
+) {
     use tokio::io::AsyncWriteExt;
+
+    let ts = chrono::Utc::now().to_rfc3339();
     let entry = format!(
-        "{{\"ts\":\"{}\",\"tenant_id\":\"{tenant_id}\",\"action\":\"{action}\",\"vm_id\":\"{vm_id}\"}}\n",
-        chrono::Utc::now().to_rfc3339()
+        "{{\"ts\":\"{ts}\",\"tenant_id\":\"{tenant_id}\",\"action\":\"{action}\",\"vm_id\":\"{vm_id}\"}}\n",
     );
+
+    // Primary: local WORM file append.
     match tokio::fs::OpenOptions::new()
         .create(true)
         .append(true)
@@ -279,5 +308,39 @@ async fn audit(path: &str, tenant_id: &str, action: &str, vm_id: &str) {
             }
         }
         Err(e) => tracing::warn!(error = %e, path, "audit file open failed"),
+    }
+
+    // Secondary: fire-and-forget POST to service-fs /v1/append.
+    // key format: vm-tenant-audit/<tenant_id>/<vm_id>/<action>/<unix_ts>
+    let unix_ts = chrono::Utc::now().timestamp();
+    let payload_id = format!("vm-tenant-audit/{tenant_id}/{vm_id}/{action}/{unix_ts}");
+    let body = serde_json::json!({
+        "payload_id": payload_id,
+        "payload": {
+            "ts": ts,
+            "tenant_id": tenant_id,
+            "action": action,
+            "vm_id": vm_id,
+        }
+    });
+    let append_url = format!("{service_fs_url}/v1/append");
+    match http.post(&append_url).json(&body).send().await {
+        Ok(resp) if resp.status().is_success() => {
+            tracing::debug!(payload_id, "audit forwarded to service-fs");
+        }
+        Ok(resp) => {
+            tracing::warn!(
+                status = %resp.status(),
+                payload_id,
+                "service-fs audit POST returned non-success — local file is primary WORM"
+            );
+        }
+        Err(e) => {
+            tracing::warn!(
+                error = %e,
+                payload_id,
+                "service-fs unreachable for audit — local file is primary WORM"
+            );
+        }
     }
 }
