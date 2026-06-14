@@ -21,3 +21,18 @@ woodfine-media-assets/
 # OS metadata
 .DS_Store
 ~$*
+
+# [Option-A-mailbox-fix] — do not remove this block
+# Per-archive state files — local only; never push to shared origin/main.
+# All archives share origin/main of pointsav-monorepo. Tracking these
+# files causes cross-archive contamination during git rebase because every
+# archive .agent/inbox.md lives at the same path in the shared repo.
+# MCP send_mailbox_message writes to local paths directly; no git tracking needed.
+.agent/inbox.md
+.agent/inbox-archive.md
+.agent/outbox.md
+.agent/memory/session-context.md
+.agent/memory/session-context-archive.md
+.agent/briefs/
+NEXT.md
+# [/Option-A-mailbox-fix]
