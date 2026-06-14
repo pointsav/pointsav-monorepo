@@ -123,11 +123,11 @@ cat > "${OVERLAY}/etc/fstab" << 'FSTAB_EOF'
 FSTAB_EOF
 
 # ── 7. Configure network interfaces ──────────────────────────────────────────
-# em0: QEMU e1000 (test) and bare-metal first Ethernet (production).
+# wm0: QEMU e1000 maps to the NetBSD wm(4) driver (Intel Gigabit Ethernet).
 # Static IP for QEMU SLIRP testing (10.0.2.15, GW 10.0.2.2).
 # In hardware deployment, replace with dhcpcd or site-specific static config.
 # The "!command" prefix runs the command after ifconfig completes.
-cat > "${OVERLAY}/etc/ifconfig.em0" << 'NET_EOF'
+cat > "${OVERLAY}/etc/ifconfig.wm0" << 'NET_EOF'
 inet 10.0.2.15 netmask 255.255.255.0
 !route add default 10.0.2.2
 NET_EOF
@@ -192,6 +192,11 @@ if [ -n "${TEST_PUBKEY_FILE}" ] && [ -f "${TEST_PUBKEY_FILE}" ]; then
         >> "${OVERLAY}/etc/ssh/sshd_config"
 fi
 
+# TCP wrappers: NetBSD OpenSSH is compiled with libwrap. The default
+# /etc/hosts.allow is absent; SLIRP forwarded connections arrive from 10.0.2.2
+# (not LOCAL). Permit sshd from any source so the smoke-test SSH works.
+echo "sshd: ALL" >> "${OVERLAY}/etc/hosts.allow"
+
 # ── 8. Strip non-server content (server image only needs runtime, not docs) ───
 echo "  pruning non-server content..."
 # Strip all of /usr/share/ except zoneinfo (needed for localtime(3)) and
@@ -213,12 +218,17 @@ rm -rf "${OVERLAY}/usr/games" "${OVERLAY}/usr/share/games"
 echo "  generating Veriexec manifest (all executables)..."
 VERIEXEC_MANIFEST="${OVERLAY}/etc/signatures"
 : > "${VERIEXEC_MANIFEST}"
-find "${OVERLAY}" -type f -perm /111 | sort | while read -r BIN_PATH; do
+# Disable pipefail for the find pipeline: find exits 1 when it encounters
+# unreadable directories (root/.ssh, var/spool/ftp/hidden). Those dirs contain
+# no executables; the 2>/dev/null suppresses the messages but not the exit code.
+set +o pipefail
+find "${OVERLAY}" -type f -perm /111 2>/dev/null | sort | while read -r BIN_PATH; do
     REL_PATH="${BIN_PATH#${OVERLAY}}"
     DIGEST=$(sha256sum "${BIN_PATH}" | awk '{print $1}')
     printf '%s %s VERIEXEC_DIRECT\n' "${REL_PATH}" "${DIGEST}" \
         >> "${VERIEXEC_MANIFEST}"
 done
+set -o pipefail
 # Enable Veriexec at boot; strict=1 raises to IDS mode (deny unlisted exec).
 echo "veriexec=YES" >> "${OVERLAY}/etc/security.conf"
 echo "kern.veriexec.strict=1" >> "${OVERLAY}/etc/sysctl.conf"
