@@ -44,6 +44,7 @@ async fn citation_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
             site_title: "PointSav Documentation Wiki".to_string(),
             blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
             peers: vec![],
+            canonical_url: None,
         },
         dir,
         state_dir,

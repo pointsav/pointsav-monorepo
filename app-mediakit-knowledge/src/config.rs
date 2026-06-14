@@ -82,6 +82,18 @@ pub struct SiteConfig {
     /// Default: `"/var/lib/local-knowledge/state"`.
     #[serde(default = "default_state_dir")]
     pub state_dir: PathBuf,
+
+    /// Canonical base URL for this instance (no trailing slash).
+    /// Used to emit absolute `<loc>` values in `/sitemap.xml`.
+    /// Example: `"https://documentation.pointsav.com"`.
+    #[serde(default)]
+    pub canonical_url: Option<String>,
+
+    /// Instance selector written into `html[data-instance]`.
+    /// Overrides the `WIKI_BRAND_INSTANCE` env var when set.
+    /// Allowed values: `"documentation"`, `"projects"`, `"corporate"`.
+    #[serde(default)]
+    pub instance: Option<String>,
 }
 
 fn default_site_title() -> String {

@@ -197,6 +197,9 @@ pub struct AppState {
     /// Phase 7: peer wiki instances for federated `knowledge/search`.
     /// Empty by default; populated from `[[peer]]` entries in knowledge.toml.
     pub peers: Vec<crate::config::PeerConfig>,
+    /// Canonical base URL (no trailing slash) used in sitemap.xml `<loc>` values.
+    /// Populated from `knowledge.toml [site] canonical_url`. `None` → relative URLs.
+    pub canonical_url: Option<String>,
 }
 
 impl AppState {

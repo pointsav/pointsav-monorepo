@@ -39,6 +39,7 @@ async fn build_state(content_dir: &Path) -> (AppState, tempfile::TempDir) {
         brand_instance: "documentation".to_string(),
         blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
         peers: vec![],
+        canonical_url: None,
     };
     (state, state_dir)
 }

@@ -831,11 +831,11 @@ fn wiki_chrome(
                     a.mobile-bar-btn.tab-edit
                         href={ "/git/" (slug) }
                         aria-label="Edit this article"
-                    { "Edit" }
+                    { (match locale { Locale::En => "Edit", Locale::Es => "Editar" }) }
                     a.mobile-bar-btn
                         href={ "/history/" (slug) }
                         aria-label="View history"
-                    { "History" }
+                    { (match locale { Locale::En => "History", Locale::Es => "Historial" }) }
                 }
 
                 // Article layout: article body (+ optional claim-rail at ≥1280px).
@@ -852,15 +852,23 @@ fn wiki_chrome(
                         header.doc-header {
                             // Wikipedia-pattern Article/Talk/Edit/History tab strip.
                             nav.wiki-page-tabs aria-label="Page tabs" {
-                                a.wiki-tab aria-current="page" href={ "/wiki/" (slug) } { "Article" }
-                                a.wiki-tab href={ "/talk/" (slug) } { "Talk" }
-                                a.wiki-tab href={ "/git/" (slug) } { "Edit" }
-                                a.wiki-tab href={ "/history/" (slug) } { "History" }
+                                a.wiki-tab aria-current="page" href={ "/wiki/" (slug) } {
+                                    (match locale { Locale::En => "Article", Locale::Es => "Artículo" })
+                                }
+                                a.wiki-tab href={ "/talk/" (slug) } {
+                                    (match locale { Locale::En => "Talk", Locale::Es => "Discusión" })
+                                }
+                                a.wiki-tab href={ "/git/" (slug) } {
+                                    (match locale { Locale::En => "Edit", Locale::Es => "Editar" })
+                                }
+                                a.wiki-tab href={ "/history/" (slug) } {
+                                    (match locale { Locale::En => "History", Locale::Es => "Historial" })
+                                }
                             }
                             @if let Some(ref cat) = fm.category {
                                 @if cat != "root" {
                                     nav.crumb aria-label="breadcrumb" {
-                                        a href="/" { "Home" }
+                                        a href="/" { (match locale { Locale::En => "Home", Locale::Es => "Inicio" }) }
                                         " › "
                                         a href={ "/category/" (cat) } { (humanize_category(cat)) }
                                         " › "
@@ -1240,7 +1248,8 @@ async fn edit_page(
                     }
                     // L25: textarea for CodeMirror to attach to.
                     // editor.js mounts on #wikitext on DOMContentLoaded.
-                    form.edit-page-form method="post" action={ "/edit/" (&slug) } {
+                    // POST removed: git-only contribution workflow (Phase 5 superseded).
+                    form.edit-page-form {
                         textarea #wikitext name="content" rows="30" {
                             (content)
                         }
