@@ -60,6 +60,9 @@ mod tests {
     #[test]
     fn rejects_traversal() {
         let dir = Path::new("/tmp/does-not-matter");
-        assert!(matches!(load_page(dir, "../etc"), Err(LoadError::InvalidSlug)));
+        assert!(matches!(
+            load_page(dir, "../etc"),
+            Err(LoadError::InvalidSlug)
+        ));
     }
 }
