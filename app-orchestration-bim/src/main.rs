@@ -1771,18 +1771,6 @@ fn extract_furniture(tokens: &HashMap<String, Value>) -> Vec<FurnitureItem> {
     items
 }
 
-#[allow(dead_code)]
-fn furn_cad_placeholder(slug: &str) -> String {
-    format!(
-        "<div class=\"furn-cad-pending\">\
-         <p>CAD block not yet available</p>\
-         <code>{slug}.dxf</code>\
-         <p>Place DXF in blocks/furniture/ then run<br>\
-         generate-furniture-plan-svg.py</p>\
-         </div>"
-    )
-}
-
 async fn furniture_handler(State(state): State<Arc<AppState>>) -> Html<String> {
     let items = extract_furniture(&state.tokens);
 
