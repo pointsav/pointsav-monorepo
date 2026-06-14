@@ -1,0 +1,32 @@
+/* carbon-overrides.css — Woodfine brand → Carbon token bridge
+   Applied after carbon.min.css to override Carbon G10 theme values */
+
+:root {
+  color-scheme: light;
+  --cds-interactive: #164679;
+  --cds-interactive-01: #164679;
+  --cds-link-01: #164679;
+  --cds-link-primary: #164679;
+  --cds-focus: #164679;
+  --cds-border-strong-01: #164679;
+  --cds-button-primary-active: #0f2e52;
+  --cds-button-primary-hover: #1a5491;
+  --cds-background: #ffffff;
+  --cds-background-hover: #f4f4f4;
+  --cds-layer-01: #f4f4f4;
+  --cds-layer-02: #ffffff;
+  --cds-text-primary: #161616;
+  --cds-text-secondary: #525252;
+  --cds-text-helper: #6f6f6f;
+  --cds-border-subtle-00: #e0e0e0;
+  --cds-border-subtle-01: #c6c6c6;
+}
+
+/* Enforce light mode — no OS dark-mode override */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light !important;
+    color: #161616 !important;
+    background-color: #ffffff !important;
+  }
+}

@@ -42,6 +42,8 @@ members = [
     # Jennifer ingest pipeline
     "service-input",
     "service-extraction",
+    # BIM Object schema vault + MCP server
+    "app-privategit-bim",
 ]
 
 [profile.dev]
