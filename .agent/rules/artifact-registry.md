@@ -1,7 +1,7 @@
 ---
 schema: foundry-artifact-registry-v1
-project: project-gis
-last_updated: 2026-06-12
+project: project-editorial
+last_updated: 2026-06-14
 ---
 
 # project-editorial Artifact Registry
@@ -161,10 +161,10 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
   Updated 2026-06-12: all 7 steps now marked complete; Step 7 updated to production build scripts.
 
 ### A22 — TOPIC: Location Intelligence Co-location Archetypes
-- **File:** `.agent/drafts-outbound/TOPIC-location-intelligence-archetypes.draft.md`
-- **Paired:** `.agent/drafts-outbound/TOPIC-location-intelligence-archetypes.es.draft.md`
-- **Status:** STAGED — draft complete 2026-06-11; updated 2026-06-12 with production data; ready for project-editorial
-- **Destination:** project-editorial → content-wiki-projects
+- **File:** `media-knowledge-projects/topic-location-intelligence-archetypes.md`
+- **Paired:** `media-knowledge-projects/topic-location-intelligence-archetypes.es.md`
+- **Status:** COMMITTED — commit d550b6b (Jennifer Woodfine, 2026-06-14); source drafts at project-gis/drafts-outbound/; editorial strip applied (H1 removed, code vars stripped from Map Integration section); Stage 6 pending
+- **Destination:** media-knowledge-projects (committed)
 - **Content:** Overview TOPIC covering all three co-location archetypes (PRO/VWH/PKS). Three-tier
   tier definitions, PRO Phase 23+Change B dataset (6,493 clusters), VWH production results
   (6,368 clusters; T1=852/T2=1,327/T3=4,189; retail_contamination flag), PKS production results
