@@ -1,0 +1,93 @@
+/* bim-components.css — BIM Object component styles */
+
+/* Ensure CDS data-table inherits our color tokens */
+cds-data-table,
+cds-table-head,
+cds-table-body,
+cds-table-row,
+cds-table-header-row,
+cds-table-header-cell,
+cds-table-cell {
+  --cds-interactive: #164679;
+  --cds-layer-accent-01: #dde7f1;
+}
+
+/* BIM tag chip */
+.bim-tag {
+  display: inline-block;
+  background: #dde7f1;
+  color: #164679;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 0.125em 0.5em;
+  border-radius: 1rem;
+  vertical-align: middle;
+}
+
+/* Side-nav custom link styling */
+cds-side-nav-link a.bim-nav-link,
+cds-side-nav-menu-item a.bim-nav-link {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+  width: 100%;
+}
+
+/* Active link indicator in sidebar */
+[aria-current="page"] {
+  border-left: 3px solid #164679;
+  background: rgba(22, 70, 121, 0.08);
+}
+
+/* Carbon button overrides for bim-nav context */
+.cds-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.cds-btn--primary {
+  background: #164679;
+  color: #ffffff;
+  border-color: #164679;
+}
+
+.cds-btn--primary:hover {
+  background: #1a5491;
+  border-color: #1a5491;
+}
+
+.cds-btn--ghost {
+  background: transparent;
+  color: #164679;
+  border-color: transparent;
+}
+
+.cds-btn--ghost:hover {
+  background: rgba(22, 70, 121, 0.08);
+}
+
+/* BIM Object card hover shadow */
+.bim-category-card {
+  cursor: pointer;
+}
+
+/* Key plan category accent bars */
+.bim-kp-card[data-category="private-office"] .bim-kp-svg { background: #eaf0f7; }
+.bim-kp-card[data-category="medical"] .bim-kp-svg { background: #e6f4ed; }
+.bim-kp-card[data-category="business"] .bim-kp-svg { background: #f0ebf7; }
+.bim-kp-card[data-category="laboratory"] .bim-kp-svg { background: #fdf0e0; }
+.bim-kp-card[data-category="academic"] .bim-kp-svg { background: #e5f4f0; }
+.bim-kp-card[data-category="civic"] .bim-kp-svg { background: #f5e9eb; }
+.bim-kp-card[data-category="corporate-office"] .bim-kp-svg { background: #e8f1f8; }
+
+/* Notification inline */
+.bim-save-notification {
+  margin-top: 1rem;
+}
