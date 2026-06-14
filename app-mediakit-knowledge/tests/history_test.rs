@@ -33,7 +33,7 @@ async fn fixture_state() -> (AppState, TempDir, TempDir) {
             brand_instance: "documentation".to_string(),
             site_title: "Test Wiki".to_string(),
             blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
-        peers: vec![],
+            peers: vec![],
         },
         content_dir,
         state_dir,
