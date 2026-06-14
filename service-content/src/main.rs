@@ -24,8 +24,7 @@ enum ExtractResult {
 
 /// Canonical classification vocabulary. Must match the runtime enum guard in
 /// `raw_entities_to_graph` — keep the two in sync.
-const ALLOWED_CLASSIFICATIONS: [&str; 5] =
-    ["Person", "Company", "Project", "Account", "Location"];
+const ALLOWED_CLASSIFICATIONS: [&str; 5] = ["Person", "Company", "Project", "Account", "Location"];
 
 /// System prompt shared between Tier A and Tier B extraction calls.
 const EXTRACTION_SYSTEM_PROMPT: &str = "Extract named entities from the text below. Classify each entity into exactly one category.\n\
