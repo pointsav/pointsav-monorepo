@@ -8,10 +8,7 @@ use serde_json::{json, Value};
 
 use crate::{render, schema::validator, state::AppState};
 
-pub async fn edit_get(
-    Path(slug): Path<String>,
-    State(state): State<AppState>,
-) -> Html<String> {
+pub async fn edit_get(Path(slug): Path<String>, State(state): State<AppState>) -> Html<String> {
     let token_json = state.tokens.get(&slug).cloned().unwrap_or(Value::Null);
     let content = render::editor::render_editor_panel(&slug, &token_json);
     Html(render::shell::page_shell(
@@ -76,8 +73,15 @@ pub async fn edit_post(
     }
 
     // Broadcast SSE event so connected browsers auto-refresh
-    let msg = format!(r#"{{"event":"token-updated","path":"{}"}}"#, out_path.display());
+    let msg = format!(
+        r#"{{"event":"token-updated","path":"{}"}}"#,
+        out_path.display()
+    );
     let _ = state.events_tx.send(msg);
 
-    (StatusCode::OK, Json(json!({ "saved": true, "file": filename }))).into_response()
+    (
+        StatusCode::OK,
+        Json(json!({ "saved": true, "file": filename })),
+    )
+        .into_response()
 }

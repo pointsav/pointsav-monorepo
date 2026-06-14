@@ -14,7 +14,12 @@ pub async fn tokens_index_handler(
     if is_fragment(&headers) {
         Html(content)
     } else {
-        Html(render::shell::page_shell("BIM Object Catalog", "/tokens", &content, &state))
+        Html(render::shell::page_shell(
+            "BIM Object Catalog",
+            "/tokens",
+            &content,
+            &state,
+        ))
     }
 }
 

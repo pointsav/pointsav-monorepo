@@ -33,7 +33,8 @@ impl AppState {
 }
 
 fn count_entities(tokens: &HashMap<String, Value>) -> usize {
-    tokens.values()
+    tokens
+        .values()
         .filter_map(|file| file.get("bim").and_then(|b| b.as_object()))
         .flat_map(|bim| bim.values())
         .filter_map(|cat| cat.as_object())
@@ -70,8 +71,8 @@ pub fn spawn_file_watcher(state: AppState, config: &Config) {
 
     tokio::spawn(async move {
         let (inner_tx, mut inner_rx) = tokio::sync::mpsc::channel::<String>(8);
-        let mut watcher = match notify::recommended_watcher(
-            move |res: notify::Result<notify::Event>| {
+        let mut watcher =
+            match notify::recommended_watcher(move |res: notify::Result<notify::Event>| {
                 if let Ok(event) = res {
                     let path_str = event
                         .paths
@@ -81,21 +82,22 @@ pub fn spawn_file_watcher(state: AppState, config: &Config) {
                         .to_string();
                     let _ = inner_tx.blocking_send(path_str);
                 }
-            },
-        ) {
-            Ok(w) => w,
-            Err(e) => {
-                eprintln!("warn: file watcher init failed: {e}");
-                return;
-            }
-        };
+            }) {
+                Ok(w) => w,
+                Err(e) => {
+                    eprintln!("warn: file watcher init failed: {e}");
+                    return;
+                }
+            };
         if let Err(e) = watcher.watch(&watch_dir, RecursiveMode::Recursive) {
             eprintln!("warn: file watcher watch failed: {e}");
             return;
         }
         while let Some(path_str) = inner_rx.recv().await {
-            let msg =
-                format!(r#"{{"event":"token-updated","path":"{}"}}"#, path_str.replace('\\', "/"));
+            let msg = format!(
+                r#"{{"event":"token-updated","path":"{}"}}"#,
+                path_str.replace('\\', "/")
+            );
             let _ = watcher_tx.send(msg);
         }
     });
