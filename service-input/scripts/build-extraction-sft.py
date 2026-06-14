@@ -96,14 +96,15 @@ def normalize_reference_yaml(path):
         elif isinstance(e, str) and e.strip():
             norm_entities.append({"name": e.strip(), "entity_type": "UNKNOWN"})
 
-    # Metrics — real field is metric_name, not name
+    # Metrics — three field name variants seen in the wild: metric_name, name, metric
     raw_metrics = block.get("metrics") or data.get("metrics") or []
     if not isinstance(raw_metrics, list):
         raw_metrics = []
     norm_metrics = []
     for m in raw_metrics:
         if isinstance(m, dict):
-            mname = m.get("metric_name") or m.get("name")
+            # Bug A fix: add "metric" as a fallback key (was dropping 39% of metrics)
+            mname = m.get("metric_name") or m.get("name") or m.get("metric")
             if mname:
                 norm_metrics.append({
                     "metric_name": str(mname),
@@ -120,7 +121,12 @@ def normalize_reference_yaml(path):
         raw = block.get(theme_key) or data.get(theme_key)
         if isinstance(raw, list):
             for t in raw:
-                ts = str(t).strip()
+                # Bug B fix: dict-themes must be flattened to a string, not repr'd.
+                # A dict like {theme, relevance, sub_themes} → extract the theme value.
+                if isinstance(t, dict):
+                    ts = str(t.get("theme") or t.get("name") or next(iter(t.values()), "")).strip()
+                else:
+                    ts = str(t).strip()
                 if ts and ts not in ("No themes loaded.", "", "[]"):
                     norm_themes.append(ts)
         if norm_themes:
@@ -152,20 +158,25 @@ def load_people(csv_path):
     return names
 
 
-def top_k_candidates(stem, all_names, k=TOP_K):
-    stem_tokens = set(stem.lower().replace("-", " ").replace("_", " ").split())
+def top_k_candidates(doc_content, all_names, k=TOP_K):
+    """Score people-names by presence in the document text, not the filename.
+    Filename-token scoring produced near-random noise for documents whose stems
+    didn't overlap with names (Audit 3, 2026-06-14). Document-text matching finds
+    names that actually appear or are closely referenced in the document body.
+    The random-pad branch is removed — an empty list beats misleading noise.
+    """
+    doc_lower = doc_content.lower()
     scored = []
     for name in all_names:
-        name_tokens = set(name.lower().split())
-        overlap = len(name_tokens & stem_tokens)
-        if overlap > 0:
-            scored.append((overlap, name))
+        # Score by how many tokens of the name appear in the document text.
+        name_tokens = name.lower().split()
+        if not name_tokens:
+            continue
+        matches = sum(1 for tok in name_tokens if len(tok) > 2 and tok in doc_lower)
+        if matches > 0:
+            scored.append((matches, name))
     scored.sort(key=lambda x: -x[0])
-    result = [n for _, n in scored[:k]]
-    if len(result) < k and all_names:
-        pad = [n for n in all_names if n not in set(result)]
-        result += pad[:k - len(result)]
-    return result
+    return [n for _, n in scored[:k]]
 
 
 def main():
@@ -213,12 +224,18 @@ def main():
             skipped_no_asset += 1
             continue
 
-        candidates = top_k_candidates(stem, all_names, TOP_K)
-        candidate_str = ", ".join(candidates) if candidates else "(no candidates)"
+        candidates = top_k_candidates(doc_content, all_names, TOP_K)
+        candidate_str = ", ".join(candidates) if candidates else "(none matched)"
 
         instruction = (
             "Extract named entities, metrics, and themes from the following document.\n"
-            f"Candidate entities (use canonical names if matched): {candidate_str}\n\n"
+            "Return a JSON object with exactly three keys:\n"
+            "  entities: list of {\"name\": string, \"entity_type\": string}\n"
+            "    entity_type must be one of: Person, Company, Project, Account, Location\n"
+            "  metrics:  list of {\"metric_name\": string, \"value\": string, \"unit\": string}\n"
+            "  themes:   list of strings (short descriptive phrases)\n"
+            "Omit any key whose list would be empty.\n"
+            f"Candidate named entities found in this document: {candidate_str}\n\n"
             f"Document:\n\n{doc_content}"
         )
         output = json.dumps(norm, ensure_ascii=False)

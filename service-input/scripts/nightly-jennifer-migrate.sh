@@ -19,29 +19,24 @@ exec >> "$LOG" 2>&1
 echo "[$(date -u +%FT%TZ)] nightly-jennifer-migrate start"
 
 # 1. Doorman health gate — /readyz returns JSON; /healthz returns plain "ok"
+# Parse via stdin (not inline string interpolation) so Bloomberg-headline filenames
+# with apostrophes or triple-quote sequences don't break the parser.
 READYZ=$(curl -sf --max-time 5 http://127.0.0.1:9080/readyz 2>/dev/null || echo "{}")
 
-TIER_A=$(python3 -c "
+read -r TIER_A TIER_B_CIRCUIT < <(printf '%s' "$READYZ" | python3 -c "
 import sys, json
 try:
-    d = json.loads('''$READYZ''')
-    print('true' if d.get('tier_a', False) else 'false')
-except Exception:
-    print('unknown')
-" 2>/dev/null || echo "unknown")
-
-TIER_B_CIRCUIT=$(python3 -c "
-import sys, json
-try:
-    d = json.loads('''$READYZ''')
+    d = json.load(sys.stdin)
+    tier_a = 'true' if d.get('tier_a', False) else 'false'
     tb = d.get('tier_b', {})
+    circuit = 'unknown'
     for node, info in tb.items():
         if isinstance(info, dict) and 'circuit' in info:
-            print(info['circuit']); sys.exit(0)
-    print('unknown')
+            circuit = info['circuit']; break
+    print(tier_a, circuit)
 except Exception:
-    print('unknown')
-" 2>/dev/null || echo "unknown")
+    print('unknown unknown')
+" 2>/dev/null || echo "unknown unknown")
 
 echo "[$(date -u +%FT%TZ)] tier_a=$TIER_A  tier_b_circuit=$TIER_B_CIRCUIT"
 
@@ -59,20 +54,21 @@ fi
 
 # 3. Calibration gate — go_no_go is nested at summary.go_no_go, NOT top-level
 CALREP=$(curl -sf --max-time 10 http://127.0.0.1:9106/v1/calibration-report 2>/dev/null || echo "{}")
-GO_NO_GO=$(python3 -c "
+read -r GO_NO_GO GO_REASON < <(printf '%s' "$CALREP" | python3 -c "
 import sys, json
 try:
-    d = json.loads('''$CALREP''')
-    print(d.get('summary', {}).get('go_no_go', 'stop'))
+    d = json.load(sys.stdin)
+    s = d.get('summary', {})
+    print(s.get('go_no_go', 'stop'), s.get('go_no_go_reason', 'unknown'))
 except Exception:
-    print('stop')
-" 2>/dev/null || echo "stop")
+    print('stop unknown')
+" 2>/dev/null || echo "stop unknown")
 
 if [ "$GO_NO_GO" = "stop" ]; then
-    echo "[$(date -u +%FT%TZ)] STOP: calibration go_no_go=stop. Aborting."
+    echo "[$(date -u +%FT%TZ)] STOP: calibration go_no_go=stop reason=$GO_REASON. Aborting."
     exit 1
 fi
-echo "[$(date -u +%FT%TZ)] calibration go_no_go=$GO_NO_GO — proceeding"
+echo "[$(date -u +%FT%TZ)] calibration go_no_go=$GO_NO_GO reason=$GO_REASON — proceeding"
 
 # 4. Batch migration loop
 # offset pagination: if docs are added between calls, resume offset may shift.
@@ -84,34 +80,24 @@ BATCH_SIZE=10
 while true; do
     RESP=$(curl -sf --max-time 30 -X POST http://127.0.0.1:9106/v1/migrate \
         -H 'Content-Type: application/json' \
-        -d "{\"batch_size\":$BATCH_SIZE,\"offset\":$OFFSET}" 2>/dev/null || echo "{}")
+        -d "{\"batch_size\":$BATCH_SIZE,\"offset\":$OFFSET}" 2>/dev/null || true)
 
-    PROCESSED=$(python3 -c "
-import json
-try:
-    d = json.loads('''$RESP''')
-    print(d.get('processed', 0))
-except Exception:
-    print(0)
-" 2>/dev/null || echo "0")
+    # Parse all three fields in one stdin call so apostrophes in filenames can't
+    # break interpolation. Emit "ERROR" as processed when the response is empty
+    # (curl failed) so we distinguish failure from a legitimate empty batch.
+    if [ -z "$RESP" ]; then
+        echo "[$(date -u +%FT%TZ)] ERROR: curl to /v1/migrate failed or timed out. Aborting."
+        exit 1
+    fi
 
-    SKIPPED=$(python3 -c "
-import json
+    read -r PROCESSED SKIPPED OFFSET < <(printf '%s' "$RESP" | python3 -c "
+import sys, json
 try:
-    d = json.loads('''$RESP''')
-    print(d.get('skipped', 0))
+    d = json.load(sys.stdin)
+    print(d.get('processed', 0), d.get('skipped', 0), d.get('offset_next', 0))
 except Exception:
-    print(0)
-" 2>/dev/null || echo "0")
-
-    OFFSET=$(python3 -c "
-import json
-try:
-    d = json.loads('''$RESP''')
-    print(d.get('offset_next', 0))
-except Exception:
-    print(0)
-" 2>/dev/null || echo "0")
+    print(0, 0, 0)
+" 2>/dev/null || echo "0 0 0")
 
     TOTAL=$((TOTAL + PROCESSED))
     echo "[$(date -u +%FT%TZ)] batch: processed=$PROCESSED skipped=$SKIPPED offset_next=$OFFSET total=$TOTAL"
