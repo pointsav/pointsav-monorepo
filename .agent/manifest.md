@@ -1,12 +1,12 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster: project-editorial
-cluster_name: project-editorial
-cluster_branch: cluster/project-editorial
-created: 2026-05-16
+cluster: project-infrastructure
+cluster_name: project-infrastructure
+cluster_branch: cluster/project-infrastructure
+created: 2026-05-18
 state: active
 slm_endpoint: http://localhost:8011
-module_id: editorial
+module_id: infrastructure
 
 tetrad:
   vendor:
