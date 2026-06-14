@@ -77,6 +77,8 @@ async fn dispatch(state: &AppState, method: &str, params: &Value) -> Result<Valu
         "query_claims" => query_claims(state, params),
         "query_page" => query_page(state, params).await,
         "search" => mcp_search(state, params).await,
+        // Phase 7: federated search — fans out to peer instances and merges results.
+        "knowledge/search" => federation_search(state, params).await,
         "list_pages" => list_pages(state, params).await,
         "get_links" => get_links(state, params).await,
         "get_citations" => get_citations(state, params).await,
@@ -651,4 +653,106 @@ fn query_claims(state: &AppState, params: &Value) -> Result<Value, (i32, String)
         })
         .collect();
     Ok(json!({ "claims": claims, "topic": topic, "asof": asof }))
+}
+
+// ─── knowledge/search (Phase 7 federation) ───────────────────────────────────
+
+/// `knowledge/search` — federated full-text search.
+///
+/// Calls local BM25 search and fans out to all configured `[[peer]]` instances.
+/// Results are merged and deduplicated by slug; each result carries an `instance`
+/// label identifying its source.
+///
+/// params: `{ query: String, limit?: usize }`
+/// returns: `{ results: [{ slug, title, lede, score, instance }] }`
+async fn federation_search(state: &AppState, params: &Value) -> Result<Value, (i32, String)> {
+    let query = params
+        .get("query")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| (-32602i32, "missing param: query".to_string()))?;
+    let limit = params
+        .get("limit")
+        .and_then(|v| v.as_u64())
+        .map(|n| n as usize)
+        .unwrap_or(10);
+
+    // Local results labelled by site_title.
+    let local_hits = crate::search::search(&state.search, query, limit)
+        .map_err(|e| (-32000i32, format!("local search error: {e}")))?;
+    let local_label = state.site_title.clone();
+    let mut results: Vec<Value> = local_hits
+        .into_iter()
+        .map(|h| {
+            json!({
+                "slug":     h.slug,
+                "title":    h.title,
+                "lede":     h.snippet,
+                "score":    h.score,
+                "instance": local_label,
+            })
+        })
+        .collect();
+
+    // Fan out to peer instances. Each peer is queried independently; failures
+    // are logged and skipped so local results are always returned.
+    let client = reqwest::Client::new();
+    let peer_request = json!({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "search",
+        "params": { "query": query, "limit": limit }
+    });
+    let mut seen_slugs: std::collections::HashSet<String> =
+        results.iter().filter_map(|r| r["slug"].as_str().map(|s| s.to_string())).collect();
+
+    for peer in &state.peers {
+        let url = format!("{}/mcp", peer.url);
+        let label = peer.label.clone();
+        match client
+            .post(&url)
+            .json(&peer_request)
+            .timeout(std::time::Duration::from_secs(3))
+            .send()
+            .await
+        {
+            Ok(resp) => match resp.json::<Value>().await {
+                Ok(body) => {
+                    if let Some(peer_results) = body
+                        .get("result")
+                        .and_then(|r| r.get("results"))
+                        .and_then(|r| r.as_array())
+                    {
+                        for hit in peer_results {
+                            let slug = hit["slug"].as_str().unwrap_or("").to_string();
+                            if !slug.is_empty() && seen_slugs.insert(slug.clone()) {
+                                results.push(json!({
+                                    "slug":     slug,
+                                    "title":    hit["title"],
+                                    "lede":     hit["lede"],
+                                    "score":    hit["score"],
+                                    "instance": label,
+                                }));
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    tracing::warn!(peer = %url, err = %e, "federation_search: JSON parse error");
+                }
+            },
+            Err(e) => {
+                tracing::warn!(peer = %url, err = %e, "federation_search: request error");
+            }
+        }
+    }
+
+    // Sort by score descending, then truncate to limit.
+    results.sort_by(|a, b| {
+        let sa = a["score"].as_f64().unwrap_or(0.0);
+        let sb = b["score"].as_f64().unwrap_or(0.0);
+        sb.partial_cmp(&sa).unwrap_or(std::cmp::Ordering::Equal)
+    });
+    results.truncate(limit);
+
+    Ok(json!({ "results": results }))
 }
