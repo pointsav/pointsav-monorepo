@@ -530,7 +530,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
     "car_rental": {
         "US": ["enterprise-us", "hertz-us", "avis-us"],
         "CA": ["enterprise-us", "hertz-us", "avis-us"],
-        "MX": [],
+        "MX": ["hertz-mx", "enterprise-mx", "avis-mx", "budget-mx"],  # Phase 3 2026-06-14
         "GB": ["europcar-fr", "sixt-de"],
         "FR": ["europcar-fr", "sixt-de"],
         "DE": ["sixt-de", "europcar-fr"],
@@ -702,12 +702,16 @@ DISPLAY_NAMES: dict[str, str] = {
     "cef-uk": "City Electrical Factors",
     # VWH — welding (Phase 1, 2026-06-01)
     "boc-uk": "BOC",
-    # PKS — car_rental (Phase 1, 2026-06-01)
+    # PKS — car_rental (Phase 1, 2026-06-01; MX added Phase 3 2026-06-14)
     "enterprise-us": "Enterprise Rent-A-Car",
     "hertz-us": "Hertz",
     "avis-us": "Avis",
     "sixt-de": "Sixt",
     "europcar-fr": "Europcar",
+    "hertz-mx": "Hertz",
+    "enterprise-mx": "Enterprise",
+    "avis-mx": "Avis",
+    "budget-mx": "Budget",
 }
 
 # ── REVERSE INDEX: chain_id → category ───────────────────────────────────────
