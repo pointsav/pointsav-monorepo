@@ -108,10 +108,8 @@ fn main() -> NotifyResult<()> {
                                     // Move to processed/ after successful emit.
                                     let done_dir = format!("{}/processed", watch_dir);
                                     if fs::create_dir_all(&done_dir).is_ok() {
-                                        let _ = fs::rename(
-                                            &path,
-                                            format!("{}/{}", done_dir, filename),
-                                        );
+                                        let _ =
+                                            fs::rename(&path, format!("{}/{}", done_dir, filename));
                                     }
                                 }
                             }
