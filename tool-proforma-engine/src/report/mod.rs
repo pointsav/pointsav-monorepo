@@ -2,6 +2,7 @@ pub mod alloc_jw1_proforma;
 pub mod bencal;
 pub mod bencal_forecast_v1;
 pub mod bencal_v1_proforma;
+pub mod building_portfolio_v2;
 pub mod d1_dev_classes;
 pub mod d1_dev_classes_v2;
 pub mod d2_direct_hold;

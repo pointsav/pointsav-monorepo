@@ -104,6 +104,14 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// Building Portfolio V2 — Four-DHS extrapolation + Development Sites layer.
+    /// US 2×; backwards-from-prototypes site model; Y1–Y10 build-out + AUM ramp.
+    /// Self-generating from locked Rust constants. Emits proforma + summary + JSON.
+    BuildingPortfolioV2 {
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
     /// Legacy JV (D7) V1 — Self-generating apples-to-apples comparator to PCLP 1
     /// per BRIEF v0.15.6 §5h. Traditional bank-debt JV ($250M equity + $750M debt =
     /// $1B single-shot). Emits proforma + summary + JSON.
@@ -424,6 +432,33 @@ fn main() {
             );
             eprintln!(
                 "wrote 3 Building Portfolio V1 files to {}",
+                out_dir.display()
+            );
+        }
+        Some(Command::BuildingPortfolioV2 { out_dir }) => {
+            // Building Portfolio V2 — four-DHS extrapolation + Development Sites layer.
+            // Self-generating from locked Rust constants in report::building_portfolio_v2.
+            let proforma_html = report::building_portfolio_v2::render_proforma();
+            let summary_html = report::building_portfolio_v2::render_summary();
+            let json_dump = report::building_portfolio_v2::render_json();
+            write_output(
+                &proforma_html,
+                Some(
+                    &out_dir.join("COMPLIANCE_MCorp_2026_06_04_Proforma_BuildingPortfolio_V2.html"),
+                ),
+            );
+            write_output(
+                &summary_html,
+                Some(
+                    &out_dir.join("COMPLIANCE_MCorp_2026_06_04_Summary_BuildingPortfolio_V2.html"),
+                ),
+            );
+            write_output(
+                &json_dump,
+                Some(&out_dir.join("COMPLIANCE_MCorp_2026_06_04_BuildingPortfolio_V2.json")),
+            );
+            eprintln!(
+                "wrote 3 Building Portfolio V2 files to {}",
                 out_dir.display()
             );
         }
