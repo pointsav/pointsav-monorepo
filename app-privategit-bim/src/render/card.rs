@@ -114,11 +114,15 @@ pub fn render_token_page(category: &str, state: &AppState) -> String {
 pub fn render_key_plans(state: &AppState) -> String {
     // Phase 4 will fill in SVG zone diagrams; stub for compile
     let Some(file_val) = state.tokens.get("key-plans") else {
-        return r#"<div class="bim-empty"><p>key-plans.dtcg.json not found in library.</p></div>"#.into();
+        return r#"<div class="bim-empty"><p>key-plans.dtcg.json not found in library.</p></div>"#
+            .into();
     };
     let bim = match file_val.get("bim").and_then(|v| v.as_object()) {
         Some(b) => b,
-        None => return r#"<div class="bim-empty"><p>No bim root in key-plans.dtcg.json.</p></div>"#.into(),
+        None => {
+            return r#"<div class="bim-empty"><p>No bim root in key-plans.dtcg.json.</p></div>"#
+                .into()
+        }
     };
 
     let mut cards = String::new();
@@ -129,8 +133,14 @@ pub fn render_key_plans(state: &AppState) -> String {
             for slug in slugs {
                 let entity = &entities[slug];
                 let val = entity.get("$value").cloned().unwrap_or(Value::Null);
-                let display_name = val.get("display_name").and_then(|v| v.as_str()).unwrap_or(slug);
-                let internal_code = val.get("internal_code").and_then(|v| v.as_str()).unwrap_or("—");
+                let display_name = val
+                    .get("display_name")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or(slug);
+                let internal_code = val
+                    .get("internal_code")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("—");
                 let category = val.get("category").and_then(|v| v.as_str()).unwrap_or("—");
                 let area_sf = val.get("area_sf").and_then(|v| v.as_u64()).unwrap_or(0);
 
@@ -242,7 +252,11 @@ pub fn render_research_index(state: &AppState) -> String {
 }
 
 pub fn render_research_item(slug: &str, state: &AppState) -> String {
-    let path = state.config.vault_dir.join("research").join(format!("{slug}.md"));
+    let path = state
+        .config
+        .vault_dir
+        .join("research")
+        .join(format!("{slug}.md"));
     let raw = match std::fs::read_to_string(&path) {
         Ok(s) => s,
         Err(_) => {
@@ -289,8 +303,12 @@ fn render_category_cards(state: &AppState) -> String {
 }
 
 fn count_entities_in_file(state: &AppState, category: &str) -> usize {
-    let Some(file_val) = state.tokens.get(category) else { return 0 };
-    let Some(bim) = file_val.get("bim").and_then(|v| v.as_object()) else { return 0 };
+    let Some(file_val) = state.tokens.get(category) else {
+        return 0;
+    };
+    let Some(bim) = file_val.get("bim").and_then(|v| v.as_object()) else {
+        return 0;
+    };
     bim.values()
         .filter_map(|v| v.as_object())
         .flat_map(|o| o.values())

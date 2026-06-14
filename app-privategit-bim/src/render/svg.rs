@@ -1,8 +1,14 @@
 use serde_json::Value;
 
 pub fn render_kp_zone_svg_from_value(val: &Value) -> String {
-    let z1 = val.get("zone1_depth_m").and_then(|v| v.as_f64()).unwrap_or(6.0);
-    let z2 = val.get("zone2_depth_m").and_then(|v| v.as_f64()).unwrap_or(0.0);
+    let z1 = val
+        .get("zone1_depth_m")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(6.0);
+    let z2 = val
+        .get("zone2_depth_m")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
     let z3 = val
         .get("zone3_depth_m")
         .and_then(|v| v.as_f64())
@@ -90,22 +96,58 @@ pub fn render_kp_zone_svg(
 
     let size_tier: u8 = match (category, area_m2) {
         ("private-office", Some(a)) => {
-            if a < 38.0 { 0 } else if a < 55.0 { 1 } else { 2 }
+            if a < 38.0 {
+                0
+            } else if a < 55.0 {
+                1
+            } else {
+                2
+            }
         }
         ("medical", Some(a)) => {
-            if a < 270.0 { 0 } else if a < 410.0 { 1 } else { 2 }
+            if a < 270.0 {
+                0
+            } else if a < 410.0 {
+                1
+            } else {
+                2
+            }
         }
         ("laboratory", Some(a)) => {
-            if a < 260.0 { 0 } else if a < 370.0 { 1 } else { 2 }
+            if a < 260.0 {
+                0
+            } else if a < 370.0 {
+                1
+            } else {
+                2
+            }
         }
         ("academic", Some(a)) => {
-            if a < 175.0 { 0 } else if a < 315.0 { 1 } else { 2 }
+            if a < 175.0 {
+                0
+            } else if a < 315.0 {
+                1
+            } else {
+                2
+            }
         }
         ("business", Some(a)) => {
-            if a < 360.0 { 0 } else if a < 545.0 { 1 } else { 2 }
+            if a < 360.0 {
+                0
+            } else if a < 545.0 {
+                1
+            } else {
+                2
+            }
         }
         ("civic", Some(a)) => {
-            if a < 420.0 { 0 } else if a < 700.0 { 1 } else { 2 }
+            if a < 420.0 {
+                0
+            } else if a < 700.0 {
+                1
+            } else {
+                2
+            }
         }
         _ => 1,
     };
@@ -312,7 +354,9 @@ pub fn render_kp_zone_svg(
                 let cy = y0 + h1 * 0.35;
                 for i in 0..chair_n {
                     let cx = ch_x0 + sp * i as f64;
-                    if cx + 10.0 > xr - 28.0 { break; }
+                    if cx + 10.0 > xr - 28.0 {
+                        break;
+                    }
                     s.push_str(&format!(
                         "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"10\" height=\"7\" fill=\"#d0e4d0\" stroke=\"#5a8a6a\" stroke-width=\"0.5\" rx=\"1.5\"/>",
                         cx, cy
@@ -384,7 +428,9 @@ pub fn render_kp_zone_svg(
                 let bs = b_area / bench_n as f64;
                 for i in 0..bench_n {
                     let bx = bx0 + bs * i as f64;
-                    if bx + 11.0 > xr - 2.0 { break; }
+                    if bx + 11.0 > xr - 2.0 {
+                        break;
+                    }
                     s.push_str(&format!(
                         "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"11\" height=\"6\" fill=\"#c0d0c8\" stroke=\"#5a8a6a\" stroke-width=\"0.5\" rx=\"0.3\"/>",
                         bx, y0 + 4.0
@@ -420,9 +466,21 @@ pub fn render_kp_zone_svg(
 
         // ── Business ───────────────────────────────────────────────────────
         "business" => {
-            let office_n: usize = match size_tier { 0 => 2, 1 => 3, _ => 5 };
-            let ws_cols: usize = match size_tier { 0 => 3, 1 => 4, _ => 5 };
-            let ws_rows: usize = match size_tier { 0 => 3, 1 => 4, _ => 5 };
+            let office_n: usize = match size_tier {
+                0 => 2,
+                1 => 3,
+                _ => 5,
+            };
+            let ws_cols: usize = match size_tier {
+                0 => 3,
+                1 => 4,
+                _ => 5,
+            };
+            let ws_rows: usize = match size_tier {
+                0 => 3,
+                1 => 4,
+                _ => 5,
+            };
             let conf_n: usize = if size_tier == 2 { 2 } else { 1 };
             let col_n = if office_n > 3 { 2usize } else { 1 };
             let per_col = office_n.div_ceil(col_n);
@@ -433,7 +491,9 @@ pub fn render_kp_zone_svg(
             ));
             for i in 0..per_col {
                 let oy = y0 + 5.0 + oh * i as f64;
-                if oy + oh > y0 + h1 - 1.0 { break; }
+                if oy + oh > y0 + h1 - 1.0 {
+                    break;
+                }
                 s.push_str(&format!(
                     "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"16\" height=\"{:.1}\" fill=\"#e8e0d0\" stroke=\"{}\" stroke-width=\"0.5\"/>",
                     x0 + 1.0, oy, oh - 0.5, accent
@@ -442,7 +502,9 @@ pub fn render_kp_zone_svg(
             if col_n == 2 {
                 for i in 0..(office_n - per_col) {
                     let oy = y0 + 5.0 + oh * i as f64;
-                    if oy + oh > y0 + h1 - 1.0 { break; }
+                    if oy + oh > y0 + h1 - 1.0 {
+                        break;
+                    }
                     s.push_str(&format!(
                         "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"16\" height=\"{:.1}\" fill=\"#e8e0d0\" stroke=\"{}\" stroke-width=\"0.5\"/>",
                         x0 + 19.0, oy, oh - 0.5, accent
@@ -459,7 +521,9 @@ pub fn render_kp_zone_svg(
                     let wy = y0 + 1.0 + ws_sy * row as f64;
                     let ww = (ws_sx - 2.0).clamp(5.0, 16.0);
                     let wh = (ws_sy - 1.5).clamp(3.0, 10.0);
-                    if wx + ww > xr - 2.0 { break; }
+                    if wx + ww > xr - 2.0 {
+                        break;
+                    }
                     s.push_str(&format!(
                         "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#d0c8e0\" stroke=\"#7060a0\" stroke-width=\"0.4\" rx=\"0.3\"/>",
                         wx, wy, ww, wh
@@ -471,7 +535,9 @@ pub fn render_kp_zone_svg(
                 let ch = (h2 * 0.48).clamp(8.0, 16.0);
                 for ci in 0..conf_n {
                     let cx_t = x0 + 4.0 + ci as f64 * (cw + 6.0);
-                    if cx_t + cw > xr - 26.0 { break; }
+                    if cx_t + cw > xr - 26.0 {
+                        break;
+                    }
                     let cy_t = y1 + (h2 - ch) / 2.0;
                     s.push_str(&format!(
                         "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#d4c8a0\" stroke=\"#8b7a40\" stroke-width=\"0.5\" rx=\"1\"/>",
@@ -588,14 +654,23 @@ pub fn render_kp_zone_svg(
 
         // ── Civic ──────────────────────────────────────────────────────────
         "civic" => {
-            let office_n: usize = match size_tier { 0 => 2, 1 => 4, _ => 5 };
-            let conf_n: usize = match size_tier { 0 => 1, _ => 2 };
+            let office_n: usize = match size_tier {
+                0 => 2,
+                1 => 4,
+                _ => 5,
+            };
+            let conf_n: usize = match size_tier {
+                0 => 1,
+                _ => 2,
+            };
             let ocols = if office_n > 3 { 2usize } else { 1 };
             let oper_col = office_n.div_ceil(ocols);
             let oh = ((h1 - 2.0) / oper_col as f64).min(12.0);
             for i in 0..oper_col {
                 let oy = y0 + 1.0 + oh * i as f64;
-                if oy + oh > y0 + h1 - 1.0 { break; }
+                if oy + oh > y0 + h1 - 1.0 {
+                    break;
+                }
                 s.push_str(&format!(
                     "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"13\" height=\"{:.1}\" fill=\"#e8e0d0\" stroke=\"{}\" stroke-width=\"0.4\"/>",
                     x0 + 1.0, oy, oh - 0.5, accent
@@ -604,7 +679,9 @@ pub fn render_kp_zone_svg(
             if ocols == 2 {
                 for i in 0..(office_n - oper_col) {
                     let oy = y0 + 1.0 + oh * i as f64;
-                    if oy + oh > y0 + h1 - 1.0 { break; }
+                    if oy + oh > y0 + h1 - 1.0 {
+                        break;
+                    }
                     s.push_str(&format!(
                         "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"13\" height=\"{:.1}\" fill=\"#e8e0d0\" stroke=\"{}\" stroke-width=\"0.4\"/>",
                         x0 + 16.0, oy, oh - 0.5, accent
@@ -615,7 +692,9 @@ pub fn render_kp_zone_svg(
             let conf_zone_x = xr - (conf_n as f64 * 32.0 + court_w + 2.0);
             for ci in 0..conf_n {
                 let cx = conf_zone_x + ci as f64 * 32.0;
-                if cx < x0 + 34.0 { continue; }
+                if cx < x0 + 34.0 {
+                    continue;
+                }
                 s.push_str(&format!(
                     "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"28\" height=\"{:.1}\" fill=\"#e8e0d0\" stroke=\"{}\" stroke-width=\"0.5\"/>",
                     cx, y0 + 1.0, h1 - 2.0, accent
@@ -637,7 +716,9 @@ pub fn render_kp_zone_svg(
                 for row in 0..cr_rows.min(4) {
                     for col in 0..3usize {
                         let sy = y0 + 3.0 + row as f64 * 7.0;
-                        if sy + 4.0 > y0 + h1 - 3.0 { break; }
+                        if sy + 4.0 > y0 + h1 - 3.0 {
+                            break;
+                        }
                         s.push_str(&format!(
                             "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"7\" height=\"4\" fill=\"#b8c8d8\" stroke=\"#5a7898\" stroke-width=\"0.3\" rx=\"0.3\"/>",
                             crx + 2.0 + col as f64 * 9.0, sy

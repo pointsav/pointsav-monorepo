@@ -6,15 +6,17 @@ use axum::{
 
 use crate::{render, state::AppState};
 
-pub async fn key_plans_handler(
-    headers: HeaderMap,
-    State(state): State<AppState>,
-) -> Html<String> {
+pub async fn key_plans_handler(headers: HeaderMap, State(state): State<AppState>) -> Html<String> {
     let content = render::card::render_key_plans(&state);
     if is_fragment(&headers) {
         Html(content)
     } else {
-        Html(render::shell::page_shell("Key Plans", "/key-plans", &content, &state))
+        Html(render::shell::page_shell(
+            "Key Plans",
+            "/key-plans",
+            &content,
+            &state,
+        ))
     }
 }
 
@@ -42,7 +44,10 @@ pub async fn kp_download_handler(
                 axum::http::StatusCode::OK,
                 [
                     ("Content-Type", content_type),
-                    ("Content-Disposition", &format!("attachment; filename=\"{safe_name}\"")),
+                    (
+                        "Content-Disposition",
+                        &format!("attachment; filename=\"{safe_name}\""),
+                    ),
                 ],
                 bytes,
             )

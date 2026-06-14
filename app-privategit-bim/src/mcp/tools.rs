@@ -69,22 +69,32 @@ pub fn list_tools() -> Vec<Value> {
 
 pub fn call_tool(params: &Option<Value>, state: &AppState) -> Result<Value, String> {
     let p = params.as_ref().ok_or("missing params")?;
-    let name = p.get("name").and_then(|v| v.as_str()).ok_or("missing tool name")?;
+    let name = p
+        .get("name")
+        .and_then(|v| v.as_str())
+        .ok_or("missing tool name")?;
     let args = p.get("arguments").cloned().unwrap_or(Value::Null);
 
     match name {
         "get_bim_object" => {
-            let path =
-                args.get("token_path").and_then(|v| v.as_str()).ok_or("missing token_path")?;
+            let path = args
+                .get("token_path")
+                .and_then(|v| v.as_str())
+                .ok_or("missing token_path")?;
             let entity = resolve_token_path(path, state)?;
             Ok(json!({
                 "content": [{ "type": "text", "text": entity.to_string() }]
             }))
         }
         "list_objects_by_category" => {
-            let cat =
-                args.get("category").and_then(|v| v.as_str()).ok_or("missing category")?;
-            let file_val = state.tokens.get(cat).ok_or_else(|| format!("category '{cat}' not found"))?;
+            let cat = args
+                .get("category")
+                .and_then(|v| v.as_str())
+                .ok_or("missing category")?;
+            let file_val = state
+                .tokens
+                .get(cat)
+                .ok_or_else(|| format!("category '{cat}' not found"))?;
             let bim = file_val
                 .get("bim")
                 .and_then(|v| v.as_object())
@@ -107,8 +117,10 @@ pub fn call_tool(params: &Option<Value>, state: &AppState) -> Result<Value, Stri
             }))
         }
         "get_ifc_entity" => {
-            let path =
-                args.get("token_path").and_then(|v| v.as_str()).ok_or("missing token_path")?;
+            let path = args
+                .get("token_path")
+                .and_then(|v| v.as_str())
+                .ok_or("missing token_path")?;
             let entity = resolve_token_path(path, state)?;
             let val = entity.get("$value").cloned().unwrap_or(Value::Null);
             Ok(json!({
@@ -122,8 +134,10 @@ pub fn call_tool(params: &Option<Value>, state: &AppState) -> Result<Value, Stri
             }))
         }
         "get_compliance_requirements" => {
-            let path =
-                args.get("token_path").and_then(|v| v.as_str()).ok_or("missing token_path")?;
+            let path = args
+                .get("token_path")
+                .and_then(|v| v.as_str())
+                .ok_or("missing token_path")?;
             let entity = resolve_token_path(path, state)?;
             let compliance = entity
                 .get("$value")
@@ -135,8 +149,10 @@ pub fn call_tool(params: &Option<Value>, state: &AppState) -> Result<Value, Stri
             }))
         }
         "get_object_property_sets" => {
-            let path =
-                args.get("token_path").and_then(|v| v.as_str()).ok_or("missing token_path")?;
+            let path = args
+                .get("token_path")
+                .and_then(|v| v.as_str())
+                .ok_or("missing token_path")?;
             let entity = resolve_token_path(path, state)?;
             let psets = entity
                 .get("$value")
@@ -173,7 +189,9 @@ fn resolve_token_path(path: &str, state: &AppState) -> Result<Value, String> {
     // Navigate remaining path segments through the JSON tree
     let mut cur: &Value = &Value::Object(bim.clone());
     for key in &rest {
-        cur = cur.get(key).ok_or_else(|| format!("key '{key}' not found in path '{path}'"))?;
+        cur = cur
+            .get(key)
+            .ok_or_else(|| format!("key '{key}' not found in path '{path}'"))?;
     }
     Ok(cur.clone())
 }
