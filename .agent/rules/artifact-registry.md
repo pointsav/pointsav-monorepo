@@ -2,6 +2,7 @@
 schema: foundry-artifact-registry-v1
 project: project-editorial
 project: project-system
+project: project-gis
 last_updated: 2026-06-14
 ---
 
@@ -135,14 +136,14 @@ Routing per `~/Foundry/conventions/artifact-classification.yaml`:
 
 ### A18 — BRIEF: Location Intelligence Archetypes (PRO / VWH / PKS)
 - **File:** `.agent/briefs/BRIEF-location-intelligence-archetypes-2026-06-01.md`
-- **Status:** ACTIVE — updated 2026-06-12; §10 PKS production system + §11 VWH calibration added
+- **Status:** ACTIVE — updated 2026-06-14; §10.13 Phase 5 MX coverage added; §10.11 version control resolved
 - **Destination:** internal (BRIEF stays in archive); editorial drafts dispatched separately
 - **Content:** Three-archetype Location Intelligence system (PRO/VWH/PKS). Definitions, co-location
   signals, full chain taxonomy with Wikidata IDs, airport/rail classification findings, service-parking
-  architecture. §10: PKS production system — 6,953 clusters; mode-group collapse; park-and-ride anchor;
-  car rental + hotel enrichment. §11: VWH calibration — hardware profile (10,338 anchors, 45 chains),
-  sim (73.4% hardware validation PASS), group-collapse tier rules, production results (6,368 clusters;
-  T1=852/T2=1,327/T3=4,189; `retail_contamination` flag at 47.9%).
+  architecture. §10: PKS production system — 7,043 clusters (Phase 5); OXXO CONVENIENCE enrichment;
+  MX=183 (was 75); mode-group collapse; park-and-ride anchor; car rental + hotel + convenience enrichment.
+  §11: VWH calibration — hardware profile (10,338 anchors, 45 chains), sim (73.4% hardware validation PASS),
+  group-collapse tier rules, production results (6,368 clusters; T1=852/T2=1,327/T3=4,189; `retail_contamination` flag at 47.9%).
 
 ### A19 — TOPIC: Vertical Warehouse (VWH)
 - **File:** `.agent/drafts-outbound/TOPIC-vertical-warehouse.draft.md`
@@ -424,7 +425,7 @@ Produced as part of the PKS co-location calibration process. See BRIEF §10.12 f
 | PKS profiling script | `app-orchestration-gis/analyze-parkade-colocation.py` | DONE (2026-06-11; profiles all POI categories within 3km of 140,201 existing parking structures) |
 | PKS calibration sim | `app-orchestration-gis/sim-pks-colocation.py` | DONE (2026-06-11; 5 iterations; transit-first, commercial-first, EPS sensitivity; calibration converged to production) |
 | Parkade co-location profile | `work/parkade-colocation-profile.json` | DONE (2026-06-11; commuter_rail 64.7% / car_rental 44.7% / hotel 36.2% / airport 4.1% within 3km of built structures) |
-| archetype-pks.geojson (calibrated) | `gateway-orchestration-gis-1/www/data/archetype-pks.geojson` | DONE (2026-06-11; 6,953 features; T1=691/T2=2,658/T3=3,604; car rental + hotel enrichment added; deployed) |
+| archetype-pks.geojson (calibrated) | `gateway-orchestration-gis-1/www/data/archetype-pks.geojson` | DONE (2026-06-14 Phase 5; 7,043 features; T1=692/T2=2,663/T3=3,688; MX=183; OXXO CONVENIENCE added; deployed) |
 
 **EU car rental chain ingests (2026-06-11):**
 
