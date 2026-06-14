@@ -85,9 +85,14 @@ fn read_vm_meta(vm_id: &str) -> Option<VmRecord> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
+
+    // VM_DISK_DIR is process-wide; serialise tests that mutate it to prevent races.
+    static VM_DISK_DIR_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn empty_or_absent_disk_dir_returns_empty() {
+        let _lock = VM_DISK_DIR_LOCK.lock().unwrap();
         std::env::set_var("VM_DISK_DIR", "/tmp/nonexistent-vm-monitor-test-dir");
         let vms = poll_running_vms();
         assert!(vms.is_empty());
@@ -95,6 +100,7 @@ mod tests {
 
     #[test]
     fn dir_with_no_sockets_returns_empty() {
+        let _lock = VM_DISK_DIR_LOCK.lock().unwrap();
         let dir = "/tmp/vm-monitor-test-no-socks";
         std::fs::create_dir_all(dir).unwrap();
         std::env::set_var("VM_DISK_DIR", dir);
@@ -105,12 +111,14 @@ mod tests {
 
     #[test]
     fn read_vm_meta_returns_none_for_absent_file() {
+        let _lock = VM_DISK_DIR_LOCK.lock().unwrap();
         std::env::set_var("VM_DISK_DIR", "/tmp/nonexistent-vm-meta-test-dir");
         assert!(read_vm_meta("no-such-vm").is_none());
     }
 
     #[test]
     fn read_vm_meta_round_trips_vm_record() {
+        let _lock = VM_DISK_DIR_LOCK.lock().unwrap();
         use system_vm_fleet_types::VmState;
         let dir = "/tmp/vm-meta-round-trip-test";
         std::fs::create_dir_all(dir).unwrap();
