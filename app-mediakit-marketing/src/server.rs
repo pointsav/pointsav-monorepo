@@ -59,7 +59,11 @@ fn render(state: &AppState, slug: &str) -> Response {
         Err(LoadError::InvalidSlug) => (StatusCode::BAD_REQUEST, "Invalid path").into_response(),
         Err(LoadError::Invalid(e)) => {
             tracing::error!(slug, error = %e, "invalid page manifest");
-            (StatusCode::INTERNAL_SERVER_ERROR, "Page manifest is invalid").into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Page manifest is invalid",
+            )
+                .into_response()
         }
     }
 }
