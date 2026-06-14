@@ -1,26 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git ls-tree *)",
-      "Bash(cargo check *)",
-      "Bash(cargo build *)",
-      "Bash(cargo test *)",
-      "Bash(cargo tree *)",
-      "Bash(cargo metadata *)",
-      "Bash(git add *)",
-      "Bash(git status*)",
-      "Bash(git log *)",
-      "Bash(git diff *)",
-      "Bash(git show *)",
-      "Bash(git branch*)",
-      "Bash(/srv/foundry/bin/commit-as-next.sh *)",
-      "Bash(/home/mathew/Foundry/bin/commit-as-next.sh *)",
-      "Bash(~/Foundry/bin/commit-as-next.sh *)",
-      "Bash(curl *)",
-      "Bash(systemctl status *)",
-      "Bash(journalctl *)",
-      "Bash(npm run *)",
-      "Bash(cargo clippy *)"
+      "Bash(python3 *)"
     ]
   }
 }
