@@ -189,7 +189,10 @@ fn serialize_people_csv(csv_bytes: &[u8], batch_rows: usize, stem: &str) -> Vec<
 
         row_count += 1;
         if row_count >= batch_rows {
-            batches.push((format!("{}-batch{:04}.txt", stem, batch_idx), current.clone()));
+            batches.push((
+                format!("{}-batch{:04}.txt", stem, batch_idx),
+                current.clone(),
+            ));
             current.clear();
             row_count = 0;
             batch_idx += 1;
@@ -548,12 +551,7 @@ async fn migrate(
         .max_depth(2)
         .into_iter()
         .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.path()
-                .extension()
-                .map(|x| x == "md")
-                .unwrap_or(false)
-        })
+        .filter(|e| e.path().extension().map(|x| x == "md").unwrap_or(false))
         .map(|e| e.path().to_path_buf())
         .collect();
     md_files.sort();
@@ -577,10 +575,8 @@ async fn migrate(
         let ledger_bytes = std::fs::read(&ledger_path_src).unwrap_or_default();
 
         let ledger_valid = ledger_bytes.len() >= 60
-            && !String::from_utf8_lossy(&ledger_bytes)
-                .contains("extraction_protocol")
-            && !String::from_utf8_lossy(&ledger_bytes)
-                .contains("fidelity_mandate");
+            && !String::from_utf8_lossy(&ledger_bytes).contains("extraction_protocol")
+            && !String::from_utf8_lossy(&ledger_bytes).contains("fidelity_mandate");
 
         if !ledger_valid {
             skipped += 1;
@@ -688,17 +684,17 @@ async fn eval_stem(
         }
     };
 
-    let extracted =
-        query_datagraph_entities(&stem, &cfg.module_id, &cfg.content_endpoint, &cfg.http_client)
-            .await;
+    let extracted = query_datagraph_entities(
+        &stem,
+        &cfg.module_id,
+        &cfg.content_endpoint,
+        &cfg.http_client,
+    )
+    .await;
 
     let f1 = compute_f1(&reference.entities, &extracted);
-    let health = structural_health_check(
-        &stem,
-        &cfg.jennifer2_root,
-        &cfg.module_id,
-        &cfg.ledger_path,
-    );
+    let health =
+        structural_health_check(&stem, &cfg.jennifer2_root, &cfg.module_id, &cfg.ledger_path);
 
     Json(serde_json::json!({
         "stem": stem,
@@ -753,12 +749,8 @@ async fn calibration_report(
             &cfg.http_client,
         )
         .await;
-        let health = structural_health_check(
-            stem,
-            &cfg.jennifer2_root,
-            &cfg.module_id,
-            &cfg.ledger_path,
-        );
+        let health =
+            structural_health_check(stem, &cfg.jennifer2_root, &cfg.module_id, &cfg.ledger_path);
         let all_green = health.all_green();
         if all_green {
             struct_pass += 1;
@@ -780,7 +772,11 @@ async fn calibration_report(
     } else {
         1.0
     };
-    let mean_entity_f1 = if total > 0 { f1_sum / total as f32 } else { 0.0 };
+    let mean_entity_f1 = if total > 0 {
+        f1_sum / total as f32
+    } else {
+        0.0
+    };
 
     let (go_no_go, reason) = if total >= 5 && structural_pass_rate < 0.80 {
         (
@@ -820,10 +816,8 @@ async fn calibration_report(
 
 #[tokio::main]
 async fn main() {
-    let bind = std::env::var("SERVICE_INPUT_BIND")
-        .unwrap_or_else(|_| "0.0.0.0:9106".into());
-    let module_id = std::env::var("SERVICE_INPUT_MODULE_ID")
-        .unwrap_or_else(|_| "jennifer".into());
+    let bind = std::env::var("SERVICE_INPUT_BIND").unwrap_or_else(|_| "0.0.0.0:9106".into());
+    let module_id = std::env::var("SERVICE_INPUT_MODULE_ID").unwrap_or_else(|_| "jennifer".into());
     let fs_endpoint = std::env::var("SERVICE_INPUT_FS_ENDPOINT")
         .unwrap_or_else(|_| "http://127.0.0.1:9100".into());
     let dest_archive = std::env::var("SERVICE_INPUT_DEST_ARCHIVE")
@@ -834,9 +828,8 @@ async fn main() {
         "/srv/foundry/deployments/cluster-totebox-jennifer-2/service-research/reference".into()
     });
     // Explicit jennifer2_root: no string surgery on reference_dir.
-    let jennifer2_root = std::env::var("SERVICE_INPUT_JENNIFER2_ROOT").unwrap_or_else(|_| {
-        "/srv/foundry/deployments/cluster-totebox-jennifer-2".into()
-    });
+    let jennifer2_root = std::env::var("SERVICE_INPUT_JENNIFER2_ROOT")
+        .unwrap_or_else(|_| "/srv/foundry/deployments/cluster-totebox-jennifer-2".into());
     let rate_per_min: u64 = std::env::var("SERVICE_INPUT_RATE_PER_MIN")
         .ok()
         .and_then(|v| v.parse().ok())

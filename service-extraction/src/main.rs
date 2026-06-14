@@ -182,8 +182,7 @@ fn process_payload(
         corpus_parts.push(format!("From: {}", sender));
 
         // 1. PURE CRYPTOGRAPHIC ORIGIN ANCHORING
-        let re_sender =
-            Regex::new(r#"(?i)"?([^"(<]+)(?:\(([^)]+)\))?"?\s*<([^>]+)>"#).unwrap();
+        let re_sender = Regex::new(r#"(?i)"?([^"(<]+)(?:\(([^)]+)\))?"?\s*<([^>]+)>"#).unwrap();
         if let Some(caps) = re_sender.captures(&sender) {
             let raw_name = caps.get(1).map_or("", |m| m.as_str()).trim().to_string();
             let name = raw_name.replace('"', "");
