@@ -28,7 +28,8 @@ use orchestration_slm::{
     YoyoProxyClient,
 };
 use orchestration_slm_core::{
-    ReadyzResponse, RegistrationRequest, RegistrationResponse, CHASSIS_VERSION,
+    AuditRollupResponse, ReadyzResponse, RegistrationRequest, RegistrationResponse,
+    TenantRollupEntry, CHASSIS_VERSION,
 };
 use serde_json::{json, Value};
 use tracing::warn;
@@ -52,6 +53,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/yoyo/trainer", post(yoyo_trainer))
         .route("/v1/yoyo/graph", post(yoyo_graph))
         .route("/v1/gate/{label}", post(gate_set))
+        .route("/v1/audit/rollup", get(audit_rollup))
         .with_state(state)
 }
 
@@ -145,6 +147,28 @@ async fn gate_set(
         )
             .into_response()
     }
+}
+
+// ── Audit rollup ──────────────────────────────────────────────────────────────
+
+/// GET /v1/audit/rollup — per-tenant metering summary (in-process, rebuilt on restart).
+async fn audit_rollup(State(state): State<Arc<AppState>>) -> Json<AuditRollupResponse> {
+    let all = state.metering.all().await;
+    let mut entries: Vec<TenantRollupEntry> = all
+        .into_iter()
+        .map(|(module_id, stats)| TenantRollupEntry {
+            module_id,
+            total_requests: stats.total_requests,
+            total_inference_ms: stats.total_inference_ms,
+            total_cost_usd: stats.total_cost_usd,
+        })
+        .collect();
+    entries.sort_by(|a, b| b.total_cost_usd.partial_cmp(&a.total_cost_usd).unwrap_or(std::cmp::Ordering::Equal));
+    let total_tenants = entries.len();
+    Json(AuditRollupResponse {
+        entries,
+        total_tenants,
+    })
 }
 
 // ── Yo-Yo proxy helpers ───────────────────────────────────────────────────────
@@ -659,6 +683,55 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(resp.status(), StatusCode::NOT_FOUND);
+    }
+
+    // ── Audit rollup ──────────────────────────────────────────────────────────
+
+    #[tokio::test]
+    async fn audit_rollup_empty_returns_ok() {
+        let app = router(test_state());
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/audit/rollup")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn audit_rollup_records_accumulate() {
+        let state = test_state();
+        state
+            .metering
+            .record("op::a::slm", Some(1000), 2.0)
+            .await;
+        state
+            .metering
+            .record("op::b::slm", Some(500), 2.0)
+            .await;
+
+        let app = router(Arc::clone(&state));
+        use axum::body::to_bytes;
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/v1/audit/rollup")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+        let rollup: AuditRollupResponse = serde_json::from_slice(&body).unwrap();
+        assert_eq!(rollup.total_tenants, 2);
+        // Sorted by cost descending: op::a has 2× the inference_ms so higher cost.
+        assert_eq!(rollup.entries[0].module_id, "op::a::slm");
+        assert_eq!(rollup.entries[0].total_requests, 1);
     }
 
     // ── Circuit breaker ───────────────────────────────────────────────────────

@@ -113,5 +113,23 @@ pub enum YoyoLabel {
     Graph,
 }
 
+// ── Audit rollup ──────────────────────────────────────────────────────────────
+
+/// Per-tenant metering summary, returned by `GET /v1/audit/rollup`.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TenantRollupEntry {
+    pub module_id: String,
+    pub total_requests: u64,
+    pub total_inference_ms: u64,
+    pub total_cost_usd: f64,
+}
+
+/// Response for `GET /v1/audit/rollup`.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AuditRollupResponse {
+    pub entries: Vec<TenantRollupEntry>,
+    pub total_tenants: usize,
+}
+
 /// Chassis version string embedded in every response.
 pub const CHASSIS_VERSION: &str = env!("CARGO_PKG_VERSION");
