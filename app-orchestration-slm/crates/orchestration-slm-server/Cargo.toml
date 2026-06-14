@@ -26,3 +26,4 @@ tracing-subscriber = { workspace = true }
 [dev-dependencies]
 tower = "0.5"
 http-body-util = "0.1"
+chrono = { workspace = true }

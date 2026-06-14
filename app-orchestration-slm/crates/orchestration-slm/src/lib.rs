@@ -15,5 +15,5 @@ pub use license::{
     resolve_from_env, verify_token, LicensePayload, LicenseStatus, REQUIRED_PRODUCT,
 };
 pub use metering::MeteringLedger;
-pub use node_circuit::{CircuitRegistry, CircuitState, NodeCircuit};
+pub use node_circuit::{CircuitRegistry, CircuitState, NodeCircuit, DEFAULT_FAILURE_THRESHOLD};
 pub use yoyo_proxy::{YoyoEndpoints, YoyoProxyClient};
