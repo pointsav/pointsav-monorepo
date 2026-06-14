@@ -46,6 +46,7 @@ async fn fixture_state() -> (AppState, TempDir, TempDir) {
             brand_instance: "documentation".to_string(),
             blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
             peers: vec![],
+            canonical_url: None,
         },
         content_dir,
         state_dir,
