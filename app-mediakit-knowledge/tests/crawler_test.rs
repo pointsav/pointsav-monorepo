@@ -55,6 +55,7 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         brand_instance: "documentation".to_string(),
         site_title: "PointSav Knowledge".to_string(),
         blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
+        peers: vec![],
     };
 
     (state, dir, state_dir)
