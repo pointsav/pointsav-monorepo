@@ -1,59 +1,46 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster: project-infrastructure
-cluster_name: project-infrastructure
-cluster_branch: cluster/project-infrastructure
-created: 2026-05-18
+cluster: project-knowledge
+cluster_name: project-knowledge
+cluster_branch: cluster/project-knowledge
+created: 2026-05-23
 state: active
 slm_endpoint: http://localhost:8011
-module_id: infrastructure
+module_id: knowledge
 
 tetrad:
   vendor:
-    - status: leg-pending
-      note: >
-        No direct monorepo crate. Editorial pipeline produces content artifacts
-        (TOPIC, GUIDE, JOURNAL) consumed downstream by media-knowledge repos and
-        woodfine-fleet-deployment. The vendor leg tracks pipeline conventions
-        committed at ~/Foundry/conventions/.
+    - repo: pointsav-monorepo
+      path: pointsav-monorepo/
+      upstream: vendor/pointsav-monorepo
+      focus: >
+        app-mediakit-knowledge — Wikipedia-pattern wiki engine; single Rust binary;
+        Apache 2.0; three production instances (9090/9093/9095).
+      status: active (canonical tip 9a1326df; Phase 0 complete 2026-06-12)
   customer:
-    - repo: media-knowledge-documentation
-      path: media-knowledge-documentation/
-      upstream: customer/media-knowledge-documentation
-      focus: >
-        Architecture, services, systems, governance TOPICs for
-        documentation.pointsav.com — all platform engineering wiki content.
-      status: active
-    - repo: media-knowledge-projects
-      path: media-knowledge-projects/
-      upstream: customer/media-knowledge-projects
-      focus: >
-        Location intelligence, GIS archetypes, research project TOPICs for
-        projects.woodfinegroup.com.
-      status: active
-    - repo: media-knowledge-corporate
-      path: media-knowledge-corporate/
-      upstream: customer/media-knowledge-corporate
-      focus: >
-        Corporate identity, governance, disclosure TOPICs.
-      status: active
-    - repo: woodfine-fleet-deployment
-      path: woodfine-fleet-deployment/
-      upstream: customer/woodfine-fleet-deployment
-      focus: >
-        Operational GUIDEs routed through Command Session for placement.
-      status: active
-  deployment:
     - status: leg-pending
       note: >
-        No deployment instance. project-editorial is a Totebox editorial gateway,
-        not a deployed service. Content it produces deploys via app-mediakit-knowledge.
+        Customer-tier deliverable is the Doctrine §IV.g exception itself:
+        media-knowledge-* repos are canonical (GitHub is downstream mirror).
+        No woodfine-fleet-deployment catalog entry needed for the engine;
+        content repos are the customer-tier artifact.
+  deployment:
+    - status: active
+      note: >
+        Three instances on vault-privategit-source-1:
+          documentation.pointsav.com  → port 9090 (documentation.toml; TOPIC+GUIDE)
+          projects.woodfinegroup.com  → port 9093 (projects.toml; TOPIC)
+          corporate.woodfinegroup.com → port 9095 (corporate.toml; TOPIC)
+        Binary sha256: e5e8995efc7d6da2f1eba10c235161a90e6c4290aa2b65951c54eb92948c8cd1
+        Systemd: local-knowledge-documentation.service, local-knowledge-projects.service,
+                 local-knowledge-corporate.service
+        Config: /etc/local-knowledge/*.toml
   wiki:
     - status: active
       note: >
-        The media-knowledge-* repos ARE the wiki output of this archive.
-        Committed content renders at documentation.pointsav.com and
-        projects.woodfinegroup.com via app-mediakit-knowledge.
+        Three content repos (media-knowledge-documentation, media-knowledge-projects,
+        media-knowledge-corporate) managed in project-editorial; GitHub is downstream.
+        Doctrine §IV.g exception ratified 2026-05-21 (amended 2026-06-11).
 
 clones:
   - repo: media-knowledge-documentation
