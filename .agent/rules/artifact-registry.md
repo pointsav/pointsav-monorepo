@@ -2,6 +2,9 @@
 schema: foundry-artifact-registry-v1
 project: project-infrastructure
 last_updated: 2026-06-16
+project: project-editorial
+project: project-system
+last_updated: 2026-06-14 (status sweep — all committed TOPICs + GUIDEs updated)
 ---
 
 # project-infrastructure Artifact Registry
@@ -167,6 +170,30 @@ Routing per `~/Foundry/conventions/artifact-classification.yaml`:
 - **Status:** STAGED — draft complete 2026-06-01; ready for project-editorial; draft references
   6,953 clusters (Phase 4) — editorial pass must update to Phase 5b production counts (see below)
 - **Destination:** project-editorial → media-knowledge-documentation
+### A18 — BRIEF: Location Intelligence Archetypes (PRO / VWH / PKS)
+- **File:** `.agent/briefs/BRIEF-location-intelligence-archetypes-2026-06-01.md`
+- **Status:** ACTIVE — updated 2026-06-12; §10 PKS production system + §11 VWH calibration added
+- **Destination:** internal (BRIEF stays in archive); editorial drafts dispatched separately
+- **Content:** Three-archetype Location Intelligence system (PRO/VWH/PKS). Definitions, co-location
+  signals, full chain taxonomy with Wikidata IDs, airport/rail classification findings, service-parking
+  architecture. §10: PKS production system — 6,953 clusters; mode-group collapse; park-and-ride anchor;
+  car rental + hotel enrichment. §11: VWH calibration — hardware profile (10,338 anchors, 45 chains),
+  sim (73.4% hardware validation PASS), group-collapse tier rules, production results (6,368 clusters;
+  T1=852/T2=1,327/T3=4,189; `retail_contamination` flag at 47.9%).
+
+### A19 — TOPIC: Vertical Warehouse (VWH)
+- **File:** `media-knowledge-documentation/archetypes/vertical-warehouse.md` + `.es.md`
+- **Status:** COMMITTED — committed prior session; ES `language_protocol` fixed ed4681c@pwoodfine 2026-06-14; Wikipedia refs (Warehouse, Retail park) added 9348d8e@jwoodfine 2026-06-14; Stage 6 pending
+- **Destination:** media-knowledge-documentation/archetypes/ (committed)
+- **Content:** VWH archetype definition (3-6 story urban logistics/light-mfg), spatial signature,
+  site selection signals, full Tier A/B chain taxonomy (Würth, Floor & Decor, United Rentals,
+  Fastenal, etc.), data collection plan with Wikidata IDs. Production calibration: 6,368 clusters
+  (T1=852/T2=1,327/T3=4,189); group-collapse tier rules; `retail_contamination` flag (see BRIEF §11).
+
+### A20 — TOPIC: Parking Structures (PKS)
+- **File:** `media-knowledge-documentation/archetypes/parking-structures.md` + `.es.md`
+- **Status:** COMMITTED — committed prior session; ES `language_protocol` fixed ed4681c@pwoodfine 2026-06-14; Wikipedia refs (Park and ride) added 9348d8e@jwoodfine 2026-06-14; Stage 6 pending
+- **Destination:** media-knowledge-documentation/archetypes/ (committed)
 - **Content:** PKS archetype definition (3-9 story transit car parks), regional-to-metro relationship,
   airport and rail station classification, car rental chains, parking operator directory. **Phase 5b
   production counts (update draft body):** 7,045 clusters (T1=692/T2=2,665/T3=3,688); MX=177;
@@ -174,12 +201,12 @@ Routing per `~/Foundry/conventions/artifact-classification.yaml`:
 
 ### A21 — GUIDE: Location Intelligence Data Collection
 - **File:** `.agent/drafts-outbound/GUIDE-location-intelligence-data-collection.draft.md`
-- **Status:** STAGED — draft complete 2026-06-01; ready for project-editorial
-- **Destination:** project-editorial → media-knowledge-documentation
+- **Status:** STAGED — draft complete; all 7 steps marked complete as of 2026-06-12; awaiting Command placement via admin-tier (woodfine-fleet-deployment)
+- **Destination:** woodfine-fleet-deployment/gateway-orchestration-gis-1/ (Command action required)
 - **Content:** 7-step operational runbook: run existing YAML ingests, add Würth + new taxonomy
   categories, add Tier A VWH chains, write ingest-osm-airports.py, write ingest-osm-railway.py,
   add PKS car rental chains, re-run test-cluster-archetypes.py and deploy updated GeoJSON.
-  Updated 2026-06-12: all 7 steps now marked complete; Step 7 updated to production build scripts.
+  All 7 steps now complete per 2026-06-12 update.
 
 ### A22 — TOPIC: Location Intelligence Co-location Archetypes
 - **File:** `media-knowledge-projects/topic-location-intelligence-archetypes.md`
@@ -236,15 +263,15 @@ Routing per `~/Foundry/conventions/artifact-classification.yaml`:
 - **Content:** System BRIEF updated v2: executive summary adds competitive positioning (Oxford Economics/CBRE/Colliers cover metro cores; this dataset addresses the suburban ring gap). §3 Regional Markets adds three-type table (metro-core/suburban-regional/standalone-secondary) and coherence constraint. §4 Top 400 formula corrected (metro_distance_multiplier removed; rationale explains why). Current top results cited. Phase 23+Change B dataset (6,493 clusters; T1=1,746/T2=2,726/T3=2,021).
 
 ### A8 — TOPIC: Top 400 Regional Markets — North America
-- **File:** `TOPIC-top-400-regional-markets-na.draft.md`
-- **Status:** REVISED + STAGED — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-rm-corrected-dispatch)
-- **Destination:** project-editorial → media-knowledge-documentation
+- **File:** `media-knowledge-projects/topic-top-400-regional-markets-na.md`
+- **Status:** COMMITTED — committed to media-knowledge-projects prior session; wikilinks added a9e7730@jwoodfine 2026-06-14; Stage 6 pending
+- **Destination:** media-knowledge-projects (committed)
 - **Content:** REVISED v2 — corrected methodology: suburban-regional definition (15–80 km from major metro), no province aggregations, no metro_multiplier. US 369 / CA 23 / MX 8. Rank 1 = Plano TX (suburb of Dallas, score 25.5). Score range 25.5–4.0.
 
 ### A9 — TOPIC: Top 400 Regional Markets — Europe
-- **File:** `TOPIC-top-400-regional-markets-eu.draft.md`
-- **Status:** REVISED + STAGED — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-rm-corrected-dispatch)
-- **Destination:** project-editorial → media-knowledge-documentation
+- **File:** `media-knowledge-projects/topic-top-400-regional-markets-eu.md`
+- **Status:** COMMITTED — committed to media-knowledge-projects prior session; wikilinks added a9e7730@jwoodfine 2026-06-14; Stage 6 pending
+- **Destination:** media-knowledge-projects (committed)
 - **Content:** REVISED v2 — corrected methodology: suburban-regional definition (15–80 km), no metro_multiplier. DE 124 / FR 102 / GB 81 / ES 23 / IT 21 / PL 16 / NL 14 / AT 7 / DK 5 / SE 4 / PT 3 = 11 countries. Rank 1 = Chemnitz (suburb of Dresden, score 18.0). Score range 18.0–3.0. Suburb_of column in top-25 table.
 
 ### A10 — TOPIC: Wichita, Kansas Regional Market
@@ -260,21 +287,21 @@ Routing per `~/Foundry/conventions/artifact-classification.yaml`:
 - **Status:** SUPERSEDED — hold pending revision. Nürnberg is a metro reference (added to EU_METROS list). Classified as metro-core (dist=1.6 km from itself). Excluded from Top 400 under corrected methodology.
 
 ### A15 — TOPIC: Plano, Texas Regional Market
-- **File:** `TOPIC-rm-plano-tx.draft.md`
-- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-rm-corrected-dispatch)
-- **Destination:** project-editorial → media-knowledge-documentation (projects.woodfinegroup.com)
+- **File:** `media-knowledge-projects/topic-rm-plano-tx.md`
+- **Status:** COMMITTED — committed to media-knowledge-projects prior session; body H1 removed + Wikipedia refs (Plano TX, DFW metroplex) added f87e9d5@jwoodfine 2026-06-14; Stage 6 pending
+- **Destination:** media-knowledge-projects (committed)
 - **Content:** Rank 1 NA. Suburb of Dallas (28.1 km). 3×T1 + 2×T2 + 1×T3, civic=true. Score=25.5. Civic anchors: Texas Health Presbyterian, Baylor Scott & White, Medical City Plano, UT Dallas, Texas A&M AgriLife. ASHRAE=3A, Köppen=Cfa. ~1,050 words body.
 
 ### A16 — TOPIC: Mississauga, Ontario Regional Market
-- **File:** `TOPIC-rm-mississauga-on.draft.md`
-- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-rm-corrected-dispatch)
-- **Destination:** project-editorial → media-knowledge-documentation (projects.woodfinegroup.com)
+- **File:** `media-knowledge-projects/topic-rm-mississauga-on.md`
+- **Status:** COMMITTED — committed to media-knowledge-projects prior session; body H1 removed + Wikipedia refs (Mississauga, Greater Toronto Area) added f87e9d5@jwoodfine 2026-06-14; Stage 6 pending
+- **Destination:** media-knowledge-projects (committed)
 - **Content:** Rank 4 NA. Suburb of Toronto (24.9 km). 2×T1 + 1×T2 + 2×T3, civic=true. Score=18.0. Civic anchors: Mississauga Hospital, Credit Valley Hospital (Trillium Health Partners), University of Toronto Mississauga. Köppen=Dfa. ~900 words body.
 
 ### A17 — TOPIC: Krefeld, Germany Regional Market
-- **File:** `TOPIC-rm-krefeld-de.draft.md`
-- **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-rm-corrected-dispatch)
-- **Destination:** project-editorial → media-knowledge-documentation (projects.woodfinegroup.com)
+- **File:** `media-knowledge-projects/topic-rm-krefeld-de.md`
+- **Status:** COMMITTED — committed to media-knowledge-projects prior session; body H1 removed + Wikipedia refs (Krefeld, Düsseldorf) added f87e9d5@jwoodfine 2026-06-14; Stage 6 pending
+- **Destination:** media-knowledge-projects (committed)
 - **Content:** Rank 5 EU. Suburb of Düsseldorf (19.4 km). 2×T1, civic=true. Score=12.0. Civic anchors: Helios Klinikum Krefeld, Hochschule Niederrhein. EU Climate=II (Atlantic), Köppen=Cfb. ~950 words body.
 
 ### A13 — DESIGN-RESEARCH: Regional Market TOPIC Template
@@ -754,6 +781,22 @@ visibility.
 | F7 | M9 | High | EN/ES parity sweep: `co-location-ranking-system.es.md` is ~25% of EN length — full parallel translation required per L4; sweep all EN/ES pairs for lagging articles | 2026-06-14 outbox | Pending project-editorial |
 | T1 | `drafts-outbound/TOPIC-ppn-vm-architecture.draft.md` | PPN VM Resource Pool Architecture | STAGED — written 2026-06-14; ready for project-editorial |
 | T2 | `drafts-outbound/TOPIC-ppn-tenant-vm-isolation.draft.md` | PPN Tenant VM Isolation | STAGED — written 2026-06-14; ready for project-editorial |
+---
+
+## project-system — Artifacts (PPN / OS Console cluster)
+
+Artifacts produced by project-system Totebox and processed through project-editorial.
+
+| ID | Artifact type | File | Title | Destination | Status |
+|----|--------------|------|-------|-------------|--------|
+| PS-A1 | GUIDE | `drafts-outbound/GUIDE-ppn-node-setup.draft.md` | PPN Node Setup Guide | woodfine-fleet-deployment/fleet-infrastructure-onprem/ | STAGED — routing sent to Command 2026-06-13 (HIGH priority); source archived afe8f328@pwoodfine; Command action pending |
+| PS-A2 | TOPIC | `media-knowledge-documentation/architecture/ppn-small-business-compute.md` | PPN Small-Business Compute | media-knowledge-documentation/architecture/ | COMMITTED — 3f1e0da@jwoodfine 2026-06-13; source archived afe8f328@pwoodfine; Stage 6 pending |
+| PS-A3 | TOPIC | `media-knowledge-documentation/architecture/os-console-architecture.md` | OS Console Architecture | media-knowledge-documentation/architecture/ | COMMITTED — 3f1e0da@jwoodfine 2026-06-13 (config table + SSH specifics + systemd paths + Doctrine anchors stripped per editorial rule); source archived afe8f328@pwoodfine; Stage 6 pending |
+| PS-A4 | TOPIC | `media-knowledge-documentation/architecture/software-distribution-substrate.md` | Software Distribution Substrate | media-knowledge-documentation/architecture/ | COMMITTED — 3f1e0da@jwoodfine 2026-06-13; source archived afe8f328@pwoodfine; Stage 6 pending |
+| PS-A5 | TOPIC | `media-knowledge-documentation/architecture/crypto-license-sales-architecture.md` | Crypto License Sales Architecture | media-knowledge-documentation/architecture/ | COMMITTED — 3f1e0da@jwoodfine 2026-06-13; source archived afe8f328@pwoodfine; Stage 6 pending |
+| PS-A6 | TOPIC | `media-knowledge-documentation/services/private-git-paid-customer-endpoint.md` | Private Git Paid Customer Endpoint | media-knowledge-documentation/services/ | COMMITTED — 3f1e0da@jwoodfine 2026-06-13; source archived afe8f328@pwoodfine; Stage 6 pending |
+| PS-A7 | JOURNAL | `drafts-outbound/JOURNAL-ppn-pooled-compute-v0.1.draft.md` | PPN Pooled Compute | project-intelligence or owning archive | STAGED — in drafts-outbound; routing to owning project pending |
+| PS-A8 | PROSE-RESEARCH | `drafts-outbound/PROSE-RESEARCH-ppn-architecture-phd-thesis.draft.md` | PPN Architecture PhD Thesis prose | project-intelligence or owning archive | STAGED — in drafts-outbound; routing to owning project pending |
 
 ---
 
@@ -762,3 +805,4 @@ visibility.
 - Add artifacts when planned; update status when dispatched or returned.
 - Cross-check with `.agent/briefs/README.md` for BRIEF-linked artifact chains.
 - Prior content (lines 65+) was project-gis contamination (M-17); replaced 2026-06-16.
+- Status sweep last performed: 2026-06-14 (all STAGED→COMMITTED promotions applied).
