@@ -62,7 +62,7 @@ pub fn submit(path: &str, username: &str, tenant: &str, endpoint: &str) -> Resul
         Ok(IngestResult {
             payload_id: payload_id.clone(),
             ledger_root: None,
-            warning: Some(format!("service-fs: {}", body_text)),
+            warning: Some(format!("service-input: {}", body_text)),
         })
     }
 }

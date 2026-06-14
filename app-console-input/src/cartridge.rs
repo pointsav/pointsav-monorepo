@@ -304,7 +304,7 @@ impl InputCartridge {
         };
         frame.render_widget(
             Paragraph::new(format!(
-                "  {} Submitting to service-fs — please wait…",
+                "  {} Submitting to service-input — please wait…",
                 SPINNER[spinner % SPINNER.len()]
             ))
             .style(Style::default().fg(Color::Yellow)),
