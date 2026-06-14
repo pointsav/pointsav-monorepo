@@ -53,7 +53,7 @@ fn default_proof_endpoint() -> String {
     "http://127.0.0.1:9092".into()
 }
 fn default_ingest_endpoint() -> String {
-    "http://127.0.0.1:9100".into()
+    "http://127.0.0.1:9106".into()
 }
 fn default_totebox_host() -> String {
     "127.0.0.1".into()

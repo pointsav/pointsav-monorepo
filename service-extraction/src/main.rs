@@ -147,14 +147,11 @@ fn process_payload(
         .unwrap_or("service-people");
     let worm_id = filepath.file_stem().unwrap().to_str().unwrap();
 
-    let parsed_mail = match parse_mail(&raw_bytes) {
-        Ok(m) => m,
-        Err(_) => return false,
-    };
-    let headers = parsed_mail.get_headers();
-    let sender = headers
-        .get_first_value("From")
-        .unwrap_or_else(|| "Unknown".to_string());
+    let ext = Path::new(original_filename)
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_lowercase();
 
     let mut graph_entities: Vec<ExtractedEntity> = Vec::new();
     let mut seen_names = HashSet::new();
@@ -162,34 +159,57 @@ fn process_payload(
 
     corpus_parts.push(format!("Document: {}", original_filename));
 
-    // 1. PURE CRYPTOGRAPHIC ORIGIN ANCHORING
-    let re_sender = Regex::new(r#"(?i)"?([^"(<]+)(?:\(([^)]+)\))?"?\s*<([^>]+)>"#).unwrap();
-    if let Some(caps) = re_sender.captures(&sender) {
-        let raw_name = caps.get(1).map_or("", |m| m.as_str()).trim().to_string();
-        let name = raw_name.replace('"', "");
-        if !name.is_empty() {
-            corpus_parts.push(format!("From: {}", sender));
-            seen_names.insert(name.clone());
-            graph_entities.push(ExtractedEntity {
-                entity_name: name,
-                classification: "ORIGIN SENDER".to_string(),
-                role_vector: "Cryptographic Anchor".to_string(),
-                confidence: 1.0,
-                context_anchor: format!("HEADER: {}", sender),
-                location_vector: "UNVERIFIED".to_string(),
-                latent_vectors: vec![],
-            });
+    if matches!(ext.as_str(), "md" | "yaml" | "yml" | "txt") {
+        // Non-email text corpus: raw UTF-8 bytes go directly into corpus_parts.
+        corpus_parts.push(String::from_utf8_lossy(&raw_bytes).into_owned());
+    } else {
+        // Email path: parse RFC 2822 headers and body.
+        let parsed_mail = match parse_mail(&raw_bytes) {
+            Ok(m) => m,
+            Err(e) => {
+                eprintln!(
+                    "[WARN] mailparse failed for {} ({}): {e}",
+                    original_filename, worm_id
+                );
+                return false;
+            }
+        };
+        let headers = parsed_mail.get_headers();
+        let sender = headers
+            .get_first_value("From")
+            .unwrap_or_else(|| "Unknown".to_string());
+
+        corpus_parts.push(format!("From: {}", sender));
+
+        // 1. PURE CRYPTOGRAPHIC ORIGIN ANCHORING
+        let re_sender =
+            Regex::new(r#"(?i)"?([^"(<]+)(?:\(([^)]+)\))?"?\s*<([^>]+)>"#).unwrap();
+        if let Some(caps) = re_sender.captures(&sender) {
+            let raw_name = caps.get(1).map_or("", |m| m.as_str()).trim().to_string();
+            let name = raw_name.replace('"', "");
+            if !name.is_empty() {
+                seen_names.insert(name.clone());
+                graph_entities.push(ExtractedEntity {
+                    entity_name: name,
+                    classification: "ORIGIN SENDER".to_string(),
+                    role_vector: "Cryptographic Anchor".to_string(),
+                    confidence: 1.0,
+                    context_anchor: format!("HEADER: {}", sender),
+                    location_vector: "UNVERIFIED".to_string(),
+                    latent_vectors: vec![],
+                });
+            }
         }
-    }
 
-    if let Some(subject) = headers.get_first_value("Subject") {
-        corpus_parts.push(format!("Subject: {}", subject));
-    }
+        if let Some(subject) = headers.get_first_value("Subject") {
+            corpus_parts.push(format!("Subject: {}", subject));
+        }
 
-    if let Ok(body) = parsed_mail.get_body() {
-        let trimmed = body.trim().to_string();
-        if !trimmed.is_empty() {
-            corpus_parts.push(trimmed);
+        if let Ok(body) = parsed_mail.get_body() {
+            let trimmed = body.trim().to_string();
+            if !trimmed.is_empty() {
+                corpus_parts.push(trimmed);
+            }
         }
     }
 
