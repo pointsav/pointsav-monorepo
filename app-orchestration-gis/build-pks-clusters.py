@@ -301,6 +301,16 @@ def _coord_override_iso(lat, lon, stored_iso=None, iata_code=None):
         return "US"
     if lat >= 54.0 and -168.5 <= lon <= -130.0:            # Alaska → US
         return "US"
+    # Positive US detection: the MX ingest bbox (14.5–33°N, -118 to -86.5°W) captures
+    # large swaths of Texas, Arizona, New Mexico, and Louisiana. Records from those states
+    # arrive tagged iso_country_code="MX" and cannot be corrected by the positive-MX rules
+    # below. These rules fire BEFORE the MX rules to give US-territory precedence.
+    if lat > 32.7:                                           # Above all MX territory → US
+        return "US"
+    if lat > 32.0 and lon > -99.0:                          # E Texas / Louisiana / AR → US
+        return "US"
+    if lat > 31.8 and -111.0 <= lon <= -104.5:              # Arizona (Tucson) / SW New Mexico → US
+        return "US"
     if lon < -114.0 and 22.0 <= lat <= 32.7:               # Baja California peninsula → MX
         return "MX"
     # MX interior: stepped lat thresholds approximate the US-Mexico border east of Baja.
