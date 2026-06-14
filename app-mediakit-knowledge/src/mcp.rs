@@ -702,8 +702,10 @@ async fn federation_search(state: &AppState, params: &Value) -> Result<Value, (i
         "method": "search",
         "params": { "query": query, "limit": limit }
     });
-    let mut seen_slugs: std::collections::HashSet<String> =
-        results.iter().filter_map(|r| r["slug"].as_str().map(|s| s.to_string())).collect();
+    let mut seen_slugs: std::collections::HashSet<String> = results
+        .iter()
+        .filter_map(|r| r["slug"].as_str().map(|s| s.to_string()))
+        .collect();
 
     for peer in &state.peers {
         let url = format!("{}/mcp", peer.url);

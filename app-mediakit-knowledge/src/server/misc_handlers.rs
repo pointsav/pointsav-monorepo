@@ -98,6 +98,7 @@ mod tests {
                 brand_theme: None,
                 brand_instance: "documentation".to_string(),
                 blueprints: crate::blueprints::Registry::builtin(),
+            peers: vec![],
             },
             dir,
             state_dir,
@@ -302,6 +303,7 @@ mod tests {
             brand_theme: None,
             brand_instance: "documentation".to_string(),
             blueprints: crate::blueprints::Registry::builtin(),
+            peers: vec![],
         };
         let app = router(state);
         let resp = app
@@ -376,6 +378,7 @@ mod tests {
             brand_theme: None,
             brand_instance: "documentation".to_string(),
             blueprints: crate::blueprints::Registry::builtin(),
+            peers: vec![],
         };
         let app = router(state);
         let resp = app
@@ -427,6 +430,7 @@ mod tests {
             brand_theme: None,
             brand_instance: "documentation".to_string(),
             blueprints: crate::blueprints::Registry::builtin(),
+            peers: vec![],
         };
         let app = router(state);
         let resp = app
@@ -481,6 +485,7 @@ mod tests {
             brand_theme: None,
             brand_instance: "documentation".to_string(),
             blueprints: crate::blueprints::Registry::builtin(),
+            peers: vec![],
         };
         let app = router(state);
         let resp = app
@@ -535,6 +540,7 @@ mod tests {
             brand_theme: None,
             brand_instance: "documentation".to_string(),
             blueprints: crate::blueprints::Registry::builtin(),
+            peers: vec![],
         };
         let app = router(state);
         let resp = app
@@ -591,6 +597,7 @@ mod tests {
             brand_theme: None,
             brand_instance: "documentation".to_string(),
             blueprints: crate::blueprints::Registry::builtin(),
+            peers: vec![],
         };
         let app = router(state);
         let resp = app
@@ -648,6 +655,7 @@ mod tests {
             brand_theme: None,
             brand_instance: "documentation".to_string(),
             blueprints: crate::blueprints::Registry::builtin(),
+            peers: vec![],
         };
         let app = router(state);
         let resp = app
@@ -710,6 +718,7 @@ mod tests {
             brand_theme: None,
             brand_instance: "documentation".to_string(),
             blueprints: crate::blueprints::Registry::builtin(),
+            peers: vec![],
         };
         let app = router(state);
         let resp = app
@@ -769,6 +778,7 @@ mod tests {
             brand_theme: None,
             brand_instance: "documentation".to_string(),
             blueprints: crate::blueprints::Registry::builtin(),
+            peers: vec![],
         };
         let app = router(state);
         let resp = app
@@ -830,6 +840,7 @@ mod tests {
             brand_theme: None,
             brand_instance: "documentation".to_string(),
             blueprints: crate::blueprints::Registry::builtin(),
+            peers: vec![],
         };
         let app = router(state);
         let resp = app
@@ -884,6 +895,7 @@ mod tests {
             brand_theme: None,
             brand_instance: "documentation".to_string(),
             blueprints: crate::blueprints::Registry::builtin(),
+            peers: vec![],
         };
         let app = router(state);
         let resp = app
