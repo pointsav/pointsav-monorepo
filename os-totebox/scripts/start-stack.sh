@@ -3,10 +3,12 @@
 # Run inside an os-totebox VM after binaries are installed.
 #
 # Env overrides:
-#   TOTEBOX_BIN_DIR   — directory containing installed binaries (default: /usr/local/bin)
-#   TOTEBOX_DATA_DIR  — data root passed to services (default: /var/lib/pointsav)
-#   TOTEBOX_LOG_DIR   — log directory (default: /var/log/pointsav)
-#   TOTEBOX_PID_DIR   — PID file directory (default: /run/pointsav)
+#   TOTEBOX_BIN_DIR      — directory containing installed binaries (default: /usr/local/bin)
+#   TOTEBOX_DATA_DIR     — data root passed to services (default: /var/lib/pointsav)
+#   TOTEBOX_LOG_DIR      — log directory (default: /var/log/pointsav)
+#   TOTEBOX_PID_DIR      — PID file directory (default: /run/pointsav)
+#   TOTEBOX_ARCHIVE      — deployment archive name (default: cluster-totebox-local)
+#   TOTEBOX_MODULE_ID    — module identifier passed to services (default: local)
 #
 # For dev on the workspace host, set TOTEBOX_BIN_DIR to the cargo target:
 #   TOTEBOX_BIN_DIR=$(cargo build --release -q 2>&1; echo target/release) \
@@ -18,6 +20,8 @@ BIN_DIR="${TOTEBOX_BIN_DIR:-/usr/local/bin}"
 DATA_DIR="${TOTEBOX_DATA_DIR:-/var/lib/pointsav}"
 LOG_DIR="${TOTEBOX_LOG_DIR:-/var/log/pointsav}"
 PID_DIR="${TOTEBOX_PID_DIR:-/run/pointsav}"
+TOTEBOX_ARCHIVE="${TOTEBOX_ARCHIVE:-cluster-totebox-local}"
+TOTEBOX_MODULE_ID="${TOTEBOX_MODULE_ID:-local}"
 
 HEALTH_TIMEOUT=15   # seconds to wait for each HTTP service
 HEALTH_INTERVAL=1   # poll interval in seconds
@@ -59,7 +63,7 @@ log " os-totebox service stack — startup"
 log "============================================================"
 
 # ── Tier 0: verify binaries present ──────────────────────────────────────────
-for bin in slm-doorman-server service-content server service-extraction; do
+for bin in slm-doorman-server service-content server service-extraction service-fs service-input; do
     [ -x "$BIN_DIR/$bin" ] || die "binary not found: $BIN_DIR/$bin"
 done
 log "all binaries found"
@@ -87,29 +91,49 @@ start_svc service-people \
         "$BIN_DIR/server"
 wait_http service-people "http://127.0.0.1:9091/v1/people"
 
+# ── Tier 0.5: service-fs (WORM storage gatekeeper — Envelope A std/axum) ─────
+start_svc service-fs \
+    env FS_BIND_ADDR="127.0.0.1:9100" \
+        FS_MODULE_ID="${TOTEBOX_MODULE_ID}" \
+        FS_LEDGER_ROOT="$DATA_DIR/$TOTEBOX_ARCHIVE/service-fs/worm" \
+        FS_WATCH_DROP_DIR="$DATA_DIR/$TOTEBOX_ARCHIVE/service-extraction/watch" \
+        "$BIN_DIR/service-fs"
+wait_http service-fs "http://127.0.0.1:9100/healthz"
+
 # ── Tier 4: service-extraction (filesystem watcher — no HTTP surface) ────────
-# service-extraction tails ingestion queues and writes to service-content.
+# service-extraction tails the watch dir dropped by service-fs and writes CORPUS
+# files to service-content/ledgers/ for DataGraph ingestion.
 # No health endpoint; process start is the signal.
 start_svc service-extraction \
-    "$BIN_DIR/service-extraction"
+    env EXTRACTION_BASE_DIR="$DATA_DIR" \
+        EXTRACTION_WATCH_DIR="$DATA_DIR/$TOTEBOX_ARCHIVE/service-extraction/watch" \
+        EXTRACTION_EMIT_CORPUS_DIR="$DATA_DIR/$TOTEBOX_ARCHIVE/service-content/ledgers" \
+        EXTRACTION_CORPUS_MODULE_ID="${TOTEBOX_MODULE_ID}" \
+        "$BIN_DIR/service-extraction"
 sleep 1
 pid_file="$PID_DIR/service-extraction.pid"
 kill -0 "$(cat "$pid_file")" 2>/dev/null \
     || die "service-extraction exited immediately; check $LOG_DIR/service-extraction.log"
 log "service-extraction running"
 
-# ── service-fs note ───────────────────────────────────────────────────────────
-# service-fs is a no_std seL4 unikernel (WORM storage enforcer). It is started
-# by the seL4 root task, not by this script. Verify its protection domain is
-# active via the seL4 IPC monitor before routing writes to it.
+# ── Tier 5: service-input (Input Machine — file ingest, migration, calibration)
+start_svc service-input \
+    env SERVICE_INPUT_BIND="127.0.0.1:9106" \
+        SERVICE_INPUT_MODULE_ID="${TOTEBOX_MODULE_ID}" \
+        SERVICE_INPUT_FS_ENDPOINT="http://127.0.0.1:9100" \
+        SERVICE_INPUT_DEST_ARCHIVE="${TOTEBOX_ARCHIVE}" \
+        SERVICE_INPUT_LEDGER="$DATA_DIR/$TOTEBOX_ARCHIVE/service-input/ledger.jsonl" \
+        "$BIN_DIR/service-input"
+wait_http service-input "http://127.0.0.1:9106/healthz"
 
 log "============================================================"
-log " stack ready"
-log "   service-slm       http://127.0.0.1:9080"
-log "   service-content   http://127.0.0.1:9081"
-log "   service-people    http://127.0.0.1:9091"
-log "   service-extraction  (background watcher)"
-log "   service-fs          (seL4 protection domain — verify separately)"
+log " stack ready  (archive: ${TOTEBOX_ARCHIVE}, module: ${TOTEBOX_MODULE_ID})"
+log "   service-slm         http://127.0.0.1:9080   (Doorman — inference gateway)"
+log "   service-content     http://127.0.0.1:9081   (DataGraph / LadybugDB)"
+log "   service-people      http://127.0.0.1:9091   (personnel ledger)"
+log "   service-extraction  (background watcher — CORPUS emitter)"
+log "   service-fs          http://127.0.0.1:9100   (WORM storage — Envelope A)"
+log "   service-input       http://127.0.0.1:9106   (Input Machine — migration / calibration)"
 log "PID files: $PID_DIR/"
 log "Logs:      $LOG_DIR/"
 log "============================================================"

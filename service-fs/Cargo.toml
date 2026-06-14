@@ -3,28 +3,31 @@ name = "service-fs"
 version = "1.0.1"
 edition = "2021"
 authors = ["PointSav Digital Systems"]
-description = "Bare-Metal Unikernel File System Gatekeeper. Enforces WORM storage boundaries."
+description = "WORM Storage Gatekeeper — Envelope A (std/axum HTTP). Envelope B (seL4 unikernel) is Phase 3."
 
 [[bin]]
 name = "service-fs"
 path = "src/main.rs"
-# Excluded from test builds: #[panic_handler] conflicts with std test harness
-test = false
 
 [dev-dependencies]
 tower = { version = "0.4", features = ["util"] }
-criterion = { version = "0.5", features = ["html_reports"] }
+tempfile = "3"
 
 [[bench]]
 name = "ledger_bench"
 harness = false
-# Requires a lib target (posix_tile + ledger modules) not yet implemented.
+# Requires lib target (PosixTileLedger) not yet implemented.
 # Enable with: cargo bench --features=bench-ledger
 required-features = ["bench-ledger"]
 
 [features]
-# Gates the ledger criterion bench; disabled until PosixTileLedger lib target lands.
 bench-ledger = []
 
 [dependencies]
-# Pure bare-metal enclave. Zero OS dependencies permitted.
+axum = { version = "0.7", features = ["json"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+hex = "0.4"
+uuid = { version = "1", features = ["v4"] }
