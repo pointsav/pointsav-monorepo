@@ -1,41 +1,47 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster: project-infrastructure
-cluster_name: project-infrastructure
-cluster_branch: main
-created: 2026-06-14
+cluster: project-gis
+cluster_name: project-gis
+cluster_branch: cluster/project-gis
+created: 2026-04-01
 state: active
-slm_endpoint: http://localhost:9180
-module_id: infrastructure
+module_id: gis
+slm_endpoint: http://localhost:8011
 
 tetrad:
   vendor:
-    - repo: pointsav-monorepo
-      path: pointsav-monorepo/
-      upstream: vendor/pointsav-monorepo
-      focus: >
-        VM fleet controller stack — service-vm-fleet (:9203 advisory placement),
-        service-vm-host (:9220 per-node QEMU agent), service-vm-tenant (:9221 tenant proxy);
-        app-orchestration-slm (:9180 Yo-Yo broker chassis, DOCTRINE #23 Tier B);
-        system-vm-fleet-types (shared wire types); all deployed on vault-privategit-source-1.
-      status: active (commits 5e851ecc / 2717fbce / a71e89f0 / 49bd534d; Stage 6 pending)
+    repo: pointsav-monorepo
+    path: pointsav-monorepo/
+    upstream: vendor/pointsav-monorepo
+    crates: [app-orchestration-gis]
+    state: active
   customer:
-    - status: leg-pending
-      note: >
-        No customer-tier deliverable defined yet. The VM fleet is internal infrastructure.
-        A woodfine-fleet-deployment catalog entry will be added when a customer-facing
-        deployment guide is written.
+    repo: woodfine-fleet-deployment
+    path: gateway-orchestration-gis-1/
+    state: active
   deployment:
-    - status: active
-      note: >
-        Four services on vault-privategit-source-1:
-          service-vm-fleet    → port 9203 (local-vm-fleet.service)
-          service-vm-host     → port 9220 (local-vm-host.service)
-          service-vm-tenant   → port 9221 (local-vm-tenant.service)
-          orchestration-slm   → port 9180 (local-orchestration-slm.service)
-        Fleet nodes: laptop-a-1 (:9220 via WireGuard), laptop-b-1 (:9220 via WireGuard).
+    name: gateway-orchestration-gis-1
+    host: vault-privategit-source-1
+    surface: gis.woodfinegroup.com
+    state: active
   wiki:
-    - status: leg-pending
-      note: >
-        TOPIC and GUIDE drafts for the VM stack not yet written.
-        Planned: TOPIC on PPN VM resource pool architecture; GUIDE on fleet operations.
+    repo: content-wiki-projects
+    state: active
+
+clones:
+  - repo: pointsav-monorepo
+    role: primary
+    path: pointsav-monorepo/
+    upstream: vendor/pointsav-monorepo
+    branch: cluster/project-gis
+---
+
+# project-gis — Cluster Manifest
+
+Location Intelligence GIS cluster. Builds and deploys the co-location archetype
+system (PRO / VWH / PKS), the Top 400 Regional Markets dataset, catchment and
+O-D analysis pipelines, AEC enrichment layers (Köppen, ecoregion, GHI, seismic,
+flood, wildfire), and the journal research programme (J1 Retail Co-location,
+J7 Urban Fringe, J8 Commuter). Primary surface: gis.woodfinegroup.com
+(gateway-orchestration-gis-1). All pipelines run from
+pointsav-monorepo/app-orchestration-gis/. Nightly rebuild: 22:00 PDT.
