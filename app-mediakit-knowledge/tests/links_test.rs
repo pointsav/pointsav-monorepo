@@ -113,6 +113,7 @@ async fn whatlinkshere_returns_backlinks_from_graph() {
         brand_theme: None,
         brand_instance: "documentation".to_string(),
         blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
+        peers: vec![],
     };
 
     let app = router(state);
