@@ -1,5 +1,6 @@
 ---
 schema: foundry-cluster-manifest-v1
+cluster: project-command
 cluster_name: project-command
 cluster_branch: cluster/project-command
 created: 2026-05-05
