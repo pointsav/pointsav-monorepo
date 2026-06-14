@@ -152,12 +152,15 @@ pub fn render_editor_panel(slug: &str, token_json: &Value) -> String {
 fn render_value_rows(token_json: &Value) -> String {
     let value = find_first_value(token_json);
     let Some(obj) = value.as_object() else {
-        return "<tr><td colspan=\"2\" class=\"bim-prop-empty\">No $value fields found.</td></tr>".into();
+        return "<tr><td colspan=\"2\" class=\"bim-prop-empty\">No $value fields found.</td></tr>"
+            .into();
     };
 
     let mut rows = String::new();
     for (key, val) in obj {
-        if key.starts_with('$') { continue; }
+        if key.starts_with('$') {
+            continue;
+        }
         let val_str = match val {
             Value::String(s) => s.clone(),
             Value::Number(n) => n.to_string(),
@@ -177,7 +180,8 @@ fn render_value_rows(token_json: &Value) -> String {
         ));
     }
     if rows.is_empty() {
-        rows = "<tr><td colspan=\"2\" class=\"bim-prop-empty\">$value has no fields.</td></tr>".into();
+        rows =
+            "<tr><td colspan=\"2\" class=\"bim-prop-empty\">$value has no fields.</td></tr>".into();
     }
     rows
 }
