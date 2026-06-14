@@ -1447,6 +1447,11 @@
             necb_zone:        c.necb_zone        || null,
             eu_climate_zone:  c.eu_climate_zone  || null,
             koppen_class:     c.koppen_class      || null,
+            temp_annual_mean_c: c.temp_annual_mean_c ?? null,
+            hdd18:            c.hdd18            ?? null,
+            cdd18:            c.cdd18            ?? null,
+            wind_speed_ms:    c.wind_speed_ms    ?? null,
+            wetland_class:    c.wetland_class     || null,
             seismic_pga_g:    c.seismic_pga_g    ?? null,
             flood_hazard:     c.flood_hazard      || null,
             wildfire_hazard:  c.wildfire_hazard   || null,
@@ -2020,9 +2025,9 @@
                 <div class="catchment-block">
                     <div class="data-label" style="margin:0 0 6px;">Site Conditions</div>
                     ${(() => {
-                        const hasClimate = !!(p.ashrae_zone || p.eu_climate_zone || p.necb_zone || p.koppen_class);
+                        const hasClimate = !!(p.ashrae_zone || p.eu_climate_zone || p.necb_zone || p.koppen_class || p.temp_annual_mean_c != null);
                         const hasEcology = !!(p.ecoregion_name || p.ecoregion_biome || p.eu_biogeo_region);
-                        const hasHazards = !!(p.seismic_pga_g != null || p.ghi_kwh_m2_yr != null || p.flood_hazard || p.wildfire_hazard);
+                        const hasHazards = !!(p.seismic_pga_g != null || p.ghi_kwh_m2_yr != null || p.wind_speed_ms != null || p.flood_hazard || p.wildfire_hazard);
                         const SUB  = `font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;`;
                         const GRID = `display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:11px;color:var(--text-main);line-height:1.5;`;
                         const DIV  = `border-top:1px solid var(--border-soft);margin-top:7px;padding-top:7px;`;
@@ -2060,6 +2065,9 @@
                                 <div style="${GRID}">
                                     ${(p.ashrae_zone||p.eu_climate_zone||p.necb_zone) ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Zone</span> <span>${p.ashrae_zone||p.eu_climate_zone||p.necb_zone}</span></div>` : ''}
                                     ${p.koppen_class ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Köppen</span> <span>${p.koppen_class}</span></div>` : ''}
+                                    ${p.temp_annual_mean_c != null ? `<div><span style="color:var(--text-muted);">Mean temp</span> <span>${p.temp_annual_mean_c.toFixed(1)} °C</span></div>` : ''}
+                                    ${p.hdd18 != null ? `<div><span style="color:var(--text-muted);">HDD 18°C</span> <span>${Math.round(p.hdd18).toLocaleString()}</span></div>` : ''}
+                                    ${p.cdd18 != null ? `<div><span style="color:var(--text-muted);">CDD 18°C</span> <span>${Math.round(p.cdd18).toLocaleString()}</span></div>` : ''}
                                 </div>
                             </div>`;
                         }
@@ -2069,6 +2077,7 @@
                                 <div style="${GRID}">
                                     ${p.ecoregion_name  ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Eco-region</span> <span>${p.ecoregion_name}</span></div>` : ''}
                                     ${p.ecoregion_biome ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Biome</span> <span>${p.ecoregion_biome}</span></div>` : ''}
+                                    ${p.wetland_class   ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Wetland</span> <span>${p.wetland_class}</span></div>` : ''}
                                     ${p.eu_biogeo_region ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">EU Biogeo.</span> <span>${p.eu_biogeo_region}</span></div>` : ''}
                                 </div>
                             </div>`;
@@ -2078,7 +2087,8 @@
                                 <div style="${SUB}">Hazards &amp; Resources</div>
                                 <div style="${GRID}">
                                     ${p.seismic_pga_g != null ? `<div><span style="color:var(--text-muted);">Seismic PGA</span> <span>${p.seismic_pga_g}g</span></div>` : ''}
-                                    ${p.ghi_kwh_m2_yr  != null ? `<div><span style="color:var(--text-muted);">Solar GHI</span> <span>${p.ghi_kwh_m2_yr} kWh/m²</span></div>` : ''}
+                                    ${p.ghi_kwh_m2_yr  != null ? `<div><span style="color:var(--text-muted);">Solar GHI</span> <span>${Math.round(p.ghi_kwh_m2_yr).toLocaleString()} kWh/m²/yr</span></div>` : ''}
+                                    ${p.wind_speed_ms  != null ? `<div><span style="color:var(--text-muted);">Wind</span> <span>${p.wind_speed_ms.toFixed(1)} m/s</span></div>` : ''}
                                     ${p.flood_hazard    ? `<div><span style="color:var(--text-muted);">Flood</span> <span>${p.flood_hazard}</span></div>` : ''}
                                     ${p.wildfire_hazard ? `<div><span style="color:var(--text-muted);">Wildfire</span> <span>${p.wildfire_hazard}</span></div>` : ''}
                                 </div>
