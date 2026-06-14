@@ -148,6 +148,7 @@ impl ContentCartridge {
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn new_for(
         username: impl Into<String>,
         tenant: impl Into<String>,
