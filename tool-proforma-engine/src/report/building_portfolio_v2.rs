@@ -448,6 +448,7 @@ tr.total td{background:#eef2f7;font-weight:700;border-top:2px solid #888}
 tr.subtotal td{background:#f5f7fa;font-weight:600;border-top:1px solid #aaa}
 tr.section-banner td{background:#e3edf7;font-weight:700;font-size:0.74rem;text-transform:uppercase;letter-spacing:.3px;color:#1a2a44;text-align:left}
 .footer{font-size:0.72rem;color:#666;margin-top:1.5rem;border-top:1px solid #ddd;padding-top:0.5rem}
+h2.break-before{break-before:page;page-break-before:always}
 @page{size:letter landscape;margin:1.5cm 2cm 1.5cm 1.5cm}
 @media print{
   body{margin:0;font-size:11px;max-width:none}
@@ -511,7 +512,7 @@ pub fn render_proforma() -> String {
 fn render_class_financials() -> String {
     let mut s = String::new();
     s.push_str("<h2>1 · Development Class Financial Statements</h2>\n");
-    s.push_str("<p class=\"note\">Foundation of the portfolio. Each of the four Development Classes is calibrated so its construction cost earns a 10.5% development yield; everything below scales from these per-building economics. Legal floor geometry: Professional Centres 3–5 floors (21,000 sf/floor); Suburban Office 6–9 floors (19,000 sf/floor); Retail Select and Tech Industrial single-storey. Tech Industrial is always built in pairs.</p>\n");
+    s.push_str("<p class=\"note\">Foundation of the portfolio. Each of the four Development Classes is calibrated so its construction cost earns a 10.5% development yield; everything below scales from these per-building economics. Rent = cost × 10.5% dev yield; NOI = rent × 57%; asset value = NOI ÷ 6.25% cap rate; depreciation = cost ÷ 40 years. Legal floor geometry: Professional Centres 3–5 floors (21,000 sf/floor); Suburban Office 6–9 floors (19,000 sf/floor); Retail Select and Tech Industrial single-storey. Tech Industrial is always built in pairs.</p>\n");
     for c in ALL_CLASSES {
         s.push_str(&render_one_class_statement(c));
     }
@@ -525,8 +526,8 @@ fn render_one_class_statement(c: Class) -> String {
         c.label(),
         comma_f(c.cost_per_sf(), 0)
     ));
-    s.push_str("<table>\n");
-    s.push_str("<tr><th class=\"lbl\">Variant</th><th>GLA</th><th>Construction cost</th><th>Rent (10.5%)</th><th>NOI (57%)</th><th>Asset value (6.25%)</th><th>Depreciation (40yr)</th><th>Dev yield</th></tr>\n");
+    s.push_str("<table class=\"wide\">\n");
+    s.push_str("<tr><th class=\"lbl\">Variant</th><th>GLA</th><th>Cost</th><th>Rent</th><th>NOI</th><th>Asset value</th><th>Deprec.</th><th>Dev yield</th></tr>\n");
     for v in c.variants() {
         let gla = v.gla;
         let cost = gla * c.cost_per_sf();
@@ -625,7 +626,7 @@ fn render_site_composition(base: &Base1x) -> String {
 // Section 4 — Per-DHS rollup.
 fn render_per_dhs(base: &Base1x) -> String {
     let mut s = String::new();
-    s.push_str("<h2>4 · Per-DHS Rollup (full modeled build-out)</h2>\n");
+    s.push_str("<h2 class=\"break-before\">4 · Per-DHS Rollup (full modeled build-out)</h2>\n");
     s.push_str("<p class=\"note\">Each Direct-Hold Solution replicates the 1× building portfolio scaled by its size factor (United States 2×). Figures are the fully-modeled portfolio; Section 5 shows how much is delivered inside the 10-year window. All amounts CAD.</p>\n");
     s.push_str("<table>\n");
     s.push_str("<tr><th class=\"lbl\">Direct-Hold Solution</th><th>Ccy</th><th>Size</th><th>Launch</th><th>Sites</th><th>Buildings</th><th>GLA</th><th>Cost</th><th>NOI</th><th>Asset value</th></tr>\n");
@@ -784,7 +785,9 @@ fn year_row_class(label: &str, class: &str, f: impl Fn(u32) -> String) -> String
 // Section 6 — System scale summary + Remaining-Sites reconciliation.
 fn render_scale_reconciliation(base: &Base1x) -> String {
     let mut s = String::new();
-    s.push_str("<h2>6 · System Scale &amp; Remaining-Sites Reconciliation</h2>\n");
+    s.push_str(
+        "<h2 class=\"break-before\">6 · System Scale &amp; Remaining-Sites Reconciliation</h2>\n",
+    );
     s.push_str("<p class=\"note\">Built within the 10-year window vs the total fully-modeled portfolio. The remaining Development Sites complete after Y10 to reach the full modeled leasable area — wording support for the prospectus and investor materials.</p>\n");
 
     // Per-DHS reconciliation.
