@@ -101,6 +101,11 @@ fn inner_main() -> anyhow::Result<()> {
     )));
     chassis.register(Box::new(SlmCartridge::new(&p.slm_endpoint, p.plain_mode)));
     chassis.register(Box::new(SystemCartridge::new(&p.pair_endpoint)));
+    // Register SIGTERM + SIGINT handler — requests clean shutdown on next chassis tick.
+    let _ = ctrlc::set_handler(|| {
+        app_console_keys::request_shutdown();
+    });
+
     chassis.run_local()
 }
 

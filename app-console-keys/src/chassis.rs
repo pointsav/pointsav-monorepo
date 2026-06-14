@@ -1,9 +1,21 @@
 use std::{
     collections::BTreeMap,
     io::{self, Write},
-    sync::mpsc,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        mpsc,
+    },
     time::{Duration, Instant},
 };
+
+/// Set by a SIGTERM/SIGINT handler to request clean shutdown on the next chassis tick.
+static SHUTDOWN_REQUESTED: AtomicBool = AtomicBool::new(false);
+
+/// Signal the chassis to exit cleanly on the next event-loop tick.
+/// Call this from a SIGTERM or SIGINT handler registered before `run_local()`.
+pub fn request_shutdown() {
+    SHUTDOWN_REQUESTED.store(true, Ordering::SeqCst);
+}
 
 use anyhow::Result;
 use crossterm::{
@@ -589,6 +601,9 @@ impl AppConsoleKeys {
 
         let run_result = (|| -> Result<()> {
             loop {
+                if SHUTDOWN_REQUESTED.load(Ordering::SeqCst) {
+                    break;
+                }
                 self.drain_pair_events();
                 terminal.draw(|f| self.render(f))?;
                 if let Some(c) = self.cartridges.get(&self.active) {
