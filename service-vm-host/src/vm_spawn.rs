@@ -21,6 +21,10 @@ fn pid_path_for(vm_id: &str) -> PathBuf {
     disk_dir().join(format!("{vm_id}.pid"))
 }
 
+pub fn meta_path_for(vm_id: &str) -> PathBuf {
+    disk_dir().join(format!("{vm_id}.meta.json"))
+}
+
 fn seed_iso_path_for(vm_id: &str) -> PathBuf {
     disk_dir().join(format!("{vm_id}-seed.iso"))
 }
@@ -205,6 +209,12 @@ pub fn spawn_qemu(record: &VmRecord, kvm: bool) -> Result<(), String> {
             kvm,
             "QEMU process spawned"
         );
+        // Persist metadata sidecar so qemu_monitor can reconstruct VmRecord fields from
+        // process state on subsequent heartbeats (vm_type, ram, vcpu, tenant_id would
+        // otherwise be lost once the spawn handler returns).
+        if let Ok(json) = serde_json::to_string(record) {
+            let _ = fs::write(meta_path_for(&record.vm_id), json);
+        }
         Ok(())
     } else {
         Err(format!(
@@ -230,6 +240,7 @@ pub fn kill_qemu(vm_id: &str) {
     }
     let _ = fs::remove_file(monitor_sock_for(vm_id));
     let _ = fs::remove_file(pidfile);
+    let _ = fs::remove_file(meta_path_for(vm_id));
 }
 
 /// Synthesise a VmRecord representing a VM that has just been accepted for provisioning.
