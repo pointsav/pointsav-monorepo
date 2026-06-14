@@ -1,4 +1,4 @@
-# BRIEF discipline — project-workplace
+# BRIEF discipline — pointsav-monorepo
 
 Rules for BRIEF-*.md files in this archive.
 Full specification: `/srv/foundry/conventions/brief-discipline.md`
