@@ -90,14 +90,14 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
   mro_industrial (Würth, Fastenal, Grainger, Hilti etc.), tool_rental (United Rentals, Sunbelt, Loxam
   etc.), flooring (Floor & Decor, Topps Tiles), auto_parts (AutoZone, O'Reilly, NAPA, Halfords),
   paint (Sherwin-Williams, Comex) all ingested; VWH production build live (6,368 clusters)
-- Full literature review (§2) — stub only
+- ~~Full literature review (§2)~~ — DONE 2026-06-14 (v0.2; §2.1–§2.4 written; [external: ...] citations flagged)
 - Validation section (§4.4) — stub only
 - OLS regression (§5.3 / §7.1) — executable once full dataset available; VWH clusters-ols.csv
   now derivable from archetype-vwh.geojson
 - ORCID IDs for all three authors
 
 **J8 — Commuter pre-submission blockers:**
-- Literature review (§2) — stub only
+- ~~Literature review (§2)~~ — DONE 2026-06-14 (v0.2; §2.1–§2.5 written; [external: ...] citations flagged)
 - Validation (§4.4) — stub only
 - Integration rate regression (§5.3 / §7.2) — requires rail-frequency external data
 - ORCID IDs for all three authors
@@ -110,11 +110,20 @@ Self-contained market briefs. Audience: commercial real estate investors, develo
 
 | ID | File | Title | Companion | Status |
 |---|---|---|---|---|
-| S1 | `SUMMARY/SUMMARY-urban-fringe.draft.md` | Urban Fringe: The Industrial Co-location Layer in the Metropolitan Ring | J7 | stub — 2026-06-01 |
-| S2 | `SUMMARY/SUMMARY-commuter.draft.md` | Commuter: Transit-Adjacent Commercial Co-location at Regional Rail Stations and Airports | J8 | stub — 2026-06-01 |
+| S1 | `SUMMARY/SUMMARY-urban-fringe.draft.md` | Urban Fringe: The Industrial Co-location Layer in the Metropolitan Ring | J7 | draft v0.2 — §2+§5+§6 written 2026-06-14 |
+| S2 | `SUMMARY/SUMMARY-commuter.draft.md` | Commuter: Transit-Adjacent Commercial Co-location at Regional Rail Stations and Airports | J8 | draft v0.2 — §7 investment thesis written 2026-06-14 |
 
-**S1 pre-completion requirements:** ~~Full chain ingestion~~ DONE 2026-06-11 → updated §2 country table (from archetype-vwh.geojson country distribution); §5 integration analysis; §6 investment thesis
-**S2 pre-completion requirements:** §5 integration rate analysis written; §6 investment thesis; map figures from `gateway-orchestration-gis-1/www/data/archetype-pks.geojson` (6,953 features; deployed 2026-06-11)
+**S1 pre-completion requirements:**
+- ~~Full chain ingestion~~ DONE 2026-06-11
+- ~~§2 production data update (6,368 clusters)~~ DONE 2026-06-14
+- ~~§5 integration analysis~~ DONE 2026-06-14 (retail_contamination analysis; dual-use zones)
+- ~~§6 investment thesis~~ DONE 2026-06-14 (T1/T2/T3 profile; demand drivers; risk factors)
+- Map figure — pending project-gis (archetype-vwh.geojson deployed; needs rendering)
+
+**S2 pre-completion requirements:**
+- ~~§7 investment thesis~~ DONE 2026-06-14 (integration rate by country; demand drivers; T1 hub analysis; risk factors)
+- Map figure — pending project-gis (archetype-pks.geojson deployed; needs rendering)
+- §5 integration rate regression — requires external rail-frequency data (long-term)
 
 ---
 
