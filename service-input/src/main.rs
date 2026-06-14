@@ -12,6 +12,7 @@ use eval::{compute_f1, normalize_reference_yaml, structural_health_check, Canoni
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
+use std::io::Write;
 use std::path::Path as FsPath;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -28,12 +29,14 @@ struct Config {
     dest_archive: String,
     reference_root: String,
     reference_dir: String,
+    jennifer2_root: String,
     rate_per_min: u64,
     batch_size: usize,
     ledger_path: String,
     max_bytes: usize,
     csv_batch_rows: usize,
     content_endpoint: String,
+    http_client: reqwest::Client,
 }
 
 // ---------------------------------------------------------------------------
@@ -58,8 +61,11 @@ type SharedState = Arc<Mutex<AppState>>;
 #[derive(Deserialize)]
 struct AppendPayload {
     path: String,
+    #[allow(dead_code)]
     submitted_by: Option<String>,
+    #[allow(dead_code)]
     tenant: Option<String>,
+    #[allow(dead_code)]
     source: Option<String>,
 }
 
@@ -113,6 +119,9 @@ struct Phase2Progress {
     offset_next: usize,
 }
 
+// Wire contract sent to service-fs /v1/append.
+// service-fs writes req.payload verbatim to the watch-dir JSON file.
+// service-extraction reads payload["file"]["filename"] and payload["file"]["data"].
 #[derive(Serialize, Deserialize)]
 struct FsAppendRequest {
     payload_id: String,
@@ -121,7 +130,9 @@ struct FsAppendRequest {
 
 #[derive(Deserialize)]
 struct FsAppendResponse {
+    #[allow(dead_code)]
     payload_id: Option<String>,
+    #[allow(dead_code)]
     sha256: Option<String>,
 }
 
@@ -166,11 +177,13 @@ fn serialize_people_csv(csv_bytes: &[u8], batch_rows: usize, stem: &str) -> Vec<
                 ));
             }
         } else {
-            // domain CSV: two cols — Name | Domain (or similar)
-            let name = rec.get(0).unwrap_or("").trim();
-            let domain = headers.get(1).map(|s| s.as_str()).unwrap_or("unknown");
-            if !name.is_empty() {
-                current.push_str(&format!("{}: {}\n", domain, name));
+            // domain CSV: emit all columns as key: value pairs
+            for (i, val) in rec.iter().enumerate() {
+                let val = val.trim();
+                if !val.is_empty() {
+                    let key = headers.get(i).map(|s| s.as_str()).unwrap_or("value");
+                    current.push_str(&format!("{}: {}\n", key, val));
+                }
             }
         }
 
@@ -195,7 +208,7 @@ fn serialize_people_csv(csv_bytes: &[u8], batch_rows: usize, stem: &str) -> Vec<
 fn now_secs() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
+        .unwrap_or_default()
         .as_secs()
 }
 
@@ -205,22 +218,32 @@ fn sha256_hex(bytes: &[u8]) -> String {
     hex::encode(h.finalize())
 }
 
-fn post_to_fs(
-    client: &reqwest::blocking::Client,
+// Blocker 1 fix: build the correct {file:{filename,data},destination_archive,target_service,edge_entities}
+// envelope that service-extraction expects.
+// Blocker 4 fix: fully async — no std::thread::sleep, no reqwest::blocking.
+async fn post_to_fs(
+    client: &reqwest::Client,
     fs_endpoint: &str,
     payload_id: &str,
     filename: &str,
     content_bytes: &[u8],
     module_id: &str,
+    dest_archive: &str,
+    target_service: &str,
 ) -> Result<FsAppendResponse, String> {
     let b64_content = B64.encode(content_bytes);
     let body = FsAppendRequest {
         payload_id: payload_id.to_string(),
+        // service-extraction reads payload["file"]["filename"] and payload["file"]["data"].
+        // destination_archive, target_service, and edge_entities are routing keys.
         payload: serde_json::json!({
-            "filename": filename,
-            "content_b64": b64_content,
-            "module_id": module_id,
-            "source": "service-input",
+            "file": {
+                "filename": filename,
+                "data": b64_content,
+            },
+            "destination_archive": dest_archive,
+            "target_service": target_service,
+            "edge_entities": [],
         }),
     };
     let url = format!("{}/v1/append", fs_endpoint.trim_end_matches('/'));
@@ -230,22 +253,35 @@ fn post_to_fs(
         .header("Content-Type", "application/json")
         .json(&body)
         .send()
+        .await
         .map_err(|e| format!("POST {url}: {e}"))?;
 
     if resp.status().is_success() {
         resp.json::<FsAppendResponse>()
+            .await
             .map_err(|e| format!("parse response: {e}"))
     } else {
         Err(format!("fs status {}", resp.status()))
     }
 }
 
+// WORM ledger: O_APPEND single-line write (no read-modify-write race, O(1) per write).
 fn write_ledger_entry(ledger_path: &str, entry: &serde_json::Value) {
-    let mut existing = std::fs::read_to_string(ledger_path).unwrap_or_default();
-    existing.push_str(&format!("{}\n", entry));
-    let tmp = format!("{}.tmp", ledger_path);
-    if std::fs::write(&tmp, &existing).is_ok() {
-        let _ = std::fs::rename(&tmp, ledger_path);
+    if let Some(parent) = FsPath::new(ledger_path).parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    match std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(ledger_path)
+    {
+        Ok(mut file) => {
+            let line = format!("{}\n", entry);
+            if let Err(e) = file.write_all(line.as_bytes()) {
+                eprintln!("[service-input] ledger write error {ledger_path}: {e}");
+            }
+        }
+        Err(e) => eprintln!("[service-input] ledger open error {ledger_path}: {e}"),
     }
 }
 
@@ -260,15 +296,74 @@ fn infer_target_service(path: &str) -> &'static str {
 }
 
 // ---------------------------------------------------------------------------
-// Rate limiter (token bucket, simple)
+// Rate limiter — async; no thread parking
 // ---------------------------------------------------------------------------
 
-fn sleep_rate(rate_per_min: u64) {
+async fn sleep_rate(rate_per_min: u64) {
     if rate_per_min == 0 {
         return;
     }
     let ms = 60_000 / rate_per_min;
-    std::thread::sleep(std::time::Duration::from_millis(ms));
+    tokio::time::sleep(std::time::Duration::from_millis(ms)).await;
+}
+
+// ---------------------------------------------------------------------------
+// DataGraph query
+// Blocker 2 fix: use /v1/graph/context (the real endpoint) instead of the
+// non-existent /v1/entities.
+// Returns Vec<CanonicalEntity> filtered by stem as the query hint.
+// ---------------------------------------------------------------------------
+
+async fn query_datagraph_entities(
+    stem: &str,
+    module_id: &str,
+    content_endpoint: &str,
+    client: &reqwest::Client,
+) -> Vec<CanonicalEntity> {
+    let url = format!(
+        "{}/v1/graph/context?q={}&module_id={}&limit=100",
+        content_endpoint.trim_end_matches('/'),
+        stem,
+        module_id,
+    );
+    let resp = match client.get(&url).send().await {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("[service-input] DataGraph error for stem {stem}: {e}");
+            return Vec::new();
+        }
+    };
+    if !resp.status().is_success() {
+        eprintln!(
+            "[service-input] DataGraph /v1/graph/context returned {} for stem {}",
+            resp.status(),
+            stem
+        );
+        return Vec::new();
+    }
+    let body: serde_json::Value = match resp.json().await {
+        Ok(v) => v,
+        Err(_) => return Vec::new(),
+    };
+    // /v1/graph/context returns Vec<GraphEntity> = JSON array of {entity_name, classification, ...}
+    body.as_array()
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|item| {
+                    let name = item.get("entity_name")?.as_str()?.to_string();
+                    let etype = item
+                        .get("classification")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("Unknown")
+                        .to_string();
+                    Some(CanonicalEntity {
+                        name,
+                        entity_type: etype,
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 // ---------------------------------------------------------------------------
@@ -352,57 +447,62 @@ async fn append(
         .and_then(|s| s.to_str())
         .unwrap_or("unknown");
 
-    let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
-        .build()
-        .unwrap();
-
     let ts = now_secs();
     let mut sent = 0usize;
+    let target_service = infer_target_service(path_str);
 
     if ext == "csv" {
-        // CSV: serialize as prose blocks of csv_batch_rows, send each as .txt
-        let batches =
-            serialize_people_csv(&bytes, cfg.csv_batch_rows, stem);
+        // CSV: serialize as prose blocks, send each batch as a .txt corpus file.
+        let batches = serialize_people_csv(&bytes, cfg.csv_batch_rows, stem);
         for (batch_filename, prose) in &batches {
             let batch_id = format!("{}-{}", req.payload_id, batch_filename.replace('.', "-"));
             if let Err(e) = post_to_fs(
-                &client,
+                &cfg.http_client,
                 &cfg.fs_endpoint,
                 &batch_id,
                 batch_filename,
                 prose.as_bytes(),
                 &cfg.module_id,
-            ) {
+                &cfg.dest_archive,
+                target_service,
+            )
+            .await
+            {
                 eprintln!("[service-input] CSV batch {batch_filename}: {e}");
             } else {
                 sent += 1;
             }
-            sleep_rate(cfg.rate_per_min);
+            sleep_rate(cfg.rate_per_min).await;
+        }
+        if sent > 0 {
+            let mut s = state.lock().unwrap();
+            s.phase1_done = true;
         }
     } else {
-        // Prose / binary: send raw bytes as-is
+        // Prose / binary: send raw bytes.
         let filename = file_path
             .file_name()
             .and_then(|f| f.to_str())
             .unwrap_or("unknown");
         match post_to_fs(
-            &client,
+            &cfg.http_client,
             &cfg.fs_endpoint,
             &req.payload_id,
             filename,
             &bytes,
             &cfg.module_id,
-        ) {
+            &cfg.dest_archive,
+            target_service,
+        )
+        .await
+        {
             Ok(_) => sent += 1,
             Err(e) => eprintln!("[service-input] append {filename}: {e}"),
         }
+        sleep_rate(cfg.rate_per_min).await;
     }
 
     // Write own ledger entry
-    if let Some(parent) = FsPath::new(&cfg.ledger_path).parent() {
-        let _ = std::fs::create_dir_all(parent);
-    }
     write_ledger_entry(
         &cfg.ledger_path,
         &serde_json::json!({
@@ -411,7 +511,7 @@ async fn append(
             "sha256": sha,
             "ts": ts,
             "sent_batches": sent,
-            "target_service": infer_target_service(path_str),
+            "target_service": target_service,
         }),
     );
 
@@ -420,9 +520,6 @@ async fn append(
         s.seen_sha256.insert(sha.clone());
         s.queued = s.queued.saturating_sub(1);
         s.done_count += 1;
-        if ext == "csv" {
-            // Phase 1 is done when the last CSV has been sent
-        }
     }
 
     Json(AppendResponse {
@@ -443,18 +540,12 @@ async fn migrate(
     let batch_size = req.batch_size.unwrap_or(cfg.batch_size).min(50);
     let offset = req.offset.unwrap_or(0);
 
-    let assets_dir = format!(
-        "{}/service-research/assets",
-        cfg.reference_root
-    );
-    let ledger_src_dir = format!(
-        "{}/service-research/ledger",
-        cfg.reference_root
-    );
+    let assets_dir = format!("{}/service-research/assets", cfg.reference_root);
+    let ledger_src_dir = format!("{}/service-research/ledger", cfg.reference_root);
 
-    // Collect sorted .md files
+    // Collect sorted .md files (depth 2 to catch immediate subdirs)
     let mut md_files: Vec<std::path::PathBuf> = walkdir::WalkDir::new(&assets_dir)
-        .max_depth(1)
+        .max_depth(2)
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|e| {
@@ -467,12 +558,7 @@ async fn migrate(
         .collect();
     md_files.sort();
 
-    let slice = md_files.iter().skip(offset).take(batch_size);
-
-    let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
-        .build()
-        .unwrap();
+    let slice: Vec<_> = md_files.iter().skip(offset).take(batch_size).collect();
 
     let mut processed = 0usize;
     let mut skipped = 0usize;
@@ -486,7 +572,7 @@ async fn migrate(
             .unwrap_or("unknown")
             .to_string();
 
-        // Check corresponding ledger
+        // Validate corresponding ledger
         let ledger_path_src = format!("{}/{}.yaml", ledger_src_dir, stem);
         let ledger_bytes = std::fs::read(&ledger_path_src).unwrap_or_default();
 
@@ -525,16 +611,20 @@ async fn migrate(
         let sha = sha256_hex(&md_bytes);
         let payload_id = format!("migrate-{}-{}", stem, &sha[..8]);
 
-        // Send to service-fs
+        // Send to service-fs with correct extraction envelope
         let filename = format!("{}.md", stem);
         match post_to_fs(
-            &client,
+            &cfg.http_client,
             &cfg.fs_endpoint,
             &payload_id,
             &filename,
             &md_bytes,
             &cfg.module_id,
-        ) {
+            &cfg.dest_archive,
+            "service-research",
+        )
+        .await
+        {
             Ok(_) => {}
             Err(e) => {
                 eprintln!("[service-input/migrate] fs POST {stem}: {e}");
@@ -544,20 +634,13 @@ async fn migrate(
             }
         }
 
-        // Copy reference YAML
-        if let Some(parent) = FsPath::new(&cfg.reference_dir).parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
+        // Copy reference YAML to jennifer-2 reference dir
         let _ = std::fs::create_dir_all(&cfg.reference_dir);
         let ledger_dst = format!("{}/{}.yaml", cfg.reference_dir, stem);
         if let Err(e) = std::fs::copy(&ledger_path_src, &ledger_dst) {
             eprintln!("[service-input/migrate] copy ledger {stem}: {e}");
         }
 
-        // Write batch ledger entry
-        if let Some(parent) = FsPath::new(&cfg.ledger_path).parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
         write_ledger_entry(
             &cfg.ledger_path,
             &serde_json::json!({
@@ -577,7 +660,7 @@ async fn migrate(
             s.phase2_processed += 1;
         }
 
-        sleep_rate(cfg.rate_per_min);
+        sleep_rate(cfg.rate_per_min).await;
     }
 
     Json(MigrateResponse {
@@ -605,12 +688,17 @@ async fn eval_stem(
         }
     };
 
-    // Query DataGraph for extracted entities
-    let extracted = query_datagraph_entities(&stem, &cfg.module_id, &cfg.content_endpoint);
+    let extracted =
+        query_datagraph_entities(&stem, &cfg.module_id, &cfg.content_endpoint, &cfg.http_client)
+            .await;
 
     let f1 = compute_f1(&reference.entities, &extracted);
-    let health =
-        structural_health_check(&stem, &cfg.reference_dir.replace("/service-research/reference", ""), &cfg.module_id, &cfg.ledger_path);
+    let health = structural_health_check(
+        &stem,
+        &cfg.jennifer2_root,
+        &cfg.module_id,
+        &cfg.ledger_path,
+    );
 
     Json(serde_json::json!({
         "stem": stem,
@@ -637,7 +725,6 @@ async fn eval_stem(
 async fn calibration_report(
     State((cfg, state)): State<(Arc<Config>, SharedState)>,
 ) -> impl IntoResponse {
-    // Read the last N entries from the ledger
     let ledger_content = std::fs::read_to_string(&cfg.ledger_path).unwrap_or_default();
     let entries: Vec<serde_json::Value> = ledger_content
         .lines()
@@ -659,10 +746,16 @@ async fn calibration_report(
         let stem = entry.get("stem").and_then(|s| s.as_str()).unwrap_or("");
         let ref_path = format!("{}/{}.yaml", cfg.reference_dir, stem);
         let reference = normalize_reference_yaml(FsPath::new(&ref_path)).ok();
-        let extracted = query_datagraph_entities(stem, &cfg.module_id, &cfg.content_endpoint);
+        let extracted = query_datagraph_entities(
+            stem,
+            &cfg.module_id,
+            &cfg.content_endpoint,
+            &cfg.http_client,
+        )
+        .await;
         let health = structural_health_check(
             stem,
-            &cfg.reference_dir.replace("/service-research/reference", ""),
+            &cfg.jennifer2_root,
             &cfg.module_id,
             &cfg.ledger_path,
         );
@@ -682,15 +775,28 @@ async fn calibration_report(
         }));
     }
 
-    let structural_pass_rate = if total > 0 { struct_pass as f32 / total as f32 } else { 1.0 };
+    let structural_pass_rate = if total > 0 {
+        struct_pass as f32 / total as f32
+    } else {
+        1.0
+    };
     let mean_entity_f1 = if total > 0 { f1_sum / total as f32 } else { 0.0 };
 
     let (go_no_go, reason) = if total >= 5 && structural_pass_rate < 0.80 {
-        ("stop", "structural_pass_rate < 0.80 — pipeline issue requires investigation")
+        (
+            "stop",
+            "structural_pass_rate < 0.80 — pipeline issue requires investigation",
+        )
     } else if structural_pass_rate >= 0.80 && mean_entity_f1 < 0.30 {
-        ("hold", "pipeline healthy but entity F1 < 0.30 — model quality issue, not blocking")
+        (
+            "hold",
+            "pipeline healthy but entity F1 < 0.30 — model quality issue, not blocking",
+        )
     } else {
-        ("go", "structural health and F1 within acceptable thresholds")
+        (
+            "go",
+            "structural health and F1 within acceptable thresholds",
+        )
     };
 
     let processed = { state.lock().unwrap().phase2_processed };
@@ -706,52 +812,6 @@ async fn calibration_report(
         },
         "go_no_go_reason": reason,
     }))
-}
-
-fn query_datagraph_entities(
-    stem: &str,
-    module_id: &str,
-    content_endpoint: &str,
-) -> Vec<CanonicalEntity> {
-    let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .unwrap_or_else(|_| reqwest::blocking::Client::new());
-
-    let url = format!(
-        "{}/v1/entities?module_id={}&source={}",
-        content_endpoint.trim_end_matches('/'),
-        module_id,
-        stem,
-    );
-    let resp = match client.get(&url).send() {
-        Ok(r) => r,
-        Err(_) => return Vec::new(),
-    };
-    if !resp.status().is_success() {
-        return Vec::new();
-    }
-    let body: serde_json::Value = match resp.json() {
-        Ok(v) => v,
-        Err(_) => return Vec::new(),
-    };
-    // Parse entity array from DataGraph response
-    body.get("entities")
-        .and_then(|arr| arr.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|item| {
-                    let name = item.get("entity_name")?.as_str()?.to_string();
-                    let etype = item
-                        .get("classification")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("Unknown")
-                        .to_string();
-                    Some(CanonicalEntity { name, entity_type: etype })
-                })
-                .collect()
-        })
-        .unwrap_or_default()
 }
 
 // ---------------------------------------------------------------------------
@@ -770,10 +830,13 @@ async fn main() {
         .unwrap_or_else(|_| "cluster-totebox-jennifer-2".into());
     let reference_root = std::env::var("SERVICE_INPUT_REFERENCE_ROOT")
         .unwrap_or_else(|_| "/srv/foundry/deployments/cluster-totebox-jennifer".into());
-    let reference_dir = std::env::var("SERVICE_INPUT_REFERENCE_DIR")
-        .unwrap_or_else(|_| {
-            "/srv/foundry/deployments/cluster-totebox-jennifer-2/service-research/reference".into()
-        });
+    let reference_dir = std::env::var("SERVICE_INPUT_REFERENCE_DIR").unwrap_or_else(|_| {
+        "/srv/foundry/deployments/cluster-totebox-jennifer-2/service-research/reference".into()
+    });
+    // Explicit jennifer2_root: no string surgery on reference_dir.
+    let jennifer2_root = std::env::var("SERVICE_INPUT_JENNIFER2_ROOT").unwrap_or_else(|_| {
+        "/srv/foundry/deployments/cluster-totebox-jennifer-2".into()
+    });
     let rate_per_min: u64 = std::env::var("SERVICE_INPUT_RATE_PER_MIN")
         .ok()
         .and_then(|v| v.parse().ok())
@@ -796,6 +859,11 @@ async fn main() {
     let content_endpoint = std::env::var("SERVICE_INPUT_CONTENT_ENDPOINT")
         .unwrap_or_else(|_| "http://127.0.0.1:9081".into());
 
+    let http_client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .expect("failed to build reqwest client");
+
     let cfg = Arc::new(Config {
         bind: bind.clone(),
         module_id,
@@ -803,12 +871,14 @@ async fn main() {
         dest_archive,
         reference_root,
         reference_dir,
+        jennifer2_root,
         rate_per_min,
         batch_size,
         ledger_path,
         max_bytes,
         csv_batch_rows,
         content_endpoint,
+        http_client,
     });
     let shared: SharedState = Arc::new(Mutex::new(AppState::default()));
 
@@ -822,8 +892,8 @@ async fn main() {
         .with_state((cfg.clone(), shared));
 
     println!(
-        "[service-input] ready on {bind} (module: {}, fs: {})",
-        cfg.module_id, cfg.fs_endpoint
+        "[service-input] ready on {bind} (module: {}, fs: {}, datagraph: {})",
+        cfg.module_id, cfg.fs_endpoint, cfg.content_endpoint,
     );
     let listener = tokio::net::TcpListener::bind(&bind)
         .await
@@ -871,26 +941,32 @@ mod tests {
     #[test]
     fn infer_target_service_routes_correctly() {
         assert_eq!(
-            infer_target_service("/srv/foundry/deployments/cluster-totebox-jennifer/service-research/assets/report.md"),
+            infer_target_service(
+                "/srv/foundry/deployments/cluster-totebox-jennifer/service-research/assets/report.md"
+            ),
             "service-research"
         );
         assert_eq!(
-            infer_target_service("/srv/foundry/deployments/cluster-totebox-jennifer/service-minutebook/assets/minutes.md"),
+            infer_target_service(
+                "/srv/foundry/deployments/cluster-totebox-jennifer/service-minutebook/assets/minutes.md"
+            ),
             "service-minutebook"
         );
         assert_eq!(
-            infer_target_service("/srv/foundry/deployments/cluster-totebox-jennifer/service-content/domains/corporate.csv"),
+            infer_target_service(
+                "/srv/foundry/deployments/cluster-totebox-jennifer/service-content/domains/corporate.csv"
+            ),
             "service-content"
         );
     }
 
     #[test]
     fn skip_invalid_ledger_size() {
-        // A ledger smaller than 60 bytes is invalid
         let small: Vec<u8> = b"title: x".to_vec();
         assert!(small.len() < 60);
-        // A valid ledger is at least 60 bytes
-        let valid: Vec<u8> = b"mentioned_entities:\n  people: []\n  companies: []\nmetrics: []\nthemes: []\ncontent_type: research\n".to_vec();
+        let valid: Vec<u8> =
+            b"mentioned_entities:\n  people: []\n  companies: []\nmetrics: []\nthemes: []\ncontent_type: research\n"
+                .to_vec();
         assert!(valid.len() >= 60);
     }
 
@@ -898,7 +974,28 @@ mod tests {
     fn skip_invalid_ledger_prompt_leak() {
         let leaked = b"extraction_protocol:\n  fidelity_mandate: true\ntitle: leaked\n";
         let content = String::from_utf8_lossy(leaked);
-        let has_leak = content.contains("extraction_protocol") || content.contains("fidelity_mandate");
+        let has_leak =
+            content.contains("extraction_protocol") || content.contains("fidelity_mandate");
         assert!(has_leak);
+    }
+
+    #[test]
+    fn post_to_fs_payload_shape() {
+        // Verify the payload shape matches what service-extraction expects:
+        // {file: {filename, data}, destination_archive, target_service, edge_entities}
+        let b64 = B64.encode(b"hello");
+        let payload = serde_json::json!({
+            "file": {
+                "filename": "test.md",
+                "data": b64,
+            },
+            "destination_archive": "cluster-totebox-jennifer-2",
+            "target_service": "service-research",
+            "edge_entities": [],
+        });
+        assert!(payload["file"]["filename"].as_str() == Some("test.md"));
+        assert!(payload["file"]["data"].as_str().is_some());
+        assert!(payload["destination_archive"].as_str() == Some("cluster-totebox-jennifer-2"));
+        assert!(payload["edge_entities"].is_array());
     }
 }

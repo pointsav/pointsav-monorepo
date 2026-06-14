@@ -80,7 +80,7 @@ wait_http service-slm "http://127.0.0.1:9080/health"
 # ── Tier 2: service-content (DataGraph / LadybugDB) ──────────────────────────
 start_svc service-content \
     env SERVICE_CONTENT_HTTP_BIND="127.0.0.1:9081" \
-        SERVICE_CONTENT_DATA_DIR="$DATA_DIR/service-content" \
+        SERVICE_CONTENT_BASE_DIR="$DATA_DIR/$TOTEBOX_ARCHIVE" \
         "$BIN_DIR/service-content"
 wait_http service-content "http://127.0.0.1:9081/health"
 
