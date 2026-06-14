@@ -57,6 +57,9 @@ fs2 = "0.4"
 # wire shape (design-pass Q5)
 base64 = "0.22"
 
+# SQLite mailbox index — Option C dual-write store (MIT)
+rusqlite = "0.31"
+
 # Observability
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
