@@ -1813,3 +1813,95 @@ impl Cartridge for ContentCartridge {
         self.truecolor = truecolor;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn cartridge() -> ContentCartridge {
+        ContentCartridge::new()
+    }
+
+    #[test]
+    fn new_starts_with_one_tab() {
+        let c = cartridge();
+        assert_eq!(c.tabs.len(), 1);
+        assert_eq!(c.active_tab_idx, 0);
+    }
+
+    #[test]
+    fn new_tab_increments_count() {
+        let mut c = cartridge();
+        c.new_tab();
+        assert_eq!(c.tabs.len(), 2);
+        assert_eq!(c.active_tab_idx, 1);
+    }
+
+    #[test]
+    fn new_tab_caps_at_four() {
+        let mut c = cartridge();
+        c.new_tab();
+        c.new_tab();
+        c.new_tab();
+        // 4 tabs — should be rejected
+        c.new_tab();
+        assert_eq!(c.tabs.len(), 4);
+        assert_eq!(c.active_tab_idx, 3);
+    }
+
+    #[test]
+    fn close_tab_decrements_count() {
+        let mut c = cartridge();
+        c.new_tab();
+        assert_eq!(c.tabs.len(), 2);
+        c.close_tab();
+        assert_eq!(c.tabs.len(), 1);
+    }
+
+    #[test]
+    fn close_last_tab_is_noop() {
+        let mut c = cartridge();
+        c.close_tab();
+        assert_eq!(c.tabs.len(), 1);
+        assert_eq!(c.active_tab_idx, 0);
+    }
+
+    #[test]
+    fn cycle_tab_wraps_forward() {
+        let mut c = cartridge();
+        c.new_tab(); // tabs=2, active=1
+        c.cycle_tab(true); // should wrap to 0
+        assert_eq!(c.active_tab_idx, 0);
+    }
+
+    #[test]
+    fn cycle_tab_wraps_backward() {
+        let mut c = cartridge();
+        c.new_tab(); // tabs=2, active=1
+        c.switch_to_tab(0); // active=0
+        c.cycle_tab(false); // should wrap to 1
+        assert_eq!(c.active_tab_idx, 1);
+    }
+
+    #[test]
+    fn switch_to_tab_changes_active_idx() {
+        let mut c = cartridge();
+        c.new_tab();
+        c.new_tab();
+        c.switch_to_tab(0);
+        assert_eq!(c.active_tab_idx, 0);
+        c.switch_to_tab(2);
+        assert_eq!(c.active_tab_idx, 2);
+    }
+
+    #[test]
+    fn close_non_last_tab_adjusts_index() {
+        let mut c = cartridge();
+        c.new_tab();
+        c.new_tab(); // 3 tabs, active=2
+        c.switch_to_tab(0); // active=0
+        c.close_tab(); // removes tab 0; new active should be 0 (shifted)
+        assert_eq!(c.tabs.len(), 2);
+        assert_eq!(c.active_tab_idx, 0);
+    }
+}
