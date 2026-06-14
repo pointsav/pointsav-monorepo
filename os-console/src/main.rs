@@ -2,6 +2,7 @@
 mod ssh_server;
 
 mod mba_client;
+mod metrics;
 
 fn main() -> anyhow::Result<()> {
     inner_main()
@@ -101,6 +102,7 @@ fn inner_main() -> anyhow::Result<()> {
     )));
     chassis.register(Box::new(SlmCartridge::new(&p.slm_endpoint, p.plain_mode)));
     chassis.register(Box::new(SystemCartridge::new(&p.pair_endpoint)));
+    metrics::spawn_metrics_server(p.metrics_port);
     // Register SIGTERM + SIGINT handler — requests clean shutdown on next chassis tick.
     let _ = ctrlc::set_handler(|| {
         app_console_keys::request_shutdown();
