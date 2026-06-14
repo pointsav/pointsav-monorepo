@@ -27,8 +27,9 @@ pub fn render_editor_panel(slug: &str, token_json: &Value) -> String {
   <div id="bim-code-pane" class="bim-editor-pane" hidden>
     <div id="bim-codemirror" class="bim-codemirror-host"></div>
     <script type="module">
-      import {{ EditorState, EditorView, keymap }} from '/static/codemirror.bundle.js';
-      import {{ json }} from '/static/codemirror-json.bundle.js';
+      import {{ EditorState }} from '/static/codemirror.bundle.js';
+      import {{ EditorView, keymap }} from '/static/codemirror.bundle.js';
+      import {{ json }} from '/static/codemirror.bundle.js';
 
       const view = new EditorView({{
         state: EditorState.create({{
