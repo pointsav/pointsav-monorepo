@@ -100,7 +100,11 @@ async fn append(
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
 
-    println!("[service-fs] {module_id}/{} → sha256:{}", req.payload_id, &sha[..12]);
+    println!(
+        "[service-fs] {module_id}/{} → sha256:{}",
+        req.payload_id,
+        &sha[..12]
+    );
 
     Json(AppendResponse {
         payload_id: req.payload_id,
@@ -132,7 +136,10 @@ async fn main() {
         .route("/v1/append", post(append))
         .with_state(cfg.clone());
 
-    println!("[service-fs] Envelope A ready on {bind} (module: {})", cfg.module_id);
+    println!(
+        "[service-fs] Envelope A ready on {bind} (module: {})",
+        cfg.module_id
+    );
     let listener = tokio::net::TcpListener::bind(&bind)
         .await
         .unwrap_or_else(|e| panic!("Cannot bind {bind}: {e}"));
@@ -203,7 +210,10 @@ mod tests {
         assert_eq!(resp.status(), 200);
 
         let log_path = format!("{}/test/log.jsonl", ledger_root);
-        assert!(std::path::Path::new(&log_path).exists(), "WORM ledger not created");
+        assert!(
+            std::path::Path::new(&log_path).exists(),
+            "WORM ledger not created"
+        );
     }
 
     #[tokio::test]

@@ -81,7 +81,8 @@ fn inner_main() -> anyhow::Result<()> {
         &p.email_endpoint,
         p.plain_mode,
     )));
-    let sess = app_console_keys::SessionState::load(&app_console_keys::SessionState::default_path());
+    let sess =
+        app_console_keys::SessionState::load(&app_console_keys::SessionState::default_path());
     chassis.register(Box::new(ContentCartridge::new_for(
         &p.username,
         &p.tenant,
