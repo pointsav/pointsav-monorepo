@@ -69,7 +69,14 @@ fn main() -> NotifyResult<()> {
                     corpus_emit_dir.as_deref(),
                     corpus_module_id.as_deref(),
                 ) {
-                    processed_ledgers.push(filename);
+                    processed_ledgers.push(filename.clone());
+                    // Move the drop file to processed/ after successful emit so the
+                    // watch dir does not accumulate unboundedly across restarts.
+                    // Moving (not deleting) preserves the original payload for audit.
+                    let done_dir = format!("{}/processed", watch_dir);
+                    if fs::create_dir_all(&done_dir).is_ok() {
+                        let _ = fs::rename(&path, format!("{}/{}", done_dir, filename));
+                    }
                 }
             }
         }
@@ -97,7 +104,15 @@ fn main() -> NotifyResult<()> {
                                     corpus_emit_dir.as_deref(),
                                     corpus_module_id.as_deref(),
                                 ) {
-                                    processed_ledgers.push(filename);
+                                    processed_ledgers.push(filename.clone());
+                                    // Move to processed/ after successful emit.
+                                    let done_dir = format!("{}/processed", watch_dir);
+                                    if fs::create_dir_all(&done_dir).is_ok() {
+                                        let _ = fs::rename(
+                                            &path,
+                                            format!("{}/{}", done_dir, filename),
+                                        );
+                                    }
                                 }
                             }
                         }
