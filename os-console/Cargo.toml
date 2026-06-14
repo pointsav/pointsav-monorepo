@@ -21,6 +21,7 @@ app-console-slm = { path = "../app-console-slm" }
 app-console-people = { path = "../app-console-people" }
 system-gateway-mba = { path = "../system-gateway-mba" }
 anyhow = "1"
+ctrlc = "3"
 tokio = { version = "1", features = ["full"] }
 russh = { version = "0.60" }
 rand = { version = "0.10", optional = true }
