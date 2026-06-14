@@ -142,6 +142,9 @@ impl ContentCartridge {
                 std::env::var("HOME").unwrap_or_else(|_| ".".into())
             ),
             "http://127.0.0.1:9081",
+            None,
+            None,
+            None,
         )
     }
 
@@ -152,8 +155,12 @@ impl ContentCartridge {
         slm_endpoint: impl Into<String>,
         drafts_outbound_path: impl Into<String>,
         content_endpoint: impl Into<String>,
+        initial_query: Option<String>,
+        initial_selected: Option<usize>,
+        initial_scroll: Option<u16>,
     ) -> Self {
         let slm = slm_endpoint.into();
+        let content_ep: String = content_endpoint.into();
 
         // Background health poller — polls Doorman /readyz every 30s
         let (health_tx, health_rx) = mpsc::channel::<bool>();
@@ -194,14 +201,31 @@ impl ContentCartridge {
             TextArea::default()
         };
         ta.set_placeholder_text(PLACEHOLDER);
+        let initial_state = if let Some(ref q) = initial_query {
+            let ep = content_ep.clone();
+            let query_str = q.clone();
+            let (tx, rx) = mpsc::channel();
+            thread::spawn(move || {
+                let _ = tx.send(search::fetch_search(&ep, &query_str));
+            });
+            ContentState::SearchResults {
+                query: q.clone(),
+                results: vec![],
+                search_rx: Some(rx),
+                selected: initial_selected.unwrap_or(0),
+                scroll: initial_scroll.unwrap_or(0),
+            }
+        } else {
+            ContentState::Input { protocol_idx }
+        };
         Self {
             username: username.into(),
             tenant: tenant.into(),
             proof_endpoint: proof_endpoint.into(),
             slm_endpoint: slm,
             drafts_outbound_path: drafts_outbound_path.into(),
-            content_endpoint: content_endpoint.into(),
-            state: ContentState::Input { protocol_idx },
+            content_endpoint: content_ep,
+            state: initial_state,
             textarea: ta,
             offline: false,
             health_rx,
@@ -231,6 +255,26 @@ impl ContentCartridge {
         } else {
             Color::Cyan
         }
+    }
+
+    /// Persist current SearchResults state to the session file.
+    /// Saves a cleared record when not in SearchResults (so the next launch starts fresh).
+    fn save_session(&self) {
+        use app_console_keys::SessionState;
+        let state = match &self.state {
+            ContentState::SearchResults {
+                query,
+                selected,
+                scroll,
+                ..
+            } => SessionState {
+                content_query: Some(query.clone()),
+                content_selected: Some(*selected),
+                content_scroll: Some(*scroll),
+            },
+            _ => SessionState::default(),
+        };
+        state.save(&SessionState::default_path());
     }
 
     fn reset_textarea(&mut self, protocol_idx: usize) {
@@ -773,6 +817,7 @@ impl ContentCartridge {
                         selected: 0,
                         scroll: 0,
                     };
+                    self.save_session();
                 }
                 return CartridgeAction::Consumed;
             }
@@ -991,6 +1036,7 @@ impl ContentCartridge {
         match key.code {
             KeyCode::Esc | KeyCode::Char('q') => {
                 self.reset_textarea(DEFAULT_PROTOCOL_IDX);
+                self.save_session();
             }
             KeyCode::Char('j') | KeyCode::Down => {
                 if let ContentState::SearchResults {
@@ -1001,11 +1047,13 @@ impl ContentCartridge {
                         *selected += 1;
                     }
                 }
+                self.save_session();
             }
             KeyCode::Char('k') | KeyCode::Up => {
                 if let ContentState::SearchResults { selected, .. } = &mut self.state {
                     *selected = selected.saturating_sub(1);
                 }
+                self.save_session();
             }
             _ => {}
         }
