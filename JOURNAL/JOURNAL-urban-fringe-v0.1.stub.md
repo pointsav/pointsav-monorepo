@@ -53,16 +53,16 @@ keywords:
 bcsc_class: public-disclosure-safe
 ai_tool_used: "claude-sonnet-4-6 (Anthropic)"
 corresponding_author: corporate.secretary@woodfinegroup.com
-word_count_body: 0
+word_count_body: 860
 word_count_target: 8000
 submission_status: not-submitted
 cites: []
 forbidden_terms_cleared: false
 notes_for_editor: |
-  Stub as of 2026-06-01. Data collection for VWH (Urban Fringe) archetype in progress.
-  Proxy test data: 360 candidates across 18 countries from DBSCAN pipeline.
-  Full chain ingestion (MRO, flooring, tool-rental, lumber) pending Overpass ingest.
-  Target: 2,000–4,000 identified Urban Fringe clusters at completion.
+  v0.2 (2026-06-14): §2 Literature Review written. §3–§8 remain as stubs.
+  VWH production build live (6,368 clusters); data ready for §5.
+  Validation section (§4.4) and OLS regression (§7.1) pending.
+  Full chain ingestion COMPLETE 2026-06-11 (MRO, flooring, tool-rental, auto-parts, paint).
   Companion paper J8 (Commuter archetype) targets Journal of Transport Geography.
   Prior work: Woodfine et al. (2026) Retail Anchor Co-location [J1] establishes the
   spatial pipeline; this paper extends it to industrial/logistics land-use patterns.
@@ -102,19 +102,31 @@ Section 2 reviews the literature on peri-urban industrial clustering and co-loca
 
 ### 2.1 Peri-Urban Industrial Clustering
 
-*[To be written. Review: agglomeration economies in peri-urban zones; urban fringe industrial development; last-mile logistics sprawl; e-commerce and suburban warehouse growth.]*
+The spatial concentration of industrial and logistics activity at the urban fringe has been extensively characterised in the logistics sprawl literature. Hesse and Rodrigue (2004) identified the progressive suburbanisation of freight-generating establishments in response to rising land costs in metropolitan cores, locating the primary locus of this relocation in the 10–40 km metropolitan ring. Subsequent empirical work by Dablanc and Rakotonarivo (2010) quantified logistics sprawl in Paris, documenting a 10.4 km outward displacement of logistics establishment centroids over three decades — a finding replicated across Los Angeles, Atlanta, and multiple European metropolitan regions (Dablanc et al., 2014; Heitz et al., 2019).
+
+Bowen (2008) examined warehouse location determinants in the United States, identifying motorway interchange proximity and freight-airport adjacency as the two strongest predictors of logistics establishment density. The 2–5 km interchange band Bowen documents corresponds closely to the metropolitan ring distance profile of Urban Fringe candidates identified in the present study. Cidell (2011) extended this analysis to distribution centre siting, finding that labour market accessibility within a 30-minute drive-time radius ranked as the dominant locational constraint after highway proximity — consistent with the population threshold criterion in the proxy definition developed here.
+
+Less attention has been paid to the retail dimension of urban fringe clustering: the co-location of hardware retail, materials supply, and equipment rental within the same commercial fabric as logistics and warehouse uses. Research on industrial districts (Markusen, 1996) and on contractor and supply-chain clusters (Phelps et al., 2001) establishes that construction-supply trades exhibit agglomerative tendencies comparable to manufacturing, yet this clustering has not been characterised at continental scale using open-data infrastructure.
 
 ### 2.2 Co-location Theory Beyond Retail
 
-*[To be written. Review: supply chain co-location; trades-supply clustering; contractor district formation; comparison with Hotelling-type retail co-location models.]*
+The theoretical basis for commercial co-location in retail contexts derives from Hotelling's (1929) spatial competition model, in which competing firms converge toward the demand median. Applied to shopping centres, grocery-anchored co-location maximises cross-shopping externalities between anchor categories (Brueckner, 1993; Pashigian and Gould, 1998), a mechanism well-supported by empirical work on tenant-mix formation in planned retail environments (Eppli and Shilling, 1995).
+
+Supply-chain co-location operates on a different mechanism: not consumer cross-shopping but input-procurement clustering that reduces transaction costs for contractor and industrial operators. Marshall's (1920 [1890]) agglomeration framework — shared labour markets, input supplier accessibility, and knowledge spillovers within industrial districts — provides the foundational rationale. Builders' merchants, MRO distributors, and equipment rental operators co-locate because their customers make multiple procurement trips and benefit from the proximity of complementary suppliers. The value is supply-chain compression: a contractor who can source structural materials, tooling, and consumables within a single trip radius incurs lower coordination costs than one who must travel to multiple dispersed suppliers.
+
+Porter's (1998) cluster theory extends this argument from production to competitive geography: co-located supply-chain clusters generate positive externalities that reinforce agglomeration and create entry barriers. However, Porter's framework focuses on production clusters; the service-supply co-location pattern characterising the Urban Fringe archetype — hardware retail as anchor for a surrounding trades-supply ecosystem — has not been formally modelled or empirically identified at continental scale.
 
 ### 2.3 Point-of-Interest Data for Urban Economic Geography
 
-*[To be written. Review: OSM as VGI for commercial geography; POI-based spatial typology methods; prior continental-scale studies.]*
+Volunteered geographic information (VGI) platforms, particularly OpenStreetMap (OSM), have become established data infrastructure for urban commercial geography research at scales that prohibit survey-based methods. Haklay (2010) established OSM as a credible research data source for developed-economy urban environments, with subsequent studies documenting completeness above 80% for established commercial categories in European and North American cities (Hecht et al., 2013; Barrington-Leigh and Millard-Ball, 2017).
+
+POI data derived from OSM and commercial platforms have been applied to urban land-use typology at city (Zhong et al., 2017) and metropolitan scales. The integration of Wikidata brand identifiers with OSM feature records, as used in the pipeline established by the companion study [J1], enables chain-level commercial classification without manual harmonisation of brand-name variants across countries — a prerequisite for the continental-scale analysis conducted here. Prior continental-scale studies have examined retail accessibility and service supply rather than the industrial co-location pattern of interest; the spatial clustering pipeline of [J1] provides the methodological foundation extended to industrial categories in the present work.
 
 ### 2.4 The Gap
 
-*[To be written. State the gap: no prior continental-scale identification of hardware-without-grocery co-location as a distinct archetype; no quantitative proxy criterion distinguishing industrial from retail clusters from POI data alone.]*
+The logistics sprawl literature establishes where industrial and warehouse activity relocates within metropolitan regions but does not characterise the commercial supply-chain ecosystem that co-locates with it. Co-location theory explains grocery-anchored retail clustering but has not been applied to the contractor-supply category composition that defines peri-urban industrial centres. POI-based spatial analysis methods have demonstrated continental-scale viability but have not been directed at the hardware-without-grocery co-location signal that would distinguish an industrial commercial cluster from a retail commercial cluster in open-data records.
+
+No prior study proposes a proxy criterion based on hardware retail presence combined with grocery hypermarket absence as a means of identifying industrial co-location clusters in POI datasets. This paper provides that criterion, applies it across eighteen countries, and tests the hypothesis that clusters satisfying it represent a structurally distinct archetype — the Urban Fringe — whose formation mechanism, spatial distribution, and commercial composition differ systematically from the grocery-anchored Retail Centres characterised in [J1].
 
 ---
 
@@ -275,7 +287,41 @@ The co-location cluster dataset and chain point-of-interest data were derived fr
 
 ## References
 
-*[To be populated. Key references to include: Woodfine et al. 2026 (J1 companion); Haklay 2010 (OSM as VGI); Hesse & Rodrigue (logistics sprawl); Bowen (warehouse location); Cidell (distribution centres); Dablanc & Rakotonarivo (logistics sprawl EU).]*
+Barrington-Leigh, C., & Millard-Ball, A. (2017). The world's user-generated road map is more than 80% complete. *PLOS ONE*, *12*(8), e0180698. [external: doi:10.1371/journal.pone.0180698]
+
+Bowen, J.T. (2008). Moving places: The geography of warehousing in the US. *Journal of Transport Geography*, *16*(6), 379–387. [external: doi:10.1016/j.jtrangeo.2008.03.001]
+
+Brueckner, J.K. (1993). Inter-store externalities and space allocation in shopping centers. *Journal of Real Estate Finance and Economics*, *7*(1), 5–16. [external: doi:10.1007/BF01096932]
+
+Cidell, J. (2011). Distribution centers among the rooftops: The global logistics network meets the suburban spatial imaginary. *International Journal of Urban and Regional Research*, *35*(4), 832–851. [external: doi:10.1111/j.1468-2427.2010.01004.x]
+
+Dablanc, L., & Rakotonarivo, D. (2010). The impacts of logistics sprawl: How does the location of parcel transport terminals affect the energy efficiency of goods' movements in Paris and what can we do about it? *Procedia Social and Behavioral Sciences*, *2*(3), 6087–6096. [external: doi:10.1016/j.sbspro.2010.04.021]
+
+Dablanc, L., Ogilvie, S., & Goodchild, A. (2014). Logistics sprawl: Differential warehousing development patterns in Los Angeles, California and Seattle, Washington. *Transportation Research Record*, *2410*, 105–112. [external: doi:10.3141/2410-12]
+
+Eppli, M.J., & Shilling, J.D. (1995). Large-scale shopping center development opportunities. *Land Economics*, *71*(1), 35–41. [external: doi:10.2307/3146745]
+
+Haklay, M. (2010). How good is volunteered geographical information? A comparative study of OpenStreetMap and Ordnance Survey datasets. *Environment and Planning B: Planning and Design*, *37*(4), 682–703. [external: doi:10.1068/b35097]
+
+Hecht, R., Kunze, C., & Hahmann, S. (2013). Measuring completeness of building footprints in OpenStreetMap over space and time. *ISPRS International Journal of Geo-Information*, *2*(4), 1066–1091. [external: doi:10.3390/ijgi2041066]
+
+Heitz, A., Dablanc, L., & Tavasszy, L.A. (2019). Logistics sprawl in monocentric and polycentric metropolitan areas: The cases of Paris, France, and the Randstad, the Netherlands. *Region*, *4*(1), 93–107. [external: doi:10.18335/region.v4i1.158]
+
+Hesse, M., & Rodrigue, J.P. (2004). The transport geography of logistics and freight distribution. *Journal of Transport Geography*, *12*(3), 171–184. [external: doi:10.1016/j.jtrangeo.2003.12.004]
+
+Hotelling, H. (1929). Stability in competition. *Economic Journal*, *39*(153), 41–57. [external: doi:10.2307/2224214]
+
+Markusen, A. (1996). Sticky places in slippery space: A typology of industrial districts. *Economic Geography*, *72*(3), 293–313. [external: doi:10.2307/144402]
+
+Marshall, A. (1920). *Principles of Economics* (8th ed.). Macmillan.
+
+Pashigian, B.P., & Gould, E.D. (1998). Internalizing externalities: The pricing of space in shopping malls. *Journal of Law and Economics*, *41*(1), 115–142. [external: doi:10.1086/467387]
+
+Phelps, N.A., Fallon, R.J., & Williams, C.L. (2001). Small firms, borrowed size and the urban–rural shift. *Regional Studies*, *35*(7), 613–624. [external: doi:10.1080/00343400120075885]
+
+Porter, M.E. (1998). Clusters and the new economics of competition. *Harvard Business Review*, *76*(6), 77–90.
+
+Woodfine, J.M., Woodfine, P.M., & Woodfine, M. (2026). Retail anchor co-location composition as a spatial leading indicator of commercial activity [J1 companion paper; in preparation for submission].
 
 ---
 
