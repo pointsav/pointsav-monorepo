@@ -145,6 +145,8 @@ All Phase 8+9 commits need `bin/promote.sh` from Command Session:
 | `5efb513d` | ops(fail2ban): port 2222 brute-force protection |
 | `3e20be12` | feat(sigterm+metrics): SIGTERM + Prometheus |
 | `a27860b3` | feat(tabs): multi-tab ContentCartridge |
+| `2c21e142` | ops(phase9): mark complete — NEXT.md + BRIEF |
+| `469b7147` | test(tabs): 9 unit tests for tab management |
 
 ---
 
@@ -173,5 +175,6 @@ All Phase 8+9 commits need `bin/promote.sh` from Command Session:
 ## Standing deferred
 
 - F7 BIM cartridge — gated on `app-console-bim` activation
-- F10 mesh cartridge — gated on `app-console-mesh` activation
+- F10 mesh cartridge — gated on `app-console-mesh` activation; Phase 1 scope when ready: poll `service-vm-fleet :9203` GET /v1/nodes → read-only table (node ID | hostname | ip | status | last_heartbeat | preferred role); no writes
+- F11 → :9202 endpoint — currently polls :9201; will connect to `service-ppn-pairing :9202` when project-infrastructure deploys it (PPN Phase 1)
 - Phase 12 (AI marginalia) — gated on SYS-ADR-07/10/19 review
