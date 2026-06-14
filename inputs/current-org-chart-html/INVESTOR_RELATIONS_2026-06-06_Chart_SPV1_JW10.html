@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slide 1: Master Assembly - Woodfine Group (Institutional Parity V7 Final)</title>
+    <style>
+        /* ==========================================================================
+           SLIDE 1 MASTER ASSEMBLY - LEAPFROG 2030
+           Target: US Letter Proportion (1056x816) - 100% Publishable
+           Focus: Universal Print Calibration & Typographic Parity
+           ========================================================================== */
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: #E2E8F0;
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+            margin: 0;
+        }
+
+        .print-canvas {
+            position: relative;
+            width: 1056px;
+            height: 816px;
+            background-color: #FFFFFF;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        @media print {
+            @page { size: landscape; margin: 0; }
+            body { padding: 0; margin: 0; background: #FFFFFF; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-canvas { box-shadow: none; width: 1056px; height: 816px; page-break-after: avoid; }
+        }
+
+        /* ==========================================
+           INSTITUTIONAL TYPOGRAPHY (DS-ADR-08)
+           ========================================== */
+        .token-disclaimer { position: absolute; top: 20px; right: 40px; font-size: 9px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.08em; z-index: 5; }
+        .token-signature { position: absolute; bottom: 30px; right: 40px; font-size: 10px; line-height: 1.4; text-align: right; color: #000000; z-index: 5; }
+
+        .title-container { position: absolute; top: 30px; left: 40px; width: 360px; z-index: 5; }
+        .t-kicker { font-size: 11px; font-weight: 800; color: #0F172A; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 2px 0; }
+        .t-headline { font-size: 14px; font-weight: 900; color: #000000; text-transform: uppercase; letter-spacing: -0.02em; margin: 0 0 6px 0; }
+        .t-preamble { font-size: 9px; line-height: 1.3; color: #475569; text-align: justify; margin: 0 0 6px 0; }
+        .t-preamble:last-child { margin-bottom: 0; }
+        .t-subtitle { font-size: 12px; font-style: italic; color: #334155; padding-bottom: 6px; border-bottom: 1px solid #CBD5E1; margin: 0 0 6px 0; }
+
+        /* ==========================================
+           DATA ZONES (Locked)
+           ========================================== */
+
+        .zone-mgmt {
+            position: absolute;
+            font-size: 11px;
+            text-align: center;
+            color: #0F172A;
+            z-index: 5;
+        }
+
+        .zone-node-gfv {
+            position: absolute;
+            width: 250px;
+            font-size: 10px;
+            font-weight: 700;
+            text-align: center;
+            color: #334155;
+            z-index: 5;
+        }
+
+        .zone-footer {
+            position: absolute;
+            width: 976px;
+            font-size: 10px;
+            line-height: 1.4;
+            color: #475569;
+            z-index: 5;
+        }
+
+        /* ==========================================
+           STRUCTURAL CSS (SVG, Tokens, Markers)
+           ========================================== */
+
+        .svg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+
+        .marker {
+            position: absolute; background-color: #FFFFFF; color: #334155;
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            padding: 2px 4px; text-align: center; z-index: 3; line-height: 1.1;
+            transform: translate(-50%, -50%);
+        }
+
+        .boundary-text {
+            position: absolute; color: #64748B; font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.05em; transform: translateX(-50%);
+            text-align: center; z-index: 2;
+        }
+
+        .token-base {
+            position: absolute; display: flex; flex-direction: column; width: 170px; height: 90px;
+            padding: 8px; text-align: center; box-sizing: border-box; z-index: 4;
+            background-color: #EEF6EC; border: 2px solid #54924E; border-radius: 0;
+        }
+
+        .token-yellow {
+            position: absolute; display: flex; flex-direction: column; width: 210px; height: 90px;
+            padding: 10px; text-align: center; box-sizing: border-box; z-index: 4;
+            background-color: #FFFDE7; border: 2px dashed #EAB308; border-radius: 110px;
+        }
+        .token-green  { background-color: #EEF6EC; border: 2px solid #54924E; border-radius: 0; }
+        .token-purple { background-color: #EEE6F1; border: 2px solid #7C468C; }
+        .token-orange { background-color: #FDE8DD; border: 2px solid #F15F22; border-radius: 0; }
+        .token-blue   { background-color: #E8EFF7; border: 2px solid #164679; border-radius: 0; }
+
+        .zone-top { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+        .zone-mid { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; gap: 2px; align-items: center; }
+        .zone-bottom { display: flex; flex-direction: column; align-items: center; }
+
+        .t-title { font-weight: 800; font-size: 11px; color: #000000; margin: 0; line-height: 1.1; letter-spacing: -0.01em; }
+        .t-code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 8.5px; color: #475569; margin: 0; }
+        .t-alias { font-style: italic; font-size: 9px; color: #000000; margin: 0; }
+        .t-country { font-size: 8.5px; color: #475569; margin: 0; }
+
+        .t-node { position: absolute; bottom: 3px; right: 6px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 9px; font-weight: 700; color: #9CA3AF; margin: 0; }
+        .token-yellow .t-node { bottom: 10px; right: 30px; }
+
+        .box-note {
+            position: absolute; font-size: 9px; font-style: italic; color: #475569;
+            line-height: 1.35; z-index: 4;
+        }
+
+    /* PRE-PRESS PRINT CALIBRATION (INJECTED) */
+    @media print {
+        @page { size: landscape; margin: 0; }
+        body { padding: 0; margin: 0; background: #FFFFFF; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .print-canvas { box-shadow: none; width: 1056px; height: 816px; page-break-after: avoid; }
+    }
+    svg { shape-rendering: geometricPrecision; }
+    path { shape-rendering: crispEdges; }
+    marker path { shape-rendering: geometricPrecision; }
+
+</style>
+</head>
+<body>
+
+<div class="print-canvas">
+
+    <div class="token-disclaimer" style="">PRIVATE &amp; CONFIDENTIAL — NOT FOR REDISTRIBUTION — INVESTMENT PROFESSIONALS ONLY</div>
+
+    <div class="title-container" style="">
+        <p class="t-kicker">WOODFINE CAPITAL PROJECTS</p>
+        <p class="t-headline">BENCAL EQUITY PARTNERS 1</p>
+        <p class="t-subtitle">Intercorporate Relationships</p>
+        <p class="t-preamble">Bencal Corporation acts as the Promoter for its special purpose vehicles, presently structured to facilitate investment in direct-hold solutions offered by Woodfine Capital Projects Inc., with the intention of expanding to additional investment strategies and private investment vehicles for future transactions.</p>
+        <p class="t-preamble">Subscription Agreements must be presented by a licensed broker-dealer authorized in Canada (CIRO/BCSC) and approved by the auditor of the investment vehicle. Referrals must be paid exclusively through licensed professionals in strict compliance with Canadian securities regulations.</p>
+    </div>
+
+    <!-- Management services caption -->
+    
+
+    <!-- SVG connector layer -->
+    <svg class="svg-layer" viewBox="0 0 1056 816" style="">
+        <defs>
+            <marker id="arrow-green" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#54924E" style=""></path></marker>
+            <marker id="arrow-purple" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7C468C" style=""></path></marker>
+            <marker id="arrow-blue" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#164679" style=""></path></marker>
+            <marker id="arrow-orange" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#F15F22" style=""></path></marker>
+        </defs>
+
+        <!-- Box 95 → Box 104 (purple, 100%): right edge #95 (605,110) → left edge #104 (740,110) -->
+        <path d="M 605 140 L 740 140" fill="none" stroke="#7C468C" stroke-width="2" marker-end="url(#arrow-purple)" style=""></path>
+
+        <!-- Box 95 → Box 96 (purple, 10%): bottom-centre #95 (520,155) → top-centre #96 (520,205) -->
+        <path d="M 520 185 L 520 235" fill="none" stroke="#7C468C" stroke-width="2" marker-end="url(#arrow-purple)" style=""></path>
+
+        <!-- Box 105 → Box 96 (blue): left edge #105 (740,250) → right edge #96 (605,250) -->
+        <path d="M 330 280 L 435 280" fill="none" stroke="#164679" stroke-width="2" marker-end="url(#arrow-blue)" style=""></path>
+
+        <!-- Box 96 → Box 16 (orange): bottom-centre #96 (520,295) → top-centre #16 (520,345) -->
+        <path d="M 520 324 L 520 374" fill="none" stroke="#F15F22" stroke-width="2" marker-end="url(#arrow-orange)" style=""></path>
+
+        
+
+        <!-- Box 16 → trunk (no arrowhead): bottom-centre #16 (520,435) → junction (520,460) -->
+        <path d="M 520 465 L 520 490" fill="none" stroke="#54924E" stroke-width="2" style=""></path>
+
+        <!-- Horizontal junction: centre #17 (148,460) → centre #34 (907,460) -->
+        <path d="M 148 490 L 907 490" fill="none" stroke="#54924E" stroke-width="2" style=""></path>
+
+        <!-- Drops: junction (y=460) → top of each yellow box (y=490), centred on box -->
+        <path d="M 148 490 L 148 520" fill="none" stroke="#54924E" stroke-width="2" marker-end="url(#arrow-green)" style=""></path>
+        <path d="M 401 490 L 401 520" fill="none" stroke="#54924E" stroke-width="2" marker-end="url(#arrow-green)" style=""></path>
+        <path d="M 654 490 L 654 520" fill="none" stroke="#54924E" stroke-width="2" marker-end="url(#arrow-green)" style=""></path>
+        <path d="M 907 490 L 907 520" fill="none" stroke="#54924E" stroke-width="2" marker-end="url(#arrow-green)" style=""></path>
+
+        <!-- Brackets: Presently Exists (solid, #17 only) / Yet to be formed (dashed, #32–#34) -->
+        <path d="M 27 677 L 27 662 L 253 662 L 253 677" fill="none" stroke="#9CA3AF" stroke-width="2" style=""></path>
+        <path d="M 268 676 L 268 661 L 1012 661 L 1012 676" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="4,4" style=""></path>
+    </svg>
+
+    <!-- Connection labels -->
+    <div class="marker" style="left: 672px; top: 140px;">100%</div>
+    <div class="marker" style="left: 520px; top: 210px;">10%</div>
+    <div class="marker" style="left: 520px; top: 349px;">10%</div>
+
+    <!-- GFV labels -->
+    <div class="zone-node-gfv" style="left: 23px; top: 622px;">CAD 250M GFV</div>
+    <div class="zone-node-gfv" style="left: 276px; top: 622px;">USD 500M GFV</div>
+    <div class="zone-node-gfv" style="left: 529px; top: 622px;">EUR 250M GFV</div>
+    <div class="zone-node-gfv" style="left: 782px; top: 622px;">MXN 5,000M GFV</div>
+
+    <!-- Boundary labels -->
+    <div class="boundary-text" style="left: 140px; top: 688px;">Presently Exists</div>
+    <div class="boundary-text" style="left: 661px; top: 688px;">Yet to be formed</div>
+
+    <!-- Footer -->
+    
+
+    <!-- ── BOXES ── -->
+
+    <!-- Box 95: Bencal Corporation (purple) -->
+    <div class="token-base token-purple" style="left: 435px; top: 95px;">
+        <div class="zone-top"><p class="t-title">Bencal Corporation</p></div>
+        <div class="zone-mid"><p class="t-code">BCL-CA-01-OPR</p><p class="t-alias">"Promoter"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
+        <p class="t-node" style="">95</p>
+    </div>
+
+    <!-- Box 104: Bencal Investment Management Inc. (purple) -->
+    <div class="token-base token-purple" style="left: 740px; top: 95px;">
+        <div class="zone-top"><p class="t-title">Bencal Investment Management Inc.</p></div>
+        <div class="zone-mid"><p class="t-code">BCL-CA-02-OPR</p></div>
+        <div class="zone-bottom"><p class="t-country">(Yet to be formed)<br>(Canada)</p></div>
+        <p class="t-node" style="">104</p>
+    </div>
+
+    <!-- Box 104 note (moved outside the box) -->
+    <div class="box-note" style="left: 740px; top: 192px; width: 170px;">
+        • Future consideration for operating company, employees and licensing
+    </div>
+
+    <!-- Box 96: Bencal Equity Partners 1 Inc. (orange) -->
+    <div class="token-base token-orange" style="left: 435px; top: 235px;">
+        <div class="zone-top"><p class="t-title">Bencal Equity<br>Partners 1 Inc.</p></div>
+        <div class="zone-mid"><p class="t-code">BEP-CA-01-AST</p><p class="t-alias">"Bencal Equity Partners 1"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
+        <p class="t-node" style="">96</p>
+    </div>
+
+    <!-- Box 105: SPV1 Shares (blue) -->
+    <div class="token-base token-blue" style="left: 160px; top: 235px;">
+        <div class="zone-top"><p class="t-title">SPV1 Shares</p></div>
+        <div class="zone-mid"><p class="t-alias" style="margin-bottom: 6px;">Friends, Family and Business Associates (&lt;50 individuals)</p><p class="t-alias">Accredited Investors<br>(300 individuals)</p></div>
+        <div class="zone-bottom"><p class="t-country">(Global)</p></div>
+        <p class="t-node" style="">105</p>
+    </div>
+
+    
+
+    <!-- Box 16: Woodfine Capital Projects Inc. (green) -->
+    <div class="token-base token-green" style="left: 435px; top: 375px;">
+        <div class="zone-top"><p class="t-title">Woodfine Capital<br>Projects Inc.</p></div>
+        <div class="zone-mid"><p class="t-code">WCP-CA-01-HLD</p><p class="t-alias">"Parent Company"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
+        <p class="t-node" style="">16</p>
+    </div>
+
+    <!-- Box 17: Woodfine Professional Centres LP (yellow) -->
+    <div class="token-yellow" style="left: 43px; top: 520px;">
+        <div class="zone-top"><p class="t-title" style="margin-top: 4px;">Woodfine Professional Centres<br>Limited Partnership</p></div>
+        <div class="zone-mid"><p class="t-code">PRO-CA-01-AST</p><p class="t-alias">"Direct-Hold Solution"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
+        <p class="t-node" style="">17</p>
+    </div>
+
+    <!-- Box 32: Woodfine Professional Centres 2 LP (yellow) -->
+    <div class="token-yellow" style="left: 296px; top: 520px;">
+        <div class="zone-top"><p class="t-title" style="margin-top: 4px;">Woodfine Professional Centres 2<br>Limited Partnership</p></div>
+        <div class="zone-mid"><p class="t-code">PRO-US-02-AST</p><p class="t-alias">"Direct-Hold Solution"</p></div>
+        <div class="zone-bottom"><p class="t-country">(United States)</p></div>
+        <p class="t-node" style="">32</p>
+    </div>
+
+    <!-- Box 33: Woodfine Professional Centres 3 SOCIMI (yellow) -->
+    <div class="token-yellow" style="left: 549px; top: 520px;">
+        <div class="zone-top"><p class="t-title" style="margin-top: 4px;">Woodfine Professional Centres 3 Sociedad Anónima Cotizada de Inversión Inmobiliaria</p></div>
+        <div class="zone-mid"><p class="t-code">PRO-ES-03-AST</p><p class="t-alias">"Direct-Hold Solution"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Spain)</p></div>
+        <p class="t-node" style="">33</p>
+    </div>
+
+    <!-- Box 34: Woodfine Professional Centres 4 FIBRA (yellow) -->
+    <div class="token-yellow" style="left: 802px; top: 520px;">
+        <div class="zone-top"><p class="t-title" style="margin-top: 4px;">Woodfine Professional Centres 4 Fideicomiso de Infraestructura en Bienes Raíces</p></div>
+        <div class="zone-mid"><p class="t-code">PRO-MX-04-AST</p><p class="t-alias">"Direct-Hold Solution"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Mexico)</p></div>
+        <p class="t-node" style="">34</p>
+    </div>
+
+    <div class="token-signature" style="">
+        June 13, 2026<br>
+        Prepared by Woodfine Management Corp.
+    </div>
+
+</div>
+
+<script>
+/* ── Org Chart Drag-Editor v1 ─────────────────────────────────────── */
+(function () {
+  'use strict';
+  const canvas = document.querySelector('.print-canvas') || document.querySelector('.sheet');
+  if (!canvas) return;
+
+  let editMode = false, dragging = null, selected = null, saveTimer = null;
+
+  /* ── Toolbar ──────────────────────────────────────────────────── */
+  const toolbar = document.createElement('div');
+  toolbar.setAttribute('data-drag-ui','1');
+  Object.assign(toolbar.style, {
+    position:'fixed', top:'12px', right:'12px', zIndex:'9999',
+    display:'flex', gap:'6px', alignItems:'center',
+    background:'#1e1e1e', border:'1px solid #444', borderRadius:'6px',
+    padding:'5px 10px', font:'700 11px/1 -apple-system,sans-serif',
+    color:'#ccc', userSelect:'none', boxShadow:'0 2px 8px rgba(0,0,0,0.4)',
+  });
+  const editBtn = document.createElement('button');
+  editBtn.textContent = '✏️ Edit Layout';
+  Object.assign(editBtn.style, {
+    background:'#333', border:'1px solid #555', color:'#ccc',
+    cursor:'pointer', borderRadius:'4px', padding:'4px 8px',
+    font:'700 11px/1 -apple-system,sans-serif',
+  });
+  const statusEl = document.createElement('span');
+  Object.assign(statusEl.style, { fontSize:'10px', color:'#666', minWidth:'70px' });
+  statusEl.setAttribute('data-drag-ui','1');
+  const dupBtn = document.createElement('button');
+  dupBtn.textContent = '⊕ Duplicate';
+  dupBtn.setAttribute('data-drag-ui','1');
+  Object.assign(dupBtn.style, {
+    background:'#333', border:'1px solid #555', color:'#666',
+    cursor:'pointer', borderRadius:'4px', padding:'4px 8px',
+    font:'700 11px/1 -apple-system,sans-serif',
+  });
+  const delBtn = document.createElement('button');
+  delBtn.textContent = '✕ Delete';
+  delBtn.setAttribute('data-drag-ui','1');
+  Object.assign(delBtn.style, {
+    background:'#333', border:'1px solid #555', color:'#666',
+    cursor:'pointer', borderRadius:'4px', padding:'4px 8px',
+    font:'700 11px/1 -apple-system,sans-serif',
+  });
+  toolbar.append(editBtn, dupBtn, delBtn, statusEl);
+  document.body.appendChild(toolbar);
+
+  /* print: hide toolbar */
+  const pStyle = document.createElement('style');
+  pStyle.setAttribute('data-drag-ui','1');
+  pStyle.textContent = '@media print{[data-drag-ui]{display:none!important}}';
+  document.head.appendChild(pStyle);
+
+  /* ── SVG path helpers ─────────────────────────────────────────── */
+  function parsePts(d) {
+    const re = /([ML])\s*([\d.+-]+)\s+([\d.+-]+)/g;
+    const pts = []; let m;
+    while ((m = re.exec(d)) !== null)
+      pts.push({ cmd:m[1], x:parseFloat(m[2]), y:parseFloat(m[3]) });
+    return pts;
+  }
+  function buildD(pts) { return pts.map(p => `${p.cmd} ${p.x} ${p.y}`).join(' '); }
+
+  /* ── Connected SVG paths (detected on pickup) ─────────────────── */
+  function findConnected(box) {
+    const svgEl = canvas.querySelector('svg');
+    if (!svgEl) return [];
+    const cs = window.getComputedStyle(box);
+    const bx=parseFloat(cs.left)||0, bw=parseFloat(cs.width)||0;
+    const by=parseFloat(cs.top)||0,  bh=parseFloat(cs.height)||0;
+    const PAD=30, result=[];
+    svgEl.querySelectorAll('path[d]').forEach(path => {
+      const pts = parsePts(path.getAttribute('d'));
+      if (pts.length < 2) return;
+      const s=pts[0], e=pts[pts.length-1];
+      const hitS = s.x>=bx-PAD&&s.x<=bx+bw+PAD&&s.y>=by-PAD&&s.y<=by+bh+PAD;
+      const hitE = e.x>=bx-PAD&&e.x<=bx+bw+PAD&&e.y>=by-PAD&&e.y<=by+bh+PAD;
+      if (hitS||hitE) result.push({path,origPts:pts.map(p=>({...p})),hitS,hitE});
+    });
+    return result;
+  }
+
+  /* ── Update connected path endpoints ──────────────────────────── */
+  function moveConnected(conn, dx, dy) {
+    conn.forEach(({path,origPts,hitS,hitE}) => {
+      const n=origPts.length, pts=origPts.map(p=>({...p}));
+      if (hitS) {
+        pts[0].x+=dx; pts[0].y+=dy;
+        if (n>1) {
+          if (Math.abs(origPts[1].y-origPts[0].y)<1) pts[1].y=pts[0].y;
+          else                                        pts[1].x=pts[0].x;
+        }
+      }
+      if (hitE) {
+        pts[n-1].x+=dx; pts[n-1].y+=dy;
+        if (n>1) {
+          if (Math.abs(origPts[n-1].y-origPts[n-2].y)<1) pts[n-2].y=pts[n-1].y;
+          else                                            pts[n-2].x=pts[n-1].x;
+        }
+      }
+      path.setAttribute('d', buildD(pts));
+    });
+  }
+
+  /* ── Selection highlight ──────────────────────────────────────── */
+  function select(el) {
+    if (selected===el) return;
+    deselect();
+    selected=el;
+    if (el.tagName.toLowerCase()==='path') {
+      el._sw = el.getAttribute('stroke-width')||'2';
+      el.setAttribute('stroke-width', parseFloat(el._sw)+2);
+      el.style.filter = 'drop-shadow(0 0 4px #4d9fff)';
+    } else {
+      el.style.outline = '2px solid #4d9fff';
+      el.style.boxShadow = '0 0 10px rgba(77,159,255,.35)';
+    }
+  }
+  function deselect() {
+    if (!selected) return;
+    const el=selected; selected=null;
+    if (el.tagName.toLowerCase()==='path') {
+      if (el._sw!==undefined) el.setAttribute('stroke-width',el._sw);
+      el.style.filter='';
+    } else { el.style.outline=''; el.style.boxShadow=''; }
+  }
+
+  /* ── Wire a box for drag ──────────────────────────────────────── */
+  function wireBox(el) {
+    el.addEventListener('mousedown', e => {
+      if (!editMode||e.button!==0) return;
+      e.stopPropagation();
+      select(el);
+      const cs=window.getComputedStyle(el);
+      dragging={el, startX:e.clientX, startY:e.clientY,
+        origLeft:parseFloat(cs.left)||0, origTop:parseFloat(cs.top)||0,
+        conn:findConnected(el), isPath:false};
+      el.style.cursor='grabbing';
+      e.preventDefault();
+    });
+  }
+
+  /* ── Wire a path for drag ─────────────────────────────────────── */
+  function wirePath(path) {
+    path.addEventListener('mousedown', e => {
+      if (!editMode||e.button!==0) return;
+      e.stopPropagation();
+      select(path);
+      dragging={el:path, startX:e.clientX, startY:e.clientY,
+        origPts:parsePts(path.getAttribute('d')).map(p=>({...p})), isPath:true};
+      path.style.cursor='grabbing';
+      e.preventDefault();
+    });
+  }
+
+  /* ── mousemove ────────────────────────────────────────────────── */
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dx=e.clientX-dragging.startX, dy=e.clientY-dragging.startY;
+    if (dragging.isPath) {
+      dragging.el.setAttribute('d', buildD(dragging.origPts.map(p=>({cmd:p.cmd,x:p.x+dx,y:p.y+dy}))));
+    } else {
+      dragging.el.style.left=(dragging.origLeft+dx)+'px';
+      dragging.el.style.top =(dragging.origTop +dy)+'px';
+      moveConnected(dragging.conn,dx,dy);
+    }
+  });
+
+  /* ── mouseup ──────────────────────────────────────────────────── */
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging.el.style.cursor='grab';
+    dragging=null;
+    scheduleSave();
+  });
+
+  /* ── Keyboard: escape to deselect, arrows to nudge ────────────── */
+  document.addEventListener('keydown', e => {
+    if (e.key==='Escape') { deselect(); return; }
+    if ((e.ctrlKey||e.metaKey)&&e.key==='d'&&editMode&&selected&&selected.tagName.toLowerCase()!=='path') { e.preventDefault(); duplicateSelected(); return; }
+    if ((e.key==='Delete'||e.key==='Backspace')&&editMode&&selected) { e.preventDefault(); deleteSelected(); return; }
+    if (!editMode||!selected||selected.tagName.toLowerCase()==='path') return;
+    const s=e.shiftKey?10:1;
+    const l=parseFloat(selected.style.left)||0, t=parseFloat(selected.style.top)||0;
+    const m={ArrowLeft:['left',l-s],ArrowRight:['left',l+s],ArrowUp:['top',t-s],ArrowDown:['top',t+s]};
+    if (m[e.key]) { selected.style[m[e.key][0]]=m[e.key][1]+'px'; e.preventDefault(); scheduleSave(); }
+  });
+
+  /* canvas background click → deselect */
+  canvas.addEventListener('mousedown', e => { if (e.target===canvas||e.target.tagName?.toLowerCase()==='svg') deselect(); });
+
+  /* ── Toggle edit mode ─────────────────────────────────────────── */
+  function setEditMode(on) {
+    editMode=on;
+    editBtn.textContent=on?'✅ Editing':'✏️ Edit Layout';
+    editBtn.style.color=on?'#89d185':'#ccc';
+    editBtn.style.borderColor=on?'#89d185':'#555';
+    const svgEl=canvas.querySelector('svg');
+    canvas.querySelectorAll('*').forEach(el => {
+    if (el.tagName.toLowerCase()==='svg') return;
+      if (window.getComputedStyle(el).position==='absolute')
+        el.style.cursor=on?'grab':'';
+    });
+    if (svgEl) {
+      svgEl.style.pointerEvents=on?'all':'';
+      svgEl.querySelectorAll('path[d]').forEach(p => {
+        p.style.cursor=on?'grab':'';
+        p.style.pointerEvents=on?'stroke':'';
+      });
+    }
+    dupBtn.style.color=on?'#ccc':'#666';
+    dupBtn.style.borderColor=on?'#555':'#444';
+    delBtn.style.color=on?'#ccc':'#666';
+    delBtn.style.borderColor=on?'#555':'#444';
+    if (!on) deselect();
+  }
+  editBtn.addEventListener('click', () => setEditMode(!editMode));
+
+  /* ── Wire up all abs-positioned elements + SVG paths ─────────── */
+  canvas.querySelectorAll('*').forEach(el => {
+    if (el.tagName.toLowerCase()==='svg') return;
+    if (window.getComputedStyle(el).position==='absolute') wireBox(el);
+  });
+  const svgEl=canvas.querySelector('svg');
+  if (svgEl) svgEl.querySelectorAll('path[d]').forEach(wirePath);
+
+  /* ── Auto-save ────────────────────────────────────────────────── */
+  /* ── Duplicate selected box ───────────────────────────────── */
+  function duplicateSelected() {
+    if (!selected||selected.tagName.toLowerCase()==='path') return;
+    const clone=selected.cloneNode(true);
+    clone.style.left=(parseFloat(selected.style.left)||0)+20+'px';
+    clone.style.top =(parseFloat(selected.style.top )||0)+20+'px';
+    canvas.appendChild(clone);
+    wireBox(clone);
+    deselect();
+    select(clone);
+    scheduleSave();
+  }
+  function deleteSelected() {
+    if (!selected) return;
+    if (selected.tagName.toLowerCase()==='path') {
+      selected.remove();
+      deselect();
+    } else {
+      findConnected(selected).forEach(({path}) => path.remove());
+      selected.remove();
+      deselect();
+    }
+    scheduleSave();
+  }
+  dupBtn.addEventListener('click', () => { if (editMode) duplicateSelected(); });
+  delBtn.addEventListener('click', () => { if (editMode) deleteSelected(); });
+
+  function scheduleSave() {
+    clearTimeout(saveTimer);
+    statusEl.textContent='unsaved…';
+    saveTimer=setTimeout(doSave,2000);
+  }
+
+  function doSave() {
+    deselect();
+    /* strip edit-mode inline styles temporarily before cloning */
+    const cleanup=[];
+    const strip = el => {
+      ['cursor','pointerEvents','filter','outline','boxShadow'].forEach(prop => {
+        const v=el.style[prop];
+        if (v) { cleanup.push([el,prop,v]); el.style[prop]=''; }
+      });
+    };
+    canvas.querySelectorAll('*').forEach(strip);
+    strip(canvas);
+
+    const clone=document.documentElement.cloneNode(true);
+    clone.querySelectorAll('[data-drag-ui]').forEach(el=>el.remove());
+    const html='<!DOCTYPE html>\n'+clone.outerHTML;
+
+    /* restore live DOM */
+    cleanup.forEach(([el,prop,val])=>el.style[prop]=val);
+
+    if (window.parent&&window.parent!==window) {
+      window.parent.postMessage({type:'wb-save-content',content:html},'*');
+      statusEl.textContent='saved ✓';
+      setTimeout(()=>{statusEl.textContent='';},3000);
+    } else {
+      /* standalone: download */
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+      a.download=(document.title||'chart')+'_edited.html';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+      statusEl.textContent='downloaded ✓';
+      setTimeout(()=>{statusEl.textContent='';},3000);
+    }
+  }
+})();
+</script>
+
+
+</body></html>
