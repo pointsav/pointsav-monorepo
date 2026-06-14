@@ -305,9 +305,11 @@ def _coord_override_iso(lat, lon, stored_iso=None, iata_code=None):
     # large swaths of Texas, Arizona, New Mexico, and Louisiana. Records from those states
     # arrive tagged iso_country_code="MX" and cannot be corrected by the positive-MX rules
     # below. These rules fire BEFORE the MX rules to give US-territory precedence.
-    if lat > 32.7:                                           # Above all MX territory → US
+    # Longitude bounds (-117 to -86°W) are mandatory: without them, lat > 32.7 would fire
+    # for all of Europe (London 51°N, Paris 49°N) and convert EU clusters to "US".
+    if lat > 32.7 and -118.5 <= lon <= -86.0:               # Above all MX territory, in NA bbox → US
         return "US"
-    if lat > 32.0 and lon > -99.0:                          # E Texas / Louisiana / AR → US
+    if lat > 32.0 and -99.0 < lon <= -86.0:                 # E Texas / Louisiana / AR → US
         return "US"
     if lat > 31.8 and -111.0 <= lon <= -104.5:              # Arizona (Tucson) / SW New Mexico → US
         return "US"
