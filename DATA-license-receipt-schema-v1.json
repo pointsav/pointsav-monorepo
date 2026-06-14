@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:pointsav:schema:license-receipt:v1",
+  "title": "LicenseReceipt",
+  "description": "Record written by tool-wallet when a Polygon USDC payment is confirmed. One file per transaction, stored at {FS_ENDPOINT}/vault/source/license-receipts/{YYYY}/{MM}/{tx_hash}.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "product_id",
+    "license_tier",
+    "version",
+    "customer_ref",
+    "price_usdc",
+    "tx_hash",
+    "chain",
+    "confirmed_at",
+    "block_number",
+    "license_key"
+  ],
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "description": "Identifier for the purchased product (e.g. os-privategit)."
+    },
+    "license_tier": {
+      "type": "string",
+      "enum": ["apache", "fsl"],
+      "description": "License tier purchased. apache = Apache 2.0 open-source tier; fsl = Functional Source License commercial tier."
+    },
+    "version": {
+      "type": "string",
+      "description": "Semver version string of the binary at the time of purchase (e.g. 0.1.2)."
+    },
+    "customer_ref": {
+      "type": "string",
+      "description": "Polygon wallet address of the paying customer (0x-prefixed, checksummed or lowercase)."
+    },
+    "price_usdc": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Amount paid in USDC micro-units. 1 USDC = 1,000,000. Example: 9900000 = 9.90 USDC."
+    },
+    "tx_hash": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]{64}$",
+      "description": "Polygon transaction hash of the confirmed USDC transfer (0x followed by 64 hex characters)."
+    },
+    "chain": {
+      "type": "string",
+      "enum": ["polygon"],
+      "description": "Blockchain network. v1 supports Polygon PoS only."
+    },
+    "confirmed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp of block confirmation (e.g. 2026-06-14T18:30:00Z)."
+    },
+    "block_number": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Polygon block number at which the payment was confirmed."
+    },
+    "license_key": {
+      "type": "string",
+      "description": "Base64url-encoded Ed25519 license token. Format: base64url(sig[64] || JSON_payload_bytes). Verified by app-privategit-source."
+    }
+  }
+}
