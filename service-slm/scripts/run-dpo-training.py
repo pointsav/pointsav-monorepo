@@ -244,20 +244,24 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
     dataset = Dataset.from_list(records)
     split = dataset.train_test_split(test_size=0.1, seed=42)
 
-    # 32B memory guardrails: gradient_checkpointing + smaller batch + shorter sequences
+    # Memory guardrails: DPO double-forward (policy + ref) exhausts 24 GB L4 at MAX_LENGTH=1024
+    # even for 7B in 4-bit (21.97 GiB observed). Apply gradient checkpointing + short sequences
+    # for all model sizes; 32B gets smaller batch on top.
     is_32b = "32B" in base_model or "32b" in base_model
     _batch_size = 1 if is_32b else BATCH_SIZE
     _grad_accum = 4 if is_32b else GRAD_ACCUM
-    _max_length = 512 if is_32b else MAX_LENGTH
+    _max_length = 512  # 1024 OOMs on L4 24 GB; 512 fits 7B DPO double-forward with grad ckpt
     if is_32b:
         print(f"[train] 32B memory mode: batch=1, grad_ckpt=True, max_len={_max_length}, grad_accum={_grad_accum}")
+    else:
+        print(f"[train] 7B memory mode: batch={_batch_size}, grad_ckpt=True, max_len={_max_length}")
 
     training_args = DPOConfig(
         output_dir=output_dir,
         num_train_epochs=NUM_EPOCHS,
         per_device_train_batch_size=_batch_size,
         gradient_accumulation_steps=_grad_accum,
-        gradient_checkpointing=is_32b,
+        gradient_checkpointing=True,  # required for 7B DPO on L4 24 GB; was OOMing without it
         learning_rate=LEARNING_RATE,
         beta=BETA,
         max_length=_max_length,
