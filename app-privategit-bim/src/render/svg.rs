@@ -21,6 +21,7 @@ pub fn render_kp_zone_svg_from_value(val: &Value) -> String {
     render_kp_zone_svg(z1, z2, z3, category, area_m2)
 }
 
+#[allow(dead_code)]
 pub fn render_kp_fraction_svg(display_name: &str) -> String {
     let fraction = if display_name.contains("1/8") {
         0.125
