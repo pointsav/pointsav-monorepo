@@ -91,3 +91,72 @@ cds-side-nav-menu-item a.bim-nav-link {
 .bim-save-notification {
   margin-top: 1rem;
 }
+
+/* Visual property editor table */
+.bim-prop-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.bim-prop-table th {
+  background: #f4f4f4;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  border-bottom: 2px solid #dde;
+  color: #333;
+}
+.bim-prop-table td {
+  padding: 0.375rem 0.75rem;
+  border-bottom: 1px solid #e8e8e8;
+  vertical-align: middle;
+}
+.bim-prop-key label {
+  color: #555;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+.bim-prop-input {
+  width: 100%;
+  border: 1px solid #dde;
+  border-radius: 3px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  background: #fafafa;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.bim-prop-input:focus {
+  outline: none;
+  border-color: #164679;
+  background: #fff;
+}
+.bim-prop-empty {
+  color: #888;
+  font-style: italic;
+  padding: 1rem 0.75rem;
+}
+
+/* Editor layout */
+.bim-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.bim-editor-pane {
+  margin-bottom: 1rem;
+}
+.bim-codemirror-host {
+  border: 1px solid #dde;
+  border-radius: 4px;
+  min-height: 300px;
+}
+.bim-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0.75rem;
+}
