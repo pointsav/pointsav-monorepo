@@ -3,6 +3,7 @@ schema: foundry-artifact-registry-v1
 project: project-editorial
 project: project-system
 project: project-gis
+project: project-knowledge
 last_updated: 2026-06-14
 last_updated: 2026-06-14 (session 8 — CODE C updated with commit 1a914564; entity_filter.rs added)
 ---
@@ -626,6 +627,45 @@ Committed to `pointsav-monorepo` feature branch; Stage 6 pending.
 | Extraction SFT pairs (human-curated) | `/srv/foundry/data/training-corpus/extraction/jennifer-sft-*.jsonl` | 182 pairs | provenance: human-curated; RAFT-style entity candidates injected from people.csv (9,575 names); metric/theme labels from jennifer-1 human-curated YAML ledgers (461 files); entity labels sparse (YAML corpus is metric/theme-dominant) |
 | DPO enrichment pairs (Tier B vs Tier A) | `cluster-totebox-jennifer/service-fs/data/training-corpus/feedback/enrichment-DOC_*.jsonl` | 4 pairs (2026-06-14) | chosen=Tier B (OLMo 32B), rejected=Tier A (OLMo 7B); P1+P3 clean, P2 contaminated (ops(slm) commit-prefix in chosen), P4 ambiguous; do NOT train as-is; pre-save validator needed; minimum 200–300 genre-diverse pairs before LoRA; provenance: olmo-self |
 | Apprenticeship SFT corpus (git-commit activity) | `/srv/foundry/data/training-corpus/feedback/apprenticeship-git-commit-*.jsonl` | 834 pairs | Separate artifact type from DPO enrichment pairs; SFT from commit activity; provenance: human-curated (commits are human-authored) |
+## E — Engine Code Artifacts (app-mediakit-knowledge)
+
+CODE artifacts that run the knowledge wiki engine. Committed to sub-clone `pointsav-monorepo/`
+via `commit-as-next.sh`. All require Stage 6 promotion by Command Session before going live.
+Binary rebuild + service restart required after each Stage 6 (see BRIEF §4 Phase 9 notes).
+
+| ID | Commit | Author | Description | Stage 6 | Live |
+|----|--------|--------|-------------|---------|------|
+| E1 | `9a1326df` | jwoodfine | Phase 0 gate: `scripts/stage6-gate.sh` xtask runner; red-link render path removed (L18 complete); `inject_wiki_prefixes` cross-mount wiring confirmed | CONFIRMED (origin/main) | Yes (binary `e5e899...`) |
+| E2 | `bd435cc3` | pwoodfine | Phase 0 code: tokens.css regen; blueprints relates_to rail; slug 301 redirect (topic- prefix + ES locale); `/edit/{slug}` stub; CodeMirror 6 + toc-persistence.js; conditional chrome load | CONFIRMED | Yes |
+| E3 | `7a2b9b42` | jwoodfine | Phase 0 mobile: M8 drawer CSS (transform+transition); tap-popover viewport flip; Cmd+K trigger + `window.openCmdK` exposure | CONFIRMED | Yes |
+| E4 | `eeb60cbb` | pwoodfine | Phase 0 AppState: `mounts: Vec<Mount>` refactor; hardcoded content_dir/guide_dir removed; `blueprints.rs` wired | CONFIRMED | Yes |
+| E5 | `6d554ec6` | jwoodfine | Phase 7 scaffold: `PeerConfig`; `peers: Vec<PeerConfig>` in AppState; federated MCP search; `activitypub.rs` stub; reqwest 0.12 + rustls-tls | Stage 6 PENDING | No (binary rebuild pending) |
+| E6 | `3106b2e1` | pwoodfine | Audit repair Sprint A: WCAG 2.2 focus outline (C3 — navy 9.1:1 vs gold 2.26:1); article body link underline (M15) | Stage 6 PENDING | No |
+| E7 | `48bfa7e7` | jwoodfine | Audit repair Sprint B: sitemap absolute URLs via `canonical_url` TOML field (M1); brand-instance from TOML `[site].instance` (M14); ES tab/breadcrumb i18n in wiki_handlers via inline match (M12); dead POST form removed from `/edit` view (M11) | Stage 6 PENDING | No |
+
+**Post-Stage-6 Command actions required (E5/E6/E7):**
+- Add `instance = "documentation"` / `"projects"` / `"corporate"` to each `/etc/local-knowledge/*.toml` (M14)
+- Add `canonical_url = "https://documentation.pointsav.com"` (and peers) to TOML where applicable (M1)
+- Rebuild binary from promoted canonical tip
+- `sudo systemctl restart local-knowledge-{documentation,projects,corporate}.service`
+
+---
+
+## F — Content Repair Requests (dispatched to project-editorial 2026-06-14)
+
+Outgoing requests generated from the 12-agent external audit (BRIEF §7). Not artifacts produced
+here — these become TOPIC/GUIDE/TEXT artifacts at project-editorial. Tracked here for status
+visibility.
+
+| ID | Audit Ref | Priority | Subject | Dispatched | Status |
+|----|-----------|----------|---------|------------|--------|
+| F1 | C2 | CRITICAL | Tier semantics reconciliation — rewrite `co-location-ranking-system` so T1 = highest (matches all other articles); add authoritative `[[co-location-tier-nomenclature]]` wikilink from every tier-using article | 2026-06-14 outbox | Pending project-editorial |
+| F2 | M2 | High | Author 4 start-here TOPICs per instance OR repoint onboarding chips to extant slugs (all 4 chips 404 on projects + corporate) | 2026-06-14 outbox | Pending project-editorial |
+| F3 | M5 | High | Add hatnote to guide catalog: "These guides are accessible to Woodfine operators; they are not public wiki articles." Do not present unresolvable GUIDE slugs as live links | 2026-06-14 outbox | Pending project-editorial |
+| F4 | M6 + M3 | High | Split transient operational/research content out of archetype TOPICs (vertical-warehouse, ranking-system) into GUIDE or BRIEF artifacts; keep TOPICs to durable declarative content; audit `category:` frontmatter on articles (M3 root cause: missing frontmatter, not engine bug) | 2026-06-14 outbox | Pending project-editorial |
+| F5 | M7 | Medium | Add dated data-snapshot line to every article containing cluster/country counts ("Data as of YYYY-MM-DD build"); reconcile home headline to one snapshot or label superset | 2026-06-14 outbox | Pending project-editorial |
+| F6 | M8 | High (legal) | Add "Data Sources" section naming © OpenStreetMap contributors / ODbL in every article whose methodology rests on OSM + Wikidata; surface Wikidata Q-IDs in brand-family taxonomy article | 2026-06-14 outbox | Pending project-editorial |
+| F7 | M9 | High | EN/ES parity sweep: `co-location-ranking-system.es.md` is ~25% of EN length — full parallel translation required per L4; sweep all EN/ES pairs for lagging articles | 2026-06-14 outbox | Pending project-editorial |
 
 ---
 
@@ -633,3 +673,7 @@ Committed to `pointsav-monorepo` feature branch; Stage 6 pending.
 
 - Add artifacts when planned; update status when dispatched or returned.
 - Cross-check with `.agent/briefs/README.md` for BRIEF-linked artifact chains.
+- When an artifact is dispatched to project-editorial/project-design, update status to DISPATCHED + commit hash
+- When an artifact is returned (approved/rejected), update status
+- Add new artifacts here at the time they are planned — do not wait until staging
+- E-series: update Stage 6 column when Command confirms promotion; update Live column when binary rebuild deployed
