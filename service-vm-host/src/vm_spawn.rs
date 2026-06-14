@@ -1,5 +1,5 @@
 use std::{fs, path::PathBuf, process::Command};
-use system_vm_fleet_types::{VmRecord, VmState};
+use system_vm_fleet_types::{HostPortMapping, VmRecord, VmState};
 
 /// Root directory for VM disk images, seed ISOs, pid files, and monitor sockets.
 /// Override with VM_DISK_DIR env var (default: /var/lib/vm-fleet).
@@ -149,13 +149,30 @@ pub fn build_seed_iso(vm_id: &str, vm_type: &str) -> Result<PathBuf, String> {
     }
 }
 
+/// Derive an ephemeral SSH host port for a VM.
+///
+/// Uses the last 4 decimal digits of a simple FNV-1a hash of the vm_id,
+/// clamped to the range 10000–19999.  No collision detection — acceptable for MVP.
+fn ssh_host_port_for(vm_id: &str) -> u16 {
+    // FNV-1a 32-bit, no external dependencies.
+    let mut hash: u32 = 2_166_136_261;
+    for byte in vm_id.as_bytes() {
+        hash ^= *byte as u32;
+        hash = hash.wrapping_mul(16_777_619);
+    }
+    let offset = hash % 10_000;
+    10_000 + offset as u16
+}
+
 /// Spawn a QEMU process for the VM using user-mode networking.
 ///
 /// Requires: disk image at disk_path_for(vm_id), seed ISO at seed_iso_path_for(vm_id).
 /// Boots Ubuntu 24.04 cloud image with cloud-init from the seed ISO.
 /// Monitor socket at {disk_dir}/{vm_id}.monitor.sock — discovered by service-vm-host's
 /// qemu_monitor module on subsequent heartbeats.
-pub fn spawn_qemu(record: &VmRecord, kvm: bool) -> Result<(), String> {
+///
+/// Returns the updated VmRecord with host_ports populated.
+pub fn spawn_qemu(record: &VmRecord, kvm: bool) -> Result<VmRecord, String> {
     let disk = disk_path_for(&record.vm_id);
     let seed = seed_iso_path_for(&record.vm_id);
     let monitor = monitor_sock_for(&record.vm_id);
@@ -167,6 +184,9 @@ pub fn spawn_qemu(record: &VmRecord, kvm: bool) -> Result<(), String> {
     if !seed.exists() {
         return Err(format!("seed ISO not found: {}", seed.display()));
     }
+
+    let host_ssh_port = ssh_host_port_for(&record.vm_id);
+    let hostfwd_arg = format!("user,hostfwd=tcp::{host_ssh_port}-:22");
 
     let mut cmd = Command::new("qemu-system-x86_64");
     cmd.args([
@@ -188,7 +208,7 @@ pub fn spawn_qemu(record: &VmRecord, kvm: bool) -> Result<(), String> {
         "-net",
         "nic,model=virtio",
         "-net",
-        "user",
+        &hostfwd_arg,
         "-display",
         "none",
         "-daemonize",
@@ -206,16 +226,25 @@ pub fn spawn_qemu(record: &VmRecord, kvm: bool) -> Result<(), String> {
         tracing::info!(
             vm_id = %record.vm_id,
             ram_mb = record.ram_alloc_mb,
+            host_ssh_port,
             kvm,
             "QEMU process spawned"
         );
+
+        let mut updated = record.clone();
+        updated.host_ports = vec![HostPortMapping {
+            host_port: host_ssh_port,
+            guest_port: 22,
+            protocol: "tcp".to_string(),
+        }];
+
         // Persist metadata sidecar so qemu_monitor can reconstruct VmRecord fields from
         // process state on subsequent heartbeats (vm_type, ram, vcpu, tenant_id would
         // otherwise be lost once the spawn handler returns).
-        if let Ok(json) = serde_json::to_string(record) {
+        if let Ok(json) = serde_json::to_string(&updated) {
             let _ = fs::write(meta_path_for(&record.vm_id), json);
         }
-        Ok(())
+        Ok(updated)
     } else {
         Err(format!(
             "qemu-system-x86_64 exited {:?} for {}",
@@ -253,5 +282,6 @@ pub fn provisioning_record(vm_id: &str, vm_type: &str, ram_mb: u64, vcpu_count: 
         vcpu_count,
         started_at: None,
         tenant_id: None,
+        host_ports: vec![],
     }
 }

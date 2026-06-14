@@ -69,6 +69,7 @@ fn query_qmp_socket(path: &std::path::Path, vm_id: &str) -> Option<VmRecord> {
         vcpu_count: 0,
         started_at: None,
         tenant_id: None,
+        host_ports: vec![],
     });
     // vm_id and state come from the live process, not the sidecar.
     record.vm_id = vm_id.to_string();
@@ -133,6 +134,7 @@ mod tests {
             vcpu_count: 2,
             started_at: None,
             tenant_id: Some("tenant-abc".to_string()),
+            host_ports: vec![],
         };
         let json = serde_json::to_string(&record).unwrap();
         std::fs::write(crate::vm_spawn::meta_path_for(vm_id), &json).unwrap();

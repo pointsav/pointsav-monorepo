@@ -39,6 +39,17 @@ pub enum VmState {
     Error,
 }
 
+/// A single host→guest port forwarding rule for QEMU SLIRP networking.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct HostPortMapping {
+    /// Port number bound on the host (hypervisor) side.
+    pub host_port: u16,
+    /// Port number inside the guest VM.
+    pub guest_port: u16,
+    /// Protocol: "tcp" or "udp".
+    pub protocol: String,
+}
+
 /// Record of a single VM as reported by the host agent.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct VmRecord {
@@ -52,6 +63,10 @@ pub struct VmRecord {
     /// None for VMs created directly via fleet API (no tenant proxy).
     #[serde(default)]
     pub tenant_id: Option<String>,
+    /// SLIRP host→guest port forwarding rules established at spawn time.
+    /// Empty for VMs without explicit port mappings.
+    #[serde(default)]
+    pub host_ports: Vec<HostPortMapping>,
 }
 
 /// Advisory placement result returned by service-vm-fleet.
@@ -146,12 +161,45 @@ mod tests {
             vcpu_count: 2,
             started_at: None,
             tenant_id: None,
+            host_ports: vec![],
         };
         let json = serde_json::to_string(&rec).unwrap();
         assert!(
             json.contains("\"Running\""),
             "state must serialise as PascalCase"
         );
+    }
+
+    #[test]
+    fn host_port_mapping_round_trips_json() {
+        let rec = VmRecord {
+            vm_id: "vm-ssh-1".to_string(),
+            vm_type: "VmTotebox".to_string(),
+            state: VmState::Provisioning,
+            ram_alloc_mb: 4096,
+            vcpu_count: 2,
+            started_at: None,
+            tenant_id: Some("alice".to_string()),
+            host_ports: vec![HostPortMapping {
+                host_port: 10022,
+                guest_port: 22,
+                protocol: "tcp".to_string(),
+            }],
+        };
+        let json = serde_json::to_string(&rec).unwrap();
+        let decoded: VmRecord = serde_json::from_str(&json).unwrap();
+        assert_eq!(decoded.host_ports.len(), 1);
+        assert_eq!(decoded.host_ports[0].host_port, 10022);
+        assert_eq!(decoded.host_ports[0].guest_port, 22);
+        assert_eq!(decoded.host_ports[0].protocol, "tcp");
+    }
+
+    #[test]
+    fn vm_record_missing_host_ports_defaults_to_empty() {
+        // Older VmRecord JSON without host_ports field must deserialise cleanly.
+        let json = r#"{"vm_id":"vm-old","vm_type":"VmMediaKit","state":"Running","ram_alloc_mb":2048,"vcpu_count":2,"started_at":null}"#;
+        let rec: VmRecord = serde_json::from_str(json).unwrap();
+        assert!(rec.host_ports.is_empty());
     }
 
     #[test]
