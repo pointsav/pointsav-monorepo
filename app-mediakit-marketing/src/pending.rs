@@ -65,7 +65,11 @@ impl Queue {
             if path.extension().and_then(|e| e.to_str()) != Some("yaml") {
                 continue;
             }
-            let id = path.file_stem().and_then(|s| s.to_str()).unwrap_or("").to_string();
+            let id = path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("")
+                .to_string();
             let slug = std::fs::read_to_string(&path)
                 .ok()
                 .and_then(|t| Page::from_yaml(&t).ok())
@@ -109,7 +113,8 @@ impl Queue {
 mod tests {
     use super::*;
 
-    const MANIFEST: &str = "title: Promo\nslug: promo\nsections:\n  - type: hero\n    headline: Hi\n";
+    const MANIFEST: &str =
+        "title: Promo\nslug: promo\nsections:\n  - type: hero\n    headline: Hi\n";
 
     #[test]
     fn stage_list_approve_round_trip() {

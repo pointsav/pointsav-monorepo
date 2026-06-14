@@ -28,7 +28,11 @@ pub async fn handler(
     Json(req): Json<Value>,
 ) -> impl IntoResponse {
     let id = req.get("id").cloned().unwrap_or(Value::Null);
-    let method = req.get("method").and_then(|v| v.as_str()).unwrap_or("").to_string();
+    let method = req
+        .get("method")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
     let params = req
         .get("params")
         .cloned()
@@ -39,12 +43,17 @@ pub async fn handler(
     } else {
         match dispatch(&state, &method, &params).await {
             Ok(result) => json!({ "jsonrpc": "2.0", "id": id, "result": result }),
-            Err((code, msg)) => json!({ "jsonrpc": "2.0", "id": id, "error": { "code": code, "message": msg } }),
+            Err((code, msg)) => {
+                json!({ "jsonrpc": "2.0", "id": id, "error": { "code": code, "message": msg } })
+            }
         }
     };
 
     (
-        [(header::CONTENT_TYPE, HeaderValue::from_static("application/json"))],
+        [(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json"),
+        )],
         Json(body),
     )
 }
@@ -172,7 +181,8 @@ fn resources_read(state: &AppState, params: &Value) -> Result<Value, (i32, Strin
     let slug = uri
         .strip_prefix("marketing://page/")
         .ok_or((-32602i32, format!("unsupported URI scheme: {uri}")))?;
-    let page = content::load_page(&state.content_dir, slug).map_err(|e| (-32000i32, format!("{e:?}")))?;
+    let page =
+        content::load_page(&state.content_dir, slug).map_err(|e| (-32000i32, format!("{e:?}")))?;
     let yaml = page.to_yaml().map_err(|e| (-32000i32, e))?;
     Ok(json!({
         "contents": [{ "uri": uri, "mimeType": "application/yaml", "text": yaml }]
