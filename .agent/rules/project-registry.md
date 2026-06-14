@@ -153,12 +153,17 @@ Last updated: 2026-05-31.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
+| moonshot-bim-engine | Scaffold-coded | moonshot | 4 files; sovereign IFC/BIM engine — replaces web-ifc/xeokit (app-workplace-bim licensing gate) |
+| moonshot-crdt | Scaffold-coded | moonshot | 4 files; collaborative state + version lineage — replaces Loro/Yjs/Automerge |
 | moonshot-database | Scaffold-coded | moonshot | 4 files |
+| moonshot-docengine | Scaffold-coded | moonshot | 4 files; document model + AST bidirectional mapping — replaces ProseMirror/Lexical/TipTap |
+| moonshot-editor | Scaffold-coded | moonshot | 4 files; editor/viewer/file-tree widget surface — replaces CodeMirror/Monaco/react-arborist |
 | moonshot-gpu | Scaffold-coded | moonshot | 4 files |
 | moonshot-hypervisor | Scaffold-coded | moonshot | 4 files |
 | moonshot-index | Scaffold-coded | moonshot | 4 files |
 | moonshot-kernel | Scaffold-coded | moonshot | 4 files |
 | moonshot-network | Scaffold-coded | moonshot | 4 files |
+| moonshot-parser | Scaffold-coded | moonshot | 4 files; incremental syntax parser — replaces tree-sitter |
 | moonshot-protocol | Scaffold-coded | moonshot | 4 files |
 | moonshot-sel4-vmm | Scaffold-coded | moonshot | 4 files |
 | moonshot-toolkit | Scaffold-coded | moonshot | 5 files; Rust-only build orchestrator per repo CLAUDE.md |
