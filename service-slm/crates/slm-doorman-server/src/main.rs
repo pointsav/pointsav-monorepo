@@ -298,26 +298,37 @@ async fn main() -> anyhow::Result<()> {
                     continue;
                 }
 
-                // Sprint 3C: when all configured Tier B nodes have been
-                // circuit-open longer than the hold threshold, skip this drain
-                // cycle. Briefs accumulate in queue/ until Tier B recovers.
-                // Exception: when SLM_TIER_A_FIRST=true the hold is bypassed;
-                // Tier A is the confident primary so Tier B unavailability
-                // should not prevent shadow brief dispatch.
+                // Sprint 3C (+ health_up extension): when all configured Tier B
+                // nodes have been circuit-open longer than the hold threshold,
+                // or when all Tier B health probes are currently failing, skip
+                // this drain cycle. Briefs accumulate in queue/ until Tier B
+                // recovers. Health probe failures do not trip the circuit
+                // breaker directly (only dispatch failures do), so the
+                // original circuit-only predicate would miss the health-down
+                // case. Exception: when SLM_TIER_A_FIRST=true the hold is
+                // bypassed; Tier A is the confident primary so Tier B
+                // unavailability should not prevent shadow brief dispatch.
                 let tier_b = drain_doorman_arc.doorman.tier_b_status();
                 if !tier_a_first
                     && !tier_b.is_empty()
                     && tier_b.values().all(|info| {
-                        info.circuit == "open"
-                            && info
-                                .opened_for_secs
-                                .map(|s| s >= hold_threshold_secs)
-                                .unwrap_or(false)
+                        // Either the circuit has been open long enough, or
+                        // health probes are failing (circuit may still be
+                        // "closed" if no dispatch failures have occurred yet).
+                        let effectively_down = info.circuit == "open" || !info.health_up;
+                        let long_enough = info
+                            .opened_for_secs
+                            .map(|s| s >= hold_threshold_secs)
+                            // No circuit timer means circuit is closed but health
+                            // is down — treat as long enough (3 consecutive probe
+                            // failures already confirm the node is offline).
+                            .unwrap_or(!info.health_up);
+                        effectively_down && long_enough
                     })
                 {
                     info!(
                         hold_threshold_secs,
-                        "drain worker: Tier B circuit open beyond hold threshold — holding queue"
+                        "drain worker: all Tier B nodes offline (circuit or health) — holding queue"
                     );
                     tokio::time::sleep(drain_interval).await;
                     continue;
