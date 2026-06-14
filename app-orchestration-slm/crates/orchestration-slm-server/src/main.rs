@@ -40,10 +40,20 @@ use std::sync::Arc;
 
 use anyhow::Context;
 use orchestration_slm::yoyo_proxy::YoyoEndpoints;
-use orchestration_slm::{FleetRegistry, MeteringLedger, YoyoProxyClient};
-use tracing::info;
+use orchestration_slm::{
+    resolve_from_env, ChassisFlowGate, CircuitRegistry, FleetRegistry, LicenseStatus,
+    MeteringLedger, YoyoProxyClient,
+};
+use tracing::{info, warn};
 
 mod http;
+
+// Placeholder embedded public key. Override with ORCHESTRATION_LICENSE_PUBKEY_HEX at deploy time.
+// The all-zero key is intentionally invalid — any real license token will fail unless the operator
+// sets the correct public key, preventing accidental grant of Tier B on a dev chassis.
+const EMBEDDED_LICENSE_PUBKEY: &[u8; 32] = &[0u8; 32];
+
+const YOYO_LABELS: &[&str] = &["proxy", "trainer", "graph"];
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -57,10 +67,26 @@ async fn main() -> anyhow::Result<()> {
     let endpoints = YoyoEndpoints::from_env();
     let (trainer_cfg, graph_cfg) = endpoints.any_configured();
 
+    let license = resolve_from_env(EMBEDDED_LICENSE_PUBKEY);
+    match &license {
+        LicenseStatus::Valid(p) => info!(
+            licensee = %p.issued_to,
+            expiry = %p.expiry.to_rfc3339(),
+            "chassis license valid — Tier B brokering enabled"
+        ),
+        LicenseStatus::Absent => info!("no license token — Tier B brokering disabled"),
+        LicenseStatus::Invalid(reason) => {
+            warn!(%reason, "chassis license invalid — Tier B brokering disabled")
+        }
+    }
+
     let state = Arc::new(http::AppState {
         fleet: FleetRegistry::new(),
         proxy: Arc::new(YoyoProxyClient::new(endpoints)),
         metering: MeteringLedger::new(),
+        circuits: Arc::new(CircuitRegistry::new(YOYO_LABELS.iter().copied())),
+        gates: Arc::new(ChassisFlowGate::new(YOYO_LABELS.iter().copied())),
+        license: Arc::new(license),
     });
 
     info!(

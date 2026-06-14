@@ -91,6 +91,12 @@ pub struct ReadyzResponse {
     pub yoyo_graph_reachable: bool,
     pub fleet_members: usize,
     pub chassis_version: &'static str,
+    /// "valid", "absent", or "invalid"
+    pub license_status: String,
+    /// Per-label circuit state: "closed", "open", or "half-open"
+    pub circuit_states: std::collections::HashMap<String, String>,
+    /// Per-label gate state: true = closed (blocked)
+    pub gate_states: std::collections::HashMap<String, bool>,
 }
 
 // ── Yo-Yo proxy ───────────────────────────────────────────────────────────────
