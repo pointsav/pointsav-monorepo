@@ -298,7 +298,8 @@ fn llms_txt_snippet(body_md: &str, max_chars: usize) -> String {
     if clean.len() <= max_chars {
         clean.to_string()
     } else {
-        let boundary = clean[..max_chars].rfind(' ').unwrap_or(max_chars);
+        let safe_end = (0..=max_chars).rev().find(|&i| clean.is_char_boundary(i)).unwrap_or(0);
+        let boundary = clean[..safe_end].rfind(' ').unwrap_or(safe_end);
         format!("{}…", &clean[..boundary])
     }
 }
@@ -1179,6 +1180,35 @@ async fn hash_lookup_page(
             "fingerprint {}",
             &hash_hex[..16]
         ))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::llms_txt_snippet;
+
+    #[test]
+    fn snippet_short_body_returns_as_is() {
+        let body = "Short body.";
+        assert_eq!(llms_txt_snippet(body, 120), "Short body.");
+    }
+
+    #[test]
+    fn snippet_truncates_at_word_boundary() {
+        let body = "The quick brown fox jumps over the lazy dog and then some more words to exceed the limit.";
+        let result = llms_txt_snippet(body, 50);
+        assert!(result.ends_with('…'), "should end with ellipsis");
+        assert!(result.len() <= 50 + '…'.len_utf8());
+    }
+
+    #[test]
+    fn snippet_em_dash_near_boundary_does_not_panic() {
+        // Regression: em dash (—, 3 bytes: 0xe2 0x80 0x94) crossing the 120-byte boundary
+        // previously caused a panic in &s[..120] when byte 120 was inside the em dash.
+        let prefix = "a".repeat(119);
+        let body = format!("{}— extra words that push beyond the boundary", prefix);
+        let result = llms_txt_snippet(&body, 120);
+        assert!(result.ends_with('…') || result.len() <= body.len());
     }
 }
 
