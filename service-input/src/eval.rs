@@ -334,7 +334,7 @@ pub fn structural_health_check(
         worm_ledger_advanced: worm_advanced,
         graph_entity_count_nonzero: graph_nonzero,
         crm_record_exists: crm_exists,
-        ledger_entry_exists: ledger_entry_exists,
+        ledger_entry_exists,
     }
 }
 

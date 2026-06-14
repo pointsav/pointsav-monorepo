@@ -23,6 +23,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone)]
 struct Config {
+    #[allow(dead_code)]
     bind: String,
     module_id: String,
     fs_endpoint: String,
@@ -224,6 +225,7 @@ fn sha256_hex(bytes: &[u8]) -> String {
 // Blocker 1 fix: build the correct {file:{filename,data},destination_archive,target_service,edge_entities}
 // envelope that service-extraction expects.
 // Blocker 4 fix: fully async — no std::thread::sleep, no reqwest::blocking.
+#[allow(clippy::too_many_arguments)]
 async fn post_to_fs(
     client: &reqwest::Client,
     fs_endpoint: &str,
