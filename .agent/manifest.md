@@ -1,12 +1,12 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster: project-system
-cluster_name: project-system
-cluster_branch: cluster/project-system
-created: 2026-05-01
+cluster: project-infrastructure
+cluster_name: project-infrastructure
+cluster_branch: main
+created: 2026-06-14
 state: active
-slm_endpoint: http://localhost:8011
-module_id: system
+slm_endpoint: http://localhost:9180
+module_id: infrastructure
 
 tetrad:
   vendor:
@@ -14,32 +14,28 @@ tetrad:
       path: pointsav-monorepo/
       upstream: vendor/pointsav-monorepo
       focus: >
-        system-core/ + system-ledger/ + system-ledger-proto/ + system-ledger-server/
-        + system-ledger-pd/ + system-substrate/ + system-substrate-netbsd/
-        + service-vm-fleet/ + service-vm-tenant/ + service-vm-host/
-        + service-extraction/ + os-totebox/ + app-privategit-source/
-        + app-privategit-marketplace/ + tool-wallet/
-      status: active (Phase 1 UEFI boot complete 2026-06-12; Phase 2 in progress)
+        VM fleet controller stack — service-vm-fleet (:9203 advisory placement),
+        service-vm-host (:9220 per-node QEMU agent), service-vm-tenant (:9221 tenant proxy);
+        app-orchestration-slm (:9180 Yo-Yo broker chassis, DOCTRINE #23 Tier B);
+        system-vm-fleet-types (shared wire types); all deployed on vault-privategit-source-1.
+      status: active (commits 5e851ecc / 2717fbce / a71e89f0 / 49bd534d; Stage 6 pending)
   customer:
     - status: leg-pending
       note: >
-        GUIDE entries for os-totebox deployment procedures and PPN fleet operations
-        planned for woodfine-fleet-deployment once Phase 2 hardening is complete.
+        No customer-tier deliverable defined yet. The VM fleet is internal infrastructure.
+        A woodfine-fleet-deployment catalog entry will be added when a customer-facing
+        deployment guide is written.
   deployment:
     - status: active
       note: >
-        os-totebox Phase 1 UEFI boot milestone COMPLETE 2026-06-12 (commit 92692800).
-        NetBSD 10.1 multiuser under QEMU TCG on GCP e2; system-ledger-server + sshd up;
-        /healthz 200 + /readyz 503 COLD. Phase 2 (Veriexec strict=1) in progress.
+        Four services on vault-privategit-source-1:
+          service-vm-fleet    → port 9203 (local-vm-fleet.service)
+          service-vm-host     → port 9220 (local-vm-host.service)
+          service-vm-tenant   → port 9221 (local-vm-tenant.service)
+          orchestration-slm   → port 9180 (local-orchestration-slm.service)
+        Fleet nodes: laptop-a-1 (:9220 via WireGuard), laptop-b-1 (:9220 via WireGuard).
   wiki:
     - status: leg-pending
       note: >
-        TOPICs for Capability Ledger Substrate architecture, PPN VM fleet architecture,
-        and seL4 PD design to be written after Phase 2 complete;
-        route via project-editorial.
-
-clones:
-  - repo: pointsav-monorepo
-    role: primary
-    path: pointsav-monorepo/
-    upstream: vendor/pointsav-monorepo
+        TOPIC and GUIDE drafts for the VM stack not yet written.
+        Planned: TOPIC on PPN VM resource pool architecture; GUIDE on fleet operations.
