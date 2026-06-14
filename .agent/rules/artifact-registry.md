@@ -367,16 +367,16 @@ Routing per `~/Foundry/conventions/artifact-classification.yaml`:
 - **Status:** STAGED in drafts-outbound/ — at project-editorial
 
 ### B13 — TOPIC: Regional Name Resolution Architecture
-- **Status:** STAGED in drafts-outbound/ — at project-editorial
+- **Status:** COMMITTED — media-knowledge-documentation/architecture/regional-name-resolution.md (prior session); Wikipedia refs added bf920fc@jwoodfine 2026-06-14
 
 ### B14 — TOPIC: Co-location Tier Nomenclature
-- **Status:** STAGED in drafts-outbound/ — at project-editorial
+- **Status:** COMMITTED — media-knowledge-documentation/reference/colocation-tier-nomenclature.md (prior session); frontmatter + DBSCAN ref added bf920fc@jwoodfine 2026-06-14; NOTE: architecture/colocation-tier-nomenclature.md is a duplicate with same slug — pending Command `git rm` (msg project-editorial-20260614-slug-collision-defect)
 
 ### B15 — TOPIC: GIS as BIM Substrate
-- **Status:** STAGED in drafts-outbound/ — at project-editorial
+- **Status:** COMMITTED — media-knowledge-documentation/architecture/gis-as-bim-substrate.md (prior session); body H1 + GIS/BIM refs added bf920fc@jwoodfine 2026-06-14
 
 ### B16 — TOPIC: UK/EU Food Retail Coverage
-- **Status:** STAGED in drafts-outbound/ — at project-editorial
+- **Status:** COMMITTED — media-knowledge-documentation/reference/uk-eu-food-retail-coverage.md (prior session); OSM/Wikidata refs added bf920fc@jwoodfine 2026-06-14
 
 ---
 
