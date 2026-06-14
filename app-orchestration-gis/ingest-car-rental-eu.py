@@ -135,6 +135,78 @@ BRANDS = {
         "_na_bbox": (14.5, -118.4, 32.7, -86.7),
         "_iso_fallback": "MX",
     },
+    # MX-only brands (Phase 5, 2026-06-14) — OSM MX uses different Wikidata IDs than EU/US canonical.
+    # IDs verified by inspecting amenity=car_rental in OSM MX bbox (590 total nodes).
+    "europcar-mx": {
+        "wikidata_id": "Q1376256",  # Europcar as tagged in OSM MX (16 nodes); EU canonical is Q466704
+        "display_name": "Europcar",
+        "canonical_name": "Europcar México",
+        "naics_code": "532111",
+        "top_category": "Passenger Car Rental",
+        "sub_category": "Car Rental",
+        "_na_bbox": (14.5, -118.4, 32.7, -86.7),
+        "_iso_fallback": "MX",
+    },
+    "alamo-mx": {
+        "wikidata_id": "Q1429287",  # Alamo as tagged in OSM MX (15 nodes)
+        "display_name": "Alamo",
+        "canonical_name": "Alamo Renta de Autos",
+        "naics_code": "532111",
+        "top_category": "Passenger Car Rental",
+        "sub_category": "Car Rental",
+        "_na_bbox": (14.5, -118.4, 32.7, -86.7),
+        "_iso_fallback": "MX",
+    },
+    "national-mx": {
+        "wikidata_id": "Q1424142",  # National Car Rental as tagged in OSM MX (12 nodes)
+        "display_name": "National Car Rental",
+        "canonical_name": "National Car Rental México",
+        "naics_code": "532111",
+        "top_category": "Passenger Car Rental",
+        "sub_category": "Car Rental",
+        "_na_bbox": (14.5, -118.4, 32.7, -86.7),
+        "_iso_fallback": "MX",
+    },
+    "thrifty-mx": {
+        "wikidata_id": "Q2429546",  # Thrifty as tagged in OSM MX (9 nodes)
+        "display_name": "Thrifty",
+        "canonical_name": "Thrifty Car Rental México",
+        "naics_code": "532111",
+        "top_category": "Passenger Car Rental",
+        "sub_category": "Car Rental",
+        "_na_bbox": (14.5, -118.4, 32.7, -86.7),
+        "_iso_fallback": "MX",
+    },
+    "sixt-mx": {
+        "wikidata_id": "Q705664",   # Sixt as tagged in OSM MX (7 nodes); EU canonical is Q704156
+        "display_name": "Sixt",
+        "canonical_name": "Sixt Renta de Autos",
+        "naics_code": "532111",
+        "top_category": "Passenger Car Rental",
+        "sub_category": "Car Rental",
+        "_na_bbox": (14.5, -118.4, 32.7, -86.7),
+        "_iso_fallback": "MX",
+    },
+    "payless-mx": {
+        "wikidata_id": "Q17084987",  # Payless Car Rental as tagged in OSM MX (6 nodes)
+        "display_name": "Payless Car Rental",
+        "canonical_name": "Payless Car Rental México",
+        "naics_code": "532111",
+        "top_category": "Passenger Car Rental",
+        "sub_category": "Car Rental",
+        "_na_bbox": (14.5, -118.4, 32.7, -86.7),
+        "_iso_fallback": "MX",
+    },
+    "dollar-mx": {
+        "wikidata_id": "Q1235661",   # Dollar Car Rental as tagged in OSM MX (2 nodes)
+        "display_name": "Dollar",
+        "canonical_name": "Dollar Car Rental México",
+        "naics_code": "532111",
+        "top_category": "Passenger Car Rental",
+        "sub_category": "Car Rental",
+        "_na_bbox": (14.5, -118.4, 32.7, -86.7),
+        "_iso_fallback": "MX",
+    },
     # NA brands not yet ingested
     "budget-us": {
         "wikidata_id": "Q1004913",
