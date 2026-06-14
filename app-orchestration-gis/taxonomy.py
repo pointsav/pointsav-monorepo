@@ -466,7 +466,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
     "mro_industrial": {
         "US": ["fastenal-us", "grainger-us"],
         "CA": ["princess-auto-ca"],                            # Phase 2 2026-06-01
-        "MX": [],
+        "MX": ["truper-mx"],                                   # Phase 3 2026-06-14
         "GB": ["wurth-de"],
         "FR": ["wurth-de"], "DE": ["wurth-de"], "ES": ["wurth-de"],
         "IT": ["wurth-de"], "GR": [], "PL": ["wurth-de"],
@@ -672,7 +672,8 @@ DISPLAY_NAMES: dict[str, str] = {
     "halfords-uk": "Halfords",
     # VWH — paint (Phase 1, 2026-06-01)
     "sherwin-williams-us": "Sherwin-Williams",
-    # VWH — mro_industrial (Phase 1, 2026-06-01)
+    # VWH — mro_industrial (Phase 1, 2026-06-01; Phase 3 MX 2026-06-14)
+    "truper-mx": "Truper",
     "wurth-de": "Würth",
     "fastenal-us": "Fastenal",
     "grainger-us": "Grainger",
