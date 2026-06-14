@@ -223,6 +223,60 @@ fn read_file_opt(path: &PathBuf) -> Option<String> {
     std::fs::read_to_string(path).ok()
 }
 
+// ── Option C: SQLite mailbox index ────────────────────────────────────────────
+//
+// Dual-write store: send_mailbox_message writes here after mailbox-send.sh
+// succeeds; query_mailbox backfills rows that have msg-ids.
+// The .md files remain canonical — this is a performance/query index only.
+
+const MAILBOX_DB_SCHEMA: &str = "
+CREATE TABLE IF NOT EXISTS messages (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    msg_id      TEXT,
+    archive     TEXT NOT NULL,
+    mailbox     TEXT NOT NULL,
+    from_field  TEXT,
+    to_field    TEXT,
+    re          TEXT,
+    priority    TEXT,
+    status      TEXT,
+    created     TEXT,
+    body        TEXT,
+    indexed_at  TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_msg_id ON messages(msg_id)
+    WHERE msg_id IS NOT NULL AND msg_id != '';
+CREATE INDEX IF NOT EXISTS idx_archive_status ON messages(archive, status);
+";
+
+fn mailbox_db_insert(
+    db_path: &std::path::Path,
+    archive: &str,
+    mailbox: &str,
+    msg_id: &str,
+    from: &str,
+    to: &str,
+    re: &str,
+    priority: &str,
+    status: &str,
+    created: &str,
+    body: &str,
+) -> rusqlite::Result<()> {
+    let conn = rusqlite::Connection::open(db_path)?;
+    conn.execute_batch(MAILBOX_DB_SCHEMA)?;
+    let now = chrono::Utc::now().to_rfc3339();
+    let msg_id_opt: Option<&str> = if msg_id.is_empty() { None } else { Some(msg_id) };
+    conn.execute(
+        "INSERT OR IGNORE INTO messages \
+         (msg_id, archive, mailbox, from_field, to_field, re, priority, status, created, body, indexed_at) \
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+        rusqlite::params![
+            msg_id_opt, archive, mailbox, from, to, re, priority, status, created, body, now
+        ],
+    )?;
+    Ok(())
+}
+
 // ── Server struct ─────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone)]
@@ -231,6 +285,7 @@ struct FoundryServer {
     doorman_url: String,
     module_id: String,
     foundry_root: PathBuf,
+    mailbox_db_path: PathBuf,
 }
 
 impl FoundryServer {
@@ -239,11 +294,13 @@ impl FoundryServer {
             .timeout(std::time::Duration::from_secs(120))
             .build()
             .expect("reqwest client init");
+        let mailbox_db_path = foundry_root.join("data").join("mailbox.db");
         Self {
             client,
             doorman_url,
             module_id,
             foundry_root,
+            mailbox_db_path,
         }
     }
 
@@ -716,20 +773,43 @@ impl FoundryServer {
                             })
                             .unwrap_or_else(|| "(unknown)".into());
 
-                        let dest_file = match p.to.as_str() {
-                            "command@claude-code" => {
-                                self.foundry_root.join(".agent").join("inbox.md")
-                            }
+                        let (dest_file, archive_name) = match p.to.as_str() {
+                            "command@claude-code" => (
+                                self.foundry_root.join(".agent").join("inbox.md"),
+                                "workspace".to_string(),
+                            ),
                             to if to.starts_with("totebox@") => {
                                 let archive = &to["totebox@".len()..];
-                                self.foundry_root
-                                    .join("clones")
-                                    .join(archive)
-                                    .join(".agent")
-                                    .join("inbox.md")
+                                (
+                                    self.foundry_root
+                                        .join("clones")
+                                        .join(archive)
+                                        .join(".agent")
+                                        .join("inbox.md"),
+                                    archive.to_string(),
+                                )
                             }
-                            _ => PathBuf::from("(unknown)"),
+                            _ => (PathBuf::from("(unknown)"), "unknown".to_string()),
                         };
+
+                        // Option C: dual-write to SQLite mailbox index
+                        {
+                            let db_path = self.mailbox_db_path.clone();
+                            let msg_id_c = msg_id.clone();
+                            let to_c = p.to.clone();
+                            let re_c = p.re.clone();
+                            let body_c = p.body.clone();
+                            let priority_c = priority.to_string();
+                            let created_c = chrono::Utc::now().to_rfc3339();
+                            let _ = tokio::task::spawn_blocking(move || {
+                                mailbox_db_insert(
+                                    &db_path, &archive_name, "inbox",
+                                    &msg_id_c, "", &to_c, &re_c,
+                                    &priority_c, "pending", &created_c, &body_c,
+                                )
+                            })
+                            .await;
+                        }
 
                         serde_json::to_string_pretty(&serde_json::json!({
                             "ok": true,
@@ -953,6 +1033,46 @@ impl FoundryServer {
 
         let total_matched = all_messages.len();
         all_messages.truncate(limit);
+
+        // Option C: backfill SQLite index from messages parsed out of .md files.
+        // Only rows with a non-empty msg-id are backfilled (idempotent via UNIQUE index).
+        if !all_messages.is_empty() {
+            let db_path = self.mailbox_db_path.clone();
+            let rows: Vec<[String; 9]> = all_messages
+                .iter()
+                .filter_map(|m| {
+                    let msg_id = m["msg_id"].as_str().unwrap_or("").to_string();
+                    if msg_id.is_empty() {
+                        return None;
+                    }
+                    Some([
+                        msg_id,
+                        m["archive"].as_str().unwrap_or("").to_string(),
+                        m.get("mailbox")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("inbox")
+                            .to_string(),
+                        m["from"].as_str().unwrap_or("").to_string(),
+                        m["to"].as_str().unwrap_or("").to_string(),
+                        m["re"].as_str().unwrap_or("").to_string(),
+                        m["priority"].as_str().unwrap_or("normal").to_string(),
+                        m["status"].as_str().unwrap_or("pending").to_string(),
+                        m["created"].as_str().unwrap_or("").to_string(),
+                    ])
+                })
+                .collect();
+            if !rows.is_empty() {
+                let _ = tokio::task::spawn_blocking(move || {
+                    for row in &rows {
+                        let _ = mailbox_db_insert(
+                            &db_path, &row[1], &row[2], &row[0], &row[3],
+                            &row[4], &row[5], &row[6], &row[7], &row[8], "",
+                        );
+                    }
+                })
+                .await;
+            }
+        }
 
         serde_json::to_string_pretty(&serde_json::json!({
             "total_matched": total_matched,
