@@ -22,6 +22,11 @@ enum ExtractResult {
     Failed,
 }
 
+/// Canonical classification vocabulary. Must match the runtime enum guard in
+/// `raw_entities_to_graph` — keep the two in sync.
+const ALLOWED_CLASSIFICATIONS: [&str; 5] =
+    ["Person", "Company", "Project", "Account", "Location"];
+
 /// System prompt shared between Tier A and Tier B extraction calls.
 const EXTRACTION_SYSTEM_PROMPT: &str = "Extract named entities from the text below. Classify each entity into exactly one category.\n\
 Categories:\n\
@@ -29,13 +34,20 @@ Categories:\n\
   Company   — a registered organisation or business named in the text.\n\
   Project   — a named software crate, infrastructure service, or engineering initiative named in the text.\n\
   Account   — a named financial account, service account reference, or contract identifier in the text.\n\
-  Location  — a named geographic place or address that appears in the text.\n\
+  Location  — a specific named geographic place or address (city, region, street address). NOT a generic spatial noun.\n\
 Omit:\n\
+  - Software licences and SPDX identifiers (Apache-2.0, MIT, GPL-3.0, BSL-1.1). These are not companies.\n\
+  - Programming languages, file formats, and protocol names (Rust, JSON, HTTP) unless they name a specific product.\n\
   - Shell environment variables ($VAR_NAME) and command-line flags (--flag).\n\
   - Statistical notation (α, β, γ, R², p-value) and mathematical symbols.\n\
   - Laws, regulations, and dates.\n\
+  - Generic spatial or role phrases that are not proper place names. A Location must be a specific named place.\n\
+    EXCLUDE: \"retail anchor location\", \"downtown core\", \"the site\", \"trade area\".\n\
+    INCLUDE: \"Murfreesboro, Tennessee\", \"Billings, Montana\", \"Chicago\".\n\
   - Abstract concepts and generic role descriptions (not named entities).\n\
   - Any entity whose name appears only in these instructions, not in the text.\n\
+A token that looks like a proper noun is not automatically an entity. If it is a licence,\n\
+a format, or a generic descriptor, omit it rather than forcing it into Company or Location.\n\
 If an entity does not clearly fit one category, omit it rather than guessing.\n\
 Return only a JSON array. Each element must have exactly two fields: \"classification\" and \"entity_name\".\n\
 If no entities are found, return an empty array [].";
@@ -498,6 +510,12 @@ fn raw_entities_to_graph(
             let entity_name = ent["entity_name"].as_str()?.to_string();
             let classification = ent["classification"].as_str()?.to_string();
             if entity_name.is_empty() || classification.is_empty() {
+                return None;
+            }
+            // Reject out-of-vocabulary classifications. OLMo may emit values such as
+            // "Licence" or "Technology" when the prompt omit list is insufficient.
+            // Dropping them here prevents bad data from landing in LadybugDB.
+            if !ALLOWED_CLASSIFICATIONS.contains(&classification.as_str()) {
                 return None;
             }
             Some(GraphEntity {
