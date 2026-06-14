@@ -81,6 +81,7 @@ fn inner_main() -> anyhow::Result<()> {
         &p.email_endpoint,
         p.plain_mode,
     )));
+    let sess = app_console_keys::SessionState::load(&app_console_keys::SessionState::default_path());
     chassis.register(Box::new(ContentCartridge::new_for(
         &p.username,
         &p.tenant,
@@ -88,6 +89,9 @@ fn inner_main() -> anyhow::Result<()> {
         &p.slm_endpoint,
         &p.drafts_outbound_path,
         &p.content_endpoint,
+        sess.content_query,
+        sess.content_selected,
+        sess.content_scroll,
     )));
     chassis.register(Box::new(InputCartridge::new_for(
         &p.username,
