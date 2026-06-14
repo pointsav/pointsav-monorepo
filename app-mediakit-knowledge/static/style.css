@@ -231,7 +231,7 @@ body {
 
 a:focus-visible, button:focus-visible, input:focus-visible,
 textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--interactive-focus-ring, var(--navy));
   outline-offset: 2px;
   border-radius: 3px;
 }
@@ -252,6 +252,7 @@ textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible {
 img { max-width: 100%; display: block; }
 a { color: var(--link); text-decoration: none; transition: color .15s ease; }
 a:hover { color: var(--link-hover); }
+.article__body a { text-decoration: underline; }
 h1, h2, h3, h4, h5, h6 { color: var(--fg-1); margin: 0; font-weight: 700; }
 hr { border: 0; border-top: 1px solid var(--rule); margin: 0; }
 code, kbd, samp {
