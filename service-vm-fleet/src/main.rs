@@ -100,10 +100,19 @@ async fn create_vm_handler(
         reg.evict_stale();
 
         let target = if let Some(pref) = &req.preferred_node {
-            if reg.get_node(pref).is_none() {
-                return Err((
+            let node = reg.get_node(pref).ok_or_else(|| {
+                (
                     StatusCode::UNPROCESSABLE_ENTITY,
                     format!("preferred_node '{pref}' is not registered"),
+                )
+            })?;
+            if node.ram_available_mb < req.ram_mb {
+                return Err((
+                    StatusCode::UNPROCESSABLE_ENTITY,
+                    format!(
+                        "preferred_node '{pref}' has {}MB available, {}MB requested",
+                        node.ram_available_mb, req.ram_mb
+                    ),
                 ));
             }
             pref.clone()
