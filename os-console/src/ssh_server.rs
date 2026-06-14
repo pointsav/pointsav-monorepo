@@ -190,8 +190,14 @@ impl Handler for AppSession {
 
         tokio::task::spawn_blocking(move || {
             let cfg = ConsoleConfig::load();
-            let content =
-                ContentCartridge::new_for(&username, &tenant, &cfg.profile.proof_endpoint);
+            let content = ContentCartridge::new_for(
+                &username,
+                &tenant,
+                &cfg.profile.proof_endpoint,
+                &cfg.profile.slm_endpoint,
+                &cfg.profile.drafts_outbound_path,
+                &cfg.profile.content_endpoint,
+            );
             let input = InputCartridge::new_for(&username, &tenant, &cfg.profile.ingest_endpoint);
             let mut chassis = AppConsoleKeys::new(username, tenant);
             chassis.set_mba_active();
