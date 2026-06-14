@@ -32,6 +32,11 @@
 //!     Hourly USD rate for cost metering. Default: 0.0 (dev/unknown).
 //!     Example: 2.21 for GCP H100 on-demand.
 //!
+//!   ORCHESTRATION_LICENSE_PUBKEY_HEX
+//!     Ed25519 public key for license token verification, as 64 hex characters.
+//!     Absent or invalid = dev key (all-zero); any real license token will fail.
+//!     Set to the key produced by `tool-wallet keygen` when a license is issued.
+//!
 //!   RUST_LOG
 //!     Tracing filter. Default: orchestration_slm=info,orchestration_slm_server=info
 
@@ -48,10 +53,28 @@ use tracing::{info, warn};
 
 mod http;
 
-// Placeholder embedded public key. Override with ORCHESTRATION_LICENSE_PUBKEY_HEX at deploy time.
-// The all-zero key is intentionally invalid — any real license token will fail unless the operator
-// sets the correct public key, preventing accidental grant of Tier B on a dev chassis.
-const EMBEDDED_LICENSE_PUBKEY: &[u8; 32] = &[0u8; 32];
+fn load_license_pubkey() -> [u8; 32] {
+    if let Ok(hex) = std::env::var("ORCHESTRATION_LICENSE_PUBKEY_HEX") {
+        let cleaned = hex.trim().to_lowercase();
+        if cleaned.len() == 64 {
+            let mut bytes = [0u8; 32];
+            let mut ok = true;
+            for (i, chunk) in cleaned.as_bytes().chunks(2).enumerate() {
+                if let Ok(s) = std::str::from_utf8(chunk) {
+                    if let Ok(b) = u8::from_str_radix(s, 16) {
+                        bytes[i] = b;
+                    } else { ok = false; break; }
+                } else { ok = false; break; }
+            }
+            if ok {
+                tracing::info!("license pubkey loaded from ORCHESTRATION_LICENSE_PUBKEY_HEX");
+                return bytes;
+            }
+        }
+        tracing::warn!("ORCHESTRATION_LICENSE_PUBKEY_HEX is set but invalid (must be 64 hex chars) — using dev key");
+    }
+    [0u8; 32]
+}
 
 const YOYO_LABELS: &[&str] = &["proxy", "trainer", "graph"];
 
@@ -67,7 +90,8 @@ async fn main() -> anyhow::Result<()> {
     let endpoints = YoyoEndpoints::from_env();
     let (trainer_cfg, graph_cfg) = endpoints.any_configured();
 
-    let license = resolve_from_env(EMBEDDED_LICENSE_PUBKEY);
+    let pubkey = load_license_pubkey();
+    let license = resolve_from_env(&pubkey);
     match &license {
         LicenseStatus::Valid(p) => info!(
             licensee = %p.issued_to,
