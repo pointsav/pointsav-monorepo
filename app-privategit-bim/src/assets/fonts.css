@@ -1,0 +1,16 @@
+/* fonts.css — IBM Plex font stack
+   In production: serve from /static/fonts/ (vendored in Phase 3)
+   Development fallback: system-ui */
+
+:root {
+  --bim-font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --bim-font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+}
+
+body {
+  font-family: var(--bim-font-sans);
+}
+
+code, pre, .bim-codemirror-host {
+  font-family: var(--bim-font-mono);
+}
