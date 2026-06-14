@@ -59,7 +59,9 @@ fn query_qmp_socket(path: &std::path::Path, vm_id: &str) -> Option<VmRecord> {
         return None;
     }
 
-    Some(VmRecord {
+    // Restore full VmRecord from the metadata sidecar written at spawn time.
+    // Falls back to a minimal record for VMs not launched by this service-vm-host.
+    let mut record = read_vm_meta(vm_id).unwrap_or_else(|| VmRecord {
         vm_id: vm_id.to_string(),
         vm_type: "unknown".to_string(),
         state: VmState::Running,
@@ -67,7 +69,17 @@ fn query_qmp_socket(path: &std::path::Path, vm_id: &str) -> Option<VmRecord> {
         vcpu_count: 0,
         started_at: None,
         tenant_id: None,
-    })
+    });
+    // vm_id and state come from the live process, not the sidecar.
+    record.vm_id = vm_id.to_string();
+    record.state = VmState::Running;
+    Some(record)
+}
+
+fn read_vm_meta(vm_id: &str) -> Option<VmRecord> {
+    let path = crate::vm_spawn::meta_path_for(vm_id);
+    let bytes = std::fs::read(&path).ok()?;
+    serde_json::from_slice(&bytes).ok()
 }
 
 #[cfg(test)]
@@ -88,6 +100,42 @@ mod tests {
         std::env::set_var("VM_DISK_DIR", dir);
         let vms = poll_running_vms();
         assert!(vms.is_empty());
+        let _ = std::fs::remove_dir(dir);
+    }
+
+    #[test]
+    fn read_vm_meta_returns_none_for_absent_file() {
+        std::env::set_var("VM_DISK_DIR", "/tmp/nonexistent-vm-meta-test-dir");
+        assert!(read_vm_meta("no-such-vm").is_none());
+    }
+
+    #[test]
+    fn read_vm_meta_round_trips_vm_record() {
+        use system_vm_fleet_types::VmState;
+        let dir = "/tmp/vm-meta-round-trip-test";
+        std::fs::create_dir_all(dir).unwrap();
+        std::env::set_var("VM_DISK_DIR", dir);
+
+        let vm_id = "test-vm-99";
+        let record = VmRecord {
+            vm_id: vm_id.to_string(),
+            vm_type: "VmTest".to_string(),
+            state: VmState::Running,
+            ram_alloc_mb: 512,
+            vcpu_count: 2,
+            started_at: None,
+            tenant_id: Some("tenant-abc".to_string()),
+        };
+        let json = serde_json::to_string(&record).unwrap();
+        std::fs::write(crate::vm_spawn::meta_path_for(vm_id), &json).unwrap();
+
+        let got = read_vm_meta(vm_id).expect("meta file should be readable");
+        assert_eq!(got.vm_type, "VmTest");
+        assert_eq!(got.ram_alloc_mb, 512);
+        assert_eq!(got.vcpu_count, 2);
+        assert_eq!(got.tenant_id.as_deref(), Some("tenant-abc"));
+
+        let _ = std::fs::remove_file(crate::vm_spawn::meta_path_for(vm_id));
         let _ = std::fs::remove_dir(dir);
     }
 }
