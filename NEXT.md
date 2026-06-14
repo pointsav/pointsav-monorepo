@@ -87,3 +87,91 @@ Last updated: 2026-06-19 (Session 25 shutdown)
       [2026-06-16 command@claude-code]
 - [x] **NEXT.md contamination repaired** — project-gis content replaced with correct
       project-intelligence state [2026-06-19 command@claude-code]
+- [x] **overnight-aec-builds.sh path fix** — ingest-osm-parking.py was called from wrong dir;
+      now uses `../pointsav-monorepo/app-orchestration-gis/ingest-osm-parking.py` [2026-06-17 totebox@claude-code]
+- [x] **build-aec-seismic.sh EU join fix** — Step 8 `or` condition split into two separate `if`
+      guards; EU vector join was skipping all clusters [2026-06-17 totebox@claude-code]
+- [x] **build-aec-flood.sh AQUEDUCT threshold fix** — lowered from 100MB to 85MB; S3 file is
+      92MB, causing every clean download to fail validation [2026-06-17 totebox@claude-code]
+- [x] **PKS Phase 5b** — 7,045 clusters (T1=692/T2=2,665/T3=3,188); MX=177; false-US removed
+      [2026-06-16 totebox]
+- [x] **park-and-ride anchor ingest** — 23,117 records [2026-06-16 totebox]
+- [x] **EU/US car rental + hotel chain ingests** [2026-06-16 totebox]
+- [x] **PKS archetype rebalanced** — Fable analysis + mode-group collapse [2026-06-15 totebox]
+- [x] **VWH retail_contamination badge** — showArchetypeDetail() badge for 3,048/6,368 clusters
+      [2026-06-13 totebox]
+- [x] **AEC wetland VRT fix** — 408 GWL_FCS30 5°-tiles assembled; gdal_translate removed (9c041f65)
+      [2026-06-16 totebox]
+- [x] **AEC wildfire numpy fix** — pure Python GDAL API (2ea45b07) [2026-06-16 totebox]
+- [x] **ashrae_zone producer script** — build-ashrae-zone.py; 6,493/6,493 populated (dce0d157)
+      [2026-06-16 totebox]
+- [x] **PKS opportunity_class field** — SATURATED/EXPAND/DEVELOP per BRIEF §10.12 (2ea45b07)
+      [2026-06-16 totebox]
+- [x] **EFEHR seismic API (sample-eshm20-api.py)** — maps.efehr.org NXDOMAIN; main build script
+      uses gitlab.seismo.ethz.ch tarball (unaffected); sample script is dev-only [2026-06-16 totebox]
+- [x] **NEXT.md contamination (M-17)** — project-knowledge + project-intelligence content removed;
+      GIS-only content restored [2026-06-17 totebox@claude-code]
+# NEXT.md — project-console
+
+> **Scope: this archive only (pointsav-monorepo Totebox).**
+> Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
+> Out-of-scope items route to outbox, not this file.
+
+Last updated: 2026-06-14 [Jennifer Woodfine / claude-code]
+
+---
+
+## Phase 9 — Operations — COMPLETE 2026-06-14
+
+| Item | Commit | What shipped |
+|---|---|---|
+| 1 — Graceful SIGTERM | `3e20be12` | `AtomicBool` + ctrlc handler; `request_shutdown()`; terminal restored on `systemctl stop` |
+| 2 — fail2ban port 2222 | `5efb513d` | `infrastructure/fail2ban/jail.local` + filter; 5-retry, 1h ban |
+| 3 — Prometheus metrics | `3e20be12` | `os_console_up` / `os_console_uptime_seconds` / `os_console_info` on loopback :9299; `metrics_port` config field |
+| 4 — Multi-tab ContentCartridge | `a27860b3` | `TabSnapshot` + `Vec<tabs>`; Ctrl-T open, Ctrl-W close, Ctrl-Tab cycle; max 4 tabs; tab bar on >1 tabs |
+
+---
+
+## Stage 6 pending (Command scope — route via outbox)
+
+All Phase 8+9 commits need `bin/promote.sh` from Command Session:
+
+| SHA | Subject |
+|---|---|
+| `6f21f580` | feat(release): Phase B — CI matrix, rustls-tls, TerminalCaps |
+| `d9261705` | ops(session): Phase B complete |
+| `d58960b4` | ops(brief): mark Phase B complete |
+| `5c36ce66` | ops(monorepo): remove .agent/ from git index |
+| `5efb513d` | ops(fail2ban): port 2222 brute-force protection |
+| `3e20be12` | feat(sigterm+metrics): SIGTERM + Prometheus |
+| `a27860b3` | feat(tabs): multi-tab ContentCartridge |
+
+---
+
+## Operator-gated items
+
+- [ ] GCE firewall: open port 2222 inbound
+- [ ] Deploy `local-console.service` systemd unit + enable
+- [ ] `pairing-server` systemd unit on GCE VM
+- [ ] Peter SSH key: `proofctl user add peter --tenant woodfine --role editor`
+- [ ] Tag `v0.1.0` on pointsav-monorepo (triggers GitHub Actions release build)
+- [ ] Branch rename `cluster/project-proofreader → cluster/project-console` on GitHub
+
+---
+
+## Phase 10 — next coding sprint (in-scope when ready)
+
+| Item | What |
+|---|---|
+| F2 People cartridge | `app-console-people` lib + `PeopleCartridge`; read-only from `service-people :9091` |
+| Chassis reconnect watchdog | retry MBA connection on drop; backoff; indicator in status bar |
+| `/audit` log viewer | tail `service-input` ledger; search; export |
+| Tab labels from state | improve `tab_label()` to pull actual query/title text live |
+
+---
+
+## Standing deferred
+
+- F7 BIM cartridge — gated on `app-console-bim` activation
+- F10 mesh cartridge — gated on `app-console-mesh` activation
+- Phase 12 (AI marginalia) — gated on SYS-ADR-07/10/19 review
