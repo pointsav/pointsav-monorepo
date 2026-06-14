@@ -30,6 +30,7 @@ async fn make_state(content_dir: &tempfile::TempDir, state_dir: &tempfile::TempD
         brand_instance: "documentation".to_string(),
         blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
         peers: vec![],
+        canonical_url: None,
     }
 }
 

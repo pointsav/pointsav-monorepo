@@ -180,8 +180,9 @@ async fn sitemap_xml(State(state): State<Arc<AppState>>) -> Result<Response, Wik
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
          <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n",
     );
+    let loc_base = state.canonical_url.as_deref().unwrap_or_default();
     for slug in &slugs {
-        xml.push_str(&format!("  <url><loc>/wiki/{slug}</loc></url>\n"));
+        xml.push_str(&format!("  <url><loc>{loc_base}/wiki/{slug}</loc></url>\n"));
     }
     xml.push_str("</urlset>\n");
 
