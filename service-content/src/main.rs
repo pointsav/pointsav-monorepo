@@ -547,6 +547,21 @@ fn write_enrichment_dpo_pair(
     if tier_a_raw.is_empty() {
         return; // no rejected signal — DPO pair would teach verbosity, not accuracy
     }
+    // Source-grounding: reject the pair if any Tier B entity name is absent
+    // (case-insensitive) from the source corpus text. Prevents Tier B hallucinations
+    // (verified: "Woodfine Management Corp.", "service-slm", "Vancouver" fabricated
+    // on git commit text in 8/8 sampled pairs) from entering DPO corpus as the
+    // preferred (chosen) side — which would train the model toward fabrication.
+    let corpus_lower = corpus_text.to_lowercase();
+    let all_grounded = tier_b_raw.iter().all(|e| {
+        e.get("entity_name")
+            .and_then(|v| v.as_str())
+            .map(|name| corpus_lower.contains(&name.to_lowercase()))
+            .unwrap_or(false)
+    });
+    if !all_grounded {
+        return; // hallucinated entity in chosen side — discard pair, write nothing
+    }
     // Normalize Tier A to {classification, entity_name} only — strips role_vector,
     // location_vector, contact_vector that are absent in Tier B's raw response.
     let tier_a_normalized: Vec<serde_json::Value> = tier_a_raw
@@ -667,8 +682,24 @@ fn process_corpus(
         }
     };
 
-    let worm_id = payload["worm_id"].as_str().unwrap_or("UNKNOWN");
-    let corpus_text = payload["corpus"].as_str().unwrap_or("");
+    // Envelope contract: accept both the native "worm_id"/"corpus" keys (ingest path)
+    // and the claude-session-bridge keys "session_id"/"turn_id"/"text" (turn-capture path).
+    // Without this, the entire session-bridge corpus class was silently dropped because
+    // corpus_text was always empty → ExtractResult::Failed at the empty-text guard below.
+    let worm_id_owned: String = payload["worm_id"]
+        .as_str()
+        .map(|s| s.to_string())
+        .or_else(|| {
+            let sid = payload["session_id"].as_str()?;
+            let tid = payload["turn_id"].as_str()?;
+            Some(format!("DOC_session-{}_turn-{}", sid, tid))
+        })
+        .unwrap_or_else(|| "UNKNOWN".to_string());
+    let worm_id = worm_id_owned.as_str();
+    let corpus_text = payload["corpus"]
+        .as_str()
+        .or_else(|| payload["text"].as_str())
+        .unwrap_or("");
     // Per-file module_id override: CORPUS JSON may carry a "module_id" field to
     // route workspace artifacts into a separate graph namespace (e.g. "foundry-workspace")
     // without requiring a separate service-content instance.
@@ -920,5 +951,78 @@ fn process_corpus(
                 result
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn tmp_dir(suffix: &str) -> std::path::PathBuf {
+        let ms = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis();
+        let dir = std::env::temp_dir().join(format!("sc-test-{}-{}", suffix, ms));
+        fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn source_grounding_drops_hallucinated_entity() {
+        // Tier B claims "Vancouver" but corpus text contains no such word.
+        // The pair must be silently dropped (no file written).
+        let tier_b = vec![serde_json::json!({
+            "classification": "Location",
+            "entity_name": "Vancouver"
+        })];
+        let tier_a = vec![serde_json::json!({
+            "classification": "Person",
+            "entity_name": "Peter Woodfine"
+        })];
+        let dir = tmp_dir("hallucinated");
+        write_enrichment_dpo_pair(
+            "DOC_test-abc_123",
+            "Peter Woodfine committed a fix to the logging module.",
+            &tier_a,
+            &tier_b,
+            dir.to_str().unwrap(),
+        );
+        assert_eq!(
+            fs::read_dir(&dir).unwrap().count(),
+            0,
+            "pair with hallucinated entity must be dropped"
+        );
+        fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn source_grounding_allows_grounded_entity() {
+        // Tier B returns "Peter Woodfine" which IS present in the corpus text.
+        // The pair must be written.
+        let tier_b = vec![serde_json::json!({
+            "classification": "Person",
+            "entity_name": "Peter Woodfine"
+        })];
+        let tier_a = vec![serde_json::json!({
+            "classification": "Person",
+            "entity_name": "Peter"
+        })];
+        let dir = tmp_dir("grounded");
+        write_enrichment_dpo_pair(
+            "DOC_test-abc_456",
+            "Peter Woodfine committed a fix to the logging module.",
+            &tier_a,
+            &tier_b,
+            dir.to_str().unwrap(),
+        );
+        assert_eq!(
+            fs::read_dir(&dir).unwrap().count(),
+            1,
+            "pair with grounded entity must be written"
+        );
+        fs::remove_dir_all(&dir).ok();
     }
 }
