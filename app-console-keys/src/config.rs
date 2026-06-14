@@ -39,6 +39,8 @@ pub struct ProfileConfig {
     pub content_endpoint: String,
     #[serde(default = "default_people_endpoint")]
     pub people_endpoint: String,
+    #[serde(default = "default_metrics_port")]
+    pub metrics_port: u16,
     #[serde(default)]
     pub plain_mode: bool,
 }
@@ -90,6 +92,9 @@ fn default_content_endpoint() -> String {
 fn default_people_endpoint() -> String {
     "http://127.0.0.1:9091".into()
 }
+fn default_metrics_port() -> u16 {
+    9299
+}
 
 impl Default for ProfileConfig {
     fn default() -> Self {
@@ -109,6 +114,7 @@ impl Default for ProfileConfig {
             orchestration_host: default_orchestration_host(),
             content_endpoint: default_content_endpoint(),
             people_endpoint: default_people_endpoint(),
+            metrics_port: default_metrics_port(),
             plain_mode: false,
         }
     }
