@@ -48,6 +48,31 @@ struct DraftTab {
     protocol_idx: usize,
 }
 
+/// Serialised snapshot of a non-active tab.
+struct TabSnapshot {
+    label: String,
+    state: ContentState,
+    textarea: TextArea<'static>,
+    pending_hyperlinks: Vec<HyperlinkTarget>,
+    restored_hint: bool,
+}
+
+impl TabSnapshot {
+    fn fresh_input() -> Self {
+        let mut ta = TextArea::default();
+        ta.set_placeholder_text(PLACEHOLDER);
+        Self {
+            label: "Content".into(),
+            state: ContentState::Input {
+                protocol_idx: DEFAULT_PROTOCOL_IDX,
+            },
+            textarea: ta,
+            pending_hyperlinks: Vec::new(),
+            restored_hint: false,
+        }
+    }
+}
+
 enum ContentState {
     Input {
         protocol_idx: usize,
@@ -128,6 +153,8 @@ pub struct ContentCartridge {
     // Draft persistence — save/restore across sessions.
     draft_save: DraftSave,
     restored_hint: bool,
+    tabs: Vec<TabSnapshot>,
+    active_tab_idx: usize,
 }
 
 impl ContentCartridge {
@@ -237,6 +264,8 @@ impl ContentCartridge {
             pending_hyperlinks: Vec::new(),
             draft_save,
             restored_hint,
+            tabs: vec![TabSnapshot::fresh_input()],
+            active_tab_idx: 0,
         }
     }
 
@@ -1292,6 +1321,146 @@ impl ContentCartridge {
         .style(Style::default().fg(Color::DarkGray));
         frame.render_widget(hint, chunks[2]);
     }
+
+    // ── Multi-tab ─────────────────────────────────────────────────────────────
+
+    fn tab_label(&self) -> String {
+        match &self.state {
+            ContentState::Input { .. } => "Content".into(),
+            ContentState::SearchResults { query, .. } => {
+                if query.is_empty() {
+                    "Search".into()
+                } else {
+                    format!("/{}", &query[..query.len().min(10)])
+                }
+            }
+            ContentState::DraftingNew { title, .. } => {
+                let t: String = title.chars().take(10).collect();
+                if t.is_empty() { "Draft".into() } else { t }
+            }
+            ContentState::Results { .. } => "Results".into(),
+            ContentState::PdfView { path, .. } => path
+                .split('/')
+                .next_back()
+                .unwrap_or("PDF")
+                .chars()
+                .take(10)
+                .collect(),
+            ContentState::MultiDraft { .. } => "Drafts".into(),
+            _ => "Content".into(),
+        }
+    }
+
+    fn serialize_current_to_slot(&mut self) {
+        let label = self.tab_label();
+        let idx = self.active_tab_idx;
+        let snap = TabSnapshot {
+            label,
+            state: std::mem::replace(
+                &mut self.state,
+                ContentState::Input {
+                    protocol_idx: DEFAULT_PROTOCOL_IDX,
+                },
+            ),
+            textarea: std::mem::replace(&mut self.textarea, {
+                let mut ta = TextArea::default();
+                ta.set_placeholder_text(PLACEHOLDER);
+                ta
+            }),
+            pending_hyperlinks: std::mem::take(&mut self.pending_hyperlinks),
+            restored_hint: std::mem::replace(&mut self.restored_hint, false),
+        };
+        if idx < self.tabs.len() {
+            self.tabs[idx] = snap;
+        }
+    }
+
+    fn load_from_slot(&mut self, idx: usize) {
+        let snap = std::mem::replace(&mut self.tabs[idx], TabSnapshot::fresh_input());
+        self.state = snap.state;
+        self.textarea = snap.textarea;
+        self.pending_hyperlinks = snap.pending_hyperlinks;
+        self.restored_hint = snap.restored_hint;
+        self.active_tab_idx = idx;
+    }
+
+    fn switch_to_tab(&mut self, new_idx: usize) {
+        if new_idx == self.active_tab_idx || new_idx >= self.tabs.len() {
+            return;
+        }
+        self.serialize_current_to_slot();
+        self.load_from_slot(new_idx);
+    }
+
+    fn new_tab(&mut self) {
+        if self.tabs.len() >= 4 {
+            return;
+        }
+        self.serialize_current_to_slot();
+        let new_idx = self.tabs.len();
+        self.tabs.push(TabSnapshot::fresh_input());
+        self.state = ContentState::Input {
+            protocol_idx: DEFAULT_PROTOCOL_IDX,
+        };
+        let mut ta = TextArea::default();
+        ta.set_placeholder_text(PLACEHOLDER);
+        self.textarea = ta;
+        self.pending_hyperlinks = Vec::new();
+        self.restored_hint = false;
+        self.active_tab_idx = new_idx;
+    }
+
+    fn close_tab(&mut self) {
+        if self.tabs.len() <= 1 {
+            return;
+        }
+        // Discard current live fields; remove this tab's slot
+        self.tabs.remove(self.active_tab_idx);
+        let new_idx = if self.active_tab_idx >= self.tabs.len() {
+            self.tabs.len() - 1
+        } else {
+            self.active_tab_idx
+        };
+        self.load_from_slot(new_idx);
+    }
+
+    fn cycle_tab(&mut self, forward: bool) {
+        let n = self.tabs.len();
+        if n <= 1 {
+            return;
+        }
+        let new_idx = if forward {
+            (self.active_tab_idx + 1) % n
+        } else {
+            (self.active_tab_idx + n - 1) % n
+        };
+        self.switch_to_tab(new_idx);
+    }
+
+    fn render_tab_bar(&self, frame: &mut Frame, area: Rect) {
+        let n = self.tabs.len();
+        let mut spans: Vec<Span> = Vec::new();
+        for i in 0..n {
+            let label = if i == self.active_tab_idx {
+                self.tab_label()
+            } else {
+                self.tabs[i].label.clone()
+            };
+            let style = if i == self.active_tab_idx {
+                Style::default()
+                    .bg(Color::DarkGray)
+                    .fg(Color::White)
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(Color::Gray)
+            };
+            spans.push(Span::styled(format!(" {} ", label), style));
+            if i + 1 < n {
+                spans.push(Span::styled("│", Style::default().fg(Color::DarkGray)));
+            }
+        }
+        frame.render_widget(Paragraph::new(Line::from(spans)), area);
+    }
 }
 
 impl Default for ContentCartridge {
@@ -1502,18 +1671,30 @@ impl Cartridge for ContentCartridge {
         };
 
         self.pending_hyperlinks.clear();
+        let render_area = if self.tabs.len() > 1 {
+            let splits = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Length(1), Constraint::Min(0)])
+                .split(area);
+            self.render_tab_bar(frame, splits[0]);
+            splits[1]
+        } else {
+            area
+        };
         match cmd {
-            Cmd::Input(pidx) => self.render_input(frame, area, pidx),
-            Cmd::Picker(sel) => Self::render_picker(frame, area, sel, self.selection_bg()),
-            Cmd::Submitting(sp) => Self::render_submitting(frame, area, sp),
-            Cmd::Results(resp, orig, sc) => Self::render_results(frame, area, &resp, &orig, sc),
+            Cmd::Input(pidx) => self.render_input(frame, render_area, pidx),
+            Cmd::Picker(sel) => Self::render_picker(frame, render_area, sel, self.selection_bg()),
+            Cmd::Submitting(sp) => Self::render_submitting(frame, render_area, sp),
+            Cmd::Results(resp, orig, sc) => {
+                Self::render_results(frame, render_area, &resp, &orig, sc)
+            }
             Cmd::Drafting(t, buf, done, err, sc) => {
-                Self::render_drafting(frame, area, &t, &buf, done, err.as_deref(), sc)
+                Self::render_drafting(frame, render_area, &t, &buf, done, err.as_deref(), sc)
             }
             Cmd::Search(q, results, sel, sc, loading) => {
                 self.pending_hyperlinks = Self::render_search_results(
                     frame,
-                    area,
+                    render_area,
                     &q,
                     &results,
                     sel,
@@ -1523,10 +1704,12 @@ impl Cartridge for ContentCartridge {
                     &self.content_endpoint,
                 );
             }
-            Cmd::Pdf(path, page, total) => self.render_pdf_view(frame, area, &path, page, total),
-            Cmd::Error(msg) => Self::render_error(frame, area, &msg),
+            Cmd::Pdf(path, page, total) => {
+                self.render_pdf_view(frame, render_area, &path, page, total)
+            }
+            Cmd::Error(msg) => Self::render_error(frame, render_area, &msg),
             Cmd::MultiDraft(labels, active, pidx) => {
-                self.render_multidraft(frame, area, &labels, active, pidx)
+                self.render_multidraft(frame, render_area, &labels, active, pidx)
             }
         }
     }
@@ -1562,6 +1745,29 @@ impl Cartridge for ContentCartridge {
             ContentState::Error { .. } => StateKind::Error,
             ContentState::MultiDraft { active, .. } => StateKind::MultiDraft(*active),
         };
+
+        // Tab management — intercept before state-specific handlers
+        if key.modifiers == KeyModifiers::CONTROL {
+            match key.code {
+                KeyCode::Char('t') => {
+                    self.new_tab();
+                    return CartridgeAction::Consumed;
+                }
+                KeyCode::Char('w') if self.tabs.len() > 1 => {
+                    self.close_tab();
+                    return CartridgeAction::Consumed;
+                }
+                KeyCode::Tab => {
+                    self.cycle_tab(true);
+                    return CartridgeAction::Consumed;
+                }
+                KeyCode::BackTab => {
+                    self.cycle_tab(false);
+                    return CartridgeAction::Consumed;
+                }
+                _ => {}
+            }
+        }
 
         match kind {
             StateKind::Input(pidx) => self.on_input_key(event, pidx),
