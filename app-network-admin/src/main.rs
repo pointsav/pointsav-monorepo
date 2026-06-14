@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use std::net::UdpSocket;
 use std::sync::Arc;
+use tokio::net::UdpSocket as TokioUdpSocket;
 use tokio::sync::Mutex;
 use warp::Filter;
 
@@ -18,7 +19,7 @@ struct AuthorizedPayload {
 }
 
 // 16-byte binary mesh frame (Genesis Protocol wire format).
-// [0..2]  op_code: u16 BE  — PING=0x0001, ISOLATE=0x0002, unknown=0x0000
+// [0..2]  op_code: u16 BE  — PING=0x0001, ISOLATE=0x0002, PONG=0x0003, unknown=0x0000
 // [2..4]  target_node: u16 BE — 0x0001=NODE-CLOUD-RELAY, 0x0002=NODE-LAPTOP-A,
 //                               0x0003=NODE-IMAC-12, 0xFFFF=broadcast
 // [4..8]  timestamp: u32 BE  — Unix seconds
@@ -27,6 +28,7 @@ fn build_mesh_frame(intent: &str, target: &str) -> [u8; 16] {
     let op: u16 = match intent {
         "ping" => 0x0001,
         "isolate" => 0x0002,
+        "pong" => 0x0003,
         _ => 0x0000,
     };
     let node: u16 = match target {
@@ -45,6 +47,37 @@ fn build_mesh_frame(intent: &str, target: &str) -> [u8; 16] {
     frame[4..8].copy_from_slice(&ts.to_be_bytes());
     frame
 }
+
+fn build_pong_frame(target_node: u16) -> [u8; 16] {
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as u32;
+    let mut frame = [0u8; 16];
+    frame[0..2].copy_from_slice(&0x0003u16.to_be_bytes()); // PONG
+    frame[2..4].copy_from_slice(&target_node.to_be_bytes());
+    frame[4..8].copy_from_slice(&ts.to_be_bytes());
+    frame
+}
+
+/// Parse PPN_PEERS env var (comma-separated host:port or bare IPs).
+/// Default: "10.8.0.1:9206,10.8.0.9:9206"
+fn resolve_peers() -> Vec<String> {
+    let raw = env::var("PPN_PEERS")
+        .unwrap_or_else(|_| "10.8.0.1:9206,10.8.0.9:9206".to_string());
+    raw.split(',')
+        .map(|s| {
+            let s = s.trim().to_string();
+            // If no port included, append canonical mesh port
+            if s.contains(':') {
+                s
+            } else {
+                format!("{}:{}", s, MESH_LISTEN_PORT)
+            }
+        })
+        .collect()
+}
+
 #[derive(Serialize)]
 struct TerminalResponse {
     status: String,
@@ -52,15 +85,81 @@ struct TerminalResponse {
     data: Option<serde_json::Value>,
 }
 
-const MESH_PORT: u16 = 8090;
+const MESH_LISTEN_PORT: u16 = 9206;
 const HTTP_PORT: u16 = 8085;
-const PEERS: &[&str] = &["10.8.0.1", "10.8.0.2", "10.8.0.3"];
+
+/// Spawn the UDP listening task on :9206 (or PPN_MESH_LISTEN_PORT override).
+/// Receives 16-byte mesh frames from WireGuard peers.
+async fn spawn_mesh_listener() {
+    let listen_port: u16 = env::var("PPN_MESH_LISTEN_PORT")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(MESH_LISTEN_PORT);
+
+    let bind_addr = format!("0.0.0.0:{}", listen_port);
+    let sock = match TokioUdpSocket::bind(&bind_addr).await {
+        Ok(s) => {
+            tracing::info!(port = listen_port, "mesh listener bound");
+            s
+        }
+        Err(e) => {
+            tracing::error!(port = listen_port, err = %e, "failed to bind mesh listener");
+            return;
+        }
+    };
+
+    let mut buf = [0u8; 256];
+    loop {
+        match sock.recv_from(&mut buf).await {
+            Ok((n, src_addr)) => {
+                if n < 16 {
+                    tracing::warn!(from = %src_addr, bytes = n, "short mesh frame ignored");
+                    continue;
+                }
+                let frame = &buf[..16];
+                let op_code = u16::from_be_bytes([frame[0], frame[1]]);
+                let target_node = u16::from_be_bytes([frame[2], frame[3]]);
+                let timestamp = u32::from_be_bytes([frame[4], frame[5], frame[6], frame[7]]);
+
+                tracing::info!(
+                    op_code = format!("{:#06x}", op_code),
+                    target_node = format!("{:#06x}", target_node),
+                    timestamp,
+                    from = %src_addr,
+                    "mesh frame received"
+                );
+
+                // PING (0x0001) addressed to this node or broadcast (0xFFFF) — reply PONG
+                if op_code == 0x0001 && (target_node == 0xFFFF || target_node <= 0x0003) {
+                    let pong = build_pong_frame(target_node);
+                    match sock.send_to(&pong, src_addr).await {
+                        Ok(_) => tracing::info!(to = %src_addr, "PONG sent"),
+                        Err(e) => tracing::warn!(to = %src_addr, err = %e, "PONG send failed"),
+                    }
+                }
+            }
+            Err(e) => {
+                tracing::error!(err = %e, "mesh listener recv error");
+            }
+        }
+    }
+}
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::from_env("RUST_LOG")
+                .add_directive("app_network_admin=info".parse().unwrap()),
+        )
+        .init();
+
     let node_id = env::var("NODE_ID").unwrap_or_else(|_| "F8-TERMINAL-GATEWAY".to_string());
     let udp_socket = UdpSocket::bind("0.0.0.0:0").expect("[FATAL] Hardware rejection.");
     let socket_arc = Arc::new(Mutex::new(udp_socket));
+
+    // Spawn UDP mesh listener on :9206
+    tokio::spawn(spawn_mesh_listener());
 
     let translate_route = warp::post()
         .and(warp::path("translate"))
@@ -83,6 +182,7 @@ async fn main() {
         .allow_headers(vec!["Content-Type", "x-file-name"])
         .allow_methods(vec!["POST"]);
 
+    tracing::info!(port = HTTP_PORT, "HTTP server starting");
     warp::serve(
         translate_route
             .or(authorize_route)
@@ -118,10 +218,7 @@ async fn handle_upload(filename: String, body: Bytes) -> Result<impl warp::Reply
         .await
     {
         Ok(res) if res.status().is_success() => {
-            println!(
-                "[INGESTION] F12 Payload routed to service-fs: {}",
-                target_filename
-            );
+            tracing::info!(file = %target_filename, "F12 payload routed to service-fs");
             Ok(warp::reply::json(&TerminalResponse {
                 status: "SUCCESS".to_string(),
                 message: "Asset locked into cold storage.".to_string(),
@@ -129,7 +226,7 @@ async fn handle_upload(filename: String, body: Bytes) -> Result<impl warp::Reply
             }))
         }
         _ => {
-            eprintln!("[FATAL] Failed to route asset to service-fs.");
+            tracing::error!(file = %target_filename, "failed to route asset to service-fs");
             Ok(warp::reply::json(&TerminalResponse {
                 status: "ERROR".to_string(),
                 message: "File System Gatekeeper rejected payload.".to_string(),
@@ -186,17 +283,22 @@ async fn handle_authorization(
     let sock = socket.lock().await;
     let mut success_count = 0;
 
-    let target_ips: Vec<&str> = match auth.target.as_str() {
-        "NODE-CLOUD-RELAY" => vec!["10.8.0.1"],
-        "NODE-LAPTOP-A" => vec!["10.8.0.2"],
-        "NODE-IMAC-12" => vec!["10.8.0.3"],
-        _ => PEERS.to_vec(),
+    // Resolve peers from env (PPN_PEERS) at request time so live changes are respected.
+    let all_peers = resolve_peers();
+
+    let target_addrs: Vec<String> = match auth.target.as_str() {
+        "NODE-CLOUD-RELAY" => vec![format!("10.8.0.1:{}", MESH_LISTEN_PORT)],
+        "NODE-LAPTOP-A" => vec![format!("10.8.0.2:{}", MESH_LISTEN_PORT)],
+        "NODE-IMAC-12" => vec![format!("10.8.0.3:{}", MESH_LISTEN_PORT)],
+        _ => all_peers,
     };
 
-    for ip in target_ips {
-        let target_addr = format!("{}:{}", ip, MESH_PORT);
-        if sock.send_to(&frame, &target_addr).is_ok() {
+    for addr in &target_addrs {
+        if sock.send_to(&frame, addr).is_ok() {
+            tracing::info!(to = %addr, intent = %auth.intent, "mesh frame sent");
             success_count += 1;
+        } else {
+            tracing::warn!(to = %addr, "mesh frame send failed");
         }
     }
 
