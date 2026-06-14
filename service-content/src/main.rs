@@ -608,6 +608,35 @@ fn write_enrichment_dpo_pair(
     }
 }
 
+/// Write the git commit SHA to the sweep completion ledger after enrichment succeeds.
+/// Only fires for sweep-sourced documents (worm_id prefix: "DOC_sweep-").
+/// Ledger path is read from SERVICE_CONTENT_SWEEP_LEDGER env var; no-op if unset.
+fn mark_sweep_sha_complete(worm_id: &str) {
+    let Some(rest) = worm_id.strip_prefix("DOC_sweep-") else {
+        return;
+    };
+    // worm_id format: DOC_sweep-<sha>_<ts_ms> — strip the trailing _<ts>
+    let sha = match rest.rfind('_') {
+        Some(pos) => &rest[..pos],
+        None => rest,
+    };
+    if sha.len() < 7 {
+        return; // sanity: git SHAs are at least 7 hex chars
+    }
+    let ledger_path = std::env::var("SERVICE_CONTENT_SWEEP_LEDGER").unwrap_or_default();
+    if ledger_path.is_empty() {
+        return;
+    }
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&ledger_path)
+    {
+        use std::io::Write;
+        let _ = writeln!(f, "{}", sha);
+    }
+}
+
 fn process_corpus(
     filepath: &Path,
     crm_dir: &str,
@@ -793,6 +822,7 @@ fn process_corpus(
                     &semantic_entities,
                     feedback_dir,
                 );
+                mark_sweep_sha_complete(worm_id);
             }
 
             // Build legacy CRM record
