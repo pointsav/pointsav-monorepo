@@ -1,8 +1,8 @@
 ---
 schema: foundry-summary-v1
 artifact_type: SUMMARY
-state: stub
-version: "0.1"
+state: draft
+version: "0.2"
 title: "Commuter: Transit-Adjacent Commercial Co-location at Regional Rail Stations and Airports"
 archetype_code: PKS
 companion_journal: JOURNAL-commuter-v0.1.stub.md
@@ -16,7 +16,7 @@ created: 2026-06-01
 
 # Commuter: Transit-Adjacent Commercial Co-location at Regional Rail Stations and Airports
 
-*A practitioner market brief. Data current as of 2026-06-01.*
+*A practitioner market brief. Data current as of 2026-06-11.*
 
 ---
 
@@ -153,18 +153,46 @@ A sub-metropolitan market with all three present is a commercially complete regi
 
 ## 7. Investment and Development Thesis
 
-*[To be written. Market drivers, risk factors, return indicators. BCSC forward-looking language throughout.]*
+**The structural case for Commuter**
 
-**Intended drivers (planned/anticipated):**
-- Growth in intercity rail ridership in EU (Green Deal; modal shift)
-- Regional airport expansion in North America and emerging EU markets
-- Car-rental demand growth at secondary transit hubs (substitution away from owned vehicles)
-- Integrated sub-metropolitan market development (combining Commuter + Retail Centre)
+The Commuter archetype identifies sub-metropolitan transit nodes where commercial activity — car rental, hospitality, ground transport services — has organised around the park-and-travel demand of regional commuters. This commercial pattern is durable because it is infrastructure-anchored: once intercity rail service or IATA-coded airport operations are established, the passenger flow that supports car-rental and hotel demand is structurally present and predictable. Unlike retail co-location, which depends on population density and consumer discretionary spending, the Commuter archetype is tied to transit ridership and travel demand — a less cyclical demand base.
 
-**Risk factors:**
-- OSM intercity station coverage: completeness varies by country; some small stations may be missing
-- Car-rental chain consolidation: industry M&A may reduce the number of distinct brand operators visible in OSM
-- Major hub proximity: if a regional hub is reclassified as a major hub (new T1 retail develops nearby), it exits the dataset
+**The integration rate as a market-screening tool**
+
+The 27% integration rate across the full 14,332-location dataset conceals substantial country-level variation that is commercially meaningful:
+
+| Country | Integration rate | Market interpretation |
+|---|---|---|
+| Germany | 39% | Dense intercity rail network; high commercial completeness in sub-metropolitan markets |
+| Great Britain | 38% | Established commuter rail belt (Midlands, North of England); strong Retail Centre adjacent to hub |
+| Canada | 32% | Major corridor markets (Toronto–Windsor, Montréal–Québec City) well-integrated |
+| United States | 29% | Amtrak corridor markets (Northeast Corridor, Pacific Surfliners); other corridors less integrated |
+| France | 24% | TGV network concentrated on major hubs; regional secondary stations less integrated |
+| Italy | 17% | Intercity rail mainly on North–South spine; southern stations under-integrated |
+| Spain | 14% | AVE high-speed network concentrated; regional secondary stations low integration |
+| Mexico | 13% | Limited intercity rail; airport-primary market |
+
+High-integration markets (DE, GB, CA) represent commercially mature sub-metropolitan networks: transit infrastructure and retail co-location have already converged. These markets offer lower development risk but also lower upside from integration growth. Low-integration markets (MX, ES, IT) represent transit-infrastructure that has not yet drawn corresponding commercial co-location — these are potential development opportunity markets, contingent on improving transit ridership.
+
+**Demand drivers**
+
+EU climate policy (European Green Deal, modal shift targets) is expected to sustain intercity rail ridership growth through the 2030s, increasing demand at sub-metropolitan transit hubs. Regional airports serving the park-and-fly market in North America and Europe continue to attract commercial development driven by leisure and business travel substitution from major hub airports. Car-rental demand at secondary transit hubs is growing as vehicle ownership costs rise in urban cores and EV charging logistics create new transit-adjacent commercial requirements.
+
+The 37% integration rate at airports (vs. 26% at rail stations) reflects that regional airports typically have purpose-built commercial zones in adjacent estate parcels, creating a more direct path to commercial development than rail stations, which are often embedded in existing urban or peri-urban fabric.
+
+**T1 Commuter hubs as commercial anchors**
+
+The T1 tier (691 hubs, 9.9% of total) identifies regional transit nodes where multi-modal infrastructure — intercity rail, commuter rail, airport, or bus terminal in combination — exists alongside a full commercial ecosystem. These are the most commercially established transit hubs in the sub-metropolitan network of each country. T1 hubs with high integration rates represent mature anchors for adjacent commercial and mixed-use development. T1 hubs with low integration rates in high-ridership corridors may represent commercial development gaps.
+
+**Risk considerations**
+
+*Major hub reclassification:* if a Commuter hub develops a T1 Retail Centre within 5km (triggering the major hub exclusion), it exits the Commuter dataset in future updates. This represents commercial success rather than a risk to existing operations, but changes the analytical classification.
+
+*Car-rental chain consolidation:* industry consolidation (Enterprise, Hertz, and Avis-Budget group covering most of the NA market; Europcar/Sixt in EU) reduces the number of distinct brand-identified branches visible in OSM. Consolidation may undercount car-rental presence at smaller stations where a single brand operates exclusively.
+
+*Transit service changes:* if intercity rail service at a regional station is reduced or discontinued, the commercial rationale for Commuter-adjacent development weakens. This risk is highest in low-ridership corridors where government subsidy supports marginal services.
+
+*OSM intercity station coverage:* station completeness in OSM varies by country, particularly in lower-income markets. The 18,107 intercity stations in the production dataset reflect OSM coverage as of the build date; some markets may be under-represented.
 
 ---
 
@@ -183,4 +211,4 @@ Transit anchors (airports + rail stations) identified from OSM with filtering fo
 
 ---
 
-*Version 0.1 · 2026-06-01 · Woodfine Management Corp., New York, NY*
+*Version 0.2 · 2026-06-14 · Woodfine Management Corp., New York, NY*
