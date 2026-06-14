@@ -6,7 +6,7 @@ title: "SLM Learning Loop — DPO Training Pipeline"
 status: active
 owner: project-intelligence
 created: 2026-05-29
-updated: 2026-06-13 (session 10b — Q&A decisions: sweep ledger cleared, NUM_EPOCHS 1→3, enrichment sort fix committed, SFT deferred)
+updated: 2026-06-13 (session 10c — Phase 4b ledger root-cause fix: mark_sweep_sha_complete() in service-content + Phase 4b shell)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 companion: BRIEF-slm-substrate-master.md
 grounds_in:
@@ -1417,8 +1417,8 @@ The learning loop pipeline engineering is mature. The training recipe has three 
 
 ### Carry-forward (open items)
 
-- [ ] **Stage 6**: promote `2b48bc75`, `06435048`, `3eed6cc4`, `a6ccdf04`, `2f8a6e9a` (project-intelligence) + workspace `d94043f`, `0a0e9f9` — Command Session scope; must land before Jun 14 00:00 UTC cycle
-- [ ] **Phase 4b ledger root-cause fix**: sweep ledger cleared (session 10b) — 1,281 commits re-eligible; **root cause** (SHA written on 202-ACK before Tier B runs) still unaddressed; add per-document Tier-B-completion tracking in service-content/bash so SHAs are only permanently ledgered after Tier B enrichment completes
+- [ ] **Stage 6**: promote `2b48bc75`, `06435048`, `3eed6cc4`, `a6ccdf04`, `2f8a6e9a`, `c2116094`, `159bbecd` (project-intelligence) + workspace `d94043f`, `0a0e9f9`, `917871f` — Command Session scope
+- [x] ~~**Phase 4b ledger root-cause fix**: SHA written on 202-ACK before Tier B runs~~ — DONE: `mark_sweep_sha_complete()` in service-content (`159bbecd`) + Phase 4b shell fix (`917871f` workspace); ledger now written only after enrichment succeeds; needs `SERVICE_CONTENT_SWEEP_LEDGER` env var in `local-content.service` (Command outbox sent)
 - [ ] **service-content binary rebuild + deploy**: after Stage 6; enrichment canonical sort fix (`2f8a6e9a`) not live until binary redeployed — Command scope (`deploy-binary.sh`)
 - [ ] **SFT-first path**: deferred by operator (session 10b Q&A: plumbing milestone first); revisit after first DPO receipt + eval-adapter.sh baseline shows signal
 - [ ] **Misrouted BRIEFs**: Command Session to relocate 6 foreign BRIEFs from this archive to owning archives (outbox sent)
