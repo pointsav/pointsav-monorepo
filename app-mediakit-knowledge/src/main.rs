@@ -145,6 +145,7 @@ async fn main() -> Result<()> {
                 eff_guide_dir_2,
                 eff_site_title,
                 eff_brand_theme,
+                eff_peers,
             ) = if let Some(ref toml_path) = knowledge_toml {
                 let cfg = app_mediakit_knowledge::config::load_config(toml_path)?;
                 let parsed_bind: SocketAddr = cfg.site.bind.parse()?;
@@ -176,6 +177,7 @@ async fn main() -> Result<()> {
                     title = %cfg.site.title,
                     brand = %cfg.site.brand,
                     mounts = cfg.mounts.len(),
+                    peers = cfg.peers.len(),
                     "loaded knowledge.toml"
                 );
                 (
@@ -187,6 +189,7 @@ async fn main() -> Result<()> {
                     guide2,
                     cfg.site.title.clone(),
                     brand,
+                    cfg.peers,
                 )
             } else {
                 // Legacy env-var path.
@@ -204,6 +207,7 @@ async fn main() -> Result<()> {
                     guide_dir_2,
                     site_title,
                     brand_theme,
+                    vec![],
                 )
             };
 
@@ -218,6 +222,7 @@ async fn main() -> Result<()> {
                 git_tenant,
                 enable_mcp,
                 eff_brand_theme,
+                eff_peers,
             )
             .await
         }
@@ -276,6 +281,7 @@ async fn serve(
     git_tenant: String,
     enable_mcp: bool,
     brand_theme: Option<String>,
+    peers: Vec<app_mediakit_knowledge::config::PeerConfig>,
 ) -> Result<()> {
     if !content_dir.is_dir() {
         bail!(
@@ -403,6 +409,7 @@ async fn serve(
         brand_theme,
         brand_instance,
         blueprints,
+        peers,
     };
     let app = router(state);
     let listener = tokio::net::TcpListener::bind(bind).await?;

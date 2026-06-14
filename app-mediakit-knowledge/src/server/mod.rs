@@ -194,6 +194,9 @@ pub struct AppState {
     /// any customer `blueprints/*.yaml` files loaded from the primary mount.
     /// Wires blueprints.rs into the render pipeline at dispatch time.
     pub blueprints: crate::blueprints::Registry,
+    /// Phase 7: peer wiki instances for federated `knowledge/search`.
+    /// Empty by default; populated from `[[peer]]` entries in knowledge.toml.
+    pub peers: Vec<crate::config::PeerConfig>,
 }
 
 impl AppState {

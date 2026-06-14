@@ -39,6 +39,26 @@ pub struct AppConfig {
     pub mounts: Vec<MountConfig>,
     #[serde(default)]
     pub citations: CitationsConfig,
+    /// Phase 7: peer instances for cross-instance federated search.
+    /// Each `[[peer]]` entry names one sibling wiki to fan out to.
+    #[serde(default, rename = "peer")]
+    pub peers: Vec<PeerConfig>,
+}
+
+/// One `[[peer]]` entry — a sibling wiki instance for federated search.
+///
+/// knowledge.toml example:
+/// ```toml
+/// [[peer]]
+/// url   = "http://127.0.0.1:9093"
+/// label = "Woodfine Projects"
+/// ```
+#[derive(Debug, Clone, Deserialize)]
+pub struct PeerConfig {
+    /// Base URL of the peer wiki instance (no trailing slash).
+    pub url: String,
+    /// Human-readable label shown in merged search results.
+    pub label: String,
 }
 
 /// `[site]` block.

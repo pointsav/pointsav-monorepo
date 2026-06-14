@@ -65,6 +65,8 @@ notify = "6"
 # <state_dir>/links.redb; blake3 provides the federation-seam baseline.
 redb = "4.1"
 blake3 = "1.8"
+# Phase 7 federation: HTTP client for cross-instance search fan-out.
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
