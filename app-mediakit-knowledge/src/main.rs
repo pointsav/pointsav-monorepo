@@ -146,6 +146,8 @@ async fn main() -> Result<()> {
                 eff_site_title,
                 eff_brand_theme,
                 eff_peers,
+                eff_instance,
+                eff_canonical_url,
             ) = if let Some(ref toml_path) = knowledge_toml {
                 let cfg = app_mediakit_knowledge::config::load_config(toml_path)?;
                 let parsed_bind: SocketAddr = cfg.site.bind.parse()?;
@@ -190,6 +192,8 @@ async fn main() -> Result<()> {
                     cfg.site.title.clone(),
                     brand,
                     cfg.peers,
+                    cfg.site.instance.clone(),
+                    cfg.site.canonical_url.clone(),
                 )
             } else {
                 // Legacy env-var path.
@@ -208,6 +212,8 @@ async fn main() -> Result<()> {
                     site_title,
                     brand_theme,
                     vec![],
+                    None,
+                    None,
                 )
             };
 
@@ -223,6 +229,8 @@ async fn main() -> Result<()> {
                 enable_mcp,
                 eff_brand_theme,
                 eff_peers,
+                eff_instance,
+                eff_canonical_url,
             )
             .await
         }
@@ -282,6 +290,8 @@ async fn serve(
     enable_mcp: bool,
     brand_theme: Option<String>,
     peers: Vec<app_mediakit_knowledge::config::PeerConfig>,
+    instance: Option<String>,
+    canonical_url: Option<String>,
 ) -> Result<()> {
     if !content_dir.is_dir() {
         bail!(
@@ -394,8 +404,9 @@ async fn serve(
     tracing::info!("link graph ready");
 
     tracing::info!(git_tenant = %git_tenant, "git remote enabled at /git-server/{}/info/refs", git_tenant);
-    let brand_instance =
-        std::env::var("WIKI_BRAND_INSTANCE").unwrap_or_else(|_| "documentation".to_string());
+    let brand_instance = instance.unwrap_or_else(|| {
+        std::env::var("WIKI_BRAND_INSTANCE").unwrap_or_else(|_| "documentation".to_string())
+    });
     let state = AppState {
         mounts,
         citations_yaml,
@@ -410,6 +421,7 @@ async fn serve(
         brand_instance,
         blueprints,
         peers,
+        canonical_url,
     };
     let app = router(state);
     let listener = tokio::net::TcpListener::bind(bind).await?;
