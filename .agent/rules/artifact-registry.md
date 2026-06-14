@@ -140,8 +140,8 @@ Routing per `~/Foundry/conventions/artifact-classification.yaml`:
 - **Destination:** internal (BRIEF stays in archive); editorial drafts dispatched separately
 - **Content:** Three-archetype Location Intelligence system (PRO/VWH/PKS). Definitions, co-location
   signals, full chain taxonomy with Wikidata IDs, airport/rail classification findings, service-parking
-  architecture. §10: PKS production system — 7,043 clusters (Phase 5); OXXO CONVENIENCE enrichment;
-  MX=183 (was 75); mode-group collapse; park-and-ride anchor; car rental + hotel + convenience enrichment.
+  architecture. §10: PKS production system — 7,045 clusters (Phase 5b); OXXO CONVENIENCE enrichment;
+  MX=177 (was 183 Phase 5; 6 false US clusters removed; lon-scoped coord override); mode-group collapse; park-and-ride anchor; car rental + hotel + convenience enrichment.
   §11: VWH calibration — hardware profile (10,338 anchors, 45 chains), sim (73.4% hardware validation PASS),
   group-collapse tier rules, production results (6,368 clusters; T1=852/T2=1,327/T3=4,189; `retail_contamination` flag at 47.9%).
 
@@ -157,13 +157,13 @@ Routing per `~/Foundry/conventions/artifact-classification.yaml`:
 
 ### A20 — TOPIC: Parking Structures (PKS)
 - **File:** `.agent/drafts-outbound/TOPIC-parking-structures.draft.md`
-- **Status:** STAGED — draft complete 2026-06-01; ready for project-editorial; production data
-  now live (6,953 clusters) — editorial pass may want to update counts in body
+- **Status:** STAGED — draft complete 2026-06-01; ready for project-editorial; draft references
+  6,953 clusters (Phase 4) — editorial pass must update to Phase 5b production counts (see below)
 - **Destination:** project-editorial → media-knowledge-documentation
 - **Content:** PKS archetype definition (3-9 story transit car parks), regional-to-metro relationship,
-  airport and rail station classification, car rental chains, parking operator directory. Production
-  calibration: 6,953 clusters (T1=691/T2=2,658/T3=3,604); park-and-ride anchor (23,117 records);
-  car rental + hotel enrichment; mode-group collapse tiers (see BRIEF §10).
+  airport and rail station classification, car rental chains, parking operator directory. **Phase 5b
+  production counts (update draft body):** 7,045 clusters (T1=692/T2=2,665/T3=3,688); MX=177;
+  park-and-ride anchor (23,117 records); car rental + hotel enrichment; mode-group collapse tiers (see BRIEF §10).
 
 ### A21 — GUIDE: Location Intelligence Data Collection
 - **File:** `.agent/drafts-outbound/GUIDE-location-intelligence-data-collection.draft.md`
@@ -182,7 +182,7 @@ Routing per `~/Foundry/conventions/artifact-classification.yaml`:
 - **Content:** Overview TOPIC covering all three co-location archetypes (PRO/VWH/PKS). Three-tier
   tier definitions, PRO Phase 23+Change B dataset (6,493 clusters), VWH production results
   (6,368 clusters; T1=852/T2=1,327/T3=4,189; retail_contamination flag), PKS production results
-  (6,953 clusters; T1=691/T2=2,658/T3=3,604; park-and-ride anchor; car rental+hotel enrichment).
+  (7,045 clusters; T1=692/T2=2,665/T3=3,688; MX=177; park-and-ride anchor; car rental+hotel enrichment; Phase 5b; false US clusters removed).
   Map integration (vwhActive/psActive toggle layer documentation). EN+ES pair.
 
 ### A23 — GUIDE: AEC Hazard Pipeline Repair
@@ -425,7 +425,7 @@ Produced as part of the PKS co-location calibration process. See BRIEF §10.12 f
 | PKS profiling script | `app-orchestration-gis/analyze-parkade-colocation.py` | DONE (2026-06-11; profiles all POI categories within 3km of 140,201 existing parking structures) |
 | PKS calibration sim | `app-orchestration-gis/sim-pks-colocation.py` | DONE (2026-06-11; 5 iterations; transit-first, commercial-first, EPS sensitivity; calibration converged to production) |
 | Parkade co-location profile | `work/parkade-colocation-profile.json` | DONE (2026-06-11; commuter_rail 64.7% / car_rental 44.7% / hotel 36.2% / airport 4.1% within 3km of built structures) |
-| archetype-pks.geojson (calibrated) | `gateway-orchestration-gis-1/www/data/archetype-pks.geojson` | DONE (2026-06-14 Phase 5; 7,043 features; T1=692/T2=2,663/T3=3,688; MX=183; OXXO CONVENIENCE added; deployed) |
+| archetype-pks.geojson (calibrated) | `gateway-orchestration-gis-1/www/data/archetype-pks.geojson` | DONE (2026-06-14 Phase 5b; 7,045 features; T1=692/T2=2,665/T3=3,688; MX=177; false US clusters removed; lon-scoped coord override; deployed) |
 
 **EU car rental chain ingests (2026-06-11):**
 
