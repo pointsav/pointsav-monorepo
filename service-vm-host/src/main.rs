@@ -157,8 +157,9 @@ async fn spawn_handler(
             }
             Ok(p) => tracing::info!(vm_id = %id, iso = %p.display(), "seed ISO ready"),
         }
-        if let Err(e) = vm_spawn::spawn_qemu(&spawn_record, kvm) {
-            tracing::warn!(vm_id = %id, error = %e, "QEMU spawn failed");
+        match vm_spawn::spawn_qemu(&spawn_record, kvm) {
+            Ok(_updated) => {}
+            Err(e) => tracing::warn!(vm_id = %id, error = %e, "QEMU spawn failed"),
         }
     }));
 
