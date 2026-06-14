@@ -56,8 +56,8 @@ impl StructuralHealth {
 /// Normalize a heterogeneous YAML ledger file to CanonicalExtraction.
 /// Handles ~130 schema variants in the jennifer-1 corpus.
 pub fn normalize_reference_yaml(path: &Path) -> Result<CanonicalExtraction, String> {
-    let content = std::fs::read_to_string(path)
-        .map_err(|e| format!("read {}: {e}", path.display()))?;
+    let content =
+        std::fs::read_to_string(path).map_err(|e| format!("read {}: {e}", path.display()))?;
 
     // Guard: skip prompt-leaked ledgers
     if content.contains("extraction_protocol") || content.contains("fidelity_mandate") {
@@ -106,7 +106,13 @@ pub fn normalize_reference_yaml(path: &Path) -> Result<CanonicalExtraction, Stri
     }
 
     // Schema variant 7: top-level entity arrays
-    for key in &["entities", "key_entities", "people", "companies", "organizations"] {
+    for key in &[
+        "entities",
+        "key_entities",
+        "people",
+        "companies",
+        "organizations",
+    ] {
         if let Some(arr) = val.get(key) {
             extract_key_entities(arr, &mut entities);
         }
@@ -123,7 +129,11 @@ pub fn normalize_reference_yaml(path: &Path) -> Result<CanonicalExtraction, Stri
     })
 }
 
-fn extract_name_list(val: Option<&serde_json::Value>, entity_type: &str, out: &mut Vec<CanonicalEntity>) {
+fn extract_name_list(
+    val: Option<&serde_json::Value>,
+    entity_type: &str,
+    out: &mut Vec<CanonicalEntity>,
+) {
     let arr = match val.and_then(|v| v.as_array()) {
         Some(a) => a,
         None => return,
@@ -137,7 +147,10 @@ fn extract_name_list(val: Option<&serde_json::Value>, entity_type: &str, out: &m
             continue;
         };
         if !name.is_empty() {
-            out.push(CanonicalEntity { name, entity_type: entity_type.into() });
+            out.push(CanonicalEntity {
+                name,
+                entity_type: entity_type.into(),
+            });
         }
     }
 }
@@ -163,7 +176,10 @@ fn extract_key_entities(val: &serde_json::Value, out: &mut Vec<CanonicalEntity>)
             .to_string();
         if let Some(n) = name {
             if !n.is_empty() {
-                out.push(CanonicalEntity { name: n, entity_type: etype });
+                out.push(CanonicalEntity {
+                    name: n,
+                    entity_type: etype,
+                });
             }
         }
     }
@@ -234,8 +250,16 @@ pub fn compute_f1(reference: &[CanonicalEntity], extracted: &[CanonicalEntity]) 
     let fp = ext_set.len().saturating_sub(tp);
     let fn_ = ref_set.len().saturating_sub(tp);
 
-    let precision = if tp + fp > 0 { tp as f32 / (tp + fp) as f32 } else { 0.0 };
-    let recall = if tp + fn_ > 0 { tp as f32 / (tp + fn_) as f32 } else { 0.0 };
+    let precision = if tp + fp > 0 {
+        tp as f32 / (tp + fp) as f32
+    } else {
+        0.0
+    };
+    let recall = if tp + fn_ > 0 {
+        tp as f32 / (tp + fn_) as f32
+    } else {
+        0.0
+    };
     let f1 = if precision + recall > 0.0 {
         2.0 * precision * recall / (precision + recall)
     } else {
@@ -262,13 +286,17 @@ pub fn structural_health_check(
     // 1. CORPUS file exists in service-content/ledgers/
     let corpus_dir = format!("{}/service-content/ledgers", jennifer2_root);
     let corpus_exists = std::fs::read_dir(&corpus_dir)
-        .map(|mut rd| rd.any(|e| {
-            e.ok().map(|e| {
-                let n = e.file_name();
-                let s = n.to_string_lossy();
-                s.starts_with("CORPUS_") && s.ends_with(".json")
-            }).unwrap_or(false)
-        }))
+        .map(|mut rd| {
+            rd.any(|e| {
+                e.ok()
+                    .map(|e| {
+                        let n = e.file_name();
+                        let s = n.to_string_lossy();
+                        s.starts_with("CORPUS_") && s.ends_with(".json")
+                    })
+                    .unwrap_or(false)
+            })
+        })
         .unwrap_or(false);
 
     // 2. WORM ledger has at least one entry
@@ -278,13 +306,18 @@ pub fn structural_health_check(
         .unwrap_or(false);
 
     // 3. CRM record for this stem exists
-    let crm_dir = format!("{}/service-fs/data/service-research/ledgers", jennifer2_root);
+    let crm_dir = format!(
+        "{}/service-fs/data/service-research/ledgers",
+        jennifer2_root
+    );
     let crm_exists = std::fs::read_dir(&crm_dir)
-        .map(|mut rd| rd.any(|e| {
-            e.ok().map(|e| {
-                e.file_name().to_string_lossy().starts_with("CRM_")
-            }).unwrap_or(false)
-        }))
+        .map(|mut rd| {
+            rd.any(|e| {
+                e.ok()
+                    .map(|e| e.file_name().to_string_lossy().starts_with("CRM_"))
+                    .unwrap_or(false)
+            })
+        })
         .unwrap_or(false);
 
     // 4. Graph entity count nonzero (checked via DataGraph in the HTTP layer; here just CORPUS file present)
@@ -330,8 +363,14 @@ metrics:
         std::fs::write(&path, yaml).unwrap();
         let result = normalize_reference_yaml(&path).unwrap();
         assert_eq!(result.entities.len(), 3);
-        assert!(result.entities.iter().any(|e| e.name == "Alice Smith" && e.entity_type == "Person"));
-        assert!(result.entities.iter().any(|e| e.name == "Acme Corp" && e.entity_type == "Company"));
+        assert!(result
+            .entities
+            .iter()
+            .any(|e| e.name == "Alice Smith" && e.entity_type == "Person"));
+        assert!(result
+            .entities
+            .iter()
+            .any(|e| e.name == "Acme Corp" && e.entity_type == "Company"));
         assert_eq!(result.themes.len(), 2);
         assert_eq!(result.metrics.len(), 1);
     }
