@@ -43,11 +43,10 @@ LORA_ALPHA = 32
 LORA_DROPOUT = 0.05
 LORA_TARGET_MODULES = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
 MAX_PROMPT_LENGTH = 512
-MAX_LENGTH = 1024
 BATCH_SIZE = 2
-GRAD_ACCUM = 4
-LEARNING_RATE = 1e-5   # LoRA-DPO: higher than full-FT DPO (1e-7..1e-6); 47 steps needs signal
-NUM_EPOCHS = 3  # 3 epochs via --resume across nightly cycles; epoch 1 alone was a resume no-op
+GRAD_ACCUM = 8   # raised 4→8; effective batch 16; damps gradient noise at low per-device batch
+LEARNING_RATE = 2e-6   # lowered from 1e-5; 12-25× too hot vs OLMo 2 reference recipe (Tülu 3 = 8e-7..2e-6)
+NUM_EPOCHS = 1   # lowered from 3; 3 epochs on single-task corpus → over-reinforcement collapse risk (Opus audit §17)
 BETA = 0.1  # DPO default. Prior 0.5 justification (empty-"[]" rejected) is obsolete — those pairs are now filtered.
 
 
@@ -262,6 +261,7 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
         per_device_train_batch_size=_batch_size,
         gradient_accumulation_steps=_grad_accum,
         gradient_checkpointing=True,  # required for 7B DPO on L4 24 GB; was OOMing without it
+        gradient_checkpointing_kwargs={"use_reentrant": False},  # prevents silent zero-grad on transformers 5.x (TRL #2486)
         learning_rate=LEARNING_RATE,
         beta=BETA,
         max_length=_max_length,
