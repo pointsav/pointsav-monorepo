@@ -192,37 +192,36 @@ if [ -n "${TEST_PUBKEY_FILE}" ] && [ -f "${TEST_PUBKEY_FILE}" ]; then
         >> "${OVERLAY}/etc/ssh/sshd_config"
 fi
 
-# ── 8. Veriexec manifest (OS-level binary signing) ───────────────────────────
-# Generate SHA-256 fingerprints for all installed binaries.
-echo "  generating Veriexec manifest..."
-VERIEXEC_MANIFEST="${OVERLAY}/etc/signatures"
-: > "${VERIEXEC_MANIFEST}"
-for BIN_PATH in \
-    "${OVERLAY}/usr/bin/system-ledger-server" \
-    "${OVERLAY}/usr/bin/slm-doorman-server" \
-    "${OVERLAY}/usr/bin/service-content" \
-    "${OVERLAY}/usr/bin/llama-server"; do
-    [ -f "${BIN_PATH}" ] || continue
-    REL_PATH="${BIN_PATH#${OVERLAY}}"
-    DIGEST=$(sha256sum "${BIN_PATH}" | awk '{print $1}')
-    printf '%s %s VERIEXEC_DIRECT\n' "${REL_PATH}" "${DIGEST}" \
-        >> "${VERIEXEC_MANIFEST}"
-done
-# Enable Veriexec enforcement at boot.
-echo "veriexec=YES" >> "${OVERLAY}/etc/security.conf"
-
-# ── 8b. Strip non-server content (server image only needs runtime, not docs) ──
+# ── 8. Strip non-server content (server image only needs runtime, not docs) ───
 echo "  pruning non-server content..."
 # Strip all of /usr/share/ except zoneinfo (needed for localtime(3)) and
 # tabset/nls (referenced by some NetBSD rc scripts).
 # This saves ~60 MB and avoids a known Ubuntu makefs 20190105-3 EINVAL bug
 # that triggers on files > ~90 KB during FFS2 image population.
+# Pruning runs BEFORE Veriexec manifest so no stale paths are fingerprinted.
 if [ -d "${OVERLAY}/usr/share" ]; then
     find "${OVERLAY}/usr/share" -mindepth 1 -maxdepth 1 \
         ! -name "zoneinfo" ! -name "tabset" ! -name "nls" \
         -exec rm -rf {} \;
 fi
 rm -rf "${OVERLAY}/usr/games" "${OVERLAY}/usr/share/games"
+
+# ── 8b. Veriexec manifest (OS-level binary signing) ──────────────────────────
+# Fingerprint every executable in the overlay: custom binaries + system binaries.
+# strict=1 (IDS mode) denies exec of any unlisted binary at runtime.
+# Run after pruning so removed paths are never included in the policy.
+echo "  generating Veriexec manifest (all executables)..."
+VERIEXEC_MANIFEST="${OVERLAY}/etc/signatures"
+: > "${VERIEXEC_MANIFEST}"
+find "${OVERLAY}" -type f -perm /111 | sort | while read -r BIN_PATH; do
+    REL_PATH="${BIN_PATH#${OVERLAY}}"
+    DIGEST=$(sha256sum "${BIN_PATH}" | awk '{print $1}')
+    printf '%s %s VERIEXEC_DIRECT\n' "${REL_PATH}" "${DIGEST}" \
+        >> "${VERIEXEC_MANIFEST}"
+done
+# Enable Veriexec at boot; strict=1 raises to IDS mode (deny unlisted exec).
+echo "veriexec=YES" >> "${OVERLAY}/etc/security.conf"
+echo "kern.veriexec.strict=1" >> "${OVERLAY}/etc/sysctl.conf"
 
 # ── 9. Build FFS2 disk image using NetBSD cross-makefs ───────────────────────
 # Set correct ownership before image capture. tar extraction runs as mathew
