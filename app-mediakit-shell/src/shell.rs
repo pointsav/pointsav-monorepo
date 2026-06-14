@@ -23,10 +23,18 @@ pub struct NavLink {
 
 impl NavLink {
     pub fn internal(label: &str, href: &str) -> Self {
-        Self { label: label.into(), href: href.into(), external: false }
+        Self {
+            label: label.into(),
+            href: href.into(),
+            external: false,
+        }
     }
     pub fn external(label: &str, href: &str) -> Self {
-        Self { label: label.into(), href: href.into(), external: true }
+        Self {
+            label: label.into(),
+            href: href.into(),
+            external: true,
+        }
     }
 }
 
@@ -198,10 +206,8 @@ mod tests {
 
     #[test]
     fn renders_full_document_without_bundler_template() {
-        let page = Page::from_yaml(
-            "title: Home\nsections:\n  - type: hero\n    headline: Hi\n",
-        )
-        .unwrap();
+        let page =
+            Page::from_yaml("title: Home\nsections:\n  - type: hero\n    headline: Hi\n").unwrap();
         let html = render_page(&Brand::woodfine(), &page, DEFAULT_TOKENS_CSS);
         assert!(html.starts_with("<!DOCTYPE html>"));
         assert!(html.contains("topnav"));
