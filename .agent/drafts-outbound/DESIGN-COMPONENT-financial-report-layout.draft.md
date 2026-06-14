@@ -13,6 +13,8 @@ routes_to: project-design
 authored: 2026-06-10T00:00:00Z
 authored_by: jmwoodfine@gmail.com (claude-code)
 authored_with: claude-opus-4-8
+updated: 2026-06-14T03:30:00Z
+update_note: "V2 Update appended 2026-06-13 — see '## V2 Update' section; new page-break utility, table.wide group rule, header-clip guidance, WeasyPrint engine result (closes a Suggested item)."
 paired_with: not-required-internal
 component_metadata:
   component_name: financial-report-layout
@@ -449,3 +451,77 @@ screen / 10px print — figures clip below that with 13 columns on letter landsc
 - For tables taller than one printed page: should we introduce repeating
   `<thead>` so the period header reprints on each page? Repeating headers
   would interact with the line-number injector (header rows would re-number).
+
+---
+
+## V2 Update (2026-06-13) — additions from Building Portfolio V2
+
+Source: `tool-proforma-engine` `building-portfolio-v2` (project-proforma). Four
+reusable findings from formatting a multi-statement, multi-DHS forecast. Each is
+a drop-in addition to `guide.md` / `research.md`; none changes existing tokens.
+
+### A. NEW — forced page-break utility (highest value)
+
+The component can keep a heading with its table (`break-after:avoid`) and keep a
+table whole (`break-inside:avoid`), but has **no way to force a statement onto its
+own page**. Multi-statement forecasts routinely need this (e.g. put the Per-DHS
+rollup and the Reconciliation each on a fresh page). Add to the CSS block:
+
+```css
+/* --- Forced page break (start a statement on its own page) -------------- */
+.page-break-before{break-before:page;page-break-before:always}
+.page-break-after{break-after:page;page-break-after:always}
+```
+
+Apply to the section heading: `<h2 class="page-break-before">4 · …</h2>`. It
+composes with the existing `h2,h3{break-after:avoid}` so the heading stays glued
+to its note + table at the top of the new page.
+
+**Codegen rule:** add `page-break-before` to the `<h2>` of any statement that
+should not share a page. Use sparingly — only where a statement warrants its own
+page; over-use creates near-empty pages (a forced break can orphan a preceding
+section's trailing note).
+
+### B. CLARIFY — `table.wide` aligns *groups*, not the whole document
+
+Research §1's codegen rule ("keep column count identical across every
+`table.wide`") reads as a whole-document constraint. In practice a document can
+hold **more than one aligned group**: e.g. four 8-column per-class financial
+statements that align with each other, plus a separate 11-column multi-year
+build-out table. Tables align **within their group**, not across groups.
+
+`table.wide` is also the right tool for any set of **same-shaped statements that
+should read as a uniform stack** (per-class, per-entity, per-segment) — not only
+multi-year period tables. Revise the rule to: *"keep column count and label/data
+split identical across every `table.wide` in the same aligned group."*
+
+### C. ADD — header-clip guidance for narrow fixed columns
+
+Data-column `<th>` inherit `white-space:nowrap` and sit in fixed-width columns.
+With 7+ data columns on letter-landscape, long headers (e.g. "Asset value
+(6.25%)", "Depreciation (40yr)") clip. **Abbreviate headers** (Cost / Rent / NOI
+/ Asset value / Deprec.) and move rate annotations (10.5% / 57% / 6.25% / 40yr)
+into the section `p.note`. Keep numeric headers ≤ ~12 characters at 8 columns.
+
+### D. CLOSE Suggested item — non-Chromium engine validated (WeasyPrint)
+
+The draft's Suggested trail asks to "test in at least one non-Chromium print
+engine." Done. **WeasyPrint** renders correctly: `@page` letter-landscape,
+`break-before:page`, `table-layout:fixed` cross-table alignment, and all three
+semantic-row background fills. Two caveats to document:
+1. WeasyPrint does **not execute JavaScript** → the JS-injected line-number gutter
+   is **absent**. Use **Chromium / browser print-to-PDF** when line numbers are
+   required; WeasyPrint is fine when they are not.
+2. WeasyPrint logs `Ignored print-color-adjust:exact (unknown property)` but
+   paints backgrounds by default, so fills survive regardless — the warning is
+   harmless.
+
+**Recommendation:** Chromium for line-numbered compliance output; WeasyPrint for
+line-number-optional drafts and CI (reads local paths directly, no snap
+confinement). This resolves Suggested item "Test in at least one non-Chromium
+print engine"; move it to Done.
+
+### Research-trail delta
+- Done +1: non-Chromium engine (WeasyPrint) validated — layout/page-break/fills hold; JS gutter absent.
+- Suggested −1: that item now Done.
+- New for design pass: page-break utility (A), wide-group rule clarification (B), header-clip rule (C).
