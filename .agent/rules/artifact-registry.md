@@ -504,7 +504,58 @@ Bug-fix pass + OXXO gap coverage. See BRIEF §10.14 for methodology. Commits a18
 
 ## B — Backlog
 
-*(No backlog items at this time.)*
+---
+
+## B — Backlog (queued for future sessions)
+
+### B1 — TOPIC: Co-location Ranking System (full update)
+- **Status:** BACKLOG — existing draft dispatched; needs update for catchment rank fields
+- **Destination:** project-editorial
+
+### B2 — TOPIC: POI Data Schema
+- **Status:** DISPATCHED sprint 13 (ba5fe38) — at project-editorial
+
+### B3 — GUIDE: Adding a Chain
+- **Status:** DISPATCHED sprint 11/13 — at project-editorial; appendix added
+
+### B4 — GUIDE: Adding a Country
+- **Status:** STAGED in drafts-outbound/ — at project-editorial
+
+### B5 — TEXT: Canada/Walmart Supercentre + Hospital Coverage
+- **Status:** STAGED in drafts-outbound/ (text-gis-canada-walmart-hospital-coverage.draft.md)
+
+### B6 — DESIGN-RESEARCH: Bento Merged Zones Disclosure
+- **Status:** IMPLEMENTED 21cf18df (2026-05-17) — merged-ring UX shipped in index.html (Union-Find groupOverlappingClusters, showMergedGroupPanel). Editorial draft still at project-design for write-up.
+
+### B7 — DESIGN-RESEARCH: Location Intelligence UX
+- **Status:** STAGED in drafts-outbound/ — at project-design
+
+### B8 — DESIGN-RESEARCH: Ring Retailer Click UX
+- **Status:** STAGED in drafts-outbound/ — at project-design
+
+### B9 — DESIGN-RESEARCH: Tier Naming Accessibility
+- **Status:** STAGED in drafts-outbound/ — at project-design
+
+### B10 — DESIGN-RESEARCH: Zoom Prefetch Pattern
+- **Status:** STAGED in drafts-outbound/ — at project-design
+
+### B11 — TEXT: Nordic/UK Coverage Release
+- **Status:** STAGED in drafts-outbound/ — at project-editorial
+
+### B12 — TEXT: UK/EU Coverage Release
+- **Status:** STAGED in drafts-outbound/ — at project-editorial
+
+### B13 — TOPIC: Regional Name Resolution Architecture
+- **Status:** COMMITTED — media-knowledge-documentation/architecture/regional-name-resolution.md (prior session); Wikipedia refs added bf920fc@jwoodfine 2026-06-14
+
+### B14 — TOPIC: Co-location Tier Nomenclature
+- **Status:** COMMITTED — media-knowledge-documentation/reference/colocation-tier-nomenclature.md (prior session); frontmatter + DBSCAN ref added bf920fc@jwoodfine 2026-06-14; NOTE: architecture/colocation-tier-nomenclature.md is a duplicate with same slug — pending Command `git rm` (msg project-editorial-20260614-slug-collision-defect)
+
+### B15 — TOPIC: GIS as BIM Substrate
+- **Status:** COMMITTED — media-knowledge-documentation/architecture/gis-as-bim-substrate.md (prior session); body H1 + GIS/BIM refs added bf920fc@jwoodfine 2026-06-14
+
+### B16 — TOPIC: UK/EU Food Retail Coverage
+- **Status:** COMMITTED — media-knowledge-documentation/reference/uk-eu-food-retail-coverage.md (prior session); OSM/Wikidata refs added bf920fc@jwoodfine 2026-06-14
 
 ---
 
