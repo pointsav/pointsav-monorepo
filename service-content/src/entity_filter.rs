@@ -1,5 +1,11 @@
 use serde_json::Value;
 
+/// Canonical classification vocabulary — shared with `raw_entities_to_graph`.
+/// Both ingest gate and DPO pre-save validator must use this constant so they
+/// agree on what is acceptable and the training signal matches what lands in LadybugDB.
+pub const ALLOWED_CLASSIFICATIONS: [&str; 5] =
+    ["Person", "Company", "Project", "Account", "Location"];
+
 /// Returns true if `name` looks like a code or environment identifier rather
 /// than a proper entity name. Used as a deterministic backstop in
 /// raw_entities_to_graph() and clean_dpo_side() to reject noise regardless
@@ -77,16 +83,41 @@ pub fn is_commit_prefix(name: &str) -> bool {
 }
 
 /// Filter noise entities from one side of a DPO pair before saving.
-/// Removes entries whose entity_name is a commit prefix or noise pattern.
+///
+/// Applies the **same** filter chain as `raw_entities_to_graph`:
+///   1. commit-prefix and noise-name rejection
+///   2. word-count gate (>8 words)
+///   3. `coerce_classification` — corrects misclassified entities in place
+///   4. `ALLOWED_CLASSIFICATIONS` gate — rejects out-of-vocabulary types
+///
+/// When `coerce_classification` corrects a classification (e.g. Company→Location)
+/// the corrected value is written into the returned JSON object so the DPO training
+/// pair teaches the correct form rather than the raw (wrong) model output.
 pub fn clean_dpo_side(side: &[Value]) -> Vec<Value> {
     side.iter()
-        .filter(|e| {
-            let Some(name) = e.get("entity_name").and_then(|v| v.as_str()) else {
-                return false;
-            };
-            !is_commit_prefix(name) && !is_noise_entity_name(name)
+        .filter_map(|e| {
+            let name = e.get("entity_name").and_then(|v| v.as_str())?;
+            let cls = e.get("classification").and_then(|v| v.as_str())?;
+            if is_commit_prefix(name) || is_noise_entity_name(name) {
+                return None;
+            }
+            if name.split_whitespace().count() > 8 {
+                return None;
+            }
+            let coerced = coerce_classification(name, cls)?;
+            if !ALLOWED_CLASSIFICATIONS.contains(&coerced.as_str()) {
+                return None;
+            }
+            if coerced != cls {
+                let mut patched = e.clone();
+                if let Some(obj) = patched.as_object_mut() {
+                    obj.insert("classification".to_string(), Value::String(coerced));
+                }
+                Some(patched)
+            } else {
+                Some(e.clone())
+            }
         })
-        .cloned()
         .collect()
 }
 
@@ -251,5 +282,41 @@ mod tests {
             cleaned[0]["entity_name"].as_str().unwrap(),
             "Jennifer Woodfine"
         );
+    }
+
+    #[test]
+    fn clean_dpo_side_rejects_overlong_phrase() {
+        let side = vec![
+            serde_json::json!({
+                "entity_name": "the quick brown fox jumped over the lazy dog here",
+                "classification": "Person"
+            }),
+            serde_json::json!({"entity_name": "Peter Woodfine", "classification": "Person"}),
+        ];
+        let cleaned = clean_dpo_side(&side);
+        assert_eq!(cleaned.len(), 1);
+        assert_eq!(cleaned[0]["entity_name"].as_str().unwrap(), "Peter Woodfine");
+    }
+
+    #[test]
+    fn clean_dpo_side_applies_coerce_classification() {
+        let side = vec![
+            serde_json::json!({"entity_name": "Portugal", "classification": "Company"}),
+        ];
+        let cleaned = clean_dpo_side(&side);
+        assert_eq!(cleaned.len(), 1);
+        assert_eq!(cleaned[0]["entity_name"].as_str().unwrap(), "Portugal");
+        assert_eq!(cleaned[0]["classification"].as_str().unwrap(), "Location");
+    }
+
+    #[test]
+    fn clean_dpo_side_rejects_invalid_classification() {
+        let side = vec![
+            serde_json::json!({"entity_name": "OpenSSL", "classification": "Technology"}),
+            serde_json::json!({"entity_name": "Peter Woodfine", "classification": "Person"}),
+        ];
+        let cleaned = clean_dpo_side(&side);
+        assert_eq!(cleaned.len(), 1);
+        assert_eq!(cleaned[0]["entity_name"].as_str().unwrap(), "Peter Woodfine");
     }
 }
