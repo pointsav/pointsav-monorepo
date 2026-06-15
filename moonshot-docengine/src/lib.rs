@@ -195,6 +195,68 @@ impl Document {
     }
 }
 
+// ---- edits ------------------------------------------------------------------
+
+/// A text edit: replace the bytes in `range` (a span in the current source) with
+/// `replacement`. Insertion is an empty `range`; deletion is an empty `replacement`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Edit {
+    pub range: Span,
+    pub replacement: String,
+}
+
+impl Edit {
+    pub fn new(range: Span, replacement: impl Into<String>) -> Self {
+        Self {
+            range,
+            replacement: replacement.into(),
+        }
+    }
+
+    /// Signed change in byte length the edit introduces.
+    pub fn delta(&self) -> isize {
+        self.replacement.len() as isize - self.range.len() as isize
+    }
+}
+
+/// Remap a span from old-source to new-source coordinates across `edit`: a span
+/// entirely before the edit is unchanged; one entirely after shifts by the edit's
+/// delta; one overlapping the edited range is invalidated (`None`) and must be
+/// re-derived. This is the shared primitive that makes incremental updates cheap —
+/// `moonshot-parser` tokens and `moonshot-editor` rows remap with the *same* call,
+/// because all three cores address the source by byte span. Reuse every span this
+/// keeps; re-derive only the ones it drops.
+pub fn remap_span(span: Span, edit: &Edit) -> Option<Span> {
+    if span.end <= edit.range.start {
+        Some(span)
+    } else if span.start >= edit.range.end {
+        let shift = |x: usize| (x as isize + edit.delta()) as usize;
+        Some(Span::new(shift(span.start), shift(span.end)))
+    } else {
+        None
+    }
+}
+
+impl Document {
+    /// The source string after applying `edit` (a pure splice; does not parse).
+    pub fn source_after(&self, edit: &Edit) -> String {
+        let s = &self.source;
+        let cap = (s.len() as isize + edit.delta()).max(0) as usize;
+        let mut out = String::with_capacity(cap);
+        out.push_str(&s[..edit.range.start]);
+        out.push_str(&edit.replacement);
+        out.push_str(&s[edit.range.end..]);
+        out
+    }
+
+    /// Apply `edit` and return the re-parsed document. The re-parse is full for now;
+    /// [`remap_span`] is the seam for incremental re-derivation (reuse remappable
+    /// blocks/tokens, re-derive only those overlapping the edit).
+    pub fn apply(&self, edit: &Edit) -> Document {
+        Document::parse(&self.source_after(edit))
+    }
+}
+
 // ---- parsing internals ------------------------------------------------------
 
 /// Source spans of each line, including the trailing `\n`. The final line has no
@@ -541,5 +603,60 @@ mod tests {
         let section = d.section_span(sel);
         assert_eq!(section.start, 0);
         assert_eq!(section.end, s.len());
+    }
+
+    #[test]
+    fn apply_splices_insert_delete_replace() {
+        let d = doc("hello world");
+        assert_eq!(
+            d.source_after(&Edit::new(Span::new(6, 11), "rust")),
+            "hello rust"
+        );
+        assert_eq!(
+            d.source_after(&Edit::new(Span::new(11, 11), "!")),
+            "hello world!"
+        );
+        assert_eq!(d.source_after(&Edit::new(Span::new(0, 6), "")), "world");
+    }
+
+    #[test]
+    fn apply_preserves_round_trip() {
+        let d = doc("# Title\n\nbody\n");
+        let e = Edit::new(Span::new(0, 0), "draft\n\n");
+        let d2 = d.apply(&e);
+        assert_eq!(d2.to_source(), d.source_after(&e));
+    }
+
+    #[test]
+    fn remap_span_before_after_and_overlap() {
+        // Replace bytes [5,8) (len 3) with 1 byte => delta -2.
+        let e = Edit::new(Span::new(5, 8), "x");
+        assert_eq!(e.delta(), -2);
+        assert_eq!(remap_span(Span::new(0, 4), &e), Some(Span::new(0, 4))); // before
+        assert_eq!(remap_span(Span::new(10, 12), &e), Some(Span::new(8, 10))); // after, shifted
+        assert_eq!(remap_span(Span::new(6, 9), &e), None); // overlaps
+        assert_eq!(remap_span(Span::new(2, 5), &e), Some(Span::new(2, 5))); // touches start = before
+    }
+
+    #[test]
+    fn incremental_remap_matches_full_reparse_for_in_block_edit() {
+        // Typing inside one paragraph must leave earlier blocks byte-identical and
+        // shift later blocks by exactly the edit delta — i.e. remapping the old
+        // block spans equals a full re-parse of the new source.
+        let s = "# Title\n\nfirst para\n\nsecond para\n\nthird para\n";
+        let d = doc(s);
+        let at = s.find("second").unwrap() + "second".len();
+        let e = Edit::new(Span::new(at, at), " EDIT"); // insert inside "second para"
+        let reparsed = d.apply(&e);
+        assert_eq!(reparsed.blocks().len(), d.blocks().len()); // no new boundaries
+        for (idx, old) in d.blocks().iter().enumerate() {
+            match remap_span(old.span, &e) {
+                Some(rs) => assert_eq!(reparsed.blocks()[idx].span, rs), // reused 1:1
+                None => assert!(reparsed.blocks()[idx]
+                    .span
+                    .text(reparsed.source())
+                    .contains("EDIT")), // the edited block
+            }
+        }
     }
 }
