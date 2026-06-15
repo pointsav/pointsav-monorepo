@@ -393,7 +393,7 @@ name = "app-orchestration-bim"
 version = "0.0.2"
 dependencies = [
  "axum 0.7.9",
- "pulldown-cmark",
+ "pulldown-cmark 0.12.2",
  "serde_json",
  "tokio",
  "tower-http 0.5.2",
@@ -408,13 +408,23 @@ dependencies = [
  "futures-util",
  "jsonschema",
  "notify 6.1.1",
- "pulldown-cmark",
+ "pulldown-cmark 0.12.2",
  "serde",
  "serde_json",
  "tokio",
  "tokio-stream",
  "tower-http 0.6.11",
  "zip 2.4.2",
+]
+
+[[package]]
+name = "app-privategit-design"
+version = "0.2.0"
+dependencies = [
+ "axum 0.7.9",
+ "pulldown-cmark 0.11.3",
+ "tokio",
+ "tower-http 0.5.2",
 ]
 
 [[package]]
@@ -1373,6 +1383,8 @@ dependencies = [
  "compression-core",
  "flate2",
  "memchr",
+ "zstd",
+ "zstd-safe",
 ]
 
 [[package]]
@@ -6066,6 +6078,18 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "679341d22c78c6c649893cbd6c3278dcbe9fc4faa62fea3a9296ae2b50c14625"
+dependencies = [
+ "bitflags 2.13.0",
+ "memchr",
+ "pulldown-cmark-escape",
+ "unicase",
+]
+
+[[package]]
+name = "pulldown-cmark"
 version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f86ba2052aebccc42cbbb3ed234b8b13ce76f75c3551a303cb2bcffcff12bb14"
@@ -8288,7 +8312,7 @@ version = "0.1.0"
 dependencies = [
  "calamine 0.25.0",
  "clap",
- "pulldown-cmark",
+ "pulldown-cmark 0.12.2",
  "serde",
  "serde_json",
 ]
@@ -8354,8 +8378,10 @@ version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e9cd434a998747dd2c4276bc96ee2e0c7a2eadf3cae88e52be55a05fa9053f5"
 dependencies = [
+ "async-compression",
  "bitflags 2.13.0",
  "bytes",
+ "futures-core",
  "futures-util",
  "http 1.4.2",
  "http-body 1.0.1",
