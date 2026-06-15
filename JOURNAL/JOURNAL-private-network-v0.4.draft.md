@@ -90,6 +90,21 @@ cites:
   - dingledine-2004-tor
   - asokan-2011-man-in-middle
 forbidden_terms_cleared: true
+section_status:
+  abstract: complete
+  s1_introduction: complete
+  s2_background: complete
+  s3_crma_design: complete
+  s4_implementation: complete
+  s5_evaluation: complete
+  s6_discussion: complete
+  s7_conclusion: complete
+refs_status:
+  count: 11
+  quality: thin
+  blockers:
+    - "IEEE TIFS IF 9.65 expects 25-35 refs; current 11 insufficient"
+    - "Word count 6,400/9,000 — §4 and §5 need additional implementation and evaluation detail"
 notes_for_editor: |
   Current body word count is approximately 6,400 words against a 9,000-word target;
   the remaining approximately 2,600 words are expected to come from expanded implementation
@@ -118,7 +133,13 @@ New York, NY, USA
 
 ## Abstract
 
-Commercial zero-trust architecture (ZTA) products achieve network isolation by routing traffic through vendor-operated infrastructure, placing routing key custody, policy enforcement, and audit-log generation with the vendor rather than with the customer. Organisations that require verifiable network isolation with explicit, auditable customer control over routing keys have no mature open-architecture reference to follow. This paper proposes a customer-rooted mesh architecture (CRMA) that achieves ZTA-equivalent isolation guarantees using WireGuard as the sole cryptographic primitive, with all private routing keys generated and permanently held on customer-controlled nodes. The CRMA derives its network dependency topology directly from the served application's service-composition graph, enforcing component-boundary isolation at the network layer through declarative WireGuard AllowedIPs configuration. We describe the CRMA design, its public-key-only coordination model (the central coordinator holds only public keys and distributes mesh configuration; no private key ever transits the coordinator), its append-only customer-controlled audit log, and a prototype implementation comprising a hub-provisioning script, a spoke-factory script, and declarative WireGuard configuration templates. Empirical benchmarks on a GCP e2-standard-8 instance running Ubuntu 24.04 and WireGuard kernel module v1.0.0 measure tunnel establishment time at 44 ± 5 ms (mean ± 95% CI, n=30), re-handshake latency at 59 ± 20 ms (n=10), policy-change propagation (AllowedIPs update via `wg set`) at 8 ms mean (n=20), and hub restart recovery at a bimodal 1–16 s depending on spoke keepalive timing. Two formal hypotheses are stated: H₁ (the CRMA provides isolation equivalent to commercial ZTA products under the NIST SP 800-207 definition); H₂ (private key custody remains with originating nodes under adversarial coordinator compromise). The CRMA provides a documented, reproducible open-architecture ZTA reference that structurally decouples isolation guarantees from vendor key custody.
+Commercial zero-trust architecture (ZTA) products achieve network isolation by routing traffic through vendor-operated infrastructure, placing routing key custody, policy enforcement, and audit-log generation with the vendor rather than with the customer. Organisations that require verifiable network isolation with explicit, auditable customer control over routing keys have no mature open-architecture reference to follow.
+
+This paper proposes a customer-rooted mesh architecture (CRMA) that achieves ZTA-equivalent isolation guarantees using WireGuard as the sole cryptographic primitive, with all private routing keys generated and permanently held on customer-controlled nodes. The CRMA derives its network dependency topology directly from the served application's service-composition graph, enforcing component-boundary isolation at the network layer through declarative WireGuard AllowedIPs configuration. We describe the CRMA design, its public-key-only coordination model (the central coordinator holds only public keys and distributes mesh configuration; no private key ever transits the coordinator), its append-only customer-controlled audit log, and a prototype implementation comprising a hub-provisioning script, a spoke-factory script, and declarative WireGuard configuration templates.
+
+Empirical benchmarks on a GCP e2-standard-8 instance running Ubuntu 24.04 and WireGuard kernel module v1.0.0 measure tunnel establishment time at 44 ± 5 ms (mean ± 95% CI, n=30), re-handshake latency at 59 ± 20 ms (n=10), policy-change propagation (AllowedIPs update via `wg set`) at 8 ms mean (n=20), and hub restart recovery at a bimodal 1–16 s depending on spoke keepalive timing.
+
+Two formal hypotheses are stated: H₁ (the CRMA provides isolation equivalent to commercial ZTA products under the NIST SP 800-207 definition); H₂ (private key custody remains with originating nodes under adversarial coordinator compromise). The CRMA provides a documented, reproducible open-architecture ZTA reference that structurally decouples isolation guarantees from vendor key custody.
 
 ---
 

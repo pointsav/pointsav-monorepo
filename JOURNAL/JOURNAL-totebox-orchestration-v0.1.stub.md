@@ -55,6 +55,24 @@ word_count_target: 9500
 submission_status: not-submitted
 cites: []
 forbidden_terms_cleared: true
+section_status:
+  abstract: complete
+  s1_introduction: complete
+  s2_literature_review: complete
+  s3_methodology: complete
+  s4_implementation: stub
+  s5_evaluation: stub
+  s6_discussion: stub
+  s7_limitations: complete
+  s8_conclusion: stub
+  s9_formal_hypotheses: complete
+  s10_falsification: complete
+refs_status:
+  count: 0
+  quality: absent
+  blockers:
+    - "References section entirely unpopulated — [To be populated] placeholder only"
+    - "§4 Implementation and §5 Evaluation pending benchmark harness completion"
 preprint_posted: true
 preprint_posted_date: 2026-06-11
 doi: ""
