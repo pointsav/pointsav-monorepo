@@ -172,6 +172,47 @@ fn push(out: &mut Vec<Token>, kind: TokenKind, start: usize, end: usize) {
     });
 }
 
+/// Incrementally re-tokenize after an edit, reusing the tokens before it.
+///
+/// `old_tokens` are the tokens of the source *before* the edit; `new_source` is the
+/// source *after*; `edit_start` is the byte offset where the edit began (the two
+/// sources are identical below it). The result is identical to a full [`tokenize`]
+/// of `new_source`, but the unchanged prefix is reused rather than re-lexed.
+///
+/// Correctness rests on the tokenizer being context-free at token boundaries: a
+/// token's class depends only on the bytes from its own start, so any token boundary
+/// at or before the edit is a safe restart point. v1 reuses the prefix and re-lexes
+/// from the restart point to the end — which correctly captures forward-propagating
+/// edits (e.g. typing `/*`). Reconvergence-based suffix reuse and a streaming lexer
+/// are the documented next refinement; this function is paired with
+/// `moonshot-docengine`'s `remap_span` seam.
+pub fn retokenize(
+    old_tokens: &[Token],
+    new_source: &str,
+    lang: Lang,
+    edit_start: usize,
+) -> Vec<Token> {
+    // Restart at the start of the token that contains (or begins at) edit_start;
+    // every earlier token lies in the unchanged region and is reused verbatim.
+    let pre = old_tokens
+        .iter()
+        .position(|t| t.span.end > edit_start)
+        .unwrap_or(old_tokens.len());
+    let restart = old_tokens
+        .get(pre)
+        .map(|t| t.span.start)
+        .unwrap_or(edit_start)
+        .min(edit_start);
+
+    let mut out: Vec<Token> = old_tokens[..pre].to_vec();
+    for mut t in tokenize(&new_source[restart..], lang) {
+        t.span.start += restart;
+        t.span.end += restart;
+        out.push(t);
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -258,5 +299,52 @@ mod tests {
             assert_eq!(toks[0].kind, TokenKind::Number);
             assert_eq!(toks[0].span.text(num), num);
         }
+    }
+
+    /// The incremental result must always equal a full re-tokenize of the new source.
+    fn assert_incremental_eq(old_src: &str, new_src: &str, edit_start: usize) {
+        let old = tokenize(old_src, Lang::Rust);
+        let inc = retokenize(&old, new_src, Lang::Rust, edit_start);
+        let full = tokenize(new_src, Lang::Rust);
+        assert_eq!(inc, full, "incremental != full for edit at {edit_start}");
+    }
+
+    #[test]
+    fn retokenize_append_reuses_prefix() {
+        let old_src = "let x = 1;";
+        let new_src = "let x = 1; let y = 2;";
+        assert_incremental_eq(old_src, new_src, old_src.len());
+        // The unchanged prefix tokens are reused verbatim (object-equal to the old run).
+        let old = tokenize(old_src, Lang::Rust);
+        let inc = retokenize(&old, new_src, Lang::Rust, old_src.len());
+        assert_eq!(&inc[..old.len()], &old[..]);
+    }
+
+    #[test]
+    fn retokenize_mid_edit_matches_full() {
+        let old_src = "let x = 1;\nlet y = 2;";
+        // Replace the "1" with "111".
+        let at = old_src.find('1').unwrap();
+        let new_src = "let x = 111;\nlet y = 2;";
+        assert_incremental_eq(old_src, new_src, at);
+    }
+
+    #[test]
+    fn retokenize_at_start_is_still_correct() {
+        // Restart point is 0 — nothing reused, but the result must still be right.
+        assert_incremental_eq("abc def", "xabc def", 0);
+    }
+
+    #[test]
+    fn retokenize_handles_forward_propagating_edit() {
+        // Inserting "/* " turns the remainder into an (unterminated) block comment.
+        // Re-lexing from before the edit to the end must capture that.
+        let old_src = "a b c";
+        let new_src = "a /* b c";
+        let at = old_src.find('b').unwrap(); // edit begins where "b" was
+        assert_incremental_eq(old_src, new_src, at);
+        // Sanity: the new full tokenization really does have a trailing comment.
+        let full = tokenize(new_src, Lang::Rust);
+        assert!(full.iter().any(|t| t.kind == TokenKind::Comment));
     }
 }
