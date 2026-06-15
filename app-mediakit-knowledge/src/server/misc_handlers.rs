@@ -515,9 +515,9 @@ mod tests {
         );
     }
 
-    /// Verify that the encyclopedia tab strip renders on article pages.
-    /// (The docs-sidenav was removed in the encyclopedia-chrome pivot; the
-    /// wiki-page-tabs strip — Article/Talk/Edit/History — is the replacement.)
+    /// Verify that the encyclopedia tab strip and category sidenav render on article pages.
+    /// Sprint C restored the docs-sidenav (category navigation) alongside the
+    /// wiki-page-tabs strip — Article/Talk/Edit/History.
     #[tokio::test]
     async fn wiki_page_renders_navigation_portlet() {
         let dir = tempfile::tempdir().unwrap();
@@ -566,8 +566,8 @@ mod tests {
             "encyclopedia tab strip should appear on article pages: {html}"
         );
         assert!(
-            !html.contains("docs-sidenav"),
-            "docs sidenav must not appear (removed in encyclopedia-chrome pivot): {html}"
+            html.contains("docs-sidenav"),
+            "category sidenav must appear on article pages (restored in Sprint C): {html}"
         );
     }
 
