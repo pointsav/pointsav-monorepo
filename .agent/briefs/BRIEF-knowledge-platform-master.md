@@ -702,6 +702,7 @@ Top institutional quality gaps beyond §7 findings (from §7.5 benchmark analysi
 
 | Sprint | Focus | Commit(s) | Status |
 |---|---|---|---|
+| 0 | Defect fixes: images route (Defect 6), manifest/CLAUDE.md cluster name, D1b rename | `2e0993e9` + `9fb431cb` + `c06c4ae8` + `9eda459f` | Done — Stage 6 pending (images route); archive commits done |
 | A | WCAG 2.2 focus outline + article link underline (C3/M15) | `3106b2e1` | Done — Stage 6 pending |
 | B | Sitemap absolute URLs, ES i18n, brand-instance from TOML, dead edit form (M1/M11/M12/M14) | `48bfa7e7` | Done — Stage 6 pending |
 | C | 7-category home page grid + sidenav (from §8.2 Layer 1 + sidenav component spec) | — | Planned |
