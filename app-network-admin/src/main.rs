@@ -1,8 +1,11 @@
+mod fleet_watch;
+
 use bytes::Bytes;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::net::UdpSocket;
+use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::net::UdpSocket as TokioUdpSocket;
 use tokio::sync::Mutex;
@@ -160,6 +163,19 @@ async fn main() {
 
     // Spawn UDP mesh listener on :9206
     tokio::spawn(spawn_mesh_listener());
+
+    // Spawn Phase S3 fleet watch — polls fleet + programs WireGuard peers + writes WORM events.
+    // Requires CAP_NET_ADMIN / root to execute `wg set`. Skips gracefully if wg is unavailable.
+    {
+        let wg_iface = env::var("WG_IFACE").unwrap_or_else(|_| "wg0".to_string());
+        let fleet_url = env::var("FLEET_URL").unwrap_or_else(|_| "http://127.0.0.1:9203".to_string());
+        let fs_url = env::var("SERVICE_FS_URL").unwrap_or_else(|_| "http://127.0.0.1:9100".to_string());
+        let home = env::var("HOME").unwrap_or_else(|_| ".".to_string());
+        let nodes_path = env::var("NODES_JSONL_PATH")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| PathBuf::from(home).join(".local/share/ppn/nodes.jsonl"));
+        tokio::spawn(fleet_watch::run_fleet_watch(wg_iface, fleet_url, fs_url, nodes_path));
+    }
 
     let translate_route = warp::post()
         .and(warp::path("translate"))
