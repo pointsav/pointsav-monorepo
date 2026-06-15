@@ -54,14 +54,15 @@ BETA = 0.1  # DPO default. Prior 0.5 justification (empty-"[]" rejected) is obso
 # the model "longer = better" rather than quality (Jun-14 audit finding).
 MIN_REJECTED_CHARS = 80
 
-# Maximum chosen/rejected length ratio. At 6.7× (Jun-14 run), DPO converges to
-# token-count discrimination in <1 epoch. Cap at 5× to preserve genuine pairs
-# while removing the most degenerate cases. Must stay <= corpus_gate.rs MAX_LENGTH_RATIO (8.0).
-MAX_LENGTH_RATIO = 5.0
+# Maximum chosen/rejected length ratio. Must match corpus_gate.rs MAX_LENGTH_RATIO (8.0).
+# Was 5.0 — that was too strict: dropped 77% of valid pairs (565/730). SimPO's length
+# normalisation mitigates the ratio artifact so 8× is safe (Jun-15 6-agent audit).
+MAX_LENGTH_RATIO = 8.0
 
 # Template-echo prefixes on the rejected side indicating OLMo never executed.
-# "<unified diff" is intentionally NOT here — OLMo legitimately wraps real diffs
-# with that header; use _is_template_echo() to distinguish placeholder vs real.
+# "<unified diff:" (with colon) is OLMo's placeholder stub — always rejected.
+# "<unified diff" without colon may legitimately wrap a real diff; the
+# _REAL_DIFF_MARKERS check below handles that case.
 # Must stay in sync with corpus_gate.rs TEMPLATE_ECHO_PREFIXES.
 TEMPLATE_ECHO_PREFIXES = (
     "<no diff provided",
@@ -69,6 +70,7 @@ TEMPLATE_ECHO_PREFIXES = (
     "<insert diff",
     "auto-reject: olmo-attempt-below-senior-standard",
     "auto-reject:",
+    "<unified diff:",  # colon = OLMo stub (Jun-15 audit: 324/861 pairs; 85 passed all gates)
 )
 
 # Markers that indicate the rejected field contains real diff content even if it
@@ -93,8 +95,22 @@ def load_feedback_files(corpus_path: str) -> list[dict]:
     files = []
     for pat in ["apprenticeship-*.jsonl", "enrichment-*.jsonl"]:
         files.extend(glob.glob(os.path.join(corpus_path, pat)))
+    # service-content writes enrichment pairs to SERVICE_CONTENT_BASE_DIR — a
+    # different directory from the apprenticeship corpus path. Scan it too so
+    # enrichment DPO pairs (Tier B entity disagreements) reach the trainer.
+    # Confirmed split-brain by 6-agent audit 2026-06-15: 8 enrichment pairs orphaned.
+    sc_base = os.environ.get(
+        "SERVICE_CONTENT_BASE_DIR",
+        "/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer/service-fs/data",
+    )
+    enrichment_dir = os.path.join(sc_base, "training-corpus", "feedback")
+    if os.path.isdir(enrichment_dir) and os.path.abspath(enrichment_dir) != os.path.abspath(corpus_path):
+        extra = glob.glob(os.path.join(enrichment_dir, "enrichment-*.jsonl"))
+        if extra:
+            print(f"[corpus] +{len(extra)} enrichment pairs from SERVICE_CONTENT_BASE_DIR")
+            files.extend(extra)
     files = sorted(set(files))
-    print(f"[corpus] found {len(files)} pair files in {corpus_path}")
+    print(f"[corpus] found {len(files)} pair files total")
     records = []
     skipped_format = 0
     skipped_empty_rejected = 0
@@ -363,7 +379,8 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
             logging_steps=5,
             save_steps=5,
             save_total_limit=2,
-            eval_strategy="no",
+            eval_strategy="steps",
+            eval_steps=5,
             report_to="none",
             bf16=torch.cuda.is_available(),
             remove_unused_columns=False,
@@ -390,7 +407,8 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
             logging_steps=5,
             save_steps=5,        # checkpoint every 5 steps (corpus is small; 50 was never reached in 1 epoch)
             save_total_limit=2,  # keep only 2 most recent; avoids disk fill on spot VM across days
-            eval_strategy="no",           # eval needs 2× VRAM (ref+trained); disabled on L4 24 GB
+            eval_strategy="steps",
+            eval_steps=5,
             report_to="none",
             bf16=torch.cuda.is_available(),
             remove_unused_columns=False,
