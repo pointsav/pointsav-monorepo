@@ -433,6 +433,75 @@ paths:
         "404":
           description: Slug not found
 
+  /history/{slug}:
+    get:
+      tags: [git]
+      summary: Article revision history (HTML)
+      description: Renders the Git commit history for the given article slug as an HTML page.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          example: architecture/compounding-substrate
+      responses:
+        "200":
+          description: History page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: Slug not found
+
+  /diff/{slug}:
+    get:
+      tags: [git]
+      summary: Article diff between two commits (HTML)
+      description: Renders an HTML diff between two Git commits for the given article slug.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          example: architecture/compounding-substrate
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Base commit SHA (defaults to parent of `to`)
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Target commit SHA (defaults to HEAD)
+      responses:
+        "200":
+          description: Diff page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: Slug not found
+
+  /openapi.yaml:
+    get:
+      tags: [render]
+      summary: OpenAPI 3.1 specification (this document)
+      description: Returns the OpenAPI 3.1 YAML specification for this API.
+      responses:
+        "200":
+          description: OpenAPI specification
+          content:
+            application/yaml:
+              schema:
+                type: string
+
   /healthz:
     get:
       tags: [render]

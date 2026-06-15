@@ -69,7 +69,7 @@ async fn mobile_nav_toggle_button_present() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (status, html) = get_wiki(state, "topic-hello").await;
+    let (status, html) = get_wiki(state, "hello").await;
     assert_eq!(status, StatusCode::OK);
     // Button id and ARIA wiring
     assert!(
@@ -103,7 +103,7 @@ async fn mobile_nav_drawer_present_and_hidden() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (status, html) = get_wiki(state, "topic-hello").await;
+    let (status, html) = get_wiki(state, "hello").await;
     assert_eq!(status, StatusCode::OK);
     assert!(
         html.contains("id=\"mobile-nav-drawer\""),
@@ -129,7 +129,7 @@ async fn mobile_nav_drawer_has_close_button() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (_, html) = get_wiki(state, "topic-hello").await;
+    let (_, html) = get_wiki(state, "hello").await;
     assert!(
         html.contains("id=\"mobile-nav-close\""),
         "mobile-nav-close button missing"
@@ -152,7 +152,7 @@ async fn mobile_nav_drawer_contains_nav_links() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (_, html) = get_wiki(state, "topic-hello").await;
+    let (_, html) = get_wiki(state, "hello").await;
     // mobile-nav-list should include standard nav entries
     assert!(html.contains("mobile-nav-list"), "mobile-nav-list missing");
     assert!(
@@ -173,7 +173,7 @@ async fn mobile_nav_overlay_present() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (_, html) = get_wiki(state, "topic-hello").await;
+    let (_, html) = get_wiki(state, "hello").await;
     assert!(
         html.contains("id=\"mobile-nav-overlay\""),
         "mobile-nav-overlay missing — JS click-outside-to-close will break"
@@ -192,7 +192,7 @@ async fn mobile_toc_drawer_present_when_article_has_headings() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (status, html) = get_wiki(state, "topic-sections").await;
+    let (status, html) = get_wiki(state, "sections").await;
     assert_eq!(status, StatusCode::OK);
     assert!(
         html.contains("id=\"toc-toggle-btn\""),
@@ -224,7 +224,7 @@ async fn mobile_toc_drawer_absent_when_no_headings() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (_, html) = get_wiki(state, "topic-flat").await;
+    let (_, html) = get_wiki(state, "flat").await;
     assert!(
         !html.contains("id=\"toc-toggle-btn\""),
         "toc-toggle-btn should be absent on articles with no headings"
@@ -247,7 +247,7 @@ async fn mobile_toc_toggle_aria_controls_wired() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (_, html) = get_wiki(state, "topic-headings").await;
+    let (_, html) = get_wiki(state, "headings").await;
     assert!(
         html.contains("aria-controls=\"mobile-toc-drawer\""),
         "toc-toggle-btn missing aria-controls=\"mobile-toc-drawer\""
