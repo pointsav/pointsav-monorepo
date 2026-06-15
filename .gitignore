@@ -24,6 +24,16 @@ woodfine-fleet-deployment/
 pointsav-media-assets/
 woodfine-media-assets/
 
+# Local service data + deployment dirs — not committed
+logs/
+state-corporate/
+state-documentation/
+state-projects/
+state-test/
+service-email-egress-ews/
+service-email-egress-imap/
+woodfine-fleet-deployment/
+
 # OS metadata
 .DS_Store
 ~$*
