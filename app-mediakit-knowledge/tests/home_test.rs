@@ -196,9 +196,10 @@ async fn home_renders_with_index_md_present() {
         &html[..html.len().min(500)]
     );
 
-    // The 3 consolidated areas that have content render in the browse grid.
-    // (Home page uses 6 consolidated areas, not 12 individual category names.)
-    for cat in &["Architecture", "Services &amp; Applications", "Reference"] {
+    // The 3 slide IA areas that have content render in the browse grid.
+    // (Fixture: architecture → "Multi-Entity Consolidation", services → "Integration & Data Portability",
+    //  governance → "Developer Platform")
+    for cat in &["Multi-Entity Consolidation", "Integration &amp; Data Portability", "Developer Platform"] {
         assert!(html.contains(cat), "category '{cat}' should appear in grid");
     }
 
@@ -508,28 +509,27 @@ async fn category_with_zero_articles_renders_placeholder() {
 
     assert_eq!(status, StatusCode::OK);
 
-    // Populated areas render; empty areas are suppressed (no placeholder text).
-    // The fixture has 3 categories: architecture → Architecture,
-    // services → Services & Applications, governance → Reference.
+    // All 7 slide IA tiles always render; populated tiles get an article count.
+    // Fixture: architecture → "Multi-Entity Consolidation", services → "Integration & Data Portability",
+    // governance → "Developer Platform".
     assert!(
-        html.contains("Architecture"),
-        "populated area Architecture must render: snippet={}",
+        html.contains("Multi-Entity Consolidation"),
+        "populated area Multi-Entity Consolidation must render: snippet={}",
         &html[..html.len().min(1500)]
     );
     assert!(
-        html.contains("Services &amp; Applications"),
+        html.contains("Integration &amp; Data Portability"),
         "populated area must render"
     );
-    assert!(html.contains("Reference"), "populated area must render");
-    // Areas with no articles are omitted — Substrate & Systems, Infrastructure,
-    // and Archetypes have no fixture content and must not appear in the grid.
+    assert!(html.contains("Developer Platform"), "populated area must render");
+    // Sprint C removed legacy category names — they must not appear in the grid.
     assert!(
         !html.contains("Archetypes"),
-        "empty area must not appear in grid"
+        "legacy category name must not appear in grid"
     );
     assert!(
         !html.contains("Infrastructure"),
-        "empty area must not appear in grid"
+        "legacy category name must not appear in grid"
     );
 }
 
