@@ -58,7 +58,10 @@ impl TenantRegistry {
                         tracing::info!(tenant_id = %tid, "registered opaque bearer token");
                         map.insert(token, tid);
                     } else {
-                        tracing::warn!(entry = pair, "TOKEN_MAP entry missing ':' separator — skipped");
+                        tracing::warn!(
+                            entry = pair,
+                            "TOKEN_MAP entry missing ':' separator — skipped"
+                        );
                     }
                 }
                 map

@@ -66,8 +66,7 @@ fn build_pong_frame(target_node: u16) -> [u8; 16] {
 /// Parse PPN_PEERS env var (comma-separated host:port or bare IPs).
 /// Default: "10.8.0.1:9206,10.8.0.9:9206"
 fn resolve_peers() -> Vec<String> {
-    let raw = env::var("PPN_PEERS")
-        .unwrap_or_else(|_| "10.8.0.1:9206,10.8.0.9:9206".to_string());
+    let raw = env::var("PPN_PEERS").unwrap_or_else(|_| "10.8.0.1:9206,10.8.0.9:9206".to_string());
     raw.split(',')
         .map(|s| {
             let s = s.trim().to_string();
@@ -168,13 +167,17 @@ async fn main() {
     // Requires CAP_NET_ADMIN / root to execute `wg set`. Skips gracefully if wg is unavailable.
     {
         let wg_iface = env::var("WG_IFACE").unwrap_or_else(|_| "wg0".to_string());
-        let fleet_url = env::var("FLEET_URL").unwrap_or_else(|_| "http://127.0.0.1:9203".to_string());
-        let fs_url = env::var("SERVICE_FS_URL").unwrap_or_else(|_| "http://127.0.0.1:9100".to_string());
+        let fleet_url =
+            env::var("FLEET_URL").unwrap_or_else(|_| "http://127.0.0.1:9203".to_string());
+        let fs_url =
+            env::var("SERVICE_FS_URL").unwrap_or_else(|_| "http://127.0.0.1:9100".to_string());
         let home = env::var("HOME").unwrap_or_else(|_| ".".to_string());
         let nodes_path = env::var("NODES_JSONL_PATH")
             .map(PathBuf::from)
             .unwrap_or_else(|_| PathBuf::from(home).join(".local/share/ppn/nodes.jsonl"));
-        tokio::spawn(fleet_watch::run_fleet_watch(wg_iface, fleet_url, fs_url, nodes_path));
+        tokio::spawn(fleet_watch::run_fleet_watch(
+            wg_iface, fleet_url, fs_url, nodes_path,
+        ));
     }
 
     let translate_route = warp::post()
