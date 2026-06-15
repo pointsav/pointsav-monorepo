@@ -48,7 +48,7 @@ async fn rendered_page_carries_jsonld_script() {
     let resp = app
         .oneshot(
             Request::builder()
-                .uri("/wiki/topic-test")
+                .uri("/wiki/test")
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -72,7 +72,7 @@ async fn rendered_page_carries_jsonld_script() {
     assert_eq!(parsed["@context"], "https://schema.org");
     assert_eq!(parsed["@type"], "TechArticle");
     assert_eq!(parsed["name"], "JSON-LD Test");
-    assert_eq!(parsed["identifier"], "topic-test");
+    assert_eq!(parsed["identifier"], "test");
     assert_eq!(parsed["inLanguage"], "en");
     assert_eq!(parsed["isPartOf"]["name"], "PointSav Knowledge");
 }
@@ -111,7 +111,7 @@ async fn fli_topic_carries_additional_property() {
     let resp = app
         .oneshot(
             Request::builder()
-                .uri("/wiki/topic-fli")
+                .uri("/wiki/fli")
                 .body(Body::empty())
                 .unwrap(),
         )

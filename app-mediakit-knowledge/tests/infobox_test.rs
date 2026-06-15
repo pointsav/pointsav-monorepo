@@ -67,7 +67,7 @@ async fn infobox_title_renders_as_caption() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (status, html) = get_wiki(state, "topic-person").await;
+    let (status, html) = get_wiki(state, "person").await;
     assert_eq!(status, StatusCode::OK);
     assert!(
         html.contains("class=\"infobox-title\""),
@@ -88,7 +88,7 @@ async fn infobox_title_not_in_data_rows() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (_, html) = get_wiki(state, "topic-bio").await;
+    let (_, html) = get_wiki(state, "bio").await;
     // The infobox table should have the born row but NOT a <th>title</th> row
     assert!(
         html.contains("<th>born</th>") || html.contains(">born<"),
@@ -112,7 +112,7 @@ async fn infobox_image_renders_img_tag() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (status, html) = get_wiki(state, "topic-landmark").await;
+    let (status, html) = get_wiki(state, "landmark").await;
     assert_eq!(status, StatusCode::OK);
     assert!(
         html.contains("class=\"infobox-image\""),
@@ -144,7 +144,7 @@ async fn infobox_image_not_in_data_rows() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (_, html) = get_wiki(state, "topic-img").await;
+    let (_, html) = get_wiki(state, "img").await;
     assert!(
         !html.contains("<th>image</th>"),
         "image key must not appear as a data row"
@@ -171,7 +171,7 @@ async fn main_block_renders_hatnote() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (status, html) = get_wiki(state, "topic-overview").await;
+    let (status, html) = get_wiki(state, "overview").await;
     assert_eq!(status, StatusCode::OK);
     assert!(
         html.contains("class=\"wiki-hatnote\""),
@@ -199,7 +199,7 @@ async fn main_block_derives_display_from_slug() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (_, html) = get_wiki(state, "topic-section").await;
+    let (_, html) = get_wiki(state, "section").await;
     // Last segment "economic-model" → "Economic Model"
     assert!(
         html.contains("Economic Model"),
@@ -219,7 +219,7 @@ async fn main_block_pipe_display_text() {
     .await
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
-    let (_, html) = get_wiki(state, "topic-pipe").await;
+    let (_, html) = get_wiki(state, "pipe").await;
     assert!(
         html.contains("The Compounding Substrate"),
         "explicit pipe display text not rendered"
