@@ -4,137 +4,63 @@ project: project-editorial
 project: project-system
 project: project-gis
 project: project-knowledge
+project: project-infrastructure
 last_updated: 2026-06-14
 last_updated: 2026-06-14 (session 8 — CODE C updated with commit 1a914564; entity_filter.rs added)
 ---
 
-# project-system Artifact Registry
+# project-infrastructure Artifact Registry
 
-Persistent record of editorial, design, data, and JOURNAL artifacts produced
-by this archive. Updated as artifacts are staged, dispatched, or completed.
+Persistent record of all CODE, SOFT, TOPIC, GUIDE, TEXT, and JOURNAL artifacts
+produced by this archive. Updated as artifacts are staged, dispatched, or completed.
 
 Routing:
-- TOPIC / GUIDE / TEXT / PROSE → `project-editorial`
-- DESIGN-RESEARCH / DESIGN-TOKEN / COMPONENT → `project-design`
-- DATA artifacts remain in this archive
-- JOURNAL → `drafts-outbound/` (staged for external journal submission)
+- TOPIC / GUIDE / TEXT / PROSE-RESEARCH / JOURNAL → `project-editorial` via `.agent/drafts-outbound/`
+- CODE → commit directly to archive git (self-contained; no drafts-outbound)
+- SOFT → commit directly; marketplace listing via `app-privategit-marketplace`
+- DATA → commit directly (none currently — architecture is stateless by design)
+
+Bright-line rules (from CLAUDE.md):
+- CODE: runs our systems; internal deploy; no customer license key
+- SOFT: Ed25519 license key + marketplace listing + price at software.pointsav.com
+- TOPIC: explains WHAT/WHY; bilingual EN+ES; survives decommission
+- GUIDE: instructs HOW-NOW; English-only; tied to a specific deployment
 
 ---
 
-## J — JOURNAL Artifacts (PhD Thesis Programme)
+## CODE Artifacts
 
-Academic papers under the `foundry-journal-v1` schema. Named natural-person
-authors only. No internal Foundry vocabulary. Rules: `.agent/rules/journal-artifact-discipline.md`.
+Self-contained binaries deployed on vault-privategit-source-1 and PPN fleet nodes.
+Committed directly; Stage 6 signals sent to Command.
 
-Status values: `stub` → `scaffolded` → `language-cleared` → `submission-ready` → `submitted` → `published`
-
-| ID | File | Title (working) | Target Journal | Lead Author | Status |
-|----|------|-----------------|----------------|-------------|--------|
-| J1 | `JOURNAL-retail-colocation-v0.5.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | v0.5 dispatched to project-editorial 2026-05-31 |
-| J2 | `JOURNAL-trustworthy-systems-v0.1.draft.md` | Composing Trustworthy Systems from Verified Primitives | ASPLOS (ACM, 19.4% AR) | Mathew Woodfine | language-cleared |
-| J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier, IF 12.0) | Jennifer M. Woodfine | language-cleared |
-| J4 | `JOURNAL-private-network-v0.4.draft.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | language-cleared (v0.5.1, 2026-06-10; `forbidden_terms_cleared: true`) |
-| J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | MLSys (ACM, 22% AR) | Mathew Woodfine | stub |
-| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared |
-| J7 | `JOURNAL-urban-fringe-v0.1.stub.md` | Industrial Co-location in the Metropolitan Ring: Spatial Signatures of the Urban Fringe Archetype | Regional Science and Urban Economics (Elsevier, IF 2.9, Q1) | Jennifer M. Woodfine | §2 written 2026-06-14; §3–§8 stub; `forbidden_terms_cleared: false` |
-| J8 | `JOURNAL-commuter-v0.1.stub.md` | The Commuter Archetype: Car-Rental Clustering as a Proxy for Transit-Adjacent Commercial Co-location | Journal of Transport Geography (Elsevier, IF 6.88, Q1) | Peter M. Woodfine | §2 written 2026-06-14; §3–§8 stub; `forbidden_terms_cleared: false` |
-
-### Pre-submission blockers by paper
-
-**J1 — Retail Co-location:**
-- ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`; body scanned clean)
-- ~~F1–F5 figures~~ — READY at project-gis `work/figures/` (produced 2026-05-28)
-- ~~Phase 22 CSV~~ — READY at project-gis `work/clusters-ols.csv` (6,493 rows, 2026-05-28)
-- ~~§7.0 preliminary OLS~~ — COMPLETE 2026-05-28: Model A (T1 span β=+0.489, p<0.001) + Model B (R²=0.503); F6 partial produced
-- ~~§5.1 table corrected~~ — DONE 2026-05-31 v0.5: NA/EU Phase 23+Change B actuals (NA T1=1,021/T2=1,831/T3=913; EU T1=725/T2=895/T3=1,108)
-- ~~§5.4 Regional Market Discovery~~ — DONE 2026-05-31 v0.5: isolation-first scoring, Top 400 country distribution, H₄ hypothesis
-- ~~Appendix B~~ — DONE 2026-05-31 v0.5: 18-country T1/T2/T3 table from Phase 23+Change B clusters-meta.json
-- Language pass on §5.4 (new section; `forbidden_terms_cleared` reset to false) — AT project-editorial
-- §7.2 primary spec (catchment_entropy ~ tier + log[pop_150km] + country FE) — pending Phase 24B (Kontur population join + O-D data)
-- F6 update with §7.2 spec results — pending Phase 24B
-- §5.3 LODES employment join — v0.6 item (executable once `build-geometric-ranking.py` run)
-- Appendix C data-flow diagram — v0.6 item
-- Permutation test (`sim-tier-permutation.py`) — to be written
-- Word count trim (~800 words; from 9,300 to 8,500 target) — AT project-editorial
-- CBRE/JLL leasing-data acquisition (Year 2 research)
-- ORCID IDs for all three authors
-
-**J2 — Trustworthy Systems:**
-- ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`)
-- Bench #9 quiet-VM re-run (22 outliers, ±11% CI — explicitly flagged)
-- Promote all `[external: ...]` citation placeholders to `citations.yaml` stable IDs
-- ASPLOS short version (~6,000 words, 2-column ACM format)
-- ORCID IDs for all three authors
-
-**J3 — AEC Data Layers:**
-- ~~Full body writing pass~~ — COMPLETE 2026-05-28 (~7,800 words; §1–§5 + §7–§8 written; §6 Results structured TODO)
-- ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`; body scanned clean)
-- §6 Results — pending AEC nightly build coverage metrics from project-gis (H3 cells covered vs. total per country per layer; Nights 2–5)
-- ORCID IDs for all three authors
-
-**J4 — Private Network / CRMA:**
-- ~~§1–§3 writing pass~~ — COMPLETE 2026-05-28 (~4,800 words; §1 Introduction, §2 Background, §3 Architecture written; §6 Discussion + §7 Conclusion written)
-- ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`)
-- ~~§4 Implementation + §5 Evaluation~~ — COMPLETE 2026-05-29 v0.3 (commit 149a8b39): empirical benchmarks on GCP e2-standard-8; B1 n=30 mean=44ms; B2 n=10 mean=59ms; B3 wg set=8ms; B4 bimodal {1s,11-16s}
-- ~~[CITATION NEEDED] x2~~ — RESOLVED v0.4 (b3e8190a): Birge-Lee 2024 DOI:10.1007/978-3-031-85960-1_14 + Mackey 2020 DOI:10.1145/3374664.3379532
-- ~~JOURNAL/ sync~~ — DONE 2026-05-31: v0.4 copied to JOURNAL/JOURNAL-private-network-v0.4.draft.md; stale v0.1 stub removed
-- ~~§4–§5 language pass~~ — COMPLETE 2026-06-10 (v0.5.1; prior project-editorial session; `forbidden_terms_cleared: true` confirmed in JOURNAL/ copy)
-- ORCID IDs for all three authors (operator action required)
-
-**J6 — Desktop Environment:**
-- §1–§4 writing pass (Introduction, Background, Design Principles, Implementation) — in progress
-- §5–§6 pending user study data
-- ORCID IDs for all three authors
-
-**J5:** HOLD until J2 submitted
-
-**J7 — Urban Fringe pre-submission blockers:**
-- ~~Full chain ingestion (MRO, flooring, tool-rental, auto-parts, paint YAMLs)~~ — RESOLVED 2026-06-11:
-  mro_industrial (Würth, Fastenal, Grainger, Hilti etc.), tool_rental (United Rentals, Sunbelt, Loxam
-  etc.), flooring (Floor & Decor, Topps Tiles), auto_parts (AutoZone, O'Reilly, NAPA, Halfords),
-  paint (Sherwin-Williams, Comex) all ingested; VWH production build live (6,368 clusters)
-- ~~Full literature review (§2)~~ — DONE 2026-06-14 (v0.2; §2.1–§2.4 written; [external: ...] citations flagged)
-- Validation section (§4.4) — stub only
-- OLS regression (§5.3 / §7.1) — executable once full dataset available; VWH clusters-ols.csv
-  now derivable from archetype-vwh.geojson
-- ORCID IDs for all three authors
-
-**J8 — Commuter pre-submission blockers:**
-- ~~Literature review (§2)~~ — DONE 2026-06-14 (v0.2; §2.1–§2.5 written; [external: ...] citations flagged)
-- Validation (§4.4) — stub only
-- Integration rate regression (§5.3 / §7.2) — requires rail-frequency external data
-- ORCID IDs for all three authors
+| Crate | Binary / Port | Status | Last commit |
+|---|---|---|---|
+| `service-vm-fleet` | `local-vm-fleet.service` :9203 | Active — deployed; 14 tests | 5e851ecc |
+| `service-vm-host` | `local-vm-host.service` :9220 (per node) | Active — deployed; 7 tests; .meta.json sidecar | 2717fbce |
+| `service-vm-tenant` | `local-vm-tenant.service` :9221 | Active — A1 opaque bearer (TOKEN_MAP); A3 SLIRP host_ports; A4 service-fs audit route | dbf6a528 |
+| `system-vm-fleet-types` | shared wire types (`no_std`-compatible) | Active — HostPortMapping + host_ports in VmRecord; backward-compat serde default | dbf6a528 |
+| `app-network-admin` | CLI :8085 HTTP + :9206 UDP listen | Active — Phase S2: tokio UDP listener; PING→PONG; PPN_PEERS env var | 3bafaec5 |
 
 ---
 
-## S — Practitioner Summaries (CBRE/JLL white paper format)
+## SOFT Artifacts
 
-Self-contained market briefs. Audience: commercial real estate investors, developers, planners. No academic citations. Published to `gis.woodfinegroup.com/research/` alongside companion JOURNAL papers.
+Commercial products verified with Ed25519 license tokens. Sold at software.pointsav.com.
+Cash register test: licensable + marketplace-listed = SOFT.
 
-| ID | File | Title | Companion | Status |
-|---|---|---|---|---|
-| S1 | `SUMMARY/SUMMARY-urban-fringe.draft.md` | Urban Fringe: The Industrial Co-location Layer in the Metropolitan Ring | J7 | draft v0.2 — §2+§5+§6 written 2026-06-14 |
-| S2 | `SUMMARY/SUMMARY-commuter.draft.md` | Commuter: Transit-Adjacent Commercial Co-location at Regional Rail Stations and Airports | J8 | draft v0.2 — §7 investment thesis written 2026-06-14 |
+| Product ID | Crate | Port | Status |
+|---|---|---|---|
+| `soft-slm-orchestration` | `app-orchestration-slm` | `local-orchestration-slm.service` :9180 | Active — deployed; 15 tests; ORCHESTRATION_LICENSE_PUBKEY_HEX runtime load (C, 85e8c60f); marketplace listing pending operator action |
 
-**S1 pre-completion requirements:**
-- ~~Full chain ingestion~~ DONE 2026-06-11
-- ~~§2 production data update (6,368 clusters)~~ DONE 2026-06-14
-- ~~§5 integration analysis~~ DONE 2026-06-14 (retail_contamination analysis; dual-use zones)
-- ~~§6 investment thesis~~ DONE 2026-06-14 (T1/T2/T3 profile; demand drivers; risk factors)
-- Map figure — pending project-gis (archetype-vwh.geojson deployed; needs rendering)
-
-**S2 pre-completion requirements:**
-- ~~§7 investment thesis~~ DONE 2026-06-14 (integration rate by country; demand drivers; T1 hub analysis; risk factors)
-- Map figure — pending project-gis (archetype-pks.geojson deployed; needs rendering)
-- §5 integration rate regression — requires external rail-frequency data (long-term)
-Routing per `~/Foundry/conventions/artifact-classification.yaml`:
-- TOPIC / GUIDE / TEXT → `.agent/drafts-outbound/` → project-editorial
-- DESIGN-* / ASSET-* → `.agent/drafts-outbound/` → project-design
-- CODE / SCRIPT / CONFIG / DATA → commit directly (self-contained)
+Notes:
+- `REQUIRED_PRODUCT = "soft-slm-orchestration"` in `orchestration-slm/src/license.rs`
+- Ed25519 offline verification — no network call for license check
+- `ORCHESTRATION_LICENSE_PUBKEY_HEX` env var → runtime pubkey (C, wiring in progress)
+- Marketplace listing in `app-privategit-marketplace` requires operator action
 
 ---
 
-## A — Active / In-Progress
+## TOPIC Artifacts
 
 ### A18 — BRIEF: Location Intelligence Archetypes (PRO / VWH / PKS)
 - **File:** `.agent/briefs/BRIEF-location-intelligence-archetypes-2026-06-01.md`
@@ -146,16 +72,11 @@ Routing per `~/Foundry/conventions/artifact-classification.yaml`:
   MX=177 (was 183 Phase 5; 6 false US clusters removed; lon-scoped coord override); mode-group collapse; park-and-ride anchor; car rental + hotel + convenience enrichment.
   §11: VWH calibration — hardware profile (10,338 anchors, 45 chains), sim (73.4% hardware validation PASS),
   group-collapse tier rules, production results (6,368 clusters; T1=852/T2=1,327/T3=4,189; `retail_contamination` flag at 47.9%).
+Explain WHAT and WHY. Bilingual EN+ES pair. Route to project-editorial.
 
-### A19 — TOPIC: Vertical Warehouse (VWH)
-- **File:** `.agent/drafts-outbound/TOPIC-vertical-warehouse.draft.md`
-- **Status:** STAGED — draft complete 2026-06-01; ready for project-editorial; production data
-  now live (6,368 clusters) — editorial pass may want to update candidate count in body
-- **Destination:** project-editorial → media-knowledge-documentation
-- **Content:** VWH archetype definition (3-6 story urban logistics/light-mfg), spatial signature,
-  site selection signals, full Tier A/B chain taxonomy (Würth, Floor & Decor, United Rentals,
-  Fastenal, etc.), data collection plan with Wikidata IDs. Production calibration: 6,368 clusters
-  (T1=852/T2=1,327/T3=4,189); group-collapse tier rules; `retail_contamination` flag (see BRIEF §11).
+| ID | File | Title | Status |
+|---|---|---|---|
+| T1 | `TOPIC-ppn-vm-architecture.draft.md` | PPN VM Resource Pool Architecture | STAGED — written 2026-06-14 (workflow D); ready for project-editorial |
 
 ### A20 — TOPIC: Parking Structures (PKS)
 - **File:** `.agent/drafts-outbound/TOPIC-parking-structures.draft.md`
@@ -327,100 +248,72 @@ Routing per `~/Foundry/conventions/artifact-classification.yaml`:
 - **Status:** DISPATCHED fe5148fd (2026-05-16) — at project-editorial; Phase 1/2 sections appended
 - **Destination:** project-editorial
 - **Content:** Full rebuild procedure including Phase 1 taxonomy rebuild steps and Phase 2 build-geometric-ranking.py future pipeline
+T1 covers: service-vm-fleet / service-vm-host / service-vm-tenant / app-orchestration-slm /
+WireGuard mesh / planned seL4 + Firecracker extensions. ~900 words. ES sibling added by project-editorial.
+
+Backlog:
+- TOPIC: Tenant VM Isolation Model — after A1–A4 hardening stable
+- TOPIC: os-network-admin as PPN Control Plane — after Phase S3 ships
 
 ---
 
-## B — Backlog (queued for future sessions)
+## GUIDE Artifacts
 
-### B1 — TOPIC: Co-location Ranking System (full update)
-- **Status:** BACKLOG — existing draft dispatched; needs update for catchment rank fields
-- **Destination:** project-editorial
+Instruct HOW-NOW. English-only. Tied to a named deployment. Route to project-editorial.
 
-### B2 — TOPIC: POI Data Schema
-- **Status:** DISPATCHED sprint 13 (ba5fe38) — at project-editorial
+| ID | File | Title | Status |
+|---|---|---|---|
+| G1 | `GUIDE-ppn-fleet-operations.draft.md` | PPN Fleet Operations | STAGED — written 2026-06-14 (workflow D); ready for project-editorial |
+| G2 | `GUIDE-ppn-node-setup.draft.md` | PPN Node Setup | STAGED — written 2026-06-11 (claude-fable-5); frontmatter updated 2026-06-14; ready for project-editorial |
 
-### B3 — GUIDE: Adding a Chain
-- **Status:** DISPATCHED sprint 11/13 — at project-editorial; appendix added
+G1 covers: check fleet status, add/reserve a node, spawn VM (operator + tenant paths),
+destroy VM, check orchestration-slm. Concrete curl examples on actual ports.
 
-### B4 — GUIDE: Adding a Country
-- **Status:** STAGED in drafts-outbound/ — at project-editorial
+G2 covers: installing os-infrastructure on a new machine and joining the PPN mesh.
+Current path is manual (3 commands on node); target is single bootable ISO.
 
-### B5 — TEXT: Canada/Walmart Supercentre + Hospital Coverage
-- **Status:** STAGED in drafts-outbound/ (text-gis-canada-walmart-hospital-coverage.draft.md)
+Destination: woodfine-fleet-deployment catalog entry for this infrastructure (pending creation).
 
-### B6 — DESIGN-RESEARCH: Bento Merged Zones Disclosure
-- **Status:** IMPLEMENTED 21cf18df (2026-05-17) — merged-ring UX shipped in index.html (Union-Find groupOverlappingClusters, showMergedGroupPanel). Editorial draft still at project-design for write-up.
-
-### B7 — DESIGN-RESEARCH: Location Intelligence UX
-- **Status:** STAGED in drafts-outbound/ — at project-design
-
-### B8 — DESIGN-RESEARCH: Ring Retailer Click UX
-- **Status:** STAGED in drafts-outbound/ — at project-design
-
-### B9 — DESIGN-RESEARCH: Tier Naming Accessibility
-- **Status:** STAGED in drafts-outbound/ — at project-design
-
-### B10 — DESIGN-RESEARCH: Zoom Prefetch Pattern
-- **Status:** STAGED in drafts-outbound/ — at project-design
-
-### B11 — TEXT: Nordic/UK Coverage Release
-- **Status:** STAGED in drafts-outbound/ — at project-editorial
-
-### B12 — TEXT: UK/EU Coverage Release
-- **Status:** STAGED in drafts-outbound/ — at project-editorial
-
-### B13 — TOPIC: Regional Name Resolution Architecture
-- **Status:** COMMITTED — media-knowledge-documentation/architecture/regional-name-resolution.md (prior session); Wikipedia refs added bf920fc@jwoodfine 2026-06-14
-
-### B14 — TOPIC: Co-location Tier Nomenclature
-- **Status:** COMMITTED — media-knowledge-documentation/reference/colocation-tier-nomenclature.md (prior session); frontmatter + DBSCAN ref added bf920fc@jwoodfine 2026-06-14; NOTE: architecture/colocation-tier-nomenclature.md is a duplicate with same slug — pending Command `git rm` (msg project-editorial-20260614-slug-collision-defect)
-
-### B15 — TOPIC: GIS as BIM Substrate
-- **Status:** COMMITTED — media-knowledge-documentation/architecture/gis-as-bim-substrate.md (prior session); body H1 + GIS/BIM refs added bf920fc@jwoodfine 2026-06-14
-
-### B16 — TOPIC: UK/EU Food Retail Coverage
-- **Status:** COMMITTED — media-knowledge-documentation/reference/uk-eu-food-retail-coverage.md (prior session); OSM/Wikidata refs added bf920fc@jwoodfine 2026-06-14
+Backlog:
+- GUIDE: Adding a PPN Node (operator) — G2 update once Genesis Protocol ISO boots bare-metal
+- GUIDE: SLM Orchestration Setup — once C (license pubkey) and marketplace listing are done
 
 ---
 
-## C — Data Artifacts (pipeline outputs, not editorial)
+## TEXT Artifacts
 
-| Artifact | File | Status |
-|---|---|---|
-| O-D Summary (B3) | `service-fs/service-mobility/od-summary.jsonl` | DONE (2026-05-15) |
-| Catchment Data | `work/catchment-data.json` | DONE (2026-05-15) |
-| Catchment Polygons | `work/catchment-polygons.geojson` → `layer3-catchment.pmtiles` (87 MB) | DONE (2026-05-15) |
-| Census Catchment | `work/census-catchment.geojson` → `layer4-census.pmtiles` (373 MB) | DONE (2026-05-15) |
-| Spend Catchment | `work/spend-catchment.geojson` → `layer5-spend.pmtiles` (635 MB) | DONE (2026-05-15) |
-| DATA-MANIFEST.md | project root | DONE (2026-05-12) |
-| clusters-meta.json | gateway www/data/ | DONE (2026-05-22; 5,702 clusters; T1=1,157/T2=4,283/T3=262; Phase 18; 570bda53) |
-| regional-markets.json | gateway www/data/ | DONE (2026-05-15; 2,986 Regional Markets, 2,942 high-conf) |
-| us_places.geojson | deployments/boundaries/ | DONE (2026-05-15; TIGER 2023, 32K US places) |
-| eu_municipalities.geojson | deployments/boundaries/ | DONE (2026-05-15; GISCO LAU 2021 + GADM GBR, 98.6K entries) |
-| ca_places_nominatim.json | deployments/boundaries/ | DONE (2026-05-15; 12 county-CSD overrides, e.g. Sherwood Park) |
+Short-form copy for UI, website, or marketing surfaces.
+
+| ID | File | Title | Status |
+|---|---|---|---|
+| — | — | — | None produced yet |
+
+Backlog:
+- TEXT: "Any Hardware, Sovereign Compute" — PPN small-business proposition (~300 words);
+  target: pointsav.com product page or gis.woodfinegroup.com/ppn. Trigger: §15 of BRIEF
+  is audience-ready.
 
 ---
 
-### VWH Calibration — Scripts + Data (2026-06-11)
+## JOURNAL / PROSE-RESEARCH Artifacts
 
-Produced as part of the VWH (Urban Fringe) co-location calibration. See BRIEF §11 for full methodology.
-Same two-step approach as PKS: profile hardware stores as proxy anchor → simulate → calibrate.
+Long-form research drafts. Named natural-person authors only. Route to project-editorial.
 
-| Artifact | File | Status |
-|---|---|---|
-| VWH profiling script | `app-orchestration-gis/analyze-vwh-colocation.py` | DONE (2026-06-11; profiles 10,338 hardware stores; 45 chains; reports co-occurrence by VWH trade category) |
-| VWH calibration sim | `app-orchestration-gis/sim-vwh-colocation.py` | DONE (2026-06-11; 1 iteration; TRADE+AUTO+SUPPORT without hardware/hypermarket; hardware validation 73.4% PASS) |
-| Hardware co-location profile | `work/hardware-colocation-profile.json` | DONE (2026-06-11; hypermarket 73.9% / auto_parts 51.2% / builders_merchant 11.4% / mro_industrial 10.4% / tool_rental 7.8%; CBD proximity filter NOT viable — 73.6% >30km from metro refs) |
-| archetype-vwh.geojson (calibrated) | `gateway-orchestration-gis-1/www/data/archetype-vwh.geojson` | DONE (2026-06-11; 6,368 features; T1=852/T2=1,327/T3=4,189; group-collapse tier rules; retail_contamination flag; 3.0MB; deployed) |
+| ID | File | Title | Status |
+|---|---|---|---|
+| PR1 | `PROSE-RESEARCH-ppn-architecture-phd-thesis.draft.md` | PointSav Private Network: A Formally-Isolated Sovereign Virtualization Platform | STAGED — v0.2 (43KB); frontmatter updated 2026-06-14; 61 citations; benchmark placeholders [T][N][L] pending empirical data; ready for project-editorial review pass |
+| J1 | `JOURNAL-ppn-pooled-compute-v0.1.draft.md` | Pooled Compute from Heterogeneous Hardware | STAGED — lead: Peter M. Woodfine; frontmatter fixed 2026-06-14 (removed incorrect email); target: IEEE TCC (IF 6.49); ORCID IDs for all 3 authors required before submission |
 
-Key finding: `build-vwh-clusters.py` already existed (ran 2026-06-05, 10,261 clusters, T3-heavy).
-Updated qualify_vwh + tier_vwh in that script from additive score to group-collapse model.
+Pre-submission blockers:
+- PR1: academic register review; citation completeness (61 entries; gaps flagged); BCSC disclosure pass; ORCID IDs
+- J1: benchmark placeholders [T][N][L] need empirical data; Peter + Mathew + Jennifer ORCID IDs; Peter email address unknown (do not use jmwoodfine@gmail.com)
 
 ---
 
-### PKS Calibration — Scripts + Data (2026-06-11)
+## Contaminated files in .agent/drafts-outbound/
 
-Produced as part of the PKS co-location calibration process. See BRIEF §10.12 for full methodology.
+These do not belong to project-infrastructure. Do not route as infrastructure artifacts.
+Flag to Command for correct routing when next Command sweep runs.
 
 | Artifact | File | Status |
 |---|---|---|
@@ -727,3 +620,13 @@ visibility.
 - When an artifact is returned (approved/rejected), update status
 - Add new artifacts here at the time they are planned — do not wait until staging
 - E-series: update Stage 6 column when Command confirms promotion; update Live column when binary rebuild deployed
+| File | Likely owner |
+|---|---|
+| `GUIDE-orgchart-authoring.draft.md` | project-orgcharts |
+| `JOURNAL-NOTES-j3-20260602.draft.md` | project-gis (J3 = AEC Data Layers) |
+| `JOURNAL-NOTES-j6-20260602.draft.md` | project-gis (J6 = Desktop Environment) |
+| `RESEARCH-bencal-naming-conventions.{md,pdf}` | project-proforma |
+| `knowledge-platform-rewrite-analysis.draft.md` | project-knowledge |
+| `COMMS-bencal-*.{md,html,pdf}` | project-proforma or project-editorial |
+| `DESIGN-*.draft.md` | project-design (orgchart / docs components) |
+| `BRIEF-REVIEW-old-brief-verdict.md` | origin unknown |

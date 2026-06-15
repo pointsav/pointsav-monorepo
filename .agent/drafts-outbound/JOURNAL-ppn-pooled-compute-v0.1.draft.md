@@ -11,7 +11,7 @@ alternate_venue: "Future Generation Computer Systems (Elsevier, IF 6.23); Journa
 authors:
   - name: "Peter M. Woodfine"
     affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
-    email: jmwoodfine@gmail.com
+    email: ""
     orcid: ""
     credit_roles:
       - Conceptualization
@@ -34,13 +34,19 @@ authors:
       - Project Administration
       - Writing – Review & Editing
 created: 2026-06-11
-archive: project-infrastructure
+updated: 2026-06-14
+owner: project-infrastructure
+route_to: project-editorial
 research_trail:
-  session: totebox@project-infrastructure 2026-06-11
-  sources: [BRIEF-totebox-transformation.md §13-§15, live deployment records 2026-06-11]
+  sources: ["BRIEF-totebox-transformation.md §13–§15", "live deployment records 2026-06-11"]
+  method: live deployment + code review
   claim_verification: pending peer review
+  forbidden_terms_cleared: false
   bcsc_reviewed: false
-  bilingual_pair: none
+operator_notes: >
+  Peter M. Woodfine email address unknown — do not use jmwoodfine@gmail.com (that is Jennifer's).
+  ORCID IDs for all three authors required before submission.
+  Benchmark placeholders [T], [N], [L] must remain as-is until empirical data is available.
 ---
 
 # Pooled Compute from Heterogeneous Hardware: A Private Platform Network Deployment Case Study

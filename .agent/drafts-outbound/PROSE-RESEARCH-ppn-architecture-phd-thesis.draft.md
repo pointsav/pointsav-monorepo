@@ -1,17 +1,15 @@
 ---
-foundry-draft-v1: true
-artifact: PROSE-RESEARCH
-name: PROSE-RESEARCH-ppn-architecture-phd-thesis
+artifact: prose-research
+schema: foundry-draft-v1
+draft-id: project-infrastructure-prose-ppn-architecture-phd-thesis
 title: "PointSav Private Network: A Formally-Isolated Sovereign Virtualization Platform for Small and Medium Businesses"
 subtitle: "PhD Thesis — Yale CS PhD standard"
-status: draft-revised
+status: draft
 revision: v0.2
-revision_date: 2026-06-01
+owner: project-infrastructure
 created: 2026-05-27
-session: totebox@project-infrastructure
-destination: project-editorial
-gateway: project-editorial
-route: review → return-to-archive
+updated: 2026-06-14
+route_to: project-editorial
 return_path: .agent/briefs/BRIEF-PPN-ARCHITECTURE.md
 review_requested:
   - academic register (Bloomberg-standard precision; no AI marketing vocabulary; no hedged claims without citation support)

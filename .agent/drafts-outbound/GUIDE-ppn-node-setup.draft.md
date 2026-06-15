@@ -1,17 +1,21 @@
 ---
-artifact: guide-draft
-foundry-draft-v1: true
-language_protocol: PROSE
-route_to: project-editorial
+artifact: guide
+schema: foundry-draft-v1
+draft-id: project-infrastructure-guide-ppn-node-setup
+title: "PPN Node Setup"
+language_protocol: PROSE-RESEARCH
 status: draft
+owner: project-infrastructure
 created: 2026-06-11
-archive: project-infrastructure
+updated: 2026-06-14
 research_trail:
-  session: totebox@project-infrastructure 2026-06-11
-  sources: [infrastructure/virt/setup-vm-host-laptop.sh, live deployment 2026-06-11]
-  claim_verification: pending editorial review
-  bcsc_reviewed: false
-  bilingual_pair: none
+  sources: ["infrastructure/virt/setup-vm-host-laptop.sh", "live deployment 2026-06-11"]
+  method: live deployment record
+  confidence: high
+  gaps: ["Genesis Protocol ISO path not yet covered — manual steps only"]
+  forbidden_terms_cleared: false
+bcsc_class: internal
+route_to: project-editorial
 ---
 
 # GUIDE: Joining a Node to an Existing PPN
