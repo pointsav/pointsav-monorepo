@@ -4,6 +4,7 @@ project: project-editorial
 project: project-system
 project: project-gis
 last_updated: 2026-06-14
+last_updated: 2026-06-14 (session 8 — CODE C updated with commit 1a914564; entity_filter.rs added)
 ---
 
 # project-system Artifact Registry
@@ -564,20 +565,67 @@ Produced as part of the PKS co-location calibration process. See BRIEF §10.12 f
 | Kontur integration plan | `work/kontur-integration-plan.md` | DONE (2026-05-17; H3 res-8 available; CC BY 4.0; HDX download) |
 | Storage report | `work/storage-report.md` | DONE (2026-05-17; root 65%; stale backups 35M removable) |
 | SafeGraph export | `export-safegraph.py` | DONE adbb5d42 (2026-05-17; --sample 100 verified) |
+
+---
+
+## A — Active / In-Progress (PPN + Totebox Pipeline)
+
+### A1–A8 — PPN / OS surface staged drafts
+
 | ID | File | Title | Destination | Status |
 |----|------|-------|-------------|--------|
 | A1 | `drafts-outbound/GUIDE-ppn-node-setup.draft.md` | PPN Node Setup Guide | project-editorial | staged |
-| A2 | `drafts-outbound/TOPIC-ppn-small-business-compute.draft.md` | PPN Small-Business Compute | project-editorial | staged |
-| A3 | `drafts-outbound/TOPIC-os-console-architecture.draft.md` | OS Console Architecture | project-editorial | staged |
-| A4 | `drafts-outbound/TOPIC-software-distribution-substrate.draft.md` | Software Distribution Substrate | project-editorial | staged |
-| A5 | `drafts-outbound/TOPIC-crypto-license-sales-architecture.draft.md` | Crypto License Sales Architecture | project-editorial | staged |
-| A6 | `drafts-outbound/TOPIC-private-git-paid-customer-endpoint.draft.md` | Private Git Paid Customer Endpoint | project-editorial | staged |
+| A2 | `drafts-outbound/TOPIC-ppn-small-business-compute.draft.md` | PPN Small-Business Compute | project-editorial | staged — EN+ES pair confirmed 2026-06-14 |
+| A3 | `drafts-outbound/TOPIC-os-console-architecture.draft.md` | OS Console Architecture | project-editorial | staged — EN+ES pair confirmed 2026-06-14 |
+| A4 | `drafts-outbound/TOPIC-software-distribution-substrate.draft.md` | Software Distribution Substrate | project-editorial | staged — EN+ES pair confirmed 2026-06-14 |
+| A5 | `drafts-outbound/TOPIC-crypto-license-sales-architecture.draft.md` | Crypto License Sales Architecture | project-editorial | staged — EN+ES pair confirmed 2026-06-14 |
+| A6 | `drafts-outbound/TOPIC-private-git-paid-customer-endpoint.draft.md` | Private Git Paid Customer Endpoint | project-editorial | staged — EN+ES pair confirmed 2026-06-14 |
 | A7 | `drafts-outbound/JOURNAL-ppn-pooled-compute-v0.1.draft.md` | PPN Pooled Compute (JOURNAL) | project-editorial | staged |
 | A8 | `drafts-outbound/PROSE-RESEARCH-ppn-architecture-phd-thesis.draft.md` | PPN Architecture PhD Thesis prose | project-editorial | staged |
+
+### A9 — TOPIC: Dual-Tier Entity Extraction Architecture
+- **File:** `drafts-outbound/TOPIC-dual-tier-extraction-architecture.draft.md`
+- **Paired:** `drafts-outbound/TOPIC-dual-tier-extraction-architecture.es.draft.md`
+- **Status:** STAGED 2026-06-14 — ready for project-editorial
+- **Destination:** project-editorial → media-knowledge-documentation
+- **Content:** Tier A (OLMo 7B local CPU, LadybugDB), Tier B (OLMo 32B L4 GPU), ALLOWED_CLASSIFICATIONS guard, EXTRACTION_SYSTEM_PROMPT hardening, drain-hold predicate (SLM_DRAIN_PAUSED), DPO enrichment loop (chosen=B / rejected=A), flush_tier_a() behaviour. 78% Tier B > Tier A enrichment signal confirmed 2026-06-14 (n=32 pairs).
+
+### A10 — GUIDE: jennifer-2 Migration Stack Operation
+- **File:** `drafts-outbound/GUIDE-jennifer-2-migration-stack.draft.md`
+- **Status:** STAGED 2026-06-14 — ready for project-editorial
+- **Destination:** project-editorial → woodfine-fleet-deployment (operator runbook)
+- **Content:** Start service-fs :9103 (j2 WORM), service-extraction j2, service-input :9106; manual migration batch commands; nightly cron driver (nightly-jennifer-migrate.sh health gate + DPO loss guard); VM-reboot restart procedure; SLM_DRAIN_PAUSED usage; drop-file lifecycle (watch → processed/).
+
+---
 
 ## B — Backlog
 
 *(No backlog items at this time.)*
+
+---
+
+## C — Code Artifacts (jennifer-2 Ingest Pipeline, 2026-06-14)
+
+Committed to `pointsav-monorepo` feature branch; Stage 6 pending.
+
+| Artifact | Commit | File(s) | Notes |
+|---|---|---|---|
+| SFT corpus generator | 4ddff37f | `service-input/scripts/build-extraction-sft.py` | RAFT-style 182 SFT pairs from 461 human-curated YAMLs; normalize_reference_yaml handles heterogeneous schema (metric_name, theme_alignment, wrapper keys); people.csv pipe-delimited positional; provenance: human-curated |
+| Nightly migration driver | 4ddff37f | `service-input/scripts/nightly-jennifer-migrate.sh` | /readyz health gate; tier_a bool + tier_b.<node>.circuit; go_no_go at summary.go_no_go (nested); DPO loss guard (skip if Tier A=true + Tier B=open); night window 05:00 UTC |
+| Extraction quality fixes | 22c57822 | `service-content/src/main.rs` | ALLOWED_CLASSIFICATIONS const; enum guard in raw_entities_to_graph(); EXTRACTION_SYSTEM_PROMPT hardened: Location negative examples ("EXCLUDE: retail anchor location, downtown core"), SPDX/licence identifiers added to omit list |
+| Drop-file lifecycle fix | 22c57822 | `service-extraction/src/main.rs` | After successful process_payload(), move drop file to watch_dir/processed/ (both startup drain site and inotify event site). Preserves audit trail vs. delete. |
+| cargo fmt pre-promote | 28c69356 + f40f922c | `service-content/src/main.rs`, `service-extraction/src/main.rs` | Style-only; required by Stage 6 gate |
+| Entity quality hardening (6 changes) | 1a914564 | `service-content/src/entity_filter.rs` (new), `service-content/src/main.rs`, `service-content/src/graph.rs`, `service-content/src/http.rs` | Changes 1-5: EXTRACTION_SYSTEM_PROMPT + is_noise_entity_name + clean_dpo_side + coerce_classification + word-count gate; Change 6: GET /v1/graph/cleanup endpoint + delete_entity on GraphStore trait; 30/30 tests; Stage 6 pending |
+
+---
+
+## D — Data / SFT Artifacts
+
+| Artifact | Location | Count | Notes |
+|---|---|---|---|
+| Extraction SFT pairs (human-curated) | `/srv/foundry/data/training-corpus/extraction/jennifer-sft-*.jsonl` | 182 pairs | provenance: human-curated; RAFT-style entity candidates injected from people.csv (9,575 names); metric/theme labels from jennifer-1 human-curated YAML ledgers (461 files); entity labels sparse (YAML corpus is metric/theme-dominant) |
+| DPO enrichment pairs (Tier B vs Tier A) | `cluster-totebox-jennifer/service-fs/data/training-corpus/feedback/enrichment-DOC_*.jsonl` | 4 pairs (2026-06-14) | chosen=Tier B (OLMo 32B), rejected=Tier A (OLMo 7B); P1+P3 clean, P2 contaminated (ops(slm) commit-prefix in chosen), P4 ambiguous; do NOT train as-is; pre-save validator needed; minimum 200–300 genre-diverse pairs before LoRA; provenance: olmo-self |
+| Apprenticeship SFT corpus (git-commit activity) | `/srv/foundry/data/training-corpus/feedback/apprenticeship-git-commit-*.jsonl` | 834 pairs | Separate artifact type from DPO enrichment pairs; SFT from commit activity; provenance: human-curated (commits are human-authored) |
 
 ---
 
