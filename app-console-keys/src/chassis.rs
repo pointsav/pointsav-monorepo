@@ -260,6 +260,24 @@ impl AppConsoleKeys {
             {
                 return ChassisAction::Quit;
             }
+            if key.modifiers.contains(KeyModifiers::CONTROL) {
+                let fkey = match key.code {
+                    KeyCode::Char('3') => Some(FKey::F3),
+                    KeyCode::Char('4') => Some(FKey::F4),
+                    KeyCode::Char('6') => Some(FKey::F6),
+                    KeyCode::Char('9') => Some(FKey::F9),
+                    KeyCode::Char('1') => Some(FKey::F11),
+                    KeyCode::Char('2') => Some(FKey::F12),
+                    _ => None,
+                };
+                if let Some(fkey) = fkey {
+                    if self.active != fkey {
+                        self.previous = self.active;
+                    }
+                    self.active = fkey;
+                    return ChassisAction::None;
+                }
+            }
             if let Some(fkey) = FKey::from_keycode(key.code) {
                 if self.active != fkey {
                     self.previous = self.active;
