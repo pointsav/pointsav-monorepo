@@ -67,6 +67,22 @@ cites:
   - w3c-verifiable-credentials
   - etsi-ts-119-511
 forbidden_terms_cleared: true
+section_status:
+  abstract: complete
+  s1_introduction: complete
+  s2_background: complete
+  s3_architecture: complete
+  s4_worm_ledger: complete
+  s5_compatibility: complete
+  s6_implementation: complete
+  s7_discussion: complete
+  s8_conclusion: complete
+refs_status:
+  count: 25
+  quality: adequate
+  blockers:
+    - "Multiple [external: url] placeholders throughout body need promotion to stable citations.yaml IDs"
+    - "Bench #9 quiet-VM re-run pending (22 outliers, ±11% CI) — affects §7.1 quantitative claims"
 language_pass_date: 2026-05-28
 routed_date: 2026-05-27
 preprint_posted: true
