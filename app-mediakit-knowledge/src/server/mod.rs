@@ -231,6 +231,7 @@ pub fn router(state: AppState) -> Router {
         .route("/es/", get(home_es))
         .route("/es/wiki/{*slug}", get(wiki_page_es))
         .route("/static/{*path}", get(static_asset))
+        .route("/images/{*path}", get(serve_content_image))
         .route("/healthz", get(healthz))
         .route("/health", get(healthz))
         // Phase 2 Step 5 — citation registry for autocomplete

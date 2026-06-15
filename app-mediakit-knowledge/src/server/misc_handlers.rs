@@ -1308,4 +1308,65 @@ mod tests {
             "ES home nav should link to /?noredirect=1 to prevent redirect loop: {html}"
         );
     }
+
+    // ── /images/ route tests ──────────────────────────────────────────────────
+
+    /// /images/{path} serves a file from <content_dir>/images/.
+    #[tokio::test]
+    async fn images_route_serves_existing_file() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::create_dir(dir.path().join("images")).await.unwrap();
+        tokio::fs::write(dir.path().join("images/test.png"), b"\x89PNG\r\n").await.unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/images/test.png")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let ct = resp
+            .headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("");
+        assert!(ct.contains("image/png"), "content-type should be image/png: {ct}");
+    }
+
+    /// /images/{path} returns 404 for a file that does not exist.
+    #[tokio::test]
+    async fn images_route_returns_404_for_missing_file() {
+        let (state, _dir, _state_dir) = fixture_state().await;
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/images/missing.png")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::NOT_FOUND);
+    }
+
+    /// Path traversal via /images/../<anything> is rejected with 404.
+    #[tokio::test]
+    async fn images_route_rejects_path_traversal() {
+        let (state, _dir, _state_dir) = fixture_state().await;
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/images/..%2Fetc%2Fpasswd")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::NOT_FOUND);
+    }
 }
