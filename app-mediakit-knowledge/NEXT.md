@@ -1,9 +1,37 @@
 # NEXT.md — app-mediakit-knowledge
 
-> Last updated: 2026-06-01 (Phase −1 documentation consolidation)
+> Last updated: 2026-06-14 (engine defect fixes + Sprint C test regression fix)
 > **SOURCE OF TRUTH:** `.agent/briefs/BRIEF-knowledge-platform-master.md` — read it first.
 > It supersedes the 2030 brief and consolidates the 2026-06-01 research (mobile-first,
 > content federation via mounts + blueprints, premium UX, linking model + zero dead links).
+
+## Engine defect fixes — 12-agent audit 2026-06-14
+
+Committed `c3261f0e` (jwoodfine) + `91e65e05` (pwoodfine) — Stage 6 pending, outbox msg `project-knowledge-20260614-engine-defects-stage6-ready`.
+`91e65e05` = Sprint C test regression fix (home_test.rs assertions updated to 7-category IA names).
+
+| Defect | Fix | Status |
+|---|---|---|
+| 1 — `references:` YAML 500 | `render.rs` `parse_page()` fault-tolerant | **FIXED c3261f0e** |
+| 2 — footnotes dropped | Not reproduced on `worm-ledger-design` | Not confirmed |
+| 3 — empty body 200 | Not reproduced on live site | Not confirmed |
+| 4 — search snippets leak markdown | `search.rs` + `feeds.rs` wikilink/markdown strip | **FIXED c3261f0e** |
+| 5 — wikilinks literal in body | Root cause = Defect 8 (claim blocks suppress comrak wikilink processing) | **Resolved by Defect 8 fix** |
+| 6 — images path not in contract | See item below | **OPEN** |
+| 7 — two renderers | `chrome/article.rs` is helpers only; `wiki_handlers.rs` is live path | Not a defect |
+| 8 — `<!--/claim-->` leak | `claim.rs` close-marker stripping added | **FIXED c3261f0e** |
+
+- [ ] **Defect 6 — `/images/` route + content-contract** [2026-06-14 totebox@project-knowledge]
+  No `/images/{*path}` route exists in the router. The content repos have no sanctioned images
+  directory. Required: (a) add `GET /images/{*path}` route serving files from `<content_dir>/images/`
+  for each mount; (b) update `repo-layout.md` content-contract for all three media-knowledge repos.
+  Blocks all visual density improvements (infoboxes, locator maps, cluster diagrams).
+  Files: `src/server/mod.rs` (router) + content-contract.md (3 repos).
+
+- [ ] **Defect 2 re-investigation** [2026-06-14 totebox@project-knowledge]
+  Footnotes rendered correctly on `worm-ledger-design`. Find an article that actually exhibits
+  the dropped-footnote symptom before writing a fix. The audit may have flagged an article with
+  malformed `[^N]` syntax (missing definition line) rather than an engine bug.
 
 ## 2026-06-01 direction (from the master brief)
 
