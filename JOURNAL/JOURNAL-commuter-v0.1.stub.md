@@ -58,6 +58,24 @@ word_count_target: 8000
 submission_status: not-submitted
 cites: []
 forbidden_terms_cleared: false
+section_status:
+  abstract: stub
+  s1_introduction: complete
+  s2_literature_review: complete
+  s3_archetype_definition: complete
+  s4_data_methodology: draft
+  s5_results: draft
+  s6_discussion: stub
+  s7_falsification: stub
+  s8_conclusion: stub
+  s9_formal_hypotheses: complete
+refs_status:
+  count: 11
+  quality: adequate
+  blockers:
+    - "forbidden_terms_cleared: false — §2 new content (2026-06-14) needs sweep before submission"
+    - "Integration rate regression (§5.3/§7.2) requires external rail-frequency data"
+    - "Xu 2020 [external: verify...] at §2.4 needs resolution"
 notes_for_editor: |
   Stub as of 2026-06-01. Full test run complete: 14,332 Commuter candidates
   (1,744 airport + 12,588 rail; 3,904 integrated with adjacent Retail Centres).

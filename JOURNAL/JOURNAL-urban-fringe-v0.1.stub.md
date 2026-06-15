@@ -58,6 +58,24 @@ word_count_target: 8000
 submission_status: not-submitted
 cites: []
 forbidden_terms_cleared: false
+section_status:
+  abstract: stub
+  s1_introduction: complete
+  s2_literature_review: complete
+  s3_archetype_definition: draft
+  s4_data_methodology: stub
+  s5_results: stub
+  s6_discussion: stub
+  s7_falsification: stub
+  s8_conclusion: stub
+  s9_formal_hypotheses: complete
+refs_status:
+  count: 18
+  quality: adequate
+  blockers:
+    - "forbidden_terms_cleared: false — §2 new content (2026-06-14) needs sweep before submission"
+    - "OLS regression (§5.3/§7.1) pending clusters-ols.csv from archetype-vwh.geojson at project-gis"
+    - "Word count 860/8,000 — §3-§8 body writing pending data and regression results"
 notes_for_editor: |
   Stub as of 2026-06-01. Data collection for VWH (Urban Fringe) archetype in progress.
   Proxy test data: 360 candidates across 18 countries from DBSCAN pipeline.
