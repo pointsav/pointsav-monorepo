@@ -147,11 +147,16 @@ impl NodeRegistry {
             })
             .collect()
     }
+
+    /// Look up a single VM by ID across all nodes.
+    pub fn find_vm(&self, vm_id: &str) -> Option<VmRecord> {
+        self.nodes.values().find_map(|e| e.vms.get(vm_id).cloned())
+    }
 }
 
 #[cfg(test)]
 impl NodeRegistry {
-    /// Look up a single VM across all nodes. Test helper.
+    /// Borrow a VM record by ID. Test helper (avoids clone in assertions).
     pub fn get_vm(&self, vm_id: &str) -> Option<&VmRecord> {
         self.nodes.values().find_map(|e| e.vms.get(vm_id))
     }
@@ -276,6 +281,31 @@ mod tests {
         assert_eq!(reg.get_node("node-a").unwrap().vm_count, 1);
         assert!(reg.remove_vm("vm-1"));
         assert_eq!(reg.get_node("node-a").unwrap().vm_count, 0);
+    }
+
+    #[test]
+    fn find_vm_returns_none_when_absent() {
+        let reg = NodeRegistry::new();
+        assert!(reg.find_vm("vm-missing").is_none());
+    }
+
+    #[test]
+    fn find_vm_returns_vm_when_present() {
+        use system_vm_fleet_types::{VmRecord, VmState};
+        let mut reg = NodeRegistry::new();
+        reg.update_node(&make_heartbeat("node-a", 8192, 2048));
+        let vm = VmRecord {
+            vm_id: "vm-find-1".to_string(),
+            vm_type: "VmTotebox".to_string(),
+            state: VmState::Running,
+            ram_alloc_mb: 2048,
+            vcpu_count: 2,
+            started_at: None,
+        };
+        reg.register_vm("node-a", vm);
+        let found = reg.find_vm("vm-find-1").unwrap();
+        assert_eq!(found.vm_id, "vm-find-1");
+        assert_eq!(found.ram_alloc_mb, 2048);
     }
 
     #[test]
