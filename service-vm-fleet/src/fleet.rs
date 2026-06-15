@@ -208,6 +208,7 @@ mod tests {
             vcpu_count: 2,
             started_at: None,
             tenant_id: None,
+            host_ports: vec![],
         };
         reg.register_vm("node-a", vm);
         assert_eq!(reg.get_node("node-a").unwrap().vm_count, 1);
