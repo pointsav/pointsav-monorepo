@@ -1,0 +1,71 @@
+chapter: "Ch.6 Pairing as Permission"
+pages:
+  - page: 60
+    content_type: "diagram"
+    quality: "medium"
+    summary: "Hand-drawn Totebox Orchestration Distributed Private Network (NOT a cloud) diagram (multiple Totebox VMs paired across Console/Interface/Network-Admin OS over InfrastructureOS virtualizations)."
+    key_concepts: ["Distributed Private Network", "not a cloud", "machine based authorization", "Pairing as permissions", "Network Admin OS", "InfrastructureOS", "on-prem / leased / Google Cloud / AWS"]
+    category_mapping: "05"
+    existing_slide: "Private Network"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Pairing as Permissions"
+    research_links: []
+    notes: "Rich MBA notes (Access = Pairing, no username or passwords) strongly augment the Pairing slide."
+
+  - page: 120
+    content_type: "divider"
+    quality: "high"
+    summary: "Section divider title slide reading PAIRING AS PERMISSIONS."
+    key_concepts: ["Pairing as Permissions", "section divider", "MBA"]
+    category_mapping: "05"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Pure chapter divider."
+
+  - page: 121
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Sketch 2 Authentication and Permissions — two mirrored Totebox-OS / Interface-OS clusters with Console OS device nodes connected by pairing links P1–P4; permissions database still needed for pairing (not role-based)."
+    key_concepts: ["Pairing as Permissions", "machine-based authorization", "unique IDs", "Totebox OS", "Interface OS", "Console OS", "P1-P4 pairings", "WhatsApp/Bluetooth analogy"]
+    category_mapping: "05"
+    existing_slide: "Pairing as Permissions"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Pairing as Permissions"
+    research_links: []
+    notes: "SKETCH 2 / V3; pairing tracks unique IDs, not RBAC. Source sketch for converted Pairing slide."
+
+  - page: 122
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Cleaner redraw of the Authentication and Permissions pairing diagram (mirrored clusters; P1-P4 pairing legend; device-type key 6-10)."
+    key_concepts: ["Pairing as Permissions", "Totebox OS", "Interface OS", "P1-P4 pairings", "unique IDs", "Console OS", "Virtualization"]
+    category_mapping: "05"
+    existing_slide: "Pairing as Permissions"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Pairing as Permissions"
+    research_links: []
+    notes: "Near-duplicate of p121 (redraw); P1=input, P2=system administration, P3=user, P4=interface legend."
+
+  - page: 123
+    content_type: "sketch"
+    quality: "low"
+    summary: "Fragmentary Permissions sketch with a single bullet 'machine based authorization' and a partially-cropped COMPLIANCE box."
+    key_concepts: ["Permissions", "machine based authorization", "MBA", "compliance"]
+    category_mapping: "05"
+    existing_slide: "Authentication"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Authentication"
+    research_links: []
+    notes: "Mostly blank/faded scan; low scan quality."

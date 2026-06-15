@@ -1,0 +1,291 @@
+chapter: "Ch.3 Console Construction"
+pages:
+  - page: 4
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn Products and Services system diagram (Console/Interface/Totebox OS as three VMs) with numbered service legend (1-25)."
+    key_concepts: ["Console OS", "Interface OS", "Totebox OS", "VM", "F-Keys console", "BIM console", "GIS Engine", "Bookkeeping"]
+    category_mapping: "03"
+    existing_slide: "VM vs Containers"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "VM vs Containers"
+    research_links: []
+    notes: "SKETCH 1 / V3; underpins converted Products & Services and VM vs Containers slides."
+
+  - page: 57
+    content_type: "divider"
+    quality: "high"
+    summary: "Section divider title slide reading CONSOLE CONSTRUCTION."
+    key_concepts: ["Console Construction", "section divider", "ConsoleOS chapter"]
+    category_mapping: "02"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Blank divider slide."
+
+  - page: 58
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Handwritten Console OS overview (3rd-party network access, Type II hypervisor, F-key/BIM/Maps/Data/Site-Super consoles)."
+    key_concepts: ["Console OS", "3rd party network access", "Type II Hypervisor", "F* keys console", "Site Super console"]
+    category_mapping: "02"
+    existing_slide: "Interface OS"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Interfaces"
+    research_links: []
+    notes: "Site Super console is a console variant not yet a discrete JW4 slide; ConsoleOS as mandatory access layer."
+
+  - page: 68
+    content_type: "annotation"
+    quality: "high"
+    summary: "Input Machine NOTES showing the two generated WORM file-system records with full Chart-of-Accounts-derived filenames for Building A and B."
+    key_concepts: ["WORM record", "flat-file", "Bookkeeper DB", "Chart of Accounts filename", "file naming convention", "duplicate-across-archives"]
+    category_mapping: "03"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "WORM Record Format — Chart-of-Accounts File Naming in the Totebox Flat-File Archive"
+    augments_existing: "Bookkeeping"
+    research_links:
+      - url: "https://www.sec.gov/investment/amendments-electronic-recordkeeping-requirements-broker-dealers"
+        title: "Amendments to Electronic Recordkeeping Requirements for Broker-Dealers (Rule 17a-4)"
+      - url: "https://datatracker.ietf.org/doc/html/rfc6920"
+        title: "RFC 6920 — Naming Things with Hashes"
+    notes: "Concrete WORM/flat-file record naming convention; high developer signal for System-of-Record story."
+
+  - page: 71
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn Input Machine diagram (PDFs through input panel and Interface OS into Totebox Archives split by minute book/bookkeeping folders)."
+    key_concepts: ["Input Machine", "Interface OS", "Console O/S", "metadata split", "Totebox Archive", "Minute Book DB", "Bookkeeping DB"]
+    category_mapping: "02"
+    existing_slide: "Input Machine"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Input Machine"
+    research_links: []
+    notes: "Source sketch for the converted Input Machine slide; 70/30 metadata payment split example."
+
+  - page: 72
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn Console OS System Administration panel (pairing, updates, configure, network) over Interface OS and three virtualized Totebox OS nodes via REST API."
+    key_concepts: ["System Administration", "Pairing", "Updates", "Configure Network", "Interface OS", "Totebox OS", "REST API"]
+    category_mapping: "02"
+    existing_slide: "System Administration"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "System Administration"
+    research_links: []
+    notes: "Source sketch for the converted System Administration slide."
+
+  - page: 73
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn F*Keys Console / Command Center panel (F1 minute book, F2 bookkeeping, F3 people + search) over Interface OS Command Center and virtualized Totebox OS."
+    key_concepts: ["F*Keys Console", "Command Center", "F1 Minute Book", "F2 Bookkeeping", "F3 People", "Search"]
+    category_mapping: "02"
+    existing_slide: "Command Center"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Command Center"
+    research_links: []
+    notes: "Source sketch underpinning the converted Command Center / F*Keys slide."
+
+  - page: 74
+    content_type: "mixed"
+    quality: "high"
+    summary: "Annotated formal Sketch 6 of the F*Keys Console (full F1-F11 list, Command Center vs BIM Server, three Totebox Archives, components legend, workflow/questions)."
+    key_concepts: ["F*Keys Console", "F1-F11", "Command Center", "BIM Server", "Totebox Archive Corporate/Personnel/Real Property", "operator vs owner access"]
+    category_mapping: "02"
+    existing_slide: "Command Center"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Command Center"
+    research_links: []
+    notes: "David Johnston formal sketch (V3); canonical F-key mapping with handwritten corrections."
+
+  - page: 75
+    content_type: "text"
+    quality: "high"
+    summary: "Typed MW notes for Console OS F*Keys: which roles need BIM Server, GIS Engine, or limited F*Keys; confirms third-party standalone Console OS operation."
+    key_concepts: ["Console OS variants", "BIM Server", "GIS Engine", "F*Keys", "third-party machines", "Interface OS"]
+    category_mapping: "02"
+    existing_slide: "Command Center"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "Interfaces"
+    research_links: []
+    notes: "Role-to-console mapping (Architects/Engineers→BIM, Real Estate→GIS, Lawyers/Accountants→limited F*Keys); annotation text, not standalone slide."
+
+  - page: 78
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn VM vs Containers comparison (bare-metal VM freely transferable vs OS-level virtualization and Docker containers)."
+    key_concepts: ["VM", "containers", "bare metal", "OS-level virtualization", "Docker", "Freely Transferable"]
+    category_mapping: "03"
+    existing_slide: "VM vs Containers"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "VM vs Containers"
+    research_links: []
+    notes: "Source sketch for the converted VM vs Containers slide; virtual machine = freely transferable."
+
+  - page: 80
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn Totebox OS file-system partition layout (R/OS/S1-S4 partitions on a micro VM with Linux system containers running Service #1-#3 mapped to best-fit DB/FS)."
+    key_concepts: ["Totebox OS file system", "partitions", "Recovery partition", "micro VM", "Linux system container", "best database for use", "best file system for use"]
+    category_mapping: "03"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Totebox OS File System and Partition Layout"
+    augments_existing: "Totebox Archive"
+    research_links:
+      - url: "https://www.iso.org/standard/74338.html"
+        title: "ISO 14641:2018 — Electronic Document Management"
+      - url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32023R2854"
+        title: "Regulation (EU) 2023/2854 (Data Act) — Chapter VI"
+      - url: "https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-190.pdf"
+        title: "NIST SP 800-190 — Application Container Security Guide"
+    notes: "Genuine gap; high developer signal on the WORM flat-file/file-system record format."
+
+  - page: 84
+    content_type: "diagram"
+    quality: "high"
+    summary: "Clean F*Keys Console DATA map (F1-F11 functions alongside Personnel/Corporate/Real Property archive contents, server stack, chart-of-accounts breakdown)."
+    key_concepts: ["F*Keys Console", "F1-F11", "Personnel/Corporate/Real Property", "Minute Book", "Bookkeeping", "Chart of Accounts", "Land Title ID"]
+    category_mapping: "02"
+    existing_slide: "Command Center"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "Command Center"
+    research_links: []
+    notes: "Polished source artwork; canonical F-key to function/archive/server mapping."
+
+  - page: 89
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn three-column breakdown of IoT Drivers, IoT Sensors, IoT Data; rule that drivers are written for Totebox OS."
+    key_concepts: ["IoT Drivers", "IoT Sensors", "IoT Data", "locks/CCTV/HVAC/elevators", "PV array", "Totebox OS drivers"]
+    category_mapping: "03"
+    existing_slide: "IoT Data"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Source for converted IoT Data slide; driver-library detail."
+
+  - page: 131
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-annotated Sketch 4 of the Console OS BIM Console / Interface OS BIM Server connecting via P3/P4 pairing to three building-specific Totebox Archives."
+    key_concepts: ["BIM Server", "BIM Console", "Interface OS", "Console OS", "Totebox Archive", "Building DB", "Materials DB", "Pairing as Permissions"]
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "BIM Console"
+    research_links: []
+    notes: "Working sketch (David Johnston); concept covered by converted BIM Console slide."
+
+  - page: 132
+    content_type: "annotation"
+    quality: "high"
+    summary: "Reviewer notes (MW) refining the BIM Server workflow — Console OS BIM aggregation, publicly-accessible Totebox tagging, single-Console pairing without Interface OS."
+    key_concepts: ["BIM Server", "Interface OS", "Pairing as Permissions", "Totebox Archive", "Public Browser Delivery", "aggregation"]
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "BIM Console"
+    research_links: []
+    notes: "Design-notes commentary; supports BIM Console slide."
+
+  - page: 133
+    content_type: "annotation"
+    quality: "high"
+    summary: "Extended MW notes arguing against publicly-accessible BIM tagging on security grounds; Interface OS exists for aggregation, Pairing as Permissions, SDKs, Public Browser Delivery."
+    key_concepts: ["Pairing as Permissions", "Interface OS", "BIM Server", "GIS Engine", "Public Browser Delivery", "security separation"]
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Pairing as Permissions"
+    research_links: []
+    notes: "Reinforces separation-of-assets / Pairing-as-Permissions rationale."
+
+  - page: 134
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Short MW note on keeping Building DB and Materials DB separate to accommodate Materials Passports tied to building certifications."
+    key_concepts: ["Building DB", "Materials DB", "Materials Passports", "building certifications", "Public Browser Delivery"]
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "BIM Console"
+    research_links: []
+    notes: "Materials Passports concept novel but minor; augments BIM Console."
+
+  - page: 135
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn BIM Console diagram (Private Console OS Projects A/B/C wired through Interface OS BIM Server, SDK, Public Browser, Web Server to building DBs)."
+    key_concepts: ["BIM Console", "Console OS", "Interface OS", "BIM Server", "Totebox Archive", "SDK", "GitHub analogy", "AEC community"]
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "BIM Console"
+    research_links: []
+    notes: "Hand-sketch source artwork; converted BIM Console slide already exists."
+
+  - page: 136
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn Maps Console diagram (Console OS Maps Console over Interface OS GIS Engine pairing to four Toteboxes plus 3rd-party CSV data)."
+    key_concepts: ["Maps Console", "GIS Engine", "Location Intelligence", "Interface OS", "Console OS", "co-location", "maps.pointsav.com"]
+    category_mapping: "02"
+    existing_slide: "Maps Console"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Maps Console"
+    research_links: []
+    notes: "Hand-sketch source for converted Maps Console slide; public web endpoints noted."
+
+  - page: 137
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn Building Preferences diagram (Console OS Building Preferences over Interface OS IoT Connect pairing to three buildings' IoT device/sensor libraries)."
+    key_concepts: ["Building Preferences", "IoT Connect", "Digital Twin", "IoT device library", "IoT sensor library", "cyber-physical"]
+    category_mapping: "02"
+    existing_slide: "Building Preferences"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Building Preferences"
+    research_links: []
+    notes: "Hand-sketch source for converted Building Preferences slide."

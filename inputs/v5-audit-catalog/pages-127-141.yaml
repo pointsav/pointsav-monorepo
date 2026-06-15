@@ -1,0 +1,309 @@
+pages:
+  - page: 127
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: diagram
+    quality: medium
+    summary: A vintage Reid Crowther origin-destination travel study map of Northwest Alberta showing trade-area capture percentages (Grande Prairie 50%, surrounding rings 25%/10%/5%, out-of-region 10%).
+    key_concepts:
+      - Origin-Destination
+      - OD Study
+      - GIS
+      - trade area
+      - catchment
+      - Grande Prairie
+      - Location Intelligence
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: ""
+    augments_existing: GIS Engine
+    notes: Historical Reid Crowther planning map used as a heritage illustration of OD/catchment methodology; predecessor exhibit, augments the GIS Engine slide rather than warranting its own.
+
+  - page: 128
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: whitepaper
+    quality: high
+    summary: A Location Intelligence advanced site-selection pipeline write-up for Woodfine Professional Centres No 2 LP (USA) profiling Franklin, Tennessee with demographics and qualified-investment anchor criteria.
+    key_concepts:
+      - Location Intelligence
+      - site selection
+      - Franklin Tennessee
+      - qualified investment criteria
+      - department store
+      - hardware store
+      - regional food distributor
+      - GIS
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: ""
+    augments_existing: GIS Engine
+    notes: Use-case worked example demonstrating the GIS Engine; enriches the existing GIS Engine slide as a case study rather than a standalone platform slide.
+
+  - page: 129
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: mixed
+    quality: high
+    summary: A Franklin TN map screenshot (Sites 17 and 18) showing the Woodfine Professional Centre plotted against colour-coded qualified-investment anchors (department store, hardware, food distributor, Costco/Sam's, hospital, university).
+    key_concepts:
+      - Location Intelligence
+      - co-location
+      - anchor tenants
+      - site selection
+      - qualified investment criteria
+      - GIS
+      - demographics
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: ""
+    augments_existing: GIS Engine
+    notes: Visual co-location legend for the Franklin case study; augments the GIS Engine slide.
+
+  - page: 130
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: photo
+    quality: medium
+    summary: A satellite aerial close-up of Site No. 17 (Westgate Circle, Franklin TN) with the candidate parcel outlined in red.
+    key_concepts:
+      - Location Intelligence
+      - aerial imagery
+      - site selection
+      - GIS
+      - parcel
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: pending
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: GIS Engine
+    notes: Supplementary aerial for the Franklin case study; low priority, augments GIS Engine.
+
+  - page: 131
+    chapter: Ch.3 Console Construction
+    content_type: sketch
+    quality: medium
+    summary: A hand-annotated "Sketch 4" systems diagram of the Console OS BIM Console / Interface OS BIM Server connecting via P3/P4 pairing to three building-specific Totebox Archives (Building DB + Materials DB).
+    key_concepts:
+      - BIM Server
+      - BIM Console
+      - Interface OS
+      - Console OS
+      - Totebox Archive
+      - Building DB
+      - Materials DB
+      - Pairing as Permissions
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: BIM Console
+    notes: Working sketch with crossed-out labels and reviewer queries (David Johnston); concept already covered by the converted BIM Console slide.
+
+  - page: 132
+    chapter: Ch.3 Console Construction
+    content_type: annotation
+    quality: high
+    summary: Reviewer notes (MW) refining the BIM Server workflow — Console OS BIM aggregation, publicly-accessible Totebox tagging, and whether a single Console OS can pair to one Totebox Archive without Interface OS.
+    key_concepts:
+      - BIM Server
+      - Interface OS
+      - Pairing as Permissions
+      - Totebox Archive
+      - Public Browser Delivery
+      - aggregation
+      - Console OS
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: BIM Console
+    notes: Design-notes commentary page (highlighted edits); supports BIM Console slide, not a standalone slide.
+
+  - page: 133
+    chapter: Ch.3 Console Construction
+    content_type: annotation
+    quality: high
+    summary: Extended reviewer notes (MW) arguing against publicly-accessible BIM data tagging on security grounds and clarifying that Interface OS exists for aggregation, Pairing as Permissions, SDKs and Public Browser Delivery.
+    key_concepts:
+      - Pairing as Permissions
+      - Interface OS
+      - BIM Server
+      - GIS Engine
+      - Public Browser Delivery
+      - Totebox Orchestration
+      - security separation
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Pairing as Permissions
+    notes: Dense commentary page reinforcing the separation-of-assets / Pairing-as-Permissions rationale; augments existing converted slides.
+
+  - page: 134
+    chapter: Ch.3 Console Construction
+    content_type: annotation
+    quality: medium
+    summary: A short reviewer note (MW) on keeping Building DB and Materials DB separate to accommodate Materials Passports tied to building certifications.
+    key_concepts:
+      - Building DB
+      - Materials DB
+      - Materials Passports
+      - building certifications
+      - Console OS
+      - Workplace OS
+      - Public Browser Delivery
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: BIM Console
+    notes: Mostly blank notes page with one paragraph; concept (Materials Passports) is novel but minor — augments BIM Console.
+
+  - page: 135
+    chapter: Ch.3 Console Construction
+    content_type: sketch
+    quality: medium
+    summary: A hand-drawn BIM Console diagram showing Private Console OS (Projects A/B/C, "new product = Totebox Archive") wired through Interface OS BIM Server, SDK, Public Browser and Web Server to three buildings' BIM/Materials databases.
+    key_concepts:
+      - BIM Console
+      - Console OS
+      - Interface OS
+      - BIM Server
+      - Totebox Archive
+      - SDK
+      - GitHub analogy
+      - AEC community
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: BIM Console
+    notes: Hand-sketch source artwork ("similar in nature to GitHub", "F*KEYS to AEC community"); the cleaned-up BIM Console slide already exists.
+
+  - page: 136
+    chapter: Ch.3 Console Construction
+    content_type: sketch
+    quality: medium
+    summary: A hand-drawn Maps Console diagram — Console OS Maps Console (People/OD/co-location/site selection/demographics/spend + Location Intelligence) over Interface OS GIS Engine pairing to four Toteboxes plus 3rd-party CSV data.
+    key_concepts:
+      - Maps Console
+      - GIS Engine
+      - Location Intelligence
+      - Interface OS
+      - Console OS
+      - co-location
+      - Totebox
+      - maps.pointsav.com
+    category_mapping: "02"
+    existing_slide: "Maps Console"
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Maps Console
+    notes: Hand-sketch source for the converted Maps Console slide; notes public web endpoints (maps.pointsav.com, projects.woodfinegroup.com).
+
+  - page: 137
+    chapter: Ch.3 Console Construction
+    content_type: sketch
+    quality: medium
+    summary: A hand-drawn Building Preferences diagram — Console OS Building Preferences (locks, CCTV, HVAC, elevators, sensors, PV array + Digital Twin) over Interface OS IoT Connect pairing to three buildings' IoT device/sensor libraries.
+    key_concepts:
+      - Building Preferences
+      - IoT Connect
+      - Digital Twin
+      - IoT device library
+      - IoT sensor library
+      - Console OS
+      - Interface OS
+      - cyber-physical
+    category_mapping: "02"
+    existing_slide: "Building Preferences"
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Building Preferences
+    notes: Hand-sketch source for the converted Building Preferences slide.
+
+  - page: 138
+    chapter: Ch.8 SMB Environment
+    content_type: divider
+    quality: high
+    summary: A section divider title page reading "Small to Medium Business (SMB) Environment".
+    key_concepts:
+      - SMB
+      - section divider
+      - small to medium business
+    category_mapping: "01"
+    existing_slide: "SMB Environment"
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: SMB Environment
+    notes: Chapter divider; SMB Environment slide already converted in Cat 01.
+
+  - page: 139
+    chapter: Ch.8 SMB Environment
+    content_type: sketch
+    quality: draft
+    summary: A sparse hand-drawn Workplace OS page listing workstations (laptops/desktop environment) and a Workplace mobile app, noted as required to access the network.
+    key_concepts:
+      - Workplace OS
+      - workstations
+      - mobile app
+      - network access
+      - Product
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: Workplace OS — Network Access Client
+    augments_existing: SMB Environment
+    notes: Rough draft sketch; Workplace OS as the network-access client is not explicitly a JW4 slide but fits the SMB Environment story — could augment rather than stand alone.
+
+  - page: 140
+    chapter: Ch.4 Totebox Services
+    content_type: sketch
+    quality: draft
+    summary: A hand-drawn Services — Communications page listing email (Maildir, each email saved as a file), chat, calendar and conferencing, with notes that each person gets their own Totebox and each Totebox its own server.
+    key_concepts:
+      - Communications
+      - Maildir
+      - flat-file
+      - email-as-file
+      - chat
+      - calendar
+      - conferencing
+      - one Totebox per person
+    category_mapping: "04"
+    existing_slide: "Totebox Services (Ladder)"
+    conversion_status: pending
+    conversion_priority: high
+    new_slide_concept: Communications Services — Maildir Flat-File (email/chat/calendar/conferencing)
+    augments_existing: ""
+    notes: Genuine gap — the Maildir "each email saved as a file" / one-Totebox-per-person model is a concrete WORM flat-file record-format detail with strong developer signal and no dedicated JW4 communications slide.
+
+  - page: 141
+    chapter: Ch.9 Deployment Scenarios
+    content_type: divider
+    quality: high
+    summary: A section divider title page reading "Sample Use Case — Deployment Scenarios".
+    key_concepts:
+      - deployment scenarios
+      - sample use case
+      - section divider
+    category_mapping: "01"
+    existing_slide: "Deployment Scenarios"
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Deployment Scenarios
+    notes: Chapter divider; Deployment Scenarios slide already converted in Cat 01.

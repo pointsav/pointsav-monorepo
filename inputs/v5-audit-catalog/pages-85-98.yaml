@@ -1,0 +1,277 @@
+pages:
+  - page: 85
+    chapter: Ch.4 Totebox Services
+    content_type: mixed
+    quality: high
+    summary: Federal Register document search form shown as a worked example of an F-keys console Search surface with structured filter fields.
+    key_concepts:
+      - F-keys console
+      - Search
+      - Federal Register
+      - document category filter
+      - structured query
+      - CSV/Excel/JSON export
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: "F-Keys Console — Search (structured document query surface)"
+    augments_existing: Interface OS
+    notes: "Reference screenshot of federalregister.gov advanced search; illustrative of console search-filter UX, not a PointSav product screen."
+  - page: 86
+    chapter: Ch.4 Totebox Services
+    content_type: mixed
+    quality: high
+    summary: Federal Register homepage screenshot illustrating the landing/results view of an F-keys console Search experience.
+    key_concepts:
+      - F-keys console
+      - Search
+      - Federal Register
+      - current issue
+      - public inspection
+      - full-text search
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: Interface OS
+    notes: "Second federalregister.gov screenshot; near-duplicate intent with p.85 (Search console example). Augments rather than warrants its own slide."
+  - page: 87
+    chapter: Ch.4 Totebox Services
+    content_type: sketch
+    quality: draft
+    summary: Hand-drawn sketch of Totebox Services as a micro-VM Totebox with a stacked service ladder (minutebook, bookkeeping, geo-spatial, communications, calendar, IoT devices).
+    key_concepts:
+      - Totebox Services
+      - micro VM
+      - minutebook
+      - bookkeeping
+      - geo-spatial
+      - communications
+      - IoT Devices
+      - unified programming language
+    category_mapping: "04"
+    existing_slide: Totebox Services (Ladder)
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: "Hand sketch; source for the converted 'Totebox Services (Ladder)' slide. Note: future rewrite of Totebox OS with unified language/protocols."
+  - page: 88
+    chapter: Ch.4 Totebox Services
+    content_type: sketch
+    quality: draft
+    summary: Hand-drawn two-column comparison of Database versus File System storage for bookkeeping/minutebook services, with input machine assigning file names.
+    key_concepts:
+      - Database vs File System
+      - chart of accounts
+      - flat-file
+      - PDF/ODT/ODS files
+      - no reference numbers
+      - input machine file naming
+      - bookkeeping
+      - minutebooks
+    category_mapping: "03"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: high
+    new_slide_concept: "WORM Record Format — Database vs Flat-File System (file-name-as-reference)"
+    augments_existing: Bookkeeping
+    notes: "High signal: defines the flat-file record model (file names replace DB reference numbers, input machine assigns names) — core ToteboxOS WORM concept with no dedicated JW4 slide."
+  - page: 89
+    chapter: Ch.3 Console Construction
+    content_type: sketch
+    quality: draft
+    summary: Hand-drawn three-column breakdown of IoT Drivers, IoT Sensors, and IoT Data, listing device types and the rule that drivers are written for Totebox OS.
+    key_concepts:
+      - IoT Drivers
+      - IoT Sensors
+      - IoT Data
+      - locks/CCTV/HVAC/elevators
+      - PV array
+      - public Wi-Fi
+      - Totebox OS drivers
+    category_mapping: "03"
+    existing_slide: IoT Data
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: "Hand sketch; source for converted 'IoT Data' slide. Adds driver-library detail (drivers must be written for Totebox OS)."
+  - page: 90
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: sketch
+    quality: draft
+    summary: Hand-drawn Geo-spatial services list covering People, Places (POI), Businesses (POI), and Parking lots (polygon) as GIS data categories.
+    key_concepts:
+      - Geo-spatial
+      - GIS
+      - point of interest
+      - parking lot polygon
+      - national/local businesses
+      - medical and higher education
+      - airports
+    category_mapping: "07"
+    existing_slide: Geo-spatial
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: GIS Engine
+    notes: "Hand sketch; source for converted 'Geo-spatial' slide. Header label 'SOFTWARE — GIS' overlaps GIS Engine (cat 07) content."
+  - page: 91
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: whitepaper
+    quality: high
+    summary: Draft GIS Notes memorandum (Memo #2) outlining the software stack to build the PointSav GIS Engine — PostGIS, QGIS, OpenStreetMap, co-location algorithm, polygons, catchments.
+    key_concepts:
+      - PostGIS
+      - QGIS
+      - OpenStreetMap
+      - co-location algorithm
+      - catchment polygons
+      - GeoNode
+      - GIS Engine
+    category_mapping: "07"
+    existing_slide: GIS Engine
+    conversion_status: pending
+    conversion_priority: high
+    new_slide_concept: "GIS Engine Stack — PostGIS + QGIS + OpenStreetMap co-location pipeline"
+    augments_existing: GIS Engine
+    notes: "Memo template has highlighted << Insert Company/Contact/Date >> placeholders. Strong developer/investor signal on the actual GIS build stack; existing 'GIS Engine' slide is a concept stub, this fills the technical gap."
+  - page: 92
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: whitepaper
+    quality: high
+    summary: Continuation of GIS memo covering O-D (origin-destination) catchment data sourcing, annual data costs ($50k-$150k), delivery via GeoNode, interactive map layers, and dataset source links.
+    key_concepts:
+      - origin-destination data
+      - hexagonal overlay
+      - catchment cost
+      - GeoNode delivery
+      - interactive map layers
+      - Google Dataset Search
+      - Totebox Archives data
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: "GIS Engine — Catchment Data Sourcing and Interactive Delivery"
+    augments_existing: GIS Engine
+    notes: "Continuation page of the Memo #2 whitepaper (p.91). O-D data economics and delivery model; augments GIS Engine narrative."
+  - page: 93
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: text
+    quality: medium
+    summary: Reference appendix of Google Dataset Search links for Home Depot, higher education, and US hospital location datasets used by the GIS Engine.
+    key_concepts:
+      - Google Dataset Search
+      - Home Depot locations
+      - higher education datasets
+      - US hospitals dataset
+      - data source links
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: GIS Engine
+    notes: "Pure URL appendix to GIS memo; mostly white space. Reference material, not slide-worthy."
+  - page: 94
+    chapter: Ch.8 SMB Environment
+    content_type: whitepaper
+    quality: high
+    summary: Draft Demographics memorandum (Memo #1) introducing Woodfine's hybrid investment structure and the data-set/geographic co-location purpose, naming Walmart Supercentres as primary target.
+    key_concepts:
+      - hybrid investment structure
+      - 2/20 restructuring
+      - class A office space
+      - geographic co-location
+      - Walmart Supercentre
+      - primary target
+      - perpetual equity
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: "Co-location Investment Thesis — Hybrid Model and Primary Targets"
+    augments_existing: Use Cases
+    notes: "Highlighted << Insert >> placeholders. Investor-facing onboarding white paper; maps to the GIS use-case/business-context narrative. Borderline cat 01 Use Cases vs 07."
+  - page: 95
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: whitepaper
+    quality: high
+    summary: Continuation of demographics memo defining primary/secondary/tertiary targets and the First- through Fifth-Degree co-location cluster rules with distance thresholds.
+    key_concepts:
+      - secondary/tertiary targets
+      - first-degree clusters
+      - fifth-degree clusters
+      - 1.0 km / 5.0 km thresholds
+      - co-location sorting
+      - sales per square foot
+      - cluster output schema
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: high
+    new_slide_concept: "Co-location Cluster Methodology — Degree Tiers and Distance Thresholds"
+    augments_existing: GIS Engine
+    notes: "High signal: defines the actual cluster-tier algorithm (1.0/5.0 km, degree definitions) that underpins the GIS product; no JW4 slide covers the cluster math."
+  - page: 96
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: diagram
+    quality: high
+    summary: Ranking matrix diagram with legend mapping Walmart/Home Depot/Costco/Hospital/Higher-education tiles into an 11-row co-location ranking methodology.
+    key_concepts:
+      - ranking matrix
+      - legend
+      - W-SC / HD / C / H / U tiles
+      - primary/secondary/tertiary weighting
+      - 11-row ranking
+      - sales per square foot
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: "Co-location Ranking Matrix — Target Tier Weighting"
+    augments_existing: GIS Engine
+    notes: "Clean diagram; visual companion to the p.95 cluster methodology. Good slide candidate but secondary to the methodology page."
+  - page: 97
+    chapter: Ch.8 SMB Environment
+    content_type: whitepaper
+    quality: high
+    summary: Demographics memo continuation on ranking output sorting, required site-selection counts per country for equity/debt financing, and the Optimum Mosaic concept.
+    key_concepts:
+      - ranking output sorting
+      - equity/debt financing schedule
+      - Canada/US/Mexico site counts
+      - Optimum Mosaic
+      - sales per square foot
+      - separate datasets per country
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: Use Cases
+    notes: "Financing-schedule detail (years 1-3 equity etc.) is investor-specific, less platform-relevant. Augments the co-location use-case narrative."
+  - page: 98
+    chapter: Ch.8 SMB Environment
+    content_type: whitepaper
+    quality: high
+    summary: Final demographics memo page on Optimum Mosaic marketing-kit generation and Transaction Summary Reports for site-specific demographic matching.
+    key_concepts:
+      - Optimum Mosaic
+      - marketing kit
+      - Transaction Summary Reports
+      - demographic profiling
+      - secondary trade
+      - Independent Board of Directors
+      - Reid Crowther demo study
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: Use Cases
+    notes: "Closing page of Memo #1 white paper. Report-template detail; investor/tenant marketing context. Augments rather than standalone."

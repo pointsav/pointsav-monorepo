@@ -1,0 +1,128 @@
+<section class="scaling" data-label="Deployment Tiers" data-screen-label="Multi-Entity Consolidation — Deployment Tiers Matrix">
+    <div class="head">
+      <span class="cat-tag">Multi-Entity Consolidation</span>
+      <div class="eyebrow">Commercial Packaging</div>
+      <h2>Deployment Tiers Matrix</h2>
+      <div class="crumb">The same platform is packaged four ways so a one-person firm and a multi-entity group buy on the terms that fit them — without a separate product for each.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <!-- LEFT: the four delivery tiers -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Four delivery tiers</span></div>
+        <div class="cmp-item lead">Managed — SaaS</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">We run the archive and consoles</span><span class="s">SMB default</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">Hosted — PaaS</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">Customer operates on leased capacity</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">On-Prem — IaaS</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">Customer hardware, customer premises</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">Self-Hosted — base node</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">FOSS ToteboxOS, single archive</span><span class="s">no paid tier</span>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <!-- RIGHT: where the commercial boundary sits -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Where the boundary sits</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">A <b>single archive is free</b> in every tier. The charge attaches to <b>cross-archive orchestration</b>, not to the node — the open-core line is the same regardless of who owns the hardware.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The SaaS / PaaS / IaaS split follows the standard service-model definitions — per NIST SP 800-145 — so procurement and audit teams map it to language they already use.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Tiers are migration paths, not silos: a customer may move on-prem or run several providers at once, a right now codified in EU Data Act (Reg. 2023/2854), Ch. VI.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">For investors this is the <b>land-and-expand surface</b>: enter Self-Hosted or Managed, expand into orchestration. SMB net revenue retention runs ~97% — per 2024 SaaS Benchmarks (High Alpha / OpenView) — so expansion is earned, not assumed.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Which tier is the entry point for your firm — Managed, Hosted, On-Prem, or Self-Hosted?</span>
+        <span>What would have to be true before you moved from a single archive to paid orchestration?</span>
+        <span>Does the on-prem / leased / cloud choice change who you trust with the data?</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="scaling" data-label="Three-Layer Stack" data-screen-label="Multi-Entity Consolidation — Totebox Orchestration Three-Layer Architecture">
+    <div class="head">
+      <span class="cat-tag">Multi-Entity Consolidation</span>
+      <div class="eyebrow">Platform Architecture</div>
+      <h2>Totebox Orchestration</h2>
+      <div class="crumb">Aggregating a fleet of archives is split across three layers so that consolidation stays stateless — the orchestrator computes a view and holds nothing.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr;">
+      <div class="cmp-col">
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">01</span><span class="rt"><b>Delivery</b> — ConsoleOS role-based HUDs present the consolidated view to a named operator. Every write crosses the F12 human-authorization checkpoint; nothing is published to a verified ledger by automation.</span></div>
+          <div class="cmp-rule"><span class="rk">02</span><span class="rt"><b>Edge Computing</b> — OrchestrationOS performs stateless cross-archive aggregation. It reads each ToteboxOS node, computes the joined result on request, and retains no copy — the commercial boundary and the paid tier both live here.</span></div>
+          <div class="cmp-rule"><span class="rk">03</span><span class="rt"><b>Private Network</b> — NetworkAdminOS enforces machine-based authorization: there is no credential database; the network topology itself is the permission system. Access is decided per request, not at a perimeter — the posture described in NIST SP 800-207 (Zero Trust Architecture).</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt"><b>What a single node cannot do:</b> a lone ToteboxOS archive holds one entity's WORM records and answers only for itself. OrchestrationOS is the only layer that joins many archives into one consolidated answer — and because it is stateless, the join exists only for the duration of the request. This is the line a developer should hold onto: <b>aggregation is computed, never stored.</b></span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The identity-based, location-independent access policy maps to NIST SP 800-207A (ZTA in multi-cloud); the workload-identity-without-shared-secrets analogue is SPIFFE (CNCF).</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Where does your consolidated reporting live today — and who keeps the merged copy?</span>
+        <span>If aggregation is stateless, what is the latency cost of recomputing the view each time?</span>
+        <span>How does "network topology as the permission system" replace a credential store you already run?</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="scaling" data-label="Owner / Operator" data-screen-label="Multi-Entity Consolidation — Scaling Option A: Interface vs Infrastructure">
+    <div class="head">
+      <span class="cat-tag">Multi-Entity Consolidation</span>
+      <div class="eyebrow">Scaling — Composition</div>
+      <h2>Interface vs Infrastructure</h2>
+      <div class="crumb">Two people scale the same fleet for different reasons — the Owner consolidates entities, the Operator runs them — so each enters the consoles by a distinct path.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <!-- LEFT: Owner path -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Owner — interface path</span></div>
+        <div class="cmp-item lead">Consolidate across entities</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">F*Keys console over the fleet</span><span class="s">cross-archive view</span><span class="s">paid orchestration</span>
+        </div>
+        <div class="cmp-item" style="margin-top:24px;">Scales by adding interfaces</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">add an archive to the view</span><span class="s">no new premises</span>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <!-- RIGHT: Operator path -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Operator — infrastructure path</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The Operator reaches F*Keys <b>over PointSav Infrastructure</b> — one entity's archive at a time — and scales by adding infrastructure: on-prem, leased, cloud, or hybrid.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Both paths authorize the same way: machine-based, no credential database. The console a person sees is decided by their device's place in the network, not by a stored role — the authenticator-binding problem framed in NIST SP 800-63B-4.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt"><b>Why the split matters commercially:</b> the Owner's interface path is where consolidation is sold; the Operator's infrastructure path is where deployment is sold. Separating them keeps the paid orchestration boundary clean.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Are you the Owner consolidating entities, the Operator running one, or both?</span>
+        <span>Does scaling-by-interface vs scaling-by-infrastructure match how you actually grow?</span>
+        <span>What console should each role see first when they sign in?</span>
+      </div>
+    </div>
+  </section>

@@ -1,0 +1,286 @@
+pages:
+  - page: 71
+    chapter: Ch.3 Console Construction
+    content_type: sketch
+    quality: medium
+    summary: Hand-drawn Input Machine diagram showing invoice/agreement PDFs flowing through an input panel and Interface OS into Totebox Archives split by minute book and bookkeeping file-system folders.
+    key_concepts:
+      - Input Machine
+      - Interface OS
+      - Console O/S
+      - metadata split
+      - Totebox Archive
+      - Minute Book DB
+      - Bookkeeping DB
+      - file system folder
+    category_mapping: "02"
+    existing_slide: Input Machine
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Input Machine
+    notes: Handwritten source sketch for the already-converted Input Machine slide; notes explain consoles pair to individual Toteboxes, interfaces are for aggregation, and 70/30 metadata payment split example.
+  - page: 72
+    chapter: Ch.3 Console Construction
+    content_type: sketch
+    quality: medium
+    summary: Hand-drawn Console OS System Administration panel (pairing, updates, configure, network) sitting over Interface OS and three virtualized Totebox OS nodes connected by REST API.
+    key_concepts:
+      - System Administration
+      - Pairing
+      - Updates
+      - Configure Network
+      - Interface OS
+      - Totebox OS
+      - Virtualization
+      - REST API
+    category_mapping: "02"
+    existing_slide: System Administration
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: System Administration
+    notes: Handwritten source sketch for the converted System Administration slide; shows Type II / Workplace OS hosting.
+  - page: 73
+    chapter: Ch.3 Console Construction
+    content_type: sketch
+    quality: medium
+    summary: Hand-drawn F*Keys Console / Command Center panel listing F1 minute book, F2 bookkeeping, F3 people plus search, layered over Interface OS Command Center and virtualized Totebox OS nodes.
+    key_concepts:
+      - F*Keys Console
+      - Command Center
+      - F1 Minute Book
+      - F2 Bookkeeping
+      - F3 People
+      - Interface OS
+      - Totebox OS
+      - Search
+    category_mapping: "02"
+    existing_slide: Command Center
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Command Center
+    notes: Handwritten source sketch underpinning the converted Command Center / F*Keys slide.
+  - page: 74
+    chapter: Ch.3 Console Construction
+    content_type: mixed
+    quality: high
+    summary: Annotated formal Sketch 6 (Version 1) of the F*Keys Console with full F1-F11 key list, Command Center vs BIM Server, three Totebox Archives, numbered components legend and a workflow/questions block.
+    key_concepts:
+      - F*Keys Console
+      - F1-F11
+      - Command Center
+      - BIM Server
+      - Totebox Archive Corporate/Personnel/Real Property
+      - Console OS
+      - Interface OS
+      - operator vs owner access
+    category_mapping: "02"
+    existing_slide: Command Center
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Command Center
+    notes: David Johnston authored formal sketch (V3) with handwritten markups (F1=Help, F5 Collaborators->People, BIM DB->Building DB correction "this was wrong on our sketch"); enriches the converted Command Center/Interfaces slides with the canonical F-key mapping.
+  - page: 75
+    chapter: Ch.3 Console Construction
+    content_type: text
+    quality: high
+    summary: Typed MW notes and workflow/questions for Console OS F*Keys, specifying which user roles need BIM Server, GIS Engine, or limited F*Keys, and confirming third-party standalone Console OS operation.
+    key_concepts:
+      - Console OS variants
+      - BIM Server
+      - GIS Engine
+      - F*Keys
+      - Workplace OS integration
+      - Command Center pairing
+      - third-party machines
+      - Interface OS
+    category_mapping: "02"
+    existing_slide: Command Center
+    conversion_status: converted
+    conversion_priority: medium
+    new_slide_concept: ""
+    augments_existing: Interfaces
+    notes: Notes companion to page 74; high developer signal on role-to-console mapping (Architects/Engineers->BIM, Real Estate->GIS, Lawyers/Accountants->limited F*Keys) but is annotation text, not a standalone slide.
+  - page: 76
+    chapter: Ch.4 Totebox Services
+    content_type: divider
+    quality: high
+    summary: Section divider title page reading "TOTEBOX SERVICES" on an otherwise blank page.
+    key_concepts:
+      - Totebox Services
+      - section divider
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: Blank divider page; no content to convert.
+  - page: 77
+    chapter: Ch.4 Totebox Services
+    content_type: sketch
+    quality: medium
+    summary: Hand-drawn Toteboxes spectrum (VM / micro VM / nano VM / unikernel) with a Freely Transferable ladder of services (minute book, bookkeeping, geo-spatial, communications, calendar, IoT devices/sensors) packaged as Totebox Services on a micro VM.
+    key_concepts:
+      - VM
+      - micro VM
+      - nano VM
+      - unikernel
+      - Freely Transferable
+      - Totebox Services
+      - minute book
+      - IoT devices/sensors
+    category_mapping: "04"
+    existing_slide: Totebox Services (Ladder)
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Totebox Services (Ladder)
+    notes: Handwritten source sketch for the converted Totebox Services (Ladder) slide; combines the VM-to-unikernel spectrum with the service ladder.
+  - page: 78
+    chapter: Ch.3 Console Construction
+    content_type: sketch
+    quality: medium
+    summary: Hand-drawn VM vs Containers comparison contrasting bare-metal VM (freely transferable) against OS-level virtualization and Docker containers (only freely transferable within same OS or with Docker present).
+    key_concepts:
+      - VM
+      - containers
+      - bare metal
+      - OS-level virtualization
+      - Docker
+      - Freely Transferable
+      - operating system
+    category_mapping: "03"
+    existing_slide: VM vs Containers
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: VM vs Containers
+    notes: Handwritten source sketch for the converted VM vs Containers slide; note "virtual machine = freely transferable".
+  - page: 79
+    chapter: Ch.4 Totebox Services
+    content_type: sketch
+    quality: medium
+    summary: Hand-drawn Totebox Services diagram showing a Totebox (micro/nano VM) containing multiple service containers, with notes that services run in containers and the Firecracker (AWS) micro-VM example.
+    key_concepts:
+      - Totebox Services
+      - containers
+      - micro VM
+      - nano VM
+      - Firecracker
+      - unikernel
+      - prototype
+      - freely transferable
+    category_mapping: "04"
+    existing_slide: Totebox Services (Containers)
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Totebox Services (Containers)
+    notes: Handwritten source sketch for the converted Totebox Services (Containers) slide; notes prototype-to-unikernel build path and that services need not be transferable if the Totebox is.
+  - page: 80
+    chapter: Ch.3 Console Construction
+    content_type: sketch
+    quality: medium
+    summary: Hand-drawn Totebox OS file-system partition layout showing R/OS/S1-S4 partitions on a micro VM with operations Linux system containers running Service #1-#3 mapped to best-fit database and file system per use.
+    key_concepts:
+      - Totebox OS file system
+      - partitions
+      - Recovery partition
+      - micro VM
+      - Linux system container
+      - service partitions
+      - best database for use
+      - best file system for use
+    category_mapping: "03"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: high
+    new_slide_concept: Totebox OS File System and Partition Layout
+    augments_existing: Totebox Archive
+    notes: No JW4 slide covers the WORM/Totebox partition layout (R=Recovery, OS, Sx=container partitions); genuine gap with high developer signal on the WORM flat-file/file-system record format.
+  - page: 81
+    chapter: Ch.8 SMB Environment
+    content_type: diagram
+    quality: high
+    summary: Clean Use Cases system map laying out Totebox OS use cases (Property Management, Record Keeping, Building Connectivity) over Infrastructure/Interface/Workplace/Console/Network Admin/Repository/Media Kit OS layers.
+    key_concepts:
+      - Totebox OS
+      - Property Management Command Centre
+      - Record Keeping
+      - Building Connectivity Digital Twin
+      - Infrastructure OS
+      - Interface OS
+      - Console OS
+      - Machine-based Authorization
+    category_mapping: "01"
+    existing_slide: Use Cases
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Use Cases
+    notes: Polished source artwork (Draft March 13 2025) for the converted Use Cases slide; lists all OS layers and the five PointSav legal entities.
+  - page: 82
+    chapter: Ch.4 Totebox Services
+    content_type: photo
+    quality: low
+    summary: Browser screenshot of the SolidOS Databrowser Frontend user-guide Introduction page describing Solid separating user data from applications.
+    key_concepts:
+      - SolidOS
+      - Solid
+      - data separation
+      - Solid Pods
+      - data portability
+      - databrowser frontend
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: Data Portability Reference — Solid / Pods Precedent
+    augments_existing: Products & Services
+    notes: External reference screenshot (solidos.github.io), not original PointSav content; supports the Freely Transferable Standard / data-portability narrative but is a low-quality web capture.
+  - page: 83
+    chapter: Ch.4 Totebox Services
+    content_type: sketch
+    quality: medium
+    summary: Hand-drawn DATA comparison of three Totebox Archive templates (Personnel vs Corporate vs Real Property) explaining why personnel, corporate, and real-property records must be separate archives.
+    key_concepts:
+      - Totebox Archive templates
+      - Personnel
+      - Corporate
+      - Real Property
+      - record keeping
+      - freely transferable
+      - real asset managers
+      - templates from services
+    category_mapping: "04"
+    existing_slide: Products & Services
+    conversion_status: converted
+    conversion_priority: medium
+    new_slide_concept: ""
+    augments_existing: Products & Services
+    notes: Handwritten DATA sketch explaining archive template separation rationale (personnel come and go; corporate can buy a company or building); enriches Products & Services and the Totebox Archive concept.
+  - page: 84
+    chapter: Ch.3 Console Construction
+    content_type: diagram
+    quality: high
+    summary: Clean F*Keys Console DATA map listing F1-F11 functions alongside Personnel/Corporate/Real Property archive contents, server stack, and databases/chart-of-accounts breakdown.
+    key_concepts:
+      - F*Keys Console
+      - F1-F11
+      - Personnel/Corporate/Real Property
+      - Minute Book
+      - Bookkeeping
+      - Chart of Accounts
+      - IoT Data
+      - Land Title ID
+    category_mapping: "02"
+    existing_slide: Command Center
+    conversion_status: converted
+    conversion_priority: medium
+    new_slide_concept: ""
+    augments_existing: Command Center
+    notes: Polished source artwork (Draft January 7 2025) detailing the canonical F-key to function/archive/server mapping and chart-of-accounts categories; strong source for the converted Command Center slide.

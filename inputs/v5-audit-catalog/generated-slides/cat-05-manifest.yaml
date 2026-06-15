@@ -1,0 +1,9 @@
+category: "05"
+category_name: "Machine-Based Authorization"
+slides_generated: 1
+slides:
+  - rank: 13
+    data_label: "Registry Token"
+    data_screen_label: "Machine-Based Authorization — Registry Token, Access Record & Pairing as Permissions"
+    conversion_priority: "high"
+    source_pages: [6]

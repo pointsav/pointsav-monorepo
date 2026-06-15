@@ -1,0 +1,34 @@
+category: "04"
+category_name: "Integration & Data Portability"
+slides_generated: 6
+slides:
+  - rank: 1
+    data_label: "Economic Model"
+    data_screen_label: "Integration & Data Portability — Economic Model: Decentralized Orchestration, Auth-as-Permissions, Freely Transferable Archives"
+    conversion_priority: "high"
+    source_pages: [28]
+  - rank: 2
+    data_label: "Communications"
+    data_screen_label: "Integration & Data Portability — Communications Services: Maildir Flat-File Record Model"
+    conversion_priority: "high"
+    source_pages: [140]
+  - rank: 14
+    data_label: "Solid / Pods"
+    data_screen_label: "Integration & Data Portability — Data Portability Reference: W3C Solid Pods Precedent"
+    conversion_priority: "medium"
+    source_pages: [82]
+  - rank: 15
+    data_label: "Console Search"
+    data_screen_label: "Integration & Data Portability — F-Keys Console: Structured Document Query Surface"
+    conversion_priority: "medium"
+    source_pages: [85, 86]
+  - rank: 16
+    data_label: "GIS Catchment"
+    data_screen_label: "Integration & Data Portability — GIS Engine: Catchment Data Sourcing and Interactive Delivery"
+    conversion_priority: "medium"
+    source_pages: [92]
+  - rank: 21
+    data_label: "Docs Navigation"
+    data_screen_label: "Integration & Data Portability — Consistent Documentation Navigation Across Deployments"
+    conversion_priority: "medium"
+    source_pages: [49]

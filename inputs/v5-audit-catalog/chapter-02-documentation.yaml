@@ -1,0 +1,505 @@
+chapter: "Ch.2 Documentation"
+pages:
+  - page: 3
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Handwritten Table of Contents sketch for the Documentation delivery method (corporate name, products/services, Totebox Orchestration, auth/permissions, Console/Interface/Infrastructure OS)."
+    key_concepts: ["Table of Contents", "Console OS", "Interface OS", "Command Center", "GIS Engine", "Infrastructure OS"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: "Documentation Delivery Method — Section Map"
+    augments_existing: "Contents"
+    research_links:
+      - url: "https://www.writethedocs.org/guide/docs-as-code/"
+        title: "Docs as Code — Write the Docs Guide"
+    notes: "Planning sketch for documentation structure rather than investor-facing content."
+
+  - page: 21
+    content_type: "text"
+    quality: "high"
+    summary: "Typeset Documentation 2.4 Naming Conventions giving canonical names for Totebox Archives, Services, Consoles; avoids DocumentServiceV2_Final drift."
+    key_concepts: ["Naming Conventions", "canonical names", "Totebox Archives", "Minutebook", "F*Keys", "BIM Console"]
+    category_mapping: "01"
+    existing_slide: "Naming Conventions"
+    conversion_status: "converted"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Naming Conventions"
+    research_links: []
+    notes: "Direct source for the JW4 Naming Conventions slide."
+
+  - page: 22
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Handwritten corporate-name brainstorm (PointSav Information/Distributed/Decentralized/Cyber Physical/Digital System, PointSav)."
+    key_concepts: ["corporate name", "PointSav", "Information System", "Distributed System", "Digital System"]
+    category_mapping: "01"
+    existing_slide: "Naming Conventions"
+    conversion_status: "converted"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Naming Conventions"
+    research_links: []
+    notes: "Background for canonical-naming decision; folds into Naming Conventions."
+
+  - page: 23
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Handwritten Documentation slide listing methods: wireframes, UML, 4+1 view model, C4 model, ISO/IEC 42010, user guide/wiki."
+    key_concepts: ["wireframes", "UML", "4+1 view model", "C4 model", "ISO/IEC 42010", "wiki"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Documentation Standards — UML, C4, 4+1, ISO/IEC 42010"
+    augments_existing: "Design System"
+    research_links:
+      - url: "https://www.iso.org/standard/74393.html"
+        title: "ISO/IEC/IEEE 42010:2022 — Architecture description"
+      - url: "https://c4model.com/"
+        title: "The C4 model for visualising software architecture (Simon Brown)"
+      - url: "https://www.computer.org/csdl/magazine/so/1995/06/s6042/13rRUxBJhBm"
+        title: "Architectural Blueprints — The '4+1' View Model (Kruchten)"
+    notes: "Concrete documentation-standards content not in JW4; developer signal."
+
+  - page: 24
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Berkshire Hathaway shareholder-letter excerpt used as a plain-language writing exemplar (Bertie mental model)."
+    key_concepts: ["plain language", "Berkshire Hathaway", "Bertie mental model", "writing style"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Naming Conventions"
+    research_links: []
+    notes: "Third-party reference exemplar; not a convertible product slide. Page 1 of 2."
+
+  - page: 25
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Continuation of Berkshire plain-language exemplar (operating results, FASB/SEC framing, operating-earnings vs net-income)."
+    key_concepts: ["plain language", "Berkshire Hathaway", "operating earnings", "FASB", "SEC", "editorial standard"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Page 2 of the Berkshire exemplar; third-party reference text."
+
+  - page: 26
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Handwritten Coding Guidelines slide citing 'The Power of 10: Rules for Developing Safety-Critical Code'."
+    key_concepts: ["coding guidelines", "Power of 10", "safety-critical code", "JPL rules", "community"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Coding Guidelines — Power of 10 Safety-Critical Rules"
+    augments_existing: "Design System"
+    research_links:
+      - url: "https://spinroot.com/gerard/pdf/P10.pdf"
+        title: "The Power of Ten — Rules for Developing Safety-Critical Code (Holzmann, NASA/JPL)"
+    notes: "Ties to seL4 / verified-primitives posture; concrete developer signal."
+
+  - page: 29
+    content_type: "text"
+    quality: "high"
+    summary: "Whitepaper text on PrivateGit OS Design System as the platform-wide house style, hosted as Git-as-CMS and offered as FOSS."
+    key_concepts: ["PrivateGit OS", "Design System", "IBM Carbon", "Git as CMS", "design tokens", "FOSS"]
+    category_mapping: "01"
+    existing_slide: "Design System"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "Editorial annotation header; source for the converted Design System slide."
+
+  - page: 30
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn whiteboard sketch proposing a Design System repository spanning MediaKit OS and Workplace OS desktop environments."
+    key_concepts: ["Design System repository", "MediaKit OS", "Workplace OS", "desktop environments", "Product"]
+    category_mapping: "01"
+    existing_slide: "Design System"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "Source material for the converted Design System slide."
+
+  - page: 31
+    content_type: "text"
+    quality: "medium"
+    summary: "Tabular Media Assets Directory listing WCP and PointSav media-asset references by company, type, component, print/digital."
+    key_concepts: ["Media Assets Directory", "WCP Media Assets", "PointSav Media Assets", "logo", "font", "icon"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "Reference directory table; enriches Design System."
+
+  - page: 32
+    content_type: "text"
+    quality: "high"
+    summary: "Whitepaper on Typographic Protocols splitting marketing fonts from system fonts with a Variable Fonts roadmap."
+    key_concepts: ["Typographic Protocols", "System Fonts", "Console Fonts", "Terminal Fonts", "Variable Fonts"]
+    category_mapping: "01"
+    existing_slide: "Typographic Protocols"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Typographic Protocols"
+    research_links: []
+    notes: ""
+
+  - page: 33
+    content_type: "diagram"
+    quality: "high"
+    summary: "Woodfine Color Values swatch board with CMYK and RGB specs for seven brand colors."
+    key_concepts: ["Color Values", "Woodfine palette", "CMYK", "RGB", "brand colors"]
+    category_mapping: "01"
+    existing_slide: "Color Values"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Color Values"
+    research_links: []
+    notes: ""
+
+  - page: 34
+    content_type: "photo"
+    quality: "medium"
+    summary: "Reference screenshot of Apple's developer fonts page (San Francisco typeface)."
+    key_concepts: ["San Francisco typeface", "Apple fonts", "typography reference", "variable optical sizes"]
+    category_mapping: "01"
+    existing_slide: "Typographic Protocols"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Typographic Protocols"
+    research_links: []
+    notes: "External screenshot reference."
+
+  - page: 35
+    content_type: "photo"
+    quality: "medium"
+    summary: "Continuation Apple typography reference (SF Pro, SF Compact, SF Mono, New York, SF Script Extensions)."
+    key_concepts: ["SF Pro", "SF Compact", "SF Mono", "New York", "typography reference"]
+    category_mapping: "01"
+    existing_slide: "Typographic Protocols"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Typographic Protocols"
+    research_links: []
+    notes: "External screenshot reference."
+
+  - page: 36
+    content_type: "text"
+    quality: "high"
+    summary: "Whitepaper on Interface Patterns defining MediaKit OS topic templates/navigation and PrivateGit OS repositories/elements."
+    key_concepts: ["Interface Patterns", "MediaKit OS", "topic templates", "PrivateGit OS", "WordPress", "MediaWiki", "Fresh RSS"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Interface Patterns — MediaKit & PrivateGit"
+    augments_existing: "Design System"
+    research_links:
+      - url: "https://www.writethedocs.org/guide/docs-as-code/"
+        title: "Docs as Code — Write the Docs Guide"
+    notes: "Modest developer signal; candidate new slide or fold into Design System."
+
+  - page: 37
+    content_type: "text"
+    quality: "medium"
+    summary: "MediaKit OS wireframe inventory table (36 wireframes across Landing Page, Corporate Wiki, Project Wiki, Newsroom)."
+    key_concepts: ["wireframes", "Landing Page", "Corporate Wiki", "Project Wiki", "Newsroom", "topic templates"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "Inventory detail, not investor-facing."
+
+  - page: 38
+    content_type: "text"
+    quality: "medium"
+    summary: "PointSav Design System component directory (30 button/form components mapped to Marketing/Wiki/Distribution and CMS)."
+    key_concepts: ["Design System Directory", "components", "button", "form", "WordPress", "FreshRSS"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "Component reference table."
+
+  - page: 39
+    content_type: "mixed"
+    quality: "medium"
+    summary: "Topic template exemplar styled on a Wikipedia (Airdrie, AB) layout with infobox and maps."
+    key_concepts: ["topic template", "Regional Market", "Wikipedia layout", "infobox", "MediaWiki"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "Wikipedia article used as layout mockup."
+
+  - page: 40
+    content_type: "photo"
+    quality: "low"
+    summary: "Site Selection Ranking topic template exemplar shown as a Wikipedia Michelin Guide ranking-table screenshot."
+    key_concepts: ["Site Selection Ranking", "topic template", "ranking table", "Wikipedia reference"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "External screenshot; low original signal."
+
+  - page: 41
+    content_type: "mixed"
+    quality: "high"
+    summary: "Rendered WCP Landing Page wireframe (MediaKit OS Marketing/Web Framework)."
+    key_concepts: ["WCP Landing Page", "wireframe", "MediaKit OS", "Web Framework", "Marketing", "freely transferable units"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "High-fidelity mockup; references 'freely transferable' partnership units (distinct from Cat 04 concept)."
+
+  - page: 42
+    content_type: "text"
+    quality: "draft"
+    summary: "Annotated content outline for the WCP Landing Page wireframe (wheelhouse sections as placeholder teasers)."
+    key_concepts: ["WCP Landing Page", "wireframe outline", "wheelhouse", "MediaKit OS", "Marketing"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "DRAFT placeholder markers; incomplete working draft."
+
+  - page: 43
+    content_type: "text"
+    quality: "draft"
+    summary: "WCP Corporate Wiki wireframe outline with narrow-banking thesis and corporate-structure topic hierarchy."
+    key_concepts: ["WCP Corporate Wiki", "narrow banking", "Woodfine LPs", "First Secured Debentures", "Freely Tradable Units"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Wiki content outline; corporate content outside the 7 platform categories."
+
+  - page: 44
+    content_type: "text"
+    quality: "draft"
+    summary: "Continuation of Corporate Wiki outline (ongoing reporting, quarterly/annual filings, references)."
+    key_concepts: ["ongoing reporting requirements", "financial statements", "Professional Centres Canada LP", "references"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Reporting-issuer disclosure content, not a platform-component slide."
+
+  - page: 45
+    content_type: "text"
+    quality: "draft"
+    summary: "WCP Projects Wiki wireframe outline with urbanism thesis and Woodfine Buildings / development-collaborators hierarchy."
+    key_concepts: ["WCP Projects Wiki", "regional markets", "Woodfine Buildings", "Parking Structures", "Vertical Warehouse"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Real-estate project taxonomy, not a platform-component slide."
+
+  - page: 46
+    content_type: "mixed"
+    quality: "medium"
+    summary: "Browser screenshot of the OSGeo open-source geospatial foundation wiki used as a reference wireframe sample."
+    key_concepts: ["wiki sample", "OSGeo", "open source", "committees", "reference layout"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Third-party screenshot; not original content."
+
+  - page: 47
+    content_type: "text"
+    quality: "medium"
+    summary: "Chart-of-accounts style topic index mapping ~46 topic IDs across seven wikis."
+    key_concepts: ["chart of accounts", "topic IDs", "Distributed Economies", "Narrow Banking", "Totebox Methodology", "topic taxonomy"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Editorial topic-index spreadsheet; no standalone slide warranted."
+
+  - page: 48
+    content_type: "text"
+    quality: "draft"
+    summary: "Newsroom / distribution wireframe outline for media and regulator releases."
+    key_concepts: ["newsroom", "media releases", "regulator releases", "distribution", "MediaKit OS", "reporting issuers"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Newsroom content outline; not a platform-component slide."
+
+  - page: 49
+    content_type: "text"
+    quality: "medium"
+    summary: "Documentation outcome: predictable Landing-to-Newsroom and Marketing-to-Distribution navigation flow consistent across MediaKit/PrivateGit OS deployments."
+    key_concepts: ["documentation outcome", "Landing Page", "Newsroom", "MediaKit OS", "PrivateGit OS", "consistent navigation"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Consistent Documentation Navigation Across Deployments (Marketing to Distribution flow)"
+    augments_existing: ""
+    research_links:
+      - url: "https://www.writethedocs.org/guide/docs-as-code/"
+        title: "Docs as Code — Write the Docs Guide"
+    notes: "Cross-deployment UX-consistency concept with no direct JW4 slide."
+
+  - page: 50
+    content_type: "divider"
+    quality: "draft"
+    summary: "Section divider DOCUMENTATION with subheading 2.1 PrivateGit OS — Source Control."
+    key_concepts: ["documentation", "PrivateGit OS", "source control", "section divider"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Near-empty divider page."
+
+  - page: 62
+    content_type: "mixed"
+    quality: "high"
+    summary: "Annotated Sketch 3 Input Machine wireframe (PDF intake, Document Splitter, Interface OS routing to corporate/building archives) with pairing-as-permissions annotations."
+    key_concepts: ["Input Machine Console", "Document Splitter", "Interface OS routing", "Totebox Archive", "Pairing as permissions (P1/P4)"]
+    category_mapping: "02"
+    existing_slide: "Input Machine"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Input Machine"
+    research_links: []
+    notes: "Detailed annotated wireframe (Sketch 3, V3) by David Johnston."
+
+  - page: 63
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Sketch 3 Input Machine NOTES — Titleco snow-removal scenario with red-ink terminology corrections."
+    key_concepts: ["Input Machine", "Titleco scenario", "snow removal invoice", "Building Manager", "Totebox Archive"]
+    category_mapping: "02"
+    existing_slide: "Input Machine"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Input Machine"
+    research_links: []
+    notes: "Supporting scenario text for the Input Machine slide."
+
+  - page: 64
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Input Machine NOTES — MW commentary refining the Titleco scenario (Buildings A/B, SF, $30,000 + 7% GST)."
+    key_concepts: ["Input Machine", "Titleco scenario", "Real Property", "Land Parcel", "GST", "MW notes"]
+    category_mapping: "02"
+    existing_slide: "Input Machine"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Input Machine"
+    research_links: []
+    notes: "Editorial annotation; supports Input Machine slide."
+
+  - page: 65
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Input Machine NOTES — six-step workflow (scan, select, choose archive via P1/P4, name via Chart of Accounts, metadata, execute)."
+    key_concepts: ["Input Machine workflow", "file manager", "P1 / P4 pairing", "Chart of Accounts", "metadata indexing"]
+    category_mapping: "02"
+    existing_slide: "Input Machine"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Input Machine"
+    research_links: []
+    notes: "Workflow narrative; pairing detail could enrich Pairing slides."
+
+  - page: 66
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Input Machine NOTES — per-building cost-per-SF allocation and WORM-style metadata index card fields."
+    key_concepts: ["Input Machine", "cost-per-SF allocation", "metadata index card", "File_Name", "Sub-total / Tax / Total / Currency"]
+    category_mapping: "02"
+    existing_slide: "Input Machine"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Input Machine"
+    research_links: []
+    notes: "Worked numeric example; metadata schema relevant to WORM record format."
+
+  - page: 67
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Input Machine NOTES — MW renames Document Splitter to Data Allocator; frames Console OS Input Machine as terminal emulator (GUI+CLI)."
+    key_concepts: ["Input Machine", "Document Splitter", "Data Allocator", "terminal emulator", "GUI / CLI", "Chart of Accounts"]
+    category_mapping: "02"
+    existing_slide: "Input Machine"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Input Machine"
+    research_links: []
+    notes: "Terminology note for editorial."

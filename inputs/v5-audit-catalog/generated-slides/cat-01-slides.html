@@ -1,0 +1,113 @@
+  <!-- ===================== 01 — LICENSING MODEL (rank 12) ===================== -->
+  <section class="scaling" data-label="Licensing Model" data-screen-label="Developer Platform — Licensing Model — Open-Source Base Nodes vs Proprietary Tiers">
+    <div class="head">
+      <span class="cat-tag">Developer Platform</span>
+      <div class="eyebrow">Open-Core Model</div>
+      <h2>Open-Source Base, Paid Coordination</h2>
+      <div class="crumb">A single archive is free to run; coordinating across archives is the commercial boundary.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Free and Open Source — Base Nodes</span></div>
+        <div class="cmp-item lead">ToteboxOS — one WORM flat-file archive per entity</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">ToteboxOS</span><span class="s">ConsoleOS</span><span class="s">Design System</span><span class="s">Documentation</span>
+        </div>
+        <div class="cmp-item" style="margin-top:24px;">An SMB runs a complete single-entity deployment at no licence cost — the base node is the open invitation to contribute.</div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Proprietary — Coordination Tiers</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt"><b>OrchestrationOS</b> — stateless cross-archive aggregation; the commercial boundary begins where one archive becomes many.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt"><b>InfrastructureOS / NetworkAdminOS</b> — leased and hybrid deployment plus machine-based authorization across the topology.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Open-source-core with priced multi-archive features mirrors established open-core practice — Source: Open-core model (GitLab, Grafana).</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Which OS layers should stay permissively licensed versus copyleft?</span>
+        <span>Is single-archive-free / multi-archive-paid the right boundary to draw for SMBs?</span>
+        <span>How do we price OrchestrationOS without re-introducing vendor lock-in?</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 01 — DOCUMENTATION STANDARDS (rank 18) ===================== -->
+  <section class="scaling" data-label="Documentation Standards" data-screen-label="Developer Platform — Documentation Standards — UML, C4, 4+1, ISO/IEC 42010">
+    <div class="head">
+      <span class="cat-tag">Developer Platform</span>
+      <div class="eyebrow">Design System — Conformance</div>
+      <h2>Documentation as a Conformance Standard</h2>
+      <div class="crumb">A contributor reads one architecture description and knows where their work lives — no archaeology required.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Notations adopted</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt"><b>UML</b> for behavioural and structural models — per OMG UML 2.5.1.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt"><b>C4 model</b> for context-to-code diagrams as version-controlled models-as-code — Source: c4model.com.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt"><b>4+1 view model</b> to separate logical, process, physical, and development concerns — per Kruchten, IEEE Software 12(6), 1995.</span></div>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Why it is citable</span></div>
+        <div class="cmp-item lead">Architecture descriptions conform to ISO/IEC/IEEE 42010:2022</div>
+        <div class="cmp-item">A single referenced standard lets technical and procurement audiences verify the documentation discipline rather than take it on trust.</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px; margin-top:18px;">
+          <span class="s">ISO/IEC 42010</span><span class="s">UML 2.5.1</span><span class="s">C4</span><span class="s">4+1</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Do we claim 42010 conformance today, or mark it planned until the architecture descriptions are complete?</span>
+        <span>Is C4 models-as-code worth the tooling cost over hand-drawn diagrams?</span>
+        <span>Which of the four notations is mandatory for a contributor's first pull request?</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 01 — CODING GUIDELINES (rank 20) ===================== -->
+  <section class="scaling" data-label="Coding Guidelines" data-screen-label="Developer Platform — Coding Guidelines — Power of 10 Safety-Critical Rules">
+    <div class="head">
+      <span class="cat-tag">Developer Platform</span>
+      <div class="eyebrow">Engineering Posture</div>
+      <h2>Power-of-Ten Safety-Critical Rules</h2>
+      <div class="crumb">Constrained control flow keeps the codebase analysable — the same discipline that lets a kernel be reasoned about.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr;">
+      <div class="cmp-col">
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">01</span><span class="rt">Restrict control flow to simple constructs — no unbounded recursion or unstructured jumps.</span></div>
+          <div class="cmp-rule"><span class="rk">02</span><span class="rt">Give every loop a fixed upper bound so termination can be verified statically.</span></div>
+          <div class="cmp-rule"><span class="rk">03</span><span class="rt">Avoid dynamic memory allocation after initialization — predictable footprint, no fragmentation drift.</span></div>
+          <div class="cmp-rule"><span class="rk">04</span><span class="rt">Keep functions short and single-purpose so each fits on one reviewable screen.</span></div>
+          <div class="cmp-rule"><span class="rk">05</span><span class="rt">Check return values, assert assumptions, and limit scope — per The Power of Ten (Holzmann, NASA/JPL, 2006).</span></div>
+        </div>
+        <div class="cmp-item" style="margin-top:24px;">Paired with Rust's ownership model, these rules make the engineering posture legible to developers and the reliability posture legible to investors — and align with the planned seL4 verified-primitives foundation.</div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Which of the ten rules can we enforce in CI versus by review?</span>
+        <span>How do the no-dynamic-allocation rules apply to async Rust services?</span>
+        <span>Should this standard be mandatory for base-node code only, or platform-wide?</span>
+      </div>
+    </div>
+  </section>

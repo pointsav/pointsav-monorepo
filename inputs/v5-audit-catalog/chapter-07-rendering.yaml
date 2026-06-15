@@ -1,0 +1,357 @@
+chapter: "Ch.7 Cross-System Rendering Design"
+pages:
+  - page: 61
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Browser screenshot of the seL4.systems Operating Systems page (LionsOS open source, KOS commercial built on seL4 microkernel) illustrating the Totebox Archive kernel rationale."
+    key_concepts: ["seL4", "microkernel", "LionsOS", "KOS", "Kry10", "Microkit", "verifiable OS", "Totebox Archive kernel"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "seL4 Kernel Foundation — Verified Microkernel for the Totebox Archive"
+    augments_existing: ""
+    research_links:
+      - url: "https://dl.acm.org/doi/10.1145/1629575.1629596"
+        title: "seL4: Formal Verification of an OS Kernel (Klein et al., SOSP '09)"
+      - url: "https://sel4.systems/About/seL4-whitepaper.pdf"
+        title: "The seL4 Microkernel — An Introduction (seL4 Foundation whitepaper)"
+      - url: "https://sel4.systems/About/history.html"
+        title: "seL4 History — DARPA HACMS and Boeing Unmanned Little Bird"
+    notes: "Genuine gap — no JW4 slide covers the seL4 moonshot/kernel rationale; high developer and investor signal."
+
+  - page: 90
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn Geo-spatial services list (People, Places POI, Businesses POI, Parking lots polygon) as GIS data categories."
+    key_concepts: ["Geo-spatial", "GIS", "point of interest", "parking lot polygon", "national/local businesses", "medical and higher education", "airports"]
+    category_mapping: "07"
+    existing_slide: "Geo-spatial"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Source for converted Geo-spatial slide; overlaps GIS Engine content."
+
+  - page: 91
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Draft GIS Notes memorandum (Memo #2) outlining the software stack to build the PointSav GIS Engine — PostGIS, QGIS, OpenStreetMap, co-location algorithm, polygons, catchments."
+    key_concepts: ["PostGIS", "QGIS", "OpenStreetMap", "co-location algorithm", "catchment polygons", "GeoNode", "GIS Engine"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "GIS Engine Stack — PostGIS + QGIS + OpenStreetMap co-location pipeline"
+    augments_existing: "GIS Engine"
+    research_links:
+      - url: "https://www.gartner.com/en/documents/5863580"
+        title: "Gartner — Forecast Analysis: Sovereign Cloud IaaS, Worldwide"
+    notes: "Strong developer/investor signal on the actual GIS build stack; existing GIS Engine slide is a concept stub."
+
+  - page: 92
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Continuation of GIS memo covering O-D catchment data sourcing, annual data costs ($50k-$150k), delivery via GeoNode, interactive map layers."
+    key_concepts: ["origin-destination data", "hexagonal overlay", "catchment cost", "GeoNode delivery", "interactive map layers", "Google Dataset Search"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "GIS Engine — Catchment Data Sourcing and Interactive Delivery"
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Continuation of Memo #2 (p.91). O-D data economics and delivery model."
+
+  - page: 93
+    content_type: "text"
+    quality: "medium"
+    summary: "Reference appendix of Google Dataset Search links (Home Depot, higher education, US hospital location datasets)."
+    key_concepts: ["Google Dataset Search", "Home Depot locations", "higher education datasets", "US hospitals dataset", "data source links"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Pure URL appendix; reference material, not slide-worthy."
+
+  - page: 95
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Continuation of demographics memo defining primary/secondary/tertiary targets and First- through Fifth-Degree co-location cluster rules with distance thresholds."
+    key_concepts: ["secondary/tertiary targets", "first-degree clusters", "fifth-degree clusters", "1.0 km / 5.0 km thresholds", "co-location sorting", "cluster output schema"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Co-location Cluster Methodology — Degree Tiers and Distance Thresholds"
+    augments_existing: "GIS Engine"
+    research_links:
+      - url: "https://www.gartner.com/en/documents/5863580"
+        title: "Gartner — Forecast Analysis: Sovereign Cloud IaaS, Worldwide"
+    notes: "Defines the actual cluster-tier algorithm (1.0/5.0 km, degree definitions); no JW4 slide covers the cluster math."
+
+  - page: 96
+    content_type: "diagram"
+    quality: "high"
+    summary: "Ranking matrix diagram with legend mapping Walmart/Home Depot/Costco/Hospital/Higher-education tiles into an 11-row co-location ranking methodology."
+    key_concepts: ["ranking matrix", "legend", "W-SC / HD / C / H / U tiles", "primary/secondary/tertiary weighting", "11-row ranking", "sales per square foot"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Co-location Ranking Matrix — Target Tier Weighting"
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Visual companion to the p.95 cluster methodology; merge candidate with rank-8 entry."
+
+  - page: 102
+    content_type: "diagram"
+    quality: "high"
+    summary: "GIS Databases and Algorithms org-chart flow diagram (Iteration 1/2 pipelines from Businesses/Places through Co-Location, Mobility, Location Intelligence, Parking Lots, Catchment Areas)."
+    key_concepts: ["GIS pipeline", "Co-Location Algorithm", "Mobility Data", "Location Intelligence", "Parking Lots", "Catchment Areas Algorithm", "Census", "Spend"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Detailed pipeline diagram enriches GIS Engine slide."
+
+  - page: 103
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "GIS database catalog (entries 1-3): Businesses, Places, Co-Location Algorithm (star-ranking matrix, Top 400 Markets calibration)."
+    key_concepts: ["Businesses", "Places", "Co-Location Algorithm", "Top 400 Markets", "star ranking", "Primary/Secondary/Tertiary", "Unique IDs"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "DRAFT banner; lists legacy PointSav entity name variants."
+
+  - page: 104
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "GIS database catalog (entries 4-9): Co-Locations, Mobility Data, Location Intelligence Algorithm, Co-Locations+LI, Parking Lots, Catchment Areas, with public/proprietary tags."
+    key_concepts: ["Co-Locations", "Mobility Data", "Location Intelligence Algorithm", "Origin-Destination", "Parking Lots", "Catchment Areas", "Proprietary", "65 km radius"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Distinguishes Public/Third Party/Proprietary database tiers — data-portability signal."
+
+  - page: 105
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "GIS database catalog (entries 10-12): Catchment Areas output plus future Census and Spend geo-demographic input databases."
+    key_concepts: ["Catchment Areas output", "Census", "Spend", "geo-demographic segmentation", "Home/Work locations", "Radius Child"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "converted"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Continuation page of the GIS catalog; lower standalone signal."
+
+  - page: 106
+    content_type: "diagram"
+    quality: "high"
+    summary: "SOFTWARE — GIS — Ranking slide (11-row ranking matrix legend; weighting of Primary/Secondary/Tertiary targets)."
+    key_concepts: ["Ranking matrix", "Primary Target", "Secondary Targets", "Tertiary Targets", "Walmart Supercentre", "sales per square foot", "weighting"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Color-coded ranking matrix; strong investor-facing visual; augments GIS Engine."
+
+  - page: 112
+    content_type: "photo"
+    quality: "medium"
+    summary: "Totebox Orchestration slide showing a Kry10 (KOS) website screenshot — seL4-microkernel, zero-trust, Trust-but-Isolate OS for mission-critical connected devices."
+    key_concepts: ["seL4", "Kry10 / KOS", "Trust but Isolate", "zero trust", "formal verification", "Erlang BEAM", "microkernel"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "seL4 Microkernel Rationale — Verified Isolation Substrate (Moonshot)"
+    augments_existing: ""
+    research_links:
+      - url: "https://dl.acm.org/doi/10.1145/1629575.1629596"
+        title: "seL4: Formal Verification of an OS Kernel (Klein et al., SOSP '09)"
+      - url: "https://arxiv.org/pdf/2310.17046"
+        title: "Proving the Absence of Microarchitectural Timing Channels (seL4 time protection)"
+      - url: "https://sel4.systems/news/2024.html"
+        title: "seL4 News 2024 — DARPA PROVERS / INSPECTA program updates"
+    notes: "Third-party Kry10 screenshot; merge candidate with p61 into one seL4 moonshot slide."
+
+  - page: 116
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn On-Prem Deployment stack (Private Git and Systems Admin VM over Virtualization, PointSav Private Network on-prem layer, Bare Metal base)."
+    key_concepts: ["On-prem", "Private Git", "Systems Admin VM", "Virtualization", "Bare Metal", "PointSav Private Network"]
+    category_mapping: "07"
+    existing_slide: "On-prem"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "On-prem"
+    research_links: []
+    notes: "Source sketch for the converted On-prem slide; install on one office computer."
+
+  - page: 117
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn Leased Server Deployment stack (Private Git and Systems Admin VM over Virtualization; PointSav Private Network leased-server layer)."
+    key_concepts: ["Leased Servers", "Private Git", "Systems Admin VM", "Virtualization", "PointSav Private Network"]
+    category_mapping: "07"
+    existing_slide: "Leased Servers"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Leased Servers"
+    research_links: []
+    notes: "No bare-metal layer (vs on-prem); source sketch for converted Leased Servers slide."
+
+  - page: 118
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn Public Cloud Deployment stack (Private Git and Systems Admin VM over Virtualization; PointSav Private Network cloud layer)."
+    key_concepts: ["Public Cloud", "Private Git", "Systems Admin VM", "Virtualization", "PointSav Private Network"]
+    category_mapping: "07"
+    existing_slide: "Public Cloud"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Public Cloud"
+    research_links: []
+    notes: "Source sketch for converted Public Cloud slide."
+
+  - page: 119
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn Hybrid deployment (Private Git and Systems Admin VM over wide Virtualization bar feeding On-Prem+Bare Metal, Leased Server, Public Cloud under one Private Network)."
+    key_concepts: ["Hybrid", "Virtualization", "On-prem", "Leased Servers", "Public Cloud", "Totebox orchestration", "Bare Metal"]
+    category_mapping: "07"
+    existing_slide: "Hybrid Network"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Hybrid Network"
+    research_links: []
+    notes: "Source sketch for converted Hybrid Network slide; any combination of deployment types."
+
+  - page: 124
+    content_type: "divider"
+    quality: "high"
+    summary: "Section divider title slide reading CROSS-SYSTEM RENDERING DESIGN."
+    key_concepts: ["Cross-System Rendering Design", "section divider"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Pure chapter divider."
+
+  - page: 125
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Screenshot of the Ghostty terminal-emulator About docs page (Native / Feature-rich / Fast / libghostty), reference for native cross-platform Console OS rendering."
+    key_concepts: ["Ghostty", "native UI", "libghostty", "Zig", "Kitty graphics protocol", "Console OS", "cross-system rendering"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Cross-System Rendering — native terminal stack (Ghostty/libghostty) rationale"
+    augments_existing: "GIS Engine"
+    research_links:
+      - url: "https://arxiv.org/pdf/1911.06260"
+        title: "A Security Perspective on Unikernels (Talbot et al.)"
+    notes: "External reference screenshot; genuine gap — no JW4 slide covers terminal-rendering substrate."
+
+  - page: 126
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Screenshot of the Kitty Terminal graphics protocol specification page (pixel-raster rendering in the terminal as the cross-system rendering substrate)."
+    key_concepts: ["Kitty graphics protocol", "terminal graphics", "pixel/raster rendering", "alpha blending", "Console OS", "cross-system rendering"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Cross-System Rendering — Kitty graphics protocol (in-terminal raster rendering)"
+    augments_existing: "GIS Engine"
+    research_links:
+      - url: "https://arxiv.org/pdf/1911.06260"
+        title: "A Security Perspective on Unikernels (Talbot et al.)"
+    notes: "Pairs with p125; merge candidate into one rendering-substrate slide. Genuine gap."
+
+  - page: 127
+    content_type: "diagram"
+    quality: "medium"
+    summary: "Vintage Reid Crowther origin-destination travel study map of Northwest Alberta showing trade-area capture percentages."
+    key_concepts: ["Origin-Destination", "OD Study", "GIS", "trade area", "catchment", "Grande Prairie", "Location Intelligence"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Heritage illustration of OD/catchment methodology; augments GIS Engine."
+
+  - page: 128
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Location Intelligence advanced site-selection write-up for Woodfine Professional Centres No 2 LP (USA) profiling Franklin, Tennessee."
+    key_concepts: ["Location Intelligence", "site selection", "Franklin Tennessee", "qualified investment criteria", "department store", "hardware store", "regional food distributor"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Use-case worked example; enriches GIS Engine as a case study."
+
+  - page: 129
+    content_type: "mixed"
+    quality: "high"
+    summary: "Franklin TN map screenshot (Sites 17/18) with Woodfine Professional Centre plotted against colour-coded qualified-investment anchors."
+    key_concepts: ["Location Intelligence", "co-location", "anchor tenants", "site selection", "qualified investment criteria", "demographics"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Visual co-location legend for the Franklin case study; augments GIS Engine."
+
+  - page: 130
+    content_type: "photo"
+    quality: "medium"
+    summary: "Satellite aerial close-up of Site No. 17 (Westgate Circle, Franklin TN) with candidate parcel outlined."
+    key_concepts: ["Location Intelligence", "aerial imagery", "site selection", "GIS", "parcel"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Supplementary aerial for the Franklin case study; low priority."

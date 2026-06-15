@@ -1,0 +1,266 @@
+pages:
+  - page: 113
+    chapter: Ch.5 Scaling and Interfaces
+    content_type: diagram
+    quality: high
+    summary: "Option A scaling diagram showing two USER/OWNER and USER/OPERATOR paths into F*Keys Consoles, with Totebox Archives and a Command Centre API riding on PointSav Infrastructure."
+    key_concepts:
+      - "F*Keys Console"
+      - "Totebox Archive"
+      - "Command Centre API"
+      - "OWNER"
+      - "OPERATOR"
+      - "PointSav Infrastructure"
+      - "Interface vs Infrastructure"
+    category_mapping: "06"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Scaling Option A — Interface vs Infrastructure (Owner/Operator console paths)"
+    augments_existing: "Scaling — Composition"
+    notes: "Header reads 'Command Centre – Interface vs. Infostructure' (typo for Infrastructure); legal-entity list at top (PointSav Information Systems Inc., Digital Systems AG, Cyber-Physical AG, Systems Inc., Inc.)."
+  - page: 114
+    chapter: Ch.5 Scaling and Interfaces
+    content_type: diagram
+    quality: high
+    summary: "Deployments matrix showing five tenant columns under one PointSav F*Keys Console, mapping SaaS/PaaS/IaaS tiers across Personnel/Corporate/Real Property archives on PointSav Infrastructure vs Self-Hosted."
+    key_concepts:
+      - "SaaS"
+      - "PaaS"
+      - "IaaS"
+      - "Virtual Machine"
+      - "Freely tradable"
+      - "Bootable disk image"
+      - "Command Centre"
+      - "Self-Hosted"
+    category_mapping: "06"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Deployment Tiers Matrix — SaaS/PaaS/IaaS across tenants (Managed/Hosted/On-Prem/Self-Hosted)"
+    augments_existing: "Scaling — Tiers"
+    notes: "Dense multi-column deployment-model matrix; high investor signal (commercial packaging of tiers). One column crossed out (X) at bottom right."
+  - page: 115
+    chapter: Ch.5 Scaling and Interfaces
+    content_type: diagram
+    quality: high
+    summary: "Totebox Orchestration org-chart diagram across three layers — Delivery (Workplace OS / F*Keys Console / Building App), Edge Computing (three minimalized-OS Totebox Archives orbiting a Command Centre), and Private Network (On-Prem / Dedicated Servers / Public Cloud)."
+    key_concepts:
+      - "Totebox Orchestration"
+      - "Workplace OS"
+      - "F*Keys Console"
+      - "minimalized OS"
+      - "Command Centre"
+      - "machine-based authorization"
+      - "Edge Computing"
+      - "Private Network"
+    category_mapping: "06"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Totebox Orchestration — three-layer delivery/edge/network architecture"
+    augments_existing: "Multiple Archives"
+    notes: "Carries 'DRAFT JANUARY 7, 2025' highlight and 'Org Chart' label; MBA footnote explains single vs simultaneous multi-archive access via Command Centre API."
+  - page: 116
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: sketch
+    quality: draft
+    summary: "Hand-drawn On-Prem Deployment stack — Private Git and Systems Admin VM over Virtualization, PointSav Private Network on-prem layer, and Bare Metal at the base, with a note about installing on one office computer."
+    key_concepts:
+      - "On-prem"
+      - "Private Git"
+      - "Systems Admin VM"
+      - "Virtualization"
+      - "Bare Metal"
+      - "PointSav Private Network"
+    category_mapping: "07"
+    existing_slide: "On-prem"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "On-prem"
+    notes: "Pen sketch; note reads 'Ability to install on one computer in the office'. Source sketch for the converted On-prem slide."
+  - page: 117
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: sketch
+    quality: draft
+    summary: "Hand-drawn Leased Server Deployment stack — Private Git and Systems Admin VM over Virtualization with a PointSav Private Network leased-server layer; NOTES section left blank."
+    key_concepts:
+      - "Leased Servers"
+      - "Private Git"
+      - "Systems Admin VM"
+      - "Virtualization"
+      - "PointSav Private Network"
+    category_mapping: "07"
+    existing_slide: "Leased Servers"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Leased Servers"
+    notes: "Pen sketch; no bare-metal layer (vs on-prem); NOTES blank. Source sketch for converted Leased Servers slide."
+  - page: 118
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: sketch
+    quality: draft
+    summary: "Hand-drawn Public Cloud Deployment stack — Private Git and Systems Admin VM over Virtualization, with the PointSav Private Network cloud layer drawn as a cloud shape; NOTES blank."
+    key_concepts:
+      - "Public Cloud"
+      - "Private Git"
+      - "Systems Admin VM"
+      - "Virtualization"
+      - "PointSav Private Network"
+    category_mapping: "07"
+    existing_slide: "Public Cloud"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Public Cloud"
+    notes: "Pen sketch; cloud-shaped network layer; NOTES heading present but empty. Source sketch for converted Public Cloud slide."
+  - page: 119
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: sketch
+    quality: draft
+    summary: "Hand-drawn Hybrid deployment — Private Git and Systems Admin VM over a wide Virtualization bar feeding three side-by-side deployment shapes (On-Prem+Bare Metal, Leased Server, Public Cloud) under one PointSav Private Network."
+    key_concepts:
+      - "Hybrid"
+      - "Virtualization"
+      - "On-prem"
+      - "Leased Servers"
+      - "Public Cloud"
+      - "Totebox orchestration"
+      - "Bare Metal"
+    category_mapping: "07"
+    existing_slide: "Hybrid Network"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Hybrid Network"
+    notes: "Pen sketch; note: 'Create a private network for totebox orchestration with any combination of on-prem, leased server or public cloud deployments together or individually.' Source sketch for converted Hybrid Network slide."
+  - page: 120
+    chapter: Ch.6 Pairing as Permission
+    content_type: divider
+    quality: high
+    summary: "Section divider title slide reading 'PAIRING AS PERMISSIONS' on an otherwise blank page."
+    key_concepts:
+      - "Pairing as Permissions"
+      - "section divider"
+      - "MBA"
+    category_mapping: "05"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: "Pure chapter divider; no content to catalog."
+  - page: 121
+    chapter: Ch.6 Pairing as Permission
+    content_type: sketch
+    quality: draft
+    summary: "Sketch 2 'Authentication and Permissions' — two mirrored Totebox-OS / Interface-OS clusters each with Console OS device nodes (input machine, F*Keys, BIM/Maps/Building consoles) connected by pairing links P1–P4, with notes that a permissions database is still needed for pairing (not role-based)."
+    key_concepts:
+      - "Pairing as Permissions"
+      - "machine-based authorization"
+      - "unique IDs"
+      - "Totebox OS"
+      - "Interface OS"
+      - "Console OS"
+      - "P1-P4 pairings"
+      - "WhatsApp/Bluetooth analogy"
+    category_mapping: "05"
+    existing_slide: "Pairing as Permissions"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Pairing as Permissions"
+    notes: "Labelled 'SKETCH 2' / 'V3'; legend numbers device types 6-10 (input machine, F*Keys, BIM, Maps, Building Preferences console). Key insight: pairing tracks unique IDs, not RBAC. Source sketch for converted Pairing as Permissions slide."
+  - page: 122
+    chapter: Ch.6 Pairing as Permission
+    content_type: sketch
+    quality: draft
+    summary: "Cleaner redraw of the same 'Authentication and Permissions' pairing diagram (mirrored Totebox-OS/Interface-OS clusters with P1-P4 pairing legend and device-type key 6-10)."
+    key_concepts:
+      - "Pairing as Permissions"
+      - "Totebox OS"
+      - "Interface OS"
+      - "P1-P4 pairings"
+      - "unique IDs"
+      - "Console OS"
+      - "Virtualization"
+    category_mapping: "05"
+    existing_slide: "Pairing as Permissions"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Pairing as Permissions"
+    notes: "Near-duplicate of page 121 content (redraw, no SKETCH 2/V3 markings); same P1=input, P2=system administration, P3=user, P4=interface legend. Duplicate of converted Pairing as Permissions material."
+  - page: 123
+    chapter: Ch.6 Pairing as Permission
+    content_type: sketch
+    quality: low
+    summary: "Fragmentary 'Permissions' sketch with a single bullet 'machine based authorization' and a partially-cropped 'COMPLIANCE' box at top right."
+    key_concepts:
+      - "Permissions"
+      - "machine based authorization"
+      - "MBA"
+      - "compliance"
+    category_mapping: "05"
+    existing_slide: "Authentication"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Authentication"
+    notes: "Mostly blank/faded scan; only legible content is 'machine based authorization' bullet plus a cropped 'COMPLIANCE' box bleeding off the top edge. Low scan quality."
+  - page: 124
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: divider
+    quality: high
+    summary: "Section divider title slide reading 'CROSS-SYSTEM RENDERING DESIGN' on an otherwise blank page."
+    key_concepts:
+      - "Cross-System Rendering Design"
+      - "section divider"
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: "Pure chapter divider; no content to catalog."
+  - page: 125
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: annotation
+    quality: medium
+    summary: "Screenshot of the Ghostty terminal-emulator 'About' docs page (Native / Feature-rich / Fast / libghostty), used as reference for native cross-platform Console OS rendering."
+    key_concepts:
+      - "Ghostty"
+      - "native UI"
+      - "libghostty"
+      - "Zig"
+      - "Kitty graphics protocol"
+      - "Console OS"
+      - "cross-system rendering"
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Cross-System Rendering — native terminal stack (Ghostty/libghostty) rationale"
+    augments_existing: "GIS Engine"
+    notes: "External reference screenshot (ghostty.org/docs/about#native); supports the cross-system/native-rendering thesis. Genuine gap — no JW4 slide covers terminal-rendering substrate."
+  - page: 126
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: annotation
+    quality: medium
+    summary: "Screenshot of the Kitty 'Terminal graphics protocol' specification page, documenting pixel-raster rendering in the terminal as the cross-system rendering substrate."
+    key_concepts:
+      - "Kitty graphics protocol"
+      - "terminal graphics"
+      - "pixel/raster rendering"
+      - "alpha blending"
+      - "Console OS"
+      - "cross-system rendering"
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Cross-System Rendering — Kitty graphics protocol (in-terminal raster rendering)"
+    augments_existing: "GIS Engine"
+    notes: "External reference screenshot (sw.kovidgoyal.net/kitty/graphics-protocol/); pairs with page 125. Genuine gap — no JW4 slide covers the graphics-protocol rendering substrate."

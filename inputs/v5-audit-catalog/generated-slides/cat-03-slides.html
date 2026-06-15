@@ -1,0 +1,107 @@
+<section class="scaling" data-label="WORM Record Format" data-screen-label="System of Record — WORM Record Format: Database vs Flat-File System">
+  <div class="head">
+    <span class="cat-tag">System of Record</span>
+    <div class="eyebrow">Record Keeping — Totebox OS</div>
+    <h2>WORM Record Format</h2>
+    <div class="crumb">A mutable database can be overwritten by an administrator; a write-once flat-file archive cannot — the file name itself is the permanent reference.</div>
+  </div>
+
+  <div class="cmp2">
+    <div class="cmp-col">
+      <div class="cmp-head"><span class="ch-t">Mutable Database</span></div>
+      <div class="cmp-item lead">Records keyed by a reference number a row in the table can hold or change.</div>
+      <div class="cmp-sub" style="margin-left:0;flex-wrap:wrap;gap:12px 26px;">
+        <span class="s">reference ID</span><span class="s">row update</span><span class="s">admin override</span><span class="s">no fixed evidence trail</span>
+      </div>
+    </div>
+    <div class="cmp-div"></div>
+    <div class="cmp-col">
+      <div class="cmp-head"><span class="ch-t">Flat-File WORM Archive</span></div>
+      <div class="cmp-rules">
+        <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The <b>file name is the reference</b> — never a database ID. The source file is the record.</span></div>
+        <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Write-once, read-many: records are non-rewriteable and non-erasable — the recordkeeping floor under SEC Rule 17a-4 and FINRA Rule 4511.</span></div>
+        <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Content addressed by SHA-256, the way <b>RFC 6920</b> names things by hash — any party can verify a record without the originating system.</span></div>
+        <div class="cmp-rule"><span class="rk">✲</span><span class="rt">A duplicated record across two archives keeps one identical name and hash — provenance is preserved, not re-numbered.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes-strip">
+    <b>Your notes</b>
+    <div class="nlist">
+      <span>Which services keep structured data in a database vs. source files in WORM?</span>
+      <span>How is the 6-year retention floor enforced so an administrator cannot override it?</span>
+      <span>What happens to the hash when a source file is re-scanned at higher fidelity?</span>
+    </div>
+  </div>
+</section>
+
+<section class="scaling" data-label="Chart-of-Accounts Names" data-screen-label="System of Record — Chart-of-Accounts File Naming in the Flat-File Archive">
+  <div class="head">
+    <span class="cat-tag">System of Record</span>
+    <div class="eyebrow">Record Keeping — Bookkeeping</div>
+    <h2>File-Name-as-Reference</h2>
+    <div class="crumb">The Input Machine derives each file name from the Chart of Accounts, so the name alone places the record — no lookup table required.</div>
+  </div>
+
+  <div class="cmp2" style="grid-template-columns:1fr;">
+    <div class="cmp-col">
+      <div class="cmp-item lead">A bookkeeping record filed by the Input Machine:</div>
+      <div class="cmp-sub" style="margin-left:0;flex-wrap:wrap;gap:12px 26px;">
+        <span class="s">BOOKKEEPING</span><span class="s">TITLECO1</span><span class="s">2025_03_07</span><span class="s">Invoice</span><span class="s">Property Management</span><span class="s">Snow Removal.PDF</span>
+      </div>
+      <div class="cmp-rules">
+        <div class="cmp-rule"><span class="rk">01</span><span class="rt"><b>Service</b> — the Totebox service that owns the record (Bookkeeping, Minute Book, IoT).</span></div>
+        <div class="cmp-rule"><span class="rk">02</span><span class="rt"><b>Entity</b> — the archive the record belongs to; one Totebox per entity.</span></div>
+        <div class="cmp-rule"><span class="rk">03</span><span class="rt"><b>ISO date</b> — sortable, locale-independent (YYYY_MM_DD).</span></div>
+        <div class="cmp-rule"><span class="rk">04</span><span class="rt"><b>Document type</b> — Invoice, Receipt, Resolution, drawn from the Chart of Accounts.</span></div>
+        <div class="cmp-rule"><span class="rk">05</span><span class="rt"><b>Account path</b> — expense category and description; the same fields a ledger row would carry, now in the name.</span></div>
+        <div class="cmp-rule"><span class="rk">06</span><span class="rt">The original PDF / ODT / ODS is the record; the name plus its SHA-256 hash is the only reference anyone needs.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes-strip">
+    <b>Your notes</b>
+    <div class="nlist">
+      <span>Who maintains the Chart-of-Accounts vocabulary the file names draw from?</span>
+      <span>How does the Input Machine resolve two records that map to the same name?</span>
+      <span>Can a record be re-filed under a corrected account without breaking the audit trail?</span>
+    </div>
+  </div>
+</section>
+
+<section class="scaling" data-label="Partition Layout" data-screen-label="System of Record — Totebox OS File System and Partition Layout">
+  <div class="head">
+    <span class="cat-tag">System of Record</span>
+    <div class="eyebrow">Record Keeping — Totebox OS</div>
+    <h2>File System &amp; Partitions</h2>
+    <div class="crumb">Each archive is a single micro VM partitioned so recovery, the OS, and per-service storage stay isolated — with the best-fit store chosen for each service.</div>
+  </div>
+
+  <div class="cmp2" style="grid-template-columns:1fr;">
+    <div class="cmp-col">
+      <div class="cmp-rules">
+        <div class="cmp-rule"><span class="rk">R</span><span class="rt"><b>Recovery</b> — restores the archive to a known-good state; kept apart from operating partitions.</span></div>
+        <div class="cmp-rule"><span class="rk">OS</span><span class="rt"><b>Operating system</b> — the Totebox OS itself; read-mostly, separate from records.</span></div>
+        <div class="cmp-rule"><span class="rk">S1</span><span class="rt"><b>Service container</b> — one service's records (e.g. Bookkeeping); best-fit database or file system per service.</span></div>
+        <div class="cmp-rule"><span class="rk">S2</span><span class="rt"><b>Service container</b> — a second service partition, isolated from the first.</span></div>
+        <div class="cmp-rule"><span class="rk">S3</span><span class="rt"><b>Service container</b> — structured services use an embedded DB; document services use the flat-file WORM store.</span></div>
+        <div class="cmp-rule"><span class="rk">S4</span><span class="rt"><b>Service container</b> — partition isolation keeps one service's data from reaching another's.</span></div>
+      </div>
+      <div class="cmp-item lead" style="margin-top:24px;">Why partition this way</div>
+      <div class="cmp-sub" style="margin-left:0;flex-wrap:wrap;gap:12px 26px;">
+        <span class="s">portable, machine-readable export — per EU Data Act Art. 23–25 (2023)</span><span class="s">WORM permanence — per ISO 14641:2018</span><span class="s">no vendor lock-in on read</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes-strip">
+    <b>Your notes</b>
+    <div class="nlist">
+      <span>Which services warrant an embedded database vs. the flat-file store?</span>
+      <span>How is a service partition exported when an entity moves its archive?</span>
+      <span>Does the recovery partition hold a verifiable hash manifest of the records?</span>
+    </div>
+  </div>
+</section>

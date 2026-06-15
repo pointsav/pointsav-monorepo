@@ -1,0 +1,2237 @@
+pages:
+  - page: 1
+    chapter: "Navigation"
+    content_type: "toc"
+    quality: "high"
+    summary: "Table of contents for the V5 (labelled VERSION 13) Design Slides listing the nine numbered sections, with sections 3-7 footnoted as Totebox Orchestration components."
+    key_concepts: ["Totebox Orchestration", "Contributors", "Documentation", "Console Construction", "Cross-System Rendering Design", "SMB Environment", "Deployment Scenarios"]
+    category_mapping: "01"
+    existing_slide: "Contents"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Contents"
+    research_links: []
+    notes: "Title block reads VERSION 13 though file is V5; nine-section ordering matches JW4 chapter scheme."
+
+  - page: 2
+    chapter: "Ch.1 Contributors"
+    content_type: "annotation"
+    quality: "draft"
+    summary: "Annotated section list (green/yellow highlight) restating the nine categories with an editor note (XXX) arguing for splitting Totebox Orchestration components from the other assignments on the first page."
+    key_concepts: ["Totebox Orchestration", "Contributors", "Deployment Scenarios", "category split", "SMB Environment"]
+    category_mapping: "01"
+    existing_slide: "Contents"
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Contents"
+    research_links: []
+    notes: "Working annotation with highlighter and reviewer initials (IK); not a finished slide. Restates TOC; duplicate of page 1 content."
+
+  - page: 3
+    chapter: "Ch.2 Documentation"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Handwritten Table of Contents sketch for the Documentation delivery method listing corporate name, products/services, Totebox Orchestration, authentication/permissions, Console OS and Interface OS sub-sections, and Infrastructure OS."
+    key_concepts: ["Table of Contents", "Console OS", "Interface OS", "Command Center", "BIM Server", "GIS Engine", "IoT Connect", "Infrastructure OS"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: "Documentation Delivery Method — Section Map"
+    augments_existing: "Contents"
+    research_links:
+      - url: "https://www.writethedocs.org/guide/docs-as-code/"
+        title: "Docs as Code — Write the Docs Guide"
+    notes: "Handwritten in blue ink; legible. Planning sketch for documentation structure rather than investor-facing content."
+
+  - page: 4
+    chapter: "Ch.3 Console Construction"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn Products and Services system diagram showing Console OS, Interface OS, and Totebox OS as three VMs with arrows, plus numbered service legend (1-25) enumerating each OS's services."
+    key_concepts: ["Console OS", "Interface OS", "Totebox OS", "VM", "F-Keys console", "BIM console", "GIS Engine", "Bookkeeping"]
+    category_mapping: "03"
+    existing_slide: "VM vs Containers"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "VM vs Containers"
+    research_links: []
+    notes: "SKETCH 1 / V3 markings. Three-VM topology and 25-item service legend underpin the converted Products & Services and VM vs Containers slides."
+
+  - page: 5
+    chapter: "Ch.1 Contributors"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Contributors section narrative defining contributor types (technical/domain/operational) and how individual Totebox Archives map to Personnel, Corporate, and Real Property via Passport, Business/Tax, and Land Title IDs."
+    key_concepts: ["Approved Contributors", "White Paper Discovery Process", "Totebox Archive - Personnel", "Passport IDs", "Business/Tax IDs", "Land Title IDs", "Supervisory Board"]
+    category_mapping: "01"
+    existing_slide: "Contributors"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Contributors"
+    research_links: []
+    notes: "Final sentence struck through (crossed-out): 'Maps each contributor to which Archive they affect'."
+
+  - page: 6
+    chapter: "Ch.1 Contributors"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Contributors continuation stating the no-raw-data rule: all interaction routes through Console OS (optionally via Interface OS), with the Totebox Archive logging access via Registry Token mapping device IP and Pairing As Permissions."
+    key_concepts: ["no raw data rule", "Console OS", "Interface OS", "Registry Token", "IP Address", "Pairing As Permissions", "access records"]
+    category_mapping: "05"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Registry Token — Access Record + Pairing As Permissions"
+    augments_existing: "Pairing as Permissions"
+    research_links:
+      - url: "https://www.ietf.org/rfc/rfc8705.html"
+        title: "RFC 8705: OAuth 2.0 Mutual-TLS Client Authentication and Certificate-Bound Access Tokens"
+      - url: "https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-63b.pdf"
+        title: "NIST SP 800-63B: Digital Identity Guidelines — Authentication and Lifecycle Management"
+      - url: "https://www.sec.gov/investment/amendments-electronic-recordkeeping-requirements-broker-dealers"
+        title: "SEC Amendments to Electronic Recordkeeping Requirements for Broker-Dealers (Rule 17a-4)"
+    notes: "Trailing sentence struck through (duplicate of the rule). Registry Token / IP-to-permission mapping is an MBA registry concept with no dedicated JW4 slide — genuine gap."
+
+  - page: 7
+    chapter: "Ch.1 Contributors"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Contributors Outcome statement: all contributors aligned before defining disciplines, with a clear auditable-by-design registry that answers 'who changed this and why' for regulators or board members."
+    key_concepts: ["Outcome", "auditable by design", "registry", "who changed this and why", "regulator", "board member"]
+    category_mapping: "01"
+    existing_slide: "Contributors"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Contributors"
+    research_links: []
+    notes: "Highlighted phrase 'A clear registry and model for who can do what, auditable by design'; closing matter of the Contributors section."
+
+  - page: 8
+    chapter: "Ch.8 SMB Environment"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Handwritten Economic Model sketch listing three pillars: property management, record keeping, and building connectivity."
+    key_concepts: ["Economic Model", "Property management", "Record keeping", "Building connectivity"]
+    category_mapping: "01"
+    existing_slide: "SMB Environment"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "SMB Environment"
+    research_links: []
+    notes: "Handwritten blue ink with boxed 'Economic Model' label; three-pillar framing maps onto SMB use-case narrative."
+
+  - page: 9
+    chapter: "Ch.8 SMB Environment"
+    content_type: "photo"
+    quality: "high"
+    summary: "Annotated aerial photo of the Woodfine Professional Centre site in Airdrie, Alberta with surrounding anchors (Walmart, Home Depot, Starbucks, Highway 2) and a Woodfine Capital Projects title block."
+    key_concepts: ["Woodfine Professional Centre", "Airdrie, Alberta", "power centre", "retail anchors", "Stantec", "Economic Model"]
+    category_mapping: "01"
+    existing_slide: "SMB Environment"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "SMB Environment"
+    research_links: []
+    notes: "Real-estate aerial render (D3 sheet, Stantec, dated 2025_01_07) used as the economic-model worked example; concrete SMB/real-property context."
+
+  - page: 10
+    chapter: "Ch.1 Contributors"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "First page of the White Paper Discovery Process draft memorandum: Woodfine hybrid investment structure (restructured 2/20, perpetual equity, secured mortgage debentures) and intent to transform print marketing into a digital platform."
+    key_concepts: ["White Paper Discovery Process", "Draft Memorandum", "hybrid structure", "2/20 restructuring", "perpetual equity", "secured mortgage debentures", "digital marketing platform"]
+    category_mapping: "01"
+    existing_slide: "How We Select Contributors"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "How We Select Contributors"
+    research_links: []
+    notes: "Yellow placeholder fields (Insert Company/Contact/Date). Investment-strategy narrative; the White Paper Discovery Process is the contributor onboarding mechanism."
+
+  - page: 11
+    chapter: "Ch.1 Contributors"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Discovery memo continuation specifying the digital platform stack — WordPress single-page site, MediaWiki corporate/projects wikis, RSS newsroom — as open-source servers acting as pre-draft for legal/accounting documentation."
+    key_concepts: ["WordPress", "MediaWiki", "RSS", "open-source servers", "Corporate wiki", "Projects wiki", "annual information circular"]
+    category_mapping: "01"
+    existing_slide: "How We Select Contributors"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "How We Select Contributors"
+    research_links: []
+    notes: "Open-source-stack rationale (scale across devices); part of the multi-page Discovery Process memo."
+
+  - page: 12
+    chapter: "Ch.1 Contributors"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Discovery memo MediaWiki Corporate section outlining the corporate wiki structure (nature of business, management team, thesis statements, Woodfine LPs) and its role as repository for regulatory filings across the parent and LPs."
+    key_concepts: ["MediaWiki Corporate", "regulatory filings", "Woodfine Capital Projects Inc.", "Professional Centres LP", "MD&A", "Material Change Reports", "Thesis Statements"]
+    category_mapping: "01"
+    existing_slide: "How We Select Contributors"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "How We Select Contributors"
+    research_links: []
+    notes: "Continuation of Discovery memo; continuous-disclosure repository structure (Canada + USA LPs)."
+
+  - page: 13
+    chapter: "Ch.1 Contributors"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Discovery memo MediaWiki Projects section listing development classes (Professional Centres, Tech Industrial, Retail Select, Suburban Office, Parking Structures), design-collaboration headings, and a market database for current/target markets."
+    key_concepts: ["MediaWiki Projects", "Development Classes", "Parking Structures", "Design Collaboration", "Regional Markets", "target markets", "Design Slides"]
+    category_mapping: "01"
+    existing_slide: "How We Select Contributors"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "How We Select Contributors"
+    research_links: []
+    notes: "Development-class taxonomy (incl. Parking Structures) ties to the GIS archetype work; part of Discovery memo."
+
+  - page: 14
+    chapter: "Ch.1 Contributors"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Discovery memo continuation completing the market database (Grande Prairie, Lexington KY) and defining the RSS Newsroom as an aggregator with two release types: Woodfine Management Corp content releases and sub-400-word regulator releases."
+    key_concepts: ["RSS Newsroom", "news aggregator", "Regulator Releases", "securities regulations", "target market", "Woodfine Management Corp", "web feed"]
+    category_mapping: "01"
+    existing_slide: "How We Select Contributors"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "How We Select Contributors"
+    research_links: []
+    notes: "Quotes Wikipedia RSS definition; closes the Discovery Process memo. Regulator-release compliance posture noted."
+
+  - page: 15
+    chapter: "Ch.1 Contributors"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Draft memo explaining the white-paper onboarding process by which potential collaborators are approved by the parent company board and added to the internal registrar."
+    key_concepts: ["white paper", "approved collaborators", "internal registrar", "board of directors", "onboarding", "Design-Build Requirements", "E. M. Forster"]
+    category_mapping: "01"
+    existing_slide: "How We Select Contributors"
+    conversion_status: "converted"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "How We Select Contributors"
+    research_links: []
+    notes: "Memo prose; closely related to the JW4 'How We Select Contributors' navigation/process slide. Page 1 of a 2-page white-paper process memo (continues p16)."
+
+  - page: 16
+    chapter: "Ch.1 Contributors"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Continuation of the white-paper memo listing what the paper is NOT, potential engagements (wiki frameworks, content, editing), and document attachments."
+    key_concepts: ["Potential Engagements", "Corporate wiki", "Projects wiki", "white paper", "WCP Draft Prospectus", "Professional Centres LP", "Marketing Kit"]
+    category_mapping: "01"
+    existing_slide: "How We Select Contributors"
+    conversion_status: "converted"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "How We Select Contributors"
+    research_links: []
+    notes: "Page 2 of the white-paper process memo (continues from p15). Engagement list and attachments enrich the contributor-selection narrative."
+
+  - page: 17
+    chapter: "Ch.1 Contributors"
+    content_type: "diagram"
+    quality: "high"
+    summary: "Delivery-method flow diagram showing Git contributor disciplines feeding Perpetual Beta R&D from PointSav Information Systems, with Totebox Archives / Control / Interfaces / Assignments circles and Stable Release (LTS) to Workplace OS."
+    key_concepts: ["Git", "Perpetual Beta", "Stable Release (LTS)", "Totebox Archives", "Interfaces", "Workplace OS", "LTS", "Command Centre"]
+    category_mapping: "01"
+    existing_slide: "Contributors"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "Contributors"
+    research_links: []
+    notes: "Polished color flow diagram. Contributor list maps to the JW4 'Contributors' slide; the Perpetual-Beta/LTS release pipeline is additional signal that could augment the Contributors or Deployment slides."
+
+  - page: 18
+    chapter: "Ch.1 Contributors"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Handwritten sketch listing licensing agreements: open source for Totebox OS, Console OS, Workplace OS, and a separate proprietary line, under a Compliance header."
+    key_concepts: ["licensing", "open source", "proprietary", "ToteboxOS", "ConsoleOS", "Workplace OS", "compliance"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Licensing Model — Open-Source Base Nodes vs Proprietary Tiers"
+    augments_existing: ""
+    research_links:
+      - url: "https://en.wikipedia.org/wiki/Open-core_model"
+        title: "Open-core model — definition, structure, and exemplars (GitLab, Grafana)"
+      - url: "https://www.gartner.com/en/documents/5028931"
+        title: "Gartner — Consult the Board: Use of Open-Source Software"
+      - url: "https://www.gartner.com/en/documents/3991495"
+        title: "Gartner — Adoption of an Open-Source Strategy"
+    notes: "Handwritten draft. No JW4 coverage of the FOSS-vs-proprietary licensing split — high investor signal (which OS layers are open source vs paid). Genuine gap."
+
+  - page: 19
+    chapter: "Ch.1 Contributors"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Handwritten sketch listing support channels: commercial support, mailing lists, bug reports, and IRC, under a Community header."
+    key_concepts: ["commercial support", "mailing lists", "bug reports", "IRC", "community"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: "Support Channels — Commercial and Community"
+    augments_existing: "Contributors"
+    research_links:
+      - url: "https://en.wikipedia.org/wiki/Open-core_model"
+        title: "Open-core model — definition, structure, and exemplars (GitLab, Grafana)"
+    notes: "Handwritten draft. Commercial-support line has investor signal but content is thin; could augment Contributors/Deployment rather than warrant a standalone slide."
+
+  - page: 20
+    chapter: "Ch.1 Contributors"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Near-empty handwritten slide with only the heading TESTING and a Compliance header; no body content captured."
+    key_concepts: ["testing", "compliance"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Essentially blank placeholder — only the word TESTING and a Compliance box are legible. No usable content; skip."
+
+  - page: 21
+    chapter: "Ch.2 Documentation"
+    content_type: "text"
+    quality: "high"
+    summary: "Typeset Documentation section 2.4 Naming Conventions giving canonical names for Totebox Archives, Services, and Consoles and the outcome of avoiding DocumentServiceV2_Final drift."
+    key_concepts: ["Naming Conventions", "canonical names", "Totebox Archives", "Minutebook", "Bookkeeping", "F*Keys", "BIM Console", "Maps Console"]
+    category_mapping: "01"
+    existing_slide: "Naming Conventions"
+    conversion_status: "converted"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Naming Conventions"
+    research_links: []
+    notes: "Clean typeset page; directly the source for the JW4 'Naming Conventions' slide (Cat 01)."
+
+  - page: 22
+    chapter: "Ch.2 Documentation"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Handwritten corporate-name brainstorm listing candidate names: PointSav Information System, Distributed System, Decentralized System, Cyber Physical, Digital System, Systems, and PointSav."
+    key_concepts: ["corporate name", "PointSav", "Information System", "Distributed System", "Decentralized System", "Cyber Physical", "Digital System"]
+    category_mapping: "01"
+    existing_slide: "Naming Conventions"
+    conversion_status: "converted"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Naming Conventions"
+    research_links: []
+    notes: "Handwritten naming brainstorm. Background for the canonical-naming decision (PointSav Digital Systems); folds into the Naming Conventions slide rather than its own."
+
+  - page: 23
+    chapter: "Ch.2 Documentation"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Handwritten Documentation slide listing documentation methods: wireframes, UML, 4+1 architectural view model, C4 model, ISO/IEC 42010, and user guide/help/wiki/main page."
+    key_concepts: ["wireframes", "UML", "4+1 view model", "C4 model", "ISO/IEC 42010", "user guide", "wiki"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Documentation Standards — UML, C4, 4+1, ISO/IEC 42010"
+    augments_existing: "Design System"
+    research_links:
+      - url: "https://www.iso.org/standard/74393.html"
+        title: "ISO/IEC/IEEE 42010:2022 — Software, systems and enterprise — Architecture description"
+      - url: "https://www.omg.org/spec/UML/2.5.1/About-UML/"
+        title: "OMG Unified Modeling Language (UML) Specification Version 2.5.1"
+      - url: "https://c4model.com/"
+        title: "The C4 model for visualising software architecture (Simon Brown)"
+      - url: "https://www.computer.org/csdl/magazine/so/1995/06/s6042/13rRUxBJhBm"
+        title: "Architectural Blueprints — The '4+1' View Model of Software Architecture (P. Kruchten)"
+    notes: "Legible handwriting. Concrete documentation-standards content (ISO/IEC 42010, C4, 4+1) not covered in JW4; developer signal. Candidate new slide or augment to Design System / docs."
+
+  - page: 24
+    chapter: "Ch.2 Documentation"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Berkshire Hathaway shareholder-letter excerpt used as a plain-language writing exemplar, with the 'Bertie' mental-model passages highlighted."
+    key_concepts: ["plain language", "Berkshire Hathaway", "shareholder letter", "Bertie mental model", "Warren Buffett", "writing style"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Naming Conventions"
+    research_links: []
+    notes: "Reference exemplar (third-party Berkshire letter), not PointSav content. Illustrates the plain-language editorial standard; not a convertible product slide. Page 1 of 2 (continues p25)."
+
+  - page: 25
+    chapter: "Ch.2 Documentation"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Continuation of the Berkshire Hathaway plain-language exemplar covering operating results, FASB/SEC/D&T audit framing, and operating-earnings versus net-income."
+    key_concepts: ["plain language", "Berkshire Hathaway", "operating earnings", "net income", "FASB", "SEC", "editorial standard"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Page 2 of the Berkshire plain-language exemplar (continues from p24). Third-party reference text; not a convertible PointSav slide."
+
+  - page: 26
+    chapter: "Ch.2 Documentation"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Handwritten Coding Guidelines slide citing 'The Power of 10: Rules for Developing Safety-Critical Code' under a Community header."
+    key_concepts: ["coding guidelines", "Power of 10", "safety-critical code", "JPL rules", "community"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Coding Guidelines — Power of 10 Safety-Critical Rules"
+    augments_existing: "Design System"
+    research_links:
+      - url: "https://spinroot.com/gerard/pdf/P10.pdf"
+        title: "The Power of Ten — Rules for Developing Safety-Critical Code (G. J. Holzmann, NASA/JPL)"
+    notes: "Handwritten draft. The Power-of-10 safety-critical coding standard is concrete developer signal not in JW4; ties to the seL4 / verified-primitives posture. Candidate new slide."
+
+  - page: 27
+    chapter: "Navigation"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Handwritten Icon Index legend mapping shapes to platform elements: User, Totebox OS, Interface OS, Console OS, Virtualization, Media Kit/Private Git OS, Infrastructure OS, Public Cloud, Container."
+    key_concepts: ["icon index", "ToteboxOS", "ConsoleOS", "Interface OS", "Infrastructure OS", "public cloud", "container", "virtualization"]
+    category_mapping: "07"
+    existing_slide: "Icon Index"
+    conversion_status: "converted"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Icon Index"
+    research_links: []
+    notes: "Handwritten legend; directly the source for the JW4 'Icon Index' navigation slide. Maps each OS layer to a diagram shape."
+
+  - page: 28
+    chapter: "Ch.5 Scaling and Interfaces"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Handwritten System Design / Economic Model slide naming three design pillars: decentralized orchestration, authentication as permissions, and freely transferable Totebox archives."
+    key_concepts: ["system design", "decentralized orchestration", "authentication as permissions", "freely transferable", "Totebox archives", "MBA", "Freely Transferable Standard"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Economic Model — Decentralized Orchestration, Auth-as-Permissions, Freely Transferable Archives"
+    augments_existing: "Pairing as Permissions"
+    research_links:
+      - url: "https://eur-lex.europa.eu/eli/reg/2023/2854/oj/eng"
+        title: "Regulation (EU) 2023/2854 (Data Act) — harmonised rules on fair access to and use of data"
+      - url: "https://link.springer.com/article/10.1007/s10257-024-00692-0"
+        title: "Assessing the value of decentralized and interoperable data storage for service providers"
+      - url: "https://www.gartner.com/en/documents/3976113"
+        title: "A Guidance Framework for Managing Vendor Lock-In Risks in Cloud IaaS (Gartner)"
+    notes: "Handwritten but legible. Ties three core differentiators. No single JW4 slide frames the economic/system-design thesis — high investor signal. Spans Cat 04/05/06."
+
+  - page: 29
+    chapter: "Ch.2 Documentation"
+    content_type: "text"
+    quality: "high"
+    summary: "Whitepaper text on PrivateGit OS Design System as the platform-wide house style, hosted as Git-as-CMS and offered as FOSS."
+    key_concepts: ["PrivateGit OS", "Design System", "IBM Carbon", "Git as CMS", "design tokens", "MediaKit OS", "FOSS"]
+    category_mapping: "01"
+    existing_slide: "Design System"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "Header reads (IK: Improved wording) — editorial annotation, not slide content."
+
+  - page: 30
+    chapter: "Ch.2 Documentation"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn whiteboard sketch proposing a Design System repository spanning MediaKit OS and Workplace OS desktop environments."
+    key_concepts: ["Design System repository", "MediaKit OS", "Workplace OS", "desktop environments", "software apps", "Product"]
+    category_mapping: "01"
+    existing_slide: "Design System"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "Pen-on-paper sketch; partly illegible cursive; NOTES section blank. Source material for the converted Design System slide."
+
+  - page: 31
+    chapter: "Ch.2 Documentation"
+    content_type: "text"
+    quality: "medium"
+    summary: "Tabular Media Assets Directory listing WCP and PointSav media-asset references by company, type, component, and print/digital."
+    key_concepts: ["Media Assets Directory", "WCP Media Assets", "PointSav Media Assets", "logo", "font", "icon", "GitHub media-assets"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "Reference directory table (V2, March 1 2025). Detail-level inventory — enriches Design System rather than warranting its own investor slide."
+
+  - page: 32
+    chapter: "Ch.2 Documentation"
+    content_type: "text"
+    quality: "high"
+    summary: "Whitepaper on Typographic Protocols splitting marketing fonts from system fonts (desktop/console/terminal/user) with a Variable Fonts roadmap."
+    key_concepts: ["Typographic Protocols", "System Fonts", "Console Fonts", "Terminal Fonts", "Variable Fonts", "Wiki Typeface Family"]
+    category_mapping: "01"
+    existing_slide: "Typographic Protocols"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Typographic Protocols"
+    research_links: []
+    notes: ""
+
+  - page: 33
+    chapter: "Ch.2 Documentation"
+    content_type: "diagram"
+    quality: "high"
+    summary: "Woodfine Color Values swatch board with CMYK and RGB specifications for the seven brand colors."
+    key_concepts: ["Color Values", "Woodfine palette", "CMYK", "RGB", "brand colors"]
+    category_mapping: "01"
+    existing_slide: "Color Values"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Color Values"
+    research_links: []
+    notes: ""
+
+  - page: 34
+    chapter: "Ch.2 Documentation"
+    content_type: "photo"
+    quality: "medium"
+    summary: "Reference screenshot of Apple's developer fonts page (San Francisco typeface) used as a typography exemplar."
+    key_concepts: ["San Francisco typeface", "Apple fonts", "typography reference", "variable optical sizes"]
+    category_mapping: "01"
+    existing_slide: "Typographic Protocols"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Typographic Protocols"
+    research_links: []
+    notes: "External screenshot (developer.apple.com/fonts) used as moodboard/reference, not original PointSav content."
+
+  - page: 35
+    chapter: "Ch.2 Documentation"
+    content_type: "photo"
+    quality: "medium"
+    summary: "Continuation screenshot of Apple typography reference detailing SF Pro, SF Compact, SF Mono, New York, and SF Script Extensions."
+    key_concepts: ["SF Pro", "SF Compact", "SF Mono", "New York", "SF Script Extensions", "typography reference"]
+    category_mapping: "01"
+    existing_slide: "Typographic Protocols"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Typographic Protocols"
+    research_links: []
+    notes: "External screenshot (developer.apple.com/fonts); reference exemplar, not original content."
+
+  - page: 36
+    chapter: "Ch.2 Documentation"
+    content_type: "text"
+    quality: "high"
+    summary: "Whitepaper on Interface Patterns defining MediaKit OS topic templates and navigation plus PrivateGit OS repositories and elements."
+    key_concepts: ["Interface Patterns", "MediaKit OS", "topic templates", "PrivateGit OS", "WordPress", "MediaWiki", "Fresh RSS"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Interface Patterns — MediaKit & PrivateGit"
+    augments_existing: "Design System"
+    research_links:
+      - url: "https://www.writethedocs.org/guide/docs-as-code/"
+        title: "Docs as Code — Write the Docs Guide"
+    notes: "No exact JW4 match for Interface Patterns; modest developer signal — candidate new slide or fold into Design System."
+
+  - page: 37
+    chapter: "Ch.2 Documentation"
+    content_type: "text"
+    quality: "medium"
+    summary: "MediaKit OS wireframe inventory table listing 36 wireframes across Landing Page, Corporate Wiki, Project Wiki, and Newsroom deployments."
+    key_concepts: ["wireframes", "Landing Page", "Corporate Wiki", "Project Wiki", "Newsroom", "topic templates"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "Draft wireframe manifest (V2, January 7 2025); inventory detail, not an investor-facing slide."
+
+  - page: 38
+    chapter: "Ch.2 Documentation"
+    content_type: "text"
+    quality: "medium"
+    summary: "PointSav Design System component directory listing 30 button/form components mapped to Marketing/Wiki/Distribution pages and their CMS."
+    key_concepts: ["Design System Directory", "components", "button", "form", "WordPress", "MediaWiki", "FreshRSS", "topic template"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "Component reference table (V2, March 1 2025; github.com/pointsav/design-system); 'Discription' typo in source header."
+
+  - page: 39
+    chapter: "Ch.2 Documentation"
+    content_type: "mixed"
+    quality: "medium"
+    summary: "Topic template exemplar showing a Regional Market article styled on a Wikipedia (Airdrie, Alberta) layout with infobox and maps."
+    key_concepts: ["topic template", "Regional Market", "Wikipedia layout", "infobox", "MediaWiki"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "Uses a real Wikipedia article (Airdrie, AB) as a layout mockup for the Regional Market topic template."
+
+  - page: 40
+    chapter: "Ch.2 Documentation"
+    content_type: "photo"
+    quality: "low"
+    summary: "Site Selection Ranking topic template exemplar shown as a screenshot of the Wikipedia Michelin Guide country-ranking table."
+    key_concepts: ["Site Selection Ranking", "topic template", "ranking table", "Wikipedia reference"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "External Wikipedia (Michelin Guide) screenshot used purely as a ranked-table layout analogy; low original signal."
+
+  - page: 41
+    chapter: "Ch.2 Documentation"
+    content_type: "mixed"
+    quality: "high"
+    summary: "Rendered WCP Landing Page wireframe (MediaKit OS Marketing/Web Framework) showing the Woodfine Capital Projects marketing homepage."
+    key_concepts: ["WCP Landing Page", "wireframe", "MediaKit OS", "Web Framework", "Marketing", "freely transferable units"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "High-fidelity rendered mockup of the WCP marketing site; references 'freely transferable' partnership units (note: Cat 04 Freely Transferable Standard is a distinct platform concept)."
+
+  - page: 42
+    chapter: "Ch.2 Documentation"
+    content_type: "text"
+    quality: "draft"
+    summary: "Annotated content outline for the WCP Landing Page wireframe enumerating wheelhouse sections as placeholder teasers."
+    key_concepts: ["WCP Landing Page", "wireframe outline", "wheelhouse", "MediaKit OS", "Web Framework", "Marketing"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Design System"
+    research_links: []
+    notes: "DRAFT JANUARY 7, 2025 (highlighted); placeholder <<Teaser>>/<<Wheelhouse>> markers — incomplete working draft."
+
+  - page: 43
+    chapter: "Ch.2 Documentation"
+    content_type: "text"
+    quality: "draft"
+    summary: "WCP Corporate Wiki wireframe outline with narrow-banking thesis statement and corporate-structure topic hierarchy."
+    key_concepts: ["WCP Corporate Wiki", "MediaKit OS", "narrow banking", "Woodfine LPs", "corporate structure", "First Secured Debentures", "Freely Tradable Units"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Wiki content outline / draft Jan 7 2025; corporate-wiki structure, not a platform-component slide. Mostly investor-corporate content outside the 7 platform categories."
+
+  - page: 44
+    chapter: "Ch.2 Documentation"
+    content_type: "text"
+    quality: "draft"
+    summary: "Continuation of WCP Corporate Wiki outline covering ongoing reporting requirements, quarterly/annual filings, and references."
+    key_concepts: ["ongoing reporting requirements", "committee meetings", "financial statements", "Professional Centres Canada LP", "external links", "references"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Continuation of p43 corporate-wiki outline; reporting-issuer disclosure content, not a platform-component slide."
+
+  - page: 45
+    chapter: "Ch.2 Documentation"
+    content_type: "text"
+    quality: "draft"
+    summary: "WCP Projects Wiki wireframe outline with urbanism thesis and Woodfine Buildings / development-collaborators topic hierarchy."
+    key_concepts: ["WCP Projects Wiki", "regional markets", "Woodfine Buildings", "Parking Structures", "Vertical Warehouse", "vernacular design", "development collaborators"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Projects-wiki content outline / draft; real-estate project taxonomy, not a platform-component slide."
+
+  - page: 46
+    chapter: "Ch.2 Documentation"
+    content_type: "mixed"
+    quality: "medium"
+    summary: "Browser screenshot of the OSGeo open-source geospatial foundation wiki used as a reference wireframe sample for the wiki layout."
+    key_concepts: ["wiki sample", "OSGeo", "open source", "committees", "design system wireframe", "reference layout"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Third-party OSGeo screenshot used as a layout reference; not original PointSav content."
+
+  - page: 47
+    chapter: "Ch.2 Documentation"
+    content_type: "text"
+    quality: "medium"
+    summary: "Chart-of-accounts style topic index mapping ~46 topic IDs across Corporate, Projects, PointSav, Distributed Economies, Geometry of Sustainability, Narrow Banking, and Totebox Methodology wikis."
+    key_concepts: ["chart of accounts", "topic IDs", "Distributed Economies", "Geometry of Sustainability", "Narrow Banking", "Totebox Methodology", "topic taxonomy"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Editorial topic-index spreadsheet; cross-wiki taxonomy, not a platform-component slide. Could inform naming-conventions work but no standalone slide warranted."
+
+  - page: 48
+    chapter: "Ch.2 Documentation"
+    content_type: "text"
+    quality: "draft"
+    summary: "Newsroom / distribution wireframe outline for media and regulator releases across Woodfine entities."
+    key_concepts: ["newsroom", "media releases", "regulator releases", "distribution", "MediaKit OS", "reporting issuers"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Newsroom content outline / draft; distribution-surface wiki, not a platform-component slide."
+
+  - page: 49
+    chapter: "Ch.2 Documentation"
+    content_type: "text"
+    quality: "medium"
+    summary: "Documentation outcome statement on a predictable Landing-to-Newsroom and Marketing-to-Distribution navigation flow consistent across MediaKit OS and PrivateGit OS deployments."
+    key_concepts: ["documentation outcome", "Landing Page", "Corporate Wiki", "Projects Wiki", "Newsroom", "MediaKit OS", "PrivateGit OS", "consistent navigation"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Consistent Documentation Navigation Across Deployments (Marketing to Distribution flow)"
+    augments_existing: ""
+    research_links:
+      - url: "https://www.writethedocs.org/guide/docs-as-code/"
+        title: "Docs as Code — Write the Docs Guide"
+    notes: "First bullet struck through; second bullet is the live statement. Genuine cross-deployment UX-consistency concept with no direct JW4 slide."
+
+  - page: 50
+    chapter: "Ch.2 Documentation"
+    content_type: "divider"
+    quality: "draft"
+    summary: "Section divider titled DOCUMENTATION with subheading 2.1 PrivateGit OS — Source Control and otherwise blank."
+    key_concepts: ["documentation", "PrivateGit OS", "source control", "section divider"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Near-empty divider page; only a heading and subheading present."
+
+  - page: 51
+    chapter: "Ch.1 Contributors"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn sketch for the Repositories delivery method listing Private GIT and GitHub with a community box and a NOTES area."
+    key_concepts: ["repositories", "Private Git", "GitHub", "community", "delivery method"]
+    category_mapping: "01"
+    existing_slide: "Repositories"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Repositories"
+    research_links: []
+    notes: "Hand-drawn sketch; precursor to the converted Repositories slide; mostly illegible NOTES area."
+
+  - page: 52
+    chapter: "Ch.1 Contributors"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Sketch 5 mockup contrasting GitHub (Android org) with Google Git, plus handwritten notes on public vs private vs hybrid repository strategy."
+    key_concepts: ["PrivateGit OS", "GitHub", "Google Git", "public vs private vs hybrid", "open source on Git", "advanced vs basic GUI"]
+    category_mapping: "01"
+    existing_slide: "Repositories"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Repositories"
+    research_links: []
+    notes: "Marked SKETCH 5 / V3; screenshots plus handwritten strategy notes (maintain open source on Git, keep the rest on PrivateGit). Augments converted Repositories slide."
+
+  - page: 53
+    chapter: "Ch.1 Contributors"
+    content_type: "text"
+    quality: "high"
+    summary: "Master GitHub repository index listing all pointsav and woodfine repos by reference number across MediaKit, Infrastructure, Console, Interface, Totebox, PrivateGit, and Network Administrator OS."
+    key_concepts: ["GitHub repositories", "pointsav org", "woodfine org", "Totebox OS", "Console OS", "Network Administrator OS", "repository index", "PrivateGit OS"]
+    category_mapping: "01"
+    existing_slide: "Repositories"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Repositories"
+    research_links: []
+    notes: "Comprehensive 55-row repo manifest (V3, April 11 2025); richest data for the Repositories slide. Authoritative repo-naming source — useful to enrich Naming Conventions too."
+
+  - page: 54
+    chapter: "Ch.4 Totebox Services"
+    content_type: "diagram"
+    quality: "high"
+    summary: "Products matrix laying out all nine operating systems (Delivery Workplace/Console/Mobile, Orchestration MediaKit/Totebox/Interface, Private Network Infrastructure/Repository/Network Admin) with kernel-to-dependencies rows and licensing."
+    key_concepts: ["operating systems matrix", "Workplace OS", "Console OS", "Orchestration OS", "Totebox OS", "Network Admin OS", "kernel", "hypervisor", "open source vs proprietary"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Platform OS Matrix — Nine Operating Systems by Tier and Licensing"
+    augments_existing: ""
+    research_links:
+      - url: "https://sel4.systems/About/seL4-whitepaper.pdf"
+        title: "The seL4 Microkernel — An Introduction (seL4 Foundation whitepaper)"
+      - url: "https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-190.pdf"
+        title: "NIST SP 800-190, Application Container Security Guide"
+      - url: "https://en.wikipedia.org/wiki/Open-core_model"
+        title: "Open-core model — definition, structure, and exemplars (GitLab, Grafana)"
+    notes: "Genuine gap: a single matrix of all nine OS components with licensing model. High investor/developer signal for platform foundation; no equivalent JW4 slide."
+
+  - page: 55
+    chapter: "Ch.4 Totebox Services"
+    content_type: "diagram"
+    quality: "high"
+    summary: "Totebox Services matrix detailing archive servers (Email, Chat, Calendar, Conferencing, FTP, RSS) and databases (Minute Book, Bookkeeping, People, Businesses, Places, Parking Lots, IoT Data) running on Totebox OS."
+    key_concepts: ["Totebox Services", "Totebox OS", "archive servers", "databases", "bookkeeping", "IoT Data", "minute book", "open source"]
+    category_mapping: "04"
+    existing_slide: "Totebox Services (Containers)"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Totebox Services (Containers)"
+    research_links: []
+    notes: "Detailed server+database service grid; enriches the converted Totebox Services (Containers) and (Ladder) slides with the full per-service breakdown."
+
+  - page: 56
+    chapter: "Ch.4 Totebox Services"
+    content_type: "diagram"
+    quality: "high"
+    summary: "Totebox Services libraries-and-software matrix covering IoT Devices/Sensors libraries and Workplace OS software (Browser, Word Processor, Spreadsheet, PDF Viewer, File Manager) on Totebox OS."
+    key_concepts: ["Totebox Services", "libraries", "IoT Devices", "IoT Sensors", "Workplace OS software", "spreadsheet", "PDF viewer", "file manager"]
+    category_mapping: "04"
+    existing_slide: "Totebox Services (Containers)"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Totebox Services (Containers)"
+    research_links: []
+    notes: "Companion grid to p55; libraries (IoT) + Workplace OS software apps. Enriches converted Totebox Services slides; Workplace OS apps could also inform Operator Workspace category 02."
+
+  - page: 57
+    chapter: "Ch.3 Console Construction"
+    content_type: "divider"
+    quality: "high"
+    summary: "Section divider title slide reading CONSOLE CONSTRUCTION."
+    key_concepts: ["Console Construction", "section divider", "ConsoleOS chapter"]
+    category_mapping: "02"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Blank divider slide; navigation/section marker only, no content to convert."
+
+  - page: 58
+    chapter: "Ch.3 Console Construction"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Handwritten Console OS overview listing third-party network access, Type II hypervisor, and the F-key/BIM/Maps/Data/Site-Super consoles."
+    key_concepts: ["Console OS", "3rd party network access", "Type II Hypervisor", "F* keys console", "BIM console", "Maps console", "Site Super console"]
+    category_mapping: "02"
+    existing_slide: "Interface OS"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Interfaces"
+    research_links: []
+    notes: "Handwritten draft; Site Super console is a console variant not yet a discrete JW4 slide; note Required to access the network reinforces ConsoleOS as mandatory access layer."
+
+  - page: 59
+    chapter: "Ch.4 Totebox Services"
+    content_type: "diagram"
+    quality: "medium"
+    summary: "Hand-drawn three-VM Products & Services diagram (Console OS / Interface OS / Totebox OS) enumerating 25 numbered products and services."
+    key_concepts: ["Console OS", "Interface OS", "Totebox OS", "Products and Services", "VM", "Bookkeeping", "IoT Device Library", "GIS Engine"]
+    category_mapping: "04"
+    existing_slide: "Products & Services"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Totebox Services (Ladder)"
+    research_links: []
+    notes: "Three-VM topology with 25-item enumerated service catalog; overlaps with Totebox Services ladder/containers slides."
+
+  - page: 60
+    chapter: "Ch.6 Pairing as Permission"
+    content_type: "diagram"
+    quality: "medium"
+    summary: "Hand-drawn Totebox Orchestration Distributed Private Network (NOT a cloud) diagram showing multiple Totebox VMs paired across Console/Interface/Network-Admin OS over InfrastructureOS virtualizations."
+    key_concepts: ["Distributed Private Network", "not a cloud", "machine based authorization", "Pairing as permissions", "Network Admin OS", "InfrastructureOS", "on-prem / leased / Google Cloud / AWS"]
+    category_mapping: "05"
+    existing_slide: "Private Network"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Pairing as Permissions"
+    research_links: []
+    notes: "Rich MBA notes (Access = Pairing, no username or passwords) strongly augment the Pairing slide."
+
+  - page: 61
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Browser screenshot of the seL4.systems Operating Systems page showing LionsOS (open source) and KOS (commercial) built on the seL4 microkernel, illustrating the Totebox Archive kernel rationale."
+    key_concepts: ["seL4", "microkernel", "LionsOS", "KOS", "Kry10", "Microkit", "verifiable OS", "Totebox Archive kernel"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "seL4 Kernel Foundation — Verified Microkernel for the Totebox Archive"
+    augments_existing: ""
+    research_links:
+      - url: "https://dl.acm.org/doi/10.1145/1629575.1629596"
+        title: "seL4: Formal Verification of an OS Kernel (Klein et al., SOSP '09)"
+      - url: "https://sel4.systems/About/seL4-whitepaper.pdf"
+        title: "The seL4 Microkernel — An Introduction (seL4 Foundation whitepaper)"
+      - url: "https://sel4.systems/About/history.html"
+        title: "seL4 History — DARPA HACMS incremental cyber-retrofit and Boeing Unmanned Little Bird"
+      - url: "https://sel4.systems/Research/pdfs/comprehensive-formal-verification-os-microkernel.pdf"
+        title: "Comprehensive Formal Verification of an OS Microkernel (Klein et al., ACM TOCS)"
+    notes: "Genuine gap — no JW4 slide covers the seL4 moonshot/kernel rationale; high developer and investor signal (formal verification, FOSS base node)."
+
+  - page: 62
+    chapter: "Ch.2 Documentation"
+    content_type: "mixed"
+    quality: "high"
+    summary: "Annotated Sketch 3 Input Machine wireframe (invoice/agreement PDF intake, Document Splitter, Interface OS routing to corporate/building Totebox Archives) with handwritten pairing-as-permissions annotations."
+    key_concepts: ["Input Machine Console", "Document Splitter", "Interface OS routing", "Totebox Archive (Corporate / Building)", "Minutebook DB", "Bookkeeper DB", "Pairing as permissions (P1/P4)", "Real Property"]
+    category_mapping: "02"
+    existing_slide: "Input Machine"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Input Machine"
+    research_links: []
+    notes: "Detailed annotated wireframe (Sketch 3, V3) by David Johnston; annotations show Input Machine pairs with any Interface OS variant or directly with a Totebox Archive."
+
+  - page: 63
+    chapter: "Ch.2 Documentation"
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Sketch 3 Input Machine NOTES page showing the Titleco snow-removal scenario with red-ink terminology corrections (Building Manager/Secretary Pool, corresponding Totebox Archive)."
+    key_concepts: ["Input Machine", "Titleco scenario", "snow removal invoice", "Building Manager", "Secretary Pool", "Totebox Archive", "Real Property"]
+    category_mapping: "02"
+    existing_slide: "Input Machine"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Input Machine"
+    research_links: []
+    notes: "Annotation/notes page; supporting scenario text for the Input Machine slide, not its own slide."
+
+  - page: 64
+    chapter: "Ch.2 Documentation"
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Input Machine NOTES continuation with MW commentary refining the Titleco scenario wording (Real Properties Building A/B, 20,000/40,000 SF, $30,000 + 7% GST)."
+    key_concepts: ["Input Machine", "Titleco scenario", "Real Property", "Land Parcel", "GST", "MW notes"]
+    category_mapping: "02"
+    existing_slide: "Input Machine"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Input Machine"
+    research_links: []
+    notes: "Editorial MW annotation refining scenario language; supports Input Machine slide."
+
+  - page: 65
+    chapter: "Ch.2 Documentation"
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Input Machine NOTES detailing the six-step workflow (scan PDF, select via file manager, choose Totebox Archive destination via P1/P4 pairing, name via Chart of Accounts, add metadata, execute)."
+    key_concepts: ["Input Machine workflow", "file manager", "Totebox Archive destination", "P1 / P4 pairing", "Chart of Accounts", "Document Splitter", "metadata indexing"]
+    category_mapping: "02"
+    existing_slide: "Input Machine"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Input Machine"
+    research_links: []
+    notes: "Workflow narrative for Input Machine; pairing (P1/P4) detail could enrich both Input Machine and Pairing slides."
+
+  - page: 66
+    chapter: "Ch.2 Documentation"
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Input Machine NOTES showing per-building hand-calculation example (cost-per-SF allocation across Buildings A/B) and the WORM-style metadata index card fields (File_Name, Type, Sub-total, Tax, Total, Currency)."
+    key_concepts: ["Input Machine", "cost-per-SF allocation", "metadata index card", "File_Name", "Sub-total / Tax / Total / Currency", "Building A", "hand calculation"]
+    category_mapping: "02"
+    existing_slide: "Input Machine"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Input Machine"
+    research_links: []
+    notes: "Worked numeric example for the Input Machine workflow; metadata schema relevant to WORM record format but presented as supporting notes."
+
+  - page: 67
+    chapter: "Ch.2 Documentation"
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Input Machine NOTES with second-building calculation and MW commentary renaming Document Splitter to Data Allocator and describing metadata as an index card per file."
+    key_concepts: ["Input Machine", "Document Splitter", "Data Allocator", "metadata index card", "terminal emulator", "GUI / CLI", "Chart of Accounts"]
+    category_mapping: "02"
+    existing_slide: "Input Machine"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Input Machine"
+    research_links: []
+    notes: "MW renames Document Splitter to Data Allocator and frames Console OS Input Machine as terminal emulator (GUI+CLI); terminology note for editorial."
+
+  - page: 68
+    chapter: "Ch.3 Console Construction"
+    content_type: "annotation"
+    quality: "high"
+    summary: "Input Machine NOTES showing the two generated WORM file-system records with the full Chart-of-Accounts-derived filenames (BOOKKEEPING_TITLECO1_2025_03_07_Invoice_Property Management_Snow Removal.PDF) for Building A and B."
+    key_concepts: ["WORM record", "flat-file", "Bookkeeper DB", "Totebox Archive", "Chart of Accounts filename", "file naming convention", "duplicate-across-archives"]
+    category_mapping: "03"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "WORM Record Format — Chart-of-Accounts File Naming in the Totebox Flat-File Archive"
+    augments_existing: "Bookkeeping"
+    research_links:
+      - url: "https://www.sec.gov/investment/amendments-electronic-recordkeeping-requirements-broker-dealers"
+        title: "Amendments to Electronic Recordkeeping Requirements for Broker-Dealers (Rule 17a-4)"
+      - url: "https://datatracker.ietf.org/doc/html/rfc6920"
+        title: "RFC 6920 — Naming Things with Hashes"
+      - url: "https://www.sec.gov/rules-regulations/staff-guidance/trading-markets-frequently-asked-questions/rule-amendments-broker"
+        title: "SEC FAQ — Rule Amendments to Broker-Dealer Electronic Recordkeeping Requirements"
+    notes: "Genuine gap — concrete WORM/flat-file record naming convention has no dedicated JW4 slide; high developer signal for System-of-Record story; could alternatively augment Bookkeeping/Totebox Archive."
+
+  - page: 69
+    chapter: "Ch.1 Contributors"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hierarchical repository tree (ConsoleOS / InterfaceOS / ToteboxOS with SourceCode, Designs, Documentation, Database subfolders) with handwritten approval notes calling for a PrivateGit repository sketch."
+    key_concepts: ["repository tree", "ConsoleOS / InterfaceOS / ToteboxOS", "SourceCode / Designs / Documentation", "Database (MinutebookDB / Bookkeeping DB)", "PrivateGit OS Repository", "Input Machine Console"]
+    category_mapping: "01"
+    existing_slide: "Repositories"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Repositories"
+    research_links: []
+    notes: "Repository structure tree (David Johnston); handwritten note flags need to build out Sketch #5 for PrivateGit OS Repository."
+
+  - page: 70
+    chapter: "Ch.1 Contributors"
+    content_type: "annotation"
+    quality: "high"
+    summary: "Transcribed repository-tree notes plus MW commentary on building a custom CMS for the PrivateGit OS repository (GitHub-style GUI) and a sketch-delivery policy (prefer legible PDFs over JPGs for board review)."
+    key_concepts: ["PrivateGit OS Repository", "custom CMS", "GitHub-style GUI", "repository tree", "sketch delivery policy", "PDF vs JPG", "Supervisory / Management Board"]
+    category_mapping: "01"
+    existing_slide: "Repositories"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Repositories"
+    research_links: []
+    notes: "MW process/governance notes on PrivateGit CMS and sketch-delivery discipline; supports Repositories slide; PrivateGit CMS concept is a candidate future slide but framed here as process commentary."
+
+  - page: 71
+    chapter: "Ch.3 Console Construction"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn Input Machine diagram showing invoice/agreement PDFs flowing through an input panel and Interface OS into Totebox Archives split by minute book and bookkeeping file-system folders."
+    key_concepts: ["Input Machine", "Interface OS", "Console O/S", "metadata split", "Totebox Archive", "Minute Book DB", "Bookkeeping DB", "file system folder"]
+    category_mapping: "02"
+    existing_slide: "Input Machine"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Input Machine"
+    research_links: []
+    notes: "Handwritten source sketch for the already-converted Input Machine slide; notes explain consoles pair to individual Toteboxes, interfaces are for aggregation, and 70/30 metadata payment split example."
+
+  - page: 72
+    chapter: "Ch.3 Console Construction"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn Console OS System Administration panel (pairing, updates, configure, network) sitting over Interface OS and three virtualized Totebox OS nodes connected by REST API."
+    key_concepts: ["System Administration", "Pairing", "Updates", "Configure Network", "Interface OS", "Totebox OS", "Virtualization", "REST API"]
+    category_mapping: "02"
+    existing_slide: "System Administration"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "System Administration"
+    research_links: []
+    notes: "Handwritten source sketch for the converted System Administration slide; shows Type II / Workplace OS hosting."
+
+  - page: 73
+    chapter: "Ch.3 Console Construction"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn F*Keys Console / Command Center panel listing F1 minute book, F2 bookkeeping, F3 people plus search, layered over Interface OS Command Center and virtualized Totebox OS nodes."
+    key_concepts: ["F*Keys Console", "Command Center", "F1 Minute Book", "F2 Bookkeeping", "F3 People", "Interface OS", "Totebox OS", "Search"]
+    category_mapping: "02"
+    existing_slide: "Command Center"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Command Center"
+    research_links: []
+    notes: "Handwritten source sketch underpinning the converted Command Center / F*Keys slide."
+
+  - page: 74
+    chapter: "Ch.3 Console Construction"
+    content_type: "mixed"
+    quality: "high"
+    summary: "Annotated formal Sketch 6 (Version 1) of the F*Keys Console with full F1-F11 key list, Command Center vs BIM Server, three Totebox Archives, numbered components legend and a workflow/questions block."
+    key_concepts: ["F*Keys Console", "F1-F11", "Command Center", "BIM Server", "Totebox Archive Corporate/Personnel/Real Property", "Console OS", "Interface OS", "operator vs owner access"]
+    category_mapping: "02"
+    existing_slide: "Command Center"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Command Center"
+    research_links: []
+    notes: "David Johnston authored formal sketch (V3) with handwritten markups; enriches the converted Command Center/Interfaces slides with the canonical F-key mapping."
+
+  - page: 75
+    chapter: "Ch.3 Console Construction"
+    content_type: "text"
+    quality: "high"
+    summary: "Typed MW notes and workflow/questions for Console OS F*Keys, specifying which user roles need BIM Server, GIS Engine, or limited F*Keys, and confirming third-party standalone Console OS operation."
+    key_concepts: ["Console OS variants", "BIM Server", "GIS Engine", "F*Keys", "Workplace OS integration", "Command Center pairing", "third-party machines", "Interface OS"]
+    category_mapping: "02"
+    existing_slide: "Command Center"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "Interfaces"
+    research_links: []
+    notes: "Notes companion to page 74; high developer signal on role-to-console mapping but is annotation text, not a standalone slide."
+
+  - page: 76
+    chapter: "Ch.4 Totebox Services"
+    content_type: "divider"
+    quality: "high"
+    summary: "Section divider title page reading TOTEBOX SERVICES on an otherwise blank page."
+    key_concepts: ["Totebox Services", "section divider"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Blank divider page; no content to convert."
+
+  - page: 77
+    chapter: "Ch.4 Totebox Services"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn Toteboxes spectrum (VM / micro VM / nano VM / unikernel) with a Freely Transferable ladder of services (minute book, bookkeeping, geo-spatial, communications, calendar, IoT devices/sensors) packaged as Totebox Services on a micro VM."
+    key_concepts: ["VM", "micro VM", "nano VM", "unikernel", "Freely Transferable", "Totebox Services", "minute book", "IoT devices/sensors"]
+    category_mapping: "04"
+    existing_slide: "Totebox Services (Ladder)"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Totebox Services (Ladder)"
+    research_links: []
+    notes: "Handwritten source sketch for the converted Totebox Services (Ladder) slide; combines the VM-to-unikernel spectrum with the service ladder."
+
+  - page: 78
+    chapter: "Ch.3 Console Construction"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn VM vs Containers comparison contrasting bare-metal VM (freely transferable) against OS-level virtualization and Docker containers (only freely transferable within same OS or with Docker present)."
+    key_concepts: ["VM", "containers", "bare metal", "OS-level virtualization", "Docker", "Freely Transferable", "operating system"]
+    category_mapping: "03"
+    existing_slide: "VM vs Containers"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "VM vs Containers"
+    research_links: []
+    notes: "Handwritten source sketch for the converted VM vs Containers slide; note virtual machine = freely transferable."
+
+  - page: 79
+    chapter: "Ch.4 Totebox Services"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn Totebox Services diagram showing a Totebox (micro/nano VM) containing multiple service containers, with notes that services run in containers and the Firecracker (AWS) micro-VM example."
+    key_concepts: ["Totebox Services", "containers", "micro VM", "nano VM", "Firecracker", "unikernel", "prototype", "freely transferable"]
+    category_mapping: "04"
+    existing_slide: "Totebox Services (Containers)"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Totebox Services (Containers)"
+    research_links: []
+    notes: "Handwritten source sketch for the converted Totebox Services (Containers) slide; notes prototype-to-unikernel build path and that services need not be transferable if the Totebox is."
+
+  - page: 80
+    chapter: "Ch.3 Console Construction"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn Totebox OS file-system partition layout showing R/OS/S1-S4 partitions on a micro VM with operations Linux system containers running Service #1-#3 mapped to best-fit database and file system per use."
+    key_concepts: ["Totebox OS file system", "partitions", "Recovery partition", "micro VM", "Linux system container", "service partitions", "best database for use", "best file system for use"]
+    category_mapping: "03"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Totebox OS File System and Partition Layout"
+    augments_existing: "Totebox Archive"
+    research_links:
+      - url: "https://www.iso.org/standard/74338.html"
+        title: "ISO 14641:2018 — Electronic Document Management: Preservation of Electronic Documents"
+      - url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32023R2854"
+        title: "Regulation (EU) 2023/2854 (Data Act) — Chapter VI, Switching Between Data Processing Services"
+      - url: "https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-190.pdf"
+        title: "NIST SP 800-190 — Application Container Security Guide"
+    notes: "No JW4 slide covers the WORM/Totebox partition layout (R=Recovery, OS, Sx=container partitions); genuine gap with high developer signal on the WORM flat-file/file-system record format."
+
+  - page: 81
+    chapter: "Ch.8 SMB Environment"
+    content_type: "diagram"
+    quality: "high"
+    summary: "Clean Use Cases system map laying out Totebox OS use cases (Property Management, Record Keeping, Building Connectivity) over Infrastructure/Interface/Workplace/Console/Network Admin/Repository/Media Kit OS layers."
+    key_concepts: ["Totebox OS", "Property Management Command Centre", "Record Keeping", "Building Connectivity Digital Twin", "Infrastructure OS", "Interface OS", "Console OS", "Machine-based Authorization"]
+    category_mapping: "01"
+    existing_slide: "Use Cases"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Use Cases"
+    research_links: []
+    notes: "Polished source artwork (Draft March 13 2025) for the converted Use Cases slide; lists all OS layers and the five PointSav legal entities."
+
+  - page: 82
+    chapter: "Ch.4 Totebox Services"
+    content_type: "photo"
+    quality: "low"
+    summary: "Browser screenshot of the SolidOS Databrowser Frontend user-guide Introduction page describing Solid separating user data from applications."
+    key_concepts: ["SolidOS", "Solid", "data separation", "Solid Pods", "data portability", "databrowser frontend"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Data Portability Reference — Solid / Pods Precedent"
+    augments_existing: "Products & Services"
+    research_links:
+      - url: "https://solidproject.org/TR/protocol"
+        title: "Solid Protocol — W3C Solid Community Group technical report"
+      - url: "https://link.springer.com/article/10.1007/s10257-024-00692-0"
+        title: "Assessing the value of decentralized and interoperable data storage for service providers"
+      - url: "https://gdpr-info.eu/art-20-gdpr/"
+        title: "Art. 20 GDPR — Right to data portability"
+    notes: "External reference screenshot (solidos.github.io), not original PointSav content; supports the Freely Transferable Standard / data-portability narrative but is a low-quality web capture."
+
+  - page: 83
+    chapter: "Ch.4 Totebox Services"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn DATA comparison of three Totebox Archive templates (Personnel vs Corporate vs Real Property) explaining why personnel, corporate, and real-property records must be separate archives."
+    key_concepts: ["Totebox Archive templates", "Personnel", "Corporate", "Real Property", "record keeping", "freely transferable", "real asset managers", "templates from services"]
+    category_mapping: "04"
+    existing_slide: "Products & Services"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "Products & Services"
+    research_links: []
+    notes: "Handwritten DATA sketch explaining archive template separation rationale; enriches Products & Services and the Totebox Archive concept."
+
+  - page: 84
+    chapter: "Ch.3 Console Construction"
+    content_type: "diagram"
+    quality: "high"
+    summary: "Clean F*Keys Console DATA map listing F1-F11 functions alongside Personnel/Corporate/Real Property archive contents, server stack, and databases/chart-of-accounts breakdown."
+    key_concepts: ["F*Keys Console", "F1-F11", "Personnel/Corporate/Real Property", "Minute Book", "Bookkeeping", "Chart of Accounts", "IoT Data", "Land Title ID"]
+    category_mapping: "02"
+    existing_slide: "Command Center"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "Command Center"
+    research_links: []
+    notes: "Polished source artwork (Draft January 7 2025) detailing the canonical F-key to function/archive/server mapping and chart-of-accounts categories; strong source for the converted Command Center slide."
+
+  - page: 85
+    chapter: "Ch.4 Totebox Services"
+    content_type: "mixed"
+    quality: "high"
+    summary: "Federal Register document search form shown as a worked example of an F-keys console Search surface with structured filter fields."
+    key_concepts: ["F-keys console", "Search", "Federal Register", "document category filter", "structured query", "CSV/Excel/JSON export"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "F-Keys Console — Search (structured document query surface)"
+    augments_existing: "Interface OS"
+    research_links:
+      - url: "https://doc.dovecot.org/2.4.0/core/config/mailbox/formats/maildir.html"
+        title: "Maildir Mailbox Format — Dovecot documentation"
+    notes: "Reference screenshot of federalregister.gov advanced search; illustrative of console search-filter UX, not a PointSav product screen."
+
+  - page: 86
+    chapter: "Ch.4 Totebox Services"
+    content_type: "mixed"
+    quality: "high"
+    summary: "Federal Register homepage screenshot illustrating the landing/results view of an F-keys console Search experience."
+    key_concepts: ["F-keys console", "Search", "Federal Register", "current issue", "public inspection", "full-text search"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Interface OS"
+    research_links: []
+    notes: "Second federalregister.gov screenshot; near-duplicate intent with p.85 (Search console example). Augments rather than warrants its own slide."
+
+  - page: 87
+    chapter: "Ch.4 Totebox Services"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn sketch of Totebox Services as a micro-VM Totebox with a stacked service ladder (minutebook, bookkeeping, geo-spatial, communications, calendar, IoT devices)."
+    key_concepts: ["Totebox Services", "micro VM", "minutebook", "bookkeeping", "geo-spatial", "communications", "IoT Devices", "unified programming language"]
+    category_mapping: "04"
+    existing_slide: "Totebox Services (Ladder)"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Hand sketch; source for the converted Totebox Services (Ladder) slide. Note: future rewrite of Totebox OS with unified language/protocols."
+
+  - page: 88
+    chapter: "Ch.4 Totebox Services"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn two-column comparison of Database versus File System storage for bookkeeping/minutebook services, with input machine assigning file names."
+    key_concepts: ["Database vs File System", "chart of accounts", "flat-file", "PDF/ODT/ODS files", "no reference numbers", "input machine file naming", "bookkeeping", "minutebooks"]
+    category_mapping: "03"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "WORM Record Format — Database vs Flat-File System (file-name-as-reference)"
+    augments_existing: "Bookkeeping"
+    research_links:
+      - url: "https://www.sec.gov/investment/amendments-electronic-recordkeeping-requirements-broker-dealers"
+        title: "Amendments to Electronic Recordkeeping Requirements for Broker-Dealers (Rule 17a-4)"
+      - url: "https://www.finra.org/rules-guidance/key-topics/books-records"
+        title: "FINRA Rule 4511 — Books and Records General Requirements"
+      - url: "https://www.iso.org/standard/74338.html"
+        title: "ISO 14641:2018 — Electronic Document Management"
+      - url: "https://www.ecfr.gov/current/title-17/chapter-I/part-1/subject-group-ECFR26e2c365a191fa7/section-1.31"
+        title: "17 CFR 1.31 — CFTC Regulatory Records: Retention and Production"
+    notes: "High signal: defines the flat-file record model (file names replace DB reference numbers, input machine assigns names) — core ToteboxOS WORM concept with no dedicated JW4 slide."
+
+  - page: 89
+    chapter: "Ch.3 Console Construction"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn three-column breakdown of IoT Drivers, IoT Sensors, and IoT Data, listing device types and the rule that drivers are written for Totebox OS."
+    key_concepts: ["IoT Drivers", "IoT Sensors", "IoT Data", "locks/CCTV/HVAC/elevators", "PV array", "public Wi-Fi", "Totebox OS drivers"]
+    category_mapping: "03"
+    existing_slide: "IoT Data"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Hand sketch; source for converted IoT Data slide. Adds driver-library detail (drivers must be written for Totebox OS)."
+
+  - page: 90
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn Geo-spatial services list covering People, Places (POI), Businesses (POI), and Parking lots (polygon) as GIS data categories."
+    key_concepts: ["Geo-spatial", "GIS", "point of interest", "parking lot polygon", "national/local businesses", "medical and higher education", "airports"]
+    category_mapping: "07"
+    existing_slide: "Geo-spatial"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Hand sketch; source for converted Geo-spatial slide. Header label SOFTWARE — GIS overlaps GIS Engine (cat 07) content."
+
+  - page: 91
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Draft GIS Notes memorandum (Memo #2) outlining the software stack to build the PointSav GIS Engine — PostGIS, QGIS, OpenStreetMap, co-location algorithm, polygons, catchments."
+    key_concepts: ["PostGIS", "QGIS", "OpenStreetMap", "co-location algorithm", "catchment polygons", "GeoNode", "GIS Engine"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "GIS Engine Stack — PostGIS + QGIS + OpenStreetMap co-location pipeline"
+    augments_existing: "GIS Engine"
+    research_links:
+      - url: "https://www.gartner.com/en/documents/5863580"
+        title: "Gartner — Forecast Analysis: Sovereign Cloud IaaS, Worldwide"
+    notes: "Memo template has highlighted placeholders. Strong developer/investor signal on the actual GIS build stack; existing GIS Engine slide is a concept stub, this fills the technical gap."
+
+  - page: 92
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Continuation of GIS memo covering O-D (origin-destination) catchment data sourcing, annual data costs ($50k-$150k), delivery via GeoNode, interactive map layers, and dataset source links."
+    key_concepts: ["origin-destination data", "hexagonal overlay", "catchment cost", "GeoNode delivery", "interactive map layers", "Google Dataset Search", "Totebox Archives data"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "GIS Engine — Catchment Data Sourcing and Interactive Delivery"
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Continuation page of the Memo #2 whitepaper (p.91). O-D data economics and delivery model; augments GIS Engine narrative."
+
+  - page: 93
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "text"
+    quality: "medium"
+    summary: "Reference appendix of Google Dataset Search links for Home Depot, higher education, and US hospital location datasets used by the GIS Engine."
+    key_concepts: ["Google Dataset Search", "Home Depot locations", "higher education datasets", "US hospitals dataset", "data source links"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Pure URL appendix to GIS memo; mostly white space. Reference material, not slide-worthy."
+
+  - page: 94
+    chapter: "Ch.8 SMB Environment"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Draft Demographics memorandum (Memo #1) introducing Woodfine's hybrid investment structure and the data-set/geographic co-location purpose, naming Walmart Supercentres as primary target."
+    key_concepts: ["hybrid investment structure", "2/20 restructuring", "class A office space", "geographic co-location", "Walmart Supercentre", "primary target", "perpetual equity"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Co-location Investment Thesis — Hybrid Model and Primary Targets"
+    augments_existing: "Use Cases"
+    research_links:
+      - url: "https://www.gartner.com/en/documents/5863580"
+        title: "Gartner — Forecast Analysis: Sovereign Cloud IaaS, Worldwide"
+    notes: "Highlighted placeholders. Investor-facing onboarding white paper; maps to the GIS use-case/business-context narrative. Borderline cat 01 Use Cases vs 07."
+
+  - page: 95
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Continuation of demographics memo defining primary/secondary/tertiary targets and the First- through Fifth-Degree co-location cluster rules with distance thresholds."
+    key_concepts: ["secondary/tertiary targets", "first-degree clusters", "fifth-degree clusters", "1.0 km / 5.0 km thresholds", "co-location sorting", "sales per square foot", "cluster output schema"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Co-location Cluster Methodology — Degree Tiers and Distance Thresholds"
+    augments_existing: "GIS Engine"
+    research_links:
+      - url: "https://www.gartner.com/en/documents/5863580"
+        title: "Gartner — Forecast Analysis: Sovereign Cloud IaaS, Worldwide"
+    notes: "High signal: defines the actual cluster-tier algorithm (1.0/5.0 km, degree definitions) that underpins the GIS product; no JW4 slide covers the cluster math."
+
+  - page: 96
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "diagram"
+    quality: "high"
+    summary: "Ranking matrix diagram with legend mapping Walmart/Home Depot/Costco/Hospital/Higher-education tiles into an 11-row co-location ranking methodology."
+    key_concepts: ["ranking matrix", "legend", "W-SC / HD / C / H / U tiles", "primary/secondary/tertiary weighting", "11-row ranking", "sales per square foot"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Co-location Ranking Matrix — Target Tier Weighting"
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Clean diagram; visual companion to the p.95 cluster methodology. Good slide candidate but secondary to the methodology page."
+
+  - page: 97
+    chapter: "Ch.8 SMB Environment"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Demographics memo continuation on ranking output sorting, required site-selection counts per country for equity/debt financing, and the Optimum Mosaic concept."
+    key_concepts: ["ranking output sorting", "equity/debt financing schedule", "Canada/US/Mexico site counts", "Optimum Mosaic", "sales per square foot", "separate datasets per country"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Use Cases"
+    research_links: []
+    notes: "Financing-schedule detail (years 1-3 equity etc.) is investor-specific, less platform-relevant. Augments the co-location use-case narrative."
+
+  - page: 98
+    chapter: "Ch.8 SMB Environment"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Final demographics memo page on Optimum Mosaic marketing-kit generation and Transaction Summary Reports for site-specific demographic matching."
+    key_concepts: ["Optimum Mosaic", "marketing kit", "Transaction Summary Reports", "demographic profiling", "secondary trade", "Independent Board of Directors", "Reid Crowther demo study"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Use Cases"
+    research_links: []
+    notes: "Closing page of Memo #1 white paper. Report-template detail; investor/tenant marketing context. Augments rather than standalone."
+
+  - page: 99
+    chapter: "Ch.8 SMB Environment"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Onboarding White Paper section describing the approved-collaborator registrar process and the questions a candidate's white paper must answer."
+    key_concepts: ["White Paper", "approved collaborators", "internal registrar", "board approval", "Geographic co-location", "Optimum Mosaic", "Transaction Summary Reports"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Onboarding White Paper — Collaborator Approval Process"
+    augments_existing: "How We Select Contributors"
+    research_links:
+      - url: "https://www.gartner.com/en/documents/3991495"
+        title: "Gartner — Adoption of an Open-Source Strategy"
+    notes: "Reads as a partner/collaborator onboarding spec; closely related to the Nav How We Select Contributors slide; could augment rather than become its own slide."
+
+  - page: 100
+    chapter: "Ch.8 SMB Environment"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Continuation of White Paper guidance (tone, length, what is NOT wanted) plus a numbered list of Potential Engagements such as co-location datasets and Woodfine Parking Structures."
+    key_concepts: ["White Paper tone", "Potential Engagements", "co-location dataset", "Optimum Mosaic", "Woodfine Parking Structures", "Acela train line", "regional airports"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Potential Engagements — Collaborator Use Cases"
+    augments_existing: "Use Cases"
+    research_links:
+      - url: "https://www.gartner.com/en/documents/3991495"
+        title: "Gartner — Adoption of an Open-Source Strategy"
+    notes: "Potential Engagements list overlaps with existing Use Cases slide; Parking Structures item ties to PKS archetype work."
+
+  - page: 101
+    chapter: "Ch.8 SMB Environment"
+    content_type: "text"
+    quality: "low"
+    summary: "Short Attachments section listing the Walmart Reid Crowther Demo Study and the Ranking matrix Excel file."
+    key_concepts: ["Attachments", "Walmart Reid Crowther Demo Study", "Ranking matrix Excel"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Use Cases"
+    research_links: []
+    notes: "Mostly empty page; reference list only, not slide-worthy on its own."
+
+  - page: 102
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "diagram"
+    quality: "high"
+    summary: "GIS Databases and Algorithms org-chart flow diagram showing Iteration 1 and Iteration 2 pipelines from Businesses/Places through Co-Location, Mobility, Location Intelligence, Parking Lots and Catchment Areas."
+    key_concepts: ["GIS pipeline", "Co-Location Algorithm", "Mobility Data", "Location Intelligence", "Parking Lots", "Catchment Areas Algorithm", "Census", "Spend"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Detailed pipeline diagram enriches the existing GIS Engine slide; dated V1 Jan 7 2025."
+
+  - page: 103
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "GIS database catalog (entries 1-3) defining Businesses, Places, and the Co-Location Algorithm including the star-ranking matrix and Top 400 Markets calibration."
+    key_concepts: ["Businesses", "Places", "Co-Location Algorithm", "Top 400 Markets", "star ranking", "Primary/Secondary/Tertiary", "Unique IDs"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "DRAFT JANUARY 7, 2025 banner; lists legacy PointSav entity name variants."
+
+  - page: 104
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "GIS database catalog (entries 4-9) defining Co-Locations output, Mobility Data, Location Intelligence Algorithm, Co-Locations+LI output, Parking Lots, and Catchment Areas Algorithm with input/output and public/proprietary tags."
+    key_concepts: ["Co-Locations", "Mobility Data", "Location Intelligence Algorithm", "Origin-Destination", "Parking Lots", "Catchment Areas", "Proprietary", "65 km radius"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Distinguishes Public/Third Party/Proprietary database tiers — useful data-portability signal."
+
+  - page: 105
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "GIS database catalog (entries 10-12) defining Catchment Areas output plus future Census and Spend geo-demographic input databases."
+    key_concepts: ["Catchment Areas output", "Census", "Spend", "geo-demographic segmentation", "Home/Work locations", "Radius Child"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "converted"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Continuation page of the GIS catalog; lower standalone signal."
+
+  - page: 106
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "diagram"
+    quality: "high"
+    summary: "SOFTWARE — GIS — Ranking slide presenting the 11-row ranking matrix legend and weighting of Primary/Secondary/Tertiary targets (Walmart Supercentre, Home Depot, Costco, Hospital, Higher education)."
+    key_concepts: ["Ranking matrix", "Primary Target", "Secondary Targets", "Tertiary Targets", "Walmart Supercentre", "sales per square foot", "weighting"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Color-coded ranking matrix; strong investor-facing visual; augments GIS Engine."
+
+  - page: 107
+    chapter: "Ch.5 Scaling and Interfaces"
+    content_type: "divider"
+    quality: "medium"
+    summary: "Section divider title slide reading SCALING AND INTERFACES."
+    key_concepts: ["Scaling", "Interfaces", "section divider"]
+    category_mapping: "06"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Blank divider; no content beyond the heading."
+
+  - page: 108
+    chapter: "Ch.5 Scaling and Interfaces"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Handwritten Scaling diagram showing Individual / Group / Organization tiers and the progressive addition of Totebox OS, Interface OS, and Infrastructure (on-prem / leased server / public cloud) layers."
+    key_concepts: ["Scaling tiers", "Individual/Group/Organization", "Console OS", "Totebox OS", "Interface OS", "Infrastructure OS", "Virtualization", "on-prem/leased/cloud"]
+    category_mapping: "06"
+    existing_slide: "Scaling — Composition"
+    conversion_status: "converted"
+    conversion_priority: "high"
+    new_slide_concept: ""
+    augments_existing: "Scaling — Composition"
+    research_links: []
+    notes: "Handwritten source sketch; the canonical sketch behind both Scaling — Tiers and Scaling — Composition; high signal on composition story."
+
+  - page: 109
+    chapter: "Ch.5 Scaling and Interfaces"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn DESIGN SYSTEM — Interface OS — Multiple Totebox Archives sketch showing a Command Center fanning out to four Toteboxes with the note that the Command Center is the Totebox aggregator."
+    key_concepts: ["Command Center", "Totebox aggregation", "multiple archives", "Interface OS", "OrchestrationOS"]
+    category_mapping: "06"
+    existing_slide: "Multiple Archives"
+    conversion_status: "converted"
+    conversion_priority: "high"
+    new_slide_concept: ""
+    augments_existing: "Multiple Archives"
+    research_links: []
+    notes: "Handwritten source; Command Center is the Totebox aggregator note maps to OrchestrationOS multi-archive aggregation."
+
+  - page: 110
+    chapter: "Ch.5 Scaling and Interfaces"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn SYSTEMS DESIGN — Interface OS sketch listing the interface stack (Command Centre API, Input Machine, IoT Connect, Building ID Server, Data Engine, Data Marketplace, BIM Server, Media Kit, Private Git) with notes that interfaces aggregate Toteboxes and are the proprietary chargeable layer."
+    key_concepts: ["Interface OS", "Command Centre API", "Data Engine", "Data Marketplace", "BIM Server", "Building ID Server", "proprietary monetization", "aggregation"]
+    category_mapping: "04"
+    existing_slide: "Interface OS"
+    conversion_status: "converted"
+    conversion_priority: "high"
+    new_slide_concept: ""
+    augments_existing: "Interface OS"
+    research_links: []
+    notes: "Handwritten source; interfaces are what we can charge for and make proprietary is a key paid-tier/business-model signal."
+
+  - page: 111
+    chapter: "Ch.5 Scaling and Interfaces"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn DESIGN SYSTEM — Interface OS sketch mapping six API plumbing layers (Command Center, BIM, GIS Engine, Data Engine, IoT Connect, Building ID Server) to their consumer consoles plus notes on running on the private network and simultaneous multi-archive access."
+    key_concepts: ["plumbing/APIs", "GIS Engine", "Data Marketplace console", "Building Preferences console", "mobile app", "F-keys console", "private network", "multiple Totebox Archives"]
+    category_mapping: "04"
+    existing_slide: "Interfaces"
+    conversion_status: "converted"
+    conversion_priority: "high"
+    new_slide_concept: ""
+    augments_existing: "Interfaces"
+    research_links: []
+    notes: "Handwritten source; explicitly maps each interface API to its console; strong developer-platform signal."
+
+  - page: 112
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "photo"
+    quality: "medium"
+    summary: "SYSTEMS DESIGN — Totebox Orchestration slide showing a screenshot of the Kry10 (KOS) website describing a seL4-microkernel, zero-trust, Trust-but-Isolate operating system for mission-critical connected devices."
+    key_concepts: ["seL4", "Kry10 / KOS", "Trust but Isolate", "zero trust", "formal verification", "Erlang BEAM", "microkernel"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "seL4 Microkernel Rationale — Verified Isolation Substrate (Moonshot)"
+    augments_existing: ""
+    research_links:
+      - url: "https://dl.acm.org/doi/10.1145/1629575.1629596"
+        title: "seL4: Formal Verification of an OS Kernel (Klein et al., SOSP '09)"
+      - url: "https://arxiv.org/pdf/2310.17046"
+        title: "Proving the Absence of Microarchitectural Timing Channels (seL4 time protection)"
+      - url: "https://sel4.systems/About/history.html"
+        title: "seL4 History — DARPA HACMS incremental cyber-retrofit and Boeing Unmanned Little Bird"
+      - url: "https://sel4.systems/news/2024.html"
+        title: "seL4 News 2024 — DARPA PROVERS / INSPECTA program updates"
+    notes: "Third-party Kry10 website screenshot used as reference; genuine gap — no JW4 slide covers the seL4 moonshot rationale; high investor/developer signal."
+
+  - page: 113
+    chapter: "Ch.5 Scaling and Interfaces"
+    content_type: "diagram"
+    quality: "high"
+    summary: "Option A scaling diagram showing two USER/OWNER and USER/OPERATOR paths into F*Keys Consoles, with Totebox Archives and a Command Centre API riding on PointSav Infrastructure."
+    key_concepts: ["F*Keys Console", "Totebox Archive", "Command Centre API", "OWNER", "OPERATOR", "PointSav Infrastructure", "Interface vs Infrastructure"]
+    category_mapping: "06"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Scaling Option A — Interface vs Infrastructure (Owner/Operator console paths)"
+    augments_existing: "Scaling — Composition"
+    research_links:
+      - url: "https://csrc.nist.gov/pubs/sp/800/63/b/4/final"
+        title: "NIST SP 800-63B-4: Digital Identity Guidelines — Authentication and Authenticator Management"
+    notes: "Header reads Command Centre – Interface vs. Infostructure (typo for Infrastructure); legal-entity list at top."
+
+  - page: 114
+    chapter: "Ch.5 Scaling and Interfaces"
+    content_type: "diagram"
+    quality: "high"
+    summary: "Deployments matrix showing five tenant columns under one PointSav F*Keys Console, mapping SaaS/PaaS/IaaS tiers across Personnel/Corporate/Real Property archives on PointSav Infrastructure vs Self-Hosted."
+    key_concepts: ["SaaS", "PaaS", "IaaS", "Virtual Machine", "Freely tradable", "Bootable disk image", "Command Centre", "Self-Hosted"]
+    category_mapping: "06"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Deployment Tiers Matrix — SaaS/PaaS/IaaS across tenants (Managed/Hosted/On-Prem/Self-Hosted)"
+    augments_existing: "Scaling — Tiers"
+    research_links:
+      - url: "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-145.pdf"
+        title: "NIST SP 800-145: The NIST Definition of Cloud Computing"
+      - url: "https://eur-lex.europa.eu/eli/reg/2023/2854/oj/eng"
+        title: "Regulation (EU) 2023/2854 (Data Act) — harmonised rules on fair access to and use of data"
+      - url: "https://www.highalpha.com/saas-benchmarks/2024"
+        title: "2024 SaaS Benchmarks Report (High Alpha / OpenView)"
+    notes: "Dense multi-column deployment-model matrix; high investor signal (commercial packaging of tiers). One column crossed out (X) at bottom right."
+
+  - page: 115
+    chapter: "Ch.5 Scaling and Interfaces"
+    content_type: "diagram"
+    quality: "high"
+    summary: "Totebox Orchestration org-chart diagram across three layers — Delivery (Workplace OS / F*Keys Console / Building App), Edge Computing (three minimalized-OS Totebox Archives orbiting a Command Centre), and Private Network (On-Prem / Dedicated Servers / Public Cloud)."
+    key_concepts: ["Totebox Orchestration", "Workplace OS", "F*Keys Console", "minimalized OS", "Command Centre", "machine-based authorization", "Edge Computing", "Private Network"]
+    category_mapping: "06"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Totebox Orchestration — three-layer delivery/edge/network architecture"
+    augments_existing: "Multiple Archives"
+    research_links:
+      - url: "https://csrc.nist.gov/pubs/sp/800/207/a/final"
+        title: "NIST SP 800-207A: ZTA Model for Access Control in Cloud-Native Apps in Multi-Cloud Environments"
+      - url: "https://spiffe.io/docs/latest/spiffe-specs/spiffe/"
+        title: "SPIFFE: Secure Production Identity Framework for Everyone — Specification"
+      - url: "https://arxiv.org/abs/2103.13333"
+        title: "A Multi-Tenant Framework for Cloud Container Services (Virtual-Cluster)"
+    notes: "Carries DRAFT JANUARY 7, 2025 highlight and Org Chart label; MBA footnote explains single vs simultaneous multi-archive access via Command Centre API."
+
+  - page: 116
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn On-Prem Deployment stack — Private Git and Systems Admin VM over Virtualization, PointSav Private Network on-prem layer, and Bare Metal at the base, with a note about installing on one office computer."
+    key_concepts: ["On-prem", "Private Git", "Systems Admin VM", "Virtualization", "Bare Metal", "PointSav Private Network"]
+    category_mapping: "07"
+    existing_slide: "On-prem"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "On-prem"
+    research_links: []
+    notes: "Pen sketch; note reads Ability to install on one computer in the office. Source sketch for the converted On-prem slide."
+
+  - page: 117
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn Leased Server Deployment stack — Private Git and Systems Admin VM over Virtualization with a PointSav Private Network leased-server layer; NOTES section left blank."
+    key_concepts: ["Leased Servers", "Private Git", "Systems Admin VM", "Virtualization", "PointSav Private Network"]
+    category_mapping: "07"
+    existing_slide: "Leased Servers"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Leased Servers"
+    research_links: []
+    notes: "Pen sketch; no bare-metal layer (vs on-prem); NOTES blank. Source sketch for converted Leased Servers slide."
+
+  - page: 118
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn Public Cloud Deployment stack — Private Git and Systems Admin VM over Virtualization, with the PointSav Private Network cloud layer drawn as a cloud shape; NOTES blank."
+    key_concepts: ["Public Cloud", "Private Git", "Systems Admin VM", "Virtualization", "PointSav Private Network"]
+    category_mapping: "07"
+    existing_slide: "Public Cloud"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Public Cloud"
+    research_links: []
+    notes: "Pen sketch; cloud-shaped network layer; NOTES heading present but empty. Source sketch for converted Public Cloud slide."
+
+  - page: 119
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn Hybrid deployment — Private Git and Systems Admin VM over a wide Virtualization bar feeding three side-by-side deployment shapes (On-Prem+Bare Metal, Leased Server, Public Cloud) under one PointSav Private Network."
+    key_concepts: ["Hybrid", "Virtualization", "On-prem", "Leased Servers", "Public Cloud", "Totebox orchestration", "Bare Metal"]
+    category_mapping: "07"
+    existing_slide: "Hybrid Network"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Hybrid Network"
+    research_links: []
+    notes: "Pen sketch; note: Create a private network for totebox orchestration with any combination of on-prem, leased server or public cloud deployments. Source sketch for converted Hybrid Network slide."
+
+  - page: 120
+    chapter: "Ch.6 Pairing as Permission"
+    content_type: "divider"
+    quality: "high"
+    summary: "Section divider title slide reading PAIRING AS PERMISSIONS on an otherwise blank page."
+    key_concepts: ["Pairing as Permissions", "section divider", "MBA"]
+    category_mapping: "05"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Pure chapter divider; no content to catalog."
+
+  - page: 121
+    chapter: "Ch.6 Pairing as Permission"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Sketch 2 Authentication and Permissions — two mirrored Totebox-OS / Interface-OS clusters each with Console OS device nodes connected by pairing links P1–P4, with notes that a permissions database is still needed for pairing (not role-based)."
+    key_concepts: ["Pairing as Permissions", "machine-based authorization", "unique IDs", "Totebox OS", "Interface OS", "Console OS", "P1-P4 pairings", "WhatsApp/Bluetooth analogy"]
+    category_mapping: "05"
+    existing_slide: "Pairing as Permissions"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Pairing as Permissions"
+    research_links: []
+    notes: "Labelled SKETCH 2 / V3; key insight: pairing tracks unique IDs, not RBAC. Source sketch for converted Pairing as Permissions slide."
+
+  - page: 122
+    chapter: "Ch.6 Pairing as Permission"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Cleaner redraw of the same Authentication and Permissions pairing diagram (mirrored Totebox-OS/Interface-OS clusters with P1-P4 pairing legend and device-type key 6-10)."
+    key_concepts: ["Pairing as Permissions", "Totebox OS", "Interface OS", "P1-P4 pairings", "unique IDs", "Console OS", "Virtualization"]
+    category_mapping: "05"
+    existing_slide: "Pairing as Permissions"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Pairing as Permissions"
+    research_links: []
+    notes: "Near-duplicate of page 121 content (redraw, no SKETCH 2/V3 markings); same P1=input, P2=system administration, P3=user, P4=interface legend. Duplicate of converted Pairing as Permissions material."
+
+  - page: 123
+    chapter: "Ch.6 Pairing as Permission"
+    content_type: "sketch"
+    quality: "low"
+    summary: "Fragmentary Permissions sketch with a single bullet machine based authorization and a partially-cropped COMPLIANCE box at top right."
+    key_concepts: ["Permissions", "machine based authorization", "MBA", "compliance"]
+    category_mapping: "05"
+    existing_slide: "Authentication"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Authentication"
+    research_links: []
+    notes: "Mostly blank/faded scan; only legible content is machine based authorization bullet plus a cropped COMPLIANCE box. Low scan quality."
+
+  - page: 124
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "divider"
+    quality: "high"
+    summary: "Section divider title slide reading CROSS-SYSTEM RENDERING DESIGN on an otherwise blank page."
+    key_concepts: ["Cross-System Rendering Design", "section divider"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Pure chapter divider; no content to catalog."
+
+  - page: 125
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Screenshot of the Ghostty terminal-emulator About docs page (Native / Feature-rich / Fast / libghostty), used as reference for native cross-platform Console OS rendering."
+    key_concepts: ["Ghostty", "native UI", "libghostty", "Zig", "Kitty graphics protocol", "Console OS", "cross-system rendering"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Cross-System Rendering — native terminal stack (Ghostty/libghostty) rationale"
+    augments_existing: "GIS Engine"
+    research_links:
+      - url: "https://arxiv.org/pdf/1911.06260"
+        title: "A Security Perspective on Unikernels (Talbot et al.)"
+    notes: "External reference screenshot (ghostty.org/docs/about#native); supports the cross-system/native-rendering thesis. Genuine gap — no JW4 slide covers terminal-rendering substrate."
+
+  - page: 126
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "annotation"
+    quality: "medium"
+    summary: "Screenshot of the Kitty Terminal graphics protocol specification page, documenting pixel-raster rendering in the terminal as the cross-system rendering substrate."
+    key_concepts: ["Kitty graphics protocol", "terminal graphics", "pixel/raster rendering", "alpha blending", "Console OS", "cross-system rendering"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Cross-System Rendering — Kitty graphics protocol (in-terminal raster rendering)"
+    augments_existing: "GIS Engine"
+    research_links:
+      - url: "https://arxiv.org/pdf/1911.06260"
+        title: "A Security Perspective on Unikernels (Talbot et al.)"
+    notes: "External reference screenshot (sw.kovidgoyal.net/kitty/graphics-protocol/); pairs with page 125. Genuine gap — no JW4 slide covers the graphics-protocol rendering substrate."
+
+  - page: 127
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "diagram"
+    quality: "medium"
+    summary: "A vintage Reid Crowther origin-destination travel study map of Northwest Alberta showing trade-area capture percentages (Grande Prairie 50%, surrounding rings 25%/10%/5%, out-of-region 10%)."
+    key_concepts: ["Origin-Destination", "OD Study", "GIS", "trade area", "catchment", "Grande Prairie", "Location Intelligence"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Historical Reid Crowther planning map used as a heritage illustration of OD/catchment methodology; predecessor exhibit, augments the GIS Engine slide rather than warranting its own."
+
+  - page: 128
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "A Location Intelligence advanced site-selection pipeline write-up for Woodfine Professional Centres No 2 LP (USA) profiling Franklin, Tennessee with demographics and qualified-investment anchor criteria."
+    key_concepts: ["Location Intelligence", "site selection", "Franklin Tennessee", "qualified investment criteria", "department store", "hardware store", "regional food distributor", "GIS"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Use-case worked example demonstrating the GIS Engine; enriches the existing GIS Engine slide as a case study rather than a standalone platform slide."
+
+  - page: 129
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "mixed"
+    quality: "high"
+    summary: "A Franklin TN map screenshot (Sites 17 and 18) showing the Woodfine Professional Centre plotted against colour-coded qualified-investment anchors (department store, hardware, food distributor, Costco/Sam's, hospital, university)."
+    key_concepts: ["Location Intelligence", "co-location", "anchor tenants", "site selection", "qualified investment criteria", "GIS", "demographics"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Visual co-location legend for the Franklin case study; augments the GIS Engine slide."
+
+  - page: 130
+    chapter: "Ch.7 Cross-System Rendering Design"
+    content_type: "photo"
+    quality: "medium"
+    summary: "A satellite aerial close-up of Site No. 17 (Westgate Circle, Franklin TN) with the candidate parcel outlined in red."
+    key_concepts: ["Location Intelligence", "aerial imagery", "site selection", "GIS", "parcel"]
+    category_mapping: "07"
+    existing_slide: "GIS Engine"
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "GIS Engine"
+    research_links: []
+    notes: "Supplementary aerial for the Franklin case study; low priority, augments GIS Engine."
+
+  - page: 131
+    chapter: "Ch.3 Console Construction"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "A hand-annotated Sketch 4 systems diagram of the Console OS BIM Console / Interface OS BIM Server connecting via P3/P4 pairing to three building-specific Totebox Archives (Building DB + Materials DB)."
+    key_concepts: ["BIM Server", "BIM Console", "Interface OS", "Console OS", "Totebox Archive", "Building DB", "Materials DB", "Pairing as Permissions"]
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "BIM Console"
+    research_links: []
+    notes: "Working sketch with crossed-out labels and reviewer queries (David Johnston); concept already covered by the converted BIM Console slide."
+
+  - page: 132
+    chapter: "Ch.3 Console Construction"
+    content_type: "annotation"
+    quality: "high"
+    summary: "Reviewer notes (MW) refining the BIM Server workflow — Console OS BIM aggregation, publicly-accessible Totebox tagging, and whether a single Console OS can pair to one Totebox Archive without Interface OS."
+    key_concepts: ["BIM Server", "Interface OS", "Pairing as Permissions", "Totebox Archive", "Public Browser Delivery", "aggregation", "Console OS"]
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "BIM Console"
+    research_links: []
+    notes: "Design-notes commentary page (highlighted edits); supports BIM Console slide, not a standalone slide."
+
+  - page: 133
+    chapter: "Ch.3 Console Construction"
+    content_type: "annotation"
+    quality: "high"
+    summary: "Extended reviewer notes (MW) arguing against publicly-accessible BIM data tagging on security grounds and clarifying that Interface OS exists for aggregation, Pairing as Permissions, SDKs and Public Browser Delivery."
+    key_concepts: ["Pairing as Permissions", "Interface OS", "BIM Server", "GIS Engine", "Public Browser Delivery", "Totebox Orchestration", "security separation"]
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Pairing as Permissions"
+    research_links: []
+    notes: "Dense commentary page reinforcing the separation-of-assets / Pairing-as-Permissions rationale; augments existing converted slides."
+
+  - page: 134
+    chapter: "Ch.3 Console Construction"
+    content_type: "annotation"
+    quality: "medium"
+    summary: "A short reviewer note (MW) on keeping Building DB and Materials DB separate to accommodate Materials Passports tied to building certifications."
+    key_concepts: ["Building DB", "Materials DB", "Materials Passports", "building certifications", "Console OS", "Workplace OS", "Public Browser Delivery"]
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "BIM Console"
+    research_links: []
+    notes: "Mostly blank notes page with one paragraph; concept (Materials Passports) is novel but minor — augments BIM Console."
+
+  - page: 135
+    chapter: "Ch.3 Console Construction"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "A hand-drawn BIM Console diagram showing Private Console OS (Projects A/B/C, new product = Totebox Archive) wired through Interface OS BIM Server, SDK, Public Browser and Web Server to three buildings' BIM/Materials databases."
+    key_concepts: ["BIM Console", "Console OS", "Interface OS", "BIM Server", "Totebox Archive", "SDK", "GitHub analogy", "AEC community"]
+    category_mapping: "02"
+    existing_slide: "BIM Console"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "BIM Console"
+    research_links: []
+    notes: "Hand-sketch source artwork (similar in nature to GitHub, F*KEYS to AEC community); the cleaned-up BIM Console slide already exists."
+
+  - page: 136
+    chapter: "Ch.3 Console Construction"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "A hand-drawn Maps Console diagram — Console OS Maps Console (People/OD/co-location/site selection/demographics/spend + Location Intelligence) over Interface OS GIS Engine pairing to four Toteboxes plus 3rd-party CSV data."
+    key_concepts: ["Maps Console", "GIS Engine", "Location Intelligence", "Interface OS", "Console OS", "co-location", "Totebox", "maps.pointsav.com"]
+    category_mapping: "02"
+    existing_slide: "Maps Console"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Maps Console"
+    research_links: []
+    notes: "Hand-sketch source for the converted Maps Console slide; notes public web endpoints (maps.pointsav.com, projects.woodfinegroup.com)."
+
+  - page: 137
+    chapter: "Ch.3 Console Construction"
+    content_type: "sketch"
+    quality: "medium"
+    summary: "A hand-drawn Building Preferences diagram — Console OS Building Preferences (locks, CCTV, HVAC, elevators, sensors, PV array + Digital Twin) over Interface OS IoT Connect pairing to three buildings' IoT device/sensor libraries."
+    key_concepts: ["Building Preferences", "IoT Connect", "Digital Twin", "IoT device library", "IoT sensor library", "Console OS", "Interface OS", "cyber-physical"]
+    category_mapping: "02"
+    existing_slide: "Building Preferences"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Building Preferences"
+    research_links: []
+    notes: "Hand-sketch source for the converted Building Preferences slide."
+
+  - page: 138
+    chapter: "Ch.8 SMB Environment"
+    content_type: "divider"
+    quality: "high"
+    summary: "A section divider title page reading Small to Medium Business (SMB) Environment."
+    key_concepts: ["SMB", "section divider", "small to medium business"]
+    category_mapping: "01"
+    existing_slide: "SMB Environment"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "SMB Environment"
+    research_links: []
+    notes: "Chapter divider; SMB Environment slide already converted in Cat 01."
+
+  - page: 139
+    chapter: "Ch.8 SMB Environment"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "A sparse hand-drawn Workplace OS page listing workstations (laptops/desktop environment) and a Workplace mobile app, noted as required to access the network."
+    key_concepts: ["Workplace OS", "workstations", "mobile app", "network access", "Product"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Workplace OS — Network Access Client"
+    augments_existing: "SMB Environment"
+    research_links:
+      - url: "https://www.iso.org/standard/77520.html"
+        title: "ISO 9241-210:2019 — Ergonomics of human-system interaction, Part 210: Human-centred design"
+    notes: "Rough draft sketch; Workplace OS as the network-access client is not explicitly a JW4 slide but fits the SMB Environment story — could augment rather than stand alone."
+
+  - page: 140
+    chapter: "Ch.4 Totebox Services"
+    content_type: "sketch"
+    quality: "draft"
+    summary: "A hand-drawn Services — Communications page listing email (Maildir, each email saved as a file), chat, calendar and conferencing, with notes that each person gets their own Totebox and each Totebox its own server."
+    key_concepts: ["Communications", "Maildir", "flat-file", "email-as-file", "chat", "calendar", "conferencing", "one Totebox per person"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Communications Services — Maildir Flat-File (email/chat/calendar/conferencing)"
+    augments_existing: ""
+    research_links:
+      - url: "https://en.wikipedia.org/wiki/Maildir"
+        title: "Maildir — flat-file mail storage format (D. J. Bernstein, qmail)"
+      - url: "https://doc.dovecot.org/2.4.0/core/config/mailbox/formats/maildir.html"
+        title: "Maildir Mailbox Format — Dovecot documentation"
+      - url: "https://www.sec.gov/investment/amendments-electronic-recordkeeping-requirements-broker-dealers"
+        title: "SEC Amendments to Electronic Recordkeeping Requirements for Broker-Dealers (Rule 17a-4)"
+    notes: "Genuine gap — the Maildir each email saved as a file / one-Totebox-per-person model is a concrete WORM flat-file record-format detail with strong developer signal and no dedicated JW4 communications slide."
+
+  - page: 141
+    chapter: "Ch.9 Deployment Scenarios"
+    content_type: "divider"
+    quality: "high"
+    summary: "A section divider title page reading Sample Use Case — Deployment Scenarios."
+    key_concepts: ["deployment scenarios", "sample use case", "section divider"]
+    category_mapping: "01"
+    existing_slide: "Deployment Scenarios"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Deployment Scenarios"
+    research_links: []
+    notes: "Chapter divider; Deployment Scenarios slide already converted in Cat 01."

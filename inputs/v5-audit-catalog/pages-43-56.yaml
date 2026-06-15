@@ -1,0 +1,278 @@
+pages:
+  - page: 43
+    chapter: Ch.2 Documentation
+    content_type: text
+    quality: draft
+    summary: WCP Corporate Wiki wireframe outline with narrow-banking thesis statement and corporate-structure topic hierarchy.
+    key_concepts:
+      - WCP Corporate Wiki
+      - MediaKit OS
+      - narrow banking
+      - Woodfine LPs
+      - corporate structure
+      - First Secured Debentures
+      - Freely Tradable Units
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: "Wiki content outline / draft Jan 7 2025; corporate-wiki structure, not a platform-component slide. Mostly investor-corporate content outside the 7 platform categories."
+  - page: 44
+    chapter: Ch.2 Documentation
+    content_type: text
+    quality: draft
+    summary: Continuation of WCP Corporate Wiki outline covering ongoing reporting requirements, quarterly/annual filings, and references.
+    key_concepts:
+      - ongoing reporting requirements
+      - committee meetings
+      - financial statements
+      - Professional Centres Canada LP
+      - external links
+      - references
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: "Continuation of p43 corporate-wiki outline; reporting-issuer disclosure content, not a platform-component slide."
+  - page: 45
+    chapter: Ch.2 Documentation
+    content_type: text
+    quality: draft
+    summary: WCP Projects Wiki wireframe outline with urbanism thesis and Woodfine Buildings / development-collaborators topic hierarchy.
+    key_concepts:
+      - WCP Projects Wiki
+      - regional markets
+      - Woodfine Buildings
+      - Parking Structures
+      - Vertical Warehouse
+      - vernacular design
+      - development collaborators
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: "Projects-wiki content outline / draft; real-estate project taxonomy, not a platform-component slide."
+  - page: 46
+    chapter: Ch.2 Documentation
+    content_type: mixed
+    quality: medium
+    summary: Browser screenshot of the OSGeo open-source geospatial foundation wiki used as a reference wireframe sample for the wiki layout.
+    key_concepts:
+      - wiki sample
+      - OSGeo
+      - open source
+      - committees
+      - design system wireframe
+      - reference layout
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: "Third-party OSGeo screenshot used as a layout reference; not original PointSav content."
+  - page: 47
+    chapter: Ch.2 Documentation
+    content_type: text
+    quality: medium
+    summary: Chart-of-accounts style topic index mapping ~46 topic IDs across Corporate, Projects, PointSav, Distributed Economies, Geometry of Sustainability, Narrow Banking, and Totebox Methodology wikis.
+    key_concepts:
+      - chart of accounts
+      - topic IDs
+      - Distributed Economies
+      - Geometry of Sustainability
+      - Narrow Banking
+      - Totebox Methodology
+      - topic taxonomy
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: "Editorial topic-index spreadsheet; cross-wiki taxonomy, not a platform-component slide. Could inform naming-conventions work but no standalone slide warranted."
+  - page: 48
+    chapter: Ch.2 Documentation
+    content_type: text
+    quality: draft
+    summary: Newsroom / distribution wireframe outline for media and regulator releases across Woodfine entities.
+    key_concepts:
+      - newsroom
+      - media releases
+      - regulator releases
+      - distribution
+      - MediaKit OS
+      - reporting issuers
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: "Newsroom content outline / draft; distribution-surface wiki, not a platform-component slide."
+  - page: 49
+    chapter: Ch.2 Documentation
+    content_type: text
+    quality: medium
+    summary: Documentation outcome statement on a predictable Landing-to-Newsroom and Marketing-to-Distribution navigation flow consistent across MediaKit OS and PrivateGit OS deployments.
+    key_concepts:
+      - documentation outcome
+      - Landing Page
+      - Corporate Wiki
+      - Projects Wiki
+      - Newsroom
+      - MediaKit OS
+      - PrivateGit OS
+      - consistent navigation
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: "Consistent Documentation Navigation Across Deployments (Marketing to Distribution flow)"
+    augments_existing: ""
+    notes: "First bullet struck through; second bullet is the live statement. Genuine cross-deployment UX-consistency concept with no direct JW4 slide."
+  - page: 50
+    chapter: Ch.2 Documentation
+    content_type: divider
+    quality: draft
+    summary: Section divider titled DOCUMENTATION with subheading 2.1 PrivateGit OS — Source Control and otherwise blank.
+    key_concepts:
+      - documentation
+      - PrivateGit OS
+      - source control
+      - section divider
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: "Near-empty divider page; only a heading and subheading present."
+  - page: 51
+    chapter: Ch.1 Contributors
+    content_type: sketch
+    quality: draft
+    summary: Hand-drawn sketch for the Repositories delivery method listing Private GIT and GitHub with a community box and a NOTES area.
+    key_concepts:
+      - repositories
+      - Private Git
+      - GitHub
+      - community
+      - delivery method
+    category_mapping: "01"
+    existing_slide: Repositories
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Repositories
+    notes: "Hand-drawn sketch; precursor to the converted Repositories slide; mostly illegible NOTES area."
+  - page: 52
+    chapter: Ch.1 Contributors
+    content_type: sketch
+    quality: draft
+    summary: Sketch 5 mockup contrasting GitHub (Android org) with Google Git, plus handwritten notes on public vs private vs hybrid repository strategy.
+    key_concepts:
+      - PrivateGit OS
+      - GitHub
+      - Google Git
+      - public vs private vs hybrid
+      - open source on Git
+      - advanced vs basic GUI
+    category_mapping: "01"
+    existing_slide: Repositories
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Repositories
+    notes: "Marked SKETCH 5 / V3; screenshots plus handwritten strategy notes (maintain open source on Git, keep the rest on PrivateGit). Augments converted Repositories slide."
+  - page: 53
+    chapter: Ch.1 Contributors
+    content_type: text
+    quality: high
+    summary: Master GitHub repository index listing all pointsav and woodfine repos by reference number across MediaKit, Infrastructure, Console, Interface, Totebox, PrivateGit, and Network Administrator OS.
+    key_concepts:
+      - GitHub repositories
+      - pointsav org
+      - woodfine org
+      - Totebox OS
+      - Console OS
+      - Network Administrator OS
+      - repository index
+      - PrivateGit OS
+    category_mapping: "01"
+    existing_slide: Repositories
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Repositories
+    notes: "Comprehensive 55-row repo manifest (V3, April 11 2025); richest data for the Repositories slide. Authoritative repo-naming source — useful to enrich Naming Conventions too."
+  - page: 54
+    chapter: Ch.4 Totebox Services
+    content_type: diagram
+    quality: high
+    summary: Products matrix laying out all nine operating systems (Delivery Workplace/Console/Mobile, Orchestration MediaKit/Totebox/Interface, Private Network Infrastructure/Repository/Network Admin) with kernel-to-dependencies rows and licensing.
+    key_concepts:
+      - operating systems matrix
+      - Workplace OS
+      - Console OS
+      - Orchestration OS
+      - Totebox OS
+      - Network Admin OS
+      - kernel
+      - hypervisor
+      - open source vs proprietary
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: high
+    new_slide_concept: "Platform OS Matrix — Nine Operating Systems by Tier and Licensing"
+    augments_existing: ""
+    notes: "Genuine gap: a single matrix of all nine OS components with licensing model (Orchestration Interface OS = Proprietary, rest Open Source). High investor/developer signal for platform foundation; no equivalent JW4 slide."
+  - page: 55
+    chapter: Ch.4 Totebox Services
+    content_type: diagram
+    quality: high
+    summary: Totebox Services matrix detailing archive servers (Email, Chat, Calendar, Conferencing, FTP, RSS) and databases (Minute Book, Bookkeeping, People, Businesses, Places, Parking Lots, IoT Data) running on Totebox OS.
+    key_concepts:
+      - Totebox Services
+      - Totebox OS
+      - archive servers
+      - databases
+      - bookkeeping
+      - IoT Data
+      - minute book
+      - open source
+    category_mapping: "04"
+    existing_slide: Totebox Services (Containers)
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Totebox Services (Containers)
+    notes: "Detailed server+database service grid; enriches the converted Totebox Services (Containers) and (Ladder) slides with the full per-service breakdown."
+  - page: 56
+    chapter: Ch.4 Totebox Services
+    content_type: diagram
+    quality: high
+    summary: Totebox Services libraries-and-software matrix covering IoT Devices/Sensors libraries and Workplace OS software (Browser, Word Processor, Spreadsheet, PDF Viewer, File Manager) on Totebox OS.
+    key_concepts:
+      - Totebox Services
+      - libraries
+      - IoT Devices
+      - IoT Sensors
+      - Workplace OS software
+      - spreadsheet
+      - PDF viewer
+      - file manager
+    category_mapping: "04"
+    existing_slide: Totebox Services (Containers)
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Totebox Services (Containers)
+    notes: "Companion grid to p55; libraries (IoT) + Workplace OS software apps. Enriches converted Totebox Services slides; Workplace OS apps could also inform Operator Workspace category 02."

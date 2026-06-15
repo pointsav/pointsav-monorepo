@@ -1,0 +1,19 @@
+category: "06"
+category_name: "Multi-Entity Consolidation"
+slides_generated: 3
+slides:
+  - rank: 3
+    data_label: "Deployment Tiers"
+    data_screen_label: "Multi-Entity Consolidation — Deployment Tiers Matrix"
+    conversion_priority: "high"
+    source_pages: [114]
+  - rank: 4
+    data_label: "Three-Layer Stack"
+    data_screen_label: "Multi-Entity Consolidation — Totebox Orchestration Three-Layer Architecture"
+    conversion_priority: "high"
+    source_pages: [115]
+  - rank: 17
+    data_label: "Owner / Operator"
+    data_screen_label: "Multi-Entity Consolidation — Scaling Option A: Interface vs Infrastructure"
+    conversion_priority: "medium"
+    source_pages: [113]

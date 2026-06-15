@@ -1,0 +1,297 @@
+<section class="scaling" data-label="OS Matrix" data-screen-label="Platform Foundation — Nine Operating Systems by Tier and Licensing">
+    <div class="head">
+      <span class="cat-tag">Platform Foundation</span>
+      <div class="eyebrow">Operating System Matrix</div>
+      <h2>Nine Operating Systems</h2>
+      <div class="crumb">The platform is not one program but nine operating systems arranged in three tiers — so the open-core line is drawn between layers, not bolted on after the fact.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <!-- LEFT: the three tiers and their OS layers -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Three tiers, nine systems</span></div>
+        <div class="cmp-item lead">Delivery — Workplace / Console / Mobile OS</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">role-based HUDs</span><span class="s">F12 human-authorization checkpoint</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">Orchestration — MediaKit / Totebox / Interface OS</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">WORM flat-file archive</span><span class="s">stateless cross-archive aggregation</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">Private Network — Infrastructure / Repository / Network Admin OS</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">on-prem / leased / cloud / hybrid</span><span class="s">machine-based authorization</span>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <!-- RIGHT: how licensing maps onto the matrix -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Where licensing falls</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The <b>base node — ToteboxOS — is FOSS</b>. A single entity runs one archive at no charge; the layers beneath it are open source down to the kernel-to-dependencies rows.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The <b>commercial boundary is the Interface OS</b> in the Orchestration tier — stateless multi-archive aggregation is the one proprietary, paid layer. This is the open-core model — per Wikipedia, open-core (GitLab, Grafana).</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Each layer is its own VM image rather than a process on a shared OS, giving stronger tenant separation than container-on-shared-kernel — per NIST SP 800-190.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">For investors the matrix is the <b>sovereignty thesis for SMBs</b>: autonomy over data, operations, and infrastructure within a regulatory boundary — a market Gartner sizes at ~$37B sovereign-cloud IaaS growing toward ~$169B by 2028.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Which of the nine layers does your firm actually touch day to day?</span>
+        <span>Does the FOSS base node give you a credible exit if you ever leave the paid tier?</span>
+        <span>Is the per-layer VM isolation a procurement requirement for your auditors?</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="scaling" data-label="seL4 Kernel" data-screen-label="Platform Foundation — seL4 Verified Microkernel for the Totebox Archive">
+    <div class="head">
+      <span class="cat-tag">Platform Foundation</span>
+      <div class="eyebrow">Kernel Rationale — Long-Arc</div>
+      <h2>Verified Microkernel</h2>
+      <div class="crumb">The Totebox archive is intended to sit on a kernel whose isolation is mathematically proven rather than tested — a planned foundation, not a shipped one.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <!-- LEFT: what seL4 is and where it already runs -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">What it is</span></div>
+        <div class="cmp-item lead">A formally verified microkernel</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">machine-checked proof, spec to C</span><span class="s">capability-based access</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">Open base, commercial systems above it</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">LionsOS — open source</span><span class="s">KOS / Kry10 — commercial</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">Proven in the field</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">DARPA HACMS autonomous vehicles</span><span class="s">red team could not break isolation</span>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <!-- RIGHT: why it matters for the archive -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Why it anchors the archive</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">seL4 carries a machine-checked proof of functional correctness — per Klein et al., SOSP '09 — later extended to integrity, confidentiality, and binary-level correctness (Klein et al., ACM TOCS).</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">It is the only kernel with a <b>verified mitigation of microarchitectural timing channels</b> — per arXiv:2310.17046 — the assurance level high-trust financial data is intended to require.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Verification tooling is being industrialised for non-expert engineers under the <b>DARPA PROVERS / INSPECTA</b> program, answering the objection that formal methods are impractical at scale.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">This is a <b>planned long-term foundation</b>, not a current dependency — the architecture is designed to adopt the verified substrate as it matures, and trust derives from per-resource authorization, not network location, in line with NIST SP 800-207.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Does a proven-isolation kernel change how you would price counterparty risk on the archive?</span>
+        <span>How much weight do your auditors give formal verification versus penetration testing?</span>
+        <span>What would the migration path look like from the present substrate to the planned seL4 base?</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="scaling" data-label="GIS Stack" data-screen-label="Platform Foundation — GIS Engine Stack PostGIS QGIS OpenStreetMap">
+    <div class="head">
+      <span class="cat-tag">Platform Foundation</span>
+      <div class="eyebrow">GIS Engine — Build Stack</div>
+      <h2>The GIS Engine Stack</h2>
+      <div class="crumb">The site-selection engine is built on named open-source geospatial components — the concrete answer to what runs beneath the co-location product.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <!-- LEFT: the named components -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Components</span></div>
+        <div class="cmp-item lead">PostGIS — spatial database</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">stores points, polygons, catchments</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">QGIS — analysis and authoring</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">co-location algorithm workbench</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">OpenStreetMap — base geography</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">businesses, places, parking polygons</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">GeoNode — interactive delivery</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">map layers to the console</span>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <!-- RIGHT: the pipeline and economics -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Pipeline and economics</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The flow runs <b>inputs → algorithms → proprietary outputs</b>: public point and polygon data enters, the co-location and catchment algorithms process it, and the ranked co-location databases are the derivative output.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Origin-destination catchment data is the one bought input — roughly <b>$50k–$150k per year</b> — joined against free OpenStreetMap geometry on a hexagonal overlay.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Every component is open source, so the engine inherits the same portability posture as the rest of the platform — no proprietary geodata runtime to be locked into.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">For investors the stack maps onto the sovereign-cloud IaaS market Gartner sizes at ~$37B today — the data layer is owned, not rented from a single vendor.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Is the $50k–$150k O-D data line item the only third-party cost in the pipeline?</span>
+        <span>Does an all-open-source geo stack matter for your data-residency obligations?</span>
+        <span>Which output database — co-location or catchment — drives your underwriting?</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="scaling" data-label="Cluster Method" data-screen-label="Platform Foundation — Co-location Cluster Methodology Degree Tiers and Distance Thresholds">
+    <div class="head">
+      <span class="cat-tag">Platform Foundation</span>
+      <div class="eyebrow">Co-location — Cluster Math</div>
+      <h2>Cluster Methodology</h2>
+      <div class="crumb">A co-location cluster is defined by degree and distance — the rules that turn a scatter of stores into a ranked site-selection signal.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <!-- LEFT: the degree tiers -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Degree tiers</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">01</span><span class="rt"><b>Primary target</b> — the anchor the cluster is built around (e.g. a Walmart Supercentre).</span></div>
+          <div class="cmp-rule"><span class="rk">02</span><span class="rt"><b>Secondary / tertiary targets</b> — large-format and civic anchors that reinforce the primary draw.</span></div>
+          <div class="cmp-rule"><span class="rk">03</span><span class="rt"><b>First-degree cluster</b> — anchors within <b>1.0 km</b> of the primary target.</span></div>
+          <div class="cmp-rule"><span class="rk">04</span><span class="rt"><b>Up to fifth-degree cluster</b> — the catchment expanded out to a <b>5.0 km</b> threshold.</span></div>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <!-- RIGHT: what the rules produce -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">What the rules produce</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The two thresholds — <b>1.0 km first-degree, 5.0 km fifth-degree</b> — are the whole sorting rule. Every candidate site is scored by how many target tiers fall inside each ring.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Tiles for each target type — Walmart, Home Depot, Costco, hospital, higher-education — feed an <b>11-row ranking matrix</b> with primary / secondary / tertiary weighting.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The output is a cluster record with a sales-per-square-foot proxy, ready to join against catchment and spend layers in the GIS engine.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Because the rule is purely geometric, it is reproducible and auditable — no opaque model weights stand between the input geography and the ranked output.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Are the 1.0 km / 5.0 km thresholds the right rings for your asset class?</span>
+        <span>Which target tiers belong in the 11-row matrix for your strategy?</span>
+        <span>Does a sales-per-square-foot proxy match the signal your acquisitions team already trusts?</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="scaling" data-label="Terminal Rendering" data-screen-label="Platform Foundation — Cross-System Rendering Native Terminal Stack Ghostty Kitty">
+    <div class="head">
+      <span class="cat-tag">Platform Foundation</span>
+      <div class="eyebrow">Cross-System Rendering</div>
+      <h2>Native Terminal Stack</h2>
+      <div class="crumb">The same console renders across every system because it draws on a native terminal substrate — not a browser shell wrapped around each platform.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <!-- LEFT: the substrate -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">The substrate</span></div>
+        <div class="cmp-item lead">Ghostty — native terminal core</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">native UI per platform</span><span class="s">libghostty embeddable core</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">Kitty graphics protocol</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">pixel / raster in the terminal</span><span class="s">alpha blending</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">One console, every system</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">Console OS HUDs render identically</span>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <!-- RIGHT: why it matters -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Why this substrate</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Ghostty is <b>native, fast, and feature-rich</b>, exposing its core as <b>libghostty</b> so the rendering engine can be embedded rather than re-implemented per platform.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The Kitty graphics protocol lets the terminal carry <b>pixel-accurate raster images with alpha blending</b> — maps, charts, and BIM views render in the same surface as text.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">A native terminal substrate keeps the <b>attack surface minimal</b> compared with a full browser runtime — the single-purpose-image argument from the unikernel literature (arXiv:1911.06260) applies to the rendering layer too.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">For developers this is a credible, inspectable rendering path; for the F12 checkpoint it means the human-authorization HUD looks the same on every deployment.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Does a native terminal substrate change your view of the console's attack surface?</span>
+        <span>How important is pixel-identical rendering across your operators' machines?</span>
+        <span>Would your team rather extend libghostty or sit behind a browser shell?</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="scaling" data-label="Co-location Thesis" data-screen-label="Platform Foundation — Co-location Investment Thesis Hybrid Model and Primary Targets">
+    <div class="head">
+      <span class="cat-tag">Platform Foundation</span>
+      <div class="eyebrow">Co-location — Investment Thesis</div>
+      <h2>The Co-location Thesis</h2>
+      <div class="crumb">The GIS engine exists to answer one underwriting question — where the next site should be — under a hybrid investment structure aimed at named anchor targets.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <!-- LEFT: the structure and targets -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Structure and targets</span></div>
+        <div class="cmp-item lead">Hybrid investment structure</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">2 / 20 restructuring</span><span class="s">perpetual equity</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">Geographic co-location purpose</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">data-set-driven site selection</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">Primary target</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">Walmart Supercentre anchors</span><span class="s">Class A office adjacency</span>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <!-- RIGHT: how the engine serves the thesis -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">How the engine serves it</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The cluster methodology turns the thesis into a <b>ranked pipeline of sites</b> — primary anchors scored against secondary and tertiary draws inside the 1.0 km and 5.0 km rings.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">A hybrid structure with <b>perpetual equity</b> is intended to hold winning sites long-term rather than churn them, so the co-location signal compounds across the portfolio.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The data layer is owned end to end, aligning with the sovereign-infrastructure posture Gartner frames as a 2024 strategic imperative for autonomy over data and operations.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The same engine that underwrites a deal becomes a <b>repeatable product</b> for other asset managers — the use case and the platform are one and the same.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Does a 2/20 hybrid structure with perpetual equity fit how you hold real assets?</span>
+        <span>Is Walmart Supercentre adjacency the right primary anchor for your markets?</span>
+        <span>Would you use the engine to underwrite your own deals, license it, or both?</span>
+      </div>
+    </div>
+  </section>

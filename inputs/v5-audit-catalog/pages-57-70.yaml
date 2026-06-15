@@ -1,0 +1,291 @@
+pages:
+  - page: 57
+    chapter: Ch.3 Console Construction
+    content_type: divider
+    quality: high
+    summary: Section divider title slide reading "CONSOLE CONSTRUCTION".
+    key_concepts:
+      - Console Construction
+      - section divider
+      - ConsoleOS chapter
+    category_mapping: "02"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: Blank divider slide; navigation/section marker only, no content to convert.
+
+  - page: 58
+    chapter: Ch.3 Console Construction
+    content_type: sketch
+    quality: draft
+    summary: Handwritten Console OS overview listing third-party network access, Type II hypervisor, and the F-key/BIM/Maps/Data/Site-Super consoles.
+    key_concepts:
+      - Console OS
+      - 3rd party network access
+      - Type II Hypervisor
+      - F* keys console
+      - BIM console
+      - Maps console
+      - Site Super console
+    category_mapping: "02"
+    existing_slide: Interface OS
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Interfaces
+    notes: Handwritten draft; "Site Super console" is a console variant not yet a discrete JW4 slide; note "Required to access the network" reinforces ConsoleOS as mandatory access layer.
+
+  - page: 59
+    chapter: Ch.4 Totebox Services
+    content_type: diagram
+    quality: medium
+    summary: Hand-drawn three-VM Products & Services diagram (Console OS / Interface OS / Totebox OS) enumerating 25 numbered products and services.
+    key_concepts:
+      - Console OS
+      - Interface OS
+      - Totebox OS
+      - Products and Services
+      - VM
+      - Bookkeeping
+      - IoT Device Library
+      - GIS Engine
+    category_mapping: "04"
+    existing_slide: Products & Services
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Totebox Services (Ladder)
+    notes: Three-VM topology with 25-item enumerated service catalog; overlaps with Totebox Services ladder/containers slides.
+
+  - page: 60
+    chapter: Ch.6 Pairing as Permission
+    content_type: diagram
+    quality: medium
+    summary: Hand-drawn Totebox Orchestration "Distributed Private Network (NOT a cloud)" diagram showing multiple Totebox VMs paired across Console/Interface/Network-Admin OS over InfrastructureOS virtualizations.
+    key_concepts:
+      - Distributed Private Network
+      - not a cloud
+      - machine based authorization
+      - Pairing as permissions
+      - Network Admin OS
+      - InfrastructureOS
+      - on-prem / leased / Google Cloud / AWS
+    category_mapping: "05"
+    existing_slide: Private Network
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Pairing as Permissions
+    notes: Rich MBA notes ("Access = Pairing, no username or passwords"; "interfaces as permissions = alternate to permissions Database and/or role based authorization") strongly augment the Pairing slide.
+
+  - page: 61
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: whitepaper
+    quality: high
+    summary: Browser screenshot of the seL4.systems Operating Systems page showing LionsOS (open source) and KOS (commercial) built on the seL4 microkernel, illustrating the Totebox Archive kernel rationale.
+    key_concepts:
+      - seL4
+      - microkernel
+      - LionsOS
+      - KOS
+      - Kry10
+      - Microkit
+      - verifiable OS
+      - Totebox Archive kernel
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: high
+    new_slide_concept: seL4 Kernel Foundation — Verified Microkernel for the Totebox Archive
+    augments_existing: ""
+    notes: Genuine gap — no JW4 slide covers the seL4 moonshot/kernel rationale; high developer and investor signal (formal verification, FOSS base node).
+
+  - page: 62
+    chapter: Ch.2 Documentation
+    content_type: mixed
+    quality: high
+    summary: Annotated Sketch 3 Input Machine wireframe (invoice/agreement PDF intake, Document Splitter, Interface OS routing to corporate/building Totebox Archives) with handwritten pairing-as-permissions annotations.
+    key_concepts:
+      - Input Machine Console
+      - Document Splitter
+      - Interface OS routing
+      - Totebox Archive (Corporate / Building)
+      - Minutebook DB
+      - Bookkeeper DB
+      - Pairing as permissions (P1/P4)
+      - Real Property
+    category_mapping: "02"
+    existing_slide: Input Machine
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Input Machine
+    notes: Detailed annotated wireframe (Sketch 3, V3) by David Johnston; annotations show Input Machine pairs with any Interface OS variant or directly with a Totebox Archive.
+
+  - page: 63
+    chapter: Ch.2 Documentation
+    content_type: annotation
+    quality: medium
+    summary: Sketch 3 Input Machine NOTES page showing the Titleco snow-removal scenario with red-ink terminology corrections (Building Manager/Secretary Pool, corresponding Totebox Archive).
+    key_concepts:
+      - Input Machine
+      - Titleco scenario
+      - snow removal invoice
+      - Building Manager
+      - Secretary Pool
+      - Totebox Archive
+      - Real Property
+    category_mapping: "02"
+    existing_slide: Input Machine
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Input Machine
+    notes: Annotation/notes page; supporting scenario text for the Input Machine slide, not its own slide.
+
+  - page: 64
+    chapter: Ch.2 Documentation
+    content_type: annotation
+    quality: medium
+    summary: Input Machine NOTES continuation with MW commentary refining the Titleco scenario wording (Real Properties Building A/B, 20,000/40,000 SF, $30,000 + 7% GST).
+    key_concepts:
+      - Input Machine
+      - Titleco scenario
+      - Real Property
+      - Land Parcel
+      - GST
+      - MW notes
+    category_mapping: "02"
+    existing_slide: Input Machine
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Input Machine
+    notes: Editorial MW annotation refining scenario language; supports Input Machine slide.
+
+  - page: 65
+    chapter: Ch.2 Documentation
+    content_type: annotation
+    quality: medium
+    summary: Input Machine NOTES detailing the six-step workflow (scan PDF, select via file manager, choose Totebox Archive destination via P1/P4 pairing, name via Chart of Accounts, add metadata, execute).
+    key_concepts:
+      - Input Machine workflow
+      - file manager
+      - Totebox Archive destination
+      - P1 / P4 pairing
+      - Chart of Accounts
+      - Document Splitter
+      - metadata indexing
+    category_mapping: "02"
+    existing_slide: Input Machine
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Input Machine
+    notes: Workflow narrative for Input Machine; pairing (P1/P4) detail could enrich both Input Machine and Pairing slides.
+
+  - page: 66
+    chapter: Ch.2 Documentation
+    content_type: annotation
+    quality: medium
+    summary: Input Machine NOTES showing per-building hand-calculation example (cost-per-SF allocation across Buildings A/B) and the WORM-style metadata index card fields (File_Name, Type, Sub-total, Tax, Total, Currency).
+    key_concepts:
+      - Input Machine
+      - cost-per-SF allocation
+      - metadata index card
+      - File_Name
+      - Sub-total / Tax / Total / Currency
+      - Building A
+      - hand calculation
+    category_mapping: "02"
+    existing_slide: Input Machine
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Input Machine
+    notes: Worked numeric example for the Input Machine workflow; metadata schema relevant to WORM record format but presented as supporting notes.
+
+  - page: 67
+    chapter: Ch.2 Documentation
+    content_type: annotation
+    quality: medium
+    summary: Input Machine NOTES with second-building calculation and MW commentary renaming "Document Splitter" to "Data Allocator" and describing metadata as an index card per file.
+    key_concepts:
+      - Input Machine
+      - Document Splitter
+      - Data Allocator
+      - metadata index card
+      - terminal emulator
+      - GUI / CLI
+      - Chart of Accounts
+    category_mapping: "02"
+    existing_slide: Input Machine
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Input Machine
+    notes: MW renames Document Splitter to Data Allocator and frames Console OS Input Machine as terminal emulator (GUI+CLI); terminology note for editorial.
+
+  - page: 68
+    chapter: Ch.3 Console Construction
+    content_type: annotation
+    quality: high
+    summary: Input Machine NOTES showing the two generated WORM file-system records with the full Chart-of-Accounts-derived filenames (BOOKKEEPING_TITLECO1_2025_03_07_Invoice_Property Management_Snow Removal.PDF) for Building A and B.
+    key_concepts:
+      - WORM record
+      - flat-file
+      - Bookkeeper DB
+      - Totebox Archive
+      - Chart of Accounts filename
+      - file naming convention
+      - duplicate-across-archives
+    category_mapping: "03"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: high
+    new_slide_concept: WORM Record Format — Chart-of-Accounts File Naming in the Totebox Flat-File Archive
+    augments_existing: Bookkeeping
+    notes: Genuine gap — concrete WORM/flat-file record naming convention has no dedicated JW4 slide; high developer signal for System-of-Record story; could alternatively augment Bookkeeping/Totebox Archive.
+
+  - page: 69
+    chapter: Ch.1 Contributors
+    content_type: sketch
+    quality: medium
+    summary: Hierarchical repository tree (ConsoleOS / InterfaceOS / ToteboxOS with SourceCode, Designs, Documentation, Database subfolders) with handwritten approval notes calling for a PrivateGit repository sketch.
+    key_concepts:
+      - repository tree
+      - ConsoleOS / InterfaceOS / ToteboxOS
+      - SourceCode / Designs / Documentation
+      - Database (MinutebookDB / Bookkeeping DB)
+      - PrivateGit OS Repository
+      - Input Machine Console
+    category_mapping: "01"
+    existing_slide: Repositories
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Repositories
+    notes: Repository structure tree (David Johnston); handwritten note flags need to build out Sketch #5 for PrivateGit OS Repository.
+
+  - page: 70
+    chapter: Ch.1 Contributors
+    content_type: annotation
+    quality: high
+    summary: Transcribed repository-tree notes plus MW commentary on building a custom CMS for the PrivateGit OS repository (GitHub-style GUI) and a sketch-delivery policy (prefer legible PDFs over JPGs for board review).
+    key_concepts:
+      - PrivateGit OS Repository
+      - custom CMS
+      - GitHub-style GUI
+      - repository tree
+      - sketch delivery policy
+      - PDF vs JPG
+      - Supervisory / Management Board
+    category_mapping: "01"
+    existing_slide: Repositories
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Repositories
+    notes: MW process/governance notes on PrivateGit CMS and sketch-delivery discipline; supports Repositories slide; PrivateGit CMS concept is a candidate future slide but framed here as process commentary.

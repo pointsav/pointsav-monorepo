@@ -1,0 +1,163 @@
+chapter: "Ch.8 SMB Environment"
+pages:
+  - page: 8
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Handwritten Economic Model sketch listing three pillars: property management, record keeping, building connectivity."
+    key_concepts: ["Economic Model", "Property management", "Record keeping", "Building connectivity"]
+    category_mapping: "01"
+    existing_slide: "SMB Environment"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "SMB Environment"
+    research_links: []
+    notes: "Three-pillar framing maps onto SMB use-case narrative."
+
+  - page: 9
+    content_type: "photo"
+    quality: "high"
+    summary: "Annotated aerial photo of the Woodfine Professional Centre site in Airdrie, Alberta with surrounding retail anchors."
+    key_concepts: ["Woodfine Professional Centre", "Airdrie, Alberta", "power centre", "retail anchors", "Stantec", "Economic Model"]
+    category_mapping: "01"
+    existing_slide: "SMB Environment"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "SMB Environment"
+    research_links: []
+    notes: "Real-estate aerial render used as the economic-model worked example."
+
+  - page: 81
+    content_type: "diagram"
+    quality: "high"
+    summary: "Clean Use Cases system map (Totebox OS use cases — Property Management, Record Keeping, Building Connectivity — over all OS layers)."
+    key_concepts: ["Totebox OS", "Property Management Command Centre", "Record Keeping", "Building Connectivity Digital Twin", "Infrastructure OS", "Console OS", "Machine-based Authorization"]
+    category_mapping: "01"
+    existing_slide: "Use Cases"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Use Cases"
+    research_links: []
+    notes: "Polished source artwork for the converted Use Cases slide; lists all OS layers and five PointSav legal entities."
+
+  - page: 94
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Draft Demographics memorandum (Memo #1) introducing Woodfine's hybrid investment structure and geographic co-location purpose; Walmart Supercentres as primary target."
+    key_concepts: ["hybrid investment structure", "2/20 restructuring", "class A office space", "geographic co-location", "Walmart Supercentre", "primary target", "perpetual equity"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Co-location Investment Thesis — Hybrid Model and Primary Targets"
+    augments_existing: "Use Cases"
+    research_links:
+      - url: "https://www.gartner.com/en/documents/5863580"
+        title: "Gartner — Forecast Analysis: Sovereign Cloud IaaS, Worldwide"
+    notes: "Investor-facing onboarding white paper; maps to GIS use-case/business-context. Borderline cat 01 vs 07."
+
+  - page: 97
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Demographics memo continuation on ranking output sorting, per-country site-selection counts for equity/debt financing, and the Optimum Mosaic concept."
+    key_concepts: ["ranking output sorting", "equity/debt financing schedule", "Canada/US/Mexico site counts", "Optimum Mosaic", "sales per square foot"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Use Cases"
+    research_links: []
+    notes: "Financing-schedule detail; investor-specific, less platform-relevant."
+
+  - page: 98
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Final demographics memo page on Optimum Mosaic marketing-kit generation and Transaction Summary Reports for site-specific demographic matching."
+    key_concepts: ["Optimum Mosaic", "marketing kit", "Transaction Summary Reports", "demographic profiling", "secondary trade", "Reid Crowther demo study"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Use Cases"
+    research_links: []
+    notes: "Report-template detail; investor/tenant marketing context."
+
+  - page: 99
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Onboarding White Paper section describing the approved-collaborator registrar process and the questions a candidate's white paper must answer."
+    key_concepts: ["White Paper", "approved collaborators", "internal registrar", "board approval", "Geographic co-location", "Optimum Mosaic", "Transaction Summary Reports"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Onboarding White Paper — Collaborator Approval Process"
+    augments_existing: "How We Select Contributors"
+    research_links:
+      - url: "https://www.gartner.com/en/documents/3991495"
+        title: "Gartner — Adoption of an Open-Source Strategy"
+    notes: "Partner/collaborator onboarding spec; closely related to How We Select Contributors; could augment."
+
+  - page: 100
+    content_type: "whitepaper"
+    quality: "high"
+    summary: "Continuation of White Paper guidance plus a numbered list of Potential Engagements (co-location datasets, Woodfine Parking Structures, regional airports)."
+    key_concepts: ["White Paper tone", "Potential Engagements", "co-location dataset", "Optimum Mosaic", "Woodfine Parking Structures", "Acela train line", "regional airports"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Potential Engagements — Collaborator Use Cases"
+    augments_existing: "Use Cases"
+    research_links:
+      - url: "https://www.gartner.com/en/documents/3991495"
+        title: "Gartner — Adoption of an Open-Source Strategy"
+    notes: "Potential Engagements list overlaps with Use Cases; Parking Structures ties to PKS archetype work."
+
+  - page: 101
+    content_type: "text"
+    quality: "low"
+    summary: "Short Attachments section listing the Walmart Reid Crowther Demo Study and the Ranking matrix Excel file."
+    key_concepts: ["Attachments", "Walmart Reid Crowther Demo Study", "Ranking matrix Excel"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Use Cases"
+    research_links: []
+    notes: "Mostly empty page; reference list only."
+
+  - page: 138
+    content_type: "divider"
+    quality: "high"
+    summary: "Section divider title page reading Small to Medium Business (SMB) Environment."
+    key_concepts: ["SMB", "section divider", "small to medium business"]
+    category_mapping: "01"
+    existing_slide: "SMB Environment"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "SMB Environment"
+    research_links: []
+    notes: "Chapter divider; SMB Environment slide already converted."
+
+  - page: 139
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Sparse hand-drawn Workplace OS page listing workstations (laptops/desktop environment) and a Workplace mobile app, noted as required to access the network."
+    key_concepts: ["Workplace OS", "workstations", "mobile app", "network access", "Product"]
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Workplace OS — Network Access Client"
+    augments_existing: "SMB Environment"
+    research_links:
+      - url: "https://www.iso.org/standard/77520.html"
+        title: "ISO 9241-210:2019 — Ergonomics of human-system interaction, Part 210"
+    notes: "Workplace OS as the network-access client; fits SMB Environment story — could augment rather than stand alone."

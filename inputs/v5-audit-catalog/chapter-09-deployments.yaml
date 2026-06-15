@@ -1,0 +1,43 @@
+chapter: "Ch.9 Deployment Scenarios (+ Navigation)"
+pages:
+  - page: 1
+    content_type: "toc"
+    quality: "high"
+    summary: "Table of contents for the V5 Design Slides listing the nine numbered sections, with sections 3-7 footnoted as Totebox Orchestration components."
+    key_concepts: ["Totebox Orchestration", "Contributors", "Documentation", "Console Construction", "Cross-System Rendering Design", "SMB Environment", "Deployment Scenarios"]
+    category_mapping: "01"
+    existing_slide: "Contents"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Contents"
+    research_links: []
+    notes: "Title block reads VERSION 13 though file is V5; nine-section ordering matches JW4 chapter scheme."
+
+  - page: 27
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Handwritten Icon Index legend mapping shapes to platform elements (User, Totebox/Interface/Console OS, Virtualization, Media Kit/Private Git OS, Infrastructure OS, Public Cloud, Container)."
+    key_concepts: ["icon index", "ToteboxOS", "ConsoleOS", "Interface OS", "Infrastructure OS", "public cloud", "container", "virtualization"]
+    category_mapping: "07"
+    existing_slide: "Icon Index"
+    conversion_status: "converted"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Icon Index"
+    research_links: []
+    notes: "Source for the JW4 Icon Index navigation slide; maps each OS layer to a diagram shape."
+
+  - page: 141
+    content_type: "divider"
+    quality: "high"
+    summary: "Section divider title page reading Sample Use Case — Deployment Scenarios."
+    key_concepts: ["deployment scenarios", "sample use case", "section divider"]
+    category_mapping: "01"
+    existing_slide: "Deployment Scenarios"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Deployment Scenarios"
+    research_links: []
+    notes: "Chapter divider; Deployment Scenarios slide already converted in Cat 01. This is the only Ch.9 page in the V5 deck — the chapter body was never drafted."

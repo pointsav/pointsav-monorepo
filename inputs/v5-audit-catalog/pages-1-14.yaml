@@ -1,0 +1,289 @@
+pages:
+  - page: 1
+    chapter: Navigation
+    content_type: toc
+    quality: high
+    summary: "Table of contents for the V5 (labelled VERSION 13) Design Slides listing the nine numbered sections, with sections 3-7 footnoted as Totebox Orchestration components."
+    key_concepts:
+      - "Totebox Orchestration"
+      - "Contributors"
+      - "Documentation"
+      - "Console Construction"
+      - "Cross-System Rendering Design"
+      - "SMB Environment"
+      - "Deployment Scenarios"
+    category_mapping: "01"
+    existing_slide: "Contents"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Contents"
+    notes: "Title block reads VERSION 13 though file is V5; nine-section ordering matches JW4 chapter scheme."
+
+  - page: 2
+    chapter: Ch.1 Contributors
+    content_type: annotation
+    quality: draft
+    summary: "Annotated section list (green/yellow highlight) restating the nine categories with an editor note (XXX) arguing for splitting Totebox Orchestration components from the other assignments on the first page."
+    key_concepts:
+      - "Totebox Orchestration"
+      - "Contributors"
+      - "Deployment Scenarios (IK: expanded)"
+      - "category split"
+      - "SMB Environment"
+    category_mapping: "01"
+    existing_slide: "Contents"
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Contents"
+    notes: "Working annotation with highlighter and reviewer initials (IK); not a finished slide. Restates TOC; duplicate of page 1 content."
+
+  - page: 3
+    chapter: Ch.2 Documentation
+    content_type: sketch
+    quality: draft
+    summary: "Handwritten Table of Contents sketch for the Documentation delivery method listing corporate name, products/services, Totebox Orchestration, authentication/permissions, Console OS and Interface OS sub-sections, and Infrastructure OS."
+    key_concepts:
+      - "Table of Contents"
+      - "Console OS"
+      - "Interface OS"
+      - "Command Center"
+      - "BIM Server"
+      - "GIS Engine"
+      - "IoT Connect"
+      - "Infrastructure OS"
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: "Documentation Delivery Method — Section Map"
+    augments_existing: "Contents"
+    notes: "Handwritten in blue ink; legible. Planning sketch for documentation structure rather than investor-facing content."
+
+  - page: 4
+    chapter: Ch.3 Console Construction
+    content_type: sketch
+    quality: medium
+    summary: "Hand-drawn Products and Services system diagram showing Console OS, Interface OS, and Totebox OS as three VMs with arrows, plus numbered service legend (1-25) enumerating each OS's services."
+    key_concepts:
+      - "Console OS"
+      - "Interface OS"
+      - "Totebox OS"
+      - "VM"
+      - "F-Keys console"
+      - "BIM console"
+      - "GIS Engine"
+      - "Bookkeeping"
+    category_mapping: "03"
+    existing_slide: "VM vs Containers"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "VM vs Containers"
+    notes: "SKETCH 1 / V3 markings. Three-VM topology and 25-item service legend underpin the converted Products & Services and VM vs Containers slides."
+
+  - page: 5
+    chapter: Ch.1 Contributors
+    content_type: whitepaper
+    quality: high
+    summary: "Contributors section narrative defining contributor types (technical/domain/operational) and how individual Totebox Archives map to Personnel, Corporate, and Real Property via Passport, Business/Tax, and Land Title IDs."
+    key_concepts:
+      - "Approved Contributors"
+      - "White Paper Discovery Process"
+      - "Totebox Archive - Personnel"
+      - "Passport IDs"
+      - "Business/Tax IDs"
+      - "Land Title IDs"
+      - "Supervisory Board"
+    category_mapping: "01"
+    existing_slide: "Contributors"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Contributors"
+    notes: "Final sentence struck through (crossed-out): 'Maps each contributor to which Archive they affect'."
+
+  - page: 6
+    chapter: Ch.1 Contributors
+    content_type: whitepaper
+    quality: high
+    summary: "Contributors continuation stating the no-raw-data rule: all interaction routes through Console OS (optionally via Interface OS), with the Totebox Archive logging access via Registry Token mapping device IP and Pairing As Permissions."
+    key_concepts:
+      - "no raw data rule"
+      - "Console OS"
+      - "Interface OS"
+      - "Registry Token"
+      - "IP Address"
+      - "Pairing As Permissions"
+      - "access records"
+    category_mapping: "05"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Registry Token — Access Record + Pairing As Permissions"
+    augments_existing: "Pairing as Permissions"
+    notes: "Trailing sentence struck through (duplicate of the rule). Registry Token / IP-to-permission mapping is an MBA registry concept with no dedicated JW4 slide — genuine gap."
+
+  - page: 7
+    chapter: Ch.1 Contributors
+    content_type: whitepaper
+    quality: high
+    summary: "Contributors Outcome statement: all contributors aligned before defining disciplines, with a clear auditable-by-design registry that answers 'who changed this and why' for regulators or board members."
+    key_concepts:
+      - "Outcome"
+      - "auditable by design"
+      - "registry"
+      - "who changed this and why"
+      - "regulator"
+      - "board member"
+    category_mapping: "01"
+    existing_slide: "Contributors"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Contributors"
+    notes: "Highlighted phrase 'A clear registry and model for who can do what, auditable by design'; closing matter of the Contributors section."
+
+  - page: 8
+    chapter: Ch.8 SMB Environment
+    content_type: sketch
+    quality: draft
+    summary: "Handwritten Economic Model sketch listing three pillars: property management, record keeping, and building connectivity."
+    key_concepts:
+      - "Economic Model"
+      - "Property management"
+      - "Record keeping"
+      - "Building connectivity"
+    category_mapping: "01"
+    existing_slide: "SMB Environment"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "SMB Environment"
+    notes: "Handwritten blue ink with boxed 'Economic Model' label; three-pillar framing maps onto SMB use-case narrative."
+
+  - page: 9
+    chapter: Ch.8 SMB Environment
+    content_type: photo
+    quality: high
+    summary: "Annotated aerial photo of the Woodfine Professional Centre site in Airdrie, Alberta with surrounding anchors (Walmart, Home Depot, Starbucks, Highway 2) and a Woodfine Capital Projects title block."
+    key_concepts:
+      - "Woodfine Professional Centre"
+      - "Airdrie, Alberta"
+      - "power centre"
+      - "retail anchors"
+      - "Stantec"
+      - "Economic Model"
+    category_mapping: "01"
+    existing_slide: "SMB Environment"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "SMB Environment"
+    notes: "Real-estate aerial render (D3 sheet, Stantec, dated 2025_01_07) used as the economic-model worked example; concrete SMB/real-property context."
+
+  - page: 10
+    chapter: Ch.1 Contributors
+    content_type: whitepaper
+    quality: high
+    summary: "First page of the White Paper Discovery Process draft memorandum: Woodfine hybrid investment structure (restructured 2/20, perpetual equity, secured mortgage debentures) and intent to transform print marketing into a digital platform."
+    key_concepts:
+      - "White Paper Discovery Process"
+      - "Draft Memorandum"
+      - "hybrid structure"
+      - "2/20 restructuring"
+      - "perpetual equity"
+      - "secured mortgage debentures"
+      - "digital marketing platform"
+    category_mapping: "01"
+    existing_slide: "How We Select Contributors"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "How We Select Contributors"
+    notes: "Yellow placeholder fields (Insert Company/Contact/Date). Investment-strategy narrative; the White Paper Discovery Process is the contributor onboarding mechanism."
+
+  - page: 11
+    chapter: Ch.1 Contributors
+    content_type: whitepaper
+    quality: high
+    summary: "Discovery memo continuation specifying the digital platform stack — WordPress single-page site, MediaWiki corporate/projects wikis, RSS newsroom — as open-source servers acting as pre-draft for legal/accounting documentation."
+    key_concepts:
+      - "WordPress"
+      - "MediaWiki"
+      - "RSS"
+      - "open-source servers"
+      - "Corporate wiki"
+      - "Projects wiki"
+      - "annual information circular"
+    category_mapping: "01"
+    existing_slide: "How We Select Contributors"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "How We Select Contributors"
+    notes: "Open-source-stack rationale (scale across devices); part of the multi-page Discovery Process memo."
+
+  - page: 12
+    chapter: Ch.1 Contributors
+    content_type: whitepaper
+    quality: high
+    summary: "Discovery memo MediaWiki Corporate section outlining the corporate wiki structure (nature of business, management team, thesis statements, Woodfine LPs) and its role as repository for regulatory filings across the parent and LPs."
+    key_concepts:
+      - "MediaWiki Corporate"
+      - "regulatory filings"
+      - "Woodfine Capital Projects Inc."
+      - "Professional Centres LP"
+      - "MD&A"
+      - "Material Change Reports"
+      - "Thesis Statements"
+    category_mapping: "01"
+    existing_slide: "How We Select Contributors"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "How We Select Contributors"
+    notes: "Continuation of Discovery memo; continuous-disclosure repository structure (Canada + USA LPs)."
+
+  - page: 13
+    chapter: Ch.1 Contributors
+    content_type: whitepaper
+    quality: high
+    summary: "Discovery memo MediaWiki Projects section listing development classes (Professional Centres, Tech Industrial, Retail Select, Suburban Office, Parking Structures), design-collaboration headings, and a market database for current/target markets."
+    key_concepts:
+      - "MediaWiki Projects"
+      - "Development Classes"
+      - "Parking Structures"
+      - "Design Collaboration"
+      - "Regional Markets"
+      - "target markets"
+      - "Design Slides"
+    category_mapping: "01"
+    existing_slide: "How We Select Contributors"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "How We Select Contributors"
+    notes: "Development-class taxonomy (incl. Parking Structures) ties to the GIS archetype work; part of Discovery memo."
+
+  - page: 14
+    chapter: Ch.1 Contributors
+    content_type: whitepaper
+    quality: high
+    summary: "Discovery memo continuation completing the market database (Grande Prairie, Lexington KY) and defining the RSS Newsroom as an aggregator with two release types: Woodfine Management Corp content releases and sub-400-word regulator releases."
+    key_concepts:
+      - "RSS Newsroom"
+      - "news aggregator"
+      - "Regulator Releases"
+      - "securities regulations"
+      - "target market"
+      - "Woodfine Management Corp"
+      - "web feed"
+    category_mapping: "01"
+    existing_slide: "How We Select Contributors"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "How We Select Contributors"
+    notes: "Quotes Wikipedia RSS definition; closes the Discovery Process memo. Regulator-release compliance posture noted."

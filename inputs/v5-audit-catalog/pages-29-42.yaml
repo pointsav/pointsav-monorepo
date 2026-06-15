@@ -1,0 +1,266 @@
+pages:
+  - page: 29
+    chapter: Ch.2 Documentation
+    content_type: text
+    quality: high
+    summary: Whitepaper text on PrivateGit OS Design System as the platform-wide house style, hosted as Git-as-CMS and offered as FOSS.
+    key_concepts:
+      - PrivateGit OS
+      - Design System
+      - IBM Carbon
+      - Git as CMS
+      - design tokens
+      - MediaKit OS
+      - FOSS
+    category_mapping: "01"
+    existing_slide: Design System
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Design System
+    notes: "Header reads (IK: Improved wording) — editorial annotation, not slide content."
+  - page: 30
+    chapter: Ch.2 Documentation
+    content_type: sketch
+    quality: draft
+    summary: Hand-drawn whiteboard sketch proposing a Design System repository spanning MediaKit OS and Workplace OS desktop environments.
+    key_concepts:
+      - Design System repository
+      - MediaKit OS
+      - Workplace OS
+      - desktop environments
+      - software apps
+      - Product
+    category_mapping: "01"
+    existing_slide: Design System
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Design System
+    notes: "Pen-on-paper sketch; partly illegible cursive; NOTES section blank. Source material for the converted Design System slide."
+  - page: 31
+    chapter: Ch.2 Documentation
+    content_type: text
+    quality: medium
+    summary: Tabular Media Assets Directory listing WCP and PointSav media-asset references by company, type, component, and print/digital.
+    key_concepts:
+      - Media Assets Directory
+      - WCP Media Assets
+      - PointSav Media Assets
+      - logo
+      - font
+      - icon
+      - GitHub media-assets
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: Design System
+    notes: "Reference directory table (V2, March 1 2025). Detail-level inventory — enriches Design System rather than warranting its own investor slide."
+  - page: 32
+    chapter: Ch.2 Documentation
+    content_type: text
+    quality: high
+    summary: Whitepaper on Typographic Protocols splitting marketing fonts from system fonts (desktop/console/terminal/user) with a Variable Fonts roadmap.
+    key_concepts:
+      - Typographic Protocols
+      - System Fonts
+      - Console Fonts
+      - Terminal Fonts
+      - Variable Fonts
+      - Wiki Typeface Family
+    category_mapping: "01"
+    existing_slide: Typographic Protocols
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Typographic Protocols
+    notes: ""
+  - page: 33
+    chapter: Ch.2 Documentation
+    content_type: diagram
+    quality: high
+    summary: Woodfine Color Values swatch board with CMYK and RGB specifications for the seven brand colors.
+    key_concepts:
+      - Color Values
+      - Woodfine palette
+      - CMYK
+      - RGB
+      - brand colors
+    category_mapping: "01"
+    existing_slide: Color Values
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Color Values
+    notes: ""
+  - page: 34
+    chapter: Ch.2 Documentation
+    content_type: photo
+    quality: medium
+    summary: Reference screenshot of Apple's developer fonts page (San Francisco typeface) used as a typography exemplar.
+    key_concepts:
+      - San Francisco typeface
+      - Apple fonts
+      - typography reference
+      - variable optical sizes
+    category_mapping: "01"
+    existing_slide: Typographic Protocols
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Typographic Protocols
+    notes: "External screenshot (developer.apple.com/fonts) used as moodboard/reference, not original PointSav content."
+  - page: 35
+    chapter: Ch.2 Documentation
+    content_type: photo
+    quality: medium
+    summary: Continuation screenshot of Apple typography reference detailing SF Pro, SF Compact, SF Mono, New York, and SF Script Extensions.
+    key_concepts:
+      - SF Pro
+      - SF Compact
+      - SF Mono
+      - New York
+      - SF Script Extensions
+      - typography reference
+    category_mapping: "01"
+    existing_slide: Typographic Protocols
+    conversion_status: converted
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Typographic Protocols
+    notes: "External screenshot (developer.apple.com/fonts); reference exemplar, not original content."
+  - page: 36
+    chapter: Ch.2 Documentation
+    content_type: text
+    quality: high
+    summary: Whitepaper on Interface Patterns defining MediaKit OS topic templates and navigation plus PrivateGit OS repositories and elements.
+    key_concepts:
+      - Interface Patterns
+      - MediaKit OS
+      - topic templates
+      - PrivateGit OS
+      - WordPress
+      - MediaWiki
+      - Fresh RSS
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: "Interface Patterns — MediaKit & PrivateGit"
+    augments_existing: Design System
+    notes: "No exact JW4 match for Interface Patterns; modest developer signal — candidate new slide or fold into Design System."
+  - page: 37
+    chapter: Ch.2 Documentation
+    content_type: text
+    quality: medium
+    summary: MediaKit OS wireframe inventory table listing 36 wireframes across Landing Page, Corporate Wiki, Project Wiki, and Newsroom deployments.
+    key_concepts:
+      - wireframes
+      - Landing Page
+      - Corporate Wiki
+      - Project Wiki
+      - Newsroom
+      - topic templates
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: Design System
+    notes: "Draft wireframe manifest (V2, January 7 2025); inventory detail, not an investor-facing slide."
+  - page: 38
+    chapter: Ch.2 Documentation
+    content_type: text
+    quality: medium
+    summary: PointSav Design System component directory listing 30 button/form components mapped to Marketing/Wiki/Distribution pages and their CMS.
+    key_concepts:
+      - Design System Directory
+      - components
+      - button
+      - form
+      - WordPress
+      - MediaWiki
+      - FreshRSS
+      - topic template
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: Design System
+    notes: "Component reference table (V2, March 1 2025; github.com/pointsav/design-system); 'Discription' typo in source header."
+  - page: 39
+    chapter: Ch.2 Documentation
+    content_type: mixed
+    quality: medium
+    summary: Topic template exemplar showing a Regional Market article styled on a Wikipedia (Airdrie, Alberta) layout with infobox and maps.
+    key_concepts:
+      - topic template
+      - Regional Market
+      - Wikipedia layout
+      - infobox
+      - MediaWiki
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: Design System
+    notes: "Uses a real Wikipedia article (Airdrie, AB) as a layout mockup for the Regional Market topic template."
+  - page: 40
+    chapter: Ch.2 Documentation
+    content_type: photo
+    quality: low
+    summary: Site Selection Ranking topic template exemplar shown as a screenshot of the Wikipedia Michelin Guide country-ranking table.
+    key_concepts:
+      - Site Selection Ranking
+      - topic template
+      - ranking table
+      - Wikipedia reference
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: Design System
+    notes: "External Wikipedia (Michelin Guide) screenshot used purely as a ranked-table layout analogy; low original signal."
+  - page: 41
+    chapter: Ch.2 Documentation
+    content_type: mixed
+    quality: high
+    summary: Rendered WCP Landing Page wireframe (MediaKit OS Marketing/Web Framework) showing the Woodfine Capital Projects marketing homepage.
+    key_concepts:
+      - WCP Landing Page
+      - wireframe
+      - MediaKit OS
+      - Web Framework
+      - Marketing
+      - freely transferable units
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: Design System
+    notes: "High-fidelity rendered mockup of the WCP marketing site; references 'freely transferable' partnership units (note: Cat 04 Freely Transferable Standard is a distinct platform concept)."
+  - page: 42
+    chapter: Ch.2 Documentation
+    content_type: text
+    quality: draft
+    summary: Annotated content outline for the WCP Landing Page wireframe enumerating wheelhouse sections as placeholder teasers.
+    key_concepts:
+      - WCP Landing Page
+      - wireframe outline
+      - wheelhouse
+      - MediaKit OS
+      - Web Framework
+      - Marketing
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: Design System
+    notes: "DRAFT JANUARY 7, 2025 (highlighted); placeholder <<Teaser>>/<<Wheelhouse>> markers — incomplete working draft."

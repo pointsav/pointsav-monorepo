@@ -1,0 +1,19 @@
+category: "01"
+category_name: "Developer Platform"
+slides_generated: 3
+slides:
+  - rank: 12
+    data_label: "Licensing Model"
+    data_screen_label: "Developer Platform — Licensing Model — Open-Source Base Nodes vs Proprietary Tiers"
+    conversion_priority: "high"
+    source_pages: [18]
+  - rank: 18
+    data_label: "Documentation Standards"
+    data_screen_label: "Developer Platform — Documentation Standards — UML, C4, 4+1, ISO/IEC 42010"
+    conversion_priority: "medium"
+    source_pages: [23]
+  - rank: 20
+    data_label: "Coding Guidelines"
+    data_screen_label: "Developer Platform — Coding Guidelines — Power of 10 Safety-Critical Rules"
+    conversion_priority: "medium"
+    source_pages: [26]

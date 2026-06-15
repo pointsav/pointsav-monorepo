@@ -1,0 +1,205 @@
+  <section class="scaling" data-label="Economic Model" data-screen-label="Integration &amp; Data Portability — Economic Model: Decentralized Orchestration, Auth-as-Permissions, Freely Transferable Archives">
+    <div class="head">
+      <span class="cat-tag">Integration &amp; Data Portability</span>
+      <div class="eyebrow">Totebox Orchestration</div>
+      <h2>The Economic Model</h2>
+      <div class="crumb">Three system-design commitments turn an archive into an asset the customer — not the vendor — controls.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr;">
+      <div class="cmp-col">
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">01</span><span class="rt"><b>Decentralized orchestration.</b> A single archive runs free and open source (Totebox OS). Revenue begins only when stateless cross-archive aggregation (Orchestration OS) coordinates two or more archives — the commercial boundary is composition, not the data itself.</span></div>
+          <div class="cmp-rule"><span class="rk">02</span><span class="rt"><b>Authorization as permissions.</b> Network topology is the permission system — no central credential database to breach or to hold the customer hostage. Authorization is evaluated per resource at the point of access. &mdash; lineage per NIST SP 800-207, Zero Trust Architecture (2020).</span></div>
+          <div class="cmp-rule"><span class="rk">03</span><span class="rt"><b>Freely transferable archives.</b> Each archive is a WORM flat-file store in open, machine-readable formats with no egress fee and no proprietary container. Exit is a copy, not a migration project. &mdash; aligned with EU Data Act Art. 23–25 (Reg. 2023/2854), egress-fee ban effective Jan 2027.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Is "composition is the paywall, not the data" the line we lead investors with?</span>
+        <span>Do we quantify lock-in cost the buyer avoids — Gartner exit-readiness framing?</span>
+        <span>How do we present the Jan 2027 egress-fee ban as a tailwind, not a feature?</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="scaling" data-label="Communications" data-screen-label="Integration &amp; Data Portability — Communications Services: Maildir Flat-File Record Model">
+    <div class="head">
+      <span class="cat-tag">Integration &amp; Data Portability</span>
+      <div class="eyebrow">Totebox OS — Communications</div>
+      <h2>Communications as Flat Files</h2>
+      <div class="crumb">Email, chat, calendar, and conferencing are stored one file per message — not locked inside a mail server's database.</div>
+    </div>
+
+    <div class="cmp2">
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">The record model</span></div>
+        <div class="cmp-item lead">One file per message; one Totebox per person</div>
+        <div class="cmp-sub" style="margin-left:0;flex-wrap:wrap;gap:12px 26px;">
+          <span class="s">email</span><span class="s">chat</span><span class="s">calendar</span><span class="s">conferencing</span>
+        </div>
+        <div class="cmp-item" style="margin-top:24px;">Each message lands write-once. Deletion is a tombstone, never an erase — the archive stays append-only and auditable.</div>
+      </div>
+      <div class="cmp-div"></div>
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Why Maildir</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Lock-free <b>tmp/new/cur</b> directory layout — safe to read and write over a networked file system without a database daemon. &mdash; per Maildir (D. J. Bernstein).</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">A proven enterprise format, not a bespoke schema — documented as a first-class IMAP mailbox store. &mdash; per Dovecot Maildir documentation.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Maps directly onto the WORM, non-rewriteable record standard regulated firms already recognize. &mdash; per SEC Rule 17a-4 (2022).</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Do we ship a single Maildir surface for all four channels, or per-channel stores?</span>
+        <span>How does the F12 human checkpoint apply to outbound message authorization?</span>
+        <span>Is the tombstone-not-erase behavior enough for 17a-4 retention review?</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="scaling" data-label="Solid / Pods" data-screen-label="Integration &amp; Data Portability — Data Portability Reference: W3C Solid Pods Precedent">
+    <div class="head">
+      <span class="cat-tag">Integration &amp; Data Portability</span>
+      <div class="eyebrow">Standards Precedent</div>
+      <h2>The Portability Precedent</h2>
+      <div class="crumb">User-owned data stores with app/data separation are an established standard — the freely transferable archive is the same idea, applied to the business entity.</div>
+    </div>
+
+    <div class="cmp2">
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">W3C Solid pods</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">A user owns the <b>pod</b>; applications connect to it rather than absorbing the data. &mdash; per Solid Protocol (W3C Solid Community Group, 2022).</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Providers are interchangeable — the pod migrates between hosts without rewriting the application.</span></div>
+        </div>
+      </div>
+      <div class="cmp-div"></div>
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Totebox archive</span></div>
+        <div class="cmp-item lead">App/data separation at the entity level</div>
+        <div class="cmp-sub" style="margin-left:0;flex-wrap:wrap;gap:12px 26px;">
+          <span class="s">archive = the pod</span><span class="s">console = the app</span><span class="s">WORM flat-file</span>
+        </div>
+        <div class="cmp-item" style="margin-top:24px;">The archive is application-independent: any conforming console reads it, and the customer keeps the canonical copy. &mdash; portability framing per GDPR Art. 20, "structured, commonly used, machine-readable."</div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Should we cite Solid by name to investors, or describe the precedent generically?</span>
+        <span>Is "archive = pod, console = app" the cleanest one-line analogy for the deck?</span>
+        <span>Do we claim GDPR Art. 20 conformance, or position it as alignment only?</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="scaling" data-label="Console Search" data-screen-label="Integration &amp; Data Portability — F-Keys Console: Structured Document Query Surface">
+    <div class="head">
+      <span class="cat-tag">Integration &amp; Data Portability</span>
+      <div class="eyebrow">Console OS — F✲KEYS</div>
+      <h2>Search the Archive</h2>
+      <div class="crumb">A structured query surface reads the flat-file archive directly — filter, locate, and export without a separate index service.</div>
+    </div>
+
+    <div class="cmp2">
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Query surface</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Filter fields map to the file-name convention — date range, document type, counterparty, account.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Worked example: a Federal Register query resolves to the underlying source files, each held write-once in the archive.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Results export in <b>open, machine-readable</b> form — CSV / JSON — so the output travels with the customer.</span></div>
+        </div>
+      </div>
+      <div class="cmp-div"></div>
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Why it stays portable</span></div>
+        <div class="cmp-item lead">The file name is the reference</div>
+        <div class="cmp-sub" style="margin-left:0;flex-wrap:wrap;gap:12px 26px;">
+          <span class="s">no proprietary index</span><span class="s">human-readable paths</span><span class="s">CSV / JSON export</span>
+        </div>
+        <div class="cmp-item" style="margin-top:24px;">Search reads the same flat files an auditor would — no hidden database layer to reconstruct on export. &mdash; flat-file lineage per Dovecot Maildir documentation.</div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Which filter fields ship in the first F✲KEYS search release?</span>
+        <span>Does export carry the source files themselves, or just the result manifest?</span>
+        <span>Is the Federal Register example the right neutral demo for the pitch?</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="scaling" data-label="GIS Catchment" data-screen-label="Integration &amp; Data Portability — GIS Engine: Catchment Data Sourcing and Interactive Delivery">
+    <div class="head">
+      <span class="cat-tag">Integration &amp; Data Portability</span>
+      <div class="eyebrow">Software — GIS Engine</div>
+      <h2>Catchment Data Economics</h2>
+      <div class="crumb">Origin-destination catchment data is expensive to license — sourcing it once and delivering it as interactive layers is the integration value.</div>
+    </div>
+
+    <div class="cmp2">
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Sourcing</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Commercial origin-destination catchment feeds run roughly <b>$50k–$150k per year</b> — a recurring cost most SMBs cannot carry alone.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The platform sources the feed once and exposes it through the orchestration tier, spreading the cost across archives.</span></div>
+        </div>
+      </div>
+      <div class="cmp-div"></div>
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Delivery</span></div>
+        <div class="cmp-item lead">Interactive layers, not raw dumps</div>
+        <div class="cmp-sub" style="margin-left:0;flex-wrap:wrap;gap:12px 26px;">
+          <span class="s">GeoNode delivery</span><span class="s">tiled layers</span><span class="s">per-archive access</span>
+        </div>
+        <div class="cmp-item" style="margin-top:24px;">Catchment results are delivered as interactive map layers the customer queries directly — and the derived outputs export with the archive, not the upstream license.</div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Is the catchment feed a paid orchestration service, or bundled into the GIS tier?</span>
+        <span>Which derived layers are portable on exit, given upstream license terms?</span>
+        <span>Do we quote the $50k–$150k range to investors as the cost we amortize?</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="scaling" data-label="Docs Navigation" data-screen-label="Integration &amp; Data Portability — Consistent Documentation Navigation Across Deployments">
+    <div class="head">
+      <span class="cat-tag">Integration &amp; Data Portability</span>
+      <div class="eyebrow">MediaKit &amp; PrivateGit OS</div>
+      <h2>One Navigation, Every Deployment</h2>
+      <div class="crumb">The same documentation flow appears whether content ships through MediaKit OS or PrivateGit OS — consistency is what makes the platform portable to operate.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr;">
+      <div class="cmp-col">
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">01</span><span class="rt"><b>Landing → Newsroom.</b> A reader moves from a landing page into the newsroom along the same path on every deployment surface.</span></div>
+          <div class="cmp-rule"><span class="rk">02</span><span class="rt"><b>Marketing → Distribution.</b> The marketing-to-distribution flow is identical across MediaKit OS (WordPress / MediaWiki / Fresh RSS) and PrivateGit OS.</span></div>
+          <div class="cmp-rule"><span class="rk">03</span><span class="rt"><b>Docs as code.</b> Documentation lives beside the source it describes, so it travels with the archive and survives a switch of host. &mdash; per Write the Docs, Docs as Code.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Is the Landing→Newsroom path enforced by the Design System tokens, or by convention?</span>
+        <span>Does the Marketing→Distribution flow stay identical when a customer self-hosts?</span>
+        <span>Where does documentation physically sit so it exports with the archive?</span>
+      </div>
+    </div>
+  </section>

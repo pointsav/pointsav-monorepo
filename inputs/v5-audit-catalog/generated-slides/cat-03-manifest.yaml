@@ -1,0 +1,22 @@
+category: "03"
+category_name: "System of Record"
+slides_generated: 3
+slides:
+  - rank: 10
+    data_label: "WORM Record Format"
+    data_screen_label: "System of Record — WORM Record Format: Database vs Flat-File System"
+    conversion_priority: "high"
+    source_pages: [88]
+    notes: "Database-vs-flat-file framing; file-name-as-reference; SHA-256 content addressing; SEC 17a-4 / FINRA 4511 / RFC 6920 inline citations."
+  - rank: 10
+    data_label: "Chart-of-Accounts Names"
+    data_screen_label: "System of Record — Chart-of-Accounts File Naming in the Flat-File Archive"
+    conversion_priority: "high"
+    source_pages: [68]
+    notes: "Worked Chart-of-Accounts filename anatomy (BOOKKEEPING_TITLECO1_2025_03_07_Invoice_...PDF) split out from the merged rank-10 entry to keep density under the notes-strip budget."
+  - rank: 11
+    data_label: "Partition Layout"
+    data_screen_label: "System of Record — Totebox OS File System and Partition Layout"
+    conversion_priority: "high"
+    source_pages: [80]
+    notes: "R/OS/S1-S4 partition layout; best-fit DB or file system per service; EU Data Act Art. 23-25 + ISO 14641:2018 inline citations."

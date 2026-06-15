@@ -1,0 +1,275 @@
+pages:
+  - page: 99
+    chapter: Ch.8 SMB Environment
+    content_type: whitepaper
+    quality: high
+    summary: Onboarding White Paper section describing the approved-collaborator registrar process and the questions a candidate's white paper must answer.
+    key_concepts:
+      - White Paper
+      - approved collaborators
+      - internal registrar
+      - board approval
+      - Geographic co-location
+      - Optimum Mosaic
+      - Transaction Summary Reports
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: "Onboarding White Paper — Collaborator Approval Process"
+    augments_existing: How We Select Contributors
+    notes: "Reads as a partner/collaborator onboarding spec; closely related to the Nav 'How We Select Contributors' slide; could augment rather than become its own slide."
+  - page: 100
+    chapter: Ch.8 SMB Environment
+    content_type: whitepaper
+    quality: high
+    summary: Continuation of White Paper guidance (tone, length, what is NOT wanted) plus a numbered list of Potential Engagements such as co-location datasets and Woodfine Parking Structures.
+    key_concepts:
+      - White Paper tone
+      - Potential Engagements
+      - co-location dataset
+      - Optimum Mosaic
+      - Woodfine Parking Structures
+      - Acela train line
+      - regional airports
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: "Potential Engagements — Collaborator Use Cases"
+    augments_existing: Use Cases
+    notes: "Potential Engagements list overlaps with existing 'Use Cases' slide; Parking Structures item ties to PKS archetype work."
+  - page: 101
+    chapter: Ch.8 SMB Environment
+    content_type: text
+    quality: low
+    summary: Short Attachments section listing the Walmart Reid Crowther Demo Study and the Ranking matrix Excel file.
+    key_concepts:
+      - Attachments
+      - Walmart Reid Crowther Demo Study
+      - Ranking matrix Excel
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: Use Cases
+    notes: "Mostly empty page; reference list only, not slide-worthy on its own."
+  - page: 102
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: diagram
+    quality: high
+    summary: GIS Databases and Algorithms org-chart flow diagram showing Iteration 1 and Iteration 2 pipelines from Businesses/Places through Co-Location, Mobility, Location Intelligence, Parking Lots and Catchment Areas.
+    key_concepts:
+      - GIS pipeline
+      - Co-Location Algorithm
+      - Mobility Data
+      - Location Intelligence
+      - Parking Lots
+      - Catchment Areas Algorithm
+      - Census
+      - Spend
+    category_mapping: "07"
+    existing_slide: GIS Engine
+    conversion_status: converted
+    conversion_priority: medium
+    new_slide_concept: ""
+    augments_existing: GIS Engine
+    notes: "Detailed pipeline diagram enriches the existing GIS Engine slide; dated V1 Jan 7 2025."
+  - page: 103
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: whitepaper
+    quality: high
+    summary: GIS database catalog (entries 1-3) defining Businesses, Places, and the Co-Location Algorithm including the star-ranking matrix and Top 400 Markets calibration.
+    key_concepts:
+      - Businesses
+      - Places
+      - Co-Location Algorithm
+      - Top 400 Markets
+      - star ranking
+      - Primary/Secondary/Tertiary
+      - Unique IDs
+    category_mapping: "07"
+    existing_slide: GIS Engine
+    conversion_status: converted
+    conversion_priority: medium
+    new_slide_concept: ""
+    augments_existing: GIS Engine
+    notes: "DRAFT JANUARY 7, 2025 banner; lists legacy PointSav entity name variants."
+  - page: 104
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: whitepaper
+    quality: high
+    summary: GIS database catalog (entries 4-9) defining Co-Locations output, Mobility Data, Location Intelligence Algorithm, Co-Locations+LI output, Parking Lots, and Catchment Areas Algorithm with input/output and public/proprietary tags.
+    key_concepts:
+      - Co-Locations
+      - Mobility Data
+      - Location Intelligence Algorithm
+      - Origin-Destination
+      - Parking Lots
+      - Catchment Areas
+      - Proprietary
+      - 65 km radius
+    category_mapping: "07"
+    existing_slide: GIS Engine
+    conversion_status: converted
+    conversion_priority: medium
+    new_slide_concept: ""
+    augments_existing: GIS Engine
+    notes: "Distinguishes Public/Third Party/Proprietary database tiers — useful data-portability signal."
+  - page: 105
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: whitepaper
+    quality: high
+    summary: GIS database catalog (entries 10-12) defining Catchment Areas output plus future Census and Spend geo-demographic input databases.
+    key_concepts:
+      - Catchment Areas output
+      - Census
+      - Spend
+      - geo-demographic segmentation
+      - Home/Work locations
+      - Radius Child
+    category_mapping: "07"
+    existing_slide: GIS Engine
+    conversion_status: converted
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: GIS Engine
+    notes: "Continuation page of the GIS catalog; lower standalone signal."
+  - page: 106
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: diagram
+    quality: high
+    summary: SOFTWARE — GIS — Ranking slide presenting the 11-row ranking matrix legend and weighting of Primary/Secondary/Tertiary targets (Walmart Supercentre, Home Depot, Costco, Hospital, Higher education).
+    key_concepts:
+      - Ranking matrix
+      - Primary Target
+      - Secondary Targets
+      - Tertiary Targets
+      - Walmart Supercentre
+      - sales per square foot
+      - weighting
+    category_mapping: "07"
+    existing_slide: GIS Engine
+    conversion_status: converted
+    conversion_priority: medium
+    new_slide_concept: ""
+    augments_existing: GIS Engine
+    notes: "Color-coded ranking matrix; strong investor-facing visual; augments GIS Engine."
+  - page: 107
+    chapter: Ch.5 Scaling and Interfaces
+    content_type: divider
+    quality: medium
+    summary: Section divider title slide reading SCALING AND INTERFACES.
+    key_concepts:
+      - Scaling
+      - Interfaces
+      - section divider
+    category_mapping: "06"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: "Blank divider; no content beyond the heading."
+  - page: 108
+    chapter: Ch.5 Scaling and Interfaces
+    content_type: sketch
+    quality: draft
+    summary: Handwritten Scaling diagram showing Individual / Group / Organization tiers and the progressive addition of Totebox OS, Interface OS, and Infrastructure (on-prem / leased server / public cloud) layers.
+    key_concepts:
+      - Scaling tiers
+      - Individual/Group/Organization
+      - Console OS
+      - Totebox OS
+      - Interface OS
+      - Infrastructure OS
+      - Virtualization
+      - on-prem/leased/cloud
+    category_mapping: "06"
+    existing_slide: Scaling — Composition
+    conversion_status: converted
+    conversion_priority: high
+    new_slide_concept: ""
+    augments_existing: Scaling — Composition
+    notes: "Handwritten source sketch; the canonical sketch behind both Scaling — Tiers and Scaling — Composition; high signal on composition story."
+  - page: 109
+    chapter: Ch.5 Scaling and Interfaces
+    content_type: sketch
+    quality: draft
+    summary: Hand-drawn DESIGN SYSTEM — Interface OS — Multiple Totebox Archives sketch showing a Command Center fanning out to four Toteboxes with the note that the Command Center is the Totebox aggregator.
+    key_concepts:
+      - Command Center
+      - Totebox aggregation
+      - multiple archives
+      - Interface OS
+      - OrchestrationOS
+    category_mapping: "06"
+    existing_slide: Multiple Archives
+    conversion_status: converted
+    conversion_priority: high
+    new_slide_concept: ""
+    augments_existing: Multiple Archives
+    notes: "Handwritten source; 'Command Center is the Totebox aggregator' note maps to OrchestrationOS multi-archive aggregation."
+  - page: 110
+    chapter: Ch.5 Scaling and Interfaces
+    content_type: sketch
+    quality: draft
+    summary: Hand-drawn SYSTEMS DESIGN — Interface OS sketch listing the interface stack (Command Centre API, Input Machine, IoT Connect, Building ID Server, Data Engine, Data Marketplace, BIM Server, Media Kit, Private Git) with notes that interfaces aggregate Toteboxes and are the proprietary chargeable layer.
+    key_concepts:
+      - Interface OS
+      - Command Centre API
+      - Data Engine
+      - Data Marketplace
+      - BIM Server
+      - Building ID Server
+      - proprietary monetization
+      - aggregation
+    category_mapping: "04"
+    existing_slide: Interface OS
+    conversion_status: converted
+    conversion_priority: high
+    new_slide_concept: ""
+    augments_existing: Interface OS
+    notes: "Handwritten source; 'interfaces are what we can charge for and make proprietary' is a key paid-tier/business-model signal."
+  - page: 111
+    chapter: Ch.5 Scaling and Interfaces
+    content_type: sketch
+    quality: draft
+    summary: Hand-drawn DESIGN SYSTEM — Interface OS sketch mapping six API plumbing layers (Command Center, BIM, GIS Engine, Data Engine, IoT Connect, Building ID Server) to their consumer consoles plus notes on running on the private network and simultaneous multi-archive access.
+    key_concepts:
+      - plumbing/APIs
+      - GIS Engine
+      - Data Marketplace console
+      - Building Preferences console
+      - mobile app
+      - F-keys console
+      - private network
+      - multiple Totebox Archives
+    category_mapping: "04"
+    existing_slide: Interfaces
+    conversion_status: converted
+    conversion_priority: high
+    new_slide_concept: ""
+    augments_existing: Interfaces
+    notes: "Handwritten source; explicitly maps each interface API to its console; strong developer-platform signal."
+  - page: 112
+    chapter: Ch.7 Cross-System Rendering Design
+    content_type: photo
+    quality: medium
+    summary: SYSTEMS DESIGN — Totebox Orchestration slide showing a screenshot of the Kry10 (KOS) website describing a seL4-microkernel, zero-trust, Trust-but-Isolate operating system for mission-critical connected devices.
+    key_concepts:
+      - seL4
+      - Kry10 / KOS
+      - Trust but Isolate
+      - zero trust
+      - formal verification
+      - Erlang BEAM
+      - microkernel
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: high
+    new_slide_concept: "seL4 Microkernel Rationale — Verified Isolation Substrate (Moonshot)"
+    augments_existing: ""
+    notes: "Third-party Kry10 website screenshot used as reference; genuine gap — no JW4 slide covers the seL4 moonshot rationale; high investor/developer signal."

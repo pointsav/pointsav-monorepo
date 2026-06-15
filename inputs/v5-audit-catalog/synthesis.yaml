@@ -1,0 +1,395 @@
+summary:
+  total_v5_pages: 141
+  already_converted: 78
+  pending_high: 16
+  pending_medium: 16
+  pending_low: 13
+  skip: 18
+
+capacity:
+  "01": {current: 9, max: 15, slots: 6}
+  "02": {current: 8, max: 15, slots: 7}
+  "03": {current: 6, max: 15, slots: 9}
+  "04": {current: 3, max: 15, slots: 12}
+  "05": {current: 3, max: 15, slots: 12}
+  "06": {current: 3, max: 15, slots: 12}
+  "07": {current: 5, max: 15, slots: 10}
+
+# priority_list — HIGH priority first; within a priority, most-slots-remaining category first.
+# V5 pages covering the same concept are merged into ONE entry. Per-category slot caps respected.
+# New-slide picks: 04 +5 (slots 12), 06 +4 (slots 12), 05 +1 (slots 12), 07 +5 (slots 10),
+# 03 +3 (slots 9), 01 +2 (slots 6), 02 +0 (no high/med new-slide gaps; covered by augments).
+priority_list:
+  # ---------- HIGH PRIORITY ----------
+  - rank: 1
+    category: "04"
+    category_name: "Integration & Data Portability"
+    new_slide_title: "Economic Model — Decentralized Orchestration, Auth-as-Permissions, Freely Transferable Archives"
+    conversion_type: "new_slide"
+    augments: null
+    source_pages: [28]
+    conversion_priority: "high"
+    rationale: "No JW4 slide frames the three-pillar economic/system-design thesis; EU Data Act portability tailwind; top investor signal."
+    research_links:
+      - url: "https://eur-lex.europa.eu/eli/reg/2023/2854/oj/eng"
+        title: "Regulation (EU) 2023/2854 (Data Act) — fair access to and use of data"
+      - url: "https://link.springer.com/article/10.1007/s10257-024-00692-0"
+        title: "Assessing the value of decentralized and interoperable data storage for service providers"
+      - url: "https://www.gartner.com/en/documents/3976113"
+        title: "A Guidance Framework for Managing Vendor Lock-In Risks in Cloud IaaS (Gartner)"
+
+  - rank: 2
+    category: "04"
+    category_name: "Integration & Data Portability"
+    new_slide_title: "Communications Services — Maildir Flat-File (email/chat/calendar/conferencing)"
+    conversion_type: "new_slide"
+    augments: null
+    source_pages: [140]
+    conversion_priority: "high"
+    rationale: "Concrete WORM flat-file record model (one-file-per-message, one-Totebox-per-person); strong developer signal; no JW4 communications slide."
+    research_links:
+      - url: "https://en.wikipedia.org/wiki/Maildir"
+        title: "Maildir — flat-file mail storage format (D. J. Bernstein, qmail)"
+      - url: "https://doc.dovecot.org/2.4.0/core/config/mailbox/formats/maildir.html"
+        title: "Maildir Mailbox Format — Dovecot documentation"
+
+  - rank: 3
+    category: "06"
+    category_name: "Multi-Entity Consolidation"
+    new_slide_title: "Deployment Tiers Matrix — SaaS/PaaS/IaaS across tenants (Managed/Hosted/On-Prem/Self-Hosted)"
+    conversion_type: "new_slide"
+    augments: null
+    source_pages: [114]
+    conversion_priority: "high"
+    rationale: "Dense commercial-packaging matrix of the deployment tiers; high investor signal; no JW4 equivalent."
+    research_links:
+      - url: "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-145.pdf"
+        title: "NIST SP 800-145: The NIST Definition of Cloud Computing"
+      - url: "https://www.highalpha.com/saas-benchmarks/2024"
+        title: "2024 SaaS Benchmarks Report (High Alpha / OpenView)"
+
+  - rank: 4
+    category: "06"
+    category_name: "Multi-Entity Consolidation"
+    new_slide_title: "Totebox Orchestration — Three-Layer Delivery / Edge / Network Architecture"
+    conversion_type: "new_slide"
+    augments: null
+    source_pages: [115]
+    conversion_priority: "high"
+    rationale: "Canonical org-chart of the orchestration stack (Delivery / Edge Computing / Private Network) with MBA footnote; central platform-architecture slide."
+    research_links:
+      - url: "https://csrc.nist.gov/pubs/sp/800/207/a/final"
+        title: "NIST SP 800-207A: ZTA Model for Access Control in Multi-Cloud Environments"
+      - url: "https://spiffe.io/docs/latest/spiffe-specs/spiffe/"
+        title: "SPIFFE: Secure Production Identity Framework for Everyone — Specification"
+
+  - rank: 5
+    category: "07"
+    category_name: "Platform Foundation"
+    new_slide_title: "Platform OS Matrix — Nine Operating Systems by Tier and Licensing"
+    conversion_type: "new_slide"
+    augments: null
+    source_pages: [54]
+    conversion_priority: "high"
+    rationale: "Single matrix of all nine OS layers with open-source/proprietary licensing; foundational platform overview; no JW4 equivalent."
+    research_links:
+      - url: "https://sel4.systems/About/seL4-whitepaper.pdf"
+        title: "The seL4 Microkernel — An Introduction (seL4 Foundation whitepaper)"
+      - url: "https://en.wikipedia.org/wiki/Open-core_model"
+        title: "Open-core model — definition, structure, and exemplars (GitLab, Grafana)"
+
+  - rank: 6
+    category: "07"
+    category_name: "Platform Foundation"
+    new_slide_title: "seL4 Kernel Foundation — Verified Microkernel for the Totebox Archive"
+    conversion_type: "new_slide"
+    augments: null
+    source_pages: [61, 112]
+    conversion_priority: "high"
+    rationale: "Merges the two seL4 reference pages (sel4.systems + Kry10/KOS) into one verified-microkernel moonshot slide; formal-verification differentiator; high developer + investor signal."
+    research_links:
+      - url: "https://dl.acm.org/doi/10.1145/1629575.1629596"
+        title: "seL4: Formal Verification of an OS Kernel (Klein et al., SOSP '09)"
+      - url: "https://sel4.systems/Research/pdfs/comprehensive-formal-verification-os-microkernel.pdf"
+        title: "Comprehensive Formal Verification of an OS Microkernel (Klein et al., ACM TOCS)"
+      - url: "https://arxiv.org/pdf/2310.17046"
+        title: "Proving the Absence of Microarchitectural Timing Channels (seL4 time protection)"
+
+  - rank: 7
+    category: "07"
+    category_name: "Platform Foundation"
+    new_slide_title: "GIS Engine Stack — PostGIS + QGIS + OpenStreetMap Co-location Pipeline"
+    conversion_type: "new_slide"
+    augments: "GIS Engine"
+    source_pages: [91]
+    conversion_priority: "high"
+    rationale: "Names the actual GIS build stack; existing GIS Engine slide is a concept stub — this fills the technical/developer gap."
+    research_links:
+      - url: "https://www.gartner.com/en/documents/5863580"
+        title: "Gartner — Forecast Analysis: Sovereign Cloud IaaS, Worldwide"
+
+  - rank: 8
+    category: "07"
+    category_name: "Platform Foundation"
+    new_slide_title: "Co-location Cluster Methodology — Degree Tiers and Distance Thresholds"
+    conversion_type: "new_slide"
+    augments: "GIS Engine"
+    source_pages: [95, 96]
+    conversion_priority: "high"
+    rationale: "Defines the cluster-tier algorithm (1.0/5.0 km, first-to-fifth degree) plus its ranking-matrix visual; underpins the GIS product; no JW4 slide covers the cluster math. Merges methodology page with its ranking-matrix companion."
+    research_links:
+      - url: "https://www.gartner.com/en/documents/5863580"
+        title: "Gartner — Forecast Analysis: Sovereign Cloud IaaS, Worldwide"
+
+  - rank: 9
+    category: "07"
+    category_name: "Platform Foundation"
+    new_slide_title: "Cross-System Rendering — Native Terminal Stack (Ghostty / Kitty Graphics Protocol)"
+    conversion_type: "new_slide"
+    augments: null
+    source_pages: [125, 126]
+    conversion_priority: "high"
+    rationale: "Merges Ghostty/libghostty and Kitty-graphics-protocol reference pages into one rendering-substrate slide; no JW4 slide covers the terminal-rendering substrate behind cross-system rendering."
+    research_links:
+      - url: "https://arxiv.org/pdf/1911.06260"
+        title: "A Security Perspective on Unikernels (Talbot et al.)"
+
+  - rank: 10
+    category: "03"
+    category_name: "System of Record"
+    new_slide_title: "WORM Record Format — Database vs Flat-File System (File-Name-as-Reference)"
+    conversion_type: "new_slide"
+    augments: "Bookkeeping"
+    source_pages: [88, 68]
+    conversion_priority: "high"
+    rationale: "Core ToteboxOS WORM concept (file names replace DB reference numbers; Chart-of-Accounts filenames). Merges the DB-vs-flat-file framing (p88) with the worked Chart-of-Accounts filename example (p68). No JW4 slide."
+    research_links:
+      - url: "https://www.sec.gov/investment/amendments-electronic-recordkeeping-requirements-broker-dealers"
+        title: "Amendments to Electronic Recordkeeping Requirements for Broker-Dealers (Rule 17a-4)"
+      - url: "https://www.finra.org/rules-guidance/key-topics/books-records"
+        title: "FINRA Rule 4511 — Books and Records General Requirements"
+      - url: "https://datatracker.ietf.org/doc/html/rfc6920"
+        title: "RFC 6920 — Naming Things with Hashes"
+
+  - rank: 11
+    category: "03"
+    category_name: "System of Record"
+    new_slide_title: "Totebox OS File System and Partition Layout"
+    conversion_type: "new_slide"
+    augments: "Totebox Archive"
+    source_pages: [80]
+    conversion_priority: "high"
+    rationale: "Partition layout (R=Recovery, OS, Sx container partitions; best-fit DB/FS per service); developer signal on the WORM file-system substrate; no JW4 slide."
+    research_links:
+      - url: "https://www.iso.org/standard/74338.html"
+        title: "ISO 14641:2018 — Electronic Document Management: Preservation of Electronic Documents"
+      - url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32023R2854"
+        title: "Regulation (EU) 2023/2854 (Data Act) — Chapter VI, Switching Between Data Processing Services"
+
+  - rank: 12
+    category: "01"
+    category_name: "Developer Platform"
+    new_slide_title: "Licensing Model — Open-Source Base Nodes vs Proprietary Tiers"
+    conversion_type: "new_slide"
+    augments: null
+    source_pages: [18]
+    conversion_priority: "high"
+    rationale: "FOSS-vs-proprietary licensing split (which OS layers are open source vs paid); open-core investor signal; no JW4 coverage."
+    research_links:
+      - url: "https://en.wikipedia.org/wiki/Open-core_model"
+        title: "Open-core model — definition, structure, and exemplars (GitLab, Grafana)"
+      - url: "https://www.gartner.com/en/documents/5028931"
+        title: "Gartner — Consult the Board: Use of Open-Source Software"
+
+  - rank: 13
+    category: "05"
+    category_name: "Machine-Based Authorization"
+    new_slide_title: "Registry Token — Access Record + Pairing As Permissions"
+    conversion_type: "new_slide"
+    augments: "Pairing as Permissions"
+    source_pages: [6]
+    conversion_priority: "high"
+    rationale: "Registry-token / IP-to-permission access-record mapping; no-raw-data rule; auditable-by-design MBA registry concept with no dedicated JW4 slide."
+    research_links:
+      - url: "https://www.ietf.org/rfc/rfc8705.html"
+        title: "RFC 8705: OAuth 2.0 Mutual-TLS Client Authentication and Certificate-Bound Access Tokens"
+      - url: "https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-63b.pdf"
+        title: "NIST SP 800-63B: Digital Identity Guidelines — Authentication and Lifecycle Management"
+      - url: "https://www.sec.gov/investment/amendments-electronic-recordkeeping-requirements-broker-dealers"
+        title: "SEC Amendments to Electronic Recordkeeping Requirements (Rule 17a-4)"
+
+  # ---------- MEDIUM PRIORITY ----------
+  - rank: 14
+    category: "04"
+    category_name: "Integration & Data Portability"
+    new_slide_title: "Data Portability Reference — Solid / Pods Precedent"
+    conversion_type: "new_slide"
+    augments: "Products & Services"
+    source_pages: [82]
+    conversion_priority: "medium"
+    rationale: "Closest standards precedent (W3C Solid user-owned pods, app/data separation) for freely transferable application-independent archives."
+    research_links:
+      - url: "https://solidproject.org/TR/protocol"
+        title: "Solid Protocol — W3C Solid Community Group technical report"
+      - url: "https://gdpr-info.eu/art-20-gdpr/"
+        title: "Art. 20 GDPR — Right to data portability"
+
+  - rank: 15
+    category: "04"
+    category_name: "Integration & Data Portability"
+    new_slide_title: "F-Keys Console — Search (Structured Document Query Surface)"
+    conversion_type: "new_slide"
+    augments: "Interface OS"
+    source_pages: [85, 86]
+    conversion_priority: "medium"
+    rationale: "Structured filter/search UX for the F-keys console (Federal Register worked example); merges the two screenshot pages into one search-surface slide."
+    research_links:
+      - url: "https://doc.dovecot.org/2.4.0/core/config/mailbox/formats/maildir.html"
+        title: "Maildir Mailbox Format — Dovecot documentation"
+
+  - rank: 16
+    category: "04"
+    category_name: "Integration & Data Portability"
+    new_slide_title: "GIS Engine — Catchment Data Sourcing and Interactive Delivery"
+    conversion_type: "new_slide"
+    augments: "GIS Engine"
+    source_pages: [92]
+    conversion_priority: "medium"
+    rationale: "O-D catchment data economics ($50k-$150k/yr) and GeoNode interactive-layer delivery model; data-portability/integration angle on the GIS product."
+    research_links: []
+
+  - rank: 17
+    category: "06"
+    category_name: "Multi-Entity Consolidation"
+    new_slide_title: "Scaling Option A — Interface vs Infrastructure (Owner/Operator Console Paths)"
+    conversion_type: "new_slide"
+    augments: "Scaling — Composition"
+    source_pages: [113]
+    conversion_priority: "medium"
+    rationale: "Owner vs Operator console paths into F*Keys over PointSav Infrastructure; clarifies the interface-vs-infrastructure scaling distinction."
+    research_links:
+      - url: "https://csrc.nist.gov/pubs/sp/800/63/b/4/final"
+        title: "NIST SP 800-63B-4: Digital Identity Guidelines — Authentication and Authenticator Management"
+
+  - rank: 18
+    category: "01"
+    category_name: "Developer Platform"
+    new_slide_title: "Documentation Standards — UML, C4, 4+1, ISO/IEC 42010"
+    conversion_type: "new_slide"
+    augments: "Design System"
+    source_pages: [23]
+    conversion_priority: "medium"
+    rationale: "Concrete documentation-standards conformance (ISO/IEC 42010, C4, 4+1, UML) not in JW4; procurement and developer signal."
+    research_links:
+      - url: "https://www.iso.org/standard/74393.html"
+        title: "ISO/IEC/IEEE 42010:2022 — Architecture description"
+      - url: "https://c4model.com/"
+        title: "The C4 model for visualising software architecture (Simon Brown)"
+      - url: "https://www.computer.org/csdl/magazine/so/1995/06/s6042/13rRUxBJhBm"
+        title: "Architectural Blueprints — The '4+1' View Model of Software Architecture (Kruchten)"
+
+  - rank: 19
+    category: "07"
+    category_name: "Platform Foundation"
+    new_slide_title: "Co-location Investment Thesis — Hybrid Model and Primary Targets"
+    conversion_type: "new_slide"
+    augments: "Use Cases"
+    source_pages: [94]
+    conversion_priority: "medium"
+    rationale: "Investor-facing co-location thesis (hybrid 2/20 structure, Walmart Supercentre primary target) framing the GIS use case; market-context slide."
+    research_links:
+      - url: "https://www.gartner.com/en/documents/5863580"
+        title: "Gartner — Forecast Analysis: Sovereign Cloud IaaS, Worldwide"
+
+  - rank: 20
+    category: "01"
+    category_name: "Developer Platform"
+    new_slide_title: "Coding Guidelines — Power of 10 Safety-Critical Rules"
+    conversion_type: "new_slide"
+    augments: "Design System"
+    source_pages: [26]
+    conversion_priority: "medium"
+    rationale: "Power-of-10 safety-critical coding standard; ties to the seL4 verified-primitives posture; concrete developer signal not in JW4."
+    research_links:
+      - url: "https://spinroot.com/gerard/pdf/P10.pdf"
+        title: "The Power of Ten — Rules for Developing Safety-Critical Code (Holzmann, NASA/JPL)"
+
+  - rank: 21
+    category: "04"
+    category_name: "Integration & Data Portability"
+    new_slide_title: "Consistent Documentation Navigation Across Deployments (Marketing to Distribution Flow)"
+    conversion_type: "new_slide"
+    augments: null
+    source_pages: [49]
+    conversion_priority: "medium"
+    rationale: "Cross-deployment UX-consistency concept (Landing-to-Newsroom, Marketing-to-Distribution) consistent across MediaKit/PrivateGit OS; no JW4 slide."
+    research_links:
+      - url: "https://www.writethedocs.org/guide/docs-as-code/"
+        title: "Docs as Code — Write the Docs Guide"
+
+  - rank: 22
+    category: "01"
+    category_name: "Developer Platform"
+    new_slide_title: "Interface Patterns — MediaKit & PrivateGit"
+    conversion_type: "augment_existing"
+    augments: "Design System"
+    source_pages: [36]
+    conversion_priority: "medium"
+    rationale: "MediaKit topic templates + PrivateGit repositories/elements; modest developer signal — fold into Design System rather than a standalone slide (01 slots filling)."
+    research_links:
+      - url: "https://www.writethedocs.org/guide/docs-as-code/"
+        title: "Docs as Code — Write the Docs Guide"
+
+# Lower-ranked MEDIUM items below cap or routed to augment (not new slides):
+#   p99 Onboarding White Paper, p100 Potential Engagements -> augment How We Select Contributors / Use Cases
+#   p127/128/129 Franklin TN case study -> augment GIS Engine
+#   p139 Workplace OS Network Access Client -> augment SMB Environment
+
+augment_existing:
+  - existing_slide: "Pairing as Permissions"
+    source_pages: [6, 28]
+    content_to_add: "Registry Token access-record mechanism (device-IP → permission mapping, no-raw-data rule, auditable-by-design) and the three-pillar economic model (decentralized orchestration, auth-as-permissions, freely transferable archives)."
+
+  - existing_slide: "Bookkeeping"
+    source_pages: [88, 68]
+    content_to_add: "Flat-file WORM record model: file names replace database reference numbers; Input Machine assigns Chart-of-Accounts-derived filenames (e.g. BOOKKEEPING_TITLECO1_2025_03_07_Invoice_Property Management_Snow Removal.PDF); duplicate-record-across-archives behavior."
+
+  - existing_slide: "Totebox Archive"
+    source_pages: [80]
+    content_to_add: "Totebox OS partition layout (R=Recovery / OS / S1-S4 service partitions) on a micro VM with best-fit database and file system selected per service."
+
+  - existing_slide: "GIS Engine"
+    source_pages: [91, 92, 96, 102, 103, 104, 105, 106, 127, 128, 129, 130]
+    content_to_add: "Build stack (PostGIS/QGIS/OpenStreetMap/GeoNode), O-D catchment data economics, the 11-row ranking matrix, the iteration-1/2 algorithm pipeline, and the Franklin TN / Reid Crowther OD worked examples as enriching detail."
+
+  - existing_slide: "Interface OS"
+    source_pages: [85, 86, 110]
+    content_to_add: "F-keys console structured Search surface (filter fields, CSV/JSON export) and the proprietary chargeable interface stack (Command Centre API, Data Engine, Data Marketplace, BIM Server, Building ID Server)."
+
+  - existing_slide: "Interfaces"
+    source_pages: [111, 75]
+    content_to_add: "Per-API-to-console plumbing map (Command Center, BIM, GIS Engine, Data Engine, IoT Connect, Building ID Server) and role-to-console mapping (Architects/Engineers→BIM, Real Estate→GIS, Lawyers/Accountants→limited F*Keys); private-network, multi-archive simultaneous access."
+
+  - existing_slide: "Design System"
+    source_pages: [23, 26, 31, 36, 37, 38, 39, 40, 41, 42]
+    content_to_add: "Documentation standards (ISO/IEC 42010, C4, 4+1, UML), Power-of-10 coding rules, Media Assets Directory, wireframe/component manifests, and topic-template exemplars."
+
+  - existing_slide: "How We Select Contributors"
+    source_pages: [99, 100]
+    content_to_add: "Onboarding White Paper collaborator approval process (board approval → internal registrar) and the numbered Potential Engagements list (co-location datasets, Woodfine Parking Structures, regional airports)."
+
+  - existing_slide: "Use Cases"
+    source_pages: [94, 97, 98, 100]
+    content_to_add: "Co-location investment thesis (hybrid model, primary targets), Optimum Mosaic marketing-kit / Transaction Summary Reports, per-country site-selection financing schedule."
+
+  - existing_slide: "SMB Environment"
+    source_pages: [139]
+    content_to_add: "Workplace OS as the network-access client (workstations / desktop environment + mobile app) required to reach the private network."
+
+  - existing_slide: "Scaling — Tiers"
+    source_pages: [114]
+    content_to_add: "If the Deployment Tiers Matrix (rank 3) is not built as a standalone slide, fold the SaaS/PaaS/IaaS × Managed/Hosted/On-Prem/Self-Hosted commercial packaging here."
+
+  - existing_slide: "Contributors"
+    source_pages: [17, 19]
+    content_to_add: "Perpetual-Beta → Stable Release (LTS) pipeline diagram and commercial/community support channels (commercial support, mailing lists, bug reports, IRC)."

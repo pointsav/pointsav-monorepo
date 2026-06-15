@@ -1,0 +1,219 @@
+chapter: "Ch.4 Totebox Services"
+pages:
+  - page: 54
+    content_type: "diagram"
+    quality: "high"
+    summary: "Products matrix laying out all nine operating systems (Delivery/Orchestration/Private Network tiers) with kernel-to-dependencies rows and licensing."
+    key_concepts: ["operating systems matrix", "Workplace OS", "Console OS", "Orchestration OS", "Totebox OS", "Network Admin OS", "kernel", "hypervisor", "open source vs proprietary"]
+    category_mapping: "07"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Platform OS Matrix — Nine Operating Systems by Tier and Licensing"
+    augments_existing: ""
+    research_links:
+      - url: "https://sel4.systems/About/seL4-whitepaper.pdf"
+        title: "The seL4 Microkernel — An Introduction (seL4 Foundation whitepaper)"
+      - url: "https://en.wikipedia.org/wiki/Open-core_model"
+        title: "Open-core model — definition, structure, and exemplars (GitLab, Grafana)"
+    notes: "Single matrix of all nine OS components with licensing model; high investor/developer signal; no JW4 equivalent."
+
+  - page: 55
+    content_type: "diagram"
+    quality: "high"
+    summary: "Totebox Services matrix detailing archive servers (Email, Chat, Calendar, Conferencing, FTP, RSS) and databases (Minute Book, Bookkeeping, People, Businesses, Places, Parking Lots, IoT Data)."
+    key_concepts: ["Totebox Services", "Totebox OS", "archive servers", "databases", "bookkeeping", "IoT Data", "minute book"]
+    category_mapping: "04"
+    existing_slide: "Totebox Services (Containers)"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Totebox Services (Containers)"
+    research_links: []
+    notes: "Detailed server+database service grid; enriches converted Totebox Services slides."
+
+  - page: 56
+    content_type: "diagram"
+    quality: "high"
+    summary: "Totebox Services libraries-and-software matrix (IoT Devices/Sensors libraries; Workplace OS software — Browser, Word Processor, Spreadsheet, PDF Viewer, File Manager)."
+    key_concepts: ["Totebox Services", "libraries", "IoT Devices", "IoT Sensors", "Workplace OS software", "spreadsheet", "PDF viewer", "file manager"]
+    category_mapping: "04"
+    existing_slide: "Totebox Services (Containers)"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Totebox Services (Containers)"
+    research_links: []
+    notes: "Companion grid to p55; Workplace OS apps could inform Operator Workspace (02)."
+
+  - page: 59
+    content_type: "diagram"
+    quality: "medium"
+    summary: "Hand-drawn three-VM Products & Services diagram (Console/Interface/Totebox OS) enumerating 25 numbered products and services."
+    key_concepts: ["Console OS", "Interface OS", "Totebox OS", "Products and Services", "VM", "Bookkeeping", "IoT Device Library", "GIS Engine"]
+    category_mapping: "04"
+    existing_slide: "Products & Services"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Totebox Services (Ladder)"
+    research_links: []
+    notes: "Overlaps with Totebox Services ladder/containers slides."
+
+  - page: 76
+    content_type: "divider"
+    quality: "high"
+    summary: "Section divider title page reading TOTEBOX SERVICES."
+    key_concepts: ["Totebox Services", "section divider"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Blank divider page."
+
+  - page: 77
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn Toteboxes spectrum (VM / micro VM / nano VM / unikernel) with a Freely Transferable service ladder packaged as Totebox Services on a micro VM."
+    key_concepts: ["VM", "micro VM", "nano VM", "unikernel", "Freely Transferable", "Totebox Services", "minute book", "IoT devices/sensors"]
+    category_mapping: "04"
+    existing_slide: "Totebox Services (Ladder)"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Totebox Services (Ladder)"
+    research_links: []
+    notes: "Source sketch for converted Totebox Services (Ladder) slide."
+
+  - page: 79
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn Totebox Services diagram (a Totebox containing multiple service containers; Firecracker AWS micro-VM example)."
+    key_concepts: ["Totebox Services", "containers", "micro VM", "nano VM", "Firecracker", "unikernel", "prototype", "freely transferable"]
+    category_mapping: "04"
+    existing_slide: "Totebox Services (Containers)"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: "Totebox Services (Containers)"
+    research_links: []
+    notes: "Source sketch for converted Totebox Services (Containers) slide; prototype-to-unikernel build path."
+
+  - page: 82
+    content_type: "photo"
+    quality: "low"
+    summary: "Browser screenshot of the SolidOS Databrowser Frontend user-guide describing Solid separating user data from applications."
+    key_concepts: ["SolidOS", "Solid", "data separation", "Solid Pods", "data portability", "databrowser frontend"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Data Portability Reference — Solid / Pods Precedent"
+    augments_existing: "Products & Services"
+    research_links:
+      - url: "https://solidproject.org/TR/protocol"
+        title: "Solid Protocol — W3C Solid Community Group technical report"
+      - url: "https://gdpr-info.eu/art-20-gdpr/"
+        title: "Art. 20 GDPR — Right to data portability"
+    notes: "External reference screenshot; supports Freely Transferable Standard / data-portability narrative."
+
+  - page: 83
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Hand-drawn DATA comparison of three Totebox Archive templates (Personnel vs Corporate vs Real Property) explaining why they must be separate archives."
+    key_concepts: ["Totebox Archive templates", "Personnel", "Corporate", "Real Property", "record keeping", "freely transferable", "real asset managers"]
+    category_mapping: "04"
+    existing_slide: "Products & Services"
+    conversion_status: "converted"
+    conversion_priority: "medium"
+    new_slide_concept: ""
+    augments_existing: "Products & Services"
+    research_links: []
+    notes: "Archive template separation rationale; enriches Products & Services and the Totebox Archive concept."
+
+  - page: 85
+    content_type: "mixed"
+    quality: "high"
+    summary: "Federal Register document search form shown as a worked example of an F-keys console Search surface with structured filter fields."
+    key_concepts: ["F-keys console", "Search", "Federal Register", "document category filter", "structured query", "CSV/Excel/JSON export"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "F-Keys Console — Search (structured document query surface)"
+    augments_existing: "Interface OS"
+    research_links:
+      - url: "https://doc.dovecot.org/2.4.0/core/config/mailbox/formats/maildir.html"
+        title: "Maildir Mailbox Format — Dovecot documentation"
+    notes: "Reference screenshot illustrating console search-filter UX."
+
+  - page: 86
+    content_type: "mixed"
+    quality: "high"
+    summary: "Federal Register homepage screenshot illustrating the landing/results view of an F-keys console Search experience."
+    key_concepts: ["F-keys console", "Search", "Federal Register", "current issue", "public inspection", "full-text search"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "low"
+    new_slide_concept: ""
+    augments_existing: "Interface OS"
+    research_links: []
+    notes: "Near-duplicate intent with p.85; augments rather than warrants its own slide."
+
+  - page: 87
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn sketch of Totebox Services as a micro-VM Totebox with a stacked service ladder (minutebook, bookkeeping, geo-spatial, communications, calendar, IoT devices)."
+    key_concepts: ["Totebox Services", "micro VM", "minutebook", "bookkeeping", "geo-spatial", "communications", "IoT Devices", "unified programming language"]
+    category_mapping: "04"
+    existing_slide: "Totebox Services (Ladder)"
+    conversion_status: "converted"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Source for converted Totebox Services (Ladder) slide; future rewrite with unified language/protocols."
+
+  - page: 88
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn two-column comparison of Database versus File System storage for bookkeeping/minutebook, with input machine assigning file names."
+    key_concepts: ["Database vs File System", "chart of accounts", "flat-file", "PDF/ODT/ODS files", "no reference numbers", "input machine file naming"]
+    category_mapping: "03"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "WORM Record Format — Database vs Flat-File System (file-name-as-reference)"
+    augments_existing: "Bookkeeping"
+    research_links:
+      - url: "https://www.sec.gov/investment/amendments-electronic-recordkeeping-requirements-broker-dealers"
+        title: "Amendments to Electronic Recordkeeping Requirements for Broker-Dealers (Rule 17a-4)"
+      - url: "https://www.finra.org/rules-guidance/key-topics/books-records"
+        title: "FINRA Rule 4511 — Books and Records General Requirements"
+      - url: "https://www.iso.org/standard/74338.html"
+        title: "ISO 14641:2018 — Electronic Document Management"
+    notes: "Core ToteboxOS WORM concept (file names replace DB reference numbers); no dedicated JW4 slide."
+
+  - page: 140
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn Services — Communications page (email Maildir, each email saved as a file; chat, calendar, conferencing; one Totebox per person, each with its own server)."
+    key_concepts: ["Communications", "Maildir", "flat-file", "email-as-file", "chat", "calendar", "conferencing", "one Totebox per person"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Communications Services — Maildir Flat-File (email/chat/calendar/conferencing)"
+    augments_existing: ""
+    research_links:
+      - url: "https://en.wikipedia.org/wiki/Maildir"
+        title: "Maildir — flat-file mail storage format (D. J. Bernstein, qmail)"
+      - url: "https://doc.dovecot.org/2.4.0/core/config/mailbox/formats/maildir.html"
+        title: "Maildir Mailbox Format — Dovecot documentation"
+      - url: "https://www.sec.gov/investment/amendments-electronic-recordkeeping-requirements-broker-dealers"
+        title: "SEC Amendments to Electronic Recordkeeping Requirements (Rule 17a-4)"
+    notes: "Concrete WORM flat-file record-format detail; strong developer signal; no dedicated JW4 communications slide."

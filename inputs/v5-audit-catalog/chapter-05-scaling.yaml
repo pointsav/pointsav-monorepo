@@ -1,0 +1,147 @@
+chapter: "Ch.5 Scaling and Interfaces"
+pages:
+  - page: 28
+    content_type: "sketch"
+    quality: "medium"
+    summary: "Handwritten System Design / Economic Model slide naming three pillars: decentralized orchestration, authentication as permissions, freely transferable Totebox archives."
+    key_concepts: ["system design", "decentralized orchestration", "authentication as permissions", "freely transferable", "Totebox archives", "MBA", "Freely Transferable Standard"]
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Economic Model — Decentralized Orchestration, Auth-as-Permissions, Freely Transferable Archives"
+    augments_existing: "Pairing as Permissions"
+    research_links:
+      - url: "https://eur-lex.europa.eu/eli/reg/2023/2854/oj/eng"
+        title: "Regulation (EU) 2023/2854 (Data Act)"
+      - url: "https://link.springer.com/article/10.1007/s10257-024-00692-0"
+        title: "Assessing the value of decentralized and interoperable data storage for service providers"
+      - url: "https://www.gartner.com/en/documents/3976113"
+        title: "A Guidance Framework for Managing Vendor Lock-In Risks in Cloud IaaS (Gartner)"
+    notes: "Three core differentiators; no single JW4 slide frames the economic/system-design thesis. Spans Cat 04/05/06."
+
+  - page: 107
+    content_type: "divider"
+    quality: "medium"
+    summary: "Section divider title slide reading SCALING AND INTERFACES."
+    key_concepts: ["Scaling", "Interfaces", "section divider"]
+    category_mapping: "06"
+    existing_slide: ""
+    conversion_status: "skip"
+    conversion_priority: "skip"
+    new_slide_concept: ""
+    augments_existing: ""
+    research_links: []
+    notes: "Blank divider."
+
+  - page: 108
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Handwritten Scaling diagram (Individual / Group / Organization tiers; progressive addition of Totebox OS, Interface OS, Infrastructure on-prem/leased/cloud)."
+    key_concepts: ["Scaling tiers", "Individual/Group/Organization", "Console OS", "Totebox OS", "Interface OS", "Infrastructure OS", "on-prem/leased/cloud"]
+    category_mapping: "06"
+    existing_slide: "Scaling — Composition"
+    conversion_status: "converted"
+    conversion_priority: "high"
+    new_slide_concept: ""
+    augments_existing: "Scaling — Composition"
+    research_links: []
+    notes: "Canonical sketch behind both Scaling — Tiers and Scaling — Composition; high composition-story signal."
+
+  - page: 109
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn Interface OS — Multiple Totebox Archives sketch (Command Center fanning out to four Toteboxes; Command Center is the Totebox aggregator)."
+    key_concepts: ["Command Center", "Totebox aggregation", "multiple archives", "Interface OS", "OrchestrationOS"]
+    category_mapping: "06"
+    existing_slide: "Multiple Archives"
+    conversion_status: "converted"
+    conversion_priority: "high"
+    new_slide_concept: ""
+    augments_existing: "Multiple Archives"
+    research_links: []
+    notes: "Maps to OrchestrationOS multi-archive aggregation."
+
+  - page: 110
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn Interface OS sketch listing the interface stack (Command Centre API, Input Machine, IoT Connect, Building ID Server, Data Engine, Data Marketplace, BIM Server, Media Kit, Private Git); interfaces are the proprietary chargeable layer."
+    key_concepts: ["Interface OS", "Command Centre API", "Data Engine", "Data Marketplace", "BIM Server", "Building ID Server", "proprietary monetization", "aggregation"]
+    category_mapping: "04"
+    existing_slide: "Interface OS"
+    conversion_status: "converted"
+    conversion_priority: "high"
+    new_slide_concept: ""
+    augments_existing: "Interface OS"
+    research_links: []
+    notes: "interfaces are what we can charge for and make proprietary — key paid-tier/business-model signal."
+
+  - page: 111
+    content_type: "sketch"
+    quality: "draft"
+    summary: "Hand-drawn Interface OS sketch mapping six API plumbing layers to their consumer consoles; notes on private network and simultaneous multi-archive access."
+    key_concepts: ["plumbing/APIs", "GIS Engine", "Data Marketplace console", "Building Preferences console", "mobile app", "F-keys console", "private network", "multiple Totebox Archives"]
+    category_mapping: "04"
+    existing_slide: "Interfaces"
+    conversion_status: "converted"
+    conversion_priority: "high"
+    new_slide_concept: ""
+    augments_existing: "Interfaces"
+    research_links: []
+    notes: "Explicitly maps each interface API to its console; strong developer-platform signal."
+
+  - page: 113
+    content_type: "diagram"
+    quality: "high"
+    summary: "Option A scaling diagram (USER/OWNER and USER/OPERATOR paths into F*Keys Consoles; Totebox Archives and Command Centre API on PointSav Infrastructure)."
+    key_concepts: ["F*Keys Console", "Totebox Archive", "Command Centre API", "OWNER", "OPERATOR", "PointSav Infrastructure", "Interface vs Infrastructure"]
+    category_mapping: "06"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "medium"
+    new_slide_concept: "Scaling Option A — Interface vs Infrastructure (Owner/Operator console paths)"
+    augments_existing: "Scaling — Composition"
+    research_links:
+      - url: "https://csrc.nist.gov/pubs/sp/800/63/b/4/final"
+        title: "NIST SP 800-63B-4: Digital Identity Guidelines"
+    notes: "Header typo 'Infostructure' for Infrastructure; legal-entity list at top."
+
+  - page: 114
+    content_type: "diagram"
+    quality: "high"
+    summary: "Deployments matrix (five tenant columns under one PointSav F*Keys Console; SaaS/PaaS/IaaS tiers across Personnel/Corporate/Real Property archives on PointSav Infrastructure vs Self-Hosted)."
+    key_concepts: ["SaaS", "PaaS", "IaaS", "Virtual Machine", "Freely tradable", "Bootable disk image", "Command Centre", "Self-Hosted"]
+    category_mapping: "06"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Deployment Tiers Matrix — SaaS/PaaS/IaaS across tenants (Managed/Hosted/On-Prem/Self-Hosted)"
+    augments_existing: "Scaling — Tiers"
+    research_links:
+      - url: "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-145.pdf"
+        title: "NIST SP 800-145: The NIST Definition of Cloud Computing"
+      - url: "https://eur-lex.europa.eu/eli/reg/2023/2854/oj/eng"
+        title: "Regulation (EU) 2023/2854 (Data Act)"
+      - url: "https://www.highalpha.com/saas-benchmarks/2024"
+        title: "2024 SaaS Benchmarks Report (High Alpha / OpenView)"
+    notes: "Dense deployment-model matrix; high investor signal (commercial packaging of tiers)."
+
+  - page: 115
+    content_type: "diagram"
+    quality: "high"
+    summary: "Totebox Orchestration org-chart across three layers — Delivery (Workplace OS / F*Keys Console / Building App), Edge Computing (three minimalized-OS archives orbiting a Command Centre), Private Network (On-Prem / Dedicated Servers / Public Cloud)."
+    key_concepts: ["Totebox Orchestration", "Workplace OS", "F*Keys Console", "minimalized OS", "Command Centre", "machine-based authorization", "Edge Computing", "Private Network"]
+    category_mapping: "06"
+    existing_slide: ""
+    conversion_status: "pending"
+    conversion_priority: "high"
+    new_slide_concept: "Totebox Orchestration — three-layer delivery/edge/network architecture"
+    augments_existing: "Multiple Archives"
+    research_links:
+      - url: "https://csrc.nist.gov/pubs/sp/800/207/a/final"
+        title: "NIST SP 800-207A: ZTA Model for Multi-Cloud Environments"
+      - url: "https://spiffe.io/docs/latest/spiffe-specs/spiffe/"
+        title: "SPIFFE: Secure Production Identity Framework for Everyone — Specification"
+      - url: "https://arxiv.org/abs/2103.13333"
+        title: "A Multi-Tenant Framework for Cloud Container Services (Virtual-Cluster)"
+    notes: "DRAFT / Org Chart; MBA footnote explains single vs simultaneous multi-archive access via Command Centre API."

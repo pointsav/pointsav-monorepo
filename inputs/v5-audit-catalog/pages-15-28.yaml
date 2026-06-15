@@ -1,0 +1,274 @@
+pages:
+  - page: 15
+    chapter: Ch.1 Contributors
+    content_type: whitepaper
+    quality: high
+    summary: "Draft memo explaining the white-paper onboarding process by which potential collaborators are approved by the parent company board and added to the internal registrar."
+    key_concepts:
+      - white paper
+      - approved collaborators
+      - internal registrar
+      - board of directors
+      - onboarding
+      - Design-Build Requirements
+      - E. M. Forster
+    category_mapping: "01"
+    existing_slide: "How We Select Contributors"
+    conversion_status: converted
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: "How We Select Contributors"
+    notes: "Memo prose; closely related to the JW4 'How We Select Contributors' navigation/process slide. Page 1 of a 2-page white-paper process memo (continues p16)."
+  - page: 16
+    chapter: Ch.1 Contributors
+    content_type: whitepaper
+    quality: high
+    summary: "Continuation of the white-paper memo listing what the paper is NOT, potential engagements (wiki frameworks, content, editing), and document attachments."
+    key_concepts:
+      - Potential Engagements
+      - Corporate wiki
+      - Projects wiki
+      - white paper
+      - WCP Draft Prospectus
+      - Professional Centres LP
+      - Marketing Kit
+    category_mapping: "01"
+    existing_slide: "How We Select Contributors"
+    conversion_status: converted
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: "How We Select Contributors"
+    notes: "Page 2 of the white-paper process memo (continues from p15). Engagement list and attachments enrich the contributor-selection narrative."
+  - page: 17
+    chapter: Ch.1 Contributors
+    content_type: diagram
+    quality: high
+    summary: "Delivery-method flow diagram showing Git contributor disciplines feeding Perpetual Beta R&D from PointSav Information Systems, with Totebox Archives / Control / Interfaces / Assignments circles and Stable Release (LTS) to Workplace OS."
+    key_concepts:
+      - Git
+      - Perpetual Beta
+      - Stable Release (LTS)
+      - Totebox Archives
+      - Interfaces
+      - Workplace OS
+      - LTS
+      - Command Centre
+    category_mapping: "01"
+    existing_slide: "Contributors"
+    conversion_status: converted
+    conversion_priority: medium
+    new_slide_concept: ""
+    augments_existing: "Contributors"
+    notes: "Polished color flow diagram. Contributor list maps to the JW4 'Contributors' slide; the Perpetual-Beta/LTS release pipeline is additional signal that could augment the Contributors or Deployment slides."
+  - page: 18
+    chapter: Ch.1 Contributors
+    content_type: sketch
+    quality: draft
+    summary: "Handwritten sketch listing licensing agreements: open source for Totebox OS, Console OS, Workplace OS, and a separate proprietary line, under a Compliance header."
+    key_concepts:
+      - licensing
+      - open source
+      - proprietary
+      - ToteboxOS
+      - ConsoleOS
+      - Workplace OS
+      - compliance
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: high
+    new_slide_concept: "Licensing Model — Open-Source Base Nodes vs Proprietary Tiers"
+    augments_existing: ""
+    notes: "Handwritten draft. No JW4 coverage of the FOSS-vs-proprietary licensing split — high investor signal (which OS layers are open source vs paid). Genuine gap."
+  - page: 19
+    chapter: Ch.1 Contributors
+    content_type: sketch
+    quality: draft
+    summary: "Handwritten sketch listing support channels: commercial support, mailing lists, bug reports, and IRC, under a Community header."
+    key_concepts:
+      - commercial support
+      - mailing lists
+      - bug reports
+      - IRC
+      - community
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: low
+    new_slide_concept: "Support Channels — Commercial and Community"
+    augments_existing: "Contributors"
+    notes: "Handwritten draft. Commercial-support line has investor signal but content is thin; could augment Contributors/Deployment rather than warrant a standalone slide."
+  - page: 20
+    chapter: Ch.1 Contributors
+    content_type: sketch
+    quality: draft
+    summary: "Near-empty handwritten slide with only the heading TESTING and a Compliance header; no body content captured."
+    key_concepts:
+      - testing
+      - compliance
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: "Essentially blank placeholder — only the word TESTING and a Compliance box are legible. No usable content; skip."
+  - page: 21
+    chapter: Ch.2 Documentation
+    content_type: text
+    quality: high
+    summary: "Typeset Documentation section 2.4 Naming Conventions giving canonical names for Totebox Archives, Services, and Consoles and the outcome of avoiding DocumentServiceV2_Final drift."
+    key_concepts:
+      - Naming Conventions
+      - canonical names
+      - Totebox Archives
+      - Minutebook
+      - Bookkeeping
+      - F*Keys
+      - BIM Console
+      - Maps Console
+    category_mapping: "01"
+    existing_slide: "Naming Conventions"
+    conversion_status: converted
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: "Naming Conventions"
+    notes: "Clean typeset page; directly the source for the JW4 'Naming Conventions' slide (Cat 01)."
+  - page: 22
+    chapter: Ch.2 Documentation
+    content_type: sketch
+    quality: draft
+    summary: "Handwritten corporate-name brainstorm listing candidate names: PointSav Information System, Distributed System, Decentralized System, Cyber Physical, Digital System, Systems, and PointSav."
+    key_concepts:
+      - corporate name
+      - PointSav
+      - Information System
+      - Distributed System
+      - Decentralized System
+      - Cyber Physical
+      - Digital System
+    category_mapping: "01"
+    existing_slide: "Naming Conventions"
+    conversion_status: converted
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: "Naming Conventions"
+    notes: "Handwritten naming brainstorm. Background for the canonical-naming decision (PointSav Digital Systems); folds into the Naming Conventions slide rather than its own."
+  - page: 23
+    chapter: Ch.2 Documentation
+    content_type: sketch
+    quality: medium
+    summary: "Handwritten Documentation slide listing documentation methods: wireframes, UML, 4+1 architectural view model, C4 model, ISO/IEC 42010, and user guide/help/wiki/main page."
+    key_concepts:
+      - wireframes
+      - UML
+      - 4+1 view model
+      - C4 model
+      - ISO/IEC 42010
+      - user guide
+      - wiki
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: "Documentation Standards — UML, C4, 4+1, ISO/IEC 42010"
+    augments_existing: "Design System"
+    notes: "Legible handwriting. Concrete documentation-standards content (ISO/IEC 42010, C4, 4+1) not covered in JW4; developer signal. Candidate new slide or augment to Design System / docs."
+  - page: 24
+    chapter: Ch.2 Documentation
+    content_type: whitepaper
+    quality: high
+    summary: "Berkshire Hathaway shareholder-letter excerpt used as a plain-language writing exemplar, with the 'Bertie' mental-model passages highlighted."
+    key_concepts:
+      - plain language
+      - Berkshire Hathaway
+      - shareholder letter
+      - Bertie mental model
+      - Warren Buffett
+      - writing style
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: "Naming Conventions"
+    notes: "Reference exemplar (third-party Berkshire letter), not PointSav content. Illustrates the plain-language editorial standard; not a convertible product slide. Page 1 of 2 (continues p25)."
+  - page: 25
+    chapter: Ch.2 Documentation
+    content_type: whitepaper
+    quality: high
+    summary: "Continuation of the Berkshire Hathaway plain-language exemplar covering operating results, FASB/SEC/D&T audit framing, and operating-earnings versus net-income."
+    key_concepts:
+      - plain language
+      - Berkshire Hathaway
+      - operating earnings
+      - net income
+      - FASB
+      - SEC
+      - editorial standard
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: skip
+    conversion_priority: skip
+    new_slide_concept: ""
+    augments_existing: ""
+    notes: "Page 2 of the Berkshire plain-language exemplar (continues from p24). Third-party reference text; not a convertible PointSav slide."
+  - page: 26
+    chapter: Ch.2 Documentation
+    content_type: sketch
+    quality: draft
+    summary: "Handwritten Coding Guidelines slide citing 'The Power of 10: Rules for Developing Safety-Critical Code' under a Community header."
+    key_concepts:
+      - coding guidelines
+      - Power of 10
+      - safety-critical code
+      - JPL rules
+      - community
+    category_mapping: "01"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: medium
+    new_slide_concept: "Coding Guidelines — Power of 10 Safety-Critical Rules"
+    augments_existing: "Design System"
+    notes: "Handwritten draft. The Power-of-10 safety-critical coding standard is concrete developer signal not in JW4; ties to the seL4 / verified-primitives posture. Candidate new slide."
+  - page: 27
+    chapter: Navigation
+    content_type: sketch
+    quality: medium
+    summary: "Handwritten Icon Index legend mapping shapes to platform elements: User, Totebox OS, Interface OS, Console OS, Virtualization, Media Kit/Private Git OS, Infrastructure OS, Public Cloud, Container."
+    key_concepts:
+      - icon index
+      - ToteboxOS
+      - ConsoleOS
+      - Interface OS
+      - Infrastructure OS
+      - public cloud
+      - container
+      - virtualization
+    category_mapping: "07"
+    existing_slide: "Icon Index"
+    conversion_status: converted
+    conversion_priority: low
+    new_slide_concept: ""
+    augments_existing: "Icon Index"
+    notes: "Handwritten legend; directly the source for the JW4 'Icon Index' navigation slide. Maps each OS layer to a diagram shape."
+  - page: 28
+    chapter: Ch.5 Scaling and Interfaces
+    content_type: sketch
+    quality: medium
+    summary: "Handwritten System Design / Economic Model slide naming three design pillars: decentralized orchestration, authentication as permissions, and freely transferable Totebox archives."
+    key_concepts:
+      - system design
+      - decentralized orchestration
+      - authentication as permissions
+      - freely transferable
+      - Totebox archives
+      - MBA
+      - Freely Transferable Standard
+    category_mapping: "04"
+    existing_slide: ""
+    conversion_status: pending
+    conversion_priority: high
+    new_slide_concept: "Economic Model — Decentralized Orchestration, Auth-as-Permissions, Freely Transferable Archives"
+    augments_existing: "Pairing as Permissions"
+    notes: "Handwritten but legible. Ties three core differentiators (decentralized orchestration = OrchestrationOS, authentication as permissions = MBA, freely transferable archives = data portability / Freely Transferable Standard). No single JW4 slide frames the economic/system-design thesis — high investor signal. Spans Cat 04/05/06."
