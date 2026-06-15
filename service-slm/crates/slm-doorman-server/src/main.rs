@@ -91,9 +91,10 @@ use slm_doorman::tier::{
 };
 use slm_doorman::{
     ApprenticeshipConfig, AuditLedger, AuditProxyClient, AuditProxyConfig, BriefCache, Doorman,
-    DoormanConfig, GraphContextClient, LarkValidator, PromotionLedger, SshKeygenVerifier,
-    VerdictDispatcher, VerdictVerifier, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+    DoormanConfig, ExpressLane, GraphContextClient, LarkValidator, PromotionLedger,
+    SshKeygenVerifier, VerdictDispatcher, VerdictVerifier, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
 };
+use slm_doorman::express_lane::DEFAULT_BATCH_SLOTS;
 use tracing::{info, warn};
 
 #[tokio::main]
@@ -130,6 +131,18 @@ async fn main() -> anyhow::Result<()> {
     // proxy is available in community-tier deployments without extra config.
     let service_content_endpoint = std::env::var("SERVICE_CONTENT_ENDPOINT")
         .unwrap_or_else(|_| http::DEFAULT_SERVICE_CONTENT_ENDPOINT.to_string());
+
+    // SLM_BATCH_SLOTS — concurrency limit for /v1/chat/completions and /v1/messages.
+    // Defaults to DEFAULT_BATCH_SLOTS (2). Returns 429 when all slots are in use.
+    // Set to a higher value on nodes with more VRAM headroom (e.g. 4 on L4/24GB).
+    let batch_slots: usize = std::env::var("SLM_BATCH_SLOTS")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(DEFAULT_BATCH_SLOTS);
+    let mut express_caps = HashMap::new();
+    express_caps.insert("batch".to_string(), batch_slots);
+    let express_lane = Arc::new(ExpressLane::new(express_caps));
+    info!(batch_slots, "express lane initialised");
 
     // Node class: env-var override or default "hardware".
     // "micro" = $7/mo e2-micro fleet; "hardware" = workspace VM; "cloud" = GCE GPU node.
@@ -174,6 +187,7 @@ async fn main() -> anyhow::Result<()> {
         service_content_endpoint,
         node_class,
         tier_a_reason,
+        express_lane,
     });
 
     info!(
