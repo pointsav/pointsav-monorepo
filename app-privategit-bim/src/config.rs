@@ -6,7 +6,9 @@ pub struct Config {
     pub vault_dir: PathBuf,
     pub library_dir: PathBuf,
     pub static_dir: PathBuf,
+    #[allow(dead_code)]
     pub tenant: String,
+    #[allow(dead_code)]
     pub public_url: String,
     pub bind: SocketAddr,
 }
