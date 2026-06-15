@@ -8,7 +8,7 @@ must be closed.
 
 State vocabulary — see `~/Foundry/CLAUDE.md` §8 for definitions.
 
-Last updated: 2026-06-14.
+Last updated: 2026-05-31.
 
 ---
 
@@ -35,7 +35,7 @@ Last updated: 2026-06-14.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-mediakit-distributions | Scaffold-coded | app-mediakit | 4 files |
-| app-mediakit-knowledge | Active | app-mediakit | Single Rust binary Wikipedia-pattern wiki; Apache 2.0; 3 live instances (ports 9090/9093/9095); Phases 0–9 shipped; Phase 7 ActivityPub scaffold committed; WCAG 2.2 + ES i18n + sitemap repairs committed 2026-06-14; Stage 6 pending (E5–E7) |
+| app-mediakit-knowledge | Scaffold-coded | app-mediakit | 4 files |
 | app-mediakit-marketing | Scaffold-coded | app-mediakit | 4 files |
 | app-mediakit-telemetry | Scaffold-coded | app-mediakit | 14 files; MaxMind `.mmdb` pending move to build-time fetch |
 
@@ -70,7 +70,6 @@ Last updated: 2026-06-14.
 | app-privategit-marketplace | Active | app-privategit | software.pointsav.com storefront; product catalog, license issuance, payment verification; v0.0.3 deployed on vault-privategit-source-1 port 9202; activated 2026-05-21 |
 | app-privategit-source | Active | app-privategit | Binary release server + Ed25519 license token verification; port 9201; v0.1.0 deployed; supersedes `app-privategit-source-control`; activated 2026-05-21 |
 | app-privategit-source-control | Scaffold-coded | app-privategit | Original scaffold (lib.rs stub, 4 files); superseded by `app-privategit-source`; pending cleanup |
-| app-privategit-bim | Reserved-folder | app-privategit | BIM Object schema vault, viewer, editor, MCP endpoint; clean-sheet rewrite; os-privategit port 9204; registered 2026-06-14 |
 | app-privategit-workbench | Scaffold-coded | app-privategit | Browser-based Totebox developer workbench; 1,191-line main.rs; v0.0.1; not in manifest; registry drift closed 2026-05-31 |
 
 ## App — Totebox surface (`app-totebox-*`)
@@ -84,7 +83,6 @@ Last updated: 2026-06-14.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
-| app-workplace-aibridge | Scaffold-coded | app-workplace | AI section-edit bridge core (req #4); lib crate; composes moonshot-docengine + moonshot-crdt; read_selection/propose_edit/commit_edit; SYS-ADR-07 guard; MCP server wraps it |
 | app-workplace-bim | Reserved-folder | app-workplace | RESEARCH.md + NEXT.md; research phase; Wave 3 |
 | app-workplace-gis | Scaffold-coded | app-workplace | Wave 2; MapLibre GL WebView shell; CLAUDE.md + NEXT.md; src-tauri stub; no Tauri crate yet |
 | app-workplace-memo | Active | app-workplace | Wave 1; Tauri v1.7 document editor; CLAUDE.md + NEXT.md present |
@@ -148,7 +146,7 @@ Last updated: 2026-06-14.
 | service-totebox-egress | Scaffold-coded | service | 18 files |
 | service-vm-fleet | Active | service | PPN VM fleet controller; axum :9203; heartbeat ingestion + advisory placement; GET /v1/vms?tenant_id= added; 14 tests passing; workspace member (2026-06-12) |
 | service-vm-host | Scaffold-coded | service | PPN VM per-node heartbeat agent; /proc/meminfo reader; QEMU monitor stub; current_thread tokio; workspace member (2026-05-29) |
-| service-vm-tenant | Active | service | PPN customer-facing VM proxy; axum :9221; Bearer auth + tenant namespace + quota enforcement; WORM audit trail; TOCTOU create Mutex; workspace member (2026-06-12) |
+| service-vm-tenant | Active | service | PPN customer-facing VM proxy; axum :9221; Bearer auth + tenant namespace + quota enforcement; WORM audit trail; TOCTOU create Mutex; workspace member (2026-06-15) |
 | service-vpn | Scaffold-coded | service | 11 files |
 
 ## Moonshot (`moonshot-*`)
@@ -156,7 +154,6 @@ Last updated: 2026-06-14.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | moonshot-bim-engine | Scaffold-coded | moonshot | 4 files; sovereign IFC/BIM engine — replaces web-ifc/xeokit (app-workplace-bim licensing gate) |
-| moonshot-code-editor | Reserved-folder | moonshot | 5 files; BIM-specific DTCG/PBS-1 editor web component; replaces CodeMirror 6 for app-privategit-bim; RESEARCH.md present; registered 2026-06-14 |
 | moonshot-crdt | Scaffold-coded | moonshot | 4 files; collaborative state + version lineage — replaces Loro/Yjs/Automerge |
 | moonshot-database | Scaffold-coded | moonshot | 4 files |
 | moonshot-docengine | Scaffold-coded | moonshot | 4 files; document model + AST bidirectional mapping — replaces ProseMirror/Lexical/TipTap |
@@ -168,8 +165,6 @@ Last updated: 2026-06-14.
 | moonshot-network | Scaffold-coded | moonshot | 4 files |
 | moonshot-parser | Scaffold-coded | moonshot | 4 files; incremental syntax parser — replaces tree-sitter |
 | moonshot-protocol | Scaffold-coded | moonshot | 4 files |
-| moonshot-registry | Reserved-folder | moonshot | 5 files; OCI Distribution Spec v1.1.0 client/server for BIM object distribution; replaces oci-client crate; RESEARCH.md present; registered 2026-06-14 |
-| moonshot-schema-validator | Reserved-folder | moonshot | 5 files; Rust+WASM JSON Schema 2020-12 validator; replaces jsonschema crate (server) + ajv (browser); RESEARCH.md present; registered 2026-06-14 |
 | moonshot-sel4-vmm | Scaffold-coded | moonshot | 4 files |
 | moonshot-toolkit | Scaffold-coded | moonshot | 5 files; Rust-only build orchestrator per repo CLAUDE.md |
 
@@ -208,14 +203,14 @@ Last updated: 2026-06-14.
 
 ---
 
-## Summary (2026-06-14)
+## Summary (2026-06-12)
 
-- **Active:** 12
-- **Scaffold-coded:** 59
-- **Reserved-folder:** 43 (adds `app-privategit-bim`, `moonshot-code-editor`, `moonshot-registry`, `moonshot-schema-validator` 2026-06-14)
+- **Active:** 12 (adds `service-vm-fleet`, `service-vm-tenant` 2026-06-12)
+- **Scaffold-coded:** 59 (`service-vm-fleet` promoted to Active 2026-06-12)
+- **Reserved-folder:** 39
 - **Defect:** 0
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 117 (added 4 entries 2026-06-14). Last updated: 2026-06-14.
+**Total rows:** 113. Last updated: 2026-06-15.
