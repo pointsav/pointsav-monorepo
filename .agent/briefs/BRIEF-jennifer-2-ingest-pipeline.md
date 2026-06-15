@@ -1,7 +1,7 @@
 ---
 artifact: brief
 schema: foundry-brief-v1
-brief-id: jennifer-2-ingest-pipeline
+brief-id: project-intelligence-jennifer-2-ingest-pipeline
 title: jennifer-2 Ingest Pipeline — Labeled Corpus → DataGraph + Entity Extraction Training
 status: active
 owner: project-data
