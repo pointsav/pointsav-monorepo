@@ -142,6 +142,21 @@ Notes:
 - Ed25519 offline verification — no network call for license check
 - `ORCHESTRATION_LICENSE_PUBKEY_HEX` env var → runtime pubkey (C, wiring in progress)
 - Marketplace listing in `app-privategit-marketplace` requires operator action
+**S1 pre-completion requirements:**
+- ~~Full chain ingestion~~ DONE 2026-06-11
+- ~~§2 production data update (6,368 clusters)~~ DONE 2026-06-14
+- ~~§5 integration analysis~~ DONE 2026-06-14 (retail_contamination analysis; dual-use zones)
+- ~~§6 investment thesis~~ DONE 2026-06-14 (T1/T2/T3 profile; demand drivers; risk factors)
+- ~~Map figure~~ — DONE 2026-06-14 (`work/figures/figure-s1-vwh-map.png`; 343 KB; T1/T2/T3 colour-coded; render-archetype-maps.py)
+
+**S2 pre-completion requirements:**
+- ~~§7 investment thesis~~ DONE 2026-06-14 (integration rate by country; demand drivers; T1 hub analysis; risk factors)
+- ~~Map figure~~ — DONE 2026-06-14 (`work/figures/figure-s2-pks-map.png`; 382 KB; T1/T2/T3 colour-coded; render-archetype-maps.py)
+- §5 integration rate regression — requires external rail-frequency data (long-term)
+Routing per `~/Foundry/conventions/artifact-classification.yaml`:
+- TOPIC / GUIDE / TEXT → `.agent/drafts-outbound/` → project-editorial
+- DESIGN-* / ASSET-* → `.agent/drafts-outbound/` → project-design
+- CODE / SCRIPT / CONFIG / DATA → commit directly (self-contained)
 
 ---
 
