@@ -305,10 +305,7 @@ fn snippet_from_body(body: &str) -> String {
         .lines()
         .find(|l| {
             let t = l.trim();
-            !t.is_empty()
-                && !t.starts_with('#')
-                && !t.starts_with("---")
-                && !t.starts_with("===")
+            !t.is_empty() && !t.starts_with('#') && !t.starts_with("---") && !t.starts_with("===")
         })
         .unwrap_or("")
         .trim();

@@ -199,7 +199,11 @@ async fn home_renders_with_index_md_present() {
     // The 3 slide IA areas that have content render in the browse grid.
     // (Fixture: architecture → "Multi-Entity Consolidation", services → "Integration & Data Portability",
     //  governance → "Developer Platform")
-    for cat in &["Multi-Entity Consolidation", "Integration &amp; Data Portability", "Developer Platform"] {
+    for cat in &[
+        "Multi-Entity Consolidation",
+        "Integration &amp; Data Portability",
+        "Developer Platform",
+    ] {
         assert!(html.contains(cat), "category '{cat}' should appear in grid");
     }
 
@@ -521,7 +525,10 @@ async fn category_with_zero_articles_renders_placeholder() {
         html.contains("Integration &amp; Data Portability"),
         "populated area must render"
     );
-    assert!(html.contains("Developer Platform"), "populated area must render");
+    assert!(
+        html.contains("Developer Platform"),
+        "populated area must render"
+    );
     // Sprint C removed legacy category names — they must not appear in the grid.
     assert!(
         !html.contains("Archetypes"),
