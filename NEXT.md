@@ -9,6 +9,16 @@
       /home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer/service-fs/data/service-content/ledgers/
       [2026-06-14 totebox@claude-code]
 
+## Completed (2026-06-15, session 10)
+
+- [x] Bug 5 closed: calibration gate returns infrastructure-hold when all Tier B nodes health_up=false;
+      nightly script only aborts on 'stop'; SERVICE_INPUT_DOORMAN_ENDPOINT added [2026-06-15 totebox@claude-code]
+- [x] service-content Changes A/B/C: HashSet O(1) ledger, 4-worker parallel drain, adaptive 3/30s timeout
+      [2026-06-15 totebox@claude-code]
+- [x] Committed 590f6aee (pwoodfine) — Stage 6 pending [2026-06-15 totebox@claude-code]
+- [x] Messages to project-intelligence (Bugs 1-4 + Bug 9 batch endpoint) and Command Session
+      (cron, Stage 6, DPO quarantine, SLM_DRAIN_PAUSED) [2026-06-15 totebox@claude-code]
+
 ## Completed (2026-06-14, session 9)
 
 - [x] Flow analysis (pipeline + extraction + DPO) — identified 3 bugs: A (DPO filter mismatch),
@@ -32,9 +42,9 @@
 ## Blocked — requires Command Session (route via outbox)
 
 - [ ] Provision cluster-totebox-jennifer-2 → outbox msg project-data-20260614-jennifer2-provision [2026-06-14 totebox@claude-code]
-- [ ] Stage 6 promotion of commits 597f8324 + 38708234 + c295f4ed + 1a914564 + 1ba2f459 → outbox msgs
+- [ ] Stage 6 promotion of commits 597f8324 + 38708234 + c295f4ed + 1a914564 + 1ba2f459 + 590f6aee → outbox msgs
       project-data-20260614-stage6-blocker-fix + project-data-20260614-stage6-extraction-fix
-      + command-20260615-stage-6-pending-project-data-service-con [2026-06-14 totebox@claude-code]
+      + command-20260615-stage-6-pending-project-data-service-con [2026-06-15 totebox@claude-code]
 - [ ] After Stage 6 + restart: run DataGraph cleanup dry-run, then destructive pass:
       curl 'http://127.0.0.1:9081/v1/graph/cleanup?module_id=jennifer&dry_run=true'
       curl 'http://127.0.0.1:9081/v1/graph/cleanup?module_id=jennifer&dry_run=false'
