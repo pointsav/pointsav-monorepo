@@ -53,20 +53,23 @@ pub const MAX_LENGTH_RATIO: f64 = 8.0;
 /// and the rejected field contains a placeholder string, not a real attempt.
 /// Pairs with these prefixes are rejected at write time.
 ///
-/// Note: `<unified diff` is intentionally absent. OLMo legitimately wraps
-/// real diffs with that header (e.g. `<unified diff>\ndiff --git ...`). The
-/// gate uses `REAL_DIFF_MARKERS` to distinguish placeholder from actual content.
+/// `<unified diff:` (with colon) is the OLMo placeholder form — OLMo always
+/// writes `<unified diff: --- a/...>` as a stub. A legitimately wrapped real
+/// diff would be `<unified diff\ndiff --git ...` (no colon). Without the colon,
+/// `check_dpo_pair()` falls through to the `REAL_DIFF_MARKERS` Rule B check.
 const TEMPLATE_ECHO_PREFIXES: &[&str] = &[
     "<no diff provided",
     "<no changes",
     "<insert diff",
     "auto-reject: olmo-attempt-below-senior-standard",
     "auto-reject:",
+    "<unified diff:",  // colon = OLMo stub; real wrapped diff omits the colon
 ];
 
-/// If the rejected side starts with `<unified diff` but ALSO contains at least
-/// one of these markers, it holds a real diff — not a template placeholder.
-/// When none of these markers appear, the `<unified diff` prefix is a stub.
+/// If the rejected side starts with `<unified diff` (without colon) but ALSO
+/// contains at least one of these markers, it holds a real diff. When none
+/// of these markers appear, the prefix is a stub.
+/// `<unified diff:` (with colon) is caught earlier as a TEMPLATE_ECHO_PREFIX.
 const REAL_DIFF_MARKERS: &[&str] = &["diff --git", "--- a/", "+++ b/", "@@ "];
 
 /// Forward-looking-information qualifiers per BCSC posture
@@ -728,5 +731,21 @@ mod tests {
         let rejected = "A rejected attempt at solving this problem using a reasonable approach that includes some detail.";
         let chosen = "x".repeat((rejected.len() as f64 * 7.9) as usize);
         check_dpo_pair(rejected, &chosen).unwrap();
+    }
+
+    #[test]
+    fn dpo_pair_rejects_unified_diff_colon_placeholder_with_real_markers() {
+        // Adversarial case confirmed by 6-agent corpus audit (2026-06-15):
+        // 291/324 `<unified diff:` placeholders embed "--- a/" and "@@ " so
+        // the old !has_real_diff gate was bypassed, letting 85 pass all checks.
+        // The colon suffix is now in TEMPLATE_ECHO_PREFIXES and caught before
+        // the REAL_DIFF_MARKERS check runs.
+        let placeholder = "<unified diff: --- a/Cargo.toml\n+++ b/Cargo.toml\n@@ -1 +1 @@\n-version = \"0.0.1\"\n+version = \"0.1.0\"\n".repeat(4);
+        let chosen = "diff --git a/Cargo.toml b/Cargo.toml\n--- a/Cargo.toml\n+++ b/Cargo.toml\n@@ -1 +1 @@\n-version = \"0.0.1\"\n+version = \"0.1.0\"".repeat(3);
+        let err = check_dpo_pair(&placeholder, &chosen).unwrap_err();
+        assert!(
+            matches!(err, DoormanError::CorpusGateRejected { reason } if reason.contains("template placeholder")),
+            "placeholder with embedded real markers must be rejected by template-echo check"
+        );
     }
 }
