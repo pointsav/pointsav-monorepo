@@ -1,0 +1,77 @@
+---
+id: datagraph-pointsav
+label: PointSav Design System Slides DataGraph
+schema: foundry-datagraph-flat-v1
+created: 2026-06-14
+status: independent
+
+description: >
+  Flat-file YAML knowledge graph for the PointSav Design System Slides project.
+  Catalogs all 141 pages of the V5 master deck, cross-referenced with 7 category
+  research corpora and synthesized into a priority-ordered slide production list.
+  Independent from service-content until slides are complete and reviewed.
+
+scope:
+  source_v5_pdf: 141 pages (Ch.1–Ch.9)
+  source_jw4_html: 48 slides (7-category TOC, JW4 rev)
+  output_jw5_html: 73 slides (+22 new across 6 categories)
+  research_categories: 7 (one per TOC category)
+
+integration:
+  target: service-content DataGraph (local-content.service)
+  path: corpus ingestion pipeline (submit_extraction / CORPUS sweep)
+  gate: JW5.html promoted to Stage 6 + operator review complete
+  status: deferred
+
+entry_points:
+  synthesis: synthesis.yaml          # priority list + capacity + augment plan
+  index: index.yaml                  # all 141 V5 pages, one entry each
+  jw4_inventory: jw4-inventory.yaml  # JW4 slide inventory
+
+chapters:
+  - chapter-01-contributors.yaml
+  - chapter-02-documentation.yaml
+  - chapter-03-console.yaml
+  - chapter-04-totebox-services.yaml
+  - chapter-05-scaling.yaml
+  - chapter-06-pairing.yaml
+  - chapter-07-rendering.yaml
+  - chapter-08-smb.yaml
+  - chapter-09-deployments.yaml
+
+research:
+  - research-01-developer-platform.yaml
+  - research-02-operator-workspace.yaml
+  - research-03-system-of-record.yaml
+  - research-04-integration-data-portability.yaml
+  - research-05-machine-based-authorization.yaml
+  - research-06-multi-entity-consolidation.yaml
+  - research-07-platform-foundation.yaml
+
+source_pages:
+  - pages-1-14.yaml
+  - pages-15-28.yaml
+  - pages-29-42.yaml
+  - pages-43-56.yaml
+  - pages-57-70.yaml
+  - pages-71-84.yaml
+  - pages-85-98.yaml
+  - pages-99-112.yaml
+  - pages-113-126.yaml
+  - pages-127-141.yaml
+
+generated_slides:
+  - generated-slides/cat-01-manifest.yaml
+  - generated-slides/cat-01-slides.html
+  - generated-slides/cat-02-manifest.yaml
+  - generated-slides/cat-02-slides.html
+  - generated-slides/cat-03-manifest.yaml
+  - generated-slides/cat-03-slides.html
+  - generated-slides/cat-04-manifest.yaml
+  - generated-slides/cat-04-slides.html
+  - generated-slides/cat-05-manifest.yaml
+  - generated-slides/cat-05-slides.html
+  - generated-slides/cat-06-manifest.yaml
+  - generated-slides/cat-06-slides.html
+  - generated-slides/cat-07-manifest.yaml
+  - generated-slides/cat-07-slides.html
