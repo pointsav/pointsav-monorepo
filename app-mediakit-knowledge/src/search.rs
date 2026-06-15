@@ -299,20 +299,62 @@ fn first_text_value(doc: &TantivyDocument, field: Field) -> String {
 }
 
 fn snippet_from_body(body: &str) -> String {
-    // First non-empty paragraph, capped at ~180 chars. Phase 3.2 may
+    // First non-empty prose paragraph, capped at ~180 chars. Phase 3.2 may
     // upgrade to query-aware snippet via tantivy's SnippetGenerator.
-    let trimmed = body
+    let line = body
         .lines()
-        .find(|l| !l.trim().is_empty() && !l.trim_start().starts_with("---"))
+        .find(|l| {
+            let t = l.trim();
+            !t.is_empty()
+                && !t.starts_with('#')
+                && !t.starts_with("---")
+                && !t.starts_with("===")
+        })
         .unwrap_or("")
         .trim();
-    if trimmed.chars().count() <= 180 {
-        trimmed.to_string()
+    // Strip inline markdown syntax for a clean plain-text snippet.
+    let clean = strip_snippet_markup(line);
+    let clean = clean.trim();
+    let char_count = clean.chars().count();
+    if char_count <= 180 {
+        clean.to_string()
     } else {
-        let mut out: String = trimmed.chars().take(180).collect();
-        out.push('…');
-        out
+        let truncated: String = clean.chars().take(180).collect();
+        if let Some(last_space) = truncated.rfind(' ') {
+            format!("{}…", &truncated[..last_space])
+        } else {
+            format!("{truncated}…")
+        }
     }
+}
+
+/// Strip `[[wikilinks]]`, `**bold**`, `*italic*`, and backtick spans from
+/// a single line of Markdown so it renders cleanly as a plain-text snippet.
+fn strip_snippet_markup(s: &str) -> String {
+    // Pass 1: wikilinks — [[slug|display]] → display; [[slug]] → slug.
+    let mut out = String::with_capacity(s.len());
+    let mut rest = s;
+    while let Some(pos) = rest.find("[[") {
+        out.push_str(&rest[..pos]);
+        match rest[pos..].find("]]") {
+            Some(end) => {
+                let inner = &rest[pos + 2..pos + end];
+                let display = inner.find('|').map_or(inner, |p| &inner[p + 1..]);
+                out.push_str(display);
+                rest = &rest[pos + end + 2..];
+            }
+            None => {
+                out.push_str(&rest[pos..]);
+                rest = "";
+            }
+        }
+    }
+    out.push_str(rest);
+    // Pass 2: strip inline markers (* _ ` [ ] ( )) and leading list/quote chars.
+    out.trim_start_matches(['-', '*', '+', '>', ' '])
+        .chars()
+        .filter(|&c| !matches!(c, '`' | '*' | '_' | '[' | ']' | '(' | ')'))
+        .collect()
 }
 
 /// Replace the indexed entry for `slug`, then commit. Called from Phase 3

@@ -177,7 +177,13 @@ pub fn parse_page(text: &str) -> Result<ParsedPage, serde_yaml::Error> {
         if let Some(end_idx) = rest.find("\n---\n") {
             let yaml = &rest[..end_idx];
             let body = &rest[end_idx + "\n---\n".len()..];
-            let fm: Frontmatter = serde_yaml::from_str(yaml)?;
+            let fm: Frontmatter = match serde_yaml::from_str(yaml) {
+                Ok(fm) => fm,
+                Err(e) => {
+                    tracing::warn!("frontmatter YAML parse error in article: {e}");
+                    Frontmatter::default()
+                }
+            };
             return Ok(ParsedPage {
                 frontmatter: fm,
                 body_md: body.to_string(),
