@@ -17,6 +17,7 @@ pub mod apprenticeship;
 pub mod audit_proxy;
 pub mod brief_cache;
 pub mod citations;
+pub mod corpus_gate;
 pub mod cost_ledger;
 pub mod error;
 pub mod express_lane;

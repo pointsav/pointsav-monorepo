@@ -47,8 +47,10 @@ regex = { workspace = true }
 fs2 = { workspace = true }
 base64 = { workspace = true }
 
-# Audit ledger sha256 integrity field (P0 — per-inference audit trail)
+# Audit ledger blake3 integrity field (P0 — per-inference audit trail)
 blake3 = "1"
+# Corpus gate dedup hashing (stable SHA-256 for deterministic JSONL keys)
+sha2 = "0.10"
 
 # Observability
 tracing = { workspace = true }

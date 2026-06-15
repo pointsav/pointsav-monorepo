@@ -337,4 +337,17 @@ pub enum DoormanError {
         /// error).
         reason: String,
     },
+
+    // ── Corpus quality gate (learning-loop-master-plan §P1-1.1) ─────────
+    /// The corpus gate rejected a shadow tuple or DPO pair before writing
+    /// to disk. `reason` contains the human-readable gate failure message
+    /// including the specific check that failed (duplicate hash, oversized
+    /// diff, Do-Not-Use term, template-echo prefix, or length ratio). Callers
+    /// MUST NOT write the JSONL row on this error.
+    #[error("corpus gate rejected tuple: {reason}")]
+    CorpusGateRejected {
+        /// Human-readable description of the gate failure, suitable for
+        /// logging and the drain-worker audit trail.
+        reason: String,
+    },
 }
