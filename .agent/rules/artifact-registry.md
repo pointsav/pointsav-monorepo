@@ -39,7 +39,7 @@ Committed directly; Stage 6 signals sent to Command.
 | `service-vm-host` | `local-vm-host.service` :9220 (per node) | Active — deployed; 7 tests; .meta.json sidecar | 2717fbce |
 | `service-vm-tenant` | `local-vm-tenant.service` :9221 | Active — A1 opaque bearer (TOKEN_MAP); A3 SLIRP host_ports; A4 service-fs audit route | dbf6a528 |
 | `system-vm-fleet-types` | shared wire types (`no_std`-compatible) | Active — HostPortMapping + host_ports in VmRecord; backward-compat serde default | dbf6a528 |
-| `app-network-admin` | CLI :8085 HTTP + :9206 UDP listen | Active — Phase S2: tokio UDP listener; PING→PONG; PPN_PEERS env var | 3bafaec5 |
+| `app-network-admin` | CLI :8085 HTTP + :9206 UDP listen | Active — Phase S3: fleet watch loop; auto WireGuard peer-table + WORM ledger; 8 tests | 13ef4654 |
 
 ---
 
