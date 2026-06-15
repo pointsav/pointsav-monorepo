@@ -1,6 +1,6 @@
 [package]
 name = "app-privategit-design"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [[bin]]
@@ -8,7 +8,18 @@ name = "app-privategit-design"
 path = "src/main.rs"
 
 [dependencies]
+# HTTP framework (future sovereign: moonshot-http)
 axum = "0.7"
+# Async runtime (long-term foundational dep; no immediate moonshot target)
 tokio = { version = "1", features = ["full"] }
+# HTTP middleware (future sovereign: moonshot-http)
 tower-http = { version = "0.5", features = ["compression-full"] }
+# Markdown → HTML (sovereign stub exists: pointsav-monorepo/moonshot-markup)
 pulldown-cmark = { version = "0.11", default-features = false, features = ["html"] }
+
+# --- "We Own It" dep map (BRIEF-app-privategit-design.md §D8) ---
+# askama (compile-time templates)   → moonshot-template  (stub added 2026-06-15)
+# syntect (syntax highlighting)     → moonshot-highlight  (stub added 2026-06-15)
+# notify  (FS watch)                → moonshot-fs-watch   (stub added 2026-06-15)
+# rusqlite (SQLite token index)     → moonshot-database   (stub exists in monorepo)
+# serde_json (DTCG token parsing)   → moonshot-toolkit    (stub exists in monorepo)
