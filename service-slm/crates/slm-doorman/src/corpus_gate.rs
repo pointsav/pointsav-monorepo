@@ -37,6 +37,38 @@ use crate::error::{DoormanError, Result};
 /// regenerated file or large rename that doesn't carry semantic signal.
 pub const MAX_DIFF_CHARS: usize = 50_000;
 
+/// Minimum rejected-side length for DPO pairs. Pairs where the rejected
+/// response is shorter than this are template stubs or empty attempts that
+/// teach the model "longer = better" rather than quality. 80 chars ≈ 1–2
+/// sentences — the minimum for any meaningful code-review attempt.
+pub const MIN_REJECTED_CHARS: usize = 80;
+
+/// Maximum ratio of chosen length to rejected length for DPO pairs. When
+/// chosen is more than 8× longer than rejected, the pair is degenerate:
+/// DPO cannot learn preference signal from it — it learns token-count
+/// discrimination instead (confirmed by Jun-14 training run; logps gap 6.7×).
+pub const MAX_LENGTH_RATIO: f64 = 8.0;
+
+/// Template-echo prefixes that indicate the OLMo attempt was never executed
+/// and the rejected field contains a placeholder string, not a real attempt.
+/// Pairs with these prefixes are rejected at write time.
+///
+/// Note: `<unified diff` is intentionally absent. OLMo legitimately wraps
+/// real diffs with that header (e.g. `<unified diff>\ndiff --git ...`). The
+/// gate uses `REAL_DIFF_MARKERS` to distinguish placeholder from actual content.
+const TEMPLATE_ECHO_PREFIXES: &[&str] = &[
+    "<no diff provided",
+    "<no changes",
+    "<insert diff",
+    "auto-reject: olmo-attempt-below-senior-standard",
+    "auto-reject:",
+];
+
+/// If the rejected side starts with `<unified diff` but ALSO contains at least
+/// one of these markers, it holds a real diff — not a template placeholder.
+/// When none of these markers appear, the `<unified diff` prefix is a stub.
+const REAL_DIFF_MARKERS: &[&str] = &["diff --git", "--- a/", "+++ b/", "@@ "];
+
 /// Forward-looking-information qualifiers per BCSC posture
 /// (`conventions/bcsc-disclosure-posture.md`). When "Sovereign Data
 /// Foundation" appears without one of these markers in the same sentence,
@@ -113,6 +145,15 @@ pub enum CorpusGateReject {
     DuplicateTuple { brief_hash: String, diff_hash: String },
     DiffTooLarge { len: usize, max: usize },
     DoNotUseTerm { term: String, where_found: WhereFound },
+    /// Rejected side is shorter than MIN_REJECTED_CHARS — likely a template
+    /// stub or empty attempt; would teach the model "longer = better".
+    RejectedTooShort { len: usize, min: usize },
+    /// Rejected side contains a template-echo prefix indicating the attempt
+    /// was never executed (e.g. the field contains a placeholder string).
+    TemplateEchoRejected { prefix: String },
+    /// Chosen is more than MAX_LENGTH_RATIO × longer than rejected — DPO
+    /// cannot distinguish quality from token count at this ratio.
+    LengthRatioTooExtreme { chosen_len: usize, rejected_len: usize, ratio: f64, max: f64 },
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -141,6 +182,15 @@ impl From<CorpusGateReject> for DoormanError {
             ),
             CorpusGateReject::DoNotUseTerm { term, where_found } => format!(
                 "Do-Not-Use term '{term}' detected in {where_found} (POINTSAV-Project-Instructions.md §5)"
+            ),
+            CorpusGateReject::RejectedTooShort { len, min } => format!(
+                "rejected side too short ({len} chars < {min} min); template stub would teach length-discrimination"
+            ),
+            CorpusGateReject::TemplateEchoRejected { prefix } => format!(
+                "rejected side is a template placeholder (starts with '{prefix}'); no real OLMo attempt captured"
+            ),
+            CorpusGateReject::LengthRatioTooExtreme { chosen_len, rejected_len, ratio, max } => format!(
+                "DPO length ratio {ratio:.1}× exceeds {max:.1}× max (chosen={chosen_len} chars, rejected={rejected_len} chars); would teach token-count not quality"
             ),
         };
         DoormanError::CorpusGateRejected { reason }
@@ -338,6 +388,103 @@ pub fn scan_diff_only(diff: &str) -> Result<CorpusGateOutcome> {
     })
 }
 
+/// Full DPO-pair gate: runs all quality checks on both the rejected and chosen
+/// sides of a preference pair before writing to disk.
+///
+/// Runs: template-echo detection, minimum-length check, length-ratio check,
+/// max-length check on chosen, Do-Not-Use scan on both sides.
+///
+/// Returns `CorpusGateOutcome` on pass; `Err(DoormanError::CorpusGateRejected)`
+/// on any hard failure.
+pub fn check_dpo_pair(rejected: &str, chosen: &str) -> Result<CorpusGateOutcome> {
+    // 1. Template-echo detection on the rejected side.
+    // Rule A: hard prefix match on known sentinel strings.
+    // Rule B: "<unified diff" prefix is only a placeholder when no real diff
+    //   markers follow; OLMo legitimately wraps real diffs with that header.
+    let rejected_lc = rejected.trim().to_lowercase();
+    let mut echo_prefix: Option<&str> = None;
+    for prefix in TEMPLATE_ECHO_PREFIXES {
+        if rejected_lc.starts_with(prefix) {
+            echo_prefix = Some(prefix);
+            break;
+        }
+    }
+    if echo_prefix.is_none() && rejected_lc.starts_with("<unified diff") {
+        let has_real_diff = REAL_DIFF_MARKERS.iter().any(|m| rejected.contains(m));
+        if !has_real_diff {
+            echo_prefix = Some("<unified diff");
+        }
+    }
+    if let Some(prefix) = echo_prefix {
+        return Err(CorpusGateReject::TemplateEchoRejected {
+            prefix: prefix.to_string(),
+        }
+        .into());
+    }
+
+    // 2. Minimum length on rejected side.
+    if rejected.len() < MIN_REJECTED_CHARS {
+        return Err(CorpusGateReject::RejectedTooShort {
+            len: rejected.len(),
+            min: MIN_REJECTED_CHARS,
+        }
+        .into());
+    }
+
+    // 3. Length ratio: chosen must not be more than MAX_LENGTH_RATIO × rejected.
+    if rejected.len() > 0 {
+        let ratio = chosen.len() as f64 / rejected.len() as f64;
+        if ratio > MAX_LENGTH_RATIO {
+            return Err(CorpusGateReject::LengthRatioTooExtreme {
+                chosen_len: chosen.len(),
+                rejected_len: rejected.len(),
+                ratio,
+                max: MAX_LENGTH_RATIO,
+            }
+            .into());
+        }
+    }
+
+    // 4. Max-length on chosen (same cap as shadow diffs).
+    if chosen.len() > MAX_DIFF_CHARS {
+        return Err(CorpusGateReject::DiffTooLarge {
+            len: chosen.len(),
+            max: MAX_DIFF_CHARS,
+        }
+        .into());
+    }
+
+    // 5. Do-Not-Use scan on both sides.
+    let chosen_lc = chosen.to_lowercase();
+    for term in DO_NOT_USE_TERMS {
+        if rejected_lc.contains(term) {
+            return Err(CorpusGateReject::DoNotUseTerm {
+                term: (*term).to_string(),
+                where_found: WhereFound::Diff,
+            }
+            .into());
+        }
+        if chosen_lc.contains(term) {
+            return Err(CorpusGateReject::DoNotUseTerm {
+                term: (*term).to_string(),
+                where_found: WhereFound::Diff,
+            }
+            .into());
+        }
+    }
+
+    // 6. BCSC posture scan (flag-only, does not reject).
+    let bcsc_violations = scan_bcsc_violations(rejected, chosen);
+    let bcsc_flagged = !bcsc_violations.is_empty();
+    let diff_hash = sha256_hex(chosen);
+    Ok(CorpusGateOutcome {
+        brief_hash: String::new(),
+        diff_hash,
+        bcsc_flagged,
+        bcsc_violations,
+    })
+}
+
 fn sha256_hex(input: &str) -> String {
     let mut h = Sha256::new();
     h.update(input.as_bytes());
@@ -523,5 +670,63 @@ mod tests {
             sha256_hex("abc"),
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
         );
+    }
+
+    // --- check_dpo_pair tests ---
+
+    fn decent_chosen() -> &'static str {
+        "+ fn process_records(records: &[Record]) -> Result<Vec<Summary>> {\n\
+         +     records.iter().map(|r| summarize(r)).collect()\n\
+         + }\n"
+    }
+
+    fn decent_rejected() -> &'static str {
+        "Here is a basic attempt at the function using an iterator approach to process the records.\n"
+    }
+
+    #[test]
+    fn dpo_pair_passes_on_clean_pair() {
+        let outcome = check_dpo_pair(decent_rejected(), decent_chosen()).unwrap();
+        assert!(!outcome.diff_hash.is_empty());
+    }
+
+    #[test]
+    fn dpo_pair_rejects_template_echo() {
+        let err = check_dpo_pair("<unified diff placeholder text goes here>", decent_chosen())
+            .unwrap_err();
+        assert!(matches!(err, DoormanError::CorpusGateRejected { reason } if reason.contains("template placeholder")));
+    }
+
+    #[test]
+    fn dpo_pair_rejects_auto_reject_prefix() {
+        let err = check_dpo_pair(
+            "auto-reject: olmo-attempt-below-senior-standard",
+            decent_chosen(),
+        )
+        .unwrap_err();
+        assert!(matches!(err, DoormanError::CorpusGateRejected { reason } if reason.contains("template placeholder")));
+    }
+
+    #[test]
+    fn dpo_pair_rejects_short_rejected() {
+        let err = check_dpo_pair("ok", decent_chosen()).unwrap_err();
+        assert!(matches!(err, DoormanError::CorpusGateRejected { reason } if reason.contains("too short")));
+    }
+
+    #[test]
+    fn dpo_pair_rejects_extreme_length_ratio() {
+        // chosen is a 10× longer string than rejected; rejected must be ≥ MIN_REJECTED_CHARS
+        let rejected = "A rejected response of sufficient length to pass the minimum character threshold for the corpus gate quality check.";
+        let chosen = "x".repeat(rejected.len() * 10);
+        let err = check_dpo_pair(rejected, &chosen).unwrap_err();
+        assert!(matches!(err, DoormanError::CorpusGateRejected { reason } if reason.contains("ratio")));
+    }
+
+    #[test]
+    fn dpo_pair_passes_at_ratio_boundary() {
+        // just under the 8× cap should pass
+        let rejected = "A rejected attempt at solving this problem using a reasonable approach that includes some detail.";
+        let chosen = "x".repeat((rejected.len() as f64 * 7.9) as usize);
+        check_dpo_pair(rejected, &chosen).unwrap();
     }
 }
