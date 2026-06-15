@@ -41,7 +41,7 @@ GCS_BUCKET = os.environ.get("SLM_YOYO_WEIGHTS_GCS_BUCKET", "")
 LORA_R = 16
 LORA_ALPHA = 32
 LORA_DROPOUT = 0.05
-LORA_TARGET_MODULES = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+LORA_TARGET_MODULES = ["att_proj", "ff_proj", "ff_out", "attn_out"]
 MAX_PROMPT_LENGTH = 512
 BATCH_SIZE = 2
 GRAD_ACCUM = 8   # raised 4→8; effective batch 16; damps gradient noise at low per-device batch
@@ -314,6 +314,21 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
         trust_remote_code=True,
     )
     model.config.use_cache = False
+
+    # Startup assertion: verify target_modules exist in this model before
+    # peft applies them. OLMo 2 uses att_proj/ff_proj/ff_out/attn_out;
+    # LLaMA names (q_proj/v_proj etc.) silently attach to zero modules.
+    _model_module_names = {name.split(".")[-1] for name, _ in model.named_modules()}
+    _matched = [m for m in LORA_TARGET_MODULES if m in _model_module_names]
+    if not _matched:
+        print(
+            f"[ERROR] LORA_TARGET_MODULES {LORA_TARGET_MODULES} matched 0 modules in model.\n"
+            f"        Model leaf module names (sample): {sorted(_model_module_names)[:20]}\n"
+            f"        Training would produce a no-op adapter. Aborting.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    print(f"[train] LoRA target assertion: {len(_matched)}/{len(LORA_TARGET_MODULES)} modules matched: {_matched}")
 
     peft_config = LoraConfig(
         task_type=TaskType.CAUSAL_LM,
