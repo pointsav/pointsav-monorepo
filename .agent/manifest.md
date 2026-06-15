@@ -1,12 +1,12 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster: project-console
-cluster_name: project-console
-cluster_branch: cluster/project-console
+cluster: project-knowledge
+cluster_name: project-knowledge
+cluster_branch: main
 created: 2026-05-27
 state: active
 slm_endpoint: http://localhost:9080
-module_id: console
+module_id: knowledge
 
 tetrad:
   vendor:
@@ -14,29 +14,29 @@ tetrad:
       path: pointsav-monorepo/
       upstream: vendor/pointsav-monorepo
       focus: >
-        os-console/ (SSH TUI binary) + app-console-content/ + app-console-email/ +
-        app-console-input/ + app-console-keys/ + app-console-people/ +
-        app-console-slm/ + app-console-system/ (active cartridges, Phase 8 complete)
-      status: active (Phase 8 complete 2026-06-13; Phase 9 deployment-blocked)
+        app-mediakit-knowledge/ (Wikipedia-pattern wiki engine; Apache 2.0;
+        Phases 0–9 shipped; E5/E6/E7 Stage 6 pending)
+      status: active
   customer:
     - status: leg-pending
       note: >
-        woodfine-fleet-deployment catalog entry planned when os-console binary
-        is deployed to vault-privategit-source-1 (Phase 9 gate).
+        Three live instances exist (local-knowledge-{documentation,projects,corporate})
+        but no woodfine-fleet-deployment catalog entries have been committed yet.
+        Catalog entries planned as part of Phase 6 deployment split ratification.
   deployment:
-    - status: leg-pending
+    - status: active
       note: >
-        Target: vault-privategit-source-1, port 2222 (SSH server mode).
-        Blocked on GCE firewall port 2222 (operator action) + vm-intelligence
-        WireGuard provisioning (project-infrastructure).
-        Systemd units drafted: infrastructure/systemd/console/local-console.service
-        + local-pairing-server.service.
+        Three live instances on vault-privategit-source-1:
+        port 9090 (documentation.pointsav.com),
+        port 9093 (projects.woodfinegroup.com),
+        port 9095 (corporate.woodfinegroup.com).
+        content-wiki-{documentation,projects,corporate} are canonical content repos.
   wiki:
-    - status: leg-pending
+    - status: active
       note: >
-        TOPIC-os-console-architecture.draft.md + .es.draft.md staged in
-        .agent/drafts-outbound/; route to project-editorial for refinement
-        and commit to content-wiki-documentation.
+        Editorial drafts dispatched from .agent/drafts-outbound/ to project-editorial.
+        Committed articles live in media-knowledge-documentation and
+        media-knowledge-projects. TOPIC/GUIDE pipeline active.
 
 clones:
   - repo: pointsav-monorepo
