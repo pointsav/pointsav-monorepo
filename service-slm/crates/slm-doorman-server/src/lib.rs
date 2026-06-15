@@ -36,7 +36,7 @@ pub mod test_helpers {
     };
     use slm_doorman::{
         AuditLedger, AuditProxyClient, AuditProxyConfig, AuditProxyPurposeAllowlist, BriefCache,
-        Doorman, DoormanConfig, PromotionLedger, VerdictDispatcher, VerdictVerifier,
+        Doorman, DoormanConfig, ExpressLane, PromotionLedger, VerdictDispatcher, VerdictVerifier,
         FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
     };
     use tokio::sync::Semaphore;
@@ -115,6 +115,7 @@ pub mod test_helpers {
             service_content_endpoint: String::new(),
             node_class: "hardware",
             tier_a_reason: "available",
+            express_lane: Arc::new(ExpressLane::with_default_labels()),
         })
     }
 
@@ -151,6 +152,7 @@ pub mod test_helpers {
             service_content_endpoint: String::new(),
             node_class: "hardware",
             tier_a_reason: "available",
+            express_lane: Arc::new(ExpressLane::with_default_labels()),
         })
     }
 
@@ -200,6 +202,7 @@ pub mod test_helpers {
             service_content_endpoint: String::new(),
             node_class: "hardware",
             tier_a_reason: "available",
+            express_lane: Arc::new(ExpressLane::with_default_labels()),
         })
     }
 
@@ -234,6 +237,7 @@ pub mod test_helpers {
             service_content_endpoint: String::new(),
             node_class: "hardware",
             tier_a_reason: "available",
+            express_lane: Arc::new(ExpressLane::with_default_labels()),
         })
     }
 
@@ -290,6 +294,7 @@ pub mod test_helpers {
             service_content_endpoint: String::new(),
             node_class: "hardware",
             tier_a_reason: "available",
+            express_lane: Arc::new(ExpressLane::with_default_labels()),
         })
     }
 
@@ -361,6 +366,7 @@ pub mod test_helpers {
             service_content_endpoint: String::new(),
             node_class: "hardware",
             tier_a_reason: "available",
+            express_lane: Arc::new(ExpressLane::with_default_labels()),
         });
         (state, ledger_dir)
     }
@@ -411,6 +417,7 @@ pub mod test_helpers {
             service_content_endpoint: String::new(),
             node_class: "hardware",
             tier_a_reason: "available",
+            express_lane: Arc::new(ExpressLane::with_default_labels()),
         });
         (state, ledger_dir)
     }
@@ -435,6 +442,7 @@ pub mod test_helpers {
             service_content_endpoint: service_content_endpoint.into(),
             node_class: "hardware",
             tier_a_reason: "available",
+            express_lane: Arc::new(ExpressLane::with_default_labels()),
         })
     }
 }

@@ -50,7 +50,8 @@ use slm_doorman::ledger::{
 use slm_doorman::{
     ApprenticeshipConfig, ApprenticeshipDispatcher, AuditCaptureEntry, AuditProxyClient,
     AuditProxyEntry, AuditProxyPurposeAllowlist, AuditProxyStubEntry, BriefCache, Doorman,
-    DoormanError, ExtractionAuditEntry, VerdictDispatchOutcome, VerdictDispatcher, VerdictWireBody,
+    DoormanError, ExpressLane, ExpressSlot, ExtractionAuditEntry, VerdictDispatchOutcome,
+    VerdictDispatcher, VerdictWireBody,
 };
 use tokio::sync::Semaphore;
 
@@ -113,6 +114,11 @@ pub struct AppState {
     /// Surfaced in `/readyz` so operators can diagnose routing decisions without
     /// reading logs.
     pub tier_a_reason: &'static str,
+    /// Concurrency gate for inference requests.  Configured from
+    /// `SLM_BATCH_SLOTS` (default `DEFAULT_BATCH_SLOTS = 2`).  Returns 429
+    /// when all slots are in use so callers retry shortly rather than queue
+    /// behind a saturated GPU node.
+    pub express_lane: Arc<ExpressLane>,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -289,6 +295,14 @@ async fn chat_completions(
         stop_sequences: None,
         session_context: body.session_context,
     };
+
+    // Express-lane concurrency gate (SLM_BATCH_SLOTS). Returns 429 when all
+    // slots are in use; caller should retry. The permit is held for the
+    // lifetime of the upstream call and released automatically on drop.
+    let _slot: ExpressSlot = state
+        .express_lane
+        .try_acquire_slot("batch")
+        .ok_or_else(|| ApiError::too_many_requests("express-lane: batch slots full; retry shortly"))?;
 
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
     let tier_str = resp.tier_used.as_str().to_string();
@@ -1652,6 +1666,10 @@ async fn anthropic_messages(
     let stream = body.stream;
 
     let req = anthropic_to_compute_request(body, module_id, request_id);
+    let _slot: ExpressSlot = state
+        .express_lane
+        .try_acquire_slot("batch")
+        .ok_or_else(|| ApiError::too_many_requests("express-lane: batch slots full; retry shortly"))?;
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
 
     if stream {
@@ -1685,6 +1703,13 @@ impl ApiError {
     fn not_found(msg: impl Into<String>) -> Self {
         Self {
             status: StatusCode::NOT_FOUND,
+            body: serde_json::json!({ "error": { "message": msg.into() } }),
+        }
+    }
+
+    fn too_many_requests(msg: impl Into<String>) -> Self {
+        Self {
+            status: StatusCode::TOO_MANY_REQUESTS,
             body: serde_json::json!({ "error": { "message": msg.into() } }),
         }
     }

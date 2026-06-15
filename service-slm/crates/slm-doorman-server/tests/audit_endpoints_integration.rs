@@ -33,7 +33,8 @@ use slm_doorman::ledger::{
 use slm_doorman::tier::{TierCPricing, TierCProvider};
 use slm_doorman::{
     AuditCaptureEntry, AuditLedger, AuditProxyClient, AuditProxyConfig, AuditProxyEntry,
-    AuditProxyStubEntry, BriefCache, Doorman, DoormanConfig, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+    AuditProxyStubEntry, BriefCache, Doorman, DoormanConfig, ExpressLane,
+    FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
 };
 use slm_doorman_server::http::{router, AppState};
 use slm_doorman_server::test_helpers::temp_queue_config;
@@ -116,6 +117,7 @@ fn app_state_with_proxy_and_ledger_dir(
         service_content_endpoint: String::new(),
         node_class: "hardware",
         tier_a_reason: "available",
+        express_lane: Arc::new(ExpressLane::with_default_labels()),
     })
 }
 
