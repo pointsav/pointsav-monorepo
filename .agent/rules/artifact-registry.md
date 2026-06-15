@@ -51,7 +51,7 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 | J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | MLSys (ACM, 22% AR) | Mathew Woodfine | stub |
 | J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared |
 | J7 | `JOURNAL-urban-fringe-v0.1.stub.md` | Industrial Co-location in the Metropolitan Ring: Spatial Signatures of the Urban Fringe Archetype | Regional Science and Urban Economics (Elsevier, IF 2.9, Q1) | Jennifer M. Woodfine | v0.3 complete 2026-06-14; §§3–8 prose written; `forbidden_terms_cleared: false` (language pass needed) |
-| J8 | `JOURNAL-commuter-v0.1.stub.md` | The Commuter Archetype: Car-Rental Clustering as a Proxy for Transit-Adjacent Commercial Co-location | Journal of Transport Geography (Elsevier, IF 6.88, Q1) | Peter M. Woodfine | §2 written 2026-06-14; §3–§8 stub; `forbidden_terms_cleared: false` |
+| J8 | `JOURNAL-commuter-v0.1.stub.md` | The Commuter Archetype: Car-Rental Clustering as a Proxy for Transit-Adjacent Commercial Co-location | Journal of Transport Geography (Elsevier, IF 6.88, Q1) | Peter M. Woodfine | v0.3 complete 2026-06-14; §§3–8 prose written; `forbidden_terms_cleared: false` (language pass needed) |
 
 ### Pre-submission blockers by paper
 
@@ -118,9 +118,13 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 
 **J8 — Commuter pre-submission blockers:**
 - ~~Literature review (§2)~~ — DONE 2026-06-14 (v0.2; §2.1–§2.5 written; [external: ...] citations flagged)
-- Validation (§4.4) — stub only
-- Integration rate regression (§5.3 / §7.2) — requires rail-frequency external data
-- ORCID IDs for all three authors
+- ~~§§3–8 full prose~~ — DONE 2026-06-14 (v0.3; §4.1/4.3/4.4 methodology; §5.1/5.2/5.3 results; §6.1/6.2/6.4 discussion; §7.1/7.2/7.3 falsification; §8 conclusion)
+- Language pass (`forbidden_terms_cleared: false`) — AT project-editorial
+- Test 1 (car-rental vs. non-transit control, §7.1) — executable from current dataset; not yet run
+- Test 2 (integration rate vs. rail frequency, §7.2) — requires GTFS data (Year 2)
+- Test 3 (passenger volume validation, §7.3) — requires station-level ridership data matching
+- [external: ...] citations in §2 — resolve to citations.yaml stable IDs before submission
+- ORCID IDs for all three authors (operator action required)
 
 ---
 
