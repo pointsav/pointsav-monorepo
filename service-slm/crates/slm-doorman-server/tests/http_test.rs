@@ -34,8 +34,8 @@ use base64::Engine as _;
 use serde_json::json;
 use slm_doorman::tier::{TierCPricing, TierCProvider};
 use slm_doorman::{
-    AuditLedger, BriefCache, Doorman, DoormanConfig, DoormanError, VerdictDispatcher,
-    VerdictVerifier, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+    AuditLedger, BriefCache, Doorman, DoormanConfig, DoormanError, ExpressLane,
+    VerdictDispatcher, VerdictVerifier, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
 };
 use slm_doorman_server::http::{
     router, AppState, AUDIT_CAPTURE_MAX_PAYLOAD_BYTES, AUDIT_PROXY_MAX_REQUEST_BYTES,
@@ -360,6 +360,7 @@ async fn error_brief_cache_miss_returns_410() {
         service_content_endpoint: String::new(),
         node_class: "hardware",
         tier_a_reason: "available",
+        express_lane: Arc::new(ExpressLane::with_default_labels()),
     });
     let app = router(state);
 
@@ -654,6 +655,7 @@ async fn shadow_enqueued_brief_file_exists_at_queue_path() {
         service_content_endpoint: String::new(),
         node_class: "hardware",
         tier_a_reason: "available",
+        express_lane: Arc::new(ExpressLane::with_default_labels()),
     });
 
     let app = router(state_with_queue);
@@ -776,6 +778,10 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         DoormanError::FlowGateClosed { .. } => StatusCode::SERVICE_UNAVAILABLE,
         DoormanError::PriorityQueueIo { .. } => StatusCode::INTERNAL_SERVER_ERROR,
         DoormanError::GcpApi { .. } => StatusCode::BAD_GATEWAY,
+        // CorpusGateRejected → 422 UNPROCESSABLE_ENTITY: the submitted DPO
+        // tuple was rejected by the corpus gate (invalid diff, placeholder,
+        // length-ratio violation). Caller-side content error.
+        DoormanError::CorpusGateRejected { .. } => StatusCode::UNPROCESSABLE_ENTITY,
     }
 }
 
@@ -1084,6 +1090,7 @@ async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
         service_content_endpoint: String::new(),
         node_class: "hardware",
         tier_a_reason: "available",
+        express_lane: Arc::new(ExpressLane::with_default_labels()),
     });
     let app = router(state);
 
@@ -1774,6 +1781,7 @@ async fn audit_proxy_unallowlisted_purpose_does_not_write_ledger_entry() {
         service_content_endpoint: String::new(),
         node_class: "hardware",
         tier_a_reason: "available",
+        express_lane: Arc::new(ExpressLane::with_default_labels()),
     });
     let app = router(state);
 
@@ -1919,6 +1927,7 @@ async fn audit_capture_valid_prose_edit_event_returns_200_and_writes_ledger() {
         service_content_endpoint: String::new(),
         node_class: "hardware",
         tier_a_reason: "available",
+        express_lane: Arc::new(ExpressLane::with_default_labels()),
     });
     let app = router(state);
 
@@ -2094,6 +2103,7 @@ async fn audit_capture_oversized_payload_returns_413() {
         service_content_endpoint: String::new(),
         node_class: "hardware",
         tier_a_reason: "available",
+        express_lane: Arc::new(ExpressLane::with_default_labels()),
     });
     let app = router(state);
 
@@ -2167,6 +2177,7 @@ async fn audit_capture_default_event_types_all_accepted() {
             service_content_endpoint: String::new(),
             node_class: "hardware",
             tier_a_reason: "available",
+            express_lane: Arc::new(ExpressLane::with_default_labels()),
         });
         let app = router(state);
 
@@ -2244,6 +2255,7 @@ async fn audit_proxy_oversized_request_returns_413() {
         service_content_endpoint: String::new(),
         node_class: "hardware",
         tier_a_reason: "available",
+        express_lane: Arc::new(ExpressLane::with_default_labels()),
     });
     let app = router(state);
 
@@ -2402,6 +2414,7 @@ async fn audit_tenant_concurrency_cap_rejects_excess_requests() {
         service_content_endpoint: String::new(),
         node_class: "hardware",
         tier_a_reason: "available",
+        express_lane: Arc::new(ExpressLane::with_default_labels()),
     });
 
     // Both requests below should fail immediately: no permits available.
@@ -2491,6 +2504,7 @@ async fn audit_tenant_concurrency_cap_per_tenant_independent() {
         service_content_endpoint: String::new(),
         node_class: "hardware",
         tier_a_reason: "available",
+        express_lane: Arc::new(ExpressLane::with_default_labels()),
     });
 
     // Two requests from different tenants; both should complete (200 OK

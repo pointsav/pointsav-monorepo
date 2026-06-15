@@ -19,7 +19,7 @@ use std::sync::{Arc, Mutex};
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use serde_json::Value;
-use slm_doorman::{BriefCache, Doorman, DoormanConfig, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST};
+use slm_doorman::{BriefCache, Doorman, DoormanConfig, ExpressLane, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST};
 use slm_doorman_server::http::{router, AppState};
 use slm_doorman_server::test_helpers::{temp_ledger, temp_queue_config};
 use tower::ServiceExt;
@@ -43,6 +43,7 @@ fn micro_state() -> Arc<AppState> {
         service_content_endpoint: String::new(),
         node_class: "micro",
         tier_a_reason: "micro-node-class",
+        express_lane: Arc::new(ExpressLane::with_default_labels()),
     })
 }
 
@@ -141,6 +142,7 @@ async fn force_broker_mode_readyz_surfaces_override_reason() {
         service_content_endpoint: String::new(),
         node_class: "hardware",             // detected as Hardware
         tier_a_reason: "force-broker-mode", // but SLM_FORCE_BROKER_MODE=true overrode it
+        express_lane: Arc::new(ExpressLane::with_default_labels()),
     });
 
     let resp = router(state)
@@ -199,6 +201,7 @@ async fn hardware_readyz_shows_tier_a_available() {
         service_content_endpoint: String::new(),
         node_class: "hardware",
         tier_a_reason: "available",
+        express_lane: Arc::new(ExpressLane::with_default_labels()),
     });
 
     let resp = router(state)
