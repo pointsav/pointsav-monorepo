@@ -6,7 +6,7 @@ title: jennifer-2 Ingest Pipeline — Labeled Corpus → DataGraph + Entity Extr
 status: active
 owner: project-data
 created: 2026-06-14
-updated: 2026-06-14 (session 9)
+updated: 2026-06-15 (session 10)
 ---
 
 # BRIEF — jennifer-2 Ingest Pipeline
@@ -356,6 +356,25 @@ jennifer-sft-<stem>.jsonl` with `provenance: "human-curated"`.
 - DataGraph: 10,833 entities (was 10,831 at session 6 end, +2).
 - Migrations this session: 2 batches (offset 0-9, 8 processed / 2 skipped). Bloomberg/CRE research articles.
 
+**2026-06-15 — Session 10 (10x perf research + Bug 5 fix + Changes A/B/C committed):**
+- Opus research agents sent to audit pipeline for 10x performance path; findings dispatched to
+  project-intelligence (Bug 9: POST /v1/batch/extract Doorman endpoint — 15-25x combined throughput).
+- Message to Command Session: cron registration, Stage 6, DPO quarantine, SLM_DRAIN_PAUSED.
+- Comprehensive message to project-intelligence: Bugs 1-4 + Bug 9 (batch endpoint).
+- Bug 5 closed: calibration gate in service-input now detects Tier B systemically down
+  (all nodes health_up=false via /readyz) and returns go_no_go='infrastructure-hold' instead
+  of 'stop'. Migration continues accumulating CORPUS when extraction is unavailable.
+  service_input SERVICE_INPUT_DOORMAN_ENDPOINT env var added; nightly script passes through
+  infrastructure-hold (only aborts on 'stop').
+- Changes A/B/C in service-content/src/main.rs:
+  - A: processed_ledgers Vec<String> → HashSet<String>; O(n) contains → O(1)
+  - B: sequential startup drain → CONTENT_DRAIN_THREADS (default 4) parallel workers
+    (Arc<Mutex<VecDeque>> work queue; MutexGuard lifetime fix: named defer_guard/circ_guard
+    before mem::take; ledger_lock serializes append_processed_ledger across workers)
+  - C: recv_timeout adapts: 3s when deferred backlog, 30s when idle
+- service-content test binary produced at 00:15 Jun 15 (compilation confirmed OK).
+- Commit 590f6aee (pwoodfine). Stage 6 pending.
+
 **2026-06-14 — Session 9 (flow analysis + 3 DPO pipeline bugs fixed):**
 - Flow analysis requested by operator: traced pipeline flow, extraction flow, and DPO training flow.
 - Identified 3 bugs in service-content/src/main.rs:
@@ -389,7 +408,7 @@ jennifer-sft-<stem>.jsonl` with `provenance: "human-curated"`.
 - **flush_tier_a() re-queue decision**: When Tier A succeeds and Tier B circuit-open, CORPUS file permanently done, DPO pair skipped. → messaged project-intelligence 2026-06-14 (§4 of same msg); decision pending.
 - ~~**processed_ledgers.jsonl location**~~: RESOLVED — confirmed at /var/lib/local-content/graph/processed_ledgers.jsonl (59,298+ entries 2026-06-14). Not under jennifer cluster tree — correct. No restart re-processing risk.
 - **migration stack systemd**: service-fs :9103, service-extraction j2, service-input :9106 are ephemeral (not systemd-managed). Will die on VM reboot. Command Session should add to systemd or nightly pre-script.
-- **Stage 6 promotion**: Commits 597f8324 + 38708234 + c295f4ed + 1a914564 + **1ba2f459** in outbox. Command Session to promote in that order. (Messages: project-data-20260614-stage6-blocker-fix + project-data-20260614-stage6-extraction-fix + command-20260615-stage-6-pending-project-data-service-con)
+- **Stage 6 promotion**: Commits 597f8324 + 38708234 + c295f4ed + 1a914564 + 1ba2f459 + **590f6aee** in outbox. Command Session to promote in that order. (Messages: project-data-20260614-stage6-blocker-fix + project-data-20260614-stage6-extraction-fix + command-20260615-stage-6-pending-project-data-service-con; 590f6aee appended 2026-06-15)
 - **Phase 2 .md migration**: EXHAUSTED — Phase 2 reference dir fully migrated (offset 80 returned empty; 59 docs ingested 2026-06-14). No further nightly batches needed for Phase 2. Nightly cron (once registered) will handle any future Phase 2 additions.
 - **SFT corpus entity gap**: 138/139 pairs have 0 entities — human-curated YAMLs are a metric/theme corpus, not entity corpus. To produce entity training signal, either (a) back-derive entity labels from people.csv source references, or (b) generate Tier A entity labels and use as human-approved-olmo-self provenance.
 - **743 quarantined briefs**: queue-quarantine has 743 entries (not surfaced in /readyz). Permanently excluded unless re-driven. Need re-drive policy after hardened binary deploys. → supplementary msg to project-intelligence 2026-06-14.
