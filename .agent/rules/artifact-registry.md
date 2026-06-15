@@ -77,6 +77,7 @@ Explain WHAT and WHY. Bilingual EN+ES pair. Route to project-editorial.
 | ID | File | Title | Status |
 |---|---|---|---|
 | T1 | `TOPIC-ppn-vm-architecture.draft.md` | PPN VM Resource Pool Architecture | STAGED — written 2026-06-14 (workflow D); ready for project-editorial |
+| T2 | `TOPIC-ppn-tenant-vm-isolation.draft.md` | PPN Tenant VM Isolation | STAGED — written 2026-06-14; A1-A4 hardening stable; ready for project-editorial |
 
 ### A20 — TOPIC: Parking Structures (PKS)
 - **File:** `.agent/drafts-outbound/TOPIC-parking-structures.draft.md`
@@ -251,8 +252,11 @@ Explain WHAT and WHY. Bilingual EN+ES pair. Route to project-editorial.
 T1 covers: service-vm-fleet / service-vm-host / service-vm-tenant / app-orchestration-slm /
 WireGuard mesh / planned seL4 + Firecracker extensions. ~900 words. ES sibling added by project-editorial.
 
+T2 covers: namespace isolation, process isolation, per-VM network containment, opaque bearer
+tokens, WORM audit trail, quota serialization, what's not guaranteed (network-level, node operator),
+path to Phase S3 + seL4 Mode B. ~1,000 words. ES sibling added by project-editorial.
+
 Backlog:
-- TOPIC: Tenant VM Isolation Model — after A1–A4 hardening stable
 - TOPIC: os-network-admin as PPN Control Plane — after Phase S3 ships
 
 ---
@@ -286,12 +290,7 @@ Short-form copy for UI, website, or marketing surfaces.
 
 | ID | File | Title | Status |
 |---|---|---|---|
-| — | — | — | None produced yet |
-
-Backlog:
-- TEXT: "Any Hardware, Sovereign Compute" — PPN small-business proposition (~300 words);
-  target: pointsav.com product page or gis.woodfinegroup.com/ppn. Trigger: §15 of BRIEF
-  is audience-ready.
+| TX1 | `TEXT-ppn-any-hardware-sovereign-compute.draft.md` | Any Hardware, Sovereign Compute | STAGED — written 2026-06-14; ~350 words; ready for project-editorial; target: pointsav.com product page |
 
 ---
 
