@@ -53,25 +53,31 @@ if ! curl -sf --max-time 5 http://127.0.0.1:9106/healthz > /dev/null 2>&1; then
 fi
 
 # 3. Calibration gate — go_no_go is nested at summary.go_no_go, NOT top-level
+# infrastructure_failure=true means Tier B is down; F1 scores are meaningless
+# in that state, so we bypass the go_no_go=stop gate to keep migration running.
 CALREP=$(curl -sf --max-time 10 http://127.0.0.1:9106/v1/calibration-report 2>/dev/null || echo "{}")
-read -r GO_NO_GO GO_REASON < <(printf '%s' "$CALREP" | python3 -c "
+read -r GO_NO_GO GO_REASON INFRA_FAILURE < <(printf '%s' "$CALREP" | python3 -c "
 import sys, json
 try:
     d = json.load(sys.stdin)
     s = d.get('summary', {})
-    print(s.get('go_no_go', 'stop'), s.get('go_no_go_reason', 'unknown'))
+    print(s.get('go_no_go', 'stop'), s.get('go_no_go_reason', 'unknown'), str(d.get('infrastructure_failure', False)).lower())
 except Exception:
-    print('stop unknown')
-" 2>/dev/null || echo "stop unknown")
+    print('stop unknown false')
+" 2>/dev/null || echo "stop unknown false")
 
 # "infrastructure-hold" means all Tier B GPU nodes are down — extraction is systemically
 # unavailable, not a data quality problem. Migration continues (CORPUS accumulates);
 # LoRA training is still blocked (handled separately by yoyo-daily-cycle.sh).
 if [ "$GO_NO_GO" = "stop" ]; then
-    echo "[$(date -u +%FT%TZ)] STOP: calibration go_no_go=stop reason=$GO_REASON. Aborting."
-    exit 1
+    if [ "$INFRA_FAILURE" = "true" ]; then
+        echo "[$(date -u +%FT%TZ)] WARN: calibration go_no_go=stop but infrastructure_failure=true (Tier B down) — bypassing gate, continuing migration."
+    else
+        echo "[$(date -u +%FT%TZ)] STOP: calibration go_no_go=stop reason=$GO_REASON. Aborting."
+        exit 1
+    fi
 fi
-echo "[$(date -u +%FT%TZ)] calibration go_no_go=$GO_NO_GO reason=$GO_REASON — proceeding"
+echo "[$(date -u +%FT%TZ)] calibration go_no_go=$GO_NO_GO infrastructure_failure=$INFRA_FAILURE reason=$GO_REASON — proceeding"
 
 # 4. Batch migration loop
 # offset pagination: if docs are added between calls, resume offset may shift.
