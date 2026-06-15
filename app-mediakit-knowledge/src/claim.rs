@@ -321,7 +321,9 @@ pub fn strip_claim_markers(html: &str) -> String {
         }
     }
     out.push_str(rest);
-    out
+    // Strip closing claim markers (<!--/claim-->) which have a different
+    // prefix than the opening markers handled by the loop above.
+    out.replace("<!--/claim-->", "")
 }
 
 /// Whitespace-normalise a claim span so `content_hash` is stable across

@@ -162,8 +162,24 @@ pub fn first_paragraph_snippet(body_md: &str, max_chars: usize) -> String {
         })
         .unwrap_or("");
 
-    // Strip crude Markdown tokens: leading list markers, emphasis, backticks.
-    let clean: String = para
+    // Strip wikilinks: [[slug|display]] → display; [[slug]] → slug.
+    let mut delinked = String::with_capacity(para.len());
+    let mut rest = para;
+    while let Some(pos) = rest.find("[[") {
+        delinked.push_str(&rest[..pos]);
+        match rest[pos..].find("]]") {
+            Some(end) => {
+                let inner = &rest[pos + 2..pos + end];
+                let display = inner.find('|').map_or(inner, |p| &inner[p + 1..]);
+                delinked.push_str(display);
+                rest = &rest[pos + end + 2..];
+            }
+            None => { delinked.push_str(&rest[pos..]); rest = ""; }
+        }
+    }
+    delinked.push_str(rest);
+    // Strip remaining inline markers: leading list/quote chars + emphasis + backticks.
+    let clean: String = delinked
         .trim_start_matches(['-', '*', '+', '>', ' '])
         .chars()
         .filter(|&c| c != '`' && c != '*' && c != '_')
