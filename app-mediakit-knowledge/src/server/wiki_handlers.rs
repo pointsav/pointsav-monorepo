@@ -602,6 +602,36 @@ async fn static_asset(Path(path): Path<String>) -> Response {
     }
 }
 
+/// `GET /images/{*path}` — serves images from `<content_dir>/images/`.
+///
+/// Path is validated with `validate_slug` (rejects `..`, leading `.`, and
+/// non-lowercase characters) before being joined onto the content directory.
+async fn serve_content_image(
+    State(state): State<Arc<AppState>>,
+    Path(path): Path<String>,
+) -> Response {
+    if validate_slug(&path).is_err() {
+        return (StatusCode::NOT_FOUND, "not found").into_response();
+    }
+    let target = state.primary_path().join("images").join(&path);
+    match fs::read(&target).await {
+        Ok(bytes) => {
+            let mime = mime_guess::from_path(&path).first_or_octet_stream();
+            let mut resp = bytes.into_response();
+            let hdrs = resp.headers_mut();
+            if let Ok(v) = HeaderValue::from_str(mime.as_ref()) {
+                hdrs.insert(header::CONTENT_TYPE, v);
+            }
+            hdrs.insert(
+                header::CACHE_CONTROL,
+                HeaderValue::from_static("public, max-age=31536000, immutable"),
+            );
+            resp
+        }
+        Err(_) => (StatusCode::NOT_FOUND, "not found").into_response(),
+    }
+}
+
 /// Full article-page shell with Phase 1.1 Wikipedia muscle-memory chrome.
 ///
 /// Additive over Phase 1's `chrome()`: the existing chrome function is
