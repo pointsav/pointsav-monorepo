@@ -432,7 +432,7 @@ pub fn check_dpo_pair(rejected: &str, chosen: &str) -> Result<CorpusGateOutcome>
     }
 
     // 3. Length ratio: chosen must not be more than MAX_LENGTH_RATIO × rejected.
-    if rejected.len() > 0 {
+    if !rejected.is_empty() {
         let ratio = chosen.len() as f64 / rejected.len() as f64;
         if ratio > MAX_LENGTH_RATIO {
             return Err(CorpusGateReject::LengthRatioTooExtreme {
