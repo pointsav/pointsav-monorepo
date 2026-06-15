@@ -1164,7 +1164,10 @@ mod tests {
             &tier_b,
             dir.to_str().unwrap(),
         );
-        assert!(!saved, "invalid classification must cause pair to be dropped");
+        assert!(
+            !saved,
+            "invalid classification must cause pair to be dropped"
+        );
         assert_eq!(fs::read_dir(&dir).unwrap().count(), 0);
         fs::remove_dir_all(&dir).ok();
     }
@@ -1182,9 +1185,8 @@ mod tests {
             serde_json::json!({"classification": "Company",  "entity_name": "Portugal"}),
             serde_json::json!({"classification": "Person",   "entity_name": "Jennifer Woodfine"}),
         ];
-        let tier_a = vec![
-            serde_json::json!({"classification": "Location", "entity_name": "Portugal"}),
-        ];
+        let tier_a =
+            vec![serde_json::json!({"classification": "Location", "entity_name": "Portugal"})];
         let dir = tmp_dir("coerce-cls");
         let saved = write_enrichment_dpo_pair(
             "DOC_test-coerce_001",
@@ -1193,7 +1195,10 @@ mod tests {
             &tier_b,
             dir.to_str().unwrap(),
         );
-        assert!(saved, "coerced pair with more entities than rejected must be written");
+        assert!(
+            saved,
+            "coerced pair with more entities than rejected must be written"
+        );
         let entries: Vec<_> = fs::read_dir(&dir).unwrap().collect();
         assert_eq!(entries.len(), 1);
         let content = fs::read_to_string(entries[0].as_ref().unwrap().path()).unwrap();
