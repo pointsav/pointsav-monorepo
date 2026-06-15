@@ -153,6 +153,13 @@ async fn wikilink_href_normalised_no_trailing_quote() {
     )
     .await
     .unwrap();
+    // Target must exist so L18 (zero-dead-links) emits an anchor rather than plain text.
+    tokio::fs::write(
+        content_dir.path().join("some-topic.md"),
+        "---\ntitle: Some Topic\n---\nTarget article.\n",
+    )
+    .await
+    .unwrap();
 
     let state = make_state(&content_dir, &state_dir).await;
     let app = router(state);
