@@ -116,13 +116,21 @@ pub fn program_wg_peer(iface: &str, pubkey: &str, wg_ip: &str) -> Result<(), Str
         Ok(())
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        Err(format!("wg set failed ({}): {}", output.status, stderr.trim()))
+        Err(format!(
+            "wg set failed ({}): {}",
+            output.status,
+            stderr.trim()
+        ))
     }
 }
 
 /// Fire-and-forget WORM topology event to service-fs.
 pub async fn write_worm_event(fs_url: &str, node_id: &str, wg_ip: &str, pubkey: &str) {
-    let payload_id = format!("ppn-topology-{}-{}", node_id, chrono::Utc::now().timestamp());
+    let payload_id = format!(
+        "ppn-topology-{}-{}",
+        node_id,
+        chrono::Utc::now().timestamp()
+    );
     let body = serde_json::json!({
         "payload_id": payload_id,
         "payload": {
@@ -142,7 +150,12 @@ pub async fn write_worm_event(fs_url: &str, node_id: &str, wg_ip: &str, pubkey: 
 
 // ── Main loop ────────────────────────────────────────────────────────────────
 
-pub async fn run_fleet_watch(wg_iface: String, fleet_url: String, fs_url: String, nodes_path: PathBuf) {
+pub async fn run_fleet_watch(
+    wg_iface: String,
+    fleet_url: String,
+    fs_url: String,
+    nodes_path: PathBuf,
+) {
     let poll_secs: u64 = std::env::var("FLEET_WATCH_INTERVAL_SECS")
         .ok()
         .and_then(|v| v.parse().ok())
@@ -213,7 +226,10 @@ mod tests {
     use tempfile::NamedTempFile;
 
     fn make_fleet_map(entries: &[(&str, &str)]) -> HashMap<String, String> {
-        entries.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
+        entries
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect()
     }
 
     fn make_programmed(ids: &[&str]) -> HashSet<String> {

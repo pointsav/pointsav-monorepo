@@ -48,8 +48,8 @@ async fn main() {
         .expect("VM_TENANT_PORT must be a valid port");
     let audit_path = std::env::var("VM_TENANT_AUDIT_LOG")
         .unwrap_or_else(|_| "/var/log/vm-tenant-audit.jsonl".to_string());
-    let service_fs_url = std::env::var("SERVICE_FS_URL")
-        .unwrap_or_else(|_| "http://127.0.0.1:9100".to_string());
+    let service_fs_url =
+        std::env::var("SERVICE_FS_URL").unwrap_or_else(|_| "http://127.0.0.1:9100".to_string());
 
     let state = AppState {
         tenants: Arc::new(tenants),
