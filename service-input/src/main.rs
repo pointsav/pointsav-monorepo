@@ -842,10 +842,29 @@ async fn calibration_report(
 
     let processed = { state.lock().unwrap().phase2_processed };
 
+    // Check whether Tier B is reachable. When health_up=false the entity F1
+    // scores are meaningless (Tier B never ran), so callers can bypass the
+    // go_no_go gate rather than blocking the nightly migration pipeline.
+    let tier_b_health_up = async {
+        let resp = cfg
+            .http_client
+            .get(format!("{}/readyz", cfg.doorman_endpoint))
+            .timeout(std::time::Duration::from_secs(3))
+            .send()
+            .await
+            .ok()?;
+        let v: serde_json::Value = resp.json().await.ok()?;
+        v.pointer("/tier_b/default/health_up")?.as_bool()
+    }
+    .await
+    .unwrap_or(false);
+    let infrastructure_failure = !tier_b_health_up;
+
     Json(serde_json::json!({
         "batch_size": total,
         "phase2_processed": processed,
         "docs": doc_results,
+        "infrastructure_failure": infrastructure_failure,
         "summary": {
             "structural_pass_rate": structural_pass_rate,
             "mean_entity_f1": mean_entity_f1,
