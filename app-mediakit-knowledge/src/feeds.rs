@@ -174,7 +174,10 @@ pub fn first_paragraph_snippet(body_md: &str, max_chars: usize) -> String {
                 delinked.push_str(display);
                 rest = &rest[pos + end + 2..];
             }
-            None => { delinked.push_str(&rest[pos..]); rest = ""; }
+            None => {
+                delinked.push_str(&rest[pos..]);
+                rest = "";
+            }
         }
     }
     delinked.push_str(rest);
