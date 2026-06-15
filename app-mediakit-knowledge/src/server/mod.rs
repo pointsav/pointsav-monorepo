@@ -673,14 +673,16 @@ struct ReferenceInvariant {
 /// Category buckets: `BTreeMap<category_name, Vec<TopicSummary>>`.
 pub type CategoryBuckets = BTreeMap<String, Vec<TopicSummary>>;
 
-/// Ratified category set in render order.
-/// Per naming-convention.md §10 Q5-A operator ratification 2026-04-28.
+/// Ratified internal article-classification category set in canonical order.
+/// Per naming-convention.md §4 (ratified 2026-05-09). Order is immutable.
+/// These are the article frontmatter `category:` values — not the home page
+/// navigation tiles (see HOMEPAGE_CATEGORIES for the slide IA layer).
 const RATIFIED_CATEGORIES: &[&str] = &[
     "architecture",
     "substrate",
     "patterns",
-    "services",
     "systems",
+    "services",
     "applications",
     "governance",
     "infrastructure",
@@ -688,33 +690,60 @@ const RATIFIED_CATEGORIES: &[&str] = &[
     "design-system",
 ];
 
-/// Homepage browse grid: 6 consolidated areas.
-/// Each entry: (display_name, primary_slug, all_slugs).
-/// `primary_slug` is the URL target; `all_slugs` are summed for the article count.
-/// Categories not listed here are still accessible via /category/<slug> and search.
-const HOMEPAGE_CATEGORIES: &[(&str, &str, &[&str])] = &[
+/// Homepage browse grid: 7-category slide IA (project-orgcharts JW4, approved 2026-06-14).
+/// BRIEF-design-system-slides.md: "Same IA governs both the slide deck and wiki documentation."
+///
+/// Each entry: (display_name, primary_slug, description, all_slugs).
+/// `primary_slug` is the /category/<slug> URL — maps to the most representative
+/// internal category so the linked page has real content.
+/// `description` is the JW4 approved one-sentence description for the tile.
+/// `all_slugs` are the internal article categories summed for the article count.
+///
+/// Mapping is exclusive (no internal category repeated) pending operator confirmation
+/// (see BRIEF-knowledge-platform-master.md §8.4 open decision #1).
+const HOMEPAGE_CATEGORIES: &[(&str, &str, &str, &[&str])] = &[
     (
-        "Architecture",
-        "architecture",
-        &["architecture", "patterns"],
-    ),
-    (
-        "Substrate & Systems",
-        "substrate",
-        &["substrate", "systems"],
-    ),
-    (
-        "Services & Applications",
-        "services",
-        &["services", "applications"],
-    ),
-    ("Infrastructure", "infrastructure", &["infrastructure"]),
-    (
-        "Reference",
+        "Developer Platform",
         "reference",
-        &["reference", "governance", "design-system"],
+        "Who we are, how you join, and the house style for everything running on the platform.",
+        &["design-system", "reference", "governance"],
     ),
-    ("Archetypes", "archetypes", &["archetypes"]),
+    (
+        "Operator Workspace",
+        "applications",
+        "The Console OS surfaces operators work in every day.",
+        &["applications"],
+    ),
+    (
+        "System of Record",
+        "systems",
+        "Toteboxes, archives, and the services that keep the records.",
+        &["systems"],
+    ),
+    (
+        "Integration & Data Portability",
+        "services",
+        "",
+        &["services", "patterns"],
+    ),
+    (
+        "Machine-Based Authorization",
+        "infrastructure",
+        "Pairing as permission across the private network — authorization by device, not by role.",
+        &["infrastructure"],
+    ),
+    (
+        "Multi-Entity Consolidation",
+        "architecture",
+        "Aggregating fleets of archives and scaling across user tiers and composition.",
+        &["architecture"],
+    ),
+    (
+        "Platform Foundation",
+        "substrate",
+        "Where the platform runs — on-prem, leased, public cloud, hybrid — and the GIS engine beneath it.",
+        &["substrate"],
+    ),
 ];
 
 // ─── Home-page helpers ──────────────────────────────────────────────────────
