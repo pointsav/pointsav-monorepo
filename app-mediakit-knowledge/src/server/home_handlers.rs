@@ -456,7 +456,7 @@ fn home_chrome(
                                 strong { (fmt_commas(stats.article_count)) }
                                 " articles across "
                                 strong { (HOMEPAGE_CATEGORIES.len()) }
-                                " areas"
+                                " categories"
                             }
                             // Home lede / intro text
                             @if !home_html.is_empty() {
@@ -491,20 +491,27 @@ fn home_chrome(
                         h2 { (s.section_browse) }
                     }
                     div.cat-grid {
-                        @for (display_name, primary_slug, slugs) in HOMEPAGE_CATEGORIES {
+                        @for (display_name, primary_slug, description, slugs) in HOMEPAGE_CATEGORIES {
                             @let count: usize = slugs.iter()
                                 .flat_map(|s| buckets.get(*s).map(|v| v.as_slice()).unwrap_or(&[]).iter())
                                 .filter(|t| t.status.as_deref() != Some("stub"))
                                 .count();
-                            @if count > 0 {
-                                a.cat-card href={ "/category/" (primary_slug) } {
-                                    div.cat-card__head {
-                                        span.cat-card__name { (display_name) }
+                            a.cat-card href={ "/category/" (primary_slug) } {
+                                div.cat-card__head {
+                                    span.cat-card__name { (display_name) }
+                                    @if count > 0 {
                                         span.cat-card__count { (count) }
                                     }
-                                    @if let Some(desc) = cat_descriptions.get(*primary_slug) {
-                                        p.cat-card__desc { (desc) }
-                                    }
+                                }
+                                @let desc_text = cat_descriptions
+                                    .get(*primary_slug)
+                                    .map(|s| s.as_str())
+                                    .filter(|s| !s.is_empty())
+                                    .unwrap_or(description);
+                                @if !desc_text.is_empty() {
+                                    p.cat-card__desc { (desc_text) }
+                                } @else if count == 0 {
+                                    p.cat-card__desc.cat-card__desc--empty { "In preparation." }
                                 }
                             }
                         }
@@ -544,7 +551,7 @@ fn home_chrome(
                         (fmt_commas(stats.article_count))
                         " articles · "
                         (HOMEPAGE_CATEGORIES.len())
-                        " areas"
+                        " categories"
                         @if let Some(ref d) = stats.last_updated {
                             " · Updated " (d)
                         }
