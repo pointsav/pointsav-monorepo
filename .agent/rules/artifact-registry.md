@@ -4,7 +4,7 @@ project: project-infrastructure
 last_updated: 2026-06-16
 project: project-editorial
 project: project-system
-last_updated: 2026-06-14 (status sweep — all committed TOPICs + GUIDEs updated)
+last_updated: 2026-06-14 (JOURNAL Actions 1–4: section_status/refs_status to J2–J8; J4 abstract restructured; VWH/PKS Related Research sections added; J1 relay sent)
 ---
 
 # project-infrastructure Artifact Registry
@@ -183,7 +183,7 @@ Routing per `~/Foundry/conventions/artifact-classification.yaml`:
 
 ### A19 — TOPIC: Vertical Warehouse (VWH)
 - **File:** `media-knowledge-documentation/archetypes/vertical-warehouse.md` + `.es.md`
-- **Status:** COMMITTED — committed prior session; ES `language_protocol` fixed ed4681c@pwoodfine 2026-06-14; Wikipedia refs (Warehouse, Retail park) added 9348d8e@jwoodfine 2026-06-14; Stage 6 pending
+- **Status:** COMMITTED — committed prior session; ES `language_protocol` fixed ed4681c@pwoodfine 2026-06-14; Wikipedia refs (Warehouse, Retail park) added 9348d8e@jwoodfine 2026-06-14; Related Research section (J7 companion) added d0bc879@jwoodfine 2026-06-14; Stage 6 pending
 - **Destination:** media-knowledge-documentation/archetypes/ (committed)
 - **Content:** VWH archetype definition (3-6 story urban logistics/light-mfg), spatial signature,
   site selection signals, full Tier A/B chain taxonomy (Würth, Floor & Decor, United Rentals,
@@ -192,7 +192,7 @@ Routing per `~/Foundry/conventions/artifact-classification.yaml`:
 
 ### A20 — TOPIC: Parking Structures (PKS)
 - **File:** `media-knowledge-documentation/archetypes/parking-structures.md` + `.es.md`
-- **Status:** COMMITTED — committed prior session; ES `language_protocol` fixed ed4681c@pwoodfine 2026-06-14; Wikipedia refs (Park and ride) added 9348d8e@jwoodfine 2026-06-14; Stage 6 pending
+- **Status:** COMMITTED — committed prior session; ES `language_protocol` fixed ed4681c@pwoodfine 2026-06-14; Wikipedia refs (Park and ride) added 9348d8e@jwoodfine 2026-06-14; Related Research section (J8 companion) added d0bc879@jwoodfine 2026-06-14; Stage 6 pending
 - **Destination:** media-knowledge-documentation/archetypes/ (committed)
 - **Content:** PKS archetype definition (3-9 story transit car parks), regional-to-metro relationship,
   airport and rail station classification, car rental chains, parking operator directory. **Phase 5b
