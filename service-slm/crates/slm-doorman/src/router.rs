@@ -709,6 +709,11 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         // GCP Compute API failure (VM start/stop/status): upstream provider
         // fault; the lifecycle monitor retries and the router falls to Tier A.
         DoormanError::GcpApi { .. } => CompletionStatus::UpstreamError,
+        // Corpus quality gate rejected a shadow tuple or DPO pair (length ratio,
+        // template echo, Do-Not-Use term, etc.). Content-level rejection — the
+        // caller's submitted content does not meet corpus quality requirements.
+        // Classified as PolicyDenied (same as malformed brief / purpose deny).
+        DoormanError::CorpusGateRejected { .. } => CompletionStatus::PolicyDenied,
     }
 }
 
