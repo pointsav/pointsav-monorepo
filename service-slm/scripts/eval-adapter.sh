@@ -80,7 +80,8 @@ fi
 
 if [[ ! -f "${HELD_OUT}" ]]; then
     echo "ERROR: held-out eval set not found: ${HELD_OUT}" >&2
-    echo "Run eval-prepare.sh first, then operator ssh-signs as holdout-v1.jsonl" >&2
+    echo "Generate it with:" >&2
+    echo "  python3 scripts/eval-prepare.py --out ${HELD_OUT}" >&2
     exit 3
 fi
 
@@ -149,6 +150,12 @@ echo "  held-out pairs: ${HELD_OUT_COUNT}"
 PASS_COUNT=0
 SAMPLE_COUNT=0
 MAX_SAMPLES=10
+LOCAL_EP="${SLM_LOCAL_ENDPOINT:-http://127.0.0.1:8080}"
+
+# Verify inference endpoint is reachable before sampling.
+if ! curl -sS --connect-timeout 3 "${LOCAL_EP}/health" >/dev/null 2>&1; then
+    echo "WARN: ${LOCAL_EP}/health not reachable — eval will count 0 passes (adapter not loaded)" >&2
+fi
 
 while IFS= read -r line && [[ "${SAMPLE_COUNT}" -lt "${MAX_SAMPLES}" ]]; do
     [[ -z "${line}" ]] && continue
@@ -157,9 +164,22 @@ while IFS= read -r line && [[ "${SAMPLE_COUNT}" -lt "${MAX_SAMPLES}" ]]; do
 
     SAMPLE_COUNT=$((SAMPLE_COUNT + 1))
 
-    # Simple heuristic: a non-empty prompt that we can parse is a PASS
-    # for the scaffold. The real eval compares model output to expected diff.
-    PASS_COUNT=$((PASS_COUNT + 1))
+    # Real inference: POST prompt to llama-server; check output contains diff markers.
+    # The adapter must be loaded into llama-server via --lora-adapters before running
+    # this script for the score to reflect the fine-tuned model (not just the base).
+    prompt_json="$(python3 -c "import sys,json; print(json.dumps({'prompt': sys.argv[1], 'max_tokens': 256, 'temperature': 0.1}))" "${prompt}" 2>/dev/null || echo "")"
+    if [[ -z "${prompt_json}" ]]; then
+        continue
+    fi
+    out_text="$(curl -sS --connect-timeout 5 --max-time 30 \
+        -X POST "${LOCAL_EP}/v1/completions" \
+        -H "Content-Type: application/json" \
+        -d "${prompt_json}" 2>/dev/null \
+        | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('choices',[{}])[0].get('text',''))" 2>/dev/null || true)"
+    # PASS criterion: response contains a real diff header line.
+    if echo "${out_text}" | grep -qE '^diff --git|^--- a/|\+\+\+ b/'; then
+        PASS_COUNT=$((PASS_COUNT + 1))
+    fi
 done < "${HELD_OUT}"
 
 if [[ "${SAMPLE_COUNT}" -eq 0 ]]; then
