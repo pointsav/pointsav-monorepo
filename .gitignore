@@ -8,6 +8,11 @@ build/
 # Generated outputs — not committed
 outputs/
 
+# Local input/library/deployment data — not committed
+inputs/
+woodfine-bim-library/
+woodfine-fleet-deployment/
+
 # Legacy .claude directory (should be .agent symlink — to be fixed)
 .claude/
 
