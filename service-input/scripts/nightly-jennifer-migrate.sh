@@ -64,6 +64,9 @@ except Exception:
     print('stop unknown')
 " 2>/dev/null || echo "stop unknown")
 
+# "infrastructure-hold" means all Tier B GPU nodes are down — extraction is systemically
+# unavailable, not a data quality problem. Migration continues (CORPUS accumulates);
+# LoRA training is still blocked (handled separately by yoyo-daily-cycle.sh).
 if [ "$GO_NO_GO" = "stop" ]; then
     echo "[$(date -u +%FT%TZ)] STOP: calibration go_no_go=stop reason=$GO_REASON. Aborting."
     exit 1

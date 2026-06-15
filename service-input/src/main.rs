@@ -37,6 +37,7 @@ struct Config {
     max_bytes: usize,
     csv_batch_rows: usize,
     content_endpoint: String,
+    doorman_endpoint: String,
     http_client: reqwest::Client,
 }
 
@@ -780,7 +781,49 @@ async fn calibration_report(
         0.0
     };
 
-    let (go_no_go, reason) = if total >= 5 && structural_pass_rate < 0.80 {
+    // Detect infrastructure failure: all Tier B nodes health_up=false on Doorman /readyz.
+    // When the extraction system is systemically down (not a data quality problem), the
+    // calibration gate would incorrectly block migration. In that case we override "stop"
+    // to "infrastructure-hold" so migration continues accumulating CORPUS while extraction
+    // recovers. The nightly script treats "infrastructure-hold" identically to "go" for
+    // migration; it never triggers LoRA training.
+    let infrastructure_failure = if total >= 5 && structural_pass_rate < 0.80 {
+        // Query Doorman to distinguish infrastructure failure from data quality failure.
+        let readyz_url = format!("{}/readyz", cfg.doorman_endpoint);
+        async {
+            let resp = cfg
+                .http_client
+                .get(&readyz_url)
+                .timeout(std::time::Duration::from_secs(3))
+                .send()
+                .await
+                .ok()?;
+            let v: serde_json::Value = resp.json().await.ok()?;
+            let tb = v.get("tier_b")?.as_object()?;
+            if tb.is_empty() {
+                return None;
+            }
+            // All nodes health_up=false → GPU fleet is down, not a data quality issue.
+            let all_down = tb.values().all(|info| {
+                !info
+                    .get("health_up")
+                    .and_then(|h| h.as_bool())
+                    .unwrap_or(true)
+            });
+            Some(all_down)
+        }
+        .await
+        .unwrap_or(false)
+    } else {
+        false
+    };
+
+    let (go_no_go, reason) = if infrastructure_failure {
+        (
+            "infrastructure-hold",
+            "Tier B GPU nodes all health_up=false — extraction system down, not data quality; migration continues",
+        )
+    } else if total >= 5 && structural_pass_rate < 0.80 {
         (
             "stop",
             "structural_pass_rate < 0.80 — pipeline issue requires investigation",
@@ -807,6 +850,7 @@ async fn calibration_report(
             "structural_pass_rate": structural_pass_rate,
             "mean_entity_f1": mean_entity_f1,
             "go_no_go": go_no_go,
+            "infrastructure_failure": infrastructure_failure,
         },
         "go_no_go_reason": reason,
     }))
@@ -853,6 +897,8 @@ async fn main() {
         .unwrap_or(100);
     let content_endpoint = std::env::var("SERVICE_INPUT_CONTENT_ENDPOINT")
         .unwrap_or_else(|_| "http://127.0.0.1:9081".into());
+    let doorman_endpoint = std::env::var("SERVICE_INPUT_DOORMAN_ENDPOINT")
+        .unwrap_or_else(|_| "http://127.0.0.1:9080".into());
 
     let http_client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
@@ -873,6 +919,7 @@ async fn main() {
         max_bytes,
         csv_batch_rows,
         content_endpoint,
+        doorman_endpoint,
         http_client,
     });
     let shared: SharedState = Arc::new(Mutex::new(AppState::default()));
