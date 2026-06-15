@@ -319,12 +319,12 @@ async fn main() -> anyhow::Result<()> {
                 // recovers. Health probe failures do not trip the circuit
                 // breaker directly (only dispatch failures do), so the
                 // original circuit-only predicate would miss the health-down
-                // case. Exception: when SLM_TIER_A_FIRST=true the hold is
-                // bypassed; Tier A is the confident primary so Tier B
-                // unavailability should not prevent shadow brief dispatch.
+                // case. SLM_TIER_A_FIRST does NOT bypass this hold: draining
+                // shadow briefs through Tier A when Tier B is offline starves
+                // entity extraction (same OLMo 7B slot). Hold regardless of
+                // tier routing preference.
                 let tier_b = drain_doorman_arc.doorman.tier_b_status();
-                if !tier_a_first
-                    && !tier_b.is_empty()
+                if !tier_b.is_empty()
                     && tier_b.values().all(|info| {
                         // Either the circuit has been open long enough, or
                         // health probes are failing (circuit may still be
