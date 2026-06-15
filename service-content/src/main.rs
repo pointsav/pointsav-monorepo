@@ -1,4 +1,5 @@
 mod config_http;
+mod entity_filter;
 mod graph;
 mod http;
 mod taxonomy;
@@ -37,16 +38,21 @@ Categories:\n\
 Omit:\n\
   - Software licences and SPDX identifiers (Apache-2.0, MIT, GPL-3.0, BSL-1.1). These are not companies.\n\
   - Programming languages, file formats, and protocol names (Rust, JSON, HTTP) unless they name a specific product.\n\
-  - Shell environment variables ($VAR_NAME) and command-line flags (--flag).\n\
+  - Shell environment variables and config symbols: $VAR_NAME, SLM_DATA_DIR, FOUNDRY_ARCHIVE_NAME — OMIT.\n\
+  - Code identifiers: backtick-quoted terms (`ghi_kwh_m2_yr`), snake_case names without spaces (service_content), file paths (./build.sh, src/main.rs, create-snapshot.sh), and call expressions (log(x), ops(slm), func()). OMIT ALL.\n\
+  - Commit-message prefixes of the form type(scope): ops(slm), feat(cache), fix(auth), chore(db) — these are NOT projects or accounts. OMIT.\n\
   - Statistical notation (α, β, γ, R², p-value) and mathematical symbols.\n\
   - Laws, regulations, and dates.\n\
+  - Generic technical concepts not attached to a proper name: \"software-as-a-service (SaaS)\", \"Hyperscaler\", \"real-time operating system (RTOS)\", \"distributed ledger technology\". These are descriptors, not entities. OMIT.\n\
+  - Placeholder values: \"not specified\", \"N/A\", \"unknown\", \"TBD\", \"none\", \"null\". OMIT.\n\
   - Generic spatial or role phrases that are not proper place names. A Location must be a specific named place.\n\
     EXCLUDE: \"retail anchor location\", \"downtown core\", \"the site\", \"trade area\".\n\
     INCLUDE: \"Murfreesboro, Tennessee\", \"Billings, Montana\", \"Chicago\".\n\
-  - Abstract concepts and generic role descriptions (not named entities).\n\
+  - Sentence fragments, clauses, or lists: any name containing a comma, \" and \", or starting with \"the\", \"a\", \"an\", \"this\". OMIT.\n\
   - Any entity whose name appears only in these instructions, not in the text.\n\
-A token that looks like a proper noun is not automatically an entity. If it is a licence,\n\
-a format, or a generic descriptor, omit it rather than forcing it into Company or Location.\n\
+Country names: when a country appears as an entity, classify it as Location, NEVER as Company. \"Portugal\" → Location.\n\
+Hard constraint: entity_name must be a short proper noun or proper-noun phrase. Maximum eight words.\n\
+A token that looks like a proper noun is not automatically an entity. If it is a licence, a format, a generic descriptor, or a code identifier, omit it rather than forcing it into Company or Location.\n\
 If an entity does not clearly fit one category, omit it rather than guessing.\n\
 Return only a JSON array. Each element must have exactly two fields: \"classification\" and \"entity_name\".\n\
 If no entities are found, return an empty array [].";
@@ -511,6 +517,22 @@ fn raw_entities_to_graph(
             if entity_name.is_empty() || classification.is_empty() {
                 return None;
             }
+            // Change 2: deterministic noise filter — rejects env vars, file paths,
+            // snake_case identifiers, call expressions, fragments, and placeholders.
+            if entity_filter::is_noise_entity_name(&entity_name) {
+                return None;
+            }
+            // Change 5: word-count gate — sentences and clauses are not entity names.
+            if entity_name.split_whitespace().count() > 8 {
+                return None;
+            }
+            // Change 4: type-coherence validation — corrects or rejects misclassified
+            // entities (country-as-Company, path-as-Project, CAPS-as-Account).
+            let classification =
+                match entity_filter::coerce_classification(&entity_name, &classification) {
+                    Some(cls) => cls,
+                    None => return None,
+                };
             // Reject out-of-vocabulary classifications. OLMo may emit values such as
             // "Licence" or "Technology" when the prompt omit list is insufficient.
             // Dropping them here prevents bad data from landing in LadybugDB.
@@ -564,6 +586,20 @@ fn write_enrichment_dpo_pair(
     if tier_a_raw.is_empty() {
         return; // no rejected signal — DPO pair would teach verbosity, not accuracy
     }
+    // Change 3: DPO pre-save validator — strip commit prefixes and noise from both
+    // sides before comparison and serialization. Prevents degenerate pairs (where the
+    // "chosen" side consists entirely of ops(slm)-style noise) from corrupting the corpus.
+    let tier_b_clean = entity_filter::clean_dpo_side(tier_b_raw);
+    let tier_a_clean = entity_filter::clean_dpo_side(tier_a_raw);
+    if tier_b_clean.is_empty() {
+        return; // all Tier B entities were noise — no training signal after cleaning
+    }
+    if tier_b_clean.len() < tier_a_clean.len() {
+        return; // cleaning made chosen worse than rejected — degenerate pair
+    }
+    // Shadow-rebind: rest of function operates on cleaned slices.
+    let tier_b_raw = tier_b_clean.as_slice();
+    let tier_a_raw = tier_a_clean.as_slice();
     // Source-grounding: reject the pair if any Tier B entity name is absent
     // (case-insensitive) from the source corpus text. Prevents Tier B hallucinations
     // (verified: "Woodfine Management Corp.", "service-slm", "Vancouver" fabricated
@@ -985,6 +1021,65 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("sc-test-{}-{}", suffix, ms));
         fs::create_dir_all(&dir).unwrap();
         dir
+    }
+
+    #[test]
+    fn raw_entities_rejects_snake_case_noise() {
+        let raw = vec![
+            serde_json::json!({"entity_name": "SLM_DATA_DIR", "classification": "Account"}),
+            serde_json::json!({"entity_name": "Jennifer Woodfine", "classification": "Person"}),
+        ];
+        let result = raw_entities_to_graph(&raw, "jennifer", 0.75);
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].entity_name, "Jennifer Woodfine");
+    }
+
+    #[test]
+    fn raw_entities_rejects_overlong_fragment() {
+        let raw = vec![serde_json::json!({
+            "entity_name": "a system that extracts entities from documents in the pipeline",
+            "classification": "Project"
+        })];
+        let result = raw_entities_to_graph(&raw, "jennifer", 0.75);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn raw_entities_coerces_country_to_location() {
+        let raw = vec![serde_json::json!({
+            "entity_name": "Portugal",
+            "classification": "Company"
+        })];
+        let result = raw_entities_to_graph(&raw, "jennifer", 0.75);
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].classification, "Location");
+    }
+
+    #[test]
+    fn dpo_pair_drops_commit_prefix_noise() {
+        // ops(slm) on Tier B chosen side should cause the pair to be dropped.
+        let tier_b = vec![serde_json::json!({
+            "classification": "Project",
+            "entity_name": "ops(slm)"
+        })];
+        let tier_a = vec![serde_json::json!({
+            "classification": "Person",
+            "entity_name": "Peter Woodfine"
+        })];
+        let dir = tmp_dir("commit-prefix");
+        write_enrichment_dpo_pair(
+            "DOC_test-dpo_001",
+            "Peter Woodfine committed ops(slm) changes.",
+            &tier_a,
+            &tier_b,
+            dir.to_str().unwrap(),
+        );
+        assert_eq!(
+            std::fs::read_dir(&dir).unwrap().count(),
+            0,
+            "pair whose chosen side is all commit-prefix noise must be dropped"
+        );
+        std::fs::remove_dir_all(&dir).ok();
     }
 
     #[test]
