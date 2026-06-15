@@ -23,9 +23,7 @@ enum ExtractResult {
     Failed,
 }
 
-/// Canonical classification vocabulary. Must match the runtime enum guard in
-/// `raw_entities_to_graph` — keep the two in sync.
-const ALLOWED_CLASSIFICATIONS: [&str; 5] = ["Person", "Company", "Project", "Account", "Location"];
+// Classification vocabulary defined in entity_filter::ALLOWED_CLASSIFICATIONS — single source of truth.
 
 /// System prompt shared between Tier A and Tier B extraction calls.
 const EXTRACTION_SYSTEM_PROMPT: &str = "Extract named entities from the text below. Classify each entity into exactly one category.\n\
@@ -536,7 +534,7 @@ fn raw_entities_to_graph(
             // Reject out-of-vocabulary classifications. OLMo may emit values such as
             // "Licence" or "Technology" when the prompt omit list is insufficient.
             // Dropping them here prevents bad data from landing in LadybugDB.
-            if !ALLOWED_CLASSIFICATIONS.contains(&classification.as_str()) {
+            if !entity_filter::ALLOWED_CLASSIFICATIONS.contains(&classification.as_str()) {
                 return None;
             }
             Some(GraphEntity {
@@ -573,29 +571,32 @@ fn raw_entities_to_graph(
 /// These fields appear in Tier A's GraphStore-hydrated path but are absent from
 /// Tier B's raw JSON response — without stripping them almost all pairs appear
 /// to differ even when the core extraction result is identical, polluting the corpus.
+/// Returns `true` if a DPO pair was durably written, `false` if skipped.
+/// Callers gate `mark_sweep_sha_complete` on this return value so the SHA
+/// ledger is only marked complete when a training pair was actually saved.
 fn write_enrichment_dpo_pair(
     worm_id: &str,
     corpus_text: &str,
     tier_a_raw: &[serde_json::Value],
     tier_b_raw: &[serde_json::Value],
     feedback_dir: &str,
-) {
+) -> bool {
     if tier_b_raw.is_empty() {
-        return;
+        return false;
     }
     if tier_a_raw.is_empty() {
-        return; // no rejected signal — DPO pair would teach verbosity, not accuracy
+        return false; // no rejected signal — DPO pair would teach verbosity, not accuracy
     }
-    // Change 3: DPO pre-save validator — strip commit prefixes and noise from both
-    // sides before comparison and serialization. Prevents degenerate pairs (where the
-    // "chosen" side consists entirely of ops(slm)-style noise) from corrupting the corpus.
+    // DPO pre-save validator — applies the SAME filter chain as raw_entities_to_graph:
+    // noise rejection + word-count gate + coerce_classification + ALLOWED_CLASSIFICATIONS.
+    // Ensures the chosen side of the DPO pair matches what actually lands in LadybugDB.
     let tier_b_clean = entity_filter::clean_dpo_side(tier_b_raw);
     let tier_a_clean = entity_filter::clean_dpo_side(tier_a_raw);
     if tier_b_clean.is_empty() {
-        return; // all Tier B entities were noise — no training signal after cleaning
+        return false; // all Tier B entities were noise — no training signal after cleaning
     }
     if tier_b_clean.len() < tier_a_clean.len() {
-        return; // cleaning made chosen worse than rejected — degenerate pair
+        return false; // cleaning made chosen worse than rejected — degenerate pair
     }
     // Shadow-rebind: rest of function operates on cleaned slices.
     let tier_b_raw = tier_b_clean.as_slice();
@@ -613,7 +614,7 @@ fn write_enrichment_dpo_pair(
             .unwrap_or(false)
     });
     if !all_grounded {
-        return; // hallucinated entity in chosen side — discard pair, write nothing
+        return false; // hallucinated entity in chosen side — discard pair, write nothing
     }
     // Normalize Tier A to {classification, entity_name} only — strips role_vector,
     // location_vector, contact_vector that are absent in Tier B's raw response.
@@ -647,7 +648,7 @@ fn write_enrichment_dpo_pair(
     if serde_json::to_string(&tier_a_sorted_cmp).unwrap_or_default()
         == serde_json::to_string(&tier_b_normalized_cmp).unwrap_or_default()
     {
-        return; // identical after normalization + sort — no training delta
+        return false; // identical after normalization + sort — no training delta
     }
     let prompt = format!("{}\n\nText:\n{}", EXTRACTION_SYSTEM_PROMPT, corpus_text);
     let now = chrono::Utc::now();
@@ -673,7 +674,9 @@ fn write_enrichment_dpo_pair(
         .open(&filename)
     {
         let _ = writeln!(f, "{}", pair);
+        return true;
     }
+    false
 }
 
 /// Write the git commit SHA to the sweep completion ledger after enrichment succeeds.
@@ -897,18 +900,6 @@ fn process_corpus(
             let graph_entities =
                 raw_entities_to_graph(&semantic_entities, effective_module_id, 0.95);
 
-            // Write enrichment DPO pair: Tier A (rejected) vs Tier B (chosen)
-            if let Some(ref ta_ents) = tier_a_raw {
-                write_enrichment_dpo_pair(
-                    worm_id,
-                    corpus_text,
-                    ta_ents,
-                    &semantic_entities,
-                    feedback_dir,
-                );
-                mark_sweep_sha_complete(worm_id);
-            }
-
             // Build legacy CRM record
             let mut enriched_crm = Vec::new();
             for ent in &semantic_entities {
@@ -991,6 +982,21 @@ fn process_corpus(
                 "  -> [WATCHER] Semantic Integration Complete: {} Nodes Secured.",
                 enriched_crm.len()
             );
+
+            // Write enrichment DPO pair after both graph and CRM are durably committed.
+            // Gate SHA ledger update on pair actually being written (Bug B fix):
+            // mark_sweep_sha_complete only fires when a training pair was saved.
+            if let Some(ref ta_ents) = tier_a_raw {
+                if write_enrichment_dpo_pair(
+                    worm_id,
+                    corpus_text,
+                    ta_ents,
+                    &semantic_entities,
+                    feedback_dir,
+                ) {
+                    mark_sweep_sha_complete(worm_id);
+                }
+            }
 
             ExtractResult::Success
         }
@@ -1134,6 +1140,73 @@ mod tests {
             fs::read_dir(&dir).unwrap().count(),
             1,
             "pair with grounded entity must be written"
+        );
+        fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn dpo_write_returns_false_on_invalid_classification() {
+        // Tier B emits "Technology" — not in ALLOWED_CLASSIFICATIONS.
+        // clean_dpo_side rejects it → empty chosen → pair dropped → false.
+        let tier_b = vec![serde_json::json!({
+            "classification": "Technology",
+            "entity_name": "OpenSSL"
+        })];
+        let tier_a = vec![serde_json::json!({
+            "classification": "Project",
+            "entity_name": "OpenSSL"
+        })];
+        let dir = tmp_dir("bad-cls");
+        let saved = write_enrichment_dpo_pair(
+            "DOC_test-badcls_001",
+            "We use OpenSSL for TLS.",
+            &tier_a,
+            &tier_b,
+            dir.to_str().unwrap(),
+        );
+        assert!(!saved, "invalid classification must cause pair to be dropped");
+        assert_eq!(fs::read_dir(&dir).unwrap().count(), 0);
+        fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn dpo_write_returns_true_and_corrects_classification() {
+        // Tier B says Portugal=Company (wrong) + Jennifer Woodfine=Person (right).
+        // Tier A says only Portugal=Location (correct but incomplete).
+        // After clean_dpo_side:
+        //   Tier B clean: [{Portugal/Location (corrected), Jennifer Woodfine/Person}] — 2 entities
+        //   Tier A clean: [{Portugal/Location}] — 1 entity
+        // Tier B > Tier A (2 > 1), sides differ after normalization → pair is written.
+        // The file must contain "Location" not "Company" for Portugal.
+        let tier_b = vec![
+            serde_json::json!({"classification": "Company",  "entity_name": "Portugal"}),
+            serde_json::json!({"classification": "Person",   "entity_name": "Jennifer Woodfine"}),
+        ];
+        let tier_a = vec![
+            serde_json::json!({"classification": "Location", "entity_name": "Portugal"}),
+        ];
+        let dir = tmp_dir("coerce-cls");
+        let saved = write_enrichment_dpo_pair(
+            "DOC_test-coerce_001",
+            "Jennifer Woodfine works on a project based in Portugal.",
+            &tier_a,
+            &tier_b,
+            dir.to_str().unwrap(),
+        );
+        assert!(saved, "coerced pair with more entities than rejected must be written");
+        let entries: Vec<_> = fs::read_dir(&dir).unwrap().collect();
+        assert_eq!(entries.len(), 1);
+        let content = fs::read_to_string(entries[0].as_ref().unwrap().path()).unwrap();
+        // The DPO pair is double-encoded: tier_b_json (a JSON string) is embedded
+        // as a JSON string value, so serde_json escapes the inner quotes as \".
+        // The file contains \"Location\" (backslash-quote, not bare-quote).
+        assert!(
+            content.contains(r#"\"Location\""#),
+            "chosen side must contain corrected classification; content: {content}"
+        );
+        assert!(
+            !content.contains(r#"\"Company\""#),
+            "raw misclassification must not appear in chosen side; content: {content}"
         );
         fs::remove_dir_all(&dir).ok();
     }
