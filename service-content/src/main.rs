@@ -221,53 +221,95 @@ fn main() -> NotifyResult<()> {
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(10);
-    let mut deferred_ledgers: Vec<String> = Vec::new();
     let mut deferred_counts: std::collections::HashMap<String, u32> =
         std::collections::HashMap::new();
-    let mut circuit_deferred_ledgers: Vec<String> = Vec::new();
 
-    if let Ok(entries) = fs::read_dir(Path::new(&corpus_dir)) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().and_then(|s| s.to_str()) == Some("json") {
-                let Some(filename) = path
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .map(|s| s.to_string())
-                else {
-                    eprintln!(
-                        "[WARN] Skipping file with non-UTF8 or missing name: {:?}",
-                        path
-                    );
-                    continue;
+    // ── Parallel startup drain ────────────────────────────────────────────────
+    // Collects unprocessed CORPUS files, then processes them with N concurrent
+    // worker threads. CONTENT_DRAIN_THREADS defaults to 4.
+    // LbugGraphStore is Send+Sync (each call opens a fresh Connection from
+    // Arc<Database>); the HTTP server thread already calls it concurrently, so
+    // N drain workers are safe without additional locking on the store itself.
+    let (mut deferred_ledgers, mut circuit_deferred_ledgers) = {
+        use std::collections::VecDeque;
+        use std::sync::Mutex;
+
+        let drain_threads: usize = std::env::var("CONTENT_DRAIN_THREADS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(4)
+            .max(1);
+
+        let queue: Arc<Mutex<VecDeque<std::path::PathBuf>>> =
+            Arc::new(Mutex::new(
+                fs::read_dir(Path::new(&corpus_dir))
+                    .into_iter()
+                    .flatten()
+                    .flatten()
+                    .map(|e| e.path())
+                    .filter(|p| p.extension().and_then(|s| s.to_str()) == Some("json"))
+                    .filter(|p| {
+                        p.file_name()
+                            .and_then(|n| n.to_str())
+                            .map(|n| n.starts_with("CORPUS_") && !processed_ledgers.contains(n))
+                            .unwrap_or(false)
+                    })
+                    .collect(),
+            ));
+
+        let done_files: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+        let defer_files: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+        let circ_files: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+        // Serialize append_processed_ledger across workers (O_APPEND + fsync per entry).
+        let ledger_lock: Arc<Mutex<()>> = Arc::new(Mutex::new(()));
+
+        let mut handles = Vec::new();
+        for _ in 0..drain_threads {
+            let q = Arc::clone(&queue);
+            let gs = Arc::clone(&graph_store);
+            let (cd, de, mid, fd) = (
+                crm_dir.clone(),
+                doorman_endpoint.clone(),
+                module_id.clone(),
+                feedback_dir.clone(),
+            );
+            let (lp, ll) = (processed_ledgers_path.clone(), Arc::clone(&ledger_lock));
+            let (d1, d2, d3) = (
+                Arc::clone(&done_files),
+                Arc::clone(&defer_files),
+                Arc::clone(&circ_files),
+            );
+            handles.push(thread::spawn(move || loop {
+                let Some(path) = q.lock().unwrap().pop_front() else {
+                    break;
                 };
-                if filename.starts_with("CORPUS_") {
-                    if processed_ledgers.contains(&filename) {
-                        continue;
+                let fname = match path.file_name().and_then(|n| n.to_str()) {
+                    Some(n) => n.to_string(),
+                    None => continue,
+                };
+                match process_corpus(&path, &cd, &de, &mid, &gs, &fd) {
+                    ExtractResult::Success | ExtractResult::Failed => {
+                        let _g = ll.lock().unwrap();
+                        append_processed_ledger(&lp, &fname);
+                        drop(_g);
+                        d1.lock().unwrap().push(fname);
                     }
-                    match process_corpus(
-                        &path,
-                        &crm_dir,
-                        &doorman_endpoint,
-                        &module_id,
-                        &graph_store,
-                        &feedback_dir,
-                    ) {
-                        ExtractResult::Success | ExtractResult::Failed => {
-                            append_processed_ledger(&processed_ledgers_path, &filename);
-                            processed_ledgers.push(filename);
-                        }
-                        ExtractResult::DeferCircuitOpen => {
-                            circuit_deferred_ledgers.push(filename);
-                        }
-                        ExtractResult::DeferTransient => {
-                            deferred_ledgers.push(filename);
-                        }
-                    }
+                    ExtractResult::DeferCircuitOpen => d3.lock().unwrap().push(fname),
+                    ExtractResult::DeferTransient => d2.lock().unwrap().push(fname),
                 }
-            }
+            }));
         }
-    }
+        for h in handles {
+            let _ = h.join();
+        }
+        processed_ledgers.extend(done_files.lock().unwrap().drain(..));
+        let mut defer_guard = defer_files.lock().unwrap();
+        let mut circ_guard = circ_files.lock().unwrap();
+        (
+            std::mem::take(&mut *defer_guard),
+            std::mem::take(&mut *circ_guard),
+        )
+    };
 
     // ── Watcher loop (blocking — runs on the main task) ───────────────────────
     // Uses recv_timeout so the loop wakes every 30 s to retry deferred files.
@@ -279,7 +321,14 @@ fn main() -> NotifyResult<()> {
     println!("[SYSTEM] Active Kernel Surveillance Engaged on Corpus Plane...");
 
     loop {
-        match rx.recv_timeout(Duration::from_secs(30)) {
+        // Adaptive poll: 3 s when deferred files are waiting (10× faster retry during
+        // Doorman recovery), 30 s when idle (no pending backlog).
+        let poll_interval = if deferred_ledgers.is_empty() && circuit_deferred_ledgers.is_empty() {
+            Duration::from_secs(30)
+        } else {
+            Duration::from_secs(3)
+        };
+        match rx.recv_timeout(poll_interval) {
             Ok(Ok(Event { paths, .. })) => {
                 for path in paths {
                     if let Some(extension) = path.extension() {
@@ -316,7 +365,7 @@ fn main() -> NotifyResult<()> {
                                     ExtractResult::Success | ExtractResult::Failed => {
                                         deferred_ledgers.retain(|f| f != &filename);
                                         append_processed_ledger(&processed_ledgers_path, &filename);
-                                        processed_ledgers.push(filename);
+                                        processed_ledgers.insert(filename);
                                     }
                                     ExtractResult::DeferCircuitOpen => {
                                         deferred_ledgers.retain(|f| f != &filename);
@@ -353,7 +402,7 @@ fn main() -> NotifyResult<()> {
                     ) {
                         ExtractResult::Success | ExtractResult::Failed => {
                             append_processed_ledger(&processed_ledgers_path, &filename);
-                            processed_ledgers.push(filename);
+                            processed_ledgers.insert(filename);
                         }
                         ExtractResult::DeferCircuitOpen => {
                             // Tier B went down for this file — move it to the
@@ -369,7 +418,7 @@ fn main() -> NotifyResult<()> {
                                     filename, max_defer_retries
                                 );
                                 append_processed_ledger(&processed_ledgers_path, &filename);
-                                processed_ledgers.push(filename);
+                                processed_ledgers.insert(filename);
                             } else {
                                 deferred_ledgers.push(filename);
                             }
@@ -407,7 +456,7 @@ fn main() -> NotifyResult<()> {
                                 ExtractResult::DeferTransient => deferred_ledgers.push(probe),
                                 _ => {
                                     append_processed_ledger(&processed_ledgers_path, &probe);
-                                    processed_ledgers.push(probe);
+                                    processed_ledgers.insert(probe);
                                 }
                             }
                             if !circuit_deferred_ledgers.is_empty() {
@@ -428,9 +477,9 @@ fn main() -> NotifyResult<()> {
     Ok(())
 }
 
-fn load_processed_ledgers(path: &Path) -> Vec<String> {
+fn load_processed_ledgers(path: &Path) -> std::collections::HashSet<String> {
     let Ok(file) = fs::File::open(path) else {
-        return Vec::new();
+        return std::collections::HashSet::new();
     };
     std::io::BufReader::new(file)
         .lines()
