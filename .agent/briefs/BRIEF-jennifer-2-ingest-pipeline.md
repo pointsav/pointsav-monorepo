@@ -6,7 +6,7 @@ title: jennifer-2 Ingest Pipeline — Labeled Corpus → DataGraph + Entity Extr
 status: active
 owner: project-data
 created: 2026-06-14
-updated: 2026-06-14 (session 8)
+updated: 2026-06-14 (session 9)
 ---
 
 # BRIEF — jennifer-2 Ingest Pipeline
@@ -356,6 +356,15 @@ jennifer-sft-<stem>.jsonl` with `provenance: "human-curated"`.
 - DataGraph: 10,833 entities (was 10,831 at session 6 end, +2).
 - Migrations this session: 2 batches (offset 0-9, 8 processed / 2 skipped). Bloomberg/CRE research articles.
 
+**2026-06-14 — Session 9 (flow analysis + 3 DPO pipeline bugs fixed):**
+- Flow analysis requested by operator: traced pipeline flow, extraction flow, and DPO training flow.
+- Identified 3 bugs in service-content/src/main.rs:
+  - Bug A: `clean_dpo_side` missed word-count gate, `coerce_classification`, and ALLOWED_CLASSIFICATIONS — DPO chosen could contain entities that the graph ingest gate rejects or reclassifies. `ALLOWED_CLASSIFICATIONS` moved to `entity_filter.rs` (single source of truth).
+  - Bug B: `mark_sweep_sha_complete` always fired regardless of whether DPO pair was saved. `write_enrichment_dpo_pair` now returns `bool`; SHA write gated on return value.
+  - Bug C: DPO pair written before graph upsert — if graph write failed, orphaned pair on disk. DPO write moved to after graph and CRM writes both succeed.
+- 35/35 tests passing (5 new); clippy clean; commit 1ba2f459 (pwoodfine).
+- Stage 6 list extended: 1ba2f459 added to NEXT.md.
+
 **2026-06-14 — Session 8 (6-change entity quality implementation):**
 - Context compaction resumed from Session 7. Opus agent's 6-change implementation plan executed in full.
 - Sent Opus analysis to project-intelligence (msg-id: command-20260614-opus-code-analysis-6-concrete-changes-to).
@@ -380,7 +389,7 @@ jennifer-sft-<stem>.jsonl` with `provenance: "human-curated"`.
 - **flush_tier_a() re-queue decision**: When Tier A succeeds and Tier B circuit-open, CORPUS file permanently done, DPO pair skipped. → messaged project-intelligence 2026-06-14 (§4 of same msg); decision pending.
 - ~~**processed_ledgers.jsonl location**~~: RESOLVED — confirmed at /var/lib/local-content/graph/processed_ledgers.jsonl (59,298+ entries 2026-06-14). Not under jennifer cluster tree — correct. No restart re-processing risk.
 - **migration stack systemd**: service-fs :9103, service-extraction j2, service-input :9106 are ephemeral (not systemd-managed). Will die on VM reboot. Command Session should add to systemd or nightly pre-script.
-- **Stage 6 promotion**: Commits 597f8324 + 38708234 + c295f4ed + **1a914564** in outbox (project-data-20260614-stage6-blocker-fix + project-data-20260614-stage6-extraction-fix + command-20260615-stage-6-pending-project-data-service-con). Command Session to promote in that order.
+- **Stage 6 promotion**: Commits 597f8324 + 38708234 + c295f4ed + 1a914564 + **1ba2f459** in outbox. Command Session to promote in that order. (Messages: project-data-20260614-stage6-blocker-fix + project-data-20260614-stage6-extraction-fix + command-20260615-stage-6-pending-project-data-service-con)
 - **Phase 2 .md migration**: EXHAUSTED — Phase 2 reference dir fully migrated (offset 80 returned empty; 59 docs ingested 2026-06-14). No further nightly batches needed for Phase 2. Nightly cron (once registered) will handle any future Phase 2 additions.
 - **SFT corpus entity gap**: 138/139 pairs have 0 entities — human-curated YAMLs are a metric/theme corpus, not entity corpus. To produce entity training signal, either (a) back-derive entity labels from people.csv source references, or (b) generate Tier A entity labels and use as human-approved-olmo-self provenance.
 - **743 quarantined briefs**: queue-quarantine has 743 entries (not surfaced in /readyz). Permanently excluded unless re-driven. Need re-drive policy after hardened binary deploys. → supplementary msg to project-intelligence 2026-06-14.
