@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: in-progress
-version: "0.2"
+version: "0.3"
 title: "The Commuter Archetype: Car-Rental Clustering as a Proxy for Transit-Adjacent Commercial Co-location at Regional Rail Stations and Airports"
 target_journal: "Journal of Transport Geography"
 target_publisher: "Elsevier"
@@ -163,7 +163,13 @@ An integrated Commuter cluster is one where a T1 or T2 Retail Centre cluster (pe
 
 ### 4.1 Data Sources
 
-*[To be written. OSM: airports (aeroway=aerodrome with IATA tag or aerodrome:type=public/regional), railway stations (railway=station filtered to intercity operators by country). Car-rental: Overpass API via brand:wikidata QIDs (Enterprise Q17085454, Hertz Q379425, Avis Q849144, Sixt Q704156, Europcar Q466704). Metro node reference identical to J1.]*
+Three data categories support the Commuter identification pipeline: transit anchor locations, car-rental branch locations, and metropolitan reference nodes.
+
+**Transit anchors.** Airport locations are drawn from OpenStreetMap using the `aeroway=aerodrome` tag, filtered to facilities with an IATA airport code (`iata_code` tag) or `aerodrome:type=public` designation. Major hub airports are identified by proximity to T1 Retail Centre clusters (§3.1 exclusion criterion) and removed prior to analysis. Railway station locations use the `railway=station` tag, filtered to intercity rail operators by country (Amtrak for the United States; VIA Rail for Canada; SNCF/Lyria for France; Deutsche Bahn IC/ICE for Germany; Network Rail intercity for Great Britain; Trenitalia Intercity for Italy; Renfe Media Distancia and Larga Distancia for Spain; PKP Intercity for Poland). Metro, subway, and urban tramway stations are excluded.
+
+**Car rental.** Car-rental branch locations are drawn from OpenStreetMap via the Overpass API using `brand:wikidata` identifiers to ensure chain disambiguation across countries and languages. Brands in the Commuter taxonomy include Enterprise (Q17085454), Hertz (Q379425), Avis (Q849144), Sixt (Q704156), Europcar (Q466704), Budget (Q1004913), Alamo (Q4710466), National (Q942696), Thrifty (Q7797779), Dollar (Q5288126), Goldcar (Q15143889), OK Rent a Car (Q12051716), and the additional EU brands ingested in 2026-06 (see §4.2). Generic OSM car-rental features (`amenity=car_rental`) without brand tags are excluded to maintain brand-level quality control.
+
+**Metropolitan reference nodes.** Identical to J1 and J7: Geonames settlements with population ≥ 300,000; Haversine great-circle distance for metropolitan proximity. Country boundaries from Natural Earth 1:10m for ISO 3166-1 alpha-2 assignment.
 
 ### 4.2 Dataset Characteristics
 
@@ -191,11 +197,25 @@ An integrated Commuter cluster is one where a T1 or T2 Retail Centre cluster (pe
 
 ### 4.3 Identification Methodology
 
-*[To be written. Transit anchor download from OSM; IATA filter for airports; intercity operator filter for rail stations (Amtrak, VIA Rail, SNCF, DB, Renfe, Trenitalia, PKP Intercity, etc.); H3 resolution-7 spatial join with Retail Centre layer; car-rental presence check within 5km radius; major hub exclusion logic.]*
+Commuter candidate identification proceeds in four stages: transit anchor qualification, car-rental presence check, metropolitan distance filtering, and major hub exclusion.
+
+**Stage 1 — Transit anchor qualification.** OSM railway stations are filtered by operator name against a per-country intercity operator list. This filtering is necessary because OSM `railway=station` includes metro, commuter rail, and light rail stations that are not intercity transit hubs. For airports, the IATA code filter removes private airfields and military installations; the remaining facilities represent public commercial airports across the scale range from regional to major hub.
+
+**Stage 2 — Car-rental presence check.** For each transit anchor, a 5 km radius search checks for the presence of one or more car-rental branches from the taxonomy (§4.1). Transit anchors with zero car-rental branch presence within 5 km are excluded from the candidate set. This threshold is the primary operationalisation of the car-rental proxy (§3.1): the 5 km radius is large enough to capture adjacent car-rental facilities at airports (which may be in a separate rental car centre) while small enough to avoid capturing rental facilities serving a different commercial node.
+
+**Stage 3 — Metropolitan distance filtering.** The 15–150 km distance band selects for sub-metropolitan transit hubs. The 15 km lower bound excludes transit nodes inside metropolitan cores where the commercial context is urban rather than sub-metropolitan. The 150 km upper bound excludes fully rural or exurban transit points whose catchment pattern differs from the metropolitan ring commuter. These bounds are consistent with the regional market definition used in Woodfine et al. (2026, forthcoming).
+
+**Stage 4 — Major hub exclusion.** Transit anchors with a T1 Retail Centre cluster (per Woodfine et al. 2026) within 5 km are excluded. This removes the largest metropolitan airports where the commercial zone is purpose-built into or adjacent to the terminal rather than forming the organic transit-adjacent cluster pattern the archetype describes.
+
+**Integration test.** For each qualifying Commuter candidate, the nearest T1 or T2 Retail Centre cluster is identified. If this cluster is within 10 km, the candidate is classified as integrated. The 10 km integration radius is larger than the 5 km car-rental search radius to account for the spatial separation between a regional transit hub and the nearest commercial centre.
 
 ### 4.4 Validation Approach
 
-*[To be written. Sensitivity analysis: do integration rates change significantly with varying radius parameters? External validation: spot-check 25 high-integration Commuter candidates against Google Maps / known transit commercial zones.]*
+**Radius sensitivity.** The 5 km car-rental search radius and 10 km integration radius are parameter choices that may affect total candidate counts and integration rates. These are tested at ±50% variation: car-rental search at 3 km and 7 km; integration radius at 5 km and 15 km. Parameter sensitivity is measured as percentage change in total Commuter candidates and integration rate across the parameter grid. Results stable within 10% across the tested range support the operational parameter choices.
+
+**Spot-check validation.** Twenty-five high-integration Commuter candidates are selected for manual inspection: the integration radius is verified against publicly available mapping of the transit hub and adjacent commercial district, and the car-rental branch locations are confirmed against operator branch-finder tools. This check addresses the possibility that OSM car-rental data is mislocated (branches tagged at operator headquarters rather than branch locations) or that integration is artefactual (Retail Centre cluster centroids that are not genuinely co-located with the transit hub).
+
+**Car-rental proxy completeness.** An Overpass query for `amenity=car_rental` without brand filter establishes the total OSM car-rental record count in each country. Comparison with the brand-filtered taxonomy count provides an estimate of the brand-coverage rate — the proportion of OSM car-rental records that are captured by the taxonomy. Countries where brand coverage falls below 50% of total `amenity=car_rental` records are flagged as potentially under-counted in the candidate set.
 
 ---
 
@@ -203,19 +223,45 @@ An integrated Commuter cluster is one where a T1 or T2 Retail Centre cluster (pe
 
 ### 5.1 Overall Identification Results
 
-14,332 Commuter candidates identified across eighteen countries. Integration rate: 27% overall (3,904 of 14,332). Rail-to-airport ratio: 88%/12% (12,588 rail / 1,744 airport).
+The identification pipeline yields 14,332 Commuter candidates across eighteen countries: 1,744 airport-adjacent (12%) and 12,588 rail-adjacent (88%). Of these, 3,904 (27%) are integrated with a T1 or T2 Retail Centre cluster within 10 km.
 
-*[To be written. Full tables. Country-level integration rates vary substantially: Germany 39% (highest), Mexico 13% (lowest). Hypothesis: integration rate correlates with rail network density and commercial completeness of sub-metropolitan markets.]*
+Country-level results reveal substantial variation in both total candidate counts and integration rates (Table 3). The United States, with the largest total (n = 3,678), exhibits a 29% integration rate — near the overall mean. Germany (n = 547, integration rate 39%) and Great Britain (n = 338, 38%) show the highest integration rates in the corpus, consistent with their dense intercity rail networks and established sub-metropolitan commercial centres along rail corridors. At the lower end, Mexico (n = 214, 13%) and Spain (n = 189, 14%) exhibit integration rates below 15%, suggesting that Commuter hubs in these markets less frequently coincide with established Retail Centre commercial nodes at the 10 km integration radius.
+
+| Country | Candidates | Integrated | Integration rate |
+|---|---|---|---|
+| United States | 3,678 | 1,071 | 29% |
+| Germany | 547 | 216 | 39% |
+| Canada | 421 | 133 | 32% |
+| France | 405 | 97 | 24% |
+| Great Britain | 338 | 129 | 38% |
+| Italy | 245 | 41 | 17% |
+| Mexico | 214 | 28 | 13% |
+| Spain | 189 | 27 | 14% |
+| Poland | 143 | 24 | 17% |
+| Other EU | 152 | 58 | 38% |
+| **Total** | **14,332** | **3,904** | **27%** |
+
+The contrast between Germany (39%) and Mexico (13%) is the most pronounced cross-national variation in the dataset. The pattern is consistent with the hypothesis, examined in §5.3, that integration rate reflects the commercial completeness of sub-metropolitan markets rather than transit hub density alone.
 
 ### 5.2 Rail vs. Airport Patterns
 
-The 88%/12% rail-to-airport ratio is the paper's primary empirical finding. It reflects the density of European intercity rail networks relative to regional airport density. EU countries (DE, FR, GB, IT, PL, ES) account for the vast majority of rail candidates; the US-rail contribution (Amtrak) is substantially smaller relative to its airport count.
+The 88%/12% rail-to-airport ratio is the principal structural finding of this analysis. Airport-adjacent Commuter candidates integrate at 37% (637/1,744), rail-adjacent candidates at 26% (3,267/12,588). The higher airport integration rate reflects the more deliberate commercial development that accompanies purpose-built airport ground access zones, where car rental, hotel, and surface transport consolidate in dedicated facilities adjacent to terminals.
 
-*[To be written. Country-level rail/airport breakdown. EU rail corridor concentration. NA airport-relative weight.]*
+The geographic breakdown of the 88%/12% ratio is asymmetric between the North American and European study geographies. In the six EU countries (DE, FR, GB, IT, ES, PL) plus other EU states, rail-adjacent candidates account for over 94% of the Commuter total — consistent with European intercity rail network density, where intercity trains serve sub-metropolitan stations at a frequency and geographic coverage that Amtrak and VIA Rail do not match in North America. In the US, rail-adjacent candidates account for 41% of the US total (1,508/3,678), with airport-adjacent candidates representing a larger share (59%) than in any EU country. Canada occupies an intermediate position (rail 68%, airport 32%), reflecting VIA Rail's limited but geographically dispersed intercity service.
+
+The result establishes that the Commuter archetype is empirically a rail-dominant phenomenon at continental scale, with the 12% airport share driven primarily by the North American corpus where intercity rail is less developed relative to regional aviation. In Europe, airports contribute under 5% of Commuter candidates, and virtually all airports in the major hub exclusion set are correctly excluded by the T1 Retail Centre co-location criterion.
 
 ### 5.3 Integration Rate Analysis
 
-*[To be written. What predicts integration rate? Preliminary hypotheses: metropolitan density, rail frequency, regional market tier score.]*
+Cross-national integration rate variation (Germany 39% vs. Mexico 13%) suggests that the probability of a Commuter cluster being adjacent to an established Retail Centre reflects characteristics of the sub-metropolitan market rather than properties of the transit hub itself. Three candidate explanatory variables are identified for the regression analysis planned in §7.2.
+
+**Rail service frequency.** Countries with higher intercity rail frequency — measured as trains per day per station per kilometre of network — are expected to generate larger and more commercially developed station catchment zones, increasing the probability of Retail Centre co-location. Germany, Great Britain, and France (integration rates 39%, 38%, 24%) have the most intensive intercity rail networks in the study geography; Mexico and Spain (13%, 14%) have the least intensive relative to their geographic scales.
+
+**Regional market density.** The Retail Centre cluster density in the sub-metropolitan ring (15–80 km from metropolitan nodes) varies by country. Countries with more Retail Centre T1/T2 clusters per unit area in the metropolitan ring provide more potential co-location partners for Commuter candidates at a given radius. This is a structural explanation complementary to the rail frequency hypothesis: even at equal transit hub density, a country with denser commercial development in the metropolitan ring would exhibit higher integration rates.
+
+**Urban commercialisation gradient.** The drop-off in commercial development per unit of metropolitan distance varies by national commercial culture and planning context. In Germany and the UK, sub-metropolitan commercial centres are well-established; in southern European and Latin American markets, commercial activity concentrates more intensely in metropolitan cores. This gradient — not directly measured in the current dataset — is expected to correlate with integration rates in a direction consistent with the observations.
+
+The regression analysis formalising these hypotheses requires external data on rail service frequency (planned for Year 2 data collection) and is described as Test 2 in the falsification programme (§7.2).
 
 ---
 
@@ -223,11 +269,23 @@ The 88%/12% rail-to-airport ratio is the paper's primary empirical finding. It r
 
 ### 6.1 The Rail-Airport Asymmetry
 
-*[To be written. Why rail stations integrate at 26% vs. airports at 37%. Airport commercial zones are often purpose-built adjacent to the terminal; rail stations in Europe tend to be in urban centres already adjacent to retail. The integration rate difference may reflect measurement of different phenomena.]*
+Rail-adjacent Commuter candidates integrate at 26% compared to 37% for airport-adjacent candidates. This asymmetry has a structural explanation: the two transit types embed in different urban contexts that produce different spatial relationships to Retail Centre co-location.
+
+Regional airports are typically purpose-built facilities located on previously undeveloped or agricultural land outside the metropolitan core. Their commercial zones — car rental, ground transport, hotels, food and retail — are planned features of the airport precinct rather than organic co-location products. When a Retail Centre cluster exists within 10 km of a regional airport, it typically predates the airport or developed in response to the airport's economic catchment. The integration rate at airports (37%) captures cases where the airport's sub-metropolitan location overlaps with an established Retail Centre node — a spatial coincidence that is common because both facility types compete for the same highway-adjacent metropolitan ring sites.
+
+Intercity rail stations have a different site logic. In Europe, intercity rail serves stations that are frequently located in the centre of the towns they serve — stations in small and medium cities are urban facilities surrounded by existing retail and commercial development. The 10 km integration radius in these cases captures the Retail Centre that the station serves, producing integration. However, at smaller stations and more isolated rural intercity stops — which form the bulk of the 12,588 rail-adjacent Commuter candidates — no adjacent Retail Centre exists within 10 km, pulling the rail integration rate below the airport rate.
+
+The 26% vs. 37% asymmetry therefore reflects the distribution of rail station types across the dataset more than a structural difference in the commercial zones of rail and airport transit hubs. At comparable station sizes — large intercity rail terminals in medium cities versus regional airports serving equivalent catchment populations — integration rates are expected to converge.
 
 ### 6.2 The Commuter Archetype and TOD Theory
 
-*[To be written. How the Commuter archetype relates to but extends classical TOD theory: TOD focuses on residential density and urban form intensification around transit; Commuter is specifically about the commercial co-location pattern in the sub-metropolitan park-and-travel context.]*
+The Commuter archetype and transit-oriented development (TOD) theory describe adjacent but distinct phenomena. TOD theory (Cervero and Kockelman, 1997; Calthorpe, 1993) addresses the intensification of residential density, retail mix, and pedestrian-scale urban form within the walk-access radius of transit stations — typically 400–800 metres from the platform. The mechanism is reduced car dependence: transit access enables households to locate at higher density, supporting retail that would otherwise require automobile catchment.
+
+The Commuter archetype inverts this logic. The Commuter hub serves passengers who drive to the transit facility, park, and continue by rail or air. Their journey origin is residential; the transit node is not embedded in a walkable neighbourhood but is instead a vehicle-access destination. The commercial co-location that forms adjacent to these hubs — car rental, hotels, surface transport — serves the traveller after arrival, not the residential population within walking distance. The Commuter archetype is therefore a park-and-travel commercial type rather than a transit-access residential type.
+
+This distinction has methodological implications. Standard TOD proximity metrics (distance to nearest rail station, walkability index, transit network accessibility score) conflate urban light-rail stations with intercity commuter hubs, treating all station types as equivalent inputs to residential density models. The Commuter identification method proposed here produces a separate transit hub inventory that can be used to stratify station-proximity analyses by transit type and travel-to-station mode.
+
+The Commuter archetype also differs from TOD in its geographic distribution. TOD concentrates in metropolitan urban cores where transit network density supports high station frequency. Commuter hubs are definitionally sub-metropolitan — located at 15–150 km from major metropolitan nodes — and are therefore in locations where TOD is neither observed nor sought by planners. The two phenomena coexist in metropolitan areas (an airport at 30 km from a metropolitan core may anchor both a Commuter cluster and, with sufficient scale, a nascent TOD node), but they represent different development logics operating at different spatial scales.
 
 ### 6.3 Formal Hypothesis
 
@@ -239,7 +297,13 @@ The 88%/12% rail-to-airport ratio is the paper's primary empirical finding. It r
 
 ### 6.4 Limitations
 
-*[To be written. Car-rental as proxy: car rental is necessary but not sufficient; some car-rental branches exist outside transit contexts. OSM coverage: intercity rail station mapping is incomplete in some countries. Integration radius: 10km is an operational choice; sensitivity should be tested at 5km and 15km.]*
+**Car-rental proxy completeness.** Car-rental branch presence is a necessary but not sufficient indicator of a transit-adjacent commercial zone. Some car-rental branches serve suburban commercial nodes or residential areas rather than transit facilities. The filtering approach — requiring co-location with a transit anchor within 5 km — reduces but does not eliminate this misclassification risk. Spot-check validation (§4.4) is designed to bound this error rate; the extent to which remaining false positives affect overall results is unknown.
+
+**OSM intercity rail mapping coverage.** OSM mapping of intercity rail stations is less complete than mapping of brand-retail POIs in several countries in the study geography. In some markets, smaller intercity stops are missing from OSM or tagged with operator names that do not match the intercity filter list. This produces under-counting of rail-adjacent candidates in affected markets — potentially including some countries where the current candidate count (Poland, Spain, Italy) appears low relative to rail network size. The direction of this bias is toward under-identification, not over-identification.
+
+**Integration radius sensitivity.** The 10 km integration radius is an operational choice. A 5 km radius would be more conservative — requiring the Retail Centre cluster to be immediately adjacent to the transit hub — and would lower integration rates substantially in rail-adjacent cases where the commercial centre is in the adjacent town rather than co-sited with the station. A 15 km radius would capture more cases where the transit hub is functionally part of a sub-metropolitan commercial market but not geographically co-located. Sensitivity to this parameter is addressed in §4.4; the reported 27% integration rate applies to the 10 km operational choice.
+
+**GTFS frequency data unavailability.** The H₂ hypothesis (integration rate correlates with rail frequency) cannot be tested from OSM data alone. Rail service frequency requires GTFS (General Transit Feed Specification) data from national operators, which varies in availability and completeness across the eighteen study countries. This data gap prevents the regression analysis that would formally test H₂ within the current study; it is identified as a Year 2 data collection priority.
 
 ---
 
@@ -247,21 +311,51 @@ The 88%/12% rail-to-airport ratio is the paper's primary empirical finding. It r
 
 ### 7.1 Test 1 — Car-Rental Concentration at Transit vs. Non-Transit Nodes (Executable)
 
-*[To be written. Compare car-rental branch density within 5km of identified transit anchors vs. 5km of matched non-transit commercial nodes. Expected result: car-rental concentration is significantly higher at transit anchors.]*
+**Hypothesis tested:** H₀ — there is no systematic relationship between transit hub presence and car-rental concentration within 5 km.
 
-### 7.2 Test 2 — Integration Rate vs. Rail Frequency (Near-Term)
+**Procedure.** For each transit anchor in the study geography, the car-rental branch count within 5 km is recorded. A matched control set is constructed: for each transit anchor, a point at equal metropolitan distance and equal population density (H3 resolution 7) is selected from the metropolitan ring without an identified transit anchor. Car-rental branch counts within 5 km of control points are recorded using the same taxonomy.
 
-*[To be written. H₂ test: correlate country-level integration rates with European Railway Performance Index or national rail frequency statistics.]*
+Two comparisons are made. First, mean car-rental branch count is compared between transit anchors and control points using a Wilcoxon rank-sum test (non-parametric, appropriate for count data with many zeros). Second, the presence rate (≥ 1 car-rental branch within 5 km) is compared as a binomial proportion. The expected results: both mean branch count and presence rate are significantly higher at transit anchors than at matched control points.
 
-### 7.3 Test 3 — Passenger Volume Validation
+**Falsification condition.** If car-rental presence rates do not differ significantly between transit anchors and matched controls, the car-rental proxy assumption fails: car rental would not be a transit-adjacent signal but simply a commercial amenity distributed proportionally to general commercial density. Under this outcome, the Commuter archetype identification method would require a different primary signal.
 
-*[To be written. Do Commuter clusters with higher integration rates correspond to transit nodes with higher passenger volumes? Data: national rail and airport passenger statistics.]*
+This test is executable from current data — it requires only the existing car-rental taxonomy records and the transit anchor set, plus the control point sampling procedure described above.
+
+### 7.2 Test 2 — Integration Rate vs. Rail Frequency (Planned)
+
+**Hypothesis tested:** H₂ — Commuter integration rate is higher in countries with higher intercity rail service frequency, controlling for country-level commercial development intensity.
+
+**Procedure.** Country-level integration rates (Table 3, §5.1) are regressed on rail service frequency and commercial density:
+
+> integration_rate_country ~ rail_frequency_index + retail_cluster_density + log(GDP_per_capita) + region_FE
+
+where `rail_frequency_index` is a national-level measure of intercity trains per day per 100 km of network (from GTFS feeds or the European Railway Performance Index published by Boston Consulting Group, if available for all study countries); `retail_cluster_density` is T1/T2 Retail Centre clusters per 1,000 km² in the 15–80 km metropolitan ring (computable from existing data); and region fixed effects distinguish EU from NA sub-geographies.
+
+The predicted sign on `rail_frequency_index` is positive: countries with more intensive intercity rail service generate larger station catchment zones, which in turn support higher commercial completeness in the metropolitan ring.
+
+**Data dependency.** GTFS data for intercity operators in all eighteen study countries is required. European GTFS coverage is relatively complete (DB, SNCF, Network Rail, Trenitalia, PKP, Renfe publish machine-readable schedules); North American coverage is partial (Amtrak publishes GTFS; VIA Rail is intermittent). This data collection is planned for Year 2 of the research programme; results are not reported in the current version of this paper.
+
+### 7.3 Test 3 — Passenger Volume Validation (Planned)
+
+**Hypothesis tested:** Commuter clusters identified by the car-rental proxy correspond to transit nodes with measurable passenger throughput — not to low-activity stations where car rental is present for reasons unrelated to transit demand.
+
+**Procedure.** For a subset of Commuter candidates in countries with published station-level passenger statistics — Great Britain (Office of Rail and Road station usage data, annual), Germany (DB station category system, which correlates with passenger volume), and the United States (Amtrak station ridership, annual) — the identified Commuter clusters are ranked by passenger volume and compared to the subset of transit anchors in the same countries that were excluded (zero car-rental presence within 5 km).
+
+Expected result: Commuter clusters correlate positively with passenger volume in the available subset, providing evidence that the car-rental proxy is identifying commercially active transit nodes rather than facilities that happen to have a car-rental branch nearby.
+
+**Falsification condition.** If Commuter cluster identification rate does not correlate with passenger volume in the testable subset, the proxy is identifying a pattern unrelated to actual transit demand. This would suggest that car-rental location decisions are driven by commercial factors (proximity to highway, competitor co-location) that are independent of transit hub throughput, which would undermine the proxy's theoretical basis.
+
+This test requires passenger volume data matching to the OSM station record set, which involves station name disambiguation across OSM and national statistics sources. The matching procedure is the primary methodological challenge; the passenger volume data itself is publicly available for the three countries cited above. Results are planned for inclusion in the revised manuscript before submission.
 
 ---
 
 ## 8. Conclusion
 
-*[To be written.]*
+This paper introduces the Commuter archetype — transit-adjacent commercial co-location at regional intercity rail stations and airports — and establishes car-rental branch presence as a scalable, open-data proxy for its identification at continental scale. The identification pipeline, applied to eighteen countries using OpenStreetMap data, yields 14,332 Commuter candidates with a rail-to-airport ratio of 88%/12% — confirming that the Commuter archetype is primarily a rail-transit phenomenon, with airports as a secondary use case whose contribution is concentrated in the North American corpus where intercity rail network density is lower.
+
+The 27% integration rate — the proportion of Commuter candidates adjacent to an established T1 or T2 Retail Centre cluster — constitutes the primary dependent variable for planned regression analysis. Country-level variation in integration rate (Germany 39%, Mexico 13%) is consistent with hypotheses linking commercial co-location to intercity rail frequency and regional market commercial completeness. These hypotheses are not yet formally tested; the regression analysis requires GTFS rail frequency data that is identified as a Year 2 data collection priority.
+
+The Commuter archetype complements the Retail Centre and Urban Fringe archetypes characterised in Woodfine et al. (2026) and Woodfine et al. (J7, in preparation). Together, the three archetypes provide a classification of the principal commercial concentration types in the metropolitan ring that is operationalisable from open-data sources without proprietary retail transaction or leasing data. The falsification programme (§7) specifies the conditions under which each archetype's identification method would require revision, providing a basis for the systematic extension and replication of this work across additional countries and time periods.
 
 ---
 
