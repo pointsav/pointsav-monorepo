@@ -1779,6 +1779,12 @@ impl From<DoormanError> for ApiError {
             DoormanError::PriorityQueueIo { .. } => StatusCode::INTERNAL_SERVER_ERROR,
             // GCP Compute API failure — upstream provider fault. 502.
             DoormanError::GcpApi { .. } => StatusCode::BAD_GATEWAY,
+            // Corpus quality gate rejected a shadow tuple or DPO pair before
+            // write. The verdict/shadow request was syntactically valid but the
+            // content (template-echo, too-short, bad length ratio, Do-Not-Use
+            // term) does not meet corpus quality requirements. 422 — the caller
+            // may resubmit with corrected content.
+            DoormanError::CorpusGateRejected { .. } => StatusCode::UNPROCESSABLE_ENTITY,
         };
         Self {
             status,

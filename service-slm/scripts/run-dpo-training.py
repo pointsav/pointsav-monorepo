@@ -50,6 +50,32 @@ NUM_EPOCHS = 1   # lowered from 3; 3 epochs on single-task corpus → over-reinf
 BETA = 0.1  # DPO default. Prior 0.5 justification (empty-"[]" rejected) is obsolete — those pairs are now filtered.
 
 
+# Minimum rejected side length. Pairs below this are template stubs that teach
+# the model "longer = better" rather than quality (Jun-14 audit finding).
+MIN_REJECTED_CHARS = 80
+
+# Maximum chosen/rejected length ratio. At 6.7× (Jun-14 run), DPO converges to
+# token-count discrimination in <1 epoch. Cap at 5× to preserve genuine pairs
+# while removing the most degenerate cases. Must stay <= corpus_gate.rs MAX_LENGTH_RATIO (8.0).
+MAX_LENGTH_RATIO = 5.0
+
+# Template-echo prefixes on the rejected side indicating OLMo never executed.
+# "<unified diff" is intentionally NOT here — OLMo legitimately wraps real diffs
+# with that header; use _is_template_echo() to distinguish placeholder vs real.
+# Must stay in sync with corpus_gate.rs TEMPLATE_ECHO_PREFIXES.
+TEMPLATE_ECHO_PREFIXES = (
+    "<no diff provided",
+    "<no changes",
+    "<insert diff",
+    "auto-reject: olmo-attempt-below-senior-standard",
+    "auto-reject:",
+)
+
+# Markers that indicate the rejected field contains real diff content even if it
+# starts with a template prefix like "<unified diff>".
+_REAL_DIFF_MARKERS = ("diff --git", "--- a/", "+++ b/", "@@ ")
+
+
 def load_feedback_files(corpus_path: str) -> list[dict]:
     """Load DPO pairs from corpus_path.
 
@@ -57,10 +83,12 @@ def load_feedback_files(corpus_path: str) -> list[dict]:
     - apprenticeship-*.jsonl: git-commit shadow captures (chosen=operator diff, rejected=OLMo diff)
     - enrichment-*.jsonl: DataGraph disagreement pairs (chosen=Tier B, rejected=Tier A)
 
-    Filters applied:
-    - Skips pairs where rejected is empty ("[]") — length-bias degenerate pairs.
-    - Skips pairs where auto_verdict=False (explicitly rejected by operator or verdict pipeline).
-      Pairs with no auto_verdict field (most) are accepted.
+    Filters applied (in order):
+    - Skips pairs where rejected is empty ("[]") — degenerate.
+    - Skips pairs where rejected is a template-echo placeholder.
+    - Skips pairs where rejected is shorter than MIN_REJECTED_CHARS.
+    - Skips pairs where chosen/rejected length ratio exceeds MAX_LENGTH_RATIO.
+    - Skips pairs where auto_verdict=False (explicitly rejected by pipeline).
     """
     files = []
     for pat in ["apprenticeship-*.jsonl", "enrichment-*.jsonl"]:
@@ -68,24 +96,53 @@ def load_feedback_files(corpus_path: str) -> list[dict]:
     files = sorted(set(files))
     print(f"[corpus] found {len(files)} pair files in {corpus_path}")
     records = []
-    skipped = 0
+    skipped_format = 0
     skipped_empty_rejected = 0
+    skipped_template_echo = 0
+    skipped_too_short = 0
+    skipped_ratio = 0
     skipped_verdict = 0
+    ratio_sum = 0.0
+    ratio_count = 0
     for f in files:
         try:
             d = json.load(open(f))
         except Exception as e:
             print(f"[WARN] skip {f}: {e}", file=sys.stderr)
-            skipped += 1
+            skipped_format += 1
             continue
         if not d.get("prompt") or not d.get("chosen"):
-            skipped += 1
+            skipped_format += 1
             continue
         rejected = d.get("rejected", "")
-        # Skip degenerate pairs where Tier A returned nothing — not genuine preference signal
+        chosen = d.get("chosen", "")
+        # Skip degenerate pairs where rejected returned nothing
         if not rejected or rejected == "[]":
             skipped_empty_rejected += 1
             continue
+        # Skip template-echo placeholders (OLMo never executed).
+        # Rule 1: hard prefix match on known sentinel strings.
+        # Rule 2: "<unified diff" prefix is ONLY a placeholder when no real diff
+        # markers follow; OLMo legitimately wraps real diffs with that header.
+        rejected_lc = rejected.strip().lower()
+        is_echo = any(rejected_lc.startswith(p) for p in TEMPLATE_ECHO_PREFIXES)
+        if not is_echo and rejected_lc.startswith("<unified diff"):
+            is_echo = not any(m in rejected for m in _REAL_DIFF_MARKERS)
+        if is_echo:
+            skipped_template_echo += 1
+            continue
+        # Skip pairs where the rejected side is too short to carry preference signal
+        if len(rejected) < MIN_REJECTED_CHARS:
+            skipped_too_short += 1
+            continue
+        # Skip pairs with extreme length ratio (teaches length, not quality)
+        if len(rejected) > 0:
+            ratio = len(chosen) / len(rejected)
+            ratio_sum += ratio
+            ratio_count += 1
+            if ratio > MAX_LENGTH_RATIO:
+                skipped_ratio += 1
+                continue
         # Skip pairs explicitly rejected by verdict pipeline
         verdict = d.get("auto_verdict")
         if verdict is not None and verdict is not True:
@@ -97,10 +154,17 @@ def load_feedback_files(corpus_path: str) -> list[dict]:
         # concatenated tokenization differs, breaking DPO loss boundary detection).
         records.append({
             "prompt":   [{"role": "user",      "content": d["prompt"]}],
-            "chosen":   [{"role": "assistant", "content": d["chosen"]}],
+            "chosen":   [{"role": "assistant", "content": chosen}],
             "rejected": [{"role": "assistant", "content": rejected}],
         })
-    print(f"[corpus] loaded {len(records)} DPO pairs ({skipped} format-skipped, {skipped_empty_rejected} empty-rejected filtered, {skipped_verdict} verdict-rejected filtered)")
+    avg_ratio = ratio_sum / ratio_count if ratio_count > 0 else 0.0
+    print(
+        f"[corpus] loaded {len(records)} DPO pairs "
+        f"(format-skip={skipped_format} empty={skipped_empty_rejected} "
+        f"template-echo={skipped_template_echo} too-short={skipped_too_short} "
+        f"ratio>{MAX_LENGTH_RATIO:.0f}x={skipped_ratio} verdict={skipped_verdict}) "
+        f"avg_ratio={avg_ratio:.1f}x"
+    )
     return records
 
 
@@ -156,11 +220,22 @@ def upload_adapter_to_gcs(adapter_path: str, adapter_name: str) -> None:
 
 
 def run_training(records: list[dict], base_model: str, output_dir: str, dry_run: bool,
-                 max_runtime_seconds: int = 0, resume: bool = False) -> None:
-    """Fine-tune base_model with DPO on records, save adapter to output_dir."""
+                 max_runtime_seconds: int = 0, resume: bool = False,
+                 loss_type: str = "simpo", simpo_gamma: float = 0.5) -> None:
+    """Fine-tune base_model with DPO or SimPO on records, save adapter to output_dir.
+
+    loss_type='simpo' (default): uses SimPOTrainer + SimPOConfig. Eliminates the
+    reference-model log-probability term that causes length discrimination in standard
+    DPO. SimPO directly maximises the average log-prob margin without normalising by
+    the reference model, so the reward signal is insensitive to sequence length.
+
+    loss_type='dpo': standard DPO with implicit reference (PEFT base model). Use for
+    ablation comparisons against SimPO runs.
+    """
     print(f"[train] base model: {base_model}")
     print(f"[train] output dir: {output_dir}")
-    print(f"[train] DPO pairs:  {len(records)}")
+    print(f"[train] pairs:      {len(records)}")
+    print(f"[train] loss type:  {loss_type} (gamma={simpo_gamma} if simpo)")
     print(f"[train] LoRA r={LORA_R} alpha={LORA_ALPHA} beta={BETA}")
     if max_runtime_seconds:
         print(f"[train] runtime cap: {max_runtime_seconds}s ({max_runtime_seconds // 3600}h {(max_runtime_seconds % 3600) // 60}m)")
@@ -183,6 +258,13 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
         from peft import LoraConfig, TaskType, get_peft_model
         from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TrainerCallback
         from trl import DPOConfig, DPOTrainer
+        if loss_type == "simpo":
+            try:
+                from trl import SimPOConfig, SimPOTrainer
+            except ImportError:
+                print("[WARN] SimPOConfig not found in this trl version — falling back to DPO loss", file=sys.stderr)
+                print("[WARN] To enable SimPO: pip install --upgrade trl>=1.4", file=sys.stderr)
+                loss_type = "dpo"
     except ImportError as e:
         print(f"[ERROR] Missing training library: {e}", file=sys.stderr)
         print("Install: pip install trl peft transformers datasets bitsandbytes", file=sys.stderr)
@@ -246,6 +328,8 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
     # Memory guardrails: DPO double-forward (policy + ref) exhausts 24 GB L4 at MAX_LENGTH=1024
     # even for 7B in 4-bit (21.97 GiB observed). Apply gradient checkpointing + short sequences
     # for all model sizes; 32B gets smaller batch on top.
+    # SimPO uses a single forward (no reference model) so memory is ~half of DPO — same cap
+    # kept for safety since gradient checkpointing is cheap.
     is_32b = "32B" in base_model or "32b" in base_model
     _batch_size = 1 if is_32b else BATCH_SIZE
     _grad_accum = 4 if is_32b else GRAD_ACCUM
@@ -255,25 +339,6 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
     else:
         print(f"[train] 7B memory mode: batch={_batch_size}, grad_ckpt=True, max_len={_max_length}")
 
-    training_args = DPOConfig(
-        output_dir=output_dir,
-        num_train_epochs=NUM_EPOCHS,
-        per_device_train_batch_size=_batch_size,
-        gradient_accumulation_steps=_grad_accum,
-        gradient_checkpointing=True,  # required for 7B DPO on L4 24 GB; was OOMing without it
-        gradient_checkpointing_kwargs={"use_reentrant": False},  # prevents silent zero-grad on transformers 5.x (TRL #2486)
-        learning_rate=LEARNING_RATE,
-        beta=BETA,
-        max_length=_max_length,
-        logging_steps=5,
-        save_steps=5,        # checkpoint every 5 steps (corpus is small; 50 was never reached in 1 epoch)
-        save_total_limit=2,  # keep only 2 most recent; avoids disk fill on spot VM across days
-        eval_strategy="no",           # eval needs 2× VRAM (ref+trained); disabled on L4 24 GB
-        report_to="none",
-        bf16=torch.cuda.is_available(),
-        remove_unused_columns=False,
-    )
-
     # expandable_segments avoids fragmentation-caused OOM on CUDA
     os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
@@ -281,15 +346,64 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
     if max_runtime_seconds:
         callbacks.append(RuntimeCapCallback(max_runtime_seconds, output_dir))
 
-    trainer = DPOTrainer(
-        model=model,
-        ref_model=None,  # uses implicit reference (PEFT base model)
-        args=training_args,
-        train_dataset=split["train"],
-        processing_class=tokenizer,
-        peft_config=peft_config,
-        callbacks=callbacks or None,
-    )
+    if loss_type == "simpo":
+        # SimPO: no reference model needed; uses average log-prob per token with a margin
+        # (gamma). Directly addresses the length-discrimination artifact in standard DPO
+        # (Jun-14 audit finding: logps/chosen −1592 vs logps/rejected −238 = 6.7× gap).
+        training_args = SimPOConfig(
+            output_dir=output_dir,
+            num_train_epochs=NUM_EPOCHS,
+            per_device_train_batch_size=_batch_size,
+            gradient_accumulation_steps=_grad_accum,
+            gradient_checkpointing=True,
+            gradient_checkpointing_kwargs={"use_reentrant": False},
+            learning_rate=LEARNING_RATE,
+            gamma=simpo_gamma,
+            max_length=_max_length,
+            logging_steps=5,
+            save_steps=5,
+            save_total_limit=2,
+            eval_strategy="no",
+            report_to="none",
+            bf16=torch.cuda.is_available(),
+            remove_unused_columns=False,
+        )
+        trainer = SimPOTrainer(
+            model=model,
+            args=training_args,
+            train_dataset=split["train"],
+            processing_class=tokenizer,
+            peft_config=peft_config,
+            callbacks=callbacks or None,
+        )
+    else:
+        training_args = DPOConfig(
+            output_dir=output_dir,
+            num_train_epochs=NUM_EPOCHS,
+            per_device_train_batch_size=_batch_size,
+            gradient_accumulation_steps=_grad_accum,
+            gradient_checkpointing=True,  # required for 7B DPO on L4 24 GB; was OOMing without it
+            gradient_checkpointing_kwargs={"use_reentrant": False},  # prevents silent zero-grad on transformers 5.x (TRL #2486)
+            learning_rate=LEARNING_RATE,
+            beta=BETA,
+            max_length=_max_length,
+            logging_steps=5,
+            save_steps=5,        # checkpoint every 5 steps (corpus is small; 50 was never reached in 1 epoch)
+            save_total_limit=2,  # keep only 2 most recent; avoids disk fill on spot VM across days
+            eval_strategy="no",           # eval needs 2× VRAM (ref+trained); disabled on L4 24 GB
+            report_to="none",
+            bf16=torch.cuda.is_available(),
+            remove_unused_columns=False,
+        )
+        trainer = DPOTrainer(
+            model=model,
+            ref_model=None,  # uses implicit reference (PEFT base model)
+            args=training_args,
+            train_dataset=split["train"],
+            processing_class=tokenizer,
+            peft_config=peft_config,
+            callbacks=callbacks or None,
+        )
 
     print(f"[train] starting DPO training on {len(split['train'])} pairs ...")
     resume_ckpt = None
@@ -330,6 +444,14 @@ def main() -> None:
     parser.add_argument("--resume", action="store_true",
                         help="Resume training from the latest checkpoint in output_dir. "
                              "Pass on every daily run to accumulate training incrementally.")
+    parser.add_argument("--loss-type", default="simpo", choices=["simpo", "dpo"],
+                        help="Preference learning objective. 'simpo' (default) avoids the "
+                             "reference-model length-normalisation bias that caused token-count "
+                             "discrimination in the Jun-14 run. 'dpo' for ablation comparison.")
+    parser.add_argument("--simpo-gamma", type=float, default=0.5,
+                        help="SimPO margin (gamma). Default 0.5. Increase to widen the "
+                             "reward margin between chosen and rejected; decrease if training "
+                             "is unstable on small corpora. Ignored when --loss-type=dpo.")
     args = parser.parse_args()
 
     corpus_path = args.corpus
@@ -348,7 +470,9 @@ def main() -> None:
 
     run_training(records, args.base_model, output_dir, dry_run=args.dry_run,
                  max_runtime_seconds=args.max_runtime_seconds,
-                 resume=args.resume)
+                 resume=args.resume,
+                 loss_type=args.loss_type,
+                 simpo_gamma=args.simpo_gamma)
 
     if args.upload_gcs and not args.dry_run:
         upload_adapter_to_gcs(output_dir, args.adapter_name)
