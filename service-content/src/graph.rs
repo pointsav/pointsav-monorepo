@@ -34,6 +34,9 @@ pub trait GraphStore: Send + Sync {
     /// Count all Entity nodes in the graph across all modules. Used by /healthz to
     /// surface the real entity count rather than always reporting 0.
     fn count_all(&self) -> Result<usize>;
+    /// Delete a single entity by module_id + entity_name. Returns Ok(()) on success
+    /// or if the entity did not exist. Used by the /v1/graph/cleanup endpoint.
+    fn delete_entity(&self, module_id: &str, entity_name: &str) -> Result<()>;
 }
 
 pub struct LbugGraphStore {
@@ -266,6 +269,26 @@ impl GraphStore for LbugGraphStore {
             )
         })?;
         Ok(0)
+    }
+
+    fn delete_entity(&self, module_id: &str, entity_name: &str) -> Result<()> {
+        let conn = self.conn()?;
+        let mut stmt = conn
+            .prepare(
+                "MATCH (e:Entity) \
+                 WHERE e.module_id = $module_id AND e.entity_name = $entity_name \
+                 DELETE e",
+            )
+            .map_err(|e| anyhow!("Failed to prepare delete_entity: {}", e))?;
+        conn.execute(
+            &mut stmt,
+            vec![
+                ("module_id", Value::String(module_id.to_string())),
+                ("entity_name", Value::String(entity_name.to_string())),
+            ],
+        )
+        .map_err(|e| anyhow!("Failed to execute delete_entity for '{}': {}", entity_name, e))?;
+        Ok(())
     }
 
     fn count_all(&self) -> Result<usize> {
