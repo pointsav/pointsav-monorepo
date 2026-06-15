@@ -1,0 +1,49 @@
+<section class="scaling" data-label="OS Matrix" data-screen-label="Platform Foundation — Nine Operating Systems by Tier and Licensing">
+    <div class="head">
+      <span class="cat-tag">Platform Foundation</span>
+      <div class="eyebrow">Operating System Matrix</div>
+      <h2>Nine Operating Systems</h2>
+      <div class="crumb">The platform is not one program but nine operating systems arranged in three tiers — so the open-core line is drawn between layers, not bolted on after the fact.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <!-- LEFT: the three tiers and their OS layers -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Three tiers, nine systems</span></div>
+        <div class="cmp-item lead">Delivery — Workplace / Console / Mobile OS</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">role-based HUDs</span><span class="s">F12 human-authorization checkpoint</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">Orchestration — MediaKit / Totebox / Interface OS</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">WORM flat-file archive</span><span class="s">stateless cross-archive aggregation</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">Private Network — Infrastructure / Repository / Network Admin OS</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">on-prem / leased / cloud / hybrid</span><span class="s">machine-based authorization</span>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <!-- RIGHT: how licensing maps onto the matrix -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Where licensing falls</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The <b>base node — ToteboxOS — is FOSS</b>. A single entity runs one archive at no charge; the layers beneath it are open source down to the kernel-to-dependencies rows.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The <b>commercial boundary is the Interface OS</b> in the Orchestration tier — stateless multi-archive aggregation is the one proprietary, paid layer. This is the open-core model — per Wikipedia, open-core (GitLab, Grafana).</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Each layer is its own VM image rather than a process on a shared OS, giving stronger tenant separation than container-on-shared-kernel — per NIST SP 800-190.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">For investors the matrix is the <b>sovereignty thesis for SMBs</b>: autonomy over data, operations, and infrastructure within a regulatory boundary — a market Gartner sizes at ~$37B sovereign-cloud IaaS growing toward ~$169B by 2028.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Which of the nine layers does your firm actually touch day to day?</span>
+        <span>Does the FOSS base node give you a credible exit if you ever leave the paid tier?</span>
+        <span>Is the per-layer VM isolation a procurement requirement for your auditors?</span>
+      </div>
+    </div>
+  </section>

@@ -1,0 +1,37 @@
+  <section class="scaling" data-label="Communications" data-screen-label="Integration &amp; Data Portability — Communications Services: Maildir Flat-File Record Model">
+    <div class="head">
+      <span class="cat-tag">Integration &amp; Data Portability</span>
+      <div class="eyebrow">Totebox OS — Communications</div>
+      <h2>Communications as Flat Files</h2>
+      <div class="crumb">Email, chat, calendar, and conferencing are stored one file per message — not locked inside a mail server's database.</div>
+    </div>
+
+    <div class="cmp2">
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">The record model</span></div>
+        <div class="cmp-item lead">One file per message; one Totebox per person</div>
+        <div class="cmp-sub" style="margin-left:0;flex-wrap:wrap;gap:12px 26px;">
+          <span class="s">email</span><span class="s">chat</span><span class="s">calendar</span><span class="s">conferencing</span>
+        </div>
+        <div class="cmp-item" style="margin-top:24px;">Each message lands write-once. Deletion is a tombstone, never an erase — the archive stays append-only and auditable.</div>
+      </div>
+      <div class="cmp-div"></div>
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Why Maildir</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Lock-free <b>tmp/new/cur</b> directory layout — safe to read and write over a networked file system without a database daemon. &mdash; per Maildir (D. J. Bernstein).</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">A proven enterprise format, not a bespoke schema — documented as a first-class IMAP mailbox store. &mdash; per Dovecot Maildir documentation.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Maps directly onto the WORM, non-rewriteable record standard regulated firms already recognize. &mdash; per SEC Rule 17a-4 (2022).</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Do we ship a single Maildir surface for all four channels, or per-channel stores?</span>
+        <span>How does the F12 human checkpoint apply to outbound message authorization?</span>
+        <span>Is the tombstone-not-erase behavior enough to pass a 17a-4 retention review?</span>
+      </div>
+    </div>
+  </section>

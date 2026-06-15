@@ -1,0 +1,137 @@
+<section class="scaling privnet archive" data-label="Pairing as Permissions" data-screen-label="Pairing as Permissions — Authentication &amp; Pairing">
+    <div class="head">
+      <div class="eyebrow">Design System — Authentication</div>
+      <h2>Pairing as Permissions</h2>
+      <div class="crumb">When a device pairs, its IP address is written into an immutable Registry Token — the token is the access record, so there is no separate credential store to breach or migrate. The pairing itself is the grant: device IDs are tracked, but access follows the machine, not a role. Console OS input machines pair to a central Totebox OS &amp; Interface OS over P1–P4.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 720" preserveAspectRatio="none">
+        <!-- LEFT consoles --P1/P2/P3--> Totebox OS -->
+        <polyline points="290,150 400,150 470,310"></polyline>
+        <line x1="290" y1="372" x2="470" y2="372"></line>
+        <polyline points="290,560 400,560 470,420"></polyline>
+        <circle class="dot" cx="470" cy="310" r="4"></circle>
+        <circle class="dot" cx="470" cy="372" r="4"></circle>
+        <circle class="dot" cx="470" cy="420" r="4"></circle>
+
+        <!-- Totebox OS --P4--> Interface OS -->
+        <line x1="700" y1="366" x2="1040" y2="366"></line>
+
+        <!-- RIGHT consoles --P1/P2/P3--> Interface OS -->
+        <polyline points="1450,150 1340,150 1270,310"></polyline>
+        <line x1="1450" y1="372" x2="1270" y2="372"></line>
+        <polyline points="1450,560 1340,560 1270,420"></polyline>
+        <circle class="dot" cx="1270" cy="310" r="4"></circle>
+        <circle class="dot" cx="1270" cy="372" r="4"></circle>
+        <circle class="dot" cx="1270" cy="420" r="4"></circle>
+      </svg>
+
+      <!-- ===== AUTHENTICATION NOTE (top, spanning centre) ===== -->
+      <div class="pnet-boundary" style="left:300px; top:0px; width:1140px; height:108px;"></div>
+      <div class="pnet-cap" style="left:300px; width:1140px;"><span>Authentication and Permissions<small>Registry Token — pairing-based</small></span></div>
+      <span class="annot" style="left:340px; top:42px;">The Registry Token binds each device IP at pairing time — the token <em>is</em> the permission record. No role table, no password database.</span>
+      <span class="annot" style="left:340px; top:74px;">Paired unique IDs are still tracked; the access grant travels with the device, not a stored credential.</span>
+
+      <!-- ===== LEFT DEVICE CLUSTER ===== -->
+      <!-- top-left: Console OS / Input Machine -->
+      <div class="node console" style="left:30px; top:118px; width:200px; height:104px;">
+        <svg viewBox="0 0 200 104"><path class="ico-line" d="M10,100 L10,50 Q10,8 100,8 Q190,8 190,50 L190,100 Z"></path></svg>
+        <span class="node-label" style="top:34px;">Console OS<small>Input Machine</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:198px; top:130px;">6</div>
+      <div class="node vbar" style="left:50px; top:230px; width:160px;"><span class="node-label">Type II / Workplace OS</span></div>
+
+      <!-- mid-left: Console OS / F# Keys -->
+      <div class="node console" style="left:30px; top:328px; width:200px; height:104px;">
+        <svg viewBox="0 0 200 104"><path class="ico-line" d="M10,100 L10,50 Q10,8 100,8 Q190,8 190,50 L190,100 Z"></path></svg>
+        <span class="node-label" style="top:40px;">Console OS<small>F# Keys</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:198px; top:340px;">7</div>
+      <div class="node vbar" style="left:50px; top:440px; width:160px;"><span class="node-label">Type II / Workplace OS</span></div>
+
+      <!-- bottom-left: Console OS / consoles 8 9 10 -->
+      <div class="node console" style="left:30px; top:528px; width:200px; height:104px;">
+        <svg viewBox="0 0 200 104"><path class="ico-line" d="M10,100 L10,50 Q10,8 100,8 Q190,8 190,50 L190,100 Z"></path></svg>
+        <span class="node-label" style="top:40px;">Console OS<small>8 · 9 · 10</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:50px; top:640px; width:160px;"><span class="node-label">Type II / Workplace OS</span></div>
+
+      <!-- left pairing badges -->
+      <div class="node badge" style="left:380px; top:250px;">P1</div>
+      <div class="node badge" style="left:380px; top:350px;">P2</div>
+      <div class="node badge" style="left:380px; top:410px;">P3</div>
+
+      <!-- ===== CENTRE — TOTEBOX OS / INTERFACE OS PAIR ===== -->
+      <div class="node totebox" style="left:470px; top:300px; width:230px; height:132px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:475px; top:440px; width:220px;"><span class="node-label">Virtualization</span></div>
+
+      <div class="node badge" style="left:850px; top:344px;">P4</div>
+
+      <div class="node hexagon" style="left:1040px; top:288px; width:230px; height:160px;">
+        <svg viewBox="0 0 230 160"><polygon class="ico-line" points="11,80 60,16 170,16 219,80 170,144 60,144"></polygon></svg>
+        <span class="node-label">Interface OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:1045px; top:460px; width:220px;"><span class="node-label">Virtualization</span></div>
+
+      <!-- right pairing badges -->
+      <div class="node badge" style="left:1330px; top:250px;">P1</div>
+      <div class="node badge" style="left:1330px; top:350px;">P2</div>
+      <div class="node badge" style="left:1330px; top:410px;">P3</div>
+
+      <!-- ===== RIGHT DEVICE CLUSTER ===== -->
+      <!-- top-right: Console OS / Input Machine -->
+      <div class="node console" style="left:1510px; top:118px; width:200px; height:104px;">
+        <svg viewBox="0 0 200 104"><path class="ico-line" d="M10,100 L10,50 Q10,8 100,8 Q190,8 190,50 L190,100 Z"></path></svg>
+        <span class="node-label" style="top:34px;">Console OS<small>Input Machine</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:1678px; top:130px;">6</div>
+      <div class="node vbar" style="left:1530px; top:230px; width:160px;"><span class="node-label">Type II / Workplace OS</span></div>
+
+      <!-- mid-right: Console OS / F# Keys -->
+      <div class="node console" style="left:1510px; top:328px; width:200px; height:104px;">
+        <svg viewBox="0 0 200 104"><path class="ico-line" d="M10,100 L10,50 Q10,8 100,8 Q190,8 190,50 L190,100 Z"></path></svg>
+        <span class="node-label" style="top:40px;">Console OS<small>F# Keys</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:1678px; top:340px;">7</div>
+      <div class="node vbar" style="left:1530px; top:440px; width:160px;"><span class="node-label">Type II / Workplace OS</span></div>
+
+      <!-- bottom-right: Console OS / consoles 8 9 10 -->
+      <div class="node console" style="left:1510px; top:528px; width:200px; height:104px;">
+        <svg viewBox="0 0 200 104"><path class="ico-line" d="M10,100 L10,50 Q10,8 100,8 Q190,8 190,50 L190,100 Z"></path></svg>
+        <span class="node-label" style="top:40px;">Console OS<small>8 · 9 · 10</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:1530px; top:640px; width:160px;"><span class="node-label">Type II / Workplace OS</span></div>
+    </div>
+
+    <div class="future-callout">
+      <b>What pairing-as-permissions buys the economic model</b>
+      <div class="cmp-rules">
+        <div class="cmp-rule"><span class="cmp-sub">Decentralized orchestration</span> — pairing is mutual and machine-to-machine, so no central authority issues or revokes access. Each Totebox Archive carries its own Registry Token; the network is the authority.</div>
+        <div class="cmp-rule"><span class="cmp-sub">Authentication as permissions</span> — the pairing <em>is</em> the access grant. The Registry Token maps the device IP to its allowed peers, replacing a role-based permissions database with the topology itself.</div>
+        <div class="cmp-rule"><span class="cmp-sub">Freely transferable archives</span> — because access lives in the token bound to the device, an archive can move between on-prem, leased, or public-cloud hosts and its permissions move with it. No re-provisioning against a stored credential.</div>
+      </div>
+      <div class="cmp-rule"><span class="cmp-sub">Planned</span> — capability confinement of each paired VM under a planned seL4-based separation kernel is intended to harden these boundaries; it is not shipped today.</div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Notes</b>
+      <div class="nlist">
+        <span>One device can hold multiple pairings at once; each writes a distinct entry into the Registry Token.</span>
+        <span>Everyday pairing analogues: WhatsApp linked devices · Bluetooth bonding — the bond is the permission, not a separate login.</span>
+        <span>P1 — Input · P2 — System Administration · P3 — User · P4 — Interface</span>
+        <span>Legend: 1 Console OS · 6 Input Machine · 7 F# Keys Console · 8 BIM Console · 9 mNPS Console · 10 Building Preferences Console</span>
+        <span>Discussion: If the Registry Token is the only access record, which of the four pairing ports (P1–P4) would you want signed and append-only first, and what audit guarantee does that give a regulated investor?</span>
+        <span>Discussion: When an archive is transferred to a new host and its IP changes, how should the Registry Token be re-bound without ever introducing a central credential store — and which service would own that re-pairing logic?</span>
+      </div>
+    </div>
+  </section>

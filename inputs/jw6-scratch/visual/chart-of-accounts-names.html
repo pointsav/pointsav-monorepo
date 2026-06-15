@@ -1,0 +1,48 @@
+<section class="scaling" data-label="Chart-of-Accounts Names" data-screen-label="System of Record — Chart-of-Accounts File Naming in the Flat-File Archive">
+  <div class="head">
+    <span class="cat-tag">System of Record</span>
+    <div class="eyebrow">Record Keeping — Bookkeeping</div>
+    <h2>File-Name-as-Reference</h2>
+    <div class="crumb">The Input Machine derives each file name from the Chart of Accounts, so the name alone places the record — no lookup table required.</div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:3px;margin-bottom:20px;">
+    <div class="slab" style="width:145px;height:54px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;font-weight:700;background:var(--paper-200);">ENTITY</div>
+    <span style="color:var(--ink-400);font-weight:700;">&gt;</span>
+    <div class="slab" style="width:145px;height:54px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;font-weight:700;background:var(--paper-300);">ACCOUNT</div>
+    <span style="color:var(--ink-400);font-weight:700;">&gt;</span>
+    <div class="slab" style="width:145px;height:54px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;font-weight:700;background:var(--paper-200);">DATE</div>
+    <span style="color:var(--ink-400);font-weight:700;">&gt;</span>
+    <div class="slab" style="width:145px;height:54px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;font-weight:700;background:var(--paper-300);">DOCTYPE</div>
+    <span style="color:var(--ink-400);font-weight:700;">&gt;</span>
+    <div class="slab" style="width:145px;height:54px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;font-weight:700;background:var(--paper-200);">VENDOR</div>
+    <span style="color:var(--ink-400);font-weight:700;">&gt;</span>
+    <div class="slab" style="width:145px;height:54px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;font-weight:700;background:var(--paper-300);">DESCRIPTION</div>
+  </div>
+
+  <div class="cmp2" style="grid-template-columns:1fr;">
+    <div class="cmp-col">
+      <div class="cmp-item lead">A bookkeeping record filed by the Input Machine:</div>
+      <div class="cmp-sub" style="margin-left:0;flex-wrap:wrap;gap:12px 26px;">
+        <span class="s">BOOKKEEPING</span><span class="s">TITLECO1</span><span class="s">2025_03_07</span><span class="s">Invoice</span><span class="s">Property Management</span><span class="s">Snow Removal.PDF</span>
+      </div>
+      <div class="cmp-rules">
+        <div class="cmp-rule"><span class="rk">01</span><span class="rt"><b>Service</b> — the Totebox service that owns the record (Bookkeeping, Minute Book, IoT).</span></div>
+        <div class="cmp-rule"><span class="rk">02</span><span class="rt"><b>Entity</b> — the archive the record belongs to; one Totebox per entity.</span></div>
+        <div class="cmp-rule"><span class="rk">03</span><span class="rt"><b>ISO date</b> — sortable, locale-independent (YYYY_MM_DD).</span></div>
+        <div class="cmp-rule"><span class="rk">04</span><span class="rt"><b>Document type</b> — Invoice, Receipt, Resolution, drawn from the Chart of Accounts.</span></div>
+        <div class="cmp-rule"><span class="rk">05</span><span class="rt"><b>Account path</b> — expense category and description; the same fields a ledger row would carry, now in the name.</span></div>
+        <div class="cmp-rule"><span class="rk">06</span><span class="rt">The original PDF / ODT / ODS is the record; the name plus its SHA-256 hash is the only reference anyone needs.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes-strip">
+    <b>Your notes</b>
+    <div class="nlist">
+      <span>Who maintains the Chart-of-Accounts vocabulary the file names draw from?</span>
+      <span>How does the Input Machine resolve two records that map to the same name?</span>
+      <span>Can a record be re-filed under a corrected account without breaking the audit trail?</span>
+    </div>
+  </div>
+</section>

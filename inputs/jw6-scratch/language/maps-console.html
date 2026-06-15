@@ -1,0 +1,115 @@
+<section class="scaling sysadmin inmac" data-label="Maps Console" data-screen-label="Systems Design — Console OS — Maps Console">
+    <div class="head">
+      <span class="cat-tag">Operator Workspace</span>
+      <div class="eyebrow">Design System — Console OS</div>
+      <h2>Maps Console</h2>
+      <div class="crumb">The Maps Console pairs Location Intelligence with the Interface OS GIS Engine — drawing People, Businesses, Places and Parking Lots from each Totebox, with a web server for public-network delivery.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 760" preserveAspectRatio="none">
+        <defs>
+          <marker id="mc-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0E7C84" stroke="none"></path>
+          </marker>
+        </defs>
+
+        <!-- Console OS (Maps Console) down to Interface OS (GIS Engine) -->
+        <line x1="250" y1="370" x2="250" y2="486" marker-end="url(#mc-arrow)"></line>
+        <!-- SDK down into Interface OS -->
+        <line x1="540" y1="300" x2="540" y2="486" marker-end="url(#mc-arrow)"></line>
+        <!-- Browser down into Web Server -->
+        <line x1="730" y1="300" x2="700" y2="500" marker-end="url(#mc-arrow)"></line>
+        <!-- Web Server out to the Totebox fleet (No API) -->
+        <line x1="800" y1="520" x2="1140" y2="120" marker-end="url(#mc-arrow)"></line>
+        <line x1="800" y1="528" x2="1140" y2="290" marker-end="url(#mc-arrow)"></line>
+        <line x1="800" y1="536" x2="1140" y2="455" marker-end="url(#mc-arrow)"></line>
+        <line x1="800" y1="544" x2="1140" y2="610" marker-end="url(#mc-arrow)"></line>
+        <circle class="dot" cx="800" cy="532" r="4"></circle>
+      </svg>
+
+      <!-- ===== CONSOLE OS — MAPS CONSOLE ===== -->
+      <div class="adminwin" style="left:40px; top:8px; width:660px; height:362px;">
+        <div class="aw-head">
+          <span class="aw-ico"><svg viewBox="0 0 100 70"><path d="M6,66 L6,40 A44,34 0 0 1 94,40 L94,66"></path></svg></span>
+          <span class="aw-t">Console OS<small>Maps Console · 9</small></span>
+        </div>
+        <div class="aw-body">
+          <div class="aw-caps">
+            <span class="aw-cap">People</span>
+            <span class="aw-cap">OD</span>
+            <span class="aw-cap">Co-location</span>
+            <span class="aw-cap">Site Selection</span>
+            <span class="aw-cap">Demographics</span>
+            <span class="aw-cap">Spend</span>
+            <span class="aw-cap">Systems Administration</span>
+          </div>
+          <div class="aw-preview"></div>
+        </div>
+      </div>
+      <div class="restapi-label" style="left:540px; top:200px;">Location Intelligence</div>
+
+      <!-- SDK -->
+      <div class="metabox" style="left:460px; top:236px; width:160px; height:64px;">SDK</div>
+      <!-- Browser -->
+      <div class="doc" style="left:650px; top:212px; width:170px; height:88px;">
+        <span class="doc-t">Browser<br>(PointSav Maps)</span>
+      </div>
+
+      <!-- ===== INTERFACE OS — GIS ENGINE ===== -->
+      <div class="node hexagon" style="left:40px; top:486px; width:660px; height:200px;">
+        <svg viewBox="0 0 660 200"><polygon class="ico-line" points="14,100 78,20 582,20 646,100 582,180 78,180"></polygon></svg>
+        <span class="node-label">Interface OS<small>GIS Engine · 13</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <!-- Web Server -->
+      <div class="backend" style="left:540px; top:500px; width:200px; height:60px;">Web Server</div>
+
+      <!-- ===== TOTEBOX FLEET ===== -->
+      <div class="arch" style="left:1140px; top:48px; width:560px; height:148px;">
+        <div class="arch-head"><span class="sq"></span><span class="at"><small>Totebox 1</small>Records</span></div>
+        <div class="arch-body">
+          <div class="db"><span class="dbn">People</span></div>
+          <div class="db"><span class="dbn">Businesses</span></div>
+          <div class="db"><span class="dbn">Places</span></div>
+          <div class="db"><span class="dbn">Parking Lots</span></div>
+        </div>
+      </div>
+
+      <div class="arch" style="left:1140px; top:218px; width:560px; height:148px;">
+        <div class="arch-head"><span class="sq"></span><span class="at"><small>Totebox 2</small>Records</span></div>
+        <div class="arch-body">
+          <div class="db"><span class="dbn">People</span></div>
+          <div class="db"><span class="dbn">Businesses</span></div>
+          <div class="db"><span class="dbn">Places</span></div>
+          <div class="db"><span class="dbn">Parking Lots</span></div>
+        </div>
+      </div>
+
+      <div class="arch" style="left:1140px; top:388px; width:560px; height:148px;">
+        <div class="arch-head"><span class="sq"></span><span class="at"><small>Totebox 3</small>Records</span></div>
+        <div class="arch-body">
+          <div class="db"><span class="dbn">People</span></div>
+          <div class="db"><span class="dbn">Businesses</span></div>
+          <div class="db"><span class="dbn">Places</span></div>
+          <div class="db"><span class="dbn">Parking Lots</span></div>
+        </div>
+      </div>
+
+      <div class="arch" style="left:1140px; top:558px; width:560px; height:148px;">
+        <div class="arch-head"><span class="sq"></span><span class="at"><small>Totebox 4</small>3rd-Party Data</span></div>
+        <div class="arch-body">
+          <div class="db"><span class="dbn">CSV File</span><span class="dbs">imported from 3rd-party provider</span></div>
+        </div>
+      </div>
+
+      <div class="annot" style="left:1000px; top:560px;">No API</div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Notes</b>
+      <span>Browser delivery is deferred past the first iteration — which of the seven Maps capabilities would you own first, and what does its first pull request change?</span>
+      <span>The fleet feeds the GIS Engine with No API on the Totebox side — how does the engine read records directly without a query interface to each archive?</span>
+      <span>Routing: Interface web server serves www.maps.pointsav.com, the API path serves www.projects.woodfinegroup.com — what determines which audience hits which surface?</span>
+    </div>
+  </section>

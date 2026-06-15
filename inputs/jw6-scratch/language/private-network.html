@@ -1,0 +1,135 @@
+  <section class="scaling privnet" data-label="Private Network" data-screen-label="Private Network — Totebox Orchestration">
+    <div class="head">
+      <span class="cat-tag">Machine-Based Authorization</span>
+      <div class="eyebrow">Design System — Architecture</div>
+      <h2>Private Network</h2>
+      <div class="crumb">Console and Interface OS pair to Totebox VMs across a customer-owned private network — the same deployment runs on-prem, on a leased server, or on Google Cloud or AWS, because it is not a cloud you rent.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 806" preserveAspectRatio="none">
+        <!-- LEFT deployment stack -->
+        <line x1="130" y1="132" x2="130" y2="148"></line>
+        <line x1="130" y1="194" x2="130" y2="206"></line>
+        <line x1="130" y1="254" x2="130" y2="276"></line>
+        <line x1="130" y1="436" x2="130" y2="448"></line>
+        <!-- Interface OS --P4--> private network -->
+        <polyline points="236,330 270,318 430,236"></polyline>
+        <polyline points="236,372 270,392 700,360"></polyline>
+        <circle class="dot" cx="430" cy="236" r="4"></circle>
+        <circle class="dot" cx="700" cy="360" r="4"></circle>
+
+        <!-- RIGHT deployment stack -->
+        <line x1="1605" y1="132" x2="1605" y2="148"></line>
+        <line x1="1605" y1="190" x2="1605" y2="212"></line>
+        <line x1="1605" y1="320" x2="1605" y2="344"></line>
+        <!-- Type II / Totebox pair --> into network -->
+        <polyline points="1530,266 1340,266 1140,236"></polyline>
+        <circle class="dot" cx="1140" cy="236" r="4"></circle>
+
+        <!-- network + stacks feed the foundation bar (top edge y=498) -->
+        <line x1="510" y1="428" x2="510" y2="498"></line>
+        <line x1="780" y1="404" x2="780" y2="498"></line>
+        <line x1="1060" y1="404" x2="1060" y2="498"></line>
+        <line x1="130" y1="490" x2="130" y2="498"></line>
+        <line x1="1620" y1="418" x2="1620" y2="498"></line>
+        <circle class="dot" cx="510" cy="498" r="4"></circle>
+        <circle class="dot" cx="780" cy="498" r="4"></circle>
+        <circle class="dot" cx="1060" cy="498" r="4"></circle>
+
+        <!-- foundation bar (bottom edge y=556) feeds infostructure backends -->
+        <line x1="560" y1="556" x2="560" y2="592"></line>
+        <line x1="880" y1="556" x2="880" y2="592"></line>
+        <line x1="1195" y1="556" x2="1195" y2="578"></line>
+        <line x1="560" y1="666" x2="560" y2="680"></line>
+        <line x1="880" y1="666" x2="880" y2="680"></line>
+        <line x1="1195" y1="672" x2="1195" y2="680"></line>
+      </svg>
+
+      <!-- ===== LEFT DEPLOYMENT ===== -->
+      <div class="zone-label" style="left:0; top:4px;"><small>Deploy</small>Native</div>
+
+      <div class="node console" style="left:30px; top:24px; width:200px; height:108px;">
+        <svg viewBox="0 0 200 108"><path class="ico-line" d="M10,104 L10,52 Q10,8 100,8 Q190,8 190,52 L190,104 Z"></path></svg>
+        <span class="node-label" style="top:40px;">Console OS</span>
+      </div>
+      <div class="node badge" style="left:198px; top:14px;">1</div>
+      <div class="node vbar" style="left:50px; top:148px; width:160px;"><span class="node-label">Native</span></div>
+      <div class="node backend" style="left:50px; top:206px; width:160px; height:48px;">Workplace OS</div>
+
+      <div class="node hexagon" style="left:24px; top:276px; width:212px; height:160px;">
+        <svg viewBox="0 0 212 160"><polygon class="ico-line" points="10,80 56,14 156,14 202,80 156,146 56,146"></polygon></svg>
+        <span class="node-label">Interface OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:204px; top:286px;">2</div>
+      <div class="node vbar" style="left:36px; top:448px; width:188px;"><span class="node-label">AWS · Virtualization</span></div>
+
+      <!-- ===== CENTRE — DISTRIBUTED PRIVATE NETWORK ===== -->
+      <div class="pnet-boundary" style="left:300px; top:24px; width:1040px; height:404px;"></div>
+      <div class="pnet-cap" style="left:300px; width:1040px;"><span>Distributed Private Network<small>Not a cloud</small></span></div>
+
+      <div class="node totebox" style="left:430px; top:150px; width:160px; height:118px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node totebox" style="left:700px; top:96px; width:160px; height:118px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node totebox" style="left:700px; top:286px; width:160px; height:118px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node totebox" style="left:980px; top:170px; width:160px; height:118px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:250px; top:300px;">P4</div>
+
+      <!-- ===== RIGHT DEPLOYMENT ===== -->
+      <div class="zone-label" style="left:1500px; top:4px; text-align:right;"><small>Pair</small>Type&nbsp;II</div>
+
+      <div class="node console" style="left:1500px; top:24px; width:210px; height:108px;">
+        <svg viewBox="0 0 210 108"><path class="ico-line" d="M10,104 L10,52 Q10,8 105,8 Q200,8 200,52 L200,104 Z"></path></svg>
+        <span class="node-label" style="top:40px;">Console OS</span>
+      </div>
+      <div class="node badge" style="left:1678px; top:14px;">1</div>
+      <div class="node vbar" style="left:1520px; top:148px; width:170px;"><span class="node-label">Type II</span></div>
+      <div class="node totebox" style="left:1530px; top:212px; width:150px; height:108px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:1672px; top:222px;">3</div>
+      <span class="annot" style="left:1352px; top:248px;">pair to Totebox</span>
+      <div class="node backend col" style="left:1535px; top:344px; width:150px; height:74px;">Network<br>Admin OS</div>
+      <div class="node badge" style="left:1678px; top:336px;">S</div>
+
+      <!-- ===== FOUNDATION ===== -->
+      <div class="node ps-bar" style="left:30px; top:498px; width:1680px; height:58px;">PointSav&nbsp;·&nbsp;Infostructure OS&nbsp;—&nbsp;Virtualization</div>
+      <div class="node badge" style="left:18px; top:500px;">4</div>
+
+      <!-- ===== INFOSTRUCTURE BACKENDS ===== -->
+      <div class="node para" style="left:470px; top:592px; width:180px; height:74px;">
+        <span class="shape"></span><span class="node-label">Infostructure OS</span>
+      </div>
+      <div class="node backend" style="left:480px; top:680px; width:160px;">On-Prem</div>
+
+      <div class="node para" style="left:790px; top:592px; width:180px; height:74px;">
+        <span class="shape"></span><span class="node-label">Infostructure OS</span>
+      </div>
+      <div class="node backend" style="left:796px; top:680px; width:168px;">Leased Server</div>
+
+      <div class="node cloud" style="left:1110px; top:578px; width:170px; height:104px;">
+        <svg viewBox="0 0 100 100"><path class="ico-line" d="M26,72 C11,72 10,50 27,50 C22,33 49,29 51,47 C57,30 84,34 76,52 C93,53 89,72 73,72 Z"></path></svg>
+        <span class="node-label">Infostructure OS</span>
+      </div>
+      <div class="node backend" style="left:1118px; top:680px; width:154px;">Google Cloud</div>
+      <div class="node badge" style="left:1262px; top:566px;">B</div>
+
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>If a customer moves the same deployment from AWS to on-prem, what changes in the pairing topology — and what stays identical?</span>
+        <span>Which node here holds the customer's data at rest, and who controls the keys to it — the customer or PointSav?</span>
+        <span>The EU Data Act mandates cloud-switching rights; how does a not-a-cloud, customer-owned network make that a non-event rather than a migration project?</span>
+      </div>
+    </div>
+  </section>

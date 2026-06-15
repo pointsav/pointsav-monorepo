@@ -1,0 +1,132 @@
+  <section class="scaling inmac" data-label="Input Machine" data-screen-label="Input Machine">
+    <div class="head">
+      <span class="cat-tag">Operator Workspace</span>
+      <div class="eyebrow">Design System — Workflow</div>
+      <h2>Input Machine</h2>
+      <div class="crumb">Source PDFs enter through the Console OS panel, get aggregated by Interface OS, and land in the Totebox archive as named file-system folders an auditor can read directly.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 720" preserveAspectRatio="none">
+        <defs>
+          <marker id="im-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0E7C84" stroke="none"></path>
+          </marker>
+        </defs>
+        <!-- source docs drop into panel -->
+        <line x1="91" y1="140" x2="91" y2="216" marker-end="url(#im-arrow)"></line>
+        <line x1="279" y1="140" x2="279" y2="216" marker-end="url(#im-arrow)"></line>
+        <!-- panel down to interface -->
+        <line x1="200" y1="368" x2="200" y2="418"></line>
+        <!-- interface / console-os out to documents -->
+        <path d="M320,484 C420,484 410,170 470,113"></path>
+        <path d="M320,510 C420,510 430,280 470,233"></path>
+        <path d="M320,536 C420,536 440,380 470,339"></path>
+        <circle class="dot" cx="470" cy="113" r="4"></circle>
+        <circle class="dot" cx="470" cy="233" r="4"></circle>
+        <circle class="dot" cx="470" cy="339" r="4"></circle>
+
+        <!-- documents to archives -->
+        <path d="M670,113 C840,113 840,146 980,146"></path>
+        <path d="M670,233 C840,233 840,360 980,360"></path>
+        <path d="M670,339 C880,339 860,574 980,574"></path>
+        <path d="M670,424 C800,424 860,178 980,178"></path>
+        <path d="M670,486 C820,486 860,392 980,392"></path>
+        <circle class="dot" cx="980" cy="146" r="4"></circle>
+        <circle class="dot" cx="980" cy="360" r="4"></circle>
+        <circle class="dot" cx="980" cy="574" r="4"></circle>
+      </svg>
+
+      <!-- ===== ZONE 1 — INPUT MACHINE ===== -->
+      <div class="zone-label" style="left:0; top:-4px;"><small>Ingest</small>Sources</div>
+
+      <div class="doc" style="left:16px; top:48px; width:150px; height:92px;"><span class="doc-t">Invoice PDF</span></div>
+      <div class="doc" style="left:196px; top:48px; width:166px; height:92px;"><span class="doc-t">Agreement PDF</span></div>
+
+      <div class="inpanel" style="left:30px; top:216px; width:340px; height:152px;">
+        <svg class="shell" viewBox="0 0 340 152"><path class="ico-line" d="M8,148 L8,70 Q8,8 170,8 Q332,8 332,70 L332,148 Z"></path></svg>
+        <div class="ip-title">Input Machine Panel</div>
+        <div class="ip-tag">Console OS</div>
+        <div class="ip-fields"><i></i><i></i></div>
+        <div class="ip-text">Text box</div>
+        <div class="ip-plus">+</div>
+      </div>
+      <div class="node badge" style="left:348px; top:220px;">6</div>
+
+      <div class="node hexagon" style="left:80px; top:418px; width:240px; height:176px;">
+        <svg viewBox="0 0 240 176"><polygon class="ico-line" points="11,88 63,16 177,16 229,88 177,160 63,160"></polygon></svg>
+        <span class="node-label">Interface OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:300px; top:428px;">2</div>
+      <span class="annot" style="left:336px; top:474px;">console o/s</span>
+
+      <!-- ===== ZONE 2 — DOCUMENTS ===== -->
+      <div class="zone-label" style="left:470px; top:-4px;"><small>Extract</small>Documents</div>
+
+      <div class="doc" style="left:470px; top:54px; width:200px; height:118px;">
+        <span class="doc-t">Agreement PDF</span><span class="doc-meta">Metadata</span>
+      </div>
+      <div class="doc" style="left:470px; top:188px; width:200px; height:90px;"><span class="doc-t">Invoice PDF #1</span></div>
+      <div class="doc" style="left:470px; top:294px; width:200px; height:90px;"><span class="doc-t">Invoice PDF #2</span></div>
+      <div class="metabox" style="left:470px; top:400px; width:200px; height:48px;">Metadata</div>
+      <div class="metabox" style="left:470px; top:462px; width:200px; height:48px;">Metadata · 70 / 30</div>
+
+      <!-- ===== ZONE 3 — TOTEBOX ARCHIVES ===== -->
+      <div class="arch" style="left:980px; top:48px; width:740px; height:196px;">
+        <div class="arch-head"><span class="sq"></span><span class="at"><small>Totebox Archive</small>Corporate</span></div>
+        <div class="arch-body">
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Minute Book D/B</span><span class="dbs">‹ file-system folder</span></span>
+            <span class="pb">1</span>
+          </div>
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Bookkeeping D/B</span><span class="dbs">‹ file-system folder</span></span>
+            <span class="pb">2</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch" style="left:980px; top:262px; width:740px; height:196px;">
+        <div class="arch-head"><span class="sq"></span><span class="at"><small>Totebox Archive</small>Real Property · Building A</span></div>
+        <div class="arch-body">
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Minute Book D/B</span><span class="dbs">‹ file-system folder</span></span>
+            <span class="pb">1</span>
+          </div>
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Bookkeeping D/B</span><span class="dbs">‹ file-system folder</span></span>
+            <span class="pb">2</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch" style="left:980px; top:476px; width:740px; height:196px;">
+        <div class="arch-head"><span class="sq"></span><span class="at"><small>Totebox Archive</small>Real Property · Building B</span></div>
+        <div class="arch-body">
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Minute Book D/B</span><span class="dbs">‹ file-system folder</span></span>
+            <span class="pb">1</span>
+          </div>
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Bookkeeping D/B</span><span class="dbs">‹ file-system folder</span></span>
+            <span class="pb">2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Notes</b>
+      <span>Worked example: one corporation that owns two buildings, each building its own archive</span>
+      <span>Every console pairs directly to an individual Totebox; interfaces handle cross-archive aggregation</span>
+      <span>Which extraction step would you own first — and how is the 70/30 payment split written into the file name?</span>
+      <span>What stops a mis-filed PDF from landing in the wrong building's archive?</span>
+    </div>
+  </section>

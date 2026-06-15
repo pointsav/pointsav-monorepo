@@ -1,0 +1,61 @@
+<section class="scaling svcladder" data-label="Interface OS" data-screen-label="Systems Design — Interface OS">
+    <div class="head">
+      <span class="cat-tag">Engineering</span>
+      <div class="eyebrow">Design System — Interface OS</div>
+      <h2>Interface</h2>
+      <div class="crumb">The Interface OS aggregates from the Toteboxes over the private network and exposes a proprietary interface stack sold as separate chargeable products &mdash; each one a line item, each one billed where the data leaves the customer&rsquo;s own archives.</div>
+    </div>
+
+    <div class="stage">
+      <!-- Interface OS (square node) -->
+      <div class="tb-square">
+        <span class="tb-kick">vm</span>
+        <span class="tb-nm">Interface OS</span>
+      </div>
+      <div class="tb-stem"></div>
+
+      <!-- interface service ladder: each rung is a separately chargeable product -->
+      <div class="svc-ladder">
+        <div class="rung"><span class="rn">1</span>Command Centre API <span class="cmp-sub">orchestration access</span></div>
+        <div class="rung"><span class="rn">2</span>Data Engine <span class="cmp-sub">analytics</span></div>
+        <div class="rung"><span class="rn">3</span>Data Marketplace <span class="cmp-sub">licensed third-party data</span></div>
+        <div class="rung"><span class="rn">4</span>BIM Server <span class="cmp-sub">building information models</span></div>
+        <div class="rung"><span class="rn">5</span>Building ID Server <span class="cmp-sub">property registry</span></div>
+        <div class="rung"><span class="rn">6</span>Input Machine / IoT Connect <span class="cmp-sub">device + sensor ingest</span></div>
+        <div class="rung"><span class="rn">7</span>Media Kit / Private Git <span class="cmp-sub">distribution + source</span></div>
+      </div>
+
+      <!-- brace -->
+      <div class="svc-brace">
+        <svg viewBox="0 0 54 402" preserveAspectRatio="none">
+          <path d="M16,2 Q34,2 34,40 L34,182 Q34,201 50,201 Q34,201 34,220 L34,362 Q34,400 16,400"></path>
+        </svg>
+      </div>
+      <div class="svc-brace-label">Chargeable interfaces &mdash; private network</div>
+
+      <!-- F-keys Search surface, fed by the Command Centre API -->
+      <div class="arch-card">
+        <div class="cmp-head">F-keys console &mdash; Search surface</div>
+        <div class="cmp-rules">
+          <div class="cmp-item"><span class="cmp-rule">Structured filter fields</span> &mdash; entity type, date range, record category; no free-text guessing.</div>
+          <div class="cmp-item"><span class="cmp-rule">Keyboard-driven</span> &mdash; the full query is built and run without a mouse.</div>
+          <div class="cmp-item"><span class="cmp-rule">CSV / JSON export</span> &mdash; results leave as a file the customer owns, not a screen they screenshot.</div>
+        </div>
+      </div>
+
+      <!-- proprietary / charge callout -->
+      <div class="future-callout">
+        <div class="fc-kick">Why this is the revenue layer</div>
+        <div class="fc-text">The Totebox OS holds the customer&rsquo;s data and is theirs. The <b>interfaces are what we charge for and keep proprietary</b> &mdash; the Interface OS aggregates across multiple Toteboxes over the private network, and each product above (Command Centre API, Data Engine, Data Marketplace, BIM Server, Building ID Server) is licensed on its own. The <b>planned</b> seL4-isolation work and the <b>intended</b> Sovereign Data Foundation sit beneath this layer; neither ships today.</div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Notes</b>
+      <div class="nlist">
+        <span>Which interface here would you own first &mdash; and what would the first pull request to its API change for the customer&rsquo;s bill?</span>
+        <span>If every product is billed separately, what stops a customer from buying only the Data Engine and rebuilding the Command Centre API themselves &mdash; is the moat the code or the private-network aggregation?</span>
+        <span>The Search surface exports CSV/JSON the customer owns; how does that pricing survive once the data has left the archive once?</span>
+      </div>
+    </div>
+  </section>

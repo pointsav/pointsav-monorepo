@@ -1,0 +1,114 @@
+---
+topic: Customer TAM
+generated: 2026-06-14
+schema: foundry-datagraph-flat-v1
+---
+sources:
+  # --- (1) Pension fund / institutional asset manager digital transformation budgets ---
+  - url: "https://www.mckinsey.com/industries/financial-services/our-insights/beyond-the-balance-sheet-north-american-asset-management-2024"
+    title: "Beyond the balance sheet: North American asset management in 2024"
+    year: "2024"
+    publisher: "McKinsey & Company"
+    relevance: "Quantifies the rising share of operations-and-technology spend inside asset managers — the budget line PointSav's WORM record-keeping and multi-entity consolidation directly compete for. Establishes that the institutional asset-management buyer is structurally re-weighting toward technology, validating the investor-leg TAM thesis."
+    slide_context: "Use Cases / Economic Model / WORM Record Format; the institutional asset-manager buyer for the investor leg of the dual audience"
+    key_stat: "Operations-and-technology spending rose from roughly 15% to 20% of total cost base for North American asset managers, putting it on par with sales-and-marketing and general overhead."
+
+  - url: "https://www.mckinsey.com/capabilities/tech-and-ai/our-insights/tech-forward/reshaping-asset-management-operations-with-technology-transformation"
+    title: "Reshaping asset management operations with technology transformation"
+    year: "2024"
+    publisher: "McKinsey & Company"
+    relevance: "Frames the legacy-estate modernization problem that drives asset-manager technology budgets and the efficiency upside PointSav's flat-file, no-credential-DB architecture targets. Supplies the ROI framing slides need when positioning to operations-and-technology decision makers."
+    slide_context: "Use Cases / Economic Model / Multiple Archives; legacy-estate replacement value proposition"
+    key_stat: "McKinsey's 2024 Ignite Survey finds technology transformations can lift run-the-bank efficiency by ~30%, while technology investment in asset management has grown ~6% per year."
+
+  - url: "https://www.deloitte.com/us/en/insights/industry/financial-services/financial-services-industry-outlooks/investment-management-industry-outlook-2024.html"
+    title: "2024 investment management outlook"
+    year: "2024"
+    publisher: "Deloitte (Deloitte Center for Financial Services)"
+    relevance: "Authoritative analyst read on where investment-management technology dollars flow and the cost pressure squeezing discretionary IT — the macro backdrop for a sovereign, low-overhead system of record. Confirms financial services leads all industries in digital-transformation spend intensity, sizing the regulated-buyer wallet."
+    slide_context: "Economic Model / Products & Services / Deployment Tiers Matrix; regulated financial-services buyer sizing"
+    key_stat: "Financial-services firms invest the highest share of revenue on digital transformation of any industry at ~7.5%, of which ~5.4% comes from the IT budget."
+
+  # --- (2) Commercial real estate PropTech market size 2024-2028 ---
+  - url: "https://www.kbvresearch.com/proptech-market/"
+    title: "PropTech Market Size, Trends Analysis & Forecast to 2028"
+    year: "2024"
+    publisher: "KBV Research"
+    relevance: "Provides the headline 2024-2028 PropTech TAM number sized to the forecast window PointSav slides reference. Anchors the property-management and BIM/Maps console value proposition to a measured, double-digit-growth addressable market for the operator audience."
+    slide_context: "BIM Console / Maps Console / Building Preferences / GIS Catchment / Use Cases; PropTech addressable-market sizing"
+    key_stat: "Global PropTech market projected to reach US$64.3 billion by 2028 at a 15.4% CAGR over the forecast period."
+
+  - url: "https://www.fortunebusinessinsights.com/proptech-market-108634"
+    title: "PropTech Market Size, Share, Trends | Forecast Report"
+    year: "2024"
+    publisher: "Fortune Business Insights"
+    relevance: "Independent corroboration of PropTech market scale and growth trajectory, giving slides a second analyst data point so the TAM claim does not rest on a single vendor estimate. Establishes cloud/SaaS as the dominant PropTech delivery model, aligning with PointSav's deployment-tier and Totebox-service framing."
+    slide_context: "Deployment Scenarios / Totebox Service Catalog / Maps Console; PropTech market corroboration"
+    key_stat: "PropTech market growth tracks a double-digit CAGR (~16%) through the 2030s, with cloud-based deployment holding the dominant share of the market."
+
+  - url: "https://urbanland.uli.org/economy-markets-trends/jll-betting-100-million-on-global-growth-of-proptech"
+    title: "JLL Betting $100 Million on Global Growth of Proptech"
+    year: "2024"
+    publisher: "Urban Land Institute (Urban Land Magazine), reporting on JLL Spark / JLL Technologies"
+    relevance: "Direct evidence that the largest CRE intermediaries are deploying institutional capital into PropTech, validating that the operator-side buyer category is real and well-funded. Useful proof point that incumbents are investing in exactly the data/smart-building category PointSav's Maps and BIM consoles address."
+    slide_context: "Maps Console / BIM Console / Co-location Thesis / GIS Catchment; CRE-incumbent demand validation"
+    key_stat: "JLL Spark / JLL Technologies has committed over US$390 million across 50+ early-stage PropTech investments since 2018, themed on data and sustainability."
+
+  # --- (3) Regulated-industry compliance software spending ---
+  - url: "https://www.grandviewresearch.com/industry-analysis/regulatory-technology-market"
+    title: "RegTech Market Size, Share & Trends Analysis Report"
+    year: "2024"
+    publisher: "Grand View Research"
+    relevance: "Sizes the regulated-industry compliance-software wallet (RegTech) that PointSav's WORM record format and audit-trail posture sell into. The BFSI dominance figure pinpoints where the regulated-buyer money concentrates for the financial-services investor leg."
+    slide_context: "WORM Record Format / Documentation Standards / Authentication / Economic Model; regulated-buyer compliance-spend sizing"
+    key_stat: "BFSI (banking, financial services & insurance) commands an estimated 40-58% share of the RegTech market in 2024, the dominant compliance-spend subsegment."
+
+  - url: "https://www.fortunebusinessinsights.com/regtech-market-108305"
+    title: "RegTech Market Size, Share, Trends & Growth Report"
+    year: "2024"
+    publisher: "Fortune Business Insights"
+    relevance: "Provides the absolute dollar size and growth rate of the regulated-compliance software market, supplying a quotable TAM figure for the compliance value proposition. Second-source corroboration that compliance automation spend is growing at ~21% CAGR, sustaining the regulated-buyer thesis."
+    slide_context: "WORM Record Format / Bookkeeping / Chart-of-Accounts Names / Economic Model; compliance-software TAM"
+    key_stat: "Global RegTech market valued at ~US$16 billion in 2024, projected toward US$100+ billion by 2033 at roughly a 21% CAGR."
+
+  # --- (4) Gartner sovereign cloud IaaS $37B-$169B forecast (original source + breakdown) ---
+  - url: "https://www.gartner.com/en/documents/5863580"
+    title: "Forecast Analysis: Sovereign Cloud IaaS, Worldwide"
+    year: "2026"
+    publisher: "Gartner, Inc."
+    relevance: "The original Gartner forecast document behind the widely cited US$37B-to-US$169B sovereign-cloud IaaS trajectory — the single most load-bearing market figure for PointSav's data-sovereignty thesis. Directly underwrites the Private Network, On-prem, Leased Servers and Hybrid Network slides as the macro tailwind for sovereign deployment."
+    slide_context: "Private Network / On-prem / Leased Servers / Hybrid Network / Public Cloud / Deployment Tiers Matrix; the core sovereign-cloud TAM citation"
+    key_stat: "Sovereign cloud IaaS forecast to grow from US$37 billion to US$169 billion over five years at a ~36% CAGR, reaching US$169 billion in 2028."
+
+  - url: "https://www.gartner.com/en/newsroom/press-releases/2026-02-09-gartner-says-worldwide-sovereign-cloud-iaas-spending-will-total-us-dollars-80-billion-in-2026"
+    title: "Gartner Says Worldwide Sovereign Cloud IaaS Spending Will Total $80 Billion in 2026"
+    year: "2026"
+    publisher: "Gartner, Inc."
+    relevance: "Publicly accessible Gartner press release confirming the sovereign-cloud spend mid-point and identifying governments and regulated industries as the primary buyers — the exact buyer segments PointSav targets. Provides a citable, non-paywalled anchor for the sovereign-cloud growth claim and its buyer-vertical breakdown."
+    slide_context: "Private Network / Hybrid Network / Deployment Tiers Matrix / Owner / Operator; sovereign-cloud buyer-vertical evidence"
+    key_stat: "Worldwide sovereign cloud IaaS spending forecast to total US$80 billion in 2026, up 35.6% from 2025, with governments and regulated industries as the main buyers."
+
+  - url: "https://www.gartner.com/en/newsroom/press-releases/2024-05-20-gartner-forecasts-worldwide-public-cloud-end-user-spending-to-surpass-675-billion-in-2024"
+    title: "Gartner Forecasts Worldwide Public Cloud End-User Spending to Surpass $675 Billion in 2024"
+    year: "2024"
+    publisher: "Gartner, Inc."
+    relevance: "Sizes the total public-cloud market that sovereign cloud is carving out of, giving slides the denominator against which the sovereign-IaaS opportunity is positioned. Confirms IaaS as the fastest-growing cloud segment, framing PointSav's infrastructure-tier addressable market."
+    slide_context: "Public Cloud / VM vs Containers / Three-Layer Stack / Deployment Tiers Matrix; total-cloud denominator for sovereign-share framing"
+    key_stat: "Worldwide public cloud end-user spending forecast to reach US$675.4 billion in 2024 (up 20.4%), with IaaS the fastest-growing segment at 25.6%."
+
+  # --- (5) SMB cloud adoption spending in property management ---
+  - url: "https://www.einpresswire.com/article/868548067/property-management-software-market-size-to-reach-usd-7-8-billion-by-2033-says-allied-market-research"
+    title: "Property Management Software Market Size to Reach USD 7.8 Billion by 2033"
+    year: "2024"
+    publisher: "Allied Market Research (via EIN Presswire)"
+    relevance: "Sizes the property-management software market specifically and confirms cloud dominates delivery — the precise SMB-operator segment PointSav's Totebox/SMB Environment slides address. Direct TAM anchor for the property-management use case in the operator leg of the dual audience."
+    slide_context: "SMB Environment / Toteboxes / Bookkeeping / Building Preferences / Deployment Scenarios; property-management software TAM"
+    key_stat: "Property management software market valued at US$3.2 billion in 2023, projected to reach US$7.8 billion by 2033 (8.9% CAGR), with cloud over three-quarters of share."
+
+  - url: "https://www.businessresearchinsights.com/market-reports/small-and-medium-business-smb-software-market-108773"
+    title: "Small & Medium Business (SMB) Software Market Size Report"
+    year: "2024"
+    publisher: "Business Research Insights"
+    relevance: "Quantifies how far SMB cloud/digital-software adoption has spread and how much SMBs spend on SaaS, sizing the bottom-of-market buyer for PointSav's SMB Environment and Totebox tiers. Demonstrates that the SMB operator is already a committed cloud spender, de-risking the SMB-tier TAM assumption."
+    slide_context: "SMB Environment / Toteboxes / Totebox Archive / Licensing Model / Deployment Tiers Matrix; SMB cloud-adoption and SaaS-spend sizing"
+    key_stat: "Over 92% of US SMEs had adopted at least one cloud/digital management software by 2024 (up from 78% in 2021); ~45% of SMBs invested up to US$600,000 in SaaS."

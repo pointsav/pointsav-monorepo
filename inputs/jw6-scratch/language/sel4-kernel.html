@@ -1,0 +1,49 @@
+  <section class="scaling" data-label="seL4 Kernel" data-screen-label="Platform Foundation — seL4 Verified Microkernel for the Totebox Archive">
+    <div class="head">
+      <span class="cat-tag">Platform Foundation</span>
+      <div class="eyebrow">Kernel Rationale — Long-Arc</div>
+      <h2>Verified Microkernel</h2>
+      <div class="crumb">The Totebox archive is intended to sit on a kernel whose isolation is mathematically proven rather than tested — a planned foundation, not a shipped one.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <!-- LEFT: what seL4 is and where it already runs -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">What it is</span></div>
+        <div class="cmp-item lead">A formally verified microkernel</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">machine-checked proof, spec to C</span><span class="s">capability-based access</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">Open base, commercial systems above it</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">LionsOS — open source</span><span class="s">KOS / Kry10 — commercial</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">Proven in the field</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">DARPA HACMS autonomous vehicles</span><span class="s">red team could not break isolation</span>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <!-- RIGHT: why it matters for the archive -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Why it anchors the archive</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">seL4 carries a machine-checked proof of functional correctness — per Klein et al., SOSP '09 — later extended to integrity, confidentiality, and binary-level correctness (Klein et al., ACM TOCS).</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">It is the only kernel with a <b>verified mitigation of microarchitectural timing channels</b> — per arXiv:2310.17046 — the assurance level high-trust financial data is intended to require.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Verification tooling is being industrialised for non-expert engineers under the <b>DARPA PROVERS / INSPECTA</b> program, answering the objection that formal methods are impractical at scale.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">This is a <b>planned long-term foundation</b>, not a current dependency — the architecture is designed to adopt the verified substrate as it matures, and trust derives from per-resource authorization, not network location, in line with NIST SP 800-207.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Does a proven-isolation kernel change how you would price counterparty risk on the archive?</span>
+        <span>How much weight do your auditors give formal verification versus penetration testing?</span>
+        <span>What would the migration path look like from the present substrate to the planned seL4 base?</span>
+      </div>
+    </div>
+  </section>

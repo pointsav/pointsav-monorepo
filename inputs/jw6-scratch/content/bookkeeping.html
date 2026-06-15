@@ -1,0 +1,75 @@
+<section class="scaling dbfs archive" data-label="Bookkeeping" data-screen-label="Services — Bookkeeping & Minute Books">
+    <div class="head">
+      <span class="cat-tag">Data</span>
+      <div class="eyebrow">Design System — Services</div>
+      <h2>Bookkeeping &amp; Minute Books</h2>
+      <div class="crumb">A conventional bookkeeper keeps numbers in a database and points each row at a document by a reference number. Here the document <i>is</i> the record: every source file is written once and never altered (write-once), and its name carries the full chart-of-accounts reference — so the file system itself is the index and there is no second database lookup to keep in sync.</div>
+    </div>
+
+    <div class="cmp2">
+      <!-- DATABASE -->
+      <div class="cmp-col">
+        <div class="cmp-head">
+          <span class="ch-ico"><svg viewBox="0 0 100 100"><ellipse cx="50" cy="24" rx="34" ry="12"></ellipse><path d="M16,24 L16,76 A34,12 0 0 0 84,76 L84,24"></path></svg></span>
+          <span class="ch-t">Database</span>
+        </div>
+        <div class="cmp-item lead">Data lives in the database</div>
+        <div class="cmp-item">Chart of Accounts</div>
+        <div class="cmp-sub"><span class="s">Name</span><span class="s">Date</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt"><b>No reference numbers</b> — the file name <i>is</i> the reference, so no separate row to reconcile</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The <b>Input Machine</b> assigns file names at the point of capture</span></div>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <!-- FILE SYSTEM -->
+      <div class="cmp-col">
+        <div class="cmp-head">
+          <span class="ch-ico"><svg viewBox="0 0 100 100"><path d="M22,8 L62,8 L82,28 L82,92 L22,92 Z"></path><path d="M62,8 L62,28 L82,28"></path></svg></span>
+          <span class="ch-t">File System</span>
+        </div>
+        <div class="cmp-item lead">Files live in the file system</div>
+        <div class="filechips">
+          <div class="filechip">
+            <span class="fc-ico"><svg viewBox="0 0 80 100"><path d="M14,6 L50,6 L68,24 L68,94 L14,94 Z"></path><path d="M50,6 L50,24 L68,24"></path></svg></span>
+            <span class="fc-t">PDF</span><span class="fc-d">source documents</span>
+          </div>
+          <div class="filechip">
+            <span class="fc-ico"><svg viewBox="0 0 80 100"><path d="M14,6 L50,6 L68,24 L68,94 L14,94 Z"></path><path d="M50,6 L50,24 L68,24"></path></svg></span>
+            <span class="fc-t">ODT</span><span class="fc-d">text documents</span>
+          </div>
+          <div class="filechip">
+            <span class="fc-ico"><svg viewBox="0 0 80 100"><path d="M14,6 L50,6 L68,24 L68,94 L14,94 Z"></path><path d="M50,6 L50,24 L68,24"></path></svg></span>
+            <span class="fc-t">ODS</span><span class="fc-d">spreadsheets</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WORM FILENAME: the file name as the chart-of-accounts reference -->
+    <div class="cmp-rules" style="margin-top:40px;">
+      <div class="cmp-rule" style="flex-direction:column; align-items:stretch; gap:18px;">
+        <span class="rt"><b>One write-once file — six segments carry the whole reference</b></span>
+        <div class="cmp-sub" style="margin:0; flex-wrap:wrap; gap:10px 14px;">
+          <span class="s">BOOKKEEPING<br><b>Entity</b></span>
+          <span class="s">TITLECO1<br><b>Account</b></span>
+          <span class="s">2025_03_07<br><b>Date</b></span>
+          <span class="s">Invoice<br><b>Doc&nbsp;type</b></span>
+          <span class="s">Property&nbsp;Management<br><b>Vendor</b></span>
+          <span class="s">Snow&nbsp;Removal<br><b>Description</b></span>
+          <span class="s">.PDF<br><b>Format</b></span>
+        </div>
+        <span class="rt">Reads as <b>BOOKKEEPING_TITLECO1_2025_03_07_Invoice_Property&nbsp;Management_Snow&nbsp;Removal.PDF</b> — the name replaces the database record number, so any party can find and audit the record by reading the file system directly, with no proprietary lookup.</span>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Notes</b>
+      <div class="nlist">
+        <span>Which audit fails first if the file name and a database row disagree — and why does write-once filing remove that failure mode entirely?</span>
+        <span>If you owned the Input Machine, what validation would your first pull request add to the file-name segments before a record is committed write-once?</span>
+      </div>
+    </div>
+  </section>

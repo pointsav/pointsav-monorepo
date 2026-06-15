@@ -1,0 +1,97 @@
+  <section class="scaling products" data-label="Products &amp; Services" data-screen-label="Products & Services">
+    <div class="head">
+      <span class="cat-tag">Integration &amp; Data Portability</span>
+      <div class="eyebrow">Totebox Orchestration</div>
+      <h2>Products &amp; Services</h2>
+      <div class="crumb">Three operating systems run the platform: Console OS dispatches to Interface OS and Totebox OS, and each one carries a defined set of services.</div>
+    </div>
+
+    <!-- orchestration diagram -->
+    <div class="stage">
+      <svg class="wire" viewBox="0 0 1744 240" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0E7C84" stroke="none"></path>
+          </marker>
+        </defs>
+        <!-- Console -> Interface -->
+        <path d="M946,128 Q780,184 628,152" marker-end="url(#ah)"></path>
+        <!-- Console -> Totebox -->
+        <path d="M1042,128 Q1052,138 1062,146" marker-end="url(#ah)"></path>
+        <!-- Interface -> Totebox -->
+        <path d="M624,188 L978,191" marker-end="url(#ah)"></path>
+      </svg>
+
+      <!-- Console OS (arch) -->
+      <div class="pnode" style="left:922px; top:0; width:208px; height:128px;">
+        <div class="glyph"><svg viewBox="0 0 166 112"><path d="M8,108 L8,50 Q8,8 83,8 Q158,8 158,50 L158,108 Z"></path></svg></div>
+        <div class="pname">Console&nbsp;OS</div>
+        <span class="pvm" style="right:16px; bottom:11px;">vm</span>
+        <span class="pbadge" style="top:-12px; right:-12px;">1</span>
+      </div>
+
+      <!-- Interface OS (hexagon) -->
+      <div class="pnode" style="left:384px; top:118px; width:240px; height:122px;">
+        <div class="glyph"><svg viewBox="0 0 126 75"><polygon points="6,37.5 28,6 98,6 120,37.5 98,69 28,69"></polygon></svg></div>
+        <div class="pname">Interface&nbsp;OS</div>
+        <span class="pvm" style="right:38px; bottom:12px;">vm</span>
+        <span class="pbadge" style="top:-12px; right:22px;">2</span>
+      </div>
+
+      <!-- Totebox OS (square) -->
+      <div class="pnode" style="left:980px; top:132px; width:160px; height:108px;">
+        <div class="glyph"><svg viewBox="0 0 100 100"><rect x="6" y="6" width="88" height="88"></rect></svg></div>
+        <div class="pname">Totebox&nbsp;OS</div>
+        <span class="pvm" style="right:14px; bottom:10px;">vm</span>
+        <span class="pbadge" style="top:-12px; right:-12px;">3</span>
+      </div>
+    </div>
+
+    <!-- service columns -->
+    <div class="cols">
+      <div class="col">
+        <div class="col-head"><span class="ch-badge">1</span><span class="ch-name">Console OS</span></div>
+        <div class="col-kicker">Services</div>
+        <div class="svc"><span class="n">06</span><span class="t">Input Machine</span></div>
+        <div class="svc"><span class="n">07</span><span class="t">F✲KEYS Console</span></div>
+        <div class="svc"><span class="n">08</span><span class="t">BIM Console</span></div>
+        <div class="svc"><span class="n">09</span><span class="t">Maps Console</span></div>
+        <div class="svc"><span class="n">10</span><span class="t">Building Preferences Console</span></div>
+      </div>
+
+      <div class="col">
+        <div class="col-head"><span class="ch-badge">2</span><span class="ch-name">Interface OS</span></div>
+        <div class="col-kicker">Services</div>
+        <div class="svc"><span class="n">11</span><span class="t">Command Center</span></div>
+        <div class="svc"><span class="n">12</span><span class="t">BIM Server</span></div>
+        <div class="svc"><span class="n">13</span><span class="t">GIS Engine</span></div>
+        <div class="svc"><span class="n">14</span><span class="t">IoT Connect</span></div>
+      </div>
+
+      <div class="col">
+        <div class="col-head"><span class="ch-badge">3</span><span class="ch-name">Totebox OS</span></div>
+        <div class="col-kicker">Services</div>
+        <div class="svc"><span class="n">15</span><span class="t">BIM Database</span></div>
+        <div class="svc"><span class="n">16</span><span class="t">Materials Database</span></div>
+        <div class="svc"><span class="n">17</span><span class="t">People</span></div>
+        <div class="svc"><span class="n">18</span><span class="t">Businesses</span></div>
+        <div class="svc"><span class="n">19</span><span class="t">Places</span></div>
+        <div class="svc"><span class="n">20</span><span class="t">Parking IoTs</span></div>
+        <div class="svc"><span class="n">21</span><span class="t">IoT Device Library</span></div>
+        <div class="svc"><span class="n">22</span><span class="t">IoT Sensor Library</span></div>
+        <div class="svc"><span class="n">23</span><span class="t">Minute Book</span></div>
+        <div class="svc"><span class="n">24</span><span class="t">Bookkeeping</span></div>
+        <div class="svc"><span class="n">25</span><span class="t">Email</span></div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Which of the three operating systems sets the commercial boundary, and which services sit above the paywall?</span>
+        <span>If Console OS dispatches to the other two, which service would you instrument first to prove the orchestration works?</span>
+        <span>Do the Totebox OS data services (People, Businesses, Places) export with the archive, or stay tied to the host?</span>
+      </div>
+    </div>
+
+  </section>

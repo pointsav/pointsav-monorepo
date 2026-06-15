@@ -1,0 +1,60 @@
+<section class="scaling vmcon" data-label="VM vs Containers" data-screen-label="VM vs Containers">
+    <div class="head">
+      <span class="cat-tag">System of Record</span>
+      <div class="eyebrow">Design System — Virtualization</div>
+      <h2>VM vs Containers</h2>
+      <div class="crumb">Each model draws its virtualization boundary in a different place, and that boundary decides whether a Totebox archive can move to any host or only to one running the same operating system.</div>
+    </div>
+
+    <div class="vc-cols">
+      <!-- COLUMN 1 — VIRTUAL MACHINE -->
+      <div class="vc-col">
+        <div class="vc-title"><span class="vt-n">1</span><span class="vt-t">Virtual Machine</span></div>
+        <div class="vc-stack">
+          <div class="slab os">Operating System</div>
+          <div class="slab big">VM</div>
+          <div class="slab metal">Bare Metal</div>
+        </div>
+        <div class="vc-virt"><b>✲</b><span>Virtualizes the <strong>bare metal</strong></span></div>
+        <div class="vc-verdict good">Freely transferable</div>
+        <div class="vc-note">A VM carries its own operating system, so it moves anywhere.</div>
+      </div>
+
+      <!-- COLUMN 2 — CONTAINER -->
+      <div class="vc-col">
+        <div class="vc-title"><span class="vt-n">2</span><span class="vt-t">Container</span></div>
+        <div class="vc-stack">
+          <div class="vc-cyl"><span class="cyl-l">OS-Level Virtualization<small>Container</small></span></div>
+          <div class="slab os">Operating System</div>
+          <div class="slab metal">Bare Metal</div>
+        </div>
+        <div class="vc-virt"><b>✲</b><span>Virtualizes the <strong>operating system</strong></span></div>
+        <div class="vc-verdict warn">Same OS only</div>
+        <div class="vc-note">Only freely transferable within the same operating system.</div>
+      </div>
+
+      <!-- COLUMN 3 — CONTAINER + DOCKER -->
+      <div class="vc-col">
+        <div class="vc-title"><span class="vt-n">3</span><span class="vt-t">Container + Docker</span></div>
+        <div class="vc-stack">
+          <div class="vc-cyl"><span class="cyl-l">Platform for Containerized Apps<small>Container</small></span></div>
+          <div class="slab docker">Docker</div>
+          <div class="slab os">Operating System</div>
+        </div>
+        <div class="vc-virt"><b>✲</b><span>Runs on the <strong>Docker</strong> runtime</span></div>
+        <div class="vc-verdict good">Transferable with Docker</div>
+        <div class="vc-note">Becomes freely transferable so long as Docker is in place.</div>
+      </div>
+    </div>
+
+    <div class="vc-foot"><b>Notes</b><strong>Virtual machine = freely transferable.</strong> &nbsp;The Totebox model favours the VM boundary for portability.</div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Why does the VM boundary matter to an archive that must outlive any single host or vendor?</span>
+        <span>What does an entity lose at the container boundary that the VM model preserves for long-term record portability?</span>
+        <span>If you were porting a Totebox today, which of the three models would you target, and what is the migration cost?</span>
+      </div>
+    </div>
+  </section>

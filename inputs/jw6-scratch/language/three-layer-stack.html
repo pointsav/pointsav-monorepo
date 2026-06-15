@@ -1,0 +1,29 @@
+  <section class="scaling" data-label="Three-Layer Stack" data-screen-label="Multi-Entity Consolidation — Totebox Orchestration Three-Layer Architecture">
+    <div class="head">
+      <span class="cat-tag">Multi-Entity Consolidation</span>
+      <div class="eyebrow">Platform Architecture</div>
+      <h2>Totebox Orchestration</h2>
+      <div class="crumb">Aggregating a fleet of archives is split across three layers — delivery, edge, network — so consolidation stays stateless: the orchestrator computes a joined view on request and keeps no merged copy.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr;">
+      <div class="cmp-col">
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">01</span><span class="rt"><b>Delivery</b> — ConsoleOS role-based HUDs present the consolidated view to a named operator. Every write crosses the F12 human-authorization checkpoint; nothing is published to a verified ledger by automation.</span></div>
+          <div class="cmp-rule"><span class="rk">02</span><span class="rt"><b>Edge Computing</b> — OrchestrationOS performs stateless cross-archive aggregation. It reads each ToteboxOS node, computes the joined result on request, and retains no copy — the commercial boundary and the paid tier both live here.</span></div>
+          <div class="cmp-rule"><span class="rk">03</span><span class="rt"><b>Private Network</b> — NetworkAdminOS enforces machine-based authorization: there is no credential database; the network topology itself is the permission system. Access is decided per request, not at a perimeter — the posture described in NIST SP 800-207 (Zero Trust Architecture).</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt"><b>What a single node cannot do:</b> a lone ToteboxOS archive holds one entity's WORM records and answers only for itself. OrchestrationOS is the only layer that joins many archives into one consolidated answer — and because it is stateless, the join exists only for the duration of the request. This is the line a developer should hold onto: <b>aggregation is computed, never stored.</b></span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The identity-based, location-independent access policy maps to NIST SP 800-207A (ZTA in multi-cloud); the workload-identity-without-shared-secrets analogue is SPIFFE (CNCF).</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Where does your consolidated reporting live today — and who keeps the merged copy once it is produced?</span>
+        <span>If aggregation is stateless, what is the latency cost of recomputing the joined view on every request, and can you afford it?</span>
+        <span>How would "network topology as the permission system" replace the credential store you run now — and what migration does that require?</span>
+      </div>
+    </div>
+  </section>

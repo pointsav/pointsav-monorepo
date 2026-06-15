@@ -1,0 +1,97 @@
+<section class="scaling privnet archive" data-label="Authentication" data-screen-label="Private Network — Authentication and Permissions">
+    <div class="head">
+      <span class="cat-tag">Machine-Based Authorization</span>
+      <div class="eyebrow">Design System — Private Network</div>
+      <h2>Authentication and Permissions</h2>
+      <div class="crumb">Console and Interface OS pair to Totebox VMs by unique device ID, not by role — the permissions store records which devices are paired, so authorization can be proven and audited without a central password database.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 560" preserveAspectRatio="none">
+        <!-- LEFT consoles --P1/P2/P3--> Totebox OS -->
+        <polyline points="276,86 360,86 470,180"></polyline>
+        <polyline points="276,248 360,248 470,228"></polyline>
+        <polyline points="276,410 360,410 470,276"></polyline>
+        <circle class="dot" cx="470" cy="180" r="4"></circle>
+        <circle class="dot" cx="470" cy="228" r="4"></circle>
+        <circle class="dot" cx="470" cy="276" r="4"></circle>
+
+        <!-- Totebox OS --P4--> Interface OS -->
+        <line x1="700" y1="228" x2="1040" y2="228"></line>
+        <circle class="dot" cx="700" cy="228" r="4"></circle>
+        <circle class="dot" cx="1040" cy="228" r="4"></circle>
+
+        <!-- Interface OS --P1/P2/P3--> RIGHT consoles -->
+        <polyline points="1270,180 1380,180 1464,86 1464,86"></polyline>
+        <polyline points="1270,228 1380,228 1464,248"></polyline>
+        <polyline points="1270,276 1380,410 1464,410"></polyline>
+        <circle class="dot" cx="1270" cy="180" r="4"></circle>
+        <circle class="dot" cx="1270" cy="228" r="4"></circle>
+        <circle class="dot" cx="1270" cy="276" r="4"></circle>
+      </svg>
+
+      <!-- ===== LEFT DEPLOYMENT STACK ===== -->
+      <!-- 1 · Console OS / Input Machine -->
+      <div class="node backend col" style="left:30px; top:24px; width:246px; height:74px;">Console OS<br>Input Machine</div>
+      <div class="node badge" style="left:236px; top:40px;">1</div>
+      <div class="node vbar" style="left:30px; top:104px; width:246px;"><span class="node-label">Type&nbsp;II / Workplace OS</span></div>
+
+      <!-- 7 · F*Keys Console -->
+      <div class="node backend col" style="left:30px; top:186px; width:246px; height:74px;">Console OS<br>F*Keys</div>
+      <div class="node badge" style="left:236px; top:202px;">7</div>
+      <div class="node vbar" style="left:30px; top:266px; width:246px;"><span class="node-label">Type&nbsp;II / Workplace OS</span></div>
+
+      <!-- 8 / 9 / 10 · Bim · mApps · Building Preferences consoles -->
+      <div class="node backend col" style="left:30px; top:348px; width:246px; height:74px;">Console OS<br>8 · 9 · 10</div>
+      <div class="node badge" style="left:236px; top:364px;">8</div>
+      <div class="node vbar" style="left:30px; top:428px; width:246px;"><span class="node-label">Type&nbsp;II / Workplace OS</span></div>
+
+      <!-- ===== CENTRE — DISTRIBUTED PRIVATE NETWORK ===== -->
+      <div class="pnet-boundary" style="left:420px; top:120px; width:900px; height:230px;"></div>
+      <div class="pnet-cap" style="left:420px; width:900px;"><span>Distributed Private Network<small>Pairing-based</small></span></div>
+
+      <div class="node totebox" style="left:470px; top:168px; width:230px; height:120px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:470px; top:300px; width:230px;"><span class="node-label">Virtualization</span></div>
+
+      <div class="node totebox" style="left:1040px; top:168px; width:230px; height:120px;">
+        <span class="node-label">Interface OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:1040px; top:300px; width:230px;"><span class="node-label">Virtualization</span></div>
+
+      <!-- port badges around the hub -->
+      <div class="node badge" style="left:438px; top:158px;">P1</div>
+      <div class="node badge" style="left:438px; top:206px;">P2</div>
+      <div class="node badge" style="left:438px; top:254px;">P3</div>
+      <div class="node badge" style="left:850px; top:200px;">P4</div>
+      <div class="node badge" style="left:1280px; top:158px;">P1</div>
+      <div class="node badge" style="left:1280px; top:206px;">P2</div>
+      <div class="node badge" style="left:1280px; top:254px;">P3</div>
+
+      <!-- ===== RIGHT DEPLOYMENT STACK (mirror) ===== -->
+      <div class="node backend col" style="left:1464px; top:24px; width:246px; height:74px;">Console OS<br>Input Machine</div>
+      <div class="node badge" style="left:1670px; top:40px;">6</div>
+      <div class="node vbar" style="left:1464px; top:104px; width:246px;"><span class="node-label">Type&nbsp;II / Workplace OS</span></div>
+
+      <div class="node backend col" style="left:1464px; top:186px; width:246px; height:74px;">Console OS<br>F*Keys</div>
+      <div class="node badge" style="left:1670px; top:202px;">7</div>
+      <div class="node vbar" style="left:1464px; top:266px; width:246px;"><span class="node-label">Type&nbsp;II / Workplace OS</span></div>
+
+      <div class="node backend col" style="left:1464px; top:348px; width:246px; height:74px;">Console OS<br>7 · 8 · 9 · 10</div>
+      <div class="node badge" style="left:1670px; top:364px;">10</div>
+      <div class="node vbar" style="left:1464px; top:428px; width:246px;"><span class="node-label">Type&nbsp;II / Workplace OS</span></div>
+
+      <!-- pairing note -->
+      <span class="annot" style="left:470px; top:360px;">✶ One device holds multiple pairings at once — the WhatsApp / Bluetooth model.</span>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>P1 Input · P2 System Administration · P3 User · P4 Interface — which port carries the highest blast radius if a pairing is forged, and how is it isolated?</span>
+        <span>If the permissions store records pairings rather than roles, what is the rollback when a device is deauthorized — does its access disappear at the next request or the next session?</span>
+        <span>For a regulated investor: how does a pairing-based store satisfy "show me who had access on this date" without a password database to subpoena?</span>
+      </div>
+    </div>
+  </section>

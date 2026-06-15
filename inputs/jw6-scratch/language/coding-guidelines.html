@@ -1,0 +1,30 @@
+  <section class="scaling" data-label="Coding Guidelines" data-screen-label="Developer Platform — Coding Guidelines — Power of 10 Safety-Critical Rules">
+    <div class="head">
+      <span class="cat-tag">Developer Platform</span>
+      <div class="eyebrow">Engineering Posture</div>
+      <h2>Power-of-Ten Safety-Critical Rules</h2>
+      <div class="crumb">Constrained control flow keeps the codebase statically analysable — the same discipline that makes a kernel reasoned about line by line.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr;">
+      <div class="cmp-col">
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">01</span><span class="rt">Restrict control flow to simple constructs — no unbounded recursion or unstructured jumps.</span></div>
+          <div class="cmp-rule"><span class="rk">02</span><span class="rt">Give every loop a fixed upper bound so termination can be verified statically.</span></div>
+          <div class="cmp-rule"><span class="rk">03</span><span class="rt">Avoid dynamic memory allocation after initialization — predictable footprint, no fragmentation drift.</span></div>
+          <div class="cmp-rule"><span class="rk">04</span><span class="rt">Keep functions short and single-purpose so each fits on one reviewable screen.</span></div>
+          <div class="cmp-rule"><span class="rk">05</span><span class="rt">Check return values, assert assumptions, and limit scope — per The Power of Ten (Holzmann, NASA/JPL, 2006).</span></div>
+        </div>
+        <div class="cmp-item" style="margin-top:24px;">Paired with Rust's ownership model, these rules make the engineering posture legible to developers and the reliability posture legible to investors — and align with the planned seL4 verified-primitives foundation.</div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Which of the ten rules can we enforce in CI versus by review?</span>
+        <span>How do the no-dynamic-allocation rules apply to async Rust services?</span>
+        <span>Should this standard be mandatory for base-node code only, or platform-wide?</span>
+      </div>
+    </div>
+  </section>

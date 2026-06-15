@@ -1,0 +1,155 @@
+  <section class="scaling" data-label="Scaling — Composition" data-screen-label="Scaling — Composition">
+    <div class="head">
+      <span class="cat-tag">Multi-Entity Consolidation</span>
+      <div class="eyebrow">Design System — Architecture</div>
+      <h2>Composition</h2>
+      <div class="crumb">The fleet is assembled in three additive steps — add a Totebox archive, add the Interface OS that reads it, add the Infostructure it runs on — so capacity grows by composing nodes rather than rebuilding the platform.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 806" preserveAspectRatio="none">
+        <!-- diagonal zone dividers -->
+        <line class="divider" x1="500" y1="806" x2="580" y2="44"></line>
+        <line class="divider" x1="1150" y1="806" x2="1230" y2="44"></line>
+
+        <!-- ZONE 1: totebox -> bar, diamonds -> bars -->
+        <line x1="250" y1="198" x2="250" y2="208"></line>
+        <line x1="120" y1="436" x2="120" y2="450"></line>
+        <line x1="365" y1="436" x2="365" y2="450"></line>
+
+        <!-- ZONE 2: interface --p4--> toteboxes -->
+        <polyline points="808,206 815,186 975,144"></polyline>
+        <polyline points="808,250 815,286 975,356"></polyline>
+        <line x1="712" y1="322" x2="712" y2="332"></line>
+        <line x1="1047" y1="198" x2="1047" y2="208"></line>
+        <line x1="1047" y1="418" x2="1047" y2="428"></line>
+        <circle class="dot" cx="975" cy="144" r="4"></circle>
+        <circle class="dot" cx="975" cy="356" r="4"></circle>
+
+        <!-- ZONE 3: interface --p4--> toteboxes -->
+        <polyline points="1422,190 1430,162 1558,122"></polyline>
+        <polyline points="1422,236 1430,246 1582,252"></polyline>
+        <circle class="dot" cx="1558" cy="122" r="4"></circle>
+        <circle class="dot" cx="1582" cy="252" r="4"></circle>
+
+        <!-- ZONE 3: everything feeds the PointSav bar (top edge y=470) -->
+        <line x1="1332" y1="290" x2="1332" y2="470"></line>
+        <line x1="1312" y1="424" x2="1312" y2="470"></line>
+        <line x1="1467" y1="424" x2="1467" y2="470"></line>
+        <line x1="1650" y1="310" x2="1650" y2="470"></line>
+        <circle class="dot" cx="1332" cy="470" r="4"></circle>
+        <circle class="dot" cx="1312" cy="470" r="4"></circle>
+        <circle class="dot" cx="1467" cy="470" r="4"></circle>
+        <circle class="dot" cx="1650" cy="470" r="4"></circle>
+
+        <!-- bar (bottom edge y=524) feeds infostructure backends -->
+        <line x1="1318" y1="524" x2="1318" y2="582"></line>
+        <line x1="1488" y1="524" x2="1488" y2="582"></line>
+        <line x1="1658" y1="524" x2="1658" y2="578"></line>
+        <!-- backends to deployment pills -->
+        <line x1="1318" y1="664" x2="1318" y2="686"></line>
+        <line x1="1488" y1="664" x2="1488" y2="686"></line>
+        <line x1="1658" y1="672" x2="1658" y2="686"></line>
+      </svg>
+
+      <!-- ===== ZONE 1 — ADD TOTEBOX ===== -->
+      <div class="zone-label" style="left:0; top:6px;"><small>Add</small>Totebox</div>
+
+      <div class="node totebox" style="left:172px; top:80px; width:156px; height:118px;">
+        <span class="node-label">Totebox OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:300px; top:66px;">P</div>
+      <div class="node vbar" style="left:160px; top:208px; width:180px;"><span class="node-label">Virtualization</span></div>
+
+      <div class="node diamond" style="left:48px; top:316px; width:144px; height:124px;">
+        <span class="shape"></span><span class="node-label">Media Kit OS</span>
+      </div>
+      <div class="node vbar" style="left:48px; top:450px; width:144px;"><span class="node-label">Virtualization</span></div>
+      <div class="node diamond" style="left:296px; top:316px; width:144px; height:124px;">
+        <span class="shape"></span><span class="node-label">Private Git OS</span>
+      </div>
+      <div class="node vbar" style="left:296px; top:450px; width:144px;"><span class="node-label">Virtualization</span></div>
+
+      <!-- ===== ZONE 2 — ADD INTERFACES ===== -->
+      <div class="zone-label" style="left:626px; top:6px;"><small>Add</small>Interfaces</div>
+
+      <div class="node hexagon" style="left:606px; top:148px; width:212px; height:178px;">
+        <svg viewBox="0 0 212 178"><polygon class="ico-line" points="10,89 56,16 156,16 202,89 156,162 56,162"></polygon></svg>
+        <span class="node-label">Interface OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:618px; top:332px; width:188px;"><span class="node-label">Virtualization</span></div>
+      <div class="node badge" style="left:794px; top:165px;">P4</div>
+      <div class="node badge" style="left:794px; top:265px;">P4</div>
+
+      <div class="node totebox" style="left:975px; top:90px; width:144px; height:108px;">
+        <span class="node-label">Totebox OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:970px; top:208px; width:156px;"><span class="node-label">Virtualization</span></div>
+      <div class="node totebox" style="left:975px; top:310px; width:144px; height:108px;">
+        <span class="node-label">Totebox OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:970px; top:428px; width:156px;"><span class="node-label">Virtualization</span></div>
+
+      <!-- ===== ZONE 3 — ADD INFOSTRUCTURE ===== -->
+      <div class="zone-label" style="left:1232px; top:6px;"><small>Add</small>Infostructure</div>
+
+      <div class="node hexagon" style="left:1238px; top:130px; width:196px; height:164px;">
+        <svg viewBox="0 0 196 164"><polygon class="ico-line" points="9,82 52,15 144,15 187,82 144,149 52,149"></polygon></svg>
+        <span class="node-label">Interface OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:1402px; top:140px;">P4</div>
+      <div class="node badge" style="left:1402px; top:224px;">P4</div>
+
+      <div class="node totebox" style="left:1556px; top:72px; width:132px; height:100px;">
+        <span class="node-label">Totebox OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node totebox" style="left:1580px; top:202px; width:132px; height:100px;">
+        <span class="node-label">Totebox OS</span>
+        <span class="vm">vm</span>
+      </div>
+
+      <div class="node diamond" style="left:1252px; top:312px; width:120px; height:112px;">
+        <span class="shape"></span><span class="node-label">Media Kit OS</span>
+      </div>
+      <div class="node diamond" style="left:1408px; top:312px; width:120px; height:112px;">
+        <span class="shape"></span><span class="node-label">Private Git OS</span>
+      </div>
+
+      <!-- PointSav virtualization bar + network admin -->
+      <div class="node ps-bar" style="left:1238px; top:470px; width:362px; height:54px;">PointSav&nbsp;—&nbsp;Virtualization</div>
+      <div class="node backend" style="left:1604px; top:454px; width:118px; height:86px; flex-direction:column; line-height:1.15;">Network<br>Admin OS</div>
+
+      <!-- Infostructure backends -->
+      <div class="node para" style="left:1252px; top:582px; width:150px; height:82px;">
+        <span class="shape"></span><span class="node-label">Infostructure OS</span>
+      </div>
+      <div class="node backend" style="left:1262px; top:686px; width:130px;">On Prem</div>
+
+      <div class="node para" style="left:1422px; top:582px; width:150px; height:82px;">
+        <span class="shape"></span><span class="node-label">Infostructure OS</span>
+      </div>
+      <div class="node backend" style="left:1428px; top:686px; width:138px;">Leased Server</div>
+
+      <div class="node cloud" style="left:1582px; top:566px; width:160px; height:106px;">
+        <svg viewBox="0 0 100 100"><path class="ico-line" d="M26,72 C11,72 10,50 27,50 C22,33 49,29 51,47 C57,30 84,34 76,52 C93,53 89,72 73,72 Z"></path></svg>
+        <span class="node-label">Infostructure OS</span>
+      </div>
+      <div class="node backend" style="left:1598px; top:686px; width:126px;">Public Cloud</div>
+
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>At which step does the paid line begin for you — adding a second archive, or adding the Interface OS that joins them?</span>
+        <span>If Infostructure can be on-prem, leased, or public cloud, which backend would you put the first archive on and why?</span>
+        <span>Composing nodes instead of rebuilding the platform — what migration cost does that remove the next time you add an entity?</span>
+      </div>
+    </div>
+  </section>

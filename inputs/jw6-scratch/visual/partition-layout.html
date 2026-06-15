@@ -1,0 +1,44 @@
+<section class="scaling" data-label="Partition Layout" data-screen-label="System of Record — Totebox OS File System and Partition Layout">
+  <div class="head">
+    <span class="cat-tag">System of Record</span>
+    <div class="eyebrow">Record Keeping — Totebox OS</div>
+    <h2>File System &amp; Partitions</h2>
+    <div class="crumb">Each archive is a single micro VM partitioned so recovery, the OS, and per-service storage stay isolated — with the best-fit store chosen for each service.</div>
+  </div>
+
+  <div class="cmp2" style="grid-template-columns:320px 1fr;align-items:start;gap:48px;">
+    <div class="cmp-col">
+      <div class="vc-stack" style="display:flex;flex-direction:column;gap:3px;margin-bottom:20px;width:320px;height:auto;justify-content:flex-start;">
+        <div class="slab metal" style="height:52px;background:var(--paper-300);font-size:13px;letter-spacing:0;">R — Recovery</div>
+        <div class="slab os" style="height:72px;background:rgba(14,124,132,0.1);font-size:13px;letter-spacing:0;">OS — Operating System</div>
+        <div class="slab" style="height:46px;font-size:13px;letter-spacing:0;">S1 — Service Store</div>
+        <div class="slab" style="height:46px;font-size:13px;letter-spacing:0;">S2</div>
+        <div class="slab" style="height:46px;font-size:13px;letter-spacing:0;">S3</div>
+        <div class="slab" style="height:46px;font-size:13px;letter-spacing:0;">S4 — Service Store</div>
+      </div>
+    </div>
+    <div class="cmp-col">
+      <div class="cmp-rules">
+        <div class="cmp-rule"><span class="rk">R</span><span class="rt"><b>Recovery</b> — restores the archive to a known-good state; kept apart from operating partitions.</span></div>
+        <div class="cmp-rule"><span class="rk">OS</span><span class="rt"><b>Operating system</b> — the Totebox OS itself; read-mostly, separate from records.</span></div>
+        <div class="cmp-rule"><span class="rk">S1</span><span class="rt"><b>Service container</b> — one service's records (e.g. Bookkeeping); best-fit database or file system per service.</span></div>
+        <div class="cmp-rule"><span class="rk">S2</span><span class="rt"><b>Service container</b> — a second service partition, isolated from the first.</span></div>
+        <div class="cmp-rule"><span class="rk">S3</span><span class="rt"><b>Service container</b> — structured services use an embedded DB; document services use the flat-file WORM store.</span></div>
+        <div class="cmp-rule"><span class="rk">S4</span><span class="rt"><b>Service container</b> — partition isolation keeps one service's data from reaching another's.</span></div>
+      </div>
+      <div class="cmp-item lead" style="margin-top:24px;">Why partition this way</div>
+      <div class="cmp-sub" style="margin-left:0;flex-wrap:wrap;gap:12px 26px;">
+        <span class="s">portable, machine-readable export — per EU Data Act Art. 23–25 (2023)</span><span class="s">WORM permanence — per ISO 14641:2018</span><span class="s">no vendor lock-in on read</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes-strip">
+    <b>Your notes</b>
+    <div class="nlist">
+      <span>Which services warrant an embedded database vs. the flat-file store?</span>
+      <span>How is a service partition exported when an entity moves its archive?</span>
+      <span>Does the recovery partition hold a verifiable hash manifest of the records?</span>
+    </div>
+  </div>
+</section>

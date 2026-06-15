@@ -1,0 +1,53 @@
+  <section class="scaling" data-label="GIS Stack" data-screen-label="Platform Foundation — GIS Engine Stack PostGIS QGIS OpenStreetMap">
+    <div class="head">
+      <span class="cat-tag">Platform Foundation</span>
+      <div class="eyebrow">GIS Engine — Build Stack</div>
+      <h2>The GIS Engine Stack</h2>
+      <div class="crumb">The site-selection engine is built on named open-source geospatial components — the concrete answer to what runs beneath the co-location product.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <!-- LEFT: the named components -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Components</span></div>
+        <div class="cmp-item lead">PostGIS — spatial database</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">stores points, polygons, catchments</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">QGIS — analysis and authoring</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">co-location algorithm workbench</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">OpenStreetMap — base geography</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">businesses, places, parking polygons</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">GeoNode — interactive delivery</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">map layers to the console</span>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <!-- RIGHT: the pipeline and economics -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Pipeline and economics</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The flow runs <b>inputs → algorithms → proprietary outputs</b>: public point and polygon data enters, the co-location and catchment algorithms process it, and the ranked co-location databases are the derivative output.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Origin-destination catchment data is the one bought input — roughly <b>$50k–$150k per year</b> — joined against free OpenStreetMap geometry on a hexagonal overlay.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Every component is open source, so the engine inherits the same portability posture as the rest of the platform — no proprietary geodata runtime to be locked into.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">For investors the stack maps onto the sovereign-cloud IaaS market Gartner sizes at ~$37B today — the data layer is owned, not rented from a single vendor.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Is the $50k–$150k O-D data line item the only third-party cost in the pipeline?</span>
+        <span>Does an all-open-source geo stack matter for your data-residency obligations?</span>
+        <span>Which output database — co-location or catchment — drives your underwriting?</span>
+      </div>
+    </div>
+  </section>

@@ -1,0 +1,86 @@
+<section class="scaling" data-label="WORM Record Format" data-screen-label="System of Record — WORM Record Format: Database vs Flat-File System">
+  <div class="head">
+    <span class="cat-tag">System of Record</span>
+    <div class="eyebrow">Record Keeping — Totebox OS</div>
+    <h2>WORM Record Format</h2>
+    <div class="crumb">A mutable database can be overwritten by an administrator; a write-once flat-file archive cannot — the file name itself is the permanent reference.</div>
+  </div>
+
+  <div class="arch-compare">
+    <div class="arch-card">
+      <span class="ac-kicker">Property</span>
+      <span class="ac-name" style="font-size:24px;color:var(--ink-300);">Compared</span>
+    </div>
+    <div class="vs-sep">vs.</div>
+    <div class="arch-card">
+      <span class="ac-kicker">System</span>
+      <span class="ac-name">Relational DB</span>
+    </div>
+    <div class="vs-sep">vs.</div>
+    <div class="arch-card">
+      <span class="ac-kicker">System</span>
+      <span class="ac-name">WORM Archive</span>
+    </div>
+  </div>
+
+  <div class="arch-compare" style="margin-bottom:16px;align-items:center;">
+    <div class="arch-why"><div class="why"><div class="wt"><b>Mutable records</b></div></div></div>
+    <div class="vs-sep" style="font-size:18px;">→</div>
+    <div class="vc-verdict warn">Yes</div>
+    <div class="vs-sep" style="font-size:18px;">→</div>
+    <div class="vc-verdict good">No</div>
+  </div>
+
+  <div class="arch-compare" style="margin-bottom:16px;align-items:center;">
+    <div class="arch-why"><div class="why"><div class="wt"><b>Append-only</b></div></div></div>
+    <div class="vs-sep" style="font-size:18px;">→</div>
+    <div class="vc-verdict warn">No</div>
+    <div class="vs-sep" style="font-size:18px;">→</div>
+    <div class="vc-verdict good">Yes</div>
+  </div>
+
+  <div class="arch-compare" style="margin-bottom:16px;align-items:center;">
+    <div class="arch-why"><div class="why"><div class="wt"><b>Audit trail</b></div></div></div>
+    <div class="vs-sep" style="font-size:18px;">→</div>
+    <div class="vc-verdict warn">Config</div>
+    <div class="vs-sep" style="font-size:18px;">→</div>
+    <div class="vc-verdict good">Built-in</div>
+  </div>
+
+  <div class="arch-compare" style="margin-bottom:30px;align-items:center;">
+    <div class="arch-why"><div class="why"><div class="wt"><b>Regulatory</b></div></div></div>
+    <div class="vs-sep" style="font-size:18px;">→</div>
+    <div class="vc-verdict warn">Add-on</div>
+    <div class="vs-sep" style="font-size:18px;">→</div>
+    <div class="vc-verdict good">Native</div>
+  </div>
+
+  <div class="cmp2">
+    <div class="cmp-col">
+      <div class="cmp-head"><span class="ch-t">Mutable Database</span></div>
+      <div class="cmp-item lead">Records keyed by a reference number a row in the table can hold or change.</div>
+      <div class="cmp-sub" style="margin-left:0;flex-wrap:wrap;gap:12px 26px;">
+        <span class="s">reference ID</span><span class="s">row update</span><span class="s">admin override</span><span class="s">no fixed evidence trail</span>
+      </div>
+    </div>
+    <div class="cmp-div"></div>
+    <div class="cmp-col">
+      <div class="cmp-head"><span class="ch-t">Flat-File WORM Archive</span></div>
+      <div class="cmp-rules">
+        <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The <b>file name is the reference</b> — never a database ID. The source file is the record.</span></div>
+        <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Write-once, read-many: records are non-rewriteable and non-erasable — the recordkeeping floor under SEC Rule 17a-4 and FINRA Rule 4511.</span></div>
+        <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Content addressed by SHA-256, the way <b>RFC 6920</b> names things by hash — any party can verify a record without the originating system.</span></div>
+        <div class="cmp-rule"><span class="rk">✲</span><span class="rt">A duplicated record across two archives keeps one identical name and hash — provenance is preserved, not re-numbered.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes-strip">
+    <b>Your notes</b>
+    <div class="nlist">
+      <span>Which services keep structured data in a database vs. source files in WORM?</span>
+      <span>How is the 6-year retention floor enforced so an administrator cannot override it?</span>
+      <span>What happens to the hash when a source file is re-scanned at higher fidelity?</span>
+    </div>
+  </div>
+</section>

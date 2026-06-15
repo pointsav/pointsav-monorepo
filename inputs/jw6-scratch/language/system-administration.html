@@ -1,0 +1,94 @@
+  <section class="scaling sysadmin" data-label="System Administration" data-screen-label="Console OS — System Administration">
+    <div class="head">
+      <span class="cat-tag">Operator Workspace</span>
+      <div class="eyebrow">Design System — Console OS</div>
+      <h2>System Administration</h2>
+      <div class="crumb">The Console OS admin panel pairs with Interface OS and every Totebox OS to run pairing, updates, configuration and networking over one shared REST API — no separate management plane to license.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 760" preserveAspectRatio="none">
+        <defs>
+          <marker id="sa-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0E7C84" stroke="none"></path>
+          </marker>
+        </defs>
+
+        <!-- P2 — console panel down-left to Interface OS -->
+        <line x1="1060" y1="300" x2="220" y2="476" marker-end="url(#sa-arrow)"></line>
+        <!-- top bus across the Totebox fleet + up to console (P2 right) -->
+        <line x1="1490" y1="368" x2="1490" y2="452"></line>
+        <polyline points="545,486 545,452 1490,452"></polyline>
+        <line x1="915" y1="452" x2="915" y2="486"></line>
+        <line x1="1315" y1="452" x2="1315" y2="486"></line>
+        <line x1="1490" y1="452" x2="1490" y2="486" marker-end="url(#sa-arrow)"></line>
+        <circle class="dot" cx="545" cy="452" r="4"></circle>
+        <circle class="dot" cx="915" cy="452" r="4"></circle>
+        <circle class="dot" cx="1315" cy="452" r="4"></circle>
+        <circle class="dot" cx="1490" cy="452" r="4"></circle>
+        <!-- P4 — Interface OS to Totebox fleet -->
+        <line x1="280" y1="556" x2="430" y2="556" marker-end="url(#sa-arrow)"></line>
+
+        <!-- REST API rail (bottom, double headed) -->
+        <line x1="40" y1="716" x2="1430" y2="716" marker-start="url(#sa-arrow)" marker-end="url(#sa-arrow)"></line>
+        <line x1="155" y1="694" x2="155" y2="716"></line>
+        <line x1="545" y1="694" x2="545" y2="716"></line>
+        <line x1="915" y1="694" x2="915" y2="716"></line>
+        <line x1="1315" y1="694" x2="1315" y2="716"></line>
+      </svg>
+
+      <!-- ===== CONSOLE OS — ADMIN PANEL ===== -->
+      <div class="adminwin" style="left:1060px; top:8px; width:660px; height:298px;">
+        <div class="aw-head">
+          <span class="aw-ico"><svg viewBox="0 0 100 70"><path d="M6,66 L6,40 A44,34 0 0 1 94,40 L94,66"></path></svg></span>
+          <span class="aw-t">Console OS<small>Systems Administration Panel</small></span>
+        </div>
+        <div class="aw-body">
+          <div class="aw-caps">
+            <span class="aw-cap">Pairing</span>
+            <span class="aw-cap">Updates</span>
+            <span class="aw-cap">Configure</span>
+            <span class="aw-cap">Network</span>
+          </div>
+          <div class="aw-preview"></div>
+        </div>
+      </div>
+      <div class="node vbar" style="left:1060px; top:316px; width:660px; height:52px;"><span class="node-label">Type II / Workplace OS</span></div>
+      <div class="node badge" style="left:600px; top:362px;">P2</div>
+      <div class="node badge" style="left:1469px; top:404px;">P2</div>
+
+      <!-- ===== INTERFACE OS ===== -->
+      <div class="node hexagon" style="left:40px; top:476px; width:240px; height:160px;">
+        <svg viewBox="0 0 240 160"><polygon class="ico-line" points="11,80 63,16 177,16 229,80 177,144 63,144"></polygon></svg>
+        <span class="node-label">Interface OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:50px; top:648px; width:220px; height:46px;"><span class="node-label">Virtualization</span></div>
+      <div class="node badge" style="left:334px; top:528px;">P4</div>
+
+      <!-- ===== TOTEBOX FLEET ===== -->
+      <div class="node totebox" style="left:430px; top:486px; width:230px; height:150px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:435px; top:648px; width:220px; height:46px;"><span class="node-label">Virtualization</span></div>
+
+      <div class="node totebox" style="left:800px; top:486px; width:230px; height:150px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:805px; top:648px; width:220px; height:46px;"><span class="node-label">Virtualization</span></div>
+
+      <div class="node totebox" style="left:1200px; top:486px; width:230px; height:150px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:1205px; top:648px; width:220px; height:46px;"><span class="node-label">Virtualization</span></div>
+
+      <div class="restapi-label" style="left:735px; top:716px;">REST API</div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Notes</b>
+      <span>One REST API spans pairing, updates, config and networking — which endpoint would you own first, and what does its first pull request change?</span>
+      <span>Authorization here binds to paired machines, not a credential database (NIST SP 800-207) — what is the audit story when a machine is de-paired?</span>
+      <span>How does a pension-fund operator confirm a fleet-wide update reached every Totebox without a central log they have to trust?</span>
+    </div>
+  </section>

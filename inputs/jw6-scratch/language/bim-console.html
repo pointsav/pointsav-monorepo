@@ -1,0 +1,113 @@
+<section class="scaling inmac" data-label="BIM Console" data-screen-label="Systems Design — Console OS — BIM Console">
+    <div class="head">
+      <span class="cat-tag">Operator Workspace</span>
+      <div class="eyebrow">Design System — Console OS</div>
+      <h2>BIM Console</h2>
+      <div class="crumb">The private BIM Console pairs with the BIM Server interface; an SDK and a public browser reach the web server, which serves the BIM and materials databases held per building.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 720" preserveAspectRatio="none">
+        <defs>
+          <marker id="bim-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0E7C84" stroke="none"></path>
+          </marker>
+        </defs>
+
+        <!-- Console OS down to Interface OS (BIM Server) -->
+        <line x1="270" y1="404" x2="270" y2="470"></line>
+
+        <!-- SDK + Browser down to Web Server -->
+        <line x1="620" y1="252" x2="620" y2="500"></line>
+        <line x1="800" y1="252" x2="800" y2="500"></line>
+
+        <!-- Web Server out to the three buildings -->
+        <path d="M868,520 C1020,520 1060,150 1230,150"></path>
+        <path d="M868,536 C1040,536 1070,372 1230,372"></path>
+        <path d="M868,552 C1040,552 1070,580 1230,580"></path>
+        <circle class="dot" cx="1230" cy="150" r="4"></circle>
+        <circle class="dot" cx="1230" cy="372" r="4"></circle>
+        <circle class="dot" cx="1230" cy="580" r="4"></circle>
+      </svg>
+
+      <!-- ===== PRIVATE CONSOLE OS — BIM CONSOLE ===== -->
+      <div class="zone-label" style="left:0; top:-4px;"><small>Private</small>Console OS</div>
+
+      <div class="arch" style="left:30px; top:48px; width:480px; height:356px;">
+        <div class="arch-head"><span class="sq"></span><span class="at"><small>Console OS</small>BIM Console</span></div>
+        <div class="arch-body" style="display:flex; gap:18px; align-items:stretch;">
+          <div class="metabox" style="position:relative; flex:1; height:104px;">Project A</div>
+          <div class="metabox" style="position:relative; flex:1; height:104px;">Project B</div>
+          <div class="metabox" style="position:relative; flex:1; height:104px;">Project C</div>
+        </div>
+        <span class="annot" style="left:36px; top:300px;">+ New Product = Totebox Archive</span>
+      </div>
+      <div class="node badge" style="left:478px; top:58px;">8</div>
+
+      <!-- ===== INTERFACE OS — BIM SERVER ===== -->
+      <div class="node hexagon" style="left:30px; top:470px; width:480px; height:170px;">
+        <svg viewBox="0 0 480 170"><polygon class="ico-line" points="14,85 78,16 402,16 466,85 402,154 78,154"></polygon></svg>
+        <span class="node-label">Interface OS<small>BIM Server</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:486px; top:486px;">12</div>
+
+      <!-- ===== PUBLIC SDK + BROWSER ===== -->
+      <div class="zone-label" style="left:560px; top:-4px;"><small>Public</small>Access</div>
+      <div class="metabox" style="left:556px; top:120px; width:128px; height:130px;">SDK</div>
+      <div class="doc" style="left:736px; top:120px; width:128px; height:130px;"><span class="doc-t">Browser</span></div>
+
+      <!-- ===== WEB SERVER ===== -->
+      <div class="node backend" style="left:556px; top:500px; width:308px; height:52px;">Web Server</div>
+
+      <!-- ===== BUILDINGS — BIM + MATERIALS DATABASES ===== -->
+      <div class="arch" style="left:1230px; top:60px; width:480px; height:178px;">
+        <div class="arch-head"><span class="sq"></span><span class="at"><small>Totebox Archive</small>Building 1</span></div>
+        <div class="arch-body" style="display:flex; flex-direction:column; gap:10px;">
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">BIM Database</span></span>
+          </div>
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Materials Database</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch" style="left:1230px; top:282px; width:480px; height:178px;">
+        <div class="arch-head"><span class="sq"></span><span class="at"><small>Totebox Archive</small>Building 2</span></div>
+        <div class="arch-body" style="display:flex; flex-direction:column; gap:10px;">
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">BIM Database</span></span>
+          </div>
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Materials Database</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch" style="left:1230px; top:490px; width:480px; height:178px;">
+        <div class="arch-head"><span class="sq"></span><span class="at"><small>Totebox Archive</small>Building 3</span></div>
+        <div class="arch-body" style="display:flex; flex-direction:column; gap:10px;">
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">BIM Database</span></span>
+          </div>
+          <div class="db">
+            <span class="cyl"><svg viewBox="0 0 100 100"><path d="M22,30 L22,70 A28,10 0 0 0 78,70 L78,30"></path><ellipse cx="50" cy="30" rx="28" ry="10"></ellipse></svg></span>
+            <span><span class="dbn">Materials Database</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Notes</b>
+      <span>The console works like a Git host for building models — would you ship read-only drawing access first, or edit-in-console from day one?</span>
+      <span>Each new product spins up its own Totebox Archive — what governs versioning of BIM and materials data across buildings?</span>
+      <span>First release exposes the Git layer to the AEC community, as F✲KEYS does for documents — what is the licensing model for SDK consumers?</span>
+    </div>
+  </section>

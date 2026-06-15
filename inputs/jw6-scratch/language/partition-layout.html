@@ -1,0 +1,34 @@
+<section class="scaling" data-label="Partition Layout" data-screen-label="System of Record — Totebox OS File System and Partition Layout">
+  <div class="head">
+    <span class="cat-tag">System of Record</span>
+    <div class="eyebrow">Record Keeping — Totebox OS</div>
+    <h2>File System &amp; Partitions</h2>
+    <div class="crumb">Each archive is a single micro VM partitioned so recovery, the OS, and per-service storage stay isolated — with the best-fit store chosen for each service.</div>
+  </div>
+
+  <div class="cmp2" style="grid-template-columns:1fr;">
+    <div class="cmp-col">
+      <div class="cmp-rules">
+        <div class="cmp-rule"><span class="rk">R</span><span class="rt"><b>Recovery</b> — restores the archive to a known-good state; kept apart from operating partitions.</span></div>
+        <div class="cmp-rule"><span class="rk">OS</span><span class="rt"><b>Operating system</b> — the Totebox OS itself; read-mostly, separate from records.</span></div>
+        <div class="cmp-rule"><span class="rk">S1</span><span class="rt"><b>Service container</b> — one service's records (e.g. Bookkeeping); best-fit database or file system per service.</span></div>
+        <div class="cmp-rule"><span class="rk">S2</span><span class="rt"><b>Service container</b> — a second service partition, isolated from the first.</span></div>
+        <div class="cmp-rule"><span class="rk">S3</span><span class="rt"><b>Service container</b> — structured services use an embedded DB; document services use the flat-file WORM store.</span></div>
+        <div class="cmp-rule"><span class="rk">S4</span><span class="rt"><b>Service container</b> — partition isolation keeps one service's data from reaching another's.</span></div>
+      </div>
+      <div class="cmp-item lead" style="margin-top:24px;">Why partition this way</div>
+      <div class="cmp-sub" style="margin-left:0;flex-wrap:wrap;gap:12px 26px;">
+        <span class="s">portable, machine-readable export — per EU Data Act Art. 23–25 (2023)</span><span class="s">WORM permanence — per ISO 14641:2018</span><span class="s">no vendor lock-in on read</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes-strip">
+    <b>Your notes</b>
+    <div class="nlist">
+      <span>Which services warrant an embedded database vs. the flat-file store, and who decides per archive?</span>
+      <span>How is a single service partition exported when an entity moves its archive under EU Data Act switching rules?</span>
+      <span>Does the recovery partition hold a verifiable SHA-256 hash manifest of every record?</span>
+    </div>
+  </div>
+</section>

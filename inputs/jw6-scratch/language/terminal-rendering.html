@@ -1,0 +1,49 @@
+  <section class="scaling" data-label="Terminal Rendering" data-screen-label="Platform Foundation — Cross-System Rendering Native Terminal Stack Ghostty Kitty">
+    <div class="head">
+      <span class="cat-tag">Platform Foundation</span>
+      <div class="eyebrow">Cross-System Rendering</div>
+      <h2>Native Terminal Stack</h2>
+      <div class="crumb">The same console renders across every system because it draws on a native terminal substrate — not a browser shell wrapped around each platform.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <!-- LEFT: the substrate -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">The substrate</span></div>
+        <div class="cmp-item lead">Ghostty — native terminal core</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">native UI per platform</span><span class="s">libghostty embeddable core</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">Kitty graphics protocol</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">pixel / raster in the terminal</span><span class="s">alpha blending</span>
+        </div>
+        <div class="cmp-item" style="margin-top:20px;">One console, every system</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">Console OS HUDs render identically</span>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <!-- RIGHT: why it matters -->
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Why this substrate</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Ghostty is <b>native, fast, and feature-rich</b>, exposing its core as <b>libghostty</b> so the rendering engine can be embedded rather than re-implemented per platform.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The Kitty graphics protocol lets the terminal carry <b>pixel-accurate raster images with alpha blending</b> — maps, charts, and BIM views render in the same surface as text.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">A native terminal substrate keeps the <b>attack surface minimal</b> compared with a full browser runtime — the single-purpose-image argument from the unikernel literature (arXiv:1911.06260) applies to the rendering layer too.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">For developers this is a credible, inspectable rendering path; for the F12 checkpoint it means the human-authorization HUD looks the same on every deployment.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Does a native terminal substrate change your view of the console's attack surface?</span>
+        <span>How important is pixel-identical rendering across your operators' machines?</span>
+        <span>Would your team rather extend libghostty or sit behind a browser shell?</span>
+      </div>
+    </div>
+  </section>

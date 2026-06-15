@@ -1,0 +1,52 @@
+<section class="scaling privnet archive" data-label="Leased Servers" data-screen-label="Private Network — Infostructure OS — Leased Servers">
+    <div class="head">
+      <span class="cat-tag">Platform Foundation</span>
+      <div class="eyebrow">Design System — Architecture</div>
+      <h2>Leased Server Deployment</h2>
+      <div class="crumb">Run Private Git and Systems Admin on dedicated leased hardware — the same Infostructure OS stack as on-prem, hosted on rented servers you control rather than a multi-tenant cloud.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 806" preserveAspectRatio="none">
+        <!-- vertical spine joining the deployment stack -->
+        <line x1="800" y1="150" x2="800" y2="172"></line>
+        <line x1="800" y1="280" x2="800" y2="302"></line>
+        <line x1="800" y1="360" x2="800" y2="392"></line>
+        <circle class="dot" cx="800" cy="172" r="4"></circle>
+        <circle class="dot" cx="800" cy="302" r="4"></circle>
+        <circle class="dot" cx="800" cy="392" r="4"></circle>
+      </svg>
+
+      <!-- ===== TOP — PRIVATE GIT ===== -->
+      <div class="node backend" style="left:700px; top:90px; width:200px; height:60px;">Private Git</div>
+      <div class="node badge" style="left:888px; top:96px;">1</div>
+
+      <!-- ===== SYSTEMS ADMIN (VM) ===== -->
+      <div class="node totebox" style="left:700px; top:172px; width:200px; height:108px;">
+        <span class="node-label">Systems Admin</span><span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:888px; top:182px;">2</div>
+
+      <!-- ===== VIRTUALIZATION BAR ===== -->
+      <div class="node vbar" style="left:660px; top:302px; width:280px;"><span class="node-label">Virtualization</span></div>
+      <div class="node badge" style="left:928px; top:304px;">3</div>
+
+      <!-- ===== FOUNDATION — POINTSAV PRIVATE NETWORK ===== -->
+      <div class="pnet-boundary" style="left:660px; top:392px; width:280px; height:200px;"></div>
+      <div class="pnet-cap" style="left:660px; width:280px;"><span>PointSav Private Network<small>Infostructure OS</small></span></div>
+      <div class="node ps-bar" style="left:684px; top:452px; width:232px; height:118px;">Leased Server Deployment</div>
+      <div class="node badge" style="left:928px; top:404px;">4</div>
+
+      <!-- ===== ANNOTATION ===== -->
+      <span class="annot" style="left:300px; top:240px;">leased infrastructure — not a cloud</span>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Does dedicated leased hardware clear the single-tenancy bar your auditors set for the cloud tier?</span>
+        <span>Who holds the lease and the root credentials — your firm, or the hosting provider?</span>
+        <span>How quickly can you migrate the same stack between leased, on-prem, and cloud if a contract ends?</span>
+      </div>
+    </div>
+  </section>

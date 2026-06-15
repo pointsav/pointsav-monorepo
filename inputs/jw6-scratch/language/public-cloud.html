@@ -1,0 +1,52 @@
+<section class="scaling privnet archive" data-label="Public Cloud" data-screen-label="Private Network — Infostructure OS — Public Cloud">
+    <div class="head">
+      <span class="cat-tag">Platform Foundation</span>
+      <div class="eyebrow">Design System — Architecture</div>
+      <h2>Public Cloud Deployment</h2>
+      <div class="crumb">Run Private Git and Systems Admin as VMs on Infostructure OS inside a public cloud — the identical stack as on-prem and leased, so the cloud is a host you can leave, not a vendor you are locked into.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 620" preserveAspectRatio="none">
+        <!-- Private Git --> Systems Admin -->
+        <line x1="730" y1="116" x2="730" y2="148"></line>
+        <!-- Systems Admin --> Virtualization -->
+        <line x1="730" y1="270" x2="730" y2="300"></line>
+        <!-- Virtualization --> Public Cloud -->
+        <line x1="730" y1="362" x2="730" y2="396"></line>
+        <circle class="dot" cx="730" cy="396" r="4"></circle>
+      </svg>
+
+      <!-- ===== PRIVATE GIT ===== -->
+      <div class="node totebox" style="left:630px; top:24px; width:200px; height:92px;">
+        <span class="node-label">Private Git</span>
+      </div>
+      <div class="node badge" style="left:838px; top:36px;">1</div>
+
+      <!-- ===== SYSTEMS ADMIN VM ===== -->
+      <div class="node totebox" style="left:630px; top:148px; width:200px; height:122px;">
+        <span class="node-label">Systems Admin</span><span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:838px; top:188px;">2</div>
+
+      <!-- ===== VIRTUALIZATION BAR ===== -->
+      <div class="node vbar" style="left:560px; top:300px; width:340px;"><span class="node-label">Virtualization</span></div>
+      <div class="node badge" style="left:908px; top:306px;">3</div>
+
+      <!-- ===== PUBLIC CLOUD ===== -->
+      <div class="node cloud" style="left:520px; top:396px; width:420px; height:200px;">
+        <svg viewBox="0 0 100 100"><path class="ico-line" d="M26,72 C11,72 10,50 27,50 C22,33 49,29 51,47 C57,30 84,34 76,52 C93,53 89,72 73,72 Z"></path></svg>
+        <span class="node-label">PointSav Private Network<small>Public Cloud Deployment</small></span>
+      </div>
+      <div class="node badge" style="left:912px; top:476px;">B</div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>If your cloud provider raised prices, how fast could you re-deploy the identical stack elsewhere?</span>
+        <span>Which residency rules apply to your records once they sit in a public-cloud region?</span>
+        <span>Who owns the encryption keys when the VMs run on infrastructure your firm does not own?</span>
+      </div>
+    </div>
+  </section>

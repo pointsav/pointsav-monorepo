@@ -1,0 +1,43 @@
+  <section class="scaling dbfs" data-label="Design System" data-screen-label="Documentation — PrivateGit OS — Design System">
+    <div class="head">
+      <span class="cat-tag">2.1</span>
+      <div class="eyebrow">Documentation</div>
+      <h2>PrivateGit OS — Design System</h2>
+      <div class="crumb">Sets the house style — documentation standards, coding rules, and a shared component library — so a new contributor and an outside auditor read the same platform the same way.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">What it entails</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Adopts <b>IBM Carbon-style</b> thinking for a PointSav Design System hosted on PrivateGit OS — one token set for layout, spacing, grids, and components across Marketing (WordPress), Knowledge (MediaWiki), and Distribution (Fresh RSS) deployments of MediaKit OS.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Pins the architecture to four named standards so the same system is legible to an engineer and to a procurement reviewer: <b>C4 Model</b> (context → container → component → code), <b>4+1 View Model</b> (logical, process, physical, development, plus scenarios), <b>UML 2.5.1</b> (sequence and component diagrams), and <b>ISO/IEC 42010</b> (architecture-description conformance, planned).</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Holds code to the <b>Power of 10</b> safety-critical rules (NASA/JPL discipline, planned for the Rust codebase): bounded loops, no recursion, explicit return checks — the same constraints that keep a release predictable for a maintainer and verifiable for a risk officer.</span></div>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Outcome</span></div>
+        <div class="cmp-item lead">A single source of truth for UI components and the architecture diagrams that describe them</div>
+        <div class="cmp-sub" style="margin-left:0; flex-wrap:wrap; gap:12px 26px;">
+          <span class="s">WCP Landing Page</span><span class="s">WCP Corporate Wiki</span><span class="s">WCP Projects Wiki</span><span class="s">WCP Newsroom</span><span class="s">PointSav Landing Page</span><span class="s">PointSav Documentation</span>
+        </div>
+        <div class="cmp-rules" style="margin-top:22px;">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Ships as a named artifact — the <b>Media Assets Directory</b> — the catalogued output of the design system, mapping every button, form, and topic template to the page and CMS it serves.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Wireframes (screen blueprints) and the C4/UML diagrams are versioned alongside the code, so the picture of the system and the system never drift apart.</span></div>
+        </div>
+        <div class="cmp-item" style="margin-top:24px;">Free and Open Source Software — available for all developers to read, fork, and contribute towards.</div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Which of the four documentation standards (C4, 4+1, UML 2.5.1, ISO/IEC 42010) would you make mandatory for the first pull request, and which would you let lag?</span>
+        <span>If you owned the Media Assets Directory, what would be the first component you'd standardise across WordPress, MediaWiki, and Fresh RSS — and why that one?</span>
+        <span>Where would the Power of 10 rules slow a developer down most, and is that friction worth the predictability it buys an auditor?</span>
+      </div>
+    </div>
+  </section>

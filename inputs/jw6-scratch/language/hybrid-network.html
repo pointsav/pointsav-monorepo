@@ -1,0 +1,64 @@
+<section class="scaling privnet archive" data-label="Hybrid Network" data-screen-label="Private Network — Infostructure OS — Hybrid">
+    <div class="head">
+      <span class="cat-tag">Platform Foundation</span>
+      <div class="eyebrow">Design System — Infostructure OS</div>
+      <h2>Private Network — Hybrid</h2>
+      <div class="crumb">Compose one private network for Totebox orchestration from on-prem, leased-server, and public-cloud deployments at once — placing each workload where its residency and cost rules demand.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 660" preserveAspectRatio="none">
+        <!-- Private Git OS + Systems Admin feed the virtualization bar -->
+        <line x1="1510" y1="170" x2="1510" y2="196"></line>
+        <line x1="1510" y1="258" x2="1510" y2="290"></line>
+        <!-- virtualization bar (bottom edge y=346) feeds the three deployments -->
+        <line x1="220" y1="346" x2="220" y2="384"></line>
+        <line x1="740" y1="346" x2="740" y2="384"></line>
+        <line x1="1260" y1="346" x2="1260" y2="384"></line>
+        <circle class="dot" cx="220" cy="346" r="4"></circle>
+        <circle class="dot" cx="740" cy="346" r="4"></circle>
+        <circle class="dot" cx="1260" cy="346" r="4"></circle>
+        <!-- on-prem deployment feeds bare metal -->
+        <line x1="220" y1="600" x2="220" y2="624"></line>
+      </svg>
+
+      <!-- ===== NETWORK TITLE BAR ===== -->
+      <div class="zone-label" style="left:30px; top:8px;"><small>Orchestration</small>PointSav Private Network</div>
+
+      <!-- ===== PRIVATE GIT OS + SYSTEMS ADMIN ===== -->
+      <div class="node backend col" style="left:1430px; top:110px; width:200px; height:60px;">Private Git OS</div>
+      <div class="node totebox" style="left:1430px; top:196px; width:200px; height:62px;">
+        <span class="node-label">Systems Admin</span><span class="vm">vm</span>
+      </div>
+
+      <!-- ===== VIRTUALIZATION BAR ===== -->
+      <div class="node ps-bar" style="left:30px; top:290px; width:1600px; height:56px;">Virtualization</div>
+
+      <!-- ===== THREE DEPLOYMENTS ===== -->
+      <!-- On-Prem -->
+      <div class="pnet-boundary" style="left:30px; top:384px; width:380px; height:200px;"></div>
+      <div class="pnet-cap" style="left:30px; width:380px;"><span>PointSav Private Network<small>On-Prem Deployment</small></span></div>
+
+      <!-- Leased Server -->
+      <div class="pnet-boundary" style="left:550px; top:384px; width:380px; height:200px;"></div>
+      <div class="pnet-cap" style="left:550px; width:380px;"><span>PointSav Private Network<small>Leased Server Deployment</small></span></div>
+
+      <!-- Public Cloud -->
+      <div class="node cloud" style="left:1080px; top:384px; width:360px; height:200px;">
+        <svg viewBox="0 0 100 100"><path class="ico-line" d="M26,72 C11,72 10,50 27,50 C22,33 49,29 51,47 C57,30 84,34 76,52 C93,53 89,72 73,72 Z"></path></svg>
+        <span class="node-label">PointSav Private Network<small>Public Cloud Deployment</small></span>
+      </div>
+
+      <!-- ===== BARE METAL ===== -->
+      <div class="node backend" style="left:30px; top:624px; width:380px; height:48px;">Bare Metal</div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Which of your workloads must stay on-prem, and which can you push to leased or cloud to cut cost?</span>
+        <span>Does running one private network across three host types complicate or simplify your audit trail?</span>
+        <span>Who decides where a new archive lands when all three deployment types are available at once?</span>
+      </div>
+    </div>
+  </section>

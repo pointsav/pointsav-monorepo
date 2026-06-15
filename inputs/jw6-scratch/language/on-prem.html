@@ -1,0 +1,57 @@
+<section class="scaling privnet inmac" data-label="On-prem" data-screen-label="Private Network — Infostructure OS — On-prem">
+    <div class="head">
+      <span class="cat-tag">Platform Foundation</span>
+      <div class="eyebrow">Design System — Architecture</div>
+      <h2>On-prem Deployment</h2>
+      <div class="crumb">Run the whole stack on one machine in your own office — Private Git and the Systems Admin VM virtualize over the PointSav Private Network down to bare metal, with no data leaving the premises.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 740" preserveAspectRatio="none">
+        <!-- vertical spine joining the on-prem deployment layers -->
+        <line x1="870" y1="92" x2="870" y2="116"></line>
+        <line x1="870" y1="200" x2="870" y2="224"></line>
+        <line x1="870" y1="290" x2="870" y2="314"></line>
+        <line x1="870" y1="470" x2="870" y2="494"></line>
+        <circle class="dot" cx="870" cy="116" r="4"></circle>
+        <circle class="dot" cx="870" cy="224" r="4"></circle>
+        <circle class="dot" cx="870" cy="314" r="4"></circle>
+        <circle class="dot" cx="870" cy="494" r="4"></circle>
+      </svg>
+
+      <!-- ===== ON-PREM DEPLOYMENT STACK ===== -->
+      <div class="zone-label" style="left:560px; top:8px;"><small>Deploy</small>On-prem</div>
+
+      <!-- Private Git -->
+      <div class="node totebox" style="left:760px; top:24px; width:220px; height:68px;">
+        <span class="node-label">Private Git</span>
+      </div>
+      <div class="node badge" style="left:996px; top:36px;">1</div>
+
+      <!-- Systems Admin VM -->
+      <div class="node totebox" style="left:760px; top:116px; width:220px; height:84px;">
+        <span class="node-label">Systems Admin</span><span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:996px; top:138px;">2</div>
+
+      <!-- Virtualization bar -->
+      <div class="node vbar" style="left:730px; top:224px; width:280px; height:66px;"><span class="node-label">Virtualization</span></div>
+
+      <!-- PointSav Private Network — On-prem Deployment -->
+      <div class="node backend col" style="left:700px; top:314px; width:340px; height:156px;">PointSav Private Network<br>On-prem Deployment</div>
+      <div class="node badge" style="left:1056px; top:382px;">3</div>
+
+      <!-- Bare metal foundation -->
+      <div class="node ps-bar" style="left:700px; top:494px; width:340px; height:66px;">Bare&nbsp;Metal</div>
+      <div class="node badge" style="left:688px; top:510px;">4</div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Which records must stay inside your own walls for a regulator, and does on-prem alone satisfy that?</span>
+        <span>Who on your team owns patching the bare-metal host once the stack runs in your office?</span>
+        <span>What does single-machine deployment cost you in redundancy versus the leased or cloud tiers?</span>
+      </div>
+    </div>
+  </section>

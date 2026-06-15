@@ -1,0 +1,93 @@
+<section class="scaling sysadmin" data-label="Building Preferences" data-screen-label="Console OS — Building Preferences">
+    <div class="head">
+      <span class="cat-tag">Operator Workspace</span>
+      <div class="eyebrow">Design System — Console OS</div>
+      <h2>Building Preferences</h2>
+      <div class="crumb">The Building Preferences Console pairs through Interface OS — IoT Connect — to fan out across each building's IoT Device and IoT Sensor libraries, driving the Digital Twin from one operator surface.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 760" preserveAspectRatio="none">
+        <defs>
+          <marker id="bp-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0E7C84" stroke="none"></path>
+          </marker>
+        </defs>
+
+        <!-- Console panel down to Interface OS (IoT Connect) -->
+        <line x1="280" y1="470" x2="280" y2="556"></line>
+
+        <!-- Interface OS fans out to the three buildings -->
+        <line x1="520" y1="556" x2="1080" y2="160" marker-end="url(#bp-arrow)"></line>
+        <line x1="520" y1="586" x2="1080" y2="392" marker-end="url(#bp-arrow)"></line>
+        <line x1="520" y1="616" x2="1080" y2="600" marker-end="url(#bp-arrow)"></line>
+        <circle class="dot" cx="520" cy="586" r="4"></circle>
+      </svg>
+
+      <!-- ===== CONSOLE OS — BUILDING PREFERENCES PANEL ===== -->
+      <div class="adminwin" style="left:40px; top:8px; width:540px; height:462px;">
+        <div class="aw-head">
+          <span class="aw-ico"><svg viewBox="0 0 100 70"><path d="M6,66 L6,40 A44,34 0 0 1 94,40 L94,66"></path></svg></span>
+          <span class="aw-t">Console OS<small>Building Preferences</small></span>
+        </div>
+        <div class="aw-body">
+          <div class="aw-caps">
+            <span class="aw-cap">Locks</span>
+            <span class="aw-cap">CCTV</span>
+            <span class="aw-cap">Lights</span>
+            <span class="aw-cap">HVAC</span>
+            <span class="aw-cap">Elevators</span>
+            <span class="aw-cap">Weathervane</span>
+            <span class="aw-cap">Turnstiles</span>
+            <span class="aw-cap">Sensors</span>
+            <span class="aw-cap">Public Wi-Fi</span>
+            <span class="aw-cap">Utility Shut-Offs</span>
+            <span class="aw-cap">Controllers — Blinds / PV Array</span>
+          </div>
+          <div class="aw-preview"></div>
+        </div>
+      </div>
+      <div class="cube-top-label" style="left:330px; top:236px;">Digital Twin</div>
+      <div class="node badge" style="left:519px; top:24px;">10</div>
+
+      <!-- ===== INTERFACE OS — IoT CONNECT ===== -->
+      <div class="node hexagon" style="left:160px; top:556px; width:360px; height:160px;">
+        <svg viewBox="0 0 360 160"><polygon class="ico-line" points="11,80 63,16 297,16 349,80 297,144 63,144"></polygon></svg>
+        <span class="node-label">Interface OS<small>IoT Connect</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:498px; top:574px;">14</div>
+
+      <!-- ===== BUILDING CARDS ===== -->
+      <div class="arch" style="left:1080px; top:80px; width:540px; height:160px;">
+        <div class="arch-head"><span class="sq"></span><span class="at">Building 1</span></div>
+        <div class="arch-body">
+          <div class="db"><span class="dbn">IoT Device Library</span></div>
+          <div class="db"><span class="dbn">IoT Sensor Library</span></div>
+        </div>
+      </div>
+
+      <div class="arch" style="left:1080px; top:312px; width:540px; height:160px;">
+        <div class="arch-head"><span class="sq"></span><span class="at">Building 2</span></div>
+        <div class="arch-body">
+          <div class="db"><span class="dbn">IoT Device Library</span></div>
+          <div class="db"><span class="dbn">IoT Sensor Library</span></div>
+        </div>
+      </div>
+
+      <div class="arch" style="left:1080px; top:520px; width:540px; height:160px;">
+        <div class="arch-head"><span class="sq"></span><span class="at">Building 3</span></div>
+        <div class="arch-body">
+          <div class="db"><span class="dbn">IoT Device Library</span></div>
+          <div class="db"><span class="dbn">IoT Sensor Library</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Notes</b>
+      <span>One console reaches locks, CCTV, HVAC, elevators and utility shut-offs across every building — which control would you own first, and what does its first pull request change?</span>
+      <span>The Digital Twin is driven from live IoT Device and Sensor libraries — how is operator authority to trigger a utility shut-off scoped and audited?</span>
+      <span>For an institutional owner, what is the failure mode if IoT Connect loses its pairing to one building mid-operation?</span>
+    </div>
+  </section>

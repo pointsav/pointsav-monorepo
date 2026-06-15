@@ -1,0 +1,70 @@
+  <section class="scaling archive" data-label="Registry Token" data-screen-label="Machine-Based Authorization — Registry Token, Access Record &amp; Pairing as Permissions">
+    <div class="head">
+      <span class="cat-tag">Machine-Based Authorization</span>
+      <div class="eyebrow">Access Records</div>
+      <h2>Registry Token — Pairing as Permissions</h2>
+      <div class="crumb">There is no password database to breach: a machine is authorized by what it is and where it sits on the network, not by a stored credential.</div>
+    </div>
+
+    <div class="cmp2">
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">The access record</span></div>
+        <div class="cmp-item lead">The Registry Token is the only source of truth</div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The <b>Totebox Archive</b> keeps access records via the <b>Registry Token</b>, mapping each paired device's <b>IP address</b> to its permitted operations.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The IP address <b>is</b> the machine identity — network topology functions as the permission system, not a separate credential store. Aligns with cryptokey routing, where a peer key authorizes only its allowed tunnel IPs — per WireGuard, NDSS 2017.</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">No raw data is exposed: every interaction routes through an instance of <b>Console OS</b>, which may route by way of <b>Interface OS</b>. The token records the access; it never holds the record.</span></div>
+        </div>
+        <div class="cmp-sub" style="margin-left:0;flex-wrap:wrap;gap:12px 26px;">
+          <span class="s">device IP → permission</span><span class="s">no credential DB</span><span class="s">no shared secret</span><span class="s">key-bound</span>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Why it holds up</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">01</span><span class="rt"><b>Auditable by design.</b> A clear registry of who can do what answers "who changed this and why?" without scrambling — immutable access logging consistent with SEC Rule 17a-4 (2022).</span></div>
+          <div class="cmp-rule"><span class="rk">02</span><span class="rt"><b>Hardware-rooted assurance.</b> Proof of possession of a machine-bound cryptographic key, rather than a password, meets the assurance posture defined for AAL3 — per NIST SP 800-63B.</span></div>
+          <div class="cmp-rule"><span class="rk">03</span><span class="rt"><b>Zero-trust aligned.</b> No implicit trust is granted by network location alone; each pairing is mutually authenticated — consistent with NIST SP 800-207, Zero Trust Architecture.</span></div>
+          <div class="cmp-rule"><span class="rk">04</span><span class="rt"><b>Token bound to the node.</b> A Registry Token is useless away from the machine it was issued to, in the manner of certificate-bound access tokens — per RFC 8705.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas" style="position:relative; height:130px; margin:16px 0;">
+      <svg class="wire" viewBox="0 0 1740 130" preserveAspectRatio="none">
+        <!-- Device → Token Record -->
+        <line x1="170" y1="60" x2="700" y2="44"></line>
+        <polyline points="688,38 702,44 688,50"></polyline>
+        <!-- Token Record → Totebox Archive -->
+        <line x1="1040" y1="44" x2="1570" y2="62"></line>
+        <polyline points="1556,56 1572,62 1558,68"></polyline>
+        <circle class="dot" cx="170" cy="60" r="5"></circle>
+        <circle class="dot" cx="1570" cy="62" r="5"></circle>
+      </svg>
+
+      <div class="totebox" style="position:absolute; left:20px; top:40px; width:100px; height:60px;">
+        <span class="node-label">Device</span>
+      </div>
+
+      <div class="doc" style="position:absolute; left:50%; transform:translateX(-50%); top:20px; width:140px;">
+        <span class="doc-t">Token Record</span>
+        <span class="doc-meta">IP · timestamp · key</span>
+      </div>
+
+      <div class="arch" style="position:absolute; right:20px; top:35px; width:110px; height:70px;">
+        <div class="arch-head"><span class="sq"></span><span class="at">Totebox Archive</span></div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>How is the Registry Token revoked when a paired device is retired or compromised?</span>
+        <span>What is recorded when a device's IP changes — re-pairing, or a tracked rebinding?</span>
+        <span>Is the paired-ID registry itself held in a Totebox Archive under the same WORM rules?</span>
+      </div>
+    </div>
+  </section>

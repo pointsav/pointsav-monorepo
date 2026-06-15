@@ -1,0 +1,125 @@
+<section class="scaling privnet archive" data-label="Pairing as Permissions" data-screen-label="Pairing as Permissions — Authentication &amp; Pairing">
+    <div class="head">
+      <span class="cat-tag">Machine-Based Authorization</span>
+      <div class="eyebrow">Design System — Authentication</div>
+      <h2>Pairing as Permissions</h2>
+      <div class="crumb">A device earns access by pairing to a Totebox OS over a numbered port, not by holding a role in a permissions table — yet every paired device keeps a unique tracked ID, so authorization is provable without a shared-secret database.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 720" preserveAspectRatio="none">
+        <!-- LEFT consoles --P1/P2/P3--> Totebox OS -->
+        <polyline points="290,150 400,150 470,310"></polyline>
+        <line x1="290" y1="372" x2="470" y2="372"></line>
+        <polyline points="290,560 400,560 470,420"></polyline>
+        <circle class="dot" cx="470" cy="310" r="4"></circle>
+        <circle class="dot" cx="470" cy="372" r="4"></circle>
+        <circle class="dot" cx="470" cy="420" r="4"></circle>
+
+        <!-- Totebox OS --P4--> Interface OS -->
+        <line x1="700" y1="366" x2="1040" y2="366"></line>
+
+        <!-- RIGHT consoles --P1/P2/P3--> Interface OS -->
+        <polyline points="1450,150 1340,150 1270,310"></polyline>
+        <line x1="1450" y1="372" x2="1270" y2="372"></line>
+        <polyline points="1450,560 1340,560 1270,420"></polyline>
+        <circle class="dot" cx="1270" cy="310" r="4"></circle>
+        <circle class="dot" cx="1270" cy="372" r="4"></circle>
+        <circle class="dot" cx="1270" cy="420" r="4"></circle>
+      </svg>
+
+      <!-- ===== AUTHENTICATION NOTE (top, spanning centre) ===== -->
+      <div class="pnet-boundary" style="left:300px; top:0px; width:1140px; height:108px;"></div>
+      <div class="pnet-cap" style="left:300px; width:1140px;"><span>Authentication and Permissions<small>Pairing-based</small></span></div>
+      <span class="annot" style="left:340px; top:42px;">A permissions store still exists — but it records pairings, not roles.</span>
+      <span class="annot" style="left:340px; top:74px;">Each paired device is held by its unique tracked ID.</span>
+
+      <!-- ===== LEFT DEVICE CLUSTER ===== -->
+      <!-- top-left: Console OS / Input Machine -->
+      <div class="node console" style="left:30px; top:118px; width:200px; height:104px;">
+        <svg viewBox="0 0 200 104"><path class="ico-line" d="M10,100 L10,50 Q10,8 100,8 Q190,8 190,50 L190,100 Z"></path></svg>
+        <span class="node-label" style="top:34px;">Console OS<small>Input Machine</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:198px; top:130px;">6</div>
+      <div class="node vbar" style="left:50px; top:230px; width:160px;"><span class="node-label">Type II / Workplace OS</span></div>
+
+      <!-- mid-left: Console OS / F# Keys -->
+      <div class="node console" style="left:30px; top:328px; width:200px; height:104px;">
+        <svg viewBox="0 0 200 104"><path class="ico-line" d="M10,100 L10,50 Q10,8 100,8 Q190,8 190,50 L190,100 Z"></path></svg>
+        <span class="node-label" style="top:40px;">Console OS<small>F# Keys</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:198px; top:340px;">7</div>
+      <div class="node vbar" style="left:50px; top:440px; width:160px;"><span class="node-label">Type II / Workplace OS</span></div>
+
+      <!-- bottom-left: Console OS / consoles 8 9 10 -->
+      <div class="node console" style="left:30px; top:528px; width:200px; height:104px;">
+        <svg viewBox="0 0 200 104"><path class="ico-line" d="M10,100 L10,50 Q10,8 100,8 Q190,8 190,50 L190,100 Z"></path></svg>
+        <span class="node-label" style="top:40px;">Console OS<small>8 · 9 · 10</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:50px; top:640px; width:160px;"><span class="node-label">Type II / Workplace OS</span></div>
+
+      <!-- left pairing badges -->
+      <div class="node badge" style="left:380px; top:250px;">P1</div>
+      <div class="node badge" style="left:380px; top:350px;">P2</div>
+      <div class="node badge" style="left:380px; top:410px;">P3</div>
+
+      <!-- ===== CENTRE — TOTEBOX OS / INTERFACE OS PAIR ===== -->
+      <div class="node totebox" style="left:470px; top:300px; width:230px; height:132px;">
+        <span class="node-label">Totebox OS</span><span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:475px; top:440px; width:220px;"><span class="node-label">Virtualization</span></div>
+
+      <div class="node badge" style="left:850px; top:344px;">P4</div>
+
+      <div class="node hexagon" style="left:1040px; top:288px; width:230px; height:160px;">
+        <svg viewBox="0 0 230 160"><polygon class="ico-line" points="11,80 60,16 170,16 219,80 170,144 60,144"></polygon></svg>
+        <span class="node-label">Interface OS</span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:1045px; top:460px; width:220px;"><span class="node-label">Virtualization</span></div>
+
+      <!-- right pairing badges -->
+      <div class="node badge" style="left:1330px; top:250px;">P1</div>
+      <div class="node badge" style="left:1330px; top:350px;">P2</div>
+      <div class="node badge" style="left:1330px; top:410px;">P3</div>
+
+      <!-- ===== RIGHT DEVICE CLUSTER ===== -->
+      <!-- top-right: Console OS / Input Machine -->
+      <div class="node console" style="left:1510px; top:118px; width:200px; height:104px;">
+        <svg viewBox="0 0 200 104"><path class="ico-line" d="M10,100 L10,50 Q10,8 100,8 Q190,8 190,50 L190,100 Z"></path></svg>
+        <span class="node-label" style="top:34px;">Console OS<small>Input Machine</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:1678px; top:130px;">6</div>
+      <div class="node vbar" style="left:1530px; top:230px; width:160px;"><span class="node-label">Type II / Workplace OS</span></div>
+
+      <!-- mid-right: Console OS / F# Keys -->
+      <div class="node console" style="left:1510px; top:328px; width:200px; height:104px;">
+        <svg viewBox="0 0 200 104"><path class="ico-line" d="M10,100 L10,50 Q10,8 100,8 Q190,8 190,50 L190,100 Z"></path></svg>
+        <span class="node-label" style="top:40px;">Console OS<small>F# Keys</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node badge" style="left:1678px; top:340px;">7</div>
+      <div class="node vbar" style="left:1530px; top:440px; width:160px;"><span class="node-label">Type II / Workplace OS</span></div>
+
+      <!-- bottom-right: Console OS / consoles 8 9 10 -->
+      <div class="node console" style="left:1510px; top:528px; width:200px; height:104px;">
+        <svg viewBox="0 0 200 104"><path class="ico-line" d="M10,100 L10,50 Q10,8 100,8 Q190,8 190,50 L190,100 Z"></path></svg>
+        <span class="node-label" style="top:40px;">Console OS<small>8 · 9 · 10</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:1530px; top:640px; width:160px;"><span class="node-label">Type II / Workplace OS</span></div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>One device holds several pairings at once (the WhatsApp / Bluetooth model) — what stops a stolen device from re-pairing, and where is that revocation enforced?</span>
+        <span>The ports map to P1 Input · P2 System Administration · P3 User · P4 Interface — which of these would you, as operator, gate most tightly, and why?</span>
+        <span>If permissions are pairings rather than roles, what does an auditor read to answer "who could do what on this date" — the paired-ID registry, the access log, or both?</span>
+      </div>
+    </div>
+  </section>

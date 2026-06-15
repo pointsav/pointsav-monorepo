@@ -1,0 +1,66 @@
+<section class="scaling toteboxes" data-label="Toteboxes" data-screen-label="Toteboxes">
+    <div class="head">
+      <span class="cat-tag">System of Record</span>
+      <div class="eyebrow">Design System — Totebox OS</div>
+      <h2>Toteboxes</h2>
+      <div class="crumb">A Totebox holds one entity's records and runs anywhere on the deployment scale — full VM down to unikernel — so the archive moves with the entity, not the vendor. Totebox Services ship as a micro VM.</div>
+    </div>
+
+    <div class="canvas">
+      <!-- deployment scale spectrum -->
+      <div class="vmscale">
+        <div class="scale-cap">Deployment Scale</div>
+        <div class="vmstep" style="left:0;">
+          <span class="vlabel">vm</span><span class="sq" style="width:118px; height:118px;"></span>
+        </div>
+        <div class="vmstep" style="left:330px;">
+          <span class="vlabel">micro vm</span><span class="sq" style="width:90px; height:90px;"></span>
+        </div>
+        <div class="vmstep" style="left:640px;">
+          <span class="vlabel">nano vm</span><span class="sq" style="width:64px; height:64px;"></span>
+        </div>
+        <div class="vmstep" style="left:910px;">
+          <span class="vlabel">unikernel</span><span class="sq" style="width:40px; height:40px;"></span>
+        </div>
+        <div class="axis"></div>
+        <div class="transfer"><b>✲</b> Freely transferable across the scale</div>
+      </div>
+
+      <!-- service list -->
+      <div class="svclist">
+        <div class="svcrow"><span class="snum">1</span><span class="sname">Minute Book</span></div>
+        <div class="svcrow"><span class="snum">2</span><span class="sname">Bookkeeping</span></div>
+        <div class="svcrow"><span class="snum">3</span><span class="sname">Geo-Spatial</span></div>
+        <div class="svcrow"><span class="snum">4</span><span class="sname">Communications</span></div>
+        <div class="svcrow"><span class="snum">5</span><span class="sname">Calendar</span></div>
+        <div class="svcrow"><span class="snum">6</span><span class="sname">IoT Devices / IoT Sensors</span></div>
+      </div>
+
+      <!-- connector from list into services card -->
+      <svg class="wire" viewBox="0 0 1740 700" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none;">
+        <defs>
+          <marker id="tb-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0E7C84" stroke="none"></path>
+          </marker>
+        </defs>
+        <line x1="800" y1="494" x2="1300" y2="494" stroke="#0E7C84" stroke-width="2.5" marker-end="url(#tb-arrow)"></line>
+        <circle cx="800" cy="494" r="4" fill="#0E7C84"></circle>
+      </svg>
+
+      <!-- totebox services card -->
+      <div class="tbservices">
+        <div class="tbs-head"><span class="tbs-sq"></span><span class="tbs-t">Totebox Services</span></div>
+        <div class="tbs-body"><span class="tbs-vm">micro vm</span></div>
+        <div class="tbs-foot">Aggregates the service list</div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Which of the six services would you stand up first in a new Totebox, and what does its first record look like?</span>
+        <span>What changes operationally when the same archive runs as a unikernel instead of a full VM?</span>
+        <span>If an entity leaves the platform, who holds the Totebox, and what is required to read it elsewhere?</span>
+      </div>
+    </div>
+  </section>

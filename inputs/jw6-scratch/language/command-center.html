@@ -1,0 +1,88 @@
+  <section class="scaling sysadmin" data-label="Command Center" data-screen-label="F*KEYS Console — Command Center">
+    <div class="head">
+      <span class="cat-tag">Operator Workspace</span>
+      <div class="eyebrow">Design System — Console OS</div>
+      <h2>F✲KEYS Command Center</h2>
+      <div class="crumb">The F✲KEYS Console drives the command center — F-key shortcuts for command bar, synchronization and people — pairing across Interface OS and a cluster of Console OS instances from one keyboard.</div>
+    </div>
+
+    <div class="canvas">
+      <svg class="wire" viewBox="0 0 1740 740" preserveAspectRatio="none">
+        <defs>
+          <marker id="cc-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0E7C84" stroke="none"></path>
+          </marker>
+        </defs>
+        <!-- P3 — console panel down-left to Interface OS -->
+        <line x1="1060" y1="300" x2="230" y2="470" marker-end="url(#cc-arrow)"></line>
+        <!-- top bus across the Console OS fleet + up to panel (P3 right) -->
+        <polyline points="560,486 560,452 1450,452"></polyline>
+        <line x1="854" y1="452" x2="854" y2="486"></line>
+        <line x1="1450" y1="452" x2="1450" y2="368"></line>
+        <line x1="1450" y1="452" x2="1450" y2="486" marker-end="url(#cc-arrow)"></line>
+        <circle class="dot" cx="560" cy="452" r="4"></circle>
+        <circle class="dot" cx="854" cy="452" r="4"></circle>
+        <circle class="dot" cx="1450" cy="452" r="4"></circle>
+        <!-- P4 — Interface OS to Console cluster -->
+        <line x1="280" y1="548" x2="412" y2="548" marker-end="url(#cc-arrow)"></line>
+      </svg>
+
+      <!-- ===== F*KEYS CONSOLE — PANEL ===== -->
+      <div class="adminwin" style="left:1060px; top:8px; width:660px; height:298px;">
+        <div class="aw-head">
+          <span class="aw-ico"><svg viewBox="0 0 100 70"><path d="M6,66 L6,40 A44,34 0 0 1 94,40 L94,66"></path></svg></span>
+          <span class="aw-t">Console OS<small>F✲KEYS Console</small></span>
+        </div>
+        <div class="aw-body">
+          <div class="aw-caps">
+            <span class="aw-cap">F1 · Command Bar</span>
+            <span class="aw-cap">F2 · Synchronization</span>
+            <span class="aw-cap">F3 · People</span>
+          </div>
+          <div class="aw-preview"></div>
+        </div>
+      </div>
+      <div class="node vbar" style="left:1060px; top:316px; width:660px; height:52px;"><span class="node-label">Type II / Workplace OS</span></div>
+      <div class="node badge" style="left:594px; top:340px;">P3</div>
+      <div class="node badge" style="left:1429px; top:404px;">P3</div>
+
+      <!-- ===== INTERFACE OS — COMMAND CENTER ===== -->
+      <div class="node hexagon" style="left:40px; top:470px; width:240px; height:158px;">
+        <svg viewBox="0 0 240 158"><polygon class="ico-line" points="11,79 63,16 177,16 229,79 177,142 63,142"></polygon></svg>
+        <span class="node-label">Interface OS<small>Command Center</small></span>
+        <span class="vm">vm</span>
+      </div>
+      <div class="node vbar" style="left:50px; top:640px; width:220px; height:46px;"><span class="node-label">Virtualization</span></div>
+      <div class="node badge" style="left:344px; top:524px;">P4</div>
+
+      <!-- ===== CLUSTERED CONSOLE OS ===== -->
+      <div class="cluster" style="left:410px; top:456px; width:600px; height:214px;"></div>
+      <div class="cluster-tag" style="left:440px; top:443px;">Command Cluster</div>
+
+      <div class="node console" style="left:436px; top:486px; width:248px; height:120px;">
+        <svg viewBox="0 0 248 120"><path class="ico-line" d="M10,116 L10,60 Q10,8 124,8 Q238,8 238,60 L238,116 Z"></path></svg>
+        <span class="node-label" style="top:54px;">Console OS</span>
+      </div>
+      <div class="node vbar" style="left:446px; top:616px; width:228px; height:44px;"><span class="node-label">Virtualization</span></div>
+
+      <div class="node console" style="left:730px; top:486px; width:248px; height:120px;">
+        <svg viewBox="0 0 248 120"><path class="ico-line" d="M10,116 L10,60 Q10,8 124,8 Q238,8 238,60 L238,116 Z"></path></svg>
+        <span class="node-label" style="top:54px;">Console OS</span>
+      </div>
+      <div class="node vbar" style="left:740px; top:616px; width:228px; height:44px;"><span class="node-label">Virtualization</span></div>
+
+      <!-- ===== STANDALONE CONSOLE OS ===== -->
+      <div class="node console" style="left:1326px; top:486px; width:248px; height:120px;">
+        <svg viewBox="0 0 248 120"><path class="ico-line" d="M10,116 L10,60 Q10,8 124,8 Q238,8 238,60 L238,116 Z"></path></svg>
+        <span class="node-label" style="top:54px;">Console OS</span>
+      </div>
+      <div class="node vbar" style="left:1336px; top:616px; width:228px; height:44px;"><span class="node-label">Virtualization</span></div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Notes</b>
+      <span>The command center super-user spans the whole fleet — which F-key action would you own first, and what does its first pull request change?</span>
+      <span>F2 Synchronization moves state across clustered Console OS instances — how is conflict resolved when two operators act at once?</span>
+      <span>For an institutional operator, what is the blast radius of a compromised command-center pairing, and how is it contained?</span>
+    </div>
+  </section>

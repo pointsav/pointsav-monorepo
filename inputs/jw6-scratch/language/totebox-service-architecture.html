@@ -1,0 +1,44 @@
+  <section class="scaling tbsvc" data-label="Totebox Services" data-screen-label="Totebox Services — Containers">
+    <div class="head">
+      <span class="cat-tag">Integration &amp; Data Portability</span>
+      <div class="eyebrow">Design System — Totebox OS</div>
+      <h2>Totebox Services &nbsp;⇒&nbsp; Containers</h2>
+      <div class="crumb">A Totebox is a micro or nano VM that runs each of its services in a separate container, so one box holds the full set of business records.</div>
+    </div>
+
+    <div class="stage">
+      <!-- isometric Totebox cube -->
+      <div class="cube">
+        <svg class="box" viewBox="0 0 600 500" preserveAspectRatio="xMidYMid meet">
+          <path class="top" d="M40,140 L120,60 L540,60 L460,140 Z"></path>
+          <path class="side" d="M460,140 L540,60 L540,380 L460,460 Z"></path>
+          <path class="front" d="M40,140 L460,140 L460,460 L40,460 Z"></path>
+        </svg>
+        <div class="cube-cyl" style="left:73px; top:212px;"></div>
+        <div class="cube-cyl" style="left:202px; top:212px;"></div>
+        <div class="cube-cyl" style="left:331px; top:212px;"></div>
+        <div class="cube-top-label">Totebox</div>
+        <div class="cube-face-label">Totebox Services</div>
+        <div class="cube-tag"><b>✲</b> a micro vm or nano vm</div>
+      </div>
+
+      <!-- explanatory points -->
+      <div class="tbsvc-points">
+        <div class="tbsvc-pt"><span class="mk">✲</span><span class="tx">A Totebox runs <b>different services</b>, each isolated in its own container.</span></div>
+        <div class="tbsvc-pt"><span class="mk">✲</span><span class="tx">The services <b>need not be transferable</b> — only the Totebox itself ports between hosts, carrying its records with it.</span></div>
+        <div class="tbsvc-ex">
+          <span class="ex-k">Ex</span>
+          <span class="ex-t"><b>Firecracker (AWS)</b> — a micro VM that still runs containers inside, the same isolation pattern applied here.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Which service container would you split out first, and what does its isolation boundary change?</span>
+        <span>If only the Totebox ports between hosts, where does per-service state live so it travels with it?</span>
+        <span>Is the micro-VM-per-box footprint defensible to a buyer pricing infrastructure cost?</span>
+      </div>
+    </div>
+  </section>

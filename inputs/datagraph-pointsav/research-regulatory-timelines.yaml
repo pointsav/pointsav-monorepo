@@ -1,0 +1,122 @@
+---
+topic: Regulatory Timelines
+generated: 2026-06-14
+schema: foundry-datagraph-flat-v1
+---
+sources:
+  # ── (1) EU Data Act 2023/2854 ──────────────────────────────────────────
+  - url: "https://eur-lex.europa.eu/eli/reg/2023/2854/oj/eng"
+    title: "Regulation (EU) 2023/2854 of the European Parliament and of the Council of 13 December 2023 on harmonised rules on fair access to and use of data and amending Regulation (EU) 2017/2394 and Directive (EU) 2020/1828 (Data Act)"
+    year: "2023"
+    publisher: "European Union (EUR-Lex, Official Journal)"
+    relevance: "Primary regulatory text for the EU Data Act. Chapter VI (Arts 23-31) mandates removal of commercial, technical and contractual barriers to switching between data processing (cloud) services and to on-premises migration. This is the legal substrate behind the Totebox 'no vendor lock-in' and data-portability design claims; cite the OJ text rather than a vendor summary for any slide making a compliance assertion."
+    slide_context: "Toteboxes; Totebox Archive; Private Network; Owner / Operator"
+    key_stat: "Adopted 13 December 2023; applies from 12 September 2025 (Article 50)."
+
+  - url: "https://www.hunton.com/privacy-and-cybersecurity-law-blog/key-provisions-of-the-eu-data-act-take-effect"
+    title: "Key Provisions of the EU Data Act Take Effect"
+    year: "2025"
+    publisher: "Hunton Andrews Kurth LLP"
+    relevance: "Analyst breakdown of which Data Act obligations bite on the 12 September 2025 application date versus phased/grace-period obligations. Useful for slides that must distinguish 'in force now' from 'phased' cloud-switching duties, so PointSav avoids overstating the maturity of any single compliance milestone."
+    slide_context: "Toteboxes; Deployment Tiers Matrix; Licensing Model"
+    key_stat: "Core Data Act obligations apply from 12 September 2025; certain switching-charge and interoperability provisions phase in afterward."
+
+  - url: "https://www.garrigues.com/en_GB/garrigues-digital/data-act-and-cloud-switching-keys-new-rules-changing-cloud-service-providers"
+    title: "The Data Act and cloud switching: keys to the new rules on changing cloud service providers"
+    year: "2025"
+    publisher: "Garrigues"
+    relevance: "Detailed walkthrough of Articles 23-31 cloud-switching mechanics: maximum 30-day mandatory transition period, removal of switching obstacles, and the phase-out of egress/switching charges. Directly supports the Totebox claim that an operator can extract data and move providers without punitive cost — the design differentiator on the portability slides."
+    slide_context: "Toteboxes; Multiple Archives; VM vs Containers; Public Cloud"
+    key_stat: "Switching charges must be progressively withdrawn — fully abolished by 12 January 2027; mandatory transition period capped at 30 days (extendable to a documented maximum)."
+
+  - url: "https://www.osborneclarke.com/insights/data-act-part-4-data-act-regulates-cloud-switching-and-influences-contractual-relationship"
+    title: "Data Act: Part 4 – The Data Act regulates cloud switching and influences the contractual relationship between customers and cloud service providers"
+    year: "2024"
+    publisher: "Osborne Clarke"
+    relevance: "Contract-drafting view of Chapter VI obligations on IaaS/PaaS/SaaS providers (functional equivalence, interoperability, exit assistance). Grounds the PointSav 'owner/operator owns the data, not the vendor' positioning in concrete contractual duties that competitors' proprietary stacks must now also meet."
+    slide_context: "Owner / Operator; Licensing Model; Economic Model"
+    key_stat: "Providers must enable functional equivalence after switching and may not impose contractual obstacles to exit; enhanced interoperability requirements apply from 12 September 2026."
+
+  # ── (2) GDPR Art. 20 data portability ──────────────────────────────────
+  - url: "https://www.bvdnet.de/wp-content/uploads/2022/03/Guidelines-on-the-right-to-data-portability.pdf"
+    title: "Guidelines on the right to data portability (WP242 rev.01)"
+    year: "2017"
+    publisher: "Article 29 Data Protection Working Party (endorsed by EDPB)"
+    relevance: "The authoritative interpretation of GDPR Article 20. Defines the three data categories (provided / observed / inferred), the structured-commonly-used-machine-readable format test, and the direct controller-to-controller transmission expectation. PointSav's WORM export and machine-readable archive formats can be mapped directly against these criteria on portability/format slides."
+    slide_context: "WORM Record Format; Solid / Pods; Documentation Standards; Naming Conventions"
+    key_stat: "Article 20 portability covers only 'provided' (actively supplied) and 'observed' data processed by consent or contract in automated form; inferred/derived data is excluded."
+
+  - url: "https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/right-data-portability_en"
+    title: "Right to data portability — EDPB guidance hub"
+    year: "2017"
+    publisher: "European Data Protection Board (EDPB)"
+    relevance: "Official EDPB endorsement page for the portability guidelines and the standing DPA reference for Article 20. Establishes that a PDF scan does not satisfy 'machine-readable' and proprietary formats fail 'commonly used' — a direct design constraint validating PointSav's open, structured export formats over closed-format competitors."
+    slide_context: "WORM Record Format; Documentation Standards; Solid / Pods"
+    key_stat: "Portable data must be structured, commonly used and machine-readable; a PDF scan or proprietary dump does not comply."
+
+  - url: "https://gdprhub.eu/Article_20_GDPR"
+    title: "Article 20 GDPR — Right to data portability"
+    year: "2024"
+    publisher: "GDPRhub (EDRi / supervisory-authority casework database)"
+    relevance: "Casework-backed reference tracking how supervisory authorities have applied Article 20 in practice, including the limited enforcement history relative to access/erasure rights. Useful for an honest slide note that portability is legally mandated but historically under-enforced — positioning PointSav's portability-by-default as exceeding the practical baseline."
+    slide_context: "Owner / Operator; Solid / Pods; Private Network"
+    key_stat: "Article 20 applies only where processing is based on consent or contract and carried out by automated means; it does not apply to processing necessary for a public-interest or legal-obligation task."
+
+  # ── (3) SEC Rule 17a-4 (2022 amendment) ────────────────────────────────
+  - url: "https://www.dechert.com/knowledge/onpoint/2022/11/-sec-adopts-amendments-to-rule-17a-4-electronic-recordkeeping-re.html"
+    title: "SEC Adopts Amendments to Rule 17a-4 Electronic Recordkeeping Requirement"
+    year: "2022"
+    publisher: "Dechert LLP"
+    relevance: "Defines the 2022 amendment's headline change: broker-dealers may now satisfy electronic recordkeeping via either traditional WORM (write-once-read-many) OR a new audit-trail alternative that can recreate an altered/overwritten/erased record. This is the exact regulatory pattern PointSav's WORM Record Format and audit-trail design implement — the strongest external validation for the bookkeeping/record slides."
+    slide_context: "WORM Record Format; Bookkeeping; Chart-of-Accounts Names; System Administration"
+    key_stat: "Amendments adopted 12 October 2022; firms may use WORM or an audit-trail alternative permitting recreation of altered/overwritten/erased records."
+
+  - url: "https://www.sidley.com/en/insights/newsupdates/2022/10/sec-modernizes-broker-dealer-recordkeeping-requirements"
+    title: "SEC Modernizes Broker-Dealer Recordkeeping Requirements"
+    year: "2022"
+    publisher: "Sidley Austin LLP"
+    relevance: "Covers effective and compliance dates and the 'technology-neutral' modernization rationale (prior electronic rules dated to 1997). Lets PointSav anchor its WORM/audit-trail architecture to a current, technology-neutral standard rather than legacy optical-media WORM, on records-format and bookkeeping slides."
+    slide_context: "WORM Record Format; Bookkeeping; Documentation Standards"
+    key_stat: "Effective 3 January 2023; broker-dealer compliance date 3 May 2023 (SBSDs/MSBSPs 3 November 2023); replaces electronic-recordkeeping rules in place since 1997."
+
+  - url: "https://www.smarsh.com/regulations/sec-rule-17a-4-records-preservation/"
+    title: "SEC Rule 17a-4: Electronic Recordkeeping Requirements Explained"
+    year: "2023"
+    publisher: "Smarsh, Inc."
+    relevance: "Vendor/compliance-practitioner explainer detailing the technical WORM and audit-trail control requirements (non-rewriteable/non-erasable storage, designated third party / executive officer access, retention periods). Supplies the concrete control vocabulary PointSav's Totebox WORM ledger can be described against on the record-format and system-administration slides."
+    slide_context: "WORM Record Format; System Administration; Bookkeeping; Totebox Service Architecture"
+    key_stat: "Records must be non-rewriteable and non-erasable (WORM) or use an audit-trail system; firms must retain a Designated Third Party (D3P) or, under the amendment, a designated senior officer for SEC access."
+
+  # ── (4) NIST SP 800-207 + US federal mandate ───────────────────────────
+  - url: "https://nvlpubs.nist.gov/nistpubs/specialpublications/NIST.SP.800-207.pdf"
+    title: "NIST Special Publication 800-207: Zero Trust Architecture"
+    year: "2020"
+    publisher: "National Institute of Standards and Technology (NIST), U.S. Department of Commerce"
+    relevance: "The definitive primary reference defining Zero Trust Architecture: per-request authentication/authorization, no implicit trust by network location, and the policy-engine / policy-administrator / policy-enforcement-point model. PointSav's 'pairing as permissions' and per-archive authentication map onto the PEP/PE model — cite the source PDF for any slide asserting a zero-trust design posture."
+    slide_context: "Pairing as Permissions; Authentication; Private Network; Registry Token"
+    key_stat: "Published August 2020; defines zero trust as 'no implicit trust granted to assets or user accounts based solely on physical or network location.'"
+
+  - url: "https://www.whitehouse.gov/wp-content/uploads/2022/01/M-22-09.pdf"
+    title: "M-22-09: Moving the U.S. Government Toward Zero Trust Cybersecurity Principles"
+    year: "2022"
+    publisher: "U.S. Office of Management and Budget (OMB), Executive Office of the President"
+    relevance: "The binding US federal adoption mandate implementing Executive Order 14028 and operationalizing NIST SP 800-207. Sets the end-of-FY2024 deadline across five pillars (identity, devices, networks, applications/workloads, data). Demonstrates that PointSav's zero-trust pairing model aligns with a government-mandated, not merely advisory, architecture — strengthening the authentication and private-network slides."
+    slide_context: "Authentication; Pairing as Permissions; Private Network; Deployment Tiers Matrix"
+    key_stat: "Issued 26 January 2022; mandates federal agencies meet specific zero-trust goals across five pillars by the end of Fiscal Year 2024 (30 September 2024)."
+
+  # ── (5) CISA Zero Trust Maturity Model v2.0 ────────────────────────────
+  - url: "https://www.cisa.gov/sites/default/files/2023-04/zero_trust_maturity_model_v2_508.pdf"
+    title: "Zero Trust Maturity Model, Version 2.0"
+    year: "2023"
+    publisher: "Cybersecurity and Infrastructure Security Agency (CISA), U.S. Department of Homeland Security"
+    relevance: "Primary text for the five-pillar (Identity, Devices, Networks, Applications & Workloads, Data) maturity model with four stages — Traditional, Initial, Advanced, Optimal — plus three cross-cutting capabilities (Visibility & Analytics, Automation & Orchestration, Governance). Gives PointSav a recognized maturity vocabulary to position Totebox/Console capabilities along a defensible gradient on deployment-tier and architecture slides."
+    slide_context: "Deployment Tiers Matrix; Three-Layer Stack; Authentication; Pairing as Permissions"
+    key_stat: "Released 11 April 2023; introduces four maturity stages (Traditional, Initial, Advanced, Optimal) across five pillars — adding the new 'Initial' stage versus v1.0's three."
+
+  - url: "https://www.cisa.gov/news-events/alerts/2023/04/11/cisa-releases-zero-trust-maturity-model-version-2"
+    title: "CISA Releases Zero Trust Maturity Model Version 2"
+    year: "2023"
+    publisher: "Cybersecurity and Infrastructure Security Agency (CISA)"
+    relevance: "Official release announcement establishing the publication date and that v2.0 supersedes the September 2021 v1.0, responding to public comment. Confirms the maturity-model lineage and currency for any slide footnote dating PointSav's zero-trust alignment to the latest federal guidance."
+    slide_context: "Deployment Tiers Matrix; Three-Layer Stack; Authentication"
+    key_stat: "Version 2.0 published 11 April 2023, superseding the initial Zero Trust Maturity Model released September 2021."

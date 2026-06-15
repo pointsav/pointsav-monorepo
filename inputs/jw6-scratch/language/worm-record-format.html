@@ -1,0 +1,37 @@
+<section class="scaling" data-label="WORM Record Format" data-screen-label="System of Record — WORM Record Format: Database vs Flat-File System">
+  <div class="head">
+    <span class="cat-tag">System of Record</span>
+    <div class="eyebrow">Record Keeping — Totebox OS</div>
+    <h2>WORM Record Format</h2>
+    <div class="crumb">A mutable database can be overwritten by an administrator; a write-once flat-file archive cannot — the file name itself is the permanent reference.</div>
+  </div>
+
+  <div class="cmp2">
+    <div class="cmp-col">
+      <div class="cmp-head"><span class="ch-t">Mutable Database</span></div>
+      <div class="cmp-item lead">Records keyed by a reference number a row in the table can hold or change.</div>
+      <div class="cmp-sub" style="margin-left:0;flex-wrap:wrap;gap:12px 26px;">
+        <span class="s">reference ID</span><span class="s">row update</span><span class="s">admin override</span><span class="s">no fixed evidence trail</span>
+      </div>
+    </div>
+    <div class="cmp-div"></div>
+    <div class="cmp-col">
+      <div class="cmp-head"><span class="ch-t">Flat-File WORM Archive</span></div>
+      <div class="cmp-rules">
+        <div class="cmp-rule"><span class="rk">✲</span><span class="rt">The <b>file name is the reference</b> — never a database ID. The source file is the record.</span></div>
+        <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Write-once, read-many: records are non-rewriteable and non-erasable — the recordkeeping floor under SEC Rule 17a-4 and FINRA Rule 4511.</span></div>
+        <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Content addressed by SHA-256, the way <b>RFC 6920</b> names things by hash — any party can verify a record without the originating system.</span></div>
+        <div class="cmp-rule"><span class="rk">✲</span><span class="rt">A duplicated record across two archives keeps one identical name and hash — provenance is preserved, not re-numbered.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes-strip">
+    <b>Your notes</b>
+    <div class="nlist">
+      <span>Which services keep structured data in a database vs. source files in WORM, and which would you migrate first?</span>
+      <span>How is the SEC 17a-4 / FINRA 4511 six-year retention floor enforced so an administrator cannot technically override it?</span>
+      <span>What happens to the SHA-256 hash when a source file is re-scanned at higher fidelity — does the original record stay addressable?</span>
+    </div>
+  </div>
+</section>
