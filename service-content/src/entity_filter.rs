@@ -243,7 +243,7 @@ mod tests {
     fn commit_prefix_negative() {
         assert!(!is_commit_prefix("service-content"));
         assert!(!is_commit_prefix("Peter Woodfine"));
-        assert!(!is_commit_prefix("ops()"));  // empty scope
+        assert!(!is_commit_prefix("ops()")); // empty scope
     }
 
     #[test]
@@ -295,14 +295,16 @@ mod tests {
         ];
         let cleaned = clean_dpo_side(&side);
         assert_eq!(cleaned.len(), 1);
-        assert_eq!(cleaned[0]["entity_name"].as_str().unwrap(), "Peter Woodfine");
+        assert_eq!(
+            cleaned[0]["entity_name"].as_str().unwrap(),
+            "Peter Woodfine"
+        );
     }
 
     #[test]
     fn clean_dpo_side_applies_coerce_classification() {
-        let side = vec![
-            serde_json::json!({"entity_name": "Portugal", "classification": "Company"}),
-        ];
+        let side =
+            vec![serde_json::json!({"entity_name": "Portugal", "classification": "Company"})];
         let cleaned = clean_dpo_side(&side);
         assert_eq!(cleaned.len(), 1);
         assert_eq!(cleaned[0]["entity_name"].as_str().unwrap(), "Portugal");
@@ -317,6 +319,9 @@ mod tests {
         ];
         let cleaned = clean_dpo_side(&side);
         assert_eq!(cleaned.len(), 1);
-        assert_eq!(cleaned[0]["entity_name"].as_str().unwrap(), "Peter Woodfine");
+        assert_eq!(
+            cleaned[0]["entity_name"].as_str().unwrap(),
+            "Peter Woodfine"
+        );
     }
 }
