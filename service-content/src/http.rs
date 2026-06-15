@@ -10,6 +10,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use crate::config_http::config_routes;
+use crate::entity_filter;
 use crate::graph::{GraphEntity, GraphStore};
 
 // ── shared server state ───────────────────────────────────────────────────────
@@ -79,6 +80,37 @@ pub struct DraftResponse {
 pub struct HealthResponse {
     pub status: &'static str,
     pub entity_count: usize,
+}
+
+fn default_dry_run() -> bool {
+    true
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CleanupQuery {
+    pub module_id: String,
+    /// When true (default), report what would be deleted without deleting anything.
+    /// Must be explicitly set to false to trigger deletions.
+    #[serde(default = "default_dry_run")]
+    pub dry_run: bool,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CleanupSample {
+    pub entity_name: String,
+    pub classification: String,
+    pub reason: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CleanupReport {
+    pub module_id: String,
+    pub scanned: usize,
+    pub flagged: usize,
+    pub deleted: usize,
+    pub dry_run: bool,
+    /// Up to 100 flagged entity samples for inspection.
+    pub samples: Vec<CleanupSample>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -342,6 +374,74 @@ async fn ingest_document(
     ))
 }
 
+/// `GET /v1/graph/cleanup` — scan and optionally delete noise entities.
+///
+/// Default is dry_run=true (safe). Pass dry_run=false to apply deletions.
+/// Example: curl 'http://127.0.0.1:9081/v1/graph/cleanup?module_id=jennifer&dry_run=true'
+///
+/// Uses the same noise filters as the ingest gate so cleanup matches exactly what
+/// the hardened binary would have rejected on ingestion.
+async fn graph_cleanup(
+    State(state): State<Arc<HttpState>>,
+    Query(params): Query<CleanupQuery>,
+) -> Result<Json<CleanupReport>, (StatusCode, String)> {
+    let entities = state
+        .graph
+        .list_entities(&params.module_id)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("list_entities failed: {e}")))?;
+
+    let scanned = entities.len();
+    let mut flagged = 0usize;
+    let mut deleted = 0usize;
+    let mut samples: Vec<CleanupSample> = Vec::new();
+
+    for entity in &entities {
+        let reason: Option<&'static str> = if entity_filter::is_noise_entity_name(&entity.entity_name) {
+            Some("noise-name")
+        } else if entity.entity_name.split_whitespace().count() > 8 {
+            Some("fragment-wordcount")
+        } else if entity_filter::coerce_classification(&entity.entity_name, &entity.classification)
+            .is_none()
+        {
+            Some("type-incoherent")
+        } else {
+            None
+        };
+
+        if let Some(r) = reason {
+            flagged += 1;
+            if samples.len() < 100 {
+                samples.push(CleanupSample {
+                    entity_name: entity.entity_name.clone(),
+                    classification: entity.classification.clone(),
+                    reason: r.to_string(),
+                });
+            }
+            if !params.dry_run {
+                match state
+                    .graph
+                    .delete_entity(&params.module_id, &entity.entity_name)
+                {
+                    Ok(()) => deleted += 1,
+                    Err(e) => eprintln!(
+                        "[CLEANUP] delete_entity failed for '{}': {e}",
+                        entity.entity_name
+                    ),
+                }
+            }
+        }
+    }
+
+    Ok(Json(CleanupReport {
+        module_id: params.module_id,
+        scanned,
+        flagged,
+        deleted,
+        dry_run: params.dry_run,
+        samples,
+    }))
+}
+
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 fn format_entity_block(entities: &[GraphEntity]) -> String {
@@ -385,6 +485,7 @@ pub async fn run_server(
         .route("/healthz", get(healthz))
         .route("/v1/graph/context", get(graph_context))
         .route("/v1/graph/mutate", post(graph_mutate))
+        .route("/v1/graph/cleanup", get(graph_cleanup))
         .route("/v1/draft/generate", post(draft_generate))
         .route("/v1/ingest", post(ingest_document))
         .merge(config_routes())
