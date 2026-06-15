@@ -4,7 +4,7 @@ project: project-infrastructure
 last_updated: 2026-06-16
 project: project-editorial
 project: project-system
-last_updated: 2026-06-14 (JOURNAL Actions 1–4: section_status/refs_status to J2–J8; J4 abstract restructured; VWH/PKS Related Research sections added; J1 relay sent)
+last_updated: 2026-06-15 (session close: M5/M6/M7/M8/C2 content repairs committed 4e89ef4 + e4c77ea + 82c4156; T1/T2 project-infrastructure TOPICs committed 84caeea; M2 start-here stubs committed 3f387fd; GUIDE-vwh-calibration-operations staged; stage-6 outbox messages sent; inbox actioned)
 ---
 
 # project-infrastructure Artifact Registry
@@ -800,9 +800,35 @@ Artifacts produced by project-system Totebox and processed through project-edito
 
 ---
 
+## project-infrastructure — Artifacts (PPN VM / tenant isolation)
+
+Artifacts from project-infrastructure Totebox editorial-passed and committed through project-editorial 2026-06-15.
+
+| ID | Artifact type | File | Title | Destination | Status |
+|----|--------------|------|-------|-------------|--------|
+| PI-A1 | TOPIC | `media-knowledge-documentation/architecture/ppn-vm-resource-pool.md` | PPN VM Resource Pool Architecture | media-knowledge-documentation/architecture/ | COMMITTED — 84caeea@pwoodfine 2026-06-15; port numbers/env-vars/API paths/DOCTRINE refs stripped per editorial stripping rule; ES stub paired; Stage 6 pending |
+| PI-A2 | TOPIC | `media-knowledge-documentation/architecture/ppn-tenant-vm-isolation.md` | PPN Tenant VM Isolation | media-knowledge-documentation/architecture/ | COMMITTED — 84caeea@pwoodfine 2026-06-15; TOKEN_MAP env var/stack code block/port numbers stripped; ES stub paired; Stage 6 pending |
+
+---
+
+## project-editorial — Content Repair Artifacts (2026-06-15 session)
+
+Committed content repairs and new stubs authored directly by project-editorial this session.
+
+| ID | Artifact type | Files | Notes | Status |
+|----|--------------|-------|-------|--------|
+| PE-R1 | CONTENT-REPAIR | 6 files (guide-catalog + VWH + PKS + archetypes, EN+ES) | M5/M6/M7/M8/C2 repairs — hatnote, OSM attribution, data dating, calibration-sentence removal, C2 cross-links | COMMITTED — 4e89ef4@pwoodfine (media-knowledge-documentation) |
+| PE-R2 | CONTENT-REPAIR | 4 files (co-location-ranking-system EN+ES + archetypes EN+ES) | C2 Tier→Rank rename, M8 OSM attribution, M9 es_status:stub | COMMITTED — e4c77ea@pwoodfine (media-knowledge-projects) |
+| PE-R3 | CONTENT-REPAIR | 4 ES stub files | M9 es_status:stub on 4 ES files below 70% coverage | COMMITTED — 82c4156@jwoodfine (media-knowledge-projects) |
+| PE-M2 | TOPIC×8 | 8 files (4 EN + 4 ES) — getting-started, quick-start, data-overview, architecture-overview | M2 start-here stubs | COMMITTED — 3f387fd@pwoodfine (media-knowledge-documentation) |
+| PE-M6 | GUIDE | `.agent/drafts-outbound/GUIDE-vwh-calibration-operations.draft.md` | M6 VWH calibration ops GUIDE stub | STAGED — routing request sent to Command via outbox msg project-editorial-20260615-guide-vwh-calibration-routing |
+
+---
+
 ## Maintenance
 
 - Add artifacts when planned; update status when dispatched or returned.
 - Cross-check with `.agent/briefs/README.md` for BRIEF-linked artifact chains.
 - Prior content (lines 65+) was project-gis contamination (M-17); replaced 2026-06-16.
 - Status sweep last performed: 2026-06-14 (all STAGED→COMMITTED promotions applied).
+- Status sweep last performed: 2026-06-15 (PI-A1/PI-A2/PE-R1-R3/PE-M2/PE-M6 added).
