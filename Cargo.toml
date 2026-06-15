@@ -6,6 +6,7 @@ members = [
     "app-console-content",
     "tool-acs-miner",
     "tool-buildingwidth",
+    "tool-floorplate",
     "app-console-input",
     "system-gateway-mba",
     "service-fs",
