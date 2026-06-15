@@ -49,6 +49,8 @@ members = [
     # Marketing platform: shared chrome chassis + the marketing app
     "app-mediakit-shell",
     "app-mediakit-marketing",
+    # Design system browser (port 9094)
+    "app-privategit-design",
 ]
 
 [profile.dev]
