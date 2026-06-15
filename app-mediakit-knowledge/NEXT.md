@@ -1,14 +1,15 @@
 # NEXT.md — app-mediakit-knowledge
 
-> Last updated: 2026-06-14 (engine defect fixes + Sprint C test regression fix)
+> Last updated: 2026-06-14 (engine defect fixes + Sprint C test regression fix + full test suite green)
 > **SOURCE OF TRUTH:** `.agent/briefs/BRIEF-knowledge-platform-master.md` — read it first.
 > It supersedes the 2030 brief and consolidates the 2026-06-01 research (mobile-first,
 > content federation via mounts + blueprints, premium UX, linking model + zero dead links).
 
 ## Engine defect fixes — 12-agent audit 2026-06-14
 
-Committed `c3261f0e` (jwoodfine) + `91e65e05` (pwoodfine) — Stage 6 pending, outbox msg `project-knowledge-20260614-engine-defects-stage6-ready`.
+Committed `c3261f0e` (jwoodfine) + `91e65e05` (pwoodfine) + `f2852d5c` (jwoodfine) — Stage 6 pending, outbox msg `project-knowledge-20260614-engine-defects-stage6-ready`.
 `91e65e05` = Sprint C test regression fix (home_test.rs assertions updated to 7-category IA names).
+`f2852d5c` = integration test full green: topic- redirect slug fix ×13, jsonld identifier, wikilink L18 fixture, openapi.yaml path sync (/history /diff /openapi.yaml).
 
 | Defect | Fix | Status |
 |---|---|---|
