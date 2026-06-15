@@ -559,6 +559,13 @@ fn write_dpo_pair(
     brief_id: &str,
     attempt_id: &str,
 ) -> Result<PathBuf> {
+    let chosen_s = sanitize(chosen_diff);
+    let rejected_s = sanitize(rejected_diff);
+
+    // Quality gate: template-echo, min-length, length-ratio, max-length, DoNotUse.
+    // Returns CorpusGateRejected on failure — same error type as shadow tuple gate.
+    crate::corpus_gate::check_dpo_pair(&rejected_s, &chosen_s)?;
+
     let prompt = read_brief_prompt_from_corpus(corpus_root, task_type, brief_id);
     let dir = corpus_root
         .join("data")
@@ -574,15 +581,28 @@ fn write_dpo_pair(
         Uuid::now_v7().simple()
     );
     let path = dir.join(&filename);
-    // TRL DPOTrainer format: prompt + chosen (preferred) + rejected (dispreferred)
+    // Capture lengths before moving chosen_s/rejected_s into the JSON macro.
+    let chosen_len = chosen_s.len();
+    let rejected_len = rejected_s.len();
+    let length_ratio = if rejected_len == 0 {
+        f64::INFINITY
+    } else {
+        chosen_len as f64 / rejected_len as f64
+    };
+    // TRL DPOTrainer format: prompt + chosen (preferred) + rejected (dispreferred).
+    // chosen_len / rejected_len / length_ratio are diagnostic fields — not used by
+    // TRL but checked by run-dpo-training.py and audit tooling.
     let record = serde_json::json!({
         "tuple_type": "apprenticeship-feedback",
         "task_type": task_type,
         "brief_id": brief_id,
         "attempt_id": attempt_id,
         "prompt": sanitize(&prompt),
-        "chosen": sanitize(chosen_diff),
-        "rejected": sanitize(rejected_diff),
+        "chosen": chosen_s,
+        "rejected": rejected_s,
+        "chosen_len": chosen_len,
+        "rejected_len": rejected_len,
+        "length_ratio": (length_ratio * 100.0).round() / 100.0,
         "doctrine_violation_tag": doctrine_violation_tag,
         "created": Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
     });
@@ -839,7 +859,8 @@ mod tests {
             tier: Tier::Local,
             cost_usd: 0.0,
             reasoning: String::new(),
-            diff: "+ stub".into(),
+            // Realistic diff >= MIN_REJECTED_CHARS (80) to pass the corpus gate.
+            diff: "diff --git a/Cargo.toml b/Cargo.toml\n--- a/Cargo.toml\n+++ b/Cargo.toml\n@@ -1 +1 @@\n-version = \"0.0.1\"\n+version = \"0.1.0\"".into(),
         }
     }
 
