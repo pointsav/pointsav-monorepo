@@ -57,6 +57,22 @@ submission_status: not-submitted
 language_pass_date: 2026-05-28
 cites: []
 forbidden_terms_cleared: true
+section_status:
+  abstract: complete
+  s1_introduction: complete
+  s2_background: complete
+  s3_layer_taxonomy: complete
+  s4_per_country_coverage: complete
+  s5_integration: complete
+  s6_results: draft
+  s7_discussion: complete
+  s8_conclusion: complete
+refs_status:
+  count: 16
+  quality: thin
+  blockers:
+    - "Reference count ~16 thin for Automation in Construction IF 12.0 (target 30-40 refs)"
+    - "§6 Results needs per-country H3-level pipeline execution counts from project-gis (nights 4/5)"
 scaffolded_from:
   - AEC-LAYERS-RESEARCH.md
   - AEC-DATA-PARITY-RESEARCH.md

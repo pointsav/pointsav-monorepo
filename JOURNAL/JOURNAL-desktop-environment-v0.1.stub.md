@@ -68,6 +68,22 @@ cites:
   - iso-16739-2018
   - buildingsmart-bcf3
 forbidden_terms_cleared: true
+section_status:
+  abstract: complete
+  s1_introduction: complete
+  s2_background: complete
+  s3_mmp_principles: complete
+  s4_implementation: complete
+  s5_user_study: complete
+  s6_results: stub
+  s7_discussion: complete
+  s8_conclusion: complete
+refs_status:
+  count: 12
+  quality: adequate
+  blockers:
+    - "§6 Results pending user study execution (≥20 AEC professional participants)"
+    - "Word count 5,950/8,000 — §6 results section will close the gap"
 preprint_posted: true
 preprint_posted_date: 2026-05-28
 doi: ""
