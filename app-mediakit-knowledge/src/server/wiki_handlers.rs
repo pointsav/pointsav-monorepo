@@ -494,31 +494,23 @@ async fn wiki_page_inner(
             format!("<aside class=\"claim-rail\" aria-label=\"Citation freshness\">{ticks}</aside>")
         }
     };
-    // Prev/next navigation within the declared category, built from the same
-    // bucketing the home page uses, cached with a short TTL so article pages
-    // stay fast. (The docs left-rail was removed in the encyclopedia-chrome
-    // pivot — Wikipedia tabs are the navigation model; BRIEF Q2.)
-    let (prev_article, next_article) = {
-        let buckets = nav_buckets_cached(&state).await;
-        // P3: find prev/next articles in the same category for navigation.
-        let category = parsed.frontmatter.category.as_deref().unwrap_or_else(|| {
-            if let Some(slash) = slug.find('/') { &slug[..slash] } else { "" }
-        });
-        let (prev, next) = if category.is_empty() {
-            (None, None)
-        } else if let Some(articles) = buckets.get(category) {
-            // Articles are sorted by slug in bucket_topics_by_category.
-            if let Some(pos) = articles.iter().position(|t| t.slug == slug) {
-                let prev = if pos > 0 { Some(articles[pos - 1].clone()) } else { None };
-                let next = if pos + 1 < articles.len() { Some(articles[pos + 1].clone()) } else { None };
-                (prev, next)
-            } else {
-                (None, None)
-            }
+    // Load category buckets (cached, ~20s TTL) for prev/next navigation and sidenav.
+    let nav_buckets = nav_buckets_cached(&state).await;
+    let article_category: String = parsed.frontmatter.category
+        .clone()
+        .unwrap_or_else(|| slug.find('/').map(|p| slug[..p].to_owned()).unwrap_or_default());
+    let (prev_article, next_article) = if article_category.is_empty() {
+        (None, None)
+    } else if let Some(articles) = nav_buckets.get(&article_category) {
+        if let Some(pos) = articles.iter().position(|t| t.slug == slug) {
+            let prev = if pos > 0 { Some(articles[pos - 1].clone()) } else { None };
+            let next = if pos + 1 < articles.len() { Some(articles[pos + 1].clone()) } else { None };
+            (prev, next)
         } else {
             (None, None)
-        };
-        (prev, next)
+        }
+    } else {
+        (None, None)
     };
     // Phase 0 — blueprint relates_to rails.
     // Each rail is (human label, vec of related slugs). Empty when the page
@@ -566,6 +558,8 @@ async fn wiki_page_inner(
         prev_article.as_ref(),
         next_article.as_ref(),
         &relates_to_rails,
+        &nav_buckets,
+        &article_category,
     )
     .into_response())
 }
@@ -648,6 +642,8 @@ fn wiki_chrome(
     prev_article: Option<&TopicSummary>,
     next_article: Option<&TopicSummary>,
     relates_to_rails: &[(String, Vec<String>)],
+    nav_buckets: &CategoryBuckets,
+    article_category: &str,
 ) -> Markup {
     let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
     let _woodfine_projects = brand_theme == Some("woodfine-projects");
@@ -838,9 +834,42 @@ fn wiki_chrome(
                     { (match locale { Locale::En => "History", Locale::Es => "Historial" }) }
                 }
 
-                // Article layout: article body (+ optional claim-rail at ≥1280px).
-                // No left docs sidenav — Wikipedia tabs are the navigation model (BRIEF Q2).
+                // Article layout: sidenav + article body (+ optional claim-rail at ≥1280px).
                 div.shell {
+
+                    // --- Left sidenav: internal category navigation (hidden below 1024px) ---
+                    nav.docs-sidenav aria-label="Documentation navigation" {
+                        div.docs-sidenav__inner {
+                            @for cat_slug in RATIFIED_CATEGORIES {
+                                @let cat_articles = nav_buckets.get(*cat_slug)
+                                    .map(|v| v.as_slice())
+                                    .unwrap_or(&[]);
+                                @let is_open = *cat_slug == article_category;
+                                details.docs-sidenav__cat open[is_open] {
+                                    summary { (humanize_category(cat_slug)) }
+                                    @if !cat_articles.is_empty() {
+                                        ul.docs-sidenav__list {
+                                            @for art in cat_articles {
+                                                @let is_current = art.slug == slug;
+                                                li {
+                                                    @if is_current {
+                                                        a.docs-sidenav__link.is-active
+                                                            href={ "/wiki/" (art.slug) }
+                                                            aria-current="page"
+                                                        { (art.title) }
+                                                    } @else {
+                                                        a.docs-sidenav__link
+                                                            href={ "/wiki/" (art.slug) }
+                                                        { (art.title) }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     // --- Article body column (two-column: prose + TOC) ---
                     main.article-wrap {
