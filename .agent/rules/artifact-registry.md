@@ -40,6 +40,87 @@ Committed directly; Stage 6 signals sent to Command.
 | `service-vm-tenant` | `local-vm-tenant.service` :9221 | Active — A1 opaque bearer (TOKEN_MAP); A3 SLIRP host_ports; A4 service-fs audit route | dbf6a528 |
 | `system-vm-fleet-types` | shared wire types (`no_std`-compatible) | Active — HostPortMapping + host_ports in VmRecord; backward-compat serde default | dbf6a528 |
 | `app-network-admin` | CLI :8085 HTTP + :9206 UDP listen | Active — Phase S3: fleet watch loop; auto WireGuard peer-table + WORM ledger; 8 tests | 13ef4654 |
+Status values: `stub` → `scaffolded` → `language-cleared` → `submission-ready` → `submitted` → `published`
+
+| ID | File | Title (working) | Target Journal | Lead Author | Status |
+|----|------|-----------------|----------------|-------------|--------|
+| J1 | `JOURNAL-retail-colocation-v0.5.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | v0.5 dispatched to project-editorial 2026-05-31 |
+| J2 | `JOURNAL-trustworthy-systems-v0.1.draft.md` | Composing Trustworthy Systems from Verified Primitives | ASPLOS (ACM, 19.4% AR) | Mathew Woodfine | language-cleared |
+| J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier, IF 12.0) | Jennifer M. Woodfine | language-cleared |
+| J4 | `JOURNAL-private-network-v0.4.draft.md` | Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | language-cleared (v0.5.1, 2026-06-10; `forbidden_terms_cleared: true`) |
+| J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | MLSys (ACM, 22% AR) | Mathew Woodfine | stub |
+| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared |
+| J7 | `JOURNAL-urban-fringe-v0.1.stub.md` | Industrial Co-location in the Metropolitan Ring: Spatial Signatures of the Urban Fringe Archetype | Regional Science and Urban Economics (Elsevier, IF 2.9, Q1) | Jennifer M. Woodfine | v0.3 complete 2026-06-14; §§3–8 prose written; `forbidden_terms_cleared: false` (language pass needed) |
+| J8 | `JOURNAL-commuter-v0.1.stub.md` | The Commuter Archetype: Car-Rental Clustering as a Proxy for Transit-Adjacent Commercial Co-location | Journal of Transport Geography (Elsevier, IF 6.88, Q1) | Peter M. Woodfine | §2 written 2026-06-14; §3–§8 stub; `forbidden_terms_cleared: false` |
+
+### Pre-submission blockers by paper
+
+**J1 — Retail Co-location:**
+- ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`; body scanned clean)
+- ~~F1–F5 figures~~ — READY at project-gis `work/figures/` (produced 2026-05-28)
+- ~~Phase 22 CSV~~ — READY at project-gis `work/clusters-ols.csv` (6,493 rows, 2026-05-28)
+- ~~§7.0 preliminary OLS~~ — COMPLETE 2026-05-28: Model A (T1 span β=+0.489, p<0.001) + Model B (R²=0.503); F6 partial produced
+- ~~§5.1 table corrected~~ — DONE 2026-05-31 v0.5: NA/EU Phase 23+Change B actuals (NA T1=1,021/T2=1,831/T3=913; EU T1=725/T2=895/T3=1,108)
+- ~~§5.4 Regional Market Discovery~~ — DONE 2026-05-31 v0.5: isolation-first scoring, Top 400 country distribution, H₄ hypothesis
+- ~~Appendix B~~ — DONE 2026-05-31 v0.5: 18-country T1/T2/T3 table from Phase 23+Change B clusters-meta.json
+- Language pass on §5.4 (new section; `forbidden_terms_cleared` reset to false) — AT project-editorial
+- §7.2 primary spec (catchment_entropy ~ tier + log[pop_150km] + country FE) — pending Phase 24B (Kontur population join + O-D data)
+- F6 update with §7.2 spec results — pending Phase 24B
+- §5.3 LODES employment join — v0.6 item (executable once `build-geometric-ranking.py` run)
+- Appendix C data-flow diagram — v0.6 item
+- Permutation test (`sim-tier-permutation.py`) — to be written
+- Word count trim (~800 words; from 9,300 to 8,500 target) — AT project-editorial
+- CBRE/JLL leasing-data acquisition (Year 2 research)
+- ORCID IDs for all three authors
+
+**J2 — Trustworthy Systems:**
+- ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`)
+- Bench #9 quiet-VM re-run (22 outliers, ±11% CI — explicitly flagged)
+- Promote all `[external: ...]` citation placeholders to `citations.yaml` stable IDs
+- ASPLOS short version (~6,000 words, 2-column ACM format)
+- ORCID IDs for all three authors
+
+**J3 — AEC Data Layers:**
+- ~~Full body writing pass~~ — COMPLETE 2026-05-28 (~7,800 words; §1–§5 + §7–§8 written; §6 Results structured TODO)
+- ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`; body scanned clean)
+- §6 Results — pending AEC nightly build coverage metrics from project-gis (H3 cells covered vs. total per country per layer; Nights 2–5)
+- ORCID IDs for all three authors
+
+**J4 — Private Network / CRMA:**
+- ~~§1–§3 writing pass~~ — COMPLETE 2026-05-28 (~4,800 words; §1 Introduction, §2 Background, §3 Architecture written; §6 Discussion + §7 Conclusion written)
+- ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`)
+- ~~§4 Implementation + §5 Evaluation~~ — COMPLETE 2026-05-29 v0.3 (commit 149a8b39): empirical benchmarks on GCP e2-standard-8; B1 n=30 mean=44ms; B2 n=10 mean=59ms; B3 wg set=8ms; B4 bimodal {1s,11-16s}
+- ~~[CITATION NEEDED] x2~~ — RESOLVED v0.4 (b3e8190a): Birge-Lee 2024 DOI:10.1007/978-3-031-85960-1_14 + Mackey 2020 DOI:10.1145/3374664.3379532
+- ~~JOURNAL/ sync~~ — DONE 2026-05-31: v0.4 copied to JOURNAL/JOURNAL-private-network-v0.4.draft.md; stale v0.1 stub removed
+- ~~§4–§5 language pass~~ — COMPLETE 2026-06-10 (v0.5.1; prior project-editorial session; `forbidden_terms_cleared: true` confirmed in JOURNAL/ copy)
+- ORCID IDs for all three authors (operator action required)
+
+**J6 — Desktop Environment:**
+- §1–§4 writing pass (Introduction, Background, Design Principles, Implementation) — in progress
+- §5–§6 pending user study data
+- ORCID IDs for all three authors
+
+**J5:** HOLD until J2 submitted
+
+**J7 — Urban Fringe pre-submission blockers:**
+- ~~Full chain ingestion (MRO, flooring, tool-rental, auto-parts, paint YAMLs)~~ — RESOLVED 2026-06-11:
+  mro_industrial (Würth, Fastenal, Grainger, Hilti etc.), tool_rental (United Rentals, Sunbelt, Loxam
+  etc.), flooring (Floor & Decor, Topps Tiles), auto_parts (AutoZone, O'Reilly, NAPA, Halfords),
+  paint (Sherwin-Williams, Comex) all ingested; VWH production build live (6,368 clusters)
+- ~~Full literature review (§2)~~ — DONE 2026-06-14 (v0.2; §2.1–§2.4 written; [external: ...] citations flagged)
+- ~~§§3–8 full prose~~ — DONE 2026-06-14 (v0.3; §3.2 enrichment categories; §4.1/4.3/4.4 methodology; §5.1/5.2/5.3 results; §6.1/6.2/6.3/6.5 discussion; §7.1/7.2/7.3 falsification; §8 conclusion)
+- Language pass (`forbidden_terms_cleared: false`) — AT project-editorial
+- Test 1 (MRO-to-grocery ratio, §7.1) — executable from current dataset; not yet run
+- Test 2 (freight infrastructure proximity, §7.2) — requires OSM motorway junction extraction
+- Test 3 (industrial landuse validation, §7.3) — requires OSM landuse polygon extraction
+- [external: ...] citations in §2 — resolve to citations.yaml stable IDs before submission
+- ORCID IDs for all three authors (operator action required)
+
+**J8 — Commuter pre-submission blockers:**
+- ~~Literature review (§2)~~ — DONE 2026-06-14 (v0.2; §2.1–§2.5 written; [external: ...] citations flagged)
+- Validation (§4.4) — stub only
+- Integration rate regression (§5.3 / §7.2) — requires rail-frequency external data
+- ORCID IDs for all three authors
 
 ---
 
@@ -139,7 +220,7 @@ Explain WHAT and WHY. Bilingual EN+ES pair. Route to project-editorial.
 
 ### A25 — BRIEF: PKS Commuter Archetype — Fable Model Analysis
 - **File:** `.agent/briefs/BRIEF-pks-fable-analysis-2026-06-11.md`
-- **Status:** ACTIVE — internal research record; not dispatched to project-editorial
+- **Status:** ARCHIVED 2026-06-14 — methodology absorbed into A18 §§10.3/10.4/10.12/10.14; no action items remain
 - **Destination:** internal (BRIEF stays in archive)
 - **Content:** Fable model consultation (claude-fable-5) on PKS tier calibration. Documents root
   causes of original 57% fake bimodal issue (ICR+CR double-counting), mode-group collapse fix,
