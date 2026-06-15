@@ -410,8 +410,33 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
     if resume:
         checkpoints = sorted(glob.glob(os.path.join(output_dir, "checkpoint-*")))
         if checkpoints:
-            resume_ckpt = checkpoints[-1]
-            print(f"[train] resuming from checkpoint: {resume_ckpt}")
+            candidate = checkpoints[-1]
+            # Staleness guard: if the checkpoint is from a completed run (epoch >= 1.0),
+            # do NOT resume — that would skip training entirely (observed: train_loss=0
+            # in 10ms when checkpoint-49 had epoch=1.0 from a prior completed cycle).
+            # Only mid-run checkpoints (epoch < 1.0) are valid resume targets.
+            state_file = os.path.join(candidate, "trainer_state.json")
+            stale = False
+            if os.path.exists(state_file):
+                try:
+                    import json as _json_local
+                    with open(state_file) as _sf:
+                        _state = _json_local.load(_sf)
+                    ckpt_epoch = _state.get("epoch", 0)
+                    if ckpt_epoch >= 1.0:
+                        print(f"[train] checkpoint {os.path.basename(candidate)} is from a "
+                              f"completed run (epoch={ckpt_epoch:.2f}) — starting fresh",
+                              file=sys.stderr)
+                        stale = True
+                except Exception as _e:
+                    print(f"[train] could not read trainer_state.json ({_e}) — starting fresh",
+                          file=sys.stderr)
+                    stale = True
+            if not stale:
+                resume_ckpt = candidate
+                print(f"[train] resuming from checkpoint: {resume_ckpt}")
+            else:
+                print(f"[train] no valid resume checkpoint — starting fresh")
         else:
             print(f"[train] no checkpoint in {output_dir} — starting fresh")
     trainer.train(resume_from_checkpoint=resume_ckpt)
