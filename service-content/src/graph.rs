@@ -287,7 +287,13 @@ impl GraphStore for LbugGraphStore {
                 ("entity_name", Value::String(entity_name.to_string())),
             ],
         )
-        .map_err(|e| anyhow!("Failed to execute delete_entity for '{}': {}", entity_name, e))?;
+        .map_err(|e| {
+            anyhow!(
+                "Failed to execute delete_entity for '{}': {}",
+                entity_name,
+                e
+            )
+        })?;
         Ok(())
     }
 

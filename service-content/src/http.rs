@@ -385,10 +385,12 @@ async fn graph_cleanup(
     State(state): State<Arc<HttpState>>,
     Query(params): Query<CleanupQuery>,
 ) -> Result<Json<CleanupReport>, (StatusCode, String)> {
-    let entities = state
-        .graph
-        .list_entities(&params.module_id)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("list_entities failed: {e}")))?;
+    let entities = state.graph.list_entities(&params.module_id).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("list_entities failed: {e}"),
+        )
+    })?;
 
     let scanned = entities.len();
     let mut flagged = 0usize;
@@ -396,17 +398,21 @@ async fn graph_cleanup(
     let mut samples: Vec<CleanupSample> = Vec::new();
 
     for entity in &entities {
-        let reason: Option<&'static str> = if entity_filter::is_noise_entity_name(&entity.entity_name) {
-            Some("noise-name")
-        } else if entity.entity_name.split_whitespace().count() > 8 {
-            Some("fragment-wordcount")
-        } else if entity_filter::coerce_classification(&entity.entity_name, &entity.classification)
+        let reason: Option<&'static str> =
+            if entity_filter::is_noise_entity_name(&entity.entity_name) {
+                Some("noise-name")
+            } else if entity.entity_name.split_whitespace().count() > 8 {
+                Some("fragment-wordcount")
+            } else if entity_filter::coerce_classification(
+                &entity.entity_name,
+                &entity.classification,
+            )
             .is_none()
-        {
-            Some("type-incoherent")
-        } else {
-            None
-        };
+            {
+                Some("type-incoherent")
+            } else {
+                None
+            };
 
         if let Some(r) = reason {
             flagged += 1;
