@@ -240,22 +240,21 @@ fn main() -> NotifyResult<()> {
             .unwrap_or(4)
             .max(1);
 
-        let queue: Arc<Mutex<VecDeque<std::path::PathBuf>>> =
-            Arc::new(Mutex::new(
-                fs::read_dir(Path::new(&corpus_dir))
-                    .into_iter()
-                    .flatten()
-                    .flatten()
-                    .map(|e| e.path())
-                    .filter(|p| p.extension().and_then(|s| s.to_str()) == Some("json"))
-                    .filter(|p| {
-                        p.file_name()
-                            .and_then(|n| n.to_str())
-                            .map(|n| n.starts_with("CORPUS_") && !processed_ledgers.contains(n))
-                            .unwrap_or(false)
-                    })
-                    .collect(),
-            ));
+        let queue: Arc<Mutex<VecDeque<std::path::PathBuf>>> = Arc::new(Mutex::new(
+            fs::read_dir(Path::new(&corpus_dir))
+                .into_iter()
+                .flatten()
+                .flatten()
+                .map(|e| e.path())
+                .filter(|p| p.extension().and_then(|s| s.to_str()) == Some("json"))
+                .filter(|p| {
+                    p.file_name()
+                        .and_then(|n| n.to_str())
+                        .map(|n| n.starts_with("CORPUS_") && !processed_ledgers.contains(n))
+                        .unwrap_or(false)
+                })
+                .collect(),
+        ));
 
         let done_files: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
         let defer_files: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
