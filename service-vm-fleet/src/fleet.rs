@@ -277,4 +277,41 @@ mod tests {
         assert!(reg.remove_vm("vm-1"));
         assert_eq!(reg.get_node("node-a").unwrap().vm_count, 0);
     }
+
+    #[test]
+    fn all_vms_empty_when_no_nodes() {
+        let reg = NodeRegistry::new();
+        assert!(reg.all_vms().is_empty());
+    }
+
+    #[test]
+    fn all_vms_aggregates_across_nodes() {
+        use system_vm_fleet_types::{VmRecord, VmState};
+        let mut reg = NodeRegistry::new();
+        reg.update_node(&make_heartbeat("node-a", 8192, 2048));
+        reg.update_node(&make_heartbeat("node-b", 8192, 2048));
+        let vm_a = VmRecord {
+            vm_id: "vm-agg-1".to_string(),
+            vm_type: "VmTotebox".to_string(),
+            state: VmState::Running,
+            ram_alloc_mb: 2048,
+            vcpu_count: 2,
+            started_at: None,
+        };
+        let vm_b = VmRecord {
+            vm_id: "vm-agg-2".to_string(),
+            vm_type: "VmMediaKit".to_string(),
+            state: VmState::Provisioning,
+            ram_alloc_mb: 4096,
+            vcpu_count: 4,
+            started_at: None,
+        };
+        reg.register_vm("node-a", vm_a);
+        reg.register_vm("node-b", vm_b);
+        let mut vms = reg.all_vms();
+        vms.sort_by(|a, b| a.vm_id.cmp(&b.vm_id));
+        assert_eq!(vms.len(), 2);
+        assert_eq!(vms[0].vm_id, "vm-agg-1");
+        assert_eq!(vms[1].vm_id, "vm-agg-2");
+    }
 }
