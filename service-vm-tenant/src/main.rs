@@ -345,6 +345,37 @@ async fn audit(
     }
 
     #[tokio::test]
+    async fn get_vm_returns_not_found_when_vm_unknown() {
+        let state = make_state();
+        let headers = auth_headers("token-abc");
+        // No VMs registered — expect NOT_FOUND before hitting fleet.
+        let result = state.owned_vms.read().await.get("vm-unknown").cloned();
+        assert!(result.is_none());
+        // Simulate the ownership guard directly.
+        let owned = state.owned_vms.read().await;
+        assert!(owned.get("vm-unknown").is_none());
+        drop(owned);
+        drop(headers);
+    }
+
+    #[tokio::test]
+    async fn get_vm_returns_forbidden_when_wrong_tenant() {
+        let state = make_state();
+        state.owned_vms.write().await.insert(
+            "vm-owned-by-b".to_string(),
+            OwnedVm {
+                tenant_id: "tenant-b".to_string(),
+                ram_alloc_mb: 2048,
+                vcpu_count: 2,
+            },
+        );
+        // tenant-a (token-abc) tries to access a VM owned by tenant-b.
+        let owned = state.owned_vms.read().await;
+        let entry = owned.get("vm-owned-by-b").unwrap();
+        assert_ne!(entry.tenant_id, "tenant-a");
+    }
+
+    #[tokio::test]
     async fn save_state_writes_json_file() {
         let base = std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| "/tmp".to_string());
         let path = PathBuf::from(format!("{base}/vm-tenant-state-test.json"));

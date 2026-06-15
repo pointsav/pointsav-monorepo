@@ -50,7 +50,10 @@ async fn main() {
         .route("/v1/nodes", get(nodes_handler))
         .route("/v1/nodes/:node_id", get(node_handler))
         .route("/v1/vms", post(create_vm_handler).get(list_vms_handler))
-        .route("/v1/vms/:vm_id", delete(destroy_vm_handler))
+        .route(
+            "/v1/vms/:vm_id",
+            delete(destroy_vm_handler).get(get_vm_handler),
+        )
         .with_state(state);
 
     let addr: SocketAddr = "0.0.0.0:9203".parse().unwrap();
@@ -207,6 +210,15 @@ async fn destroy_vm_handler(State(state): State<AppState>, Path(vm_id): Path<VmI
     } else {
         StatusCode::NOT_FOUND
     }
+}
+
+async fn get_vm_handler(
+    State(state): State<AppState>,
+    Path(vm_id): Path<VmId>,
+) -> Result<Json<VmRecord>, StatusCode> {
+    let mut reg = state.registry.write().await;
+    reg.evict_stale();
+    reg.find_vm(&vm_id).map(Json).ok_or(StatusCode::NOT_FOUND)
 }
 
 async fn list_vms_handler(State(state): State<AppState>) -> Json<Vec<VmRecord>> {
