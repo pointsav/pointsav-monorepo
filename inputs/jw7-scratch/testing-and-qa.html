@@ -1,0 +1,39 @@
+  <section class="scaling" data-label="Testing &amp; QA" data-screen-label="Developer Platform — Testing, QA, and Compliance Verification">
+    <div class="head">
+      <span class="cat-tag">Developer Platform</span>
+      <div class="eyebrow">Developer Platform</div>
+      <h2>Testing &amp; QA</h2>
+      <div class="crumb">Every commit to the canonical ledger passes three verification layers before Stage 6 promotion — developer-side testing, integration coverage, and compliance verification that the WORM audit trail is intact.</div>
+    </div>
+
+    <div class="cmp2" style="grid-template-columns:1fr 1px 1fr; gap:0 60px;">
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Developer Layer</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">1</span><span class="rt">Unit tests — Rust cargo test; every public function has a corresponding test</span></div>
+          <div class="cmp-rule"><span class="rk">2</span><span class="rt">Integration tests — end-to-end API calls; real filesystem, no mocks</span></div>
+          <div class="cmp-rule"><span class="rk">3</span><span class="rt">Clippy gate — cargo clippy --all-targets -D warnings; zero allowed warnings</span></div>
+        </div>
+      </div>
+
+      <div class="cmp-div"></div>
+
+      <div class="cmp-col">
+        <div class="cmp-head"><span class="ch-t">Compliance Layer</span></div>
+        <div class="cmp-rules">
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">WORM integrity — every WORM record verified append-only before Stage 6 promotion</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Audit trail — chain of custody confirmed across contributor boundary crossings</span></div>
+          <div class="cmp-rule"><span class="rk">✲</span><span class="rt">Stage 6 gate — Command Session promotion only after all checks pass</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes-strip">
+      <b>Your notes</b>
+      <div class="nlist">
+        <span>Which layer would fail first in your current stack, and why?</span>
+        <span>Does your company already run clippy in CI, or would this be new discipline?</span>
+        <span>What does your team currently do for WORM or append-only record verification?</span>
+      </div>
+    </div>
+  </section>
