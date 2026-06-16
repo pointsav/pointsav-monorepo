@@ -13,7 +13,9 @@ axum = "0.7"
 # Async runtime (long-term foundational dep; no immediate moonshot target)
 tokio = { version = "1", features = ["full"] }
 # HTTP middleware (future sovereign: moonshot-http)
-tower-http = { version = "0.5", features = ["compression-full"] }
+tower-http = { version = "0.5", features = ["compression-full", "fs"] }
+# SSE stream combinators (transitive via axum; declared explicitly for clarity)
+futures-util = "0.3"
 # Markdown → HTML (sovereign stub exists: pointsav-monorepo/moonshot-markup)
 pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
 # Query param deserialization (sovereign target: moonshot-toolkit)
