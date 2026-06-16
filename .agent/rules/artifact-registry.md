@@ -4,7 +4,7 @@ project: project-infrastructure
 last_updated: 2026-06-16
 project: project-editorial
 project: project-system
-last_updated: 2026-06-15 (session close: M5/M6/M7/M8/C2 content repairs committed 4e89ef4 + e4c77ea + 82c4156; T1/T2 project-infrastructure TOPICs committed 84caeea; M2 start-here stubs committed 3f387fd; GUIDE-vwh-calibration-operations staged; stage-6 outbox messages sent; inbox actioned)
+last_updated: 2026-06-16 (session: Phase G — 7 WFD GUIDE drafts staged in drafts-outbound; outbox routing message sent to Command)
 ---
 
 # project-infrastructure Artifact Registry
@@ -822,6 +822,28 @@ Committed content repairs and new stubs authored directly by project-editorial t
 | PE-R3 | CONTENT-REPAIR | 4 ES stub files | M9 es_status:stub on 4 ES files below 70% coverage | COMMITTED — 82c4156@jwoodfine (media-knowledge-projects) |
 | PE-M2 | TOPIC×8 | 8 files (4 EN + 4 ES) — getting-started, quick-start, data-overview, architecture-overview | M2 start-here stubs | COMMITTED — 3f387fd@pwoodfine (media-knowledge-documentation) |
 | PE-M6 | GUIDE | `.agent/drafts-outbound/GUIDE-vwh-calibration-operations.draft.md` | M6 VWH calibration ops GUIDE stub | STAGED — routing request sent to Command via outbox msg project-editorial-20260615-guide-vwh-calibration-routing |
+
+---
+
+## project-editorial — Phase G: WFD GUIDE Drafts (2026-06-16 session)
+
+7 operational GUIDEs staged in `.agent/drafts-outbound/` for Command admin-tier placement in `woodfine-fleet-deployment`. All routed via outbox message `project-editorial-20260616-phase-g-guide-routing`.
+
+| ID | Artifact type | Draft file | Destination | Status |
+|----|--------------|------------|-------------|--------|
+| PG-1 | GUIDE | `GUIDE-mk-documentation-editorial-content-sweep.draft.md` | `media-knowledge-documentation/guide-editorial-content-sweep.md` (REPLACE — EGREGIOUS fix) | STAGED |
+| PG-2 | GUIDE | `GUIDE-mk-documentation-deployment.draft.md` | `media-knowledge-documentation/guide-deployment.md` (CREATE — missing) | STAGED |
+| PG-3 | GUIDE | `GUIDE-mk-documentation-content-operations.draft.md` | `media-knowledge-documentation/guide-content-operations.md` (CREATE) | STAGED |
+| PG-4 | GUIDE | `GUIDE-mk-projects-deployment.draft.md` | `media-knowledge-projects/guide-deployment.md` (REPLACE scaffold) | STAGED |
+| PG-5 | GUIDE | `GUIDE-mk-projects-content-operations.draft.md` | `media-knowledge-projects/guide-content-operations.md` (CREATE) | STAGED |
+| PG-6 | GUIDE | `GUIDE-mk-corporate-deployment.draft.md` | `media-knowledge-corporate/guide-deployment.md` (REPLACE scaffold) | STAGED |
+| PG-7 | GUIDE | `GUIDE-mk-corporate-content-operations.draft.md` | `media-knowledge-corporate/guide-content-operations.md` (CREATE) | STAGED |
+
+**Notes:**
+- PG-1 replaces the existing `guide-editorial-content-sweep.md` which contained EGREGIOUS violations (internal vocab: "Foundry wikis", "DataGraph", inference-pipeline jargon; stale internal paths)
+- PG-2 fills the documentation wiki's missing deployment guide (currently absent from WFD `media-knowledge-documentation/`)
+- PG-4 and PG-6 replace scaffold stubs with substantive content; projects/corporate instances are planned but not yet deployed — port numbers and WIKI_CONTENT_DIR paths flagged for Command verification
+- All 7 require Command admin-tier commit to `woodfine-fleet-deployment` (customer/ scope)
 
 ---
 
