@@ -110,6 +110,7 @@ async fn home_inner(
         &state.site_title,
         state.brand_theme.as_deref(),
         &state.brand_instance,
+        &state.peers,
         maybe_user.as_ref(),
         pending_count,
     ))
@@ -153,6 +154,27 @@ async fn resolve_bare_slug(state: &AppState, bare_slug: &str) -> Option<String> 
         }
     }
     found
+}
+
+/// Scan all articles for one whose `aliases:` frontmatter lists `target_slug`.
+/// Returns the canonical slug of the owning article when found, or `None`.
+/// Runs only on miss (after all other resolution paths have failed), so the
+/// hot path — article found by slug — is unaffected.
+async fn resolve_alias_slug(state: &AppState, target_slug: &str) -> Option<String> {
+    let topic_files =
+        collect_all_topic_files(state.primary_path(), &state.guide_dirs_arr())
+            .await
+            .unwrap_or_default();
+    for tf in &topic_files {
+        if let Ok(text) = fs::read_to_string(&tf.path).await {
+            if let Ok(parsed) = crate::render::parse_page(&text) {
+                if parsed.frontmatter.aliases.iter().any(|a| a == target_slug) {
+                    return Some(tf.slug.clone());
+                }
+            }
+        }
+    }
+    None
 }
 
 async fn wiki_page(
@@ -292,6 +314,17 @@ async fn wiki_page_inner(
                                     .body(axum::body::Body::empty())
                                     .unwrap());
                             }
+                        }
+                        // Alias resolver: scan all articles for one whose `aliases:`
+                        // frontmatter lists this slug, then 301-redirect to it.
+                        // Only runs after all other resolution paths have failed.
+                        if let Some(canonical) = resolve_alias_slug(&state, &slug).await {
+                            let location = format!("/wiki/{canonical}?redirectedfrom={slug}");
+                            return Ok(Response::builder()
+                                .status(StatusCode::MOVED_PERMANENTLY)
+                                .header(header::LOCATION, location)
+                                .body(axum::body::Body::empty())
+                                .unwrap());
                         }
                         // topic- filename fallback: content repos name files as
                         // topic-foo.md; serve them at /wiki/foo (canonical slug).
@@ -549,6 +582,7 @@ async fn wiki_page_inner(
         &state.site_title,
         state.brand_theme.as_deref(),
         &state.brand_instance,
+        &state.peers,
         maybe_user.as_ref(),
         pending_count,
         redirected_from,
@@ -663,6 +697,7 @@ fn wiki_chrome(
     site_title: &str,
     brand_theme: Option<&str>,
     brand_instance: &str,
+    peers: &[crate::config::PeerConfig],
     user: Option<&User>,
     pending_count: i64,
     redirected_from: Option<&str>,
@@ -850,6 +885,18 @@ fn wiki_chrome(
                 }
                 div.mobile-nav-overlay #mobile-nav-overlay aria-hidden="true" {}
 
+                // Cross-instance discovery strip — only rendered when peers are configured
+                @if !peers.is_empty() {
+                    nav.peer-strip aria-label="Also on this platform" {
+                        span.peer-strip__label { "Also on this platform" }
+                        @for peer in peers {
+                            a.peer-strip__link href=(peer.url) rel="noopener" {
+                                (peer.label)
+                            }
+                        }
+                    }
+                }
+
                 // Mobile bottom action bar (wiki_chrome only; CSS hides on desktop)
                 nav.mobile-bottom-bar aria-label="Mobile article actions" {
                     button.mobile-bar-btn #mobile-bar-toc aria-label="Contents" { "Contents" }
@@ -987,6 +1034,15 @@ fn wiki_chrome(
                                             }
                                         }
                                     }
+                                }
+                            }
+                        }
+
+                        // Audience chips: compact role indicators from frontmatter `audience:`
+                        @if !fm.audience.is_empty() {
+                            div.audience-chips {
+                                @for aud in &fm.audience {
+                                    span.audience-chip { (aud) }
                                 }
                             }
                         }
