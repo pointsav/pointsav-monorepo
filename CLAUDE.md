@@ -1,8 +1,8 @@
 @~/Foundry/AGENT.md
 
-# project-knowledge — Archive Guide
+# project-intelligence — Archive Guide
 
-> **State:** active | **Last updated:** 2026-06-16
+> **State:** active | **Last updated:** 2026-06-17
 > **Cluster manifest:** `.agent/manifest.md`
 > **Workspace AGENT.md takes precedence on conflict.**
 
@@ -10,13 +10,15 @@
 
 ## Cluster mission
 
-`app-mediakit-knowledge` — Wikipedia-pattern HTTP knowledge wiki engine (Apache 2.0).
-Single Rust binary; 3 live instances on vault-privategit-source-1.
-Substrate substitution for MediaWiki per Doctrine claim #29.
+SLM inference infrastructure — Doorman (Tier A/B/C routing + circuit breaker),
+OLMo 7B Tier A (local CPU inference via `local-slm.service`),
+OLMo 32B Tier B (yoyo-batch L4 GPU; us-central1-b target),
+DataGraph entity enrichment (LadybugDB via `service-content`),
+and LoRA training pipeline.
 
-**Live instances:** documentation.pointsav.com (:9090) · projects.woodfinegroup.com (:9093) · corporate (:9095).
-**Phase 9 complete 2026-06-14:** WCAG 2.2 focus outline; sitemap/i18n repairs; defects 1/4/8 fixed; Sprint C 7-category IA.
-**Next:** Sprint D (home page redesign); Defect 2 (footnotes CSS); blueprint rendering; Phase 1 mobile foundation (Inter + Source Serif 4 approved).
+**Live services:** `local-doorman.service` (:9080) · `local-slm.service` (OLMo 7B Tier A)
+**Stage 6 pending:** `23b012a1` (LoRA target_modules fix + noise filter) · `4a9c81b9` (DOC_sweep gate + sweep ledger)
+**Blocked:** yoyo-batch TERMINATED — restart requires operator approval + us-central1-b + ML libs
 
 ## Tetrad
 
@@ -29,7 +31,7 @@ Per `~/Foundry/AGENT.md` § Session roles:
 1. Confirm role: `~/Foundry/bin/foundry-role.sh` (Totebox Session expected)
 2. Write session lock: `.agent/engines/<engine-id>/session.lock`
 3. Read `.agent/manifest.md` — cluster mission + tetrad
-4. Call `get_session_brief(role="totebox", archive="project-knowledge")` — replaces inbox, NOTAM, session-context reads
+4. Call `get_session_brief(role="totebox", archive="project-intelligence")` — replaces inbox, NOTAM, session-context reads
 5. Read `~/Foundry/NOTAM.md` — only if `notam_active: true` from step 4
 6. Read `.agent/rules/*.md` if present
 
@@ -42,18 +44,19 @@ Bloomberg standard; BCSC posture; SYS-ADR-07/10/19.
 
 ## Build notes
 
-- Crate: `app-mediakit-knowledge` in `pointsav-monorepo/app-mediakit-knowledge/`
-- Fast gate: `cargo check -p app-mediakit-knowledge`
-- Test gate: `cargo test -p app-mediakit-knowledge` (67 unit + 70+ integration)
-- Lint gate: `cargo clippy -p app-mediakit-knowledge -- -D warnings`
-- Run locally: `cargo run -p app-mediakit-knowledge -- serve --content-dir <path>`
-- Doorman endpoint: `http://localhost:9080`
+- Doorman: `service-slm/crates/slm-doorman-server/` — run from `service-slm/` sub-workspace
+- DataGraph: `service-content/` — own Cargo workspace
+- Extraction: `service-extraction/` — own Cargo workspace
+- Fast gate: `cargo check -p slm-doorman-server` (from `service-slm/`)
+- Test gate: `cargo test -p slm-doorman-server`
+- Lint gate: `cargo clippy -p slm-doorman-server -- -D warnings`
+- Doorman health: `curl http://localhost:9080/doorman/health`
+- MCP module_id: `jennifer` (see `.mcp.json`)
 
 ## Commit + promote
 
-Commits via `~/Foundry/bin/commit-as-next.sh "<message>"` (from archive root or sub-clone).
+Commits via `~/Foundry/bin/commit-as-next.sh "<message>"` (from archive root or `service-slm/`).
 Stage 6 promotion via `~/Foundry/bin/promote.sh` from Command Session.
-**Stage 6 current:** Sub-clone at `d0abd9ad`; binary rebuilt; all 3 instances live (Session 86, 2026-06-16).
 
 ## Conflicts
 
@@ -61,7 +64,7 @@ Surface conflicts via outbox to Command Session — do not silently override.
 
 ## MCP tools — `foundry` server (use at startup)
 
-`get_session_brief(role="totebox", archive="project-knowledge")` replaces manually reading
+`get_session_brief(role="totebox", archive="project-intelligence")` replaces manually reading
 inbox.md, outbox.md, NOTAM.md, session-context.md. Call it first.
 
 | Tool | When to use |
