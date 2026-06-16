@@ -10,11 +10,14 @@ Last updated: 2026-06-16
 ## Blocked — Command Session (route via outbox)
 
 - [ ] **check --strict gate** — F2/F3 dead links at project-editorial must resolve first
+- [ ] **Nginx vhost SSE proxy** — add `/_api/edit/events` block to nginx vhost for live reload:
+      `proxy_buffering off; proxy_read_timeout 3600s; proxy_set_header Connection ''; proxy_http_version 1.1;`
+      (VM sysadmin scope)
 
 ## Active (Totebox scope)
 
-- [ ] **Nginx vhost SSE proxy** — add `/_api/edit/events` block for live reload:
-      `proxy_buffering off; proxy_read_timeout 3600s; proxy_set_header Connection ''; proxy_http_version 1.1;`
+- [ ] **Sprint D** — home page editorial redesign; next engineering sprint
+- [ ] **Defect 2** (footnotes CSS) — find reproducing article first; `<sup>` + `.footnotes` styling gap; confirmed NOT an engine bug
 - [ ] **Design artifacts D1a–D1e** — DESIGN-* files in `.agent/drafts-outbound/`; dispatch to project-design
 - [ ] **D2 orgcharts relay** — D2a–D2m in drafts-outbound originated from project-orgcharts;
       relay to project-design or confirm project-orgcharts has canonical copies before removing

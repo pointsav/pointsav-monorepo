@@ -743,15 +743,14 @@ Binary rebuild + service restart required after each Stage 6 (see BRIEF §4 Phas
 | E2 | `bd435cc3` | pwoodfine | Phase 0 code: tokens.css regen; blueprints relates_to rail; slug 301 redirect (topic- prefix + ES locale); `/edit/{slug}` stub; CodeMirror 6 + toc-persistence.js; conditional chrome load | CONFIRMED | Yes |
 | E3 | `7a2b9b42` | jwoodfine | Phase 0 mobile: M8 drawer CSS (transform+transition); tap-popover viewport flip; Cmd+K trigger + `window.openCmdK` exposure | CONFIRMED | Yes |
 | E4 | `eeb60cbb` | pwoodfine | Phase 0 AppState: `mounts: Vec<Mount>` refactor; hardcoded content_dir/guide_dir removed; `blueprints.rs` wired | CONFIRMED | Yes |
-| E5 | `6d554ec6` | jwoodfine | Phase 7 scaffold: `PeerConfig`; `peers: Vec<PeerConfig>` in AppState; federated MCP search; `activitypub.rs` stub; reqwest 0.12 + rustls-tls | Stage 6 PENDING | No (binary rebuild pending) |
-| E6 | `3106b2e1` | pwoodfine | Audit repair Sprint A: WCAG 2.2 focus outline (C3 — navy 9.1:1 vs gold 2.26:1); article body link underline (M15) | Stage 6 PENDING | No |
-| E7 | `48bfa7e7` | jwoodfine | Audit repair Sprint B: sitemap absolute URLs via `canonical_url` TOML field (M1); brand-instance from TOML `[site].instance` (M14); ES tab/breadcrumb i18n in wiki_handlers via inline match (M12); dead POST form removed from `/edit` view (M11) | Stage 6 PENDING | No |
+| E5 | `6d554ec6` | jwoodfine | Phase 7 scaffold: `PeerConfig`; `peers: Vec<PeerConfig>` in AppState; federated MCP search; `activitypub.rs` stub; reqwest 0.12 + rustls-tls | CONFIRMED | Yes |
+| E6 | `3106b2e1` | pwoodfine | Audit repair Sprint A: WCAG 2.2 focus outline (C3 — navy 9.1:1 vs gold 2.26:1); article body link underline (M15) | CONFIRMED | Yes |
+| E7 | `48bfa7e7` | jwoodfine | Audit repair Sprint B: sitemap absolute URLs via `canonical_url` TOML field (M1); brand-instance from TOML `[site].instance` (M14); ES tab/breadcrumb i18n in wiki_handlers via inline match (M12); dead POST form removed from `/edit` view (M11) | CONFIRMED | Yes |
+| E8 | `934dac27` | jwoodfine | Defect 6: `GET /images/{*path}` — serve content images from mount; validate_slug guard, mime_guess, immutable cache; 3 tests added | CONFIRMED | Yes |
 
-**Post-Stage-6 Command actions required (E5/E6/E7):**
-- Add `instance = "documentation"` / `"projects"` / `"corporate"` to each `/etc/local-knowledge/*.toml` (M14)
-- Add `canonical_url = "https://documentation.pointsav.com"` (and peers) to TOML where applicable (M1)
-- Rebuild binary from promoted canonical tip
-- `sudo systemctl restart local-knowledge-{documentation,projects,corporate}.service`
+**Post-Stage-6 actions confirmed complete (Session 86, 2026-06-16):**
+- `instance =` + `canonical_url =` present in all 3 `/etc/local-knowledge/*.toml` — verified
+- Binary rebuilt from `d0abd9ad`; deployed; 9090/9093/9095 healthy (200 OK)
 
 ---
 
