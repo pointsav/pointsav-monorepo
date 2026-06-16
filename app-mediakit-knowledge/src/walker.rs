@@ -87,6 +87,16 @@ pub struct Frontmatter {
 
     /// Hatnote text rendered at the top of the article body (italic, indented).
     pub hatnote: Option<String>,
+
+    /// Target audience chips shown below the article H1 and status badge.
+    /// E.g. ["operator", "developer", "public"]. Rendered as inline chips.
+    #[serde(default)]
+    pub audience: Vec<String>,
+
+    /// Alternative slugs that 301-redirect to this article's canonical slug.
+    /// Allows renaming articles without breaking existing links.
+    #[serde(default)]
+    pub aliases: Vec<String>,
 }
 
 /// Named sequence membership (deferred to a later phase; stub).
