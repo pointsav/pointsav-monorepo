@@ -422,6 +422,7 @@ name = "app-privategit-design"
 version = "0.2.0"
 dependencies = [
  "axum 0.7.9",
+ "futures-util",
  "moonshot-fs-watch",
  "moonshot-index",
  "pulldown-cmark 0.13.4",

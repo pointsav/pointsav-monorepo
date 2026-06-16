@@ -1,0 +1,18 @@
+/* Carbon Design System tokens — --cds-* custom properties (D6).
+   Consuming rules use var(--cds-*); future themes swap this file only. */
+:root {
+  --cds-background: #fff;
+  --cds-layer: #f4f4f4;
+  --cds-border-subtle: #e0e0e0;
+  --cds-border-strong: #8d8d8d;
+  --cds-text-primary: #161616;
+  --cds-text-secondary: #393939;
+  --cds-text-tertiary: #525252;
+  --cds-link-primary: #0e3a66;
+  --cds-interactive: #0050e6;
+  --cds-focus: #0f62fe;
+  --cds-background-brand: #161616;
+  --cds-selected-background: #e8f0f8;
+  --cds-selected-text: #0e3a66;
+  --cds-sidebar-bg: #f4f4f4;
+}
