@@ -487,6 +487,38 @@
     }
 
     .photo-thumb:hover { opacity: 0.8; }
+    .photo-thumb { cursor: zoom-in; }
+
+    /* ── Lightbox ── */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img {
+      max-width: 96vw;
+      max-height: 92vh;
+      object-fit: contain;
+      border-radius: 4px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    }
+    #lightbox-close {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      color: white;
+      font-size: 2rem;
+      line-height: 1;
+      cursor: pointer;
+      opacity: 0.8;
+      user-select: none;
+    }
 
     .photo-thumb-label {
       font-size: 0.65rem;
@@ -928,6 +960,17 @@ const SEED = [
 
 const KEY = 'sourdough_loaves';
 
+// ─── Lightbox ─────────────────────────────────────────────────────────────────
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightbox-img').src = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
 // ─── Photo helpers ────────────────────────────────────────────────────────────
 const photoData = { top: null, bottom: null, crumb: null, scorecard: null };
 
@@ -1245,10 +1288,10 @@ function toggleMobileDetail(l, card) {
     ${(l.photos && (l.photos.top || l.photos.bottom || l.photos.crumb || l.photos.scorecard)) ? `<div class="detail-item" style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:0.5rem;margin-top:0.25rem">
       <span>Photos</span>
       <div class="photo-thumb-row">
-        ${l.photos.top       ? `<div class="photo-thumb-wrap"><img src="${l.photos.top}"       class="photo-thumb" alt="Top"        onclick="window.open(this.src)"><span class="photo-thumb-label">Top</span></div>`        : ''}
-        ${l.photos.bottom    ? `<div class="photo-thumb-wrap"><img src="${l.photos.bottom}"    class="photo-thumb" alt="Bottom"     onclick="window.open(this.src)"><span class="photo-thumb-label">Bottom</span></div>`     : ''}
-        ${l.photos.crumb     ? `<div class="photo-thumb-wrap"><img src="${l.photos.crumb}"     class="photo-thumb" alt="Crumb"      onclick="window.open(this.src)"><span class="photo-thumb-label">Crumb</span></div>`      : ''}
-        ${l.photos.scorecard ? `<div class="photo-thumb-wrap"><img src="${l.photos.scorecard}" class="photo-thumb" alt="Score Card" onclick="window.open(this.src)"><span class="photo-thumb-label">Score Card</span></div>` : ''}
+        ${l.photos.top       ? `<div class="photo-thumb-wrap"><img src="${l.photos.top}"       class="photo-thumb" alt="Top"        onclick="openLightbox(this.src)"><span class="photo-thumb-label">Top</span></div>`        : ''}
+        ${l.photos.bottom    ? `<div class="photo-thumb-wrap"><img src="${l.photos.bottom}"    class="photo-thumb" alt="Bottom"     onclick="openLightbox(this.src)"><span class="photo-thumb-label">Bottom</span></div>`     : ''}
+        ${l.photos.crumb     ? `<div class="photo-thumb-wrap"><img src="${l.photos.crumb}"     class="photo-thumb" alt="Crumb"      onclick="openLightbox(this.src)"><span class="photo-thumb-label">Crumb</span></div>`      : ''}
+        ${l.photos.scorecard ? `<div class="photo-thumb-wrap"><img src="${l.photos.scorecard}" class="photo-thumb" alt="Score Card" onclick="openLightbox(this.src)"><span class="photo-thumb-label">Score Card</span></div>` : ''}
       </div>
     </div>` : ''}
   </div>`;
@@ -1294,10 +1337,10 @@ function toggleDetail(l, row) {
     ${(l.photos && (l.photos.top || l.photos.bottom || l.photos.crumb || l.photos.scorecard)) ? `<div class="detail-item" style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:0.5rem;margin-top:0.25rem">
       <span>Photos</span>
       <div class="photo-thumb-row">
-        ${l.photos.top       ? `<div class="photo-thumb-wrap"><img src="${l.photos.top}"       class="photo-thumb" alt="Top"        onclick="window.open(this.src)"><span class="photo-thumb-label">Top</span></div>`        : ''}
-        ${l.photos.bottom    ? `<div class="photo-thumb-wrap"><img src="${l.photos.bottom}"    class="photo-thumb" alt="Bottom"     onclick="window.open(this.src)"><span class="photo-thumb-label">Bottom</span></div>`     : ''}
-        ${l.photos.crumb     ? `<div class="photo-thumb-wrap"><img src="${l.photos.crumb}"     class="photo-thumb" alt="Crumb"      onclick="window.open(this.src)"><span class="photo-thumb-label">Crumb</span></div>`      : ''}
-        ${l.photos.scorecard ? `<div class="photo-thumb-wrap"><img src="${l.photos.scorecard}" class="photo-thumb" alt="Score Card" onclick="window.open(this.src)"><span class="photo-thumb-label">Score Card</span></div>` : ''}
+        ${l.photos.top       ? `<div class="photo-thumb-wrap"><img src="${l.photos.top}"       class="photo-thumb" alt="Top"        onclick="openLightbox(this.src)"><span class="photo-thumb-label">Top</span></div>`        : ''}
+        ${l.photos.bottom    ? `<div class="photo-thumb-wrap"><img src="${l.photos.bottom}"    class="photo-thumb" alt="Bottom"     onclick="openLightbox(this.src)"><span class="photo-thumb-label">Bottom</span></div>`     : ''}
+        ${l.photos.crumb     ? `<div class="photo-thumb-wrap"><img src="${l.photos.crumb}"     class="photo-thumb" alt="Crumb"      onclick="openLightbox(this.src)"><span class="photo-thumb-label">Crumb</span></div>`      : ''}
+        ${l.photos.scorecard ? `<div class="photo-thumb-wrap"><img src="${l.photos.scorecard}" class="photo-thumb" alt="Score Card" onclick="openLightbox(this.src)"><span class="photo-thumb-label">Score Card</span></div>` : ''}
       </div>
     </div>` : ''}
   </div></td>`;
@@ -1936,6 +1979,11 @@ if ('serviceWorker' in navigator) {
     </div>
 
   </div>
+</div>
+
+<div id="lightbox" onclick="closeLightbox()">
+  <span id="lightbox-close" onclick="closeLightbox()">&times;</span>
+  <img id="lightbox-img" src="" alt="">
 </div>
 
 </body>
