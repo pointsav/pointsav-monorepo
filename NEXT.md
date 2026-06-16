@@ -7,6 +7,21 @@ Last updated: 2026-06-17
 
 ---
 
+## Completed (Sessions 84+)
+
+- [x] **PKS Phase 5b** — 7,045 clusters (T1=692/T2=2,665/T3=3,688); MX=177; false-US clusters removed [2026-06-16 totebox]
+- [x] **park-and-ride anchor ingest** — 23,117 records [2026-06-16 totebox]
+- [x] **EU/US car rental + hotel chain ingests** [2026-06-16 totebox]
+- [x] **PKS archetype rebalanced** — Fable analysis + mode-group collapse [2026-06-15 totebox]
+- [x] **VWH retail_contamination badge** — `showArchetypeDetail()` badge for 3,048/6,368 clusters [2026-06-13 totebox]
+- [x] **A26 BRIEF updated** — §4 operator crontab checkboxes; first clean run 2026-06-13T05:48Z [2026-06-13 totebox]
+- [x] **Root disk + BRIEF contamination outbox sent** — msg-id: project-gis-20260613-disk-brief-contamination [2026-06-13 totebox]
+- [x] **AEC wetland VRT fix** — 408 GWL_FCS30 5°-tiles assembled via gdalbuildvrt; gdal_translate removed; VRT used directly (9c041f65) [2026-06-16 totebox]
+- [x] **AEC wildfire numpy fix** — gdal_calc.py + gdal_polygonize.py replaced with pure Python GDAL API (2ea45b07) [2026-06-16 totebox]
+- [x] **ashrae_zone producer script** — build-ashrae-zone.py from koppen+HDD/CDD; 6,493/6,493 clusters populated (dce0d157) [2026-06-16 totebox]
+- [x] **PKS opportunity_class field** — SATURATED/EXPAND/DEVELOP per BRIEF §10.12 (2ea45b07) [2026-06-16 totebox]
+- [x] **Overnight AEC builds scheduled** — gis-overnight-aec-builds.timer fires 2026-06-17 05:00 UTC (22:00 PDT tonight); park_ride ingest US/CA/DE/FR/IT/PL/NO/IS → PKS rebuild → seismic → flood [2026-06-16 totebox]
+
 ## Blocked — Command Session (route via outbox)
 
 - [x] **Stage 6 READY (4th)** — promoted Session 91 (2026-06-17); canonical tip `047fd9d0` `[2026-06-17 command@claude-code]`
@@ -147,3 +162,7 @@ Last updated: 2026-06-17
       prior "TERMINATED" was stale); confirm trl/peft/transformers/accelerate/bitsandbytes
       installed in ~/training-venv before triggering LoRA training; do not start full 45-min
       cycle until operator approves [via outbox to Command]
+- [ ] **EU seismic (EFEHR)** — maps.efehr.org NXDOMAIN; correct API endpoint needed before sample-eshm20-api.py can run; seismic_pga_g=0 for all EU clusters until resolved
+- [ ] **Post-overnight verification** — after 2026-06-17 builds: check wetland_class, seismic counts, PKS T2 uplift, wildfire GeoJSON features
+- [ ] **Nginx vhost SSE proxy** — add `/_api/edit/events` block for live reload:
+      `proxy_buffering off; proxy_read_timeout 3600s; proxy_set_header Connection ''; proxy_http_version 1.1;`
