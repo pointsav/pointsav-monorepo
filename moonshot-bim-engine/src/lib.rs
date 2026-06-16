@@ -101,6 +101,192 @@ pub fn split_params(params: &str) -> Vec<String> {
     out
 }
 
+// ---- typed values -----------------------------------------------------------
+
+/// A parsed STEP parameter value (ISO 10303-21). Reals carry `f64`, so `Value` is
+/// `PartialEq` but not `Eq`. The grammar covered: references, integers, reals,
+/// strings, enumerations, the unset (`$`) and derived (`*`) markers, lists, and
+/// typed values (`KEYWORD(value)`). STEP `\X\`-style string encodings are kept
+/// verbatim in v0; decoding them is a documented next layer.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Value {
+    /// `#42` — a reference to another instance.
+    Ref(u64),
+    Integer(i64),
+    Real(f64),
+    /// A string literal with `''` escapes already decoded to `'`.
+    Str(String),
+    /// `.ADDED.` -> `Enum("ADDED")` (dots stripped).
+    Enum(String),
+    /// `$` — an unset optional attribute.
+    Null,
+    /// `*` — a derived attribute.
+    Derived,
+    List(Vec<Value>),
+    /// `IFCBOOLEAN(.T.)` -> `Typed("IFCBOOLEAN", Enum("T"))`.
+    Typed(String, Box<Value>),
+    /// `"00AB"` — a binary/hex literal, kept verbatim.
+    Binary(String),
+}
+
+impl Instance {
+    /// Parse this instance's raw params into typed [`Value`]s (top-level fields).
+    pub fn values(&self) -> Result<Vec<Value>, ParseError> {
+        parse_value_list(&self.params)
+    }
+}
+
+/// Parse a single STEP value from `s` (leading whitespace/comments allowed).
+pub fn parse_value(s: &str) -> Result<Value, ParseError> {
+    let b = s.as_bytes();
+    let (v, _) = value_at(s, b, 0, b.len())?;
+    Ok(v)
+}
+
+/// Parse a comma-separated list of top-level STEP values (an instance's params).
+pub fn parse_value_list(params: &str) -> Result<Vec<Value>, ParseError> {
+    if params.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+    let b = params.as_bytes();
+    let end = b.len();
+    let mut i = 0;
+    let mut out = Vec::new();
+    loop {
+        let (v, ni) = value_at(params, b, i, end)?;
+        out.push(v);
+        i = skip_ws_comments(b, ni, end);
+        if i >= end {
+            break;
+        }
+        if b[i] == b',' {
+            i += 1;
+        } else {
+            return Err(ParseError::Malformed(i));
+        }
+    }
+    Ok(out)
+}
+
+/// Parse one value starting at `i`; returns the value and the index just past it.
+fn value_at(s: &str, b: &[u8], i: usize, end: usize) -> Result<(Value, usize), ParseError> {
+    let i = skip_ws_comments(b, i, end);
+    if i >= end {
+        return Err(ParseError::Malformed(i));
+    }
+    match b[i] {
+        b'$' => Ok((Value::Null, i + 1)),
+        b'*' => Ok((Value::Derived, i + 1)),
+        b'#' => {
+            let st = i + 1;
+            let mut j = st;
+            while j < end && b[j].is_ascii_digit() {
+                j += 1;
+            }
+            if j == st {
+                return Err(ParseError::Malformed(i));
+            }
+            let id = s[st..j].parse().map_err(|_| ParseError::Malformed(st))?;
+            Ok((Value::Ref(id), j))
+        }
+        b'\'' => {
+            let e = scan_string(b, i, end);
+            let inner = &s[i + 1..e - 1];
+            Ok((Value::Str(inner.replace("''", "'")), e))
+        }
+        b'"' => {
+            let mut j = i + 1;
+            while j < end && b[j] != b'"' {
+                j += 1;
+            }
+            let inner = s[i + 1..j.min(end)].to_string();
+            Ok((Value::Binary(inner), (j + 1).min(end)))
+        }
+        b'.' => {
+            let st = i + 1;
+            let mut j = st;
+            while j < end && b[j] != b'.' {
+                j += 1;
+            }
+            Ok((Value::Enum(s[st..j].to_string()), (j + 1).min(end)))
+        }
+        b'(' => {
+            let (items, ni) = list_at(s, b, i + 1, end)?;
+            Ok((Value::List(items), ni))
+        }
+        c if c == b'+' || c == b'-' || c.is_ascii_digit() => {
+            let st = i;
+            let mut j = i + 1;
+            let mut real = false;
+            while j < end {
+                let d = b[j];
+                if d.is_ascii_digit() {
+                    j += 1;
+                } else if d == b'.' || d == b'e' || d == b'E' {
+                    real = true;
+                    j += 1;
+                } else if (d == b'+' || d == b'-') && (b[j - 1] == b'e' || b[j - 1] == b'E') {
+                    j += 1;
+                } else {
+                    break;
+                }
+            }
+            let tok = &s[st..j];
+            if real {
+                let r: f64 = tok.parse().map_err(|_| ParseError::Malformed(st))?;
+                Ok((Value::Real(r), j))
+            } else {
+                let n: i64 = tok.parse().map_err(|_| ParseError::Malformed(st))?;
+                Ok((Value::Integer(n), j))
+            }
+        }
+        c if c.is_ascii_alphabetic() || c == b'_' => {
+            let st = i;
+            let mut j = i;
+            while j < end && (b[j].is_ascii_alphanumeric() || b[j] == b'_') {
+                j += 1;
+            }
+            let kw = s[st..j].to_string();
+            let j2 = skip_ws_comments(b, j, end);
+            if j2 < end && b[j2] == b'(' {
+                let (inner, nj) = value_at(s, b, j2 + 1, end)?;
+                let nj = skip_ws_comments(b, nj, end);
+                if nj >= end || b[nj] != b')' {
+                    return Err(ParseError::Malformed(nj));
+                }
+                Ok((Value::Typed(kw, Box::new(inner)), nj + 1))
+            } else {
+                Ok((Value::Enum(kw), j))
+            }
+        }
+        _ => Err(ParseError::Malformed(i)),
+    }
+}
+
+/// Parse list items starting just past `(`; returns items and the index past `)`.
+fn list_at(s: &str, b: &[u8], mut i: usize, end: usize) -> Result<(Vec<Value>, usize), ParseError> {
+    let mut items = Vec::new();
+    loop {
+        i = skip_ws_comments(b, i, end);
+        if i >= end {
+            return Err(ParseError::Malformed(i));
+        }
+        if b[i] == b')' {
+            return Ok((items, i + 1));
+        }
+        let (v, ni) = value_at(s, b, i, end)?;
+        items.push(v);
+        i = skip_ws_comments(b, ni, end);
+        if i < end && b[i] == b',' {
+            i += 1;
+        } else if i < end && b[i] == b')' {
+            return Ok((items, i + 1));
+        } else {
+            return Err(ParseError::Malformed(i));
+        }
+    }
+}
+
 // ---- internals --------------------------------------------------------------
 
 /// Byte range between a section keyword (e.g. `"DATA;"`) and its following `ENDSEC;`.
@@ -359,5 +545,73 @@ END-ISO-10303-21;
     fn split_params_empty_is_no_fields() {
         assert!(split_params("").is_empty());
         assert!(split_params("   ").is_empty());
+    }
+
+    #[test]
+    fn parse_value_scalars() {
+        assert_eq!(parse_value("#42").unwrap(), Value::Ref(42));
+        assert_eq!(parse_value("$").unwrap(), Value::Null);
+        assert_eq!(parse_value("*").unwrap(), Value::Derived);
+        assert_eq!(parse_value("1234").unwrap(), Value::Integer(1234));
+        assert_eq!(parse_value("-3").unwrap(), Value::Integer(-3));
+        assert_eq!(parse_value(".ADDED.").unwrap(), Value::Enum("ADDED".into()));
+        assert_eq!(
+            parse_value("'My Project'").unwrap(),
+            Value::Str("My Project".into())
+        );
+        assert_eq!(parse_value("'it''s'").unwrap(), Value::Str("it's".into()));
+    }
+
+    #[test]
+    fn parse_value_real() {
+        match parse_value("1.0E-5").unwrap() {
+            Value::Real(r) => assert!((r - 1.0e-5).abs() < 1e-12),
+            other => panic!("expected Real, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn parse_value_lists_and_typed() {
+        assert_eq!(
+            parse_value("(#11,#12)").unwrap(),
+            Value::List(vec![Value::Ref(11), Value::Ref(12)])
+        );
+        assert_eq!(
+            parse_value("IFCBOOLEAN(.T.)").unwrap(),
+            Value::Typed("IFCBOOLEAN".into(), Box::new(Value::Enum("T".into())))
+        );
+        // Nested lists.
+        assert_eq!(
+            parse_value("((1,2),(3,4))").unwrap(),
+            Value::List(vec![
+                Value::List(vec![Value::Integer(1), Value::Integer(2)]),
+                Value::List(vec![Value::Integer(3), Value::Integer(4)]),
+            ])
+        );
+    }
+
+    #[test]
+    fn instance_values_decode_full_attribute_lists() {
+        let f = parse(SAMPLE).unwrap();
+        // #2 IFCOWNERHISTORY(#3,#6,$,.ADDED.,$,$,$,1234)
+        let v = f.instance(2).unwrap().values().unwrap();
+        assert_eq!(
+            v,
+            vec![
+                Value::Ref(3),
+                Value::Ref(6),
+                Value::Null,
+                Value::Enum("ADDED".into()),
+                Value::Null,
+                Value::Null,
+                Value::Null,
+                Value::Integer(1234),
+            ]
+        );
+        // #1 IFCPROJECT — the (#11) attribute decodes as a single-element list.
+        let p = f.instance(1).unwrap().values().unwrap();
+        assert_eq!(p[2], Value::Str("My Project".into()));
+        assert_eq!(p[7], Value::List(vec![Value::Ref(11)]));
+        assert_eq!(p[8], Value::Ref(7));
     }
 }
