@@ -411,7 +411,7 @@ echo "[6/9] GWL_FCS30 wetland raster tiles (CC BY 4.0, Zenodo 7340516)" | tee -a
 
 GWL_DIR="$WORK_DIR/gwl-tiles"
 GWL_VRT="$WORK_DIR/gwl-fcs30-mosaic.vrt"
-GWL_TIF="$WORK_DIR/gwl-fcs30-global.tif"  # materialised TIF for downstream scripts
+GWL_TIF="$GWL_VRT"  # VRT used directly — gdallocationinfo reads VRT natively
 mkdir -p "$GWL_DIR"
 
 # Zenodo record 7340516 distributes 408 individual 5°-lat/lon TIFs
@@ -425,9 +425,7 @@ done < <(find "$GWL_DIR" -name "GWL_FCS30_*.tif" -print0 2>/dev/null | sort -z)
 if [[ ${#GWL_TIFS[@]} -gt 0 ]]; then
     echo "  Found ${#GWL_TIFS[@]} GWL_FCS30 tiles in $GWL_DIR" | tee -a "$LOG"
     gdalbuildvrt "$GWL_VRT" "${GWL_TIFS[@]}" 2>&1 | tee -a "$LOG"
-    # Materialise VRT → TIF so downstream scripts can reference a single file
-    gdal_translate -q "$GWL_VRT" "$GWL_TIF" 2>&1 | tee -a "$LOG"
-    echo "  → Mosaic TIF: $GWL_TIF (${#GWL_TIFS[@]} tiles)  ✓" | tee -a "$LOG"
+    echo "  → Mosaic VRT: $GWL_VRT (${#GWL_TIFS[@]} tiles)  ✓" | tee -a "$LOG"
     SKIP_WETLAND=0
 else
     echo "WARN: No GWL_FCS30 tiles found in $GWL_DIR — wetland sampling will be skipped" | tee -a "$LOG"
