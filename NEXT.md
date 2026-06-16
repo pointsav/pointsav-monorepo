@@ -50,14 +50,20 @@ Last updated: 2026-06-16
       circuits currently report "closed" with health_up=false causing false routing to Tier B;
       Bug 4 drain-hold fix is live but this TierBInfo extension is outstanding
       [2026-06-15 command@claude-code]
-- [ ] **Bug 1: SHA-on-202-ACK** — ~400 files marked done on 202-ACK before confirmed Tier B
-      enrichment; repair-ledger.py at service-slm/scripts/ removes stale entries; run after
-      Tier B restores and first enrichment cycle completes; ledger at 0 entries (repair already
-      ran this session — clean) [2026-06-15 totebox@project-data]
 - [ ] **Phase 4b reconciliation pass** — 1,281 sweep-ledger entries written before Tier B online;
       DOC_sweep quarantine gate now in place (4a9c81b9) — next replay will skip DPO pair gen
       for sweep docs and mark SHAs complete correctly; Totebox sprint when Tier B restores
       [2026-06-15 command@claude-code]
+
+## Completed (2026-06-16, Session 18)
+
+- [x] **State sync actioned** — command-20260616-project-intelligence-state-sync; Stage 6
+      (088b8e21→4886129d) + doorman deployment (52ead171) + quarantine re-drive confirmed;
+      NEXT.md reconciled [2026-06-16 totebox@project-intelligence]
+- [x] **Bug 1: SHA-on-202-ACK** — repair-ledger.py (52746a3c) ran; stale SHA entries cleared;
+      ledger at 0; ~400 files will re-enrich automatically when Tier B restores; sweep ledger
+      also fixed (4a9c81b9 — mark_sweep_sha_complete now unconditional for DOC_sweep-* docs)
+      [2026-06-16 totebox@project-intelligence]
 
 ## Completed (2026-06-16, Session 84 extended)
 
