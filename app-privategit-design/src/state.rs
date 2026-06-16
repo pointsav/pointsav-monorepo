@@ -6,7 +6,9 @@ use tokio::sync::{watch, RwLock};
 pub struct AppState {
     pub vault: PathBuf,
     pub nav: Arc<HashMap<String, Vec<String>>>,
+    #[allow(dead_code)]
     pub tenant: String,
+    pub doorman_url: String,
     pub watch_tx: Arc<watch::Sender<()>>,
     pub index: Arc<RwLock<InvertedIndex>>,
     pub edit_token: Arc<String>,

@@ -96,6 +96,8 @@ _es.onmessage=function(e){var n=document.querySelector('nav.sidebar');if(n)n.inn
     out.push_str("<script defer src=\"/static/drawer.js\"></script>\n");
     // D3: edit overlay (no-op on non-element pages; checks URL slug/tab)
     out.push_str("<script defer src=\"/static/edit.js\"></script>\n");
+    // D5: AI assistant overlay — selection → POST /ai/session → SSE delta stream
+    out.push_str("<script defer src=\"/static/ai.js\"></script>\n");
     out.push_str("</body>\n</html>");
     out
 }
