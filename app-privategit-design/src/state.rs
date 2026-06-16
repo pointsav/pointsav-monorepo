@@ -1,8 +1,12 @@
+use moonshot_index::InvertedIndex;
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use tokio::sync::{watch, RwLock};
 
 #[derive(Clone)]
 pub struct AppState {
     pub vault: PathBuf,
     pub nav: Arc<HashMap<String, Vec<String>>>,
     pub tenant: String,
+    pub watch_tx: Arc<watch::Sender<()>>,
+    pub index: Arc<RwLock<InvertedIndex>>,
 }

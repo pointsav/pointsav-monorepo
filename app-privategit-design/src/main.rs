@@ -1,18 +1,16 @@
 mod config;
 mod render;
+mod routes;
 mod schema;
 mod state;
 mod vault;
 
-use axum::{
-    extract::{Path, State},
-    http::StatusCode,
-    response::{Html, IntoResponse, Redirect, Response},
-    routing::get,
-    Router,
+use moonshot_index::{Document, InvertedIndex};
+use std::{path::Path, sync::Arc};
+use tokio::{
+    net::TcpListener,
+    sync::{watch, RwLock},
 };
-use std::{fs, sync::Arc};
-use tokio::net::TcpListener;
 use tower_http::compression::CompressionLayer;
 
 use config::Config;
@@ -23,91 +21,126 @@ use vault::SECTIONS;
 async fn main() {
     let cfg = Config::from_env();
     let nav = Arc::new(vault::discover_nav(&cfg.vault));
+    let index = Arc::new(RwLock::new(InvertedIndex::new()));
+
+    populate_index(&cfg.vault, &index).await;
+
     eprintln!(
-        "app-privategit-design v{}: vault={:?} elements={}",
+        "app-privategit-design v{}: vault={:?} elements={} indexed={}",
         env!("CARGO_PKG_VERSION"),
         cfg.vault,
-        nav.get("elements").map(|v| v.len()).unwrap_or(0)
+        nav.get("elements").map(|v| v.len()).unwrap_or(0),
+        index.read().await.len(),
     );
+
+    let (watch_tx, _initial_rx) = watch::channel(());
+    let watch_tx = Arc::new(watch_tx);
+
+    // Bridge blocking inotify thread → async index update + SSE broadcast
+    let watcher = moonshot_fs_watch::FsWatcher::watch(&cfg.vault);
+    {
+        let watch_tx2 = watch_tx.clone();
+        let vault2 = cfg.vault.clone();
+        let index2 = index.clone();
+        let (path_tx, mut path_rx) = tokio::sync::mpsc::channel::<std::path::PathBuf>(64);
+
+        tokio::task::spawn_blocking(move || {
+            for path in watcher.rx {
+                if path_tx.blocking_send(path).is_err() {
+                    break;
+                }
+            }
+        });
+
+        tokio::spawn(async move {
+            while let Some(path) = path_rx.recv().await {
+                if is_indexable_md(&path) {
+                    reindex_file(&path, &vault2, &index2).await;
+                }
+                let _ = watch_tx2.send(());
+            }
+        });
+    }
 
     let state = AppState {
         vault: cfg.vault,
         nav,
         tenant: cfg.tenant,
+        watch_tx,
+        index,
     };
 
-    let app = Router::new()
-        .route("/healthz", get(healthz))
-        .route("/", get(index))
-        .route("/elements/:slug", get(element_redirect))
-        .route("/elements/:slug/:tab", get(element_tab))
-        .with_state(state)
-        .layer(CompressionLayer::new());
+    let app = routes::build_router(state).layer(CompressionLayer::new());
 
     let listener = TcpListener::bind(&cfg.bind).await.expect("bind failed");
     eprintln!("app-privategit-design listening on {}", cfg.bind);
     axum::serve(listener, app).await.expect("serve failed");
 }
 
-async fn healthz() -> impl IntoResponse {
-    (StatusCode::OK, "ok")
+fn is_indexable_md(path: &Path) -> bool {
+    let lossy = path.to_string_lossy();
+    path.is_file()
+        && lossy.ends_with(".md")
+        && !lossy.ends_with(".es.md")
 }
 
-async fn index(State(state): State<AppState>) -> Html<String> {
-    let nav_html = render::render_nav(&state.nav, SECTIONS, "", "");
-    let content = "<div class=\"home-body\"><h1>PointSav Design System</h1>\
-                   <p>Select an element from the sidebar.</p></div>";
-    Html(render::shell("PointSav Design System", &nav_html, "", "", content))
-}
-
-async fn element_redirect(Path(slug): Path<String>, State(state): State<AppState>) -> Response {
-    if slug.contains("..") || slug.contains('/') {
-        return (StatusCode::BAD_REQUEST, "invalid").into_response();
-    }
-    let tabs = vault::discover_tabs(&state.vault, "elements", &slug);
-    let first = tabs
-        .into_iter()
-        .next()
-        .unwrap_or_else(|| "overview".to_string());
-    Redirect::permanent(&format!("/elements/{}/{}", slug, first)).into_response()
-}
-
-async fn element_tab(
-    Path((slug, tab)): Path<(String, String)>,
-    State(state): State<AppState>,
-) -> Response {
-    if slug.contains("..") || slug.contains('/') || tab.contains("..") || tab.contains('/') {
-        return (StatusCode::BAD_REQUEST, "invalid").into_response();
-    }
-    let tabs = vault::discover_tabs(&state.vault, "elements", &slug);
-    if tabs.is_empty() {
-        return (StatusCode::NOT_FOUND, "element not found").into_response();
-    }
-    let md_path = state
-        .vault
-        .join("elements")
-        .join(&slug)
-        .join(format!("{}.md", tab));
-    let raw = match fs::read_to_string(&md_path) {
-        Ok(s) => s,
-        Err(_) => return (StatusCode::NOT_FOUND, "tab not found").into_response(),
+async fn reindex_file(path: &Path, _vault: &Path, index: &Arc<RwLock<InvertedIndex>>) {
+    let Ok(content) = tokio::fs::read_to_string(path).await else {
+        return;
     };
+    let (fm, body) = vault::parse_frontmatter(&content);
+    let title = fm
+        .get("name")
+        .or_else(|| fm.get("title"))
+        .cloned()
+        .unwrap_or_else(|| {
+            path.file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("")
+                .to_string()
+        });
+    let doc = Document {
+        id: path.to_string_lossy().to_string(),
+        title,
+        body,
+    };
+    index.write().await.insert(doc);
+}
 
-    // Schema-aware rendering dispatch (D2)
-    let (frontmatter, body) = vault::parse_frontmatter(&raw);
-    let schema_type = schema::detect(&frontmatter);
-    let content = schema::render(schema_type, &frontmatter, &body);
-
-    let nav_html = render::render_nav(&state.nav, SECTIONS, "elements", &slug);
-    let tab_bar = render::render_tab_bar("elements", &slug, &tabs, &tab);
-    let label = vault::to_title(&slug);
-
-    Html(render::shell(
-        &format!("{} — PointSav Design System", label),
-        &nav_html,
-        &tab_bar,
-        &label,
-        &content,
-    ))
-    .into_response()
+async fn populate_index(vault: &Path, index: &Arc<RwLock<InvertedIndex>>) {
+    let mut idx = index.write().await;
+    for section in SECTIONS {
+        let sec_dir = vault.join(section);
+        let Ok(entries) = std::fs::read_dir(&sec_dir) else {
+            continue;
+        };
+        for entry in entries.filter_map(|e| e.ok()) {
+            if !entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
+                continue;
+            }
+            let Ok(files) = std::fs::read_dir(entry.path()) else {
+                continue;
+            };
+            for file in files.filter_map(|e| e.ok()) {
+                let name = file.file_name().to_string_lossy().to_string();
+                if !name.ends_with(".md") || name.ends_with(".es.md") {
+                    continue;
+                }
+                let Ok(content) = std::fs::read_to_string(file.path()) else {
+                    continue;
+                };
+                let (fm, body) = vault::parse_frontmatter(&content);
+                let title = fm
+                    .get("name")
+                    .or_else(|| fm.get("title"))
+                    .cloned()
+                    .unwrap_or_else(|| name[..name.len() - 3].to_string());
+                idx.insert(Document {
+                    id: file.path().to_string_lossy().to_string(),
+                    title,
+                    body,
+                });
+            }
+        }
+    }
 }

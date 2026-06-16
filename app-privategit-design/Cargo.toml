@@ -15,11 +15,18 @@ tokio = { version = "1", features = ["full"] }
 # HTTP middleware (future sovereign: moonshot-http)
 tower-http = { version = "0.5", features = ["compression-full"] }
 # Markdown → HTML (sovereign stub exists: pointsav-monorepo/moonshot-markup)
-pulldown-cmark = { version = "0.11", default-features = false, features = ["html"] }
+pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
+# Query param deserialization (sovereign target: moonshot-toolkit)
+serde = { version = "1", features = ["derive"] }
+# Sovereign FS watcher — inotify (replaces notify crate; stub → active 2026-06-15)
+moonshot-fs-watch = { path = "../moonshot-fs-watch" }
+# Sovereign in-memory search index (replaces tantivy; stub → active 2026-06-15)
+moonshot-index = { path = "../moonshot-index" }
 
 # --- "We Own It" dep map (BRIEF-app-privategit-design.md §D8) ---
 # askama (compile-time templates)   → moonshot-template  (stub added 2026-06-15)
 # syntect (syntax highlighting)     → moonshot-highlight  (stub added 2026-06-15)
-# notify  (FS watch)                → moonshot-fs-watch   (stub added 2026-06-15)
+# notify  (FS watch)                → moonshot-fs-watch   (active 2026-06-15)
+# tantivy (full-text search)        → moonshot-index      (active 2026-06-15)
 # rusqlite (SQLite token index)     → moonshot-database   (stub exists in monorepo)
 # serde_json (DTCG token parsing)   → moonshot-toolkit    (stub exists in monorepo)

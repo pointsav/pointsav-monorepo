@@ -51,6 +51,9 @@ members = [
     "app-mediakit-marketing",
     # Design system browser (port 9094)
     "app-privategit-design",
+    # Sovereign replacement stubs (wired into app-privategit-design)
+    "moonshot-fs-watch",
+    "moonshot-index",
 ]
 
 [profile.dev]
