@@ -1,260 +1,235 @@
-use std::sync::mpsc;
-use std::time::Duration;
-
-use app_console_keys::cartridge::{Cartridge, CartridgeAction};
-use app_console_keys::fkey::FKey;
 use crossterm::event::{Event, KeyCode};
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
     Frame,
 };
-use serde::Deserialize;
+use std::sync::mpsc;
 
-// ── Contact model ─────────────────────────────────────────────────────────────
+use app_console_keys::{
+    cartridge::{Cartridge, CartridgeAction},
+    colors::{tc_accent, tc_muted},
+    fkey::FKey,
+};
 
-#[derive(Debug, Clone, Deserialize)]
-pub struct Contact {
-    pub id: String,
-    pub name: String,
-    #[serde(default)]
-    pub linkedin_url: Option<String>,
-    #[serde(default)]
-    pub timezone: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct ContactsResponse {
-    contacts: Vec<Contact>,
-}
-
-// ── State machine ─────────────────────────────────────────────────────────────
-
-enum PeopleState {
-    Loading,
-    List,
-    Detail,
-    Error(String),
+#[derive(Debug, Clone)]
+struct Person {
+    id: String,
+    name: String,
+    email: String,
+    role: Option<String>,
 }
 
 enum BgMsg {
-    Contacts(Vec<Contact>),
+    People(Vec<Person>),
     Err(String),
 }
 
-// ── PeopleCartridge ───────────────────────────────────────────────────────────
+enum PeopleView {
+    List,
+    Detail(usize),
+}
 
 pub struct PeopleCartridge {
-    state: PeopleState,
-    contacts: Vec<Contact>,
-    list_state: ListState,
-    plain: bool,
     truecolor: bool,
+    people: Vec<Person>,
+    list_state: ListState,
+    view: PeopleView,
+    status: String,
     bg_rx: mpsc::Receiver<BgMsg>,
+    refresh_tx: mpsc::SyncSender<()>,
 }
 
 impl PeopleCartridge {
-    pub fn new(endpoint: impl Into<String>, plain: bool) -> Self {
-        let endpoint = endpoint.into();
+    pub fn new_for(endpoint: &str) -> Self {
+        let (refresh_tx, refresh_rx) = mpsc::sync_channel::<()>(4);
         let (bg_tx, bg_rx) = mpsc::channel::<BgMsg>();
 
-        std::thread::spawn(move || {
-            fetch_contacts(&endpoint, &bg_tx);
-        });
-
-        let mut list_state = ListState::default();
-        list_state.select(Some(0));
+        let ep = endpoint.to_string();
+        std::thread::spawn(move || fetch_loop(ep, bg_tx, refresh_rx));
 
         Self {
-            state: PeopleState::Loading,
-            contacts: Vec::new(),
-            list_state,
-            plain,
             truecolor: false,
+            people: Vec::new(),
+            list_state: ListState::default(),
+            view: PeopleView::List,
+            status: "Press R to load contacts".into(),
             bg_rx,
+            refresh_tx,
         }
     }
 
-    fn accent_color(&self) -> Color {
-        if self.truecolor {
-            Color::Rgb(32, 178, 170)
-        } else {
-            Color::Cyan
-        }
+    fn trigger_refresh(&self) {
+        let _ = self.refresh_tx.try_send(());
     }
 
-    fn selection_bg(&self) -> Color {
-        if self.truecolor {
-            Color::Rgb(0, 95, 135)
-        } else {
-            Color::DarkGray
+    fn drain_bg(&mut self) {
+        while let Ok(msg) = self.bg_rx.try_recv() {
+            match msg {
+                BgMsg::People(people) => {
+                    let n = people.len();
+                    self.people = people;
+                    self.status = format!("{} contacts", n);
+                    if !self.people.is_empty() && self.list_state.selected().is_none() {
+                        self.list_state.select(Some(0));
+                    }
+                }
+                BgMsg::Err(e) => {
+                    self.status = format!("Error: {}", e);
+                }
+            }
         }
-    }
-
-    fn move_up(&mut self) {
-        if self.contacts.is_empty() {
-            return;
-        }
-        let i = self.list_state.selected().unwrap_or(0);
-        self.list_state.select(Some(if i == 0 {
-            self.contacts.len() - 1
-        } else {
-            i - 1
-        }));
-    }
-
-    fn move_down(&mut self) {
-        if self.contacts.is_empty() {
-            return;
-        }
-        let i = self.list_state.selected().unwrap_or(0);
-        self.list_state.select(Some((i + 1) % self.contacts.len()));
-    }
-
-    fn selected_contact(&self) -> Option<&Contact> {
-        self.list_state
-            .selected()
-            .and_then(|i| self.contacts.get(i))
     }
 
     fn render_list(&mut self, frame: &mut Frame, area: Rect) {
-        let block = Block::default()
-            .title(" F2: People — Directory ")
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(self.accent_color()));
-        let inner = block.inner(area);
-        frame.render_widget(block, area);
+        let muted = tc_muted(self.truecolor);
+        let accent = tc_accent(self.truecolor);
+        let status_text = self.status.clone();
+
+        let outer = Block::default().title(" F2 — People ").borders(Borders::ALL);
+        let inner = outer.inner(area);
+        frame.render_widget(outer, area);
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Min(1), Constraint::Length(1)])
+            .constraints([Constraint::Fill(1), Constraint::Length(1)])
             .split(inner);
 
-        if self.contacts.is_empty() {
-            frame.render_widget(
-                Paragraph::new("  No contacts.").style(Style::default().fg(Color::DarkGray)),
-                chunks[0],
-            );
-        } else {
-            let items: Vec<ListItem> = self
-                .contacts
-                .iter()
-                .map(|c| {
-                    let tz = c.timezone.as_deref().unwrap_or("—");
-                    let line = Line::from(vec![
-                        Span::styled(
-                            format!("  {:<32}", truncate(&c.name, 31)),
-                            Style::default().fg(Color::White),
-                        ),
-                        Span::styled(
-                            format!("  {}", truncate(tz, 20)),
-                            Style::default().fg(Color::DarkGray),
-                        ),
-                    ]);
-                    ListItem::new(line)
-                })
-                .collect();
+        let items: Vec<ListItem> = self
+            .people
+            .iter()
+            .map(|p| {
+                let role_tag = p
+                    .role
+                    .as_deref()
+                    .map(|r| format!(" [{}]", r))
+                    .unwrap_or_default();
+                ListItem::new(Line::from(vec![
+                    Span::styled(p.name.clone(), Style::default().fg(Color::White)),
+                    Span::styled(format!("  {}", p.email), Style::default().fg(muted)),
+                    Span::styled(role_tag, Style::default().fg(accent)),
+                ]))
+            })
+            .collect();
 
-            let list = List::new(items)
-                .highlight_style(if self.plain {
-                    Style::default().add_modifier(Modifier::REVERSED)
-                } else {
-                    Style::default()
-                        .bg(self.selection_bg())
-                        .add_modifier(Modifier::BOLD)
-                })
-                .highlight_symbol("> ");
-            frame.render_stateful_widget(list, chunks[0], &mut self.list_state);
-        }
+        let list = List::new(items)
+            .highlight_style(
+                Style::default()
+                    .bg(accent)
+                    .fg(Color::Black)
+                    .add_modifier(Modifier::BOLD),
+            )
+            .highlight_symbol("▶ ");
+        frame.render_stateful_widget(list, chunks[0], &mut self.list_state);
 
-        let hint_text = " j/k=navigate  Enter=detail  Esc=back";
-        frame.render_widget(
-            Paragraph::new(hint_text).style(Style::default().fg(Color::DarkGray)),
-            chunks[1],
-        );
+        let hint = Line::from(vec![
+            Span::styled(" j/k ", Style::default().fg(accent)),
+            Span::raw("nav  "),
+            Span::styled(" Enter ", Style::default().fg(accent)),
+            Span::raw("detail  "),
+            Span::styled(" N ", Style::default().fg(accent)),
+            Span::raw("new  "),
+            Span::styled(" R ", Style::default().fg(accent)),
+            Span::raw("refresh    "),
+            Span::styled(status_text, Style::default().fg(muted)),
+        ]);
+        frame.render_widget(Paragraph::new(hint), chunks[1]);
     }
 
-    fn render_detail(&self, frame: &mut Frame, area: Rect) {
-        let Some(c) = self.selected_contact() else {
+    fn render_detail_inner(frame: &mut Frame, area: Rect, person: Option<&Person>, truecolor: bool) {
+        let muted = tc_muted(truecolor);
+        let accent = tc_accent(truecolor);
+
+        let Some(person) = person else {
+            frame.render_widget(Paragraph::new("  Contact not found"), area);
             return;
         };
-        let block = Block::default()
-            .title(format!(" {} ", c.name))
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(self.accent_color()));
-        let inner = block.inner(area);
-        frame.render_widget(block, area);
 
-        let mut lines = vec![
+        let outer = Block::default()
+            .title(format!(" {} ", person.name))
+            .borders(Borders::ALL);
+        let inner = outer.inner(area);
+        frame.render_widget(outer, area);
+
+        let lines = vec![
             Line::from(""),
             Line::from(vec![
-                Span::styled("  Name:      ", Style::default().fg(Color::DarkGray)),
-                Span::styled(c.name.clone(), Style::default().fg(Color::White)),
-            ]),
-            Line::from(vec![
-                Span::styled("  ID:        ", Style::default().fg(Color::DarkGray)),
-                Span::styled(c.id.clone(), Style::default().fg(Color::DarkGray)),
-            ]),
-            Line::from(vec![
-                Span::styled("  Timezone:  ", Style::default().fg(Color::DarkGray)),
+                Span::styled("  Name:   ", Style::default().fg(muted)),
                 Span::styled(
-                    c.timezone.clone().unwrap_or_else(|| "—".into()),
+                    person.name.clone(),
+                    Style::default()
+                        .fg(Color::White)
+                        .add_modifier(Modifier::BOLD),
+                ),
+            ]),
+            Line::from(vec![
+                Span::styled("  Email:  ", Style::default().fg(muted)),
+                Span::styled(person.email.clone(), Style::default().fg(accent)),
+            ]),
+            Line::from(vec![
+                Span::styled("  Role:   ", Style::default().fg(muted)),
+                Span::styled(
+                    person.role.as_deref().unwrap_or("—").to_string(),
                     Style::default().fg(Color::White),
                 ),
             ]),
-        ];
-        if let Some(url) = &c.linkedin_url {
-            lines.push(Line::from(vec![
-                Span::styled("  LinkedIn:  ", Style::default().fg(Color::DarkGray)),
-                Span::styled(url.clone(), Style::default().fg(self.accent_color())),
-            ]));
-        }
-        lines.push(Line::from(""));
-        lines.push(Line::from(Span::styled(
-            "  [Esc: back to list]",
-            Style::default().fg(Color::DarkGray),
-        )));
-
-        frame.render_widget(Paragraph::new(lines).wrap(Wrap { trim: false }), inner);
-    }
-
-    fn render_loading(&self, frame: &mut Frame, area: Rect) {
-        let block = Block::default().title(" F2: People ").borders(Borders::ALL);
-        let inner = block.inner(area);
-        frame.render_widget(block, area);
-        frame.render_widget(
-            Paragraph::new("  Loading contacts…").style(Style::default().fg(Color::DarkGray)),
-            inner,
-        );
-    }
-
-    fn render_error_state(&self, frame: &mut Frame, area: Rect, msg: &str) {
-        let block = Block::default()
-            .title(" F2: People — Unavailable ")
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(Color::DarkGray));
-        let inner = block.inner(area);
-        frame.render_widget(block, area);
-        frame.render_widget(
-            Paragraph::new(vec![
-                Line::from(""),
-                Line::from(Span::styled(
-                    format!(
-                        "  {} service-people unavailable",
-                        if self.plain { "[!]" } else { "⚠" }
-                    ),
-                    Style::default().fg(Color::Yellow),
-                )),
-                Line::from(""),
-                Line::from(Span::styled(
-                    format!("  {}", msg),
-                    Style::default().fg(Color::DarkGray),
-                )),
+            Line::from(vec![
+                Span::styled("  ID:     ", Style::default().fg(muted)),
+                Span::styled(person.id.clone(), Style::default().fg(muted)),
             ]),
-            inner,
-        );
+            Line::from(""),
+            Line::from(vec![
+                Span::styled(" E ", Style::default().fg(accent)),
+                Span::raw("edit  "),
+                Span::styled(" D ", Style::default().fg(accent)),
+                Span::raw("delete  "),
+                Span::styled(" Esc ", Style::default().fg(accent)),
+                Span::raw("back"),
+            ]),
+        ];
+        frame.render_widget(Paragraph::new(lines), inner);
+    }
+}
+
+fn fetch_loop(endpoint: String, tx: mpsc::Sender<BgMsg>, rx: mpsc::Receiver<()>) {
+    loop {
+        if rx.recv().is_err() {
+            break;
+        }
+        let url = format!("{}/v1/people", endpoint);
+        match reqwest::blocking::get(&url) {
+            Ok(resp) if resp.status().is_success() => match resp.json::<serde_json::Value>() {
+                Ok(json) => {
+                    let people = json
+                        .as_array()
+                        .map(|arr| {
+                            arr.iter()
+                                .filter_map(|v| {
+                                    Some(Person {
+                                        id: v["id"].as_str()?.to_string(),
+                                        name: v["name"].as_str().unwrap_or("Unknown").to_string(),
+                                        email: v["email"].as_str().unwrap_or("").to_string(),
+                                        role: v["role"].as_str().map(|s| s.to_string()),
+                                    })
+                                })
+                                .collect()
+                        })
+                        .unwrap_or_default();
+                    let _ = tx.send(BgMsg::People(people));
+                }
+                Err(e) => {
+                    let _ = tx.send(BgMsg::Err(e.to_string()));
+                }
+            },
+            Ok(resp) => {
+                let _ = tx.send(BgMsg::Err(format!("HTTP {}", resp.status())));
+            }
+            Err(e) => {
+                let _ = tx.send(BgMsg::Err(e.to_string()));
+            }
+        }
     }
 }
 
@@ -267,6 +242,10 @@ impl Cartridge for PeopleCartridge {
         "People"
     }
 
+    fn tick(&mut self) {
+        self.drain_bg();
+    }
+
     fn set_graphics_caps(
         &mut self,
         _kitty: bool,
@@ -277,37 +256,19 @@ impl Cartridge for PeopleCartridge {
         self.truecolor = truecolor;
     }
 
-    fn tick(&mut self) {
-        while let Ok(msg) = self.bg_rx.try_recv() {
-            match msg {
-                BgMsg::Contacts(contacts) => {
-                    self.contacts = contacts;
-                    if !self.contacts.is_empty() && self.list_state.selected().is_none() {
-                        self.list_state.select(Some(0));
-                    }
-                    self.state = PeopleState::List;
-                }
-                BgMsg::Err(e) => {
-                    self.state = PeopleState::Error(e);
-                }
-            }
-        }
-    }
-
     fn render(&mut self, frame: &mut Frame, area: Rect) {
-        // render_list needs &mut self (stateful widget); separate it before the shared borrow.
-        if matches!(self.state, PeopleState::List) {
-            self.render_list(frame, area);
-            return;
-        }
-        match &self.state {
-            PeopleState::Loading => self.render_loading(frame, area),
-            PeopleState::Detail => self.render_detail(frame, area),
-            PeopleState::Error(msg) => {
-                let msg = msg.clone();
-                self.render_error_state(frame, area, &msg);
+        self.drain_bg();
+        let detail_idx = match self.view {
+            PeopleView::List => None,
+            PeopleView::Detail(i) => Some(i),
+        };
+        match detail_idx {
+            None => self.render_list(frame, area),
+            Some(idx) => {
+                let person = self.people.get(idx).cloned();
+                let truecolor = self.truecolor;
+                Self::render_detail_inner(frame, area, person.as_ref(), truecolor);
             }
-            PeopleState::List => unreachable!(),
         }
     }
 
@@ -316,79 +277,64 @@ impl Cartridge for PeopleCartridge {
             return CartridgeAction::None;
         };
 
-        if matches!(self.state, PeopleState::List) {
-            return match key.code {
+        let in_list = matches!(self.view, PeopleView::List);
+        let detail_idx = if let PeopleView::Detail(i) = self.view {
+            Some(i)
+        } else {
+            None
+        };
+
+        if in_list {
+            match key.code {
+                KeyCode::Char('r') | KeyCode::Char('R') => {
+                    self.status = "Loading\u{2026}".into();
+                    self.trigger_refresh();
+                }
                 KeyCode::Char('j') | KeyCode::Down => {
-                    self.move_down();
-                    CartridgeAction::Consumed
+                    let next = self
+                        .list_state
+                        .selected()
+                        .map(|i| (i + 1).min(self.people.len().saturating_sub(1)))
+                        .unwrap_or(0);
+                    self.list_state.select(Some(next));
                 }
                 KeyCode::Char('k') | KeyCode::Up => {
-                    self.move_up();
-                    CartridgeAction::Consumed
+                    let prev = self
+                        .list_state
+                        .selected()
+                        .map(|i| i.saturating_sub(1))
+                        .unwrap_or(0);
+                    self.list_state.select(Some(prev));
                 }
                 KeyCode::Enter => {
-                    if self.selected_contact().is_some() {
-                        self.state = PeopleState::Detail;
+                    if let Some(idx) = self.list_state.selected() {
+                        if idx < self.people.len() {
+                            self.view = PeopleView::Detail(idx);
+                        }
                     }
-                    CartridgeAction::Consumed
                 }
-                KeyCode::Esc => CartridgeAction::GoBack,
-                _ => CartridgeAction::None,
-            };
-        }
-
-        if matches!(self.state, PeopleState::Detail) {
-            return match key.code {
+                KeyCode::Char('n') | KeyCode::Char('N') => {
+                    self.status = "New contact \u{2014} not yet implemented".into();
+                }
+                _ => return CartridgeAction::None,
+            }
+        } else if let Some(_idx) = detail_idx {
+            match key.code {
                 KeyCode::Esc | KeyCode::Char('q') => {
-                    self.state = PeopleState::List;
-                    CartridgeAction::Consumed
+                    self.view = PeopleView::List;
                 }
-                _ => CartridgeAction::None,
-            };
-        }
-
-        CartridgeAction::None
-    }
-}
-
-// ── Background fetch ──────────────────────────────────────────────────────────
-
-fn fetch_contacts(endpoint: &str, tx: &mpsc::Sender<BgMsg>) {
-    let client = match reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(5))
-        .build()
-    {
-        Ok(c) => c,
-        Err(e) => {
-            let _ = tx.send(BgMsg::Err(format!("client: {e}")));
-            return;
-        }
-    };
-    let url = format!("{}/v1/people", endpoint);
-    match client.get(&url).send() {
-        Ok(resp) if resp.status().is_success() => match resp.json::<ContactsResponse>() {
-            Ok(r) => {
-                let _ = tx.send(BgMsg::Contacts(r.contacts));
+                KeyCode::Char('e') | KeyCode::Char('E') => {
+                    self.status = "Edit \u{2014} not yet implemented".into();
+                    self.view = PeopleView::List;
+                }
+                KeyCode::Char('d') | KeyCode::Char('D') => {
+                    self.status = "Delete \u{2014} not yet implemented".into();
+                    self.view = PeopleView::List;
+                }
+                _ => return CartridgeAction::None,
             }
-            Err(e) => {
-                let _ = tx.send(BgMsg::Err(format!("parse: {e}")));
-            }
-        },
-        Ok(resp) => {
-            let _ = tx.send(BgMsg::Err(format!("HTTP {}", resp.status())));
         }
-        Err(e) => {
-            let _ = tx.send(BgMsg::Err(format!("service-people unavailable: {e}")));
-        }
-    }
-}
 
-fn truncate(s: &str, max: usize) -> String {
-    if s.chars().count() <= max {
-        s.to_string()
-    } else {
-        let mut out: String = s.chars().take(max.saturating_sub(1)).collect();
-        out.push('…');
-        out
+        CartridgeAction::Consumed
     }
 }
