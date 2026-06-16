@@ -51,6 +51,9 @@ pub const SIDEBAR_ORDER: &[(&str, &str)] = &[
     ("identity-codes", "Identity + Codes"),
     ("relationships", "Relationships"),
     ("key-plans", "Key Plans"),
+    ("amenity-key-plan", "Amenity Key Plans"),
+    ("retail-select", "Retail Select"),
+    ("tech-industrial", "Tech Industrial"),
 ];
 
 pub fn known_categories() -> HashMap<&'static str, CatMeta> {
@@ -141,6 +144,27 @@ pub fn known_categories() -> HashMap<&'static str, CatMeta> {
         intro: "Key Plans are the smallest BIM Object unit — spatial programs defined by furniture placement and three-zone cross-section.",
         elements: "Private Office · Medical · Business · Laboratory · Academic · Civic · Corporate Office",
         card_desc: "Spatial programs with zone depths, furniture programs, and compliance data",
+    });
+    m.insert("amenity-key-plan", CatMeta {
+        display_name: "Amenity Key Plans",
+        ifc_anchor: "IfcSpace",
+        intro: "Non-leasable building amenity and service spaces for Professional Centre and Suburban Office development classes.",
+        elements: "IfcSpace · IfcTransportElement · IfcAnnotation",
+        card_desc: "Tenant Lounge · Lobby Atrium · Loading · Restrooms · Coffee/Bread · Building service rooms",
+    });
+    m.insert("retail-select", CatMeta {
+        display_name: "Retail Select",
+        ifc_anchor: "IfcSpace",
+        intro: "Single-storey neighbourhood retail leaseholds where the Tile equals the Floor Plate — no building core deduction.",
+        elements: "IfcSpace",
+        card_desc: "RA-1 Small (4,500 SF) · RB-2 Medium (6,700 SF) · RC-3 Large (7,700 SF)",
+    });
+    m.insert("tech-industrial", CatMeta {
+        display_name: "Tech Industrial",
+        ifc_anchor: "IfcSpace",
+        intro: "Single-storey light-industrial and R&D leaseholds where the Tile equals the Floor Plate — no building core deduction.",
+        elements: "IfcSpace",
+        card_desc: "TI-1 Medium (7,200 SF) · TI-2 Large (8,400 SF) · TI-3 Extra Large (9,600 SF)",
     });
     m
 }
