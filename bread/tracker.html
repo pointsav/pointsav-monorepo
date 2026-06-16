@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#164679">
+  <meta name="theme-color" content="#54924E">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="/manifest.json">
@@ -14,15 +14,15 @@
     :root {
       --bg: #F7F9FA;
       --card: #FFFFFF;
-      --primary: #164679;
-      --primary-dark: #0E3A66;
+      --primary: #54924E;
+      --primary-dark: #3D7039;
       --accent: #F57F17;
-      --good: #54924E;
+      --good: #164679;
       --bad: #A2191F;
       --text: #111827;
       --muted: #6B7280;
       --border: #E6E7E8;
-      --hover: #E8EFF7;
+      --hover: #EEF6EC;
     }
 
     body {
@@ -147,7 +147,7 @@
       font-size: 0.8rem;
     }
 
-    .rating-good { background: #EEF6EC; color: var(--good); }
+    .rating-good { background: #E8EFF7; color: var(--good); }
     .rating-mid  { background: #FFFDE7; color: #92660A; }
     .rating-bad  { background: #FFE4E6; color: var(--bad); }
     .rating-none { background: var(--bg); color: var(--muted); }
@@ -1412,7 +1412,7 @@ function svgText(parent, text, attrs) {
 
 function normToColor(n) {
   if (n == null) return '#AAAAAA';
-  return n >= 0.6 ? '#54924E' : n >= 0.3 ? '#F57F17' : '#A2191F';
+  return n >= 0.6 ? '#164679' : n >= 0.3 ? '#F57F17' : '#A2191F';
 }
 
 function ratingColor(l) { return normToColor(normScore(l)); }
@@ -1468,7 +1468,7 @@ function renderFlourGap(loaves) {
   container.insertAdjacentHTML('beforeend', `
     <div class="chart-legend">
       <span>Color = rating:</span>
-      <span style="color:#54924E">&#9679; ≥6</span>
+      <span style="color:#164679">&#9679; ≥6</span>
       <span style="color:#F57F17">&#9679; 3–5</span>
       <span style="color:#A2191F">&#9679; &lt;3</span>
       <span style="color:#AAA">&#9679; unrated</span>
