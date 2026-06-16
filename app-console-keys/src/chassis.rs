@@ -91,6 +91,8 @@ pub struct AppConsoleKeys {
     tenant: String,
     pairing_state: PairingState,
     pair_rx: Option<mpsc::Receiver<PairingEvent>>,
+    // Receives `true` when the reconnect watchdog successfully re-establishes the MBA link.
+    mba_reconnect_rx: Option<mpsc::Receiver<bool>>,
     // Kitty/Sixel graphics protocol (local PTY path only; None over russh).
     picker: Option<Picker>,
     // Cached QR image protocol state for the AwaitingApproval screen.
@@ -111,6 +113,7 @@ impl AppConsoleKeys {
             tenant: tenant.into(),
             pairing_state: PairingState::default(),
             pair_rx: None,
+            mba_reconnect_rx: None,
             picker: None,
             qr_state: None,
             caps: TerminalCaps {
@@ -149,6 +152,10 @@ impl AppConsoleKeys {
 
     pub fn set_pair_rx(&mut self, rx: mpsc::Receiver<PairingEvent>) {
         self.pair_rx = Some(rx);
+    }
+
+    pub fn set_mba_reconnect_rx(&mut self, rx: mpsc::Receiver<bool>) {
+        self.mba_reconnect_rx = Some(rx);
     }
 
     pub fn caps(&self) -> TerminalCaps {
@@ -564,6 +571,15 @@ impl AppConsoleKeys {
             .unwrap_or_default();
         for ev in events {
             self.apply_pairing_event(ev);
+        }
+        // Check for MBA reconnect from watchdog thread.
+        let reconnected = self
+            .mba_reconnect_rx
+            .as_ref()
+            .and_then(|rx| rx.try_recv().ok())
+            .unwrap_or(false);
+        if reconnected {
+            self.mba_status = MbaStatus::Active;
         }
         for c in self.cartridges.values_mut() {
             c.tick();
