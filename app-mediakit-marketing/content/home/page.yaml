@@ -10,17 +10,29 @@ sections:
       label: Contact us
       href: /page/contact
 
-  - type: prose
+  - type: card-grid
+    heading: What we do
+    columns: 3
+    cards:
+      - title: Develop
+        icon: "▣"
+        body: Ground-up commercial development, grounded in site-level analysis.
+      - title: Operate
+        icon: "◈"
+        body: Direct, long-horizon operation of the assets we build.
+      - title: Hold
+        icon: "◆"
+        body: Long holding periods and direct ownership, not quick turnover.
+
+  - type: feature
+    heading: A platform built in-house
     body: |
-      ## What we do
-
-      We acquire, develop, and operate commercial property. Our work is
-      grounded in site-level analysis, long holding periods, and direct
-      ownership of the assets we build.
-
-      The platform underlying our reporting and operations is being built
-      in-house; additional capabilities are planned and will be announced as
-      they are delivered.
+      Our reporting and operations run on software we are building ourselves.
+      Additional capabilities are planned and will be announced as they are
+      delivered.
+    cta:
+      label: Read the disclaimer
+      href: /page/disclaimer
 
   - type: cta
     heading: Enquire about a project
