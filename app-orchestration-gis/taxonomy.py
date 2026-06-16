@@ -477,7 +477,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
     "flooring": {
         "US": ["floor-decor-us"],
         "GB": ["topps-tiles-uk"],
-        "CA": [], "MX": [],
+        "CA": [], "MX": ["interceramic-mx"],
         "FR": [], "DE": [], "ES": [], "IT": [], "GR": [], "PL": [],
         "AT": [], "NL": [], "PT": [],
         "SE": [], "DK": [], "NO": [], "FI": [], "IS": [],
@@ -678,9 +678,10 @@ DISPLAY_NAMES: dict[str, str] = {
     "fastenal-us": "Fastenal",
     "grainger-us": "Grainger",
     "hilti-ch": "Hilti",
-    # VWH — flooring (Phase 1, 2026-06-01)
+    # VWH — flooring (Phase 1, 2026-06-01; Phase 3 MX 2026-06-15)
     "floor-decor-us": "Floor & Decor",
     "topps-tiles-uk": "Topps Tiles",
+    "interceramic-mx": "Interceramic",
     # VWH — tool_rental (Phase 1, 2026-06-01)
     "united-rentals-us": "United Rentals",
     "sunbelt-rentals-us": "Sunbelt Rentals",
