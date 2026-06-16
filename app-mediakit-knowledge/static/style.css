@@ -253,6 +253,14 @@ img { max-width: 100%; display: block; }
 a { color: var(--link); text-decoration: none; transition: color .15s ease; }
 a:hover { color: var(--link-hover); }
 .article__body a { text-decoration: underline; }
+sup, sub { font-size: 0.75em; line-height: 0; position: relative; vertical-align: baseline; }
+sup { top: -0.5em; }
+sub { bottom: -0.25em; }
+.footnotes { border-top: 1px solid var(--rule); margin-top: var(--sp-12); padding-top: var(--sp-6); font-size: var(--text-sm); color: var(--fg-2); }
+.footnotes ol { padding-left: var(--sp-8); }
+.footnotes li { margin-bottom: var(--sp-2); line-height: 1.6; }
+.footnote-ref a, .footnote-backref { font-size: 0.75em; text-decoration: none; color: var(--navy); }
+.footnote-ref a:hover, .footnote-backref:hover { text-decoration: underline; }
 h1, h2, h3, h4, h5, h6 { color: var(--fg-1); margin: 0; font-weight: 700; }
 hr { border: 0; border-top: 1px solid var(--rule); margin: 0; }
 code, kbd, samp {
@@ -815,6 +823,7 @@ div.mobile-toc-drawer:not([aria-hidden]) {
   max-width: var(--content-max); margin: 0 auto; padding: 0 var(--sp-8);
 }
 .site-footer__trademark { font-size: var(--text-xs); color: var(--fg-3); line-height: 1.6; }
+.footer-version { font-size: var(--text-xs); color: var(--fg-4); margin-top: var(--sp-1); }
 
 /* ============================================================================
  * Section 5 — Article surface (Source Serif 4 body, headings, status badge)
@@ -853,6 +862,16 @@ div.mobile-toc-drawer:not([aria-hidden]) {
   transition: background .15s ease;
 }
 .category-chip:hover { background: color-mix(in srgb, var(--navy) 16%, transparent); color: var(--navy-deep); }
+
+/* Audience chips — role indicators from frontmatter `audience:` */
+.audience-chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-3) 0; }
+.audience-chip {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 4px;
+  font-family: var(--font-display); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--fg-2); background: var(--bg-subtle); border: 1px solid var(--border);
+}
 
 /* Hatnote */
 .hatnote {
@@ -1196,6 +1215,43 @@ a.wikilink-missing, a.wiki-redlink { color: var(--color-link-redlink, #cc3333); 
 }
 .browse-list__item a:hover { background: var(--bg-hover); color: var(--fg-1); }
 .browse-list__count { font-family: var(--font-mono); font-size: 12px; color: var(--fg-4); }
+
+/* Cross-instance discovery band */
+.peer-band {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-5);
+  padding: var(--sp-5) var(--sp-6); margin: var(--sp-8) 0;
+  background: var(--bg-subtle); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.peer-band__label {
+  font-family: var(--font-display); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-4);
+}
+.peer-band__link {
+  display: inline-flex; align-items: center; gap: var(--sp-1);
+  font-size: var(--text-sm); font-weight: 600; color: var(--navy);
+  text-decoration: none; transition: color .12s;
+}
+.peer-band__link:hover { color: var(--navy-deep); }
+.peer-band__arrow { width: 10px; height: 10px; opacity: 0.7; }
+
+/* Compact cross-instance strip for article pages */
+.peer-strip {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-6);
+  background: var(--bg-subtle); border-bottom: 1px solid var(--border);
+  font-size: var(--text-xs);
+}
+.peer-strip__label {
+  font-family: var(--font-display); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-4);
+  margin-right: var(--sp-1);
+}
+.peer-strip__link {
+  color: var(--navy); text-decoration: none; font-weight: 500;
+  transition: color .12s;
+}
+.peer-strip__link:hover { color: var(--navy-deep); text-decoration: underline; }
+.peer-strip__link + .peer-strip__link::before { content: "·"; margin-right: var(--sp-3); color: var(--fg-4); }
 
 /* ============================================================================
  * Section 7 — Edit surface (Phase 6 — CodeMirror container sizing)

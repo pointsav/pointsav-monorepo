@@ -242,6 +242,9 @@ fn shell_footer(brand_instance: &str, view_source_slug: Option<&str>) -> maud::M
                     }
                 }
                 p.footer-copyright-line.copyright { (copyright) }
+                p.footer-version {
+                    "app-mediakit-knowledge v" (env!("CARGO_PKG_VERSION"))
+                }
                 p.footer-license {
                     "Content is available under the "
                     a href="https://creativecommons.org/licenses/by/4.0/" rel="license" {
@@ -296,6 +299,7 @@ fn home_chrome(
     site_title: &str,
     brand_theme: Option<&str>,
     brand_instance: &str,
+    peers: &[crate::config::PeerConfig],
     user: Option<&User>,
     pending_count: i64,
 ) -> Markup {
@@ -554,6 +558,19 @@ fn home_chrome(
                         " categories"
                         @if let Some(ref d) = stats.last_updated {
                             " · Updated " (d)
+                        }
+                    }
+                }
+
+                // ── Also on this platform (cross-instance discovery band) ────
+                @if !peers.is_empty() {
+                    aside.peer-band {
+                        span.peer-band__label { "Also on this platform" }
+                        @for peer in peers {
+                            a.peer-band__link href=(peer.url) rel="noopener" {
+                                (peer.label)
+                                (PreEscaped(r#"<svg class="peer-band__arrow" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 5h6M6 3l2 2-2 2"/></svg>"#))
+                            }
                         }
                     }
                 }

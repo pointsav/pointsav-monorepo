@@ -292,7 +292,8 @@ pub fn router(state: AppState) -> Router {
         .route("/special/categories", get(categories_index_page))
         .route("/special/hash-lookup/{hash}", get(hash_lookup_page))
         // Phase 4 Step 4.8 — OpenAPI 3.1 specification
-        .route("/openapi.yaml", get(openapi_yaml));
+        .route("/openapi.yaml", get(openapi_yaml))
+        .route("/openapi.json", get(openapi_json));
     // Phase 4 Step 4.6 — MCP JSON-RPC 2.0 endpoint; only mounted when
     // --enable-mcp is set (default off).
     if mcp_enabled {
@@ -343,17 +344,22 @@ async fn search_complete(
         if hits.len() >= 10 {
             break;
         }
-        let title = if let Ok(text) = fs::read_to_string(&tf.path).await {
+        let (title, lede) = if let Ok(text) = fs::read_to_string(&tf.path).await {
             if let Ok(p) = crate::render::parse_page(&text) {
-                p.frontmatter.title.unwrap_or_else(|| tf.slug.clone())
+                let t = p.frontmatter.title.unwrap_or_else(|| tf.slug.clone());
+                let l = p
+                    .frontmatter
+                    .short_description
+                    .unwrap_or_else(|| crate::feeds::first_paragraph_snippet(&p.body_md, 120));
+                (t, l)
             } else {
-                tf.slug.clone()
+                (tf.slug.clone(), String::new())
             }
         } else {
-            tf.slug.clone()
+            (tf.slug.clone(), String::new())
         };
         if title.to_lowercase().contains(&q) || tf.slug.to_lowercase().contains(&q) {
-            hits.push(json!({"title": title, "slug": tf.slug}));
+            hits.push(json!({"title": title, "slug": tf.slug, "lede": lede}));
         }
     }
     Json(json!(hits))
@@ -401,6 +407,14 @@ async fn openapi_yaml() -> impl IntoResponse {
     )
 }
 
+/// `GET /openapi.json` — compatibility alias; 301-redirects to `/openapi.yaml`.
+///
+/// Allows tool discovery via the conventional `.json` path without duplicating
+/// the spec or misrepresenting the content type.
+async fn openapi_json() -> impl IntoResponse {
+    axum::response::Redirect::permanent("/openapi.yaml")
+}
+
 #[derive(Deserialize)]
 struct IndexQueryParams {
     /// Present as `?noredirect=1` (or any value) to suppress Accept-Language → /es/ redirect.
@@ -411,6 +425,10 @@ struct IndexQueryParams {
 struct SearchQueryParams {
     #[serde(default)]
     q: String,
+    /// Filter results to a single category slug (matches the slug prefix, e.g. `architecture`).
+    category: Option<String>,
+    /// Filter results to a single status value (e.g. `active`, `stub`, `pre-build`).
+    status: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -534,11 +552,46 @@ async fn search_page(
     CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     let query = params.q.trim().to_string();
-    let hits = if query.is_empty() {
+    let filter_category = params.category.as_deref().map(str::trim).filter(|s| !s.is_empty());
+    let filter_status = params.status.as_deref().map(str::trim).filter(|s| !s.is_empty());
+
+    let raw_hits = if query.is_empty() {
         Vec::new()
     } else {
-        run_search(&state.search, &query, 25)?
+        run_search(&state.search, &query, 50)?
     };
+
+    // Post-search filters: category by slug prefix, status by frontmatter read.
+    let mut hits = Vec::new();
+    for hit in raw_hits {
+        if hits.len() >= 25 {
+            break;
+        }
+        // Category filter: slug prefix match (e.g. "architecture/slug").
+        if let Some(cat) = filter_category {
+            let prefix = format!("{cat}/");
+            if !hit.slug.starts_with(&prefix) {
+                continue;
+            }
+        }
+        // Status filter: read frontmatter (only for filtered result set, ≤50 hits).
+        if let Some(wanted_status) = filter_status {
+            let path = state.primary_path().join(format!("{}.md", hit.slug));
+            let ok = if let Ok(text) = fs::read_to_string(&path).await {
+                if let Ok((fm, _)) = crate::walker::parse_frontmatter(&text) {
+                    fm.status.as_deref() == Some(wanted_status)
+                } else {
+                    false
+                }
+            } else {
+                false
+            };
+            if !ok {
+                continue;
+            }
+        }
+        hits.push(hit);
+    }
 
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     Ok(chrome(
@@ -558,6 +611,8 @@ async fn search_page(
                     placeholder="Search TOPICs"
                     autocomplete="off"
                     autofocus?[query.is_empty()];
+                input type="hidden" name="category" value=(filter_category.unwrap_or(""));
+                input type="hidden" name="status" value=(filter_status.unwrap_or(""));
                 button type="submit" { "Search" }
             }
             @if !query.is_empty() {
@@ -566,6 +621,11 @@ async fn search_page(
                         "No results for "
                         em { (query) }
                         "."
+                        @if filter_category.is_some() || filter_status.is_some() {
+                            " (filters active — "
+                            a href={ "/search?q=" (query) } { "clear filters" }
+                            ")"
+                        }
                     }
                 } @else {
                     p.search-summary {
@@ -573,6 +633,12 @@ async fn search_page(
                         " result" @if hits.len() != 1 { "s" }
                         " for "
                         em { (query) }
+                        @if let Some(cat) = filter_category {
+                            " in category "" (cat) """
+                        }
+                        @if let Some(st) = filter_status {
+                            " with status "" (st) """
+                        }
                         "."
                     }
                     ol.search-results {
