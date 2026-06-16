@@ -1,0 +1,10 @@
+[package]
+name = "app-workplace-aibridge"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+moonshot-docengine = { path = "../moonshot-docengine" }
+moonshot-crdt = { path = "../moonshot-crdt" }
