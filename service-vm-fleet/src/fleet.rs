@@ -1,5 +1,5 @@
 use chrono::Utc;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use system_vm_fleet_types::{
     FleetStatus, NodeHeartbeat, NodeId, NodeRecord, VmId, VmRecord, VmState,
 };
@@ -25,7 +25,6 @@ impl NodeRegistry {
 
     pub fn update_node(&mut self, hb: &NodeHeartbeat) {
         let ram_available = hb.ram_total_mb.saturating_sub(hb.ram_used_mb);
-        let vm_count = hb.vms.len() as u32;
 
         let entry = self
             .nodes
@@ -36,7 +35,7 @@ impl NodeRegistry {
                     hostname: hb.hostname.clone(),
                     wg_ip: hb.wg_ip.clone(),
                     ram_available_mb: ram_available,
-                    vm_count,
+                    vm_count: 0,
                     kvm_available: hb.kvm_available,
                     reserved: hb.reserved,
                     last_heartbeat: hb.timestamp_utc,
@@ -47,16 +46,25 @@ impl NodeRegistry {
         entry.record.hostname = hb.hostname.clone();
         entry.record.wg_ip = hb.wg_ip.clone();
         entry.record.ram_available_mb = ram_available;
-        entry.record.vm_count = vm_count;
         entry.record.kvm_available = hb.kvm_available;
         entry.record.reserved = hb.reserved;
         entry.record.last_heartbeat = hb.timestamp_utc;
 
-        // Sync VM records from heartbeat
-        entry.vms.clear();
+        // Merge VM records from heartbeat rather than replacing wholesale.
+        //
+        // The host is the source of truth for VMs it can see via QMP. Insert or
+        // update every VM it reports. Retain Provisioning/Error VMs absent from
+        // the heartbeat — they are not yet visible to the host because QEMU has
+        // not started (or has failed). Evict Running VMs that have disappeared
+        // from the host view; those have been killed externally.
+        let hb_ids: HashSet<&str> = hb.vms.iter().map(|v| v.vm_id.as_str()).collect();
         for vm in &hb.vms {
             entry.vms.insert(vm.vm_id.clone(), vm.clone());
         }
+        entry
+            .vms
+            .retain(|id, vm| hb_ids.contains(id.as_str()) || !matches!(vm.state, VmState::Running));
+        entry.record.vm_count = entry.vms.len() as u32;
     }
 
     /// Remove nodes that have not sent a heartbeat within STALE_THRESHOLD_SECS.
@@ -281,6 +289,101 @@ mod tests {
         assert_eq!(reg.get_node("node-a").unwrap().vm_count, 1);
         assert!(reg.remove_vm("vm-1"));
         assert_eq!(reg.get_node("node-a").unwrap().vm_count, 0);
+    }
+
+    #[test]
+    fn provisioning_vm_survives_heartbeat_without_it() {
+        let mut reg = NodeRegistry::new();
+        reg.update_node(&make_heartbeat("node-a", 8192, 2048));
+        reg.register_vm(
+            "node-a",
+            VmRecord {
+                vm_id: "vm-prov-1".to_string(),
+                vm_type: "VmTotebox".to_string(),
+                state: VmState::Provisioning,
+                ram_alloc_mb: 2048,
+                vcpu_count: 2,
+                started_at: None,
+            },
+        );
+        // Heartbeat without this VM (QEMU not yet started — no QMP socket).
+        reg.update_node(&make_heartbeat("node-a", 8192, 2048));
+        let vm = reg
+            .get_vm("vm-prov-1")
+            .expect("provisioning VM must survive heartbeat");
+        assert!(matches!(vm.state, VmState::Provisioning));
+    }
+
+    #[test]
+    fn running_vm_evicted_when_absent_from_heartbeat() {
+        let mut reg = NodeRegistry::new();
+        reg.update_node(&make_heartbeat("node-a", 8192, 2048));
+        reg.register_vm(
+            "node-a",
+            VmRecord {
+                vm_id: "vm-run-evict".to_string(),
+                vm_type: "VmTotebox".to_string(),
+                state: VmState::Running,
+                ram_alloc_mb: 2048,
+                vcpu_count: 2,
+                started_at: None,
+            },
+        );
+        // Next heartbeat from host does not include this VM (killed externally).
+        reg.update_node(&make_heartbeat("node-a", 8192, 2048));
+        assert!(reg.get_vm("vm-run-evict").is_none());
+    }
+
+    #[test]
+    fn error_vm_survives_heartbeat_without_it() {
+        let mut reg = NodeRegistry::new();
+        reg.update_node(&make_heartbeat("node-a", 8192, 2048));
+        reg.register_vm(
+            "node-a",
+            VmRecord {
+                vm_id: "vm-err-1".to_string(),
+                vm_type: "VmTotebox".to_string(),
+                state: VmState::Error,
+                ram_alloc_mb: 2048,
+                vcpu_count: 2,
+                started_at: None,
+            },
+        );
+        reg.update_node(&make_heartbeat("node-a", 8192, 2048));
+        assert!(reg.get_vm("vm-err-1").is_some());
+    }
+
+    #[test]
+    fn vm_count_reflects_merged_provisioning_plus_heartbeat_vms() {
+        let mut reg = NodeRegistry::new();
+        reg.update_node(&make_heartbeat("node-a", 8192, 2048));
+        // Fleet registered a Provisioning VM (create handler).
+        reg.register_vm(
+            "node-a",
+            VmRecord {
+                vm_id: "vm-prov-count".to_string(),
+                vm_type: "VmTotebox".to_string(),
+                state: VmState::Provisioning,
+                ram_alloc_mb: 2048,
+                vcpu_count: 2,
+                started_at: None,
+            },
+        );
+        // Host heartbeat reports a different VM already Running.
+        let mut hb = make_heartbeat("node-a", 8192, 4096);
+        hb.vms = vec![VmRecord {
+            vm_id: "vm-run-count".to_string(),
+            vm_type: "VmTotebox".to_string(),
+            state: VmState::Running,
+            ram_alloc_mb: 2048,
+            vcpu_count: 2,
+            started_at: None,
+        }];
+        reg.update_node(&hb);
+        // Both VMs must be present; count must be 2.
+        assert_eq!(reg.get_node("node-a").unwrap().vm_count, 2);
+        assert!(reg.get_vm("vm-prov-count").is_some());
+        assert!(reg.get_vm("vm-run-count").is_some());
     }
 
     #[test]
