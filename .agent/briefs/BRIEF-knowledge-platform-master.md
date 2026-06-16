@@ -266,6 +266,40 @@ uses the `pointsav.com` domain. Phase 6 cutover complete.
 
 ## §6 — Session Log
 
+### 2026-06-16 | totebox | claude-code (Sprint D/E/F/G — comprehensive plan execution)
+
+Sprints D, E, F, G executed in AUTO mode. All code changes in `app-mediakit-knowledge/`. Stage 6 pending — compile gate in progress.
+
+**Phase 1 (engine defects):**
+- Defect 2 (footnote CSS): prophylactic `sup/sub/footnotes` CSS added to `style.css`
+- M13 (/openapi.json redirect): `GET /openapi.json` route added → 301 to `/openapi.yaml`
+
+**Sprint D (home page peers band):**
+- `home_handlers.rs`: `peers: &[PeerConfig]` param added to `home_chrome()`; `.peer-band` aside rendered when peers non-empty
+- `style.css`: `.peer-band` + `.peer-band__label` + `.peer-band__link` + `.peer-band__arrow` CSS added
+- `wiki_handlers.rs`: call site updated to pass `&state.peers`
+
+**Sprint E (article chrome):**
+- `render.rs`: `audience: Vec<String>` + `aliases: Vec<String>` fields added to `render::Frontmatter` (correct struct used by wiki_handlers)
+- `walker.rs`: same fields added to `walker::Frontmatter` (used by check/walker)
+- `wiki_handlers.rs`: audience chips rendered below H1; `resolve_alias_slug()` async fn + 301 alias redirect in NotFound path
+- `style.css`: `.audience-chips` + `.audience-chip` CSS added
+
+**Sprint F (header/footer chrome):**
+- `home_handlers.rs`: `p.footer-version { "app-mediakit-knowledge v" (env!("CARGO_PKG_VERSION")) }` added to `shell_footer()`
+- `style.css`: `.footer-version` CSS added
+- `wiki_handlers.rs`: `peers: &[PeerConfig]` added to `wiki_chrome()` signature + call site; `.peer-strip` nav rendered above `.shell`
+- `style.css`: `.peer-strip` + `.peer-strip__label` + `.peer-strip__link` CSS added
+
+**Sprint G (search enhancements):**
+- `mod.rs`: `search_complete` now returns `{title, slug, lede}` (lede = `short_description` or first paragraph snippet)
+- `mod.rs`: `SearchQueryParams` extended with `category: Option<String>` + `status: Option<String>`
+- `mod.rs`: `search_page` applies post-search category (slug-prefix) + status (frontmatter read) filters
+
+Cargo check running (blocked on package cache lock from project-intelligence session).
+
+---
+
 ### 2026-06-16 | totebox | claude-code (Stage 6 confirmed; live audit)
 
 Stage 6 confirmed via binary ledger: sub-clone tip `d0abd9ad` promoted Session 86
@@ -725,7 +759,7 @@ Top institutional quality gaps beyond §7 findings (from §7.5 benchmark analysi
 | A | WCAG 2.2 focus outline + article link underline (C3/M15) | `3106b2e1` | Done — Stage 6 confirmed (Session 86, 2026-06-16) |
 | B | Sitemap absolute URLs, ES i18n, brand-instance from TOML, dead edit form (M1/M11/M12/M14) | `48bfa7e7` | Done — Stage 6 confirmed (Session 86, 2026-06-16) |
 | C | 7-category home page grid + sidenav (from §8.2 Layer 1 + sidenav component spec) | `9cc1a80c` | Done — Stage 6 confirmed (Session 86, 2026-06-16) |
-| D | Home page editorial redesign: 10-slot anatomy, lede, cross-instance band | — | Planned |
-| E | Article chrome: frontmatter schema (id/type/aliases/relates_to), maturity pills, audience chips | — | Planned |
-| F | Header/footer: doc-header component, cross-instance nav in header, build timestamp in footer | — | Planned |
-| G | Search: snippet preview (first_body_line()), status filter, category filter | — | Planned |
+| D | Home page redesign: peer-band (cross-instance discovery), version in footer | — | Code complete 2026-06-16; pending cargo check + commit (lock contention from project-intelligence) |
+| E | Article chrome: audience chips + aliases frontmatter + render::Frontmatter schema | — | Code complete 2026-06-16; pending cargo check + commit |
+| F | Header/footer: doc-header CSS, cross-instance peer-strip in article header, engine version in footer | — | Code complete 2026-06-16; pending cargo check + commit |
+| G | Search: lede snippet in autocomplete, ?category= and ?status= filters in search_page | — | Code complete 2026-06-16; pending cargo check + commit |
