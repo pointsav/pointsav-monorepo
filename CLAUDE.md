@@ -1,54 +1,79 @@
 @~/Foundry/AGENT.md
 
-# pointsav-monorepo — Sub-clone Guide
+# project-knowledge — Archive Guide
 
-> This CLAUDE.md covers the `pointsav-monorepo/` sub-clone common to all
-> Totebox Archives that use the monorepo as their vendor leg.
-> **Archive-level guidance (mission, tetrad, MCP startup) lives in `../CLAUDE.md`.**
+> **State:** active | **Last updated:** 2026-06-16
+> **Cluster manifest:** `.agent/manifest.md`
 > **Workspace AGENT.md takes precedence on conflict.**
 
 ---
 
-## Sub-clone role
+## Cluster mission
 
-`pointsav-monorepo` is the vendor-leg sub-clone for any Totebox Archive whose
-work lives in this monorepo. Commit here via `commit-as-next.sh`; promote to
-canonical (`vendor/pointsav-monorepo`) via Command Session `promote.sh`.
+`app-mediakit-knowledge` — Wikipedia-pattern HTTP knowledge wiki engine (Apache 2.0).
+Single Rust binary; 3 live instances on vault-privategit-source-1.
+Substrate substitution for MediaWiki per Doctrine claim #29.
 
-The monorepo is shared — multiple Totebox Archives may have clones of it.
-Never force-push; never reset --hard without operator approval and all sessions
-confirming inactive.
+**Live instances:** documentation.pointsav.com (:9090) · projects.woodfinegroup.com (:9093) · corporate (:9095).
+**Phase 9 complete 2026-06-14:** WCAG 2.2 focus outline; sitemap/i18n repairs; defects 1/4/8 fixed; Sprint C 7-category IA.
+**Next:** Sprint D (home page redesign); Defect 2 (footnotes CSS); blueprint rendering; Phase 1 mobile foundation (Inter + Source Serif 4 approved).
 
-## Fast gates
+## Tetrad
 
-```
-cargo check -p <crate>
-cargo test -p <crate>
-cargo clippy -p <crate> -- -D warnings
-cargo fmt -p <crate> --check
-```
+See `.agent/manifest.md` `tetrad:` block for the canonical declaration.
 
-Substitute the crate for the active project. For project-knowledge: `app-mediakit-knowledge`.
+## At session start
 
-## Key layout
+Per `~/Foundry/AGENT.md` § Session roles:
 
-```
-pointsav-monorepo/
-├── Cargo.toml              workspace manifest (all member crates)
-├── app-mediakit-knowledge/ wiki engine (project-knowledge focus)
-├── app-console-*/          TUI cartridges (project-console focus)
-├── service-*/              backend services
-└── scripts/                xtask, dtcg-to-css.py, stage6-gate.sh
-```
+1. Confirm role: `~/Foundry/bin/foundry-role.sh` (Totebox Session expected)
+2. Write session lock: `.agent/engines/<engine-id>/session.lock`
+3. Read `.agent/manifest.md` — cluster mission + tetrad
+4. Call `get_session_brief(role="totebox", archive="project-knowledge")` — replaces inbox, NOTAM, session-context reads
+5. Read `~/Foundry/NOTAM.md` — only if `notam_active: true` from step 4
+6. Read `.agent/rules/*.md` if present
 
-## Commit rules
+## Hard rules
 
-- `git add <specific files>` — never `git add .`
-- `~/Foundry/bin/commit-as-next.sh "<type>(<scope>): <message>"` from sub-clone CWD
-- Run `cargo test -p <crate>` before every commit
-- If unpromoted commits exist, write `"Stage 6 pending — project-knowledge — <crate>"` to outbox
+`~/Foundry/AGENT.md` § Hard rules — identity store immutable, never chmod;
+preview before writing; edit in place (no _V2 files); one session per repo;
+Bloomberg standard; BCSC posture; SYS-ADR-07/10/19.
+`~/Foundry/CLAUDE.md` § Size discipline — per-archive CLAUDE.md ≤ 150 lines.
+
+## Build notes
+
+- Crate: `app-mediakit-knowledge` in `pointsav-monorepo/app-mediakit-knowledge/`
+- Fast gate: `cargo check -p app-mediakit-knowledge`
+- Test gate: `cargo test -p app-mediakit-knowledge` (67 unit + 70+ integration)
+- Lint gate: `cargo clippy -p app-mediakit-knowledge -- -D warnings`
+- Run locally: `cargo run -p app-mediakit-knowledge -- serve --content-dir <path>`
+- Doorman endpoint: `http://localhost:9080`
+
+## Commit + promote
+
+Commits via `~/Foundry/bin/commit-as-next.sh "<message>"` (from archive root or sub-clone).
+Stage 6 promotion via `~/Foundry/bin/promote.sh` from Command Session.
+**Stage 6 current:** Sub-clone at `d0abd9ad`; binary rebuilt; all 3 instances live (Session 86, 2026-06-16).
 
 ## Conflicts
 
-Surface via archive outbox (`../.agent/outbox.md`) — not here.
-Do not write to another archive's state files.
+Surface conflicts via outbox to Command Session — do not silently override.
+
+## MCP tools — `foundry` server (use at startup)
+
+`get_session_brief(role="totebox", archive="project-knowledge")` replaces manually reading
+inbox.md, outbox.md, NOTAM.md, session-context.md. Call it first.
+
+| Tool | When to use |
+|---|---|
+| `get_session_brief` | **First call at startup** — inbox, outbox, NOTAM, session-context |
+| `send_mailbox_message` | Send any mailbox message (M-2/M-10 audit compliant) |
+| `get_doorman_status` | Tier A/B/C + circuit state |
+| `query_datagraph` | Entity lookup before answering about people/projects |
+| `ask_local` | OLMo 7B local inference — free, SYS-ADR-07-safe |
+
+## Artifact types — bright-line rules
+
+TOPIC = explains WHAT/WHY; public wiki; bilingual EN+ES.
+GUIDE = instructs HOW-NOW; woodfine-fleet-deployment/<name>/; English-only.
+CODE = runs our systems; no customer license; internal deploy only.
