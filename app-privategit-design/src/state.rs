@@ -1,3 +1,4 @@
+use minijinja::Environment;
 use moonshot_index::InvertedIndex;
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 use tokio::sync::{watch, RwLock};
@@ -12,4 +13,5 @@ pub struct AppState {
     pub watch_tx: Arc<watch::Sender<()>>,
     pub index: Arc<RwLock<InvertedIndex>>,
     pub edit_token: Arc<String>,
+    pub env: Arc<Environment<'static>>,
 }

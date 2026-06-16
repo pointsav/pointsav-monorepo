@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }}</title>
+<link rel="stylesheet" href="/static/tokens.css">
+<link rel="stylesheet" href="/static/portal.css">
+</head>
+<body>
+<header><a href="/">PointSav Design System</a></header>
+<div class="layout">
+<nav class="sidebar">{{ nav_html | safe }}</nav>
+<div class="main">
+{{ tab_bar | safe }}
+{% if page_title %}<h1 class="page-title">{{ page_title }}</h1>
+{% endif %}
+<div class="content">{{ content | safe }}</div>
+</div>
+</div>
+<script>
+var _es=new EventSource('/sidebar/sse');
+_es.onmessage=function(e){var n=document.querySelector('nav.sidebar');if(n)n.innerHTML=e.data;};
+</script>
+<script defer src="/static/drawer.js"></script>
+<script defer src="/static/edit.js"></script>
+<script defer src="/static/ai.js"></script>
+</body>
+</html>

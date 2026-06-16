@@ -6,6 +6,7 @@ mod schema;
 mod state;
 mod vault;
 
+use minijinja::{path_loader, Environment};
 use moonshot_index::{Document, InvertedIndex};
 use std::{path::Path, sync::Arc};
 use tokio::{
@@ -66,6 +67,11 @@ async fn main() {
     let edit_token = Arc::new(generate_token());
     eprintln!("app-privategit-design edit token: {}", edit_token);
 
+    let mut jinja = Environment::new();
+    jinja.set_loader(path_loader(concat!(env!("CARGO_MANIFEST_DIR"), "/templates")));
+    jinja.add_filter("to_title", |s: String| -> String { vault::to_title(&s) });
+    let env = Arc::new(jinja);
+
     let state = AppState {
         vault: cfg.vault,
         nav,
@@ -74,6 +80,7 @@ async fn main() {
         watch_tx,
         index,
         edit_token,
+        env,
     };
 
     let app = routes::build_router(state).layer(CompressionLayer::new());
