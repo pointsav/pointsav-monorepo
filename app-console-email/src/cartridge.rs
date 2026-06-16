@@ -105,6 +105,19 @@ impl EmailCartridge {
         }
     }
 
+    fn muted_color(&self) -> Color {
+        app_console_keys::colors::tc_muted(self.truecolor)
+    }
+    fn warn_color(&self) -> Color {
+        app_console_keys::colors::tc_warn(self.truecolor)
+    }
+    fn error_color(&self) -> Color {
+        app_console_keys::colors::tc_error(self.truecolor)
+    }
+    fn accent_color(&self) -> Color {
+        app_console_keys::colors::tc_accent(self.truecolor)
+    }
+
     fn move_up(&mut self) {
         if self.messages.is_empty() {
             return;
@@ -208,22 +221,6 @@ impl EmailCartridge {
         self.compose_focus = ComposeField::To;
     }
 
-    fn accent_color(&self) -> Color {
-        if self.truecolor {
-            Color::Rgb(32, 178, 170)
-        } else {
-            Color::Cyan
-        }
-    }
-
-    fn selection_bg(&self) -> Color {
-        if self.truecolor {
-            Color::Rgb(0, 95, 135)
-        } else {
-            Color::DarkGray
-        }
-    }
-
     fn render_inbox(&mut self, frame: &mut Frame, area: Rect) {
         let block = Block::default()
             .title(" Email — Inbox ")
@@ -282,7 +279,7 @@ impl EmailCartridge {
                     Style::default().add_modifier(Modifier::REVERSED)
                 } else {
                     Style::default()
-                        .bg(self.selection_bg())
+                        .bg(self.muted_color())
                         .add_modifier(Modifier::BOLD)
                 })
                 .highlight_symbol("> ");
@@ -293,7 +290,7 @@ impl EmailCartridge {
             Style::default().fg(if self.plain {
                 Color::Reset
             } else {
-                Color::DarkGray
+                self.muted_color()
             }),
         );
         frame.render_widget(hint, chunks[1]);
@@ -323,7 +320,7 @@ impl EmailCartridge {
             Paragraph::new(" Esc/q=back  R=reply").style(Style::default().fg(if self.plain {
                 Color::Reset
             } else {
-                Color::DarkGray
+                self.muted_color()
             }));
         frame.render_widget(hint, chunks[1]);
     }
@@ -361,7 +358,7 @@ impl EmailCartridge {
         );
 
         let body_style = if self.compose_focus == ComposeField::Body && !self.plain {
-            Style::default().fg(Color::Yellow)
+            Style::default().fg(self.warn_color())
         } else {
             Style::default()
         };
@@ -381,14 +378,14 @@ impl EmailCartridge {
         .style(Style::default().fg(if self.plain {
             Color::Reset
         } else {
-            Color::DarkGray
+            self.muted_color()
         }));
         frame.render_widget(hint, chunks[3]);
     }
 
     fn render_field(&self, frame: &mut Frame, area: Rect, label: &str, value: &str, active: bool) {
         let style = if active && !self.plain {
-            Style::default().fg(Color::Yellow)
+            Style::default().fg(self.warn_color())
         } else {
             Style::default()
         };
@@ -412,7 +409,7 @@ impl EmailCartridge {
             .border_style(if self.plain {
                 Style::default()
             } else {
-                Style::default().fg(Color::Red)
+                Style::default().fg(self.error_color())
             });
         let inner = block.inner(area);
         frame.render_widget(block, area);
@@ -420,7 +417,7 @@ impl EmailCartridge {
             .style(if self.plain {
                 Style::default()
             } else {
-                Style::default().fg(Color::Red)
+                Style::default().fg(self.error_color())
             })
             .wrap(Wrap { trim: false });
         frame.render_widget(para, inner);
@@ -532,13 +529,7 @@ impl Cartridge for EmailCartridge {
         "Email"
     }
 
-    fn set_graphics_caps(
-        &mut self,
-        _kitty: bool,
-        _sixel: bool,
-        _font_size: (u16, u16),
-        truecolor: bool,
-    ) {
+    fn set_graphics_caps(&mut self, _kitty: bool, _sixel: bool, _font_size: (u16, u16), truecolor: bool) {
         self.truecolor = truecolor;
     }
 
