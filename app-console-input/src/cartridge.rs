@@ -161,7 +161,7 @@ pub struct InputCartridge {
 
 impl InputCartridge {
     pub fn new() -> Self {
-        Self::new_for("operator", "local", "http://127.0.0.1:9100")
+        Self::new_for("operator", "local", "http://127.0.0.1:9106")
     }
 
     pub fn new_for(
