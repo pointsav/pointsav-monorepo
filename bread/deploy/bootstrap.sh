@@ -65,16 +65,7 @@ cp "$BREAD_DIR/deploy/nginx-bread.conf" /etc/nginx/sites-available/bread.woodfin
 ln -sf /etc/nginx/sites-available/bread.woodfinegroup.com \
         /etc/nginx/sites-enabled/bread.woodfinegroup.com
 
-# 9. htpasswd
-if [ ! -f /etc/nginx/bread.htpasswd ]; then
-  echo ""
-  echo "==> Set a password for the 'jennifer' account:"
-  htpasswd -c /etc/nginx/bread.htpasswd jennifer
-else
-  echo "    /etc/nginx/bread.htpasswd already exists — skipping (run 'htpasswd /etc/nginx/bread.htpasswd jennifer' to reset)"
-fi
-
-# 10. Test + reload nginx
+# 9. Test + reload nginx
 nginx -t
 systemctl reload nginx
 echo ""
