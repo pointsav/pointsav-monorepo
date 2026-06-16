@@ -53,17 +53,13 @@ pub fn is_noise_entity_name(name: &str) -> bool {
     }
     // Numeric-prefix: entities that start with a digit or decimal are counts,
     // measurements, or data fragments ("5.0 km of the cluster centroid", "3,904 of 14,332")
-    if trimmed
-        .chars()
-        .next()
-        .map_or(false, |c| c.is_ascii_digit())
-    {
+    if trimmed.chars().next().is_some_and(|c| c.is_ascii_digit()) {
         return true;
     }
     // Sentence fragment starters (expanded from 4 → 14)
     const FRAGMENT_STARTERS: [&str; 14] = [
-        "the ", "a ", "an ", "this ", "all ", "any ", "each ", "most ",
-        "some ", "these ", "those ", "section ", "for ", "of ",
+        "the ", "a ", "an ", "this ", "all ", "any ", "each ", "most ", "some ", "these ",
+        "those ", "section ", "for ", "of ",
     ];
     if FRAGMENT_STARTERS.iter().any(|p| lower.starts_with(p)) {
         return true;
@@ -76,10 +72,24 @@ pub fn is_noise_entity_name(name: &str) -> bool {
     // Only applied to single-word entries (multi-word proper nouns are fine).
     if !trimmed.contains(' ') {
         const ABSTRACT_NOUNS: [&str; 18] = [
-            "framework", "model", "hypothesis", "hypotheses", "pipeline",
-            "approach", "process", "mechanism", "algorithm", "methodology",
-            "criterion", "criteria", "paradigm", "construct", "abstraction",
-            "concept", "system", "architecture",
+            "framework",
+            "model",
+            "hypothesis",
+            "hypotheses",
+            "pipeline",
+            "approach",
+            "process",
+            "mechanism",
+            "algorithm",
+            "methodology",
+            "criterion",
+            "criteria",
+            "paradigm",
+            "construct",
+            "abstraction",
+            "concept",
+            "system",
+            "architecture",
         ];
         if ABSTRACT_NOUNS.contains(&lower.as_str()) {
             return true;
@@ -268,7 +278,9 @@ mod tests {
         assert!(is_noise_entity_name("all formal verification proofs"));
         assert!(is_noise_entity_name("some of the clusters"));
         assert!(is_noise_entity_name("each tier definition"));
-        assert!(is_noise_entity_name("Section 7 states the falsification programme"));
+        assert!(is_noise_entity_name(
+            "Section 7 states the falsification programme"
+        ));
     }
 
     #[test]
