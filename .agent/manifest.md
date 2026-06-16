@@ -1,45 +1,40 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster: project-editorial
-cluster_name: project-editorial
-cluster_branch: cluster/project-editorial
-created: 2026-05-01
+cluster: project-intelligence
+cluster_name: project-intelligence
+cluster_branch: main
+created: 2026-05-27
 state: active
-slm_endpoint: http://localhost:8011
-module_id: editorial
+slm_endpoint: http://localhost:9080
+module_id: jennifer
 
 tetrad:
   vendor:
     - repo: pointsav-monorepo
-      path: pointsav-monorepo/
+      path: ./
       upstream: vendor/pointsav-monorepo
       focus: >
-        system-core/ + system-ledger/ + system-ledger-proto/ + system-ledger-server/
-        + system-ledger-pd/ + system-substrate/ + system-substrate-netbsd/
-        + service-vm-fleet/ + service-vm-tenant/ + service-vm-host/
-        + service-extraction/ + os-totebox/ + app-privategit-source/
-        + app-privategit-marketplace/ + tool-wallet/
-      status: active (Phase 1 UEFI boot complete 2026-06-12; Phase 2 in progress)
+        service-slm/crates/slm-doorman-server/ (Doorman + circuit breaker + LoRA training),
+        service-content/ (DataGraph entity extraction, LadybugDB),
+        service-extraction/ (extraction pipeline)
+      status: active
   customer:
     - status: leg-pending
       note: >
-        GUIDE entries for os-totebox deployment procedures and PPN fleet operations
-        planned for woodfine-fleet-deployment once Phase 2 hardening is complete.
+        No woodfine-fleet-deployment catalog entries committed yet.
+        local-doorman.service is live but not cataloged.
   deployment:
     - status: active
       note: >
-        os-totebox Phase 1 UEFI boot milestone COMPLETE 2026-06-12 (commit 92692800).
-        NetBSD 10.1 multiuser under QEMU TCG on GCP e2; system-ledger-server + sshd up;
-        /healthz 200 + /readyz 503 COLD. Phase 2 (Veriexec strict=1) in progress.
+        local-doorman.service (:9080) on vault-privategit-source-1.
+        local-slm.service (OLMo 7B Tier A).
+        yoyo-batch L4 GPU (Tier B) — TERMINATED; restart pending operator approval
+        (us-central1-b; image slm-yoyo-20260512-111846; ML libs install required).
   wiki:
     - status: leg-pending
       note: >
-        TOPICs for Capability Ledger Substrate architecture, PPN VM fleet architecture,
-        and seL4 PD design to be written after Phase 2 complete;
-        route via project-editorial.
+        TOPIC/GUIDE drafts in .agent/drafts-outbound/.
+        T1 (PPN VM Architecture) and T2 (Tenant VM Isolation) STAGED.
+        Pipeline through project-editorial to media-knowledge-documentation.
 
-clones:
-  - repo: pointsav-monorepo
-    role: primary
-    path: pointsav-monorepo/
-    upstream: vendor/pointsav-monorepo
+clones: []
