@@ -78,7 +78,7 @@ revision_history:
     changes: "Readability pass: VPN, NIST/SP, NAT, AES/AES-NI first-use expansions in §1.2, §2.1, §3.1, §5.3"
   - version: "0.5.1"
     date: "2026-06-10"
-    changes: "Language pass §4–§5 (project-editorial): commercial product names genericized in §5.5 (no-competitive-comparisons-by-name rule); forbidden_terms_cleared confirmed for full document."
+    changes: "Language pass §4–§5: commercial product names genericized in §5.5 (no-competitive-comparisons-by-name rule); forbidden_terms_cleared confirmed for full document."
 cites:
   - donenfeld-2017-wireguard
   - rose-2020-nist-800-207
