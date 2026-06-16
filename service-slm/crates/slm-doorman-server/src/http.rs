@@ -744,8 +744,11 @@ struct BatchItem {
     text: String,
     /// JSON Schema constraining the OUTPUT array from the inference model.
     schema: serde_json::Value,
-    /// Per-item inference timeout in seconds (default 180).
+    /// Per-item inference timeout in seconds (default 180). Forward-compat
+    /// field — mirrors ExtractionRequest.timeout_secs; not yet threaded into
+    /// ComputeRequest (timeout is managed by the Yo-Yo circuit deadline).
     #[serde(default = "default_batch_item_timeout")]
+    #[allow(dead_code)]
     timeout_secs: u64,
 }
 
