@@ -1,32 +1,32 @@
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
-#[derive(Serialize, Deserialize, Default, Clone)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct SessionState {
-    pub content_query: Option<String>,
-    pub content_selected: Option<usize>,
-    pub content_scroll: Option<u16>,
+    pub content_query: String,
+}
+
+fn session_path() -> PathBuf {
+    let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
+    PathBuf::from(home).join(".local/share/os-console/session.toml")
 }
 
 impl SessionState {
-    pub fn load(path: &Path) -> Self {
-        std::fs::read_to_string(path)
+    pub fn load() -> Self {
+        let path = session_path();
+        std::fs::read_to_string(&path)
             .ok()
             .and_then(|s| toml::from_str(&s).ok())
             .unwrap_or_default()
     }
 
-    pub fn save(&self, path: &Path) {
+    pub fn save(&self) {
+        let path = session_path();
         if let Some(parent) = path.parent() {
             let _ = std::fs::create_dir_all(parent);
         }
-        if let Ok(text) = toml::to_string_pretty(self) {
-            let _ = std::fs::write(path, text);
+        if let Ok(s) = toml::to_string(self) {
+            let _ = std::fs::write(path, s);
         }
-    }
-
-    pub fn default_path() -> PathBuf {
-        let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
-        PathBuf::from(format!("{}/.config/os-console/session.toml", home))
     }
 }
