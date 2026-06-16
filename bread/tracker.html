@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#8B5E3C">
+  <meta name="theme-color" content="#164679">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="/manifest.json">
@@ -12,17 +12,17 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #F9F5F0;
+      --bg: #F7F9FA;
       --card: #FFFFFF;
-      --primary: #8B5E3C;
-      --primary-dark: #6B4628;
-      --accent: #D4A853;
-      --good: #4A7C59;
-      --bad: #C0392B;
-      --text: #2C1810;
-      --muted: #8C7A6B;
-      --border: #E8DDD4;
-      --hover: #F4EDE6;
+      --primary: #164679;
+      --primary-dark: #0E3A66;
+      --accent: #F57F17;
+      --good: #54924E;
+      --bad: #A2191F;
+      --text: #111827;
+      --muted: #6B7280;
+      --border: #E6E7E8;
+      --hover: #E8EFF7;
     }
 
     body {
@@ -30,6 +30,7 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
     header {
@@ -51,7 +52,12 @@
       border-bottom: 2px solid var(--border);
       display: flex;
       padding: 0 1rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      white-space: nowrap;
+      scrollbar-width: none;
     }
+    nav.tabs::-webkit-scrollbar { display: none; }
 
     nav.tabs button {
       border: none;
@@ -69,7 +75,7 @@
     nav.tabs button.active { color: var(--primary); border-bottom-color: var(--primary); }
     nav.tabs button:hover:not(.active) { color: var(--text); background: var(--hover); }
 
-    main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+    main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; overflow-x: hidden; }
 
     .tab-section { display: none; }
     .tab-section.active { display: block; }
@@ -126,7 +132,7 @@
     .loaf-table tbody tr.expanded td { background: var(--hover); }
 
     .expand-row td {
-      background: #F0EAE3 !important;
+      background: var(--hover) !important;
       padding: 1rem 1.25rem !important;
       cursor: default;
     }
@@ -141,9 +147,9 @@
       font-size: 0.8rem;
     }
 
-    .rating-good { background: #E8F5E9; color: var(--good); }
-    .rating-mid  { background: #FFF8E1; color: #B8860B; }
-    .rating-bad  { background: #FDECEA; color: var(--bad); }
+    .rating-good { background: #EEF6EC; color: var(--good); }
+    .rating-mid  { background: #FFFDE7; color: #92660A; }
+    .rating-bad  { background: #FFE4E6; color: var(--bad); }
     .rating-none { background: var(--bg); color: var(--muted); }
 
     .detail-grid {
@@ -241,6 +247,71 @@
       .form-grid { grid-template-columns: 1fr 1fr; }
     }
 
+    /* ── Mobile card list (replaces table on narrow screens) ── */
+    .loaf-card-list { display: none; }
+
+    .loaf-mobile-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .loaf-mobile-card:hover,
+    .loaf-mobile-card.expanded { background: var(--hover); }
+
+    .loaf-mobile-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.3rem;
+    }
+
+    .loaf-mobile-card-id {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 0.9rem;
+    }
+
+    .loaf-mobile-card-meta {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .loaf-mobile-expand {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      padding: 0.85rem 1rem;
+      margin-top: -2px;
+    }
+
+    @media (max-width: 600px) {
+      main { padding: 0.75rem; }
+
+      nav.tabs button { padding: 0.75rem 0.9rem; font-size: 0.82rem; }
+
+      .loaf-table-wrap { display: none; }
+      .loaf-card-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+      }
+
+      .btn { min-height: 44px; }
+      .form-group input,
+      .form-group select { min-height: 44px; font-size: 16px; }
+
+      .form-grid { grid-template-columns: 1fr; }
+
+      header { padding: 0.85rem 1rem; }
+      header h1 { font-size: 1.2rem; }
+    }
+
     .gap-panel {
       background: white;
       border: 1px solid var(--border);
@@ -279,14 +350,14 @@
 
     /* ── Best loaf card ── */
     .best-card {
-      background: linear-gradient(135deg, #FFF8ED, #FDEECE);
-      border: 1px solid #D4A853;
+      background: linear-gradient(135deg, #EEF3F9, #E8EFF7);
+      border: 1px solid var(--accent);
       border-radius: 8px;
       padding: 1.25rem;
       grid-column: 1 / -1;
     }
 
-    .best-card h3 { font-size: 0.88rem; font-weight: 700; color: #8B6914; margin-bottom: 1rem; }
+    .best-card h3 { font-size: 0.88rem; font-weight: 700; color: var(--primary); margin-bottom: 1rem; }
 
     .best-header { display: flex; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
 
@@ -294,7 +365,7 @@
       font-size: 0.68rem;
       text-transform: uppercase;
       letter-spacing: 0.4px;
-      color: #8B6914;
+      color: var(--primary);
       margin-bottom: 2px;
     }
 
@@ -306,15 +377,15 @@
       text-align: left;
       padding: 0.35rem 0.6rem;
       font-weight: 600;
-      color: #8B6914;
+      color: var(--primary);
       font-size: 0.68rem;
       text-transform: uppercase;
-      border-bottom: 1px solid #E8D9B0;
+      border-bottom: 1px solid var(--border);
     }
 
     .delta-table td {
       padding: 0.35rem 0.6rem;
-      border-bottom: 1px solid #F5ECC8;
+      border-bottom: 1px solid var(--border);
     }
 
     .dp { color: var(--good); font-weight: 700; }
@@ -433,9 +504,9 @@
       margin-left: 0.5rem;
       flex-shrink: 0;
     }
-    .sync-dot.synced  { background: #4fd17a; }
-    .sync-dot.offline { background: #D4A853; }
-    .sync-dot.error   { background: #C0392B; }
+    .sync-dot.synced  { background: var(--good); }
+    .sync-dot.offline { background: var(--accent); }
+    .sync-dot.error   { background: var(--bad); }
     #sync-label { font-size: 0.72rem; opacity: 0.75; }
 
     .score-cell { text-align: center; font-size: 0.85rem; font-weight: 600; color: var(--text); }
@@ -448,7 +519,7 @@
     .pf-page { padding: 8mm 10mm; display: flex; flex-direction: column; gap: 8mm; }
 
     .pf-card {
-      border: 1px solid #c8b89a;
+      border: 1px solid var(--border);
       border-radius: 3px;
       padding: 6mm 7mm 5mm;
       page-break-inside: avoid;
@@ -458,7 +529,7 @@
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      border-bottom: 1.5px solid #8B5E3C;
+      border-bottom: 1.5px solid var(--primary);
       padding-bottom: 2mm;
       margin-bottom: 3mm;
     }
@@ -468,7 +539,7 @@
       font-weight: bold;
       text-transform: uppercase;
       letter-spacing: 2px;
-      color: #5a3a1a;
+      color: var(--primary);
     }
 
     .pf-meta { display: flex; gap: 8mm; }
@@ -484,7 +555,7 @@
       font-size: 6pt;
       text-transform: uppercase;
       letter-spacing: 1.5px;
-      color: #8B5E3C;
+      color: var(--primary);
       font-family: sans-serif;
       font-weight: 700;
       border-bottom: 0.5px solid #ddd;
@@ -612,7 +683,7 @@
           <button class="btn btn-secondary" onclick="exportData()">Export JSON</button>
         </div>
       </div>
-      <div style="overflow-x:auto;margin-top:1rem">
+      <div class="loaf-table-wrap" style="overflow-x:auto;margin-top:1rem">
         <table class="loaf-table">
           <thead>
             <tr>
@@ -634,6 +705,7 @@
           <tbody id="loaf-tbody"></tbody>
         </table>
       </div>
+      <div class="loaf-card-list" id="loaf-card-list"></div>
     </div>
   </section>
 
@@ -1067,12 +1139,17 @@ function renderLoaves() {
   document.getElementById('header-count').textContent = loaves.length + ' loaves tracked';
 
   const tbody = document.getElementById('loaf-tbody');
+  const cardList = document.getElementById('loaf-card-list');
+
   if (loaves.length === 0) {
     tbody.innerHTML = '<tr><td colspan="13"><div class="empty-state">No loaves yet — add your first one!</div></td></tr>';
+    if (cardList) cardList.innerHTML = '<div class="empty-state">No loaves yet — add your first one!</div>';
     return;
   }
 
   tbody.innerHTML = '';
+  if (cardList) cardList.innerHTML = '';
+
   [...loaves].sort((a,b) => b.id - a.id).forEach(l => {
     const f = totalFlour(l);
     const wp = pct(l.white_g, l), wwp = pct(l.wheat_g, l), rp = pct(l.rye_g, l);
@@ -1084,6 +1161,8 @@ function renderLoaves() {
 
     const sl = scoreLabel(l);
     const sc = hasSubScores(l) ? score(l) : null;
+
+    // Desktop table row
     const row = document.createElement('tr');
     row.innerHTML = `
       <td><span class="loaf-num">#${l.id}</span></td>
@@ -1102,7 +1181,78 @@ function renderLoaves() {
     `;
     row.onclick = () => toggleDetail(l, row);
     tbody.appendChild(row);
+
+    // Mobile card
+    if (cardList) {
+      const metaParts = [
+        blend !== '—' ? blend : null,
+        h != null ? h+'% hydration' : null,
+        l.ambient_temp_c != null ? l.ambient_temp_c+'°C' : null,
+        pm != null ? pm+' min proof' : null,
+      ].filter(Boolean);
+
+      const card = document.createElement('div');
+      card.className = 'loaf-mobile-card';
+      card.innerHTML = `
+        <div class="loaf-mobile-card-top">
+          <span class="loaf-mobile-card-id">#${l.id} &mdash; ${l.date || '—'}</span>
+          <span class="rating-badge ${ratingCls(l)}">${sc != null ? sc+'/30' : sl ?? '—'}</span>
+        </div>
+        <div class="loaf-mobile-card-meta">${metaParts.join(' &middot; ') || '—'}</div>
+      `;
+      card.onclick = () => toggleMobileDetail(l, card);
+      cardList.appendChild(card);
+    }
   });
+}
+
+function toggleMobileDetail(l, card) {
+  const next = card.nextSibling;
+  if (next && next.classList && next.classList.contains('loaf-mobile-expand')) {
+    next.remove(); card.classList.remove('expanded'); return;
+  }
+  card.classList.add('expanded');
+  const h = hydration(l), pm = proofMins(l), f = totalFlour(l);
+  const exp = document.createElement('div');
+  exp.className = 'loaf-mobile-expand';
+  exp.onclick = e => e.stopPropagation();
+  exp.innerHTML = `<div class="detail-grid">
+    <div class="detail-item"><span>White flour</span><span>${dot(l.white_g,'g')}</span></div>
+    <div class="detail-item"><span>Wheat flour</span><span>${dot(l.wheat_g,'g')}</span></div>
+    <div class="detail-item"><span>Rye flour</span><span>${dot(l.rye_g,'g')}</span></div>
+    <div class="detail-item"><span>Total flour</span><span>${f ? f+'g' : '—'}</span></div>
+    <div class="detail-item"><span>Water</span><span>${dot(l.water_g,'g')}</span></div>
+    <div class="detail-item"><span>Hydration</span><span>${h != null ? h+'%' : '—'}</span></div>
+    <div class="detail-item"><span>Salt</span><span>${dot(l.salt_g,'g')}</span></div>
+    <div class="detail-item"><span>Starter</span><span>${l.starter_g != null ? l.starter_g+'g' : '—'}</span></div>
+    <div class="detail-item"><span>Starter day</span><span>${l.starter_day != null ? 'Day '+l.starter_day : '—'}</span></div>
+    <div class="detail-item"><span>Ice water</span><span>${l.ice===true?'Yes':l.ice===false?'No':'—'}</span></div>
+    <div class="detail-item"><span>Ambient temp</span><span>${l.ambient_temp_c != null ? l.ambient_temp_c+'°C' : '—'}</span></div>
+    <div class="detail-item"><span>Proof window</span><span>${l.proof_start&&l.proof_end ? l.proof_start+'–'+l.proof_end+(pm?' ('+pm+' min)':'') : '—'}</span></div>
+    ${l.techniques ? `<div class="detail-item" style="grid-column:1/-1"><span>Techniques</span><span>${l.techniques}</span></div>` : ''}
+    ${l.notes ? `<div class="detail-item" style="grid-column:1/-1"><span>Notes</span><span>${l.notes}</span></div>` : ''}
+    ${(hasSubScores(l) || l.overall != null) ? `<div class="detail-item" style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:0.5rem;margin-top:0.25rem">
+      <span>Scores</span>
+      <span style="display:flex;gap:1rem;flex-wrap:wrap">
+        ${l.flavor  != null ? `<span><span style="color:var(--muted);font-size:0.7rem">Flavor </span>${l.flavor}/5</span>` : ''}
+        ${l.crumb   != null ? `<span><span style="color:var(--muted);font-size:0.7rem">Crumb </span>${l.crumb}/5</span>`  : ''}
+        ${l.crust   != null ? `<span><span style="color:var(--muted);font-size:0.7rem">Crust </span>${l.crust}/5</span>`  : ''}
+        ${l.spring  != null ? `<span><span style="color:var(--muted);font-size:0.7rem">Spring </span>${l.spring}/5</span>` : ''}
+        ${l.overall != null ? `<span><span style="color:var(--muted);font-size:0.7rem">Overall </span>${l.overall}/10</span>` : ''}
+        ${hasSubScores(l)   ? `<span style="font-weight:700;color:var(--primary)">Score ${score(l)}/30</span>` : ''}
+      </span>
+    </div>` : ''}
+    ${(l.photos && (l.photos.top || l.photos.bottom || l.photos.crumb || l.photos.scorecard)) ? `<div class="detail-item" style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:0.5rem;margin-top:0.25rem">
+      <span>Photos</span>
+      <div class="photo-thumb-row">
+        ${l.photos.top       ? `<div class="photo-thumb-wrap"><img src="${l.photos.top}"       class="photo-thumb" alt="Top"        onclick="window.open(this.src)"><span class="photo-thumb-label">Top</span></div>`        : ''}
+        ${l.photos.bottom    ? `<div class="photo-thumb-wrap"><img src="${l.photos.bottom}"    class="photo-thumb" alt="Bottom"     onclick="window.open(this.src)"><span class="photo-thumb-label">Bottom</span></div>`     : ''}
+        ${l.photos.crumb     ? `<div class="photo-thumb-wrap"><img src="${l.photos.crumb}"     class="photo-thumb" alt="Crumb"      onclick="window.open(this.src)"><span class="photo-thumb-label">Crumb</span></div>`      : ''}
+        ${l.photos.scorecard ? `<div class="photo-thumb-wrap"><img src="${l.photos.scorecard}" class="photo-thumb" alt="Score Card" onclick="window.open(this.src)"><span class="photo-thumb-label">Score Card</span></div>` : ''}
+      </div>
+    </div>` : ''}
+  </div>`;
+  card.after(exp);
 }
 
 function toggleDetail(l, row) {
@@ -1262,7 +1412,7 @@ function svgText(parent, text, attrs) {
 
 function normToColor(n) {
   if (n == null) return '#AAAAAA';
-  return n >= 0.6 ? '#4A7C59' : n >= 0.3 ? '#D4A853' : '#C0392B';
+  return n >= 0.6 ? '#54924E' : n >= 0.3 ? '#F57F17' : '#A2191F';
 }
 
 function ratingColor(l) { return normToColor(normScore(l)); }
@@ -1295,8 +1445,8 @@ function renderFlourGap(loaves) {
   });
 
   // Axis labels
-  svgText(svg, 'White %', {x:W/2,y:H-1,'text-anchor':'middle','font-size':'8.5',fill:'#8C7A6B'});
-  svgText(svg, 'Wheat %', {x:9,y:H/2,'text-anchor':'middle','font-size':'8.5',fill:'#8C7A6B',transform:`rotate(-90,9,${H/2})`});
+  svgText(svg, 'White %', {x:W/2,y:H-1,'text-anchor':'middle','font-size':'8.5',fill:'#6B7280'});
+  svgText(svg, 'Wheat %', {x:9,y:H/2,'text-anchor':'middle','font-size':'8.5',fill:'#6B7280',transform:`rotate(-90,9,${H/2})`});
 
   valid.forEach(l => {
     const wp  = pct(l.white_g, l);
@@ -1318,9 +1468,9 @@ function renderFlourGap(loaves) {
   container.insertAdjacentHTML('beforeend', `
     <div class="chart-legend">
       <span>Color = rating:</span>
-      <span style="color:#4A7C59">&#9679; ≥6</span>
-      <span style="color:#D4A853">&#9679; 3–5</span>
-      <span style="color:#C0392B">&#9679; &lt;3</span>
+      <span style="color:#54924E">&#9679; ≥6</span>
+      <span style="color:#F57F17">&#9679; 3–5</span>
+      <span style="color:#A2191F">&#9679; &lt;3</span>
       <span style="color:#AAA">&#9679; unrated</span>
       &nbsp;&#9679; size = rye%
     </div>`);
@@ -1382,8 +1532,8 @@ function renderStarterGap(loaves) {
     const col = normToColor(avgNorm);
 
     svg.appendChild(svgEl('rect', {x:PL, y:y+(spacing-barH)/2, width:bw, height:barH, fill:col, opacity:'0.82', rx:'3'}));
-    svgText(svg, amt+'g', {x:PL-3,y:y+spacing/2+3,'text-anchor':'end','font-size':'9',fill:'#2C1810','font-weight':'600'});
-    svgText(svg, '×'+group.length+(avgNorm!=null?' ('+(avgNorm*10).toFixed(1)+')':''), {x:PL+bw+4,y:y+spacing/2+3,'font-size':'8.5',fill:'#8C7A6B'});
+    svgText(svg, amt+'g', {x:PL-3,y:y+spacing/2+3,'text-anchor':'end','font-size':'9',fill:'#111827','font-weight':'600'});
+    svgText(svg, '×'+group.length+(avgNorm!=null?' ('+(avgNorm*10).toFixed(1)+')':''), {x:PL+bw+4,y:y+spacing/2+3,'font-size':'8.5',fill:'#6B7280'});
   });
 
   container.appendChild(svg);
@@ -1442,8 +1592,8 @@ function renderTempGap(loaves) {
     svgText(svg, v, {x:PL-3,y:y+3,'text-anchor':'end','font-size':'8',fill:'#AFA49A'});
   });
 
-  svgText(svg, 'Temp (°C)',   {x:W/2,y:H-1,'text-anchor':'middle','font-size':'8.5',fill:'#8C7A6B'});
-  svgText(svg, 'Proof (min)', {x:9,y:H/2,'text-anchor':'middle','font-size':'8.5',fill:'#8C7A6B',transform:`rotate(-90,9,${H/2})`});
+  svgText(svg, 'Temp (°C)',   {x:W/2,y:H-1,'text-anchor':'middle','font-size':'8.5',fill:'#6B7280'});
+  svgText(svg, 'Proof (min)', {x:9,y:H/2,'text-anchor':'middle','font-size':'8.5',fill:'#6B7280',transform:`rotate(-90,9,${H/2})`});
 
   // Temp-only dots (no proof time) — shown at midpoint y with lower opacity
   withTemp.filter(l=>proofMins(l)==null).forEach(l => {
@@ -1553,7 +1703,7 @@ function renderBestLoaf(loaves) {
         <div class="best-score-label">Worst rated</div>
         <div class="best-score-val" style="color:var(--bad)">#${worst.id} — ${scoreLabel(worst)}</div>
       </div>
-      <div style="font-size:0.8rem;color:#8B6914;align-self:center">
+      <div style="font-size:0.8rem;color:var(--primary);align-self:center">
         ${rated.length} rated loaves &middot; avg ${avgNorm}/10
       </div>
     </div>
@@ -1570,7 +1720,7 @@ function renderBestLoaf(loaves) {
     const bv = f.fn(best), wv = f.fn(worst);
     if (bv==null && wv==null) return;
     html += `<tr>
-      <td style="color:#5A3E28;font-weight:500">${f.label}</td>
+      <td style="color:var(--text);font-weight:500">${f.label}</td>
       <td>${fmtV(bv,f.unit)}</td>
       <td>${fmtV(wv,f.unit)}</td>
       <td>${deltaHtml(bv,wv,f.unit)}</td>
@@ -1582,7 +1732,7 @@ function renderBestLoaf(loaves) {
   const tips = [];
   if (best.techniques) tips.push(`<strong>Techniques:</strong> ${best.techniques}`);
   if (best.notes)      tips.push(`<strong>Notes:</strong> ${best.notes}`);
-  if (tips.length) html += `<div style="margin-top:0.75rem;font-size:0.82rem;color:#8B6914">${tips.join('<br>')}</div>`;
+  if (tips.length) html += `<div style="margin-top:0.75rem;font-size:0.82rem;color:var(--primary)">${tips.join('<br>')}</div>`;
 
   el.innerHTML = html;
 }
