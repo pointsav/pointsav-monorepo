@@ -611,6 +611,13 @@ def build(output_path: Path):
         transit_cats    = sorted(cats & TRANSIT_MODES)
         enrichment_cats = sorted(cats - TRANSIT_MODES)
         mode_grps       = _mode_groups(cats)
+        ec              = _enrich_classes(cats)
+        if t == 1:
+            opp_class = "SATURATED"
+        elif t == 2 and ("RENTAL" in ec or "HOTEL" in ec):
+            opp_class = "EXPAND"
+        else:
+            opp_class = "DEVELOP"
 
         # Airports anchor PKS clusters: use airport name + airport centroid when present.
         airport_members = [i for i in comp if all_recs[i]["category"] == "airport"]
@@ -647,6 +654,7 @@ def build(output_path: Path):
                 "car_rental":        "car_rental" in cats,
                 "hotel":             "hotel" in cats,
                 "pks_signal":        sorted(cats),
+                "opportunity_class": opp_class,
                 "archetype":         "commuter",
             },
         })

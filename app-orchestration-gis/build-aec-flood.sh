@@ -504,28 +504,102 @@ GWIS_CLASSIFIED="$WORK_DIR/gwis-fwi-classified.tif"
 GWIS_GEOJSON="$WORK_DIR/gwis-fwi-global.geojson"
 
 if [[ $SKIP_WILDFIRE -eq 0 && ! -f "$GWIS_GEOJSON" ]]; then
-    # Classify FWI into 5 levels (1=low, 5=extreme)
-    gdal_calc.py \
-        -A "$GWIS_TIF" \
-        --outfile="$GWIS_CLASSIFIED" \
-        --calc="(A>0)*(A<=5.2)*1 + (A>5.2)*(A<=11.2)*2 + (A>11.2)*(A<=21.3)*3 + (A>21.3)*(A<=38.0)*4 + (A>38.0)*5" \
-        --type=Byte \
-        --NoDataValue=0 \
-        --co="COMPRESS=DEFLATE" \
-        2>&1 | tee -a "$LOG"
-
-    gdal_polygonize.py "$GWIS_CLASSIFIED" -f GeoJSON "$GWIS_GEOJSON" wildfire_zones fwi_class \
-        2>&1 | tee -a "$LOG"
-
+    # Classify FWI + polygonize using pure Python GDAL API (avoids numpy 2.x ABI crash
+    # that breaks gdal_calc.py and gdal_polygonize.py compiled against numpy 1.x).
     python3 - <<PYEOF 2>&1 | tee -a "$LOG"
-import json, pathlib
-LABELS = {1:'low',2:'moderate',3:'high',4:'very_high',5:'extreme'}
-p = pathlib.Path("$GWIS_GEOJSON")
-gj = json.loads(p.read_text())
-for f in gj['features']:
-    cls = f['properties'].get('fwi_class',0)
-    f['properties']['wildfire_risk'] = LABELS.get(cls, 'unknown')
-p.write_text(json.dumps(gj))
+import json, struct, pathlib, sys
+from osgeo import gdal, ogr, osr
+
+gdal.UseExceptions()
+LABELS = {1:'low', 2:'moderate', 3:'high', 4:'very_high', 5:'extreme'}
+
+src_path     = "$GWIS_TIF"
+cls_path     = "$GWIS_CLASSIFIED"
+geojson_path = "$GWIS_GEOJSON"
+
+# ── Classify FWI float raster → byte raster ──────────────────────────────────
+src_ds = gdal.Open(src_path, gdal.GA_ReadOnly)
+if src_ds is None:
+    print(f"ERROR: cannot open {src_path}", file=sys.stderr)
+    sys.exit(1)
+
+band   = src_ds.GetRasterBand(1)
+nd     = band.GetNoDataValue()
+cols   = src_ds.RasterXSize
+rows   = src_ds.RasterYSize
+BLOCK  = 512
+
+drv    = gdal.GetDriverByName("GTiff")
+cls_ds = drv.Create(cls_path, cols, rows, 1, gdal.GDT_Byte,
+                    ["COMPRESS=DEFLATE", "TILED=YES"])
+cls_ds.SetGeoTransform(src_ds.GetGeoTransform())
+cls_ds.SetProjection(src_ds.GetProjection())
+cls_band = cls_ds.GetRasterBand(1)
+cls_band.SetNoDataValue(0)
+
+for y in range(0, rows, BLOCK):
+    ysize = min(BLOCK, rows - y)
+    for x in range(0, cols, BLOCK):
+        xsize  = min(BLOCK, cols - x)
+        data   = band.ReadRaster(x, y, xsize, ysize, buf_type=gdal.GDT_Float32)
+        floats = struct.unpack(f"{xsize*ysize}f", data)
+        out    = bytearray(xsize * ysize)
+        for i, v in enumerate(floats):
+            if nd is not None and abs(v - nd) < 1e-6:
+                out[i] = 0
+            elif v <= 0:
+                out[i] = 0
+            elif v <= 5.2:
+                out[i] = 1
+            elif v <= 11.2:
+                out[i] = 2
+            elif v <= 21.3:
+                out[i] = 3
+            elif v <= 38.0:
+                out[i] = 4
+            else:
+                out[i] = 5
+        cls_band.WriteRaster(x, y, xsize, ysize, bytes(out), buf_type=gdal.GDT_Byte)
+
+cls_band.FlushCache()
+cls_ds = None
+src_ds = None
+print("  Classified FWI → byte raster  ✓")
+
+# ── Polygonize ────────────────────────────────────────────────────────────────
+cls_ds   = gdal.Open(cls_path, gdal.GA_ReadOnly)
+cls_band = cls_ds.GetRasterBand(1)
+
+mem_drv  = ogr.GetDriverByName("Memory")
+mem_ds   = mem_drv.CreateDataSource("out")
+srs      = osr.SpatialReference()
+srs.ImportFromEPSG(4326)
+mem_lyr  = mem_ds.CreateLayer("wildfire_zones", srs=srs)
+fd       = ogr.FieldDefn("fwi_class", ogr.OFTInteger)
+mem_lyr.CreateField(fd)
+
+gdal.Polygonize(cls_band, cls_band, mem_lyr, 0, [], callback=None)
+cls_ds = None
+
+# Add wildfire_risk label and write GeoJSON
+feats = []
+for feat in mem_lyr:
+    cls = feat.GetField("fwi_class")
+    if not cls:
+        continue
+    geom = feat.GetGeometryRef()
+    if geom is None:
+        continue
+    feats.append({
+        "type": "Feature",
+        "properties": {"fwi_class": cls, "wildfire_risk": LABELS.get(cls, "unknown")},
+        "geometry": json.loads(geom.ExportToJson()),
+    })
+mem_ds = None
+
+gj = {"type": "FeatureCollection", "features": feats}
+pathlib.Path(geojson_path).write_text(json.dumps(gj))
+print(f"  Polygonized {len(feats)} features → {geojson_path}  ✓")
 PYEOF
 fi
 

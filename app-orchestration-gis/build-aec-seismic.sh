@@ -411,58 +411,26 @@ echo "[6/9] GWL_FCS30 wetland raster tiles (CC BY 4.0, Zenodo 7340516)" | tee -a
 
 GWL_DIR="$WORK_DIR/gwl-tiles"
 GWL_VRT="$WORK_DIR/gwl-fcs30-mosaic.vrt"
-GWL_TIF="$GWL_VRT"  # Step 7 references GWL_TIF; point at mosaic VRT
+GWL_TIF="$WORK_DIR/gwl-fcs30-global.tif"  # materialised TIF for downstream scripts
 mkdir -p "$GWL_DIR"
 
-GWL_TILES=(
-    "GWL_FCS30_2020_W65_W90.zip"   # NA east: eastern US, Maritime Canada
-    "GWL_FCS30_2020_W95_W120.zip"  # NA west: central/western US, BC/Alberta
-    "GWL_FCS30_2020_W35_W60.zip"   # NA northeast: Quebec, Atlantic provinces
-    "GWL_FCS30_2020_E0_E30.zip"    # EU: FR east, DE, NL, Nordics, PL, IT north, GR
-    "GWL_FCS30_2020_W0_W30.zip"    # UK, Ireland, Portugal, western France
-)
-
-GWL_BASE_URL="https://zenodo.org/records/7340516/files"
+# Zenodo record 7340516 distributes 408 individual 5°-lat/lon TIFs
+# (e.g. GWL_FCS30_2020_E0N10.tif), NOT 30°-lon zip archives.
+# Collect all tiles already present in gwl-tiles/ and build a VRT mosaic.
 GWL_TIFS=()
-
-for TILE in "${GWL_TILES[@]}"; do
-    TILE_ZIP="$GWL_DIR/$TILE"
-    TILE_NAME="${TILE%.zip}"
-    TILE_TIF="$GWL_DIR/${TILE_NAME}.tif"
-    if [[ -f "$TILE_TIF" ]]; then
-        GWL_TIFS+=("$TILE_TIF")
-        echo "  Cached: $TILE_TIF" | tee -a "$LOG"
-        continue
-    fi
-    if [[ ! -f "$TILE_ZIP" ]]; then
-        curl -L --retry 3 --retry-delay 30 \
-            -o "$TILE_ZIP" \
-            "${GWL_BASE_URL}/${TILE}" \
-            2>&1 | tee -a "$LOG" || true
-    fi
-    if [[ -f "$TILE_ZIP" && $(stat -c%s "$TILE_ZIP") -gt 1000000 ]]; then
-        unzip -o "$TILE_ZIP" "*.tif" -d "$GWL_DIR" 2>&1 | tee -a "$LOG"
-        EXTRACTED=$(find "$GWL_DIR" -name "${TILE_NAME}*.tif" | head -1)
-        if [[ -n "$EXTRACTED" ]]; then
-            [[ "$EXTRACTED" != "$TILE_TIF" ]] && mv -f "$EXTRACTED" "$TILE_TIF"
-            GWL_TIFS+=("$TILE_TIF")
-            echo "  → $TILE_TIF ($(du -sh "$TILE_TIF" | cut -f1))  ✓" | tee -a "$LOG"
-        else
-            echo "WARN: no TIF found in $TILE_ZIP" | tee -a "$LOG"
-        fi
-        rm -f "$TILE_ZIP"
-    else
-        echo "WARN: $TILE download failed or too small — skipping tile" | tee -a "$LOG"
-        rm -f "$TILE_ZIP"
-    fi
-done
+while IFS= read -r -d '' f; do
+    GWL_TIFS+=("$f")
+done < <(find "$GWL_DIR" -name "GWL_FCS30_*.tif" -print0 2>/dev/null | sort -z)
 
 if [[ ${#GWL_TIFS[@]} -gt 0 ]]; then
+    echo "  Found ${#GWL_TIFS[@]} GWL_FCS30 tiles in $GWL_DIR" | tee -a "$LOG"
     gdalbuildvrt "$GWL_VRT" "${GWL_TIFS[@]}" 2>&1 | tee -a "$LOG"
-    echo "  → Mosaic VRT: $GWL_VRT (${#GWL_TIFS[@]} tiles)  ✓" | tee -a "$LOG"
+    # Materialise VRT → TIF so downstream scripts can reference a single file
+    gdal_translate -q "$GWL_VRT" "$GWL_TIF" 2>&1 | tee -a "$LOG"
+    echo "  → Mosaic TIF: $GWL_TIF (${#GWL_TIFS[@]} tiles)  ✓" | tee -a "$LOG"
     SKIP_WETLAND=0
 else
-    echo "WARN: No GWL_FCS30 tiles downloaded — wetland sampling will be skipped" | tee -a "$LOG"
+    echo "WARN: No GWL_FCS30 tiles found in $GWL_DIR — wetland sampling will be skipped" | tee -a "$LOG"
     SKIP_WETLAND=1
 fi
 
