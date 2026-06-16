@@ -39,3 +39,63 @@ Last updated: 2026-06-16
 - [x] Master BRIEF updated (Sprint 0 row; 2026-06-15 work log) — 298ba52a
 - [x] 12-agent external audit — F1–F7 content repair requests dispatched to project-editorial
 - [x] check --strict: F2/F3 dead links identified
+# NEXT.md — project-intelligence (Totebox)
+
+## Active (Totebox scope)
+
+- [ ] **CLAUDE.md contamination** — file contains project-console mission text; needs replacement
+      with project-intelligence mission (service-slm Doorman + OLMo enrichment + LoRA training);
+      Totebox scope fix [2026-06-16 command@claude-code]
+- [ ] **down_for_secs in TierBInfo** — expose seconds-since-last-healthy-check in /readyz;
+      circuits currently report "closed" with health_up=false causing false routing to Tier B;
+      Bug 4 drain-hold fix is live but this TierBInfo extension is outstanding
+      [2026-06-15 command@claude-code]
+- [ ] **Bug 1: SHA-on-202-ACK** — ~400 files marked done on 202-ACK before confirmed Tier B
+      enrichment; repair-ledger.py at service-slm/scripts/ removes stale entries; run after
+      Tier B restores and first enrichment cycle completes; ledger at 0 entries (repair already
+      ran this session — clean) [2026-06-15 totebox@project-data]
+- [ ] **Phase 4b reconciliation pass** — 1,281 sweep-ledger entries written before Tier B online;
+      DOC_sweep quarantine gate now in place (4a9c81b9) — next replay will skip DPO pair gen
+      for sweep docs and mark SHAs complete correctly; Totebox sprint when Tier B restores
+      [2026-06-15 command@claude-code]
+
+## Completed (2026-06-16, Session 84 extended)
+
+- [x] **Stage 6 complete** — 8 commits (088b8e21→4886129d) promoted to canonical; includes
+      Q4 nightly gate bypass, Q1 repair-ledger.py, Q11 BRIEF fix, drain-hold fix, Q6/Q8
+      batch-extract + redrive-quarantine.py [2026-06-16 command@claude-code]
+- [x] **slm-doorman-server deployed** — rebuilt from 4886129d (service-slm sub-workspace);
+      sha256: 52ead171; local-doorman restarted; drain-hold fix live in production
+      [2026-06-16 command@claude-code]
+- [x] **redrive-quarantine.py** — 737 quarantined briefs → queue; queue_pending=785;
+      queue_quarantine=0 confirmed [2026-06-16 command@claude-code]
+- [x] **SLM_DRAIN_PAUSED** — drain-paused.conf active; OLMo slot freed for entity extraction
+      [2026-06-16 totebox@project-intelligence]
+- [x] **Bug 4: drain-hold fix** — commit 28231f6f: !tier_a_first guard removed; hold fires on
+      health_up=false [2026-06-15 totebox@project-intelligence]
+- [x] **Bug 2: LoRA target_modules (real fix)** — commit 23b012a1: q_proj/k_proj/v_proj/
+      o_proj/gate_proj/up_proj/down_proj (LLaMA-arch names); commit 401827c7 introduced wrong
+      OLMo-1 names; 23b012a1 supersedes it; training has never produced an adapter until this fix
+      [2026-06-16 totebox@project-intelligence]
+- [x] **DataGraph noise filter expansion** — commit 23b012a1: entity_filter.rs numeric-prefix,
+      FRAGMENT_STARTERS 4→14, ABSTRACT_NOUNS blocklist (18 terms); 39/39 tests
+      [2026-06-16 totebox@project-intelligence]
+- [x] **DOC_sweep quarantine gate + sweep ledger fix** — commit 4a9c81b9: DPO pair gen skips
+      DOC_sweep-* worm IDs; mark_sweep_sha_complete now unconditional for sweep docs; sweep
+      ledger was permanently stuck at 0 (SHAs re-submitted every nightly cycle); 40/40 tests
+      [2026-06-16 totebox@project-intelligence]
+- [x] **Doorman batch extract endpoint** — commit e5c0ee4f (in Stage 6'd range); POST
+      /v1/batch/extract + Semaphore(4) Tier A / Semaphore(1) Tier B; CONTENT_BATCH_SIZE env var
+      [2026-06-16 command@claude-code]
+- [x] **yoyo-batch stopped** — operator requested immediate stop; VM TERMINATED 2026-06-16;
+      do not restart until operator approves + prerequisites met (see Blocked section)
+      [2026-06-16 operator]
+
+## Blocked — requires Command Session (route via outbox)
+
+- [ ] **yoyo-batch VM start** — do not restart until operator approves next cycle; if
+      reprovisioning: us-central1-b ONLY (NOT us-central1-a, NOT zone-fallback), image
+      slm-yoyo-20260512-111846 + startup-script-url from GCS [via outbox]
+- [ ] **ML lib install on yoyo-batch** (Bug 3) — pip install trl peft transformers accelerate
+      bitsandbytes in ~/training-venv; VM currently TERMINATED; flag to Command when ready
+      [via outbox]
