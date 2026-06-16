@@ -1,3 +1,4 @@
+mod ai;
 mod config;
 mod render;
 mod routes;
@@ -69,6 +70,7 @@ async fn main() {
         vault: cfg.vault,
         nav,
         tenant: cfg.tenant,
+        doorman_url: cfg.doorman_url,
         watch_tx,
         index,
         edit_token,
