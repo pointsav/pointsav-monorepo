@@ -10,6 +10,7 @@
 use maud::{html, Markup, PreEscaped, DOCTYPE};
 
 use crate::page::Page;
+use crate::section::CtaButton;
 use crate::tokens::{SECTIONS_CSS, SHELL_CSS, WOODFINE_WORDMARK_SVG};
 
 /// A navigation link in the header.
@@ -60,6 +61,9 @@ pub struct Brand {
     pub footer_nav: Vec<NavLink>,
     /// Copyright line.
     pub copyright: String,
+    /// Persistent enquire / click-to-call CTA shown in the header on every
+    /// page (mobile research: persistent enquire/click-to-call in header).
+    pub header_cta: Option<CtaButton>,
 }
 
 impl Brand {
@@ -85,6 +89,10 @@ impl Brand {
                 NavLink::internal("Disclaimer", "/page/disclaimer"),
             ],
             copyright: "© 2026 Woodfine Capital Projects Inc. All rights reserved.".into(),
+            header_cta: Some(CtaButton {
+                label: "Enquire".into(),
+                href: "/page/contact".into(),
+            }),
         }
     }
 
@@ -107,6 +115,7 @@ impl Brand {
             cities: vec!["Vancouver".into(), "New York".into()],
             footer_nav: vec![NavLink::internal("Disclaimer", "/page/disclaimer")],
             copyright: "© 2026 PointSav Digital Systems. All rights reserved.".into(),
+            header_cta: None,
         }
     }
 
@@ -141,7 +150,12 @@ fn header(brand: &Brand) -> Markup {
             a class="wordmark" href="/" aria-label=(brand.wordmark_label) {
                 (PreEscaped(&brand.wordmark_svg))
             }
-            (render_nav(&brand.right_nav, "right"))
+            div class="right-cluster" {
+                (render_nav(&brand.right_nav, "right"))
+                @if let Some(cta) = &brand.header_cta {
+                    a class="header-cta" href=(cta.href) { (cta.label) }
+                }
+            }
         }
     }
 }
