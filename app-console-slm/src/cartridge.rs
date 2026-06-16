@@ -67,40 +67,28 @@ impl SlmCartridge {
         }
     }
 
+    fn muted_color(&self) -> Color {
+        app_console_keys::colors::tc_muted(self.truecolor)
+    }
+    fn success_color(&self) -> Color {
+        app_console_keys::colors::tc_success(self.truecolor)
+    }
+    fn error_color(&self) -> Color {
+        app_console_keys::colors::tc_error(self.truecolor)
+    }
+    fn warn_color(&self) -> Color {
+        app_console_keys::colors::tc_warn(self.truecolor)
+    }
+
     fn trigger_refresh(&mut self) {
         let _ = self.refresh_tx.try_send(());
         self.error = None;
     }
 
-    fn accent_color(&self) -> Color {
-        if self.truecolor {
-            Color::Rgb(32, 178, 170)
-        } else {
-            Color::Cyan
-        }
-    }
-
-    fn ok_color(&self) -> Color {
-        if self.truecolor {
-            Color::Rgb(0, 200, 83)
-        } else {
-            Color::Green
-        }
-    }
-
-    fn warn_color(&self) -> Color {
-        if self.truecolor {
-            Color::Rgb(255, 165, 0)
-        } else {
-            Color::Yellow
-        }
-    }
-
     fn render_dashboard(&self, frame: &mut Frame, area: Rect) {
         let outer = Block::default()
             .title(" F9 — SLM Infrastructure ")
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(self.accent_color()));
+            .borders(Borders::ALL);
         let inner = outer.inner(area);
         frame.render_widget(outer, area);
 
@@ -162,7 +150,7 @@ impl SlmCartridge {
             Style::default().fg(if self.plain {
                 Color::Reset
             } else {
-                Color::DarkGray
+                self.muted_color()
             }),
         );
         frame.render_widget(hint, chunks[5]);
@@ -175,7 +163,7 @@ impl SlmCartridge {
                     Line::from(vec![
                         Span::styled(
                             if self.plain { "[ERROR] " } else { "✗  " },
-                            Style::default().fg(Color::Red),
+                            Style::default().fg(self.error_color()),
                         ),
                         Span::raw(e.clone()),
                     ]),
@@ -193,7 +181,7 @@ impl SlmCartridge {
                 "● running"
             },
             Style::default()
-                .fg(self.ok_color())
+                .fg(self.success_color())
                 .add_modifier(Modifier::BOLD),
         );
 
@@ -219,9 +207,9 @@ impl SlmCartridge {
             }
         };
         let tier_a_style = if h.tier_a {
-            Style::default().fg(self.ok_color())
+            Style::default().fg(self.success_color())
         } else {
-            Style::default().fg(Color::DarkGray)
+            Style::default().fg(self.muted_color())
         };
 
         let circuit = if h.tier_b_circuit_state.is_empty() {
@@ -270,9 +258,9 @@ impl SlmCartridge {
                         .and_then(|v| v.as_str())
                         .unwrap_or("unknown");
                     let state_style = match state {
-                        "Available" => Style::default().fg(self.ok_color()),
+                        "Available" => Style::default().fg(self.success_color()),
                         "Stopped" | "FailedStart" | "Zombie" => {
-                            Style::default().fg(Color::DarkGray)
+                            Style::default().fg(self.muted_color())
                         }
                         _ => Style::default(),
                     };
@@ -342,7 +330,7 @@ impl SlmCartridge {
         };
 
         let poison_style = if q.poison > 0 {
-            Style::default().fg(Color::Red)
+            Style::default().fg(self.error_color())
         } else {
             Style::default()
         };
@@ -402,13 +390,7 @@ impl Cartridge for SlmCartridge {
         "SLM"
     }
 
-    fn set_graphics_caps(
-        &mut self,
-        _kitty: bool,
-        _sixel: bool,
-        _font_size: (u16, u16),
-        truecolor: bool,
-    ) {
+    fn set_graphics_caps(&mut self, _kitty: bool, _sixel: bool, _font_size: (u16, u16), truecolor: bool) {
         self.truecolor = truecolor;
     }
 

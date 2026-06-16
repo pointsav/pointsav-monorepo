@@ -45,24 +45,24 @@ impl SystemCartridge {
         }
     }
 
+    fn muted_color(&self) -> Color {
+        app_console_keys::colors::tc_muted(self.truecolor)
+    }
+    fn success_color(&self) -> Color {
+        app_console_keys::colors::tc_success(self.truecolor)
+    }
+    fn error_color(&self) -> Color {
+        app_console_keys::colors::tc_error(self.truecolor)
+    }
+    fn warn_color(&self) -> Color {
+        app_console_keys::colors::tc_warn(self.truecolor)
+    }
+    fn accent_color(&self) -> Color {
+        app_console_keys::colors::tc_accent(self.truecolor)
+    }
+
     pub fn pending_count(&self) -> u16 {
         self.pending.len() as u16
-    }
-
-    fn accent_color(&self) -> Color {
-        if self.truecolor {
-            Color::Rgb(32, 178, 170)
-        } else {
-            Color::Cyan
-        }
-    }
-
-    fn selection_bg(&self) -> Color {
-        if self.truecolor {
-            Color::Rgb(40, 40, 60)
-        } else {
-            Color::DarkGray
-        }
     }
 
     fn spawn_poller(base_url: String) -> mpsc::Receiver<Vec<PendingRequest>> {
@@ -154,6 +154,10 @@ impl Cartridge for SystemCartridge {
         "F11: System"
     }
 
+    fn set_graphics_caps(&mut self, _kitty: bool, _sixel: bool, _font_size: (u16, u16), truecolor: bool) {
+        self.truecolor = truecolor;
+    }
+
     fn tick(&mut self) {
         self.drain_poll();
     }
@@ -162,20 +166,10 @@ impl Cartridge for SystemCartridge {
         self.pending_count()
     }
 
-    fn set_graphics_caps(
-        &mut self,
-        _kitty: bool,
-        _sixel: bool,
-        _font_size: (u16, u16),
-        truecolor: bool,
-    ) {
-        self.truecolor = truecolor;
-    }
-
     fn render(&mut self, frame: &mut Frame, area: Rect) {
         let block = Block::default()
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(Color::DarkGray))
+            .border_style(Style::default().fg(self.muted_color()))
             .title(" F11: System — Operator Panel ");
         let inner = block.inner(area);
         frame.render_widget(block, area);
@@ -205,7 +199,7 @@ impl Cartridge for SystemCartridge {
             ),
             Span::styled(
                 format!("  ({})", self.pending.len()),
-                Style::default().fg(Color::DarkGray),
+                Style::default().fg(self.muted_color()),
             ),
         ]));
         frame.render_widget(heading, chunks[0]);
@@ -214,7 +208,7 @@ impl Cartridge for SystemCartridge {
         if self.pending.is_empty() {
             let msg = Paragraph::new(Line::from(Span::styled(
                 "  No pending connection requests.",
-                Style::default().fg(Color::DarkGray),
+                Style::default().fg(self.muted_color()),
             )));
             frame.render_widget(msg, chunks[1]);
         } else {
@@ -226,10 +220,7 @@ impl Cartridge for SystemCartridge {
                     let marker = if i == self.selected { ">" } else { " " };
                     let ts = req.created_at.get(..19).unwrap_or(&req.created_at);
                     let line = Line::from(vec![
-                        Span::styled(
-                            format!(" {marker} "),
-                            Style::default().fg(self.accent_color()),
-                        ),
+                        Span::styled(format!(" {marker} "), Style::default().fg(self.accent_color())),
                         Span::styled(
                             format!("{:<14}", req.code),
                             Style::default()
@@ -240,10 +231,10 @@ impl Cartridge for SystemCartridge {
                             format!("  {:<28}", format!("{}@{}", req.username, req.tenant)),
                             Style::default().fg(Color::White),
                         ),
-                        Span::styled(ts.to_string(), Style::default().fg(Color::DarkGray)),
+                        Span::styled(ts.to_string(), Style::default().fg(self.muted_color())),
                     ]);
                     if i == self.selected {
-                        ListItem::new(line).style(Style::default().bg(self.selection_bg()))
+                        ListItem::new(line).style(Style::default().bg(self.muted_color()))
                     } else {
                         ListItem::new(line)
                     }
@@ -260,13 +251,13 @@ impl Cartridge for SystemCartridge {
                 .and_then(|r| r.fingerprint.as_deref())
                 .unwrap_or("(not yet returned by server)");
             let fp_widget = Paragraph::new(Line::from(vec![
-                Span::styled("  Fingerprint: ", Style::default().fg(Color::DarkGray)),
+                Span::styled("  Fingerprint: ", Style::default().fg(self.muted_color())),
                 Span::styled(fp_text, Style::default().fg(self.accent_color())),
             ]))
             .block(
                 Block::default()
                     .borders(Borders::TOP)
-                    .border_style(Style::default().fg(Color::DarkGray)),
+                    .border_style(Style::default().fg(self.muted_color())),
             );
             frame.render_widget(fp_widget, chunks[2]);
         }
@@ -279,11 +270,11 @@ impl Cartridge for SystemCartridge {
         };
         let hint = if let Some(msg) = &self.feedback {
             let (color, prefix) = if msg.starts_with("Error") {
-                (Color::Yellow, "")
+                (self.warn_color(), "")
             } else if msg.starts_with("Approved") {
-                (Color::Green, "")
+                (self.success_color(), "")
             } else {
-                (Color::Red, "")
+                (self.error_color(), "")
             };
             Line::from(Span::styled(
                 format!("{prefix}{msg}"),
@@ -291,15 +282,15 @@ impl Cartridge for SystemCartridge {
             ))
         } else if !self.pending.is_empty() {
             Line::from(vec![
-                Span::styled("[Enter] approve  ", Style::default().fg(Color::DarkGray)),
-                Span::styled("[D] deny  ", Style::default().fg(Color::DarkGray)),
-                Span::styled(fp_hint, Style::default().fg(Color::DarkGray)),
-                Span::styled("[↑↓] select", Style::default().fg(Color::DarkGray)),
+                Span::styled("[Enter] approve  ", Style::default().fg(self.muted_color())),
+                Span::styled("[D] deny  ", Style::default().fg(self.muted_color())),
+                Span::styled(fp_hint, Style::default().fg(self.muted_color())),
+                Span::styled("[↑↓] select", Style::default().fg(self.muted_color())),
             ])
         } else {
             Line::from(Span::styled(
                 "Refreshes every 5 seconds.",
-                Style::default().fg(Color::DarkGray),
+                Style::default().fg(self.muted_color()),
             ))
         };
         frame.render_widget(Paragraph::new(hint), chunks[3]);

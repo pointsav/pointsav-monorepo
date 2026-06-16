@@ -184,14 +184,6 @@ impl InputCartridge {
         self.path_input = PathInput::new();
     }
 
-    fn anchor_color(&self) -> Color {
-        if self.truecolor {
-            Color::Rgb(210, 0, 210)
-        } else {
-            Color::Magenta
-        }
-    }
-
     fn render_modal(frame: &mut Frame, area: Rect) -> Rect {
         let vchunks = Layout::default()
             .direction(Direction::Vertical)
@@ -220,7 +212,7 @@ impl InputCartridge {
             .borders(Borders::ALL)
             .border_style(
                 Style::default()
-                    .fg(self.anchor_color())
+                    .fg(Color::Magenta)
                     .add_modifier(Modifier::BOLD),
             )
             .title(" F12: Input Machine — The Anchor (SYS-ADR-10) ");
@@ -304,7 +296,7 @@ impl InputCartridge {
         };
         frame.render_widget(
             Paragraph::new(format!(
-                "  {} Submitting to service-input — please wait…",
+                "  {} Submitting to service-fs — please wait…",
                 SPINNER[spinner % SPINNER.len()]
             ))
             .style(Style::default().fg(Color::Yellow)),
@@ -454,13 +446,7 @@ impl Cartridge for InputCartridge {
         "Input"
     }
 
-    fn set_graphics_caps(
-        &mut self,
-        _kitty: bool,
-        _sixel: bool,
-        _font_size: (u16, u16),
-        truecolor: bool,
-    ) {
+    fn set_graphics_caps(&mut self, _kitty: bool, _sixel: bool, _font_size: (u16, u16), truecolor: bool) {
         self.truecolor = truecolor;
     }
 
