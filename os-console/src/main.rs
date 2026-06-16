@@ -72,18 +72,50 @@ fn inner_main() -> anyhow::Result<()> {
                 chassis.set_pairing_error(format!("{e}"));
             }
         }
+
+        // Reconnect watchdog — retries MBA link with exponential backoff.
+        let (reconnect_tx, reconnect_rx) = std::sync::mpsc::channel::<bool>();
+        let host = p.totebox_host.clone();
+        let port = p.totebox_ssh_port;
+        let username = p.username.clone();
+        let key_path = p.ssh_key_path.clone();
+        std::thread::spawn(move || {
+            let mut delay = std::time::Duration::from_secs(2);
+            let max_delay = std::time::Duration::from_secs(60);
+            loop {
+                std::thread::sleep(delay);
+                let result = tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .map(|rt| {
+                        rt.block_on(async {
+                            tokio::time::timeout(
+                                std::time::Duration::from_secs(5),
+                                mba_client::connect_mba(&host, port, &username, &key_path),
+                            )
+                            .await
+                            .unwrap_or_else(|_| mba_client::MbaResult {
+                                active: false,
+                                fingerprint: "(timeout)".into(),
+                            })
+                        })
+                    });
+                let active = result.map(|r| r.active).unwrap_or(false);
+                if active {
+                    let _ = reconnect_tx.send(true);
+                    break;
+                }
+                delay = (delay * 2).min(max_delay);
+            }
+        });
+        chassis.set_mba_reconnect_rx(reconnect_rx);
     }
 
-    chassis.register(Box::new(PeopleCartridge::new(
-        &p.people_endpoint,
-        p.plain_mode,
-    )));
+    chassis.register(Box::new(PeopleCartridge::new_for(&p.people_endpoint)));
     chassis.register(Box::new(EmailCartridge::new_for(
         &p.email_endpoint,
         p.plain_mode,
     )));
-    let sess =
-        app_console_keys::SessionState::load(&app_console_keys::SessionState::default_path());
     chassis.register(Box::new(ContentCartridge::new_for(
         &p.username,
         &p.tenant,
@@ -91,9 +123,6 @@ fn inner_main() -> anyhow::Result<()> {
         &p.slm_endpoint,
         &p.drafts_outbound_path,
         &p.content_endpoint,
-        sess.content_query,
-        sess.content_selected,
-        sess.content_scroll,
     )));
     chassis.register(Box::new(InputCartridge::new_for(
         &p.username,
@@ -103,11 +132,9 @@ fn inner_main() -> anyhow::Result<()> {
     chassis.register(Box::new(SlmCartridge::new(&p.slm_endpoint, p.plain_mode)));
     chassis.register(Box::new(SystemCartridge::new(&p.pair_endpoint)));
     metrics::spawn_metrics_server(p.metrics_port);
-    // Register SIGTERM + SIGINT handler — requests clean shutdown on next chassis tick.
     let _ = ctrlc::set_handler(|| {
         app_console_keys::request_shutdown();
     });
-
     chassis.run_local()
 }
 
