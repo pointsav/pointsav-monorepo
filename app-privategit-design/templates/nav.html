@@ -1,0 +1,13 @@
+{% for section in sections %}
+{% set items = nav[section] %}
+{% if items %}
+<div class="nav-section">
+<span class="nav-section-title">{{ section | to_title }}</span>
+<ul>
+{% for slug in items %}
+<li><a href="/{{ section }}/{{ slug }}/overview"{% if section == active_section and slug == active_slug %} class="active"{% endif %}>{{ slug | to_title }}</a></li>
+{% endfor %}
+</ul>
+</div>
+{% endif %}
+{% endfor %}
