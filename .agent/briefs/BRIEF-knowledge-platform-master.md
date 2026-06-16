@@ -6,7 +6,7 @@ owner: project-knowledge
 status: active
 title: Knowledge Platform — Master Brief
 cluster: project-knowledge
-updated: 2026-06-15
+updated: 2026-06-16
 supersedes: archive/BRIEF-knowledge-platform-master.md
 verdict_source: .agent/drafts-outbound/BRIEF-REVIEW-old-brief-verdict.md
 ---
@@ -54,7 +54,7 @@ Single Rust binary. No runtime system dependencies. Apache 2.0.
 | Phase 0 | Federation engine | **Complete 2026-06-12** | All scope items done; gate 689 articles / 0 dead links; Stage 6 at 9a1326df; archive ops pending Stage 6 |
 | Phase 9 | Production deploy | **Shipped 2026-06-11** | WIKI_KNOWLEDGE_TOML migration; /etc/local-knowledge/; all 3 instances healthy |
 
-Sub-clone tip: `9a1326df` — **CANONICAL** (origin/main confirmed 2026-06-12). Archive tip: `e6d01e9c` (+4 ops commits ahead of canonical; Stage 6 READY pending this session close-out).
+Sub-clone tip: `d0abd9ad` — **CANONICAL** (origin/main confirmed 2026-06-16; Session 86). All archive ops commits promoted; Stage 6 complete.
 
 ---
 
@@ -265,6 +265,25 @@ uses the `pointsav.com` domain. Phase 6 cutover complete.
 ---
 
 ## §6 — Session Log
+
+### 2026-06-16 | totebox | claude-code (Stage 6 confirmed; live audit)
+
+Stage 6 confirmed via binary ledger: sub-clone tip `d0abd9ad` promoted Session 86
+(2026-06-16T16:55:53Z); sha256 `a2bcfce2ee310d26c144e8e7b6784ce8cc6860f73832ff67a26506ba5340528b`;
+smoke_test=pass; all 3 instances restarted and healthy.
+
+Live audit (HTTP probe + route verification): / → 200 on all 3; sitemap absolute URLs
+confirmed (E7 live: `<loc>https://documentation.pointsav.com/wiki/...`); data-instance
+per-instance correct — documentation/projects/corporate (M14 fix live); internal nav
+links use clean slugs, no `topic-` prefix (M1 partial confirmed); images route registered
+(E8; `/images/missing.png` → 404 is correct behaviour for absent files). Outstanding
+project-editorial items F1–F7 pending responses. M10 502 flapping pending Command load-test gate.
+
+BRIEF §2 sub-clone tip updated; §8.3 Stage 6 reference updated; §8.5 Sprint 0/A/B/C
+status updated from "pending"/"planned" to confirmed. Sprint D (home page editorial
+redesign) is the next engineering sprint.
+
+---
 
 ### 2026-06-14 | totebox | claude-code (Phase 6 shipped; Phase 7 scaffold)
 
@@ -678,7 +697,7 @@ These continue as the article routing key (slug structure, landing pages, sidena
 
 See §7 (12-agent external audit). Benchmark gap analysis in §7.5.
 
-Engine issues (C3/M1/M3/M4/M11–M15) addressed in Sprint A/B (commits `3106b2e1`/`48bfa7e7`, Stage 6 pending).
+Engine issues (C3/M1/M3/M4/M11–M15) addressed in Sprint A/B (commits `3106b2e1`/`48bfa7e7`, Stage 6 confirmed Session 86, 2026-06-16).
 Content issues (C2/M2/M5–M9) routed to project-editorial (msg-id: `command-20260614-content-repairs-app-mediakit-knowledge-a`).
 
 Top institutional quality gaps beyond §7 findings (from §7.5 benchmark analysis):
@@ -702,10 +721,10 @@ Top institutional quality gaps beyond §7 findings (from §7.5 benchmark analysi
 
 | Sprint | Focus | Commit(s) | Status |
 |---|---|---|---|
-| 0 | Defect fixes: images route (Defect 6), manifest/CLAUDE.md cluster name, D1b rename | `2e0993e9` + `9fb431cb` + `c06c4ae8` + `9eda459f` | Done — Stage 6 pending (images route); archive commits done |
-| A | WCAG 2.2 focus outline + article link underline (C3/M15) | `3106b2e1` | Done — Stage 6 pending |
-| B | Sitemap absolute URLs, ES i18n, brand-instance from TOML, dead edit form (M1/M11/M12/M14) | `48bfa7e7` | Done — Stage 6 pending |
-| C | 7-category home page grid + sidenav (from §8.2 Layer 1 + sidenav component spec) | — | Planned |
+| 0 | Defect fixes: images route (Defect 6), manifest/CLAUDE.md cluster name, D1b rename | `2e0993e9` + `9fb431cb` + `c06c4ae8` + `9eda459f` | Done — Stage 6 confirmed (Session 86, 2026-06-16; sub-clone `d0abd9ad`) |
+| A | WCAG 2.2 focus outline + article link underline (C3/M15) | `3106b2e1` | Done — Stage 6 confirmed (Session 86, 2026-06-16) |
+| B | Sitemap absolute URLs, ES i18n, brand-instance from TOML, dead edit form (M1/M11/M12/M14) | `48bfa7e7` | Done — Stage 6 confirmed (Session 86, 2026-06-16) |
+| C | 7-category home page grid + sidenav (from §8.2 Layer 1 + sidenav component spec) | `9cc1a80c` | Done — Stage 6 confirmed (Session 86, 2026-06-16) |
 | D | Home page editorial redesign: 10-slot anatomy, lede, cross-instance band | — | Planned |
 | E | Article chrome: frontmatter schema (id/type/aliases/relates_to), maturity pills, audience chips | — | Planned |
 | F | Header/footer: doc-header component, cross-instance nav in header, build timestamp in footer | — | Planned |
