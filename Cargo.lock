@@ -348,6 +348,7 @@ dependencies = [
  "app-mediakit-shell",
  "axum 0.8.9",
  "clap",
+ "http-body-util",
  "serde",
  "serde_json",
  "serde_yaml",
