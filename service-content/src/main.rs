@@ -629,6 +629,13 @@ fn write_enrichment_dpo_pair(
     tier_b_raw: &[serde_json::Value],
     feedback_dir: &str,
 ) -> bool {
+    // DOC_sweep docs are git commit text — Tier B hallucination rate is too high for
+    // reliable DPO signal (source-grounding check catches these downstream, but early
+    // return avoids the file-write path entirely). SHA is marked complete at the call
+    // site regardless, preventing per-cycle re-submission of the same commit SHAs.
+    if worm_id.starts_with("DOC_sweep-") {
+        return false;
+    }
     if tier_b_raw.is_empty() {
         return false;
     }
@@ -1032,16 +1039,18 @@ fn process_corpus(
             );
 
             // Write enrichment DPO pair after both graph and CRM are durably committed.
-            // Gate SHA ledger update on pair actually being written (Bug B fix):
-            // mark_sweep_sha_complete only fires when a training pair was saved.
+            // For sweep docs (DOC_sweep-*): write_enrichment_dpo_pair returns false early
+            // (policy: skip pair generation for commit text), but mark the SHA complete
+            // unconditionally — otherwise the same commit SHAs re-submit every nightly cycle.
             if let Some(ref ta_ents) = tier_a_raw {
-                if write_enrichment_dpo_pair(
+                let saved = write_enrichment_dpo_pair(
                     worm_id,
                     corpus_text,
                     ta_ents,
                     &semantic_entities,
                     feedback_dir,
-                ) {
+                );
+                if saved || worm_id.starts_with("DOC_sweep-") {
                     mark_sweep_sha_complete(worm_id);
                 }
             }
@@ -1260,6 +1269,36 @@ mod tests {
         assert!(
             !content.contains(r#"\"Company\""#),
             "raw misclassification must not appear in chosen side; content: {content}"
+        );
+        fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn dpo_sweep_docs_never_generate_pairs() {
+        // DOC_sweep-* worm IDs come from git commit text where Tier B hallucination
+        // rate is too high for reliable DPO signal. Policy: always return false,
+        // write nothing — even if the entities are otherwise valid and grounded.
+        let tier_b = vec![serde_json::json!({
+            "classification": "Person",
+            "entity_name": "Peter Woodfine"
+        })];
+        let tier_a = vec![serde_json::json!({
+            "classification": "Person",
+            "entity_name": "Peter"
+        })];
+        let dir = tmp_dir("sweep-skip");
+        let saved = write_enrichment_dpo_pair(
+            "DOC_sweep-abc123def456_1718500000000",
+            "Peter Woodfine committed a fix to the logging module.",
+            &tier_a,
+            &tier_b,
+            dir.to_str().unwrap(),
+        );
+        assert!(!saved, "sweep docs must never generate DPO pairs");
+        assert_eq!(
+            fs::read_dir(&dir).unwrap().count(),
+            0,
+            "no file must be written for sweep-origin docs"
         );
         fs::remove_dir_all(&dir).ok();
     }
