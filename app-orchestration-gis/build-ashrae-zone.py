@@ -2,26 +2,26 @@
 """
 build-ashrae-zone.py — Patch ashrae_zone into clusters-meta.json
 
-Downloads the DOE/PNNL ASHRAE 169-2020 world climate zone GeoJSON once and
-performs a point-in-polygon spatial join for every cluster centroid, writing
-the result back to clusters-meta.json.
+Primary path (--from-fields, default): derives ASHRAE 169-2020 zone from the
+cluster's existing koppen_class + hdd18 + cdd18 fields.  No network required.
 
-ASHRAE 169-2020 zones: 1A–8A, 1B–7B, 3C, 4C, 5C, 6C (A=Humid, B=Dry, C=Marine)
-Values written: e.g. "2A", "5B", "3C"
+Secondary path (--from-geojson): downloads the DOE/PNNL climate zone GeoJSON
+and does a point-in-polygon spatial join (requires shapely + network).
 
-Source: Pacific Northwest National Laboratory (PNNL) / DOE Building Technologies Office
-GeoJSON: https://energyplus.net/assets/nrel_custom/epw_climate_zones/EPW_CZ_Map.geojson
-Licence: public domain (US Government / DOE)
+ASHRAE 169-2020 zones: 1A–8A, 1B–7B, 3C, 4C, 5C, 6C
+  A=Humid  B=Dry  C=Marine
 
 Usage:
-    python3 build-ashrae-zone.py [--dry-run] [--overwrite] [--countries DE FR]
+    python3 build-ashrae-zone.py               # from-fields (default, fast)
+    python3 build-ashrae-zone.py --from-geojson
+    python3 build-ashrae-zone.py --dry-run
+    python3 build-ashrae-zone.py --overwrite --countries DE FR
 """
 
 import argparse
 import json
 import os
 import sys
-import time
 import urllib.request
 from pathlib import Path
 
@@ -32,14 +32,74 @@ META_PATH = Path(
     "/srv/foundry/deployments/gateway-orchestration-gis-1/www/data/clusters-meta.json"
 )
 ASHRAE_GEOJSON = WORK_DIR / "aec" / "ashrae-zones.geojson"
-# Primary source: EnergyPlus / PNNL world climate zone map (public domain, DOE)
 ASHRAE_URL = (
     "https://energyplus.net/assets/nrel_custom/epw_climate_zones/EPW_CZ_Map.geojson"
 )
 
+# ── Köppen → ASHRAE moisture-regime mapping ──────────────────────────────────
+# B (Dry): arid and semi-arid climates; dry-summer subtypes of C/D
+_DRY_PREFIXES = ("BW", "BS")
+_DRY_SUBTYPES = ("Csa", "Csb", "Csc", "Dsa", "Dsb", "Dsc", "Dsd")
+# C (Marine): oceanic Cfb/Cfc zones with no dry season and mild winters
+# — assigned only when zone number is 3–6 (temperature range consistent with marine)
+_MARINE_SUBTYPES = ("Cfb", "Cfc")
+
+
+def moisture_regime(koppen: str, zone_num: int) -> str:
+    """Return ASHRAE moisture suffix (A/B/C) from Köppen class and zone number."""
+    if not koppen:
+        return "A"
+    if koppen[:2] in _DRY_PREFIXES or koppen in _DRY_SUBTYPES:
+        return "B"
+    if koppen in _MARINE_SUBTYPES and 3 <= zone_num <= 6:
+        return "C"
+    return "A"
+
+
+def ashrae_from_fields(hdd18, cdd18, koppen_class: str) -> str | None:
+    """
+    Derive ASHRAE 169-2020 zone from HDD/CDD (base 18 °C) and Köppen class.
+
+    Zone-number boundaries (ASHRAE Table B-1, converted to base-18 °C):
+      1: CDD ≥ 5000
+      2: CDD ≥ 3000
+      3: CDD ≥ 1200  or  HDD < 1200
+      4: HDD < 2600
+      5: HDD < 4000
+      6: HDD < 5500
+      7: HDD < 8000
+      8: HDD ≥ 8000
+    """
+    try:
+        hdd = float(hdd18 or 0)
+        cdd = float(cdd18 or 0)
+    except (TypeError, ValueError):
+        return None
+
+    if cdd >= 5000:
+        n = 1
+    elif cdd >= 3000:
+        n = 2
+    elif cdd >= 1200 or hdd < 1200:
+        n = 3
+    elif hdd < 2600:
+        n = 4
+    elif hdd < 4000:
+        n = 5
+    elif hdd < 5500:
+        n = 6
+    elif hdd < 8000:
+        n = 7
+    else:
+        n = 8
+
+    m = moisture_regime(koppen_class or "", n)
+    return f"{n}{m}"
+
+
+# ── GeoJSON spatial-join path ─────────────────────────────────────────────────
 
 def download_ashrae(path: Path) -> bool:
-    """Download ASHRAE zone GeoJSON. Returns True on success."""
     path.parent.mkdir(parents=True, exist_ok=True)
     print(f"Downloading ASHRAE climate zones → {path}")
     try:
@@ -49,10 +109,9 @@ def download_ashrae(path: Path) -> bool:
         )
         with urllib.request.urlopen(req, timeout=60) as r:
             data = r.read()
-        # Minimal sanity check: should be JSON with features
         gj = json.loads(data)
         if "features" not in gj or len(gj["features"]) < 10:
-            print(f"  WARN: unexpected GeoJSON structure ({len(gj.get('features', []))} features)")
+            print(f"  WARN: unexpected GeoJSON ({len(gj.get('features', []))} features)")
             return False
         path.write_bytes(data)
         print(f"  → {path} ({len(gj['features'])} zone polygons)  ✓")
@@ -63,21 +122,15 @@ def download_ashrae(path: Path) -> bool:
 
 
 def load_zones(path: Path):
-    """
-    Load ASHRAE zone polygons. Returns list of (zone_label, shapely_shape) tuples.
-    Requires shapely. Falls back to bounding-box approximation if shapely absent.
-    """
     try:
         from shapely.geometry import shape
     except ImportError:
         print("ERROR: shapely not available — install with: pip3 install shapely")
         sys.exit(1)
-
     gj = json.loads(path.read_text())
     zones = []
     for feat in gj.get("features", []):
         props = feat.get("properties") or {}
-        # PNNL GeoJSON uses 'IECC_Climate_Zone' or 'BA_Climate_Zone' or 'Climate_Zone'
         zone = (
             props.get("IECC_Climate_Zone")
             or props.get("BA_Climate_Zone")
@@ -86,7 +139,6 @@ def load_zones(path: Path):
             or props.get("CZ")
         )
         if not zone:
-            # Try to extract from any string property containing a zone code pattern
             for v in props.values():
                 s = str(v).strip()
                 if len(s) == 2 and s[0].isdigit() and s[1].upper() in "ABC":
@@ -94,18 +146,16 @@ def load_zones(path: Path):
                     break
         if not zone:
             continue
-        zone = str(zone).strip().upper()
         try:
             geom = shape(feat["geometry"])
-            zones.append((zone, geom))
+            zones.append((str(zone).strip().upper(), geom))
         except Exception:
             continue
     print(f"  Loaded {len(zones)} ASHRAE zone polygons")
     return zones
 
 
-def zone_for_point(lon: float, lat: float, zones: list) -> str | None:
-    """Return ASHRAE zone label for point, or None if not found."""
+def zone_for_point_geojson(lon: float, lat: float, zones: list) -> str | None:
     try:
         from shapely.geometry import Point
     except ImportError:
@@ -117,34 +167,23 @@ def zone_for_point(lon: float, lat: float, zones: list) -> str | None:
     return None
 
 
+# ── Main ──────────────────────────────────────────────────────────────────────
+
 def main():
     parser = argparse.ArgumentParser(description="Patch ashrae_zone in clusters-meta.json")
     parser.add_argument("--meta", default=str(META_PATH))
     parser.add_argument("--dry-run", action="store_true",
-                        help="Query one cluster; no writes")
+                        help="Process one cluster; no writes")
     parser.add_argument("--overwrite", action="store_true",
                         help="Re-assign clusters that already have ashrae_zone")
-    parser.add_argument("--countries", nargs="+", default=None, metavar="ISO",
-                        help="Limit to specific ISO-2 codes")
+    parser.add_argument("--countries", nargs="+", default=None, metavar="ISO")
+    parser.add_argument("--from-geojson", action="store_true",
+                        help="Use GeoJSON spatial join instead of field derivation")
     args = parser.parse_args()
 
     meta_path = Path(args.meta)
     if not meta_path.exists():
         print(f"ERROR: {meta_path} not found", file=sys.stderr)
-        sys.exit(1)
-
-    # Download zone GeoJSON if not cached
-    if not ASHRAE_GEOJSON.exists():
-        ok = download_ashrae(ASHRAE_GEOJSON)
-        if not ok:
-            print("WARN: could not download ASHRAE zones — aborting")
-            sys.exit(1)
-    else:
-        print(f"Using cached ASHRAE zones: {ASHRAE_GEOJSON}")
-
-    zones = load_zones(ASHRAE_GEOJSON)
-    if not zones:
-        print("ERROR: no zone polygons loaded")
         sys.exit(1)
 
     clusters = json.loads(meta_path.read_text())
@@ -156,18 +195,36 @@ def main():
     ]
     print(f"Clusters total: {len(clusters)}  |  targets: {len(targets)}")
 
+    if args.from_geojson:
+        if not ASHRAE_GEOJSON.exists():
+            ok = download_ashrae(ASHRAE_GEOJSON)
+            if not ok:
+                print("WARN: could not download ASHRAE zones — falling back to field derivation")
+                args.from_geojson = False
+        if args.from_geojson:
+            zones = load_zones(ASHRAE_GEOJSON)
+            zone_fn = lambda c: zone_for_point_geojson(c.get("lon", 0), c.get("lat", 0), zones)
+
+    if not args.from_geojson:
+        missing = sum(1 for c in targets if c.get("koppen_class") is None)
+        if missing:
+            print(f"  WARN: {missing}/{len(targets)} targets missing koppen_class — moisture defaults to 'A'")
+        zone_fn = lambda c: ashrae_from_fields(c.get("hdd18"), c.get("cdd18"), c.get("koppen_class"))
+
     if args.dry_run:
         if not targets:
             print("No eligible targets.")
             return
         c = targets[0]
-        z = zone_for_point(c["lon"], c["lat"], zones)
-        print(f"DRY RUN — cluster {c.get('id')} @ ({c['lat']}, {c['lon']}) → ashrae_zone={z}")
+        z = zone_fn(c)
+        print(f"DRY RUN — cluster {c.get('id')} @ ({c.get('lat')}, {c.get('lon')}) "
+              f"koppen={c.get('koppen_class')} hdd={c.get('hdd18')} cdd={c.get('cdd18')} "
+              f"→ ashrae_zone={z}")
         return
 
     patched = 0
     for i, c in enumerate(targets):
-        z = zone_for_point(c.get("lon", 0), c.get("lat", 0), zones)
+        z = zone_fn(c)
         if z:
             c["ashrae_zone"] = z
             patched += 1
