@@ -22,13 +22,33 @@ pub fn page_path(content_dir: &Path, slug: &str) -> PathBuf {
     content_dir.join(slug).join("page.yaml")
 }
 
-/// Load and validate the manifest for `slug`. The home page is `slug = "home"`.
+/// Load and validate the manifest for `slug` in the default (English) language.
 pub fn load_page(content_dir: &Path, slug: &str) -> Result<Page, LoadError> {
+    load_page_lang(content_dir, slug, "en")
+}
+
+/// Load `<slug>/page.<lang>.yaml`, falling back to `<slug>/page.yaml` when no
+/// language variant exists. `lang = "en"` uses `page.yaml` directly. The home
+/// page is `slug = "home"`.
+pub fn load_page_lang(content_dir: &Path, slug: &str, lang: &str) -> Result<Page, LoadError> {
     if slug.is_empty() || slug.contains("..") || slug.starts_with('/') {
         return Err(LoadError::InvalidSlug);
     }
-    let path = page_path(content_dir, slug);
-    let text = std::fs::read_to_string(&path).map_err(|_| LoadError::NotFound)?;
+    if lang.contains("..") || lang.contains('/') {
+        return Err(LoadError::InvalidSlug);
+    }
+    let candidates: Vec<PathBuf> = if lang == "en" {
+        vec![page_path(content_dir, slug)]
+    } else {
+        vec![
+            content_dir.join(slug).join(format!("page.{lang}.yaml")),
+            page_path(content_dir, slug),
+        ]
+    };
+    let text = candidates
+        .iter()
+        .find_map(|p| std::fs::read_to_string(p).ok())
+        .ok_or(LoadError::NotFound)?;
     let mut page = Page::from_yaml(&text).map_err(LoadError::Invalid)?;
     if page.slug.is_none() {
         page.slug = Some(slug.to_string());

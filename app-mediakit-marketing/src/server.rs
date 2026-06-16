@@ -31,6 +31,8 @@ pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/", get(home))
         .route("/page/{slug}", get(page))
+        .route("/es", get(home_es))
+        .route("/es/page/{slug}", get(page_es))
         .route("/healthz", get(healthz))
         .route("/api/mcp", post(crate::mcp::handler))
         .route("/api/pending", get(list_pending))
@@ -44,16 +46,27 @@ async fn healthz() -> &'static str {
 }
 
 async fn home(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    render(&state, "home")
+    render(&state, "home", "en")
 }
 
 async fn page(State(state): State<Arc<AppState>>, Path(slug): Path<String>) -> impl IntoResponse {
-    render(&state, &slug)
+    render(&state, &slug, "en")
+}
+
+async fn home_es(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    render(&state, "home", "es")
+}
+
+async fn page_es(
+    State(state): State<Arc<AppState>>,
+    Path(slug): Path<String>,
+) -> impl IntoResponse {
+    render(&state, &slug, "es")
 }
 
 /// Render a slug to a full HTML document (or an error response).
-fn render(state: &AppState, slug: &str) -> Response {
-    match content::load_page(&state.content_dir, slug) {
+fn render(state: &AppState, slug: &str, lang: &str) -> Response {
+    match content::load_page_lang(&state.content_dir, slug, lang) {
         Ok(page) => Html(render_page(&state.brand, &page, &state.tokens_css)).into_response(),
         Err(LoadError::NotFound) => (StatusCode::NOT_FOUND, "Not found").into_response(),
         Err(LoadError::InvalidSlug) => (StatusCode::BAD_REQUEST, "Invalid path").into_response(),

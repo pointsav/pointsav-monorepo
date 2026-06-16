@@ -1,0 +1,41 @@
+title: Inicio
+slug: home
+description: Woodfine Capital Projects — desarrollo inmobiliario disciplinado en Norteamérica.
+lang: es
+sections:
+  - type: hero
+    headline: Activos reales, con disciplina
+    subhead: Woodfine Capital Projects desarrolla y mantiene inmuebles comerciales en Vancouver y Nueva York.
+    cta:
+      label: Contáctenos
+      href: /es/page/contact
+
+  - type: card-grid
+    heading: Qué hacemos
+    columns: 3
+    cards:
+      - title: Desarrollar
+        icon: "▣"
+        body: Desarrollo comercial desde cero, basado en el análisis del sitio.
+      - title: Operar
+        icon: "◈"
+        body: Operación directa y a largo plazo de los activos que construimos.
+      - title: Mantener
+        icon: "◆"
+        body: Períodos de tenencia largos y propiedad directa, sin rotación rápida.
+
+  - type: feature
+    heading: Una plataforma propia
+    body: |
+      Nuestros informes y operaciones funcionan con software que desarrollamos
+      nosotros mismos. Se prevén capacidades adicionales que se anunciarán a
+      medida que se entreguen.
+    cta:
+      label: Leer el aviso legal
+      href: /es/page/disclaimer
+
+  - type: cta
+    heading: Consulte sobre un proyecto
+    cta:
+      label: Póngase en contacto
+      href: /es/page/contact
