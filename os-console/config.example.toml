@@ -13,4 +13,4 @@ tenant   = "woodfine"
 proof_endpoint = "http://127.0.0.1:9092"
 
 # Ingest service — POST /v1/append
-ingest_endpoint = "http://127.0.0.1:9100"
+ingest_endpoint = "http://127.0.0.1:9106"
