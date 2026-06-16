@@ -1,0 +1,39 @@
+J1 §7.2 OLS — catchment_entropy ~ tier + log(pop_150km) + country FE
+Data: Phase 23+Change B | O-D: US LODES + ES MITMA only
+N = 3,178 clusters | 2 countries
+Tier: T1=908 T2=1,791 T3=479
+
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:        od_work_entropy   R-squared:                       0.538
+Model:                            OLS   Adj. R-squared:                  0.537
+Method:                 Least Squares   F-statistic:                     2.503
+Date:                Mon, 15 Jun 2026   Prob (F-statistic):              0.359
+Time:                        18:09:17   Log-Likelihood:                -1728.0
+No. Observations:                3178   AIC:                             3466.
+Df Residuals:                    3173   BIC:                             3496.
+Df Model:                           4                                         
+Covariance Type:              cluster                                         
+====================================================================================
+                       coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------------
+Intercept           -1.1336      0.315     -3.595      0.000      -1.752      -0.516
+C(country)[T.US]     1.5933      0.002    638.117      0.000       1.588       1.598
+t1_dummy            -0.0404      0.001    -47.338      0.000      -0.042      -0.039
+t2_dummy            -0.1219      0.003    -45.239      0.000      -0.127      -0.117
+log_pop_150km        0.2416      0.021     11.767      0.000       0.201       0.282
+==============================================================================
+Omnibus:                      976.113   Durbin-Watson:                   1.748
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):             4479.355
+Skew:                          -1.412   Prob(JB):                         0.00
+Kurtosis:                       8.084   Cond. No.                         267.
+==============================================================================
+
+Notes:
+[1] Standard Errors are robust to cluster correlation (cluster)
+
+── KEY COEFFICIENTS ──
+T1 coef: -0.040 [-0.042, -0.039]  p=0.0000
+T2 coef: -0.122 [-0.127, -0.117]  p=0.0000
+log(pop) coef: +0.242 [+0.201, +0.282]  p=0.0000
+R² = 0.538  Adj-R² = 0.537
