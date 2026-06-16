@@ -1,12 +1,7 @@
 ---
 schema: foundry-artifact-registry-v1
-project: project-editorial
-project: project-system
-project: project-gis
-project: project-knowledge
 project: project-infrastructure
-last_updated: 2026-06-14
-last_updated: 2026-06-14 (session 8 — CODE C updated with commit 1a914564; entity_filter.rs added)
+last_updated: 2026-06-16
 ---
 
 # project-infrastructure Artifact Registry
@@ -131,11 +126,10 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 ## SOFT Artifacts
 
 Commercial products verified with Ed25519 license tokens. Sold at software.pointsav.com.
-Cash register test: licensable + marketplace-listed = SOFT.
 
 | Product ID | Crate | Port | Status |
 |---|---|---|---|
-| `soft-slm-orchestration` | `app-orchestration-slm` | `local-orchestration-slm.service` :9180 | Active — deployed; 15 tests; ORCHESTRATION_LICENSE_PUBKEY_HEX runtime load (C, 85e8c60f); marketplace listing pending operator action |
+| `soft-slm-orchestration` | `app-orchestration-slm` | `local-orchestration-slm.service` :9180 | Active — deployed; 15 tests; marketplace listing pending operator action |
 
 Notes:
 - `REQUIRED_PRODUCT = "soft-slm-orchestration"` in `orchestration-slm/src/license.rs`
@@ -157,22 +151,11 @@ Routing per `~/Foundry/conventions/artifact-classification.yaml`:
 - TOPIC / GUIDE / TEXT → `.agent/drafts-outbound/` → project-editorial
 - DESIGN-* / ASSET-* → `.agent/drafts-outbound/` → project-design
 - CODE / SCRIPT / CONFIG / DATA → commit directly (self-contained)
+- `ORCHESTRATION_LICENSE_PUBKEY_HEX` env var → runtime pubkey (wiring in progress)
 
 ---
 
 ## TOPIC Artifacts
-
-### A18 — BRIEF: Location Intelligence Archetypes (PRO / VWH / PKS)
-- **File:** `.agent/briefs/BRIEF-location-intelligence-archetypes-2026-06-01.md`
-- **Status:** ACTIVE — updated 2026-06-14; §10.13 Phase 5 MX coverage added; §10.11 version control resolved
-- **Destination:** internal (BRIEF stays in archive); editorial drafts dispatched separately
-- **Content:** Three-archetype Location Intelligence system (PRO/VWH/PKS). Definitions, co-location
-  signals, full chain taxonomy with Wikidata IDs, airport/rail classification findings, service-parking
-  architecture. §10: PKS production system — 7,045 clusters (Phase 5b); OXXO CONVENIENCE enrichment;
-  MX=177 (was 183 Phase 5; 6 false US clusters removed; lon-scoped coord override); mode-group collapse; park-and-ride anchor; car rental + hotel + convenience enrichment.
-  §11: VWH calibration — hardware profile (10,338 anchors, 45 chains), sim (73.4% hardware validation PASS),
-  group-collapse tier rules, production results (6,368 clusters; T1=852/T2=1,327/T3=4,189; `retail_contamination` flag at 47.9%).
-Explain WHAT and WHY. Bilingual EN+ES pair. Route to project-editorial.
 
 | ID | File | Title | Status |
 |---|---|---|---|
@@ -769,6 +752,8 @@ visibility.
 | F5 | M7 | Medium | Add dated data-snapshot line to every article containing cluster/country counts ("Data as of YYYY-MM-DD build"); reconcile home headline to one snapshot or label superset | 2026-06-14 outbox | Pending project-editorial |
 | F6 | M8 | High (legal) | Add "Data Sources" section naming © OpenStreetMap contributors / ODbL in every article whose methodology rests on OSM + Wikidata; surface Wikidata Q-IDs in brand-family taxonomy article | 2026-06-14 outbox | Pending project-editorial |
 | F7 | M9 | High | EN/ES parity sweep: `co-location-ranking-system.es.md` is ~25% of EN length — full parallel translation required per L4; sweep all EN/ES pairs for lagging articles | 2026-06-14 outbox | Pending project-editorial |
+| T1 | `drafts-outbound/TOPIC-ppn-vm-architecture.draft.md` | PPN VM Resource Pool Architecture | STAGED — written 2026-06-14; ready for project-editorial |
+| T2 | `drafts-outbound/TOPIC-ppn-tenant-vm-isolation.draft.md` | PPN Tenant VM Isolation | STAGED — written 2026-06-14; ready for project-editorial |
 
 ---
 
@@ -776,17 +761,4 @@ visibility.
 
 - Add artifacts when planned; update status when dispatched or returned.
 - Cross-check with `.agent/briefs/README.md` for BRIEF-linked artifact chains.
-- When an artifact is dispatched to project-editorial/project-design, update status to DISPATCHED + commit hash
-- When an artifact is returned (approved/rejected), update status
-- Add new artifacts here at the time they are planned — do not wait until staging
-- E-series: update Stage 6 column when Command confirms promotion; update Live column when binary rebuild deployed
-| File | Likely owner |
-|---|---|
-| `GUIDE-orgchart-authoring.draft.md` | project-orgcharts |
-| `JOURNAL-NOTES-j3-20260602.draft.md` | project-gis (J3 = AEC Data Layers) |
-| `JOURNAL-NOTES-j6-20260602.draft.md` | project-gis (J6 = Desktop Environment) |
-| `RESEARCH-bencal-naming-conventions.{md,pdf}` | project-proforma |
-| `knowledge-platform-rewrite-analysis.draft.md` | project-knowledge |
-| `COMMS-bencal-*.{md,html,pdf}` | project-proforma or project-editorial |
-| `DESIGN-*.draft.md` | project-design (orgchart / docs components) |
-| `BRIEF-REVIEW-old-brief-verdict.md` | origin unknown |
+- Prior content (lines 65+) was project-gis contamination (M-17); replaced 2026-06-16.
