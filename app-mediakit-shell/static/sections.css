@@ -108,3 +108,99 @@
   .section-cta  { padding: 56px 24px; }
   .section-prose { padding: 48px 140px; }
 }
+
+/* ── Hero image (real-asset imagery — mobile research §4) ──────────── */
+.hero-media { margin: 0 0 24px; }
+.hero-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+}
+.hero-media figcaption {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* ── Card grid (equal-weight; single-column on mobile) ────────────── */
+.section-card-grid { background: var(--paper); padding: 32px 24px; }
+.cards-heading {
+  margin: 0 0 24px;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(20px, 3vw, 28px);
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  text-align: center;
+}
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr;        /* mobile: single column */
+  gap: 16px;
+}
+.card {
+  display: block;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 24px;
+}
+.card-link { transition: transform 160ms ease, box-shadow 160ms ease; }
+.card-link:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(17, 24, 39, 0.08); }
+.card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 12px;
+  background: var(--accent-tint);
+  color: var(--accent);
+  border-radius: 3px;
+  font-size: 22px;
+}
+.card-title {
+  margin: 0 0 8px;
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.card-body { margin: 0; font-size: 16px; line-height: 1.55; color: var(--ink-2); }
+
+/* ── Feature row (image + text; stacked mobile, side-by-side desktop) ─ */
+.section-feature { background: var(--paper); padding: 32px 24px; display: grid; gap: 20px; }
+.feature-media { margin: 0; }
+.feature-media img { display: block; width: 100%; height: auto; border-radius: 2px; }
+.feature-heading {
+  margin: 0 0 12px;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(20px, 3vw, 28px);
+  color: var(--ink);
+}
+.feature-body { font-size: 17px; line-height: 1.6; color: var(--ink-2); }
+.feature-body a { color: var(--accent); text-decoration: underline; }
+
+/* ── Standalone media ─────────────────────────────────────────────── */
+.section-media { padding: 0 24px; }
+.media-figure { margin: 0; }
+.media-figure img { display: block; width: 100%; height: auto; border-radius: 2px; }
+.media-figure figcaption { margin-top: 6px; font-size: 13px; color: var(--ink-3); }
+
+@media (min-width: 769px) {
+  .section-card-grid { padding: 48px 140px; }
+  .card-grid { grid-template-columns: repeat(var(--cols, 3), 1fr); gap: 24px; }
+
+  .section-feature {
+    padding: 56px 140px;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 48px;
+  }
+  /* default: media left, text right. media-right swaps the order. */
+  .feature-media-right .feature-media { order: 2; }
+
+  .section-media { padding: 0 140px; }
+}
