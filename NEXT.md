@@ -16,13 +16,20 @@ Last updated: 2026-06-16
 
 ## Active (Totebox scope)
 
-- [ ] **Sprint D** — home page editorial redesign; next engineering sprint
-- [ ] **Defect 2** (footnotes CSS) — find reproducing article first; `<sup>` + `.footnotes` styling gap; confirmed NOT an engine bug
-- [ ] **Design artifacts D1a–D1e** — DESIGN-* files in `.agent/drafts-outbound/`; dispatch to project-design
-- [ ] **D2 orgcharts relay** — D2a–D2m in drafts-outbound originated from project-orgcharts;
-      relay to project-design or confirm project-orgcharts has canonical copies before removing
-- [ ] **F-series tracking** — F1–F7 content repair requests sent to project-editorial 2026-06-14;
-      track responses; update artifact-registry.md Status column when returned
+- [ ] **Cargo check + test gate** — `cargo check -p app-mediakit-knowledge` + `cargo test -p app-mediakit-knowledge` must pass before Stage 6 promotion; blocked on `~/.cargo/.package-cache-mutate` lock from project-intelligence slm-doorman + system memory pressure (608MB available at time of commit `21212c69`); run as soon as lock releases [2026-06-16 totebox]
+- [ ] **Stage 6 READY signal** — send to Command after cargo check + test pass; include E9 commit SHA `21212c69` [2026-06-16 totebox]
+- [x] **Design artifacts D1a–D1e** — dispatched to project-design via send_mailbox_message (msg-id: command-20260616-design-artifacts-dispatch-knowledge-plat) [2026-06-16 totebox@claude-code]
+- [x] **D2 orgcharts relay** — D2a–D2m relayed to project-design via send_mailbox_message (msg-id: command-20260616-cross-archive-relay-d2a-d2m-orgchart-wor); GUIDE-orgchart-authoring.draft.md flagged for project-editorial [2026-06-16 totebox@claude-code]
+- [ ] **F-series tracking** — F1–F7 content repair requests sent to project-editorial 2026-06-14; track responses; update artifact-registry.md Status column when returned [2026-06-16 totebox]
+
+## Completed (this session, 2026-06-16)
+
+- [x] **Sprint D** — home page peer-band (`aside.peer-band`) in `home_handlers.rs`; CSS in `style.css`; peers threaded into `home_chrome()` [2026-06-16 totebox@claude-code]
+- [x] **Defect 2** (footnotes CSS) — `sup/sub/footnotes` CSS prophylactically added to `style.css` [2026-06-16 totebox@claude-code]
+- [x] **M13 /openapi.json** — `GET /openapi.json` route added → 301 redirect to `/openapi.yaml` [2026-06-16 totebox@claude-code]
+- [x] **Sprint E** — `audience` + `aliases` fields added to `render::Frontmatter` (correct) + `walker::Frontmatter`; audience chips in `wiki_chrome`; `resolve_alias_slug()` + 301 alias redirect [2026-06-16 totebox@claude-code]
+- [x] **Sprint F** — engine version in `shell_footer()`; `.peer-strip` cross-instance nav in `wiki_chrome`; doc-header CSS gap noted (already in HTML, was missing CSS — `.site-footer__trademark` CSS structure confirmed) [2026-06-16 totebox@claude-code]
+- [x] **Sprint G** — `search_complete` returns `{title,slug,lede}`; `search_page` accepts `?category=` + `?status=` filters (post-search) [2026-06-16 totebox@claude-code]
 
 ## Completed (Sessions 84+)
 
