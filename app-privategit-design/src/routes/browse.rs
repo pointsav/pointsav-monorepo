@@ -7,10 +7,10 @@ use axum::{
 use std::fs;
 
 pub async fn index(State(state): State<AppState>) -> Html<String> {
-    let nav_html = render::render_nav(&state.nav, vault::SECTIONS, "", "");
+    let nav_html = render::render_nav(&state.env, &state.nav, vault::SECTIONS, "", "");
     let content = "<div class=\"home-body\"><h1>PointSav Design System</h1>\
                    <p>Select an element from the sidebar.</p></div>";
-    Html(render::shell("PointSav Design System", &nav_html, "", "", content))
+    Html(render::shell(&state.env, "PointSav Design System", &nav_html, "", "", content))
 }
 
 pub async fn element_redirect(
@@ -53,11 +53,12 @@ pub async fn element_tab(
     let schema_type = schema::detect(&frontmatter);
     let content = schema::render(schema_type, &frontmatter, &body);
 
-    let nav_html = render::render_nav(&state.nav, vault::SECTIONS, "elements", &slug);
-    let tab_bar = render::render_tab_bar("elements", &slug, &tabs, &tab);
+    let nav_html = render::render_nav(&state.env, &state.nav, vault::SECTIONS, "elements", &slug);
+    let tab_bar = render::render_tab_bar(&state.env, "elements", &slug, &tabs, &tab);
     let label = vault::to_title(&slug);
 
     Html(render::shell(
+        &state.env,
         &format!("{} — PointSav Design System", label),
         &nav_html,
         &tab_bar,
