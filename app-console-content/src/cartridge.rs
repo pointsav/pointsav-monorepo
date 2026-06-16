@@ -2,6 +2,7 @@ use std::sync::mpsc;
 use std::thread;
 
 use app_console_keys::{Cartridge, CartridgeAction, FKey};
+use app_console_keys::session::SessionState;
 use crossterm::event::{Event, KeyCode, KeyModifiers};
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
@@ -155,6 +156,8 @@ pub struct ContentCartridge {
     restored_hint: bool,
     tabs: Vec<TabSnapshot>,
     active_tab_idx: usize,
+    // Last search query — restored from session.toml at startup.
+    last_search: String,
 }
 
 impl ContentCartridge {
@@ -212,6 +215,7 @@ impl ContentCartridge {
             thread::sleep(std::time::Duration::from_secs(30));
         });
 
+        let saved_session = SessionState::load();
         let draft_save = DraftSave::open();
         let saved_draft = draft_save.load();
         let restored_hint = saved_draft.is_some();
@@ -266,6 +270,7 @@ impl ContentCartridge {
             restored_hint,
             tabs: vec![TabSnapshot::fresh_input()],
             active_tab_idx: 0,
+            last_search: saved_session.content_query,
         }
     }
 
@@ -347,9 +352,14 @@ impl ContentCartridge {
         } else {
             ""
         };
+        let search_note = if !self.last_search.is_empty() {
+            format!("  [last: {}]", &self.last_search)
+        } else {
+            String::new()
+        };
         let hint = Paragraph::new(format!(
-            " Protocol: {}  —  {}    [Tab: change  Ctrl-S: submit  /new: draft  /search: search  q/Ctrl-C: quit]{}{}",
-            slug, display, offline_note, restored_note
+            " Protocol: {}  —  {}    [Tab: change  Ctrl-S: submit  /new: draft  /search: search  q/Ctrl-C: quit]{}{}{}",
+            slug, display, offline_note, restored_note, search_note
         ))
         .style(Style::default().fg(Color::DarkGray));
         frame.render_widget(hint, chunks[1]);
@@ -1065,6 +1075,13 @@ impl ContentCartridge {
     fn on_search_key(&mut self, key: &crossterm::event::KeyEvent) -> CartridgeAction {
         match key.code {
             KeyCode::Esc | KeyCode::Char('q') => {
+                if let ContentState::SearchResults { ref query, .. } = self.state {
+                    self.last_search = query.clone();
+                    let session = SessionState {
+                        content_query: query.clone(),
+                    };
+                    session.save();
+                }
                 self.reset_textarea(DEFAULT_PROTOCOL_IDX);
                 self.save_session();
             }
@@ -1483,6 +1500,13 @@ impl Cartridge for ContentCartridge {
         while let Ok(available) = self.health_rx.try_recv() {
             self.offline = !available;
         }
+    }
+
+    fn set_graphics_caps(&mut self, kitty: bool, sixel: bool, font_size: (u16, u16), truecolor: bool) {
+        self.pdf_kitty = kitty;
+        self.pdf_sixel = sixel;
+        self.pdf_font_size = font_size;
+        self.truecolor = truecolor;
     }
 
     fn render(&mut self, frame: &mut Frame, area: Rect) {

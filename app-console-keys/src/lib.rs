@@ -1,5 +1,7 @@
 pub mod cartridge;
 pub mod chassis;
+pub mod colors;
+pub mod session;
 pub mod config;
 pub mod fkey;
 pub mod input_bytes;
