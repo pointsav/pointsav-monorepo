@@ -1,41 +1,108 @@
 title: Home
 slug: home
-description: Woodfine Capital Projects — disciplined real estate development across North America.
+description: A real property developer with 40 years' experience in the procurement, development, and management of real property.
 lang: en
 sections:
   - type: hero
-    headline: Real assets, built with discipline
-    subhead: Woodfine Capital Projects develops and holds commercial real estate in Vancouver and New York.
-    cta:
-      label: Contact us
-      href: /page/contact
+    headline: A real property developer with 40 years' experience
+    subhead: >-
+      The firm sponsors direct-hold solutions that hold four Development Classes
+      of environmentally certified properties in or near Power Centres in
+      selected North American and European markets.
 
   - type: card-grid
-    heading: What we do
+    columns: 4
+    cards:
+      - title: Alignment of Interests
+        body: >-
+          Our unique fee structure directly aligns the interests of investors
+          and management. Woodfine's equity interest in each of our direct-hold
+          solutions is held solely through the ownership of the units.
+      - title: Freely Transferable
+        body: >-
+          Because our direct-hold solutions are regulated as public companies,
+          their units are freely transferable and can be bought and sold at any
+          time without the consent of Woodfine or other unit holders.
+      - title: Low Fees
+        body: >-
+          Our partners pay one Advisory Fee — a single charge covering all
+          aspects of the real estate businesses. It is calculated on the gross
+          funded value, not Net Asset Value (NAV), keeping the manager's
+          interest fully aligned with the partner's.
+      - title: Anti-Dilution
+        body: >-
+          Our direct-hold solutions are closed-end with a fixed gross funded
+          value, a feature that drives increasing yield over time, after an
+          initial period. Increases in maximum subscribed capital are not
+          permitted under the universal governing bylaws.
+      - title: Reduced Volatility
+        body: >-
+          The Net Asset Value (NAV) of each direct-hold solution is not
+          correlated to the stock market. Net Asset Values are posted quarterly
+          and determined by third-party property appraisers.
+      - title: No Bank Debt
+        body: >-
+          As reporting issuers, our direct-hold solutions may issue their own
+          First Secured Mortgage Debentures in order to fund new buildings,
+          rather than placing third-party bank debt on the properties.
+      - title: Qualified Investments
+        body: >-
+          Prospective project sites and buildings must meet specific parameters
+          before any project can be approved by an independent board of
+          directors.
+      - title: Digital Systems
+        href: https://home.pointsav.com
+        body: >-
+          Woodfine partners with PointSav Digital Systems to deliver the digital
+          infrastructure underpinning each project — BIM tokenization, location
+          intelligence, and operational systems integrated across the
+          direct-hold solution lifecycle.
+
+  - type: card-grid
     columns: 3
     cards:
-      - title: Develop
-        icon: "▣"
-        body: Ground-up commercial development, grounded in site-level analysis.
-      - title: Operate
-        icon: "◈"
-        body: Direct, long-horizon operation of the assets we build.
-      - title: Hold
-        icon: "◆"
-        body: Long holding periods and direct ownership, not quick turnover.
+      - title: Manifest
+        href: https://github.com/woodfine/woodfine-fleet-deployment
+      - title: BIM Library
+        href: https://bim.woodfinegroup.com/
+      - title: Location Intelligence
+        href: https://gis.woodfinegroup.com/
 
-  - type: feature
-    heading: A platform built in-house
+  - type: prose
     body: |
-      Our reporting and operations run on software we are building ourselves.
-      Additional capabilities are planned and will be announced as they are
-      delivered.
-    cta:
-      label: Read the disclaimer
-      href: /page/disclaimer
+      **Securities offering.** Securities of Woodfine-sponsored direct-hold
+      solutions are offered only to qualified investors pursuant to applicable
+      prospectus exemptions under National Instrument 45-106 — Prospectus
+      Exemptions. The information on this page is provided for general
+      informational purposes only and does not constitute an offer to sell or a
+      solicitation of an offer to buy any security. Prospective investors should
+      review the applicable offering memorandum and consult their own
+      professional advisors before investing.
 
-  - type: cta
-    heading: Enquire about a project
-    cta:
-      label: Get in touch
-      href: /page/contact
+      1. Information on this page describes the firm and its activities at a high
+      level and is qualified in its entirety by the applicable offering
+      memorandum and universal governing bylaws.
+
+      2. Investment in real-property direct-hold solutions involves significant
+      risk, including possible loss of capital. Past performance is not
+      indicative of future results. References to structural features such as
+      advisory fees, transferability, and net asset value methodology describe
+      the contractual terms of the direct-hold solutions and are not
+      representations as to investment outcomes or returns.
+
+      **Forward-looking statements.** Statements that are not historical facts
+      may constitute forward-looking information within the meaning of applicable
+      Canadian securities laws. Such statements are subject to known and unknown
+      risks, uncertainties and assumptions, and actual results may differ
+      materially. Woodfine undertakes no obligation to update such statements
+      except as required by law.
+
+      **Registration.** Woodfine Capital Projects and its affiliates conduct
+      registrable activities, where required, under the relevant categories
+      prescribed by the British Columbia Securities Commission and other Canadian
+      securities regulators. Specific registration details are available on
+      request.
+
+      Woodfine Capital Projects, Woodfine Management Corp, PointSav Digital
+      Systems, Totebox Orchestration, and Totebox Archive are trademarks owned by
+      Woodfine Capital Projects Inc.
