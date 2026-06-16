@@ -25,6 +25,9 @@ moonshot-fs-watch = { path = "../moonshot-fs-watch" }
 # Sovereign in-memory search index (replaces tantivy; stub → active 2026-06-15)
 moonshot-index = { path = "../moonshot-index" }
 
+# HTTP client for AI upstream relay (sovereign target: moonshot-http, long-term)
+reqwest = { version = "0.12", default-features = false, features = ["stream", "rustls-tls", "json"] }
+
 # --- "We Own It" dep map (BRIEF-app-privategit-design.md §D8) ---
 # askama (compile-time templates)   → moonshot-template  (stub added 2026-06-15)
 # syntect (syntax highlighting)     → moonshot-highlight  (stub added 2026-06-15)
