@@ -18,6 +18,9 @@
 //!   POST /v1/graph/mutate        → graph-mutate proxy; forwards to
 //!                                  service-content /v1/graph/mutate and
 //!                                  audit-logs as event_type=graph-mutation
+//!   POST /v1/batch/extract       → batched entity extraction (up to 10
+//!                                  items); items processed sequentially;
+//!                                  each item audited independently
 //!
 //! The /v1/chat/completions handler accepts an OpenAI-compatible body
 //! plus optional X-Foundry-* headers (Module-ID, Request-ID,
@@ -134,6 +137,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/verdict", post(verdict))
         .route("/v1/shadow", post(shadow))
         .route("/v1/extract", post(extract))
+        .route("/v1/batch/extract", post(batch_extract))
         .route("/v1/audit/proxy", post(audit_proxy))
         .route("/v1/audit/capture", post(audit_capture))
         .route("/v1/graph/query", post(graph_query))
@@ -169,6 +173,10 @@ async fn readyz(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     let queue_pending = count_dir(base.join("queue"));
     let queue_done = count_dir(base.join("queue-done"));
     let queue_poison = count_dir(base.join("queue-poison"));
+    // Q8: surfaced here so callers don't need a separate /v1/status/queue poll.
+    // Non-zero quarantine = classification-guard rejections needing re-drive
+    // after Stage 6 deploys the hardened binary.
+    let queue_quarantine = count_dir(base.join("quarantine"));
 
     let body = serde_json::json!({
         "ready": ai_available,
@@ -187,6 +195,7 @@ async fn readyz(State(state): State<Arc<AppState>>) -> impl IntoResponse {
         "queue_pending": queue_pending,
         "queue_done": queue_done,
         "queue_poison": queue_poison,
+        "queue_quarantine": queue_quarantine,
     });
     let http_status = if ai_available {
         StatusCode::OK
@@ -502,9 +511,33 @@ fn acquire_tenant_permit(
         })
 }
 
+/// System prompt sent to the Yo-Yo "trainer" node for all extraction calls
+/// (both `/v1/extract` and `/v1/batch/extract`).  Kept as a named constant
+/// so both handlers stay in sync without duplication.
+const DOORMAN_EXTRACTION_SYSTEM_PROMPT: &str = "\
+Extract named entities from the text. Classify each entity into exactly one category.\n\
+Categories and examples:\n\
+  Person — named human individual. Example: \"Jane Smith\".\n\
+  Company — registered organisation or business. Example: \"Woodfine Management Corp.\".\n\
+  Project — named initiative, programme, or system. Example: \"service-slm\".\n\
+  Account — financial account, service account, or contract reference.\n\
+  Location — geographic place or address. Example: \"Vancouver\".\n\
+Omit: laws and regulations (not Location), dates and years (not Location), abstract concepts \
+(not Company), regulatory bodies (not Company unless they are a named legal entity with a \
+registered name).\n\
+If an entity does not clearly fit one category, omit it rather than guessing.\n\
+Return a JSON array matching the schema exactly.";
+
 /// Maximum permitted raw body size for `POST /v1/extract`.
 /// 256 KiB: large enough for a 3000-token corpus; small enough to resist DoS.
 pub const EXTRACTION_MAX_REQUEST_BYTES: usize = 256 * 1024; // 256 KiB
+
+/// Maximum permitted raw body size for `POST /v1/batch/extract`.
+/// 2 MiB: 10 items × ~200 KiB each with headroom.
+const BATCH_EXTRACTION_MAX_REQUEST_BYTES: usize = 2 * 1024 * 1024; // 2 MiB
+
+/// Maximum number of items in a single `/v1/batch/extract` request.
+const BATCH_MAX_ITEMS: usize = 10;
 
 /// `POST /v1/extract` — dedicated entity extraction endpoint.
 ///
@@ -565,16 +598,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         messages: vec![
             ChatMessage {
                 role: "system".to_string(),
-                content: "Extract named entities from the text. Classify each entity into exactly one category.\n\
-Categories and examples:\n\
-  Person — named human individual. Example: \"Jane Smith\".\n\
-  Company — registered organisation or business. Example: \"Woodfine Management Corp.\".\n\
-  Project — named initiative, programme, or system. Example: \"service-slm\".\n\
-  Account — financial account, service account, or contract reference.\n\
-  Location — geographic place or address. Example: \"Vancouver\".\n\
-Omit: laws and regulations (not Location), dates and years (not Location), abstract concepts (not Company), regulatory bodies (not Company unless they are a named legal entity with a registered name).\n\
-If an entity does not clearly fit one category, omit it rather than guessing.\n\
-Return a JSON array matching the schema exactly.".to_string(),
+                content: DOORMAN_EXTRACTION_SYSTEM_PROMPT.to_string(),
             },
             ChatMessage {
                 role: "user".to_string(),
@@ -698,6 +722,253 @@ Return a JSON array matching the schema exactly.".to_string(),
         extraction_ok,
         deferred,
         defer_reason: defer_reason_enum,
+    })
+    .into_response()
+}
+
+// ---------------------------------------------------------------------------
+// Batch extraction types — local to this crate (no shared-type contract yet)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Deserialize)]
+struct BatchExtractionRequest {
+    /// Tenant identifier — validated as [`ModuleId`]; shared across all items.
+    module_id: String,
+    /// Extraction items; 1–[`BATCH_MAX_ITEMS`] entries.
+    items: Vec<BatchItem>,
+}
+
+#[derive(Debug, Deserialize)]
+struct BatchItem {
+    /// Unstructured prose to extract entities from (ADR-07: prose only).
+    text: String,
+    /// JSON Schema constraining the OUTPUT array from the inference model.
+    schema: serde_json::Value,
+    /// Per-item inference timeout in seconds (default 180).
+    #[serde(default = "default_batch_item_timeout")]
+    timeout_secs: u64,
+}
+
+fn default_batch_item_timeout() -> u64 {
+    180
+}
+
+#[derive(Debug, Serialize)]
+struct BatchItemResponse {
+    /// Zero-based position of this item in the request array.
+    index: usize,
+    /// Extracted entity array.  Empty when `deferred: true`.
+    entities: Vec<serde_json::Value>,
+    tier_used: String,
+    model: String,
+    extraction_ok: bool,
+    deferred: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    defer_reason: Option<DeferReason>,
+}
+
+#[derive(Debug, Serialize)]
+struct BatchExtractionResponse {
+    items: Vec<BatchItemResponse>,
+    total: usize,
+    extraction_ok_count: usize,
+    deferred_count: usize,
+}
+
+/// `POST /v1/batch/extract` — batched entity extraction, up to [`BATCH_MAX_ITEMS`] items.
+///
+/// Items are processed sequentially; the Yo-Yo "trainer" node is inherently
+/// serial (one inference at a time), so concurrent fan-out would only queue
+/// at the router level.  The throughput gain vs. N separate HTTP calls comes
+/// from eliminating N caller round-trips.
+///
+/// Each item produces its own audit ledger entry.  The tenant concurrency
+/// permit is acquired and released per item so the slot is never held for
+/// longer than one inference call.
+///
+/// Response is always HTTP 200 — inspect `items[].deferred` per item.
+async fn batch_extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoResponse {
+    // 0. Body-size cap.
+    if raw.len() > BATCH_EXTRACTION_MAX_REQUEST_BYTES {
+        return ApiError::bad_request(format!(
+            "batch/extract request is {} bytes, exceeding the {}-byte limit; split payload",
+            raw.len(),
+            BATCH_EXTRACTION_MAX_REQUEST_BYTES,
+        ))
+        .into_response();
+    }
+
+    // 1. Deserialise.
+    let req: BatchExtractionRequest = match serde_json::from_slice(&raw) {
+        Ok(r) => r,
+        Err(e) => return ApiError::bad_request(format!("invalid JSON body: {e}")).into_response(),
+    };
+
+    // 2. Validate module_id.
+    let module_id = match ModuleId::from_str(&req.module_id) {
+        Ok(mid) => mid,
+        Err(e) => return ApiError::bad_request(format!("invalid module_id: {e}")).into_response(),
+    };
+
+    // 3. Batch size guards.
+    if req.items.is_empty() {
+        return ApiError::bad_request("items array must not be empty").into_response();
+    }
+    if req.items.len() > BATCH_MAX_ITEMS {
+        return ApiError::bad_request(format!(
+            "batch size {} exceeds maximum of {}; split into smaller batches",
+            req.items.len(),
+            BATCH_MAX_ITEMS,
+        ))
+        .into_response();
+    }
+
+    // 4. Process each item sequentially.
+    let mut responses: Vec<BatchItemResponse> = Vec::with_capacity(req.items.len());
+
+    for (idx, item) in req.items.into_iter().enumerate() {
+        // Acquire permit per item; released at end of loop body.
+        let _permit = match acquire_tenant_permit(&state, &module_id) {
+            Ok(p) => p,
+            Err(_) => {
+                responses.push(BatchItemResponse {
+                    index: idx,
+                    entities: vec![],
+                    tier_used: "deferred".to_string(),
+                    model: "none".to_string(),
+                    extraction_ok: false,
+                    deferred: true,
+                    defer_reason: Some(DeferReason::YoyoTransient),
+                });
+                continue;
+            }
+        };
+
+        let request_id = RequestId::new();
+        let compute_req = ComputeRequest {
+            request_id,
+            module_id: module_id.clone(),
+            model: None,
+            messages: vec![
+                ChatMessage {
+                    role: "system".to_string(),
+                    content: DOORMAN_EXTRACTION_SYSTEM_PROMPT.to_string(),
+                },
+                ChatMessage {
+                    role: "user".to_string(),
+                    content: item.text,
+                },
+            ],
+            complexity: Complexity::High,
+            tier_hint: Some(Tier::Yoyo),
+            stream: false,
+            max_tokens: Some(2048),
+            temperature: Some(0.1),
+            sanitised_outbound: true,
+            tier_c_label: None,
+            yoyo_label: Some("trainer".to_string()),
+            grammar: Some(GrammarConstraint::JsonSchema(item.schema)),
+            speculation: None,
+            graph_context_enabled: None,
+            tools: None,
+            stop_sequences: None,
+            session_context: None,
+        };
+
+        let start = std::time::Instant::now();
+        let result = state.doorman.route_yoyo_only(&compute_req, "trainer").await;
+        let latency_ms = start.elapsed().as_millis() as u64;
+
+        let error_message_for_audit = result.as_ref().err().map(|e| e.to_string());
+
+        let (entities, tier_used, model, extraction_ok, deferred, defer_reason_str) = match result {
+            Ok(compute_resp) => {
+                let content_no_think: String = if compute_resp.reasoning_content.is_some() {
+                    compute_resp.content.clone()
+                } else {
+                    strip_think_blocks(&compute_resp.content)
+                };
+                let raw_content = content_no_think.trim().to_string();
+                let stripped = raw_content
+                    .strip_prefix("```json")
+                    .unwrap_or(&raw_content)
+                    .strip_prefix("```")
+                    .unwrap_or(&raw_content);
+                let stripped = stripped.strip_suffix("```").unwrap_or(stripped).trim();
+                match serde_json::from_str::<Vec<serde_json::Value>>(stripped) {
+                    Ok(ents) => (ents, "yoyo_trainer".to_string(), compute_resp.model, true, false, None::<String>),
+                    Err(_) => (vec![], "deferred".to_string(), "none".to_string(), false, true, Some("yoyo-transient".to_string())),
+                }
+            }
+            Err(DoormanError::TierUnavailable(_)) => (
+                vec![],
+                "deferred".to_string(),
+                "none".to_string(),
+                false,
+                true,
+                Some("yoyo-circuit-open".to_string()),
+            ),
+            Err(_) => (
+                vec![],
+                "deferred".to_string(),
+                "none".to_string(),
+                false,
+                true,
+                Some("yoyo-transient".to_string()),
+            ),
+        };
+
+        // Audit entry per item (non-fatal).
+        let audit_entry = ExtractionAuditEntry {
+            entry_type: ENTRY_TYPE_EXTRACT.to_string(),
+            timestamp_utc: Utc::now(),
+            request_id,
+            module_id: module_id.clone(),
+            extraction_ok,
+            deferred,
+            entities_count: entities.len(),
+            tier_used: tier_used.clone(),
+            latency_ms,
+            defer_reason: defer_reason_str.clone(),
+            error_message: error_message_for_audit,
+        };
+        if let Err(write_err) = state.doorman.ledger().append_extract_entry(&audit_entry) {
+            tracing::warn!(
+                target: "slm_doorman::batch_extract",
+                error = %write_err,
+                request_id = %request_id,
+                idx,
+                "failed to write extraction audit entry for batch item"
+            );
+        }
+
+        let defer_reason_enum = defer_reason_str.as_deref().map(|s| match s {
+            "yoyo-circuit-open" => DeferReason::YoyoCircuitOpen,
+            "yoyo-label-unconfigured" => DeferReason::YoyoLabelUnconfigured,
+            _ => DeferReason::YoyoTransient,
+        });
+
+        responses.push(BatchItemResponse {
+            index: idx,
+            entities,
+            tier_used,
+            model,
+            extraction_ok,
+            deferred,
+            defer_reason: defer_reason_enum,
+        });
+        // _permit dropped here — slot released before next item's inference call.
+    }
+
+    let extraction_ok_count = responses.iter().filter(|r| r.extraction_ok).count();
+    let deferred_count = responses.iter().filter(|r| r.deferred).count();
+    let total = responses.len();
+
+    Json(BatchExtractionResponse {
+        items: responses,
+        total,
+        extraction_ok_count,
+        deferred_count,
     })
     .into_response()
 }
