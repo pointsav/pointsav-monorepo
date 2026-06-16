@@ -144,7 +144,7 @@ Last updated: 2026-05-31.
 | service-search | Reserved-folder | service | 1 file |
 | service-slm | Scaffold-coded | service | Contains `router/` (Rust runtime, renamed 2026-04-23 from `cognitive-forge/`) and `router-trainer/` (Python distillation workflow, moved in 2026-04-23 from former top-level `tool-cognitive-forge/`); both names replace the retired "cognitive-forge" term per Do-Not-Use list |
 | service-totebox-egress | Scaffold-coded | service | 18 files |
-| service-vm-fleet | Active | service | PPN VM fleet controller; axum :9203; heartbeat ingestion + advisory placement; GET /v1/vms (all VMs) + GET /v1/vms/:vm_id (state poll); 22 tests passing; workspace member (2026-06-15) |
+| service-vm-fleet | Active | service | PPN VM fleet controller; axum :9203; heartbeat ingestion + advisory placement; GET /v1/vms (all VMs) + GET /v1/vms/:vm_id (state poll); merge-not-replace heartbeat sync (Provisioning/Error VMs survive host window); 26 tests passing; workspace member (2026-06-15) |
 | service-vm-host | Active | service | PPN VM per-node heartbeat agent; /proc/meminfo + /proc/cpuinfo + /proc/loadavg + /dev/kvm; QMP socket poll; .meta.json sidecar read; heartbeat POST to fleet; 7 tests passing; workspace member (2026-06-15) |
 | service-vm-tenant | Active | service | PPN customer-facing VM proxy; axum :9221; Bearer auth + quota enforcement + TOCTOU guard; WORM audit; startup state recovery (TENANT_STATE_PATH); GET /v1/vms/:vm_id ownership-checked poll; 11 tests passing; workspace member (2026-06-15) |
 | service-vpn | Scaffold-coded | service | 11 files |
