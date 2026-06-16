@@ -135,6 +135,16 @@ pub struct Frontmatter {
     #[serde(default)]
     pub infobox: Option<Infobox>,
 
+    /// Target audience chips shown below the article H1 and status badge.
+    /// E.g. ["operator", "developer", "public"]. Rendered as inline chips.
+    #[serde(default)]
+    pub audience: Vec<String>,
+
+    /// Alternative slugs that 301-redirect to this article's canonical slug.
+    /// Allows renaming articles without breaking existing links.
+    #[serde(default)]
+    pub aliases: Vec<String>,
+
     #[serde(flatten)]
     pub extra: BTreeMap<String, serde_yaml::Value>,
 }
