@@ -15,13 +15,14 @@ pub async fn sidebar_sse(
 ) -> Sse<impl stream::Stream<Item = Result<Event, Infallible>>> {
     let rx = state.watch_tx.subscribe();
     let nav = state.nav.clone();
+    let env = state.env.clone();
 
-    let s = stream::unfold((rx, nav), |(mut rx, nav)| async move {
+    let s = stream::unfold((rx, nav, env), |(mut rx, nav, env)| async move {
         if rx.changed().await.is_err() {
             return None;
         }
-        let html = render::render_nav(&nav, SECTIONS, "", "");
-        Some((Ok(Event::default().data(html)), (rx, nav)))
+        let html = render::render_nav(&env, &nav, SECTIONS, "", "");
+        Some((Ok(Event::default().data(html)), (rx, nav, env)))
     });
 
     Sse::new(s).keep_alive(KeepAlive::default())
