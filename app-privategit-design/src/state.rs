@@ -9,4 +9,5 @@ pub struct AppState {
     pub tenant: String,
     pub watch_tx: Arc<watch::Sender<()>>,
     pub index: Arc<RwLock<InvertedIndex>>,
+    pub edit_token: Arc<String>,
 }

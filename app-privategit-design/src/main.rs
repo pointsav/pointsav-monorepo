@@ -62,12 +62,16 @@ async fn main() {
         });
     }
 
+    let edit_token = Arc::new(generate_token());
+    eprintln!("app-privategit-design edit token: {}", edit_token);
+
     let state = AppState {
         vault: cfg.vault,
         nav,
         tenant: cfg.tenant,
         watch_tx,
         index,
+        edit_token,
     };
 
     let app = routes::build_router(state).layer(CompressionLayer::new());
@@ -105,6 +109,13 @@ async fn reindex_file(path: &Path, _vault: &Path, index: &Arc<RwLock<InvertedInd
         body,
     };
     index.write().await.insert(doc);
+}
+
+fn generate_token() -> String {
+    let mut buf = [0u8; 32];
+    let mut f = std::fs::File::open("/dev/urandom").expect("open /dev/urandom");
+    std::io::Read::read_exact(&mut f, &mut buf).expect("read entropy");
+    buf.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
 async fn populate_index(vault: &Path, index: &Arc<RwLock<InvertedIndex>>) {
