@@ -84,6 +84,7 @@ Last updated: 2026-06-14.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
+| app-workplace-aibridge | Scaffold-coded | app-workplace | AI section-edit bridge core (req #4); lib crate; composes moonshot-docengine + moonshot-crdt; read_selection/propose_edit/commit_edit; SYS-ADR-07 guard; MCP server wraps it |
 | app-workplace-bim | Reserved-folder | app-workplace | RESEARCH.md + NEXT.md; research phase; Wave 3 |
 | app-workplace-gis | Scaffold-coded | app-workplace | Wave 2; MapLibre GL WebView shell; CLAUDE.md + NEXT.md; src-tauri stub; no Tauri crate yet |
 | app-workplace-memo | Active | app-workplace | Wave 1; Tauri v1.7 document editor; CLAUDE.md + NEXT.md present |
