@@ -5,7 +5,7 @@ pub mod search;
 pub mod sse;
 
 use crate::state::AppState;
-use axum::{routing::{get, put}, Router};
+use axum::{routing::{get, post, put}, Router};
 use tower_http::services::ServeDir;
 
 pub fn build_router(state: AppState) -> Router {
@@ -20,6 +20,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/sidebar/sse", get(sse::sidebar_sse))
         .route("/vault/elements/:slug/:tab/raw", get(edit::get_raw))
         .route("/vault/elements/:slug/:tab", put(edit::put_save))
+        .route("/ai/session", post(ai::post_session))
         .nest_service("/static", ServeDir::new(static_dir))
         .with_state(state)
 }
