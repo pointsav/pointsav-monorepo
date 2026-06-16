@@ -51,14 +51,39 @@ pub fn is_noise_entity_name(name: &str) -> bool {
     if !trimmed.contains(' ') && trimmed.contains('_') {
         return true;
     }
-    // Sentence fragment starters
-    const FRAGMENT_STARTERS: [&str; 4] = ["the ", "a ", "an ", "this "];
+    // Numeric-prefix: entities that start with a digit or decimal are counts,
+    // measurements, or data fragments ("5.0 km of the cluster centroid", "3,904 of 14,332")
+    if trimmed
+        .chars()
+        .next()
+        .map_or(false, |c| c.is_ascii_digit())
+    {
+        return true;
+    }
+    // Sentence fragment starters (expanded from 4 → 14)
+    const FRAGMENT_STARTERS: [&str; 14] = [
+        "the ", "a ", "an ", "this ", "all ", "any ", "each ", "most ",
+        "some ", "these ", "those ", "section ", "for ", "of ",
+    ];
     if FRAGMENT_STARTERS.iter().any(|p| lower.starts_with(p)) {
         return true;
     }
     // Comma-joined or conjunction phrases: not a single entity
     if trimmed.contains(", ") || lower.contains(" and ") {
         return true;
+    }
+    // Abstract common nouns that are never named entities in this domain.
+    // Only applied to single-word entries (multi-word proper nouns are fine).
+    if !trimmed.contains(' ') {
+        const ABSTRACT_NOUNS: [&str; 18] = [
+            "framework", "model", "hypothesis", "hypotheses", "pipeline",
+            "approach", "process", "mechanism", "algorithm", "methodology",
+            "criterion", "criteria", "paradigm", "construct", "abstraction",
+            "concept", "system", "architecture",
+        ];
+        if ABSTRACT_NOUNS.contains(&lower.as_str()) {
+            return true;
+        }
     }
     false
 }
@@ -229,6 +254,39 @@ mod tests {
         assert!(!is_noise_entity_name("Woodfine Management Corp."));
         assert!(!is_noise_entity_name("Vancouver"));
         assert!(!is_noise_entity_name("service-content"));
+    }
+
+    #[test]
+    fn noise_rejects_numeric_prefix() {
+        assert!(is_noise_entity_name("5.0 km of the cluster centroid"));
+        assert!(is_noise_entity_name("3,904 of 14,332"));
+        assert!(is_noise_entity_name("100 meters"));
+    }
+
+    #[test]
+    fn noise_rejects_extended_fragment_starters() {
+        assert!(is_noise_entity_name("all formal verification proofs"));
+        assert!(is_noise_entity_name("some of the clusters"));
+        assert!(is_noise_entity_name("each tier definition"));
+        assert!(is_noise_entity_name("Section 7 states the falsification programme"));
+    }
+
+    #[test]
+    fn noise_rejects_abstract_nouns() {
+        assert!(is_noise_entity_name("framework"));
+        assert!(is_noise_entity_name("model"));
+        assert!(is_noise_entity_name("hypothesis"));
+        assert!(is_noise_entity_name("hypotheses"));
+        assert!(is_noise_entity_name("pipeline"));
+        assert!(is_noise_entity_name("architecture"));
+    }
+
+    #[test]
+    fn noise_allows_valid_multi_word_with_common_words() {
+        // "Model" in a proper noun context is fine — filter is single-word only
+        assert!(!is_noise_entity_name("Claude Model Registry"));
+        // Proper nouns that happen to contain abstract concepts remain valid
+        assert!(!is_noise_entity_name("Foundry Pipeline"));
     }
 
     #[test]
