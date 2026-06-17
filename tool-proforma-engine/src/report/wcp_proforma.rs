@@ -291,9 +291,11 @@ fn render_income_statement(years: &[WcpYear]) -> String {
     s.push_str(&data_row("Referral fees (Y1–Y2)", years, |y| {
         y.referral_fees
     }));
-    s.push_str(&data_row("WPI compensation agreement (Y1–Y2)", years, |y| {
-        y.wpi_consulting
-    }));
+    s.push_str(&data_row(
+        "WPI compensation agreement (Y1–Y2)",
+        years,
+        |y| y.wpi_consulting,
+    ));
     s.push_str(&data_row("G&amp;A — New York City", years, |y| y.gna_nyc));
     s.push_str(&data_row("G&amp;A — Berlin", years, |y| y.gna_berlin));
     s.push_str(&data_row("Total operating expenses", years, |y| {
@@ -326,10 +328,14 @@ fn render_book_valuation(years: &[WcpYear]) -> String {
     s.push_str(&data_row("Financing activity", years, |y| {
         y.financing_activity
     }));
-    s.push_str(&data_row("Cumulative free cash flow", years, |y| y.cumulative_fcf));
-    s.push_str(&data_row("Direct-hold solution ownership (10% of DHS NAV)", years, |y| {
-        y.lp_ownership_book
+    s.push_str(&data_row("Cumulative free cash flow", years, |y| {
+        y.cumulative_fcf
     }));
+    s.push_str(&data_row(
+        "Direct-hold solution ownership (10% of DHS NAV)",
+        years,
+        |y| y.lp_ownership_book,
+    ));
     s.push_str(&data_row("Book value", years, |y| y.book_value));
     s.push_str(&data_row_ps("Book value per share", years, |y| {
         y.book_value_per_share
