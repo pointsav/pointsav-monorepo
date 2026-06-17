@@ -149,6 +149,7 @@ async fn main() -> Result<()> {
                 eff_instance,
                 eff_canonical_url,
                 eff_activitypub_outbox_url,
+                eff_start_here,
             ) = if let Some(ref toml_path) = knowledge_toml {
                 let cfg = app_mediakit_knowledge::config::load_config(toml_path)?;
                 let parsed_bind: SocketAddr = cfg.site.bind.parse()?;
@@ -196,6 +197,7 @@ async fn main() -> Result<()> {
                     cfg.site.instance.clone(),
                     cfg.site.canonical_url.clone(),
                     cfg.federation.outbox_url.clone(),
+                    cfg.start_here.clone(),
                 )
             } else {
                 // Legacy env-var path.
@@ -217,6 +219,7 @@ async fn main() -> Result<()> {
                     None,
                     None,
                     None,
+                    vec![],
                 )
             };
 
@@ -235,6 +238,7 @@ async fn main() -> Result<()> {
                 eff_instance,
                 eff_canonical_url,
                 eff_activitypub_outbox_url,
+                eff_start_here,
             )
             .await
         }
@@ -297,6 +301,7 @@ async fn serve(
     instance: Option<String>,
     canonical_url: Option<String>,
     activitypub_outbox_url: Option<String>,
+    start_here: Vec<app_mediakit_knowledge::config::StartHereEntry>,
 ) -> Result<()> {
     if !content_dir.is_dir() {
         bail!(
@@ -448,6 +453,7 @@ async fn serve(
         peers,
         canonical_url,
         activitypub_outbox_url,
+        start_here,
     };
     let app = router(state);
     let listener = tokio::net::TcpListener::bind(bind).await?;

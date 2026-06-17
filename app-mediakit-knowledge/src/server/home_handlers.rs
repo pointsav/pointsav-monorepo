@@ -300,6 +300,7 @@ fn home_chrome(
     brand_theme: Option<&str>,
     brand_instance: &str,
     peers: &[crate::config::PeerConfig],
+    start_here: &[crate::config::StartHereEntry],
     user: Option<&User>,
     pending_count: i64,
 ) -> Markup {
@@ -474,23 +475,40 @@ fn home_chrome(
                     }
 
                     // ── Start here strip ─────────────────────────────────────
+                    // When [[start_here]] entries are present in knowledge.toml,
+                    // render them; otherwise fall back to four hardcoded PointSav
+                    // documentation chips (documentation instance default).
                     div.section-head { h2 { (s.section_start) } }
                     div.starthere-row {
-                        a.starthere-chip href="/wiki/architecture/economic-model" {
-                            span.kind-badge data-type="topic" { "Topic" }
-                            " Platform business model"
-                        }
-                        a.starthere-chip href="/wiki/architecture/three-ring-architecture" {
-                            span.kind-badge data-type="topic" { "Topic" }
-                            " Three-ring architecture"
-                        }
-                        a.starthere-chip href="/wiki/architecture/compounding-substrate" {
-                            span.kind-badge data-type="topic" { "Topic" }
-                            " Compounding substrate"
-                        }
-                        a.starthere-chip href="/wiki/reference/nomenclature-taxonomy" {
-                            span.kind-badge data-type="topic" { "Topic" }
-                            " Naming conventions"
+                        @if !start_here.is_empty() {
+                            @for chip in start_here {
+                                @let badge_label = {
+                                    let mut s = chip.kind.clone();
+                                    if let Some(c) = s.get_mut(0..1) { c.make_ascii_uppercase(); }
+                                    s
+                                };
+                                a.starthere-chip href=(chip.href) {
+                                    span.kind-badge data-type=(chip.kind) { (badge_label) }
+                                    " " (chip.label)
+                                }
+                            }
+                        } @else {
+                            a.starthere-chip href="/wiki/architecture/economic-model" {
+                                span.kind-badge data-type="topic" { "Topic" }
+                                " Platform business model"
+                            }
+                            a.starthere-chip href="/wiki/architecture/three-ring-architecture" {
+                                span.kind-badge data-type="topic" { "Topic" }
+                                " Three-ring architecture"
+                            }
+                            a.starthere-chip href="/wiki/architecture/compounding-substrate" {
+                                span.kind-badge data-type="topic" { "Topic" }
+                                " Compounding substrate"
+                            }
+                            a.starthere-chip href="/wiki/reference/nomenclature-taxonomy" {
+                                span.kind-badge data-type="topic" { "Topic" }
+                                " Naming conventions"
+                            }
                         }
                     }
 

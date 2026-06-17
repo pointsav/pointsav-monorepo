@@ -101,6 +101,7 @@ mod tests {
             peers: vec![],
             canonical_url: None,
             activitypub_outbox_url: None,
+            start_here: vec![],
             },
             dir,
             state_dir,
@@ -308,6 +309,7 @@ mod tests {
             peers: vec![],
             canonical_url: None,
             activitypub_outbox_url: None,
+            start_here: vec![],
         };
         let app = router(state);
         let resp = app
@@ -385,6 +387,7 @@ mod tests {
             peers: vec![],
             canonical_url: None,
             activitypub_outbox_url: None,
+            start_here: vec![],
         };
         let app = router(state);
         let resp = app
@@ -439,6 +442,7 @@ mod tests {
             peers: vec![],
             canonical_url: None,
             activitypub_outbox_url: None,
+            start_here: vec![],
         };
         let app = router(state);
         let resp = app
@@ -496,6 +500,7 @@ mod tests {
             peers: vec![],
             canonical_url: None,
             activitypub_outbox_url: None,
+            start_here: vec![],
         };
         let app = router(state);
         let resp = app
@@ -553,6 +558,7 @@ mod tests {
             peers: vec![],
             canonical_url: None,
             activitypub_outbox_url: None,
+            start_here: vec![],
         };
         let app = router(state);
         let resp = app
@@ -612,6 +618,7 @@ mod tests {
             peers: vec![],
             canonical_url: None,
             activitypub_outbox_url: None,
+            start_here: vec![],
         };
         let app = router(state);
         let resp = app
@@ -672,6 +679,7 @@ mod tests {
             peers: vec![],
             canonical_url: None,
             activitypub_outbox_url: None,
+            start_here: vec![],
         };
         let app = router(state);
         let resp = app
@@ -737,6 +745,7 @@ mod tests {
             peers: vec![],
             canonical_url: None,
             activitypub_outbox_url: None,
+            start_here: vec![],
         };
         let app = router(state);
         let resp = app
@@ -799,6 +808,7 @@ mod tests {
             peers: vec![],
             canonical_url: None,
             activitypub_outbox_url: None,
+            start_here: vec![],
         };
         let app = router(state);
         let resp = app
@@ -863,6 +873,7 @@ mod tests {
             peers: vec![],
             canonical_url: None,
             activitypub_outbox_url: None,
+            start_here: vec![],
         };
         let app = router(state);
         let resp = app
@@ -920,6 +931,7 @@ mod tests {
             peers: vec![],
             canonical_url: None,
             activitypub_outbox_url: None,
+            start_here: vec![],
         };
         let app = router(state);
         let resp = app

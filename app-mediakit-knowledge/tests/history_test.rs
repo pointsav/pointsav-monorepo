@@ -36,6 +36,7 @@ async fn fixture_state() -> (AppState, TempDir, TempDir) {
             peers: vec![],
             canonical_url: None,
             activitypub_outbox_url: None,
+            start_here: vec![],
         },
         content_dir,
         state_dir,

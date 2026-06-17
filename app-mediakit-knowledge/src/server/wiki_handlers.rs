@@ -111,6 +111,7 @@ async fn home_inner(
         state.brand_theme.as_deref(),
         &state.brand_instance,
         &state.peers,
+        &state.start_here,
         maybe_user.as_ref(),
         pending_count,
     ))
