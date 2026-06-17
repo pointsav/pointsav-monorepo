@@ -43,6 +43,24 @@ pub struct AppConfig {
     /// Each `[[peer]]` entry names one sibling wiki to fan out to.
     #[serde(default, rename = "peer")]
     pub peers: Vec<PeerConfig>,
+    /// Phase 7: ActivityPub federation outbox configuration.
+    #[serde(default)]
+    pub federation: FederationConfig,
+}
+
+/// `[federation]` block — ActivityPub outbox configuration.
+///
+/// knowledge.toml example:
+/// ```toml
+/// [federation]
+/// outbox_url = "https://relay.example.com/inbox"
+/// ```
+#[derive(Debug, Clone, Deserialize, Default)]
+pub struct FederationConfig {
+    /// ActivityPub outbox URL to POST `Create/Article` activities to.
+    /// When absent, ActivityPub emission is disabled (best-effort, no-op).
+    #[serde(default)]
+    pub outbox_url: Option<String>,
 }
 
 /// One `[[peer]]` entry — a sibling wiki instance for federated search.

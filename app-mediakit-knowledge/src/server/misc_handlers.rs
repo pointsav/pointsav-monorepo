@@ -100,6 +100,7 @@ mod tests {
                 blueprints: crate::blueprints::Registry::builtin(),
             peers: vec![],
             canonical_url: None,
+            activitypub_outbox_url: None,
             },
             dir,
             state_dir,
@@ -306,6 +307,7 @@ mod tests {
             blueprints: crate::blueprints::Registry::builtin(),
             peers: vec![],
             canonical_url: None,
+            activitypub_outbox_url: None,
         };
         let app = router(state);
         let resp = app
@@ -382,6 +384,7 @@ mod tests {
             blueprints: crate::blueprints::Registry::builtin(),
             peers: vec![],
             canonical_url: None,
+            activitypub_outbox_url: None,
         };
         let app = router(state);
         let resp = app
@@ -435,6 +438,7 @@ mod tests {
             blueprints: crate::blueprints::Registry::builtin(),
             peers: vec![],
             canonical_url: None,
+            activitypub_outbox_url: None,
         };
         let app = router(state);
         let resp = app
@@ -491,6 +495,7 @@ mod tests {
             blueprints: crate::blueprints::Registry::builtin(),
             peers: vec![],
             canonical_url: None,
+            activitypub_outbox_url: None,
         };
         let app = router(state);
         let resp = app
@@ -547,6 +552,7 @@ mod tests {
             blueprints: crate::blueprints::Registry::builtin(),
             peers: vec![],
             canonical_url: None,
+            activitypub_outbox_url: None,
         };
         let app = router(state);
         let resp = app
@@ -605,6 +611,7 @@ mod tests {
             blueprints: crate::blueprints::Registry::builtin(),
             peers: vec![],
             canonical_url: None,
+            activitypub_outbox_url: None,
         };
         let app = router(state);
         let resp = app
@@ -664,6 +671,7 @@ mod tests {
             blueprints: crate::blueprints::Registry::builtin(),
             peers: vec![],
             canonical_url: None,
+            activitypub_outbox_url: None,
         };
         let app = router(state);
         let resp = app
@@ -728,6 +736,7 @@ mod tests {
             blueprints: crate::blueprints::Registry::builtin(),
             peers: vec![],
             canonical_url: None,
+            activitypub_outbox_url: None,
         };
         let app = router(state);
         let resp = app
@@ -789,6 +798,7 @@ mod tests {
             blueprints: crate::blueprints::Registry::builtin(),
             peers: vec![],
             canonical_url: None,
+            activitypub_outbox_url: None,
         };
         let app = router(state);
         let resp = app
@@ -852,6 +862,7 @@ mod tests {
             blueprints: crate::blueprints::Registry::builtin(),
             peers: vec![],
             canonical_url: None,
+            activitypub_outbox_url: None,
         };
         let app = router(state);
         let resp = app
@@ -908,6 +919,7 @@ mod tests {
             blueprints: crate::blueprints::Registry::builtin(),
             peers: vec![],
             canonical_url: None,
+            activitypub_outbox_url: None,
         };
         let app = router(state);
         let resp = app
