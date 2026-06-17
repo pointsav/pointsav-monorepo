@@ -665,7 +665,10 @@ fn query_claims(state: &AppState, params: &Value) -> Result<Value, (i32, String)
 ///
 /// params: `{ query: String, limit?: usize }`
 /// returns: `{ results: [{ slug, title, lede, score, instance }] }`
-pub(crate) async fn federation_search(state: &AppState, params: &Value) -> Result<Value, (i32, String)> {
+pub(crate) async fn federation_search(
+    state: &AppState,
+    params: &Value,
+) -> Result<Value, (i32, String)> {
     let query = params
         .get("query")
         .and_then(|v| v.as_str())

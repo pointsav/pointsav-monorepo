@@ -705,10 +705,7 @@ async fn search_all_page(
     } else {
         let fed_params = serde_json::json!({ "query": query, "limit": 30 });
         match crate::mcp::federation_search(&state, &fed_params).await {
-            Ok(v) => v["results"]
-                .as_array()
-                .cloned()
-                .unwrap_or_default(),
+            Ok(v) => v["results"].as_array().cloned().unwrap_or_default(),
             Err((_, msg)) => {
                 tracing::warn!(err = %msg, "search/all: federation_search error");
                 Vec::new()
