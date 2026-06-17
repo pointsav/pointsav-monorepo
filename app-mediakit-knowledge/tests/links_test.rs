@@ -115,6 +115,7 @@ async fn whatlinkshere_returns_backlinks_from_graph() {
         blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
         peers: vec![],
         canonical_url: None,
+        activitypub_outbox_url: None,
     };
 
     let app = router(state);
