@@ -36,7 +36,7 @@ async fn doorman_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
             blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
             peers: vec![],
             canonical_url: None,
-        activitypub_outbox_url: None,
+            activitypub_outbox_url: None,
         },
         dir,
         state_dir,
