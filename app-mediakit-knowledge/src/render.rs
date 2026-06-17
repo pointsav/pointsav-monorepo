@@ -916,12 +916,11 @@ pub fn inject_citation_refs(
 
     // Regex: `[<id>]` where id matches the citation ID alphabet (lowercase, digits, hyphens).
     // We only want to match these when they appear outside HTML tags.
-    use std::sync::OnceLock;
     use regex::Regex;
+    use std::sync::OnceLock;
     static RE: OnceLock<Regex> = OnceLock::new();
-    let re = RE.get_or_init(|| {
-        Regex::new(r"\[([a-z][a-z0-9-]*(?:-\d+)?)\]").expect("citation ref regex")
-    });
+    let re = RE
+        .get_or_init(|| Regex::new(r"\[([a-z][a-z0-9-]*(?:-\d+)?)\]").expect("citation ref regex"));
 
     let mut out = String::with_capacity(html.len());
     let mut rest = html;
