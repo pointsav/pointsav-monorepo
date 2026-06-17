@@ -53,6 +53,23 @@ Hard constraint: entity_name must be a short proper noun or proper-noun phrase. 
 A token that looks like a proper noun is not automatically an entity. If it is a licence, a format, a generic descriptor, or a code identifier, omit it rather than forcing it into Company or Location.\n\
 If an entity does not clearly fit one category, omit it rather than guessing.\n\
 Return only a JSON array. Each element must have exactly two fields: \"classification\" and \"entity_name\".\n\
+\n\
+Examples:\n\
+Text: Jennifer Woodfine is managing director at Woodfine Management Corp. in Vancouver, Canada.\n\
+Output: [{\"classification\":\"Person\",\"entity_name\":\"Jennifer Woodfine\"},{\"classification\":\"Company\",\"entity_name\":\"Woodfine Management Corp.\"},{\"classification\":\"Location\",\"entity_name\":\"Vancouver\"}]\n\
+\n\
+Text: The cluster contains service-fs, not service-research. Let me explore the actual structure.\n\
+Output: [{\"classification\":\"Project\",\"entity_name\":\"service-fs\"}]\n\
+\n\
+Text: ops(slm): update drain predicate — remove !tier_a_first guard\n\
+Output: []\n\
+\n\
+Text: service-vm-tenant and fleet commits were dropped. Run reflog to recover.\n\
+Output: [{\"classification\":\"Project\",\"entity_name\":\"service-vm-tenant\"},{\"classification\":\"Project\",\"entity_name\":\"fleet\"}]\n\
+\n\
+Text: Peter Woodfine oversees operations at PointSav Digital Systems in us-central1-b.\n\
+Output: [{\"classification\":\"Person\",\"entity_name\":\"Peter Woodfine\"},{\"classification\":\"Company\",\"entity_name\":\"PointSav Digital Systems\"},{\"classification\":\"Location\",\"entity_name\":\"us-central1-b\"}]\n\
+\n\
 If no entities are found, return an empty array [].";
 
 fn main() -> NotifyResult<()> {
@@ -500,19 +517,35 @@ fn append_processed_ledger(path: &Path, filename: &str) {
 /// Returns None when Tier A is unavailable or response is unparseable.
 fn call_tier_a_extract(
     corpus_text: &str,
-    _entity_schema: &serde_json::Value,
+    entity_schema: &serde_json::Value,
     doorman_endpoint: &str,
 ) -> Option<Vec<serde_json::Value>> {
-    // Grammar constraint is intentionally OMITTED for Tier A: llama-server's grammar
-    // mode overrides the assistant pre-fill and causes OLMo 7B to return [] regardless
-    // of content. Pre-fill alone produces correct entities; serde_json validates format.
-    let chat_body = serde_json::json!({
-        "messages": [
-            {"role": "system", "content": EXTRACTION_SYSTEM_PROMPT},
-            {"role": "user",   "content": corpus_text},
-            {"role": "assistant", "content": "[{\""}
-        ]
-    });
+    // Grammar mode: SERVICE_CONTENT_TIER_A_GRAMMAR=json_schema enables JSON Schema grammar
+    // constraint instead of assistant pre-fill. Default is pre-fill (safer for OLMo 2 7B,
+    // which returns [] when grammar overrides the pre-fill). OLMo 3 handles grammar correctly;
+    // enable after confirming OLMo 3 is loaded via smoke test. GrammarConstraint::JsonSchema
+    // serialises as {"type": "json-schema", "value": ...} (kebab-case tag).
+    let use_grammar = std::env::var("SERVICE_CONTENT_TIER_A_GRAMMAR")
+        .map(|v| v == "json_schema")
+        .unwrap_or(false);
+
+    let chat_body = if use_grammar {
+        serde_json::json!({
+            "messages": [
+                {"role": "system", "content": EXTRACTION_SYSTEM_PROMPT},
+                {"role": "user",   "content": corpus_text}
+            ],
+            "grammar": {"type": "json-schema", "value": entity_schema}
+        })
+    } else {
+        serde_json::json!({
+            "messages": [
+                {"role": "system", "content": EXTRACTION_SYSTEM_PROMPT},
+                {"role": "user",   "content": corpus_text},
+                {"role": "assistant", "content": "[{\""}
+            ]
+        })
+    };
     let url = format!("{}/v1/chat/completions", doorman_endpoint);
     let client = reqwest::blocking::Client::new();
     match client
@@ -1259,16 +1292,20 @@ mod tests {
         let entries: Vec<_> = fs::read_dir(&dir).unwrap().collect();
         assert_eq!(entries.len(), 1);
         let content = fs::read_to_string(entries[0].as_ref().unwrap().path()).unwrap();
-        // The DPO pair is double-encoded: tier_b_json (a JSON string) is embedded
-        // as a JSON string value, so serde_json escapes the inner quotes as \".
-        // The file contains \"Location\" (backslash-quote, not bare-quote).
+        // Parse the JSONL record and inspect only the `chosen` field.
+        // The full `content` now includes few-shot examples in the prompt that themselves
+        // contain "Company" as a classification label, so checking `content` as a whole
+        // would produce false positives. Only the chosen side matters.
+        let record: serde_json::Value =
+            serde_json::from_str(&content).expect("DPO pair must be valid JSON");
+        let chosen = record["chosen"].as_str().expect("chosen must be a string");
         assert!(
-            content.contains(r#"\"Location\""#),
-            "chosen side must contain corrected classification; content: {content}"
+            chosen.contains("\"Location\""),
+            "chosen side must contain corrected classification; chosen: {chosen}"
         );
         assert!(
-            !content.contains(r#"\"Company\""#),
-            "raw misclassification must not appear in chosen side; content: {content}"
+            !chosen.contains("\"Company\""),
+            "raw misclassification must not appear in chosen side; chosen: {chosen}"
         );
         fs::remove_dir_all(&dir).ok();
     }

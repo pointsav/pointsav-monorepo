@@ -10,7 +10,7 @@ Requirements (on trainer VM):
   pip install trl>=0.8 peft>=0.10 transformers>=4.40 datasets bitsandbytes
 
 Usage:
-  python3 run-dpo-training.py --corpus /path/to/feedback/ --base-model allenai/OLMo-2-1124-7B-Instruct
+  python3 run-dpo-training.py --corpus /path/to/feedback/
   python3 run-dpo-training.py --dry-run   # inspect corpus without training
 
 GCS variant (Yo-Yo trainer VM, picking up marker):
@@ -18,8 +18,12 @@ GCS variant (Yo-Yo trainer VM, picking up marker):
     python3 run-dpo-training.py --from-gcs --adapter apprenticeship-pointsav
 
 Notes:
-  - adapter output goes to ./adapters/<adapter_name>-<date>/
-  - GCS upload: gs://<bucket>/adapters/<adapter_name>-<date>/
+  - Default base model: /data/weights/olmo-3-7b-think-hf (OLMo 3 7B Think, pre-loaded on
+    persistent weights disk by vllm-weights-prep.sh — no re-download needed each run)
+  - adapter output goes to ./adapters/<adapter_name>-wip/ by default; daily cycle overrides
+    to /data/weights/adapters/<name>/ (persistent disk, survives all VM cycles)
+  - Workspace VM pulls adapter via rsync after training; workspace uploads to GCS (yoyo-batch
+    lacks ADC — cannot write to GCS directly)
   - OLMo-only policy: never substitute a non-OLMo base model
 """
 
@@ -484,8 +488,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="LoRA DPO training for apprenticeship adapter")
     parser.add_argument("--corpus", default=os.path.join(FOUNDRY_ROOT, "data", "training-corpus", "feedback"),
                         help="Path to feedback/ directory containing apprenticeship-*.jsonl files")
-    parser.add_argument("--base-model", default="allenai/OLMo-2-1124-7B-Instruct",
-                        help="HuggingFace model ID for the OLMo base model (OLMo-only policy)")
+    parser.add_argument("--base-model", default="/data/weights/olmo-3-7b-think-hf",
+                        help="HuggingFace model ID or local path for the OLMo base model (OLMo-only policy). "
+                             "Default points to OLMo 3 7B Think weights pre-loaded on the yoyo-batch "
+                             "persistent weights disk by vllm-weights-prep.sh — avoids re-downloading.")
     parser.add_argument("--adapter-name", default="apprenticeship-pointsav",
                         help="Name for the output adapter")
     parser.add_argument("--output-dir", default=None,
