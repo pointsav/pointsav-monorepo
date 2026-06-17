@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::render::render_markdown;
+use std::collections::HashMap;
 
 pub fn render(frontmatter: Option<&HashMap<String, String>>, body: &str) -> String {
     let mut out = String::new();
