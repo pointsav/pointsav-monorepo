@@ -116,6 +116,7 @@ async fn whatlinkshere_returns_backlinks_from_graph() {
         peers: vec![],
         canonical_url: None,
         activitypub_outbox_url: None,
+        start_here: vec![],
     };
 
     let app = router(state);

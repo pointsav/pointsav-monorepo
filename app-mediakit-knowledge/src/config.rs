@@ -46,6 +46,10 @@ pub struct AppConfig {
     /// Phase 7: ActivityPub federation outbox configuration.
     #[serde(default)]
     pub federation: FederationConfig,
+    /// Per-instance "New here? Start with these" chips.
+    /// When empty, the engine falls back to four hardcoded PointSav documentation chips.
+    #[serde(default, rename = "start_here")]
+    pub start_here: Vec<StartHereEntry>,
 }
 
 /// `[federation]` block — ActivityPub outbox configuration.
@@ -61,6 +65,32 @@ pub struct FederationConfig {
     /// When absent, ActivityPub emission is disabled (best-effort, no-op).
     #[serde(default)]
     pub outbox_url: Option<String>,
+}
+
+/// One `[[start_here]]` entry — a chip shown in the "New here? Start with these" strip.
+///
+/// knowledge.toml example:
+/// ```toml
+/// [[start_here]]
+/// href  = "/wiki/topic-co-location-methodology"
+/// label = "Co-location methodology"
+/// kind  = "topic"
+/// ```
+/// When no `[[start_here]]` entries are present, the engine renders the four
+/// hardcoded PointSav documentation chips (backward-compatible default).
+#[derive(Debug, Clone, Deserialize)]
+pub struct StartHereEntry {
+    /// Target URL for the chip link (absolute path, e.g. `/wiki/topic-foo`).
+    pub href: String,
+    /// Display label shown inside the chip.
+    pub label: String,
+    /// Badge type: `"topic"` (default) or `"guide"`.
+    #[serde(default = "default_start_here_kind")]
+    pub kind: String,
+}
+
+fn default_start_here_kind() -> String {
+    "topic".to_string()
 }
 
 /// One `[[peer]]` entry — a sibling wiki instance for federated search.

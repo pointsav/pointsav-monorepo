@@ -46,6 +46,7 @@ async fn citation_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
             peers: vec![],
             canonical_url: None,
             activitypub_outbox_url: None,
+            start_here: vec![],
         },
         dir,
         state_dir,
