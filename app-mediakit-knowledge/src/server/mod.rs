@@ -255,6 +255,8 @@ pub fn router(state: AppState) -> Router {
         .route("/category/{name}", get(category_page))
         // Phase 3 Step 3.2 — full-text search HTML page over the tantivy index
         .route("/search", get(search_page))
+        // Sprint M — cross-instance federated search HTML page
+        .route("/search/all", get(search_all_page))
         .route("/wanted", get(wanted_page))
         .route("/random", get(random_page))
         // Phase 4 Step 4.6 — MCP route mounted conditionally; see mcp_enabled guard below
@@ -664,6 +666,111 @@ async fn search_page(
                                 span.search-hit-slug { (hit.slug) }
                                 @if !hit.snippet.is_empty() {
                                     p.search-hit-snippet { (hit.snippet) }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            @if !state.peers.is_empty() && !query.is_empty() {
+                p.search-all-link {
+                    a href={ "/search/all?q=" (query) } {
+                        "Search all sites →"
+                    }
+                }
+            }
+        },
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
+    ))
+}
+
+/// Sprint M — `GET /search/all?q=...` cross-instance federated search page.
+///
+/// Fans out to all peer instances via `federation_search()` (reuses the same
+/// logic as `POST /mcp` `search` method). When no peers are configured, falls
+/// back gracefully to the local-only results with a note. Only available when
+/// the binary is configured with `[[peer]]` entries in knowledge.toml, though
+/// the route is always mounted so the URL is stable.
+async fn search_all_page(
+    State(state): State<Arc<AppState>>,
+    Query(params): Query<SearchQueryParams>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    let query = params.q.trim().to_string();
+
+    let results: Vec<serde_json::Value> = if query.is_empty() {
+        Vec::new()
+    } else {
+        let fed_params = serde_json::json!({ "query": query, "limit": 30 });
+        match crate::mcp::federation_search(&state, &fed_params).await {
+            Ok(v) => v["results"]
+                .as_array()
+                .cloned()
+                .unwrap_or_default(),
+            Err((_, msg)) => {
+                tracing::warn!(err = %msg, "search/all: federation_search error");
+                Vec::new()
+            }
+        }
+    };
+
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    Ok(chrome(
+        if query.is_empty() {
+            "Search all sites".to_string()
+        } else {
+            format!("Search all: {query}")
+        }
+        .as_str(),
+        html! {
+            h1 { "Search all sites" }
+            @if state.peers.is_empty() {
+                p.search-note {
+                    "This instance has no peer sites configured. "
+                    a href="/search" { "Search this site →" }
+                }
+            }
+            form.search-form action="/search/all" method="get" {
+                input
+                    type="search"
+                    name="q"
+                    value=(query)
+                    placeholder="Search across all sites"
+                    autocomplete="off"
+                    autofocus?[query.is_empty()];
+                button type="submit" { "Search" }
+            }
+            @if !query.is_empty() {
+                @if results.is_empty() {
+                    p.search-empty {
+                        "No results for "
+                        em { (query) }
+                        " across all sites."
+                    }
+                } @else {
+                    p.search-summary {
+                        (results.len())
+                        " result" @if results.len() != 1 { "s" }
+                        " for "
+                        em { (query) }
+                        " across all sites."
+                    }
+                    ol.search-results {
+                        @for hit in &results {
+                            @let slug  = hit["slug"].as_str().unwrap_or("");
+                            @let title = hit["title"].as_str().unwrap_or(slug);
+                            @let lede  = hit["lede"].as_str().unwrap_or("");
+                            @let inst  = hit["instance"].as_str().unwrap_or("");
+                            li.search-hit {
+                                a.search-hit-title href={ "/wiki/" (slug) } { (title) }
+                                span.search-hit-slug { (slug) }
+                                @if !inst.is_empty() {
+                                    span.instance-badge { (inst) }
+                                }
+                                @if !lede.is_empty() {
+                                    p.search-hit-snippet { (lede) }
                                 }
                             }
                         }
