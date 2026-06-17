@@ -25,6 +25,21 @@ struct AppState {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+fn product_requires_license(releases_dir: &str, product: &str) -> bool {
+    let manifest = PathBuf::from(releases_dir)
+        .join(product)
+        .join("MANIFEST.json");
+    let Ok(text) = fs::read_to_string(&manifest) else {
+        return true; // default: license required
+    };
+    let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) else {
+        return true;
+    };
+    val.get("requires_license")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true)
+}
+
 fn release_path(releases_dir: &str, parts: &[&str]) -> PathBuf {
     let mut p = PathBuf::from(releases_dir);
     for part in parts {
@@ -252,6 +267,36 @@ async fn binary(
         return stream_file(path, "application/octet-stream").await;
     }
 
+    // Open products (requires_license: false in MANIFEST.json) — serve without auth
+    if !product_requires_license(&state.releases_dir, &product) {
+        tracing::info!(product_id = %product, result = "ok-open", "binary-download");
+        let path = release_path(&state.releases_dir, &[&product, &version, &platform]);
+        let filename = format!("{product}-{version}-{platform}");
+        return match File::open(&path).await {
+            Ok(file) => {
+                let stream = ReaderStream::new(file);
+                let body = Body::from_stream(stream);
+                (
+                    StatusCode::OK,
+                    [
+                        (header::CONTENT_TYPE, "application/octet-stream"),
+                        (
+                            header::CONTENT_DISPOSITION,
+                            Box::leak(format!("attachment; filename=\"{filename}\"").into_boxed_str()),
+                        ),
+                    ],
+                    body,
+                )
+                    .into_response()
+            }
+            Err(_) => (
+                StatusCode::NOT_FOUND,
+                Json(json!({"error": "binary not found"})),
+            )
+                .into_response(),
+        };
+    }
+
     // Accept Authorization: Bearer <token> header OR ?token= query param (for browser download links)
     let key_b64 = headers
         .get(header::AUTHORIZATION)
@@ -411,6 +456,14 @@ async fn verify_key_pub(State(state): State<Arc<AppState>>) -> Response {
     }
 }
 
+async fn install_script(
+    State(state): State<Arc<AppState>>,
+    Path(product): Path<String>,
+) -> Response {
+    let path = release_path(&state.releases_dir, &[&product, "install.sh"]);
+    stream_file(path, "text/x-shellscript").await
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 #[tokio::main]
@@ -439,6 +492,7 @@ async fn main() -> Result<()> {
         .route("/healthz", get(healthz))
         .route("/releases/", get(releases_index))
         .route("/releases/:product/", get(product_index))
+        .route("/releases/:product/install.sh", get(install_script))
         .route("/releases/:product/:version/MANIFEST", get(manifest))
         .route("/releases/:product/latest/:platform", get(latest_redirect))
         .route("/releases/:product/:version/:platform", get(binary))

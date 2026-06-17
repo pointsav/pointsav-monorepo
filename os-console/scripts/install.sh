@@ -1,34 +1,56 @@
 #!/bin/bash
-# install.sh — install os-console on Mac Pro (macOS 10.13) or iMac (Linux Mint)
+# install.sh — install os-console on macOS 10.13 Intel or Linux x86_64
 #
 # What this script does:
-#   1. Detects the SSH key that connects to the build server
-#   2. Downloads the pre-built binary from the build server via scp
-#   3. Writes ~/.config/os-console/config.toml
-#   4. Creates a desktop launcher (double-click to open)
+#   1. Downloads the pre-built binary from software.pointsav.com
+#   2. Writes ~/.config/os-console/config.toml
+#   3. Creates a desktop launcher (double-click to open)
 #
 # Run with:
-#   curl -fsSL https://raw.githubusercontent.com/.../install.sh | bash
+#   curl -fsSL https://software.pointsav.com/os-console/install.sh | bash
 #   — or —
 #   bash install.sh
 #
-# No Rust, no compiler, no git required on this machine.
+# No Rust, no compiler, no git, no SSH key required.
 
 set -e
 
-GCE_IP="34.53.65.203"
-GCE_USER="mathew"
-BINARY_PATH="/srv/foundry/cargo-target/mathew/release/os-console"
+SOURCE_URL="https://software.pointsav.com/releases/os-console/latest"
 
 echo "=== os-console install ==="
 echo ""
 
-# ── Step 1: Find the SSH key that connects ──────────────────────────────────
+# ── Step 1: Detect platform ─────────────────────────────────────────────────
 
-mkdir -p "$HOME/.ssh"
-chmod 700 "$HOME/.ssh"
+case "$(uname -s)-$(uname -m)" in
+  Linux-x86_64)   PLATFORM="linux-x86_64" ;;
+  Darwin-x86_64)  PLATFORM="darwin-x86_64" ;;
+  Darwin-arm64)   PLATFORM="darwin-arm64" ;;
+  *)
+    echo "ERROR: Unsupported platform: $(uname -s) $(uname -m)"
+    exit 1
+    ;;
+esac
 
+echo "Platform: $PLATFORM"
+
+# ── Step 2: Download binary ─────────────────────────────────────────────────
+
+mkdir -p "$HOME/bin"
+
+echo "Downloading os-console from software.pointsav.com..."
+curl -fsSL --location \
+    "$SOURCE_URL/$PLATFORM" \
+    -o "$HOME/bin/os-console"
+chmod +x "$HOME/bin/os-console"
+echo "Installed: $HOME/bin/os-console"
+
+# ── Step 3: Detect SSH key for embedded tunnel ──────────────────────────────
+
+GCE_IP="34.53.65.203"
+GCE_USER="mathew"
 SSH_KEY=""
+
 for CANDIDATE in \
     "$HOME/.ssh/google_compute_engine" \
     "$HOME/.ssh/id_ed25519" \
@@ -42,7 +64,7 @@ do
                -o StrictHostKeyChecking=no \
                "$GCE_USER@$GCE_IP" true 2>/dev/null; then
             SSH_KEY="$CANDIDATE"
-            echo "Connected with: $SSH_KEY"
+            echo "SSH key: $SSH_KEY"
             break
         fi
     fi
@@ -50,32 +72,17 @@ done
 
 if [ -z "$SSH_KEY" ]; then
     echo ""
-    echo "ERROR: No SSH key found that can reach the build server ($GCE_IP)."
+    echo "WARNING: No SSH key found that can reach the build server ($GCE_IP)."
+    echo "The binary was installed but the embedded tunnel will not connect."
     echo ""
     echo "Ask the system administrator to authorize your public key."
     echo "If you don't have a key yet, run:"
     echo "  ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ''"
     echo "Then share:  cat ~/.ssh/id_ed25519.pub"
-    exit 1
+    SSH_KEY="$HOME/.ssh/id_ed25519"
 fi
 
-# Accept host key
-ssh-keyscan -H "$GCE_IP" >> "$HOME/.ssh/known_hosts" 2>/dev/null
-
-# ── Step 2: Download binary ─────────────────────────────────────────────────
-
-mkdir -p "$HOME/bin"
-
-echo "Downloading os-console..."
-scp -i "$SSH_KEY" \
-    -o BatchMode=yes \
-    -o StrictHostKeyChecking=no \
-    "$GCE_USER@$GCE_IP:$BINARY_PATH" \
-    "$HOME/bin/os-console"
-chmod +x "$HOME/bin/os-console"
-echo "Installed: $HOME/bin/os-console"
-
-# ── Step 3: config.toml ────────────────────────────────────────────────────
+# ── Step 4: config.toml ────────────────────────────────────────────────────
 
 CONFIG_DIR="$HOME/.config/os-console"
 mkdir -p "$CONFIG_DIR"
@@ -97,7 +104,7 @@ EOF
 
 echo "Config: $CONFIG_DIR/config.toml"
 
-# ── Step 4: Desktop launcher ────────────────────────────────────────────────
+# ── Step 5: Desktop launcher ────────────────────────────────────────────────
 
 case "$(uname -s)" in
   Linux)
@@ -136,4 +143,4 @@ echo "=== Done ==="
 echo ""
 echo "Double-click 'OS Console' on your desktop."
 echo ""
-echo "To update:  bash install.sh"
+echo "To update:  curl -fsSL https://software.pointsav.com/releases/os-console/install.sh | bash"
