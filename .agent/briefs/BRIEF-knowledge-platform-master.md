@@ -54,7 +54,7 @@ Single Rust binary. No runtime system dependencies. Apache 2.0.
 | Phase 0 | Federation engine | **Complete 2026-06-12** | All scope items done; gate 689 articles / 0 dead links; Stage 6 at 9a1326df; archive ops pending Stage 6 |
 | Phase 9 | Production deploy | **Shipped 2026-06-11** | WIKI_KNOWLEDGE_TOML migration; /etc/local-knowledge/; all 3 instances healthy |
 
-Sub-clone tip: `3d90e76d` — **CANONICAL** (origin/main confirmed 2026-06-16; Session 87). Sprints D/E/F/G + pre-promote fixes promoted; Stage 6 READY sent 2026-06-16; pending binary rebuild (Command).
+Sub-clone tip: `588496f2` (Session 87, 2026-06-16). Sprints D–I promoted or Stage 6 READY sent. Live binary at `8599b14c` (Sprints D–G); Sprints H + I pending binary rebuild (Command has 2 READY signals queued).
 
 ---
 
@@ -756,9 +756,7 @@ Top institutional quality gaps beyond §7 findings (from §7.5 benchmark analysi
 ### §8.4 — Open Design Decisions
 
 1. **Slide → internal category mapping** — **LOCKED 2026-06-16**: use draft §8.2 mapping as-is for documentation.pointsav.com. Sprint I may proceed.
-2. **Woodfine instances (9093/9095) navigation IA** — **DECIDED 2026-06-16**: projects.woodfinegroup.com and corporate.woodfinegroup.com each get their own distinct IA (not the 7-tile PointSav system). Candidate IAs proposed Session 87; operator confirmation pending before Sprint I touches Woodfine instances.
-   - **projects.woodfinegroup.com (candidate):** Active Developments · Investment Portfolio · Strategic Initiatives · Operations · Governance · Archive
-   - **corporate.woodfinegroup.com (candidate):** Corporate Structure · Financial Reporting · Governance & Compliance · People & Teams · Technology & Systems · Legal & Contracts
+2. **Woodfine instances (9093/9095) navigation IA** — **RESOLVED 2026-06-16**: category grid suppressed on both instances (Sprint I, `588496f2`). Content audit showed ~18 corporate topics and ~50 projects topics; not enough volume to warrant a category taxonomy. "Browse by area" section removed from projects + corporate home pages; documentation.pointsav.com unchanged.
 3. **Per-brand editorial gravitas contract** — ~12 tokens beyond the accent: density, serif headings, drop-cap gating. Deferred from §5; blocking Phase 5 instance differentiation.
 4. **Design slides federation** — embedding project-orgcharts slide diagrams as article visual assets (one slide per TOPIC). Phase 7 scope; not in Sprints C–G.
 
@@ -777,3 +775,4 @@ Top institutional quality gaps beyond §7 findings (from §7.5 benchmark analysi
 | F | Header/footer: doc-header CSS, cross-instance peer-strip in article header, engine version in footer | `575776a8` chain → `3d90e76d` | Done — Stage 6 READY sent 2026-06-16; pending binary rebuild (Command) |
 | G | Search: lede snippet in autocomplete, ?category= and ?status= filters in search_page | `575776a8` chain → `3d90e76d` | Done — Stage 6 READY sent 2026-06-16; pending binary rebuild (Command) |
 | H | Phase 7 ActivityPub wiring: FederationConfig + AppState.activitypub_outbox_url + on_article_saved() wired into file watcher | `2c0ed559` | Done — 200+ tests green; Stage 6 READY (2nd) pending; note: wired into content-dir file watcher (not edit handler — no HTTP POST write path exists in git-only architecture) |
+| I | Suppress category grid + category count on projects/corporate home pages | `588496f2` | Done — documentation unchanged; Stage 6 READY (3rd) sent |
