@@ -465,6 +465,8 @@ async fn wiki_page_inner(
     let raw_html = render_html_raw(&parsed.body_md, state.primary_path(), &state.link_roots());
     let raw_html = crate::glossary::inject_glossary_tooltips(&raw_html, &state.glossary);
     let raw_html = crate::render::inject_citation_markers(&raw_html);
+    let cite_registry = crate::citations::CitationRegistry::load(&state.citations_yaml).ok();
+    let raw_html = crate::render::inject_citation_refs(&raw_html, cite_registry.as_ref());
     let is_journal = parsed.frontmatter.layout.as_deref() == Some("journal");
     let raw_html = crate::render::inject_sidenotes(&raw_html, is_journal);
     let headings = extract_headings(&raw_html);
@@ -1073,10 +1075,38 @@ fn wiki_chrome(
                             }
                         }
 
-                        // Hatnote (item 6): italic, indented, top of article body
-                        @if let Some(hatnote) = &fm.hatnote {
-                            div.wiki-hatnote {
-                                (hatnote)
+                        // Hatnote (item 6): typed or freehand, top of article body.
+                        // hatnote_type selects the rendering variant; hatnote: supplies
+                        // the target slug for "main" and "see-also" types.
+                        @match fm.hatnote_type.as_deref() {
+                            Some("main") => {
+                                @if let Some(slug) = &fm.hatnote {
+                                    div.wiki-hatnote.hatnote--main {
+                                        "Main article: "
+                                        a href={ "/wiki/" (slug) } { (slug) }
+                                    }
+                                }
+                            }
+                            Some("see-also") => {
+                                @if let Some(slug) = &fm.hatnote {
+                                    div.wiki-hatnote.hatnote--see-also {
+                                        "See also: "
+                                        a href={ "/wiki/" (slug) } { (slug) }
+                                    }
+                                }
+                            }
+                            Some("disambig") => {
+                                div.wiki-hatnote.hatnote--disambig {
+                                    "This page is a disambiguation page."
+                                }
+                            }
+                            _ => {
+                                // "note", unknown type, or absent — freehand text fallback
+                                @if let Some(hatnote) = &fm.hatnote {
+                                    div.wiki-hatnote {
+                                        (hatnote)
+                                    }
+                                }
                             }
                         }
 

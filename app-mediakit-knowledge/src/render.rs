@@ -44,8 +44,20 @@ pub struct Frontmatter {
 
     /// Italic note rendered at the top of the article body (above the infobox
     /// in source order, per Wikipedia hatnote convention). Phase 1.1 chrome.
+    /// When `hatnote_type` is absent, this field is rendered as freehand text.
+    /// When `hatnote_type` is present, this field supplies the target slug for
+    /// `"main"` and `"see-also"` types; unused for `"disambig"` and `"note"`.
     #[serde(default)]
     pub hatnote: Option<String>,
+
+    /// Sprint L: typed hatnote vocabulary. Closed set:
+    ///   `"main"`     → "Main article: [link]" (uses `hatnote:` as the target slug)
+    ///   `"see-also"` → "See also: [link]"     (uses `hatnote:` as the target slug)
+    ///   `"disambig"` → "This page is a disambiguation page." (no companion field)
+    ///   `"note"`     → renders `hatnote:` as freehand text (same as absent type)
+    /// When absent, falls back to freehand `hatnote:` rendering (backward compat).
+    #[serde(default)]
+    pub hatnote_type: Option<String>,
 
     /// Language code → slug map; drives the language-switcher button next to
     /// the title. Phase 1.1 chrome. Example: `{ es: "topic-hello.es" }`.
@@ -880,6 +892,72 @@ pub fn extract_headings(html: &str) -> Vec<(String, String, u8)> {
     }
 
     headings
+}
+
+/// Sprint K — resolve `[citation-id]` inline tokens in rendered HTML.
+///
+/// After comrak emits HTML, this pass scans text nodes (content outside `<…>` tags)
+/// for patterns matching `[<id>]` where `<id>` exists in the citation registry.
+/// Matching tokens are replaced with:
+///   `<a class="cite-ref" href="/api/citations#<id>" title="<entry.title>"><sup>[<id>]</sup></a>`
+/// Unknown `[foo]` patterns that are not in the registry are left verbatim — Markdown
+/// link text fragments like `[text](url)` will have already been expanded by comrak and
+/// won't appear in the HTML; only unresolved bracket tokens survive to this pass.
+///
+/// When `registry` is `None` (unit tests or when the YAML is absent), returns `html` unchanged.
+pub fn inject_citation_refs(
+    html: &str,
+    registry: Option<&crate::citations::CitationRegistry>,
+) -> String {
+    let registry = match registry {
+        Some(r) if !r.entries.is_empty() => r,
+        _ => return html.to_string(),
+    };
+
+    // Regex: `[<id>]` where id matches the citation ID alphabet (lowercase, digits, hyphens).
+    // We only want to match these when they appear outside HTML tags.
+    use std::sync::OnceLock;
+    use regex::Regex;
+    static RE: OnceLock<Regex> = OnceLock::new();
+    let re = RE.get_or_init(|| {
+        Regex::new(r"\[([a-z][a-z0-9-]*(?:-\d+)?)\]").expect("citation ref regex")
+    });
+
+    let mut out = String::with_capacity(html.len());
+    let mut rest = html;
+
+    while !rest.is_empty() {
+        // Skip over HTML tags verbatim so we don't replace tokens inside attributes.
+        if rest.starts_with('<') {
+            if let Some(close) = rest.find('>') {
+                out.push_str(&rest[..close + 1]);
+                rest = &rest[close + 1..];
+                continue;
+            }
+        }
+        // Find the next `<` — everything before it is text content.
+        let text_end = rest.find('<').unwrap_or(rest.len());
+        let text = &rest[..text_end];
+        rest = &rest[text_end..];
+
+        // Scan text for citation tokens.
+        let mut last = 0;
+        for cap in re.captures_iter(text) {
+            let m = cap.get(0).unwrap();
+            let id = cap.get(1).unwrap().as_str();
+            if let Some(entry) = registry.get(id) {
+                out.push_str(&text[last..m.start()]);
+                let title = entry.title.replace('"', "&quot;");
+                out.push_str(&format!(
+                    r#"<a class="cite-ref" href="/api/citations#{id}" title="{title}"><sup>[{id}]</sup></a>"#
+                ));
+                last = m.end();
+            }
+        }
+        out.push_str(&text[last..]);
+    }
+
+    out
 }
 
 #[cfg(test)]
