@@ -53,6 +53,9 @@ Last updated: 2026-06-16
 
 - [x] **CLAUDE.md contamination** — CLAUDE.md + manifest.md replaced with project-intelligence
       mission (Doorman + OLMo + LoRA + DataGraph); commit 3378a0a3 [2026-06-17 totebox@claude-code]
+- [x] **service-content binary rebuild** — built 5c3d7f5b from HEAD; 40/40 tests; deployed;
+      healthz 11935 entities; ledger entries written; outbox sent to Command
+      [2026-06-17 totebox@claude-code]
 - [ ] **down_for_secs in TierBInfo** — expose seconds-since-last-healthy-check in /readyz;
       circuits currently report "closed" with health_up=false causing false routing to Tier B;
       Bug 4 drain-hold fix is live but this TierBInfo extension is outstanding
@@ -61,6 +64,19 @@ Last updated: 2026-06-16
       DOC_sweep quarantine gate now in place (4a9c81b9) — next replay will skip DPO pair gen
       for sweep docs and mark SHAs complete correctly; Totebox sprint when Tier B restores
       [2026-06-15 command@claude-code]
+- [ ] **DOC_sweep live test** — test file dropped to corpus dir (DOC_sweep-test-gate-001);
+      startup drain still running (~8,140 new files); watcher will process after drain completes;
+      verify: sweep ledger gets entry, no DPO pair, file moves to processed/
+      [2026-06-17 totebox@claude-code]
+- [ ] **Graph cleanup pass** — `/v1/graph/cleanup?module_id=jennifer`; noise filter now deployed;
+      expect abstract noun / fragment entities to be flagged for removal
+      [2026-06-17 totebox@claude-code]
+
+## Completed (2026-06-17, Session 19)
+
+- [x] **Archive identity contamination fixed** — CLAUDE.md + manifest.md had project-knowledge
+      content; replaced with project-intelligence SLM/Doorman/OLMo/LoRA mission; commits
+      3378a0a3 + 417fa648 [2026-06-17 totebox@claude-code]
 
 ## Completed (2026-06-16, Session 18)
 
