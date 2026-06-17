@@ -552,8 +552,16 @@ async fn search_page(
     CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     let query = params.q.trim().to_string();
-    let filter_category = params.category.as_deref().map(str::trim).filter(|s| !s.is_empty());
-    let filter_status = params.status.as_deref().map(str::trim).filter(|s| !s.is_empty());
+    let filter_category = params
+        .category
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
+    let filter_status = params
+        .status
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
 
     let raw_hits = if query.is_empty() {
         Vec::new()
@@ -633,11 +641,11 @@ async fn search_page(
                         " result" @if hits.len() != 1 { "s" }
                         " for "
                         em { (query) }
-                        @if let Some(cat) = filter_category {
-                            " in category "" (cat) """
+                        @if let Some(_cat) = filter_category {
+                            " in category "" (_cat) """
                         }
-                        @if let Some(st) = filter_status {
-                            " with status "" (st) """
+                        @if let Some(_st) = filter_status {
+                            " with status "" (_st) """
                         }
                         "."
                     }

@@ -65,38 +65,70 @@ impl ZoneDepths {
     /// Confirmed against CONSTRUCTION_2026_01_06_Key_Plan_Professional_Office_FFE_FIN.xlsx
     fn from_category(cat: &Category) -> Self {
         match cat {
-            Category::PrivateOffice => Self { z1: 6.0, z2: 3.8, z3: 2.0 },
-            Category::Medical       => Self { z1: 7.2, z2: 4.9, z3: 2.9 },
-            Category::Business      => Self { z1: 6.0, z2: 7.3, z3: 2.7 },
-            Category::Laboratory    => Self { z1: 6.8, z2: 4.8, z3: 3.0 },
-            Category::Academic      => Self { z1: 4.7, z2: 3.0, z3: 0.0 },
-            Category::Civic         => Self { z1: 6.0, z2: 7.2, z3: 3.6 },
+            Category::PrivateOffice => Self {
+                z1: 6.0,
+                z2: 3.8,
+                z3: 2.0,
+            },
+            Category::Medical => Self {
+                z1: 7.2,
+                z2: 4.9,
+                z3: 2.9,
+            },
+            Category::Business => Self {
+                z1: 6.0,
+                z2: 7.3,
+                z3: 2.7,
+            },
+            Category::Laboratory => Self {
+                z1: 6.8,
+                z2: 4.8,
+                z3: 3.0,
+            },
+            Category::Academic => Self {
+                z1: 4.7,
+                z2: 3.0,
+                z3: 0.0,
+            },
+            Category::Civic => Self {
+                z1: 6.0,
+                z2: 7.2,
+                z3: 3.6,
+            },
         }
     }
 
     fn category_name(cat: &Category) -> &'static str {
         match cat {
             Category::PrivateOffice => "private-office",
-            Category::Medical       => "medical",
-            Category::Business      => "business",
-            Category::Laboratory    => "laboratory",
-            Category::Academic      => "academic",
-            Category::Civic         => "civic",
+            Category::Medical => "medical",
+            Category::Business => "business",
+            Category::Laboratory => "laboratory",
+            Category::Academic => "academic",
+            Category::Civic => "civic",
         }
     }
 
     /// Half-width: one side of the floor plate (habitat + magazine, no corridor)
-    fn half_width(&self) -> f64 { self.z1 + self.z2 }
+    fn half_width(&self) -> f64 {
+        self.z1 + self.z2
+    }
 
     /// Full double-loaded width: both sides + central corridor
-    fn full_width(&self) -> f64 { 2.0 * self.half_width() + self.z3 }
+    fn full_width(&self) -> f64 {
+        2.0 * self.half_width() + self.z3
+    }
 
     /// Frontage (m) = net leasable area divided by the half-width depth
     /// (area_m2 per side = area / 2 for a double-loaded plate; frontage = that ÷ half_width)
-    fn frontage(&self, area_m2: f64) -> f64 { area_m2 / self.half_width() }
+    fn frontage(&self, area_m2: f64) -> f64 {
+        area_m2 / self.half_width()
+    }
 }
 
-fn m_to_ft(m: f64) -> f64 { m * 3.28084 }
+fn m_to_ft(m: f64) -> f64 {
+    m * 3.28084
+}
 
 fn main() {
     let cli = Cli::parse();
@@ -107,9 +139,7 @@ fn main() {
             let label = ZoneDepths::category_name(cat).to_string();
             (d, label)
         }
-        (None, Some(z1), Some(z2), Some(z3)) => {
-            (ZoneDepths { z1, z2, z3 }, "custom".to_string())
-        }
+        (None, Some(z1), Some(z2), Some(z3)) => (ZoneDepths { z1, z2, z3 }, "custom".to_string()),
         _ => {
             eprintln!("error: provide either --category or all three of --z1 --z2 --z3");
             std::process::exit(1);
@@ -135,8 +165,8 @@ fn main() {
                 "full_width_ft": m_to_ft(full_w),
             });
             if let (Some(area), Some(fr)) = (cli.area, frontage) {
-                obj["area_m2"]     = json!(area);
-                obj["frontage_m"]  = json!(fr);
+                obj["area_m2"] = json!(area);
+                obj["frontage_m"] = json!(fr);
                 obj["frontage_ft"] = json!(m_to_ft(fr));
             }
             println!("{}", serde_json::to_string_pretty(&obj).unwrap());
@@ -145,16 +175,40 @@ fn main() {
             println!("Building Width Calculator — {cat_label}");
             println!();
             println!("Zone depths");
-            println!("  Z1 – Habitat   {:5.2} m  ({:.1} ft)", depths.z1, m_to_ft(depths.z1));
-            println!("  Z2 – Magazine  {:5.2} m  ({:.1} ft)", depths.z2, m_to_ft(depths.z2));
-            println!("  Z3 – Corridor  {:5.2} m  ({:.1} ft)", depths.z3, m_to_ft(depths.z3));
+            println!(
+                "  Z1 – Habitat   {:5.2} m  ({:.1} ft)",
+                depths.z1,
+                m_to_ft(depths.z1)
+            );
+            println!(
+                "  Z2 – Magazine  {:5.2} m  ({:.1} ft)",
+                depths.z2,
+                m_to_ft(depths.z2)
+            );
+            println!(
+                "  Z3 – Corridor  {:5.2} m  ({:.1} ft)",
+                depths.z3,
+                m_to_ft(depths.z3)
+            );
             println!();
             println!("Floor plate (double-loaded)");
-            println!("  Half-width     {:5.2} m  ({:.1} ft)  [Z1 + Z2, per side]", half_w, m_to_ft(half_w));
-            println!("  Full width     {:5.2} m  ({:.1} ft)  [2 × (Z1 + Z2) + Z3]", full_w, m_to_ft(full_w));
+            println!(
+                "  Half-width     {:5.2} m  ({:.1} ft)  [Z1 + Z2, per side]",
+                half_w,
+                m_to_ft(half_w)
+            );
+            println!(
+                "  Full width     {:5.2} m  ({:.1} ft)  [2 × (Z1 + Z2) + Z3]",
+                full_w,
+                m_to_ft(full_w)
+            );
             if let (Some(area), Some(fr)) = (cli.area, frontage) {
                 println!();
-                println!("Leasable area    {:6.2} m²  ({:.1} SF)", area, area * 10.7639);
+                println!(
+                    "Leasable area    {:6.2} m²  ({:.1} SF)",
+                    area,
+                    area * 10.7639
+                );
                 println!("Façade frontage  {:5.2} m  ({:.1} ft)", fr, m_to_ft(fr));
             }
         }
