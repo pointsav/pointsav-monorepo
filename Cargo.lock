@@ -264,6 +264,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "app-console-people"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "app-console-keys",
+ "crossterm",
+ "ratatui",
+ "reqwest 0.12.28",
+ "serde_json",
+]
+
+[[package]]
 name = "app-console-slm"
 version = "0.1.0"
 dependencies = [
@@ -5381,6 +5393,7 @@ dependencies = [
  "app-console-email",
  "app-console-input",
  "app-console-keys",
+ "app-console-people",
  "app-console-slm",
  "app-console-system",
  "ctrlc",
