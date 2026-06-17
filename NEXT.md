@@ -63,9 +63,10 @@ Last updated: 2026-06-16
       grammar smoke test PASS (4 entities); SERVICE_CONTENT_TIER_A_GRAMMAR=json_schema active;
       service-content binary rebuilt; Phase 5b (adapter pull+GCS) committed 7cb857e
       [2026-06-17 command@claude-code]
-- [ ] **V2 Phase 4 — yoyo-batch BLOCKED** — us-central1-a STOCKOUT for g2-standard-4 (L4 GPU);
-      cannot start on current instance; awaiting operator decision (stay+wait vs one-time zone move)
-      [2026-06-17 command@claude-code]
+- [ ] **V2 Phase 4 — yoyo-batch waiting for L4 capacity** — us-central1-a STOCKOUT for g2-standard-4;
+      OPERATOR DECISION: wait for us-central1-a to free up — do NOT change zones or reprovision.
+      local-yoyo-daily.service timer retries automatically; no manual action until VM starts
+      [2026-06-17 operator]
 - [ ] **down_for_secs in TierBInfo** — expose seconds-since-last-healthy-check in /readyz;
       circuits currently report "closed" with health_up=false causing false routing to Tier B;
       Bug 4 drain-hold fix is live but this TierBInfo extension is outstanding
