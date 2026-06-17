@@ -175,13 +175,11 @@ fn check_content(paths: &[PathBuf]) -> (Vec<(String, String)>, Vec<(String, Stri
             .map(|l| l.trim_start_matches('#').trim())
             .collect();
         match content_type_val {
-            "topic" => {
-                if h2_headings.is_empty() {
-                    missing_fields.push((
-                        art.report_slug.clone(),
-                        "section:topic-requires-at-least-one-h2".to_string(),
-                    ));
-                }
+            "topic" if h2_headings.is_empty() => {
+                missing_fields.push((
+                    art.report_slug.clone(),
+                    "section:topic-requires-at-least-one-h2".to_string(),
+                ));
             }
             "guide" => {
                 let guide_sections = ["Steps", "Prerequisites", "Procedure"];
@@ -516,12 +514,12 @@ mod tests {
         std::fs::create_dir_all(&tmp).unwrap();
         std::fs::write(
             tmp.join("existing.md"),
-            "---\ntitle: Existing\nslug: existing\n---\nBody.\n",
+            "---\ntitle: Existing\nslug: existing\n---\n\n## Section\n\nBody.\n",
         )
         .unwrap();
         std::fs::write(
             tmp.join("linker.md"),
-            "---\ntitle: Linker\nslug: linker\n---\nSee [[existing]] and [[missing-page]].\n",
+            "---\ntitle: Linker\nslug: linker\n---\n\n## Section\n\nSee [[existing]] and [[missing-page]].\n",
         )
         .unwrap();
         let (dead, missing, total) = check_content(std::slice::from_ref(&tmp));
@@ -537,7 +535,7 @@ mod tests {
         let tmp = std::env::temp_dir().join(format!("xtask-miss-{}", std::process::id()));
         std::fs::create_dir_all(&tmp).unwrap();
         // Missing `slug` field.
-        std::fs::write(tmp.join("bad.md"), "---\ntitle: Bad Article\n---\nBody.\n").unwrap();
+        std::fs::write(tmp.join("bad.md"), "---\ntitle: Bad Article\n---\n\n## Section\n\nBody.\n").unwrap();
         let (dead, missing, _) = check_content(std::slice::from_ref(&tmp));
         assert!(dead.is_empty());
         assert_eq!(missing.len(), 1);
