@@ -106,9 +106,7 @@ Last updated: 2026-06-16
 
 ## Blocked — requires Command Session (route via outbox)
 
-- [ ] **yoyo-batch VM start** — do not restart until operator approves next cycle; if
-      reprovisioning: us-central1-b ONLY (NOT us-central1-a, NOT zone-fallback), image
-      slm-yoyo-20260512-111846 + startup-script-url from GCS [via outbox]
-- [ ] **ML lib install on yoyo-batch** (Bug 3) — pip install trl peft transformers accelerate
-      bitsandbytes in ~/training-venv; VM currently TERMINATED; flag to Command when ready
-      [via outbox]
+- [ ] **yoyo-batch ML libs** (Bug 3) — yoyo-batch RUNNING in us-central1-a (verified 2026-06-17;
+      prior "TERMINATED" was stale); confirm trl/peft/transformers/accelerate/bitsandbytes
+      installed in ~/training-venv before triggering LoRA training; do not start full 45-min
+      cycle until operator approves [via outbox to Command]

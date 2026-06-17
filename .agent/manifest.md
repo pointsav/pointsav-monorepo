@@ -28,8 +28,9 @@ tetrad:
       note: >
         local-doorman.service (:9080) on vault-privategit-source-1.
         local-slm.service (OLMo 7B Tier A).
-        yoyo-batch L4 GPU (Tier B) — TERMINATED; restart pending operator approval
-        (us-central1-b; image slm-yoyo-20260512-111846; ML libs install required).
+        yoyo-batch L4 GPU (Tier B) — RUNNING us-central1-a (verified 2026-06-17);
+        health_up=false on all endpoints (llama-server not responding);
+        ML libs (trl/peft/transformers) install status unconfirmed.
   wiki:
     - status: leg-pending
       note: >
