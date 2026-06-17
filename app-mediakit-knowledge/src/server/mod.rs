@@ -203,6 +203,9 @@ pub struct AppState {
     /// Phase 7: ActivityPub outbox URL for `on_article_saved()` emission.
     /// Populated from `knowledge.toml [federation] outbox_url`. `None` → disabled.
     pub activitypub_outbox_url: Option<String>,
+    /// Per-instance "New here? Start with these" chips from `[[start_here]]` in knowledge.toml.
+    /// Empty → engine renders four hardcoded PointSav documentation chips (backward-compat default).
+    pub start_here: Vec<crate::config::StartHereEntry>,
 }
 
 impl AppState {
