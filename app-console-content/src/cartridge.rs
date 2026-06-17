@@ -1824,18 +1824,6 @@ impl Cartridge for ContentCartridge {
         }
     }
 
-    fn set_graphics_caps(
-        &mut self,
-        kitty: bool,
-        sixel: bool,
-        font_size: (u16, u16),
-        truecolor: bool,
-    ) {
-        self.pdf_kitty = kitty;
-        self.pdf_sixel = sixel;
-        self.pdf_font_size = font_size;
-        self.truecolor = truecolor;
-    }
 }
 
 #[cfg(test)]
