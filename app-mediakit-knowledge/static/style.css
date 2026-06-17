@@ -874,12 +874,16 @@ div.mobile-toc-drawer:not([aria-hidden]) {
 }
 
 /* Hatnote */
-.hatnote {
+.hatnote,
+.wiki-hatnote {
   padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-6);
   border-left: 3px solid var(--border); color: var(--fg-2);
   font-size: 15px; background: var(--bg-subtle);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
+.hatnote--main    { border-left-color: var(--accent, #3b82f6); }
+.hatnote--see-also { border-left-color: var(--border-2, #9ca3af); }
+.hatnote--disambig { border-left-color: var(--warn, #f59e0b); }
 
 /* Prose — Source Serif 4 reading font (L8) */
 .prose {
