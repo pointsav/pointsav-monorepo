@@ -74,6 +74,12 @@ tenant   = "$TENANT"
 # MBA SSH connection — localhost forwarded through foundry-services tunnel
 totebox_host     = "127.0.0.1"
 totebox_ssh_port = 2222
+
+# T0 override: service-input is currently deployed on :9100 on the GCE VM.
+# The Phase 10 code defaults to :9106 (port was updated in commit a17cfdb0).
+# This line keeps F12 working until Stage 6 redeploys service-input on :9106.
+# Remove this line after Stage 6 lands.
+ingest_endpoint = "http://127.0.0.1:9100"
 EOF
     echo "Created: $CONFIG_FILE"
 else
