@@ -3,6 +3,7 @@ mod ssh_server;
 
 mod mba_client;
 mod metrics;
+mod tunnel;
 
 fn main() -> anyhow::Result<()> {
     inner_main()
@@ -26,6 +27,27 @@ fn inner_main() -> anyhow::Result<()> {
 
     let cfg = ConsoleConfig::load();
     let p = &cfg.profile;
+
+    // Start embedded SSH tunnel if gce_host is configured
+    if !p.gce_host.is_empty() {
+        tunnel::spawn_tunnel(tunnel::TunnelConfig {
+            gce_host: p.gce_host.clone(),
+            gce_port: p.gce_ssh_port,
+            username: p.gce_user.clone(),
+            key_path: p.ssh_key_path.clone(),
+            forwards: vec![
+                (9080, 9080), // Doorman
+                (9081, 9081), // service-content
+                (9092, 9092), // service-proofreader (F4)
+                (9100, 9100), // service-input (F12)
+                (9093, 9093), // service-email (F3)
+                (9201, 9201), // pairing-server (F11)
+                (2222, 2222), // MBA SSH
+            ],
+        });
+        // Give the tunnel ~1.5s to establish before attempting MBA
+        std::thread::sleep(std::time::Duration::from_millis(1500));
+    }
 
     // Attempt MBA peer-to-peer link (5s timeout)
     let rt = tokio::runtime::Runtime::new()?;
