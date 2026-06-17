@@ -58,7 +58,9 @@ fn parse_anthropic_sse(bytes: &[u8]) -> Vec<AiChunk> {
         match last_event {
             "content_block_delta" => {
                 if let Some(t) = extract_text_delta(data) {
-                    if !t.is_empty() { out.push(AiChunk::Delta(t)); }
+                    if !t.is_empty() {
+                        out.push(AiChunk::Delta(t));
+                    }
                 }
             }
             "message_stop" => out.push(AiChunk::Done),
@@ -73,6 +75,13 @@ fn extract_text_delta(json: &str) -> Option<String> {
     let rest = json.get(after..)?.trim_start();
     if let Some(inner) = rest.strip_prefix('"') {
         let end = inner.find('"')?;
-        Some(inner[..end].replace("\\n", "\n").replace("\\\"", "\"").replace("\\\\", "\\"))
-    } else { None }
+        Some(
+            inner[..end]
+                .replace("\\n", "\n")
+                .replace("\\\"", "\"")
+                .replace("\\\\", "\\"),
+        )
+    } else {
+        None
+    }
 }

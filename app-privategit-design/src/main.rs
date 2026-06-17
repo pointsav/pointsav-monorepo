@@ -68,7 +68,10 @@ async fn main() {
     eprintln!("app-privategit-design edit token: {}", edit_token);
 
     let mut jinja = Environment::new();
-    jinja.set_loader(path_loader(concat!(env!("CARGO_MANIFEST_DIR"), "/templates")));
+    jinja.set_loader(path_loader(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/templates"
+    )));
     jinja.add_filter("to_title", |s: String| -> String { vault::to_title(&s) });
     let env = Arc::new(jinja);
 
@@ -92,9 +95,7 @@ async fn main() {
 
 fn is_indexable_md(path: &Path) -> bool {
     let lossy = path.to_string_lossy();
-    path.is_file()
-        && lossy.ends_with(".md")
-        && !lossy.ends_with(".es.md")
+    path.is_file() && lossy.ends_with(".md") && !lossy.ends_with(".es.md")
 }
 
 async fn reindex_file(path: &Path, _vault: &Path, index: &Arc<RwLock<InvertedIndex>>) {

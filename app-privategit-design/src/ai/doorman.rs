@@ -45,11 +45,18 @@ fn parse_sse_chunks(bytes: &[u8]) -> Vec<AiChunk> {
     let mut out = Vec::new();
     for line in text.lines() {
         let data = line.strip_prefix("data: ").unwrap_or(line).trim();
-        if data == "[DONE]" { out.push(AiChunk::Done); continue; }
-        if data.is_empty() { continue; }
+        if data == "[DONE]" {
+            out.push(AiChunk::Done);
+            continue;
+        }
+        if data.is_empty() {
+            continue;
+        }
         // Extract delta.content from {"choices":[{"delta":{"content":"..."}}]}
         if let Some(content) = extract_delta_content(data) {
-            if !content.is_empty() { out.push(AiChunk::Delta(content)); }
+            if !content.is_empty() {
+                out.push(AiChunk::Delta(content));
+            }
         }
     }
     out
@@ -59,9 +66,18 @@ fn extract_delta_content(json: &str) -> Option<String> {
     // Hand-rolled extraction — avoids serde dep for this path.
     let after = json.find("\"content\":")?.saturating_add(10);
     let rest = json.get(after..)?.trim_start();
-    if rest.starts_with("null") { return None; }
+    if rest.starts_with("null") {
+        return None;
+    }
     if let Some(inner) = rest.strip_prefix('"') {
         let end = inner.find('"')?;
-        Some(inner[..end].replace("\\n", "\n").replace("\\\"", "\"").replace("\\\\", "\\"))
-    } else { None }
+        Some(
+            inner[..end]
+                .replace("\\n", "\n")
+                .replace("\\\"", "\"")
+                .replace("\\\\", "\\"),
+        )
+    } else {
+        None
+    }
 }
