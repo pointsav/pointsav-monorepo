@@ -83,7 +83,7 @@ fn default_slm_endpoint() -> String {
     "http://localhost:9080".into()
 }
 fn default_pair_endpoint() -> String {
-    "http://127.0.0.1:9201".into()
+    "http://127.0.0.1:9205".into()
 }
 fn default_drafts_outbound_path() -> String {
     let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
