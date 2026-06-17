@@ -147,13 +147,15 @@ fn check_content(paths: &[PathBuf]) -> (Vec<(String, String)>, Vec<(String, Stri
         }
 
         // Blueprint frontmatter validation.
+        let content_type_val: &str = art
+            .fields
+            .as_ref()
+            .and_then(|m| m.get("type").or_else(|| m.get("content_type")))
+            .map(|s| s.as_str())
+            .unwrap_or("topic");
+
         if let Some(map) = &art.fields {
-            let content_type = map
-                .get("type")
-                .or_else(|| map.get("content_type"))
-                .map(|s| s.as_str())
-                .unwrap_or("topic");
-            let required = match content_type {
+            let required = match content_type_val {
                 "guide" => &required_guide[..],
                 _ => &required_topic[..],
             };
@@ -162,6 +164,38 @@ fn check_content(paths: &[PathBuf]) -> (Vec<(String, String)>, Vec<(String, Stri
                     missing_fields.push((art.report_slug.clone(), field.to_string()));
                 }
             }
+        }
+
+        // Sprint N: section schema gate — warn when required level-2 headings are absent.
+        // Only applies to `topic` and `guide` content types; other blueprints are exempt.
+        let h2_headings: Vec<&str> = art
+            .body
+            .lines()
+            .filter(|l| l.starts_with("## "))
+            .map(|l| l.trim_start_matches('#').trim())
+            .collect();
+        match content_type_val {
+            "topic" => {
+                if h2_headings.is_empty() {
+                    missing_fields.push((
+                        art.report_slug.clone(),
+                        "section:topic-requires-at-least-one-h2".to_string(),
+                    ));
+                }
+            }
+            "guide" => {
+                let guide_sections = ["Steps", "Prerequisites", "Procedure"];
+                let has_guide_section = h2_headings
+                    .iter()
+                    .any(|h| guide_sections.iter().any(|s| h.eq_ignore_ascii_case(s)));
+                if !has_guide_section {
+                    missing_fields.push((
+                        art.report_slug.clone(),
+                        "section:guide-missing-Steps/Prerequisites/Procedure".to_string(),
+                    ));
+                }
+            }
+            _ => {}
         }
     }
 
