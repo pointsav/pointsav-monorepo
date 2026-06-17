@@ -19,8 +19,36 @@ use comrak::{
     nodes::{NodeHtmlBlock, NodeValue},
     parse_document, Arena, Options,
 };
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::BTreeMap;
+
+/// Accept a frontmatter field that may be either a bare YAML string or a YAML
+/// sequence of strings. Content authored with `audience: customer-woodfine`
+/// (scalar) and `audience: [customer-woodfine, operator]` (sequence) are both
+/// valid. Without this, serde_yaml fails the entire Frontmatter parse on scalar
+/// input, silently defaulting all fields including `title` → raw-slug display.
+fn deser_string_or_vec<'de, D: Deserializer<'de>>(d: D) -> Result<Vec<String>, D::Error> {
+    use serde::de::{SeqAccess, Visitor};
+    use std::fmt;
+    struct StrOrVec;
+    impl<'de> Visitor<'de> for StrOrVec {
+        type Value = Vec<String>;
+        fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            f.write_str("a string or list of strings")
+        }
+        fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<Vec<String>, E> {
+            Ok(vec![v.to_string()])
+        }
+        fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<Vec<String>, A::Error> {
+            let mut out = Vec::new();
+            while let Some(s) = seq.next_element::<String>()? {
+                out.push(s);
+            }
+            Ok(out)
+        }
+    }
+    d.deserialize_any(StrOrVec)
+}
 
 /// Translation entry: language code (e.g. "es") → slug of sibling page.
 pub type TranslationMap = BTreeMap<String, String>;
@@ -148,13 +176,15 @@ pub struct Frontmatter {
     pub infobox: Option<Infobox>,
 
     /// Target audience chips shown below the article H1 and status badge.
-    /// E.g. ["operator", "developer", "public"]. Rendered as inline chips.
-    #[serde(default)]
+    /// E.g. ["operator", "developer", "public"]. Also accepts a bare string
+    /// (`audience: operator`) for backward compat with older content.
+    #[serde(default, deserialize_with = "deser_string_or_vec")]
     pub audience: Vec<String>,
 
     /// Alternative slugs that 301-redirect to this article's canonical slug.
     /// Allows renaming articles without breaking existing links.
-    #[serde(default)]
+    /// Also accepts a bare string for single-alias content.
+    #[serde(default, deserialize_with = "deser_string_or_vec")]
     pub aliases: Vec<String>,
 
     #[serde(flatten)]
