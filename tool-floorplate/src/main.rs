@@ -186,12 +186,12 @@ fn print_multi_tile(cli: &Cli, s: &ClassSpec) {
     println!();
     println!("CO Key Plan fractions");
     println!(
-        "  {:<8}  {:>9}   {:>6}   {:>8}   {}",
-        "Label", "Leasable", "m²", "Tiles", "Note"
+        "  {:<8}  {:>9}   {:>6}   {:>8}   Note",
+        "Label", "Leasable", "m²", "Tiles"
     );
     println!(
-        "  {:<8}  {:>9}   {:>6}   {:>8}   {}",
-        "-----", "--------", "--", "-----", "----"
+        "  {:<8}  {:>9}   {:>6}   {:>8}   ----",
+        "-----", "--------", "--", "-----"
     );
     for (label, lsf, tile_label, note) in CO_FRACTIONS {
         println!(
