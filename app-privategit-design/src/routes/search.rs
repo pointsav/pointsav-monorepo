@@ -62,7 +62,10 @@ fn snippet(body: &str, query: &str) -> String {
         let s = &body[start..end];
         s.replace('\n', " ").trim().to_string()
     } else {
-        body.chars().take(120).collect::<String>().replace('\n', " ")
+        body.chars()
+            .take(120)
+            .collect::<String>()
+            .replace('\n', " ")
     }
 }
 

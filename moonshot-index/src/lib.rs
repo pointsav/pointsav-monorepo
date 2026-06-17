@@ -14,9 +14,9 @@ pub struct InvertedIndex {
 }
 
 const STOP_WORDS: &[&str] = &[
-    "a", "an", "and", "are", "as", "at", "be", "been", "being", "by",
-    "for", "from", "in", "is", "it", "its", "of", "on", "or", "the",
-    "this", "that", "these", "those", "to", "was", "were", "with",
+    "a", "an", "and", "are", "as", "at", "be", "been", "being", "by", "for", "from", "in", "is",
+    "it", "its", "of", "on", "or", "the", "this", "that", "these", "those", "to", "was", "were",
+    "with",
 ];
 
 fn tokenize(text: &str) -> Vec<String> {

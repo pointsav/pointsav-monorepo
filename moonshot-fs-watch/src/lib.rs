@@ -28,11 +28,18 @@ fn add_watch(fd: RawFd, path: &Path) -> Option<i32> {
         libc::inotify_add_watch(
             fd,
             c_path.as_ptr(),
-            libc::IN_MODIFY | libc::IN_CREATE | libc::IN_DELETE
-                | libc::IN_MOVED_FROM | libc::IN_MOVED_TO,
+            libc::IN_MODIFY
+                | libc::IN_CREATE
+                | libc::IN_DELETE
+                | libc::IN_MOVED_FROM
+                | libc::IN_MOVED_TO,
         )
     };
-    if wd < 0 { None } else { Some(wd) }
+    if wd < 0 {
+        None
+    } else {
+        Some(wd)
+    }
 }
 
 fn add_recursive(fd: RawFd, path: &Path, watches: &mut HashMap<i32, PathBuf>) {
@@ -72,7 +79,10 @@ fn run_watcher(root: PathBuf, tx: mpsc::Sender<PathBuf>) {
         while offset + event_size <= n {
             let event = unsafe { &*(buf.as_ptr().add(offset) as *const libc::inotify_event) };
             let name_len = event.len as usize;
-            let dir = watches.get(&event.wd).cloned().unwrap_or_else(|| root.clone());
+            let dir = watches
+                .get(&event.wd)
+                .cloned()
+                .unwrap_or_else(|| root.clone());
 
             let event_path = if name_len > 0 && offset + event_size + name_len <= n {
                 let name_ptr = unsafe { buf.as_ptr().add(offset + event_size) };

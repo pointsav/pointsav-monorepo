@@ -10,13 +10,17 @@ pub async fn index(State(state): State<AppState>) -> Html<String> {
     let nav_html = render::render_nav(&state.env, &state.nav, vault::SECTIONS, "", "");
     let content = "<div class=\"home-body\"><h1>PointSav Design System</h1>\
                    <p>Select an element from the sidebar.</p></div>";
-    Html(render::shell(&state.env, "PointSav Design System", &nav_html, "", "", content))
+    Html(render::shell(
+        &state.env,
+        "PointSav Design System",
+        &nav_html,
+        "",
+        "",
+        content,
+    ))
 }
 
-pub async fn element_redirect(
-    Path(slug): Path<String>,
-    State(state): State<AppState>,
-) -> Response {
+pub async fn element_redirect(Path(slug): Path<String>, State(state): State<AppState>) -> Response {
     if slug.contains("..") || slug.contains('/') {
         return (StatusCode::BAD_REQUEST, "invalid").into_response();
     }

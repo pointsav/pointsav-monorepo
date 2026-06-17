@@ -4,8 +4,8 @@
 use futures_util::Stream;
 use std::pin::Pin;
 
-pub mod doorman;
 pub mod claude;
+pub mod doorman;
 
 /// Normalised chunk from any upstream model.
 pub enum AiChunk {
@@ -18,9 +18,13 @@ pub enum AiChunk {
 impl AiChunk {
     pub fn to_sse(&self) -> String {
         match self {
-            AiChunk::Delta(t) => format!("data: {{\"type\":\"delta\",\"text\":{}}}\n\n", json_str(t)),
-            AiChunk::Done    => "data: {\"type\":\"done\"}\n\n".to_string(),
-            AiChunk::Error(e) => format!("data: {{\"type\":\"error\",\"msg\":{}}}\n\n", json_str(e)),
+            AiChunk::Delta(t) => {
+                format!("data: {{\"type\":\"delta\",\"text\":{}}}\n\n", json_str(t))
+            }
+            AiChunk::Done => "data: {\"type\":\"done\"}\n\n".to_string(),
+            AiChunk::Error(e) => {
+                format!("data: {{\"type\":\"error\",\"msg\":{}}}\n\n", json_str(e))
+            }
         }
     }
 }
