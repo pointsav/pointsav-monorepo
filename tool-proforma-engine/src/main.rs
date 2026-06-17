@@ -210,6 +210,16 @@ enum Command {
         #[arg(long, default_value = ".")]
         out_dir: PathBuf,
     },
+    /// 10-Year Financial Forecast — Big-4-style four-statement package (IFRS 18) + merged notes
+    /// plus an Independent Practitioner's Assurance Report; jurisdiction-parameterized (Canada
+    /// default). Emits COMPLIANCE_MCorp_date_Forecast_entity-slug_V1 in html, json and pdf.
+    ForecastStatements {
+        /// Entity: canada (additional jurisdictions added in Phase B).
+        #[arg(long, default_value = "canada")]
+        jurisdiction: String,
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
+    },
 }
 
 fn write_output(content: &str, out: Option<&PathBuf>) {
@@ -731,6 +741,49 @@ fn main() {
             eprintln!(
                 "wrote 2{} JW1 Allocation files to {}",
                 pdf_note,
+                out_dir.display()
+            );
+        }
+        Some(Command::ForecastStatements {
+            jurisdiction,
+            out_dir,
+        }) => {
+            use proforma_engine::spv::statutory_forecast::jurisdiction_by_key;
+            use report::forecast_statements::{render_json, render_proforma};
+            let j = match jurisdiction_by_key(&jurisdiction) {
+                Some(j) => j,
+                None => {
+                    eprintln!("error: unknown jurisdiction '{jurisdiction}' (supported: canada)");
+                    std::process::exit(1);
+                }
+            };
+            let html = render_proforma(j);
+            let json = render_json(j);
+            let stem = format!("COMPLIANCE_MCorp_2026_06_14_Forecast_{}_V1", j.file_slug);
+            let html_path = out_dir.join(format!("{stem}.html"));
+            let json_path = out_dir.join(format!("{stem}.json"));
+            write_output(&html, Some(&html_path));
+            write_output(&json, Some(&json_path));
+            let pdf_path = html_path.with_extension("pdf");
+            let status = std::process::Command::new("weasyprint")
+                .arg(html_path.as_os_str())
+                .arg(pdf_path.as_os_str())
+                .status();
+            let pdf_note = match status {
+                Ok(s) if s.success() => " + 1 PDF".to_string(),
+                Ok(s) => {
+                    eprintln!("weasyprint exited {} for {}", s, html_path.display());
+                    String::new()
+                }
+                Err(e) => {
+                    eprintln!("weasyprint not found or failed: {e}");
+                    String::new()
+                }
+            };
+            eprintln!(
+                "wrote 2{} forecast files for {} to {}",
+                pdf_note,
+                j.term_name,
                 out_dir.display()
             );
         }

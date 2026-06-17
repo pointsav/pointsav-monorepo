@@ -8,6 +8,8 @@ pub mod bencal_spv2_proforma;
 pub mod irr;
 pub mod legacy_jv_proforma;
 pub mod pclp1_proforma;
+pub mod statutory_forecast;
+pub mod statutory_notes;
 pub mod wcp_proforma;
 
 /// Merge a `_derivation` block into the top-level JSON object for audit purposes.
