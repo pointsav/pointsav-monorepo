@@ -148,6 +148,7 @@ async fn main() -> Result<()> {
                 eff_peers,
                 eff_instance,
                 eff_canonical_url,
+                eff_activitypub_outbox_url,
             ) = if let Some(ref toml_path) = knowledge_toml {
                 let cfg = app_mediakit_knowledge::config::load_config(toml_path)?;
                 let parsed_bind: SocketAddr = cfg.site.bind.parse()?;
@@ -194,6 +195,7 @@ async fn main() -> Result<()> {
                     cfg.peers,
                     cfg.site.instance.clone(),
                     cfg.site.canonical_url.clone(),
+                    cfg.federation.outbox_url.clone(),
                 )
             } else {
                 // Legacy env-var path.
@@ -214,6 +216,7 @@ async fn main() -> Result<()> {
                     vec![],
                     None,
                     None,
+                    None,
                 )
             };
 
@@ -231,6 +234,7 @@ async fn main() -> Result<()> {
                 eff_peers,
                 eff_instance,
                 eff_canonical_url,
+                eff_activitypub_outbox_url,
             )
             .await
         }
@@ -292,6 +296,7 @@ async fn serve(
     peers: Vec<app_mediakit_knowledge::config::PeerConfig>,
     instance: Option<String>,
     canonical_url: Option<String>,
+    activitypub_outbox_url: Option<String>,
 ) -> Result<()> {
     if !content_dir.is_dir() {
         bail!(
@@ -345,6 +350,8 @@ async fn serve(
     let search_arc = Arc::new(search_index);
 
     // Incremental search reindex: watch content_dir for .md changes.
+    // Phase 7: after a successful write reindex, emit an ActivityPub Create/Article
+    // activity to `activitypub_outbox_url` (best-effort, non-blocking).
     {
         let (tx, mut rx) = mpsc::channel::<notify::Result<notify::Event>>(64);
         let mut watcher: RecommendedWatcher = Watcher::new(
@@ -356,6 +363,8 @@ async fn serve(
         watcher.watch(&content_dir, RecursiveMode::Recursive)?;
         let idx = Arc::clone(&search_arc);
         let cdir = content_dir.clone();
+        let ap_outbox = activitypub_outbox_url.clone();
+        let ap_canonical = canonical_url.clone();
         tokio::spawn(async move {
             let _w = watcher;
             while let Some(event) = rx.recv().await {
@@ -372,6 +381,25 @@ async fn serve(
                             if let Ok(text) = std::fs::read_to_string(path) {
                                 if let Err(e) = search::reindex_topic(&idx, &slug, &text).await {
                                     tracing::warn!(slug, error = %e, "reindex failed");
+                                } else if ap_outbox.is_some() {
+                                    let base = ap_canonical
+                                        .as_deref()
+                                        .unwrap_or("http://localhost:9090");
+                                    let actor_id =
+                                        format!("{}/activitypub/actor", base);
+                                    let published = chrono::Utc::now()
+                                        .format("%Y-%m-%dT%H:%M:%SZ")
+                                        .to_string();
+                                    app_mediakit_knowledge::activitypub::on_article_saved(
+                                        ap_outbox.as_deref(),
+                                        &actor_id,
+                                        base,
+                                        &slug,
+                                        &slug,
+                                        "",
+                                        &published,
+                                    )
+                                    .await;
                                 }
                             }
                         }
@@ -422,6 +450,7 @@ async fn serve(
         blueprints,
         peers,
         canonical_url,
+        activitypub_outbox_url,
     };
     let app = router(state);
     let listener = tokio::net::TcpListener::bind(bind).await?;

@@ -35,6 +35,7 @@ async fn fixture_state() -> (AppState, TempDir, TempDir) {
             blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
             peers: vec![],
             canonical_url: None,
+        activitypub_outbox_url: None,
         },
         content_dir,
         state_dir,

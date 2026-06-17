@@ -7,11 +7,12 @@
 //! It emits to a configurable HTTP endpoint; the operator controls whether that
 //! endpoint is a public ActivityPub inbox or an internal relay.
 //!
-//! Phase 7 implementation plan:
-//!   1. Wire `on_article_saved()` call into the edit handler (server/misc_handlers.rs).
-//!   2. Add `[federation].outbox_url` to knowledge.toml + `AppConfig`.
-//!   3. Populate `AppState.activitypub_outbox_url` from config at startup.
-//!   4. Use reqwest to POST the Activity JSON to `outbox_url` (best-effort, logged on error).
+//! Phase 7 implementation — Sprint H (2026-06-16):
+//!   1. `[federation].outbox_url` added to knowledge.toml + `AppConfig` (config.rs).
+//!   2. `AppState.activitypub_outbox_url` populated from config at startup (main.rs).
+//!   3. `on_article_saved()` wired into the content-dir file watcher (main.rs).
+//!      Note: git-only contribution workflow means no HTTP POST edit handler exists;
+//!      the file watcher fires on any `.md` change to the content directory.
 
 use serde::{Deserialize, Serialize};
 
@@ -94,10 +95,11 @@ impl CreateActivity {
 }
 
 /// Emit a `Create/Article` Activity to `outbox_url` when an article is saved.
-/// Best-effort: logs on error, never panics, never blocks the edit response.
+/// Best-effort: logs on error, never panics, never blocks the caller.
 ///
-/// Called by the edit handler after a successful commit. `outbox_url` comes
-/// from `knowledge.toml` `[federation].outbox_url`; if absent, this is a no-op.
+/// Called from the content-dir file watcher after a successful `.md` reindex.
+/// `outbox_url` comes from `knowledge.toml` `[federation].outbox_url`; if absent,
+/// this is a no-op.
 pub async fn on_article_saved(
     outbox_url: Option<&str>,
     actor_id: &str,

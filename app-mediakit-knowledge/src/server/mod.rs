@@ -200,6 +200,9 @@ pub struct AppState {
     /// Canonical base URL (no trailing slash) used in sitemap.xml `<loc>` values.
     /// Populated from `knowledge.toml [site] canonical_url`. `None` → relative URLs.
     pub canonical_url: Option<String>,
+    /// Phase 7: ActivityPub outbox URL for `on_article_saved()` emission.
+    /// Populated from `knowledge.toml [federation] outbox_url`. `None` → disabled.
+    pub activitypub_outbox_url: Option<String>,
 }
 
 impl AppState {
