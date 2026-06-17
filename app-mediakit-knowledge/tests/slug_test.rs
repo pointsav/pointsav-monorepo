@@ -31,6 +31,7 @@ async fn make_state(content_dir: &tempfile::TempDir, state_dir: &tempfile::TempD
         blueprints: app_mediakit_knowledge::blueprints::Registry::builtin(),
         peers: vec![],
         canonical_url: None,
+        activitypub_outbox_url: None,
     }
 }
 
