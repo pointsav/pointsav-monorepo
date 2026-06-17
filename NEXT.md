@@ -56,6 +56,9 @@ Last updated: 2026-06-16
 - [x] **service-content binary rebuild** — built 5c3d7f5b from HEAD; 40/40 tests; deployed;
       healthz 11935 entities; ledger entries written; outbox sent to Command
       [2026-06-17 totebox@claude-code]
+- [x] **V2 overhaul — Totebox phases done** — ffef89c3 (BRIEF) + e9deedbe (few-shot+grammar+OLMo 3 training path);
+      Phase 1+2+5a committed; outbox to Command for Phase 3+4+5b
+      [2026-06-17 totebox@claude-code]
 - [ ] **down_for_secs in TierBInfo** — expose seconds-since-last-healthy-check in /readyz;
       circuits currently report "closed" with health_up=false causing false routing to Tier B;
       Bug 4 drain-hold fix is live but this TierBInfo extension is outstanding
