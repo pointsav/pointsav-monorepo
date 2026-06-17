@@ -535,7 +535,11 @@ mod tests {
         let tmp = std::env::temp_dir().join(format!("xtask-miss-{}", std::process::id()));
         std::fs::create_dir_all(&tmp).unwrap();
         // Missing `slug` field.
-        std::fs::write(tmp.join("bad.md"), "---\ntitle: Bad Article\n---\n\n## Section\n\nBody.\n").unwrap();
+        std::fs::write(
+            tmp.join("bad.md"),
+            "---\ntitle: Bad Article\n---\n\n## Section\n\nBody.\n",
+        )
+        .unwrap();
         let (dead, missing, _) = check_content(std::slice::from_ref(&tmp));
         assert!(dead.is_empty());
         assert_eq!(missing.len(), 1);
