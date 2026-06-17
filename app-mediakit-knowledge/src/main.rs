@@ -382,14 +382,11 @@ async fn serve(
                                 if let Err(e) = search::reindex_topic(&idx, &slug, &text).await {
                                     tracing::warn!(slug, error = %e, "reindex failed");
                                 } else if ap_outbox.is_some() {
-                                    let base = ap_canonical
-                                        .as_deref()
-                                        .unwrap_or("http://localhost:9090");
-                                    let actor_id =
-                                        format!("{}/activitypub/actor", base);
-                                    let published = chrono::Utc::now()
-                                        .format("%Y-%m-%dT%H:%M:%SZ")
-                                        .to_string();
+                                    let base =
+                                        ap_canonical.as_deref().unwrap_or("http://localhost:9090");
+                                    let actor_id = format!("{}/activitypub/actor", base);
+                                    let published =
+                                        chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
                                     app_mediakit_knowledge::activitypub::on_article_saved(
                                         ap_outbox.as_deref(),
                                         &actor_id,
