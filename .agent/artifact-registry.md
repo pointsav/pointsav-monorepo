@@ -757,7 +757,7 @@ Binary rebuild + service restart required after each Stage 6 (see BRIEF §4 Phas
 | E6 | `3106b2e1` | pwoodfine | Audit repair Sprint A: WCAG 2.2 focus outline (C3 — navy 9.1:1 vs gold 2.26:1); article body link underline (M15) | CONFIRMED | Yes |
 | E7 | `48bfa7e7` | jwoodfine | Audit repair Sprint B: sitemap absolute URLs via `canonical_url` TOML field (M1); brand-instance from TOML `[site].instance` (M14); ES tab/breadcrumb i18n in wiki_handlers via inline match (M12); dead POST form removed from `/edit` view (M11) | CONFIRMED | Yes |
 | E8 | `934dac27` | jwoodfine | Defect 6: `GET /images/{*path}` — serve content images from mount; validate_slug guard, mime_guess, immutable cache; 3 tests added | CONFIRMED | Yes |
-| E9 | `21212c69` | jwoodfine | Sprint D/E/F/G + Defect 2 + M13: peer-band home_chrome; audience chips + aliases render::Frontmatter + walker::Frontmatter; peer-strip wiki_chrome; footer-version; search lede + ?category=/?status=; footnote CSS; /openapi.json 301 | Stage 6 PENDING | No |
+| E9 | `575776a8`→`3d90e76d` | jwoodfine | Sprint D/E/F/G + Defect 2 + M13: peer-band home_chrome; audience chips + aliases render::Frontmatter + walker::Frontmatter; peer-strip wiki_chrome; footer-version; search lede + ?category=/?status=; footnote CSS; /openapi.json 301 | Stage 6 READY (msg-id: command-20260617-stage-6-ready-app-mediakit-knowledge-bin) | No |
 
 **Post-Stage-6 actions confirmed complete (Session 86, 2026-06-16):**
 - `instance =` + `canonical_url =` present in all 3 `/etc/local-knowledge/*.toml` — verified
