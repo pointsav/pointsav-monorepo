@@ -102,21 +102,15 @@ Multi-agent research (3 Explore agents + web research) confirmed why entity extr
 
 ## Carry-forward
 
-### V2 overhaul — Totebox scope (this session)
-- [ ] **Phase 1**: Add 5 few-shot examples to `EXTRACTION_SYSTEM_PROMPT` in `service-content/src/main.rs:28-56` → build + test + commit → outbox to Command for binary redeploy
-- [ ] **Phase 2**: Add `SERVICE_CONTENT_TIER_A_GRAMMAR` env flag to `call_tier_a_extract()` → commit → deploy gated on Phase 3
-- [ ] **Phase 5a**: Update `run-dpo-training.py` — `--base-model /data/weights/olmo-3-7b-think-hf`, `--output-dir /data/weights/adapters/apprenticeship-pointsav-incremental` → commit
+### V2 overhaul — status as of 2026-06-17 Session 20
 
-### V2 overhaul — Command scope (outbox after Totebox commits)
-- [ ] **Phase 3**: Download OLMo 3 7B Instruct GGUF → update `local-slm.service` (ctx-size 8192) → deploy + smoke test grammar
-- [ ] **Phase 4**: Start yoyo-batch (us-central1-a, stay on current instance) → verify vLLM OLMo 3 → run tests → shut down; let 2hr/day timer take over
-- [ ] **Phase 5b**: Add Phase 6b to `yoyo-daily-cycle.sh`: rsync adapter `/data/weights/adapters/` → workspace `/srv/foundry/data/adapters/`; then `gsutil rsync` to GCS as backup
-- [ ] **Phase 6**: After OLMo 3 Tier A live: graph cleanup pass + repair-ledger.py (gate: Tier B circuit closed)
-
-### Legacy carry-forward
-- [x] Run `redrive-quarantine.py` — DONE 2026-06-16 by Command (737 re-driven; queue_quarantine=0)
-- [x] Stage 6 for 23b012a1 + 4a9c81b9 (Totebox audit fixes) — in origin/main as of 7df62961
-- [x] Service-content binary rebuild — DONE 2026-06-17 Session 19 (sha256 5c3d7f5b; 40/40 tests; 11935 entities)
-- [x] DOC_sweep gate verified via unit test `dpo_sweep_docs_never_generate_pairs` (40/40 pass)
-- [ ] Graph cleanup pass (`/v1/graph/cleanup?module_id=jennifer`) — pending OLMo 3 Tier A deploy
-- [ ] Run `repair-ledger.py` once Tier B circuit closes (gate: [[project-intelligence-tier-b-gpu-restoration]])
+- [x] **Phase 1 (few-shot)** — 5 examples in `EXTRACTION_SYSTEM_PROMPT`; 40/40 tests; commit e9deedbe
+- [x] **Phase 2 (grammar flag)** — `SERVICE_CONTENT_TIER_A_GRAMMAR=json_schema` env var in `call_tier_a_extract()`; commit e9deedbe
+- [x] **Phase 5a (training base model)** — `run-dpo-training.py` default → `/data/weights/olmo-3-7b-think-hf`; commit e9deedbe
+- [x] **Phase 3 (OLMo 3 Tier A)** — `Olmo-3-7B-Instruct-Q4_K_M.gguf` deployed; ctx-size 8192; grammar smoke test PASS (4 entities); `SERVICE_CONTENT_TIER_A_GRAMMAR=json_schema` active; service-content rebuilt (Command, 2026-06-17)
+- [x] **Phase 5b (adapter pull+GCS)** — rsync pull + GCS backup added to `yoyo-daily-cycle.sh`; output-dir updated to persistent weights disk; commit 7cb857e (Command, 2026-06-17)
+- [ ] **Phase 4 (yoyo-batch OLMo 3 verify)** — BLOCKED: us-central1-a STOCKOUT for g2-standard-4 (L4 GPU). OPERATOR DECISION: wait for capacity to return — no zone change. `local-yoyo-daily.service` timer retries automatically.
+- [ ] **Phase 6 (graph cleanup + repair-ledger)** — gate: Phase 4 done (Tier B circuit closed). Run `/v1/graph/cleanup?module_id=jennifer` then `repair-ledger.py --dry-run` first.
+- [ ] **Grammar open decision** — closed: grammar PASS on OLMo 3; `SERVICE_CONTENT_TIER_A_GRAMMAR=json_schema` is the live setting; grammar mode is now the default for Tier A
+- [ ] **Verify OLMo 3 target_modules** — confirm on first training run after Phase 4 unblocks; runtime assertion at `run-dpo-training.py:321-330` will verify
+- [ ] **Adapter eval gate** — after first adapter pull to workspace post-Phase-4; run `eval-adapter.sh`; operator reviews before registry.yaml update
