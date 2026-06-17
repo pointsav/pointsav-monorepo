@@ -41,12 +41,12 @@ fn inner_main() -> anyhow::Result<()> {
                 (9092, 9092), // service-proofreader (F4)
                 (9100, 9100), // service-input (F12)
                 (9093, 9093), // service-email (F3)
-                (9201, 9201), // pairing-server (F11)
+                (9205, 9205), // pairing-server (F11)
                 (2222, 2222), // MBA SSH
             ],
         });
-        // Give the tunnel ~1.5s to establish before attempting MBA
-        std::thread::sleep(std::time::Duration::from_millis(1500));
+        // Give the tunnel ~3s to establish before attempting MBA
+        std::thread::sleep(std::time::Duration::from_millis(3000));
     }
 
     // Attempt MBA peer-to-peer link (5s timeout)
