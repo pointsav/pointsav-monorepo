@@ -776,4 +776,4 @@ Top institutional quality gaps beyond §7 findings (from §7.5 benchmark analysi
 | E | Article chrome: audience chips + aliases frontmatter + render::Frontmatter schema | `575776a8` chain → `3d90e76d` | Done — Stage 6 READY sent 2026-06-16; pending binary rebuild (Command) |
 | F | Header/footer: doc-header CSS, cross-instance peer-strip in article header, engine version in footer | `575776a8` chain → `3d90e76d` | Done — Stage 6 READY sent 2026-06-16; pending binary rebuild (Command) |
 | G | Search: lede snippet in autocomplete, ?category= and ?status= filters in search_page | `575776a8` chain → `3d90e76d` | Done — Stage 6 READY sent 2026-06-16; pending binary rebuild (Command) |
-| H | Phase 7 ActivityPub wiring: FederationConfig + AppState.activitypub_outbox_url + on_article_saved() wired into edit handler | — | In progress — Session 87 |
+| H | Phase 7 ActivityPub wiring: FederationConfig + AppState.activitypub_outbox_url + on_article_saved() wired into file watcher | `2c0ed559` | Done — 200+ tests green; Stage 6 READY (2nd) pending; note: wired into content-dir file watcher (not edit handler — no HTTP POST write path exists in git-only architecture) |
