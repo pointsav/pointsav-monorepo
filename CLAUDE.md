@@ -2,7 +2,7 @@
 
 # project-intelligence — Archive Guide
 
-> **State:** active | **Last updated:** 2026-06-18
+> **State:** active | **Last updated:** 2026-06-16
 > **Cluster manifest:** `.agent/manifest.md`
 > **Workspace AGENT.md takes precedence on conflict.**
 
@@ -16,8 +16,9 @@ OLMo 32B Tier B (yoyo-batch L4 GPU; us-central1-b target),
 DataGraph entity enrichment (LadybugDB via `service-content`),
 and LoRA training pipeline.
 
-**Live services:** `local-doorman.service` (:9080) · `local-slm.service` (OLMo 7B Tier A)
-**Blocked:** yoyo-batch TERMINATED — restart requires operator approval + us-central1-b + ML libs
+**Active cartridges:** F2 People, F4 Content, F9 SLM, F11 System, F12 Input (Anchor), F3 Email, F6 Bookkeeper.
+**Phase 10 complete 2026-06-16:** F2 PeopleCartridge scaffold, Rgb color helpers, session persistence, chassis reconnect watchdog.
+**Next:** Phase 11 — F7 BIM cartridge (`app-console-bim`); blocked on project-bim Phase 1 service.
 
 ## Tetrad
 
@@ -56,6 +57,7 @@ Bloomberg standard; BCSC posture; SYS-ADR-07/10/19.
 
 Commits via `~/Foundry/bin/commit-as-next.sh "<message>"` (from archive root or `service-slm/`).
 Stage 6 promotion via `~/Foundry/bin/promote.sh` from Command Session.
+**Stage 6 pending:** commits through `fc4d0978` (Phase 10) need promote; git divergence on main is a Command-side blocker.
 
 ## Conflicts
 
