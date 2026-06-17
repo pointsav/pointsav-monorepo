@@ -54,7 +54,7 @@ Single Rust binary. No runtime system dependencies. Apache 2.0.
 | Phase 0 | Federation engine | **Complete 2026-06-12** | All scope items done; gate 689 articles / 0 dead links; Stage 6 at 9a1326df; archive ops pending Stage 6 |
 | Phase 9 | Production deploy | **Shipped 2026-06-11** | WIKI_KNOWLEDGE_TOML migration; /etc/local-knowledge/; all 3 instances healthy |
 
-Sub-clone tip: `d0abd9ad` — **CANONICAL** (origin/main confirmed 2026-06-16; Session 86). All archive ops commits promoted; Stage 6 complete.
+Sub-clone tip: `3d90e76d` — **CANONICAL** (origin/main confirmed 2026-06-16; Session 87). Sprints D/E/F/G + pre-promote fixes promoted; Stage 6 READY sent 2026-06-16; pending binary rebuild (Command).
 
 ---
 
@@ -265,6 +265,17 @@ uses the `pointsav.com` domain. Phase 6 cutover complete.
 ---
 
 ## §6 — Session Log
+
+### 2026-06-16 | totebox | claude-code (Session 87 — cargo gates + BRIEF updates)
+
+Cargo check + test: 200 passed, 0 failed, 1 pre-existing ignored (integrity_bar). 14.9 GB RAM available; stale lock from prior session — no active cargo processes.
+Stage 6 READY signal sent to Command: msg-id `command-20260617-stage-6-ready-app-mediakit-knowledge-bin`; sub-clone canonical `3d90e76d`.
+NEXT.md: project-intelligence contamination (66 lines) removed; D/E/F/G + cargo gate items checked off; committed `a7171768` (pwoodfine).
+BRIEF §2/§6/§8.4/§8.5 updated this session. Artifact registry E9 → Stage 6 READY.
+§8.4 decisions resolved: #1 LOCKED (use draft §8.2 mapping); #2 DECIDED (Woodfine instances get own IA; candidates proposed).
+Sprint H (ActivityPub wiring) executed this session — see §8.5.
+
+---
 
 ### 2026-06-16 | totebox | claude-code (Sprint D/E/F/G — comprehensive plan execution)
 
@@ -744,8 +755,10 @@ Top institutional quality gaps beyond §7 findings (from §7.5 benchmark analysi
 
 ### §8.4 — Open Design Decisions
 
-1. **Slide → internal category mapping** — operator to confirm or revise the §8.2 mapping table once the 7-category home page grid renders (Sprint C deliverable).
-2. **Woodfine instances (9093/9095) navigation IA** — do projects.woodfinegroup.com and corporate.woodfinegroup.com use the same 7-category slide IA or a subset? JW4 slides are scoped to the PointSav platform; Woodfine instances may carry a different IA.
+1. **Slide → internal category mapping** — **LOCKED 2026-06-16**: use draft §8.2 mapping as-is for documentation.pointsav.com. Sprint I may proceed.
+2. **Woodfine instances (9093/9095) navigation IA** — **DECIDED 2026-06-16**: projects.woodfinegroup.com and corporate.woodfinegroup.com each get their own distinct IA (not the 7-tile PointSav system). Candidate IAs proposed Session 87; operator confirmation pending before Sprint I touches Woodfine instances.
+   - **projects.woodfinegroup.com (candidate):** Active Developments · Investment Portfolio · Strategic Initiatives · Operations · Governance · Archive
+   - **corporate.woodfinegroup.com (candidate):** Corporate Structure · Financial Reporting · Governance & Compliance · People & Teams · Technology & Systems · Legal & Contracts
 3. **Per-brand editorial gravitas contract** — ~12 tokens beyond the accent: density, serif headings, drop-cap gating. Deferred from §5; blocking Phase 5 instance differentiation.
 4. **Design slides federation** — embedding project-orgcharts slide diagrams as article visual assets (one slide per TOPIC). Phase 7 scope; not in Sprints C–G.
 
@@ -759,7 +772,8 @@ Top institutional quality gaps beyond §7 findings (from §7.5 benchmark analysi
 | A | WCAG 2.2 focus outline + article link underline (C3/M15) | `3106b2e1` | Done — Stage 6 confirmed (Session 86, 2026-06-16) |
 | B | Sitemap absolute URLs, ES i18n, brand-instance from TOML, dead edit form (M1/M11/M12/M14) | `48bfa7e7` | Done — Stage 6 confirmed (Session 86, 2026-06-16) |
 | C | 7-category home page grid + sidenav (from §8.2 Layer 1 + sidenav component spec) | `9cc1a80c` | Done — Stage 6 confirmed (Session 86, 2026-06-16) |
-| D | Home page redesign: peer-band (cross-instance discovery), version in footer | — | Code complete 2026-06-16; pending cargo check + commit (lock contention from project-intelligence) |
-| E | Article chrome: audience chips + aliases frontmatter + render::Frontmatter schema | — | Code complete 2026-06-16; pending cargo check + commit |
-| F | Header/footer: doc-header CSS, cross-instance peer-strip in article header, engine version in footer | — | Code complete 2026-06-16; pending cargo check + commit |
-| G | Search: lede snippet in autocomplete, ?category= and ?status= filters in search_page | — | Code complete 2026-06-16; pending cargo check + commit |
+| D | Home page redesign: peer-band (cross-instance discovery), version in footer | `575776a8` chain → `3d90e76d` | Done — 200 tests green; Stage 6 READY sent 2026-06-16 (msg-id: command-20260617-stage-6-ready-app-mediakit-knowledge-bin); pending binary rebuild (Command) |
+| E | Article chrome: audience chips + aliases frontmatter + render::Frontmatter schema | `575776a8` chain → `3d90e76d` | Done — Stage 6 READY sent 2026-06-16; pending binary rebuild (Command) |
+| F | Header/footer: doc-header CSS, cross-instance peer-strip in article header, engine version in footer | `575776a8` chain → `3d90e76d` | Done — Stage 6 READY sent 2026-06-16; pending binary rebuild (Command) |
+| G | Search: lede snippet in autocomplete, ?category= and ?status= filters in search_page | `575776a8` chain → `3d90e76d` | Done — Stage 6 READY sent 2026-06-16; pending binary rebuild (Command) |
+| H | Phase 7 ActivityPub wiring: FederationConfig + AppState.activitypub_outbox_url + on_article_saved() wired into edit handler | — | In progress — Session 87 |
