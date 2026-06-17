@@ -3,27 +3,37 @@
 Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 
-Last updated: 2026-06-16
+Last updated: 2026-06-17
 
 ---
 
 ## Blocked — Command Session (route via outbox)
 
+- [ ] **Stage 6 READY (4th)** — sub-clone tip `c5658afe`; promote Sprints H–N; rebuild binary; restart all 3 instances; msg-id: command-20260617-stage-6-ready-app-mediakit-knowledge-spr
+- [ ] **TOML [[start_here]] entries** — add to projects.toml + corporate.toml before restarting those services; msg-id: command-20260617-build-request-app-mediakit-knowledge-spr
 - [ ] **check --strict gate** — F2/F3 dead links at project-editorial must resolve first
-- [ ] **Nginx vhost SSE proxy** — add `/_api/edit/events` block to nginx vhost for live reload:
-      `proxy_buffering off; proxy_read_timeout 3600s; proxy_set_header Connection ''; proxy_http_version 1.1;`
-      (VM sysadmin scope)
+- [ ] **Nginx vhost SSE proxy** — add `/_api/edit/events` block to nginx vhost for live reload (VM sysadmin scope)
 
 ## Active (Totebox scope)
 
-- [x] **Cargo check + test gate** — 200 tests, 0 failed; cargo check OK; 14.9 GB available [2026-06-16 totebox@claude-code]
-- [x] **Stage 6 READY signal** — sent to Command (msg-id: command-20260617-stage-6-ready-app-mediakit-knowledge-bin); sub-clone canonical HEAD `3d90e76d` [2026-06-16 totebox@claude-code]
-- [x] **Design artifacts D1a–D1e** — dispatched to project-design via send_mailbox_message (msg-id: command-20260616-design-artifacts-dispatch-knowledge-plat) [2026-06-16 totebox@claude-code]
-- [x] **D2 orgcharts relay** — D2a–D2m relayed to project-design via send_mailbox_message (msg-id: command-20260616-cross-archive-relay-d2a-d2m-orgchart-wor); GUIDE-orgchart-authoring.draft.md flagged for project-editorial [2026-06-16 totebox@claude-code]
-- [x] **Sprint H** — ActivityPub wiring: FederationConfig + AppState.activitypub_outbox_url + on_article_saved() wired into content-dir file watcher; committed `2c0ed559`; Stage 6 READY pending [2026-06-16 totebox@claude-code]
 - [ ] **F-series tracking** — F1–F7 content repair requests sent to project-editorial 2026-06-14; track responses; update artifact-registry.md Status column when returned [2026-06-16 totebox]
+- [ ] **project-editorial frontmatter gaps** — sent msg-id command-20260617-frontmatter-gaps-media-knowledge-project; awaiting title:/short_description:/category: fixes in media-knowledge-projects + corporate
 
-## Completed (this session, 2026-06-16)
+## Completed (Session 88, 2026-06-17)
+
+- [x] **Step 0** — BRIEF sync: §2 sub-clone tip + §8.5 Sprints J–N plan rows; committed `652c0c24` [2026-06-17 totebox@claude-code]
+- [x] **Step 1** — Outbox to project-editorial: frontmatter gaps (title/short_description/category) for Woodfine content repos [2026-06-17 totebox@claude-code]
+- [x] **Sprint I** — Suppress category grid + count on projects/corporate; committed `588496f2` [2026-06-17 totebox@claude-code]
+- [x] **Sprint J** — Configurable [[start_here]] chips via knowledge.toml; StartHereEntry in config.rs + AppState; dynamic rendering in home_chrome(); fallback to 4 hardcoded PointSav chips; committed `2c60282e` [2026-06-17 totebox@claude-code]
+- [x] **Sprint K** — inject_citation_refs(): [citation-id] tokens in article body → linked superscripts; regex scan of HTML text nodes; per-request CitationRegistry::load(); committed `db08ebd0` [2026-06-17 totebox@claude-code]
+- [x] **Sprint L** — Typed hatnote vocabulary (hatnote_type field: main/see-also/disambig/note); .wiki-hatnote CSS fix (was unstyled); modifier classes; committed `36700138` [2026-06-17 totebox@claude-code]
+- [x] **Sprint M** — GET /search/all federated search page; federation_search() pub(crate); "Search all sites →" link on /search when peers non-empty; committed `c80bf265` [2026-06-17 totebox@claude-code]
+- [x] **Sprint N** — xtask section schema gate: topic requires ≥1 h2; guide requires Steps/Prerequisites/Procedure; committed `c5658afe` [2026-06-17 totebox@claude-code]
+- [x] **BRIEF updated** — §2 tip `c5658afe`; §8.5 rows J–N marked Done; committed `a7b32e27` [2026-06-17 totebox@claude-code]
+- [x] **Stage 6 READY (4th)** — sent to Command (msg-id: command-20260617-stage-6-ready-app-mediakit-knowledge-spr) [2026-06-17 totebox@claude-code]
+- [x] **Command status check** — confirmed inbox had no replies; PID 5642 (Command session) dead; user notified to start Command Session; consolidated action message sent [2026-06-17 totebox@claude-code]
+
+## Completed (Session 87, 2026-06-16)
 
 - [x] **Sprint D** — home page peer-band (`aside.peer-band`) in `home_handlers.rs`; CSS in `style.css`; peers threaded into `home_chrome()` [2026-06-16 totebox@claude-code]
 - [x] **Defect 2** (footnotes CSS) — `sup/sub/footnotes` CSS prophylactically added to `style.css` [2026-06-16 totebox@claude-code]
