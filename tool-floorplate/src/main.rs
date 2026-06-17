@@ -60,11 +60,11 @@ const PO_L_SF: f64 = 685.0;
 
 /// CO Key Plan fractions: (label, leasable_sf, tile_count_label, note)
 const CO_FRACTIONS: &[(&str, f64, &str, &str)] = &[
-    ("CO-FF",  20_000.0, "8 tiles",    "full leasable floor"),
-    ("CO-1/2", 10_000.0, "4 tiles",    ""),
-    ("CO-1/3",  6_667.0, "2-3 tiles",  ""),
-    ("CO-1/4",  5_000.0, "2 tiles",    ""),
-    ("CO-1/8",  2_500.0, "1 tile",     "smallest unit"),
+    ("CO-FF", 20_000.0, "8 tiles", "full leasable floor"),
+    ("CO-1/2", 10_000.0, "4 tiles", ""),
+    ("CO-1/3", 6_667.0, "2-3 tiles", ""),
+    ("CO-1/4", 5_000.0, "2 tiles", ""),
+    ("CO-1/8", 2_500.0, "1 tile", "smallest unit"),
 ];
 
 // ── Class specification ───────────────────────────────────────────────────────
@@ -139,26 +139,37 @@ fn m2(sf: f64) -> String {
 
 fn print_multi_tile(cli: &Cli, s: &ClassSpec) {
     let gross = cli.area.unwrap_or((s.area_min_sf + s.area_max_sf) / 2.0);
-    let default_note = if cli.area.is_none() { "  (class midpoint)" } else { "" };
+    let default_note = if cli.area.is_none() {
+        "  (class midpoint)"
+    } else {
+        ""
+    };
     let core_sf = (gross * CORE_FACTOR).round();
     let net_sf = gross - core_sf;
     let tiles_full = (net_sf / TILE_SF).floor() as u32;
     let remainder = net_sf - tiles_full as f64 * TILE_SF;
 
     println!("Floor Plate — {}", s.display_name);
-    println!("Development class   {}  ({}-{} floors)", s.display_name, s.floors_min, s.floors_max);
+    println!(
+        "Development class   {}  ({}-{} floors)",
+        s.display_name, s.floors_min, s.floors_max
+    );
     println!(
         "Gross floor area    {:>9}  ({}){}",
-        ft(gross), m2(gross), default_note
+        ft(gross),
+        m2(gross),
+        default_note
     );
     println!();
     println!(
         "  Building core       {:>7}  ({:.0}%)",
-        ft(core_sf), CORE_FACTOR * 100.0
+        ft(core_sf),
+        CORE_FACTOR * 100.0
     );
     println!(
         "  Net leasable area   {:>7}  ({:.0}%)",
-        ft(net_sf), (1.0 - CORE_FACTOR) * 100.0
+        ft(net_sf),
+        (1.0 - CORE_FACTOR) * 100.0
     );
     if remainder > 1.0 {
         println!(
@@ -166,22 +177,38 @@ fn print_multi_tile(cli: &Cli, s: &ClassSpec) {
             tiles_full, TILE_SF as u32, remainder
         );
     } else {
-        println!("  Tiles               {}  ×  CO-1/8 ({} SF each)", tiles_full, TILE_SF as u32);
-    }
-
-    println!();
-    println!("CO Key Plan fractions");
-    println!("  {:<8}  {:>9}   {:>6}   {:>8}   {}", "Label", "Leasable", "m²", "Tiles", "Note");
-    println!("  {:<8}  {:>9}   {:>6}   {:>8}   {}", "-----", "--------", "--", "-----", "----");
-    for (label, lsf, tile_label, note) in CO_FRACTIONS {
         println!(
-            "  {:<8}  {:>9}   {:>6}   {:>8}   {}",
-            label, ft(*lsf), m2(*lsf), tile_label, note
+            "  Tiles               {}  ×  CO-1/8 ({} SF each)",
+            tiles_full, TILE_SF as u32
         );
     }
 
     println!();
-    println!("T_Basic composition per CO-1/8 tile  ({} SF leasable)", TILE_SF as u32);
+    println!("CO Key Plan fractions");
+    println!(
+        "  {:<8}  {:>9}   {:>6}   {:>8}   {}",
+        "Label", "Leasable", "m²", "Tiles", "Note"
+    );
+    println!(
+        "  {:<8}  {:>9}   {:>6}   {:>8}   {}",
+        "-----", "--------", "--", "-----", "----"
+    );
+    for (label, lsf, tile_label, note) in CO_FRACTIONS {
+        println!(
+            "  {:<8}  {:>9}   {:>6}   {:>8}   {}",
+            label,
+            ft(*lsf),
+            m2(*lsf),
+            tile_label,
+            note
+        );
+    }
+
+    println!();
+    println!(
+        "T_Basic composition per CO-1/8 tile  ({} SF leasable)",
+        TILE_SF as u32
+    );
     println!("  PO-S  {}  each", ft(PO_S_SF));
     println!("  PO-M  {}  each", ft(PO_M_SF));
     println!("  PO-L  {}  each", ft(PO_L_SF));
@@ -195,11 +222,13 @@ fn print_multi_tile(cli: &Cli, s: &ClassSpec) {
             println!("Building totals  ({} floors)", f);
             println!(
                 "  Gross       {:>10}  ({})",
-                ft(gross * f as f64), m2(gross * f as f64)
+                ft(gross * f as f64),
+                m2(gross * f as f64)
             );
             println!(
                 "  Leasable    {:>10}  ({})",
-                ft(net_sf * f as f64), m2(net_sf * f as f64)
+                ft(net_sf * f as f64),
+                m2(net_sf * f as f64)
             );
         }
         None => {
@@ -210,7 +239,9 @@ fn print_multi_tile(cli: &Cli, s: &ClassSpec) {
             for f in [s.floors_min, s.floors_max] {
                 println!(
                     "  {} floors   {:>10} gross   ({} leasable)",
-                    f, ft(gross * f as f64), ft(net_sf * f as f64)
+                    f,
+                    ft(gross * f as f64),
+                    ft(net_sf * f as f64)
                 );
             }
         }
@@ -292,7 +323,9 @@ fn print_tile_floor(cli: &Cli, s: &ClassSpec) {
         if let Some((label, nearest_sf)) = nearest {
             println!(
                 "Given area  {}  →  nearest: {} ({})",
-                ft(area), label, ft(*nearest_sf)
+                ft(area),
+                label,
+                ft(*nearest_sf)
             );
         }
     }
@@ -302,7 +335,8 @@ fn print_tile_floor(cli: &Cli, s: &ClassSpec) {
         println!("Building totals  ({} floors  ×  {} floor)", f, ft(sf));
         println!(
             "  Gross = Leasable  {:>9}  ({})",
-            ft(sf * f as f64), m2(sf * f as f64)
+            ft(sf * f as f64),
+            m2(sf * f as f64)
         );
     }
 }
