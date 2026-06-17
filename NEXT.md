@@ -59,6 +59,13 @@ Last updated: 2026-06-16
 - [x] **V2 overhaul — Totebox phases done** — ffef89c3 (BRIEF) + e9deedbe (few-shot+grammar+OLMo 3 training path);
       Phase 1+2+5a committed; outbox to Command for Phase 3+4+5b
       [2026-06-17 totebox@claude-code]
+- [x] **V2 Phase 3 — Command complete** — OLMo 3 7B Instruct GGUF live on Tier A (ctx 8192);
+      grammar smoke test PASS (4 entities); SERVICE_CONTENT_TIER_A_GRAMMAR=json_schema active;
+      service-content binary rebuilt; Phase 5b (adapter pull+GCS) committed 7cb857e
+      [2026-06-17 command@claude-code]
+- [ ] **V2 Phase 4 — yoyo-batch BLOCKED** — us-central1-a STOCKOUT for g2-standard-4 (L4 GPU);
+      cannot start on current instance; awaiting operator decision (stay+wait vs one-time zone move)
+      [2026-06-17 command@claude-code]
 - [ ] **down_for_secs in TierBInfo** — expose seconds-since-last-healthy-check in /readyz;
       circuits currently report "closed" with health_up=false causing false routing to Tier B;
       Bug 4 drain-hold fix is live but this TierBInfo extension is outstanding
