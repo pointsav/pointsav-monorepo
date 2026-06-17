@@ -348,6 +348,71 @@
       flex-wrap: wrap;
     }
 
+    /* ── Suggestion cards ── */
+    .sugg-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.25rem;
+    }
+    @media (max-width: 720px) { .sugg-grid { grid-template-columns: 1fr; } }
+
+    .sugg-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .sugg-header { display: flex; align-items: flex-start; gap: 0.5rem; justify-content: space-between; }
+    .sugg-title { font-size: 0.88rem; font-weight: 700; color: var(--primary); line-height: 1.3; }
+    .sugg-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .sugg-badge.flour      { background: #EDF2FB; color: #2B59A1; }
+    .sugg-badge.hydration  { background: #E8F5E9; color: #1B6E2E; }
+    .sugg-badge.starter    { background: #FEF3E2; color: #8A4E00; }
+    .sugg-rationale { font-size: 0.79rem; line-height: 1.6; color: var(--muted); }
+    .sugg-watch {
+      font-size: 0.77rem;
+      color: var(--text);
+      font-style: italic;
+      border-left: 2px solid var(--accent);
+      padding-left: 0.5rem;
+    }
+    .sugg-recipe { font-size: 0.78rem; border-collapse: collapse; width: 100%; }
+    .sugg-recipe td { padding: 0.18rem 0.4rem; border-bottom: 1px solid var(--border); }
+    .sugg-recipe td:first-child { color: var(--muted); }
+    .sugg-recipe td:nth-child(2) { font-weight: 600; color: var(--text); }
+    .sugg-recipe td:last-child { text-align: right; color: var(--muted); font-size: 0.72rem; }
+    .sugg-temp {
+      font-size: 0.76rem;
+      color: #7C4700;
+      background: #FEF3E2;
+      border-radius: 4px;
+      padding: 0.35rem 0.5rem;
+    }
+    .sugg-btn {
+      margin-top: auto;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+    .sugg-btn:hover { opacity: 0.88; }
+
     /* ── Best loaf card ── */
     .best-card {
       background: linear-gradient(135deg, #EEF3F9, #E8EFF7);
@@ -935,12 +1000,141 @@
         <div id="best-content"></div>
       </div>
 
+      <div class="gap-panel" style="grid-column: 1 / -1">
+        <h3>What to try next — research-backed suggestions</h3>
+        <div id="suggestions-grid"></div>
+      </div>
+
     </div>
   </section>
 
 </main>
 
 <script>
+// ─── Research-backed suggestions (Opus-generated 2026-06-17) ─────────────────
+const SUGGESTIONS = [
+  // ── Flour ratio experiments ──────────────────────────────────────────────
+  {
+    id: 'classic-tartine-80-20',
+    title: 'Classic country loaf (80/20)',
+    dimension: 'flour',
+    rationale: 'The 80% white / 20% whole wheat ratio is the foundational "country loaf" of Tartine and FWSY — the most-studied, most-replicated high-scoring ratio in home sourdough. Whole wheat at 20% contributes bran-derived flavor complexity and extra wild-yeast food without the gluten-cutting effect that dominates above 30%. Your best loaf (#4) was 72% white / 27% wheat — this experiment pulls white higher to isolate whether the extra structure drove that score.',
+    what_to_watch: 'Look for noticeably better oven spring and a more open, irregular crumb compared to your recent 50% white loaves.',
+    recipe: { white_g: 520, wheat_g: 130, rye_g: 0, water_g: 494, starter_g: 15, salt_g: 14 },
+    temp_note: null,
+  },
+  {
+    id: 'near-pure-white',
+    title: 'Near-pure white control',
+    dimension: 'flour',
+    rationale: 'Loaf #1 was all-white but has no water, score, or technique data — essentially unknown. A controlled 95% white / 5% wheat trial establishes a clean baseline: maximum gluten development, maximum spring potential, mildest flavor. White bread flour at this ratio ferments most predictably, making it the ideal variable-isolation experiment before changing hydration or starter amounts.',
+    what_to_watch: 'Score for spring and crust crackle specifically — this ratio should outperform on both if gluten is properly developed.',
+    recipe: { white_g: 617, wheat_g: 33, rye_g: 0, water_g: 481, starter_g: 15, salt_g: 14 },
+    temp_note: null,
+  },
+  {
+    id: 'rye-15-percent',
+    title: 'Rye step-up to 15%',
+    dimension: 'flour',
+    rationale: 'Rye contains pentosans — water-absorbing polysaccharides that increase dough extensibility and fermentation activity. At 10% (your current ceiling) the effect is subtle; at 15% it becomes perceptible: the dough ferments faster, the crumb is slightly chewier, and the flavor gains a distinct earthy-sour note. Hydration is raised slightly to compensate for rye\'s higher water absorption.',
+    what_to_watch: 'Taste for the earthy, malty rye character in the crust — and note whether this feels noticeably more sour than your wheat-heavy loaves.',
+    recipe: { white_g: 488, wheat_g: 65, rye_g: 97, water_g: 507, starter_g: 15, salt_g: 14 },
+    temp_note: 'Rye accelerates fermentation — at cooler ambient temps (13–16°C) this is a net positive; at warmer temps reduce proof time by 10–15 min.',
+  },
+  {
+    id: 'high-wheat-60',
+    title: 'High whole wheat (60%)',
+    dimension: 'flour',
+    rationale: 'Whole wheat bran particles physically cut developing gluten strands, and germ oils inhibit hydration. At 60% whole wheat these effects are substantial: the dough is extensible but weak, spring is reduced, and flavor becomes pronounced and nutty. Many bakers find 55–65% whole wheat produces their most complex-tasting loaf. Hydration is raised to 80% because bran absorbs significantly more water than white flour.',
+    what_to_watch: 'Score flavor and crumb separately — expect lower spring than loaf #4, but potentially your best flavor score yet.',
+    recipe: { white_g: 260, wheat_g: 390, rye_g: 0, water_g: 520, starter_g: 15, salt_g: 14 },
+    temp_note: null,
+  },
+  {
+    id: 'tri-flour-balanced',
+    title: 'Balanced tri-flour blend',
+    dimension: 'flour',
+    rationale: 'A 55% white / 30% whole wheat / 15% rye blend combines structural white flour, the nutty complexity of whole wheat, and the earthy fermentation-boosting character of rye in proportions where each is perceptible. This puts rye at 15% (above your ceiling) and wheat at 30% (below your recent high) — a combination you have never approached. Common in German and Scandinavian country breads.',
+    what_to_watch: 'See whether the three-way blend produces more complex flavor than any two-flour combination you have tried — compare directly against loaf #6 notes.',
+    recipe: { white_g: 358, wheat_g: 195, rye_g: 97, water_g: 520, starter_g: 15, salt_g: 14 },
+    temp_note: 'Rye + whole wheat together accelerate fermentation noticeably — watch proof closely above 18°C.',
+  },
+  // ── Hydration experiments ─────────────────────────────────────────────────
+  {
+    id: 'low-hydration-baseline',
+    title: 'Tight crumb baseline (62%)',
+    dimension: 'hydration',
+    rationale: 'At 62% hydration the gluten network is tighter, so CO₂ bubbles stay small and evenly distributed rather than merging into large irregular pockets — producing a dense, sandwich-style crumb. Crust development is often superior at lower hydrations because less surface moisture means the Maillard reaction proceeds more quickly and evenly. This establishes a controlled low-end baseline.',
+    what_to_watch: 'Look for a fine, uniform crumb with no large holes, and assess whether the crust is crispier and more deeply coloured than your wetter loaves.',
+    recipe: { white_g: 325, wheat_g: 293, rye_g: 32, water_g: 403, starter_g: 15, salt_g: 14 },
+    temp_note: 'Skip ice water — at 62% the dough is already stiff and cool ambient temps mean overcooling is a real risk. Use room-temperature water.',
+  },
+  {
+    id: 'standard-no-ice-water',
+    title: '75% — room temp water only',
+    dimension: 'hydration',
+    rationale: 'Ice water controls final dough temperature (FDT), ideally 24–26°C. At 13–22°C ambient with hand-mixing, ice water may actually undershoot FDT and slow fermentation unnecessarily. This experiment isolates that variable: same 75% hydration as loaves 8 and 9, but with room-temperature water. If the loaf rises faster and has better spring, ice water was overcooling the dough.',
+    what_to_watch: 'Compare bulk fermentation speed against a loaf made with ice water — if this one doubles in noticeably less time, ice water was inhibiting your fermentation.',
+    recipe: { white_g: 325, wheat_g: 293, rye_g: 32, water_g: 488, starter_g: 15, salt_g: 14 },
+    temp_note: 'Use water at room temperature (~18–20°C). If your kitchen is warmer than 20°C on bake day, use cold (not ice) water instead.',
+  },
+  {
+    id: 'autolyse-80',
+    title: '80% hydration with autolyse',
+    dimension: 'hydration',
+    rationale: 'Autolyse is a 30–45 minute pre-rest of flour and water (no starter, no salt) that allows gluten to form passively through hydration. At 80% hydration with autolyse, the dough becomes more extensible and less sticky than 80% without it. The mechanism: glutenin and gliadin proteins fully hydrate and begin aligning into gluten strands without the interference of salt (which tightens gluten) or starter acidity (which weakens it).',
+    what_to_watch: 'After autolyse the dough should feel noticeably smoother — score spring and crumb openness and compare against any previous 80% bake.',
+    recipe: { white_g: 325, wheat_g: 293, rye_g: 32, water_g: 520, starter_g: 15, salt_g: 14 },
+    temp_note: 'Mix flour and water only, rest 30–45 min covered, then add starter and salt. At cool ambient (≤16°C) extend autolyse to 45 min; at 20°C+ keep it to 30 min.',
+  },
+  {
+    id: 'high-hydration-open-crumb',
+    title: 'Open crumb at 87%',
+    dimension: 'hydration',
+    rationale: 'Professional bakers target 78–88% for open, irregular crumb because above ~78% the gluten network becomes extensible enough for large alveoli to form and hold without collapsing. At 87% the dough is genuinely slack — handle with wet hands and a bench scraper. The extra moisture generates more steam in the first 15 minutes of baking, gelatinising the surface rapidly and producing dramatic oven spring. This is the highest-value untried territory in your data.',
+    what_to_watch: 'Look for large, irregular holes in the crumb cross-section — a tight, uniform crumb here means under-fermentation, too many folds, or deflated shaping.',
+    recipe: { white_g: 325, wheat_g: 293, rye_g: 32, water_g: 566, starter_g: 15, salt_g: 14 },
+    temp_note: 'At cool ambient (≤16°C) allow extra bulk time — look for 75% volume increase rather than clock-watching. Use room-temp water; ice water at 87% will stall fermentation noticeably.',
+  },
+  // ── Starter & fermentation experiments ───────────────────────────────────
+  {
+    id: 'day-1-peak-starter',
+    title: 'Day 1 peak starter',
+    dimension: 'starter',
+    rationale: 'You have only used Day 2 starter (deflated, high acidity). A starter used at its Day 1 peak — just domed, maximum CO₂ production — has maximum yeast activity and minimum acid accumulation. The higher yeast-to-bacteria ratio produces more lift, more oven spring, and a milder, sweeter crumb rather than the tighter, more acidic profile of Day 2. This is the single most impactful untried variable in your fermentation setup.',
+    what_to_watch: 'Watch for dramatically more ear and oven spring, a milder less-sour flavor, and a potentially more open irregular crumb compared to your Day 2 loaves.',
+    recipe: { white_g: 325, wheat_g: 293, rye_g: 32, water_g: 488, starter_g: 15, salt_g: 14 },
+    temp_note: 'At 13–18°C, Day 1 peak bulk will take 10–14 hours — start the night before and catch the dough when it has risen 75% and jiggles. At 20–22°C, expect 5–7 hours.',
+  },
+  {
+    id: 'low-starter-overnight-bulk',
+    title: '1% starter, overnight bulk',
+    dimension: 'starter',
+    rationale: 'At 1% starter (6.5g), bulk fermentation at cool ambient temperatures takes 16–20 hours — long enough for proteases to develop umami compounds and a more complex acid profile (both lactic and acetic) through slow enzymatic activity. This extended fermentation produces more aromatic esters and a deeper flavour that cannot be achieved at higher starter percentages. Bakers who prize flavour complexity consistently work in the 0.5–1.5% range.',
+    what_to_watch: 'Complex wheaty-yeasty aroma in the crumb, pronounced ear, and a flavour that is rich and deep rather than simply sharp-sour.',
+    recipe: { white_g: 325, wheat_g: 293, rye_g: 32, water_g: 488, starter_g: 7, salt_g: 14 },
+    temp_note: 'Only attempt when ambient temp is 13–18°C. Mix in the evening; expect bulk to finish 16–20 hours later. Judge by dough feel (pillowy, jiggly, 75–80% rise) not by clock.',
+  },
+  {
+    id: 'high-starter-fast-mild',
+    title: '8% starter — fast and mild',
+    dimension: 'starter',
+    rationale: 'At 8% starter (52g), fermentation is dominated by yeast rather than bacterial acid production. The shorter bulk (3–4 hours at 20°C) means lactic and acetic acid have little time to accumulate, producing a milder, slightly sweet crumb with strong spring. This is an important data point: you need to know whether you prefer the flavour complexity of slow-ferment loaves or the better spring and open crumb of a fast-ferment.',
+    what_to_watch: 'Flavour should be noticeably milder and slightly sweet with none of the sharp sourness; spring and ear should be the best you have seen.',
+    recipe: { white_g: 325, wheat_g: 293, rye_g: 32, water_g: 488, starter_g: 52, salt_g: 14 },
+    temp_note: 'Best on a 19–22°C day: bulk done in 3–4 hours. At 13–15°C expect 6–8 hours. Do not leave unattended past 150% rise — over-proofing risk is high at this starter percentage.',
+  },
+  {
+    id: 'day-3-acetic-sour',
+    title: 'Day 3+ starter — sharp sour',
+    dimension: 'starter',
+    rationale: 'A Day 3+ starter (two days past peak, unfed) is loaded with acetic acid from slow anaerobic fermentation. Acetic acid produces a sharp, vinegar-forward sourness distinct from the milder yogurt-like lactic sourness of Day 2 — this is the acid associated with traditional San Francisco sourdough. Acetic acid also temporarily tightens gluten protein bonds, which can improve structure in high-hydration doughs.',
+    what_to_watch: 'Sourness should be sharp and pronounced (more vinegar than yogurt); crumb may be slightly tighter and chewier; watch carefully for over-proofing.',
+    recipe: { white_g: 325, wheat_g: 293, rye_g: 32, water_g: 488, starter_g: 20, salt_g: 14 },
+    temp_note: 'At 13–18°C with 20g of Day 3+ starter, expect bulk to take 12–18 hours. Skip the float test (depleted starter often sinks). Judge by 60–75% volume rise and a jiggly, pillowy feel.',
+  },
+];
+
 // ─── Seed (digitised from bread1.jpg and bread2.jpg) ─────────────────────────
 const SEED = [
   {id:1,  date:null, white_g:659,  wheat_g:null, rye_g:null, starter_g:null, starter_day:null, salt_g:null, water_g:null, ice:null,  ambient_temp_c:null, proof_start:null,  proof_end:null,  techniques:'', flavor:null, crumb:null, crust:null, spring:null, overall:null, notes:'First experiment — all white'},
@@ -1781,12 +1975,90 @@ function renderBestLoaf(loaves) {
 }
 
 // ─── Gaps: entry point ────────────────────────────────────────────────────────
+// ─── Suggestions: "what to try next" ─────────────────────────────────────────
+function alreadyTriedSuggestion(s, validLoaves) {
+  if (!validLoaves.length) return false;
+  return validLoaves.some(l => {
+    const tf = totalFlour(l);
+    if (!tf) return false;
+    if (s.dimension === 'hydration') {
+      const sh = s.recipe.water_g / (s.recipe.white_g + s.recipe.wheat_g + s.recipe.rye_g) * 100;
+      return Math.abs((hydration(l) || 0) - sh) <= 4;
+    }
+    const sf = s.recipe.white_g + s.recipe.wheat_g + s.recipe.rye_g;
+    const swPct  = s.recipe.white_g / sf * 100;
+    const swwPct = s.recipe.wheat_g / sf * 100;
+    const srpPct = s.recipe.rye_g   / sf * 100;
+    return Math.abs((pct(l.white_g,l)||0) - swPct)  <= 7 &&
+           Math.abs((pct(l.wheat_g,l)||0) - swwPct) <= 7 &&
+           Math.abs((pct(l.rye_g,l)  ||0) - srpPct) <= 7;
+  });
+}
+
+function renderSuggestions(loaves) {
+  const el = document.getElementById('suggestions-grid');
+  if (!el) return;
+  const valid = loaves.filter(l => totalFlour(l) > 0);
+  const dimOrder = {flour: 0, hydration: 1, starter: 2};
+  const dimLabel  = {flour: 'Flour ratio', hydration: 'Hydration', starter: 'Starter'};
+
+  const tagged = SUGGESTIONS.map(s => ({...s, tried: alreadyTriedSuggestion(s, valid)}));
+  tagged.sort((a, b) => (a.tried - b.tried) || (dimOrder[a.dimension] - dimOrder[b.dimension]));
+  const show = tagged.filter(s => !s.tried).slice(0, 6);
+
+  if (!show.length) {
+    el.innerHTML = '<div class="gap-text"><span class="tr">You\'ve covered all suggested experiments — great work!</span></div>';
+    return;
+  }
+
+  el.innerHTML = '<div class="sugg-grid">' + show.map(s => {
+    const tf = s.recipe.white_g + s.recipe.wheat_g + s.recipe.rye_g;
+    const hy = tf ? Math.round(s.recipe.water_g / tf * 100) : '—';
+    const rows = [
+      ['White',   s.recipe.white_g  + 'g', tf ? Math.round(s.recipe.white_g  / tf * 100) + '%' : ''],
+      ['Wheat',   s.recipe.wheat_g  ? s.recipe.wheat_g  + 'g' : '—', tf && s.recipe.wheat_g  ? Math.round(s.recipe.wheat_g  / tf * 100) + '%' : ''],
+      ['Rye',     s.recipe.rye_g    ? s.recipe.rye_g    + 'g' : '—', tf && s.recipe.rye_g    ? Math.round(s.recipe.rye_g    / tf * 100) + '%' : ''],
+      ['Water',   s.recipe.water_g  + 'g', hy + '% hyd.'],
+      ['Starter', s.recipe.starter_g + 'g', tf ? (s.recipe.starter_g / tf * 100).toFixed(1) + '%' : ''],
+      ['Salt',    s.recipe.salt_g    + 'g', tf ? (s.recipe.salt_g    / tf * 100).toFixed(1) + '%' : ''],
+    ].filter(r => r[1] !== '—');
+
+    const recipeJson = JSON.stringify(s.recipe).replace(/"/g, '&quot;');
+    return '<div class="sugg-card">' +
+      '<div class="sugg-header">' +
+        '<span class="sugg-title">' + s.title + '</span>' +
+        '<span class="sugg-badge ' + s.dimension + '">' + dimLabel[s.dimension] + '</span>' +
+      '</div>' +
+      '<div class="sugg-rationale">' + s.rationale + '</div>' +
+      '<div class="sugg-watch">' + s.what_to_watch + '</div>' +
+      '<table class="sugg-recipe">' + rows.map(r => '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td></tr>').join('') + '</table>' +
+      (s.temp_note ? '<div class="sugg-temp">' + s.temp_note + '</div>' : '') +
+      '<button class="sugg-btn" onclick="startBake(' + recipeJson + ')">Start this bake →</button>' +
+    '</div>';
+  }).join('') + '</div>';
+}
+
+function startBake(r) {
+  const set = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+  set('f-white',   r.white_g);
+  set('f-wheat',   r.wheat_g || '');
+  set('f-rye',     r.rye_g   || '');
+  set('f-water',   r.water_g);
+  set('f-starter', r.starter_g);
+  set('f-salt',    r.salt_g);
+  updateHydration();
+  const addBtn = document.querySelector('nav.tabs button:nth-child(2)');
+  showTab('add', addBtn);
+  window.scrollTo(0, 0);
+}
+
 function renderGaps() {
   const loaves = load();
   renderFlourGap(loaves);
   renderStarterGap(loaves);
   renderTempGap(loaves);
   renderBestLoaf(loaves);
+  renderSuggestions(loaves);
 }
 
 // ─── Print form ───────────────────────────────────────────────────────────────
