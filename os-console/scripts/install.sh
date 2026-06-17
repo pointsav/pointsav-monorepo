@@ -18,7 +18,7 @@ set -e
 
 GCE_IP="34.53.65.203"
 GCE_USER="mathew"
-BINARY_PATH="/srv/foundry/clones/project-console/pointsav-monorepo/target/release/os-console"
+BINARY_PATH="/srv/foundry/cargo-target/release/os-console"
 
 echo "=== os-console install ==="
 echo ""
