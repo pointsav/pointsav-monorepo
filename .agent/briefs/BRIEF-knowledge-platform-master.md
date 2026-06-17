@@ -6,7 +6,7 @@ owner: project-knowledge
 status: active
 title: Knowledge Platform — Master Brief
 cluster: project-knowledge
-updated: 2026-06-16
+updated: 2026-06-17
 supersedes: archive/BRIEF-knowledge-platform-master.md
 verdict_source: .agent/drafts-outbound/BRIEF-REVIEW-old-brief-verdict.md
 ---
@@ -54,7 +54,7 @@ Single Rust binary. No runtime system dependencies. Apache 2.0.
 | Phase 0 | Federation engine | **Complete 2026-06-12** | All scope items done; gate 689 articles / 0 dead links; Stage 6 at 9a1326df; archive ops pending Stage 6 |
 | Phase 9 | Production deploy | **Shipped 2026-06-11** | WIKI_KNOWLEDGE_TOML migration; /etc/local-knowledge/; all 3 instances healthy |
 
-Sub-clone tip: `588496f2` (Session 87, 2026-06-16). Sprints D–I in canonical; live binary at `8599b14c` (Sprints D–G); Sprints H + I pending binary rebuild (Command has 3 Stage 6 READY signals queued). Sprints J–N planned this session.
+Sub-clone tip: `c5658afe` (Session 88, 2026-06-17). Sprints D–N committed (J–N this session, 2026-06-17); Stage 6 READY (4th) sent to Command (msg-id: command-20260617-stage-6-ready-app-mediakit-knowledge-spr). Live binary still at `8599b14c` pending rebuild.
 
 ---
 
@@ -776,8 +776,8 @@ Top institutional quality gaps beyond §7 findings (from §7.5 benchmark analysi
 | G | Search: lede snippet in autocomplete, ?category= and ?status= filters in search_page | `575776a8` chain → `3d90e76d` | Done — Stage 6 READY sent 2026-06-16; pending binary rebuild (Command) |
 | H | Phase 7 ActivityPub wiring: FederationConfig + AppState.activitypub_outbox_url + on_article_saved() wired into file watcher | `2c0ed559` | Done — 200+ tests green; Stage 6 READY (2nd) pending; note: wired into content-dir file watcher (not edit handler — no HTTP POST write path exists in git-only architecture) |
 | I | Suppress category grid + category count on projects/corporate home pages | `588496f2` | Done — documentation unchanged; Stage 6 READY (3rd) sent |
-| J | Configurable start-here chips via `knowledge.toml` `[[start_here]]` — fix 404 chips on Woodfine instances | TBD | Planned |
-| K | Citation inline token resolution — `[ni-51-102]` in article body → `<cite>` superscript link | TBD | Planned |
-| L | Typed hatnote vocabulary — closed set (redirect/main/disambig/see-also/note); CSS variants | TBD | Planned |
-| M | Cross-instance search web route `GET /search/all?q=` — reuses `federation_search()` from mcp.rs | TBD | Planned |
-| N | xtask section schema gate — warn when topic/guide articles missing required level-2 headings | TBD | Planned |
+| J | Configurable start-here chips via `knowledge.toml` `[[start_here]]` — fix 404 chips on Woodfine instances | `2c60282e` | Done — tests green; Stage 6 READY (4th) sent 2026-06-17; TOML entries for projects/corporate relayed to Command |
+| K | Citation inline token resolution — `[citation-id]` in article body → `<a class="cite-ref">` superscript | `db08ebd0` | Done — tests green; Stage 6 READY (4th) |
+| L | Typed hatnote vocabulary — closed set (main/see-also/disambig/note); .wiki-hatnote CSS fix | `36700138` | Done — tests green; Stage 6 READY (4th) |
+| M | Cross-instance search web route `GET /search/all?q=` — reuses `federation_search()` from mcp.rs | `c80bf265` | Done — tests green; Stage 6 READY (4th) |
+| N | xtask section schema gate — warn when topic/guide articles missing required level-2 headings | `c5658afe` | Done — tests green; Stage 6 READY (4th) |
