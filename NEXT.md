@@ -9,10 +9,10 @@ Last updated: 2026-06-17
 
 ## Blocked — Command Session (route via outbox)
 
-- [ ] **Stage 6 READY (4th)** — sub-clone tip `c5658afe`; promote Sprints H–N; rebuild binary; restart all 3 instances; msg-id: command-20260617-stage-6-ready-app-mediakit-knowledge-spr
-- [ ] **TOML [[start_here]] entries** — add to projects.toml + corporate.toml before restarting those services; msg-id: command-20260617-build-request-app-mediakit-knowledge-spr
+- [x] **Stage 6 READY (4th)** — promoted Session 91 (2026-06-17); canonical tip `047fd9d0` `[2026-06-17 command@claude-code]`
+- [x] **TOML [[start_here]] entries** — 4 chips added to projects.toml + corporate.toml; services restarted Session 91 `[2026-06-17 command@claude-code]`
 - [ ] **check --strict gate** — F2/F3 dead links at project-editorial must resolve first
-- [ ] **Nginx vhost SSE proxy** — add `/_api/edit/events` block to nginx vhost for live reload (VM sysadmin scope)
+- [x] **Nginx vhost SSE proxy** — `/_api/edit/events` block added to all 3 vhosts; nginx reloaded `[2026-06-17 command@claude-code]`
 
 ## Active (Totebox scope)
 
