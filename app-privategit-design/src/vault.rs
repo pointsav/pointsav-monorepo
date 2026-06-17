@@ -73,7 +73,10 @@ pub fn parse_frontmatter(content: &str) -> (HashMap<String, String>, String) {
     let fm_text = &rest[..end];
     // consume the closing `---` line and optional newline
     let after_close = end + 4; // "\n---".len()
-    let body = rest.get(after_close..).unwrap_or("").trim_start_matches('\n');
+    let body = rest
+        .get(after_close..)
+        .unwrap_or("")
+        .trim_start_matches('\n');
 
     let mut fields = HashMap::new();
     for line in fm_text.lines() {

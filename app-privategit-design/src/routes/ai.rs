@@ -43,7 +43,10 @@ pub async fn post_session(
                 .unwrap_or("")
                 .to_string();
             if api_key.is_empty() {
-                return (StatusCode::BAD_REQUEST, "X-Api-Key required for claude model")
+                return (
+                    StatusCode::BAD_REQUEST,
+                    "X-Api-Key required for claude model",
+                )
                     .into_response();
             }
             ai::claude::stream_completion(&api_key, req).await
@@ -51,9 +54,8 @@ pub async fn post_session(
         _ => ai::doorman::stream_completion(&state.doorman_url, req).await,
     };
 
-    let body_stream = chunk_stream.map(|chunk| {
-        Ok::<String, std::convert::Infallible>(chunk.to_sse())
-    });
+    let body_stream =
+        chunk_stream.map(|chunk| Ok::<String, std::convert::Infallible>(chunk.to_sse()));
 
     axum::response::Response::builder()
         .status(200)

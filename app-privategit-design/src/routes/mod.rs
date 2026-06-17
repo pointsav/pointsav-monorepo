@@ -5,7 +5,10 @@ pub mod search;
 pub mod sse;
 
 use crate::state::AppState;
-use axum::{routing::{get, post, put}, Router};
+use axum::{
+    routing::{get, post, put},
+    Router,
+};
 use tower_http::services::ServeDir;
 
 pub fn build_router(state: AppState) -> Router {

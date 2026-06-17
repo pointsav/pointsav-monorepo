@@ -31,11 +31,7 @@ pub fn detect(frontmatter: &HashMap<String, String>) -> SchemaType {
 }
 
 /// Dispatch rendering to the appropriate schema renderer.
-pub fn render(
-    schema: SchemaType,
-    frontmatter: &HashMap<String, String>,
-    body: &str,
-) -> String {
+pub fn render(schema: SchemaType, frontmatter: &HashMap<String, String>, body: &str) -> String {
     let fm = if frontmatter.is_empty() {
         None
     } else {
