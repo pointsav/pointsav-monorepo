@@ -20,6 +20,7 @@ Last updated: 2026-06-16
 - [x] **Stage 6 READY signal** — sent to Command (msg-id: command-20260617-stage-6-ready-app-mediakit-knowledge-bin); sub-clone canonical HEAD `3d90e76d` [2026-06-16 totebox@claude-code]
 - [x] **Design artifacts D1a–D1e** — dispatched to project-design via send_mailbox_message (msg-id: command-20260616-design-artifacts-dispatch-knowledge-plat) [2026-06-16 totebox@claude-code]
 - [x] **D2 orgcharts relay** — D2a–D2m relayed to project-design via send_mailbox_message (msg-id: command-20260616-cross-archive-relay-d2a-d2m-orgchart-wor); GUIDE-orgchart-authoring.draft.md flagged for project-editorial [2026-06-16 totebox@claude-code]
+- [x] **Sprint H** — ActivityPub wiring: FederationConfig + AppState.activitypub_outbox_url + on_article_saved() wired into content-dir file watcher; committed `2c0ed559`; Stage 6 READY pending [2026-06-16 totebox@claude-code]
 - [ ] **F-series tracking** — F1–F7 content repair requests sent to project-editorial 2026-06-14; track responses; update artifact-registry.md Status column when returned [2026-06-16 totebox]
 
 ## Completed (this session, 2026-06-16)
