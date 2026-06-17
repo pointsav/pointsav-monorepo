@@ -1,56 +1,29 @@
 #!/bin/bash
-# install.sh — one-shot setup for os-console on Mac Pro (macOS 10.13) or iMac (Linux Mint)
+# install.sh — install os-console on Mac Pro (macOS 10.13) or iMac (Linux Mint)
 #
 # What this script does:
-#   1. Checks for Rust toolchain (installs silently if missing)
-#   2. Builds os-console from the current source tree
-#   3. Installs binary to ~/bin/os-console
-#   4. Detects SSH key that can reach the GCE VM
-#   5. Writes ~/.config/os-console/config.toml with tunnel settings
-#   6. Installs desktop launcher (double-click to open)
+#   1. Detects the SSH key that connects to the build server
+#   2. Downloads the pre-built binary from the build server via scp
+#   3. Writes ~/.config/os-console/config.toml
+#   4. Creates a desktop launcher (double-click to open)
 #
-# Run from the monorepo root:
-#   bash os-console/scripts/install.sh
+# Run with:
+#   curl -fsSL https://raw.githubusercontent.com/.../install.sh | bash
+#   — or —
+#   bash install.sh
 #
-# After install, double-click "OS Console" on your desktop to launch.
+# No Rust, no compiler, no git required on this machine.
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MONOREPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 GCE_IP="34.53.65.203"
 GCE_USER="mathew"
+BINARY_PATH="/srv/foundry/clones/project-console/pointsav-monorepo/target/release/os-console"
 
-echo "=== os-console setup ==="
+echo "=== os-console install ==="
 echo ""
 
-# ── Step 1: Rust toolchain ──────────────────────────────────────────────────
-
-if ! command -v cargo > /dev/null 2>&1; then
-    echo "Installing Rust toolchain..."
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --quiet
-    # shellcheck source=/dev/null
-    source "$HOME/.cargo/env"
-fi
-
-echo "Rust: $(cargo --version)"
-
-# ── Step 2: Build ───────────────────────────────────────────────────────────
-
-echo ""
-echo "Building os-console (first build: ~5–10 min)..."
-cd "$MONOREPO_ROOT"
-cargo build --release --bin os-console
-echo "Build complete."
-
-# ── Step 3: Install binary ──────────────────────────────────────────────────
-
-mkdir -p "$HOME/bin"
-cp target/release/os-console "$HOME/bin/os-console"
-chmod +x "$HOME/bin/os-console"
-echo "Installed: $HOME/bin/os-console"
-
-# ── Step 4: SSH key auto-detect ─────────────────────────────────────────────
+# ── Step 1: Find the SSH key that connects ──────────────────────────────────
 
 mkdir -p "$HOME/.ssh"
 chmod 700 "$HOME/.ssh"
@@ -65,11 +38,11 @@ do
     if [ -f "$CANDIDATE" ]; then
         if ssh -i "$CANDIDATE" \
                -o BatchMode=yes \
-               -o ConnectTimeout=5 \
+               -o ConnectTimeout=8 \
                -o StrictHostKeyChecking=no \
                "$GCE_USER@$GCE_IP" true 2>/dev/null; then
             SSH_KEY="$CANDIDATE"
-            echo "SSH key: $SSH_KEY"
+            echo "Connected with: $SSH_KEY"
             break
         fi
     fi
@@ -77,35 +50,44 @@ done
 
 if [ -z "$SSH_KEY" ]; then
     echo ""
-    echo "ERROR: Could not find an SSH key that connects to $GCE_IP."
-    echo "Run:  ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ''"
-    echo "Then ask the system administrator to add your public key:"
-    echo "  cat ~/.ssh/id_ed25519.pub"
+    echo "ERROR: No SSH key found that can reach the build server ($GCE_IP)."
+    echo ""
+    echo "Ask the system administrator to authorize your public key."
+    echo "If you don't have a key yet, run:"
+    echo "  ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ''"
+    echo "Then share:  cat ~/.ssh/id_ed25519.pub"
     exit 1
 fi
 
-# Accept host key silently
+# Accept host key
 ssh-keyscan -H "$GCE_IP" >> "$HOME/.ssh/known_hosts" 2>/dev/null
 
-# ── Step 5: config.toml ────────────────────────────────────────────────────
-#
-# The binary manages the SSH tunnel internally — no separate ssh process needed.
-# gce_host enables the embedded tunnel; ssh_key_path points to the key it uses.
+# ── Step 2: Download binary ─────────────────────────────────────────────────
+
+mkdir -p "$HOME/bin"
+
+echo "Downloading os-console..."
+scp -i "$SSH_KEY" \
+    -o BatchMode=yes \
+    -o StrictHostKeyChecking=no \
+    "$GCE_USER@$GCE_IP:$BINARY_PATH" \
+    "$HOME/bin/os-console"
+chmod +x "$HOME/bin/os-console"
+echo "Installed: $HOME/bin/os-console"
+
+# ── Step 3: config.toml ────────────────────────────────────────────────────
 
 CONFIG_DIR="$HOME/.config/os-console"
-CONFIG_FILE="$CONFIG_DIR/config.toml"
 mkdir -p "$CONFIG_DIR"
 
-cat > "$CONFIG_FILE" << EOF
+cat > "$CONFIG_DIR/config.toml" << EOF
 [profile]
 username = "jennifer"
 tenant   = "woodfine"
 
 totebox_host     = "127.0.0.1"
 totebox_ssh_port = 2222
-
-# T0: service-input runs on :9100 until Stage 6 redeploys on :9106
-ingest_endpoint = "http://127.0.0.1:9100"
+ingest_endpoint  = "http://127.0.0.1:9100"
 
 # Embedded SSH tunnel — binary connects to gce_host at startup
 gce_host     = "$GCE_IP"
@@ -113,11 +95,9 @@ gce_user     = "$GCE_USER"
 ssh_key_path = "$SSH_KEY"
 EOF
 
-echo "Config: $CONFIG_FILE"
+echo "Config: $CONFIG_DIR/config.toml"
 
-# ── Step 6: Desktop launcher ────────────────────────────────────────────────
-#
-# The binary now handles its own tunnel — the launcher just runs the binary.
+# ── Step 4: Desktop launcher ────────────────────────────────────────────────
 
 case "$(uname -s)" in
   Linux)
@@ -133,8 +113,8 @@ Icon=utilities-terminal
 StartupNotify=false
 DEOF
     chmod +x "$DESKTOP_FILE"
-    echo "Desktop launcher: $DESKTOP_FILE"
-    echo "Right-click → 'Allow Launching' once, then double-click to open."
+    echo "Launcher: $DESKTOP_FILE"
+    echo "Right-click → 'Allow Launching' once, then double-click."
     ;;
 
   Darwin)
@@ -144,17 +124,16 @@ DEOF
 exec ~/bin/os-console
 DEOF
     chmod +x "$LAUNCHER"
-    echo "Desktop launcher: $LAUNCHER"
-    echo "First open: right-click → Open → Open anyway (one-time Gatekeeper prompt)."
+    echo "Launcher: $LAUNCHER"
+    echo "First open: right-click → Open → Open anyway."
     ;;
 esac
 
 # ── Done ────────────────────────────────────────────────────────────────────
 
 echo ""
-echo "=== Setup complete ==="
+echo "=== Done ==="
 echo ""
-echo "Double-click 'OS Console' on your desktop to launch."
+echo "Double-click 'OS Console' on your desktop."
 echo ""
-echo "To rebuild after a source update:"
-echo "  cd $MONOREPO_ROOT && cargo build --release --bin os-console && cp target/release/os-console ~/bin/os-console"
+echo "To update:  bash install.sh"
