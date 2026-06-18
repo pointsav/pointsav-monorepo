@@ -155,8 +155,10 @@ def coerce_classification(name: str, cls: str):
 def apply_filter(raw: list) -> list:
     out = []
     for e in raw:
-        name = e.get("entity_name", "")
-        cls = e.get("classification", "")
+        name = e.get("entity_name") or ""
+        cls = e.get("classification") or ""
+        if not name or not isinstance(name, str):
+            continue
         if is_commit_prefix(name) or is_noise_entity_name(name):
             continue
         if len(name.split()) > 8:
