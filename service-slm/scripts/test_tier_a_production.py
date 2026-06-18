@@ -58,8 +58,8 @@ Output: []
 Text: Woodfine Management Corp. uses service-content and service-slm for extraction; service-bim is not yet active.
 Output: [{"classification":"Company","entity_name":"Woodfine Management Corp."},{"classification":"Project","entity_name":"service-content"},{"classification":"Project","entity_name":"service-slm"}]
 
-Text: Peter Woodfine oversees operations at PointSav Digital Systems in us-central1-b.
-Output: [{"classification":"Person","entity_name":"Peter Woodfine"},{"classification":"Company","entity_name":"PointSav Digital Systems"},{"classification":"Location","entity_name":"us-central1-b"}]
+Text: The panic is at service-slm/crates/slm-doorman-server/src/http.rs:1302:9.
+Output: []
 
 Text: Mathew provisioned the yoyo-batch GPU VM in us-central1-a for PointSav Digital Systems.
 Output: [{"classification":"Company","entity_name":"PointSav Digital Systems"},{"classification":"Location","entity_name":"us-central1-a"},{"classification":"Person","entity_name":"Mathew"}]
@@ -325,27 +325,10 @@ def run_tests():
     return totals["fail"] == 0
 
 
-def warmup():
-    """Prime the llama-server KV cache with the system prompt before tests run.
-
-    The 1002-token system prompt takes ~170s to process cold. After this call,
-    subsequent requests that share the same system prompt prefix only process
-    the user message (~20-30 tokens), dropping per-test time from 200-500s to
-    20-50s.
-    """
-    print("Warming KV cache (priming system prompt)...")
-    _, _, elapsed = extract(
-        "Jennifer Woodfine is managing director at Woodfine Management Corp."
-    )
-    print(f"  Cache warm ({elapsed:.1f}s) — subsequent tests will be faster")
-    print()
-
-
 if __name__ == "__main__":
     print("OLMo 3 Tier A — Production code path test")
     print(f"Endpoint: {LLAMA_ENDPOINT}")
     print(f"Timeout:  {TIMEOUT}s per call")
     print("=" * 60)
-    warmup()
     ok = run_tests()
     sys.exit(0 if ok else 1)
