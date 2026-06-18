@@ -239,7 +239,7 @@ python3 - <<PYEOF 2>&1 | tee -a "$LOG"
 import json, subprocess, csv, math, pathlib, sys
 
 META = pathlib.Path("$META_PATH")
-USGS_TIF = "$USGS_TIF"
+USGS_TIF = "${USGS_TIF:-}"
 NRCAN_CSV = "$NRCAN_CSV"
 SKIP_NRCAN = int("${SKIP_NRCAN:-1}")
 SKIP_USGS  = int("${SKIP_USGS:-0}")
