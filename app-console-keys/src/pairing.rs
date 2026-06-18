@@ -38,6 +38,12 @@ pub enum PairingEvent {
     Denied,
     Expired,
     Error(String),
+    /// Pair POST succeeded after retry; chassis should transition to AwaitingApproval.
+    InitSuccess {
+        code: String,
+        request_id: String,
+        fingerprint: String,
+    },
 }
 
 #[derive(Serialize)]
@@ -133,6 +139,36 @@ pub fn spawn_status_poll(base_url: String, request_id: String) -> mpsc::Receiver
                 }
             }
             std::thread::sleep(Duration::from_secs(2));
+        }
+    });
+    rx
+}
+
+/// Retry the pair POST in a background thread until it succeeds.
+/// Sends `PairingEvent::InitSuccess` when the tunnel becomes reachable.
+/// Used when the initial pair POST fails (tunnel not ready yet).
+pub fn spawn_pair_init(
+    base_url: String,
+    username: String,
+    tenant: String,
+    public_key: String,
+    fingerprint: String,
+) -> mpsc::Receiver<PairingEvent> {
+    let (tx, rx) = mpsc::channel::<PairingEvent>();
+    std::thread::spawn(move || {
+        loop {
+            std::thread::sleep(Duration::from_secs(3));
+            match post_pair_request(&base_url, &username, &tenant, &public_key, &fingerprint) {
+                Ok((request_id, code)) => {
+                    let _ = tx.send(PairingEvent::InitSuccess {
+                        code,
+                        request_id,
+                        fingerprint: fingerprint.clone(),
+                    });
+                    break;
+                }
+                Err(_) => {} // tunnel not ready yet — keep retrying
+            }
         }
     });
     rx
