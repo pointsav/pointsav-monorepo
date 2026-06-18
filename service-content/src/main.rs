@@ -70,6 +70,12 @@ Output: [{\"classification\":\"Project\",\"entity_name\":\"service-vm-tenant\"},
 Text: Peter Woodfine oversees operations at PointSav Digital Systems in us-central1-b.\n\
 Output: [{\"classification\":\"Person\",\"entity_name\":\"Peter Woodfine\"},{\"classification\":\"Company\",\"entity_name\":\"PointSav Digital Systems\"},{\"classification\":\"Location\",\"entity_name\":\"us-central1-b\"}]\n\
 \n\
+Text: Mathew provisioned the yoyo-batch GPU VM in us-central1-a for PointSav Digital Systems.\n\
+Output: [{\"classification\":\"Company\",\"entity_name\":\"PointSav Digital Systems\"},{\"classification\":\"Location\",\"entity_name\":\"us-central1-a\"},{\"classification\":\"Person\",\"entity_name\":\"Mathew\"}]\n\
+\n\
+Text: The automation bot triggered the outbox status check and corpus pipeline.\n\
+Output: []\n\
+\n\
 If no entities are found, return an empty array [].";
 
 fn main() -> NotifyResult<()> {

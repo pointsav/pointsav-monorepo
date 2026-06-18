@@ -216,6 +216,15 @@ pub fn coerce_classification(entity_name: &str, classification: &str) -> Option<
     {
         return None;
     }
+    // Multi-word all-lowercase Account → reject (real account IDs contain digits,
+    // colons, or uppercase; plain lowercase phrases are abstract nouns mis-labelled
+    // as Account, e.g. "automation bot", "outbox status", "corpus payload").
+    if classification == "Account"
+        && entity_name.contains(' ')
+        && entity_name.chars().all(|c| c.is_ascii_lowercase() || c == ' ' || c == '-')
+    {
+        return None;
+    }
     Some(classification.to_string())
 }
 
