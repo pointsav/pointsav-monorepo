@@ -42,7 +42,7 @@ use ratatui_image::{
 use crate::{
     cartridge::{Cartridge, CartridgeAction},
     fkey::FKey,
-    pairing::{PairingEvent, PairingState},
+    pairing::{self, PairingEvent, PairingState},
     widgets::status_bar::MbaStatus,
 };
 use std::collections::BTreeSet;
