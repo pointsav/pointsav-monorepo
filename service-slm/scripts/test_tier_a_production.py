@@ -55,8 +55,8 @@ Output: [{"classification":"Project","entity_name":"service-fs"}]
 Text: ops(slm): update drain predicate — remove !tier_a_first guard
 Output: []
 
-Text: service-vm-tenant and fleet commits were dropped. Run reflog to recover.
-Output: [{"classification":"Project","entity_name":"service-vm-tenant"},{"classification":"Project","entity_name":"fleet"}]
+Text: Woodfine Management Corp. uses service-content and service-slm for extraction; service-bim is not yet active.
+Output: [{"classification":"Company","entity_name":"Woodfine Management Corp."},{"classification":"Project","entity_name":"service-content"},{"classification":"Project","entity_name":"service-slm"}]
 
 Text: Peter Woodfine oversees operations at PointSav Digital Systems in us-central1-b.
 Output: [{"classification":"Person","entity_name":"Peter Woodfine"},{"classification":"Company","entity_name":"PointSav Digital Systems"},{"classification":"Location","entity_name":"us-central1-b"}]
