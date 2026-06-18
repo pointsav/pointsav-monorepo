@@ -269,9 +269,9 @@ def run_tests():
          [("Company","Woodfine Management Corp."), ("Project","service-content"), ("Project","service-slm")]),
 
         # ── Edge cases ────────────────────────────────────────────────────────
-        ("edge", "Doorman — ambiguous infra name → []",
+        ("edge", "Doorman — named system component",
          "The Doorman routes all inference requests through its circuit breaker.",
-         []),
+         [("Project","Doorman")]),
 
         ("edge", "Multi-entity GCP + people",
          "Mathew provisioned the yoyo-batch GPU VM in us-central1-a for PointSav Digital Systems.",

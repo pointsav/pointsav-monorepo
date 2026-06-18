@@ -70,8 +70,8 @@ Output: [{\"classification\":\"Company\",\"entity_name\":\"Woodfine Management C
 Text: The panic is at service-slm/crates/slm-doorman-server/src/http.rs:1302:9.\n\
 Output: []\n\
 \n\
-Text: Mathew provisioned the yoyo-batch GPU VM in us-central1-a for PointSav Digital Systems.\n\
-Output: [{\"classification\":\"Company\",\"entity_name\":\"PointSav Digital Systems\"},{\"classification\":\"Location\",\"entity_name\":\"us-central1-a\"},{\"classification\":\"Person\",\"entity_name\":\"Mathew\"}]\n\
+Text: Peter Woodfine approved moving the yoyo-batch instance to us-central1-b.\n\
+Output: [{\"classification\":\"Person\",\"entity_name\":\"Peter Woodfine\"},{\"classification\":\"Location\",\"entity_name\":\"us-central1-b\"}]\n\
 \n\
 Text: The automation bot triggered the outbox status check and corpus pipeline.\n\
 Output: []\n\
