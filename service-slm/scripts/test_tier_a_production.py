@@ -325,10 +325,27 @@ def run_tests():
     return totals["fail"] == 0
 
 
+def warmup():
+    """Prime the llama-server KV cache with the system prompt before tests run.
+
+    The 1002-token system prompt takes ~170s to process cold. After this call,
+    subsequent requests that share the same system prompt prefix only process
+    the user message (~20-30 tokens), dropping per-test time from 200-500s to
+    20-50s.
+    """
+    print("Warming KV cache (priming system prompt)...")
+    _, _, elapsed = extract(
+        "Jennifer Woodfine is managing director at Woodfine Management Corp."
+    )
+    print(f"  Cache warm ({elapsed:.1f}s) — subsequent tests will be faster")
+    print()
+
+
 if __name__ == "__main__":
     print("OLMo 3 Tier A — Production code path test")
     print(f"Endpoint: {LLAMA_ENDPOINT}")
     print(f"Timeout:  {TIMEOUT}s per call")
     print("=" * 60)
+    warmup()
     ok = run_tests()
     sys.exit(0 if ok else 1)
