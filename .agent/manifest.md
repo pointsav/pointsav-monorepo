@@ -1,41 +1,47 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster: project-intelligence
-cluster_name: project-intelligence
+cluster: project-gis
+cluster_name: project-gis
 cluster_branch: main
-created: 2026-05-27
+created: 2026-04-01
 state: active
+module_id: gis
 slm_endpoint: http://localhost:9080
-module_id: jennifer
 
 tetrad:
   vendor:
-    - repo: pointsav-monorepo
-      path: ./
-      upstream: vendor/pointsav-monorepo
-      focus: >
-        service-slm/crates/slm-doorman-server/ (Doorman + circuit breaker + LoRA training),
-        service-content/ (DataGraph entity extraction, LadybugDB),
-        service-extraction/ (extraction pipeline)
-      status: active
+    repo: pointsav-monorepo
+    path: pointsav-monorepo/
+    upstream: vendor/pointsav-monorepo
+    crates: [app-orchestration-gis]
+    state: active
   customer:
-    - status: leg-pending
-      note: >
-        No woodfine-fleet-deployment catalog entries committed yet.
-        local-doorman.service is live but not cataloged.
+    repo: woodfine-fleet-deployment
+    path: gateway-orchestration-gis-1/
+    state: active
   deployment:
-    - status: active
-      note: >
-        local-doorman.service (:9080) on vault-privategit-source-1.
-        local-slm.service (OLMo 7B Tier A).
-        yoyo-batch L4 GPU (Tier B) — RUNNING us-central1-a (verified 2026-06-17);
-        health_up=false on all endpoints (llama-server not responding);
-        ML libs (trl/peft/transformers) install status unconfirmed.
+    name: gateway-orchestration-gis-1
+    host: vault-privategit-source-1
+    surface: gis.woodfinegroup.com
+    state: active
   wiki:
-    - status: leg-pending
-      note: >
-        TOPIC/GUIDE drafts in .agent/drafts-outbound/.
-        T1 (PPN VM Architecture) and T2 (Tenant VM Isolation) STAGED.
-        Pipeline through project-editorial to media-knowledge-documentation.
+    repo: content-wiki-projects
+    state: active
 
-clones: []
+clones:
+  - repo: pointsav-monorepo
+    role: primary
+    path: pointsav-monorepo/
+    upstream: vendor/pointsav-monorepo
+    branch: main
+---
+
+# project-gis — Cluster Manifest
+
+Location Intelligence GIS cluster. Builds and deploys the co-location archetype
+system (PRO / VWH / PKS), the Top 400 Regional Markets dataset, catchment and
+O-D analysis pipelines, AEC enrichment layers (Köppen, ecoregion, GHI, seismic,
+flood, wildfire), and the journal research programme (J1 Retail Co-location,
+J7 Urban Fringe, J8 Commuter). Primary surface: gis.woodfinegroup.com
+(gateway-orchestration-gis-1). All pipelines run from
+pointsav-monorepo/app-orchestration-gis/. Nightly rebuild: 22:00 PDT.
