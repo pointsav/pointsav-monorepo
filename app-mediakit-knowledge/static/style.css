@@ -163,7 +163,6 @@
 
   /* Layout geometry */
   --header-h:   88px;
-  --wiki-bar-h: 52px;
   --tabs-h:     40px;
   --toc-w:      248px;
   --sidenav-w:  256px;
@@ -334,7 +333,7 @@ kbd { border: 1px solid var(--fg-4); box-shadow: 0 1px 0 var(--fg-4); }
 /* Docs left navigation */
 .docs-sidenav {
   position: sticky;
-  top: calc(var(--header-h) + var(--wiki-bar-h));
+  top: var(--header-h);
   align-self: start;
   height: calc(100dvh - var(--header-h));
   overflow-y: auto;
@@ -405,8 +404,10 @@ kbd { border: 1px solid var(--fg-4); box-shadow: 0 1px 0 var(--fg-4); }
   top: 0;
   z-index: 50;
   transition: box-shadow var(--dur-fast) var(--ease-out);
+  margin-bottom: 28px;
 }
 .topnav.scrolled { box-shadow: 0 1px 0 var(--border), 0 4px 16px rgba(16,23,42,.07); }
+html.search-open .topnav { margin-bottom: 0; }
 
 .topnav .left,
 .topnav .right {
@@ -421,12 +422,18 @@ kbd { border: 1px solid var(--fg-4); box-shadow: 0 1px 0 var(--fg-4); }
 }
 .topnav .left  { justify-content: flex-start; }
 .topnav .right { justify-content: flex-end; flex-wrap: nowrap; gap: 36px; }
-.topnav .left a, .topnav .right a {
+.topnav .left a {
   text-decoration: none; color: var(--fg-3); white-space: nowrap;
   display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px;
   transition: opacity 160ms ease;
 }
-.topnav .left a:hover, .topnav .right a:hover { opacity: 0.7; color: var(--fg-3); }
+.topnav .right a {
+  text-decoration: none; color: var(--navy); white-space: nowrap;
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px;
+  transition: opacity 160ms ease;
+}
+.topnav .left a:hover { opacity: 0.7; color: var(--fg-3); }
+.topnav .right a:hover { opacity: 0.7; color: var(--navy); }
 .topnav .right a.external::after {
   content: " \2197";
   font-size: 0.85em;
@@ -484,29 +491,37 @@ kbd { border: 1px solid var(--fg-4); box-shadow: 0 1px 0 var(--fg-4); }
   width: 320px;
 }
 
-/* --- wiki-bar: secondary sticky bar with search + auth + lang --- */
-.wiki-bar {
-  display: flex;
+/* --- Search toggle icon in topnav right-cluster --- */
+.search-toggle {
+  display: inline-flex;
   align-items: center;
-  gap: var(--sp-4);
-  padding: 8px 56px;
+  justify-content: center;
+  width: 32px; height: 32px;
+  border: none; background: transparent; cursor: pointer;
+  color: var(--fg-3);
+  transition: color .15s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+.search-toggle:hover { color: var(--navy); }
+.search-toggle svg { width: 18px; height: 18px; }
+html.search-open .search-toggle { color: var(--navy); }
+
+/* --- Search panel — drops below topnav when .search-open --- */
+.topnav-search-panel {
+  display: none;
+  padding: 12px 56px;
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: var(--header-h);
   z-index: 49;
-}
-.wiki-bar-right {
-  display: flex;
   align-items: center;
-  gap: var(--sp-4);
-  margin-left: auto;
+  gap: 8px;
 }
-/* Legacy center-column search (kept for any remaining usages) */
-.topnav-center {
-  display: flex; align-items: center; justify-content: center;
-  padding: 0 var(--sp-4); position: relative;
-}
+html.search-open .topnav-search-panel { display: flex; }
+.topnav-search-panel .topnav-search { position: relative; }
+
 .topnav-search { display: flex; align-items: center; gap: 6px; width: 100%; max-width: 520px; }
 .header-search-wrap { position: relative; flex: 1; }
 .topnav-search input[type="search"] {
@@ -531,14 +546,20 @@ kbd { border: 1px solid var(--fg-4); box-shadow: 0 1px 0 var(--fg-4); }
 .ac-item { padding: 8px var(--sp-3); cursor: pointer; font-size: var(--text-sm); color: var(--fg-1); }
 .ac-item:hover, .ac-item.ac-active { background: var(--bg-hover); }
 
-/* Language + theme toggles */
+/* Language toggle — lives in topnav right-cluster */
 a.lang-toggle {
-  font-family: var(--font-display);
-  font-size: 13px; font-weight: 500;
-  letter-spacing: 0.1em; text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px;
+  font-family: "Barlow Condensed", "Oswald", "Helvetica Neue", Arial, sans-serif;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--fg-3); transition: color .15s ease;
+  text-decoration: none;
+  white-space: nowrap;
 }
-a.lang-toggle:hover { color: var(--fg-1); }
+a.lang-toggle:hover { color: var(--navy); }
 
 .wiki-appearance-btn {
   display: inline-flex; align-items: center;
@@ -595,7 +616,7 @@ nav.article-tabs {
   display: flex; align-items: stretch; justify-content: space-between;
   height: var(--tabs-h); background: var(--bg);
   border-bottom: 1px solid var(--border); padding: 0 var(--sp-5);
-  position: sticky; top: calc(var(--header-h) + var(--wiki-bar-h)); z-index: 40;
+  position: sticky; top: var(--header-h); z-index: 40;
 }
 .article-tabs__left, .article-tabs__right { display: flex; align-items: stretch; gap: 2px; }
 .article-tab {
@@ -780,10 +801,10 @@ li.toc-section-active > a { font-weight: 600; color: var(--navy); }
 nav.mobile-nav-drawer,
 div.mobile-toc-drawer {
   position: fixed;
-  top: calc(var(--header-h) + var(--wiki-bar-h));
+  top: var(--header-h);
   left: 0;
   width: min(280px, 88vw);
-  height: calc(100dvh - var(--header-h) - var(--wiki-bar-h));
+  height: calc(100dvh - var(--header-h));
   background: var(--bg-elevated);
   border-right: 1px solid var(--border);
   box-shadow: var(--shadow-lg);
@@ -886,17 +907,19 @@ div.mobile-toc-drawer:not([aria-hidden]) {
 [data-auth="anon"] .wiki-tagline   { display: none; }
 [data-auth="anon"] .stub-notice    { display: none; }
 [data-auth="anon"] .search-trigger { display: none; }
+[data-auth="anon"] .content-type-badge { display: none; }
 
 /* --- Marketing footer (Lapfrog 2030) --- */
 .footer {
+  margin: 0 56px;
   margin-top: var(--sp-12);
   border-top: 1px solid var(--border);
-  padding: 22px 56px;
+  padding: 22px 120px;
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
   column-gap: 24px;
-  background: var(--bg-subtle);
+  background: var(--paper-3, #E6E7E8);
   font-family: var(--font-body);
 }
 .footer .cities {
@@ -928,7 +951,7 @@ div.mobile-toc-drawer:not([aria-hidden]) {
 }
 .footer .footnav a:hover { opacity: 0.65; }
 .copyright {
-  padding: 14px 56px 48px;
+  margin: 14px 96px 48px;
   font-size: 11px;
   color: var(--fg-4);
   letter-spacing: 0.04em;
@@ -1019,7 +1042,7 @@ div.mobile-toc-drawer:not([aria-hidden]) {
 .prose > * + * { margin-top: 1.3em; }
 .prose h2, .prose h3 {
   font-family: var(--font-display); color: var(--fg-1); text-wrap: balance;
-  scroll-margin-top: calc(var(--header-h) + var(--wiki-bar-h) + var(--tabs-h) + 12px);
+  scroll-margin-top: calc(var(--header-h) + var(--tabs-h) + 12px);
 }
 .prose h2 {
   font-weight: 700; font-size: var(--text-3xl); letter-spacing: 0.01em;
@@ -1146,7 +1169,7 @@ a.wikilink-missing, a.wiki-redlink { color: var(--color-link-redlink, #cc3333); 
 
 /* Reading progress bar */
 .reading-progress-bar {
-  position: fixed; top: calc(var(--header-h) + var(--wiki-bar-h)); left: 0;
+  position: fixed; top: var(--header-h); left: 0;
   height: 2px; background: var(--navy); z-index: 45;
   transition: width .1s linear;
 }
@@ -1470,14 +1493,16 @@ a.wikilink-missing, a.wiki-redlink { color: var(--color-link-redlink, #cc3333); 
  * ============================================================================ */
 @media (max-width: 1200px) {
   .topnav { padding: 0 36px; }
-  .wiki-bar { padding: 8px 36px; }
-  .footer { padding: 20px 36px; }
-  .copyright { padding: 12px 36px 40px; }
+  .topnav-search-panel { padding: 12px 36px; }
+  .footer { margin: 0 36px; padding: 20px 80px; }
+  .copyright { margin: 12px 56px 40px; }
 }
 @media (max-width: 1024px) {
   .topnav { padding: 0 24px; }
-  .wiki-bar { padding: 8px 24px; }
+  .topnav-search-panel { padding: 12px 24px; }
   .wordmark .logo-svg { width: 240px; height: 60px; }
+  .footer { margin: 0 24px; padding: 18px 48px; }
+  .copyright { margin: 10px 32px 32px; }
 }
 @media (max-width: 768px) {
   .topnav {
@@ -1495,18 +1520,20 @@ a.wikilink-missing, a.wiki-redlink { color: var(--color-link-redlink, #cc3333); 
   .topnav .right a.external::after { display: none; }
   .topnav .header-cta { padding: 0 10px; font-size: 11px; }
   .wordmark .logo-svg { width: 200px; height: 50px; }
-  .wiki-bar { padding: 8px 16px; gap: var(--sp-3); }
+  .topnav-search-panel { padding: 10px 16px; }
   .article__title { font-size: clamp(28px, 7vw, 40px); }
   .prose { max-width: 100%; font-size: 17px; }
-  .footer { margin-top: var(--sp-8); padding: 16px 20px; grid-template-columns: 1fr; row-gap: 12px; }
+  .footer { margin: 0 12px; margin-top: var(--sp-8); padding: 16px 20px; grid-template-columns: 1fr; row-gap: 12px; }
   .footer .footnav { text-align: left; flex-direction: row; gap: 16px; flex-wrap: wrap; }
-  .copyright { padding: 8px 20px 28px; }
+  .copyright { margin: 8px 20px 28px; }
 }
 @media (max-width: 480px) {
   .topnav { padding: 6px 12px; }
   .topnav .left, .topnav .right { gap: 12px; font-size: 11px; letter-spacing: 0.10em; }
   .wordmark .logo-svg { width: 180px; height: 45px; }
-  .wiki-bar { padding: 6px 12px; }
+  .topnav-search-panel { padding: 8px 12px; }
+  .footer { margin: 0 8px; padding: 14px 16px; }
+  .copyright { margin: 8px 16px 24px; }
 }
 
 /* ============================================================================

@@ -1446,3 +1446,33 @@ function initCategoryFacets() {
     });
   });
 }
+
+// Search toggle — opens/closes the topnav search panel
+(function() {
+  var btn = document.querySelector('.search-toggle');
+  if (!btn) return;
+  btn.addEventListener('click', function() {
+    var open = document.documentElement.classList.toggle('search-open');
+    btn.setAttribute('aria-expanded', open);
+    if (open) {
+      var input = document.getElementById('header-search-q');
+      if (input) { input.focus(); }
+    }
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      document.documentElement.classList.remove('search-open');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+  // Close panel when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!document.documentElement.classList.contains('search-open')) return;
+    var panel = document.getElementById('topnav-search-panel');
+    var topnav = document.querySelector('header.topnav');
+    if (panel && !panel.contains(e.target) && topnav && !topnav.contains(e.target)) {
+      document.documentElement.classList.remove('search-open');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+}());
