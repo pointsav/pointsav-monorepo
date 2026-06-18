@@ -803,18 +803,27 @@ fn wiki_chrome(
                         nav.right {
                             @if woodfine_theme {
                                 a.external href="https://corporate.woodfinegroup.com" target="_blank" rel="noopener" { "Corporate" }
+                                a.external href="https://projects.woodfinegroup.com" target="_blank" rel="noopener" { "Projects" }
                                 a.external href="https://newsroom.woodfinegroup.com" target="_blank" rel="noopener" { "Newsroom" }
                             } @else {
                                 a.external href="https://software.pointsav.com" target="_blank" rel="noopener" { "Monorepo" }
                                 a.external href="https://design.pointsav.com" target="_blank" rel="noopener" { "Design System" }
                             }
                         }
+                        (auth_nav_widget(user, pending_count))
+                        a.lang-toggle href=(match locale { Locale::En => format!("/es/wiki/{slug}"), Locale::Es => format!("/wiki/{slug}") }) {
+                            (match locale { Locale::En => "ES", Locale::Es => "EN" })
+                        }
+                        button.search-toggle type="button" aria-label="Search" aria-expanded="false"
+                            aria-controls="topnav-search-panel" {
+                            (PreEscaped(SEARCH_ICON_SVG))
+                        }
                         @if woodfine_theme {
                             a.header-cta href="https://home.woodfinegroup.com/page/contact" target="_blank" rel="noopener" { "Enquire" }
                         }
                     }
                 }
-                div.wiki-bar {
+                div.topnav-search-panel #topnav-search-panel aria-hidden="true" {
                     form.topnav-search action="/search" method="get" role="search" {
                         input #header-search-q
                             type="search"
@@ -826,12 +835,6 @@ fn wiki_chrome(
                         button.topnav-search-btn type="submit" aria-label="Search" { "→" }
                     }
                     div.ac-dropdown #search-autocomplete-dropdown {}
-                    nav.wiki-bar-right {
-                        (auth_nav_widget(user, pending_count))
-                        a.lang-toggle href=(match locale { Locale::En => format!("/es/wiki/{slug}"), Locale::Es => format!("/wiki/{slug}") }) {
-                            (match locale { Locale::En => "ES", Locale::Es => "EN" })
-                        }
-                    }
                 }
                 // Mobile-only toggle buttons placed outside topnav so the header
                 // height is consistent across all page types (P1 fix).

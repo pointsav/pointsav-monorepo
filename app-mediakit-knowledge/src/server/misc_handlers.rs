@@ -33,9 +33,15 @@ fn chrome(
                             a.external href="https://software.pointsav.com" target="_blank" rel="noopener" { "Monorepo" }
                             a.external href="https://design.pointsav.com" target="_blank" rel="noopener" { "Design System" }
                         }
+                        (auth_nav_widget(user, pending_count))
+                        a.lang-toggle href="/es/" { "ES" }
+                        button.search-toggle type="button" aria-label="Search" aria-expanded="false"
+                            aria-controls="topnav-search-panel" {
+                            (PreEscaped(SEARCH_ICON_SVG))
+                        }
                     }
                 }
-                div.wiki-bar {
+                div.topnav-search-panel #topnav-search-panel aria-hidden="true" {
                     form.topnav-search action="/search" method="get" role="search" {
                         input #header-search-q
                             type="search"
@@ -47,10 +53,6 @@ fn chrome(
                         button.topnav-search-btn type="submit" aria-label="Search" { "→" }
                     }
                     div.ac-dropdown #search-autocomplete-dropdown {}
-                    nav.wiki-bar-right {
-                        (auth_nav_widget(user, pending_count))
-                        a.lang-toggle href="/es/" { "ES" }
-                    }
                 }
                 main.site-main #main-content {
                     (body)
