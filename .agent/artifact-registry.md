@@ -1,7 +1,7 @@
 ---
 schema: foundry-artifact-registry-v1
 project: project-gis
-last_updated: 2026-05-30
+last_updated: 2026-06-18
 ---
 
 # project-editorial Artifact Registry
@@ -134,6 +134,37 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 - **Status:** STAGED in drafts-outbound/ — dispatched to project-editorial 2026-05-30 (msg-id: project-gis-20260530-rm-corrected-dispatch)
 - **Destination:** project-editorial → media-knowledge-documentation (projects.woodfinegroup.com)
 - **Content:** Rank 5 EU. Suburb of Düsseldorf (19.4 km). 2×T1, civic=true. Score=12.0. Civic anchors: Helios Klinikum Krefeld, Hochschule Niederrhein. EU Climate=II (Atlantic), Köppen=Cfb. ~950 words body.
+
+### A22 — TOPIC: Location Intelligence Co-location Archetypes (EN+ES)
+- **File:** `TOPIC-location-intelligence-archetypes.draft.md` + `.es.draft.md`
+- **Status:** COMPLETE — committed to `media-knowledge-projects/` 2026-06-15 (prior session); EN+ES pair both live
+- **Destination:** media-knowledge-projects/topic-location-intelligence-archetypes.md + .es.md
+- **Content:** Three-archetype overview (PRO/VWH/PKS); production results (VWH 6,368 clusters; PKS 6,953 clusters); co-location signals; map integration
+
+### A21 — GUIDE: Location Intelligence Data Collection
+- **File:** `GUIDE-location-intelligence-data-collection.draft.md`
+- **Status:** CONSOLIDATED → `how-to/collect-location-intelligence-data` — new article created 2026-06-18; no consolidation overlap with `connect-osm-data-pipeline` (different scope: generic single-chain vs VWH/PKS-specific pipeline execution log)
+- **Destination:** media-knowledge-documentation/how-to/collect-location-intelligence-data.md
+
+### A20 — TOPIC: Parking Structures (PKS)
+- **File:** `TOPIC-parking-structures.draft.md`
+- **Status:** CONSOLIDATED → `archetypes/parking-structures` — existing article updated 2026-06-18; merged production data (6,953 clusters, tier counts) + enrichment signal tables + chain taxonomy (car rental, hotel chains) + mixed-service stations note
+- **Destination:** media-knowledge-documentation/archetypes/parking-structures.md
+
+### A19 — TOPIC: Vertical Warehouse (VWH)
+- **File:** `TOPIC-vertical-warehouse.draft.md`
+- **Status:** CONSOLIDATED → `archetypes/vertical-warehouse` — existing article updated 2026-06-18; merged 2026-06-11 production data (per-country table, retail_contamination 47.9%) + chain taxonomy (TRADE/AUTO/SUPPORT + not-ingested)
+- **Destination:** media-knowledge-documentation/archetypes/vertical-warehouse.md
+
+### A23 — GUIDE: GIS AEC Pipeline Repair
+- **File:** `GUIDE-gis-aec-pipeline-repair.draft.md`
+- **Status:** ROUTED TO COMMAND — outbox message sent 2026-06-17 (Command Session scope: woodfine-fleet-deployment/gateway-orchestration-gis-1/); pending Command ACK
+- **Destination:** woodfine-fleet-deployment/gateway-orchestration-gis-1/guide-gis-aec-pipeline-repair.md
+
+### A24 — GUIDE: GIS Nightly Build Operations
+- **File:** `GUIDE-gis-nightly-build-operations.draft.md`
+- **Status:** ROUTED TO COMMAND — outbox message sent 2026-06-17 (Command Session scope); pending Command ACK
+- **Destination:** woodfine-fleet-deployment/gateway-orchestration-gis-1/guide-gis-nightly-build-operations.md
 
 ### A13 — DESIGN-RESEARCH: Regional Market TOPIC Template
 - **File:** `DESIGN-regional-market-topic-template.draft.md`
