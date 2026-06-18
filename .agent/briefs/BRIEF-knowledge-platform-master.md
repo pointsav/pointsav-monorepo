@@ -54,7 +54,7 @@ Single Rust binary. No runtime system dependencies. Apache 2.0.
 | Phase 0 | Federation engine | **Complete 2026-06-12** | All scope items done; gate 689 articles / 0 dead links; Stage 6 at 9a1326df; archive ops pending Stage 6 |
 | Phase 9 | Production deploy | **Shipped 2026-06-11** | WIKI_KNOWLEDGE_TOML migration; /etc/local-knowledge/; all 3 instances healthy |
 
-Sub-clone tip: `c5658afe` (Session 88, 2026-06-17). Sprints D–N committed (J–N this session, 2026-06-17); Stage 6 READY (4th) sent to Command (msg-id: command-20260617-stage-6-ready-app-mediakit-knowledge-spr). Live binary still at `8599b14c` pending rebuild.
+Sub-clone tip: `c5658afe` (Session 88, 2026-06-17). Sprints D–N committed (J–N this session, 2026-06-17); Stage 6 READY (4th) sent to Command (msg-id: command-20260617-stage-6-ready-app-mediakit-knowledge-spr). Live binary still at `8599b14c` pending rebuild. Sprints S/P/Q/T (Lapfrog 2030 + marketing header parity) planned in Session 89; pending plan approval before implementation.
 
 ---
 
@@ -757,7 +757,7 @@ Top institutional quality gaps beyond §7 findings (from §7.5 benchmark analysi
 
 1. **Slide → internal category mapping** — **LOCKED 2026-06-16**: use draft §8.2 mapping as-is for documentation.pointsav.com. Sprint I may proceed.
 2. **Woodfine instances (9093/9095) navigation IA** — **RESOLVED 2026-06-16**: category grid suppressed on both instances (Sprint I, `588496f2`). Content audit showed ~18 corporate topics and ~50 projects topics; not enough volume to warrant a category taxonomy. "Browse by area" section removed from projects + corporate home pages; documentation.pointsav.com unchanged.
-3. **Per-brand editorial gravitas contract** — ~12 tokens beyond the accent: density, serif headings, drop-cap gating. Deferred; needs project-design CSS spec for `tokens-woodfine.css` before engine work.
+3. **Per-brand editorial gravitas contract** — **RESOLVED 2026-06-17** (operator direction, Session 89): Lapfrog 2030 design direction decided. See §8.6 for full specification. Key decisions locked: (a) 3-font system matching `app-mediakit-shell/static/tokens.css` — Oswald/Barlow Condensed display, Nunito Sans body, Source Serif 4 reading; (b) marketing header (`left-nav → wordmark-center → right-cluster+CTA`) matching `home.woodfinegroup.com`; (c) article titles at `clamp(36px, 4.5vw, 60px)` display font; (d) remove Wikipedia editing affordances for anon readers via `[data-auth="anon"]` CSS.
 4. **Design slides federation** — embedding project-orgcharts slide diagrams as article visual assets (one slide per TOPIC). Phase 7 scope; deferred.
 
 ---
@@ -781,3 +781,140 @@ Top institutional quality gaps beyond §7 findings (from §7.5 benchmark analysi
 | L | Typed hatnote vocabulary — closed set (main/see-also/disambig/note); .wiki-hatnote CSS fix | `36700138` | Done — tests green; Stage 6 READY (4th) |
 | M | Cross-instance search web route `GET /search/all?q=` — reuses `federation_search()` from mcp.rs | `c80bf265` | Done — tests green; Stage 6 READY (4th) |
 | N | xtask section schema gate — warn when topic/guide articles missing required level-2 headings | `c5658afe` | Done — tests green; Stage 6 READY (4th) |
+| S | Marketing header parity — Rust: topnav HTML → `left-nav / wordmark-center / right-cluster+CTA`; wiki-bar secondary bar for search+auth; WORDMARK_SVG_WOODFINE → path-based institutional mark from shell.rs; external nav links per instance | pending (Session 89) | Planned |
+| P | CSS: topnav `1fr auto 1fr` grid, marketing nav style (display font, 0.16em letter-spacing), wiki-bar below header, anon-hide Wikipedia editing UI, home editorial grid, start-here chips, featured hero base; tokens-woodfine.css: featured blue panel, wikilink color, remove solid blue topnav bar | pending | Planned |
+| Q | Rust HomeStrings per-instance (for_instance matcher), audience chip human labels, instance wordmark text | pending | Planned |
+| T | Lapfrog 2030 CSS — font system switch to marketing 3-font stack, article title large editorial, H2/H3 display font no-border, wider measure 80ch, blockquote editorial, marketing footer (shell_footer Rust + CSS), home hero full-bleed, mobile responsive pass | pending | Planned |
+
+---
+
+## §8.6 — Lapfrog 2030 Design Direction (locked 2026-06-17)
+
+Operator direction from Session 89: the three wiki instances must match the institutional
+quality of `home.woodfinegroup.com` and `home.pointsav.com` as reference standards.
+Bankers arrive at the wiki directly from those sites; visual continuity is required.
+
+### Reference sources
+
+- `app-mediakit-shell/src/shell.rs` — `Brand::woodfine()` and `Brand::pointsav()` structures
+- `app-mediakit-shell/static/shell.css` — marketing nav/footer CSS (canonical `.topnav` spec)
+- `app-mediakit-shell/static/tokens.css` — marketing design token palette (36 lines)
+- `app-mediakit-shell/static/woodfine-wordmark.svg` — institutional path SVG (`viewBox="0 0 144 36"`)
+
+### Locked design decisions
+
+**D-L1 — Marketing header structure** (replaces Wikipedia-style search-bar topnav):
+```
+<header.topnav>
+  <nav.left>  [Disclaimer, Contact us]  </nav>
+  <a.wordmark>  [path SVG]  </a>
+  <div.right-cluster>
+    <nav.right>  [Corporate↗, Newsroom↗]  </nav>
+    <a.header-cta>  Enquire  </a>   [Woodfine only]
+  </div>
+</header>
+<div.wiki-bar>  [search form + auth + lang]  </div>
+```
+Grid: `1fr auto 1fr` (matches `app-mediakit-shell/static/shell.css` `.topnav`).
+Padding: `56px` horizontal (matching `shell.css`).
+Search drops to `wiki-bar` secondary bar sticky at `top: var(--header-h)`.
+
+**D-L2 — 3-font system matching marketing** (replaces Inter/Inter):
+- `--font-display`: `"Oswald", "Trade Gothic LT Std", "Barlow Condensed", "Helvetica Neue", Arial, sans-serif`
+- `--font-body`: `"Nunito Sans", "Avenir LT Std", "Avenir Next", "Mulish", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif`
+- `--font-reading`: `'Source Serif 4', Georgia, ui-serif, serif` (keep — best reading font)
+No font files needed — system fallbacks (Helvetica Neue, system-ui) provide institutional feel.
+All H2/H3/H4 automatically get display font because they already reference `var(--font-display)`.
+
+**D-L3 — Article title: magazine-grade display** (was `clamp(28px, 3.6vw, 44px)`):
+`clamp(36px, 4.5vw, 60px)` display font, weight 700, line-height 1.05, letter-spacing −0.02em,
+`text-wrap: balance`. Target: Financial Times / Bloomberg front-page headline treatment.
+
+**D-L4 — H2 section headings: editorial, not Wikipedia** (remove border-bottom):
+`font-size: 30px`, `font-weight: 700`, `letter-spacing: 0.01em`, `margin-top: 2.8em`,
+`border-bottom: none` (was `1px solid var(--rule)` — Wikipedia artifact). With Oswald/Barlow
+Condensed at 700 weight this renders as Bloomberg-style section dividers.
+
+**D-L5 — Wider reading measure** (was 68ch):
+`--measure: 80ch`. Body `font-size: 18px` (was 17px), `line-height: 1.75` (was 1.70).
+Blockquote: remove italic (institutional, not blog); add `background: var(--bg-subtle)`.
+
+**D-L6 — Marketing footer** (replaces current plain footer):
+`footer.footer` with `.cities` (serif, 14px) and `.footnav` (display font, 11px, 0.18em tracking,
+uppercase). Per-instance content: Woodfine → `Vancouver | New York`, Contact + Disclaimer;
+PointSav → `Vancouver | New York`, Disclaimer only.
+
+**D-L7 — Wikipedia editing UI hidden for anonymous readers** (highest-impact single rule):
+`[data-auth="anon"]` selector on `<html>` already set by engine. Add to `style.css`:
+`.wiki-page-tabs, .edit-pencil, .doc-edit-row, .wiki-tagline, .stub-notice, .search-trigger { display: none }`
+Authenticated editors still see full UI. Clean product-page reading experience for all visitors.
+
+**D-L8 — Instance token split**:
+- `projects` / `corporate` instances → Woodfine tokens (`#164679` Woodfine Blue accent, CTA)
+- `documentation` instance → PointSav tokens (`#B4C5D5` steel-blue accent) — unchanged
+- Marketing header is WHITE/LIGHT on ALL instances (remove the solid-blue nav bar from Sprint O)
+- Woodfine Blue applied to: `header-cta` button, right-nav link color, featured hero panel background
+
+**D-L9 — Mobile-first topnav** (≤768px stacks):
+```css
+.topnav { grid-template-columns: 1fr; grid-template-rows: auto auto; justify-items: center; gap: 12px; }
+.topnav .wordmark { order: -1; }
+.topnav .left, .topnav .right { justify-content: center; }
+```
+Article reading on mobile: `max-width: 100%` on `.prose`.
+
+### Meet-in-the-middle (outbox to Command — NOT in this sprint)
+
+`app-mediakit-shell/src/shell.rs` `Brand::pointsav()` should add `Documentation↗` link
+pointing to `documentation.pointsav.com` to its `right_nav`. Small change in project-marketing
+scope. Outbox message to Command to relay to project-marketing archive.
+
+---
+
+### §8.8 — Session 90 Log (2026-06-17, Totebox, claude-sonnet-4-6)
+
+Session 90 — Lapfrog 2030 implementation (context-resumed from Session 89 plan). All Sprints S/P/Q/T applied.
+
+**Rust changes (home_handlers.rs, wiki_handlers.rs, misc_handlers.rs):**
+- Sprint S1: WORDMARK_SVG_WOODFINE replaced with institutional path-based SVG (viewBox 0 0 144 36, 320×80)
+- Sprint S2: All three topnav locations (home, article, edit, chrome) → marketing structure (left nav | wordmark center | right-cluster + CTA)
+- Sprint S3: Removed `button.search-trigger` emoji button; search moved to `.wiki-bar` secondary bar
+- Sprint Q1: Per-instance HomeStrings overrides (section_featured, section_start) as local variables
+- Sprint Q2: Audience chip labels humanised (customer-woodfine → "Woodfine Group", etc.)
+- Sprint T5: shell_footer() replaced with marketing footer (.footer + .copyright, per-instance entity)
+- misc_handlers.rs: `chrome()` also updated to marketing topnav + wiki-bar structure
+
+**CSS changes (style.css, tokens-woodfine.css):**
+- Sprint T1: Font system → Oswald/Barlow Condensed display, Nunito Sans body, Source Serif 4 reading
+- Sprint P1: Topnav grid `1fr auto 1fr`; padding 56px; min-height; `.right-cluster`, `.header-cta`; wordmark 80px
+- Sprint P2: `.wiki-bar` secondary sticky bar at `top: var(--header-h)`; `.wiki-bar-right`
+- Sprint P3 (in tokens-woodfine.css): Removed solid blue topnav; Woodfine Blue on right links + CTA only
+- Sprint P4: `[data-auth="anon"]` hides `.wiki-page-tabs`, `.edit-pencil`, `.doc-edit-row`, `.wiki-tagline`, `.stub-notice`, `.search-trigger`
+- Sprint P5: `.wiki-home-editorial` 3fr/2fr grid, `.wiki-home-editorial__right` column flex
+- Sprint P6: `.starthere-row`, `.starthere-chip` pill styles
+- Sprint T2: `.article__title` clamp(36px,4.5vw,60px), weight 700, letter-spacing -0.02em
+- Sprint T3: `.prose h2` border-bottom removed, margin-top 2.8em; `.prose h3` 22px, 2.0em
+- Sprint T4: `--measure` 80ch; prose 18px, line-height 1.75; blockquote redesigned (bg-subtle, no italic)
+- Sprint T5 CSS: `.footer`, `.cities`, `.sep`, `.footnav`, `.copyright` marketing footer rules
+- Sprint T7: Mobile breakpoints 1200/1024/768/480px; topnav stacked on ≤768px; article full-width
+- Sprint P7 (tokens-woodfine.css): Featured hero panel — `background: #164679`, white title 36px, excerpt rgba(255,255,255,0.88)
+- Sprint P8 (tokens-woodfine.css): `a.wikilink { color: #164679 }`, blockquote gold, footer footnav hover, chip hover Woodfine Blue fill
+
+**Status:** cargo check passed (6m build, 0 errors). Tests running. Pending: commit + Stage 6 outbox.
+
+---
+
+### §8.7 — Session 89 Log (2026-06-17, Totebox, claude-sonnet-4-6)
+
+Session 89 design direction session. Audit of live sites (:9090/:9093/:9095) confirmed sites
+still appear Wikipedia-like; no institutional banking aesthetic. Operator direction:
+- Make wiki header match `home.woodfinegroup.com` exactly (same wordmark, same nav links, same CTA)
+- Token split: projects/corporate → Woodfine Blue; documentation → PointSav steel
+- Lapfrog 2030 now, not deferred: adopt marketing font system, editorial article reading, mobile-first
+- Article reading redesign: "so good bankers won't like going back" — display font headings at magazine scale
+- Mobile: all three instances must work well on phones ("most people check first on phones")
+- Meet-in-the-middle: document what `app-mediakit-shell` needs (outbox to Command, NOT this sprint)
+
+Plan file: `/home/mathew/.claude/plans/update-the-breif-and-rippling-newt.md`.
+Sprints S + P + Q + T defined in plan file. BRIEF §8.4 decision #3 resolved; §8.6 added.
+Sub-clone tip still `c5658afe` — Sprints S/P/Q/T pending next session after plan approval.

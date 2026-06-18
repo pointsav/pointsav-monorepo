@@ -22,23 +22,32 @@ fn chrome(
             body {
                 a.skip-to-content href="#main-content" { "Skip to content" }
                 header.topnav {
+                    nav.left {
+                        a href="https://home.pointsav.com/page/disclaimer" target="_blank" rel="noopener" { "Disclaimer" }
+                    }
                     a.wordmark href="/" aria-label=(site_title) {
                         (PreEscaped(WORDMARK_SVG_POINTSAV))
                     }
-                    div.topnav-center {
-                        form.topnav-search action="/search" method="get" role="search" {
-                            input #header-search-q
-                                type="search"
-                                name="q"
-                                placeholder="Search…"
-                                autocomplete="off"
-                                aria-label="Search this wiki"
-                                spellcheck="false";
-                            button.topnav-search-btn type="submit" aria-label="Search" { "→" }
+                    div.right-cluster {
+                        nav.right {
+                            a.external href="https://software.pointsav.com" target="_blank" rel="noopener" { "Monorepo" }
+                            a.external href="https://design.pointsav.com" target="_blank" rel="noopener" { "Design System" }
                         }
-                        div.ac-dropdown #search-autocomplete-dropdown {}
                     }
-                    nav.right {
+                }
+                div.wiki-bar {
+                    form.topnav-search action="/search" method="get" role="search" {
+                        input #header-search-q
+                            type="search"
+                            name="q"
+                            placeholder="Search…"
+                            autocomplete="off"
+                            aria-label="Search this wiki"
+                            spellcheck="false";
+                        button.topnav-search-btn type="submit" aria-label="Search" { "→" }
+                    }
+                    div.ac-dropdown #search-autocomplete-dropdown {}
+                    nav.wiki-bar-right {
                         (auth_nav_widget(user, pending_count))
                         a.lang-toggle href="/es/" { "ES" }
                     }
