@@ -28,34 +28,70 @@ fn inner_main() -> anyhow::Result<()> {
     let cfg = ConsoleConfig::load();
     let p = &cfg.profile;
 
+    // Port list used by both tunnel paths.
+    let tunnel_forwards: &[(u16, u16)] = &[
+        (9080, 9080), // Doorman
+        (9081, 9081), // service-content
+        (9092, 9092), // service-proofreader (F4)
+        (9100, 9100), // service-input (F12)
+        (9093, 9093), // service-email (F3)
+        (9205, 9205), // pairing-server (F11)
+        (2222, 2222), // MBA SSH
+    ];
+
     // Start embedded SSH tunnel if gce_host is configured
+    let mut _ssh_child: Option<std::process::Child> = None;
     if !p.gce_host.is_empty() {
-        tunnel::spawn_tunnel(tunnel::TunnelConfig {
-            gce_host: p.gce_host.clone(),
-            gce_port: p.gce_ssh_port,
-            username: p.gce_user.clone(),
-            key_path: p.ssh_key_path.clone(),
-            forwards: vec![
-                (9080, 9080), // Doorman
-                (9081, 9081), // service-content
-                (9092, 9092), // service-proofreader (F4)
-                (9100, 9100), // service-input (F12)
-                (9093, 9093), // service-email (F3)
-                (9205, 9205), // pairing-server (F11)
-                (2222, 2222), // MBA SSH
-            ],
-        });
-        // Wait until tunnel binds local ports (up to 15s), poll every 250ms.
-        // A fixed sleep races on slow networks; polling exits as soon as ready.
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(15);
-        loop {
-            if std::net::TcpStream::connect("127.0.0.1:9205").is_ok() {
-                break;
+        // Skip tunnel if ports are already bound (user has an external ssh -N running).
+        if std::net::TcpStream::connect("127.0.0.1:9205").is_err() {
+            tunnel::spawn_tunnel(tunnel::TunnelConfig {
+                gce_host: p.gce_host.clone(),
+                gce_port: p.gce_ssh_port,
+                username: p.gce_user.clone(),
+                key_path: p.ssh_key_path.clone(),
+                forwards: tunnel_forwards.to_vec(),
+            });
+            // Wait up to 5s for russh to bind ports.
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+            loop {
+                if std::net::TcpStream::connect("127.0.0.1:9205").is_ok() {
+                    break;
+                }
+                if std::time::Instant::now() >= deadline {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(250));
             }
-            if std::time::Instant::now() >= deadline {
-                break;
+        }
+
+        // Russh didn't bind ports — fall back to system ssh.
+        if std::net::TcpStream::connect("127.0.0.1:9205").is_err() {
+            let mut cmd = std::process::Command::new("ssh");
+            cmd.arg("-N")
+               .arg("-o").arg("StrictHostKeyChecking=accept-new")
+               .arg("-o").arg("ServerAliveInterval=30")
+               .arg("-o").arg("ServerAliveCountMax=3")
+               .arg("-p").arg(p.gce_ssh_port.to_string())
+               .arg("-i").arg(&p.ssh_key_path);
+            for &(local_port, remote_port) in tunnel_forwards {
+                cmd.arg("-L").arg(format!("{local_port}:localhost:{remote_port}"));
             }
-            std::thread::sleep(std::time::Duration::from_millis(250));
+            cmd.arg(format!("{}@{}", p.gce_user, p.gce_host));
+            cmd.stdout(std::process::Stdio::null());
+            cmd.stderr(std::process::Stdio::null());
+            _ssh_child = cmd.spawn().ok();
+
+            // Wait up to 15s for system ssh to bind ports.
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(15);
+            loop {
+                if std::net::TcpStream::connect("127.0.0.1:9205").is_ok() {
+                    break;
+                }
+                if std::time::Instant::now() >= deadline {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(250));
+            }
         }
     }
 
@@ -175,7 +211,11 @@ fn inner_main() -> anyhow::Result<()> {
     let _ = ctrlc::set_handler(|| {
         app_console_keys::request_shutdown();
     });
-    chassis.run_local()
+    let result = chassis.run_local();
+    if let Some(mut child) = _ssh_child {
+        let _ = child.kill();
+    }
+    result
 }
 
 /// Read the OpenSSH public key line from the .pub file alongside the private key.
