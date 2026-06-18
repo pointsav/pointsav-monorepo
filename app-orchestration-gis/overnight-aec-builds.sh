@@ -5,7 +5,7 @@
 # DO NOT run during business hours — heavy downloads and compute.
 #
 # Steps:
-#   1. park_ride ingest for US/CA/DE/FR/IT/PL/NO/IS
+#   1. park_ride ingest for US/CA/DE/FR/IT/PL/NO (IS not in known-countries list)
 #   2. PKS cluster rebuild (if ingest succeeded)
 #   3. build-aec-seismic.sh (wetland VRT + US/CA USGS/NRCan seismic)
 #   4. build-aec-flood.sh (wildfire downloads ~1.5GB + classify)
@@ -20,9 +20,9 @@ LOG="$SCRIPT_DIR/overnight-aec-builds.log"
 echo "=== overnight-aec-builds.sh started $(date -u +%Y-%m-%dT%H:%M:%SZ) ===" | tee -a "$LOG"
 
 # Step 1 — park_ride ingest
-echo "[1/4] park_ride ingest: US CA DE FR IT PL NO IS" | tee -a "$LOG"
+echo "[1/4] park_ride ingest: US CA DE FR IT PL NO" | tee -a "$LOG"
 cd "$SCRIPT_DIR"
-python3 ../pointsav-monorepo/app-orchestration-gis/ingest-osm-parking.py --countries US CA DE FR IT PL NO IS >> "$LOG" 2>&1
+python3 ../pointsav-monorepo/app-orchestration-gis/ingest-osm-parking.py --countries US CA DE FR IT PL NO >> "$LOG" 2>&1
 echo "  → park_ride ingest complete $(date -u +%H:%MZ)" | tee -a "$LOG"
 
 # Step 2 — PKS rebuild
