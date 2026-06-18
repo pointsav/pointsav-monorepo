@@ -22,7 +22,7 @@ echo "=== overnight-aec-builds.sh started $(date -u +%Y-%m-%dT%H:%M:%SZ) ===" | 
 # Step 1 — park_ride ingest
 echo "[1/4] park_ride ingest: US CA DE FR IT PL NO IS" | tee -a "$LOG"
 cd "$SCRIPT_DIR"
-python3 ingest-osm-parking.py --countries US CA DE FR IT PL NO IS >> "$LOG" 2>&1
+python3 ../pointsav-monorepo/app-orchestration-gis/ingest-osm-parking.py --countries US CA DE FR IT PL NO IS >> "$LOG" 2>&1
 echo "  → park_ride ingest complete $(date -u +%H:%MZ)" | tee -a "$LOG"
 
 # Step 2 — PKS rebuild

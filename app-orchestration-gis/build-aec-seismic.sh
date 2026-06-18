@@ -522,7 +522,9 @@ if HAS_SHAPELY:
                'IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','GB'}
     n = 0
     for c in clusters:
-        if c.get('seismic_pga_g') is not None or c.get('iso') not in EU_ISOS:
+        if c.get('seismic_pga_g') is not None:
+            continue
+        if c.get('iso') not in EU_ISOS:
             continue
         pt = Point(c['lon'], c['lat'])
         for poly, props in polys:
