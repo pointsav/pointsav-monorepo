@@ -1,9 +1,22 @@
 # NEXT.md — app-mediakit-knowledge
 
-> Last updated: 2026-06-14 (engine defect fixes + Sprint C test regression fix + full test suite green)
+> Last updated: 2026-06-17 (Lapfrog 2030 — marketing header parity, editorial redesign, mobile first)
 > **SOURCE OF TRUTH:** `.agent/briefs/BRIEF-knowledge-platform-master.md` — read it first.
 > It supersedes the 2030 brief and consolidates the 2026-06-01 research (mobile-first,
 > content federation via mounts + blueprints, premium UX, linking model + zero dead links).
+
+## Lapfrog 2030 — shipped 2026-06-17 (commit 9ebf4a7b, Stage 6 pending)
+
+Marketing header parity (all 3 instances), Woodfine Blue token split, editorial article
+redesign, marketing footer, anon-reader clean, home editorial grid, mobile-first breakpoints.
+See BRIEF §8.8 for full sprint log. **Stage 6 outbox message sent to Command.**
+
+- [ ] **Sprint T6 — home hero `ul.recent` move** [2026-06-17 totebox@project-knowledge]
+  `ul.recent` (recently updated articles) sits inside `.wiki-home-editorial__left` alongside
+  the featured article panel. CSS alone can't separate them into a full-bleed hero + right-column
+  recent list. Needs a small Rust change in `home_handlers.rs` to move `ul.recent` into
+  `.wiki-home-editorial__right`. Low visual priority — layout is functional; the full-bleed
+  hero works without it.
 
 ## Engine defect fixes — 12-agent audit 2026-06-14
 
@@ -36,9 +49,9 @@ Committed `c3261f0e` (jwoodfine) + `91e65e05` (pwoodfine) + `f2852d5c` (jwoodfin
 
 ## 2026-06-01 direction (from the master brief)
 
-- [ ] **§7 font decision (supersedes L8):** Oswald/Nunito/Roboto Slab → **Inter (UI+headings)
-      + Source Serif 4 (reading body) + system mono.** Files already on disk; lands in Phase 1.
-      ⚠️ Conflict surfaced to Command (overrides a "LOCKED" decision); logged in master Decision Log.
+- [x] **§7 font decision:** Shipped in Lapfrog 2030 (2026-06-17) as Oswald/Barlow Condensed
+      display + Nunito Sans body + Source Serif 4 reading. System fallbacks only (no @font-face).
+      DTCG back-port to design-system still pending (see Per-brand section below).
 - [ ] **Phase 0 — federation engine:** `knowledge.toml` mounts; `blueprints/*.yaml` + `src/blueprints.rs`;
       thread mounts into `inject_wiki_prefixes` (cross-mount resolution); build-time dead-link gate;
       **remove red-link path** (`render.rs:464`, L18); typed TOPIC↔GUIDE backlinks; slug normalization.
