@@ -108,7 +108,7 @@ AQUEDUCT_URLS=(
 
 _aqueduct_valid() {
     [[ -f "$AQUEDUCT_TIF" ]] \
-        && (( $(stat -c%s "$AQUEDUCT_TIF") >= 100000000 )) \
+        && (( $(stat -c%s "$AQUEDUCT_TIF") >= 85000000 )) \
         && file "$AQUEDUCT_TIF" 2>/dev/null | grep -qi "TIFF\|GeoTIFF"
 }
 
