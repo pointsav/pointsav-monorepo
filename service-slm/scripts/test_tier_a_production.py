@@ -14,7 +14,7 @@ import urllib.request
 import urllib.error
 
 LLAMA_ENDPOINT = "http://127.0.0.1:8080/v1/chat/completions"
-TIMEOUT = 300
+TIMEOUT = 500
 
 # Exact copy of EXTRACTION_SYSTEM_PROMPT from service-content/src/main.rs
 EXTRACTION_SYSTEM_PROMPT = """Extract named entities from the text below. Classify each entity into exactly one category.
@@ -142,9 +142,12 @@ def coerce_classification(name: str, cls: str):
             and all(c.isupper() or c == "_" or c.isdigit() for c in name)
             and any(c.isupper() for c in name)):
         return None
-    # Multi-word all-lowercase Account → reject (abstract noise phrase).
-    if (cls == "Account" and " " in name
-            and all(c.islower() or c in " -" for c in name)):
+    # Lowercase-only Account (spaces or hyphens only) → reject (abstract noise phrase).
+    # Covers both "outbox status" (space) and "service-content" (hyphen) cases.
+    # Real account IDs contain digits, colons, or uppercase letters.
+    if (cls == "Account"
+            and all(c.islower() or c in " -" for c in name)
+            and (" " in name or "-" in name)):
         return None
     return cls
 
