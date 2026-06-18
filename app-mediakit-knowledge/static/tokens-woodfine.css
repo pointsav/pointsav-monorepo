@@ -89,73 +89,104 @@ html[data-theme="dark"] {
  * Targets: projects.woodfinegroup.com (:9093), corporate.woodfinegroup.com (:9095)
  * ============================================================================ */
 
-/* ── Navigation bar — Woodfine Blue masthead ── */
-:is([data-instance="projects"], [data-instance="corporate"]) .topnav {
+/* ── Navigation bar — light marketing header, Woodfine Blue accents ── */
+:is([data-instance="projects"], [data-instance="corporate"]) .topnav .right a {
+  color: #164679;
+}
+:is([data-instance="projects"], [data-instance="corporate"]) .topnav .right a:hover {
+  color: #164679;
+  opacity: 0.70;
+}
+:is([data-instance="projects"], [data-instance="corporate"]) .topnav .header-cta {
   background: #164679;
-  border-bottom: none;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.28);
 }
-:is([data-instance="projects"], [data-instance="corporate"]) .topnav .wordmark {
-  color: #fff;
-}
-/* Override SVG presentation attribute (lower specificity than CSS property) */
-:is([data-instance="projects"], [data-instance="corporate"]) .topnav .wordmark svg text {
-  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-}
-:is([data-instance="projects"], [data-instance="corporate"]) .topnav .lang-toggle {
-  color: rgba(255,255,255,0.80);
-  border-color: rgba(255,255,255,0.35);
-}
-:is([data-instance="projects"], [data-instance="corporate"]) .topnav .lang-toggle:hover {
-  color: #fff;
-  border-color: rgba(255,255,255,0.70);
-}
-:is([data-instance="projects"], [data-instance="corporate"]) .topnav-search input {
-  background: rgba(255,255,255,0.12);
-  border-color: rgba(255,255,255,0.30);
-  color: #fff;
-}
-:is([data-instance="projects"], [data-instance="corporate"]) .topnav-search input::placeholder {
-  color: rgba(255,255,255,0.55);
-}
-:is([data-instance="projects"], [data-instance="corporate"]) .topnav-search-btn {
-  color: rgba(255,255,255,0.80);
+:is([data-instance="projects"], [data-instance="corporate"]) .topnav .header-cta:hover {
+  background: #0F3258;
+  opacity: 1;
 }
 
-/* ── Featured article — editorial weight ── */
+/* ── Featured article — Woodfine Blue hero panel ── */
 :is([data-instance="projects"], [data-instance="corporate"]) .featured {
-  border-top: 3px solid #164679;
-  padding-top: 18px;
-}
-:is([data-instance="projects"], [data-instance="corporate"]) .featured__row:first-child {
-  color: #164679;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-size: 10px;
-}
-:is([data-instance="projects"], [data-instance="corporate"]) .featured__row:first-child .dot {
   background: #164679;
+  border-top: none;
+  padding: 40px 32px;
+  margin: 0 calc(-1 * var(--sp-8));
+  border-radius: 0;
+}
+:is([data-instance="projects"], [data-instance="corporate"]) .featured__row {
+  color: rgba(255,255,255,0.70);
+}
+:is([data-instance="projects"], [data-instance="corporate"]) .featured__row .dot {
+  background: rgba(255,255,255,0.65);
 }
 :is([data-instance="projects"], [data-instance="corporate"]) .featured__title {
-  font-size: 20px;
+  font-size: 36px;
   font-weight: 700;
-  letter-spacing: -0.012em;
-  line-height: 1.3;
-  margin-top: 10px;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  margin-top: 12px;
+  color: #fff;
+}
+:is([data-instance="projects"], [data-instance="corporate"]) .featured__title a {
+  color: #fff;
+  text-decoration: none;
+}
+:is([data-instance="projects"], [data-instance="corporate"]) .featured__title a:hover {
+  color: rgba(255,255,255,0.88);
+}
+:is([data-instance="projects"], [data-instance="corporate"]) .featured__excerpt {
+  color: rgba(255,255,255,0.88);
+  font-size: 17px;
+}
+:is([data-instance="projects"], [data-instance="corporate"]) .featured__cta {
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.45);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius);
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  transition: background .12s, border-color .12s;
+}
+:is([data-instance="projects"], [data-instance="corporate"]) .featured__cta:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.75);
+  text-decoration: none;
 }
 
 /* ── Start-here chips — Woodfine Blue accent ── */
 :is([data-instance="projects"], [data-instance="corporate"]) .starthere-chip {
   border-color: rgba(22,70,121,0.28);
 }
-:is([data-instance="projects"], [data-instance="corporate"]) .starthere-chip:hover {
-  border-color: #164679;
-  background: rgba(22,70,121,0.05);
-}
 
 /* ── Home stats bar — subtle institutional treatment ── */
 :is([data-instance="projects"], [data-instance="corporate"]) .home-stats-oneliner {
   color: #164679;
   font-weight: 500;
+}
+
+/* ── Wikilinks — Woodfine Blue instead of Wikipedia blue ── */
+:is([data-instance="projects"], [data-instance="corporate"]) a.wikilink {
+  color: #164679;
+}
+:is([data-instance="projects"], [data-instance="corporate"]) a.wikilink:hover {
+  color: #1A5FA8;
+}
+
+/* ── Blockquote accent — restore gold on Woodfine ── */
+:is([data-instance="projects"], [data-instance="corporate"]) .prose blockquote {
+  border-left-color: #C7A961;
+}
+
+/* ── Footer — Woodfine Blue footnav accents ── */
+:is([data-instance="projects"], [data-instance="corporate"]) .footer .footnav a:hover {
+  color: #164679;
+  opacity: 1;
+}
+
+/* ── Start-here chip hover — Woodfine Blue fill ── */
+:is([data-instance="projects"], [data-instance="corporate"]) .starthere-chip:hover {
+  background: #164679;
+  border-color: #164679;
+  color: #fff;
 }

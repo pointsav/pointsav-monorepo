@@ -784,6 +784,14 @@ fn wiki_chrome(
                 div.reading-progress-bar aria-hidden="true" {}
                 a.skip-to-content href="#mw-content-text" { "Skip to content" }
                 header.topnav {
+                    nav.left {
+                        @if woodfine_theme {
+                            a href="https://home.woodfinegroup.com/page/disclaimer" target="_blank" rel="noopener" { "Disclaimer" }
+                            a href="https://home.woodfinegroup.com/page/contact" { "Contact us" }
+                        } @else {
+                            a href="https://home.pointsav.com/page/disclaimer" target="_blank" rel="noopener" { "Disclaimer" }
+                        }
+                    }
                     a.wordmark href="/" aria-label=(site_title) {
                         @if woodfine_theme {
                             (PreEscaped(WORDMARK_SVG_WOODFINE))
@@ -791,25 +799,35 @@ fn wiki_chrome(
                             (PreEscaped(WORDMARK_SVG_POINTSAV))
                         }
                     }
-                    div.topnav-center {
-                        form.topnav-search action="/search" method="get" role="search" {
-                            input #header-search-q
-                                type="search"
-                                name="q"
-                                placeholder="Search…"
-                                autocomplete="off"
-                                aria-label="Search this wiki"
-                                spellcheck="false";
-                            button.topnav-search-btn type="submit" aria-label="Search" { "→" }
+                    div.right-cluster {
+                        nav.right {
+                            @if woodfine_theme {
+                                a.external href="https://corporate.woodfinegroup.com" target="_blank" rel="noopener" { "Corporate" }
+                                a.external href="https://newsroom.woodfinegroup.com" target="_blank" rel="noopener" { "Newsroom" }
+                            } @else {
+                                a.external href="https://software.pointsav.com" target="_blank" rel="noopener" { "Monorepo" }
+                                a.external href="https://design.pointsav.com" target="_blank" rel="noopener" { "Design System" }
+                            }
                         }
-                        div.ac-dropdown #search-autocomplete-dropdown {}
+                        @if woodfine_theme {
+                            a.header-cta href="https://home.woodfinegroup.com/page/contact" target="_blank" rel="noopener" { "Enquire" }
+                        }
                     }
-                    nav.right {
+                }
+                div.wiki-bar {
+                    form.topnav-search action="/search" method="get" role="search" {
+                        input #header-search-q
+                            type="search"
+                            name="q"
+                            placeholder="Search…"
+                            autocomplete="off"
+                            aria-label="Search this wiki"
+                            spellcheck="false";
+                        button.topnav-search-btn type="submit" aria-label="Search" { "→" }
+                    }
+                    div.ac-dropdown #search-autocomplete-dropdown {}
+                    nav.wiki-bar-right {
                         (auth_nav_widget(user, pending_count))
-                        button.search-trigger
-                            aria-label="Search"
-                            onclick="if(window.openCmdK)window.openCmdK()"
-                        { "🔍" }
                         a.lang-toggle href=(match locale { Locale::En => format!("/es/wiki/{slug}"), Locale::Es => format!("/wiki/{slug}") }) {
                             (match locale { Locale::En => "ES", Locale::Es => "EN" })
                         }
@@ -1045,7 +1063,15 @@ fn wiki_chrome(
                         @if !fm.audience.is_empty() {
                             div.audience-chips {
                                 @for aud in &fm.audience {
-                                    span.audience-chip { (aud) }
+                                    span.audience-chip {
+                                        (match aud.as_str() {
+                                            "customer-woodfine" => "Woodfine Group",
+                                            "operator"          => "Operator",
+                                            "developer"         => "Developer",
+                                            "public"            => "Public",
+                                            other               => other,
+                                        })
+                                    }
                                 }
                             }
                         }
@@ -1373,6 +1399,7 @@ async fn edit_page(
             }
             body {
                 header.topnav {
+                    div.left {}
                     a.wordmark href="/" aria-label=(&state.site_title) {
                         @if woodfine_theme {
                             (PreEscaped(WORDMARK_SVG_WOODFINE))
@@ -1380,6 +1407,7 @@ async fn edit_page(
                             (PreEscaped(WORDMARK_SVG_POINTSAV))
                         }
                     }
+                    div.right-cluster {}
                 }
                 div.edit-page-wrap {
                     nav.edit-page-crumb {
