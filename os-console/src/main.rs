@@ -45,8 +45,18 @@ fn inner_main() -> anyhow::Result<()> {
                 (2222, 2222), // MBA SSH
             ],
         });
-        // Give the tunnel ~3s to establish before attempting MBA
-        std::thread::sleep(std::time::Duration::from_millis(3000));
+        // Wait until tunnel binds local ports (up to 15s), poll every 250ms.
+        // A fixed sleep races on slow networks; polling exits as soon as ready.
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(15);
+        loop {
+            if std::net::TcpStream::connect("127.0.0.1:9205").is_ok() {
+                break;
+            }
+            if std::time::Instant::now() >= deadline {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(250));
+        }
     }
 
     // Attempt MBA peer-to-peer link (5s timeout)
