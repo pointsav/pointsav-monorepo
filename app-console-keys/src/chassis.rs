@@ -91,6 +91,7 @@ pub struct AppConsoleKeys {
     tenant: String,
     pairing_state: PairingState,
     pair_rx: Option<mpsc::Receiver<PairingEvent>>,
+    pair_base_url: String,
     // Receives `true` when the reconnect watchdog successfully re-establishes the MBA link.
     mba_reconnect_rx: Option<mpsc::Receiver<bool>>,
     // Kitty/Sixel graphics protocol (local PTY path only; None over russh).
@@ -113,6 +114,7 @@ impl AppConsoleKeys {
             tenant: tenant.into(),
             pairing_state: PairingState::default(),
             pair_rx: None,
+            pair_base_url: String::new(),
             mba_reconnect_rx: None,
             picker: None,
             qr_state: None,
@@ -154,6 +156,10 @@ impl AppConsoleKeys {
         self.pair_rx = Some(rx);
     }
 
+    pub fn set_pair_base_url(&mut self, url: String) {
+        self.pair_base_url = url;
+    }
+
     pub fn set_mba_reconnect_rx(&mut self, rx: mpsc::Receiver<bool>) {
         self.mba_reconnect_rx = Some(rx);
     }
@@ -190,6 +196,15 @@ impl AppConsoleKeys {
                 if matches!(self.pairing_state, PairingState::AwaitingApproval { .. }) {
                     self.pairing_state = PairingState::Error(e);
                 }
+            }
+            PairingEvent::InitSuccess { code, request_id, fingerprint } => {
+                self.pairing_state = PairingState::AwaitingApproval {
+                    code: code.clone(),
+                    request_id: request_id.clone(),
+                    fingerprint,
+                };
+                let new_rx = pairing::spawn_status_poll(self.pair_base_url.clone(), request_id);
+                self.pair_rx = Some(new_rx);
             }
         }
     }

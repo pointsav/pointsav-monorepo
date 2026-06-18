@@ -80,6 +80,7 @@ fn inner_main() -> anyhow::Result<()> {
     drop(rt);
 
     let mut chassis = AppConsoleKeys::new(&p.username, &p.tenant);
+    chassis.set_pair_base_url(p.pair_endpoint.clone());
 
     if mba.active {
         chassis.set_mba_active();
@@ -88,7 +89,7 @@ fn inner_main() -> anyhow::Result<()> {
         chassis.set_pairing_unpaired(mba.fingerprint.clone());
 
         let pub_key_line = load_pubkey_line(&p.ssh_key_path);
-        match pairing::post_pair_request(
+        let pair_rx = match pairing::post_pair_request(
             &p.pair_endpoint,
             &p.username,
             &p.tenant,
@@ -97,13 +98,20 @@ fn inner_main() -> anyhow::Result<()> {
         ) {
             Ok((request_id, code)) => {
                 chassis.set_pairing_awaiting(code, request_id.clone(), mba.fingerprint.clone());
-                let rx = pairing::spawn_status_poll(p.pair_endpoint.clone(), request_id);
-                chassis.set_pair_rx(rx);
+                pairing::spawn_status_poll(p.pair_endpoint.clone(), request_id)
             }
-            Err(e) => {
-                chassis.set_pairing_error(format!("{e}"));
+            Err(_) => {
+                // Tunnel not ready yet — retry in background; TUI shows "Connecting…"
+                pairing::spawn_pair_init(
+                    p.pair_endpoint.clone(),
+                    p.username.clone(),
+                    p.tenant.clone(),
+                    pub_key_line,
+                    mba.fingerprint.clone(),
+                )
             }
-        }
+        };
+        chassis.set_pair_rx(pair_rx);
 
         // Reconnect watchdog — retries MBA link with exponential backoff.
         let (reconnect_tx, reconnect_rx) = std::sync::mpsc::channel::<bool>();
