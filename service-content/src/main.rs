@@ -67,8 +67,8 @@ Output: []\n\
 Text: Woodfine Management Corp. uses service-content and service-slm for extraction; service-bim is not yet active.\n\
 Output: [{\"classification\":\"Company\",\"entity_name\":\"Woodfine Management Corp.\"},{\"classification\":\"Project\",\"entity_name\":\"service-content\"},{\"classification\":\"Project\",\"entity_name\":\"service-slm\"}]\n\
 \n\
-Text: Peter Woodfine oversees operations at PointSav Digital Systems in us-central1-b.\n\
-Output: [{\"classification\":\"Person\",\"entity_name\":\"Peter Woodfine\"},{\"classification\":\"Company\",\"entity_name\":\"PointSav Digital Systems\"},{\"classification\":\"Location\",\"entity_name\":\"us-central1-b\"}]\n\
+Text: The panic is at service-slm/crates/slm-doorman-server/src/http.rs:1302:9.\n\
+Output: []\n\
 \n\
 Text: Mathew provisioned the yoyo-batch GPU VM in us-central1-a for PointSav Digital Systems.\n\
 Output: [{\"classification\":\"Company\",\"entity_name\":\"PointSav Digital Systems\"},{\"classification\":\"Location\",\"entity_name\":\"us-central1-a\"},{\"classification\":\"Person\",\"entity_name\":\"Mathew\"}]\n\
