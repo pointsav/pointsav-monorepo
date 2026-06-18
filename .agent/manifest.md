@@ -4,7 +4,7 @@ cluster: project-proforma
 cluster_branch: cluster/project-proforma
 created: 2026-05-20
 state: active
-slm_endpoint: http://localhost:8011
+slm_endpoint: http://localhost:9080
 module_id: proforma
 doctrine_version: 0.0.10
 doctrine_claims_codified: [37]
