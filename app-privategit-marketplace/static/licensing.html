@@ -2,7 +2,7 @@
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=1440">
-<title>Licensing — PointSav, Inc.</title>
+<title>Licensing — PointSav</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=League+Gothic&family=Mulish:ital,wght@0,300..700;1,400&family=Nunito+Sans:ital,wght@0,300..700;1,400&family=Oswald:wght@400;500;600;700&family=Roboto+Slab:wght@300;400;500;700&family=Zilla+Slab:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400&display=swap" rel="stylesheet">
@@ -89,6 +89,7 @@
     align-items: center;
     justify-content: center;
     line-height: 1;
+    text-decoration: none;
   }
   .wordmark img, .wordmark .logo-svg {
     display: block;
@@ -321,57 +322,51 @@
   .props .row-2 { margin-top: 28px; }
 
   /* === Footer (matches Disclaimer page) === */
-  footer {
-    margin: 0 56px;
-    background: var(--paper-2);
-    border-top: 1px solid var(--rule);
-    padding: 0 0 20px;
-  }
-  .footer-nav {
-    display: flex;
+  /* ── Footer — matching home.pointsav.com ──────────────────────── */
+  footer.footer {
+    display: grid;
+    grid-template-columns: 1fr auto;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-    background: #B4C5D5;
-    padding: 18px 140px;
+    padding: 22px 56px;
+    background: var(--paper-3);
+    margin-top: 48px;
   }
-  .footer-bottom-wrap { padding: 0 140px; }
-  .footer-nav .offices {
-    font-family: var(--display);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #164679;
+  .cities {
+    font-family: var(--serif);
+    font-size: 14px;
+    color: var(--ink-2);
   }
-  .footer-nav .offices span { margin: 0 6px; color: #164679; opacity: 0.45; }
-  .footer-nav .footer-links a { color: #164679; }
-  .footer-nav .footer-links a:hover { color: #0f3056; }
-  .footer-links {
+  .cities .sep { margin: 0 6px; color: var(--ink-4); }
+  .footnav {
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    gap: 4px;
+    text-align: right;
+  }
+  .footnav a {
     font-family: var(--display);
-    font-size: 11px;
-    letter-spacing: 0.1em;
+    font-size: 10px;
+    font-weight: 500;
     text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-decoration: none;
   }
-  .footer-links a { color: var(--ink-3); text-decoration: none; }
-  .footer-links a:hover { color: var(--accent); }
-  .footer-bottom {
-    border-top: 1px solid var(--rule);
-    padding-top: 14px;
-    font-family: var(--sans);
-    font-size: 11px;
-    color: var(--ink-3);
-    line-height: 1.7;
-  }
-  .footer-bottom strong { color: var(--ink-2); }
-  .footer-version {
-    margin-top: 10px;
-    font-family: var(--sans);
+  .footnav a:hover { opacity: 0.7; }
+  .copyright {
+    text-align: center;
     font-size: 10px;
     color: var(--ink-4);
-    letter-spacing: 0.04em;
+    padding: 12px 56px 4px;
+  }
+  .footer-legal {
+    text-align: center;
+    font-size: 9px;
+    color: var(--ink-4);
+    padding: 0 56px 24px;
+    line-height: 1.6;
+    max-width: 900px;
+    margin: 0 auto;
   }
 
   /* ── Tweaks panel hooks ───────────────────────────────────────── */
@@ -1013,6 +1008,121 @@
     padding: 1px 6px;
     border-radius: 2px;
   }
+
+  /* Two-tier mint buttons per product row */
+  .mint-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-self: end;
+    align-items: flex-end;
+  }
+  .mint-group .mint {
+    white-space: nowrap;
+    font-size: 11px;
+    padding: 8px 14px;
+  }
+
+  /* ── Checkout overlay ──────────────────────────────────────────── */
+  #checkout-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 900;
+    align-items: center;
+    justify-content: center;
+  }
+  #checkout-overlay.open { display: flex; }
+  #checkout-panel {
+    background: var(--paper);
+    border: 1px solid var(--rule-strong);
+    border-radius: 4px;
+    width: min(540px, 96vw);
+    padding: 32px 36px;
+    position: relative;
+  }
+  #checkout-panel h3 {
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin: 0 0 6px;
+  }
+  #checkout-panel .product-label {
+    font-size: 13px;
+    color: var(--ink-3);
+    margin-bottom: 20px;
+  }
+  #checkout-close {
+    position: absolute;
+    top: 14px; right: 18px;
+    background: none; border: none;
+    font-size: 20px; cursor: pointer;
+    color: var(--ink-3);
+    line-height: 1;
+  }
+  .co-step { display: none; }
+  .co-step.active { display: block; }
+  .co-addr-box {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 12px 14px;
+    font-family: monospace;
+    font-size: 13px;
+    word-break: break-all;
+    margin-bottom: 10px;
+  }
+  .co-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--ink-2);
+    margin-bottom: 8px;
+  }
+  .co-row .label { color: var(--ink-3); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+  .co-btn-row { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .co-btn {
+    font-family: var(--display);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase;
+    border: none; border-radius: 2px; cursor: pointer;
+    padding: 10px 18px;
+    background: var(--accent); color: #fff;
+  }
+  .co-btn:hover { opacity: .88; }
+  .co-btn.secondary { background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--rule-strong); }
+  .co-btn.copy-btn { background: var(--paper-3); color: var(--ink-2); font-size: 10px; padding: 6px 12px; }
+  .co-input {
+    width: 100%; box-sizing: border-box;
+    border: 1px solid var(--rule-strong); border-radius: 3px;
+    padding: 10px 12px; font-size: 13px; font-family: monospace;
+    background: var(--paper); color: var(--ink);
+    margin-bottom: 10px;
+  }
+  .co-input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  .co-spinner {
+    display: none;
+    font-size: 13px; color: var(--ink-3);
+    margin-top: 12px;
+  }
+  .co-spinner.active { display: block; }
+  .co-key-box {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 12px 14px;
+    font-family: monospace;
+    font-size: 13px;
+    word-break: break-all;
+    margin-bottom: 8px;
+  }
+  .co-error { color: #b94a48; font-size: 13px; margin-top: 10px; }
+  .co-note { font-size: 12px; color: var(--ink-3); margin-top: 10px; line-height: 1.55; }
 </style>
 </head>
 
@@ -1021,12 +1131,12 @@
 <div class="page" data-screen-label="Licensing">
   <header class="topnav">
     <nav class="left">
-      <a href="/software">Software</a>
+      <a href="/products">Products</a>
       <a class="active-page" href="#">Licensing</a>
       <a href="#">Disclaimer</a>
       <a href="#">Contact us</a>
     </nav>
-    <div class="wordmark" aria-label="PointSav, Inc.">
+    <a class="wordmark" href="https://home.pointsav.com/" aria-label="PointSav, Inc.">
       <svg class="logo-svg" role="img" aria-label="PointSav, Inc." viewBox="0 0 144 36" width="280" height="auto" xmlns="http://www.w3.org/2000/svg" fill="#111827">
 <g transform="translate(-28.8654, -10.2516) scale(1.3911)">
   <defs id="defs2"></defs>
@@ -1034,10 +1144,10 @@
   <path d="m 36.767496,30.4389 v -2.25 h 0.56 q 0.29,0 0.485,0.085 0.2,0.08 0.32,0.235 0.12,0.155 0.17,0.375 0.055,0.215 0.055,0.485 0,0.295 -0.075,0.5 -0.075,0.205 -0.2,0.335 -0.125,0.125 -0.285,0.18 -0.16,0.055 -0.33,0.055 z m -0.785,-2.91 v 3.57 h 1.54 q 0.41,0 0.71,-0.135 0.305,-0.14 0.505,-0.38 0.205,-0.24 0.305,-0.57 0.1,-0.33 0.1,-0.72 0,-0.445 -0.125,-0.775 -0.12,-0.33 -0.34,-0.55 -0.215,-0.22 -0.515,-0.33 -0.295,-0.11 -0.64,-0.11 z m 5.704996,0 v 3.57 h 0.785 v -3.57 z m 6.055,3.165 0.08,0.405 h 0.5 v -1.93 h -1.5 v 0.585 h 0.79 q -0.035,0.375 -0.25,0.575 -0.21,0.195 -0.6,0.195 -0.265,0 -0.45,-0.1 -0.185,-0.105 -0.3,-0.275 -0.115,-0.17 -0.17,-0.38 -0.05,-0.215 -0.05,-0.44 0,-0.235 0.05,-0.455 0.055,-0.22 0.17,-0.39 0.115,-0.175 0.3,-0.275 0.185,-0.105 0.45,-0.105 0.285,0 0.485,0.15 0.2,0.15 0.27,0.45 h 0.75 q -0.03,-0.305 -0.165,-0.54 -0.135,-0.235 -0.345,-0.395 -0.205,-0.16 -0.465,-0.24 -0.255,-0.085 -0.53,-0.085 -0.41,0 -0.74,0.145 -0.325,0.145 -0.55,0.4 -0.225,0.255 -0.345,0.6 -0.12,0.34 -0.12,0.74 0,0.39 0.12,0.73 0.12,0.335 0.345,0.585 0.225,0.25 0.55,0.395 0.33,0.14 0.74,0.14 0.26,0 0.515,-0.105 0.255,-0.11 0.465,-0.38 z m 3.215004,-3.165 v 3.57 h 0.785 v -3.57 z m 4.265001,0.66 v 2.91 h 0.785 v -2.91 h 1.07 v -0.66 h -2.925 v 0.66 z m 4.705005,1.53 0.465,-1.31 h 0.01 l 0.45,1.31 z m 0.075,-2.19 -1.35,3.57 h 0.79 l 0.28,-0.795 h 1.335 l 0.27,0.795 h 0.815 l -1.335,-3.57 z m 4.449997,0 v 3.57 h 2.525 v -0.66 h -1.74 v -2.91 z m 8.890002,2.385 h -0.76 q -0.005,0.33 0.12,0.57 0.125,0.24 0.335,0.395 0.215,0.155 0.49,0.225 0.28,0.075 0.575,0.075 0.365,0 0.64,-0.085 0.28,-0.085 0.465,-0.235 0.19,-0.155 0.285,-0.365 0.095,-0.21 0.095,-0.455 0,-0.3 -0.13,-0.49 -0.125,-0.195 -0.3,-0.31 -0.175,-0.115 -0.355,-0.165 -0.175,-0.055 -0.275,-0.075 -0.335,-0.085 -0.545,-0.14 -0.205,-0.055 -0.325,-0.11 -0.115,-0.055 -0.155,-0.12 -0.04,-0.065 -0.04,-0.17 0,-0.115 0.05,-0.19 0.05,-0.075 0.125,-0.125 0.08,-0.05 0.175,-0.07 0.095,-0.02 0.19,-0.02 0.145,0 0.265,0.025 0.125,0.025 0.22,0.085 0.095,0.06 0.15,0.165 0.06,0.105 0.07,0.265 h 0.76 q 0,-0.31 -0.12,-0.525 -0.115,-0.22 -0.315,-0.36 -0.2,-0.14 -0.46,-0.2 -0.255,-0.065 -0.535,-0.065 -0.24,0 -0.48,0.065 -0.24,0.065 -0.43,0.2 -0.19,0.135 -0.31,0.34 -0.115,0.2 -0.115,0.475 0,0.245 0.09,0.42 0.095,0.17 0.245,0.285 0.15,0.115 0.34,0.19 0.19,0.07 0.39,0.12 0.195,0.055 0.385,0.1 0.19,0.045 0.34,0.105 0.15,0.06 0.24,0.15 0.095,0.09 0.095,0.235 0,0.135 -0.07,0.225 -0.07,0.085 -0.175,0.135 -0.105,0.05 -0.225,0.07 -0.12,0.015 -0.225,0.015 -0.155,0 -0.3,-0.035 -0.145,-0.04 -0.255,-0.115 -0.105,-0.08 -0.17,-0.205 -0.065,-0.125 -0.065,-0.305 z m 5.635002,-0.205 v 1.39 h 0.785 v -1.37 l 1.325,-2.2 h -0.875 l -0.83,1.41 -0.835,-1.41 h -0.88 z m 4.944999,0.205 h -0.76 q -0.005,0.33 0.12,0.57 0.125,0.24 0.335,0.395 0.215,0.155 0.49,0.225 0.28,0.075 0.575,0.075 0.365,0 0.64,-0.085 0.28,-0.085 0.465,-0.235 0.19,-0.155 0.285,-0.365 0.095,-0.21 0.095,-0.455 0,-0.3 -0.13,-0.49 -0.125,-0.195 -0.3,-0.31 -0.175,-0.115 -0.355,-0.165 -0.175,-0.055 -0.275,-0.075 -0.335,-0.085 -0.545,-0.14 -0.205,-0.055 -0.325,-0.11 -0.115,-0.055 -0.155,-0.12 -0.04,-0.065 -0.04,-0.17 0,-0.115 0.05,-0.19 0.05,-0.075 0.125,-0.125 0.08,-0.05 0.175,-0.07 0.095,-0.02 0.19,-0.02 0.145,0 0.265,0.025 0.125,0.025 0.22,0.085 0.095,0.06 0.15,0.165 0.06,0.105 0.07,0.265 h 0.76 q 0,-0.31 -0.12,-0.525 -0.115,-0.22 -0.315,-0.36 -0.2,-0.14 -0.46,-0.2 -0.255,-0.065 -0.535,-0.065 -0.24,0 -0.48,0.065 -0.24,0.065 -0.43,0.2 -0.19,0.135 -0.31,0.34 -0.115,0.2 -0.115,0.475 0,0.245 0.09,0.42 0.095,0.17 0.245,0.285 0.15,0.115 0.34,0.19 0.19,0.07 0.39,0.12 0.195,0.055 0.385,0.1 0.19,0.045 0.34,0.105 0.15,0.06 0.24,0.15 0.095,0.09 0.095,0.235 0,0.135 -0.07,0.225 -0.07,0.085 -0.175,0.135 -0.105,0.05 -0.225,0.07 -0.12,0.015 -0.225,0.015 -0.155,0 -0.3,-0.035 -0.145,-0.04 -0.255,-0.115 -0.105,-0.08 -0.17,-0.205 -0.065,-0.125 -0.065,-0.305 z m 5.499999,-1.725 v 2.91 h 0.785 v -2.91 h 1.07 v -0.66 h -2.925 v 0.66 z m 4.265001,-0.66 v 3.57 h 2.71 v -0.66 h -1.925 v -0.875 h 1.73 v -0.61 h -1.73 v -0.765 h 1.885 v -0.66 z m 5.240001,0 v 3.57 h 0.735 v -2.505 h 0.01 l 0.874997,2.505 h 0.605 l 0.875,-2.53 h 0.01 v 2.53 h 0.735 v -3.57 h -1.105 l -0.79,2.455 h -0.01 l -0.835,-2.455 z m 7.070007,2.385 h -0.76 q -0.005,0.33 0.12,0.57 0.125,0.24 0.335,0.395 0.215,0.155 0.49,0.225 0.28,0.075 0.575,0.075 0.365,0 0.64,-0.085 0.28,-0.085 0.465,-0.235 0.19,-0.155 0.285,-0.365 0.095,-0.21 0.095,-0.455 0,-0.3 -0.13,-0.49 -0.125,-0.195 -0.3,-0.31 -0.175,-0.115 -0.355,-0.165 -0.175,-0.055 -0.275,-0.075 -0.335,-0.085 -0.545,-0.14 -0.205,-0.055 -0.325,-0.11 -0.115,-0.055 -0.155,-0.12 -0.04,-0.065 -0.04,-0.17 0,-0.115 0.05,-0.19 0.05,-0.075 0.125,-0.125 0.08,-0.05 0.175,-0.07 0.095,-0.02 0.19,-0.02 0.145,0 0.265,0.025 0.125,0.025 0.22,0.085 0.095,0.06 0.15,0.165 0.06,0.105 0.07,0.265 h 0.76 q 0,-0.31 -0.12,-0.525 -0.115,-0.22 -0.315,-0.36 -0.2,-0.14 -0.46,-0.2 -0.255,-0.065 -0.535,-0.065 -0.24,0 -0.48,0.065 -0.24,0.065 -0.43,0.2 -0.19,0.135 -0.31,0.34 -0.115,0.2 -0.115,0.475 0,0.245 0.09,0.42 0.095,0.17 0.245,0.285 0.15,0.115 0.34,0.19 0.19,0.07 0.39,0.12 0.195,0.055 0.385,0.1 0.19,0.045 0.34,0.105 0.15,0.06 0.24,0.15 0.095,0.09 0.095,0.235 0,0.135 -0.07,0.225 -0.07,0.085 -0.175,0.135 -0.105,0.05 -0.225,0.07 -0.12,0.015 -0.225,0.015 -0.155,0 -0.3,-0.035 -0.145,-0.04 -0.255,-0.115 -0.105,-0.08 -0.17,-0.205 -0.065,-0.125 -0.065,-0.305 z" id="text2" style="font-weight:700;font-size:5px;font-family:&#39;Helvetica Neue&#39;, Helvetica, Arial, sans-serif;letter-spacing:2;text-anchor:middle;fill:#111827;fill-rule:evenodd" aria-label="DIGITAL SYSTEMS"></path>
 </g>
 </svg>
-    </div>
+    </a>
     <nav class="right">
-      <a href="https://documentation.pointsav.com/" target="_blank" rel="noopener">Documentation</a>
-      <a href="#">Marketplace</a>
+      <a href="https://corporate.woodfinegroup.com/" target="_blank" rel="noopener">Corporate</a>
+      <a href="https://projects.woodfinegroup.com/" target="_blank" rel="noopener">Projects</a>
       <a href="https://pointsav.com/" target="_blank" rel="noopener">Newsroom</a>
     </nav>
   </header>
@@ -1049,7 +1159,8 @@
   <main class="subpage-main">
 
     <div class="lic-intro">
-      <p><strong>One page, two transactions.</strong> Claim a free verification token to prove the software you installed came from PointSav, or mint a paid licence token to unlock proprietary modules. Both live in your own multi-chain wallet — no store, no cart, no account. Tax is calculated live against your wallet's billing jurisdiction and shown before you sign.</p>
+      <p><strong>One page, two actions.</strong> Claim a free verification token to confirm the binary you installed came from PointSav, or purchase a pre-compiled, signed OS image licence. Payment is Polygon USDC only — no account, no cart, no subscription. A licence key is issued on confirmed payment and is your authentication credential for the <code>app-privategit-source</code> registry.</p>
+      <p><strong>Apache 2.0 — $1.00 USDC</strong> · source-readable, fully open; may fork, redistribute, compete. <strong>FSL — $19.00 USDC</strong> · source-readable, non-compete restriction; converts to Apache 2.0 automatically after two years. No tax collected — PointSav operates below the CA $30,000 GST small-supplier threshold.</p>
     </div>
 
     <!-- ───────────  Free verification tokens  ─────────── -->
@@ -1060,7 +1171,7 @@
       </div>
 
       <p class="blurb">
-        Every installer downloaded from <code>app-privategit-source</code> is signed against a free, single-use verification token. Claim the token after your install completes; the running software checks it against the chain you minted on, confirming the binary you have is the one we shipped. One per install. Revocable from your wallet.
+        Every installer downloaded from <code>app-privategit-source</code> is signed. Claim a free, single-use verification token after install completes — the running software checks the Ed25519 signature against the embedded public key, confirming the binary is the one PointSav shipped. One per install. No chain transaction required.
         <a class="inline-action" href="#claim">Claim token →</a>
       </p>
     </section>
@@ -1073,49 +1184,108 @@
       </div>
 
       <p class="blurb">
-        Proprietary apps and services on top of the open architecture are gated by licence tokens. Buy once, hold in your wallet, transfer between buildings as your portfolio changes. Tokens are checked at runtime by the relevant <code>app-*</code> or <code>service-*</code> module.
+        Pre-compiled, signed OS images — one-time payment per version. The licence key issued on confirmed payment is your authentication credential for the <code>app-privategit-source</code> registry. Each version is purchased independently; no subscription, no automatic updates. Two tiers per product: Apache 2.0 ($1.00 USDC) or FSL ($19.00 USDC). Payment via Polygon USDC only.
       </p>
 
       <div class="licenses">
 
-        <div class="license">
-          <div class="name">
-            F*KEYS CONSOLE
-            <small>Operator command surface across the PointSav OSes — work-orders, audits, role assignment. <span class="tag">app-keys-console</span></small>
-          </div>
-          <a class="mint" href="/licensing#wallet" aria-label="Mint Keys Console license">$180 →</a>
+        <div class="licenses-head head">
+          <div class="name">Product</div>
+          <div class="col">Apache 2.0 · $1.00 &nbsp;|&nbsp; FSL · $19.00 &nbsp; (Polygon USDC)</div>
         </div>
 
         <div class="license">
           <div class="name">
-            Command Centre
-            <small>Portfolio overlay: cross-site dashboards, capital planning, GIS-bound site analytics. <span class="tag">app-command-centre</span></small>
+            PointSav Console OS
+            <small>Hosted application (Type II) — graphical terminal on existing OS. <span class="tag">os-console</span></small>
           </div>
-          <a class="mint" href="/licensing#wallet" aria-label="Mint Command Centre license">$420 →</a>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Console OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Console OS — FSL">FSL · $19.00 →</a>
+          </div>
         </div>
 
         <div class="license">
           <div class="name">
-            Business Applications
-            <small>Tenant billing, vendor contracts, occupancy ledgers — runs against your Totebox archive. <span class="tag">app-business-applications</span></small>
+            PointSav Infrastructure OS
+            <small>Lightweight universal hypervisor for infrastructure-node provisioning. <span class="tag">os-infrastructure</span></small>
           </div>
-          <a class="mint" href="/licensing#wallet" aria-label="Mint Business Applications license">$240 →</a>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Infrastructure OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Infrastructure OS — FSL">FSL · $19.00 →</a>
+          </div>
         </div>
 
         <div class="license">
           <div class="name">
-            BMS Bridge
-            <small>Autonomous BACnet / MQTT / Modbus translator between legacy controls and PointSav Infrastructure OS. <span class="tag">service-bms-bridge</span></small>
+            PointSav MediaKit OS
+            <small>High-performance JeOS for corporate disclosure and digital marketing surfaces. <span class="tag">os-mediakit</span></small>
           </div>
-          <a class="mint" href="/licensing#wallet" aria-label="Mint BMS Bridge license">$300 →</a>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav MediaKit OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav MediaKit OS — FSL">FSL · $19.00 →</a>
+          </div>
         </div>
 
         <div class="license">
           <div class="name">
-            Peak-Load Forecast
-            <small>District-thermal and electrical peak-load forecasting service; hourly rebuilds against utility data. <span class="tag">service-peak-forecast</span></small>
+            PointSav Network OS
+            <small>Orchestrates VM map, private network routing, and provisioning authorisation. <span class="tag">os-network-admin</span></small>
           </div>
-          <a class="mint" href="/licensing#wallet" aria-label="Mint Peak-Load Forecast license">$360 →</a>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Network OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Network OS — FSL">FSL · $19.00 →</a>
+          </div>
+        </div>
+
+        <div class="license">
+          <div class="name">
+            PointSav PrivateGit OS
+            <small>Independent code repository and version control system. <span class="tag">os-privategit</span></small>
+          </div>
+          <div class="mint-group">
+            <a class="mint co-trigger" href="#checkout-overlay"
+               data-product="os-privategit" data-price="1000000" data-tier="apache"
+               data-label="PointSav PrivateGit OS — Apache 2.0"
+               aria-label="Purchase PointSav PrivateGit OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint co-trigger" href="#checkout-overlay"
+               data-product="os-privategit-fsl" data-price="19000000" data-tier="fsl"
+               data-label="PointSav PrivateGit OS — FSL"
+               aria-label="Purchase PointSav PrivateGit OS — FSL">FSL · $19.00 →</a>
+          </div>
+        </div>
+
+        <div class="license">
+          <div class="name">
+            PointSav Workplace OS
+            <small>Bare-metal installation on trusted hardware (Type I) — boots to Console OS. <span class="tag">os-workplace</span></small>
+          </div>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Workplace OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Workplace OS — FSL">FSL · $19.00 →</a>
+          </div>
+        </div>
+
+        <div class="license">
+          <div class="name">
+            Totebox Integration OS
+            <small>Aggregation and active routing of Totebox Archives across the wider system. <span class="tag">os-interface</span></small>
+          </div>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase Totebox Integration OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase Totebox Integration OS — FSL">FSL · $19.00 →</a>
+          </div>
+        </div>
+
+        <div class="license">
+          <div class="name">
+            Totebox OS
+            <small>Hardware-agnostic micro-kernel foundation for data segregation across Toteboxes. <span class="tag">os-totebox</span></small>
+          </div>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase Totebox OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase Totebox OS — FSL">FSL · $19.00 →</a>
+          </div>
         </div>
 
       </div>
@@ -1132,15 +1302,9 @@
         <div class="wallet-row">
           <div class="label">Connect</div>
           <div class="body">
-            Not connected.
+            Not connected. Polygon USDC only.
             <div class="chains" style="margin-top:10px;">
-              <span class="chain on">ethereum</span>
-              <span class="chain">solana</span>
-              <span class="chain">bitcoin</span>
-              <span class="chain">polygon</span>
-              <span class="chain">base</span>
-              <span class="chain">avalanche</span>
-              <span class="chain dim">+ 2 more</span>
+              <span class="chain on">polygon</span>
             </div>
           </div>
           <a class="btn-primary" href="#connect">Connect wallet →</a>
@@ -1150,13 +1314,11 @@
           <div class="label">Tax</div>
           <div class="body">
             <div class="juris">
-              <span class="auto">Ontario, Canada</span> · HST 13% · auto-detected from wallet billing region
-              <a class="change" href="#change">change</a>
+              No tax collected — PointSav operates below the CA $30,000 GST small-supplier threshold. International customers are zero-rated.
             </div>
             <div class="totals">
-              <span class="k">Subtotal</span>          <span class="v">$180.00 USD</span>
-              <span class="k">Tax · HST 13%</span>    <span class="v">+ $23.40</span>
-              <span class="k total-k">Total</span>     <span class="v total-v">$204.60</span>
+              <span class="k">Subtotal</span>          <span class="v">$1.00 USDC</span>
+              <span class="k total-k">Total</span>     <span class="v total-v">$1.00 USDC</span>
             </div>
           </div>
           <a class="btn-secondary" href="/licensing#wallet">Mint →</a>
@@ -1165,47 +1327,327 @@
     </section>
 
     <div class="lic-note">
-      <p><strong>Tax.</strong> The indirect tax for your wallet's billing jurisdiction — GST/HST, sales tax, VAT, or equivalent — is calculated live, shown before you sign, and remitted on your behalf. Verification tokens carry no tax. Need the installers first? See <a href="/software" style="color:var(--accent);">Software</a>.</p>
+      <p><strong>No tax collected.</strong> PointSav operates below the CA $30,000 GST small-supplier threshold. No GST, BC PST, or equivalent is charged. International customers (US, EU, Spain, Mexico) are zero-rated under Canadian export rules. Need the installers first? See <a href="/software" style="color:var(--accent);">Software</a>.</p>
     </div>
 
   </main>
 
   <!-- Footer (matches Disclaimer page) -->
-  <footer>
-    <div class="footer-nav">
-      <div class="offices">
-        Vancouver <span>|</span> New York <span>|</span> Berlin
-      </div>
-      <div class="footer-links">
-        <a href="/software">Software</a>
-        <a href="#">Contact us</a>
-        <a href="#">Disclaimer</a>
-      </div>
-    </div>
-    <div class="footer-bottom-wrap">
-    <div class="footer-bottom">
-      <p>
-        <strong>© 2011–2026 Woodfine Capital Projects Inc. All rights reserved.</strong>
-      </p>
-      <p style="margin-top:6px;">
-        Woodfine Capital Projects, Woodfine Management Corp, PointSav Digital Systems,
-        Totebox Orchestration, and Totebox Archive are trademarks owned by
-        Woodfine Capital Projects Inc. This notice serves as a formal declaration of
-        intellectual property rights, asserting continuous use in commerce regardless of
-        the omission of the ™ or ® symbols in the accompanying text. All operational and
-        architectural system designations (including but not limited to PointSav Console OS,
-        PointSav Infrastructure OS, PointSav MediaKit OS, PointSav Network OS,
-        PointSav PrivateGit OS, PointSav Workplace OS, Totebox Integration OS, and Totebox OS)
-        are proprietary structural wordmarks utilized exclusively within the PointSav Digital
-        Systems architecture.
-      </p>
-      <p class="footer-version">
-        Website Disclaimer v1.0 — Woodfine Capital Projects Inc. — Effective 2026-05-07 —
-        Source: factory-release-engineering/policies/DISCLAIMER.md
-      </p>
-    </div>
-    </div>
+  <footer class="footer">
+    <div class="cities">Vancouver <span class="sep">|</span> New York <span class="sep">|</span> Berlin</div>
+    <nav class="footnav">
+      <a href="#">Contact us</a>
+      <a href="#">Disclaimer</a>
+    </nav>
   </footer>
+  <div class="copyright">© 2011–2026 Woodfine Capital Projects Inc. All rights reserved.</div>
+  <div class="footer-legal">Woodfine Capital Projects&#x2122;, Woodfine Management Corp&#x2122;, PointSav Digital Systems&#x2122;,
+    Totebox Orchestration&#x2122;, and Totebox Archive&#x2122; are trademarks of Woodfine Capital
+    Projects Inc., used in Canada, the United States, Latin America, and Europe.
+    All other trademarks are the property of their respective owners.
+    Website Disclaimer v1.0 — Effective 2026-05-07.</div>
+
+  <!-- ── Checkout overlay ─────────────────────────────────────────────────── -->
+  <div id="checkout-overlay" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+    <div id="checkout-panel">
+      <button id="checkout-close" aria-label="Close checkout">&times;</button>
+
+      <!-- Step 1: payment instructions -->
+      <div class="co-step active" id="co-step-1">
+        <h3 id="checkout-title">Pay with Polygon USDC</h3>
+        <p class="product-label" id="co-product-label"></p>
+        <div class="co-row"><span class="label">Amount</span><span id="co-amount"></span></div>
+        <div class="co-row"><span class="label">Chain</span><span>Polygon PoS</span></div>
+        <div class="co-row"><span class="label">Token</span><span>USDC (native)</span></div>
+        <div class="co-row" style="margin-bottom:6px;"><span class="label">Send to</span></div>
+        <div class="co-addr-box" id="co-wallet-addr">Loading…</div>
+        <div class="co-btn-row">
+          <button class="co-btn copy-btn" id="co-copy-addr">Copy address</button>
+          <button class="co-btn" id="co-paid-btn">I've sent payment →</button>
+        </div>
+        <p class="co-note">Send exactly the amount shown. Include no memo. The transaction hash you receive from your wallet is needed in the next step.</p>
+      </div>
+
+      <!-- Step 2: transaction hash entry -->
+      <div class="co-step" id="co-step-2">
+        <h3>Confirm payment</h3>
+        <p class="product-label" id="co-product-label-2"></p>
+        <p style="font-size:13px;color:var(--ink-2);margin-bottom:14px;">Paste the Polygon transaction hash from your wallet. Confirmation typically takes 30–120 seconds.</p>
+        <input class="co-input" id="co-tx-input" type="text" placeholder="0x… transaction hash" autocomplete="off" spellcheck="false" />
+        <div class="co-btn-row">
+          <button class="co-btn" id="co-verify-btn">Verify payment →</button>
+          <button class="co-btn secondary" id="co-back-btn">← Back</button>
+        </div>
+        <div class="co-spinner" id="co-spinner">Checking on-chain… <span id="co-retry-note"></span></div>
+        <div class="co-error" id="co-error" style="display:none;"></div>
+      </div>
+
+      <!-- Step 3: success -->
+      <div class="co-step" id="co-step-3">
+        <h3>Payment confirmed</h3>
+        <p class="product-label" id="co-product-label-3"></p>
+        <div class="co-row" style="margin-bottom:6px;"><span class="label">License key</span></div>
+        <div class="co-key-box" id="co-license-key"></div>
+        <div class="co-btn-row" style="margin-bottom:16px;">
+          <button class="co-btn copy-btn" id="co-copy-key">Copy license key</button>
+        </div>
+        <div id="co-download-wrap" style="display:none;">
+          <div class="co-row" style="margin-bottom:6px;"><span class="label">Download token (for <code>?token=</code> URL parameter)</span></div>
+          <div class="co-key-box" id="co-token" style="font-size:11px;"></div>
+          <div class="co-btn-row">
+            <button class="co-btn copy-btn" id="co-copy-token">Copy token</button>
+            <a class="co-btn" id="co-download-link" href="#" target="_blank" rel="noopener">Download binary →</a>
+          </div>
+        </div>
+        <div id="co-signing-note" style="display:none;">
+          <p class="co-note">License key issued. Signed download tokens are not yet configured on this server — use your license key when prompted after installing from the free download. <a href="/software" style="color:var(--accent);">See software page →</a></p>
+        </div>
+        <div class="co-btn-row" style="margin-top:18px;">
+          <button class="co-btn secondary" id="co-close-btn">Close</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
 
+<script>
+(function () {
+  'use strict';
+
+  var staticWalletAddress = '';
+  var currentProduct = '';
+  var currentTier = '';
+  var currentPrice = 0;
+  var currentLabel = '';
+  var currentTxHash = '';
+  var currentOrderId = '';
+  var pollTimer = null;
+  var pollCount = 0;
+  var MAX_POLLS = 20;
+
+  function el(id) { return document.getElementById(id); }
+
+  function showStep(n) {
+    [1, 2, 3].forEach(function (i) {
+      var s = el('co-step-' + i);
+      if (s) s.classList.toggle('active', i === n);
+    });
+  }
+
+  function openOverlay() {
+    el('checkout-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeOverlay() {
+    el('checkout-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    clearPoll();
+  }
+
+  function clearPoll() {
+    if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+    pollCount = 0;
+  }
+
+  function usdcDisplay(units) {
+    return '$' + (units / 1000000).toFixed(2) + ' USDC';
+  }
+
+  function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(function () {
+      var orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(function () { btn.textContent = orig; }, 1500);
+    });
+  }
+
+  function setError(msg) {
+    var e = el('co-error');
+    e.textContent = msg;
+    e.style.display = msg ? 'block' : 'none';
+  }
+
+  function setSpinner(msg) {
+    var s = el('co-spinner');
+    if (msg) {
+      el('co-retry-note').textContent = msg;
+      s.classList.add('active');
+    } else {
+      s.classList.remove('active');
+    }
+  }
+
+  // Fetch static fallback address at page load (used if per-order address unavailable)
+  fetch('/v1/wallet/address')
+    .then(function (r) { return r.json(); })
+    .then(function (d) { staticWalletAddress = d.address || ''; })
+    .catch(function () {});
+
+  // Wire up purchase triggers
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.co-trigger').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        currentProduct = a.dataset.product;
+        currentTier = a.dataset.tier;
+        currentPrice = parseInt(a.dataset.price, 10);
+        currentLabel = a.dataset.label;
+        currentTxHash = '';
+        currentOrderId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : Date.now().toString(36) + Math.random().toString(36).slice(2);
+        clearPoll();
+        setError('');
+        setSpinner('');
+
+        el('co-product-label').textContent = currentLabel;
+        el('co-amount').textContent = usdcDisplay(currentPrice);
+        el('co-wallet-addr').textContent = 'Generating address…';
+        el('co-tx-input').value = '';
+        showStep(1);
+        openOverlay();
+
+        // Fetch a unique per-order address; fall back to static address on error
+        fetch('/v1/order-address/' + encodeURIComponent(currentOrderId))
+          .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+          .then(function (res) {
+            if (res.ok && res.data.address) {
+              el('co-wallet-addr').textContent = res.data.address;
+            } else {
+              el('co-wallet-addr').textContent = staticWalletAddress || 'Unavailable';
+            }
+          })
+          .catch(function () {
+            el('co-wallet-addr').textContent = staticWalletAddress || 'Unavailable';
+          });
+      });
+    });
+
+    // Close on backdrop click
+    el('checkout-overlay').addEventListener('click', function (e) {
+      if (e.target === el('checkout-overlay')) closeOverlay();
+    });
+
+    el('checkout-close').addEventListener('click', closeOverlay);
+    el('co-close-btn').addEventListener('click', closeOverlay);
+
+    el('co-copy-addr').addEventListener('click', function () {
+      copyText(el('co-wallet-addr').textContent, el('co-copy-addr'));
+    });
+
+    el('co-paid-btn').addEventListener('click', function () {
+      el('co-product-label-2').textContent = currentLabel;
+      setError('');
+      setSpinner('');
+      showStep(2);
+    });
+
+    el('co-back-btn').addEventListener('click', function () {
+      clearPoll();
+      setError('');
+      setSpinner('');
+      showStep(1);
+    });
+
+    el('co-verify-btn').addEventListener('click', function () {
+      var txHash = el('co-tx-input').value.trim();
+      if (!txHash) { setError('Please enter a transaction hash.'); return; }
+      if (!/^0x[0-9a-fA-F]{64}$/.test(txHash)) {
+        setError('Transaction hash must be 0x followed by 64 hex characters.');
+        return;
+      }
+      currentTxHash = txHash.toLowerCase();
+      setError('');
+      pollCount = 0;
+      pollLicense();
+    });
+
+    el('co-copy-key').addEventListener('click', function () {
+      copyText(el('co-license-key').textContent, el('co-copy-key'));
+    });
+
+    el('co-copy-token').addEventListener('click', function () {
+      copyText(el('co-token').textContent, el('co-copy-token'));
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeOverlay();
+    });
+  });
+
+  function pollLicense() {
+    if (pollCount >= MAX_POLLS) {
+      setSpinner('');
+      setError('Payment not confirmed after ' + MAX_POLLS + ' attempts. Check your wallet and try again, or contact support.');
+      return;
+    }
+    setSpinner(pollCount > 0 ? 'Attempt ' + (pollCount + 1) + ' of ' + MAX_POLLS + '…' : '');
+    pollCount++;
+
+    fetch('/v1/license/' + encodeURIComponent(currentTxHash))
+      .then(function (r) {
+        if (r.status === 200) return r.json().then(function (d) { onConfirmed(d); });
+        if (r.status === 202) {
+          return r.json().then(function (d) {
+            var delay = ((d.retry_after || 30) * 1000);
+            setSpinner('Waiting for on-chain confirmation… retrying in ' + (d.retry_after || 30) + 's');
+            pollTimer = setTimeout(pollLicense, delay);
+          });
+        }
+        return r.json().then(function (d) {
+          setSpinner('');
+          setError(d.message || d.error || 'Payment not found. Check the transaction hash and try again.');
+        });
+      })
+      .catch(function () {
+        setSpinner('');
+        setError('Network error — check your connection and retry.');
+      });
+  }
+
+  function onConfirmed(data) {
+    setSpinner('');
+    var licenseKey = data.license_key || '';
+
+    // Attempt to issue a signed download token
+    fetch('/v1/issue-token/' + encodeURIComponent(currentTxHash))
+      .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+      .then(function (res) {
+        showSuccess(licenseKey, res.status === 200 ? res.data : null);
+      })
+      .catch(function () { showSuccess(licenseKey, null); });
+  }
+
+  function showSuccess(licenseKey, tokenData) {
+    el('co-product-label-3').textContent = currentLabel;
+    el('co-license-key').textContent = licenseKey;
+    showStep(3);
+
+    if (tokenData && tokenData.token) {
+      el('co-token').textContent = tokenData.token;
+      var dlLink = el('co-download-link');
+      dlLink.href = tokenData.download_url || '#';
+      el('co-download-wrap').style.display = 'block';
+      el('co-signing-note').style.display = 'none';
+    } else {
+      el('co-download-wrap').style.display = 'none';
+      el('co-signing-note').style.display = 'block';
+    }
+  }
+
+}());
+
+// Auto-open checkout overlay when arriving via ?product= link (e.g. from /products page)
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var pid = params.get('product');
+  if (!pid) return;
+  var trigger = document.querySelector('.co-trigger[data-product="' + pid + '"]');
+  if (trigger) trigger.click();
+}());
+</script>
 </body></html>
