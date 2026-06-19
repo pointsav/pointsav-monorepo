@@ -3,16 +3,16 @@ artifact: brief
 schema: foundry-brief-v1
 brief-id: project-console-os-console-active-dev
 owner: project-console
-title: "os-console Active Development — Phases 8–10"
+title: "os-console Active Development — Phases 8–11"
 status: active
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-06-19
 authors: [totebox@project-console, claude-sonnet-4-6]
 doctrine_anchors: [claim-45, claim-49, claim-54, SYS-ADR-07, SYS-ADR-10, SYS-ADR-19]
 companion: BRIEF-project-console-master.md
 ---
 
-# os-console Active Development — Phases 8–10
+# os-console Active Development — Phases 8–11
 
 > **Read this before any session.** Supersedes `BRIEF-project-console-master.md` for active
 > phase tracking. Architecture detail (F-key map, Cartridge trait, MBA topology, platform targets)
@@ -20,7 +20,7 @@ companion: BRIEF-project-console-master.md
 
 ---
 
-## §1 — State snapshot (2026-06-12)
+## §1 — State snapshot (2026-06-19)
 
 | Phase | Status | Key commits |
 |---|---|---|
@@ -31,24 +31,37 @@ companion: BRIEF-project-console-master.md
 | Phase 7 — PDF viewing | ✓ complete | — |
 | Cross-platform Phase A | ✓ complete | `009b2e04` |
 | Cross-platform Phase B | ✓ complete; Stage 6 pending | `6f21f580` |
-| Phase 8 — Polish | not started | — |
-| Phase 9 — Operations | not started | — |
-| Phase 10–13 | deferred | — |
+| Phase 8 — Polish | ✓ complete (partial items remain) | `ac7eb500`, `bc95acfa`, `abd8d019` |
+| Phase 9 — Operations | in progress (SIGTERM done; firewall + metrics pending) | `d2afebfe`, `78941244` |
+| Phase 10 — Sprint (truecolor + watchdog + People) | ✓ complete 2026-06-16 | `bc95acfa`, `abd8d019`, `fc4d0978` |
+| Phase 11 — F7 BIM cartridge | blocked | project-bim Phase 1 |
 
 ---
 
 ## §2 — Stage 6 status
 
-**Phase B commits awaiting push to staging mirrors + canonical promote:**
+**All Phase 8–10 commits awaiting push to staging mirrors + canonical promote.**
+
+Force-push to staging mirrors **authorized by Command 2026-05-28** (inbox `command-20260528-console-answers`).
+Outbox messages sent 2026-06-12 and 2026-06-16 requesting Command action.
+
+**Divergence blocker (high priority):** local `main` and `origin/main` have diverged at `5c36ce66`.
+Do NOT force-push until Command Session resolves. See outbox `project-console-20260616-divergence-blocker`.
+
+Full promote range: `6f21f580` through `fc4d0978` (includes Phase B + Phase 8 + Phase 9 + Phase 10).
 
 | SHA | Subject |
 |---|---|
 | `6f21f580` | feat(release): Phase B — CI matrix, rustls-tls, TerminalCaps |
 | `d9261705` | ops(session): Phase B complete |
 | `d58960b4` | ops(brief): mark Phase B complete |
-
-Force-push to staging mirrors **authorized by Command 2026-05-28** (inbox `command-20260528-console-answers`).
-Outbox message sent 2026-06-12 requesting Command action (push + promote-queue.jsonl entry).
+| `ac7eb500` | feat(truecolor+people): Phase 8 sprint — Rgb variants + PeopleCartridge scaffold |
+| `7259d2a0` | feat(config): people_endpoint default :9091 |
+| `d2afebfe` | feat(systemd): local-console.service + local-pairing-server.service |
+| `78941244` | feat(sigterm): graceful SIGTERM handling — terminal restored on systemd stop |
+| `bc95acfa` | feat(truecolor+session): Rgb color variants across all cartridges + content search persistence |
+| `abd8d019` | feat(people): F2 PeopleCartridge scaffold — contact list + CRUD stubs; service-people at :9091 |
+| `fc4d0978` | feat(watchdog): chassis auto-reconnect watchdog with exponential backoff |
 
 ---
 
@@ -57,11 +70,11 @@ Outbox message sent 2026-06-12 requesting Command action (push + promote-queue.j
 **Gate criterion:** all items below complete; `cargo check --release` clean on all 4 targets.
 
 - [ ] OSC 8 hyperlinks in ContentCartridge (editor navigation)
-- [x] Truecolor Rgb variants — email/slm/system/input cartridges — `ac7eb500`
+- [x] Truecolor Rgb variants — all cartridges — `ac7eb500`, `bc95acfa`
 - [ ] Multi-tab support (multiple open ContentCartridge documents)
-- [ ] Session persistence across SSH reconnect (state serialized to local file)
+- [x] Content search session persistence — `bc95acfa`
 - [x] `/audit` log viewer command — already fully implemented in InputCartridge; confirmed (2026-06-12)
-- [x] F2 People cartridge — `app-console-people` scaffold committed — `ac7eb500`
+- [x] F2 People cartridge scaffold — `abd8d019`; service-people contract verified 2026-06-19
 
 **UX contract** (enforce per `BRIEF-project-console-master.md` §6 — preserved here):
 - `--plain` mode: every cartridge functions fully with no terminal graphics
@@ -78,19 +91,18 @@ Blocked on: GCE firewall port 2222 (operator action); vm-intelligence WireGuard 
 
 - [x] `local-console.service` systemd unit — `infrastructure/systemd/console/local-console.service` — `d2afebfe`
 - [x] `pairing-server` systemd unit — `infrastructure/systemd/console/local-pairing-server.service` — `d2afebfe`
+- [x] Graceful SIGTERM handling in os-console binary — `78941244`
 - [ ] Prometheus metrics exporter on configurable port
 - [ ] fail2ban config for port 2222 (SSH brute-force protection)
-- [ ] Graceful SIGTERM handling in os-console binary
 
 ---
 
-## §5 — Phase 10–13 (deferred)
+## §5 — Phase 11–13 (deferred)
 
 | Phase | What | Gate |
 |---|---|---|
-| 10 | F7 BIM cartridge (`app-console-bim`) | project-bim Phase 1 service ready |
-| 11 | F10 mesh cartridge (`app-console-mesh`) | PPN mesh operational |
-| 12 | Chassis auto-reconnect watchdog | Phase 9 complete |
+| 11 | F7 BIM cartridge (`app-console-bim`) | project-bim Phase 1 service ready |
+| 12 | F10 mesh cartridge (`app-console-mesh`) | PPN mesh operational |
 | 13 | F2 People cartridge full CRUD | service-people CRUD (project-data) |
 
 ---
@@ -110,13 +122,29 @@ Blocked on: GCE firewall port 2222 (operator action); vm-intelligence WireGuard 
 - 2026-05-31: Doorman endpoint confirmed at `http://localhost:9080` (not 8011) — fixed in `009b2e04`.
 - 2026-05-31: `--plain` mode, keyboard ergonomics contract, semantic color states extracted from Gemini audit.
 - 2026-06-12: This BRIEF created; `BRIEF-project-console-master.md` remains archived (historical).
+- 2026-06-16: Phase 10 sprint complete — truecolor across all cartridges, PeopleCartridge scaffold (F2), chassis watchdog.
+- 2026-06-19: service-people HTTP API contract verified — endpoint `http://127.0.0.1:9091/v1/people`, struct fields match, wiring correct. No code changes required.
 
 ## §8 — Decisions open
 
 - [x] Phase 8 start — proceeding without Stage 6 Phase B promote (local coding unblocked)
 - [x] Phase 9 systemd unit design — drafted local-console.service + local-pairing-server.service
+- [ ] SSH reconnect session persistence (full state serialization) — Phase 8 item partially addressed by content search persistence; full cross-reconnect state still open
 
 ## §9 — Work log
+
+2026-06-19 totebox@claude-code: Cleanup session — inbox cleared, NEXT.md refreshed, BRIEF updated.
+  - service-people contract (inbox msg command-20260618): F2 wiring verified clean; endpoint + struct match; archived
+  - foundry-prod broadcast (inbox msg command-20260618): awareness noted; archived
+  - Phase 11 BIM status: blocked on project-bim Phase 1 (no ETA)
+  - drafts-outbound: routed to project-editorial and project-design via outbox
+  - artifact-registry.md: updated with Phase 10 artifacts
+
+2026-06-16 totebox@claude-code: Phase 10 sprint — 3 commits.
+  - bc95acfa (Jennifer): Rgb color helpers + content search session persistence
+  - abd8d019 (Peter): F2 PeopleCartridge scaffold — contact list, detail view, :9091 fetch loop, j/k nav
+  - fc4d0978 (Peter): chassis auto-reconnect watchdog (exponential backoff 2s→60s cap)
+  - BRIEF and NEXT.md updated; Stage 6 outbox sent to Command
 
 2026-06-13 totebox@claude-code: Phase 8 coding sprint — all items committed.
   - Truecolor Rgb variants: EmailCartridge, SlmCartridge, SystemCartridge, InputCartridge (ac7eb500)
