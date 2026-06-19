@@ -27,9 +27,9 @@
 //! deployments are a separate Master-scope decision with explicit
 //! cost-cap configuration.
 
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -225,6 +225,10 @@ pub struct YoYoTierClient {
     /// Three consecutive failures flip this to false; one recovery resets.
     /// Checked by the router before dispatching — single atomic load.
     pub health_up: Arc<AtomicBool>,
+    /// Unix epoch seconds at which health_up last transitioned to false.
+    /// Zero means health is currently up (or was never down).
+    /// Updated atomically by the health probe; read by health_down_secs().
+    pub health_down_since_secs: Arc<AtomicU64>,
     /// Three-state circuit breaker driven by actual request outcomes.
     /// Shared with no other task; updated only by complete() return path.
     pub circuit: Arc<CircuitBreaker>,
@@ -235,6 +239,7 @@ pub struct YoYoTierClient {
 impl YoYoTierClient {
     pub fn new(config: YoYoTierConfig, bearer: Arc<dyn BearerTokenProvider>) -> Self {
         let health_up = Arc::new(AtomicBool::new(true));
+        let health_down_since_secs = Arc::new(AtomicU64::new(0));
         let circuit = Arc::new(CircuitBreaker::new());
 
         // Spawn background health probe if a tokio runtime is available.
@@ -242,12 +247,14 @@ impl YoYoTierClient {
         // a runtime don't panic.
         if let Ok(handle) = tokio::runtime::Handle::try_current() {
             let health_up_clone = Arc::clone(&health_up);
+            let health_down_clone = Arc::clone(&health_down_since_secs);
             let endpoint = config.endpoint.clone();
             let health_path = config.health_path.clone();
             handle.spawn(run_health_probe(
                 endpoint,
                 health_path,
                 health_up_clone,
+                health_down_clone,
                 bearer.clone(),
             ));
         }
@@ -262,8 +269,25 @@ impl YoYoTierClient {
                 .unwrap_or_default(),
             bearer,
             health_up,
+            health_down_since_secs,
             circuit,
             zone,
+        }
+    }
+
+    /// Returns seconds since the health probe last transitioned to down,
+    /// or `None` when health is currently up. Independent of circuit state —
+    /// useful for observing probe failures before they trip the circuit breaker.
+    pub fn health_down_secs(&self) -> Option<u64> {
+        let since = self.health_down_since_secs.load(Ordering::Relaxed);
+        if since == 0 {
+            None
+        } else {
+            let now = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs();
+            Some(now.saturating_sub(since))
         }
     }
 
@@ -547,6 +571,7 @@ async fn run_health_probe(
     endpoint: String,
     health_path: String,
     health_up: Arc<AtomicBool>,
+    health_down_since_secs: Arc<AtomicU64>,
     bearer: Arc<dyn BearerTokenProvider>,
 ) {
     let http = reqwest::Client::builder()
@@ -589,6 +614,7 @@ async fn run_health_probe(
                 );
             }
             consecutive_failures = 0;
+            health_down_since_secs.store(0, Ordering::Relaxed);
             health_up.store(true, Ordering::Relaxed);
         } else {
             consecutive_failures += 1;
@@ -598,6 +624,17 @@ async fn run_health_probe(
                     consecutive_failures,
                     "health probe: Tier B marked unavailable"
                 );
+                // Record the timestamp only on the first transition to down
+                // (when health_down_since_secs is still 0).
+                health_down_since_secs.compare_exchange(
+                    0,
+                    SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs(),
+                    Ordering::Relaxed,
+                    Ordering::Relaxed,
+                ).ok();
                 health_up.store(false, Ordering::Relaxed);
             } else {
                 debug!(
