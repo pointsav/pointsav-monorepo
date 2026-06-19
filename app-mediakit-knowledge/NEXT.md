@@ -1,11 +1,25 @@
 # NEXT.md — app-mediakit-knowledge
 
-> Last updated: 2026-06-17 (Lapfrog 2030 — marketing header parity, editorial redesign, mobile first)
+> Last updated: 2026-06-18 (Sprint I — on-domain static pages, institutional polish, font research revision)
 > **SOURCE OF TRUTH:** `.agent/briefs/BRIEF-knowledge-platform-master.md` — read it first.
 > It supersedes the 2030 brief and consolidates the 2026-06-01 research (mobile-first,
 > content federation via mounts + blueprints, premium UX, linking model + zero dead links).
 
-## Lapfrog 2030 — shipped 2026-06-17 (commit 9ebf4a7b, Stage 6 pending)
+## Sprint I — pending commit + Stage 6 (2026-06-18)
+
+On-domain static pages (`/page/{slug}` route + `page_handler`): Disclaimer, Contact served on-domain
+with full wiki chrome. Font research revision (D-L2 revised per §8.9 benchmark): Source Serif 4 display
++ Inter body replaces Oswald/Barlow. Outline CTA button. Institutional radii (2/4/6px). Measure 66ch.
+`wiki.js` on all pages. `Arc<AppState>` compile fix. All on-domain nav links converted to internal routes.
+**Pending commit — compile check in progress.**
+
+## Sprint H — shipped 2026-06-18 (commit 5c3f07d0, Stage 6 pending)
+
+Header bridge (Projects↗ in Woodfine nav), SVG inline-style removed, Goldman Sachs polish
+(scrolled shadow, right nav navy, content-type-badge hidden, post-header breathing room).
+See BRIEF §8.8 for full sprint log.
+
+## Lapfrog 2030 — shipped 2026-06-17 (commit 441e77a4, Stage 6 pending)
 
 Marketing header parity (all 3 instances), Woodfine Blue token split, editorial article
 redesign, marketing footer, anon-reader clean, home editorial grid, mobile-first breakpoints.
@@ -49,9 +63,9 @@ Committed `c3261f0e` (jwoodfine) + `91e65e05` (pwoodfine) + `f2852d5c` (jwoodfin
 
 ## 2026-06-01 direction (from the master brief)
 
-- [x] **§7 font decision:** Shipped in Lapfrog 2030 (2026-06-17) as Oswald/Barlow Condensed
-      display + Nunito Sans body + Source Serif 4 reading. System fallbacks only (no @font-face).
-      DTCG back-port to design-system still pending (see Per-brand section below).
+- [x] **§7 font decision:** Initially Oswald/Barlow Condensed (Lapfrog 2030, 2026-06-17).
+      **Revised Sprint I (2026-06-18):** Source Serif 4 display + Inter body per §8.9 benchmark research
+      (condensed grotesque signals editorial/athletic, not institutional finance). DTCG back-port pending.
 - [ ] **Phase 0 — federation engine:** `knowledge.toml` mounts; `blueprints/*.yaml` + `src/blueprints.rs`;
       thread mounts into `inject_wiki_prefixes` (cross-mount resolution); build-time dead-link gate;
       **remove red-link path** (`render.rs:464`, L18); typed TOPIC↔GUIDE backlinks; slug normalization.

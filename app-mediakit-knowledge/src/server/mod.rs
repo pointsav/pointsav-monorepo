@@ -232,6 +232,8 @@ pub fn router(state: AppState) -> Router {
     let mcp_enabled = state.mcp_enabled;
     let mut r = Router::new()
         .route("/", get(index))
+        // Static pages (Disclaimer, Contact, etc.) served on-domain with wiki chrome
+        .route("/page/{slug}", get(page_handler))
         // Wildcard capture allows category-scoped slugs: `/wiki/architecture/compounding-substrate`
         .route("/wiki/{*slug}", get(wiki_page))
         .route("/es/", get(home_es))
