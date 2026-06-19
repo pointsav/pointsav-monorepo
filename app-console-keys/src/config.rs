@@ -41,8 +41,6 @@ pub struct ProfileConfig {
     pub people_endpoint: String,
     #[serde(default = "default_metrics_port")]
     pub metrics_port: u16,
-    #[serde(default = "default_people_endpoint")]
-    pub people_endpoint: String,
     #[serde(default)]
     pub plain_mode: bool,
     /// GCE VM hostname/IP for embedded SSH tunnel. Empty = no tunnel.
@@ -104,9 +102,6 @@ fn default_people_endpoint() -> String {
 fn default_metrics_port() -> u16 {
     9299
 }
-fn default_people_endpoint() -> String {
-    "http://127.0.0.1:9091".into()
-}
 fn default_gce_ssh_port() -> u16 {
     22
 }
@@ -133,7 +128,6 @@ impl Default for ProfileConfig {
             content_endpoint: default_content_endpoint(),
             people_endpoint: default_people_endpoint(),
             metrics_port: default_metrics_port(),
-            people_endpoint: default_people_endpoint(),
             plain_mode: false,
             gce_host: String::new(),
             gce_ssh_port: default_gce_ssh_port(),
