@@ -56,10 +56,19 @@ pub struct BuildStep {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum BuildCommand {
-    /// Cross-compile a Protection Domain's binary.
+    /// Cross-compile a C Protection Domain binary with aarch64-linux-gnu-gcc.
     CompilePd {
         pd_name: String,
         source_path: String,
+        binary_target: String,
+    },
+    /// Build a Rust Protection Domain binary with `cargo build --target
+    /// aarch64-unknown-none --release`. `crate_name` is the crate directory
+    /// (e.g. `"moonshot-sel4-vmm"`); `bin_name` is the `--bin` target.
+    CompileRustPd {
+        pd_name: String,
+        crate_name: String,
+        bin_name: String,
         binary_target: String,
     },
     /// Assemble the final bootable image from PD binaries +
@@ -97,16 +106,39 @@ impl BuildPlan {
         let mut steps: Vec<BuildStep> = spec
             .protection_domains
             .iter()
-            .map(|pd| BuildStep {
-                name: format!("compile-pd-{}", pd.name),
-                description: format!("Cross-compile protection domain `{}`", pd.name),
-                input_paths: vec![pd.binary.clone()],
-                output_paths: vec![format!("build/{}.elf", pd.name)],
-                command: BuildCommand::CompilePd {
-                    pd_name: pd.name.clone(),
-                    source_path: pd.binary.clone(),
-                    binary_target: format!("build/{}.elf", pd.name),
-                },
+            .map(|pd| {
+                let binary_target = format!("build/{}.elf", pd.name);
+                if let Some(bin_name) = &pd.rust_bin {
+                    // Rust PD: cargo build --target aarch64-unknown-none
+                    BuildStep {
+                        name: format!("compile-pd-{}", pd.name),
+                        description: format!(
+                            "Build Rust PD `{}` (crate: {}, bin: {})",
+                            pd.name, pd.binary, bin_name
+                        ),
+                        input_paths: vec![format!("{}/Cargo.toml", pd.binary)],
+                        output_paths: vec![binary_target.clone()],
+                        command: BuildCommand::CompileRustPd {
+                            pd_name: pd.name.clone(),
+                            crate_name: pd.binary.clone(),
+                            bin_name: bin_name.clone(),
+                            binary_target,
+                        },
+                    }
+                } else {
+                    // C PD: aarch64-linux-gnu-gcc
+                    BuildStep {
+                        name: format!("compile-pd-{}", pd.name),
+                        description: format!("Cross-compile protection domain `{}`", pd.name),
+                        input_paths: vec![pd.binary.clone()],
+                        output_paths: vec![binary_target.clone()],
+                        command: BuildCommand::CompilePd {
+                            pd_name: pd.name.clone(),
+                            source_path: pd.binary.clone(),
+                            binary_target,
+                        },
+                    }
+                }
             })
             .collect();
 
@@ -174,6 +206,7 @@ mod tests {
             protection_domains: vec![ProtectionDomain {
                 name: "hello".to_string(),
                 binary: "src/hello.rs".to_string(),
+                rust_bin: None,
                 priority: 100,
                 stack_bytes: 4096,
             }],
@@ -189,16 +222,33 @@ mod tests {
                 ProtectionDomain {
                     name: "client".to_string(),
                     binary: "src/client.rs".to_string(),
+                    rust_bin: None,
                     priority: 100,
                     stack_bytes: 4096,
                 },
                 ProtectionDomain {
                     name: "server".to_string(),
                     binary: "src/server.rs".to_string(),
+                    rust_bin: None,
                     priority: 100,
                     stack_bytes: 4096,
                 },
             ],
+            channels: vec![],
+            memory_regions: vec![],
+            irq_delivery: vec![],
+        }
+    }
+
+    fn fixture_spec_rust_pd() -> SystemSpec {
+        SystemSpec {
+            protection_domains: vec![ProtectionDomain {
+                name: "os-console".to_string(),
+                binary: "moonshot-sel4-vmm".to_string(),
+                rust_bin: Some("console_main".to_string()),
+                priority: 100,
+                stack_bytes: 65536,
+            }],
             channels: vec![],
             memory_regions: vec![],
             irq_delivery: vec![],
@@ -306,5 +356,35 @@ mod tests {
         spec.protection_domains[0].priority = 50;
         let plan_after = BuildPlan::from_spec(&spec).unwrap();
         assert_ne!(plan_before.plan_hash, plan_after.plan_hash);
+    }
+
+    #[test]
+    fn rust_pd_generates_compile_rust_pd_step() {
+        let spec = fixture_spec_rust_pd();
+        let plan = BuildPlan::from_spec(&spec).unwrap();
+        assert_eq!(plan.steps.len(), 2);
+        match &plan.steps[0].command {
+            BuildCommand::CompileRustPd {
+                pd_name,
+                crate_name,
+                bin_name,
+                binary_target,
+            } => {
+                assert_eq!(pd_name, "os-console");
+                assert_eq!(crate_name, "moonshot-sel4-vmm");
+                assert_eq!(bin_name, "console_main");
+                assert_eq!(binary_target, "build/os-console.elf");
+            }
+            other => panic!("expected CompileRustPd; got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn rust_pd_plan_differs_from_c_pd_plan() {
+        let c_spec = fixture_spec_one_pd();
+        let rust_spec = fixture_spec_rust_pd();
+        let c_plan = BuildPlan::from_spec(&c_spec).unwrap();
+        let rust_plan = BuildPlan::from_spec(&rust_spec).unwrap();
+        assert_ne!(c_plan.plan_hash, rust_plan.plan_hash);
     }
 }

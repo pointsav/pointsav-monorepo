@@ -172,12 +172,61 @@ fn execute_step(step: &BuildStep) -> Result<(), String> {
             println!("  ✓ {binary_target}");
             Ok(())
         }
+        BuildCommand::CompileRustPd {
+            pd_name,
+            crate_name,
+            bin_name,
+            binary_target,
+        } => compile_rust_pd(pd_name, crate_name, bin_name, binary_target),
         BuildCommand::AssembleImage {
             pd_binary_paths,
             output_image,
             ..
         } => assemble_image(pd_binary_paths, output_image),
     }
+}
+
+fn compile_rust_pd(
+    pd_name: &str,
+    crate_name: &str,
+    bin_name: &str,
+    binary_target: &str,
+) -> Result<(), String> {
+    // Inherit CARGO_TARGET_DIR if set (avoids lock contention with the
+    // outer `cargo run` that drives moonshot-toolkit itself).
+    // Fall back to the crate's own target/ directory.
+    let target_dir = std::env::var("CARGO_TARGET_DIR")
+        .unwrap_or_else(|_| format!("{crate_name}/target"));
+
+    // Stream cargo output to stdout/stderr directly (status(), not output())
+    // so the user sees progress on long Rust builds.
+    let status = std::process::Command::new("cargo")
+        .args([
+            "build",
+            "--manifest-path",
+            &format!("{crate_name}/Cargo.toml"),
+            "--target",
+            "aarch64-unknown-none",
+            "--release",
+            "--bin",
+            bin_name,
+        ])
+        .env("CARGO_TARGET_DIR", &target_dir)
+        .status()
+        .map_err(|e| format!("compile-rust-pd-{pd_name}: exec cargo: {e}"))?;
+
+    if !status.success() {
+        return Err(format!(
+            "compile-rust-pd-{pd_name}: `cargo build --bin {bin_name}` failed"
+        ));
+    }
+
+    let elf_src = format!("{target_dir}/aarch64-unknown-none/release/{bin_name}");
+    std::fs::copy(&elf_src, binary_target).map_err(|e| {
+        format!("compile-rust-pd-{pd_name}: copy {elf_src} → {binary_target}: {e}")
+    })?;
+    println!("  ✓ {binary_target}");
+    Ok(())
 }
 
 fn run_gcc(args: &[String], context: &str) -> Result<(), String> {
