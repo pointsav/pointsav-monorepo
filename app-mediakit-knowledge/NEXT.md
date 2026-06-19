@@ -1,17 +1,17 @@
 # NEXT.md — app-mediakit-knowledge
 
-> Last updated: 2026-06-18 (Sprint I — on-domain static pages, institutional polish, font research revision)
+> Last updated: 2026-06-19 (Sprint I committed fa22b382; Stage 6 pending for I + H + Lapfrog 2030)
 > **SOURCE OF TRUTH:** `.agent/briefs/BRIEF-knowledge-platform-master.md` — read it first.
 > It supersedes the 2030 brief and consolidates the 2026-06-01 research (mobile-first,
 > content federation via mounts + blueprints, premium UX, linking model + zero dead links).
 
-## Sprint I — pending commit + Stage 6 (2026-06-18)
+## Sprint I — shipped 2026-06-19 (commit fa22b382, Stage 6 pending)
 
 On-domain static pages (`/page/{slug}` route + `page_handler`): Disclaimer, Contact served on-domain
 with full wiki chrome. Font research revision (D-L2 revised per §8.9 benchmark): Source Serif 4 display
 + Inter body replaces Oswald/Barlow. Outline CTA button. Institutional radii (2/4/6px). Measure 66ch.
 `wiki.js` on all pages. `Arc<AppState>` compile fix. All on-domain nav links converted to internal routes.
-**Pending commit — compile check in progress.**
+14/14 tests green. **Stage 6 outbox message sent to Command (msg-id: command-20260619-stage-6-ready-8th-app-mediakit-knowledge).**
 
 ## Sprint H — shipped 2026-06-18 (commit 5c3f07d0, Stage 6 pending)
 
