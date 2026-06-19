@@ -1,47 +1,47 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster: project-gis
-cluster_name: project-gis
+cluster: project-intelligence
+cluster_name: project-intelligence
 cluster_branch: main
-created: 2026-04-01
+created: 2026-05-27
 state: active
-module_id: gis
 slm_endpoint: http://localhost:9080
+module_id: jennifer
 
 tetrad:
   vendor:
-    repo: pointsav-monorepo
-    path: pointsav-monorepo/
-    upstream: vendor/pointsav-monorepo
-    crates: [app-orchestration-gis]
-    state: active
+    - repo: pointsav-monorepo
+      path: ./
+      upstream: vendor/pointsav-monorepo
+      focus: >
+        service-slm/crates/slm-doorman-server/ (Doorman + circuit breaker + LoRA training),
+        service-content/ (DataGraph entity extraction, LadybugDB),
+        service-extraction/ (extraction pipeline)
+      status: active
   customer:
-    repo: woodfine-fleet-deployment
-    path: gateway-orchestration-gis-1/
-    state: active
+    - status: leg-pending
+      note: >
+        No woodfine-fleet-deployment catalog entries committed yet.
+        local-doorman.service is live but not cataloged.
   deployment:
-    name: gateway-orchestration-gis-1
-    host: vault-privategit-source-1
-    surface: gis.woodfinegroup.com
-    state: active
+    - status: active
+      note: >
+        local-doorman.service (:9080) on vault-privategit-source-1.
+        local-slm.service (OLMo 7B Tier A).
+        yoyo-batch L4 GPU (Tier B) — TERMINATED; restart requires operator approval.
   wiki:
-    repo: content-wiki-projects
-    state: active
+    - status: leg-pending
+      note: >
+        TOPIC/GUIDE drafts in .agent/drafts-outbound/.
+        Pipeline through project-editorial to media-knowledge-documentation.
 
-clones:
-  - repo: pointsav-monorepo
-    role: primary
-    path: pointsav-monorepo/
-    upstream: vendor/pointsav-monorepo
-    branch: main
+clones: []
 ---
 
-# project-gis — Cluster Manifest
+# project-intelligence — Cluster Manifest
 
-Location Intelligence GIS cluster. Builds and deploys the co-location archetype
-system (PRO / VWH / PKS), the Top 400 Regional Markets dataset, catchment and
-O-D analysis pipelines, AEC enrichment layers (Köppen, ecoregion, GHI, seismic,
-flood, wildfire), and the journal research programme (J1 Retail Co-location,
-J7 Urban Fringe, J8 Commuter). Primary surface: gis.woodfinegroup.com
-(gateway-orchestration-gis-1). All pipelines run from
-pointsav-monorepo/app-orchestration-gis/. Nightly rebuild: 22:00 PDT.
+SLM inference infrastructure cluster. Builds and operates local-doorman.service
+(Tier A/B/C routing + circuit breaker), local-slm.service (OLMo 7B Tier A
+CPU inference), DataGraph entity enrichment (LadybugDB via service-content),
+and the LoRA training pipeline. Primary crates: slm-doorman-server,
+service-content, service-extraction.
