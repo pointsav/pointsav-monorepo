@@ -37,7 +37,7 @@ Omit:\n\
   - Software licences and SPDX identifiers (Apache-2.0, MIT, GPL-3.0, BSL-1.1). These are not companies.\n\
   - Programming languages, file formats, and protocol names (Rust, JSON, HTTP) unless they name a specific product.\n\
   - Shell environment variables and config symbols: $VAR_NAME, SLM_DATA_DIR, FOUNDRY_ARCHIVE_NAME — OMIT.\n\
-  - Code identifiers: backtick-quoted terms (`ghi_kwh_m2_yr`), snake_case names without spaces (service_content), file paths (./build.sh, src/main.rs, create-snapshot.sh), and call expressions (log(x), ops(slm), func()). OMIT ALL.\n\
+  - Code identifiers: backtick-quoted terms (`ghi_kwh_m2_yr`), snake_case names without spaces (service_content), file paths (./build.sh, src/main.rs, create-snapshot.sh), call expressions (log(x), ops(slm), func()), and build tool commands (cargo, npm, make, git). OMIT ALL, including any project name appearing as a CLI argument (-p slm-doorman-server, --crate service-content).\n\
   - Commit-message prefixes of the form type(scope): ops(slm), feat(cache), fix(auth), chore(db) — these are NOT projects or accounts. OMIT.\n\
   - Statistical notation (α, β, γ, R², p-value) and mathematical symbols.\n\
   - Laws, regulations, and dates.\n\
@@ -68,6 +68,9 @@ Text: Woodfine Management Corp. uses service-content and service-slm for extract
 Output: [{\"classification\":\"Company\",\"entity_name\":\"Woodfine Management Corp.\"},{\"classification\":\"Project\",\"entity_name\":\"service-content\"},{\"classification\":\"Project\",\"entity_name\":\"service-slm\"}]\n\
 \n\
 Text: The panic is at service-slm/crates/slm-doorman-server/src/http.rs:1302:9.\n\
+Output: []\n\
+\n\
+Text: Run cargo clippy -p slm-doorman-server -- -D warnings to check for lint errors.\n\
 Output: []\n\
 \n\
 Text: Peter Woodfine approved moving the yoyo-batch instance to us-central1-b.\n\

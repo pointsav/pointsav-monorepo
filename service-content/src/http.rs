@@ -410,6 +410,10 @@ async fn graph_cleanup(
             .is_none()
             {
                 Some("type-incoherent")
+            } else if !entity_filter::ALLOWED_CLASSIFICATIONS
+                .contains(&entity.classification.as_str())
+            {
+                Some("oov-classification")
             } else {
                 None
             };
