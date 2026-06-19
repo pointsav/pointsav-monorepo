@@ -9,27 +9,28 @@ Last updated: 2026-06-19 (Session 25 shutdown)
 
 ## Active (Totebox scope)
 
-- [ ] **down_for_secs in TierBInfo** — expose seconds-since-last-healthy-check in /readyz;
-      circuits currently report "closed" with health_up=false causing false routing to Tier B;
-      Bug 4 drain-hold predicate fix is live but this TierBInfo field extension is outstanding
-      [2026-06-15 command@claude-code]
+- [ ] **down_for_secs in TierBInfo** — `health_down_secs: Option<u64>` added to TierBInfo
+      + `health_down_since_secs: Arc<AtomicU64>` wired in YoYoTierClient/run_health_probe;
+      committed but deploy pending (Stage 6 + slm-doorman-server rebuild required)
+      [2026-06-19 totebox@project-intelligence]
 - [ ] **Phase 4b reconciliation pass** — 1,281 sweep-ledger entries written before Tier B online;
       DOC_sweep quarantine gate in place; Totebox sprint when Tier B restores; gated on
       yoyo-batch being provisioned in us-central1-a (operator approval required)
       [2026-06-15 command@claude-code]
-- [ ] **CLAUDE.md contamination** — still contains project-console mission text; replace with
-      correct project-intelligence SLM/Doorman/OLMo/LoRA/DataGraph content; Totebox scope
-      [2026-06-16 command@claude-code]
-- [ ] **Phase 5b — adapter pull verification** — after next 02:30 UTC daily cycle:
-      check `/srv/foundry/data/adapters/apprenticeship-pointsav-incremental/adapter_config.json`;
-      if absent: check `journalctl -u local-yoyo-daily` for rsync failure
+- [x] **CLAUDE.md contamination** — confirmed clean (81 lines, correct project-intelligence
+      SLM/Doorman/OLMo/LoRA/DataGraph content; no project-console text)
       [2026-06-19 totebox@project-intelligence]
-- [ ] **Phase 6-D — enrichment spot-check** — run 3-5 targeted extractions via
-      `curl http://127.0.0.1:9080/v1/extract` to confirm Doorman Tier A fallback
-      (f1879462) works correctly; check `entities` field is non-empty
+- [ ] **Phase 5b — adapter pull verification** — pull wired in nightly-run.sh (Phase 5b block);
+      pulls from yoyo-batch:/data/weights/adapters/apprenticeship-pointsav-wip/ at start of
+      Phase 1 each cycle; verify after first successful yoyo-batch cycle:
+      `ls /srv/foundry/data/adapters/apprenticeship-pointsav-incremental/`
       [2026-06-19 totebox@project-intelligence]
-- [ ] **Remove dead config** — `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=false` in
-      local-content.service systemd unit is unreferenced in code; remove when convenient
+- [x] **Phase 6-D — enrichment spot-check** — 3 extractions confirmed; `tier_used: "tier_a_fallback"`;
+      OLMo-2 Tier A returning clean entities (Person/Company/Location); f1879462 verified working
+      [2026-06-19 totebox@project-intelligence]
+- [ ] **Remove dead config** — `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=false` confirmed
+      absent from all codebase files; must be in live systemd unit only; Command scope
+      (systemd override cleanup + daemon-reload); routed via outbox
       [2026-06-19 totebox@project-intelligence]
 
 ## Blocked — Command Session (route via outbox)
