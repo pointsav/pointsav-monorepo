@@ -6,7 +6,7 @@ title: "Enrichment Pipeline Correctness — OLMo 3 Upgrade + Extraction Quality 
 status: active
 owner: project-intelligence
 created: 2026-06-15
-updated: 2026-06-19 (Session 23 shutdown)
+updated: 2026-06-19 (Session 24 — all blockers actioned by Command)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 companion: BRIEF-slm-learning-loop.md
 plan: /home/mathew/.claude/plans/goofy-rolling-nebula.md
@@ -175,6 +175,21 @@ Multi-agent research (3 Explore agents + web research) confirmed why entity extr
   known infrastructure name appears as a distractor. Resolution path: DPO training (deb592ac fix
   now lets enrichment pairs flow into training signal). Tier B is the correct tier for multi-entity.
 
+- 2026-06-19 Session 24 (Command inbox — all blockers actioned):
+  Command actioned all items from Session 23 shutdown + training blocker outbox messages.
+  1. Training blocker FIXED: `/data/weights/adapters` created + chowned on yoyo-batch persistent disk.
+     June 14 adapter rsync'd from boot disk to persistent disk:
+     `/data/weights/adapters/apprenticeship-pointsav-incremental/` (adapter_config.json,
+     adapter_model.safetensors, checkpoint-45, checkpoint-49, ...). yoyo-batch is TERMINATED.
+     Next 02:30 UTC cycle will find the directory and adapter present; 1043 pairs queued.
+  2. Stage 6 complete: fa97936c → 631574ee (8 commits) promoted to canonical.
+     vendor/pointsav-monorepo fast-forwarded.
+  3. service-content rebuilt (3m33s clean) and redeployed via deploy-binary.sh.
+     local-content.service active, healthz OK. entity_count=12,080 post-restart.
+  4. Phase 6-A OOV cleanup (new binary, dry_run=false): scanned=2795, flagged=531, deleted=531.
+     Pre-OLMo3 Technology/Organisation classification entities removed.
+     Combined with earlier 84 noise-name deletions: **615 total noise entities removed today**.
+
 - 2026-06-19 Session 23 shutdown (yoyo-batch cycle audit + training blocker found):
   yoyo-batch auto-stopped at 03:41 UTC by budget-exhaustion guard (5928s/7200s consumed).
   Reviewed all 5 daily cycle logs — critical new finding: **LoRA training has been failing
@@ -217,10 +232,12 @@ Root cause of multi-entity: `yoyo-batch` is a known name in model's context, cla
 Resolution: DPO training (deb592ac fix now allows enrichment pairs to flow — long-term improvement).
 
 **yoyo-batch: TERMINATED** (auto-stop 03:41 UTC, budget guard). Today: 5928s/7200s consumed.
-**Training blocker confirmed:** All daily cycle training has been failing since Phase 5-A landed.
-  Fix: `sudo mkdir -p /data/weights/adapters && sudo chown mathew:mathew /data/weights/adapters`
-  (run on yoyo-batch via gcloud ssh — one-time; persistent disk survives restarts).
-**Corpus queue:** pending=855, done=3033, poison=74, quarantine=0. 1043 pairs ready to train.
+**Training blocker: FIXED** (Command, 2026-06-19): `/data/weights/adapters` created + chowned
+  on persistent disk. June 14 adapter rsync'd to persistent disk. Next 02:30 UTC daily cycle
+  should train successfully. 1043 pairs queued (1001 apprenticeship + ~42 enrichment).
+**DataGraph: 12,080 entities** (service-content rebuilt with prompt v3 + new filters + OOV check;
+  615 noise entities removed today: 84 noise-name + 531 OOV-classified pre-OLMo3 entities).
+**Corpus queue:** pending=855, done=3033, poison=74, quarantine=0.
 
 - [x] **Phase 1 (few-shot)** — 8 examples in `EXTRACTION_SYSTEM_PROMPT` (prompt v3, 3e05f810); 43/43 tests
 - [x] **Phase 2 (grammar flag)** — `SERVICE_CONTENT_TIER_A_GRAMMAR` env var wired; reverted on CPU (unusable); stays for Tier B GPU
@@ -229,13 +246,16 @@ Resolution: DPO training (deb592ac fix now allows enrichment pairs to flow — l
 - [x] **Phase 5a (training base model)** — `run-dpo-training.py` default → `/data/weights/olmo-3-7b-think-hf`
 - [x] **Phase 5b (adapter pull+GCS)** — Phase 6b in `yoyo-daily-cycle.sh` (lines 600–618) already coded; adapter dir exists but empty
 - [x] **Phase 5-A FIX (yoyo-daily-cycle.sh base model)** — Confirmed fixed by Command. Lines 539 + 576 in `/srv/foundry/bin/yoyo-daily-cycle.sh` already have `/data/weights/olmo-3-7b-think-hf` (verified Session 23 by BRIEF cross-check agent).
-- [ ] **Phase 5-A BLOCKER (adapter output dir)** — `/data/weights/adapters` missing on yoyo-batch persistent disk; PermissionError kills training in every cycle since Phase 5-A landed. Fix (Command, one-time): `gcloud compute ssh mathew@yoyo-batch --zone us-central1-a -- "sudo mkdir -p /data/weights/adapters && sudo chown mathew:mathew /data/weights/adapters"`. Must run before next training attempt.
-- [ ] **Phase 5b verification** — after adapter dir fix + next daily cycle (02:30 UTC): check `data/adapters/apprenticeship-pointsav-incremental/adapter_config.json`
+- [x] **Phase 5-A BLOCKER (adapter output dir)** — FIXED by Command 2026-06-19: `/data/weights/adapters` created + chowned on yoyo-batch persistent disk. June 14 adapter rsync'd (adapter_config.json, adapter_model.safetensors, checkpoint-45, checkpoint-49). Persistent disk; survives all VM cycles.
+- [ ] **Phase 5b verification** — adapter now present on persistent disk; after next daily cycle (02:30 UTC): verify Phase 6b rsync pull-back produced `data/adapters/apprenticeship-pointsav-incremental/adapter_config.json` on workspace VM + GCS upload
 - [ ] **Phase 5c (adapter eval)** — after adapter pull: run `eval-adapter.sh`; operator approval gates `registry.yaml` update
-- [ ] **Phase 6-A (graph cleanup)** — run `curl http://127.0.0.1:9081/v1/graph/cleanup?module_id=jennifer` after local-content restarts; removes OLMo 2 noise entities
+- [x] **Phase 6-A (graph cleanup)** — DONE × 2 by Command (2026-06-19):
+      Round 1 (old binary): scanned=2837, flagged=84, deleted=84 (noise-name entities)
+      Round 2 (new binary with OOV check): scanned=2795, flagged=531, deleted=531 (Technology/Organisation era)
+      Total: 615 noise entities removed. entity_count=12,080.
 - [x] **Phase 6-B/C (repair-ledger)** — ran `repair-ledger.py --dry-run`; sweep ledger absent/empty; nothing to repair
 - [ ] **Phase 6-D (enrichment spot-check)** — run 3-5 test extractions via Doorman after local-content restarts
-- [ ] **Phase 7 (final extraction test)** — 12/14 (my 7-example prompt, test b19oomhj7); prompt v3 (3e05f810) expected 13/14 on clean slot; 8 commits pending Stage 6 (fa97936c→ba9eba57); after Command rebuilds service-content + grants clean slot, run production test for v3 baseline confirmation
+- [ ] **Phase 7 (final extraction test)** — 12/14 (my 7-example prompt, test b19oomhj7); prompt v3 (3e05f810) expected 13/14 on clean slot; Stage 6 DONE + service-content rebuilt with v3; pending: Command grants clean slot (stop local-content + restart local-slm), then run `python3 service-slm/scripts/test_tier_a_production.py` for v3 baseline confirmation
 - [ ] **Verify OLMo 3 target_modules** — runtime assertion in `run-dpo-training.py:321-330` verifies on first training run
 - [ ] **Adapter eval gate** — operator reviews eval output before `registry.yaml` promoted
 - [ ] **OLMo upgrade path** — consider `unsloth/Olmo-3-7B-Instruct-GGUF` UD-Q4_K_XL for better accuracy at same size; operator decision gate before local-slm.service restart
