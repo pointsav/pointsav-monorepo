@@ -32,6 +32,21 @@ Last updated: 2026-06-19 (Session 25 shutdown)
       absent from all codebase files; must be in live systemd unit only; Command scope
       (systemd override cleanup + daemon-reload); routed via outbox
       [2026-06-19 totebox@project-intelligence]
+- [x] **Bug: semaphore leak on client disconnect** — fixed 2026-06-19; 120 s timeout wrapper
+      (`EXTRACT_DEADLINE_SECS`) around entire routing block in `/v1/extract` handler;
+      `DoormanError::RequestTimeout` returned on deadline → permit drops via RAII; bounds
+      permit hold to 120 s even when hyper 0.14 keeps handler alive after client disconnect
+      [2026-06-19 totebox@project-intelligence]
+- [x] **Bug: DeferReason wildcard in http.rs** — fixed 2026-06-19; added `TierAFailed`,
+      `ParseError`, `Timeout`, `AllTiersUnavailable` variants to `DeferReason` enum in
+      slm-core; both extract + batch handler wildcards now have explicit arms;
+      `DoormanError::RequestTimeout` added to error.rs + ApiError status mapping
+      [2026-06-19 totebox@project-intelligence]
+- [ ] **Known: queue saturates OLMo in Tier B degraded mode** — corpus queue runs 2 in-flight
+      (matching OLMo --parallel 2); when Tier B down, queue uses Tier A leaving 0 slots for
+      interactive /v1/extract; resolves automatically when yoyo-batch restores (queue → Tier B);
+      workaround: limit queue to 1 in-flight via SLM_BATCH_CONCURRENCY=1 when Tier B down
+      [2026-06-19 totebox@project-intelligence]
 
 ## Blocked — Command Session (route via outbox)
 

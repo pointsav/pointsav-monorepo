@@ -623,51 +623,75 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         session_context: None,
     };
 
-    // 5. Route: Tier B first, fall back to Tier A if Tier B circuit is open.
+    // 5. Route: Tier B first, fall back to Tier A if Tier B is unavailable.
+    //
+    // The whole routing block runs under a 120 s deadline so the per-tenant
+    // semaphore permit (acquired above) is always released within a bounded
+    // time — even when OLMo is saturated and the client has disconnected.
+    // Hyper 0.14 does not cancel in-flight handlers on client disconnect, so
+    // without this timeout a killed curl leaves the permit held until OLMo
+    // finally responds (up to 1 800 s on the local tier).
     let start = std::time::Instant::now();
-    let tier_b_result = state.doorman.route_yoyo_only(&tier_b_req, "trainer").await;
-    let tier_b_unavailable = matches!(&tier_b_result, Err(DoormanError::TierUnavailable(_)));
+    const EXTRACT_DEADLINE_SECS: u64 = 120;
+    let routing_result = tokio::time::timeout(
+        std::time::Duration::from_secs(EXTRACT_DEADLINE_SECS),
+        async {
+            let tier_b_result = state.doorman.route_yoyo_only(&tier_b_req, "trainer").await;
+            let tier_b_unavailable =
+                matches!(&tier_b_result, Err(DoormanError::TierUnavailable(_)));
 
-    let result = if tier_b_unavailable {
-        // Tier B offline — fall back to Tier A (OLMo 3 7B Instruct, no grammar).
-        // Grammar constraint is unreliable on CPU at 7B scale; pre-fill in the system
-        // prompt anchors JSON array format instead.
-        let tier_a_req = ComputeRequest {
-            request_id: RequestId::new(),
-            module_id: module_id.clone(),
-            model: None,
-            messages: vec![
-                ChatMessage {
-                    role: "system".to_string(),
-                    content: DOORMAN_EXTRACTION_SYSTEM_PROMPT.to_string(),
-                },
-                ChatMessage {
-                    role: "user".to_string(),
-                    content: req.text,
-                },
-                ChatMessage {
-                    role: "assistant".to_string(),
-                    content: "[{\"".to_string(),
-                },
-            ],
-            complexity: Complexity::Medium,
-            tier_hint: Some(Tier::Local),
-            stream: false,
-            max_tokens: Some(512),
-            temperature: Some(0.1),
-            sanitised_outbound: true,
-            tier_c_label: None,
-            yoyo_label: None,
-            grammar: None,
-            speculation: None,
-            graph_context_enabled: None,
-            tools: None,
-            stop_sequences: None,
-            session_context: None,
-        };
-        state.doorman.route(&tier_a_req).await.map(|r| (r, "tier_a_fallback"))
-    } else {
-        tier_b_result.map(|r| (r, "yoyo_trainer"))
+            if tier_b_unavailable {
+                // Tier B offline — fall back to Tier A (OLMo 7B, no grammar).
+                // Grammar constraint is unreliable on CPU at 7B scale; pre-fill
+                // anchors JSON array format instead.
+                let tier_a_req = ComputeRequest {
+                    request_id: RequestId::new(),
+                    module_id: module_id.clone(),
+                    model: None,
+                    messages: vec![
+                        ChatMessage {
+                            role: "system".to_string(),
+                            content: DOORMAN_EXTRACTION_SYSTEM_PROMPT.to_string(),
+                        },
+                        ChatMessage {
+                            role: "user".to_string(),
+                            content: req.text,
+                        },
+                        ChatMessage {
+                            role: "assistant".to_string(),
+                            content: "[{\"".to_string(),
+                        },
+                    ],
+                    complexity: Complexity::Medium,
+                    tier_hint: Some(Tier::Local),
+                    stream: false,
+                    max_tokens: Some(512),
+                    temperature: Some(0.1),
+                    sanitised_outbound: true,
+                    tier_c_label: None,
+                    yoyo_label: None,
+                    grammar: None,
+                    speculation: None,
+                    graph_context_enabled: None,
+                    tools: None,
+                    stop_sequences: None,
+                    session_context: None,
+                };
+                state
+                    .doorman
+                    .route(&tier_a_req)
+                    .await
+                    .map(|r| (r, "tier_a_fallback"))
+            } else {
+                tier_b_result.map(|r| (r, "yoyo_trainer"))
+            }
+        },
+    )
+    .await;
+
+    let result = match routing_result {
+        Ok(inner) => inner,
+        Err(_timeout) => Err(DoormanError::RequestTimeout),
     };
 
     let latency_ms = start.elapsed().as_millis() as u64;
@@ -728,13 +752,21 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
             true,
             Some("all-tiers-unavailable".to_string()),
         ),
+        Err(DoormanError::RequestTimeout) => (
+            vec![],
+            "deferred".to_string(),
+            "none".to_string(),
+            false,
+            true,
+            Some("timeout".to_string()),
+        ),
         Err(_) => (
             vec![],
             "deferred".to_string(),
             "none".to_string(),
             false,
             true,
-            Some("transient-error".to_string()),
+            Some("tier-a-failed".to_string()),
         ),
     };
 
@@ -765,6 +797,11 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
     let defer_reason_enum = defer_reason_str.as_deref().map(|s| match s {
         "yoyo-circuit-open" => DeferReason::YoyoCircuitOpen,
         "yoyo-label-unconfigured" => DeferReason::YoyoLabelUnconfigured,
+        "yoyo-transient" => DeferReason::YoyoTransient,
+        "all-tiers-unavailable" => DeferReason::AllTiersUnavailable,
+        "tier-a-failed" => DeferReason::TierAFailed,
+        "parse-error" => DeferReason::ParseError,
+        "timeout" => DeferReason::Timeout,
         _ => DeferReason::YoyoTransient,
     });
 
@@ -1001,6 +1038,11 @@ async fn batch_extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl I
         let defer_reason_enum = defer_reason_str.as_deref().map(|s| match s {
             "yoyo-circuit-open" => DeferReason::YoyoCircuitOpen,
             "yoyo-label-unconfigured" => DeferReason::YoyoLabelUnconfigured,
+            "yoyo-transient" => DeferReason::YoyoTransient,
+            "all-tiers-unavailable" => DeferReason::AllTiersUnavailable,
+            "tier-a-failed" => DeferReason::TierAFailed,
+            "parse-error" => DeferReason::ParseError,
+            "timeout" => DeferReason::Timeout,
             _ => DeferReason::YoyoTransient,
         });
 
@@ -2123,6 +2165,9 @@ impl From<DoormanError> for ApiError {
             DoormanError::TierBTimeout | DoormanError::TierBCircuitOpen => {
                 StatusCode::SERVICE_UNAVAILABLE
             }
+            // Extract handler 120 s deadline. Caught before this conversion
+            // in /v1/extract, but must be covered for exhaustiveness.
+            DoormanError::RequestTimeout => StatusCode::SERVICE_UNAVAILABLE,
             // Flow gate closed (operator kill switch). 503 with Retry-After;
             // the operator deliberately paused this tier. Caller should retry
             // after the gate re-opens.
