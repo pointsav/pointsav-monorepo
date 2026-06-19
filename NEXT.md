@@ -34,10 +34,9 @@ Last updated: 2026-06-19 (Session 25 shutdown)
 
 ## Blocked — Command Session (route via outbox)
 
-- [ ] **local-slm.service `--parallel 2`** — slot contention root cause: service-content
-      calls `/v1/chat/completions` (Doorman→llama-server) every 3 min; single slot means corpus
-      drain and foreground tests block each other; fix is `--parallel 2`; BLOCKED pending
-      explicit operator approval [2026-06-18 command@claude-code]
+- [x] **local-slm.service `--parallel 2`** — operator approved 2026-06-19; applied to
+      threads.conf drop-in; daemon-reload + restart; service active; two slots now available
+      [2026-06-19 command@claude-code]
 - [ ] **yoyo-batch ML libs** — trl/peft/transformers/accelerate/bitsandbytes not installed in
       training venv on GPU VM; LoRA training has never produced a real adapter; install needed
       before next training cycle; yoyo-batch TERMINATED (us-central1-a STOCKOUT); restart
