@@ -67,6 +67,33 @@ else
     log "Skipping Yo-Yo lifecycle (--no-yoyo)."
 fi
 
+# ── Phase 5b: adapter pull from previous training cycle ──────────────────────
+# Pull LoRA adapter from yoyo-batch persistent disk if training completed.
+# Runs after start-yoyo.sh (VM is up) so we have SSH access.
+# Warn-only: a failed pull defers to the next cycle without aborting extraction.
+if [[ "${NO_YOYO}" != "true" ]]; then
+    YOYO_INSTANCE="${SLM_YOYO_GCP_INSTANCE:-yoyo-batch}"
+    YOYO_ZONE="${SLM_YOYO_GCP_ZONE:-us-central1-a}"
+    ADAPTER_SRC="${YOYO_INSTANCE}:/data/weights/adapters/apprenticeship-pointsav-wip/"
+    ADAPTER_DEST="${FOUNDRY_ROOT}/data/adapters/apprenticeship-pointsav-incremental/"
+    log "Phase 5b: checking for adapter on ${YOYO_INSTANCE} (${YOYO_ZONE})..."
+    if gcloud compute ssh "${YOYO_INSTANCE}" --zone="${YOYO_ZONE}" \
+        --command 'test -f /data/weights/adapters/apprenticeship-pointsav-wip/adapter_config.json' \
+        --quiet 2>/dev/null; then
+        log "Adapter found — pulling to ${ADAPTER_DEST}"
+        mkdir -p "${ADAPTER_DEST}"
+        if gcloud compute scp --recurse \
+            "${ADAPTER_SRC}" "${ADAPTER_DEST}" \
+            --zone="${YOYO_ZONE}" 2>&1 | sed 's/^/  /'; then
+            log "Phase 5b: adapter pull succeeded."
+        else
+            log "WARN: Phase 5b adapter pull failed — will retry next cycle."
+        fi
+    else
+        log "Phase 5b: no completed adapter on ${YOYO_INSTANCE} — skipping pull."
+    fi
+fi
+
 # Workspace feeder warmup (20 workspace artifacts → DataGraph via REST)
 log "Workspace feeder warmup (batch-size 20)..."
 "${SCRIPT_DIR}/foundry-workspace-feeder.sh" --batch-size 20 2>&1 | sed 's/^/  /' || true
