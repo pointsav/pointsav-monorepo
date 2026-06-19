@@ -19,3 +19,12 @@ pub mod types;
 
 pub use debug::{putchar, puts, puts_line, spin, write_bytes};
 pub use types::{ChannelId, MsgInfo};
+
+// Bare-metal panic handler for AArch64 builds.
+// On release builds panic = "abort" so this is unreachable in practice;
+// it satisfies the linker for debug builds.
+#[cfg(target_arch = "aarch64")]
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    unsafe { loop { syscall::yield_cpu(); } }
+}

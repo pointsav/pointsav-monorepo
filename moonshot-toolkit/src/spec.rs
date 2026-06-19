@@ -44,9 +44,17 @@ pub struct SystemSpec {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ProtectionDomain {
     pub name: String,
-    /// Path to the binary that runs in this PD. Resolved at build
-    /// time.
+    /// For C PDs: path to the `.c` source file compiled by aarch64-linux-gnu-gcc.
+    /// For Rust PDs (when `rust_bin` is set): the crate directory name
+    /// (e.g. `"moonshot-sel4-vmm"`); the crate's Cargo.toml is resolved
+    /// as `<binary>/Cargo.toml` relative to the monorepo root.
     pub binary: String,
+    /// When set, this PD is a Rust `[[bin]]` target compiled with
+    /// `cargo build --target aarch64-unknown-none --release`.
+    /// Value is the `--bin` target name (e.g. `"console_main"`).
+    /// `binary` is interpreted as the crate directory name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rust_bin: Option<String>,
     /// Scheduling priority (0 = highest; matches Microkit / seL4).
     #[serde(default)]
     pub priority: u8,
