@@ -124,6 +124,7 @@ Blocked on: GCE firewall port 2222 (operator action); vm-intelligence WireGuard 
 - 2026-06-12: This BRIEF created; `BRIEF-project-console-master.md` remains archived (historical).
 - 2026-06-16: Phase 10 sprint complete — truecolor across all cartridges, PeopleCartridge scaffold (F2), chassis watchdog.
 - 2026-06-19: service-people HTTP API contract verified — endpoint `http://127.0.0.1:9091/v1/people`, struct fields match, wiring correct. No code changes required.
+- 2026-06-19: We Own It principle adopted — all runtime deps must be tier 1 (ours) or tier 2 (vendored trusted; formally verified or BSD/MIT source we build); see conventions/we-own-it-principle.md (pending ratification at Command).
 
 ## §8 — Decisions open
 
