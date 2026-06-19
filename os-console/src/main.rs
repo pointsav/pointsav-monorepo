@@ -9,6 +9,32 @@ fn main() -> anyhow::Result<()> {
     inner_main()
 }
 
+/// Returns true if the pairing server is reachable AND responding with HTTP.
+/// Uses a raw TCP probe rather than reqwest so it doesn't depend on the tokio runtime.
+/// A dead SSH child can hold port 9205 open while the underlying SSH connection is gone;
+/// this probe detects that case (TCP connect succeeds, but no HTTP bytes come back).
+fn pairing_server_alive() -> bool {
+    use std::io::{Read, Write};
+    let addr: std::net::SocketAddr = "127.0.0.1:9205".parse().unwrap();
+    let Ok(mut stream) = std::net::TcpStream::connect_timeout(
+        &addr,
+        std::time::Duration::from_millis(500),
+    ) else {
+        return false;
+    };
+    if stream
+        .write_all(b"GET /v1/node-join/pending HTTP/1.0\r\nHost: 127.0.0.1\r\n\r\n")
+        .is_err()
+    {
+        return false;
+    }
+    stream
+        .set_read_timeout(Some(std::time::Duration::from_secs(3)))
+        .ok();
+    let mut buf = [0u8; 12];
+    matches!(stream.read_exact(&mut buf), Ok(())) && buf.starts_with(b"HTTP/1.")
+}
+
 #[cfg(feature = "ssh-server")]
 fn inner_main() -> anyhow::Result<()> {
     let rt = tokio::runtime::Runtime::new()?;
@@ -42,8 +68,17 @@ fn inner_main() -> anyhow::Result<()> {
     // Start embedded SSH tunnel if gce_host is configured
     let mut _ssh_child: Option<std::process::Child> = None;
     if !p.gce_host.is_empty() {
-        // Skip tunnel if ports are already bound (user has an external ssh -N running).
-        if std::net::TcpStream::connect("127.0.0.1:9205").is_err() {
+        // Check if the pairing server is actually reachable through an existing tunnel —
+        // not just whether the port is bound. A stale SSH child from a previous run can
+        // hold port 9205 open while the underlying SSH connection is dead, causing all
+        // HTTP requests to fail silently.
+        if !pairing_server_alive() {
+            // Kill any stale SSH holding port 9205 before spawning fresh.
+            let _ = std::process::Command::new("pkill")
+                .args(["-f", "9205:localhost:9205"])
+                .status();
+            std::thread::sleep(std::time::Duration::from_millis(400));
+
             tunnel::spawn_tunnel(tunnel::TunnelConfig {
                 gce_host: p.gce_host.clone(),
                 gce_port: p.gce_ssh_port,
@@ -62,10 +97,17 @@ fn inner_main() -> anyhow::Result<()> {
                 }
                 std::thread::sleep(std::time::Duration::from_millis(250));
             }
+            if std::net::TcpStream::connect("127.0.0.1:9205").is_ok() {
+                eprintln!("os-console: tunnel: russh bound port 9205");
+            } else {
+                eprintln!("os-console: tunnel: russh did not bind port 9205 within 5s");
+            }
+        } else {
+            eprintln!("os-console: tunnel: existing tunnel alive — skipping spawn");
         }
 
         // Russh didn't bind ports — fall back to system ssh.
-        if std::net::TcpStream::connect("127.0.0.1:9205").is_err() {
+        if !pairing_server_alive() {
             let mut cmd = std::process::Command::new("ssh");
             cmd.arg("-N")
                .arg("-o").arg("StrictHostKeyChecking=accept-new")
@@ -79,7 +121,13 @@ fn inner_main() -> anyhow::Result<()> {
             cmd.arg(format!("{}@{}", p.gce_user, p.gce_host));
             cmd.stdout(std::process::Stdio::null());
             cmd.stderr(std::process::Stdio::null());
-            _ssh_child = cmd.spawn().ok();
+            match cmd.spawn() {
+                Ok(child) => {
+                    eprintln!("os-console: tunnel: system ssh spawned pid {}", child.id());
+                    _ssh_child = Some(child);
+                }
+                Err(e) => eprintln!("os-console: tunnel: system ssh spawn failed: {e}"),
+            }
 
             // Wait up to 15s for system ssh to bind ports.
             let deadline = std::time::Instant::now() + std::time::Duration::from_secs(15);
@@ -91,6 +139,11 @@ fn inner_main() -> anyhow::Result<()> {
                     break;
                 }
                 std::thread::sleep(std::time::Duration::from_millis(250));
+            }
+            if std::net::TcpStream::connect("127.0.0.1:9205").is_ok() {
+                eprintln!("os-console: tunnel: system ssh bound port 9205");
+            } else {
+                eprintln!("os-console: tunnel: system ssh did not bind port 9205 within 15s");
             }
         }
     }
