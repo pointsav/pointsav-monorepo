@@ -47,15 +47,15 @@ pub enum PairingEvent {
 }
 
 #[derive(Serialize)]
-struct PairRequest<'a> {
-    username: &'a str,
-    tenant: &'a str,
-    public_key: &'a str,
-    fingerprint: &'a str,
+struct NodeJoinReq {
+    node_id: String,
+    wireguard_pubkey: String,
+    bottom: &'static str,
+    arch: &'static str,
 }
 
 #[derive(Deserialize)]
-struct PairResponse {
+struct NodeJoinResp {
     request_id: String,
     code: String,
 }
@@ -65,25 +65,33 @@ struct StatusResponse {
     state: String,
 }
 
-/// POST /v1/pair/request — returns (request_id, code) on success.
+/// POST /v1/node-join/request — returns (request_id, code) on success.
+/// Maps username@tenant → node_id, SSH public key → wireguard_pubkey field.
+/// fingerprint is for display only and is not sent to the server.
 pub fn post_pair_request(
     base_url: &str,
     username: &str,
     tenant: &str,
     public_key: &str,
-    fingerprint: &str,
+    _fingerprint: &str,
 ) -> Result<(String, String)> {
-    let url = format!("{}/v1/pair/request", base_url.trim_end_matches('/'));
+    let url = format!("{}/v1/node-join/request", base_url.trim_end_matches('/'));
+    let arch: &'static str = if std::env::consts::ARCH == "aarch64" {
+        "aarch64"
+    } else {
+        "x86_64"
+    };
+    let bottom: &'static str = if arch == "aarch64" { "seL4" } else { "netbsd-compat" };
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(10))
         .build()?;
-    let resp: PairResponse = client
+    let resp: NodeJoinResp = client
         .post(&url)
-        .json(&PairRequest {
-            username,
-            tenant,
-            public_key,
-            fingerprint,
+        .json(&NodeJoinReq {
+            node_id: format!("{username}@{tenant}"),
+            wireguard_pubkey: public_key.to_string(),
+            bottom,
+            arch,
         })
         .send()?
         .error_for_status()?
@@ -108,7 +116,7 @@ pub fn spawn_status_poll(base_url: String, request_id: String) -> mpsc::Receiver
         };
         loop {
             let url = format!(
-                "{}/v1/pair/status/{}",
+                "{}/v1/node-join/status/{}",
                 base_url.trim_end_matches('/'),
                 request_id
             );
@@ -167,7 +175,13 @@ pub fn spawn_pair_init(
                     });
                     break;
                 }
-                Err(_) => {} // tunnel not ready yet — keep retrying
+                Err(e) => {
+                    let port_bound = std::net::TcpStream::connect_timeout(
+                        &"127.0.0.1:9205".parse().unwrap(),
+                        std::time::Duration::from_millis(200),
+                    ).is_ok();
+                    eprintln!("os-console: pair: POST failed (9205 bound={port_bound}): {e:?}");
+                }
             }
         }
     });
