@@ -103,6 +103,24 @@ Multi-agent research (3 Explore agents + web research) confirmed why entity extr
   training SSH uses wrong base model (OLMo 2 remote ID). Phase 6-B ran: sweep ledger empty, nothing to
   repair. 13/14 is CPU-mode ceiling for GCP zone test; grammar constraints on Tier B would fix the last one.
   7 commits promoted by Command (Stage 6); 3 more pending (eb7ad67f, b49a950c, b43af58d).
+- 2026-06-18 Session 22 (Tier A vs Tier B deep comparison): First side-by-side comparison run using
+  new `test_tier_ab_deep.py` (verbose per-step filter chain logging + JSONL output). Tier B (yoyo-batch
+  OLMo 3 7B Think, 10-11 tok/s GPU) scored 7/14 raw vs Tier A (OLMo 3 7B Instruct, CPU) at 13/14.
+  Two filter gaps found and fixed (commit d406e1cd, 42/42 tests):
+    1. `.service` suffix missing from PATH_SUFFIXES — caught local-content.service as false Project
+    2. Multi-word lowercase Project phrase rule — rejected "outbox status", "corpus payload key",
+       "enrichment queue", "automation bot". Real project names use hyphens not spaces.
+  Predicted Tier B after filters: 9/14. Remaining 5 Tier B failures are model-level:
+    - Think model ignores negation ("not authored by Peter Woodfine", "service-bim not active")
+    - Think model strips path/CLI context and returns project name (service-slm from path,
+      slm-doorman-server from -p flag)
+    - Both tiers extract yoyo-batch from "yoyo-batch GPU VM in us-central1-a" (model-level; no filter fix)
+  Tier B **outperforms** Tier A on: GCP zone recognition (us-central1-b correctly as Location).
+  Tier A **outperforms** Tier B on: negation, noise rejection, instruction following.
+  Strategic implication: the two models are complementary. Current Tier A → Tier B routing is correct.
+  Tier A deep test running (CPU, 30-60 min); JSONL at test_results_deep_20260619T025702Z.jsonl (Tier B).
+  Tier B JSONL saved to: service-slm/scripts/test_results_deep_20260619T025702Z.jsonl.
+  Commits pending Stage 6: d406e1cd + earlier eb7ad67f, b49a950c, b43af58d.
 - 2026-06-17 Session 19 (Totebox rebuild + test): Archive CLAUDE.md + manifest.md contamination fixed
   (was project-knowledge content). service-content binary rebuilt from HEAD (5c3d7f5b, 40/40 tests,
   healthz 11935 entities). yoyo-batch confirmed RUNNING in us-central1-a but llama-server not running
