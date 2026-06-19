@@ -2,7 +2,7 @@
 
 # project-intelligence — Archive Guide
 
-> **State:** active | **Last updated:** 2026-06-16
+> **State:** active | **Last updated:** 2026-06-19
 > **Cluster manifest:** `.agent/manifest.md`
 > **Workspace AGENT.md takes precedence on conflict.**
 
@@ -18,7 +18,8 @@ and LoRA training pipeline.
 
 **Active cartridges:** F2 People, F4 Content, F9 SLM, F11 System, F12 Input (Anchor), F3 Email, F6 Bookkeeper.
 **Phase 10 complete 2026-06-16:** F2 PeopleCartridge scaffold, Rgb color helpers, session persistence, chassis reconnect watchdog.
-**Next:** Phase 11 — F7 BIM cartridge (`app-console-bim`); blocked on project-bim Phase 1 service.
+**Phase H1 complete 2026-06-19:** moonshot-sel4-vmm `#![no_std]` PD runtime + console_hello.c seL4 rootserver; QEMU gate passed ("Hello from os-console seL4 PD"). Use `-m 1G` (DTB reports 1 GiB).
+**Next:** Phase 11 — F7 BIM cartridge (`app-console-bim`); blocked on project-bim Phase 1 service. Phase H2 — VirtIO serial PD + ratatui on seL4.
 
 ## Tetrad
 
