@@ -117,7 +117,29 @@ Last updated: 2026-06-19 (Session 25 shutdown)
 > Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Out-of-scope items route to outbox, not this file.
 
-Last updated: 2026-06-14 [Jennifer Woodfine / claude-code]
+Last updated: 2026-06-19 [Jennifer Woodfine / claude-code]
+
+---
+
+## Phase H1 — seL4 unikernel substrate — COMPLETE 2026-06-19
+
+| Item | Status | Notes |
+|---|---|---|
+| vendor-sel4-kernel AArch64 build | COMPLETE | `build/aarch64-qemu/kernel.elf` (910K, AArch64 ELF) |
+| moonshot-sel4-vmm `#![no_std]` PD runtime | COMPLETE | `lib.rs`, `syscall.rs`, `debug.rs`, `types.rs`; seL4 ABI wrappers; cfg-gated AArch64 asm |
+| `console_hello.c` bare-metal PD + TOML spec | COMPLETE | `moonshot-toolkit/examples/console_hello.c`; `os-console-hello.toml` |
+| moonshot-toolkit image build | COMPLETE | `build/system-image.bin` (1.1M elfloader ELF) built via separate target-dir to avoid cargo-lock contention |
+| QEMU boot verification | **GATE PASSED** | `Hello from os-console seL4 PD` on serial; QEMU `-m 1G` required (DTB reports 1 GiB; 512M causes Data Abort) |
+| Phase H1 commit | COMMITTED | All Phase H1 files staged and committed |
+
+[2026-06-19 totebox@claude-code]
+
+## Phase H2 — next (Step 4 stretch: VirtIO serial PD + ratatui, ~200 lines)
+
+- [ ] Implement VirtIO serial PD in moonshot-sel4-vmm (~200 lines Rust)
+- [ ] Integrate ratatui rendering via VirtIO console backend
+- [ ] Update moonshot-toolkit TOML spec: `examples/os-console-virtio.toml` (2-PD: console PD + virtio-serial PD)
+- [ ] Gate: ratatui TUI renders in QEMU virtual terminal
 
 ---
 
