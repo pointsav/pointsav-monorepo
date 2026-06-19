@@ -70,7 +70,7 @@ Output: []
 If no entities are found, return an empty array []."""
 
 ALLOWED_CLASSIFICATIONS = {"Person", "Company", "Project", "Account", "Location"}
-PATH_SUFFIXES = (".sh", ".py", ".rs", ".md", ".json", ".jsonl", ".conf", ".toml", ".yaml")
+PATH_SUFFIXES = (".sh", ".py", ".rs", ".md", ".json", ".jsonl", ".conf", ".toml", ".yaml", ".service")
 ABSTRACT_NOUNS = {
     "framework", "model", "hypothesis", "hypotheses", "pipeline", "approach",
     "process", "mechanism", "algorithm", "methodology", "criterion", "criteria",
@@ -137,6 +137,8 @@ def coerce_classification(name: str, cls: str):
     if cls == "Company" and lower in KNOWN_PLACES:
         return "Location"
     if cls == "Project" and "/" in name:
+        return None
+    if cls == "Project" and " " in name and all(c.islower() or c == " " for c in name):
         return None
     if (cls == "Account" and len(name) >= 2
             and all(c.isupper() or c == "_" or c.isdigit() for c in name)
