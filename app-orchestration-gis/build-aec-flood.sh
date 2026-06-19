@@ -444,10 +444,13 @@ echo "[12/17] Merge EU flood zones + build layer12-flood-eu-regulatory.pmtiles" 
 
 EU_FLOOD_MERGED="$WORK_DIR/flood-eu-regulatory.geojson"
 if [[ ${#EU_FLOOD_PARTS[@]} -gt 0 && ! -f "$EU_FLOOD_MERGED" ]]; then
-    ogr2ogr -f GeoJSON "$EU_FLOOD_MERGED" "${EU_FLOOD_PARTS[0]}" 2>&1 | tee -a "$LOG"
+    # --config OGR_GEOJSON_MAX_OBJ_SIZE 0 removes the per-feature size limit (IT GeoJSON has large polygons)
+    ogr2ogr --config OGR_GEOJSON_MAX_OBJ_SIZE 0 -f GeoJSON "$EU_FLOOD_MERGED" "${EU_FLOOD_PARTS[0]}" \
+        2>&1 | tee -a "$LOG"
     for i in "${!EU_FLOOD_PARTS[@]}"; do
         [[ $i -eq 0 ]] && continue
-        ogr2ogr -f GeoJSON -update -append "$EU_FLOOD_MERGED" "${EU_FLOOD_PARTS[$i]}" \
+        ogr2ogr --config OGR_GEOJSON_MAX_OBJ_SIZE 0 -f GeoJSON -update -append \
+            "$EU_FLOOD_MERGED" "${EU_FLOOD_PARTS[$i]}" \
             2>&1 | tee -a "$LOG" || true
     done
 fi
