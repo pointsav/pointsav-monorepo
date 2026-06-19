@@ -6,7 +6,7 @@ title: "Enrichment Pipeline Correctness — OLMo 3 Upgrade + Extraction Quality 
 status: active
 owner: project-intelligence
 created: 2026-06-15
-updated: 2026-06-19 (Session 23)
+updated: 2026-06-19 (Session 23 shutdown)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 companion: BRIEF-slm-learning-loop.md
 plan: /home/mathew/.claude/plans/goofy-rolling-nebula.md
@@ -175,6 +175,26 @@ Multi-agent research (3 Explore agents + web research) confirmed why entity extr
   known infrastructure name appears as a distractor. Resolution path: DPO training (deb592ac fix
   now lets enrichment pairs flow into training signal). Tier B is the correct tier for multi-entity.
 
+- 2026-06-19 Session 23 shutdown (yoyo-batch cycle audit + training blocker found):
+  yoyo-batch auto-stopped at 03:41 UTC by budget-exhaustion guard (5928s/7200s consumed).
+  Reviewed all 5 daily cycle logs — critical new finding: **LoRA training has been failing
+  silently in every cycle since the Phase 5-A output-dir fix landed.**
+  Root cause: `/data/weights/adapters` directory does not exist on yoyo-batch's persistent
+  disk. The June 14 manual cycle (last successful training run) wrote to `/home/mathew/adapters/`
+  (ephemeral boot disk). Daily cycle Phase 6 SSH now targets `/data/weights/adapters/
+  apprenticeship-pointsav-incremental` but gets PermissionError on first makedirs call.
+  Error logged in all 5 stints today (rc=1, no receipt written → next cycle retries forever):
+    PermissionError: [Errno 13] Permission denied: '/data/weights/adapters'
+  Fix (one-time, Command scope — next yoyo-batch start):
+    gcloud compute ssh mathew@yoyo-batch --zone us-central1-a -- \
+      "sudo mkdir -p /data/weights/adapters && sudo chown mathew:mathew /data/weights/adapters"
+  After this is done, training will succeed on the next 02:30 UTC cycle.
+  1043 pairs queued (1001 apprenticeship + ~42 enrichment) ready to train on.
+  Enrichment DPO new today: +0 (service-content inactive for Tier A testing all session).
+  Queue state: pending=855, done=3033, poison=74, quarantine=0.
+  Outbox message project-intelligence-20260619-session23-shutdown-full sent to Command
+  with full action priority list (§2 training fix → §3 Stage 6 → §4 rebuild → §5 cleanup).
+
 - 2026-06-17 Session 19 (Totebox rebuild + test): Archive CLAUDE.md + manifest.md contamination fixed
   (was project-knowledge content). service-content binary rebuilt from HEAD (5c3d7f5b, 40/40 tests,
   healthz 11935 entities). yoyo-batch confirmed RUNNING in us-central1-a but llama-server not running
@@ -183,7 +203,7 @@ Multi-agent research (3 Explore agents + web research) confirmed why entity extr
 
 ## Carry-forward
 
-### V2 overhaul — status as of 2026-06-19 Session 23
+### V2 overhaul — status as of 2026-06-19 Session 23 shutdown
 
 **Extraction quality: 12/14** (my 7-example prompt, production test b19oomhj7, ~17 min).
 Agent's committed prompt v3 (3e05f810) expected: **13/14** on clean slot (path fragment passes
@@ -196,6 +216,12 @@ Failures in both prompt approaches:
 Root cause of multi-entity: `yoyo-batch` is a known name in model's context, classified as Project.
 Resolution: DPO training (deb592ac fix now allows enrichment pairs to flow — long-term improvement).
 
+**yoyo-batch: TERMINATED** (auto-stop 03:41 UTC, budget guard). Today: 5928s/7200s consumed.
+**Training blocker confirmed:** All daily cycle training has been failing since Phase 5-A landed.
+  Fix: `sudo mkdir -p /data/weights/adapters && sudo chown mathew:mathew /data/weights/adapters`
+  (run on yoyo-batch via gcloud ssh — one-time; persistent disk survives restarts).
+**Corpus queue:** pending=855, done=3033, poison=74, quarantine=0. 1043 pairs ready to train.
+
 - [x] **Phase 1 (few-shot)** — 8 examples in `EXTRACTION_SYSTEM_PROMPT` (prompt v3, 3e05f810); 43/43 tests
 - [x] **Phase 2 (grammar flag)** — `SERVICE_CONTENT_TIER_A_GRAMMAR` env var wired; reverted on CPU (unusable); stays for Tier B GPU
 - [x] **Phase 3 (OLMo 3 Tier A)** — `Olmo-3-7B-Instruct-Q4_K_M.gguf`, ctx-size 8192, `--no-jinja` (deliberately kept)
@@ -203,12 +229,13 @@ Resolution: DPO training (deb592ac fix now allows enrichment pairs to flow — l
 - [x] **Phase 5a (training base model)** — `run-dpo-training.py` default → `/data/weights/olmo-3-7b-think-hf`
 - [x] **Phase 5b (adapter pull+GCS)** — Phase 6b in `yoyo-daily-cycle.sh` (lines 600–618) already coded; adapter dir exists but empty
 - [x] **Phase 5-A FIX (yoyo-daily-cycle.sh base model)** — Confirmed fixed by Command. Lines 539 + 576 in `/srv/foundry/bin/yoyo-daily-cycle.sh` already have `/data/weights/olmo-3-7b-think-hf` (verified Session 23 by BRIEF cross-check agent).
-- [ ] **Phase 5b verification** — after 5-A fix + next daily cycle (02:30 UTC): check `data/adapters/apprenticeship-pointsav-incremental/adapter_config.json`
+- [ ] **Phase 5-A BLOCKER (adapter output dir)** — `/data/weights/adapters` missing on yoyo-batch persistent disk; PermissionError kills training in every cycle since Phase 5-A landed. Fix (Command, one-time): `gcloud compute ssh mathew@yoyo-batch --zone us-central1-a -- "sudo mkdir -p /data/weights/adapters && sudo chown mathew:mathew /data/weights/adapters"`. Must run before next training attempt.
+- [ ] **Phase 5b verification** — after adapter dir fix + next daily cycle (02:30 UTC): check `data/adapters/apprenticeship-pointsav-incremental/adapter_config.json`
 - [ ] **Phase 5c (adapter eval)** — after adapter pull: run `eval-adapter.sh`; operator approval gates `registry.yaml` update
 - [ ] **Phase 6-A (graph cleanup)** — run `curl http://127.0.0.1:9081/v1/graph/cleanup?module_id=jennifer` after local-content restarts; removes OLMo 2 noise entities
 - [x] **Phase 6-B/C (repair-ledger)** — ran `repair-ledger.py --dry-run`; sweep ledger absent/empty; nothing to repair
 - [ ] **Phase 6-D (enrichment spot-check)** — run 3-5 test extractions via Doorman after local-content restarts
-- [ ] **Phase 7 (final extraction test)** — 12/14 (my 7-example prompt, production test b19oomhj7); prompt v3 (3e05f810) expected 13/14 on clean slot; 6 commits pending Stage 6 (fa97936c d406e1cd 2124c8b6 3e05f810 99f09ed7 deb592ac); after rebuild run production test for v3 baseline confirmation
+- [ ] **Phase 7 (final extraction test)** — 12/14 (my 7-example prompt, test b19oomhj7); prompt v3 (3e05f810) expected 13/14 on clean slot; 8 commits pending Stage 6 (fa97936c→ba9eba57); after Command rebuilds service-content + grants clean slot, run production test for v3 baseline confirmation
 - [ ] **Verify OLMo 3 target_modules** — runtime assertion in `run-dpo-training.py:321-330` verifies on first training run
 - [ ] **Adapter eval gate** — operator reviews eval output before `registry.yaml` promoted
 - [ ] **OLMo upgrade path** — consider `unsloth/Olmo-3-7B-Instruct-GGUF` UD-Q4_K_XL for better accuracy at same size; operator decision gate before local-slm.service restart
