@@ -134,12 +134,30 @@ Last updated: 2026-06-19 [Jennifer Woodfine / claude-code]
 
 [2026-06-19 totebox@claude-code]
 
-## Phase H2 — next (Step 4 stretch: VirtIO serial PD + ratatui, ~200 lines)
+## Phase H2 — seL4 substrate continuation (multi-day, see BRIEF-sel4-unikernel.md)
 
-- [ ] Implement VirtIO serial PD in moonshot-sel4-vmm (~200 lines Rust)
-- [ ] Integrate ratatui rendering via VirtIO console backend
-- [ ] Update moonshot-toolkit TOML spec: `examples/os-console-virtio.toml` (2-PD: console PD + virtio-serial PD)
-- [ ] Gate: ratatui TUI renders in QEMU virtual terminal
+### H2a — Rust rootserver (Day 1, ~3-5 hours)
+- [ ] Add `--target aarch64-unknown-none` support to moonshot-toolkit CompilePd
+- [ ] Add AArch64 asm `_start` + `console_main()` to moonshot-sel4-vmm
+- [ ] `moonshot-toolkit/examples/os-console-rust.toml` — Rust PD spec
+- [ ] Verify: `rustup target list --installed | grep aarch64-unknown-none`
+- **Gate:** "Hello from moonshot-sel4-vmm (Rust)" on QEMU serial. No C in the PD.
+
+### H2b — Two PDs + seL4 IPC (Day 2, ~6-10 hours)
+- [ ] `moonshot-sel4-vmm/src/bootstrap.rs` — rootserver CSpace/VSpace setup (~150 lines)
+- [ ] counter-pd + receiver-pd (C or Rust)
+- [ ] `moonshot-toolkit/examples/os-console-ipc.toml` — 3-PD spec
+- **Gate:** "IPC received: N" printed by receiver-pd via rootserver-distributed endpoint cap.
+
+### H2c — UART MMIO from user space (Day 3, ~4-6 hours)
+- [ ] Rootserver maps PL011 UART page (0x09000000) into console-pd VSpace
+- [ ] Direct MMIO write to UART DR/FR registers (no SysDebugPutChar)
+- **Gate:** "Hello via MMIO UART" from PD-direct register write.
+
+### H3 — VirtIO serial + ratatui (Week 2, 2-3 days)
+- [ ] VirtIO MMIO serial driver (QEMU virt 0x0a000000+; virtqueue rings)
+- [ ] ratatui backend — TestBackend → buffer → VirtIO write per line
+- **Gate:** ratatui layout (borders + 2 panes) visible in QEMU serial output.
 
 ---
 
