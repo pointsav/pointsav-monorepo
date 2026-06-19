@@ -10,10 +10,10 @@ updated: 2026-06-19
 parent: BRIEF-topic-guide-adaptation-plan.md
 ---
 
-> ## 🟢 STATUS: AUTO RUN IN PROGRESS — 2026-06-19
+> ## ✅ STATUS: AUTO RUN COMPLETE — 2026-06-19
 > AUTO run approved: [x]
-> When approved, execute Tracks 1–4 in order. Commit per track (or per article where noted).
-> Surface only real blockers. Report completion summary at end of run.
+> Track 1: COMPLETE | Track 2: PARTIAL (2d/project-console pending Command) | Track 3: COMPLETE | Track 4: COMPLETE
+> All media-knowledge-projects M7+M9 repairs committed. Stage 6 pending Command.
 
 ---
 
@@ -236,4 +236,9 @@ Execute at start of AUTO run (before Tracks 1–3).
 
 ## Carry-forward
 
-(To be filled in at session close.)
+- [ ] **Stage 6** — Command: media-knowledge-projects (tip 7fa466b — 6 commits from this session + prior unpromoted); project-editorial archive pending if any changes
+- [ ] **Track 2d / project-console** — Command routing guidance still pending for PROSE-RESEARCH-ppn-architecture-phd-thesis and knowledge-platform-rewrite destination; 13 project-console artifacts awaiting Command ACK (msg-id: command-20260619-drafts-outbound-pickup-editorial-researc)
+- [ ] **NEXT.md contamination** — NEXT.md has project-knowledge + project-intelligence content concatenated; needs surgical cleanup to isolate project-editorial items only
+- [ ] **media-knowledge-documentation M9** — ES parity sweep was run for media-knowledge-projects only; documentation sub-clone ES pairs not yet checked
+- [ ] **`how-to/collect-location-intelligence-data.es.md`** — ES pair outstanding (carried from prior session)
+- [ ] **F2/F3 dead links** — dead wikilinks in project-editorial; check --strict gate blocked
