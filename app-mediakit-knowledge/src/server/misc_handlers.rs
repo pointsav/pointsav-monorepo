@@ -92,11 +92,10 @@ pub async fn page_handler(
             }
         }
         Err(_) => {
-            format!(
-                "<p class=\"article__lede\">This page is being prepared.</p>\
-                 <p>For immediate assistance, contact us at \
-                 <a href=\"mailto:open.source@pointsav.com\">open.source@pointsav.com</a>.</p>"
-            )
+            "<p class=\"article__lede\">This page is being prepared.</p>\
+             <p>For immediate assistance, contact us at \
+             <a href=\"mailto:open.source@pointsav.com\">open.source@pointsav.com</a>.</p>"
+                .to_string()
         }
     };
 
