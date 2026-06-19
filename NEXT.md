@@ -134,7 +134,7 @@ Last updated: 2026-06-14 [Jennifer Woodfine / claude-code]
 
 ## Stage 6 pending (Command scope — route via outbox)
 
-All Phase 8+9 commits need `bin/promote.sh` from Command Session:
+All Phase 8+9+10+T0 commits + 2026-06-19 need `bin/promote.sh` from Command Session:
 
 | SHA | Subject |
 |---|---|
@@ -147,6 +147,17 @@ All Phase 8+9 commits need `bin/promote.sh` from Command Session:
 | `a27860b3` | feat(tabs): multi-tab ContentCartridge |
 | `2c21e142` | ops(phase9): mark complete — NEXT.md + BRIEF |
 | `469b7147` | test(tabs): 9 unit tests for tab management |
+| `bc95acfa`..`fc4d0978` | Phase 10 commits (F2 People, reconnect watchdog, session persistence) |
+| `5dab352e`..`91eb2148` | T0 pairing + tunnel fixes |
+| `c9084667` | feat(content): pdfium-render optional — pdf feature flag |
+| `3816794d` | docs(briefs): BRIEF-macos-binary-mac-pro |
+
+## darwin-x86_64 binary pending (waiting on Jennifer)
+
+- [ ] Jennifer builds on Mac Pro: `cargo build --release --bin os-console`
+- [ ] Jennifer scps binary to `mathew@34.53.65.203:/tmp/darwin-x86_64-0.2.4`
+- [ ] Deploy: scp to foundry-prod + chmod (instructions in BRIEF-macos-binary-mac-pro.md)
+- [ ] Then: `curl -fsSL https://software.pointsav.com/releases/os-console/install.sh | bash` on Mac Pro
 
 ---
 
