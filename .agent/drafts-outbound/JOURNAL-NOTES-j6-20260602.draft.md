@@ -4,12 +4,15 @@ artifact: JOURNAL-NOTES
 journal: j6
 journal_title: "Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration"
 section: "§3 Design Principles + §4 Implementation — keyboard power moves (2026-06-02)"
-state: draft-pending-editorial-review
+state: language-cleared
 originating_cluster: project-workplace
 created: 2026-06-02
 to: project-editorial
 language_protocol: PROSE-TOPIC
 bcsc_class: current-fact
+forbidden_terms_cleared: true
+language_cleared_by: project-editorial
+language_cleared_date: 2026-06-19
 research_trail:
   source_files:
     - app-workplace-http-prototype/src/assets/memo.html
