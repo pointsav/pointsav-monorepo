@@ -122,10 +122,12 @@
  * Section 1 — Custom properties (token var references; no hardcoded hex)
  * ============================================================================ */
 :root {
-  /* Type — Lapfrog 2030: Oswald/Barlow Condensed display + Nunito Sans body + Source Serif 4 reading */
-  --font-display:  "Oswald", "Trade Gothic LT Std", "Barlow Condensed", "Helvetica Neue", Arial, sans-serif;
-  --font-body:     "Nunito Sans", "Avenir LT Std", "Avenir Next", "Mulish", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
-  --font-reading:  'Source Serif 4', Georgia, ui-serif, serif;
+  /* Type — Sprint I: Source Serif 4 display (authoritative serif) + Inter body (neutral grotesque, already loaded)
+     Both fonts are self-hosted via @font-face above. Condensed display faces (Oswald/Barlow) removed —
+     they signal editorial/athletic, not institutional finance. */
+  --font-display:  "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-body:     "Inter", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-reading:  "Source Serif 4", Georgia, ui-serif, serif;
   /* Marketing token aliases */
   --display: var(--font-display);
   --sans:    var(--font-body);
@@ -155,7 +157,7 @@
   /* Spacing — 8px grid */
   --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
   --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
-  --sp-12: 48px; --sp-16: 64px;
+  --sp-12: 48px; --sp-16: 64px; --sp-20: 80px; --sp-24: 96px;
 
   /* Motion */
   --dur-fast: 150ms; --dur-base: 200ms;
@@ -167,13 +169,16 @@
   --toc-w:      248px;
   --sidenav-w:  256px;
   --content-max: 1440px;
-  --measure:    80ch;
+  --measure:    66ch;
   --bar-h:      56px;
 
-  /* Radii */
-  --radius-sm: 6px;
-  --radius:    10px;
-  --radius-lg: 16px;
+  /* Radii — institutional: near-square, not friendly-app */
+  --radius-sm: 2px;
+  --radius:    4px;
+  --radius-lg: 6px;
+
+  /* Footer surface */
+  --paper-3: #E8EBEd;
 
   /* Semantic colour aliases pointing at token vars from tokens.css */
   --navy:         #164679;
@@ -452,18 +457,19 @@ html.search-open .topnav { margin-bottom: 0; }
   align-items: center;
   min-height: 38px;
   padding: 0 16px;
-  background: var(--accent);
-  color: #fff;
-  font-family: "Barlow Condensed", "Oswald", "Helvetica Neue", Arial, sans-serif;
+  background: transparent;
+  color: var(--navy);
+  border: 1.5px solid var(--navy);
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   border-radius: 2px;
   text-decoration: none;
-  transition: opacity 160ms ease;
+  transition: background 160ms ease, color 160ms ease;
 }
-.topnav .header-cta:hover { opacity: 0.88; }
+.topnav .header-cta:hover { background: var(--navy); color: #fff; }
 
 .brand__mark {
   width: 30px; height: 30px;
@@ -975,16 +981,23 @@ div.mobile-toc-drawer:not([aria-hidden]) {
  * Section 5 — Article surface (Source Serif 4 body, headings, status badge)
  * ============================================================================ */
 .article__title {
-  font-family: var(--font-display); font-weight: 700;
-  font-size: clamp(36px, 4.5vw, 60px); line-height: 1.05;
-  letter-spacing: -0.02em; color: var(--fg-1);
+  font-family: var(--font-reading); font-weight: 700;
+  font-size: clamp(34px, 3.6vw, 48px); line-height: 1.1;
+  letter-spacing: -0.01em; color: var(--fg-1);
   text-wrap: balance;
   margin-bottom: var(--sp-4); padding-bottom: 0;
   border-bottom: none;
 }
 .article__meta-row {
   display: flex; align-items: center; flex-wrap: wrap;
-  gap: var(--sp-3); margin-bottom: var(--sp-6); font-size: 13px;
+  gap: var(--sp-3); margin-bottom: var(--sp-12); font-size: 13px;
+}
+/* Lede / standfirst — styled as a distinct lead-in, not body text */
+.article__lede {
+  font-family: var(--font-reading);
+  font-size: 21px; line-height: 1.5;
+  color: var(--fg-2); max-width: 60ch;
+  margin: 0 0 var(--sp-8);
 }
 
 /* Status badges */
@@ -1041,16 +1054,16 @@ div.mobile-toc-drawer:not([aria-hidden]) {
 }
 .prose > * + * { margin-top: 1.3em; }
 .prose h2, .prose h3 {
-  font-family: var(--font-display); color: var(--fg-1); text-wrap: balance;
+  font-family: var(--font-reading); color: var(--fg-1); text-wrap: balance;
   scroll-margin-top: calc(var(--header-h) + var(--tabs-h) + 12px);
 }
 .prose h2 {
-  font-weight: 700; font-size: var(--text-3xl); letter-spacing: 0.01em;
+  font-weight: 700; font-size: var(--text-3xl); letter-spacing: var(--tracking-heading);
   margin-top: 2.8em; margin-bottom: 0.6em;
   padding-bottom: 0; border-bottom: none;
 }
 .prose h3 {
-  font-weight: 600; font-size: 22px; letter-spacing: 0.01em;
+  font-weight: 600; font-size: 22px; letter-spacing: var(--tracking-heading);
   margin-top: 2.0em; margin-bottom: 0.4em;
 }
 .prose p { margin: 0; }
@@ -1107,7 +1120,7 @@ div.mobile-toc-drawer:not([aria-hidden]) {
 .article-nav__prev:hover, .article-nav__next:hover { text-decoration: underline; }
 
 /* Wikilinks */
-a.wikilink { color: var(--color-link-default, #3366cc); }
+a.wikilink { color: var(--color-link-default, var(--navy)); }
 a.wikilink:hover { text-decoration: underline; }
 a.wikilink-missing, a.wiki-redlink { color: var(--color-link-redlink, #cc3333); }
 
@@ -1221,7 +1234,7 @@ a.wikilink-missing, a.wiki-redlink { color: var(--color-link-redlink, #cc3333); 
  * Section 6 — Home surface (category grid, cluster cards, due-diligence list)
  * ============================================================================ */
 .home-page { padding: var(--sp-8) 0; }
-.home-section { margin-bottom: var(--sp-16); }
+.home-section { margin-bottom: var(--sp-24); }
 .section-head {
   display: flex; align-items: baseline; justify-content: space-between;
   margin-bottom: var(--sp-5);
@@ -1335,10 +1348,10 @@ a.wikilink-missing, a.wiki-redlink { color: var(--color-link-redlink, #cc3333); 
   padding: var(--sp-6); background: var(--bg-elevated);
   border: 1px solid var(--border); border-radius: var(--radius);
   text-decoration: none; color: inherit;
-  transition: border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast), box-shadow var(--dur-fast);
+  transition: border-color var(--dur-fast) var(--ease-out);
 }
 .cat-card:hover {
-  border-color: var(--navy-soft); transform: translateY(-2px); box-shadow: var(--shadow-md);
+  border-color: var(--navy);
 }
 .cat-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
 .cat-card__name { font-family: var(--font-display); font-weight: 600; font-size: 16px; color: var(--fg-1); }
@@ -1369,6 +1382,8 @@ a.wikilink-missing, a.wiki-redlink { color: var(--color-link-redlink, #cc3333); 
   border-bottom: 1px solid var(--rule);
   text-decoration: none; color: inherit; transition: background .12s ease;
 }
+/* kind-badge in the feed is always "Topic" — suppress the redundant label */
+.recent__item .kind-badge { display: none; }
 .recent__item:last-child { border-bottom: 0; }
 .recent__item:hover { background: var(--bg-hover); }
 /* L27: title is its own element — never concatenated with date string */

@@ -1447,6 +1447,15 @@ function initCategoryFacets() {
   });
 }
 
+// Topnav scrolled shadow — adds .scrolled class when page is scrolled > 4px
+(function() {
+  var nav = document.querySelector('header.topnav');
+  if (!nav) return;
+  function update() { nav.classList.toggle('scrolled', window.scrollY > 4); }
+  window.addEventListener('scroll', update, { passive: true });
+  update();
+}());
+
 // Search toggle — opens/closes the topnav search panel
 (function() {
   var btn = document.querySelector('.search-toggle');

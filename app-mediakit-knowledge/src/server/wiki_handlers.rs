@@ -786,10 +786,10 @@ fn wiki_chrome(
                 header.topnav {
                     nav.left {
                         @if woodfine_theme {
-                            a href="https://home.woodfinegroup.com/page/disclaimer" target="_blank" rel="noopener" { "Disclaimer" }
-                            a href="https://home.woodfinegroup.com/page/contact" { "Contact us" }
+                            a href="/page/disclaimer" { "Disclaimer" }
+                            a href="/page/contact" { "Contact us" }
                         } @else {
-                            a href="https://home.pointsav.com/page/disclaimer" target="_blank" rel="noopener" { "Disclaimer" }
+                            a href="/page/disclaimer" { "Disclaimer" }
                         }
                     }
                     a.wordmark href="/" aria-label=(site_title) {
@@ -819,7 +819,7 @@ fn wiki_chrome(
                             (PreEscaped(SEARCH_ICON_SVG))
                         }
                         @if woodfine_theme {
-                            a.header-cta href="https://home.woodfinegroup.com/page/contact" target="_blank" rel="noopener" { "Enquire" }
+                            a.header-cta href="/page/contact" { "Enquire" }
                         }
                     }
                 }
