@@ -23,7 +23,7 @@ fn chrome(
                 a.skip-to-content href="#main-content" { "Skip to content" }
                 header.topnav {
                     nav.left {
-                        a href="https://home.pointsav.com/page/disclaimer" target="_blank" rel="noopener" { "Disclaimer" }
+                        a href="/page/disclaimer" { "Disclaimer" }
                     }
                     a.wordmark href="/" aria-label=(site_title) {
                         (PreEscaped(WORDMARK_SVG_POINTSAV))
@@ -58,6 +58,7 @@ fn chrome(
                     (body)
                 }
                 (shell_footer("documentation", None))
+                script src="/static/wiki.js" defer="true" {}
             }
         }
     }
@@ -68,6 +69,131 @@ fn chrome(
 /// unchanged; both are inert. Renders nothing.
 fn auth_nav_widget(_user: Option<&User>, _pending_count: i64) -> Markup {
     html! {}
+}
+
+/// GET /page/:slug — static pages (Disclaimer, Contact, etc.) served on-domain
+/// with the full wiki chrome so navigation stays on the same domain.
+/// Tries `page-{slug}.md` in the primary content directory first; renders a
+/// placeholder if the file is not present.
+pub async fn page_handler(
+    State(state): State<Arc<AppState>>,
+    Path(slug): Path<String>,
+) -> impl IntoResponse {
+    let brand_instance = state.brand_instance.as_str();
+    let woodfine_theme = matches!(brand_instance, "projects" | "corporate");
+
+    let primary = state.primary_path().to_path_buf();
+    let md_path = primary.join(format!("page-{slug}.md"));
+    let content_html: String = match fs::read_to_string(&md_path).await {
+        Ok(text) => {
+            match parse_page(&text) {
+                Ok(parsed) => render_html_raw(&parsed.body_md, &primary, &[]),
+                Err(_) => String::new(),
+            }
+        }
+        Err(_) => {
+            format!(
+                "<p class=\"article__lede\">This page is being prepared.</p>\
+                 <p>For immediate assistance, contact us at \
+                 <a href=\"mailto:open.source@pointsav.com\">open.source@pointsav.com</a>.</p>"
+            )
+        }
+    };
+
+    let display_title = page_title_for_slug(&slug);
+    let site_title = &state.site_title;
+
+    let page = html! {
+        (DOCTYPE)
+        html lang="en"
+             data-auth="anon"
+             data-instance=(brand_instance) {
+            head {
+                meta charset="utf-8";
+                meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover";
+                title { (display_title) " — " (site_title) }
+                link rel="stylesheet" href="/static/tokens.css";
+                link rel="stylesheet" href="/static/style.css";
+                @if woodfine_theme {
+                    link rel="stylesheet" href="/static/tokens-woodfine.css";
+                }
+                script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'light';document.documentElement.setAttribute('data-theme',t);}());"#)) }
+            }
+            body {
+                a.skip-to-content href="#page-content" { "Skip to content" }
+                header.topnav {
+                    nav.left {
+                        @if woodfine_theme {
+                            a href="/page/disclaimer" { "Disclaimer" }
+                            a href="/page/contact" { "Contact us" }
+                        } @else {
+                            a href="/page/disclaimer" { "Disclaimer" }
+                        }
+                    }
+                    a.wordmark href="/" aria-label=(site_title) {
+                        @if woodfine_theme {
+                            (PreEscaped(WORDMARK_SVG_WOODFINE))
+                        } @else {
+                            (PreEscaped(WORDMARK_SVG_POINTSAV))
+                        }
+                    }
+                    div.right-cluster {
+                        nav.right {
+                            @if woodfine_theme {
+                                a.external href="https://corporate.woodfinegroup.com" target="_blank" rel="noopener" { "Corporate" }
+                                a.external href="https://projects.woodfinegroup.com" target="_blank" rel="noopener" { "Projects" }
+                                a.external href="https://newsroom.woodfinegroup.com" target="_blank" rel="noopener" { "Newsroom" }
+                            } @else {
+                                a.external href="https://software.pointsav.com" target="_blank" rel="noopener" { "Monorepo" }
+                                a.external href="https://design.pointsav.com" target="_blank" rel="noopener" { "Design System" }
+                            }
+                        }
+                        @if woodfine_theme {
+                            a.header-cta href="/page/contact" { "Enquire" }
+                        }
+                        button.search-toggle type="button" aria-label="Search" aria-expanded="false"
+                            aria-controls="topnav-search-panel" {
+                            (PreEscaped(SEARCH_ICON_SVG))
+                        }
+                    }
+                }
+                div.topnav-search-panel #topnav-search-panel aria-hidden="true" {
+                    form.topnav-search action="/search" method="get" role="search" {
+                        input #header-search-q
+                            type="search"
+                            name="q"
+                            placeholder="Search…"
+                            autocomplete="off"
+                            aria-label="Search this wiki"
+                            spellcheck="false";
+                        button.topnav-search-btn type="submit" aria-label="Search" { "→" }
+                    }
+                }
+                main.site-main #page-content {
+                    div.shell {
+                        article.prose {
+                            h1 { (display_title) }
+                            (PreEscaped(content_html))
+                        }
+                    }
+                }
+                (shell_footer(brand_instance, None))
+                script src="/static/wiki.js" defer="true" {}
+            }
+        }
+    };
+
+    axum::response::Html(page.into_string())
+}
+
+fn page_title_for_slug(slug: &str) -> &'static str {
+    match slug {
+        "disclaimer" => "Disclaimer",
+        "contact" => "Contact us",
+        "privacy" => "Privacy Policy",
+        "terms" => "Terms of Use",
+        _ => "Page",
+    }
 }
 
 #[cfg(test)]
