@@ -403,6 +403,7 @@ pub fn glossary_to_entities(rows: &[GlossaryRow]) -> Vec<GraphEntity> {
 
 pub fn themes_to_entities(rows: &[ThemeRow]) -> Vec<GraphEntity> {
     rows.iter()
+        .filter(|r| r.active_state == "active")
         .map(|r| GraphEntity {
             entity_name: r.name.clone(),
             classification: "theme".to_string(),
@@ -417,6 +418,7 @@ pub fn themes_to_entities(rows: &[ThemeRow]) -> Vec<GraphEntity> {
 
 pub fn topics_to_entities(rows: &[TopicRow]) -> Vec<GraphEntity> {
     rows.iter()
+        .filter(|r| r.active_state == "active")
         .map(|r| GraphEntity {
             entity_name: r.title.clone(),
             classification: "topic".to_string(),
