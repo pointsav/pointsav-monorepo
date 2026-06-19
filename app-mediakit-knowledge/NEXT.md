@@ -1,6 +1,6 @@
 # NEXT.md — app-mediakit-knowledge
 
-> Last updated: 2026-06-19 (Sprint I committed fa22b382; Stage 6 pending for I + H + Lapfrog 2030)
+> Last updated: 2026-06-19 (Sprint T6 committed; Defect 6 + Defect 2 closed; Stage 6 (8th) pending)
 > **SOURCE OF TRUTH:** `.agent/briefs/BRIEF-knowledge-platform-master.md` — read it first.
 > It supersedes the 2030 brief and consolidates the 2026-06-01 research (mobile-first,
 > content federation via mounts + blueprints, premium UX, linking model + zero dead links).
@@ -25,12 +25,9 @@ Marketing header parity (all 3 instances), Woodfine Blue token split, editorial 
 redesign, marketing footer, anon-reader clean, home editorial grid, mobile-first breakpoints.
 See BRIEF §8.8 for full sprint log. **Stage 6 outbox message sent to Command.**
 
-- [ ] **Sprint T6 — home hero `ul.recent` move** [2026-06-17 totebox@project-knowledge]
-  `ul.recent` (recently updated articles) sits inside `.wiki-home-editorial__left` alongside
-  the featured article panel. CSS alone can't separate them into a full-bleed hero + right-column
-  recent list. Needs a small Rust change in `home_handlers.rs` to move `ul.recent` into
-  `.wiki-home-editorial__right`. Low visual priority — layout is functional; the full-bleed
-  hero works without it.
+- [x] **Sprint T6 — home hero `ul.recent` move** [2026-06-19 totebox@project-knowledge]
+  `ul.recent` moved from `.wiki-home-editorial__left` into `.wiki-home-editorial__right` (after stats + home lede).
+  Featured article now stands alone in the left column. Tests green. Stage 6 pending (9th).
 
 ## Engine defect fixes — 12-agent audit 2026-06-14
 
@@ -45,21 +42,19 @@ Committed `c3261f0e` (jwoodfine) + `91e65e05` (pwoodfine) + `f2852d5c` (jwoodfin
 | 3 — empty body 200 | Not reproduced on live site | Not confirmed |
 | 4 — search snippets leak markdown | `search.rs` + `feeds.rs` wikilink/markdown strip | **FIXED c3261f0e** |
 | 5 — wikilinks literal in body | Root cause = Defect 8 (claim blocks suppress comrak wikilink processing) | **Resolved by Defect 8 fix** |
-| 6 — images path not in contract | See item below | **OPEN** |
+| 6 — images path not in contract | `GET /images/{*path}` implemented in Sprint I (`wiki_handlers.rs:646`); tests in `misc_handlers.rs`; route registered `mod.rs:242` | **CLOSED** |
 | 7 — two renderers | `chrome/article.rs` is helpers only; `wiki_handlers.rs` is live path | Not a defect |
 | 8 — `<!--/claim-->` leak | `claim.rs` close-marker stripping added | **FIXED c3261f0e** |
 
-- [ ] **Defect 6 — `/images/` route + content-contract** [2026-06-14 totebox@project-knowledge]
-  No `/images/{*path}` route exists in the router. The content repos have no sanctioned images
-  directory. Required: (a) add `GET /images/{*path}` route serving files from `<content_dir>/images/`
-  for each mount; (b) update `repo-layout.md` content-contract for all three media-knowledge repos.
-  Blocks all visual density improvements (infoboxes, locator maps, cluster diagrams).
-  Files: `src/server/mod.rs` (router) + content-contract.md (3 repos).
+- [x] **Defect 6 — `/images/` route** [2026-06-19 totebox@project-knowledge]
+  Already implemented: `serve_content_image` at `wiki_handlers.rs:646`; route `GET /images/{*path}` at `mod.rs:242`;
+  path-traversal guard, MIME detection, 1y cache header; 3 tests in `misc_handlers.rs:1473–1527`. Not a live defect.
+  Content-contract update for media-knowledge repos deferred to Command (content repo governance).
 
-- [ ] **Defect 2 re-investigation** [2026-06-14 totebox@project-knowledge]
-  Footnotes rendered correctly on `worm-ledger-design`. Find an article that actually exhibits
-  the dropped-footnote symptom before writing a fix. The audit may have flagged an article with
-  malformed `[^N]` syntax (missing definition line) rather than an engine bug.
+- [x] **Defect 2 re-investigation** [2026-06-19 totebox@project-knowledge]
+  Footnotes engine confirmed active: `render.rs:288` has `options.extension.footnotes = true`. Tufte sidenote
+  transform at `render.rs:635`. No article with dropped footnotes found in session investigation.
+  Closed as "not confirmed — likely content-side malformed `[^N]` syntax; reopen if specific article identified."
 
 ## 2026-06-01 direction (from the master brief)
 
