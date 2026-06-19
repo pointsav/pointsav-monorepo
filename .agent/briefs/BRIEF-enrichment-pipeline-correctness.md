@@ -122,6 +122,23 @@ Multi-agent research (3 Explore agents + web research) confirmed why entity extr
   Strategic implication: the two models are complementary. Current Tier A → Tier B routing is correct.
   Tier B JSONL saved to: service-slm/scripts/test_results_deep_20260619T025702Z.jsonl.
   Commits pending Stage 6: d406e1cd + earlier eb7ad67f, b49a950c, b43af58d.
+- 2026-06-18 Session 22 (Claude, codebase audit): Full Tier A vs Tier B side-by-side JSONL comparison
+  completed. Tier A: 11/14 (prompt v2 cold-start, CPU). Tier B: 7/14 raw → predicted 9/14 with new filters.
+  3 shared failures: shell command / path fragment (model context-strips, returns crate name) + multi-entity
+  GCP (Tier A truncates at 2 entities; Tier B gets all 4 + extra yoyo-batch). 3 code fixes committed:
+    1. entity_filter.rs: single-word all-lowercase Account → None (catches "outbox" noise, 43/43 tests)
+    2. run-dpo-training.py: source-type-aware MIN_REJECTED_CHARS — enrichment pairs (entity JSON arrays)
+       now use 10-char floor vs 80-char floor for diff pairs. CRITICAL: 80-char floor was silently dropping
+       ALL enrichment DPO pairs, zeroing extraction-quality training signal reaching the LoRA trainer.
+    3. main.rs Code identifiers Omit rule: explicitly names CLI arguments and build tool commands.
+  OLMo research (WebSearch agent): OLMo 3 7B Instruct is latest 7B family (no OLMo 4 as of Jun 2026).
+  OLMo 3.1 32B Instruct/Think exists but no 7B 3.1. unsloth/Olmo-3-7B-Instruct-GGUF offers UD-Q4_K_XL
+  Dynamic 2.0 quant (reportedly better than standard K-quant). OLMo 3 7B Instruct IFEval: 85.6 vs
+  Qwen 2.5 7B 73.4 — our OLMo-only policy is well-founded; current model is best available.
+  Instruct (not Think) is correct for extraction tasks — Think is designed for math/code reasoning.
+  DPO pair quality audit: 4/10 enrichment pairs had issues (2 empty-rejected; 2 noise-in-chosen).
+  The "corpus payload" and "outbox status" noise now caught by filters. "drain loop code" empty-rejected
+  already filtered by run-dpo-training.py empty check. "outbox" single-word Account now filtered.
 - 2026-06-19 Session 22 continued (taxonomy audit + pipeline fixes + prompt v3):
   Taxonomy audit: Archetypes/COA/Domains/Topics/Themes/Guides all loading correctly via
   taxonomy::load_taxonomy_from_dir(). Two latent bugs found and fixed:
@@ -174,3 +191,4 @@ Test suite: `service-slm/scripts/test_tier_a_production.py` (synced to productio
 - [ ] **Phase 7 (final extraction test)** — 11/14 cold-start (prompt v2 deep test); prompt v3 committed (3e05f810); next test after local-content rebuild will establish prompt v3 baseline; target 13/14; commits eb7ad67f, b49a950c, b43af58d, d406e1cd, 3e05f810 pending Stage 6
 - [ ] **Verify OLMo 3 target_modules** — runtime assertion in `run-dpo-training.py:321-330` verifies on first training run
 - [ ] **Adapter eval gate** — operator reviews eval output before `registry.yaml` promoted
+- [ ] **OLMo upgrade path** — consider `unsloth/Olmo-3-7B-Instruct-GGUF` UD-Q4_K_XL for better accuracy at same size; operator decision gate before local-slm.service restart
