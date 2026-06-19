@@ -3,7 +3,7 @@
 Hot open items. ≤200 lines. Backlog at `.agent/next-backlog.md`.
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 
-Last updated: 2026-06-19
+Last updated: 2026-06-19 (Session 25 shutdown)
 
 ---
 
@@ -20,6 +20,17 @@ Last updated: 2026-06-19
 - [ ] **CLAUDE.md contamination** — still contains project-console mission text; replace with
       correct project-intelligence SLM/Doorman/OLMo/LoRA/DataGraph content; Totebox scope
       [2026-06-16 command@claude-code]
+- [ ] **Phase 5b — adapter pull verification** — after next 02:30 UTC daily cycle:
+      check `/srv/foundry/data/adapters/apprenticeship-pointsav-incremental/adapter_config.json`;
+      if absent: check `journalctl -u local-yoyo-daily` for rsync failure
+      [2026-06-19 totebox@project-intelligence]
+- [ ] **Phase 6-D — enrichment spot-check** — run 3-5 targeted extractions via
+      `curl http://127.0.0.1:9080/v1/extract` to confirm Doorman Tier A fallback
+      (f1879462) works correctly; check `entities` field is non-empty
+      [2026-06-19 totebox@project-intelligence]
+- [ ] **Remove dead config** — `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=false` in
+      local-content.service systemd unit is unreferenced in code; remove when convenient
+      [2026-06-19 totebox@project-intelligence]
 
 ## Blocked — Command Session (route via outbox)
 
