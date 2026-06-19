@@ -235,6 +235,10 @@ fi
 echo "" | tee -a "$LOG"
 echo "[3/9] Sample seismic PGA at cluster centroids" | tee -a "$LOG"
 
+# USGS data is GeoJSON (not raster); USGS_TIF is unused but referenced in the
+# heredoc for legacy raster fallback path — set explicitly to avoid set -u error.
+USGS_TIF="${USGS_TIF:-}"
+
 python3 - <<PYEOF 2>&1 | tee -a "$LOG"
 import json, subprocess, csv, math, pathlib, sys
 
