@@ -1,4 +1,21 @@
-// Architectural Scaffold
-pub fn system_status() -> &'static str {
-    "SYSTEM EVENT: moonshot-sel4-vmm scaffold verified."
-}
+//! moonshot-sel4-vmm — seL4 Microkit Protection Domain runtime.
+//!
+//! Provides:
+//! - `syscall`: raw seL4 AArch64 ABI wrappers (unsafe, inline asm)
+//! - `types`:   MsgInfo and ChannelId IPC types
+//! - `debug`:   DebugPutChar serial output for PD development
+//!
+//! Phase H1 target: rootserver ELF that prints via DebugPutChar.
+//! Phase H2 target: full Microkit PD event loop (notified / protected callbacks).
+//!
+//! Build target: aarch64-unknown-none (bare metal, no OS).
+//! No heap allocator required for phase H1.
+
+#![no_std]
+
+pub mod debug;
+pub mod syscall;
+pub mod types;
+
+pub use debug::{putchar, puts, puts_line, spin, write_bytes};
+pub use types::{ChannelId, MsgInfo};
