@@ -166,8 +166,8 @@ Last updated: 2026-05-31.
 | moonshot-network | Scaffold-coded | moonshot | 4 files |
 | moonshot-parser | Scaffold-coded | moonshot | 4 files; incremental syntax parser — replaces tree-sitter |
 | moonshot-protocol | Scaffold-coded | moonshot | 4 files |
-| moonshot-sel4-vmm | Scaffold-coded | moonshot | 4 files |
-| moonshot-toolkit | Scaffold-coded | moonshot | 5 files; Rust-only build orchestrator per repo CLAUDE.md |
+| moonshot-sel4-vmm | Active | moonshot | Phase H1 2026-06-19; `#![no_std]` seL4 PD runtime; syscall.rs (ABI wrappers, cfg-gated AArch64 asm), debug.rs (putchar/puts/spin), types.rs (MsgInfo + ChannelId); standalone `[workspace]`; 8 files |
+| moonshot-toolkit | Active | moonshot | v0.3.1; Phase 1C complete 2026-05-27; Rust-only build orchestrator; TOML spec → BuildPlan → elfloader ELF; 35 tests; produces `build/system-image.bin`; standalone `[workspace]`; own CWD required for build |
 
 ## Tool (`tool-*`)
 
@@ -204,14 +204,14 @@ Last updated: 2026-05-31.
 
 ---
 
-## Summary (2026-06-15)
+## Summary (2026-06-19)
 
-- **Active:** 13 (adds `service-vm-host` 2026-06-15)
-- **Scaffold-coded:** 58 (`service-vm-host` promoted to Active 2026-06-15)
+- **Active:** 15 (adds `moonshot-sel4-vmm` + `moonshot-toolkit` 2026-06-19)
+- **Scaffold-coded:** 56 (two promoted to Active 2026-06-19)
 - **Reserved-folder:** 39
 - **Defect:** 0
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 113. Last updated: 2026-06-15.
+**Total rows:** 113. Last updated: 2026-06-19.
