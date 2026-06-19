@@ -239,6 +239,20 @@ pub fn coerce_classification(entity_name: &str, classification: &str) -> Option<
     {
         return None;
     }
+    // Single-word all-lowercase Account with no digits, colons, or at-sign → reject.
+    // Real account identifiers (GCP projects, service accounts, contract IDs) always
+    // contain at least one structural character. A bare lowercase word ("outbox",
+    // "inbox", "queue") is a generic noun, not an account reference.
+    if classification == "Account"
+        && !entity_name.contains(' ')
+        && !entity_name.contains('-')
+        && !entity_name.contains(':')
+        && !entity_name.contains('@')
+        && !entity_name.contains('.')
+        && entity_name.chars().all(|c| c.is_ascii_lowercase())
+    {
+        return None;
+    }
     Some(classification.to_string())
 }
 
@@ -434,6 +448,26 @@ mod tests {
         // service- prefix project names (no .service suffix) must pass
         assert!(!is_noise_entity_name("service-vm-fleet"));
         assert!(!is_noise_entity_name("service-content"));
+    }
+
+    #[test]
+    fn coerce_single_word_lowercase_account_rejected() {
+        // Bare lowercase single-word → not an account identifier
+        assert_eq!(coerce_classification("outbox", "Account"), None);
+        assert_eq!(coerce_classification("inbox", "Account"), None);
+        assert_eq!(coerce_classification("queue", "Account"), None);
+        // Lowercase with hyphens also rejected by existing rule (no structural chars)
+        assert_eq!(coerce_classification("gcp-foundry-prod", "Account"), None);
+        // Accounts with structural characters (@ or .) pass through
+        assert_eq!(
+            coerce_classification("jennifer@woodfine.com", "Account"),
+            Some("Account".to_string())
+        );
+        // ALL_CAPS with digits pass through
+        assert_eq!(
+            coerce_classification("PROJECT-12345", "Account"),
+            Some("Account".to_string())
+        );
     }
 
     #[test]
