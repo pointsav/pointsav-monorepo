@@ -6,7 +6,7 @@ title: "Enrichment Pipeline Correctness — OLMo 3 Upgrade + Extraction Quality 
 status: active
 owner: project-intelligence
 created: 2026-06-15
-updated: 2026-06-19 (Session 24 — all blockers actioned by Command)
+updated: 2026-06-19 (Session 25 — flow root cause found + Doorman Tier A fallback committed)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 companion: BRIEF-slm-learning-loop.md
 plan: /home/mathew/.claude/plans/goofy-rolling-nebula.md
@@ -259,3 +259,27 @@ Resolution: DPO training (deb592ac fix now allows enrichment pairs to flow — l
 - [ ] **Verify OLMo 3 target_modules** — runtime assertion in `run-dpo-training.py:321-330` verifies on first training run
 - [ ] **Adapter eval gate** — operator reviews eval output before `registry.yaml` promoted
 - [ ] **OLMo upgrade path** — consider `unsloth/Olmo-3-7B-Instruct-GGUF` UD-Q4_K_XL for better accuracy at same size; operator decision gate before local-slm.service restart
+
+### Session 25 additions (2026-06-19)
+
+- **Flow root cause confirmed:** service-content's `call_tier_a_extract` calls Doorman at
+  `/v1/chat/completions` (NOT `/v1/extract`) with the full 8-example prompt v3.
+  `[TIER-A] Unavailable` is caused by **slot contention** — single llama-server slot occupied
+  by a foreground test or chat session. llama-server returns 503 in <1s → `None` → "Unavailable."
+  `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=false` in systemd unit is **dead config** — not
+  referenced anywhere in the code. Can be removed.
+
+- **Fix committed (f1879462):** Doorman `/v1/extract` handler now falls back to Tier A (no
+  grammar, pre-fill `[{"` anchor, 512-token max, separate RequestId) when Tier B circuit is open.
+  Helps external `/v1/extract` callers. Does NOT fix service-content's `/v1/chat/completions`
+  slot contention issue.
+
+- **Fix required (Command scope — `--parallel 2`):** Add `--parallel 2` to llama-server flags in
+  `infrastructure/local-slm.service`. Two slots allow corpus drain + foreground tests to run
+  concurrently without blocking. Outbox message sent: `project-intelligence-20260619-flow-fix-slot-stage6`.
+
+- **Training fixes committed (60e88399):** LoRA r=16→32, alpha=32→64, `loss_type="sigmoid_norm"`
+  in DPOConfig fallback (prevents length-bias: chosen=JSON vs rejected=[]), `eval_dataset`
+  wired to both SimPOTrainer and DPOTrainer (was split but never passed).
+
+- **Stage 6 pending:** 3 commits: `1fe42506`, `60e88399`, `f1879462` + BRIEF commit.
