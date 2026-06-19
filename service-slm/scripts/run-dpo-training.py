@@ -41,9 +41,12 @@ from pathlib import Path
 FOUNDRY_ROOT = os.environ.get("FOUNDRY_ROOT", "/srv/foundry")
 GCS_BUCKET = os.environ.get("SLM_YOYO_WEIGHTS_GCS_BUCKET", "")
 
-# LoRA hyperparameters for OLMo 7B — conservative defaults
-LORA_R = 16
-LORA_ALPHA = 32
+# LoRA hyperparameters for OLMo 7B
+# r=32/alpha=64: research on 7B extraction tasks shows meaningful gains over r=16 (clinical
+# extraction: 10-20pt F1 improvement at r=32; r=16 underfits narrow-task preference signal).
+# Adapter size doubles (~200 MB → ~400 MB) but stays well within persistent disk budget.
+LORA_R = 32
+LORA_ALPHA = 64
 LORA_DROPOUT = 0.05
 LORA_TARGET_MODULES = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
 MAX_PROMPT_LENGTH = 512
@@ -422,6 +425,7 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
             model=model,
             args=training_args,
             train_dataset=split["train"],
+            eval_dataset=split["test"],
             processing_class=tokenizer,
             peft_config=peft_config,
             callbacks=callbacks or None,
@@ -436,6 +440,10 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
             gradient_checkpointing_kwargs={"use_reentrant": False},  # prevents silent zero-grad on transformers 5.x (TRL #2486)
             learning_rate=LEARNING_RATE,
             beta=BETA,
+            loss_type="sigmoid_norm",  # length-normalised DPO — prevents "longer = better" bias
+            # (chosen=populated JSON, rejected=[] creates extreme length imbalance;
+            # sigmoid_norm divides log-prob by sequence length before computing loss.
+            # Added per OLMo/Tülu 3 training playbook; native TRL support since v0.9.)
             max_length=_max_length,
             logging_steps=5,
             save_steps=5,        # checkpoint every 5 steps (corpus is small; 50 was never reached in 1 epoch)
@@ -451,6 +459,7 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
             ref_model=None,  # uses implicit reference (PEFT base model)
             args=training_args,
             train_dataset=split["train"],
+            eval_dataset=split["test"],
             processing_class=tokenizer,
             peft_config=peft_config,
             callbacks=callbacks or None,
