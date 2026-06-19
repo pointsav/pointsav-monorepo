@@ -33,6 +33,11 @@ use std::sync::Arc;
 pub struct TierBInfo {
     pub configured: bool,
     pub health_up: bool,
+    /// Seconds since the health probe last marked this node unavailable.
+    /// `null` when health is currently up. Independent of circuit state —
+    /// non-zero here means probes are failing even if `circuit` shows "closed"
+    /// (circuit only trips on actual inference failures, not probe failures).
+    pub health_down_secs: Option<u64>,
     pub circuit: &'static str,
     pub opened_for_secs: Option<u64>,
     /// Why the circuit opened. Derived from health_up + circuit state.
@@ -155,6 +160,7 @@ impl Doorman {
                 let info = TierBInfo {
                     configured: true,
                     health_up,
+                    health_down_secs: client.health_down_secs(),
                     circuit,
                     opened_for_secs: client.circuit.opened_for_secs(),
                     reason,
