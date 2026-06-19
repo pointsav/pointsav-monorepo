@@ -78,3 +78,6 @@ strip = "symbols"
 [profile.release.package.app-mediakit-marketing]
 opt-level = 3
 strip = "symbols"
+
+[patch.crates-io]
+tantivy-common = { path = "vendor-tantivy-common" }
