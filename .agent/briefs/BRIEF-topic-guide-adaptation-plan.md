@@ -3,10 +3,10 @@ artifact: brief
 schema: foundry-brief-v1
 brief-id: project-editorial-topic-guide-adaptation-2026-06-14
 title: "TOPIC and GUIDE Adaptation Plan — §16 Quality Programme"
-status: active
+status: reference
 owner: project-editorial
 created: 2026-06-14
-updated: 2026-06-18
+updated: 2026-06-19
 parent: BRIEF-artifact-style-guide.md §16
 ---
 
