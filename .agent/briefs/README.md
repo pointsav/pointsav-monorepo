@@ -21,7 +21,7 @@ When a BRIEF graduates to a deliverable, it routes here:
 | DESIGN-* | project-design drafts-outbound |
 | GUIDE-* | Command Session (woodfine/* customer tier) |
 
-## Archived briefs
+## Contamination note (2026-06-19)
 
 | File | Archived date | Notes |
 |------|--------------|-------|
