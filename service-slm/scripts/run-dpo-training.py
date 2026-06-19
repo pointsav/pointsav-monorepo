@@ -54,9 +54,19 @@ NUM_EPOCHS = 1   # lowered from 3; 3 epochs on single-task corpus → over-reinf
 BETA = 0.1  # DPO default. Prior 0.5 justification (empty-"[]" rejected) is obsolete — those pairs are now filtered.
 
 
-# Minimum rejected side length. Pairs below this are template stubs that teach
-# the model "longer = better" rather than quality (Jun-14 audit finding).
-MIN_REJECTED_CHARS = 80
+# Minimum rejected side length for DIFF pairs. Pairs below this are template stubs
+# that teach the model "longer = better" rather than quality (Jun-14 audit finding).
+MIN_REJECTED_CHARS_DIFF = 80
+
+# Minimum rejected side length for ENRICHMENT pairs (source_type=datagraph-enrichment).
+# Enrichment rejected sides are JSON entity arrays, not diffs — naturally short.
+# A rejected side of `[]` is already caught by the empty check above; a rejected side
+# of `[{"classification":"Account","entity_name":"outbox"}]` is ~55 chars and IS a
+# valid training signal. A floor of 10 covers the minimum meaningful JSON entity object
+# while excluding genuine empty/stub values.
+# Jun-18 audit finding: 80-char floor was silently dropping ALL enrichment pairs,
+# zeroing out the extraction-quality training signal reaching the LoRA trainer.
+MIN_REJECTED_CHARS_ENTITIES = 10
 
 # Maximum chosen/rejected length ratio. Must match corpus_gate.rs MAX_LENGTH_RATIO (8.0).
 # Was 5.0 — that was too strict: dropped 77% of valid pairs (565/730). SimPO's length
@@ -151,8 +161,12 @@ def load_feedback_files(corpus_path: str) -> list[dict]:
         if is_echo:
             skipped_template_echo += 1
             continue
-        # Skip pairs where the rejected side is too short to carry preference signal
-        if len(rejected) < MIN_REJECTED_CHARS:
+        # Skip pairs where the rejected side is too short to carry preference signal.
+        # Enrichment pairs (entity JSON arrays) use a lower floor than diff pairs.
+        source_type = d.get("source_type", "")
+        is_enrichment = source_type == "datagraph-enrichment"
+        min_chars = MIN_REJECTED_CHARS_ENTITIES if is_enrichment else MIN_REJECTED_CHARS_DIFF
+        if len(rejected) < min_chars:
             skipped_too_short += 1
             continue
         # Skip pairs with extreme length ratio (teaches length, not quality)
