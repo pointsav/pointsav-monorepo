@@ -6,7 +6,7 @@ title: "Enrichment Pipeline Correctness — OLMo 3 Upgrade + Extraction Quality 
 status: active
 owner: project-intelligence
 created: 2026-06-15
-updated: 2026-06-18 (Session 21)
+updated: 2026-06-19 (Session 22 continued)
 author: totebox@project-intelligence (claude-sonnet-4-6)
 companion: BRIEF-slm-learning-loop.md
 plan: /home/mathew/.claude/plans/goofy-rolling-nebula.md
@@ -55,7 +55,7 @@ Multi-agent research (3 Explore agents + web research) confirmed why entity extr
 - OLMo 3 7B Think HF weights already on persistent disk — training base model path updated to `/data/weights/olmo-3-7b-think-hf` (no re-download).
 - Adapter output path moved from boot disk (`/home/mathew/adapters/`) to persistent weights disk (`/data/weights/adapters/`) — survives ALL VM cycles including reprovision.
 - Adapter pull-back added to yoyo-daily-cycle.sh: workspace VM rsyncs adapter from yoyo-batch after training, then uploads to GCS as backup.
-- Few-shot examples (5 examples) added to `EXTRACTION_SYSTEM_PROMPT` before any model upgrade.
+- Few-shot examples (8 examples) added to `EXTRACTION_SYSTEM_PROMPT` before any model upgrade.
 - Grammar constraint env flag (`SERVICE_CONTENT_TIER_A_GRAMMAR`) added; test on OLMo 3; if grammar works on OLMo 3 enable via `local-content.service` env var.
 
 ## Decisions open
@@ -105,7 +105,9 @@ Multi-agent research (3 Explore agents + web research) confirmed why entity extr
   7 commits promoted by Command (Stage 6); 3 more pending (eb7ad67f, b49a950c, b43af58d).
 - 2026-06-18 Session 22 (Tier A vs Tier B deep comparison): First side-by-side comparison run using
   new `test_tier_ab_deep.py` (verbose per-step filter chain logging + JSONL output). Tier B (yoyo-batch
-  OLMo 3 7B Think, 10-11 tok/s GPU) scored 7/14 raw vs Tier A (OLMo 3 7B Instruct, CPU) at 13/14.
+  OLMo 3 7B Think, 10-11 tok/s GPU) scored 7/14 raw vs Tier A (OLMo 3 7B Instruct, CPU) at 11/14.
+  Corrected: earlier "13/14" was on a stale test script (example 6 still had old Mathew/us-central1-a
+  text while production main.rs had already switched to Peter/us-central1-b). True production score: 11/14.
   Two filter gaps found and fixed (commit d406e1cd, 42/42 tests):
     1. `.service` suffix missing from PATH_SUFFIXES — caught local-content.service as false Project
     2. Multi-word lowercase Project phrase rule — rejected "outbox status", "corpus payload key",
@@ -118,9 +120,29 @@ Multi-agent research (3 Explore agents + web research) confirmed why entity extr
   Tier B **outperforms** Tier A on: GCP zone recognition (us-central1-b correctly as Location).
   Tier A **outperforms** Tier B on: negation, noise rejection, instruction following.
   Strategic implication: the two models are complementary. Current Tier A → Tier B routing is correct.
-  Tier A deep test running (CPU, 30-60 min); JSONL at test_results_deep_20260619T025702Z.jsonl (Tier B).
   Tier B JSONL saved to: service-slm/scripts/test_results_deep_20260619T025702Z.jsonl.
   Commits pending Stage 6: d406e1cd + earlier eb7ad67f, b49a950c, b43af58d.
+- 2026-06-19 Session 22 continued (taxonomy audit + pipeline fixes + prompt v3):
+  Taxonomy audit: Archetypes/COA/Domains/Topics/Themes/Guides all loading correctly via
+  taxonomy::load_taxonomy_from_dir(). Two latent bugs found and fixed:
+    1. taxonomy.rs active_state not filtered — themes_to_entities() and topics_to_entities()
+       now skip rows where active_state != "active". No functional impact today (all rows are
+       active) but prevents stale taxonomy from reaching the graph.
+    2. graph_cleanup OOV check missing — /v1/graph/cleanup now flags entities whose
+       classification is not in ALLOWED_CLASSIFICATIONS (e.g. 'Technology', 'Organisation'
+       from pre-OLMo3 era). Reason code 'oov-classification'. http.rs. Fix C from audit plan.
+  Note: taxonomy entities (module_id="__taxonomy__") are correctly isolated from the inference
+  context injection path — the Doorman's graph_context query uses the session module_id
+  (e.g. "jennifer"), so taxonomy is reference-only, not injected into extraction prompts.
+  Prompt v3 (8 examples, commit 3e05f810): Split combined example 5 (path+cargo) into two
+  dedicated examples (path fragment alone, CLI command alone). Added automation bot example (8).
+  Extended code-identifier instruction to explicitly name build tool commands and CLI arguments.
+  Synced all 3 files: main.rs, test_tier_a_production.py, test_tier_ab_deep.py. 43/43 tests.
+  Complete Tier A vs Tier B comparison from deep test JSONL:
+    - Both pass: core(2/2), negation trap, commit prefix, workspace(2/2), Doorman
+    - Tier A only: negated person excluded, conditional exclusion, env var, abstract tech nouns
+    - Both fail: shell command, path fragment, multi-entity (3 shared failures)
+  Commits pending Stage 6: d406e1cd, 3e05f810 + earlier eb7ad67f, b49a950c, b43af58d.
 - 2026-06-17 Session 19 (Totebox rebuild + test): Archive CLAUDE.md + manifest.md contamination fixed
   (was project-knowledge content). service-content binary rebuilt from HEAD (5c3d7f5b, 40/40 tests,
   healthz 11935 entities). yoyo-batch confirmed RUNNING in us-central1-a but llama-server not running
@@ -129,26 +151,26 @@ Multi-agent research (3 Explore agents + web research) confirmed why entity extr
 
 ## Carry-forward
 
-### V2 overhaul — status as of 2026-06-18 Session 21
+### V2 overhaul — status as of 2026-06-19 Session 22 continued
 
-**Extraction quality: 13/14** (up from 7/14 baseline). Test suite: `service-slm/scripts/test_tier_a_production.py`.
-One stubborn failure: GCP zone test — model extracts `yoyo-batch` as Project instead of `us-central1-b` as
-Location, even when example 6 IS the exact test sentence. Pre-fill `[{"` commits model to first entity before
-context is fully weighted; CPU-mode instruction following cannot overcome yoyo-batch salience. Fix: grammar
-constraints on Tier B GPU, or accept 13/14 as CPU-mode ceiling.
+**Extraction quality: 11/14** (deep test cold-start, test_tier_ab_deep.py with prompt v2).
+Prompt v3 (3e05f810) targets 13/14 by adding dedicated examples for the 2 shared-fail test cases.
+Remaining 3 failures: shell command extraction (both tiers), path fragment extraction (both tiers),
+multi-entity pre-fill bias (Tier A). These are model-level issues; filter cannot fix them.
+Test suite: `service-slm/scripts/test_tier_a_production.py` (synced to production main.rs prompt v3).
 
-- [x] **Phase 1 (few-shot)** — 7 examples in `EXTRACTION_SYSTEM_PROMPT`; 40/40 tests; multiple commits
+- [x] **Phase 1 (few-shot)** — 8 examples in `EXTRACTION_SYSTEM_PROMPT` (prompt v3, 3e05f810); 43/43 tests
 - [x] **Phase 2 (grammar flag)** — `SERVICE_CONTENT_TIER_A_GRAMMAR` env var wired; reverted on CPU (unusable); stays for Tier B GPU
 - [x] **Phase 3 (OLMo 3 Tier A)** — `Olmo-3-7B-Instruct-Q4_K_M.gguf`, ctx-size 8192, `--no-jinja` (deliberately kept)
 - [x] **Phase 4 (yoyo-batch)** — RUNNING in us-central1-a; all 3 Tier B circuits CLOSED (trainer/default/graph); queue_pending=876
 - [x] **Phase 5a (training base model)** — `run-dpo-training.py` default → `/data/weights/olmo-3-7b-think-hf`
 - [x] **Phase 5b (adapter pull+GCS)** — Phase 6b in `yoyo-daily-cycle.sh` (lines 600–618) already coded; adapter dir exists but empty
-- [ ] **Phase 5-A FIX (yoyo-daily-cycle.sh base model)** — SSH training invocation still uses `allenai/OLMo-2-1124-7B-Instruct`; must change to `/data/weights/olmo-3-7b-think-hf`. Outbox sent to Command (2026-06-18).
+- [x] **Phase 5-A FIX (yoyo-daily-cycle.sh base model)** — Confirmed fixed by Command. Lines 539 + 576 in `/srv/foundry/bin/yoyo-daily-cycle.sh` already have `/data/weights/olmo-3-7b-think-hf` (verified Session 23 by BRIEF cross-check agent).
 - [ ] **Phase 5b verification** — after 5-A fix + next daily cycle (02:30 UTC): check `data/adapters/apprenticeship-pointsav-incremental/adapter_config.json`
 - [ ] **Phase 5c (adapter eval)** — after adapter pull: run `eval-adapter.sh`; operator approval gates `registry.yaml` update
 - [ ] **Phase 6-A (graph cleanup)** — run `curl http://127.0.0.1:9081/v1/graph/cleanup?module_id=jennifer` after local-content restarts; removes OLMo 2 noise entities
 - [x] **Phase 6-B/C (repair-ledger)** — ran `repair-ledger.py --dry-run`; sweep ledger absent/empty; nothing to repair
 - [ ] **Phase 6-D (enrichment spot-check)** — run 3-5 test extractions via Doorman after local-content restarts
-- [x] **Phase 7 (final extraction test)** — 13/14 confirmed (byqz1a9qa); BRIEF updated; commits eb7ad67f, b49a950c, b43af58d pending Stage 6
+- [ ] **Phase 7 (final extraction test)** — 11/14 cold-start (prompt v2 deep test); prompt v3 committed (3e05f810); next test after local-content rebuild will establish prompt v3 baseline; target 13/14; commits eb7ad67f, b49a950c, b43af58d, d406e1cd, 3e05f810 pending Stage 6
 - [ ] **Verify OLMo 3 target_modules** — runtime assertion in `run-dpo-training.py:321-330` verifies on first training run
 - [ ] **Adapter eval gate** — operator reviews eval output before `registry.yaml` promoted
