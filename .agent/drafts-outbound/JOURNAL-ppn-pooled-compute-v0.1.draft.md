@@ -41,8 +41,10 @@ research_trail:
   sources: ["BRIEF-totebox-transformation.md §13–§15", "live deployment records 2026-06-11"]
   method: live deployment + code review
   claim_verification: pending peer review
-  forbidden_terms_cleared: false
-  bcsc_reviewed: false
+  forbidden_terms_cleared: true
+  bcsc_reviewed: true
+  language_cleared_by: project-editorial
+  language_cleared_date: 2026-06-19
 operator_notes: >
   Peter M. Woodfine email address unknown — do not use jmwoodfine@gmail.com (that is Jennifer's).
   ORCID IDs for all three authors required before submission.
@@ -149,7 +151,7 @@ Approximate total monthly cost: US$23–32 for a three-node PPN providing ~8.6 G
 
 The deployment shows that the coordination layer — encrypted mesh, advisory placement, delegated spawn — functions correctly across heterogeneous hardware with meaningfully different network characteristics. The fleet controller's design (eviction-based liveness, advisory rather than prescriptive placement) is appropriate for a pool where node availability is not guaranteed: a laptop that hibernates or loses connectivity is evicted without affecting the placement decisions for remaining nodes.
 
-The three-command onboarding procedure is a working proof of concept, not a product. The target operator experience is a bootable ISO (write to USB, boot, answer three questions) that replaces the three manual commands and the subsequent SSH-based setup entirely. os-infrastructure is the software layer toward that target.
+The three-command onboarding procedure is a working proof of concept, not a product. A planned target operator experience is a bootable ISO (write to USB, boot, answer three questions) intended to replace the three manual commands and the subsequent SSH-based setup entirely. os-infrastructure is the software layer toward that target.
 
 ### 4.2 Limitations and future work
 
