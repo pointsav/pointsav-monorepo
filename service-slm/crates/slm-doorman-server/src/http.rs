@@ -541,14 +541,16 @@ const BATCH_MAX_ITEMS: usize = 10;
 
 /// `POST /v1/extract` — dedicated entity extraction endpoint.
 ///
-/// Routes exclusively to Yo-Yo "trainer" (OLMo 3 32B-Think) via
-/// `route_yoyo_only()`. Does NOT fall back to Tier A — OLMo 7B cannot
-/// produce structured JSON arrays reliably and must never serve as a
-/// fallback for extraction (SYS-ADR-07).
+/// Routing strategy:
+///   1. Try Tier B (Yo-Yo "trainer", OLMo 3 32B-Think + JsonSchema grammar) — highest quality.
+///   2. If Tier B circuit is open or unavailable, fall back to Tier A (local OLMo 3 7B Instruct).
+///      Tier A uses no grammar constraint (unreliable on CPU at 7B scale); relies on pre-fill
+///      assistant message (`[{"`) in the extraction system prompt to anchor JSON array format.
+///      Tier A result is lower quality than Tier B but far better than empty `[]` during outages.
 ///
 /// Response is always HTTP 200:
 /// - `extraction_ok: true`  → `entities` contains the extracted array
-/// - `deferred: true`       → Yo-Yo unavailable; caller retries with backoff
+/// - `deferred: true`       → both tiers unavailable; caller retries with backoff
 ///
 /// ADR-07 boundary: `ExtractionRequest.text` is prose only. The `schema`
 /// field constrains the OUTPUT; structured graph data must never cross the
@@ -591,7 +593,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
 
     // 4. Build ComputeRequest targeting Yo-Yo "trainer" with JsonSchema grammar.
     let request_id = RequestId::new();
-    let compute_req = ComputeRequest {
+    let tier_b_req = ComputeRequest {
         request_id,
         module_id: module_id.clone(),
         model: None,
@@ -602,7 +604,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
             },
             ChatMessage {
                 role: "user".to_string(),
-                content: req.text,
+                content: req.text.clone(),
             },
         ],
         complexity: Complexity::High,
@@ -621,9 +623,53 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         session_context: None,
     };
 
-    // 5. Route — no Tier A fallback.
+    // 5. Route: Tier B first, fall back to Tier A if Tier B circuit is open.
     let start = std::time::Instant::now();
-    let result = state.doorman.route_yoyo_only(&compute_req, "trainer").await;
+    let tier_b_result = state.doorman.route_yoyo_only(&tier_b_req, "trainer").await;
+    let tier_b_unavailable = matches!(&tier_b_result, Err(DoormanError::TierUnavailable(_)));
+
+    let result = if tier_b_unavailable {
+        // Tier B offline — fall back to Tier A (OLMo 3 7B Instruct, no grammar).
+        // Grammar constraint is unreliable on CPU at 7B scale; pre-fill in the system
+        // prompt anchors JSON array format instead.
+        let tier_a_req = ComputeRequest {
+            request_id: RequestId::new(),
+            module_id: module_id.clone(),
+            model: None,
+            messages: vec![
+                ChatMessage {
+                    role: "system".to_string(),
+                    content: DOORMAN_EXTRACTION_SYSTEM_PROMPT.to_string(),
+                },
+                ChatMessage {
+                    role: "user".to_string(),
+                    content: req.text,
+                },
+                ChatMessage {
+                    role: "assistant".to_string(),
+                    content: "[{\"".to_string(),
+                },
+            ],
+            complexity: Complexity::Medium,
+            tier_hint: Some(Tier::Local),
+            stream: false,
+            max_tokens: Some(512),
+            temperature: Some(0.1),
+            sanitised_outbound: true,
+            tier_c_label: None,
+            yoyo_label: None,
+            grammar: None,
+            speculation: None,
+            graph_context_enabled: None,
+            tools: None,
+            stop_sequences: None,
+            session_context: None,
+        };
+        state.doorman.route(&tier_a_req).await.map(|r| (r, "tier_a_fallback"))
+    } else {
+        tier_b_result.map(|r| (r, "yoyo_trainer"))
+    };
+
     let latency_ms = start.elapsed().as_millis() as u64;
 
     // Capture error message before moving result.
@@ -631,7 +677,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
 
     // 6. Parse result into response fields.
     let (entities, tier_used, model, extraction_ok, deferred, defer_reason_str) = match result {
-        Ok(compute_resp) => {
+        Ok((compute_resp, used_tier_label)) => {
             // With --reasoning-format deepseek, think tokens route to reasoning_content
             // and content is already clean JSON. Fall back to strip_think_blocks()
             // when reasoning_content is absent (raw format or pre-deepseek builds).
@@ -640,18 +686,25 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
             } else {
                 strip_think_blocks(&compute_resp.content)
             };
+            // For Tier A fallback: model output begins mid-array (after pre-fill `[{"`).
+            // Prepend the pre-fill prefix back so the JSON is parseable.
+            let content_raw = if used_tier_label == "tier_a_fallback" {
+                format!("[{{\"{}",
+                    content_no_think.trim().trim_start_matches("[{\""))
+            } else {
+                content_no_think.trim().to_string()
+            };
             // Strip markdown fences if the model wrapped its output.
-            let raw_content = content_no_think.trim().to_string();
-            let stripped = raw_content
+            let stripped = content_raw
                 .strip_prefix("```json")
-                .unwrap_or(&raw_content)
+                .unwrap_or(&content_raw)
                 .strip_prefix("```")
-                .unwrap_or(&raw_content);
+                .unwrap_or(&content_raw);
             let stripped = stripped.strip_suffix("```").unwrap_or(stripped).trim();
             match serde_json::from_str::<Vec<serde_json::Value>>(stripped) {
                 Ok(ents) => (
                     ents,
-                    "yoyo_trainer".to_string(),
+                    used_tier_label.to_string(),
                     compute_resp.model,
                     true,
                     false,
@@ -663,7 +716,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
                     "none".to_string(),
                     false,
                     true,
-                    Some("yoyo-transient".to_string()),
+                    Some("parse-error".to_string()),
                 ),
             }
         }
@@ -673,7 +726,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
             "none".to_string(),
             false,
             true,
-            Some("yoyo-circuit-open".to_string()),
+            Some("all-tiers-unavailable".to_string()),
         ),
         Err(_) => (
             vec![],
@@ -681,7 +734,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
             "none".to_string(),
             false,
             true,
-            Some("yoyo-transient".to_string()),
+            Some("transient-error".to_string()),
         ),
     };
 
