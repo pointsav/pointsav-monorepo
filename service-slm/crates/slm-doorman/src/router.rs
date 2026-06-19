@@ -720,6 +720,10 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         // caller's submitted content does not meet corpus quality requirements.
         // Classified as PolicyDenied (same as malformed brief / purpose deny).
         DoormanError::CorpusGateRejected { .. } => CompletionStatus::PolicyDenied,
+        // Extract handler 120 s deadline. The inference slot is released; the
+        // caller should retry or accept the deferred response. UpstreamError
+        // because the extraction timed out due to OLMo saturation.
+        DoormanError::RequestTimeout => CompletionStatus::UpstreamError,
     }
 }
 
