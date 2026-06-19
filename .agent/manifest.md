@@ -34,7 +34,7 @@ spec_via_operation: true
 tetrad:
   vendor:
     - repo: pointsav-monorepo
-      path: pointsav-monorepo/
+      path: ./
       upstream: vendor/pointsav-monorepo
       focus: |
         tool-proforma — LP financial sensitivity analysis + proforma engine
