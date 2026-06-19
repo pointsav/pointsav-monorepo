@@ -99,10 +99,13 @@ html[data-theme="dark"] {
 }
 :is([data-instance="projects"], [data-instance="corporate"]) .topnav .header-cta {
   background: #164679;
+  color: #fff;
+  border-color: #164679;
 }
 :is([data-instance="projects"], [data-instance="corporate"]) .topnav .header-cta:hover {
   background: #0F3258;
-  opacity: 1;
+  color: #fff;
+  border-color: #0F3258;
 }
 
 /* ── Featured article — Woodfine Blue hero panel ── */

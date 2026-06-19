@@ -226,11 +226,11 @@ fn shell_footer(brand_instance: &str, view_source_slug: Option<&str>) -> maud::M
             }
             nav.footnav aria-label="Footer navigation" {
                 @if woodfine {
-                    a href="https://home.woodfinegroup.com/page/contact" target="_blank" rel="noopener" { "Contact us" }
-                    a href="https://home.woodfinegroup.com/page/disclaimer" target="_blank" rel="noopener" { "Disclaimer" }
+                    a href="/page/contact" { "Contact us" }
+                    a href="/page/disclaimer" { "Disclaimer" }
                 } @else {
-                    a href="/wiki/contact" { "Contact" }
-                    a href="/wiki/disclaimers" { "Disclaimer" }
+                    a href="/page/contact" { "Contact" }
+                    a href="/page/disclaimer" { "Disclaimer" }
                 }
                 a href="/sitemap.xml" { "Sitemap" }
                 @if let Some(slug) = view_source_slug {
@@ -359,10 +359,10 @@ fn home_chrome(
                 header.topnav {
                     nav.left {
                         @if woodfine_theme {
-                            a href="https://home.woodfinegroup.com/page/disclaimer" target="_blank" rel="noopener" { "Disclaimer" }
-                            a href="https://home.woodfinegroup.com/page/contact" { "Contact us" }
+                            a href="/page/disclaimer" { "Disclaimer" }
+                            a href="/page/contact" { "Contact us" }
                         } @else {
-                            a href="https://home.pointsav.com/page/disclaimer" target="_blank" rel="noopener" { "Disclaimer" }
+                            a href="/page/disclaimer" { "Disclaimer" }
                         }
                     }
                     a.wordmark href="/" aria-label=(site_title) {
@@ -392,7 +392,7 @@ fn home_chrome(
                             (PreEscaped(SEARCH_ICON_SVG))
                         }
                         @if woodfine_theme {
-                            a.header-cta href="https://home.woodfinegroup.com/page/contact" target="_blank" rel="noopener" { "Enquire" }
+                            a.header-cta href="/page/contact" { "Enquire" }
                         }
                     }
                 }
