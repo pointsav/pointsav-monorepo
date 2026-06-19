@@ -66,16 +66,19 @@ at least 2026-06-04.
 | `build-aec-seismic.sh` | project-gis `app-orchestration-gis/` | `seismic_pga_g` (USGS NSHM 2023, NRCan 2015, ESHM20) + wetland |
 | `build-aec-flood.sh` | project-gis `app-orchestration-gis/` | `flood_hazard`, `wildfire_hazard` + hazard tiles |
 
-### Layer status (2026-06-12)
+### Layer status (2026-06-19, post Night 5)
 
 | Layer | AEC Fields | Deployed Tiles | Last Successful Run | Status |
 |---|---|---|---|---|
-| Köppen + ecoregion | `koppen_class`, `ecoregion_name`, `ecoregion_biome` | `layer9-koppen-global.pmtiles`, `layer9-ecoregions-global.pmtiles` | Jun 8 (6,485/6,493) | **Wiped by nightly** |
-| Solar + climate | `ghi_kwh_m2_yr`, `wind_speed_ms`, `temp_annual_mean_c`, `hdd18`, `cdd18` | (inline in clusters-meta) | Jun 8 (6,481/6,493) | **Wiped by nightly** |
-| Wetland | `wetland_class` | (inline) | Never — 0/6,493 hits | **Broken** (GWL_FCS30 sampler) |
-| Seismic | `seismic_pga_g` | `layer10-seismic-eu.pmtiles` | `.night4-complete` present; field landing unverified | **Uncertain** |
-| Flood + wildfire | `flood_hazard`, `wildfire_hazard` | `layer11-flood-global.pmtiles` (deployed); FEMA/EU/wildfire tiles missing | No `.night5-complete` | **Incomplete** |
-| **All cluster AEC fields** | — | — | — | **NONE deployed** (wiped Jun 12) |
+| Köppen + ecoregion | `koppen_class`, `ecoregion_name`, `ecoregion_biome` | `layer9-koppen-global.pmtiles`, `layer9-ecoregions-global.pmtiles` | Jun 8 (6,485/6,493); survives nightly via coord-merge | **Active** |
+| Solar + climate | `ghi_kwh_m2_yr`, `wind_speed_ms`, `temp_annual_mean_c`, `hdd18`, `cdd18` | (inline in clusters-meta) | Jun 8 (6,481/6,493); survives nightly | **Active** |
+| Wetland | `wetland_class` | (inline) | Never — 0/6,493 hits | **Broken** (GWL_FCS30 sampler; VRT exists, no gdal_translate step) |
+| Seismic EU | `seismic_pga_g` | `layer10-seismic-eu.pmtiles` (2.1 MB, Jun 18) | Night 4 ran; 0 EU clusters assigned | **Blocked** — ESHM20 tarball produces 1-feature metadata GeoJSON; maps.efehr.org API is NXDOMAIN |
+| Seismic US/CA | `seismic_pga_g` | (inline) | Night 4; USGS/NRCan sampler ran | **Uncertain** — field landing unverified |
+| Flood global | `flood_hazard` | `layer11-flood-global.pmtiles` (120 MB, Jun 18) | Night 5 ✓ — 855 hits from EU regulatory | **Partial** — AQUEDUCT raster sampling = 0 for US/CA (plausible; retail co-locations avoid floodplains) |
+| Flood EU | `flood_hazard` | `layer12-flood-eu-regulatory.pmtiles` (151 KB, Jun 18) | Night 5 ✓ | **Active** |
+| Flood FEMA US | — | `layer12-fema-sfha-us.pmtiles` (2.8 MB, Jun 17, OLD) | Night 5 skipped — clusters.geojson missing | **Stale** |
+| Wildfire | `wildfire_hazard` | — | Never — GFWED variable name bug (`FWI` → `GPM.LATE.v5_FWI`); fixed 2026-06-19 | **Ready to run** (fix committed; Night 6 will produce layer15) |
 
 ### URL fixes already applied
 
@@ -188,8 +191,12 @@ Wire-up: AGENT.md startup step 9b (Command Session); any FAIL is a session block
 - [x] First clean nightly run: 2026-06-13T05:48Z (start) → 05:48Z (end) ≈ 48 min. All 4 steps passed: build-clusters (6,493 clusters, T1=1746/T2=2726/T3=2021), build-tiles (54.8 MB pmtiles, 18 MB meta), VWH ✓, PKS ✓
   - Note: run showed "AEC index loaded: 0 records" — NOT a bug. The AEC backfill (~2h) completed AFTER the 22:00 PDT nightly ran. The nightly correctly loaded the pre-backfill clusters-meta.json. AEC data was present in clusters-meta.json when the backfill finished; tonight's nightly will preserve it via coordinate-merge.
 - [x] Verify AEC fields survive next nightly run — AEC coordinate-merge is in place; first verification will be 2026-06-14 run
-- [ ] Run `build-aec-seismic.sh` (URL-fixed; may need `.night4-complete` cleared)
-- [ ] Run `build-aec-flood.sh` Night 5 (lowest priority)
+- [x] Run `build-aec-seismic.sh` Night 4 — 2026-06-18; EU seismic 0 (ESHM20 source issue, not script)
+- [x] Run `build-aec-flood.sh` Night 5 — 2026-06-19; layer11 ✓ (120 MB), layer12-EU ✓ (151 KB); GFWED wildfire FAILED (variable name bug)
+- [x] Fix GFWED NetCDF variable name — `NETCDF:${mnc}:FWI` → `NETCDF:${mnc}:GPM.LATE.v5_FWI` (build-aec-flood.sh, 2026-06-19)
+- [ ] Run `build-aec-flood.sh` Night 6 — verify wildfire layer15 produced after GFWED fix
+- [ ] Investigate FEMA layer12 — clusters.geojson missing; FEMA REST skipped Night 5
+- [ ] EU seismic fallback — maps.efehr.org NXDOMAIN; investigate GSHAP raster or git clone ESHM20 repo
 
 ---
 

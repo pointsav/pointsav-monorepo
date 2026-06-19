@@ -1,4 +1,4 @@
-# Briefs — project-knowledge
+# Briefs — project-gis
 
 `BRIEF-*.md` files are permanent git-tracked artifacts. Never delete — supersede via
 `status: archived` or `git mv` to `briefs/archive/`. See `conventions/brief-discipline.md`.
@@ -7,7 +7,8 @@
 
 | File | brief-id | Title | Status | Updated |
 |------|----------|-------|--------|---------|
-| BRIEF-knowledge-platform-master.md | knowledge-platform-master | Knowledge Platform — Master Brief | active | 2026-06-13 |
+| BRIEF-pks-fable-analysis-2026-06-11.md | pks-fable-analysis | PKS Commuter Archetype — Fable Rebalance | active | 2026-06-11 |
+| BRIEF-gis-nightly-rebuild-aec-2026-06-12.md | gis-nightly-rebuild-aec | GIS Nightly Rebuild + AEC Layer Infrastructure | active | 2026-06-19 |
 
 ## Artifact routing
 
@@ -24,10 +25,11 @@ When a BRIEF graduates to a deliverable, it routes here:
 
 | File | Archived date | Notes |
 |------|--------------|-------|
-| archive/BRIEF-knowledge-platform-master.md | 2026-06-04 | Superseded by active copy (post-verdict panel rewrite) |
+| archive/BRIEF-app-workplace-architecture.md | 2026-06-14 | Relocated from project-gis (wrong archive) |
 
-## Contamination note (2026-06-13)
+## History
 
-This README was overwritten by a project-intelligence rebase that contaminated the archive's
-git history. Restored to correct project-knowledge content 2026-06-13. Command should
-investigate the M-17 contamination mechanism to prevent recurrence.
+- 2026-06-19: Contamination repaired — README previously showed project-knowledge content
+  (knowledge-platform-master BRIEF); restored to GIS-only content.
+- 2026-06-13: README overwritten by project-intelligence rebase (M-17 contamination).
+  20 non-GIS BRIEFs relocated by Command (commit: actioned 2026-06-18).

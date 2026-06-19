@@ -504,8 +504,8 @@ for m in 01 02 03 04 05 06 07 08 09 10 11 12; do
         url="$GFWED_BASE/$GFWED_YEAR/FWI.GPM.LATE.v5.Monthly.Default.${GFWED_YEAR}${m}.nc"
         curl -L --no-progress-meter --show-error --retry 3 --retry-delay 10 --max-time 600 \
             -o "$mnc" "$url" 2>&1 | tee -a "$LOG" || true
-        if [[ -f "$mnc" ]] && gdalinfo "NETCDF:${mnc}:FWI" &>/dev/null; then
-            gdal_translate -q -a_srs EPSG:4326 "NETCDF:${mnc}:FWI" "$mtif" 2>&1 | tee -a "$LOG" || true
+        if [[ -f "$mnc" ]] && gdalinfo "NETCDF:${mnc}:GPM.LATE.v5_FWI" &>/dev/null; then
+            gdal_translate -q -a_srs EPSG:4326 "NETCDF:${mnc}:GPM.LATE.v5_FWI" "$mtif" 2>&1 | tee -a "$LOG" || true
         else
             echo "  WARN: GFWED ${GFWED_YEAR}-${m} download/read failed" | tee -a "$LOG"
         fi
