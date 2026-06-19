@@ -546,6 +546,14 @@ pub enum DeferReason {
     YoyoLabelUnconfigured,
     /// The Yo-Yo circuit breaker is open after consecutive failures.
     YoyoCircuitOpen,
-    /// A transient upstream error prevented extraction (timeout or 5xx).
+    /// A transient upstream error from Tier B (timeout or 5xx before fallback).
     YoyoTransient,
+    /// Tier B was unavailable and Tier A (local OLMo) also returned an error.
+    TierAFailed,
+    /// Tier A returned output that could not be parsed as a JSON entity array.
+    ParseError,
+    /// The extraction handler timed out waiting for inference to complete.
+    Timeout,
+    /// Both Tier B and Tier A reported unavailable; no tier could serve the request.
+    AllTiersUnavailable,
 }

@@ -247,6 +247,12 @@ pub enum DoormanError {
     #[error("Tier B circuit breaker is open; cooling down after consecutive failures")]
     TierBCircuitOpen,
 
+    /// The extraction handler's 120 s deadline fired before any tier returned
+    /// a result. Releases the per-tenant semaphore permit so a stuck OLMo call
+    /// does not permanently consume a concurrency slot when the client disconnects.
+    #[error("extraction deadline (120 s) exceeded; semaphore permit released")]
+    RequestTimeout,
+
     // ── Graph proxy (conventions/datagraph-access-discipline.md) ────────
     /// `POST /v1/graph/query` or `POST /v1/graph/mutate` — caller omitted the
     /// mandatory `X-Foundry-Module-ID` header. 400 BAD_REQUEST.
