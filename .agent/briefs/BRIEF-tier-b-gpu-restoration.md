@@ -49,13 +49,22 @@ Tier B is restored. Zone fallback is FORBIDDEN per operator policy
   - **Phase 6-D**: Tier A fallback verified: `tier_used: "tier_a_fallback"`, OLMo-2, clean entities.
   - **Training approval tag**: `coding-lora-2026-06-19.tag` created at `/srv/foundry/data/training-approved/`.
   - **Queue state**: pending=886, quarantine=0, poison=77; 18 training markers queued.
+  - **Flow test**: 1,021 DPO corpus pairs confirmed; DataGraph enrichment active
+    (`entity_count=2–5` per extraction). Two bugs found + fixed:
+    - Bug 1: `OwnedSemaphorePermit` not released on client disconnect → 120 s
+      `tokio::time::timeout` wrapper bounds hold to EXTRACT_DEADLINE_SECS.
+      `DoormanError::RequestTimeout` added. Commit `a7b1572c`.
+    - Bug 2: `_ => DeferReason::YoyoTransient` wildcard masked Tier A failures;
+      added `TierAFailed`, `ParseError`, `Timeout`, `AllTiersUnavailable` variants.
+      Both single + batch handler wildcards now explicit. Commit `a7b1572c`.
 
 ## Carry-forward
 
 - [ ] Command: provision/start yoyo-batch (operator action); confirm VM is RUNNING
 - [ ] Command: verify ML libs (`trl 1.5.1` in `~/training-venv`) still intact after VM restart
-- [ ] Command: Stage 6 + `cargo build --release -p slm-doorman-server` + `bin/deploy-binary.sh`
-      + `sudo systemctl restart local-doorman.service` (for Phase B health_down_secs)
+- [ ] Command: Stage 6 (4 commits: `c0448b81`→`a7b1572c`) + `cargo build --release -p slm-doorman-server`
+      + `bin/deploy-binary.sh` + `sudo systemctl restart local-doorman.service`
+      (needed for Phase B health_down_secs + Bug 1/2 fixes — outbox sent)
 - [ ] Command: dead config removal — `SERVICE_CONTENT_TIER_A_FALLBACK_ENABLED=false` from live
       systemd unit + `daemon-reload + restart local-content.service`
 - [ ] Totebox: verify `health_down_secs` appears in `/readyz` after Doorman rebuild
