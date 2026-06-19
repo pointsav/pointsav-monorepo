@@ -20,9 +20,9 @@ told across six sections, ending with an illustrative Years 11–20 continuation
 
 Not to be confused with the *sensitivity analysis* (a different deliverable). This is the *comparison*.
 
-## Current state — PAUSED, NOT YET COMMITTED
+## Current state — COMMITTED (2026-06-19)
 
-Complete and verified; the operator paused here to do other Rust-engine work.
+Complete and verified. Committed in monorepo commit `f5cc00cc feat(tool-proforma-engine): add JW1 allocation proforma + V8/DHS/AltRE modules`. Stage 6 pending Command Session.
 
 - **Generator:** `pointsav-monorepo/tool-proforma-engine/src/report/tearsheet_alt_re_v2.rs` (~1029 lines).
 - **Registered in:** `src/report/mod.rs` (`pub mod tearsheet_alt_re_v2;`).

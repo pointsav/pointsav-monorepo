@@ -8,6 +8,7 @@ slm_endpoint: http://localhost:9080
 module_id: proforma
 doctrine_version: 0.0.10
 doctrine_claims_codified: [37]
+publication_gate: operator-explicit
 
 operator: jennifer
 working_pattern: domain-expert-tool-development
