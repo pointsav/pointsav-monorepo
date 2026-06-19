@@ -158,29 +158,88 @@ AQUEDUCT_GEOJSON="$WORK_DIR/aqueduct-flood-global.geojson"
 if [[ -f "$AQUEDUCT_SKIP" ]]; then
     echo "  SKIP: .aqueduct.skip marker present — no AQUEDUCT raster to process" | tee -a "$LOG"
 elif [[ ! -f "$AQUEDUCT_GEOJSON" ]]; then
-    # Classify into 0–5 byte raster (0=no flood, 1=very_low, 2=low, 3=medium, 4=high, 5=very_high)
-    gdal_calc.py \
-        -A "$AQUEDUCT_TIF" \
-        --outfile="$AQUEDUCT_CLASSIFIED" \
-        --calc="(A>0)*(A<=0.1)*1 + (A>0.1)*(A<=0.5)*2 + (A>0.5)*(A<=1.5)*3 + (A>1.5)*(A<=5.0)*4 + (A>5.0)*5" \
-        --type=Byte \
-        --NoDataValue=0 \
-        --co="COMPRESS=DEFLATE" \
-        2>&1 | tee -a "$LOG"
+    # Classify + polygonize using GDAL Python API (avoids gdal_calc.py / gdal_polygonize.py
+    # which crash under numpy 2.x because _gdal_array.so was compiled against numpy 1.x ABI).
+    python3 - "$AQUEDUCT_TIF" "$AQUEDUCT_CLASSIFIED" "$AQUEDUCT_GEOJSON" <<'PYEOF' 2>&1 | tee -a "$LOG"
+import sys, struct, json, pathlib
+from osgeo import gdal, ogr, osr
 
-    gdal_polygonize.py "$AQUEDUCT_CLASSIFIED" -f GeoJSON "$AQUEDUCT_GEOJSON" flood_zones flood_class \
-        2>&1 | tee -a "$LOG"
+in_path, cls_path, geojson_path = sys.argv[1], sys.argv[2], sys.argv[3]
+# Do NOT call gdal.UseExceptions() — it lazily imports gdal_array which crashes under numpy 2.x
 
-    # Map integer class to label
-    python3 - <<PYEOF 2>&1 | tee -a "$LOG"
-import json, pathlib
-LABELS = {1:'very_low',2:'low',3:'medium',4:'high',5:'very_high'}
-p = pathlib.Path("$AQUEDUCT_GEOJSON")
+# -- Step A: classify float raster → byte raster (0=nodata, 1–5 depth categories) --
+src = gdal.Open(in_path)
+band = src.GetRasterBand(1)
+xsize, ysize = src.RasterXSize, src.RasterYSize
+nodata = band.GetNoDataValue() or -9999.0
+
+drv = gdal.GetDriverByName('GTiff')
+dst = drv.Create(cls_path, xsize, ysize, 1, gdal.GDT_Byte,
+                 ['COMPRESS=DEFLATE', 'TILED=YES', 'BLOCKXSIZE=256', 'BLOCKYSIZE=256'])
+dst.SetGeoTransform(src.GetGeoTransform())
+dst.SetProjection(src.GetProjection())
+ob = dst.GetRasterBand(1)
+ob.SetNoDataValue(0)
+
+BLOCK = 512
+for y in range(0, ysize, BLOCK):
+    ny = min(BLOCK, ysize - y)
+    raw = band.ReadRaster(0, y, xsize, ny, buf_type=gdal.GDT_Float32)
+    vals = struct.unpack(f'{xsize * ny}f', raw)
+    out = bytearray(xsize * ny)
+    for i, v in enumerate(vals):
+        if v <= 0 or abs(v - nodata) < 1.0:
+            out[i] = 0
+        elif v <= 0.1:
+            out[i] = 1
+        elif v <= 0.5:
+            out[i] = 2
+        elif v <= 1.5:
+            out[i] = 3
+        elif v <= 5.0:
+            out[i] = 4
+        else:
+            out[i] = 5
+    ob.WriteRaster(0, y, xsize, ny, bytes(out), buf_type=gdal.GDT_Byte)
+    if y % 5000 == 0:
+        print(f'  classify row {y}/{ysize}', flush=True)
+
+ob.FlushCache()
+dst = None
+src = None
+print(f'  → {cls_path}  ✓', flush=True)
+
+# -- Step B: polygonize byte raster → GeoJSON using gdal.Polygonize() --
+src_cls = gdal.Open(cls_path)
+src_band = src_cls.GetRasterBand(1)
+
+mem_drv = ogr.GetDriverByName('Memory')
+mem_ds = mem_drv.CreateDataSource('out')
+srs = osr.SpatialReference()
+srs.ImportFromWkt(src_cls.GetProjection())
+lyr = mem_ds.CreateLayer('flood_zones', srs=srs)
+fd = ogr.FieldDefn('flood_class', ogr.OFTInteger)
+lyr.CreateField(fd)
+
+gdal.Polygonize(src_band, src_band, lyr, 0, [], callback=None)
+
+gj_drv = ogr.GetDriverByName('GeoJSON')
+gj_ds = gj_drv.CreateDataSource(geojson_path)
+gj_lyr = gj_ds.CopyLayer(lyr, 'flood_zones')
+gj_ds = None
+mem_ds = None
+src_cls = None
+print(f'  → {geojson_path}  ✓ ({pathlib.Path(geojson_path).stat().st_size // 1024} KB)', flush=True)
+
+# Map integer class to label
+LABELS = {1:'very_low', 2:'low', 3:'medium', 4:'high', 5:'very_high'}
+p = pathlib.Path(geojson_path)
 gj = json.loads(p.read_text())
 for f in gj['features']:
-    cls = f['properties'].get('flood_class',0)
+    cls = f['properties'].get('flood_class', 0)
     f['properties']['flood_depth_cat'] = LABELS.get(cls, 'unknown')
 p.write_text(json.dumps(gj))
+print('  label mapping done  ✓', flush=True)
 PYEOF
 fi
 
