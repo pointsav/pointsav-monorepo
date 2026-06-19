@@ -74,7 +74,10 @@ async fn run_tunnel(config: &TunnelConfig) {
     {
         Ok(h) => h,
         Err(e) => {
-            eprintln!("os-console: tunnel: connect to {}:{} failed: {e}", config.gce_host, config.gce_port);
+            eprintln!(
+                "os-console: tunnel: connect to {}:{} failed: {e}",
+                config.gce_host, config.gce_port
+            );
             return;
         }
     };
@@ -86,7 +89,10 @@ async fn run_tunnel(config: &TunnelConfig) {
     {
         Ok(r) if r.success() => {}
         Ok(_) => {
-            eprintln!("os-console: tunnel: SSH auth rejected for {}", config.username);
+            eprintln!(
+                "os-console: tunnel: SSH auth rejected for {}",
+                config.username
+            );
             return;
         }
         Err(e) => {
