@@ -36,9 +36,9 @@ pub fn is_noise_entity_name(name: &str) -> bool {
     if trimmed.contains('/') {
         return true;
     }
-    // File-extension-suffixed names: create-yoyo-snapshot.sh, build.py
-    const PATH_SUFFIXES: [&str; 9] = [
-        ".sh", ".py", ".rs", ".md", ".json", ".jsonl", ".conf", ".toml", ".yaml",
+    // File-extension-suffixed names: create-yoyo-snapshot.sh, build.py, local-content.service
+    const PATH_SUFFIXES: [&str; 10] = [
+        ".sh", ".py", ".rs", ".md", ".json", ".jsonl", ".conf", ".toml", ".yaml", ".service",
     ];
     if PATH_SUFFIXES.iter().any(|s| lower.ends_with(s)) {
         return true;
@@ -204,6 +204,18 @@ pub fn coerce_classification(entity_name: &str, classification: &str) -> Option<
     }
     // File-path-like name as Project → reject (it's a path, not a project).
     if classification == "Project" && entity_name.contains('/') {
+        return None;
+    }
+    // Multi-word lowercase phrase as Project → reject (operational noise like "outbox status",
+    // "corpus payload key", "enrichment queue", "automation bot"). Real project names use
+    // hyphens as word separators (service-vm-fleet), not spaces. A space in a Project name
+    // with all-lowercase characters is a strong signal of a generic phrase, not a proper name.
+    if classification == "Project"
+        && entity_name.contains(' ')
+        && entity_name
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c == ' ')
+    {
         return None;
     }
     // ALL_CAPS with underscores as Account → reject (it's a constant or env var).
@@ -390,6 +402,38 @@ mod tests {
         assert_eq!(cleaned.len(), 1);
         assert_eq!(cleaned[0]["entity_name"].as_str().unwrap(), "Portugal");
         assert_eq!(cleaned[0]["classification"].as_str().unwrap(), "Location");
+    }
+
+    #[test]
+    fn coerce_lowercase_spaced_project_phrase_rejected() {
+        // "outbox status", "corpus payload key", "automation bot" — operational noise phrases
+        assert_eq!(coerce_classification("outbox status", "Project"), None);
+        assert_eq!(coerce_classification("corpus payload key", "Project"), None);
+        assert_eq!(coerce_classification("enrichment queue", "Project"), None);
+        assert_eq!(coerce_classification("automation bot", "Project"), None);
+        // Valid project names (no spaces) must pass through unchanged
+        assert_eq!(
+            coerce_classification("service-vm-fleet", "Project"),
+            Some("Project".to_string())
+        );
+        assert_eq!(
+            coerce_classification("slm-doorman-server", "Project"),
+            Some("Project".to_string())
+        );
+        assert_eq!(
+            coerce_classification("Doorman", "Project"),
+            Some("Project".to_string())
+        );
+    }
+
+    #[test]
+    fn noise_rejects_service_suffix() {
+        // systemd unit names extracted as Project — filter via .service suffix
+        assert!(is_noise_entity_name("local-content.service"));
+        assert!(is_noise_entity_name("llama-server.service"));
+        // service- prefix project names (no .service suffix) must pass
+        assert!(!is_noise_entity_name("service-vm-fleet"));
+        assert!(!is_noise_entity_name("service-content"));
     }
 
     #[test]
