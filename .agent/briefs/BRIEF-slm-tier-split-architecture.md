@@ -291,7 +291,38 @@ Target topology: one dedicated Command os-orchestration; N peer Totebox Archives
    Does each VM get a static provisioned ID, or is there a discovery/allocation
    protocol?
 
-## §8 — Work log
+## §8 — app-orchestration-graph (future extraction)
+
+`app-orchestration-slm`'s `POST /v1/graph/federated` currently handles all
+cross-Totebox DataGraph federation. A dedicated `app-orchestration-graph` service
+is NOT needed now — it is a Phase 3+ extraction for when the fleet grows.
+
+**Why the name is `app-orchestration-graph` and NOT `app-orchestration-content`:**
+`service-content` already exists as the per-Totebox DataGraph store. A gateway
+named `app-orchestration-content` would be confused with the store. Graph naming
+signals function (federation gateway), not data ownership.
+
+**Activation threshold (any one of these):**
+- Fleet exceeds ~10 active Totebox Archives with non-trivial DataGraphs
+- DataGraph fanout measurably degrades inference broker latency in `app-orchestration-slm`
+- A second consumer of cross-Totebox DataGraph access emerges
+
+**Port:** `:9181` (`:9180` is `app-orchestration-slm`)
+
+**What it will own when extracted:**
+- `POST /v1/graph/federated` endpoint and all fanout logic (moved from `app-orchestration-slm`)
+- Persistent connection pool to all registered Totebox `service-content` endpoints
+- Partial-failure tolerance (`partial: true` when ≥1 Totebox unreachable)
+- Short-TTL result caching (30s default, configurable per query type)
+
+**What it will NOT own:** entity data, DataGraph replication, any persistent store.
+It is a read-only gateway. All data stays sovereign in each Totebox's `service-content`.
+
+**Reserved-folder created:** `app-orchestration-graph/` with `README.md` + `README.es.md`
+**TOPIC staged:** `TOPIC-app-orchestration-graph-federation.draft.md` (EN + ES) → project-editorial
+**GUIDE staged:** `GUIDE-app-orchestration-graph-deployment.draft.md` → project-editorial
+
+## §9 — Work log
 
 ### Session 12 — 2026-06-20
 
@@ -303,6 +334,9 @@ Target topology: one dedicated Command os-orchestration; N peer Totebox Archives
 - Decision locked: os-orchestration has NO DataGraph and NO LoRA of its own (§6.5)
   Rationale: gateway not store; federated graph covers cross-Totebox queries on-demand;
   stateless rule preserved; LoRA stays domain-specific per Totebox
+- cluster-totebox-data-1 full provisioning plan + naming written into §5
+- app-orchestration-graph future extraction documented in §8; Reserved-folder created;
+  TOPIC (EN+ES) and GUIDE staged to drafts-outbound
 
 ## §9 — Carry-forward
 
