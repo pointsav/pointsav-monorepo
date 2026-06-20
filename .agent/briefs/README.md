@@ -3,7 +3,7 @@
 `BRIEF-*.md` files are permanent git-tracked artifacts. Never delete — supersede via
 `status: archived` or `git mv` to `briefs/archive/`. See `conventions/brief-discipline.md`.
 
-## Active briefs
+## Active briefs (native to project-data)
 
 | Brief ID | Title | Status |
 |---|---|---|
