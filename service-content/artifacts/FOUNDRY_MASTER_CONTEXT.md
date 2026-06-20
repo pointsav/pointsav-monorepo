@@ -113,7 +113,7 @@ links: [SYS-GLOS-01, PPN-01, SYS-CORE-01]
 
 --- [PATH]: factory-pointsav/content-wiki-documentation/SYS-STRAT-01.yaml ---
 topic_id: SYS-STRAT-01
-title: The Digital First Paradigm & Trustworthy Systems
+title: The Digital First Paradigm & Capability Geometry
 tier: Tier-6-System
 category: System-Architecture
 tags: [digital-first, soc3, darp, trustworthy-system, machine-readable, 3-track]
@@ -1188,7 +1188,7 @@ Formal Rust Verification development to replace the C-based seL4 kernel.
 > **Phase:** Production Iteration 1 | **Focus:** 3-Track Architecture & SOC 3 / DARP Compliance | **Estado:** Desarrollo activo de servicios Totebox.
 
 ### 🚀 The Digital First Operating System
-**[ EN ]** PointSav engineers Trustworthy Systems. We build decentralized, mathematically verified operating environments that guarantee structural sovereignty natively, completely bypassing legacy legacy SaaS vulnerabilities (SaaS) databases.
+**[ EN ]** PointSav engineers Capability Geometry. We build decentralized, mathematically verified operating environments that guarantee structural sovereignty natively, completely bypassing legacy legacy SaaS vulnerabilities (SaaS) databases.
 
 > [!WARNING]
 > **SECURITY BOUNDARY DECLARATION**
@@ -2168,7 +2168,7 @@ SILO: sovereign-profiles
 > **[ ES ]** Esta organización sirve exclusivamente como escaparate público de ingeniería. Para mantener el cumplimiento estricto de DARP, no se almacenan datos corporativos en vivo, claves criptográficas ni Archivos Totebox activos en esta plataforma.
 
 ### 🎯 Operational Mandate | Mandato Operativo
-**[ EN ]** PointSav engineers Operating Systems for the Digital First enterprise, bypassing legacy legacy SaaS vulnerabilities (SaaS) vulnerabilities. We architect Trustworthy Systems utilizing a proprietary `no_std` Rust Capability-Based Manager operating at the microkernel level.
+**[ EN ]** PointSav engineers Operating Systems for the Digital First enterprise, bypassing legacy legacy SaaS vulnerabilities (SaaS) vulnerabilities. We architect Capability Geometry utilizing a proprietary `no_std` Rust Capability-Based Manager operating at the microkernel level.
 **[ ES ]** PointSav diseña Sistemas Operativos para la empresa de prioridad digital, evitando vulnerabilidades del SaaS tradicional. Arquitectamos Sistemas Confiables utilizando un Gestor de Capacidades propietario en Rust a nivel de micronúcleo.
 
 ### ⚖️ Mathematical Compliance | Cumplimiento Matemático
