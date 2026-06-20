@@ -6,7 +6,7 @@ title: "os-console seL4 unikernel substrate — Phase H roadmap"
 status: active
 owner: totebox@project-console
 created: 2026-06-19
-updated: 2026-06-20 (H1/H2a/H2b/H2c/H3/H4/H5/H6/H7 all COMPLETE)
+updated: 2026-06-20 (H1/H2a/H2b/H2c/H3/H4/H5/H6/H7/H8 all COMPLETE)
 ---
 
 # BRIEF — os-console seL4 unikernel substrate
@@ -237,15 +237,43 @@ ICMP/ARP DMA gate: PASSED
 ICMP echo request via QEMU user-mode network; receive ICMP echo reply. Proves the DMA
 path works end to end.
 
-### Phase H8 — HTTP GET to Doorman health endpoint (next after H7)
+### Phase H8 — HTTP GET to Doorman /healthz via raw TCP — COMPLETE 2026-06-20
 
-**Goal:** smoltcp TCP + HTTP/1.1 GET to `10.0.2.2:9080/doorman/health` (QEMU user-mode
-NAT puts host at 10.0.2.2). Proves the full network stack to a real Totebox service.
+**Gate passed:** "HTTP GET gate: PASSED"; Doorman responded HTTP/1.1 200 OK.
+
+**What shipped:** `bin/virtio_net_http.rs` — both VirtIO queues (receiveq + transmitq),
+pre-populated RX buffer, raw TCP/IP: SYN handshake + ARP reply + HTTP/1.1 GET to
+`10.0.2.2:9080/healthz`. IP and TCP checksum computed in bare `no_std` Rust.
+
+**Key discovery:** QEMU SLiRP sends an ARP request before delivering the SYN-ACK. Guest
+must reply to ARP (MAC = 52:54:00:12:34:56 for IP 10.0.2.15) so SLiRP learns the guest's
+MAC and can deliver the TCP SYN-ACK. Without the ARP reply the SYN-ACK is never delivered.
+
+**QEMU output:**
+```
+[h8] SYN sent
+[h8] ARP request received
+[h8] SYN-ACK! server_seq=0x00000001
+[h8] ACK+GET sent
+[h8] rx len=0x00000040  (server ACK to our SYN-ACK)
+[h8] rx len=0x000000c9  (HTTP response)
+[h8] response: HTTP/1.1 200 OK content-type: text/plain; charset=utf-8 co
+HTTP GET gate: PASSED
+```
+
+Proves the full seL4 user-space → VirtIO DMA → SLiRP → host TCP → Doorman path.
+Phase H roadmap (H1–H8) now complete.
+
+**QEMU command:**
+```
+qemu-system-aarch64 -machine virt -cpu cortex-a53 -m 1G \
+  -device virtio-net-device,netdev=n0 -netdev user,id=n0 \
+  -kernel build/system-image.bin -display none -serial stdio
+```
 
 ## Carry-forward
 
-- H1–H7 all COMPLETE. Phase H8 next: HTTP GET to 10.0.2.2:9080/doorman/health via raw TCP.
-- Stage 6 pending: commits through Phase H5 (commit `85367867` + H5 commit) need `bin/promote.sh`
-  from Command Session. Route via outbox.
+- H1–H8 all COMPLETE. Phase H roadmap done. Next: Phase H9 (if any) or Phase 11 (BIM cartridge).
+- Stage 6 pending: commits through H8 need `bin/promote.sh` from Command Session.
 - M-17 contamination in `.agent/briefs/` — cross-archive BRIEFs present; Command Session sweep
   pending (noted in prior session).
