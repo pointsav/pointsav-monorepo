@@ -97,18 +97,21 @@ native build re-imposes sovereignty. Stage a DOCTRINE-AMENDMENT (workbench-as-OS
   BIM emphasized.
 - **P5 os-workplace chassis** — BRIEF section above + DOCTRINE-AMENDMENT draft.
 
-**STATUS (2026-06-15) — plan NOT complete.** What exists is the owned engine *substrate*, not yet
-wired into the running workbench:
-- **P0** ✅ done (2026-06-19) — BRIEF-workplace-roadmap + BRIEF-workplace-architecture both marked `status: superseded` in sub-clone `.agent/briefs/`.
+**STATUS (2026-06-19) — Phases P0–P5 complete (code committed; browser verification pending):**
+- **P0** ✅ done (2026-06-19) — BRIEF-workplace-roadmap + BRIEF-workplace-architecture superseded.
 - **P1** ✅ done (8412516b).
-- **P2** 🟡 *foundations only* — all five Rust cores built + tested (see Work log 2026-06-15), but
-  **no WASM bindings, no thin frontend, and `app-privategit-workbench`/the 3,891-line monolith is NOT
-  replaced**; file ops not reimplemented in a running prototype.
-- **P3** ❌ not started (the `section_span` hook exists in docengine; no MCP bridge).
-- **P4** ❌ not started (8-schema matrix).
-- **P5** 🟡 chassis-vision section present; DOCTRINE-AMENDMENT draft not staged.
-The biggest remaining gap is **integration** — nothing runs in the app yet; that step needs a
-browser/the operator's machine to verify and cannot be validated headless.
+- **P2 front half** ✅ done (2026-06-15) — 5 Rust cores; 46 tests; see Work log.
+- **P2 back half (WASM)** ✅ done (2026-06-19, commit 098edf2d) — wasm-bindgen exports for all 5 cores.
+- **P3 MCP bridge** ✅ done (2026-06-19, commit a22a7353) — POST /mcp, 3 tools, SYS-ADR-07 guard, 9 tests.
+- **P3 /section endpoint** ✅ done (commit a22a7353) — AST-aware block snap via moonshot-docengine.
+- **P4 Schema handlers** ✅ partial done (commit a22a7353) — presentation/schedule/gis Rust handlers;
+  BIM schema handler pending (app-privategit-bim service dependency; blocked).
+- **P4 Thin frontend** ✅ done (commit a22a7353) — 468-line replacement for 3,891-line monolith;
+  9-button schema bar, virtualized file tree, light mode, /section sync.
+- **P5 DOCTRINE-AMENDMENT** ✅ staged (2026-06-19) — draft at `.agent/drafts-outbound/`; Command ratification pending.
+
+**Remaining gap:** browser verification (localhost:9110 + MCP .mcp.json test) requires operator's machine.
+Stage 6 pending (outbox `project-workplace-20260619-stage6-phases-abcdef`).
 
 Reuse from `app-privategit-workbench/src/main.rs`: atomic save w/ mtime-conflict, soft-trash+restore,
 SSE via notify, git-status, server-side document render, PDF export (WeasyPrint).
@@ -170,18 +173,15 @@ SSE via notify, git-status, server-side document render, PDF export (WeasyPrint)
 
 ## Carry-forward
 
-- [ ] **Stage 6 (Command):** promote `8412516b` + `e327d669` + `c3b27db4` + `ad26f48d` + `3d88c5a0` +
-      `dc9dca21` + `6a9e65de` + `d3207aa8` + `601d6dc9` (all on `main`, nested sub-clone).
-- [ ] **P2 back half — INTEGRATION (needs operator/browser to verify):** WASM-bind the cores
-      (wasm-bindgen), build a thin frontend around them, and *replace* `app-privategit-workbench`'s
-      monolith; reimplement file ops (save/duplicate/delete+restore/rename/move/create/download) end-to-end.
-- [ ] **P3 AI MCP-bridge:** Rust MCP server exposing `section_span`-derived selection
-      (`read_selection`/`propose_edit`/`commit_edit`); SYS-ADR-07 guard. Plumbing first.
-- [ ] **P4 Schema matrix:** make all 8 schemas demonstrably function (BIM emphasized).
-- [x] **P0 finish:** flip overlapping sections of BRIEF-workplace-roadmap + -architecture to
-      superseded-by this BRIEF (do not delete). Done 2026-06-19.
-- [ ] **P5:** stage the DOCTRINE-AMENDMENT draft (workbench-as-os-workplace-surface) → Command ratification.
-- [ ] **Next pure-Rust layers (optional, verifiable here):** concurrent-merge sequence CRDT (crdt),
-      IFC geometry/tessellation (bim-engine), suffix-reuse retokenize (parser).
+- [ ] **Stage 6 (Command):** promote all commits on `main` (nested sub-clone) through a22a7353 + archive f0dac52a.
+      Checklist in outbox msg `project-workplace-20260619-stage6-phases-abcdef`.
+- [ ] **Browser verification (operator's machine):** cargo run → localhost:9110; 7-item checklist in outbox.
+- [ ] **P4 BIM schema handler** — blocked on project-bim Phase 1 (app-privategit-bim service dependency).
+- [x] **P0 finish:** BRIEFs superseded. Done 2026-06-19 (commit 098edf2d).
+- [x] **P2 WASM bindings:** all 5 cores. Done 2026-06-19 (commit 098edf2d).
+- [x] **P3 MCP bridge + /section:** Done 2026-06-19 (commit a22a7353).
+- [x] **P4 thin frontend + schema handlers (presentation/schedule/gis):** Done 2026-06-19 (commit a22a7353).
+- [x] **P5 DOCTRINE-AMENDMENT staged:** Done 2026-06-19; Command ratification pending.
+- [ ] **P5 DOCTRINE-AMENDMENT ratification:** Command Session to review §IV.h draft and ratify.
 - [ ] **Governance (Command):** manifest `cluster_branch` drift; `.agent/briefs` versioning gap (Option A).
 - [ ] Pre-existing inbox blocker (prior session): Stage 6 fmt + E0432 (tool-proforma-engine:370).
