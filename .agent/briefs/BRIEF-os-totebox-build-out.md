@@ -338,12 +338,63 @@ consumed as path dependencies from the appropriate crate paths.
 | J7 References section | All stubs resolved; J2 citable preprint (posted 2026-05-28) | project-data |
 | AArch64 hardware decision (Option A GCP or Option B Firecracker) | Operator | Command Session |
 
+### When project-system replies (build plan)
+
+When a message arrives from project-system confirming the Microkit SDK install path,
+execute in this order:
+
+**Step 1 — Confirm cross-compiler is available:**
+```bash
+which aarch64-linux-gnu-gcc || which aarch64-none-elf-gcc
+# If missing: sudo apt-get install gcc-aarch64-linux-gnu
+```
+
+**Step 2 — Verify os-totebox.toml validates with the installed SDK path:**
+```bash
+export MICROKIT_SDK=<path-from-project-system-message>
+cd /srv/foundry/clones/project-data/moonshot-toolkit
+cargo run -- validate examples/os-totebox.toml   # already passes; confirm still clean
+```
+
+**Step 3 — Build the Phase H1 image:**
+```bash
+cargo run -- build examples/os-totebox.toml --sdk $MICROKIT_SDK
+# Expected output: build/system-image.bin (or loader.img depending on toolkit version)
+# If build fails: check that pd_stub.c compiles; error will name the PD and C error
+```
+
+**Step 4 — QEMU dev boot:**
+```bash
+qemu-system-aarch64 \
+  -M virt,virtualization=on \
+  -cpu cortex-a53 \
+  -m 1G \
+  -serial mon:stdio \
+  -kernel $MICROKIT_SDK/bin/loader.elf \
+  -device loader,file=build/system-image.bin,addr=0x70000000,cpu-num=0 \
+  -nographic
+# Success: 7x "=== os-totebox PD: Capability Geometry boot ===" banners on serial
+# Each PD prints its banner independently (order is scheduler-determined)
+```
+
+**Step 5 — On success:**
+- Update §9 "Built and committed" table: add QEMU boot passing row
+- Change Phase H1 status from "gated" to "complete" in §7
+- Send reply to project-system confirming QEMU boot passed + serial log excerpt
+- Send outbox to Command: Phase H1 QEMU milestone complete; Phase H2 planning needed
+  (Phase H2 = CompileRustPd in moonshot-toolkit + Rust PdEntry per PD)
+
+**Step 6 — If QEMU boot fails (common issues):**
+- Fault at `_start`: check `pd_stub.c` link script and ELF entry point
+- No serial output: SysDebugPutChar syscall number may differ in SDK version; check
+  `moonshot-sel4-vmm/src/syscall.rs` debug_put_char constant (currently -9)
+- Loader ELF mismatch: confirm SDK board matches `qemu_virt_aarch64`
+
 ### Stage 6 status
 
-At least 25 commits from project-data are pending Stage 6 promotion to canonical
-(pointsav-monorepo). Command Session outbox message requesting promote was sent after
-Session 1 (2026-06-11). Confirm with Command Session before assuming promotion is
-complete; these commits include service-people, service-extraction workspace fix, and J7.
+Commits through 4e6e5cf6 (Phase H1 + Phase 2 + serde_json fix) pending Stage 6
+promotion. Outbox message sent to Command. Canonical pull by project-system is
+blocked until promote completes.
 
 ---
 
