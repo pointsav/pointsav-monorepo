@@ -155,7 +155,49 @@ for the os-orchestration VM topology. PDs:
 
 This is Phase H2 work (after Phase H1 QEMU boot passes). See BRIEF-os-orchestration-build-out.
 
-## §5 — Decisions locked
+## §5 — Deployment sequence (phased)
+
+### Phase 1 — os-totebox VM + foundry-workspace as interim os-orchestration
+
+The foundry-workspace VM already runs `service-slm` (Doorman, Tier A) and
+`service-content` (DataGraph). It can serve as interim os-orchestration with
+zero new code — the new os-totebox VM's Tier 0 Doorman registers against it.
+
+Steps:
+1. Provision a new GCP Debian VM (`os-totebox-1`)
+2. Build + deploy the 6-service stack on `os-totebox-1` (service-fs, service-content,
+   service-people, service-slm in Tier 0 mode, service-extraction, service-input)
+3. Set `SLM_ORCHESTRATION_ENDPOINT=http://<foundry-workspace-ip>:9080` on `os-totebox-1`
+4. Verify Tier 0 Doorman registers against foundry-workspace; inference routes correctly
+5. The foundry-workspace Doorman continues serving its own Totebox Archives as normal —
+   it is BOTH a regular Doorman AND interim os-orchestration during this phase
+
+### Phase 2 — Validate and iterate
+
+With `os-totebox-1` live and routing inference through foundry-workspace:
+- Confirm DataGraph sovereignty: `os-totebox-1` service-content is independent
+- Confirm federated graph: operator-invoked `POST /v1/graph/federated` on
+  foundry-workspace returns entities from both its own DataGraph AND `os-totebox-1`
+- Run a training schedule test: `os-totebox-1` posts to foundry-workspace's
+  `POST /v1/training/schedule`
+- Monitor for circuit breaker events (Tier 0 → foundry-workspace unavailable → Tier C)
+
+### Phase 3 — Dedicated os-orchestration VM (Command os-orchestration)
+
+Once Phase 2 is validated:
+1. Provision a dedicated GCP VM (`os-orchestration-command-1`) — sized for a
+   larger model (OLMo 2 7B or Llama 3.3 70B; decision §6.1)
+2. Deploy `app-orchestration-slm` + llama-server on `os-orchestration-command-1`
+3. Register all existing os-totebox VMs against the new Command os-orchestration
+4. Migrate foundry-workspace: its own Doorman switches from Tier A local to
+   Tier 0 mode (pointing at `os-orchestration-command-1`) — the workspace VM
+   becomes just another Totebox Archive in the fleet
+5. foundry-workspace's interim os-orchestration role is retired
+
+This is the target topology: one Command os-orchestration; N Totebox Archives
+(including foundry-workspace) all running Tier 0 Doormen.
+
+## §6 — Decisions locked
 
 1. **DataGraph is sovereign.** os-totebox's service-content DataGraph does NOT
    automatically sync to os-orchestration. Federated queries are pull-on-demand,
@@ -167,14 +209,26 @@ This is Phase H2 work (after Phase H1 QEMU boot passes). See BRIEF-os-orchestrat
 4. **No new Yo-Yo VMs.** Existing fleet (trainer + graph + proxy nodes) is
    unchanged by this split. os-orchestration becomes their new front-end for
    Tier 0 clients.
+5. **os-orchestration has NO DataGraph and NO LoRA of its own.** It is a
+   gateway, not a data store. Rationale:
+   - DataGraph: `POST /v1/graph/federated` already fans out to Totebox DataGraphs
+     in real time. A meta-graph at os-orchestration creates a stale-cache/sync
+     problem with no benefit over real-time federation.
+   - LoRA: each Totebox trains a domain-specific adapter (project-gis ≠ project-editorial).
+     os-orchestration selects the right adapter from `GET /v1/adapters` via `module_id`.
+     A cross-archive LoRA would be a semantic mush — it defeats domain tuning.
+   - Stateless rule: existing app-orchestration-slm CLAUDE.md decision stands.
+     "No persistent data" means no sync problem, no corruption risk, clean restarts.
+   - Summary: os-orchestration provides base model + adapter routing + circuit
+     brokering. All knowledge stays in the Totebox that generated it.
 
-## §6 — Decisions open
+## §7 — Decisions open
 
 1. **Which model does os-orchestration run locally (Tier A)?** Current workspace
    Tier A is OLMo 2 1B (fast, small). os-orchestration could run a larger model
    (e.g. OLMo 2 7B or Llama 3.3 70B) given it's a dedicated VM. Blocked on GCP
    VM sizing decision.
-2. **Tier 0 circuit breaker behavior when os-orchestration is unreachable.** Options:
+2. **Tier 0 circuit breaker fallback when os-orchestration is unreachable.** Options:
    a. Escalate to Tier B (Yo-Yo direct) — requires Tier 0 Doorman to hold Yo-Yo
       credentials, which complicates the "thin router" premise.
    b. Escalate to Tier C (Anthropic) only — simpler but more expensive.
@@ -183,15 +237,15 @@ This is Phase H2 work (after Phase H1 QEMU boot passes). See BRIEF-os-orchestrat
    os-orchestration at `service-slm` startup, or on first inference request?
    Startup registration means early failure detection; lazy means the service starts
    even if os-orchestration is down.
-4. **DataGraph pull scope.** When os-orchestration calls `POST /v1/graph/federated`,
-   what entities does a Tier 0 Doorman expose? Full archive DataGraph? A curated
-   projection? Needs a DataGraph ACL design.
+4. **DataGraph pull scope for federated queries.** When os-orchestration calls
+   `POST /v1/graph/federated`, what entities does a Tier 0 Doorman expose? Full
+   archive DataGraph? A curated projection? Needs a DataGraph ACL design.
 5. **os-totebox deployment identity.** Each os-totebox VM would have a unique
    `FOUNDRY_ARCHIVE_NAME` + `SLM_MODULE_ID`. The membership token embeds both.
    Does each VM get a static provisioned ID, or is there a discovery/allocation
    protocol?
 
-## §7 — Work log
+## §8 — Work log
 
 ### Session 12 — 2026-06-20
 
@@ -199,13 +253,17 @@ This is Phase H2 work (after Phase H1 QEMU boot passes). See BRIEF-os-orchestrat
 - Phase 2 research (commits fb24a853 + 4e6e5cf6) incorporated as §3
 - Tier 0 Doorman mode spec written (§4)
 - Inference proxy endpoint spec written (§4)
-- 5 open decisions surfaced (§6)
+- Phased deployment sequence written (§5) — foundry-workspace as interim os-orchestration
+- Decision locked: os-orchestration has NO DataGraph and NO LoRA of its own (§6.5)
+  Rationale: gateway not store; federated graph covers cross-Totebox queries on-demand;
+  stateless rule preserved; LoRA stays domain-specific per Totebox
 
-## §8 — Carry-forward
+## §9 — Carry-forward
 
 - [ ] Stage 6 promote (Command Session) — prerequisite for all downstream work
 - [ ] Design `InferenceRequest` / `InferenceResponse` types in orchestration-slm-core
-- [ ] Implement `SLM_TIER=0` mode in service-slm Doorman
+- [ ] Implement `SLM_TIER=0` mode in service-slm Doorman (env var `SLM_TIER=0`)
 - [ ] Implement `POST /v1/inference` on app-orchestration-slm
-- [ ] Resolve open decisions §6.1 (VM sizing) and §6.2 (circuit breaker fallback)
+- [ ] Resolve open decisions §7.1 (VM sizing) and §7.2 (circuit breaker fallback)
+- [ ] Provision os-totebox-1 GCP VM (Phase 1 of §5 sequence)
 - [ ] Write os-orchestration.toml Microkit system spec (Phase H2 dependency)
