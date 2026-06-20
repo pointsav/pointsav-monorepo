@@ -3,10 +3,10 @@ artifact: brief
 schema: foundry-brief-v1
 brief-id: knowledge-platform-master
 owner: project-knowledge
-status: active
+status: archived
 title: Knowledge Platform — Master Brief
 cluster: project-knowledge
-updated: 2026-06-17
+updated: 2026-06-20
 supersedes: archive/BRIEF-knowledge-platform-master.md
 verdict_source: .agent/drafts-outbound/BRIEF-REVIEW-old-brief-verdict.md
 ---

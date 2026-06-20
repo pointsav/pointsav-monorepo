@@ -1,10 +1,10 @@
 ---
 schema: foundry-artifact-registry-v1
-project: project-console
-last_updated: 2026-06-19
+project: project-design
+last_updated: 2026-06-20
 ---
 
-# project-console Artifact Registry
+# project-design Artifact Registry
 
 Persistent record of artifacts produced by this archive.
 Updated at session end when new artifacts are staged or committed.
