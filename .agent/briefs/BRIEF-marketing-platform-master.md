@@ -3,10 +3,10 @@ artifact: brief
 schema: foundry-brief-v1
 brief-id: project-marketing-platform-master
 title: "Marketing Platform — Master Brief (app-mediakit-marketing + app-mediakit-shell)"
-status: archived
+status: active
 owner: project-marketing
 created: 2026-06-13
-updated: 2026-06-20
+updated: 2026-06-19
 ---
 
 ## Context
@@ -147,15 +147,22 @@ standard is "AI drafts, human approves" — which is exactly L3/L4 and our ADRs.
   already in place.
 - **P4b — content migration — PointSav (done 2026-06-19):** `home`, `contact`,
   `disclaimer` section manifests for `home.pointsav.com` in `content-pointsav/`.
-  Commit `727711940` (project-marketing sub-clone; Stage 6 pending).
-- **P5 — deployment cut-over (in progress 2026-06-19):** nginx updated to serve
-  `/fonts/`, `/tokens.css`, `/media/` from deployment content dirs (static assets
-  the new binary does not serve). New binary built from canonical
-  (`app-mediakit-marketing` rewrite) and deploying via `deploy-binary.sh`.
-  Manifests staged to both deployment content dirs. Services restart pending.
-  Playwright mobile diag acceptance gate: still pending.
-- **P6 — cross-archive adoption:** handoff to project-knowledge /
-  project-distributions to adopt `app-mediakit-shell` (seamless shared chrome).
+  Commit `727711940` (project-marketing sub-clone; Stage 6 pending → complete
+  end of Session 102).
+- **P5 — SEO + Spanish + tokens (done 2026-06-19):** SEO meta tags (canonical
+  link, OG, Twitter card, LD+JSON schema.org) added to `app-mediakit-shell`
+  `Brand` struct + `render_page`; `google_verify` from env. Spanish manifests
+  (`page.es.yaml`) authored for all 6 pages (Woodfine + PointSav); staged to
+  both deployment dirs; `/es` and `/es/page/{slug}` routes now serve Spanish
+  content. PointSav design tokens (`--ps-blue: #0B5394`) in
+  `deployments/media-marketing-landing-2/content/tokens.css` with systemd
+  drop-in. All committed: `cb10a7914` (SEO + Spanish) + `b1712553b` (fmt).
+  Stage 6: pending → complete end of Session 102. Binary redeploy still needed
+  (new binary will serve SEO tags; currently running pre-SEO binary `5fa8b840`).
+- **P5b — deployment cut-over (done 2026-06-19):** nginx static routes + binary
+  deploy were actioned in Session 102. Services verified 200 OK. Playwright
+  mobile diag run: 7/8 pass; Galaxy S24 / Woodfine shows content overflow
+  (innerWidth 401 > viewport 360) — CSS width fix deferred to NEXT.md.
 - **P6 — cross-archive adoption:** handoff to project-knowledge /
   project-distributions to adopt `app-mediakit-shell` (seamless shared chrome).
 - **P7 — os-mediakit:** instance-launch integration.
@@ -183,6 +190,17 @@ standard is "AI drafts, human approves" — which is exactly L3/L4 and our ADRs.
   rewrite, canonical commit `38ad344f`) deploying via `deploy-binary.sh`.
 
 ## Work log
+
+2026-06-19 command@claude-code (Session 102 — Jennifer): P4b + P5 + SEO + Spanish.
+Sub-clone commits: `727711940` (PointSav home/contact/disclaimer section manifests),
+`cb10a7914` (SEO meta tags in shell.rs Brand struct + render_page; 6 page.es.yaml
+files — Woodfine + PointSav; 2 new tests; 17 total pass), `b1712553b` (cargo fmt).
+Created `deployments/media-marketing-landing-2/content/tokens.css` (PointSav blue
+`#0B5394`) + systemd drop-in for `SERVICE_MARKETING_TOKENS_CSS`. Spanish manifests
+staged to both deployment content dirs. Playwright mobile diag: 7/8 pass; Galaxy
+S24 / Woodfine content overflow (innerWidth 401 vs viewport 360) — NEXT.md item.
+Stage 6: running at session close. Binary redeploy (SEO code) pending post-Stage 6.
+Outer archive: `f6b02b40` (BRIEF update) also pending Stage 6.
 
 2026-06-19 command@claude-code (Session 102 — Jennifer): P4b + P5.
 Wrote PointSav section manifests (`home`, `contact`, `disclaimer`) to
