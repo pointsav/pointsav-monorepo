@@ -6,7 +6,7 @@ title: "os-console seL4 unikernel substrate — Phase H roadmap"
 status: active
 owner: totebox@project-console
 created: 2026-06-19
-updated: 2026-06-20 (H2b/H2c/serial-PD/UART-MMIO all COMPLETE)
+updated: 2026-06-20 (H1/H2a/H2b/H2c/H3/H4/H5 all COMPLETE)
 ---
 
 # BRIEF — os-console seL4 unikernel substrate
@@ -164,44 +164,61 @@ via exact paddr match (staircase analysis: 16 MiB untyped starts exactly at 0x09
 **Goal:** PD writes to PL011 UART at 0x09000000 directly (not via SysDebugPutChar).
 This is the step before VirtIO — validates that MMIO mapping from a seL4 PD works.
 
-### Phase H3 — VirtIO serial + ratatui (Week 2)
+### Phase H3 — UART MMIO gate via seL4 device-untyped — COMPLETE 2026-06-20
 
-**Goal:** VirtIO serial device driver; ratatui renders to VirtIO console. First real TUI
-on seL4.
+**Gate passed:** "UART gate: PASSED\r\n" via direct write_volatile to PL011 UARTDR at
+virtual 0x40000000. Committed as part of `85367867` (Phase H3+H4 dual-phase commit).
 
-**Architecture:**
-```
-serial-pd (priority 200):
-  - maps VirtIO MMIO region (virt machine: 0x0a000000+)
-  - implements virtqueue ring buffer setup
-  - exposes write endpoint via seL4 IPC
+**What shipped:** `bin/uart_main.rs` — device-untyped → SmallPage → two ARMPageTableMap
+(L1 PUD + L2 PMD) → ARMPageMap → write_volatile to PL011 UARTDR at 0x09000000.
 
-console-pd (priority 100):
-  - initialises ratatui with custom backend (calls serial-pd via IPC per write)
-  - renders a layout: status bar + F-key list + activity pane
-```
+Key lesson: AArch64 4-level walk requires TWO ARMPageTableMap invocations before ARMPageMap.
 
-**VirtIO MMIO on QEMU virt:**
-- Add `-device virtio-serial-device,bus=virtio-mmio-bus.0` to QEMU command
-- Device probes at 0x0a000000; MMIO at standard offset
-- Feature negotiation: bit 0 (VIRTIO_F_VERSION_1)
-- Virtqueues: receiveq (0), transmitq (1)
+### Phase H4 — ANSI cartridge panel via serial PD IPC — COMPLETE 2026-06-20
 
-**ratatui no_std approach (decision to confirm at H2c):**
-- Option A: TestBackend renders to an in-memory buffer; console-pd prints buffer
-  line by line via serial-pd IPC. Simplest.
-- Option B: Implement `ratatui::backend::Backend` trait with a custom VirtIO backend.
-  Cleanest. Requires ratatui to compile no_std (not current as of 0.29).
+**Gate passed:** "Panel gate: PASSED" in QEMU serial output. Committed in `85367867`.
 
-**Gate:** ratatui layout (borders, text, at least 2 panes) visible in QEMU serial output.
+**What shipped:** `bin/panel_main.rs` + `src/ansi.rs` — two-TCB system (serial_pd +
+console_pd); ANSI clear+home + bordered box + 7 cartridge rows with GREEN [ACTIVE] labels;
+IPC protocol: MR[0]=chunk byte count, MR[1..3]=packed LE bytes (24 bytes/message).
 
-**Estimated effort:** 2-3 days.
+### Phase H5 — VirtIO MMIO bus probe via seL4 capability mapping — COMPLETE 2026-06-20
+
+**Gate passed:** "VirtIO-net init gate: PASSED" in QEMU serial output.
+
+**What shipped:** `bin/virtio_net_init.rs` — same two ARMPageTableMap + ARMPageMap chain
+applied to VirtIO MMIO bus at 0x0a000000 (virtual 0x40200000); reads MAGIC=0x74726976
+(VirtIO MMIO transport present); VERSION=1 (legacy), STATUS progression written.
+DEVICE_ID=0 at slot 0: QEMU assigns virtio-net to slot 31 (0x0a003e00); H6 will scan slots.
+
+**QEMU command:** `qemu-system-aarch64 -machine virt -cpu cortex-a53 -m 1G -nographic
+  -device virtio-net-device,netdev=n0 -netdev user,id=n0 -kernel build/system-image.bin`
+
+### Phase H6 — VirtIO-net slot scan + virtqueue ring setup (next)
+
+**Goal:** Scan all 32 VirtIO MMIO slots (0x0a000000 to 0x0a003e00, stride 0x200) to find
+DEVICE_ID=1 (network). Set up receive virtqueue ring. Gate: "VirtIO-net device_id=1 init
+complete" after STATUS progression to DRIVER_OK.
+
+**Key:** Must map 32 consecutive 512-byte regions. Options: (a) map one page covering
+0x0a000000-0x0a000fff (8 VirtIO slots × 512 B) and probe with stride, or (b) map only
+the target slot once found. Option (a) covers all 8 slots in one SmallPage.
+
+### Phase H7 — smoltcp ICMP ping (future)
+
+**Goal:** Implement virtqueue ring (descriptor table + avail ring + used ring); send an
+ICMP echo request via QEMU user-mode network; receive ICMP echo reply. Proves the DMA
+path works end to end.
+
+### Phase H8 — HTTP GET to Doorman health endpoint (future)
+
+**Goal:** smoltcp TCP + HTTP/1.1 GET to `10.0.2.2:9080/doorman/health` (QEMU user-mode
+NAT puts host at 10.0.2.2). Proves the full network stack to a real Totebox service.
 
 ## Carry-forward
 
-- H1/H2a/H2b/H2c all COMPLETE. Phase H3 (VirtIO serial + ratatui) is next.
-  Auto-plan H4 = BRIEF H3 (ANSI panel with ratatui-inspired TUI via raw ANSI escape sequences
-  — no VirtIO yet, just serial IPC from Phase H2b pattern).
-- Stage 6 pending: commits through `fae0f517` (Phase H2c/H3) — route to Command Session.
-- M-17 contamination in `.agent/briefs/` — cross-archive BRIEFs present; not this session's
-  concern but note for Command Session sweep.
+- H1–H5 all COMPLETE. Phase H6 next: scan VirtIO MMIO slots for DEVICE_ID=1 + virtqueue ring.
+- Stage 6 pending: commits through Phase H5 (commit `85367867` + H5 commit) need `bin/promote.sh`
+  from Command Session. Route via outbox.
+- M-17 contamination in `.agent/briefs/` — cross-archive BRIEFs present; Command Session sweep
+  pending (noted in prior session).
