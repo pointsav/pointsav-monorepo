@@ -6,7 +6,7 @@ title: "app-privategit-design — 2030 Design System Platform"
 status: active
 owner: project-design
 created: 2026-06-06
-updated: 2026-06-15
+updated: 2026-06-20
 ---
 
 # BRIEF — app-privategit-design
@@ -23,10 +23,10 @@ updated: 2026-06-15
 
 ## Scope
 
-**This BRIEF covers:** the v0.2.0 clean-sheet architecture for `app-privategit-design` — multi-file Rust module tree, schema-aware rendering, WYSIWYG dual-mode editing, real-time sidebar, AI bridge SSE endpoint, Carbon CSS integration, mobile CSS, DTCG token-schema gaps, the marketing-pages render pipeline (design.pointsav.com), the contributor workflow, the We-Own-It dependency map, and the 2030 platform vision.
+**This BRIEF covers:** the v0.2.0→v0.3.0 architecture for `app-privategit-design` — multi-file Rust module tree, schema-aware rendering (v0.3.0 adds Marketing + Bundle), WYSIWYG dual-mode editing, real-time sidebar, AI bridge SSE endpoint, Carbon CSS integration, mobile CSS, DTCG token-schema gaps (v0.3.0: composite groups added), the marketing-pages render pipeline (design.pointsav.com), the contributor workflow, the We-Own-It dependency map, and the 2030 platform vision.
 
 **This BRIEF explicitly does NOT cover:**
-- **The DESIGN-BUNDLE renderer.** Renderer design is **NOT started — pending Command ratification per operator decision 2026-06-14.** Bundle material in this BRIEF (§"DESIGN-BUNDLE — research reference") is reference only; `routes/bundle.rs` is a reserved name with no implementation.
+- **DESIGN-BUNDLE ratified 2026-06-20.** `schema/bundle.rs` implemented in v0.3.0 — identity header, metadata panel, member list with role chips, body prose, ZIP download via `/elements/:slug/download`. **DTCG multi-file split and Style Dictionary resolver** remain deferred (v0.4.0).
 - **Stage 6 promotion / canonical writes.** DTCG multi-file split, resolver, and any Style Dictionary build wiring stage as DESIGN drafts or commit in *this* archive; promotion to canonical is a Command-Session route via outbox (per `scope-discipline.md`).
 - **Figma / MCP / Code Connect as a code source of truth.** Import-only, draft-tier, hand-verified — never generates committed code.
 
@@ -55,7 +55,7 @@ Per `feedback-we-own-it-dependency-discipline.md`: every 3rd-party dep gets a `m
 | **rusqlite** (`bundled`) + spawn_blocking | 0.32 | Token-cache + session store (chosen over sqlx: thinner, closer to moonshot-database, no unused multi-DB layer) | `moonshot-database` (exists) | **L** | 2027+ (last; SQLite is highest-trust C lib) |
 | **notify** | 8.1.0 | FS watch for vault change → SSE. **Linux-only target → raw `inotify` sufficient**; skip the abstraction | `moonshot-fs-watch` (create) | **S** | **v0.2.0** (sovereign day one on inotify; notify never added) |
 | **pulldown-cmark** | 0.11 → **0.13** (bump) | Markdown render (DTCG docs, RESEARCH prose); pull-parser composes with highlight code-block hook | `moonshot-markup` (create; pull-parser + AST + token-directive layer) | M | 2027 |
-| **async_zip** / `s-zip` | — | DESIGN-BUNDLE ZIP streaming — **NOT ADDED** (BUNDLE deferred); s-zip if bundles ever large | `moonshot-archive` (future, if BUNDLE ratified) | — | deferred |
+| **zip** | 2.x | DESIGN-BUNDLE ZIP packaging — **ADDED v0.3.0** (BUNDLE ratified 2026-06-20); replaces async_zip/s-zip consideration | `moonshot-archive` (future target; zip is simple enough to own if needed) | M | deferred past v0.3.0 |
 | **axum** | 0.7 → 0.8 | HTTP framework — **WON'T REPLACE** | none | — | pinned/audited |
 | **tokio** | 1.x | Async runtime — **WON'T REPLACE** | none | — | pinned/audited |
 | **tower-http** | 0.5 | CompressionLayer (gzip/Brotli for sidebar payload) — **WON'T REPLACE** (tower ecosystem) | none | — | pinned/audited |
