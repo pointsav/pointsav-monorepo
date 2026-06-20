@@ -8,5 +8,6 @@ description = "Shared types for the app-orchestration-slm Yo-Yo broker chassis"
 
 [dependencies]
 serde = { workspace = true }
+serde_json = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
