@@ -166,7 +166,7 @@ Last updated: 2026-05-31.
 | moonshot-network | Scaffold-coded | moonshot | 4 files |
 | moonshot-parser | Scaffold-coded | moonshot | 4 files; incremental syntax parser — replaces tree-sitter |
 | moonshot-protocol | Scaffold-coded | moonshot | 4 files |
-| moonshot-sel4-vmm | Active | moonshot | Phase H5 2026-06-20; `#![no_std]` seL4 PD runtime; syscall.rs (ABI + 4-MR send/recv), debug.rs, types.rs, ansi.rs, bootstrap.rs, bootinfo.rs; bin/console_main.rs (H1), bin/ipc_main.rs (H2b), bin/serial_main.rs (H2: serial_pd string IPC gate PASSED), bin/uart_main.rs (H3: UART MMIO gate PASSED), bin/panel_main.rs (H4: ANSI panel gate PASSED), bin/virtio_net_init.rs (H5: VirtIO MMIO bus probe gate PASSED); standalone `[workspace]`; 14 files |
+| moonshot-sel4-vmm | Active | moonshot | Phase H6 2026-06-20; `#![no_std]` seL4 PD runtime; syscall.rs (ABI + 4-MR send/recv), debug.rs, types.rs, ansi.rs, bootstrap.rs, bootinfo.rs; bin/console_main.rs (H1), bin/ipc_main.rs (H2b), bin/serial_main.rs (H2: serial_pd string IPC PASSED), bin/uart_main.rs (H3: UART MMIO PASSED), bin/panel_main.rs (H4: ANSI panel PASSED), bin/virtio_net_init.rs (H5: VirtIO bus probe PASSED), bin/virtio_net_gate.rs (H6: slot scan + DRIVER_OK STATUS=0x7 PASSED); standalone `[workspace]`; 15 files |
 | moonshot-toolkit | Active | moonshot | v0.3.1; Phase 1C complete 2026-05-27; Rust-only build orchestrator; TOML spec → BuildPlan → elfloader ELF; 35 tests; produces `build/system-image.bin`; standalone `[workspace]`; own CWD required for build |
 
 ## Tool (`tool-*`)

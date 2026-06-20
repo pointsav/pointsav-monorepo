@@ -6,7 +6,7 @@ title: "os-console seL4 unikernel substrate — Phase H roadmap"
 status: active
 owner: totebox@project-console
 created: 2026-06-19
-updated: 2026-06-20 (H1/H2a/H2b/H2c/H3/H4/H5 all COMPLETE)
+updated: 2026-06-20 (H1/H2a/H2b/H2c/H3/H4/H5/H6 all COMPLETE)
 ---
 
 # BRIEF — os-console seL4 unikernel substrate
@@ -194,17 +194,30 @@ DEVICE_ID=0 at slot 0: QEMU assigns virtio-net to slot 31 (0x0a003e00); H6 will 
 **QEMU command:** `qemu-system-aarch64 -machine virt -cpu cortex-a53 -m 1G -nographic
   -device virtio-net-device,netdev=n0 -netdev user,id=n0 -kernel build/system-image.bin`
 
-### Phase H6 — VirtIO-net slot scan + virtqueue ring setup (next)
+### Phase H6 — VirtIO-net slot scan + STATUS to DRIVER_OK — COMPLETE 2026-06-20
 
-**Goal:** Scan all 32 VirtIO MMIO slots (0x0a000000 to 0x0a003e00, stride 0x200) to find
-DEVICE_ID=1 (network). Set up receive virtqueue ring. Gate: "VirtIO-net device_id=1 init
-complete" after STATUS progression to DRIVER_OK.
+**Gate passed:** "VirtIO-net device_id=1 init gate: PASSED"; STATUS=0x00000007 (DRIVER_OK).
 
-**Key:** Must map 32 consecutive 512-byte regions. Options: (a) map one page covering
-0x0a000000-0x0a000fff (8 VirtIO slots × 512 B) and probe with stride, or (b) map only
-the target slot once found. Option (a) covers all 8 slots in one SmallPage.
+**What shipped:** `bin/virtio_net_gate.rs` — maps 4 KiB page at 0x0a003000 (virtual 0x40200000)
+covering VirtIO slots 24–31 (8 × 512 B per slot). Scans with stride 0x200; finds slot 31
+at offset 0xe00: DEVICE_ID=0x00000001 (VirtIO-net). Advances STATUS to ACKNOWLEDGE|DRIVER|DRIVER_OK.
 
-### Phase H7 — smoltcp ICMP ping (future)
+Key: free pointer advancement trick — retype 4 SmallPages from the 16 KiB device untyped
+at 0x0a000000; 4th retype lands at 0x0a003000. STATUS=0x7 confirms device accepted DRIVER_OK.
+
+**QEMU command:** `-device virtio-net-device,netdev=n0 -netdev user,id=n0`
+
+### Phase H7 — smoltcp ICMP ping (next)
+
+### Phase H7 — smoltcp ICMP ping via virtqueue DMA (next after H6)
+
+**Goal:** Set up virtqueue descriptor table + avail ring + used ring; map a RAM page for
+DMA; enqueue a buffer in the net device's transmitq; trigger the device via QueueNotify;
+verify ICMP echo reply received in the used ring. Gate: ICMP echo reply received.
+
+**Key:** Virtqueue DMA requires mapping a RAM SmallPage and writing its physical address
+to QueueDescLow/QueueDescHigh (modern, VERSION=2) or QueuePFN (legacy, VERSION=1, page
+number). QEMU virt VirtIO-net uses VERSION=1 (legacy) per Phase H6 output.
 
 **Goal:** Implement virtqueue ring (descriptor table + avail ring + used ring); send an
 ICMP echo request via QEMU user-mode network; receive ICMP echo reply. Proves the DMA
@@ -217,7 +230,7 @@ NAT puts host at 10.0.2.2). Proves the full network stack to a real Totebox serv
 
 ## Carry-forward
 
-- H1–H5 all COMPLETE. Phase H6 next: scan VirtIO MMIO slots for DEVICE_ID=1 + virtqueue ring.
+- H1–H6 all COMPLETE. Phase H7 next: virtqueue DMA + smoltcp ICMP ping.
 - Stage 6 pending: commits through Phase H5 (commit `85367867` + H5 commit) need `bin/promote.sh`
   from Command Session. Route via outbox.
 - M-17 contamination in `.agent/briefs/` — cross-archive BRIEFs present; Command Session sweep
