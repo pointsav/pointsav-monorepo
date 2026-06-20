@@ -166,7 +166,7 @@ Last updated: 2026-05-31.
 | moonshot-network | Scaffold-coded | moonshot | 4 files |
 | moonshot-parser | Scaffold-coded | moonshot | 4 files; incremental syntax parser — replaces tree-sitter |
 | moonshot-protocol | Scaffold-coded | moonshot | 4 files |
-| moonshot-sel4-vmm | Active | moonshot | Phase H7 2026-06-20; `#![no_std]` seL4 PD runtime; syscall.rs, debug.rs, types.rs, ansi.rs, bootstrap.rs, bootinfo.rs; bin/console_main.rs (H1 PASSED), bin/ipc_main.rs (H2b PASSED), bin/serial_main.rs (H2 PASSED), bin/uart_main.rs (H3 PASSED), bin/panel_main.rs (H4 PASSED), bin/virtio_net_init.rs (H5 PASSED), bin/virtio_net_gate.rs (H6: DRIVER_OK PASSED), bin/virtio_net_icmp.rs (H7: VirtIO DMA used_ring.idx=1 PASSED); standalone `[workspace]`; 16 files |
+| moonshot-sel4-vmm | Active | moonshot | Phase H8 2026-06-20; `#![no_std]` seL4 PD runtime; syscall.rs (+ send wrapper), debug.rs, types.rs, ansi.rs, bootstrap.rs, bootinfo.rs; bin/console_main.rs (H1), bin/ipc_main.rs (H2b), bin/serial_main.rs (H2), bin/uart_main.rs (H3), bin/panel_main.rs (H4), bin/virtio_net_init.rs (H5), bin/virtio_net_gate.rs (H6: DRIVER_OK), bin/virtio_net_icmp.rs (H7: VirtIO DMA PASSED), bin/virtio_net_http.rs (H8: HTTP GET Doorman 200 OK PASSED); standalone `[workspace]`; 18 files |
 | moonshot-toolkit | Active | moonshot | v0.3.1; Phase 1C complete 2026-05-27; Rust-only build orchestrator; TOML spec → BuildPlan → elfloader ELF; 35 tests; produces `build/system-image.bin`; standalone `[workspace]`; own CWD required for build |
 
 ## Tool (`tool-*`)
@@ -204,9 +204,9 @@ Last updated: 2026-05-31.
 
 ---
 
-## Summary (2026-06-19)
+## Summary (2026-06-20)
 
-- **Active:** 16 (adds `app-orchestration-slm` Phase 2 2026-06-19; prior: `moonshot-sel4-vmm` + `moonshot-toolkit` same date)
+- **Active:** 16 (`moonshot-sel4-vmm` updated to Phase H8 2026-06-20; no count change)
 - **Scaffold-coded:** 55
 - **Reserved-folder:** 39
 - **Defect:** 0
@@ -214,4 +214,4 @@ Last updated: 2026-05-31.
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 113. Last updated: 2026-06-19.
+**Total rows:** 113. Last updated: 2026-06-20.
