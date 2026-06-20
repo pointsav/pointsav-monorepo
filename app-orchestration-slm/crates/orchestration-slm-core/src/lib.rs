@@ -133,3 +133,87 @@ pub struct AuditRollupResponse {
 
 /// Chassis version string embedded in every response.
 pub const CHASSIS_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+// ── Phase 2: Federated graph query ───────────────────────────────────────────
+
+/// Body for `POST /v1/graph/federated`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FederatedGraphRequest {
+    /// Query string forwarded verbatim to each registered Doorman.
+    pub q: String,
+    #[serde(default = "default_federated_limit")]
+    pub limit: usize,
+}
+
+fn default_federated_limit() -> usize {
+    20
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FederatedGraphEntry {
+    pub module_id: String,
+    pub archive_id: String,
+    pub result: serde_json::Value,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FederatedGraphResponse {
+    pub entries: Vec<FederatedGraphEntry>,
+    pub archives_queried: usize,
+    pub archives_reachable: usize,
+}
+
+// ── Phase 2: Training schedule ────────────────────────────────────────────────
+
+/// Body for `POST /v1/training/schedule`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrainingScheduleRequest {
+    pub module_id: String,
+    pub base_model: String,
+    pub dataset_uri: String,
+    pub adapter_name: String,
+    #[serde(default = "default_training_steps")]
+    pub max_steps: u32,
+}
+
+fn default_training_steps() -> u32 {
+    500
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TrainingScheduleResponse {
+    pub job_id: String,
+    pub status: &'static str,
+    pub trainer_endpoint: Option<String>,
+}
+
+// ── Phase 2: Adapter listing ──────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AdapterEntry {
+    pub name: String,
+    pub base_model: String,
+    pub node_label: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AdaptersResponse {
+    pub adapters: Vec<AdapterEntry>,
+    pub total: usize,
+}
+
+// ── Phase 2: Signed membership token ─────────────────────────────────────────
+
+/// Registration response (Phase 2) — includes Ed25519 signed membership token.
+///
+/// Token format: `<base64url(claims_json)>.<base64url(ed25519_signature)>`.
+/// Valid for 1 hour. The Doorman presents this as `Authorization: Bearer <token>`
+/// on subsequent proxy calls; the chassis verifies signature + expiry inline.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RegistrationResponseV2 {
+    pub status: &'static str,
+    pub module_id: String,
+    pub chassis_version: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub membership_token: Option<String>,
+}

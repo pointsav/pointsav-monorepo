@@ -320,13 +320,18 @@ consumed as path dependencies from the appropriate crate paths.
 | os-totebox/Cargo.toml | In tree | v0.1.0; no dependencies yet |
 | os-totebox-release.img (50 MB) | project-system | H0 reference artefact; Phase 1 complete |
 
+| moonshot-sel4-vmm/src/pd.rs — PdEntry trait + sel4_main! macro + 7-PD channel constants + host panic stub | session-11 | Committed; Stage 6 pending |
+| moonshot-sel4-vmm/src/lib.rs — pd mod export + host panic handler for x86_64 cargo check | session-11 | Committed; Stage 6 pending |
+| moonshot-toolkit/examples/os-totebox.toml — 7-PD Microkit system spec (Phase H1) | session-11 | Committed; Stage 6 pending |
+| os-totebox/src/pd_stub.c — bare-metal AArch64 C stub PD shared by all 7 PDs (Phase H1) | session-11 | Committed; Stage 6 pending |
+
 ### Not yet built (gated)
 
 | Item | Gate | Owner |
 |------|------|-------|
-| moonshot-sel4-vmm PD runtime (~300 LOC) | Microkit SDK operator download | project-system |
-| moonshot-toolkit os-totebox.toml system spec | moonshot-sel4-vmm scaffold | project-system |
-| QEMU AArch64 dev boot | os-totebox.toml complete | project-system / project-data |
+| Microkit SDK download | Operator action (v2.1.0 or v2.2.0 from sel4.systems) | project-system |
+| QEMU AArch64 dev boot of os-totebox.toml with pd_stub.c PDs | Microkit SDK must be installed | project-system / project-data |
+| Phase H2: Rust PdEntry per PD (CompileRustPd in moonshot-toolkit) | Phase H1 QEMU boot passing | project-data |
 | service-people POST/PATCH endpoints | F2 console cartridge read-only validation first | project-data |
 | J7 §4 Implementation | First os-totebox deployment evidence | project-data |
 | J7 §5 Evaluation + §6 Discussion + §8 Conclusion | Benchmark harness | project-data |

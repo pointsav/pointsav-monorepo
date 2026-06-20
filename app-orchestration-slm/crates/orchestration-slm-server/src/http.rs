@@ -24,12 +24,14 @@ use axum::{
     Json, Router,
 };
 use orchestration_slm::{
-    ChassisError, ChassisFlowGate, CircuitRegistry, FleetRegistry, LicenseStatus, MeteringLedger,
-    YoyoProxyClient,
+    ChassisError, ChassisFlowGate, CircuitRegistry, FleetRegistry, LicenseStatus, MembershipKey,
+    MeteringLedger, YoyoProxyClient,
 };
 use orchestration_slm_core::{
-    AuditRollupResponse, ReadyzResponse, RegistrationRequest, RegistrationResponse,
-    TenantRollupEntry, CHASSIS_VERSION,
+    AdapterEntry, AdaptersResponse, AuditRollupResponse, FederatedGraphEntry,
+    FederatedGraphRequest, FederatedGraphResponse, ReadyzResponse, RegistrationRequest,
+    RegistrationResponseV2, TenantRollupEntry, TrainingScheduleRequest, TrainingScheduleResponse,
+    CHASSIS_VERSION,
 };
 use serde_json::{json, Value};
 use tracing::warn;
@@ -41,6 +43,7 @@ pub struct AppState {
     pub circuits: Arc<CircuitRegistry>,
     pub gates: Arc<ChassisFlowGate>,
     pub license: Arc<LicenseStatus>,
+    pub membership: Arc<MembershipKey>,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -54,6 +57,9 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/yoyo/graph", post(yoyo_graph))
         .route("/v1/gate/{label}", post(gate_set))
         .route("/v1/audit/rollup", get(audit_rollup))
+        .route("/v1/graph/federated", post(graph_federated))
+        .route("/v1/training/schedule", post(training_schedule))
+        .route("/v1/adapters", get(adapters_list))
         .with_state(state)
 }
 
@@ -113,12 +119,14 @@ async fn fleet_list(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 async fn discovery_register(
     State(state): State<Arc<AppState>>,
     ExtractJson(req): ExtractJson<RegistrationRequest>,
-) -> Json<RegistrationResponse> {
+) -> Json<RegistrationResponseV2> {
     let member = state.fleet.register(req).await;
-    Json(RegistrationResponse {
+    let token = state.membership.issue(&member.module_id, &member.archive_id);
+    Json(RegistrationResponseV2 {
         status: "registered",
         module_id: member.module_id,
         chassis_version: CHASSIS_VERSION,
+        membership_token: Some(token),
     })
 }
 
@@ -366,6 +374,164 @@ async fn yoyo_graph(
     dispatch_yoyo(state, headers, body, "graph").await
 }
 
+// ── Phase 2: Federated graph query ────────────────────────────────────────────
+
+/// POST /v1/graph/federated — fan out a DataGraph query to all registered archives.
+///
+/// Calls `{doorman_endpoint}/v1/query` on each fleet member's Doorman using
+/// a fire-and-forget reqwest client. Results from unreachable archives are
+/// silently omitted; the caller sees `archives_queried` vs `archives_reachable`.
+async fn graph_federated(
+    State(state): State<Arc<AppState>>,
+    ExtractJson(req): ExtractJson<FederatedGraphRequest>,
+) -> impl IntoResponse {
+    let members = state.fleet.list_full().await;
+    let archives_queried = members.len();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .unwrap_or_default();
+
+    let mut entries: Vec<FederatedGraphEntry> = Vec::new();
+    for member in &members {
+        let url = format!("{}/v1/query", member.doorman_endpoint.trim_end_matches('/'));
+        let body = serde_json::json!({ "q": req.q, "limit": req.limit });
+        if let Ok(resp) = client.post(&url).json(&body).send().await {
+            if let Ok(result) = resp.json::<serde_json::Value>().await {
+                entries.push(FederatedGraphEntry {
+                    module_id: member.module_id.clone(),
+                    archive_id: member.archive_id.clone(),
+                    result,
+                });
+            }
+        }
+    }
+
+
+    let archives_reachable = entries.len();
+    Json(FederatedGraphResponse {
+        entries,
+        archives_queried,
+        archives_reachable,
+    })
+}
+
+// ── Phase 2: Training schedule ────────────────────────────────────────────────
+
+/// POST /v1/training/schedule — relay a LoRA training job to the Yo-Yo trainer.
+///
+/// Proxies to `ORCHESTRATION_YOYO_TRAINER_ENDPOINT/v1/training/jobs`.
+/// Returns the job-id from the trainer's response, or 503 if not configured.
+async fn training_schedule(
+    State(state): State<Arc<AppState>>,
+    ExtractJson(req): ExtractJson<TrainingScheduleRequest>,
+) -> Response {
+    match state.proxy.endpoints.trainer_endpoint.as_deref() {
+        None => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({"error": "trainer Yo-Yo node not configured on this chassis"})),
+        )
+            .into_response(),
+        Some(endpoint) => {
+            let url = format!("{}/v1/training/jobs", endpoint.trim_end_matches('/'));
+            let client = reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(30))
+                .build()
+                .unwrap_or_default();
+            match client.post(&url).json(&req).send().await {
+                Ok(resp) => {
+                    let status = resp.status();
+                    match resp.json::<serde_json::Value>().await {
+                        Ok(body) => {
+                            let job_id = body
+                                .get("job_id")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("unknown")
+                                .to_string();
+                            Json(TrainingScheduleResponse {
+                                job_id,
+                                status: if status.is_success() { "queued" } else { "error" },
+                                trainer_endpoint: Some(endpoint.to_string()),
+                            })
+                            .into_response()
+                        }
+                        Err(_) => (
+                            StatusCode::BAD_GATEWAY,
+                            Json(json!({"error": "trainer returned non-JSON response"})),
+                        )
+                            .into_response(),
+                    }
+                }
+                Err(e) => {
+                    warn!(error = %e, "training schedule: trainer unreachable");
+                    (
+                        StatusCode::SERVICE_UNAVAILABLE,
+                        Json(json!({"error": "trainer Yo-Yo node unreachable", "detail": e.to_string()})),
+                    )
+                        .into_response()
+                }
+            }
+        }
+    }
+}
+
+// ── Phase 2: Adapter listing ──────────────────────────────────────────────────
+
+/// GET /v1/adapters — list available LoRA adapters from the Yo-Yo fleet.
+///
+/// Queries `{trainer_endpoint}/v1/adapters` and `{graph_endpoint}/v1/adapters`.
+/// Results from both nodes are merged and labelled with `node_label`.
+async fn adapters_list(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .unwrap_or_default();
+
+    let mut adapters: Vec<AdapterEntry> = Vec::new();
+
+    let nodes: &[(&str, &str)] = &[
+        (
+            state.proxy.endpoints.trainer_endpoint.as_deref().unwrap_or(""),
+            "trainer",
+        ),
+        (
+            state.proxy.endpoints.graph_endpoint.as_deref().unwrap_or(""),
+            "graph",
+        ),
+    ];
+
+    for (endpoint, label) in nodes {
+        if endpoint.is_empty() {
+            continue;
+        }
+        let url = format!("{}/v1/adapters", endpoint.trim_end_matches('/'));
+        if let Ok(resp) = client.get(&url).send().await {
+            if let Ok(body) = resp.json::<serde_json::Value>().await {
+                if let Some(arr) = body.get("adapters").and_then(|v| v.as_array()) {
+                    for entry in arr {
+                        adapters.push(AdapterEntry {
+                            name: entry
+                                .get("name")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("unknown")
+                                .to_string(),
+                            base_model: entry
+                                .get("base_model")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("unknown")
+                                .to_string(),
+                            node_label: label.to_string(),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    let total = adapters.len();
+    Json(AdaptersResponse { adapters, total })
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
@@ -398,6 +564,10 @@ mod tests {
         })
     }
 
+    fn make_membership() -> Arc<orchestration_slm::MembershipKey> {
+        Arc::new(orchestration_slm::MembershipKey::generate().unwrap())
+    }
+
     fn test_state() -> Arc<AppState> {
         Arc::new(AppState {
             fleet: FleetRegistry::new(),
@@ -406,6 +576,7 @@ mod tests {
             circuits: Arc::new(CircuitRegistry::new(["proxy", "trainer", "graph"])),
             gates: Arc::new(ChassisFlowGate::new(["proxy", "trainer", "graph"])),
             license: Arc::new(make_license_valid()),
+            membership: make_membership(),
         })
     }
 
@@ -417,6 +588,7 @@ mod tests {
             circuits: Arc::new(CircuitRegistry::new(["proxy", "trainer", "graph"])),
             gates: Arc::new(ChassisFlowGate::new(["proxy", "trainer", "graph"])),
             license: Arc::new(LicenseStatus::Absent),
+            membership: make_membership(),
         })
     }
 

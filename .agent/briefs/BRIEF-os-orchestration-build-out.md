@@ -287,8 +287,15 @@ ledger autonomously. All WORM writes remain inside the Totebox's own `service-fs
 - Bind port: `:9180` (configurable via `ORCHESTRATION_BIND_ADDR`).
 - MVP endpoints implemented: `/healthz`, `/readyz`, `/v1/fleet`, `/v1/discovery/register`,
   `/v1/yoyo/proxy`, `/v1/yoyo/trainer`, `/v1/yoyo/graph`.
-- Phase 2 endpoints planned (not implemented): `/v1/graph/federated`, `/v1/training/schedule`,
-  `/v1/adapters`, `/v1/audit/rollup`.
+- Phase 2 endpoints **implemented (session-11):**
+  - `POST /v1/graph/federated` — fans out `q` to each registered Doorman's `/v1/query`; 10s timeout per archive; `archives_queried` vs `archives_reachable` summary.
+  - `POST /v1/training/schedule` — proxies LoRA training job to Yo-Yo trainer `/v1/training/jobs`; returns `job_id`; 503 if trainer not configured.
+  - `GET /v1/adapters` — queries trainer + graph nodes `/v1/adapters`; merges with `node_label`.
+- Phase 2 membership tokens **implemented (session-11):**
+  - `orchestration-slm/src/membership.rs` — `MembershipKey::generate()` (32-byte OS entropy), `MembershipClaims`, `issue()` (1-hour Ed25519 token), `verify()` (signature + expiry).
+  - `POST /v1/discovery/register` now returns `RegistrationResponseV2` with `membership_token: Some(...)`.
+  - `fleet.rs` — added `list_full()` returning `Vec<FleetMember>` with `doorman_endpoint` for federation fanout.
+- Phase 2 still pending: `/v1/audit/rollup` is wired to route but returns empty rollup (placeholder).
 - License: `LicenseRef-PointSav-Proprietary`.
 - Stage 6 promotion: pending (included in the batch of commits awaiting Command Session promote).
 

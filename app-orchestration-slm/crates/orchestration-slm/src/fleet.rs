@@ -67,6 +67,12 @@ impl FleetRegistry {
         self.inner.read().await.len()
     }
 
+    /// Return all fleet members with full detail (including `doorman_endpoint`).
+    /// Used by the federated graph endpoint to fan out to each Doorman.
+    pub async fn list_full(&self) -> Vec<FleetMember> {
+        self.inner.read().await.values().cloned().collect()
+    }
+
     /// Authenticate a Yo-Yo proxy request.
     ///
     /// `bearer_module_id` — module-id extracted from `Authorization: Bearer <id>`
