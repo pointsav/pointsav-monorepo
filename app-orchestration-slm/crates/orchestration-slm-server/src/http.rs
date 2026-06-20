@@ -297,7 +297,7 @@ async fn dispatch_yoyo(
     // 5. Proxy to the Yo-Yo node.
     match state.proxy.proxy(label, &member.module_id, body).await {
         Ok((bytes, inference_ms)) => {
-            state.circuits.get(label).map(|c| c.record_success());
+            if let Some(c) = state.circuits.get(label) { c.record_success() }
             state
                 .metering
                 .record(
@@ -320,7 +320,7 @@ async fn dispatch_yoyo(
             (StatusCode::OK, resp_headers, bytes).into_response()
         }
         Err(ChassisError::YoyoNotConfigured(lbl)) => {
-            state.circuits.get(label).map(|c| c.record_failure());
+            if let Some(c) = state.circuits.get(label) { c.record_failure() }
             (
                 StatusCode::SERVICE_UNAVAILABLE,
                 Json(
@@ -330,7 +330,7 @@ async fn dispatch_yoyo(
                 .into_response()
         }
         Err(ChassisError::YoyoUpstream(msg)) => {
-            state.circuits.get(label).map(|c| c.record_failure());
+            if let Some(c) = state.circuits.get(label) { c.record_failure() }
             warn!(label, error = %msg, "upstream error");
             (
                 StatusCode::BAD_GATEWAY,
@@ -339,7 +339,7 @@ async fn dispatch_yoyo(
                 .into_response()
         }
         Err(e) => {
-            state.circuits.get(label).map(|c| c.record_failure());
+            if let Some(c) = state.circuits.get(label) { c.record_failure() }
             warn!(label, error = %e, "proxy error");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
