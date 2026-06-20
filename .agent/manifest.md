@@ -1,80 +1,95 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster: project-proforma
-cluster_branch: cluster/project-proforma
-created: 2026-05-20
+cluster: project-design
+cluster_branch: cluster/project-design
+created: 2026-04-23
 state: active
 slm_endpoint: http://localhost:9080
-module_id: proforma
+module_id: design
 doctrine_version: 0.0.10
 doctrine_claims_codified: [37]
 publication_gate: operator-explicit
 
 operator: jennifer
-working_pattern: domain-expert-tool-development
-input_shape: excel-files-plus-financial-models
-spec_via_operation: true
+working_pattern: design-system-development
+input_shape: dtcg-token-files-plus-component-guides
+spec_via_operation: false
 
-# Jennifer Woodfine is the cluster operator. The proforma tooling
-# exists to model, stress-test, and present financial projections for
-# Woodfine Capital Projects real estate limited partnerships (PCLP series).
-# tool-proforma is an interactive HTML sensitivity analysis engine:
-# sliders drive yield rate, DSCR, LTV, and distribution caps; outputs
-# include market value, NAV, compounded return, and interest coverage.
+# This cluster owns the PointSav Design System browser and the
+# DTCG token repository. app-privategit-design is a Rust/axum SSR
+# web application serving design.pointsav.com; it reads the
+# pointsav-design-system sub-clone as a vault of DTCG token JSON
+# and renders schema-aware views for COMPONENT, TOKEN, RESEARCH,
+# MARKETING, and BUNDLE artifact types.
 #
-# This is NOT bookkeeping software — it is a forward-looking financial
-# modelling tool. Project-bookkeeping owns the vault/ledger stack;
-# project-proforma owns the LP proforma + sensitivity tooling.
+# pointsav-design-system (sub-clone) is the DTCG 2025.10 token
+# source of truth — dtcg-bundle.json contains all primitive,
+# semantic, component, and workplace token groups.
 #
-# BCSC note: all forward-looking projections carry planned/intended/target
-# language. No proforma output is to be published as a verified ledger
-# entry (SYS-ADR-19). The BCSC continuous-disclosure posture applies to
-# all content produced here (conventions/bcsc-disclosure-posture.md).
+# Design asset pipelines (woodfine-media-assets, pointsav-media-assets)
+# are also managed from this cluster via staging-tier commit + promote.
 
 tetrad:
   vendor:
-    - repo: pointsav-monorepo
+    - repo: project-design (archive root git)
       path: ./
-      upstream: vendor/pointsav-monorepo
+      upstream: cluster/project-design → main (Stage 6)
       focus: |
-        tool-proforma — LP financial sensitivity analysis + proforma engine
-          * Interactive HTML sensitivity dashboards (PCLP series)
-          * Tearsheet generators (mcorp-tearsheet-*)
-          * Reconciliation utilities (visa-recon-*)
+        app-privategit-design — design system browser + DTCG token API
+          * Schema-aware rendering (COMPONENT, TOKEN, RESEARCH, MARKETING, BUNDLE)
+          * Sovereign inotify FS-watch (moonshot-fs-watch)
+          * SSE live-reload sidebar (moonshot-index)
+          * WYSIWYG edit overlay (PUT vault save-back)
+          * AI bridge: DoormanOlmo + ClaudeCloud SSE relay
   customer:
-    - status: leg-pending
-      note: may never have customer-facing deliverables; operator decision 2026-05-20
+    - repo: pointsav-design-system (sub-clone)
+      path: pointsav-design-system/
+      upstream: vendor/pointsav-design-system
+      focus: |
+        DTCG 2025.10 token definitions
+          * dtcg-bundle.json — primitive + semantic + component + workplace groups
+          * components/ — DESIGN-COMPONENT guides
+          * research/ — DESIGN-RESEARCH files
+          * assets/ — ASSET files
   deployment:
-    - status: leg-pending
-      note: tool-proforma is a local HTML tool; no server deployment planned at this time
+    - service: local-design.service
+      port: 9094
+      binary: /usr/local/bin/app-privategit-design
+      version: "0.2.0"
+      url: design.pointsav.com (nginx reverse-proxy)
+      status: active
   wiki:
     - repo: vendor/content-wiki-documentation
-      drafts_via: clones/project-proforma/.agent/drafts-outbound/
+      drafts_via: clones/project-design/.agent/drafts-outbound/
       gateway: project-editorial
       planned_topics: []
       status: leg-pending
 
 clones:
-  - repo: pointsav-monorepo
-    role: primary
-    path: pointsav-monorepo/
-    upstream: vendor/pointsav-monorepo
-    focus: tool-proforma
+  - repo: pointsav-design-system
+    role: customer-token-source
+    path: pointsav-design-system/
+    upstream: vendor/pointsav-design-system
+    focus: DTCG token definitions
 
 adapter_routing:
   trains:
-    - cluster-project-proforma
+    - cluster-project-design
     - tenant-woodfine
   consumes:
     - constitutional-doctrine
     - engineering-pointsav
-    - cluster-project-proforma
+    - cluster-project-design
     - tenant-woodfine
     - role-task
 
 cross_cluster_dependencies:
-  - cluster: project-bookkeeping
-    why: shared domain knowledge (Jennifer's financial operations); vault ledger data
-         feeds proforma assumptions; the two tools are operationally coupled but
-         architecturally separate
-    interface: no direct code dependency; knowledge transfer via operator sessions
+  - cluster: project-workplace
+    why: wp-* token definitions (DESIGN-TOKEN-CHANGE-wp-tokens-20260602) consumed by design-system
+    interface: drafts-outbound → project-design intake
+  - cluster: project-orgcharts
+    why: orgchart-* token definitions and component guides
+    interface: drafts-outbound → project-design intake
+  - cluster: project-documents
+    why: legal document formatting tokens (component.document.legal.*)
+    interface: drafts-outbound → project-design intake (DESIGN-BUNDLE ratification 2026-06-20)

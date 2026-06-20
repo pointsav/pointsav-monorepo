@@ -3,10 +3,10 @@ artifact: brief
 schema: foundry-brief-v1
 brief-id: project-marketing-platform-master
 title: "Marketing Platform — Master Brief (app-mediakit-marketing + app-mediakit-shell)"
-status: active
+status: archived
 owner: project-marketing
 created: 2026-06-13
-updated: 2026-06-13
+updated: 2026-06-20
 ---
 
 ## Context
