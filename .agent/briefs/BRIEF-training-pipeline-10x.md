@@ -61,11 +61,13 @@ learns "emit `diff --git` and be long" — surface form, not correctness.
   tokens mid-hunk) → per-mode: SFT 2048, SimPO 7B 1024, DPO 7B 512, 32B 1024.
 - **`export-sft.py`** (new): builds SFT corpus from shadow tuples' gold
   `actual_diff` — per-file split + canonical envelope, `--task-type git-commit`
-  default (other shadow types carry capture-boilerplate bodies). Validated
-  dry-run, git-commit only: **2,585 clean SFT records from 1,299 tuples**
-  (vs 168 trainable DPO pairs = 15x), each a tractable single-file task with a
-  real commit-message prompt in the on-policy envelope. (`--task-type all`
-  yields 4,337 but includes boilerplate-body shadow types — not recommended.)
+  default (other shadow types carry capture-boilerplate bodies). Validated,
+  git-commit only: **2,228 clean SFT records from 1,299 tuples** (vs 168 trainable
+  DPO pairs = 13x), each a tractable single-file task with a real commit-message
+  prompt in the on-policy envelope; 0 malformed, all within the 2048-token window.
+  Written to `data/corpus/sft/sft-2026-06-20.jsonl`.
+- **`2f9bd612`**: size guard `_MAX_SEGMENT_CHARS=8000` drops 425 generated/vendored
+  diffs (Cargo.lock, minified) that would truncate past SFT max_length.
 
 ## Decisions open / follow-up
 
