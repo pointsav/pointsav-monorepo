@@ -5,6 +5,30 @@ a fourth entry is added.
 
 ---
 
+## 2026-06-20 | Totebox | claude-code (Sonnet 4.6)
+
+**Done this session:**
+- Phase H8 complete: HTTP GET to Doorman `/healthz` (200 OK) via raw TCP over VirtIO-net from
+  seL4 user space. Key discovery: QEMU SLiRP sends an ARP broadcast before delivering TCP SYN-ACK;
+  guest must reply to ARP (52:54:00:12:34:56 for 10.0.2.15) so SLiRP learns the guest MAC.
+- Written: `moonshot-sel4-vmm/src/bin/virtio_net_http.rs` — dual VirtIO queue init, ARP reply,
+  raw TCP/IP (IP+TCP checksums hand-rolled, `#![no_std]`), HTTP/1.1 GET to `10.0.2.2:9080/healthz`.
+- Added `syscall::send()` wrapper (was missing; `pd::notify()` called it).
+- Written: `moonshot-toolkit/examples/os-console-virtio-http.toml`.
+- Gate output: `[h8] ARP request received` → `[h8] SYN-ACK! server_seq=0x00000001` → `HTTP GET gate: PASSED`
+- Commit `2e0b47c5` (Peter). Phase H roadmap H1–H8 now complete.
+- M-17 contamination observed: `NEXT.md`, `CLAUDE.md`, `brief-discipline.md` contain project-design
+  and project-editorial content. Did NOT fix — noted for Command Session sweep.
+
+**Pending / carry-forward:**
+- Stage 6: commit `2e0b47c5` (+ all prior Phase H commits) need `bin/promote.sh` from Command Session.
+- NEXT.md M-17 contamination: three archives concatenated into one file; Command Session repair needed.
+- CLAUDE.md M-17 contamination: file now contains project-design guide content instead of project-console.
+
+**Operator preferences surfaced:** None new this session.
+
+---
+
 ## 2026-06-19 | Totebox | claude-code (Sonnet 4.6)
 
 **Done this session:**
