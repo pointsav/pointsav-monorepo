@@ -166,7 +166,7 @@ Last updated: 2026-05-31.
 | moonshot-network | Scaffold-coded | moonshot | 4 files |
 | moonshot-parser | Scaffold-coded | moonshot | 4 files; incremental syntax parser — replaces tree-sitter |
 | moonshot-protocol | Scaffold-coded | moonshot | 4 files |
-| moonshot-sel4-vmm | Active | moonshot | Phase H2 2026-06-19; `#![no_std]` seL4 PD runtime; syscall.rs (ABI + 4-MR send/recv), debug.rs, types.rs, bootstrap.rs; bin/console_main.rs (H1), bin/ipc_main.rs (H2b), bin/serial_main.rs (H2: serial_pd + console_pd string IPC, bordered box gate PASSED); standalone `[workspace]`; 11 files |
+| moonshot-sel4-vmm | Active | moonshot | Phase H3 2026-06-20; `#![no_std]` seL4 PD runtime; syscall.rs (ABI + 4-MR send/recv), debug.rs, types.rs, bootstrap.rs, bootinfo.rs; bin/console_main.rs (H1), bin/ipc_main.rs (H2b), bin/serial_main.rs (H2: serial_pd + console_pd string IPC, bordered box gate PASSED), bin/uart_main.rs (H3: device-untyped → SmallPage → two ARMPageTableMap → ARMPageMap → direct MMIO write, UART gate PASSED); standalone `[workspace]`; 12 files |
 | moonshot-toolkit | Active | moonshot | v0.3.1; Phase 1C complete 2026-05-27; Rust-only build orchestrator; TOML spec → BuildPlan → elfloader ELF; 35 tests; produces `build/system-image.bin`; standalone `[workspace]`; own CWD required for build |
 
 ## Tool (`tool-*`)
