@@ -6,7 +6,7 @@ title: "os-console seL4 unikernel substrate — Phase H roadmap"
 status: active
 owner: totebox@project-console
 created: 2026-06-19
-updated: 2026-06-19 (H2a COMPLETE)
+updated: 2026-06-20 (H2b/H2c/serial-PD/UART-MMIO all COMPLETE)
 ---
 
 # BRIEF — os-console seL4 unikernel substrate
@@ -114,7 +114,10 @@ cat /tmp/sel4-serial.log
   `vmm::spin()`; 232-byte BANNER includes gate text
 - `moonshot-toolkit/examples/os-console-rust.toml` — `rust_bin = "console_main"` spec
 
-### Phase H2b — Two PDs + seL4 IPC (Day 2)
+### Phase H2b — Two PDs + seL4 IPC — COMPLETE 2026-06-19
+
+**Gate passed:** "IPC gate: PASSED" + counter value printed. Commit `b399f1f9`.
+Serial PD + Console PD string IPC (bordered box) also complete: commit `ea61ad97`.
 
 **Goal:** rootserver boots two PDs; they exchange a message via seL4 endpoint. Proves
 the IPC path that all future cartridge isolation depends on.
@@ -150,21 +153,16 @@ reading seL4 manual §4 (CNode invocations) and §6 (TCB invocations) carefully.
 - seL4 initial caps layout: `seL4_BootInfo` struct tells rootserver what untyped
   memory regions it has to work with
 
-### Phase H2c — UART MMIO access from user space (Day 3)
+### Phase H2c — UART MMIO access from user space — COMPLETE 2026-06-20
+
+**Gate passed:** "UART gate: PASSED\r\n" via direct write_volatile to PL011 UARTDR.
+Commit `fae0f517`. Key lesson: AArch64 4-level walk requires TWO ARMPageTableMap
+invocations (L1 PUD + L2 PMD) before ARMPageMap can install a SmallPage. One call
+leaves lookupPTSlot at ptBitsLeft=21 ≠ 12 → ARMPageMap fails. Device untyped found
+via exact paddr match (staircase analysis: 16 MiB untyped starts exactly at 0x09000000).
 
 **Goal:** PD writes to PL011 UART at 0x09000000 directly (not via SysDebugPutChar).
 This is the step before VirtIO — validates that MMIO mapping from a seL4 PD works.
-
-**What changes:**
-1. Rootserver maps the PL011 UART page (0x09000000–0x09001000) into the console-pd's
-   VSpace using `seL4_ARM_Page_Map`.
-2. console-pd writes UART registers directly: `DR` (0x09000000), `FR` (0x09000018).
-3. No SysDebugPutChar — pure MMIO.
-
-**Gate:** "Hello via MMIO UART" appears on QEMU serial, written by the PD directly.
-
-**Estimated effort:** 4-6 hours. Requires ASID allocation + page table setup in
-rootserver bootstrap.
 
 ### Phase H3 — VirtIO serial + ratatui (Week 2)
 
@@ -201,8 +199,9 @@ console-pd (priority 100):
 
 ## Carry-forward
 
-- H2a COMPLETE. H2b next: two PDs + seL4 IPC — `bootstrap.rs` rootserver CSpace/VSpace
-  setup (~150 lines); counter-pd + receiver-pd; Gate: "IPC received: N"
-- Stage 6 pending: `0e8cfef5`, `e25b6ad7`, H2a completion commit — route to Command Session
+- H1/H2a/H2b/H2c all COMPLETE. Phase H3 (VirtIO serial + ratatui) is next.
+  Auto-plan H4 = BRIEF H3 (ANSI panel with ratatui-inspired TUI via raw ANSI escape sequences
+  — no VirtIO yet, just serial IPC from Phase H2b pattern).
+- Stage 6 pending: commits through `fae0f517` (Phase H2c/H3) — route to Command Session.
 - M-17 contamination in `.agent/briefs/` — cross-archive BRIEFs present; not this session's
-  concern but note for Command Session sweep
+  concern but note for Command Session sweep.
