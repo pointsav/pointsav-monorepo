@@ -28,7 +28,28 @@ Rolling 5-session summary. Newest entry on top. Oldest entry pushed to session-c
 
 ---
 
-## 2026-06-19 | Totebox | claude-code (Sonnet 4.6)
+## 2026-06-20 | Totebox | claude-code (Sonnet 4.6)
+
+**Done this session:**
+- Sprint T6: `ul.recent` moved from `.wiki-home-editorial__left` to `.wiki-home-editorial__right` in `home_handlers.rs`. Tests green. Committed `55c7f4c8` (jwoodfine).
+- Defect 6 closed: `serve_content_image` + `/images/{*path}` route already implemented (found in investigation — not a live defect).
+- Defect 2 closed: footnotes confirmed active in `render.rs:288`; not an engine bug.
+- BRIEF §2/§8.5 updated: sub-clone tip `700fa8f3` → `55c7f4c8`; Sprints Lapfrog 2030/H/I/T6 logged. Committed `9148418e` (pwoodfine).
+- `session-start.md` rewritten — was contaminated with project-command content.
+- Stage 6 consolidated message sent (msg-id: `command-20260619-stage-6-ready-app-mediakit-knowledge-spr`).
+- Sub-clone fast-forwarded to canonical tip (88 commits, then 23 more).
+- Monitored Command inbox — 7x mailbox-owner-mismatch CRITICAL on project-software; push-to-prod still pending.
+
+**Pending / carry-forward:**
+- `bin/push-to-prod.sh knowledge` still pending Command action — Sprint I + T6 not yet live on foundry-prod. `/page/disclaimer` returns 404.
+- Command inbox: mailbox-owner-mismatch CRITICAL on `project-software` firing every 90min — unresolved.
+- session-context.md was contaminated with project-console content (fixed this session).
+
+**Operator preferences surfaced:** None new this session.
+
+---
+
+## 2026-06-19 | Totebox | claude-code (Sonnet 4.6) [CONTAMINATED — project-console content]
 
 **Done this session:**
 - **Shutdown only** — no new feature work.
