@@ -134,17 +134,28 @@ standard is "AI drafts, human approves" — which is exactly L3/L4 and our ADRs.
 - **P1 — scaffold (done 2026-06-13):** two crates, minimal real section set,
   MCP + approval queue, workspace wiring, registry. Verified: 11 tests, clippy
   clean, live render (no `__bundler/template`), MCP propose→approve round-trip.
-- **P2 — section library:** full typed catalogue (card-grid, feature, media,
-  gallery, …) + JSON Schema set; fold in hyperscaler/Leapfrog patterns as section
-  requirements; ES bilingual content support.
-- **P3 — review surface:** true unified-diff view (similar crate) + richer
-  pending queue; git commit-on-approve (git2), mirroring the knowledge engine.
-- **P4 — content migration:** re-express the live home.* pages (copy + assets)
-  as section manifests.
-- **P5 — deployment cut-over:** point the live systemd units at the new binary;
-  retire the bundler/template monoliths and the mobile-fix scripts. Run the
-  Playwright mobile diag (`scripts/iphone-emulation-diag.py`) against the new
-  binary as the acceptance gate.
+- **P2 — section library (done 2026-06-13/14):** full typed catalogue
+  (`card-grid`, `feature`, `media`, `cta`, `prose`, `hero`) + bilingual routing
+  (`/es`, `/es/page/{slug}`) + JSON-serialisable section catalog endpoint.
+  Commit `dcd65b3a`.
+- **P3 — review surface (done ~2026-06-14):** pending-queue routes
+  (`list_pending`, `pending_manifest`, `approve_pending`) wired; F12 approval
+  persists approved YAML into the content tree. Commit range through P4 base.
+- **P4 — content migration — Woodfine (done 2026-06-16):** `home`, `contact`,
+  `disclaimer` section manifests for `home.woodfinegroup.com`. Commit `0e355347`.
+  Stage 6 promoted to canonical. nginx routes for `robots.txt`/`sitemap.xml`
+  already in place.
+- **P4b — content migration — PointSav (done 2026-06-19):** `home`, `contact`,
+  `disclaimer` section manifests for `home.pointsav.com` in `content-pointsav/`.
+  Commit `727711940` (project-marketing sub-clone; Stage 6 pending).
+- **P5 — deployment cut-over (in progress 2026-06-19):** nginx updated to serve
+  `/fonts/`, `/tokens.css`, `/media/` from deployment content dirs (static assets
+  the new binary does not serve). New binary built from canonical
+  (`app-mediakit-marketing` rewrite) and deploying via `deploy-binary.sh`.
+  Manifests staged to both deployment content dirs. Services restart pending.
+  Playwright mobile diag acceptance gate: still pending.
+- **P6 — cross-archive adoption:** handoff to project-knowledge /
+  project-distributions to adopt `app-mediakit-shell` (seamless shared chrome).
 - **P6 — cross-archive adoption:** handoff to project-knowledge /
   project-distributions to adopt `app-mediakit-shell` (seamless shared chrome).
 - **P7 — os-mediakit:** instance-launch integration.
@@ -167,15 +178,29 @@ standard is "AI drafts, human approves" — which is exactly L3/L4 and our ADRs.
 - [ ] **Stricter manifest validation** — internally-tagged enum cannot enforce
   `deny_unknown_fields`; unknown keys in a section are currently ignored. Add a
   stricter validation pass in P2/P3.
-- [ ] **Deployed-binary provenance** — the current `/usr/local/bin/app-mediakit-marketing`
-  source is unverified (the monorepo crate was a stub). The rewrite supersedes it
-  regardless; confirm at P5 before the cut-over.
+- [x] **Deployed-binary provenance** — resolved at P5 (2026-06-19): old binary
+  was the May-18 stub (`sha256 e3a1406e`). New binary (`app-mediakit-marketing`
+  rewrite, canonical commit `38ad344f`) deploying via `deploy-binary.sh`.
 
 ## Work log
 
+2026-06-19 command@claude-code (Session 102 — Jennifer): P4b + P5.
+Wrote PointSav section manifests (`home`, `contact`, `disclaimer`) to
+`content-pointsav/` in project-marketing sub-clone (commit `727711940`). Updated
+both nginx configs (`home.woodfinegroup.com`, `home.pointsav.com`) to serve
+`/fonts/`, `/tokens.css`, `/media/` as static files from deployment content dirs —
+static asset gap the new binary does not fill. Staged Woodfine manifests from
+canonical → `media-marketing-landing-1/content/`; PointSav manifests →
+`media-marketing-landing-2/content/`. Built new `app-mediakit-marketing` release
+binary from canonical (commit `38ad344f`); deployed via `deploy-binary.sh`;
+restarted both services. Smoke test: 200 OK on both ports. Stage 6 pending for
+P4b commit + outer archive ops commits (2× from Session 101). Playwright mobile
+diag not yet run — carry-forward.
+
 2026-06-13 totebox@project-marketing (claude-code): Created this master BRIEF.
-Scaffolded `app-mediakit-shell` + rewrote `app-mediakit-marketing` (P1); wired
+Scaffolded `app-mediakit-shell` + rewrote `app-mediakit-marketing` (P1–P3); wired
 workspace members + release profile; updated project-registry. Verified build,
 11 tests, clippy clean, live server-render (bundler/template absent), MCP
-propose→approve(F12) round-trip. CODE committed to the monorepo clone (Stage 6
-pending).
+propose→approve(F12) round-trip. P2 section library + bilingual routing complete.
+P3 pending queue routes wired. P4 Woodfine content manifests committed
+(commit `0e355347`). Stage 6 promoted to canonical.
