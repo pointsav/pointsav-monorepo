@@ -1,95 +1,76 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster: project-design
-cluster_branch: cluster/project-design
+cluster: project-system
+cluster_branch: main
 created: 2026-04-23
 state: active
 slm_endpoint: http://localhost:9080
-module_id: design
+module_id: system
 doctrine_version: 0.0.10
 doctrine_claims_codified: [37]
 publication_gate: operator-explicit
 
 operator: jennifer
-working_pattern: design-system-development
-input_shape: dtcg-token-files-plus-component-guides
+working_pattern: infrastructure-development
+input_shape: rust-monorepo-crates
 spec_via_operation: false
 
-# This cluster owns the PointSav Design System browser and the
-# DTCG token repository. app-privategit-design is a Rust/axum SSR
-# web application serving design.pointsav.com; it reads the
-# pointsav-design-system sub-clone as a vault of DTCG token JSON
-# and renders schema-aware views for COMPONENT, TOKEN, RESEARCH,
-# MARKETING, and BUNDLE artifact types.
-#
-# pointsav-design-system (sub-clone) is the DTCG 2025.10 token
-# source of truth — dtcg-bundle.json contains all primitive,
-# semantic, component, and workplace token groups.
-#
-# Design asset pipelines (woodfine-media-assets, pointsav-media-assets)
-# are also managed from this cluster via staging-tier commit + promote.
+# This cluster owns the PointSav Rust monorepo (pointsav-monorepo).
+# Primary focus areas:
+# - PPN VM fleet stack (service-vm-fleet, service-vm-host, service-vm-tenant, system-vm-fleet-types)
+# - os-totebox unikernel VM image (NetBSD; Veriexec; Phase 2 complete 2026-06-14)
+# - seL4 unikernel substrate (moonshot-toolkit, moonshot-sel4-vmm; Phase H1 complete 2026-06-19)
+# - app-console-* cartridges and os-console TUI
+# - All other monorepo workspace members
 
 tetrad:
   vendor:
-    - repo: project-design (archive root git)
+    - repo: pointsav-monorepo (archive root git)
       path: ./
-      upstream: cluster/project-design → main (Stage 6)
+      upstream: main (Stage 6)
       focus: |
-        app-privategit-design — design system browser + DTCG token API
-          * Schema-aware rendering (COMPONENT, TOKEN, RESEARCH, MARKETING, BUNDLE)
-          * Sovereign inotify FS-watch (moonshot-fs-watch)
-          * SSE live-reload sidebar (moonshot-index)
-          * WYSIWYG edit overlay (PUT vault save-back)
-          * AI bridge: DoormanOlmo + ClaudeCloud SSE relay
+        PPN VM fleet stack — service-vm-fleet (:9203), service-vm-host, service-vm-tenant (:9221),
+          system-vm-fleet-types
+        os-totebox — NetBSD unikernel VM image; Phase 2 complete 2026-06-14
+        seL4 substrate — moonshot-toolkit v0.3.1, moonshot-sel4-vmm Phase H1 complete 2026-06-19
+        app-console-* cartridges + os-console TUI
+        All other monorepo workspace members
   customer:
-    - repo: pointsav-design-system (sub-clone)
-      path: pointsav-design-system/
-      upstream: vendor/pointsav-design-system
-      focus: |
-        DTCG 2025.10 token definitions
-          * dtcg-bundle.json — primitive + semantic + component + workplace groups
-          * components/ — DESIGN-COMPONENT guides
-          * research/ — DESIGN-RESEARCH files
-          * assets/ — ASSET files
+    - status: leg-pending
+      note: >
+        No woodfine-fleet-deployment catalog entries committed yet.
+        os-totebox deployment docs planned as GUIDE artifacts.
   deployment:
-    - service: local-design.service
-      port: 9094
-      binary: /usr/local/bin/app-privategit-design
-      version: "0.2.0"
-      url: design.pointsav.com (nginx reverse-proxy)
-      status: active
+    - status: leg-pending
+      note: >
+        os-totebox instances are provisioned per-node; not yet cataloged in fleet-deployment.
+        service-vm-fleet/host/tenant run on vault-privategit-source-1 (ports 9203, 9221).
   wiki:
     - repo: vendor/content-wiki-documentation
-      drafts_via: clones/project-design/.agent/drafts-outbound/
+      drafts_via: clones/project-system/.agent/drafts-outbound/
       gateway: project-editorial
-      planned_topics: []
-      status: leg-pending
+      status: active
+      note: >
+        9 TOPICs promoted to canonical media-knowledge-documentation 2026-06-19 (commit 2222e42).
+        5 additional TOPIC drafts staged in drafts-outbound (A2–A6).
 
-clones:
-  - repo: pointsav-design-system
-    role: customer-token-source
-    path: pointsav-design-system/
-    upstream: vendor/pointsav-design-system
-    focus: DTCG token definitions
+clones: []
 
 adapter_routing:
   trains:
-    - cluster-project-design
+    - cluster-project-system
     - tenant-woodfine
   consumes:
     - constitutional-doctrine
     - engineering-pointsav
-    - cluster-project-design
+    - cluster-project-system
     - tenant-woodfine
     - role-task
 
 cross_cluster_dependencies:
-  - cluster: project-workplace
-    why: wp-* token definitions (DESIGN-TOKEN-CHANGE-wp-tokens-20260602) consumed by design-system
-    interface: drafts-outbound → project-design intake
-  - cluster: project-orgcharts
-    why: orgchart-* token definitions and component guides
-    interface: drafts-outbound → project-design intake
-  - cluster: project-documents
-    why: legal document formatting tokens (component.document.legal.*)
-    interface: drafts-outbound → project-design intake (DESIGN-BUNDLE ratification 2026-06-20)
+  - cluster: project-console
+    why: seL4 Phase H1 parallel work; os-console-hello.toml gate passed; Phase H2 VirtIO serial PD planned
+    interface: outbox coordination → project-system provides toolkit + vmm crates
+  - cluster: project-data
+    why: seL4 Phase H1 parallel work; os-totebox-hello.toml spec pending project-data PD confirmation
+    interface: outbox coordination (msg-id: command-20260620-sel4-phase-h1-which-pd-crate-is-your-tar)
