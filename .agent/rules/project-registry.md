@@ -61,7 +61,7 @@ Last updated: 2026-05-31.
 | app-orchestration-exchange | Reserved-folder | app-orchestration | Browser ad campaign UI; deployed as gateway-orchestration-exchange-N; Doctrine claim #52 |
 | app-orchestration-gis | Reserved-folder | app-orchestration | GIS/mapping orchestration surface; deployed as gateway-orchestration-gis-1; registry drift closed 2026-05-07 |
 | app-orchestration-market | Reserved-folder | app-orchestration | Browser marketplace storefront; deployed as gateway-orchestration-market-N; Doctrine claim #52 |
-| app-orchestration-slm | Scaffold-coded | app-orchestration | Commercial Yo-Yo broker chassis (DOCTRINE #23); 3-crate workspace (orchestration-slm-core, orchestration-slm, orchestration-slm-server); port :9180; MVP scaffold 2026-05-27; deploys as gateway-orchestration-slm-N on os-orchestration |
+| app-orchestration-slm | Active | app-orchestration | Commercial Yo-Yo broker chassis (DOCTRINE #23); 3-crate workspace; port :9180; MVP complete; Phase 2 signed membership tokens + federated graph + training schedule + adapters endpoints 2026-06-19 |
 
 ## App — PrivateGit surface (`app-privategit-*`)
 
@@ -206,8 +206,8 @@ Last updated: 2026-05-31.
 
 ## Summary (2026-06-19)
 
-- **Active:** 15 (adds `moonshot-sel4-vmm` + `moonshot-toolkit` 2026-06-19)
-- **Scaffold-coded:** 56 (two promoted to Active 2026-06-19)
+- **Active:** 16 (adds `app-orchestration-slm` Phase 2 2026-06-19; prior: `moonshot-sel4-vmm` + `moonshot-toolkit` same date)
+- **Scaffold-coded:** 55
 - **Reserved-folder:** 39
 - **Defect:** 0
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
