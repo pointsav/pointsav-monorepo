@@ -1,9 +1,9 @@
 ---
 mailbox: outbox
-owner: task-project-bim
+owner: totebox@project-bim
 location: ~/Foundry/clones/project-bim/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Outbox — Task Claude on project-bim cluster
+# Outbox — clones/project-bim
 
