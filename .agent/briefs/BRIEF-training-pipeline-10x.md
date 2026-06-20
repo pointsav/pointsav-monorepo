@@ -88,28 +88,55 @@ learns "emit `diff --git` and be long" — surface form, not correctness.
 - **lora-update.sh / nightly**: add an SFT stage before the preference stage;
   gate preference on "SFT adapter exists + emits valid diffs".
 
-### Inference slot saturation (mix of Totebox + Command)
-- **`CONTENT_DRAIN_THREADS=1`** when Tier B down — frees an OLMo slot for
-  interactive `/v1/extract` (Command: service-content env). The `defer:timeout`
-  is the Doorman's 120s deadline firing while blocked behind drain, NOT a 503.
+### Inference slot saturation — Batch D, DEFERRED to a dedicated session
+Rationale for deferral (2026-06-20): all of these touch the Doorman HOT PATH
+(local.rs / http.rs extract+batch handlers / router.rs / slm-core), which was
+being deployed concurrently, in a contended monorepo (see session-context:
+concurrent sessions + auto-rebase). Multi-crate exhaustive-match surface + the
+agent's caveat that the 503 may not even fire (llama.cpp queues internally rather
+than 503-ing) make this unsuitable for the tail of a long multi-batch session.
+Needs focused work + live-doorman validation.
+- **IMMEDIATE mitigation (Command env, routed via outbox 2026-06-20):**
+  `CONTENT_DRAIN_THREADS=1` (or `SLM_BATCH_CONCURRENCY=1`) while Tier B down —
+  frees an OLMo slot for interactive `/v1/extract`. The `defer:timeout` is the
+  Doorman's 120s deadline firing while blocked behind drain, NOT a 503.
 - Skip redundant `/v1/extract` Tier-B call in service-content when circuit known
   open (halves Tier A load during outage).
-- Detect llama-server 503 → new `DoormanError::TierABusy` fast-fail (local.rs).
-- Global Tier-A admission semaphore = `--parallel` count (Doorman).
+- Detect llama-server 503 → new `DoormanError::TierABusy` fast-fail (local.rs +
+  error.rs + http.rs ×2 + slm-core DeferReason + router.rs classify_error).
+- Global Tier-A admission semaphore = `--parallel` count (Doorman) — the real fix
+  for llama.cpp internal-queue head-of-line blocking.
 - **`ExpressLane::decide()` is fully built but never wired** into any HTTP
-  handler — the fairness logic that would fix this permanently is dead code.
+  handler — the permanent batch-vs-interactive fairness mechanism, currently dead
+  code. Wiring it is the end-state.
 
-### DataGraph entity quality (Command + Totebox)
-- **NULL vectors root cause**: `service-content/src/main.rs:55` extraction prompt
-  says "exactly two fields" while the schema (main.rs:869-885) declares five
-  (incl. the 3 vectors). The prompt actively forbids what the schema asks. Fix:
-  add vectors to prompt + 2-3 few-shot examples, OR delete them from schema.
-- **No entity resolution**: `Woodfine Management Corp.`/`Corp`, `Peter`/`Peter M.`
-  split into distinct nodes (graph.rs:120-124). Add normalization before id
-  construction. Inflates the 11,873 count with duplicates.
-- Context probe `break`s on first matching word (router.rs:225-230) → multi-entity
-  prompts get partial grounding.
-- `confidence` field is a tier tag (0.75/0.95), not a confidence; query unordered.
+### Batch execution log (Session 26c cont., 2026-06-20)
+- **Batch A** (`8d73757b`, on origin/main): apprenticeship.rs capture quality —
+  prefill→`self_confidence: `, stop→`\n```\n`, max_tokens→1536. 193 tests.
+- **Batch B** (`c1c1dcc4`+`20b7b295`, on origin/main): verdict.rs canonical-envelope
+  DPO pairs (`render_canonical_response`) + corpus_gate chosen-floor & example-echo
+  + run-dpo-training.py mirror. 195 tests.
+- **Batch C** (`3c6faacf`, local — needs push/Stage 6): service-content
+  normalize_entity_key dedup + extraction prompt/schema vector alignment. 44 tests.
+  NOTE: needs a live extraction spot-check post-deploy (vectors populate when
+  stated, no hallucination).
+- **Batch D**: deferred (above).
+- Concurrency note: this clone is shared with other sessions + an auto-rebase;
+  edits twice wiped before commit. Mitigation: claimed session.lock; commit each
+  batch immediately after green tests.
+
+### DataGraph entity quality
+- **[DONE — Batch C `3c6faacf`] NULL vectors root cause**: prompt/schema
+  contradiction at main.rs:55 fixed — prompt now permits optional vectors when
+  explicitly stated; Jennifer few-shot demonstrates role_vector. Live spot-check
+  pending post-deploy.
+- **[DONE — Batch C `3c6faacf`] Entity resolution**: `normalize_entity_key`
+  collapses `Corp.`/`Corp` + whitespace/case variants onto one node id. (No alias
+  resolution for `Peter`/`Peter M.` — still a follow-up if needed.)
+- **[OPEN]** Context probe `break`s on first matching word (router.rs:225-230) →
+  multi-entity prompts get partial grounding. (Doorman change.)
+- **[OPEN]** `confidence` field is a tier tag (0.75/0.95), not a confidence; query
+  unordered — rename or compute real signal + `ORDER BY`.
 
 ## Carry-forward
 - Stage 6 for `0506d359` + the SFT script commits (outbox msg-id
