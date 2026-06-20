@@ -157,45 +157,91 @@ This is Phase H2 work (after Phase H1 QEMU boot passes). See BRIEF-os-orchestrat
 
 ## §5 — Deployment sequence (phased)
 
-### Phase 1 — os-totebox VM + foundry-workspace as interim os-orchestration
+### Naming
 
-The foundry-workspace VM already runs `service-slm` (Doorman, Tier A) and
-`service-content` (DataGraph). It can serve as interim os-orchestration with
-zero new code — the new os-totebox VM's Tier 0 Doorman registers against it.
+| Role | Deployment catalog name | GCP VM name | Notes |
+|---|---|---|---|
+| First os-totebox cluster | `cluster-totebox-data-1` | `totebox-data-1` | Hosts project-data archive |
+| Interim os-orchestration | `gateway-orchestration-command-1` | `foundry-workspace` (existing) | foundry-workspace acting as gateway |
+| Future dedicated os-orchestration | `gateway-orchestration-command-2` | `orchestration-command-1` | Phase 3; sized for larger model |
 
-Steps:
-1. Provision a new GCP Debian VM (`os-totebox-1`)
-2. Build + deploy the 6-service stack on `os-totebox-1` (service-fs, service-content,
-   service-people, service-slm in Tier 0 mode, service-extraction, service-input)
-3. Set `SLM_ORCHESTRATION_ENDPOINT=http://<foundry-workspace-ip>:9080` on `os-totebox-1`
-4. Verify Tier 0 Doorman registers against foundry-workspace; inference routes correctly
-5. The foundry-workspace Doorman continues serving its own Totebox Archives as normal —
-   it is BOTH a regular Doorman AND interim os-orchestration during this phase
+The Totebox Archive on `cluster-totebox-data-1` keeps the archive name `project-data` —
+same project, different host VM. foundry-workspace's role alias
+`gateway-orchestration-command-1` is a catalog entry only; the physical VM does not change.
 
-### Phase 2 — Validate and iterate
+### Phase 1 — Provision cluster-totebox-data-1 (NO new code required)
 
-With `os-totebox-1` live and routing inference through foundry-workspace:
-- Confirm DataGraph sovereignty: `os-totebox-1` service-content is independent
-- Confirm federated graph: operator-invoked `POST /v1/graph/federated` on
-  foundry-workspace returns entities from both its own DataGraph AND `os-totebox-1`
-- Run a training schedule test: `os-totebox-1` posts to foundry-workspace's
-  `POST /v1/training/schedule`
-- Monitor for circuit breaker events (Tier 0 → foundry-workspace unavailable → Tier C)
+**VM spec (minimum viable):**
+- Type: `e2-small` (2 vCPU, 2GB RAM) — ~$13/month
+- Disk: 50GB SSD boot disk (~$4.25/month) — cargo target dir fills fast
+- Region: same zone as foundry-workspace (low-latency internal routing)
+- OS: Debian 12
+- External IP: yes (Claude Code needs Anthropic API egress)
+- Total: ~$17/month
 
-### Phase 3 — Dedicated os-orchestration VM (Command os-orchestration)
+2GB RAM is sufficient for Tier 0 (no llama-server). Resize to e2-medium (4GB,
+~$30/month) if service-content DataGraph grows or cargo builds are too slow.
 
-Once Phase 2 is validated:
-1. Provision a dedicated GCP VM (`os-orchestration-command-1`) — sized for a
-   larger model (OLMo 2 7B or Llama 3.3 70B; decision §6.1)
-2. Deploy `app-orchestration-slm` + llama-server on `os-orchestration-command-1`
-3. Register all existing os-totebox VMs against the new Command os-orchestration
-4. Migrate foundry-workspace: its own Doorman switches from Tier A local to
-   Tier 0 mode (pointing at `os-orchestration-command-1`) — the workspace VM
-   becomes just another Totebox Archive in the fleet
-5. foundry-workspace's interim os-orchestration role is retired
+**foundry-workspace config change (Command Session, one-time):**
+Rebind llama-server from `127.0.0.1:8080` to internal GCP IP (or `0.0.0.0:8080`):
+```
+# /etc/systemd/system/local-slm.service override:
+# Add --host <internal-ip> to the llama-server ExecStart flags
+# Open GCP firewall: allow tcp:8080 from totebox-data-1 internal IP only
+sudo systemctl edit local-slm.service
+sudo systemctl restart local-slm.service
+```
+This is the ONLY foundry-workspace change needed for Phase 1. No code changes anywhere.
 
-This is the target topology: one Command os-orchestration; N Totebox Archives
-(including foundry-workspace) all running Tier 0 Doormen.
+**cluster-totebox-data-1 service stack:**
+```
+SLM_LOCAL_ENDPOINT=http://<foundry-workspace-internal-ip>:8080   # routes inference to fw llama-server
+SLM_BIND_ADDR=0.0.0.0:9080                                        # expose Doorman on internal network
+SERVICE_CONTENT_GRAPH_BACKEND=sqlite                               # start lightweight; migrate later
+```
+The os-totebox-1 Doorman treats foundry-workspace's llama-server as its "Tier A" —
+no Tier 0 mode code needed. foundry-workspace handles concurrent requests (llama-server
+queues them). DataGraph on os-totebox-1 (service-content) starts empty and populates
+as service-extraction processes documents — sovereign from day one.
+
+**project-data archive migration:**
+- project-data Totebox Session MOVES to cluster-totebox-data-1
+- Current foundry-workspace project-data session closes before cluster VM takes over
+- One session per git repo — no concurrent sessions on the same archive
+
+**6-service deploy order on cluster-totebox-data-1:**
+```
+1. service-fs        (port 9100 — must be first; others depend on it)
+2. service-content   (port 9081 — DataGraph; start empty, sqlite backend)
+3. service-people    (port 9091)
+4. service-input     (port 9106 — required by start-stack.sh; no port server)
+5. service-extraction (no HTTP port; fs watcher; depends on service-fs + service-content)
+6. service-slm       (port 9080 — Doorman last; all dependencies must be up)
+```
+
+### Phase 2 — Validate
+
+With cluster-totebox-data-1 live:
+- Confirm DataGraph sovereignty: cluster-totebox-data-1 service-content is independent
+- Confirm inference routing: `doorman_health()` shows Tier A alive (foundry-workspace:8080)
+- Confirm circuit breaker: if foundry-workspace llama-server stops, Doorman escalates to Tier C
+- Confirm federated graph: operator-invoked `POST /v1/graph/federated` on foundry-workspace
+  returns entities from its own DataGraph; cluster-totebox-data-1 DataGraph starts empty
+  (will grow as extraction runs)
+
+### Phase 3 — Implement proper Tier 0 mode + dedicated os-orchestration VM
+
+After Phase 2 validates the routing concept:
+1. Implement `SLM_TIER=0` mode in service-slm Doorman (new code — see §4)
+2. Implement `POST /v1/inference` on app-orchestration-slm (new code — see §4)
+3. Provision `gateway-orchestration-command-2` GCP VM (dedicated; sized for larger model)
+4. Deploy app-orchestration-slm + llama-server on it
+5. Switch all os-totebox VMs to proper Tier 0 mode (membership token auth)
+6. foundry-workspace Doorman switches to Tier 0 (joins the fleet as a peer)
+7. foundry-workspace's interim gateway role (`gateway-orchestration-command-1`) is retired
+
+Target topology: one dedicated Command os-orchestration; N peer Totebox Archives
+(cluster-totebox-data-1, foundry-workspace, future VMs) all running proper Tier 0.
 
 ## §6 — Decisions locked
 
