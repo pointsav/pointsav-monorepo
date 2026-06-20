@@ -72,5 +72,5 @@ cross_cluster_dependencies:
     why: seL4 Phase H1 parallel work; os-console-hello.toml gate passed; Phase H2 VirtIO serial PD planned
     interface: outbox coordination → project-system provides toolkit + vmm crates
   - cluster: project-data
-    why: seL4 Phase H1 parallel work; os-totebox-hello.toml spec pending project-data PD confirmation
-    interface: outbox coordination (msg-id: command-20260620-sel4-phase-h1-which-pd-crate-is-your-tar)
+    why: seL4 Phase H1 parallel work; os-totebox is confirmed PD target (BRIEF-os-totebox-build-out)
+    interface: os-totebox-hello.toml spec delivered 2026-06-20 (commit 23b7026d5); Stage 6 pending
