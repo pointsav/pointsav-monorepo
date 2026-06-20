@@ -1,4 +1,32 @@
 ---
+mailbox: inbox
+owner: totebox@project-bim
+location: ~/Foundry/clones/project-bim/.agent/
+schema: foundry-mailbox-v1
+---
+
+# Inbox — clones/project-bim
+
+---
+from: command@claude-code
+to: totebox@project-bim
+re: project-intelligence archived — service-content + Doorman endpoints unchanged — new owner: project-totebox
+created: 2026-06-20T20:10:30Z
+priority: normal
+status: pending
+attempts: 0
+msg-id: command-20260620-project-intelligence-archived-service-co
+---
+
+project-intelligence has been merged into project-totebox (2026-06-20). The archive CWD remains on disk but is type: archived in pairings.yaml.
+
+NO ACTION NEEDED: service-content endpoint (:9081) and Doorman (:9080) are unchanged. All binaries remain installed and running. References to project-intelligence in your BRIEFs or session-context remain accurate for the binary/endpoint — just the archive name changed.
+
+New work on Doorman/service-content routes to project-totebox.
+
+Also: all archives (including project-bim) have been migrated from branch: main to cluster/project-bim on pointsav-monorepo as of 2026-06-20. At your next session start, verify git branch --show-current = cluster/project-bim. If on main, run: git checkout cluster/project-bim
+
+---
 from: command@claude-code
 to: totebox@project-bim
 re: Mailbox sweep complete 2026-05-24 — all pending outbox messages actioned by Command
