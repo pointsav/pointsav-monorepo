@@ -9,6 +9,29 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 
 ---
 
+## 2026-06-20 | totebox@claude-code | app-privategit-bim UI polish
+
+**Done:**
+- Applied three UI fixes to `app-privategit-bim` (clean-sheet Carbon rewrite):
+  1. **Hero + header/footer restored** — `cds-header-name` now shows "Woodfine | BIM Object Library"; home page has hero tagline, three article sections (problem statement, BIM Objects answer, browse CTA), dark three-column footer. Content sourced verbatim from `app-orchestration-bim/src/main.rs`.
+  2. **Sidebar always open** — removed hamburger toggle (`cds-header-menu-button`), added `expanded` attribute to `cds-side-nav`. Resolves Carbon conflict between hamburger pattern and `is-not-child-of-header` persistent rail.
+  3. **Token table fixed** — replaced `cds-data-table` / `cds-table-*` web components (inline-rendered before JS initialises) with plain `<table class="bim-token-table">`. CSS selectors added to `bim-components.css`; hero/footer CSS added to `bim-layout.css`.
+- Files changed: `shell.rs`, `card.rs`, `home.rs`, `bim-layout.css`, `bim-components.css`
+- Committed `39d3cb0b` to monorepo cluster branch: "feat(app-privategit-bim): restore header/footer/intro; fix sidebar; replace cds-data-table with plain table"
+- Preview running on port 9206 (SSH tunnel: `ssh -L 9206:localhost:9206 jennifer@34.53.65.203 -N`); verified all fixes via curl
+- Created `BRIEF-app-privategit-bim.md` + `briefs/README.md` (new files)
+
+**Root cause learned:** Previous session edits landed in phantom `/srv/foundry/clones/project-bim/app-privategit-bim/` path (doesn't exist). Actual source is always in `/srv/foundry/clones/project-bim/pointsav-monorepo/app-privategit-bim/`.
+
+**Pending / carry-forward:**
+- Stage 6 promotion of monorepo cluster branch → Command Session (outbox message sent)
+- Production deploy of `app-privategit-bim` (replace `app-orchestration-bim` on port 9096, nginx config, systemd service) → Command Session
+
+**Operator preferences surfaced:**
+- User browses via SSH tunnel (`ssh -L 9206:localhost:9206 jennifer@34.53.65.203 -N`) — not WireGuard VPN
+
+---
+
 ## 2026-05-28 | totebox@claude-code | preview-viewers + routing-correction
 
 **Done:**

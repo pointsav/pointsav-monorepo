@@ -7,6 +7,13 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Hot — pick up here next session
 
+- [x] **app-privategit-bim UI polish — committed 2026-06-20** `[2026-06-20 totebox@claude-code]`
+  - Monorepo: 39d3cb0b — shell.rs + card.rs + home.rs + bim-layout.css + bim-components.css
+  - Hero/footer/header restored; sidebar always open; cds-data-table → plain table
+  - Preview on port 9206 — verified via curl (all checks pass)
+  - Brief: `.agent/briefs/BRIEF-app-privategit-bim.md`
+  - Stage 6 + production deploy → Command Session outbox (sent this session)
+
 - [x] **tool-keyplan v0.0.1 — committed 2026-05-23** `[2026-05-23 totebox@claude-code]`
   - Monorepo: a4ba3e96 — Cargo.toml + tool-keyplan/ crate (6 files)
   - Engine: ASR A1.2 ✓ European Lighting ✓ Wheelchair ✓ — ALL CONSTRAINTS SATISFIED

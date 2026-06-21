@@ -10,6 +10,53 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-bim
 to: command@claude-code
+re: Stage 6 + production deploy — app-privategit-bim UI polish complete
+created: 2026-06-20T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-bim-20260620-stage6-deploy-bim
+---
+
+app-privategit-bim Phase 1 UI polish is committed on cluster branch of
+`pointsav-monorepo` (commit 39d3cb0b). Ready for Stage 6 promotion and
+production deploy.
+
+**Monorepo commit:** 39d3cb0b
+"feat(app-privategit-bim): restore header/footer/intro; fix sidebar; replace cds-data-table with plain table"
+
+Files changed:
+- `app-privategit-bim/src/render/shell.rs` — header brand, meta, footer, sidebar expanded, no hamburger
+- `app-privategit-bim/src/render/card.rs` — hero + article prose on home; plain table on category pages
+- `app-privategit-bim/src/routes/home.rs` — empty title (browser uses full "BIM Object Library — Woodfine")
+- `app-privategit-bim/src/assets/bim-layout.css` — hero, article, footer CSS
+- `app-privategit-bim/src/assets/bim-components.css` — .bim-token-table styles
+
+**Actions requested from Command Session:**
+
+1. **Stage 6 promote** — run `bin/promote.sh` from project-bim cluster branch;
+   filter `.agent/` paths; push code to `origin/main` of pointsav-monorepo.
+
+2. **Build binary** — `cargo build --release -p app-privategit-bim` from monorepo.
+
+3. **Deploy** — copy binary to `/usr/local/bin/app-privategit-bim`.
+   Write systemd service unit (similar to `local-bim-orchestration.service`):
+   - Port: `BIM_BIND=127.0.0.1:9094` (or next available non-colliding port)
+   - `BIM_STATIC_DIR=` path to packaged assets (not source tree)
+   - `BIM_LIBRARY_DIR=/srv/foundry/clones/project-bim/woodfine-bim-library`
+   - Service name: `local-bim.service`
+
+4. **Nginx** — update `bim.woodfinegroup.com` nginx config to proxy to the new port.
+   The old `app-orchestration-bim` on port 9096 can be stopped once the new service
+   is confirmed healthy.
+
+Preview was verified at port 9206 (all curl checks passed 2026-06-20).
+BRIEF: `.agent/briefs/BRIEF-app-privategit-bim.md`
+
+— totebox@project-bim
+
+---
+from: totebox@project-bim
+to: command@claude-code
 re: NOTAM unreadable at Totebox session startup — permission denied
 created: 2026-05-20T00:00:00Z
 priority: normal
@@ -33,8 +80,9 @@ to: command@claude-code
 re: 4 operator decisions blocking further Key Plans work — see foundation briefing
 created: 2026-05-17T23:55:00Z
 priority: normal
-status: pending
+status: dispatched
 msg-id: project-bim-20260517-key-plans-foundation-decisions
+relayed-on: 2026-06-21
 ---
 
 The cluster has paused further Key Plans / `BIM_TOKENS` / DTCG token work pending
@@ -146,7 +194,8 @@ to: command@claude-code
 re: session complete — Tasks 1–4 done; woodfine-bim-library pushed; B5 deferred
 created: 2026-05-17T22:00:00Z
 priority: normal
-status: pending
+status: dispatched
+relayed-on: 2026-06-21
 ---
 
 Session summary — 2026-05-17, totebox@project-bim (claude-sonnet-4-6):
@@ -193,8 +242,9 @@ to: command@claude-code
 re: woodfine-palette-additions — admin-tier action needed (mcorp-administrator)
 created: 2026-05-17T21:00:00Z
 priority: normal
-status: pending
+status: dispatched
 msg-id: project-bim-20260517-palette-admin-action
+relayed-on: 2026-06-21
 ---
 
 `woodfine-palette-additions.md` in `clones/project-bim/.agent/drafts-outbound/`
@@ -351,8 +401,9 @@ to: command@claude-code
 re: Please relay to project-design — P8c render.rs-only decision
 created: 2026-05-16T18:45:00Z
 priority: normal
-status: pending
+status: dispatched
 msg-id: project-bim-20260516-p8c-relay-to-design
+relayed-on: 2026-06-21
 ---
 
 Operator decision confirmed (inbox msg project-bim-20260516-p8c-regulation-component):
@@ -374,8 +425,9 @@ to: command@claude-code
 re: building-width-calculator.dtcg.json migrated — Stage 6 + admin cleanup needed
 created: 2026-05-16T18:45:00Z
 priority: normal
-status: pending
+status: dispatched
 msg-id: project-bim-20260516-bwc-migration-complete
+relayed-on: 2026-06-21
 ---
 
 `building-width-calculator.dtcg.json` is now committed in `woodfine-design-bim`
