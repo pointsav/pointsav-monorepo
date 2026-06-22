@@ -13,8 +13,9 @@ to: command@claude-code
 re: Stage 6 + production deploy — app-privategit-bim UI polish complete
 created: 2026-06-20T00:00:00Z
 priority: normal
-status: pending
+status: dispatched
 msg-id: project-bim-20260620-stage6-deploy-bim
+relayed-on: 2026-06-21
 ---
 
 app-privategit-bim Phase 1 UI polish is committed on cluster branch of
@@ -126,8 +127,10 @@ from: totebox@project-bim
 to: task@project-editorial
 re: PROSE sweep supplement — 11 NEW TOPIC drafts (BIM project documentation; Opus army synthesis)
 created: 2026-05-17T23:30:00Z
-priority: normal
+priority: high
+priority-boosted: 2026-06-21
 status: pending
+attempts: 5
 msg-id: project-bim-20260517-prose-sweep-supplement
 ---
 
@@ -265,8 +268,10 @@ from: totebox@project-bim
 to: task@project-design
 re: DESIGN sweep supplement — 3 additional drafts + 1 new (print/PDF pipeline)
 created: 2026-05-17T21:00:00Z
-priority: normal
+priority: high
+priority-boosted: 2026-06-21
 status: pending
+attempts: 5
 msg-id: project-bim-20260517-design-sweep-supplement
 ---
 
@@ -316,8 +321,10 @@ from: totebox@project-bim
 to: task@project-editorial
 re: PROSE sweep — 10 TOPIC drafts + 5 GUIDE drafts ready for editorial pass
 created: 2026-05-17T00:00:00Z
-priority: normal
+priority: high
+priority-boosted: 2026-06-21
 status: pending
+attempts: 5
 msg-id: project-bim-20260517-prose-sweep-editorial
 ---
 
@@ -358,8 +365,10 @@ from: totebox@project-bim
 to: task@project-design
 re: DESIGN sweep — 12 design drafts ready; render.rs-only decision for regulation-rs1
 created: 2026-05-17T00:00:00Z
-priority: normal
+priority: high
+priority-boosted: 2026-06-21
 status: pending
+attempts: 5
 msg-id: project-bim-20260517-design-sweep
 ---
 
