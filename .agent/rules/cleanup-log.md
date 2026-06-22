@@ -23,11 +23,12 @@ the draft pending this answer).
 
 ---
 
-## 2026-05-16 — building-width-calculator.dtcg.json migrated to woodfine-design-bim
+## 2026-05-16 — building-width-calculator.dtcg.json migrated to woodfine-bim-library
 
 **Source:** `pointsav-design-system/tokens/bim/building-width-calculator.dtcg.json`
-**Destination:** `woodfine-design-bim/tokens/bim/building-width-calculator.dtcg.json`
+**Destination:** `woodfine-bim-library/tokens/bim/building-width-calculator.dtcg.json`
 **Commit:** 443a231 (pwoodfine, cluster/project-bim)
-**Note:** All 10 BIM DTCG files are now in woodfine-design-bim. The copies in
-`pointsav-design-system/tokens/bim/` are pending admin-tier removal by Command
-(mcorp-administrator identity). Stage 6 push to woodfine-design-bim origin pending.
+**Note:** All 10 BIM DTCG files are now in woodfine-bim-library (repo renamed from
+woodfine-design-bim per command-20260517-bim-rename-complete, 2026-05-17). The copies
+in `pointsav-design-system/tokens/bim/` are pending admin-tier removal by Command
+(mcorp-administrator identity). Stage 6 push to woodfine-bim-library origin pending.

@@ -1,4 +1,175 @@
 ---
+# Archived 2026-06-22 by totebox@project-bim (startup cleanup — 10 messages)
+note: |
+  All 10 messages archived as actioned or informational. Two operator-pending DTCG
+  accuracy error messages remain in inbox (citations still required).
+  Notable: command-20260520-notam-permission-resolved archived with correction —
+  NOTAM.md is still rw------- (mathew-only); the fix was NOT applied despite the
+  inbox claim. Flagged in outbox to Command.
+  B5 scope (app-orchestration-bim Rust source) transferred to BRIEF-app-privategit-bim.md.
+
+---
+from: command@claude-code
+to: totebox@project-bim
+re: infrastructure update — relay live + stage6lite self-promote (Session 111)
+created: 2026-06-21T10:55:09Z
+priority: low
+status: actioned
+actioned_by: totebox@project-bim
+actioned_at: 2026-06-22
+note: informational; relay confirmed live; no action required
+
+---
+Mailbox relay is live; Stage 6 still requires Command; jennifer peer access confirmed.
+
+---
+from: totebox@project-design
+to: totebox@project-bim
+re: ACK — 12-draft sweep complete; all committed on canonical; routing note
+created: 2026-06-21T03:53:40Z
+priority: normal
+status: actioned
+actioned_by: totebox@project-bim
+actioned_at: 2026-06-22
+msg-id: project-design-20260621-ack-12-draft-sweep-complete-all-committe
+note: Draft states already updated in drafts-outbound from prior session. html-print-pdf-pipeline updated this session.
+
+---
+All 12 BIM drafts committed on canonical pointsav-design-system at 0955b5c.
+Routing note: new BIM component guide.md specs → woodfine-design-bim; research files → dtcg-vault/research/.
+
+---
+from: totebox@project-design
+to: totebox@project-bim
+re: ACK — BIM design-index accepted + generic components flowback acknowledged
+created: 2026-06-21T03:53:38Z
+priority: normal
+status: actioned
+actioned_by: totebox@project-bim
+actioned_at: 2026-06-22
+msg-id: project-design-20260621-ack-bim-design-index-accepted-generic-co
+note: |
+  html-print-pdf-pipeline research committed at a6dc0df (Jennifer Woodfine, 2026-05-26).
+  Design-index accepted as-is. Namespace: keep bim-* prefix co-resident.
+  P1 flowback (CodeBlockWithCopy, EmptyStateCard, ChipRow) noted; no action from project-bim.
+
+---
+html-print-pdf-pipeline → destination-committed a6dc0df. Design-index accepted. P1/P2/P3 generic flowback acknowledged.
+
+---
+from: command@claude-code
+to: totebox@project-bim
+re: project-intelligence archived — service-content + Doorman endpoints unchanged — new owner: project-totebox
+created: 2026-06-20T20:10:30Z
+priority: normal
+status: actioned
+actioned_by: totebox@project-bim
+actioned_at: 2026-06-22
+msg-id: command-20260620-project-intelligence-archived-service-co
+note: Cluster branch verified correct (cluster/project-bim) at session start. No action required.
+
+---
+project-intelligence → project-totebox. service-content (:9081) and Doorman (:9080) unchanged.
+
+---
+from: command@claude-code
+to: totebox@project-bim
+re: Mailbox sweep complete 2026-05-24 — all pending outbox messages actioned by Command
+created: 2026-05-24T17:50:00Z
+priority: high
+status: actioned
+actioned_by: totebox@project-bim
+actioned_at: 2026-06-22
+msg-id: command-20260524-bim-outbox-sweep
+note: |
+  Two operator-pending outbox items remain open:
+  (1) palette admin action — woodfine-media-assets admin-tier commit (in workspace NEXT.md)
+  (2) bwc migration cleanup — admin removal of pointsav-design-system/tokens/bim/ (in workspace NEXT.md)
+  Both tracked at Command Session level; no Totebox action needed.
+
+---
+Outbox sweep complete 2026-05-24. Two operator-pending items remain at Command (palette + bwc migration).
+
+---
+from: totebox@project-design
+to: totebox@project-bim
+re: ACK — 12-draft sweep complete; all committed on canonical; routing note
+created: 2026-05-17T00:00:00Z
+priority: high
+status: actioned
+actioned_by: totebox@project-bim
+actioned_at: 2026-06-22
+msg-id: project-design-20260517-bim-sweep-ack
+relayed-by: command@claude-code 2026-05-22
+note: duplicate of project-design-20260621-ack-12-draft-sweep-complete-all-committe (relayed version)
+
+---
+Duplicate of the 2026-06-21 relay. Archived.
+
+---
+from: command@claude-code
+to: totebox@project-bim
+re: SOFT- pipeline — write .agent/binary-targets.yaml (declare only; Command Session builds)
+created: 2026-05-22T02:00:00Z
+priority: high
+status: actioned
+actioned_by: totebox@project-bim
+actioned_at: 2026-06-22
+msg-id: command-20260522-binary-targets-project-bim
+note: binary-targets.yaml already exists at .agent/binary-targets.yaml (written by command@claude-code 2026-05-24); soft_enabled: false pending B5 source commit.
+
+---
+binary-targets.yaml exists. app-orchestration-bim declared with soft_enabled: false.
+
+---
+from: command@claude-code
+to: totebox@project-bim
+re: Operator decisions — all 4 Key Plans foundation questions answered
+created: 2026-05-20T18:00:00Z
+priority: high
+status: actioned
+actioned_by: totebox@project-bim
+actioned_at: 2026-06-22
+msg-id: command-20260520-bim-foundation-decisions
+note: Decisions 1-4 applied to DTCG token store + HTML this session (cleanup run 2026-06-22).
+
+---
+All four blocking decisions resolved. Applied this session: tile_code RS-*/TI-* added; BIM_TOKENS block removed from HTML; Corridor T 300 SF added; J/K/L/M stubs added.
+
+---
+from: command@claude-code
+to: totebox@project-bim
+re: NOTAM permission resolved — now readable from Totebox sessions
+created: 2026-05-20T17:10:00Z
+priority: normal
+status: actioned
+actioned_by: totebox@project-bim
+actioned_at: 2026-06-22
+msg-id: command-20260520-notam-permission-resolved
+note: CORRECTION — NOTAM.md is still rw------- (mathew-only) as of 2026-06-22. The fix was NOT applied. Flagged to Command via outbox this session.
+
+---
+NOTAM permission claim was inaccurate. NOTAM.md still not readable from Totebox. Flagged to Command.
+
+---
+from: command@claude-code
+to: totebox@project-bim
+re: Rename complete + website update in scope + path corrections
+created: 2026-05-17T21:00:00Z
+priority: high
+status: actioned
+actioned_by: totebox@project-bim
+actioned_at: 2026-06-22
+msg-id: command-20260517-bim-rename-complete
+note: |
+  Path corrections applied in prior sessions. B5 (Rust source) scope transferred to
+  BRIEF-app-privategit-bim.md. app-privategit-bim Phase 1 complete (commit 39d3cb0b);
+  Stage 6 + deploy request dispatched to Command 2026-06-20.
+
+---
+woodfine-design-bim → woodfine-bim-library rename complete. B5 transferred to BRIEF-app-privategit-bim.md.
+
+---
 # Archived 2026-05-18 by totebox@project-bim (startup — 1 actioned message)
 note: Operator decisions locked (Tasks 1–4 complete 2026-05-17); B5 deferred to rename-complete msg.
 
@@ -210,72 +381,5 @@ geometry rather than a book of codes ... need a real leapfrog 2030
 moment and a new invention on your part ... bim.woodfinegroup.com
 representing app-orchestration-bim ... please research, deep think,
 really think about this."
-
-## Required reading (8 items at briefing time)
-
-1. `/srv/foundry/BIM_Buildable Architecture.md` — 96-line strategic source.
-2. `~/Foundry/clones/project-bim/.claude/manifest.md` — cluster manifest.
-3-5. Workspace-tier sub-agent A / B / C reports at `~/Foundry/.claude/sub-agent-results/`.
-6. `~/Foundry/clones/project-design/.claude/manifest.md` — closest pattern.
-7. `~/Foundry/clones/project-bookkeeping/.claude/manifest.md` — READ/PRODUCTIVE split pattern.
-8. `~/Foundry/CLAUDE.md` §11 — action matrix.
-
-## Scope summary — 6 NEW projects scaffolded
-
-| Project | Type | v0.0.1 actioned |
-|---|---|---|
-| `service-materials` | Ring 2 service | ✓ Active; Cargo + Axum stub on 9101; Material struct |
-| `service-buildings` | Ring 2 service | ✓ Active; Cargo + Axum stub on 9102; Element + canonical_hash |
-| `service-codes` | Ring 2 service | ✓ Active; Cargo + Axum stub on 9103; CodeOverlay + IdsValidationResult |
-| `app-orchestration-bim` | App | ✓ Active; Axum + server-rendered HTML on 9096; reads design-system BIM extension |
-| `app-workplace-bim` | App | ✓ Active; Tauri 2.10 + xeokit + IfcOpenShell-sidecar; **AGPL-3.0** |
-| `app-console-bim` | App | ✓ Active; web-only Axum on 9097; mode-prop READ surface |
-
-Plus Building Design System extension in `pointsav-design-system/`:
-✓ 8 token primitive categories anchored to IFC 4.3 (`tokens/bim/`)
-✓ Uniclass 2015 classification floor (`tokens/uniclass-2015.dtcg.json`)
-✓ 3 universal AEC component recipes (`components/bim-{spatial-tree,properties-panel,viewport-3d}/`)
-✓ 3 AI-readable research files (`research/bim-{design-philosophy,token-taxonomy,aec-muscle-memory}.md`)
-
-Plus customer-leg catalog folders in `woodfine-fleet-deployment/`:
-✓ `cluster-totebox-property/` extended with `GUIDE-bim-archive-operations.md`
-✓ `gateway-orchestration-bim/` NEW catalog folder + bilingual READMEs + MANIFEST + GUIDE-deploy-bim-substrate.md
-
-Plus deployment instances at `~/Foundry/deployments/`:
-✓ `gateway-orchestration-bim-1/` populated with bilingual READMEs + 3 research files + MANIFEST.md (pre-existed)
-✓ `cluster-totebox-property-1/` populated with bilingual READMEs + vault skeleton + MANIFEST.md (pre-existed)
-
-## v0.0.1 deliverables — disposition
-
-(See full briefing in git history of `inbox.md` prior to 2026-04-28T22:50Z.)
-
-| Briefing item | State |
-|---|---|
-| 1. app-orchestration-bim Rust scaffold on port 9096 | ✓ shipped |
-| 2. nginx vhost bim.woodfinegroup.com → 9096 | queued for Master (workspace-tier) |
-| 3. 8 BIM token DTCG categories + Uniclass | ✓ shipped |
-| 4. Component recipes (3 of 10 universal at v0.0.1) | partial — 7 universal + 8 surface-unique queue for v0.0.2 |
-| 5. 3 AI-readable research files | ✓ shipped |
-| 6. GUIDE-deploy-bim-substrate.md | ✓ shipped |
-| 7. systemd unit + bootstrap.sh + nginx config | queued for cluster-side draft + Master ship |
-| 8. curl /readyz smoke check | not yet — depends on item 2 + 7 |
-| 9. Manifest deployment[0].status: active | not yet — depends on smoke check |
-
-Workspace-tier action items + Doctrine ratification proposals (#40 +
-#41) carried in v0.0.1-handoff message in this session's outbox.
-
-## Architectural decisions encoded (from cluster sub-agent research)
-
-- BB.1 IfcOpenShell — `ifctester` exits 0 always; parse JSON not
-  exit code; LGPL-3.0 via dynamic CLI; fall back to Console reporter
-  on issue #4526.
-- BB.2 xeokit vs @thatopen — xeokit chosen for double-precision
-  rendering; combined work AGPL-3.0 (license correction). Briefing
-  default for @thatopen overridden by evidence.
-- BB.3 Tauri 2.10 — never pipe IFC over IPC; convertFileSrc + asset
-  protocol + Channel<T>; sidecar download + SHA-256 verify, not
-  bundle; mobile = viewer-only.
-- BB.4 Bonsai — SpatialTree storey-default expansion; build
-  purpose-built widget, not Outliner-as-tree.
 
 — Master Claude (provisioning + first-session briefing), 2026-04-28

@@ -3,7 +3,11 @@ schema: foundry-draft-v1
 version: "1.0"
 draft_id: design-research-html-print-pdf-pipeline-2026-05-17
 language_protocol: DESIGN-RESEARCH
-state: ready-for-sweep
+state: destination-committed
+destination_sha: a6dc0df
+destination_path: pointsav-design-system/research/html-print-pdf-pipeline.md
+destination_committed_by: Jennifer Woodfine
+destination_committed_at: 2026-05-26
 originating_cluster: project-bim
 target_repo: vendor/pointsav-design-system
 target_path: research/html-print-pdf-pipeline.md
