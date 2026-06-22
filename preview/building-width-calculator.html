@@ -849,7 +849,7 @@
         <p>The engine outputs IFC-compatible geometry and a leasing-plan summary; this deck is what the engine will render as a human preview.</p>
         <p>Every metre, every square foot, every percentage on these slides is read live from the DTCG token files at page load. When the tokens change &mdash; a new key plan sample, a corridor width update &mdash; the deck changes with them. The engine, when shipped, shares the same source.</p>
         <div class="closing">
-          Source: woodfine-design-bim DTCG token library v0.0.2
+          Source: woodfine-bim-library DTCG token library
         </div>
       </div>
 
@@ -877,34 +877,8 @@
 </div>
 
 <script>
-/* ============================================================
-   BIM_TOKENS — inline mirror of the DTCG token files.
-   All values are read from this object at render time.
-   ============================================================ */
-const BIM_TOKENS = {
-  zones: {
-    "private-office":      { label: "Private Office",      habitat: 5.9944, magazine: 1.3716, corridor: 3.0,   note: "PO-1/PO-2/PO-3 — 3.0 m shared building corridor (small-tenant traffic)" },
-    "professional-office": { label: "Professional Office", habitat: 6.0,    magazine: 3.0,    corridor: 3.0,   note: "V12 baseline (Jan 2025) — TBD pending furniture lock; Z2 and Z3 are placeholders" },
-    "academic":            { label: "Academic",            habitat: 4.7,    magazine: 3.0,    corridor: 3.0,   note: "Seating faces forward — Habitat under 6 m permitted; 3.0 m corridor for assembly-egress sizing" },
-    "business":            { label: "Business",            habitat: 5.51,   magazine: 9.26,   corridor: 2.75,  note: "Notes V3 Option A/A — widest of 21 enumerated options; reflects open storage walls" },
-    "medical":             { label: "Medical",             habitat: 7.2819, magazine: 4.877,  corridor: 2.892, note: "M3/M1/M2 sketches — 286 5/8\" + 192\" + 113 7/8\"; exam-table depth + patient circulation" },
-    "laboratory":          { label: "Laboratory",          habitat: 6.7818, magazine: 4.8006, corridor: 3.048, note: "Bench depth + fume hood clearance + IBC high-hazard egress 10'0\"" },
-    "civic":               { label: "Civic",               habitat: 6.0,    magazine: 7.23,   corridor: 3.6,   note: "Widest Corridor 12'0\" — public assembly egress; awaiting DISCOVERY sketch confirmation" }
-  },
-  circulationAddition: {
-    perpendicularDesk: 0.7
-  },
-  floorPlate: {
-    netLeasableM2: 1858.06,
-    netLeasableSF: 20000
-  },
-  tiles: {
-    small: 2700, // SF
-    large: 4900  // SF
-  }
-};
-
-/* ---------- helpers ---------- */
+/* ---------- pure helpers ---------- */
+function parseM(s) { return parseFloat(s); }
 function mToFtIn(m) {
   if (m === 0) return "—";
   const totalIn = m * 39.3701;
@@ -918,23 +892,32 @@ function mFmt(m) {
   return m.toFixed(2).replace(/\.?0+$/, function(s){ return s.indexOf('.') >= 0 ? s.replace(/0+$/,'').replace(/\.$/,'') : s; }) + " m";
 }
 function totalWidth(z) {
-  // Habitat and Magazine are mirrored on each side of a single centreline Corridor.
-  // V12 (Jan 2025) and Notes V3 enumeration confirm: Z3 is NOT doubled.
   return 2 * (z.habitat + z.magazine) + z.corridor;
+}
+function buildZone(z, label) {
+  const desc = z.$description || '';
+  const note = desc.indexOf('.') >= 0 ? desc.slice(0, desc.indexOf('.') + 1) : desc;
+  return {
+    label,
+    habitat:  parseM(z.habitat.depth.$value),
+    magazine: parseM(z.magazine.depth.$value),
+    corridor: parseM(z.corridor.width.$value),
+    note,
+  };
 }
 
 /* ---------- Section 1 strip diagram ---------- */
-(function renderStrip() {
+function renderStrip(BIM_TOKENS) {
   const el = document.getElementById('strip-diagram');
   const z = BIM_TOKENS.zones["professional-office"];
   const rows = [
-    { cls: 'facade',   label: 'Facade',   dim: '—',           desc: 'Frontage' },
+    { cls: 'facade',   label: 'Facade',   dim: '—',              desc: 'Frontage' },
     { cls: 'habitat',  label: 'Zone 1',   dim: mFmt(z.habitat),  desc: 'Habitat — desks' },
     { cls: 'magazine', label: 'Zone 2',   dim: mFmt(z.magazine), desc: 'Magazine — storage' },
     { cls: 'corridor', label: 'Zone 3',   dim: mFmt(z.corridor), desc: 'Corridor' },
     { cls: 'magazine', label: 'Zone 2',   dim: mFmt(z.magazine), desc: 'Magazine — storage' },
     { cls: 'habitat',  label: 'Zone 1',   dim: mFmt(z.habitat),  desc: 'Habitat — desks' },
-    { cls: 'facade',   label: 'Facade',   dim: '—',           desc: 'Frontage' }
+    { cls: 'facade',   label: 'Facade',   dim: '—',              desc: 'Frontage' }
   ];
   el.innerHTML = rows.map(r =>
     `<div class="strip-row ${r.cls}">
@@ -947,13 +930,13 @@ function totalWidth(z) {
        <div style="font-size: 10px; color: var(--ink-soft);">Professional Office</div>
        <div class="dim"><strong>${totalWidth(z).toFixed(1)} m</strong><br>${mToFtIn(totalWidth(z))}</div>
      </div>`;
-})();
+}
 
 /* ---------- Section 2 bar chart ----------
    Each bar visualises the full mirror cross-section:
    [ Z1 | Z2 | Z3 | Z2 | Z1 ]   (Z3 single, centerline)
    Total bar width is scaled to the widest tenant. */
-(function renderBars() {
+function renderBars(BIM_TOKENS) {
   const el = document.getElementById('bar-table');
   const order = ["private-office", "academic", "professional-office", "laboratory", "medical", "business", "civic"];
   const totals = order.map(k => totalWidth(BIM_TOKENS.zones[k]));
@@ -963,7 +946,6 @@ function totalWidth(z) {
     const z = BIM_TOKENS.zones[key];
     const t = totalWidth(z);
     const pctTotal = (t / maxTotal) * 100;
-    // Per-segment share of the bar, summing to 100%.
     const sZ1 = (z.habitat / t) * 100;
     const sZ2 = (z.magazine / t) * 100;
     const sZ3 = (z.corridor / t) * 100;
@@ -988,19 +970,19 @@ function totalWidth(z) {
        </div>
      </div>`;
   }).join('');
-})();
+}
 
 /* ---------- Section 3 calc table + delta card ---------- */
-(function renderCalc() {
+function renderCalc(BIM_TOKENS) {
   const tbody = document.querySelector('#calc-table tbody');
   const order = ["private-office", "academic", "professional-office", "laboratory", "medical", "business", "civic"];
   const totals = order.map(k => ({ key: k, t: totalWidth(BIM_TOKENS.zones[k]) }));
-  const widest = totals.reduce((a,b) => a.t > b.t ? a : b);
+  const widest   = totals.reduce((a,b) => a.t > b.t ? a : b);
   const narrowest = totals.reduce((a,b) => a.t < b.t ? a : b);
 
   tbody.innerHTML = order.map(key => {
     const z = BIM_TOKENS.zones[key];
-    const half = z.habitat + z.magazine; // mirrored Habitat+Magazine; Corridor is centerline
+    const half = z.habitat + z.magazine;
     const t = totalWidth(z);
     let cls = '';
     if (key === widest.key) cls = 'widest';
@@ -1032,10 +1014,10 @@ function totalWidth(z) {
       <div class="val">${delta.toFixed(2)} m <span class="ft">${deltaFt.toFixed(1)} ft</span></div>
     </div>
   `;
-})();
+}
 
 /* ---------- Section 4 floor plate compositions ---------- */
-function renderComposition(containerId, heading, descr, tiles) {
+function renderComposition(containerId, heading, descr, tiles, BIM_TOKENS) {
   const el = document.getElementById(containerId);
   const total = tiles.reduce((s,t) => s + t.sf, 0);
   const html = tiles.map(t => {
@@ -1058,46 +1040,107 @@ function renderComposition(containerId, heading, descr, tiles) {
   `;
 }
 
-renderComposition(
-  'comp-corporate',
-  'Composition A — Corporate-heavy',
-  'Three large corporate tiles (Tile F, 4,900 SF each) plus two standard corporate tiles (Tile A, 2,700 SF each). Five independent climate zones — each tenant controls their own thermostat. Total: 20,100 SF.',
-  [
-    { label: 'Tile F', cls: 'tile-corp', sf: 4900, zones: 1 },
-    { label: 'Tile F', cls: 'tile-corp', sf: 4900, zones: 1 },
-    { label: 'Tile F', cls: 'tile-corp', sf: 4900, zones: 1 },
-    { label: 'Tile A', cls: 'tile-corp', sf: 2700, zones: 1 },
-    { label: 'Tile A', cls: 'tile-corp', sf: 2700, zones: 1 }
-  ]
-);
+function renderCompositions(BIM_TOKENS) {
+  const S = BIM_TOKENS.tiles.small;
+  const L = BIM_TOKENS.tiles.large;
 
-renderComposition(
-  'comp-private',
-  'Composition B — Private Office heavy',
-  'Maximum climate-zone count. Two Tile G (4,900 SF, 10 climate zones each) plus four Tile B-1 (2,700 SF, 5 climate zones each) end caps. Twenty private licensed offices and twenty more in end caps. Forty independent thermostats on one floor.',
-  [
-    { label: 'Tile B-1', cls: 'tile-priv', sf: 2700, zones: 5 },
-    { label: 'Tile G',   cls: 'tile-priv', sf: 4900, zones: 10 },
-    { label: 'Tile B-1', cls: 'tile-priv', sf: 2700, zones: 5 },
-    { label: 'Tile B-1', cls: 'tile-priv', sf: 2700, zones: 5 },
-    { label: 'Tile G',   cls: 'tile-priv', sf: 4900, zones: 10 },
-    { label: 'Tile B-1', cls: 'tile-priv', sf: 2700, zones: 5 }
-  ]
-);
+  renderComposition(
+    'comp-corporate',
+    'Composition A — Corporate-heavy',
+    `Three large corporate tiles (Tile F, ${L.toLocaleString()} SF each) plus two standard corporate tiles (Tile A, ${S.toLocaleString()} SF each). Five independent climate zones — each tenant controls their own thermostat.`,
+    [
+      { label: 'Tile F', cls: 'tile-corp', sf: L, zones: 1 },
+      { label: 'Tile F', cls: 'tile-corp', sf: L, zones: 1 },
+      { label: 'Tile F', cls: 'tile-corp', sf: L, zones: 1 },
+      { label: 'Tile A', cls: 'tile-corp', sf: S, zones: 1 },
+      { label: 'Tile A', cls: 'tile-corp', sf: S, zones: 1 }
+    ],
+    BIM_TOKENS
+  );
 
-renderComposition(
-  'comp-mixed',
-  'Composition C — Mixed Professional Centre',
-  'Two Tile H (large professional, 3 climate zones each), one Tile C-2 (Medium professional pair), one Tile C-1 (Medium + Small), and two end-cap mixed tiles (E-1 / E-2). Tenants: Medical anchor + Business cluster + Private Office end caps.',
-  [
-    { label: 'Tile E-1', cls: 'tile-mixed', sf: 2700, zones: 3 },
-    { label: 'Tile H',   cls: 'tile-prof',  sf: 4900, zones: 3 },
-    { label: 'Tile C-2', cls: 'tile-prof',  sf: 2700, zones: 2 },
-    { label: 'Tile H',   cls: 'tile-prof',  sf: 4900, zones: 3 },
-    { label: 'Tile C-1', cls: 'tile-prof',  sf: 2700, zones: 2 },
-    { label: 'Tile E-2', cls: 'tile-mixed', sf: 2100, zones: 3 }
-  ]
-);
+  renderComposition(
+    'comp-private',
+    'Composition B — Private Office heavy',
+    `Maximum climate-zone count. Two Tile G (${L.toLocaleString()} SF, 10 climate zones each) plus four Tile B-1 (${S.toLocaleString()} SF, 5 climate zones each) end caps. Forty independent thermostats on one floor.`,
+    [
+      { label: 'Tile B-1', cls: 'tile-priv', sf: S, zones: 5 },
+      { label: 'Tile G',   cls: 'tile-priv', sf: L, zones: 10 },
+      { label: 'Tile B-1', cls: 'tile-priv', sf: S, zones: 5 },
+      { label: 'Tile B-1', cls: 'tile-priv', sf: S, zones: 5 },
+      { label: 'Tile G',   cls: 'tile-priv', sf: L, zones: 10 },
+      { label: 'Tile B-1', cls: 'tile-priv', sf: S, zones: 5 }
+    ],
+    BIM_TOKENS
+  );
+
+  renderComposition(
+    'comp-mixed',
+    'Composition C — Mixed Professional Centre',
+    'Two Tile H (large professional, 3 climate zones each), one Tile C-2 (Medium professional pair), one Tile C-1 (Medium + Small), and two end-cap mixed tiles (E-1 / E-2). Tenants: Medical anchor + Business cluster + Private Office end caps.',
+    [
+      { label: 'Tile E-1', cls: 'tile-mixed', sf: S,    zones: 3 },
+      { label: 'Tile H',   cls: 'tile-prof',  sf: L,    zones: 3 },
+      { label: 'Tile C-2', cls: 'tile-prof',  sf: S,    zones: 2 },
+      { label: 'Tile H',   cls: 'tile-prof',  sf: L,    zones: 3 },
+      { label: 'Tile C-1', cls: 'tile-prof',  sf: S,    zones: 2 },
+      { label: 'Tile E-2', cls: 'tile-mixed', sf: 2100, zones: 3 }
+    ],
+    BIM_TOKENS
+  );
+}
+
+/* ---------- DTCG fetch + init ----------
+   Requires this file to be served from the archive root
+   (not from preview/ root) so relative paths resolve.
+   Serve with: python3 -m http.server from /srv/foundry/clones/project-bim/
+   Then open: http://localhost:8000/preview/building-width-calculator.html
+   --------------------------------------------------------- */
+async function init() {
+  const base = '../woodfine-bim-library/tokens/bim/';
+  const [bwcJson, fpJson, tileJson] = await Promise.all([
+    fetch(base + 'building-width-calculator.dtcg.json').then(r => r.json()),
+    fetch(base + 'floor-plate-standards.dtcg.json').then(r => r.json()),
+    fetch(base + 'tile-system.dtcg.json').then(r => r.json()),
+  ]);
+
+  const bwc = bwcJson.bim.zone;
+  const BIM_TOKENS = {
+    zones: {
+      'private-office':      buildZone(bwc['private-office'],      'Private Office'),
+      'professional-office': buildZone(bwc['professional-office'], 'Professional Office'),
+      'academic':            buildZone(bwc['academic'],            'Academic'),
+      'business':            buildZone(bwc['business'],            'Business'),
+      'medical':             buildZone(bwc['medical'],             'Medical'),
+      'laboratory':          buildZone(bwc['laboratory'],          'Laboratory'),
+      'civic':               buildZone(bwc['civic'],               'Civic'),
+    },
+    circulationAddition: {
+      perpendicularDesk: parseM(bwcJson.bim['circulation-addition']['perpendicular-desk'].$value),
+    },
+    floorPlate: {
+      netLeasableM2: fpJson.bim['floor-plate']['net-leasable'].area.$value,
+      netLeasableSF: 20000,
+    },
+    tiles: {
+      small: tileJson.bim.tile['small-tile']['tile-a'].$value.total_area_sf,
+      large: tileJson.bim.tile['large-tile']['tile-f'].$value.total_area_sf,
+    },
+  };
+
+  renderStrip(BIM_TOKENS);
+  renderBars(BIM_TOKENS);
+  renderCalc(BIM_TOKENS);
+  renderCompositions(BIM_TOKENS);
+}
+
+init().catch(err => {
+  console.error('DTCG fetch failed:', err);
+  document.body.insertAdjacentHTML('afterbegin',
+    `<div style="background:darkred;color:white;padding:12px 16px;font-family:monospace;font-size:13px;position:sticky;top:0;z-index:99">
+      DTCG load error: ${err.message}<br>
+      Serve from the archive root: <code>python3 -m http.server</code> in <code>/srv/foundry/clones/project-bim/</code>
+    </div>`);
+});
 </script>
 
 </body>
