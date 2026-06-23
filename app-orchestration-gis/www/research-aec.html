@@ -3,16 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis — Working Paper v0.3</title>
+<title>Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis — Woodfine GIS</title>
+<meta name="description" content="Working paper: open-source building-systems (AEC) data layers — climate zones, seismic, flood, solar — for urban-scale site analysis across North America and Europe.">
+<link rel="canonical" href="https://gis.woodfinegroup.com/research-aec.html">
 <style>
-  :root {
-    --brand-primary: #164679;
-    --text-main: #1a202c;
-    --text-muted: #64748b;
-    --border-soft: #e2e8f0;
-    --bg: #f8fafc;
-    --surface: #ffffff;
-  }
+  /* Design tokens are defined in lib/research-mobile.css (:root), synced to the map page. */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -271,8 +266,28 @@
     .article-body h2 { font-size: 17px; }
   }
 </style>
+<link rel="stylesheet" href="lib/research-mobile.css">
+<script defer src="lib/section-collapse.js"></script>
 </head>
-<body>
+<body data-collapse-root=".article-body" data-collapse-heading="h2">
+
+<header class="research-topbar">
+  <div class="rt-bar">
+    <a href="/" class="rt-home"><span class="rt-home-ico" aria-hidden="true">←</span> Map</a>
+    <nav class="rt-tabs" aria-label="Research papers">
+      <a class="rt-tab" href="/research.html">Overview</a>
+      <a class="rt-tab" href="/research-colocation.html">Co-location</a>
+      <a class="rt-tab" href="/research-regional-markets.html">Regional Markets</a>
+      <a class="rt-tab" href="/research-aec.html" aria-current="page">AEC</a>
+      <a class="rt-tab" href="/research-summary.html">Summary</a>
+    </nav>
+  </div>
+  <div class="rt-crumb">
+    <a href="/research.html" style="color:rgba(255,255,255,0.62);text-decoration:none;">Research</a>
+    <span class="rt-crumb-sep" aria-hidden="true">›</span>
+    <span class="rt-crumb-cur">AEC Building-Systems Data Layers</span>
+  </div>
+</header>
 
 <div class="page-wrapper">
 
@@ -314,9 +329,10 @@
 <li><a href="#52-polygon-layers">5.2 Polygon Layers: PMTiles</a></li>
 <li><a href="#53-point-enrichment">5.3 Point Enrichment: Cluster Metadata Fields</a></li>
 <li><a href="#54-api-lookups">5.4 API Call-Time Lookups</a></li>
+<li><a href="#55-bim-workspace">5.5 BIM Workspace Integration</a></li>
 </ul>
 </li>
-<li><a href="#6-results">6. Results</a></li>
+<li><a href="#6-coverage-assessment">6. Preliminary Coverage Assessment</a></li>
 <li><a href="#7-discussion">7. Discussion</a><ul>
 <li><a href="#71-coverage-gaps">7.1 Coverage Gaps and Implications</a></li>
 <li><a href="#72-reproducibility">7.2 Reproducibility and Licence Transparency</a></li>
@@ -350,7 +366,7 @@
 <li><a href="#3-layer-taxonomy">3. AEC Data Layer Taxonomy</a></li>
 <li><a href="#4-coverage-assessment">4. Per-Country Coverage Assessment</a></li>
 <li><a href="#5-integration-pipeline">5. Integration Pipeline</a></li>
-<li><a href="#6-results">6. Results</a></li>
+<li><a href="#6-coverage-assessment">6. Preliminary Coverage Assessment</a></li>
 <li><a href="#7-discussion">7. Discussion</a></li>
 <li><a href="#8-conclusion">8. Conclusion</a></li>
 <li><a href="#references">References</a></li>
@@ -359,9 +375,9 @@
     </details>
 
     <div class="draft-notice">
-      <strong>Working paper · v0.3 · May 2026 · CC BY 4.0.</strong>
+      <strong>Working paper · v0.6 · 10 June 2026 · CC BY 4.0.</strong>
       This paper is in preparation for intended submission.
-      <em>Cite as:</em> Woodfine, Jennifer M., Woodfine, Peter M., &amp; Woodfine, Mathew (2026). Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis. Working Paper v0.3, 29 May 2026. Woodfine Management Corp., New York, NY.
+      <em>Cite as:</em> Woodfine, Jennifer M., Woodfine, Peter M., &amp; Woodfine, Mathew (2026). Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis. Working Paper v0.6, 10 June 2026. Woodfine Management Corp., New York, NY.
       <br /><br />
       <strong>Forward-Looking Statements.</strong>
       Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially.
@@ -473,10 +489,14 @@ Woodfine Management Corp., New York, NY, USA</p>
 <p>Layers with continuous scalar values at cluster centroids — solar GHI, seismic PGA, urban heat island intensity, soil classification — are stored as fields in the cluster metadata JSON rather than as tile layers. This approach eliminates tile hosting overhead for these layers while making values available for programmatic query, inspector panel display, and export. The solar GHI field (<code>ghi_kwh_m2_yr</code>) is populated by querying NREL NSRDB for US clusters and PVGIS for EU clusters via their respective public APIs; seismic PGA (<code>pga_2pct_50yr_g</code>) is sampled from USGS NSHM 2023 for US clusters and ESHM20 for EU clusters at cluster centroid coordinates.</p>
 <h3 id="54-api-lookups">5.4 API Call-Time Lookups: Copyright-Constrained Layers</h3>
 <p>ASCE 7-22 design wind speed and ground snow load maps are copyrighted by the American Society of Civil Engineers. Redistribution of these maps as GIS layers requires a commercial licence from ASCE; no open-licence version exists. The ATC Hazards by Location API (Applied Technology Council) returns design wind speed (Vult in mph), site-amplified ground snow load (Pg), and seismic design parameters at any US coordinate via a structured JSON response. The ATC API is queried at cluster-selection time; values are returned for display without being stored as a redistributed layer. This architecture is appropriate for point-lookup use cases and avoids ASCE copyright exposure; it introduces API latency and an external dependency that bulk-downloaded raster layers do not.</p>
+<h3 id="55-bim-workspace">5.5 BIM Workspace Integration: DTCG-Based Element Styling Schema</h3>
+<p>The integration pipeline described in §§5.1–5.4 delivers regulatory-grade layer values to cluster-level metadata and tile layers. A complementary implementation path exposes these layer values at the building-element level through a schema — bim-workspace-v1.0 — that applies the W3C Design Token Community Group (DTCG) interchange format to IFC element visual configuration.</p>
+<p>DTCG defines a JSON schema for design token interchange using <code>$value</code>, <code>$type</code>, and <code>$description</code> fields. The format achieves broad toolchain adoption in user interface design systems and digital product development pipelines. Applying it to IFC element styling — where the token values are climate-zone-aware colour assignments, flood-risk visual overlays, or seismic-zone stroke weights rather than brand palette entries — extends DTCG into an open-licence AEC interchange role for which no prior open-source tooling appears to have been published.</p>
+<p>The bim-workspace-v1.0 schema covers eight IFC element types: IfcWall, IfcDoor, IfcWindow, IfcSlab, IfcColumn, IfcBeam, IfcStair, and IfcRoof. Each type carries a DTCG token block configurable through a split-panel browser interface — a left-panel token editor and a right-panel live JSON preview. The API surface is minimal: a POST endpoint accepts a JSON body conforming to the schema and writes a named workspace file; a GET index endpoint returns all stored workspaces. Create, list, and read-back round trips are verified at prototype implementation level.</p>
+<p>The contribution is compositional: DTCG provides the interchange contract that transforms locally stored layer values into machine-readable building-element configurations. Downstream toolchains — including IFC authoring environments that accept JSON-format style overrides — can consume these files without bespoke adapters, extending the open-licence coverage assessment in §4 to the building element as the unit of analysis.</p>
 <hr />
-<h2 id="6-results">6. Results</h2>
-<p>Pipeline execution at continental scale for all sixteen study countries is in progress. This section will report: (a) H3 resolution-7 cell coverage counts for each of the four Tier 1 layers per country; (b) confirmation or falsification of H₁ and H₂ per the test specifications in §7.4.</p>
-<p>Preliminary assessment from the coverage scorecard (§4): five of eight layer types achieve regulatory-grade open (✓) coverage for at least six of the sixteen study countries. All sixteen countries achieve ✓ or proxy coverage for seismic (ESHM20 globally) and solar GHI (PVGIS globally). Documentary assessment confirms the United States has ✓ coverage for all four Tier 1 layers. Per-country H3-level counts will be added upon pipeline completion.</p>
+<h2 id="6-coverage-assessment">6. Preliminary Coverage Assessment</h2>
+<p>Documentary assessment of the coverage scorecard (§4) yields the following findings across all sixteen study countries. Five of eight layer types achieve regulatory-grade open (✓) coverage for at least six of the sixteen study countries. All sixteen countries achieve ✓ or proxy coverage for seismic (ESHM20 globally) and solar GHI (PVGIS globally). Documentary assessment confirms the United States has ✓ coverage for all four Tier 1 layers. Three structural open-data gaps are confirmed: the absence of a national Canadian flood hazard layer, CONABIO's non-commercial licensing for Mexico's precision climate and eco-region data, and the ASCE 7 copyright constraint on wind and snow load redistribution. Per-country H3-level coverage counts from full pipeline execution are a pre-submission deliverable; see §7.5.</p>
 <hr />
 <h2 id="7-discussion">7. Discussion</h2>
 <h3 id="71-coverage-gaps">7.1 Coverage Gaps and Implications</h3>
@@ -548,8 +568,19 @@ Woodfine Management Corp., New York, NY, USA</p>
 
 </div>
 
+<nav class="research-prevnext" aria-label="Paper navigation">
+  <a class="rpn-link rpn-prev" href="/research-regional-markets.html">
+    <span class="rpn-dir">← Previous</span>
+    <span class="rpn-title">Regional Markets</span>
+  </a>
+  <a class="rpn-link rpn-next" href="/research-summary.html">
+    <span class="rpn-dir">Next →</span>
+    <span class="rpn-title">Summary</span>
+  </a>
+</nav>
+
 <div class="page-footer">
-  <span>Woodfine Management Corp. · Working Paper v0.3 · <a href="/research.html">← Research Papers</a> · <a href="/">Map</a></span>
+  <span>Woodfine Management Corp. · Working Paper v0.6 · <a href="/research.html">← Research Papers</a> · <a href="/">Map</a></span>
 </div>
 
 </body>
