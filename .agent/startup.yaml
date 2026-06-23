@@ -1,0 +1,46 @@
+schema: foundry-startup-v1
+archive: project-bim
+role: totebox
+steps:
+  - id: confirm-role
+    role: both
+    action: "run bin/foundry-role.sh; git branch --show-current must return cluster/project-bim"
+  - id: session-lock
+    role: both
+    action: "write .agent/engines/<engine>/session.lock (engine, role, pid, started, boot_id)"
+  - id: read-manifest
+    role: totebox
+    action: "read .agent/manifest.md — cluster mission + tetrad"
+  - id: export-session-context
+    role: totebox
+    action: "export FOUNDRY_ARCHIVE_NAME, FOUNDRY_ARCHIVE_DOMAIN, FOUNDRY_TETRAD_SUMMARY, FOUNDRY_CURRENT_TASK"
+  - id: get-session-brief
+    role: totebox
+    action: "call get_session_brief(role='totebox', archive='project-bim') — covers inbox/NOTAM/outbox/session-context"
+  - id: read-inbox
+    role: command
+    action: "read .agent/inbox.md; add status: pending to any missing it; archive actioned to inbox-archive.md"
+  - id: read-notam
+    role: both
+    action: "read ~/Foundry/NOTAM.md (Totebox: only if get_session_brief returns notam_active: true)"
+  - id: read-rules
+    role: both
+    action: "read all .agent/rules/*.md"
+  - id: read-briefs-readme
+    role: totebox
+    action: "read .agent/briefs/README.md (covered by get_session_brief if MCP available)"
+  - id: git-drift-check
+    role: command
+    action: "run bin/foundry-health.sh --git"
+  - id: cron-audit
+    role: command
+    action: "run bin/cron-audit.sh"
+  - id: binary-ledger-check
+    role: command
+    action: "verify data/binary-ledger/*.jsonl last entry sha256 vs installed binary"
+  - id: read-session-context
+    role: both
+    action: "read .agent/memory/session-context.md (Totebox: covered by get_session_brief if MCP available)"
+  - id: nightly-build-results
+    role: command
+    action: "run bin/nightly-build-plan.sh"
