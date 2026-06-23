@@ -3,16 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity — Working Paper v0.5 — Retail Anchor Co-location</title>
+<title>Retail Anchor Co-location Composition as a Spatial Leading Indicator — Woodfine GIS</title>
+<meta name="description" content="Working paper: retail anchor co-location composition (hypermarket, hardware, warehouse-club) as a spatial leading indicator of commercial activity, from a continental-scale DBSCAN cluster analysis.">
+<link rel="canonical" href="https://gis.woodfinegroup.com/research-colocation.html">
 <style>
-  :root {
-    --brand-primary: #164679;
-    --text-main: #1a202c;
-    --text-muted: #64748b;
-    --border-soft: #e2e8f0;
-    --bg: #f8fafc;
-    --surface: #ffffff;
-  }
+  /* Design tokens are defined in lib/research-mobile.css (:root), synced to the map page. */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -283,8 +278,28 @@
   .page-footer a { color: rgba(255,255,255,0.8); }
   .page-footer a:hover { color: white; }
 </style>
+<link rel="stylesheet" href="lib/research-mobile.css">
+<script defer src="lib/section-collapse.js"></script>
 </head>
-<body>
+<body data-collapse-root=".article-body" data-collapse-heading="h2">
+
+<header class="research-topbar">
+  <div class="rt-bar">
+    <a href="/" class="rt-home"><span class="rt-home-ico" aria-hidden="true">←</span> Map</a>
+    <nav class="rt-tabs" aria-label="Research papers">
+      <a class="rt-tab" href="/research.html">Overview</a>
+      <a class="rt-tab" href="/research-colocation.html" aria-current="page">Co-location</a>
+      <a class="rt-tab" href="/research-regional-markets.html">Regional Markets</a>
+      <a class="rt-tab" href="/research-aec.html">AEC</a>
+      <a class="rt-tab" href="/research-summary.html">Summary</a>
+    </nav>
+  </div>
+  <div class="rt-crumb">
+    <a href="/research.html" style="color:rgba(255,255,255,0.62);text-decoration:none;">Research</a>
+    <span class="rt-crumb-sep" aria-hidden="true">›</span>
+    <span class="rt-crumb-cur">Retail Co-location Composition</span>
+  </div>
+</header>
 
 <div class="page-wrapper">
 
@@ -371,7 +386,6 @@
 
     <details class="mobile-toc">
       <summary>Contents</summary>
-      <a href="/" class="back-to-map" style="padding:8px 0;margin:0 0 8px;">← Back to Map</a>
       <div class="toc">
 <ul>
 <li><a href="#retail-anchor-co-location-composition-as-a-spatial-leading-indicator-of-commercial-activity-a-continental-scale-cluster-analysis">Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity: A Continental-Scale Cluster Analysis</a><ul>
@@ -1143,6 +1157,17 @@ T0 ⟺ T1 ∧ tight_intact ∧ civic_modifier = 1
 
   </main>
 </div>
+
+<nav class="research-prevnext" aria-label="Paper navigation">
+  <a class="rpn-link rpn-prev" href="/research.html">
+    <span class="rpn-dir">← Previous</span>
+    <span class="rpn-title">Overview</span>
+  </a>
+  <a class="rpn-link rpn-next" href="/research-regional-markets.html">
+    <span class="rpn-dir">Next →</span>
+    <span class="rpn-title">Regional Markets</span>
+  </a>
+</nav>
 
 <footer class="page-footer">
   <a href="/" rel="noopener">← Back to Map</a>

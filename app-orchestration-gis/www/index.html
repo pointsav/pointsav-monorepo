@@ -3,7 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Woodfine Location Intelligence</title>
+    <meta name="theme-color" content="#164679">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Woodfine GIS">
+    <title>Woodfine GIS — Location Intelligence &amp; Retail Co-location Map</title>
+    <meta name="description" content="Woodfine Location Intelligence: an interactive GIS map of retail co-location clusters, Urban Fringe industrial zones, and Commuter transit hubs across North America and Europe.">
+    <link rel="canonical" href="https://gis.woodfinegroup.com/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Woodfine GIS">
+    <meta property="og:title" content="Woodfine GIS — Location Intelligence &amp; Retail Co-location Map">
+    <meta property="og:description" content="Interactive GIS map of retail co-location clusters, Urban Fringe industrial zones, and Commuter transit hubs across North America and Europe.">
+    <meta property="og:url" content="https://gis.woodfinegroup.com/">
+    <meta property="og:image" content="https://gis.woodfinegroup.com/favicon.svg">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Woodfine GIS — Location Intelligence">
+    <meta name="twitter:description" content="Interactive GIS map of retail co-location, Urban Fringe, and Commuter hubs across North America and Europe.">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Dataset",
+          "name": "Woodfine Retail Co-location Index",
+          "description": "Interactive index of retail co-location clusters, Urban Fringe industrial zones, and Commuter transit hubs across North America and Europe, classified into Regional, District, and Local tiers with modelled catchment population and consumer spend.",
+          "url": "https://gis.woodfinegroup.com/",
+          "keywords": ["retail co-location", "location intelligence", "site selection", "trade area", "GIS"],
+          "spatialCoverage": "North America and Europe",
+          "license": "https://www.openstreetmap.org/copyright",
+          "creator": { "@type": "Organization", "name": "PointSav Digital Systems", "url": "https://gis.woodfinegroup.com/" },
+          "isBasedOn": ["WorldPop population grids", "OpenStreetMap", "Kontur Population (CC BY)"]
+        },
+        {
+          "@type": "Organization",
+          "name": "PointSav Digital Systems",
+          "description": "Software developer of the Woodfine GIS location-intelligence platform.",
+          "url": "https://gis.woodfinegroup.com/"
+        }
+      ]
+    }
+    </script>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
     <link rel="preload" href="lib/maplibre-gl.js" as="script">
@@ -18,7 +57,9 @@
             --brand-accent:  #EAB308;
             --surface-glass: rgba(255, 255, 255, 0.92);
             --text-main:     #111827;
-            --text-muted:    #6B7280;
+            /* F32 — darkened from #6B7280 (4.83:1) to clear 4.5:1 even on the
+               translucent glass panel; ~5.6:1 on white. */
+            --text-muted:    #5A626E;
             --border-soft:   rgba(0, 0, 0, 0.08);
             --btn-width:     100px;
             /* Design-research blue ramp (degree 1–5, mapped to 4 tiers) */
@@ -42,11 +83,30 @@
         .panel-header { padding: 20px; border-bottom: 1px solid var(--border-soft); background: #fff; }
         .panel-header h1 { margin: 0; font-size: 16px; font-weight: 800; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.5px; }
         .panel-header p  { margin: 2px 0 0 0; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-        .panel-content { padding: 0 20px 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .panel-content { padding: 0 20px 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
         .data-block  { margin-bottom: 14px; }
+        /* Mobile peek-summary: a one-row digest shown at the peek detent. Hidden on desktop. */
+        .peek-summary { display: none; }
+        @media (max-width: 768px) {
+            /* Peek-summary shows ONLY at the peek detent; half/full show the full detail body. */
+            #data-panel.has-detail[data-detent="peek"] .peek-summary {
+                display: flex; align-items: center; gap: 10px;
+                padding: 2px 0 12px; margin-bottom: 4px;
+                border-bottom: 1px solid var(--border-soft);
+            }
+            .peek-summary .ps-text { min-width: 0; flex: 1; }
+            .peek-summary .ps-name { font-size: 15px; font-weight: 800; color: var(--brand-primary);
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .peek-summary .ps-stat { font-size: 13px; color: var(--text-muted);
+                display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+            .peek-summary .ps-stat strong { color: #111827; }
+            .peek-summary .tier-badge { flex-shrink: 0; }
+        }
         .data-label  { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
         .data-value  { font-size: 18px; font-weight: 800; color: var(--text-main); }
         .tier-badge  { display: inline-block; padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 800; letter-spacing: 0.3px; }
+        .tier-chip   { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px 2px; border-radius: 7px; font-size: 10px; font-weight: 600; line-height: 1.25; text-align: center; white-space: nowrap; overflow: hidden; }
+        .tier-chip b { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
 
         /* ── BentoBox cluster inspector — Layout A ────────────────── */
         .bento-tier-cell      { display: flex; align-items: center; gap: 10px; padding: 10px 0 6px; flex-wrap: wrap; }
@@ -59,7 +119,7 @@
         .civic-stats  { display: flex; gap: 10px; margin-top: 8px; }
         .civic-box    { flex: 1; background: #fff; border: 1px solid var(--border-soft); border-radius: 8px; padding: 10px; text-align: center; }
         .civic-box span  { font-size: 18px; font-weight: 800; color: var(--brand-primary); display: block; }
-        .civic-box small { font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .civic-box small { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; }
         .index-box { background: rgba(0,0,0,0.02); padding: 12px; border-radius: 8px; font-size: 11px; color: var(--text-main); border: 1px solid var(--border-soft); margin-top: 8px; }
         .index-box strong { display: block; margin-bottom: 4px; color: var(--brand-primary); text-transform: uppercase; font-size: 11px; font-weight: 700; }
         .empty-msg { padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px; font-style: italic; }
@@ -109,13 +169,84 @@
 
         /* ── Responsive ───────────────────────────────────────────── */
         @media (max-width: 768px) {
-            #data-panel      { top: auto; bottom: 0; left: 0; width: 100%; border-radius: 20px 20px 0 0; max-height: 45dvh; padding-bottom: env(safe-area-inset-bottom, 0px); }
-            .nav-cluster     { bottom: 52dvh; right: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
-            .nav-btn         { width: 80px; }
-            .panel-collapse-btn { display: flex; }
-            #data-panel.collapsed { max-height: 80px; overflow: hidden; }
-            #data-panel.collapsed .panel-collapse-btn { transform: rotate(180deg); }
+            /* ── Bottom-sheet ──────────────────────────────────────────
+               BOTH overview and detail are now real 3-detent draggable sheets — peek/half/full —
+               whose height is driven by JS via the --sheet-h custom property. The OVERVIEW sheet
+               rests at peek (grabber + chain search + tier counts) leaving the map ~80% of screen;
+               DETAIL (.has-detail) is unchanged (peek shows the one-row summary). */
+            #data-panel {
+                top: auto; bottom: 0; left: 0; width: 100%;
+                border-radius: 20px 20px 0 0;
+                height: var(--sheet-h, 22dvh);
+                max-height: 90dvh;
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+                transition: height 0.30s cubic-bezier(.32,.72,0,1);
+            }
+            #data-panel.has-detail {
+                height: var(--sheet-h, 52dvh);
+                max-height: 90dvh;
+            }
+            #data-panel.dragging { transition: none; }   /* 1:1 finger tracking */
+            /* Detail hides the overview chrome (keeps the back strip + the summary) */
+            #data-panel.has-detail > .panel-header > h1,
+            #data-panel.has-detail > .panel-header > p,
+            #data-panel.has-detail > .panel-header > .region-switch,
+            #data-panel.has-detail > .panel-header > .chain-search-wrap { display: none; }
+            /* Peek detent (detail): show only the summary; hide the scrollable detail body + back strip */
+            #data-panel.has-detail[data-detent="peek"] .detail-body { display: none; }
+            #data-panel.has-detail[data-detent="peek"] .context-strip { display: none !important; }
+
+            /* Peek detent (overview): show grabber + chain search + region tabs (compact) + tier pills.
+               Hide subtitle, tagline, footer/signature, and non-peek inspector blocks. */
+            #data-panel:not(.has-detail)[data-detent="peek"] > .panel-header > p:not(.panel-tagline),
+            #data-panel:not(.has-detail)[data-detent="peek"] > .panel-header > .panel-tagline,
+            #data-panel:not(.has-detail)[data-detent="peek"] > .panel-footer,
+            #data-panel:not(.has-detail)[data-detent="peek"] > .panel-signature {
+                display: none !important;
+            }
+            /* Region tabs stay visible at peek — compact form so the user can switch NA↔EU */
+            #data-panel:not(.has-detail)[data-detent="peek"] > .panel-header > .region-switch {
+                margin-top: 2px; margin-bottom: 0; padding: 2px;
+            }
+            #data-panel:not(.has-detail)[data-detent="peek"] .region-tab { padding: 3px 6px; font-size: 9px; }
+            /* Also hide the tagline at the detail peek (one-row summary) — keep peek tight. */
+            #data-panel.has-detail[data-detent="peek"] > .panel-header > .panel-tagline {
+                display: none !important;
+            }
+            #data-panel:not(.has-detail)[data-detent="peek"] #inspector > .data-block {
+                display: none !important;
+            }
+
+            .nav-cluster     { bottom: calc(var(--sheet-h, 22dvh) + 12px); right: 12px; padding-bottom: 0; transition: bottom 0.30s ease; }
+            .nav-cluster.has-detail-nav { bottom: calc(var(--sheet-h, 52dvh) + 12px); }
+            .nav-cluster     { gap: 8px; }
+            .nav-btn         { width: 46px; border-radius: 10px; }
+            .zoom-btn        { height: 46px; }
+            .home-btn        { height: 44px; }
+            .nav-btn .icon   { font-size: 20px; }
+            .nav-btn .label  { display: none; }   /* icons suffice on mobile; keep buttons compact 44-46px */
+
+            /* Real drag grabber — shown in BOTH overview and detail on mobile.
+               Dismiss (detail) = map "← Back" button + swipe-down; overview clamps at peek. */
+            .sheet-grabber { display: none; }
+            #data-panel .sheet-grabber {
+                display: flex; align-items: center; justify-content: center;
+                height: 16px; cursor: grab; touch-action: none;
+                -webkit-tap-highlight-color: transparent;
+            }
+            #data-panel .sheet-grabber:active { cursor: grabbing; }
+            /* Tighter header on mobile — the grabber already provides top spacing */
+            .panel-header { padding-top: 2px; padding-bottom: 12px; }
+            .panel-collapse-btn { display: none; }   /* superseded by grabber */
             .drawer-handle   { display: block; }
+            /* Readability floor — nothing below 12px on phones */
+            .panel-header p, .civic-box small, .lc-planned { font-size: 12px !important; }
+            .data-label, .lc-group-label, .chain-section-label { font-size: 12px !important; }
+        }
+
+        /* Landscape short-screen phones (e.g. iPhone SE rotated) — tighten side panel */
+        @media (orientation: landscape) and (max-height: 430px) {
+            #data-panel { width: 300px; max-height: 100%; }
         }
 
         /* ── Touch targets ────────────────────────────────────────── */
@@ -164,6 +295,17 @@
         .footer-btn:hover { background: rgba(0,0,0,0.05); color: var(--brand-primary); }
         .footer-btn + .footer-btn { border-left: 1px solid var(--border-soft); }
         .footer-btn-primary { color: var(--brand-primary); }
+        .panel-tagline { margin: 3px 0 0; font-size: 12px; font-style: normal; text-transform: none !important; color: var(--brand-primary); line-height: 1.35; opacity: 0.92; }
+        .panel-signature { padding: 6px 12px 8px; font-size: 9px; letter-spacing: 0.4px; color: var(--text-muted); text-align: center; border-top: 1px solid var(--border-soft); background: rgba(0,0,0,0.015); }
+        .panel-signature strong, .panel-signature a { color: var(--brand-primary); font-weight: 800; text-decoration: none; }
+        .panel-signature a:hover { text-decoration: underline; }
+        .layer-hint { margin-top: 8px; padding: 7px 9px; background: rgba(22,70,121,0.04); border: 1px solid var(--border-soft); border-radius: 6px; font-size: 10px; line-height: 1.45; color: var(--text-muted); }
+        #map-legend { position: absolute; top: 12px; right: 12px; z-index: 5; background: rgba(255,255,255,0.94); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border: 1px solid var(--border-soft); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); padding: 9px 11px; font-size: 11px; color: #1f2937; max-width: 220px; }
+        #map-legend h4 { margin: 0 0 6px; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); font-weight: 800; }
+        #map-legend .lg-row { display: flex; align-items: center; gap: 7px; margin: 3px 0; }
+        #map-legend .lg-sw { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,0.18); flex: none; }
+        #map-legend .lg-ring { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid #164679; background: rgba(22,70,121,0.12); flex: none; }
+        @media (max-width: 768px) { #map-legend { display: none; } }
 
         .modal-overlay { 
             position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
@@ -171,14 +313,14 @@
             display: none; align-items: center; justify-content: center; z-index: 1000; 
         }
         .modal-box { 
-            background: #fff; width: 90%; max-width: 500px; max-height: 80vh; 
+            background: #fff; width: 90%; max-width: 500px; max-height: 80dvh;
             border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); 
             display: flex; flex-direction: column; overflow: hidden;
         }
         .modal-header { padding: 20px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; }
         .modal-header h2 { margin: 0; font-size: 14px; font-weight: 800; color: var(--brand-primary); text-transform: uppercase; }
         .modal-close { border: none; background: transparent; font-size: 20px; cursor: pointer; color: var(--text-muted); }
-        .modal-body { padding: 24px; overflow-y: auto; -webkit-overflow-scrolling: touch; font-size: 13px; line-height: 1.6; color: var(--text-main); }
+        .modal-body { padding: 24px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; font-size: 13px; line-height: 1.6; color: var(--text-main); }
         .modal-body h3 { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--brand-primary); margin: 20px 0 8px 0; }
         .modal-body p { margin: 0 0 12px 0; }
         .modal-body ul { margin: 0 0 16px 0; padding-left: 20px; }
@@ -211,14 +353,29 @@
         .sel-el-block        { background: rgba(22,70,121,0.04); border-radius: 8px; padding: 10px 12px; border-left: 3px solid var(--brand-primary); }
         .sel-el-pinned       { position: sticky; top: 0; background: rgb(248, 250, 252); z-index: 2; margin: 0 -20px 16px; padding: 10px 20px; border-radius: 0; border-left: none; border-bottom: 1px solid var(--border-soft); }
 
+        /* Screen-reader-only utility (visually hidden, still announced) */
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+        /* Allow a focused sr-only link (skip-to-content style) to surface on keyboard focus */
+        .sr-only-focusable:focus { position: fixed; top: 8px; left: 8px; width: auto; height: auto; padding: 8px 12px; margin: 0; clip: auto; overflow: visible; background: #fff; color: var(--brand-primary, #08306B); border: 2px solid var(--brand-primary, #08306B); border-radius: 6px; z-index: 1000; white-space: normal; }
+        /* F26(d) — visible keyboard focus on all interactive controls. Mouse clicks
+           (no :focus-visible) stay unringed; keyboard navigation gets a clear ring. */
+        a:focus-visible, button:focus-visible, input:focus-visible,
+        [tabindex]:focus-visible, [role="button"]:focus-visible, [role="option"]:focus-visible {
+            outline: 2px solid var(--brand-primary, #08306B);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+        #map:focus-visible { outline: 2px solid var(--brand-primary, #08306B); outline-offset: -2px; }
         /* ── Chain search / retailer + place search ────────────────────── */
         .chain-search-wrap  { position: relative; margin-top: 8px; }
         .chain-search-input { width: 100%; padding: 12px 32px 12px 12px; border: 1px solid var(--border-soft); border-radius: 6px; font-size: 16px; color: var(--brand-primary); outline: none; box-sizing: border-box; background: #fff; }
         .chain-search-input:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 2px rgba(10,48,112,0.08); }
         .chain-search-input::placeholder { color: var(--text-muted); font-weight: 400; }
-        .chain-search-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 16px; line-height: 1; padding: 0 2px; }
+        .chain-search-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 16px; line-height: 1; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
         .chain-dropdown { position: absolute; left: 0; right: 0; top: calc(100% + 2px); background: #fff; border: 1px solid var(--border-soft); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); max-height: 260px; overflow-y: auto; -webkit-overflow-scrolling: touch; z-index: 20; }
         .chain-option { padding: 7px 12px; font-size: 13px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chain-option .chain-count { float: right; margin-left: 10px; font-size: 11px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+        .chain-option:hover .chain-count, .chain-option.focused .chain-count { color: var(--brand-primary); opacity: 0.8; }
         .chain-option:hover, .chain-option.focused { background: #EFF6FF; color: var(--brand-primary); font-weight: 700; }
         .chain-section-label { padding: 5px 12px 3px 12px; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; background: #f8fafc; border-bottom: 1px solid var(--border-soft); }
         .chain-section-label + .chain-option { border-top: none; }
@@ -259,8 +416,8 @@
         .catchment-pop-stats { display: flex; gap: 0; margin-top: 8px; border-top: 1px solid var(--border-soft); padding-top: 8px; }
         .catchment-zone-stat { flex: 1; }
         .catchment-zone-stat + .catchment-zone-stat { border-left: 1px solid var(--border-soft); padding-left: 10px; margin-left: 6px; }
-        .catchment-zone-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
-        .catchment-zone-pop { font-size: 15px; font-weight: 900; color: var(--text-main); font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 1px; }
+        .catchment-zone-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+        .catchment-zone-pop { font-size: 16px; font-weight: 800; color: var(--text-main); font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 2px; }
         .catchment-zone-km { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
         .data-value { font-variant-numeric: tabular-nums; }
         .rank-num { font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 900; color: var(--brand-primary); line-height: 1.1; }
@@ -291,7 +448,7 @@
         /* ── Drawer handle (mobile discoverability) ───────────────── */
         .drawer-handle {
             display: none; width: 40px; height: 4px; background: rgba(0,0,0,0.2);
-            border-radius: 2px; margin: 10px auto 6px; flex-shrink: 0;
+            border-radius: 2px; margin: 5px auto 5px; flex-shrink: 0;
         }
 
         /* ── Landscape: drawer → left side panel ─────────────────── */
@@ -312,19 +469,203 @@
             #data-panel { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(255,255,255,0.97); }
         }
 
+        /* ── F5 — cluster scorecard "why it ranks" summary box ─────── */
+        .scorecard-box {
+            background: rgba(22,70,121,0.05); border: 1px solid var(--border-soft);
+            border-left: 3px solid var(--brand-primary); border-radius: 0 8px 8px 0;
+            padding: 9px 11px; margin-top: 4px;
+            font-size: 12px; line-height: 1.5; color: var(--text-main);
+        }
+        .scorecard-box .sc-lead { font-weight: 800; color: var(--brand-primary); }
+
+        /* In-inspector print/PDF affordance */
+        .inspector-print-btn {
+            width: 100%; border: 1px solid var(--border-soft); border-radius: 8px;
+            background: #fff; padding: 9px 12px; font-size: 11px; font-weight: 800;
+            color: var(--brand-primary); cursor: pointer; text-transform: uppercase;
+            letter-spacing: 0.4px; transition: all 0.15s; text-align: center;
+        }
+        .inspector-print-btn:hover { background: var(--brand-primary); color: #fff; border-color: var(--brand-primary); }
+
+        /* Print-only one-pager header — hidden on screen, shown on print */
+        .print-only { display: none; }
+
+        /* ── F15 — compare tray ────────────────────────────────────── */
+        #compare-tray {
+            position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+            z-index: 30; width: min(720px, calc(100vw - 32px));
+            background: #fff; border: 1px solid var(--border-soft); border-radius: 14px;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.18); display: none;
+            max-height: 60vh; overflow: hidden; flex-direction: column;
+        }
+        #compare-tray.open { display: flex; }
+        .compare-tray-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px; border-bottom: 1px solid var(--border-soft); background: #fff;
+        }
+        .compare-tray-head h3 { margin: 0; font-size: 11px; font-weight: 800; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .compare-tray-close { border: none; background: transparent; font-size: 20px; cursor: pointer; color: var(--text-muted); line-height: 1; min-width: 32px; }
+        .compare-tray-body { overflow: auto; -webkit-overflow-scrolling: touch; }
+        .compare-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .compare-table th, .compare-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+        .compare-table th { font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; background: #f8fafc; position: sticky; top: 0; }
+        .compare-table td.cmp-name { font-weight: 800; color: var(--brand-primary); }
+        .compare-table td.cmp-num { font-variant-numeric: tabular-nums; }
+        .compare-table .cmp-tier-badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: 800; }
+        .compare-remove { border: none; background: transparent; cursor: pointer; color: var(--text-muted); font-size: 14px; line-height: 1; padding: 0 4px; }
+        .compare-remove:hover { color: #DC2626; }
+        @media (max-width: 768px) { #compare-tray { width: calc(100vw - 16px); bottom: 8px; } }
+
+        /* ── F24 — print / one-pager ───────────────────────────────── */
+        @media print {
+            /* Hide all map chrome: map canvas, nav buttons, legend, footer,
+               coachmark, modals, search, sheet grabber, compare tray, a11y text. */
+            #map, .nav-cluster, #map-legend, .panel-footer, .panel-signature,
+            #coachmark, .modal-overlay, .sheet-grabber, .drawer-handle,
+            .region-switch, .chain-search-wrap, #context-strip, #compare-tray,
+            #a11y-status, #a11y-rm-list, .panel-collapse-btn, .inspector-print-btn,
+            .catchment-master-toggle, .catchment-sublayers, .peek-summary,
+            .lc-btn, .layer-hint { display: none !important; }
+
+            html, body { height: auto !important; overflow: visible !important; background: #fff !important; }
+
+            /* Show the one-pager header */
+            .print-only { display: block !important; }
+            #print-header {
+                margin: 0 0 14px; padding-bottom: 10px; border-bottom: 2px solid var(--brand-primary);
+            }
+            #print-header .ph-title { font-size: 20px; font-weight: 800; color: var(--brand-primary); letter-spacing: 0.5px; text-transform: uppercase; margin: 0; }
+            #print-header .ph-sub   { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin: 4px 0 0; }
+            #print-header .ph-date  { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+            /* Flatten the panel to a static, full-width document */
+            #data-panel {
+                position: static !important; top: auto !important; left: auto !important;
+                bottom: auto !important; right: auto !important;
+                width: 100% !important; max-width: 100% !important; max-height: none !important;
+                height: auto !important; overflow: visible !important;
+                box-shadow: none !important; border: none !important; border-radius: 0 !important;
+                background: #fff !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+                display: block !important; transform: none !important;
+            }
+            #data-panel .panel-header { padding: 0; border-bottom: none; background: #fff !important; }
+            #data-panel .panel-header h1, #data-panel .panel-header > p { display: none !important; }
+            .panel-content, #inspector {
+                padding: 0 !important; overflow: visible !important; max-height: none !important; display: block !important;
+            }
+            #inspector .detail-body { display: block !important; }
+            /* Keep colour fidelity for tier badges on print */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            /* Avoid awkward page breaks inside stat blocks */
+            .data-block, .catchment-block, .scorecard-box { break-inside: avoid; page-break-inside: avoid; }
+        }
+
+        /* ── First-run welcome card (F19) — branded coachmark ─────────── */
+        .cm-overlay{position:fixed;inset:0;background:rgba(8,48,107,.45);
+          backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
+          display:none;align-items:center;justify-content:center;z-index:1100;padding:16px;}
+        .cm-card{background:#fff;width:100%;max-width:440px;border-radius:18px;overflow:hidden;
+          box-shadow:0 24px 60px rgba(8,48,107,.35);animation:cm-rise .28s cubic-bezier(.2,.8,.2,1);}
+        @keyframes cm-rise{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+
+        /* Branded header — navy gradient + amber underline */
+        .cm-banner{position:relative;padding:22px 24px 20px;color:#fff;
+          background:linear-gradient(135deg,#164679 0%,#08306B 100%);
+          border-bottom:3px solid var(--brand-accent,#EAB308);}
+        .cm-eyebrow{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+          color:#9ECAE1;margin-bottom:6px;}
+        .cm-banner h2{margin:0;font-size:21px;font-weight:800;line-height:1.2;letter-spacing:-.2px;}
+        .cm-close{position:absolute;top:14px;right:14px;border:none;background:rgba(255,255,255,.12);
+          color:#fff;width:30px;height:30px;border-radius:8px;font-size:18px;cursor:pointer;line-height:1;}
+        .cm-close:hover{background:rgba(255,255,255,.22);}
+
+        .cm-body{padding:20px 24px 4px;}
+        .cm-lead{margin:0 0 16px;font-size:13.5px;line-height:1.55;color:var(--text-muted,#5A626E);}
+        .cm-row{display:flex;gap:11px;align-items:flex-start;margin:0 0 14px;}
+        .cm-row p{margin:0;font-size:13.5px;line-height:1.5;color:var(--text-main,#111827);}
+        .cm-row strong{color:var(--brand-primary,#164679);}
+
+        /* leading visual tokens */
+        .cm-dot{flex:none;width:16px;height:16px;border-radius:50%;margin-top:2px;}
+        .cm-dot-cluster{background:#3182BD;box-shadow:0 0 0 4px rgba(49,130,189,.18);}
+        .cm-dot-tap{background:transparent;border:2px solid var(--brand-primary,#164679);position:relative;}
+        .cm-dot-tap::after{content:"";position:absolute;inset:3px;border-radius:50%;
+          background:var(--brand-accent,#EAB308);}
+
+        /* tier swatch chips — real hexes */
+        .cm-tierblock{background:#F4F8FD;border:1px solid #E1EBF6;border-radius:12px;
+          padding:12px 14px;margin:0 0 16px;}
+        .cm-row-label{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+          color:var(--text-muted,#5A626E);margin-bottom:9px;}
+        .cm-swatches{display:flex;gap:8px;flex-wrap:wrap;}
+        .cm-chip{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;
+          color:var(--brand-primary,#164679);background:#fff;border:1px solid #E1EBF6;
+          border-radius:999px;padding:5px 11px 5px 6px;}
+        .cm-chip i{width:13px;height:13px;border-radius:50%;display:inline-block;
+          box-shadow:0 0 0 1px rgba(0,0,0,.06);}
+
+        .cm-actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;
+          padding:8px 24px 22px;}
+        /* Zero-cookie trust badge — subtle, muted; opens the disclaimer modal */
+        .cm-trust{margin-right:auto;border:none;background:transparent;cursor:pointer;
+          font-size:11px;font-weight:600;line-height:1.2;letter-spacing:.1px;
+          color:var(--text-muted,#5A626E);padding:6px 2px;text-align:left;}
+        .cm-trust:hover{color:var(--brand-primary,#164679);}
+        .cm-trust .cm-trust-glyph{color:var(--brand-primary,#164679);font-weight:800;font-size:12px;}
+        .cm-trust:focus-visible{outline:2px solid var(--brand-accent,#EAB308);outline-offset:2px;border-radius:6px;}
+        .cm-skip{border:none;background:transparent;color:var(--text-muted,#5A626E);
+          font-size:13px;font-weight:600;cursor:pointer;padding:9px 8px;}
+        .cm-skip:hover{color:var(--brand-primary,#164679);}
+        .cm-primary{border:none;background:var(--brand-primary,#164679);color:#fff;
+          font-size:14px;font-weight:700;cursor:pointer;padding:11px 20px;border-radius:10px;
+          box-shadow:0 3px 10px rgba(22,70,121,.28);transition:background .15s,transform .05s;}
+        .cm-primary:hover{background:#08306B;}
+        .cm-primary:active{transform:translateY(1px);}
+        .cm-primary:focus-visible,.cm-skip:focus-visible{outline:2px solid var(--brand-accent,#EAB308);outline-offset:2px;}
+
+        .cm-mobile-only{display:none;}
+        @media (max-width:640px){
+          .cm-overlay{align-items:flex-end;padding:0;}              /* slide up from bottom on phones */
+          .cm-card{max-width:none;border-radius:18px 18px 0 0;animation:cm-sheet .3s cubic-bezier(.2,.8,.2,1);}
+          @keyframes cm-sheet{from{transform:translateY(100%)}to{transform:none}}
+          .cm-banner h2{font-size:19px;}
+          .cm-mobile-only{display:inline;}
+          .cm-actions{padding-bottom:max(22px,env(safe-area-inset-bottom));}
+        }
+        @media (prefers-reduced-motion:reduce){.cm-card{animation:none;}}
+
     </style>
 </head>
 <body>
-    <div id="map"></div>
+    <div id="map" role="region" aria-label="Interactive retail co-location map" tabindex="-1"></div>
+    <!-- F26(b) — global live region: announces selection, region switch, search counts -->
+    <div id="a11y-status" class="sr-only" aria-live="polite" role="status"></div>
+    <!-- F26(c) — crawlable / screen-reader text alternative for the canvas map.
+         Populated from the same rm-top400 data the map renders. -->
+    <nav id="a11y-rm-list" class="sr-only" aria-label="Top 400 Regional Markets, text list">
+        <h2>Top Regional Markets</h2>
+        <p>The interactive map above is a graphical canvas. The ranked list below presents the same Top 400 Regional Markets — co-location settlements ranked by composite score — for screen readers and search engines.</p>
+        <ol id="a11y-rm-ol"><li>Loading regional market index…</li></ol>
+    </nav>
 
-    <aside id="data-panel">
-        <div class="drawer-handle" aria-hidden="true"></div>
+    <aside id="data-panel" role="region" aria-label="Location details">
+        <div class="sheet-grabber" role="button" tabindex="0"
+             aria-label="Resize panel — drag, or tap to cycle peek, half and full">
+            <span class="drawer-handle" aria-hidden="true"></span>
+        </div>
+        <!-- F24 — print-only one-pager header (hidden on screen) -->
+        <div id="print-header" class="print-only">
+            <p class="ph-title">Woodfine GIS</p>
+            <p class="ph-sub">Location Intelligence — Cluster One-Pager</p>
+            <p class="ph-date" id="print-date"></p>
+        </div>
         <div class="panel-header">
             <button class="panel-collapse-btn"
                     onclick="document.getElementById('data-panel').classList.toggle('collapsed')"
                     aria-label="Collapse panel">▾</button>
             <h1>Woodfine GIS</h1>
             <p>Location Intelligence</p>
+            <p class="panel-tagline" id="panel-tagline">Spatial measures of retail, industrial, and transit<br>anchor clustering</p>
             <div class="region-switch" id="region-tabs">
                 <button class="region-tab active" data-region="NA" onclick="switchRegion('NA')">North America</button>
                 <button class="region-tab" data-region="EU" onclick="switchRegion('EU')">Europe</button>
@@ -333,14 +674,18 @@
                 <input id="chain-search-input" class="chain-search-input" type="text"
                        placeholder="Search city, town, or retailer…" autocomplete="off"
                        inputmode="search" enterkeyhint="search"
+                       role="combobox" aria-autocomplete="list" aria-expanded="false"
+                       aria-controls="chain-dropdown" aria-label="Search city, town, or retailer"
                        oninput="onChainSearchInput(this.value)"
                        onfocus="if(this.value)onChainSearchInput(this.value)"
                        onblur="closeDropdown()"
                        onkeydown="onChainSearchKey(event)" />
                 <button id="chain-search-clear" class="chain-search-clear"
-                        onclick="clearChainFilter()" style="display:none;" aria-label="Clear">×</button>
+                        onclick="clearChainFilter()" style="display:none;" aria-label="Clear search">×</button>
                 <div id="chain-dropdown" class="chain-dropdown" style="display:none;"
+                     role="listbox" aria-label="Search results"
                      onmousedown="event.preventDefault()"></div>
+                <div id="chain-search-status" class="sr-only" aria-live="polite" role="status"></div>
             </div>
             <div id="context-strip" class="context-strip" aria-hidden="true" style="display:none;">
                 <button id="ctx-back-btn" class="ctx-back"></button>
@@ -348,7 +693,7 @@
             </div>
         </div>
         <div class="panel-content" id="inspector">
-            <div class="empty-msg">Select a commercial node to begin regional market analysis.</div>
+            <div class="empty-msg">Select a cluster on the map to view its market analysis.</div>
         </div>
         <div class="panel-footer">
             <button class="footer-btn" onclick="openModal('modal-credits')">Data</button>
@@ -356,7 +701,17 @@
             <button class="footer-btn" onclick="openModal('modal-methodology')">Method</button>
             <a class="footer-btn footer-btn-primary" href="/research.html" target="_blank" rel="noopener">Research ↗</a>
         </div>
+        <div class="panel-signature">Engineered by <a href="https://home.pointsav.com" target="_blank" rel="noopener">PointSav Digital Systems</a></div>
     </aside>
+
+    <div id="map-legend" aria-label="Map legend">
+        <h4>Co-location tier</h4>
+        <div class="lg-row"><span class="lg-sw" style="background:#08306B"></span> Regional — strongest co-location</div>
+        <div class="lg-row"><span class="lg-sw" style="background:#3182BD"></span> District — two-format co-location</div>
+        <div class="lg-row"><span class="lg-sw" style="background:#9ECAE1"></span> Local — single anchor</div>
+        <div class="lg-row"><span class="lg-ring"></span> Proximity ring — modelled catchment</div>
+        <div class="lg-row" id="lg-top400" style="display:none;"><span class="lg-sw" style="background:#D97706"></span> Top 400 Regional Market</div>
+    </div>
 
     <div class="nav-cluster">
         <button class="nav-btn home-btn" id="map-back-btn" style="display:none;" onclick="mapNavBack()">
@@ -369,6 +724,62 @@
         <button class="nav-btn zoom-btn" onclick="map.zoomOut()">
             <span class="icon">－</span><span class="label">Zoom Out</span>
         </button>
+    </div>
+
+    <!-- F15 — compare tray (pinned clusters, side-by-side) -->
+    <div id="compare-tray" role="region" aria-label="Compare pinned clusters">
+        <div class="compare-tray-head">
+            <h3>Compare clusters</h3>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <button class="footer-btn" style="flex:none;padding:5px 10px;" onclick="clearCompare()">Clear all</button>
+                <button class="compare-tray-close" onclick="closeCompareTray()" aria-label="Close compare tray">×</button>
+            </div>
+        </div>
+        <div class="compare-tray-body" id="compare-tray-body"></div>
+    </div>
+
+    <!-- First-run orientation (F19) — branded welcome card -->
+    <div id="coachmark" class="cm-overlay" style="display:none;" onclick="dismissCoachmark(event)">
+        <div class="cm-card" onclick="event.stopPropagation()" role="dialog" aria-modal="true"
+             aria-labelledby="cm-title" aria-describedby="cm-lead">
+            <div class="cm-banner">
+                <div class="cm-eyebrow">Woodfine GIS · Retail Co-location Index</div>
+                <h2 id="cm-title">See where the anchors cluster.</h2>
+                <button class="cm-close" onclick="dismissCoachmark()" aria-label="Close">×</button>
+            </div>
+            <div class="cm-body">
+                <p id="cm-lead" class="cm-lead">An interactive index of retail co-location clusters across
+                    North America and Europe — each scored by modelled catchment population and consumer spend.</p>
+
+                <div class="cm-row">
+                    <span class="cm-dot cm-dot-cluster" aria-hidden="true"></span>
+                    <p><strong>Each dot is a co-location cluster</strong> — where large-format anchors group together.</p>
+                </div>
+
+                <div class="cm-tierblock">
+                    <div class="cm-row-label">Colour = tier (catchment strength)</div>
+                    <div class="cm-swatches">
+                        <span class="cm-chip"><i style="background:#08306B"></i>Regional</span>
+                        <span class="cm-chip"><i style="background:#3182BD"></i>District</span>
+                        <span class="cm-chip"><i style="background:#9ECAE1"></i>Local</span>
+                    </div>
+                </div>
+
+                <div class="cm-row">
+                    <span class="cm-dot cm-dot-tap" aria-hidden="true"></span>
+                    <p><strong>Click a cluster</strong> to inspect its trade area.
+                       <span class="cm-mobile-only">On mobile, drag the panel up for detail.</span></p>
+                </div>
+            </div>
+            <div class="cm-actions">
+                <button type="button" class="cm-trust" onclick="event.stopPropagation(); openModal('modal-disclaimer');"
+                        aria-label="Zero cookies, no tracking — view privacy posture">
+                    <span class="cm-trust-glyph" aria-hidden="true">&empty;</span> Zero Cookies · no tracking
+                </button>
+                <button class="cm-skip" onclick="dismissCoachmark()">Skip</button>
+                <button class="cm-primary" onclick="dismissCoachmark()">Explore the map →</button>
+            </div>
+        </div>
     </div>
 
     <!-- ── Modals ────────────────────────────────────────────────── -->
@@ -409,6 +820,8 @@
                 <p>Woodfine Group does not guarantee the accuracy, completeness, or timeliness of the data. Retailer locations and catchment analysis should not be used for high-stakes site selection, navigation, or critical infrastructure planning without independent verification.</p>
                 <h3>Privacy Notice</h3>
                 <p>We do not utilize real-time individual tracking data. Catchment population and consumer-spend metrics are derived from WorldPop high-resolution population grids assigned to clusters via a distance-decay radius model. No personally identifiable information (PII) is processed or displayed.</p>
+                <h3>Digital Infrastructure &amp; Privacy Posture</h3>
+                <p>This interface operates on a Zero-Cookie and Zero-State Telemetry architecture. It does not deploy tracking cookies, retain session states, or harvest Personally Identifiable Information (PII). System interactions are limited to the collection of anonymized network routing and viewport data strictly for the purpose of auditing infrastructure performance.</p>
             </div>
         </div>
     </div>
@@ -422,18 +835,20 @@
             <div class="modal-body">
                 <h3>Tier Classification</h3>
                 <p>Each location on this map is assigned a tier based on the composition of large-format retail anchors present within the co-location cluster — not on retailer count or proximity alone.</p>
+                <p>Tiers are labelled Regional, District, Local in descending co-location strength.</p>
                 <ul>
-                    <li><strong>Regional (T1):</strong> A hypermarket, hardware retailer, and at least one of: warehouse club, lifestyle anchor, or electronics anchor — three independent format categories co-located within a sub-metropolitan market.</li>
-                    <li><strong>District (T2):</strong> A hypermarket and hardware retailer co-located without the third anchor category.</li>
-                    <li><strong>Local (T3):</strong> A single large-format anchor category present without a qualifying co-location pair.</li>
+                    <li><strong>Regional:</strong> A hypermarket, hardware retailer, and at least one of: warehouse club, lifestyle anchor, or electronics anchor — three independent format categories co-located within a sub-metropolitan market.</li>
+                    <li><strong>District:</strong> A hypermarket and hardware retailer co-located without the third anchor category.</li>
+                    <li><strong>Local:</strong> A single large-format anchor category present without a qualifying co-location pair.</li>
                 </ul>
                 <h3>Data and Scale</h3>
-                <p>The framework is applied to 6,493 co-location clusters across thirteen countries in North America and Europe, using OpenStreetMap point-of-interest records as the primary source. Clusters are identified by a two-pass spatial clustering algorithm (DBSCAN) calibrated to sub-metropolitan retail park configurations. Within each tier, clusters are ranked by geometric compactness and catchment characteristics.</p>
+                <p>The framework is applied to 6,493 co-location clusters across North America and Europe, using OpenStreetMap point-of-interest records as the primary source. Clusters are identified by a two-pass spatial clustering algorithm (DBSCAN with a distance threshold calibrated to sub-metropolitan retail-park spacing, followed by an Intersection-over-Union merge pass). Cluster counts are descriptive rather than inferential: the totals shift with the clustering parameters, so the figures indicate market structure rather than precise measurements. Within each tier, clusters are ranked by geometric compactness and catchment characteristics. A &ldquo;Regional Market&rdquo; denotes a settlement containing at least one qualifying co-location; the published Top-400 ranks these markets by a composite score.</p>
                 <h3>Catchment Areas</h3>
-                <p>Population and consumer spend figures are derived from WorldPop 100 m population grids and modelled per-capita spend estimates, aggregated to H3 hexagonal cells within a 150 km radius of each cluster centroid. The intended refinement — replacing the radius-based catchment with mobility-defined catchments derived from parking-lot geo-fencing — is a planned extension as origin-destination panel data is acquired.</p>
+                <p>Population and consumer spend figures are derived from WorldPop 100 m population grids and modelled per-capita spend estimates, aggregated to H3 hexagonal cells within a 150 km radius of each cluster centroid. Spend is estimated by a simple chain: WorldPop cell population → a single, <strong>uniform national per-capita retail-spend rate</strong> → sum over the catchment cells. The per-capita rate is applied uniformly within a country; it does not adjust for local income, age, or household composition, so cell-level spend is an order-of-magnitude estimate rather than a measured figure.</p>
+                <p>Because the catchment is built from a fixed radius and then aggregated to H3 hexagons, the totals are sensitive to the choice of radius and hexagon resolution — the modifiable areal unit problem (MAUP). Different but equally reasonable zone definitions would yield different population and spend totals; the figures indicate scale, not precise counts. The intended refinement — replacing the radius-based catchment with mobility-defined catchments derived from parking-lot geo-fencing — is a planned extension as origin-destination panel data is acquired.</p>
                 <h3>Limitations</h3>
                 <ul>
-                    <li>OSM coverage varies by country and retailer format. Major chains in the thirteen study countries are well-mapped; newer formats and smaller markets may be under-represented.</li>
+                    <li>OSM coverage varies by country and retailer format. Major chains across the North American and European study markets are well-mapped; newer formats and smaller markets may be under-represented.</li>
                     <li>Spend figures are modelled estimates, not transaction data. They reflect demographic proxies, not observed retail sales.</li>
                     <li>The tier classification reflects anchor composition at a point in time. Store openings and closures are incorporated through periodic dataset rebuilds.</li>
                 </ul>
@@ -449,6 +864,182 @@
         if (e && e.target !== document.getElementById(id)) return;
         document.getElementById(id).style.display = 'none';
     }
+    // F26(b) — announce a change to assistive tech via the global polite live region.
+    // Re-setting textContent (with a tick of empty string) forces SR re-announcement
+    // even when the same message repeats.
+    function a11yAnnounce(msg) {
+        const el = document.getElementById('a11y-status');
+        if (!el || !msg) return;
+        el.textContent = '';
+        // microtask defer so the cleared value is observed before the new one
+        setTimeout(() => { el.textContent = String(msg); }, 30);
+    }
+
+    // ── F24 — print / one-pager ──────────────────────────────────────
+    // Sets the dated subtitle on the print-only header just before the
+    // browser print dialog opens, then invokes the native print/PDF flow.
+    function setPrintDate() {
+        const el = document.getElementById('print-date');
+        if (!el) return;
+        try {
+            el.textContent = new Date().toLocaleDateString('en-CA',
+                { year: 'numeric', month: 'long', day: 'numeric' });
+        } catch (_) { el.textContent = new Date().toISOString().slice(0, 10); }
+    }
+    function printOnePager() { setPrintDate(); window.print(); }
+    window.addEventListener('beforeprint', setPrintDate);
+
+    // ── F5 — cluster scorecard "why it ranks" summary ────────────────
+    // Composes a single explainable line from fields ALREADY on the cluster
+    // props — tier, anchor count, compactness percentile, catchment pop.
+    // Invents no new score; omits any part whose source field is missing.
+    function buildScorecardHTML(p, tierName) {
+        const parts = [];
+        const anchors = (p.member_count != null) ? p.member_count
+                        : (p.count_3km != null ? p.count_3km : null);
+        if (anchors != null && anchors !== '—' && Number(anchors) > 0) {
+            const n = Number(anchors);
+            parts.push(`${n} anchor${n > 1 ? 's' : ''}`);
+        }
+        if (p.dist_pctile != null) {
+            const pc = Math.round(p.dist_pctile);
+            // higher percentile = tighter than that share of clusters
+            if (pc >= 90)      parts.push('top-decile compactness');
+            else if (pc >= 75) parts.push('top-quartile compactness');
+            else               parts.push(`tighter than ${pc}% of clusters`);
+        }
+        const pop = (p.pp != null && !isNaN(parseInt(p.pp))) ? parseInt(p.pp) : null;
+        if (pop != null && pop > 0) parts.push(`~${compactNum(pop)} catchment population`);
+        const rmRank = p.rm_rank || 0;
+        if (rmRank > 0) parts.push(`Top-400 Regional Market (#${rmRank})`);
+
+        if (!parts.length) return '';
+
+        const tierPhrase = (tierName && tierName !== '—')
+            ? (tierName === 'Regional' ? 'Strongest tier (Regional)'
+               : tierName === 'District' ? 'Two-format tier (District)'
+               : tierName === 'Local'    ? 'Single-anchor tier (Local)'
+               : `${tierName} tier`)
+            : 'This cluster';
+        return `<div class="data-block">
+            <div class="scorecard-box">
+                <span class="sc-lead">${escapeHtml(tierPhrase)}:</span>
+                ${parts.join(', ')}.
+            </div>
+        </div>`;
+    }
+
+    // ── F15 — compare tray (pin 2–4 clusters) ────────────────────────
+    // Holds shallow snapshots taken from selectedClusterProps at pin time.
+    // Reads selection state; never mutates it. Self-contained overlay.
+    let compareSet = [];
+    function compareKeyFor(p) { return String(p.cluster_id || p.id || p.display_name || p.anchor_label || ''); }
+    function addToCompare() {
+        const p = selectedClusterProps;
+        if (!p) return;
+        const key = compareKeyFor(p);
+        if (!key) return;
+        if (compareSet.some(c => c.key === key)) { openCompareTray(); return; }
+        if (compareSet.length >= 4) {
+            a11yAnnounce('Compare tray is full — remove a cluster to add another.');
+            renderCompareTray(); openCompareTray();
+            return;
+        }
+        const tvKey = effectiveTierKey(p);
+        const tc    = tierColor(tvKey);
+        const name  = p.display_name || (p.anchor_label ? (p.anchor_label + (p.city ? ', ' + p.city : '')) : 'Cluster');
+        const anchors = (p.member_count != null) ? p.member_count
+                        : (p.count_3km != null ? p.count_3km : null);
+        compareSet.push({
+            key,
+            name,
+            tierName: tc.name, tierFill: tc.fill, tierText: tc.text,
+            anchors:  anchors,
+            pop:      (p.pp != null && !isNaN(parseInt(p.pp))) ? parseInt(p.pp) : null,
+            spend:    (p.sp != null && !isNaN(parseInt(p.sp))) ? parseInt(p.sp) : null,
+        });
+        a11yAnnounce(`Added ${name} to compare. ${compareSet.length} pinned.`);
+        renderCompareTray();
+        openCompareTray();
+        // reflect the pinned count on the inspector button if present
+        const btn = document.getElementById('compare-add-btn');
+        if (btn) btn.textContent = `＋ Compare (${compareSet.length})`;
+    }
+    function removeFromCompare(key) {
+        compareSet = compareSet.filter(c => c.key !== key);
+        renderCompareTray();
+        if (!compareSet.length) closeCompareTray();
+    }
+    function clearCompare() { compareSet = []; renderCompareTray(); closeCompareTray(); }
+    function openCompareTray()  { const t = document.getElementById('compare-tray'); if (t) t.classList.add('open'); }
+    function closeCompareTray() { const t = document.getElementById('compare-tray'); if (t) t.classList.remove('open'); }
+    function renderCompareTray() {
+        const body = document.getElementById('compare-tray-body');
+        if (!body) return;
+        if (!compareSet.length) { body.innerHTML = ''; return; }
+        const rows = compareSet.map(c => `
+            <tr>
+                <td class="cmp-name">${escapeHtml(c.name)}</td>
+                <td><span class="cmp-tier-badge" style="background:${c.tierFill};color:${c.tierText};">${escapeHtml(c.tierName)}</span></td>
+                <td class="cmp-num">${c.anchors != null && c.anchors !== '—' ? c.anchors : '—'}</td>
+                <td class="cmp-num">${c.pop   != null ? compactNum(c.pop)   : '—'}</td>
+                <td class="cmp-num">${c.spend != null ? '$' + compactNum(c.spend) : '—'}</td>
+                <td><button class="compare-remove" onclick="removeFromCompare('${c.key.replace(/'/g, "\\'")}')" aria-label="Remove from compare" title="Remove">×</button></td>
+            </tr>`).join('');
+        body.innerHTML = `<table class="compare-table">
+            <thead><tr><th>Cluster</th><th>Tier</th><th>Anchors</th><th>Population</th><th>Spend</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+    }
+    // F26(c) — build the screen-reader / crawler text alternative for the canvas.
+    // Lists the Top 400 Regional Markets (rank, name, continent, tier composition)
+    // from the same rmTop400 data that drives the map's amber RM stars.
+    function renderRmTextAlternative() {
+        const ol = document.getElementById('a11y-rm-ol');
+        if (!ol) return;
+        const entries = Object.values(rmTop400 || {}).filter(r => r && r.rank && r.rank <= 400);
+        if (!entries.length) { ol.outerHTML = '<p id="a11y-rm-ol">Regional market index unavailable.</p>'; return; }
+        // Data holds two parallel Top-400 rankings (NA 1–400, EU 1–400); group by
+        // continent so rank numbers are unambiguous in the list.
+        const contName = { NA: 'North America', EU: 'Europe' };
+        const item = (r) => {
+            const t = [];
+            if (r.t1) t.push(`${r.t1} Regional`);
+            if (r.t2) t.push(`${r.t2} District`);
+            if (r.t3) t.push(`${r.t3} Local`);
+            const tierTxt = t.length ? t.join(', ') : 'no tier breakdown';
+            return `<li value="${r.rank}">Rank ${r.rank}: ${escapeHtml(r.name || 'Unnamed market')}`
+                 + ` — tier composition: ${escapeHtml(tierTxt)}.</li>`;
+        };
+        const groups = ['NA', 'EU'].map(cont => {
+            const rows = entries.filter(r => r.cont === cont).sort((a, b) => a.rank - b.rank);
+            if (!rows.length) return '';
+            return `<section><h3>${escapeHtml(contName[cont] || cont)} — Top ${rows.length} Regional Markets</h3>`
+                 + `<ol>${rows.map(item).join('')}</ol></section>`;
+        }).join('');
+        // Replace the placeholder <ol> with the grouped sections.
+        ol.outerHTML = `<div id="a11y-rm-ol">${groups}</div>`;
+    }
+    // First-run orientation (F19)
+    function dismissCoachmark(e) {
+        if (e && e.target && e.target.id !== 'coachmark') return;
+        const el = document.getElementById('coachmark');
+        if (el) el.style.display = 'none';
+        try { localStorage.setItem('wf_coachmark_seen', '1'); } catch (_) {}
+        document.removeEventListener('keydown', _coachmarkEsc);
+    }
+    function _coachmarkEsc(ev) { if (ev.key === 'Escape') dismissCoachmark(); }
+    function maybeShowCoachmark() {
+        let seen = false;
+        try { seen = localStorage.getItem('wf_coachmark_seen') === '1'; } catch (_) {}
+        if (seen) return;
+        const el = document.getElementById('coachmark');
+        if (!el) return;
+        el.style.display = 'flex';
+        document.addEventListener('keydown', _coachmarkEsc);
+        el.querySelector('.cm-primary')?.focus();
+    }
+    window.addEventListener('load', () => { setTimeout(maybeShowCoachmark, 500); });
 
     // ── PMTiles protocol ────────────────────────────────────────────
     const protocol = new pmtiles.Protocol();
@@ -460,10 +1051,18 @@
     // ── Tier colour ramp — 4-tier: Regional → District → Local → Fringe ──
     // Keys are V2 rank values (3=Regional, 2=District, 1=Local, 0=Fringe) used by
     // TIER_COLORS and effectiveTierKey(). Map layer filters use V3 `tier` (1=Regional…4=Fringe).
+    // F8 — ordered, CVD-safe sequential blue ramp (ColorBrewer Blues).
+    // Keys are V2 rank values: 3=Regional(T1, darkest), 2=District(T2), 1=Local(T3, lightest).
+    // 0=Fringe stays maroon (distinct off-ramp semantic, not a co-location tier).
+    // COPY NOTE (Phase A): "T1/T2/T3" and "Fringe" are internal codes only and are
+    // never surfaced in user-facing UI text. User-facing tier labels are Regional /
+    // District / Local (descending co-location strength); the Fringe tier carries no
+    // rendered label. Keep this invariant when adding new copy.
+    // Amber is reserved for selection / Top-400 only — no tier uses it.
     const TIER_COLORS = {
-        3: { fill: '#164679', text: '#ffffff', name: 'Regional' },  // woodfine-blue
-        2: { fill: '#54924E', text: '#ffffff', name: 'District' },  // woodfine-green
-        1: { fill: '#EAB308', text: '#111827', name: 'Local'    },  // institutional gold
+        3: { fill: '#08306B', text: '#ffffff', name: 'Regional' },  // T1 — darkest blue (strongest)
+        2: { fill: '#3182BD', text: '#ffffff', name: 'District' },  // T2 — mid blue
+        1: { fill: '#9ECAE1', text: '#111827', name: 'Local'    },  // T3 — light blue
         0: { fill: '#991B1B', text: '#ffffff', name: 'Fringe'   },  // institutional maroon
     };
     // Map V3 tier (1=Regional…4=Fringe) to V2 key for TIER_COLORS lookup.
@@ -536,6 +1135,33 @@
         BRAND_CHAINS[name].push(id);
     }
     const BRAND_NAMES = Object.keys(BRAND_CHAINS).sort();
+    // F17 — per-brand location counts, aggregated from clusterMeta members once
+    // data loads (see computeBrandCounts). Keyed by display name. Falls back to
+    // 0 (count suppressed in the dropdown) until populated.
+    const BRAND_COUNTS = {};
+    function computeBrandCounts(meta) {
+        if (!Array.isArray(meta)) return;
+        const byId = {};
+        for (const c of meta) {
+            const members = Array.isArray(c.members) ? c.members : [];
+            for (const m of members) {
+                const cid = m && m.chain_id;
+                if (cid) byId[cid] = (byId[cid] || 0) + 1;
+            }
+        }
+        for (const name of BRAND_NAMES) {
+            const ids = BRAND_CHAINS[name] || [];
+            let total = 0;
+            for (const id of ids) total += (byId[id] || 0);
+            BRAND_COUNTS[name] = total;
+        }
+    }
+    const _brandCountFmt = new Intl.NumberFormat('en');
+    function brandCountLabel(name) {
+        const n = BRAND_COUNTS[name] || 0;
+        if (!n) return '';
+        return n === 1 ? '1 location' : _brandCountFmt.format(n) + ' locations';
+    }
 
     function formatChainId(id) {
         return id.replace(/-[a-z]{2}$/, '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -567,6 +1193,183 @@
         window.addEventListener('resize', sync);
         if (window.visualViewport) window.visualViewport.addEventListener('resize', sync);
         sync();
+    }
+
+    // flyTo/easeTo padding so a tapped feature centres in the visible map band ABOVE the mobile
+    // bottom sheet (or to the right of the desktop side card). Reads the live panel height.
+    function sheetPad() {
+        if (window.innerWidth > 768) return { top: 0, bottom: 0, left: 380, right: 0 };
+        const panel = document.getElementById('data-panel');
+        let bottom = panel ? panel.offsetHeight : 0;
+        if (panel && panel.classList.contains('has-detail')) {
+            // Prefer the JS-driven detent target (--sheet-h) — offsetHeight is mid-transition.
+            const v = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sheet-h'));
+            const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+            bottom = !isNaN(v) ? v : Math.max(bottom, Math.round(vh * 0.52));
+        }
+        return { top: 0, bottom, left: 0, right: 0 };
+    }
+
+    // ── Bottom-sheet detent controller (peek / half / full) ────────────────────
+    // Drag the grabber, tap to cycle, arrow keys to step; swipe down past peek dismisses.
+    // Active only on mobile while a feature is selected (#data-panel.has-detail).
+    const SHEET = (() => {
+        const mq = window.matchMedia('(max-width: 768px)');
+        const panel = () => document.getElementById('data-panel');
+        const PEEK_PX = 90;            // detail peek: one-row summary strip
+        const PEEK_PX_OVERVIEW = 152;  // overview peek: brand + grabber + compact region tabs + search bar only
+        // The sheet machinery runs on mobile for BOTH the overview (no .has-detail) and the
+        // detail panel (.has-detail). Detail behaviour is unchanged; overview is the new case.
+        const active = p => mq.matches && !!p;          // mobile + panel present (overview OR detail)
+        const isOverview = p => p && !p.classList.contains('has-detail');
+        function px(name, p) {
+            // Visual viewport excludes the mobile browser's bottom toolbar; window.innerHeight
+            // (layout viewport) does NOT — using it would push the sheet behind the footbar.
+            const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+            if (name === 'peek') {
+                // Overview peek must clear the grabber + chain search + tier-count pills, so it
+                // uses a taller floor than the detail one-row summary peek.
+                return isOverview(p) ? Math.max(PEEK_PX_OVERVIEW, Math.round(h * 0.16)) : PEEK_PX;
+            }
+            return name === 'half' ? Math.round(h * 0.52) : Math.round(h * 0.90);
+        }
+        let current = 'half';
+        const setVar = v => document.documentElement.style.setProperty('--sheet-h', v);
+        function reframe() {
+            if (typeof selectedClusterCoords !== 'undefined' && selectedClusterCoords) {
+                map.easeTo({ center: selectedClusterCoords, padding: sheetPad(), duration: 280, essential: true });
+            }
+        }
+        function snapTo(name, animate = true) {
+            const p = panel();
+            if (!active(p)) return;
+            current = name;
+            if (!animate) { p.classList.add('dragging'); }
+            setVar(px(name, p) + 'px');
+            p.dataset.detent = name;
+            p.setAttribute('aria-expanded', name === 'peek' ? 'false' : 'true');
+            if (!animate) { requestAnimationFrame(() => p.classList.remove('dragging')); }
+            reframe();
+        }
+        function cycle() { snapTo(current === 'peek' ? 'half' : current === 'half' ? 'full' : 'peek'); }
+        function open() {                      // called when entering detail mode
+            current = 'half';
+            const p = panel();
+            setVar(px('half', p) + 'px');
+            if (p) { p.dataset.detent = 'half'; p.setAttribute('aria-expanded', 'true'); }
+            attach();
+        }
+        function attach() {
+            const p = panel(); if (!p) return;
+            const grab = p.querySelector('.sheet-grabber');
+            if (!grab || grab._wired) return; grab._wired = true;
+            let startY = 0, startH = 0, dragging = false, moved = false;
+            grab.addEventListener('pointerdown', e => {
+                if (!active(p)) return;
+                dragging = true; moved = false; startY = e.clientY;
+                startH = p.getBoundingClientRect().height;
+                p.classList.add('dragging');
+                try { grab.setPointerCapture(e.pointerId); } catch (_) {}
+            });
+            grab.addEventListener('pointermove', e => {
+                if (!dragging) return;
+                const dy = startY - e.clientY;
+                if (Math.abs(dy) > 4) moved = true;
+                // Overview clamps the minimum at its peek height (nothing to dismiss); detail can
+                // be dragged below peek to trigger swipe-down dismiss (→ flyToOverview).
+                const minH = isOverview(p) ? px('peek', p) : 60;
+                const hgt = Math.min(px('full', p), Math.max(minH, startH + dy));
+                setVar(hgt + 'px');
+            });
+            function end() {
+                if (!dragging) return; dragging = false; p.classList.remove('dragging');
+                const hgt = p.getBoundingClientRect().height;
+                // Detail only: dragging below ~half the peek strip dismisses the sheet.
+                if (!isOverview(p) && hgt < PEEK_PX * 0.55) { flyToOverview(); return; }
+                const opts = [['peek', px('peek', p)], ['half', px('half', p)], ['full', px('full', p)]];
+                opts.sort((a, b) => Math.abs(a[1] - hgt) - Math.abs(b[1] - hgt));
+                snapTo(opts[0][0]);
+            }
+            grab.addEventListener('pointerup', end);
+            grab.addEventListener('pointercancel', end);
+            grab.addEventListener('click', () => { if (!moved) cycle(); });
+            grab.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cycle(); }
+                else if (e.key === 'ArrowUp')   { e.preventDefault(); snapTo(current === 'peek' ? 'half' : 'full'); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); snapTo(current === 'full' ? 'half' : 'peek'); }
+            });
+        }
+        // When the mobile browser toolbar shows/hides, the visual viewport resizes — recompute
+        // the active detent in px so the sheet keeps its proportion and never hides behind the footbar.
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                const p = panel();
+                if (active(p) && p.dataset.detent) snapTo(current, false);
+            });
+        }
+        return { snapTo, cycle, open, attach, isOverview, isMobile: () => mq.matches, get current() { return current; } };
+    })();
+    window.SHEET = SHEET;   // debug / test harness handle (read-only use)
+
+    // Open the mobile bottom sheet at the peek detent when a feature is selected — grab handle
+    // + one-row summary only (~90px), leaving ~90% of the screen as map. User drags up to reveal
+    // full detail. No-op on desktop.
+    function expandSheetForDetail() {
+        const panel = document.getElementById('data-panel');
+        if (!panel) return;
+        panel.classList.add('has-detail');
+        panel.classList.remove('collapsed');
+        document.querySelector('.nav-cluster')?.classList.add('has-detail-nav');
+        SHEET.snapTo('peek', true);   // start at 90px peek strip (was: open() → half)
+        SHEET.attach();               // wire the drag grabber
+    }
+    function collapseSheet() {
+        const panel = document.getElementById('data-panel');
+        if (!panel) return;
+        document.querySelector('.nav-cluster')?.classList.remove('has-detail-nav');
+        // On mobile the overview is itself a sheet — rest it at peek rather than tearing down
+        // the --sheet-h / data-detent machinery. restOverviewSheet() reads .has-detail to know it
+        // is coming from detail, so it must run BEFORE we clear that class.
+        // On desktop these are inert (no mobile media query) — just tear down.
+        if (SHEET.isMobile()) {
+            restOverviewSheet();   // also removes .has-detail
+        } else {
+            panel.classList.remove('has-detail');
+            panel.removeAttribute('data-detent');
+            document.documentElement.style.removeProperty('--sheet-h');
+        }
+    }
+
+    // Rest the OVERVIEW bottom sheet at its peek detent on mobile (grabber + chain search + tier
+    // pills visible; map ~80% of screen). No-op on desktop. Drives --sheet-h + data-detent like
+    // the detail sheet so the nav-cluster and map padding track the live height.
+    function restOverviewSheet() {
+        const panel = document.getElementById('data-panel');
+        if (!panel || !SHEET.isMobile()) return;
+        const wasDetail = panel.classList.contains('has-detail');
+        panel.classList.remove('has-detail');
+        panel.classList.remove('collapsed');
+        SHEET.attach();                 // wire the drag grabber (idempotent)
+        // Snap to peek on the deselect/init path (coming from detail, or no detent yet).
+        // If the user already expanded the overview sheet (half/full), preserve their detent on
+        // in-place refreshes (e.g. radius toggle, count updates) — just keep --sheet-h current.
+        if (wasDetail || !panel.dataset.detent) {
+            SHEET.snapTo('peek', true);   // overview peek floor (~190px) drives --sheet-h
+        } else {
+            SHEET.snapTo(SHEET.current, false);   // recompute current detent height in px
+        }
+    }
+
+    // One-row digest shown at the peek detent on mobile (hidden on desktop via CSS).
+    // name: plain string; tierBadgeHTML + statHTML: pre-built safe HTML fragments.
+    function peekSummaryHTML(name, tierBadgeHTML, statHTML) {
+        return `<div class="peek-summary">
+            ${tierBadgeHTML || ''}
+            <div class="ps-text">
+                <div class="ps-name">${escapeHtml(name || '—')}</div>
+                <div class="ps-stat">${statHTML || ''}</div>
+            </div>
+        </div>`;
     }
 
     function setNavContext(backLabel, backFn, currentLabel) {
@@ -793,9 +1596,39 @@
             .catch(() => {});
     }
 
+    // F8 — ordered, CVD-safe sequential tier ramp (ColorBrewer Blues).
+    // T1 strongest=darkest → T3 lightest. Amber (#EAB308) is reserved for
+    // selection / Top-400 highlight only — NO tier may be amber.
     function colorMatchExpr() {
         return ['match', ['get', 'tier'],
-            1, '#164679', 2, '#54924E', 3, '#EAB308', '#CBD5E1'];
+            1, '#08306B', 2, '#3182BD', 3, '#9ECAE1', '#CBD5E1'];
+    }
+
+    // F2 — zoom-staged tier opacity for the 'nodes' layer (single source of truth).
+    // Below ~z5 only T1 shows; T2 fades in by ~z6.5; T3 by ~z7.5. No data is removed —
+    // only appearance is staged by zoom so the dot field reads as signal not confetti
+    // at continental zoom. Returned fresh each call; applied by addLayer + applyBubbleAecOverlayStyle.
+    // Shared bubble spec — applied IDENTICALLY to Retail `nodes`, Urban Fringe
+    // (uf-t1/2/3) and Commuter (cm-t1/2/3) so all three render the same at the
+    // overview/continental zoom where the user compares them. Single source of
+    // truth for radius / opacity / stroke per tier.
+    //   radius (overview anchors z2→z8): T1 4→10 · T2 2.8→7 · T3 2→5  (T1>T2>T3)
+    //   opacity (flat):                  T1 0.90 · T2 0.82 · T3 0.74  (all solid)
+    //   stroke (white taper):            T1 1.5  · T2 1    · T3 0.5
+    const BUBBLE_OPACITY = ['match', ['get', 'tier'],
+        1, 0.90,
+        2, 0.82,
+        3, 0.74,
+        0.82];
+    // Per-tier white-stroke taper as an expression so the single multi-tier
+    // `nodes` layer can match the per-layer archetype stroke widths.
+    const BUBBLE_STROKE_WIDTH = ['match', ['get', 'tier'], 1, 1.5, 2, 1, 3, 0.5, 1];
+
+    function nodesStagedOpacityExpr() {
+        // F13 conf-wash dropped: all clusters render at full per-tier opacity so
+        // they read as solid markers, identical to the archetype modes. The only
+        // shading is the Top-400 recess (0.45).
+        return BUBBLE_OPACITY;
     }
 
     const _compactFmt = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
@@ -850,9 +1683,19 @@
     let clusterMeta  = null;
     let clusterIndex = null; // Map: cluster_id → meta object
     let rmTop400     = {};   // rm_id → { rank, score, name, metro, dist_km, lat, lon, t1, t2, t3, cont }
+    let retailActive      = true;   // Retail is on by default (radio group floor)
     let rmStarsActive     = false;
     let urbanFringeActive = false;
     let commuterActive    = false;
+    // null = Retail mode; 'VWH' = Urban Fringe; 'PKS' = Commuter
+    let activeArchetype   = null;
+    // Top 400 recess: stores each archetype layer's original (zoom-staged)
+    // circle-opacity expression so it can be restored exactly when Top 400 turns off.
+    // Captured lazily the first time a layer is recessed (see _recessLayer).
+    const _archetypeOrigOpacity = {};   // layerId → original circle-opacity expr
+    // Archetype GeoJSON (loaded alongside clusters-meta.json)
+    let vwhData = null;
+    let pksData = null;
 
     // ── Catchment state ──────────────────────────────────────────────────────
     let catchmentActive    = false;
@@ -879,10 +1722,26 @@
         attributionControl: false,
         maxBounds: [[-160.0, -5.0], [45.0, 80.0]],
         maxTileCacheSize: 500,
-        cooperativeGestures: window.matchMedia('(pointer: coarse)').matches,
+        // Full-screen map: one-finger pan is correct. cooperativeGestures (two-finger) is for
+        // maps embedded in scrolling pages — it made the mobile map feel unresponsive.
+        cooperativeGestures: false,
     });
     map.touchZoomRotate.disableRotation();
-    map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
+    if (map.touchPitch) map.touchPitch.disable();   // 2D north-up map — no accidental tilt
+    window.map = map;   // debug / test harness handle
+    map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: 'Data: WorldPop 2026 · Kontur Population (CC BY) · updated 2026-06' }), 'bottom-left');
+
+    // F27 — deep-linkable view: persist zoom/lat/lon in the URL hash; restore on load
+    function writeMapHash() {
+        const c = map.getCenter();
+        history.replaceState(null, '', `#${map.getZoom().toFixed(2)}/${c.lat.toFixed(4)}/${c.lng.toFixed(4)}`);
+    }
+    function restoreMapHash() {
+        const m = /^#(\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)/.exec(location.hash);
+        if (m) { try { map.jumpTo({ zoom: +m[1], center: [+m[3], +m[2]] }); } catch (e) {} }
+    }
+    map.on('moveend', writeMapHash);
+    map.on('load', restoreMapHash);
 
     function updateRegionTabs(key) {
         document.querySelectorAll('.region-tab').forEach(btn => {
@@ -913,6 +1772,10 @@
         overviewActive = true;
         map.setMinZoom(r.minZoom);
         updateRegionTabs(key);
+        a11yAnnounce(`Region switched to ${r.label}. Showing overview.`);
+        // Reset sheet to peek so the new continent's map is fully visible (not half-covered)
+        const _rsp = document.getElementById('data-panel');
+        if (_rsp) delete _rsp.dataset.detent;
         if (map.getLayer('nodes')) setRadius(r.defaultRadius);
 
         const afterMove = () => {
@@ -995,8 +1858,10 @@
     function applyClusterBubbleStroke() {
         if (!map.getLayer('nodes')) return;
         if (!activeChainFilter) {
-            map.setPaintProperty('nodes', 'circle-stroke-width', 0);
-            map.setPaintProperty('nodes', 'circle-stroke-color', 'rgba(0,0,0,0)');
+            // F8: always-on per-tier white taper separates overlapping tier dots on
+            // the light basemap (shared bubble spec — matches uf-*/cm-*).
+            map.setPaintProperty('nodes', 'circle-stroke-width', BUBBLE_STROKE_WIDTH);
+            map.setPaintProperty('nodes', 'circle-stroke-color', '#FFFFFF');
             return;
         }
         const matchExpr = chainFilterExpr(activeChainFilter);
@@ -1062,24 +1927,44 @@
         if (!dd) return;
         const sections = [];
         if (lastBrandMatches.length) {
-            sections.push('<div class="chain-section-label">Retailers</div>');
-            sections.push(lastBrandMatches.map(n =>
-                `<div class="chain-option" data-kind="brand" data-brand="${escapeAttr(n)}" onclick="setChainFilterFromEl(this)">${escapeHtml(n)}</div>`
-            ).join(''));
+            sections.push('<div class="chain-section-label" role="presentation">Chains</div>');
+            sections.push(lastBrandMatches.map(n => {
+                const cnt = brandCountLabel(n);  // F17 — "1,234 locations"
+                const cntHtml = cnt ? `<span class="chain-count">${escapeHtml(cnt)}</span>` : '';
+                const ariaLbl = cnt ? `${n} — ${cnt}` : n;
+                return `<div class="chain-option" role="option" aria-label="${escapeAttr(ariaLbl)}" data-kind="brand" data-brand="${escapeAttr(n)}" onclick="setChainFilterFromEl(this)">${cntHtml}${escapeHtml(n)}</div>`;
+            }).join(''));
         }
         if (lastPlaceResults.length) {
-            sections.push('<div class="chain-section-label">Places</div>');
+            sections.push('<div class="chain-section-label" role="presentation">Places &amp; Cities</div>');
             sections.push(lastPlaceResults.map((p, i) =>
-                `<div class="chain-option place-option" data-kind="place" data-idx="${i}" onclick="selectPlaceResult(${i})"><span>${escapeHtml(p.name)}</span><span class="place-sub">${escapeHtml(p.context)}</span></div>`
+                `<div class="chain-option place-option" role="option" data-kind="place" data-idx="${i}" onclick="selectPlaceResult(${i})"><span>${escapeHtml(p.name)}</span><span class="place-sub">${escapeHtml(p.context)}</span></div>`
             ).join(''));
         }
         if (!sections.length) {
             dd.style.display = 'none';
             dd.innerHTML = '';
+            setSearchExpanded(false);
+            announceSearchStatus('');
             return;
         }
         dd.innerHTML = sections.join('');
         dd.style.display = '';
+        setSearchExpanded(true);
+        // F17 — announce result counts for assistive tech
+        const parts = [];
+        if (lastBrandMatches.length) parts.push(`${lastBrandMatches.length} chain${lastBrandMatches.length === 1 ? '' : 's'}`);
+        if (lastPlaceResults.length) parts.push(`${lastPlaceResults.length} place${lastPlaceResults.length === 1 ? '' : 's'}`);
+        announceSearchStatus(parts.length ? parts.join(', ') + ' found' : '');
+    }
+
+    function setSearchExpanded(open) {
+        const inp = document.getElementById('chain-search-input');
+        if (inp) inp.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    function announceSearchStatus(msg) {
+        const el = document.getElementById('chain-search-status');
+        if (el) el.textContent = msg;
     }
 
     function escapeHtml(s) {
@@ -1249,6 +2134,7 @@
         selectedClusterProps  = null;
         selectedClusterCoords = null;
         catchmentActive = false;
+        collapseSheet();   // mobile: shrink sheet back to peek (resets map padding via observer)
         hideCatchment();
         applyView();
         if (map.getSource('proximity-circle-src')) map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: [] });
@@ -1262,7 +2148,9 @@
             map.setFilter('nodes-halo', ['==', ['get', 'tier'], 1]);
         }
         applyBubbleAecOverlayStyle();
-        if (rmStarsActive) applyRmStarsStyle(); // restore amber stars if toggle was on
+        if (rmStarsActive)     applyRmStarsStyle();
+        if (urbanFringeActive) applyUrbanFringeStyle(); // restore VWH dots on zoom-out
+        if (commuterActive)    applyCommuterStyle();    // restore PKS dots on zoom-out
         if (map.getLayer('nodes-label')) map.setFilter('nodes-label', ['<=', ['get', 'tier'], 2]);
         if (map.getSource('anchors')) {
             map.getSource('anchors').setData({ type: 'FeatureCollection', features: [] });
@@ -1270,42 +2158,27 @@
         if (map.getSource('cluster-centroid-src')) {
             map.getSource('cluster-centroid-src').setData({ type: 'FeatureCollection', features: [] });
         }
-        // Compute live counts from clusterMeta filtered to current region
-        const regionKey = currentRegion;
-        const regionLabel = REGIONS[regionKey]?.label || regionKey;
-        let liveTotal = 0, liveT1 = 0, liveT2 = 0, liveT3 = 0;
-        if (clusterMeta) {
-            const regionISOs = regionKey === 'NA' ? ['US','CA','MX'] : null; // null = all non-NA
-            for (const c of clusterMeta) {
-                const inRegion = regionISOs ? regionISOs.includes(c.iso)
-                                            : !['US','CA','MX'].includes(c.iso);
-                if (!inRegion) continue;
-                liveTotal++;
-                if (c.t === 1) liveT1++;
-                else if (c.t === 2) liveT2++;
-                else if (c.t === 3) liveT3++;
-            }
-        }
         document.getElementById('inspector').innerHTML = `
             <div class="data-block" style="padding-top:16px;">
-                <div class="data-label">Coverage · ${escapeHtml(regionLabel)}</div>
-                <div class="data-value">${liveTotal ? liveTotal.toLocaleString() : '—'}</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">co-location clusters</div>
+                <div class="data-value" id="bento-total">—</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;" id="bento-sublabel">retail clusters</div>
                 ${activeChainFilter ? `<div class="chain-filter-pill">${escapeHtml(activeChainFilter)} <span onclick="clearChainFilter()" style="cursor:pointer;opacity:0.7;">×</span></div>` : ''}
             </div>
-            <div class="data-block">
-                <div class="data-label">Quality Tiers</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;">
-                    <span class="tier-badge" style="background:#164679;color:#fff;font-size:11px;text-align:center;display:block;padding:4px 2px;">T1 ${liveT1.toLocaleString()}</span>
-                    <span class="tier-badge" style="background:#54924E;color:#fff;font-size:11px;text-align:center;display:block;padding:4px 2px;">T2 ${liveT2.toLocaleString()}</span>
-                    <span class="tier-badge" style="background:#EAB308;color:#111827;font-size:11px;text-align:center;display:block;padding:4px 2px;">T3 ${liveT3.toLocaleString()}</span>
+            <div class="data-block overview-peek-keep">
+                <div class="data-label" id="bento-mode-label" style="margin-bottom:6px;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;opacity:0.7;">Retail · —</div>
+                <div class="data-label" style="margin-bottom:8px;">Co-location tiers</div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:4px;">
+                    <span class="tier-chip" id="bento-t1" style="background:#08306B;color:#fff;"><b>—</b>Regional</span>
+                    <span class="tier-chip" id="bento-t2" style="background:#3182BD;color:#fff;"><b>—</b>District</span>
+                    <span class="tier-chip" id="bento-t3" style="background:#9ECAE1;color:#111827;"><b>—</b>Local</span>
                 </div>
             </div>
             <div class="data-block">
-                <div class="data-label" style="color:#92400E;display:flex;align-items:center;gap:5px;"><span style="color:#D97706">★</span> Regional Markets</div>
                 <button class="lc-btn${rmStarsActive ? ' lc-active' : ''}" id="lc-rm-stars" onclick="toggleRmStars(this)">
-                    <span class="lc-dot" style="background:#D97706"></span>Top 400 Highlight
-                    <span class="lc-planned">800 markets</span>
+                    <span class="lc-dot" style="background:#D97706"></span>Top 400 Regional Markets
+                </button>
+                <button class="lc-btn${retailActive ? ' lc-active' : ''}" id="lc-retail" onclick="toggleRetailLayer(this)" style="margin-top:4px;">
+                    <span class="lc-dot" style="background:#164679"></span>Retail
                 </button>
                 <button class="lc-btn${urbanFringeActive ? ' lc-active' : ''}" id="lc-urban-fringe" onclick="toggleUrbanFringeLayer(this)" style="margin-top:4px;">
                     <span class="lc-dot" style="background:#EA580C"></span>Urban Fringe
@@ -1316,20 +2189,64 @@
             </div>
             <div class="data-block">
                 <div class="data-label">Layers</div>
-                <button class="lc-btn lc-active" id="lc-clusters" onclick="toggleLayer('nodes', this)">
-                    <span class="lc-dot" style="background:#0A3070"></span>Co-location
-                </button>
-                <button class="lc-btn${koppenActive ? ' lc-active' : ''}" id="lc-koppen" onclick="toggleKoppenLayer(this)" style="margin-top:4px;">
+                <button class="lc-btn${koppenActive ? ' lc-active' : ''}" id="lc-koppen" onclick="toggleKoppenLayer(this)">
                     <span class="lc-dot" style="background:linear-gradient(135deg,#2563eb 30%,#16a34a 65%,#dc2626 100%)"></span><span class="lc-spinner"></span>Köppen-Geiger Climate
                 </button>
-                <button class="lc-btn${ecoregionsActive ? ' lc-active' : ''}" id="lc-ecoregions" onclick="toggleEcoregionsLayer(this)">
+                <button class="lc-btn${ecoregionsActive ? ' lc-active' : ''}" id="lc-ecoregions" onclick="toggleEcoregionsLayer(this)" style="margin-top:4px;">
                     <span class="lc-dot" style="background:linear-gradient(135deg,#1a9641 50%,#2c7bb6 100%)"></span><span class="lc-spinner"></span>Ecoregions (Biomes)
                 </button>
-                <div style="font-size:10px;color:var(--text-muted);font-style:italic;padding:4px 4px 0;margin-top:2px;">
-                    Catchment · Spend · Work Origins — available after selecting a cluster.
-                </div>
+                <div class="layer-hint">Catchment, Spend &amp; Work Origins become available when you select a cluster.</div>
             </div>
         `;
+        // Populate counts for the active mode
+        const _activeMode = urbanFringeActive ? 'VWH' : commuterActive ? 'PKS' : 'RETAIL';
+        renderTierCounts(_activeMode);
+    }
+
+    function renderTierCounts(mode) {
+        const regionISOs = currentRegion === 'NA' ? new Set(['US','CA','MX']) : null;
+        const inRegion = iso => regionISOs ? regionISOs.has(iso) : !['US','CA','MX'].includes(iso);
+        const regionLabel = REGIONS[currentRegion]?.label || currentRegion;
+        let total = 0, t1 = 0, t2 = 0, t3 = 0, label = '', sub = '';
+
+        if (mode === 'RETAIL' && clusterMeta) {
+            label = `Retail · ${regionLabel}`;  sub = 'retail clusters';
+            for (const c of clusterMeta) {
+                if (!inRegion(c.iso)) continue;
+                total++; if (c.t===1) t1++; else if (c.t===2) t2++; else if (c.t===3) t3++;
+            }
+        } else if (mode === 'VWH') {
+            label = `Urban Fringe · ${regionLabel}`;  sub = 'industrial clusters';
+            if (vwhData) {
+                for (const f of vwhData.features) {
+                    if (!inRegion(f.properties.iso)) continue;
+                    total++;
+                    const t = f.properties.vwh_tier;
+                    if (t===1) t1++; else if (t===2) t2++; else if (t===3) t3++;
+                }
+            } else { sub = 'loading…'; }
+        } else if (mode === 'PKS') {
+            label = `Commuter · ${regionLabel}`;  sub = 'transit clusters';
+            if (pksData) {
+                for (const f of pksData.features) {
+                    if (!inRegion(f.properties.iso)) continue;
+                    total++;
+                    const t = f.properties.commuter_tier;
+                    if (t===1) t1++; else if (t===2) t2++; else if (t===3) t3++;
+                }
+            } else { sub = 'loading…'; }
+        } else if (mode === 'RETAIL') {
+            label = `Retail · ${regionLabel}`;  sub = 'loading…';
+        }
+
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        set('bento-mode-label', label);
+        set('bento-total', total ? total.toLocaleString() : '—');
+        set('bento-sublabel', sub);
+        const setCount = (id, v) => { const el = document.getElementById(id); if (!el) return; const b = el.querySelector('b'); if (b) b.textContent = v.toLocaleString(); else el.textContent = v.toLocaleString(); };
+        setCount('bento-t1', t1);
+        setCount('bento-t2', t2);
+        setCount('bento-t3', t3);
     }
 
     // ── Retail Level: All Locations + proximity rings, no cluster bubbles ──────
@@ -1340,7 +2257,10 @@
         selectedClusterId = null;
         selectedClusterProps = null;
         selectedClusterCoords = null;
-        setNavContext(REGIONS[currentRegion]?.label || 'Overview', flyToOverview, 'Retail View');
+        const _viewLabel = urbanFringeActive ? 'Urban Fringe View'
+                         : commuterActive    ? 'Commuter View'
+                         : 'Retail View';
+        setNavContext(REGIONS[currentRegion]?.label || 'Overview', flyToOverview, _viewLabel);
 
         // Paint opacity before applyView (belt-and-suspenders — layout visibility follows)
         if (map.getLayer('nodes')) map.setPaintProperty('nodes', 'circle-opacity', 0);
@@ -1350,17 +2270,34 @@
         applyView();
         buildProdRings();
         applyChainFilterStyling();
-        renderRetailLevelInspector();
+        // Archetype modes: auto-select the strongest co-location at the view centre so the
+        // BentoBox fills with that location's data on drill-down (no extra click needed).
+        if (activeArchetype) {
+            const ctr = map.getCenter();
+            const feat = findStrongestArchetypeAt(ctr.lat, ctr.lng);
+            if (feat) { showArchetypeDetail(feat); return; }
+        }
+        renderLocalModeInspector();
     }
 
-    function renderRetailLevelInspector() {
+    function renderLocalModeInspector() {
+        // Archetype modes: show the selected co-location's data instead of the generic message.
+        if (activeArchetype && isArchetypeProps(selectedClusterProps)) {
+            showArchetypeDetail(selectedClusterProps);
+            return;
+        }
+        const modeLabel = urbanFringeActive ? 'Urban Fringe'
+                        : commuterActive    ? 'Commuter'
+                        : 'Retail';
+        const showCatchment = !urbanFringeActive && !commuterActive;
         document.getElementById('inspector').innerHTML = `
             <div class="data-block" style="padding-top:16px;">
-                <div class="data-label">Retail View</div>
+                <div class="data-label">${modeLabel} View</div>
                 <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
-                    Click a ring to inspect its cluster.
+                    Click a ring to explore.
                 </div>
             </div>
+            ${showCatchment ? `
             <div class="data-block">
                 <div class="data-label">Layers</div>
                 <div class="lc-group-label">Catchment (150 km)</div>
@@ -1369,7 +2306,7 @@
                     <span class="lc-dot" style="background:#f97316"></span>Population &amp; Spend Heatmap
                     ${!selectedClusterId ? '<span class="lc-planned">Pick a ring</span>' : ''}
                 </button>
-            </div>
+            </div>` : ''}
         `;
     }
 
@@ -1380,6 +2317,132 @@
             return;
         }
         toggleCatchmentMaster(btn);
+    }
+
+    // ── Archetype (Urban Fringe / Commuter) detail panel ───────────────────────
+    const VWH_CAT_LABELS = {
+        hardware: 'Hardware', mro_industrial: 'Industrial MRO', tool_rental: 'Tool Rental',
+        auto_parts: 'Auto Parts', electrical: 'Electrical', flooring: 'Flooring',
+        lumber: 'Lumber', plumbing: 'Plumbing', paint: 'Paint', welding: 'Welding',
+    };
+    const PKS_CAT_LABELS = {
+        airport: 'Airport', intercity_rail: 'Intercity Rail', commuter_rail: 'Commuter Rail',
+        metro_subway: 'Metro / Subway', car_rental: 'Car Rental',
+        park_ride: 'Park & Ride', parcel_depot: 'Parcel Depot', self_storage: 'Self-Storage',
+    };
+    const VWH_TIER_DESC = { 1: 'Established industrial node', 2: 'Industrial pair', 3: 'Emerging industrial node' };
+    const PKS_TIER_DESC = { 1: 'Major transit hub', 2: 'Park-and-fly / multimodal rail', 3: 'Commuter station' };
+
+    function _asArray(v) {
+        if (Array.isArray(v)) return v;
+        if (typeof v === 'string') { try { return JSON.parse(v); } catch(_) { return v ? [v] : []; } }
+        return [];
+    }
+
+    // Find the strongest archetype co-location whose ring contains (lat, lon).
+    // Strongest = highest tier (T1>T2>T3), tie-broken by member/node count.
+    function findStrongestArchetypeAt(lat, lon) {
+        const data = activeArchetype === 'VWH' ? vwhData
+                   : activeArchetype === 'PKS' ? pksData : null;
+        if (!data) return null;
+        let best = null, bestScore = -1;
+        for (const f of data.features) {
+            const p = f.properties;
+            const km = activeArchetype === 'VWH' ? Math.max(1.0, (p.span_km || 0) / 2 * 1.15) : 2.0;
+            if (haversineKm(lon, lat, p.lon, p.lat) > km) continue;
+            const tier = (activeArchetype === 'VWH' ? p.vwh_tier : p.commuter_tier) || 3;
+            const cnt  = p.member_count || 0;
+            const score = (4 - tier) * 1000 + cnt;
+            if (score > bestScore) { bestScore = score; best = p; }
+        }
+        return best;
+    }
+
+    function isArchetypeProps(p) {
+        return !!p && (p.vwh_tier != null || p.commuter_tier != null);
+    }
+
+    // Render the BentoBox for one archetype co-location feature (mode from activeArchetype).
+    function showArchetypeDetail(p) {
+        if (!p) return;
+        const mode = activeArchetype; // 'VWH' | 'PKS'
+        selectedClusterProps  = p;
+        selectedClusterId     = p.id || p.name || null;
+        selectedClusterCoords = [p.lon, p.lat];
+        // Show the map "← Back" button (dismiss → overview), same as Retail panels.
+        setNavContext(REGIONS[currentRegion]?.label || 'Overview', flyToOverview,
+                      p.nearest_metro || p.name || p.id || '');
+        expandSheetForDetail();   // mobile: grow sheet so stats are visible
+
+        const tier = (mode === 'VWH' ? p.vwh_tier : p.commuter_tier) || 3;
+        const tc   = tierColor(4 - tier);
+        const archLabel = mode === 'VWH' ? 'Intercity Fringe' : 'Commuter';
+        const desc = (mode === 'VWH' ? VWH_TIER_DESC : PKS_TIER_DESC)[tier] || '';
+        const labels = mode === 'VWH' ? VWH_CAT_LABELS : PKS_CAT_LABELS;
+
+        const cats = (mode === 'VWH' ? _asArray(p.vwh_signal) : _asArray(p.transit_categories));
+        const chips = cats.map(c => `<span class="bento-composition-chip">${escapeHtml(labels[c] || c)}</span>`).join(' ');
+
+        const metro = p.nearest_metro ? `~${Math.round(p.metro_dist_km || 0)} km from ${escapeHtml(p.nearest_metro)}` : '';
+        const countCount = p.member_count || 0;
+        const countLabel = mode === 'VWH' ? 'co-located stores' : 'transit & services on site';
+        const pksMultiModal = !!p.multi_modal;
+        const secondStat = mode === 'VWH'
+            ? `<div class="rank-num">${(p.span_km || 0).toFixed(2)}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">km across</div>`
+            : `<div class="rank-num">${pksMultiModal ? 'Yes' : 'No'}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">multi-modal</div>`;
+
+        // Chains / anchors
+        let anchorsHtml = '';
+        if (mode === 'VWH') {
+            const hw = _asArray(p.hardware_chains).map(id => `<div class="pill">${escapeHtml(chainName(id))}</div>`).join('');
+            const en = _asArray(p.enrichment_chains).map(id => `<div class="pill">${escapeHtml(chainName(id))}</div>`).join('');
+            anchorsHtml = `<div class="anchor-pills">${hw}${en}</div>`;
+        } else {
+            const tp = cats.filter(c => c !== 'car_rental').map(c => `<div class="pill">${escapeHtml(labels[c] || c)}</div>`).join('');
+            const hasCar = p.car_rental === true;
+            const cr = hasCar ? `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;font-style:italic;">Car rental on site</div>` : '';
+            anchorsHtml = `<div class="anchor-pills">${tp}</div>${cr}`;
+        }
+
+        const contamBadge = (mode === 'VWH' && p.retail_contamination)
+            ? `<div class="rm-badge"><span style="font-weight:600;">Mixed-use site</span><span style="opacity:0.75;margin-left:4px;">— hypermarket within 1 km</span></div>`
+            : '';
+
+        const peek = peekSummaryHTML(
+            p.nearest_metro || p.name || p.id || '',
+            `<span class="tier-badge" style="background:${tc.fill};color:${tc.text};">${tc.name}</span>`,
+            `<strong>${countCount}</strong> ${countLabel}`
+        );
+        document.getElementById('inspector').innerHTML = peek + `
+          <div class="detail-body">
+            <div class="data-block" style="padding-top:16px;">
+                <div class="data-label">${archLabel} · ${escapeHtml(countryName(p.iso) || p.iso || '')}</div>
+                <div class="region-name-hero">${escapeHtml(p.nearest_metro || p.name || p.id || '')}</div>
+                ${metro ? `<div class="region-secondary-geo">${metro}</div>` : ''}
+            </div>
+            <div class="data-block bento-tier-cell">
+                <span class="tier-badge bento-tier-badge" style="background:${tc.fill};color:${tc.text};">${tc.name}</span>
+                <div class="bento-composition-chip" style="background:none;border:none;padding-left:8px;">${escapeHtml(desc)}</div>
+            </div>
+            ${contamBadge}
+            ${chips ? `<div class="data-block"><div class="data-label">Composition</div><div style="margin-top:6px;">${chips}</div></div>` : ''}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="data-block">
+                    <div class="data-label">${mode === 'VWH' ? 'Co-located Stores' : 'Transit Points'}</div>
+                    <div class="rank-num">${countCount}</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${countLabel}</div>
+                </div>
+                <div class="data-block">
+                    <div class="data-label">${mode === 'VWH' ? 'Span' : 'Multi-modal'}</div>
+                    ${secondStat}
+                </div>
+            </div>
+            <div class="data-block">
+                <div class="data-label">${mode === 'VWH' ? 'Chains' : 'Transit'}</div>
+                ${anchorsHtml}
+            </div>
+          </div>
+        `;
     }
 
     // Convert compact clusterMeta entry (§2 schema) to the property shape expected by showClusterDetail
@@ -1552,9 +2615,9 @@
         aecActive = !aecActive;
         btn.classList.toggle('lc-active', aecActive);
         const aecLayers = [
-            'layer8-ashrae', 'layer8-ashrae-line', 'layer8-necb', 'layer8-eu-climate',
-            'layer10-seismic', 'layer11-flood',
-            'layer12-fema', 'layer12-eu-flood', 'layer15-wildfire',
+            'layer9-koppen', 'layer9-ecoregions',
+            // future global layers (added when tiles cover US+CA+MX+EU):
+            // 'layer11-flood', 'layer15-wildfire',
         ];
         aecLayers.forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', aecActive ? 'visible' : 'none');
@@ -1562,17 +2625,18 @@
         applyBubbleAecOverlayStyle();
     }
 
-    // ── Overlay group: Top400 / Urban Fringe / Commuter — mutually exclusive ─────
-    // Only one of the three may be active at a time. All ghost the Co-location
-    // bubbles to 10% opacity so the overlay layer reads as foreground.
+    // ── View mode radio group: Retail / Urban Fringe / Commuter — exactly one active ──
+    // Top 400 is an independent highlight overlay, NOT part of this group.
 
     function deactivateOverlayGroup() {
-        if (rmStarsActive) {
-            rmStarsActive = false;
-            document.getElementById('lc-rm-stars')?.classList.remove('lc-active');
-            ['rm-stars-glow', 'rm-stars-dot'].forEach(id =>
-                map.getLayer(id) && map.setLayoutProperty(id, 'visibility', 'none'));
+        // Deactivate Retail
+        if (retailActive) {
+            retailActive = false;
+            document.getElementById('lc-retail')?.classList.remove('lc-active');
         }
+        // Top 400 is an independent overlay — it PERSISTS across mode switches.
+        // Do not deactivate or hide rm-stars here. The mode toggle handlers
+        // re-apply the recess + re-raise the stars after the new mode is shown.
         if (urbanFringeActive) {
             urbanFringeActive = false;
             document.getElementById('lc-urban-fringe')?.classList.remove('lc-active');
@@ -1585,86 +2649,216 @@
             ['cm-t1', 'cm-t2', 'cm-t3'].forEach(id =>
                 map.getLayer(id) && map.setLayoutProperty(id, 'visibility', 'none'));
         }
+        // Reset archetype mode → restore Retail cluster nodes
+        if (activeArchetype !== null) {
+            activeArchetype = null;
+            if (map.getLayer('nodes')) map.setLayoutProperty('nodes', 'visibility', 'visible');
+            if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'visible');
+            _restoreNodesIfClear();
+        }
     }
 
     function _restoreNodesIfClear() {
         if (!koppenActive && !ecoregionsActive) {
-            map.setPaintProperty('nodes', 'circle-opacity', 0.88);
+            // Restore the live zoom-staged opacity expression (not a flat constant)
+            // so the overview alpha-blend survives a Top-400 recess/un-recess cycle.
+            map.setPaintProperty('nodes', 'circle-opacity', nodesStagedOpacityExpr());
+            // Restore the per-tier white-stroke taper (from recess flat 0.75).
+            map.setPaintProperty('nodes', 'circle-stroke-width', BUBBLE_STROKE_WIDTH);
+            map.setPaintProperty('nodes', 'circle-stroke-color', '#FFFFFF');
             map.setPaintProperty('nodes', 'circle-stroke-opacity', 1.0);
             if (map.getLayer('nodes-halo')) map.setPaintProperty('nodes-halo', 'circle-opacity', 0.10);
             if (activeChainFilter) applyClusterBubbleStroke();
         }
     }
 
-    function _ghostNodes() {
-        map.setPaintProperty('nodes', 'circle-opacity', 0.10);
-        map.setPaintProperty('nodes', 'circle-stroke-opacity', 0.0);
+    // ── Top 400 recess helpers ──────────────────────────────────────────────────
+    // When Top 400 is active, the currently-visible bubble layer(s) for the active
+    // mode are recessed (pushed back) so the amber stars read clearly on top, while
+    // the bubbles stay legible (0.45 fill) rather than near-invisible ghosting.
+    const RECESS_OPACITY        = 0.45;
+    const RECESS_STROKE_WIDTH   = 0.75;
+    const RECESS_STROKE_OPACITY = 0.6;
+
+    // Recess the Retail `nodes` layer (replaces the old 0.10 ghost behaviour).
+    function _recessNodes() {
+        map.setPaintProperty('nodes', 'circle-opacity', RECESS_OPACITY);
+        map.setPaintProperty('nodes', 'circle-stroke-width', RECESS_STROKE_WIDTH);
+        map.setPaintProperty('nodes', 'circle-stroke-opacity', RECESS_STROKE_OPACITY);
         if (map.getLayer('nodes-halo')) map.setPaintProperty('nodes-halo', 'circle-opacity', 0.0);
+    }
+
+    // Recess an archetype layer (uf-* / cm-*). Stores its original zoom-staged
+    // circle-opacity expression the first time so it can be restored exactly.
+    function _recessArchetypeLayer(id) {
+        if (!map.getLayer(id)) return;
+        if (!(id in _archetypeOrigOpacity)) {
+            _archetypeOrigOpacity[id] = map.getPaintProperty(id, 'circle-opacity');
+        }
+        map.setPaintProperty(id, 'circle-opacity', RECESS_OPACITY);
+        map.setPaintProperty(id, 'circle-stroke-width', RECESS_STROKE_WIDTH);
+        map.setPaintProperty(id, 'circle-stroke-opacity', RECESS_STROKE_OPACITY);
+    }
+
+    // Restore an archetype layer's original opacity expression + strokes.
+    function _unrecessArchetypeLayer(id, defStrokeWidth) {
+        if (!map.getLayer(id)) return;
+        if (id in _archetypeOrigOpacity) {
+            map.setPaintProperty(id, 'circle-opacity', _archetypeOrigOpacity[id]);
+        }
+        map.setPaintProperty(id, 'circle-stroke-width', defStrokeWidth);
+        map.setPaintProperty(id, 'circle-stroke-opacity', 1);
+    }
+
+    // Default per-layer stroke widths (match the layer definitions) for un-recess restore.
+    const _archetypeStrokeWidth = {
+        'uf-t1': 1.5, 'uf-t2': 1, 'uf-t3': 0.5,
+        'cm-t1': 1.5, 'cm-t2': 1, 'cm-t3': 0.5,
+    };
+
+    // Recess whichever bubble layer(s) the active mode currently shows.
+    function _recessActiveModeBubbles() {
+        if (urbanFringeActive) {
+            ['uf-t1', 'uf-t2', 'uf-t3'].forEach(_recessArchetypeLayer);
+        } else if (commuterActive) {
+            ['cm-t1', 'cm-t2', 'cm-t3'].forEach(_recessArchetypeLayer);
+        } else if (map.getLayer('nodes')) {
+            _recessNodes();   // Retail
+        }
+    }
+
+    // Un-recess the active mode's bubble layer(s) — restore original styling.
+    function _unrecessActiveModeBubbles() {
+        ['uf-t1', 'uf-t2', 'uf-t3', 'cm-t1', 'cm-t2', 'cm-t3'].forEach(id =>
+            _unrecessArchetypeLayer(id, _archetypeStrokeWidth[id]));
+        if (map.getLayer('nodes')) _restoreNodesIfClear();
     }
 
     // ── Regional Markets star layer ───────────────────────────────────────────
     function toggleRmStars(btn) {
-        const turningOn = !rmStarsActive;
-        if (turningOn) deactivateOverlayGroup();
-        rmStarsActive = turningOn;
+        rmStarsActive = !rmStarsActive;
         if (btn) btn.classList.toggle('lc-active', rmStarsActive);
         applyRmStarsStyle();
     }
 
     function applyRmStarsStyle() {
-        const vis = (rmStarsActive && prodView.mode === 'GLOBAL') ? 'visible' : 'none';
+        // Top 400 stars are shown whenever active (keeping the GLOBAL-zoom gate),
+        // independent of which mode (Retail / Urban Fringe / Commuter) is selected.
+        const starsVisible = rmStarsActive && prodView.mode === 'GLOBAL';
+        const vis = starsVisible ? 'visible' : 'none';
         ['rm-stars-glow', 'rm-stars-dot'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
         });
+        // Amber legend row visible only when Top 400 is on.
+        const lgTop400 = document.getElementById('lg-top400');
+        if (lgTop400) lgTop400.style.display = rmStarsActive ? 'flex' : 'none';
+
         if (!map.getLayer('nodes')) return;
-        if (rmStarsActive && prodView.mode === 'GLOBAL') {
-            _ghostNodes();
-        } else if (!urbanFringeActive && !commuterActive) {
-            _restoreNodesIfClear();
+        if (starsVisible) {
+            // Recess the active mode's bubble layer(s) so the amber stars read on top.
+            _recessActiveModeBubbles();
+            // Always raise the stars above every bubble/archetype layer.
+            ['rm-stars-glow', 'rm-stars-dot'].forEach(id => {
+                if (map.getLayer(id)) map.moveLayer(id);
+            });
+        } else {
+            // Top 400 off (or in LOCAL) → restore the active mode's bubble styling.
+            _unrecessActiveModeBubbles();
         }
     }
 
     // ── Urban Fringe layer ────────────────────────────────────────────────────
     function toggleUrbanFringeLayer(btn) {
         const turningOn = !urbanFringeActive;
-        if (turningOn) deactivateOverlayGroup();
-        urbanFringeActive = turningOn;
-        if (btn) btn.classList.toggle('lc-active', urbanFringeActive);
-        applyUrbanFringeStyle();
+        if (turningOn) {
+            deactivateOverlayGroup();
+            urbanFringeActive = true;
+            if (btn) btn.classList.add('lc-active');
+            applyUrbanFringeStyle();
+            renderTierCounts('VWH');
+        } else {
+            // Toggle off → switch back to Retail
+            toggleRetailLayer(null);
+        }
     }
 
     function applyUrbanFringeStyle() {
+        activeArchetype = urbanFringeActive ? 'VWH' : null;
+        // Archetype dots: GLOBAL overview only — hidden in LOCAL so the ring has no centre dot.
         const vis = (urbanFringeActive && prodView.mode === 'GLOBAL') ? 'visible' : 'none';
         ['uf-t1', 'uf-t2', 'uf-t3'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
         });
         if (!map.getLayer('nodes')) return;
-        if (urbanFringeActive && prodView.mode === 'GLOBAL') {
-            _ghostNodes();
+        if (urbanFringeActive) {
+            // Completely hide Retail cluster nodes — VWH is a dedicated view
+            map.setLayoutProperty('nodes', 'visibility', 'none');
+            if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'none');
+            // In LOCAL (ring) mode, rebuild rings from VWH data
+            if (prodView.mode === 'LOCAL') buildProdRings();
         } else if (!rmStarsActive && !commuterActive) {
+            map.setLayoutProperty('nodes', 'visibility', 'visible');
+            if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'visible');
             _restoreNodesIfClear();
+        }
+        // Top 400 persists across mode switches — re-apply recess to the newly-shown
+        // archetype bubbles and re-raise the amber stars on top.
+        if (urbanFringeActive && rmStarsActive && prodView.mode === 'GLOBAL') {
+            applyRmStarsStyle();
         }
     }
 
     // ── Commuter layer ────────────────────────────────────────────────────────
     function toggleCommuterLayer(btn) {
         const turningOn = !commuterActive;
-        if (turningOn) deactivateOverlayGroup();
-        commuterActive = turningOn;
-        if (btn) btn.classList.toggle('lc-active', commuterActive);
-        applyCommuterStyle();
+        if (turningOn) {
+            deactivateOverlayGroup();
+            commuterActive = true;
+            if (btn) btn.classList.add('lc-active');
+            applyCommuterStyle();
+            renderTierCounts('PKS');
+        } else {
+            // Toggle off → switch back to Retail
+            toggleRetailLayer(null);
+        }
     }
 
     function applyCommuterStyle() {
+        activeArchetype = commuterActive ? 'PKS' : null;
+        // Archetype dots: GLOBAL overview only — hidden in LOCAL so the ring has no centre dot.
         const vis = (commuterActive && prodView.mode === 'GLOBAL') ? 'visible' : 'none';
         ['cm-t1', 'cm-t2', 'cm-t3'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
         });
         if (!map.getLayer('nodes')) return;
-        if (commuterActive && prodView.mode === 'GLOBAL') {
-            _ghostNodes();
+        if (commuterActive) {
+            map.setLayoutProperty('nodes', 'visibility', 'none');
+            if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'none');
+            if (prodView.mode === 'LOCAL') buildProdRings();
         } else if (!rmStarsActive && !urbanFringeActive) {
+            map.setLayoutProperty('nodes', 'visibility', 'visible');
+            if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'visible');
             _restoreNodesIfClear();
+        }
+        // Top 400 persists across mode switches — re-apply recess to the newly-shown
+        // archetype bubbles and re-raise the amber stars on top.
+        if (commuterActive && rmStarsActive && prodView.mode === 'GLOBAL') {
+            applyRmStarsStyle();
+        }
+    }
+
+    // ── Retail toggle (radio group) ───────────────────────────────────────────
+    function toggleRetailLayer(btn) {
+        if (retailActive) return;          // already active — radio no-op
+        deactivateOverlayGroup();          // clears VWH/PKS, restores nodes
+        retailActive = true;
+        document.getElementById('lc-retail')?.classList.add('lc-active');
+        if (btn) btn.classList.add('lc-active');
+        renderTierCounts('RETAIL');
+        // Top 400 persists across mode switches — re-recess the now-visible Retail
+        // nodes and re-raise the amber stars on top.
+        if (rmStarsActive && prodView.mode === 'GLOBAL') {
+            applyRmStarsStyle();
         }
     }
 
@@ -1674,14 +2868,14 @@
             map.setPaintProperty('nodes', 'circle-opacity', 0);
             map.setPaintProperty('nodes', 'circle-stroke-width', 2);
             map.setPaintProperty('nodes', 'circle-stroke-color', [
-                'match', ['get', 'tier'], 1, '#164679', 2, '#54924E', 3, '#EAB308', '#CBD5E1'
+                'match', ['get', 'tier'], 1, '#08306B', 2, '#3182BD', 3, '#9ECAE1', '#CBD5E1'
             ]);
             map.setPaintProperty('nodes', 'circle-stroke-opacity', 0.95);
             if (map.getLayer('nodes-halo')) map.setPaintProperty('nodes-halo', 'circle-opacity', 0);
         } else {
-            map.setPaintProperty('nodes', 'circle-opacity', 0.88);
-            map.setPaintProperty('nodes', 'circle-stroke-width', 1.5);
-            map.setPaintProperty('nodes', 'circle-stroke-color', 'rgba(10, 48, 112, 0.25)');
+            map.setPaintProperty('nodes', 'circle-opacity', nodesStagedOpacityExpr());  // F2 — restore zoom-staged tier opacity
+            map.setPaintProperty('nodes', 'circle-stroke-width', BUBBLE_STROKE_WIDTH);
+            map.setPaintProperty('nodes', 'circle-stroke-color', '#FFFFFF');
             map.setPaintProperty('nodes', 'circle-stroke-opacity', 1);
             if (map.getLayer('nodes-halo')) map.setPaintProperty('nodes-halo', 'circle-opacity', 0.10);
             if (activeChainFilter) applyClusterBubbleStroke();
@@ -1771,25 +2965,45 @@
         applyBubbleAecOverlayStyle();
     }
 
-    // Derive production layer visibility from (prodView.mode, prodView.selected). The only writer.
+    // Derive production layer visibility from (prodView.mode, activeArchetype). The only writer.
     function applyView() {
         const setVis = (ids, on) => ids.forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
         });
         const local = prodView.mode === 'LOCAL';
-        setVis(['nodes', 'nodes-halo'], !local);
+        const arch  = activeArchetype; // null | 'VWH' | 'PKS'
+
+        // Retail cluster nodes: show only in GLOBAL when no archetype overlay is active
+        setVis(['nodes', 'nodes-halo'], !local && arch === null);
+
+        // Proximity rings (proximity-circle-src): shared by Retail + VWH + PKS.
+        // buildProdRings() dispatcher populates the right geometry before this call.
         setVis(['proximity-fill', 'proximity-line-t1', 'proximity-line-t234', 'proximity-ring-label'], local);
+
+        // Individual store dots: visible in all LOCAL mode views (Retail, VWH, PKS)
         setVis(['all-locations', 'all-locations-hit'], local);
+
         setVis(['cluster-centroid'], false);
         setVis(['proximity-merged-label'], false);
-        // rm-stars + archetype overlays: hidden at retailer zoom; restored on overview
-        setVis(['rm-stars-glow', 'rm-stars-dot', 'uf-t1', 'uf-t2', 'uf-t3', 'cm-t1', 'cm-t2', 'cm-t3'], false);
+
+        // GLOBAL-only overlays: rm-stars + archetype dots. In LOCAL (ring) mode they are all
+        // hidden so the ring stands alone with no centre dot — identical to Retail.
+        if (local) {
+            setVis(['rm-stars-glow', 'rm-stars-dot',
+                    'uf-t1', 'uf-t2', 'uf-t3', 'cm-t1', 'cm-t2', 'cm-t3'], false);
+        }
     }
 
-    // Build a ring for every cluster in the current viewport — no merging.
-    // Each cluster uses its own ring_radius_km (c.rr). Called on drillIntoCluster,
-    // setRetailLevel, and moveend while in LOCAL mode.
+    // Ring dispatcher — routes to the correct builder based on activeArchetype.
+    // All callers use this name; mode-switching updates activeArchetype before calling.
     function buildProdRings() {
+        if (activeArchetype === 'VWH') { buildVwhRings(); return; }
+        if (activeArchetype === 'PKS') { buildPksRings(); return; }
+        _buildRetailRings();
+    }
+
+    // Retail rings: one circle per cluster in the current viewport (same radius formula as before).
+    function _buildRetailRings() {
         if (!map.getSource('proximity-circle-src')) return;
         const circles = [];
         if (clusterMeta) {
@@ -1805,12 +3019,58 @@
             }
         }
         map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: circles });
-        if (map.getSource('proximity-vignette-src')) {
+        if (map.getSource('proximity-vignette-src'))
             map.getSource('proximity-vignette-src').setData({ type: 'FeatureCollection', features: [] });
-        }
-        if (map.getSource('proximity-merged-label-src')) {
+        if (map.getSource('proximity-merged-label-src'))
             map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: [] });
+    }
+
+    // Urban Fringe (VWH) rings — same T1/T2/T3 colors as Retail.
+    // Radius = max(1.0, span_km / 2 * 1.15). Rank = 4 - vwh_tier.
+    function buildVwhRings() {
+        if (!map.getSource('proximity-circle-src') || !vwhData) return;
+        const circles = [];
+        const b = map.getBounds();
+        const pad = 0.1;
+        for (const feat of vwhData.features) {
+            const p = feat.properties;
+            if (p.lon < b.getWest() - pad || p.lon > b.getEast() + pad) continue;
+            if (p.lat < b.getSouth() - pad || p.lat > b.getNorth() + pad) continue;
+            const km  = Math.max(1.0, (p.span_km || 0) / 2 * 1.15);
+            const rank = 4 - (p.vwh_tier || 3);
+            const circle = makeCircleGeoJSON([p.lon, p.lat], km);
+            circle.features[0].properties = { cluster_id: p.id || '', rank, merged_count: 1, member_ids: p.id || '' };
+            circles.push(circle.features[0]);
         }
+        map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: circles });
+        if (map.getSource('proximity-vignette-src'))
+            map.getSource('proximity-vignette-src').setData({ type: 'FeatureCollection', features: [] });
+        if (map.getSource('proximity-merged-label-src'))
+            map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: [] });
+    }
+
+    // Commuter (PKS) rings — transit nodes are point locations; fixed 2 km radius.
+    // Rank = 4 - commuter_tier (T1 → rank 3 = blue, T2 → rank 2 = green, T3 → rank 1 = gold).
+    function buildPksRings() {
+        if (!map.getSource('proximity-circle-src') || !pksData) return;
+        const circles = [];
+        const b = map.getBounds();
+        const pad = 0.1;
+        for (const feat of pksData.features) {
+            const p = feat.properties;
+            const lon = p.lon, lat = p.lat;
+            if (lon < b.getWest() - pad || lon > b.getEast() + pad) continue;
+            if (lat < b.getSouth() - pad || lat > b.getNorth() + pad) continue;
+            const rank = 4 - (p.commuter_tier || 3);
+            const circle = makeCircleGeoJSON([lon, lat], 2.0);
+            circle.features[0].properties = { cluster_id: p.name || p.iata || '', rank, merged_count: 1, member_ids: '' };
+            circles.push(circle.features[0]);
+        }
+        map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: circles });
+        if (map.getSource('proximity-vignette-src'))
+            map.getSource('proximity-vignette-src').setData({ type: 'FeatureCollection', features: [] });
+        if (map.getSource('proximity-merged-label-src'))
+            map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: [] });
     }
 
 
@@ -1847,10 +3107,13 @@
         if (props !== undefined) { selectedClusterProps = props; selectedClusterCoords = coords; }
         const p = selectedClusterProps;
         if (!p) return;
+        expandSheetForDetail();   // mobile: grow sheet so stats are visible
         const clusterName = p.display_name || (p.anchor_label + (p.city ? ', ' + p.city : ''));
         setNavContext(REGIONS[currentRegion].label, flyToOverview, clusterName);
         const tvKey  = effectiveTierKey(p);
         const tc     = tierColor(tvKey);
+        // F26(b) — announce the selection to assistive tech (name + tier)
+        a11yAnnounce(`Selected ${clusterName}. Tier: ${tc.name}.`);
 
         let hw = [], wh = [], life = [], elec = [], sport = [], subs = [], mz = [], preds = [];
         try { hw    = JSON.parse(p.hw_list); } catch (_) {}
@@ -1893,7 +3156,11 @@
         const sourceBadgeTxt = catchmentSourceLabel(p, catchmentSubLayer);
 
 
-        document.getElementById('inspector').innerHTML = `
+        const _peekCluster = peekSummaryHTML(clusterName,
+            `<span class="tier-badge" style="background:${tc.fill};color:${tc.text};">${tc.name}</span>`,
+            `<strong>${p.member_count ?? p.count_3km ?? '—'}</strong> anchors`);
+        document.getElementById('inspector').innerHTML = _peekCluster + `
+            <div class="detail-body">
             <div class="data-block" style="padding-top:16px;">
                 <div class="data-label">Regional Market</div>
                 ${regionBlock}
@@ -1901,8 +3168,8 @@
             </div>
             <div id="sel-el" class="sel-el-block sel-el-pinned data-block">
                 <div class="data-label">Selected Location</div>
-                <div style="font-size:11px;color:var(--text-muted);font-style:italic;padding:4px 0;">
-                    Click a retailer dot in this ring to inspect.
+                <div style="font-size:11px;color:var(--text-muted);font-style:italic;padding:4px 0;" title="Click any retailer dot in the cluster ring to inspect that store.">
+                    Click a dot to inspect.
                 </div>
             </div>
             <div class="data-block bento-tier-cell">
@@ -1912,21 +3179,22 @@
                       style="background:${tc.fill};color:${tc.text};"${predHover}>${tc.name}</span>
                 <div class="bento-composition-chip">${tierDesc}</div>
             </div>
+            ${buildScorecardHTML(p, tc.name)}
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div class="data-block">
-                    <div class="data-label">Geometric Rank</div>
+                    <div class="data-label" title="How tightly the anchor stores sit together. 100 = most compact on the map; higher = better-defined node.">Cluster Compactness</div>
                     <div class="rank-num">${p.dist_pctile != null ? Math.round(p.dist_pctile) : '—'}</div>
-                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">compactness pctile</div>
-                    ${p.span_km != null ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${parseFloat(p.span_km).toFixed(2)} km span</div>` : ''}
+                    ${p.dist_pctile != null ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Tighter than ${Math.round(p.dist_pctile)}%</div>` : ''}
+                    ${p.span_km != null ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${parseFloat(p.span_km).toFixed(2)} km across</div>` : ''}
                 </div>
                 <div class="data-block">
-                    <div class="data-label">Members</div>
+                    <div class="data-label">Anchor Stores</div>
                     <div class="rank-num">${p.member_count != null ? p.member_count : (p.count_3km !== null ? p.count_3km : '—')}</div>
-                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">anchor locations</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">major retailers in cluster</div>
                 </div>
             </div>
             <div class="data-block">
-                <div class="data-label">Anchors</div>
+                <div class="data-label" title="Major chains driving foot traffic to this cluster.">Anchor Retailers</div>
                 <div class="anchor-pills">
                     ${anchorLabel ? `<div class="pill alpha">${anchorLabel}</div>` : ''}
                     ${hw.map(h => `<div class="pill">${chainName(h)}</div>`).join('')}
@@ -1935,7 +3203,7 @@
                     ${elec.map(e => `<div class="pill">${e}</div>`).join('')}
                     ${sport.map(s => `<div class="pill">${s}</div>`).join('')}
                     ${subs.length > 0 ? `<div style="font-size:10px;color:var(--text-muted);width:100%;margin-top:3px;">+ ${subs.join(' · ')}</div>` : ''}
-                    ${mz.length > 0 ? `<div style="font-size:10px;color:var(--text-muted);width:100%;margin-top:6px;font-style:italic;">Co-located within 150 m: ${mz.map(z => z.anchor || z.merged_anchor || '').filter(Boolean).join(' · ')}</div>` : ''}
+                    ${mz.length > 0 ? `<div style="font-size:10px;color:var(--text-muted);width:100%;margin-top:6px;font-style:italic;">Same site (within 150 m): ${mz.map(z => z.anchor || z.merged_anchor || '').filter(Boolean).join(' · ')}</div>` : ''}
                 </div>
             </div>
             <div class="data-block" style="padding-top:6px;">
@@ -1994,15 +3262,9 @@
                 const NUM  = `font-weight:700;margin-right:6px;min-width:14px;display:inline-block;`;
                 const DASH = `color:var(--text-muted);`;
                 let html = `<div class="data-block" style="padding-top:6px;"><div class="catchment-block">`;
-                html += `<div class="data-label" style="margin:0 0 6px;">Civic Context</div>`;
+                html += `<div class="data-label" style="margin:0 0 6px;">Nearby Institutions</div>`;
                 if (!loaded) {
-                    html += `<div><div style="${SUB}">Healthcare</div>`;
-                    html += `<div style="${ROW}${DASH}"><span>Regional hospitals</span> <span>—</span></div>`;
-                    html += `<div style="${ROW}${DASH}"><span>District hospitals</span> <span>—</span></div></div>`;
-                    html += `<div style="${DIV}"><div style="${SUB}">Education</div>`;
-                    html += `<div style="${ROW}${DASH}"><span>Regional universities</span> <span>—</span></div>`;
-                    html += `<div style="${ROW}${DASH}"><span>Small universities</span> <span>—</span></div></div>`;
-                    html += `<div style="font-size:10px;color:var(--text-muted);margin-top:7px;">within 5 km · data pending</div>`;
+                    html += `<div style="font-size:11px;color:var(--text-muted);" title="Hospitals and universities within a 5 km drive. Loads when available for this site.">Hospital &amp; university data pending.</div>`;
                 } else {
                     if (hasHealthcare) {
                         html += `<div><div style="${SUB}">Healthcare</div>`;
@@ -2019,7 +3281,7 @@
                     if (!hasHealthcare && !hasEducation) {
                         html += `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">None within 5 km</div>`;
                     } else {
-                        html += `<div style="font-size:10px;color:var(--text-muted);margin-top:6px;">within 5 km</div>`;
+                        html += `<div style="font-size:10px;color:var(--text-muted);margin-top:6px;">within 5 km drive</div>`;
                     }
                 }
                 html += `</div></div>`;
@@ -2027,51 +3289,27 @@
             })()}
             <div class="data-block" style="padding-top:6px;">
                 <div class="catchment-block">
-                    <div class="data-label" style="margin:0 0 6px;">Site Conditions</div>
+                    <div class="data-label" style="margin:0 0 6px;">Site &amp; Climate</div>
                     ${(() => {
-                        const hasClimate = !!(p.ashrae_zone || p.eu_climate_zone || p.necb_zone || p.koppen_class || p.temp_annual_mean_c != null);
-                        const hasEcology = !!(p.ecoregion_name || p.ecoregion_biome || p.eu_biogeo_region);
-                        const hasHazards = !!(p.seismic_pga_g != null || p.ghi_kwh_m2_yr != null || p.wind_speed_ms != null || p.flood_hazard || p.wildfire_hazard);
+                        const hasClimate = !!(p.koppen_class || p.temp_annual_mean_c != null);
+                        const hasEcology = !!(p.ecoregion_name || p.ecoregion_biome || p.wetland_class);
+                        const hasHazards = !!(p.ghi_kwh_m2_yr != null || p.wind_speed_ms != null || p.flood_hazard || p.wildfire_hazard);
                         const SUB  = `font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;`;
                         const GRID = `display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:11px;color:var(--text-main);line-height:1.5;`;
                         const DIV  = `border-top:1px solid var(--border-soft);margin-top:7px;padding-top:7px;`;
                         const DASH = `color:var(--text-muted);`;
                         if (!hasClimate && !hasEcology && !hasHazards) {
-                            return `
-                            <div>
-                                <div style="${SUB}">Climate</div>
-                                <div style="${GRID}${DASH}">
-                                    <div style="grid-column:1/-1"><span>Zone</span> <span>—</span></div>
-                                    <div style="grid-column:1/-1"><span>Köppen</span> <span>—</span></div>
-                                </div>
-                            </div>
-                            <div style="${DIV}">
-                                <div style="${SUB}">Ecology</div>
-                                <div style="${GRID}${DASH}">
-                                    <div style="grid-column:1/-1"><span>Eco-region</span> <span>—</span></div>
-                                    <div style="grid-column:1/-1"><span>Biome</span> <span>—</span></div>
-                                </div>
-                            </div>
-                            <div style="${DIV}">
-                                <div style="${SUB}">Hazards &amp; Resources</div>
-                                <div style="${GRID}${DASH}">
-                                    <div><span>Seismic PGA</span> <span>—</span></div>
-                                    <div><span>Solar GHI</span> <span>—</span></div>
-                                    <div><span>Flood</span> <span>—</span></div>
-                                </div>
-                            </div>
-                            `;
+                            return `<div style="font-size:11px;color:var(--text-muted);" title="Climate (Köppen), eco-region, and solar/hazard data load when available for this site.">Climate, ecology &amp; hazard data pending.</div>`;
                         }
                         let html = '';
                         if (hasClimate) {
                             html += `<div>
                                 <div style="${SUB}">Climate</div>
                                 <div style="${GRID}">
-                                    ${(p.ashrae_zone||p.eu_climate_zone||p.necb_zone) ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Zone</span> <span>${p.ashrae_zone||p.eu_climate_zone||p.necb_zone}</span></div>` : ''}
-                                    ${p.koppen_class ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Köppen</span> <span>${p.koppen_class}</span></div>` : ''}
+                                    ${p.koppen_class ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);" title="Köppen classification — e.g. Dfb = humid continental.">Climate zone (Köppen)</span> <span>${p.koppen_class}</span></div>` : ''}
                                     ${p.temp_annual_mean_c != null ? `<div><span style="color:var(--text-muted);">Mean temp</span> <span>${p.temp_annual_mean_c.toFixed(1)} °C</span></div>` : ''}
-                                    ${p.hdd18 != null ? `<div><span style="color:var(--text-muted);">HDD 18°C</span> <span>${Math.round(p.hdd18).toLocaleString()}</span></div>` : ''}
-                                    ${p.cdd18 != null ? `<div><span style="color:var(--text-muted);">CDD 18°C</span> <span>${Math.round(p.cdd18).toLocaleString()}</span></div>` : ''}
+                                    ${p.hdd18 != null ? `<div><span style="color:var(--text-muted);" title="Heating Degree Days, base 18°C — annual heating demand. Higher = colder.">Heating demand (HDD)</span> <span>${Math.round(p.hdd18).toLocaleString()}</span></div>` : ''}
+                                    ${p.cdd18 != null ? `<div><span style="color:var(--text-muted);" title="Cooling Degree Days, base 18°C — annual cooling demand. Higher = hotter.">Cooling demand (CDD)</span> <span>${Math.round(p.cdd18).toLocaleString()}</span></div>` : ''}
                                 </div>
                             </div>`;
                         }
@@ -2080,18 +3318,16 @@
                                 <div style="${SUB}">Ecology</div>
                                 <div style="${GRID}">
                                     ${p.ecoregion_name  ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Eco-region</span> <span>${p.ecoregion_name}</span></div>` : ''}
-                                    ${p.ecoregion_biome ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Biome</span> <span>${p.ecoregion_biome}</span></div>` : ''}
+                                    ${p.ecoregion_biome ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Habitat type</span> <span>${p.ecoregion_biome}</span></div>` : ''}
                                     ${p.wetland_class   ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Wetland</span> <span>${p.wetland_class}</span></div>` : ''}
-                                    ${p.eu_biogeo_region ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">EU Biogeo.</span> <span>${p.eu_biogeo_region}</span></div>` : ''}
                                 </div>
                             </div>`;
                         }
                         if (hasHazards) {
                             html += `<div style="${(hasClimate||hasEcology) ? DIV : ''}">
-                                <div style="${SUB}">Hazards &amp; Resources</div>
+                                <div style="${SUB}">Energy &amp; Hazards</div>
                                 <div style="${GRID}">
-                                    ${p.seismic_pga_g != null ? `<div><span style="color:var(--text-muted);">Seismic PGA</span> <span>${p.seismic_pga_g}g</span></div>` : ''}
-                                    ${p.ghi_kwh_m2_yr  != null ? `<div><span style="color:var(--text-muted);">Solar GHI</span> <span>${Math.round(p.ghi_kwh_m2_yr).toLocaleString()} kWh/m²/yr</span></div>` : ''}
+                                    ${p.ghi_kwh_m2_yr  != null ? `<div><span style="color:var(--text-muted);" title="Global Horizontal Irradiance — annual solar energy per m². Higher = stronger rooftop-solar potential.">Solar resource (GHI)</span> <span>${Math.round(p.ghi_kwh_m2_yr).toLocaleString()} kWh/m²/yr</span></div>` : ''}
                                     ${p.wind_speed_ms  != null ? `<div><span style="color:var(--text-muted);">Wind</span> <span>${p.wind_speed_ms.toFixed(1)} m/s</span></div>` : ''}
                                     ${p.flood_hazard    ? `<div><span style="color:var(--text-muted);">Flood</span> <span>${p.flood_hazard}</span></div>` : ''}
                                     ${p.wildfire_hazard ? `<div><span style="color:var(--text-muted);">Wildfire</span> <span>${p.wildfire_hazard}</span></div>` : ''}
@@ -2101,6 +3337,13 @@
                         return html;
                     })()}
                 </div>
+            </div>
+            <div class="data-block" style="display:flex;gap:8px;padding-top:6px;">
+                <button id="compare-add-btn" class="inspector-print-btn" style="flex:1;"
+                        onclick="addToCompare()">＋ Compare${compareSet.length ? ` (${compareSet.length})` : ''}</button>
+                <button class="inspector-print-btn" style="flex:1;"
+                        onclick="printOnePager()" title="Print or save this cluster as a one-page PDF">Print / PDF</button>
+            </div>
             </div>
         `;
         loadCatchmentStats(p.cluster_id || p.id);
@@ -2178,7 +3421,7 @@
         // Load rm-top400 first (small file, ~145 KB) then clusters-meta
         fetch('data/rm-top400.json')
             .then(r => r.json())
-            .then(d => { rmTop400 = d || {}; })
+            .then(d => { rmTop400 = d || {}; renderRmTextAlternative(); })
             .catch(() => {});
 
         fetch('data/clusters-meta.json')
@@ -2186,7 +3429,8 @@
             .then(data => {
                 clusterMeta  = data;
                 clusterIndex = new Map(data.map(c => [c.id, c]));
-                document.getElementById('inspector').innerHTML = '<div class="empty-msg">Select a commercial node to begin regional market analysis.</div>';
+                computeBrandCounts(data);  // F17 — per-brand location counts for search dropdown
+                document.getElementById('inspector').innerHTML = '<div class="empty-msg">Select a cluster on the map to view its market analysis.</div>';
                 if (overviewActive) showOverview(); // refresh tier badge counts now that data is ready
                 // Populate the 'data' GeoJSON source — eliminates tile-fetch latency during zoom
                 const nodesGeoJSON = {
@@ -2199,6 +3443,8 @@
                             properties: {
                                 cluster_id:   c.id,
                                 tier:         c.t  ?? 0,
+                                mc:           c.mc || 0,   // F23 — member/anchor count for proportional symbol sizing
+                                conf:         c.conf || 'high',  // F13 — confidence (high/medium/low); low → provisional rendering
                                 ring_radius_km: c.rr || 3.0,
                                 display_name: c.mkt || '',
                                 hw_list:      [],
@@ -2231,6 +3477,25 @@
             })
             .catch(() => { /* rings fall back to querySourceFeatures */ });
 
+        // Load VWH and PKS archetype GeoJSON into JS so ring builders can access properties
+        fetch('data/archetype-vwh.geojson?v=20260616')
+            .then(r => r.json())
+            .then(d => {
+                vwhData = d;
+                if (activeArchetype === 'VWH' && prodView.mode === 'LOCAL') buildVwhRings();
+                if (urbanFringeActive && prodView.mode === 'GLOBAL') renderTierCounts('VWH');
+            })
+            .catch(() => {});
+
+        fetch('data/archetype-pks.geojson?v=20260616')
+            .then(r => r.json())
+            .then(d => {
+                pksData = d;
+                if (activeArchetype === 'PKS' && prodView.mode === 'LOCAL') buildPksRings();
+                if (commuterActive && prodView.mode === 'GLOBAL') renderTierCounts('PKS');
+            })
+            .catch(() => {});
+
         // GeoJSON source for 1km/3km proximity ring around selected anchor (drawn dynamically at drill-in)
         map.addSource('proximity-circle-src', {
             type: 'geojson',
@@ -2253,7 +3518,7 @@
             source: 'proximity-circle-src',
             layout: { visibility: 'none' },
             paint: {
-                'fill-color': ['match', ['get', 'rank'], 3, '#164679', 2, '#54924E', '#EAB308'],
+                'fill-color': ['match', ['get', 'rank'], 3, '#08306B', 2, '#3182BD', '#9ECAE1'],
                 'fill-opacity': 0.06,
             },
         });
@@ -2263,7 +3528,7 @@
             source: 'proximity-circle-src',
             filter: ['==', ['get', 'rank'], 3],
             layout: { visibility: 'none' },
-            paint: { 'line-color': '#164679', 'line-width': 2.5, 'line-opacity': 0.95 },
+            paint: { 'line-color': '#08306B', 'line-width': 2.5, 'line-opacity': 0.95 },
         });
         // proximity-line-t234: T2/T3 dashed tier-colored ring
         map.addLayer({
@@ -2272,7 +3537,7 @@
             filter: ['!=', ['get', 'rank'], 3],
             layout: { visibility: 'none' },
             paint: {
-                'line-color': ['match', ['get', 'rank'], 2, '#54924E', '#EAB308'],
+                'line-color': ['match', ['get', 'rank'], 2, '#3182BD', '#9ECAE1'],
                 'line-width': 1.5,
                 'line-opacity': 0.8,
                 'line-dasharray': [3, 2],
@@ -2332,7 +3597,7 @@
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'], 9, 4, 14, 6],
                 'circle-color': ['match', ['get', 'tier'],
-                    1, '#164679', 2, '#54924E', 3, '#EAB308', '#991B1B'],
+                    1, '#08306B', 2, '#3182BD', 3, '#9ECAE1', '#991B1B'],
                 'circle-stroke-width': 2,
                 'circle-stroke-color': ['match', ['get', 'tier'], 3, '#111827', '#FFFFFF'],
                 'circle-opacity': 1.0,
@@ -2356,15 +3621,21 @@
         });
 
         // Layer: all individual store locations
+        // F22 — metro-zoom hierarchy: the raw POI field is demoted (smaller + more
+        // muted) at metro/retail zoom so the cluster bubbles + active catchment
+        // dominate; individual stores recover full presence only at deep store-level
+        // zoom (~z13+) where they become the subject. The loudest colour stays the
+        // selected node, not this background field.
         map.addLayer({
             id: 'all-locations', type: 'circle',
             source: 'locations-src', 'source-layer': 'locations',
             layout: { visibility: 'none' },
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'],
-                    2, 1.5,
-                    6, 2.5,
-                    10, 3.5,
+                    2, 1.2,
+                    6, 1.8,
+                    10, 2.6,    // demoted at metro zoom (was 3.5)
+                    13, 4.0,    // recover toward store level
                     14, 5],
                 'circle-color': ['case',
                     ['==', ['get', 'brand_family'], 'Hypermarket'], '#0A3070',
@@ -2373,7 +3644,12 @@
                     ['==', ['get', 'category_id'],  'hospital'],    '#DC2626',
                     ['==', ['get', 'category_id'],  'university'],  '#15803D',
                     '#6B7280'],
-                'circle-opacity': 0.70,
+                // F22 — fade the background POI field down through metro zoom; restore at store level
+                'circle-opacity': ['interpolate', ['linear'], ['zoom'],
+                    6, 0.55,
+                    10, 0.40,   // most-demoted at metro zoom so bubbles/catchment read first
+                    13, 0.62,
+                    14, 0.70],
             },
         });
 
@@ -2384,27 +3660,41 @@
             filter: ['==', ['get', 'tier'], 1],
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 12, 14, 34],
-                'circle-color': '#0a3070',
+                'circle-color': '#08306B',
                 'circle-opacity': 0.10,
                 'circle-stroke-width': 0,
             },
         });
 
         // Layer: co-location cluster nodes (primary, interactive)
+        // Uses the SHARED bubble spec (radius/opacity/stroke) so it renders
+        // identically to Urban Fringe / Commuter at the overview zoom range.
+        // mcBump (proportional-size inflation) and the conf-wash are dropped:
+        // they made big clusters merge into dark blobs and low/medium-confidence
+        // clusters read as faint hollow dots. Unlike the archetypes (overview-
+        // only, fade to 0 by z13), `nodes` persists past RETAIL_ZOOM_THRESHOLD,
+        // so it keeps growing through z14 instead of fading out.
         map.addLayer({
             id: 'nodes', type: 'circle',
             source: 'data',
-            layout: { visibility: 'visible' },
+            layout: {
+                visibility: 'visible',
+                // F23 — draw strongest tier on top (T1=1 highest sort-key).
+                'circle-sort-key': ['match', ['get', 'tier'], 1, 3, 2, 2, 3, 1, 0],
+            },
             filter: ['<', ['get', 'tier'], 4],
             paint: {
+                // Shared per-tier radius at the overview anchors (z2/z8) — identical
+                // to uf-*/cm-*. Continues growing to z14 (Retail mode stays live
+                // through the z9 level switch).
                 'circle-radius': ['interpolate', ['linear'], ['zoom'],
-                    2,  ['match', ['get', 'tier'], 1, 7,  2, 5,  3, 4,  4],
-                    8,  ['match', ['get', 'tier'], 1, 15, 2, 11, 3, 8,  7],
-                    14, ['match', ['get', 'tier'], 1, 22, 2, 16, 3, 12, 9]],
+                    2,  ['match', ['get', 'tier'], 1, 4,  2, 2.8, 3, 2,  2.8],
+                    8,  ['match', ['get', 'tier'], 1, 10, 2, 7,   3, 5,  7],
+                    14, ['match', ['get', 'tier'], 1, 16, 2, 12,  3, 9,  12]],
                 'circle-color': colorMatchExpr(),
-                'circle-stroke-width': 1.5,
-                'circle-stroke-color': 'rgba(10, 48, 112, 0.25)',
-                'circle-opacity': 0.88,
+                'circle-stroke-width': BUBBLE_STROKE_WIDTH,
+                'circle-stroke-color': '#FFFFFF',
+                'circle-opacity': nodesStagedOpacityExpr(),
             },
         });
 
@@ -2445,81 +3735,85 @@
             },
         });
 
-        // ── Urban Fringe overlay layers ──────────────────────────────────────────
-        map.addSource('uf-src', { type: 'geojson', data: 'data/archetype-vwh.geojson' });
+        // ── Urban Fringe overlay layers (T1/T2/T3 standard color palette) ─────────
+        map.addSource('uf-src', { type: 'geojson', data: 'data/archetype-vwh.geojson?v=20260616' });
         map.addLayer({
             id: 'uf-t1', type: 'circle', source: 'uf-src',
             filter: ['==', ['get', 'vwh_tier'], 1],
-            layout: { visibility: 'none' },
+            // Draw strongest tier on top (T1 highest). Matches the nodes sort-key approach.
+            layout: { visibility: 'none', 'circle-sort-key': 3 },
             paint: {
-                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 5, 8, 9],
-                'circle-color': '#EA580C',
-                'circle-opacity': 0.85,
+                // Shared per-tier radius at overview anchors (z2/z8) — identical to nodes.
+                // Archetype layers are overview-only: fade to 0 by z13.
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 4, 8, 10, 10, 6, 12, 3],
+                'circle-color': '#08306B',
+                // Flat shared opacity at overview (T1 0.90); overview-only fade after z10.
+                'circle-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.90, 10, 0.50, 12, 0.15, 13, 0.0],
                 'circle-stroke-width': 1.5,
-                'circle-stroke-color': '#7C2D12',
+                'circle-stroke-color': '#FFFFFF',
             },
         });
         map.addLayer({
             id: 'uf-t2', type: 'circle', source: 'uf-src',
             filter: ['==', ['get', 'vwh_tier'], 2],
-            layout: { visibility: 'none' },
+            layout: { visibility: 'none', 'circle-sort-key': 2 },
             paint: {
-                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 3, 8, 6],
-                'circle-color': '#FB923C',
-                'circle-opacity': 0.72,
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 2.8, 8, 7, 10, 4, 12, 2],
+                'circle-color': '#3182BD',
+                'circle-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.82, 10, 0.45, 12, 0.12, 13, 0.0],
                 'circle-stroke-width': 1,
-                'circle-stroke-color': '#C2410C',
+                'circle-stroke-color': '#FFFFFF',
             },
         });
         map.addLayer({
             id: 'uf-t3', type: 'circle', source: 'uf-src',
             filter: ['==', ['get', 'vwh_tier'], 3],
-            layout: { visibility: 'none' },
+            layout: { visibility: 'none', 'circle-sort-key': 1 },
             paint: {
-                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 2, 8, 4],
-                'circle-color': '#FED7AA',
-                'circle-opacity': 0.55,
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 2, 8, 5, 10, 3, 12, 2],
+                'circle-color': '#9ECAE1',
+                'circle-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.74, 10, 0.38, 12, 0.10, 13, 0.0],
                 'circle-stroke-width': 0.5,
-                'circle-stroke-color': '#EA580C',
+                'circle-stroke-color': '#FFFFFF',
             },
         });
 
-        // ── Commuter overlay layers ──────────────────────────────────────────────
-        map.addSource('cm-src', { type: 'geojson', data: 'data/archetype-pks.geojson' });
+        // ── Commuter overlay layers (T1/T2/T3 standard color palette) ───────────
+        map.addSource('cm-src', { type: 'geojson', data: 'data/archetype-pks.geojson?v=20260616' });
         map.addLayer({
             id: 'cm-t1', type: 'circle', source: 'cm-src',
             filter: ['==', ['get', 'commuter_tier'], 1],
-            layout: { visibility: 'none' },
+            layout: { visibility: 'none', 'circle-sort-key': 3 },
             paint: {
-                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 5, 8, 9],
-                'circle-color': '#0891B2',
-                'circle-opacity': 0.85,
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 4, 8, 10, 10, 6, 12, 3],
+                'circle-color': '#08306B',
+                'circle-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.90, 10, 0.50, 12, 0.15, 13, 0.0],
                 'circle-stroke-width': 1.5,
-                'circle-stroke-color': '#164E63',
+                'circle-stroke-color': '#FFFFFF',
             },
         });
         map.addLayer({
             id: 'cm-t2', type: 'circle', source: 'cm-src',
             filter: ['==', ['get', 'commuter_tier'], 2],
-            layout: { visibility: 'none' },
+            layout: { visibility: 'none', 'circle-sort-key': 2 },
             paint: {
-                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 3, 8, 6],
-                'circle-color': '#38BDF8',
-                'circle-opacity': 0.72,
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 2.8, 8, 7, 10, 4, 12, 2],
+                'circle-color': '#3182BD',
+                'circle-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.82, 10, 0.45, 12, 0.12, 13, 0.0],
                 'circle-stroke-width': 1,
-                'circle-stroke-color': '#0369A1',
+                'circle-stroke-color': '#FFFFFF',
             },
         });
         map.addLayer({
             id: 'cm-t3', type: 'circle', source: 'cm-src',
             filter: ['==', ['get', 'commuter_tier'], 3],
-            layout: { visibility: 'none' },
+            layout: { visibility: 'none', 'circle-sort-key': 1 },
             paint: {
-                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 2, 8, 4],
-                'circle-color': '#7DD3FC',
-                'circle-opacity': 0.55,
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 2, 8, 5, 10, 3, 12, 2],
+                'circle-color': '#9ECAE1',
+                'circle-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.74, 10, 0.38, 12, 0.10, 13, 0.0],
                 'circle-stroke-width': 0.5,
-                'circle-stroke-color': '#0891B2',
+                'circle-stroke-color': '#FFFFFF',
             },
         });
 
@@ -2736,63 +4030,12 @@
         }, 'proximity-fill');
 
 
-        // ── AEC / Site Conditions layers (Night 2 — climate zones) ──────────────
-        // Inserted before proximity-vignette so they render beneath rings/clusters.
-
-        map.addSource('aec-ashrae-src', {
-            type: 'vector',
-            url: 'pmtiles://tiles/layer8-ashrae-zones-us.pmtiles',
-        });
-        map.addLayer({
-            id: 'layer8-ashrae', type: 'fill',
-            source: 'aec-ashrae-src', 'source-layer': 'ashrae_zones',
-            layout: { visibility: 'none' },
-            paint: {
-                'fill-color': [
-                    'match', ['get', 'ashrae_zone'],
-                    '1A','#ef4444','1B','#f97316',
-                    '2A','#fb923c','2B','#fbbf24',
-                    '3A','#eab308','3B','#84cc16','3C','#10b981',
-                    '4A','#06b6d4','4B','#3b82f6','4C','#6366f1',
-                    '5A','#8b5cf6','5B','#a855f7','5C','#d946ef',
-                    '6A','#c084fc','6B','#e879f9',
-                    '7','#9ca3af','8','#6b7280',
-                    '#cccccc'
-                ],
-                'fill-opacity': 0.55,
-            },
-        }, 'proximity-vignette');
-        map.addLayer({
-            id: 'layer8-ashrae-line', type: 'line',
-            source: 'aec-ashrae-src', 'source-layer': 'ashrae_zones',
-            layout: { visibility: 'none' },
-            paint: { 'line-color': '#ffffff', 'line-width': 0.5, 'line-opacity': 0.7 },
-        }, 'proximity-vignette');
-
-        map.addSource('aec-eu-climate-src', {
-            type: 'vector',
-            url: 'pmtiles://tiles/layer8-eu-climate-zones.pmtiles',
-        });
-        map.addLayer({
-            id: 'layer8-eu-climate', type: 'fill',
-            source: 'aec-eu-climate-src', 'source-layer': 'eu_climate_zones',
-            layout: { visibility: 'none' },
-            paint: {
-                'fill-color': [
-                    'match', ['get', 'zone_code'],
-                    'H1a','#8b5cf6','H1b','#6366f1','H1c','#3b82f6',
-                    'H2a','#10b981','H2b','#06b6d4','H2c','#eab308','H2d','#fbbf24',
-                    'H3','#fb923c',
-                    '#cccccc'
-                ],
-                'fill-opacity': 0.55,
-            },
-        }, 'proximity-vignette');
-
-        // Köppen-Geiger + Ecoregions are lazy-inited on first toggle (see toggleKoppenLayer/toggleEcoregionsLayer)
-
-        // Update aecLayers toggle to also cover the line layer
-        // (handled by the existing toggleAEC function checking map.getLayer(id))
+        // ── AEC / Site Conditions layers ──────────────────────────────────────────
+        // Only global layers (US+CA+MX+EU coverage) are wired here.
+        // Regional-only layers (ASHRAE US, EU climate codes, seismic US+CA, FEMA)
+        // have been removed — no MX source exists for those datasets.
+        // Köppen-Geiger + Ecoregions are lazy-inited on first toggle (see toggleKoppenLayer/toggleEcoregionsLayer).
+        // Future global layers (flood via JRC AQUEDUCT, wildfire via GWIS) added when tiles are ready.
 
         // ── Cluster zoom helper — shared by nodes click + proximity-fill click ──
         function drillIntoCluster(p, coords) {
@@ -2847,7 +4090,7 @@
             // Second-click street-level step is owned by the proximity-fill handler —
             // keeps drillIntoCluster deterministic regardless of caller zoom level.
             const targetZoom = Math.max(map.getZoom(), km === 1 ? 12 : 11);
-            map.flyTo({ center: coords, zoom: targetZoom, duration: 1200, essential: true });
+            map.flyTo({ center: coords, zoom: targetZoom, duration: 1200, essential: true, padding: sheetPad() });
         }
         // Expose on window so injected panel onclick handlers can call them
         window.drillIntoCluster = drillIntoCluster;
@@ -2876,7 +4119,7 @@
             const rmName   = first.mkt  || rmKey;
             const metro    = first.mrgn || '';
             const country  = countryName(first.iso);
-            const tierDotColor = (t) => t === 1 ? '#164679' : t === 2 ? '#54924E' : '#EAB308';
+            const tierDotColor = (t) => t === 1 ? '#08306B' : t === 2 ? '#3182BD' : '#9ECAE1';
             const itemsHTML = clusters.map(c => {
                 const props = metaToClusterProps(c);
                 const tvKey = effectiveTierKey(props);
@@ -2887,7 +4130,7 @@
                     <div class="merged-group-item-tier" style="background:${tc.fill};"></div>
                     <div>
                         <div class="merged-group-item-name">${escapeHtml(c.mkt || c.td || c.id)}</div>
-                        <div class="merged-group-item-sub">${escapeHtml(c.td || '')}${c.span ? ' · ' + c.span.toFixed(1) + ' km span' : ''}</div>
+                        <div class="merged-group-item-sub">${escapeHtml(c.td || '')}${c.span ? ' · ' + c.span.toFixed(1) + ' km across' : ''}</div>
                     </div>
                 </div>`;
             }).join('');
@@ -2914,6 +4157,15 @@
             const retailerHits = map.queryRenderedFeatures(e.point, { layers: ['all-locations', 'all-locations-hit', 'individual-points'] });
             if (retailerHits.length) return;
 
+            // Archetype modes: clicking a ring (not a retailer dot) shows the strongest
+            // co-location in that ring in the BentoBox.
+            if (activeArchetype) {
+                const feat = findStrongestArchetypeAt(e.lngLat.lat, e.lngLat.lng);
+                if (feat) showArchetypeDetail(feat);
+                e.stopPropagation();
+                return;
+            }
+
             const props = e.features[0]?.properties;
             if (!props) return;
 
@@ -2936,6 +4188,7 @@
                     zoom: Math.max(z, streetZ),
                     duration: 800,
                     essential: true,
+                    padding: sheetPad(),
                 });
             }
             e.stopPropagation();
@@ -2953,10 +4206,32 @@
             const rmGroup  = clustersByRM?.get(rmKey);
             if (rmGroup && rmGroup.length > 1) {
                 showRegionalMarketPanel(rmKey);
-                map.flyTo({ center: [c.lon, c.lat], zoom: Math.max(map.getZoom(), 10), duration: 600, essential: true });
+                map.flyTo({ center: [c.lon, c.lat], zoom: Math.max(map.getZoom(), 10), duration: 600, essential: true, padding: sheetPad() });
             } else {
                 drillIntoCluster(metaToClusterProps(c), [c.lon, c.lat]);
             }
+        });
+
+        // ── Click handler: Urban Fringe / Commuter archetype dots ──────────────
+        // Mirror the Retail bubble drill-in: fly down to the dot's ring. The flyTo
+        // crosses RETAIL_ZOOM_THRESHOLD → zoomend switches GLOBAL→LOCAL → buildProdRings
+        // draws the VWH/PKS ring (dispatch keyed on activeArchetype).
+        function drillIntoArchetypeDot(e) {
+            const f = e.features && e.features[0];
+            if (!f) return;
+            const coords = f.geometry?.coordinates
+                || [f.properties?.lon, f.properties?.lat];
+            if (coords[0] == null || coords[1] == null) return;
+            map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 12), duration: 900, essential: true, padding: sheetPad() });
+            if (f.properties && isArchetypeProps(f.properties)) {
+                showArchetypeDetail(f.properties);
+            }
+            e.stopPropagation && e.stopPropagation();
+        }
+        ['uf-t1', 'uf-t2', 'uf-t3', 'cm-t1', 'cm-t2', 'cm-t3'].forEach(id => {
+            map.on('click', id, drillIntoArchetypeDot);
+            map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
+            map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
         });
 
         // Rebuild proximity rings after every pan in Retail Level
