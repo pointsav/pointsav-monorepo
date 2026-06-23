@@ -1,0 +1,346 @@
+/* research-mobile.css — shared layer for gis.woodfinegroup.com/research
+   Linked by all research-*.html pages. Pairs with section-collapse.js.
+
+   Scope (extended 2026-06):
+   1. Design tokens synced to the map page (index.html): brand navy, amber accent.
+   2. Shared sticky top navigation (.research-topbar) — back-to-map + section tabs
+      + breadcrumb, sticky on desktop AND mobile.
+   3. Shared prev/next foot navigation (.research-prevnext).
+   4. Shared collapsible-section affordances (mobile Wikipedia pattern).
+   5. Mobile breakpoint unified at 768px across all pages.
+   6. Print-doc (Summary, Regional Markets) mobile fixes + print hide rules.
+
+   Per-page inline <style> blocks keep CONTENT-specific layout (sidebars, article
+   typography, print @page templates). Tokens + nav + topbar/footer chrome live here. */
+
+/* Enable height:auto animation where the browser supports it (progressive enhancement). */
+:root {
+  interpolate-size: allow-keywords;
+
+  /* ── Design tokens — synced to the map page (index.html) ──────────────────── */
+  --brand-primary: #164679;   /* navy header / primary actions */
+  --brand-deep:    #08306B;   /* deepest navy (tier ramp anchor) */
+  --brand-accent:  #EAB308;   /* amber — active tab underline / accents */
+  --brand-accent-deep: #D97706; /* amber-orange — RM star, hover */
+  --text-main:     #111827;
+  --text-muted:    #5A626E;
+  --border-soft:   rgba(0, 0, 0, 0.08);
+  --bg:            #f8fafc;
+  --surface:       #ffffff;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SHARED STICKY TOP NAVIGATION — .research-topbar
+   Sticky on desktop and mobile. Three rows of intent:
+     row 1 (.rt-bar)   — ← Map button + section tabs (scrollable on mobile)
+     row 2 (.rt-crumb) — breadcrumb / current-paper title
+   ══════════════════════════════════════════════════════════════════════════════ */
+.research-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--brand-primary);
+  border-bottom: 3px solid var(--brand-accent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+.rt-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.rt-bar::-webkit-scrollbar { display: none; }
+
+/* ← Map button — visually distinct primary escape hatch */
+.rt-home {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 46px;
+  margin: 6px 6px 6px 0;
+  padding: 0 14px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff;
+  font: 700 13px/1 'Inter', system-ui, -apple-system, sans-serif;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.rt-home:hover { background: rgba(255, 255, 255, 0.22); border-color: rgba(255,255,255,0.4); text-decoration: none; }
+.rt-home .rt-home-ico { font-size: 15px; line-height: 1; }
+
+/* Section tabs */
+.rt-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  flex: 1 1 auto;
+}
+.rt-tab {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 46px;
+  padding: 0 13px;
+  color: rgba(255, 255, 255, 0.74);
+  text-decoration: none;
+  font: 600 13px/1 'Inter', system-ui, -apple-system, sans-serif;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -3px;            /* overlap the topbar's amber underline */
+  transition: color 0.15s, border-color 0.15s;
+}
+.rt-tab:hover { color: #fff; text-decoration: none; }
+.rt-tab[aria-current="page"] {
+  color: #fff;
+  font-weight: 700;
+  border-bottom-color: var(--brand-accent);
+}
+
+/* Breadcrumb / current-paper title row */
+.rt-crumb {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 5px 14px 7px;
+  font: 600 11px/1.3 'Inter', system-ui, sans-serif;
+  color: rgba(255, 255, 255, 0.62);
+  letter-spacing: 0.02em;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.rt-crumb .rt-crumb-sep { opacity: 0.5; }
+.rt-crumb .rt-crumb-cur { color: #fff; font-weight: 700; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SHARED PREV / NEXT FOOT NAVIGATION — .research-prevnext
+   Sits at the foot of each paper, above the footer, in series order.
+   ══════════════════════════════════════════════════════════════════════════════ */
+.research-prevnext {
+  display: flex;
+  gap: 12px;
+  max-width: 860px;
+  margin: 40px auto 0;
+  padding: 24px 20px 4px;
+  border-top: 1px solid var(--border-soft);
+}
+.rpn-link {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--surface);
+  text-decoration: none;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  min-width: 0;
+}
+.rpn-link:hover {
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-color: rgba(22, 70, 121, 0.35);
+}
+.rpn-next { text-align: right; align-items: flex-end; }
+.rpn-dir {
+  font: 700 10px/1 'Inter', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.rpn-title {
+  font: 700 14px/1.3 'Inter', system-ui, sans-serif;
+  color: var(--brand-primary);
+}
+.rpn-spacer { flex: 1 1 0; }   /* holds the slot when one side is absent */
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   COLLAPSIBLE SECTIONS (Wikipedia-mobile pattern)
+   The toggle button replaces the section heading; the panel holds the section body.
+   On desktop the toggle renders as a plain heading and the panel is always shown.
+   ══════════════════════════════════════════════════════════════════════════════ */
+.sc-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 12px 4px;
+  min-height: 44px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #d8dee6;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.sc-toggle:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+.sc-toggle .sc-title { display: block; }
+.sc-chevron {
+  flex: none;
+  width: 0.6em;
+  height: 0.6em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);            /* points down when collapsed */
+  transition: transform 0.25s ease;
+  opacity: 0.6;
+}
+.sc-toggle[aria-expanded="true"] .sc-chevron {
+  transform: rotate(-135deg);          /* points up when expanded */
+}
+.sc-panel {
+  overflow: hidden;
+}
+.sc-panel[hidden] { display: none; }
+
+/* Expand-all / collapse-all control (mobile only) */
+.sc-allctl {
+  display: none;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+.sc-allctl button {
+  flex: 1;
+  min-height: 40px;
+  border: 1px solid #c8ccd1;
+  border-radius: 6px;
+  background: #f4f6f9;
+  color: var(--brand-primary);
+  font: 600 13px/1 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   MOBILE-ONLY ADJUSTMENTS (unified breakpoint: 768px)
+   ══════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Readability floor — nothing below 13px on phones */
+  .research-mobile, .research-mobile p, .research-mobile li { font-size: 17px; line-height: 1.6; }
+
+  /* Wide tables scroll inside their own box, never the page */
+  .research-mobile table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sc-allctl { display: flex; }
+
+  /* Topbar on mobile: keep sticky, trim padding, scroll tabs horizontally */
+  .rt-home { min-height: 42px; margin: 5px 6px 5px 0; }
+  .rt-tab  { min-height: 42px; padding: 0 11px; }
+  .rt-crumb { padding: 4px 12px 6px; font-size: 10px; }
+
+  /* Prev/next stacks vertically on phones */
+  .research-prevnext {
+    flex-direction: column;
+    margin-top: 24px;
+    padding: 18px 16px 0;
+  }
+  .rpn-next { text-align: left; align-items: flex-start; }
+  .rpn-spacer { display: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   PRINT-DOC PAGES (Summary, Regional Markets) — mobile fixes
+   These two pages are built from a fixed 10-inch print template; the per-page reflow
+   unlocks width + stacks grids + scales primary fonts. This block fixes the second tier:
+   header/footer crush, remaining sub-12px text, fixed-inch widths, pipeline arrows, spacing.
+   Class names are unique to the print-doc pages — no collision with article pages.
+   ══════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* 1 — Header + footer stop crushing: stack the brand/title/meta vertically */
+  .pg-hd {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    border-bottom-width: 2px;
+  }
+  .pg-hd .org  { font-size: 12px !important; font-weight: 700; letter-spacing: 0.08em;
+                 text-transform: uppercase; color: var(--brand-primary); }
+  .pg-hd .ttl  { font-size: 21px !important; font-weight: 800; line-height: 1.25; text-align: left; }
+  .pg-hd .meta { font-size: 12px !important; text-align: left !important; color: #666; }
+  .pg-ft {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 12px !important;
+  }
+
+  /* 2 — Complete the font floor (print-point text the reflow missed) */
+  .comp-lbl, .comp-pct, .comp-fill, .comp-note,
+  .res-box li, .res-box h4, .cites, .data-note p,
+  .pipe-body, .pipe-tag, .tc, .cc-mem {
+    font-size: 13px !important;
+    line-height: 1.45;
+  }
+
+  /* 3 — Unlock fixed-inch widths so the T2 composition rows wrap */
+  .comp-lbl { min-width: 0 !important; }
+  .comp-pct { width: auto !important; white-space: normal !important; }
+
+  /* 4 — Pipeline connector arrows: point DOWN between vertically-stacked stages */
+  .pipe-stage { position: relative; }
+  .pipe-stage::after {
+    content: "↓" !important;
+    right: 50% !important;
+    left: auto !important;
+    top: auto !important;
+    bottom: -8px !important;
+    transform: translateX(50%) !important;
+  }
+  .pipe-stage:last-child::after { display: none !important; }
+
+  /* 5 — Spacing / legibility polish */
+  .data-note { padding: 10px 12px !important; }
+  .tb { height: 12px !important; }
+  .cc { padding: 8px 10px !important; }
+  .tc { gap: 10px !important; }
+
+  /* 6 — Drop the "Page N of N" print fragment on the reflowed single-column mobile view */
+  .pg-num { display: none !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   PRINT — hide cross-page chrome so only the paper prints
+   ══════════════════════════════════════════════════════════════════════════════ */
+@media print {
+  .research-topbar,
+  .research-prevnext { display: none !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   DESKTOP: sections always open; topbar stays sticky.
+   ══════════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 769px) {
+  .sc-toggle {
+    cursor: default;
+    border-bottom: none;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .sc-chevron { display: none; }
+  .sc-panel { display: block !important; }
+  .sc-allctl { display: none; }
+}

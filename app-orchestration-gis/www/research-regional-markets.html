@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Top 400 Regional Markets — Summary &amp; Methodology · Woodfine Management Corp.</title>
+<title>Top 400 Regional Markets — Summary &amp; Methodology — Woodfine GIS</title>
+<meta name="description" content="Top 400 suburban-regional markets across North America and Europe: geographic distribution, tier composition, and ranking methodology from the Woodfine GIS platform.">
+<link rel="canonical" href="https://gis.woodfinegroup.com/research-regional-markets.html">
 <style>
 /* ─── Print setup ──────────────────────────────────────────────────── */
 @page { size: letter landscape; margin: 0.45in 0.5in 0.38in 0.5in; }
@@ -12,11 +14,13 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 /* ─── Document variables ───────────────────────────────────────────── */
+/* Synced to the map page; the shared lib/research-mobile.css :root (loaded last) is authoritative. */
 :root {
   --brand-primary: #164679;
-  --text-main: #1a202c;
-  --text-muted: #64748b;
-  --border-soft: #e2e8f0;
+  --brand-accent: #EAB308;
+  --text-main: #111827;
+  --text-muted: #5A626E;
+  --border-soft: rgba(0, 0, 0, 0.08);
   --bg: #f8fafc;
   --surface: #ffffff;
 }
@@ -139,9 +143,73 @@
   .page-footer a { color: rgba(255,255,255,0.82); text-decoration: none; }
   .page-footer a:hover { color: #fff; text-decoration: underline; }
 
-  @media (max-width: 700px) {
+  @media (max-width: 768px) {
     .toc-sidebar { display: none; }
-    .page-wrapper { padding: 12px 10px 40px; gap: 0; }
+    .page-wrapper { padding: 0 0 40px; gap: 0; }
+    .doc-main, .pages-wrapper { overflow-x: visible; padding: 0; }
+    /* Unlock the fixed 10-inch print page → full-width responsive column */
+    .page {
+      width: 100% !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      padding: 14px 12px !important;
+      margin: 0 0 12px !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+    }
+    /* Stack every multi-column grid to a single column */
+    .region-grid, .eu-grid, .p2-top, .p2-bot, .kpi-row,
+    .cls-grid, .top5-wrap, .pipeline-grid {
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+    }
+    /* Readable type floor — scale the tiny print-point fonts up for phones */
+    .page, .page p, .cc-name, .region, .leader, .ctx { font-size: 14px !important; line-height: 1.5 !important; }
+    .pg-hd .ttl { font-size: 19px !important; }
+    .pg-hd .org, .pg-hd .meta { font-size: 12px !important; }
+    .stag { font-size: 13px !important; padding: 6px 8px !important; }
+    .region-hd { font-size: 14px !important; padding: 8px !important; }
+    .cc-name { font-size: 15px !important; font-weight: 700; }
+    .cc-iso, .km, .mt { font-size: 12px !important; }
+    .kpi-n, .kpi-num, .kpi-val { font-size: 22px !important; }   /* align to Summary */
+    .kpi-lbl, .kpi-sub { font-size: 12px !important; }
+    h4, .rank-table-box h4 { font-size: 14px !important; }
+    /* Tables scroll inside their own box, never the page */
+    .rank-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .rank-table th { font-size: 12px !important; }
+    .rank-table td { font-size: 13px !important; }
+    .rank-table td:last-child { font-size: 14px !important; }
+
+    /* ── Page-unique nested classes the shared block didn't reach ───────── */
+    /* Rank-table inner spans */
+    .rank-table .rk { font-size: 13px !important; width: auto !important; }
+    .rank-table .mn { font-size: 14px !important; }
+    .rank-table .mt { font-size: 12px !important; }
+    .rank-table .km { font-size: 12px !important; }
+    /* Leader lists */
+    .leaders  { padding: 8px 10px !important; }
+    .lr-rank  { font-size: 13px !important; width: auto !important; }
+    .lr-name  { font-size: 14px !important; }
+    .lr-metro { font-size: 12px !important; }
+    .lr-score { font-size: 15px !important; }
+    /* Country-card secondary text */
+    .cc-iso   { font-size: 12px !important; }
+    .cc-count { font-size: 15px !important; }
+    .cc-sub   { font-size: 12px !important; }
+    .cc-pct   { font-size: 12px !important; }
+    .eu-grid .cc { padding: 8px 10px !important; }
+    /* Share bars — visible band */
+    .sb { height: 14px !important; }
+    /* Classification grid → stacked readable cards (display:contents defeats the 1fr stack) */
+    .cls-grid { display: block !important; overflow: visible !important; }
+    .cls-row  { display: block !important; border-bottom: 1px solid #e8ecf3; }
+    .cls-row:last-child { border-bottom: none; }
+    .cls-row > div { display: block !important; padding: 3px 8px !important;
+                     font-size: 13px !important; border-bottom: none !important; }
+    .cls-band  { font-size: 14px !important; white-space: normal !important; }
+    .cls-range { white-space: normal !important; }
+    /* Research-context paragraph */
+    .res-box .context-p { font-size: 13px !important; line-height: 1.5; }
   }
 }
 
@@ -406,8 +474,27 @@ body {
   line-height: 1.5;
 }
 </style>
+<link rel="stylesheet" href="lib/research-mobile.css">
 </head>
 <body>
+
+<header class="research-topbar">
+  <div class="rt-bar">
+    <a href="/" class="rt-home"><span class="rt-home-ico" aria-hidden="true">←</span> Map</a>
+    <nav class="rt-tabs" aria-label="Research papers">
+      <a class="rt-tab" href="/research.html">Overview</a>
+      <a class="rt-tab" href="/research-colocation.html">Co-location</a>
+      <a class="rt-tab" href="/research-regional-markets.html" aria-current="page">Regional Markets</a>
+      <a class="rt-tab" href="/research-aec.html">AEC</a>
+      <a class="rt-tab" href="/research-summary.html">Summary</a>
+    </nav>
+  </div>
+  <div class="rt-crumb">
+    <a href="/research.html" style="color:rgba(255,255,255,0.62);text-decoration:none;">Research</a>
+    <span class="rt-crumb-sep" aria-hidden="true">›</span>
+    <span class="rt-crumb-cur">Top 400 Regional Markets</span>
+  </div>
+</header>
 
 <div class="page-wrapper">
 
@@ -441,7 +528,7 @@ body {
     <div class="pg-hd">
       <div class="org">Woodfine Management Corp.</div>
       <div class="ttl">Top 400 Regional Markets — Geographic Distribution</div>
-      <div class="meta">PointSav GIS Platform · v0.3 · 31 May 2026<br>Page 1 of 2</div>
+      <div class="meta">PointSav GIS Platform · v0.3 · 31 May 2026<span class="pg-num"><br>Page 1 of 2</span></div>
     </div>
 
     <div class="stag" style="margin-bottom:3pt">
@@ -665,7 +752,7 @@ body {
     <div class="pg-hd">
       <div class="org">Woodfine Management Corp.</div>
       <div class="ttl">Top 400 Regional Markets — Scoring Methodology &amp; Research Context</div>
-      <div class="meta">PointSav GIS Platform · v0.3 · 31 May 2026<br>Page 2 of 2</div>
+      <div class="meta">PointSav GIS Platform · v0.3 · 31 May 2026<span class="pg-num"><br>Page 2 of 2</span></div>
     </div>
 
     <!-- §2–§4: KPIs + classification left, formula right -->
@@ -893,6 +980,17 @@ body {
   </div><!-- /doc-main -->
 
 </div><!-- /page-wrapper -->
+
+<nav class="research-prevnext" aria-label="Paper navigation">
+  <a class="rpn-link rpn-prev" href="/research-colocation.html">
+    <span class="rpn-dir">← Previous</span>
+    <span class="rpn-title">Co-location</span>
+  </a>
+  <a class="rpn-link rpn-next" href="/research-aec.html">
+    <span class="rpn-dir">Next →</span>
+    <span class="rpn-title">AEC</span>
+  </a>
+</nav>
 
 <div class="page-footer">
   Woodfine Management Corp. &nbsp;·&nbsp; New York, New York &nbsp;·&nbsp;

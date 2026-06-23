@@ -3,16 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Research — Woodfine Management Corp.</title>
+<title>Research — Woodfine GIS Working Papers</title>
+<meta name="description" content="Working papers from Woodfine Management Corp. on retail co-location, regional markets, and open-source building-systems data layers for urban-scale site analysis.">
+<link rel="canonical" href="https://gis.woodfinegroup.com/research.html">
 <style>
-  :root {
-    --brand-primary: #164679;
-    --text-main: #1a202c;
-    --text-muted: #64748b;
-    --border-soft: #e2e8f0;
-    --bg: #f8fafc;
-    --surface: #ffffff;
-  }
+  /* Design tokens are defined in lib/research-mobile.css (:root), synced to the map page. */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -29,21 +24,12 @@
     background: var(--brand-primary);
     color: white;
     padding: 28px 20px 24px;
+    border-bottom: 3px solid var(--brand-accent);
   }
   .page-header-inner {
     max-width: 860px;
     margin: 0 auto;
   }
-  .page-header .back-link {
-    display: inline-block;
-    color: rgba(255,255,255,0.75);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-decoration: none;
-    margin-bottom: 14px;
-  }
-  .page-header .back-link:hover { color: white; text-decoration: underline; }
   .page-header h1 {
     font-size: 22px;
     font-weight: 700;
@@ -171,19 +157,37 @@
   .page-footer a { color: rgba(255,255,255,0.8); }
   .page-footer a:hover { color: white; }
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     .page-header h1 { font-size: 18px; }
     .paper-card { padding: 20px; }
     .paper-title { font-size: 16px; }
     .paper-version { margin-left: 0; }
   }
 </style>
+<link rel="stylesheet" href="lib/research-mobile.css">
 </head>
 <body>
 
+<header class="research-topbar">
+  <div class="rt-bar">
+    <a href="/" class="rt-home"><span class="rt-home-ico" aria-hidden="true">←</span> Map</a>
+    <nav class="rt-tabs" aria-label="Research papers">
+      <a class="rt-tab" href="/research.html" aria-current="page">Overview</a>
+      <a class="rt-tab" href="/research-colocation.html">Co-location</a>
+      <a class="rt-tab" href="/research-regional-markets.html">Regional Markets</a>
+      <a class="rt-tab" href="/research-aec.html">AEC</a>
+      <a class="rt-tab" href="/research-summary.html">Summary</a>
+    </nav>
+  </div>
+  <div class="rt-crumb">
+    <span>Woodfine GIS</span>
+    <span class="rt-crumb-sep" aria-hidden="true">›</span>
+    <span class="rt-crumb-cur">Research — Working Papers</span>
+  </div>
+</header>
+
 <div class="page-header">
   <div class="page-header-inner">
-    <a href="/" class="back-link">← Back to Map</a>
     <h1>Research</h1>
     <div class="subtitle">Woodfine Management Corp. — Working Papers</div>
   </div>
@@ -260,6 +264,14 @@
       <span class="paper-status status-review">§6 Results pending nightly build pipeline completion. ORCID IDs required before submission.</span>
     </div>
   </div>
+
+<nav class="research-prevnext" aria-label="Paper navigation">
+  <span class="rpn-spacer"></span>
+  <a class="rpn-link rpn-next" href="/research-colocation.html">
+    <span class="rpn-dir">Next →</span>
+    <span class="rpn-title">Co-location</span>
+  </a>
+</nav>
 
 </main>
 
