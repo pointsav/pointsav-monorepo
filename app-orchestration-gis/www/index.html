@@ -558,6 +558,8 @@
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             /* Avoid awkward page breaks inside stat blocks */
             .data-block, .catchment-block, .scorecard-box { break-inside: avoid; page-break-inside: avoid; }
+            /* Page 2 — map snapshot */
+            #print-map-page { break-before: page; page-break-before: always; margin: 0; padding: 0; }
         }
 
         /* ── First-run welcome card (F19) — branded coachmark ─────────── */
@@ -702,6 +704,17 @@
             <a class="footer-btn footer-btn-primary" href="/research.html" target="_blank" rel="noopener">Research ↗</a>
         </div>
         <div class="panel-signature">Engineered by <a href="https://home.pointsav.com" target="_blank" rel="noopener">PointSav Digital Systems</a></div>
+        <!-- F24 — print map page (page 2): canvas snapshot at cluster zoom, after stats -->
+        <div id="print-map-page" class="print-only">
+            <div style="margin:0 0 8px;padding-bottom:8px;border-bottom:2px solid var(--brand-primary);display:flex;align-items:baseline;gap:10px;">
+                <span id="print-map-title" style="font-size:15px;font-weight:800;color:var(--brand-primary);text-transform:uppercase;letter-spacing:0.4px;"></span>
+                <span id="print-map-zoom-note" style="font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;"></span>
+            </div>
+            <img id="print-map-img" style="width:100%;height:auto;display:block;border:1px solid #e0e0e0;border-radius:4px;" src="" alt="Cluster location map" />
+            <div style="font-size:9px;color:var(--text-muted);margin-top:6px;">
+                Map: OpenFreeMap contributors · Data: OSM, WorldPop 2026, Kontur CC BY 4.0 · Engineered by PointSav
+            </div>
+        </div>
     </aside>
 
     <div id="map-legend" aria-label="Map legend">
@@ -875,9 +888,10 @@
         setTimeout(() => { el.textContent = String(msg); }, 30);
     }
 
-    // ── F24 — print / one-pager ──────────────────────────────────────
-    // Sets the dated subtitle on the print-only header just before the
-    // browser print dialog opens, then invokes the native print/PDF flow.
+    // ── F24 — print / one-pager (2-page: stats + map) ───────────────
+    // Page 1: inspector stats panel (flattened by @media print CSS).
+    // Page 2: canvas snapshot of the map centred on the selected cluster
+    //         at a zoom derived from span_km so the ring always fills the page.
     function setPrintDate() {
         const el = document.getElementById('print-date');
         if (!el) return;
@@ -886,7 +900,35 @@
                 { year: 'numeric', month: 'long', day: 'numeric' });
         } catch (_) { el.textContent = new Date().toISOString().slice(0, 10); }
     }
-    function printOnePager() { setPrintDate(); window.print(); }
+    function calcPrintZoom(span_km) {
+        // Auto-derive zoom so the full ring + one ring-width of context fits the page.
+        // span_km ≤1 → z15 (street detail); ~2 → z14; ~4 → z13; ~8 → z12; >8 → z11.
+        return Math.min(15, Math.max(11, Math.round(14.5 - Math.log2(Math.max(1, span_km || 1)))));
+    }
+    function printOnePager() {
+        setPrintDate();
+        const p      = selectedClusterProps;
+        const coords = selectedClusterCoords;
+        // If no cluster is selected fall back to stats-only single page.
+        if (!p || !coords) { window.print(); return; }
+
+        const zoom  = calcPrintZoom(p.span_km);
+        const title = p.display_name || p.anchor_label || 'Cluster';
+
+        // Populate page-2 header labels.
+        const mapTitle    = document.getElementById('print-map-title');
+        const mapZoomNote = document.getElementById('print-map-zoom-note');
+        if (mapTitle)    mapTitle.textContent    = title + ' — Location Map';
+        if (mapZoomNote) mapZoomNote.textContent = `zoom ${zoom} · ${(p.span_km || 0).toFixed(1)} km span`;
+
+        // Fly to the cluster centre at print zoom, wait for tiles, snapshot.
+        map.flyTo({ center: coords, zoom, essential: true });
+        map.once('idle', () => {
+            const img = document.getElementById('print-map-img');
+            if (img) img.src = map.getCanvas().toDataURL('image/png');
+            window.print();
+        });
+    }
     window.addEventListener('beforeprint', setPrintDate);
 
     // ── F5 — cluster scorecard "why it ranks" summary ────────────────
@@ -969,6 +1011,8 @@
         compareSet = compareSet.filter(c => c.key !== key);
         renderCompareTray();
         if (!compareSet.length) closeCompareTray();
+        const btn = document.getElementById('compare-add-btn');
+        if (btn) btn.textContent = compareSet.length ? `＋ Compare (${compareSet.length})` : '＋ Compare';
     }
     function clearCompare() { compareSet = []; renderCompareTray(); closeCompareTray(); }
     function openCompareTray()  { const t = document.getElementById('compare-tray'); if (t) t.classList.add('open'); }
@@ -1725,6 +1769,8 @@
         // Full-screen map: one-finger pan is correct. cooperativeGestures (two-finger) is for
         // maps embedded in scrolling pages — it made the mobile map feel unresponsive.
         cooperativeGestures: false,
+        // Required for getCanvas().toDataURL() in the print flow (F24 page 2 map snapshot).
+        preserveDrawingBuffer: true,
     });
     map.touchZoomRotate.disableRotation();
     if (map.touchPitch) map.touchPitch.disable();   // 2D north-up map — no accidental tilt
