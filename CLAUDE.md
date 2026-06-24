@@ -38,8 +38,9 @@ Per `~/Foundry/AGENT.md` § Session roles:
 ## Commit + promote
 
 Commits via `~/Foundry/bin/commit-as-next.sh "<message>"` from archive root.
-**Stage 6:** No self-service promote (`self_service: none`). Request via outbox
-to `command@claude-code`. Command Session holds the canonical merge key.
+**Stage 6 self-service (this archive):** `~/Foundry/bin/self-service-promote.sh`
+— pushes code commits to staging mirrors + appends to `promote-queue.jsonl`.
+Command Session processes canonical merge. Do NOT run `promote.sh` directly.
 
 ## Artifacts produced here
 
