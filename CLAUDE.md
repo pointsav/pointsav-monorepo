@@ -37,10 +37,9 @@ Per `~/Foundry/AGENT.md` § Session roles:
 
 ## Commit + promote
 
-- Commits via `~/Foundry/bin/commit-as-next.sh "<message>"`. Direct
-  `git commit` is blocked by the pre-commit gate (Phase 1.13).
-- Stage 6 promotion via `~/Foundry/bin/promote.sh` from the
-  Command Session, not from this Totebox.
+Commits via `~/Foundry/bin/commit-as-next.sh "<message>"` from archive root.
+**Stage 6:** No self-service promote (`self_service: none`). Request via outbox
+to `command@claude-code`. Command Session holds the canonical merge key.
 
 ## Artifacts produced here
 
@@ -54,3 +53,15 @@ CODE-* / SCRIPT-* / CONFIG-* / DATA-* → commit directly (self-contained).
 
 If a workspace rule conflicts with anything stated here, **stop and surface
 the conflict via outbox to command session** — do not silently override.
+
+## MCP tools — `foundry` server (use at startup)
+
+`get_session_brief(role="totebox", archive="project-bim")` replaces manually reading
+inbox.md, outbox.md, NOTAM.md, session-context.md. Call it first.
+
+| Tool | When to use |
+|---|---|
+| `get_session_brief` | **First call at startup** — inbox, outbox, NOTAM, session-context |
+| `send_mailbox_message` | Send any mailbox message (M-2/M-10 audit compliant) |
+| `query_datagraph` | Entity lookup before answering about people/projects |
+| `ask_local` | OLMo 7B local inference — free, SYS-ADR-07-safe |
