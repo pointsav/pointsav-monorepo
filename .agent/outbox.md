@@ -152,7 +152,7 @@ created: 2026-05-17T23:30:00Z
 priority: high
 priority-boosted: 2026-06-21
 status: pending
-attempts: 9
+attempts: 14
 msg-id: project-bim-20260517-prose-sweep-supplement
 ---
 
@@ -293,7 +293,7 @@ created: 2026-05-17T21:00:00Z
 priority: high
 priority-boosted: 2026-06-21
 status: pending
-attempts: 9
+attempts: 14
 msg-id: project-bim-20260517-design-sweep-supplement
 ---
 
@@ -346,7 +346,7 @@ created: 2026-05-17T00:00:00Z
 priority: high
 priority-boosted: 2026-06-21
 status: pending
-attempts: 9
+attempts: 14
 msg-id: project-bim-20260517-prose-sweep-editorial
 ---
 
@@ -390,7 +390,7 @@ created: 2026-05-17T00:00:00Z
 priority: high
 priority-boosted: 2026-06-21
 status: pending
-attempts: 9
+attempts: 14
 msg-id: project-bim-20260517-design-sweep
 ---
 

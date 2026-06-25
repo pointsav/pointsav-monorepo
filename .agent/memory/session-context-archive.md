@@ -1,6 +1,20 @@
 
 ---
 
+## 2026-05-23 | totebox@claude-code | tool-keyplan-scaffold
+
+**Done:**
+- Scaffolded `tool-keyplan` Rust crate — TOML config → validated DTCG JSON engine (v0.0.1)
+- Created `pointsav-design-system/tokens/bim/interior.dtcg.json` — 7 furniture tokens + 1 circulation constraint token
+- Created `pointsav-monorepo/tool-keyplan/` crate; updated workspace Cargo.toml
+- Updated key-plans.dtcg.json PO-1 with structured furniture_refs + compliance
+- Engine validation: ASR A1.2 ✓ European Lighting ✓ Wheelchair ✓
+- Created `.agent/briefs/BRIEF-tool-keyplan.md`
+
+**Carry-forward:** Deliverable 1b key-plans-registry.md; Corporate Office SVG; Decisions 1–4; 6 DTCG files; binary ledger v0.0.3
+
+---
+
 ## 2026-05-21b | totebox@claude-code | plan-bim-objects-v2-committed
 
 **Done:**
