@@ -53,8 +53,10 @@ Attribution format: `[YYYY-MM-DD role@engine]`
   - Command Session: update `data/binary-ledger/app-orchestration-bim.jsonl`
   - sha256 `/usr/local/bin/app-orchestration-bim` must match ledger entry
 
-- [x] **NOTAM unreadable — resolved 2026-05-20** `[2026-05-20 totebox@claude-code]`
-  - Fixed by Command: NOTAM.md now `-rw-r--r-- mathew:foundry` (world-readable). Outbox message actioned.
+- [ ] **NOTAM still permission denied — fix not applied** `[2026-06-22 totebox@claude-code]`
+  - `ls -la /srv/foundry/NOTAM.md` shows `-rw------- 1 mathew mathew` as of 2026-06-22 session start
+  - inbox `command-20260520-notam-permission-resolved` was inaccurate; flagged to Command via outbox `project-bim-20260622-notam-permission-still-denied`
+  - Command: re-apply `chmod 644 /srv/foundry/NOTAM.md`
 
 - [x] **Key Plans foundation — 4 operator decisions received 2026-05-20** `[2026-05-20 totebox@claude-code]`
   - All 4 decisions answered via inbox `command-20260520-bim-foundation-decisions`
@@ -69,10 +71,13 @@ Attribution format: `[YYYY-MM-DD role@engine]`
   - Output: `woodfine-bim-library/key-plans/key-plans-registry.md`
   - Also in `outputs/key-plans-registry.md` — pull via `fpull bim outputs/`
 
-- [ ] **Apply Decision 1–4 to existing DTCG tokens + HTML** `[2026-05-21 totebox@claude-code]`
-  - Standardise naming in all existing DTCG entries to Decision 1 convention
-  - Delete BIM_TOKENS block from `building-width-calculator.html` (Decision 2)
-  - Add stub entries for RS/TI tiles and J/K/L/M placeholders (Decisions 3 + 4)
+- [x] **Apply Decision 1–4 to existing DTCG tokens + HTML — done 2026-06-22** `[2026-06-22 totebox@claude-code]`
+  - D1: descriptive names + type-prefixed codes already in place from prior sessions
+  - D2: `building-width-calculator.html` — inline `BIM_TOKENS` removed; async `init()` fetches from `../woodfine-bim-library/tokens/bim/*.dtcg.json` (commits `b7ee3e6e`)
+  - D3: `tile_code RS-A/B/C` → `retail-select.dtcg.json`; `TI-A/B/C` → `tech-industrial.dtcg.json`
+  - D4: `tile-system.dtcg.json` — Corridor Expander T (300 SF, operative) + J/K/L/M reserved stubs added
+  - Sub-clone commit: `05c8c38` (jwoodfine, woodfine-bim-library main); archive commit: `b7ee3e6e` (pwoodfine, cluster/project-bim)
+  - HTML requires web server from archive root to serve DTCG fetch: `python3 -m http.server 8100` in project-bim/
 
 - [x] **HTML print layout — resolved 2026-05-17** `[2026-05-17 totebox@claude-code]`
   - Root cause: `@page { size: landscape; margin: 0.3in }` + `slide { width: 10.4in }` triple-stacked margins; Chrome silently ignored
@@ -146,4 +151,5 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Deferred
 
-- [ ] Stage 6 push — 18 commits ahead of origin on `cluster/project-bim` `[2026-05-17 totebox@claude-code]`
+- [ ] Stage 6 push — 54+ commits ahead of origin on `cluster/project-bim` `[2026-06-24 totebox@claude-code]`
+  - app-privategit-bim Phase 1 code ready; outbox dispatch sent to Command 2026-06-20
