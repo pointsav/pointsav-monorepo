@@ -1,4 +1,26 @@
 
+
+---
+
+## 2026-05-28 | totebox@claude-code | preview-viewers + routing-correction
+
+**Done:**
+- Created `preview/po-1-floor-plan.html` — SVG floor plan of PO-1 at 1:20 scale; 6 furniture pieces; dimension callouts; zone fills; HTML legend table
+- Created `preview/interior-tokens.html` — HTML viewer for interior.dtcg.json; 7 furniture Object cards + circulation constraint panel; colour-coded by category
+- Copied `preview/interior.dtcg.json` — point-in-time snapshot in preview/ for local serving
+- Copied all 3 new preview files to `outputs/` for rsync access
+- Copied `interior.dtcg.json` to correct location: `woodfine-bim-library/tokens/bim/interior.dtcg.json`
+- Updated BRIEF-tool-keyplan.md: interior.dtcg.json and key-plans.dtcg.json locations corrected
+
+**Pending / carry-forward:**
+- Apply PO-1 structured furniture_refs to `woodfine-bim-library/tokens/bim/key-plans.dtcg.json`
+- Deliverable 1b: `woodfine-bim-library/key-plans/key-plans-registry.md` standalone Markdown
+- Corporate Office SVG diagrams: blocked on zone depth data
+- DTCG 6 missing Object files; 5 Rust crates
+- Binary ledger entry at Command Session for app-orchestration-bim v0.0.3
+
+**Operator preferences surfaced:** say "BIM Objects" not "tokens" in project-bim; all BIM Object files route to woodfine-bim-library.
+
 ---
 
 ## 2026-05-23 | totebox@claude-code | tool-keyplan-scaffold

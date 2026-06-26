@@ -9,6 +9,27 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 
 ---
 
+## 2026-06-25 | totebox@claude-code | startup + immediate shutdown (no work done)
+
+**Done:**
+- Session lock written; role confirmed (Totebox, cluster/project-bim)
+- Startup reads: manifest, inbox, NOTAM (clear), session-context, briefs README, outbox, git status
+- Detected: 18 modified IFC files in `woodfine-bim-library/key-plans/` (pre-existing; not created this session)
+
+**Pending / carry-forward:**
+- Stage 6 + production deploy of `app-privategit-bim` → Command Session (outbox dispatched 2026-06-20)
+- NOTAM.md permission (`chmod 644`) → Command Session (outbox dispatched 2026-06-22)
+- PO-1 furniture_refs: apply to `woodfine-bim-library/tokens/bim/key-plans.dtcg.json`
+- key-plans-registry.md Deliverable 1b
+- Corporate Office SVG diagrams: blocked on zone depth data
+- 6 missing DTCG files; 5 Rust crates
+- DTCG accuracy errors (operator-pending citations — do not touch)
+- 18 modified IFC files in `woodfine-bim-library/key-plans/` — uncommitted; origin/cause unknown; review before next commit
+
+**Operator preferences surfaced:** none new this session.
+
+---
+
 ## 2026-06-22 | totebox@claude-code | context cleanup sweep + DTCG Decisions 2-4
 
 **Done:**
@@ -54,55 +75,4 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 **Operator preferences surfaced:**
 - User browses via SSH tunnel (`ssh -L 9206:localhost:9206 jennifer@34.53.65.203 -N`) — not WireGuard VPN
 
----
-
-## 2026-05-28 | totebox@claude-code | preview-viewers + routing-correction
-
-**Done:**
-- Created `preview/po-1-floor-plan.html` — SVG floor plan of PO-1 at 1:20 scale; 6 furniture pieces; dimension callouts; zone fills; HTML legend table
-- Created `preview/interior-tokens.html` — HTML viewer for interior.dtcg.json; 7 furniture Object cards + circulation constraint panel; colour-coded by category
-- Copied `preview/interior.dtcg.json` — point-in-time snapshot in preview/ for local serving
-- Copied all 3 new preview files to `outputs/` for rsync access
-- Copied `interior.dtcg.json` to correct location: `woodfine-bim-library/tokens/bim/interior.dtcg.json`
-- Updated BRIEF-tool-keyplan.md: interior.dtcg.json and key-plans.dtcg.json locations corrected
-
-**Operator corrections (saved to memory):**
-- In project-bim, say **BIM Objects** not "tokens"
-- All BIM Object files route to `woodfine-bim-library`, not `pointsav-design-system`
-
-**CRITICAL — routing errors from prior session to resolve:**
-- `pointsav-design-system/tokens/bim/interior.dtcg.json` — misrouted; pending admin-tier removal by Command
-- `pointsav-design-system/tokens/bim/key-plans.dtcg.json` — PO-1 structured furniture_refs applied here in error; `woodfine-bim-library/tokens/bim/key-plans.dtcg.json` still needs that update
-
-**Pending / carry-forward:**
-- Apply PO-1 structured furniture_refs to `woodfine-bim-library/tokens/bim/key-plans.dtcg.json`
-- Deliverable 1b: `woodfine-bim-library/key-plans/key-plans-registry.md` standalone Markdown
-- Corporate Office SVG diagrams: no furniture; blocked on zone depth data
-- Apply Decisions 1–4 to DTCG Objects + delete BIM_TOKENS block from HTML
-- DTCG 6 missing Object files
-- Binary ledger entry at Command Session for app-orchestration-bim v0.0.3
-- Stage 6: 37+ commits ahead of origin on cluster/project-bim
-
----
-
-## 2026-05-28 | totebox@claude-code | preview-viewers + routing-correction
-
-**Done:**
-- Created `preview/po-1-floor-plan.html` — SVG floor plan of PO-1 at 1:20 scale; 6 furniture pieces; dimension callouts; zone fills; HTML legend table
-- Created `preview/interior-tokens.html` — HTML viewer for interior.dtcg.json; 7 furniture Object cards + circulation constraint panel; colour-coded by category
-- Copied all 3 new preview files to `outputs/` for rsync access
-- Copied `interior.dtcg.json` to correct location: `woodfine-bim-library/tokens/bim/interior.dtcg.json`
-- Updated BRIEF-tool-keyplan.md: interior.dtcg.json and key-plans.dtcg.json locations corrected
-
-**CRITICAL — routing errors still open:**
-- `pointsav-design-system/tokens/bim/interior.dtcg.json` — misrouted; wbl is canonical; pending admin-tier removal by Command
-- `pointsav-design-system/tokens/bim/key-plans.dtcg.json` — PO-1 update applied here in error; wbl canonical copy still needs furniture_refs update
-
-**Pending / carry-forward:**
-- Apply PO-1 structured furniture_refs to `woodfine-bim-library/tokens/bim/key-plans.dtcg.json`
-- Deliverable 1b: `woodfine-bim-library/key-plans/key-plans-registry.md`
-- Corporate Office SVG diagrams: blocked on zone depth data
-- 6 DTCG missing files; 5 Rust crates
-
-**Operator preferences surfaced:** say "BIM Objects" not "tokens" in project-bim; all BIM Object files route to woodfine-bim-library.
 
