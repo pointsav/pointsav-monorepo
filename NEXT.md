@@ -53,6 +53,11 @@ Attribution format: `[YYYY-MM-DD role@engine]`
   - Command Session: update `data/binary-ledger/app-orchestration-bim.jsonl`
   - sha256 `/usr/local/bin/app-orchestration-bim` must match ledger entry
 
+- [ ] **WBL key-plans IFC files — 18 uncommitted modifications** `[2026-06-25 totebox@claude-code]`
+  - `woodfine-bim-library/key-plans/` has 18 modified `.ifc` files (academic, business, civic, laboratory, medical, private-office × 3 variants each)
+  - Detected at startup 2026-06-25; origin unknown — review diff before committing
+  - `git -C woodfine-bim-library diff key-plans/` to inspect
+
 - [ ] **NOTAM still permission denied — fix not applied** `[2026-06-22 totebox@claude-code]`
   - `ls -la /srv/foundry/NOTAM.md` shows `-rw------- 1 mathew mathew` as of 2026-06-22 session start
   - inbox `command-20260520-notam-permission-resolved` was inaccurate; flagged to Command via outbox `project-bim-20260622-notam-permission-still-denied`
