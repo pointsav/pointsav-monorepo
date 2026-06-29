@@ -416,7 +416,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
     "electronics": {
         "US": [],   # Best Buy deferred to Phase 22 (counter-factual analysis first)
         "CA": [],
-        "MX": [],
+        "MX": ["coppel-mx"],            # Phase 22 2026-06-29
         "GB": [],   # Currys deferred to Phase 22 (UK coverage expansion)
         "FR": ["boulanger-fr", "darty-fr"],   # Mulliez big-box + large-format Darty — Phase 21 2026-05-24
         "DE": ["mediamarkt-de", "saturn-de"], # saturn-de rebranding in flight — Phase 21 2026-05-24
