@@ -80,18 +80,27 @@ TOP_N = 600  # candidates per continent (3x proforma for the largest target mark
 # Nordic countries treated as one combined market for normalization and proforma coverage.
 NORDIC_ISOS = {'DK', 'SE', 'NO', 'FI'}
 
+# New Europe group: Central/Eastern Europe + Balkans + Greece.
+# GR is a member; the standalone GR proforma slot is replaced by this group.
+NEW_EUROPE_ISOS = {'CZ', 'HU', 'RO', 'BG', 'SK', 'HR', 'GR'}
+
 # Per-country proforma targets from Woodfine Buildings Portfolio Proforma V2.
 # CA/US/ES/MX confirmed from proforma; Spain template applied to remaining markets.
+# GR replaced by NEW_EUROPE group (2026-06-29): CZ/HU/RO/BG/SK/HR/GR treated as one market.
 PROFORMA_TARGETS = {
     'CA': 22, 'US': 44, 'MX': 22,
     'ES': 22, 'PL': 22, 'NORDICS': 22,
-    'GB': 22, 'IT': 22, 'GR': 22,
+    'GB': 22, 'IT': 22, 'NEW_EUROPE': 22,
 }
 
 
 def norm_group(iso):
-    """Map a country ISO to its normalization group (Nordics share one group)."""
-    return 'NORDICS' if iso in NORDIC_ISOS else iso
+    """Map a country ISO to its normalization group."""
+    if iso in NORDIC_ISOS:
+        return 'NORDICS'
+    if iso in NEW_EUROPE_ISOS:
+        return 'NEW_EUROPE'
+    return iso
 
 
 CIVIC_CATEGORIES = {
@@ -886,6 +895,8 @@ coverage_rows = []
 for grp, proforma_target in PROFORMA_TARGETS.items():
     if grp == 'NORDICS':
         count = sum(1 for r in all_top if r['iso'] in NORDIC_ISOS)
+    elif grp == 'NEW_EUROPE':
+        count = sum(1 for r in all_top if r['iso'] in NEW_EUROPE_ISOS)
     else:
         count = sum(1 for r in all_top if r['iso'] == grp)
     needed = proforma_target * 3
