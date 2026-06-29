@@ -375,7 +375,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
     "lifestyle": {
         "US": ["ikea-us"],
         "CA": ["ikea-ca"],
-        "MX": ["ikea-mx"],
+        "MX": ["ikea-mx", "liverpool-mx", "suburbia-mx"],  # liverpool-mx + suburbia-mx Phase 22 2026-06-29
         "GB": ["ikea-uk"],
         "FR": ["ikea-fr", "xxxlutz-fr"],   # xxxlutz-fr ~5 stores — Phase 21 2026-05-24
         "DE": ["ikea-de", "xxxlutz-de", "hoeffner-de"],  # xxxlutz-de ~90, hoeffner-de ~25 — Phase 21 2026-05-24

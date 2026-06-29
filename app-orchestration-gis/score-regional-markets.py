@@ -229,7 +229,7 @@ NA_METROS = [
     (32.5027, -117.0087, 'Tijuana'),
     (29.0729, -110.9559, 'Hermosillo'),
     (28.6353, -106.0889, 'Chihuahua'),
-    (26.9353, -101.4252, 'Saltillo'),
+    (25.4230, -100.9927, 'Saltillo'),  # fix: was Monclova coords (174km error)
     (22.1565, -100.9855, 'San Luis Potosí'),
     (21.0190, -101.2574, 'León'),
     (20.5888, -100.3899, 'Querétaro'),
