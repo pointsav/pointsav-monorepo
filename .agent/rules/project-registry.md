@@ -58,9 +58,10 @@ Last updated: 2026-05-31.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-orchestration-bim | Reserved-folder | app-orchestration | 2 files (CLAUDE.md + RESEARCH.md byte-identical to app-console-bim copy, Task Claude — BIM to rationalise); triggered taxonomy expansion to seventh in-force domain on 2026-04-22; directory created 2026-04-23 (closes registry drift) |
+| app-orchestration-command | Active | app-orchestration | CommandCentre hub v0.0.1; 3-crate workspace (orchestration-command-core, orchestration-command, orchestration-command-server); port :8020 loopback; Ed25519 invite token pairing; pairings.yaml fleet API; WORM audit ledger; 7/7 tests; deployed vault-privategit-source-1 2026-06-29 |
 | app-orchestration-exchange | Reserved-folder | app-orchestration | Browser ad campaign UI; deployed as gateway-orchestration-exchange-N; Doctrine claim #52 |
 | app-orchestration-gis | Reserved-folder | app-orchestration | GIS/mapping orchestration surface; deployed as gateway-orchestration-gis-1; registry drift closed 2026-05-07 |
-| app-orchestration-graph | Reserved-folder | app-orchestration | Cross-Totebox DataGraph federation gateway; activates when fleet >10 Toteboxes or second DataGraph consumer emerges; port :9181 (planned); README+README.es; TOPIC+GUIDE staged 2026-06-20 |
+| app-orchestration-graph | Scaffold-coded | app-orchestration | Cross-Totebox DataGraph federation gateway; activates when fleet >10 Toteboxes or second DataGraph consumer emerges; port :9181 (planned); 0.0.1-stub standalone workspace promoted 2026-06-29; README+README.es; TOPIC+GUIDE staged 2026-06-20 |
 | app-orchestration-market | Reserved-folder | app-orchestration | Browser marketplace storefront; deployed as gateway-orchestration-market-N; Doctrine claim #52 |
 | app-orchestration-slm | Active | app-orchestration | Commercial Yo-Yo broker chassis (DOCTRINE #23); 3-crate workspace; port :9180; MVP complete; Phase 2 signed membership tokens + federated graph + training schedule + adapters endpoints 2026-06-19 |
 
@@ -207,12 +208,12 @@ Last updated: 2026-05-31.
 
 ## Summary (2026-06-20)
 
-- **Active:** 16
-- **Scaffold-coded:** 55
-- **Reserved-folder:** 40 (adds `app-orchestration-graph` 2026-06-20)
+- **Active:** 17
+- **Scaffold-coded:** 56
+- **Reserved-folder:** 39
 - **Defect:** 0
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 114. Last updated: 2026-06-20.
+**Total rows:** 115. Last updated: 2026-06-29.
