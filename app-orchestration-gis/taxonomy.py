@@ -427,10 +427,10 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "AT": ["mediamarkt-at"],              # Phase 21 2026-05-24
         "NL": ["mediamarkt-nl"],              # Phase 21 2026-05-24
         "PT": [],
-        "SE": ["mediamarkt-se"],              # Phase 21 2026-05-24
-        "DK": [],
-        "NO": [],
-        "FI": [],
+        "SE": ["mediamarkt-se", "elgiganten-se"],  # Phase 21 2026-05-24; elgiganten-se Phase 22 2026-06-29
+        "DK": ["elgiganten-dk"],                    # Phase 22 2026-06-29
+        "NO": ["elkjop-no", "power-no"],            # Phase 22 2026-06-29
+        "FI": ["gigantti-fi"],                      # Phase 22 2026-06-29
         "IS": [],
     },
 
