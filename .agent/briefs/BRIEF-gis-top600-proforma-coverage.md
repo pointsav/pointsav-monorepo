@@ -158,14 +158,75 @@ Pattern: `ingest-osm.py` with Wikidata QID + `name_query` fallback.
 
 ---
 
+## Simulation results (2026-06-29)
+
+Run: `score-regional-markets.py` with country normalization on current cluster data.
+
+### NA TOP600 distribution
+| Country | In TOP600 | Needed (3×) | Status |
+|---|---|---|---|
+| US | 515 (85.8%) | 132 | ✓ |
+| CA | 56 (9.3%) | 66 | ✗ gap=10 |
+| MX | 29 (4.8%) | 66 | ✗ gap=37 |
+
+**TOP 5 NA (normalized):**
+1. London, Ontario (CA) — nr. Kitchener 76 km — index 100
+2. Lake Charles, LA (US) — nr. Baton Rouge 109 km — index 100
+3. Boca del Río (MX) — nr. Puebla 90 km — index 100
+4. Mesa, AZ (US) — nr. Phoenix 18 km — index 95
+5. Fort Wayne, IN (US) — nr. Indianapolis 107 km — index 93
+
+### EU TOP600 distribution
+| Country | In TOP600 | Proforma target | Needed (3×) | Status |
+|---|---|---|---|---|
+| FR | 177 (29.5%) | — | — | non-proforma |
+| DE | 175 (29.2%) | — | — | non-proforma |
+| GB | 86 (14.3%) | 22 | 66 | ✓ |
+| ES | 47 (7.8%) | 22 | 66 | ✗ gap=19 |
+| IT | 43 (7.2%) | 22 | 66 | ✗ gap=23 |
+| PL | 37 (6.2%) | 22 | 66 | ✗ gap=29 |
+| NL | 21 (3.5%) | — | — | non-proforma |
+| PT | 5 (0.8%) | — | — | non-proforma |
+| DK | 4 (0.7%) | (Nordic group) | — | — |
+| FI | 2 (0.3%) | (Nordic group) | — | — |
+| SE | 1 (0.2%) | (Nordic group) | — | — |
+| NO | 0 | (Nordic group) | — | — |
+| GR | 0 | 22 | 66 | ✗ gap=66 DATA GAP |
+| **NORDICS total** | **7** | 22 | 66 | ✗ gap=59 |
+
+**TOP 5 EU (normalized — one per country at index 100):**
+1. Esbjerg (DK) — nr. Odense 118 km — index 100
+2. TauntonDeane (GB) — nr. Cardiff 110 km — index 100
+3. Rosenheim (DE) — nr. Munich 80 km — index 100
+4. Albi (FR) — nr. Toulouse 77 km — index 100
+5. Jerez de la Frontera (ES) — nr. Cádiz 76 km — index 100
+
+### Key findings
+- Country normalization ensures the #1 site per country reaches index 100 and competes
+  at the top of the global list. This solves the "best of Canada is buried" problem.
+- However, by volume, DE+FR still take 58.7% of EU TOP600 (350/600). Proforma markets
+  (ES/IT/PL/NORDICs/GR) get 220/600 combined — short of 396 needed for full 3× coverage.
+- NORDICS has only 7 eligible suburban-regional markets total (across DK+SE+NO+FI).
+  This is the tightest gap — structural, not a data gap. Norway has 0 eligible markets.
+- GR is a data gap. CA gap (10) is likely addressable with more Canadian chain ingests.
+- Algorithm note: normalization alone doesn't guarantee quota. To guarantee 66 slots
+  per country requires stratified sampling (Phase N+1 decision, see Decisions open).
+
+---
+
 ## Work log
 
 - **2026-06-29** — Operator Q&A completed (11 questions). Decisions locked. BRIEF created.
   Phase 6 web research launched in parallel with BRIEF creation.
+  Score simulation run. Results logged above. Research page (v0.4) + index.html updated.
+  All code committed (commit 4de80f9c + second commit pending research page changes).
 
 ---
 
 ## Carry-forward
 
-- Phase 6 simulation results go in `work/top600-proforma-coverage.json` — paste summary here
-- Phase 1 ingest QIDs go in the Required ingests table above once confirmed
+- Phase 1 GR/IT chain ingests — QIDs confirmed in BRIEF. Run after normalization is deployed.
+- CA gap (10) — check how many CA markets are in the suburban-regional pool; may need
+  more Canadian chain ingests (Canadian Tire large-format, Home Depot CA suburban)
+- NORDICS structural gap — only 7 eligible markets; flag to operator for proforma adjustment
+- GR proforma target reduction decision still open (see Decisions open)
