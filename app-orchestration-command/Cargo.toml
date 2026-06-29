@@ -1,0 +1,56 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/orchestration-command-core",
+    "crates/orchestration-command",
+    "crates/orchestration-command-server",
+]
+
+[workspace.package]
+edition = "2021"
+license = "LicenseRef-PointSav-Proprietary"
+rust-version = "1.85"
+
+[workspace.dependencies]
+orchestration-command-core = { path = "crates/orchestration-command-core" }
+orchestration-command = { path = "crates/orchestration-command" }
+
+# Async runtime (current_thread flavor — 4–8 MB RSS floor vs 30–40 MB multi-thread)
+tokio = { version = "1.40", features = ["rt", "macros", "net", "time", "sync", "io-util", "process"] }
+
+# HTTP
+axum = "0.8"
+
+# Serialisation
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Identifiers, time
+uuid = { version = "1.10", features = ["v7", "serde"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
+
+# Errors
+anyhow = "1"
+thiserror = "2"
+
+# YAML parsing (pairings.yaml, manifests)
+serde_yaml = "0.9"
+
+# License token + invite token — Ed25519 signature over a base64 payload.
+ed25519-dalek = "2"
+base64 = "0.22"
+
+# Observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true
