@@ -1,24 +1,15 @@
-[workspace]
-
 [package]
 name = "app-orchestration-graph"
-version = "0.0.1-stub"
+version = "0.1.0"
 edition = "2021"
-license = "LicenseRef-PointSav-Proprietary"
-rust-version = "1.85"
 
 [[bin]]
-name = "orchestration-graph-server"
+name = "app-orchestration-graph"
 path = "src/main.rs"
 
 [dependencies]
-tokio = { version = "1.40", features = ["rt", "macros", "net"] }
 axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
+reqwest = { version = "0.12", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-
-[profile.release]
-opt-level = "z"
-lto = true
-codegen-units = 1
-panic = "abort"
-strip = true
