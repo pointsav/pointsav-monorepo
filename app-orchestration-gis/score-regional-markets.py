@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-score-regional-markets.py — Top 400 Regional Markets ranking (NA and EU).
+score-regional-markets.py — Top 600 Regional Markets ranking (NA and EU).
 
 DEFINITION: A Regional Market is a named suburb or satellite municipality within
 commuting distance (15–80 km) of a major metro centre. Major metro cores are
@@ -27,8 +27,9 @@ Scoring formula (within suburban-regional pool only):
   No metro_multiplier — all markets in the pool are already in the suburban band.
 
 Outputs:
-  work/top400-regional-na.json  — top 400 suburban-regional NA markets
-  work/top400-regional-eu.json  — top 400 suburban-regional EU markets
+  work/top600-regional-na.json  — top 600 suburban-regional NA markets
+  work/top600-regional-eu.json  — top 600 suburban-regional EU markets
+  work/top600-proforma-coverage.json — per-country proforma 3x proof
   work/classified-na.json       — all NA markets with rm_type (reference)
   work/classified-eu.json       — all EU markets with rm_type (reference)
 
@@ -48,10 +49,11 @@ RM_PATH       = Path('/srv/foundry/deployments/gateway-orchestration-gis-1/www/d
 CLUSTERS_PATH = Path('/srv/foundry/deployments/gateway-orchestration-gis-1/www/data/clusters-meta.json')
 AEC_PATH      = WORK_DIR / 'DATA-aec-clusters.csv'
 
-OUT_NA       = WORK_DIR / 'top400-regional-na.json'
-OUT_EU       = WORK_DIR / 'top400-regional-eu.json'
+OUT_NA       = WORK_DIR / 'top600-regional-na.json'
+OUT_EU       = WORK_DIR / 'top600-regional-eu.json'
 OUT_CLASS_NA = WORK_DIR / 'classified-na.json'
 OUT_CLASS_EU = WORK_DIR / 'classified-eu.json'
+OUT_COVERAGE = WORK_DIR / 'top600-proforma-coverage.json'
 
 # Geometric isolation thresholds (replaces fixed metro-distance approach)
 # INNER_KM: below this = metro-adjacent (too close to be an independent suburban market)
@@ -72,6 +74,25 @@ MKT_CONF_OVERRIDES = {
     'rm_ca_strathcona_county': 'high',  # Sherwood Park / Strathcona County, AB — real T1 market
 }
 MAX_SPAN_KM   = 200   # cluster bounding-box span limit (name-collision check)
+
+TOP_N = 600  # candidates per continent (3x proforma for the largest target market)
+
+# Nordic countries treated as one combined market for normalization and proforma coverage.
+NORDIC_ISOS = {'DK', 'SE', 'NO', 'FI'}
+
+# Per-country proforma targets from Woodfine Buildings Portfolio Proforma V2.
+# CA/US/ES/MX confirmed from proforma; Spain template applied to remaining markets.
+PROFORMA_TARGETS = {
+    'CA': 22, 'US': 44, 'MX': 22,
+    'ES': 22, 'PL': 22, 'NORDICS': 22,
+    'GB': 22, 'IT': 22, 'GR': 22,
+}
+
+
+def norm_group(iso):
+    """Map a country ISO to its normalization group (Nordics share one group)."""
+    return 'NORDICS' if iso in NORDIC_ISOS else iso
+
 
 CIVIC_CATEGORIES = {
     'healthcare', 'higher_education', 'medical', 'education',
@@ -791,49 +812,99 @@ eu_regional = sorted(
 na_all = sorted([r for r in all_scored if r['continent'] == 'NA'], key=lambda r: r['score'], reverse=True)
 eu_all = sorted([r for r in all_scored if r['continent'] == 'EU'], key=lambda r: r['score'], reverse=True)
 
+
+def apply_country_norm(regional_list):
+    """Add norm_score (0–1) by min-max normalizing raw scores within each country/group.
+
+    Nordics (DK/SE/NO/FI) are treated as one group so the 66 proforma candidate slots
+    are drawn from the best sites across all four countries, not separately.
+    Best site in every group gets 1.0; worst gets 0.0. Groups with one site get 1.0.
+    Re-sorts the list by norm_score DESC.
+    """
+    groups = {}
+    for r in regional_list:
+        g = norm_group(r['iso'])
+        groups.setdefault(g, []).append(r)
+    for g, members in groups.items():
+        scores = [m['score'] for m in members]
+        g_min, g_max = min(scores), max(scores)
+        span = g_max - g_min
+        for m in members:
+            m['norm_score'] = round(1.0 if span == 0 else (m['score'] - g_min) / span, 4)
+    return sorted(regional_list, key=lambda r: r['norm_score'], reverse=True)
+
+
+na_regional = apply_country_norm(na_regional)
+eu_regional = apply_country_norm(eu_regional)
+
 for i, r in enumerate(na_regional, 1):
     r['rank'] = i
 for i, r in enumerate(eu_regional, 1):
     r['rank'] = i
 
-top_na = na_regional[:400]
-top_eu = eu_regional[:400]
+top_na = na_regional[:TOP_N]
+top_eu = eu_regional[:TOP_N]
 
 # ── Write output ───────────────────────────────────────────────────────────────
 
 WORK_DIR.mkdir(exist_ok=True)
 
-# rm-top400.json — flat dict keyed by rm_id for O(1) lookup in the map JS.
+# rm-top600.json — flat dict keyed by rm_id for O(1) lookup in the map JS.
 # Deployed to www/data/ so the browser can fetch it alongside clusters-meta.json.
-# 'score' is rescaled to a 0–100 Regional Market Index (per continent, top = 100)
-# for presentation; the raw discovery score is kept as 'raw'.
-OUT_RM_TOP400 = Path('/srv/foundry/deployments/gateway-orchestration-gis-1/www/data/rm-top400.json')
+# 'score' = norm_score × 100 (0–100 Regional Market Index, country-normalized);
+# 'raw' = original discovery score before normalization.
+OUT_RM_TOP600 = Path('/srv/foundry/deployments/gateway-orchestration-gis-1/www/data/rm-top600.json')
 
-na_max = max((r['score'] for r in top_na), default=1.0) or 1.0
-eu_max = max((r['score'] for r in top_eu), default=1.0) or 1.0
-
-rm_top400_dict = {}
+rm_top600_dict = {}
 for r in top_na:
-    rm_top400_dict[r['rm_id']] = {
-        'rank': r['rank'], 'score': round(100 * r['score'] / na_max, 1), 'raw': r['score'],
+    rm_top600_dict[r['rm_id']] = {
+        'rank': r['rank'], 'score': round(100 * r['norm_score'], 1), 'raw': r['score'],
         'name': r['market'], 'metro': r['suburb_of'],
         'dist_km': r['anchor_d'],   # anchor_d = geometric isolation distance
         'lat': r['centroid']['lat'], 'lon': r['centroid']['lon'],
         't1': r['t1'], 't2': r['t2'], 't3': r['t3'],
+        'iso': r['iso'],
         'cont': 'NA',
     }
 for r in top_eu:
-    rm_top400_dict[r['rm_id']] = {
-        'rank': r['rank'], 'score': round(100 * r['score'] / eu_max, 1), 'raw': r['score'],
+    rm_top600_dict[r['rm_id']] = {
+        'rank': r['rank'], 'score': round(100 * r['norm_score'], 1), 'raw': r['score'],
         'name': r['market'], 'metro': r['suburb_of'],
         'dist_km': r['anchor_d'],   # anchor_d = geometric isolation distance
         'lat': r['centroid']['lat'], 'lon': r['centroid']['lon'],
         't1': r['t1'], 't2': r['t2'], 't3': r['t3'],
+        'iso': r['iso'],
         'cont': 'EU',
     }
-with open(OUT_RM_TOP400, 'w') as f:
-    json.dump(rm_top400_dict, f, separators=(',', ':'))
-print(f"Wrote {OUT_RM_TOP400} ({len(rm_top400_dict)} entries)", flush=True)
+with open(OUT_RM_TOP600, 'w') as f:
+    json.dump(rm_top600_dict, f, separators=(',', ':'))
+print(f"Wrote {OUT_RM_TOP600} ({len(rm_top600_dict)} entries)", flush=True)
+
+# Proforma coverage proof: per-country count of candidates in TOP_N vs. 3x target.
+all_top = top_na + top_eu
+coverage_rows = []
+for grp, proforma_target in PROFORMA_TARGETS.items():
+    if grp == 'NORDICS':
+        count = sum(1 for r in all_top if r['iso'] in NORDIC_ISOS)
+    else:
+        count = sum(1 for r in all_top if r['iso'] == grp)
+    needed = proforma_target * 3
+    coverage_rows.append({
+        'country': grp,
+        'proforma_target': proforma_target,
+        'candidates_needed': needed,
+        'candidates_in_top600': count,
+        'meets_3x': count >= needed,
+        'gap': max(0, needed - count),
+    })
+with open(OUT_COVERAGE, 'w') as f:
+    json.dump(coverage_rows, f, indent=2)
+print(f"Wrote {OUT_COVERAGE} ({len(coverage_rows)} country entries)", flush=True)
+print("\n── Proforma 3x Coverage ──")
+for row in coverage_rows:
+    flag = '✓' if row['meets_3x'] else f'✗ gap={row["gap"]}'
+    print(f"  {row['country']:>8}  proforma={row['proforma_target']:>2}  needed={row['candidates_needed']:>3}  "
+          f"have={row['candidates_in_top600']:>3}  {flag}")
 
 with open(OUT_NA, 'w') as f:
     json.dump(top_na, f, indent=2)
@@ -853,22 +924,22 @@ print(f"Wrote {OUT_CLASS_EU} ({len(eu_all)} total EU with rm_type)", flush=True)
 
 # ── Console summary ────────────────────────────────────────────────────────────
 
-print("\n── TOP 20 NA Regional Markets (suburban-regional) ──")
-hdr = f"{'Rk':>3}  {'Market':<30}  {'ISO':>3}  {'Suburb of':<16}  {'km':>5}  T1  T2  T3  Civ  Score"
+print("\n── TOP 20 NA Regional Markets (suburban-regional, country-normalized) ──")
+hdr = f"{'Rk':>3}  {'Market':<30}  {'ISO':>3}  {'Suburb of':<16}  {'km':>5}  T1  T2  T3  Civ  Norm  Raw"
 print(hdr)
 for r in top_na[:20]:
     print(f"{r['rank']:>3}  {r['market']:<30}  {r['iso']:>3}  "
           f"{r['suburb_of']:<16}  {r['anchor_d']:>5.1f}  "
           f"{r['t1']:>2}  {r['t2']:>2}  {r['t3']:>2}  "
-          f"{'Y' if r['civic'] else 'N':>3}  {r['score']:>6.3f}")
+          f"{'Y' if r['civic'] else 'N':>3}  {r['norm_score']:>5.3f}  {r['score']:>5.3f}")
 
-print("\n── TOP 20 EU Regional Markets (suburban-regional) ──")
+print("\n── TOP 20 EU Regional Markets (suburban-regional, country-normalized) ──")
 print(hdr)
 for r in top_eu[:20]:
     print(f"{r['rank']:>3}  {r['market']:<30}  {r['iso']:>3}  "
           f"{r['suburb_of']:<16}  {r['anchor_d']:>5.1f}  "
           f"{r['t1']:>2}  {r['t2']:>2}  {r['t3']:>2}  "
-          f"{'Y' if r['civic'] else 'N':>3}  {r['score']:>6.3f}")
+          f"{'Y' if r['civic'] else 'N':>3}  {r['norm_score']:>5.3f}  {r['score']:>5.3f}")
 
 # ── 3 candidate test markets for TOPIC articles ────────────────────────────────
 
