@@ -729,10 +729,10 @@
     <!-- F26(b) — global live region: announces selection, region switch, search counts -->
     <div id="a11y-status" class="sr-only" aria-live="polite" role="status"></div>
     <!-- F26(c) — crawlable / screen-reader text alternative for the canvas map.
-         Populated from the same rm-top400 data the map renders. -->
-    <nav id="a11y-rm-list" class="sr-only" aria-label="Top 400 Regional Markets, text list">
+         Populated from the same rm-top600 data the map renders. -->
+    <nav id="a11y-rm-list" class="sr-only" aria-label="Top 600 Regional Markets, text list">
         <h2>Top Regional Markets</h2>
-        <p>The interactive map above is a graphical canvas. The ranked list below presents the same Top 400 Regional Markets — co-location settlements ranked by composite score — for screen readers and search engines.</p>
+        <p>The interactive map above is a graphical canvas. The ranked list below presents the same Top 600 Regional Markets — co-location settlements ranked by composite score — for screen readers and search engines.</p>
         <ol id="a11y-rm-ol"><li>Loading regional market index…</li></ol>
     </nav>
 
@@ -830,7 +830,7 @@
                 <table id="print-rm-colocs-table">
                     <thead><tr>
                         <th>Tier</th><th>Composition</th><th>Anchors</th>
-                        <th style="text-align:right">≈ km</th><th style="text-align:right">Top-400</th>
+                        <th style="text-align:right">≈ km</th><th style="text-align:right">Top-600</th>
                     </tr></thead>
                     <tbody id="print-rm-colocs-tbody"></tbody>
                 </table>
@@ -856,7 +856,7 @@
         <div class="lg-row"><span class="lg-sw" style="background:#3182BD"></span> District — two-format co-location</div>
         <div class="lg-row"><span class="lg-sw" style="background:#9ECAE1"></span> Local — single anchor</div>
         <div class="lg-row"><span class="lg-ring"></span> Proximity ring — modelled catchment</div>
-        <div class="lg-row" id="lg-top400" style="display:none;"><span class="lg-sw" style="background:#D97706"></span> Top 400 Regional Market</div>
+        <div class="lg-row" id="lg-top600" style="display:none;"><span class="lg-sw" style="background:#D97706"></span> Top 600 Regional Market</div>
     </div>
 
     <div class="nav-cluster">
@@ -989,7 +989,7 @@
                     <li><strong>Local:</strong> A single large-format anchor category present without a qualifying co-location pair.</li>
                 </ul>
                 <h3>Data and Scale</h3>
-                <p>The framework is applied to 6,493 co-location clusters across North America and Europe, using OpenStreetMap point-of-interest records as the primary source. Clusters are identified by a two-pass spatial clustering algorithm (DBSCAN with a distance threshold calibrated to sub-metropolitan retail-park spacing, followed by an Intersection-over-Union merge pass). Cluster counts are descriptive rather than inferential: the totals shift with the clustering parameters, so the figures indicate market structure rather than precise measurements. Within each tier, clusters are ranked by geometric compactness and catchment characteristics. A &ldquo;Regional Market&rdquo; denotes a settlement containing at least one qualifying co-location; the published Top-400 ranks these markets by a composite score.</p>
+                <p>The framework is applied to 6,493 co-location clusters across North America and Europe, using OpenStreetMap point-of-interest records as the primary source. Clusters are identified by a two-pass spatial clustering algorithm (DBSCAN with a distance threshold calibrated to sub-metropolitan retail-park spacing, followed by an Intersection-over-Union merge pass). Cluster counts are descriptive rather than inferential: the totals shift with the clustering parameters, so the figures indicate market structure rather than precise measurements. Within each tier, clusters are ranked by geometric compactness and catchment characteristics. A &ldquo;Regional Market&rdquo; denotes a settlement containing at least one qualifying co-location; the published Top-600 ranks these markets by a composite score.</p>
                 <h3>Catchment Areas</h3>
                 <p>Population and consumer spend figures are derived from WorldPop 100 m population grids and modelled per-capita spend estimates, aggregated to H3 hexagonal cells within a 150 km radius of each cluster centroid. Spend is estimated by a simple chain: WorldPop cell population → a single, <strong>uniform national per-capita retail-spend rate</strong> → sum over the catchment cells. The per-capita rate is applied uniformly within a country; it does not adjust for local income, age, or household composition, so cell-level spend is an order-of-magnitude estimate rather than a measured figure.</p>
                 <p>Because the catchment is built from a fixed radius and then aggregated to H3 hexagons, the totals are sensitive to the choice of radius and hexagon resolution — the modifiable areal unit problem (MAUP). Different but equally reasonable zone definitions would yield different population and spend totals; the figures indicate scale, not precise counts. The intended refinement — replacing the radius-based catchment with mobility-defined catchments derived from parking-lot geo-fencing — is a planned extension as origin-destination panel data is acquired.</p>
@@ -1276,7 +1276,7 @@
             }
         }
 
-        // Page 3 — co-locations: metro-aware scope + Top-400 column (B4b, synchronous).
+        // Page 3 — co-locations: metro-aware scope + Top-600 column (B4b, synchronous).
         const TIER_LABEL = { 1: 'T1 · Regional', 2: 'T2 · District', 3: 'T3 · Local' };
         const rmId    = p.regional_market;
         // All co-locations in this market: same RM OR within ring radius (catches adjacent admin units).
@@ -1312,7 +1312,7 @@
                         <td>${c.td || '—'}</td>
                         <td style="color:#555;font-size:9px">${anchors}</td>
                         <td style="text-align:right">${isCurrent ? '—' : dist.toFixed(1)}</td>
-                        <td style="text-align:right" class="prt-top400-cell">—</td>
+                        <td style="text-align:right" class="prt-top600-cell">—</td>
                     </tr>`;
                 }).join('');
             colocT.innerHTML = colocHtml;
@@ -1370,12 +1370,12 @@
         const catchmentPromise = catchmentCentroidCache[clusterId]
             ? Promise.resolve(catchmentCentroidCache[clusterId])
             : fetch(`data/catchment-cells/${clusterId}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
-        const [retailers, satImg, wiki, metroWiki, top400Data, catchmentCells] = await Promise.allSettled([
+        const [retailers, satImg, wiki, metroWiki, top600Data, catchmentCells] = await Promise.allSettled([
             _prtFetchRetailers(coords, ringKm * 1000),
             _prtSatSnapshot(coords, zoom, ringKm, p.members || []),
             _prtFetchWikiBlurb(p.display_name || p.market_name || '', { introOnly: true, maxChars: p.rm_type === 'metro' ? 1200 : (metroWikiTitle ? 620 : 850) }),
             metroWikiTitle ? _prtFetchWikiBlurb(metroWikiTitle, { introOnly: true, maxChars: 600 }) : Promise.resolve(null),
-            fetch('data/rm-top400.json').then(r => r.json()).catch(() => ({})),
+            fetch('data/rm-top600.json').then(r => r.json()).catch(() => ({})),
             catchmentPromise
         ]);
 
@@ -1404,19 +1404,19 @@
         wikiEl.innerHTML = wikiHtml;
         wikiEl.style.fontStyle = 'normal';
 
-        // Top-400 cells — fill after top400Data arrives (B4b).
-        const top400 = (top400Data.status === 'fulfilled' && top400Data.value) ? top400Data.value : {};
-        document.querySelectorAll('.prt-top400-cell').forEach((cell, i) => {
+        // Top-600 cells — fill after top600Data arrives (B4b).
+        const top600 = (top600Data.status === 'fulfilled' && top600Data.value) ? top600Data.value : {};
+        document.querySelectorAll('.prt-top600-cell').forEach((cell, i) => {
             const sib = sortedColocs[i];
             if (!sib) return;
-            const entry = top400[sib.rm];
+            const entry = top600[sib.rm];
             cell.textContent = entry ? `#${entry.rank}` : '—';
         });
-        // Show this cluster's Top-400 rank if it has one.
-        const selfRank = top400[p.regional_market];
+        // Show this cluster's Top-600 rank if it has one.
+        const selfRank = top600[p.regional_market];
         const noteEl = el('print-retail-note');
         if (noteEl && selfRank) {
-            noteEl.textContent = noteEl.textContent + ` · Top-400 Regional Market #${selfRank.rank}`;
+            noteEl.textContent = noteEl.textContent + ` · Top-600 Regional Market #${selfRank.rank}`;
         }
 
         // Retailer table — grouped by tenant-rep category.
@@ -1591,7 +1591,7 @@
         const pop = (p.pp != null && !isNaN(parseInt(p.pp))) ? parseInt(p.pp) : null;
         if (pop != null && pop > 0) parts.push(`~${compactNum(pop)} catchment population`);
         const rmRank = p.rm_rank || 0;
-        if (rmRank > 0) parts.push(`Top-400 Regional Market (#${rmRank})`);
+        if (rmRank > 0) parts.push(`Top-600 Regional Market (#${rmRank})`);
 
         if (!parts.length) return '';
 
@@ -1766,14 +1766,14 @@
     }
 
     // F26(c) — build the screen-reader / crawler text alternative for the canvas.
-    // Lists the Top 400 Regional Markets (rank, name, continent, tier composition)
-    // from the same rmTop400 data that drives the map's amber RM stars.
+    // Lists the Top 600 Regional Markets (rank, name, continent, tier composition)
+    // from the same rmTop600 data that drives the map's amber RM stars.
     function renderRmTextAlternative() {
         const ol = document.getElementById('a11y-rm-ol');
         if (!ol) return;
-        const entries = Object.values(rmTop400 || {}).filter(r => r && r.rank && r.rank <= 400);
+        const entries = Object.values(rmTop600 || {}).filter(r => r && r.rank && r.rank <= 600);
         if (!entries.length) { ol.outerHTML = '<p id="a11y-rm-ol">Regional market index unavailable.</p>'; return; }
-        // Data holds two parallel Top-400 rankings (NA 1–400, EU 1–400); group by
+        // Data holds two parallel Top-600 rankings (NA 1–400, EU 1–400); group by
         // continent so rank numbers are unambiguous in the list.
         const contName = { NA: 'North America', EU: 'Europe' };
         const item = (r) => {
@@ -1837,7 +1837,7 @@
     // never surfaced in user-facing UI text. User-facing tier labels are Regional /
     // District / Local (descending co-location strength); the Fringe tier carries no
     // rendered label. Keep this invariant when adding new copy.
-    // Amber is reserved for selection / Top-400 only — no tier uses it.
+    // Amber is reserved for selection / Top-600 only — no tier uses it.
     // Province/state abbreviation → full name (shared by Bento Box + print)
     const PROV_ABBR = {
         AB:'Alberta',BC:'British Columbia',ON:'Ontario',QC:'Quebec',SK:'Saskatchewan',
@@ -2399,7 +2399,7 @@
 
     // F8 — ordered, CVD-safe sequential tier ramp (ColorBrewer Blues).
     // T1 strongest=darkest → T3 lightest. Amber (#EAB308) is reserved for
-    // selection / Top-400 highlight only — NO tier may be amber.
+    // selection / Top-600 highlight only — NO tier may be amber.
     function colorMatchExpr() {
         return ['match', ['get', 'tier'],
             1, '#08306B', 2, '#3182BD', 3, '#9ECAE1', '#CBD5E1'];
@@ -2428,7 +2428,7 @@
     function nodesStagedOpacityExpr() {
         // F13 conf-wash dropped: all clusters render at full per-tier opacity so
         // they read as solid markers, identical to the archetype modes. The only
-        // shading is the Top-400 recess (0.45).
+        // shading is the Top-600 recess (0.45).
         return BUBBLE_OPACITY;
     }
 
@@ -2483,15 +2483,15 @@
     // In-memory cluster data for ring generation and BentoBox fallback (loaded at startup)
     let clusterMeta  = null;
     let clusterIndex = null; // Map: cluster_id → meta object
-    let rmTop400     = {};   // rm_id → { rank, score, name, metro, dist_km, lat, lon, t1, t2, t3, cont }
+    let rmTop600     = {};   // rm_id → { rank, score, name, metro, dist_km, lat, lon, t1, t2, t3, cont }
     let retailActive      = true;   // Retail is on by default (radio group floor)
     let rmStarsActive     = false;
     let urbanFringeActive = false;
     let commuterActive    = false;
     // null = Retail mode; 'VWH' = Urban Fringe; 'PKS' = Commuter
     let activeArchetype   = null;
-    // Top 400 recess: stores each archetype layer's original (zoom-staged)
-    // circle-opacity expression so it can be restored exactly when Top 400 turns off.
+    // Top 600 recess: stores each archetype layer's original (zoom-staged)
+    // circle-opacity expression so it can be restored exactly when Top 600 turns off.
     // Captured lazily the first time a layer is recessed (see _recessLayer).
     const _archetypeOrigOpacity = {};   // layerId → original circle-opacity expr
     // Archetype GeoJSON (loaded alongside clusters-meta.json)
@@ -3003,7 +3003,7 @@
             </div>
             <div class="data-block">
                 <button class="lc-btn${rmStarsActive ? ' lc-active' : ''}" id="lc-rm-stars" onclick="toggleRmStars(this)">
-                    <span class="lc-dot" style="background:#D97706"></span>Top 400 Regional Markets
+                    <span class="lc-dot" style="background:#D97706"></span>Top 600 Regional Markets
                 </button>
                 <button class="lc-btn${retailActive ? ' lc-active' : ''}" id="lc-retail" onclick="toggleRetailLayer(this)" style="margin-top:4px;">
                     <span class="lc-dot" style="background:#164679"></span>Retail
@@ -3476,7 +3476,7 @@
     }
 
     // ── View mode radio group: Retail / Urban Fringe / Commuter — exactly one active ──
-    // Top 400 is an independent highlight overlay, NOT part of this group.
+    // Top 600 is an independent highlight overlay, NOT part of this group.
 
     function deactivateOverlayGroup() {
         // Deactivate Retail
@@ -3484,7 +3484,7 @@
             retailActive = false;
             document.getElementById('lc-retail')?.classList.remove('lc-active');
         }
-        // Top 400 is an independent overlay — it PERSISTS across mode switches.
+        // Top 600 is an independent overlay — it PERSISTS across mode switches.
         // Do not deactivate or hide rm-stars here. The mode toggle handlers
         // re-apply the recess + re-raise the stars after the new mode is shown.
         if (urbanFringeActive) {
@@ -3511,7 +3511,7 @@
     function _restoreNodesIfClear() {
         if (!koppenActive && !ecoregionsActive) {
             // Restore the live zoom-staged opacity expression (not a flat constant)
-            // so the overview alpha-blend survives a Top-400 recess/un-recess cycle.
+            // so the overview alpha-blend survives a Top-600 recess/un-recess cycle.
             map.setPaintProperty('nodes', 'circle-opacity', nodesStagedOpacityExpr());
             // Restore the per-tier white-stroke taper (from recess flat 0.75).
             map.setPaintProperty('nodes', 'circle-stroke-width', BUBBLE_STROKE_WIDTH);
@@ -3522,8 +3522,8 @@
         }
     }
 
-    // ── Top 400 recess helpers ──────────────────────────────────────────────────
-    // When Top 400 is active, the currently-visible bubble layer(s) for the active
+    // ── Top 600 recess helpers ──────────────────────────────────────────────────
+    // When Top 600 is active, the currently-visible bubble layer(s) for the active
     // mode are recessed (pushed back) so the amber stars read clearly on top, while
     // the bubbles stay legible (0.45 fill) rather than near-invisible ghosting.
     const RECESS_OPACITY        = 0.45;
@@ -3592,16 +3592,16 @@
     }
 
     function applyRmStarsStyle() {
-        // Top 400 stars are shown whenever active (keeping the GLOBAL-zoom gate),
+        // Top 600 stars are shown whenever active (keeping the GLOBAL-zoom gate),
         // independent of which mode (Retail / Urban Fringe / Commuter) is selected.
         const starsVisible = rmStarsActive && prodView.mode === 'GLOBAL';
         const vis = starsVisible ? 'visible' : 'none';
         ['rm-stars-glow', 'rm-stars-dot'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
         });
-        // Amber legend row visible only when Top 400 is on.
-        const lgTop400 = document.getElementById('lg-top400');
-        if (lgTop400) lgTop400.style.display = rmStarsActive ? 'flex' : 'none';
+        // Amber legend row visible only when Top 600 is on.
+        const lgTop600 = document.getElementById('lg-top600');
+        if (lgTop600) lgTop600.style.display = rmStarsActive ? 'flex' : 'none';
 
         if (!map.getLayer('nodes')) return;
         if (starsVisible) {
@@ -3612,7 +3612,7 @@
                 if (map.getLayer(id)) map.moveLayer(id);
             });
         } else {
-            // Top 400 off (or in LOCAL) → restore the active mode's bubble styling.
+            // Top 600 off (or in LOCAL) → restore the active mode's bubble styling.
             _unrecessActiveModeBubbles();
         }
     }
@@ -3651,7 +3651,7 @@
             if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'visible');
             _restoreNodesIfClear();
         }
-        // Top 400 persists across mode switches — re-apply recess to the newly-shown
+        // Top 600 persists across mode switches — re-apply recess to the newly-shown
         // archetype bubbles and re-raise the amber stars on top.
         if (urbanFringeActive && rmStarsActive && prodView.mode === 'GLOBAL') {
             applyRmStarsStyle();
@@ -3690,7 +3690,7 @@
             if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'visible');
             _restoreNodesIfClear();
         }
-        // Top 400 persists across mode switches — re-apply recess to the newly-shown
+        // Top 600 persists across mode switches — re-apply recess to the newly-shown
         // archetype bubbles and re-raise the amber stars on top.
         if (commuterActive && rmStarsActive && prodView.mode === 'GLOBAL') {
             applyRmStarsStyle();
@@ -3705,7 +3705,7 @@
         document.getElementById('lc-retail')?.classList.add('lc-active');
         if (btn) btn.classList.add('lc-active');
         renderTierCounts('RETAIL');
-        // Top 400 persists across mode switches — re-recess the now-visible Retail
+        // Top 600 persists across mode switches — re-recess the now-visible Retail
         // nodes and re-raise the amber stars on top.
         if (rmStarsActive && prodView.mode === 'GLOBAL') {
             applyRmStarsStyle();
@@ -3998,7 +3998,7 @@
             regionBlock = `<div class="data-value" style="font-size:16px;">${escapeHtml(secondaryGeo || 'Regional Node')}</div>`;
         }
 
-        // RM rank badge (shown when cluster belongs to a Top 400 Regional Market)
+        // RM rank badge (shown when cluster belongs to a Top 600 Regional Market)
         const rmRank  = p.rm_rank  || 0;
         const rmScore = p.rm_score || 0;
         const rmCont  = p.rm_cont  || '';
@@ -4279,10 +4279,10 @@
 
         // Load cluster data into memory: nodes GeoJSON source + ring generation + BentoBox fallback
         document.getElementById('inspector').innerHTML = '<div class="loading-skeleton">Loading map data…</div>';
-        // Load rm-top400 first (small file, ~145 KB) then clusters-meta
-        fetch('data/rm-top400.json')
+        // Load rm-top600 first (small file, ~145 KB) then clusters-meta
+        fetch('data/rm-top600.json')
             .then(r => r.json())
-            .then(d => { rmTop400 = d || {}; renderRmTextAlternative(); })
+            .then(d => { rmTop600 = d || {}; renderRmTextAlternative(); })
             .catch(() => {});
 
         fetch('data/clusters-meta.json')
@@ -4297,7 +4297,7 @@
                 const nodesGeoJSON = {
                     type: 'FeatureCollection',
                     features: data.map(c => {
-                        const rmInfo = rmTop400[c.rm] || null;
+                        const rmInfo = rmTop600[c.rm] || null;
                         return {
                             type: 'Feature',
                             geometry: { type: 'Point', coordinates: [c.lon, c.lat] },
@@ -4319,7 +4319,7 @@
                 };
                 if (map.getSource('data')) map.getSource('data').setData(nodesGeoJSON);
                 // Populate rm-stars source (one dot per Regional Market)
-                const rmStarsFeatures = Object.values(rmTop400)
+                const rmStarsFeatures = Object.values(rmTop600)
                     .filter(r => r.lat && r.lon)
                     .map(r => ({
                         type: 'Feature',
@@ -4559,7 +4559,7 @@
             },
         });
 
-        // ── rm-stars: one amber dot per Top 400 Regional Market ─────────────────
+        // ── rm-stars: one amber dot per Top 600 Regional Market ─────────────────
         // Shown only at co-location zoom (z < 9) when rmStarsActive; hidden at retailer zoom.
         // One dot per market (not per cluster) — no double-ring conflict with nodes-halo.
         map.addSource('rm-stars-src', {
