@@ -112,6 +112,7 @@
         .bento-tier-cell      { display: flex; align-items: center; gap: 10px; padding: 10px 0 6px; flex-wrap: wrap; }
         .bento-tier-badge     { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.3px; line-height: 1.4; white-space: nowrap; }
         .bento-composition-chip { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.3px; }
+        .bento-metro-anchor   { font-size: 11px; font-weight: 500; color: var(--text-muted); margin-top: 2px; letter-spacing: 0.2px; }
 
         .anchor-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
         .pill         { background: #fff; border: 1px solid var(--border-soft); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; color: var(--text-main); text-transform: uppercase; }
@@ -367,22 +368,24 @@
         }
         #map:focus-visible { outline: 2px solid var(--brand-primary, #08306B); outline-offset: -2px; }
         /* ── Chain search / retailer + place search ────────────────────── */
-        .chain-search-wrap  { position: relative; margin-top: 8px; }
-        .chain-search-input { width: 100%; padding: 12px 32px 12px 12px; border: 1px solid var(--border-soft); border-radius: 6px; font-size: 16px; color: var(--brand-primary); outline: none; box-sizing: border-box; background: #fff; }
+        .chain-search-wrap  { position: relative; margin-top: 8px; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(10,48,112,0.10); }
+        .chain-search-icon  { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted); pointer-events: none; flex-shrink: 0; }
+        .chain-search-input { width: 100%; padding: 12px 32px 12px 34px; border: 1px solid var(--border-soft); border-radius: 8px; font-size: 15px; color: var(--brand-primary); outline: none; box-sizing: border-box; background: transparent; font-family: inherit; font-weight: 400; }
         .chain-search-input:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 2px rgba(10,48,112,0.08); }
         .chain-search-input::placeholder { color: var(--text-muted); font-weight: 400; }
         .chain-search-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 16px; line-height: 1; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
-        .chain-dropdown { position: absolute; left: 0; right: 0; top: calc(100% + 2px); background: #fff; border: 1px solid var(--border-soft); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); max-height: 260px; overflow-y: auto; -webkit-overflow-scrolling: touch; z-index: 20; }
-        .chain-option { padding: 7px 12px; font-size: 13px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .chain-option .chain-count { float: right; margin-left: 10px; font-size: 11px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+        .chain-dropdown { position: fixed; background: #fff; border: 1px solid var(--border-soft); border-radius: 8px; box-shadow: 0 6px 18px rgba(10,48,112,0.13); max-height: 280px; overflow-y: auto; -webkit-overflow-scrolling: touch; z-index: 1000; }
+        .chain-option { padding: 8px 12px; font-size: 13px; cursor: pointer; }
+        .chain-option .chain-count { margin-left: auto; padding-left: 10px; flex-shrink: 0; font-size: 11px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
         .chain-option:hover .chain-count, .chain-option.focused .chain-count { color: var(--brand-primary); opacity: 0.8; }
         .chain-option:hover, .chain-option.focused { background: #EFF6FF; color: var(--brand-primary); font-weight: 700; }
-        .chain-section-label { padding: 5px 12px 3px 12px; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; background: #f8fafc; border-bottom: 1px solid var(--border-soft); }
+        .chain-section-label { padding: 6px 12px 4px 12px; font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; background: #f8fafc; border-bottom: 1px solid var(--border-soft); }
         .chain-section-label + .chain-option { border-top: none; }
-        .chain-option.place-option { font-weight: 500; color: var(--text-main); }
+        .chain-option.place-option { font-weight: 500; color: var(--text-main); padding: 9px 12px; flex-direction: column; align-items: flex-start; justify-content: center; }
         .chain-option.place-option:hover, .chain-option.place-option.focused { color: var(--brand-primary); font-weight: 700; }
-        .chain-option .place-sub { font-size: 10px; color: var(--text-muted); font-weight: 400; display: block; margin-top: 1px; }
-        .chain-option.place-option:hover .place-sub, .chain-option.place-option.focused .place-sub { color: var(--brand-primary); opacity: 0.75; }
+        .chain-option .place-name { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chain-option .place-sub  { font-size: 10.5px; color: var(--text-muted); font-weight: 400; display: block; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+        .chain-option.place-option:hover .place-sub, .chain-option.place-option.focused .place-sub { color: var(--brand-primary); opacity: 0.8; }
         .chain-option.loading { color: var(--text-muted); font-style: italic; cursor: default; }
         .chain-option.loading:hover { background: transparent; color: var(--text-muted); font-weight: 400; }
         .chain-filter-pill { display: inline-flex; align-items: center; gap: 5px; background: #EFF6FF; color: var(--brand-primary); border-radius: 10px; padding: 2px 8px; font-size: 10px; font-weight: 800; margin-top: 6px; }
@@ -487,7 +490,7 @@
         }
         .inspector-print-btn:hover { background: var(--brand-primary); color: #fff; border-color: var(--brand-primary); }
 
-        /* Print-only one-pager header — hidden on screen, shown on print */
+        /* Print-only report header — hidden on screen, shown on print */
         .print-only { display: none; }
 
         /* ── F15 — compare tray ────────────────────────────────────── */
@@ -516,7 +519,7 @@
         .compare-remove:hover { color: #DC2626; }
         @media (max-width: 768px) { #compare-tray { width: calc(100vw - 16px); bottom: 8px; } }
 
-        /* ── F24 — print / one-pager ───────────────────────────────── */
+        /* ── F24 — print report ─────────────────────────────────────── */
         @media print {
             /* Hide all map chrome: map canvas, nav buttons, legend, footer,
                coachmark, modals, search, sheet grabber, compare tray, a11y text. */
@@ -529,7 +532,7 @@
 
             html, body { height: auto !important; overflow: visible !important; background: #fff !important; }
 
-            /* Show the one-pager header */
+            /* Show the report header */
             .print-only { display: block !important; }
             #print-header {
                 margin: 0 0 14px; padding-bottom: 10px; border-bottom: 2px solid var(--brand-primary);
@@ -554,12 +557,95 @@
                 padding: 0 !important; overflow: visible !important; max-height: none !important; display: block !important;
             }
             #inspector .detail-body { display: block !important; }
+            /* Hide interactive-only inspector elements on print */
+            #sel-el, .empty-msg, .layer-hint { display: none !important; }
             /* Keep colour fidelity for tier badges on print */
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            /* Screen-only elements hidden on print (e.g. Site & Climate dynamic grid — replaced by #print-aec-p1 table) */
+            .hide-on-print { display: none !important; }
             /* Avoid awkward page breaks inside stat blocks */
             .data-block, .catchment-block, .scorecard-box { break-inside: avoid; page-break-inside: avoid; }
-            /* Page 2 — map snapshot */
-            #print-map-page { break-before: page; page-break-before: always; margin: 0; padding: 0; }
+
+            /* Page 2 — cluster map */
+            #print-map-page { break-before: page; page-break-before: always; margin: 0; padding: 1.5rem 2rem; }
+            #print-map-legend { display: block; border-top: 1px solid #e0e0e0; padding-top: 6px; margin-top: 8px; }
+
+            /* Page 3 — site analysis */
+            #print-retail-page { break-before: page; page-break-before: always; padding: 1.5rem 2rem; }
+            #print-retail-header { margin-bottom: 0; padding-bottom: 10px; border-bottom: 2px solid var(--brand-primary); }
+            #print-retail-title { display: block; font-size: 16px; font-weight: 800; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.4px; }
+            #print-retail-rm    { display: block; font-size: 10.5px; color: #444; margin-top: 3px; font-weight: 600; }
+            #print-retail-wiki  { display: block; font-size: 9.5px; color: #333; margin-top: 10px; line-height: 1.5; }
+            #print-retail-note  { display: block; font-size: 8.5px; color: var(--text-muted); margin-top: 3px; }
+            /* Section dividers */
+            .prt-section-head {
+                font-size: 8px; font-weight: 800; text-transform: uppercase;
+                letter-spacing: 1px; color: var(--brand-primary);
+                margin: 12px 0 5px; padding-top: 10px; border-top: 1px solid #e5e7eb;
+            }
+            /* Anchor category matrix */
+            #print-anchor-matrix { margin: 10px 0 6px; }
+            /* Catchment trade area summary */
+            #print-catchment-section { margin: 4px 0 0; }
+            .prt-mini-table { width: 100%; border-collapse: collapse; font-size: 9.5px; }
+            .prt-mini-table td { padding: 2px 6px; border-bottom: 1px solid #f0f0f0; }
+            .prt-mini-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+            .prt-mini-table td:nth-child(2) { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+            /* Co-locations */
+            #print-rm-colocs { margin: 4px 0 0; }
+            #print-rm-colocs-heading { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--brand-primary); margin: 0 0 4px; padding-top: 10px; border-top: 1px solid #e5e7eb; }
+            #print-rm-colocs-table { width: 100%; border-collapse: collapse; font-size: 9.5px; break-inside: auto; }
+            #print-rm-colocs-table th { text-align: left; padding: 3px 6px; border-bottom: 1px solid var(--brand-primary); font-weight: 700; font-size: 8px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); }
+            #print-rm-colocs-table td { padding: 3px 6px; border-bottom: 1px solid #f0f0f0; }
+            #print-rm-colocs-table tr { break-inside: avoid; page-break-inside: avoid; }
+            /* Retail tenancy */
+            #print-retail-subheading { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--brand-primary); margin: 0 0 4px; padding-top: 10px; border-top: 1px solid #e5e7eb; }
+            #print-retail-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+            #print-retail-table th { text-align: left; padding: 4px 8px; border-bottom: 2px solid var(--brand-primary); font-weight: 700; font-size: 8px; text-transform: uppercase; letter-spacing: 0.4px; }
+            #print-retail-table td { padding: 3px 8px; border-bottom: 1px solid #eee; }
+            #print-retail-table tr { break-inside: avoid; page-break-inside: avoid; }
+            #print-retail-attribution { font-size: 7.5px; color: var(--text-muted); margin-top: 0.75rem; }
+            /* Metro context line */
+            #print-metro-ctx { display: none; font-size: 10px; font-weight: 600; color: #555; margin: 1px 0 3px; }
+            /* Category column */
+            .prt-cat { font-weight: 600; white-space: nowrap; padding-right: 0.8em; width: 26%; }
+            /* AEC / climate block */
+            .prt-aec-table { width: 100%; font-size: 9px; border-collapse: collapse; margin-top: 0.75rem; }
+            .prt-aec-table caption { font-size: 10px; font-weight: 700; text-align: left; margin-bottom: 2px; letter-spacing: 0.5px; text-transform: uppercase; }
+            .prt-aec-table td { padding: 2px 6px; border-bottom: 1px solid #f0f0f0; }
+
+            /* Page 4 — satellite aerial */
+            #print-sat-page { break-before: page; page-break-before: always; padding: 1.5rem 2rem; }
+            #print-sat-header { margin: 0 0 10px; padding-bottom: 8px; border-bottom: 2px solid var(--brand-primary); display: flex; align-items: baseline; gap: 10px; }
+            #print-sat-title { font-size: 15px; font-weight: 800; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.4px; }
+            #print-sat-subtitle { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
+            #print-sat-caption { font-size: 7.5px; color: var(--text-muted); margin: 4px 0 0; display: block; }
+            #print-sat-legend { border-top: 1px solid #e0e0e0; padding: 6px 0 0; margin-top: 8px; }
+        }
+
+        /* ── Compare batch print mode ──────────────────────────────────── */
+        /* Screen: batch container always hidden */
+        #batch-print-container { display: none; }
+        @media print {
+            /* In batch mode: hide the normal single-cluster print pages + panel */
+            body.batch-print-active #data-panel,
+            body.batch-print-active #print-map-page,
+            body.batch-print-active #print-retail-page,
+            body.batch-print-active #print-sat-page { display: none !important; }
+            /* Show the batch container */
+            body.batch-print-active #batch-print-container { display: block !important; width: 100%; }
+            /* Per-cluster block layout */
+            body.batch-print-active .batch-stats-page { padding: 1.5rem 2rem; }
+            body.batch-print-active .batch-page { padding: 1.5rem 2rem; }
+            body.batch-print-active .batch-cluster-break { break-before: page; page-break-before: always; }
+            /* Ensure detail-body content shows in batch context */
+            body.batch-print-active #batch-print-container .detail-body { display: block !important; }
+            body.batch-print-active #batch-print-container .data-block { display: block !important; }
+            body.batch-print-active #batch-print-container .print-only { display: block !important; }
+            /* Batch print header per cluster */
+            body.batch-print-active .batch-print-header { margin: 0 0 14px; padding-bottom: 10px; border-bottom: 2px solid var(--brand-primary); }
+            body.batch-print-active .batch-print-header .ph-title { font-size: 20px; font-weight: 800; color: var(--brand-primary); letter-spacing: 0.5px; text-transform: uppercase; margin: 0; }
+            body.batch-print-active .batch-print-header .ph-sub { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin: 4px 0 0; }
         }
 
         /* ── First-run welcome card (F19) — branded coachmark ─────────── */
@@ -655,10 +741,10 @@
              aria-label="Resize panel — drag, or tap to cycle peek, half and full">
             <span class="drawer-handle" aria-hidden="true"></span>
         </div>
-        <!-- F24 — print-only one-pager header (hidden on screen) -->
+        <!-- F24 — print-only report header (hidden on screen) -->
         <div id="print-header" class="print-only">
             <p class="ph-title">Woodfine GIS</p>
-            <p class="ph-sub">Location Intelligence — Cluster One-Pager</p>
+            <p class="ph-sub">Location Intelligence — Site Analysis Report</p>
             <p class="ph-date" id="print-date"></p>
         </div>
         <div class="panel-header">
@@ -673,6 +759,10 @@
                 <button class="region-tab" data-region="EU" onclick="switchRegion('EU')">Europe</button>
             </div>
             <div id="chain-search-wrap" class="chain-search-wrap">
+                <svg class="chain-search-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <circle cx="8.5" cy="8.5" r="5" stroke="currentColor" stroke-width="1.75"/>
+                    <line x1="12.5" y1="12.5" x2="17" y2="17" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+                </svg>
                 <input id="chain-search-input" class="chain-search-input" type="text"
                        placeholder="Search city, town, or retailer…" autocomplete="off"
                        inputmode="search" enterkeyhint="search"
@@ -711,10 +801,53 @@
                 <span id="print-map-zoom-note" style="font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;"></span>
             </div>
             <img id="print-map-img" style="width:100%;height:auto;display:block;border:1px solid #e0e0e0;border-radius:4px;" src="" alt="Cluster location map" />
-            <div style="font-size:9px;color:var(--text-muted);margin-top:6px;">
-                Map: OpenFreeMap contributors · Data: OSM, WorldPop 2026, Kontur CC BY 4.0 · Engineered by PointSav
+            <div style="font-size:7.5px;color:var(--text-muted);margin-top:3px;">
+                Map: OpenFreeMap contributors · Data: OSM, WorldPop 2026, Kontur CC BY 4.0 · Engineered by PointSav Digital Systems
+            </div>
+            <div id="print-map-legend" style="margin-top:6px;"></div>
+        </div>
+
+        <!-- PAGE 3: RM context + co-locations in same RM + nearby OSM retailers -->
+        <div id="print-retail-page" class="print-only">
+            <div id="print-retail-header">
+                <span id="print-retail-title"></span>
+                <span id="print-retail-rm"></span>
+                <span id="print-metro-ctx"></span>
+                <span id="print-retail-wiki"></span>
+                <span id="print-retail-note"></span>
+            </div>
+            <div id="print-anchor-matrix"></div>
+            <p id="print-retail-subheading"></p>
+            <table id="print-retail-table">
+                <thead><tr>
+                    <th>Category</th><th>Retailers</th>
+                </tr></thead>
+                <tbody id="print-retail-tbody"><tr><td colspan="2">Loading…</td></tr></tbody>
+            </table>
+            <p id="print-retail-attribution"></p>
+            <div id="print-rm-colocs">
+                <p id="print-rm-colocs-heading"></p>
+                <table id="print-rm-colocs-table">
+                    <thead><tr>
+                        <th>Tier</th><th>Composition</th><th>Anchors</th>
+                        <th style="text-align:right">≈ km</th><th style="text-align:right">Top-400</th>
+                    </tr></thead>
+                    <tbody id="print-rm-colocs-tbody"></tbody>
+                </table>
             </div>
         </div>
+
+        <!-- PAGE 4: Satellite aerial view -->
+        <div id="print-sat-page" class="print-only">
+            <div id="print-sat-header">
+                <span id="print-sat-title"></span>
+                <span id="print-sat-subtitle">Satellite Aerial View</span>
+            </div>
+            <img id="print-sat-img" style="width:100%;display:block;border:1px solid #e0e0e0;border-radius:4px;" alt="Satellite aerial view" />
+            <p id="print-sat-caption" style="margin:3px 0 0;"></p>
+            <div id="print-sat-legend" class="print-only" style="display:none;margin-top:6px;"></div>
+        </div>
+
     </aside>
 
     <div id="map-legend" aria-label="Map legend">
@@ -744,6 +877,7 @@
         <div class="compare-tray-head">
             <h3>Compare clusters</h3>
             <div style="display:flex;align-items:center;gap:6px;">
+                <button id="compare-print-btn" class="footer-btn" style="flex:none;padding:5px 10px;" onclick="printCompareBatch()">Print Reports</button>
                 <button class="footer-btn" style="flex:none;padding:5px 10px;" onclick="clearCompare()">Clear all</button>
                 <button class="compare-tray-close" onclick="closeCompareTray()" aria-label="Close compare tray">×</button>
             </div>
@@ -900,34 +1034,538 @@
                 { year: 'numeric', month: 'long', day: 'numeric' });
         } catch (_) { el.textContent = new Date().toISOString().slice(0, 10); }
     }
-    function calcPrintZoom(span_km) {
-        // Auto-derive zoom so the full ring + one ring-width of context fits the page.
-        // span_km ≤1 → z15 (street detail); ~2 → z14; ~4 → z13; ~8 → z12; >8 → z11.
-        return Math.min(15, Math.max(11, Math.round(14.5 - Math.log2(Math.max(1, span_km || 1)))));
+    // ── Print helpers (pages 3 + 4) ─────────────────────────────────────
+    function _firstSentence(text) {
+        const m = (text || '').match(/^[^.!?]+[.!?]/);
+        return m ? m[0] : (text || '').slice(0, 120);
     }
-    function printOnePager() {
+    function _prtAecBlock(p) {
+        const rows = [
+            p.koppen_class    && ['Climate',      `Köppen ${p.koppen_class}${p.ashrae_zone ? ' · ASHRAE ' + p.ashrae_zone : ''}`],
+            p.ecoregion_name  && ['Ecoregion',    p.ecoregion_name + (p.ecoregion_biome ? ` (${p.ecoregion_biome})` : '')],
+            p.temp_annual_mean_c != null && ['Temperature', `Annual mean ${p.temp_annual_mean_c.toFixed(1)} °C · HDD18 ${(p.hdd18||0).toLocaleString()} · CDD18 ${(p.cdd18||0).toLocaleString()}`],
+            p.ghi_kwh_m2_yr   && ['Solar (GHI)',  `${Math.round(p.ghi_kwh_m2_yr).toLocaleString()} kWh/m²/yr`],
+            p.flood_hazard    && ['Flood',         p.flood_hazard],
+            p.wildfire_hazard && ['Wildfire',      p.wildfire_hazard],
+            p.seismic_pga_g   && p.seismic_pga_g > 0 && ['Seismic PGA', `${p.seismic_pga_g.toFixed(3)} g`],
+        ].filter(Boolean);
+        if (!rows.length) return null;
+        const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return `<table class="prt-aec-table"><caption>Site Conditions</caption>` +
+            rows.map(([k,v]) => `<tr><td class="prt-cat">${k}</td><td>${esc(v)}</td></tr>`).join('') +
+            `</table>`;
+    }
+    function _prtHaversineKm(center, node) {
+        const R = 6371, r = Math.PI / 180;
+        const dLat = (node.lat - center[1]) * r, dLon = (node.lon - center[0]) * r;
+        const a = Math.sin(dLat/2)**2 + Math.cos(center[1]*r)*Math.cos(node.lat*r)*Math.sin(dLon/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+    async function _prtFetchRetailers(center, radiusM) {
+        const tracked = new Set(Object.values(CHAIN_DISPLAY_NAMES).map(n => n.toLowerCase().trim()));
+        // nwr catches nodes + way-polygons (most large stores) + relations; out center gives centroid for ways
+        const q = `[out:json][timeout:15];nwr(around:${radiusM},${center[1]},${center[0]})["shop"]["name"];out center 80;`;
+        try {
+            const r = await fetch('https://overpass-api.de/api/interpreter', {
+                method: 'POST', body: 'data=' + encodeURIComponent(q),
+                signal: AbortSignal.timeout(16000)
+            });
+            if (!r.ok) return [];
+            const j = await r.json();
+            return (j.elements || [])
+                .map(n => {
+                    const lat = n.lat ?? n.center?.lat;
+                    const lon = n.lon ?? n.center?.lon;
+                    if (lat == null || lon == null) return null;
+                    const name = n.tags.name || n.tags.brand || '(unnamed)';
+                    return { name, shop: n.tags.shop || '—', dist: _prtHaversineKm(center, { lat, lon }) };
+                })
+                .filter(Boolean)
+                .filter(x => !tracked.has(x.name.toLowerCase().trim()))
+                .sort((a, b) => a.dist - b.dist)
+                .slice(0, 40);
+        } catch { return []; }
+    }
+    async function _prtFetchWikiBlurb(mkt, { introOnly = true, maxChars = 400 } = {}) {
+        const title = (mkt || '').replace(/, ([A-Z]{2})$/, (_, code) => PROV_ABBR[code] ? ', ' + PROV_ABBR[code] : ', ' + code);
+        try {
+            // MediaWiki extracts API — intro section only, uniform 400-char cap for all markets.
+            // Keeps local and metro paragraphs visually balanced on the print page.
+            const introParam = introOnly ? '&exintro=1' : '';
+            const url = 'https://en.wikipedia.org/w/api.php?action=query&redirects=1&titles=' +
+                encodeURIComponent(title) +
+                `&prop=extracts|description${introParam}&format=json&origin=*`;
+            const r = await fetch(url, { signal: AbortSignal.timeout(7000) });
+            if (!r.ok) return null;
+            const j = await r.json();
+            const pages = j?.query?.pages || {};
+            const page = Object.values(pages)[0];
+            if (!page || page.missing !== undefined) return null;
+            const extractHtml = page.extract || '';
+            let extract = extractHtml.replace(/<[^>]+>/g, ' ').replace(/\s{2,}/g, ' ').trim();
+            // Cap at maxChars at a sentence boundary.
+            if (maxChars > 0 && extract.length > maxChars) {
+                const cut = extract.slice(0, maxChars);
+                const lastSentence = cut.search(/[^.!?]*$/);
+                extract = (lastSentence > 0 ? cut.slice(0, lastSentence) : cut).trim();
+            }
+            const desc = page.description || '';
+            return { desc, extract };
+        } catch { return null; }
+    }
+    function _prtSatSnapshot(center, zoom, ringKm, members) {
+        return new Promise(resolve => {
+            const div = document.createElement('div');
+            div.style.cssText = 'position:fixed;width:1200px;height:900px;left:-9999px;top:0;visibility:hidden';
+            document.body.appendChild(div);
+            const cleanup = () => { try { satM.remove(); } catch(e){} div.remove(); };
+            const bail = setTimeout(() => { cleanup(); resolve(null); }, 15000);
+            const satM = new maplibregl.Map({
+                container: div, preserveDrawingBuffer: true, center, zoom,
+                style: {
+                    version: 8,
+                    sources: { esri: { type: 'raster', tileSize: 256,
+                        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+                        attribution: '© Esri, DigitalGlobe, Earthstar Geographics' }},
+                    layers: [{ id: 'esri', type: 'raster', source: 'esri' }]
+                }
+            });
+            satM.on('load', () => {
+                satM.addSource('p-ring', { type: 'geojson', data: makeCircleGeoJSON(center, ringKm) });
+                satM.addLayer({ id: 'p-ring-line', type: 'line', source: 'p-ring',
+                    paint: { 'line-color': '#FFFFFF', 'line-width': 3, 'line-opacity': 0.95 } });
+                satM.addSource('sat-locs-src', { type: 'vector', url: 'pmtiles://tiles/layer1-locations.pmtiles' });
+                satM.addLayer({ id: 'sat-locs', type: 'circle', source: 'sat-locs-src', 'source-layer': 'locations',
+                    paint: {
+                        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 6],
+                        'circle-color': ['case',
+                            ['==', ['get', 'brand_family'], 'Hypermarket'], '#0A3070',
+                            ['==', ['get', 'brand_family'], 'Hardware'],    '#D97706',
+                            '#6B7280'],
+                        'circle-opacity': 0.9, 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5
+                    }
+                });
+                // Anchor member overlay — large category-colored circles with white halo
+                const SAT_CAT_COLOR = {
+                    hypermarket:'#0A3070', hardware:'#D97706', price_club:'#0891B2',
+                    lifestyle:'#059669', sport:'#7C3AED', electronics:'#1D4ED8',
+                    medical:'#DC2626', education:'#92400E'
+                };
+                const anchorFeats = (members || []).filter(m => m.lon && m.lat).map(m => ({
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [m.lon, m.lat] },
+                    properties: { color: SAT_CAT_COLOR[m.category] || '#6B7280' }
+                }));
+                if (anchorFeats.length) {
+                    satM.addSource('prt-anchors', { type: 'geojson',
+                        data: { type: 'FeatureCollection', features: anchorFeats } });
+                    satM.addLayer({ id: 'prt-anchors-halo', type: 'circle', source: 'prt-anchors',
+                        paint: { 'circle-radius': 14, 'circle-color': '#ffffff', 'circle-opacity': 1 } });
+                    satM.addLayer({ id: 'prt-anchors-fill', type: 'circle', source: 'prt-anchors',
+                        paint: { 'circle-radius': 10, 'circle-color': ['get', 'color'],
+                                 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2.5 } });
+                }
+            });
+            satM.once('idle', () => {
+                clearTimeout(bail);
+                let img = null;
+                try { img = satM.getCanvas().toDataURL('image/png'); } catch(e) {}
+                cleanup(); resolve(img);
+            });
+        });
+    }
+
+    function calcPrintZoom(span_km, ring_km) {
+        // Ring-driven zoom: ring fills ~80% of canvas.
+        // rr=1km→z15, rr=2km→z14, rr=3km→z14, rr=5km→z13, rr=8km→z12.
+        const rr = ring_km || Math.max(1.0, (span_km || 1) / 2 * 1.15);
+        return Math.min(15, Math.max(11, Math.round(15.5 - Math.log2(Math.max(0.8, rr)))));
+    }
+    async function printOnePager({ skipPrint = false } = {}) {
+        // Show loading state on Print Report button with animated dots (not shown in batch mode).
+        const _prtBtn = document.getElementById('print-report-btn');
+        let _prtDotTimer = null;
+        if (!skipPrint && _prtBtn) {
+            _prtBtn.disabled = true;
+            let _d = 0;
+            const _dots = ['Generating .', 'Generating ..', 'Generating ...'];
+            _prtBtn.textContent = _dots[0];
+            _prtDotTimer = setInterval(() => { _d = (_d + 1) % 3; _prtBtn.textContent = _dots[_d]; }, 500);
+        }
+        try {
         setPrintDate();
+        // Clear stale satellite image from a previous print so the old photo
+        // doesn't flash during the new render before the fresh one loads.
+        const _satPreclear = document.getElementById('print-sat-img');
+        if (_satPreclear) _satPreclear.src = '';
         const p      = selectedClusterProps;
         const coords = selectedClusterCoords;
         // If no cluster is selected fall back to stats-only single page.
-        if (!p || !coords) { window.print(); return; }
+        if (!p || !coords) { if (!skipPrint) window.print(); return; }
 
-        const zoom  = calcPrintZoom(p.span_km);
-        const title = p.display_name || p.anchor_label || 'Cluster';
+        const ringKm  = p.ring_radius_km || Math.max(1.0, (p.span_km || 1) / 2 * 1.15);
+        const zoom    = calcPrintZoom(p.span_km, ringKm);
+        const el      = id => document.getElementById(id);
+        const esc     = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-        // Populate page-2 header labels.
-        const mapTitle    = document.getElementById('print-map-title');
-        const mapZoomNote = document.getElementById('print-map-zoom-note');
-        if (mapTitle)    mapTitle.textContent    = title + ' — Location Map';
+        // Page 3 — skeleton text while network calls are in flight.
+        // rmLine: "City, Province/State" for NA; "City · Region" for EU/UK if region differs from city
+        const isNA = ['US','CA','MX'].includes(p.iso || '');
+        const locationFull = (p.city && p.state) ? `${p.city}, ${p.state}` : (p.display_name || p.market_name || '');
+        const mrgnForRm = !isNA && p.market_region && !p.market_region.startsWith(p.city || '') ? p.market_region : '';
+        const rmLine = [locationFull, mrgnForRm].filter(Boolean).join(' · ');
+
+        // Populate page-2 header labels (existing behaviour).
+        const mapTitle    = el('print-map-title');
+        const mapZoomNote = el('print-map-zoom-note');
+        if (mapTitle)    mapTitle.textContent    = locationFull + ' — Location Map';
         if (mapZoomNote) mapZoomNote.textContent = `zoom ${zoom} · ${(p.span_km || 0).toFixed(1)} km span`;
 
-        // Fly to the cluster centre at print zoom, wait for tiles, snapshot.
-        map.flyTo({ center: coords, zoom, essential: true });
-        map.once('idle', () => {
-            const img = document.getElementById('print-map-img');
-            if (img) img.src = map.getCanvas().toDataURL('image/png');
-            window.print();
+        el('print-retail-title').textContent = locationFull + ' — Site Intelligence';
+        el('print-retail-rm').textContent    = (p.rm_type === 'metro' ? 'Metro Area: ' : 'Regional Market: ') + rmLine;
+        el('print-retail-wiki').innerHTML    = '';
+        el('print-retail-note').textContent  = `${p.tier_descriptor || 'Co-location'} · ${(p.span_km || 0).toFixed(2)} km span · ${ringKm} km ring`;
+        el('print-retail-subheading').textContent = `Nearby Retail Tenancy — ${ringKm} km Ring`;
+        el('print-retail-tbody').innerHTML   = '<tr><td colspan="2" style="color:#999;padding:8px">Fetching…</td></tr>';
+        el('print-retail-attribution').textContent = '© OpenStreetMap contributors, ODbL · Overpass API';
+
+        // Anchor composition matrix — 5-column single-row table matching POI marker colors.
+        const ANCHOR_CATS = [
+            { key: 'hypermarket', label: 'Hypermarket', color: '#0A3070' },
+            { key: 'hardware',    label: 'Hardware',    color: '#D97706' },
+            { key: 'price_club',  label: 'Price Club',  color: '#0891B2' },
+            { key: 'education',   label: 'Academic',    color: '#92400E' },
+            { key: 'medical',     label: 'Medical',     color: '#DC2626' },
+        ];
+        // Build category → retailer name list from members (retail only, no civic duplicates)
+        const catRetailers = {};
+        for (const m of (p.members || [])) {
+            if (!m.category || m._civic) continue;
+            const nm = m.name || m.chain_id || '';
+            if (!nm) continue;
+            (catRetailers[m.category] = catRetailers[m.category] || new Set()).add(nm);
+        }
+        const matrixEl = el('print-anchor-matrix');
+        if (matrixEl) {
+            // One-line bubble row: colored dot if category is fulfilled at this site, grey outline if not.
+            const bubbles = ANCHOR_CATS.map(a => {
+                const filled = !!catRetailers[a.key];
+                const dot = filled
+                    ? `<span style="display:inline-block;width:11px;height:11px;border-radius:50%;
+                        background:${a.color};box-shadow:0 0 0 1.5px rgba(0,0,0,.22);flex-shrink:0;"></span>`
+                    : `<span style="display:inline-block;width:11px;height:11px;border-radius:50%;
+                        border:1.5px solid #bbb;flex-shrink:0;"></span>`;
+                return `<span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap;
+                    color:${filled ? '#222' : '#aaa'};">
+                  ${dot}<span style="font-size:9px;font-weight:${filled ? '700' : '400'};">${a.label}</span>
+                </span>`;
+            }).join('');
+            matrixEl.innerHTML =
+                `<div style="display:flex;gap:16px;align-items:center;margin:0.4rem 0 0.75rem;flex-wrap:wrap;">${bubbles}</div>`;
+        }
+
+        // Metro context line (B4a) — show "Part of Calgary Metro" for satellite/metro types.
+        const metroCtxEl = el('print-metro-ctx');
+        const isMetroType = p.rm_type === 'metro' || p.rm_type === 'satellite_regional';
+        if (metroCtxEl) {
+            if (isMetroType && p.metro_name) {
+                metroCtxEl.textContent = 'Part of ' + p.metro_name;
+                metroCtxEl.style.display = 'block';
+            } else {
+                metroCtxEl.style.display = 'none';
+            }
+        }
+
+        // Page 3 — co-locations: metro-aware scope + Top-400 column (B4b, synchronous).
+        const TIER_LABEL = { 1: 'T1 · Regional', 2: 'T2 · District', 3: 'T3 · Local' };
+        const rmId    = p.regional_market;
+        // All co-locations in this market: same RM OR within ring radius (catches adjacent admin units).
+        // Includes the current cluster — shown highlighted in the table.
+        const allColocs = clusterIndex
+            ? Array.from(clusterIndex.values()).filter(c => {
+                if (c.rm === rmId) return true;
+                return _prtHaversineKm(coords, c) <= ringKm;
+            })
+            : [];
+        const colocH = el('print-rm-colocs-heading');
+        const colocT = el('print-rm-colocs-tbody');
+        const colocScope = (isMetroType && p.metro_name)
+            ? `the ${p.metro_name.replace(/\s+Metro$/i, '')} Metro Area`
+            : `the ${locationFull} Regional Market`;
+        const sortedColocs = allColocs.slice().sort((a, b) => _prtHaversineKm(coords, a) - _prtHaversineKm(coords, b));
+        if (allColocs.length <= 1) {
+            colocH.textContent = `Only co-location in ${colocScope}`;
+            el('print-rm-colocs-table').style.display = 'none';
+        } else {
+            colocH.textContent = `Co-locations in ${colocScope} (${allColocs.length})`;
+            el('print-rm-colocs-table').style.display = '';
+            const expandMktName = mkt => (mkt || '').replace(/, ([A-Z]{2})$/, (_, code) => PROV_ABBR[code] ? ', ' + PROV_ABBR[code] : ', ' + code);
+            const colocHtml = sortedColocs.map(c => {
+                    const isCurrent = c.id === p.cluster_id;
+                    const dist      = _prtHaversineKm(coords, c);
+                    const anchors   = (Array.isArray(c.members) ? c.members : []).map(m => m.name).join(' · ') || '—';
+                    const mktLoc    = expandMktName(c.mkt || '');
+                    const rowStyle  = isCurrent ? ' style="background:#EFF6FF;"' : '';
+                    const thisLabel = isCurrent ? ' <span style="font-size:7.5px;font-weight:700;color:var(--brand-primary);text-transform:uppercase;letter-spacing:0.5px;">← this site</span>' : '';
+                    return `<tr${rowStyle}>
+                        <td><strong>${TIER_LABEL[c.t] || 'T' + c.t}</strong>${thisLabel}${mktLoc ? `<br><span style="font-size:8px;color:#777;font-weight:400">${esc(mktLoc)}</span>` : ''}</td>
+                        <td>${c.td || '—'}</td>
+                        <td style="color:#555;font-size:9px">${anchors}</td>
+                        <td style="text-align:right">${isCurrent ? '—' : dist.toFixed(1)}</td>
+                        <td style="text-align:right" class="prt-top400-cell">—</td>
+                    </tr>`;
+                }).join('');
+            colocT.innerHTML = colocHtml;
+        }
+
+        // Page 2: fly to cluster, wait for idle, snapshot canvas.
+        map.flyTo({ center: coords, zoom, essential: true, duration: 900 });
+        await new Promise(res => map.once('idle', res));
+        const mapImg = el('print-map-img');
+        if (mapImg) {
+            mapImg.src = map.getCanvas().toDataURL('image/png');
+            // Wait for decode so print dialog captures the new image, not the previous one.
+            await new Promise(r => { if (mapImg.complete && mapImg.naturalWidth > 0) r(); else { mapImg.onload = r; mapImg.onerror = r; } });
+        }
+
+        // Page 2: anchor category legend (what's at THIS site) below map.
+        const prtLegEl = el('print-map-legend');
+        if (prtLegEl) {
+            const ANCHOR_CAT_COLORS = {
+                hypermarket:'#0A3070', hardware:'#D97706', price_club:'#0891B2',
+                lifestyle:'#059669', sport:'#7C3AED', electronics:'#1D4ED8',
+                medical:'#DC2626', education:'#92400E'
+            };
+            const ANCHOR_CAT_LABELS = {
+                hypermarket:'Hypermarket', hardware:'Hardware & Home',
+                price_club:'Price Club / Warehouse', lifestyle:'Lifestyle & Apparel',
+                sport:'Sport & Outdoor', electronics:'Electronics',
+                medical:'Medical / Healthcare', education:'Academic'
+            };
+            const catsPresent = [...new Set((p.members || []).map(m => m.category).filter(Boolean))];
+            const legItem = (color, label) =>
+                `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:16px;white-space:nowrap;">` +
+                `<span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:${color};box-shadow:0 0 0 1.5px rgba(0,0,0,.18);flex-shrink:0;"></span>` +
+                `<span style="font-size:8.5px;font-weight:600;">${label}</span></span>`;
+            if (catsPresent.length) {
+                prtLegEl.innerHTML = `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px 0;">` +
+                    catsPresent.map(cat => legItem(
+                        ANCHOR_CAT_COLORS[cat] || '#6B7280',
+                        ANCHOR_CAT_LABELS[cat] || cat.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase())
+                    )).join('') +
+                    `</div>`;
+            } else {
+                prtLegEl.innerHTML = '';
+            }
+        }
+
+        // Metro Wikipedia title (B3) — only for satellite_regional clusters (the parent metro is a distinct city).
+        // For metro-type clusters, the cluster IS the metro city — no second article needed; use a longer blurb instead.
+        const metroWikiTitle = (p.rm_type === 'satellite_regional') && p.metro_name
+            ? p.metro_name.replace(/\s+Metro$/i, '').trim()
+            : null;
+
+        // Pages 3 + 4 + Wikipedia in parallel (B3, B6).
+        const clusterId = p.cluster_id || p.id;
+        const catchmentPromise = catchmentCentroidCache[clusterId]
+            ? Promise.resolve(catchmentCentroidCache[clusterId])
+            : fetch(`data/catchment-cells/${clusterId}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
+        const [retailers, satImg, wiki, metroWiki, top400Data, catchmentCells] = await Promise.allSettled([
+            _prtFetchRetailers(coords, ringKm * 1000),
+            _prtSatSnapshot(coords, zoom, ringKm, p.members || []),
+            _prtFetchWikiBlurb(p.display_name || p.market_name || '', { introOnly: true, maxChars: p.rm_type === 'metro' ? 1200 : (metroWikiTitle ? 620 : 850) }),
+            metroWikiTitle ? _prtFetchWikiBlurb(metroWikiTitle, { introOnly: true, maxChars: 600 }) : Promise.resolve(null),
+            fetch('data/rm-top400.json').then(r => r.json()).catch(() => ({})),
+            catchmentPromise
+        ]);
+
+        // Wikipedia blurb — labeled sections for both local + metro (B3).
+        const wb      = wiki.status      === 'fulfilled' && wiki.value;
+        const metroWb = metroWiki.status === 'fulfilled' && metroWiki.value;
+        const wikiEl  = el('print-retail-wiki');
+        const wikiSection = (label, blurb) => {
+            const city = label.replace(/, \w+$/, ''); // "Airdrie, AB" → "Airdrie"
+            let h = `<div style="border-left:3px solid var(--brand-primary,#0A3070);padding-left:7px;margin:0 0 4px;">` +
+                    `<span style="font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:var(--brand-primary,#0A3070);">About ${esc(city)}</span>`;
+            if (blurb.desc) h += `<span style="font-size:8.5px;color:#888;margin-left:5px;">— ${esc(blurb.desc)}</span>`;
+            h += `</div><p style="margin:0;font-style:normal;font-size:9.5px;color:#333;line-height:1.55;">${esc(blurb.extract)}</p>`;
+            return h;
+        };
+        let wikiHtml = '';
+        if (wb && metroWb && metroWikiTitle) {
+            // Two-column layout when we have both local and metro context.
+            wikiHtml = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:2px;">` +
+                `<div>${wikiSection(p.display_name || p.market_name || '', wb)}</div>` +
+                `<div>${wikiSection(metroWikiTitle, metroWb)}</div></div>`;
+        } else {
+            if (wb)                        wikiHtml += wikiSection(p.display_name || p.market_name || '', wb);
+            if (metroWb && metroWikiTitle) wikiHtml += wikiSection(metroWikiTitle, metroWb);
+        }
+        wikiEl.innerHTML = wikiHtml;
+        wikiEl.style.fontStyle = 'normal';
+
+        // Top-400 cells — fill after top400Data arrives (B4b).
+        const top400 = (top400Data.status === 'fulfilled' && top400Data.value) ? top400Data.value : {};
+        document.querySelectorAll('.prt-top400-cell').forEach((cell, i) => {
+            const sib = sortedColocs[i];
+            if (!sib) return;
+            const entry = top400[sib.rm];
+            cell.textContent = entry ? `#${entry.rank}` : '—';
         });
+        // Show this cluster's Top-400 rank if it has one.
+        const selfRank = top400[p.regional_market];
+        const noteEl = el('print-retail-note');
+        if (noteEl && selfRank) {
+            noteEl.textContent = noteEl.textContent + ` · Top-400 Regional Market #${selfRank.rank}`;
+        }
+
+        // Retailer table — grouped by tenant-rep category.
+        const SHOP_BUCKET = {
+            // Grocery & Food
+            supermarket:'Grocery & Food', grocery:'Grocery & Food', convenience:'Grocery & Food',
+            greengrocer:'Grocery & Food', bakery:'Grocery & Food', butcher:'Grocery & Food',
+            deli:'Grocery & Food', fishmonger:'Grocery & Food', health_food:'Grocery & Food',
+            frozen_food:'Grocery & Food', food:'Grocery & Food', ice_cream:'Grocery & Food',
+            confectionery:'Grocery & Food', beverages:'Grocery & Food', alcohol:'Grocery & Food',
+            wine:'Grocery & Food', tea:'Grocery & Food', dairy:'Grocery & Food',
+            chocolate:'Grocery & Food', candy:'Grocery & Food', organic:'Grocery & Food',
+            coffee:'Grocery & Food', spices:'Grocery & Food', farm:'Grocery & Food',
+            seafood:'Grocery & Food', pasta:'Grocery & Food', nuts:'Grocery & Food',
+            general:'Grocery & Food',
+            // Health & Pharmacy
+            pharmacy:'Health & Pharmacy', chemist:'Health & Pharmacy', optician:'Health & Pharmacy',
+            medical_supply:'Health & Pharmacy', hearing_aids:'Health & Pharmacy',
+            cannabis:'Health & Pharmacy', sports_nutrition:'Health & Pharmacy',
+            herbalist:'Health & Pharmacy', nutrition_supplements:'Health & Pharmacy',
+            // Beauty & Personal Care
+            hairdresser:'Beauty & Personal Care', beauty:'Beauty & Personal Care',
+            cosmetics:'Beauty & Personal Care', massage:'Beauty & Personal Care',
+            tattoo:'Beauty & Personal Care', perfumery:'Beauty & Personal Care',
+            nail_salon:'Beauty & Personal Care', tanning:'Beauty & Personal Care',
+            // Apparel & Accessories
+            clothes:'Apparel & Accessories', shoes:'Apparel & Accessories',
+            jewelry:'Apparel & Accessories', bag:'Apparel & Accessories',
+            accessories:'Apparel & Accessories', tailor:'Apparel & Accessories',
+            watches:'Apparel & Accessories', baby_goods:'Apparel & Accessories',
+            fashion_accessories:'Apparel & Accessories', sunglasses:'Apparel & Accessories',
+            wedding:'Apparel & Accessories', second_hand:'Apparel & Accessories',
+            // Home, Electronics & Leisure
+            hardware:'Home, Electronics & Leisure', garden:'Home, Electronics & Leisure',
+            furniture:'Home, Electronics & Leisure', appliances:'Home, Electronics & Leisure',
+            electronics:'Home, Electronics & Leisure', computer:'Home, Electronics & Leisure',
+            mobile_phone:'Home, Electronics & Leisure', bicycle:'Home, Electronics & Leisure',
+            sports:'Home, Electronics & Leisure', toys:'Home, Electronics & Leisure',
+            books:'Home, Electronics & Leisure', pet:'Home, Electronics & Leisure',
+            craft:'Home, Electronics & Leisure', outdoor:'Home, Electronics & Leisure',
+            music:'Home, Electronics & Leisure', camera:'Home, Electronics & Leisure',
+            lighting:'Home, Electronics & Leisure', department_store:'Home, Electronics & Leisure',
+            variety_store:'Home, Electronics & Leisure', gift:'Home, Electronics & Leisure',
+            video_games:'Home, Electronics & Leisure', video:'Home, Electronics & Leisure',
+            hifi:'Home, Electronics & Leisure', antiques:'Home, Electronics & Leisure',
+            art:'Home, Electronics & Leisure', frame:'Home, Electronics & Leisure',
+            paint:'Home, Electronics & Leisure', bed:'Home, Electronics & Leisure',
+            kitchen:'Home, Electronics & Leisure', bathroom:'Home, Electronics & Leisure',
+            tiles:'Home, Electronics & Leisure', houseware:'Home, Electronics & Leisure',
+            interior_decoration:'Home, Electronics & Leisure', flooring:'Home, Electronics & Leisure',
+            swimming_pool:'Home, Electronics & Leisure', collector:'Home, Electronics & Leisure',
+            discount:'Home, Electronics & Leisure',
+            // Auto & Vehicles
+            car:'Auto & Vehicles', car_repair:'Auto & Vehicles', car_parts:'Auto & Vehicles',
+            car_wash:'Auto & Vehicles', tyres:'Auto & Vehicles', motorcycle:'Auto & Vehicles',
+            truck_repair:'Auto & Vehicles', car_rental:'Auto & Vehicles',
+            vehicle_inspection:'Auto & Vehicles', caravan:'Auto & Vehicles',
+            boat:'Auto & Vehicles', trailer:'Auto & Vehicles',
+            // Consumer Services (everyday service tenants)
+            laundry:'Consumer Services', dry_cleaning:'Consumer Services',
+            copyshop:'Consumer Services', photo:'Consumer Services',
+            newsagent:'Consumer Services', stationery:'Consumer Services',
+            florist:'Consumer Services', locksmith:'Consumer Services',
+            key_cutting:'Consumer Services', funeral_directors:'Consumer Services',
+            // Financial & Professional Services
+            bank:'Financial & Professional Services', insurance:'Financial & Professional Services',
+            estate_agent:'Financial & Professional Services', travel_agency:'Financial & Professional Services',
+            money_lender:'Financial & Professional Services', post_office:'Financial & Professional Services',
+            pawnbroker:'Financial & Professional Services',
+        };
+        const BUCKET_ORDER = [
+            'Grocery & Food', 'Health & Pharmacy', 'Beauty & Personal Care',
+            'Apparel & Accessories', 'Home, Electronics & Leisure',
+            'Auto & Vehicles', 'Consumer Services',
+            'Financial & Professional Services', 'Other'
+        ];
+        const rawRetailers = retailers.status === 'fulfilled' ? retailers.value : [];
+        const byBucket = {};
+        // CJK_RE: Chinese/Japanese/Korean + related Unicode blocks
+        const CJK_RE = /[\u2E80-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF]/;
+        for (const r of rawRetailers) {
+            if (CJK_RE.test(r.name || '')) continue;   // skip stores with Asian-script names
+            const shop = r.shop || 'other';
+            const bucket = SHOP_BUCKET[shop] || 'Other';
+            (byBucket[bucket] = byBucket[bucket] || new Set()).add(r.name || '—');
+        }
+        const retailHtml = Object.keys(byBucket).length
+            ? BUCKET_ORDER
+                .filter(b => byBucket[b])
+                .map(b => `<tr><td class="prt-cat">${b}</td><td>${[...byBucket[b]].map(esc).join(', ')}</td></tr>`)
+                .join('')
+            : '<tr><td colspan="2" style="color:#999;padding:8px">No retail data within ring</td></tr>';
+        el('print-retail-tbody').innerHTML = retailHtml;
+
+        // AEC block — page 1 (inspector section, print-only placeholder).
+        const aecHtml = _prtAecBlock(p);
+        const aecP1El = el('print-aec-p1');
+        if (aecP1El && aecHtml) { aecP1El.innerHTML = aecHtml; aecP1El.style.display = 'block'; }
+
+        // Satellite page (B6) — header + anchor legend beneath image.
+        const satTitle = el('print-sat-title');
+        if (satTitle) satTitle.textContent = locationFull;
+        el('print-sat-caption').textContent = `© Esri, DigitalGlobe, Earthstar Geographics · zoom ${zoom} · OpenFreeMap contributors`;
+        const satPage = el('print-sat-page');
+        if (satImg.status === 'fulfilled' && satImg.value) {
+            const _satEl = el('print-sat-img');
+            _satEl.src = satImg.value;
+            // Wait for the new satellite image to decode before triggering print so
+            // the browser doesn't capture the previous cluster's image from its cache.
+            await new Promise(r => { if (_satEl.complete && _satEl.naturalWidth > 0) r(); else { _satEl.onload = r; _satEl.onerror = r; } });
+            satPage.style.display = '';
+            const SAT_CAT_COLOR = {
+                hypermarket:'#0A3070', hardware:'#D97706', price_club:'#0891B2',
+                lifestyle:'#059669', sport:'#7C3AED', electronics:'#1D4ED8',
+                medical:'#DC2626', education:'#92400E'
+            };
+            const catsSeen = [...new Set((p.members || []).map(m => m.category).filter(Boolean))];
+            const legEl = el('print-sat-legend');
+            if (legEl && catsSeen.length) {
+                const CAT_LABEL = {
+                    hypermarket:'Hypermarket', hardware:'Hardware & Home',
+                    price_club:'Price Club / Warehouse', lifestyle:'Lifestyle & Apparel',
+                    sport:'Sport & Outdoor', electronics:'Electronics',
+                    medical:'Medical / Healthcare', education:'Post-Secondary',
+                };
+                legEl.innerHTML = catsSeen.map(cat =>
+                    `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:16px;white-space:nowrap;">` +
+                    `<span style="width:11px;height:11px;border-radius:50%;background:${SAT_CAT_COLOR[cat]||'#6B7280'};` +
+                    `border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.28);display:inline-block;flex-shrink:0;"></span>` +
+                    `<span style="font-size:8.5px;font-weight:600;">${esc(CAT_LABEL[cat] || cat.replace(/_/g,' '))}</span>` +
+                    `</span>`
+                ).join('');
+                legEl.style.display = 'flex';
+                legEl.style.flexWrap = 'wrap';
+                legEl.style.alignItems = 'center';
+            }
+        } else {
+            satPage.style.display = 'none';
+        }
+
+        if (!skipPrint) window.print();
+        // Restore bento box state: aecP1El had display:block set for print; clear it so
+        // the screen-side .hide-on-print climate grid is the only visible version on return.
+        if (aecP1El) aecP1El.style.display = '';
+        } finally {
+            if (_prtDotTimer) clearInterval(_prtDotTimer);
+            // Always restore the print button — even if an error or early-return occurred.
+            if (!skipPrint && _prtBtn) { _prtBtn.disabled = false; _prtBtn.textContent = 'Print Report'; }
+        }
     }
     window.addEventListener('beforeprint', setPrintDate);
 
@@ -992,20 +1630,48 @@
         const name  = p.display_name || (p.anchor_label ? (p.anchor_label + (p.city ? ', ' + p.city : '')) : 'Cluster');
         const anchors = (p.member_count != null) ? p.member_count
                         : (p.count_3km != null ? p.count_3km : null);
-        compareSet.push({
+        // Population + spend: prefer cluster meta (pp/sp), then cached centroid data.
+        const cid = p.cluster_id || p.id;
+        let cmpPop   = (p.pp != null && !isNaN(parseInt(p.pp))) ? parseInt(p.pp) : null;
+        let cmpSpend = (p.sp != null && !isNaN(parseInt(p.sp))) ? parseInt(p.sp) : null;
+        const _applyFeats = feats => {
+            const v1 = Math.round(feats.reduce((s, f) => s + (f.properties.pop         || 0), 0));
+            const v2 = Math.round(feats.reduce((s, f) => s + (f.properties.spend_total || 0), 0));
+            if (v1 > 0) cmpPop   = v1;
+            if (v2 > 0) cmpSpend = v2;
+        };
+        if ((cmpPop == null || cmpSpend == null) && catchmentCentroidCache[cid]) {
+            _applyFeats(catchmentCentroidCache[cid].features || []);
+        }
+        const entry = {
             key,
             name,
             tierName: tc.name, tierFill: tc.fill, tierText: tc.text,
             anchors:  anchors,
-            pop:      (p.pp != null && !isNaN(parseInt(p.pp))) ? parseInt(p.pp) : null,
-            spend:    (p.sp != null && !isNaN(parseInt(p.sp))) ? parseInt(p.sp) : null,
-        });
+            pop:      cmpPop,
+            spend:    cmpSpend,
+        };
+        compareSet.push(entry);
         a11yAnnounce(`Added ${name} to compare. ${compareSet.length} pinned.`);
         renderCompareTray();
         openCompareTray();
         // reflect the pinned count on the inspector button if present
         const btn = document.getElementById('compare-add-btn');
         if (btn) btn.textContent = `＋ Compare (${compareSet.length})`;
+        // If pop/spend still missing, fetch catchment data in the background and patch the entry.
+        if (entry.pop == null || entry.spend == null) {
+            fetch(`data/catchment-cells/${cid}.json`)
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (!data) return;
+                    catchmentCentroidCache[cid] = data;
+                    _applyFeats(data.features || []);
+                    entry.pop   = cmpPop;
+                    entry.spend = cmpSpend;
+                    renderCompareTray();
+                })
+                .catch(() => {});
+        }
     }
     function removeFromCompare(key) {
         compareSet = compareSet.filter(c => c.key !== key);
@@ -1020,6 +1686,8 @@
     function renderCompareTray() {
         const body = document.getElementById('compare-tray-body');
         if (!body) return;
+        const cpBtn = document.getElementById('compare-print-btn');
+        if (cpBtn) cpBtn.textContent = compareSet.length ? `Print Reports (${compareSet.length})` : 'Print Reports';
         if (!compareSet.length) { body.innerHTML = ''; return; }
         const rows = compareSet.map(c => `
             <tr>
@@ -1035,6 +1703,68 @@
             <tbody>${rows}</tbody>
         </table>`;
     }
+
+    // Compare batch print — generates a single combined PDF for all pinned clusters.
+    async function printCompareBatch() {
+        if (!compareSet.length) return;
+        const btn = document.getElementById('compare-print-btn');
+        let _batchDotTimer = null;
+        if (btn) {
+            btn.disabled = true;
+            let _d = 0;
+            const _dots = ['Generating .', 'Generating ..', 'Generating ...'];
+            btn.textContent = _dots[0];
+            _batchDotTimer = setInterval(() => { _d = (_d + 1) % 3; btn.textContent = _dots[_d]; }, 500);
+        }
+        const container = document.getElementById('batch-print-container');
+        const savedProps  = selectedClusterProps;
+        const savedCoords = selectedClusterCoords;
+        try {
+            const chunks = [];
+            for (const item of compareSet) {
+                const c = clusterIndex && clusterIndex.get(item.key);
+                if (!c) continue;
+                // showClusterDetail sets selectedClusterProps + updates inspector HTML.
+                showClusterDetail(metaToClusterProps(c), [c.lon, c.lat]);
+                await printOnePager({ skipPrint: true });
+                // Capture the populated single-cluster print DOM as HTML strings.
+                const satPageEl = document.getElementById('print-sat-page');
+                chunks.push({
+                    insp: document.getElementById('inspector')?.innerHTML || '',
+                    p2:   document.getElementById('print-map-page')?.innerHTML || '',
+                    p3:   document.getElementById('print-retail-page')?.innerHTML || '',
+                    p4:   (satPageEl && satPageEl.style.display !== 'none') ? satPageEl.innerHTML : null,
+                });
+            }
+            if (!chunks.length) return;
+            let html = '';
+            for (let i = 0; i < chunks.length; i++) {
+                const ch = chunks[i];
+                const brk = i > 0 ? '<div class="batch-cluster-break"></div>' : '';
+                html += `${brk}
+                <div class="batch-print-header">
+                    <p class="ph-title">Woodfine GIS</p>
+                    <p class="ph-sub">Location Intelligence — Site Analysis Report</p>
+                </div>
+                <div class="batch-stats-page">${ch.insp}</div>
+                <div class="batch-page batch-cluster-break">${ch.p2}</div>
+                <div class="batch-page batch-cluster-break">${ch.p3}</div>
+                ${ch.p4 ? `<div class="batch-page batch-cluster-break">${ch.p4}</div>` : ''}`;
+            }
+            if (container) container.innerHTML = html;
+            document.body.classList.add('batch-print-active');
+            window.print();
+        } finally {
+            document.body.classList.remove('batch-print-active');
+            if (container) container.innerHTML = '';
+            // Restore the bento panel to whatever was selected before batch print.
+            if (savedProps) showClusterDetail(savedProps, savedCoords);
+            else { selectedClusterProps = null; selectedClusterCoords = null; }
+            if (_batchDotTimer) clearInterval(_batchDotTimer);
+            if (btn) { btn.disabled = false; btn.textContent = compareSet.length ? `Print Reports (${compareSet.length})` : 'Print Reports'; }
+        }
+    }
+
     // F26(c) — build the screen-reader / crawler text alternative for the canvas.
     // Lists the Top 400 Regional Markets (rank, name, continent, tier composition)
     // from the same rmTop400 data that drives the map's amber RM stars.
@@ -1083,7 +1813,12 @@
         document.addEventListener('keydown', _coachmarkEsc);
         el.querySelector('.cm-primary')?.focus();
     }
-    window.addEventListener('load', () => { setTimeout(maybeShowCoachmark, 500); });
+    window.addEventListener('load', () => {
+        setTimeout(maybeShowCoachmark, 500);
+        // Move chain-dropdown to body so it escapes the panel's overflow:hidden clipping.
+        const chainDd = document.getElementById('chain-dropdown');
+        if (chainDd) document.body.appendChild(chainDd);
+    });
 
     // ── PMTiles protocol ────────────────────────────────────────────
     const protocol = new pmtiles.Protocol();
@@ -1103,6 +1838,22 @@
     // District / Local (descending co-location strength); the Fringe tier carries no
     // rendered label. Keep this invariant when adding new copy.
     // Amber is reserved for selection / Top-400 only — no tier uses it.
+    // Province/state abbreviation → full name (shared by Bento Box + print)
+    const PROV_ABBR = {
+        AB:'Alberta',BC:'British Columbia',ON:'Ontario',QC:'Quebec',SK:'Saskatchewan',
+        MB:'Manitoba',NS:'Nova Scotia',NB:'New Brunswick',NL:'Newfoundland and Labrador',
+        PE:'Prince Edward Island',YT:'Yukon',NT:'Northwest Territories',NU:'Nunavut',
+        AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',
+        CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',
+        IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',
+        ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',
+        MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',
+        NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',
+        ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',
+        RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',
+        UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',
+        WI:'Wisconsin',WY:'Wyoming',DC:'Washington, D.C.'
+    };
     const TIER_COLORS = {
         3: { fill: '#08306B', text: '#ffffff', name: 'Regional' },  // T1 — darkest blue (strongest)
         2: { fill: '#3182BD', text: '#ffffff', name: 'District' },  // T2 — mid blue
@@ -1129,6 +1880,12 @@
     };
 
     function tierColor(rankVal) { return TIER_COLORS[rankVal] ?? NEUTRAL; }
+
+    // Strip German admin suffixes (", Stadt" etc.) and bilingual slash names from LAU data.
+    function normalizeMarketName(n) {
+        if (!n) return n;
+        return n.replace(/, (Stadt|Gemeinde|Markt|Flecken)$/, '').split(' / ')[0].trim();
+    }
 
     function catchmentBounds(lon, lat, km) {
         const dLat = km / 111.0;
@@ -1973,18 +2730,22 @@
         if (!dd) return;
         const sections = [];
         if (lastBrandMatches.length) {
+            const MAX_BRAND_ROWS = 3;
+            const visibleBrands = lastBrandMatches.slice(0, MAX_BRAND_ROWS);
+            const hiddenBrands  = lastBrandMatches.length - visibleBrands.length;
             sections.push('<div class="chain-section-label" role="presentation">Chains</div>');
-            sections.push(lastBrandMatches.map(n => {
-                const cnt = brandCountLabel(n);  // F17 — "1,234 locations"
+            sections.push(visibleBrands.map(n => {
+                const cnt = brandCountLabel(n);
                 const cntHtml = cnt ? `<span class="chain-count">${escapeHtml(cnt)}</span>` : '';
                 const ariaLbl = cnt ? `${n} — ${cnt}` : n;
-                return `<div class="chain-option" role="option" aria-label="${escapeAttr(ariaLbl)}" data-kind="brand" data-brand="${escapeAttr(n)}" onclick="setChainFilterFromEl(this)">${cntHtml}${escapeHtml(n)}</div>`;
+                return `<div class="chain-option" role="option" aria-label="${escapeAttr(ariaLbl)}" data-kind="brand" data-brand="${escapeAttr(n)}" onclick="setChainFilterFromEl(this)">${escapeHtml(n)}${cntHtml}</div>`;
             }).join(''));
+            if (hiddenBrands > 0) sections.push(`<div class="chain-section-label" style="font-style:italic;color:var(--text-muted)">+${hiddenBrands} more — type more to narrow</div>`);
         }
         if (lastPlaceResults.length) {
             sections.push('<div class="chain-section-label" role="presentation">Places &amp; Cities</div>');
             sections.push(lastPlaceResults.map((p, i) =>
-                `<div class="chain-option place-option" role="option" data-kind="place" data-idx="${i}" onclick="selectPlaceResult(${i})"><span>${escapeHtml(p.name)}</span><span class="place-sub">${escapeHtml(p.context)}</span></div>`
+                `<div class="chain-option place-option" role="option" data-kind="place" data-idx="${i}" onclick="selectPlaceResult(${i})"><span class="place-name">${escapeHtml(p.name)}</span>${p.context ? `<span class="place-sub">${escapeHtml(p.context)}</span>` : ''}</div>`
             ).join(''));
         }
         if (!sections.length) {
@@ -1996,6 +2757,24 @@
         }
         dd.innerHTML = sections.join('');
         dd.style.display = '';
+        // Position the fixed dropdown — opens upward if insufficient space below.
+        const inp = document.getElementById('chain-search-input');
+        if (inp) {
+            const r = inp.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - r.bottom - 8;
+            const spaceAbove = r.top - 8;
+            dd.style.left  = r.left + 'px';
+            dd.style.width = r.width + 'px';
+            if (spaceBelow >= 140 || spaceBelow >= spaceAbove) {
+                dd.style.top    = (r.bottom + 4) + 'px';
+                dd.style.bottom = '';
+                dd.style.maxHeight = Math.min(280, spaceBelow) + 'px';
+            } else {
+                dd.style.bottom = (window.innerHeight - r.top + 4) + 'px';
+                dd.style.top    = '';
+                dd.style.maxHeight = Math.min(280, spaceAbove) + 'px';
+            }
+        }
         setSearchExpanded(true);
         // F17 — announce result counts for assistive tech
         const parts = [];
@@ -2035,7 +2814,8 @@
         const qLower = q.toLowerCase();
         lastBrandMatches = BRAND_NAMES.filter(n => n.toLowerCase().includes(qLower));
         // 2. Show a Loading row immediately for places so the user sees activity
-        if (q.length >= 2) {
+        // Fire Nominatim from the first character (debounced); single-char queries are valid.
+        {
             // Keep prior place results visible until new ones arrive — avoids flicker
             renderSearchDropdown();
             // Inject a Loading row if there are no place results yet for this query
@@ -2048,21 +2828,20 @@
                     dd2.innerHTML += '<div class="chain-section-label">Places</div><div class="chain-option loading">Searching…</div>';
                 }
             }
-            // Debounce geocoding to ~250ms; respects Nominatim's usage policy
+            // Debounce geocoding; use slightly longer delay for single characters
             if (placeSearchTimer) clearTimeout(placeSearchTimer);
             const mySeq = ++placeSearchSeq;
-            placeSearchTimer = setTimeout(() => fetchPlaceResults(q, mySeq), 250);
-        } else {
-            // Single character — show only brand matches (avoid pinging Nominatim for every keystroke)
-            lastPlaceResults = [];
-            renderSearchDropdown();
+            const delay = q.length === 1 ? 400 : 250;
+            placeSearchTimer = setTimeout(() => fetchPlaceResults(q, mySeq), delay);
         }
     }
 
     function fetchPlaceResults(q, mySeq) {
+        const SEARCH_COUNTRIES = 'ca,us,mx,gb,de,fr,nl,at,it,pl,se,dk,no,fi,es,pt,gr';
         const url = 'https://nominatim.openstreetmap.org/search'
             + '?q=' + encodeURIComponent(q)
-            + '&format=json&limit=5&addressdetails=1';
+            + '&format=json&limit=8&addressdetails=1'
+            + '&countrycodes=' + SEARCH_COUNTRIES;
         // Nominatim requires a descriptive User-Agent; browsers forbid setting User-Agent,
         // so we pass identifying info via a request param and rely on the Referer header.
         fetch(url, { headers: { 'Accept': 'application/json' } })
@@ -2077,7 +2856,10 @@
                     const contextParts = [];
                     if (addr.state && addr.state !== primary) contextParts.push(addr.state);
                     if (addr.country && addr.country !== primary) contextParts.push(addr.country);
-                    const context = contextParts.length ? contextParts.join(', ') : (r.display_name || '');
+                    // Fallback: take up to 2 segments from display_name that don't repeat the primary name
+                    const fallbackCtx = (r.display_name || '').split(',').slice(1, 4)
+                        .map(s => s.trim()).filter(s => s && s.toLowerCase() !== primary.toLowerCase()).slice(0, 2).join(', ');
+                    const context = contextParts.length ? contextParts.join(', ') : fallbackCtx;
                     let bbox = null;
                     if (Array.isArray(r.boundingbox) && r.boundingbox.length === 4) {
                         const [s, n, w, e] = r.boundingbox.map(parseFloat);
@@ -2493,6 +3275,14 @@
 
     // Convert compact clusterMeta entry (§2 schema) to the property shape expected by showClusterDetail
     function metaToClusterProps(c) {
+        // If a T3 satellite was absorbed into a stronger satellite's RM, display as the host city.
+        // Rocky View No.44 T3 (rm=rm_ca_airdrie) → shows "Airdrie, AB" not "Rocky View No.44, AB".
+        if (c.t === 3 && clusterIndex) {
+            const host = Array.from(clusterIndex.values()).find(
+                h => h.rm === c.rm && h.id !== c.id && h.t < c.t
+            );
+            if (host && host.mkt !== c.mkt) c = { ...c, mkt: host.mkt };
+        }
         // Derive legacy fields from members array (§2 schema)
         let members = [];
         try { members = Array.isArray(c.members) ? c.members : JSON.parse(c.members || '[]'); } catch(_) {}
@@ -2504,16 +3294,25 @@
         const elecM  = members.filter(m => m.category === 'electronics');
         const civicM = members.filter(m => m.category === 'medical' || m.category === 'education');
         const anchorName = (hyperM[0] || lifeM[0] || members[0])?.name || '';
+        // Split mkt ("Airdrie, AB") into city + full province/state name
+        const mktNorm   = normalizeMarketName(c.mkt) || '';
+        const mktComma  = mktNorm.lastIndexOf(',');
+        const mktCity   = mktComma >= 0 ? mktNorm.slice(0, mktComma).trim() : mktNorm;
+        const mktAbbr   = mktComma >= 0 ? mktNorm.slice(mktComma + 1).trim() : '';
+        const mktState  = PROV_ABBR[mktAbbr] || mktAbbr;
+        // Suppress legacy region_name for satellite/metro types — mrgn contains CSD+CMA which is misleading
+        const rmTypeC   = c.rm_type || '';
+        const useRegion = (rmTypeC !== 'satellite_regional' && rmTypeC !== 'metro') ? (c.mrgn || '') : '';
         return {
             cluster_id:           c.id,
             // Market identity
-            display_name:         c.mkt  || '',
+            display_name:         mktNorm,
             anchor_label:         anchorName,
             primary_anchor:       anchorName,
-            city:                 c.mkt  || '',
-            state:                c.mrgn || '',
+            city:                 mktCity,
+            state:                mktState,
             iso:                  c.iso  || '',
-            region_name:          c.mrgn || '',
+            region_name:          useRegion,
             mkt_conf:             c.conf || 'low',
             // Tier (§2: c.t)
             tier:                 c.t    ?? 0,
@@ -2527,9 +3326,12 @@
             demand_rank_in_tier:  c.dmr,
             demand_basis:         c.dmb  || 'interim-none',
             regional_market:      c.rm   || '',
-            market_name:          c.mkt  || '',
+            market_name:          normalizeMarketName(c.mkt) || '',
             market_region:        c.mrgn || '',
             metro_market:         c.metro || '',
+            rm_type:              c.rm_type || '',
+            metro_id:             c.metro_id || '',
+            metro_name:           c.metro_name || '',
             continent:            c.cont || '',
             member_count:         c.mc   || members.length,
             // Legacy ring-count proxies
@@ -2577,6 +3379,8 @@
             hc_count_district: 0,
             he_count_regional: civicM.filter(m => m.category === 'education').length,
             he_count_small:    0,
+            // Raw members array — needed by printOnePager for category bubble legend
+            members:           members,
         };
     }
 
@@ -3174,14 +3978,25 @@
 
         const anchorLabel = p.anchor_label || p.primary_anchor || '';
 
-        // Cell 1 — place name + region
+        // Cell 1 — place name + region (three-tier market hierarchy)
         const cityState    = p.city ? (p.state ? `${p.city}, ${p.state}` : `${p.city}, ${countryName(p.iso)}`) : null;
         const regionRaw    = (p.region_name && p.region_name !== 'Unknown Region') ? p.region_name : null;
         const secondaryGeo = cityState || (p.iso ? countryName(p.iso) : null);
-        const regionLabel  = regionRaw || secondaryGeo || 'Regional Node';
-        const regionBlock  = regionRaw
-            ? `<div class="region-hero-block"><div class="region-name-hero">${regionRaw}</div>${secondaryGeo ? `<div class="region-secondary-geo">${secondaryGeo}</div>` : ''}</div>`
-            : `<div class="data-value" style="font-size:16px;">${regionLabel}</div>`;
+        const rmTypeVal    = p.rm_type || '';
+        const metroNameVal = p.metro_name || '';
+        let regionBlock;
+        if (rmTypeVal === 'metro') {
+            // Metro Area: label already says "Metro Area" — show city+province directly, no internal "Calgary Metro" name
+            regionBlock = `<div class="region-hero-block"><div class="region-name-hero">${escapeHtml(secondaryGeo || metroNameVal.replace(/\s+Metro$/i, ''))}</div></div>`;
+        } else if (rmTypeVal === 'satellite_regional') {
+            // Satellite RM: label says "Regional Market" — show city+province, no metro sub-line
+            regionBlock = `<div class="region-hero-block"><div class="region-name-hero">${escapeHtml(cityState || p.city || 'Regional Node')}</div>${regionRaw ? `<div class="region-secondary-geo">${escapeHtml(regionRaw)}</div>` : ''}</div>`;
+        } else if (regionRaw) {
+            // Legacy / EU / standalone: region-hero pattern
+            regionBlock = `<div class="region-hero-block"><div class="region-name-hero">${escapeHtml(regionRaw)}</div>${secondaryGeo ? `<div class="region-secondary-geo">${escapeHtml(secondaryGeo)}</div>` : ''}</div>`;
+        } else {
+            regionBlock = `<div class="data-value" style="font-size:16px;">${escapeHtml(secondaryGeo || 'Regional Node')}</div>`;
+        }
 
         // RM rank badge (shown when cluster belongs to a Top 400 Regional Market)
         const rmRank  = p.rm_rank  || 0;
@@ -3208,7 +4023,7 @@
         document.getElementById('inspector').innerHTML = _peekCluster + `
             <div class="detail-body">
             <div class="data-block" style="padding-top:16px;">
-                <div class="data-label">Regional Market</div>
+                <div class="data-label">${rmTypeVal === 'metro' ? 'Metro Area' : 'Regional Market'}</div>
                 ${regionBlock}
                 ${rmBadge}
             </div>
@@ -3335,15 +4150,14 @@
             })()}
             <div class="data-block" style="padding-top:6px;">
                 <div class="catchment-block">
-                    <div class="data-label" style="margin:0 0 6px;">Site &amp; Climate</div>
-                    ${(() => {
+                    <div class="data-label" style="margin:0 0 6px;">Site Conditions</div>
+                    <div class="hide-on-print">${(() => {
                         const hasClimate = !!(p.koppen_class || p.temp_annual_mean_c != null);
                         const hasEcology = !!(p.ecoregion_name || p.ecoregion_biome || p.wetland_class);
                         const hasHazards = !!(p.ghi_kwh_m2_yr != null || p.wind_speed_ms != null || p.flood_hazard || p.wildfire_hazard);
                         const SUB  = `font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;`;
                         const GRID = `display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:11px;color:var(--text-main);line-height:1.5;`;
                         const DIV  = `border-top:1px solid var(--border-soft);margin-top:7px;padding-top:7px;`;
-                        const DASH = `color:var(--text-muted);`;
                         if (!hasClimate && !hasEcology && !hasHazards) {
                             return `<div style="font-size:11px;color:var(--text-muted);" title="Climate (Köppen), eco-region, and solar/hazard data load when available for this site.">Climate, ecology &amp; hazard data pending.</div>`;
                         }
@@ -3381,14 +4195,15 @@
                             </div>`;
                         }
                         return html;
-                    })()}
+                    })()}</div>
+                    <div id="print-aec-p1" class="print-only" style="display:none;"></div>
                 </div>
             </div>
             <div class="data-block" style="display:flex;gap:8px;padding-top:6px;">
                 <button id="compare-add-btn" class="inspector-print-btn" style="flex:1;"
                         onclick="addToCompare()">＋ Compare${compareSet.length ? ` (${compareSet.length})` : ''}</button>
-                <button class="inspector-print-btn" style="flex:1;"
-                        onclick="printOnePager()" title="Print or save this cluster as a one-page PDF">Print / PDF</button>
+                <button id="print-report-btn" class="inspector-print-btn" style="flex:1;"
+                        onclick="printOnePager()" title="Print or export this cluster as a PDF report">Print Report</button>
             </div>
             </div>
         `;
@@ -3492,7 +4307,7 @@
                                 mc:           c.mc || 0,   // F23 — member/anchor count for proportional symbol sizing
                                 conf:         c.conf || 'high',  // F13 — confidence (high/medium/low); low → provisional rendering
                                 ring_radius_km: c.rr || 3.0,
-                                display_name: c.mkt || '',
+                                display_name: normalizeMarketName(c.mkt) || '',
                                 hw_list:      [],
                                 wh_list:      [],
                                 rm_rank:  rmInfo ? rmInfo.rank  : 0,
@@ -4162,7 +4977,7 @@
             const clusters = clustersByRM?.get(rmKey);
             if (!clusters || clusters.length === 0) return;
             const first = clusters[0];
-            const rmName   = first.mkt  || rmKey;
+            const rmName   = normalizeMarketName(first.mkt) || rmKey;
             const metro    = first.mrgn || '';
             const country  = countryName(first.iso);
             const tierDotColor = (t) => t === 1 ? '#08306B' : t === 2 ? '#3182BD' : '#9ECAE1';
@@ -4175,7 +4990,7 @@
                     onmousedown="event.preventDefault()">
                     <div class="merged-group-item-tier" style="background:${tc.fill};"></div>
                     <div>
-                        <div class="merged-group-item-name">${escapeHtml(c.mkt || c.td || c.id)}</div>
+                        <div class="merged-group-item-name">${escapeHtml(normalizeMarketName(c.mkt) || c.td || c.id)}</div>
                         <div class="merged-group-item-sub">${escapeHtml(c.td || '')}${c.span ? ' · ' + c.span.toFixed(1) + ' km across' : ''}</div>
                     </div>
                 </div>`;
@@ -4463,5 +5278,8 @@
         if (strip && strip.style.display !== 'none') document.getElementById('ctx-back-btn').click();
     });
 </script>
+
+<!-- Compare batch print container — populated by printCompareBatch(), shown only in @media print when body.batch-print-active -->
+<div id="batch-print-container"></div>
 </body>
 </html>
