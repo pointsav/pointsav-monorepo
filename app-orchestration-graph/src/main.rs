@@ -186,9 +186,7 @@ async fn graph_context(
 }
 
 /// GET /v1/health — list target archives and their reachability.
-async fn health_targets(
-    State(state): State<Arc<AppState>>,
-) -> Json<HealthResponse> {
+async fn health_targets(State(state): State<Arc<AppState>>) -> Json<HealthResponse> {
     let futs: Vec<_> = state
         .targets
         .iter()
@@ -197,10 +195,16 @@ async fn health_targets(
             let url = format!("{}/healthz", base_url);
             let base_url = base_url.clone();
             async move {
-                let reachable = client.get(&url).send().await
+                let reachable = client
+                    .get(&url)
+                    .send()
+                    .await
                     .map(|r| r.status().is_success())
                     .unwrap_or(false);
-                TargetStatus { url: base_url, reachable }
+                TargetStatus {
+                    url: base_url,
+                    reachable,
+                }
             }
         })
         .collect();
@@ -239,10 +243,7 @@ fn normalize_entity_key(name: &str) -> String {
 async fn futures_join_all<T: Send + 'static>(
     futs: Vec<impl std::future::Future<Output = T> + Send + 'static>,
 ) -> Vec<T> {
-    let handles: Vec<_> = futs
-        .into_iter()
-        .map(|f| tokio::spawn(f))
-        .collect();
+    let handles: Vec<_> = futs.into_iter().map(|f| tokio::spawn(f)).collect();
     let mut results = Vec::with_capacity(handles.len());
     for h in handles {
         // JoinError only on panic — treat as a warning-worthy absent result.
@@ -257,8 +258,8 @@ async fn futures_join_all<T: Send + 'static>(
 
 #[tokio::main]
 async fn main() {
-    let bind_addr = std::env::var("ORCHESTRATION_GRAPH_BIND")
-        .unwrap_or_else(|_| "127.0.0.1:9181".to_string());
+    let bind_addr =
+        std::env::var("ORCHESTRATION_GRAPH_BIND").unwrap_or_else(|_| "127.0.0.1:9181".to_string());
 
     // Parse comma-separated target URLs; trim whitespace; skip empty entries.
     let targets: Vec<String> = std::env::var("ORCHESTRATION_GRAPH_TARGETS")
