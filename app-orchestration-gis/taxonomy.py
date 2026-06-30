@@ -582,6 +582,7 @@ ISO_TO_CONTINENT: dict[str, str] = {
     "IT": "EU", "GR": "EU", "PL": "EU", "AT": "EU",
     "NL": "EU", "PT": "EU",
     "SE": "EU", "DK": "EU", "NO": "EU", "FI": "EU", "IS": "EU",
+    "CZ": "EU", "HU": "EU", "SK": "EU", "RO": "EU", "BG": "EU",  # New Europe Phase 23
 }
 
 # ── DISPLAY NAMES ─────────────────────────────────────────────────────────────
