@@ -22,8 +22,8 @@ OM_URL      = ("https://archive-api.open-meteo.com/v1/archive"
                "?latitude={lat}&longitude={lon}"
                "&start_date=2000-01-01&end_date=2020-12-31"
                "&daily=temperature_2m_mean&timezone=UTC")
-WORKERS     = 1     # single worker — Open-Meteo free tier: ~10k/day, 1 req per 7s safe
-DELAY       = 7.0   # seconds between requests
+WORKERS     = 1     # single worker — Open-Meteo free tier: ~10k/day
+DELAY       = 10.0  # 1 req/10s = 8,640/day — safely under 10k limit
 
 def fetch_temp(lat, lon):
     """Returns (mean_c, hdd18, cdd18) or None on error."""
