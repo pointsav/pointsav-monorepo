@@ -2,10 +2,9 @@
 
 //! Pairing store — records completed pairings and appends to the WORM audit ledger.
 //!
-//! v0.0.1 stores pairings in-process (rebuilt on restart). A persistent
-//! pairings.yaml or sqlite backend is planned for v0.1.0.
-//! The WORM ledger (append-only JSONL) is written to `COMMAND_AUDIT_LEDGER_PATH`
-//! (default: `./data/command-audit.jsonl`).
+//! v0.0.2 writes pairings to `user-pairings.yaml` (same directory as pairings.yaml)
+//! in addition to the in-process store. The WORM ledger (append-only JSONL) is written
+//! to `COMMAND_AUDIT_LEDGER_PATH` (default: `./data/command-audit.jsonl`).
 
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -29,6 +28,7 @@ pub struct PairingRecord {
 /// WORM ledger entry (one line of JSONL per pairing event).
 #[derive(Debug, Serialize)]
 struct LedgerEntry<'a> {
+    schema_version: &'static str,
     event: &'static str,
     ts: DateTime<Utc>,
     role: &'a PairingRole,
@@ -38,9 +38,21 @@ struct LedgerEntry<'a> {
     instance: &'a str,
 }
 
+/// YAML entry written to user-pairings.yaml (application-layer pairing store).
+/// Infrastructure-layer pairings.yaml is NEVER written by this code.
+#[derive(Debug, Serialize)]
+struct UserPairingEntry<'a> {
+    public_key: &'a str,
+    role: &'a PairingRole,
+    archive_scope: &'a [String],
+    node_label: &'a str,
+    paired_on: DateTime<Utc>,
+}
+
 pub struct PairingStore {
     records: Mutex<Vec<PairingRecord>>,
     ledger_path: PathBuf,
+    user_pairings_path: PathBuf,
     instance_id: String,
     audit_count: Mutex<u64>,
 }
@@ -53,15 +65,23 @@ impl PairingStore {
         if let Some(parent) = ledger_path.parent() {
             let _ = std::fs::create_dir_all(parent);
         }
+
+        // user-pairings.yaml lives alongside pairings.yaml (infrastructure ACK 2026-06-29).
+        let user_pairings_path = std::env::var("COMMAND_PAIRINGS_PATH")
+            .ok()
+            .and_then(|p| PathBuf::from(&p).parent().map(|d| d.join("user-pairings.yaml")))
+            .unwrap_or_else(|| PathBuf::from("user-pairings.yaml"));
+
         Self {
             records: Mutex::new(Vec::new()),
             ledger_path,
+            user_pairings_path,
             instance_id: instance_id.into(),
             audit_count: Mutex::new(0),
         }
     }
 
-    /// Record a new pairing, write to WORM ledger, return a `PairResponse`.
+    /// Record a new pairing, write to WORM ledger and user-pairings.yaml, return a `PairResponse`.
     pub fn record(
         &self,
         public_key: String,
@@ -70,7 +90,7 @@ impl PairingStore {
         node_label: String,
     ) -> Result<PairResponse, CommandError> {
         let now = Utc::now();
-        let fingerprint = sha256_hex(public_key.as_bytes());
+        let fingerprint = key_fingerprint(public_key.as_bytes());
 
         // Check for duplicate (same public key).
         {
@@ -91,6 +111,7 @@ impl PairingStore {
 
         // Append to WORM ledger.
         let entry = LedgerEntry {
+            schema_version: "1",
             event: "pairing_created",
             ts: now,
             role: &role,
@@ -103,6 +124,16 @@ impl PairingStore {
             .map_err(|e| CommandError::Pairing(format!("ledger json: {e}")))?;
         line.push('\n');
         append_to_file(&self.ledger_path, &line)?;
+
+        // Write to user-pairings.yaml (application-layer persistent store).
+        let user_entry = UserPairingEntry {
+            public_key: &public_key,
+            role: &role,
+            archive_scope: &archive_scope,
+            node_label: &node_label,
+            paired_on: now,
+        };
+        write_user_pairing(&self.user_pairings_path, &user_entry)?;
 
         // Store in-process.
         let record = PairingRecord {
@@ -138,9 +169,18 @@ fn append_to_file(path: &PathBuf, line: &str) -> Result<(), CommandError> {
     Ok(())
 }
 
-fn sha256_hex(data: &[u8]) -> String {
-    // Simple FNV-1a fingerprint — good enough for audit log identification.
-    // Real SHA-256 would require the `sha2` crate; keeping deps minimal for v0.0.1.
+/// Append one pairing entry to user-pairings.yaml as a YAML list item.
+/// Appending `- key: val` blocks sequentially produces a valid YAML list.
+fn write_user_pairing(path: &PathBuf, entry: &UserPairingEntry) -> Result<(), CommandError> {
+    let yaml = serde_yaml::to_string(&[entry])
+        .map_err(|e| CommandError::Pairing(format!("user-pairings yaml: {e}")))?;
+    append_to_file(path, &yaml)?;
+    Ok(())
+}
+
+/// FNV-1a fingerprint for audit log key identification.
+/// Keeping deps minimal for v0.0.1; real SHA-256 would require the `sha2` crate.
+fn key_fingerprint(data: &[u8]) -> String {
     let mut hash: u64 = 14695981039346656037u64;
     for &byte in data {
         hash ^= u64::from(byte);
