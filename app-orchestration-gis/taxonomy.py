@@ -334,7 +334,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "HU": ["obi-hu"],
         "RO": ["leroy-merlin-ro"],
         "SK": ["obi-sk"],
-        "BG": [],
+        "BG": ["praktiker-bg"],
     },
 
     "price_club": {
