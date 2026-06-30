@@ -4,6 +4,11 @@
 # Run at 05:00 UTC (10pm Vancouver PDT) per overnight-builds policy.
 # Usage:  bash nightly-rebuild.sh [--dry-run]
 #
+# IMPORTANT: This script must run as the mathew user (not root). The RegionEngine
+# requires shapely, which is installed for mathew but not for root. If run as root,
+# all clusters get country-level regional_market values (rm_us_us, rm_de_de, etc.)
+# instead of city-level values, causing score-regional-markets.py to produce 0 results.
+#
 # Rebuilds:
 #   1. build-clusters.py   → work/clusters.geojson
 #   2. build-tiles.py --layer 2  → layer2-clusters.pmtiles + clusters-meta.json
@@ -46,6 +51,14 @@ if (( DISK_AVAIL < 5 )); then
     exit 1
 fi
 echo "Disk free: ${DISK_AVAIL}G  ✓" | tee -a "$LOG"
+
+# Verify shapely is available (required for RegionEngine city geocoding)
+if ! python3 -c "import shapely" 2>/dev/null; then
+    echo "ERROR: shapely not installed — RegionEngine will return None for all city lookups." | tee -a "$LOG"
+    echo "  Fix: ensure this script runs as a user with shapely installed (not root)." | tee -a "$LOG"
+    exit 1
+fi
+echo "shapely: OK  ✓" | tee -a "$LOG"
 
 if ! python3 -c "import taxonomy" 2>/dev/null; then
     # try from script dir
