@@ -157,6 +157,21 @@ else
     echo "  WARNING: PKS rebuild failed — archetype-pks.geojson not refreshed" | tee -a "$LOG"
 fi
 
+# ── step 5 — AEC temperature join (background, ~19h) ─────────────────────
+# Open-Meteo archive API: 1 req/10s = 8,640/day < 10k free-tier limit.
+# Runs in the background so nightly-rebuild.sh can complete. Patches
+# clusters-meta.json by cluster_id at the end, so it survives the next rebuild.
+# Kills any stale temperature job before starting a fresh one.
+
+echo "" | tee -a "$LOG"
+echo "[4] build-temperature-join.py (background, ~19h)" | tee -a "$LOG"
+DEPLOY_APP="/srv/foundry/deployments/gateway-orchestration-gis-1/app-orchestration-gis"
+pkill -f "build-temperature-join.py" 2>/dev/null || true
+nohup python3 "$DEPLOY_APP/build-temperature-join.py" \
+    >> "$SCRIPT_DIR/work/temperature-join.log" 2>&1 &
+TEMP_PID=$!
+echo "  PID $TEMP_PID — log: work/temperature-join.log" | tee -a "$LOG"
+
 # ── summary ───────────────────────────────────────────────────────────────
 
 echo "" | tee -a "$LOG"
