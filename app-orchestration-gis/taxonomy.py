@@ -236,6 +236,12 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "IS": [
             "hagkaup-is",
         ],
+        # New Europe — Phase 22 2026-06-29
+        "CZ": ["kaufland-cz"],
+        "SK": ["kaufland-sk"],
+        "HU": ["kaufland-hu"],
+        "RO": ["carrefour-ro"],
+        "BG": ["kaufland-bg"],
     },
 
     "hardware": {
@@ -323,6 +329,12 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
             "husasmidjan-is",
             "byko-is",
         ],
+        # New Europe — Phase 22 2026-06-29
+        "CZ": ["obi-cz"],
+        "HU": ["obi-hu"],
+        "RO": ["leroy-merlin-ro"],
+        "SK": [],
+        "BG": [],
     },
 
     "price_club": {
@@ -432,6 +444,12 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "NO": ["elkjop-no", "power-no"],            # Phase 22 2026-06-29
         "FI": ["gigantti-fi"],                      # Phase 22 2026-06-29
         "IS": [],
+        # New Europe — Phase 22 2026-06-29
+        "CZ": ["mediamarkt-cz"],
+        "SK": ["mediamarkt-sk"],
+        "HU": ["mediamarkt-hu"],
+        "RO": [],
+        "BG": [],
     },
 
     # Civic categories have no BRAND_FILL — detected from OSM civic JSONL
