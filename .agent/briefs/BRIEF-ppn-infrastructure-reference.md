@@ -572,35 +572,134 @@ Do NOT use this claim for x86-64 deployments (functional correctness only).
 | `.qcow2` | QCOW2 (QEMU native) | Cloud VM import (GCP raw import, DigitalOcean, etc.) | Same kernel binary; `platform=` boot arg selects behavior (Talos Linux pattern) |
 | Daemon AppImage / `.deb` | ELF binary (Linux); later: Windows .exe, macOS .pkg | Existing Linux (daemon mode, no seL4 boot) | `os-network-admin` primary distribution; compiled from same Rust source with `--features daemon` |
 
-### Pricing
+### Pricing — BETA (current)
 
-| Product | USDC | What unlocks |
+| Product | Price | Notes |
 |---|---|---|
-| `os-infrastructure` | $19 | `.iso` + `.qcow2` download tokens |
-| `os-network-admin` | $1 | Daemon AppImage/.deb + `.iso` + `.qcow2` download tokens |
+| `os-network-admin` | FREE (BETA) | Payment disconnected; public CLI download |
+| `os-infrastructure` | FREE (BETA) | Payment disconnected; ISO/QCOW2 when built |
 
-Same Ed25519-signed archive, same Polygon PoS USDC transaction, same modal → tx hash → license key + download token flow. No account required.
+Paid listing ($1 USDC / $19 USDC) enabled by operator after D7 mesh test passes and
+operator explicitly approves. Payment reconnect is a deliberate operator action — it does
+not happen automatically at D7.
 
-**Source code:** Available free on GitHub (open source). USDC payment is for the
-pre-built signed binary distribution and the license key that unlocks software.pointsav.com download.
+**Source code:** Available free on GitHub (open source). Future paid listing is for the
+pre-built Ed25519-signed binary distribution.
 
-### Two-click install target (SMB audience)
+### BETA upload policy
 
-Target market: Small and medium businesses with limited IT staff. Installation must be ≤3
-operator decisions (node name, genesis endpoint, pairing code). Any complexity beyond
-those 3 decisions is product scope reduction work.
+Upload binaries to software.pointsav.com as soon as they build and sign — do NOT wait
+for the D7 three-node mesh test. The BETA listing is the proof that the software exists.
 
-- os-infrastructure bare metal: write ISO to USB, boot, answer 3 questions
-- os-network-admin daemon: download AppImage, `chmod +x`, double-click or `./app-network-admin`
+Rationale: investors, bankers, and technical reviewers must be able to download and inspect
+the binary independently. A "coming soon" page is not the same as an actual downloadable
+binary. Upload early; upgrade to paid after D7.
 
-### Gate to software.pointsav.com listing
+project-software listing requirements for BETA:
+- Label: "BETA — Free Download" (not a price or payment button)
+- Payment: disconnected (no USDC modal, no wallet connection required)
+- Download: public URL, no token, no account required
+- Version tag: `0.1.0-beta.1` (or current semver + `-beta.N`)
+
+### CLI install — primary download method
+
+Users and reviewers download via `curl`. No browser modal, no payment during BETA.
+
+**os-network-admin daemon (Linux x86-64):**
+```bash
+curl -fL https://software.pointsav.com/download/os-network-admin/beta/x86_64 \
+  -o os-network-admin
+chmod +x os-network-admin
+sudo ./os-network-admin
+```
+
+**Verify Ed25519 signature:**
+```bash
+curl -fL https://software.pointsav.com/download/os-network-admin/beta/x86_64.sig \
+  -o os-network-admin.sig
+# Verify with PointSav signing key published at software.pointsav.com/signing-key
+```
+
+**os-infrastructure ISO (bare metal, when built):**
+```bash
+curl -fL https://software.pointsav.com/download/os-infrastructure/beta/x86_64.iso \
+  -o os-infrastructure.iso
+# Write to USB: sudo dd if=os-infrastructure.iso of=/dev/sdX bs=4M status=progress
+```
+
+**Target install experience:** ≤3 operator decisions (node name, genesis endpoint,
+pairing code). Complexity beyond those 3 decisions is product scope reduction work.
+
+### project-software mandate — page structure + all-project catalog
+
+project-software is responsible for building out software.pointsav.com to accommodate
+binaries from all projects, not just this archive. When project-infrastructure sends
+its handoff outbox message, project-software should:
+
+1. **Build the full product catalog page structure** — one product card per binary,
+   organized by project. Initial catalog from this archive:
+   - `os-network-admin` — PPN mesh control plane daemon (AppImage, Linux x86-64)
+   - `os-infrastructure` — PPN node OS (ISO, QCOW2, x86-64) — when built
+
+2. **URL convention** — `software.pointsav.com/download/<product>/<channel>/<artifact>`:
+   - `channel`: `beta` (current) → `v1`, `latest` (future)
+   - `artifact`: `x86_64`, `x86_64.iso`, `x86_64.qcow2`, `x86_64.sig`
+
+3. **Each product listing page** must include:
+   - Product name + one-line description
+   - BETA badge (while payment is disconnected)
+   - CLI download command (pre-filled `curl` one-liner)
+   - Ed25519 signature verification command
+   - System requirements (e.g. CAP_NET_ADMIN, WireGuard kernel module)
+   - Version + build date
+   - Link to GitHub source
+
+4. **Binaries from other archives** — project-software will receive separate outbox
+   messages from other archives (e.g. app-workplace-*, app-orchestration-*) as they
+   produce distributable binaries. Each message will follow the same format as the
+   project-infrastructure handoff (see handoff pipeline below).
+
+5. **No self-service uploads** — project-software does not pull binaries directly from
+   foundry-workspace. All uploads are triggered by explicit outbox messages from the
+   originating archive.
+
+### project-software handoff pipeline (this archive)
+
+When a binary is ready for software.pointsav.com:
+
+1. **Build + sign** (project-infrastructure, this archive):
+   - `cargo build --release --features daemon`
+   - Sign with `identity/id_pointsav-administrator` Ed25519 key
+
+2. **Send outbox message to project-software** with:
+   - Binary path on foundry-workspace
+   - Ed25519 signature file path
+   - Version string (e.g. `0.1.0-beta.1`)
+   - Explicit instruction: BETA listing, payment disconnected, CLI download URL template
+   - System requirements (CAP_NET_ADMIN, WireGuard module, x86-64 Linux)
+
+3. **project-software receives** and:
+   - Uploads binary + signature to software.pointsav.com asset storage
+   - Publishes BETA listing: "BETA — Free Download", no payment modal
+   - Adds product card to the catalog page
+   - Confirms CLI URL works: `curl -fL https://software.pointsav.com/download/...`
+
+4. **Later — paid listing (separate operator approval after D7)**:
+   - project-infrastructure sends second outbox to project-software
+   - project-software enables USDC modal at $1 USDC (os-network-admin) / $19 USDC (os-infrastructure)
+   - Operator reviews and approves before enabling — this does NOT happen automatically
+
+### Gate to paid listing (D7 mesh test)
+
+The D7 gate applies to the **paid listing** only. BETA binaries upload before D7.
 
 Three-node mesh test (D7):
 1. Laptop A: os-infrastructure ISO boot (VT-x bare metal) → peer registers in fleet
 2. foundry-workspace: os-infrastructure QCOW2 under QEMU/TCG → peer registers
 3. iMac Linux Mint: os-network-admin daemon → peer registers
 
-All three peers visible in `service-vm-fleet` → upload and list both products.
+All three peers visible in `service-vm-fleet` → operator approves → project-software
+enables USDC payment at $1 / $19.
 
 ---
 
