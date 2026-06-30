@@ -17,7 +17,7 @@ from threading import Thread, Lock
 from queue import Queue
 
 META_PATH = Path("/srv/foundry/deployments/gateway-orchestration-gis-1/www/data/clusters-meta.json")
-POWER_URL = "https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=WS100M&community=RE&longitude={lon}&latitude={lat}&format=JSON"
+POWER_URL = "https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=WS50M&community=RE&longitude={lon}&latitude={lat}&format=JSON"
 WORKERS      = 1    # NASA POWER rate-limited at >1 req/s; use 1 worker + 10s
 BATCH_DELAY  = 10.0
 
@@ -28,7 +28,7 @@ def fetch_wind(lat, lon):
         with urllib.request.urlopen(req, timeout=30) as r:
             data = json.loads(r.read())
         # Annual mean is in properties.parameter.WS100M.ANN
-        val = data.get('properties', {}).get('parameter', {}).get('WS100M', {}).get('ANN')
+        val = data.get('properties', {}).get('parameter', {}).get('WS50M', {}).get('ANN')
         if val is None or val < 0 or val > 50:
             return None
         return round(float(val), 2)
