@@ -326,6 +326,25 @@ def build_clusters_meta():
     with open(clusters_path) as f:
         fc = json.load(f)
 
+    # Carry forward AEC fields from previous clusters-meta.json (keyed by cluster_id)
+    AEC_FIELDS = [
+        'ashrae_zone', 'necb_zone', 'eu_climate_zone', 'koppen_class',
+        'temp_annual_mean_c', 'hdd18', 'cdd18', 'wind_speed_ms', 'wetland_class',
+        'seismic_pga_g', 'flood_hazard', 'wildfire_hazard', 'wildfire_risk',
+        'fwi_class', 'ghi_kwh_m2_yr', 'ecoregion_name', 'ecoregion_biome',
+        'eu_biogeo_region', 'mobility_source', 'mobility_vintage',
+    ]
+    out = WWW_DIR / "data" / "clusters-meta.json"
+    prev_aec: dict = {}
+    if out.exists():
+        try:
+            prev = json.loads(out.read_text())
+            prev_aec = {c['id']: {f: c[f] for f in AEC_FIELDS if f in c and c[f] is not None}
+                        for c in prev if c.get('id')}
+            print(f"  AEC carry-forward: {len(prev_aec)} cluster records loaded")
+        except Exception as e:
+            print(f"  AEC carry-forward: skipped ({e})")
+
     meta = []
     tier_counts: dict = {}
     for feat in fc.get("features", []):
@@ -367,6 +386,8 @@ def build_clusters_meta():
             # Members
             "mc":   int(p.get("member_count") or len(members)),
             "members": members,
+            # AEC fields carried forward from previous clusters-meta.json (if present)
+            **prev_aec.get(p.get("cluster_id", ""), {}),
         })
     out = WWW_DIR / "data" / "clusters-meta.json"
     out.parent.mkdir(parents=True, exist_ok=True)
