@@ -5,7 +5,7 @@ status: active
 brief-id: project-gis-aec-climate-layers
 owner: project-gis
 created: 2026-06-25
-updated: 2026-06-25
+updated: 2026-06-30
 ---
 
 # BRIEF: AEC / Climate Layers — Manual Pickup Queue
@@ -21,25 +21,43 @@ Operator runs these manually, one task at a time, at their own pace — no sched
 
 ---
 
-## Current Coverage (2026-06-25)
+## Current Coverage (2026-06-30, post Phase 22)
 
 | Field | Coverage | Source ready? | Script ready? |
 |---|---|---|---|
-| `wildfire_hazard` | ✅ 6101/6117 (99.7%) | ✅ | ✅ |
-| `flood_hazard` | ⚠️ 801/6117 (13%) | ✅ | ✅ (needs re-run) |
-| `koppen_class` | ❌ 0/6117 | ✅ raster in work/aec/ | ❌ needs new script |
-| `ecoregion_name` | ❌ 0/6117 | ✅ geojson in work/aec/ | ❌ needs new script |
-| `ecoregion_biome` | ❌ 0/6117 | ✅ same | ❌ needs new script |
-| `wetland_class` | ❌ 0/6117 | ✅ VRT in work/aec/ | ✅ in build-aec-seismic.sh |
-| `seismic_pga_g` | ❌ 0/6117 | ✅ US + CA; ⚠️ EU blocked | ✅ (EU needs ESHM20 fix) |
-| `temp_annual_mean_c` | ❌ 0/6117 | ❌ needs download | ❌ needs new script |
-| `hdd18` | ❌ 0/6117 | ❌ needs download | ❌ needs new script |
-| `cdd18` | ❌ 0/6117 | ❌ needs download | ❌ needs new script |
-| `ghi_kwh_m2_yr` | ❌ 0/6117 | ❌ needs download | ❌ needs new script |
-| `wind_speed_ms` | ❌ 0/6117 | ❌ needs download | ❌ needs new script |
-| `ashrae_zone` | ❌ 0/6117 | depends on koppen+hdd | ✅ build-ashrae-zone.py |
-| `necb_zone` | ❌ 0/6117 | depends on hdd | ❌ needs new script |
-| `eu_climate_zone` | ❌ 0/6117 | ❌ needs download | ❌ needs new script |
+| `wildfire_hazard` (= fwi) | ✅ 6102/6118 (99%) | ✅ | ✅ build-fwi-join.py |
+| `flood_hazard` | ⚠️ 801/6118 (13%) | ✅ | ✅ (build-aec-flood.sh re-run) |
+| `koppen_class` | ✅ 6116/6118 (99%) | ✅ | ✅ build-koppen-join.py |
+| `ecoregion_name` | ✅ 6088/6118 (99%) | ✅ | ✅ build-ecoregion-join.py |
+| `ecoregion_biome` | ✅ 6088/6118 (99%) | ✅ | ✅ build-ecoregion-join.py |
+| `wetland_class` | ✅ 33/6118 (0.5%) | ✅ VRT in deployment work/aec/ | ✅ build-wetland-join.py |
+| `fwi_class` | ✅ 6102/6118 (99%) | ✅ gwis-fwi-global.geojson | ✅ build-fwi-join.py |
+| `ashrae_zone` | ✅ 6118/6118 (100%) | derived from koppen | ✅ build-ashrae-zone.py |
+| `seismic_pga_g` | ❌ 0/6118 | ⚠️ DATA FORMAT ISSUE (see §Seismic below) | ❌ blocked |
+| `temp_annual_mean_c` | ❌ 0/6118 | ❌ needs download | ❌ needs new script |
+| `hdd18` | ❌ 0/6118 | ❌ needs download | ❌ needs new script |
+| `cdd18` | ❌ 0/6118 | ❌ needs download | ❌ needs new script |
+| `ghi_kwh_m2_yr` | ❌ 0/6118 | ❌ needs download | ❌ needs new script |
+| `wind_speed_ms` | ❌ 0/6118 | ❌ needs download | ❌ needs new script |
+| `necb_zone` | ❌ 0/6118 | depends on hdd | ❌ needs new script |
+| `eu_climate_zone` | ❌ 0/6118 | ❌ needs download | ❌ needs new script |
+
+**Disk:** 14 GB free (92% full) as of 2026-06-30. Monitor before large downloads.
+
+## Seismic data format issue (discovered 2026-06-30)
+
+`eshm20-eu.geojson` (110K, in deployment work/aec/) = seismotectonic zone INPUTS (ZONE_ID, MAXMAG fields) — NOT PGA hazard output. Cannot be used for PIP seismic classification.
+
+`usgs-nshm-pga-us.geojson` (66M, in clone work/aec/) = contour LineStrings with `Contour: -1000000.0` — these are NSHM contour line exports, not zone polygons. PIP doesn't work on lines.
+
+`build-aec-seismic.sh` also has a USGS_TIF unbound-variable bug at step 3 that kills the script.
+
+**To unblock:**
+- EU seismic: download ESHM20 PGA output rasters from EFEHR (separate release, not in the source tarball)
+  URL pattern: `https://hazard.efehr.org/` or EFEHR Zenodo record
+- US seismic: download the actual NSHM 2023 PGA raster from ScienceBase item `64ff886dd34ed30c2057b4d9`
+  (not the contour shapefile — the raster interpolation grid)
+- Fix: Use `band.ReadRaster()` instead of `ReadAsArray()` (numpy 2.x compat) as done in build-koppen-join.py
 
 **Disk:** 15 GB free (91% full) as of 2026-06-25. Monitor before large downloads.
 
