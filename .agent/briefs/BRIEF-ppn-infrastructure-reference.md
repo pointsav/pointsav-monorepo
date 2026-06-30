@@ -356,6 +356,72 @@ Total operator time to add Laptop A: approximately 10 minutes of terminal intera
 os-infrastructure does not yet boot on bare metal with a working Genesis Protocol.
 Phase S4 closes the gap.
 
+### §15a. Double-click install UX requirement (2026-06-29)
+
+The install experience for os-network-admin daemon mode must be **double-click style** —
+the user downloads the binary, runs it, and the binary handles everything. No manual
+WireGuard configuration, no keypair generation in a terminal, no editing config files.
+
+**Why this matters:** The current Phase S3 daemon requires 9 manual steps to get running
+(keypair gen, config file, wg-quick up, nodes.jsonl setup). This is a developer workflow,
+not a product. Investors, bankers, and SMB customers cannot be expected to follow it.
+The download page showing a `curl` command is correct. Everything after the binary runs
+must be automatic.
+
+**Target user flow (daemon mode):**
+```
+1. curl -fL https://software.pointsav.com/download/os-network-admin/beta/x86_64 -o os-network-admin
+2. chmod +x os-network-admin
+3. sudo ./os-network-admin
+   ↓
+   Prompt: "Node name [imac-studio]: "
+   Prompt: "Genesis endpoint [foundry.pointsav.com:51820]: "
+   Prompt: "Pairing code: "
+   ↓
+   Binary generates WireGuard keypair internally
+   Binary requests join via CPace ceremony
+   Binary configures wg0 automatically
+   Binary starts fleet watch loop
+   Done.
+```
+
+**What this requires technically:**
+
+| Capability | Phase | Status |
+|---|---|---|
+| Internal WireGuard keypair generation | S4 | Not yet — daemon currently requires pre-existing keypair |
+| Automatic `wg0` interface creation | S4 | Not yet — currently requires manual `wg-quick up` |
+| CPace pairing ceremony (join request) | S4 | Not yet — Phase S4 item |
+| Genesis endpoint connection | S4 | Not yet — FLEET_URL stub only |
+| Interactive TUI prompts (3 questions) | S4 | Not yet — ratatui integration |
+
+**Current D7 test:** The D7 three-node mesh test uses manual WireGuard setup (developer
+workflow). This is acceptable for the internal test milestone. The double-click experience
+is the requirement for the public-facing BETA and the paid listing.
+
+**Gap to close before software.pointsav.com BETA is genuinely user-facing:**
+Phase S4 (Genesis Protocol) must land. Until then, the BETA listing is honest about being
+developer/technical-user targeted. The product page should note "requires WireGuard" and
+link to setup instructions. Do not claim double-click UX until Phase S4 ships.
+
+### §15b. WireGuard mesh — current live state (2026-06-29)
+
+foundry-workspace (`10.8.0.9`) sees the following peers via `wg show`:
+
+| Peer pubkey (truncated) | Endpoint | AllowedIPs | Status |
+|---|---|---|---|
+| `2e1K3zPXd…` | `24.86.192.209:51820` | `10.8.0.0/24` (hub) | Live — handshake ~1 min ago |
+| `WH+Rss8GJ…` | (none) | `10.8.0.3/32` | Offline |
+
+Live nodes reachable via mesh ping from foundry-workspace (2026-06-29):
+- `10.8.0.1` — alive (20ms) — Laptop B (VP reserved per §18)
+- `10.8.0.7` — alive — unknown device; may be iMac (operator to confirm via `ip addr show wg0`)
+- `10.8.0.9` — foundry-workspace
+
+**iMac WireGuard status:** Unknown. If `10.8.0.7` responds to `ip addr show wg0` on the
+iMac, WireGuard is already configured and no setup is needed for the D7 test. Operator
+must confirm before running the manual setup steps.
+
 ---
 
 ## §16. Customer Virtualization Layer — service-vm-tenant
@@ -601,9 +667,15 @@ project-software listing requirements for BETA:
 - Download: public URL, no token, no account required
 - Version tag: `0.1.0-beta.1` (or current semver + `-beta.N`)
 
-### CLI install — primary download method
+### CLI install — primary download method (current BETA)
 
 Users and reviewers download via `curl`. No browser modal, no payment during BETA.
+
+**Current UX limitation:** After downloading, the user must manually configure WireGuard
+before running the daemon (9-step process). This is a developer/technical workflow.
+The BETA product page must be honest about this — label it "Technical Preview" and link
+to setup instructions. Do not claim one-click or automated setup until Phase S4 ships.
+See §15a for the target double-click UX and what Phase S4 must deliver.
 
 **os-network-admin daemon (Linux x86-64):**
 ```bash
