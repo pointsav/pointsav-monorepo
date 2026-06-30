@@ -239,7 +239,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         # New Europe — Phase 22 2026-06-29
         "CZ": ["kaufland-cz"],
         "SK": ["kaufland-sk"],
-        "HU": ["kaufland-hu"],
+        "HU": ["auchan-hu"],      # kaufland-hu: Q685431 returns 0 in HU OSM; Auchan (26) fills gap
         "RO": ["carrefour-ro"],
         "BG": ["kaufland-bg"],
     },
@@ -333,7 +333,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "CZ": ["obi-cz"],
         "HU": ["obi-hu"],
         "RO": ["leroy-merlin-ro"],
-        "SK": [],
+        "SK": ["obi-sk"],
         "BG": [],
     },
 
