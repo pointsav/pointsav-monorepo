@@ -415,7 +415,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
 
     "sport": {
         "US": ["rei-us", "bass-pro-shops-us", "cabelas-us"],
-        "CA": ["decathlon-ca"],
+        "CA": ["decathlon-ca", "sportchek-ca"],  # sportchek-ca Phase 23 2026-06-30
         "MX": ["decathlon-mx"],   # ~14 stores, Q509349 — Phase 20 2026-05-24
         "GB": ["decathlon-gb"],
         "FR": ["decathlon-fr"],
@@ -434,8 +434,8 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
     },
 
     "electronics": {
-        "US": [],   # Best Buy deferred to Phase 22 (counter-factual analysis first)
-        "CA": [],
+        "US": ["bestbuy-us"],   # Phase 23 2026-06-30
+        "CA": ["bestbuy-ca"],   # Phase 23 2026-06-30
         "MX": ["coppel-mx"],            # Phase 22 2026-06-29
         "GB": [],   # Currys deferred to Phase 22 (UK coverage expansion)
         "FR": ["boulanger-fr", "darty-fr"],   # Mulliez big-box + large-format Darty — Phase 21 2026-05-24
@@ -799,8 +799,9 @@ def tier_of(cats: set[str], tight: bool = False, span_km: float | None = None) -
     has_life  = "lifestyle"   in retail
     has_elec  = "electronics" in retail
 
-    # T1.a — tripartite: hyper + hw + (price_club or lifestyle or electronics)
-    if has_hyper and has_hw and (has_pc or has_life or has_elec):
+    # T1.a — tripartite: hyper + hw + (price_club or lifestyle or electronics or sport)
+    has_sport = "sport" in retail
+    if has_hyper and has_hw and (has_pc or has_life or has_elec or has_sport):
         return 1
     # T1.b — H2b: compact multi-anchor regardless of composition
     if tight and n >= 3:

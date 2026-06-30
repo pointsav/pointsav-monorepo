@@ -70,7 +70,8 @@ OUT_COVERAGE = WORK_DIR / 'top600-proforma-coverage.json'
 INNER_KM      = 3     # only excludes near-duplicate co-located markets (same hub as a
                       # neighbour). Well-known dense-metro suburbs (Plano, Brampton) stay
                       # IN and are ranked DOWN by the isolation gradient, not excluded.
-OUTER_KM      = 120   # replaces SUBURBAN_MAX_KM=80; wider range opens low-density countries
+OUTER_KM      = 180   # raised from 120: Prairie/western CA cities are far apart; 180 km allows
+                      # Saskatoon–Regina–Winnipeg ring to qualify once T1 clusters exist there
 METRO_CORE_KM = 12    # a market centroid within this of a major metro centroid IS that
                       # metro (already a "Metro Market") → excluded. Exclusion-only; does
                       # NOT define the suburban band. Catches localized names (Roma, Genova).
