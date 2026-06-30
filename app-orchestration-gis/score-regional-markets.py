@@ -75,7 +75,7 @@ MKT_CONF_OVERRIDES = {
 }
 MAX_SPAN_KM   = 200   # cluster bounding-box span limit (name-collision check)
 
-TOP_N = 600  # candidates per continent (3x proforma for the largest target market)
+TOP_N = 400  # canonical TOP400 per continent (proforma countries only)
 
 # Nordic countries treated as one combined market for normalization and proforma coverage.
 NORDIC_ISOS = {'DK', 'SE', 'NO', 'FI'}
@@ -92,6 +92,11 @@ PROFORMA_TARGETS = {
     'ES': 22, 'PL': 22, 'NORDICS': 22,
     'GB': 22, 'IT': 22, 'NEW_EUROPE': 22,
 }
+
+# Only proforma ISOs enter the Regional Market ranking.
+# FR, DE, NL, PT, BE, and all other non-proforma countries are excluded — their co-location
+# clusters appear on the map at the Co-location Level but are not Regional Markets.
+PROFORMA_ISOS = {'US', 'CA', 'MX', 'GB', 'ES', 'IT', 'PL'} | NORDIC_ISOS | NEW_EUROPE_ISOS
 
 
 def norm_group(iso):
@@ -810,11 +815,15 @@ for cont in ('NA', 'EU'):
 # ── Filter and rank ────────────────────────────────────────────────────────────
 
 na_regional = sorted(
-    [r for r in all_scored if r['continent'] == 'NA' and r['rm_type'] == 'suburban-regional'],
+    [r for r in all_scored
+     if r['continent'] == 'NA' and r['rm_type'] == 'suburban-regional'
+     and r['iso'] in PROFORMA_ISOS],
     key=lambda r: r['score'], reverse=True,
 )
 eu_regional = sorted(
-    [r for r in all_scored if r['continent'] == 'EU' and r['rm_type'] == 'suburban-regional'],
+    [r for r in all_scored
+     if r['continent'] == 'EU' and r['rm_type'] == 'suburban-regional'
+     and r['iso'] in PROFORMA_ISOS],
     key=lambda r: r['score'], reverse=True,
 )
 
@@ -851,8 +860,45 @@ for i, r in enumerate(na_regional, 1):
 for i, r in enumerate(eu_regional, 1):
     r['rank'] = i
 
-top_na = na_regional[:TOP_N]
-top_eu = eu_regional[:TOP_N]
+def build_tiered_list(regional_list, top_n, proforma_targets, nordic_isos, new_europe_isos):
+    """Assign rm_tier and build the final ranked list.
+
+    Tier 1 — 'top400': ranks 1..top_n (canonical published list).
+    Tier 2 — 'buffer': additional markets per proforma country/group up to exactly
+              3× that country's proforma target. Buffer size is variable per country,
+              not a fixed number. Countries that already have ≥3× in the top_n get
+              no buffer markets.
+    """
+    canonical = regional_list[:top_n]
+    overflow  = regional_list[top_n:]
+
+    for r in canonical:
+        r['rm_tier'] = 'top400'
+
+    # Count canonical markets per proforma group
+    canon_counts = {}
+    for r in canonical:
+        g = norm_group(r['iso'])
+        canon_counts[g] = canon_counts.get(g, 0) + 1
+
+    # Buffer: per group, add overflow markets until 3× target is reached
+    buffer = []
+    buffer_counts = {g: 0 for g in proforma_targets}
+    for r in overflow:
+        g = norm_group(r['iso'])
+        if g not in proforma_targets:
+            continue
+        needed   = proforma_targets[g] * 3
+        have_now = canon_counts.get(g, 0) + buffer_counts.get(g, 0)
+        if have_now < needed:
+            r['rm_tier'] = 'buffer'
+            buffer.append(r)
+            buffer_counts[g] = buffer_counts.get(g, 0) + 1
+
+    return canonical + buffer
+
+top_na = build_tiered_list(na_regional, TOP_N, PROFORMA_TARGETS, NORDIC_ISOS, NEW_EUROPE_ISOS)
+top_eu = build_tiered_list(eu_regional, TOP_N, PROFORMA_TARGETS, NORDIC_ISOS, NEW_EUROPE_ISOS)
 
 # ── Write output ───────────────────────────────────────────────────────────────
 
@@ -869,21 +915,23 @@ for r in top_na:
     rm_top600_dict[r['rm_id']] = {
         'rank': r['rank'], 'score': round(100 * r['norm_score'], 1), 'raw': r['score'],
         'name': r['market'], 'metro': r['suburb_of'],
-        'dist_km': r['anchor_d'],   # anchor_d = geometric isolation distance
+        'dist_km': r['anchor_d'],
         'lat': r['centroid']['lat'], 'lon': r['centroid']['lon'],
         't1': r['t1'], 't2': r['t2'], 't3': r['t3'],
         'iso': r['iso'],
         'cont': 'NA',
+        'rm_tier': r['rm_tier'],
     }
 for r in top_eu:
     rm_top600_dict[r['rm_id']] = {
         'rank': r['rank'], 'score': round(100 * r['norm_score'], 1), 'raw': r['score'],
         'name': r['market'], 'metro': r['suburb_of'],
-        'dist_km': r['anchor_d'],   # anchor_d = geometric isolation distance
+        'dist_km': r['anchor_d'],
         'lat': r['centroid']['lat'], 'lon': r['centroid']['lon'],
         't1': r['t1'], 't2': r['t2'], 't3': r['t3'],
         'iso': r['iso'],
         'cont': 'EU',
+        'rm_tier': r['rm_tier'],
     }
 with open(OUT_RM_TOP600, 'w') as f:
     json.dump(rm_top600_dict, f, separators=(',', ':'))
