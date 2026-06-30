@@ -40,11 +40,11 @@ def worker(q, results, lock, progress, total):
         item = q.get()
         if item is None:
             break
-        idx, lat, lon = item
+        cluster_id, lat, lon = item
         val = fetch_wind(lat, lon)
         with lock:
             if val is not None:
-                results[idx] = val
+                results[cluster_id] = val
             progress[0] += 1
             done = progress[0]
             if done % 300 == 0 or done == total:
@@ -59,8 +59,9 @@ total    = len(clusters)
 already  = sum(1 for c in clusters if c.get('wind_speed_ms') is not None)
 print(f"  {total} clusters; {already} already have wind_speed_ms")
 
-pending = [(i, c['lat'], c['lon']) for i, c in enumerate(clusters)
-           if c.get('wind_speed_ms') is None and 'lat' in c and 'lon' in c]
+# Use cluster_id as key (not array index) so results survive a clusters-meta.json rebuild
+pending = [(c['id'], c['lat'], c['lon']) for c in clusters
+           if c.get('wind_speed_ms') is None and 'lat' in c and 'lon' in c and 'id' in c]
 print(f"  Fetching {len(pending)} clusters from NASA POWER...")
 
 results  = {}
@@ -84,9 +85,11 @@ lock_path = META_PATH.with_suffix('.lock')
 with open(lock_path, 'w') as lf:
     fcntl.flock(lf, fcntl.LOCK_EX)
     clusters = json.loads(META_PATH.read_text())
-    for idx, val in results.items():
-        clusters[idx]['wind_speed_ms'] = val
-        n_new += 1
+    for c in clusters:
+        cid = c.get('id', '')
+        if cid in results:
+            c['wind_speed_ms'] = results[cid]
+            n_new += 1
     META_PATH.write_text(json.dumps(clusters, separators=(',', ':')))
 t_total = sum(1 for c in clusters if c.get('wind_speed_ms') is not None)
 print(f"\nDone.")
