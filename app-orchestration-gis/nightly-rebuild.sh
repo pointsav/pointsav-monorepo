@@ -116,6 +116,20 @@ META_SIZE=$(du -sh "$META_OUT" | cut -f1)
 echo "  → $TILES_OUT ($TILES_SIZE)  ✓" | tee -a "$LOG"
 echo "  → $META_OUT ($META_SIZE)  ✓" | tee -a "$LOG"
 
+# ── step 2b — build-regional-markets.py ─────────────────────────────────────
+# Depends on clusters.geojson (step 1). Must run as a user with shapely.
+
+echo "" | tee -a "$LOG"
+echo "[2b] build-regional-markets.py" | tee -a "$LOG"
+python3 build-regional-markets.py 2>&1 | tee -a "$LOG"
+
+# ── step 2c — score-regional-markets.py ─────────────────────────────────────
+# Depends on regional-markets.json (step 2b) + clusters-meta.json (step 2).
+
+echo "" | tee -a "$LOG"
+echo "[2c] score-regional-markets.py" | tee -a "$LOG"
+python3 score-regional-markets.py 2>&1 | tee -a "$LOG"
+
 # ── step 3 — Location Intelligence: VWH archetype rebuild ─────────────────
 # VWH (Intercity Fringe) depends on fresh cluster chain membership.
 # ~60s. Non-fatal on error.
