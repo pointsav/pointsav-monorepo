@@ -140,6 +140,7 @@ DISPLAY_COUNTRIES = {
     "UK":          ["GB"],
     "NORDICS":     ["SE", "DK", "NO", "FI", "IS"],
     "CONTINENTAL": ["FR", "DE", "ES", "IT", "GR", "PL", "AT", "NL", "PT"],
+    "NEW_EUROPE":  ["CZ", "HU", "SK", "RO", "BG"],  # Phase 23 2026-06-30
 }
 
 # Flat ordered list for iteration
@@ -431,6 +432,12 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "DK": ["decathlon-dk"],
         "NO": ["decathlon-no", "xxl-no"],  # xxl-no ~39 stores, Q5447082 — Phase 20 2026-05-24
         "FI": ["decathlon-fi", "xxl-fi"],  # xxl-fi ~15 stores, Q5447082 — Phase 20 2026-05-24
+        # New Europe — Phase 23 2026-06-30
+        "CZ": ["decathlon-cz"],
+        "HU": ["decathlon-hu"],
+        "RO": ["decathlon-ro"],
+        "SK": ["decathlon-sk"],
+        "BG": ["decathlon-bg"],
     },
 
     "electronics": {

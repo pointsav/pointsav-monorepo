@@ -685,7 +685,7 @@ for rm in rms_raw:
     iso   = rm.get('iso', '')
     cont  = rm.get('continent', rm.get('cont', ''))
 
-    if not cont:
+    if cont not in ('NA', 'EU'):
         cont = 'NA' if iso in NA_ISOS else 'EU' if iso in EU_ISOS else 'OTHER'
     if cont not in ('NA', 'EU'):
         continue
