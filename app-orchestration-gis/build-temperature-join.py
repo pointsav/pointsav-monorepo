@@ -49,11 +49,11 @@ def worker(q, results, lock, progress, total):
         item = q.get()
         if item is None:
             break
-        idx, lat, lon = item
+        cluster_id, lat, lon = item
         result = fetch_temp(lat, lon)
         with lock:
             if result is not None:
-                results[idx] = result
+                results[cluster_id] = result
             progress[0] += 1
             done = progress[0]
             if done % 200 == 0 or done == total:
@@ -68,9 +68,10 @@ total    = len(clusters)
 already  = sum(1 for c in clusters if c.get('temp_annual_mean_c') is not None)
 print(f"  {total} clusters; {already} already have temp_annual_mean_c")
 
-pending = [(i, c['lat'], c['lon']) for i, c in enumerate(clusters)
-           if c.get('temp_annual_mean_c') is None and 'lat' in c and 'lon' in c]
-print(f"  Fetching {len(pending)} clusters from Open-Meteo archive (~50-60 min)...")
+# Use cluster_id as key (not array index) so results survive a clusters-meta.json rebuild
+pending = [(c['id'], c['lat'], c['lon']) for c in clusters
+           if c.get('temp_annual_mean_c') is None and 'lat' in c and 'lon' in c and 'id' in c]
+print(f"  Fetching {len(pending)} clusters from Open-Meteo archive (~{len(pending)*7//3600+1}h)...")
 
 results  = {}
 lock     = Lock()
@@ -89,17 +90,20 @@ for t in threads:
     t.join()
 
 n_new = 0
-# Exclusive file lock: atomic read-modify-write to avoid concurrent patch conflicts
+# Exclusive file lock: atomic read-modify-write; re-read file so we survive a mid-run rebuild
 lock_path = META_PATH.with_suffix('.lock')
 with open(lock_path, 'w') as lf:
     fcntl.flock(lf, fcntl.LOCK_EX)
     clusters = json.loads(META_PATH.read_text())
-    for idx, (mean_c, hdd, cdd) in results.items():
-        clusters[idx]['temp_annual_mean_c'] = mean_c
-        clusters[idx]['hdd18']              = hdd
-        clusters[idx]['cdd18']              = cdd
-        n_new += 1
+    for c in clusters:
+        cid = c.get('id', '')
+        if cid in results:
+            mean_c, hdd, cdd = results[cid]
+            c['temp_annual_mean_c'] = mean_c
+            c['hdd18']              = hdd
+            c['cdd18']              = cdd
+            n_new += 1
     META_PATH.write_text(json.dumps(clusters, separators=(',', ':')))
 t_total = sum(1 for c in clusters if c.get('temp_annual_mean_c') is not None)
 print(f"\nDone.")
-print(f"  temp_annual_mean_c: {t_total}/{total} ({n_new} new)")
+print(f"  temp_annual_mean_c: {t_total}/{len(clusters)} ({n_new} new)")
