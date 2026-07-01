@@ -42,6 +42,19 @@ Commits via `~/Foundry/bin/commit-as-next.sh "<message>"` from archive root.
 — pushes code commits to staging mirrors + appends to `promote-queue.jsonl`.
 Command Session processes canonical merge. Do NOT run `promote.sh` directly.
 
+## Deploy model — local-first, Command takes it live
+
+This archive builds/deploys to `local-bim` on the workspace VM (port 9096) as
+a self-service step. It does NOT push to foundry-prod directly.
+
+Review: operator runs `ssh foundry-workspace-preview` and browses
+`localhost:9096` to approve changes before they go live.
+
+Going live: Command Session runs `~/Foundry/bin/push-to-prod.sh bim`
+(`target_bim()`) after operator approval — pushes the binary + vault +
+design-system + library dirs, restarts `local-bim-orchestration` on
+foundry-prod.
+
 ## Artifacts produced here
 
 For each piece of work, classify per `~/Foundry/conventions/artifact-classification.yaml`:
