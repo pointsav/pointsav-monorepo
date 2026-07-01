@@ -37,7 +37,7 @@ HARDWARE_BY_REGION = {
 # Region → ISO code for hardware lookup + cluster filter
 REGION_ISO = {
     "AB": "CA", "BC": "CA", "SK": "CA", "MB": "CA",
-    "AB_URBAN": "CA", "WEST": "CA",
+    "AB_URBAN": "CA", "WEST": "CA", "ON": "CA", "QC": "CA", "ATL": "CA",
     "GB": "GB", "FR": "FR", "DE": "DE", "ES": "ES",
 }
 
@@ -50,6 +50,9 @@ REGIONS = {
     "MB":       (49.0, -102.0, 60.0,  -95.0),
     "WEST":     (49.0, -139.0, 60.0,  -95.0),
     "AB_URBAN": (49.0, -115.0, 54.5, -110.5),
+    "ON":       (41.6,  -95.2, 56.9,  -74.3),   # Ontario
+    "QC":       (45.0,  -79.8, 62.6,  -57.1),   # Quebec
+    "ATL":      (43.3,  -69.1, 60.4,  -52.6),   # NB + NS + PE + NL combined
     # Europe
     "GB":  (50.0,  -6.0, 58.7,  1.8),   # England + Wales + Scottish lowlands
     "FR":  (42.3,  -5.2, 51.2,  8.2),   # Metropolitan France
@@ -96,7 +99,7 @@ def make_query(bbox_str: str, cat: str) -> str:
   way["office"~"^(construction_company|engineer)$"]({bbox_str});""",
     }
     block = S[cat]
-    return f"[out:json][timeout:120];\n({block}\n);\nout center;"
+    return f"[out:json][timeout:240];\n({block}\n);\nout center;"
 
 
 def haversine(lat1, lon1, lat2, lon2):
@@ -118,7 +121,7 @@ def fetch_overpass(q: str, cat: str, retries: int = 3):
     })
     for attempt in range(retries):
         try:
-            with urllib.request.urlopen(req, timeout=150) as r:
+            with urllib.request.urlopen(req, timeout=280) as r:
                 return json.loads(r.read())
         except urllib.error.HTTPError as e:
             if e.code == 429 and attempt < retries - 1:
@@ -189,7 +192,7 @@ def load_hardware(bbox, chains):
 def fetch_transit_stations(bbox_str):
     """Passenger rail/metro/tram stations — used to detect CBD convergence points."""
     q = f"""
-[out:json][timeout:120];
+[out:json][timeout:240];
 (
   node["railway"="station"]({bbox_str});
   node["railway"="halt"]({bbox_str});
