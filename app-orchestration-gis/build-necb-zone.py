@@ -41,11 +41,13 @@ n_new = n_skip = 0
 for c in clusters:
     if c.get('necb_zone') is not None:
         continue
-    # Only apply to Canada clusters (identified by country field or lon/lat range)
-    country = c.get('country', '') or c.get('iso', '')
-    lat = c.get('lat', 0)
-    lon = c.get('lon', 0)
-    is_canada = (country.upper() == 'CA') or (41 < lat < 84 and -141 < lon < -52)
+    # Only apply to Canada clusters, identified by iso alone. A lat/lon-bbox
+    # fallback was here previously (41 < lat < 84 and -141 < lon < -52) but that
+    # box covers most of the northern continental US too — verified 2026-07-01
+    # that `iso` is populated on all 6963 clusters (0 missing), so the fallback
+    # was unnecessary and was silently tagging ~900 US clusters with a
+    # Canada-only building code. iso alone is sufficient and correct.
+    is_canada = c.get('iso') == 'CA'
     if not is_canada:
         n_skip += 1
         continue
