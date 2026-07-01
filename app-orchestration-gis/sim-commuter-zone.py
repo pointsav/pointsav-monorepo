@@ -21,7 +21,9 @@ QUERY_SLEEP = 4
 POI_RADIUS_KM = 0.8   # walk-shed radius around each station
 
 # Known line termini per region, from route-relation queries (ground truth, not
-# guesswork) — see BRIEF-gis-commuter-zone.md for the queries used.
+# guesswork) — see BRIEF-gis-commuter-zone.md for the queries used. Region keys are
+# historically AB/BC for Calgary/Vancouver (kept for continuity with committed work);
+# new cities use full names since Ottawa/Edmonton would otherwise collide with ON/AB.
 TERMINI_BY_REGION = {
     # Calgary CTrain (2026-06-30)
     "AB": {"69 Street", "Saddletowne", "Somerset-Bridlewood",
@@ -34,12 +36,32 @@ TERMINI_BY_REGION = {
            "Production Way–University", "Production Way-University",
            "VCC-Clark", "VCC–Clark",
            "Lafarge Lake–Douglas", "Lafarge Lake-Douglas"},
+    # Toronto TTC (2026-06-30) — Line 1/2/4/5/6. Kennedy is shared Line2/Line5
+    # terminus + GO interchange (major hub, flagged inner-city). Sheppard-Yonge is a
+    # Line 4 terminus but a Line 1 mid-line interchange — treated as terminus.
+    "TORONTO": {"Vaughan Metropolitan Centre", "Finch", "Kipling", "Kennedy",
+                "Don Mills", "Sheppard-Yonge", "Sheppard–Yonge",
+                "Mount Dennis", "Humber College", "Finch West"},
+    # Ottawa O-Train (2026-06-30) — Lines 1/2/4. Bayview is Line 2 terminus + Line 1
+    # interchange — treated as terminus (same pattern as Sheppard-Yonge).
+    "OTTAWA": {"Tunney's Pasture", "Blair", "Bayview", "Limebank",
+               "South Keys", "Airport", "Airport / Aéroport"},
+    # Edmonton LRT (2026-06-30) — Capital/Metro/Valley Lines.
+    "EDMONTON": {"Clareview", "Century Park", "Health Sciences/Jubilee",
+                 "NAIT/Blatchford Market", "Mill Woods", "102 Street"},
+    # Montreal Metro + REM (2026-06-30) — Green/Orange/Yellow/Blue + REM branches.
+    # Berri-UQAM is the 3-line downtown interchange (Yellow terminus) — inner-city.
+    "MONTREAL": {"Honoré-Beaugrand", "Angrignon", "Montmorency", "Côte-Vertu",
+                 "Berri-UQAM", "Longueuil–Université-de-Sherbrooke",
+                 "Saint-Michel", "Snowdon", "Deux-Montagnes", "Brossard",
+                 "Anse-à-l'Orme"},
 }
 
 # Inner-city/downtown termini — excluded from the "suburban terminus" baseline
 # comparison the same way Calgary's downtown corridor was excluded, but reported
 # separately since a downtown terminus is itself an interesting test case.
-INNER_CITY_TERMINI = {"Waterfront", "VCC-Clark", "VCC–Clark"}
+INNER_CITY_TERMINI = {"Waterfront", "VCC-Clark", "VCC–Clark",
+                       "Kennedy", "Berri-UQAM"}
 
 REGIONS = {
     # Calgary metro only — terminus dictionary is Calgary-specific; a wider AB bbox
@@ -47,6 +69,10 @@ REGIONS = {
     "AB": (50.75, -114.35, 51.20, -113.85),
     # Metro Vancouver only (SkyTrain network extent) — same scoping logic.
     "BC": (49.00, -123.25, 49.35, -122.60),
+    "TORONTO":  (43.55, -79.65, 43.85, -79.10),
+    "OTTAWA":   (45.20, -75.90, 45.50, -75.45),
+    "EDMONTON": (53.35, -113.75, 53.72, -113.25),
+    "MONTREAL": (45.30, -73.95, 45.75, -73.40),
 }
 
 # Downtown transit-mall corridor per region — excluded from suburban-vs-terminus
@@ -58,6 +84,20 @@ DOWNTOWN_CORRIDOR_BY_REGION = {
            "Erlton/Stampede", "Victoria Park/Stampede"},
     "BC": {"Waterfront", "Burrard", "Granville", "Stadium–Chinatown",
            "Main Street–Science World", "VCC-Clark", "VCC–Clark"},
+    # Toronto downtown core — Yonge-University financial/entertainment district loop.
+    "TORONTO": {"Union", "King", "Queen", "Dundas", "College", "Wellesley",
+                "Bloor-Yonge", "Bloor–Yonge", "St George", "St. George",
+                "Osgoode", "St Andrew", "St. Andrew", "Museum", "Queen's Park",
+                "St Patrick", "St. Patrick", "Kennedy"},
+    # Ottawa downtown core — Confederation Line underground/central segment.
+    "OTTAWA": {"Parliament", "Rideau", "Lyon", "Bayview"},
+    # Edmonton downtown core — Churchill/Central/Bay-Enterprise Square corridor.
+    "EDMONTON": {"Churchill", "Central", "Bay/Enterprise Square", "Corona",
+                 "Grandin/Government Centre", "MacEwan", "Stadium"},
+    # Montreal downtown core — Green/Orange central segment.
+    "MONTREAL": {"Berri-UQAM", "McGill", "Peel", "Guy-Concordia",
+                 "Lucien-L'Allier", "Bonaventure", "Square-Victoria",
+                 "Place-des-Arts", "Saint-Laurent"},
 }
 
 
@@ -79,12 +119,12 @@ def fetch_overpass(q, label, retries=3):
     })
     for attempt in range(retries):
         try:
-            with urllib.request.urlopen(req, timeout=150) as r:
+            with urllib.request.urlopen(req, timeout=200) as r:
                 return json.loads(r.read())
         except urllib.error.HTTPError as e:
-            if e.code == 429 and attempt < retries - 1:
+            if e.code in (429, 504) and attempt < retries - 1:
                 wait = 15 * (attempt + 1)
-                print(f"  429, retrying in {wait}s...", end=" ", flush=True)
+                print(f"  {e.code}, retrying in {wait}s...", end=" ", flush=True)
                 time.sleep(wait)
                 continue
             print(f"  WARN {label}: {e}", file=sys.stderr)
