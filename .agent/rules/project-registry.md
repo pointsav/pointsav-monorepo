@@ -36,6 +36,7 @@ Last updated: 2026-05-31.
 |---|---|---|---|
 | app-mediakit-distributions | Scaffold-coded | app-mediakit | 4 files |
 | app-mediakit-knowledge | Scaffold-coded | app-mediakit | 4 files |
+| app-mediakit-knowledge-2 | Scaffold-coded | app-mediakit | Ground-up rewrite of the wiki engine (plan virtual-twirling-parasol); temporary `-2` name, renamed to `app-mediakit-knowledge` at cutover (P8). P0 scaffold 2026-07-01: new crate, config.rs (knowledge.toml schema preserved), /healthz + /static, 2 config tests, all 3 production configs load; workspace member |
 | app-mediakit-marketing | Active | app-mediakit | Clean-sheet rewrite 2026-06 (P1 scaffold); axum 0.8 server-rendered, typed section-manifests, MCP-first authoring + F12 approval queue; depends on `app-mediakit-shell`; workspace member; serves home.woodfinegroup.com / home.pointsav.com |
 | app-mediakit-shell | Active | app-mediakit | Shared chrome chassis (analogue of `app-console-keys`): maud header/footer + typed `Section` vocabulary + DTCG token loading; lib crate, framework-agnostic; consumed by `app-mediakit-marketing`; knowledge/distributions adoption planned; workspace member (2026-06) |
 | app-mediakit-telemetry | Scaffold-coded | app-mediakit | 14 files; MaxMind `.mmdb` pending move to build-time fetch |
