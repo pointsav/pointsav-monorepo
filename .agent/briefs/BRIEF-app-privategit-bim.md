@@ -355,3 +355,26 @@ state as of the original escalation.
     in `fonts.css` but referenced by zero rules anywhere — flagged by FABLE,
     left as-is (no obviously-correct place to apply it without inventing a role
     that doesn't exist in the current page structure).
+
+- **2026-07-02 (license correction resolved, commit `83bad1c5`):** Operator
+  pushed back twice on the Opus review's AGPL finding ("I think it's only
+  FSL now" / "check project-software") — correctly not taking the first
+  answer at face value on a real legal question. Re-verified independently
+  each time: confirmed against `factory-release-engineering`'s
+  `README.md` summary table and `licenses/MIXED-MONOREPO-NOTICE.txt` (the
+  file automated compliance verification actually uses), then again
+  against `project-software`'s live marketplace storefront catalog
+  (`app-privategit-marketplace/catalog/products.yaml`). All six documents
+  inside `factory-release-engineering` plus the separate storefront
+  catalog agree, zero contradict: `app-privategit-bim` → AGPL-3.0-or-later,
+  `app-orchestration-bim` → FSL-1.1-ALv2 (this half already
+  operator-ratified per `NEXT.md` DEF-001, closed 2026-05-20).
+  Operator confirmed "yes, go ahead." Fixed: both crates' `Cargo.toml`
+  (previously both wrongly said `Apache-2.0`), added `LICENSE` files to
+  both (AGPL-3.0 / FSL-1.1-Apache-2.0 text from
+  `factory-release-engineering/licenses/`), corrected the public footer
+  to split platform-code license (AGPL-3.0-or-later + source link) from
+  BIM-data license (Apache-2.0, unaffected, already correct) instead of
+  one blanket wrong claim. Deployed and verified live. Command's earlier
+  flag (`command-20260702-likely-license-mislabel-app-privategit-b`) is
+  now resolved — worth a short follow-up to Command noting closure.
