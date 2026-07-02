@@ -3,7 +3,7 @@ name = "app-orchestration-bim"
 version = "0.0.2"
 edition = "2021"
 description = "BIM Object Library — Woodfine server-rendered catalog (Axum + DTCG)"
-license = "Apache-2.0"
+license = "FSL-1.1-ALv2"
 
 [[bin]]
 name = "app-orchestration-bim"
