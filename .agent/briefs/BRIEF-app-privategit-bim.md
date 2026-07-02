@@ -6,7 +6,7 @@ title: app-privategit-bim — Carbon Framework Rewrite
 status: active
 owner: project-bim
 created: 2026-06-20
-updated: 2026-06-20
+updated: 2026-07-02
 ---
 
 # Brief — app-privategit-bim Carbon Framework Rewrite
@@ -80,12 +80,55 @@ Phase 2 (pending):
   reports `token_count: 0` (separate from the static-asset bug) — needs a
   look during/after the prod deploy.
 
+- **2026-07-02 (browser-in-the-loop audit, Fable agent):** Operator felt the new
+  site's "look" and BIM-object explanations regressed vs. `app-orchestration-bim`.
+  Ran the old crate fresh on scratch port 9097 with its real (previously-uncommitted)
+  CSS, screenshotted both alongside prod, and diffed content. Findings:
+  - **Root-caused the `token_count: 0` bug** (see 2026-07-02 entry above): local-bim.service's
+    `BIM_DESIGN_SYSTEM_DIR` points at `pointsav-monorepo` instead of `woodfine-bim-library`
+    — every category shows "0 entities" on the live local preview right now. Escalated
+    to Command HIGH priority (`command-20260702-bim-woodfinegroup-com-local-bim-bim-desi`).
+  - **The old site's real CSS/fonts/logo were never committed to git** — they only exist
+    at `/var/lib/local-bim-orchestration/static/` on this VM (css/tokens.css, components.css,
+    base.css, layout.css; Geist Sans/Mono + Source Serif 4 woff2; Woodfine logo SVG). Same
+    root cause as prod's CSS 404s: `bin/push-to-prod.sh`'s `target_bim()` never pushes a
+    static dir. **Should be committed into git** (suggested target:
+    `app-privategit-bim/src/assets/`) before it's lost — currently a single VM directory
+    is the only copy.
+  - **Content regression confirmed real**: old `CatMeta` (`app-orchestration-bim/src/main.rs:64-190`)
+    had multi-sentence category intros plus `uniclass`/`ifc_hierarchy`/`property_sets` fields
+    driving chip rows + IFC hierarchy rows + property-set tables + Regulation/Climate
+    Zone/Token Format tabs (`main.rs:1250-1338`). New crate's `known_categories()`
+    (`app-privategit-bim/src/schema/dtcg.rs`, on `main` branch — not in this checkout, see below)
+    thinned every intro to one flat sentence and dropped those structural fields entirely.
+    The `/about` "What is a BIM Object?" page and sidebar Overview section were also dropped
+    (no route for it in the new router).
+  - **New engine's real wins** (worth keeping): MCP JSON-RPC endpoint (5 tools), SSE
+    live-reload, dual-mode visual/code editor with jsonschema validation, 3 more categories
+    (12 vs 9), and it renders real DTCG entities instead of hardcoded tables.
+  - **Important branch note:** `app-privategit-bim/` source exists only on `main` —
+    it is NOT present in this `cluster/project-bim` checkout (confirmed via
+    `git branch --all --contains <commit>`). To port any of the CSS/content fixes below,
+    this branch needs `git fetch origin && git rebase origin/main` first (per
+    CLAUDE.md §8 rebase discipline) — not yet done, pending operator go-ahead since it's
+    a rebase of a shared branch.
+  - Screenshots saved at `~/bim-audit-shots/` on this VM (session-local, not archived).
+
 ## Carry-forward
 
 - Stage 6 promotion (monorepo cluster → canonical main) → Command Session outbox ✓
 - Production deploy (systemd + nginx) → Command Session outbox — **re-escalated
   2026-07-02 as HIGH priority; live site is actively broken, not just pending
   an upgrade** (`command-20260702-escalation-bim-woodfinegroup-com-is-live`)
-- `token_count: 0` in app-privategit-bim (local preview) — needs investigation,
-  likely a separate bug in the DTCG token-loading path from the components
-  loader (components_count loads fine at 18)
+- `token_count: 0` root-caused 2026-07-02 → escalated to Command HIGH priority
+  (`command-20260702-bim-woodfinegroup-com-local-bim-bim-desi`); one-line systemd
+  unit env var fix, not a code bug
+- **CSS/font/logo assets never committed to git** — only copy is
+  `/var/lib/local-bim-orchestration/static/` on this VM; recommend committing before
+  it's lost, target `app-privategit-bim/src/assets/` — blocked on the branch rebase below
+- **Category content/CSS bridging plan drafted 2026-07-02** (full detail in audit report,
+  not yet copied into this file in full) — restore old `CatMeta` intro text + uniclass/
+  ifc_hierarchy/property_sets fields, restore chip-row + tabbed detail layout, restore
+  `/about` page + sidebar Overview section, restore footer stats/closing line. Blocked on
+  rebasing `cluster/project-bim` onto `main` to get `app-privategit-bim` into this working
+  tree — operator has not yet confirmed the rebase; ask before running it.
