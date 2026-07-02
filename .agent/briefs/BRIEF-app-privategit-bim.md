@@ -314,3 +314,44 @@ state as of the original escalation.
 - **Logo swap and favicon still flagged, not applied** (see Decisions open below) —
   now more relevant given the exact-brand-match direction; the `wf-logo_V1.svg`
   entity-naming question is still open.
+
+- **2026-07-02 (footer bugs + license review + FABLE mobile re-check, commits
+  `f141dc0d`, `75fb40b8`, `453504c0`):** Operator reported "footer is in the middle
+  of the page" on localhost. Found two real bugs: `.bim-shell` had a redundant
+  `min-height: calc(100vh - 48px)` forcing the content area to always be
+  near-full-viewport tall regardless of actual content, creating huge gaps before
+  the footer on short pages (About, Furniture) and pushing it off-screen on tall
+  windows — removed, `flex:1` alone is correct. `.bim-footer` had no `margin-left`
+  so the fixed sidebar overlapped its left column on every page — added, with a
+  mobile-breakpoint reset to 0. Verified at multiple viewport heights, fixed
+  (`f141dc0d`).
+  - **License/footer accuracy review (operator requested, ran via Opus model)**:
+    found the footer's "Apache-2.0" claim is very likely wrong —
+    `factory-release-engineering`'s `LICENSE-MATRIX.md` + `repo-license-map.yaml`
+    (internally consistent with each other) say `app-privategit-*` should be
+    AGPL-3.0-or-later; both `app-privategit-bim/Cargo.toml` and
+    `app-orchestration-bim/Cargo.toml` mislabel as Apache-2.0. The BIM *data*
+    (`woodfine-bim-library`) genuinely is Apache-2.0 — that part's right; the
+    footer conflates code and data under one license line. Also found the footer
+    was missing the mandatory trademark notice (`TRADEMARK.md` §13 — not
+    optional for a footer surface). **Added the trademark notice** (unambiguous,
+    no judgment call) — committed `75fb40b8`. **Did NOT change the license
+    designation** — that's a real distribution-terms decision for a live public
+    product; flagged to Command (`command-20260702-likely-license-mislabel-app-privategit-b`)
+    rather than made unilaterally. `factory-release-engineering` itself does not
+    need updating for this — it's already correct; the crates diverge from it.
+  - **FABLE mobile re-check** (after the brand-match + footer fixes, none of which
+    had been screenshotted at mobile width yet) confirmed the footer fixes and
+    hamburger drawer all work correctly at 390px, but found 4 new/pre-existing
+    bugs: Oswald never actually rendered on headings (vestigial `carbon.min.css` —
+    still genuinely needed for the `/edit` page's real Carbon components — loaded
+    after `fonts.css` and its reset won the cascade), `.bim-table-wrap` had zero
+    CSS rules anywhere (caused whole-page horizontal scroll on mobile instead of
+    just the table), the topbar `|` separator wasn't hidden alongside the label
+    under 420px, and breadcrumb links (reusing `.bim-nav-link`, which is
+    `display:block`) stacked vertically instead of reading inline (pre-existing,
+    not a regression). All four fixed and verified (`453504c0`).
+  - **Still-dead token, not fixed**: `--bim-font-serif` (Roboto Slab) is defined
+    in `fonts.css` but referenced by zero rules anywhere — flagged by FABLE,
+    left as-is (no obviously-correct place to apply it without inventing a role
+    that doesn't exist in the current page structure).
