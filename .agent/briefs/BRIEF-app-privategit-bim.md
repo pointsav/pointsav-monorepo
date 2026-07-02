@@ -113,6 +113,36 @@ Phase 2 (pending):
     CLAUDE.md §8 rebase discipline) — not yet done, pending operator go-ahead since it's
     a rebase of a shared branch.
   - Screenshots saved at `~/bim-audit-shots/` on this VM (session-local, not archived).
+- **2026-07-02 (bridging work implemented, commit `ff1270b8`):** Attempted the full
+  `git fetch origin && git rebase origin/main` on operator confirmation — it conflicted
+  immediately (add/add on `.agent/manifest.md`, `.agent/plans/README.md`, `.gitignore`).
+  Root cause: `cluster/project-bim`'s very first commit in `pointsav-monorepo`
+  (`31403f27`) committed project-bim's entire `.agent/` tree directly into this shared
+  repo's history, before the `[Option-A-mailbox-fix]` `.gitignore` block (now on `main`)
+  existed to prevent exactly that. Aborted the rebase (clean, no data lost) and flagged
+  the contamination to Command as its own item (`command-20260702-pointsav-monorepo-cluster-branches-agent`)
+  — likely affects other clusters whose first commit predates that fix; needs a
+  history rewrite + force-push to staging mirrors, so left for Command to plan rather
+  than acted on unilaterally. Unblocked the actual goal with a narrow
+  `git checkout origin/main -- app-privategit-bim` instead (commit `84bd1025`) — pulls
+  just that crate's 34 files without touching `.agent/`.
+  Then implemented the full bridging plan: vendored the recovered CSS/fonts/logo into
+  `app-privategit-bim/src/assets/` (`fonts/`, `images/`, new `tokens.css`, rewritten
+  `fonts.css`), replaced `<cds-header>`/`<cds-side-nav>` with plain HTML+CSS (`.bim-topbar`,
+  `.bim-side-nav`, grouped `.bim-nav-group`s) to avoid fighting Carbon's shadow-DOM
+  theming, restored full `CatMeta` (`uniclass`/`ifc_hierarchy`/`property_sets` fields +
+  multi-sentence intros) in `schema/dtcg.rs`, rebuilt `render/card.rs`'s category pages
+  with the old chip-row + `<details>` Specification/BIM Objects/Regulation/Climate
+  Zone/Token Format layout (property-set tables + live DTCG entity table both included),
+  added `/about` (`routes/about.rs`), and restored full footer stats + closing line.
+  Had to add an empty `[workspace]` table to `app-privategit-bim/Cargo.toml` — it isn't
+  a member of the root workspace and errored on build without opting out standalone.
+  Built clean, verified with browser screenshots against a scratch port (9099) — visual
+  fidelity now close to the old site's screenshots while keeping the new engine's live
+  data and features. Live `:9096` service confirmed untouched throughout (a `pkill -f`
+  during cleanup nearly matched the systemd-managed process too — caught because it's
+  root-owned and the kill was rejected; used a more targeted process match after).
+  Committed to `cluster/project-bim` (`ff1270b8`), not yet Stage-6 promoted.
 
 ## Carry-forward
 
@@ -120,15 +150,17 @@ Phase 2 (pending):
 - Production deploy (systemd + nginx) → Command Session outbox — **re-escalated
   2026-07-02 as HIGH priority; live site is actively broken, not just pending
   an upgrade** (`command-20260702-escalation-bim-woodfinegroup-com-is-live`)
-- `token_count: 0` root-caused 2026-07-02 → escalated to Command HIGH priority
-  (`command-20260702-bim-woodfinegroup-com-local-bim-bim-desi`); one-line systemd
-  unit env var fix, not a code bug
-- **CSS/font/logo assets never committed to git** — only copy is
-  `/var/lib/local-bim-orchestration/static/` on this VM; recommend committing before
-  it's lost, target `app-privategit-bim/src/assets/` — blocked on the branch rebase below
-- **Category content/CSS bridging plan drafted 2026-07-02** (full detail in audit report,
-  not yet copied into this file in full) — restore old `CatMeta` intro text + uniclass/
-  ifc_hierarchy/property_sets fields, restore chip-row + tabbed detail layout, restore
-  `/about` page + sidebar Overview section, restore footer stats/closing line. Blocked on
-  rebasing `cluster/project-bim` onto `main` to get `app-privategit-bim` into this working
-  tree — operator has not yet confirmed the rebase; ask before running it.
+- `token_count: 0` root-caused 2026-07-02 → escalated to Command, **ACK'd and fixed
+  same day** — `local-bim.service`'s `BIM_DESIGN_SYSTEM_DIR` corrected, verified
+  `token_count: 0 → 80` live.
+- **Branch contamination in `pointsav-monorepo`'s `cluster/project-bim`** → escalated to
+  Command HIGH priority (`command-20260702-pointsav-monorepo-cluster-branches-agent`),
+  unresolved — this branch still cannot cleanly rebase onto `origin/main` until Command
+  plans a history-rewrite fix (likely affects other clusters too).
+- **CSS/font/logo assets recovered and committed** (2026-07-02, commit `ff1270b8`) —
+  no longer only-copy-on-a-VM-directory; now under `app-privategit-bim/src/assets/`.
+- **Category content/CSS bridging plan implemented** 2026-07-02 (commit `ff1270b8`) —
+  see work log above. Not yet Stage-6 promoted; not yet deployed to `local-bim.service`
+  or foundry-prod. Next: self-service-promote → operator review on `local-bim` preview
+  → decide whether to fold into the pending prod deploy of `39d3cb0b`/canonical's
+  already-fixed header/footer/sidebar, or ship separately.
