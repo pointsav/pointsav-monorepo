@@ -135,9 +135,9 @@ def fetch_overpass(q: str, cat: str, retries: int = 3):
             with urllib.request.urlopen(req, timeout=280) as r:
                 return json.loads(r.read())
         except urllib.error.HTTPError as e:
-            if e.code == 429 and attempt < retries - 1:
+            if e.code in (429, 502, 503, 504) and attempt < retries - 1:
                 wait = 15 * (attempt + 1)
-                print(f"  429, retrying in {wait}s...", end=" ", flush=True)
+                print(f"  {e.code}, retrying in {wait}s...", end=" ", flush=True)
                 time.sleep(wait)
                 continue
             print(f"  WARN {cat}: {e}", file=sys.stderr)
