@@ -85,17 +85,27 @@ Phase 2 (pending):
   time, so this round proceeded with the recommended middle path: same
   *organizational* pattern as a design system (token browser, per-category
   detail pages, content-in-files) but keep the BB.14 navy/Source-Serif/Geist
-  visual skin. **This is explicitly revisitable** — see Decisions open below.
+  visual skin. **RESOLVED same session — see below.**
+- **RESOLVED 2026-07-02 (commit `e222418b`): visual direction is an exact match
+  to `home.woodfinegroup.com`'s brand.** Operator picked option (c) from the
+  three surfaced below — not Carbon, not the BB.14 look. Fonts: Oswald
+  (display/headings), Nunito Sans (body/UI), Roboto Slab (serif prose) — self-
+  hosted, matching `pointsav-design-system/tokens/theme-woodfine-wcp.css` 1:1.
+  Colors: exact `--ink`/`--ink-2`/`--ink-3`/`--rule`/`--wf-blue`/`--wf-blue-tint`
+  values from the same source (brand blue `#164679` was already an exact match
+  by coincidence). Kept a neutral system monospace stack for IFC/JSON display
+  — home.woodfinegroup.com has no code-display need to match there. This
+  supersedes the BB.14 differentiation research for BIM specifically; the
+  reasoning that made it acceptable: BB.14 was about not looking like
+  PointSav's Carbon design system, not about inventing a separate identity —
+  matching Woodfine's own real brand still satisfies that.
 
-## Decisions open
+## Decisions open (historical — the three options as originally surfaced)
 
-- **Visual direction — needs an explicit operator answer.** Three real options
-  surfaced this session: (a) keep current BB.14 look [default, what shipped],
-  (b) match design.pointsav.com's Carbon skin exactly (reverses BB.14), (c)
-  match `home.woodfinegroup.com`'s actual brand stack (Oswald/Roboto Slab/
-  Nunito Sans, documented in `pointsav-design-system/themes/MEMO-Woodfine-Color-Matrix.md`)
-  instead of either. Nothing further should change the visual skin until this
-  is settled.
+- Three real options were surfaced this session: (a) keep current BB.14 look
+  [what shipped first], (b) match design.pointsav.com's Carbon skin exactly
+  (reverses BB.14), (c) match `home.woodfinegroup.com`'s actual brand stack
+  instead of either. **Operator chose (c) — see Decisions locked above.**
 - **IA reorganization recommendation from the FABLE research pass (not yet
   implemented, no operator sign-off):** group the 20 categories into three
   sections mirroring design.pointsav.com's *intended* (not current) IA —
@@ -280,15 +290,27 @@ Sent a follow-up to Command with the correction above plus a note that whenever
 `push-to-prod.sh bim` runs, it should pick up this current HEAD rather than the
 state as of the original escalation.
 
+- **2026-07-02 (brand-match implementation, commit `e222418b`):** Operator confirmed
+  the visual-direction decision (see Decisions locked above) and asked to implement
+  it. Vendored Oswald/Nunito Sans/Roboto Slab woff2 files from the copies already
+  self-hosted for `app-mediakit-knowledge` (no new download needed), rewrote
+  `fonts.css`/`tokens.css` to the exact `theme-woodfine-wcp.css` values, swept
+  leftover Carbon-era hardcoded grays to their Woodfine equivalents across
+  `bim-layout.css`/`bim-components.css`, removed the now-unused Geist/Source Serif
+  files. Verified on a scratch port, then synced to `/var/lib/local-bim/static/`
+  and restarted `local-bim.service` — confirmed live on `127.0.0.1:9096`.
+
 ## Pending operator decisions (as of 2026-07-02, second session)
 
 - **Foundry-prod deploy still needs Command** — see correction above. Not something
-  further Totebox self-service action can resolve.
-- **Visual-direction question still open** (see Decisions open above) — three-way
-  fork, asked once, no response.
+  further Totebox self-service action can resolve. The local preview (now including
+  the brand-match work) is ready whenever that happens.
 - Separately, `.agent/briefs/BRIEF-key-plans-site.md` is likely stale — it's scoped to
   the *old* `app-orchestration-bim`/`local-bim-orchestration` service and an older
   `pointsav-design-system/tokens/bim/key-plans.dtcg.json` source path, predates the
   `app-privategit-bim` cutover entirely, and doesn't appear to have been touched since.
   Recommend the operator review it for archival — not touched this session, flagging
   only.
+- **Logo swap and favicon still flagged, not applied** (see Decisions open below) —
+  now more relevant given the exact-brand-match direction; the `wf-logo_V1.svg`
+  entity-naming question is still open.
