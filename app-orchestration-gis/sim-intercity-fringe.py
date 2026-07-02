@@ -42,17 +42,28 @@ REGION_ISO = {
 }
 
 # Region bounding boxes  south, west, north, east
+#
+# 2026-07-01: BC's east edge was -114.0, overlapping ~6 degrees into Alberta
+# (Calgary sits at ~-114.07 — 19/176 zones leaked into BC's sweep per the BRIEF's
+# measurement). Tightened to -120.0 to match AB's real west edge. MB's west edge
+# similarly overlapped SK's east edge by 0.5 degrees — tightened to match.
+# ON/QC/ATL have much larger overlaps (QC's -79.8 sits deep inside ON's box which
+# extends to -74.3; ATL's -69.1 sits deep inside QC's box which extends to -57.1 —
+# Montreal itself falls inside ON's box) — NOT fixed here. These provinces' real
+# borders are irregular (rivers, not meridians), so a rectangle edit can't resolve
+# them without excluding real territory; needs actual province polygon boundaries
+# (point-in-polygon on cluster centroids) in a future session. See NEXT.md.
 REGIONS = {
     # Canada
     "AB":       (49.0, -120.0, 60.0, -110.0),
-    "BC":       (48.3, -139.0, 60.0, -114.0),
+    "BC":       (48.3, -139.0, 60.0, -120.0),
     "SK":       (49.0, -110.0, 60.0, -101.5),
-    "MB":       (49.0, -102.0, 60.0,  -95.0),
+    "MB":       (49.0, -101.5, 60.0,  -95.0),
     "WEST":     (49.0, -139.0, 60.0,  -95.0),
     "AB_URBAN": (49.0, -115.0, 54.5, -110.5),
-    "ON":       (41.6,  -95.2, 56.9,  -74.3),   # Ontario
-    "QC":       (45.0,  -79.8, 62.6,  -57.1),   # Quebec
-    "ATL":      (43.3,  -69.1, 60.4,  -52.6),   # NB + NS + PE + NL combined
+    "ON":       (41.6,  -95.2, 56.9,  -74.3),   # Ontario — NOT fixed, see note above
+    "QC":       (45.0,  -79.8, 62.6,  -57.1),   # Quebec — NOT fixed, see note above
+    "ATL":      (43.3,  -69.1, 60.4,  -52.6),   # NB + NS + PE + NL combined — NOT fixed, see note above
     # Europe
     "GB":  (50.0,  -6.0, 58.7,  1.8),   # England + Wales + Scottish lowlands
     "FR":  (42.3,  -5.2, 51.2,  8.2),   # Metropolitan France
