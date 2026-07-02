@@ -63,8 +63,29 @@ Phase 2 (pending):
   (from `app-orchestration-bim` source), sidebar `expanded`, `cds-data-table` →
   plain table. Committed `39d3cb0b` to monorepo cluster branch. Preview running
   on port 9206.
+- **2026-07-02:** Operator reported the live public site (bim.woodfinegroup.com)
+  "does not look good." Investigation confirmed it is actively broken: all 5
+  CSS files 404 (unstyled raw HTML), `/readyz` reports `tokens_count: 0,
+  components_count: 0`, `/tokens.json` returns `{}`. Root cause: foundry-prod
+  is still serving the OLD `app-orchestration-bim` on port 9096, and its
+  `$BIM_STATIC_DIR` / design-system vault paths on that host are missing or
+  empty. Confirmed on this workspace VM that `local-bim.service` is already
+  active running the NEW `app-privategit-bim` on 127.0.0.1:9096 — healthy,
+  fully styled (all static assets 200, `components_count: 18`). Sent
+  high-priority escalation to Command (`command-20260702-escalation-bim-
+  woodfinegroup-com-is-live`) re-requesting the Phase 2 production deploy
+  (Stage 6 promote `39d3cb0b` + build/deploy `app-privategit-bim` to
+  foundry-prod + stop old service), using the workspace's `local-bim.service`
+  unit as the working reference. Also noted: even the healthy local preview
+  reports `token_count: 0` (separate from the static-asset bug) — needs a
+  look during/after the prod deploy.
 
 ## Carry-forward
 
 - Stage 6 promotion (monorepo cluster → canonical main) → Command Session outbox ✓
-- Production deploy (systemd + nginx) → Command Session outbox ✓
+- Production deploy (systemd + nginx) → Command Session outbox — **re-escalated
+  2026-07-02 as HIGH priority; live site is actively broken, not just pending
+  an upgrade** (`command-20260702-escalation-bim-woodfinegroup-com-is-live`)
+- `token_count: 0` in app-privategit-bim (local preview) — needs investigation,
+  likely a separate bug in the DTCG token-loading path from the components
+  loader (components_count loads fine at 18)
