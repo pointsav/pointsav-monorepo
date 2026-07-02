@@ -245,19 +245,45 @@ Phase 2 (pending):
   possible, so `app-privategit-bim`'s source was pulled in with a targeted
   `git checkout origin/main -- app-privategit-bim` instead (already covered above).
 
+## CORRECTION (2026-07-02, later same session): local-bim ≠ foundry-prod
+
+The FABLE audit's "headline finding" (logged above) that "prod and 127.0.0.1:9096 are
+literally the same process" is **wrong**. It read this VM's
+`/etc/nginx/sites-enabled/bim.woodfinegroup.com` config (which does proxy to
+`127.0.0.1:9096`) but never checked DNS. `bim.woodfinegroup.com` resolves to
+`34.168.19.68`; this workspace VM's public IP is `34.53.65.203` — **different hosts**.
+This VM's nginx vhost + Let's Encrypt cert for that domain are stale/vestigial, left
+over from before DNS pointed elsewhere (or before "foundry-prod" was split out as a
+separate host) — not actually receiving public traffic. Flagging for Command to
+clean up if confirmed unused; not acted on here.
+
+Practical effect: everything in this brief about fixing "the live site" only ever
+fixed `local-bim.service` on this workspace VM (`127.0.0.1:9096`) — the correct and
+intended Totebox self-service scope per `CLAUDE.md`'s local-first deploy model. It
+never touched the actual public `bim.woodfinegroup.com`, which is served by a
+separate "foundry-prod" host only Command can deploy to. The prior escalations
+(`command-20260702-escalation-bim-woodfinegroup-com-is-live` and today's follow-up
+`command-20260702-local-bim-service-redeployed-with-full-f`) remain the correct path
+for actually fixing the public domain — this was not a wasted effort, just scoped
+correctly to the local preview all along.
+
+## Redeploy completed (2026-07-02, operator confirmed "yes, redeploy now")
+
+Rebuilt `app-privategit-bim` from current `cluster/project-bim` HEAD (commits
+`ff1270b8`, `c498bcff`, `9059f83e`), resynced `/var/lib/local-bim/static/` via
+`sudo rsync --chown=local-bim:local-bim`, `sudo install`ed the new binary,
+`sudo systemctl restart local-bim.service`. Verified on `127.0.0.1:9096`: `healthz`
+18/80, home page shows `CATEGORIES 20`, plain `.bim-topbar` shell (no `cds-header`),
+`tokens.css`/vendored fonts load 200, `climate-zones` no longer errors, `/furniture`
+shows its real 8 items. This is now the current, correct state of the local preview.
+Sent a follow-up to Command with the correction above plus a note that whenever
+`push-to-prod.sh bim` runs, it should pick up this current HEAD rather than the
+state as of the original escalation.
+
 ## Pending operator decisions (as of 2026-07-02, second session)
 
-- **Deploy go-ahead needed.** Asked twice (design-direction question, then a
-  redeploy-now-vs-later question) and got no response both times — proceeded with the
-  non-public-facing work (content/mobile) and deliberately held off on anything that
-  touches the live `local-bim.service`/`bim.woodfinegroup.com`. The site is still
-  running the ~10-day-stale build with the Carbon bug live for real visitors. A
-  combined redeploy (covering `ff1270b8` + `c498bcff` + `9059f83e`) is ready to go —
-  needs `sudo install` + static asset resync + `sudo systemctl restart local-bim.service`,
-  which is instantly public. Also note: `~/Foundry/bin/deploy-binary.sh` is NOT the
-  right tool for this — it's Command-Session-scoped and requires the source to already
-  be promoted to canonical `origin/main`, neither of which applies here (this crate
-  isn't even registered in `conventions/software-units.yaml`).
+- **Foundry-prod deploy still needs Command** — see correction above. Not something
+  further Totebox self-service action can resolve.
 - **Visual-direction question still open** (see Decisions open above) — three-way
   fork, asked once, no response.
 - Separately, `.agent/briefs/BRIEF-key-plans-site.md` is likely stale — it's scoped to
