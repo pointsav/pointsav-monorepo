@@ -1,7 +1,11 @@
 # tool-buildingwidth + tool-floorplates — Architecture & Gap Register
 
-> **Status:** Research complete (2026-05-17, Opus agent army).
-> **Next:** Create missing token files → scaffold Rust crates.
+> **Status:** Research complete (2026-05-17, Opus agent army). Missing token files created and
+> internal inconsistencies fixed 2026-07-03 (commit `ae153aa`, woodfine-bim-library) — see
+> NEXT.md for the two genuine data gaps found along the way (Medium-tile end-cap composition
+> not sourced; Tile F-medium composition arithmetic doesn't reconcile with its SF target).
+> **Next:** Rust crate scaffold — unblocked, not yet started; needs its own dedicated planning
+> session given the scope (new workspace, ILP solver, bidirectional adjustment logic).
 > **HTML preview:** `/home/jennifer/sandbox/outputs/project-bim/html/`
 
 ---
