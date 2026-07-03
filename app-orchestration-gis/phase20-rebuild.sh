@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # phase20-rebuild.sh — Phase 20 chain ingest + H2b taxonomy + full cluster/tile rebuild
 #
 # Runs automatically after phase19-rebuild.sh completes (schedule at 05:00 UTC 2026-05-25,

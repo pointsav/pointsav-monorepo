@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # overnight-aec-builds.sh — AEC + park_ride ingest builds
 #
 # Scheduled to run after 05:00 UTC (22:00 PDT) per overnight-builds policy.

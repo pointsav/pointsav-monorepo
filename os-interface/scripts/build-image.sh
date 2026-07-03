@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # build-image.sh — Build the os-orchestration NetBSD 10.1 guest image.
 #
 # (Directory currently: os-interface — canonical name os-orchestration, rename in flight.)

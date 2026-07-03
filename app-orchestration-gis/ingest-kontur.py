@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 """
 ingest-kontur.py — Kontur Population res-8 GeoPackage → census-h3-res7.jsonl
 

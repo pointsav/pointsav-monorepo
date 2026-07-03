@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # phase22-rebuild.sh — Phase 22 taxonomy revision: Change A + B3 tier rebalancing
 #
 # Change A: T2 now requires has_hypermarket AND has_hardware (not just has_hyper + n≥2).

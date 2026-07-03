@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 """
 build-necb-zone.py — NECB 2020 climate zone for Canadian clusters
 Task H — Phase 22 2026-06-30

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # phase21-rebuild.sh — Phase 21 electronics category + XXXLutz/Höffner lifestyle + full cluster/tile rebuild
 #
 # Runs automatically after phase20-rebuild.sh completes (schedule 2026-05-26, 05:00 UTC).

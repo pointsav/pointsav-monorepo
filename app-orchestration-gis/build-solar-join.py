@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 """
 build-solar-join.py — PVGIS monthly irradiation → annual GHI per cluster
 Task F — Phase 22 2026-06-30

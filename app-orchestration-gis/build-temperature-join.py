@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 """
 build-temperature-join.py — Open-Meteo historical API temperature + HDD/CDD join
 Task E — Phase 22 2026-06-30

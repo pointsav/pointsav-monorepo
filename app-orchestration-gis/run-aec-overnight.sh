@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # run-aec-overnight.sh — sequential overnight AEC refresh (race-free).
 #
 # The seismic and flood builds BOTH read-modify-write the same clusters-meta.json
