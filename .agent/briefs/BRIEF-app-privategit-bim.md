@@ -6,7 +6,7 @@ title: app-privategit-bim — BIM Object Library website
 status: active
 owner: project-bim
 created: 2026-06-20
-updated: 2026-07-02
+updated: 2026-07-03
 ---
 
 # Brief — app-privategit-bim — BIM Object Library website
@@ -616,3 +616,64 @@ state as of the original escalation.
   sessions rather than relying on the promote step to catch it. Prod's systemd unit was renamed
   `local-bim-orchestration`/`local-bim` → `local-woodfine-bim` as part of an unrelated workspace-wide
   naming reorg; this archive's own local workspace staging unit is unaffected, still `local-bim`.
+
+- **2026-07-03 (new session — DTCG token gap register closed):** Completed all 6 missing DTCG token
+  files from `.agent/plans/tool-buildingwidth-architecture.md` (`furniture.dtcg.json`,
+  `floor-plate-assembly-rules.dtcg.json`, `building-grid.dtcg.json`, `tenant-mix.dtcg.json` new; Medium
+  Tile family + Special Tiles added to `tile-system.dtcg.json`) plus all 6 documented internal
+  inconsistencies (5 fixed with real data traced to sources already in the token set; 1 —
+  professional-office medium/large key-plan areas — marked `status: reserved` since no source document
+  exists, not fabricated). Found and flagged two genuine data gaps in the process rather than papering
+  over them: the Medium-tile end-cap composition isn't sourced, and Tile F-medium's stated "3x PO Small
+  + PO Medium" composition sums to 1,440 SF against a 3,500 SF target (doesn't reconcile). Rust crate
+  scaffold (bim-units/bim-tokens/bim-furniture/tool-buildingwidth/tool-floorplates) is now unblocked
+  but was deliberately not started -- genuinely large scope, needs its own planning session.
+  Commit ae153aa (woodfine-bim-library).
+
+- **2026-07-03 (same session -- reposition as a BIM Objects CMS, not a wiki clone):** Operator looked at
+  the live redesign from earlier this session fresh and judged the wiki-engine-modeled shell (utility
+  bar, in-header search, accent-left-border cards) the wrong direction -- floated the idea that this
+  product should be a genuine "Carbon for BIM Objects" CMS, architects self-serving their own private/
+  public libraries, not a docs-wiki clone. Ran a full research-through-implementation cycle:
+  - **Research (7 subagents, 3 rounds)**, all findings on record at .agent/sub-agent-results/RD.1
+    through RD.7-visual-direction-synthesis-2026-07-03.md: live-site structural audit, git archaeology
+    of the pre-wiki baseline (76bf3c6e), design.pointsav.com's current + historical structure (its own
+    catalog documents a "wiki" component category as a *legitimate but distinct* pattern from its own
+    catalog-shell chrome -- sharpened the diagnosis from "wiki styling is wrong" to "BIM borrowed the
+    wrong pattern category for what it is"), full extraction of prior strategy docs (BB.13/BB.14 --
+    Adobe Spectrum chrome pick, 14/15 bankers'-distinguishability score; bim-token-strategy.md's
+    non-branding product-feel content), a Fable-driven competitive resurvey (Spectrum pick re-confirmed
+    at 14/15 against the sibling's *drifted* current palette; found genuine new AEC-vendor prior art in
+    Bentley iTwinUI, doesn't displace the pick), and a Fable synthesis reconciling all of it into one
+    concrete, implementable spec (RD.7).
+  - **Implemented** (Steps 1-4, matching the approved plan): fixed a real bug found along the way --
+    content::load_categories only enumerated .md sidecars, so the 4 DTCG files from the earlier
+    token-gap-closure session were invisible on the live site (no nav, no card, unreachable by search)
+    -- flipped to token-file-driven enumeration. 4-section IA (Taxonomy/Objects/Compositions/Context,
+    Section enum, section: frontmatter on all 24 sidecars). Utility bar + in-header search deleted
+    entirely; header rebuilt as a single 48px "title block" bar. Full color/typography system swap --
+    #1A4480 drafting blue as the *sole* interactive accent site-wide (color-collision-checked against
+    the sibling's drifted navy per RD.5), dark mode re-palettized to desaturated instrument-navy.
+    carbon.min.css/carbon.esm.js scoped to /edit/* only -- public catalog no longer ships literal
+    IBM Carbon CSS. Commit 0f76dd0e (pointsav-monorepo).
+  - **Real, honestly-flagged gap**: Geist Sans/Geist Mono/Source Serif 4 font files don't exist anywhere
+    in this workspace and this environment can't fetch/subset them -- fonts.css uses documented
+    system-font fallback stacks rather than fabricated @font-face rules pointing at nonexistent
+    assets. Needs a future session (or the operator) to source and self-host actual woff2 subsets.
+  - **Deferred, fully specced in RD.7 for a follow-up pass** -- nothing lost by waiting: hero
+    isometric-building SVG, tab-bar page anatomy, IFC GUID monospace markers, classification chip
+    restyle, dark viewport preview frames, section landing pages (2x2 panel grid replacing the flat
+    24-card homepage grid). PointSav-branded/dedicated-domain positioning
+    (bim-token-strategy.md's fuller recommendation) explicitly deferred as a separate, much larger
+    decision -- operator did not respond to the scope-clarifying question, defaulted to the lowest-risk
+    option (Woodfine branding/domain unchanged).
+  - **Promote anomaly, diagnosed and resolved, not a regression**: self-service-promote.sh failed
+    twice with an ordinary-looking "fetch first" push rejection. Full diagnosis (fresh fetch,
+    merge-base, --is-ancestor -- all clean, no real divergence) before discovering the actual cause:
+    ran the script from the archive root (project-bim) instead of from inside pointsav-monorepo --
+    the script derives its repo identity from basename $REPO_ROOT, so it picked up the *wrong
+    repository's* HEAD entirely and tried to push it under the right name. Left 2 spurious
+    promote-queue.jsonl entries (repo: "project-bim", wrong head); flagged to Command via mailbox
+    to disregard, with a suggested script hardening (assert expected repo marker, or require
+    --repo explicitly) so a wrong-directory invocation fails loudly instead of silently misqueueing.
+    Retried correctly from pointsav-monorepo; clean fast-forward, staging mirrors updated.

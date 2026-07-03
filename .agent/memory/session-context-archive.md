@@ -2,6 +2,27 @@
 
 ---
 
+## 2026-06-25 | totebox@claude-code | startup + immediate shutdown (no work done)
+
+**Done:**
+- Session lock written; role confirmed (Totebox, cluster/project-bim)
+- Startup reads: manifest, inbox, NOTAM (clear), session-context, briefs README, outbox, git status
+- Detected: 18 modified IFC files in `woodfine-bim-library/key-plans/` (pre-existing; not created this session)
+
+**Pending / carry-forward:**
+- Stage 6 + production deploy of `app-privategit-bim` → Command Session (outbox dispatched 2026-06-20)
+- NOTAM.md permission (`chmod 644`) → Command Session (outbox dispatched 2026-06-22)
+- PO-1 furniture_refs: apply to `woodfine-bim-library/tokens/bim/key-plans.dtcg.json`
+- key-plans-registry.md Deliverable 1b
+- Corporate Office SVG diagrams: blocked on zone depth data
+- 6 missing DTCG files; 5 Rust crates
+- DTCG accuracy errors (operator-pending citations — do not touch)
+- 18 modified IFC files in `woodfine-bim-library/key-plans/` — uncommitted; origin/cause unknown; review before next commit
+
+**Operator preferences surfaced:** none new this session.
+
+---
+
 ## 2026-06-22 | totebox@claude-code | context cleanup sweep + DTCG Decisions 2-4
 
 **Done:**
