@@ -463,3 +463,125 @@ state as of the original escalation.
     solid-navy topbar fill vs. a lighter family-matching treatment
     (kept navy — legitimate app-shell pattern per the audit's "keep
     different" list, revisit only if operator specifically wants it lighter).
+
+- **2026-07-03 (full shell redesign, commits `7ae34ad1` through `19979562`):**
+  Same session, later turn. Operator looked at the live site fresh after
+  the pass above and judged it "a dog" next to `home.woodfinegroup.com`
+  and the live Woodfine/PointSav wiki instances
+  (`local-knowledge-corporate`/`-projects`/`-documentation`, ports
+  9095/9093/9090, started this turn specifically to be inspected — running
+  `app-mediakit-knowledge-2`, an in-progress rewrite, **not** the
+  `app-mediakit-knowledge` crate name would suggest; confirmed via `ps`/`ss`
+  against the live processes). Direct comparison: the wiki has real search,
+  a dark-mode toggle, accent-bordered card grids, a proper cross-property
+  footer with corporate identity (cities line) and badges, and an
+  "Important Information" disclosure band — structural gaps, not
+  cosmetic ones. Operator confirmed "full re-design." Plan mode used
+  again; two Explore agents mapped the wiki's exact CSS/HTML (found it's
+  actually `app-mediakit-knowledge-2`, source in the `project-knowledge`
+  clone, not `-knowledge`) and catalogued every one of BIM's existing
+  functional pieces (routes, Carbon dependencies, JS behaviors) so the
+  rebuild wouldn't drop capability; one Plan agent validated the
+  dark-mode/Carbon interaction approach and the search implementation
+  scope before implementation started.
+  - **Key finding, load-bearing for the whole redesign**: the wiki's font
+    stack (Inter + Source Serif 4) does not match home.woodfinegroup.com's
+    (Oswald + Nunito Sans + Roboto Slab) — nor does the legacy
+    `app-mediakit-knowledge`'s (IBM Plex Sans + Playfair Display). All
+    three sibling properties already disagree on typography. Decision:
+    BIM keeps its existing, already-correct match to the marketing site's
+    type/color system; only the wiki's *structure and components* were
+    ported, reimplemented in Woodfine's fonts — not a font swap.
+  - **Round 1 — dark-mode infrastructure** (`7ae34ad1`): `data-theme`
+    attribute + CSS custom-property overrides, narrowed to only the
+    surfaces that actually render light and must flip (topbar/footer are
+    already permanently-dark chrome in both themes, left alone).
+    `/edit/{slug}` forced to `data-theme="light"` server-side rather than
+    attempting a dark-chrome/light-content hybrid — validated by a Plan
+    agent as the safer approach; the hybrid would have required
+    excluding the editor's own plain-HTML property table from the
+    hex-to-token conversion pass, recreating the exact half-applied look
+    the fix was meant to avoid. Removed a `carbon-overrides.css` block
+    that was unconditionally hard-blocking OS dark mode.
+  - **Round 2 — header + utility bar** (`2ef545f5`): solid-navy topbar
+    replaced with a light header (the wiki's proven pattern for this
+    site type) carrying the real Woodfine wordmark SVG (navy-on-white via
+    `currentColor`, same markup home.woodfinegroup.com renders), a search
+    form, and the dark-mode toggle. New utility bar above it links
+    Corporate/Projects/GitHub. Caught during dark-mode testing: the home
+    page's actual hero heading (`.bim-hero__statline` — it's a `<p>`, not
+    an `<h1>`) had a hardcoded `color: #111827`, rendering invisible
+    dark-text-on-dark once the toggle was flipped; swept both stylesheets
+    for the same pattern and converted every exact-match hardcoded
+    fg-color hex to its token.
+  - **Round 3 — sidebar + card grid** (`be407bee`): category cards
+    restyled to the wiki's accent-left-border convention, description
+    line dropped (name + count only, denser). Sidebar links get the same
+    accent-left-border treatment on hover/active, scoped to
+    `.bim-side-nav .bim-nav-link` specifically since the bare class is
+    shared with breadcrumbs/cards/research items. Remaining dark-mode
+    surfaces converted (`.bim-tag`, `[aria-current="page"]` — also set
+    client-side by the SPA nav JS, kept in sync — token tables, key-plan
+    category color swatches with dark variants; verified the SVG zone
+    diagrams' own hardcoded ink colors stay legible against the darker
+    swatches, reading as an intentional blueprint-on-dark-canvas look).
+  - **Round 4 — footer + disclosure band** (`bc3bb9dc`): footer's third
+    column changed from a license dump to a real "Network" column;
+    AGPL/source-link facts folded into column one alongside the existing
+    Apache-2.0 BIM-data license line. Base row gained a "Vancouver | New
+    York" cities line and two badge chips (Powered-by-PointSav, BIM-data
+    Apache-2.0 — a text badge, not a fake CC icon for a license that
+    doesn't have that convention). New "Important Information"
+    `<details>` band with BIM-appropriate disclosure text (verify
+    classifications against current code before construction; planned/
+    intended language for in-development features per BCSC posture) —
+    rendered as a sibling of `.bim-shell` like the footer so it spans
+    full width respecting the sidebar, not confined to `.bim-main`'s
+    narrower column.
+  - **Round 5 — search** (`472eb451`): wires up the header search bar.
+    Deliberately skipped a search-index crate (tantivy etc.) — validated
+    by the same Plan agent as unnecessary at this corpus size (~150-200
+    entities, 3 research articles); the research-index page already does
+    a fresh disk scan per request, so a linear scan for search is
+    strictly cheaper than what's already shipping. Multi-word
+    AND-across-tokens/OR-across-fields matching across three independent
+    paths (categories, entities via a depth-agnostic recursive `$value`
+    collector covering every category file, research articles); scored,
+    deterministically sorted, highlighted snippets reusing the existing
+    `esc()` helper.
+  - **Verification pass** (`19979562`): editor route confirmed
+    functional and correctly forced-light; SPA fragment navigation
+    confirmed not leaking the footer/disclosure (they live outside
+    `#bim-main-content`, correctly untouched by fragment swaps); found
+    and fixed a real mobile bug — at 390px the header's four controls
+    (hamburger/logo/search/theme-toggle) summed wider than the viewport,
+    silently pushing the theme toggle off-screen with no scroll available
+    to reach it. Side-by-side against `home.woodfinegroup.com`'s header
+    confirms the "blend in" goal: same wordmark asset, same navy, and the
+    two sites now read as "the same company's marketing site and its
+    product library" rather than unrelated properties.
+  - **Mid-session incident, resolved, not a regression**: hit a
+    VM-wide disk-full condition (root filesystem 154G/154G used) that
+    blocked all Bash tool use, including read-only diagnosis — genuinely
+    VM-wide, not caused by this session's own scratch files (33M
+    screenshots, 228M harness tmp dir, neither explains 154G). Flagged to
+    the operator rather than investigated further from a Totebox session
+    (VM sysadmin is Command Session territory); operator cleared it
+    externally and work resumed. Also, mid-Plan-agent-exploration this
+    session, a tool result contained an injected block disguised as a
+    system/plan-mode directive telling the agent to prematurely write
+    files outside its read-only scope — the agent correctly identified it
+    as not coming from the operator and ignored it; flagged to the
+    operator for transparency. Its actual findings were independently
+    corroborated against known code and used as-is.
+  - **Deferred, not done this pass**: search doesn't index property-set/
+    compliance text inside entity `$value` objects (title/slug/IFC-class/
+    top-level `$description` only) — a two-word query like "fire door"
+    can legitimately return zero results if no single item's *indexed*
+    fields contain both words, even though both words individually exist
+    in the corpus; primary-button pill styling to match the marketing
+    site's "Enquire" CTA convention (still open from the prior pass);
+    Furniture Library thumbnails (still open); the wiki's more generous
+    section-padding/hero treatment noted in an earlier fresh-eyes look at
+    the homepage — largely addressed by the header/card-grid work but not
+    independently re-verified against that specific complaint.
