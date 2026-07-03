@@ -57,19 +57,14 @@ Attribution format: `[YYYY-MM-DD role@engine]`
   - Brief: `.agent/briefs/BRIEF-tool-keyplan.md`
   - NOTE: interior.dtcg.json + key-plans.dtcg.json were committed to pointsav-design-system in error — see routing items below
 
-- [ ] **ROUTING FIX — apply PO-1 furniture_refs to wbl key-plans.dtcg.json** `[2026-05-28 totebox@claude-code]`
+- [ ] **ROUTING FIX — apply PO-1 furniture_refs to wbl key-plans.dtcg.json — STALE PREMISE, needs rescoping** `[2026-05-28 totebox@claude-code, re-investigated 2026-07-03]`
   - `woodfine-bim-library/tokens/bim/key-plans.dtcg.json` PO-1 entry still has old `furniture_program` string array
-  - Apply structured `furniture_refs` + `bounding_box_mm` + `circulation_ref` + `compliance` from the pointsav-design-system copy
-  - interior.dtcg.json already copied to wbl (2026-05-28) ✓
+  - Original plan: apply structured `furniture_refs` + `bounding_box_mm` + `circulation_ref` + `compliance` from "the pointsav-design-system copy" of `key-plans.dtcg.json`
+  - **2026-07-03: that source file no longer exists anywhere in the `pointsav-design-system` clone** (confirmed via `find`, zero matches). `furniture_refs` only appears in `tool-keyplan`'s Rust generator source (`pointsav-monorepo/tool-keyplan/src/main.rs`), not in any live JSON data file — likely because the admin-tier removal item below already ran. Don't attempt a data copy against a source that isn't there; needs a real decision on where this data should actually come from (regenerate via `tool-keyplan`? hand-author?) before touching it.
 
-- [ ] **ROUTING FIX — Command: admin-tier removal of misrouted BIM Objects** `[2026-05-28 totebox@claude-code]`
-  - `pointsav-design-system/tokens/bim/interior.dtcg.json` — created in wrong repo; wbl is canonical
-  - `pointsav-design-system/tokens/bim/key-plans.dtcg.json` — PO-1 update applied here in error; wbl is canonical
-  - Requires Command Session (mcorp-administrator identity to remove from pointsav-design-system)
-
-- [ ] **Deliverable 1b — key-plans-registry.md** `[2026-05-22 totebox@claude-code]`
-  - Write `woodfine-bim-library/key-plans/key-plans-registry.md` standalone Markdown
-  - All data in `.agent/plans/plan-bim-objects.md` Part 1
+- [x] **ROUTING FIX — Command: admin-tier removal of misrouted BIM Objects — CONFIRMED DONE (found stale) 2026-07-03** `[2026-05-28 totebox@claude-code]`
+  - Both `pointsav-design-system/tokens/bim/interior.dtcg.json` and `.../key-plans.dtcg.json` confirmed absent from that repo as of 2026-07-03 (`find` returns zero matches for either) — the admin-tier removal this item asked for has already happened, just never marked done here
+  - This is also *why* the PO-1 furniture_refs item above lost its data source
 
 - [x] **Key Plans SVG size-specific furniture — shipped 2026-05-22** `[2026-05-22 totebox@claude-code]`
   - `app-orchestration-bim v0.0.3` (commit 8ce0b9ba) — size_tier per category from area_m²
@@ -81,10 +76,6 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 - [ ] **Corporate Office SVG diagrams** `[2026-05-22 totebox@claude-code]`
   - Currently `_ => {}` — no furniture; zone structure only
   - Blocked on zone depth data for Corporate Office sizes
-
-- [ ] **Deliverable 1b — key-plans-registry.md** `[2026-05-22 totebox@claude-code]`
-  - Write `woodfine-bim-library/key-plans/key-plans-registry.md` standalone Markdown
-  - All data in `.agent/plans/plan-bim-objects.md` Part 1
 
 - [ ] **Binary ledger — app-orchestration-bim v0.0.3** `[2026-05-22 totebox@claude-code]`
   - Command Session: update `data/binary-ledger/app-orchestration-bim.jsonl`
