@@ -42,14 +42,13 @@ deliberately NOT built here yet (untested code path, no way to verify
 correctness against a new city in this session) and is tracked as a follow-up
 in NEXT.md under Commuter Zone international expansion.
 
-Open follow-up (not resolved here, needs operator input): whether this should
-eventually merge into build-pks-clusters.py (the existing "Commuter" archetype,
-which already DBSCANs metro_subway + other transit POIs but without topology/
-terminus-awareness or parkade-gap detection) rather than staying a fully
-separate archetype, and how to avoid a naming collision between this feature
-and the existing shipped "Urban Fringe" (VWH) archetype if "Intercity Fringe"
-also ships later. Also not done here: frontend integration (a new
-activeArchetype-style mode in www/index.html, following the VWH/PKS pattern).
+Resolved 2026-07-01 (operator decision): this replaces build-pks-clusters.py's
+detection method entirely (the existing "Commuter" archetype's generic
+multi-POI DBSCAN) rather than staying a separate archetype — same UI toggle,
+no new map mode. Not yet implemented (big-lift rewrite of a shipped pipeline).
+Naming collision resolved too: "Urban Fringe" is the one name for both the old
+(VWH) and new detection methods, no second name. Also not done here: frontend
+integration would be moot under this direction (no new toggle needed).
 
 Usage:
     python3 build-transit-terminus.py --dry-run              # one region, print only
