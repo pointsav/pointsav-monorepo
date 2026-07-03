@@ -16,7 +16,10 @@ from collections import defaultdict
 
 OVERPASS = "https://overpass-api.de/api/interpreter"
 CLUSTER_KM   = 0.6    # merge signals within 600m into one UF candidate
-QUERY_SLEEP  = 4      # seconds between Overpass requests (avoid 429)
+# 2026-07-03: throttled well beyond the prior 4s pace per operator direction —
+# avoid overloading Overpass during the multi-day full-NA sweep, no daily cap
+# but accept the sweep taking much longer wall-clock time as a result.
+QUERY_SLEEP  = 25     # seconds between Overpass requests
 
 import os
 
@@ -28,6 +31,8 @@ CLUSTERS_GEOJSON = Path(__file__).resolve().parent / "work" / "clusters.geojson"
 # Per-region hardware chains
 HARDWARE_BY_REGION = {
     "CA":   ["home-depot-ca", "canadian-tire-ca", "rona-ca"],
+    "US":   ["home-depot-us", "lowes-us", "menards-us"],
+    "MX":   ["home-depot-mx"],
     "GB":   ["bq-uk", "screwfix-uk", "wickes-uk"],
     "FR":   ["leroy-merlin-fr", "castorama-fr", "brico-depot-fr", "bricomarch-fr"],
     "DE":   ["obi-de", "hornbach-de"],
@@ -38,6 +43,10 @@ HARDWARE_BY_REGION = {
 REGION_ISO = {
     "AB": "CA", "BC": "CA", "SK": "CA", "MB": "CA",
     "AB_URBAN": "CA", "WEST": "CA", "ON": "CA", "QC": "CA", "ATL": "CA",
+    "US_PACIFIC": "US", "US_MOUNTAIN": "US", "US_CENTRAL_NORTH": "US",
+    "US_CENTRAL_SOUTH": "US", "US_MIDWEST": "US", "US_SOUTHEAST": "US",
+    "US_NORTHEAST": "US", "US_MIDATLANTIC": "US",
+    "MX_NORTH": "MX", "MX_CENTRAL": "MX", "MX_SOUTH": "MX",
     "GB": "GB", "FR": "FR", "DE": "DE", "ES": "ES",
 }
 
@@ -64,6 +73,21 @@ REGIONS = {
     "ON":       (41.6,  -95.2, 56.9,  -74.3),   # Ontario — NOT fixed, see note above
     "QC":       (45.0,  -79.8, 62.6,  -57.1),   # Quebec — NOT fixed, see note above
     "ATL":      (43.3,  -69.1, 60.4,  -52.6),   # NB + NS + PE + NL combined — NOT fixed, see note above
+    # United States — 2026-07-03, 8 sub-regions sized comparably to Canada's
+    # provinces (10-23° longitude spans). Some overlap between adjacent regions
+    # is expected, same accepted limitation as ON/QC/ATL above — not a blocker.
+    "US_PACIFIC":       (32.5, -125.0, 49.0, -114.0),   # WA/OR/CA
+    "US_MOUNTAIN":      (31.3, -120.0, 49.0, -102.0),   # ID/MT/WY/NV/UT/CO/AZ/NM
+    "US_CENTRAL_NORTH": (37.0, -104.1, 49.4,  -89.5),   # ND/SD/NE/KS/MN/IA
+    "US_CENTRAL_SOUTH": (25.8, -106.6, 37.0,  -89.0),   # OK/TX/AR/LA
+    "US_MIDWEST":       (37.0,  -92.9, 48.3,  -80.5),   # WI/IL/MI/IN/OH
+    "US_SOUTHEAST":     (24.5,  -91.7, 39.1,  -75.5),   # KY/TN/MS/AL/GA/FL/SC/NC
+    "US_NORTHEAST":     (38.9,  -80.5, 47.5,  -66.9),   # ME/NH/VT/MA/RI/CT/NY/NJ/PA
+    "US_MIDATLANTIC":   (36.5,  -83.7, 40.6,  -75.0),   # WV/VA/DE/MD/DC
+    # Mexico — 2026-07-03, 3 sub-regions by latitude band.
+    "MX_NORTH":   (24.0, -118.0, 32.7, -97.0),
+    "MX_CENTRAL": (19.0, -105.5, 24.0, -96.0),
+    "MX_SOUTH":   (14.5,  -99.5, 19.0, -86.7),
     # Europe
     "GB":  (50.0,  -6.0, 58.7,  1.8),   # England + Wales + Scottish lowlands
     "FR":  (42.3,  -5.2, 51.2,  8.2),   # Metropolitan France
@@ -136,7 +160,7 @@ def fetch_overpass(q: str, cat: str, retries: int = 3):
                 return json.loads(r.read())
         except urllib.error.HTTPError as e:
             if e.code in (429, 502, 503, 504) and attempt < retries - 1:
-                wait = 15 * (attempt + 1)
+                wait = 30 * (2 ** attempt)  # 30s/60s/120s — 2026-07-03 throttling
                 print(f"  {e.code}, retrying in {wait}s...", end=" ", flush=True)
                 time.sleep(wait)
                 continue
