@@ -3,5 +3,5 @@
 
 // Architectural Scaffold
 pub fn system_status() -> &'static str {
-    "SYSTEM EVENT: os-interface scaffold verified."
+    "SYSTEM EVENT: os-orchestration scaffold verified."
 }

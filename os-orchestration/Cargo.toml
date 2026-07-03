@@ -3,7 +3,7 @@
 
 [package]
 license = "FSL-1.1-ALv2"
-name = "os-interface"
+name = "os-orchestration"
 version = "0.1.0"
 edition = "2021"
 

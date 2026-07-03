@@ -1,6 +1,6 @@
 <div align="center">
 
-# os-interface
+# os-orchestration
 
 [ 🇬🇧 Read this document in English ](./README.md)
 
