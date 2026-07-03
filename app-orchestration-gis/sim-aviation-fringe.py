@@ -21,8 +21,12 @@ a wrong bbox and wrong results):
   LFPN  Toussus-le-Noble, FR         — new
 
 Usage:
-    python3 sim-aviation-fringe.py                # all 4 sites
-    python3 sim-aviation-fringe.py --icao CYKF     # one site
+    python3 sim-aviation-fringe.py                # all 4 validation sites
+    python3 sim-aviation-fringe.py --icao CYKF     # one validation site
+    python3 sim-aviation-fringe.py --batch-file work/na-sweep-logs/aerodromes-ab.json
+        # 2026-07-03 Part C batch mode: profile every site in a
+        # discover-na-aerodromes.py output file directly by lat/lon, skipping
+        # the ICAO-lookup query (halves query count for large batches).
 """
 
 import argparse
@@ -36,7 +40,9 @@ import urllib.request
 from pathlib import Path
 
 OVERPASS = "https://overpass-api.de/api/interpreter"
-QUERY_SLEEP = 4
+# 2026-07-03: throttled per operator direction for the full NA sweep — no daily
+# cap, but substantially slower than the original 4s pace.
+QUERY_SLEEP = 25
 BBOX_RADIUS_KM = 3.0  # generous radius around the aerodrome center; GA airport
                        # properties + immediately adjacent fringe development
                        # should fit inside this. Not validated against a known
@@ -64,8 +70,8 @@ def fetch_overpass(q, label, retries=3):
             with urllib.request.urlopen(req, timeout=200) as r:
                 return json.loads(r.read())
         except urllib.error.HTTPError as e:
-            if e.code in (429, 504) and attempt < retries - 1:
-                wait = 15 * (attempt + 1)
+            if e.code in (429, 502, 503, 504) and attempt < retries - 1:
+                wait = 30 * (2 ** attempt)  # 30s/60s/120s — 2026-07-03 throttling
                 print(f"  {e.code}, retrying in {wait}s...", end=" ", flush=True)
                 time.sleep(wait)
                 continue
@@ -152,11 +158,62 @@ out center tags;
     }
 
 
+def profile_and_score(lat, lon, radius_km):
+    """Profile a site and apply the confirmed >=5-hangar rule. Shared by both modes."""
+    profile = profile_site(lat, lon, radius_km)
+    aerodrome_anchor = profile["has_runway"]
+    hangar_cluster = profile["hangar_count"] >= HANGAR_THRESHOLD
+    confirmed = aerodrome_anchor and hangar_cluster
+    return profile, aerodrome_anchor, hangar_cluster, confirmed
+
+
+def run_batch(batch_file: Path):
+    """2026-07-03 Part C mode: profile every discovered site directly by
+    lat/lon (from discover-na-aerodromes.py output) — skips find_aerodrome()'s
+    ICAO-lookup query entirely since coordinates are already known."""
+    sites = json.loads(batch_file.read_text())
+    print(f"Batch mode: {len(sites)} sites from {batch_file}")
+    results = []
+    for i, site in enumerate(sites):
+        name = site.get("name") or site.get("icao") or "unnamed"
+        print(f"\n[{i+1}/{len(sites)}] {name} @ ({site['lat']:.4f}, {site['lon']:.4f})")
+        profile, aerodrome_anchor, hangar_cluster, confirmed = profile_and_score(
+            site["lat"], site["lon"], BBOX_RADIUS_KM)
+        print(f"  hangars={profile['hangar_count']}  runway={aerodrome_anchor}  "
+              f"confirmed={confirmed}")
+        results.append({
+            "icao": site.get("icao"), "iata": site.get("iata"), "found": True,
+            "lat": site["lat"], "lon": site["lon"], "name": name, **profile,
+            "aerodrome_anchor": aerodrome_anchor,
+            "hangar_cluster": hangar_cluster,
+            "confirmed": confirmed,
+        })
+        if i < len(sites) - 1:
+            time.sleep(QUERY_SLEEP)
+
+    confirmed_n = sum(1 for r in results if r["confirmed"])
+    print(f"\n{'='*70}\n{confirmed_n}/{len(results)} sites confirmed "
+          f"(>=  {HANGAR_THRESHOLD} hangars + runway)\n{'='*70}")
+
+    out_dir = Path("work/na-sweep-logs")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / f"aviation-fringe-{batch_file.stem.replace('aerodromes-', '')}.json"
+    out.write_text(json.dumps(results, indent=2))
+    print(f"Saved -> {out}\n")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--icao", nargs="+", default=None, choices=list(SITES.keys()),
                      metavar="ICAO", help="Limit to specific sites (default: all 4)")
+    ap.add_argument("--batch-file", type=Path, default=None,
+                     help="Profile every site in a discover-na-aerodromes.py "
+                          "output JSON file (Part C NA sweep mode)")
     args = ap.parse_args()
+
+    if args.batch_file:
+        run_batch(args.batch_file)
+        return
 
     icaos = args.icao or list(SITES.keys())
     results = []
@@ -169,10 +226,8 @@ def main():
             continue
         print(f"  Found: {site['name']!r} @ ({site['lat']:.4f}, {site['lon']:.4f})")
         time.sleep(QUERY_SLEEP)
-        profile = profile_site(site["lat"], site["lon"], BBOX_RADIUS_KM)
-        aerodrome_anchor = profile["has_runway"]
-        hangar_cluster = profile["hangar_count"] >= HANGAR_THRESHOLD
-        confirmed = aerodrome_anchor and hangar_cluster
+        profile, aerodrome_anchor, hangar_cluster, confirmed = profile_and_score(
+            site["lat"], site["lon"], BBOX_RADIUS_KM)
 
         print(f"  Total elements: {profile['total_elements']}")
         for k, v in sorted(profile["counts"].items(), key=lambda kv: -kv[1]):
