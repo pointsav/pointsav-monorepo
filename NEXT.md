@@ -7,6 +7,34 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Hot — pick up here next session
 
+- [x] **Reposition app-privategit-bim as a BIM Objects CMS, not a wiki clone — Steps 1-4 DONE 2026-07-03** `[2026-07-03 totebox@claude-code]`
+  - Operator judged yesterday's wiki-engine-modeled shell redesign (`.bim-utility` bar, in-header search,
+    accent-left-border cards, dark-navy-Carbon-adjacent palette) the wrong direction for a product whose job
+    is presenting BIM Objects like a design-system catalog presents tokens/components — full research trail
+    (7 agents, 3 rounds, live-site audit, git archaeology, competitive resurvey via Fable, synthesis) at
+    `.agent/sub-agent-results/RD.1` through `RD.7-visual-direction-synthesis-2026-07-03.md`.
+  - Fixed a real bug found along the way: `content::load_categories` only enumerated `.md` sidecars, so the
+    4 DTCG files added earlier the same session were invisible (no nav, no card, unreachable by search) —
+    flipped to token-file-driven enumeration with sidecar as optional enrichment.
+  - Implemented: 4-section IA (Taxonomy/Objects/Compositions/Context, `Section` enum in `content.rs`,
+    `section:` frontmatter on all 24 sidecars), sidebar rebuilt as a native-`<details>` section tree, utility
+    bar + in-header search deleted, header rebuilt as a single 48px "title block" bar, full color system swap
+    to `#1A4480` drafting blue (color-collision-checked against the sibling design.pointsav.com), dark mode
+    re-palettized to desaturated instrument-navy, `carbon.min.css`/`carbon.esm.js` scoped to `/edit/*` only.
+  - **Deferred, fully specced in RD.7 for a follow-up pass — nothing lost by waiting:** hero isometric-building
+    SVG, tab-bar page anatomy, IFC GUID monospace markers, classification chip restyle, dark viewport preview
+    frames, section landing pages (2×2 panel grid replacing the flat 24-card homepage grid).
+  - **Real gap, not deferred by choice:** Geist Sans / Geist Mono / Source Serif 4 font files don't exist
+    anywhere in this workspace and this environment has no way to fetch/subset them — `fonts.css` currently
+    uses honest system-font fallback stacks (documented inline) rather than fabricated `@font-face` rules.
+    Needs the operator or a session with font-fetch capability to source and self-host actual woff2 subsets
+    (OFL 1.1, same vendoring pattern as the removed Oswald/Nunito/Roboto Slab set) before the typography
+    fully lands as specced.
+  - **Not yet pushed to staging** — verified locally only (`local-bim.service`, port 9096). Run
+    `self-service-promote.sh` once operator has reviewed the live preview.
+  - PointSav-branded/dedicated-domain positioning (`bim-token-strategy.md`'s fuller recommendation) was
+    explicitly deferred as a separate, much larger decision — not touched this pass.
+
 - [x] **Command: resolve staging-fork anomaly + canonical merge + prod push — DONE 2026-07-03** `[2026-07-03 command@claude-code]`
   - Root cause: `self-service-promote.sh` pushed every self-service archive to the SAME `main` ref on the shared
     personal fork — always failed once a different archive's unrelated history landed there first. Worse,
