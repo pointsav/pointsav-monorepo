@@ -599,3 +599,20 @@ state as of the original escalation.
   design-system path). All three now logged as concrete NEXT.md items. Process lesson for future
   sessions on this archive: always re-run the inbox read after a context compaction — don't assume
   it carried over from before the compaction boundary.
+
+- **2026-07-03 (LIVE — canonical merge + prod push complete, same shutdown window):** Command
+  resolved the staging-fork anomaly (root cause: `self-service-promote.sh` pushed every self-service
+  archive to the same shared `main` ref on the personal fork; fixed to push each archive to its own
+  ref, and made the promote-queue write unconditional rather than silently dropped on push failure),
+  merged 23 of 28 local commits to canonical (the full shell redesign), and pushed to foundry-prod.
+  **Verified live**: `https://bim.woodfinegroup.com` returns 200, `/healthz` reports healthy, and the
+  utility bar / theme-toggle / search markup are all present in the served HTML — this is the actual
+  redesign, not a stale build. 5 commits stayed local-only: 2 are `.agent/`-only (correctly never
+  promote) and 3 are older tool-keyplan/app-orchestration-bim work that conflicts heavily with
+  canonical's independently-evolved `main.rs` — flagged by Command as needing a dedicated
+  reconciliation session, not a guessed merge. Command also fixed a clippy gate issue in the new
+  `render/search.rs`/`render/sidebar.rs` this session introduced (this crate had never had
+  `-D warnings` run on it before) — worth running `cargo clippy` locally on new Rust code in future
+  sessions rather than relying on the promote step to catch it. Prod's systemd unit was renamed
+  `local-bim-orchestration`/`local-bim` → `local-woodfine-bim` as part of an unrelated workspace-wide
+  naming reorg; this archive's own local workspace staging unit is unaffected, still `local-bim`.
