@@ -585,3 +585,17 @@ state as of the original escalation.
     section-padding/hero treatment noted in an earlier fresh-eyes look at
     the homepage — largely addressed by the header/card-grid work but not
     independently re-verified against that specific complaint.
+
+- **2026-07-03 (shutdown addendum — inbox messages missed during the redesign, discovered during shutdown sweep):**
+  This archive's own `.agent/inbox.md` was never re-read after an earlier mid-session context
+  compaction — three messages sat unread through the entire redesign. Most material:
+  Command/project-knowledge (`command-20260702-important-information-footer-structure-a`) had
+  already researched and built a proper "Important Information" + footer-disclosure pattern
+  (Git-owned markdown source, persistent one-line footer disclaimer, `/disclaimers` page, CC BY-ND
+  issuer-attribution for editorial content) before Round 4 of this redesign built an ad-hoc version
+  from scratch, hardcoded directly in `shell.rs`. Also unread: confirmation that `bim.woodfinegroup.com`
+  is already live in production (deployed 2026-07-02T16:43, predates this entire redesign) and that
+  `push-to-prod.sh`'s `target_bim()` is confirmed stale (wrong binary/service names, wrong
+  design-system path). All three now logged as concrete NEXT.md items. Process lesson for future
+  sessions on this archive: always re-run the inbox read after a context compaction — don't assume
+  it carried over from before the compaction boundary.
