@@ -119,20 +119,18 @@ Attribution format: `[YYYY-MM-DD role@engine]`
   - Generate: `NODE_PATH=/home/jennifer/sandbox/working/ps-talking-points/node_modules node build-pdf.mjs <file.html>` or `all`
   - Do NOT use the browser print dialog — output varies by operator; use the script
 
-- [ ] **DTCG token files — 6 missing files to create** `[2026-05-17 totebox@claude-code]`
-  - Full spec in `.agent/plans/tool-buildingwidth-architecture.md`
-  - Priority order:
-    1. `furniture.dtcg.json` — manufacturer SKUs + zone derivation (highest priority; missing foundation)
-    2. `floor-plate-assembly-rules.dtcg.json` — FP-* validation rules
-    3. `building-grid.dtcg.json` — structural module + tolerance bands
-    4. Medium Tile family additions to `tile-system.dtcg.json`
-    5. Special Tiles additions to `tile-system.dtcg.json`
-    6. `tenant-mix.dtcg.json` (move from `floor-plate-standards.dtcg.json`)
-  - Also: 6 internal inconsistencies to fix (see plan §Internal inconsistencies)
+- [x] **DTCG token files — 6 missing files created — DONE 2026-07-03** `[2026-05-17 totebox@claude-code, completed 2026-07-03]`
+  - Full spec was `.agent/plans/tool-buildingwidth-architecture.md`; commit `ae153aa` (woodfine-bim-library, main)
+  - All 6 delivered: `furniture.dtcg.json`, `floor-plate-assembly-rules.dtcg.json`, `building-grid.dtcg.json`, `tenant-mix.dtcg.json` (new), Medium Tile family + Special Tiles added to `tile-system.dtcg.json`
+  - All 6 internal inconsistencies also fixed (5 resolved with real data; #3 professional-office medium/large marked `status: reserved` — no source document located, not fabricated)
+  - Verified against the live app: `local-bim.service` restarts healthy, `token_count` 80→102, all new files present via `/api/tokens.json`, search indexes the new entities
+  - **Two genuine data gaps found and flagged in the token data itself** (not silently resolved): the Medium-family end-cap tiles (E-1/E-2 Medium) have no sourced composition (`composition_status: not-sourced`); Tile F-medium's stated "3× PO Small + PO Medium" composition sums to 1,440 SF against a 3,500 SF target — a 2,060 SF gap (`composition_status: arithmetic-does-not-reconcile`). Needs a source document or operator decision, not a guess.
+  - **Not done**: dedicated `site-content/categories/*.md` pages for the 4 new token files — they're loaded/valid/searchable but won't get their own sidebar card without a category page (distinct UI-work scope from token authoring)
 
-- [ ] **Rust crate scaffold** — after DTCG files are complete: `[2026-05-17 totebox@claude-code]`
+- [ ] **Rust crate scaffold** — DTCG files are now complete, this is unblocked `[2026-05-17 totebox@claude-code, unblocked 2026-07-03]`
   - 5 crates: `bim-units`, `bim-tokens`, `bim-furniture`, `tool-buildingwidth`, `tool-floorplates`
   - Full architecture in `.agent/plans/tool-buildingwidth-architecture.md`
+  - This is a genuinely large undertaking (new Rust workspace, ILP solver via `good_lp`, bidirectional adjustment logic) — was explicitly held back from the 2026-07-03 DTCG-authoring pass pending its own dedicated planning session, not attempted opportunistically
 
 ---
 
