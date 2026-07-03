@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # run-enrichment-ingest.sh — VWH enrichment-coverage ingest + rebuild (Phase 2)
 #
 # Run overnight (after 05:00 UTC / 10pm Vancouver) per Overnight Builds Policy —

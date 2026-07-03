@@ -1,4 +1,7 @@
 #!/bin/bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # Batch download WorldPop 2026 Constrained grids
 # Pattern: https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2026/{ISO}/v1/100m/constrained/{iso}_pop_2026_CN_100m_R2025A_v1.tif
 

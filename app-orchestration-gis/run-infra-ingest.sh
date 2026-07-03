@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # run-infra-ingest.sh — PKS transit infrastructure ingest (airports + railway)
 # Run when Overpass rate limit has cleared (overnight, or after cooldown).
 # Heavy: ~15 US airport tiles + 16 countries × 2 scripts. Allow 30-60 min.

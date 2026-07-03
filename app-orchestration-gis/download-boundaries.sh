@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # download-boundaries.sh — download offline reverse-geocoding boundary files
 #
 # Downloads 5 GeoJSON files to cluster-totebox-personnel-1/boundaries/.

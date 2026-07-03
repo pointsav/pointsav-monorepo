@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # build-aec-flood.sh — Night 5 AEC build: flood hazard + wildfire risk
 #
 # Run at 05:00 UTC 2026-05-28 (Night 5 of AEC staged rollout).

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # build-aec-climate-solar.sh — Night 2 AEC build: climate zones + solar GHI
 #
 # Run at 05:00 UTC 2026-05-25 (Night 2 of AEC staged rollout).

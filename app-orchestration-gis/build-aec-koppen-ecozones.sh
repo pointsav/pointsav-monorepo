@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # build-aec-koppen-ecozones.sh — Night 3 AEC build: Köppen-Geiger + ecoregions + PVGIS solar
 #
 # Run at 05:00 UTC 2026-05-26 (Night 3 of AEC staged rollout).

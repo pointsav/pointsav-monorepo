@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # phase19-rebuild.sh — Phase 19 sport ingest + full cluster/tile rebuild
 #
 # Runs automatically after nightly-rebuild.sh completes.

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: FSL-1.1-ALv2
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 // app-orchestration-bim v0.0.2
 // BIM Object Library — Woodfine server-rendered catalog
 // Reads DTCG token files from $BIM_DESIGN_SYSTEM_DIR/tokens/bim/

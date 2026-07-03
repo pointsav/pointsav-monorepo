@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 """
 build-wind-join.py — NASA POWER climatological annual mean wind speed per cluster
 Task G — Phase 22 2026-06-30

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 """
 ingest-statcan.py — Statistics Canada 2021 Census Journey-to-Work ingest
 ========================================================================

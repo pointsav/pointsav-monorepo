@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 """Render S1 (VWH) and S2 (PKS) archetype map figures for practitioner summaries.
 
 Output: work/figure-s1-vwh-map.png (VWH, 6,368 clusters, T1/T2/T3 colour-coded)
