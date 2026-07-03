@@ -28,11 +28,13 @@ Attribution format: `[YYYY-MM-DD role@engine]`
     substantially elsewhere. Remain on local `cluster/project-bim` only. Needs someone with context on both
     sides of the conflict, not a guessed resolution.
 
-- [ ] **Redo "Important Information" disclosure band against Command/project-knowledge's actual pattern** `[2026-07-03 totebox@claude-code]`
-  - This session built an ad-hoc `<details>` disclosure band + hardcoded text directly in `shell.rs`, **without having read** inbox message `command-20260702-important-information-footer-structure-a` until shutdown
-  - Real spec: disclosure text sourced from a Git-owned markdown file (counsel owns the text, not hardcoded in Rust), a persistent one-line footer disclaimer always visible (not just the collapsible band, "so a collapsed band never screenshots bare"), a dedicated `/disclaimers` page, CC BY-ND attribution to the issuer entity (Woodfine Capital Projects Inc.) for editorial/research content specifically — separate from the Apache-2.0 BIM Object data license — and NI 45-106 forward-looking-statements language mirroring home.woodfinegroup.com
-  - If BIM will host research-paper journals: project-knowledge's `SPEC-journal-wiki-render-contract.md` §§9-10 governs the render contract
-  - Read the full message before starting — don't re-derive from this summary alone
+- [x] **Redo "Important Information" disclosure band against Command/project-knowledge's actual pattern — DONE 2026-07-03** `[2026-07-03 totebox@claude-code]`
+  - Disclosure text now sourced from `woodfine-bim-library/site-content/pages/important-information.md` (Git-owned, request-time read with a safe fallback if missing); persistent one-line footer disclaimer always visible; new `/disclaimers` page (`site-content/pages/disclaimers.md`); real CC BY-ND 4.0 marks (copied from the reference wiki's own assets) + genuine creativecommons.org deed link as a footer badge, separate from the existing Apache-2.0 BIM-data badge
+  - Verified live on local preview: band shows real file content (not fallback), `/disclaimers` renders all 4 sections correctly, badges/disclaimer confirmed on both desktop and mobile
+  - Found and fixed a real bug while verifying: `content::load_page()` only splits on `## ` headings, so `disclaimers.md`'s initial `# Disclaimers` H1 was silently absorbed into the first section and rendered as a duplicate heading — fixed by dropping the redundant H1 (matches `about.md`'s existing convention)
+  - Also fixed 2 clippy warnings Command had already fixed on canonical but which never synced back to this local branch
+  - **Not yet pushed to staging/canonical** — commits `68e3406f` (pointsav-monorepo) + `4176389` (woodfine-bim-library) are local-only; run `self-service-promote.sh` next session (should work cleanly now that Command fixed the per-archive-ref bug) or ask Command directly
+  - If BIM will host research-paper journals: project-knowledge's `SPEC-journal-wiki-render-contract.md` §§9-10 still governs the render contract — not addressed here
 
 - [ ] **Search: doesn't index property-set/compliance text inside entity values** `[2026-07-03 totebox@claude-code]`
   - Only title/slug/IFC-class/top-level `$description` are indexed — a query like "fire door" can legitimately return 0 results even though both words exist in the corpus, if no single item's indexed fields contain both
