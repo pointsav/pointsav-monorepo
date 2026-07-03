@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-sim-intercity-fringe.py — Intercity Fringe zone detection simulation
+sim-urban-fringe.py — Urban Fringe zone detection simulation
 
-Queries Overpass for 9 IF category signals, clusters at 600m,
+Queries Overpass for 9 UF category signals, clusters at 600m,
 scores against threshold variants, cross-checks hardware + T1/T2/T3 proximity.
 
 Usage:
-  python3 sim-intercity-fringe.py [--region AB_URBAN|GB|FR|DE|...]
-  Output: work/sim-if-<region>.json + printed table
+  python3 sim-urban-fringe.py [--region AB_URBAN|GB|FR|DE|...]
+  Output: work/sim-uf-<region>.json + printed table
 """
 
 import json, math, sys, time, urllib.request, urllib.parse, argparse
@@ -15,7 +15,7 @@ from pathlib import Path
 from collections import defaultdict
 
 OVERPASS = "https://overpass-api.de/api/interpreter"
-CLUSTER_KM   = 0.6    # merge signals within 600m into one IF candidate
+CLUSTER_KM   = 0.6    # merge signals within 600m into one UF candidate
 QUERY_SLEEP  = 4      # seconds between Overpass requests (avoid 429)
 
 SERVICE_BUSINESS = Path(
@@ -72,7 +72,7 @@ REGIONS = {
     "ES":  (35.9,  -9.3, 43.8,  4.4),   # Spain
 }
 
-# IF category → Overpass query blocks (node + way where applicable)
+# UF category → Overpass query blocks (node + way where applicable)
 def make_query(bbox_str: str, cat: str) -> str:
     S = {
         "industrial_land": f"""
@@ -272,7 +272,7 @@ THRESHOLDS = {
     # Hardware-anchored: industrial_land within 3km of hardware is implicit
     "hw_adjacent": lambda c: "industrial_land" in c and len(c & SERVICE_CATS) >= 1,
     # standard's rule OR a stricter 4-of-8 non-land co-location bar — catches
-    # commercial-zoned parcels that show the IF pattern but lack the OSM tag.
+    # commercial-zoned parcels that show the UF pattern but lack the OSM tag.
     "commercial_fallback": lambda c: (
         ("industrial_land" in c and len(c & SERVICE_CATS) >= 2)
         or len(c & NON_LAND_CATS) >= 4
@@ -292,7 +292,7 @@ def main():
     bbox     = REGIONS[args.region]
     bbox_str = f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}"
 
-    print(f"\nIntercity Fringe simulation — {args.region}")
+    print(f"\nUrban Fringe simulation — {args.region}")
     print(f"Bbox: {bbox}\n")
 
     # ── Step 1: fetch category signals ───────────────────────────────────────
@@ -400,7 +400,7 @@ def main():
 
         # Nearest SINGLE transit station (any station, not just CBD-convergence
         # clusters) — tests whether ordinary transit access, not just downtown
-        # proximity, is itself a co-location signal for IF zones.
+        # proximity, is itself a co-location signal for UF zones.
         if stations:
             sdists = sorted(
                 haversine(cl["cx"], cl["cy"], slat, slon)
@@ -425,7 +425,7 @@ def main():
             key=lambda c: (-c["n_cats"], -c["n_sig"])
         )
         print(f"\n{'─'*80}")
-        print(f"THRESHOLD '{thresh}' — {len(zones)} IF candidate zones")
+        print(f"THRESHOLD '{thresh}' — {len(zones)} UF candidate zones")
         print(f"{'─'*80}")
         for i, cl in enumerate(zones[:25], 1):
             cats_str = " ".join(c[:4] for c in sorted(cl["cats"]))
@@ -515,7 +515,7 @@ def main():
                     print(f"    {label:<22} {n:4d} ({100*n//len(cbd_dists)}%)")
 
     # ── Step 5: save JSON ─────────────────────────────────────────────────────
-    out = Path(f"work/sim-if-{args.region.lower()}.json")
+    out = Path(f"work/sim-uf-{args.region.lower()}.json")
     out.parent.mkdir(exist_ok=True)
     payload = {
         "region":          args.region,
