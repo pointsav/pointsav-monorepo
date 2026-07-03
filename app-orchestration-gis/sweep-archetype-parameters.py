@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 """
 sweep-archetype-parameters.py — comprehensive parameter sweep for the Urban Fringe
 (VWH) and Commuter (PKS) archetypes.

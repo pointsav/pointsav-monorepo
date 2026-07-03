@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # build-aec-seismic.sh — Night 4 AEC build: seismic hazard + wetland classification
 #
 # Run at 05:00 UTC 2026-05-27 (Night 4 of AEC staged rollout).

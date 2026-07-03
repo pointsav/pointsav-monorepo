@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 """
 build-wetland-join.py — GWL_FCS30 wetland classification join
 Phase 22 2026-06-29 — samples VRT mosaic (408 tiles, 30m resolution).

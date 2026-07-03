@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: FSL-1.1-ALv2
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 /* section-collapse.js — Wikipedia-mobile collapsible sections for research pages.
  *
  * Zero dependencies. Auto-wraps each section heading + its following content into a

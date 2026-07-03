@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 # nightly-rebuild.sh — Phase 2 cluster + tile rebuild
 #
 # Run at 05:00 UTC (10pm Vancouver PDT) per overnight-builds policy.
