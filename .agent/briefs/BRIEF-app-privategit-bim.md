@@ -378,3 +378,88 @@ state as of the original escalation.
   one blanket wrong claim. Deployed and verified live. Command's earlier
   flag (`command-20260702-likely-license-mislabel-app-privategit-b`) is
   now resolved — worth a short follow-up to Command noting closure.
+
+- **2026-07-02/03 (multi-agent design/consistency pass, commits `7186ea57`
+  through `76bf3c6e`):** Operator: "this website still needs some work... run
+  a few opus agents to a complete top to bottom browser in the loop... cross
+  check the internet and the other localhost Woodfine and Pointsav sites...
+  this should blend in with the other Woodfine websites... maybe FABLE
+  after." Plan mode used; plan at
+  `/home/mathew/.claude/plans/can-you-make-sure-mellow-flask.md`.
+  - **Round 0** — bounded footer CSS triage (spacing tightened, trademark
+    paragraph reduced to genuine fine-print scale) before the research round,
+    so agents reviewed a non-embarrassing baseline (`7186ea57`).
+  - **Round 1** — 3 parallel Opus agents: full site audit, cross-reference
+    against `home.woodfinegroup.com` (:9102, live/reliable comparator;
+    `design.pointsav.com` :9094 excluded — crash-looping, separate
+    `project-design` bug, PointSav-branded anyway), external research on
+    technical/spec-catalog site design. Cross-reference's headline finding:
+    colors already matched exactly (verified token-by-token) — the "doesn't
+    blend in" complaint was chrome/type-weight/footer/wordmark, not palette.
+  - **Round 2 — real bugs fixed, not just polish** (`e8324e54`, `9cf2ca4e`,
+    `b8706bd3`): (1) **confidentiality leak** — research articles
+    (`/research/*`) exposed `~/Foundry/...` paths, `.claude/sub-agent-results`
+    references, and internal app codenames; sanitized all three, and made
+    them git-tracked for the first time (`woodfine-bim-library/research/`
+    previously held only `.gitkeep` — the live copy was
+    `deployments/gateway-orchestration-bim-1/research/`, local-only/
+    gitignored, commit `48c638c` in woodfine-bim-library). (2) **data bug** —
+    token category pages iterated DTCG `$description` metadata as a fake
+    entity row (visible on climate-zones, retail-select); fixed by filtering
+    `$`-prefixed keys in both the per-category loop and the home-page entity
+    counter; multi-group files (climate-zones has two top-level groups) now
+    show `group/slug` to disambiguate previously-identical-looking rows.
+    (3) Key Plans page (`/key-plans`) was showing "— —" / "0 SF" placeholder
+    data for **every one of 23 cards** — a genuinely severe, silent bug found
+    during a mobile-readiness sweep triggered by a separate operator ask
+    mid-session ("make sure bim.woodfinegroup.com is 100% ready on mobile");
+    root cause was a fixed-2-level-nesting assumption where the real file
+    nests 3 levels (category → subcategory → size variant); replaced with a
+    depth-agnostic recursive collector. (4) `.bim-markdown` had zero CSS for
+    `<p>`/`<ul>`/`<table>` — also found during the same mobile sweep.
+  - **Round 2 — brand-family + polish**: real Woodfine wordmark SVG (same
+    markup home.woodfinegroup.com uses, `currentColor` white-on-navy) replaces
+    plain-text "Woodfine" in the topbar; all H1s 300→600 to match the
+    marketing site's confident hero weight; bare oversized `<h2>`s given
+    explicit scale; `.bim-main` narrowed 1200px→920px to close the
+    orphaned-prose void next to full-width cards; research index now shows
+    real article titles instead of raw file slugs; entities table gained the
+    same mobile `overflow-x:auto` wrap the property-sets table already had;
+    removed the internal `app-privategit-bim` slug from the public topbar and
+    `/healthz`·`/readyz` from the public footer (both P0 findings — internal/
+    ops surface visible to real visitors); removed the always-hardcoded
+    "REGULATORY OVERLAYS 0 registered" chip and "bSDD URI: pending" row
+    (never wired to real data); Uniclass chip/row now hidden instead of
+    showing an em-dash when a category has no code.
+  - **Round 3 — Fable verification** (`a89364d0e8bfcd4aa`): 8/9 fixes
+    confirmed working cleanly; one partial (research-article H1s were still
+    weight-400 via a `.bim-markdown` override missed by the site-wide
+    300→600 change) — fixed same pass (`76bf3c6e`). Direct side-by-side
+    against `home.woodfinegroup.com` confirmed the family-resemblance goal:
+    genuinely reads as the same company now. Also found 6/23 Key Plans cards
+    still render as an empty box; traced to the *real* root cause (missing
+    `zone1/2/3_depth_m`, not `furniture_program` as first assumed — the SVG
+    generator never reads `furniture_program` at all, it draws procedurally
+    from zone depths) and added an explanatory caption so the blank reads as
+    intentional rather than broken, verified it does not false-fire on any
+    of the 17 populated cards.
+  - **Cross-archive finding, not project-bim's territory**: both the
+    cross-reference and Fable agents independently found
+    `home.woodfinegroup.com` (app-mediakit-marketing) declares the
+    Oswald/Nunito Sans/Roboto Slab stack but ships no self-hosted
+    `@font-face` rules — falls back to Arial on machines without those fonts
+    installed. Flagged to Command via mailbox
+    (`command-20260703-app-mediakit-marketing-home-woodfinegrou`) rather than
+    fixed here.
+  - **Deferred, not done this pass** (lower priority / bigger scope, logged
+    so they aren't silently dropped): Furniture Library page still lists
+    bare `.ifc` filenames with no thumbnail/display name (Key Plans already
+    has the SVG furniture glyphs — reuse opportunity flagged, not done); no
+    Key-Plans color-legend; category pages still show `0 REGISTERED`-style
+    honest-but-sparse data for un-populated categories (no fabricated data
+    added); bSDD-style property-set grouping redesign (external-research
+    finding, a bigger structural idea for a future pass); primary-button
+    pill styling to match the marketing site's "Enquire" CTA convention;
+    solid-navy topbar fill vs. a lighter family-matching treatment
+    (kept navy — legitimate app-shell pattern per the audit's "keep
+    different" list, revisit only if operator specifically wants it lighter).
