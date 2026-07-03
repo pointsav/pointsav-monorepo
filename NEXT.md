@@ -7,6 +7,31 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Hot — pick up here next session
 
+- [ ] **Command: resolve staging-fork anomaly blocking Stage 6 self-service push** `[2026-07-03 totebox@claude-code]`
+  - `bin/self-service-promote.sh` rejected pushing `cluster/project-bim` (23 commits, full shell redesign) to `origin-staging-j`
+  - `git merge-base HEAD origin-staging-j/main` → **no common ancestor at all**, not ordinary divergence (that fork's `main` picked up unrelated `project-knowledge`/`app-mediakit-knowledge` commits)
+  - Did NOT force-push or rebase through it. Escalated: mailbox `command-20260703-project-bim-ready-for-canonical-merge-pr` (high priority)
+  - Local commits safe on `cluster/project-bim`, HEAD `19979562e98f60059be4fc1bcd317eccb1c2a80a` — do not retry the self-service push until Command confirms the fork state is fixed
+
+- [ ] **Command: process promote-queue + push-to-prod.sh bim once fork resolved** `[2026-07-03 totebox@claude-code]`
+  - Operator already reviewed + approved the redesign on desktop/mobile and side-by-side against the wiki sites — no further review needed before push
+  - `push-to-prod.sh`'s `target_bim()` is confirmed stale per Command's own inbox message (2026-07-02, `command-20260702-resolved-bim-woodfinegroup-com-deployed-`): wrong binary/service names, wrong design-system path (`pointsav-design-system` vs `woodfine-bim-library`). Confirm this was actually fixed before assuming a clean run — Command worked around it manually last time
+  - `bim.woodfinegroup.com` is currently live but serving a build from BEFORE this session's redesign (last deploy 2026-07-02T16:43)
+
+- [ ] **Redo "Important Information" disclosure band against Command/project-knowledge's actual pattern** `[2026-07-03 totebox@claude-code]`
+  - This session built an ad-hoc `<details>` disclosure band + hardcoded text directly in `shell.rs`, **without having read** inbox message `command-20260702-important-information-footer-structure-a` until shutdown
+  - Real spec: disclosure text sourced from a Git-owned markdown file (counsel owns the text, not hardcoded in Rust), a persistent one-line footer disclaimer always visible (not just the collapsible band, "so a collapsed band never screenshots bare"), a dedicated `/disclaimers` page, CC BY-ND attribution to the issuer entity (Woodfine Capital Projects Inc.) for editorial/research content specifically — separate from the Apache-2.0 BIM Object data license — and NI 45-106 forward-looking-statements language mirroring home.woodfinegroup.com
+  - If BIM will host research-paper journals: project-knowledge's `SPEC-journal-wiki-render-contract.md` §§9-10 governs the render contract
+  - Read the full message before starting — don't re-derive from this summary alone
+
+- [ ] **Search: doesn't index property-set/compliance text inside entity values** `[2026-07-03 totebox@claude-code]`
+  - Only title/slug/IFC-class/top-level `$description` are indexed — a query like "fire door" can legitimately return 0 results even though both words exist in the corpus, if no single item's indexed fields contain both
+  - Lower priority; noted as a known/accepted scope limit when built, not a bug
+
+- [ ] **Verify corporate wiki instance (port 9095) CSS is fixed** `[2026-07-03 totebox@claude-code]`
+  - 4 of 5 stylesheets 404'd during a same-session recheck (`projects`/`documentation` instances on 9093/9090 were fine)
+  - Not project-bim's service (`app-mediakit-knowledge-2`, likely project-knowledge's territory) — flagged verbally to operator only, not yet escalated via mailbox
+
 - [x] **app-privategit-bim UI polish — committed 2026-06-20** `[2026-06-20 totebox@claude-code]`
   - Monorepo: 39d3cb0b — shell.rs + card.rs + home.rs + bim-layout.css + bim-components.css
   - Hero/footer/header restored; sidebar always open; cds-data-table → plain table
@@ -156,5 +181,6 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Deferred
 
-- [ ] Stage 6 push — 54+ commits ahead of origin on `cluster/project-bim` `[2026-06-24 totebox@claude-code]`
-  - app-privategit-bim Phase 1 code ready; outbox dispatch sent to Command 2026-06-20
+- [ ] Stage 6 push — commits ahead of origin on `cluster/project-bim` `[2026-06-24 totebox@claude-code, superseded 2026-07-03]`
+  - Superseded by the Hot-section item above (staging-fork anomaly on `origin-staging-j`, escalated to Command
+    2026-07-03) — that's the current blocker, not a simple backlog of unpushed commits
