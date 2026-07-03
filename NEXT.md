@@ -7,16 +7,26 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Hot — pick up here next session
 
-- [ ] **Command: resolve staging-fork anomaly blocking Stage 6 self-service push** `[2026-07-03 totebox@claude-code]`
-  - `bin/self-service-promote.sh` rejected pushing `cluster/project-bim` (23 commits, full shell redesign) to `origin-staging-j`
-  - `git merge-base HEAD origin-staging-j/main` → **no common ancestor at all**, not ordinary divergence (that fork's `main` picked up unrelated `project-knowledge`/`app-mediakit-knowledge` commits)
-  - Did NOT force-push or rebase through it. Escalated: mailbox `command-20260703-project-bim-ready-for-canonical-merge-pr` (high priority)
-  - Local commits safe on `cluster/project-bim`, HEAD `19979562e98f60059be4fc1bcd317eccb1c2a80a` — do not retry the self-service push until Command confirms the fork state is fixed
+- [x] **Command: resolve staging-fork anomaly + canonical merge + prod push — DONE 2026-07-03** `[2026-07-03 command@claude-code]`
+  - Root cause: `self-service-promote.sh` pushed every self-service archive to the SAME `main` ref on the shared
+    personal fork — always failed once a different archive's unrelated history landed there first. Worse,
+    `set -e` meant the promote-queue entry silently never got written on push failure. Command fixed both:
+    each archive now pushes to its own ref (`BRANCH:CLUSTER_NAME`); queue/notify steps are now unconditional.
+  - 23 of 28 local commits landed on canonical (the full shell redesign, reviewed + approved). Verified live
+    externally: `https://bim.woodfinegroup.com` → 200, `/healthz` ok, utility bar/theme-toggle/search markup
+    all confirmed present in the served HTML.
+  - Also fixed a clippy gate issue in the new `render/search.rs`/`render/sidebar.rs` (2x useless `format!()` on
+    static strings) since `-D warnings` had never been run on this crate before — worth running `cargo clippy`
+    locally on new Rust code going forward rather than relying on Command's promote step to catch it.
+  - Prod systemd unit renamed `local-bim-orchestration`/`local-bim` → `local-woodfine-bim` as part of a
+    workspace-wide naming reorg (unrelated to this work). Local workspace staging unit unaffected, still `local-bim`.
 
-- [ ] **Command: process promote-queue + push-to-prod.sh bim once fork resolved** `[2026-07-03 totebox@claude-code]`
-  - Operator already reviewed + approved the redesign on desktop/mobile and side-by-side against the wiki sites — no further review needed before push
-  - `push-to-prod.sh`'s `target_bim()` is confirmed stale per Command's own inbox message (2026-07-02, `command-20260702-resolved-bim-woodfinegroup-com-deployed-`): wrong binary/service names, wrong design-system path (`pointsav-design-system` vs `woodfine-bim-library`). Confirm this was actually fixed before assuming a clean run — Command worked around it manually last time
-  - `bim.woodfinegroup.com` is currently live but serving a build from BEFORE this session's redesign (last deploy 2026-07-02T16:43)
+- [ ] **5 excluded commits need a dedicated reconciliation session** `[2026-07-03 command@claude-code]`
+  - 2 `.agent/`-only commits (31403f27, f570b2c6) — correctly never promote, no action needed
+  - 3 older tool-keyplan/app-orchestration-bim commits (8ce0b9ba, a4ba3e96, 1608fa26) — conflict heavily
+    (30+ hunks) with `app-orchestration-bim/src/main.rs` on canonical, which has evolved independently and
+    substantially elsewhere. Remain on local `cluster/project-bim` only. Needs someone with context on both
+    sides of the conflict, not a guessed resolution.
 
 - [ ] **Redo "Important Information" disclosure band against Command/project-knowledge's actual pattern** `[2026-07-03 totebox@claude-code]`
   - This session built an ad-hoc `<details>` disclosure band + hardcoded text directly in `shell.rs`, **without having read** inbox message `command-20260702-important-information-footer-structure-a` until shutdown
