@@ -6,7 +6,7 @@ Active briefs and artifact routing for this archive.
 
 | Brief | Status | Summary |
 |---|---|---|
-| [BRIEF-app-privategit-bim.md](BRIEF-app-privategit-bim.md) | active | Carbon framework rewrite of BIM Object Library web surface; Phase 1 complete; deploy pending |
+| [BRIEF-app-privategit-bim.md](BRIEF-app-privategit-bim.md) | active | BIM Object Library web surface; live on bim.woodfinegroup.com; 2026-07-03 CMS reposition superseded — presentation-layer rebuild in progress (Envelope-as-Navigation direction) |
 | [BRIEF-key-plans-site.md](BRIEF-key-plans-site.md) | active | Key Plans live site (app-orchestration-bim v0.0.3); SVG diagrams + Corporate Office blocked |
 | [BRIEF-tool-keyplan.md](BRIEF-tool-keyplan.md) | active | tool-keyplan Rust crate v0.0.1; DTCG validation engine; key-plans-registry.md pending |
 

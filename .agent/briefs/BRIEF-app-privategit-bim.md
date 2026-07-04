@@ -99,6 +99,24 @@ Phase 2 (pending):
   reasoning that made it acceptable: BB.14 was about not looking like
   PointSav's Carbon design system, not about inventing a separate identity —
   matching Woodfine's own real brand still satisfies that.
+- **SUPERSEDED 2026-07-03 (later session, same day): the entire "BIM Objects CMS"
+  Spectrum-grammar reposition (commit `0f76dd0e`, the RD.1–RD.7 research cycle
+  above) is being thrown out and rebuilt, not iterated on.** Operator reviewed
+  the live redesign fresh, confirmed the specific defects found in a live-site
+  audit (dead `/tokens` nav link, mobile sidebar full-screen takeover with no
+  dismiss path, over-elaborated footer, truncated/inverted-hierarchy "Important
+  Information" disclosure, fonts silently falling back to system defaults, WCAG
+  contrast failures, sparse/blank data cells), then delivered a structural
+  verdict: **"we need to take form these but make something radically
+  different"** — not a request to polish the Spectrum-chrome direction further,
+  a rejection of the premise that copying a generic docs-chrome design system
+  (however well-executed) is the right differentiation strategy for this
+  product at all. See the 2026-07-03 "presentation-layer rebuild" work-log
+  entry below for the full research trail and the approved plan. RD.7's visual
+  spec (drafting blue, Spectrum grammar, 4-section IA) is not being carried
+  forward as the target — the new direction uses the product's own claim #41
+  invention (City Code as Composable Geometry) as the interface's organizing
+  principle instead of borrowing a generic enterprise design system's chrome.
 
 ## Decisions open (historical — the three options as originally surfaced)
 
@@ -677,3 +695,146 @@ state as of the original escalation.
     to disregard, with a suggested script hardening (assert expected repo marker, or require
     --repo explicitly) so a wrong-directory invocation fails loudly instead of silently misqueueing.
     Retried correctly from pointsav-monorepo; clean fast-forward, staging mirrors updated.
+
+- **2026-07-03 (later same day — live-site audit, then full presentation-layer rebuild decision):**
+  Operator asked "is the new website up live? can you check?" — verified `bim.woodfinegroup.com`
+  live (200, valid cert), but the live binary turned out to be running the OLD wiki-shell (pre-CMS
+  redesign), not `0f76dd0e`'s CMS reposition — traced to a `promote.sh` `tail -40` truncation bug on
+  Command's side that made the 18-commit queue look like only 18 commits when the real range was 31,
+  silently dropping the newest 11 (including `0f76dd0e` itself). Escalated to Command via mailbox;
+  Command re-diagnosed, took the verified tree from the branch tip for the affected files, promoted
+  as `d97e5edd`, re-verified every marker live (0 `.bim-utility`, 5 `<details>`, `#1A4480` present,
+  Geist/Source Serif declared) — confirmed genuinely live this time.
+  - **Operator then live-reviewed the corrected redesign and pushed back hard, with specifics**:
+    "the sideabar tak[es] up the whol[e] scree[n] when open", "the footer is no good, it is too
+    confusing, we don't need to follow the other sites accept maybe desgin.pointsav.com", "the
+    copy in the 'Important Information' is off... it should n[o]t go to a 'Read full'... all the
+    copy should be there in the drop down like on home.woodfinegroup.com and home.pointsav.com",
+    and finally: "it doesn't seem like a site for a 'Design System' like IBM Carbon or the ot[h]er
+    hypersc[a]ler Design Systems."
+  - **Live-site technical audit (two parallel agents, one with real headless-browser screenshots
+    via system chromium — no Playwright installed anywhere reachable) confirmed all operator
+    complaints plus found additional defects the operator hadn't named**: `/tokens` ("Browse All
+    BIM Objects") silently renders the homepage template instead of a category index — the site's
+    primary CTA is a dead end; Geist Sans/Geist Mono/Source Serif 4 never actually load (no woff2
+    files exist in this workspace/environment), so every page renders in plain system Georgia/
+    Arial — screenshots confirm this reads as "unstyled default browser text"; `--bim-fg-faint
+    #98A2B3` fails WCAG AA (~2.2–2.6:1) on the header standards line and sidebar section counts;
+    BIM Object spec tables on category pages (e.g. `/tokens/spatial`) ship with empty `Description`
+    cells for most rows, no placeholder; mobile sidebar confirmed to have zero scrim/backdrop and
+    no outside-tap-to-close (only closes via the toggle itself or a nav link) — full-width,
+    near-full-height `position:fixed` panel at ≤1056px with no visible way out. Footer compared
+    directly against `design.pointsav.com` (2 columns, 1 badge, no disclosure — pure token catalog,
+    no BCSC obligation) and `home.woodfinegroup.com`/`home.pointsav.com` (both use
+    `<details class="m-footer__disclosure">` with the FULL multi-paragraph disclosure inline, a
+    "Full disclaimer" pointer paragraph only at the very end) vs. BIM's actual footer (3 columns, 3
+    elaborate badges, disclosure truncated to 2 paragraphs + a "Read the full disclaimer →"
+    link-out) — confirmed both the over-elaboration and the wrong truncation pattern. Also found
+    the "Important Information" `<summary>` (12px) is styled smaller than its own `<details>` body
+    text (13px) — an inverted type hierarchy.
+  - **Operator decision, after reviewing all of the above: throw out the current presentation
+    layer entirely and rebuild it — not a patch pass.** Explicitly: "track A is a waste of time,
+    we [a]re going to th[r]o[w] the current site in the garbage." The underlying BIM Object *data*
+    (24 categories, IFC 4.3 anchoring, Uniclass classification, DTCG token content) stays — only
+    the Rust/Axum presentation shell is being thrown out.
+  - **Differentiation research (2 parallel agents)**, prompted by the operator's explicit framing
+    "we need to take form these but make something radically different" and "100x improvement"
+    (visual polish + content depth + interactivity, per operator's own prioritization) benchmarked
+    against "hyperscaler" caliber:
+    - **Differentiation-angle research** found the real gap: RD.1–RD.7 (and everything before it)
+      styled a generic docs-chrome catalog — nobody used the product's own actual invention,
+      **claim #41 "City Code as Composable Geometry"**, as the thing that shapes the *interface*,
+      only ever as content. Surveyed genuinely distinctive (non-generic-SaaS) products — Speckle,
+      Hypar, Rhino/Grasshopper, Linear, Raycast, Warp, Framer — and found the common thread:
+      differentiation lives in one invented, domain-native structural unit (Warp's block,
+      Grasshopper's wire, Speckle making the 3D object graph itself the homepage), not refined
+      chrome. Also surfaced the century-old axonometric zoning-envelope diagram (NYC 1916 zoning
+      resolution, Hugh Ferriss) as an already-existing, literal visual grammar for "composable
+      geometric constraint" that maps directly onto claim #41. Four concrete angles proposed:
+      (1) **Envelope-as-navigation homepage** — an interactive isometric zoning-envelope diagram as
+      the literal front door/nav, replacing the sidebar tree; (2) **live constraint-composition
+      tool** — pick tokens on a category page, watch the envelope recompute/violations resolve in
+      real time; (3) **GUID-as-owned-visual-mark** — the IFC GlobalId as a recurring, Raycast-style
+      signature (drafting-sheet title-block stamp); (4) **drafting-sheet layout system** — real
+      construction-document-set conventions (sheet numbers, title blocks, cross-sheet references)
+      replacing card grids.
+    - **3D IFC viewport feasibility research** (two attempts — first died to a transient API 529
+      overload mid-run): confirmed the current crate has zero client-side 3D tooling (`Cargo.toml`
+      has no wasm-bindgen/Tauri; `bim.js` does only SPA nav/theme-toggle/SSE). Compared xeokit-sdk
+      (AGPL-3.0, near-complete out-of-box BIM viewer, double-precision georeferenced rendering) vs.
+      `@thatopen/components` (MIT/MPL, license-clean for any distribution model, more assembly
+      required, needs WASM + COOP/COEP headers this server doesn't set today) against the project's
+      own prior research (`BB.2-xeokit-vs-thatopen-2026-04-28.md`, written for the *Tauri desktop*
+      `app-workplace-bim` product, which recommends xeokit specifically for that product's
+      georeferencing needs and accepts AGPL as "manageable" for open-source distribution) and a
+      **separate, still-open decision** (`design-component-bim-viewport-3d.draft.md`'s
+      `open_question_1`, for the related `app-console-bim` read-only surface) that explicitly
+      flags AGPL as the wrong choice for a publicly-hosted, presumably-closed-source showcase like
+      this one, proposing `@thatopen`/non-3D fallback instead — this question is genuinely
+      unresolved elsewhere in the project, not something to default-pick here either. Real sample
+      IFC content already exists (18 key-plan models in `woodfine-bim-library`), but no XKT/
+      Fragments conversion pipeline exists yet for either library. Three effort tiers assessed
+      (static hero model → per-category static viewport → fully live GUID-linked data-bound
+      viewport); only the most ambitious tier is genuinely differentiated for this product's
+      pitch, and it's also the highest-risk/highest-maintenance tier.
+  - **Scoping decision (plan mode, approved by operator)**: rather than attempt the full rebuild
+    or all four differentiation angles at once, scoped to the most realistic, highest-impact first
+    step — the **Envelope-as-Navigation homepage** — plus a dedicated **Header, footer & wayfinding**
+    treatment (persistent minimal header, hamburger toggle removed outright rather than fixed since
+    it has no target once the sidebar-tree nav model is gone, breadcrumb + "back to overview" link
+    replacing the sidebar on category pages, footer/disclosure rebuilt on the home-sites' inline-
+    copy pattern). Full plan at `/home/mathew/.claude/plans/can-you-audit-the-modular-bengio.md`.
+    Drafting-sheet IA, GUID-as-mark, live-composition tool, and the 3D-viewport decision gate are
+    explicitly deferred — see Carry-forward below, not lost.
+
+## Carry-forward (2026-07-03 rebuild — current, supersedes older Carry-forward items above where they conflict)
+
+- **Envelope-as-Navigation homepage + header/footer/wayfinding rebuild — implemented and verified
+  locally on `local-bim.service` (127.0.0.1:9096), per
+  `/home/mathew/.claude/plans/can-you-audit-the-modular-bengio.md`.** Not yet promoted/deployed to
+  prod — pending operator review of the local preview, same pattern as every prior redesign pass.
+  - **New module** `render::envelope` (isometric zoning-envelope diagram, hand-derived iso
+    projection matching the existing svg.rs key-plan-diagram convention — no WebGL/3D library, no
+    new dependency). Homepage (`render_home`) now leads with this diagram; each tier (base/setback/
+    tower) and the ground plane are real `<a>` hotspots to `/tokens#taxonomy|compositions|objects|
+    context`. A jurisdiction-overlay toggle (municipal/+provincial/+accessibility) swaps between
+    3 pre-rendered SVG frames showing the envelope visibly shrink as constraints stack.
+  - **Fixed the `/tokens` dead-link bug** found in the same-day audit: `render_tokens_index` was
+    literally `render_home(state)` (a stub); now renders a real index, categories grouped under
+    the same 4 section anchors the envelope hotspots route to.
+  - **Removed the sidebar-tree nav entirely** (`render::sidebar` module deleted) — replaced by the
+    envelope diagram (homepage) and a breadcrumb + "← Back to overview" link (category/detail
+    pages). This also removes the mobile full-screen-takeover bug at its root (there's no more
+    always-present drawer to trap content behind) rather than patching the old drawer's scrim/
+    close behavior.
+  - **Footer + disclosure rebuilt**: inline full disclosure copy (reusing the same
+    `disclaimers_page` sections `/disclaimers` renders — `content::render_important_information`
+    and the separate `important-information.md` summary are now dead code, removed), footer
+    trimmed from 3 columns/3 badges to 2 columns/1 badge + a single "part of the network" line,
+    disclosure heading now 1.0625rem/700 vs. body's 0.8125rem (was inverted at 0.75rem/600).
+  - **WCAG contrast fixed**: `--bim-fg-faint` recomputed and verified (not eyeballed) at 5.0:1+
+    (light) / 4.5:1+ (dark) against every background it's used on — was ~2.2-2.6:1.
+  - **Empty `Description` cells** in category BIM Object tables now show `—` instead of blank.
+  - **Two bugs caught during implementation, not from the original audit**: (1) the envelope
+    diagram's first draft used projection constants that clipped part of the ground plane off the
+    SVG viewBox and left ~50% of the canvas empty — caught via an actual screenshot, not assumed
+    correct from the markup; recomputed the projection's true bounding box and refit the viewBox.
+    (2) `home.md`'s "Browse the catalog" section still said "navigate by category in the sidebar"
+    after the sidebar was removed — a stale cross-reference in content, not code; fixed in
+    `woodfine-bim-library/site-content/pages/home.md`.
+  - **cargo build + cargo clippy both clean**, zero warnings (including on the new
+    `render::envelope` module) — verified before, not just after, local deployment.
+- **Deferred, explicitly not dropped:**
+  1. **Drafting-sheet layout system** (sheet numbers, title blocks, cross-sheet references) for
+     category/detail pages — next structural layer after the homepage ships.
+  2. **GUID-as-owned-visual-mark** — natural fit once the drafting-sheet system exists.
+  3. **Live constraint-composition tool** — the most engineering-heavy differentiation angle; a
+     stretch goal once the envelope diagram has interactive precedent to build from.
+  4. **3D IFC viewport — explicit decision gate, not a default.** Needs operator sign-off
+     specifically on the AGPL (xeokit) vs. MIT/MPL (`@thatopen`) commercial-distribution tradeoff
+     before any engineering starts — see the licensing analysis in the 2026-07-03 entry above and
+     `design-component-bim-viewport-3d.draft.md`'s still-open `open_question_1`.
+- **Older Carry-forward items above** (Stage 6 promotion status, prod deploy plumbing, license
+  labeling, branch-contamination fix) are believed resolved per later entries in this Work log —
+  not re-verified as part of this rebuild scoping; re-check before assuming still-current if acting
+  on them.
