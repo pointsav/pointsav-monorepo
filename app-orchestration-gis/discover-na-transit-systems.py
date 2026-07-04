@@ -10,11 +10,11 @@ Overpass query, with results manually transcribed. That query pattern is
 documented in BRIEF-gis-commuter-zone.md but was never coded as a reusable
 discovery step. Also, that dict only covers subway/light_rail — the operator
 flagged this "misses a lot": tram/streetcar networks and commuter/suburban
-rail (route=rail, filtered by operator) are just as valid Transit Terminus
+rail (route=train, filtered by operator) are just as valid Transit Terminus
 candidates and were never covered at all.
 
 Method: query relation[route=subway/light_rail/tram] directly (unambiguous
-transit types), plus relation[route=rail] filtered post-hoc by operator/network
+transit types), plus relation[route=train] filtered post-hoc by operator/network
 against the same COMMUTER_OPERATORS allowlist ingest-osm-railway-commuter.py
 already built (imported directly, not duplicated) — to exclude freight/
 intercity rail. For each relation, the first and last "stop"-role members are
@@ -132,7 +132,7 @@ def haversine(lat1, lon1, lat2, lon2):
 
 def keep_relation(tags: dict, iso: str) -> bool:
     """Same operator-allowlist logic as ingest-osm-railway-commuter.py's
-    keep_station(), applied to route=rail relations (subway/light_rail/tram
+    keep_station(), applied to route=train relations (subway/light_rail/tram
     are always kept — unambiguous transit types)."""
     operator = (tags.get("operator") or "").lower()
     network = (tags.get("network") or "").lower()
@@ -173,7 +173,7 @@ def extract_termini(res: dict, iso: str, route_type: str) -> list:
     systems = []
     for rel in relations:
         tags = rel.get("tags", {})
-        if route_type == "rail" and not keep_relation(tags, iso):
+        if route_type == "train" and not keep_relation(tags, iso):
             continue
         members = rel.get("members", [])
         stop_members = [m for m in members
@@ -240,7 +240,7 @@ def discover_region(region: str, bbox: tuple) -> list:
     bbox_str = f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}"
     iso = REGION_ISO[region]
     all_relations = []
-    for route_type in ("subway", "light_rail", "tram", "rail"):
+    for route_type in ("subway", "light_rail", "tram", "train"):
         print(f"  querying route={route_type}...", end=" ", flush=True)
         res = fetch_relations(bbox_str, route_type)
         rels = extract_termini(res, iso, route_type)
