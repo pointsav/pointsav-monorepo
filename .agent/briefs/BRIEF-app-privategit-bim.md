@@ -838,3 +838,81 @@ state as of the original escalation.
   labeling, branch-contamination fix) are believed resolved per later entries in this Work log —
   not re-verified as part of this rebuild scoping; re-check before assuming still-current if acting
   on them.
+
+- **2026-07-04 (second pass — real-object hero, header/footer redo, family continuity, shipped and
+  verified locally):** Operator reviewed the Envelope-as-Navigation rebuild fresh and rejected the
+  core concept: "the three 3d boxes do not quite make any real sense... we don't have the massing
+  for real BIM Objects to allow us to be more playful." Root cause identified together with the
+  operator: the zoning-envelope diagram represented claim #41 (City Code as Composable Geometry), a
+  real but explicitly v0.0.2+ roadmap idea per the manifest's own scope section — not what the
+  catalog does today. Extensive real-source research this session (project-bim's own `inputs/`
+  "Collaborators" folders — confirmed these are internal Woodfine-family email threads, not external
+  architects — plus `cluster-totebox-jennifer` and `key-plans-foundation-study.md`) found:
+  - **A real, hand-drafted CAD sheet for PO-1** ("Private Office — Small") at
+    `inputs/Sketches/DISCOVERY_MCorp_Sketches_Key Plans_Private Office.pdf` — real dimensions 19'-8"
+    (5.9944 m) depth × 13'-5" width, 325 SF, no Zone 3 (opens directly to shared corridor).
+  - **A real data bug**: `key-plans.dtcg.json`'s private-office small/medium/large entries (all
+    marked `status: "confirmed"`) had inherited the *Professional Office* use-type's zone depths
+    (6.0/3.8/2.0 m) instead of Private Office's real CAD-sourced values. **Fixed** — corrected to
+    5.9944/1.3716 m (no Zone 3) across all three size variants, with the wrong `"Steelcase Leap
+    chair"` brand claim (no source found anywhere) also removed in favor of generic "ergonomic task
+    chair" language.
+  - **New hero: "Anatomy of a Key Plan — PO-1"** (`render/hero.rs`, new module, `render/envelope.rs`
+    deleted) — reuses the *existing* real SVG generator (`render::svg::render_kp_zone_svg_from_value`,
+    same diagram already live on `/key-plans`) rather than inventing geometry, with real, always-visible
+    (not hover-only) fact callouts routed to the matching catalog section: IFC anchor/Uniclass →
+    Taxonomy; zone depths + real regulatory citations (European Lighting Standard, German Circulation
+    Law) → Context; the real furniture list → Objects; the real tile-nesting fact → Compositions.
+    Real authorship credit (Jennifer M. Woodfine, "Spatial Taxonomy — Key Plan Methodology," V12,
+    Jan 2025). Confirmed "Key Plan" (not "Bundle") is the real, established term — checked against
+    the actual methodology PDF's own definition before using either word.
+  - **Two real content additions to `home.md`**, both carefully scoped as our own positioning, not
+    claims about third parties: a paragraph citing Denver International Airport's real, sourced BIM
+    program (~17M SF, 93 buildings, hundreds of Revit models, vendor-managed CDE) as proof the
+    industry needs this at scale, positioning this platform as the open-standard/self-hostable
+    version of that same pattern; and a paragraph tying the BIM Object Library to PointSav's own
+    already-published positioning pillars (home.pointsav.com's real icon-strip: "Business
+    Administration, Record Keeping, Building Connectivity") rather than positioning BIM as a
+    standalone competitor to Autodesk-style tools.
+  - **Legal disclosure rewritten** by a dedicated Opus-model pass instructed to write with securities-
+    lawyer precision: `disclaimers.md` replaced (four sections tightened, "Sovereign Data Foundation"
+    — confirmed not a real initiative — removed entirely, not replaced with any other named one);
+    `important-information.md` deleted (confirmed dead code — the footer already inlines
+    `disclaimers.md` directly, no route loaded the separate file). **Flagged, not resolved**: the
+    CC BY-ND 4.0 editorial-content license claim has no backing LICENSE file anywhere in either
+    repo — needs an operator decision before this text is treated as fully settled.
+  - **Real bugs fixed from a fresh independent audit**: dead-space layout bug (`.bim-shell`'s forced
+    `flex:1`/`min-height:100vh` stretch left ~1500px of empty space before the footer on short
+    pages — removed, `.bim-footer`'s existing `margin-top:auto` now does that job correctly alone);
+    doubled/garbled chip text ("IFC IfcSpatialElement" was rendering as "IFC IFCSPATIALELEMENT" under
+    the chip's uppercase transform — fixed by exempting `<code>` from that transform); redundant
+    breadcrumb + back-link on category pages (consolidated to the breadcrumb alone).
+  - **Header rebuilt**: wordmark logo dropped entirely (operator request); the `flex:1` spacer that
+    left ~700px of dead space at 1440px width replaced with `justify-content: space-between`; brand
+    identity is now plain text ("BIM Object Library") that never disappears at any breakpoint (the
+    old logo+descriptor combo used to drop all identifying text below 480px).
+  - **Footer rebuilt**: badge corrected to "Powered by PrivateGit" (`os-privategit`/`app-privategit-*`
+    is a real, named architecture tier in this workspace's doctrine, distinct from "PointSav Digital
+    Systems" the company); switched from dark navy/black to a light surface (`#f8f9fa`, matching
+    `home.woodfinegroup.com`'s real current footer exactly) — this was the main reason the footer
+    "didn't match the site holistically" since the rest of the site is light; replaced the old flat
+    5-step gray ladder with three real, distinct type/color steps (heading/body/legal fine-print);
+    cities+badge regrouped tightly so the single remaining badge doesn't read as a placeholder for a
+    missing row.
+  - **Colors + fonts — reversed the RD.7 Spectrum-chrome direction for family continuity** (explicit
+    operator call): `--bim-accent` changed from the drafting-blue `#1A4480` to `#164679`, copied
+    directly from `home.woodfinegroup.com`'s live tokens (its `--m-navy-700`/`--m-navy-600`/
+    `--m-navy-100`/`--m-ink-900`/`--m-grey-50`/`--m-grey-200` primitives — not approximated). Real
+    self-hosted **Inter + Source Serif 4 + Source Code Pro** font files copied byte-for-byte from
+    `vendor/pointsav-monorepo/app-mediakit-marketing-2/static/fonts/` (the exact files
+    `home.woodfinegroup.com` currently serves) — finally resolves the "fonts never actually load"
+    defect that was confirmed as the single biggest driver of "looks generic." Old unused
+    Oswald/Nunito Sans/Roboto Slab files (from an earlier, since-superseded brand-match pass)
+    removed as confirmed-dead, git-recoverable cleanup.
+  - **Verified**: `cargo build` + `cargo clippy` both clean (zero warnings) before and after every
+    change. Deployed to `local-bim.service` (127.0.0.1:9096); screenshots taken at desktop/mobile/
+    full-page; every hero callout hotspot click-tested (all HTTP 200, routing to real distinct
+    content); confirmed zero "Sovereign Data Foundation" occurrences site-wide; confirmed mobile
+    header retains brand text at every width.
+  - **Not committed yet this pass** — pending operator review of the local preview before repeating
+    the commit + self-service-promote + Command-notification flow from the first pass.
