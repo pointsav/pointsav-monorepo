@@ -9,6 +9,105 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 
 ---
 
+## 2026-07-03/04 | totebox@claude-code | bim.woodfinegroup.com — two full rebuild passes, real-data bug fix, family-continuity reversal
+
+**Done:**
+- **Live-site check + promote-truncation correction**: operator asked "is the new website up live?" —
+  found it was serving the OLD wiki-shell, root-caused to a `tail -40` truncation bug on Command's side
+  during `promote.sh` (saw 18 of the real 31 queued commits, silently dropping the newest 11 including
+  the CMS-reposition tip). Escalated with exact evidence; Command re-diagnosed, corrected, redeployed —
+  confirmed genuinely live this time.
+- **Fresh full-site audit (2 parallel agents) found real bugs beyond the operator's named complaints**:
+  a CSS layout bug (`.bim-shell`'s forced `flex:1`/`min-height:100vh` left ~1500px dead space before the
+  footer), a missing `&lt;h1&gt;` on the homepage, doubled/garbled chip text ("IFC IfcSpatialElement" →
+  "IFC IFCSPATIALELEMENT" under an uppercase transform), redundant breadcrumb+back-link, and confirmed
+  fonts still weren't actually loading (system fallback) — the single biggest driver of "looks generic."
+- **Operator rejected the Envelope-as-Navigation hero's core concept**, not just execution: "the three 3d
+  boxes do not quite make any real sense... we don't have the massing for real BIM Objects to allow us
+  to be more playful." Root cause worked out together: the diagram represented claim #41 (City Code as
+  Composable Geometry), an explicit v0.0.2+ roadmap idea per the manifest's own scope section — not what
+  the catalog does today.
+- **Deep real-source research (multiple rounds, following the operator's own pointers into `inputs/`'s
+  dated "Collaborators" folders and `cluster-totebox-jennifer`)** found: those "Collaborators" folders
+  are internal Woodfine-family mail-merge email threads, not external architects; a real, hand-drafted
+  CAD sheet for PO-1 ("Private Office — Small," `inputs/Sketches/DISCOVERY_MCorp_Sketches_Key
+  Plans_Private Office.pdf`) with real dimensions (19'-8"/5.9944m depth × 13'-5" width, 325 SF, no Zone
+  3); and — the most consequential find — that `key-plans.dtcg.json`'s private-office entries, despite
+  being marked `status: "confirmed"`, had actually inherited the *Professional Office* use-type's zone
+  depths by mistake. **Fixed the real data bug** (corrected to 5.9944/1.3716m across PO-1/2/3, dropped an
+  unverifiable "Steelcase Leap" brand claim with no source anywhere).
+- **Checked real terminology before inventing any** — verified "Bundle" doesn't appear anywhere in the
+  actual methodology PDFs (it's a software/design-system import) before using it; the product's own real,
+  established term is "Key Plan," and the real IFC relationship is `IfcRelContainedInSpatialStructure`.
+- **Real, carefully-scoped positioning content added** (not overclaimed): a real, sourced Denver
+  International Airport reference (17M SF, 93 buildings, proprietary Revit/CDE — used as a contrast
+  point for "open standard, self-hostable," not a claim Denver would have chosen this), and a tie to
+  PointSav's own already-published positioning pillars (home.pointsav.com's real icon-strip: "Business
+  Administration, Record Keeping, Building Connectivity") rather than positioning BIM as a standalone
+  competitor to Autodesk-style tools.
+- **Legal disclosure rewritten by a dedicated Opus-model pass** (operator: "write it as if they were a
+  hyperscaler lawyer at a big law firm") — `disclaimers.md` replaced with tightened, precise text;
+  confirmed "Sovereign Data Foundation" isn't a real initiative and removed it entirely, not replaced
+  with anything else; `important-information.md` deleted as confirmed-dead (footer already inlines
+  `disclaimers.md` directly). **Flagged, not silently resolved**: the CC BY-ND 4.0 editorial-license
+  claim has no backing LICENSE file anywhere in either repo.
+- **Reversed the RD.7 Spectrum-chrome color/font direction for family continuity** (explicit operator
+  call, not a default): `--bim-accent` changed from drafting-blue `#1A4480` to `#164679`, copied directly
+  from `home.woodfinegroup.com`'s live tokens (not approximated); real self-hosted Inter/Source Serif
+  4/Source Code Pro files copied byte-for-byte from `app-mediakit-marketing-2` (the exact files
+  `home.woodfinegroup.com` currently serves) — finally real fonts, not another silent fallback.
+  Differentiation now comes from the real-object content grounding, not a deliberately different palette.
+- **Two full implementation passes, both verified (cargo build + clippy clean, local deploy, screenshots,
+  hotspot click-tests) and committed**: pass 1 (envelope-as-navigation, later superseded) at
+  `pointsav-monorepo` `dbb74ff8`; pass 2 (real "Anatomy of a Key Plan — PO-1" hero, header/footer redo,
+  color/font continuity) at `pointsav-monorepo` `0d72def7`, `woodfine-bim-library` `ee089b2` (the
+  zone-depth fix + legal text + home.md content), archive-root BRIEF commits after each pass.
+- **`woodfine-bim-library`'s remote misconfiguration (flagged pass 1) was fixed by Command by pass 2**
+  — now correctly points at `woodfine/woodfine-bim-library` — but it has no staging-mirror remotes at
+  all, so it still needs Command's admin-tier push each time; flagged as a recurring bottleneck worth a
+  proper staging-mirror setup, not just a one-off unblock.
+
+**Pending / carry-forward:**
+- Both passes' commits are staged/queued for Command (canonical merge + `push-to-prod.sh bim` for
+  `pointsav-monorepo`; admin-tier push for `woodfine-bim-library`) — not yet live on foundry-prod as of
+  this session's end.
+- CC BY-ND 4.0 license-file gap — needs an operator decision before the new disclosure text is fully
+  settled.
+- `building-width-calculator.dtcg.json` (a third token file) still has its own, still-unreconciled set
+  of Private Office zone-depth numbers, different again from both the old wrong "confirmed" value and
+  the real CAD-sourced one now in `key-plans.dtcg.json` — same bug family, not yet fixed there.
+- "Swiss air requirement" (operator-mentioned) — searched, not found in any text-based source this
+  session; may be in a PDF not yet read, or may not exist. Don't fabricate it.
+- Deferred design work (unchanged from pass 1, still logged in the BRIEF): drafting-sheet layout system,
+  GUID-as-visual-mark, live constraint-composition tool, and the 3D-viewport decision gate (real
+  AGPL-xeokit vs. MIT/MPL-@thatopen licensing tradeoff, needs explicit operator sign-off before any
+  engineering starts — already flagged as an open question elsewhere in the project).
+
+**Operator preferences surfaced:**
+- **"No hype, must be real" is an operating standard, not a one-time note** — applies to visual concepts
+  (rejected an invented diagram in favor of a real, already-shipped catalog entry), specific factual
+  claims (rejected an unverifiable brand/chair claim), and terminology (checked "Bundle" against real
+  sources before using it). When in doubt, go find the real primary source rather than write plausible
+  copy — this operator will ask "how does this relate back to X" if a concept feels invented, and that
+  question is a genuine signal to reconsider the concept, not just execute better.
+- **Expects the agent to actually dig into real files the operator points at** (`inputs/`'s dated folders,
+  `cluster-totebox-jennifer`), including reading PDFs/binary-ish sources directly, not just theorizing
+  from summaries — and to keep digging across multiple redirects in the same session without losing
+  the thread.
+- **Comfortable reversing an earlier research-backed decision** (RD.7's deliberate color differentiation)
+  when a more important goal (family continuity) emerges — don't over-anchor on a previous session's
+  "confirmed" research conclusion if the operator gives new, explicit direction.
+- **Values a dedicated high-effort pass for register-sensitive text** (asked for legal disclosure text
+  to be written "as if they were a hyperscaler lawyer at a big law firm" — a specific, deliberate framing
+  worth reusing for future legal/compliance copy needs on this archive).
+- Sensitive personal/corporate archives (`cluster-totebox-jennifer`) contain real investor-relations and
+  corporate-response material alongside useful general research — correctly scoped research agents to
+  read the general/public material (industry reports, methodology PDFs) while explicitly not opening or
+  summarizing anything that looked like confidential business content; this distinction mattered and
+  should carry forward to any future research into personal Totebox directories.
+
+---
+
 ## 2026-07-03 | totebox@claude-code | DTCG token gap closure + BIM-Objects-CMS redesign (research-heavy, 7 subagents)
 
 **Done:**
@@ -162,41 +261,3 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 - Reacts strongly and specifically to competitor/sibling-site comparisons ("is a dog," "way better") — take this
   as a genuine escalation signal warranting a structural response (full redesign), not just another polish pass.
 
----
-
-## 2026-07-02 | totebox@claude-code | live-site diagnosis + escalation to Command
-
-**Done:**
-- Session lock written; role confirmed (Totebox, cluster/project-bim)
-- Startup reads: manifest, session brief (inbox/outbox/NOTAM/context), rules, briefs README, session-start
-- Operator asked me to check bim.woodfinegroup.com ("does not look good"). Diagnosed root cause: foundry-prod
-  is still serving the OLD `app-orchestration-bim` — all 5 CSS files 404 (unstyled page), `/readyz` shows
-  `tokens_count: 0, components_count: 0`, `/tokens.json` returns `{}`
-- Confirmed on this workspace VM that `local-bim.service` already runs the NEW `app-privategit-bim` on
-  127.0.0.1:9096, fully healthy and styled (components_count: 18) — the fix already exists locally, it just
-  hasn't been promoted/deployed to foundry-prod
-- Sent HIGH-priority escalation to Command (`command-20260702-escalation-bim-woodfinegroup-com-is-live`)
-  re-requesting the Phase 2 production deploy originally requested 2026-06-20 (`project-bim-20260620-stage6-
-  deploy-bim`, still un-actioned as of this session)
-- Updated `BRIEF-app-privategit-bim.md` work log + carry-forward with full diagnosis
-- No file edits/commits in project-bim this session (investigation + mailbox only)
-
-**Pending / carry-forward:**
-- Stage 6 + production deploy of `app-privategit-bim` → Command Session — **now HIGH priority**, live site is
-  actively broken (see escalation msg-id above), not just a pending upgrade
-- `token_count: 0` in app-privategit-bim's own local preview (separate bug from the static-asset issue;
-  components load fine at 18) — needs investigation, likely in the DTCG token-loading path
-- NOTAM.md permission (`chmod 644`) → Command Session (outbox dispatched 2026-06-22; still unresolved per
-  inbox — Command claimed fixed 2026-05-20 but it recurred)
-- PO-1 furniture_refs: apply to `woodfine-bim-library/tokens/bim/key-plans.dtcg.json`
-- key-plans-registry.md Deliverable 1b
-- Corporate Office SVG diagrams: blocked on zone depth data
-- 6 missing DTCG files; 5 Rust crates
-- DTCG accuracy errors (operator-pending citations — do not touch)
-- 18 modified IFC files in `woodfine-bim-library/key-plans/` — still uncommitted; origin/cause unknown;
-  present across at least 3 sessions now (2026-06-25 → 2026-07-02); review before next commit
-- New inbox item (2026-07-02, broadcast): binary distribution tracking — `.agent/binary-targets.yaml` exists
-  but only declares `app-orchestration-bim`; `tool-keyplan` also has a `[[bin]]` target and is undeclared.
-  Not actioned this session — flagged, awaiting operator go-ahead to add the entry.
-
-**Operator preferences surfaced:** none new this session.

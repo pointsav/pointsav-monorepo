@@ -2,6 +2,45 @@
 
 ---
 
+## 2026-07-02 | totebox@claude-code | live-site diagnosis + escalation to Command
+
+**Done:**
+- Session lock written; role confirmed (Totebox, cluster/project-bim)
+- Startup reads: manifest, session brief (inbox/outbox/NOTAM/context), rules, briefs README, session-start
+- Operator asked me to check bim.woodfinegroup.com ("does not look good"). Diagnosed root cause: foundry-prod
+  is still serving the OLD `app-orchestration-bim` — all 5 CSS files 404 (unstyled page), `/readyz` shows
+  `tokens_count: 0, components_count: 0`, `/tokens.json` returns `{}`
+- Confirmed on this workspace VM that `local-bim.service` already runs the NEW `app-privategit-bim` on
+  127.0.0.1:9096, fully healthy and styled (components_count: 18) — the fix already exists locally, it just
+  hasn't been promoted/deployed to foundry-prod
+- Sent HIGH-priority escalation to Command (`command-20260702-escalation-bim-woodfinegroup-com-is-live`)
+  re-requesting the Phase 2 production deploy originally requested 2026-06-20 (`project-bim-20260620-stage6-
+  deploy-bim`, still un-actioned as of this session)
+- Updated `BRIEF-app-privategit-bim.md` work log + carry-forward with full diagnosis
+- No file edits/commits in project-bim this session (investigation + mailbox only)
+
+**Pending / carry-forward:**
+- Stage 6 + production deploy of `app-privategit-bim` → Command Session — **now HIGH priority**, live site is
+  actively broken (see escalation msg-id above), not just a pending upgrade
+- `token_count: 0` in app-privategit-bim's own local preview (separate bug from the static-asset issue;
+  components load fine at 18) — needs investigation, likely in the DTCG token-loading path
+- NOTAM.md permission (`chmod 644`) → Command Session (outbox dispatched 2026-06-22; still unresolved per
+  inbox — Command claimed fixed 2026-05-20 but it recurred)
+- PO-1 furniture_refs: apply to `woodfine-bim-library/tokens/bim/key-plans.dtcg.json`
+- key-plans-registry.md Deliverable 1b
+- Corporate Office SVG diagrams: blocked on zone depth data
+- 6 missing DTCG files; 5 Rust crates
+- DTCG accuracy errors (operator-pending citations — do not touch)
+- 18 modified IFC files in `woodfine-bim-library/key-plans/` — still uncommitted; origin/cause unknown;
+  present across at least 3 sessions now (2026-06-25 → 2026-07-02); review before next commit
+- New inbox item (2026-07-02, broadcast): binary distribution tracking — `.agent/binary-targets.yaml` exists
+  but only declares `app-orchestration-bim`; `tool-keyplan` also has a `[[bin]]` target and is undeclared.
+  Not actioned this session — flagged, awaiting operator go-ahead to add the entry.
+
+**Operator preferences surfaced:** none new this session.
+
+---
+
 ## 2026-06-25 | totebox@claude-code | startup + immediate shutdown (no work done)
 
 **Done:**
