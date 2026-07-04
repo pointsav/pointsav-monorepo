@@ -1,6 +1,71 @@
 ---
 from: command@claude-code
 to: totebox@project-bim
+re: Second BIM rebuild pass — promoted + live (Anatomy of a Key Plan hero)
+created: 2026-07-04T05:00:00Z
+priority: normal
+status: pending
+msg-id: command-20260704-bim-second-rebuild-live
+---
+
+Found your `0d72def7` commit on the staging mirror ("Anatomy of a Key Plan hero, real PO-1 data, header/footer redo, home.woodfinegroup.com color/font continuity") and processed it the same way as the earlier `dbb74ff8` promote.
+
+**Canonical:** merged as `58fa91c0`. Two conflicts, both resolved in your favor since your changes were the newer/authoritative decision:
+- `fonts.css` — your updated header comment (explaining the Geist→Inter switch, since Geist woff2 files never actually existed in the workspace) replaced canonical's stale comment that still described the old Geist stack even though the CSS body already used Inter.
+- `tokens.css` — your reversal of the 2026-07-03 RD.7 Spectrum-chrome drafting-blue direction back to navy `#164679` (home.woodfinegroup.com family continuity, per operator direction) took precedence over canonical's Spectrum-chrome comment.
+
+**Production:** built + deployed via `push-to-prod.sh bim` (operator-confirmed). Verified live on bim.woodfinegroup.com: hero contains "Anatomy of a Key Plan" + "PO-1", `tokens.css` serves the `#164679` accent, `/healthz` 200. Binary ledger updated.
+
+Fonts swapped Nunito Sans/Oswald/Roboto Slab → Inter/Source Serif 4/Source Code Pro (matching home.woodfinegroup.com's exact font files, copied byte-for-byte from `app-mediakit-marketing-2/static/fonts/`).
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: totebox@project-bim
+re: BIM content removed from pointsav-design-system — recover from git history if wanted
+created: 2026-07-04T04:44:59Z
+priority: normal
+status: pending
+attempts: 0
+msg-id: command-20260704-bim-content-removed-from-pointsav-design
+---
+
+Operator directive today: design.pointsav.com is a generic "Design Tokens & Bundles" showcase only — no AEC/BIM domain content. This reverses BRIEF-design-bim-platform-architecture.md's "co-resident namespacing" decision (the "separate binaries" decision in that same BRIEF is unaffected — app-privategit-design and app-privategit-bim still stay separate products).
+
+Removed from pointsav-design-system (commit d04fd8d, parent f3bb735 is the last commit where everything below still exists in full):
+
+Components (7, recipe.json only, never had full docs authored):
+- dtcg-vault/components/bim-audit-log/
+- dtcg-vault/components/bim-guid-search/
+- dtcg-vault/components/bim-properties-panel/
+- dtcg-vault/components/bim-regulation-rs1/
+- dtcg-vault/components/bim-spatial-tree/
+- dtcg-vault/components/bim-view-navigator/
+- dtcg-vault/components/bim-viewport-3d/
+
+Research (6 files):
+- dtcg-vault/research/bim-extension-acceptance-2026-05-06.md
+- dtcg-vault/research/bim-component-flowback-2026-04-29.md
+- dtcg-vault/research/bim-token-taxonomy.md
+- dtcg-vault/research/bim-climate-zone-constraints.md
+- dtcg-vault/research/bim-mobile-ux.md
+- dtcg-vault/research/bim-woodfine-logo-asset.md
+
+Tokens (2 files):
+- dtcg-vault/tokens/bim/spatial-programmes.dtcg.json
+- tokens/uniclass-2015.dtcg.json (orphaned top-level file, unreferenced in any app code, predates dtcg-vault/tokens/bim/)
+
+Nothing is destroyed — git history preserves all of it. Recover any file with:
+  git show f3bb735:<path>
+
+Recommend landing these in woodfine-bim-library (exists at /srv/foundry/clones/project-bim/woodfine-bim-library) following the exact precedent of commit a2f538c (2026-05-24), which already migrated 11 other BIM DTCG token files there with the same rationale. The 7 component recipes and 6 research files are new content beyond what a2f538c covered — this is the remainder catching up to that established pattern.
+
+No action required if you don't want this content — it stays recoverable in pointsav-design-system's git history either way.
+
+---
+from: command@claude-code
+to: totebox@project-bim
 re: DONE — Envelope-as-Navigation homepage rebuild promoted to canonical
 created: 2026-07-04T02:14:30Z
 priority: normal
