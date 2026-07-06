@@ -994,3 +994,35 @@ state as of the original escalation.
   `.agent/briefs/assets/woodfine-bim-library.html`. That candidate is a proposal for operator
   review/decision, not committed work; it is not assumed to replace anything until the operator
   says so.
+
+- **2026-07-06 — v2 built as real Rust integration, deployed to local preview (not committed to
+  production):** Operator chose to implement the v2 direction as real code, radically (not
+  incrementally) — the whole site rebuilt, not just a new home page bolted onto the old one.
+  Delegated to two sequential opus-model agent passes, each independently re-verified (rebuild +
+  clippy + a real local server run + curl, not just trusting the agent's own report):
+  - **Pass 1** — new home page (`render/catalog.rs`, 853 lines): a unified two-tab Objects/
+    Compositions catalog, server-rendered from real `woodfine-bim-library` data (7 Steelcase
+    furniture BIM Objects, 23 real Key Plan Compositions), reusing `render_kp_zone_svg_from_value`
+    and `collect_kp_leaves` rather than reimplementing them. Classification chips: Uniclass Pr
+    (Objects) vs. a Uniclass SL-tier label synthesized per category (Compositions) — no fabricated
+    codes. PO-1 shows a real, resolved "Composed from" bill-of-objects (its 6 `furniture_refs`,
+    added this session via a real `tool-keyplan` compile); the other 22 Compositions gracefully
+    fall back to the existing prose `furniture_program` list. New `bim-catalog.js` (329 lines)
+    adds tab switching/faceted filtering/a detail modal on top of the fully server-rendered page
+    (works with JS off), reading data from the existing `/api/tokens.json` endpoint (extended with
+    a `_catalog` key, no new route). `/key-plans` and `/furniture` now redirect (303) to `/` —
+    their download sub-routes are untouched.
+  - **Pass 2** — full-site visual rebuild: `/tokens`, `/tokens/{name}`, `/about`, `/disclaimers`,
+    `/search`, `/research`, `/research/{slug}` all rebuilt to the same visual family (masthead,
+    chips, spec tables) — content/logic unchanged. `/about`/`/disclaimers` legal text verified
+    byte-identical to source via an automated test (caught and fixed its own reconstruction bug
+    before reporting done). `/edit`'s CodeMirror tool and Carbon CSS surface deliberately untouched.
+  - **Verification**: `cargo build` + `cargo clippy -D warnings` clean (independently re-run, not
+    just trusted), 6 new in-process route tests pass, and a real local server run (own port,
+    outside any agent sandbox) confirmed every route 200 with real data server-rendered, redirects
+    correct, downloads working.
+  - **Deployed to `local-bim.service` (127.0.0.1:9096)** — binary + static assets synced, service
+    restarted, confirmed healthy and serving the new site. **Not pushed to foundry-prod** — that
+    remains a Command Session action gated on operator approval of this local preview, per this
+    archive's own deploy model. Two commits: `b899adbc` (small — only captured a file deletion due
+    to a `git add` slip on a stale path) + `cc25102f` (the actual 16-file redesign).

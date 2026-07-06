@@ -130,11 +130,18 @@ real Woodfine facts below):
   faceted sidebar, full spec/classification/download detail view.
 - **Compositions tab:** the real Key Plan data model — Private Office,
   Medical, Business, Laboratory, Academic, Civic (3 sizes each) + Corporate
-  Office (5 sizes) — **23 cards**, not 24. **Flag for operator:** the
-  historical brief content said "24 Key Plan cards" but its own category
-  table sums to 6×3 + 5 = 23. The build used the real enumerable data (23)
-  rather than fabricate a 24th card — confirm whether a 24th real Key Plan
-  exists that should be added, or whether "24" was simply wrong.
+  Office (5 sizes) — **23 cards, confirmed correct** (resolved 2026-07-06).
+  The historical "24 Key Plan cards" claim was a simple arithmetic slip,
+  never checked against its own table (6×3 + 5 = 23, not 24). Cross-checked
+  directly against the source-of-record
+  `woodfine-bim-library/tokens/bim/key-plans.dtcg.json` (23 leaf entries) and
+  `key-plans-registry.md`'s per-category tables (same 23) — both independent
+  sources agree. No 24th Key Plan exists in this data set; the wider registry
+  does list additional categories (Circulation/Utility, Professional
+  Centre/Suburban Office Infrastructure, Retail Select, Tech Industrial) but
+  those were never part of the "24 cards" claim's scope — they were never
+  built into the live catalog page at all, and remain a separate, larger
+  backlog of unimplemented Key Plans.
   Each Composition shows a "Composed from" bill-of-objects linking to
   constituent furniture Objects, plus the real circulation/lighting/
   accessibility constraints (DIN 18040, EN 12464-1, ASR A1.2, ArbStättV §12).
@@ -161,8 +168,10 @@ rendered as a viewable Artifact for operator review.
 
 ## Open items for the operator
 
-- Decide whether to adopt the Woodfine v2 candidate (in full, in part, or
-  not at all) — nothing has been committed to the live site.
-- Resolve the 23-vs-24 Key Plan count discrepancy noted above.
+- ~~Decide whether to adopt the Woodfine v2 candidate~~ — **decided
+  2026-07-06: adopt, build as real Rust integration** (not a static push).
+  See `BRIEF-app-privategit-bim.md`'s implementation section for the plan.
+- ~~Resolve the 23-vs-24 Key Plan count discrepancy~~ — **resolved
+  2026-07-06: 23 is correct**, see above.
 - `app-orchestration-bim`'s BIM Editor/Viewer scope is defined but
   unbuilt — genuinely future work, not scheduled here.
