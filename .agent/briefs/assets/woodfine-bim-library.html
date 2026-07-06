@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Woodfine BIM Object Library — Building-component registry &amp; Key Plan Compositions</title>
+<style>
+/* ============================================================
+   WOODFINE BIM OBJECT LIBRARY — design tokens
+   Navy is the sole interactive accent (masthead, links, CTAs,
+   the signature 3px card top-rule). Classification chips are
+   distinguished within the brand family: Objects = soft navy-tint
+   outline (Pr/Ss); Compositions = solid deep-navy fill (EF/SL).
+   Neutrals carry a slight navy bias so they read as chosen.
+   ============================================================ */
+:root {
+  color-scheme: light;
+  --bg:            #F7F9FA;
+  --surface:       #FFFFFF;
+  --surface-2:     #EEF1F5;
+  --surface-3:     #E6E7E8;
+  --border:        #E6E7E8;
+  --border-strong: #C8CCD1;
+
+  --ink:           #111827;
+  --text-2:        #54595D;
+  --muted:         #6B7280;
+
+  --navy:          #164679;   /* sole interactive accent */
+  --navy-hover:    #1D5795;
+  --navy-press:    #10365C;
+  --navy-deep:     #0B2340;
+  --navy-tint:     #E8EEF5;
+  --navy-line:     #C7D6E8;
+
+  /* Objects — Pr/Ss classification chip (soft navy outline) */
+  --pr-fg:  #164679; --pr-bg: #E8EEF5; --pr-line: #C7D6E8;
+  /* Compositions — EF/SL classification chip (solid deep navy) */
+  --ef-fg:  #FFFFFF; --ef-bg: #0B2340; --ef-line: #0B2340;
+
+  --ok:            #1E7A46;   /* semantic: compliance only */
+  --ok-bg:         #E5F1EA;
+
+  /* masthead + hero are brand constants — same in both themes */
+  --mast-bg:   #0B2340;
+  --mast-2:    #10365C;
+  --mast-fg:   #FFFFFF;
+  --mast-dim:  #9DB3CE;
+  --footer-bg: #F8F9FA;
+
+  --shadow:    0 1px 2px rgba(11,35,64,.05), 0 10px 26px -16px rgba(11,35,64,.22);
+  --shadow-lg: 0 30px 70px -26px rgba(6,20,40,.45);
+
+  --radius:    3px;   /* sharp corners — brand */
+  --maxw:      1140px;
+  --prosew:    720px;
+
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", "Iowan Old Style", serif;
+  --mono: "Source Code Pro", ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:            #0D1420;
+    --surface:       #131C2B;
+    --surface-2:     #1B2537;
+    --surface-3:     #202B3E;
+    --border:        #263248;
+    --border-strong: #3A4863;
+    --ink:           #E8EDF4;
+    --text-2:        #B4BECD;
+    --muted:         #8592A6;
+
+    --navy:          #6FA0D6;
+    --navy-hover:    #86B2E2;
+    --navy-press:    #5A8CC4;
+    --navy-deep:     #0B2340;
+    --navy-tint:     #17263E;
+    --navy-line:     #2C3E5C;
+
+    --pr-fg:  #8FB4E0; --pr-bg: #17263E; --pr-line: #2C3E5C;
+    --ef-fg:  #DDE8F6; --ef-bg: #21375A; --ef-line: #33507E;
+
+    --ok:            #5FCF89;
+    --ok-bg:         #12281C;
+
+    --footer-bg:     #101826;
+
+    --shadow:    0 1px 2px rgba(0,0,0,.45), 0 12px 30px -16px rgba(0,0,0,.65);
+    --shadow-lg: 0 34px 76px -28px rgba(0,0,0,.75);
+  }
+}
+/* manual toggle wins over the media query, both directions */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg:#F7F9FA; --surface:#FFFFFF; --surface-2:#EEF1F5; --surface-3:#E6E7E8;
+  --border:#E6E7E8; --border-strong:#C8CCD1; --ink:#111827; --text-2:#54595D; --muted:#6B7280;
+  --navy:#164679; --navy-hover:#1D5795; --navy-press:#10365C; --navy-deep:#0B2340; --navy-tint:#E8EEF5; --navy-line:#C7D6E8;
+  --pr-fg:#164679; --pr-bg:#E8EEF5; --pr-line:#C7D6E8;
+  --ef-fg:#FFFFFF; --ef-bg:#0B2340; --ef-line:#0B2340;
+  --ok:#1E7A46; --ok-bg:#E5F1EA; --footer-bg:#F8F9FA;
+  --shadow:0 1px 2px rgba(11,35,64,.05),0 10px 26px -16px rgba(11,35,64,.22);
+  --shadow-lg:0 30px 70px -26px rgba(6,20,40,.45);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg:#0D1420; --surface:#131C2B; --surface-2:#1B2537; --surface-3:#202B3E;
+  --border:#263248; --border-strong:#3A4863; --ink:#E8EDF4; --text-2:#B4BECD; --muted:#8592A6;
+  --navy:#6FA0D6; --navy-hover:#86B2E2; --navy-press:#5A8CC4; --navy-deep:#0B2340; --navy-tint:#17263E; --navy-line:#2C3E5C;
+  --pr-fg:#8FB4E0; --pr-bg:#17263E; --pr-line:#2C3E5C;
+  --ef-fg:#DDE8F6; --ef-bg:#21375A; --ef-line:#33507E;
+  --ok:#5FCF89; --ok-bg:#12281C; --footer-bg:#101826;
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 12px 30px -16px rgba(0,0,0,.65);
+  --shadow-lg:0 34px 76px -28px rgba(0,0,0,.75);
+}
+
+/* ============================================================ RESET ==== */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+}
+h1,h2,h3,h4 { margin: 0; font-weight: 700; text-wrap: balance; }
+p { margin: 0; }
+a { color: inherit; }
+button { font-family: inherit; }
+img { max-width: 100%; }
+:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; border-radius: 2px; }
+::selection { background: var(--navy-tint); color: var(--ink); }
+.mono { font-family: var(--mono); font-feature-settings:"tnum"; }
+.serif { font-family: var(--serif); }
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 clamp(16px, 4vw, 36px); }
+.eyebrow-label {
+  font-family: var(--sans); font-size: 11px; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+
+/* ============================================================ MASTHEAD == */
+.mast {
+  position: sticky; top: 0; z-index: 50;
+  background: linear-gradient(180deg, var(--mast-2), var(--mast-bg));
+  color: var(--mast-fg); border-bottom: 1px solid rgba(255,255,255,.09);
+}
+.mast__inner { display: flex; align-items: center; gap: 22px; height: 57px; }
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; flex: none; }
+.brand__mark {
+  width: 30px; height: 30px; flex: none; border: 1.5px solid rgba(255,255,255,.55);
+  display: grid; place-items: center; color: var(--mast-fg);
+}
+.brand__mark svg { width: 17px; height: 17px; display: block; }
+.brand__txt { line-height: 1.05; }
+.brand__name { font-family: var(--serif); font-weight: 700; font-size: 16px; letter-spacing: .005em; }
+.brand__sub { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--mast-dim); margin-top: 2px; }
+.mast__spacer { flex: 1 1 auto; }
+.mnav { display: flex; align-items: center; gap: 4px; }
+.mnav a {
+  text-decoration: none; color: rgba(255,255,255,.78); font-size: 13.5px; font-weight: 500;
+  padding: 18px 12px; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s;
+}
+.mnav a:hover { color: #fff; }
+.mnav a[aria-current="page"] { color: #fff; border-bottom-color: #fff; }
+.iconbtn {
+  width: 36px; height: 36px; border: 1px solid rgba(255,255,255,.24); background: rgba(255,255,255,.06);
+  color: var(--mast-fg); cursor: pointer; display: grid; place-items: center; transition: background .15s, border-color .15s;
+}
+.iconbtn:hover { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.42); }
+.iconbtn svg { width: 17px; height: 17px; }
+.iconbtn .moon { display: none; }
+.mnav-hide { display: inline-flex; }
+
+/* ============================================================ HERO ===== */
+.hero {
+  position: relative; overflow: hidden; color: #EAF1FA;
+  background:
+    radial-gradient(120% 130% at 82% -10%, rgba(41,86,140,.55) 0%, transparent 55%),
+    linear-gradient(155deg, #10365C 0%, #0B2340 58%, #071A31 100%);
+  border-bottom: 3px solid var(--navy);
+}
+.hero::before {   /* blueprint grid scrim — reads as architectural drawing */
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(140,175,220,.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(140,175,220,.16) 1px, transparent 1px);
+  background-size: 44px 44px; background-position: center;
+  -webkit-mask-image: radial-gradient(130% 90% at 78% 0%, #000 0%, transparent 66%);
+          mask-image: radial-gradient(130% 90% at 78% 0%, #000 0%, transparent 66%);
+}
+.hero::after {   /* implied photography vignette scrim */
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background: linear-gradient(0deg, rgba(4,14,28,.5), transparent 45%);
+}
+.hero__inner {
+  position: relative; z-index: 1; display: grid;
+  grid-template-columns: minmax(0,1.25fr) minmax(0,.75fr);
+  gap: clamp(28px, 5vw, 60px); align-items: center;
+  padding: clamp(42px, 6.5vw, 84px) 0 clamp(38px, 5vw, 66px);
+}
+.hero__eyebrow {
+  display: inline-flex; align-items: center; gap: 9px; margin-bottom: 22px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  color: #BFD4EE; border: 1px solid rgba(160,190,225,.34); padding: 6px 12px;
+}
+.hero__eyebrow b { color: #EAF1FA; font-weight: 600; letter-spacing: .04em; }
+.hero h1 {
+  font-family: var(--serif); font-weight: 700; color: #fff;
+  font-size: clamp(31px, 4.7vw, 52px); line-height: 1.06; letter-spacing: -.01em; max-width: 15ch;
+}
+.hero h1 em { font-style: italic; color: #BAD3F0; }
+.hero__lede {
+  font-family: var(--serif); font-size: clamp(16px, 1.8vw, 19px); line-height: 1.62;
+  color: #D3E0F0; max-width: 52ch; margin-top: 22px;
+}
+.hero__lede strong { color: #fff; font-weight: 600; }
+.hero__sites { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 8px; }
+.hero__sites span {
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .02em; color: #CFE0F2;
+  border: 1px solid rgba(150,182,220,.3); background: rgba(23,50,84,.4); padding: 5px 11px;
+}
+.hero__panel {
+  border: 1px solid rgba(150,182,220,.28); background: rgba(11,26,49,.55);
+  backdrop-filter: blur(3px); box-shadow: 0 24px 60px -30px rgba(0,0,0,.7);
+}
+.hero__panel-h {
+  padding: 13px 18px; border-bottom: 1px solid rgba(150,182,220,.24);
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #9FBCE0;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.hero__panel-h .live { display:inline-flex; align-items:center; gap:7px; color:#7FD4A2; }
+.hero__panel-h .live::before { content:""; width:7px; height:7px; border-radius:50%; background:#7FD4A2; box-shadow:0 0 0 3px rgba(127,212,162,.22); }
+.hero__stats { display: grid; grid-template-columns: 1fr 1fr; }
+.hstat { padding: 16px 18px; border-top: 1px solid rgba(150,182,220,.16); border-right: 1px solid rgba(150,182,220,.16); }
+.hstat:nth-child(2n){ border-right: 0; }
+.hstat:nth-child(-n+2){ border-top: 0; }
+.hstat__n { font-family: var(--mono); font-size: 26px; font-weight: 600; color: #fff; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.hstat__n small { font-size: .5em; color: #9FBCE0; font-weight: 500; }
+.hstat__l { font-size: 11.5px; color: #A9C2DE; margin-top: 3px; line-height: 1.35; }
+
+/* ============================================================ PREAMBLE = */
+.section { padding: clamp(40px, 6vw, 68px) 0; }
+.section--alt { background: var(--surface-3); }
+.sec-head { max-width: var(--prosew); margin-bottom: 30px; }
+.sec-head .kicker { color: var(--navy); margin-bottom: 12px; display:inline-block; }
+.sec-head h2 { font-family: var(--serif); font-size: clamp(23px, 3vw, 31px); line-height: 1.15; letter-spacing: -.01em; }
+.sec-head p { color: var(--text-2); font-size: 16px; line-height: 1.62; margin-top: 14px; }
+
+.def-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 22px; }
+.def {
+  background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--navy);
+  padding: 26px 26px 24px; box-shadow: var(--shadow);
+}
+.def__tag {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; font-weight: 600;
+  color: var(--navy); display: inline-flex; align-items: center; gap: 9px; margin-bottom: 14px;
+}
+.def__tag svg { width: 15px; height: 15px; }
+.def h3 { font-family: var(--serif); font-size: 21px; letter-spacing: -.01em; margin-bottom: 10px; }
+.def p { color: var(--text-2); font-size: 14.5px; line-height: 1.64; }
+.def p + p { margin-top: 11px; }
+.def code {
+  font-family: var(--mono); font-size: .85em; background: var(--surface-2);
+  padding: 1px 5px; border: 1px solid var(--border); color: var(--ink);
+}
+.def__foot {
+  margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border);
+  font-family: var(--mono); font-size: 11.5px; color: var(--muted); letter-spacing: .01em;
+}
+
+.enable-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
+.encard { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--navy); padding: 22px 22px 20px; }
+.encard h4 { font-family: var(--serif); font-size: 17px; margin-bottom: 10px; display: flex; align-items: center; gap: 11px; }
+.encard h4 .ic { width: 30px; height: 30px; flex: none; border: 1px solid var(--navy-line); background: var(--navy-tint); color: var(--navy); display: grid; place-items: center; }
+.encard h4 .ic svg { width: 16px; height: 16px; }
+.encard p { color: var(--text-2); font-size: 14px; line-height: 1.6; }
+.encard p em { font-style: normal; font-family: var(--mono); font-size: .86em; background: var(--surface-2); border:1px solid var(--border); padding: 0 4px; color: var(--ink); }
+
+/* ============================================================ CATALOG == */
+.catalog { padding: clamp(30px,4vw,44px) 0 84px; }
+.tabbar {
+  display: flex; align-items: center; gap: 2px; border-bottom: 1px solid var(--border-strong);
+  margin-bottom: 26px; position: sticky; top: 57px; z-index: 30; background: var(--bg); padding-top: 6px;
+}
+.tab {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  padding: 13px 18px 14px; font-size: 15px; font-weight: 600; color: var(--muted);
+  border-bottom: 2px solid transparent; margin-bottom: -1px; display: flex; align-items: center; gap: 10px;
+  transition: color .15s;
+}
+.tab:hover { color: var(--text-2); }
+.tab[aria-selected="true"] { color: var(--navy); border-bottom-color: var(--navy); }
+.tab .count {
+  font-family: var(--mono); font-size: 11px; font-weight: 600; padding: 2px 8px;
+  background: var(--surface-2); color: var(--muted); font-variant-numeric: tabular-nums; border: 1px solid var(--border);
+}
+.tab[aria-selected="true"] .count { background: var(--navy-tint); color: var(--navy); border-color: var(--navy-line); }
+
+.catbody { display: grid; grid-template-columns: 250px minmax(0,1fr); gap: 30px; align-items: start; }
+
+/* ---- Facets ---- */
+.facets { position: sticky; top: 116px; }
+.search {
+  display: flex; align-items: center; gap: 9px; border: 1px solid var(--border-strong);
+  background: var(--surface); padding: 0 12px; margin-bottom: 20px;
+}
+.search svg { width: 16px; height: 16px; color: var(--muted); flex: none; }
+.search input {
+  border: 0; background: none; outline: none; color: var(--ink); font-family: var(--sans);
+  font-size: 14px; padding: 11px 0; width: 100%;
+}
+.fgrp { border-top: 1px solid var(--border); padding: 15px 0 8px; }
+.fgrp:first-of-type { border-top: 0; padding-top: 0; }
+.fgrp__h { font-family: var(--mono); font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin-bottom: 11px; font-weight: 600; }
+.facet { display: flex; align-items: center; gap: 10px; padding: 5px 4px; cursor: pointer; font-size: 13.5px; color: var(--text-2); user-select: none; }
+.facet:hover { background: var(--surface-2); color: var(--ink); }
+.facet input { position: absolute; opacity: 0; width: 0; height: 0; }
+.facet__box { width: 16px; height: 16px; border: 1.5px solid var(--border-strong); flex: none; display: grid; place-items: center; transition: background .12s, border-color .12s; }
+.facet__box svg { width: 11px; height: 11px; color: #fff; opacity: 0; }
+.facet input:checked + .facet__box { background: var(--navy); border-color: var(--navy); }
+.facet input:checked + .facet__box svg { opacity: 1; }
+.facet input:focus-visible + .facet__box { outline: 2px solid var(--navy); outline-offset: 2px; }
+.facet__lbl { flex: 1 1 auto; }
+.facet__lbl code { font-family: var(--mono); font-size: 12px; }
+.facet__n { font-family: var(--mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.freset {
+  margin-top: 15px; width: 100%; text-align: left; background: none; border: 0; cursor: pointer;
+  font-size: 12.5px; color: var(--navy); font-weight: 600; padding: 6px 4px;
+}
+.freset:hover { text-decoration: underline; }
+.freset[hidden] { display: none; }
+
+/* ---- Grid + cards ---- */
+.gridhead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
+.gridhead .res { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.gridhead .res b { color: var(--ink); font-weight: 600; }
+.gridhead .hint { font-size: 12.5px; color: var(--muted); }
+.cardgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(228px, 1fr)); gap: 18px; }
+
+.card {
+  border: 1px solid var(--border); border-top: 3px solid var(--navy); background: var(--surface);
+  cursor: pointer; text-align: left; padding: 0; width: 100%; color: inherit; display: flex; flex-direction: column;
+  transition: transform .16s cubic-bezier(.2,.7,.3,1), box-shadow .16s, border-color .16s;
+}
+.card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--border-strong); border-top-color: var(--navy-hover); }
+.card:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+.thumb {
+  aspect-ratio: 5 / 4; position: relative; overflow: hidden; border-bottom: 1px solid var(--border);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--navy) 8%, var(--surface)), var(--surface) 62%);
+}
+.thumb::before {
+  content:""; position:absolute; inset:0;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--navy) 20%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--navy) 20%, transparent) 1px, transparent 1px);
+  background-size: 20px 20px; background-position: center; opacity: .5;
+}
+.thumb__glyph { position: absolute; inset: 0; display: grid; place-items: center; color: color-mix(in srgb, var(--navy) 80%, var(--ink)); }
+.thumb__glyph b { font-size: 40px; line-height: 1; font-weight: 400; }
+.thumb__id { position: absolute; left: 9px; top: 8px; font-family: var(--mono); font-size: 10px; letter-spacing: .04em; color: var(--muted); background: color-mix(in srgb, var(--surface) 78%, transparent); padding: 2px 6px; border: 1px solid var(--border); }
+.thumb__fmt { position: absolute; bottom: 8px; right: 8px; display: flex; gap: 4px; }
+.thumb__fmt span { font-family: var(--mono); font-size: 9.5px; padding: 2px 5px; background: color-mix(in srgb, var(--surface) 82%, transparent); border: 1px solid var(--border); color: var(--muted); }
+.card__body { padding: 13px 14px 15px; display: flex; flex-direction: column; gap: 9px; flex: 1 1 auto; }
+.card__name { font-size: 14.5px; font-weight: 600; line-height: 1.3; letter-spacing: -.005em; }
+.card__meta { font-size: 12px; color: var(--muted); margin-top: auto; }
+.card__meta .em { color: var(--text-2); font-weight: 500; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; font-weight: 600;
+  letter-spacing: .01em; padding: 3px 8px; border: 1px solid transparent; white-space: nowrap; width: fit-content;
+}
+.chip .lv { font-size: 9px; opacity: .82; letter-spacing: .06em; }
+.chip--pr { color: var(--pr-fg); background: var(--pr-bg); border-color: var(--pr-line); }
+.chip--ef { color: var(--ef-fg); background: var(--ef-bg); border-color: var(--ef-line); }
+.chip--plain { color: var(--text-2); background: var(--surface-2); border-color: var(--border); }
+.chip--ok { color: var(--ok); background: var(--ok-bg); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+
+.empty { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--muted); border: 1px dashed var(--border-strong); }
+.empty svg { width: 30px; height: 30px; margin-bottom: 10px; opacity: .6; }
+
+/* ============================================================ DETAIL PANEL */
+.modal { position: fixed; inset: 0; z-index: 100; display: none; }
+.modal.is-open { display: block; }
+.modal__bk { position: absolute; inset: 0; background: rgba(6,16,32,.58); backdrop-filter: blur(3px); }
+.modal__panel {
+  position: absolute; top: 0; right: 0; height: 100%; width: min(660px, 100%);
+  background: var(--surface); border-left: 1px solid var(--border); box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column; animation: slidein .26s cubic-bezier(.2,.7,.25,1);
+}
+@keyframes slidein { from { transform: translateX(26px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .modal__panel { animation: none; } .card, .hero__panel { transition: none; } html { scroll-behavior: auto; } }
+.modal__head { display: flex; align-items: flex-start; gap: 14px; padding: 20px 22px 16px; border-bottom: 1px solid var(--border); }
+.modal__head-main { flex: 1 1 auto; min-width: 0; }
+.modal__ey { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 11px; }
+.modal__id { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.modal__title { font-family: var(--serif); font-size: 22px; letter-spacing: -.01em; line-height: 1.2; }
+.modal__sub { font-size: 13px; color: var(--text-2); margin-top: 6px; }
+.modal__close { flex: none; width: 36px; height: 36px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-2); cursor: pointer; display: grid; place-items: center; }
+.modal__close:hover { background: var(--surface-2); color: var(--ink); }
+.modal__close svg { width: 17px; height: 17px; }
+.modal__body { overflow-y: auto; padding: 20px 22px 34px; display: flex; flex-direction: column; gap: 24px; }
+
+.preview { aspect-ratio: 16/9; border: 1px solid var(--border); overflow: hidden; position: relative;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--navy) 12%, var(--surface)), var(--surface) 60%); }
+.preview::before { content:""; position:absolute; inset:0;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--navy) 22%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--navy) 22%, transparent) 1px, transparent 1px);
+  background-size: 28px 28px; background-position: center; opacity: .5; }
+.preview__glyph { position:absolute; inset:0; display:grid; place-items:center; color: color-mix(in srgb, var(--navy) 78%, var(--ink)); }
+.preview__glyph b { font-size: 60px; line-height: 1; font-weight: 400; }
+.preview__cap { position:absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.detail-desc { color: var(--text-2); font-size: 14px; line-height: 1.64; }
+
+.sect__h { font-family: var(--mono); font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 13px; display: flex; align-items: center; gap: 10px; }
+.sect__h::after { content:""; flex: 1 1 auto; height: 1px; background: var(--border); }
+
+.spectable { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.spectable th, .spectable td { text-align: left; padding: 9px 2px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.spectable th { font-weight: 500; color: var(--muted); width: 46%; }
+.spectable td { color: var(--ink); font-variant-numeric: tabular-nums; }
+.spectable td.mono { font-family: var(--mono); font-size: 12.5px; }
+.spectable tr:last-child th, .spectable tr:last-child td { border-bottom: 0; }
+
+.classblock { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border); overflow: hidden; }
+.clrow { background: var(--surface-2); padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.clrow__k { font-size: 12px; color: var(--muted); }
+.clrow__v { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--ink); text-align: right; }
+.clrow__v small { display: block; font-weight: 500; color: var(--text-2); font-size: 11px; margin-top: 2px; }
+
+.dl__row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.fmtseg { display: inline-flex; border: 1px solid var(--border-strong); overflow: hidden; }
+.fmtseg button { appearance: none; border: 0; background: var(--surface); cursor: pointer; padding: 9px 15px; font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--text-2); border-right: 1px solid var(--border); transition: background .12s, color .12s; }
+.fmtseg button:last-child { border-right: 0; }
+.fmtseg button[aria-pressed="true"] { background: var(--navy-tint); color: var(--navy); }
+.fmtseg button:hover { background: var(--surface-2); }
+.fmtseg button .sz { display: block; font-size: 10px; font-weight: 500; color: var(--muted); margin-top: 2px; }
+.btn { appearance: none; border: 0; cursor: pointer; padding: 11px 18px; font-size: 13.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 9px; background: var(--navy); color: #fff; box-shadow: var(--shadow); }
+.btn svg { width: 16px; height: 16px; }
+.btn:hover { background: var(--navy-hover); }
+.btn:active { background: var(--navy-press); }
+.dl__note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+.dl__note code { font-family: var(--mono); background: var(--surface-2); border: 1px solid var(--border); padding: 0 4px; }
+
+.areabox { display: flex; align-items: baseline; gap: 12px; padding: 15px 16px; border: 1px solid var(--border); border-left: 3px solid var(--navy); background: var(--surface-2); }
+.areabox__n { font-family: var(--mono); font-size: 26px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.areabox__n small { font-size: .5em; color: var(--muted); font-weight: 500; }
+.areabox__l { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+
+.zones { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.zone { border: 1px solid var(--border); background: var(--surface); padding: 12px 13px; }
+.zone__k { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--navy); font-weight: 600; }
+.zone__t { font-size: 12px; color: var(--text-2); margin-top: 3px; }
+.zone__n { font-family: var(--mono); font-size: 17px; font-weight: 600; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.zone__n small { font-size: .6em; color: var(--muted); font-weight: 500; }
+.zone__bar { height: 4px; background: var(--surface-3); margin-top: 8px; overflow: hidden; }
+.zone__bar i { display: block; height: 100%; background: var(--navy); }
+
+.bill { display: flex; flex-direction: column; gap: 8px; }
+.billrow { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 1px solid var(--border); background: var(--surface); padding: 11px 12px; cursor: pointer; color: inherit; transition: border-color .14s, background .14s; }
+.billrow:hover { border-color: var(--navy-line); background: var(--surface-2); }
+.billrow:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+.billrow__qty { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--navy); background: var(--navy-tint); border: 1px solid var(--navy-line); padding: 4px 8px; flex: none; min-width: 42px; text-align: center; }
+.billrow__main { flex: 1 1 auto; min-width: 0; }
+.billrow__name { font-size: 13.5px; font-weight: 600; }
+.billrow__code { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 2px; }
+.billrow__arrow { color: var(--muted); flex: none; }
+.billrow__arrow svg { width: 16px; height: 16px; display: block; }
+.billrow--ext { cursor: default; }
+.billrow--ext:hover { border-color: var(--border); background: var(--surface); }
+.billrow--ext .billrow__arrow { opacity: 0; }
+
+.cons-list { display: flex; flex-direction: column; gap: 8px; }
+.cons { display: flex; gap: 11px; align-items: flex-start; font-size: 13px; color: var(--text-2); border: 1px solid var(--border); border-left: 3px solid var(--navy); padding: 10px 12px; background: var(--surface); }
+.cons__ico { color: var(--navy); flex: none; margin-top: 1px; }
+.cons__ico svg { width: 15px; height: 15px; display: block; }
+.cons b { color: var(--ink); font-weight: 600; }
+.cons code { font-family: var(--mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--border); padding: 0 4px; color: var(--ink); }
+.appears { font-size: 12.5px; color: var(--muted); }
+.appears b { color: var(--text-2); }
+
+/* ============================================================ FOOTER === */
+.foot { background: var(--footer-bg); border-top: 1px solid var(--border); color: var(--muted); }
+.foot__top { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 34px; padding: 44px 0 30px; }
+.foot__brand .brand__name { font-family: var(--serif); font-size: 17px; color: var(--ink); }
+.foot__brand p { font-size: 13px; color: var(--text-2); margin-top: 12px; max-width: 40ch; line-height: 1.6; }
+.foot__col h5 { font-family: var(--mono); font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; font-weight: 600; }
+.foot__col a, .foot__col span { display: block; font-size: 13.5px; color: var(--text-2); text-decoration: none; padding: 4px 0; }
+.foot__col a:hover { color: var(--navy); }
+.foot__disc { border-top: 1px solid var(--border); padding: 22px 0; }
+.foot__disc details { max-width: none; }
+.foot__disc summary { cursor: pointer; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); font-weight: 600; list-style: none; display: flex; align-items: center; gap: 9px; }
+.foot__disc summary::-webkit-details-marker { display: none; }
+.foot__disc summary .chev { transition: transform .18s; }
+.foot__disc details[open] summary .chev { transform: rotate(90deg); }
+.foot__disc summary svg { width: 13px; height: 13px; }
+.foot__disc p { font-size: 12px; line-height: 1.65; color: var(--muted); margin-top: 14px; max-width: 92ch; }
+.foot__disc p + p { margin-top: 10px; }
+.foot__badges { border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; gap: 12px 10px; padding: 20px 0; }
+.foot__badges .badge { font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; color: var(--text-2); border: 1px solid var(--border-strong); padding: 5px 10px; }
+.foot__badges .tm { font-size: 11.5px; color: var(--muted); }
+.foot__bottom { border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: space-between; padding: 20px 0 40px; }
+.foot__bottom .cc { font-size: 12.5px; color: var(--text-2); }
+.foot__bottom .loc { font-family: var(--mono); font-size: 11.5px; letter-spacing: .05em; color: var(--muted); }
+
+/* ============================================================ RESPONSIVE */
+@media (max-width: 1000px) {
+  .hero__inner { grid-template-columns: 1fr; }
+  .hero__panel { max-width: 460px; }
+  .catbody { grid-template-columns: 1fr; }
+  .facets { position: static; }
+  .facets__wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 4px 24px; }
+  .foot__top { grid-template-columns: 1fr 1fr; }
+  .foot__brand { grid-column: 1 / -1; }
+}
+@media (max-width: 720px) {
+  .def-grid, .enable-grid { grid-template-columns: 1fr; }
+  .mnav-hide { display: none; }
+  .brand__sub { display: none; }
+  .modal__panel { width: 100%; border-left: 0; }
+  .zones { grid-template-columns: 1fr; }
+  .foot__top { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) {
+  .cardgrid { grid-template-columns: repeat(auto-fill, minmax(148px,1fr)); }
+  .hero__stats { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================================================== MASTHEAD ==== -->
+<header class="mast">
+  <div class="wrap mast__inner">
+    <a class="brand" href="#top" aria-label="Woodfine BIM Object Library — home">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+          <path d="M12 2.5 3.5 7v10L12 21.5 20.5 17V7L12 2.5Z"/><path d="M3.5 7 12 11.5 20.5 7M12 11.5v10"/>
+        </svg>
+      </span>
+      <span class="brand__txt">
+        <span class="brand__name">Woodfine</span>
+        <span class="brand__sub">BIM Object Library</span>
+      </span>
+    </a>
+    <div class="mast__spacer"></div>
+    <nav class="mnav mnav-hide" aria-label="Primary">
+      <a href="#catalog" aria-current="page">Library</a>
+      <a href="#site-types">Site-Types</a>
+      <a href="#standards">Standards</a>
+      <a href="#about">About</a>
+    </nav>
+    <button class="iconbtn" id="themeToggle" aria-label="Toggle colour theme" title="Toggle light / dark">
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- =================================================== HERO ==== -->
+  <section class="hero">
+    <div class="wrap hero__inner">
+      <div class="hero__main">
+        <span class="hero__eyebrow">BUILDING-COMPONENT REGISTRY <b>· open standards, versioned</b></span>
+        <h1>One authoritative source for every <em>building component</em> across the portfolio.</h1>
+        <p class="hero__lede">
+          The Woodfine BIM Object Library is the issuer-of-record registry for every atomic
+          building component in Woodfine's property portfolio — and the
+          <strong>Key Plan Compositions</strong> our architects assemble from them. Each object is
+          classified, versioned and inspectable, and is built on
+          <strong>open standards — IFC and DTCG tokens</strong>, not vendor lock-in.
+        </p>
+        <div class="hero__sites" id="site-types" aria-label="Development site-types">
+          <span>Professional Centre</span>
+          <span>Suburban Office</span>
+          <span>Retail Select</span>
+          <span>Tech Industrial</span>
+        </div>
+      </div>
+      <aside class="hero__panel" aria-label="Registry summary">
+        <div class="hero__panel-h"><span>Registry — current release</span><span class="live">SYNCED</span></div>
+        <div class="hero__stats">
+          <div class="hstat"><div class="hstat__n" id="stat-obj">0</div><div class="hstat__l">Atomic BIM Objects, classified &amp; versioned</div></div>
+          <div class="hstat"><div class="hstat__n" id="stat-comp">0</div><div class="hstat__l">Key Plan Compositions across 7 categories</div></div>
+          <div class="hstat"><div class="hstat__n">4</div><div class="hstat__l">Development site-types under one model</div></div>
+          <div class="hstat"><div class="hstat__n">IFC<small> 4.3</small></div><div class="hstat__l">Uniclass 2015 classified · DTCG tokens</div></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============================================ DEFINITION ==== -->
+  <section class="section" id="standards">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow-label kicker">The intellectual spine</span>
+        <h2>An Object is an atom. A Composition is what you build from atoms.</h2>
+        <p>
+          The distinction runs through the entire library. Get it right and every downstream party —
+          architect, property manager, tenant — reads the same specification the same way.
+        </p>
+      </div>
+      <div class="def-grid">
+        <article class="def">
+          <div class="def__tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16"/></svg>
+            BIM Object — the atom
+          </div>
+          <h3>A single, atomic building-component specification.</h3>
+          <p>
+            One product or entity — a task chair, a desk, a storage pedestal — identified by its
+            <code>IFC&nbsp;4.3</code> entity class and its <code>Uniclass&nbsp;2015</code> classification at the
+            <strong>Products (Pr)</strong> or <strong>Systems (Ss)</strong> level.
+          </p>
+          <p>
+            It carries manufacturer data and the constraints that apply to it. A BIM Object is
+            <strong>never a composed layout</strong> — it is the atom that Key Plans are assembled from.
+          </p>
+          <div class="def__foot">Detail view → manufacturer spec sheet · classification · download formats</div>
+        </article>
+        <article class="def">
+          <div class="def__tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7.5" height="7.5"/><rect x="13" y="3.5" width="7.5" height="7.5"/><rect x="3.5" y="13" width="7.5" height="7.5"/><rect x="13" y="13" width="7.5" height="7.5"/></svg>
+            COMPOSITION — the assembly
+          </div>
+          <h3>A Key Plan template, assembled from many objects.</h3>
+          <p>
+            A named template built from several BIM Objects to satisfy a design methodology and the
+            applicable building code. Classified one tier up, at Uniclass
+            <strong>Elements/functions (EF)</strong> or <strong>Spaces/locations (SL)</strong> level — not a
+            BIM Object itself.
+          </p>
+          <p>
+            A Composition's detail view resolves to a <strong>&ldquo;Composed from&rdquo;</strong> bill of objects —
+            links to its constituent atoms — with the circulation, lighting and accessibility standards it
+            holds constant.
+          </p>
+          <div class="def__foot">Detail view → bill of objects · constraints satisfied · computed area</div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ WHAT IT ENABLES ==== -->
+  <section class="section section--alt" id="about">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow-label kicker">What one registry enables</span>
+        <h2>Authoritative once — consumed by everyone downstream.</h2>
+      </div>
+      <div class="enable-grid">
+        <article class="encard">
+          <h4><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V8l6-4 6 4v13M10 21v-5h4v5"/></svg></span>Architects</h4>
+          <p>Start from <em>pre-validated</em>, code-compliant building blocks instead of a blank sheet. Every Object and Key Plan is classified, versioned and inspectable — pull only what the standard already approves.</p>
+        </article>
+        <article class="encard">
+          <h4><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span>Property managers</h4>
+          <p>Clean data continuity from design through operations. The same registry version that specified a component carries its property set into facilities management — no re-keying at handover, no orphaned records.</p>
+        </article>
+        <article class="encard">
+          <h4><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12v9M12 12 4 7.5M12 12l8-4.5"/></svg></span>Developers &amp; tenants</h4>
+          <p>Transparent, inspectable specifications. Fit-out begins from an approved Composition — not a blank file — that holds wayfinding, lighting and life-safety standards constant across every leasehold.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================ CATALOG ==== -->
+  <section class="catalog wrap" id="catalog">
+    <div class="sec-head" style="margin-bottom:18px">
+      <span class="eyebrow-label kicker">The library</span>
+      <h2>Browse the registry.</h2>
+    </div>
+    <div class="tabbar" role="tablist" aria-label="Catalog type">
+      <button class="tab" role="tab" id="tab-objects" aria-selected="true" aria-controls="panel-catalog" data-tab="objects">
+        BIM Objects <span class="count" id="count-objects">0</span>
+      </button>
+      <button class="tab" role="tab" id="tab-compositions" aria-selected="false" aria-controls="panel-catalog" data-tab="compositions">
+        Key Plan Compositions <span class="count" id="count-compositions">0</span>
+      </button>
+    </div>
+
+    <div class="catbody" id="panel-catalog" role="tabpanel" aria-labelledby="tab-objects">
+      <aside class="facets">
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input type="search" id="searchInput" placeholder="Search name, ID, classification…" aria-label="Search catalog">
+        </label>
+        <div class="facets__wrap" id="facetHost"></div>
+        <button class="freset" id="resetFacets" hidden>Clear all filters</button>
+      </aside>
+
+      <div class="grid-region">
+        <div class="gridhead">
+          <div class="res"><b id="resCount">0</b> <span id="resNoun">objects</span></div>
+          <div class="hint">Select any card for the full specification.</div>
+        </div>
+        <div class="cardgrid" id="cardGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================= FOOTER ==== -->
+  <footer class="foot">
+    <div class="wrap">
+      <div class="foot__top">
+        <div class="foot__brand">
+          <span class="brand__name">Woodfine BIM Object Library</span>
+          <p>The building-component registry of record for Woodfine's property portfolio. Published and maintained by Woodfine Capital Projects Inc.</p>
+        </div>
+        <div class="foot__col">
+          <h5>Library</h5>
+          <a href="#catalog">BIM Objects</a>
+          <a href="#catalog">Key Plan Compositions</a>
+          <a href="#site-types">Development site-types</a>
+          <a href="#standards">Classification model</a>
+        </div>
+        <div class="foot__col">
+          <h5>Contact</h5>
+          <span>Woodfine Capital Projects Inc.</span>
+          <a href="mailto:library@woodfinegroup.com">library@woodfinegroup.com</a>
+          <span>Vancouver — corporate</span>
+          <span>New York — investor relations</span>
+        </div>
+      </div>
+
+      <div class="foot__disc">
+        <details>
+          <summary>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            Informational purposes &amp; forward-looking statements
+          </summary>
+          <p>
+            The specifications, classifications and Key Plan Compositions presented in this library are provided by
+            Woodfine Capital Projects Inc. for general informational purposes only, and do not constitute an offer,
+            solicitation, or recommendation with respect to any security, property, or leasehold. This material is
+            published consistent with continuous-disclosure practice under National Instrument 51-102 and the guidance
+            of OSC Staff Notice 51-721, and should be read together with Woodfine's continuous-disclosure record.
+          </p>
+          <p>
+            Certain statements herein — including references to planned, intended, or target portfolio composition,
+            site-type deployment, and library coverage — are forward-looking information. Forward-looking information
+            reflects current expectations and is subject to risks and uncertainties that may cause actual results to
+            differ materially. Woodfine undertakes no obligation to update or revise any forward-looking information,
+            whether as a result of new information, future events, or otherwise, except as required by applicable
+            securities law.
+          </p>
+        </details>
+      </div>
+
+      <div class="foot__badges">
+        <span class="badge">IFC 4.3</span>
+        <span class="badge">Uniclass 2015</span>
+        <span class="badge">DTCG tokens</span>
+        <span class="badge">DIN 18040 · EN 12464-1</span>
+        <span class="tm">Woodfine&trade; and the Woodfine mark are trademarks of Woodfine Capital Projects Inc.</span>
+      </div>
+
+      <div class="foot__bottom">
+        <span class="cc">© 2026 Woodfine Capital Projects Inc. All rights reserved.</span>
+        <span class="loc">VANCOUVER | NEW YORK</span>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<!-- ==================================================== DETAIL PANEL ==== -->
+<div class="modal" id="modal" aria-hidden="true">
+  <div class="modal__bk" data-close></div>
+  <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1" id="modalPanel">
+    <div class="modal__head">
+      <div class="modal__head-main" id="modalHead"></div>
+      <button class="modal__close" data-close aria-label="Close detail panel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal__body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   WOODFINE BIM OBJECT LIBRARY — data model
+   Objects  : atomic components, Uniclass Pr/Ss + IFC 4.3 entity class.
+   Compositions (Key Plans): named templates, Uniclass EF/SL, built from
+   a "composed from" bill of objects.
+   ===================================================================== */
+
+const OBJECTS = [
+  {
+    id: "WBL-OBJ-0412", ref: "leap-v2",
+    name: "Leap V2 Task Chair",
+    ifc: "IfcFurniture", ifcType: "CHAIR",
+    uni: "Pr_40_50_12_85", uniLabel: "Task chairs", lv: "Pr",
+    mfr: "Steelcase", series: "462 Series", zone: "Zone 1 · Habitat", glyph: "⧗",
+    formats: [["RFA","2.4 MB"],["IFC","880 KB"],["DWG","420 KB"]],
+    desc: "Ergonomic swivel task chair with LiveBack dynamic support, specified as the Habitat-zone work seat across the portfolio's office site-types. Registry-pinned to the Woodfine design-token set for finish and arm configuration.",
+    specs: [
+      ["Product series", "462 Series"],
+      ["Footprint (W × D)", "686 × 629 mm"],
+      ["Height range", "978 – 1099 mm"],
+      ["Seat width", "515 mm"],
+      ["Seat depth adjustment", "100 mm (Natural Glide)"],
+      ["Back support", "LiveBack, variable backstop"],
+      ["Arms", "4-way adjustable"],
+      ["Rated load", "136 kg"],
+      ["Base", "5-star, dual-wheel castors"],
+      ["Warranty", "12 yr, 3-shift use"],
+      ["Environmental", "Cradle to Cradle certified"]
+    ]
+  },
+  {
+    id: "WBL-OBJ-0418", ref: "series-1",
+    name: "Series 1 Task Chair",
+    ifc: "IfcFurniture", ifcType: "CHAIR",
+    uni: "Pr_40_50_12_85", uniLabel: "Task chairs", lv: "Pr",
+    mfr: "Steelcase", series: "Series 1", zone: "Zone 1 · Habitat", glyph: "⌇",
+    formats: [["RFA","2.1 MB"],["IFC","760 KB"],["DWG","390 KB"]],
+    desc: "Compact, cost-efficient task chair used for visitor and secondary Habitat-zone seating where full LiveBack articulation is not required. Shares the portfolio finish token set with the Leap V2.",
+    specs: [
+      ["Product series", "Series 1"],
+      ["Footprint (W × D)", "635 × 610 mm"],
+      ["Height range", "940 – 1050 mm"],
+      ["Seat width", "500 mm"],
+      ["Back support", "Integrated LiveBack (fixed weight)"],
+      ["Arms", "Height-adjustable"],
+      ["Rated load", "136 kg"],
+      ["Warranty", "12 yr"]
+    ]
+  },
+  {
+    id: "WBL-OBJ-0231", ref: "migration-se",
+    name: "Migration SE Height-Adjustable Desk",
+    ifc: "IfcFurniture", ifcType: "DESK",
+    uni: "Pr_40_50_88_23", uniLabel: "Desks", lv: "Pr",
+    mfr: "Steelcase", series: "Migration SE", zone: "Zone 1 · Habitat", glyph: "▭",
+    formats: [["RFA","3.1 MB"],["IFC","1.2 MB"],["DWG","540 KB"],["DTCG","12 KB"]],
+    desc: "Sit-to-stand single desk set at the facade glazing line as the primary Habitat-zone workstation. Parametric on top size; the standard portfolio instance is the 58″ × 29″ top.",
+    specs: [
+      ["Standard top (W × D)", "1473 × 737 mm (58″ × 29″)"],
+      ["Height range", "648 – 1289 mm"],
+      ["Adjustment", "Electric, dual-motor"],
+      ["Transit speed", "38 mm/s"],
+      ["Rated load", "56 kg (distributed)"],
+      ["Controller", "4-preset, collision-sensing"],
+      ["Cable management", "Integral spine + tray"],
+      ["Warranty", "10 yr (5 yr electrical)"]
+    ]
+  },
+  {
+    id: "WBL-OBJ-0244", ref: "ology",
+    name: "Ology Bench Desk",
+    ifc: "IfcFurniture", ifcType: "DESK",
+    uni: "Pr_40_50_88_23", uniLabel: "Desks", lv: "Pr",
+    mfr: "Steelcase", series: "Ology", zone: "Zone 1 · Habitat", glyph: "▬",
+    formats: [["RFA","3.4 MB"],["IFC","1.4 MB"],["DWG","610 KB"]],
+    desc: "Height-adjustable bench desk used in the open-plan Corporate Office Compositions, run back-to-back on a shared spine. Wellbeing-oriented adjustment range with quiet drive.",
+    specs: [
+      ["Bench module (W × D)", "1400 × 800 mm"],
+      ["Height range", "650 – 1285 mm"],
+      ["Adjustment", "Electric, whisper drive"],
+      ["Configuration", "Back-to-back bench, shared spine"],
+      ["Rated load", "70 kg"],
+      ["Warranty", "10 yr"]
+    ]
+  },
+  {
+    id: "WBL-OBJ-0605", ref: "groupwork-round",
+    name: "Groupwork 36″ Round Table",
+    ifc: "IfcFurniture", ifcType: "TABLE",
+    uni: "Pr_40_50_88_78", uniLabel: "Tables", lv: "Pr",
+    mfr: "Steelcase", series: "Groupwork", zone: "Zone 2 · Magazine", glyph: "◯",
+    formats: [["RFA","1.9 MB"],["IFC","690 KB"],["DWG","310 KB"]],
+    desc: "Round meeting and collaboration table for Magazine-zone huddle and consultation settings. Fixed-height; specified where a small-group surface is composed into a Key Plan.",
+    specs: [
+      ["Diameter", "914 mm (36″)"],
+      ["Bounding (W × D)", "914 × 914 mm"],
+      ["Height", "724 mm"],
+      ["Top", "Laminate, 25 mm, radiused edge"],
+      ["Base", "Column, disc foot"],
+      ["Seats", "3 – 4"],
+      ["Warranty", "12 yr"]
+    ]
+  },
+  {
+    id: "WBL-OBJ-0512", ref: "ts-pedestal",
+    name: "TS Series Mobile Pedestal",
+    ifc: "IfcFurniture", ifcType: "STORAGE",
+    uni: "Pr_40_50_30_54", uniLabel: "Storage units", lv: "Pr",
+    mfr: "Steelcase", series: "TS Series", zone: "Zone 2 · Magazine", glyph: "▤",
+    formats: [["RFA","1.6 MB"],["IFC","620 KB"],["DWG","270 KB"]],
+    desc: "Under-desk mobile pedestal providing personal storage in the Magazine zone, one per Habitat workstation. Box-box-file drawer stack on castors.",
+    specs: [
+      ["Footprint (W × D)", "387 × 559 mm"],
+      ["Height", "533 mm"],
+      ["Drawers", "Box / box / file"],
+      ["Mobility", "5 castors, central lock"],
+      ["Load per drawer", "18 kg"],
+      ["Finish", "Portfolio token set"],
+      ["Warranty", "12 yr"]
+    ]
+  },
+  {
+    id: "WBL-OBJ-0538", ref: "universal-file",
+    name: "Universal Lateral File",
+    ifc: "IfcFurniture", ifcType: "STORAGE",
+    uni: "Pr_40_50_30_54", uniLabel: "Storage units", lv: "Pr",
+    mfr: "Steelcase", series: "Universal Storage", zone: "Zone 2 · Magazine", glyph: "▥",
+    formats: [["RFA","1.8 MB"],["IFC","700 KB"],["DWG","300 KB"]],
+    desc: "Two-drawer lateral file for shared Magazine-zone records and team storage. Counterweighted anti-tip; used as the storage atom in Medical, Laboratory and team Compositions.",
+    specs: [
+      ["Footprint (W × D)", "914 × 470 mm"],
+      ["Height (2-drawer)", "705 mm"],
+      ["Filing", "Lateral, A4 / foolscap"],
+      ["Safety", "Counterweight anti-tip interlock"],
+      ["Load per drawer", "34 kg"],
+      ["Warranty", "12 yr"]
+    ]
+  },
+  {
+    id: "WBL-OBJ-0721", ref: "acoustic-screen",
+    name: "Acoustic Privacy Screen — generic-equivalent",
+    ifc: "IfcFurniture", ifcType: "SCREEN",
+    uni: "Pr_40_50_75_02", uniLabel: "Screens", lv: "Pr",
+    mfr: "Woodfine generic-equivalent", series: "Corridor screen", zone: "Zone 3 · Corridor", glyph: "▮",
+    formats: [["RFA","1.1 MB"],["IFC","480 KB"],["DWG","200 KB"]],
+    desc: "Desk-mounted acoustic screen setting the Corridor-zone boundary and speech-privacy datum between Habitat rows. Specified generic-equivalent so any compliant supplier may satisfy the token.",
+    specs: [
+      ["Panel (W × H)", "1400 × 400 mm"],
+      ["Core", "PET acoustic felt, 24 mm"],
+      ["Speech reduction", "Class C absorption"],
+      ["Mount", "Desk-clamp, tool-free"],
+      ["Finish", "Portfolio token set"],
+      ["Warranty", "5 yr"]
+    ]
+  }
+];
+
+const OBJ_BY_REF = Object.fromEntries(OBJECTS.map(o => [o.ref, o]));
+
+/* --------------------------------------------------------------------
+   Compositions — generated from category descriptors so the 24 Key Plans
+   stay internally consistent. Real furniture facts are baked into the
+   Private Office / Medical / Business builders per the design brief.
+   Zone split: Habitat 56% · Magazine 22% · Corridor 22% (from computed NLA).
+   -------------------------------------------------------------------- */
+
+const CONS = {
+  area:   "Minimum usable area per Habitat occupant held at <b>8.0 m²</b> — <code>ASR A1.2 §4.1</code>.",
+  window: "Habitat desks set within <b>6.0 m</b> of the facade glazing line for daylight autonomy — <code>EN 12464-1</code>.",
+  aisle:  "Circulation aisles: <b>875 mm</b> single-file, <b>1200 mm</b> two-way — <code>ArbStättV §12</code>.",
+  turn:   "Accessible turning provision: <b>1500 mm</b> diameter circle (750 mm radius) clear of all fixtures and door swing — <code>DIN 18040</code>.",
+  clinic: "Clinical positions maintain a <b>1200 mm</b> two-way circulation loop to the treatment core with unobstructed practitioner egress.",
+  bench:  "Laboratory benches hold a <b>1500 mm</b> back-to-back working clearance; fume positions vent to the base-building riser.",
+  egress: "Assembly seating maintains two independent egress paths at <b>1200 mm</b> clear to the corridor datum.",
+  counter:"Public service counters provide one accessible transaction position at <b>760 mm</b> with knee clearance per bank."
+};
+
+const CATS = [
+  {
+    key: "private-office", label: "Private Office", glyph: "◱",
+    uni: "SL_20_10_58", uniLabel: "Cellular office areas", lv: "SL",
+    sizes: ["Small","Medium","Large"],
+    metrics: [[9.4,3.0,1],[16.6,4.5,2],[24.9,6.0,3]],
+    cons: ["area","window","aisle","turn"],
+    furn: k => (k+1) + " Habitat desk" + (k?"s":"") + " at the facade, " + [1,2,2][k] + "-seat meeting provision",
+    bill: k => [
+      { ref:"migration-se", qty:k+1, note:"Habitat desk at facade" },
+      { ref:"leap-v2",      qty:k+1, note:"Task chair" },
+      { ref:"ts-pedestal",  qty:k+1, note:"Mobile pedestal" },
+      { ref:"series-1",     qty:[1,2,2][k], note:"Visitor chair" },
+      k===2 ? { ref:"groupwork-round", qty:1, note:"In-office meeting table" } : null
+    ].filter(Boolean)
+  },
+  {
+    key: "medical", label: "Medical", glyph: "✚",
+    uni: "SL_25_10_53", uniLabel: "Consulting / treatment areas", lv: "SL",
+    sizes: ["Small","Medium","Large"],
+    metrics: [[30,6,2],[56,9,4],[92,14,6]],
+    cons: ["clinic","turn","aisle"],
+    furn: k => [2,4,6][k] + " dental treatment chairs, " + [1,1,2][k] + " practitioner office" + ([1,1,2][k]>1?"s":""),
+    bill: k => [
+      { name:"Dental treatment chair", code:"Pr_65_60_23_18", qty:[2,4,6][k], ext:true },
+      { name:"Practitioner office fit-out", code:"SL_20_10_58", qty:[1,1,2][k], ext:true },
+      { ref:"leap-v2",       qty:[1,1,2][k], note:"Clinician chair" },
+      { ref:"universal-file", qty:[1,2,3][k], note:"Records storage" },
+      { ref:"series-1",      qty:[3,5,8][k], note:"Waiting-room seat" }
+    ]
+  },
+  {
+    key: "business", label: "Business", glyph: "◧",
+    uni: "SL_20_10_08", uniLabel: "Business areas", lv: "SL",
+    sizes: ["Small","Medium","Large"],
+    metrics: [[78,10,9],[132,14,16],[205,20,25]],
+    cons: ["area","window","aisle","turn"],
+    furn: k => ["3 × 3","4 × 4","5 × 5"][k] + " workstation grid, " + [2,3,5][k] + " exec offices, " + [1,1,2][k] + " conference table" + ([1,1,2][k]>1?"s":""),
+    bill: k => [
+      { ref:"migration-se", qty:[9,16,25][k], note:"Workstation desk (grid)" },
+      { ref:"leap-v2",      qty:[9,16,25][k], note:"Task chair" },
+      { name:"Executive office fit-out", code:"SL_20_10_58", qty:[2,3,5][k], ext:true },
+      { ref:"groupwork-round", qty:[1,1,2][k], note:"Conference table" },
+      { ref:"ts-pedestal",  qty:[9,16,25][k], note:"Mobile pedestal" },
+      { ref:"acoustic-screen", qty:[6,10,16][k], note:"Workstation screen" }
+    ]
+  },
+  {
+    key: "laboratory", label: "Laboratory", glyph: "⚗",
+    uni: "SL_25_15_46", uniLabel: "Laboratory areas", lv: "SL",
+    sizes: ["Small","Medium","Large"],
+    metrics: [[48,7,6],[92,11,12],[150,16,18]],
+    cons: ["bench","aisle","turn"],
+    furn: k => [4,8,12][k] + " bench modules, " + [1,2,3][k] + " fume position" + ([1,2,3][k]>1?"s":""),
+    bill: k => [
+      { name:"Laboratory bench module", code:"Pr_40_50_88_40", qty:[4,8,12][k], ext:true },
+      { name:"Fume cupboard", code:"Pr_65_52_38_28", qty:[1,2,3][k], ext:true },
+      { ref:"series-1",       qty:[4,8,12][k], note:"Lab stool" },
+      { ref:"universal-file", qty:[2,3,5][k], note:"Reagent storage" }
+    ]
+  },
+  {
+    key: "academic", label: "Academic", glyph: "△",
+    uni: "SL_20_05_04", uniLabel: "Teaching areas", lv: "SL",
+    sizes: ["Small","Medium","Large"],
+    metrics: [[80,9,30],[156,13,60],[264,20,110]],
+    cons: ["egress","aisle","turn"],
+    furn: k => [30,60,110][k] + "-seat teaching room, " + [2,4,6][k] + " seminar tables",
+    bill: k => [
+      { name:"Tiered lecture seat", code:"Pr_40_50_12_40", qty:[30,60,110][k], ext:true },
+      { ref:"migration-se",   qty:[2,3,4][k], note:"Instructor desk" },
+      { ref:"leap-v2",        qty:[2,3,4][k], note:"Instructor chair" },
+      { ref:"groupwork-round", qty:[2,4,6][k], note:"Seminar table" }
+    ]
+  },
+  {
+    key: "civic", label: "Civic", glyph: "◈",
+    uni: "SL_20_10_15", uniLabel: "Civic / community areas", lv: "SL",
+    sizes: ["Small","Medium","Large"],
+    metrics: [[60,8,14],[118,12,30],[200,18,52]],
+    cons: ["counter","turn","aisle"],
+    furn: k => [2,3,5][k] + " service positions, " + [8,16,28][k] + " waiting seats",
+    bill: k => [
+      { name:"Public bench seating (linear)", code:"Pr_40_50_12_60", qty:[6,12,20][k], ext:true },
+      { name:"Service counter position", code:"SL_20_10_15", qty:[2,3,5][k], ext:true },
+      { ref:"series-1",        qty:[8,16,28][k], note:"Waiting seat" },
+      { ref:"groupwork-round", qty:[1,2,3][k], note:"Consultation table" }
+    ]
+  },
+  {
+    key: "corporate-office", label: "Corporate Office", glyph: "▦",
+    uni: "SL_20_10_54", uniLabel: "Open-plan office areas", lv: "SL",
+    sizes: ["Full Floor","Half Floor","Third Floor","Quarter Floor","Eighth Floor"],
+    fractions: [1, 0.5, 1/3, 0.25, 0.125],
+    cons: ["area","window","aisle","turn"],
+    corp: true
+  }
+];
+
+function round1(n){ return Math.round(n*10)/10; }
+
+function buildComposition(cat, size, k) {
+  let area, facade, occ, desks;
+  if (cat.corp) {
+    const f = cat.fractions[k];
+    desks  = Math.round(120 * f);
+    area   = Math.round(1800 * f);
+    facade = Math.round(168 * f);
+    occ    = Math.round(180 * f);
+  } else {
+    [area, facade, occ] = cat.metrics[k];
+  }
+  const z1 = round1(area * 0.56), z2 = round1(area * 0.22), z3 = round1(area * 0.22);
+  const bill = cat.corp
+    ? [
+        { ref:"ology",           qty:desks, note:"Sit-stand bench desk" },
+        { ref:"leap-v2",         qty:desks, note:"Task chair" },
+        { ref:"ts-pedestal",     qty:desks, note:"Mobile pedestal" },
+        { ref:"acoustic-screen", qty:Math.round(desks/2), note:"Desk screen" },
+        { ref:"groupwork-round", qty:Math.max(1, Math.round(desks/12)), note:"Collaboration table" },
+        { ref:"universal-file",  qty:Math.max(1, Math.round(desks/8)),  note:"Team storage" }
+      ]
+    : cat.bill(k);
+  const furn = cat.corp
+    ? (desks + " open-plan bench desks, " + Math.max(1, Math.round(desks/12)) + " collaboration settings")
+    : cat.furn(k);
+  return {
+    id: cat.key.toUpperCase().replace(/[^A-Z]/g,"").slice(0,4) + "-" + (cat.corp ? ["FF","HF","TF","QF","EF"][k] : ["S","M","L"][k]),
+    cat: cat.label, catKey: cat.key, size,
+    name: cat.label + " — " + size,
+    uni: cat.uni, uniLabel: cat.uniLabel, lv: cat.lv, glyph: cat.glyph,
+    area: area.toFixed(area < 100 ? 1 : 0), facade, occ, furn,
+    zones: { z1, z2, z3 },
+    composedFrom: bill,
+    cons: cat.cons,
+    desc: "A repeatable " + cat.label + " Key Plan at the " + size + " tier — a named Composition assembled to a fixed methodology, deployed across the portfolio's " +
+          "site-types and instanced by placement. Furniture arrangement: " + furn + "."
+  };
+}
+
+const COMPOSITIONS = [];
+CATS.forEach(cat => cat.sizes.forEach((size,k) => COMPOSITIONS.push(buildComposition(cat, size, k))));
+
+/* ---- Which Compositions use a given object (for the "Appears in" line) ---- */
+const OBJ_USED_IN = {};
+COMPOSITIONS.forEach(c => c.composedFrom.forEach(b => {
+  if (b.ref) { (OBJ_USED_IN[b.ref] = OBJ_USED_IN[b.ref] || new Set()).add(c.cat); }
+}));
+
+/* =====================================================================
+   RENDER + INTERACTION
+   ===================================================================== */
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const state = { tab: "objects", search: "", facets: {} };
+
+const FACET_CONFIG = {
+  objects: [
+    { key: "uniLabel", label: "Uniclass Pr / Ss", get: o => [o.uniLabel] },
+    { key: "mfr",      label: "Manufacturer",     get: o => [o.mfr] },
+    { key: "zone",     label: "Layout zone",      get: o => [o.zone] },
+    { key: "fmt",      label: "File format",      get: o => o.formats.map(f => f[0]) }
+  ],
+  compositions: [
+    { key: "cat",  label: "Category",           get: c => [c.cat] },
+    { key: "size", label: "Size tier",          get: c => [c.size] },
+    { key: "lv",   label: "Classification tier", get: c => [c.lv === "SL" ? "SL — Spaces/locations" : "EF — Elements/functions"] }
+  ]
+};
+
+function activeData() { return state.tab === "objects" ? OBJECTS : COMPOSITIONS; }
+
+function matchesFacets(item) {
+  const cfg = FACET_CONFIG[state.tab];
+  for (const f of cfg) {
+    const sel = state.facets[f.key];
+    if (sel && sel.size) {
+      if (![...sel].some(v => f.get(item).includes(v))) return false;
+    }
+  }
+  return true;
+}
+function matchesSearch(item) {
+  if (!state.search) return true;
+  const q = state.search.toLowerCase();
+  const hay = [item.id, item.name, item.mfr, item.uni, item.uniLabel, item.ifc, item.cat, item.size].filter(Boolean).join(" ").toLowerCase();
+  return hay.includes(q);
+}
+function visibleItems() { return activeData().filter(i => matchesFacets(i) && matchesSearch(i)); }
+
+/* ---- Facets ---- */
+function renderFacets() {
+  const host = $("#facetHost");
+  host.innerHTML = "";
+  const cfg = FACET_CONFIG[state.tab];
+  cfg.forEach(f => {
+    const counts = {};
+    activeData().forEach(item => {
+      if (!matchesSearch(item)) return;
+      const ok = cfg.every(g => {
+        if (g.key === f.key) return true;
+        const sel = state.facets[g.key];
+        if (!sel || !sel.size) return true;
+        return [...sel].some(v => g.get(item).includes(v));
+      });
+      if (!ok) return;
+      f.get(item).forEach(v => counts[v] = (counts[v]||0)+1);
+    });
+    const values = Object.keys(counts);
+    if (!values.length) return;
+    // keep declared order for size tiers; otherwise alphabetical
+    if (f.key === "size") { const order = ["Small","Medium","Large","Full Floor","Half Floor","Third Floor","Quarter Floor","Eighth Floor"]; values.sort((a,b)=>order.indexOf(a)-order.indexOf(b)); }
+    else values.sort();
+    const grp = document.createElement("div");
+    grp.className = "fgrp";
+    grp.innerHTML = `<div class="fgrp__h">${f.label}</div>`;
+    values.forEach(v => {
+      const sel = state.facets[f.key] && state.facets[f.key].has(v);
+      const lbl = document.createElement("label");
+      lbl.className = "facet";
+      lbl.innerHTML = `
+        <input type="checkbox" ${sel?"checked":""} data-fkey="${f.key}" value="${v.replace(/"/g,'&quot;')}">
+        <span class="facet__box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L19 7"/></svg></span>
+        <span class="facet__lbl">${v}</span>
+        <span class="facet__n">${counts[v]}</span>`;
+      grp.appendChild(lbl);
+    });
+    host.appendChild(grp);
+  });
+  const anySel = Object.values(state.facets).some(s => s && s.size);
+  $("#resetFacets").hidden = !anySel && !state.search;
+}
+
+/* ---- Cards ---- */
+function chipHtml(item) {
+  return state.tab === "objects"
+    ? `<span class="chip chip--pr"><span class="lv">${item.lv}</span>${item.uni}</span>`
+    : `<span class="chip chip--ef"><span class="lv">${item.lv}</span>${item.uni}</span>`;
+}
+function renderGrid() {
+  const grid = $("#cardGrid");
+  const items = visibleItems();
+  $("#resCount").textContent = items.length;
+  $("#resNoun").textContent = state.tab === "objects"
+    ? (items.length === 1 ? "object" : "objects")
+    : (items.length === 1 ? "composition" : "compositions");
+  grid.innerHTML = "";
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <div>No ${state.tab === "objects" ? "objects" : "compositions"} match the current filters.</div></div>`;
+    return;
+  }
+  items.forEach(item => {
+    const fmts = (item.formats || []).map(f => `<span>${f[0]}</span>`).join("");
+    const meta = state.tab === "objects"
+      ? `<span class="em">${item.mfr}</span> · ${item.ifcType}`
+      : `<span class="em">${item.size}</span> · ${item.area} m² · ${item.occ} occ.`;
+    const card = document.createElement("button");
+    card.className = "card";
+    card.setAttribute("aria-label", `${item.name} — view specification`);
+    card.innerHTML = `
+      <span class="thumb">
+        <span class="thumb__id">${item.id}</span>
+        <span class="thumb__glyph"><b aria-hidden="true">${item.glyph}</b></span>
+        ${fmts ? `<span class="thumb__fmt">${fmts}</span>` : ""}
+      </span>
+      <span class="card__body">
+        ${chipHtml(item)}
+        <span class="card__name">${item.name}</span>
+        <span class="card__meta">${meta}</span>
+      </span>`;
+    card.addEventListener("click", () => openModal(item, state.tab));
+    grid.appendChild(card);
+  });
+}
+
+/* ---- Detail: object ---- */
+const NUMRE = /[×°.]|mm|kg|m\/s|W|hr|Pa|MB|KB|yr|\bA4\b|\d/;
+function specRow(k, v) { return `<tr><th>${k}</th><td class="${NUMRE.test(v)?"mono":""}">${v}</td></tr>`; }
+
+function objectDetailHtml(o) {
+  const specs = o.specs.map(s => specRow(s[0], s[1])).join("");
+  const fmtBtns = o.formats.filter(f => ["RFA","IFC","DWG"].includes(f[0])).map((f,i) =>
+    `<button aria-pressed="${i===0?"true":"false"}" data-fmt="${f[0]}">.${f[0].toLowerCase()}<span class="sz">${f[1]}</span></button>`).join("");
+  const used = OBJ_USED_IN[o.ref] ? [...OBJ_USED_IN[o.ref]] : [];
+  return `
+  <div class="preview">
+    <div class="preview__glyph"><b aria-hidden="true">${o.glyph}</b></div>
+    <span class="preview__cap">geometry preview · LOD 350 · ${o.id}</span>
+  </div>
+  <p class="detail-desc">${o.desc}</p>
+
+  <div>
+    <div class="sect__h">Specification &amp; property set</div>
+    <table class="spectable"><tbody>${specs}</tbody></table>
+  </div>
+
+  <div>
+    <div class="sect__h">Classification &amp; registry</div>
+    <div class="classblock">
+      <div class="clrow"><span class="clrow__k">IFC 4.3 entity class</span><span class="clrow__v">${o.ifc}<small>PredefinedType · ${o.ifcType}</small></span></div>
+      <div class="clrow"><span class="clrow__k">Uniclass 2015 — ${o.lv} (Products)</span><span class="clrow__v">${o.uni}<small>${o.uniLabel}</small></span></div>
+      <div class="clrow"><span class="clrow__k">Woodfine registry reference</span><span class="clrow__v">${o.id}<small>${o.mfr} · ${o.series}</small></span></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="sect__h">Applicable constraints</div>
+    <div class="cons-list">
+      <div class="cons"><span class="cons__ico">${SHIELD}</span><span>Assigned to <b>${o.zone}</b> in the Woodfine layout model.</span></div>
+      <div class="cons"><span class="cons__ico">${SHIELD}</span><span>${CONS.window}</span></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="sect__h">Download format</div>
+    <div class="dl__row">
+      <div class="fmtseg" role="group" aria-label="Download format">${fmtBtns}</div>
+      <button class="btn" type="button">${DLICON} Add to model</button>
+    </div>
+    <p class="dl__note">Resolved from registry reference <code>${o.id}@latest</code>; finish and hardware pin to the Woodfine DTCG token set on checkout.</p>
+    ${used.length ? `<p class="appears" style="margin-top:12px">Appears in <b>${used.length}</b> Key Plan ${used.length===1?"category":"categories"}: ${used.join(" · ")}.</p>` : ""}
+  </div>`;
+}
+
+/* ---- Detail: composition ---- */
+function compositionDetailHtml(c) {
+  const bill = c.composedFrom.map(b => {
+    const linked = b.ref && OBJ_BY_REF[b.ref];
+    const nm = linked ? OBJ_BY_REF[b.ref].name : b.name;
+    const code = linked ? OBJ_BY_REF[b.ref].uni : b.code;
+    const suffix = linked ? ` · ${OBJ_BY_REF[b.ref].id}` : " · external reference";
+    return `<button class="billrow${linked?"":" billrow--ext"}" type="button" ${linked?`data-obj="${b.ref}"`:"disabled"}>
+        <span class="billrow__qty">${b.qty}×</span>
+        <span class="billrow__main">
+          <span class="billrow__name">${nm}</span>
+          <span class="billrow__code">${code}${suffix}</span>
+        </span>
+        <span class="billrow__arrow">${linked?ARROW:""}</span>
+      </button>`;
+  }).join("");
+  const cons = c.cons.map(key => `<div class="cons"><span class="cons__ico">${SHIELD}</span><span>${CONS[key]}</span></div>`).join("");
+  const zt = c.zones.z1 + c.zones.z2 + c.zones.z3;
+  const zone = (k,t,n) => `<div class="zone"><div class="zone__k">${k}</div><div class="zone__t">${t}</div><div class="zone__n">${n}<small> m²</small></div><div class="zone__bar"><i style="width:${Math.round(n/zt*100)}%"></i></div></div>`;
+  return `
+  <div class="preview">
+    <div class="preview__glyph"><b aria-hidden="true">${c.glyph}</b></div>
+    <span class="preview__cap">key-plan tile · assembled template · ${c.uni}</span>
+  </div>
+  <p class="detail-desc">${c.desc}</p>
+
+  <div class="areabox">
+    <span class="areabox__n">${c.area}<small> m²</small></span>
+    <span class="areabox__l">Net leasable area · ${c.facade} m facade frontage · ${c.occ} occupant${c.occ===1?"":"s"}</span>
+  </div>
+
+  <div>
+    <div class="sect__h">Zone allocation</div>
+    <div class="zones">
+      ${zone("Zone 1","Habitat · desks / natural light", c.zones.z1)}
+      ${zone("Zone 2","Magazine · storage", c.zones.z2)}
+      ${zone("Zone 3","Corridor · circulation", c.zones.z3)}
+    </div>
+  </div>
+
+  <div>
+    <div class="sect__h">Composed from — bill of objects</div>
+    <div class="bill">${bill}</div>
+  </div>
+
+  <div>
+    <div class="sect__h">Constraints satisfied</div>
+    <div class="cons-list">${cons}</div>
+  </div>
+
+  <div>
+    <div class="sect__h">Classification &amp; registry</div>
+    <div class="classblock">
+      <div class="clrow"><span class="clrow__k">Uniclass 2015 — ${c.lv} (${c.lv==="SL"?"Spaces/locations":"Elements/functions"})</span><span class="clrow__v">${c.uni}<small>${c.uniLabel}</small></span></div>
+      <div class="clrow"><span class="clrow__k">Key Plan reference</span><span class="clrow__v">WBL-KP-${c.id}<small>${c.cat} · ${c.size}</small></span></div>
+      <div class="clrow"><span class="clrow__k">Accessibility</span><span class="clrow__v" style="color:var(--ok)">DIN 18040 ✓<small>1500 mm turning circle held</small></span></div>
+    </div>
+  </div>`;
+}
+
+/* ---- shared icons ---- */
+const SHIELD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V7l8-4z"/><path d="M9 12l2 2 4-4"/></svg>';
+const ARROW  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+const DLICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>';
+
+/* ---- Modal control ---- */
+let lastFocus = null;
+function openModal(item, tab) {
+  const isObj = tab === "objects";
+  lastFocus = document.activeElement;
+  const chip = isObj
+    ? `<span class="chip chip--pr"><span class="lv">${item.lv}</span>${item.uni}</span><span class="chip chip--plain">${item.ifc}</span>`
+    : `<span class="chip chip--ef"><span class="lv">${item.lv}</span>${item.uni}</span><span class="chip chip--plain">KEY PLAN</span>`;
+  $("#modalHead").innerHTML = `
+    <div class="modal__ey">${chip}<span class="modal__id mono">${item.id}</span></div>
+    <h2 class="modal__title" id="modalTitle">${item.name}</h2>
+    <p class="modal__sub">${isObj ? item.mfr + " · " + item.series + " · certified BIM Object" : "Composition · assembled from " + item.composedFrom.length + " object types"}</p>`;
+  $("#modalBody").innerHTML = isObj ? objectDetailHtml(item) : compositionDetailHtml(item);
+
+  $$("#modalBody .fmtseg button").forEach(b => b.addEventListener("click", () => {
+    $$("#modalBody .fmtseg button").forEach(x => x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+  }));
+  $$("#modalBody [data-obj]").forEach(b => b.addEventListener("click", () => openModal(OBJ_BY_REF[b.dataset.obj], "objects")));
+
+  const modal = $("#modal");
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+  $("#modalBody").scrollTop = 0;
+  $("#modalPanel").focus();
+}
+function closeModal() {
+  const modal = $("#modal");
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+
+/* ---- Tabs ---- */
+function setTab(tab) {
+  state.tab = tab; state.facets = {}; state.search = "";
+  $("#searchInput").value = "";
+  $$(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.tab === tab)));
+  $("#panel-catalog").setAttribute("aria-labelledby", "tab-" + tab);
+  renderFacets(); renderGrid();
+}
+
+/* ---- Events ---- */
+$$(".tab").forEach(t => t.addEventListener("click", () => setTab(t.dataset.tab)));
+$$(".tab").forEach((t,i,arr) => t.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+    e.preventDefault();
+    const next = arr[(i + (e.key==="ArrowRight"?1:arr.length-1)) % arr.length];
+    next.focus(); next.click();
+  }
+}));
+$("#facetHost").addEventListener("change", e => {
+  const cb = e.target.closest("input[data-fkey]");
+  if (!cb) return;
+  const k = cb.dataset.fkey;
+  state.facets[k] = state.facets[k] || new Set();
+  cb.checked ? state.facets[k].add(cb.value) : state.facets[k].delete(cb.value);
+  renderFacets(); renderGrid();
+});
+let searchTimer;
+$("#searchInput").addEventListener("input", e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { state.search = e.target.value.trim(); renderFacets(); renderGrid(); }, 90);
+});
+$("#resetFacets").addEventListener("click", () => {
+  state.facets = {}; state.search = ""; $("#searchInput").value = "";
+  renderFacets(); renderGrid();
+});
+$$("[data-close]").forEach(el => el.addEventListener("click", closeModal));
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#modal").classList.contains("is-open")) closeModal(); });
+
+/* ---- Theme toggle ---- */
+const root = document.documentElement;
+function syncToggleIcon() {
+  const dark = root.getAttribute("data-theme") === "dark"
+    || (!root.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+  $(".iconbtn .sun").style.display = dark ? "none" : "block";
+  $(".iconbtn .moon").style.display = dark ? "block" : "none";
+}
+$("#themeToggle").addEventListener("click", () => {
+  const cur = root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  root.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+  syncToggleIcon();
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncToggleIcon);
+
+/* ---- Init ---- */
+$("#count-objects").textContent = OBJECTS.length;
+$("#count-compositions").textContent = COMPOSITIONS.length;
+$("#stat-obj").textContent = OBJECTS.length;
+$("#stat-comp").textContent = COMPOSITIONS.length;
+syncToggleIcon();
+setTab("objects");
+</script>
+</body>
+</html>

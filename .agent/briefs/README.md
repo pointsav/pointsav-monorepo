@@ -6,14 +6,15 @@ Active briefs and artifact routing for this archive.
 
 | Brief | Status | Summary |
 |---|---|---|
-| [BRIEF-app-privategit-bim.md](BRIEF-app-privategit-bim.md) | active | BIM Object Library web surface; live on bim.woodfinegroup.com; includes the Key Plans SVG diagram system (merged 2026-07-06 — see below) |
-| [BRIEF-tool-keyplan.md](BRIEF-tool-keyplan.md) | active | tool-keyplan Rust crate v0.0.1; DTCG validation engine; key-plans-registry.md pending; functionally unchanged since 2026-05-22 |
+| [BRIEF-app-privategit-bim.md](BRIEF-app-privategit-bim.md) | active | CMS/catalog for BIM Objects + Compositions; live on bim.woodfinegroup.com; 2026-07-06 v2 design direction proposed (see simulation brief) |
+| [BRIEF-app-orchestration-bim.md](BRIEF-app-orchestration-bim.md) | active | Forward scope redefined 2026-07-06 as the **BIM Editor/Viewer** (distinct from the CMS above) — software not started, definition locked first. Carries the historical Key Plans Live Site record (that specific feature moved to app-privategit-bim). |
+| [BRIEF-tool-keyplan.md](BRIEF-tool-keyplan.md) | active | tool-keyplan Rust crate v0.0.1; the Composition compiler; functionally unchanged since 2026-05-22 |
 
-## Superseded briefs
+## Reference briefs
 
-| Brief | Superseded by | Why |
-|---|---|---|
-| [BRIEF-key-plans-site.md](BRIEF-key-plans-site.md) | BRIEF-app-privategit-bim.md | Described the standalone `app-orchestration-bim`/`local-bim-orchestration` service, retired 2026-07-02. Still-valid technical content (SVG tier system, furniture counts) merged into the successor's "Key Plans SVG diagram system" section. Kept for archival record, not deleted. |
+| Brief | Summary |
+|---|---|
+| [BRIEF-simulation-bim-library-denver-woodfine.md](BRIEF-simulation-bim-library-denver-woodfine.md) | Design-thinking exercise (2026-07-06): simulated PointSav→Denver Airport BIM CMS sale used as a Denver-content-free structural pass-through to derive a Woodfine-native v2 design candidate. Grounds the corrected BIM Object vs. Composition definition. |
 
 ## Artifact routing
 

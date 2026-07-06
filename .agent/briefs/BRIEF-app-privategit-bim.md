@@ -970,3 +970,27 @@ state as of the original escalation.
     header retains brand text at every width.
   - **Not committed yet this pass** — pending operator review of the local preview before repeating
     the commit + self-service-promote + Command-notification flow from the first pass.
+
+- **2026-07-06 — Objects/Compositions definition corrected + v2 design direction proposed:**
+  Operator flagged that the project's framing may have drifted: is a "Key Plan"/"Tile" the same
+  thing as a "BIM Object," or is it what architects build *from* BIM Objects? Research (NBS/
+  buildingSMART/bSDD, Uniclass 2015, Revit Family-vs-Group/Assembly precedent) confirms the
+  operator's instinct: a BIM Object is a single, atomic building-component specification (one
+  product/entity, Uniclass Pr/Ss level); a Key Plan/Tile is a **Composition** — a named template
+  assembled *from* several BIM Objects (Uniclass EF/SL level, the industry-standard "space-type" /
+  "typical" / test-fit-layout concept), never a BIM Object itself. This app's own 2026-07-03 CMS
+  repositioning (Taxonomy/Objects/**Compositions**/Context IA above) already had this right — the
+  actual bug was isolated to `.agent/plans/plan-bim-objects.md`'s wording ("Key Plan is the smallest
+  BIM Object unit"), now corrected there. This app's role is confirmed as the **CMS/catalog for BIM
+  Objects and the Compositions built from them** — see `BRIEF-app-orchestration-bim.md` for the
+  now-clarified, separate BIM Editor/Viewer product this is not, and `tool-keyplan`'s brief for the
+  Composition compiler.
+  Operator also corrected the working assumption behind this whole brief: **current
+  bim.woodfinegroup.com is not a polished baseline worth lightly annotating** — it should be
+  approached like designing a new website. A design-thinking exercise (simulate PointSav selling
+  `os-privategit` to Denver International Airport as a BIM Object CMS, then transpose the concept,
+  Denver-content-free, to a Woodfine-native version) produced a genuine **v2 design candidate** —
+  see `BRIEF-simulation-bim-library-denver-woodfine.md` and
+  `.agent/briefs/assets/woodfine-bim-library.html`. That candidate is a proposal for operator
+  review/decision, not committed work; it is not assumed to replace anything until the operator
+  says so.

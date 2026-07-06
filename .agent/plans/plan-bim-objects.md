@@ -141,10 +141,27 @@ layer. Zone 3 is consistent within a category.
 
 ## Part 1 — Key Plans
 
+### BIM Object vs. Composition (correction, 2026-07-06)
+
+A Key Plan is **not** a BIM Object — it is a **Composition** assembled
+*from* BIM Objects. This matches real AEC industry practice: NBS/
+buildingSMART/Uniclass 2015 treat a BIM object as a single atomic product/
+entity (Uniclass Pr=Products, Ss=Systems level); a Key Plan is the industry
+equivalent of a **space-type / "typical" / test-fit layout** (Uniclass
+EF=Elements-functions, SL=Spaces-locations level) — the same distinction as
+a Revit Family (atomic) vs. a Revit Group/Assembly (composed). The
+definitions below describe a Composition, not a BIM Object; the "smallest
+BIM Object unit" framing that used to open this section was incorrect and
+is fixed here. See `BRIEF-app-privategit-bim.md`'s "Objects vs. Compositions"
+section and `BRIEF-simulation-bim-library-denver-woodfine.md` for the full
+grounding and citations.
+
 ### Definition
 
-A Key Plan is the smallest BIM Object unit. Defined by:
-- Furniture arrangement (specific manufacturer SKUs)
+A Key Plan is a **Composition** — a named template assembled from several
+BIM Objects (furniture, fixtures) to satisfy a methodology. Defined by:
+- Furniture arrangement (specific manufacturer SKUs — each an individual
+  BIM Object referenced by the Composition)
 - Zone 1/2/3 dimensions
 - Net leasable area (m² and SF)
 - Facade frontage
@@ -420,7 +437,8 @@ Tile codes (Decision 4): TI-A through TI-M (type-prefixed).
 
 ### Definition
 
-A Tile is a BIM Object composed of one or more Key Plans within a single
+A Tile is a **Composition** (not a BIM Object — see the correction note in
+Part 1) composed of one or more Key Plan Compositions within a single
 **Climate Zone**. One Tile = one climate zone = one HVAC control boundary.
 
 Standard sizes: **2,700 SF** (base module) and **6,000 SF** (end-cap module).

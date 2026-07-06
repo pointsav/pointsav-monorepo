@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PointSav SourceCatalog — Denver International Airport BIM Object Registry</title>
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   Cool blue-slate neutrals (deliberate blue bias) + a single
+   signal-amber brand accent. Two classification chip hues:
+   slate-blue for Objects (Uniclass Pr/Ss), teal for
+   Compositions (Uniclass EF/SL).
+   ============================================================ */
+:root {
+  color-scheme: light;
+  --bg:          #f5f7fa;
+  --surface:     #ffffff;
+  --surface-2:   #eceff4;
+  --surface-3:   #e2e7ef;
+  --border:      #d6dbe4;
+  --border-strong:#b7c0cd;
+  --text:        #151a22;
+  --text-2:      #434c5b;
+  --muted:       #6a7383;
+
+  --accent:      #a76800;  /* amber, text-safe on light ground */
+  --accent-bg:   #e8a417;  /* solid amber for chips / primary buttons */
+  --accent-on:   #201400;  /* text on solid amber */
+  --accent-soft: #fbf0d7;
+  --accent-line: #eec26a;
+
+  --pr:          #2c58c6;  /* Objects — Pr/Ss classification */
+  --pr-soft:     #e6ecfb;
+  --pr-line:     #b9c9f2;
+
+  --ef:          #0d7a6a;  /* Compositions — EF/SL classification */
+  --ef-soft:     #dbf1ec;
+  --ef-line:     #a7ddd1;
+
+  --good:        #227a49;
+  --warn:        #8a5e00;
+  --crit:        #b83227;
+
+  --shadow:      0 1px 2px rgba(20,28,42,.05), 0 8px 24px -12px rgba(20,28,42,.18);
+  --shadow-lg:   0 24px 60px -20px rgba(15,22,38,.35);
+
+  --radius:      10px;
+  --radius-sm:   6px;
+  --maxw:        1320px;
+
+  --font-sans: "Helvetica Neue", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:          #0b0f15;
+    --surface:     #131922;
+    --surface-2:   #1a212c;
+    --surface-3:   #222b38;
+    --border:      #29323f;
+    --border-strong:#3a4553;
+    --text:        #e8edf4;
+    --text-2:      #b1bac8;
+    --muted:       #838d9c;
+
+    --accent:      #f2b634;
+    --accent-bg:   #e8a417;
+    --accent-on:   #1c1200;
+    --accent-soft: #2a2010;
+    --accent-line: #4a3c18;
+
+    --pr:          #7ea3f6;
+    --pr-soft:     #182440;
+    --pr-line:     #2b3c66;
+
+    --ef:          #4ccbb5;
+    --ef-soft:     #0f2e29;
+    --ef-line:     #1e463f;
+
+    --good:        #5fcf89;
+    --warn:        #e0b45c;
+    --crit:        #ef7d70;
+
+    --shadow:      0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.6);
+    --shadow-lg:   0 30px 70px -24px rgba(0,0,0,.7);
+  }
+}
+/* Manual toggle wins over the media query, both directions */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg:#f5f7fa; --surface:#ffffff; --surface-2:#eceff4; --surface-3:#e2e7ef;
+  --border:#d6dbe4; --border-strong:#b7c0cd; --text:#151a22; --text-2:#434c5b; --muted:#6a7383;
+  --accent:#a76800; --accent-bg:#e8a417; --accent-on:#201400; --accent-soft:#fbf0d7; --accent-line:#eec26a;
+  --pr:#2c58c6; --pr-soft:#e6ecfb; --pr-line:#b9c9f2;
+  --ef:#0d7a6a; --ef-soft:#dbf1ec; --ef-line:#a7ddd1;
+  --good:#227a49; --warn:#8a5e00; --crit:#b83227;
+  --shadow:0 1px 2px rgba(20,28,42,.05),0 8px 24px -12px rgba(20,28,42,.18);
+  --shadow-lg:0 24px 60px -20px rgba(15,22,38,.35);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg:#0b0f15; --surface:#131922; --surface-2:#1a212c; --surface-3:#222b38;
+  --border:#29323f; --border-strong:#3a4553; --text:#e8edf4; --text-2:#b1bac8; --muted:#838d9c;
+  --accent:#f2b634; --accent-bg:#e8a417; --accent-on:#1c1200; --accent-soft:#2a2010; --accent-line:#4a3c18;
+  --pr:#7ea3f6; --pr-soft:#182440; --pr-line:#2b3c66;
+  --ef:#4ccbb5; --ef-soft:#0f2e29; --ef-line:#1e463f;
+  --good:#5fcf89; --warn:#e0b45c; --crit:#ef7d70;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.6);
+  --shadow-lg:0 30px 70px -24px rgba(0,0,0,.7);
+}
+
+/* ============================================================ RESET ==== */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+h1,h2,h3,h4 { margin: 0; font-weight: 700; text-wrap: balance; letter-spacing: -0.012em; }
+p { margin: 0; }
+a { color: inherit; }
+button { font-family: inherit; }
+:focus-visible { outline: 2px solid var(--accent-bg); outline-offset: 2px; border-radius: 4px; }
+::selection { background: var(--accent-soft); color: var(--text); }
+
+.mono { font-family: var(--font-mono); font-feature-settings:"ss01","tnum"; }
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px); }
+
+/* ============================================================ APP BAR == */
+.appbar {
+  position: sticky; top: 0; z-index: 40;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.appbar__inner {
+  display: flex; align-items: center; gap: 20px;
+  height: 60px;
+}
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex: none; }
+.brand__mark {
+  width: 30px; height: 30px; flex: none; border-radius: 7px;
+  background: var(--text); color: var(--bg);
+  display: grid; place-items: center;
+}
+.brand__mark svg { width: 18px; height: 18px; display: block; }
+.brand__name { font-weight: 700; letter-spacing: -0.02em; font-size: 15px; line-height: 1.1; }
+.brand__name span { color: var(--accent); }
+.brand__sub {
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted); margin-top: 1px;
+}
+.appbar__ctx {
+  margin-left: 4px; padding-left: 16px; border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; line-height: 1.15;
+}
+.appbar__ctx b { font-size: 13px; font-weight: 600; }
+.appbar__ctx small { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); letter-spacing:.03em; }
+.appbar__spacer { flex: 1 1 auto; }
+.iconbtn {
+  width: 38px; height: 38px; border-radius: 9px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-2); cursor: pointer;
+  display: grid; place-items: center; transition: background .15s, color .15s, border-color .15s;
+}
+.iconbtn:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-strong); }
+.iconbtn svg { width: 18px; height: 18px; }
+.iconbtn .moon { display: none; }
+.appbar__env {
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing:.05em;
+  color: var(--good); display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border: 1px solid var(--border); border-radius: 20px; background: var(--surface);
+}
+.appbar__env::before { content:""; width:7px; height:7px; border-radius:50%; background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent); }
+.hide-sm { display: inline-flex; }
+
+/* ============================================================ HERO ===== */
+.hero { padding: clamp(38px, 6vw, 74px) 0 clamp(28px, 4vw, 48px); position: relative; overflow: hidden; }
+.hero::before {
+  content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 46px 46px; background-position: center;
+  -webkit-mask-image: radial-gradient(120% 80% at 78% 0%, #000 0%, transparent 62%);
+          mask-image: radial-gradient(120% 80% at 78% 0%, #000 0%, transparent 62%);
+  opacity: .5;
+}
+.hero__inner { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,.85fr); gap: clamp(28px, 5vw, 64px); align-items: start; }
+.eyebrow {
+  display: inline-flex; align-items:center; gap: 9px; font-family: var(--font-mono);
+  font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+  border: 1px solid var(--accent-line); background: var(--accent-soft);
+  padding: 6px 12px; border-radius: 20px; margin-bottom: 22px;
+}
+.eyebrow b { color: var(--text-2); font-weight: 600; letter-spacing:.06em; }
+.hero h1 {
+  font-size: clamp(30px, 4.6vw, 50px); line-height: 1.04; letter-spacing: -0.025em;
+  max-width: 15ch;
+}
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero__lede { font-size: clamp(16px, 1.7vw, 18px); color: var(--text-2); max-width: 54ch; margin-top: 22px; line-height: 1.6; }
+.hero__lede strong { color: var(--text); font-weight: 600; }
+
+.hero__stats {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
+  background: var(--border); border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden; box-shadow: var(--shadow);
+}
+.stat { background: var(--surface); padding: 18px 20px; }
+.stat__n { font-family: var(--font-mono); font-size: clamp(22px, 3vw, 29px); font-weight: 600; letter-spacing:-.02em; font-variant-numeric: tabular-nums; }
+.stat__n small { font-size: .55em; color: var(--muted); font-weight: 500; }
+.stat__l { font-size: 12px; color: var(--muted); margin-top: 3px; letter-spacing:.01em; }
+.hero__pipe {
+  margin-top: 18px; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted);
+  display: flex; flex-wrap: wrap; align-items:center; gap: 8px 6px; line-height: 1.9;
+}
+.hero__pipe span { padding: 3px 9px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text-2); }
+.hero__pipe .arw { border:0; background:none; color: var(--muted); padding: 0 1px; }
+
+/* ============================================================ DEFINITION */
+.def { padding: clamp(30px,4vw,50px) 0 8px; }
+.def__grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 20px; }
+.defcard { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: 24px 24px 22px; box-shadow: var(--shadow); position: relative; }
+.defcard__tag {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase;
+  font-weight: 600; display:inline-flex; align-items:center; gap: 8px; margin-bottom: 12px;
+}
+.defcard--obj .defcard__tag { color: var(--pr); }
+.defcard--obj { border-top: 3px solid var(--pr); }
+.defcard--comp .defcard__tag { color: var(--ef); }
+.defcard--comp { border-top: 3px solid var(--ef); }
+.defcard h3 { font-size: 19px; margin-bottom: 8px; letter-spacing:-.02em; }
+.defcard p { color: var(--text-2); font-size: 14.5px; line-height: 1.62; }
+.defcard p + p { margin-top: 10px; }
+.defcard code { font-family: var(--font-mono); font-size: .86em; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color: var(--text); }
+
+.enable { padding: 30px 0 8px; }
+.enable__head { display:flex; align-items:baseline; gap:12px; margin-bottom: 16px; flex-wrap:wrap; }
+.enable__head h2 { font-size: 15px; letter-spacing:-.01em; }
+.enable__head p { color: var(--muted); font-size: 13px; }
+.enable__grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+.encard { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: 18px 20px; }
+.encard h4 { font-size: 14px; margin-bottom: 6px; display:flex; align-items:center; gap:9px; }
+.encard h4 .dot { width: 22px; height:22px; flex:none; border-radius:6px; display:grid; place-items:center; background: var(--accent-soft); color: var(--accent); }
+.encard h4 .dot svg { width: 13px; height: 13px; }
+.encard p { color: var(--text-2); font-size: 13.5px; line-height: 1.55; }
+.encard p em { font-style: normal; font-family: var(--font-mono); font-size: .88em; color: var(--text); background: var(--surface-2); padding: 0 4px; border-radius: 3px; }
+
+/* ============================================================ CATALOG == */
+.catalog { padding: 40px 0 80px; }
+.tabbar {
+  display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--border);
+  margin-bottom: 22px; position: sticky; top: 60px; z-index: 20; background: var(--bg);
+  padding-top: 4px;
+}
+.tab {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  padding: 12px 16px 13px; font-size: 14.5px; font-weight: 600; color: var(--muted);
+  border-bottom: 2px solid transparent; margin-bottom: -1px; display:flex; align-items:center; gap: 9px;
+  transition: color .15s;
+}
+.tab:hover { color: var(--text-2); }
+.tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent-bg); }
+.tab .count {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 20px;
+  background: var(--surface-2); color: var(--muted); font-variant-numeric: tabular-nums;
+}
+.tab[aria-selected="true"] .count { background: var(--accent-soft); color: var(--accent); }
+
+.catalog__body { display: grid; grid-template-columns: 254px minmax(0,1fr); gap: 28px; align-items: start; }
+
+/* ---- Facets ---- */
+.facets { position: sticky; top: 116px; }
+.search {
+  display: flex; align-items: center; gap: 9px; border: 1px solid var(--border); border-radius: 9px;
+  background: var(--surface); padding: 0 12px; margin-bottom: 18px; box-shadow: var(--shadow);
+}
+.search svg { width: 16px; height: 16px; color: var(--muted); flex: none; }
+.search input {
+  border: 0; background: none; outline: none; color: var(--text); font-family: var(--font-sans);
+  font-size: 14px; padding: 11px 0; width: 100%;
+}
+.facetgrp { border-top: 1px solid var(--border); padding: 14px 0 6px; }
+.facetgrp:first-of-type { border-top: 0; padding-top: 0; }
+.facetgrp__h { font-family: var(--font-mono); font-size: 11px; letter-spacing:.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; font-weight:600; }
+.facet {
+  display: flex; align-items: center; gap: 10px; padding: 5px 4px; border-radius: 6px; cursor: pointer;
+  font-size: 13.5px; color: var(--text-2); user-select: none;
+}
+.facet:hover { background: var(--surface-2); color: var(--text); }
+.facet input { position: absolute; opacity: 0; width: 0; height: 0; }
+.facet__box {
+  width: 16px; height: 16px; border: 1.5px solid var(--border-strong); border-radius: 4px; flex: none;
+  display: grid; place-items: center; transition: background .12s, border-color .12s;
+}
+.facet__box svg { width: 11px; height: 11px; color: var(--accent-on); opacity: 0; }
+.facet input:checked + .facet__box { background: var(--accent-bg); border-color: var(--accent-bg); }
+.facet input:checked + .facet__box svg { opacity: 1; }
+.facet input:focus-visible + .facet__box { outline: 2px solid var(--accent-bg); outline-offset: 2px; }
+.facet__lbl { flex: 1 1 auto; }
+.facet__lbl code { font-family: var(--font-mono); font-size: 12px; }
+.facet__n { font-family: var(--font-mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.facets__reset {
+  margin-top: 14px; width: 100%; text-align: left; background: none; border: 0; cursor: pointer;
+  font-size: 12.5px; color: var(--accent); font-weight: 600; padding: 6px 4px; border-radius: 6px;
+}
+.facets__reset:hover { background: var(--surface-2); }
+.facets__reset[hidden] { display: none; }
+
+/* ---- Grid + cards ---- */
+.gridhead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+.gridhead .res { font-size: 13px; color: var(--muted); font-family: var(--font-mono); }
+.gridhead .res b { color: var(--text); font-weight: 600; }
+.cardgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 16px; }
+
+.card {
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+  overflow: hidden; cursor: pointer; text-align: left; padding: 0; width: 100%; color: inherit;
+  display: flex; flex-direction: column; transition: transform .16s cubic-bezier(.2,.7,.3,1), box-shadow .16s, border-color .16s;
+}
+.card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--border-strong); }
+.card:focus-visible { outline: 2px solid var(--accent-bg); outline-offset: 2px; }
+.thumb {
+  aspect-ratio: 4 / 3; position: relative; overflow: hidden;
+  background:
+    radial-gradient(140% 120% at 20% 0%, color-mix(in srgb, var(--tint,var(--pr)) 16%, var(--surface)) 0%, var(--surface) 60%);
+  border-bottom: 1px solid var(--border);
+}
+.thumb::before {
+  content:""; position:absolute; inset:0;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--tint,var(--pr)) 26%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--tint,var(--pr)) 26%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px; background-position: center; opacity: .35;
+}
+.thumb__glyph {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em; color: color-mix(in srgb, var(--tint,var(--pr)) 82%, var(--text));
+  text-align:center; font-weight: 600;
+}
+.thumb__glyph b { display:block; font-size: 30px; line-height:1; opacity:.9; margin-bottom: 8px; }
+.thumb__fmt {
+  position: absolute; bottom: 8px; right: 8px; display:flex; gap: 4px;
+}
+.thumb__fmt span { font-family: var(--font-mono); font-size: 9.5px; letter-spacing:.03em; padding: 2px 5px; border-radius: 4px; background: color-mix(in srgb, var(--surface) 82%, transparent); border: 1px solid var(--border); color: var(--muted); backdrop-filter: blur(3px); }
+.card__body { padding: 13px 14px 15px; display:flex; flex-direction: column; gap: 9px; flex: 1 1 auto; }
+.card__name { font-size: 14.5px; font-weight: 600; letter-spacing:-.01em; line-height: 1.28; }
+.card__meta { font-size: 12px; color: var(--muted); margin-top: auto; display:flex; align-items:center; gap: 7px; }
+.card__meta .mfr { font-weight: 500; color: var(--text-2); }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono);
+  font-size: 11px; font-weight: 600; letter-spacing: .02em; padding: 3px 8px; border-radius: 6px;
+  border: 1px solid transparent; white-space: nowrap; width: fit-content;
+}
+.chip .lv { font-size: 9px; opacity: .8; letter-spacing:.08em; }
+.chip--pr { color: var(--pr); background: var(--pr-soft); border-color: var(--pr-line); }
+.chip--ef { color: var(--ef); background: var(--ef-soft); border-color: var(--ef-line); }
+.chip--ifc { color: var(--text-2); background: var(--surface-2); border-color: var(--border); }
+
+.empty { grid-column: 1/-1; text-align:center; padding: 60px 20px; color: var(--muted); border: 1px dashed var(--border); border-radius: var(--radius); }
+.empty svg { width: 30px; height: 30px; margin-bottom: 10px; opacity: .6; }
+
+/* ============================================================ MODAL ==== */
+.modal { position: fixed; inset: 0; z-index: 100; display: none; }
+.modal[open], .modal.is-open { display: block; }
+.modal__backdrop { position: absolute; inset: 0; background: color-mix(in srgb, #05070c 62%, transparent); backdrop-filter: blur(3px); }
+.modal__panel {
+  position: absolute; top: 0; right: 0; height: 100%; width: min(640px, 100%);
+  background: var(--surface); border-left: 1px solid var(--border); box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column; animation: slidein .26s cubic-bezier(.2,.7,.25,1);
+}
+@keyframes slidein { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .modal__panel { animation: none; } .card { transition: none; } }
+.modal__head { display: flex; align-items: flex-start; gap: 14px; padding: 20px 22px 16px; border-bottom: 1px solid var(--border); }
+.modal__head-main { flex: 1 1 auto; min-width: 0; }
+.modal__ey { display:flex; align-items:center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.modal__id { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing:.03em; }
+.modal__title { font-size: 21px; letter-spacing:-.02em; line-height: 1.2; }
+.modal__sub { font-size: 13px; color: var(--text-2); margin-top: 5px; }
+.modal__body { overflow-y: auto; padding: 20px 22px 30px; display: flex; flex-direction: column; gap: 22px; }
+
+.preview {
+  aspect-ratio: 16/9; border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; position: relative;
+  background: radial-gradient(150% 120% at 15% 0%, color-mix(in srgb, var(--tint,var(--pr)) 18%, var(--surface)), var(--surface) 60%);
+}
+.preview::before {
+  content:""; position:absolute; inset:0;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--tint,var(--pr)) 24%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--tint,var(--pr)) 24%, transparent) 1px, transparent 1px);
+  background-size: 30px 30px; background-position: center; opacity: .4;
+}
+.preview__glyph { position:absolute; inset:0; display:grid; place-items:center; font-family: var(--font-mono); color: color-mix(in srgb, var(--tint,var(--pr)) 80%, var(--text)); font-weight:600; }
+.preview__glyph b { display:block; font-size: 52px; line-height:1; margin-bottom: 10px; text-align:center; opacity:.9; }
+.preview__cap { position:absolute; left: 12px; bottom: 10px; font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); letter-spacing:.04em; }
+
+.sect__h { font-family: var(--font-mono); font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 12px; display:flex; align-items:center; gap:8px; }
+.sect__h::after { content:""; flex:1 1 auto; height:1px; background: var(--border); }
+
+.spectable { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.spectable th, .spectable td { text-align: left; padding: 9px 2px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.spectable th { font-weight: 500; color: var(--muted); width: 44%; }
+.spectable td { color: var(--text); font-variant-numeric: tabular-nums; }
+.spectable td .mono, .spectable td.mono { font-family: var(--font-mono); font-size: 12.5px; }
+.spectable tr:last-child th, .spectable tr:last-child td { border-bottom: 0; }
+
+.classblock { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.clrow { background: var(--surface-2); padding: 12px 14px; display:flex; align-items:center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.clrow__k { font-size: 12px; color: var(--muted); }
+.clrow__v { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--text); text-align: right; }
+.clrow__v small { display:block; font-weight: 500; color: var(--text-2); font-size: 11px; margin-top: 2px; letter-spacing:.02em; }
+
+.dl { display: flex; flex-direction: column; gap: 12px; }
+.dl__row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.fmtseg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+.fmtseg button {
+  appearance: none; border: 0; background: var(--surface); cursor: pointer; padding: 9px 16px;
+  font-family: var(--font-mono); font-size: 12.5px; font-weight: 600; color: var(--text-2); border-right: 1px solid var(--border);
+  transition: background .12s, color .12s;
+}
+.fmtseg button:last-child { border-right: 0; }
+.fmtseg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.fmtseg button:hover { background: var(--surface-2); }
+.fmtseg button .sz { display:block; font-size: 10px; font-weight: 500; color: var(--muted); margin-top:2px; }
+.btn {
+  appearance: none; border: 0; cursor: pointer; border-radius: 9px; padding: 11px 18px;
+  font-size: 13.5px; font-weight: 600; display: inline-flex; align-items:center; gap: 9px;
+  background: var(--accent-bg); color: var(--accent-on); box-shadow: var(--shadow);
+}
+.btn svg { width: 16px; height: 16px; }
+.btn:hover { filter: brightness(1.05); }
+.dl__note { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.dl__note code { font-family: var(--font-mono); background: var(--surface-2); padding: 0 4px; border-radius: 3px; }
+
+/* ---- Compositions: bill of objects ---- */
+.bill { display: flex; flex-direction: column; gap: 8px; }
+.billrow {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  border: 1px solid var(--border); border-radius: 9px; background: var(--surface); padding: 11px 12px; cursor: pointer;
+  color: inherit; transition: border-color .14s, background .14s;
+}
+.billrow:hover { border-color: var(--pr-line); background: var(--surface-2); }
+.billrow:focus-visible { outline: 2px solid var(--accent-bg); outline-offset: 2px; }
+.billrow__qty { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--pr); background: var(--pr-soft); border: 1px solid var(--pr-line); border-radius: 6px; padding: 4px 8px; flex: none; min-width: 40px; text-align:center; }
+.billrow__main { flex: 1 1 auto; min-width: 0; }
+.billrow__name { font-size: 13.5px; font-weight: 600; }
+.billrow__code { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 2px; }
+.billrow__arrow { color: var(--muted); flex: none; }
+.billrow__arrow svg { width: 16px; height: 16px; display:block; }
+.billrow--ext { cursor: default; }
+.billrow--ext:hover { border-color: var(--border); background: var(--surface); }
+.billrow--ext .billrow__arrow { opacity: 0; }
+
+.constraints { display: flex; flex-direction: column; gap: 8px; }
+.cons {
+  display: flex; gap: 11px; align-items: flex-start; font-size: 13px; color: var(--text-2);
+  border: 1px solid var(--border); border-left: 3px solid var(--ef); border-radius: 8px; padding: 10px 12px; background: var(--surface);
+}
+.cons__ico { color: var(--ef); flex: none; margin-top: 1px; }
+.cons__ico svg { width: 15px; height: 15px; display:block; }
+.cons b { color: var(--text); font-weight: 600; }
+.cons code { font-family: var(--font-mono); font-size: 12px; background: var(--surface-2); padding: 0 4px; border-radius: 3px; color: var(--text); }
+
+.areabox { display:flex; align-items: baseline; gap: 10px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); }
+.areabox__n { font-family: var(--font-mono); font-size: 26px; font-weight: 600; letter-spacing:-.02em; font-variant-numeric: tabular-nums; }
+.areabox__n small { font-size: .5em; color: var(--muted); font-weight:500; }
+.areabox__l { font-size: 12.5px; color: var(--muted); }
+
+/* ============================================================ FOOTER === */
+.foot { border-top: 1px solid var(--border); padding: 26px 0 48px; color: var(--muted); font-size: 12.5px; }
+.foot__row { display:flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; justify-content: space-between; }
+.foot__row .mono { font-size: 11.5px; letter-spacing:.03em; }
+.foot a { color: var(--text-2); text-decoration: none; }
+.foot a:hover { color: var(--accent); }
+
+/* ============================================================ RESPONSIVE */
+@media (max-width: 1000px) {
+  .hero__inner { grid-template-columns: 1fr; }
+  .hero__aside { max-width: 520px; }
+  .catalog__body { grid-template-columns: 1fr; }
+  .facets { position: static; }
+  .facets__wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 6px 24px; }
+}
+@media (max-width: 720px) {
+  .def__grid, .enable__grid { grid-template-columns: 1fr; }
+  .hero__stats { grid-template-columns: repeat(2,1fr); }
+  .appbar__ctx { display: none; }
+  .hide-sm { display: none; }
+  .modal__panel { width: 100%; border-left: 0; }
+}
+@media (max-width: 420px) {
+  .cardgrid { grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================================================== APP BAR ==== -->
+<header class="appbar">
+  <div class="wrap appbar__inner">
+    <a class="brand" href="#top" aria-label="PointSav SourceCatalog home">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="6" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="12" r="2.4"/>
+          <path d="M6 8.4v7.2M8.1 6.9l7.8 3.9M8.1 17.1l7.8-3.9"/>
+        </svg>
+      </span>
+      <span>
+        <span class="brand__name">Point<span>Sav</span> SourceCatalog</span>
+        <span class="brand__sub">os-privategit · registry</span>
+      </span>
+    </a>
+    <div class="appbar__ctx hide-sm">
+      <b>Denver International Airport</b>
+      <small>DEN · DFI Integrated Digital Standards</small>
+    </div>
+    <div class="appbar__spacer"></div>
+    <span class="appbar__env hide-sm">ACC-SYNCED</span>
+    <button class="iconbtn" id="themeToggle" aria-label="Toggle color theme" title="Toggle light / dark">
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- =================================================== HERO ==== -->
+  <section class="hero">
+    <div class="wrap hero__inner">
+      <div class="hero__main">
+        <span class="eyebrow">BIM OBJECT REGISTRY <b>· Design Standards Manual compliant</b></span>
+        <h1>One authoritative source for every <em>building component</em> across the airport.</h1>
+        <p class="hero__lede">
+          SourceCatalog replaces DEN's scattered Revit family libraries with a single
+          <strong>git-backed, versioned registry</strong> of every atomic building component
+          spanning <strong>600+ models, 93 buildings and roughly 17 million square feet.</strong>
+          Each object is classified, searchable and API-addressable — and plugs straight into
+          the existing Autodesk Construction Cloud, Revit and Maximo pipeline.
+        </p>
+      </div>
+      <aside class="hero__aside">
+        <div class="hero__stats">
+          <div class="stat"><div class="stat__n">600<small>+</small></div><div class="stat__l">Federated Revit / Civil 3D models</div></div>
+          <div class="stat"><div class="stat__n">93</div><div class="stat__l">Buildings under one BIM-code hierarchy</div></div>
+          <div class="stat"><div class="stat__n">17<small>M ft²</small></div><div class="stat__l">Managed gross floor area</div></div>
+          <div class="stat"><div class="stat__n">IFC<small> 4.3</small></div><div class="stat__l">Uniclass 2015 classified, bSDD-linked</div></div>
+        </div>
+        <div class="hero__pipe" aria-label="Integration pipeline">
+          <span>Revit / Civil 3D</span><span class="arw">→</span>
+          <span>ACC (CDE)</span><span class="arw">→</span>
+          <span>SourceCatalog</span><span class="arw">→</span>
+          <span>COBie</span><span class="arw">→</span>
+          <span>IBM Maximo</span><span class="arw">·</span>
+          <span>ArcGIS Indoors</span>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============================================ DEFINITION ==== -->
+  <section class="def wrap">
+    <div class="def__grid">
+      <article class="defcard defcard--obj">
+        <div class="defcard__tag">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+          BIM OBJECT — the atom
+        </div>
+        <h3>A single, certified building component.</h3>
+        <p>
+          One product or entity — a door, a jet-bridge cab hinge, a specific luminaire —
+          identified by its <code>IFC&nbsp;4.3</code> entity class and its <code>Uniclass&nbsp;2015</code>
+          classification at the <strong>Products (Pr)</strong> or <strong>Systems (Ss)</strong> level.
+        </p>
+        <p>
+          It carries manufacturer or generic data plus the applicable property sets and geometric
+          constraints. A BIM Object is <strong>never a composed layout</strong> — it is the atom that
+          layouts are built from.
+        </p>
+      </article>
+      <article class="defcard defcard--comp">
+        <div class="defcard__tag">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.4"/><rect x="13" y="3" width="8" height="8" rx="1.4"/><rect x="3" y="13" width="8" height="8" rx="1.4"/><rect x="13" y="13" width="8" height="8" rx="1.4"/></svg>
+          COMPOSITION — the assembly
+        </div>
+        <h3>A named template built from many objects.</h3>
+        <p>
+          A Key Plan, tile, space-type or "typical" — assembled from several BIM Objects to satisfy a
+          methodology or code requirement. Classified one tier up, at Uniclass
+          <strong>Elements/functions (EF)</strong> or <strong>Spaces/locations (SL)</strong> level.
+        </p>
+        <p>
+          This is the Revit family-versus-group distinction. A Composition's detail view shows a
+          <strong>"Composed from"</strong> bill of objects — links to its constituent atoms — not a
+          manufacturer spec sheet.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============================================ WHAT IT ENABLES ==== -->
+  <section class="enable wrap">
+    <div class="enable__head">
+      <h2>What one registry enables</h2>
+      <p>Authoritative once — consumed by every downstream party.</p>
+    </div>
+    <div class="enable__grid">
+      <article class="encard">
+        <h4><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg></span>Contractors</h4>
+        <p>A single certified-component source of truth for <em>BIM Project Execution Plan</em> compliance. Pull only DSM-approved objects; every model reconciles against the same registry version.</p>
+      </article>
+      <article class="encard">
+        <h4><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span>Facility operations</h4>
+        <p>Clean, complete property data flows as <em>COBie</em> straight into IBM Maximo. Assets arrive at handover pre-populated — no re-keying, no orphaned equipment records.</p>
+      </article>
+      <article class="encard">
+        <h4><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12v9M12 12L4 7.5M12 12l8-4.5"/></svg></span>Tenants &amp; airlines</h4>
+        <p>Future leaseholders start from <em>pre-approved</em>, code-compliant Compositions instead of a blank Revit file — accelerating fit-out review and holding wayfinding and life-safety standards constant.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ================================================ CATALOG ==== -->
+  <section class="catalog wrap" id="catalog">
+    <div class="tabbar" role="tablist" aria-label="Catalog type">
+      <button class="tab" role="tab" id="tab-objects" aria-selected="true" aria-controls="panel-catalog" data-tab="objects">
+        BIM Objects <span class="count" id="count-objects">0</span>
+      </button>
+      <button class="tab" role="tab" id="tab-compositions" aria-selected="false" aria-controls="panel-catalog" data-tab="compositions">
+        Compositions <span class="count" id="count-compositions">0</span>
+      </button>
+    </div>
+
+    <div class="catalog__body" id="panel-catalog" role="tabpanel" aria-labelledby="tab-objects">
+      <!-- Facets -->
+      <aside class="facets">
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input type="search" id="searchInput" placeholder="Search name, ID, manufacturer…" aria-label="Search catalog">
+        </label>
+        <div class="facets__wrap" id="facetHost"></div>
+        <button class="facets__reset" id="resetFacets" hidden>Clear all filters</button>
+      </aside>
+
+      <!-- Grid -->
+      <div class="grid-region">
+        <div class="gridhead">
+          <div class="res"><b id="resCount">0</b> <span id="resNoun">objects</span></div>
+        </div>
+        <div class="cardgrid" id="cardGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================= FOOTER ==== -->
+  <footer class="foot">
+    <div class="wrap foot__row">
+      <span class="mono">POINTSAV DIGITAL SYSTEMS · os-privategit · app-privategit-bim</span>
+      <span>Registry mirror of DEN Digital Facilities Infrastructure · <a href="#top">Design Standards Manual §DFI-IDSM</a></span>
+      <span class="mono">bSDD · Uniclass 2015 · IFC 4.3</span>
+    </div>
+  </footer>
+</main>
+
+<!-- ==================================================== MODAL ==== -->
+<div class="modal" id="modal" aria-hidden="true">
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1" id="modalPanel">
+    <div class="modal__head">
+      <div class="modal__head-main" id="modalHead"></div>
+      <button class="iconbtn" data-close aria-label="Close detail panel" style="flex:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal__body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   DATA MODEL
+   Objects: atomic components, Uniclass Pr/Ss + IFC 4.3 entity class.
+   Compositions: named templates, Uniclass EF/SL, "composed from" bill.
+   ===================================================================== */
+const OBJECTS = [
+  {
+    id: "PBB-DR-04",
+    name: "Passenger Boarding Bridge — Cab Door Assembly",
+    ifc: "IfcDoor",
+    uni: "Pr_30_59_24_23", uniLabel: "Aircraft interface doorsets", lv: "Pr",
+    mfr: "JBT AeroTech", tint: "var(--pr)", glyph: "⊟",
+    formats: [["RFA","4.1 MB"],["IFC","1.9 MB"],["DWG","880 KB"]],
+    desc: "Powered bi-parting cab door at the aircraft interface of an apron-drive boarding bridge. Certified against DEN DFI life-safety and de-icing exposure requirements for Concourse gate positions.",
+    specs: [
+      ["Overall frame size", "2100 × 2440 mm"],
+      ["Clear structural opening", "1980 × 2340 mm"],
+      ["Leaf construction", "Insulated aluminium, thermally broken"],
+      ["Glazing", "Laminated low-E, 60% VLT, argon fill"],
+      ["Operation", "Powered bi-parting, auto-close on retract"],
+      ["Fire rating", "45 min (UL 10C)"],
+      ["Weather seal", "EPDM triple-blade, −40 °C rated"],
+      ["Wind / pressure load", "1.9 kPa (Class 5)"],
+      ["Cycle rating", "500,000 cycles (tested)"],
+      ["Ingress protection", "IP54 (exposed face)"],
+      ["Unit mass", "312 kg"],
+      ["Warranty", "10 yr structural / 3 yr actuation"]
+    ],
+    bimcode: "DEN.CONC-B.L05.GATE-B39.PBB-DR",
+    bimcodeNote: "Concourse B · Level 5 · Gate B39 · boarding-bridge door"
+  },
+  {
+    id: "LUM-LR-1200",
+    name: "Concourse Luminaire — Linear Recessed 1200",
+    ifc: "IfcLightFixture",
+    uni: "Pr_70_65_51_45", uniLabel: "Linear luminaires", lv: "Pr",
+    mfr: "Zumtobel (generic-equivalent)", tint: "var(--pr)", glyph: "▭",
+    formats: [["RFA","2.6 MB"],["IFC","1.1 MB"],["DWG","410 KB"]],
+    desc: "Recessed continuous-run linear luminaire for concourse ceilings, tuned to DEN wayfinding luminance targets and integrated with the DALI daylight-harvesting zone controller.",
+    specs: [
+      ["Nominal length", "1200 mm (run-linkable)"],
+      ["Luminous flux", "4,850 lm"],
+      ["Efficacy", "138 lm/W"],
+      ["Correlated colour temp.", "3500 K (fixed)"],
+      ["Colour rendering", "CRI ≥ 90, R9 ≥ 50"],
+      ["Control", "DALI-2, daylight + occupancy zone"],
+      ["Rated life", "L80 @ 60,000 h"],
+      ["Emergency", "3 hr integral battery variant"],
+      ["Ingress protection", "IP40"],
+      ["Connected load", "35 W"]
+    ],
+    bimcode: "DEN.CONC-A.L04.CLG-GRID.LUM-LR",
+    bimcodeNote: "Concourse A · Level 4 · ceiling grid · linear luminaire"
+  },
+  {
+    id: "CWL-UNI-P2",
+    name: "Terminal Curtain Wall — Unitized Panel P2",
+    ifc: "IfcCurtainWall",
+    uni: "Pr_20_85_16_24", uniLabel: "Unitized curtain walling", lv: "Pr",
+    mfr: "Kawneer", tint: "var(--pr)", glyph: "▤",
+    formats: [["RFA","3.4 MB"],["IFC","2.2 MB"],["DWG","1.1 MB"]],
+    desc: "Factory-glazed unitized curtain-wall panel for the Jeppesen Terminal head-house glazing line, carrying the DEN thermal and blast-resilience performance set.",
+    specs: [
+      ["Panel module", "1500 × 4200 mm"],
+      ["System depth", "160 mm"],
+      ["Glazing", "Double IGU, ceramic-frit spandrel"],
+      ["U-value (assembly)", "1.4 W/m²K"],
+      ["Air infiltration", "≤ 0.3 L/s·m² @ 300 Pa"],
+      ["Water penetration", "No leakage @ 720 Pa"],
+      ["Structural", "Deflection L/175, seismic drift ±25 mm"],
+      ["Finish", "PVDF 2-coat, RAL 9006"],
+      ["Panel mass", "465 kg"]
+    ],
+    bimcode: "DEN.JEPP.L06.FACADE-N.CWL-P2",
+    bimcodeNote: "Jeppesen Terminal · Level 6 · north façade · unitized panel"
+  },
+  {
+    id: "BHS-CNV-B2",
+    name: "Baggage Handling Conveyor — Belt Section 2m",
+    ifc: "IfcConveyorSegment",
+    uni: "Pr_75_75_14_08", uniLabel: "Baggage conveying systems", lv: "Pr",
+    mfr: "Vanderlande", tint: "var(--pr)", glyph: "▬",
+    formats: [["RFA","2.9 MB"],["IFC","1.7 MB"],["DWG","640 KB"]],
+    desc: "Standard-gauge belt conveyor section for the outbound baggage basement, parametric on length and incline for BHS routing layouts.",
+    specs: [
+      ["Section length", "2000 mm (parametric 1–6 m)"],
+      ["Belt width", "1000 mm"],
+      ["Conveying speed", "0.5 m/s (VFD 0.2–1.0)"],
+      ["Design throughput", "1,800 bags/hr"],
+      ["Max unit load", "50 kg/item"],
+      ["Drive", "Drum motor, 1.5 kW"],
+      ["Incline range", "0–18°"],
+      ["Frame", "Galvanised steel, bolt-together"],
+      ["Guarding", "IP54, e-stop @ 15 m pitch"]
+    ],
+    bimcode: "DEN.BHS.B01.OUTBD-L3.CNV-B2",
+    bimcodeNote: "BHS basement · Level B01 · outbound line 3 · belt section"
+  },
+  {
+    id: "WLK-MOV-PLT",
+    name: "Moving Walkway — Pallet Type 1m",
+    ifc: "IfcTransportElement",
+    ifcType: "MOVINGWALKWAY",
+    uni: "Pr_75_50_58_52", uniLabel: "Moving walkways", lv: "Pr",
+    mfr: "Schindler", tint: "var(--pr)", glyph: "⇥",
+    formats: [["RFA","3.1 MB"],["IFC","2.0 MB"],["DWG","720 KB"]],
+    desc: "Horizontal pallet-type passenger walkway for concourse connectors, parametric on run length with DEN-standard balustrade and skirt lighting.",
+    specs: [
+      ["Pallet width", "1000 mm"],
+      ["Speed", "0.65 m/s"],
+      ["Incline", "0° (horizontal)"],
+      ["Rise / run", "Parametric, 20–120 m"],
+      ["Capacity", "6,750 pax/hr"],
+      ["Balustrade", "Glass, LED skirt (wayfinding amber)"],
+      ["Drive", "Gearless PM, regenerative"],
+      ["Standard", "ASME A17.1 / EN 115"]
+    ],
+    bimcode: "DEN.CONC-C.L04.CONNECT.WLK-PLT",
+    bimcodeNote: "Concourse C · Level 4 · connector · moving walkway"
+  },
+  {
+    id: "SEAT-BM4",
+    name: "Passenger Seating — Beam Unit, 4-Place",
+    ifc: "IfcFurniture",
+    uni: "Pr_40_50_12_09", uniLabel: "Beam seating", lv: "Pr",
+    mfr: "Arconas (generic-equivalent)", tint: "var(--pr)", glyph: "▦",
+    formats: [["RFA","1.8 MB"],["IFC","760 KB"],["DWG","300 KB"]],
+    desc: "Four-place tandem beam seat for gate hold rooms, with integrated USB-C / AC power and an ADA transfer-arm end configuration.",
+    specs: [
+      ["Places", "4 (tandem beam)"],
+      ["Overall length", "2440 mm"],
+      ["Seat height", "430 mm"],
+      ["Power", "2 × USB-C PD + 1 × duplex AC / bay"],
+      ["Frame", "Powder-coat aluminium, anthracite"],
+      ["Upholstery", "Contract vinyl, Class 1 fire"],
+      ["ADA", "Transfer arm, 760 mm clear adjacency"],
+      ["Unit mass", "88 kg"]
+    ],
+    bimcode: "DEN.CONC-B.L05.HOLD-B39.SEAT-BM4",
+    bimcodeNote: "Concourse B · Level 5 · hold room B39 · beam seat"
+  },
+  {
+    id: "SGN-FIDS-OH",
+    name: "Wayfinding — Overhead Flight Information Display",
+    ifc: "IfcAudioVisualAppliance",
+    uni: "Pr_75_70_08_25", uniLabel: "Information display screens", lv: "Pr",
+    mfr: "Daktronics", tint: "var(--pr)", glyph: "▧",
+    formats: [["RFA","2.2 MB"],["IFC","990 KB"],["DWG","350 KB"]],
+    desc: "Ceiling-hung dual-sided flight-information display for concourse thoroughfares, on the DEN wayfinding content network and Frutiger-standard type treatment.",
+    specs: [
+      ["Screen size", "55 in dual-sided"],
+      ["Resolution", "3840 × 2160 per face"],
+      ["Brightness", "700 cd/m²"],
+      ["Mount", "Structural pendant, 3-point"],
+      ["Network", "PoE++ signage VLAN"],
+      ["Content", "FIDS feed, wayfinding CMS"],
+      ["Enclosure", "Extruded aluminium, IP32"]
+    ],
+    bimcode: "DEN.CONC-A.L04.THRU-N.SGN-FIDS",
+    bimcodeNote: "Concourse A · Level 4 · north thoroughfare · FIDS"
+  },
+  {
+    id: "DMP-FSD-R",
+    name: "Combination Fire/Smoke Damper — Rectangular",
+    ifc: "IfcDamper",
+    uni: "Pr_60_60_26_29", uniLabel: "Fire and smoke dampers", lv: "Pr",
+    mfr: "Ruskin", tint: "var(--pr)", glyph: "▨",
+    formats: [["RFA","1.4 MB"],["IFC","620 KB"],["DWG","240 KB"]],
+    desc: "Dynamic combination fire/smoke damper for terminal HVAC penetrations, parametric on duct size with actuator and end-switch data for the Maximo test-and-inspect programme.",
+    specs: [
+      ["Duct size", "Parametric, 300–1500 mm"],
+      ["Fire rating", "1.5 hr (UL 555 / 555S)"],
+      ["Leakage class", "Class I @ 250 Pa"],
+      ["Actuator", "Electric, 24 V, spring-return"],
+      ["Position feedback", "Dual end-switch (Maximo tagged)"],
+      ["Sleeve", "Galvanised, factory-assembled"],
+      ["Reset", "Electric, remote-capable"]
+    ],
+    bimcode: "DEN.CONC-B.L03.MECH-4.DMP-FSD",
+    bimcodeNote: "Concourse B · Level 3 · mechanical zone 4 · fire/smoke damper"
+  },
+  {
+    id: "WC-WH-FV",
+    name: "Water Closet — Wall-Hung, Flush-Valve",
+    ifc: "IfcSanitaryTerminal",
+    uni: "Pr_40_20_96_98", uniLabel: "WC pans", lv: "Pr",
+    mfr: "Kohler", tint: "var(--pr)", glyph: "◗",
+    formats: [["RFA","1.2 MB"],["IFC","540 KB"],["DWG","210 KB"]],
+    desc: "Wall-hung vitreous-china WC on carrier, with sensor flush valve, sized to DEN water-efficiency and high-traffic restroom durability standards.",
+    specs: [
+      ["Type", "Wall-hung, floor-mount carrier"],
+      ["Flush volume", "4.8 L (1.28 gpf)"],
+      ["Valve", "Sensor flush, hardwired + battery"],
+      ["Rim height", "430 mm (ADA when carrier-set)"],
+      ["Rated load", "455 kg (carrier)"],
+      ["Material", "Vitreous china, glazed trapway"],
+      ["Water sense", "EPA WaterSense listed"]
+    ],
+    bimcode: "DEN.JEPP.L05.RESTRM-N.WC-WH",
+    bimcodeNote: "Jeppesen Terminal · Level 5 · north restroom · WC"
+  }
+];
+
+const COMPOSITIONS = [
+  {
+    id: "T-C1",
+    name: "Check-In Counter — Standard",
+    uni: "SL_20_35_15", uniLabel: "Check-in areas", lv: "SL",
+    tint: "var(--ef)", glyph: "◱",
+    area: "6.4", areaNote: "per counter position (footprint incl. agent zone)",
+    desc: "Standard airline check-in counter position at the ticketing hall frontage. A repeatable Composition sized to DEN passenger-processing methodology, deployed island-style along the check-in row and instanced per airline leasehold.",
+    composedFrom: [
+      { ref: "SGN-FIDS-OH", qty: "1", name: "Overhead position signage assembly", code: "Pr_75_70_08_25" },
+      { qty: "1", name: "Check-in kiosk / agent workstation unit", code: "Pr_40_50_88_06", ext: true },
+      { qty: "1", name: "Baggage-belt interface panel + scale", code: "Pr_75_75_14_08", ext: true },
+      { qty: "6", name: "Retractable queue stanchion + belt", code: "Pr_35_90_75_74", ext: true },
+      { ref: "SEAT-BM4", qty: "0", name: "(no fixed seating — standing process)", code: "—", muted: true }
+    ],
+    constraints: [
+      { t: "Satisfies <b>DFI-IDSM §7.3</b> ticketing-hall counter module — accessible transaction surface at <code>865 mm</code> for one position per bank." },
+      { t: "BEP deliverable <b>LOD 350</b> at handover; agent-side clearances reconcile against the ArcGIS Indoors queue-network layer." },
+      { t: "Belt interface geometry must align to the outbound <code>BHS-CNV-B2</code> injection point tolerance of <code>±15 mm</code>." },
+      { t: "Egress: maintains <code>1120 mm</code> clear behind agent line to the back-of-house corridor." }
+    ],
+    bimcode: "DEN.JEPP.L06.TKT-HALL.CTR-T-C1",
+    bimcodeNote: "Jeppesen Terminal · Level 6 · ticketing hall · check-in typical"
+  },
+  {
+    id: "R-800",
+    name: "Concourse Retail Concession — 800 SF Typical",
+    uni: "SL_25_10_74", uniLabel: "Retail areas", lv: "SL",
+    tint: "var(--ef)", glyph: "◳",
+    area: "74.3", areaNote: "800 sq ft leasehold envelope (demised area)",
+    desc: "Leasehold-tenant retail space plan for an 800-square-foot in-line concession. A pre-approved Composition handed to concessionaires as the fit-out baseline, holding storefront line, life-safety and wayfinding standards constant across the concession programme.",
+    composedFrom: [
+      { qty: "1", name: "Storefront glazing assembly (demising line)", code: "Pr_20_85_16_24", ref: "CWL-UNI-P2" },
+      { qty: "1", name: "POS counter unit + transaction well", code: "Pr_40_50_88_11", ext: true },
+      { qty: "8", name: "Display fixture system (gondola / wall run)", code: "Pr_40_50_30_25", ext: true },
+      { qty: "1", name: "Signage / branding blade zone", code: "Pr_75_70_08_50", ext: true },
+      { ref: "LUM-LR-1200", qty: "9", name: "Linear recessed luminaire run", code: "Pr_70_65_51_45" }
+    ],
+    constraints: [
+      { t: "Satisfies <b>DFI-IDSM §9.1</b> concession fit-out envelope — storefront held <code>150 mm</code> behind the demising line; no encroachment on the concourse thoroughfare." },
+      { t: "Life-safety: single demised space under <code>93 m²</code>, one exit permitted; sprinkler and detection tie to the base-building grid." },
+      { t: "Wayfinding blade sign conforms to the DEN sign family — <b>no tenant signage</b> above the datum line." },
+      { t: "COBie deliverable includes tenant-installed assets under a distinct <code>Space.Category</code> for Maximo leasehold tracking." }
+    ],
+    bimcode: "DEN.CONC-B.L05.RETAIL-14.SP-R-800",
+    bimcodeNote: "Concourse B · Level 5 · retail bay 14 · 800 SF typical"
+  },
+  {
+    id: "RR-FAM",
+    name: "Passenger Restroom — Family / Assisted",
+    uni: "SL_25_10_80", uniLabel: "Sanitary areas", lv: "SL",
+    tint: "var(--ef)", glyph: "◰",
+    area: "9.1", areaNote: "single-occupant assisted room (clear internal)",
+    desc: "Fully-accessible single-occupant family / assisted restroom, deployed at each concourse restroom core. A Composition that fixes ADA clearances and fixture set so every instance passes plan review identically.",
+    composedFrom: [
+      { ref: "WC-WH-FV", qty: "1", name: "Wall-hung WC on carrier", code: "Pr_40_20_96_98" },
+      { qty: "1", name: "Accessible lavatory + fittings", code: "Pr_40_20_96_52", ext: true },
+      { qty: "1", name: "Baby-change station (fold-down)", code: "Pr_40_50_12_03", ext: true },
+      { qty: "3", name: "Grab-rail set (ADA configuration)", code: "Pr_40_20_96_31", ext: true }
+    ],
+    constraints: [
+      { t: "Satisfies <b>ADA / DEN §11B</b> — maintains a <code>1525 mm</code> turning circle clear of all fixtures and door swing." },
+      { t: "Fixture heights, grab-rail geometry and reach ranges are locked by the Composition; instances are placement-only." }
+    ],
+    bimcode: "DEN.CONC-A.L04.RR-CORE-3.SP-RR-FAM",
+    bimcodeNote: "Concourse A · Level 4 · restroom core 3 · family/assisted"
+  },
+  {
+    id: "HOLD-60",
+    name: "Gate Hold Room — 60-Seat Block",
+    uni: "SL_20_30_35", uniLabel: "Waiting / hold areas", lv: "SL",
+    tint: "var(--ef)", glyph: "◲",
+    area: "112.0", areaNote: "seating block (excludes boarding podium queue)",
+    desc: "Repeatable 60-seat gate hold-room seating block with boarding podium and charging provision. Instanced per gate position to a fixed passenger-hold methodology and egress calculation.",
+    composedFrom: [
+      { ref: "SEAT-BM4", qty: "15", name: "4-place beam seating unit", code: "Pr_40_50_12_09" },
+      { qty: "1", name: "Boarding podium + gate-agent workstation", code: "Pr_40_50_88_06", ext: true },
+      { ref: "SGN-FIDS-OH", qty: "2", name: "Gate information display", code: "Pr_75_70_08_25" },
+      { ref: "LUM-LR-1200", qty: "12", name: "Linear recessed luminaire run", code: "Pr_70_65_51_45" }
+    ],
+    constraints: [
+      { t: "Satisfies <b>DFI-IDSM §7.6</b> hold-room provision — 60 fixed seats plus <code>35%</code> standing allowance for the design aircraft." },
+      { t: "Egress: two paths maintained, <code>1120 mm</code> minimum aisle, direct to the concourse thoroughfare." },
+      { t: "Power provision at ≥ <code>60%</code> of seats per DEN passenger-experience standard." }
+    ],
+    bimcode: "DEN.CONC-B.L05.HOLD-B39.SP-HOLD-60",
+    bimcodeNote: "Concourse B · Level 5 · gate B39 · 60-seat hold block"
+  }
+];
+
+/* =====================================================================
+   RENDER + INTERACTION
+   ===================================================================== */
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const OBJ_BY_ID = Object.fromEntries(OBJECTS.map(o => [o.id, o]));
+
+const state = { tab: "objects", search: "", facets: {} };
+
+/* ---- Facet configuration per tab ---- */
+const FACET_CONFIG = {
+  objects: [
+    { key: "ifc",  label: "IFC 4.3 Entity", get: o => [o.ifc] },
+    { key: "mfr",  label: "Manufacturer",   get: o => [o.mfr] },
+    { key: "fmt",  label: "File Format",    get: o => o.formats.map(f => f[0]) }
+  ],
+  compositions: [
+    { key: "uniLabel", label: "Uniclass SL / EF", get: c => [c.uniLabel] },
+    { key: "lv",       label: "Classification Tier", get: c => [c.lv === "SL" ? "SL — Spaces/locations" : "EF — Elements/functions"] }
+  ]
+};
+
+function activeData() { return state.tab === "objects" ? OBJECTS : COMPOSITIONS; }
+
+function matchesFacets(item) {
+  const cfg = FACET_CONFIG[state.tab];
+  for (const f of cfg) {
+    const sel = state.facets[f.key];
+    if (sel && sel.size) {
+      const vals = f.get(item);
+      if (![...sel].some(v => vals.includes(v))) return false;
+    }
+  }
+  return true;
+}
+function matchesSearch(item) {
+  if (!state.search) return true;
+  const q = state.search.toLowerCase();
+  const hay = [item.id, item.name, item.mfr, item.uni, item.uniLabel, item.ifc].filter(Boolean).join(" ").toLowerCase();
+  return hay.includes(q);
+}
+function visibleItems() { return activeData().filter(i => matchesFacets(i) && matchesSearch(i)); }
+
+/* ---- Build facet UI ---- */
+function renderFacets() {
+  const host = $("#facetHost");
+  host.innerHTML = "";
+  const cfg = FACET_CONFIG[state.tab];
+  // counts computed over items passing OTHER facets + search
+  cfg.forEach(f => {
+    const counts = {};
+    activeData().forEach(item => {
+      if (!matchesSearch(item)) return;
+      // count against everything except this facet group
+      const ok = cfg.every(g => {
+        if (g.key === f.key) return true;
+        const sel = state.facets[g.key];
+        if (!sel || !sel.size) return true;
+        return [...sel].some(v => g.get(item).includes(v));
+      });
+      if (!ok) return;
+      f.get(item).forEach(v => counts[v] = (counts[v]||0)+1);
+    });
+    const values = Object.keys(counts).sort();
+    if (!values.length) return;
+    const grp = document.createElement("div");
+    grp.className = "facetgrp";
+    grp.innerHTML = `<div class="facetgrp__h">${f.label}</div>`;
+    values.forEach(v => {
+      const sel = state.facets[f.key] && state.facets[f.key].has(v);
+      const lbl = document.createElement("label");
+      lbl.className = "facet";
+      lbl.innerHTML = `
+        <input type="checkbox" ${sel ? "checked":""} data-fkey="${f.key}" value="${v.replace(/"/g,'&quot;')}">
+        <span class="facet__box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L19 7"/></svg></span>
+        <span class="facet__lbl">${v}</span>
+        <span class="facet__n">${counts[v]}</span>`;
+      grp.appendChild(lbl);
+    });
+    host.appendChild(grp);
+  });
+  // reset visibility
+  const anySel = Object.values(state.facets).some(s => s && s.size);
+  $("#resetFacets").hidden = !anySel && !state.search;
+}
+
+/* ---- Build card grid ---- */
+function chipHtml(item) {
+  if (state.tab === "objects")
+    return `<span class="chip chip--pr"><span class="lv">${item.lv}</span>${item.uni}</span>`;
+  return `<span class="chip chip--ef"><span class="lv">${item.lv}</span>${item.uni}</span>`;
+}
+function renderGrid() {
+  const grid = $("#cardGrid");
+  const items = visibleItems();
+  $("#resCount").textContent = items.length;
+  $("#resNoun").textContent = state.tab === "objects" ? (items.length === 1 ? "object" : "objects") : (items.length === 1 ? "composition" : "compositions");
+  grid.innerHTML = "";
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <div>No ${state.tab} match the current filters.</div></div>`;
+    return;
+  }
+  items.forEach(item => {
+    const fmts = (item.formats || []).map(f => `<span>${f[0]}</span>`).join("");
+    const meta = state.tab === "objects"
+      ? `<span class="mfr">${item.mfr}</span> · <span>${item.ifc}</span>`
+      : `<span class="mfr">${item.uniLabel}</span> · <span>${item.area} m²</span>`;
+    const card = document.createElement("button");
+    card.className = "card";
+    card.style.setProperty("--tint", item.tint);
+    card.setAttribute("aria-label", `${item.name} — view details`);
+    card.innerHTML = `
+      <span class="thumb">
+        <span class="thumb__glyph"><b aria-hidden="true">${item.glyph}</b>${state.tab==="objects"?item.ifc:item.id}</span>
+        ${fmts ? `<span class="thumb__fmt">${fmts}</span>` : ""}
+      </span>
+      <span class="card__body">
+        ${chipHtml(item)}
+        <span class="card__name">${item.name}</span>
+        <span class="card__meta">${meta}</span>
+      </span>`;
+    card.addEventListener("click", () => openModal(item.id, state.tab));
+    grid.appendChild(card);
+  });
+}
+
+/* ---- Detail modal ---- */
+function specRow(k, v) { return `<tr><th>${k}</th><td>${v}</td></tr>`; }
+
+function objectDetailHtml(o) {
+  const specs = o.specs.map(s => specRow(s[0], /[×°.]|mm|kg|W|hr|Pa|lm|L|kPa|K|%|MB|KB|in|cd|gpf/.test(s[1]) ? `<span class="mono">${s[1]}</span>` : s[1])).join("");
+  const fmtBtns = o.formats.map((f,i) => `<button aria-pressed="${i===0?"true":"false"}" data-fmt="${f[0]}"> .${f[0].toLowerCase()} <span class="sz">${f[1]}</span></button>`).join("");
+  return `
+  <div class="preview" style="--tint:${o.tint}">
+    <div class="preview__glyph"><span><b aria-hidden="true">${o.glyph}</b>${o.ifc}</span></div>
+    <span class="preview__cap">geometry preview · LOD 350 · ${o.id}</span>
+  </div>
+  <p style="color:var(--text-2);font-size:14px;line-height:1.6;margin-top:-4px">${o.desc}</p>
+
+  <div>
+    <div class="sect__h">Specification &amp; property set</div>
+    <table class="spectable"><tbody>${specs}</tbody></table>
+  </div>
+
+  <div>
+    <div class="sect__h">Classification &amp; location</div>
+    <div class="classblock">
+      <div class="clrow"><span class="clrow__k">IFC 4.3 entity class</span><span class="clrow__v">${o.ifc}${o.ifcType?`<small>PredefinedType · ${o.ifcType}</small>`:""}</span></div>
+      <div class="clrow"><span class="clrow__k">Uniclass 2015 — ${o.lv} (Products)</span><span class="clrow__v">${o.uni}<small>${o.uniLabel}</small></span></div>
+      <div class="clrow"><span class="clrow__k">DEN BIM-code location</span><span class="clrow__v">${o.bimcode}<small>${o.bimcodeNote}</small></span></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="sect__h">Download format</div>
+    <div class="dl">
+      <div class="dl__row">
+        <div class="fmtseg" role="group" aria-label="Download format">${fmtBtns}</div>
+        <button class="btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+          Add to model
+        </button>
+      </div>
+      <p class="dl__note">Resolved from registry ref <code>${o.id}@latest</code> · pins to the ACC common data environment on checkout.</p>
+    </div>
+  </div>`;
+}
+
+function compositionDetailHtml(c) {
+  const bill = c.composedFrom.map(b => {
+    const linked = b.ref && OBJ_BY_ID[b.ref];
+    const cls = `billrow${(b.ext || b.muted || !linked) ? " billrow--ext":""}`;
+    const nm = linked ? OBJ_BY_ID[b.ref].name : b.name;
+    const style = b.muted ? ' style="opacity:.55"' : "";
+    return `<button class="${cls}" type="button" ${linked?`data-obj="${b.ref}"`:"disabled"}${style}>
+        <span class="billrow__qty">${b.qty}×</span>
+        <span class="billrow__main">
+          <span class="billrow__name">${nm}</span>
+          <span class="billrow__code">${b.code}${linked?` · ${b.ref}`:` · unlinked ref`}</span>
+        </span>
+        <span class="billrow__arrow">${linked?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>':""}</span>
+      </button>`;
+  }).join("");
+  const cons = c.constraints.map(x => `<div class="cons"><span class="cons__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V7l8-4z"/><path d="M9 12l2 2 4-4"/></svg></span><span>${x.t}</span></div>`).join("");
+  return `
+  <div class="preview" style="--tint:${c.tint}">
+    <div class="preview__glyph"><span><b aria-hidden="true">${c.glyph}</b>${c.id}</span></div>
+    <span class="preview__cap">key-plan tile · assembled template · ${c.uni}</span>
+  </div>
+  <p style="color:var(--text-2);font-size:14px;line-height:1.6;margin-top:-4px">${c.desc}</p>
+
+  <div class="areabox">
+    <span class="areabox__n">${c.area}<small> m²</small></span>
+    <span class="areabox__l">Computed footprint<br>${c.areaNote}</span>
+  </div>
+
+  <div>
+    <div class="sect__h">Composed from — bill of objects</div>
+    <div class="bill">${bill}</div>
+  </div>
+
+  <div>
+    <div class="sect__h">DFI / BEP constraints satisfied</div>
+    <div class="constraints">${cons}</div>
+  </div>
+
+  <div>
+    <div class="sect__h">Classification &amp; location</div>
+    <div class="classblock">
+      <div class="clrow"><span class="clrow__k">Uniclass 2015 — ${c.lv} (${c.lv==="SL"?"Spaces/locations":"Elements/functions"})</span><span class="clrow__v">${c.uni}<small>${c.uniLabel}</small></span></div>
+      <div class="clrow"><span class="clrow__k">DEN BIM-code location</span><span class="clrow__v">${c.bimcode}<small>${c.bimcodeNote}</small></span></div>
+    </div>
+  </div>`;
+}
+
+let lastFocus = null;
+function openModal(id, tab) {
+  const isObj = tab === "objects";
+  const item = isObj ? OBJ_BY_ID[id] : COMPOSITIONS.find(c => c.id === id);
+  if (!item) return;
+  lastFocus = document.activeElement;
+  const chip = isObj
+    ? `<span class="chip chip--pr"><span class="lv">${item.lv}</span>${item.uni}</span><span class="chip chip--ifc">${item.ifc}</span>`
+    : `<span class="chip chip--ef"><span class="lv">${item.lv}</span>${item.uni}</span><span class="chip chip--ifc">TEMPLATE</span>`;
+  $("#modalHead").innerHTML = `
+    <div class="modal__ey">${chip}<span class="modal__id mono">${item.id}</span></div>
+    <h2 class="modal__title" id="modalTitle">${item.name}</h2>
+    <p class="modal__sub">${isObj ? item.mfr + " · certified BIM Object" : "Composition · assembled from " + item.composedFrom.filter(b=>b.qty!=="0").length + " object types"}</p>`;
+  $("#modalBody").innerHTML = isObj ? objectDetailHtml(item) : compositionDetailHtml(item);
+
+  // wire format selector
+  $$("#modalBody .fmtseg button").forEach(b => b.addEventListener("click", () => {
+    $$("#modalBody .fmtseg button").forEach(x => x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+  }));
+  // wire bill-of-objects links -> open that object
+  $$("#modalBody [data-obj]").forEach(b => b.addEventListener("click", () => openModal(b.dataset.obj, "objects")));
+
+  const modal = $("#modal");
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+  $("#modalBody").scrollTop = 0;
+  $("#modalPanel").focus();
+}
+function closeModal() {
+  const modal = $("#modal");
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+
+/* ---- Tabs ---- */
+function setTab(tab) {
+  state.tab = tab;
+  state.facets = {};
+  state.search = "";
+  $("#searchInput").value = "";
+  $$(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.tab === tab)));
+  $("#panel-catalog").setAttribute("aria-labelledby", "tab-" + tab);
+  renderFacets();
+  renderGrid();
+}
+
+/* ---- Events ---- */
+$$(".tab").forEach(t => t.addEventListener("click", () => setTab(t.dataset.tab)));
+$$(".tab").forEach((t,i,arr) => t.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+    e.preventDefault();
+    const next = arr[(i + (e.key==="ArrowRight"?1:arr.length-1)) % arr.length];
+    next.focus(); next.click();
+  }
+}));
+$("#facetHost").addEventListener("change", e => {
+  const cb = e.target.closest("input[data-fkey]");
+  if (!cb) return;
+  const k = cb.dataset.fkey;
+  state.facets[k] = state.facets[k] || new Set();
+  cb.checked ? state.facets[k].add(cb.value) : state.facets[k].delete(cb.value);
+  renderFacets(); renderGrid();
+});
+let searchTimer;
+$("#searchInput").addEventListener("input", e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { state.search = e.target.value.trim(); renderFacets(); renderGrid(); }, 90);
+});
+$("#resetFacets").addEventListener("click", () => {
+  state.facets = {}; state.search = ""; $("#searchInput").value = "";
+  renderFacets(); renderGrid();
+});
+$$("[data-close]").forEach(el => el.addEventListener("click", closeModal));
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#modal").classList.contains("is-open")) closeModal(); });
+
+/* ---- Theme toggle ---- */
+const root = document.documentElement;
+function syncToggleIcon() {
+  const dark = getComputedStyle(root).colorScheme.includes("dark")
+    || root.getAttribute("data-theme") === "dark"
+    || (!root.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+  $(".iconbtn .sun").style.display = dark ? "none" : "block";
+  $(".iconbtn .moon").style.display = dark ? "block" : "none";
+}
+$("#themeToggle").addEventListener("click", () => {
+  const cur = root.getAttribute("data-theme")
+    || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  root.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+  syncToggleIcon();
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncToggleIcon);
+
+/* ---- Init ---- */
+$("#count-objects").textContent = OBJECTS.length;
+$("#count-compositions").textContent = COMPOSITIONS.length;
+syncToggleIcon();
+setTab("objects");
+</script>
+</body>
+</html>
