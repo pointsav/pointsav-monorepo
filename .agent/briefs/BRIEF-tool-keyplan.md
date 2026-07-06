@@ -5,7 +5,7 @@ archive: project-bim
 topic: tool-keyplan
 status: active
 created: 2026-05-22
-updated: 2026-05-22
+updated: 2026-07-06
 ---
 
 # Brief — tool-keyplan (BIM Key Plan DTCG Compiler)
@@ -33,9 +33,12 @@ computed bounding box, and compliance record
 | `pointsav-monorepo/tool-keyplan/configs/po-1.toml` | committed | PO-1 input config |
 | `pointsav-monorepo/Cargo.toml` | committed | tool-keyplan added to members |
 | `woodfine-bim-library/tokens/bim/interior.dtcg.json` | committed | Furniture + circulation BIM Objects (canonical location) |
-| `woodfine-bim-library/tokens/bim/key-plans.dtcg.json` | pending update | PO-1 structured furniture_refs not yet applied to wbl copy |
-| `pointsav-design-system/tokens/bim/interior.dtcg.json` | misrouted — pending admin removal | Copy created in wrong repo; wbl is canonical |
-| `pointsav-design-system/tokens/bim/key-plans.dtcg.json` | misrouted — pending admin removal | PO-1 update applied here in error; wbl is canonical |
+| `woodfine-bim-library/tokens/bim/key-plans.dtcg.json` | committed (PO-1 structured furniture_refs applied 2026-05-23) | Canonical location |
+
+**Update 2026-07-06:** the `pointsav-design-system` misrouted copies noted
+below are moot — that repo no longer exists as a clone in this archive.
+`woodfine-bim-library` has been canonical since the 2026-05-24 migration
+(`cleanup-log.md`).
 
 ## Furniture BIM Objects — PO-1 (interior.dtcg.json)
 
@@ -73,13 +76,13 @@ CARGO_TARGET_DIR=/srv/foundry/cargo-target/jennifer cargo build -p tool-keyplan
 
 # Validate only (no output file)
 ./target/release/tool-keyplan \
-  --interior pointsav-design-system/tokens/bim/interior.dtcg.json \
+  --interior woodfine-bim-library/tokens/bim/interior.dtcg.json \
   --config tool-keyplan/configs/po-1.toml \
   --validate-only
 
 # Compile full DTCG output
 ./target/release/tool-keyplan \
-  --interior pointsav-design-system/tokens/bim/interior.dtcg.json \
+  --interior woodfine-bim-library/tokens/bim/interior.dtcg.json \
   --config tool-keyplan/configs/po-1.toml \
   --output /tmp/po-1-out.dtcg.json
 ```
@@ -104,6 +107,17 @@ Written → /tmp/po-1-out.dtcg.json
 - [x] Update `key-plans.dtcg.json` PO-1 entry to use structured `furniture_refs` — done 2026-05-23
 - [ ] Aisle clearance check (875 mm between furniture bounding boxes) — v0.0.2
 - [ ] Extend to Medical, Laboratory, Business, Academic, Civic interior.dtcg.json tokens
+
+**Update 2026-07-06:** functionally unchanged since v0.0.1 — only formatting/
+clippy/licensing housekeeping commits since 2026-05-22
+(`96225980`, `add53f64`, `78384aae`, `ee23105b`). None of the "Pending" items
+below have been picked up.
+
+The 3 early commits on this crate (`8ce0b9ba`, `a4ba3e96`, `1608fa26`) that
+were flagged 2026-07-03 as needing "a dedicated reconciliation session" against
+canonical were verified 2026-07-06 to be a non-issue: their content is already
+on `origin/main` under the housekeeping commits listed above. No reconciliation
+work is actually needed — see NEXT.md.
 
 ## History
 

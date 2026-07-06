@@ -3,14 +3,30 @@ artifact: brief
 schema: foundry-brief-v1
 archive: project-bim
 topic: key-plans-site
-status: active
+status: superseded
+superseded_by: BRIEF-app-privategit-bim.md
 created: 2026-05-22
-updated: 2026-05-22
+updated: 2026-07-06
 ---
 
-# Brief — Key Plans Live Site (app-orchestration-bim)
+# Brief — Key Plans Live Site (app-orchestration-bim) — SUPERSEDED
 
-## Current state
+**Superseded 2026-07-06.** This brief described the standalone
+`app-orchestration-bim` / `local-bim-orchestration` service. That service was
+retired 2026-07-02 (disabled, not removed, per Command's deploy message
+`command-20260702-resolved-bim-woodfinegroup-com-deployed-`) and replaced by
+`app-privategit-bim` on the same port/domain. `app-privategit-bim` ported the
+same SVG generator convention (`render::svg::render_kp_zone_svg_from_value`,
+same diagram, now at that app's `/key-plans` route). The still-valid technical
+content below (SVG tier system, furniture counts, the raw-string footgun) has
+been merged, with corrected paths and names, into
+`BRIEF-app-privategit-bim.md`'s "Key Plans SVG diagram system" section. This
+file is kept for archival record per the "briefs are permanent" rule — refer
+to the successor brief for current state.
+
+---
+
+## Current state (as of 2026-05-22 — historical, see note above)
 
 Key Plans catalog is live at `https://bim.woodfinegroup.com/tokens/key-plans.dtcg`.
 

@@ -49,6 +49,60 @@ Phase 2 (pending):
 - MCP server integration (`mcpkit-axum`)
 - IFC-lite-core trajectory
 
+Phase 2 status update (2026-07-06): production deploy happened — see Work log
+2026-07-02/03 entries. `local-bim.service` replaced `local-bim-orchestration`
+on port 9096; `app-orchestration-bim`'s service is disabled (kept only as a
+rollback path, not removed). `bim.woodfinegroup.com` now serves
+`app-privategit-bim`.
+
+## Key Plans SVG diagram system
+
+*(Merged 2026-07-06 from `BRIEF-key-plans-site.md`, which is now superseded —
+see that file for archival context. Content below updated to current paths/
+names; the feature itself now lives at this app's `/key-plans` route, reusing
+the same `render::svg::render_kp_zone_svg_from_value` generator referenced in
+the 2026-07-03 "Anatomy of a Key Plan" work-log entry below.)*
+
+**DTCG data:** `woodfine-bim-library/tokens/bim/key-plans.dtcg.json` (canonical
+location; the old `pointsav-design-system/tokens/bim/` copy this brief
+originally cited no longer exists as a clone in this archive)
+
+24 Key Plan cards across 7 categories:
+
+| Category | cat_order | Cards | Display names |
+|---|---|---|---|
+| Private Office | 0 | 3 | Small / Medium / Large |
+| Medical | 1 | 3 | Small / Medium / Large |
+| Business | 2 | 3 | Small / Medium / Large |
+| Laboratory | 3 | 3 | Small / Medium / Large |
+| Academic | 4 | 3 | Small / Medium / Large |
+| Civic | 5 | 3 | Small / Medium / Large |
+| Corporate Office | 6 | 5 | Full Floor / Half / Third / Quarter / Eighth |
+
+Cards ordered Small → Medium → Large within category (`size_order()`).
+Corporate Office last (`cat_order` = 6).
+
+**Size tier:** computed from `area_m2` and `category`. Tier 0=Small, 1=Medium,
+2=Large.
+
+**Furniture key differences by tier:**
+- Private Office: 1 / 2 / 3 desks at facade
+- Medical: 2 / 4 / 6 dental chairs; 1 / 1 / 2 doctor offices
+- Laboratory: 3 / 5 / 7 lab bench clusters; 1 / 2 / 2 offices
+- Business: 3×3 / 4×4 / 5×5 workstation grid; 2 / 3 / 5 exec offices; 1 / 1 / 2 conference tables
+- Academic: workstation bank + conf table / dual banks + oval table / theater seats + bank + round tables
+- Civic: 2 / 4 / 5 offices; 1 / 2 / 2 conf rooms; court room in Large only
+
+**Known Rust footgun:** raw string delimiter `r#"..."#` closes on first `"#` —
+SVG hex colors like `fill="#888"` terminate it early. Use `format!()` with
+escaped quotes instead.
+
+**Still pending (carried over, unverified as of 2026-07-06):**
+- [ ] Corporate Office SVG diagrams — was `_ => {}` (no furniture drawn) as of
+  2026-05-22; awaiting zone depth data. Not re-checked against current source.
+- [ ] `woodfine-bim-library/key-plans/key-plans-registry.md` standalone
+  Markdown deliverable (data currently lives only in DTCG + this brief)
+
 ## Decisions locked
 
 - **SUPERSEDED 2026-07-02: Carbon Web Components removed from the page shell.**
