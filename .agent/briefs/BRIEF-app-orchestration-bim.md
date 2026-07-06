@@ -2,27 +2,56 @@
 artifact: brief
 schema: foundry-brief-v1
 archive: project-bim
-topic: key-plans-site
-status: superseded
-superseded_by: BRIEF-app-privategit-bim.md
+topic: app-orchestration-bim
+status: active
 created: 2026-05-22
 updated: 2026-07-06
 ---
 
-# Brief — Key Plans Live Site (app-orchestration-bim) — SUPERSEDED
+# Brief — app-orchestration-bim
 
-**Superseded 2026-07-06.** This brief described the standalone
-`app-orchestration-bim` / `local-bim-orchestration` service. That service was
-retired 2026-07-02 (disabled, not removed, per Command's deploy message
-`command-20260702-resolved-bim-woodfinegroup-com-deployed-`) and replaced by
-`app-privategit-bim` on the same port/domain. `app-privategit-bim` ported the
-same SVG generator convention (`render::svg::render_kp_zone_svg_from_value`,
-same diagram, now at that app's `/key-plans` route). The still-valid technical
-content below (SVG tier system, furniture counts, the raw-string footgun) has
-been merged, with corrected paths and names, into
-`BRIEF-app-privategit-bim.md`'s "Key Plans SVG diagram system" section. This
-file is kept for archival record per the "briefs are permanent" rule — refer
-to the successor brief for current state.
+## Forward scope (2026-07-06) — BIM Editor/Viewer, distinct from the CMS
+
+**Corrected product definition, replacing the 2026-07-06 "superseded" call
+on this brief (that call was premature — this crate is a separate product,
+not a retired predecessor of `app-privategit-bim`).**
+
+project-bim has three distinct products, easy to conflate because they all
+touch the same data:
+
+| Product | Role | Status |
+|---|---|---|
+| `app-privategit-bim` | **CMS/catalog** — hosts and browses BIM Objects + Compositions as data (design-system-token-catalog shape) | active, being redesigned — see `BRIEF-app-privategit-bim.md` |
+| `app-orchestration-bim` | **BIM Editor/Viewer** — viewing/editing actual BIM models (IFC files) directly, not a catalog | active brief, **software not started** — define now, build later |
+| `tool-keyplan` | **Composition compiler** — validates & compiles Key Plan Compositions from BIM Objects per methodology | active — see `BRIEF-tool-keyplan.md` |
+
+`app-orchestration-bim`'s historical Key-Plans-catalog feature (below) really
+was retired — that specific *catalog page* moved to `app-privategit-bim`'s
+`/key-plans` route (still true, unchanged from the 2026-07-06 note). What was
+wrong was treating that as the end of `app-orchestration-bim` as a product.
+Instead, this crate's future scope is a **BIM Editor/Viewer**: an in-browser
+tool for opening, inspecting, and editing real IFC/BIM model files directly —
+the "Revit-lite" / model-authoring surface, analogous to how a design-system
+catalog (Carbon, Spectrum) is a different product from the Figma/authoring
+tool that produces the components it catalogs. `app-privategit-bim` is the
+Carbon-catalog equivalent; `app-orchestration-bim` is the authoring-tool
+equivalent. No implementation work has started on this scope — this section
+exists to lock the definition in before building it, per operator direction
+("we simply need to define it better, we will work on that software later").
+
+## Historical record — Key Plans Live Site (as of 2026-05-22, superseded 2026-07-02)
+
+This brief originally described the standalone `app-orchestration-bim` /
+`local-bim-orchestration` service serving a Key Plans catalog page. That
+*service* was retired 2026-07-02 (disabled, not removed, per Command's
+deploy message `command-20260702-resolved-bim-woodfinegroup-com-deployed-`)
+and replaced by `app-privategit-bim` on the same port/domain, which ported
+the same SVG generator convention (`render::svg::render_kp_zone_svg_from_value`,
+same diagram, now at that app's `/key-plans` route). The technical content
+below (SVG tier system, furniture counts, the raw-string footgun) was merged,
+with corrected paths and names, into `BRIEF-app-privategit-bim.md`'s "Key
+Plans SVG diagram system" section — that merge stands; refer there for the
+current, corrected version of this specific content.
 
 ---
 
