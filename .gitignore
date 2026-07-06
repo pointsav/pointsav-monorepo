@@ -1,2 +1,6 @@
 # Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock
+.agent/locks/
+
+# Gemini CLI project-config symlink (per-machine, ephemeral)
+.antigravitycli/

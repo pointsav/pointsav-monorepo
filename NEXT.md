@@ -7,14 +7,28 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Hot — pick up here next session
 
-- [ ] **Command: canonical merge + prod push for the 2026-07-04 real-object rebuild** `[2026-07-04 totebox@claude-code]`
-  - `pointsav-monorepo` `0d72def7` (real "Anatomy of a Key Plan — PO-1" hero, header/footer redo, color/font
-    continuity with home.woodfinegroup.com) pushed to staging mirrors, promote-queue entry written.
+- [ ] **`pointsav-monorepo` Cargo.lock is stale relative to Cargo.toml workspace members — not this archive's to fix alone** `[2026-07-06 totebox@claude-code]`
+  - Working tree has an uncommitted +6035/-1453 line `Cargo.lock` diff. Root cause: the committed `Cargo.lock`
+    at current HEAD (`45039f1f`) was last content-updated at old commit `82e10457`, well before many current
+    workspace members (`app-console-email`, `app-console-input`, `app-console-keys`, `app-console-people`,
+    `app-console-search`, `app-console-slm`, `app-console-system`, `app-mediakit-*`, etc.) existed in
+    `Cargo.toml`. A local `cargo build`/`check` regenerated the lockfile to match. This is a canonical-repo
+    lockfile-hygiene gap (workspace-wide, not BIM-specific), not something introduced by this archive's work.
+  - **Deliberately NOT committed** — a diff this size touching every workspace member's transitive deps risks
+    merge noise for every other archive's next Stage 6 promote (project-console/project-knowledge already
+    have pending promotes touching `app-console-*` crates per session-context carry-forward). Left in the
+    working tree uncommitted; flag to Command/operator for a decision on who should own regenerating and
+    committing this (likely belongs with whoever last added workspace members, or a dedicated
+    `cargo update --workspace` housekeeping commit reviewed by Command).
+
+- [ ] **Command: admin-tier push for `woodfine-bim-library` `ee089b2`** `[2026-07-04 totebox@claude-code, updated 2026-07-06]`
+  - `pointsav-monorepo` `0d72def7` half of this item is DONE — confirmed merged to canonical as `58fa91c0`
+    and deployed live (inbox msg `command-20260704-bim-second-rebuild-live`, 2026-07-04). Struck 2026-07-06.
   - `woodfine-bim-library` `ee089b2` (zone-depth data-bug fix, legal text rewrite, home.md content) is
-    committed locally only — its remote is now correctly configured (fixed since last flagged) but has no
-    staging mirror, so it needs Command's admin-tier push directly.
-  - See `BRIEF-app-privategit-bim.md`'s 2026-07-04 entry for full detail on both this and the earlier,
-    now-superseded envelope-as-navigation pass (`dbb74ff8`, also pending the same merge).
+    still committed locally only — its remote is now correctly configured (fixed since last flagged) but has no
+    staging mirror, so it still needs Command's admin-tier push directly.
+  - See `BRIEF-app-privategit-bim.md`'s 2026-07-04 entry for full detail on the now-fully-resolved
+    envelope-as-navigation pass (`dbb74ff8`) and real-object rebuild (`0d72def7`).
 
 - [ ] **woodfine-bim-library has no staging-mirror remotes at all** `[2026-07-04 totebox@claude-code]`
   - Only a single `origin` (woodfine-administrator identity) — every real content/data fix here gets stuck
@@ -50,12 +64,14 @@ Attribution format: `[YYYY-MM-DD role@engine]`
     is already an open question elsewhere in the project (`design-component-bim-viewport-3d.draft.md`'s
     `open_question_1`) — don't resolve it by default here either.
 
-- [ ] **5 excluded commits need a dedicated reconciliation session** `[2026-07-03 command@claude-code]`
-  - 2 `.agent/`-only commits (31403f27, f570b2c6) — correctly never promote, no action needed
-  - 3 older tool-keyplan/app-orchestration-bim commits (8ce0b9ba, a4ba3e96, 1608fa26) — conflict heavily
-    (30+ hunks) with `app-orchestration-bim/src/main.rs` on canonical, which has evolved independently and
-    substantially elsewhere. Remain on local `cluster/project-bim` only. Needs someone with context on both
-    sides of the conflict, not a guessed resolution.
+- [x] **5 excluded commits — RESOLVED, no reconciliation session needed** `[2026-07-03 command@claude-code, verified resolved 2026-07-06 totebox@claude-code]`
+  - 2 `.agent/`-only commits (31403f27, f570b2c6) — correctly never promote, no action needed.
+  - 3 older tool-keyplan/app-orchestration-bim commits (8ce0b9ba, a4ba3e96, 1608fa26) — verified 2026-07-06:
+    their content is already present on `origin/main` under different SHAs (`9bb81f99`, `96225980`,
+    `add53f64`, `78384aae`, `96485c5d` — diffed identical / equivalent commit messages). Someone (likely
+    Command) already did the reconciliation directly on canonical between 2026-07-03 and 2026-07-05. The
+    2026-07-05 hard-reset of local `cluster/project-bim` to `origin/main` (which orphaned these 3 SHAs
+    locally) was this reconciliation completing, not a bug or data loss. No further action needed.
 
 - [ ] **Search: doesn't index property-set/compliance text inside entity values** `[2026-07-03 totebox@claude-code]`
   - Only title/slug/IFC-class/top-level `$description` are indexed — a query like "fire door" can legitimately return 0 results even though both words exist in the corpus, if no single item's indexed fields contain both
