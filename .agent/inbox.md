@@ -43,10 +43,10 @@ to: totebox@project-bim
 re: Status check — DTCG accuracy errors + mailbox lifecycle backfill
 created: 2026-05-15T09:00:00Z
 priority: normal
-status: operator-pending
+status: actioned
 actioned_by: command@claude-code
-actioned_at: 2026-05-16
-note: citations are a blocking prerequisite for DTCG fixes; not started pending operator source research
+actioned_at: 2026-07-07
+note: RESOLVED 2026-07-07 — see the actioned note on the original 2026-05-13 message below; all 3 accuracy errors closed with citations
 ---
 
 Status check on the DTCG accuracy error message below (2026-05-13). Three items in `climate-zones.dtcg.json`, `performance.dtcg.json`, `materials.dtcg.json` are on hold pending source citations.
@@ -65,7 +65,10 @@ to: totebox@project-bim
 re: BIM token catalog — 3 data accuracy errors; do NOT edit until source citations confirmed
 created: 2026-05-13T16:30:00Z
 priority: normal
-status: operator-pending
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-07-07
+note: RESOLVED 2026-07-07 — all 3 errors closed. (1) climate-zones.dtcg.json and (3) materials.dtcg.json were already fixed 2026-05-24 (commit b4b4379, never had their status updated). (2) performance.dtcg.json's Pset_DoorCommon.FireExit -> IsFireExit was still outstanding — fixed this session (commit 4be3606) with $cites: ["ifc-4-3"] added, matching the citation pattern already used in the other 2 files.
 ---
 
 Three accuracy errors were identified in the BIM DTCG token catalog during the
