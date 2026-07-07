@@ -151,9 +151,10 @@ re: PROSE sweep supplement — 11 NEW TOPIC drafts (BIM project documentation; O
 created: 2026-05-17T23:30:00Z
 priority: high
 priority-boosted: 2026-06-21
-status: pending
+status: dispatched
 attempts: 25
 msg-id: project-bim-20260517-prose-sweep-supplement
+relayed-on: 2026-07-07
 ---
 
 Eleven new TOPIC drafts staged in `clones/project-bim/.agent/drafts-outbound/`
@@ -292,9 +293,10 @@ re: DESIGN sweep supplement — 3 additional drafts + 1 new (print/PDF pipeline)
 created: 2026-05-17T21:00:00Z
 priority: high
 priority-boosted: 2026-06-21
-status: pending
+status: dispatched
 attempts: 25
 msg-id: project-bim-20260517-design-sweep-supplement
+relayed-on: 2026-07-07
 ---
 
 Supplemental dispatch to the earlier design sweep message
@@ -345,9 +347,10 @@ re: PROSE sweep — 10 TOPIC drafts + 5 GUIDE drafts ready for editorial pass
 created: 2026-05-17T00:00:00Z
 priority: high
 priority-boosted: 2026-06-21
-status: pending
+status: dispatched
 attempts: 25
 msg-id: project-bim-20260517-prose-sweep-editorial
+relayed-on: 2026-07-07
 ---
 
 15 PROSE drafts are staged in `clones/project-bim/.agent/drafts-outbound/` awaiting
@@ -389,9 +392,10 @@ re: DESIGN sweep — 12 design drafts ready; render.rs-only decision for regulat
 created: 2026-05-17T00:00:00Z
 priority: high
 priority-boosted: 2026-06-21
-status: pending
+status: dispatched
 attempts: 25
 msg-id: project-bim-20260517-design-sweep
+relayed-on: 2026-07-07
 ---
 
 12 DESIGN drafts are staged in `clones/project-bim/.agent/drafts-outbound/` awaiting
