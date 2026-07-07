@@ -146,7 +146,7 @@ scaffold (`bim-units`, `bim-tokens`, `bim-furniture`, `tool-buildingwidth`,
 
 ---
 from: totebox@project-bim
-to: task@project-editorial
+to: totebox@project-editorial
 re: PROSE sweep supplement — 11 NEW TOPIC drafts (BIM project documentation; Opus army synthesis)
 created: 2026-05-17T23:30:00Z
 priority: high
@@ -287,7 +287,7 @@ admin-tier edit. Routing the draft to Command for coordination.
 
 ---
 from: totebox@project-bim
-to: task@project-design
+to: totebox@project-design
 re: DESIGN sweep supplement — 3 additional drafts + 1 new (print/PDF pipeline)
 created: 2026-05-17T21:00:00Z
 priority: high
@@ -340,7 +340,7 @@ to Command (admin-tier / mcorp-administrator), NOT to project-design.
 
 ---
 from: totebox@project-bim
-to: task@project-editorial
+to: totebox@project-editorial
 re: PROSE sweep — 10 TOPIC drafts + 5 GUIDE drafts ready for editorial pass
 created: 2026-05-17T00:00:00Z
 priority: high
@@ -384,7 +384,7 @@ All 10 TOPIC articles now drafted — no remaining gaps from manifest.md §plann
 
 ---
 from: totebox@project-bim
-to: task@project-design
+to: totebox@project-design
 re: DESIGN sweep — 12 design drafts ready; render.rs-only decision for regulation-rs1
 created: 2026-05-17T00:00:00Z
 priority: high
