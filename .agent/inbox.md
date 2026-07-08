@@ -46,12 +46,18 @@ to: totebox@project-bim
 re: Important Information + footer structure — applies to bim.woodfinegroup.com (Woodfine record + a JOURNAL /research surface)
 created: 2026-07-02T18:21:35Z
 priority: normal
-status: read-not-actioned
+status: actioned
+actioned_by: totebox@claude-code
+actioned_at: 2026-07-07
 attempts: 0
 msg-id: command-20260702-important-information-footer-structure-a
-note: read late (2026-07-03 shutdown sweep, missed after a mid-session context compaction) — an
-  ad-hoc "Important Information" band was already built this session without seeing this message;
-  redo against this spec next session. Logged as a Hot item in NEXT.md.
+note: RESOLVED 2026-07-07 — redone against the real reference implementation (project-knowledge's
+  app-mediakit-knowledge, counsel-approved 2026-07-02): dedicated important-information.md band
+  content (not the full disclaimers reuse), real CC BY-ND badge with official marks + deed link,
+  beforeprint/afterprint JS to genuinely force the band open for real printing (CSS alone proved
+  insufficient against a generated PDF). Commits: pointsav-monorepo 787f3867, woodfine-bim-library
+  95ca5b8. JOURNAL /research render-contract work consciously deferred, not dropped — see reply
+  command-20260708-done-important-information-band-cc-by-nd.
 ---
 
 Flagging a legal-presentation pattern we researched + built on the knowledge wikis, relevant to bim.woodfinegroup.com — it's a Woodfine public property AND one of the specialist JOURNAL /research surfaces (per project-editorial's journal-registry, bim carries a research paper).
