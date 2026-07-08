@@ -2,6 +2,67 @@
 
 ---
 
+## 2026-07-02/03 | totebox@claude-code | mobile fixes + full shell redesign (largest session on this archive to date)
+
+**Done:**
+- Continued from a compacted context; earlier turns (mobile-readiness sweep, license footer split, license Cargo.toml
+  correction) already summarized/committed before this entry's window starts. **Did not re-read `.agent/inbox.md`
+  after the compaction** — missed 3 real messages until surfaced during shutdown (see Pending below). Flag for
+  next session: always re-run the inbox read after a context compaction, don't assume it carried over.
+- **Mobile-readiness sweep** (operator: "make sure bim.woodfinegroup.com is 100% ready on mobile"): found and fixed
+  two real bugs — Key Plans page showed placeholder "— —"/"0 SF" on every card (data-nesting assumption wrong,
+  file nests 3 levels not 2); `.bim-markdown` had zero CSS for `<p>`/`<ul>`/`<table>`.
+- **Multi-agent design/consistency pass** (Plan Mode; 3 parallel Opus research agents + synthesis + Fable
+  verification): fixed a confidentiality leak in research articles (internal `~/Foundry/...` paths, app codenames
+  publicly visible — sanitized, made git-tracked for the first time), a `$description`-as-fake-entity-row data bug,
+  duplicate-looking rows in multi-group token files, internal app slug + ops endpoints visible in public
+  chrome, H1 weight 300→600, orphaned-prose layout, duplicate "Key Plans" sidebar label pointing to two pages.
+- **Full shell redesign** (operator, after fresh look: "is a dog... check out how clean the new sites are" —
+  compared against `home.woodfinegroup.com` and the live wiki instances, `app-mediakit-knowledge-2` at
+  corporate/projects/documentation.woodfinegroup.com, ports 9095/9093/9090, started this session specifically to
+  inspect). Two Explore agents mapped the wiki's exact CSS/HTML and BIM's functional inventory; a Plan agent
+  validated dark-mode/Carbon interaction and search-implementation scope. Five rounds, all committed:
+  1. Dark-mode infrastructure (`data-theme`, narrowed token overrides, `/edit/*` forced light — Carbon-dependent)
+  2. Header + utility bar rebuild (light chrome replacing navy topbar, real wordmark, search bar, theme toggle)
+  3. Sidebar + card-grid restyle (accent-left-border convention)
+  4. Footer rebuild (Network column, cities line, badges) + new "Important Information" disclosure band
+     (built ad-hoc — this duplicated unread Command guidance; redone properly 2026-07-07/08, see current
+     session-context.md)
+  5. Server-side search (categories/entities/research articles, no new crate)
+  Found and fixed along the way: hardcoded `#111827` making the homepage H1-equivalent invisible in dark mode
+  (swept both stylesheets for the same pattern), a mobile header-overflow bug hiding the theme toggle at 390px.
+- Attempted Stage 6 self-service push (`bin/self-service-promote.sh`) — rejected, and `git merge-base` found
+  **no common ancestor** between local `cluster/project-bim` and `origin-staging-j/main` (that fork's main had
+  advanced with unrelated `project-knowledge` commits). Did not force-push or guess at a rebase. Escalated to
+  Command (`command-20260703-project-bim-ready-for-canonical-merge-pr`, high priority) with full detail, asking
+  them to resolve the fork state, process the promote-queue, and run `push-to-prod.sh bim` once done.
+- Two mid-session incidents, both resolved, neither a regression: a VM-wide disk-full condition (154G/154G) that
+  blocked all Bash tool use — genuinely workspace-wide, operator cleared it externally; and a detected-and-ignored
+  prompt-injection attempt inside a tool result during Plan-agent exploration (flagged to operator for transparency).
+- 41 commits total this session to `pointsav-monorepo` cluster/project-bim; `woodfine-bim-library` research/*.md
+  (3 files, made git-tracked for the first time) on `main`; `BRIEF-app-privategit-bim.md` updated after each phase.
+
+**Pending / carry-forward (resolved by 2026-07-07/08, kept for history):**
+- Command's canonical merge + prod push was blocked on a staging-fork anomaly; resolved by Command in a
+  later session. `push-to-prod.sh`'s `target_bim()` staleness was also fixed by Command by then.
+- The Important Information band was redone against the real Command/project-knowledge pattern on
+  2026-07-07/08 (dedicated `important-information.md`, real CC BY-ND badge, real print-open JS) — see
+  current `session-context.md` for that entry.
+- Search's property-set/compliance-text indexing gap, the corporate wiki CSS 404s, and the 18 modified
+  IFC files were all still open as of 2026-07-07/08 — not addressed by the redesign session.
+
+**Operator preferences surfaced:**
+- Wants fresh-eyes re-verification even after "done" work — asked to recheck mobile/desktop twice more after the
+  redesign was already verified once, and asked for a direct side-by-side against comparison sites a second time.
+  Don't treat one verification pass as sufficient when the operator asks to "check again."
+- Explicit go-ahead needed before actions with external/shared-state footprint (staging pushes, force-pushes) —
+  correctly held off on a rebase-and-force-retry when the git history diverged unexpectedly; operator confirmed
+  this was the right call rather than pushing through it.
+- Reacts strongly and specifically to competitor/sibling-site comparisons ("is a dog," "way better") — take this
+  as a genuine escalation signal warranting a structural response (full redesign), not just another polish pass.
+
+---
+
 ## 2026-07-02 | totebox@claude-code | live-site diagnosis + escalation to Command
 
 **Done:**

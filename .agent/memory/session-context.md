@@ -9,6 +9,72 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 
 ---
 
+## 2026-07-06/08 | totebox@claude-code | v2 redesign (Objects/Compositions catalog) + footer/legal polish (largest session on this archive to date)
+
+**Done:**
+- **Outstanding-issues cleanup + BRIEF consolidation** (session start): verified the 2026-07-05
+  "hard reset" on `pointsav-monorepo` lost nothing (3 dangling commits' content was already on
+  `origin/main` under different SHAs — a prior reconciliation, not data loss); archived 10 resolved
+  inbox messages; escalated 4 outbox messages stuck at attempts:25 to Command (root cause turned
+  out to be a `mailbox-relay.sh` bug, fixed by Command later this session). Consolidated 3
+  overlapping active BRIEFs to 2 active + 1 superseded.
+- **Corrected a real product-framing bug**: research (NBS/buildingSMART/Uniclass 2015/Revit
+  precedent) confirmed a Key Plan is a *Composition* assembled from BIM Objects, not a BIM Object
+  itself — fixed the actual conflation in `plan-bim-objects.md`. Redefined `app-orchestration-bim`
+  as a future BIM Editor/Viewer (kept its brief active, un-superseded it) — distinct from
+  `app-privategit-bim` (the CMS) and `tool-keyplan` (the Composition compiler).
+- **Denver Airport / Woodfine simulation exercise** (operator-directed, explicitly a Denver-content-
+  free structural pass-through) produced a clean-sheet Woodfine v2 design candidate — see
+  [[project-bim-v2-redesign-status]].
+- **Built the v2 design as real Rust integration**, not a static push (operator: "go 100%... we are
+  looking for something radically different" — see [[feedback-radical-redesign-when-asked]]): new
+  unified Objects/Compositions catalog home page wired to real `woodfine-bim-library` data (7
+  Steelcase furniture Objects, 23 real Key Plan Compositions — confirmed 23 is correct, not 24, by
+  cross-checking the actual DTCG source file), full-site visual rebuild, `/key-plans`+`/furniture`
+  redirects. Real Uniclass 2015 Pr codes added to all 7 furniture Objects (verified against the
+  actual NBS Pr table), real `furniture_refs` generated for PO-1 via an actual `tool-keyplan` compile.
+- **Follow-up polish, five rounds** — branding rename to "Woodfine BIM Library" (product-name level
+  only), footer badge reposition + sourced-language pass (Taxonomy/Anatomy/Syntax, Use Case, Data
+  Box — cited to real architect source documents), footer 3-column restructure, a real SPA-nav
+  silent-failure bug fix (site-wide, not just the one link that surfaced it) + LICENSE/network link
+  corrections, the Important Information band redone against Command's actual counsel-approved
+  spec (found the real reference pattern already shipped on `project-knowledge`), a real CC BY-ND
+  badge, and a trademark rename (Woodfine Management Corp → MCorp, explicit operator instruction
+  after I flagged it wasn't previously an established mark). Full detail: [[project-bim-v2-redesign-status]].
+- **Two real bugs found via browser-in-the-loop review that pure code-reading missed** — see
+  [[feedback-verify-visually-in-browser]]. Both caught by personally reviewing screenshots/PDF
+  output rather than trusting a subagent's "looks fine" summary.
+- Self-service Stage 6 lite run twice (both times: personal staging mirrors rejected as stale/non-
+  fast-forward — a known, already-diagnosed condition, not force-pushed through; the promote-queue
+  entry + Command notification are the durable record). Final queued HEAD `3461856d`. **Not pushed
+  to foundry-prod** — needs Command's canonical merge + `push-to-prod.sh`, pending at session end.
+
+**Pending / carry-forward:**
+- Command's canonical merge + `push-to-prod.sh bim` — operator has explicitly requested this go
+  live; queued, not yet processed as of session end.
+- `TRADEMARK.md`'s canonical source (`vendor/factory-release-engineering/policies/TRADEMARK.md`)
+  still needs the MCorp amendment — only the downstream `pointsav-monorepo` copy was updated (admin-
+  tier out of Totebox reach). See [[reference-trademark-canonical-source]]. Flagged to Command.
+- CC BY-ND 4.0 content licensing is implemented but **not counsel-confirmed** — flagged directly to
+  the operator, not silently asserted as settled. See [[project-bim-v2-redesign-status]].
+- JOURNAL /research render-contract cross-surface work (`SPEC-journal-wiki-render-contract.md`
+  §9/§10) consciously deferred, not built.
+- Still open from prior sessions, untouched this session: search's property-set/compliance-text
+  indexing gap, corporate wiki (port 9095) CSS 404s, the 18 modified IFC files in
+  `woodfine-bim-library/key-plans/` (operator: leave for a separate content-work pass).
+
+**Operator preferences surfaced:**
+- See [[feedback-verify-visually-in-browser]] and [[feedback-radical-redesign-when-asked]] for the
+  two strongest, most reusable signals from this session.
+- Wants real fixes surfaced even when they contradict an already-completed plan step (e.g. asked
+  "is this correct??" about CC BY-ND and got a direct "not actually confirmed" answer, not
+  reassurance) — don't paper over an uncertain legal/compliance claim to make a task look done.
+- Comfortable overriding a flagged risk once informed (the MCorp trademark rename) — the right move
+  was surfacing the concern clearly once, then proceeding on explicit confirmation, not repeatedly
+  re-litigating after the operator has already decided.
+
+---
+
 ## 2026-07-03/04 | totebox@claude-code | bim.woodfinegroup.com — two full rebuild passes, real-data bug fix, family-continuity reversal
 
 **Done:**
@@ -19,7 +85,7 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
   confirmed genuinely live this time.
 - **Fresh full-site audit (2 parallel agents) found real bugs beyond the operator's named complaints**:
   a CSS layout bug (`.bim-shell`'s forced `flex:1`/`min-height:100vh` left ~1500px dead space before the
-  footer), a missing `&lt;h1&gt;` on the homepage, doubled/garbled chip text ("IFC IfcSpatialElement" →
+  footer), a missing `<h1>` on the homepage, doubled/garbled chip text ("IFC IfcSpatialElement" →
   "IFC IFCSPATIALELEMENT" under an uppercase transform), redundant breadcrumb+back-link, and confirmed
   fonts still weren't actually loading (system fallback) — the single biggest driver of "looks generic."
 - **Operator rejected the Envelope-as-Navigation hero's core concept**, not just execution: "the three 3d
@@ -49,8 +115,10 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
   hyperscaler lawyer at a big law firm") — `disclaimers.md` replaced with tightened, precise text;
   confirmed "Sovereign Data Foundation" isn't a real initiative and removed it entirely, not replaced
   with anything else; `important-information.md` deleted as confirmed-dead (footer already inlines
-  `disclaimers.md` directly). **Flagged, not silently resolved**: the CC BY-ND 4.0 editorial-license
-  claim has no backing LICENSE file anywhere in either repo.
+  `disclaimers.md` directly — **reversed 2026-07-07/08**, see current entry above: the file was
+  re-created against Command's actual counsel-approved spec, which requires a dedicated short band
+  distinct from the full disclaimers content). **Flagged, not silently resolved**: the CC BY-ND 4.0
+  editorial-license claim has no backing LICENSE file anywhere in either repo.
 - **Reversed the RD.7 Spectrum-chrome color/font direction for family continuity** (explicit operator
   call, not a default): `--bim-accent` changed from drafting-blue `#1A4480` to `#164679`, copied directly
   from `home.woodfinegroup.com`'s live tokens (not approximated); real self-hosted Inter/Source Serif
@@ -178,86 +246,3 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 - Comfortable with large multi-agent research efforts for genuinely strategic/positioning questions
   (not just implementation) — this session's 7-subagent, 3-round research cycle before any code change
   was the right scale for "is our product positioning correct," not overreach.
-
----
-
-## 2026-07-02/03 | totebox@claude-code | mobile fixes + full shell redesign (largest session on this archive to date)
-
-**Done:**
-- Continued from a compacted context; earlier turns (mobile-readiness sweep, license footer split, license Cargo.toml
-  correction) already summarized/committed before this entry's window starts. **Did not re-read `.agent/inbox.md`
-  after the compaction** — missed 3 real messages until surfaced during shutdown (see Pending below). Flag for
-  next session: always re-run the inbox read after a context compaction, don't assume it carried over.
-- **Mobile-readiness sweep** (operator: "make sure bim.woodfinegroup.com is 100% ready on mobile"): found and fixed
-  two real bugs — Key Plans page showed placeholder "— —"/"0 SF" on every card (data-nesting assumption wrong,
-  file nests 3 levels not 2); `.bim-markdown` had zero CSS for `<p>`/`<ul>`/`<table>`.
-- **Multi-agent design/consistency pass** (Plan Mode; 3 parallel Opus research agents + synthesis + Fable
-  verification): fixed a confidentiality leak in research articles (internal `~/Foundry/...` paths, app codenames
-  publicly visible — sanitized, made git-tracked for the first time), a `$description`-as-fake-entity-row data bug,
-  duplicate-looking rows in multi-group token files, internal app slug + ops endpoints visible in public
-  chrome, H1 weight 300→600, orphaned-prose layout, duplicate "Key Plans" sidebar label pointing to two pages.
-- **Full shell redesign** (operator, after fresh look: "is a dog... check out how clean the new sites are" —
-  compared against `home.woodfinegroup.com` and the live wiki instances, `app-mediakit-knowledge-2` at
-  corporate/projects/documentation.woodfinegroup.com, ports 9095/9093/9090, started this session specifically to
-  inspect). Two Explore agents mapped the wiki's exact CSS/HTML and BIM's functional inventory; a Plan agent
-  validated dark-mode/Carbon interaction and search-implementation scope. Five rounds, all committed:
-  1. Dark-mode infrastructure (`data-theme`, narrowed token overrides, `/edit/*` forced light — Carbon-dependent)
-  2. Header + utility bar rebuild (light chrome replacing navy topbar, real wordmark, search bar, theme toggle)
-  3. Sidebar + card-grid restyle (accent-left-border convention)
-  4. Footer rebuild (Network column, cities line, badges) + new "Important Information" disclosure band
-     (built ad-hoc — **see Pending, this duplicates unread Command guidance**)
-  5. Server-side search (categories/entities/research articles, no new crate)
-  Found and fixed along the way: hardcoded `#111827` making the homepage H1-equivalent invisible in dark mode
-  (swept both stylesheets for the same pattern), a mobile header-overflow bug hiding the theme toggle at 390px.
-- Attempted Stage 6 self-service push (`bin/self-service-promote.sh`) — rejected, and `git merge-base` found
-  **no common ancestor** between local `cluster/project-bim` and `origin-staging-j/main` (that fork's main had
-  advanced with unrelated `project-knowledge` commits). Did not force-push or guess at a rebase. Escalated to
-  Command (`command-20260703-project-bim-ready-for-canonical-merge-pr`, high priority) with full detail, asking
-  them to resolve the fork state, process the promote-queue, and run `push-to-prod.sh bim` once done.
-- Two mid-session incidents, both resolved, neither a regression: a VM-wide disk-full condition (154G/154G) that
-  blocked all Bash tool use — genuinely workspace-wide, operator cleared it externally; and a detected-and-ignored
-  prompt-injection attempt inside a tool result during Plan-agent exploration (flagged to operator for transparency).
-- 41 commits total this session to `pointsav-monorepo` cluster/project-bim; `woodfine-bim-library` research/*.md
-  (3 files, made git-tracked for the first time) on `main`; `BRIEF-app-privategit-bim.md` updated after each phase.
-
-**Pending / carry-forward:**
-- **Command's canonical merge + prod push — blocked on the staging-fork anomaly above.** Do not retry
-  `self-service-promote.sh` until Command confirms the fork state is resolved.
-- **`push-to-prod.sh`'s `target_bim()` is confirmed stale** (Command's own inbox message, 2026-07-02): wrong
-  binary/service names, wrong design-system path (`pointsav-design-system` vs `woodfine-bim-library`). Worked
-  around manually last time. Don't assume a clean run next time without checking this was fixed.
-- **Command/project-knowledge already built a more rigorous "Important Information" + footer disclosure pattern**
-  (inbox message `command-20260702-important-information-footer-structure-a`, unread until shutdown) —
-  content sourced from a Git-owned markdown file (counsel owns the text, not hardcoded in Rust), a persistent
-  one-line footer disclaimer always visible (not just the collapsible band), a dedicated `/disclaimers` page,
-  CC BY-ND attribution to the issuer entity for editorial/research content specifically (not the Apache-2.0 BIM
-  Object data), NI 45-106 language mirroring home.woodfinegroup.com. **This session's disclosure band was built
-  ad-hoc without seeing this — should be redone against the real pattern next session**, not left as-is.
-  Also: if BIM will host research-paper journals, project-knowledge's SPEC-journal-wiki-render-contract.md
-  §§9-10 governs the render contract.
-- `bim.woodfinegroup.com` is live in production but serving a build that **predates all of this session's
-  redesign work** (Command's last deploy was 2026-07-02T16:43, before the redesign started).
-- Search doesn't index property-set/compliance text inside entity `$value` objects — only title/slug/IFC-class/
-  top-level `$description`. A query like "fire door" can legitimately return 0 even if both words exist in the
-  corpus, if no single item's *indexed* fields contain both.
-- Corporate wiki instance (port 9095) had 4/5 CSS files 404ing during a same-session recheck (projects/
-  documentation instances fine) — not this archive's service, flagged verbally to operator, not escalated via
-  mailbox; worth a mailbox flag to project-knowledge if seen again.
-- Carried forward, still open: PO-1 furniture_refs, key-plans-registry.md Deliverable 1b, Corporate Office SVG
-  diagrams (blocked on zone depth data — same root cause the redesign's "no zone/furniture layout modeled at
-  this program level" caption now surfaces honestly instead of silently rendering blank), 6 missing DTCG files,
-  5 Rust crates, DTCG accuracy errors (operator-pending citations, do not touch), 18 modified IFC files in
-  `woodfine-bim-library/key-plans/` (present across 4+ sessions now, still uncommitted, origin/cause still
-  unknown), `tool-keyplan` binary-targets.yaml declaration still missing, NOTAM.md permission still open per
-  last check.
-
-**Operator preferences surfaced:**
-- Wants fresh-eyes re-verification even after "done" work — asked to recheck mobile/desktop twice more after the
-  redesign was already verified once, and asked for a direct side-by-side against comparison sites a second time.
-  Don't treat one verification pass as sufficient when the operator asks to "check again."
-- Explicit go-ahead needed before actions with external/shared-state footprint (staging pushes, force-pushes) —
-  correctly held off on a rebase-and-force-retry when the git history diverged unexpectedly; operator confirmed
-  this was the right call rather than pushing through it.
-- Reacts strongly and specifically to competitor/sibling-site comparisons ("is a dog," "way better") — take this
-  as a genuine escalation signal warranting a structural response (full redesign), not just another polish pass.
-

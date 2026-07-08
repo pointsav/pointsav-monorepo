@@ -1026,3 +1026,69 @@ state as of the original escalation.
     remains a Command Session action gated on operator approval of this local preview, per this
     archive's own deploy model. Two commits: `b899adbc` (small — only captured a file deletion due
     to a `git add` slip on a stale path) + `cc25102f` (the actual 16-file redesign).
+
+- **2026-07-07/08 — polish pass, real bugs found via browser-in-the-loop, spec redo, trademark
+  rename.** Same session continued; five follow-up rounds, each independently re-verified (not just
+  trusting agent/subagent reports):
+  - **Branding + footer badge + sourced copy** (`69d6406b`): product name → "Woodfine BIM Library"
+    at the title/nav/footer level only (item-level "BIM Object"/"BIM Objects" copy untouched —
+    confirmed via research this has been the deliberate term since a 2026-05-17 sweep, so this is a
+    new stylistic call, not a reversion). "Powered by PrivateGit" badge kept, moved right. Copy pass
+    using real source documents (Openstudio correspondence, DISCOVERY sketch notes): "Taxonomy ·
+    Anatomy · Syntax" framing, "Use Case" facet label, "Data Box" area-panel label — each cited to
+    source in a code comment. **Real bug found and fixed**: `.bim-cat-grid[hidden]`'s `display: grid`
+    was beating the `[hidden]` UA default, so Objects/Compositions tab panels rendered stacked on
+    top of each other regardless of which tab was selected — caught by personally reviewing the
+    audit agent's own screenshots rather than trusting its "looks fine" summary. Separately, a real
+    mobile-overflow bug (classification chips forcing cards wider than viewport) was found and
+    fixed by the audit agent, independently re-verified.
+  - **Footer 3-column restructure** (`643af9dd`): promoted the standalone "Woodfine network" line
+    into a proper third column; dropped `· {public_url}` from the copyright line (keeping "See
+    LICENSE for terms." — verified this exact text is mandated verbatim by
+    `TRADEMARK.md` §13, not removable); dropped a redundant "See Important Information" pointer
+    (disclosure section's own heading sits directly above the footer already).
+  - **Real SPA-nav bug fixed** (`8eeffe9b`): `bim.js`'s client-side nav silently did nothing on any
+    link to a page without a `/fragment/*` route (only `/tokens`, `/tokens/{name}`, `/research` have
+    one) — affected the "Full disclaimer →" link and any breadcrumb "Home" link site-wide. Fixed by
+    falling back to a real page load on a non-OK fragment fetch. Also: linked the previously-bare
+    "LICENSE" text to the real file on GitHub; corrected "Woodfine Capital Projects" → the real
+    `home.woodfinegroup.com` (bare `woodfinegroup.com` turned out to be a placeholder/press-release
+    page, confirmed via WebFetch); added "PointSav Digital Systems" → `home.pointsav.com`.
+  - **Important Information band redone against Command's actual 2026-07-02 spec** (`787f3867`,
+    +`woodfine-bim-library` `95ca5b8`): found the real counsel-approved reference implementation
+    already shipped on `project-knowledge`'s `app-mediakit-knowledge` and matched it — dedicated
+    short `important-information.md` (not a reuse of the full `disclaimers_page`), a real CC BY-ND
+    4.0 badge (official marks + deed link — the SVG assets turned out to already be committed from
+    the original ad-hoc attempt, just never wired up), and print handling. **Caught the print CSS
+    not actually working**: the proven `display: block !important` pattern reports as visible via
+    `getComputedStyle` but a real generated PDF omitted the content anyway — added a
+    `beforeprint`/`afterprint` JS handler that genuinely opens the `<details>`, verified via a second
+    event listener observing state mid-print-cycle (since Playwright's `page.pdf()` doesn't fire
+    `beforeprint` at all, unlike a real user's Ctrl+P). Marked Command's spec message `actioned`;
+    flagged the JOURNAL /research render-contract work as consciously deferred, not silently dropped.
+  - **Trademark rename** (`3461856d`): operator asked to replace "Woodfine Management Corp™" with
+    "MCorp™". Flagged first that "MCorp" wasn't an enumerated mark anywhere in canonical governance
+    (only ever a filename-shorthand in architect source docs) — operator confirmed it was a
+    deliberate rename, not a mix-up. Updated both the footer and `pointsav-monorepo/TRADEMARK.md`
+    (§1 marks list + §13 canonical notice) for internal consistency. **Real drift flagged, not
+    silently created**: this `TRADEMARK.md` is a downstream copy of the actual canonical policy at
+    `vendor/factory-release-engineering/policies/TRADEMARK.md` (confirmed byte-identical before the
+    edit) — per that document's own §11, real amendments only take effect there, which is
+    admin-tier, out of Totebox reach. Sent Command a high-priority message asking for the canonical
+    source (and any other mirrors, e.g. `woodfine-fleet-deployment/TRADEMARK.md`, not checked) to be
+    amended to match.
+  - **CC BY-ND licensing — flagged as not actually counsel-confirmed.** When asked "is this
+    correct," checked `project-knowledge`'s own tracked governance record (the reference
+    implementation this pattern was copied from) and found the CC BY-ND choice explicitly listed as
+    "⚠️ For counsel (surfaced, not decided)" — a working engineering default, not a confirmed legal
+    position. Told the operator directly rather than asserting it was fine; this is now more
+    prominently asserted (via the new real CC badge) than before, so worth an actual counsel
+    sign-off before treating it as settled.
+  - **Self-service Stage 6 lite run twice** (`bin/self-service-promote.sh`) — direct pushes to both
+    personal staging mirrors were rejected as non-fast-forward both times (mirrors are stale,
+    pre-dating the 2026-07-05 branch reset investigated earlier this session — a known, already-
+    diagnosed condition, not a new anomaly, so not force-pushed through). The promote-queue entry +
+    Command inbox notification are the durable record regardless and succeeded both times; final
+    queued HEAD is `3461856d`. **Not pushed to foundry-prod** — operator has explicitly requested it
+    go live; that step needs Command Session (canonical merge + `push-to-prod.sh`), still pending as
+    of session end.
