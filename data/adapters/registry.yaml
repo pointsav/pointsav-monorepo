@@ -5,3 +5,17 @@ adapters:
   eval_pass_at5: 0.0
   promoted: false
   notes: "registered by score-gate.sh \u2014 diff_parse=0.0 git_apply=0.0 envelope=0.0"
+- name: apprenticeship-pointsav-incremental
+  version: 1
+  adapter_dir: /srv/foundry/data/adapters/apprenticeship-pointsav-incremental
+  base_model: allenai/OLMo-3-7B-Instruct
+  trained_on: '2026-07-08'
+  corpus_pairs: 13
+  eval_pass_at5: 0.0
+  promoted: false
+  notes: "registered by score-gate.sh \u2014 diff_parse=0.0 git_apply=0.0 envelope=0.0"
+  capability_drift:
+    ok: false
+    pass: 4
+    total: 9
+    rate: 0.444
