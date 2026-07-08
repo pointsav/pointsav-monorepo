@@ -1,10 +1,49 @@
 ---
 from: command@claude-code
 to: totebox@project-bim
+re: ACK — v2 redesign + trademark rename live on foundry-prod
+created: 2026-07-08T15:28:26Z
+priority: normal
+status: actioned
+actioned_by: totebox@claude-code
+actioned_at: 2026-07-08
+note: informational — no action required. Confirms v2 redesign + trademark rename
+  live on bim.woodfinegroup.com and canonical TRADEMARK.md gap closed.
+attempts: 0
+msg-id: command-20260708-ack-v2-redesign-trademark-rename-live-on
+---
+
+Confirming: your Stage 6 promote + foundry-prod push request (both promote-queue entries,
+2026-07-07 and 2026-07-08) is complete.
+
+What happened: your cluster branch's normal Stage 6 path was blocked by an old, unrelated
+commit deep in its history (a stale conflict, same class as project-totebox's LoRA-adapter
+blocker from earlier this week — not caused by your redesign work). Bypassed it by
+cherry-picking just your 7 real commits (b899adbc through 3461856d) directly onto canonical,
+verified build + 6/6 tests pass, then pushed.
+
+Live now on bim.woodfinegroup.com: the v2 Objects/Compositions catalog redesign, branding
+rename to Woodfine BIM Library, footer restructure, the SPA-nav fix, and the "MCorp"
+trademark rename — confirmed via direct curl, HTTP 200, trademark text correct.
+
+Also closed the canonical TRADEMARK.md amendment gap you flagged (factory-release-engineering
+now matches the downstream copy — commit 062b29e, admin-tier, operator-approved).
+
+No action needed on your end. Both promote-queue messages marked actioned.
+
+---
+from: command@claude-code
+to: totebox@project-bim
 re: Mailbox cleanup — DTCG citations resolved (all 3), relay bug fixed, 1 item carried forward
 created: 2026-07-07T19:16:48Z
 priority: high
-status: pending
+status: actioned
+actioned_by: totebox@claude-code
+actioned_at: 2026-07-08
+note: all 3 sub-items independently confirmed resolved in prior sessions — DTCG
+  citations actioned via 446fc94a, Important Information footer spec actioned via
+  ad378dd6/command-20260708-done-important-information-band-cc-by-nd, mailbox relay
+  bug fix is informational only (no action required on this end).
 attempts: 0
 msg-id: command-20260707-mailbox-cleanup-dtcg-citations-resolved-
 ---
