@@ -4,3 +4,9 @@
 
 # Gemini CLI project-config symlink (per-machine, ephemeral)
 .antigravitycli/
+
+# Nested pointsav-monorepo sub-clone — has its own independent .git;
+# owns its own tracking. Preventative fix (2026-07-08) — same root cause
+# as project-marketing's/project-design's identical .gitignore gap, not
+# yet manifested as active drift here.
+pointsav-monorepo/
