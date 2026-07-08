@@ -1092,3 +1092,21 @@ state as of the original escalation.
     queued HEAD is `3461856d`. **Not pushed to foundry-prod** — operator has explicitly requested it
     go live; that step needs Command Session (canonical merge + `push-to-prod.sh`), still pending as
     of session end.
+
+- **2026-07-08 — LIVE on foundry-prod, independently verified twice.** Command bypassed a stale
+  unrelated conflict deep in cluster branch history by cherry-picking the 7 real commits
+  (`b899adbc`..`3461856d`) directly onto canonical; build + 6/6 tests passed; pushed. Operator then
+  asked for a browser-in-the-loop check that the correct version actually shipped (not just trusting
+  Command's report). Ran headless Playwright/Chromium against `https://bim.woodfinegroup.com`
+  directly: HTTP 200, screenshot + full body-text dump confirmed title "Woodfine BIM Library",
+  Objects/Compositions taxonomy framing, 3-column footer, "MCorp™" trademark line, and a real CC
+  BY-ND 4.0 badge. Traced the exact rendered footer/trademark text back to
+  `app-privategit-bim/src/render/shell.rs` in the local clone and ran `git log` on that file — last
+  commit touching it is `3461856d`, the exact SHA Command cited, confirming this is genuinely that
+  commit's output and not a stale/partial deploy (the failure mode that hit project-marketing the
+  same day). Sent Command a detailed confirmation; Command independently re-verified the same URL
+  and reported the same result, and separately found + fixed a missing `--delete` flag on the
+  shared `push-to-prod.sh`'s vault rsync (preemptively applied to `target_bim` too — see
+  `cleanup-log.md` 2026-07-08 for detail). **v2 redesign is now fully shipped — no longer pending
+  Command.** Canonical `TRADEMARK.md` amendment (item above) also closed same day, admin-tier commit
+  `062b29e`. Remaining open item: CC BY-ND counsel sign-off (still "surfaced, not decided").

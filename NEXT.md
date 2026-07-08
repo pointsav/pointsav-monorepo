@@ -7,23 +7,19 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Hot — pick up here next session
 
-- [ ] **Command: canonical merge + `push-to-prod.sh bim` for the v2 redesign** `[2026-07-08 totebox@claude-code]`
-  - Operator has explicitly requested this go live. Queued via `self-service-promote.sh` (queue entry +
-    Command inbox notification, msg `self-service-promote-project-bim-20260708045027`), HEAD `3461856d`.
-    Direct pushes to both personal staging mirrors were rejected (stale, pre-dating the 2026-07-05 branch
-    reset — known condition, not a new anomaly) but the queue entry is the durable record. Verified
-    independently at every commit this session (build+clippy+tests+real Playwright checks); deployed and
-    confirmed on `local-bim.service` (127.0.0.1:9096). Not yet processed by Command as of session end.
+- [x] **Command: canonical merge + `push-to-prod.sh bim` for the v2 redesign — DONE, verified live** `[2026-07-08 totebox@claude-code, confirmed 2026-07-08]`
+  - Command bypassed a stale unrelated conflict deep in cluster branch history by cherry-picking the 7 real
+    commits (`b899adbc`..`3461856d`) directly onto canonical; build + 6/6 tests passed; pushed to
+    foundry-prod. Independently re-verified same day with a real headless-browser check (Playwright) against
+    `https://bim.woodfinegroup.com` — HTTP 200, title/branding/footer/Objects-Compositions catalog/MCorp
+    trademark all correct, traced the rendered footer text back to `pointsav-monorepo/app-privategit-bim/src/render/shell.rs`
+    and confirmed `git log` on that file ends at `3461856d`, matching Command's cited SHA exactly — not a
+    stale or partial deploy. Command separately re-verified too (`command-20260708-ack-verified-bim-woodfinegroup-com-no-ac`).
 
-- [ ] **Command/admin-tier: amend the canonical `TRADEMARK.md` — "Woodfine Management Corp" → "MCorp"** `[2026-07-08 totebox@claude-code]`
-  - Operator instructed this rename (confirmed deliberate after I flagged "MCorp" wasn't previously an
-    enumerated mark anywhere in canonical governance). Updated `pointsav-monorepo/TRADEMARK.md` (§1 marks
-    list + §13 canonical notice) and the live footer to match — but that file is a downstream mirror of
-    the real canonical policy at `vendor/factory-release-engineering/policies/TRADEMARK.md` (confirmed
-    byte-identical before this edit). Per that document's own §11, only a publish there is a real
-    amendment — admin-tier, out of Totebox reach. Flagged to Command via mailbox
-    (`command-20260708-trademark-rename-woodfine-management-cor`); also flagged that
-    `woodfine-fleet-deployment/TRADEMARK.md` (if it's a separate mirror) wasn't checked.
+- [x] **Command/admin-tier: amend the canonical `TRADEMARK.md` — "Woodfine Management Corp" → "MCorp" — DONE** `[2026-07-08 totebox@claude-code, confirmed 2026-07-08]`
+  - Closed by Command same day: canonical `vendor/factory-release-engineering/policies/TRADEMARK.md` amended
+    (admin-tier commit `062b29e`, operator-approved), now matches the downstream `pointsav-monorepo` copy and
+    the live footer. Confirmed via inbox `command-20260708-ack-v2-redesign-trademark-rename-live-on`.
 
 - [ ] **Operator/counsel: confirm CC BY-ND 4.0 content licensing is actually intended, not just a working default** `[2026-07-08 totebox@claude-code]`
   - Implemented (real badge + deed link added to the footer this session) because it's already stated in

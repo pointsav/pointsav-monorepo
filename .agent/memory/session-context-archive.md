@@ -2,6 +2,79 @@
 
 ---
 
+## 2026-07-03 | totebox@claude-code | DTCG token gap closure + BIM-Objects-CMS redesign (research-heavy, 7 subagents)
+
+**Done:**
+- **DTCG token gap register closed**: all 6 missing files from `tool-buildingwidth-architecture.md`
+  (`furniture.dtcg.json`, `floor-plate-assembly-rules.dtcg.json`, `building-grid.dtcg.json`,
+  `tenant-mix.dtcg.json` new; Medium Tile family + Special Tiles added to `tile-system.dtcg.json`) plus
+  all 6 documented internal inconsistencies (5 fixed with real data already in the token set; 1 —
+  professional-office medium/large — marked `status: reserved`, no source exists, not fabricated).
+  Found and flagged two new data gaps rather than papering over them (Medium-tile end-cap composition
+  not sourced; Tile F-medium's stated composition doesn't arithmetically reconcile with its SF target).
+  Commit `ae153aa` (woodfine-bim-library). Rust crate scaffold now unblocked, deliberately not started.
+- **Reposition as a BIM Objects CMS, not a wiki clone** — operator looked at the redesign shipped
+  earlier this session fresh and judged the wiki-engine-modeled chrome (utility bar, in-header search,
+  accent-left-border cards) the wrong direction; floated "Carbon for BIM Objects" positioning. Full
+  research-through-implementation cycle, Plan Mode, 7 subagents across 3 rounds — all findings on
+  record at `.agent/sub-agent-results/RD.1` through `RD.7-visual-direction-synthesis-2026-07-03.md`:
+  live-site + git-history audit, design.pointsav.com current+historical audit (its own catalog
+  documents a "wiki" component category as *legitimate but distinct* from its own catalog-shell chrome
+  — sharpened the diagnosis), full extraction of prior strategy docs (`BB.13`/`BB.14` — Adobe Spectrum
+  pick, 14/15 bankers'-distinguishability; `bim-token-strategy.md`), a Fable-driven competitive resurvey
+  (Spectrum pick re-confirmed against the sibling's drifted current palette; new AEC-vendor prior art
+  found — Bentley iTwinUI, doesn't displace the pick), Fable synthesis into one implementable spec.
+  **Implemented**: fixed a real bug (`content::load_categories` only enumerated `.md` sidecars, so the
+  4 new DTCG files were invisible — flipped to token-file-driven enumeration), 4-section IA
+  (Taxonomy/Objects/Compositions/Context, `Section` enum, `section:` frontmatter on all 24 sidecars),
+  utility bar + in-header search deleted, header rebuilt as a 48px "title block" bar, full color/type
+  system swap (`#1A4480` drafting blue as sole interactive accent, color-collision-checked; dark mode
+  re-palettized to instrument-navy), Carbon CSS scoped to `/edit/*` only. Commit `0f76dd0e`
+  (pointsav-monorepo). **Honestly flagged, not silently degraded**: Geist/Source-Serif-4 font files
+  don't exist in this workspace and can't be fetched here — `fonts.css` uses documented system-font
+  fallbacks, not fabricated `@font-face` rules. **Deferred, fully specced in `RD.7`**: hero SVG, tab
+  bars, GUID markers, chip restyle, dark preview frames, section landing pages — nothing lost by
+  waiting. PointSav-branded/dedicated-domain positioning explicitly deferred as a separate decision
+  (operator didn't respond to the scope question; defaulted to lowest-risk: Woodfine branding unchanged).
+- **Promote anomaly, correctly diagnosed, not forced through**: `self-service-promote.sh` failed twice
+  with an ordinary-looking "fetch first" rejection. Full diagnosis (fresh fetch, `merge-base`,
+  `--is-ancestor` — all clean) before finding the real cause: ran the script from the archive root
+  instead of from inside `pointsav-monorepo` (script derives repo identity from `basename $REPO_ROOT`,
+  so it picked up the wrong repo's HEAD). Flagged 2 spurious `promote-queue.jsonl` entries to Command
+  via mailbox with a script-hardening suggestion; retried correctly, clean fast-forward, staging
+  mirrors updated.
+- Fable-model agents used explicitly per operator instruction ("use FABLE as well where appropriate")
+  for the two genuinely open-ended/creative research steps (competitive resurvey, final synthesis) —
+  kept factual audits (live-site DOM, git archaeology) on standard Explore-type agents.
+- Sub-agents in the `Explore`/general-purpose read-only role do NOT have Write tool access even when
+  asked to write a results file — they return the content as their final message instead; the
+  orchestrating session has to persist it. Learned this the hard way after asking 4 agents to Write
+  and having to manually persist all 4 outputs. Design future multi-round research prompts around this.
+
+**Pending / carry-forward:**
+- **Not yet in Command's canonical merge** — staging mirrors updated (`0f76dd0e`), Command inbox
+  notified, promote-queue entry correct. Command will process at next startup per standard flow.
+- RD.7's deferred visual polish (hero SVG, tab bars, GUID markers, chip restyle, dark preview frames,
+  section landing pages) — fully specced, ready to implement whenever picked up next.
+- Font files (Geist Sans/Mono, Source Serif 4) need sourcing + self-hosting before the typography spec
+  fully lands — needs either operator-provided files or a session with font-fetch capability.
+- All carry-forward items from the prior session below remain open (PO-1 furniture_refs, key-plans-
+  registry.md, Corporate Office SVGs, 18 IFC files — actually resolved this session's earlier turn per
+  NEXT.md, 5 Rust crates, DTCG accuracy errors — operator-pending, do not touch, port 9095 wiki CSS).
+
+**Operator preferences surfaced:**
+- Explicitly validates the "escalate a git anomaly, diagnose fully before touching anything, don't
+  force/rebase" pattern a second time — this is now a confirmed, reusable rule for this archive, not a
+  one-off. Fully diagnosing before acting (not just reporting "it failed") is the expected standard.
+- Wants real competitive/design research grounded in re-reading ALL existing BRIEFs/TOPICs/GUIDEs and
+  prior research before proposing new direction — explicitly said "cross check the internet after the
+  review" (sequencing: internal review first, external research second, synthesis last).
+- Comfortable with large multi-agent research efforts for genuinely strategic/positioning questions
+  (not just implementation) — this session's 7-subagent, 3-round research cycle before any code change
+  was the right scale for "is our product positioning correct," not overreach.
+
+---
+
 ## 2026-07-02/03 | totebox@claude-code | mobile fixes + full shell redesign (largest session on this archive to date)
 
 **Done:**

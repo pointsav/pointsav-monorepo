@@ -9,6 +9,51 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 
 ---
 
+## 2026-07-08 | totebox@claude-code | live-site verification (browser-in-the-loop) + mailbox triage
+
+**Done:**
+- **Startup**: role confirmed (Totebox, `cluster/project-bim`, correct branch), session brief pulled via
+  MCP. Processed 2 pending inbox messages that were already resolved by prior-session work but never
+  flipped to `actioned`: Command's v2-redesign-live ACK (mailbox-cleanup summary — all 3 sub-items
+  independently confirmed already resolved). Updated [[project-bim-v2-redesign-status]] memory to drop
+  "pending Command" language since the ACK confirmed the push actually landed.
+- **Operator asked for real browser-in-the-loop verification** that Command pushed the correct v2 build to
+  `bim.woodfinegroup.com` (not just trusting Command's report) — see [[feedback-verify-visually-in-browser]].
+  Used Python Playwright (already installed; no MCP browser tool available) to load the live URL headless,
+  captured a full-page screenshot + full body-text dump. Confirmed: HTTP 200, title "Woodfine BIM Library",
+  Objects/Compositions taxonomy framing, 3-column restructured footer, "MCorp™" trademark line, real CC
+  BY-ND 4.0 badge, collapsible Important Information band. **Didn't stop at "text matches"** — traced the
+  exact rendered footer/trademark text back to `pointsav-monorepo/app-privategit-bim/src/render/shell.rs`
+  in the local clone and ran `git log` on that file: last commit touching it is `3461856d`, the exact SHA
+  Command cited as the cherry-pick tail — proof this is genuinely that commit's output, not a stale/partial
+  deploy (the failure mode that hit project-marketing the same day per Command's carry-forward notes).
+- Sent Command a detailed mailbox confirmation (`command-20260708-verified-bim-woodfinegroup-com-is-the-co`)
+  with full method + findings, plus a side-flag on the public "AGPL-3.0-or-later" footer license claim.
+  Command replied same session: independently re-verified with the same result, and separately found +
+  fixed a missing `--delete` flag on shared `push-to-prod.sh`'s vault rsync (discovered auditing
+  project-design; preemptively applied the same fix to `target_bim` even though it hadn't visibly bitten
+  BIM yet). Marked that ACK actioned too — inbox is now fully clear, nothing pending.
+- **NEXT.md**: struck 2 completed Hot items (Command's canonical merge + push-to-prod, and the canonical
+  TRADEMARK.md amendment) — both confirmed done this session, replaced with resolution detail.
+- **BRIEF-app-privategit-bim.md** + **cleanup-log.md**: appended closing entries recording the live
+  confirmation and the shared push-to-prod.sh fix, so the v2 redesign's "pending Command" status doesn't
+  linger stale in the durable record.
+
+**Pending / carry-forward:**
+- CC BY-ND 4.0 content licensing still not counsel-confirmed (unchanged from last session) — see
+  [[project-bim-v2-redesign-status]].
+- All other carry-forward items unchanged from 2026-07-06/08 entry below (JOURNAL /research render-contract
+  deferral, search indexing gap, corporate wiki CSS 404s, 18 modified IFC files, Cargo.lock staleness,
+  woodfine-bim-library staging-mirror gap, `ee089b2` admin-tier push, NOTAM permission — not re-verified
+  this session, no reason to believe changed).
+
+**Operator preferences surfaced:**
+- Confirms the standing rule from [[feedback-verify-visually-in-browser]]: even when the other party
+  (Command) reports a verified success, a specific operator ask to "check ... browser in the loop" means
+  do the real independent check yourself, not just relay their report.
+
+---
+
 ## 2026-07-06/08 | totebox@claude-code | v2 redesign (Objects/Compositions catalog) + footer/legal polish (largest session on this archive to date)
 
 **Done:**
@@ -174,75 +219,3 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
   summarizing anything that looked like confidential business content; this distinction mattered and
   should carry forward to any future research into personal Totebox directories.
 
----
-
-## 2026-07-03 | totebox@claude-code | DTCG token gap closure + BIM-Objects-CMS redesign (research-heavy, 7 subagents)
-
-**Done:**
-- **DTCG token gap register closed**: all 6 missing files from `tool-buildingwidth-architecture.md`
-  (`furniture.dtcg.json`, `floor-plate-assembly-rules.dtcg.json`, `building-grid.dtcg.json`,
-  `tenant-mix.dtcg.json` new; Medium Tile family + Special Tiles added to `tile-system.dtcg.json`) plus
-  all 6 documented internal inconsistencies (5 fixed with real data already in the token set; 1 —
-  professional-office medium/large — marked `status: reserved`, no source exists, not fabricated).
-  Found and flagged two new data gaps rather than papering over them (Medium-tile end-cap composition
-  not sourced; Tile F-medium's stated composition doesn't arithmetically reconcile with its SF target).
-  Commit `ae153aa` (woodfine-bim-library). Rust crate scaffold now unblocked, deliberately not started.
-- **Reposition as a BIM Objects CMS, not a wiki clone** — operator looked at the redesign shipped
-  earlier this session fresh and judged the wiki-engine-modeled chrome (utility bar, in-header search,
-  accent-left-border cards) the wrong direction; floated "Carbon for BIM Objects" positioning. Full
-  research-through-implementation cycle, Plan Mode, 7 subagents across 3 rounds — all findings on
-  record at `.agent/sub-agent-results/RD.1` through `RD.7-visual-direction-synthesis-2026-07-03.md`:
-  live-site + git-history audit, design.pointsav.com current+historical audit (its own catalog
-  documents a "wiki" component category as *legitimate but distinct* from its own catalog-shell chrome
-  — sharpened the diagnosis), full extraction of prior strategy docs (`BB.13`/`BB.14` — Adobe Spectrum
-  pick, 14/15 bankers'-distinguishability; `bim-token-strategy.md`), a Fable-driven competitive resurvey
-  (Spectrum pick re-confirmed against the sibling's drifted current palette; new AEC-vendor prior art
-  found — Bentley iTwinUI, doesn't displace the pick), Fable synthesis into one implementable spec.
-  **Implemented**: fixed a real bug (`content::load_categories` only enumerated `.md` sidecars, so the
-  4 new DTCG files were invisible — flipped to token-file-driven enumeration), 4-section IA
-  (Taxonomy/Objects/Compositions/Context, `Section` enum, `section:` frontmatter on all 24 sidecars),
-  utility bar + in-header search deleted, header rebuilt as a 48px "title block" bar, full color/type
-  system swap (`#1A4480` drafting blue as sole interactive accent, color-collision-checked; dark mode
-  re-palettized to instrument-navy), Carbon CSS scoped to `/edit/*` only. Commit `0f76dd0e`
-  (pointsav-monorepo). **Honestly flagged, not silently degraded**: Geist/Source-Serif-4 font files
-  don't exist in this workspace and can't be fetched here — `fonts.css` uses documented system-font
-  fallbacks, not fabricated `@font-face` rules. **Deferred, fully specced in `RD.7`**: hero SVG, tab
-  bars, GUID markers, chip restyle, dark preview frames, section landing pages — nothing lost by
-  waiting. PointSav-branded/dedicated-domain positioning explicitly deferred as a separate decision
-  (operator didn't respond to the scope question; defaulted to lowest-risk: Woodfine branding unchanged).
-- **Promote anomaly, correctly diagnosed, not forced through**: `self-service-promote.sh` failed twice
-  with an ordinary-looking "fetch first" rejection. Full diagnosis (fresh fetch, `merge-base`,
-  `--is-ancestor` — all clean) before finding the real cause: ran the script from the archive root
-  instead of from inside `pointsav-monorepo` (script derives repo identity from `basename $REPO_ROOT`,
-  so it picked up the wrong repo's HEAD). Flagged 2 spurious `promote-queue.jsonl` entries to Command
-  via mailbox with a script-hardening suggestion; retried correctly, clean fast-forward, staging
-  mirrors updated.
-- Fable-model agents used explicitly per operator instruction ("use FABLE as well where appropriate")
-  for the two genuinely open-ended/creative research steps (competitive resurvey, final synthesis) —
-  kept factual audits (live-site DOM, git archaeology) on standard Explore-type agents.
-- Sub-agents in the `Explore`/general-purpose read-only role do NOT have Write tool access even when
-  asked to write a results file — they return the content as their final message instead; the
-  orchestrating session has to persist it. Learned this the hard way after asking 4 agents to Write
-  and having to manually persist all 4 outputs. Design future multi-round research prompts around this.
-
-**Pending / carry-forward:**
-- **Not yet in Command's canonical merge** — staging mirrors updated (`0f76dd0e`), Command inbox
-  notified, promote-queue entry correct. Command will process at next startup per standard flow.
-- RD.7's deferred visual polish (hero SVG, tab bars, GUID markers, chip restyle, dark preview frames,
-  section landing pages) — fully specced, ready to implement whenever picked up next.
-- Font files (Geist Sans/Mono, Source Serif 4) need sourcing + self-hosting before the typography spec
-  fully lands — needs either operator-provided files or a session with font-fetch capability.
-- All carry-forward items from the prior session below remain open (PO-1 furniture_refs, key-plans-
-  registry.md, Corporate Office SVGs, 18 IFC files — actually resolved this session's earlier turn per
-  NEXT.md, 5 Rust crates, DTCG accuracy errors — operator-pending, do not touch, port 9095 wiki CSS).
-
-**Operator preferences surfaced:**
-- Explicitly validates the "escalate a git anomaly, diagnose fully before touching anything, don't
-  force/rebase" pattern a second time — this is now a confirmed, reusable rule for this archive, not a
-  one-off. Fully diagnosing before acting (not just reporting "it failed") is the expected standard.
-- Wants real competitive/design research grounded in re-reading ALL existing BRIEFs/TOPICs/GUIDEs and
-  prior research before proposing new direction — explicitly said "cross check the internet after the
-  review" (sequencing: internal review first, external research second, synthesis last).
-- Comfortable with large multi-agent research efforts for genuinely strategic/positioning questions
-  (not just implementation) — this session's 7-subagent, 3-round research cycle before any code change
-  was the right scale for "is our product positioning correct," not overreach.
