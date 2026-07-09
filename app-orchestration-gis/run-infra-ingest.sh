@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-License-Identifier: LicenseRef-PointSav-ARR
 # SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+#
+# This file is proprietary material of Woodfine Capital Projects Inc.
+# See the LICENSE file in this repository for the full terms.
+# Unauthorized use, reproduction, or distribution is prohibited.
+
 
 # run-infra-ingest.sh — PKS transit infrastructure ingest (airports + railway)
 # Run when Overpass rate limit has cleared (overnight, or after cooldown).
