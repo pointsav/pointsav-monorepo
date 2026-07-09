@@ -16,6 +16,12 @@ Active briefs and artifact routing for this archive.
 |---|---|
 | [BRIEF-simulation-bim-library-denver-woodfine.md](BRIEF-simulation-bim-library-denver-woodfine.md) | Design-thinking exercise (2026-07-06): simulated PointSav→Denver Airport BIM CMS sale used as a Denver-content-free structural pass-through to derive a Woodfine-native v2 design candidate. Grounds the corrected BIM Object vs. Composition definition. |
 
+## Superseded briefs
+
+| Brief | Summary |
+|---|---|
+| [BRIEF-bim-website-pipeline.md](BRIEF-bim-website-pipeline.md) | Pre-redesign record (2026-06-03) of the old `app-orchestration-bim` v0.0.2 service. Reclaimed 2026-07-09 from a misfile in project-editorial's briefs dir; fully superseded by `BRIEF-app-privategit-bim.md`. Kept for history only. |
+
 ## Artifact routing
 
 | Type | Destination |

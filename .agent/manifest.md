@@ -148,7 +148,10 @@ tetrad:
                      BCF 3.0 issue exchange ZIPs;
                      CityJSONSeq portfolio exports)
       status: pre-created 2026-04-28 (this provisioning); awaits
-        first IFC archive ingestion
+        first IFC archive ingestion. **Explicitly deprioritized 2026-07-09**
+        per operator decision (not abandoned) — CMS/content-accuracy work
+        on `gateway-orchestration-bim-1` is the current focus. See
+        cleanup-log.md 2026-07-09 entry.
   wiki:
     - repo: vendor/content-wiki-documentation
       drafts_via: clones/project-bim/.claude/drafts-outbound/
@@ -172,8 +175,17 @@ tetrad:
         - DESIGN-COMPONENT-bim-guid-search.md          (console-unique GuidSearch; FM operator entry point)
         - DESIGN-COMPONENT-bim-audit-log.md            (console-unique AuditLog; activity feed of building's operational life)
         - DESIGN-COMPONENT-bim-code-rs1.md             (the leapfrog invention: city-code-as-composable-geometry component recipe)
-      status: leg-pending — Task drafts in .claude/drafts-outbound/;
-        project-editorial sweeps PROSE-*; project-design sweeps DESIGN-*
+      status: substantially complete (updated 2026-07-09) — the 2026-05-17
+        TOPIC/GUIDE/DESIGN dispatch batch (10 TOPICs + 5 GUIDEs + 7
+        DESIGN-COMPONENT + 4 DESIGN-RESEARCH + 1 DESIGN-TOKEN-CHANGE + 11
+        supplement TOPICs) is confirmed published and swept — see inbox
+        `command-20260709-editorial-sweep-complete-26-draft-batch-` (10
+        TOPICs migrated to `media-knowledge-projects/building-design/`
+        during the 2026-06 Phase C reorg, not `content-wiki-documentation`
+        as originally planned above — that destination discrepancy is
+        noted, not yet reconciled in this manifest's planned_topics list).
+        Was previously stale at `leg-pending`; corrected during the
+        2026-07-09 plan-completeness audit (see cleanup-log.md).
 
 clones:
   - repo: pointsav-monorepo
