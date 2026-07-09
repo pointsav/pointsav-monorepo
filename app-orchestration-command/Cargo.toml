@@ -16,7 +16,7 @@ members = [
 
 [workspace.package]
 edition = "2021"
-license = "LicenseRef-PointSav-Proprietary"
+license = "LicenseRef-PointSav-ARR"
 rust-version = "1.85"
 
 [workspace.dependencies]

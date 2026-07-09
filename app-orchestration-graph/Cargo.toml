@@ -7,7 +7,7 @@
 
 
 [package]
-license = "FSL-1.1-ALv2"
+license = "LicenseRef-PointSav-ARR"
 name = "app-orchestration-graph"
 version = "0.1.0"
 edition = "2021"
