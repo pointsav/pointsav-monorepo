@@ -62,6 +62,12 @@ Full 2026-07-09 plan-completeness audit + BRIEF consolidation: see cleanup-log.m
   - Full architecture in `.agent/plans/tool-buildingwidth-architecture.md`
   - This is a genuinely large undertaking (new Rust workspace, ILP solver via `good_lp`, bidirectional adjustment logic) — deliberately held back pending its own dedicated planning session, not attempted opportunistically
 
+- [ ] **WBL key-plans IFC files — 18 uncommitted modifications** `[2026-06-25 totebox@claude-code]`
+  - `woodfine-bim-library/key-plans/` has 18 modified `.ifc` files (academic, business, civic, laboratory, medical, private-office × 3 variants each), confirmed still present and untouched as of 2026-07-09.
+  - Detected at startup 2026-06-25; origin unknown — review diff before committing. Not a Command
+    dependency — ours to review.
+  - `git -C woodfine-bim-library diff key-plans/` to inspect
+
 ---
 
 ## Waiting on Command (no project-bim decision needed — visibility only)
@@ -95,11 +101,6 @@ Full 2026-07-09 plan-completeness audit + BRIEF consolidation: see cleanup-log.m
   - `ls -la /srv/foundry/NOTAM.md` shows `-rw------- 1 mathew mathew` as of last check
   - inbox `command-20260520-notam-permission-resolved` was inaccurate; flagged to Command via outbox `project-bim-20260622-notam-permission-still-denied`
   - Command: re-apply `chmod 644 /srv/foundry/NOTAM.md`
-
-- [ ] **WBL key-plans IFC files — 18 uncommitted modifications** `[2026-06-25 totebox@claude-code]`
-  - `woodfine-bim-library/key-plans/` has 18 modified `.ifc` files (academic, business, civic, laboratory, medical, private-office × 3 variants each)
-  - Detected at startup 2026-06-25; origin unknown — review diff before committing
-  - `git -C woodfine-bim-library diff key-plans/` to inspect
 
 ---
 
