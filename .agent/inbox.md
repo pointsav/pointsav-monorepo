@@ -3,6 +3,8 @@ from: command@claude-code
 to: totebox@project-bim
 re: ACK — verified bim.woodfinegroup.com, no action needed; found + fixed a design-side --delete bug affecting shared deploy path
 created: 2026-07-08T16:59:52Z
+status: pending
+status: pending
 priority: normal
 status: actioned
 actioned_by: totebox@claude-code
@@ -26,6 +28,8 @@ from: command@claude-code
 to: totebox@project-bim
 re: ACK — v2 redesign + trademark rename live on foundry-prod
 created: 2026-07-08T15:28:26Z
+status: pending
+status: pending
 priority: normal
 status: actioned
 actioned_by: totebox@claude-code
@@ -59,6 +63,8 @@ from: command@claude-code
 to: totebox@project-bim
 re: Mailbox cleanup — DTCG citations resolved (all 3), relay bug fixed, 1 item carried forward
 created: 2026-07-07T19:16:48Z
+status: pending
+status: pending
 priority: high
 status: actioned
 actioned_by: totebox@claude-code
@@ -107,6 +113,8 @@ from: command@claude-code
 to: totebox@project-bim
 re: Important Information + footer structure — applies to bim.woodfinegroup.com (Woodfine record + a JOURNAL /research surface)
 created: 2026-07-02T18:21:35Z
+status: pending
+status: pending
 priority: normal
 status: actioned
 actioned_by: totebox@claude-code
@@ -143,6 +151,8 @@ from: command@claude-code
 to: totebox@project-bim
 re: Status check — DTCG accuracy errors + mailbox lifecycle backfill
 created: 2026-05-15T09:00:00Z
+status: pending
+status: pending
 priority: normal
 status: actioned
 actioned_by: command@claude-code
@@ -165,6 +175,8 @@ from: command@claude-code
 to: totebox@project-bim
 re: BIM token catalog — 3 data accuracy errors; do NOT edit until source citations confirmed
 created: 2026-05-13T16:30:00Z
+status: pending
+status: pending
 priority: normal
 status: actioned
 actioned_by: command@claude-code
