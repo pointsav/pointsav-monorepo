@@ -10,6 +10,37 @@ the record but are not NEXT.md action items.
 
 ---
 
+## 2026-07-10 — 2 of 3 BIM research essays enriched from internal design-response deck; seeding request sent to project-editorial
+
+**Trigger:** operator asked whether `CONSTRUCTION_2025_10_31_Design Slides_Openstudio_Woodfine Response.docx`
+(confirmed byte-identical to the already-fully-read "copy 2" version used in the v3 redesign workflow)
+contained material to strengthen the 3 site research essays, ahead of proposing them as JOURNAL seeds to
+project-editorial.
+
+**Findings applied:**
+- `bim-design-philosophy.md` — added a "Why build, not buy" section quoting Woodfine's own internal
+  rationale (vendor heterogeneity, cost model, control argument) and a sourced "100+ years" building-lifespan
+  figure alongside the existing unsourced "50+ years" (not silently overwritten — both stated).
+- `flat-file-vs-cloud-bim.md` — added the actual specified deployment topology (each Woodfine Building on
+  its own independent VM, not a shared platform) and a sourced cost-model quote under Pricing models.
+- `aec-muscle-memory-rationale.md` — **no changes.** Exhaustive grep across the full 9,674-line source doc
+  found zero material about AEC software interface conventions or muscle memory; the two "Revit" string
+  matches were false positives ("revitalize"). Confirmed nothing to add rather than stretching a tenuous
+  match.
+- No competitor names (Autodesk/Bentley/Trimble/Planon/Tririga/Archibus/iTwin/Tandem/Nemetschek/dTwin) exist
+  anywhere in the source document — the existing citations in `flat-file-vs-cloud-bim.md` are not
+  corroborated or extended by this source; left as-is.
+
+**Side finding, NOT folded into the essay work:** a separate research thread (Opus + Fable browser-in-loop
+audit of the PointSav Design System v3 mockup + bim.woodfinegroup.com, re: "BIM Objects as a product other
+companies adopt for their own library") surfaced a real license conflict — the live footer shows both
+"Object data licensed Apache-2.0" and a "LICENSED CC BY-ND 4.0" badge, and CC BY-ND forbids the derivative
+use this positioning idea requires. See `BRIEF-bim-server-external-positioning.md` for full detail — this
+needs explicit operator re-scoping, not a default inherited from the 2026-07-09 CC BY-ND confirmation
+(which was made in a different context and not explicitly tested against this use case).
+
+---
+
 ## 2026-05-16 — P8c render.rs-only decision
 
 **Artifact:** `design-component-bim-regulation-rs1.md`

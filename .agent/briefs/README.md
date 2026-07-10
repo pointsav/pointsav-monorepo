@@ -6,9 +6,11 @@ Active briefs and artifact routing for this archive.
 
 | Brief | Status | Summary |
 |---|---|---|
-| [BRIEF-app-privategit-bim.md](BRIEF-app-privategit-bim.md) | active | CMS/catalog for BIM Objects + Compositions; live on bim.woodfinegroup.com; 2026-07-06 v2 design direction proposed (see simulation brief) |
+| [BRIEF-bim-v3-hyperscaler-redesign.md](BRIEF-bim-v3-hyperscaler-redesign.md) | active | 2026-07-09: full-reset visual redesign (fresh audit + research + Fable synthesis, real prototype to local preview) + BIM Library/BIM Objects narrative initiative. Explicitly does NOT build on the RD.1-7/envelope-diagram lineage in BRIEF-app-privategit-bim.md — operator called that approach not working. |
+| [BRIEF-app-privategit-bim.md](BRIEF-app-privategit-bim.md) | active | CMS/catalog for BIM Objects + Compositions; live on bim.woodfinegroup.com; 2026-07-06 v2 design direction proposed (see simulation brief). Prior redesign-research lineage (RD.1-7) superseded by BRIEF-bim-v3-hyperscaler-redesign.md. |
 | [BRIEF-app-orchestration-bim.md](BRIEF-app-orchestration-bim.md) | active | Forward scope redefined 2026-07-06 as the **BIM Editor/Viewer** (distinct from the CMS above) — software not started, definition locked first. Carries the historical Key Plans Live Site record (that specific feature moved to app-privategit-bim). |
 | [BRIEF-tool-keyplan.md](BRIEF-tool-keyplan.md) | active | tool-keyplan Rust crate v0.0.1; the Composition compiler; functionally unchanged since 2026-05-22 |
+| [BRIEF-bim-server-external-positioning.md](BRIEF-bim-server-external-positioning.md) | active | 2026-07-10: "BIM Objects as a Carbon-Design-System-style product other companies adopt" — Opus+Fable research found a real license conflict (Apache-2.0 vs CC BY-ND on Object data) that needs explicit operator re-scoping before this idea can proceed; also stub IFC exports and catalog-breadth gaps. Not folded into JOURNAL essay seeding. |
 
 ## Reference briefs
 
