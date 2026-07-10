@@ -170,11 +170,27 @@ def profile_and_score(lat, lon, radius_km):
 def run_batch(batch_file: Path):
     """2026-07-03 Part C mode: profile every discovered site directly by
     lat/lon (from discover-na-aerodromes.py output) — skips find_aerodrome()'s
-    ICAO-lookup query entirely since coordinates are already known."""
+    ICAO-lookup query entirely since coordinates are already known.
+
+    2026-07-09: checkpoints after every site (not just at the end) and
+    resumes from an existing partial output file — a VM crash mid-region
+    used to lose the entire region's Overpass queries (all-or-nothing write
+    at loop end); now at most one in-flight site's query is lost."""
     sites = json.loads(batch_file.read_text())
-    print(f"Batch mode: {len(sites)} sites from {batch_file}")
+    out_dir = Path("work/na-sweep-logs")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / f"aviation-fringe-{batch_file.stem.replace('aerodromes-', '')}.json"
+
     results = []
-    for i, site in enumerate(sites):
+    start_i = 0
+    if out.exists():
+        results = json.loads(out.read_text())
+        start_i = len(results)
+        print(f"Resuming {out}: {start_i}/{len(sites)} already profiled")
+
+    print(f"Batch mode: {len(sites)} sites from {batch_file}")
+    for i in range(start_i, len(sites)):
+        site = sites[i]
         name = site.get("name") or site.get("icao") or "unnamed"
         print(f"\n[{i+1}/{len(sites)}] {name} @ ({site['lat']:.4f}, {site['lon']:.4f})")
         profile, aerodrome_anchor, hangar_cluster, confirmed = profile_and_score(
@@ -188,17 +204,13 @@ def run_batch(batch_file: Path):
             "hangar_cluster": hangar_cluster,
             "confirmed": confirmed,
         })
+        out.write_text(json.dumps(results, indent=2))
         if i < len(sites) - 1:
             time.sleep(QUERY_SLEEP)
 
     confirmed_n = sum(1 for r in results if r["confirmed"])
     print(f"\n{'='*70}\n{confirmed_n}/{len(results)} sites confirmed "
           f"(>=  {HANGAR_THRESHOLD} hangars + runway)\n{'='*70}")
-
-    out_dir = Path("work/na-sweep-logs")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    out = out_dir / f"aviation-fringe-{batch_file.stem.replace('aerodromes-', '')}.json"
-    out.write_text(json.dumps(results, indent=2))
     print(f"Saved -> {out}\n")
 
 
