@@ -5,7 +5,7 @@ archive: project-bim
 topic: bim-v3-hyperscaler-redesign
 status: active
 created: 2026-07-09
-updated: 2026-07-10
+updated: 2026-07-11
 ---
 
 # Brief — BIM v3 "hyperscaler-grade" redesign + BIM Library narrative initiative
@@ -937,3 +937,95 @@ because it's an open problem.
   no visual defects found.
 - **Nothing committed or deployed to `local-bim.service` yet** — gated on explicit operator go-ahead per the
   standing local-first deploy model, same discipline as every prior round this session.
+
+---
+
+## Round 7 — compositions visibility swap, Zone-N ordinal removal, Geometry of Sustainability integration
+(shipped), plus a close-out pass fixing 2 more real bugs found live
+
+**Operator's two asks:** (1) the public `/compositions` grid had it backwards — showing Private Office +
+5 Corporate Office entries, hiding Medical/Academic/Laboratory/Business/Civic (15 real Key Plan entries);
+wanted Corporate Office removed, the other 6 categories shown. (2) "Zone" language on the Method page
+"seems to be getting in the way" — asked directly whether it's real architectural terminology or borrowed
+BIM-platform jargon, and wanted "Geometry of Sustainability" worked into the core explanation rather than
+read as a separate idea.
+
+**Investigation found the visibility gate was keyed backwards, not just miscategorized**: it hid entries
+with real zone data and empty bill (exactly the 15 non-Private-Office Key Plan categories), while Corporate
+Office passed *only* because it has no zone fields to check at all. Flipped to key on zone-data presence —
+one-line fix, shows exactly the 18 real Key Plan entries.
+
+**Fable research (not assumed) confirmed "Zone 1/2/3" isn't real terminology anywhere** — checked against
+BCO Guide to Specification, ASHRAE 90.1 (its own numbered zones index compass orientation, not depth),
+daylighting standards, and buildingSMART IFC (`IfcZone` is a non-geometric functional grouping, never an
+ordinal depth band). Dropped the ordinal sitewide, kept Habitat/Magazine/Corridor as standalone names.
+Separately found a real bug this session's own Round 6 work introduced: the two-ladder diagram rendered
+"Zone" as a fifth rung on the space ladder, implying it aggregates into Key Plan the same way Tiles
+aggregate into Floor Plates — wrong; Habitat/Magazine/Corridor are one Key Plan's internal decomposition,
+not a separate composable unit. Removed the rung (4, not 5), recomputed the SVG's coordinate geometry to
+match. Geometry of Sustainability's opening line rewritten to explicitly reference the just-made efficiency
+claim as pillar one, moved to sit immediately after it — one continuous argument instead of two.
+
+**Systemic sweep beyond the original scope**: the Zone-N ordinal also existed in the underlying DTCG token
+`$description` fields (not just template code) — 25+ occurrences across `key-plans.dtcg.json`,
+`furniture.dtcg.json`, `building-grid.dtcg.json`, `building-width-calculator.dtcg.json`,
+`professional-office-subtypes.dtcg.json`. Fixed via a scripted substitution with a paired-name pre-pass (to
+avoid "Habitat Habitat" duplication where "Zone 1 Habitat" already appeared together) — caught and fixed a
+compact "Zone 1/2/3" shorthand that the substitution script itself briefly mangled into "Habitat/2/3" before
+a follow-up check caught it. Also fixed a `tool-buildingwidth Rust engine` internal-crate-name leak found in
+the same file's category-root description.
+
+**Verified live before and after deploy**: 18 compositions confirmed via direct route check both on scratch
+and on `local-bim.service` post-deploy; zero remaining Zone-N hits across the full site (grep + live curl);
+`/research` still byte-matched to source; `cargo build`+`test` 6/6 clean (one test needed updating — it
+hardcoded the two-ladder/kp-zone figcaption text, which legitimately changed).
+
+**Real mid-session hazard, resolved without data loss**: Command ran Stage 6 for project-bim concurrently in
+this exact shared working directory. First manifestation (benign): two "recovery" commits from Command's own
+prior conflict-resolution activity, verified content-for-content against what a dispatched background
+JOURNAL-review agent had actually done — no issue. Second manifestation (a real, if minor, loss): a
+one-line edit to a TOPIC draft was silently discarded mid-rebase — caught via git reflog (`cherry-pick`/
+`reset` pairs) and a working-tree diff check, not assumed; confirmed the danger window had closed (no
+`rebase-merge` dir, no lock) before re-applying. Third manifestation (a live, active conflict): found
+Command mid-cherry-pick on a `scratch-resolve-bim` branch with 3 real unresolved conflicts
+(`.agent/memory/session-context*.md`, `NEXT.md`) — stopped all git operations in this repo immediately,
+reported it plainly rather than working around it, and waited for operator confirmation that Command had
+finished before touching `project-bim` again.
+
+**Close-out pass — 2 more real bugs found by directly checking the live site, not from the original ask:**
+- Every object/composition detail page's browser tab showed a literal, generic `<title>Object —
+  Woodfine BIM Library</title>` / `<title>Composition — ...</title>` — never the actual item's name.
+  Root cause: `routes/objects.rs`/`routes/compositions.rs` passed hardcoded string literals into
+  `page_shell()`'s title param instead of the real name the render functions already look up internally.
+  Fixed by changing `render_object_detail`/`render_composition_detail`'s return type from `Option<String>`
+  to `Option<(String, String)>` (name, html) — for the object-in-composition page, uses the object's own
+  name (the primary content on that page), not the parent composition's.
+- No favicon was ever configured — every page load hit a 404 on `/favicon.ico`. Fixed with an inline SVG
+  data-URI favicon (no new binary asset) in `page_shell()`'s `<head>`, reusing the site's own navy
+  plan-stroke visual language (a bounded room + partition line) rather than a generic icon.
+- Per operator: Corporate Office detail pages now 404 (not just delisted from the grid) — they're being
+  actively deprioritized, unlike the room-programme-only entries that stay directly reachable by design.
+  Implemented inside `render_composition_detail` itself (reuses `composition_is_publicly_visible()`),
+  combined cleanly with the same signature change the title fix needed.
+- The 1920px `/objects` grid soft-fail (known since Round 5) stays explicitly deferred — operator confirmed,
+  not touched.
+
+**Also fixed in passing**: a genuine defect Command's own review caught in the same session — both JOURNAL
+drafts' author frontmatter carried a real personal Gmail address (`jmwoodfine@gmail.com`) instead of a
+corporate one, the same recurring defect class flagged elsewhere in the corpus. Fixed to
+`corporate.secretary@woodfinegroup.com`, replied to Command's inbox message, archived it.
+
+**Shipped**: both rounds (visibility/Zone/sustainability, then the close-out pass) committed and deployed to
+`local-bim.service` separately, each verified live before and after. `pointsav-monorepo` commits:
+`4c58c956` (visibility/Zone/ladder), `6ed21aad` (close-out). `woodfine-bim-library`: `e163f05`
+(visibility/Zone/sustainability content — close-out pass touched no content files). `project-bim`:
+`fbcce6f4` (Round 6 BRIEF, pre-existing), `2795a181` (re-applied TOPIC fix), `590042ef` (JOURNAL email fix +
+inbox archive).
+
+**Next**: Round 8 kickoff approved but not started — operator wants Opus + Fable research (grounded in the
+Openstudio design-response docx re-read for Building Width Calculator content, plus a new source,
+`inputs/DISCOVERY_MCorp_Sketches_Key Plans_Business_Notes.pdf`) into (1) rewriting the Composition
+definition to explicitly say "any architectural drawing or drafting," and (2) working out Building Width
+Calculator's correct conceptual separation from Key Plans/Tiles/Floor Plates and a real public name for it
+(the internal codename `tool-buildingwidth` must never appear in public copy). No content changes until that
+research lands and a concrete plan is presented for review.
