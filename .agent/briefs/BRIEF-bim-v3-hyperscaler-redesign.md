@@ -815,3 +815,125 @@ systemctl restart local-bim.service`. Service confirmed active, listening on 127
 (`woodfine-bim-library`) is read live from the git working tree by the running service — no separate sync
 step needed for `about.md`/`home.md`/token changes. Final live-service verification (not scratch) launched
 against the real running instance. Nothing touches foundry-prod at any point.
+
+---
+
+## Round 6 — polish/cohesion pass ("get the site over the next hump"), all 7 planned tasks complete
+
+**Trigger:** operator's assessment of the live Round 5 result: the redesign "worked" and moved in the right
+direction, but wasn't polished enough to be the "100x" outcome — "the pieces are in place but they don't
+quite come together." Asked directly: nav order + a redesigned active-tab treatment, a real point-of-view
+fix (site read like "Mathew sending notes to AI and AI responding," not hyperscaler-grade institutional
+copy), and a concrete answer to "how do we get this site over the next hump" — commissioned a real
+Opus+Fable browser-in-the-loop review as part of scoping, not blind execution. Full scoping/findings detail
+is in the Plan Mode transcript (Opus voice/cohesion audit + Fable nav/motion/award-criteria research);
+summary of what shipped:
+
+**P0 — split-source serving bug.** `/research` was serving a stale 2026-07-02 `gateway-orchestration-bim-1`
+snapshot, missing a week of real essay edits. Synced `woodfine-bim-library/research/*.md` into the
+deployment vault; re-verified byte-identical post-sync (and again at the end of this round).
+
+**Nav order + redesign.** Reordered to `Method | Objects | Compositions | Research` (Method-first — every
+concept Objects/Compositions display, Method defines). Replaced the Round 5 hairline+end-tick active-state
+(operator: "does not look good," and it was — sub-perceptual at real nav size) with a containment/"room on
+the plan" treatment: filled accent-tint rectangle + solid stroke, near-square corners, matching the same
+zone-fill grammar used on every plan diagram. Mirrored in the mobile drawer.
+
+**Voice/POV pass.** Fixed 12+ concrete instances Opus found by exact quote: the Method page's own
+edit-history self-reference ("an earlier version of this page did exactly that"), a `tool-buildingwidth`
+Rust-crate-name leak in body copy, doubled citation-defense hedging, "verified BIM Object"/audit-log
+sourcing narration on all 7 object detail pages (moved to plain metadata, no retrieval-date narration),
+"0 of 0 — pending"/"not yet authored" language on compositions, `Doorman`/`service-slm`/version-tag/
+`project-bookkeeping vault` internal leakage in the research essays, and every named-competitor comparison
+(Autodesk, Bentley, Trimble, Nemetschek, Planon, Tririga, Archibus, Tririga, FM:Systems, EcoDomus, ONUMA) —
+rewritten in category terms per the operator's explicit governance decision (research is public, rewritten
+neutral).
+
+**Compositions completeness gate.** New `composition_is_publicly_visible()` filters the 14 zero-furniture
+entries from the public grid (kept in the underlying data model, not deleted) while keeping Corporate
+Office's floor-scale leasehold listings and PO-2/PO-3's genuinely-partial real data visible — matches the
+operator's confirmed nuance, not a blanket suppress-everything-incomplete rule.
+
+**Method page visual scaffolding.** Two new diagrams (`render_two_ladder_svg()`, reused
+`render_kp_zone_svg()`) injected after the sections that introduce each concept — the page explaining the
+model got a real diagram for the first time; every composition detail page already had one.
+
+**Motion + hero + footer.** Formalized the SVG draw-on system as real CSS custom-property motion tokens
+(`tokens.css`) instead of hardcoded JS magic numbers; rebuilt the homepage hero around a self-composing Key
+Plan built from real PO-1 data (was empty grid paper at 1440–1920px); redesigned the footer as a literal
+drawing title block (bordered frame, "Office" label, flattened badge chrome).
+
+**Bug fixes — two real defects found and fixed, one false lead corrected:**
+- **Composition-detail column imbalance** (Opus: "~1,000px of empty space below a short key-plan diagram
+  against a tall parts list"). Moved the Data Box area stat and Classification & registry block from the
+  bottom of the rail into the sticky plan column, below the diagram — real content filling real space, not
+  a CSS hack. Live-verified: plan column height 424.8px → 748.6px, rail-vs-plan gap cut from ~542px to
+  218.6px (~60% reduction), no breakage across viewports/dark theme/the zero-bill Corporate Office case.
+- **`/objects` compare-bar overlap — got this wrong once, then fixed it for real.** First attempt added
+  `margin-bottom` to the grid, reasoning from CSS mechanics alone; a live re-check found it only fixed the
+  "scrolled to the bottom" case and left the actual bug untouched: `position: sticky; bottom: 1rem` clamps
+  to the viewport-bottom threshold as soon as the element's in-flow position is below that threshold *for
+  the current scroll offset* — with a short catalog (7 objects, 2 rows), that's true from the very first
+  paint, so the bar was rendering pinned over row-1 card titles (measured 17–56px of real glyph overlap at
+  1440px) before any scrolling happened at all. Fixed by making the bar static instead of sticky — no
+  floating-CTA convenience for a catalog this short, but the overlap failure mode is now structurally
+  impossible. Live re-verified: zero overlap at all three viewports, JS compare-selection interaction
+  unaffected.
+- **Hero rhythm** — live-checked, no real defect found (text/visual vertical centers matched to <0.1px at
+  every desktop width; mobile/tablet correctly hide the visual with no leftover gap; hero-to-next-section
+  spacing scales sensibly 32–48px). No fix needed.
+
+**Additional gaps found and fixed during final sweep, beyond the original 7-item plan** (same recurring
+patterns this whole session — systematic greps, not one-off spot fixes):
+- The `IfcZone`-as-spatial-element ontology error (found and fixed multiple times already this session in
+  the JOURNAL draft and 2 category files) recurred a 4th time in `site-content/categories/01-spatial.md`'s
+  `elements:` list — removed.
+- 5 more internal Rust crate-name leaks (`tool-buildingwidth`, `tool-keyplan`, `tool-floorplates`) in public
+  category descriptions, beyond the one already caught in Opus's original 12-item list — swept via
+  `grep -rniE "tool-[a-z]"` across the full library and fixed.
+- 3 more "not yet"/"pending" audit-log-style phrasings the original voice pass missed: 2 empty-state
+  messages on category detail pages ("Regulation"/"Climate Zone" accordions), and the per-row "not yet
+  linked" tag on composition parts lists (→ "not in catalog").
+- A stale module-doc comment in `catalog.rs` still describing the pre-fix "N of M — pending" wording.
+- `cargo test` caught a real gap the Method-page diagram injection introduced: the
+  `about_disclaimers_body_byte_identical_to_source` test asserted exact section-by-section byte equality
+  against source data, which the new `<figure>` insertions legitimately break. Test updated to construct
+  the same expected figure HTML via the same `render::svg` calls the handler uses, so it still catches
+  real content drift without false-failing on the intentional diagrams. 6/6 tests passing.
+
+**JOURNAL polish (parallel track, same round):** dispatched a background agent to bring both JOURNAL drafts
+into full structural conformance with the real style guide (abstract → frontmatter, remove body h1/
+author-block, remove hand-typed References section — the engine generates it) and do a genuine voice pass
+grounded in real Woodfine writing samples, matching the JOURNAL style guide's register without reading as
+AI-generated. Two items it flagged but left unfixed (Acknowledgements section off the mandated back-matter
+heading contract; a stale "still open" claim in the AI Use Disclosure contradicting `revision_history`) were
+independently already resolved by the time this session came back to check on them — see the note below.
+
+**Process note, not a content issue:** two commits appeared on this branch (`01518ade`, `9ea7b898`) mid-round
+with messages describing recovery of a "crashed session"'s leftover uncommitted work — this session didn't
+consciously author them in the visible conversation. Verified thoroughly before proceeding: both commits'
+diffs match exactly the JOURNAL structural-conformance/voice-pass work the dispatched background agent
+reported doing (including the two items it had flagged as unfixed — folding Acknowledgements into Funding,
+correcting the stale AI Use Disclosure claim — which these commits show as already applied). Real commit
+SHAs cited elsewhere in this same BRIEF (`010d7c00`, `d1b5c7a`) were independently confirmed to exist on the
+correct branches with matching content. No session-lock conflict, no data loss, no unexplained content —
+this session's own subsequent manual edits attempting the same two fixes landed as pure no-op diffs against
+what was already committed. Noted for the record since it's a genuinely surprising git-log entry, not
+because it's an open problem.
+
+**Final verification — comprehensive, before requesting commit/deploy go-ahead:**
+- `cargo build` + `cargo test`: 6/6 passing.
+- Forbidden-vocabulary sweep (named competitors, internal codenames, version tags, audit-log phrasing):
+  clean across the full `woodfine-bim-library` tree.
+- `/research` byte-identical to source post-sync (re-confirmed a second time this round).
+- `/compositions` grid shows exactly the intended 8 entries (PO-1/2/3 + 5 Corporate Office) via direct route
+  check.
+- Full 108-combination viewport×theme×page sweep (6 viewports × light/dark × 9 page routes) via headless
+  Playwright: zero horizontal overflow, zero forbidden-vocabulary hits, zero JS console/page errors, nav
+  order and containment active-state correct in all 108 cases. One pre-existing, out-of-scope gap noted
+  (no `favicon.ico` ever configured — 404, cosmetic, not a Round 6 regression) — left for a future round,
+  not silently dropped. Manually eyeballed a representative sample of screenshots (home/method/objects/
+  composition-detail at desktop, home at mobile dark) beyond the automated checks — genuinely polished,
+  no visual defects found.
+- **Nothing committed or deployed to `local-bim.service` yet** — gated on explicit operator go-ahead per the
+  standing local-first deploy model, same discipline as every prior round this session.
