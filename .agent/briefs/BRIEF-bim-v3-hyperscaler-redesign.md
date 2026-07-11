@@ -792,6 +792,26 @@ checks clean, 1 real bug found and fixed, 1 minor polish gap left open:**
 group clicks pin/unpin correctly without navigating, and correctly sync the paired bill row (class lists
 confirmed before/after, toggle confirmed both directions). Scratch instance stopped, cleanup done.
 
-**Round 5 — all 9 planned build items complete, `cargo build` + `cargo test` (6/6) clean.** Nothing
-deployed to `local-bim.service`; nothing committed. Both remain gated on explicit operator go-ahead per the
-standing local-first deploy model, consistent with every prior round this session.
+**Round 5 — all 9 planned build items complete, `cargo build` + `cargo test` (6/6) clean.** Operator
+confirmed both commit and deploy. Executed:
+
+**Commit (3 separate repos, specific files staged, no `git add -A`):**
+- `woodfine-bim-library` (main branch) — commit `d1b5c7a`: content-only changes (category ledes, ontology
+  fixes, homepage citations, PO-2/PO-3 token data, new `accessibility-conformance.md`). **Explicitly
+  excluded all 18 `key-plans/*.ifc` files** — checked their diffs first and found they're pure
+  IFCPROJECT/IFCSITE GUID regeneration (a new random GlobalId each run, no real content change), not
+  something to commit as meaningful history.
+- `pointsav-monorepo` (cluster/project-bim) — commit `010d7c00`: all 9 code files for the build round.
+- `project-bim` top-level (cluster/project-bim) — commit `bc2e8937`: BRIEFs, 7 TOPIC drafts, 2 JOURNAL
+  drafts, inbox sync. Non-fatal post-commit hook warning (`python3: Argument list too long`) — same
+  pre-existing infra issue flagged earlier this session, does not block the commit.
+- **Scope note surfaced, not silently resolved**: `citations.yaml` (10+ new entries registered this
+  session) lives in the workspace-root repo (`/srv/foundry`, branch `cluster/command`) — Command Session's
+  scope, not something committed from this Totebox session. Flagged to the operator; not yet actioned.
+
+**Deploy:** `cargo build --release`, `sudo install` fresh binary to `/usr/local/bin/app-privategit-bim`,
+`sudo rsync --chown=local-bim:local-bim --delete` static assets to `/var/lib/local-bim/static/`, `sudo
+systemctl restart local-bim.service`. Service confirmed active, listening on 127.0.0.1:9096. Content
+(`woodfine-bim-library`) is read live from the git working tree by the running service — no separate sync
+step needed for `about.md`/`home.md`/token changes. Final live-service verification (not scratch) launched
+against the real running instance. Nothing touches foundry-prod at any point.

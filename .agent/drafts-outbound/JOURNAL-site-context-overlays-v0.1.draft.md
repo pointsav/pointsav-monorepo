@@ -2,8 +2,27 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.2"
+version: "0.2.1"
 title: "Site Context Overlays: Decoupling Regulatory and Environmental Assessment from Reusable Building Compositions"
+abstract: |
+  Architects re-author the same functional space types — a stairwell, a private office, a
+  residential unit — on every project, and re-verify code compliance for each instance from
+  first principles, because building-code and site-environmental data are conventionally authored
+  as prose reports attached to a single project rather than as structured data attached to a
+  reusable design. This paper specifies an architecture that separates two concerns conventionally
+  merged: a Composition (a reusable functional-space design, jurisdiction-agnostic by
+  construction) and a Site Context Overlay (jurisdiction- or location-specific regulatory and
+  environmental data, authored once per place and applied to any Composition deployed there).
+  Compliance and site-context status become a derived, computed Assessment — never hand-authored,
+  always re-derivable — rather than a property baked into either the Composition or the Overlay.
+  We specify a closed four-category schema for Site Context Overlays (Regulatory and Entitlement;
+  Hazards and Structural Loads; Climate and Energy; Ground and Ecology) covering the layer types
+  an architect or engineer needs at a site, and a self-hosted extension model in which
+  practitioners maintain their own Composition libraries against a shared base catalogue without a
+  centrally hosted accounts system. We ground the spatial-hierarchy terminology in IFC 4.3's
+  existing element/space distinction, correcting an earlier internal working assumption that
+  conflated the two. The paper closes with falsifiable claims about what this architecture makes
+  possible that a project-scoped, prose-based compliance workflow structurally cannot.
 target_journal: "Journal of Information Technology in Construction (ITcon)"
 target_publisher: "International Council for Research and Innovation in Building and Construction (CIB)"
 impact_factor: "3.6"
@@ -103,6 +122,9 @@ revision_history:
   - version: "0.2"
     date: "2026-07-10"
     changes: "Corrected a real error in Table 2 (§4.1) found by a dedicated adversarial Opus review of the corrected hierarchy model: `IfcZone` was listed as a Tile analogue alongside `IfcSpatialZone`, but `IfcZone` is a subtype of `IfcGroup` (joined via `IfcRelAssignsToGroup`), not a placeable/aggregatable `IfcProduct`-descended entity — its presence directly contradicted this section's own claim that every rung is placeable and aggregatable. Removed `IfcZone`; Tile now maps to `IfcSpatialZone` exclusively; Zone (one level down) restated as an `IfcSpace` subdivision rather than reusing `IfcSpatialZone` for two different rungs. Also corrected the convergence sentence: placement/classification converge at `IfcProduct`, but the shared aggregation mechanism (`IfcRelAggregates`) is defined one level higher, on `IfcObjectDefinition` — the prior wording conflated the two."
+  - version: "0.2.1"
+    date: "2026-07-10"
+    changes: "Structural conformance to the wiki render contract (guide-journal §9) plus an authorial voice pass. Structural: moved the abstract into frontmatter (`abstract: |`) and deleted the body `## Abstract` section; deleted the body-level h1 title, author block, and keywords line so the body now opens directly at `## 1. Introduction`; deleted the hand-typed `## References` section entirely (the engine generates references from `cites:` plus citations.yaml). No in-text bracket-ID citation, table row, IFC-entity name, hypothesis, or falsification-test text was changed — the corrected two-ladder terminology model (§4.1, Table 2) is preserved exactly. Voice: sentence-level pass over the prose to remove generic-academic filler (hedge-stacking, empty transitions, over-symmetric constructions), tightening toward the direct, declarative register of the authors' own primary-source design-response document, while preserving every factual claim, every citation, and every planned/delivered hedge distinction. Section-opening sentences rewritten where they labelled a topic rather than advancing the single thesis. No facts, quotes, or citations added or removed."
 notes_for_editor: |
   This is the third bim-surface JOURNAL seed (after desktop-environment and the merged
   flat-file-bim-substrate paper), bringing the surface to 3 of the registry's ~3–5 soft cap —
@@ -124,29 +146,11 @@ notes_for_editor: |
   v0.1.1) — we're treating aec-data-layers as related work, not re-deriving its citations.
 ---
 
-# Site Context Overlays: Decoupling Regulatory and Environmental Assessment from Reusable Building Compositions
-
-**Jennifer M. Woodfine, Peter M. Woodfine, and Mathew Woodfine**
-Woodfine Management Corp., Vancouver, British Columbia, Canada
-*Corresponding author:* jmwoodfine@gmail.com
-
-*Keywords:* jurisdiction-portable BIM, regulatory compliance automation, IFC spatial structure, composable geometry, self-hosted BIM, site context data, building code as data
-
----
-
-## Abstract
-
-Architects re-author the same functional space types — a stairwell, a private office, a residential unit — on every project, and re-verify code compliance for each instance from first principles, because building-code and site-environmental data are conventionally authored as prose reports attached to a single project rather than as structured data attached to a reusable design. This paper specifies an architecture that separates two concerns conventionally merged: a **Composition** (a reusable functional-space design, jurisdiction-agnostic by construction) and a **Site Context Overlay** (jurisdiction- or location-specific regulatory and environmental data, authored once per place and applied to any Composition deployed there). Compliance and site-context status become a derived, computed **Assessment** — never hand-authored, always re-derivable — rather than a property baked into either the Composition or the Overlay. We specify a closed four-category schema for Site Context Overlays (Regulatory and Entitlement; Hazards and Structural Loads; Climate and Energy; Ground and Ecology) covering the layer types an architect or engineer needs at a site, and a self-hosted extension model in which practitioners maintain their own Composition libraries against a shared base catalogue without a centrally hosted accounts system. We ground the spatial-hierarchy terminology in IFC 4.3's existing element/space distinction, correcting an earlier internal working assumption that conflated the two. The paper closes with falsifiable claims about what this architecture makes possible that a project-scoped, prose-based compliance workflow structurally cannot.
-
-*(199 words)*
-
----
-
 ## 1. Introduction
 
 ### 1.1 The Research Problem
 
-A recurring inefficiency in commercial building design is the re-authoring problem: an architect who has designed a compliant emergency stairwell, a functional private office, or a well-configured mop room on one project starts from a blank sheet on the next project, even when the two projects share a jurisdiction, and starts from a blank sheet on regulatory compliance verification even when the two projects share the same space type. This is not a failure of individual practice; it follows from how building-code and environmental-context information is conventionally packaged — as a project-specific consultant report, not as data attached to a reusable design artifact that can travel with that artifact to the next project.
+An architect who has designed a compliant emergency stairwell, a functional private office, or a well-configured mop room on one project starts the next project from a blank sheet — even when the two share a jurisdiction, and even when they share the same space type, so the compliance verification is re-run from first principles too. This is not a failure of individual practice; it follows from how building-code and environmental-context information is conventionally packaged: as a project-specific consultant report, not as data attached to a reusable design artifact that can travel with that artifact to the next project.
 
 This paper specifies an architecture in which a reusable space design and the place-specific rules that govern it are two separate, independently authored data structures, joined only at evaluation time. We ask a falsifiable question: can regulatory and environmental site data be authored once per jurisdiction and applied to any number of reusable Compositions deployed there — including Compositions an architect authors independently and reuses across an entire practice — without editing either the Composition or the jurisdiction data when a new pairing occurs?
 
@@ -205,7 +209,7 @@ Site Context Overlays carry a `category` field restricted to exactly four values
 | Climate and Energy | What is the long-run environmental average? | Long-run averages | Building-code climate zone, solar irradiance |
 | Ground and Ecology | What does the site itself contain? | In-situ measured properties | Soil type, eco-region |
 
-This grouping organises by design question and data statistic rather than by regulatory status, because most of the underlying layers are code-referenced somewhere — partitioning by "is this a law" does not cleanly separate them. Regulatory and Entitlement captures rules; Hazards and Structural Loads captures return-period extremes; Climate and Energy captures long-run averages; Ground and Ecology captures properties measured directly at the site. Cross-category interactions — seismic peak ground acceleration amplified by soil site class; a flood designation that is simultaneously a physical hazard and a trigger for a regulatory freeboard requirement — are resolved at Assessment time, not by duplicating a layer's data into two categories.
+The grouping is by design question and data statistic, not by regulatory status. Most of the underlying layers are code-referenced somewhere, so partitioning on "is this a law" does not cleanly separate them; partitioning on what each layer measures — a rule, a return-period extreme, a long-run average, an in-situ property — does. Cross-category interactions — seismic peak ground acceleration amplified by soil site class; a flood designation that is at once a physical hazard and a trigger for a regulatory freeboard requirement — are resolved at Assessment time, not by copying a layer's data into two categories.
 
 The specific layers, their per-country sourcing, and their licensing status are the subject of a related but separate research programme, cited here as related work rather than re-derived; the finding this paper relies on is narrower — that the layers cluster cleanly into exactly these four design-question categories, independent of which specific national data source ultimately populates each one.
 
@@ -273,7 +277,7 @@ The four-category schema (§3.3) is validated by internal design-question consis
 
 ## 7. Conclusion
 
-This paper specified an architecture separating reusable building Compositions from the jurisdiction- and location-specific data that governs their regulatory and environmental status, replacing an ad hoc pattern that conflated measurement, threshold, and verdict into a single unstructured field with no jurisdiction key. Site Context Overlays, organised into a closed four-category schema, attach to Objects and Compositions by classification without editing either; compliance becomes a computed Assessment rather than an authored fact. We further corrected an internal terminology error — describing spatial units (Key Plan, Tile, Floor Plate) as if they were the same kind of entity as a physical product Object — using IFC 4.3's own element/spatial-element distinction, and confirmed that the platform's Key Plan zoning methodology operationalises a well-established general architectural principle rather than inventing one. Finally, we specified a self-hosted extension model in which a practitioner's own Composition library remains portable and privately governed while still benefiting from a shared, updatable base catalogue and jurisdiction Overlay set.
+The re-authoring problem this paper opened with — an architect rebuilding the same space type, and re-verifying its compliance from scratch, on every project — is not a discipline problem to be solved by better practice; it is an artifact of packaging code and site data as a project-scoped prose report. Separating the reusable Composition from the jurisdiction-specific Site Context Overlay, and deriving compliance as a computed Assessment rather than authoring it as a verdict, dissolves the problem by construction: a Composition authored once is deployable in any jurisdiction, registering a new jurisdiction adds one Overlay record and edits no existing design, and the same design carries a different, automatically-derived compliance status in each place it is proposed. What a project-scoped, prose-based workflow structurally cannot do — reuse a design and its compliance status across jurisdictions without re-authoring either — is this architecture's ordinary mode of operation. The supporting results hold it together: a closed four-category schema that separates regulatory rules from environmental facts, a spatial-hierarchy terminology corrected against IFC 4.3's own element/space distinction rather than a flattened working assumption, and a self-hosted extension model that keeps a practitioner's accumulated library private and portable while still tracking a shared, updatable base catalogue.
 
 ---
 
@@ -334,27 +338,3 @@ No external funding received.
 ## Data Availability
 
 The IFC 4.3 schema and IDS 1.0 specification cited in this paper are publicly available from buildingSMART International. The internal design-response document referenced in §4.2 is an unpublished primary source authored by the paper's own authors and is not separately available for third-party verification; the quoted material is reported as primary authorial testimony, not as a third-party-verifiable citation. The related site-data-layer sourcing referenced in §3.3 is documented in a sibling research programme's own paper, cited as related work.
-
----
-
-## References
-
-buildingSMART International. 2024. *IFC 4.3 — Industry Foundation Classes* (ISO 16739-1:2024). https://ifc43-docs.buildingsmart.org/
-
-buildingSMART International. 2024. *Information Delivery Specification (IDS) 1.0.* https://www.buildingsmart.org/standards/bsi-standards/information-delivery-specification/
-
-buildingSMART International. *buildingSMART Data Dictionary (bSDD).* https://www.buildingsmart.org/users/services/buildingsmart-data-dictionary/
-
-IFC.js Project. *IFC Fragment Specification.* https://ifcjs.github.io/info/docs/Guide/web-ifc/ifcjs-fragment
-
-Building and Construction Authority, Singapore. *CORENET X.* https://www1.bca.gov.sg/regulatory-info/building-control/corenet-x
-
-ASHRAE. *ASHRAE Standard 90.1 — Energy Standard for Buildings Except Low-Rise Residential Buildings.* https://www.ashrae.org/technical-resources/bookstore/standard-90-1
-
-British Council for Offices. *Guide to Specification.* https://www.bco.org.uk/publications/about-our-guides/guide-to-specification
-
-International WELL Building Institute. *WELL Building Standard v2 — Feature: Daylight Modeling.* https://standard.wellcertified.com/v2/light/daylight-modeling
-
-European Union. *EUPL v1.2 — European Union Public Licence.*
-
----

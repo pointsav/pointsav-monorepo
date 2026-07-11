@@ -2,8 +2,29 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.2"
+version: "0.2.1"
 title: "Flat-File, Open-Standard Building Information Modelling: An Architectural Alternative to Cloud-Authoritative Platforms"
+abstract: |
+  Commercial Building Information Modelling (BIM) platforms in wide production use today —
+  including asset-lifecycle and Integrated Workplace Management System (IWMS) products from
+  several established vendors — share a common architectural spine: an authoritative database
+  hosted in the vendor's multi-tenant cloud, subscription-gated access, lossy import/export as
+  the interoperability mechanism, and a per-seat or per-token economic unit. This paper argues
+  that these are not independent design choices but a single coupled architecture, and that each
+  element functions at once as a revenue mechanism and as a structural vulnerability for the
+  building owner. We present an alternative: a flat-file, open-standard substrate built on
+  IFC 4.3 (ISO 16739-1:2024), the Information Delivery Specification (IDS) 1.0, BIM Collaboration
+  Format (BCF) 3.0, and COBie, in which the building's authoritative state is a directory of
+  plain-text and standardised-binary files under the owner's exclusive control, and any authoring
+  or visualization tool is a replaceable client of that state rather than its custodian. We
+  identify five owner-facing capabilities — asset-anchored BIM, offline-capable field use,
+  vendor-obsolescence survival, direct IoT integration, and convergence of BIM with lease and
+  financial records — that are structurally unavailable to multi-tenant cloud-authoritative
+  platforms, and one capability — real-time multi-user synchronous editing — where the flat-file
+  architecture is honestly weaker. The argument is grounded in a real deployment: an
+  owner-operator's internal design-response rationale for building rather than licensing this
+  substrate, predating and independent of this manuscript. We close with a falsification
+  programme specifying the conditions under which each claim would be considered refuted.
 target_journal: "Journal of Information Technology in Construction (ITcon)"
 target_publisher: "International Council for Research and Innovation in Building and Construction (CIB)"
 impact_factor: "3.6"
@@ -115,6 +136,9 @@ revision_history:
   - version: "0.2"
     date: "2026-07-10"
     changes: "Cleared both flags raised in v0.1. (1) Confirmed §2.1's cloud-authoritative-category description does not name any specific vendor's product — the 'named-competitor' concern was about draft-intent notes, not the actual body text, which was already generic; removed the inline editorial note accordingly. (2) Replaced the hedged EU mandate paragraph in §5.3 with individually verified, per-country status for Denmark, Spain, Italy, Norway, Germany, the Netherlands, and Poland, each with a live-checked source and correct planned/intended framing where a mandate is a future target rather than current law (Germany's 2027 building-construction target; Poland's 2025/2030 roadmap) — this corrected two claims that were flatly wrong in the original source essay (Germany has no current blanket building-construction mandate; the Netherlands and Poland have no national mandate at all, only agency-level or optional provisions). Registered 5 new citations.yaml entries. Updated Test 6 in the falsification programme accordingly."
+  - version: "0.2.1"
+    date: "2026-07-10"
+    changes: "Structural conformance to the wiki render contract (guide-journal §9) plus an authorial voice pass. Structural: moved the abstract into frontmatter (`abstract: |`) and deleted the body `## Abstract` section; deleted the body-level h1 title, author block, and keywords line so the body now opens directly at `## 1. Introduction` (title/authors are the generated masthead); deleted the hand-typed `## References` section entirely (the engine generates references from `cites:` plus citations.yaml — an author never writes it by hand). No in-text bracket-ID citation, table, hypothesis, or falsification-test text was changed. Voice: sentence-level pass over the prose to remove generic-academic filler (hedge-stacking, empty transitions, over-symmetric constructions), tightening claims of record toward the direct, declarative register of the authors' own primary-source design-response document, while preserving every factual claim, every citation, and every planned/delivered hedge distinction exactly. Section-opening sentences rewritten where they labelled a topic rather than advancing the single thesis. No facts, quotes, or citations added or removed."
 notes_for_editor: |
   Handed off per your 2026-07-10 reply accepting the seed proposal with the requested shape
   change (one merged paper, argument + comparison sections, rather than two companion papers).
@@ -137,29 +161,11 @@ notes_for_editor: |
   publicly-cited references table if that page renders it anywhere — worth a sweep.
 ---
 
-# Flat-File, Open-Standard Building Information Modelling: An Architectural Alternative to Cloud-Authoritative Platforms
-
-**Jennifer M. Woodfine, Peter M. Woodfine, and Mathew Woodfine**
-Woodfine Management Corp., Vancouver, British Columbia, Canada
-*Corresponding author:* jmwoodfine@gmail.com
-
-*Keywords:* flat-file BIM, open BIM, IFC 4.3, vendor lock-in, offline-first architecture, data sovereignty, asset lifecycle management
-
----
-
-## Abstract
-
-Commercial Building Information Modelling (BIM) platforms in wide production use today — including asset-lifecycle and Integrated Workplace Management System (IWMS) products from several established vendors — share a common architectural spine: an authoritative database hosted in the vendor's multi-tenant cloud, subscription-gated access, lossy import/export as the interoperability mechanism, and a per-seat or per-token economic unit. This paper argues that these are not independent design choices but a single coupled architecture, and that each element simultaneously functions as a revenue mechanism and a structural vulnerability for the building owner. We present an alternative architecture — a flat-file, open-standard substrate built on IFC 4.3 (ISO 16739-1:2024), the Information Delivery Specification (IDS) 1.0, BIM Collaboration Format (BCF) 3.0, and COBie — in which the building's authoritative state is a directory of plain-text and standardised-binary files under the owner's exclusive control, and any authoring or visualization tool is a replaceable client of that state rather than its custodian. We identify five owner-facing capabilities — asset-anchored BIM, offline-capable field use, vendor-obsolescence survival, direct IoT integration, and convergence of BIM with lease and financial records — that are structurally unavailable to multi-tenant cloud-authoritative platforms, and one capability — real-time multi-user synchronous editing — where the flat-file architecture is honestly weaker. The argument is grounded in a real deployment case: an owner-operator's internal design-response rationale for building rather than licensing this substrate, predating and independent of this manuscript. We close with a falsification programme specifying the conditions under which each claim would be considered refuted.
-
-*(228 words)*
-
----
-
 ## 1. Introduction
 
 ### 1.1 The Research Problem
 
-A building owner selecting a Building Information Modelling platform today chooses, in practice, an architecture — not merely a feature set. Commercial BIM and Integrated Workplace Management System (IWMS) platforms in production use converge on a common pattern: the authoritative model resides in a vendor-operated multi-tenant cloud; access requires an active subscription; interoperability with other tools proceeds through export/import rather than a shared native format; and the vendor, not the owner, controls the terms under which the digital twin remains accessible over the building's operating life. For an asset with a design life measured in decades, the consequences of this architecture accumulate over a timescale that exceeds most software vendors' own corporate lifespans.
+A building owner who selects a Building Information Modelling platform is selecting an architecture, not a feature set. Commercial BIM and Integrated Workplace Management System (IWMS) platforms in production use converge on a common pattern: the authoritative model resides in a vendor-operated multi-tenant cloud; access requires an active subscription; interoperability with other tools proceeds through export/import rather than a shared native format; and the vendor, not the owner, controls the terms under which the digital twin remains accessible over the building's operating life. For an asset with a design life measured in decades, the consequences of that architecture accumulate over a timescale that outlasts most software vendors' own corporate lifespans.
 
 This paper asks a narrower, falsifiable question: are there owner-facing capabilities that a flat-file, open-standard BIM architecture can provide and a multi-tenant cloud-authoritative architecture cannot provide by construction — not merely by contractual promise, but as a structural consequence of where the data lives and who controls access to it?
 
@@ -187,7 +193,7 @@ Commercial BIM platforms serving asset-lifecycle and facility-management use cas
 
 A sixth property — version lock, where a model saved in one software release cannot open in an earlier release of the same product — is documented as an effective lock-in mechanism in the CAD/BIM authoring-tool literature, independent of any specific vendor.
 
-None of these five properties is, individually, a defect. Each is a reasonable engineering trade-off that a commercial software vendor makes to fund development, guarantee service levels, and simplify collaboration. The claim advanced in this paper is architectural, not evaluative of vendor conduct: the five properties are coupled, and each is simultaneously the mechanism by which the vendor is compensated and the mechanism by which the owner's long-run control over its own asset data is constrained. Specific, citable illustrations of this coupling exist in vendor product documentation — for example, published subscription-lapse terms for cloud-hosted digital-twin products state that access to a previously-created model requires re-entering a paid term. We report this as a documented, sourced pattern across the category rather than naming any single vendor's product, consistent with this manuscript treating the argument as architectural rather than as an evaluation of any specific vendor's conduct.
+No one of these five properties is a defect. Each is a reasonable engineering trade-off a commercial vendor makes to fund development, guarantee service levels, and simplify collaboration. The claim here is architectural, not a judgement of vendor conduct: the five properties are coupled, and each is at once the mechanism by which the vendor is paid and the mechanism by which the owner's long-run control over its own asset data is constrained. Vendor product documentation supplies citable illustrations — published subscription-lapse terms for cloud-hosted digital-twin products state that access to a previously-created model requires re-entering a paid term. We report this as a documented pattern across the category, not as a charge against any single vendor's product.
 
 ### 2.2 Open BIM Standards as the Alternative Substrate
 
@@ -233,7 +239,7 @@ The empirical basis for this paper's comparative claims (§4) and the case for b
 
 ## 4. Results: Point-by-Point Architectural Comparison
 
-Table 2 compares the flat-file substrate against the cloud-authoritative architecture defined in §2.1 across five dimensions: data location, data visibility, operational continuity, pricing structure, and format permanence. Each row states an architectural property, not a vendor-specific promise; where a specific documented vendor fact illustrates the property, it is cited.
+The two architectures diverge on a single axis — where the authoritative data lives and who controls access to it — and the rows of Table 2 are that one difference worked out across five dimensions: data location, data visibility, operational continuity, pricing structure, and format permanence. Each row states an architectural property, not a vendor-specific promise; where a documented vendor fact illustrates the property, it is cited.
 
 **Table 2.** Architectural comparison — flat-file substrate vs. cloud-authoritative BIM/IWMS.
 
@@ -272,11 +278,11 @@ Building on Table 2, we identify five capabilities that follow from the flat-fil
 
 The architectural argument in this paper is not a retrospective justification constructed after the substrate was built. The owner-operator underlying this case study articulated the same rationale internally, in an unpublished design-response document, before any of the flat-file substrate described in §3 existed. We report this as primary authorial testimony — the authors' own stated reasoning at the time, not a third-party claim requiring external verification — consistent with the distinction between primary and cited evidence classes used throughout this manuscript (§9.2).
 
-On vendor heterogeneity across a building's equipment stack, the authors' internal rationale held: most buildings are filled with equipment from multiple vendors, speaking different languages and running separate firmware, some of which cannot be updated without vendor calls and consulting agreements — a condition the authors characterised as neither efficient nor accountable.
+One thread of that rationale was vendor heterogeneity. Most buildings, the authors observed, are filled with equipment from multiple vendors — speaking different languages, running separate firmware, some of it updatable only through vendor calls and consulting agreements. Their verdict on that arrangement was blunt: neither efficient nor accountable.
 
-On the cost model, the authors' rationale held that an owner-operated substrate produces a single integration cost per building that can be amortised, with ongoing support fitting into operating costs rather than recurring per-seat or per-token licensing — infrastructure, in the authors' framing, rather than overhead.
+A second thread was cost. An owner-operated substrate, on their reasoning, produces a single integration cost per building that can be amortised, with ongoing support absorbed into operating costs rather than recurring per-seat or per-token licensing — infrastructure, in their own framing, not overhead.
 
-On control, the authors' stated position was direct: absent developing the software themselves, the owner-operator would never have real control over it — a position stated by analogy to the loss of control implied by building a digital twin's delivery infrastructure on a third-party operating system rather than one under the owner's own governance.
+The third was control, and the position was flat: absent developing the software themselves, the authors held, the owner-operator would never really have control over it — the same loss of control they saw in building a digital twin's delivery infrastructure on a third party's operating system rather than one under their own governance.
 
 The intent for the BIM layer specifically predates this manuscript by several months and named the target explicitly: an open-sourced BIM runtime with full access among all project collaborators regardless of their individual software selections, and an independent BIM server for each building in the portfolio — targeting buildingSMART's ISO 19650 information-management certification [iso-19650] as the applicable standard. The substrate specified in §3 of this paper is the realisation of that stated intent, not a narrative constructed to fit an architecture chosen for other reasons.
 
@@ -322,7 +328,7 @@ The two items flagged in the prior revision of this manuscript — per-EU-member
 
 ## 7. Conclusion
 
-This paper has argued that the architecture shared across commercial cloud-authoritative BIM and IWMS platforms — authoritative data in vendor-controlled multi-tenant cloud, subscription-gated access, lossy interoperability, and per-seat economics — is a coupled design, not five independent choices, and that a flat-file, open-standard alternative built on IFC 4.3, IDS 1.0, BCF 3.0, and COBie provides five owner-facing capabilities structurally unavailable to the cloud-authoritative architecture, at the honestly-stated cost of weaker real-time synchronous collaboration. The argument is grounded in a real multi-building owner-operator's internal rationale, predating this manuscript, for building this substrate rather than licensing an incumbent platform, and is consistent with the direction of government BIM procurement policy in the United States, United Kingdom, Singapore, and Dubai, each of which specifies conformance to open standards rather than a named commercial platform.
+The architecture shared across commercial cloud-authoritative BIM and IWMS platforms — authoritative data in a vendor-controlled multi-tenant cloud, subscription-gated access, lossy interoperability, per-seat economics — is one coupled design, not five independent choices, and the same coupling that funds the vendor is what leaves the owner's decades-long access to its own asset data at the vendor's discretion. Relocating the authoritative state to a directory of open-standard files the owner holds outright breaks that coupling at the root: it yields five owner-facing capabilities the cloud-authoritative architecture cannot provide by construction — asset-anchored BIM, offline field use, vendor-obsolescence survival, direct IoT integration, and the convergence of BIM with lease and financial records — at the honestly-stated cost of weaker real-time synchronous collaboration. The case is not hypothetical: it restates a multi-building owner-operator's own internal rationale, recorded before the substrate was built, and it runs with, not against, the direction of government BIM procurement in the United States, United Kingdom, Singapore, and Dubai, each of which specifies conformance to open standards rather than to a named commercial platform.
 
 ---
 
@@ -352,15 +358,9 @@ This paper has argued that the architecture shared across commercial cloud-autho
 
 ---
 
-## Acknowledgements
-
-No external funding received. The authors thank buildingSMART International and the IfcOpenShell open-source community for the open-standard tooling this paper's architecture depends on.
-
----
-
 ## AI Use Disclosure
 
-This paper was developed using Claude Sonnet 5 (Anthropic). Source material was drawn from two internally authored research essays and an internal design-response document predating this manuscript. Restructuring into the JOURNAL schema, comparative-table synthesis, and citation verification were performed with AI assistance under human editorial direction. All regulatory-mandate and standards-citation claims were checked against a live web source in the course of this drafting pass; two items (full EU per-country verification, the named-comparator editorial question) remain open and are stated as such rather than resolved by the AI tool. The model used is identified per COPE 2024 guidelines.
+This paper was developed using Claude Sonnet 5 (Anthropic). Source material was drawn from two internally authored research essays and an internal design-response document predating this manuscript. Restructuring into the JOURNAL schema, comparative-table synthesis, and citation verification were performed with AI assistance under human editorial direction. All regulatory-mandate and standards-citation claims were checked against a live web source in the course of this drafting pass; the two items open at the v0.1 handoff (full EU per-country verification, the named-comparator editorial question) were subsequently resolved and are recorded in `revision_history` v0.2 rather than left open. The model used is identified per COPE 2024 guidelines.
 
 ---
 
@@ -380,64 +380,10 @@ The authors declare no conflict of interest. The authors are principals of the o
 
 ## Funding
 
-No external funding received.
+No external funding received. The authors thank buildingSMART International and the IfcOpenShell open-source community for the open-standard tooling this paper's architecture depends on.
 
 ---
 
 ## Data Availability
 
 The open standards cited in this paper (IFC 4.3, IDS 1.0, BCF 3.0, COBie, ISO 19650) are publicly available from buildingSMART International and ISO. The internal design-response document referenced in §5.2 is an unpublished primary source authored by the paper's own authors and is not separately available for third-party verification; the quoted rationale is reported as primary authorial testimony, not as a third-party-verifiable citation.
-
----
-
-## References
-
-buildingSMART International. 2024. *IFC 4.3 — Industry Foundation Classes* (ISO 16739-1:2024). https://ifc43-docs.buildingsmart.org/
-
-buildingSMART International. 2024. *Information Delivery Specification (IDS) 1.0.* https://www.buildingsmart.org/standards/bsi-standards/information-delivery-specification/
-
-buildingSMART International. *BIM Collaboration Format (BCF) v3.0.* Oslo.
-
-buildingSMART International. *buildingSMART Data Dictionary (bSDD).* https://www.buildingsmart.org/users/services/buildingsmart-data-dictionary/
-
-International Organization for Standardization. 2018. *ISO 19650 — Organization and digitization of information about buildings and civil engineering works, including building information modelling (BIM).* https://www.iso.org/standard/68078.html
-
-International Organization for Standardization. 2018. *ISO 16739-1:2018 — Industry Foundation Classes (IFC) Part 1: Data schema.*
-
-National Institute of Building Sciences. *COBie v3 — Construction Operations Building Information Exchange.* https://www.nibs.org/events/eventdetail/a-technical-overview-of-cobie-v3
-
-World Wide Web Consortium. *Scalable Vector Graphics (SVG) 2 — W3C Recommendation.* https://www.w3.org/TR/SVG2/
-
-International Organization for Standardization / Khronos Group. 2022. *ISO/IEC 12113:2022 — Information technology — Runtime 3D asset delivery format — Khronos glTF 2.0.* https://www.iso.org/standard/83990.html
-
-U.S. General Services Administration. *BIM Guide Series.* https://www.gsa.gov/cdnstatic/BIM_Guide_07_v_1.pdf
-
-U.S. Department of Veterans Affairs, Office of Construction and Facilities Management. *VA BIM Standard Manual.* https://www.cfm.va.gov/til/bim/BIM-Manual.pdf
-
-UK BIM Framework. *Information Management Mandate.* https://ukbimframework.org/
-
-Building and Construction Authority, Singapore. *CORENET X.* https://www1.bca.gov.sg/regulatory-info/building-control/corenet-x
-
-Global BIM Network. 2024. *Dubai BIM Mandate (Circular 207).* https://globalbim.org/info-collection/dubai-bim-mandate-circular-207/
-
-U.S. Department of State, Directorate of Defense Trade Controls. *International Traffic in Arms Regulations (ITAR).* https://www.pmddtc.state.gov/
-
-European Parliament and Council. 2016. *General Data Protection Regulation (GDPR), Regulation (EU) 2016/679.*
-
-European Union. *EUPL v1.2 — European Union Public Licence.*
-
-IfcOpenShell Contributors. 2025. *IfcOpenShell v0.8.5.* https://ifcopenshell.org
-
-IFC.js Project. *IFC Fragment Specification.* https://ifcjs.github.io/info/docs/Guide/web-ifc/ifcjs-fragment
-
-Ministerio de Transportes, Movilidad y Agenda Urbana (MITMA). *Spain BIM Plan for Public Procurement — Executive Summary.* https://cdn.mitma.gob.es/portal-web-drupal/cbim/pdf/executive_summary__en_a4_web.pdf
-
-buildingSMART Deutschland. *BIM und Digitalisierung der Bauwirtschaft — Stand der staatlichen Initiativen in Deutschland.* https://www.buildingsmart.de/buildingsmart/aktuelles/bim-und-digitalisierung-der-bauwirtschaft-stand-der-staatlichen-initiativen
-
-Rijksvastgoedbedrijf (Central Government Real Estate Agency, Netherlands). *RVB BIM Norm.* https://www.rijksvastgoedbedrijf.nl/english
-
-Borkowski, A. S., W. Drozd, and K. Zima. 2024. The Status of the Implementation of the Building Information Modeling Mandate in Poland: A Literature Review. *ISPRS International Journal of Geo-Information* 13(10): 343. https://doi.org/10.3390/ijgi13100343
-
-Construction Management. *A BIM Mandate Lesson from Denmark.* https://constructionmanagement.co.uk/bim-ma4ndate-lesso4n-den7mark/
-
----
