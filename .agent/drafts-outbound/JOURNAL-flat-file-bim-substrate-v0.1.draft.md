@@ -2,7 +2,7 @@
 schema: foundry-journal-v1
 artifact_type: JOURNAL
 state: draft
-version: "0.2.1"
+version: "0.2.2"
 title: "Flat-File, Open-Standard Building Information Modelling: An Architectural Alternative to Cloud-Authoritative Platforms"
 abstract: |
   Commercial Building Information Modelling (BIM) platforms in wide production use today —
@@ -32,7 +32,7 @@ alternate_venue: "Automation in Construction (Elsevier, IF 12.0)"
 authors:
   - name: "Jennifer M. Woodfine"
     affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
-    email: jmwoodfine@gmail.com
+    email: corporate.secretary@woodfinegroup.com
     orcid: ""
     credit_roles:
       - Conceptualization
@@ -70,7 +70,7 @@ keywords:
   - asset lifecycle management
 bcsc_class: public-disclosure-safe
 ai_tool_used: "claude-sonnet-5 (Anthropic)"
-corresponding_author: jmwoodfine@gmail.com
+corresponding_author: corporate.secretary@woodfinegroup.com
 word_count_body: 3450
 word_count_target: 6000
 submission_status: not-submitted
@@ -139,6 +139,9 @@ revision_history:
   - version: "0.2.1"
     date: "2026-07-10"
     changes: "Structural conformance to the wiki render contract (guide-journal §9) plus an authorial voice pass. Structural: moved the abstract into frontmatter (`abstract: |`) and deleted the body `## Abstract` section; deleted the body-level h1 title, author block, and keywords line so the body now opens directly at `## 1. Introduction` (title/authors are the generated masthead); deleted the hand-typed `## References` section entirely (the engine generates references from `cites:` plus citations.yaml — an author never writes it by hand). No in-text bracket-ID citation, table, hypothesis, or falsification-test text was changed. Voice: sentence-level pass over the prose to remove generic-academic filler (hedge-stacking, empty transitions, over-symmetric constructions), tightening claims of record toward the direct, declarative register of the authors' own primary-source design-response document, while preserving every factual claim, every citation, and every planned/delivered hedge distinction exactly. Section-opening sentences rewritten where they labelled a topic rather than advancing the single thesis. No facts, quotes, or citations added or removed."
+  - version: "0.2.2"
+    date: "2026-07-11"
+    changes: "Fixed a real defect Command flagged on review (msg command-20260711, re: Round 5 handoff): the author frontmatter's `email`/`corresponding_author` fields carried a real personal Gmail address (jmwoodfine@gmail.com) instead of a corporate address — same defect class that recurred elsewhere in the corpus this session. Both fields now read corporate.secretary@woodfinegroup.com, matching the pattern used elsewhere. No other change."
 notes_for_editor: |
   Handed off per your 2026-07-10 reply accepting the seed proposal with the requested shape
   change (one merged paper, argument + comparison sections, rather than two companion papers).
