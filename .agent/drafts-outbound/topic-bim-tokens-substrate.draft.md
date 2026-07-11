@@ -147,7 +147,7 @@ and element tokens must satisfy.
 
 The most architecturally consequential performance BIM Object is
 `bim.performance.max-workstation-to-window`, set at 6.0 metres from
-EN 12464-1:2021. This single value drives the Zone 1 Habitat depth
+EN 12464-1:2021. This single value drives the Habitat depth
 in every professional office floor plate.
 
 Source file: `performance.dtcg.json`
