@@ -1,4 +1,4 @@
-# tool-buildingwidth + tool-floorplates — Architecture & Gap Register
+# tool-floorplates — Architecture & Gap Register
 
 > **Status:** Research complete (2026-05-17, Opus agent army). Missing token files created and
 > internal inconsistencies fixed 2026-07-03 (commit `ae153aa`, woodfine-bim-library) — see
@@ -7,6 +7,16 @@
 > **Next:** Rust crate scaffold — unblocked, not yet started; needs its own dedicated planning
 > session given the scope (new workspace, ILP solver, bidirectional adjustment logic).
 > **HTML preview:** `/home/jennifer/sandbox/outputs/project-bim/html/`
+> **Revised 2026-07-11 (operator direction):** consolidated from two peer tools
+> (`tool-buildingwidth` + `tool-floorplates`) into one tool, `tool-floorplates`. Width
+> computation (deterministic formula) is now the first internal stage of this one tool's
+> pipeline, feeding the floor-plate assembly solver (ILP) as its second stage — not a
+> separate top-level binary. Rationale: building width is the major adjustment derived from
+> a use type's Key Plans, but it's one output among several this tool needs to produce on the
+> way to a valid floor plate; `tool-floorplates` already depended on `tool-buildingwidth` as a
+> crate in the prior design, so this collapses two `[[bin]]` targets into one binary with two
+> internal modules rather than inventing a new relationship. Nothing has been built yet — this
+> is a planning-doc-only change, no code exists to migrate.
 
 ---
 
@@ -32,14 +42,17 @@ tenant demising impossible. The system must be exact — not approximate.
 
 ---
 
-## Two Rust tools
+## One Rust tool, two internal stages
 
-| Tool | Role | Input | Output |
+| Stage | Role | Input | Output |
 |---|---|---|---|
-| `tool-buildingwidth` | Compute building width from use-type tokens | Use type + optional zone overrides | Width (m + ft), validation, provenance |
-| `tool-floorplates` | Assemble a valid floor plate from tenant requirements | Tenant mix + target SF + width | Tile composition, length, door count, climate zones |
+| `width` (module) | Compute building width from use-type tokens | Use type + optional zone overrides | Width (m + ft), validation, provenance |
+| `solver` (module) | Assemble a valid floor plate from tenant requirements | Tenant mix + target SF + width (from `width`) | Tile composition, length, door count, climate zones |
 
-Both are `lib.rs` + `[[bin]]` — usable as library (future Tauri UI) or CLI.
+`tool-floorplates` is `lib.rs` + `[[bin]]` — usable as library (future Tauri UI) or CLI. `solver` calls
+`width` internally as its first step (a floor plate can't be fit until its width is known); the CLI exposes
+both stages as subcommands (`tool-floorplates width ...` / `tool-floorplates fit ...`) so width can still be
+computed and inspected on its own, without implying it's a separate tool.
 
 ---
 
@@ -50,8 +63,9 @@ crates/
   bim-units/            # unit-safe types: Meters, SquareMeters, UseType enum
   bim-tokens/           # DTCG loader + typed model (shared, no business logic)
   bim-furniture/        # furniture catalogue + backwards zone derivation
-  tool-buildingwidth/   # zone computation + width calc + bidirectional adjust
-  tool-floorplates/     # floor-plate assembly solver (ILP via good_lp)
+  tool-floorplates/     # one crate, two modules:
+    src/width.rs        #   zone computation + width calc + bidirectional adjust
+    src/solver.rs       #   floor-plate assembly solver (ILP via good_lp), calls width.rs
 ```
 
 ---
@@ -182,7 +196,7 @@ impl TokenStore {
 // DimensionToken parses "6.0m", "5.9944m", "7.2m", "19'8\"" → Meters
 ```
 
-### `tool-buildingwidth` — key functions
+### `tool-floorplates::width` — width computation (stage 1)
 ```rust
 pub fn compute_width(
     tokens: &TokenStore,
@@ -200,20 +214,21 @@ pub fn adjust(
 // Bands: ±2.5ft Green, ±5ft Yellow (review), ±10ft Red (tile family change)
 ```
 
-### `tool-floorplates` — assembly solver
+### `tool-floorplates::solver` — floor-plate assembly (stage 2, calls `width` internally)
 ```rust
 pub fn fit_floor_plate(
     tokens: &TokenStore,
     request: FloorPlateRequest,
 ) -> Result<Vec<FloorPlateConfig>, SolverError>
 // Algorithm:
-// 1. Derive L = net_leasable / width
-// 2. Reserve core (Offset Pulled Back Core, ≥18m from short end)
-// 3. Place end caps (B-1/E-1 left, B-2/E-2 right; natural light required)
-// 4. Compose mid-tiles: bounded ILP via good_lp (≤30 tiles — exhaustive viable)
-// 5. Fill residual with special tiles; apply FP-SNAP-001
-// 6. Run all FP-* rules; collect ValidationResult
-// 7. Return top-K configs sorted by utilisation
+// 1. Call width::compute_width() for the request's use type
+// 2. Derive L = net_leasable / width
+// 3. Reserve core (Offset Pulled Back Core, ≥18m from short end)
+// 4. Place end caps (B-1/E-1 left, B-2/E-2 right; natural light required)
+// 5. Compose mid-tiles: bounded ILP via good_lp (≤30 tiles — exhaustive viable)
+// 6. Fill residual with special tiles; apply FP-SNAP-001
+// 7. Run all FP-* rules; collect ValidationResult
+// 8. Return top-K configs sorted by utilisation
 ```
 
 ### Bidirectional adjustment logic (the ±5ft invariant)
@@ -237,8 +252,9 @@ Red band    (≤3.048m / 10ft): Tile family changes Small→Medium or Medium→L
 bim-units         ← no deps
 bim-tokens        ← serde, serde_json, thiserror, bim-units
 bim-furniture     ← bim-tokens
-tool-buildingwidth ← bim-tokens, bim-furniture, clap
-tool-floorplates  ← bim-tokens, bim-furniture, tool-buildingwidth, good_lp, clap
+tool-floorplates  ← bim-tokens, bim-furniture, good_lp, clap
+                    (width.rs and solver.rs are modules within this one crate,
+                     not separate crates — solver.rs calls width.rs directly)
 ```
 
 ---
@@ -246,8 +262,8 @@ tool-floorplates  ← bim-tokens, bim-furniture, tool-buildingwidth, good_lp, cl
 ## CLI examples (target UX)
 
 ```bash
-# Compute width for a use type
-$ tool-buildingwidth compute --use-type medical
+# Compute width for a use type (stage 1, exposed as its own subcommand)
+$ tool-floorplates width --use-type medical
   Zone 1 Habitat:    7.200 m  (23'7")
   Zone 2 Magazine:   4.870 m  (15'12")
   Zone 3 Corridor:   2.890 m  (9'6")
@@ -256,18 +272,18 @@ $ tool-buildingwidth compute --use-type medical
   EN 12464-1: ✓  IBC stretcher: ✓  ADA: ✓
 
 # Derive zone from furniture (requires furniture.dtcg.json)
-$ tool-buildingwidth compute --use-type professional-office --derive-from-furniture
+$ tool-floorplates width --use-type professional-office --derive-from-furniture
   steelcase-think (762mm) × 3 + ArbStättV (1,000mm) + ASR A1.8 (1,000mm) + EN pad (1,714mm)
   Derived Z1: 6.000m  Token Z1: 6.000m  Delta: 0mm ✓
 
 # Bidirectional — what happens if the floor plate is 5ft too wide?
-$ tool-buildingwidth adjust --use-type medical --target-width 26.39m
+$ tool-floorplates width --adjust --use-type medical --target-width 26.39m
   Delta: −1.520m  Band: YELLOW
   Strategy: AbsorbInMagazine  Z2: 4.870m → 4.108m (−0.762m each side)
   Consequence: Medical Small key plan 223m² → 215.7m² (warn)
   Floor length grows: 66.58m → 69.91m (+5.0%)
 
-# Assemble a floor plate
+# Assemble a floor plate (stage 2 — calls width internally, no separate invocation needed)
 $ tool-floorplates fit \
     --class professional-centre \
     --target-sf 20000 \
