@@ -303,12 +303,6 @@ The re-authoring problem this paper opened with — an architect rebuilding the 
 
 ---
 
-## Acknowledgements
-
-No external funding received. The authors thank buildingSMART International for the IFC 4.3 spatial-structure and aggregation schema this paper's corrected terminology (§4.1) is grounded in.
-
----
-
 ## AI Use Disclosure
 
 This paper was developed using Claude Sonnet 5 (Anthropic). The Site Context Overlay data model, the four-category schema, and the self-hosted extension model were designed in an earlier working session and formalised into this manuscript with AI assistance under human editorial direction. The spatial-hierarchy correction in §4.1 was produced by a dedicated architectural consult using a different model instance than the one drafting this manuscript, specifically to obtain an independent check rather than have the drafting model self-review its own prior terminology. All standards citations were checked against the cited source in the course of this drafting pass. The model used is identified per COPE 2024 guidelines.
@@ -331,7 +325,7 @@ The authors declare no conflict of interest. The authors are principals of the o
 
 ## Funding
 
-No external funding received.
+No external funding received. The authors thank buildingSMART International for the IFC 4.3 spatial-structure and aggregation schema this paper's corrected terminology (§4.1) is grounded in.
 
 ---
 
