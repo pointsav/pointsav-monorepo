@@ -1029,3 +1029,62 @@ definition to explicitly say "any architectural drawing or drafting," and (2) wo
 Calculator's correct conceptual separation from Key Plans/Tiles/Floor Plates and a real public name for it
 (the internal codename `tool-buildingwidth` must never appear in public copy). No content changes until that
 research lands and a concrete plan is presented for review.
+
+---
+
+## Round 8 — Composition definition rewrite, Method page source-fidelity fixes, tool architecture
+consolidation (shipped)
+
+**Research (Opus + Fable, run in parallel, both re-reading the primary source docx; Opus additionally read
+a new source, `inputs/DISCOVERY_MCorp_Sketches_Key Plans_Business_Notes.pdf`, not previously read this
+session) converged independently on the same core finding**: the operator's phrase "any architectural
+drawing" is not safe unqualified — it directly contradicts the homepage's own "nothing is a drawing,
+everything is a specification" positioning, and unqualified "any drawing" also swallows Key Plans (which
+the source itself calls "drafting the Key Plans"), re-opening the exact Composition/Key-Plan conflation a
+prior round already fixed. Both independently proposed the same fix: keep the drawing/drafting framing but
+fence it to "drafted from cataloged Objects." Operator directed synthesizing both candidates rather than
+picking one — landed as:
+
+> "Compositions are what an architectural drawing becomes when its parts are real: an assembly of Objects —
+> from a single workstation up to a full leasing layout — carried as structured data rather than lines,
+> where each part still carries its own IFC identity, classification, and code constraints, so the
+> arrangement can actually be rebuilt, not just depicted. Drawings of space — plans of rooms, floors,
+> buildings — belong to the Key Plan system, not here."
+
+**Building Width Calculator**: Opus traced the real aggregation mechanism through the source with direct
+quotes — it does NOT aggregate Key Plans into Tiles (the source explicitly warns "Individual Key Plans are
+not to be summed up together to make Tiles"); it derives a building's WIDTH from furniture-driven zone
+depths, which then sets Floor Plate dimensions. This directly corrected the operator's own working guess
+about the mechanism. The live category-page description was already source-accurate — no content fix
+needed. Both research passes independently confirmed "Building Width Calculator" is already the right
+public name; no rename, no new public name added this round.
+
+**Two real, previously-unknown issues found by the research (not the original ask) — both fixed, operator
+confirmed one at a time:**
+- A real live bug, confirmed by direct curl against `local-bim.service`: the homepage body already had the
+  corrected Composition definition, but the Objects/Compositions catalog-index card ledes (`catalog.rs`, 2
+  hardcoded locations) still showed the old over-broad "parts combined into a room, a floor, a building" —
+  the exact space-ladder-scale language a prior round's fix was supposed to remove. Fixed to match the new
+  definition.
+- A real tension in already-shipped Method page copy: the "Two ladders" section used aggregation verbs
+  ("built *from*," implying summation) while the source explicitly warns against exactly that framing
+  ("not to be summed up... self-similar aperiodic"). Tightened to the source's own self-similar/
+  "without remainder" language, consistent with the "formal definition" subsection lower on the same page
+  (which already had the correct framing) — no more internal contradiction on one page.
+
+**A real architecture decision, made live in conversation, not from the research**: the operator questioned
+whether the two planned-but-unbuilt internal Rust tools (`tool-buildingwidth` — deterministic width formula;
+`tool-floorplates` — ILP floor-plate-fitting solver) should really be separate. Verified against the real
+architecture doc (`.agent/plans/tool-buildingwidth-architecture.md`) that `tool-floorplates` already
+depended on `tool-buildingwidth` as a crate in the existing design — confirmed merging them is a real,
+low-risk consolidation (two `[[bin]]` targets into one binary with two internal stages), not a redesign,
+since nothing is built yet. Updated the doc: single tool `tool-floorplates`, width computation as an
+internal module (`width.rs`) feeding the solver module (`solver.rs`), CLI restructured as subcommands.
+Doc-only change — no code exists yet, no public copy references either codename.
+
+**Shipped**: `pointsav-monorepo` commit `c2a43bb3` (stale-lede fix), `woodfine-bim-library` commit `da3ce03`
+(Composition definition + Method page tightening), `project-bim` commit `c6a03108` (architecture doc — note:
+this was initially reported to the operator as already committed when it was not; caught and corrected
+before session close, not left silently wrong). Verified live on `local-bim.service` post-deploy: new
+Composition definition renders on homepage/catalog-index/Method page, tightened aggregation language
+present, all Round 7 fixes (18 compositions, Corporate Office 404, real titles, favicon) still intact.
