@@ -5,7 +5,6 @@
 // See the LICENSE file in this repository for the full terms.
 // Unauthorized use, reproduction, or distribution is prohibited.
 
-
 // app-orchestration-bim v0.0.2
 // BIM Object Library — Woodfine server-rendered catalog
 // Reads DTCG token files from $BIM_DESIGN_SYSTEM_DIR/tokens/bim/
