@@ -9,6 +9,95 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 
 ---
 
+## 2026-07-09/13 | totebox@claude-code | Round 10 voice/diagram polish + Rounds 11-13 Spanish translation, LIVE on foundry-prod, real static-asset sync bug found post-push
+
+**Done:**
+- **Round 10** (voice/diagram work, largely predates this session's visible context window):
+  sitewide third-person→first-person voice rewrite; Method-page diagram redesign (containment model
+  → nested/concentric frames; cross-section craft pass); real dark-mode contrast fix
+  (`--bim-pen-primary`/`--bim-pen-secondary`); real motion-animation bug fix (staggered
+  `transition-delay` getting cancelled by style recalcs — switched to JS `setTimeout`). Follow-ups:
+  diagram text legibility + a caught-and-fixed `letter-spacing` clipping regression; mobile header
+  right-justification; renamed a cross-section label "Interior"→"CENTRELINE" after a multi-round
+  grilling landed on the real underlying concept (mirror-symmetry geometry).
+- **Rounds 11-13 — Spanish (`/es/*`) translation, now live on foundry-prod.** Operator: "+50% of our
+  audience in Mexico." Reference implementation (`app-mediakit-marketing-2`) traced with real
+  file:line citations before any code. Real Mexican-Spanish AEC/BIM terminology glossary researched
+  via a dedicated Opus agent before translating anything (Key Plan/Tile/Magazine kept English —
+  Mexican AEC practice borrows English BIM vocabulary directly; Habitat→Hábitat, Corridor→Corredor,
+  Floor Plate→Placa de Piso, Object→Objeto).
+  - Round 11 (plan-mode scoped, Tier 1): home/method/disclaimers/24 category ledes/UI chrome.
+    Operator's own explicit decision: "I draft it, flagged for verification" — not routed to
+    project-editorial, applied uniformly including the legal disclaimers content.
+  - Round 12: operator broadened scope — "keep translating everything except the Research essays and
+    the Key Plans pages themselves." Objects/Search pages + full DTCG entity-description dataset (221
+    entities across 22 files, `key-plans.dtcg.json`/`amenity-key-plan.dtcg.json` excluded). One real
+    boundary case caught on review and reverted (a Key-Plan-specific subtree nested inside an
+    otherwise in-scope file). One real bug caught by browser click-through, not curl: object cards
+    silently linked to the English detail page.
+  - Round 13: operator clarified further — Key Plans/Research nav should read in Spanish even though
+    their *content* stays English. A browser-in-the-loop check (operator-requested) confirmed clicking
+    those nav links from `/es` was a genuine dead end — landed on all-English pages with the language
+    switch entirely absent, no way back to Spanish. Fixed with chrome-only-translated routes. Also
+    caught a second bug while there: nav active-page highlighting had been silently broken on every
+    Spanish page since Round 11 (path-prefix matching never accounted for `/es/`).
+  - **Deployed to foundry-prod 2026-07-13** via the normal Command handoff (this archive doesn't push
+    to foundry-prod directly — see [[project-bim-deploy-model]]). Command ran `push-to-prod.sh bim`,
+    confirmed 200s. **Same-day, operator asked to verify visually** ("check the live site... browser
+    in the loop") — found the "LIVE, health check passed" report was misleading: a real, severe
+    static-asset sync gap on foundry-prod (`bim-planroom.css`, the core stylesheet, 404s entirely;
+    3 other assets stale/undersized) that predates this session's own work and wasn't caught because
+    `/healthz` never checks static assets. Escalated to Command high-priority with exact diagnostics
+    (byte-size diffs, 404 confirmation, Playwright screenshots) — **not yet confirmed fixed as of
+    session end.**
+- Full detail for all of the above: `.agent/briefs/BRIEF-app-privategit-bim.md` (updated this
+  session, now ~1,200 lines — consider whether it needs splitting if it keeps growing at this rate).
+
+**Pending / carry-forward:**
+- **foundry-prod static-asset sync gap** — awaiting Command's fix + re-verification. Highest-priority
+  item for next session's startup: check Command's reply first.
+- SEO gaps on bim.woodfinegroup.com — a real, ready-to-apply draft from project-editorial
+  (`SEO-bim-woodfinegroup.draft.html`), zero of ~10 signals present, 3 open questions need real
+  answers. Not started; deserves its own session.
+- Spanish translation's remaining exclusions (Key Plan/Composition technical data, Research essay
+  content, SVG diagram inner labels) are deliberate, not "not yet gotten to" — don't reopen without a
+  new operator decision.
+- Binary-ledger sha256 refresh (Command-owned, low priority) and two forward-looking cross-property
+  proposals from Command (footer-structure standardization, legal-tokens runtime consumer) — optional,
+  logged, no action needed unless BIM ships a public-facing footer redesign or migrates trademark text
+  off hardcoded strings.
+- Pre-existing, untouched this session: the 18 modified `.ifc` files in `woodfine-bim-library/
+  key-plans/` (operator: leave for a separate content-work pass), Cargo.lock staleness, JOURNAL-merge
+  decision still sitting `status: pending` in inbox.md (whether to hand off enriched research-essay
+  text for Command to merge, or pre-merge it — genuinely still open, not actioned this session since
+  it deserved real attention, not a shutdown-sweep rush).
+
+**Operator preferences surfaced:**
+- **"Browser in the loop" is a standing verification instruction, invoked repeatedly this session** —
+  every round got a real Playwright click-through before being called done, and it caught two real
+  bugs (object-card links, nav active-state) that curl/HTTP-status checks alone would have missed.
+  When the operator asks to "check ... browser in the loop," that means launch a real check, not
+  relay another party's report — reconfirms [[feedback-verify-visually-in-browser]].
+- **Scope decisions arrive incrementally and get refined, not stated once and fixed** — "translate
+  everything except Research/Key Plans" (Round 12) later got refined to "except the Research
+  essays and the Key Plans pages *themselves*" (Round 13, meaning chrome CAN translate even where
+  content can't) via a follow-up clarification, not a full restatement. Don't over-interpret an
+  earlier scope boundary as more restrictive than the operator's latest wording actually says —
+  ask or re-derive from the newest message if a boundary case is ambiguous (the
+  `building-width-calculator.dtcg.json` Key-Plan-subtree case this session is the concrete example:
+  correctly caught as still-excluded on inspection, not because the file was excluded, but because
+  its *content* was).
+- **Wants real production issues escalated immediately and precisely** — when the operator reported
+  the live site "doesn't look like the preview," the right move was to drop the in-progress shutdown
+  sweep, diagnose with real byte-level evidence before reporting anything, and hand Command a
+  complete, actionable report (exact file, exact diff, exact ask) rather than a vague "something's
+  wrong, please look."
+- Confirmed again this session: operator is comfortable with multi-round scope negotiation on a single
+  feature (3 rounds of "how much should translate") rather than wanting the full scope locked up front
+  — each round's request built on the verified state of the previous one.
+
+---
+
 ## 2026-07-08 | totebox@claude-code | live-site verification (browser-in-the-loop) + mailbox triage
 
 **Done:**
@@ -119,103 +208,4 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
   re-litigating after the operator has already decided.
 
 ---
-
-## 2026-07-03/04 | totebox@claude-code | bim.woodfinegroup.com — two full rebuild passes, real-data bug fix, family-continuity reversal
-
-**Done:**
-- **Live-site check + promote-truncation correction**: operator asked "is the new website up live?" —
-  found it was serving the OLD wiki-shell, root-caused to a `tail -40` truncation bug on Command's side
-  during `promote.sh` (saw 18 of the real 31 queued commits, silently dropping the newest 11 including
-  the CMS-reposition tip). Escalated with exact evidence; Command re-diagnosed, corrected, redeployed —
-  confirmed genuinely live this time.
-- **Fresh full-site audit (2 parallel agents) found real bugs beyond the operator's named complaints**:
-  a CSS layout bug (`.bim-shell`'s forced `flex:1`/`min-height:100vh` left ~1500px dead space before the
-  footer), a missing `<h1>` on the homepage, doubled/garbled chip text ("IFC IfcSpatialElement" →
-  "IFC IFCSPATIALELEMENT" under an uppercase transform), redundant breadcrumb+back-link, and confirmed
-  fonts still weren't actually loading (system fallback) — the single biggest driver of "looks generic."
-- **Operator rejected the Envelope-as-Navigation hero's core concept**, not just execution: "the three 3d
-  boxes do not quite make any real sense... we don't have the massing for real BIM Objects to allow us
-  to be more playful." Root cause worked out together: the diagram represented claim #41 (City Code as
-  Composable Geometry), an explicit v0.0.2+ roadmap idea per the manifest's own scope section — not what
-  the catalog does today.
-- **Deep real-source research (multiple rounds, following the operator's own pointers into `inputs/`'s
-  dated "Collaborators" folders and `cluster-totebox-jennifer`)** found: those "Collaborators" folders
-  are internal Woodfine-family mail-merge email threads, not external architects; a real, hand-drafted
-  CAD sheet for PO-1 ("Private Office — Small," `inputs/Sketches/DISCOVERY_MCorp_Sketches_Key
-  Plans_Private Office.pdf`) with real dimensions (19'-8"/5.9944m depth × 13'-5" width, 325 SF, no Zone
-  3); and — the most consequential find — that `key-plans.dtcg.json`'s private-office entries, despite
-  being marked `status: "confirmed"`, had actually inherited the *Professional Office* use-type's zone
-  depths by mistake. **Fixed the real data bug** (corrected to 5.9944/1.3716m across PO-1/2/3, dropped an
-  unverifiable "Steelcase Leap" brand claim with no source anywhere).
-- **Checked real terminology before inventing any** — verified "Bundle" doesn't appear anywhere in the
-  actual methodology PDFs (it's a software/design-system import) before using it; the product's own real,
-  established term is "Key Plan," and the real IFC relationship is `IfcRelContainedInSpatialStructure`.
-- **Real, carefully-scoped positioning content added** (not overclaimed): a real, sourced Denver
-  International Airport reference (17M SF, 93 buildings, proprietary Revit/CDE — used as a contrast
-  point for "open standard, self-hostable," not a claim Denver would have chosen this), and a tie to
-  PointSav's own already-published positioning pillars (home.pointsav.com's real icon-strip: "Business
-  Administration, Record Keeping, Building Connectivity") rather than positioning BIM as a standalone
-  competitor to Autodesk-style tools.
-- **Legal disclosure rewritten by a dedicated Opus-model pass** (operator: "write it as if they were a
-  hyperscaler lawyer at a big law firm") — `disclaimers.md` replaced with tightened, precise text;
-  confirmed "Sovereign Data Foundation" isn't a real initiative and removed it entirely, not replaced
-  with anything else; `important-information.md` deleted as confirmed-dead (footer already inlines
-  `disclaimers.md` directly — **reversed 2026-07-07/08**, see current entry above: the file was
-  re-created against Command's actual counsel-approved spec, which requires a dedicated short band
-  distinct from the full disclaimers content). **Flagged, not silently resolved**: the CC BY-ND 4.0
-  editorial-license claim has no backing LICENSE file anywhere in either repo.
-- **Reversed the RD.7 Spectrum-chrome color/font direction for family continuity** (explicit operator
-  call, not a default): `--bim-accent` changed from drafting-blue `#1A4480` to `#164679`, copied directly
-  from `home.woodfinegroup.com`'s live tokens (not approximated); real self-hosted Inter/Source Serif
-  4/Source Code Pro files copied byte-for-byte from `app-mediakit-marketing-2` (the exact files
-  `home.woodfinegroup.com` currently serves) — finally real fonts, not another silent fallback.
-  Differentiation now comes from the real-object content grounding, not a deliberately different palette.
-- **Two full implementation passes, both verified (cargo build + clippy clean, local deploy, screenshots,
-  hotspot click-tests) and committed**: pass 1 (envelope-as-navigation, later superseded) at
-  `pointsav-monorepo` `dbb74ff8`; pass 2 (real "Anatomy of a Key Plan — PO-1" hero, header/footer redo,
-  color/font continuity) at `pointsav-monorepo` `0d72def7`, `woodfine-bim-library` `ee089b2` (the
-  zone-depth fix + legal text + home.md content), archive-root BRIEF commits after each pass.
-- **`woodfine-bim-library`'s remote misconfiguration (flagged pass 1) was fixed by Command by pass 2**
-  — now correctly points at `woodfine/woodfine-bim-library` — but it has no staging-mirror remotes at
-  all, so it still needs Command's admin-tier push each time; flagged as a recurring bottleneck worth a
-  proper staging-mirror setup, not just a one-off unblock.
-
-**Pending / carry-forward:**
-- Both passes' commits are staged/queued for Command (canonical merge + `push-to-prod.sh bim` for
-  `pointsav-monorepo`; admin-tier push for `woodfine-bim-library`) — not yet live on foundry-prod as of
-  this session's end.
-- CC BY-ND 4.0 license-file gap — needs an operator decision before the new disclosure text is fully
-  settled.
-- `building-width-calculator.dtcg.json` (a third token file) still has its own, still-unreconciled set
-  of Private Office zone-depth numbers, different again from both the old wrong "confirmed" value and
-  the real CAD-sourced one now in `key-plans.dtcg.json` — same bug family, not yet fixed there.
-- "Swiss air requirement" (operator-mentioned) — searched, not found in any text-based source this
-  session; may be in a PDF not yet read, or may not exist. Don't fabricate it.
-- Deferred design work (unchanged from pass 1, still logged in the BRIEF): drafting-sheet layout system,
-  GUID-as-visual-mark, live constraint-composition tool, and the 3D-viewport decision gate (real
-  AGPL-xeokit vs. MIT/MPL-@thatopen licensing tradeoff, needs explicit operator sign-off before any
-  engineering starts — already flagged as an open question elsewhere in the project).
-
-**Operator preferences surfaced:**
-- **"No hype, must be real" is an operating standard, not a one-time note** — applies to visual concepts
-  (rejected an invented diagram in favor of a real, already-shipped catalog entry), specific factual
-  claims (rejected an unverifiable brand/chair claim), and terminology (checked "Bundle" against real
-  sources before using it). When in doubt, go find the real primary source rather than write plausible
-  copy — this operator will ask "how does this relate back to X" if a concept feels invented, and that
-  question is a genuine signal to reconsider the concept, not just execute better.
-- **Expects the agent to actually dig into real files the operator points at** (`inputs/`'s dated folders,
-  `cluster-totebox-jennifer`), including reading PDFs/binary-ish sources directly, not just theorizing
-  from summaries — and to keep digging across multiple redirects in the same session without losing
-  the thread.
-- **Comfortable reversing an earlier research-backed decision** (RD.7's deliberate color differentiation)
-  when a more important goal (family continuity) emerges — don't over-anchor on a previous session's
-  "confirmed" research conclusion if the operator gives new, explicit direction.
-- **Values a dedicated high-effort pass for register-sensitive text** (asked for legal disclosure text
-  to be written "as if they were a hyperscaler lawyer at a big law firm" — a specific, deliberate framing
-  worth reusing for future legal/compliance copy needs on this archive).
-- Sensitive personal/corporate archives (`cluster-totebox-jennifer`) contain real investor-relations and
-  corporate-response material alongside useful general research — correctly scoped research agents to
-  read the general/public material (industry reports, methodology PDFs) while explicitly not opening or
-  summarizing anything that looked like confidential business content; this distinction mattered and
-  should carry forward to any future research into personal Totebox directories.
 

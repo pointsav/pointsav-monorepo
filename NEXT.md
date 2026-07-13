@@ -11,6 +11,28 @@ Full 2026-07-09 plan-completeness audit + BRIEF consolidation: see cleanup-log.m
 
 ## Hot — pick up here next session
 
+- [ ] **foundry-prod static-asset gap — server-side fixed + verified twice; confirm operator's browser cache cleared** `[2026-07-13 totebox@claude-code]`
+  - Server-side root cause found, escalated, and fixed by Command (see `.agent/rules/cleanup-log.md`
+    2026-07-13 entry for full detail) — `push-to-prod.sh`'s `target_bim()` now sources static assets
+    from the same place the binary comes from, closing the whole bug class, not just a one-time
+    resync. Verified clean twice via independent full-browser audits (9 pages × 2 viewports ×
+    2 languages, then a fresh/cache-busted re-check) — zero defects both times. Operator was still
+    reporting it broken on their own device after the fix; likely explanation is browser heuristic
+    caching (the 4 fixed assets send no `Cache-Control` header) — asked operator to confirm via
+    hard-refresh/incognito, not yet confirmed as of shutdown. **Start here next session: check
+    whether the operator confirmed it resolved.** If a genuine non-cache issue surfaces, that's a new
+    investigation — the root cause here is closed.
+
+- [ ] **SEO draft ready for bim.woodfinegroup.com — real, substantive work, not started** `[2026-07-12 totebox@project-editorial, logged 2026-07-13]`
+  - project-editorial staged a ready-to-apply draft (`SEO-bim-woodfinegroup.draft.html`, their
+    `.agent/drafts-outbound/`) as part of a 10-property cross-site SEO strategy
+    (`BRIEF-seo-cross-site-strategy.md`). This property currently has zero of ~10 required SEO
+    signals (no canonical, no OG, no Twitter, no JSON-LD, robots.txt/sitemap.xml both 404), plus a
+    real bug: the meta description is hardcoded identical on every page (confirmed directly against
+    `shell.rs` — `meta_desc` uses the same `t(lang, ..., ...)` call regardless of route). 3 open
+    questions flagged in the draft (per-page description sourcing, sitemap URL inventory needs the
+    real route table, og-image asset path) — do not silently resolve them. Deserves its own session.
+
 - [ ] **`building-width-calculator.dtcg.json` still has unreconciled Private Office zone depths** `[2026-07-04 totebox@claude-code]`
   - A third token file, with yet another set of numbers, different from both the old wrong "confirmed"
     value and the real CAD-sourced one now correct in `key-plans.dtcg.json`. Same bug family as the fix
@@ -166,6 +188,14 @@ Full 2026-07-09 plan-completeness audit + BRIEF consolidation: see cleanup-log.m
 ---
 
 ## Deferred
+
+- [ ] **Add `Cache-Control` headers to `app-privategit-bim`'s static assets** `[2026-07-13 totebox@claude-code]`
+  - Found while investigating the foundry-prod static-asset gap (see cleanup-log.md): `bim-planroom.css`/
+    `bim-layout.css`/`bim-components.css`/`bim.js` send no `Cache-Control`/`Expires` header, only
+    `Last-Modified`. A browser that loads the site right before a deploy can keep serving stale
+    cached CSS/JS via heuristic freshness (RFC 7234) well after the server itself is fixed, with no
+    way to force a refresh short of a hard-reload. Low priority, but worth a short `max-age` or
+    content-hashed filenames so future deploys don't leave this same silent tail for real visitors.
 
 - [ ] **Spanish translation — Research essay body content ("the Journals")** `[2026-07-12, re-scoped 2026-07-13 totebox@claude-code]`
   - Round 11 deferred all of Objects/Key-Plans/Research/Search; Round 12 brought Objects, Search, and

@@ -10,6 +10,54 @@ the record but are not NEXT.md action items.
 
 ---
 
+## 2026-07-13 — foundry-prod static-asset sync gap on bim.woodfinegroup.com: found, escalated, fixed at the root, verified twice
+
+**Trigger:** operator asked for a browser-in-the-loop check of the live site after Command reported
+the Spanish-translation (Round 11-13) push as "LIVE, health check passed."
+
+**Found:** the live site was visually broken — `bim-planroom.css` (core plan-room/catalog stylesheet,
+46KB) 404'd entirely on foundry-prod despite being correctly `<link>`'d in the served HTML;
+`bim-layout.css`/`bim-components.css`/`bim.js` were stale/undersized. Root cause traced by reading
+`bin/push-to-prod.sh`'s `target_bim()` directly: it sourced the **binary** from this workspace VM's
+own locally-installed build (correct, since I'd just built it for `local-bim.service` testing) but
+sourced **static assets** from `vendor/pointsav-monorepo` — the canonical, Stage-6-promoted mirror,
+whose last commit touching `app-privategit-bim/src/assets/` was `d4f3d595` (2026-07-07/08), 3 rounds
+behind `cluster/project-bim`. Binary and assets were never verified consistent before this push.
+
+**Escalated to Command** (`command-20260713-urgent-bim-woodfinegroup-com-is-live-but`, then a
+precise root-cause follow-up `command-20260713-re-urgent-bim-woodfinegroup-com-found-th` after
+reading the script myself) with two fix options: full Stage 6 promote of the backlogged commits, or
+repoint `push-to-prod.sh`'s asset source at the same Totebox clone the binary already used.
+
+**Fixed by Command** (commit `b042290`, `command-20260713-re-urgent-bim-woodfinegroup-com-fixed-st`):
+repointed `target_bim()`'s `assets_src` at `clones/project-bim` — the real fix, not a one-time
+resync, so binary and assets stay consistent regardless of future Stage 6 promotion lag. Re-ran
+`push-to-prod.sh bim`; all 4 flagged files verified byte-for-byte correct on foundry-prod.
+
+**Verified twice, independently, via real browser (not just curl):**
+1. A full 9-page × 2-viewport × 2-language audit (home/method/objects/key-plans/tokens/search/
+   disclaimers, /es, /es/method) — zero defects, zero console errors, zero failed requests.
+2. A follow-up fresh/cache-busted re-check (operator reported still seeing it broken after the first
+   all-clear) — new incognito-equivalent browser context, explicit no-cache headers, `?nocache=`
+   cache-busting. Same clean result, network activity observed from inside the actual page load.
+   Found the likely explanation for the operator's continued reports: none of the 4 fixed assets send
+   a `Cache-Control`/`Expires` header (only `Last-Modified`), so a browser that loaded the old broken
+   version before the fix could keep serving it from heuristic cache until a hard refresh. Flagged to
+   Command as a low-priority follow-up (add `Cache-Control` or content-hashed filenames to these
+   assets so a future deploy doesn't leave the same silent stale-cache tail for real visitors).
+
+**Status:** server-side confirmed fully resolved and stable (2 independent audits, both clean).
+Operator asked to confirm via hard-refresh/incognito on their own device; not yet confirmed as of
+shutdown — if a genuine non-cache issue turns up, treat as a new investigation, not a reopening of
+this one (the root cause here is closed).
+
+**Also confirmed still real, unrelated to this fix:** the Method page's SVG diagrams keep their
+*inner* labels (Building, Habitat, Corridor, etc.) in English on `/es/method` even though captions
+and surrounding prose translate — independently reconfirmed by the full-site audit as the same,
+already-known, deliberate Round-11 scope boundary (only figcaptions were in scope). Not a new defect.
+
+---
+
 ## 2026-07-10 — 2 of 3 BIM research essays enriched from internal design-response deck; seeding request sent to project-editorial
 
 **Trigger:** operator asked whether `CONSTRUCTION_2025_10_31_Design Slides_Openstudio_Woodfine Response.docx`

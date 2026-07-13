@@ -6,7 +6,7 @@ title: app-privategit-bim — BIM Object Library website
 status: active
 owner: project-bim
 created: 2026-06-20
-updated: 2026-07-03
+updated: 2026-07-13
 ---
 
 # Brief — app-privategit-bim — BIM Object Library website
@@ -1110,3 +1110,116 @@ state as of the original escalation.
   `cleanup-log.md` 2026-07-08 for detail). **v2 redesign is now fully shipped — no longer pending
   Command.** Canonical `TRADEMARK.md` amendment (item above) also closed same day, admin-tier commit
   `062b29e`. Remaining open item: CC BY-ND counsel sign-off (still "surfaced, not decided").
+
+- **2026-07-09/10 — Round 10, sitewide first-person voice rewrite + Method-page diagram redesign.**
+  (Full detail predates this session's visible context window; summarized here for continuity.)
+  Rewrote all sitewide content from third-person "Woodfine's own X" self-reference into first-person
+  "we/our" institutional voice; redesigned both Method-page SVG diagrams (containment model → literal
+  nested/concentric frames; cross-section diagram craft pass — dashed centerline replacing a
+  semantically-backwards hatch pattern, added a chained dimension line); fixed a real dark-mode
+  contrast bug (`--bim-pen-primary`/`--bim-pen-secondary` tokens) and a real motion-animation bug
+  (staggered `transition-delay` values getting cancelled by intervening style recalcs — switched the
+  stagger mechanism from CSS `transition-delay` to JS `setTimeout`). Two small follow-up rounds:
+  diagram text legibility (font-size bump, with a caught-and-fixed clipping regression from
+  `letter-spacing`) and mobile header hamburger/toggle right-justification. A multi-round grilling
+  correctly renamed the cross-section diagram's "Interior" label to "CENTRELINE" (British/Canadian
+  spelling, per operator), grounded in the mirror-symmetry geometry already documented elsewhere on
+  the site rather than a guessed synonym.
+
+- **2026-07-12/13 — Rounds 11-13, Spanish (`/es/*`) translation, now LIVE on foundry-prod.**
+  Operator: "we need to look at translating this page to Spanish ... we have +50% of our audience in
+  Mexico ... using the same language toggle as http://127.0.0.1:9102/". Reference implementation
+  (`app-mediakit-marketing-2`) traced with real file:line citations before any code: thin paired
+  routes calling one shared `render_slug(state, slug, lang)` function, `t(lang, en, es)` chrome-string
+  helper, path-preserving `lang_switch()`, hreflang tags. Real Mexican-Spanish AEC/BIM terminology
+  glossary researched via dedicated Opus agent before any translation began (Key Plan/Tile/Magazine
+  kept as English proper nouns — Mexican AEC practice borrows English BIM vocabulary directly, and
+  literal translations of Tile/Magazine collide with unrelated everyday meanings; Habitat→Hábitat,
+  Corridor→Corredor, Floor Plate→Placa de Piso, Object→Objeto applied consistently).
+  - **Round 11 (Tier 1, plan-mode-scoped):** `/es`, `/es/method`, `/es/disclaimers`, `/es/tokens`,
+    `/es/tokens/{name}` — home/method/disclaimers/24 category ledes/UI chrome, drafted directly by
+    the operator's own decision ("I draft it, flagged for verification" — not routed to
+    project-editorial, applying uniformly including disclaimers.md). Real architectural fix found and
+    applied: the Method page's diagram-caption injection matched section headings by exact English
+    text, which would have silently broken under Spanish headings — switched to matching by section
+    index instead (same fix later applied to `render_home`'s "The Library" section match).
+    `content.rs`/`state.rs` load optional `.es.md` siblings with graceful English fallback.
+  - **Round 12:** operator asked to keep translating "everything except the Research essays and the
+    Key Plans pages themselves." Added `/es/objects`, `/es/objects/{slug}`, `/es/objects/compare`,
+    `/es/search`; extended `/tokens/{name}`'s entity table (previously English-only "out of scope")
+    to read an optional `$description_es` sibling field per DTCG entity. 221 entity descriptions
+    translated across 22 `tokens/bim/*.json` files via 3 parallel drafting agents — `key-plans.dtcg.json`
+    and `amenity-key-plan.dtcg.json` deliberately excluded. One real boundary case caught on review:
+    `building-width-calculator.dtcg.json`'s `bim.key-plan.*` subtree (individual Key Plan size data)
+    got translated along with the rest of the file, then reverted — same exclusion, just nested
+    inside an otherwise in-scope file. One real bug found via a real-browser click-through (not just
+    curl): `render_object_card()` had been missed in the lang-threading pass, so cards on `/es/objects`
+    still linked to the English detail page — fixed, rebuilt, redeployed, reverified.
+  - **Round 13:** operator clarified further — Key Plans/Research nav links should stay in Spanish
+    chrome even though their *content* stays English; a browser-in-the-loop check confirmed clicking
+    "Key Plans" or "Research" from `/es` was landing on a fully-English page with the language switch
+    **entirely absent** — a dead end, not just a translation gap. Added `/es/key-plans`,
+    `/es/key-plans/{slug}`, `/es/key-plans/{slug}/o/{object}`, `/es/research`, `/es/research/{slug}`
+    as chrome-only-translated routes (nav/footer/breadcrumbs/section headings/bill-of-materials status
+    labels in Spanish; dimensions/bill-of-materials item names/descriptions and Research essay
+    title/body — "the Journals" — stay English by explicit operator decision). Also fixed a second,
+    independently-discovered bug while wiring this up: the nav's `aria-current="page"` active-state
+    highlighting matched `active_path` against `/objects`/`/key-plans`/etc. directly, which never
+    matched on any `/es/*` page — the active nav item had been silently unhighlighted on every Spanish
+    page since Round 11. Fixed by stripping the `/es` prefix before matching.
+  - **Verification discipline throughout:** every round rebuilt+retested (7/7 tests) on a scratch
+    instance before touching `local-bim.service`, then a dedicated Playwright agent click-through
+    (not just curl/href inspection) before calling a round done — this caught both real bugs above,
+    neither of which would have surfaced from HTTP-status checks alone.
+  - **Deployed to foundry-prod 2026-07-13**, operator-requested, via the normal
+    "send to Command" handoff (this archive doesn't push to foundry-prod directly). Command ran
+    `push-to-prod.sh bim`, confirmed `/es`/`/es/objects`/`/es/key-plans` all 200. **Same-day follow-up
+    finding, still open:** operator reported the live site didn't match the local preview visually;
+    investigation (curl byte-size diff + Playwright screenshots) confirmed a real, severe static-asset
+    sync gap — `bim-planroom.css` (the core plan-room/catalog stylesheet, 46KB) 404s entirely on
+    foundry-prod despite being correctly `<link>`'d in the HTML; `bim-layout.css`/`bim-components.css`
+    stale; `bim.js` under half the correct size. Visual effect: unstyled cards, no background texture,
+    plain underlined links, a header layout void (an older, already-locally-fixed bug). This predates
+    Round 11-13's own work — not something this session's changes introduced — and the earlier
+    "LIVE, health check passed" report didn't catch it since `/healthz` doesn't check static assets.
+    Escalated to Command high-priority (`command-20260713-urgent-bim-woodfinegroup-com-is-live-but`),
+    asking for a full verified resync of `src/assets/*` plus a visual (not just HTTP-status)
+    re-verification. **Not yet confirmed fixed as of session end** — see Carry-forward.
+
+## Carry-forward (2026-07-13 — current, supersedes older Carry-forward items above where they conflict)
+
+- **foundry-prod static-asset sync gap — RESOLVED same session, verified twice.** Command found the
+  real root cause (`push-to-prod.sh`'s `target_bim()` sourced the binary from this VM's local build
+  but static assets from a stale `vendor/pointsav-monorepo` mirror, 3 rounds behind) and fixed it
+  properly — repointed `assets_src` at the same Totebox clone the binary uses (commit `b042290`), not
+  just a one-time resync. Verified clean via two independent full-browser audits (a 9-page/2-viewport/
+  2-language sweep, then a fresh/cache-busted re-check after the operator reported still seeing it
+  broken). Full detail: `.agent/rules/cleanup-log.md` 2026-07-13 entry. **Only open thread:** the
+  operator's own browser may still show the old broken CSS/JS due to heuristic caching (these 4
+  assets send no `Cache-Control` header) — asked them to confirm via hard-refresh/incognito, not
+  confirmed as of shutdown. If they report a genuine non-cache issue, treat it as a new investigation.
+- **SEO gaps on bim.woodfinegroup.com — real, substantive work, not started.** project-editorial staged
+  a ready-to-apply draft (`SEO-bim-woodfinegroup.draft.html`, their `.agent/drafts-outbound/`) —
+  zero of ~10 required SEO signals present (no canonical/OG/Twitter/JSON-LD, robots.txt/sitemap.xml
+  both 404), plus a real bug: the meta description is hardcoded identical on every page (confirmed
+  directly against `shell.rs` this session). 3 open questions in the draft need real answers (per-page
+  description sourcing, sitemap URL inventory, og-image asset path) — do not silently resolve them.
+  Logged in NEXT.md Hot section; deserves its own session.
+- **Binary-ledger sha256 refresh** — Command flagged the prod push's local sha256 differed from the
+  binary ledger's recorded value (a WARN, not a blocker; the correct binary landed regardless).
+  Command-owned housekeeping, not urgent.
+- **Spanish translation remaining scope, all deliberately excluded, not "not yet gotten to":** Key
+  Plan/Composition technical data (dimensions, bill-of-materials, descriptions) and Research essay
+  title/body ("the Journals") stay English permanently per explicit operator decision. SVG diagram
+  *inner* labels on `/es/method` (Building/FACADE/DAYLIGHT PERIMETER etc.) stay English — only the
+  figcaptions translate; a real gap if full diagram translation is ever wanted (would need `lang`
+  threaded into `render/svg.rs`), not attempted.
+- **Footer-structure / browser-tab-title cross-property proposals from Command** (2026-07-12) —
+  optional, forward-looking reference for whenever BIM ships a public-facing footer redesign; this
+  archive is already compliant with the ratified browser-tab-title em-dash pattern and has a real
+  favicon. No action needed unless/until a footer redesign is scoped.
+- **Legal-tokens runtime-consumer pattern** (factory-release-engineering's
+  `tokens/legal-tokens-{woodfine,pointsav}.yaml`) — forward-looking only; this archive's trademark
+  string is already correct ("MCorp™"), but if/when a shared token-consumer pattern lands in
+  `app-mediakit-marketing-2`, worth migrating `shell.rs`'s hardcoded trademark paragraph to read from
+  it instead, so it can't drift again.
