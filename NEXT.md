@@ -62,6 +62,29 @@ Full 2026-07-09 plan-completeness audit + BRIEF consolidation: see cleanup-log.m
   - Full architecture in `.agent/plans/tool-buildingwidth-architecture.md`
   - This is a genuinely large undertaking (new Rust workspace, ILP solver via `good_lp`, bidirectional adjustment logic) — deliberately held back pending its own dedicated planning session, not attempted opportunistically
 
+- [ ] **Amenity + Common Area Key Plan categories — real open design questions, not yet resolved** `[2026-07-11 totebox@claude-code]`
+  - Found while auditing `inputs/Sketches/*.pdf` for a "color version" of the Key Plans: two entire
+    categories exist in source material but have no confirmed numbers and are not on the site —
+    "Amenities" (Tenant Lounge, Lobby Atrium, Building Manager Office, Coffee/Bread, Main Floor Retail)
+    and "Common Area, Auxiliary Structures, Upper Floors" (Loading/Recycling, Public Lobby Washroom,
+    Garbage Enclosure, Building Core, Corridor).
+  - Real, specific unresolved design questions survive in the source, addressed to a named collaborator
+    ("Brandaan"): should there be a Mop Room in Loading/Recycling? should a Service Elevator have access
+    to Loading/Recycling for move-ins/move-outs? refuse bins or compactors, and how many for a
+    4-floor vs. 9-floor building?
+  - A short, honest forward-reference ("Amenity and Common Area categories are in active design") was
+    added to `about.md`'s "Key Plans and Tiles" section 2026-07-11 — no fabricated Key Plan entries.
+    Needs real operator decisions on the open questions above before either category can ship with
+    real numbers.
+
+- [ ] **V1/V2/V3 furniture-count discrepancies in source tables — not reconciled against `key-plans.dtcg.json`** `[2026-07-11 totebox@claude-code]`
+  - Found alongside the Amenity/Common Area sketches: several category source tables carry multiple
+    dated revisions (V1/V2/V3) with real furniture-count differences between them (e.g. Academic's
+    Reception furniture is zeroed out in V3 vs. non-zero in V1 in `inputs/Sketches/DISCOVERY_MCorp_Sketches_Key
+    Plans_Academic.pdf`). Not checked category-by-category against what's actually live in
+    `key-plans.dtcg.json` today — a real data-accuracy question, deferred out of Round 10's voice/diagram
+    scope per operator decision. Needs a dedicated reconciliation pass.
+
 - [ ] **WBL key-plans IFC files — 18 uncommitted modifications** `[2026-06-25 totebox@claude-code]`
   - `woodfine-bim-library/key-plans/` has 18 modified `.ifc` files (academic, business, civic, laboratory, medical, private-office × 3 variants each), confirmed still present and untouched as of 2026-07-09.
   - Detected at startup 2026-06-25; origin unknown — review diff before committing. Not a Command
@@ -133,4 +156,26 @@ Full 2026-07-09 plan-completeness audit + BRIEF consolidation: see cleanup-log.m
 
 ## Deferred
 
-(empty)
+- [ ] **Spanish translation Tier 2 — research essays** `[2026-07-12 totebox@claude-code]`
+  - Round 11 (`/es/*` routes, home/method/disclaimers/24 category ledes/UI chrome) shipped Tier 1 only,
+    per explicit operator scoping decision. The 4 `research/*.md` essays (~3,480 words) have no
+    `.es.md` siblings and no `/es/research/*` routes — deliberately deferred, not forgotten.
+
+- [ ] **Spanish translation Tier 3 — DTCG token `$description`/`design_notes` fields** `[2026-07-12 totebox@claude-code]`
+  - Same Round 11 scoping decision. ~7,800 words nominal across 24 `tokens/bim/*.json` files, though a
+    large fraction is codes/dimensions/manufacturer names that shouldn't translate — needs its own
+    scoping pass to separate translatable prose from technical values before drafting.
+
+- [ ] **Spanish translation — SVG diagram inner labels on /es/method** `[2026-07-12 totebox@claude-code]`
+  - The two Method-page diagrams' `<figcaption>`s are fully translated (Round 11 Tier 1), but the labels
+    drawn *inside* the SVGs themselves (Building, FACADE, DAYLIGHT PERIMETER, etc. — `render/svg.rs`'s
+    `render_containment_model_svg()`/`render_method_zone_svg()`) stay English on `/es/method`, since only
+    the figcaptions were in this round's scope. Confirmed via browser check 2026-07-12 — visually fine,
+    not a bug, but a real gap if full diagram translation is ever wanted. Would need `lang` threaded into
+    `render/svg.rs`, not attempted this round.
+
+- [ ] **Spanish translation — Objects/Key Plans/Research/Search pages** `[2026-07-12 totebox@claude-code]`
+  - Out of scope for all of Round 11, not just Tier 2/3 — these are data-heavy, per-entity pages with
+    no lede/prose equivalent to translate; the Spanish site currently links to their plain English URLs
+    (graceful degradation, matching the reference `app-mediakit-marketing-2` pattern). Revisit only if
+    the operator wants full entity-level bilingual coverage, a larger undertaking than a lede pass.
