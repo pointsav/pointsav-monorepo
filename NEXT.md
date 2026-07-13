@@ -95,6 +95,17 @@ Full 2026-07-09 plan-completeness audit + BRIEF consolidation: see cleanup-log.m
 
 ## Waiting on Command (no project-bim decision needed — visibility only)
 
+- [ ] **`local-bim.service` unit file had wrong `BIM_DESIGN_SYSTEM_DIR` — fixed but uncommitted** `[2026-07-12 totebox@claude-code]`
+  - `/srv/foundry/infrastructure/local-bim/local-bim.service` (workspace-root git, Command territory)
+    pointed `BIM_DESIGN_SYSTEM_DIR` at `pointsav-monorepo` instead of `woodfine-bim-library` — silently
+    zeroed out every category/token/entity on the live `local-bim.service` (port 9096) sitewide, not just
+    the new `/es/*` routes. Triggered by running the documented `bootstrap.sh` self-service deploy.
+    Corrected locally and service restarted (verified healthy — 72 category cards, no warnings), but
+    left uncommitted since `/srv/foundry/` is Command's git scope. Flagged via outbox
+    `command-20260713-local-bim-service-unit-file-bim-design-s`. Also noted: `bootstrap.sh`'s
+    `systemctl enable --now` doesn't restart an already-running service — needed a manual
+    `systemctl restart` to pick up a rebuilt binary.
+
 - [ ] **`pointsav-monorepo` Cargo.lock is stale relative to Cargo.toml workspace members** `[2026-07-06 totebox@claude-code, recurred 2026-07-07/08]`
   - Working tree has an uncommitted +6035/-1453 line `Cargo.lock` diff. Root cause: the committed
     `Cargo.lock` at current HEAD (`45039f1f`) was last content-updated at old commit `82e10457`,
