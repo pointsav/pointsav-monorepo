@@ -167,12 +167,13 @@ Full 2026-07-09 plan-completeness audit + BRIEF consolidation: see cleanup-log.m
 
 ## Deferred
 
-- [ ] **Spanish translation — Research essays** `[2026-07-12, re-scoped 2026-07-13 totebox@claude-code]`
-  - Round 11 deferred all of Objects/Key-Plans/Research/Search; Round 12 (2026-07-13) brought Objects,
-    Search, and the full DTCG entity-description dataset into scope per operator request ("keep
-    translating everything except the Research essays and the Key Plans pages themselves"). Research
-    is the one content type still explicitly out of scope — the 4 `research/*.md` essays (~3,480 words)
-    have no `.es.md` siblings and no `/es/research/*` routes. Deliberately deferred, not forgotten.
+- [ ] **Spanish translation — Research essay body content ("the Journals")** `[2026-07-12, re-scoped 2026-07-13 totebox@claude-code]`
+  - Round 11 deferred all of Objects/Key-Plans/Research/Search; Round 12 brought Objects, Search, and
+    the full DTCG entity-description dataset into scope; Round 13 (2026-07-13) added chrome translation
+    for `/es/research` + `/es/research/{slug}` (nav, breadcrumb, kicker) per operator clarification —
+    the essay *content itself* is the one thing still explicitly excluded, not the whole page family.
+    The 4 `research/*.md` essay titles/bodies (~3,480 words) stay English verbatim; no `.es.md` siblings
+    exist or are planned unless the operator revisits this.
 
 - [x] ~~Spanish translation Tier 3 — DTCG token `$description` fields~~ — **done 2026-07-13.** 221
   `$description_es` fields added across 22 `tokens/bim/*.json` files (3 parallel drafting passes).
@@ -181,9 +182,15 @@ Full 2026-07-09 plan-completeness audit + BRIEF consolidation: see cleanup-log.m
   reverted for the same reason — see cleanup-log.md for the full boundary-case note. `design_notes`
   fields (a different, non-rendered field) were correctly left untouched by the drafting passes.
 
-- [ ] **Spanish translation — Key Plans pages (/key-plans, /key-plans/{slug})** `[2026-07-13 totebox@claude-code]`
-  - Explicitly and permanently out of scope per operator decision, not a "not yet gotten to" item —
-    listed here for visibility only, in case that decision is ever revisited.
+- [x] ~~Spanish translation — Key Plans page chrome~~ — **done 2026-07-13 (Round 13).**
+  `/es/key-plans`, `/es/key-plans/{slug}`, `/es/key-plans/{slug}/o/{object}` all live — nav, footer,
+  breadcrumbs, section headings ("Zone allocation"→"Asignación de zonas", "Parts list"→"Lista de
+  componentes", bill-of-materials linked/unlinked status labels) translate. Fixed a real dead-end bug
+  in the process: clicking Key Plans from the Spanish nav used to strand the visitor on an all-English
+  page with the language switch entirely absent.
+  - **Still and permanently out of scope:** the Key Plan/Composition data itself — dimensions, bill-of-
+    materials item names, `$description` prose — per explicit operator decision. Not a "not yet gotten
+    to" item.
 
 - [ ] **Spanish translation — SVG diagram inner labels on /es/method** `[2026-07-12 totebox@claude-code]`
   - The two Method-page diagrams' `<figcaption>`s are fully translated (Round 11 Tier 1), but the labels
