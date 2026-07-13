@@ -167,15 +167,23 @@ Full 2026-07-09 plan-completeness audit + BRIEF consolidation: see cleanup-log.m
 
 ## Deferred
 
-- [ ] **Spanish translation Tier 2 — research essays** `[2026-07-12 totebox@claude-code]`
-  - Round 11 (`/es/*` routes, home/method/disclaimers/24 category ledes/UI chrome) shipped Tier 1 only,
-    per explicit operator scoping decision. The 4 `research/*.md` essays (~3,480 words) have no
-    `.es.md` siblings and no `/es/research/*` routes — deliberately deferred, not forgotten.
+- [ ] **Spanish translation — Research essays** `[2026-07-12, re-scoped 2026-07-13 totebox@claude-code]`
+  - Round 11 deferred all of Objects/Key-Plans/Research/Search; Round 12 (2026-07-13) brought Objects,
+    Search, and the full DTCG entity-description dataset into scope per operator request ("keep
+    translating everything except the Research essays and the Key Plans pages themselves"). Research
+    is the one content type still explicitly out of scope — the 4 `research/*.md` essays (~3,480 words)
+    have no `.es.md` siblings and no `/es/research/*` routes. Deliberately deferred, not forgotten.
 
-- [ ] **Spanish translation Tier 3 — DTCG token `$description`/`design_notes` fields** `[2026-07-12 totebox@claude-code]`
-  - Same Round 11 scoping decision. ~7,800 words nominal across 24 `tokens/bim/*.json` files, though a
-    large fraction is codes/dimensions/manufacturer names that shouldn't translate — needs its own
-    scoping pass to separate translatable prose from technical values before drafting.
+- [x] ~~Spanish translation Tier 3 — DTCG token `$description` fields~~ — **done 2026-07-13.** 221
+  `$description_es` fields added across 22 `tokens/bim/*.json` files (3 parallel drafting passes).
+  `key-plans.dtcg.json` and `amenity-key-plan.dtcg.json` deliberately excluded (Key Plans stay
+  English-only); `building-width-calculator.dtcg.json`'s `bim.key-plan.*` subtree was translated then
+  reverted for the same reason — see cleanup-log.md for the full boundary-case note. `design_notes`
+  fields (a different, non-rendered field) were correctly left untouched by the drafting passes.
+
+- [ ] **Spanish translation — Key Plans pages (/key-plans, /key-plans/{slug})** `[2026-07-13 totebox@claude-code]`
+  - Explicitly and permanently out of scope per operator decision, not a "not yet gotten to" item —
+    listed here for visibility only, in case that decision is ever revisited.
 
 - [ ] **Spanish translation — SVG diagram inner labels on /es/method** `[2026-07-12 totebox@claude-code]`
   - The two Method-page diagrams' `<figcaption>`s are fully translated (Round 11 Tier 1), but the labels
@@ -185,8 +193,8 @@ Full 2026-07-09 plan-completeness audit + BRIEF consolidation: see cleanup-log.m
     not a bug, but a real gap if full diagram translation is ever wanted. Would need `lang` threaded into
     `render/svg.rs`, not attempted this round.
 
-- [ ] **Spanish translation — Objects/Key Plans/Research/Search pages** `[2026-07-12 totebox@claude-code]`
-  - Out of scope for all of Round 11, not just Tier 2/3 — these are data-heavy, per-entity pages with
-    no lede/prose equivalent to translate; the Spanish site currently links to their plain English URLs
-    (graceful degradation, matching the reference `app-mediakit-marketing-2` pattern). Revisit only if
-    the operator wants full entity-level bilingual coverage, a larger undertaking than a lede pass.
+- [x] ~~Spanish translation — Objects/Search pages~~ — **done 2026-07-13 (Round 12).** Originally
+  scoped out of Round 11 as "data-heavy, no lede/prose equivalent"; operator asked to bring them into
+  scope. `/es/objects`, `/es/objects/{slug}`, `/es/objects/compare`, `/es/search` all live — chrome
+  translated, entity descriptions pull from the new `$description_es` DTCG field. Key Plans and
+  Research remain the only two excluded page families (see above).
