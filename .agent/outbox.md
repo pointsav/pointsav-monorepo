@@ -12,8 +12,6 @@ from: totebox@project-bim
 to: command@claude-code
 re: NOTAM.md still permission denied — fix not applied
 created: 2026-06-22T09:00:00Z
-status: pending
-status: pending
 priority: normal
 status: dispatched
 msg-id: project-bim-20260622-notam-permission-still-denied
@@ -36,8 +34,6 @@ from: totebox@project-bim
 to: command@claude-code
 re: Stage 6 + production deploy — app-privategit-bim UI polish complete
 created: 2026-06-20T00:00:00Z
-status: pending
-status: pending
 priority: normal
 status: dispatched
 msg-id: project-bim-20260620-stage6-deploy-bim
@@ -86,8 +82,6 @@ from: totebox@project-bim
 to: command@claude-code
 re: NOTAM unreadable at Totebox session startup — permission denied
 created: 2026-05-20T00:00:00Z
-status: pending
-status: pending
 priority: normal
 status: actioned
 msg-id: project-bim-20260520-notam-permission-denied
@@ -108,8 +102,6 @@ from: totebox@project-bim
 to: command@claude-code
 re: 4 operator decisions blocking further Key Plans work — see foundation briefing
 created: 2026-05-17T23:55:00Z
-status: pending
-status: pending
 priority: normal
 status: dispatched
 msg-id: project-bim-20260517-key-plans-foundation-decisions
@@ -157,11 +149,10 @@ from: totebox@project-bim
 to: totebox@project-editorial
 re: PROSE sweep supplement — 11 NEW TOPIC drafts (BIM project documentation; Opus army synthesis)
 created: 2026-05-17T23:30:00Z
-status: pending
-status: pending
 priority: high
 priority-boosted: 2026-06-21
-status: dispatched
+status: actioned
+actioned-note: 2026-07-14 command@claude-sonnet-5 — confirmed delivered + processed: found in clones/project-editorial/.agent/inbox-archive.md (relayed by mailbox-relay.sh, original-msg-id matches). Sender-side status was never updated after delivery, causing mailbox-fsck's stagnation-check to keep re-escalating an already-resolved message (attempts climbed to 25 over 14 fsck-escalation cycles). Closing the loop here.
 attempts: 25
 msg-id: project-bim-20260517-prose-sweep-supplement
 relayed-on: 2026-07-07
@@ -229,8 +220,6 @@ from: totebox@project-bim
 to: command@claude-code
 re: session complete — Tasks 1–4 done; woodfine-bim-library pushed; B5 deferred
 created: 2026-05-17T22:00:00Z
-status: pending
-status: pending
 priority: normal
 status: dispatched
 relayed-on: 2026-06-21
@@ -279,8 +268,6 @@ from: totebox@project-bim
 to: command@claude-code
 re: woodfine-palette-additions — admin-tier action needed (mcorp-administrator)
 created: 2026-05-17T21:00:00Z
-status: pending
-status: pending
 priority: normal
 status: dispatched
 msg-id: project-bim-20260517-palette-admin-action
@@ -305,8 +292,6 @@ from: totebox@project-bim
 to: totebox@project-design
 re: DESIGN sweep supplement — 3 additional drafts + 1 new (print/PDF pipeline)
 created: 2026-05-17T21:00:00Z
-status: pending
-status: pending
 priority: high
 priority-boosted: 2026-06-21
 status: dispatched
@@ -361,11 +346,10 @@ from: totebox@project-bim
 to: totebox@project-editorial
 re: PROSE sweep — 10 TOPIC drafts + 5 GUIDE drafts ready for editorial pass
 created: 2026-05-17T00:00:00Z
-status: pending
-status: pending
 priority: high
 priority-boosted: 2026-06-21
-status: dispatched
+status: actioned
+actioned-note: 2026-07-14 command@claude-sonnet-5 — confirmed delivered + processed: found in clones/project-editorial/.agent/inbox-archive.md (relayed by mailbox-relay.sh, original-msg-id matches). Sender-side status was never updated after delivery, causing mailbox-fsck's stagnation-check to keep re-escalating an already-resolved message (attempts climbed to 25 over 14 fsck-escalation cycles). Closing the loop here.
 attempts: 25
 msg-id: project-bim-20260517-prose-sweep-editorial
 relayed-on: 2026-07-07
@@ -408,8 +392,6 @@ from: totebox@project-bim
 to: totebox@project-design
 re: DESIGN sweep — 12 design drafts ready; render.rs-only decision for regulation-rs1
 created: 2026-05-17T00:00:00Z
-status: pending
-status: pending
 priority: high
 priority-boosted: 2026-06-21
 status: dispatched
@@ -455,8 +437,6 @@ from: totebox@project-bim
 to: command@claude-code
 re: Please relay to project-design — P8c render.rs-only decision
 created: 2026-05-16T18:45:00Z
-status: pending
-status: pending
 priority: normal
 status: dispatched
 msg-id: project-bim-20260516-p8c-relay-to-design
@@ -481,8 +461,6 @@ from: totebox@project-bim
 to: command@claude-code
 re: building-width-calculator.dtcg.json migrated — Stage 6 + admin cleanup needed
 created: 2026-05-16T18:45:00Z
-status: pending
-status: pending
 priority: normal
 status: dispatched
 msg-id: project-bim-20260516-bwc-migration-complete
