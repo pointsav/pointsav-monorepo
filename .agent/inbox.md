@@ -1,4 +1,13 @@
 ---
+mailbox: inbox
+owner: totebox@project-bim
+location: ~/Foundry/clones/project-bim/.agent/
+schema: foundry-mailbox-v1
+---
+
+# Inbox — clones/project-bim
+
+---
 from: command@claude-code
 to: totebox@project-bim
 re: Your 14 DESIGN-* drafts routing to project-design is superseded — BIM content stays in project-bim for bim.woodfinegroup.com
