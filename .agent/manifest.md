@@ -4,7 +4,7 @@ cluster_name: project-bim
 cluster_branch: cluster/project-bim
 created: 2026-04-28
 state: active (Ratified Tetrad 2026-05-03)
-slm_endpoint: http://localhost:8011
+slm_endpoint: http://localhost:9080
 module_id: bim
 doctrine_version: 0.0.12
 doctrine_claims_codified: [37, 40, 41]
@@ -42,9 +42,12 @@ tetrad:
         extends with: GUIDE-bim-archive-operations.md +
         GUIDE-vault-export.md + GUIDE-bim-code-encoding.md (the
         City-Code-as-Composable-Geometry runbook).
-      status: leg-pending — Task drafts inside cluster-totebox-property/
-        catalog folder; Master coordinates §11 cross-repo rehoming if
-        fan-out
+      status: partially shipped — guide-bim-archive-operations.md
+        committed 2026-05-07 (woodfine-fleet-deployment commit
+        589cecf); GUIDE-vault-export.md and GUIDE-bim-code-encoding.md
+        from the original plan not yet drafted (corrected 2026-07-15;
+        previously read as not-yet-started leg-pending, which was
+        stale)
     - fleet_deployment_repo: customer/woodfine-fleet-deployment
       catalog_subfolder: gateway-orchestration-bim/
       tenant: woodfine
@@ -54,8 +57,14 @@ tetrad:
         substrate.md + GUIDE-bim-orchestration-operations.md. Catalog
         does NOT yet exist; Task creates as part of first-iteration
         scope.
-      status: leg-pending — Task creates catalog folder + drafts GUIDEs
-        inside it
+      status: partially shipped — catalog folder created and 5 GUIDEs
+        committed 2026-05-07/08 (woodfine-fleet-deployment commits
+        589cecf, 18ec79b: guide-bim-token-authoring.md,
+        guide-deploy-bim-substrate.md, guide-deployment.md,
+        guide-provision-node.md, guide-regulation-overlay-publishing.md);
+        GUIDE-bim-orchestration-operations.md from the original plan
+        not yet drafted (corrected 2026-07-15; previously read as
+        catalog-does-not-exist leg-pending, which was stale)
     - fleet_deployment_repo: vendor/pointsav-fleet-deployment
       catalog_subfolder: gateway-orchestration-bim/
       tenant: pointsav
@@ -123,9 +132,11 @@ tetrad:
         structural under whatever pick BB.14 returns.
       status: live on HTTP since 2026-04-28T23:46Z; v0.0.1 binary
         verified (/readyz returns components_count=3, tokens_count=8,
-        research_count=3); HTTPS pending Master certbot run; v0.0.2
-        visual upgrade pending operator sign-off on BB.14
-        recommendation
+        research_count=3); HTTPS live (certbot cert installed;
+        verified 2026-07-15 — HTTP 301s to HTTPS, HTTPS returns 200);
+        v0.0.2 visual upgrade (BB.14 recommendation) shipped and
+        confirmed live 2026-07-08 (see cleanup-log.md same-date entry;
+        corrected 2026-07-15 — both items were stale "pending" claims)
     - path: ~/Foundry/deployments/cluster-totebox-property-1/
       tenant: woodfine
       shape: bim-property-archive
