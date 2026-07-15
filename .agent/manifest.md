@@ -38,8 +38,8 @@ tetrad:
         Per-property BIM archive catalog. Existing folder
         (cluster-totebox-property/ already in repo with README.md +
         README.es.md + guide-deployment.md + guide-provision-node.md
-        from prior project-system substrate work). Cluster Task
-        extends with: GUIDE-bim-archive-operations.md +
+        from prior project-system substrate work). Cluster Totebox
+        Session extends with: GUIDE-bim-archive-operations.md +
         GUIDE-vault-export.md + GUIDE-bim-code-encoding.md (the
         City-Code-as-Composable-Geometry runbook).
       status: partially shipped — guide-bim-archive-operations.md
@@ -53,9 +53,9 @@ tetrad:
       tenant: woodfine
       purpose: |
         NEW catalog folder for the bim.woodfinegroup.com frontend.
-        Cluster Task creates the catalog folder + GUIDE-deploy-bim-
+        Cluster Totebox Session creates the catalog folder + GUIDE-deploy-bim-
         substrate.md + GUIDE-bim-orchestration-operations.md. Catalog
-        does NOT yet exist; Task creates as part of first-iteration
+        does NOT yet exist; Totebox Session creates as part of first-iteration
         scope.
       status: partially shipped — catalog folder created and 5 GUIDEs
         committed 2026-05-07/08 (woodfine-fleet-deployment commits
@@ -81,7 +81,7 @@ tetrad:
       tenant: woodfine
       shape: bim-token-catalog-showcase
       hosted_url: https://bim.woodfinegroup.com (LIVE on HTTP since
-        2026-04-28T23:46Z; HTTPS pending Master certbot run; mirrors
+        2026-04-28T23:46Z; HTTPS pending Command Session certbot run; mirrors
         proofreader.woodfinegroup.com + design.pointsav.com pattern)
       audience: |
         BIM operators + architects + structural / MEP engineers +
@@ -153,7 +153,7 @@ tetrad:
         - vault/refs/            # Git-style ref pointers into objects/ (branches, tags, HEADs)
       runtime_artifacts:
         - inputs/   (operator-staged IFC ingestion + materials)
-        - working/  (Task in-progress builds)
+        - working/  (Totebox Session in-progress builds)
         - exports/  (COBie-compatible spreadsheets via ifccsv;
                      IDS validation reports via ifctester;
                      BCF 3.0 issue exchange ZIPs;
@@ -166,8 +166,8 @@ tetrad:
   wiki:
     - repo: vendor/content-wiki-documentation
       drafts_via: clones/project-bim/.claude/drafts-outbound/
-      gateway: project-editorial Task (PROSE-* drafts) + project-design
-        Task (DESIGN-* drafts)
+      gateway: project-editorial Totebox Session (PROSE-* drafts) + project-design
+        Totebox Session (DESIGN-* drafts)
       planned_topics:
         - TOPIC-flat-file-bim-leapfrog.md          (vendor-public; the strategic pitch from BIM_Buildable Architecture.md; doctrine claim #40 narrative)
         - TOPIC-city-code-as-composable-geometry.md (vendor-public; the leapfrog invention; doctrine claim #41 narrative; "validator vs composer" framing)
@@ -218,7 +218,7 @@ clones:
     upstream: customer/woodfine-fleet-deployment (cloned via local
       filesystem 2026-04-28; remotes set to mcorp-administrator SSH
       alias + jwoodfine + pwoodfine staging mirrors)
-    focus: Two catalog subfolders — cluster-totebox-property/ (extends GUIDEs) + gateway-orchestration-bim/ (NEW, Task creates folder + drafts GUIDEs).
+    focus: Two catalog subfolders — cluster-totebox-property/ (extends GUIDEs) + gateway-orchestration-bim/ (NEW, Totebox Session creates folder + drafts GUIDEs).
 
 deployment_instances:
   - ~/Foundry/deployments/gateway-orchestration-bim-1/  (woodfine; bim.woodfinegroup.com target)
@@ -260,9 +260,9 @@ cross_cluster_dependencies:
       sweeps DESIGN-* drafts from drafts-outbound/ via the cluster-
       design-draft-pipeline.
     handoff: |
-      project-bim Task drafts a BIM token addition or component recipe;
+      project-bim Totebox Session drafts a BIM token addition or component recipe;
       project-design sweeps via bin/draft-sweep.sh --gateway design;
-      Master ratifies cross-cluster shared-file edits if any.
+      Command Session ratifies cross-cluster shared-file edits if any.
   - cluster: project-data
     why: |
       service-fs (WORM ledger) is the IFC archival backbone — IFC-SPF
@@ -273,14 +273,14 @@ cross_cluster_dependencies:
     interface: |
       service-fs HTTP API at FS_ENDPOINT (per local-fs systemd unit
       on workspace VM since v0.1.23). service-input MCP server
-      consumed by project-bim Task during ingestion; project-data
+      consumed by project-bim Totebox Session during ingestion; project-data
       reviews + accepts the IFC-SPF parser extension via cross-cluster
       handoff. service-codes consumes service-fs at /v1/append for
       audit-trail of code-overlay versions.
     handoff: |
-      project-bim Task extends service-input with IFC-SPF parser
+      project-bim Totebox Session extends service-input with IFC-SPF parser
       module (IfcOpenShell 0.8.5 sidecar pattern via Rust subprocess
-      call); project-data Task reviews + accepts the extension via
+      call); project-data Totebox Session reviews + accepts the extension via
       cross-cluster outbox.
   - cluster: project-editorial
     why: |
@@ -292,8 +292,10 @@ cross_cluster_dependencies:
       drop drafts in .claude/drafts-outbound/; project-editorial sweeps
       via bin/draft-sweep.sh --gateway language (default); refines
       against banned-vocab + BCSC + citation registry + bilingual
-      pair generation; hands off to content-wiki-documentation Root
-      for add-side commit.
+      pair generation; project-editorial's Totebox Session commits
+      directly into content-wiki-documentation for add-side commit
+      (Root session is eliminated under the current two-tier model —
+      there is no separate Root session to hand off to).
   - cluster: project-intelligence
     why: |
       service-slm Doorman dispatches apprenticeship briefs on BIM
@@ -370,7 +372,7 @@ regulatory_acceptance:
 
 Multi-clone N=3 cluster authored under Doctrine v0.0.12 §IV.c +
 claim #37 (Project Tetrad Discipline). Three sub-clones in one
-cluster directory; one Task session writes to one `.git/index` at
+cluster directory; one Totebox Session writes to one `.git/index` at
 a time.
 
 Proposes ratification of two Doctrine claims at next operator-presence
@@ -496,7 +498,7 @@ together at every milestone:
    `.claude/drafts-outbound/`, refined by project-editorial gateway
    (PROSE-*) and project-design gateway (DESIGN-*)
 
-Master ratification of any milestone work checks all four legs.
+Command Session ratification of any milestone work checks all four legs.
 
 ## First-iteration scope (v0.0.1 — operator-overridable target)
 
