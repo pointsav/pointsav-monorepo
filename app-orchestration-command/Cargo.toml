@@ -48,6 +48,9 @@ serde_yaml = "0.9"
 ed25519-dalek = "2"
 base64 = "0.22"
 
+# Key fingerprinting for the pairing WORM ledger (v0.1.0 — replaces FNV-1a)
+sha2 = "0.10"
+
 # Observability
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
