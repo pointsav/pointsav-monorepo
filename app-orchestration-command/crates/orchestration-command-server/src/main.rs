@@ -117,11 +117,18 @@ async fn main() -> anyhow::Result<()> {
         child::ChildSupervisor::spawn(slm_path, running);
     }
 
+    // Restore prior pairings from user-pairings.yaml so a restart doesn't forget them.
+    let pairing_store = PairingStore::new(&instance_id);
+    match pairing_store.load() {
+        Ok(restored) => info!(restored, "pairing store restored from user-pairings.yaml"),
+        Err(e) => warn!(error = %e, "failed to restore pairing store — starting empty"),
+    }
+
     let state = Arc::new(http::AppState {
         archives: Arc::new(archives),
         personnel: Arc::new(personnel_map),
         inviter: Arc::new(InviteIssuer::new_ephemeral(&instance_id)),
-        pairing_store: Arc::new(PairingStore::new(&instance_id)),
+        pairing_store: Arc::new(pairing_store),
         router: Arc::new(MessageRouter::new(module_to_root, Arc::new(instance_id.clone()))),
         license: Arc::new(license),
         child_running: Arc::clone(&child_sup.running),
