@@ -79,3 +79,11 @@ inbox.md, outbox.md, NOTAM.md, session-context.md. Call it first.
 | `send_mailbox_message` | Send any mailbox message (M-2/M-10 audit compliant) |
 | `query_datagraph` | Entity lookup before answering about people/projects |
 | `ask_local` | OLMo 7B local inference — free, SYS-ADR-07-safe |
+
+## pointsav-monorepo sub-clone
+
+Generic sub-clone conventions (fast gates, commit rules, layout) live at
+`@~/Foundry/conventions/pointsav-monorepo-subclone-guide.md` — that file is
+never archive-specific and is never touched by any archive's Stage-6
+promotion. This archive's own identity/mission content belongs only here,
+never in the sub-clone.
