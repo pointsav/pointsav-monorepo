@@ -18,6 +18,11 @@ use orchestration_command_core::{ArchiveEntry, LegStatus, TetradStatus};
 #[derive(Debug, Deserialize)]
 struct PairingEntry {
     cluster_name: String,
+    // Business-admin/local-only archives (e.g. project-jennifer, project-documents) have
+    // no DataGraph tenant relevance and legitimately omit this field in pairings.yaml —
+    // required-but-missing on even one entry previously failed the WHOLE Vec<PairingEntry>
+    // parse, silently zeroing archives_loaded for the entire fleet (found 2026-07-27).
+    #[serde(default)]
     module_id: String,
     #[serde(default = "default_slm")]
     slm_endpoint: String,
@@ -222,5 +227,30 @@ pairings:
         let parsed: PairingsYaml = serde_yaml::from_str(yaml).unwrap();
         assert_eq!(parsed.pairings[0].slm_endpoint, "http://localhost:8011");
         assert_eq!(parsed.pairings[0].entry_type, "");
+    }
+
+    /// Regression test for the missing-module_id bug (found 2026-07-27): 5 real
+    /// pairings.yaml entries (business-admin/local-only archives with no DataGraph
+    /// tenant relevance — project-jennifer, project-documents, project-mathew,
+    /// project-source, project-woodfine) omit module_id entirely. Before this fix,
+    /// module_id was required, so even one such entry failed the WHOLE
+    /// Vec<PairingEntry> parse, silently zeroing archives_loaded for the entire
+    /// fleet in production — not just the entries actually missing the field.
+    #[test]
+    fn missing_module_id_defaults_and_does_not_fail_whole_list() {
+        let yaml = r#"
+pairings:
+  - cluster_name: project-bim
+    module_id: bim
+  - cluster_name: project-jennifer
+    branch: cluster/jennifer-sandbox
+    self_service: none
+    local_only: true
+    content_class: business-admin
+"#;
+        let parsed: PairingsYaml = serde_yaml::from_str(yaml).expect("list must parse even with one entry missing module_id");
+        assert_eq!(parsed.pairings.len(), 2);
+        assert_eq!(parsed.pairings[0].module_id, "bim");
+        assert_eq!(parsed.pairings[1].module_id, "");
     }
 }
