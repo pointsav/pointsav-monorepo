@@ -87,3 +87,13 @@ Generic sub-clone conventions (fast gates, commit rules, layout) live at
 never archive-specific and is never touched by any archive's Stage-6
 promotion. This archive's own identity/mission content belongs only here,
 never in the sub-clone.
+
+## Real BIM reference material — `business-admin/project-floorplates`
+
+**2026-07-30 split:** `content_class: business-admin` (hybrid archive, same
+pattern as `project-proforma`/`project-orgcharts`). Real Key Plans/Tiles/
+Floor Plates source docs (was tracked here as `inputs/`/`outputs/`/`preview/`)
+purged from git history, moved to `business-admin/project-floorplates/`.
+**Reference in place by absolute path — do not copy back or `git add`/commit
+here or in `pointsav-monorepo`.** See AGENT.md's business-admin section +
+`business-admin/project-floorplates/README.md`.
