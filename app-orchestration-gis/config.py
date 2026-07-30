@@ -1,11 +1,3 @@
-# SPDX-License-Identifier: LicenseRef-PointSav-ARR
-# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
-#
-# This file is proprietary material of Woodfine Capital Projects Inc.
-# See the LICENSE file in this repository for the full terms.
-# Unauthorized use, reproduction, or distribution is prohibited.
-
-
 """
 app-orchestration-gis configuration.
 """
@@ -277,32 +269,6 @@ REGION_CONFIG = {
         "hardware":  ["leroy-merlin-pt"],
         "warehouse": []
     },
-    # New Europe — Phase 23 2026-06-30
-    "CZ": {
-        "anchor":    ["kaufland-cz"],
-        "hardware":  ["obi-cz"],
-        "warehouse": []
-    },
-    "HU": {
-        "anchor":    ["auchan-hu"],
-        "hardware":  ["obi-hu"],
-        "warehouse": []
-    },
-    "SK": {
-        "anchor":    ["kaufland-sk"],
-        "hardware":  ["obi-sk"],
-        "warehouse": []
-    },
-    "RO": {
-        "anchor":    ["carrefour-ro"],
-        "hardware":  ["leroy-merlin-ro"],
-        "warehouse": []
-    },
-    "BG": {
-        "anchor":    ["kaufland-bg"],
-        "hardware":  ["praktiker-bg"],
-        "warehouse": []
-    },
 }
 
 ISO_TO_REGION = {
@@ -311,7 +277,6 @@ ISO_TO_REGION = {
     "SE": "NORDICS", "NO": "NORDICS", "DK": "NORDICS", "FI": "NORDICS", "IS": "NORDICS",
     "FR": "FR", "DE": "DE", "GB": "GB",
     "AT": "AT", "NL": "NL", "PT": "PT",
-    "CZ": "CZ", "HU": "HU", "SK": "SK", "RO": "RO", "BG": "BG",
 }
 
 # ── ALGORITHM TUNING ─────────────────────────────────────────────────────────

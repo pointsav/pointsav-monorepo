@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-PointSav-ARR
-# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
-#
-# This file is proprietary material of Woodfine Capital Projects Inc.
-# See the LICENSE file in this repository for the full terms.
-# Unauthorized use, reproduction, or distribution is prohibited.
-
-
 # download-boundaries.sh — download offline reverse-geocoding boundary files
 #
 # Downloads 5 GeoJSON files to cluster-totebox-personnel-1/boundaries/.

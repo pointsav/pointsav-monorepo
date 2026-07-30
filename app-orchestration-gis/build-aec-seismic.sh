@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-PointSav-ARR
-# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
-#
-# This file is proprietary material of Woodfine Capital Projects Inc.
-# See the LICENSE file in this repository for the full terms.
-# Unauthorized use, reproduction, or distribution is prohibited.
-
-
 # build-aec-seismic.sh — Night 4 AEC build: seismic hazard + wetland classification
 #
 # Run at 05:00 UTC 2026-05-27 (Night 4 of AEC staged rollout).
@@ -135,12 +127,10 @@ try:
     print(zips[0][1] if zips else '')
 except Exception:
     print('')
-" 2>/dev/null) || true
+" 2>/dev/null)
         if [[ -z "$USGS_DL_URL" ]]; then
-            USGS_DL_URL="https://www.sciencebase.gov/catalog/file/get/64ff886dd34ed30c2057b4d9?f=__disk__76%2Ff4%2Fb4%2F76f4b416aadf6f70680106a36acc31714473b4ff"
-            echo "  API returned no URL — using hardcoded direct URL" | tee -a "$LOG"
-        fi
-        if [[ -n "$USGS_DL_URL" ]]; then
+            echo "  WARN: ScienceBase catalog API unreachable or no .zip file — USGS seismic data will be skipped" | tee -a "$LOG"
+        else
             echo "  Downloading: $USGS_DL_URL" | tee -a "$LOG"
             curl -L --retry 3 --retry-delay 10 --max-time 300 \
                 -H "User-Agent: Mozilla/5.0 (compatible; USGS-Data-Fetch/1.0)" \
@@ -155,12 +145,11 @@ except Exception:
         for inner in "$TMP_USGS"/*.zip; do
             [[ -f "$inner" ]] && unzip -o "$inner" -d "$TMP_USGS" 2>&1 | tee -a "$LOG" || true
         done
-        # Find the 2%/50yr PGA shapefile — prefer poly (zones) then arc (contours)
-        # Note: find -o is unparenthesized here so we chain explicit checks instead
-        SHP=$(find "$TMP_USGS" -name "*2Pct*poly*.shp" 2>/dev/null | head -1)
-        [[ -z "$SHP" ]] && SHP=$(find "$TMP_USGS" -name "*2Pct*.shp" 2>/dev/null | head -1)
-        [[ -z "$SHP" ]] && SHP=$(find "$TMP_USGS" -name "*PGA*.shp" 2>/dev/null | head -1)
-        [[ -z "$SHP" ]] && SHP=$(find "$TMP_USGS" -name "*.shp" 2>/dev/null | head -1)
+        # Find the 2%/50yr PGA shapefile (look for *2Pct* or *2pct* or *PGA* shp)
+        SHP=$(find "$TMP_USGS" -name "*2Pct*.shp" -o -name "*2pct*.shp" -o -name "*PGA*.shp" 2>/dev/null | head -1)
+        if [[ -z "$SHP" ]]; then
+            SHP=$(find "$TMP_USGS" -name "*.shp" 2>/dev/null | head -1)
+        fi
         if [[ -n "$SHP" ]]; then
             ogr2ogr -f GeoJSON -t_srs EPSG:4326 "$USGS_GEOJSON" "$SHP" \
                 2>&1 | tee -a "$LOG"
@@ -246,70 +235,21 @@ fi
 echo "" | tee -a "$LOG"
 echo "[3/9] Sample seismic PGA at cluster centroids" | tee -a "$LOG"
 
+# USGS data is GeoJSON (not raster); USGS_TIF is unused but referenced in the
+# heredoc for legacy raster fallback path — set explicitly to avoid set -u error.
+USGS_TIF="${USGS_TIF:-}"
+
 python3 - <<PYEOF 2>&1 | tee -a "$LOG"
-import json, csv, pathlib
+import json, subprocess, csv, math, pathlib, sys
 
 META = pathlib.Path("$META_PATH")
-USGS_GEOJSON_PATH = "$USGS_GEOJSON"
+USGS_TIF = "${USGS_TIF:-}"
 NRCAN_CSV = "$NRCAN_CSV"
 SKIP_NRCAN = int("${SKIP_NRCAN:-1}")
 SKIP_USGS  = int("${SKIP_USGS:-0}")
 
 clusters = json.loads(META.read_text())
-
-# Build USGS seismic lookup from GeoJSON arc/contour features.
-# The USGS NSHM 2023 shapefile ships as contour arcs (LineString) with a
-# 'Contour' property holding the PGA value in g. Sentinel -1000000.0 = ocean/nodata.
-# Poly variants use polygon centroids; both are handled below.
-usgs_points = []  # [(lat, lon, pga_g)]
-if not SKIP_USGS and pathlib.Path(USGS_GEOJSON_PATH).exists():
-    try:
-        gj = json.loads(pathlib.Path(USGS_GEOJSON_PATH).read_text())
-        for feat in gj.get('features', []):
-            props = feat.get('properties') or {}
-            pga_raw = None
-            # USGS ScienceBase 2%/50yr export ships PGA hazard bands as
-            # low_cont/high_cont (e.g. "0.89"/"0.90") rather than a single value —
-            # use the band midpoint. Checked before the single-key fallbacks below.
-            if props.get('low_cont') is not None and props.get('high_cont') is not None:
-                try:
-                    pga_raw = (float(props['low_cont']) + float(props['high_cont'])) / 2.0
-                except (TypeError, ValueError):
-                    pga_raw = None
-            if pga_raw is None:
-                for key in ('Contour', 'CONTOUR', 'PGA', 'ACC', 'VALUE', 'pga', 'contour'):
-                    if key in props and props[key] is not None:
-                        pga_raw = props[key]; break
-            if pga_raw is None:
-                continue
-            try:
-                pga_g = float(pga_raw)
-            except (TypeError, ValueError):
-                continue
-            if pga_g <= 0:
-                continue  # nodata sentinel (-1000000) or zero
-            geom = feat.get('geometry') or {}
-            coords = geom.get('coordinates', [])
-            gtype = geom.get('type', '')
-            if gtype == 'LineString' and coords:
-                mid = coords[len(coords) // 2]
-                usgs_points.append((mid[1], mid[0], pga_g))
-            elif gtype == 'MultiLineString' and coords and coords[0]:
-                mid = coords[0][len(coords[0]) // 2]
-                usgs_points.append((mid[1], mid[0], pga_g))
-            elif gtype == 'Polygon' and coords and coords[0]:
-                ring = coords[0]
-                clat = sum(p[1] for p in ring) / len(ring)
-                clon = sum(p[0] for p in ring) / len(ring)
-                usgs_points.append((clat, clon, pga_g))
-            elif gtype == 'MultiPolygon' and coords and coords[0] and coords[0][0]:
-                ring = coords[0][0]
-                clat = sum(p[1] for p in ring) / len(ring)
-                clon = sum(p[0] for p in ring) / len(ring)
-                usgs_points.append((clat, clon, pga_g))
-        print(f"  USGS arcs: {len(usgs_points)} contour points loaded")
-    except Exception as e:
-        print(f"  WARN: failed to load USGS GeoJSON — {e}")
+use_gdallocationinfo = $USE_GDALLOCATIONINFO
 
 # Build NRCan nearest-neighbour lookup grid from CSV
 nrcan_grid = []  # [(lat, lon, pga_g)]
@@ -335,15 +275,18 @@ if not SKIP_NRCAN and pathlib.Path(NRCAN_CSV).exists():
     print(f"  NRCan grid: {len(nrcan_grid)} points loaded")
 
 def sample_usgs(lon, lat):
-    """Nearest-neighbour lookup in USGS arc/contour data → float g or None."""
-    if not usgs_points:
+    """Sample USGS NSHM 2023 PGA raster at (lon, lat) → float g or None."""
+    if SKIP_USGS or not use_gdallocationinfo:
         return None
-    best, best_dist = None, float('inf')
-    for glat, glon, pga in usgs_points:
-        d = (glat - lat) ** 2 + (glon - lon) ** 2
-        if d < best_dist:
-            best_dist = d; best = pga
-    return round(best, 4) if best is not None and best_dist < 1.0 else None
+    try:
+        result = subprocess.run(
+            ["gdallocationinfo", "-valonly", "-wgs84", USGS_TIF, str(lon), str(lat)],
+            capture_output=True, text=True, timeout=10
+        )
+        val = result.stdout.strip()
+        return round(float(val), 4) if val else None
+    except Exception:
+        return None
 
 def sample_nrcan(lon, lat):
     """Nearest-neighbour lookup in NRCan CSV grid → float g or None."""
@@ -390,27 +333,38 @@ PYEOF
 #   0.20–0.40g / >0.40g — five levels mapped to very_low/low/moderate/high/very_high.
 
 echo "" | tee -a "$LOG"
-echo "[4/9] EU seismic PGA via EFEHR API (sample-eshm20-api.py)" | tee -a "$LOG"
+echo "[4/9] ESHM20 EU seismic hazard zones (CC BY 4.0)" | tee -a "$LOG"
 
-# The ESHM20 GitLab tarball approach produced a 1-feature GeoJSON (a metadata envelope,
-# not hazard zones) — no cluster centroids landed inside it. The EFEHR REST API at
-# maps.efehr.org is the authoritative replacement: per-point PGA lookup, no auth required,
-# 0.6s/call polite rate. sample-eshm20-api.py patches seismic_pga_g directly into
-# clusters-meta.json and skips clusters that already have a value.
-# The cached eshm20-eu.tar.gz is left in place as a reference; step [8/9] (vector join)
-# will silently no-op if the GeoJSON is absent or 1-feature.
-#
-# 2026-07-01: maps.efehr.org does not resolve (dead/wrong hostname). The correct host,
-# hazard.efehr.org, resolves but its own SSL certificate has expired (confirmed via
-# curl -v) — an external EFEHR infrastructure problem, not fixable here. All 2,796
-# queries fail with "Name or service not known" every run until EFEHR fixes their DNS/cert.
+ESHM20_TAR="$WORK_DIR/eshm20-eu.tar.gz"
+ESHM20_GEOJSON="$WORK_DIR/eshm20-eu.geojson"
+if [[ ! -f "$ESHM20_GEOJSON" ]]; then
+    # Primary: EFEHR GitLab tarball (ESHM20 — replaces retired Pangaea ESHM13 URL)
+    curl -L --retry 3 --retry-delay 15 \
+        -o "$ESHM20_TAR" \
+        "https://gitlab.seismo.ethz.ch/efehr/eshm20/-/archive/master/eshm20-master.tar.gz" \
+        2>&1 | tee -a "$LOG" || true
 
-EU_SEISMIC_LOG="$SCRIPT_DIR/sample-eshm20.log"
-echo "  Running sample-eshm20-api.py (EU clusters; EFEHR REST API)..." | tee -a "$LOG"
-python3 "$SCRIPT_DIR/sample-eshm20-api.py" 2>&1 | tee -a "$EU_SEISMIC_LOG" | tee -a "$LOG"
-ESHM20_GEOJSON=""   # no local GeoJSON — step [5/9] PMTiles will be skipped
-SKIP_ESHM20=1
-echo "  EU seismic PGA patched via API — layer10 PMTiles step skipped (no zone polygons)" | tee -a "$LOG"
+    if [[ -f "$ESHM20_TAR" && $(stat -c%s "$ESHM20_TAR") -gt 10000 ]]; then
+        TMP_DIR=$(mktemp -d)
+        tar xzf "$ESHM20_TAR" -C "$TMP_DIR" 2>&1 | tee -a "$LOG"
+        # Find shapefile — prefer PGA 10/50 if named; fall back to any .shp
+        SHP=$(find "$TMP_DIR" -name "*PGA*10*50*.shp" | head -1)
+        [[ -z "$SHP" ]] && SHP=$(find "$TMP_DIR" -name "*.shp" | head -1)
+        if [[ -n "$SHP" ]]; then
+            ogr2ogr -f GeoJSON -t_srs EPSG:4326 "$ESHM20_GEOJSON" "$SHP" \
+                2>&1 | tee -a "$LOG"
+        fi
+        rm -rf "$TMP_DIR"
+    fi
+fi
+if [[ ! -f "$ESHM20_GEOJSON" ]]; then
+    echo "WARN: ESHM20 GeoJSON not produced — EU seismic PMTiles will be skipped" | tee -a "$LOG"
+    SKIP_ESHM20=1
+else
+    FEAT_COUNT=$(python3 -c "import json; d=json.load(open('$ESHM20_GEOJSON')); print(len(d['features']))" 2>/dev/null || echo "?")
+    echo "  → $ESHM20_GEOJSON ($FEAT_COUNT features)  ✓" | tee -a "$LOG"
+    SKIP_ESHM20=0
+fi
 
 # ── Step 5 — Build layer10-seismic-eu.pmtiles ────────────────────────────────
 
@@ -461,35 +415,21 @@ echo "[6/9] GWL_FCS30 wetland raster tiles (CC BY 4.0, Zenodo 7340516)" | tee -a
 
 GWL_DIR="$WORK_DIR/gwl-tiles"
 GWL_VRT="$WORK_DIR/gwl-fcs30-mosaic.vrt"
-GWL_TIF="$WORK_DIR/gwl-fcs30-global.tif"
+GWL_TIF="$GWL_VRT"  # VRT used directly — gdallocationinfo reads VRT natively
 mkdir -p "$GWL_DIR"
 
-# GWL_FCS30 Zenodo record 7340516 distributes individual 5°-lat/lon tile TIFs
-# (e.g. GWL_FCS30_2020_E0N10.tif), not the 30°-lon zips the original script expected.
-# The full global dataset (408 tiles, ~2 GB) is already in gwl-tiles/.
-# Build the VRT directly from whatever tiles are present, then convert to a single TIF
-# so build-aec-global.sh (which expects gwl-fcs30-global.tif) finds the right file.
-#
-# 2026-07-01: gwl-fcs30-global.tif is symlinked to gwl-fcs30-mosaic.vrt in practice —
-# gdallocationinfo reads a VRT identically to a real TIF, so no gdal_translate merge
-# is needed (saves ~2GB of disk). Re-run gdal_translate below only if the symlink
-# approach ever needs replacing with a physical file.
-
+# Zenodo record 7340516 distributes 408 individual 5°-lat/lon TIFs
+# (e.g. GWL_FCS30_2020_E0N10.tif), NOT 30°-lon zip archives.
+# Collect all tiles already present in gwl-tiles/ and build a VRT mosaic.
 GWL_TIFS=()
 while IFS= read -r -d '' f; do
     GWL_TIFS+=("$f")
-done < <(find "$GWL_DIR" -name "GWL_FCS30_*.tif" -print0 2>/dev/null)
+done < <(find "$GWL_DIR" -name "GWL_FCS30_*.tif" -print0 2>/dev/null | sort -z)
 
 if [[ ${#GWL_TIFS[@]} -gt 0 ]]; then
     echo "  Found ${#GWL_TIFS[@]} GWL_FCS30 tiles in $GWL_DIR" | tee -a "$LOG"
     gdalbuildvrt "$GWL_VRT" "${GWL_TIFS[@]}" 2>&1 | tee -a "$LOG"
     echo "  → Mosaic VRT: $GWL_VRT (${#GWL_TIFS[@]} tiles)  ✓" | tee -a "$LOG"
-    if [[ ! -e "$GWL_TIF" ]]; then
-        gdal_translate -q "$GWL_VRT" "$GWL_TIF" 2>&1 | tee -a "$LOG"
-        echo "  → GeoTIFF: $GWL_TIF ($(du -sh "$GWL_TIF" | cut -f1))  ✓" | tee -a "$LOG"
-    else
-        echo "  → $GWL_TIF already present (symlink or file)  ✓" | tee -a "$LOG"
-    fi
     SKIP_WETLAND=0
 else
     echo "WARN: No GWL_FCS30 tiles found in $GWL_DIR — wetland sampling will be skipped" | tee -a "$LOG"
@@ -586,7 +526,9 @@ if HAS_SHAPELY:
                'IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','GB'}
     n = 0
     for c in clusters:
-        if c.get('seismic_pga_g') is not None or c.get('iso') not in EU_ISOS:
+        if c.get('seismic_pga_g') is not None:
+            continue
+        if c.get('iso') not in EU_ISOS:
             continue
         pt = Point(c['lon'], c['lat'])
         for poly, props in polys:

@@ -1,12 +1,4 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LicenseRef-PointSav-ARR
-# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
-#
-# This file is proprietary material of Woodfine Capital Projects Inc.
-# See the LICENSE file in this repository for the full terms.
-# Unauthorized use, reproduction, or distribution is prohibited.
-
-
 """Render S1 (VWH) and S2 (PKS) archetype map figures for practitioner summaries.
 
 Output: work/figure-s1-vwh-map.png (VWH, 6,368 clusters, T1/T2/T3 colour-coded)

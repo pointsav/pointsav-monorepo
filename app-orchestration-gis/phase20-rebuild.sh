@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-PointSav-ARR
-# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
-#
-# This file is proprietary material of Woodfine Capital Projects Inc.
-# See the LICENSE file in this repository for the full terms.
-# Unauthorized use, reproduction, or distribution is prohibited.
-
-
 # phase20-rebuild.sh — Phase 20 chain ingest + H2b taxonomy + full cluster/tile rebuild
 #
 # Runs automatically after phase19-rebuild.sh completes (schedule at 05:00 UTC 2026-05-25,

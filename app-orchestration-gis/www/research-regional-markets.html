@@ -1,23 +1,9 @@
-<!--
-  SPDX-License-Identifier: LicenseRef-PointSav-ARR
-  SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
-
-  This file is proprietary material of Woodfine Capital Projects Inc.
-  See the LICENSE file in this repository for the full terms.
-  Unauthorized use, reproduction, or distribution is prohibited.
--->
-
-<!--
--->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Top 600 Regional Markets — Summary &amp; Methodology — Woodfine GIS</title>
-<meta name="description" content="Top 600 suburban-regional markets across North America and Europe: geographic distribution, tier composition, and ranking methodology from the Woodfine GIS platform.">
-<link rel="canonical" href="https://gis.woodfinegroup.com/research-regional-markets.html">
+<title>Top 400 Regional Markets — Summary &amp; Methodology · Woodfine Management Corp.</title>
 <style>
 /* ─── Print setup ──────────────────────────────────────────────────── */
 @page { size: letter landscape; margin: 0.45in 0.5in 0.38in 0.5in; }
@@ -26,13 +12,11 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 /* ─── Document variables ───────────────────────────────────────────── */
-/* Synced to the map page; the shared lib/research-mobile.css :root (loaded last) is authoritative. */
 :root {
   --brand-primary: #164679;
-  --brand-accent: #EAB308;
-  --text-main: #111827;
-  --text-muted: #5A626E;
-  --border-soft: rgba(0, 0, 0, 0.08);
+  --text-main: #1a202c;
+  --text-muted: #64748b;
+  --border-soft: #e2e8f0;
   --bg: #f8fafc;
   --surface: #ffffff;
 }
@@ -155,73 +139,9 @@
   .page-footer a { color: rgba(255,255,255,0.82); text-decoration: none; }
   .page-footer a:hover { color: #fff; text-decoration: underline; }
 
-  @media (max-width: 768px) {
+  @media (max-width: 700px) {
     .toc-sidebar { display: none; }
-    .page-wrapper { padding: 0 0 40px; gap: 0; }
-    .doc-main, .pages-wrapper { overflow-x: visible; padding: 0; }
-    /* Unlock the fixed 10-inch print page → full-width responsive column */
-    .page {
-      width: 100% !important;
-      min-width: 0 !important;
-      min-height: 0 !important;
-      padding: 14px 12px !important;
-      margin: 0 0 12px !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-    }
-    /* Stack every multi-column grid to a single column */
-    .region-grid, .eu-grid, .p2-top, .p2-bot, .kpi-row,
-    .cls-grid, .top5-wrap, .pipeline-grid {
-      grid-template-columns: 1fr !important;
-      gap: 10px !important;
-    }
-    /* Readable type floor — scale the tiny print-point fonts up for phones */
-    .page, .page p, .cc-name, .region, .leader, .ctx { font-size: 14px !important; line-height: 1.5 !important; }
-    .pg-hd .ttl { font-size: 19px !important; }
-    .pg-hd .org, .pg-hd .meta { font-size: 12px !important; }
-    .stag { font-size: 13px !important; padding: 6px 8px !important; }
-    .region-hd { font-size: 14px !important; padding: 8px !important; }
-    .cc-name { font-size: 15px !important; font-weight: 700; }
-    .cc-iso, .km, .mt { font-size: 12px !important; }
-    .kpi-n, .kpi-num, .kpi-val { font-size: 22px !important; }   /* align to Summary */
-    .kpi-lbl, .kpi-sub { font-size: 12px !important; }
-    h4, .rank-table-box h4 { font-size: 14px !important; }
-    /* Tables scroll inside their own box, never the page */
-    .rank-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .rank-table th { font-size: 12px !important; }
-    .rank-table td { font-size: 13px !important; }
-    .rank-table td:last-child { font-size: 14px !important; }
-
-    /* ── Page-unique nested classes the shared block didn't reach ───────── */
-    /* Rank-table inner spans */
-    .rank-table .rk { font-size: 13px !important; width: auto !important; }
-    .rank-table .mn { font-size: 14px !important; }
-    .rank-table .mt { font-size: 12px !important; }
-    .rank-table .km { font-size: 12px !important; }
-    /* Leader lists */
-    .leaders  { padding: 8px 10px !important; }
-    .lr-rank  { font-size: 13px !important; width: auto !important; }
-    .lr-name  { font-size: 14px !important; }
-    .lr-metro { font-size: 12px !important; }
-    .lr-score { font-size: 15px !important; }
-    /* Country-card secondary text */
-    .cc-iso   { font-size: 12px !important; }
-    .cc-count { font-size: 15px !important; }
-    .cc-sub   { font-size: 12px !important; }
-    .cc-pct   { font-size: 12px !important; }
-    .eu-grid .cc { padding: 8px 10px !important; }
-    /* Share bars — visible band */
-    .sb { height: 14px !important; }
-    /* Classification grid → stacked readable cards (display:contents defeats the 1fr stack) */
-    .cls-grid { display: block !important; overflow: visible !important; }
-    .cls-row  { display: block !important; border-bottom: 1px solid #e8ecf3; }
-    .cls-row:last-child { border-bottom: none; }
-    .cls-row > div { display: block !important; padding: 3px 8px !important;
-                     font-size: 13px !important; border-bottom: none !important; }
-    .cls-band  { font-size: 14px !important; white-space: normal !important; }
-    .cls-range { white-space: normal !important; }
-    /* Research-context paragraph */
-    .res-box .context-p { font-size: 13px !important; line-height: 1.5; }
+    .page-wrapper { padding: 12px 10px 40px; gap: 0; }
   }
 }
 
@@ -486,27 +406,8 @@ body {
   line-height: 1.5;
 }
 </style>
-<link rel="stylesheet" href="lib/research-mobile.css">
 </head>
 <body>
-
-<header class="research-topbar">
-  <div class="rt-bar">
-    <a href="/" class="rt-home"><span class="rt-home-ico" aria-hidden="true">←</span> Map</a>
-    <nav class="rt-tabs" aria-label="Research papers">
-      <a class="rt-tab" href="/research.html">Overview</a>
-      <a class="rt-tab" href="/research-colocation.html">Co-location</a>
-      <a class="rt-tab" href="/research-regional-markets.html" aria-current="page">Regional Markets</a>
-      <a class="rt-tab" href="/research-aec.html">AEC</a>
-      <a class="rt-tab" href="/research-summary.html">Summary</a>
-    </nav>
-  </div>
-  <div class="rt-crumb">
-    <a href="/research.html" style="color:rgba(255,255,255,0.62);text-decoration:none;">Research</a>
-    <span class="rt-crumb-sep" aria-hidden="true">›</span>
-    <span class="rt-crumb-cur">Top 600 Regional Markets</span>
-  </div>
-</header>
 
 <div class="page-wrapper">
 
@@ -539,8 +440,8 @@ body {
 
     <div class="pg-hd">
       <div class="org">Woodfine Management Corp.</div>
-      <div class="ttl">Top 600 Regional Markets — Geographic Distribution</div>
-      <div class="meta">PointSav GIS Platform · v0.4 · 29 June 2026<span class="pg-num"><br>Page 1 of 2</span></div>
+      <div class="ttl">Top 400 Regional Markets — Geographic Distribution</div>
+      <div class="meta">PointSav GIS Platform · v0.3 · 31 May 2026<br>Page 1 of 2</div>
     </div>
 
     <div class="stag" style="margin-bottom:3pt">
@@ -554,36 +455,36 @@ body {
       <div class="region-col">
 
         <div class="region">
-          <div class="region-hd" style="background:#1a3a6b">North America &nbsp;·&nbsp; 600 markets &nbsp;·&nbsp; 3 countries</div>
+          <div class="region-hd" style="background:#1a3a6b">North America &nbsp;·&nbsp; 400 markets &nbsp;·&nbsp; 3 countries</div>
 
           <div class="cc">
             <div class="cc-top">
               <div><span class="cc-name">United States</span><span class="cc-iso">US</span></div>
-              <span class="cc-count">515</span>
+              <span class="cc-count">347</span>
             </div>
-            <span class="cc-sub">85.8% of NA Top 600</span>
-            <div class="sb"><div class="sb-na" style="width:85.8%"></div></div>
-            <span class="cc-pct">Index 38–100 &nbsp;·&nbsp; isolated hubs + composition-strong suburbs</span>
+            <span class="cc-sub">86.8% of NA Top 400</span>
+            <div class="sb"><div class="sb-na" style="width:86.8%"></div></div>
+            <span class="cc-pct">Index 56–100 &nbsp;·&nbsp; isolated hubs + composition-strong suburbs</span>
           </div>
 
           <div class="cc">
             <div class="cc-top">
               <div><span class="cc-name">Canada</span><span class="cc-iso">CA</span></div>
-              <span class="cc-count">56</span>
+              <span class="cc-count">44</span>
             </div>
-            <span class="cc-sub">9.3% of NA Top 600</span>
-            <div class="sb"><div class="sb-ca" style="width:9.3%"></div></div>
-            <span class="cc-pct">London ON #1 · Sherwood Park AB · Courtenay BC</span>
+            <span class="cc-sub">11.0% of NA Top 400</span>
+            <div class="sb"><div class="sb-ca" style="width:11.0%"></div></div>
+            <span class="cc-pct">London ON #2 · Courtenay BC #3 · Sherwood Park AB #57</span>
           </div>
 
           <div class="cc">
             <div class="cc-top">
               <div><span class="cc-name">Mexico</span><span class="cc-iso">MX</span></div>
-              <span class="cc-count">29</span>
+              <span class="cc-count">9</span>
             </div>
-            <span class="cc-sub">4.8% of NA Top 600</span>
-            <div class="sb"><div class="sb-mx" style="width:4.8%"></div></div>
-            <span class="cc-pct">Boca del Río #3 · regional hubs beyond CDMX / Monterrey cores</span>
+            <span class="cc-sub">2.2% of NA Top 400</span>
+            <div class="sb"><div class="sb-mx" style="width:2.2%"></div></div>
+            <span class="cc-pct">Regional hubs beyond the CDMX / Monterrey cores</span>
           </div>
         </div>
 
@@ -591,33 +492,33 @@ body {
           <div class="leaders-hd">§2 &nbsp;Top-ranked North American markets</div>
           <div class="leader-row">
             <span class="lr-rank">1</span>
-            <span class="lr-name">London, Ontario</span>
-            <span class="lr-metro">nr. Kitchener · 76 km · CA</span>
+            <span class="lr-name">Fort Wayne, Indiana</span>
+            <span class="lr-metro">nr. Indianapolis · 107 km</span>
             <span class="lr-score">100</span>
           </div>
           <div class="leader-row">
             <span class="lr-rank">2</span>
-            <span class="lr-name">Lake Charles, Louisiana</span>
-            <span class="lr-metro">nr. Baton Rouge · 109 km · US</span>
-            <span class="lr-score">100</span>
+            <span class="lr-name">London, Ontario</span>
+            <span class="lr-metro">nr. Kitchener · 76 km</span>
+            <span class="lr-score">98</span>
           </div>
           <div class="leader-row">
             <span class="lr-rank">3</span>
-            <span class="lr-name">Boca del Río</span>
-            <span class="lr-metro">nr. Puebla · 90 km · MX</span>
-            <span class="lr-score">100</span>
+            <span class="lr-name">Courtenay, B.C.</span>
+            <span class="lr-metro">nr. Vancouver · 85 km</span>
+            <span class="lr-score">90</span>
           </div>
           <div class="leader-row">
             <span class="lr-rank">4</span>
             <span class="lr-name">Mesa, Arizona</span>
-            <span class="lr-metro">nr. Phoenix · 18 km · US</span>
-            <span class="lr-score">95</span>
+            <span class="lr-metro">nr. Phoenix · 18 km</span>
+            <span class="lr-score">87</span>
           </div>
           <div class="leader-row">
             <span class="lr-rank">5</span>
-            <span class="lr-name">Fort Wayne, Indiana</span>
-            <span class="lr-metro">nr. Indianapolis · 107 km · US</span>
-            <span class="lr-score">93</span>
+            <span class="lr-name">Baxter, Minnesota</span>
+            <span class="lr-metro">nr. Minneapolis · 90 km</span>
+            <span class="lr-score">86</span>
           </div>
         </div>
 
@@ -627,118 +528,118 @@ body {
       <div class="region-col">
 
         <div class="region">
-          <div class="region-hd" style="background:#5c1f1f">Europe &nbsp;·&nbsp; 600 markets &nbsp;·&nbsp; 12 countries</div>
+          <div class="region-hd" style="background:#5c1f1f">Europe &nbsp;·&nbsp; 400 markets &nbsp;·&nbsp; 12 countries</div>
           <div class="eu-grid">
 
             <div class="cc">
-              <div class="cc-top"><div><span class="cc-name">France</span><span class="cc-iso">FR</span></div><span class="cc-count">177</span></div>
-              <span class="cc-sub">29.5% of EU Top 600</span>
-              <div class="sb"><div class="sb-eu" style="width:29.5%"></div></div>
-              <span class="cc-pct">Provincial hypermarket corridors beyond Paris basin</span>
-            </div>
-
-            <div class="cc">
-              <div class="cc-top"><div><span class="cc-name">Germany</span><span class="cc-iso">DE</span></div><span class="cc-count">175</span></div>
-              <span class="cc-sub">29.2% of EU Top 600</span>
-              <div class="sb"><div class="sb-eu" style="width:29.2%"></div></div>
+              <div class="cc-top"><div><span class="cc-name">Germany</span><span class="cc-iso">DE</span></div><span class="cc-count">134</span></div>
+              <span class="cc-sub">33.5% of EU Top 400</span>
+              <div class="sb"><div class="sb-eu" style="width:33.5%"></div></div>
               <span class="cc-pct">Deep retail composition in suburban ring cities</span>
             </div>
 
             <div class="cc">
-              <div class="cc-top"><div><span class="cc-name">Great Britain</span><span class="cc-iso">GB</span></div><span class="cc-count">86</span></div>
-              <span class="cc-sub">14.3% of EU Top 600</span>
-              <div class="sb"><div class="sb-eu" style="width:14.3%"></div></div>
+              <div class="cc-top"><div><span class="cc-name">France</span><span class="cc-iso">FR</span></div><span class="cc-count">123</span></div>
+              <span class="cc-sub">30.8% of EU Top 400</span>
+              <div class="sb"><div class="sb-eu" style="width:30.8%"></div></div>
+              <span class="cc-pct">Provincial hypermarket corridors beyond Paris basin</span>
+            </div>
+
+            <div class="cc">
+              <div class="cc-top"><div><span class="cc-name">Great Britain</span><span class="cc-iso">GB</span></div><span class="cc-count">48</span></div>
+              <span class="cc-sub">12.0% of EU Top 400</span>
+              <div class="sb"><div class="sb-eu" style="width:12.0%"></div></div>
               <span class="cc-pct">Out-of-town retail parks; civic anchors common</span>
             </div>
 
             <div class="cc">
-              <div class="cc-top"><div><span class="cc-name">Spain</span><span class="cc-iso">ES</span></div><span class="cc-count">47</span></div>
-              <span class="cc-sub">7.8% · Proforma market</span>
-              <div class="sb"><div class="sb-eu" style="width:7.8%"></div></div>
+              <div class="cc-top"><div><span class="cc-name">Spain</span><span class="cc-iso">ES</span></div><span class="cc-count">28</span></div>
+              <span class="cc-sub">7.0%</span>
+              <div class="sb"><div class="sb-eu" style="width:7.0%"></div></div>
             </div>
 
             <div class="cc">
-              <div class="cc-top"><div><span class="cc-name">Italy</span><span class="cc-iso">IT</span></div><span class="cc-count">43</span></div>
-              <span class="cc-sub">7.2% · Proforma market</span>
-              <div class="sb"><div class="sb-eu" style="width:7.2%"></div></div>
+              <div class="cc-top"><div><span class="cc-name">Poland</span><span class="cc-iso">PL</span></div><span class="cc-count">19</span></div>
+              <span class="cc-sub">4.8%</span>
+              <div class="sb"><div class="sb-eu" style="width:4.8%"></div></div>
             </div>
 
             <div class="cc">
-              <div class="cc-top"><div><span class="cc-name">Poland</span><span class="cc-iso">PL</span></div><span class="cc-count">37</span></div>
-              <span class="cc-sub">6.2% · Proforma market</span>
-              <div class="sb"><div class="sb-eu" style="width:6.2%"></div></div>
+              <div class="cc-top"><div><span class="cc-name">Italy</span><span class="cc-iso">IT</span></div><span class="cc-count">12</span></div>
+              <span class="cc-sub">3.0%</span>
+              <div class="sb"><div class="sb-eu" style="width:3.0%"></div></div>
             </div>
 
             <div class="cc">
-              <div class="cc-top"><div><span class="cc-name">Netherlands</span><span class="cc-iso">NL</span></div><span class="cc-count">21</span></div>
-              <span class="cc-sub">3.5%</span>
-              <div class="sb"><div class="sb-eu" style="width:3.5%"></div></div>
+              <div class="cc-top"><div><span class="cc-name">Portugal</span><span class="cc-iso">PT</span></div><span class="cc-count">9</span></div>
+              <span class="cc-sub">2.2%</span>
+              <div class="sb"><div class="sb-eu" style="width:2.2%"></div></div>
             </div>
 
             <div class="cc">
-              <div class="cc-top"><div><span class="cc-name">Portugal</span><span class="cc-iso">PT</span></div><span class="cc-count">5</span></div>
-              <span class="cc-sub">0.8%</span>
-              <div class="sb"><div class="sb-eu" style="width:0.8%"></div></div>
+              <div class="cc-top"><div><span class="cc-name">Denmark</span><span class="cc-iso">DK</span></div><span class="cc-count">7</span></div>
+              <span class="cc-sub">1.8%</span>
+              <div class="sb"><div class="sb-eu" style="width:1.8%"></div></div>
             </div>
 
             <div class="cc">
-              <div class="cc-top"><div><span class="cc-name">Denmark</span><span class="cc-iso">DK</span></div><span class="cc-count">4</span></div>
-              <span class="cc-sub">0.7% · Nordic group (7 total)</span>
-              <div class="sb"><div class="sb-eu" style="width:0.7%"></div></div>
+              <div class="cc-top"><div><span class="cc-name">Finland</span><span class="cc-iso">FI</span></div><span class="cc-count">7</span></div>
+              <span class="cc-sub">1.8%</span>
+              <div class="sb"><div class="sb-eu" style="width:1.8%"></div></div>
             </div>
 
             <div class="cc">
-              <div class="cc-top"><div><span class="cc-name">Finland</span><span class="cc-iso">FI</span></div><span class="cc-count">2</span></div>
-              <span class="cc-sub">0.3% · Nordic group</span>
-              <div class="sb"><div class="sb-eu" style="width:0.3%"></div></div>
+              <div class="cc-top"><div><span class="cc-name">Austria</span><span class="cc-iso">AT</span></div><span class="cc-count">5</span></div>
+              <span class="cc-sub">1.2%</span>
+              <div class="sb"><div class="sb-eu" style="width:1.2%"></div></div>
             </div>
 
             <div class="cc">
-              <div class="cc-top"><div><span class="cc-name">Sweden</span><span class="cc-iso">SE</span></div><span class="cc-count">1</span></div>
-              <span class="cc-sub">0.2% · Nordic group</span>
-              <div class="sb"><div class="sb-eu" style="width:0.2%"></div></div>
+              <div class="cc-top"><div><span class="cc-name">Sweden</span><span class="cc-iso">SE</span></div><span class="cc-count">4</span></div>
+              <span class="cc-sub">1.0%</span>
+              <div class="sb"><div class="sb-eu" style="width:1.0%"></div></div>
             </div>
 
             <div class="cc">
-              <div class="cc-top"><div><span class="cc-name">Greece</span><span class="cc-iso">GR</span></div><span class="cc-count">0</span></div>
-              <span class="cc-sub">0% · Proforma market · ingest pending</span>
-              <div class="sb"><div class="sb-eu" style="width:0%"></div></div>
+              <div class="cc-top"><div><span class="cc-name">Netherlands</span><span class="cc-iso">NL</span></div><span class="cc-count">4</span></div>
+              <span class="cc-sub">1.0%</span>
+              <div class="sb"><div class="sb-eu" style="width:1.0%"></div></div>
             </div>
 
           </div><!-- /eu-grid -->
         </div>
 
         <div class="leaders eu-leaders">
-          <div class="leaders-hd">§2 &nbsp;Top-ranked European markets (country-normalized)</div>
+          <div class="leaders-hd">§2 &nbsp;Top-ranked European markets</div>
           <div class="leader-row">
             <span class="lr-rank">1</span>
             <span class="lr-name">Esbjerg</span>
-            <span class="lr-metro">nr. Odense · 118 km · DK</span>
+            <span class="lr-metro">nr. Odense · 92 km · DK</span>
             <span class="lr-score">100</span>
           </div>
           <div class="leader-row">
             <span class="lr-rank">2</span>
-            <span class="lr-name">TauntonDeane</span>
-            <span class="lr-metro">nr. Cardiff · 110 km · GB</span>
-            <span class="lr-score">100</span>
+            <span class="lr-name">Chemnitz</span>
+            <span class="lr-metro">nr. Dresden · 30 km · DE</span>
+            <span class="lr-score">81</span>
           </div>
           <div class="leader-row">
             <span class="lr-rank">3</span>
-            <span class="lr-name">Rosenheim</span>
-            <span class="lr-metro">nr. Munich · 80 km · DE</span>
-            <span class="lr-score">100</span>
+            <span class="lr-name">Würzburg</span>
+            <span class="lr-metro">nr. Nürnberg · 33 km · DE</span>
+            <span class="lr-score">79</span>
           </div>
           <div class="leader-row">
             <span class="lr-rank">4</span>
-            <span class="lr-name">Albi</span>
-            <span class="lr-metro">nr. Toulouse · 77 km · FR</span>
-            <span class="lr-score">100</span>
+            <span class="lr-name">Lahti</span>
+            <span class="lr-metro">nr. Helsinki · 114 km · FI</span>
+            <span class="lr-score">78</span>
           </div>
           <div class="leader-row">
             <span class="lr-rank">5</span>
-            <span class="lr-name">Jerez de la Frontera</span>
-            <span class="lr-metro">nr. Cádiz · 76 km · ES</span>
-            <span class="lr-score">100</span>
+            <span class="lr-name">Ipswich</span>
+            <span class="lr-metro">nr. Cambridge · 87 km · GB</span>
+            <span class="lr-score">77</span>
           </div>
         </div>
 
@@ -747,7 +648,7 @@ body {
     </div><!-- /region-grid -->
 
     <div class="data-note">
-      <p><strong>v0.4 scoring — country normalization:</strong> Raw scores are min-max normalized within each country (Nordics DK+SE+NO+FI treated as one group) before global ranking. This ensures the best site in Canada, Spain, Poland, or Greece competes on equal footing with the best site in Germany or France. Effect: London ON moves to <strong>#1 NA</strong>; Boca del Río MX enters at <strong>#3 NA</strong>; all country leaders share index 100. Germany + France dominate EU by volume (58.7% combined) reflecting retail density; GB 14.3%, ES 7.8%, IT 7.2%, PL 6.2%. Nordic group (DK+SE+FI+NO) produces 7 eligible suburban-regional markets total. Greece: 0 markets — chain ingest pending (AB Vassilopoulos, Kotsovolos, Leroy Merlin GR).</p>
+      <p><strong>v0.3 scoring:</strong> The isolation floor was raised (0.65 baseline) and a composition depth bonus was added for close-in markets (anchor_d ≤ 40 km), so established suburban centres with deep retail co-location now score competitively alongside isolated hubs. Sherwood Park, Alberta enters at <strong>#57 NA</strong>; Mesa AZ at <strong>#4</strong>; Plano TX at <strong>#6</strong>; Mississauga ON at <strong>#7</strong>. Isolated discoveries remain: Fort Wayne IN #1, Esbjerg DK #1 EU. Full ranked lists at <strong>projects.woodfinegroup.com</strong>.</p>
     </div>
 
     <div class="pg-ft">
@@ -763,8 +664,8 @@ body {
 
     <div class="pg-hd">
       <div class="org">Woodfine Management Corp.</div>
-      <div class="ttl">Top 600 Regional Markets — Scoring Methodology &amp; Research Context</div>
-      <div class="meta">PointSav GIS Platform · v0.4 · 29 June 2026<span class="pg-num"><br>Page 2 of 2</span></div>
+      <div class="ttl">Top 400 Regional Markets — Scoring Methodology &amp; Research Context</div>
+      <div class="meta">PointSav GIS Platform · v0.3 · 31 May 2026<br>Page 2 of 2</div>
     </div>
 
     <!-- §2–§4: KPIs + classification left, formula right -->
@@ -774,9 +675,9 @@ body {
         <div class="stag">§2 &nbsp;·&nbsp; Market Summary</div>
         <div class="kpi-row">
           <div class="kpi k-all">
-            <div class="kpi-n">1,200</div>
+            <div class="kpi-n">800</div>
             <div class="kpi-lbl">Markets Ranked</div>
-            <div class="kpi-sub">600 NA · 600 EU</div>
+            <div class="kpi-sub">400 NA · 400 EU</div>
           </div>
           <div class="kpi k-na">
             <div class="kpi-n">3,307</div>
@@ -808,7 +709,7 @@ body {
           <div class="cls-row pool">
             <div class="cls-band">Regional Market</div>
             <div class="cls-range">anchor_d 3–120 km</div>
-            <div class="cls-note">Top 600 pool — serves its own regional catchment</div>
+            <div class="cls-note">Top 400 pool — serves its own regional catchment</div>
           </div>
           <div class="cls-row other">
             <div class="cls-band">Standalone</div>
@@ -868,12 +769,7 @@ body {
           </div>
         </div>
 
-        <div class="formula-line" style="margin-top:0.6em;">
-          <span class="formula-var">norm_score</span>
-          <span class="formula-eq"> = (score − country_min) / (country_max − country_min)</span>
-        </div>
-
-        <div class="comp-note"><em>depth</em> = (T1×4)+(T2×2)+(T3×1); <em>floor</em> = 2 for close-in markets (depth bonus rewards composition), 4 for isolated markets (isolation already carries the score). T1.b scoring correction: tight clusters with ≥3 members score as T1. Civic (hospital/university) ×1.15. <strong>Country normalization (v0.4):</strong> raw scores are min-max normalized within each country before global ranking, so the best site in Greece competes on equal footing with the best site in Germany. Nordic countries (DK+SE+NO+FI) are normalized as one group. Underlying database: 6,493 clusters, 18 countries.</div>
+        <div class="comp-note"><em>depth</em> = (T1×4)+(T2×2)+(T3×1); <em>floor</em> = 2 for close-in markets (depth bonus rewards composition), 4 for isolated markets (isolation already carries the score). T1.b scoring correction: tight clusters with ≥3 members score as T1. Civic (hospital/university) ×1.15. Underlying database: 6,493 clusters, 18 countries.</div>
       </div>
 
     </div><!-- /p2-top -->
@@ -892,33 +788,33 @@ body {
             <tbody>
               <tr>
                 <td class="rk">1</td>
-                <td><span class="mn">London, Ontario</span><span class="mt">nr. Kitchener · CA</span></td>
-                <td class="km">76</td>
+                <td><span class="mn">Fort Wayne, Indiana</span><span class="mt">nr. Indianapolis · US</span></td>
+                <td class="km">107</td>
                 <td>100</td>
               </tr>
               <tr>
                 <td class="rk">2</td>
-                <td><span class="mn">Lake Charles, Louisiana</span><span class="mt">nr. Baton Rouge · US</span></td>
-                <td class="km">109</td>
-                <td>100</td>
+                <td><span class="mn">London, Ontario</span><span class="mt">nr. Kitchener · CA</span></td>
+                <td class="km">76</td>
+                <td>98</td>
               </tr>
               <tr>
                 <td class="rk">3</td>
-                <td><span class="mn">Boca del Río</span><span class="mt">nr. Puebla · MX</span></td>
-                <td class="km">90</td>
-                <td>100</td>
+                <td><span class="mn">Courtenay, B.C.</span><span class="mt">nr. Vancouver · CA</span></td>
+                <td class="km">85</td>
+                <td>90</td>
               </tr>
               <tr>
                 <td class="rk">4</td>
                 <td><span class="mn">Mesa, Arizona</span><span class="mt">nr. Phoenix · US</span></td>
                 <td class="km">18</td>
-                <td>95</td>
+                <td>87</td>
               </tr>
               <tr>
                 <td class="rk">5</td>
-                <td><span class="mn">Fort Wayne, Indiana</span><span class="mt">nr. Indianapolis · US</span></td>
-                <td class="km">107</td>
-                <td>93</td>
+                <td><span class="mn">Baxter, Minnesota</span><span class="mt">nr. Minneapolis · US</span></td>
+                <td class="km">90</td>
+                <td>86</td>
               </tr>
             </tbody>
           </table>
@@ -934,32 +830,32 @@ body {
               <tr>
                 <td class="rk">1</td>
                 <td><span class="mn">Esbjerg</span><span class="mt">nr. Odense · DK</span></td>
-                <td class="km">118</td>
+                <td class="km">92</td>
                 <td>100</td>
               </tr>
               <tr>
                 <td class="rk">2</td>
-                <td><span class="mn">TauntonDeane</span><span class="mt">nr. Cardiff · GB</span></td>
-                <td class="km">110</td>
-                <td>100</td>
+                <td><span class="mn">Chemnitz</span><span class="mt">nr. Dresden · DE</span></td>
+                <td class="km">30</td>
+                <td>81</td>
               </tr>
               <tr>
                 <td class="rk">3</td>
-                <td><span class="mn">Rosenheim</span><span class="mt">nr. Munich · DE</span></td>
-                <td class="km">80</td>
-                <td>100</td>
+                <td><span class="mn">Würzburg</span><span class="mt">nr. Nürnberg · DE</span></td>
+                <td class="km">33</td>
+                <td>79</td>
               </tr>
               <tr>
                 <td class="rk">4</td>
-                <td><span class="mn">Albi</span><span class="mt">nr. Toulouse · FR</span></td>
-                <td class="km">77</td>
-                <td>100</td>
+                <td><span class="mn">Lahti</span><span class="mt">nr. Helsinki · FI</span></td>
+                <td class="km">114</td>
+                <td>78</td>
               </tr>
               <tr>
                 <td class="rk">5</td>
-                <td><span class="mn">Jerez de la Frontera</span><span class="mt">nr. Cádiz · ES</span></td>
-                <td class="km">76</td>
-                <td>100</td>
+                <td><span class="mn">Ipswich</span><span class="mt">nr. Cambridge · GB</span></td>
+                <td class="km">87</td>
+                <td>77</td>
               </tr>
             </tbody>
           </table>
@@ -969,17 +865,17 @@ body {
 
       <div class="res-box">
         <div class="stag">§6 &nbsp;·&nbsp; Research Context</div>
-        <h4>Composition + Isolation + Country Normalization</h4>
-        <p class="context-p">Oxford Economics, CBRE, and Colliers International cover the largest 50–100 metros by GDP and population. This list does the opposite: it surfaces regional anchor towns — places that serve a wide catchment independently of any major metro. v0.4 scoring balances three signals: geographic <em>isolation</em> (how far a market sits from competing retail hubs), tier <em>composition</em> (which anchor categories co-locate), and per-country normalization (ensures the best site in a smaller market — Spain, Poland, Greece — competes fairly with the best site in a larger market — Germany, France). Nordics (DK+SE+NO+FI) are treated as one group.</p>
+        <h4>Composition + Isolation: A Dual-Signal Index</h4>
+        <p class="context-p">Oxford Economics, CBRE, and Colliers International cover the largest 50–100 metros by GDP and population. This list does the opposite: it surfaces regional anchor towns — places that serve a wide catchment independently of any major metro. v0.3 scoring balances two signals: geographic <em>isolation</em> (how far a market sits from competing retail hubs) and tier <em>composition</em> (which anchor categories co-locate). Markets score well on either signal; the strongest markets score on both.</p>
         <ul>
-          <li><strong>Multi-country top ranking:</strong> Country normalization places one market from each country at index 100. London ON, Lake Charles LA, and Boca del Río MX each achieve #1 globally within their country — and compete globally on those terms. Esbjerg DK leads EU at #1.</li>
-          <li><strong>Proforma coverage (3×):</strong> US 515 markets (need 132 ✓), GB 86 (need 66 ✓), ES 47 (need 66 — gap 19), IT 43 (gap 23), PL 37 (gap 29), CA 56 (gap 10), MX 29 (gap 37), NORDICs 7 (gap 59), GR 0 (ingest pending). Additional chain ingests — AB Vassilopoulos, Kotsovolos, Leroy Merlin GR — will expand GR pool.</li>
+          <li><strong>Discovery hubs lead:</strong> Fort Wayne IN #1 (isolated 107 km, multi-T1) and Esbjerg DK #1 EU (isolated 92 km) hold top positions — genuinely underserved regional catchments.</li>
+          <li><strong>Established suburbs now score fairly:</strong> Sherwood Park AB enters at #57 — a T1 market 9 km from Edmonton that was suppressed by the prior isolation-only formula. Mesa AZ #4, Plano TX #6, Mississauga ON #7.</li>
           <li><strong>No fixed distance band:</strong> A market's class is set by <em>anchor_d</em> — distance to the nearest external T1 hub — derived from co-location data, not a curated metro radius.</li>
           <li><strong>T1.b correction:</strong> Compact clusters (tight, ≥3 members) that the taxonomy build mis-classifies as T2 are promoted to T1 at score time — closing a known build gap without a full rebuild.</li>
           <li><strong>Companion manuscript in preparation</strong> for intended submission to <em>Journal of Economic Geography</em> (Oxford University Press) — gis.woodfinegroup.com/research/</li>
         </ul>
         <div class="cites">
-          <div>Woodfine, J. M., Woodfine, P. M., &amp; Woodfine, M. (2026). <em>Top 600 Regional Markets: North America and Europe.</em> Working Data v0.3. Woodfine Management Corp., New York, New York. projects.woodfinegroup.com</div>
+          <div>Woodfine, J. M., Woodfine, P. M., &amp; Woodfine, M. (2026). <em>Top 400 Regional Markets: North America and Europe.</em> Working Data v0.3. Woodfine Management Corp., New York, New York. projects.woodfinegroup.com</div>
           <div style="margin-top:4pt;">Woodfine, J. M., Woodfine, P. M., &amp; Woodfine, M. (2026). <em>Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity.</em> Working Paper v0.5. Woodfine Management Corp., New York, New York.</div>
         </div>
       </div>
@@ -997,17 +893,6 @@ body {
   </div><!-- /doc-main -->
 
 </div><!-- /page-wrapper -->
-
-<nav class="research-prevnext" aria-label="Paper navigation">
-  <a class="rpn-link rpn-prev" href="/research-colocation.html">
-    <span class="rpn-dir">← Previous</span>
-    <span class="rpn-title">Co-location</span>
-  </a>
-  <a class="rpn-link rpn-next" href="/research-aec.html">
-    <span class="rpn-dir">Next →</span>
-    <span class="rpn-title">AEC</span>
-  </a>
-</nav>
 
 <div class="page-footer">
   Woodfine Management Corp. &nbsp;·&nbsp; New York, New York &nbsp;·&nbsp;

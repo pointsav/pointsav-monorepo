@@ -47,7 +47,7 @@ use anyhow::Context;
 use orchestration_slm::yoyo_proxy::YoyoEndpoints;
 use orchestration_slm::{
     resolve_from_env, ChassisFlowGate, CircuitRegistry, FleetRegistry, LicenseStatus,
-    MembershipKey, MeteringLedger, YoyoProxyClient,
+    MeteringLedger, YoyoProxyClient,
 };
 use tracing::{info, warn};
 
@@ -104,8 +104,6 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    let membership = MembershipKey::generate().context("failed to generate membership keypair")?;
-
     let state = Arc::new(http::AppState {
         fleet: FleetRegistry::new(),
         proxy: Arc::new(YoyoProxyClient::new(endpoints)),
@@ -113,7 +111,6 @@ async fn main() -> anyhow::Result<()> {
         circuits: Arc::new(CircuitRegistry::new(YOYO_LABELS.iter().copied())),
         gates: Arc::new(ChassisFlowGate::new(YOYO_LABELS.iter().copied())),
         license: Arc::new(license),
-        membership: Arc::new(membership),
     });
 
     info!(

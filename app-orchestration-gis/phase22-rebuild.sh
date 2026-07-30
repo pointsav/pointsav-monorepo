@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: LicenseRef-PointSav-ARR
-# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
-#
-# This file is proprietary material of Woodfine Capital Projects Inc.
-# See the LICENSE file in this repository for the full terms.
-# Unauthorized use, reproduction, or distribution is prohibited.
-
-
 # phase22-rebuild.sh — Phase 22 taxonomy revision: Change A + B3 tier rebalancing
 #
 # Change A: T2 now requires has_hypermarket AND has_hardware (not just has_hyper + n≥2).

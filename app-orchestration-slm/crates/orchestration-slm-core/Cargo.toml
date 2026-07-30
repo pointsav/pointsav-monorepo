@@ -1,11 +1,3 @@
-# SPDX-License-Identifier: LicenseRef-PointSav-ARR
-# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
-#
-# This file is proprietary material of Woodfine Capital Projects Inc.
-# See the LICENSE file in this repository for the full terms.
-# Unauthorized use, reproduction, or distribution is prohibited.
-
-
 [package]
 name = "orchestration-slm-core"
 version = "0.1.0"
@@ -16,6 +8,5 @@ description = "Shared types for the app-orchestration-slm Yo-Yo broker chassis"
 
 [dependencies]
 serde = { workspace = true }
-serde_json = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
