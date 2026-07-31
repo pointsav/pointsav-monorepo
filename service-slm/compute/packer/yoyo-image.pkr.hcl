@@ -8,8 +8,9 @@ packer {
 }
 
 variable "project_id" {
-  type    = string
-  default = "woodfine-node-gcp-free"
+  # No default — supply explicitly via -var (2026-07-30 GitHub-exposure
+  # remediation: this previously defaulted to a real project ID).
+  type = string
 }
 
 variable "zone" {

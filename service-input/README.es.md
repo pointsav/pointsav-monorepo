@@ -2,40 +2,38 @@
 
 [ 🇬🇧 Read this document in English ](./README.md)
 
-Servicio de ingesta de límites del Ring 1 para la entrada genérica
-de documentos. Acepta archivos de formatos compatibles (PDF, DOCX,
-XLSX, Markdown) en el límite de cada inquilino, los normaliza y
-escribe la carga útil analizada a través de `service-fs` en el
-Libro Mayor Inmutable WORM (Write-Once-Read-Many). Los consumidores
-de Ring 2 (`service-extraction`, `service-content`,
-`service-search`) leen del libro mayor; nunca tocan el documento
-original.
+Backend de Input Machine para el despliegue `cluster-totebox-jennifer-2`.
+Migra en lotes archivos heredados del despliegue jennifer-1 a través
+de la canalización de ingesta actual hacia `service-fs` (o
+directamente a un directorio CORPUS para extracción), y evalúa la
+salida de extracción contra datos de referencia curados manualmente
+para monitorear la calibración de la canalización con el tiempo.
+Activo en el puerto 9106.
 
-## Posición en la arquitectura
+## Nota histórica
 
-- **Ring:** 1 (ingesta de límites, por inquilino) — ver
-  `~/Foundry/conventions/three-ring-architecture.md`.
-- **Escribe a:** `service-fs` (libro mayor WORM).
-- **Leído por:** `service-extraction` (Ring 2) vía protocolo de
-  cable MCP.
-- **Multi-inquilino:** un proceso por `moduleId`.
+Un diseño anterior de este crate — un servicio genérico de ingesta de
+límites del Ring 1 para análisis de documentos multi-formato
+(PDF/DOCX/XLSX/Markdown) — fue completamente construido y probado
+antes de la fusión de este archivo del 2026-06-20, pero esa
+implementación nunca se incorporó. El propósito real y actual de este
+crate ha estado en desarrollo continuo desde el 2026-06-14 y no está
+relacionado con ese diseño anterior.
 
-## Reglas estrictas
+## Endpoints
 
-- **ADR-07: cero IA en Ring 1.** El análisis es determinista; sin
-  inferencia de LLM, sin modelos de incrustación, sin normalización
-  asistida por IA.
-- **WORM vía `service-fs`.** Este crate nunca persiste directamente
-  a disco; cada escritura pasa por la interfaz MCP de `service-fs`
-  para que la invariante de sólo-añadir se aplique en un único
-  límite.
+| Endpoint | Método | Propósito |
+|---|---|---|
+| `/healthz` | GET | Disponibilidad + conteos de cola/completados |
+| `/v1/status` | GET | Progreso de migración fase-1/fase-2 |
+| `/v1/append` | POST | Reenvía una carga útil preformada a `service-fs` |
+| `/v1/migrate` | POST | Migra en lotes archivos heredados de jennifer-1; reanudable |
+| `/v1/eval/:stem` | GET | Evalúa la salida de extracción de un documento contra datos de referencia |
+| `/v1/calibration-report` | GET | Puntuación de calibración agregada en todos los stems |
 
 ## Estado
 
-Reserved-folder. Creado el 2026-04-25 por Task Claude en el
-cluster `project-data`. Sin código aún — la siguiente sesión
-activará el proyecto según `~/Foundry/CLAUDE.md` §9 y añadirá el
-esqueleto inicial del despachador de analizadores.
+Activo. En funcionamiento en el puerto 9106.
 
 ## Licencia
 

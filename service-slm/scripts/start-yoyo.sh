@@ -43,7 +43,7 @@
 #   SLM_YOYO_GCP_INSTANCE=yoyo-tier-b-2 ./scripts/start-yoyo.sh
 set -uo pipefail
 
-PROJECT="${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}"
+PROJECT="${SLM_YOYO_GCP_PROJECT:?SLM_YOYO_GCP_PROJECT must be set (2026-07-30 GitHub-exposure remediation - no real-value default)}"
 PRIMARY_ZONE="${SLM_YOYO_GCP_ZONE:-us-central1-a}"
 INSTANCE="${SLM_YOYO_GCP_INSTANCE:-yoyo-batch}"
 DOORMAN_ENV="${DOORMAN_ENV_FILE:-/etc/local-doorman/local-doorman.env}"
@@ -198,29 +198,46 @@ provision_vm_in_zone() {
     local zone="$1"
     echo "  [PROVISION] Creating ${INSTANCE} in ${PROJECT}/${zone}..."
 
-    # Create weights disk — restore from snapshot if one exists, otherwise blank.
-    # 256GB pd-balanced fits the first-boot bootstrap peak (safetensors 64GB + intermediate
-    # fp16 GGUF 64GB during convert step, before cleanup) PLUS steady-state (base 20GB +
-    # LoRA adapters 3GB + tokenizer + checkpoints + headroom). pd-balanced is much cheaper
-    # than pd-ssd; LoRA I/O is fine on balanced. ~$26/mo always-attached.
-    echo "  [PROVISION] Creating weights disk ${WEIGHTS_DISK} (256GB pd-balanced) in ${zone}..."
-    local disk_create_args=(
-        "${WEIGHTS_DISK}"
-        --project="${PROJECT}"
-        --zone="${zone}"
-        --type=pd-balanced
-        --labels=role=yoyo-weights
-    )
-    if [[ -n "${WEIGHTS_SNAPSHOT}" ]]; then
-        echo "  [PROVISION] Restoring from snapshot ${WEIGHTS_SNAPSHOT} (weights preserved)."
-        disk_create_args+=(--source-snapshot="${WEIGHTS_SNAPSHOT}")
+    # Disk reuse fix (2026-07-16): this function used to call `gcloud compute disks
+    # create` unconditionally on every invocation — restoring from a snapshot if one
+    # was configured, otherwise a blank 256GB disk that forces vllm-weights-prep.service
+    # to re-bootstrap the full weights set from GCS/AllenAI. That reproduces the exact
+    # costly pattern the operator flagged from memory (repeated weights re-download
+    # from VM cycling) every time this Mode-2 path fires, even when a perfectly good
+    # weights disk from a prior run already exists under the same name. Check first;
+    # only create if genuinely absent. `disk_freshly_created` tracks which case we're
+    # in so the failure-cleanup path below never deletes a disk we didn't create this
+    # run — reused disks must survive a failed provision attempt.
+    local disk_freshly_created=false
+    if gcloud compute disks describe "${WEIGHTS_DISK}" \
+            --project="${PROJECT}" --zone="${zone}" >/dev/null 2>&1; then
+        echo "  [PROVISION] Weights disk ${WEIGHTS_DISK} already exists in ${zone} — reusing it (no create, no weights re-download)."
     else
-        echo "  [PROVISION] No snapshot set — empty disk; vllm-weights-prep.service will bootstrap from GCS or AllenAI."
-        disk_create_args+=(--size=256GB)
-    fi
-    if ! gcloud compute disks create "${disk_create_args[@]}" 2>&1; then
-        echo "  [PROVISION] Disk creation failed in ${zone} — trying next zone."
-        return 1
+        # Create weights disk — restore from snapshot if one exists, otherwise blank.
+        # 256GB pd-balanced fits the first-boot bootstrap peak (safetensors 64GB + intermediate
+        # fp16 GGUF 64GB during convert step, before cleanup) PLUS steady-state (base 20GB +
+        # LoRA adapters 3GB + tokenizer + checkpoints + headroom). pd-balanced is much cheaper
+        # than pd-ssd; LoRA I/O is fine on balanced. ~$26/mo always-attached.
+        echo "  [PROVISION] Creating weights disk ${WEIGHTS_DISK} (256GB pd-balanced) in ${zone}..."
+        local disk_create_args=(
+            "${WEIGHTS_DISK}"
+            --project="${PROJECT}"
+            --zone="${zone}"
+            --type=pd-balanced
+            --labels=role=yoyo-weights
+        )
+        if [[ -n "${WEIGHTS_SNAPSHOT}" ]]; then
+            echo "  [PROVISION] Restoring from snapshot ${WEIGHTS_SNAPSHOT} (weights preserved)."
+            disk_create_args+=(--source-snapshot="${WEIGHTS_SNAPSHOT}")
+        else
+            echo "  [PROVISION] No snapshot set — empty disk; vllm-weights-prep.service will bootstrap from GCS or AllenAI."
+            disk_create_args+=(--size=256GB)
+        fi
+        if ! gcloud compute disks create "${disk_create_args[@]}" 2>&1; then
+            echo "  [PROVISION] Disk creation failed in ${zone} — trying next zone."
+            return 1
+        fi
+        disk_freshly_created=true
     fi
 
     # Build metadata arg — bearer-token (nginx auth) + weights-gcs-bucket
@@ -260,12 +277,21 @@ provision_vm_in_zone() {
 
     if [[ $? -ne 0 ]]; then
         if is_stockout "${err_output}"; then
-            echo "  [PROVISION] Stockout in ${zone} — deleting disk, trying next."
-            gcloud compute disks delete "${WEIGHTS_DISK}" --project="${PROJECT}" --zone="${zone}" --quiet 2>/dev/null || true
+            echo "  [PROVISION] Stockout in ${zone}."
+            if [[ "${disk_freshly_created}" == "true" ]]; then
+                echo "  [PROVISION] Deleting the disk this run created, trying next zone."
+                gcloud compute disks delete "${WEIGHTS_DISK}" --project="${PROJECT}" --zone="${zone}" --quiet 2>/dev/null || true
+            else
+                echo "  [PROVISION] Disk was reused from a prior run — leaving it intact, trying next zone."
+            fi
             return 1
         else
             echo "  [PROVISION] VM creation failed in ${zone}: ${err_output}"
-            gcloud compute disks delete "${WEIGHTS_DISK}" --project="${PROJECT}" --zone="${zone}" --quiet 2>/dev/null || true
+            if [[ "${disk_freshly_created}" == "true" ]]; then
+                gcloud compute disks delete "${WEIGHTS_DISK}" --project="${PROJECT}" --zone="${zone}" --quiet 2>/dev/null || true
+            else
+                echo "  [PROVISION] Disk was reused from a prior run — leaving it intact."
+            fi
             return 1
         fi
     fi

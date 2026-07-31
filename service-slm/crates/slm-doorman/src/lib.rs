@@ -67,7 +67,7 @@ pub use ledger::{
 pub use priority_queue::{Priority, PriorityQueue, QueueDepth};
 pub use promotion_ledger::{PromotionLedger, PromotionOutcome, Stage, StatRow};
 pub use redact::sanitize;
-pub use router::{Doorman, DoormanConfig, TierBInfo};
+pub use router::{Doorman, DoormanConfig, LocalBackend, TierBInfo};
 pub use tier::{
     BearerTokenProvider, ExternalAllowlist, ExternalTierClient, ExternalTierConfig,
     LocalTierClient, PricingConfig, StaticBearer, TierCPricing, TierCProvider, YoYoTierClient,

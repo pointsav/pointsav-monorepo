@@ -35,4 +35,7 @@ pub enum ChassisError {
 
     #[error("license verification failed: {0}")]
     License(String),
+
+    #[error("allocation ledger I/O error: {0}")]
+    AllocationLedgerIo(String),
 }

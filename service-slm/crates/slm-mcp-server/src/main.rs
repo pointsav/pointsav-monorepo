@@ -265,7 +265,11 @@ fn mailbox_db_insert(
     let conn = rusqlite::Connection::open(db_path)?;
     conn.execute_batch(MAILBOX_DB_SCHEMA)?;
     let now = chrono::Utc::now().to_rfc3339();
-    let msg_id_opt: Option<&str> = if msg_id.is_empty() { None } else { Some(msg_id) };
+    let msg_id_opt: Option<&str> = if msg_id.is_empty() {
+        None
+    } else {
+        Some(msg_id)
+    };
     conn.execute(
         "INSERT OR IGNORE INTO messages \
          (msg_id, archive, mailbox, from_field, to_field, re, priority, status, created, body, indexed_at) \
@@ -805,9 +809,17 @@ impl FoundryServer {
                             let created_c = chrono::Utc::now().to_rfc3339();
                             match tokio::task::spawn_blocking(move || {
                                 mailbox_db_insert(
-                                    &db_path, &archive_name, "inbox",
-                                    &msg_id_c, "", &to_c, &re_c,
-                                    &priority_c, "pending", &created_c, &body_c,
+                                    &db_path,
+                                    &archive_name,
+                                    "inbox",
+                                    &msg_id_c,
+                                    "",
+                                    &to_c,
+                                    &re_c,
+                                    &priority_c,
+                                    "pending",
+                                    &created_c,
+                                    &body_c,
                                 )
                             })
                             .await
@@ -818,7 +830,9 @@ impl FoundryServer {
                                     false
                                 }
                                 Err(e) => {
-                                    eprintln!("[WARN] mailbox_db_insert task panicked for {msg_id}: {e}");
+                                    eprintln!(
+                                        "[WARN] mailbox_db_insert task panicked for {msg_id}: {e}"
+                                    );
                                     false
                                 }
                             }
@@ -1091,8 +1105,8 @@ impl FoundryServer {
                 let _ = tokio::task::spawn_blocking(move || {
                     for row in &rows {
                         let _ = mailbox_db_insert(
-                            &db_path, &row[1], &row[2], &row[0], &row[3],
-                            &row[4], &row[5], &row[6], &row[7], &row[8], "",
+                            &db_path, &row[1], &row[2], &row[0], &row[3], &row[4], &row[5],
+                            &row[6], &row[7], &row[8], "",
                         );
                     }
                 })

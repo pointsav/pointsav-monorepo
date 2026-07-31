@@ -34,8 +34,8 @@ use base64::Engine as _;
 use serde_json::json;
 use slm_doorman::tier::{TierCPricing, TierCProvider};
 use slm_doorman::{
-    AuditLedger, BriefCache, Doorman, DoormanConfig, DoormanError, ExpressLane,
-    VerdictDispatcher, VerdictVerifier, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+    AuditLedger, BriefCache, Doorman, DoormanConfig, DoormanError, ExpressLane, VerdictDispatcher,
+    VerdictVerifier, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
 };
 use slm_doorman_server::http::{
     router, AppState, AUDIT_CAPTURE_MAX_PAYLOAD_BYTES, AUDIT_PROXY_MAX_REQUEST_BYTES,
@@ -406,7 +406,7 @@ async fn error_verify_signature_returns_403() {
 // ── 2d. ExternalNotAllowlisted → 403 FORBIDDEN ────────────────────────────
 //
 // The HTTP handler sets tier_hint = None and the router only selects
-// External when tier_hint = Some(Tier::External). Therefore
+// External when tier_hint = Some(InferenceRoute::External). Therefore
 // ExternalNotAllowlisted cannot be triggered through the normal
 // POST /v1/chat/completions path. Instead we verify the
 // From<DoormanError> status mapping by constructing the ApiError
@@ -881,7 +881,9 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
         temp_ledger(),
     );
 
-    use slm_core::{ChatMessage, Complexity, GrammarConstraint, ModuleId, RequestId, Tier};
+    use slm_core::{
+        ChatMessage, Complexity, GrammarConstraint, InferenceRoute, ModuleId, RequestId,
+    };
     use std::str::FromStr;
 
     let req = slm_core::ComputeRequest {
@@ -893,7 +895,7 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
             content: "ping".to_string(),
         }],
         complexity: Complexity::High,
-        tier_hint: Some(Tier::Yoyo),
+        tier_hint: Some(InferenceRoute::Yoyo),
         stream: false,
         max_tokens: None,
         temperature: None,
@@ -1209,7 +1211,8 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
         Arc::new(StaticBearer::new("test-token")),
     );
     // health_up starts false (pessimistic init); simulate a passed health probe.
-    yoyo.health_up.store(true, std::sync::atomic::Ordering::Relaxed);
+    yoyo.health_up
+        .store(true, std::sync::atomic::Ordering::Relaxed);
     let doorman = Doorman::new(
         DoormanConfig {
             local: None,
@@ -1228,7 +1231,9 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
         temp_ledger(),
     );
 
-    use slm_core::{ChatMessage, Complexity, GrammarConstraint, ModuleId, RequestId, Tier};
+    use slm_core::{
+        ChatMessage, Complexity, GrammarConstraint, InferenceRoute, ModuleId, RequestId,
+    };
     use std::str::FromStr;
 
     let req = slm_core::ComputeRequest {
@@ -1240,7 +1245,7 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
             content: "ping".to_string(),
         }],
         complexity: Complexity::High,
-        tier_hint: Some(Tier::Yoyo),
+        tier_hint: Some(InferenceRoute::Yoyo),
         stream: false,
         max_tokens: None,
         temperature: None,
@@ -2727,8 +2732,15 @@ async fn graph_query_scopes_to_caller_module_id() {
     let resp = app.oneshot(req).await.expect("oneshot");
     assert_eq!(resp.status(), StatusCode::OK);
 
-    let received = mock_sc.received_requests().await.expect("request recording enabled");
-    assert_eq!(received.len(), 1, "expected exactly one upstream query call, no cross-tenant merge");
+    let received = mock_sc
+        .received_requests()
+        .await
+        .expect("request recording enabled");
+    assert_eq!(
+        received.len(),
+        1,
+        "expected exactly one upstream query call, no cross-tenant merge"
+    );
     let queried_module_ids: Vec<String> = received
         .iter()
         .map(|r| {
@@ -2783,8 +2795,15 @@ async fn graph_mutate_enforces_caller_module_id() {
     let resp = app.oneshot(req).await.expect("oneshot");
     assert_eq!(resp.status(), StatusCode::OK);
 
-    let received = mock_sc.received_requests().await.expect("request recording enabled");
-    assert_eq!(received.len(), 1, "expected exactly one forwarded mutate call");
+    let received = mock_sc
+        .received_requests()
+        .await
+        .expect("request recording enabled");
+    assert_eq!(
+        received.len(),
+        1,
+        "expected exactly one forwarded mutate call"
+    );
     let forwarded_body: serde_json::Value =
         serde_json::from_slice(&received[0].body).expect("forwarded body must be valid JSON");
     assert_eq!(
@@ -3027,5 +3046,273 @@ async fn anthropic_messages_streaming_returns_sse_with_all_six_events() {
     assert!(
         body_str.contains("streamed response"),
         "SSE body must contain the response text"
+    );
+}
+
+// ===========================================================================
+// Previously-untested routes (2026-07-18 test-coverage pass, service-slm/
+// service-content readiness for project-editorial's extraction). Basic
+// contract tests only — status code, response shape — not deep behavioral
+// tests, since these routes are outside project-editorial's actual
+// integration surface (they only call POST /v1/graph/mutate via the Doorman).
+// ===========================================================================
+
+#[tokio::test]
+async fn anthropic_count_tokens_estimates_from_body_length() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+    let body = json!({"model": "claude-haiku-4-5-20251001", "messages": []});
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/messages/count_tokens")
+        .header("content-type", "application/json")
+        .body(Body::from(body.to_string()))
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn anthropic_models_lists_the_two_tier_routed_ids() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+    let req = Request::builder()
+        .uri("/v1/models")
+        .body(Body::empty())
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+    let bytes = axum::body::to_bytes(resp.into_body(), 1024 * 1024)
+        .await
+        .unwrap();
+    let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    let ids: Vec<&str> = body["data"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|m| m["id"].as_str().unwrap())
+        .collect();
+    assert!(ids.contains(&"claude-haiku-4-5-20251001"));
+    assert!(ids.contains(&"claude-sonnet-4-6"));
+}
+
+#[tokio::test]
+async fn extract_no_tiers_configured_returns_200_deferred() {
+    // Documented contract: /v1/extract is "Always HTTP 200. When deferred:
+    // true, entities is empty and defer_reason describes why" — not an
+    // error status, even with zero tiers available.
+    let state = app_state_no_tiers();
+    let app = router(state);
+    let body = json!({
+        "text": "Some prose to extract entities from.",
+        "schema": {"type": "array", "items": {"type": "object"}},
+        "module_id": "pointsav"
+    });
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/extract")
+        .header("content-type", "application/json")
+        .body(Body::from(body.to_string()))
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+    let bytes = axum::body::to_bytes(resp.into_body(), 1024 * 1024)
+        .await
+        .unwrap();
+    let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(body["deferred"], json!(true));
+    assert_eq!(body["entities"], json!([]));
+}
+
+#[tokio::test]
+async fn extract_invalid_module_id_returns_400() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+    let body = json!({
+        "text": "x",
+        "schema": {},
+        "module_id": "Invalid Module Id With Spaces"
+    });
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/extract")
+        .header("content-type", "application/json")
+        .body(Body::from(body.to_string()))
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+async fn extract_oversized_body_returns_400() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+    let oversized_text = "x".repeat(300 * 1024); // > 256 KiB EXTRACTION_MAX_REQUEST_BYTES
+    let body = json!({"text": oversized_text, "schema": {}, "module_id": "pointsav"});
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/extract")
+        .header("content-type", "application/json")
+        .body(Body::from(body.to_string()))
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+async fn batch_extract_no_tiers_configured_returns_200_deferred_per_item() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+    let body = json!({
+        "module_id": "pointsav",
+        "items": [
+            {"text": "First doc.", "schema": {}},
+            {"text": "Second doc.", "schema": {}}
+        ]
+    });
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/batch/extract")
+        .header("content-type", "application/json")
+        .body(Body::from(body.to_string()))
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+    let bytes = axum::body::to_bytes(resp.into_body(), 1024 * 1024)
+        .await
+        .unwrap();
+    let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    // Real shape: {"items": [...], "total": N, "extraction_ok_count": N, "deferred_count": N}.
+    let items = body["items"].as_array().expect("expected an items array");
+    assert_eq!(items.len(), 2);
+    assert!(items.iter().all(|i| i["deferred"] == json!(true)));
+    assert_eq!(body["total"], json!(2));
+    assert_eq!(body["deferred_count"], json!(2));
+}
+
+#[tokio::test]
+async fn batch_extract_empty_items_returns_400() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+    let body = json!({"module_id": "pointsav", "items": []});
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/batch/extract")
+        .header("content-type", "application/json")
+        .body(Body::from(body.to_string()))
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+async fn batch_extract_too_many_items_returns_400() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+    let items: Vec<_> = (0..11)
+        .map(|_| json!({"text": "x", "schema": {}}))
+        .collect();
+    let body = json!({"module_id": "pointsav", "items": items});
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/batch/extract")
+        .header("content-type", "application/json")
+        .body(Body::from(body.to_string()))
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+async fn status_queue_returns_zero_counts_for_fresh_queue() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+    let req = Request::builder()
+        .uri("/v1/status/queue")
+        .body(Body::empty())
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+    let bytes = axum::body::to_bytes(resp.into_body(), 1024 * 1024)
+        .await
+        .unwrap();
+    let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(body["pending"], json!(0));
+    assert_eq!(body["poison"], json!(0));
+}
+
+#[tokio::test]
+async fn status_yoyo_reports_no_yoyo_when_unconfigured() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+    let req = Request::builder()
+        .uri("/v1/status/yoyo")
+        .body(Body::empty())
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+    let bytes = axum::body::to_bytes(resp.into_body(), 1024 * 1024)
+        .await
+        .unwrap();
+    let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(body["has_yoyo"], json!(false));
+}
+
+#[tokio::test]
+async fn status_flow_reports_no_tiers_available() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+    let req = Request::builder()
+        .uri("/v1/status/flow")
+        .body(Body::empty())
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+    let bytes = axum::body::to_bytes(resp.into_body(), 1024 * 1024)
+        .await
+        .unwrap();
+    let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(body["ai_available"], json!(false));
+}
+
+#[tokio::test]
+async fn status_cost_returns_zeros_when_no_ledger_for_today() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+    let req = Request::builder()
+        .uri("/v1/status/cost")
+        .body(Body::empty())
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+    let bytes = axum::body::to_bytes(resp.into_body(), 1024 * 1024)
+        .await
+        .unwrap();
+    let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(body["request_count"], json!(0));
+}
+
+#[tokio::test]
+async fn status_tier_a_returns_200_with_reachable_field() {
+    // Deliberately does NOT assert a specific `reachable` value — this route
+    // hits the real 127.0.0.1:8080, which may or may not have a live
+    // llama-server depending on the host this test runs on (it does on this
+    // production VM). The contract under test is "always 200, never errors
+    // out, always reports a reachable boolean" — not a specific host state.
+    let state = app_state_no_tiers();
+    let app = router(state);
+    let req = Request::builder()
+        .uri("/v1/status/tier-a")
+        .body(Body::empty())
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+    let bytes = axum::body::to_bytes(resp.into_body(), 1024 * 1024)
+        .await
+        .unwrap();
+    let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert!(
+        body["reachable"].is_boolean(),
+        "expected a reachable: bool field, got: {body}"
     );
 }

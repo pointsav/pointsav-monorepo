@@ -14,23 +14,44 @@
 # This is the canonical template every archive's .git/hooks/post-commit is copied from —
 # fixing bin/capture-edit.py alone left this file (and any newly-provisioned archive)
 # still vulnerable.
-set -euo pipefail
+#
+# 2026-07-30 (Command broadcast, originally fixed 2026-07-15 in the global hook):
+# diff and payload are now passed via temp file + stdin instead of an environment
+# variable / argv element — a large diff (e.g. a 16k-line commit) could exceed the
+# OS's single-string env/argv length limit, failing with "Argument list too long"
+# (non-fatal — telemetry only — but the capture was silently lost). This template
+# had not picked up that fix until now.
 
 DOORMAN_ENDPOINT="${SLM_DOORMAN_ENDPOINT:-http://127.0.0.1:9080}"
+TOGGLE_FILE="${FOUNDRY_ROOT:-/srv/foundry}/identity/.toggle"
 
-DIFF=$(git diff HEAD~1 HEAD --unified=3 2>/dev/null || git show HEAD --unified=3)
+DIFF_FILE=$(mktemp)
+git diff HEAD~1 HEAD --unified=3 > "$DIFF_FILE" 2>/dev/null || git show HEAD --unified=3 > "$DIFF_FILE" 2>/dev/null
 
-if [ -z "$DIFF" ]; then
+if [ ! -s "$DIFF_FILE" ]; then
+    rm -f "$DIFF_FILE"
     exit 0
 fi
 
 COMMIT_MSG=$(git log -1 --pretty=%s 2>/dev/null || echo "git-commit")
 
-PAYLOAD=$(HOOK_DIFF="$DIFF" python3 - "$COMMIT_MSG" <<'PYEOF'
-import json, sys, uuid, datetime, os, re
+# Read identity from toggle file (0=jwoodfine, 1=pwoodfine) — restores the
+# same identity-detection this template already had before this fix, since
+# senior_identity was previously hardcoded to "pwoodfine" below.
+if [ -f "$TOGGLE_FILE" ]; then
+    TOGGLE=$(cat "$TOGGLE_FILE" 2>/dev/null || echo "0")
+    [ "$TOGGLE" = "1" ] && IDENTITY="pwoodfine" || IDENTITY="jwoodfine"
+else
+    IDENTITY="jwoodfine"
+fi
 
-diff_text = os.environ.get('HOOK_DIFF', '')
-commit_msg = sys.argv[1] if len(sys.argv) > 1 else "git-commit"
+PY_SCRIPT=$(mktemp)
+cat > "$PY_SCRIPT" <<'PYEOF'
+import json, sys, uuid, datetime, re
+
+identity = sys.argv[1] if len(sys.argv) > 1 else "jwoodfine"
+commit_msg = sys.argv[2] if len(sys.argv) > 2 else "git-commit"
+diff_text = sys.stdin.read()
 brief_id = uuid.uuid4().hex.upper()
 now = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
@@ -83,7 +104,7 @@ data = {
         "brief_id": brief_id,
         "created": now,
         "senior_role": "master",
-        "senior_identity": "pwoodfine",
+        "senior_identity": identity,
         "task_type": "shadow-capture",
         "scope": {"files": []},
         "acceptance_test": "",
@@ -93,12 +114,17 @@ data = {
     "actual_diff": diff_text,
     "truncated": truncated
 }
-print(json.dumps(data))
+json.dump(data, sys.stdout)
 PYEOF
-)
 
-curl -s -X POST "${DOORMAN_ENDPOINT}/v1/shadow" \
-    -H "Content-Type: application/json" \
-    -H "X-Foundry-Module-ID: git-hook" \
-    -d "$PAYLOAD" \
-    > /dev/null 2>&1 &
+(
+    PAYLOAD_FILE=$(mktemp)
+    python3 "$PY_SCRIPT" "$IDENTITY" "$COMMIT_MSG" < "$DIFF_FILE" > "$PAYLOAD_FILE" 2>/dev/null
+    curl -s --max-time 5 -X POST "${DOORMAN_ENDPOINT}/v1/shadow" \
+        -H "Content-Type: application/json" \
+        -H "X-Foundry-Module-ID: git-hook" \
+        --data-binary "@${PAYLOAD_FILE}" \
+        > /dev/null 2>&1
+    rm -f "$PAYLOAD_FILE" "$DIFF_FILE" "$PY_SCRIPT"
+) &
+disown

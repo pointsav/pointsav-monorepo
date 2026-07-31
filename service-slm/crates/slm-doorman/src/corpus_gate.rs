@@ -63,7 +63,7 @@ const TEMPLATE_ECHO_PREFIXES: &[&str] = &[
     "<insert diff",
     "auto-reject: olmo-attempt-below-senior-standard",
     "auto-reject:",
-    "<unified diff:",  // colon = OLMo stub; real wrapped diff omits the colon
+    "<unified diff:", // colon = OLMo stub; real wrapped diff omits the colon
 ];
 
 /// If the rejected side starts with `<unified diff` (without colon) but ALSO
@@ -103,10 +103,7 @@ const BCSC_FORWARD_LOOKING_MARKERS: &[&str] = &[
 /// flags the tuple. Co-evolution with `POINTSAV-Project-Instructions.md`
 /// is project-editorial scope — when ratified, this list is replaced by
 /// the canonical version.
-const BCSC_TRIGGER_TERMS: &[&str] = &[
-    "Sovereign Data Foundation",
-    "the Foundation",
-];
+const BCSC_TRIGGER_TERMS: &[&str] = &["Sovereign Data Foundation", "the Foundation"];
 
 /// Placeholder Do-Not-Use term list (POINTSAV-Project-Instructions.md §5).
 /// Match is case-insensitive. Project-editorial ratification of the
@@ -117,17 +114,17 @@ const BCSC_TRIGGER_TERMS: &[&str] = &[
 /// When editorial publishes the canonical YAML/Lark artifact, swap this
 /// constant for a runtime-loaded set keyed by version hash.
 const DO_NOT_USE_TERMS: &[&str] = &[
-    "sovereign telemetry",          // → "Verified System Telemetry"
-    "cognitive forge",              // retired term per cleanup-log
+    "sovereign telemetry", // → "Verified System Telemetry"
+    "cognitive forge",     // retired term per cleanup-log
     "cognitive-forge",
-    "ai-first",                     // marketing vocab, Bloomberg violation
-    "ai-powered",                   // marketing vocab
-    "ai-driven",                    // marketing vocab
-    "next-generation ai",           // marketing vocab
-    "cutting-edge ai",              // marketing vocab
-    "revolutionary",                // marketing vocab
-    "game-changing",                // marketing vocab
-    "groundbreaking ai",            // marketing vocab
+    "ai-first",           // marketing vocab, Bloomberg violation
+    "ai-powered",         // marketing vocab
+    "ai-driven",          // marketing vocab
+    "next-generation ai", // marketing vocab
+    "cutting-edge ai",    // marketing vocab
+    "revolutionary",      // marketing vocab
+    "game-changing",      // marketing vocab
+    "groundbreaking ai",  // marketing vocab
 ];
 
 /// Outcome of the corpus-gate check for a single tuple about to be written.
@@ -156,27 +153,51 @@ pub struct CorpusGateOutcome {
 /// so call sites surface a uniform error to the drain worker.
 #[derive(Clone, Debug)]
 pub enum CorpusGateReject {
-    DuplicateTuple { brief_hash: String, diff_hash: String },
-    DiffTooLarge { len: usize, max: usize },
-    DoNotUseTerm { term: String, where_found: WhereFound },
+    DuplicateTuple {
+        brief_hash: String,
+        diff_hash: String,
+    },
+    DiffTooLarge {
+        len: usize,
+        max: usize,
+    },
+    DoNotUseTerm {
+        term: String,
+        where_found: WhereFound,
+    },
     /// Rejected side is shorter than MIN_REJECTED_CHARS — likely a template
     /// stub or empty attempt; would teach the model "longer = better".
-    RejectedTooShort { len: usize, min: usize },
+    RejectedTooShort {
+        len: usize,
+        min: usize,
+    },
     /// Chosen side is shorter than MIN_REJECTED_CHARS — an empty/near-empty
     /// chosen produces an INVERTED preference (the model learns to prefer no
     /// output). Symmetric guard to RejectedTooShort (2026-06-19 audit).
-    ChosenTooShort { len: usize, min: usize },
+    ChosenTooShort {
+        len: usize,
+        min: usize,
+    },
     /// Rejected side contains a template-echo prefix indicating the attempt
     /// was never executed (e.g. the field contains a placeholder string).
-    TemplateEchoRejected { prefix: String },
+    TemplateEchoRejected {
+        prefix: String,
+    },
     /// Rejected side echoes the verbatim system-prompt diff EXAMPLE
     /// (`path/to/file` + `old line`/`new line` ...) rather than a real diff —
     /// the post-0506d359 failure mode that passes every other gate as a
     /// "real diff" because it contains `--- a/` / `@@` markers (2026-06-19 audit).
-    SystemPromptExampleEcho { markers: usize },
+    SystemPromptExampleEcho {
+        markers: usize,
+    },
     /// Chosen is more than MAX_LENGTH_RATIO × longer than rejected — DPO
     /// cannot distinguish quality from token count at this ratio.
-    LengthRatioTooExtreme { chosen_len: usize, rejected_len: usize, ratio: f64, max: f64 },
+    LengthRatioTooExtreme {
+        chosen_len: usize,
+        rejected_len: usize,
+        ratio: f64,
+        max: f64,
+    },
     /// `git apply --check` failed on the chosen side — the diff is syntactically
     /// plausible but would not apply cleanly. Enabled by CORPUS_GATE_GIT_APPLY_CHECK=true.
     GitApplyFailed,
@@ -304,8 +325,7 @@ impl CorpusIndex {
             brief_hash: brief_hash.to_string(),
             diff_hash: diff_hash.to_string(),
             brief_id: brief_id.to_string(),
-            written_at: chrono::Utc::now()
-                .to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+            written_at: chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
         };
         if let Ok(line) = serde_json::to_string(&row) {
             use std::io::Write as _;
@@ -544,8 +564,7 @@ pub fn check_dpo_pair(rejected: &str, chosen: &str) -> Result<CorpusGateOutcome>
     // Enable with env var CORPUS_GATE_GIT_APPLY_CHECK=true. Off by default
     // because each check spawns a subprocess (~5ms).
     if std::env::var("CORPUS_GATE_GIT_APPLY_CHECK").as_deref() == Ok("true") {
-        let tmp_path = std::env::temp_dir()
-            .join(format!("corpus_gate_{}.patch", &diff_hash[..16]));
+        let tmp_path = std::env::temp_dir().join(format!("corpus_gate_{}.patch", &diff_hash[..16]));
         if std::fs::write(&tmp_path, chosen).is_ok() {
             let passed = std::process::Command::new("git")
                 .args(["apply", "--check", "--stat"])
@@ -656,7 +675,13 @@ mod tests {
     fn passes_on_clean_tuple() {
         let root = tmp_root("clean");
         let index = CorpusIndex::open(&root).unwrap();
-        let outcome = check(&index, "brief-1", "fix the cache invalidation on writes when the worker drains", "+ a line\n- another line\n").unwrap();
+        let outcome = check(
+            &index,
+            "brief-1",
+            "fix the cache invalidation on writes when the worker drains",
+            "+ a line\n- another line\n",
+        )
+        .unwrap();
         assert!(!outcome.brief_hash.is_empty());
         assert!(!outcome.diff_hash.is_empty());
         assert!(!outcome.bcsc_flagged);
@@ -679,11 +704,23 @@ mod tests {
         let root = tmp_root("dup-reload");
         {
             let index = CorpusIndex::open(&root).unwrap();
-            check(&index, "brief-1", "alpha bravo charlie delta echo foxtrot", "+ diff content\n").unwrap();
+            check(
+                &index,
+                "brief-1",
+                "alpha bravo charlie delta echo foxtrot",
+                "+ diff content\n",
+            )
+            .unwrap();
         }
         // Re-open: in-memory state is rebuilt from sidecar.
         let index = CorpusIndex::open(&root).unwrap();
-        let err = check(&index, "brief-2", "alpha bravo charlie delta echo foxtrot", "+ diff content\n").unwrap_err();
+        let err = check(
+            &index,
+            "brief-2",
+            "alpha bravo charlie delta echo foxtrot",
+            "+ diff content\n",
+        )
+        .unwrap_err();
         assert!(matches!(err, DoormanError::CorpusGateRejected { .. }));
     }
 
@@ -692,7 +729,13 @@ mod tests {
         let root = tmp_root("oversized");
         let index = CorpusIndex::open(&root).unwrap();
         let huge = "+ line\n".repeat(MAX_DIFF_CHARS / 7 + 100);
-        let err = check(&index, "brief-1", "decent brief body with enough characters to pass", &huge).unwrap_err();
+        let err = check(
+            &index,
+            "brief-1",
+            "decent brief body with enough characters to pass",
+            &huge,
+        )
+        .unwrap_err();
         assert!(matches!(err, DoormanError::CorpusGateRejected { .. }));
     }
 
@@ -709,7 +752,13 @@ mod tests {
     fn rejects_do_not_use_term_in_diff() {
         let root = tmp_root("dnu-diff");
         let index = CorpusIndex::open(&root).unwrap();
-        let err = check(&index, "brief-1", "clean brief body with sufficient context describing the change", "+ // The cognitive forge subsystem starts here\n").unwrap_err();
+        let err = check(
+            &index,
+            "brief-1",
+            "clean brief body with sufficient context describing the change",
+            "+ // The cognitive forge subsystem starts here\n",
+        )
+        .unwrap_err();
         assert!(matches!(err, DoormanError::CorpusGateRejected { .. }));
     }
 
@@ -777,7 +826,9 @@ mod tests {
     fn dpo_pair_rejects_template_echo() {
         let err = check_dpo_pair("<unified diff placeholder text goes here>", decent_chosen())
             .unwrap_err();
-        assert!(matches!(err, DoormanError::CorpusGateRejected { reason } if reason.contains("template placeholder")));
+        assert!(
+            matches!(err, DoormanError::CorpusGateRejected { reason } if reason.contains("template placeholder"))
+        );
     }
 
     #[test]
@@ -787,13 +838,17 @@ mod tests {
             decent_chosen(),
         )
         .unwrap_err();
-        assert!(matches!(err, DoormanError::CorpusGateRejected { reason } if reason.contains("template placeholder")));
+        assert!(
+            matches!(err, DoormanError::CorpusGateRejected { reason } if reason.contains("template placeholder"))
+        );
     }
 
     #[test]
     fn dpo_pair_rejects_short_rejected() {
         let err = check_dpo_pair("ok", decent_chosen()).unwrap_err();
-        assert!(matches!(err, DoormanError::CorpusGateRejected { reason } if reason.contains("too short")));
+        assert!(
+            matches!(err, DoormanError::CorpusGateRejected { reason } if reason.contains("too short"))
+        );
     }
 
     #[test]
@@ -802,7 +857,9 @@ mod tests {
         let rejected = "A rejected response of sufficient length to pass the minimum character threshold for the corpus gate quality check.";
         let chosen = "x".repeat(rejected.len() * 10);
         let err = check_dpo_pair(rejected, &chosen).unwrap_err();
-        assert!(matches!(err, DoormanError::CorpusGateRejected { reason } if reason.contains("ratio")));
+        assert!(
+            matches!(err, DoormanError::CorpusGateRejected { reason } if reason.contains("ratio"))
+        );
     }
 
     #[test]

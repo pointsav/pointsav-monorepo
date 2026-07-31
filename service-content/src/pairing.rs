@@ -124,6 +124,117 @@ pub fn verify_pair_token(token: &str, public_key_b64: &str) -> Result<TokenPaylo
     Ok(payload)
 }
 
+// ── Command-sourced peers (O9 credential-chain wiring) ─────────────────────────
+//
+// app-orchestration-command's `PairingStore` (a separate, same-named-but-
+// unrelated type in a different, proprietary crate) records its own pairings
+// — console/instance ↔ CommandCentre — using a fundamentally different
+// protocol: an invite-token ceremony that authorizes enrollment but never
+// itself proves the enrolling peer holds the private key for the public_key
+// it registers. service-content's own pairing (above) proves live key
+// possession on every request instead (`verify_capability`'s Ed25519
+// signature check). These are genuinely incompatible protocols, not just
+// "shared vocabulary" — reconciling them by relaying Command's raw invite
+// token would not work (verify_capability expects a signature over a
+// payload, not an invite proof).
+//
+// The sound bridge: teach service-content to ALSO trust public keys Command
+// has recorded (an additional, alternate source for "who is a registered
+// peer"), while keeping service-content's own signature verification as the
+// thing that actually proves possession at request time. A peer paired via
+// Command still has to sign its own `X-Foundry-Capability` header with the
+// same key it registered — service-content's existing `verify_capability`
+// call is completely unchanged; only the "resolve from_instance → public_key"
+// step gains a second, optional source.
+//
+// Deliberately NOT a new Cargo dependency on `orchestration-command-core`
+// (that crate is `LicenseRef-PointSav-Proprietary`; service-content is
+// AGPL-3.0-or-later — a dependency in that direction is not legal per this
+// workspace's own license-boundary rule, matching the same "duplicate a
+// tiny type, don't share a crate" pattern already used for O5/O8). This
+// struct only needs to deserialize the same wire shape Command already
+// writes to `user-pairings.yaml`, not import Command's actual Rust types.
+//
+// Both processes currently run on the same host (foundry-workspace) — reading
+// the file directly avoids inventing a new network/auth surface between the
+// two services for what is, today, a local file both could equally read.
+// If the two are ever split across hosts, this becomes an HTTP lookup
+// instead; the `find_by_instance`/`resolve_public_key` split below is
+// designed so that swap doesn't touch any caller.
+
+/// One entry from Command's `user-pairings.yaml`, deserialized locally rather
+/// than via a shared type (see module doc comment above). Only the fields
+/// service-content actually needs are captured; unknown fields are ignored.
+#[derive(Debug, Clone, Deserialize)]
+pub struct CommandPairedPeer {
+    pub public_key: String,
+    /// Command's `PairingRole` enum ("User" | "Admin" | "Interface"),
+    /// deserialized as a plain string — service-content doesn't need to
+    /// interpret it (archive_scope for the actual request comes from the
+    /// signed `CapabilityPayload` itself, not from this record; see
+    /// `capability_gate`'s doc comment), only to know a key exists.
+    #[serde(default)]
+    pub role: String,
+    #[serde(default)]
+    pub node_label: String,
+}
+
+/// Which trust source resolved a peer's public key in `resolve_public_key` —
+/// carried into the audit trail so a Command-sourced trust decision (a new
+/// path as of O9) is visibly distinguishable from service-content's own
+/// long-standing direct registrations, not silently indistinguishable.
+#[derive(Debug, Clone)]
+pub enum ResolvedPeer {
+    /// service-content's own direct `/v1/pair` registration.
+    Direct(String),
+    /// Trusted via Command's pairing record instead. `role` is Command's own
+    /// `PairingRole` ("User" | "Admin" | "Interface") as a plain string.
+    ViaCommand { public_key: String, role: String },
+}
+
+impl ResolvedPeer {
+    pub fn public_key(&self) -> &str {
+        match self {
+            ResolvedPeer::Direct(k) => k,
+            ResolvedPeer::ViaCommand { public_key, .. } => public_key,
+        }
+    }
+
+    /// "direct" or "command" — for the audit trail, not used in any access
+    /// decision (verify_capability's signature check is what actually gates
+    /// access; this is purely observability).
+    pub fn source_label(&self) -> &'static str {
+        match self {
+            ResolvedPeer::Direct(_) => "direct",
+            ResolvedPeer::ViaCommand { .. } => "command",
+        }
+    }
+}
+
+/// Reads Command's `user-pairings.yaml`, tolerant of absence — this is an
+/// optional, additional trust source, not a hard requirement. Any read or
+/// parse failure returns an empty list with a warning rather than failing
+/// service-content's own startup, since Command pairing is orthogonal to
+/// service-content's primary function.
+fn load_command_pairings(path: &Path) -> Vec<CommandPairedPeer> {
+    if !path.exists() {
+        return Vec::new();
+    }
+    match std::fs::read_to_string(path) {
+        Ok(content) => match serde_yaml::from_str::<Vec<CommandPairedPeer>>(&content) {
+            Ok(peers) => peers,
+            Err(e) => {
+                eprintln!("[pairing] failed to parse Command pairings at {path:?}: {e} — treating as empty, service-content's own pairings are unaffected");
+                Vec::new()
+            }
+        },
+        Err(e) => {
+            eprintln!("[pairing] failed to read Command pairings at {path:?}: {e} — treating as empty, service-content's own pairings are unaffected");
+            Vec::new()
+        }
+    }
+}
+
 // ── pairing store ─────────────────────────────────────────────────────────────
 
 /// In-memory pairing registry backed by an append-only JSONL file.
@@ -134,6 +245,10 @@ pub struct PairingStore {
     store_path: PathBuf,
     audit_path: PathBuf,
     by_pubkey: HashMap<String, PairingRecord>,
+    /// Additional peers trusted via Command's own pairing record — see the
+    /// module doc comment above `CommandPairedPeer`. Empty unless
+    /// `COMMAND_USER_PAIRINGS_PATH` is set and the file exists/parses.
+    command_pairings: Vec<CommandPairedPeer>,
 }
 
 impl PairingStore {
@@ -156,10 +271,15 @@ impl PairingStore {
             }
         }
 
+        let command_pairings = std::env::var("COMMAND_USER_PAIRINGS_PATH")
+            .map(|p| load_command_pairings(Path::new(&p)))
+            .unwrap_or_default();
+
         Ok(Self {
             store_path,
             audit_path,
             by_pubkey,
+            command_pairings,
         })
     }
 
@@ -179,6 +299,29 @@ impl PairingStore {
         self.by_pubkey
             .values()
             .find(|r| r.issuer == from_instance || r.node_label == from_instance)
+    }
+
+    /// Resolve a peer's public key for `capability_gate`, checking
+    /// service-content's own direct `/v1/pair` registrations first, then
+    /// falling back to peers Command has paired (O9 credential-chain
+    /// wiring — see the module doc comment above `CommandPairedPeer`).
+    /// `capability_gate`'s own `verify_capability` call is what actually
+    /// proves the caller holds this key's private half; this method only
+    /// resolves which key to check against — the returned `ResolvedPeer`
+    /// also records which trust source answered, so the audit trail can
+    /// tell the two apart (a new, previously-impossible trust path is worth
+    /// being able to see, not just silently accept).
+    pub fn resolve_public_key(&self, from_instance: &str) -> Option<ResolvedPeer> {
+        if let Some(rec) = self.find_by_instance(from_instance) {
+            return Some(ResolvedPeer::Direct(rec.public_key.clone()));
+        }
+        self.command_pairings
+            .iter()
+            .find(|p| p.node_label == from_instance)
+            .map(|p| ResolvedPeer::ViaCommand {
+                public_key: p.public_key.clone(),
+                role: p.role.clone(),
+            })
     }
 
     /// Persist a new pairing and return it.
@@ -295,6 +438,20 @@ impl PairingKeypair {
 // in PairingStore at `/v1/pair` time. Model B: os-totebox verifies independently
 // rather than trusting the forwarding instance's pairing alone (DOCTRINE: holds
 // no archive keys).
+//
+// Extended 2026-07-18 (BRIEF-datagraph-tenant-isolation.md's "grant-vs-forward"
+// carry-forward) with `forwarded_for`: `#[serde(default)]`, so existing senders
+// that predate this field remain valid (absent = direct grant, unchanged
+// behavior). `None` means the signing peer is asserting its OWN capability
+// (a direct grant from its own `/v1/pair` registration); `Some(origin_instance)`
+// means the peer is relaying a capability on behalf of a third instance it
+// talked to. `capability_gate` only honors a forward when the signing peer's
+// own `user_scope` is `"ADMIN"` — an ordinary paired peer cannot unilaterally
+// claim to forward on behalf of someone with broader access than itself. No
+// real sender uses this yet (`app-orchestration-graph`, the one place a real
+// forward would occur, sends no capability at all today) — this is the
+// receiver-side contract, validated with synthetic peers until a real sender
+// exists.
 
 /// Payload of a forwarded `X-Foundry-Capability` header.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -307,6 +464,11 @@ pub struct CapabilityPayload {
     pub expiry: String,
     #[serde(default)]
     pub peer_type: String,
+    /// `None` = direct grant (signing peer's own capability). `Some(origin)` =
+    /// forwarded on behalf of `origin` — only honored for `user_scope: "ADMIN"`
+    /// signers (see module doc comment above).
+    #[serde(default)]
+    pub forwarded_for: Option<String>,
 }
 
 impl CapabilityPayload {
@@ -394,7 +556,17 @@ impl InterfaceAuditLog {
         }
     }
 
-    pub fn record(&self, endpoint: &str, payload: &CapabilityPayload) -> std::io::Result<()> {
+    /// `trust_source` is `"direct"` (service-content's own `/v1/pair`) or
+    /// `"command"` (resolved via Command's pairing record — O9 credential-
+    /// chain wiring) — see `ResolvedPeer::source_label`. Purely observability;
+    /// `verify_capability`'s signature check already gated access before this
+    /// is ever called.
+    pub fn record(
+        &self,
+        endpoint: &str,
+        payload: &CapabilityPayload,
+        trust_source: &str,
+    ) -> std::io::Result<()> {
         let entry = serde_json::json!({
             "event": "capability_verified",
             "ts": Utc::now().to_rfc3339(),
@@ -404,6 +576,7 @@ impl InterfaceAuditLog {
             "archive_scope": payload.archive_scope,
             "peer_type": payload.peer_type,
             "nonce": payload.nonce,
+            "trust_source": trust_source,
         });
         let mut f = std::fs::OpenOptions::new()
             .create(true)
@@ -420,6 +593,12 @@ impl InterfaceAuditLog {
 /// Not persisted — nonces are tied to short-lived tokens (24h default).
 /// After restart the window is narrow enough to be acceptable.
 pub struct NonceCache(pub Mutex<HashSet<String>>);
+
+impl Default for NonceCache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl NonceCache {
     pub fn new() -> Self {
@@ -572,6 +751,7 @@ mod tests {
             nonce: "cap-nonce-1".into(),
             expiry: expiry.to_rfc3339(),
             peer_type: "orchestration".into(),
+            forwarded_for: None,
         };
         let pj = serde_json::to_string(&payload).unwrap();
         let pb64 = URL_SAFE_NO_PAD.encode(pj.as_bytes());
@@ -666,12 +846,14 @@ mod tests {
             nonce: "n1".into(),
             expiry: (Utc::now() + chrono::Duration::hours(1)).to_rfc3339(),
             peer_type: "orchestration".into(),
+            forwarded_for: None,
         };
-        log.record("/v1/graph/mutate", &payload).expect("record");
+        log.record("/v1/graph/mutate", &payload, "direct").expect("record");
         let content = std::fs::read_to_string(d.path().join("interface-audit.jsonl")).unwrap();
         assert_eq!(content.lines().count(), 1);
         assert!(content.contains("capability_verified"));
         assert!(content.contains("project-orchestration"));
+        assert!(content.contains("\"trust_source\":\"direct\""));
     }
 
     #[test]
@@ -681,5 +863,143 @@ mod tests {
         let kp1 = make_keypair(dir);
         let kp2 = PairingKeypair::load_or_generate(dir).expect("reload");
         assert_eq!(kp1.verifying_key_b64, kp2.verifying_key_b64);
+    }
+
+    // ── O9 credential-chain wiring ──────────────────────────────────────────
+
+    #[test]
+    fn load_command_pairings_missing_file_returns_empty() {
+        let d = tmp_dir();
+        let missing = d.path().join("does-not-exist.yaml");
+        assert!(load_command_pairings(&missing).is_empty());
+    }
+
+    #[test]
+    fn load_command_pairings_malformed_yaml_returns_empty() {
+        let d = tmp_dir();
+        let path = d.path().join("user-pairings.yaml");
+        std::fs::write(&path, "not: [valid, yaml: structure for Vec<CommandPairedPeer>")
+            .expect("write");
+        assert!(load_command_pairings(&path).is_empty());
+    }
+
+    #[test]
+    fn load_command_pairings_parses_valid_entries() {
+        let d = tmp_dir();
+        let path = d.path().join("user-pairings.yaml");
+        std::fs::write(
+            &path,
+            "- public_key: pk-cmd-1\n  role: ADMIN\n  node_label: console-1\n\
+             - public_key: pk-cmd-2\n  role: USER\n  node_label: console-2\n",
+        )
+        .expect("write");
+        let peers = load_command_pairings(&path);
+        assert_eq!(peers.len(), 2);
+        assert_eq!(peers[0].public_key, "pk-cmd-1");
+        assert_eq!(peers[0].role, "ADMIN");
+        assert_eq!(peers[0].node_label, "console-1");
+        assert_eq!(peers[1].node_label, "console-2");
+    }
+
+    #[test]
+    fn load_command_pairings_tolerates_unknown_fields() {
+        let d = tmp_dir();
+        let path = d.path().join("user-pairings.yaml");
+        // Command's real record shape carries fields service-content doesn't
+        // need (e.g. paired_on, expiry) — must be ignored, not a parse error.
+        std::fs::write(
+            &path,
+            "- public_key: pk-cmd-1\n  role: ADMIN\n  node_label: console-1\n  paired_on: '2026-07-30T00:00:00Z'\n  something_else: 42\n",
+        )
+        .expect("write");
+        let peers = load_command_pairings(&path);
+        assert_eq!(peers.len(), 1);
+        assert_eq!(peers[0].public_key, "pk-cmd-1");
+    }
+
+    fn store_with_command_pairings(
+        dir: &tempfile::TempDir,
+        command_pairings: Vec<CommandPairedPeer>,
+    ) -> PairingStore {
+        let mut store = PairingStore::load(dir.path().to_str().unwrap()).expect("load");
+        store.command_pairings = command_pairings;
+        store
+    }
+
+    #[test]
+    fn resolve_public_key_falls_back_to_command_pairing() {
+        let d = tmp_dir();
+        let store = store_with_command_pairings(
+            &d,
+            vec![CommandPairedPeer {
+                public_key: "pk-cmd".into(),
+                role: "ADMIN".into(),
+                node_label: "console-1".into(),
+            }],
+        );
+        let resolved = store.resolve_public_key("console-1").expect("resolved via command");
+        assert_eq!(resolved.public_key(), "pk-cmd");
+        assert_eq!(resolved.source_label(), "command");
+        assert!(matches!(resolved, ResolvedPeer::ViaCommand { .. }));
+    }
+
+    #[test]
+    fn resolve_public_key_prefers_direct_registration_over_command() {
+        let d = tmp_dir();
+        let mut store = store_with_command_pairings(
+            &d,
+            vec![CommandPairedPeer {
+                public_key: "pk-cmd".into(),
+                role: "ADMIN".into(),
+                node_label: "same-node".into(),
+            }],
+        );
+        store
+            .insert(PairingRecord {
+                public_key: "pk-direct".into(),
+                issuer: "same-node".into(),
+                peer_type: "totebox".into(),
+                role: "INTERFACE".into(),
+                archive_scope: vec!["project-totebox".into()],
+                node_label: "same-node".into(),
+                paired_on: Utc::now().to_rfc3339(),
+                nonce: "n1".into(),
+            })
+            .expect("insert");
+
+        let resolved = store.resolve_public_key("same-node").expect("resolved");
+        assert_eq!(resolved.public_key(), "pk-direct");
+        assert_eq!(resolved.source_label(), "direct");
+        assert!(matches!(resolved, ResolvedPeer::Direct(_)));
+    }
+
+    #[test]
+    fn resolve_public_key_none_when_peer_unknown_to_either_source() {
+        let d = tmp_dir();
+        let store = store_with_command_pairings(&d, vec![]);
+        assert!(store.resolve_public_key("nobody").is_none());
+    }
+
+    #[test]
+    fn pairing_store_load_reads_command_pairings_path_env_var() {
+        let store_dir = tmp_dir();
+        let command_dir = tmp_dir();
+        let command_path = command_dir.path().join("user-pairings.yaml");
+        std::fs::write(
+            &command_path,
+            "- public_key: pk-env\n  role: ADMIN\n  node_label: env-node\n",
+        )
+        .expect("write");
+
+        // SAFETY / isolation: no other test in this module reads or writes
+        // COMMAND_USER_PAIRINGS_PATH, so this does not race with sibling
+        // tests despite cargo test's default multi-threaded execution.
+        std::env::set_var("COMMAND_USER_PAIRINGS_PATH", &command_path);
+        let store = PairingStore::load(store_dir.path().to_str().unwrap()).expect("load");
+        std::env::remove_var("COMMAND_USER_PAIRINGS_PATH");
+
+        let resolved = store.resolve_public_key("env-node").expect("resolved via env-configured path");
+        assert_eq!(resolved.public_key(), "pk-env");
+        assert_eq!(resolved.source_label(), "command");
     }
 }

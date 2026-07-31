@@ -26,7 +26,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use serde::{Deserialize, Serialize};
-use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
+use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, GrammarConstraint, InferenceRoute};
 use tracing::debug;
 
 use crate::error::{DoormanError, Result};
@@ -320,7 +320,7 @@ impl ExternalTierClient {
 
         Ok(ComputeResponse {
             request_id: req.request_id,
-            tier_used: Tier::External,
+            tier_used: InferenceRoute::External,
             model: model_id.to_string(),
             content,
             reasoning_content: None,
@@ -397,7 +397,7 @@ mod tests {
                 content: "ping".into(),
             }],
             complexity: slm_core::Complexity::Low,
-            tier_hint: Some(Tier::External),
+            tier_hint: Some(InferenceRoute::External),
             stream: false,
             max_tokens: Some(50),
             temperature: Some(0.0),
@@ -470,7 +470,7 @@ mod tests {
             ))
             .await
             .expect("happy path 200");
-        assert_eq!(resp.tier_used, Tier::External);
+        assert_eq!(resp.tier_used, InferenceRoute::External);
         assert_eq!(resp.model, "anthropic:claude-haiku-4-5");
         assert_eq!(resp.content, "GROUNDED");
         assert_eq!(resp.upstream_version.as_deref(), Some("anthropic"));

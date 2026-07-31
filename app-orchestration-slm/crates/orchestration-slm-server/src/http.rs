@@ -8,6 +8,7 @@
 //!   GET  /healthz                  — liveness
 //!   GET  /readyz                   — readiness with Yo-Yo probe, circuit, gate, license state
 //!   GET  /v1/fleet                 — registered Totebox listing
+//!   POST /v1/discovery/allocate    — per-VM identity allocation (§14 #20), first-boot only
 //!   POST /v1/discovery/register    — Totebox Doorman self-registration
 //!   POST /v1/yoyo/proxy            — relay → Yo-Yo "default" node
 //!   POST /v1/yoyo/trainer          — relay → Yo-Yo "trainer" node
@@ -24,14 +25,14 @@ use axum::{
     Json, Router,
 };
 use orchestration_slm::{
-    ChassisError, ChassisFlowGate, CircuitRegistry, FleetRegistry, LicenseStatus, MembershipKey,
-    MeteringLedger, YoyoProxyClient,
+    AllocationLedger, ChassisError, ChassisFlowGate, CircuitRegistry, FleetRegistry,
+    LicenseStatus, MembershipKey, MeteringLedger, YoyoProxyClient,
 };
 use orchestration_slm_core::{
-    AdapterEntry, AdaptersResponse, AuditRollupResponse, FederatedGraphEntry,
-    FederatedGraphRequest, FederatedGraphResponse, ReadyzResponse, RegistrationRequest,
-    RegistrationResponseV2, TenantRollupEntry, TrainingScheduleRequest, TrainingScheduleResponse,
-    CHASSIS_VERSION,
+    AdapterEntry, AdaptersResponse, AllocationRequest, AllocationResponse, AuditRollupResponse,
+    FederatedGraphEntry, FederatedGraphRequest, FederatedGraphResponse, ReadyzResponse,
+    RegistrationRequest, RegistrationResponseV2, TenantRollupEntry, TrainingScheduleRequest,
+    TrainingScheduleResponse, CHASSIS_VERSION,
 };
 use serde_json::{json, Value};
 use tracing::warn;
@@ -44,6 +45,33 @@ pub struct AppState {
     pub gates: Arc<ChassisFlowGate>,
     pub license: Arc<LicenseStatus>,
     pub membership: Arc<MembershipKey>,
+    pub allocation: Arc<AllocationLedger>,
+    /// Shared admission-control secret for `/v1/discovery/allocate` and
+    /// `/v1/discovery/register` (`ORCHESTRATION_REGISTRATION_TOKEN`). Both
+    /// endpoints were previously open to any caller that could reach the
+    /// chassis — anyone could self-register and be issued a fully-privileged
+    /// membership token. `None` preserves the prior unauthenticated
+    /// behavior (dev/test default; `main.rs` logs a loud startup warning
+    /// when this is unset) — set it in any real deployment.
+    pub registration_token: Option<String>,
+}
+
+/// Checks `Authorization: Bearer <token>` against `state.registration_token`
+/// for the discovery endpoints. Returns `Ok(())` when the gate is open
+/// (either no token is configured, or the caller presented the right one);
+/// `Err(response)` (401) otherwise.
+fn check_registration_token(state: &AppState, headers: &HeaderMap) -> std::result::Result<(), Response> {
+    let Some(expected) = &state.registration_token else {
+        return Ok(());
+    };
+    match extract_bearer_module_id(headers) {
+        Some(presented) if &presented == expected => Ok(()),
+        _ => Err((
+            StatusCode::UNAUTHORIZED,
+            Json(json!({"error": "missing or incorrect Authorization: Bearer <registration-token>"})),
+        )
+            .into_response()),
+    }
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -51,6 +79,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
         .route("/v1/fleet", get(fleet_list))
+        .route("/v1/discovery/allocate", post(discovery_allocate))
         .route("/v1/discovery/register", post(discovery_register))
         .route("/v1/yoyo/proxy", post(yoyo_proxy))
         .route("/v1/yoyo/trainer", post(yoyo_trainer))
@@ -60,6 +89,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/graph/federated", post(graph_federated))
         .route("/v1/training/schedule", post(training_schedule))
         .route("/v1/adapters", get(adapters_list))
+        .route("/v1/inference", post(inference))
         .with_state(state)
 }
 
@@ -87,9 +117,17 @@ async fn readyz(State(state): State<Arc<AppState>>) -> Json<ReadyzResponse> {
         false
     };
 
-    let circuit_states = state
-        .circuits
-        .snapshot()
+    let circuit_snapshot = state.circuits.snapshot();
+    let mut open_labels: Vec<&str> = circuit_snapshot
+        .iter()
+        .filter(|(_, v)| **v == orchestration_slm::CircuitState::Open)
+        .map(|(k, _)| k.as_str())
+        .collect();
+    open_labels.sort_unstable();
+    let degraded = !open_labels.is_empty();
+    let degraded_reason = degraded.then(|| format!("circuit open for: {}", open_labels.join(", ")));
+
+    let circuit_states = circuit_snapshot
         .into_iter()
         .map(|(k, v)| (k, v.as_str().to_string()))
         .collect();
@@ -105,6 +143,8 @@ async fn readyz(State(state): State<Arc<AppState>>) -> Json<ReadyzResponse> {
         license_status: state.license.label().to_string(),
         circuit_states,
         gate_states,
+        degraded,
+        degraded_reason,
     })
 }
 
@@ -116,10 +156,47 @@ async fn fleet_list(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 
 // ── Discovery ─────────────────────────────────────────────────────────────────
 
+/// POST /v1/discovery/allocate — per-VM discovery/allocation (§14 #20).
+///
+/// Called once by a Doorman at its own first boot, before `/v1/discovery/
+/// register`, to obtain a chassis-guaranteed-unique module_id/archive_id —
+/// closes the collision gap in the self-claimed `SLM_MODULE_ID`/
+/// `SLM_ARCHIVE_ID` env-var scheme (see `AllocationLedger`'s own doc
+/// comment for the concrete failure mode this prevents). The caller is
+/// expected to persist the result locally and reuse it on every subsequent
+/// boot — this endpoint does not itself register the allocated identity in
+/// the live fleet; a separate `/v1/discovery/register` call still does that.
+async fn discovery_allocate(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    ExtractJson(req): ExtractJson<AllocationRequest>,
+) -> Response {
+    if let Err(resp) = check_registration_token(&state, &headers) {
+        return resp;
+    }
+    match state.allocation.allocate(req.requested_archive_id.as_deref()) {
+        Ok((module_id, archive_id)) => {
+            (StatusCode::OK, Json(AllocationResponse { module_id, archive_id })).into_response()
+        }
+        Err(e) => {
+            warn!(error = %e, "allocation ledger error");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": "allocation ledger unavailable"})),
+            )
+                .into_response()
+        }
+    }
+}
+
 async fn discovery_register(
     State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
     ExtractJson(req): ExtractJson<RegistrationRequest>,
-) -> Json<RegistrationResponseV2> {
+) -> Response {
+    if let Err(resp) = check_registration_token(&state, &headers) {
+        return resp;
+    }
     let member = state.fleet.register(req).await;
     let token = state.membership.issue(&member.module_id, &member.archive_id);
     Json(RegistrationResponseV2 {
@@ -128,6 +205,7 @@ async fn discovery_register(
         chassis_version: CHASSIS_VERSION,
         membership_token: Some(token),
     })
+    .into_response()
 }
 
 // ── Gate management ───────────────────────────────────────────────────────────
@@ -280,15 +358,24 @@ async fn dispatch_yoyo(
 
     // 4. Circuit breaker — shared node health across all archives.
     {
-        let allowed = state
-            .circuits
-            .get(label)
-            .map(|c| c.allow_request())
-            .unwrap_or(true);
+        let circuit = state.circuits.get(label);
+        let allowed = circuit.map(|c| c.allow_request()).unwrap_or(true);
         if !allowed {
+            // Chassis has "no lower rung" (BRIEF-os-totebox-platform.md's
+            // graceful-degradation design note) — fail-fast is correct, but
+            // an opaque 503 leaves the caller guessing how long to back off.
+            // Retry-After reflects this circuit's real remaining cooldown,
+            // not a guessed constant.
+            let retry_after = circuit.and_then(|c| c.retry_after_secs()).unwrap_or(0);
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                axum::http::header::RETRY_AFTER,
+                retry_after.to_string().parse().unwrap(),
+            );
             return (
                 StatusCode::SERVICE_UNAVAILABLE,
-                Json(json!({"error": format!("circuit breaker open for '{label}'")})),
+                headers,
+                Json(json!({"error": format!("circuit breaker open for '{label}'"), "retry_after_secs": retry_after})),
             )
                 .into_response();
         }
@@ -372,6 +459,157 @@ async fn yoyo_graph(
     ExtractJson(body): ExtractJson<Value>,
 ) -> Response {
     dispatch_yoyo(state, headers, body, "graph").await
+}
+
+// ── Tier 0 Doorman inference entry point ──────────────────────────────────────
+
+/// POST /v1/inference — the Tier 0 Doorman entry point
+/// (`BRIEF-os-totebox-platform.md` §6, §14 #17/#18).
+///
+/// Authenticates via a **signed membership token**
+/// (`Authorization: Bearer <token>`, issued by `POST /v1/discovery/register`)
+/// rather than the plain bearer-module-id scheme `/v1/yoyo/*` uses — a Tier 0
+/// Doorman must already hold a token from registration before it can call this.
+///
+/// This is the *primary*, explicitly-invoked inference path for a Tier 0
+/// Doorman — not an escalation target. Per §14 #17/#18 (decisions locked): a
+/// Tier 0 Doorman's own circuit breaker never escalates here automatically on
+/// a local failure (queue-and-retry only); it calls this endpoint directly,
+/// by design, for every inference request while `SLM_TIER=0`.
+///
+/// Routes to the "proxy" Yo-Yo label — the only compute this chassis brokers
+/// today (os-orchestration's own local Tier A model choice is explicitly
+/// deferred, §14 #16). Body is passed through verbatim, same pass-through
+/// convention as `/v1/yoyo/proxy`. Gate order mirrors `dispatch_yoyo` exactly,
+/// with membership-token auth in place of bearer-module-id auth.
+///
+/// **Not implemented in this pass**: per-tenant rate limiting on this
+/// endpoint specifically (the original design note called for it; the
+/// existing chassis has no rate-limiting infrastructure yet to hook into —
+/// flagged as a follow-up, not silently dropped).
+async fn inference(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    ExtractJson(body): ExtractJson<Value>,
+) -> Response {
+    const LABEL: &str = "proxy";
+
+    // 1. Membership-token auth.
+    let token = match extract_bearer_module_id(&headers) {
+        Some(t) => t,
+        None => {
+            return (
+                StatusCode::UNAUTHORIZED,
+                Json(json!({"error": "missing Authorization: Bearer <membership-token>"})),
+            )
+                .into_response();
+        }
+    };
+    let claims = match state.membership.verify(&token) {
+        Ok(c) => c,
+        Err(_) => {
+            return (
+                StatusCode::UNAUTHORIZED,
+                Json(json!({"error": "invalid or expired membership token"})),
+            )
+                .into_response();
+        }
+    };
+
+    // 2. Flow gate — operator kill switch, same "proxy" label as /v1/yoyo/proxy.
+    if let Some(blocking) = state.gates.blocking_label(LABEL) {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({"error": format!("flow gate '{}' is closed", blocking)})),
+        )
+            .into_response();
+    }
+
+    // 3. License — chassis-level Tier B gate.
+    if !state.license.permits_tier_b() {
+        return (
+            StatusCode::PAYMENT_REQUIRED,
+            Json(json!({"error": "Tier B brokering requires a valid chassis license"})),
+        )
+            .into_response();
+    }
+
+    // 4. Circuit breaker — shared node health state across all archives.
+    let allowed = state
+        .circuits
+        .get(LABEL)
+        .map(|c| c.allow_request())
+        .unwrap_or(true);
+    if !allowed {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({"error": format!("circuit breaker open for '{LABEL}'")})),
+        )
+            .into_response();
+    }
+
+    // 5. Proxy to the Yo-Yo node, metered against the token's module_id.
+    match state.proxy.proxy(LABEL, &claims.module_id, body).await {
+        Ok((bytes, inference_ms)) => {
+            if let Some(c) = state.circuits.get(LABEL) {
+                c.record_success()
+            }
+            state
+                .metering
+                .record(
+                    &claims.module_id,
+                    inference_ms,
+                    state.proxy.endpoints.hourly_usd_rate,
+                )
+                .await;
+            let mut resp_headers = HeaderMap::new();
+            resp_headers.insert(
+                axum::http::header::CONTENT_TYPE,
+                "application/json".parse().unwrap(),
+            );
+            resp_headers.insert(
+                "x-foundry-tier-used"
+                    .parse::<axum::http::HeaderName>()
+                    .unwrap(),
+                "yoyo".parse().unwrap(),
+            );
+            (StatusCode::OK, resp_headers, bytes).into_response()
+        }
+        Err(ChassisError::YoyoNotConfigured(lbl)) => {
+            if let Some(c) = state.circuits.get(LABEL) {
+                c.record_failure()
+            }
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(
+                    json!({"error": format!("Yo-Yo label '{}' not configured on this chassis", lbl)}),
+                ),
+            )
+                .into_response()
+        }
+        Err(ChassisError::YoyoUpstream(msg)) => {
+            if let Some(c) = state.circuits.get(LABEL) {
+                c.record_failure()
+            }
+            warn!(error = %msg, "inference upstream error");
+            (
+                StatusCode::BAD_GATEWAY,
+                Json(json!({"error": "Yo-Yo upstream error", "detail": msg})),
+            )
+                .into_response()
+        }
+        Err(e) => {
+            if let Some(c) = state.circuits.get(LABEL) {
+                c.record_failure()
+            }
+            warn!(error = %e, "inference proxy error");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": "proxy internal error"})),
+            )
+                .into_response()
+        }
+    }
 }
 
 // ── Phase 2: Federated graph query ────────────────────────────────────────────
@@ -568,6 +806,15 @@ mod tests {
         Arc::new(orchestration_slm::MembershipKey::generate().unwrap())
     }
 
+    fn make_allocation_ledger() -> Arc<AllocationLedger> {
+        let path = std::env::temp_dir().join(format!(
+            "orchestration-slm-server-alloc-test-{}-{}",
+            std::process::id(),
+            chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0)
+        ));
+        Arc::new(AllocationLedger::load(path).expect("test allocation ledger"))
+    }
+
     fn test_state() -> Arc<AppState> {
         Arc::new(AppState {
             fleet: FleetRegistry::new(),
@@ -577,6 +824,8 @@ mod tests {
             gates: Arc::new(ChassisFlowGate::new(["proxy", "trainer", "graph"])),
             license: Arc::new(make_license_valid()),
             membership: make_membership(),
+            allocation: make_allocation_ledger(),
+            registration_token: None,
         })
     }
 
@@ -589,6 +838,8 @@ mod tests {
             gates: Arc::new(ChassisFlowGate::new(["proxy", "trainer", "graph"])),
             license: Arc::new(LicenseStatus::Absent),
             membership: make_membership(),
+            allocation: make_allocation_ledger(),
+            registration_token: None,
         })
     }
 
@@ -640,6 +891,61 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::OK);
     }
 
+    // ── Allocation (§14 #20) ─────────────────────────────────────────────────
+
+    #[tokio::test]
+    async fn allocate_with_no_body_hint_returns_default_identity() {
+        let app = router(test_state());
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/discovery/allocate")
+                    .header("content-type", "application/json")
+                    .body(Body::from(serde_json::to_vec(&json!({})).unwrap()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+        let parsed: AllocationResponse = serde_json::from_slice(&body).unwrap();
+        assert_eq!(parsed.module_id, "op::archive::slm");
+    }
+
+    #[tokio::test]
+    async fn allocate_two_requests_with_same_hint_never_collide() {
+        let state = test_state();
+        let app = router(Arc::clone(&state));
+
+        let mk_req = || {
+            Request::builder()
+                .method("POST")
+                .uri("/v1/discovery/allocate")
+                .header("content-type", "application/json")
+                .body(Body::from(
+                    serde_json::to_vec(&AllocationRequest {
+                        requested_archive_id: Some("data".to_string()),
+                    })
+                    .unwrap(),
+                ))
+                .unwrap()
+        };
+
+        let resp1 = app.clone().oneshot(mk_req()).await.unwrap();
+        let body1 = axum::body::to_bytes(resp1.into_body(), usize::MAX).await.unwrap();
+        let parsed1: AllocationResponse = serde_json::from_slice(&body1).unwrap();
+
+        let resp2 = app.oneshot(mk_req()).await.unwrap();
+        let body2 = axum::body::to_bytes(resp2.into_body(), usize::MAX).await.unwrap();
+        let parsed2: AllocationResponse = serde_json::from_slice(&body2).unwrap();
+
+        assert_ne!(
+            parsed1.module_id, parsed2.module_id,
+            "two allocations requesting the same hint must never collide"
+        );
+    }
+
     // ── Registration ──────────────────────────────────────────────────────────
 
     #[tokio::test]
@@ -669,6 +975,139 @@ mod tests {
 
         assert_eq!(resp.status(), StatusCode::OK);
         assert_eq!(state.fleet.member_count().await, 1);
+    }
+
+    fn state_with_registration_token(token: &str) -> Arc<AppState> {
+        Arc::new(AppState {
+            fleet: FleetRegistry::new(),
+            proxy: Arc::new(YoyoProxyClient::new(make_endpoints())),
+            metering: MeteringLedger::new(),
+            circuits: Arc::new(CircuitRegistry::new(["proxy", "trainer", "graph"])),
+            gates: Arc::new(ChassisFlowGate::new(["proxy", "trainer", "graph"])),
+            license: Arc::new(make_license_valid()),
+            membership: make_membership(),
+            allocation: make_allocation_ledger(),
+            registration_token: Some(token.to_string()),
+        })
+    }
+
+    fn registration_body() -> Vec<u8> {
+        serde_json::to_vec(&RegistrationRequest {
+            module_id: "op::a::slm".to_string(),
+            archive_id: "project-a".to_string(),
+            doorman_endpoint: "http://10.0.0.1:9080".to_string(),
+            tier_b_subscribed: true,
+        })
+        .unwrap()
+    }
+
+    #[tokio::test]
+    async fn discovery_register_without_token_configured_is_still_open() {
+        // Backward-compatible default: no ORCHESTRATION_REGISTRATION_TOKEN
+        // configured means no gate, matching pre-existing behavior.
+        let app = router(test_state());
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/discovery/register")
+                    .header("content-type", "application/json")
+                    .body(Body::from(registration_body()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn discovery_register_rejects_missing_token_when_configured() {
+        let app = router(state_with_registration_token("secret-reg-token"));
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/discovery/register")
+                    .header("content-type", "application/json")
+                    .body(Body::from(registration_body()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn discovery_register_rejects_wrong_token_when_configured() {
+        let app = router(state_with_registration_token("secret-reg-token"));
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/discovery/register")
+                    .header("content-type", "application/json")
+                    .header("authorization", "Bearer wrong-token")
+                    .body(Body::from(registration_body()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn discovery_register_accepts_correct_token_when_configured() {
+        let state = state_with_registration_token("secret-reg-token");
+        let app = router(Arc::clone(&state));
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/discovery/register")
+                    .header("content-type", "application/json")
+                    .header("authorization", "Bearer secret-reg-token")
+                    .body(Body::from(registration_body()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        assert_eq!(state.fleet.member_count().await, 1);
+    }
+
+    #[tokio::test]
+    async fn discovery_allocate_rejects_missing_token_when_configured() {
+        let app = router(state_with_registration_token("secret-reg-token"));
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/discovery/allocate")
+                    .header("content-type", "application/json")
+                    .body(Body::from(serde_json::to_vec(&serde_json::json!({})).unwrap()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn discovery_allocate_accepts_correct_token_when_configured() {
+        let app = router(state_with_registration_token("secret-reg-token"));
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/discovery/allocate")
+                    .header("content-type", "application/json")
+                    .header("authorization", "Bearer secret-reg-token")
+                    .body(Body::from(serde_json::to_vec(&serde_json::json!({})).unwrap()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
     }
 
     // ── Auth / subscription ───────────────────────────────────────────────────
@@ -935,6 +1374,64 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(resp.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let retry_after = resp
+            .headers()
+            .get(axum::http::header::RETRY_AFTER)
+            .expect("circuit-open response must carry a Retry-After header")
+            .to_str()
+            .unwrap()
+            .parse::<u64>()
+            .expect("Retry-After must be a plain integer seconds value");
+        // Freshly tripped (just now, in this test) — should be close to the
+        // full cooldown, not zero and not implausibly large.
+        assert!(
+            retry_after > 0 && retry_after <= orchestration_slm::node_circuit::DEFAULT_COOLDOWN.as_secs(),
+            "Retry-After ({retry_after}) should be within (0, cooldown]"
+        );
+    }
+
+    #[tokio::test]
+    async fn readyz_reports_degraded_when_circuit_open() {
+        let state = test_state();
+
+        // Baseline: nothing tripped yet.
+        let app = router(Arc::clone(&state));
+        let resp = app
+            .oneshot(Request::builder().uri("/readyz").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+        // Deserialize into a plain Value rather than ReadyzResponse — that
+        // struct's `&'static str` fields make typed deserialization borrow
+        // from `body`, which doesn't outlive this scope; Value avoids that
+        // lifetime entirely and still lets us assert on the exact fields.
+        let readyz: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(readyz["degraded"], false, "should not be degraded before any circuit trips");
+        assert!(readyz["degraded_reason"].is_null());
+
+        // Trip the "trainer" circuit.
+        {
+            let c = state.circuits.get("trainer").unwrap();
+            for _ in 0..DEFAULT_FAILURE_THRESHOLD {
+                c.record_failure();
+            }
+        }
+
+        let app = router(Arc::clone(&state));
+        let resp = app
+            .oneshot(Request::builder().uri("/readyz").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        // readyz itself always stays 200 — the chassis is genuinely ready;
+        // only the reachability of one backend is degraded. Fail-fast for
+        // an actual request belongs on /v1/yoyo/* (already covered by
+        // circuit_open_returns_503), not on this liveness/status endpoint.
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+        let readyz: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(readyz["degraded"], true, "should be degraded once a circuit trips open");
+        assert_eq!(readyz["degraded_reason"], "circuit open for: trainer");
     }
 
     #[tokio::test]
@@ -956,5 +1453,137 @@ mod tests {
             state.circuits.get("trainer").unwrap().state(),
             CircuitState::Closed
         );
+    }
+
+    // ── Tier 0 Doorman inference entry point ───────────────────────────────────
+
+    #[tokio::test]
+    async fn inference_missing_auth_returns_401() {
+        let app = router(test_state());
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/inference")
+                    .header("content-type", "application/json")
+                    .body(Body::from(proxy_body()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    /// A plain module-id bearer string (the scheme `/v1/yoyo/*` accepts) must
+    /// NOT work here — `/v1/inference` requires a real signed membership
+    /// token, not a bare string.
+    #[tokio::test]
+    async fn inference_plain_module_id_bearer_is_rejected_not_a_valid_token() {
+        let state = test_state();
+        register_member(&state, "op::a::slm", true).await;
+        let app = router(Arc::clone(&state));
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/inference")
+                    .header("content-type", "application/json")
+                    .header("authorization", "Bearer op::a::slm")
+                    .body(Body::from(proxy_body()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn inference_tampered_membership_token_returns_401() {
+        let state = test_state();
+        let token = state.membership.issue("op::a::slm", "project-a");
+        let tampered = token.replacen('a', "b", 1);
+        let app = router(Arc::clone(&state));
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/inference")
+                    .header("content-type", "application/json")
+                    .header("authorization", format!("Bearer {tampered}"))
+                    .body(Body::from(proxy_body()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn inference_valid_token_but_unlicensed_chassis_returns_402() {
+        let state = test_state_unlicensed();
+        let token = state.membership.issue("op::a::slm", "project-a");
+        let app = router(Arc::clone(&state));
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/inference")
+                    .header("content-type", "application/json")
+                    .header("authorization", format!("Bearer {token}"))
+                    .body(Body::from(proxy_body()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::PAYMENT_REQUIRED);
+    }
+
+    /// Valid token, licensed chassis, but no Yo-Yo "proxy" endpoint configured
+    /// — note this does NOT require fleet registration at all, unlike
+    /// `/v1/yoyo/proxy`: a membership token is self-contained proof of
+    /// identity (issued at `/v1/discovery/register` time), so `/v1/inference`
+    /// doesn't re-check fleet membership on every call.
+    #[tokio::test]
+    async fn inference_valid_token_licensed_but_not_configured_returns_503() {
+        let state = test_state();
+        let token = state.membership.issue("op::a::slm", "project-a");
+        let app = router(Arc::clone(&state));
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/inference")
+                    .header("content-type", "application/json")
+                    .header("authorization", format!("Bearer {token}"))
+                    .body(Body::from(proxy_body()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::SERVICE_UNAVAILABLE);
+    }
+
+    /// A membership token issued by a *different* chassis keypair must be
+    /// rejected — proves this endpoint actually verifies the signature
+    /// against this chassis's own key, not just checking token shape.
+    #[tokio::test]
+    async fn inference_token_from_a_different_chassis_keypair_returns_401() {
+        let state = test_state();
+        let other_chassis_key = orchestration_slm::MembershipKey::generate().unwrap();
+        let foreign_token = other_chassis_key.issue("op::a::slm", "project-a");
+        let app = router(Arc::clone(&state));
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/inference")
+                    .header("content-type", "application/json")
+                    .header("authorization", format!("Bearer {foreign_token}"))
+                    .body(Body::from(proxy_body()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
     }
 }

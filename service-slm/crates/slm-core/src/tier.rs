@@ -12,9 +12,11 @@ pub struct SpeculationRequest {
 
 /// Three compute tiers. The Doorman may pick a different tier than the
 /// caller's hint based on budget caps, request shape, and warm-VM state.
+/// Named `InferenceRoute` (not `Tier`) to avoid colliding with the
+/// unrelated customer-facing commercial tier ladder (Tier 0/1/2/3).
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum Tier {
+pub enum InferenceRoute {
     /// Tier A — local OLMo 3 7B Q4 (mistral.rs / llama.cpp HTTP on this VM).
     Local,
     /// Tier B — Yo-Yo OLMo-3-1125-32B-Think on multi-cloud GPU burst.
@@ -24,12 +26,12 @@ pub enum Tier {
     External,
 }
 
-impl Tier {
+impl InferenceRoute {
     pub fn as_str(&self) -> &'static str {
         match self {
-            Tier::Local => "local",
-            Tier::Yoyo => "yoyo",
-            Tier::External => "external",
+            InferenceRoute::Local => "local",
+            InferenceRoute::Yoyo => "yoyo",
+            InferenceRoute::External => "external",
         }
     }
 }

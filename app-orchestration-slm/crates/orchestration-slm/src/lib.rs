@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-PointSav-Proprietary
 
+pub mod allocation;
 pub mod error;
 pub mod fleet;
 pub mod flow_gate;
@@ -9,6 +10,7 @@ pub mod metering;
 pub mod node_circuit;
 pub mod yoyo_proxy;
 
+pub use allocation::AllocationLedger;
 pub use error::{ChassisError, Result};
 pub use fleet::FleetRegistry;
 pub use flow_gate::{ChassisFlowGate, GLOBAL_LABEL};

@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: FSL-1.1-ALv2
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
-
-/// os-totebox — NetBSD 10.1 compat-bottom image builder metadata.
-///
-/// The guest VM image for `vm-intelligence` (8 GiB RAM, OLMo 7B, Doorman,
-/// `service-content`, `system-ledger-server`). Built with `scripts/build-image.sh`
-/// which uses NetBSD cross tools (`nbmakefs`, `nbinstallboot`) on the GCP Ubuntu host.
-/// OLMo weights live on a separate data QCOW2 (`scripts/provision-data-disk.sh`).
+//! os-totebox — NetBSD 10.1 compat-bottom image builder metadata.
+//!
+//! The guest VM image for `vm-intelligence` (8 GiB RAM, OLMo 7B, Doorman,
+//! `service-content`, `system-ledger-server`). Built with `scripts/build-image.sh`
+//! which uses NetBSD cross tools (`nbmakefs`, `nbinstallboot`) on the GCP Ubuntu host.
+//! OLMo weights live on a separate data QCOW2 (`scripts/provision-data-disk.sh`).
+//!
+//! Also the crate for the `os-totebox` product bundle binary (`src/main.rs`) —
+//! see `BRIEF-os-totebox-platform.md` §8/§10 (Phase 2).
 
 /// NetBSD version pinned for this image.
 pub const NETBSD_VERSION: &str = "10.1";

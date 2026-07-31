@@ -40,7 +40,7 @@ set -uo pipefail
 DOORMAN="${SLM_DOORMAN_ENDPOINT:-http://127.0.0.1:9080}"
 SERVICE_CONTENT="${SERVICE_CONTENT_ENDPOINT:-http://127.0.0.1:9081}"
 INSTANCE="${SLM_YOYO_GCP_INSTANCE:-yoyo-tier-b-1}"
-PROJECT="${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}"
+PROJECT="${SLM_YOYO_GCP_PROJECT:?SLM_YOYO_GCP_PROJECT must be set (2026-07-30 GitHub-exposure remediation - no real-value default)}"
 ZONE="${SLM_YOYO_GCP_ZONE:-us-west1-b}"
 INCLUDE_IDLE_TEST=false
 INCLUDE_VLLM_RESTART=false

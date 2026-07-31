@@ -35,7 +35,7 @@ use tokio::sync::OwnedSemaphorePermit;
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
+use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, GrammarConstraint, InferenceRoute};
 use tracing::{debug, info, warn};
 
 use crate::error::{DoormanError, Result};
@@ -370,7 +370,7 @@ impl YoYoTierClient {
             if let Some(ref sem) = self.concurrency_sem {
                 match sem.clone().try_acquire_owned() {
                     Ok(p) => Some(p),
-                    Err(_) => return Err(DoormanError::TierUnavailable(Tier::Yoyo)),
+                    Err(_) => return Err(DoormanError::TierUnavailable(InferenceRoute::Yoyo)),
                 }
             } else {
                 None
@@ -496,7 +496,7 @@ impl YoYoTierClient {
 
         Ok(ComputeResponse {
             request_id: req.request_id,
-            tier_used: Tier::Yoyo,
+            tier_used: InferenceRoute::Yoyo,
             model,
             content: msg.content.unwrap_or_default(),
             reasoning_content: msg.reasoning_content,
@@ -773,7 +773,7 @@ mod tests {
                 content: "ping".into(),
             }],
             complexity: slm_core::Complexity::High,
-            tier_hint: Some(Tier::Yoyo),
+            tier_hint: Some(InferenceRoute::Yoyo),
             stream: false,
             max_tokens: Some(20),
             temperature: Some(0.0),
@@ -841,7 +841,7 @@ mod tests {
 
         let client = client(server.uri());
         let resp = client.complete(&req()).await.expect("happy path 200");
-        assert_eq!(resp.tier_used, Tier::Yoyo);
+        assert_eq!(resp.tier_used, InferenceRoute::Yoyo);
         assert_eq!(resp.content, "PONG");
         assert_eq!(resp.inference_ms, 412);
         assert_eq!(resp.upstream_version.as_deref(), Some("mistralrs:0.8"));

@@ -20,8 +20,9 @@ use std::path::{Path, PathBuf};
 use chrono::Utc;
 use regex::Regex;
 use slm_core::{
-    ApprenticeshipAttempt, ApprenticeshipBrief, ChatMessage, Complexity, ComputeRequest, ModuleId,
-    RequestId, Tier, APPRENTICE_ESCALATE_THRESHOLD, DEFAULT_BRIEF_TIER_B_THRESHOLD_CHARS,
+    ApprenticeshipAttempt, ApprenticeshipBrief, ChatMessage, Complexity, ComputeRequest,
+    InferenceRoute, ModuleId, RequestId, APPRENTICE_ESCALATE_THRESHOLD,
+    DEFAULT_BRIEF_TIER_B_THRESHOLD_CHARS,
 };
 use std::str::FromStr;
 use std::sync::OnceLock;
@@ -198,7 +199,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
                 },
             ],
             complexity: match tier_hint {
-                Tier::Yoyo => Complexity::High,
+                InferenceRoute::Yoyo => Complexity::High,
                 _ => Complexity::Medium,
             },
             tier_hint: Some(tier_hint),
@@ -209,13 +210,13 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             // real multi-hunk diff routinely exceeds 1024 tokens; truncation
             // there produced unterminated diffs that poisoned the corpus.
             max_tokens: Some(match tier_hint {
-                Tier::Yoyo => 2048,
+                InferenceRoute::Yoyo => 2048,
                 _ => 1536,
             }),
             temperature: None,
             sanitised_outbound: true,
             tier_c_label: None,
-            yoyo_label: if matches!(tier_hint, Tier::Yoyo) {
+            yoyo_label: if matches!(tier_hint, InferenceRoute::Yoyo) {
                 self.config.yoyo_dispatch_label.clone()
             } else {
                 None
@@ -327,19 +328,19 @@ impl<'a> ApprenticeshipDispatcher<'a> {
                 },
             ],
             complexity: match tier_hint {
-                Tier::Yoyo => Complexity::High,
+                InferenceRoute::Yoyo => Complexity::High,
                 _ => Complexity::Medium,
             },
             tier_hint: Some(tier_hint),
             stream: false,
             max_tokens: Some(match tier_hint {
-                Tier::Yoyo => 2048,
+                InferenceRoute::Yoyo => 2048,
                 _ => 1536,
             }),
             temperature: None,
             sanitised_outbound: true,
             tier_c_label: None,
-            yoyo_label: if matches!(tier_hint, Tier::Yoyo) {
+            yoyo_label: if matches!(tier_hint, InferenceRoute::Yoyo) {
                 self.config.yoyo_dispatch_label.clone()
             } else {
                 None
@@ -364,8 +365,44 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             "dispatching shadow brief"
         );
 
-        // Background work: use background slot (respects background_sem cap).
-        let resp = self.doorman.route_local_background(&req).await?;
+        // Background work, isolated from real-time Tier A traffic either way:
+        // InferenceRoute::Yoyo goes through route_yoyo_only (no automatic Tier A fallback —
+        // same reasoning as extraction's use of it: a background enrichment pass
+        // must not silently substitute a smaller model when the GPU node is
+        // unavailable; the drain worker's own yoyo_node_ready hold-check already
+        // gates dispatch on Tier B being ready, so reaching here with Tier B down
+        // is a narrow race, not the common case — it surfaces as a normal
+        // TierUnavailable retry, not a LocalSaturated one). InferenceRoute::Local keeps using
+        // route_local_background's dedicated background slot (respects
+        // background_sem cap) exactly as before.
+        //
+        // Fixed 2026-07-15 (BRIEF-os-totebox-platform.md, NEXT.md): this used to
+        // call route_local_background unconditionally regardless of tier_hint, so
+        // the drain worker's yoyo_dispatch_label override had no effect — every
+        // shadow-capture dispatch went through Tier A, never Tier B, despite the
+        // surrounding entrypoint.rs comments documenting Tier B enrichment as the
+        // intent.
+        // Audit fix (2026-07-30): this bypasses route()'s own automatic
+        // write_audit call (route_yoyo_only/route_local_background are used
+        // deliberately to skip route()'s Tier A fallback — see comment above),
+        // so the dispatch result must be captured and audited explicitly here
+        // rather than relying on route()'s internal bookkeeping, which never
+        // runs on this path. Previously this dispatch was recorded only to the
+        // apprenticeship training-corpus tuple, never to the audit ledger.
+        let dispatch_result = match tier_hint {
+            InferenceRoute::Yoyo => {
+                let label = self
+                    .config
+                    .yoyo_dispatch_label
+                    .as_deref()
+                    .unwrap_or("default");
+                self.doorman.route_yoyo_only(&req, label).await
+            }
+            _ => self.doorman.route_local_background(&req).await,
+        };
+        self.doorman
+            .write_audit_entry(&req, tier_hint, &dispatch_result);
+        let resp = dispatch_result?;
         let full_content = if resp.content.trim_start().starts_with("---") {
             resp.content.clone()
         } else {
@@ -659,22 +696,22 @@ fn render_files(root: &Path, paths: &[String]) -> String {
 }
 
 /// Pick a tier hint for a brief. Char-based proxy per design-pass Q6.
-/// When `tier_a_first=true`, always returns `Tier::Local` — shadow briefs
+/// When `tier_a_first=true`, always returns `InferenceRoute::Local` — shadow briefs
 /// run on Tier A, and the write_shadow_tuple guard filters escalated-empty
 /// results so no degenerate DPO tuples enter the corpus.
 pub fn pick_tier_for_brief(
     brief: &ApprenticeshipBrief,
     threshold_chars: usize,
     tier_a_first: bool,
-) -> Tier {
+) -> InferenceRoute {
     if tier_a_first {
-        return Tier::Local;
+        return InferenceRoute::Local;
     }
     let size = brief.body.len() + brief.acceptance_test.len();
     if size > threshold_chars {
-        Tier::Yoyo
+        InferenceRoute::Yoyo
     } else {
-        Tier::Local
+        InferenceRoute::Local
     }
 }
 
@@ -795,7 +832,7 @@ fn extract_diff_block(text: &str) -> Option<String> {
 pub fn empty_attempt(
     brief: &ApprenticeshipBrief,
     model: &str,
-    tier: Tier,
+    tier: InferenceRoute,
 ) -> ApprenticeshipAttempt {
     ApprenticeshipAttempt {
         brief_id: brief.brief_id.clone(),
@@ -942,7 +979,7 @@ Bumping MANIFEST.md per ni-51-102 forward-looking marker.
         });
         let doorman = Doorman::new(
             DoormanConfig {
-                local: Some(local),
+                local: Some(local.into()),
                 yoyo: std::collections::HashMap::new(),
                 external: None,
                 lark_validator: None,
@@ -969,7 +1006,7 @@ Bumping MANIFEST.md per ni-51-102 forward-looking marker.
         );
         assert!((attempt.self_confidence - 0.82).abs() < 1e-3);
         assert!(attempt.diff.contains("source_version: 0.2.0"));
-        assert_eq!(attempt.tier, Tier::Local);
+        assert_eq!(attempt.tier, InferenceRoute::Local);
         assert!(attempt.reasoning.contains("forward-looking"));
     }
 
@@ -1014,7 +1051,7 @@ I'm not sure how to apply this safely.
         });
         let doorman = Doorman::new(
             DoormanConfig {
-                local: Some(local),
+                local: Some(local.into()),
                 yoyo: std::collections::HashMap::new(),
                 external: None,
                 lark_validator: None,
@@ -1107,10 +1144,11 @@ OK.
         );
         // health_up initialises false (pessimistic); simulate the first
         // successful /health probe so dispatch will route to Tier B.
-        yoyo.health_up.store(true, std::sync::atomic::Ordering::Relaxed);
+        yoyo.health_up
+            .store(true, std::sync::atomic::Ordering::Relaxed);
         let doorman = Doorman::new(
             DoormanConfig {
-                local: Some(local),
+                local: Some(local.into()),
                 yoyo: {
                     let mut m = std::collections::HashMap::new();
                     m.insert("default".to_string(), yoyo);
@@ -1135,7 +1173,7 @@ OK.
             .await
             .expect("tier-B dispatch ok");
 
-        assert_eq!(attempt.tier, Tier::Yoyo);
+        assert_eq!(attempt.tier, InferenceRoute::Yoyo);
         // Tier A must NOT have received any request.
         let received_a = server_a.received_requests().await.unwrap_or_default();
         assert_eq!(
@@ -1198,7 +1236,7 @@ ok
         });
         let doorman = Doorman::new(
             DoormanConfig {
-                local: Some(local),
+                local: Some(local.into()),
                 yoyo: std::collections::HashMap::new(),
                 external: None,
                 lark_validator: None,
@@ -1249,12 +1287,12 @@ ok
         b.body = "x".repeat(50);
         b.acceptance_test = "y".repeat(50);
         // 50 + 50 = 100, NOT exceeding 100 → Tier A
-        assert_eq!(pick_tier_for_brief(&b, 100, false), Tier::Local);
+        assert_eq!(pick_tier_for_brief(&b, 100, false), InferenceRoute::Local);
         b.body = "x".repeat(51);
         // 51 + 50 = 101, exceeds 100 → Tier B
-        assert_eq!(pick_tier_for_brief(&b, 100, false), Tier::Yoyo);
+        assert_eq!(pick_tier_for_brief(&b, 100, false), InferenceRoute::Yoyo);
         // tier_a_first=true always returns Tier A regardless of size
-        assert_eq!(pick_tier_for_brief(&b, 100, true), Tier::Local);
+        assert_eq!(pick_tier_for_brief(&b, 100, true), InferenceRoute::Local);
     }
 
     // ── AS-4 dispatch_shadow tests ───────────────────────────────────
@@ -1288,8 +1326,13 @@ Shadow attempt for the apprentice.
         Mock::given(method("POST"))
             .and(path("/v1/chat/completions"))
             .respond_with(
-                // dispatch_shadow uses route_local_background → complete_inner_streaming
-                // (stream:true), so the mock must return SSE format.
+                // Small body → pick_tier_for_brief returns InferenceRoute::Local (see
+                // dispatcher_config's 100-char threshold) → dispatch_shadow's
+                // InferenceRoute::Local branch uses route_local_background →
+                // complete_inner_streaming (stream:true), so the mock must return
+                // SSE format. The InferenceRoute::Yoyo branch is covered separately by
+                // shadow_large_body_routes_to_tier_b_not_tier_a below, which uses
+                // plain JSON — route_yoyo_only's client.complete() is non-streaming.
                 ResponseTemplate::new(200)
                     .insert_header("content-type", "text/event-stream")
                     .set_body_string(ok_completion_sse(apprentice_response)),
@@ -1304,7 +1347,7 @@ Shadow attempt for the apprentice.
         });
         let doorman = Doorman::new(
             DoormanConfig {
-                local: Some(local),
+                local: Some(local.into()),
                 yoyo: std::collections::HashMap::new(),
                 external: None,
                 lark_validator: None,
@@ -1354,6 +1397,107 @@ Shadow attempt for the apprentice.
         assert!((sc - 0.7).abs() < 1e-3, "got {sc}");
     }
 
+    /// Regression 2026-07-15: dispatch_shadow used to call route_local_background
+    /// unconditionally, ignoring tier_hint entirely — so the drain worker's Tier B
+    /// override (yoyo_dispatch_label + brief_tier_b_threshold_chars=0) had no
+    /// effect and every shadow-capture dispatch went through Tier A. Mirrors
+    /// dispatch_brief's own big_body_routes_to_tier_b test above: a body over the
+    /// (test) 100-char threshold with a yoyo label configured must reach the
+    /// mocked Tier B server, and Tier A must receive zero requests.
+    #[tokio::test]
+    async fn shadow_large_body_routes_to_tier_b_not_tier_a() {
+        let server_a = MockServer::start().await;
+        let server_b = MockServer::start().await;
+
+        let apprentice_response = "\
+---
+self_confidence: 0.6
+escalate: false
+---
+
+## Reasoning
+
+Shadow attempt via Tier B.
+
+## Diff
+
+```diff
+--- a/foo
++++ b/foo
+@@ -1 +1 @@
+-a
++b
+```
+";
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_json(ok_completion(apprentice_response)),
+            )
+            .expect(1) // Tier B receives the only call
+            .mount(&server_b)
+            .await;
+        // Tier A: not mounted; received_requests asserted to 0 below.
+
+        let local = LocalTierClient::new(LocalTierConfig {
+            endpoint: server_a.uri(),
+            default_model: "olmo-3-1125-7b-q4".into(),
+        });
+        let bearer: Arc<dyn BearerTokenProvider> = Arc::new(StaticBearer::new("test"));
+        let yoyo = YoYoTierClient::new(
+            YoYoTierConfig {
+                endpoint: server_b.uri(),
+                default_model: "Olmo-3-1125-32B-Think".into(),
+                contract_version: crate::YOYO_CONTRACT_VERSION.into(),
+                pricing: PricingConfig::default(),
+                zone: None,
+                health_path: "/health".to_string(),
+            },
+            bearer,
+        );
+        // health_up initialises false (pessimistic); simulate the first
+        // successful /health probe so route_yoyo_only's allow_request() passes.
+        yoyo.health_up
+            .store(true, std::sync::atomic::Ordering::Relaxed);
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: Some(local.into()),
+                yoyo: {
+                    let mut m = std::collections::HashMap::new();
+                    m.insert("trainer".to_string(), yoyo);
+                    m
+                },
+                external: None,
+                lark_validator: None,
+                graph_context_client: None,
+                tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
+            },
+            ledger(),
+        );
+
+        let dir = tmp_dir("shadow-tier-b");
+        let mut cfg = dispatcher_config(dir); // threshold = 100 chars
+        cfg.yoyo_dispatch_label = Some("trainer".to_string());
+
+        let big_body = "x".repeat(150); // 150 + len("TEST") > 100
+        let outcome = ApprenticeshipDispatcher::new(&doorman, cfg)
+            .dispatch_shadow(&brief_for(&big_body), "diff --git a/foo b/foo\n+b\n")
+            .await
+            .expect("shadow tier-B dispatch ok");
+        assert!(!outcome.already_captured);
+
+        let received_a = server_a.received_requests().await.unwrap_or_default();
+        assert_eq!(
+            received_a.len(),
+            0,
+            "dispatch_shadow MUST route the large brief to Tier B, not Tier A"
+        );
+        let received_b = server_b.received_requests().await.unwrap_or_default();
+        assert_eq!(received_b.len(), 1);
+    }
+
     /// Idempotency on retry — same brief_id submitted twice writes
     /// exactly one tuple. The second POST is a no-op (apprentice is
     /// NOT redispatched).
@@ -1379,7 +1523,7 @@ Shadow attempt for the apprentice.
         });
         let doorman = Doorman::new(
             DoormanConfig {
-                local: Some(local),
+                local: Some(local.into()),
                 yoyo: std::collections::HashMap::new(),
                 external: None,
                 lark_validator: None,

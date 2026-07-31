@@ -70,7 +70,7 @@ SOFT_WALL_SECONDS=$(( HARD_WALL_SECONDS - 90 ))
 (( SOFT_WALL_SECONDS < 60 )) && SOFT_WALL_SECONDS=$(( HARD_WALL_SECONDS / 2 ))
 
 # GCP target — per SYSTEM CONTEXT, NOT the start/stop-yoyo defaults.
-PROJECT="${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}"
+PROJECT="${SLM_YOYO_GCP_PROJECT:?SLM_YOYO_GCP_PROJECT must be set (2026-07-30 GitHub-exposure remediation - no real-value default)}"
 ZONE="${SLM_YOYO_GCP_ZONE:-us-central1-a}"
 INSTANCE="${SLM_YOYO_GCP_INSTANCE:-yoyo-batch}"
 GCLOUD="${GCLOUD_BIN:-/snap/bin/gcloud}"

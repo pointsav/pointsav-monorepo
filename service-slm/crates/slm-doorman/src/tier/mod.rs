@@ -10,6 +10,12 @@
 mod circuit_breaker;
 mod external;
 mod local;
+/// Tier 0 orchestration client — routes through `app-orchestration-slm`'s
+/// `POST /v1/inference` instead of a local llama-server. Standalone and
+/// tested; not yet wired into `Doorman`'s tier-selection — see the module's
+/// own doc comment and `BRIEF-os-totebox-platform.md` Phase 5 for the exact
+/// remaining wiring step.
+mod orchestration;
 mod yoyo;
 
 pub use external::{
@@ -17,6 +23,7 @@ pub use external::{
     FOUNDRY_DEFAULT_ALLOWLIST,
 };
 pub use local::{LocalTierClient, LocalTierConfig};
+pub use orchestration::{allocate_identity, OrchestrationTierClient, OrchestrationTierConfig};
 pub use yoyo::{
     BearerTokenProvider, MetadataBearer, PricingConfig, StaticBearer, YoYoTierClient,
     YoYoTierConfig,

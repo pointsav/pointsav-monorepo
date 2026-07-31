@@ -22,7 +22,7 @@ pub use error::{CoreError, Result};
 pub use mesh::{EnergySource, EnvironmentMetadata, NodeDescriptor, NodeId};
 pub use module_id::ModuleId;
 pub use request_id::RequestId;
-pub use tier::{Complexity, SpeculationRequest, Tier};
+pub use tier::{Complexity, InferenceRoute, SpeculationRequest};
 
 use serde::{Deserialize, Serialize};
 
@@ -94,7 +94,7 @@ pub struct ComputeRequest {
     #[serde(default)]
     pub complexity: Complexity,
     #[serde(default)]
-    pub tier_hint: Option<Tier>,
+    pub tier_hint: Option<InferenceRoute>,
     #[serde(default)]
     pub stream: bool,
     #[serde(default)]
@@ -467,7 +467,7 @@ pub struct AuditCaptureResponse {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ComputeResponse {
     pub request_id: RequestId,
-    pub tier_used: Tier,
+    pub tier_used: InferenceRoute,
     pub model: String,
     pub content: String,
     /// Think-model reasoning tokens when upstream uses `--reasoning-format deepseek`.

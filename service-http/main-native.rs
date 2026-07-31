@@ -4,6 +4,7 @@
 // ==============================================================================
 // 🏭 POINTSAV DIGITAL SYSTEMS : SERVICE-HTTP (OMNI-ROUTER)
 // ==============================================================================
+use std::env;
 use std::fs;
 use std::net::{TcpListener, TcpStream};
 use std::io::{Read, Write};
@@ -52,8 +53,13 @@ fn handle_client(mut stream: TcpStream, expected_signature: &str) {
             if allowed_services.contains(&service) {
                 println!(" [MESH] Routing to: {} -> {}", service, entity);
                 
-                // Construct the absolute path dynamically
-                let target_path = format!("/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-personnel-1/{}/ledgers/{}.yaml", service, entity);
+                // Construct the absolute path dynamically. No hardcoded default
+                // (2026-07-30 GitHub-exposure remediation) — fail loudly if the
+                // deployment root isn't configured rather than silently pointing
+                // at a real, non-portable path.
+                let deployment_root = env::var("WOODFINE_FLEET_DEPLOYMENT_ROOT")
+                    .expect("WOODFINE_FLEET_DEPLOYMENT_ROOT must be set");
+                let target_path = format!("{}/{}/ledgers/{}.yaml", deployment_root, service, entity);
                 
                 match fs::read_to_string(&target_path) {
                     Ok(data) => {
@@ -75,8 +81,14 @@ fn handle_client(mut stream: TcpStream, expected_signature: &str) {
 }
 
 fn main() {
-    let token_path = "/home/mathew/Foundry/factory-pointsav/pointsav-monorepo/system-mba-shim/vault_identity.key";
-    let expected_signature = fs::read_to_string(token_path).unwrap_or_else(|_| String::from("CRITICAL_FAILURE")).trim().to_string();
+    // No hardcoded default (2026-07-30 GitHub-exposure remediation). The
+    // previous hardcoded path was also stale/dead — it pointed at
+    // `system-mba-shim`, which does not exist; the real crate is
+    // `system-gateway-mba`. Fail loudly rather than silently pointing at a
+    // wrong or non-portable path.
+    let token_path = env::var("MBA_VAULT_IDENTITY_KEY_PATH")
+        .expect("MBA_VAULT_IDENTITY_KEY_PATH must be set");
+    let expected_signature = fs::read_to_string(&token_path).unwrap_or_else(|_| String::from("CRITICAL_FAILURE")).trim().to_string();
     
     println!("=========================================");
     println!(" [!] POINTSAV NATIVE OMNI-ROUTER");

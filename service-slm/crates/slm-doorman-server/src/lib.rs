@@ -8,16 +8,20 @@
 //! TCP listener.
 //!
 //! The `main.rs` binary target uses this library via `slm_doorman_server::http`.
+//!
+//! `run()` (see `entrypoint` module) is the full Doorman boot sequence —
+//! builds `AppState`, spawns the Brief Queue Substrate background tasks, and
+//! serves the axum router. `main.rs` is a thin wrapper around it; a bundling
+//! binary (`BRIEF-os-totebox-platform.md` §8/§10, Phase 2) embeds this crate
+//! as a library dependency and calls `run()` directly on its own tokio task.
 
 /// Drain-worker decision logic (empty-diff skip guard), extracted for unit tests.
 pub mod drain;
+/// Full Doorman boot sequence (`run()`), moved out of `main.rs` so this crate
+/// is embeddable as a library dependency, not only runnable as its own binary.
+pub mod entrypoint;
 pub mod http;
 pub mod idle_monitor;
-/// Three-priority in-flight request scheduler (P0/P1/P2 slot reservation).
-/// P2 (training) is admitted only when ALL inference slots are free, preventing
-/// training requests from competing with extraction. Wire into `AppState` when
-/// GRPO training requests begin routing through the Doorman.
-pub mod scheduler;
 /// Brief Queue Substrate (apprenticeship-substrate.md §7C).
 ///
 /// File-backed durable queue that decouples brief acceptance from
@@ -25,6 +29,13 @@ pub mod scheduler;
 /// Yo-Yo idle-shutdown preemption. See `queue.rs` module-level docs for
 /// the full design.
 pub mod queue;
+/// Three-priority in-flight request scheduler (P0/P1/P2 slot reservation).
+/// P2 (training) is admitted only when ALL inference slots are free, preventing
+/// training requests from competing with extraction. Wire into `AppState` when
+/// GRPO training requests begin routing through the Doorman.
+pub mod scheduler;
+
+pub use entrypoint::run;
 
 /// Test helpers — factory functions shared across integration test files.
 ///
@@ -133,7 +144,7 @@ pub mod test_helpers {
         });
         let doorman = Doorman::new(
             DoormanConfig {
-                local: Some(local),
+                local: Some(local.into()),
                 yoyo: std::collections::HashMap::new(),
                 external: None,
                 lark_validator: None,

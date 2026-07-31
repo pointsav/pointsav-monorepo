@@ -37,7 +37,7 @@ use std::sync::Mutex;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use slm_core::{ModuleId, RequestId, Tier};
+use slm_core::{InferenceRoute, ModuleId, RequestId};
 
 use crate::error::{DoormanError, Result};
 
@@ -89,7 +89,7 @@ pub struct AuditEntry {
     pub timestamp_utc: DateTime<Utc>,
     pub request_id: RequestId,
     pub module_id: ModuleId,
-    pub tier: Tier,
+    pub tier: InferenceRoute,
     pub model: String,
     pub inference_ms: u64,
     pub cost_usd: f64,
@@ -416,7 +416,7 @@ mod tests {
             timestamp_utc: Utc::now(),
             request_id: RequestId::new(),
             module_id: ModuleId::from_str("foundry").unwrap(),
-            tier: Tier::Local,
+            tier: InferenceRoute::Local,
             model: "olmo-3-7b-q4".into(),
             inference_ms: 412,
             cost_usd: 0.0,
@@ -590,7 +590,7 @@ mod tests {
             timestamp_utc: Utc::now(),
             request_id: RequestId::new(),
             module_id: ModuleId::from_str("foundry").unwrap(),
-            tier: Tier::Local,
+            tier: InferenceRoute::Local,
             model: "olmo-3-7b-q4".into(),
             inference_ms: 1,
             cost_usd: 0.0,

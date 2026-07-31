@@ -13,7 +13,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
-use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
+use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, GrammarConstraint, InferenceRoute};
 use tokio::sync::{watch, OwnedSemaphorePermit, Semaphore};
 use tracing::debug;
 
@@ -340,7 +340,7 @@ impl LocalTierClient {
 
         Ok(ComputeResponse {
             request_id: req.request_id,
-            tier_used: Tier::Local,
+            tier_used: InferenceRoute::Local,
             model,
             content,
             reasoning_content: None,
@@ -417,7 +417,7 @@ impl LocalTierClient {
 
         Ok(ComputeResponse {
             request_id: req.request_id,
-            tier_used: Tier::Local,
+            tier_used: InferenceRoute::Local,
             model,
             content: msg.content.unwrap_or_default(),
             reasoning_content: None,
@@ -493,7 +493,8 @@ fn is_false(b: &bool) -> bool {
 mod tests {
     use super::*;
     use slm_core::{
-        ChatMessage, Complexity, ComputeRequest, GrammarConstraint, ModuleId, RequestId, Tier,
+        ChatMessage, Complexity, ComputeRequest, GrammarConstraint, InferenceRoute, ModuleId,
+        RequestId,
     };
     use std::str::FromStr;
     use wiremock::matchers::{method, path};
@@ -509,7 +510,7 @@ mod tests {
                 content: "ping".into(),
             }],
             complexity: Complexity::Low,
-            tier_hint: Some(Tier::Local),
+            tier_hint: Some(InferenceRoute::Local),
             stream: false,
             max_tokens: Some(20),
             temperature: Some(0.0),
@@ -558,7 +559,7 @@ mod tests {
 
         let client = client(server.uri());
         let resp = client.complete(&req()).await.expect("happy path 200");
-        assert_eq!(resp.tier_used, Tier::Local);
+        assert_eq!(resp.tier_used, InferenceRoute::Local);
         assert_eq!(resp.content, "PONG");
         assert_eq!(resp.model, "OLMo-3-7B-Q4_K_M.gguf");
         assert_eq!(

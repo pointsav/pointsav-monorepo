@@ -94,7 +94,7 @@ impl Default for BriefCache {
 mod tests {
     use super::*;
     use chrono::Utc;
-    use slm_core::{BriefScope, SeniorRole, Tier};
+    use slm_core::{BriefScope, InferenceRoute, SeniorRole};
 
     fn brief(id: &str) -> ApprenticeshipBrief {
         ApprenticeshipBrief {
@@ -121,7 +121,7 @@ mod tests {
             self_confidence: 0.9,
             escalate: false,
             inference_ms: 100,
-            tier: Tier::Local,
+            tier: InferenceRoute::Local,
             cost_usd: 0.0,
             reasoning: String::new(),
             diff: String::new(),

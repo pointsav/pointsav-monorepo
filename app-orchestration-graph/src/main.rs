@@ -1,4 +1,9 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: LicenseRef-PointSav-ARR
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+//
+// This file is proprietary material of Woodfine Capital Projects Inc.
+// See the LICENSE file in this repository for the full terms.
+// Unauthorized use, reproduction, or distribution is prohibited.
 
 //! app-orchestration-graph — Cross-archive DataGraph federation gateway
 //!
@@ -10,10 +15,30 @@
 //! Activation: not deployed yet — scaffold only. Activated by Command Session
 //! when the fleet has ≥2 Totebox archives with DataGraph endpoints.
 //!
+//! **Target model** (reworked `BRIEF-datagraph-tenant-isolation.md` Session 4):
+//! `ORCHESTRATION_GRAPH_TARGETS` is now a comma-separated list of
+//! `archive_name|endpoint|module_id` triples (previously a flat list of bare
+//! URLs) — e.g. `project-editorial|http://127.0.0.1:9081|pointsav`. Carrying
+//! the archive name and module_id explicitly (not just a URL) is what makes
+//! the eventual real per-archive-instance split a config change, not a
+//! rework, and is required for capability-forwarding below (a signed
+//! capability's `archive_scope` names a `module_id`, not a URL).
+//!
+//! **Capability-forwarding** (also Session 4): each fan-out call to a target
+//! now carries a signed `X-Foundry-Capability` header (see `capability.rs`)
+//! — this instance's own Ed25519 identity, paired with each target via
+//! `POST /v1/pair` at startup, `archive_scope` set to that target's own
+//! `module_id`. Ships as a **direct grant only** (not a "forward" claim) —
+//! this instance doesn't yet authenticate its own inbound callers, so it has
+//! no real third-party identity to relay on behalf of; see `capability.rs`'s
+//! doc comment for the full scope reasoning.
+//!
 //! Routes:
 //!   GET /healthz                    → liveness
 //!   GET /v1/graph/context?q=&module_id= → federated entity query
 //!   GET /v1/health                  → target list + per-archive status
+
+mod capability;
 
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -26,6 +51,7 @@ use axum::{
     routing::get,
     Router,
 };
+use capability::Identity;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
@@ -83,15 +109,59 @@ pub struct HealthResponse {
     pub targets: Vec<TargetStatus>,
 }
 
+/// A federation target: `{archive_name, endpoint, module_id}`, not a bare
+/// URL — see module doc comment for why this tuple shape matters.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TargetSpec {
+    pub archive_name: String,
+    pub endpoint: String,
+    pub module_id: String,
+}
+
+/// Parse `ORCHESTRATION_GRAPH_TARGETS`: comma-separated
+/// `archive_name|endpoint|module_id` triples. Malformed entries (wrong field
+/// count) are skipped with a warning printed to stderr, not silently dropped
+/// or fatal — one bad entry must not take down the whole target list.
+pub fn parse_targets(raw: &str) -> Vec<TargetSpec> {
+    raw.split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .filter_map(|entry| {
+            let parts: Vec<&str> = entry.split('|').map(str::trim).collect();
+            match parts.as_slice() {
+                [archive_name, endpoint, module_id]
+                    if !archive_name.is_empty() && !endpoint.is_empty() && !module_id.is_empty() =>
+                {
+                    Some(TargetSpec {
+                        archive_name: archive_name.to_string(),
+                        endpoint: endpoint.to_string(),
+                        module_id: module_id.to_string(),
+                    })
+                }
+                _ => {
+                    eprintln!(
+                        "[orchestration-graph] WARNING: skipping malformed ORCHESTRATION_GRAPH_TARGETS \
+                         entry {entry:?} — expected \"archive_name|endpoint|module_id\""
+                    );
+                    None
+                }
+            }
+        })
+        .collect()
+}
+
 // ── server state ─────────────────────────────────────────────────────────────
 
 pub struct AppState {
     /// One reqwest::Client with a 30-second per-request timeout.
     /// A single client reuses connection pools across fan-out requests.
     client: Client,
-    /// Comma-separated list of service-content base URLs parsed from
+    /// `{archive_name, endpoint, module_id}` tuples parsed from
     /// ORCHESTRATION_GRAPH_TARGETS env var at startup.
-    targets: Vec<String>,
+    targets: Vec<TargetSpec>,
+    /// This instance's own Ed25519 identity — signs the `X-Foundry-
+    /// Capability` header attached to every fan-out call.
+    identity: Identity,
 }
 
 // ── handlers ─────────────────────────────────────────────────────────────────
@@ -102,6 +172,16 @@ async fn healthz() -> &'static str {
 
 /// GET /v1/graph/context — federated entity query.
 /// Fans out to all targets, merges, deduplicates by normalized entity name.
+///
+/// Each target is queried using ITS OWN configured `module_id` (`TargetSpec.
+/// module_id`), not the caller's request-level `params.module_id` — with
+/// tenant-isolation enforced server-side at each target
+/// (`BRIEF-datagraph-tenant-isolation.md` Session 2/3), a single caller-
+/// supplied `module_id` string isn't meaningful across archives that each
+/// scope their own tenant differently; `target.module_id` is also what the
+/// signed capability's `archive_scope` asserts, so query and capability stay
+/// consistent (a mismatch would be rejected by the target's own
+/// `capability_gate`). `params.q`/`params.limit` still apply per target.
 async fn graph_context(
     State(state): State<Arc<AppState>>,
     Query(params): Query<ContextQuery>,
@@ -117,18 +197,26 @@ async fn graph_context(
     // Fan-out: query all targets concurrently.
     let futs: Vec<_> = targets
         .iter()
-        .map(|base_url| {
+        .map(|target| {
             let client = state.client.clone();
             let url = format!(
                 "{}/v1/graph/context?q={}&module_id={}&limit={}",
-                base_url,
+                target.endpoint,
                 urlencoding_basic(&params.q),
-                urlencoding_basic(&params.module_id),
+                urlencoding_basic(&target.module_id),
                 params.limit,
             );
-            let base_url = base_url.clone();
+            let capability = state
+                .identity
+                .make_capability_header(&target.module_id, &capability::fresh_nonce());
+            let base_url = target.endpoint.clone();
             async move {
-                match client.get(&url).send().await {
+                match client
+                    .get(&url)
+                    .header("X-Foundry-Capability", capability)
+                    .send()
+                    .await
+                {
                     Ok(resp) if resp.status().is_success() => {
                         match resp.json::<Vec<GraphEntity>>().await {
                             Ok(mut entities) => {
@@ -190,10 +278,10 @@ async fn health_targets(State(state): State<Arc<AppState>>) -> Json<HealthRespon
     let futs: Vec<_> = state
         .targets
         .iter()
-        .map(|base_url| {
+        .map(|target| {
             let client = state.client.clone();
-            let url = format!("{}/healthz", base_url);
-            let base_url = base_url.clone();
+            let url = format!("{}/healthz", target.endpoint);
+            let base_url = target.endpoint.clone();
             async move {
                 let reachable = client
                     .get(&url)
@@ -261,27 +349,32 @@ async fn main() {
     let bind_addr =
         std::env::var("ORCHESTRATION_GRAPH_BIND").unwrap_or_else(|_| "127.0.0.1:9181".to_string());
 
-    // Parse comma-separated target URLs; trim whitespace; skip empty entries.
-    let targets: Vec<String> = std::env::var("ORCHESTRATION_GRAPH_TARGETS")
-        .unwrap_or_default()
-        .split(',')
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .collect();
+    let targets = parse_targets(&std::env::var("ORCHESTRATION_GRAPH_TARGETS").unwrap_or_default());
 
     if targets.is_empty() {
         eprintln!(
-            "[orchestration-graph] WARNING: ORCHESTRATION_GRAPH_TARGETS is not set. \
-             Set to comma-separated service-content base URLs (e.g. \
-             http://archive1:9081,http://archive2:9081)."
+            "[orchestration-graph] WARNING: ORCHESTRATION_GRAPH_TARGETS is not set (or fully \
+             malformed). Set to comma-separated \"archive_name|endpoint|module_id\" triples \
+             (e.g. project-editorial|http://127.0.0.1:9081|pointsav,project-bim|http://host2:9081|woodfine)."
         );
     } else {
         println!(
             "[orchestration-graph] Federating {} archive(s): {}",
             targets.len(),
-            targets.join(", ")
+            targets
+                .iter()
+                .map(|t| format!("{} ({})", t.archive_name, t.endpoint))
+                .collect::<Vec<_>>()
+                .join(", ")
         );
     }
+
+    let identity = Identity::load_or_generate(&capability::default_seed_path())
+        .unwrap_or_else(|e| panic!("[orchestration-graph] failed to load/generate identity: {e}"));
+    println!(
+        "[orchestration-graph] identity public key: {}",
+        identity.verifying_key_b64
+    );
 
     // 30-second per-request timeout: one unreachable archive must not stall all queries.
     let client = Client::builder()
@@ -289,7 +382,44 @@ async fn main() {
         .build()
         .expect("build reqwest client");
 
-    let state = Arc::new(AppState { client, targets });
+    // Pair with each target at startup — best-effort. A target that's
+    // unreachable or already paired is logged and skipped, not fatal: this
+    // crate is explicitly "not deployed yet — scaffold only" and targets may
+    // not exist yet during development.
+    for target in &targets {
+        let pair_url = format!("{}/v1/pair", target.endpoint);
+        let req = identity.build_pair_request(&target.module_id, &capability::fresh_nonce());
+        match client.post(&pair_url).json(&req).send().await {
+            Ok(resp) if resp.status().is_success() => {
+                println!(
+                    "[orchestration-graph] paired with {} ({})",
+                    target.archive_name, target.endpoint
+                );
+            }
+            Ok(resp) => {
+                eprintln!(
+                    "[orchestration-graph] WARNING: pairing with {} ({}) returned HTTP {} — \
+                     fan-out to this target will fail capability_gate until paired",
+                    target.archive_name,
+                    target.endpoint,
+                    resp.status()
+                );
+            }
+            Err(e) => {
+                eprintln!(
+                    "[orchestration-graph] WARNING: could not reach {} ({}) to pair: {e} — \
+                     fan-out to this target will fail capability_gate until paired",
+                    target.archive_name, target.endpoint
+                );
+            }
+        }
+    }
+
+    let state = Arc::new(AppState {
+        client,
+        targets,
+        identity,
+    });
 
     let app = Router::new()
         .route("/healthz", get(healthz))
@@ -305,4 +435,62 @@ async fn main() {
     axum::serve(listener, app)
         .await
         .expect("[orchestration-graph] Server error");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_targets_single_valid_triple() {
+        let targets = parse_targets("project-editorial|http://127.0.0.1:9081|pointsav");
+        assert_eq!(targets.len(), 1);
+        assert_eq!(targets[0].archive_name, "project-editorial");
+        assert_eq!(targets[0].endpoint, "http://127.0.0.1:9081");
+        assert_eq!(targets[0].module_id, "pointsav");
+    }
+
+    #[test]
+    fn parse_targets_multiple_triples() {
+        let targets = parse_targets(
+            "project-editorial|http://host1:9081|pointsav,project-bim|http://host2:9081|woodfine",
+        );
+        assert_eq!(targets.len(), 2);
+        assert_eq!(targets[1].archive_name, "project-bim");
+        assert_eq!(targets[1].module_id, "woodfine");
+    }
+
+    #[test]
+    fn parse_targets_trims_whitespace() {
+        let targets = parse_targets(" project-editorial | http://127.0.0.1:9081 | pointsav ");
+        assert_eq!(targets.len(), 1);
+        assert_eq!(targets[0].archive_name, "project-editorial");
+        assert_eq!(targets[0].endpoint, "http://127.0.0.1:9081");
+    }
+
+    #[test]
+    fn parse_targets_skips_malformed_entries_not_fatal() {
+        // Old flat-URL-only format (no pipes) — malformed under the new
+        // tuple shape, must be skipped, not panic or silently produce a
+        // garbage TargetSpec.
+        let targets = parse_targets(
+            "http://old-flat-format:9081,project-editorial|http://host1:9081|pointsav",
+        );
+        assert_eq!(targets.len(), 1, "malformed entry skipped, valid one kept");
+        assert_eq!(targets[0].archive_name, "project-editorial");
+    }
+
+    #[test]
+    fn parse_targets_empty_string_returns_empty_vec() {
+        assert!(parse_targets("").is_empty());
+        assert!(parse_targets("   ").is_empty());
+    }
+
+    #[test]
+    fn parse_targets_rejects_empty_field_within_triple() {
+        // Right shape (3 pipe-separated fields) but one field is empty —
+        // must still be rejected, not accepted with a blank module_id.
+        let targets = parse_targets("project-editorial||pointsav");
+        assert!(targets.is_empty());
+    }
 }

@@ -37,6 +37,20 @@
 //!     Absent or invalid = dev key (all-zero); any real license token will fail.
 //!     Set to the key produced by `tool-wallet keygen` when a license is issued.
 //!
+//!   ORCHESTRATION_ALLOCATION_LEDGER_PATH
+//!     Path to the per-VM discovery/allocation ledger (§14 #20) — an append-only
+//!     JSONL file of every module_id ever handed out by POST /v1/discovery/allocate.
+//!     Default: /var/lib/orchestration-slm/allocated-ids.jsonl
+//!
+//!   ORCHESTRATION_REGISTRATION_TOKEN
+//!     Shared admission-control secret for POST /v1/discovery/allocate and
+//!     POST /v1/discovery/register. Callers must send it as
+//!     `Authorization: Bearer <token>`. Absent = both endpoints stay open to
+//!     any caller that can reach the chassis (the prior, unauthenticated
+//!     behavior) — a loud startup warning is logged in that case. Set this
+//!     in any real deployment; the corresponding Doorman-side setting is
+//!     `SLM_ORCHESTRATION_REGISTRATION_TOKEN`.
+//!
 //!   RUST_LOG
 //!     Tracing filter. Default: orchestration_slm=info,orchestration_slm_server=info
 
@@ -46,8 +60,8 @@ use std::sync::Arc;
 use anyhow::Context;
 use orchestration_slm::yoyo_proxy::YoyoEndpoints;
 use orchestration_slm::{
-    resolve_from_env, ChassisFlowGate, CircuitRegistry, FleetRegistry, LicenseStatus,
-    MembershipKey, MeteringLedger, YoyoProxyClient,
+    resolve_from_env, AllocationLedger, ChassisFlowGate, CircuitRegistry, FleetRegistry,
+    LicenseStatus, MembershipKey, MeteringLedger, YoyoProxyClient,
 };
 use tracing::{info, warn};
 
@@ -106,6 +120,26 @@ async fn main() -> anyhow::Result<()> {
 
     let membership = MembershipKey::generate().context("failed to generate membership keypair")?;
 
+    let allocation_ledger_path = std::env::var("ORCHESTRATION_ALLOCATION_LEDGER_PATH")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| {
+            std::path::PathBuf::from("/var/lib/orchestration-slm/allocated-ids.jsonl")
+        });
+    let allocation = AllocationLedger::load(allocation_ledger_path.clone())
+        .with_context(|| format!("failed to load allocation ledger at {allocation_ledger_path:?}"))?;
+    info!(path = ?allocation_ledger_path, "allocation ledger loaded");
+
+    let registration_token = std::env::var("ORCHESTRATION_REGISTRATION_TOKEN").ok();
+    match &registration_token {
+        Some(_) => info!("ORCHESTRATION_REGISTRATION_TOKEN configured — discovery endpoints require it"),
+        None => warn!(
+            "ORCHESTRATION_REGISTRATION_TOKEN is unset — /v1/discovery/allocate and \
+             /v1/discovery/register are UNAUTHENTICATED; any caller that can reach this \
+             chassis can self-register and be issued a membership token. Set \
+             ORCHESTRATION_REGISTRATION_TOKEN before production use."
+        ),
+    }
+
     let state = Arc::new(http::AppState {
         fleet: FleetRegistry::new(),
         proxy: Arc::new(YoyoProxyClient::new(endpoints)),
@@ -114,6 +148,8 @@ async fn main() -> anyhow::Result<()> {
         gates: Arc::new(ChassisFlowGate::new(YOYO_LABELS.iter().copied())),
         license: Arc::new(license),
         membership: Arc::new(membership),
+        allocation: Arc::new(allocation),
+        registration_token,
     });
 
     info!(
@@ -129,8 +165,33 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("failed to bind")?;
 
-    axum::serve(listener, app).await.context("server error")?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+        .context("server error")?;
+    info!("chassis shut down cleanly.");
     Ok(())
+}
+
+/// Awaits SIGTERM, then returns — drives the chassis's own axum graceful
+/// shutdown (drain in-flight requests, stop accepting new ones). The
+/// chassis is stateless (rebuilds its fleet registry from heartbeats on
+/// restart per this crate's own CLAUDE.md), so there is no checkpoint/WAL
+/// concern here like os-totebox's LadybugDB — draining in-flight HTTP is
+/// the whole story. Mirrors the same pattern already proven in
+/// slm-doorman-server and service-content (BRIEF-os-totebox-platform.md,
+/// T11/T12).
+async fn shutdown_signal() {
+    match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+        Ok(mut sigterm) => {
+            sigterm.recv().await;
+            info!("SIGTERM received — draining in-flight requests, no new connections accepted...");
+        }
+        Err(e) => {
+            tracing::error!(error = %e, "failed to install SIGTERM handler — graceful shutdown unavailable, server will only stop on abrupt termination");
+            std::future::pending::<()>().await;
+        }
+    }
 }
 
 fn init_tracing() {

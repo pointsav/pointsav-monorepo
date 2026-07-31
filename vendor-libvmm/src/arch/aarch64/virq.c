@@ -1,0 +1,163 @@
+/*
+ * Copyright 2024, UNSW
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <microkit.h>
+#include <libvmm/libvmm.h>
+#include <libvmm/arch/aarch64/vgic/vgic.h>
+#include <libvmm/arch/aarch64/vgic/virq.h>
+
+extern guest_t guest;
+
+/* Maps Microkit channel numbers with registered vIRQ */
+irq_routing_info_t virq_passthrough_map[MAX_PASSTHROUGH_IRQ] = { 0 };
+
+#define PPI_VTIMER_IRQ      27
+
+static void vppi_event_ack(irq_routing_info_t irq_routing_info, void *cookie)
+{
+    microkit_vcpu_arm_ack_vppi(IRQ_ROUTE_TO_ARM_CPUID(irq_routing_info), IRQ_ROUTE_TO_ARM_INTID(irq_routing_info));
+}
+
+static void sgi_ack(irq_routing_info_t irq_routing_info, void *cookie)
+{
+}
+
+bool virq_controller_init()
+{
+    bool success;
+
+    vgic_init();
+#if defined(GIC_V2)
+    LOG_VMM("initialised virtual GICv2 (distributor: 0x%lx)\n", GIC_DIST_PADDR);
+#elif defined(GIC_V3)
+    LOG_VMM("initialised virtual GICv3 (distributor: 0x%lx, redistributor: 0x%lx)\n", GIC_DIST_PADDR, GIC_REDIST_PADDR);
+#else
+#error "Unsupported GIC version"
+#endif
+
+    /* Register the fault handler */
+    success = fault_register_vm_exception_handler(GIC_DIST_PADDR, GIC_DIST_SIZE, vgic_handle_fault_dist, NULL);
+    if (!success) {
+        LOG_VMM_ERR("Failed to register fault handler for GIC distributor region\n");
+        return false;
+    }
+#if defined(GIC_V3)
+    success = fault_register_vm_exception_handler(GIC_REDIST_PADDR, GIC_REDIST_TOTAL_SIZE, vgic_handle_fault_redist,
+                                                  NULL);
+    if (!success) {
+        LOG_VMM_ERR("Failed to register fault handler for GIC redistributor region\n");
+        return false;
+    }
+#endif
+
+    for (int vcpu = 0; vcpu < guest.num_vcpus; vcpu++) {
+        success = vgic_register_irq(vcpu, PPI_VTIMER_IRQ, &vppi_event_ack, NULL);
+        if (!success) {
+            LOG_VMM_ERR("Failed to register vCPU virtual timer IRQ: 0x%x\n", PPI_VTIMER_IRQ);
+            return false;
+        }
+        for (int i = 0; i < NUM_SGI_VIRQS; i++) {
+            success = vgic_register_irq(vcpu, i, &sgi_ack, NULL);
+            if (!success) {
+                LOG_VMM_ERR("Failed to register vCPU SGI 0x%x IRQ", i);
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+static bool irq_type_check(irq_routing_info_t irq_routing_info)
+{
+    if (irq_routing_info.type != IRQ_TYPE_ARM_GIC) {
+        LOG_VMM_ERR("expected irq type %d for ARM, but got %d", IRQ_TYPE_ARM_GIC, irq_routing_info.type);
+        return false;
+    }
+    return true;
+}
+
+bool virq_inject(irq_routing_info_t irq_routing_info)
+{
+    if (!irq_type_check(irq_routing_info)) {
+        return false;
+    }
+    return vgic_inject_irq(IRQ_ROUTE_TO_ARM_CPUID(irq_routing_info), IRQ_ROUTE_TO_ARM_INTID(irq_routing_info));
+}
+
+bool virq_set_level(irq_routing_info_t irq_routing_info, bool level)
+{
+    if (level) {
+        return vgic_inject_irq(IRQ_ROUTE_TO_ARM_CPUID(irq_routing_info), IRQ_ROUTE_TO_ARM_INTID(irq_routing_info));
+    } else {
+        return true;
+    }
+}
+
+bool virq_register(irq_routing_info_t irq_routing_info, virq_ack_fn_t ack_fn, void *ack_data)
+{
+    if (!irq_type_check(irq_routing_info)) {
+        return false;
+    }
+    return vgic_register_irq(IRQ_ROUTE_TO_ARM_CPUID(irq_routing_info), IRQ_ROUTE_TO_ARM_INTID(irq_routing_info), ack_fn,
+                             ack_data);
+}
+
+static void virq_passthrough_ack(irq_routing_info_t irq_routing_info, void *cookie)
+{
+    assert(irq_type_check(irq_routing_info));
+    /* We are down-casting to microkit_channel so must first cast to size_t */
+    microkit_irq_ack((microkit_channel)(size_t)cookie);
+}
+
+bool virq_register_passthrough(irq_routing_info_t irq_routing_info, microkit_channel irq_ch)
+{
+    if (!irq_type_check(irq_routing_info)) {
+        return false;
+    }
+    if (irq_ch >= MICROKIT_MAX_CHANNELS) {
+        LOG_VMM_ERR("Invalid channel number given '0x%x' for passthrough vIRQ 0x%x\n", irq_ch,
+                    IRQ_ROUTE_TO_ARM_INTID(irq_routing_info));
+        return false;
+    }
+
+    LOG_VMM("Register passthrough vIRQ 0x%x on vCPU 0x%x (IRQ channel: 0x%x)\n",
+            IRQ_ROUTE_TO_ARM_INTID(irq_routing_info), IRQ_ROUTE_TO_ARM_CPUID(irq_routing_info), irq_ch);
+
+    virq_passthrough_map[irq_ch] = irq_routing_info;
+
+    bool success = virq_register(irq_routing_info, &virq_passthrough_ack, (void *)(size_t)irq_ch);
+    assert(success);
+    if (!success) {
+        LOG_VMM_ERR("Failed to register passthrough vIRQ 0x%x\n", IRQ_ROUTE_TO_ARM_INTID(irq_routing_info));
+        return false;
+    }
+
+    return true;
+}
+
+bool virq_handle_passthrough(microkit_channel irq_ch)
+{
+    if (irq_ch >= MAX_PASSTHROUGH_IRQ) {
+        LOG_VMM_ERR("attempted to handle invalid passthrough IRQ channel 0x%x\n", irq_ch);
+        return false;
+    }
+    if (IRQ_ROUTE_INVALID(virq_passthrough_map[irq_ch])) {
+        LOG_VMM_ERR("attempted to handle invalid passthrough IRQ channel 0x%x\n", irq_ch);
+        return false;
+    }
+
+    bool success = vgic_inject_irq(IRQ_ROUTE_TO_ARM_CPUID(virq_passthrough_map[irq_ch]),
+                                   IRQ_ROUTE_TO_ARM_INTID(virq_passthrough_map[irq_ch]));
+    if (!success) {
+        LOG_VMM_ERR("could not inject passthrough vIRQ 0x%x, dropped on vCPU 0x%x\n",
+                    IRQ_ROUTE_TO_ARM_INTID(virq_passthrough_map[irq_ch]),
+                    IRQ_ROUTE_TO_ARM_CPUID(virq_passthrough_map[irq_ch]));
+        return false;
+    }
+
+    return true;
+}

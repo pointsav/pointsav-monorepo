@@ -184,6 +184,21 @@ impl NodeCircuit {
         let g = self.inner.lock().expect("node circuit lock poisoned");
         g.opened_at.map(|t| t.elapsed().as_secs())
     }
+
+    /// This circuit's configured cooldown, in seconds — used to compute a
+    /// real `Retry-After` value (`cooldown_secs() - opened_for_secs()`)
+    /// instead of guessing a fixed number.
+    pub fn cooldown_secs(&self) -> u64 {
+        self.cooldown.as_secs()
+    }
+
+    /// Seconds remaining before a half-open probe is allowed, if the circuit
+    /// is currently open. `None` if closed (nothing to wait for) or if
+    /// already past cooldown (a probe should be allowed now).
+    pub fn retry_after_secs(&self) -> Option<u64> {
+        let elapsed = self.opened_for_secs()?;
+        Some(self.cooldown_secs().saturating_sub(elapsed)).filter(|&r| r > 0)
+    }
 }
 
 /// A registry of node circuits, keyed by Yo-Yo label. Shared across the chassis
