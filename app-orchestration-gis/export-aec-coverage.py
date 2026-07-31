@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PointSav-ARR
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+#
+# This file is proprietary material of Woodfine Capital Projects Inc.
+# See the LICENSE file in this repository for the full terms.
+# Unauthorized use, reproduction, or distribution is prohibited.
+
+
 """
 export-aec-coverage.py — AEC data coverage CSV export for J3 §6 Results.
 

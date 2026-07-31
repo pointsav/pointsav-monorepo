@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PointSav-ARR
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+#
+# This file is proprietary material of Woodfine Capital Projects Inc.
+# See the LICENSE file in this repository for the full terms.
+# Unauthorized use, reproduction, or distribution is prohibited.
+
+
 """
 sample-eshm20-api.py — Populate seismic_pga for EU clusters via EFEHR API
 
@@ -13,12 +21,28 @@ Usage:
     python3 sample-eshm20-api.py --help
 
 API endpoint (no auth required):
-    https://maps.efehr.org/api/v1/calc/disaggregation?
-        lon={lon}&lat={lat}&rp=475&imt=PGA&vs30=760
+    https://efehr-services.ethz.ch/api/v1/curves?
+        lon={lon}&lat={lat}&modelid=81&imt=PGA
 
-    Returns JSON. PGA value in `mean_hazard` field (g units).
-    Return period 475yr corresponds to 10% probability in 50 years (standard seismic design).
-    vs30=760 = rock site (NEHRP class B/C boundary).
+    2026-07-01: the old `maps.efehr.org/api/v1/calc/disaggregation` endpoint this
+    script used is dead (NXDOMAIN). EFEHR migrated to a new unified platform at
+    efehr-services.ethz.ch (valid cert, confirmed live) — discovered via the "Web
+    Services" page at hazard.efehr.org (readable with `curl -k` despite its own
+    expired cert) which links a beta OpenAPI spec at
+    https://efehr-services.ethz.ch/api/openapi.json. Old `hazard.efehr.org` itself
+    is a documentation portal, not an API host — do not point EFEHR_BASE at it.
+
+    The new API's `/v1/maps` point-query endpoint (closest analogue to the old
+    disaggregation call) timed out repeatedly in testing (likely a beta-quality
+    backend issue) — use `/v1/curves` instead, which returns the full hazard curve
+    (investigation_time=50yr, `points: [{iml, poe}, ...]` sorted by increasing PGA)
+    fast and reliably (~0.6s/call, 4/4 test points across DE/FR/ES/IT succeeded, no
+    rate-limiting observed). Interpolate PGA at the desired `poe` client-side —
+    poe=0.10 with investigation_time=50yr is exactly the standard "10% probability
+    of exceedance in 50 years" / 475yr-return-period seismic design value, so no
+    additional return-period math is needed against this endpoint.
+
+    Model ID 81 = ESHM20 (confirmed via `/v1/models?lon=..&lat=..` for any EU point).
 
 Fallback (if API unreachable):
     Use GSHAP global raster:
@@ -42,31 +66,53 @@ META_PATH = (
 
 EU_ISOS = {"DE", "FR", "GB", "IT", "ES", "PL", "AT", "NL", "SE", "DK", "NO", "FI", "IS", "GR", "PT"}
 
-# EFEHR API — no authentication required
-EFEHR_BASE = "https://maps.efehr.org/api/v1/calc/disaggregation"
+# EFEHR API — new unified platform, no authentication required (2026-07-01)
+EFEHR_BASE = "https://efehr-services.ethz.ch/api/v1/curves"
+ESHM20_MODEL_ID = 81
 RATE_SLEEP = 0.6  # seconds between requests to be polite
 
 
+def _interpolate_pga(points: list, target_poe: float) -> float | None:
+    """Log-linear interpolate PGA (iml) at the target poe from a sorted hazard curve.
+
+    `points` is the curve's own point list: increasing iml, decreasing poe.
+    """
+    for i in range(len(points) - 1):
+        p0, p1 = points[i], points[i + 1]
+        if p0["poe"] >= target_poe >= p1["poe"]:
+            if p0["poe"] == p1["poe"]:
+                return p0["iml"]
+            # log-linear in both iml and poe, standard for hazard curves
+            import math
+            log_poe0, log_poe1 = math.log(p0["poe"]), math.log(p1["poe"])
+            log_iml0, log_iml1 = math.log(p0["iml"]), math.log(p1["iml"])
+            frac = (math.log(target_poe) - log_poe0) / (log_poe1 - log_poe0)
+            return math.exp(log_iml0 + frac * (log_iml1 - log_iml0))
+    return None  # target_poe outside the curve's range
+
+
 def query_efehr(lon: float, lat: float, rp: int = 475) -> float | None:
-    """Return mean PGA (g) for the given point, or None on error."""
-    url = (
-        f"{EFEHR_BASE}?lon={lon:.6f}&lat={lat:.6f}"
-        f"&rp={rp}&imt=PGA&vs30=760"
-    )
+    """Return interpolated PGA (g) at the given return period, or None on error.
+
+    rp=475 <-> poe=0.10 over a 50yr investigation time (standard 10%-in-50yr design
+    value) — the curve endpoint already returns points at investigation_time=50yr,
+    so poe=1/rp is not the right conversion here; poe=0.10 is used directly for the
+    only rp this script calls with (475).
+    """
+    target_poe = 1.0 - (1.0 - 1.0 / rp) ** 50  # ~0.10 for rp=475
+    url = f"{EFEHR_BASE}?lon={lon:.6f}&lat={lat:.6f}&modelid={ESHM20_MODEL_ID}&imt=PGA"
     try:
         req = urllib.request.Request(url, headers={"Accept": "application/json"})
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=20) as resp:
             data = json.loads(resp.read().decode())
-        # Try common response shapes
-        if "mean_hazard" in data:
-            return float(data["mean_hazard"])
-        if "pga" in data:
-            return float(data["pga"])
-        if "data" in data and isinstance(data["data"], dict):
-            return float(data["data"].get("mean_hazard", data["data"].get("pga", 0)))
-        # Print full response once so the caller can adapt
-        print(f"  WARN: unexpected API response shape: {json.dumps(data)[:200]}")
-        return None
+        curves = data.get("curves", [])
+        if not curves:
+            print(f"  WARN: no curve returned for ({lat:.4f}, {lon:.4f})")
+            return None
+        # Use the arithmetic-mean aggregation (first curve; matches the old script's
+        # "mean_hazard" semantics) rather than a percentile/fractile curve.
+        curve = next((c for c in curves if c.get("aggregation_type") == "arithmetic"), curves[0])
+        return _interpolate_pga(curve["points"], target_poe)
     except urllib.error.HTTPError as e:
         print(f"  HTTP {e.code} for ({lat:.4f}, {lon:.4f})")
         return None
@@ -148,9 +194,12 @@ def main():
         print(f"Wrote {out_path}")
     else:
         print("No clusters patched — clusters-meta.json unchanged")
-        if errors == len(targets):
+        if targets and errors == len(targets):
             print("All queries failed. Check EFEHR API availability, or use GSHAP fallback.")
-            sys.exit(1)
+            # Non-fatal: an unreachable external API is a degraded-data condition, not a
+            # script error — exit 0 so build-aec-seismic.sh's `set -euo pipefail` doesn't
+            # abort before steps 5-9 (wetland/EU zone join), matching how the NRCan step
+            # already treats its own unreachable-host case as non-fatal (SKIP_NRCAN=1).
 
 
 if __name__ == "__main__":

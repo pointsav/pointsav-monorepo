@@ -1,8 +1,21 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: LicenseRef-PointSav-ARR
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+#
+# This file is proprietary material of Woodfine Capital Projects Inc.
+# See the LICENSE file in this repository for the full terms.
+# Unauthorized use, reproduction, or distribution is prohibited.
+
+
 # nightly-rebuild.sh — Phase 2 cluster + tile rebuild
 #
 # Run at 05:00 UTC (10pm Vancouver PDT) per overnight-builds policy.
 # Usage:  bash nightly-rebuild.sh [--dry-run]
+#
+# IMPORTANT: This script must run as the mathew user (not root). The RegionEngine
+# requires shapely, which is installed for mathew but not for root. If run as root,
+# all clusters get country-level regional_market values (rm_us_us, rm_de_de, etc.)
+# instead of city-level values, causing score-regional-markets.py to produce 0 results.
 #
 # Rebuilds:
 #   1. build-clusters.py   → work/clusters.geojson
@@ -46,6 +59,14 @@ if (( DISK_AVAIL < 5 )); then
     exit 1
 fi
 echo "Disk free: ${DISK_AVAIL}G  ✓" | tee -a "$LOG"
+
+# Verify shapely is available (required for RegionEngine city geocoding)
+if ! python3 -c "import shapely" 2>/dev/null; then
+    echo "ERROR: shapely not installed — RegionEngine will return None for all city lookups." | tee -a "$LOG"
+    echo "  Fix: ensure this script runs as a user with shapely installed (not root)." | tee -a "$LOG"
+    exit 1
+fi
+echo "shapely: OK  ✓" | tee -a "$LOG"
 
 if ! python3 -c "import taxonomy" 2>/dev/null; then
     # try from script dir
@@ -103,6 +124,20 @@ META_SIZE=$(du -sh "$META_OUT" | cut -f1)
 echo "  → $TILES_OUT ($TILES_SIZE)  ✓" | tee -a "$LOG"
 echo "  → $META_OUT ($META_SIZE)  ✓" | tee -a "$LOG"
 
+# ── step 2b — build-regional-markets.py ─────────────────────────────────────
+# Depends on clusters.geojson (step 1). Must run as a user with shapely.
+
+echo "" | tee -a "$LOG"
+echo "[2b] build-regional-markets.py" | tee -a "$LOG"
+python3 build-regional-markets.py 2>&1 | tee -a "$LOG"
+
+# ── step 2c — score-regional-markets.py ─────────────────────────────────────
+# Depends on regional-markets.json (step 2b) + clusters-meta.json (step 2).
+
+echo "" | tee -a "$LOG"
+echo "[2c] score-regional-markets.py" | tee -a "$LOG"
+python3 score-regional-markets.py 2>&1 | tee -a "$LOG"
+
 # ── step 3 — Location Intelligence: VWH archetype rebuild ─────────────────
 # VWH (Intercity Fringe) depends on fresh cluster chain membership.
 # ~60s. Non-fatal on error.
@@ -129,6 +164,21 @@ if python3 build-pks-clusters.py >> "$LOG" 2>&1; then
 else
     echo "  WARNING: PKS rebuild failed — archetype-pks.geojson not refreshed" | tee -a "$LOG"
 fi
+
+# ── step 5 — AEC temperature join (background, ~19h) ─────────────────────
+# Open-Meteo archive API: 1 req/10s = 8,640/day < 10k free-tier limit.
+# Runs in the background so nightly-rebuild.sh can complete. Patches
+# clusters-meta.json by cluster_id at the end, so it survives the next rebuild.
+# Kills any stale temperature job before starting a fresh one.
+
+echo "" | tee -a "$LOG"
+echo "[4] build-temperature-join.py (background, ~19h)" | tee -a "$LOG"
+DEPLOY_APP="/srv/foundry/deployments/gateway-orchestration-gis-1/app-orchestration-gis"
+pkill -f "build-temperature-join.py" 2>/dev/null || true
+nohup python3 "$DEPLOY_APP/build-temperature-join.py" \
+    >> "$SCRIPT_DIR/work/temperature-join.log" 2>&1 &
+TEMP_PID=$!
+echo "  PID $TEMP_PID — log: work/temperature-join.log" | tee -a "$LOG"
 
 # ── summary ───────────────────────────────────────────────────────────────
 

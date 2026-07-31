@@ -1,3 +1,11 @@
+# SPDX-License-Identifier: LicenseRef-PointSav-ARR
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+#
+# This file is proprietary material of Woodfine Capital Projects Inc.
+# See the LICENSE file in this repository for the full terms.
+# Unauthorized use, reproduction, or distribution is prohibited.
+
+
 """
 taxonomy.py — Declarative co-location taxonomy.
 
@@ -132,6 +140,7 @@ DISPLAY_COUNTRIES = {
     "UK":          ["GB"],
     "NORDICS":     ["SE", "DK", "NO", "FI", "IS"],
     "CONTINENTAL": ["FR", "DE", "ES", "IT", "GR", "PL", "AT", "NL", "PT"],
+    "NEW_EUROPE":  ["CZ", "HU", "SK", "RO", "BG"],  # Phase 23 2026-06-30
 }
 
 # Flat ordered list for iteration
@@ -236,6 +245,12 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "IS": [
             "hagkaup-is",
         ],
+        # New Europe — Phase 22 2026-06-29
+        "CZ": ["kaufland-cz"],
+        "SK": ["kaufland-sk"],
+        "HU": ["auchan-hu"],      # kaufland-hu: Q685431 returns 0 in HU OSM; Auchan (26) fills gap
+        "RO": ["carrefour-ro"],
+        "BG": ["kaufland-bg"],
     },
 
     "hardware": {
@@ -323,6 +338,12 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
             "husasmidjan-is",
             "byko-is",
         ],
+        # New Europe — Phase 22 2026-06-29
+        "CZ": ["obi-cz"],
+        "HU": ["obi-hu"],
+        "RO": ["leroy-merlin-ro"],
+        "SK": ["obi-sk"],
+        "BG": ["praktiker-bg"],
     },
 
     "price_club": {
@@ -375,7 +396,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
     "lifestyle": {
         "US": ["ikea-us"],
         "CA": ["ikea-ca"],
-        "MX": ["ikea-mx"],
+        "MX": ["ikea-mx", "liverpool-mx", "suburbia-mx"],  # liverpool-mx + suburbia-mx Phase 22 2026-06-29
         "GB": ["ikea-uk"],
         "FR": ["ikea-fr", "xxxlutz-fr"],   # xxxlutz-fr ~5 stores — Phase 21 2026-05-24
         "DE": ["ikea-de", "xxxlutz-de", "hoeffner-de"],  # xxxlutz-de ~90, hoeffner-de ~25 — Phase 21 2026-05-24
@@ -395,7 +416,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
 
     "sport": {
         "US": ["rei-us", "bass-pro-shops-us", "cabelas-us"],
-        "CA": ["decathlon-ca"],
+        "CA": ["decathlon-ca", "sportchek-ca"],  # sportchek-ca Phase 23 2026-06-30
         "MX": ["decathlon-mx"],   # ~14 stores, Q509349 — Phase 20 2026-05-24
         "GB": ["decathlon-gb"],
         "FR": ["decathlon-fr"],
@@ -411,12 +432,18 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "DK": ["decathlon-dk"],
         "NO": ["decathlon-no", "xxl-no"],  # xxl-no ~39 stores, Q5447082 — Phase 20 2026-05-24
         "FI": ["decathlon-fi", "xxl-fi"],  # xxl-fi ~15 stores, Q5447082 — Phase 20 2026-05-24
+        # New Europe — Phase 23 2026-06-30
+        "CZ": ["decathlon-cz"],
+        "HU": ["decathlon-hu"],
+        "RO": ["decathlon-ro"],
+        "SK": ["decathlon-sk"],
+        "BG": ["decathlon-bg"],
     },
 
     "electronics": {
-        "US": [],   # Best Buy deferred to Phase 22 (counter-factual analysis first)
-        "CA": [],
-        "MX": [],
+        "US": ["bestbuy-us"],   # Phase 23 2026-06-30
+        "CA": ["bestbuy-ca"],   # Phase 23 2026-06-30
+        "MX": ["coppel-mx"],            # Phase 22 2026-06-29
         "GB": [],   # Currys deferred to Phase 22 (UK coverage expansion)
         "FR": ["boulanger-fr", "darty-fr"],   # Mulliez big-box + large-format Darty — Phase 21 2026-05-24
         "DE": ["mediamarkt-de", "saturn-de"], # saturn-de rebranding in flight — Phase 21 2026-05-24
@@ -427,11 +454,17 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "AT": ["mediamarkt-at"],              # Phase 21 2026-05-24
         "NL": ["mediamarkt-nl"],              # Phase 21 2026-05-24
         "PT": [],
-        "SE": ["mediamarkt-se"],              # Phase 21 2026-05-24
-        "DK": [],
-        "NO": [],
-        "FI": [],
+        "SE": ["mediamarkt-se", "elgiganten-se"],  # Phase 21 2026-05-24; elgiganten-se Phase 22 2026-06-29
+        "DK": ["elgiganten-dk"],                    # Phase 22 2026-06-29
+        "NO": ["elkjop-no", "power-no"],            # Phase 22 2026-06-29
+        "FI": ["gigantti-fi"],                      # Phase 22 2026-06-29
         "IS": [],
+        # New Europe — Phase 22 2026-06-29
+        "CZ": ["mediamarkt-cz"],
+        "SK": ["mediamarkt-sk"],
+        "HU": ["mediamarkt-hu"],
+        "RO": [],
+        "BG": [],
     },
 
     # Civic categories have no BRAND_FILL — detected from OSM civic JSONL
@@ -549,6 +582,7 @@ ISO_TO_CONTINENT: dict[str, str] = {
     "IT": "EU", "GR": "EU", "PL": "EU", "AT": "EU",
     "NL": "EU", "PT": "EU",
     "SE": "EU", "DK": "EU", "NO": "EU", "FI": "EU", "IS": "EU",
+    "CZ": "EU", "HU": "EU", "SK": "EU", "RO": "EU", "BG": "EU",  # New Europe Phase 23
 }
 
 # ── DISPLAY NAMES ─────────────────────────────────────────────────────────────
@@ -773,8 +807,9 @@ def tier_of(cats: set[str], tight: bool = False, span_km: float | None = None) -
     has_life  = "lifestyle"   in retail
     has_elec  = "electronics" in retail
 
-    # T1.a — tripartite: hyper + hw + (price_club or lifestyle or electronics)
-    if has_hyper and has_hw and (has_pc or has_life or has_elec):
+    # T1.a — tripartite: hyper + hw + (price_club or lifestyle or electronics or sport)
+    has_sport = "sport" in retail
+    if has_hyper and has_hw and (has_pc or has_life or has_elec or has_sport):
         return 1
     # T1.b — H2b: compact multi-anchor regardless of composition
     if tight and n >= 3:

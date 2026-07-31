@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-PointSav-ARR
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+#
+# This file is proprietary material of Woodfine Capital Projects Inc.
+# See the LICENSE file in this repository for the full terms.
+# Unauthorized use, reproduction, or distribution is prohibited.
+
+
 """
 build-clusters.py — Two-pass tight-first DBSCAN co-location engine.
 
@@ -417,10 +425,12 @@ def assemble_feature(c: dict, engine: RegionEngine) -> dict:
     else:
         market_name = region_name or iso
 
-    regional_market = (
-        "rm_" + iso.lower() + "_" +
-        re.sub(r"[^a-z0-9]+", "_", (city or region_name or iso).lower()).strip("_")
-    )
+    _rm_base = (city or region_name or iso).lower()
+    _rm_slug = re.sub(r"[^a-z0-9]+", "_", _rm_base).strip("_")
+    if not _rm_slug:
+        # Non-ASCII city names (Greek, etc.) produce empty slug — fall back to lat/lon
+        _rm_slug = f"{clat:.3f}_{clon:.3f}".replace(".", "p").replace("-", "n")
+    regional_market = "rm_" + iso.lower() + "_" + _rm_slug
 
     retail_members = [m for m in c["members"] if not m.get("_civic") and not m.get("_enrich")]
     civic_members  = [m for m in c["members"] if m.get("_civic")]
