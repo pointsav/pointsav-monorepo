@@ -1,1 +1,3 @@
 build/
+build-aarch64-qemu/
+build-aarch64-qemu2/

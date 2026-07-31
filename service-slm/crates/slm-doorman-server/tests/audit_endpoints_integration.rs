@@ -511,7 +511,7 @@ async fn audit_proxy_failure_records_stub_only_then_capture_succeeds_independent
 #[test]
 fn mixed_entry_types_in_jsonl_stream_distinguishable_by_field_presence() {
     use chrono::Utc;
-    use slm_core::{ModuleId, RequestId, Tier};
+    use slm_core::{InferenceRoute, ModuleId, RequestId};
     use slm_doorman::ledger::{AuditEntry, CompletionStatus};
     use std::str::FromStr;
 
@@ -528,7 +528,7 @@ fn mixed_entry_types_in_jsonl_stream_distinguishable_by_field_presence() {
         timestamp_utc: now,
         request_id: RequestId::new(),
         module_id: module_id.clone(),
-        tier: Tier::Local,
+        tier: InferenceRoute::Local,
         model: "olmo-3-7b-q4".to_string(),
         inference_ms: 412,
         cost_usd: 0.0,
@@ -667,7 +667,7 @@ fn discriminate_entry_type(entry: &serde_json::Value) -> &'static str {
 #[test]
 fn entry_type_tag_discriminates_all_entry_kinds() {
     use chrono::Utc;
-    use slm_core::{ModuleId, RequestId, Tier};
+    use slm_core::{InferenceRoute, ModuleId, RequestId};
     use slm_doorman::ledger::{AuditEntry, CompletionStatus};
     use std::str::FromStr;
 
@@ -689,7 +689,7 @@ fn entry_type_tag_discriminates_all_entry_kinds() {
             timestamp_utc: now,
             request_id: RequestId::new(),
             module_id: module_id.clone(),
-            tier: Tier::Local,
+            tier: InferenceRoute::Local,
             model: "olmo-3-7b-q4".to_string(),
             inference_ms: 200,
             cost_usd: 0.0,

@@ -503,7 +503,10 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
         if loss_type == "simpo":
             # SimPOTrainer was native in trl 0.9–0.11. In trl ≥0.12 it was folded into
             # CPOTrainer(loss_type='simpo', cpo_alpha=0.0) — same math, different class name
-            # (Meng et al. 2024, arxiv:2405.14734). Try native first; fall back to CPO.
+            # (Meng et al. 2024, arxiv:2405.14734). In later trl releases CPOTrainer itself
+            # relocated to trl.experimental.cpo (2026-07-08 web research finding — check the
+            # pin before relying on this path). Try native, then top-level CPO, then the
+            # experimental path.
             _simpo_via_cpo = False
             try:
                 from trl import SimPOConfig, SimPOTrainer  # noqa: F401
@@ -513,15 +516,22 @@ def run_training(records: list[dict], base_model: str, output_dir: str, dry_run:
                     _simpo_via_cpo = True
                     print("[train] SimPOConfig not available; using CPOTrainer(loss_type='simpo', cpo_alpha=0.0)")
                 except ImportError:
-                    print(
-                        "[ERROR] --loss-type simpo requested but neither SimPOConfig/SimPOTrainer\n"
-                        "        nor CPOTrainer are available in installed trl. Both implement SimPO;\n"
-                        "        SimPOTrainer was native in trl 0.9–0.11, then folded into CPOTrainer\n"
-                        "        as CPOConfig(loss_type='simpo', cpo_alpha=0.0) in trl >=0.12.\n"
-                        "        Fix: pip install 'trl>=0.9', OR pass --loss-type dpo.",
-                        file=sys.stderr,
-                    )
-                    sys.exit(1)
+                    try:
+                        from trl.experimental.cpo import CPOConfig, CPOTrainer  # noqa: F401
+                        _simpo_via_cpo = True
+                        print("[train] SimPOConfig not available; using trl.experimental.cpo.CPOTrainer(loss_type='simpo', cpo_alpha=0.0)")
+                    except ImportError:
+                        print(
+                            "[ERROR] --loss-type simpo requested but none of SimPOConfig/SimPOTrainer,\n"
+                            "        trl.CPOTrainer, nor trl.experimental.cpo.CPOTrainer are available in\n"
+                            "        installed trl. All three implement SimPO; SimPOTrainer was native in\n"
+                            "        trl 0.9–0.11, folded into CPOTrainer as CPOConfig(loss_type='simpo',\n"
+                            "        cpo_alpha=0.0) in trl >=0.12, then CPOTrainer itself moved to\n"
+                            "        trl.experimental.cpo in a later release.\n"
+                            "        Fix: pip install 'trl>=0.9', OR pass --loss-type dpo.",
+                            file=sys.stderr,
+                        )
+                        sys.exit(1)
     except ImportError as e:
         print(f"[ERROR] Missing training library: {e}", file=sys.stderr)
         print("Install: pip install trl peft transformers datasets bitsandbytes", file=sys.stderr)

@@ -1,7 +1,6 @@
 variable "project_id" {
-  description = "GCP project ID where Yo-Yo resources are created."
+  description = "GCP project ID where Yo-Yo resources are created. No default — supply explicitly via -var or a .tfvars file (2026-07-30 GitHub-exposure remediation: this previously defaulted to a real project ID)."
   type        = string
-  default     = "woodfine-node-gcp-free"
 }
 
 variable "region" {

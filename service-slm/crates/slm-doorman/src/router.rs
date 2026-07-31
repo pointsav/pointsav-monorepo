@@ -12,7 +12,7 @@
 //! deterministic processing" decision.
 
 use chrono::Utc;
-use slm_core::{Complexity, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
+use slm_core::{Complexity, ComputeRequest, ComputeResponse, GrammarConstraint, InferenceRoute};
 use tracing::{debug, info, warn};
 
 use crate::cost_ledger::{CostLedger, CostRow};
@@ -21,7 +21,7 @@ use crate::grammar_validation::LarkValidator;
 use crate::graph::GraphContextClient;
 use crate::ledger::{AuditEntry, AuditLedger, CompletionStatus, ENTRY_TYPE_CHAT_COMPLETION};
 use crate::mesh::MeshRegistry;
-use crate::tier::{ExternalTierClient, LocalTierClient, YoYoTierClient};
+use crate::tier::{ExternalTierClient, LocalTierClient, OrchestrationTierClient, YoYoTierClient};
 
 use serde::Serialize;
 use std::collections::HashMap;
@@ -50,7 +50,7 @@ pub struct TierBInfo {
 
 #[derive(Default)]
 pub struct DoormanConfig {
-    pub local: Option<LocalTierClient>,
+    pub local: Option<LocalBackend>,
     pub yoyo: HashMap<String, YoYoTierClient>,
     pub external: Option<ExternalTierClient>,
     /// Optional Lark grammar pre-validator (PS.3 step 5). When `Some`,
@@ -69,7 +69,7 @@ pub struct DoormanConfig {
     pub graph_context_client: Option<GraphContextClient>,
     /// When `true`, Tier A is the confident primary regardless of request
     /// complexity. The router only escalates to Tier B when the caller
-    /// explicitly hints `Tier::Yoyo` AND the relevant node circuit is closed
+    /// explicitly hints `InferenceRoute::Yoyo` AND the relevant node circuit is closed
     /// AND health probe is up. Set via `SLM_TIER_A_FIRST=true`. Mutually
     /// exclusive with `SLM_FORCE_BROKER_MODE=true`.
     pub tier_a_first: bool,
@@ -88,8 +88,55 @@ pub struct Orchestrator {
     pub registry: Box<dyn MeshRegistry>,
 }
 
+/// What backs the "Local" compute slot: either a real llama-server on this
+/// host (the default), or — Tier 0 Doorman mode, `SLM_TIER=0`
+/// (`BRIEF-os-totebox-platform.md` §6/§14 #17-18) — a thin client that
+/// routes what would normally be local inference through
+/// `app-orchestration-slm`'s `POST /v1/inference` instead. Not to be
+/// confused with `Orchestrator`/`MeshRegistry` above, an unrelated,
+/// unwired multi-node mesh-discovery scaffold — this is specifically the
+/// single-upstream Tier 0 compute source.
+pub enum LocalBackend {
+    Direct(LocalTierClient),
+    Orchestrated(OrchestrationTierClient),
+}
+
+impl From<LocalTierClient> for LocalBackend {
+    fn from(c: LocalTierClient) -> Self {
+        LocalBackend::Direct(c)
+    }
+}
+
+impl From<OrchestrationTierClient> for LocalBackend {
+    fn from(c: OrchestrationTierClient) -> Self {
+        LocalBackend::Orchestrated(c)
+    }
+}
+
+impl LocalBackend {
+    pub async fn complete(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
+        match self {
+            LocalBackend::Direct(c) => c.complete(req).await,
+            LocalBackend::Orchestrated(c) => c.complete(req).await,
+        }
+    }
+
+    /// `LocalTierClient::complete_background` uses a dedicated semaphore so
+    /// background/batch callers (extraction fallback, drain dispatch) never
+    /// starve real-time Tier A slots. `OrchestrationTierClient` has no local
+    /// slot to protect — the remote chassis/Yo-Yo fleet manages its own
+    /// concurrency — so background calls route through the same `complete`
+    /// path as real-time ones in Tier 0 mode.
+    pub async fn complete_background(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
+        match self {
+            LocalBackend::Direct(c) => c.complete_background(req).await,
+            LocalBackend::Orchestrated(c) => c.complete(req).await,
+        }
+    }
+}
+
 pub struct Doorman {
-    local: Option<LocalTierClient>,
+    local: Option<LocalBackend>,
     yoyo: HashMap<String, YoYoTierClient>,
     external: Option<ExternalTierClient>,
     ledger: AuditLedger,
@@ -177,7 +224,10 @@ impl Doorman {
     /// preventing Tier A fallback from saturating OLMo when the GPU node is
     /// unavailable (STOCKOUT, circuit open, or health probe failure).
     pub fn yoyo_node_ready(&self, label: &str) -> bool {
-        self.yoyo.get(label).map(|c| c.allow_request()).unwrap_or(false)
+        self.yoyo
+            .get(label)
+            .map(|c| c.allow_request())
+            .unwrap_or(false)
     }
 
     pub fn ledger(&self) -> &AuditLedger {
@@ -287,12 +337,12 @@ impl Doorman {
         result
     }
 
-    fn select_tier(&self, req: &ComputeRequest) -> Result<Tier> {
+    fn select_tier(&self, req: &ComputeRequest) -> Result<InferenceRoute> {
         // SLM_TIER_A_FIRST mode: Tier A is the confident primary. Escalate to
         // Tier B only when the caller explicitly hints Yoyo AND the circuit is
         // closed AND the health probe is up. All other requests go to Tier A.
         if self.tier_a_first {
-            let yoyo_hint = req.tier_hint == Some(Tier::Yoyo);
+            let yoyo_hint = req.tier_hint == Some(InferenceRoute::Yoyo);
             if yoyo_hint {
                 let label = req
                     .yoyo_label
@@ -310,10 +360,10 @@ impl Doorman {
                     .map(|c| c.allow_request())
                     .unwrap_or(false);
                 if yoyo_ready {
-                    return self.confirm_tier_with_req(Tier::Yoyo, req);
+                    return self.confirm_tier_with_req(InferenceRoute::Yoyo, req);
                 }
             }
-            return self.confirm_tier_with_req(Tier::Local, req);
+            return self.confirm_tier_with_req(InferenceRoute::Local, req);
         }
 
         if let Some(hint) = req.tier_hint {
@@ -323,12 +373,12 @@ impl Doorman {
         // else local. Tier C is never a default — callers must hint it
         // explicitly and the label-allowlist check runs in `dispatch`.
         let preferred = match req.complexity {
-            Complexity::Low | Complexity::Medium => Tier::Local,
+            Complexity::Low | Complexity::Medium => InferenceRoute::Local,
             Complexity::High => {
                 if !self.yoyo.is_empty() {
-                    Tier::Yoyo
+                    InferenceRoute::Yoyo
                 } else {
-                    Tier::Local
+                    InferenceRoute::Local
                 }
             }
         };
@@ -362,24 +412,28 @@ impl Doorman {
         false
     }
 
-    fn confirm_tier_with_req(&self, tier: Tier, req: &ComputeRequest) -> Result<Tier> {
+    fn confirm_tier_with_req(
+        &self,
+        tier: InferenceRoute,
+        req: &ComputeRequest,
+    ) -> Result<InferenceRoute> {
         // Daily spend cap: intercept Tier B before circuit check. When the cap
         // is exceeded, silently downgrade to Tier A so the request still completes.
-        let tier = if tier == Tier::Yoyo && self.daily_cap_exceeded() {
-            Tier::Local
+        let tier = if tier == InferenceRoute::Yoyo && self.daily_cap_exceeded() {
+            InferenceRoute::Local
         } else {
             tier
         };
         let configured = match tier {
-            Tier::Local => self.local.is_some(),
-            Tier::Yoyo => {
+            InferenceRoute::Local => self.local.is_some(),
+            InferenceRoute::Yoyo => {
                 if let Some(ref label) = req.yoyo_label {
                     self.yoyo.contains_key(label)
                 } else {
                     !self.yoyo.is_empty()
                 }
             }
-            Tier::External => self.external.is_some(),
+            InferenceRoute::External => self.external.is_some(),
         };
         if configured {
             Ok(tier)
@@ -394,7 +448,11 @@ impl Doorman {
         }
     }
 
-    async fn dispatch(&self, tier: Tier, req: &ComputeRequest) -> Result<ComputeResponse> {
+    async fn dispatch(
+        &self,
+        tier: InferenceRoute,
+        req: &ComputeRequest,
+    ) -> Result<ComputeResponse> {
         info!(
             target: "slm_doorman::router",
             request_id = %req.request_id,
@@ -417,10 +475,10 @@ impl Doorman {
         //
         // Tier A rejects Lark in its own grammar-policy check (steps 2-4).
         // Tier C rejects all grammars (steps 2-4). Neither path reaches here
-        // with a Lark grammar under normal routing. The guard on Tier::Yoyo
+        // with a Lark grammar under normal routing. The guard on InferenceRoute::Yoyo
         // is defensive; it makes the semantics explicit rather than relying on
         // routing invariants.
-        if tier == Tier::Yoyo {
+        if tier == InferenceRoute::Yoyo {
             if let (Some(validator), Some(GrammarConstraint::Lark(lark_src))) =
                 (&self.lark_validator, &req.grammar)
             {
@@ -431,18 +489,18 @@ impl Doorman {
         }
 
         match tier {
-            Tier::Local => {
+            InferenceRoute::Local => {
                 self.local
                     .as_ref()
-                    .ok_or(DoormanError::TierUnavailable(Tier::Local))?
+                    .ok_or(DoormanError::TierUnavailable(InferenceRoute::Local))?
                     .complete(req)
                     .await
             }
-            Tier::Yoyo => {
+            InferenceRoute::Yoyo => {
                 let client = if let Some(ref label) = req.yoyo_label {
                     self.yoyo.get(label).ok_or_else(|| {
                         warn!(target: "slm_doorman::router", label, "requested Yo-Yo label not configured");
-                        DoormanError::TierUnavailable(Tier::Yoyo)
+                        DoormanError::TierUnavailable(InferenceRoute::Yoyo)
                     })?
                 } else {
                     // Default to the first configured Yo-Yo if no label provided.
@@ -452,7 +510,7 @@ impl Doorman {
                     self.yoyo
                         .values()
                         .next()
-                        .ok_or_else(|| DoormanError::TierUnavailable(Tier::Yoyo))?
+                        .ok_or_else(|| DoormanError::TierUnavailable(InferenceRoute::Yoyo))?
                 };
 
                 // B4: fast-path health + circuit check before making any HTTP call.
@@ -479,7 +537,7 @@ impl Doorman {
                     Err(e) => Err(e),
                 }
             }
-            Tier::External => {
+            InferenceRoute::External => {
                 // Strip session_context before forwarding to external Tier C.
                 // The field is internal Foundry metadata and must not leave the
                 // Totebox boundary.
@@ -489,14 +547,19 @@ impl Doorman {
                 };
                 self.external
                     .as_ref()
-                    .ok_or(DoormanError::TierUnavailable(Tier::External))?
+                    .ok_or(DoormanError::TierUnavailable(InferenceRoute::External))?
                     .complete(&req_for_tier_c)
                     .await
             }
         }
     }
 
-    fn write_audit(&self, req: &ComputeRequest, tier: Tier, result: &Result<ComputeResponse>) {
+    fn write_audit(
+        &self,
+        req: &ComputeRequest,
+        tier: InferenceRoute,
+        result: &Result<ComputeResponse>,
+    ) {
         let entry = match result {
             Ok(resp) => AuditEntry {
                 entry_type: ENTRY_TYPE_CHAT_COMPLETION.to_string(),
@@ -547,7 +610,7 @@ impl Doorman {
         // Write to cost ledger for successful Tier B responses (P3-3.5-followup).
         // Non-fatal: cost tracking must never block the response path.
         if let (Some(ref cost_ledger), Ok(resp)) = (&self.cost_ledger, result) {
-            if resp.tier_used == Tier::Yoyo {
+            if resp.tier_used == InferenceRoute::Yoyo {
                 let row = CostRow {
                     ts: entry
                         .timestamp_utc
@@ -573,11 +636,32 @@ impl Doorman {
 }
 
 impl Doorman {
+    /// Public entry point for callers outside `route()`'s own dispatch path
+    /// (`route_yoyo_only`/`route_local_background` callers) to append an audit
+    /// entry for a request that was dispatched without going through `route()`
+    /// itself. `route()` audits every request internally via the private
+    /// `write_audit`; this wrapper exists so `dispatch_shadow` (apprenticeship
+    /// pipeline) and the `x-foundry-background` HTTP path — both of which call
+    /// `route_yoyo_only`/`route_local_background` directly to skip `route()`'s
+    /// automatic Tier A fallback/graph-context injection — can still record
+    /// every dispatch to the audit ledger, not just the ones that happen to go
+    /// through `route()`. See the module-level fix note near `dispatch_shadow`.
+    pub fn write_audit_entry(
+        &self,
+        req: &ComputeRequest,
+        tier: InferenceRoute,
+        result: &Result<ComputeResponse>,
+    ) {
+        self.write_audit(req, tier, result);
+    }
+}
+
+impl Doorman {
     /// Route a request to a specific named Yo-Yo backend without Tier A fallback.
     ///
     /// Unlike `route()`, this method does NOT fall back to Tier A on
     /// circuit-open or transient failure. Returns
-    /// `Err(DoormanError::TierUnavailable(Tier::Yoyo))` immediately so the
+    /// `Err(DoormanError::TierUnavailable(InferenceRoute::Yoyo))` immediately so the
     /// caller can defer the request rather than routing to an inappropriate
     /// backend.
     ///
@@ -596,7 +680,7 @@ impl Doorman {
                 label,
                 "route_yoyo_only: Yo-Yo label not configured"
             );
-            DoormanError::TierUnavailable(Tier::Yoyo)
+            DoormanError::TierUnavailable(InferenceRoute::Yoyo)
         })?;
 
         if !client.allow_request() {
@@ -606,7 +690,7 @@ impl Doorman {
                 label,
                 "route_yoyo_only: circuit not allowing request (open or health-probe down)"
             );
-            return Err(DoormanError::TierUnavailable(Tier::Yoyo));
+            return Err(DoormanError::TierUnavailable(InferenceRoute::Yoyo));
         }
 
         // PS.3: validate Lark grammar at boundary if validator configured.
@@ -634,7 +718,7 @@ impl Doorman {
                 );
                 local.complete(req).await
             }
-            None => Err(DoormanError::TierUnavailable(Tier::Local)),
+            None => Err(DoormanError::TierUnavailable(InferenceRoute::Local)),
         }
     }
 
@@ -645,7 +729,7 @@ impl Doorman {
     pub async fn route_local_background(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
         match &self.local {
             Some(local) => local.complete_background(req).await,
-            None => Err(DoormanError::TierUnavailable(Tier::Local)),
+            None => Err(DoormanError::TierUnavailable(InferenceRoute::Local)),
         }
     }
 }
@@ -773,7 +857,7 @@ mod tests {
 
     fn req(
         complexity: Complexity,
-        hint: Option<Tier>,
+        hint: Option<InferenceRoute>,
         yoyo_label: Option<String>,
     ) -> ComputeRequest {
         ComputeRequest {
@@ -809,12 +893,69 @@ mod tests {
         AuditLedger::new(dir).unwrap()
     }
 
+    /// Regression: `LocalBackend::Orchestrated`'s `complete_background` must
+    /// route through the same `complete()` path as a real-time call — there is
+    /// no local slot to isolate background traffic from (the remote chassis/
+    /// Yo-Yo fleet manages its own concurrency), unlike `LocalBackend::Direct`
+    /// which uses a dedicated background semaphore. Both calls in this test hit
+    /// the same mocked `/v1/inference` endpoint and must both succeed.
+    #[tokio::test]
+    async fn orchestrated_backend_background_call_uses_same_path_as_complete() {
+        use wiremock::matchers::{method, path};
+        use wiremock::{Mock, MockServer, ResponseTemplate};
+
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/discovery/register"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "status": "registered",
+                "module_id": "test",
+                "chassis_version": "0.1.0",
+                "membership_token": "tok.sig"
+            })))
+            .mount(&server)
+            .await;
+        Mock::given(method("POST"))
+            .and(path("/v1/inference"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "choices": [{ "message": { "content": "pong" } }]
+            })))
+            .mount(&server)
+            .await;
+
+        let client =
+            crate::tier::OrchestrationTierClient::new(crate::tier::OrchestrationTierConfig {
+                endpoint: server.uri(),
+                module_id: "test".to_string(),
+                archive_id: "project-totebox".to_string(),
+                doorman_endpoint: "http://127.0.0.1:9080".to_string(),
+                registration_token: None,
+            });
+        client
+            .register()
+            .await
+            .expect("registration should succeed");
+        let backend = LocalBackend::from(client);
+
+        let resp = backend
+            .complete(&req(Complexity::Low, None, None))
+            .await
+            .expect("complete should succeed");
+        assert_eq!(resp.content, "pong");
+
+        let resp_bg = backend
+            .complete_background(&req(Complexity::Low, None, None))
+            .await
+            .expect("complete_background should succeed via the same path");
+        assert_eq!(resp_bg.content, "pong");
+    }
+
     #[tokio::test]
     async fn unconfigured_router_refuses_with_tier_unavailable() {
         let doorman = Doorman::new(DoormanConfig::default(), ledger());
         let result = doorman.route(&req(Complexity::Medium, None, None)).await;
         match result {
-            Err(DoormanError::TierUnavailable(Tier::Local)) => {}
+            Err(DoormanError::TierUnavailable(InferenceRoute::Local)) => {}
             other => panic!("expected TierUnavailable(Local), got {other:?}"),
         }
     }
@@ -853,7 +994,7 @@ mod tests {
         let picked = doorman
             .select_tier(&req(Complexity::High, None, None))
             .expect("should pick yoyo");
-        assert_eq!(picked, Tier::Yoyo);
+        assert_eq!(picked, InferenceRoute::Yoyo);
     }
 
     fn make_yoyo(zone: Option<String>) -> YoYoTierClient {
@@ -987,7 +1128,7 @@ mod tests {
         let result = doorman.select_tier(&req(Complexity::High, None, None));
         match result {
             // local is None, so confirm_tier_with_req(Local) → TierUnavailable(Local)
-            Err(DoormanError::TierUnavailable(Tier::Local)) => {}
+            Err(DoormanError::TierUnavailable(InferenceRoute::Local)) => {}
             other => panic!("expected TierUnavailable(Local) after cap redirect, got {other:?}"),
         }
     }
@@ -1033,7 +1174,7 @@ mod tests {
         let picked = doorman
             .select_tier(&req(Complexity::High, None, None))
             .expect("cap not exceeded — should pick yoyo");
-        assert_eq!(picked, Tier::Yoyo);
+        assert_eq!(picked, InferenceRoute::Yoyo);
     }
 
     /// End-to-end proof that `route()` actually injects graph context before
@@ -1080,10 +1221,12 @@ mod tests {
 
         let doorman = Doorman::new(
             DoormanConfig {
-                local: Some(LocalTierClient::new(crate::tier::LocalTierConfig {
-                    endpoint: server.uri(),
-                    default_model: "OLMo-3-7B-Instruct".into(),
-                })),
+                local: Some(LocalBackend::Direct(LocalTierClient::new(
+                    crate::tier::LocalTierConfig {
+                        endpoint: server.uri(),
+                        default_model: "OLMo-3-7B-Instruct".into(),
+                    },
+                ))),
                 yoyo: HashMap::new(),
                 external: None,
                 lark_validator: None,
@@ -1095,7 +1238,7 @@ mod tests {
             ledger(),
         );
 
-        let mut request = req(Complexity::Low, Some(Tier::Local), None);
+        let mut request = req(Complexity::Low, Some(InferenceRoute::Local), None);
         request.messages = vec![ChatMessage {
             role: "user".into(),
             content: "who is Hamid Moghadam?".into(),
@@ -1193,10 +1336,12 @@ mod tests {
 
         let doorman = Doorman::new(
             DoormanConfig {
-                local: Some(LocalTierClient::new(crate::tier::LocalTierConfig {
-                    endpoint: server.uri(),
-                    default_model: "OLMo-3-7B-Instruct".into(),
-                })),
+                local: Some(LocalBackend::Direct(LocalTierClient::new(
+                    crate::tier::LocalTierConfig {
+                        endpoint: server.uri(),
+                        default_model: "OLMo-3-7B-Instruct".into(),
+                    },
+                ))),
                 yoyo: HashMap::new(),
                 external: None,
                 lark_validator: None,
@@ -1208,7 +1353,7 @@ mod tests {
             ledger(),
         );
 
-        let mut request = req(Complexity::Low, Some(Tier::Local), None);
+        let mut request = req(Complexity::Low, Some(InferenceRoute::Local), None);
         request.messages = vec![ChatMessage {
             role: "user".into(),
             content: "Who is Peter M. Woodfine?".into(),
@@ -1237,5 +1382,112 @@ mod tests {
             "the short, common-word spurious match must not win over the more \
              specific candidate, got: {content}"
         );
+    }
+
+    // -----------------------------------------------------------------------
+    // Sovereignty invariant freeze (BRIEF-os-totebox-platform.md §14 #14,
+    // 2026-07-14): the automatic/circuit-breaker path must never select
+    // InferenceRoute::External, only an explicit caller hint may. This was verified
+    // true of the code as a fact-check during that BRIEF's decision-
+    // resolution session; these tests freeze it against future refactor
+    // drift rather than leaving it as an unenforced assumption.
+    // -----------------------------------------------------------------------
+
+    fn external_client() -> ExternalTierClient {
+        ExternalTierClient::new(crate::tier::ExternalTierConfig {
+            allowlist: crate::tier::ExternalAllowlist::EMPTY,
+            provider_endpoints: HashMap::new(),
+            provider_api_keys: HashMap::new(),
+            pricing: crate::tier::TierCPricing::default(),
+        })
+    }
+
+    /// Default tier-selection policy (no explicit `tier_hint`) must never
+    /// produce `InferenceRoute::External`, for any complexity, even when an external
+    /// client IS configured and available. Only an explicit hint may select
+    /// it — see `select_tier`'s own comment: "Tier C is never a default —
+    /// callers must hint it explicitly."
+    #[test]
+    fn select_tier_default_policy_never_produces_external() {
+        let mut yoyo_map = HashMap::new();
+        yoyo_map.insert("default".to_string(), make_yoyo(None));
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: Some(LocalBackend::Direct(LocalTierClient::new(
+                    crate::tier::LocalTierConfig {
+                        endpoint: "http://invalid.example".into(),
+                        default_model: "test-model".into(),
+                    },
+                ))),
+                yoyo: yoyo_map,
+                external: Some(external_client()),
+                lark_validator: None,
+                graph_context_client: None,
+                tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
+            },
+            ledger(),
+        );
+        for complexity in [Complexity::Low, Complexity::Medium, Complexity::High] {
+            let picked = doorman
+                .select_tier(&req(complexity, None, None))
+                .expect("local + yoyo configured — selection should succeed");
+            assert_ne!(
+                picked,
+                InferenceRoute::External,
+                "default policy (no explicit tier_hint) must never select \
+                 InferenceRoute::External, got it for complexity {complexity:?}"
+            );
+        }
+    }
+
+    /// `try_local_fallback` — the path `dispatch` takes on a Tier B
+    /// unavailable/transient-failure — only ever considers Tier A (local).
+    /// With `local: None` it must fail `TierUnavailable(Local)`, never
+    /// succeed via or even attempt External, despite External being
+    /// configured and available.
+    #[tokio::test]
+    async fn try_local_fallback_never_reaches_external() {
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: None,
+                yoyo: HashMap::new(),
+                external: Some(external_client()),
+                lark_validator: None,
+                graph_context_client: None,
+                tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
+            },
+            ledger(),
+        );
+        let result = doorman
+            .try_local_fallback(&req(Complexity::High, None, None))
+            .await;
+        match result {
+            Err(DoormanError::TierUnavailable(InferenceRoute::Local)) => {}
+            other => panic!(
+                "try_local_fallback must only ever resolve to Local or \
+                 TierUnavailable(Local), never touch External — got {other:?}"
+            ),
+        }
+    }
+
+    /// `is_transient_tier_b_failure` classifies only Tier-B-shaped errors.
+    /// It must never itself be satisfied by, or be used to justify routing
+    /// toward, External — this pins its match arms so a future edit can't
+    /// silently widen it to cover (and thus implicitly permit escalating
+    /// through) an external-tier error variant.
+    #[test]
+    fn is_transient_tier_b_failure_does_not_cover_external_errors() {
+        assert!(!is_transient_tier_b_failure(
+            &DoormanError::TierUnavailable(InferenceRoute::External)
+        ));
+        assert!(!is_transient_tier_b_failure(
+            &DoormanError::ExternalNotAllowlisted {
+                label: "some-label".to_string(),
+            }
+        ));
     }
 }

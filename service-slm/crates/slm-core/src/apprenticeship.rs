@@ -18,7 +18,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::tier::Tier;
+use crate::tier::InferenceRoute;
 
 /// Senior role per `apprenticeship-substrate.md` §3. Free-form
 /// `root-<repo-name>` and `task-<cluster-name>` are valid; the Doorman
@@ -106,7 +106,7 @@ pub struct ApprenticeshipAttempt {
     /// or explicit escalate marker in its response).
     pub escalate: bool,
     pub inference_ms: u64,
-    pub tier: Tier,
+    pub tier: InferenceRoute,
     pub cost_usd: f64,
     /// Apprentice's chain-of-thought, citing brief invariants and
     /// doctrine clauses (convention §4).
@@ -243,7 +243,7 @@ mod tests {
             self_confidence: 0.82,
             escalate: false,
             inference_ms: 1234,
-            tier: Tier::Local,
+            tier: InferenceRoute::Local,
             cost_usd: 0.0,
             reasoning: "Per ni-51-102 forward-looking marker, ...".into(),
             diff: "--- a/MANIFEST.md\n+++ b/MANIFEST.md\n@@ ...\n".into(),

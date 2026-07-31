@@ -7,5 +7,19 @@ license = "FSL-1.1-ALv2"
 name = "os-totebox"
 version = "0.1.0"
 edition = "2024"
+description = "os-totebox product bundle — service-content + service-slm (Doorman) run as one deployable process, dogfooded on foundry-workspace before relocating to a dedicated VM. See BRIEF-os-totebox-platform.md §8/§10 (Phase 2)."
+
+[lib]
+name = "os_totebox"
+path = "src/lib.rs"
+
+[[bin]]
+name = "os-totebox"
+path = "src/main.rs"
 
 [dependencies]
+service-content = { path = "../service-content" }
+slm-doorman-server = { path = "../service-slm/crates/slm-doorman-server" }
+tokio = { version = "1", features = ["rt-multi-thread", "signal"] }
+anyhow = "1"
+tracing = "0.1"

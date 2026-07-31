@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use slm_core::Tier;
+use slm_core::InferenceRoute;
 use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, DoormanError>;
@@ -8,11 +8,11 @@ pub type Result<T> = std::result::Result<T, DoormanError>;
 #[derive(Debug, Error)]
 pub enum DoormanError {
     #[error("requested tier {0:?} is not configured")]
-    TierUnavailable(Tier),
+    TierUnavailable(InferenceRoute),
 
     #[error("tier {tier:?} is not yet implemented (filled in {filled_in_by})")]
     NotImplemented {
-        tier: Tier,
+        tier: InferenceRoute,
         filled_in_by: &'static str,
     },
 

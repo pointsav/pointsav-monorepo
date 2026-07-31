@@ -16,7 +16,7 @@
 # to DOORMAN_ENV_FILE automatically if the file is writable.
 set -uo pipefail
 
-PROJECT="${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}"
+PROJECT="${SLM_YOYO_GCP_PROJECT:?SLM_YOYO_GCP_PROJECT must be set (2026-07-30 GitHub-exposure remediation - no real-value default)}"
 ZONE="${SLM_YOYO_GCP_ZONE:-us-west1-b}"
 INSTANCE="${SLM_YOYO_GCP_INSTANCE:-yoyo-tier-b-1}"
 DOORMAN_ENV="${DOORMAN_ENV_FILE:-/etc/local-doorman/local-doorman.env}"

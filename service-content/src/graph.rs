@@ -4,7 +4,7 @@
 use anyhow::{anyhow, Result};
 use lbug::{Connection, Database, LogicalType, SystemConfig, Value};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 /// Build the canonical node key for an entity name so trivial surface variants
 /// collapse onto the SAME graph node on upsert (`MERGE` dedupes on id).
@@ -66,6 +66,15 @@ pub struct GraphEntity {
     pub role_vector: Option<String>,
     pub location_vector: Option<String>,
     pub contact_vector: Option<String>,
+    /// Defaults to empty on deserialization — a `POST /v1/graph/mutate` caller is not
+    /// required to redundantly stamp every entity with the same tenant it already named
+    /// once at the request's top level (`MutateRequest.module_id`); `graph_mutate`
+    /// backfills any entity whose `module_id` arrives empty from that top-level value
+    /// before writing. Discovered via a real integration gap: project-editorial's
+    /// `graph-committer.py` sends exactly this shape and 422'd against the old
+    /// `module_id`-required-per-entity contract on every one of its 25 real proposals
+    /// (2026-07-18 live end-to-end test).
+    #[serde(default)]
     pub module_id: String,
     pub confidence: f64,
     pub source_doc: Option<String>, // CORPUS worm_id that first introduced this entity
@@ -142,6 +151,18 @@ pub trait GraphStore: Send + Sync {
 
 pub struct LbugGraphStore {
     db: Arc<Database>,
+    /// Serializes every write-transaction-opening call. LadybugDB (`lbug`) hard-rejects
+    /// a second concurrent write transaction ("Cannot start a new write transaction in
+    /// the system. Only one write transaction at a time is allowed in the system.") —
+    /// confirmed via a real concurrent-writer test (2026-07-18 test-coverage pass,
+    /// `service-content/tests/http_test.rs`'s `concurrent_writers_*` tests), which
+    /// panicked every writer past the first without this lock. This directly
+    /// contradicted this crate's own prior claim (`lib.rs`'s drain-worker comment) that
+    /// concurrent calls were "safe without additional locking on the store itself" —
+    /// they were not; nothing enforced it. Held only around the write methods below
+    /// (`upsert_entities`, `upsert_edges`, the three `delete_*` methods) — read methods
+    /// are unaffected and still run fully concurrently with each other.
+    write_lock: Mutex<()>,
 }
 
 impl LbugGraphStore {
@@ -155,7 +176,10 @@ impl LbugGraphStore {
         };
         let db = Database::new(db_path, config)
             .map_err(|e| anyhow!("Failed to open LadybugDB at {}: {}", db_path, e))?;
-        Ok(Self { db: Arc::new(db) })
+        Ok(Self {
+            db: Arc::new(db),
+            write_lock: Mutex::new(()),
+        })
     }
 
     fn conn(&self) -> Result<Connection<'_>> {
@@ -229,6 +253,7 @@ impl GraphStore for LbugGraphStore {
         if entities.is_empty() {
             return Ok(0);
         }
+        let _write_guard = self.write_lock.lock().unwrap();
         let conn = self.conn()?;
         let now = chrono::Utc::now().to_rfc3339();
 
@@ -586,6 +611,7 @@ impl GraphStore for LbugGraphStore {
     }
 
     fn delete_by_classification(&self, module_id: &str, classification: &str) -> Result<usize> {
+        let _write_guard = self.write_lock.lock().unwrap();
         let conn = self.conn()?;
         let mut stmt = conn
             .prepare(
@@ -611,6 +637,7 @@ impl GraphStore for LbugGraphStore {
         classification: &str,
         location: &str,
     ) -> Result<usize> {
+        let _write_guard = self.write_lock.lock().unwrap();
         let conn = self.conn()?;
         let mut stmt = conn
             .prepare(
@@ -644,6 +671,7 @@ impl GraphStore for LbugGraphStore {
     }
 
     fn delete_entity(&self, module_id: &str, entity_name: &str) -> Result<()> {
+        let _write_guard = self.write_lock.lock().unwrap();
         let conn = self.conn()?;
         let mut stmt = conn
             .prepare(
@@ -689,6 +717,7 @@ impl GraphStore for LbugGraphStore {
         if edges.is_empty() {
             return Ok(0);
         }
+        let _write_guard = self.write_lock.lock().unwrap();
         let conn = self.conn()?;
 
         // Check-then-create pattern: avoids duplicate edges on repeated calls.

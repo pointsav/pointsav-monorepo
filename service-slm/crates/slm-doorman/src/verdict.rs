@@ -832,7 +832,9 @@ fn read_attempt_diff_from_corpus(corpus_root: &Path, task_type: &str, brief_id: 
 mod tests {
     use super::*;
     use chrono::TimeZone;
-    use slm_core::{ApprenticeshipAttempt, ApprenticeshipBrief, BriefScope, SeniorRole, Tier};
+    use slm_core::{
+        ApprenticeshipAttempt, ApprenticeshipBrief, BriefScope, InferenceRoute, SeniorRole,
+    };
     use std::path::PathBuf;
 
     /// Test verifier — accepts only when `senior_identity` matches a
@@ -906,7 +908,7 @@ mod tests {
             self_confidence: 0.9,
             escalate: false,
             inference_ms: 100,
-            tier: Tier::Local,
+            tier: InferenceRoute::Local,
             cost_usd: 0.0,
             reasoning: String::new(),
             // Realistic diff >= MIN_REJECTED_CHARS (80) to pass the corpus gate.

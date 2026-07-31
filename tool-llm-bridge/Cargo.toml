@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
+[package]
+name = "tool-llm-bridge"
+version = "0.1.0"
+edition = "2021"
+authors = ["PointSav Digital Systems"]
+description = "Tier X — isolated external-LLM research/code-assist bridge (BRIEF-os-totebox-platform.md §7/§14 #12). Sidecar credential isolation: only this process ever holds the real upstream API key; callers authenticate with a separate local-only token and never see the real key. Domain-allowlisted egress to one configured upstream, per-label allowlist (mirrors service-slm's Tier C external.rs design), tag-based local-only/cloud-allowed gate, zero DataGraph write path by construction — this crate has no DataGraph client dependency at all."
+license = "Apache-2.0"
+
+[lib]
+name = "tool_llm_bridge"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tool-llm-bridge"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "signal"] }
+axum = "0.7"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+reqwest = { version = "0.12", features = ["json"] }
+anyhow = "1"
+
+[dev-dependencies]
+tower = { version = "0.4", features = ["util"] }
+wiremock = "0.6"

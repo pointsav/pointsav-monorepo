@@ -526,7 +526,9 @@ mod tests {
             .await
             .expect("expected Some context");
         assert!(ctx.contains("Relationships:"));
-        assert!(ctx.contains("PointSav Digital Systems --[subsidiary_of]--> Woodfine Capital Projects"));
+        assert!(
+            ctx.contains("PointSav Digital Systems --[subsidiary_of]--> Woodfine Capital Projects")
+        );
     }
 
     /// If the edges endpoint is unavailable/errors, `fetch_context` must still

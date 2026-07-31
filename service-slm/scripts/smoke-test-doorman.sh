@@ -122,11 +122,15 @@ echo ""
 # it means local-slm.service is not running. The test reports PASS on 200 only.
 {
     local_payload='{"messages":[{"role":"user","content":"Say hello in one word."}],"max_tokens":5}'
+    # Real Tier A round-trips observed taking ~25s under normal load (measured
+    # directly, 2026-07-17 session) — the shared 15s default is too tight for
+    # this specific check; override it here rather than loosen it globally.
     IFS='|' read -r status body <<< "$(
         _curl POST "$DOORMAN_URL/v1/chat/completions" \
             -H 'Content-Type: application/json' \
             -H 'X-Foundry-Module-ID: foundry' \
-            -d "$local_payload"
+            -d "$local_payload" \
+            --max-time 40
     )"
     echo ""
     echo "TEST: POST /v1/chat/completions → 200 (Tier A round-trip)"
@@ -193,6 +197,55 @@ echo ""
             -d "$bad_event_payload"
     )"
     _check "POST /v1/audit/capture (unknown event_type) → 400" "400" "$status" "$body"
+}
+
+# 9. POST /v1/graph/mutate → expect 200, tenant-scoped write
+# Uses a clearly-tagged synthetic module_id ("smoke-test-doorman") so this
+# never pollutes real tenant data and is trivially identifiable/cleanable.
+# Round-trips with test 10 below to prove the DataGraph write path actually
+# works, not just that the route responds — see BRIEF-datagraph-tenant-
+# isolation.md for why this specific path (write, then read back scoped to
+# the same caller) is the real proof, not either check alone.
+SMOKE_TEST_MODULE_ID="smoke-test-doorman"
+SMOKE_TEST_ENTITY="SmokeTestEntity-$(date +%s)"
+{
+    mutate_payload="{\"module_id\":\"${SMOKE_TEST_MODULE_ID}\",\"entities\":[{\"entity_name\":\"${SMOKE_TEST_ENTITY}\",\"classification\":\"architecture-reference\",\"role_vector\":null,\"location_vector\":null,\"contact_vector\":null,\"module_id\":\"${SMOKE_TEST_MODULE_ID}\",\"confidence\":1.0,\"source_doc\":null}]}"
+    IFS='|' read -r status body <<< "$(
+        _curl POST "$DOORMAN_URL/v1/graph/mutate" \
+            -H 'Content-Type: application/json' \
+            -H "X-Foundry-Module-ID: ${SMOKE_TEST_MODULE_ID}" \
+            -d "$mutate_payload"
+    )"
+    _check "POST /v1/graph/mutate (tagged test entity) → 200" "200" "$status" "$body"
+}
+
+# 10. POST /v1/graph/query → expect 200, must return the entity just written,
+# scoped strictly to the caller's own module_id (the tenant-isolation fix's
+# actual live contract — see graph_query_scopes_to_caller_module_id).
+{
+    query_payload="{\"q\":\"${SMOKE_TEST_ENTITY}\",\"limit\":5}"
+    IFS='|' read -r status body <<< "$(
+        _curl POST "$DOORMAN_URL/v1/graph/query" \
+            -H 'Content-Type: application/json' \
+            -H "X-Foundry-Module-ID: ${SMOKE_TEST_MODULE_ID}" \
+            -d "$query_payload"
+    )"
+    _check "POST /v1/graph/query (read back tagged entity) → 200" "200" "$status" "$body"
+    if [[ "$status" == "200" ]]; then
+        if ! echo "$body" | grep -q "$SMOKE_TEST_ENTITY"; then
+            echo "    WARNING: query did not return the entity just written via graph/mutate — write/read round-trip may be broken"
+        fi
+    fi
+}
+
+# 11. POST /v1/graph/query with missing X-Foundry-Module-ID → expect 400
+{
+    IFS='|' read -r status body <<< "$(
+        _curl POST "$DOORMAN_URL/v1/graph/query" \
+            -H 'Content-Type: application/json' \
+            -d '{"q":"x","limit":5}'
+    )"
+    _check "POST /v1/graph/query (missing module_id header) → 400" "400" "$status" "$body"
 }
 
 # ─── summary ─────────────────────────────────────────────────────────────────

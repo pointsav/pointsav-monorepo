@@ -145,7 +145,9 @@ mod tests {
     async fn p2_only_when_idle() {
         let s = RequestScheduler::new(2);
         // P2 admitted when both slots free
-        let _permit = s.try_admit(InfightPriority::P2).expect("idle → P2 admitted");
+        let _permit = s
+            .try_admit(InfightPriority::P2)
+            .expect("idle → P2 admitted");
         // P2 rejected while one slot is occupied (not fully idle)
         assert!(s.try_admit(InfightPriority::P2).is_none());
     }

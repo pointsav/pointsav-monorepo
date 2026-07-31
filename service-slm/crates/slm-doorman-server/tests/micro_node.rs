@@ -19,7 +19,9 @@ use std::sync::{Arc, Mutex};
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use serde_json::Value;
-use slm_doorman::{BriefCache, Doorman, DoormanConfig, ExpressLane, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST};
+use slm_doorman::{
+    BriefCache, Doorman, DoormanConfig, ExpressLane, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+};
 use slm_doorman_server::http::{router, AppState};
 use slm_doorman_server::test_helpers::{temp_ledger, temp_queue_config};
 use tower::ServiceExt;
@@ -177,7 +179,7 @@ async fn hardware_readyz_shows_tier_a_available() {
     });
     let doorman = Doorman::new(
         DoormanConfig {
-            local: Some(local),
+            local: Some(local.into()),
             yoyo: HashMap::new(),
             external: None,
             lark_validator: None,

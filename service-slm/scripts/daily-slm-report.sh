@@ -32,7 +32,7 @@ DOORMAN_ENV="${DOORMAN_ENV_FILE:-/etc/local-doorman/local-doorman.env}"
 LEDGER_DIR="${BINARY_LEDGER_DIR:-/srv/foundry/data/binary-ledger}"
 YOYO_INSTANCE="${SLM_YOYO_GCP_INSTANCE:-yoyo-tier-b-1}"
 YOYO_ZONE="${SLM_YOYO_GCP_ZONE:-europe-west4-a}"
-YOYO_PROJECT="${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}"
+YOYO_PROJECT="${SLM_YOYO_GCP_PROJECT:?SLM_YOYO_GCP_PROJECT must be set (2026-07-30 GitHub-exposure remediation - no real-value default)}"
 
 NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 DATE="$(date -u +%Y-%m-%d)"

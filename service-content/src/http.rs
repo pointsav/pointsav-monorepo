@@ -21,6 +21,7 @@ use crate::config_http::config_routes;
 use crate::entity_filter;
 use crate::graph::{GraphEntity, GraphStore, RelatedToEdge};
 use crate::pairing::{InterfaceAuditLog, NonceCache, PairingKeypair, PairingRecord, PairingStore};
+use crate::write_governance::WriteGovernanceDispatcher;
 
 // ── shared server state ───────────────────────────────────────────────────────
 
@@ -35,6 +36,11 @@ pub struct HttpState {
     pub nonce_cache: NonceCache,
     pub pairing_key: PairingKeypair,
     pub capability_audit: InterfaceAuditLog,
+    /// SYS-ADR-19 write-governance checkpoint (`GET /v1/graph/pending`,
+    /// `POST /v1/graph/verdict`). Independent of `SERVICE_CONTENT_WRITE_
+    /// GOVERNANCE_ENABLED` — the dispatcher/endpoints always exist; the flag
+    /// only controls whether `lib.rs`'s automated writers route through it.
+    pub write_governance: WriteGovernanceDispatcher,
 }
 
 // ── pairing request / response ────────────────────────────────────────────────
@@ -272,13 +278,67 @@ async fn graph_edges(
 
 async fn graph_mutate(
     State(state): State<Arc<HttpState>>,
-    Json(body): Json<MutateRequest>,
+    Json(mut body): Json<MutateRequest>,
 ) -> Result<Json<MutateResponse>, (StatusCode, String)> {
+    // Backfill each entity's module_id from the request's top-level value when absent —
+    // `upsert_entities` writes `entity.module_id` verbatim as the node's `e.module_id`
+    // property (not the outer parameter, which only scopes the node's composite ID), so
+    // an empty per-entity value would otherwise land as `module_id: ""` in the graph.
+    // A caller is not required to redundantly repeat the same tenant on every entity —
+    // discovered via a real integration gap: project-editorial's `graph-committer.py`
+    // sends exactly this shape (2026-07-18 live end-to-end test).
+    for entity in &mut body.entities {
+        if entity.module_id.is_empty() {
+            entity.module_id = body.module_id.clone();
+        }
+    }
     state
         .graph
         .upsert_entities(&body.module_id, &body.entities)
         .map(|upserted| Json(MutateResponse { upserted }))
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+}
+
+// ── SYS-ADR-19 write-governance checkpoint ──────────────────────────────────
+
+/// `GET /v1/graph/pending` — list held-pending automated writes (both
+/// outstanding and already-resolved, most-recently-captured first) so a
+/// human reviewer can see what's queued and what a `write_id` needs for
+/// `POST /v1/graph/verdict`.
+async fn graph_pending(
+    State(state): State<Arc<HttpState>>,
+) -> Result<Json<Vec<crate::write_governance::PendingWrite>>, (StatusCode, String)> {
+    crate::write_governance::list_pending(&state.write_governance.pending_dir)
+        .map(Json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+}
+
+/// `POST /v1/graph/verdict` — a human reviewer's signed accept/reject on a
+/// held-pending write. Verifies the SSH signature (shells out to
+/// `ssh-keygen -Y verify`, potentially slow) via `spawn_blocking` before
+/// touching any state — mirrors the apprenticeship substrate's own
+/// verify-before-mutate ordering.
+async fn graph_verdict(
+    State(state): State<Arc<HttpState>>,
+    Json(wire): Json<crate::write_governance::WriteVerdictWireBody>,
+) -> Result<Json<crate::write_governance::WriteVerdictDispatchOutcome>, (StatusCode, String)> {
+    let dispatcher = state.write_governance.clone();
+    let graph = state.graph.clone();
+    let result = tokio::task::spawn_blocking(move || dispatcher.dispatch(wire, graph.as_ref()))
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("join: {e}")))?;
+
+    result.map(Json).map_err(|e| {
+        use crate::write_governance::WriteGovernanceError as E;
+        let status = match &e {
+            E::VerifySignature(_) => StatusCode::FORBIDDEN,
+            E::VerdictParse(_) => StatusCode::BAD_REQUEST,
+            E::OrphanVerdict { .. } => StatusCode::GONE,
+            E::AlreadyResolved { .. } => StatusCode::CONFLICT,
+            E::Io(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        };
+        (status, e.to_string())
+    })
 }
 
 /// Tier C Drafting Pipeline.
@@ -909,8 +969,9 @@ async fn issue_pair_token(
 
 // ── capability gate middleware ────────────────────────────────────────────────
 
-/// Pure scope-vs-target policy check for a verified capability, independent of
-/// any HTTP/router plumbing so it can be unit-tested directly.
+/// Pure scope-vs-target + grant-vs-forward policy check for a verified
+/// capability, independent of any HTTP/router plumbing so it can be
+/// unit-tested directly.
 ///
 /// `["*"]` in `archive_scope` is the operator-override wildcard
 /// (BRIEF-datagraph-tenant-isolation.md, Decisions Locked):
@@ -919,12 +980,29 @@ async fn issue_pair_token(
 ///   the operator, full stop.
 ///
 /// A non-wildcard scope must contain the request's target archive exactly.
+///
+/// **grant-vs-forward** (Session 4): `forwarded_for` is `None` for a direct
+/// grant (the signing peer's own capability) or `Some(origin)` when the peer
+/// claims to be relaying a capability on behalf of a third instance. A
+/// forward claim is only honored for `user_scope == "ADMIN"` signers —
+/// otherwise an ordinary paired peer could unilaterally claim to forward on
+/// behalf of someone with broader access than itself, defeating the point of
+/// distinguishing the two in the first place. This check is independent of
+/// (and applies before) the scope-vs-target check above.
 fn scope_permits_request(
     archive_scope: &[String],
     user_scope: &str,
     target_module_id: Option<&str>,
     is_mutate_route: bool,
+    forwarded_for: Option<&str>,
 ) -> Result<(), String> {
+    if forwarded_for.is_some() && user_scope != "ADMIN" {
+        return Err(format!(
+            "capability claims forwarded_for={forwarded_for:?} but signer's user_scope \
+             {user_scope:?} is not ADMIN — only ADMIN-scoped peers may forward"
+        ));
+    }
+
     let is_wildcard = archive_scope.iter().any(|s| s == "*");
 
     if is_wildcard && is_mutate_route {
@@ -955,8 +1033,11 @@ fn scope_permits_request(
 /// localhost-trusted path (the Doorman calls `/v1/graph/mutate` directly and
 /// does not yet send this header). Requests that DO present the header must
 /// verify against a registered peer's public key (resolved by `from_instance`
-/// via `PairingStore::find_by_instance`) or are rejected. A verified request
-/// is recorded to `interface-audit.jsonl` before continuing.
+/// via `PairingStore::resolve_public_key`, which checks service-content's own
+/// direct `/v1/pair` registrations first, falling back to peers Command has
+/// paired — O9 credential-chain wiring, BRIEF-os-totebox-platform.md) or are
+/// rejected. A verified request is recorded to `interface-audit.jsonl` before
+/// continuing, tagged with which trust source resolved it.
 async fn capability_gate(
     State(state): State<Arc<HttpState>>,
     req: Request,
@@ -1001,16 +1082,16 @@ async fn capability_gate(
             "capability payload missing from_instance".to_string(),
         ))?;
 
-    let public_key = {
+    let resolved = {
         let store = state.pairing_store.lock().unwrap();
-        store
-            .find_by_instance(from_instance)
-            .map(|r| r.public_key.clone())
+        store.resolve_public_key(from_instance)
     }
     .ok_or((
         StatusCode::FORBIDDEN,
         format!("{from_instance} is not a paired peer"),
     ))?;
+    let public_key = resolved.public_key().to_string();
+    let trust_source = resolved.source_label();
 
     let verified = verify_capability(&header_str, &public_key).map_err(|e| match e {
         CapabilityError::Malformed => (StatusCode::BAD_REQUEST, e.to_string()),
@@ -1046,7 +1127,11 @@ async fn capability_gate(
         })?;
         let target = serde_json::from_slice::<serde_json::Value>(&bytes)
             .ok()
-            .and_then(|v| v.get("module_id").and_then(|m| m.as_str()).map(String::from));
+            .and_then(|v| {
+                v.get("module_id")
+                    .and_then(|m| m.as_str())
+                    .map(String::from)
+            });
         (Request::from_parts(parts, Body::from(bytes)), target)
     } else {
         let target = req.uri().query().and_then(|q| {
@@ -1061,6 +1146,7 @@ async fn capability_gate(
         &verified.user_scope,
         target_module_id.as_deref(),
         is_mutate_route,
+        verified.forwarded_for.as_deref(),
     ) {
         let status = if msg.starts_with("could not determine") {
             StatusCode::BAD_REQUEST
@@ -1071,7 +1157,7 @@ async fn capability_gate(
     }
 
     let endpoint = req.uri().path().to_string();
-    if let Err(e) = state.capability_audit.record(&endpoint, &verified) {
+    if let Err(e) = state.capability_audit.record(&endpoint, &verified, trust_source) {
         eprintln!("[HTTP] interface-audit write failed: {e}");
     }
 
@@ -1079,6 +1165,43 @@ async fn capability_gate(
 }
 
 // ── server entrypoint ─────────────────────────────────────────────────────────
+
+/// Builds the full axum `Router` against a given `HttpState`, with no binding/serving
+/// side effects — separated from `run_server` so tests can drive the real router via
+/// `tower::ServiceExt::oneshot` instead of only unit-testing individual handlers.
+pub fn router(state: Arc<HttpState>) -> Router {
+    // Capability-gated: both the read (`/v1/graph/context`) and write
+    // (`/v1/graph/mutate`) DataGraph proxy routes are gated by the capability
+    // middleware when an X-Foundry-Capability header is present (forwarded
+    // INTERFACE-peer / operator-override requests); absent-header (local
+    // Doorman) calls pass through unchanged. `/v1/graph/context` was
+    // previously ungated entirely — closed as part of the tenant-isolation
+    // fix (BRIEF-datagraph-tenant-isolation.md).
+    let capability_gated = Router::new()
+        .route("/v1/graph/context", get(graph_context))
+        .route("/v1/graph/mutate", post(graph_mutate))
+        .route_layer(middleware::from_fn_with_state(
+            state.clone(),
+            capability_gate,
+        ));
+
+    Router::new()
+        .route("/healthz", get(healthz))
+        .route("/v1/graph/edges", get(graph_edges))
+        .route("/v1/graph/delta", get(graph_delta))
+        .route("/v1/graph/cleanup", get(graph_cleanup))
+        .route("/v1/graph/enrich", post(graph_enrich))
+        .route("/v1/draft/generate", post(draft_generate))
+        .route("/v1/ingest", post(ingest_document))
+        .route("/v1/pair", post(pair_peer))
+        .route("/v1/pair/token", get(issue_pair_token))
+        .route("/v1/pairs", get(list_pairs))
+        .route("/v1/graph/pending", get(graph_pending))
+        .route("/v1/graph/verdict", post(graph_verdict))
+        .merge(capability_gated)
+        .merge(config_routes())
+        .with_state(state)
+}
 
 pub async fn run_server(
     store: Arc<dyn GraphStore>,
@@ -1105,6 +1228,13 @@ pub async fn run_server(
 
     let capability_audit = InterfaceAuditLog::new(&graph_dir);
 
+    let write_governance = WriteGovernanceDispatcher {
+        verifier: Arc::new(crate::write_governance::SshKeygenVerifier::new(
+            crate::write_governance::allowed_signers_path(),
+        )),
+        pending_dir: crate::write_governance::pending_writes_dir(),
+    };
+
     let state = Arc::new(HttpState {
         graph: store,
         doorman_endpoint,
@@ -1115,37 +1245,10 @@ pub async fn run_server(
         nonce_cache: NonceCache::new(),
         pairing_key,
         capability_audit,
+        write_governance,
     });
 
-    // Capability-gated: both the read (`/v1/graph/context`) and write
-    // (`/v1/graph/mutate`) DataGraph proxy routes are gated by the capability
-    // middleware when an X-Foundry-Capability header is present (forwarded
-    // INTERFACE-peer / operator-override requests); absent-header (local
-    // Doorman) calls pass through unchanged. `/v1/graph/context` was
-    // previously ungated entirely — closed as part of the tenant-isolation
-    // fix (BRIEF-datagraph-tenant-isolation.md).
-    let capability_gated = Router::new()
-        .route("/v1/graph/context", get(graph_context))
-        .route("/v1/graph/mutate", post(graph_mutate))
-        .route_layer(middleware::from_fn_with_state(
-            state.clone(),
-            capability_gate,
-        ));
-
-    let app = Router::new()
-        .route("/healthz", get(healthz))
-        .route("/v1/graph/edges", get(graph_edges))
-        .route("/v1/graph/delta", get(graph_delta))
-        .route("/v1/graph/cleanup", get(graph_cleanup))
-        .route("/v1/graph/enrich", post(graph_enrich))
-        .route("/v1/draft/generate", post(draft_generate))
-        .route("/v1/ingest", post(ingest_document))
-        .route("/v1/pair", post(pair_peer))
-        .route("/v1/pair/token", get(issue_pair_token))
-        .route("/v1/pairs", get(list_pairs))
-        .merge(capability_gated)
-        .merge(config_routes())
-        .with_state(state);
+    let app = router(state);
 
     let listener = match tokio::net::TcpListener::bind(&bind_addr).await {
         Ok(l) => l,
@@ -1155,8 +1258,32 @@ pub async fn run_server(
         }
     };
     println!("[HTTP] Graph API listening on {}", bind_addr);
-    if let Err(e) = axum::serve(listener, app).await {
+    if let Err(e) = axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+    {
         eprintln!("[HTTP] Server error: {}", e);
+    }
+    println!("[HTTP] Graph API server shut down cleanly.");
+}
+
+/// Awaits SIGTERM, then returns — drives `run_server`'s own axum graceful
+/// shutdown independently of `lib.rs::run()`'s separate SIGTERM listener for
+/// the watcher loop. Multiple independent listeners for the same signal in
+/// one process is a safe, supported pattern (see the "SIGTERM handling"
+/// comment in `lib.rs::run()` for why); each half of the bundle drains its
+/// own in-flight work on the same signal without needing to coordinate a
+/// shared flag across the thread boundary.
+async fn shutdown_signal() {
+    match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+        Ok(mut sigterm) => {
+            sigterm.recv().await;
+            println!("[HTTP] SIGTERM received — draining in-flight requests, no new connections accepted...");
+        }
+        Err(e) => {
+            eprintln!("[HTTP] failed to install SIGTERM handler: {e} — graceful shutdown unavailable, server will only stop on abrupt termination");
+            std::future::pending::<()>().await;
+        }
     }
 }
 
@@ -1273,13 +1400,15 @@ mod tests {
     #[test]
     fn scope_permits_exact_match_on_read() {
         let scope = vec!["project-totebox".to_string()];
-        assert!(scope_permits_request(&scope, "USER", Some("project-totebox"), false).is_ok());
+        assert!(
+            scope_permits_request(&scope, "USER", Some("project-totebox"), false, None).is_ok()
+        );
     }
 
     #[test]
     fn scope_permits_rejects_mismatched_target() {
         let scope = vec!["project-totebox".to_string()];
-        let err = scope_permits_request(&scope, "USER", Some("project-editorial"), false)
+        let err = scope_permits_request(&scope, "USER", Some("project-editorial"), false, None)
             .expect_err("mismatched target must be rejected");
         assert!(err.contains("does not cover target archive"));
     }
@@ -1287,7 +1416,7 @@ mod tests {
     #[test]
     fn scope_permits_rejects_undeterminable_target() {
         let scope = vec!["project-totebox".to_string()];
-        let err = scope_permits_request(&scope, "USER", None, false)
+        let err = scope_permits_request(&scope, "USER", None, false, None)
             .expect_err("missing target module_id must be rejected");
         assert!(err.contains("could not determine target archive"));
     }
@@ -1295,13 +1424,13 @@ mod tests {
     #[test]
     fn scope_permits_wildcard_admin_on_read() {
         let scope = vec!["*".to_string()];
-        assert!(scope_permits_request(&scope, "ADMIN", Some("any-archive"), false).is_ok());
+        assert!(scope_permits_request(&scope, "ADMIN", Some("any-archive"), false, None).is_ok());
     }
 
     #[test]
     fn scope_permits_wildcard_rejects_non_admin() {
         let scope = vec!["*".to_string()];
-        let err = scope_permits_request(&scope, "USER", Some("any-archive"), false)
+        let err = scope_permits_request(&scope, "USER", Some("any-archive"), false, None)
             .expect_err("wildcard scope must require ADMIN role");
         assert!(err.contains("requires an ADMIN-role capability"));
     }
@@ -1311,7 +1440,7 @@ mod tests {
         // The operator override is read-only even for the operator — a wildcard
         // scope must never be honored on the mutate route, regardless of role.
         let scope = vec!["*".to_string()];
-        let err = scope_permits_request(&scope, "ADMIN", Some("any-archive"), true)
+        let err = scope_permits_request(&scope, "ADMIN", Some("any-archive"), true, None)
             .expect_err("wildcard scope must never be honored on mutate");
         assert!(err.contains("read-only"));
     }
@@ -1321,6 +1450,64 @@ mod tests {
         // Non-wildcard scopes are unaffected by the mutate-route restriction —
         // only the wildcard override is read-only.
         let scope = vec!["project-totebox".to_string()];
-        assert!(scope_permits_request(&scope, "USER", Some("project-totebox"), true).is_ok());
+        assert!(scope_permits_request(&scope, "USER", Some("project-totebox"), true, None).is_ok());
+    }
+
+    // ── scope_permits_request — grant-vs-forward (Session 4) ──────────────────
+
+    #[test]
+    fn scope_permits_direct_grant_unaffected_by_forward_check() {
+        // forwarded_for: None is the default (existing) behavior — untouched.
+        let scope = vec!["project-totebox".to_string()];
+        assert!(
+            scope_permits_request(&scope, "USER", Some("project-totebox"), false, None).is_ok()
+        );
+    }
+
+    #[test]
+    fn scope_permits_forward_claim_from_admin_permitted() {
+        let scope = vec!["project-totebox".to_string()];
+        assert!(scope_permits_request(
+            &scope,
+            "ADMIN",
+            Some("project-totebox"),
+            false,
+            Some("project-orchestration"),
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn scope_permits_forward_claim_from_non_admin_rejected() {
+        // An ordinary paired peer must not be able to unilaterally claim to
+        // forward on behalf of a third instance — the whole point of
+        // distinguishing grant-vs-forward.
+        let scope = vec!["project-totebox".to_string()];
+        let err = scope_permits_request(
+            &scope,
+            "USER",
+            Some("project-totebox"),
+            false,
+            Some("project-orchestration"),
+        )
+        .expect_err("non-ADMIN forward claim must be rejected");
+        assert!(err.contains("only ADMIN-scoped peers may forward"));
+    }
+
+    #[test]
+    fn scope_permits_forward_check_runs_before_scope_check() {
+        // A non-ADMIN forward claim is rejected on the forward check even when
+        // archive_scope would otherwise have permitted the request — forward
+        // authorization is a precondition, not an alternative path.
+        let scope = vec!["project-totebox".to_string()];
+        let err = scope_permits_request(
+            &scope,
+            "USER",
+            Some("project-totebox"), // scope-vs-target WOULD pass
+            false,
+            Some("project-orchestration"), // but forward-vs-grant must fail first
+        )
+        .expect_err("forward check must run first");
+        assert!(err.contains("ADMIN"));
     }
 }

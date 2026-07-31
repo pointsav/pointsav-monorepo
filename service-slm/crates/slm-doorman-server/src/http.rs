@@ -44,7 +44,7 @@ use serde::{Deserialize, Serialize};
 use slm_core::{
     ApprenticeshipAttempt, ApprenticeshipBrief, AuditCaptureRequest, AuditCaptureResponse,
     AuditProxyRequest, ChatMessage, Complexity, ComputeRequest, DeferReason, ExtractionRequest,
-    ExtractionResponse, GrammarConstraint, ModuleId, RequestId, Tier,
+    ExtractionResponse, GrammarConstraint, InferenceRoute, ModuleId, RequestId,
 };
 use slm_doorman::ledger::{
     ENTRY_TYPE_AUDIT_CAPTURE, ENTRY_TYPE_AUDIT_PROXY, ENTRY_TYPE_AUDIT_PROXY_STUB,
@@ -251,7 +251,11 @@ struct ChatCompletionsBody {
 /// injection silently returns nothing). Falls back to `foundry` on an unset/invalid value.
 fn default_module_id() -> ModuleId {
     let raw = std::env::var("SLM_DEFAULT_MODULE_ID").unwrap_or_default();
-    let id = if raw.trim().is_empty() { "foundry" } else { raw.trim() };
+    let id = if raw.trim().is_empty() {
+        "foundry"
+    } else {
+        raw.trim()
+    };
     ModuleId::from_str(id).unwrap_or_else(|e| {
         tracing::warn!("invalid SLM_DEFAULT_MODULE_ID {id:?} ({e}); falling back to 'foundry'");
         ModuleId::from_str("foundry").expect("compile-time-valid default moduleId")
@@ -336,11 +340,17 @@ async fn chat_completions(
     // context injection; they route directly to complete_background() which
     // preempts itself when an interactive request arrives.
     if is_background {
-        let resp = state
+        // Audit fix (2026-07-30): route_local_background() deliberately skips
+        // route()'s own automatic audit-ledger write (same reason as
+        // dispatch_shadow in slm-doorman — this path bypasses route()'s Tier A
+        // fallback/graph-context injection on purpose). Capture the raw result
+        // before the `?` so both success and failure get audited, matching
+        // route()'s own behavior, rather than silently going unaudited.
+        let dispatch_result = state.doorman.route_local_background(&req).await;
+        state
             .doorman
-            .route_local_background(&req)
-            .await
-            .map_err(ApiError::from)?;
+            .write_audit_entry(&req, InferenceRoute::Local, &dispatch_result);
+        let resp = dispatch_result.map_err(ApiError::from)?;
         let tier_str = resp.tier_used.as_str().to_string();
         let mut resp_headers = HeaderMap::new();
         if let Ok(v) = tier_str.parse() {
@@ -355,7 +365,9 @@ async fn chat_completions(
     let _slot: ExpressSlot = state
         .express_lane
         .try_acquire_slot("batch")
-        .ok_or_else(|| ApiError::too_many_requests("express-lane: batch slots full; retry shortly"))?;
+        .ok_or_else(|| {
+            ApiError::too_many_requests("express-lane: batch slots full; retry shortly")
+        })?;
 
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
     let tier_str = resp.tier_used.as_str().to_string();
@@ -489,7 +501,9 @@ async fn shadow(
     // empty. Empty acceptance_test means OLMo has no self-evaluation criteria,
     // driving the ~21% empty-attempt rate in shadow tuples.
     let enriched_brief = if wire.brief.acceptance_test.is_empty() && !wire.actual_diff.is_empty() {
-        let changed: Vec<&str> = wire.actual_diff.lines()
+        let changed: Vec<&str> = wire
+            .actual_diff
+            .lines()
             .filter(|l| l.starts_with("diff --git"))
             .filter_map(|l| l.split(" b/").nth(1))
             .collect();
@@ -677,7 +691,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
             },
         ],
         complexity: Complexity::High,
-        tier_hint: Some(Tier::Yoyo),
+        tier_hint: Some(InferenceRoute::Yoyo),
         stream: false,
         max_tokens: Some(2048),
         temperature: Some(0.1),
@@ -731,7 +745,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
                         },
                     ],
                     complexity: Complexity::Medium,
-                    tier_hint: Some(Tier::Local),
+                    tier_hint: Some(InferenceRoute::Local),
                     stream: false,
                     max_tokens: Some(1024),
                     temperature: Some(0.1),
@@ -781,8 +795,10 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
             // For Tier A fallback: model output begins mid-array (after pre-fill `[{"`).
             // Prepend the pre-fill prefix back so the JSON is parseable.
             let content_raw = if used_tier_label == "tier_a_fallback" {
-                format!("[{{\"{}",
-                    content_no_think.trim().trim_start_matches("[{\""))
+                format!(
+                    "[{{\"{}",
+                    content_no_think.trim().trim_start_matches("[{\"")
+                )
             } else {
                 content_no_think.trim().to_string()
             };
@@ -1030,7 +1046,7 @@ async fn batch_extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl I
                 },
             ],
             complexity: Complexity::High,
-            tier_hint: Some(Tier::Yoyo),
+            tier_hint: Some(InferenceRoute::Yoyo),
             stream: false,
             max_tokens: Some(2048),
             temperature: Some(0.1),
@@ -1066,8 +1082,22 @@ async fn batch_extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl I
                     .unwrap_or(&raw_content);
                 let stripped = stripped.strip_suffix("```").unwrap_or(stripped).trim();
                 match serde_json::from_str::<Vec<serde_json::Value>>(stripped) {
-                    Ok(ents) => (ents, "yoyo_trainer".to_string(), compute_resp.model, true, false, None::<String>),
-                    Err(_) => (vec![], "deferred".to_string(), "none".to_string(), false, true, Some("yoyo-transient".to_string())),
+                    Ok(ents) => (
+                        ents,
+                        "yoyo_trainer".to_string(),
+                        compute_resp.model,
+                        true,
+                        false,
+                        None::<String>,
+                    ),
+                    Err(_) => (
+                        vec![],
+                        "deferred".to_string(),
+                        "none".to_string(),
+                        false,
+                        true,
+                        Some("yoyo-transient".to_string()),
+                    ),
                 }
             }
             Err(DoormanError::TierUnavailable(_)) => (
@@ -1590,7 +1620,8 @@ async fn graph_query(
 
     let (status, rows): (StatusCode, Vec<serde_json::Value>) = match sc_resp {
         Ok(r) => {
-            let sc_status = StatusCode::from_u16(r.status().as_u16()).unwrap_or(StatusCode::BAD_GATEWAY);
+            let sc_status =
+                StatusCode::from_u16(r.status().as_u16()).unwrap_or(StatusCode::BAD_GATEWAY);
             if !sc_status.is_success() {
                 (sc_status, Vec::new())
             } else {
@@ -1689,7 +1720,8 @@ async fn graph_mutate(
                 "module_id".to_string(),
                 serde_json::Value::String(caller_module_id.clone()),
             );
-            serde_json::to_vec(&serde_json::Value::Object(map)).unwrap_or_else(|_| body_bytes.to_vec())
+            serde_json::to_vec(&serde_json::Value::Object(map))
+                .unwrap_or_else(|_| body_bytes.to_vec())
         }
         _ => body_bytes.to_vec(),
     };
@@ -2167,7 +2199,9 @@ async fn anthropic_messages(
     let _slot: ExpressSlot = state
         .express_lane
         .try_acquire_slot("batch")
-        .ok_or_else(|| ApiError::too_many_requests("express-lane: batch slots full; retry shortly"))?;
+        .ok_or_else(|| {
+            ApiError::too_many_requests("express-lane: batch slots full; retry shortly")
+        })?;
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
 
     if stream {

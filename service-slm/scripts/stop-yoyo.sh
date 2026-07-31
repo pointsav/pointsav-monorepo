@@ -27,7 +27,7 @@
 #   SLM_YOYO_GCP_INSTANCE=yoyo-tier-b-2 ./scripts/stop-yoyo.sh
 set -uo pipefail
 
-PROJECT="${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}"
+PROJECT="${SLM_YOYO_GCP_PROJECT:?SLM_YOYO_GCP_PROJECT must be set (2026-07-30 GitHub-exposure remediation - no real-value default)}"
 ZONE="${SLM_YOYO_GCP_ZONE:-us-central1-a}"
 INSTANCE="${SLM_YOYO_GCP_INSTANCE:-yoyo-batch}"
 LIFECYCLE_LOG="${SLM_YOYO_LIFECYCLE_LOG:-/srv/foundry/data/yoyo-lifecycle.log}"
