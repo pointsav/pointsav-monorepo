@@ -8,7 +8,7 @@ use crate::{i18n::PageLang, render, schema, state::AppState, vault};
 use axum::{
     extract::{Path, State},
     http::{header, StatusCode},
-    response::{Html, IntoResponse, Response},
+    response::{Html, IntoResponse, Redirect, Response},
 };
 use std::{fs, io::Write, path::Path as StdPath};
 
@@ -51,6 +51,12 @@ fn list_bundle_files(dir: &StdPath) -> Vec<BundleFile> {
 fn content_type_for(filename: &str) -> &'static str {
     if filename.ends_with(".css") {
         "text/css; charset=utf-8"
+    } else if filename == "tokens.full.json" {
+        // DTCG's own registered media type (Format Module, 2025.10) — every other
+        // .json file served through this generic bundle route (component recipes,
+        // other externally-mounted DESIGN-BUNDLE directories) stays plain
+        // application/json below; only the DTCG token export itself gets this.
+        "application/design-tokens+json; charset=utf-8"
     } else if filename.ends_with(".json") {
         "application/json; charset=utf-8"
     } else {
@@ -173,4 +179,13 @@ pub async fn download(Path(name): Path<String>, State(state): State<AppState>) -
         buf.into_inner(),
     )
         .into_response()
+}
+
+/// `/tokens.json` — documentation (get-started.md, the Foundations page, and the
+/// TOPIC-figma-tokens-studio-integration wiki article all promise this exact path) has
+/// always named the export `/tokens.json`, but the real server route only ever served it
+/// at `/bundles/tokens/tokens.full.json`. A 308 permanent redirect closes that gap without
+/// duplicating the bundle route or renaming the canonical file.
+pub async fn tokens_json_redirect() -> Redirect {
+    Redirect::permanent("/bundles/tokens/tokens.full.json")
 }
