@@ -99,6 +99,39 @@ async fn render_index(state: &AppState, lang: Lang) -> Html<String> {
         })
         .collect();
 
+    // Phase 6 (2026-07-29) — Paper and Writing get a real live sample on the homepage,
+    // not a text card: a mock document snippet bound to the actual paper.primitive.*
+    // ink/rule values, and the real writing.semantic.register.* scale — same `tiers`
+    // data the /tokens gallery renders from, no invented graphics or placeholder copy.
+    let find_val = |p: &str| -> String {
+        all_entries
+            .iter()
+            .find(|e| e.path == p)
+            .map(|e| e.value.clone())
+            .unwrap_or_default()
+    };
+    let paper_ink = find_val("paper.primitive.color.ink");
+    let paper_rule = find_val("paper.primitive.rule.standard");
+    let paper_rule_emphasis = find_val("paper.primitive.rule.emphasis");
+    let register_paths = [
+        ("how-to", "writing.semantic.register.how-to"),
+        ("reference", "writing.semantic.register.reference"),
+        ("communications", "writing.semantic.register.communications"),
+        ("journal", "writing.semantic.register.journal"),
+        ("legal", "writing.semantic.register.legal"),
+        ("specialist", "writing.semantic.register.specialist"),
+        ("financial-disclosure", "writing.semantic.register.financial-disclosure"),
+    ];
+    let register_rows: String = register_paths
+        .iter()
+        .map(|(name, path)| {
+            format!(
+                "<div class=\"pillar-preview__row\"><code>{name}</code><span class=\"pillar-preview__row-value\">{}</span></div>",
+                find_val(path)
+            )
+        })
+        .collect();
+
     // Faithful translation of the English copy below, not filler — see PR/commit
     // message for translation-review notes. Both variants kept side by side (rather
     // than an external strings file) since this is the only Spanish page today and a
@@ -111,7 +144,9 @@ async fn render_index(state: &AppState, lang: Lang) -> Html<String> {
          d1_h3, d1_a, d1_b, d1_c, d2_h3, d2_a, d2_b, d2_c, d3_h3, d3_a, d3_b, d3_c, d4_h3, d4_a, d4_b, d4_c,
          proof_h2, proof_intro, proof_l1, proof_l2, proof_l3, proof_l4, proof_example_label, proof_footnote,
          closing_h3, closing_p_pre, closing_p_mid, closing_p_post, closing_cta_text,
-         selfhost_eyebrow, selfhost_h2, selfhost_p, selfhost_cta) = match lang {
+         selfhost_eyebrow, selfhost_h2, selfhost_p, selfhost_cta,
+         pillar_preview_label, paper_preview_h3, paper_preview_body, paper_preview_caption,
+         writing_preview_h3, writing_preview_caption) = match lang {
         Lang::En => (
             "Token documentation &amp; component library",
             "One governed token graph, not a components folder every team forks and drifts&nbsp;from.",
@@ -161,6 +196,12 @@ async fn render_index(state: &AppState, lang: Lang) -> Html<String> {
              own change history, its own on-prem MCP endpoint, inside its own infrastructure. That's \
              a separate product from what's on this page.",
             "Publish your own design system",
+            "Live from the token graph",
+            "Paper — print &amp; compliance documents",
+            "A regulated print document isn't a font choice — it's a rule weight, an ink color, and a page geometry, all versioned like every other token. This corner is bound to the real paper.primitive.color.ink and paper.primitive.rule.standard values below, not a screenshot.",
+            "Eleven document families — subscription agreements, prospectuses, financial reports, PDF-binder navigation, Mexico FIBRA trust &amp; prospectus — share this same rule-weight ladder.",
+            "Writing — a versioned voice",
+            "Seven registers, each a real token — not a style-guide sentence someone has to remember to apply.",
         ),
         Lang::Es => (
             "Documentación de tokens y biblioteca de componentes",
@@ -213,6 +254,12 @@ async fn render_index(state: &AppState, lang: Lang) -> Html<String> {
              de su propia infraestructura. Eso es un producto separado de lo que se muestra en esta \
              página.",
             "Publique su propio sistema de diseño",
+            "En vivo desde el grafo de tokens",
+            "Paper — documentos impresos y de cumplimiento",
+            "Un documento impreso regulado no es una elección de fuente — es un grosor de regla, un color de tinta y una geometría de página, todo versionado como cualquier otro token. Este rincón está vinculado a los valores reales de paper.primitive.color.ink y paper.primitive.rule.standard a continuación, no una captura de pantalla.",
+            "Once familias de documentos — acuerdos de suscripción, prospectos, informes financieros, navegación de carpetas PDF, fideicomiso y prospecto FIBRA de México — comparten esta misma escala de grosor de regla.",
+            "Writing — una voz versionada",
+            "Siete registros, cada uno un token real — no una frase de guía de estilo que alguien tiene que recordar aplicar.",
         ),
     };
 
@@ -273,6 +320,30 @@ async fn render_index(state: &AppState, lang: Lang) -> Html<String> {
          <span class=\"product-strip__name\">Org Charts</span>\
          <span class=\"product-strip__stat\">{oc_stat}</span>\
          </a>\
+         </div>\
+         </section>\
+         <section class=\"pillar-preview\" aria-label=\"{pillar_preview_label}\">\
+         <span class=\"product-strip__label\">{pillar_preview_label}</span>\
+         <div class=\"pillar-preview__grid\">\
+         <div class=\"pillar-preview__card\">\
+         <h3>{paper_preview_h3}</h3>\
+         <p class=\"pillar-preview__body\">{paper_preview_body}</p>\
+         <div class=\"pillar-preview__sample\" aria-hidden=\"true\" style=\"color:{paper_ink};border-top:{paper_rule} solid {paper_ink}\">\
+         <div class=\"pillar-preview__sample-heading\" style=\"border-bottom:{paper_rule_emphasis} solid {paper_ink}\">Article 4 — Commission Rebate</div>\
+         <p class=\"pillar-preview__sample-text\">The Registered Dealer shall remit the Commission Rebate to the Corporation within five (5) Business Days of receipt, net of any Offering Costs advanced under Section 3.2.</p>\
+         </div>\
+         <div class=\"pillar-preview__rows\">\
+         <div class=\"pillar-preview__row\"><code>paper.primitive.color.ink</code><span class=\"pillar-preview__row-value\">{paper_ink}</span></div>\
+         <div class=\"pillar-preview__row\"><code>paper.primitive.rule.standard</code><span class=\"pillar-preview__row-value\">{paper_rule}</span></div>\
+         <div class=\"pillar-preview__row\"><code>paper.primitive.rule.emphasis</code><span class=\"pillar-preview__row-value\">{paper_rule_emphasis}</span></div>\
+         </div>\
+         <p class=\"pillar-preview__caption\">{paper_preview_caption}</p>\
+         </div>\
+         <div class=\"pillar-preview__card\">\
+         <h3>{writing_preview_h3}</h3>\
+         <p class=\"pillar-preview__body\">{writing_preview_caption}</p>\
+         <div class=\"pillar-preview__rows\">{register_rows}</div>\
+         </div>\
          </div>\
          </section>\
          <section class=\"act\">\

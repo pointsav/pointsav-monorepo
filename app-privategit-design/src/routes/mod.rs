@@ -26,6 +26,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/", get(browse::index))
         .route("/es", get(browse::index_es))
         .route("/tokens", get(browse::tokens_gallery_page))
+        .route("/tokens.json", get(bundle::tokens_json_redirect))
         .route("/adoption", get(browse::adoption_page))
         .route("/elements/:slug/download", get(browse::bundle_download))
         .route("/components/:slug/recipe.json", get(browse::component_recipe))
