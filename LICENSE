@@ -1,5 +1,5 @@
 MULTI-LICENSE NOTICE
-Version 1.1 — Effective 2026-05-24
+Version 1.2 — Effective 2026-08-02
 Copyright © 2026 Woodfine Capital Projects Inc. All rights reserved.
 
 This repository contains code under multiple licenses. Each source file
@@ -18,17 +18,16 @@ is maintained in:
 Directories under AGPL-3.0-or-later:
 
   os-console/        — platform console
-  os-privategit/     — private git module
-  os-totebox/        — core platform
   os-workplace/      — workplace module
   service-*/         — all platform services
   system-*/          — all platform systems
-  tool-*/            — all platform tools
-  moonshot-*/        — experimental and speculative work
+  tool-*/            — all platform tools (except tool-wallet/, see Apache-2.0 below)
+  moonshot-*/        — experimental and speculative work (except the five
+                       FSL-1.1-ALv2 overrides listed below)
   app-console-*/     — applications extending os-console
-  app-privategit-*/  — applications extending os-privategit
-  app-totebox-*/     — applications extending os-totebox
   app-workplace-*/   — applications extending os-workplace
+  xtask/             — workspace build-task runner
+  pointsav-pty-bridge/ — PTY bridge service
   foundry-nodeclass/ — workspace node classification library
   scripts/           — workspace build and automation scripts
   slm/               — language model module configuration
@@ -38,17 +37,47 @@ Directories under FSL-1.1-ALv2 (Functional Source License 1.1 with
 Apache-2.0 future license):
 
   os-infrastructure/   — infrastructure module
-  os-interface/        — interface module (renames to os-orchestration)
+  os-privategit/       — private git / storefront engine module
+  os-totebox/          — sovereign data vault module
   os-mediakit/         — media kit module
   os-network-admin/    — network administration module
+  app-privategit-*/    — applications extending os-privategit
+  app-totebox-*/       — applications extending os-totebox
   app-mediakit-*/      — applications extending os-mediakit
   app-network-*/       — applications extending os-network-admin
   templates/           — HTML/CSS shell templates for app-mediakit surfaces
+  moonshot-docengine/  — document-engine infrastructure (override of moonshot-* default)
+  moonshot-editor/     — editor/viewer/file-tree widget surface (override)
+  moonshot-crdt/       — collaborative state / version-lineage engine (override)
+  moonshot-parser/     — incremental syntax parser (override)
+  moonshot-bim-engine/ — sovereign IFC/BIM engine (override)
 
-Directories carrying upstream third-party licenses:
+Directories under Apache-2.0:
 
-  vendor-virtio/     — virtio driver stubs; see vendor-virtio/README.md for SPDX
-  vendor-wireguard/  — WireGuard tooling; see vendor-wireguard/README.md for SPDX
+  tool-wallet/  — payment/wallet tooling (override of tool-* default; no
+                  revenue role, seeds the Binary Library Open Source shelf)
+
+Directories under PointSav-ARR (proprietary — permanent commercial moat,
+not distributed under either the AGPL commercial-alternative tier or the
+FSL tier described below):
+
+  os-interface/        — orchestration/aggregation module (renames to
+                         os-orchestration/; both currently exist mid-rename)
+  os-orchestration/    — rename target of os-interface/, above
+  app-orchestration-*/ — applications extending os-interface/os-orchestration
+
+Directories carrying upstream third-party licenses (vendored code; not
+relicensed or SPDX-stamped by this repository's tooling):
+
+  vendor-virtio/          — virtio driver stubs; see vendor-virtio/README.md for SPDX
+  vendor-wireguard/       — WireGuard tooling; see vendor-wireguard/README.md for SPDX
+  vendor-azure-auth/      — Microsoft Azure authentication libraries
+  vendor-gpu-drivers/     — GPU driver packages
+  vendor-linux-systemd/   — systemd library bindings (LGPL-2.1-or-later)
+  vendor-microsoft-graph/ — Microsoft Graph SDK
+  vendor-phi3-mini/       — Phi-3 Mini model weights (MIT, Microsoft Research)
+  vendor-sel4-kernel/     — seL4 microkernel source (GPL-2.0-only, Data61/CSIRO)
+  vendor-slm-engine/      — local language model engine
 
 The full AGPL-3.0-or-later text is available at:
   https://github.com/pointsav/factory-release-engineering/blob/main/licenses/AGPL-3.0.txt
@@ -56,22 +85,31 @@ The full AGPL-3.0-or-later text is available at:
 The full FSL-1.1-ALv2 text is available at:
   https://github.com/pointsav/factory-release-engineering/blob/main/licenses/FSL-1.1-Apache-2.0.txt
 
+The full Apache-2.0 text is available at:
+  https://github.com/pointsav/factory-release-engineering/blob/main/licenses/Apache-2.0.txt
+
+The full PointSav-ARR text is available at:
+  https://github.com/pointsav/factory-release-engineering/blob/main/licenses/PointSav-ARR.txt
+
 --------------------------------------------------------------------------------
 LOCAL-ONLY DIRECTORIES (not tracked in this repository)
 --------------------------------------------------------------------------------
 
-The following directories exist on operator machines but are gitignored and
-never committed to this repository:
+  discovery-queue/  — operator-local transaction queue
 
-  app-infrastructure-*/  — per-deployment infrastructure instances
-  vendor-azure-auth/     — Microsoft Azure authentication libraries
-  vendor-gpu-drivers/    — GPU driver packages
-  vendor-linux-systemd/  — systemd library bindings
-  vendor-microsoft-graph/— Microsoft Graph SDK
-  vendor-phi3-mini/      — Phi-3 Mini model weights
-  vendor-sel4-kernel/    — seL4 microkernel source
-  vendor-slm-engine/     — local language model engine
-  discovery-queue/       — operator-local transaction queue
+--------------------------------------------------------------------------------
+DIRECTORIES PENDING LICENSE CLASSIFICATION
+--------------------------------------------------------------------------------
+
+A small number of directories in this repository are real and git-tracked
+but do not yet have a license assignment in the mapping referenced above —
+each requires content review before classification. The current, dated list
+is maintained in `LICENSE-MATRIX.md` §4.6 of the factory-release-engineering
+repository (not duplicated here, since this notice is a static file and that
+list changes independently). Do not assume such a directory is licensed
+under any of the terms above merely because it sits inside this repository —
+per the NO SINGLE-LICENSE WARRANTY section below, an unlicensed file may not
+be used, copied, modified, or distributed.
 
 --------------------------------------------------------------------------------
 COMMERCIAL ALTERNATIVE
