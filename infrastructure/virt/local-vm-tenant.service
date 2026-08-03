@@ -6,7 +6,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=mathew
+User=<operator>
 ExecStart=/usr/local/bin/service-vm-tenant
 Restart=on-failure
 RestartSec=10s

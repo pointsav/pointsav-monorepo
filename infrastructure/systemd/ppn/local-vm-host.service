@@ -6,7 +6,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=mathew
+User=<operator>
 EnvironmentFile=-/etc/default/vm-host
 ExecStart=/usr/local/bin/service-vm-host
 Restart=on-failure

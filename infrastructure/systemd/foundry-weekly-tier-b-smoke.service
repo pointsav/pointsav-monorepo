@@ -4,7 +4,7 @@ Documentation=service-slm/scripts/start-yoyo.sh
 
 [Service]
 Type=oneshot
-User=mathew
+User=<operator>
 TimeoutStartSec=4800
 ExecStart=/bin/bash -c '\
   mkdir -p /srv/foundry/data/smoke-test && \

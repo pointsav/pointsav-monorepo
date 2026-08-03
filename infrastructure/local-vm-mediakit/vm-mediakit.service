@@ -14,7 +14,7 @@ ExecStop=/bin/bash -c '\
   && sleep 10'
 TimeoutStopSec=30
 Restart=no
-User=mathew
+User=<operator>
 WorkingDirectory=/srv/foundry/clones/project-infrastructure
 
 [Install]

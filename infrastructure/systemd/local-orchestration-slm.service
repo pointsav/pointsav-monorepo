@@ -6,7 +6,7 @@ Wants=local-doorman.service
 
 [Service]
 Type=simple
-User=mathew
+User=<operator>
 EnvironmentFile=/etc/foundry/local-orchestration-slm.env
 ExecStart=/usr/local/bin/orchestration-slm-server
 Restart=on-failure
