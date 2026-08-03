@@ -6,7 +6,7 @@
 ### *Trustworthy Records Infrastructure for Institutions That Own Their Assets*
 ### *Infraestructura de Registros Verificables para Instituciones que Poseen sus Activos*
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
+[![License: Multiple](https://img.shields.io/badge/License-Multiple-blue.svg?style=flat-square)](LICENSE)
 [![Compliance: WORM](https://img.shields.io/badge/Compliance-WORM_Ready-22863a.svg?style=flat-square)](#)
 [![Foundation: seL4 Verified](https://img.shields.io/badge/Foundation-seL4_Verified-6f42c1.svg?style=flat-square)](#the-trustworthy-systems-foundation)
 [![WCAG: 2.2 AAA](https://img.shields.io/badge/WCAG-2.2_AAA-0075ca.svg?style=flat-square)](https://github.com/pointsav/pointsav-design-system)
@@ -80,7 +80,7 @@ The seL4 kernel is the formal security foundation. A compatibility shim currentl
 
 ## The Commercial Model
 
-Single-archive use — one ToteboxOS instance, one ConsoleOS terminal — is completely free and open source under Apache 2.0. An independent developer, a sole practitioner, or a small organisation can run a complete, WORM-compliant records platform with no commercial relationship with PointSav.
+Single-archive use — one ToteboxOS instance, one ConsoleOS terminal — is free to use and source-available: `os-totebox` under FSL-1.1-ALv2 (converts to Apache-2.0 two years after each release), `os-console` under AGPL-3.0-or-later. An independent developer, a sole practitioner, or a small organisation can run a complete, WORM-compliant records platform with no commercial relationship with PointSav.
 
 The moment you need to aggregate across multiple archives — connecting a building's property records to the personnel records of the management team, for example — you need OrchestrationOS, which is proprietary software. This is the monetisation boundary. PointSav does not charge for private data storage. It charges for the intelligence layer that connects archives together.
 
@@ -102,24 +102,24 @@ Woodfine is a subsidiary of the same parent company that owns PointSav. This is 
 
 | Component | Function | License | Status |
 |:---|:---|:---|:---|
-| `os-infrastructure` | Compute and hardware substrate | Proprietary | 🟢 Active |
-| `os-network-admin` | Private network routing and MBA registry | Proprietary | 🟡 Development |
+| `os-infrastructure` | Compute and hardware substrate | FSL-1.1-ALv2 | 🟢 Active |
+| `os-network-admin` | Private network routing and MBA registry | FSL-1.1-ALv2 | 🟡 Development |
 
 ### Platform
 
 | Component | Function | License | Status |
 |:---|:---|:---|:---|
-| `os-totebox` | Core archive operating system | Apache 2.0 | 🟡 Development |
+| `os-totebox` | Core archive operating system | FSL-1.1-ALv2 | 🟡 Development |
 | `os-orchestration` | Multi-archive aggregation and extended compute | Proprietary | 🟡 Development |
-| `os-workplace` | Staff desktop environment | Apache 2.0 | 🟡 Development |
+| `os-workplace` | Staff desktop environment | AGPL-3.0-or-later | 🟡 Development |
 
 ### Delivery
 
 | Component | Function | License | Status |
 |:---|:---|:---|:---|
-| `os-console` | Operator terminal — Command Ledger | Apache 2.0 | 🟡 Development |
-| `os-mediakit` | Public-facing web delivery | Proprietary | 🟢 Active |
-| `os-privategit` | Self-hosted version control | Apache 2.0 | 🟢 Active |
+| `os-console` | Operator terminal — Command Ledger | AGPL-3.0-or-later | 🟡 Development |
+| `os-mediakit` | Public-facing web delivery | FSL-1.1-ALv2 | 🟢 Active |
+| `os-privategit` | Self-hosted version control | FSL-1.1-ALv2 | 🟢 Active |
 
 ### Totebox Services
 
