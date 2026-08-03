@@ -22,7 +22,9 @@ architecture, or direction.
 
 ## 2. Filing issues
 
-Use the issue templates in `.github/ISSUE_TEMPLATE/`:
+Use the issue templates staged at `factory-release-engineering/github/ISSUE_TEMPLATE/`
+**(not yet auto-propagated to individual repos' `.github/` — see NEXT.md DEF-006;
+reference them directly from this repo until that lands):**
 
   - **Bug reports** — describe what happened, what You expected, and
     how to reproduce it.
@@ -51,9 +53,10 @@ Standard fork-and-pull-request workflow:
 
 ## 4. Code style and quality
 
-Each repository's source tree includes an `.editorconfig` file for
-baseline formatting (indentation, line endings, final newline). Honor
-it.
+Repositories should include an `.editorconfig` file for baseline
+formatting (indentation, line endings, final newline) where one exists;
+honor it. **Not yet propagated by this repo's tooling (NEXT.md DEF-006)**
+— no canonical `.editorconfig` source currently lives here.
 
 Language-specific linters and formatters are configured per-repository
 and enforced in CI. Run them locally before opening a PR to avoid
@@ -75,11 +78,15 @@ configuration.
 ## 6. Review process
 
 Every PR requires at least one approving review from a maintainer
-listed in `CODEOWNERS` before merge. CI must be green. No mandatory
-second reviewer is required at the factory-release-engineering level.
-Individual repositories may require a second approval for specific
-file paths via their `CODEOWNERS` (e.g., `LICENSE`, `CONTRIBUTING.md`,
-auth-related code).
+before merge. CI must be green. No mandatory second reviewer is required
+at the factory-release-engineering level. Individual repositories may
+adopt a `CODEOWNERS` file (a template lives at
+`factory-release-engineering/github/CODEOWNERS.template`) to require a
+second approval for specific file paths (e.g., `LICENSE`, `CONTRIBUTING.md`,
+auth-related code). **This template is not yet auto-propagated or
+substituted by this repo's tooling (NEXT.md DEF-006)** — a repository
+adopting it today must fill the `${...}` placeholders and commit it
+directly.
 
 Maintainers may request changes, approve, or close the PR with
 explanation. Maintainers merge using "squash and merge" unless a
