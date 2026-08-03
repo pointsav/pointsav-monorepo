@@ -7,7 +7,7 @@
 # Requires: sshd running, WireGuard mesh active (can reach 10.8.0.9).
 #
 # Usage (from the laptop):
-#   NODE_ID=laptop-a-1  WG_IP=10.8.0.6  bash <(curl -s mathew@10.8.0.9:'/srv/foundry/clones/project-infrastructure/infrastructure/virt/setup-vm-host-laptop.sh')
+#   NODE_ID=laptop-a-1  WG_IP=10.8.0.6  bash <(curl -s <operator>@10.8.0.9:'/srv/foundry/clones/project-infrastructure/infrastructure/virt/setup-vm-host-laptop.sh')
 #   NODE_ID=laptop-b-1  WG_IP=10.8.0.1  bash ...
 #
 # Or after scp:

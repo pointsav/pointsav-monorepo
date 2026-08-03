@@ -8,11 +8,11 @@ Wants=local-content.service
 ExecStart=/usr/bin/python3 /srv/foundry/clones/project-intelligence/service-slm/scripts/claude-session-bridge.py
 Restart=on-failure
 RestartSec=10
-User=mathew
-WorkingDirectory=/home/mathew
+User=<operator>
+WorkingDirectory=/home/<operator>
 
-Environment=CLAUDE_PROJECTS_DIR=/home/mathew/.claude/projects
-Environment=CORPUS_WATCH_DIR=/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer/service-fs/data/service-content/ledgers
+Environment=CLAUDE_PROJECTS_DIR=/home/<operator>/.claude/projects
+Environment=CORPUS_WATCH_DIR=/home/<operator>/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer/service-fs/data/service-content/ledgers
 Environment=POLL_INTERVAL_SECS=10
 
 StandardOutput=journal

@@ -5,7 +5,7 @@ After=local-bim-orchestration.service
 
 [Service]
 Type=oneshot
-User=jennifer
+User=<operator>
 Group=foundry
 WorkingDirectory=/srv/foundry/clones/project-bim
 ExecStart=/usr/bin/bash woodfine-bim-library/scripts/run-furniture-pipeline.sh
