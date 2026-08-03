@@ -55,10 +55,17 @@ impl Config {
         );
 
         let mut bundle_mounts = HashMap::new();
+        // Was clones/project-editorial/media-knowledge-documentation/.internal/style-guides —
+        // a real public product feature that happened to sit under a path named .internal/
+        // in a public wiki repo, which a 2026-08-03 AI-tooling-removal sweep correctly deleted.
+        // Moved to pointsav-design-system/editorial-style-guide/ as first-class product content
+        // (no .internal/, no agent vocabulary — structurally out of scope for future sweeps of
+        // that kind), synced to the vault via bin/sync-style-guides.sh (same pattern as
+        // bin/sync-design-tokens.sh for the "tokens" mount below).
         bundle_mounts.insert(
             "editorial-style-guide".to_string(),
             PathBuf::from(env::var("BUNDLE_MOUNT_EDITORIAL_STYLE_GUIDE").unwrap_or_else(|_| {
-                "/srv/foundry/clones/project-editorial/media-knowledge-documentation/.internal/style-guides".to_string()
+                vault.join("editorial-style-guide").to_string_lossy().into_owned()
             })),
         );
         // P1.11 — "Get started / Download tokens" front door: the compiled DTCG bundle
