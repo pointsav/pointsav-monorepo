@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
-mod ai;
 mod component_meta;
 mod component_preview;
 mod config;
@@ -122,7 +121,6 @@ async fn main() {
         vault: cfg.vault,
         nav,
         tenant: cfg.tenant,
-        doorman_url: cfg.doorman_url,
         watch_tx,
         index,
         edit_token,

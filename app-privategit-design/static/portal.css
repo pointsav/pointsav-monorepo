@@ -1255,7 +1255,7 @@ section.install-block:first-of-type { border-top: none; }
 }
 
 @media print {
-  header, .sidebar, .tab-bar, .drawer-toggle, #ai-overlay, #edit-toggle, #save-btn { display: none !important; }
+  header, .sidebar, .tab-bar, .drawer-toggle, #edit-toggle, #save-btn { display: none !important; }
   .layout, .main, .content { overflow: visible !important; }
   .ds-footer { border-top: 1px solid #000; }
 }
