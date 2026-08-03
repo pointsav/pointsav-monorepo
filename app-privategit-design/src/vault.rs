@@ -94,7 +94,10 @@ pub fn sidebar_heading_for_group_label(label: &str) -> (&'static str, Option<&'s
     if label.contains("gis.woodfinegroup.com") {
         ("GIS", Some("/products/gis/overview"))
     } else if label.contains("wiki engine") {
-        ("Knowledge Platform", Some("/products/knowledge-platform/overview"))
+        (
+            "Knowledge Platform",
+            Some("/products/knowledge-platform/overview"),
+        )
     } else if label.contains("Org Chart") {
         ("Org Charts", Some("/products/org-charts/overview"))
     } else {
@@ -181,8 +184,10 @@ pub fn discover_nav(vault: &Path) -> HashMap<String, Vec<String>> {
                 let name = e.file_name().into_string().ok()?;
                 match layout {
                     Layout::Nested => ft.is_dir().then_some(name),
-                    Layout::Flat => (ft.is_file() && name.ends_with(".md") && !name.ends_with(".es.md"))
-                        .then(|| name[..name.len() - 3].to_string()),
+                    Layout::Flat => {
+                        (ft.is_file() && name.ends_with(".md") && !name.ends_with(".es.md"))
+                            .then(|| name[..name.len() - 3].to_string())
+                    }
                 }
             })
             .collect();

@@ -9,16 +9,18 @@
 mod protocol;
 mod tools;
 
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{
+    extract::State,
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Json,
+};
 use protocol::{JsonRpcError, JsonRpcRequest, JsonRpcResponse};
 use serde_json::json;
 
 use crate::state::AppState;
 
-pub async fn mcp_handler(
-    State(state): State<AppState>,
-    body: axum::body::Bytes,
-) -> (StatusCode, Json<JsonRpcResponse>) {
+pub async fn mcp_handler(State(state): State<AppState>, body: axum::body::Bytes) -> Response {
     let req: JsonRpcRequest = match serde_json::from_slice(&body) {
         Ok(r) => r,
         Err(_) => {
@@ -33,11 +35,19 @@ pub async fn mcp_handler(
                     }),
                     id: serde_json::Value::Null,
                 }),
-            );
+            )
+                .into_response();
         }
     };
 
-    let id = req.id.clone();
+    // Fable-audit finding (2026-08-02): a JSON-RPC notification (no `id`, e.g.
+    // "notifications/initialized") must get no response at all per spec -- this
+    // used to be unreachable (id was mandatory, so parsing failed first). Return an
+    // empty 202 before dispatching to any method handler; nothing below this point
+    // needs to run for a fire-and-forget notification.
+    let Some(id) = req.id.clone() else {
+        return StatusCode::ACCEPTED.into_response();
+    };
     let resp = match req.method.as_str() {
         "initialize" => JsonRpcResponse {
             jsonrpc: "2.0".into(),
@@ -83,5 +93,5 @@ pub async fn mcp_handler(
         },
     };
 
-    (StatusCode::OK, Json(resp))
+    (StatusCode::OK, Json(resp)).into_response()
 }

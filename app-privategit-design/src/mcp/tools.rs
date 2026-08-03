@@ -82,11 +82,15 @@ pub async fn call_tool(params: &Option<Value>, state: &AppState) -> Result<Value
             if slug.contains("..") || slug.contains('/') {
                 return Err("invalid name".to_string());
             }
-            let path = state.vault.join("components").join(slug).join("recipe.json");
+            let path = state
+                .vault
+                .join("components")
+                .join(slug)
+                .join("recipe.json");
             let raw = std::fs::read_to_string(&path)
                 .map_err(|_| format!("no recipe.json for component '{slug}'"))?;
-            let recipe: Value =
-                serde_json::from_str(&raw).map_err(|_| "recipe.json is not valid JSON".to_string())?;
+            let recipe: Value = serde_json::from_str(&raw)
+                .map_err(|_| "recipe.json is not valid JSON".to_string())?;
             Ok(json!({ "content": [{ "type": "text", "text": recipe.to_string() }] }))
         }
         "list_components" => {
@@ -100,7 +104,9 @@ pub async fn call_tool(params: &Option<Value>, state: &AppState) -> Result<Value
                     .map(|(_, slugs)| slugs.clone())
                     .unwrap_or_default(),
             };
-            Ok(json!({ "content": [{ "type": "text", "text": serde_json::to_string(&slugs).unwrap() }] }))
+            Ok(
+                json!({ "content": [{ "type": "text", "text": serde_json::to_string(&slugs).unwrap() }] }),
+            )
         }
         "get_token" => {
             let query = args
@@ -113,7 +119,9 @@ pub async fn call_tool(params: &Option<Value>, state: &AppState) -> Result<Value
                 .flat_map(|tier| &tier.groups)
                 .flat_map(|group| &group.entries)
                 .collect();
-            let direct_hit = entries.iter().find(|e| e.css_var == query || e.path == query);
+            let direct_hit = entries
+                .iter()
+                .find(|e| e.css_var == query || e.path == query);
             let hit = match direct_hit {
                 Some(e) => Some(*e),
                 // A direct lookup miss doesn't necessarily mean the token never existed --
@@ -121,22 +129,36 @@ pub async fn call_tool(params: &Option<Value>, state: &AppState) -> Result<Value
                 // consumer using a pre-rename id/path still resolves instead of getting a
                 // false "not found" that pushes toward re-drafting a token that already
                 // exists (the exact failure mode this whole pipeline exists to prevent).
-                None => resolve_renamed_query(&state.vault, query)
-                    .and_then(|resolved| entries.iter().find(|e| e.css_var == resolved || e.path == resolved).copied()),
+                None => resolve_renamed_query(&state.vault, query).and_then(|resolved| {
+                    entries
+                        .iter()
+                        .find(|e| e.css_var == resolved || e.path == resolved)
+                        .copied()
+                }),
             };
             match hit {
-                Some(entry) => Ok(json!({
-                    "content": [{
-                        "type": "text",
-                        "text": json!({
-                            "path": entry.path,
-                            "css_var": entry.css_var,
-                            "value": entry.value,
-                            "kind": entry.kind,
-                            "description": entry.description,
-                        }).to_string()
-                    }]
-                })),
+                Some(entry) => {
+                    // Correction (2026-08-02 MCP functional-test finding): get_token used to
+                    // return an alias token's raw $value verbatim -- e.g. "{color.neutral-100}"
+                    // instead of the actual "#1a1a1a" it resolves to. An agent calling get_token
+                    // to "get the tokens right from the website" then had to make a second,
+                    // undocumented call to resolve the alias itself. Resolve it server-side;
+                    // keep the raw alias string too so composition relationships aren't hidden.
+                    let resolved_value = resolve_alias_value(&entry.value, &entries, 0);
+                    Ok(json!({
+                        "content": [{
+                            "type": "text",
+                            "text": json!({
+                                "path": entry.path,
+                                "css_var": entry.css_var,
+                                "value": resolved_value,
+                                "raw_value": entry.value,
+                                "kind": entry.kind,
+                                "description": entry.description,
+                            }).to_string()
+                        }]
+                    }))
+                }
                 None => Err(format!("no token found matching '{query}'")),
             }
         }
@@ -152,13 +174,16 @@ pub async fn call_tool(params: &Option<Value>, state: &AppState) -> Result<Value
                 .take(20)
                 .map(|doc| json!({ "id": doc.id, "title": doc.title }))
                 .collect();
-            Ok(json!({ "content": [{ "type": "text", "text": serde_json::to_string(&hits).unwrap() }] }))
+            Ok(
+                json!({ "content": [{ "type": "text", "text": serde_json::to_string(&hits).unwrap() }] }),
+            )
         }
         "list_token_families" => {
             let pillar_filter = args.get("pillar").and_then(|v| v.as_str());
             let path = state.vault.join("exports").join("token-families.json");
-            let raw = std::fs::read_to_string(&path)
-                .map_err(|_| "token-families.json not found -- run bin/generate-tokens-export.py".to_string())?;
+            let raw = std::fs::read_to_string(&path).map_err(|_| {
+                "token-families.json not found -- run bin/generate-tokens-export.py".to_string()
+            })?;
             let registry: Value = serde_json::from_str(&raw)
                 .map_err(|_| "token-families.json is not valid JSON".to_string())?;
             let all = registry
@@ -172,9 +197,33 @@ pub async fn call_tool(params: &Option<Value>, state: &AppState) -> Result<Value
                     .filter(|f| f.get("pillar").and_then(|v| v.as_str()) == Some(p))
                     .collect(),
             };
-            Ok(json!({ "content": [{ "type": "text", "text": serde_json::to_string(&families).unwrap() }] }))
+            Ok(
+                json!({ "content": [{ "type": "text", "text": serde_json::to_string(&families).unwrap() }] }),
+            )
         }
         other => Err(format!("unknown tool: {other}")),
+    }
+}
+
+/// Resolves a DTCG `$value` that may itself be an alias reference (`{dotted.path}`) to
+/// the literal value it ultimately points at, by looking the referenced path up in the
+/// same flattened entries list `get_token` already loaded -- no second vault read.
+/// Follows multi-level aliases (an alias pointing at another alias); `depth` guards
+/// against a cyclic reference in the source data turning into an infinite loop, since
+/// nothing upstream currently validates against that. Returns the value as-is,
+/// unresolved, if it isn't an alias, if the referenced path doesn't exist, or if depth
+/// is exceeded -- callers should treat that as "couldn't resolve further," not an error;
+/// `get_token`'s response also carries the original raw value so nothing is hidden.
+fn resolve_alias_value(value: &str, entries: &[&tokens_gallery::TokenEntry], depth: u8) -> String {
+    if depth > 8 {
+        return value.to_string();
+    }
+    let Some(inner) = value.strip_prefix('{').and_then(|v| v.strip_suffix('}')) else {
+        return value.to_string();
+    };
+    match entries.iter().find(|e| e.path == inner) {
+        Some(target) => resolve_alias_value(&target.value, entries, depth + 1),
+        None => value.to_string(),
     }
 }
 

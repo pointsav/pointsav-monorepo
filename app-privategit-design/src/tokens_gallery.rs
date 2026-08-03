@@ -21,6 +21,12 @@
 // (`primitive.json`, `pointsav-brand.json`, `paper/*`, `writing/*`). The real generator
 // is `pointsav-design-system/bin/generate-tokens-export.py` (added same day, closes this
 // gap) — run it after editing any source file, before committing `tokens.full.json`.
+// Correction (2026-08-02 registry-reconciliation pass): the tier list below was missing
+// "wcp" (the finance/wcp pillar, 25 tokens — `tokens.full.json`'s real top-level keys are
+// primitive/theme/paper/writing/wcp/ibm-carbon-org-chart/org-chart-extended, confirmed
+// against `exports/tokens.manifest.json`'s `leafCount: 611`). Every count derived from this
+// function had silently undercounted by exactly 25 (586 vs. 611) since wcp was added, and
+// the gallery page never rendered those tokens at all. Added "wcp" below to fix both.
 use serde_json::Value;
 use std::path::Path;
 
@@ -61,6 +67,7 @@ pub fn load_and_flatten(vault: &Path) -> Vec<TokenTier> {
         "theme",
         "paper",
         "writing",
+        "wcp",
         "ibm-carbon-org-chart",
         "org-chart-extended",
     ] {
@@ -73,7 +80,26 @@ pub fn load_and_flatten(vault: &Path) -> Vec<TokenTier> {
                 continue;
             }
             let mut entries = Vec::new();
-            flatten(group_val, group_name.clone(), None, &mut entries);
+            // Fable audit finding (2026-08-02): this used to seed the path with
+            // `group_name` alone for every tier, silently dropping `tier_name` --
+            // e.g. a paper-tier leaf got path "primitive.color.ink" instead of
+            // "paper.primitive.color.ink". That broke the homepage Paper/Writing
+            // preview (find_val() calls below use the real tier-inclusive paths, which
+            // could never match), MCP alias resolution (196 of 248 real aliases are
+            // tier-inclusive, e.g. "{paper.primitive.page.margin-standard}"), and
+            // renames.json's path-alias branch. Only the "primitive" tier is meant to
+            // stay bare/group-relative: generate-tokens-export.py's own alias_index
+            // deliberately special-cases pillar=="primitive" to register a bare-path
+            // alias alongside the full one (since every other tier's tokens reference
+            // primitive values without the "primitive." prefix, e.g. theme's
+            // "{color.neutral-100}") -- no such special case exists for any other
+            // tier, so every other tier's real path includes its own tier name.
+            let seed_path = if tier_name == "primitive" {
+                group_name.clone()
+            } else {
+                format!("{tier_name}.{group_name}")
+            };
+            flatten(group_val, seed_path, None, &mut entries);
             if !entries.is_empty() {
                 groups.push(TokenGroup {
                     name: group_name.clone(),
@@ -116,8 +142,25 @@ fn flatten(val: &Value, path: String, inherited_type: Option<String>, out: &mut 
         } else {
             None
         };
+        // Correction (2026-08-02 MCP functional-test finding): this used to reconstruct
+        // css_var from the DTCG path (`--{path with dots as dashes}`), which does NOT
+        // match the token's real canonical id -- the one actually emitted into
+        // exports/tokens.css by generate-tokens-export.py, and the one get_token callers
+        // see in real rendered CSS. A caller pasting the real variable name they see on
+        // the page got a false "not found" from get_token, the opposite of what an
+        // AI-agent-consumable registry is supposed to guarantee. Read the real canonical
+        // id from $extensions when present; only fall back to the reconstructed form for
+        // entries that somehow lack it (there shouldn't be any -- the generator's own
+        // migrate-canonical-ids.py stamps every real leaf).
+        let css_var = map
+            .get("$extensions")
+            .and_then(|e| e.get("com.pointsav.tokens"))
+            .and_then(|t| t.get("id"))
+            .and_then(|v| v.as_str())
+            .map(String::from)
+            .unwrap_or_else(|| format!("--{}", path.replace('.', "-")));
         out.push(TokenEntry {
-            css_var: format!("--{}", path.replace('.', "-")),
+            css_var,
             path,
             value,
             kind,
@@ -135,14 +178,43 @@ fn flatten(val: &Value, path: String, inherited_type: Option<String>, out: &mut 
     }
 }
 
+// Real count, not a hardcoded literal (2026-08-02 registry-reconciliation pass — the
+// homepage previously hardcoded this as "6", stale against the real 10 families in
+// `paper.semantic`). Counts top-level non-`$`-prefixed keys directly from the same
+// `tokens.full.json` `load_and_flatten` already reads, so it can't drift independently.
+pub fn paper_family_count(vault: &Path) -> usize {
+    let path = vault.join("exports").join("tokens.full.json");
+    let Ok(raw) = std::fs::read_to_string(&path) else {
+        return 0;
+    };
+    let Ok(Value::Object(root)) = serde_json::from_str::<Value>(&raw) else {
+        return 0;
+    };
+    let Some(Value::Object(paper)) = root.get("paper") else {
+        return 0;
+    };
+    let Some(Value::Object(semantic)) = paper.get("semantic") else {
+        return 0;
+    };
+    semantic.keys().filter(|k| !k.starts_with('$')).count()
+}
+
 fn contrast_ratio_vs_white(hex: &str) -> Option<String> {
     let hex = hex.trim_start_matches('#');
     if hex.len() != 6 {
         return None;
     }
-    let r = u8::from_str_radix(&hex[0..2], 16).ok()?;
-    let g = u8::from_str_radix(&hex[2..4], 16).ok()?;
-    let b = u8::from_str_radix(&hex[4..6], 16).ok()?;
+    // Fable-audit finding (2026-08-02): `hex.len()` is a byte count, but a `$value`
+    // like "#aéaaa" is 6 bytes with a multi-byte char straddling index 2 -- the old
+    // `&hex[0..2]` byte-slice would panic ("byte index 2 is not a char boundary") on
+    // that input. `load_and_flatten()` runs on every page render, so one malformed
+    // vault token would 500 every request. Vault content is operator-controlled, not
+    // user input, but a typo is still one edit away; `.get()` returns `None` instead
+    // of panicking on a bad boundary or bad UTF-8 slice, same as an unparseable hex
+    // digit already does via `.ok()?` below.
+    let r = u8::from_str_radix(hex.get(0..2)?, 16).ok()?;
+    let g = u8::from_str_radix(hex.get(2..4)?, 16).ok()?;
+    let b = u8::from_str_radix(hex.get(4..6)?, 16).ok()?;
     let lum = relative_luminance(r, g, b);
     let ratio = (1.0 + 0.05) / (lum + 0.05);
     Some(format!("{ratio:.2}:1"))

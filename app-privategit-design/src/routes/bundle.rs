@@ -91,7 +91,9 @@ pub async fn list(Path(name): Path<String>, State(state): State<AppState>) -> Re
         &state.component_groups,
         &state.site_origin,
         &format!("{title} — PointSav Design System"),
-        &format!("Download the {title} bundle from the PointSav Design System — {file_count} files."),
+        &format!(
+            "Download the {title} bundle from the PointSav Design System — {file_count} files."
+        ),
         &path,
         &PageLang::en_only(),
         &nav_html,
@@ -112,14 +114,29 @@ pub async fn file(
     let Some(dir) = state.bundle_mounts.get(&name) else {
         return (StatusCode::NOT_FOUND, "bundle not found").into_response();
     };
-    let Ok(raw) = fs::read_to_string(dir.join(&filename)) else {
+    // Fable-audit finding (2026-08-02): this used to read the file as a String via
+    // `fs::read_to_string`, which errors on any non-UTF-8 file -- silently 404ing
+    // any binary file a DESIGN-BUNDLE mount happens to list (list_bundle_files lists
+    // every file regardless of content type). Both mounts today are text-only, so no
+    // live impact yet, but the route is meant to be a generic bundle-file server, not
+    // text-only. Reading raw bytes first and only decoding to a String for the .md
+    // rendering branch below (the one path that genuinely needs text) makes this
+    // binary-safe for whatever gets mounted next.
+    let Ok(raw_bytes) = fs::read(dir.join(&filename)) else {
         return (StatusCode::NOT_FOUND, "file not found").into_response();
     };
 
     if !filename.ends_with(".md") {
-        return ([(header::CONTENT_TYPE, content_type_for(&filename))], raw).into_response();
+        return (
+            [(header::CONTENT_TYPE, content_type_for(&filename))],
+            raw_bytes,
+        )
+            .into_response();
     }
 
+    let Ok(raw) = String::from_utf8(raw_bytes) else {
+        return (StatusCode::INTERNAL_SERVER_ERROR, "not valid UTF-8").into_response();
+    };
     let (frontmatter, body) = vault::parse_frontmatter(&raw);
     let schema_type = schema::detect(&frontmatter);
     let content = schema::render(schema_type, &frontmatter, &body);
@@ -131,7 +148,10 @@ pub async fn file(
         &state.component_groups,
         &state.site_origin,
         &format!("{filename} — PointSav Design System"),
-        &format!("{filename}, from the {} bundle in the PointSav Design System.", vault::to_title(&name)),
+        &format!(
+            "{filename}, from the {} bundle in the PointSav Design System.",
+            vault::to_title(&name)
+        ),
         &format!("/bundles/{name}/{filename}"),
         &PageLang::en_only(),
         &nav_html,
