@@ -425,16 +425,15 @@ header a { color: var(--cds-text-secondary); text-decoration: none; font-size: 0
   border-right: 1px solid var(--cds-border-subtle);
   overflow-y: auto; padding: var(--cds-space-6) var(--cds-space-5);
 }
-/* 2026-07-16 audit fix: this rule previously set `display: flex; flex-direction:
-   column` unconditionally — same bug class as the top-nav dropdown-panel fix
-   earlier this session (author `display` on a <details> child overrides the UA's
-   native closed-state hiding). Below 961px this defeated the documented
-   "mobile stays collapsed-by-default" intent (comment below) entirely — tapping
-   the summary flipped the arrow but the list never actually hid. Scoped to
-   [open] now; the @media (min-width:961px) override below already re-forces it
-   open on desktop via its own :not([open]) rule. */
-.doc-toc__components-details[open] .doc-toc__components { display: flex; flex-direction: column; }
-.doc-toc__components { list-style: none; margin: 0; padding: 0; gap: 1px; }
+/* Operator feedback (2026-08-03): the sidebar's "Components" heading used to be a
+   <details>/<summary> toggle, collapsed by default below 961px and force-expanded-
+   but-unclickable above it. Only one category ever renders here per page (never
+   more than one at once — see render_nav's own doc comment), so there was nothing
+   for a toggle to save space from; it just hid the primary navigation behind an
+   extra tap on narrow viewports. Now a plain, always-visible heading + list at
+   every width — no <details> markup, no [open]-gating, no media-query override
+   needed. */
+.doc-toc__components { list-style: none; margin: 0; padding: 0; gap: 1px; display: flex; flex-direction: column; }
 .doc-toc__components li a {
   display: flex; align-items: center; justify-content: space-between; gap: var(--cds-space-2);
   padding: 0.35rem var(--cds-space-3); border-radius: var(--cds-radius-sm);
@@ -443,26 +442,10 @@ header a { color: var(--cds-text-secondary); text-decoration: none; font-size: 0
 .doc-toc__components li a:hover { background: var(--cds-layer); color: var(--cds-link-primary); }
 .doc-toc__components li a.active { background: var(--cds-surface-tint); color: var(--cds-selected-text); font-weight: 600; }
 .doc-toc__components-more { font-family: var(--cds-font-mono); font-size: 0.75rem; color: var(--cds-text-tertiary); padding: 0.45rem var(--cds-space-3) 0; }
-.doc-toc__components-details summary {
-  cursor: pointer; list-style: none; font-family: var(--cds-font-mono); font-size: var(--cds-type-micro, 0.6875rem);
+.doc-toc__components-heading {
+  font-family: var(--cds-font-mono); font-size: var(--cds-type-micro, 0.6875rem);
   font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cds-text-tertiary);
   padding: var(--cds-space-2) 0;
-}
-.doc-toc__components-details summary::-webkit-details-marker { display: none; }
-.doc-toc__components-details summary::after { content: "\25be"; float: right; }
-.doc-toc__components-details[open] summary::after { content: "\25b4"; }
-.doc-toc__components-details-count {
-  font-family: var(--cds-font-mono); font-size: var(--cds-type-micro, 0.6875rem); font-weight: 600;
-  padding: 0.1rem 0.4rem; margin-left: var(--cds-space-2); border-radius: 999px;
-  background: var(--cds-layer); color: var(--cds-text-tertiary); text-transform: none; letter-spacing: normal;
-}
-/* Above 960px the rail is always expanded (matches mockup: no page ever sets the
-   `open` attribute — CSS can't strip an HTML boolean attribute — so this override
-   is what keeps desktop expanded while mobile stays collapsed-by-default). */
-@media (min-width: 961px) {
-  .doc-toc__components-details:not([open]) .doc-toc__components { display: flex; }
-  .doc-toc__components-details summary { cursor: default; pointer-events: none; }
-  .doc-toc__components-details summary::after { content: none; }
 }
 .main { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
 .tab-bar {
@@ -959,12 +942,17 @@ section.act:first-of-type { border-top: none; }
    reconciling it against the header/content column above (operator: "the footer
    doesn't seem to always line up"). */
 .ds-footer__cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3rem; margin-bottom: 1.5rem; max-width: 1440px; margin-inline: auto; padding-inline: 1.5rem; }
-/* Single breakpoint, straight from 4 columns to 1 (2026-07-18) -- the prior
-   960px intermediate 2-column tier paired the 4 real footer columns
-   (Identity 5 items, Canonical 14, Machine-surface 6, Network 4) into an
-   unbalanced 2x2 grid at in-between widths; a single stacked column can't
-   produce that problem regardless of how mismatched the column lengths are. */
-@media (max-width: 960px) { .ds-footer__cols { grid-template-columns: 1fr; gap: 1.5rem; } }
+/* Operator feedback (2026-08-03): a single stacked column at every width below
+   960px turned the 14-item Canonical + 6-item Machine-surface groups into one
+   long unbroken wall of links -- worse than the 2x2-pairing problem the 2026-07-18
+   fix was solving. A 3-column tier fixes that original problem too, differently:
+   with 3 columns and 4 real groups (Identity 5, Canonical 14, Machine-surface 6,
+   Network 4), grid auto-flow places the first 3 in row one and lets Network wrap
+   alone onto row two -- nothing gets force-paired with a mismatched neighbor the
+   way a strict 2-column split did. Reserve the single-column stack for genuinely
+   narrow phone widths only. */
+@media (max-width: 960px) { .ds-footer__cols { grid-template-columns: repeat(3, 1fr); gap: 2rem; } }
+@media (max-width: 640px) { .ds-footer__cols { grid-template-columns: 1fr; gap: 1.5rem; } }
 .ds-footer__col-title {
   font-size: var(--cds-footer-heading-size); font-weight: 600; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--cds-footer-ink-muted); margin-bottom: 0.5rem;
