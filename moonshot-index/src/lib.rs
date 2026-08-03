@@ -911,7 +911,7 @@ mod trigram_tests {
         let corpus = [
             (
                 "1",
-                "Proforma_Bencal_SPV1.json",
+                "Q3_Rent_Roll_Draft.json",
                 "rent roll and cap rate assumptions",
             ),
             (
