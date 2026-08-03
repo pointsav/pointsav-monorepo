@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
-pub mod ai;
 pub mod browse;
 pub mod bundle;
 pub mod edit;
@@ -50,7 +49,6 @@ pub fn build_router(state: AppState) -> Router {
         .route("/sidebar/sse", get(sse::sidebar_sse))
         .route("/vault/:section/:slug/:tab/raw", get(edit::get_raw))
         .route("/vault/:section/:slug/:tab", put(edit::put_save))
-        .route("/ai/session", post(ai::post_session))
         .route("/mcp", post(crate::mcp::mcp_handler))
         .nest_service("/static", ServeDir::new(static_dir))
         .with_state(state)

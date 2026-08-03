@@ -6,7 +6,6 @@ use std::{collections::HashMap, env, path::PathBuf};
 pub struct Config {
     pub vault: PathBuf,
     pub bind: String,
-    pub doorman_url: String,
     pub tenant: String,
     /// DESIGN-BUNDLE mounts: bundle name -> canonical source directory owned by
     /// another archive (mounted read-only for serving + /download; never copied).
@@ -87,8 +86,6 @@ impl Config {
         Config {
             vault,
             bind,
-            doorman_url: env::var("DOORMAN_URL")
-                .unwrap_or_else(|_| "http://127.0.0.1:9092".to_string()),
             tenant: env::var("DESIGN_TENANT").unwrap_or_else(|_| "pointsav".to_string()),
             bundle_mounts,
             templates_dir,
