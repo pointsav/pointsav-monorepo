@@ -3,12 +3,20 @@
   SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 -->
 
-<details class="doc-toc__components-details">
-<summary>{{ heading }} <span class="doc-toc__components-details-count">{{ slugs | length }}</span></summary>
+<!--
+  Operator feedback (2026-08-03): this used to be a <details>/<summary> collapsible
+  with a count badge and a "N components." footer line. Only one category ever renders
+  per page (render_nav picks the current component's own group -- generic UI / GIS /
+  Knowledge Platform / Org Charts, never more than one at once), so a collapse/expand
+  toggle had nothing to save space from -- it just added a click before a visitor could
+  see the very sidebar that IS the primary navigation here. Plain, always-visible
+  heading + list now; the "N components." count line is dropped entirely (the real
+  per-family totals already live on /tokens and the homepage, not repeated per sidebar).
+-->
+<div class="doc-toc__components-heading">{{ heading }}</div>
 <ul class="doc-toc__components">
 {% for slug in slugs %}
 <li><a href="/components/{{ slug }}/usage"{% if slug == active_slug %} class="active"{% endif %}>{{ slug | to_title }}</a></li>
 {% endfor %}
 </ul>
-<div class="doc-toc__components-more">{{ slugs | length }} components.{% if see_also %} See also: <a href="{{ see_also }}">{{ heading }}</a>.{% endif %}</div>
-</details>
+{% if see_also %}<div class="doc-toc__components-more">See also: <a href="{{ see_also }}">{{ heading }}</a>.</div>{% endif %}
