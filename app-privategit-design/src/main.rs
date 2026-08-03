@@ -39,6 +39,38 @@ async fn main() {
 
     populate_index(&cfg.vault, &index).await;
 
+    // Registry-drift guard (2026-08-02): every rendered stat is supposed to trace back to
+    // one source (`exports/tokens.manifest.json`'s `leafCount`), but this has silently
+    // drifted at least once already (tokens_gallery's hardcoded tier list omitted "wcp",
+    // undercounting by exactly 25 leaves against the manifest). Loud, not fatal — a
+    // startup log line an operator will actually see, rather than a page that quietly
+    // shows the wrong number again.
+    {
+        let live_count: usize = tokens_gallery::load_and_flatten(&cfg.vault)
+            .iter()
+            .flat_map(|tier| &tier.groups)
+            .map(|group| group.entries.len())
+            .sum();
+        let manifest_path = cfg.vault.join("exports").join("tokens.manifest.json");
+        match std::fs::read_to_string(&manifest_path) {
+            Ok(raw) => match serde_json::from_str::<serde_json::Value>(&raw) {
+                Ok(manifest) => {
+                    if let Some(expected) = manifest.get("leafCount").and_then(|v| v.as_u64()) {
+                        if expected as usize != live_count {
+                            eprintln!(
+                                "WARNING: token-count drift — rendered gallery sums to {live_count} \
+                                 leaves but {manifest_path:?} declares leafCount={expected}. A tier is \
+                                 likely missing from tokens_gallery::load_and_flatten's hardcoded list."
+                            );
+                        }
+                    }
+                }
+                Err(e) => eprintln!("WARNING: could not parse {manifest_path:?}: {e}"),
+            },
+            Err(e) => eprintln!("WARNING: could not read {manifest_path:?}: {e}"),
+        }
+    }
+
     let item_count: usize = nav.values().map(|v| v.len()).sum();
     eprintln!(
         "app-privategit-design v{}: vault={:?} sections={} items={} indexed={}",

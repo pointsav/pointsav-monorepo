@@ -46,12 +46,11 @@
 <a href="/components/button/usage">{{ nav_components }}</a>
 <!-- Restructured 2026-07-16 (IA coherence audit, Opus): the old single "More"
      dropdown grouped 5 unrelated domains (Guidelines/Elements/Adoption/Agents/
-     Releases) behind one vague label -- the clearest "ad-hoc growth" tell per
-     real Carbon/Primer/Polaris precedent. Split into two honest groupings:
-     design guidance (this dropdown -- Accessibility + Elements, surfaced right
-     next to Tokens/Components rather than buried) and developer-facing docs
-     (Develop, below -- Self-host/Agents/Releases, a real Carbon-style "Get
-     started"/"Develop" bucket). -->
+     Releases) behind one vague label -- a classic "ad-hoc growth" tell. Split
+     into two honest groupings: design guidance (this dropdown -- Accessibility
+     + Elements, surfaced right next to Tokens/Components rather than buried)
+     and developer-facing docs (Develop, below -- Self-host/Agents/Releases, a
+     standard "Get started"/"Develop" bucket). -->
 <details class="site-nav__dropdown">
 <summary aria-controls="site-nav-guidelines-panel">{{ nav_guidelines }}</summary>
 <div class="site-nav__dropdown-panel" id="site-nav-guidelines-panel" role="group" aria-label="{{ nav_guidelines }}">
@@ -150,8 +149,7 @@ _es.onmessage=function(e){var n=document.querySelector('nav.sidebar');if(n)n.inn
 {% endif %}
 <script defer src="/static/nav-dropdown.js"></script>
 <script defer src="/static/drawer.js"></script>
-<script defer src="/static/edit.js"></script>
-<script defer src="/static/tokens-gallery.js"></script>
+<script defer src="/static/edit.js"></script><script defer src="/static/tokens-gallery.js"></script>
 <script defer src="/static/code-copy.js"></script>
 <script defer src="/static/search.js"></script>
 <script defer src="/static/theme-toggle.js"></script>

@@ -23,10 +23,21 @@ pub fn build_router(state: AppState) -> Router {
         .route("/healthz", get(healthz))
         .route("/robots.txt", get(seo::robots_txt))
         .route("/sitemap.xml", get(seo::sitemap_xml))
+        .route("/llms.txt", get(seo::llms_txt))
         .route("/", get(browse::index))
         .route("/es", get(browse::index_es))
         .route("/tokens", get(browse::tokens_gallery_page))
         .route("/tokens.json", get(bundle::tokens_json_redirect))
+        // "Foundations" is the v3 redesign's decided replacement vocabulary for
+        // "Tokens" (BRIEF-design-pointsav-v3-ground-up-rethink.md, Phase 1 result) --
+        // added 2026-08-02 as a real, working alias to the same handler so the
+        // refreshed mockups' "Browse the tokens" CTA resolves to something real.
+        // Deliberately NOT yet a full IA rename: /tokens stays live and is still
+        // what every existing nav label, sitemap entry, and llms.txt line points at.
+        // Full vocabulary migration (renaming the nav label, updating sitemap/
+        // llms.txt generation, and the homepage copy rewrite to match) is scoped as
+        // its own follow-up -- see NEXT.md.
+        .route("/foundations", get(browse::tokens_gallery_page))
         .route("/adoption", get(browse::adoption_page))
         .route("/elements/:slug/download", get(browse::bundle_download))
         .route("/components/:slug/recipe.json", get(browse::component_recipe))

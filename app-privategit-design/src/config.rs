@@ -30,7 +30,18 @@ pub struct Config {
     /// canonical URLs for itself — the same class of bug templates_dir/static_dir
     /// already hit (a compile-time/hardcoded value silently wrong on another
     /// deployment). Only the promoted foundry-prod deploy should set
-    /// DESIGN_SITE_ORIGIN=https://design.pointsav.com.
+    /// DESIGN_PUBLIC_URL=https://design.pointsav.com.
+    ///
+    /// Fable-audit finding (2026-08-02): this previously read only
+    /// `DESIGN_SITE_ORIGIN`, a variable nothing ever actually sets --
+    /// `local-design.service` (and, presumably, its promoted counterpart) sets
+    /// `DESIGN_PUBLIC_URL` instead, so this had silently fallen back to the
+    /// `http://<bind>` loopback default in every real deployment, confirmed live:
+    /// `robots.txt`/`sitemap.xml`/canonical tags/`llms.txt` were all emitting
+    /// `http://127.0.0.1:9094/...` instead of `https://design.pointsav.com/...`.
+    /// Now reads `DESIGN_PUBLIC_URL` (matching the deployed unit) with
+    /// `DESIGN_SITE_ORIGIN` kept as a fallback alias in case anything else already
+    /// depends on the older name.
     pub site_origin: String,
 }
 
@@ -69,7 +80,9 @@ impl Config {
         }));
 
         let bind = env::var("DESIGN_BIND").unwrap_or_else(|_| "127.0.0.1:9094".to_string());
-        let site_origin = env::var("DESIGN_SITE_ORIGIN").unwrap_or_else(|_| format!("http://{bind}"));
+        let site_origin = env::var("DESIGN_PUBLIC_URL")
+            .or_else(|_| env::var("DESIGN_SITE_ORIGIN"))
+            .unwrap_or_else(|_| format!("http://{bind}"));
 
         Config {
             vault,

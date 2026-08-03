@@ -32,7 +32,9 @@ pub fn render_nav(
     if active_section != "components" {
         return String::new();
     }
-    let Some((label, slugs)) = crate::vault::component_group_for_slug(component_groups, active_slug) else {
+    let Some((label, slugs)) =
+        crate::vault::component_group_for_slug(component_groups, active_slug)
+    else {
         return String::new();
     };
     let (heading, see_also) = crate::vault::sidebar_heading_for_group_label(label);

@@ -20,6 +20,9 @@ pub async fn get_raw(
     if bad_path(&section) || bad_path(&slug) || bad_path(&tab) {
         return (StatusCode::BAD_REQUEST, "invalid path").into_response();
     }
+    if !vault::is_known_section(&section) {
+        return (StatusCode::NOT_FOUND, "unknown section").into_response();
+    }
     let path = vault::content_path(&state.vault, &section, &slug, &tab);
     match fs::read_to_string(&path) {
         Ok(s) => (
@@ -55,6 +58,9 @@ pub async fn put_save(
     if bad_path(&section) || bad_path(&slug) || bad_path(&tab) {
         return (StatusCode::BAD_REQUEST, "invalid path").into_response();
     }
+    if !vault::is_known_section(&section) {
+        return (StatusCode::NOT_FOUND, "unknown section").into_response();
+    }
 
     let path = vault::content_path(&state.vault, &section, &slug, &tab);
 
@@ -87,5 +93,9 @@ pub async fn put_save(
 }
 
 fn bad_path(s: &str) -> bool {
-    s.contains("..") || s.contains('/') || s.contains('\\')
+    // Fable-audit finding (2026-08-02): missing a "." check let a tab like "usage.es"
+    // reach the deliberately-filtered `.es.md` sibling file (see the matching fix in
+    // browse.rs's item_tab) via this unauthenticated GET; real section/slug/tab
+    // segments are plain slugs with no dots.
+    s.contains("..") || s.contains('/') || s.contains('\\') || s.contains('.')
 }
