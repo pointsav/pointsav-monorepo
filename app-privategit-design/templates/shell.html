@@ -140,7 +140,14 @@
 {% if nav_html %}
 <script>
 (function(){
-var parts='{{ path }}'.split('/');
+// Live-audit finding (2026-08-04): '{{ path }}' is HTML-entity-escaped by minijinja's
+// autoescape (/ -> &#x2f;) when interpolated here, and browsers do NOT decode entities
+// inside <script> content -- so splitting that string on '/' never found a real slash,
+// even before the components-only guard below existed (parts[2] was always undefined,
+// so slug was always ''). Reading location.pathname instead sidesteps the escaping
+// entirely -- same pattern edit.js already uses for the same reason.
+var parts=location.pathname.split('/');
+if(parts[1] !== 'components') return;
 var slug=parts[2]||'';
 var _es=new EventSource('/sidebar/sse?lang={{ lang }}&section=components&slug='+encodeURIComponent(slug));
 _es.onmessage=function(e){var n=document.querySelector('nav.sidebar');if(n)n.innerHTML=e.data;};
@@ -150,6 +157,7 @@ _es.onmessage=function(e){var n=document.querySelector('nav.sidebar');if(n)n.inn
 <script defer src="/static/nav-dropdown.js"></script>
 <script defer src="/static/drawer.js"></script>
 <script defer src="/static/edit.js"></script><script defer src="/static/tokens-gallery.js"></script>
+<script defer src="/static/tokens-scrollspy.js"></script>
 <script defer src="/static/code-copy.js"></script>
 <script defer src="/static/search.js"></script>
 <script defer src="/static/theme-toggle.js"></script>

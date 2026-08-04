@@ -49,6 +49,19 @@ pub fn render_nav(
         .expect("render nav.html failed")
 }
 
+/// Tokens-page sidebar (tier -> group links). Deliberately a separate render path from
+/// render_nav rather than folding into its `if active_section != "components"` gate --
+/// that gate is intentional scope (see render_nav's own doc comment), not a TODO.
+pub fn render_nav_tokens(
+    env: &Environment<'static>,
+    tiers: &[crate::tokens_gallery::TokenTier],
+) -> String {
+    env.get_template("nav-tokens.html")
+        .expect("nav-tokens.html missing")
+        .render(context! { tiers => tiers })
+        .expect("render nav-tokens.html failed")
+}
+
 pub fn render_tab_bar(
     env: &Environment<'static>,
     section: &str,
