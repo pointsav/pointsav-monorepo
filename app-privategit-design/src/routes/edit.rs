@@ -13,15 +13,31 @@ use std::fs;
 
 /// Serve the raw markdown source for a vault file.
 /// GET /vault/:section/:slug/:tab/raw
+/// Live-audit finding (2026-08-04): this had zero auth for any section, gated or not --
+/// PUT (below) always required the edit_token bearer, GET never did, so raw markdown for
+/// every section was fetchable unauthenticated. Closing this only for gated sections
+/// keeps normal browsing of public sections' raw-view unauthenticated exactly as before;
+/// gated sections now require the same bearer token as the save path.
 pub async fn get_raw(
     Path((section, slug, tab)): Path<(String, String, String)>,
     State(state): State<AppState>,
+    headers: HeaderMap,
 ) -> impl IntoResponse {
     if bad_path(&section) || bad_path(&slug) || bad_path(&tab) {
         return (StatusCode::BAD_REQUEST, "invalid path").into_response();
     }
     if !vault::is_known_section(&section) {
         return (StatusCode::NOT_FOUND, "unknown section").into_response();
+    }
+    if !vault::is_publicly_reachable(&section) {
+        let auth = headers
+            .get(header::AUTHORIZATION)
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.strip_prefix("Bearer "))
+            .unwrap_or("");
+        if auth != state.edit_token.as_str() {
+            return StatusCode::UNAUTHORIZED.into_response();
+        }
     }
     let path = vault::content_path(&state.vault, &section, &slug, &tab);
     match fs::read_to_string(&path) {

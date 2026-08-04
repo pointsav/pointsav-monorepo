@@ -78,12 +78,14 @@ impl Config {
             ),
         );
 
-        let templates_dir = PathBuf::from(env::var("DESIGN_TEMPLATES_DIR").unwrap_or_else(|_| {
-            concat!(env!("CARGO_MANIFEST_DIR"), "/templates").to_string()
-        }));
-        let static_dir = PathBuf::from(env::var("DESIGN_STATIC_DIR").unwrap_or_else(|_| {
-            concat!(env!("CARGO_MANIFEST_DIR"), "/static").to_string()
-        }));
+        let templates_dir = PathBuf::from(
+            env::var("DESIGN_TEMPLATES_DIR")
+                .unwrap_or_else(|_| concat!(env!("CARGO_MANIFEST_DIR"), "/templates").to_string()),
+        );
+        let static_dir = PathBuf::from(
+            env::var("DESIGN_STATIC_DIR")
+                .unwrap_or_else(|_| concat!(env!("CARGO_MANIFEST_DIR"), "/static").to_string()),
+        );
 
         let bind = env::var("DESIGN_BIND").unwrap_or_else(|_| "127.0.0.1:9094".to_string());
         let site_origin = env::var("DESIGN_PUBLIC_URL")

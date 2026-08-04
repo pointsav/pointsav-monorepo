@@ -24,8 +24,8 @@
     btn.id = 'edit-toggle';
     btn.textContent = 'Edit';
     applyStyle(btn, 'position:fixed;bottom:2rem;right:2rem;padding:0.5rem 1.25rem;'
-      + 'background:var(--cds-interactive);color:#fff;border:none;border-radius:var(--cds-radius-md);cursor:pointer;'
-      + 'font-size:0.875rem;font-weight:600;z-index:200;box-shadow:var(--cds-elevation-2)');
+      + 'background:var(--ps-interactive);color:#fff;border:none;border-radius:var(--ps-radius-md);cursor:pointer;'
+      + 'font-size:0.875rem;font-weight:600;z-index:200;box-shadow:var(--ps-elevation-2)');
     document.body.appendChild(btn);
     btn.addEventListener('click', function () {
       if (!editing) enterEdit();
@@ -68,8 +68,8 @@
     textarea = document.createElement('textarea');
     textarea.value = rawMarkdown;
     applyStyle(textarea, 'width:100%;min-height:480px;padding:1rem;resize:vertical;'
-      + 'font-family:var(--cds-font-mono);font-size:0.875rem;line-height:1.6;'
-      + 'border:2px solid var(--cds-interactive);border-radius:var(--cds-radius-md);outline:none');
+      + 'font-family:var(--ps-font-mono);font-size:0.875rem;line-height:1.6;'
+      + 'border:2px solid var(--ps-interactive);border-radius:var(--ps-radius-md);outline:none');
     content.innerHTML = '';
     content.appendChild(textarea);
     textarea.focus();

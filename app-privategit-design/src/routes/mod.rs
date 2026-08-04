@@ -26,7 +26,6 @@ pub fn build_router(state: AppState) -> Router {
         .route("/", get(browse::index))
         .route("/es", get(browse::index_es))
         .route("/tokens", get(browse::tokens_gallery_page))
-        .route("/tokens.json", get(bundle::tokens_json_redirect))
         // "Foundations" is the v3 redesign's decided replacement vocabulary for
         // "Tokens" (BRIEF-design-pointsav-v3-ground-up-rethink.md, Phase 1 result) --
         // added 2026-08-02 as a real, working alias to the same handler so the
@@ -37,9 +36,13 @@ pub fn build_router(state: AppState) -> Router {
         // llms.txt generation, and the homepage copy rewrite to match) is scoped as
         // its own follow-up -- see NEXT.md.
         .route("/foundations", get(browse::tokens_gallery_page))
+        .route("/tokens.json", get(bundle::tokens_json_redirect))
         .route("/adoption", get(browse::adoption_page))
         .route("/elements/:slug/download", get(browse::bundle_download))
-        .route("/components/:slug/recipe.json", get(browse::component_recipe))
+        .route(
+            "/components/:slug/recipe.json",
+            get(browse::component_recipe),
+        )
         .route("/:section/:slug", get(browse::item_redirect))
         .route("/:section/:slug/:tab", get(browse::item_tab))
         .route("/tokens/search", get(search::token_search))
