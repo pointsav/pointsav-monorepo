@@ -11,17 +11,32 @@
   .active client-side (unlike nav.html's server-rendered .active -- this page is one
   continuous scroll, not a series of separate page loads, so there's no server-known
   "active" item until the user actually scrolls).
+
+  Restyled 2026-08-04 (operator: didn't visually match /components) onto the shared
+  .doc-toc* class family both sidebars now use -- see nav.html for the full design
+  rationale (Fable+Opus reviewed, synthesized by hand). The old top "TIERS" eyebrow
+  is dropped for the same reason nav.html drops "COMPONENTS": aria-label on the
+  <nav> wrapper in shell.html carries the section identity instead.
+
+  Single-group tiers (today: only "wcp") skip the nested list entirely and link the
+  tier heading straight at that one group -- a lonely one-item indent under a
+  header reads as a rendering defect, not real structure.
 -->
-<div class="doc-toc__tokens-heading">Tiers</div>
-<ul class="doc-toc__tokens">
+<ul class="doc-toc">
 {% for tier in tiers %}
-<li class="doc-toc__tokens-tier">
-<a href="#{{ tier.name }}" class="doc-toc__tokens-tier-link">{{ tier.name | to_title }}</a>
-<ul class="doc-toc__tokens-groups">
+<li class="doc-toc__group">
+{% if tier.groups | length == 1 %}
+{% for group in tier.groups %}
+<a href="#{{ tier.name }}-{{ group.name }}" class="doc-toc__group-heading">{{ tier.name | to_title }}</a>
+{% endfor %}
+{% else %}
+<a href="#{{ tier.name }}" class="doc-toc__group-heading">{{ tier.name | to_title }}</a>
+<ul class="doc-toc__group-list">
 {% for group in tier.groups %}
 <li><a href="#{{ tier.name }}-{{ group.name }}">{{ group.name | to_title }}</a></li>
 {% endfor %}
 </ul>
+{% endif %}
 </li>
 {% endfor %}
 </ul>

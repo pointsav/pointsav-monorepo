@@ -4,19 +4,33 @@
 -->
 
 <!--
-  Operator feedback (2026-08-03): this used to be a <details>/<summary> collapsible
-  with a count badge and a "N components." footer line. Only one category ever renders
-  per page (render_nav picks the current component's own group -- generic UI / GIS /
-  Knowledge Platform / Org Charts, never more than one at once), so a collapse/expand
-  toggle had nothing to save space from -- it just added a click before a visitor could
-  see the very sidebar that IS the primary navigation here. Plain, always-visible
-  heading + list now; the "N components." count line is dropped entirely (the real
-  per-family totals already live on /tokens and the homepage, not repeated per sidebar).
+  Reversed 2026-08-04 (operator request): this used to render only the current
+  component's own category (Phase 25, 2026-07-15, commit 2bb342173 -- "matches
+  mockup's doc-toc exactly"). Now renders all 5 categories always, matching
+  /tokens' sidebar -- the two are meant to read as a considered pair.
+
+  Uses the shared .doc-toc* class family (see nav-tokens.html, portal.css) --
+  deliberately ONE family, not two parallel __components/__tokens rule sets, since
+  two hand-maintained parallel families is exactly what produced the visual
+  mismatch this change fixes. Design reviewed independently by Fable + Opus;
+  synthesized: drop the old top "COMPONENTS" eyebrow entirely (redundant now that
+  the generic category is itself literally named "Components" -- aria-label on
+  the <nav> wrapper in shell.html keeps the section identity for assistive tech),
+  category headers stay title-case (not uppercase/mono) so hierarchy comes from
+  color + position, not from stacking bold+uppercase+mono on top of an already-bold
+  active state.
 -->
-<div class="doc-toc__components-heading">{{ heading }}</div>
-<ul class="doc-toc__components">
-{% for slug in slugs %}
+<ul class="doc-toc">
+{% for cat in categories %}
+<li class="doc-toc__group">
+{% if cat.see_also %}<a href="{{ cat.see_also }}" class="doc-toc__group-heading">{{ cat.heading }}</a>
+{% else %}<span class="doc-toc__group-heading">{{ cat.heading }}</span>
+{% endif %}
+<ul class="doc-toc__group-list">
+{% for slug in cat.slugs %}
 <li><a href="/components/{{ slug }}/usage"{% if slug == active_slug %} class="active"{% endif %}>{{ slug | to_title }}</a></li>
 {% endfor %}
 </ul>
-{% if see_also %}<div class="doc-toc__components-more">See also: <a href="{{ see_also }}">{{ heading }}</a>.</div>{% endif %}
+</li>
+{% endfor %}
+</ul>

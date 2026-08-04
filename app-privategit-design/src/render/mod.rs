@@ -15,14 +15,19 @@ pub fn render_markdown(md: &str) -> String {
     out
 }
 
-/// The sidebar only exists on component-detail pages now (nav/sidebar structural
-/// rebuild — the mockup has no sidebar at all on any other page type; see BRIEF Phase
-/// 25), scoped to just the current component's own real category (generic UI / GIS /
-/// Knowledge Platform / Org Charts), never the full mixed section tree this function
-/// used to render on every route. Returns an empty string for every non-component
-/// route (and `shell.html`'s `{% if nav_html %}` treats empty as "no sidebar at all"),
-/// and for a components route whose slug isn't found in any group (shouldn't happen for
-/// a real slug, but fails safe rather than panicking).
+/// The sidebar only exists on component-detail pages (nav/sidebar structural rebuild —
+/// the mockup has no sidebar at all on any other page type; see BRIEF Phase 25).
+/// Returns an empty string for every non-component route (and `shell.html`'s
+/// `{% if nav_html %}` treats empty as "no sidebar at all").
+///
+/// Reversed 2026-08-04 (operator request, after /tokens shipped its own 2-level
+/// tier/group sidebar): Phase 25 (2026-07-15, commit 2bb342173) had deliberately
+/// narrowed this to show only the current component's own category, matching a
+/// design mockup at the time. Now shows every category always, matching /tokens'
+/// pattern -- the two sidebars are meant to read as a considered pair, not
+/// independently-shaped variants. `component_groups` already holds the full
+/// dataset (`vault::discover_component_groups` runs once at startup over every
+/// slug), so this needed no new data-gathering, just less filtering.
 pub fn render_nav(
     env: &Environment<'static>,
     component_groups: &[(String, Vec<String>)],
@@ -32,18 +37,27 @@ pub fn render_nav(
     if active_section != "components" {
         return String::new();
     }
-    let Some((label, slugs)) =
-        crate::vault::component_group_for_slug(component_groups, active_slug)
-    else {
-        return String::new();
-    };
-    let (heading, see_also) = crate::vault::sidebar_heading_for_group_label(label);
+    #[derive(serde::Serialize)]
+    struct NavCategory<'a> {
+        heading: &'static str,
+        see_also: Option<&'static str>,
+        slugs: &'a [String],
+    }
+    let categories: Vec<NavCategory> = component_groups
+        .iter()
+        .map(|(label, slugs)| {
+            let (heading, see_also) = crate::vault::sidebar_heading_for_group_label(label);
+            NavCategory {
+                heading,
+                see_also,
+                slugs,
+            }
+        })
+        .collect();
     env.get_template("nav.html")
         .expect("nav.html missing")
         .render(context! {
-            heading => heading,
-            see_also => see_also,
-            slugs => slugs,
+            categories => categories,
             active_slug => active_slug,
         })
         .expect("render nav.html failed")
