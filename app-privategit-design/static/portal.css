@@ -436,46 +436,64 @@ header a { color: var(--ps-text-secondary); text-decoration: none; font-size: 0.
 }
 /* Operator feedback (2026-08-03): the sidebar's "Components" heading used to be a
    <details>/<summary> toggle, collapsed by default below 961px and force-expanded-
-   but-unclickable above it. Only one category ever renders here per page (never
-   more than one at once — see render_nav's own doc comment), so there was nothing
-   for a toggle to save space from; it just hid the primary navigation behind an
-   extra tap on narrow viewports. Now a plain, always-visible heading + list at
-   every width — no <details> markup, no [open]-gating, no media-query override
-   needed. */
-.doc-toc__components { list-style: none; margin: 0; padding: 0; gap: 1px; display: flex; flex-direction: column; }
-.doc-toc__components li a {
+   but-unclickable above it. There was nothing for a toggle to save space from; it
+   just hid the primary navigation behind an extra tap on narrow viewports. Now a
+   plain, always-visible list at every width — no <details> markup, no [open]-gating,
+   no media-query override needed.
+
+   Restyled 2026-08-04 (operator: /components and /tokens sidebars didn't visually
+   match once /tokens shipped its own 2-level tier/group nav). Both pages now share
+   ONE class family (.doc-toc*) instead of two independently-maintained parallel
+   ones (.doc-toc__components* / .doc-toc__tokens*) — the two parallel families are
+   exactly what let them drift apart the first time; one family makes that
+   structurally impossible going forward. Design independently proposed by Fable and
+   Opus, synthesized by hand. Key decisions:
+   - The old top eyebrow heading ("COMPONENTS" / "TIERS") is gone — both reviews
+     independently flagged it as a third, redundant weight level (worse: the
+     generic "Components" category is itself named "Components", directly
+     duplicating the eyebrow text it sat under). aria-label on the <nav> wrapper
+     in shell.html carries the section identity for assistive tech instead.
+   - Group/tier headings are title-case, not uppercase/mono — hierarchy comes from
+     darker color (--ps-text-primary) + position, not from stacking
+     bold+uppercase+mono on top of an already-bold active state (uppercase is
+     itself a weight signal, and it fights real content like "Knowledge Platform"
+     or an acronym like "WCP").
+   - Real --ps-type-label (12px) used for the heading row instead of the phantom
+     --ps-type-micro fallback (11px) — tokens.css's own header comment records
+     11px labels already failing a legibility bump once (P2.6); no reason to
+     re-introduce that at a smaller size here.
+   - Indent reduced from 12px to 8px (--ps-space-3) with a 1px left-border spine —
+     color/weight already carry most of the hierarchy, so the indent only needs to
+     read as a nudge, and the reclaimed width matters in a 200px-usable column
+     holding a 22-item category.
+   - Active nested links keep the existing blue-tint treatment (unchanged elsewhere
+     on the site) plus a 2px inset accent bar, so an active row is findable at a
+     glance in a long scrolling list; headings get the tint only, no bar, so the
+     "current page" cue has exactly one shape. */
+.doc-toc { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ps-space-4); }
+.doc-toc__group { display: flex; flex-direction: column; gap: var(--ps-space-1); }
+.doc-toc__group-heading {
+  display: block; font-size: var(--ps-type-label, 0.75rem); font-weight: 600;
+  color: var(--ps-text-primary); padding: 0.3rem var(--ps-space-3);
+  border-radius: var(--ps-radius-sm); text-decoration: none;
+}
+a.doc-toc__group-heading:hover { background: var(--ps-layer); color: var(--ps-link-primary); }
+a.doc-toc__group-heading.active { background: var(--ps-surface-tint); color: var(--ps-selected-text); }
+.doc-toc__group-list {
+  list-style: none; margin: 0 0 0 var(--ps-space-3); padding: 0 0 0 var(--ps-space-3);
+  border-left: 1px solid var(--ps-border-subtle); display: flex; flex-direction: column; gap: 1px;
+}
+.doc-toc__group-list a {
   display: flex; align-items: center; justify-content: space-between; gap: var(--ps-space-2);
-  padding: 0.35rem var(--ps-space-3); border-radius: var(--ps-radius-sm);
+  padding: 0.3rem var(--ps-space-3); border-radius: var(--ps-radius-sm);
   font-size: var(--ps-type-caption, 0.8125rem); color: var(--ps-text-secondary); text-decoration: none;
+  scroll-margin-top: var(--ps-space-4);
 }
-.doc-toc__components li a:hover { background: var(--ps-layer); color: var(--ps-link-primary); }
-.doc-toc__components li a.active { background: var(--ps-surface-tint); color: var(--ps-selected-text); font-weight: 600; }
-.doc-toc__components-more { font-family: var(--ps-font-mono); font-size: 0.75rem; color: var(--ps-text-tertiary); padding: 0.45rem var(--ps-space-3) 0; }
-.doc-toc__components-heading {
-  font-family: var(--ps-font-mono); font-size: var(--ps-type-micro, 0.6875rem);
-  font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ps-text-tertiary);
-  padding: var(--ps-space-2) 0;
+.doc-toc__group-list a:hover { background: var(--ps-layer); color: var(--ps-link-primary); }
+.doc-toc__group-list a.active {
+  background: var(--ps-surface-tint); color: var(--ps-selected-text); font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--ps-selected-text);
 }
-.doc-toc__tokens-heading {
-  font-family: var(--ps-font-mono); font-size: var(--ps-type-micro, 0.6875rem);
-  font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ps-text-tertiary);
-  padding: var(--ps-space-2) 0;
-}
-.doc-toc__tokens { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ps-space-2); }
-.doc-toc__tokens-tier-link {
-  display: block; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
-  font-size: var(--ps-type-micro, 0.6875rem); color: var(--ps-text-tertiary);
-  padding: 0.35rem var(--ps-space-3); text-decoration: none; border-radius: var(--ps-radius-sm);
-}
-.doc-toc__tokens-tier-link:hover { background: var(--ps-layer); color: var(--ps-link-primary); }
-.doc-toc__tokens-tier-link.active { background: var(--ps-surface-tint); color: var(--ps-selected-text); }
-.doc-toc__tokens-groups { list-style: none; margin: 0; padding: 0 0 0 var(--ps-space-4); display: flex; flex-direction: column; gap: 1px; }
-.doc-toc__tokens-groups a {
-  display: block; padding: 0.35rem var(--ps-space-3); border-radius: var(--ps-radius-sm);
-  font-size: var(--ps-type-caption, 0.8125rem); color: var(--ps-text-secondary); text-decoration: none;
-}
-.doc-toc__tokens-groups a:hover { background: var(--ps-layer); color: var(--ps-link-primary); }
-.doc-toc__tokens-groups a.active { background: var(--ps-surface-tint); color: var(--ps-selected-text); font-weight: 600; }
 .main { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
 .tab-bar {
   display: flex; border-bottom: 1px solid var(--ps-border-subtle);

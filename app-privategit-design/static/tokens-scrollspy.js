@@ -16,28 +16,37 @@
   var sidebar = document.querySelector('nav.sidebar');
   if (!sidebar) return;
 
-  var groupLinks = sidebar.querySelectorAll('.doc-toc__tokens-groups a');
-  var tierLinks = sidebar.querySelectorAll('.doc-toc__tokens-tier-link');
+  // A single lookup pool, not two separate NodeLists keyed by class. A tier with
+  // exactly one group (today: "wcp") renders as ONE combined link straight to that
+  // group -- see nav-tokens.html -- so its href is "#wcp-finance", not "#wcp"; a
+  // groupLinks-only lookup for "wcp-finance" would miss it entirely (that link
+  // lives in .doc-toc__group-heading, not .doc-toc__group-list, in the collapsed
+  // case). Searching every in-page anchor link by href sidesteps the distinction.
+  var allLinks = sidebar.querySelectorAll('a[href^="#"]');
   var activeGroupLink = null;
   var activeTierLink = null;
 
-  function linkFor(list, id) {
+  function linkFor(id) {
     var href = '#' + id;
-    for (var i = 0; i < list.length; i++) {
-      if (list[i].getAttribute('href') === href) return list[i];
+    for (var i = 0; i < allLinks.length; i++) {
+      if (allLinks[i].getAttribute('href') === href) return allLinks[i];
     }
     return null;
   }
 
   function setActive(groupEl) {
-    var link = linkFor(groupLinks, groupEl.id);
+    var link = linkFor(groupEl.id);
     if (!link || link === activeGroupLink) return;
     if (activeGroupLink) activeGroupLink.classList.remove('active');
     link.classList.add('active');
     activeGroupLink = link;
 
     var tierEl = groupEl.closest('.tg-tier');
-    var tierLink = tierEl ? linkFor(tierLinks, tierEl.id) : null;
+    // Skip the tier-level lookup entirely when the group link IS the tier link
+    // (the collapsed single-group case) -- same element, already marked active
+    // above; a second lookup would just find nothing (no separate "#wcp" href
+    // exists) and correctly no-op, but skipping is clearer than relying on that.
+    var tierLink = tierEl && '#' + tierEl.id !== link.getAttribute('href') ? linkFor(tierEl.id) : null;
     if (tierLink !== activeTierLink) {
       if (activeTierLink) activeTierLink.classList.remove('active');
       if (tierLink) tierLink.classList.add('active');

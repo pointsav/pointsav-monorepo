@@ -71,20 +71,6 @@ pub fn component_origin_label<'a>(
         .map(|(label, _)| label.as_str())
 }
 
-/// The `discover_component_groups` entry (label, slugs) that a given component slug
-/// belongs to — regardless of whether it's the generic (empty-label) group. Used by the
-/// component-detail sidebar (Phase: nav/sidebar structural rebuild) to scope the rail to
-/// just the current component's own category, matching the mockup's real per-page
-/// `doc-toc` (never the full mixed tree `component_origin_label`'s callers show).
-pub fn component_group_for_slug<'a>(
-    component_groups: &'a [(String, Vec<String>)],
-    slug: &str,
-) -> Option<&'a (String, Vec<String>)> {
-    component_groups
-        .iter()
-        .find(|(_, slugs)| slugs.iter().any(|s| s == slug))
-}
-
 /// A sidebar rail needs a plain noun heading ("GIS", "Knowledge Platform") and, for the
 /// 3 non-generic categories, a real link out to that domain's product-line page —
 /// distinct wording from `discover_component_groups`'s origin-badge label ("Also used on
@@ -100,6 +86,14 @@ pub fn sidebar_heading_for_group_label(label: &str) -> (&'static str, Option<&'s
         )
     } else if label.contains("Org Chart") {
         ("Org Charts", Some("/products/org-charts/overview"))
+    } else if label.contains("Paper") {
+        // Live-audit finding (2026-08-04): this case was missing, so the "paper"
+        // category (7 slugs) silently fell through to the generic "Components"
+        // heading below -- harmless while the sidebar only ever showed one category
+        // at a time, but a real gap once it shows all categories together and
+        // "Paper" needs its own real heading to be distinguishable from the generic
+        // group sitting right next to it.
+        ("Paper", Some("/paper/paper/overview"))
     } else {
         ("Components", None)
     }
@@ -252,7 +246,12 @@ pub fn discover_tabs(vault: &Path, section: &str, slug: &str) -> Vec<String> {
 /// like "Wiki Toc Sidebar" read as auto-title-cased file names, not curated nav, next to
 /// real prose labels. (bim/guid/3d/rs1/ifc removed 2026-07-04 — those were BIM-specific
 /// slugs, and BIM content no longer lives in this substrate.)
-const ACRONYM_WORDS: &[&str] = &["gis", "toc", "mcp"];
+// "wcp" added 2026-08-04: the tokens sidebar's tier heading used to render this in
+// CSS text-transform: uppercase regardless of the underlying string, masking that
+// to_title("wcp") produced "Wcp" (not in this list). Removing the uppercase
+// transform as part of the sidebar redesign (title-case now carries the visual
+// hierarchy, not forced caps) exposed it directly on the live page.
+const ACRONYM_WORDS: &[&str] = &["gis", "toc", "mcp", "wcp"];
 
 pub fn to_title(s: &str) -> String {
     s.split('-')
