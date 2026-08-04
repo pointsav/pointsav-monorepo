@@ -159,6 +159,19 @@ pub fn is_flat_section(section: &str) -> bool {
         .any(|(s, _, l)| *s == section && *l == Layout::Flat)
 }
 
+/// Sections withheld from public reach as a stopgap (2026-08-04) -- NOT the future
+/// public "journals" feature (that's unbuilt, separately scoped, not this). `research/`
+/// content is pre-decision working material that still carries competitor-name
+/// violations and was never meant for the primary nav or search engines, but this app's
+/// routing served it identically to every other section. Files stay on disk and remain
+/// editable via the existing edit_token-authed save path; only unauthenticated public
+/// reach is cut.
+const GATED_SECTIONS: &[&str] = &["research"];
+
+pub fn is_publicly_reachable(section: &str) -> bool {
+    is_known_section(section) && !GATED_SECTIONS.contains(&section)
+}
+
 /// The one place that knows flat sections ignore the tab segment on disk — every
 /// content-path lookup (browsing, editing, WYSIWYG save) should go through this rather
 /// than building the path inline, so the flat/nested distinction stays in one function.

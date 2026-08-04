@@ -285,7 +285,7 @@ async fn render_index(state: &AppState, lang: Lang) -> Html<String> {
     // are bound to this page's own real CSS custom properties, not a screenshot --
     // an actual live sample of the token graph the page is about. Real values
     // (not the mockup's illustrative ones) confirmed directly against tokens.css:
-    // --cds-interactive #234ed8, --cds-font-mono 'JetBrains Mono', --cds-radius-md 0.25rem.
+    // --ps-interactive #234ed8, --ps-font-mono 'JetBrains Mono', --ps-radius-md 0.25rem.
     let content = format!(
         "<div class=\"home-body\">\
          <section class=\"home-hero-section\">\
@@ -307,17 +307,17 @@ async fn render_index(state: &AppState, lang: Lang) -> Html<String> {
          <div class=\"token-preview\" aria-hidden=\"true\">\
          <div class=\"token-preview__label\">Live from tokens.css :root</div>\
          <div class=\"token-preview__swatches\">\
-         <span class=\"token-preview__swatch\" style=\"background: var(--cds-interactive)\"></span>\
-         <span class=\"token-preview__swatch\" style=\"background: var(--cds-selected-text)\"></span>\
-         <span class=\"token-preview__swatch\" style=\"background: var(--cds-positive-text)\"></span>\
-         <span class=\"token-preview__swatch\" style=\"background: var(--cds-caution-text)\"></span>\
-         <span class=\"token-preview__swatch\" style=\"background: var(--cds-critical-text)\"></span>\
+         <span class=\"token-preview__swatch\" style=\"background: var(--ps-interactive)\"></span>\
+         <span class=\"token-preview__swatch\" style=\"background: var(--ps-selected-text)\"></span>\
+         <span class=\"token-preview__swatch\" style=\"background: var(--ps-positive-text)\"></span>\
+         <span class=\"token-preview__swatch\" style=\"background: var(--ps-caution-text)\"></span>\
+         <span class=\"token-preview__swatch\" style=\"background: var(--ps-critical-text)\"></span>\
          </div>\
          <div class=\"token-preview__type\">Aa</div>\
          <div class=\"token-preview__rows\">\
-         <div class=\"token-preview__row\"><code>--cds-interactive</code><span class=\"token-preview__row-value\">#234ed8</span></div>\
-         <div class=\"token-preview__row\"><code>--cds-font-mono</code><span class=\"token-preview__row-value\">JetBrains Mono</span></div>\
-         <div class=\"token-preview__row\"><code>--cds-radius-md</code><span class=\"token-preview__row-value\">0.25rem</span></div>\
+         <div class=\"token-preview__row\"><code>--ps-interactive</code><span class=\"token-preview__row-value\">#234ed8</span></div>\
+         <div class=\"token-preview__row\"><code>--ps-font-mono</code><span class=\"token-preview__row-value\">JetBrains Mono</span></div>\
+         <div class=\"token-preview__row\"><code>--ps-radius-md</code><span class=\"token-preview__row-value\">0.25rem</span></div>\
          </div>\
          </div>\
          </section>\
@@ -577,7 +577,7 @@ pub async fn item_redirect(
     if slug.contains("..") || slug.contains('/') {
         return (StatusCode::BAD_REQUEST, "invalid").into_response();
     }
-    if !vault::is_known_section(&section) {
+    if !vault::is_publicly_reachable(&section) {
         return (StatusCode::NOT_FOUND, "unknown section").into_response();
     }
     let tabs = vault::discover_tabs(&state.vault, &section, &slug);
@@ -617,7 +617,7 @@ pub async fn item_tab(
     {
         return (StatusCode::BAD_REQUEST, "invalid").into_response();
     }
-    if !vault::is_known_section(&section) {
+    if !vault::is_publicly_reachable(&section) {
         return (StatusCode::NOT_FOUND, "unknown section").into_response();
     }
     // A flat section (research/developing/designing/about) has exactly one canonical

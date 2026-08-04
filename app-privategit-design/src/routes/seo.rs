@@ -6,7 +6,7 @@ use axum::{extract::State, http::header, response::IntoResponse};
 
 pub async fn robots_txt(State(state): State<AppState>) -> impl IntoResponse {
     let body = format!(
-        "User-agent: *\nAllow: /\nSitemap: {}/sitemap.xml\n",
+        "User-agent: *\nAllow: /\nDisallow: /research/\nSitemap: {}/sitemap.xml\n",
         state.site_origin
     );
     ([(header::CONTENT_TYPE, "text/plain; charset=utf-8")], body)
@@ -55,6 +55,9 @@ pub async fn llms_txt(State(state): State<AppState>) -> impl IntoResponse {
     ));
 
     for (section, default_tab, _) in vault::SECTIONS {
+        if !vault::is_publicly_reachable(section) {
+            continue;
+        }
         let Some(slugs) = state.nav.get(*section) else {
             continue;
         };
@@ -116,6 +119,9 @@ pub async fn sitemap_xml(State(state): State<AppState>) -> impl IntoResponse {
     push_url(&mut body, &state.site_origin, "/adoption");
 
     for (section, _, _) in vault::SECTIONS {
+        if !vault::is_publicly_reachable(section) {
+            continue;
+        }
         let Some(slugs) = state.nav.get(*section) else {
             continue;
         };
