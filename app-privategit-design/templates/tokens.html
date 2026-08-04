@@ -85,18 +85,12 @@ meaning.</p>
 </div>
 </div>
 
-<nav class="domain-jump" aria-label="Jump to token tier">
-{% for tier in tiers %}
-<a href="#{{ tier.name }}">{{ tier.name | to_title }}</a>
-{% endfor %}
-</nav>
-
 <div class="tokens-gallery">
 {% for tier in tiers %}
 <section class="tg-tier" id="{{ tier.name }}">
 <h2>{{ tier.name | to_title }}</h2>
 {% for group in tier.groups %}
-<div class="tg-group">
+<div class="tg-group" id="{{ tier.name }}-{{ group.name }}">
 <h3>{{ group.name | to_title }}</h3>
 {% if tier.name == "primitive" and group.name == "color" %}<p class="tg-group-guidance"><a href="/elements/color/overview">Read the full color guidance &rarr;</a></p>{% endif %}
 {% if tier.name == "primitive" and group.name == "motion" %}<p class="tg-group-guidance"><a href="/elements/motion/overview">Read the full motion guidance &rarr;</a></p>{% endif %}

@@ -482,6 +482,7 @@ pub async fn tokens_gallery_page(State(state): State<AppState>) -> Html<String> 
         .sum();
     let total_categories: usize = tiers.iter().map(|t| t.groups.len()).sum();
     let total_tiers = tiers.len();
+    let nav_html = render::render_nav_tokens(&state.env, &tiers);
     let body = state
         .env
         .get_template("tokens.html")
@@ -494,7 +495,6 @@ pub async fn tokens_gallery_page(State(state): State<AppState>) -> Html<String> 
         })
         .expect("render tokens.html failed");
 
-    let nav_html = render::render_nav(&state.env, &state.component_groups, "", "");
     Html(render::shell(
         &state.env,
         &state.vault,

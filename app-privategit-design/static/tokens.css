@@ -6,16 +6,17 @@
 /* PointSav Design System tokens — --ps-* custom properties.
    Reconciled 2026-07-03 (Phase 1, hyperscaler-tier initiative) to this project's own
    ratified DTCG primitives (pointsav-design-system/dtcg-vault/tokens/primitive.json +
-   themes/pointsav-brand.json), replacing values that had drifted to IBM Carbon's literal
-   hex values — a doctrine violation, not a style choice (see commit 18b1764, 2026-04-28:
-   "original hex values... Inter, no IBM Plex"). Every value below traces to a real
-   primitive/semantic token in that vault; none are invented.
+   themes/pointsav-brand.json), replacing values that had drifted to a competing
+   product's literal hex values — a doctrine violation, not a style choice (see commit
+   18b1764, 2026-04-28: "original hex values... Inter, no borrowed font"). Every value
+   below traces to a real primitive/semantic token in that vault; none are invented.
    Consuming rules use var(--ps-*); future tenant themes swap this file only.
    Live-audit finding (2026-08-04): the 2026-07-03 fix corrected every value here but
-   left the property NAMES on the old --cds-* prefix (IBM Carbon's own custom-property
-   convention) -- every page on the live site was still carrying that fingerprint in its
-   rendered CSS, not just in docs. Renamed --cds-* -> --ps-* across this file, portal.css,
-   edit.js, and browse.rs's hardcoded homepage sample in one pass; no values changed. */
+   left the property NAMES on the old --cds-* prefix (a competing product's own
+   custom-property convention) -- every page on the live site was still carrying that
+   fingerprint in its rendered CSS, not just in docs. Renamed --cds-* -> --ps-* across
+   this file, portal.css, edit.js, and browse.rs's hardcoded homepage sample in one
+   pass; no values changed. */
 
 /* Self-hosted fonts — Inter (body, per founding doctrine) and JetBrains Mono (code).
    Both SIL OFL 1.1; licence text ships alongside at fonts/{Inter,JetBrainsMono}-OFL.txt.

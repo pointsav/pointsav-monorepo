@@ -22,11 +22,14 @@
 // is `pointsav-design-system/bin/generate-tokens-export.py` (added same day, closes this
 // gap) — run it after editing any source file, before committing `tokens.full.json`.
 // Correction (2026-08-02 registry-reconciliation pass): the tier list below was missing
-// "wcp" (the finance/wcp pillar, 25 tokens — `tokens.full.json`'s real top-level keys are
-// primitive/theme/paper/writing/wcp/ibm-carbon-org-chart/org-chart-extended, confirmed
-// against `exports/tokens.manifest.json`'s `leafCount: 611`). Every count derived from this
-// function had silently undercounted by exactly 25 (586 vs. 611) since wcp was added, and
-// the gallery page never rendered those tokens at all. Added "wcp" below to fix both.
+// "wcp" (the finance/wcp pillar, 25 tokens). Every count derived from this function had
+// silently undercounted by exactly 25 (586 vs. 611) since wcp was added, and the gallery
+// page never rendered those tokens at all. Added "wcp" below to fix both.
+// Cleanup (2026-08-04, content audit): the tier list previously also carried two
+// tier names retired in the 2026-08-02 de-branding pass, no longer present in
+// `tokens.full.json`. The lookup below already skips any tier absent from the data,
+// so this was dead code, not a live bug; removed for good since a stale tier name
+// has zero purpose once the tier itself is gone.
 use serde_json::Value;
 use std::path::Path;
 
@@ -62,15 +65,7 @@ pub fn load_and_flatten(vault: &Path) -> Vec<TokenTier> {
     };
 
     let mut tiers = Vec::new();
-    for tier_name in [
-        "primitive",
-        "theme",
-        "paper",
-        "writing",
-        "wcp",
-        "ibm-carbon-org-chart",
-        "org-chart-extended",
-    ] {
+    for tier_name in ["primitive", "theme", "paper", "writing", "wcp"] {
         let Some(Value::Object(tier_map)) = root.get(tier_name) else {
             continue;
         };

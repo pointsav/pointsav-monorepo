@@ -1,0 +1,27 @@
+<!--
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+-->
+
+<!--
+  Operator feedback (2026-08-04): /tokens had no persistent navigation -- only a
+  .domain-jump pill row that scrolled out of view, easy to get lost in with 5 tiers /
+  25 groups / 661 leaf tokens on one long page. This sidebar replaces it: tier + group
+  links, kept in sync with scroll position by static/tokens-scrollspy.js toggling
+  .active client-side (unlike nav.html's server-rendered .active -- this page is one
+  continuous scroll, not a series of separate page loads, so there's no server-known
+  "active" item until the user actually scrolls).
+-->
+<div class="doc-toc__tokens-heading">Tiers</div>
+<ul class="doc-toc__tokens">
+{% for tier in tiers %}
+<li class="doc-toc__tokens-tier">
+<a href="#{{ tier.name }}" class="doc-toc__tokens-tier-link">{{ tier.name | to_title }}</a>
+<ul class="doc-toc__tokens-groups">
+{% for group in tier.groups %}
+<li><a href="#{{ tier.name }}-{{ group.name }}">{{ group.name | to_title }}</a></li>
+{% endfor %}
+</ul>
+</li>
+{% endfor %}
+</ul>

@@ -456,6 +456,26 @@ header a { color: var(--ps-text-secondary); text-decoration: none; font-size: 0.
   font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ps-text-tertiary);
   padding: var(--ps-space-2) 0;
 }
+.doc-toc__tokens-heading {
+  font-family: var(--ps-font-mono); font-size: var(--ps-type-micro, 0.6875rem);
+  font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ps-text-tertiary);
+  padding: var(--ps-space-2) 0;
+}
+.doc-toc__tokens { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ps-space-2); }
+.doc-toc__tokens-tier-link {
+  display: block; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+  font-size: var(--ps-type-micro, 0.6875rem); color: var(--ps-text-tertiary);
+  padding: 0.35rem var(--ps-space-3); text-decoration: none; border-radius: var(--ps-radius-sm);
+}
+.doc-toc__tokens-tier-link:hover { background: var(--ps-layer); color: var(--ps-link-primary); }
+.doc-toc__tokens-tier-link.active { background: var(--ps-surface-tint); color: var(--ps-selected-text); }
+.doc-toc__tokens-groups { list-style: none; margin: 0; padding: 0 0 0 var(--ps-space-4); display: flex; flex-direction: column; gap: 1px; }
+.doc-toc__tokens-groups a {
+  display: block; padding: 0.35rem var(--ps-space-3); border-radius: var(--ps-radius-sm);
+  font-size: var(--ps-type-caption, 0.8125rem); color: var(--ps-text-secondary); text-decoration: none;
+}
+.doc-toc__tokens-groups a:hover { background: var(--ps-layer); color: var(--ps-link-primary); }
+.doc-toc__tokens-groups a.active { background: var(--ps-surface-tint); color: var(--ps-selected-text); font-weight: 600; }
 .main { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
 .tab-bar {
   display: flex; border-bottom: 1px solid var(--ps-border-subtle);
@@ -537,9 +557,6 @@ header a { color: var(--ps-text-secondary); text-decoration: none; font-size: 0.
 .tier-legend .card h3 { display: flex; align-items: center; gap: var(--ps-space-3); font-family: var(--ps-font-mono); font-size: var(--ps-type-body); letter-spacing: 0.02em; text-transform: uppercase; }
 .tier-legend .card code { display: block; margin-top: var(--ps-space-3); font-size: var(--ps-type-caption, 0.8125rem); color: var(--ps-text-tertiary); background: var(--ps-layer); padding: 0.4rem 0.6rem; border-radius: var(--ps-radius-sm); }
 
-.domain-jump { display: flex; flex-wrap: wrap; gap: var(--ps-space-3); margin-bottom: var(--ps-space-10); }
-.domain-jump a { font-family: var(--ps-font-mono); font-size: 0.75rem; text-decoration: none; color: var(--ps-text-secondary); background: var(--ps-layer); border: 1px solid var(--ps-border-subtle); border-radius: 999px; padding: 0.35rem 0.85rem; }
-.domain-jump a:hover { color: var(--ps-interactive); border-color: var(--ps-interactive); }
 
 /* ---- MCP/Agents doc page: section scaffolding, endpoint cards, callout ---- */
 .doc-section { margin-bottom: var(--ps-space-11); }
