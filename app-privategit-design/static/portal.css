@@ -343,16 +343,6 @@ body {
   .site-nav { transition: none; }
   .nav-toggle__overlay { transition: none; }
 }
-@media (max-width: 860px) {
-  /* Fixed-height row still can't hold wordmark+search+lang-switch+theme-toggle
-     below ~860px even with the top nav already hidden (verified via real-viewport
-     screenshot: content wrapped to 3 rows and the fixed height clipped rows 2-3
-     entirely, making search/lang/theme invisible though still in the DOM).
-     Nothing else depends on a fixed header height (.layout is a flex sibling
-     that fills remaining space regardless), so let it grow instead of clipping. */
-  .site-header__inner { height: auto; flex-wrap: wrap; row-gap: 0.375rem; padding-block: 0.5rem; }
-  .header-search-wrap { margin-left: 0; flex: 1 1 auto; max-width: none; }
-}
 /* header-search/theme-toggle/lang-switch have no mockup equivalent (both are real,
    post-mockup additions) — light-mode colors below are a real design judgment using
    the same token vocabulary the rest of the light-mode chrome uses, not copied from
@@ -361,6 +351,25 @@ body {
 header a { color: var(--cds-text-secondary); text-decoration: none; font-size: 0.875rem; font-weight: 600; letter-spacing: 0.01em; display: flex; align-items: center; height: 100%; }
 [data-theme="dark"] header a { color: #fff; }
 .header-search-wrap { position: relative; flex: 0 1 320px; max-width: 320px; }
+@media (max-width: 860px) {
+  /* Fixed-height row still can't hold wordmark+search+lang-switch+theme-toggle
+     below ~860px even with the top nav already hidden (verified via real-viewport
+     screenshot: content wrapped to 3 rows and the fixed height clipped rows 2-3
+     entirely, making search/lang/theme invisible though still in the DOM).
+     Nothing else depends on a fixed header height (.layout is a flex sibling
+     that fills remaining space regardless), so let it grow instead of clipping. */
+  .site-header__inner { height: auto; flex-wrap: wrap; row-gap: 0.375rem; padding-block: 0.5rem; }
+  /* Operator + live-audit finding (2026-08-04, Fable+Opus independently confirmed):
+     this rule previously sat ABOVE the base `.header-search-wrap { flex: 0 1 320px;
+     max-width: 320px; }` rule in source order. Same selector, same specificity
+     (0,1,0) -- the later base rule always won the cascade, at every width,
+     including inside this very media query, so this override was dead code from
+     the day it shipped: the search bar never actually relaxed on mobile, forcing
+     the language toggle + hamburger to wrap to their own row(s) below a search bar
+     that couldn't shrink. Moved the base rule above this block so this override
+     applies as originally intended. */
+  .header-search-wrap { margin-left: 0; flex: 1 1 auto; max-width: none; }
+}
 .header-search-icon {
   position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%);
   width: var(--cds-icon-size-sm); height: var(--cds-icon-size-sm);
