@@ -942,16 +942,47 @@ section.act:first-of-type { border-top: none; }
    reconciling it against the header/content column above (operator: "the footer
    doesn't seem to always line up"). */
 .ds-footer__cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3rem; margin-bottom: 1.5rem; max-width: 1440px; margin-inline: auto; padding-inline: 1.5rem; }
-/* Operator feedback (2026-08-03): a single stacked column at every width below
-   960px turned the 14-item Canonical + 6-item Machine-surface groups into one
-   long unbroken wall of links -- worse than the 2x2-pairing problem the 2026-07-18
-   fix was solving. A 3-column tier fixes that original problem too, differently:
-   with 3 columns and 4 real groups (Identity 5, Canonical 14, Machine-surface 6,
-   Network 4), grid auto-flow places the first 3 in row one and lets Network wrap
-   alone onto row two -- nothing gets force-paired with a mismatched neighbor the
-   way a strict 2-column split did. Reserve the single-column stack for genuinely
-   narrow phone widths only. */
-@media (max-width: 960px) { .ds-footer__cols { grid-template-columns: repeat(3, 1fr); gap: 2rem; } }
+/* `.ds-footer__col-group` wraps Identity + Network so they share one grid cell
+   at the 3-column tier below -- see that media query for why. At this default
+   (4-column, >=961px) width it must stay transparent to the grid, or the
+   desktop layout would silently drop from 4 real columns to 3. */
+.ds-footer__col-group { display: contents; }
+/* display:contents makes Identity + Network direct grid participants again at
+   this width, but their DOM order (Identity, Network, Canonical, Machine-
+   surface -- Network moved next to Identity for the 3-column stacking below)
+   would otherwise visually reorder the desktop columns too. `order` restores
+   the original left-to-right desktop position (Identity, Canonical,
+   Machine-surface, Network) without needing a second copy of the markup. */
+.ds-footer__col--identity { order: 1; }
+.ds-footer__col--canonical { order: 2; }
+/* Canonical and Machine-surface get explicit orders too, not just Identity/
+   Network -- an item with no `order` set defaults to 0, which would sort it
+   *before* Identity's order:1 and break the intended left-to-right sequence. */
+.ds-footer__col--mono { order: 3; }
+.ds-footer__col--network { order: 4; }
+/* Operator feedback (2026-08-03, first pass): a single stacked column at every
+   width below 960px turned the 14-item Canonical + 6-item Machine-surface
+   groups into one long unbroken wall of links -- worse than the 2x2-pairing
+   problem the 2026-07-18 fix was solving. A 3-column tier fixed that, but
+   incompletely (see the 2026-08-04 fix below).
+   Operator feedback (2026-08-04, live-site review, second pass): with 3
+   columns and 4 real groups (Identity 5, Canonical 14, Machine-surface 6,
+   Network 4), grid auto-flow placed the first 3 in row one -- whose height is
+   dictated by Canonical's 14 items (~600px) -- stretching Identity and
+   Machine-surface to match with nothing to show for it, then dropped Network
+   onto its own separate row *below* all that wasted space, adding a whole
+   extra row's height the footer didn't need. `.ds-footer__col-group` (see
+   above) fixes this properly rather than just avoiding a force-paired 2x2:
+   Identity + Network share one grid cell here, stacked in a real flex column,
+   so Network fills the room already sitting empty next to Identity instead of
+   opening a new row. Identity (5 items) + Network (4 items) stacked is still
+   shorter than Canonical's 14, so the footer's total height goes back to
+   being driven by Canonical alone -- the same total height as before this
+   whole regression started. */
+@media (max-width: 960px) {
+  .ds-footer__cols { grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+  .ds-footer__col-group { display: flex; flex-direction: column; gap: 2rem; }
+}
 @media (max-width: 640px) { .ds-footer__cols { grid-template-columns: 1fr; gap: 1.5rem; } }
 .ds-footer__col-title {
   font-size: var(--cds-footer-heading-size); font-weight: 600; letter-spacing: 0.08em;

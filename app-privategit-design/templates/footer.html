@@ -23,6 +23,21 @@
 <p class="ds-footer__disclosure-notice">{{ disclosure_notice }}</p>
 
 <div class="ds-footer__cols">
+<!-- Operator feedback (2026-08-04, live-site review): at the 3-column tier
+     (641-960px), the grid's row-1 height is dictated by Canonical's 14 items
+     (~600px); Identity and Machine-surface (short lists) got stretched to
+     match that height with nothing to show for it, and Network (4 items) then
+     dropped to its own separate row *below* all that wasted space -- adding a
+     whole extra row's height to the footer instead of using the room already
+     sitting empty next to Identity. Grouping Identity+Network into one shared
+     grid cell (`.ds-footer__col-group`, `display: contents` at 4-column
+     desktop width so it stays 4 real columns there unchanged; a real flex
+     column at the 3-column tier so the two short lists stack together in one
+     cell) lets Network use that existing space instead of adding a new row --
+     Identity (~5 items) + Network (4 items) combined is still shorter than
+     Canonical's 14, so the footer's total height goes back to being driven by
+     Canonical alone, the same as before this regression. -->
+<div class="ds-footer__col-group">
 <div class="ds-footer__col ds-footer__col--identity">
 <p class="ds-footer__col-title">PointSav Design System</p>
 <ul>
@@ -33,7 +48,17 @@
 <li><a href="https://github.com/pointsav/pointsav-design-system">{{ identity_source_label }}</a></li>
 </ul>
 </div>
-<nav class="ds-footer__col" aria-label="{{ canonical_title }}">
+<nav class="ds-footer__col ds-footer__col--network" aria-label="{{ network_title }}">
+<p class="ds-footer__col-title">{{ network_title }}</p>
+<ul>
+<li><a href="https://home.pointsav.com">{{ network_pointsav }}</a></li>
+<li><a href="https://documentation.pointsav.com">{{ network_documentation }}</a></li>
+<li><a href="https://software.pointsav.com">{{ network_software }}</a></li>
+<li><a href="https://home.woodfinegroup.com">{{ network_woodfine }}</a></li>
+</ul>
+</nav>
+</div>
+<nav class="ds-footer__col ds-footer__col--canonical" aria-label="{{ canonical_title }}">
 <p class="ds-footer__col-title">{{ canonical_title }}</p>
 <ul>
 <li><a href="/">{{ overview }}</a></li>
@@ -61,15 +86,6 @@
 <li><a href="/bundles/tokens/download">/bundles/:name/download</a></li>
 <li><a href="/healthz">/healthz</a></li>
 <li><a href="/releases/changelog/overview">Design System v{{ version }}</a></li>
-</ul>
-</nav>
-<nav class="ds-footer__col" aria-label="{{ network_title }}">
-<p class="ds-footer__col-title">{{ network_title }}</p>
-<ul>
-<li><a href="https://home.pointsav.com">{{ network_pointsav }}</a></li>
-<li><a href="https://documentation.pointsav.com">{{ network_documentation }}</a></li>
-<li><a href="https://software.pointsav.com">{{ network_software }}</a></li>
-<li><a href="https://home.woodfinegroup.com">{{ network_woodfine }}</a></li>
 </ul>
 </nav>
 </div>
