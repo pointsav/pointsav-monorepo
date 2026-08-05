@@ -57,7 +57,7 @@ pub fn list_tools() -> Vec<Value> {
                 "properties": {
                     "pillar": {
                         "type": "string",
-                        "description": "Filter to one pillar, e.g. 'paper', 'writing', 'primitive', 'theme', 'wcp'. Omit for all pillars."
+                        "description": "Filter to one pillar, e.g. 'paper', 'writing', 'primitive', 'theme'. Omit for all pillars."
                     }
                 }
             }
