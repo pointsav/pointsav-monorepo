@@ -478,7 +478,6 @@ header a { color: var(--ps-text-secondary); text-decoration: none; font-size: 0.
   border-left: 2px solid transparent; text-decoration: none;
 }
 a.doc-toc__group-heading:hover { color: var(--ps-link-primary); }
-a.doc-toc__group-heading.active { border-left-color: var(--ps-selected-text); color: var(--ps-selected-text); }
 .doc-toc__group-list {
   list-style: none; margin: 0 0 0 var(--ps-space-3); padding: 0;
   display: flex; flex-direction: column;
@@ -560,8 +559,15 @@ a.doc-toc__group-heading.active { border-left-color: var(--ps-selected-text); co
 .stat-panel__label { font-family: var(--ps-font-mono); font-size: var(--ps-type-micro, 0.6875rem); text-transform: uppercase; letter-spacing: 0.04em; color: var(--ps-text-secondary); }
 .tokens-hero__stats { border-top: 1px solid var(--ps-border-subtle); border-bottom: 1px solid var(--ps-border-subtle); }
 
-.get-tokens-strip { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ps-space-7); margin-top: var(--ps-space-7); }
-@media (max-width: 720px) { .get-tokens-strip { grid-template-columns: 1fr; } }
+/* auto-fit, not a fixed 1fr 1fr + viewport-width breakpoint -- the strip's real
+   available width is (viewport - 232px sidebar - content padding), which the old
+   720px breakpoint never accounted for, so it could never fire while the sidebar
+   was present (sidebar only collapses <=768px). Self-collapses at the right point
+   regardless of sidebar width instead. Found 2026-08-05: at 800px viewport the
+   Figma column was 100% clipped off-screen (body has overflow:hidden, not even
+   scrollable); at 900px it was squeezed to a ~110px sliver with mid-word clipping. */
+.get-tokens-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: var(--ps-space-7); margin-top: var(--ps-space-7); }
+.get-tokens-strip__snippet, .get-tokens-strip__figma { min-width: 0; }
 .get-tokens-strip__snippet-label, .get-tokens-strip__figma-label { font-family: var(--ps-font-mono); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em; color: var(--ps-text-tertiary); margin-bottom: var(--ps-space-3); }
 .get-tokens-strip__snippet .doc-code-block { margin: 0; }
 .get-tokens-strip__snippet .doc-code-block pre { padding: var(--ps-space-4) var(--ps-space-5); }
@@ -677,9 +683,11 @@ section.act:first-of-type { border-top: none; }
    hero was previously text + stats only. Rendered directly from this page's
    own real CSS custom properties -- not a screenshot, an actual live sample
    of the token graph the page is about. */
+.home-hero > :last-child { margin-bottom: 0; }
 .home-hero-section {
   display: grid; grid-template-columns: minmax(0, 46rem) minmax(260px, 320px);
   gap: var(--ps-space-9, 3rem); align-items: center;
+  margin-bottom: var(--ps-space-10);
 }
 @media (max-width: 960px) { .home-hero-section { grid-template-columns: 1fr; } }
 
@@ -721,8 +729,11 @@ section.act:first-of-type { border-top: none; }
   padding: var(--ps-space-6); margin-bottom: var(--ps-space-10);
   background: var(--ps-layer); border: 1px solid var(--ps-border-subtle); border-radius: var(--ps-radius-md);
 }
-.pillar-preview__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ps-space-7); margin-top: var(--ps-space-5); }
-@media (max-width: 760px) { .pillar-preview__grid { grid-template-columns: 1fr; } }
+/* auto-fit, same fix and same reasoning as .get-tokens-strip above -- not
+   currently visibly broken here (no sidebar narrows this page's container the
+   same way), but it's the identical trap and cheap to fix for consistency. */
+.pillar-preview__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: var(--ps-space-7); margin-top: var(--ps-space-5); }
+.pillar-preview__card { min-width: 0; }
 .pillar-preview__card h3 { font-size: 1.0625rem; margin: 0 0 var(--ps-space-3); color: var(--ps-text-primary); }
 .pillar-preview__body { font-size: var(--ps-type-caption, 0.8125rem); color: var(--ps-text-secondary); margin: 0 0 var(--ps-space-5); }
 .pillar-preview__sample {
@@ -1035,7 +1046,7 @@ section.act:first-of-type { border-top: none; }
   text-transform: uppercase; color: var(--ps-footer-ink-muted); margin-bottom: 0.5rem;
 }
 .ds-footer__col ul { list-style: none; }
-.ds-footer__col li { margin-bottom: 0.375rem; }
+.ds-footer__col li { margin-bottom: 0; font-size: 0.8125rem; }
 /* padding + display:block widen the tap target to ~35px tall (was ~16px, no padding) --
    found via mobile audit 2026-07-22: WCAG 2.2 SC 2.5.8 requires 24x24px minimum. */
 .ds-footer__col a { display: block; padding: 0.5rem 0; color: var(--ps-footer-link); text-decoration: none; font-size: 0.8125rem; }
