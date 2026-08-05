@@ -24,7 +24,6 @@
   // case). Searching every in-page anchor link by href sidesteps the distinction.
   var allLinks = sidebar.querySelectorAll('a[href^="#"]');
   var activeGroupLink = null;
-  var activeTierLink = null;
 
   function linkFor(id) {
     var href = '#' + id;
@@ -34,6 +33,12 @@
     return null;
   }
 
+  // Marks only the specific group/leaf link active -- never the tier heading.
+  // Matches /components' nav.html, which only ever sets .active on the leaf
+  // link (see templates/nav.html). An earlier version of this function also
+  // marked the enclosing tier heading active as a "breadcrumb" -- removed
+  // 2026-08-05 per operator parity request: /tokens and /components now use
+  // exactly one marker, never two simultaneously.
   function setActive(groupEl) {
     var link = linkFor(groupEl.id);
     if (!link || link === activeGroupLink) return;
@@ -42,26 +47,8 @@
       activeGroupLink.removeAttribute('aria-current');
     }
     link.classList.add('active');
-    link.setAttribute('aria-current', 'true');
+    link.setAttribute('aria-current', 'page');
     activeGroupLink = link;
-
-    var tierEl = groupEl.closest('.tg-tier');
-    // Skip the tier-level lookup entirely when the group link IS the tier link
-    // (the collapsed single-group case) -- same element, already marked active
-    // above; a second lookup would just find nothing (no separate tier-only href
-    // exists) and correctly no-op, but skipping is clearer than relying on that.
-    var tierLink = tierEl && '#' + tierEl.id !== link.getAttribute('href') ? linkFor(tierEl.id) : null;
-    if (tierLink !== activeTierLink) {
-      if (activeTierLink) {
-        activeTierLink.classList.remove('active');
-        activeTierLink.removeAttribute('aria-current');
-      }
-      if (tierLink) {
-        tierLink.classList.add('active');
-        tierLink.setAttribute('aria-current', 'true');
-      }
-      activeTierLink = tierLink;
-    }
   }
 
   // Multiple groups can sit inside the observation band at once (short groups);
