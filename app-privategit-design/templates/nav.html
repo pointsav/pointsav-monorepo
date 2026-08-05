@@ -28,7 +28,7 @@
 {% endif %}
 <ul class="doc-toc__group-list">
 {% for slug in cat.slugs %}
-<li><a href="/components/{{ slug }}/usage"{% if slug == active_slug %} class="active"{% endif %}>{{ slug | to_title }}</a></li>
+<li><a href="/components/{{ slug }}/usage"{% if slug == active_slug %} class="active" aria-current="page"{% endif %}>{{ slug | to_title }}</a></li>
 {% endfor %}
 </ul>
 </li>

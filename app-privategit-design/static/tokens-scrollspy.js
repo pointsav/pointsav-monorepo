@@ -17,9 +17,9 @@
   if (!sidebar) return;
 
   // A single lookup pool, not two separate NodeLists keyed by class. A tier with
-  // exactly one group (today: "wcp") renders as ONE combined link straight to that
-  // group -- see nav-tokens.html -- so its href is "#wcp-finance", not "#wcp"; a
-  // groupLinks-only lookup for "wcp-finance" would miss it entirely (that link
+  // exactly one group renders as ONE combined link straight to that group -- see
+  // nav-tokens.html -- so its href is "#tier-group", not "#tier"; a
+  // groupLinks-only lookup for "tier-group" would miss it entirely (that link
   // lives in .doc-toc__group-heading, not .doc-toc__group-list, in the collapsed
   // case). Searching every in-page anchor link by href sidesteps the distinction.
   var allLinks = sidebar.querySelectorAll('a[href^="#"]');
@@ -37,19 +37,29 @@
   function setActive(groupEl) {
     var link = linkFor(groupEl.id);
     if (!link || link === activeGroupLink) return;
-    if (activeGroupLink) activeGroupLink.classList.remove('active');
+    if (activeGroupLink) {
+      activeGroupLink.classList.remove('active');
+      activeGroupLink.removeAttribute('aria-current');
+    }
     link.classList.add('active');
+    link.setAttribute('aria-current', 'true');
     activeGroupLink = link;
 
     var tierEl = groupEl.closest('.tg-tier');
     // Skip the tier-level lookup entirely when the group link IS the tier link
     // (the collapsed single-group case) -- same element, already marked active
-    // above; a second lookup would just find nothing (no separate "#wcp" href
+    // above; a second lookup would just find nothing (no separate tier-only href
     // exists) and correctly no-op, but skipping is clearer than relying on that.
     var tierLink = tierEl && '#' + tierEl.id !== link.getAttribute('href') ? linkFor(tierEl.id) : null;
     if (tierLink !== activeTierLink) {
-      if (activeTierLink) activeTierLink.classList.remove('active');
-      if (tierLink) tierLink.classList.add('active');
+      if (activeTierLink) {
+        activeTierLink.classList.remove('active');
+        activeTierLink.removeAttribute('aria-current');
+      }
+      if (tierLink) {
+        tierLink.classList.add('active');
+        tierLink.setAttribute('aria-current', 'true');
+      }
       activeTierLink = tierLink;
     }
   }

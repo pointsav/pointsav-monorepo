@@ -246,12 +246,10 @@ pub fn discover_tabs(vault: &Path, section: &str, slug: &str) -> Vec<String> {
 /// like "Wiki Toc Sidebar" read as auto-title-cased file names, not curated nav, next to
 /// real prose labels. (bim/guid/3d/rs1/ifc removed 2026-07-04 — those were BIM-specific
 /// slugs, and BIM content no longer lives in this substrate.)
-// "wcp" added 2026-08-04: the tokens sidebar's tier heading used to render this in
-// CSS text-transform: uppercase regardless of the underlying string, masking that
-// to_title("wcp") produced "Wcp" (not in this list). Removing the uppercase
-// transform as part of the sidebar redesign (title-case now carries the visual
-// hierarchy, not forced caps) exposed it directly on the live page.
-const ACRONYM_WORDS: &[&str] = &["gis", "toc", "mcp", "wcp"];
+// "wcp" was added 2026-08-04 (tokens sidebar redesign exposed to_title("wcp")
+// rendering as "Wcp" once forced-uppercase text-transform was removed), then
+// removed again the same day when the "wcp" pillar itself was retired.
+const ACRONYM_WORDS: &[&str] = &["gis", "toc", "mcp"];
 
 pub fn to_title(s: &str) -> String {
     s.split('-')

@@ -18,9 +18,10 @@
   is dropped for the same reason nav.html drops "COMPONENTS": aria-label on the
   <nav> wrapper in shell.html carries the section identity instead.
 
-  Single-group tiers (today: only "wcp") skip the nested list entirely and link the
-  tier heading straight at that one group -- a lonely one-item indent under a
-  header reads as a rendering defect, not real structure.
+  Single-group tiers skip the nested list entirely and link the tier heading
+  straight at that one group -- a lonely one-item indent under a header reads as a
+  rendering defect, not real structure. (No tier is single-group as of 2026-08-04's
+  "wcp" pillar retirement, but the logic stays generic for whatever lands next.)
 -->
 <ul class="doc-toc">
 {% for tier in tiers %}

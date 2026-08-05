@@ -30,6 +30,13 @@
 // `tokens.full.json`. The lookup below already skips any tier absent from the data,
 // so this was dead code, not a live bug; removed for good since a stale tier name
 // has zero purpose once the tier itself is gone.
+// Retirement (2026-08-04, later same day): "wcp" removed again -- not a stale-name
+// cleanup this time, the pillar itself was deleted. It was always a pure alias
+// layer over paper.semantic.financial-report-layout.*, never consumed by any real
+// code (confirmed against project-proforma, its originating archive), and the
+// gallery never resolved DTCG aliases before rendering, so its 25 entries only ever
+// showed as broken/empty rows. See pointsav-design-system's finance.tokens.json
+// deletion commit for the full rationale.
 use serde_json::Value;
 use std::path::Path;
 
@@ -65,7 +72,7 @@ pub fn load_and_flatten(vault: &Path) -> Vec<TokenTier> {
     };
 
     let mut tiers = Vec::new();
-    for tier_name in ["primitive", "theme", "paper", "writing", "wcp"] {
+    for tier_name in ["primitive", "theme", "paper", "writing"] {
         let Some(Value::Object(tier_map)) = root.get(tier_name) else {
             continue;
         };
