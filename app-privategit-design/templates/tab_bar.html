@@ -1,0 +1,15 @@
+<!--
+  SPDX-License-Identifier: FSL-1.1-ALv2
+  SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+-->
+
+<!--
+-->
+
+{% if tabs | length > 1 %}
+<nav class="tab-bar" aria-label="Views">
+{% for tab in tabs %}
+<a href="/{{ section }}/{{ slug }}/{{ tab }}"{% if tab == active_tab %} class="active"{% endif %}>{{ tab | to_title }}</a>
+{% endfor %}
+</nav>
+{% endif %}

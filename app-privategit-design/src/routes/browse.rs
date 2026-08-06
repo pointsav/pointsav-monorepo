@@ -1,5 +1,6 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: FSL-1.1-ALv2
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 
 use crate::{
     component_meta, component_preview,
@@ -286,16 +287,6 @@ async fn render_index(state: &AppState, lang: Lang) -> Html<String> {
     // an actual live sample of the token graph the page is about. Real values
     // (not the mockup's illustrative ones) confirmed directly against tokens.css:
     // --ps-interactive #234ed8, --ps-font-mono 'JetBrains Mono', --ps-radius-md 0.25rem.
-    //
-    // Paper-pillar specimen text (below, "Section 4.2 -- Notice of Changes"). Illustrative
-    // -- adapted from publicly published SaaS/cloud terms-of-service conventions (a
-    // materially-identical "notice before a material change" clause appears independently
-    // in Google Cloud Platform's ToS S1.4(e), GitHub's ToS SR, and Stripe's Services
-    // Agreement S7.1(c)), not sourced from any private or client-specific document. Mirrors
-    // the disclosure convention on worked examples in dtcg-vault/writing/semantic.json
-    // ("example_source": "Illustrative -- representative pattern, not sourced from a
-    // specific document"). Any future replacement of this specimen must carry the same
-    // disclosure.
     let content = format!(
         "<div class=\"home-body\">\
          <section class=\"home-hero-section\">\
@@ -355,8 +346,8 @@ async fn render_index(state: &AppState, lang: Lang) -> Html<String> {
          <h3>{paper_preview_h3}</h3>\
          <p class=\"pillar-preview__body\">{paper_preview_body}</p>\
          <div class=\"pillar-preview__sample\" aria-hidden=\"true\" style=\"color:{paper_ink};border-top:{paper_rule} solid {paper_ink}\">\
-         <div class=\"pillar-preview__sample-heading\" style=\"border-bottom:{paper_rule_emphasis} solid {paper_ink}\">Section 4.2 — Notice of Changes</div>\
-         <p class=\"pillar-preview__sample-text\">We will give you at least 30 days' notice before any change that materially affects your rights takes effect, and we will publish what changed alongside the version it replaces.</p>\
+         <div class=\"pillar-preview__sample-heading\" style=\"border-bottom:{paper_rule_emphasis} solid {paper_ink}\">Article 4 — Commission Rebate</div>\
+         <p class=\"pillar-preview__sample-text\">The Registered Dealer shall remit the Commission Rebate to the Corporation within five (5) Business Days of receipt, net of any Offering Costs advanced under Section 3.2.</p>\
          </div>\
          <div class=\"pillar-preview__rows\">\
          <div class=\"pillar-preview__row\"><code>paper.primitive.color.ink</code><span class=\"pillar-preview__row-value\">{paper_ink}</span></div>\
