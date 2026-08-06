@@ -1,5 +1,6 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: FSL-1.1-ALv2
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 
 // Mobile sidebar drawer toggle (D7).
 // Injects a toggle button above the sidebar on narrow viewports; re-evaluates on
