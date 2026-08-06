@@ -1,5 +1,6 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: FSL-1.1-ALv2
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 
 // Closes .site-nav__dropdown ("Product lines" / "More") on link-selection and on
 // outside-click — native <details>/<summary> can't do either on its own. Ported

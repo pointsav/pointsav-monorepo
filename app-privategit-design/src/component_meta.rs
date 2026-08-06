@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: FSL-1.1-ALv2
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 // Phase 3 (hyperscaler-tier initiative) — per-component origin + freshness badges,
 // rendered on each component's own page (not just the sidebar grouping shipped in
 // Phase 2). Echoes Spectrum's per-component changelog/version pattern from the external

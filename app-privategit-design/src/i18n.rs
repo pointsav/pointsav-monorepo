@@ -1,5 +1,6 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: FSL-1.1-ALv2
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 
 // First-pass Spanish support (2026-07-12): homepage + shared chrome (nav/footer/
 // header) only — matching home.woodfinegroup.com's toggle pattern for the parts that
@@ -115,7 +116,7 @@ impl ChromeStrings {
                 lang_switch_label: "Español",
                 footer_identity_tagline: "Open design tokens and components, published for anyone to use",
                 footer_identity_standards: "DTCG Format Module 2025.10 · W3C Design Tokens Community Group",
-                footer_identity_license: "Design tokens licensed Apache-2.0 · server source AGPL-3.0-or-later · distributed binary PointSav-Commercial",
+                footer_identity_license: "Design tokens licensed Apache-2.0 · server source FSL-1.1-ALv2 · distributed binary PointSav-Commercial",
                 footer_identity_source_label: "Design system source (github.com/pointsav)",
                 footer_network_title: "Network",
                 footer_network_pointsav: "PointSav Digital Systems",
@@ -168,7 +169,7 @@ impl ChromeStrings {
                 lang_switch_label: "English",
                 footer_identity_tagline: "Tokens y componentes de diseño abiertos, publicados para que cualquiera los use",
                 footer_identity_standards: "DTCG Format Module 2025.10 · W3C Design Tokens Community Group",
-                footer_identity_license: "Tokens de diseño licenciados bajo Apache-2.0 · código del servidor bajo AGPL-3.0-or-later · binario distribuido PointSav-Commercial",
+                footer_identity_license: "Tokens de diseño licenciados bajo Apache-2.0 · código del servidor bajo FSL-1.1-ALv2 · binario distribuido PointSav-Commercial",
                 footer_identity_source_label: "Código fuente del sistema de diseño (github.com/pointsav)",
                 footer_network_title: "Red",
                 footer_network_pointsav: "PointSav Digital Systems",
