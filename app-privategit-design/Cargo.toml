@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
+
+[package]
+license = "FSL-1.1-ALv2"
+name = "app-privategit-design"
+version = "0.3.0"
+edition = "2021"
+
+[[bin]]
+name = "app-privategit-design"
+path = "src/main.rs"
+
+[dependencies]
+# HTTP framework (future sovereign: moonshot-http)
+axum = "0.7"
+# Async runtime (long-term foundational dep; no immediate moonshot target)
+tokio = { version = "1", features = ["full"] }
+# HTTP middleware (future sovereign: moonshot-http)
+tower-http = { version = "0.5", features = ["compression-full", "fs"] }
+# SSE stream combinators (transitive via axum; declared explicitly for clarity)
+futures-util = "0.3"
+# Markdown → HTML (sovereign stub exists: pointsav-monorepo/moonshot-markup)
+pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
+# Query param deserialization (sovereign target: moonshot-toolkit)
+serde = { version = "1", features = ["derive"] }
+# Sovereign FS watcher — inotify (replaces notify crate; stub → active 2026-06-15)
+moonshot-fs-watch = { path = "../moonshot-fs-watch" }
+# Sovereign in-memory search index (replaces tantivy; stub → active 2026-06-15)
+moonshot-index = { path = "../moonshot-index" }
+
+# HTTP client for AI upstream relay (sovereign target: moonshot-http, long-term)
+reqwest = { version = "0.12", default-features = false, features = ["stream", "rustls-tls", "json"] }
+# Runtime HTML templates; path_loader enables disk-backed auto-reload (sovereign target: moonshot-template)
+minijinja = { version = "2", features = ["loader"] }
+# Bundle ZIP packaging (sovereign target: moonshot-archive; no in-house zip yet)
+zip = "2"
+# DTCG token-bundle parsing for the /tokens gallery (sovereign target: moonshot-toolkit, long-term)
+serde_json = "1"
+
+# --- "We Own It" dep map (BRIEF-app-privategit-design.md §D8) ---
+# askama (compile-time templates)   → moonshot-template  (stub added 2026-06-15)
+# syntect (syntax highlighting)     → moonshot-highlight  (stub added 2026-06-15)
+# notify  (FS watch)                → moonshot-fs-watch   (active 2026-06-15)
+# tantivy (full-text search)        → moonshot-index      (active 2026-06-15)
+# rusqlite (SQLite token index)     → moonshot-database   (stub exists in monorepo)
+# serde_json (DTCG token parsing)   → moonshot-toolkit    (stub exists in monorepo; direct dep active 2026-07-03)

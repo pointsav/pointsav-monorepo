@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: FSL-1.1-ALv2
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 use crate::{state::AppState, tokens_gallery};
 use serde_json::{json, Value};
 
