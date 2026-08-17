@@ -1,12 +1,13 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: FSL-1.1-ALv2
 # SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 
 [package]
 name = "app-privategit-bim"
 version = "0.1.0"
 edition = "2021"
 description = "BIM Object schema vault, viewer, editor, and MCP endpoint — Woodfine"
-license = "AGPL-3.0-or-later"
+license = "FSL-1.1-ALv2"
 
 [[bin]]
 name = "app-privategit-bim"

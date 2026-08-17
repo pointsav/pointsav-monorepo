@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 [workspace]
 
 [package]
@@ -5,7 +8,7 @@ name = "workplace-presentation"
 version = "0.1.0"
 description = "Sovereign offline presentation tool — PointSav Digital Systems"
 authors = ["PointSav Digital Systems"]
-license = "EUPL-1.2"
+license = "AGPL-3.0-or-later"
 repository = ""
 edition = "2021"
 rust-version = "1.70"

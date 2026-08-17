@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: FSL-1.1-ALv2
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 //! `app-mediakit-foodservice` — the food-service platform engine.
 //!
 //! Server-rendered, agent-first. Follows the `app-mediakit-marketing` pattern:

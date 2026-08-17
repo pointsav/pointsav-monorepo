@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 //! moonshot-cad-kernel — sovereign CAD kernel foundation (Phase 0).
 //!
 //! Per `BRIEF-workplace-bim-cad-tool` (research synthesis 2026-07-14), the CAD tool's

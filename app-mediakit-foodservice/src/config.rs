@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: FSL-1.1-ALv2
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 //! Runtime configuration — per-instance via env/args. Env var names use the
 //! `SERVICE_FOODSERVICE_*` prefix, matching the deployment contract for this
 //! site so `os-mediakit` can launch instances unchanged.

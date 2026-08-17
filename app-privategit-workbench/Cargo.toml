@@ -1,9 +1,12 @@
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 [package]
 name = "app-privategit-workbench"
 version = "0.0.1"
 edition = "2021"
 description = "Browser-based developer workbench for Totebox Orchestration — file tree, viewer, and editor."
-license = "Apache-2.0"
+license = "FSL-1.1-ALv2"
 
 [dependencies]
 axum = "0.8"
