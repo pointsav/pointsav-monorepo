@@ -2,12 +2,21 @@
 
 //! KoGNER-style entity-hint cache.
 //!
+//! **Disabled by default as of 2026-08-16** — see `entity_hints_if_enabled()`
+//! in `lib.rs` for why: appending real example names to GLiNER's label
+//! descriptions was found to *suppress* recall for this bi-encoder model,
+//! not improve it as originally assumed here ("free quality improvement").
+//! This module's cache-building/filtering logic is left intact and still
+//! runs at startup (harmless — building an unused cache costs one
+//! `list_entities` call), just not wired into the live `/v1/extract` request
+//! unless `SERVICE_CONTENT_ENTITY_HINTS_ENABLED=true` is set.
+//!
 //! A handful of known entity names per classification, fetched once from the
-//! graph at drain startup and passed to GLiNER as concrete examples appended
-//! to its label descriptions. Free quality improvement — no model change, no
-//! per-request graph query. Unblocked by `ontology/entity_types.csv` landing
-//! (2026-06-30): hints are keyed by the same classification labels the CSV
-//! defines, whatever they happen to be at runtime.
+//! graph at drain startup and intended to be passed to GLiNER as concrete
+//! examples appended to its label descriptions. Unblocked by
+//! `ontology/entity_types.csv` landing (2026-06-30): hints are keyed by the
+//! same classification labels the CSV defines, whatever they happen to be at
+//! runtime.
 
 use crate::entity_filter::is_noise_entity_name;
 use crate::graph::{GraphEntity, GraphStore};

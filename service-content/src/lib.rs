@@ -1362,7 +1362,18 @@ fn call_tier_a_combined(
         .header("X-Foundry-Complexity", "low")
         .header("X-Foundry-Background", "true")
         .json(&chat_body)
-        .timeout(Duration::from_secs(180))
+        // 1800s, not 180s (found + fixed 2026-08-16): this exact model/hardware
+        // (OLMo 7B Q4_K_M, CPU) is documented in slm-doorman/src/tier/local.rs's
+        // own LocalTierClient as taking 17-60 minutes for completions up to
+        // max_tokens=2048 — this call requests 1536 tokens with grammar-
+        // constrained decoding (typically slower per-token), squarely in the
+        // same regime. The old 180s value timed out on ~70% of real calls live
+        // (confirmed via journalctl), well before this exact class of "timeout
+        // far shorter than real model latency" bug was already root-caused once
+        // for LocalTierClient itself (see that file's comment on the prior 120s
+        // incident). Matching the same already-battle-tested value here instead
+        // of re-deriving a new one.
+        .timeout(Duration::from_secs(1800))
         .send()
     {
         Ok(r) if r.status().is_success() => match r.json::<serde_json::Value>() {
@@ -1772,6 +1783,36 @@ fn call_tier_0_gliner_at(
     GlinerOutcome::Empty
 }
 
+/// Whether to send KoGNER entity-hint examples on `/v1/extract` calls.
+/// Default **disabled** — found + reproduced live 2026-08-16: appending real
+/// example names to a label's zero-shot description text does not "add
+/// examples" the way the original KoGNER design assumed, it *narrows* what
+/// the bi-encoder model matches, actively suppressing correct recall. A
+/// single clean, correctly-formatted hint on the `Company` label was enough
+/// to take real content from 3 correct entity hits down to zero in direct
+/// reproduction against the live GLiNER service. This is a different, third
+/// mechanism from the two earlier hint bugs already fixed (2026-07-02 noise-
+/// seeding, 2026-07-27 domain-label mismatch — see `entity_hints.rs` and
+/// `BRIEF-flow-quality-audit.md`) — neither of those fixes touches this one,
+/// and this one is self-worsening: hints are capped at 3/label and cached
+/// once per process lifetime, so as the graph grows toward every label's cap
+/// being full, suppression trends toward total (confirmed live: 2,365
+/// extraction calls, 6 successes, this boot). `entity_hints.rs`'s cache-
+/// building/filtering machinery is left fully in place, just not wired to
+/// the live request — set `SERVICE_CONTENT_ENTITY_HINTS_ENABLED=true` to
+/// re-enable for testing a properly-evaluated version of this technique.
+fn entity_hints_if_enabled() -> Option<&'static std::collections::HashMap<String, Vec<String>>> {
+    let enabled = matches!(
+        std::env::var("SERVICE_CONTENT_ENTITY_HINTS_ENABLED").as_deref(),
+        Ok("1") | Ok("true") | Ok("TRUE") | Ok("yes")
+    );
+    if enabled {
+        entity_hints::get_entity_hints()
+    } else {
+        None
+    }
+}
+
 /// Runs the chunked GLiNER `/v1/extract` calls for one domain, deduping by
 /// (name, classification). `Err` carries the terminal `GlinerOutcome` for a
 /// genuine transport/protocol failure; `Ok` (possibly empty) means GLiNER
@@ -1790,7 +1831,7 @@ fn run_gliner_domain(
         let body = serde_json::json!({
             "text": chunk,
             "domain_id": domain,
-            "entity_hints": entity_hints::get_entity_hints(),
+            "entity_hints": entity_hints_if_enabled(),
         });
         let resp = match client.post(&url).json(&body).send() {
             Ok(r) => r,
