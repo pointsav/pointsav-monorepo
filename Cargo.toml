@@ -72,6 +72,12 @@ members = [
     "app-console-search",
     # mTLS Phase A public ingress
     "service-ingress",
+    # os-totebox product bundle -- dogfood on foundry-workspace
+    # (BRIEF-os-totebox-platform.md section 10, Phase 2). Crate has existed in
+    # canonical for a while but was never added as a workspace member here
+    # (only on project-totebox's own cluster-branch copy of this file) --
+    # found 2026-08-17 when deploy-binary.sh couldn't find the bin target.
+    "os-totebox",
 ]
 exclude = [
     # system-core and system-ledger declare their own [workspace] (standalone-extractable
@@ -79,6 +85,11 @@ exclude = [
     # multi-workspace-root error when used as path dependencies from within this workspace.
     "system-core",
     "system-ledger",
+    # service-slm declares its own [workspace] too (5-crate nested workspace: slm-core,
+    # slm-doorman, slm-doorman-server, adapter-hub, slm-mcp-server). Excluded for the same
+    # reason, so os-totebox can path-depend on slm-doorman-server
+    # (BRIEF-os-totebox-platform.md section 8/10, Phase 2 dogfood bundle).
+    "service-slm",
     # Held-out crates that physically nest under the workspace root
     # but are deliberately not workspace members.
     # - service-fs: see members comment above
