@@ -18,6 +18,13 @@ name = "os-totebox"
 path = "src/main.rs"
 
 [dependencies]
+# Force zstd-sys to link system libzstd via pkg-config instead of compiling its
+# own bundled C source -- avoids a duplicate-symbol link collision with lbug,
+# which statically bundles its own zstd implementation (see .cargo/config.toml's
+# 2026-06-22 note). zstd-sys itself is only ever a transitive dep (via
+# tower-http's compression feature); pinning it here purely to control its
+# feature resolution for this binary target.
+zstd-sys = { version = "2", default-features = false, features = ["pkg-config"] }
 service-content = { path = "../service-content" }
 slm-doorman-server = { path = "../service-slm/crates/slm-doorman-server" }
 tokio = { version = "1", features = ["rt-multi-thread", "signal"] }
