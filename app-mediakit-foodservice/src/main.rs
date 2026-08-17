@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: FSL-1.1-ALv2
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 //! Food-service platform engine — binary entry.
 //!
 //! `app-mediakit-foodservice serve --content-dir <dir>` renders pages

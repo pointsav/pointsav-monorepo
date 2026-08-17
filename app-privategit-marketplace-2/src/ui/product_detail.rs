@@ -1,5 +1,6 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: FSL-1.1-ALv2
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
 
 //! Product detail page — `GET /software/:product_id` (S136, requested by
 //! Command 2026-06-30). One page per catalog entry: BETA badge, tier badge,
