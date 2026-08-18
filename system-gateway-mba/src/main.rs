@@ -8,7 +8,7 @@ use tiny_http::{Method, Response, Server};
 
 fn deployment_dir() -> String {
     std::env::var("MBA_DEPLOYMENT_DIR")
-        .unwrap_or_else(|_| "/home/mathew/deployments/woodfine-fleet-deployment".to_string())
+        .expect("MBA_DEPLOYMENT_DIR must be set (2026-08-18 GitHub-exposure remediation - no real-value default)")
 }
 
 fn main() {

@@ -74,7 +74,7 @@ PROJECT="${SLM_YOYO_GCP_PROJECT:?SLM_YOYO_GCP_PROJECT must be set (2026-07-30 Gi
 ZONE="${SLM_YOYO_GCP_ZONE:-us-central1-a}"
 INSTANCE="${SLM_YOYO_GCP_INSTANCE:-yoyo-batch}"
 GCLOUD="${GCLOUD_BIN:-/snap/bin/gcloud}"
-SSH_KEY="${SLM_YOYO_SSH_KEY:-/home/mathew/.ssh/google_compute_engine}"
+SSH_KEY="${SLM_YOYO_SSH_KEY:?SLM_YOYO_SSH_KEY must be set (2026-08-18 GitHub-exposure remediation - no real-value default)}"
 
 # Kill switch — distinct from the production switch (/srv/foundry/data/yoyo-disabled).
 KILL_SWITCH="${TEST_MODE_KILL_SWITCH:-/srv/foundry/data/yoyo-test-mode-kill}"
