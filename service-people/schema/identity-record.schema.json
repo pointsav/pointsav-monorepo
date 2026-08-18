@@ -135,9 +135,9 @@
   "examples": [
     {
       "identity_id": "a1b2c3d4-e5f6-5789-a0b1-c2d3e4f5a6b7",
-      "primary_email": "jwoodfine@woodfine.com",
+      "primary_email": "user@example.com",
       "addresses": {
-        "emails": ["jwoodfine@woodfine.com", "jennifer.woodfine@gmail.com"],
+        "emails": ["user@example.com", "user2@example.com"],
         "phones": ["+1-555-0123"],
         "endpoints": [
           {

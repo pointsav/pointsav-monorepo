@@ -6,7 +6,7 @@
     <t:RequestServerVersion Version="Exchange2016" />
     <t:ExchangeImpersonation>
       <t:ConnectingSID>
-        <t:PrimarySmtpAddress>peter@woodfinegroup.com</t:PrimarySmtpAddress>
+        <t:PrimarySmtpAddress>service-account@example.com</t:PrimarySmtpAddress>
       </t:ConnectingSID>
     </t:ExchangeImpersonation>
   </soap:Header>
