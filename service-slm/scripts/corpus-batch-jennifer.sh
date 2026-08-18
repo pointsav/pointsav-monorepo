@@ -15,14 +15,14 @@
 #   ./scripts/corpus-batch-jennifer.sh [--batch-size N]
 #   JENNIFER_BASE=/path/to/deployment ./scripts/corpus-batch-jennifer.sh
 #
-# Env vars (with defaults):
-#   JENNIFER_BASE          — jennifer deployment root
-#   SERVICE_CONTENT_LEDGER — service-content ledger dir (CORPUS_*.json goes here)
-#   JENNIFER_CRM_DIR       — where SEMANTIC_*.json files are written (idempotency check)
+# Env vars:
+#   JENNIFER_BASE          — jennifer deployment root (required, no default)
+#   SERVICE_CONTENT_LEDGER — service-content ledger dir (CORPUS_*.json goes here; default derived from JENNIFER_BASE)
+#   JENNIFER_CRM_DIR       — where SEMANTIC_*.json files are written (idempotency check; default derived from JENNIFER_BASE)
 #   BATCH_SIZE             — max files to process per invocation (default 50)
 set -uo pipefail
 
-JENNIFER_BASE="${JENNIFER_BASE:-/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer}"
+JENNIFER_BASE="${JENNIFER_BASE:?JENNIFER_BASE must be set (2026-08-18 GitHub-exposure remediation - no real-value default)}"
 SERVICE_CONTENT_LEDGER="${SERVICE_CONTENT_LEDGER:-${JENNIFER_BASE}/service-fs/data/service-content/ledgers}"
 JENNIFER_CRM_DIR="${JENNIFER_CRM_DIR:-${JENNIFER_BASE}/service-fs/data/service-people/ledgers}"
 
