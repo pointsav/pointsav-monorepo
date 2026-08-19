@@ -11,6 +11,7 @@ Description: Bypasses the top 10,000 mega-caps to execute a 90-second targeted s
 import urllib.request
 import urllib.error
 import json
+import os
 import re
 import sys
 import time
@@ -161,7 +162,10 @@ def process_funds():
         print("[SYSTEM] Recovering ledger data extracted prior to termination...")
         
     finally:
-        output_path = "/home/mathew/Foundry/factory-pointsav/pointsav-monorepo/tool-edgar-extractor/extracted_funds.json"
+        # Defaults to the current working directory so the interrupt-recovery
+        # save below always succeeds; override with EDGAR_OUTPUT_PATH for a
+        # specific destination (2026-08-19 GitHub-exposure remediation).
+        output_path = os.environ.get("EDGAR_OUTPUT_PATH", "extracted_funds.json")
         with open(output_path, 'w') as f:
             json.dump(valid_funders, f, indent=4)
             

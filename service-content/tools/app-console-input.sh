@@ -3,10 +3,12 @@
 # SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
 # Identity: Ingestion Gateway (Ground Control - v1.9 Surgical)
-GCP_IP="35.212.238.174" 
-REMOTE_USER="mathew"
-REMOTE_REPO="/home/foundry/node-gcp-free/factory-pointsav/pointsav-monorepo"
-HOT_ZONE="$HOME/Desktop/service-content"
+# Requires GCP_IP, REMOTE_USER, REMOTE_REPO env vars set — no real-value
+# defaults (2026-08-19 GitHub-exposure remediation).
+GCP_IP="${GCP_IP:?GCP_IP must be set}"
+REMOTE_USER="${REMOTE_USER:?REMOTE_USER must be set}"
+REMOTE_REPO="${REMOTE_REPO:?REMOTE_REPO must be set}"
+HOT_ZONE="${HOT_ZONE:-$HOME/Desktop/service-content}"
 
 echo "📡 POINTSAV SURGICAL GATEWAY ACTIVE"
 cd "$HOT_ZONE/input"
