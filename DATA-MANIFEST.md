@@ -67,7 +67,7 @@ Rewe (DE), Lidl, and Aldi are not ingested by design. These chains operate in ne
 
 ### Tier Assignment (V3, May 2026)
 
-Tiers are assigned by binary predicate gates (pure-geometric engine, `build-geometric-ranking.py`). A cluster is Tier 1 Regional if it passes all five gates: composition (Warehouse+Hypermarket or Lifestyle+Hypermarket), top-10% national primary catchment population, top-20% national secondary catchment population, regional hospital present, and IoU ≤ 0.10 with any stronger co-located cluster. The full predicate specification is in `SCORING-METHODOLOGY.md`.
+Tiers are assigned by binary predicate gates (pure-geometric engine, `build-geometric-ranking.py`). A cluster is Tier 1 Regional if it passes all five gates: composition (Warehouse+Hypermarket or Lifestyle+Hypermarket), top-10% national primary catchment population, top-20% national secondary catchment population, regional hospital present, and IoU ≤ 0.10 with any stronger co-located cluster. The full predicate specification is in `scoring-methodology.md`.
 
 Prior to Sprint 17 (May 2026), tiers were assigned by a composite score (V2: sum of base score, count bonus, diversity bonus, civic depth, overlap penalty). V2 sub-scores (`score_final`, `rank_v2`, and related fields) have been removed from emitted geometry; the V2 scripts are retained at `legacy/generate-rankings-v2.py`.
 

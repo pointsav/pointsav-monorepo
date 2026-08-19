@@ -453,7 +453,7 @@ fn price_units_from_check_json(check_json: &Value) -> u64 {
 ///
 /// THE FIX: compare `l.price_usdc == price_units` directly — both operands are
 /// already micro-USDC units, so no multiplication belongs on the catalog side.
-/// Full rationale: `docs/P4-PRICING-FIX.md`.
+/// Full rationale: `docs/p4-pricing-fix.md`.
 ///
 /// **Known limitation, not fixed in this phase (data-model rebuild):** now that
 /// multiple os-* products can share the same tier price (up to 4 at `commercial`/
