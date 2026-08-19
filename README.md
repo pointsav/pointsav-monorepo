@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/pointsav/pointsav-media-assets/main/ASSET-SIGNET-MASTER.svg" width="72" alt="PointSav Digital Systems">
+<img src="https://raw.githubusercontent.com/pointsav/pointsav-media-assets/main/asset-signet-master.svg" width="72" alt="PointSav Digital Systems">
 
 # PointSav Digital Systems
 ### *Trustworthy Records Infrastructure for Institutions That Own Their Assets*
