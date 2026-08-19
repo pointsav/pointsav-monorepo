@@ -22,8 +22,8 @@ authors:
 repository-code: "https://github.com/pointsav/pointsav-monorepo"
 url: "https://github.com/pointsav/pointsav-monorepo"
 license: CC-BY-4.0
-version: "0.1.132"
-date-released: "2026-05-12"
+version: "0.1.5"
+date-released: "2026-08-19"
 keywords:
   - compounding-substrate
   - ai-doorman
@@ -56,6 +56,6 @@ preferred-citation:
       family-names: Digital Systems
       email: open.source@pointsav.com
       affiliation: PointSav Digital Systems
-  version: "0.1.132"
-  date-released: "2026-05-12"
+  version: "0.1.5"
+  date-released: "2026-08-19"
   url: "https://github.com/pointsav/pointsav-monorepo"

@@ -27,10 +27,9 @@ Directories under AGPL-3.0-or-later:
   app-console-*/     — applications extending os-console
   app-workplace-*/   — applications extending os-workplace
   xtask/             — workspace build-task runner
-  pointsav-pty-bridge/ — PTY bridge service
+  service-pty-bridge/ — PTY bridge service (renamed from pointsav-pty-bridge/)
   foundry-nodeclass/ — workspace node classification library
   scripts/           — workspace build and automation scripts
-  slm/               — language model module configuration
   docs/              — internal technical documentation
 
 Directories under FSL-1.1-ALv2 (Functional Source License 1.1 with
@@ -90,12 +89,6 @@ The full Apache-2.0 text is available at:
 
 The full PointSav-ARR text is available at:
   https://github.com/pointsav/factory-release-engineering/blob/main/licenses/PointSav-ARR.txt
-
---------------------------------------------------------------------------------
-LOCAL-ONLY DIRECTORIES (not tracked in this repository)
---------------------------------------------------------------------------------
-
-  discovery-queue/  — operator-local transaction queue
 
 --------------------------------------------------------------------------------
 DIRECTORIES PENDING LICENSE CLASSIFICATION
