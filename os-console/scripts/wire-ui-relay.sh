@@ -7,7 +7,7 @@
 # Target: GCP-Node (os-console UI Chassis)
 # ==============================================================================
 
-UI_DIR="/home/mathew/Foundry/factory-pointsav/pointsav-monorepo/os-console"
+UI_DIR="${OS_CONSOLE_UI_DIR:?OS_CONSOLE_UI_DIR must be set (2026-08-19 GitHub-exposure remediation - no real-value default)}"
 RELAY_URL="http://127.0.0.1:3000"
 
 echo "[SYS] Scanning presentation layer for legacy ingestion endpoints..."

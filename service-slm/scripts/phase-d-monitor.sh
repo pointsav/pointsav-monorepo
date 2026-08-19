@@ -147,9 +147,9 @@ Tier B online: ${TIER_B_UP}
 $(if [[ "${ADAPTER_TYPE}" == "peft" ]]; then
 echo "NEXT STEP (GGUF conversion needed):
   1. Wait for yoyo-batch to come online
-  2. SSH to VM: ssh mathew@<VM_IP>
+  2. SSH to VM: ssh <operator>@<VM_IP>
   3. Run: python3 convert_lora_to_gguf.py --base /data/weights/olmo-3-7b-instruct-hf ${ADAPTER_PATH}
-  4. Pull GGUF to workspace: scp mathew@<VM_IP>:${ADAPTER_PATH}.gguf ${ADAPTER_PATH}.gguf
+  4. Pull GGUF to workspace: scp <operator>@<VM_IP>:${ADAPTER_PATH}.gguf ${ADAPTER_PATH}.gguf
   5. rm ${COMPLETE_MARKER} && bash ${SCRIPTS_DIR}/phase-d-monitor.sh"
 elif [[ "${GATE_RESULT}" -ne 0 ]]; then
 echo "NEXT STEP: deploy gate FAILED — check ${LOG_FILE} for details"

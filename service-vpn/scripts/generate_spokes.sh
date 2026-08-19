@@ -11,7 +11,7 @@ set -e
 # Cryptographic Anchor (Laptop-B)
 HUB_PUBKEY="2e1K3zPXdTmG5vwQdjmUZ6RlzDg6MVDjpnGc52t3pXE"
 ENDPOINT="<REDACTED-VPN-HUB-ENDPOINT>:51820"
-OUTPUT_DIR="/home/mathew/Foundry/pointsav-monorepo/service-vpn/spokes"
+OUTPUT_DIR="${VPN_SPOKES_OUTPUT_DIR:?VPN_SPOKES_OUTPUT_DIR must be set (2026-08-19 GitHub-exposure remediation - no real-value default)}"
 
 mkdir -p "${OUTPUT_DIR}"
 cd "${OUTPUT_DIR}"

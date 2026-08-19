@@ -8,7 +8,7 @@ Walk both source trees (engineering/ and apprenticeship/) and record, for
 every file: path, size, SHA256, mtime. Write the manifest as a timestamped
 JSON file at:
 
-    /home/mathew/Foundry/data/training-corpus/MANIFEST-<ISO8601>.json
+    <corpus-root>/MANIFEST-<ISO8601>.json
 
 Run this BEFORE any merge or export operation so the pre-merge state is
 permanently recorded.
@@ -30,7 +30,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-_DEFAULT_CORPUS_ROOT = "/home/mathew/Foundry/data/training-corpus"
+_DEFAULT_CORPUS_ROOT = os.environ.get("SLM_TRAINING_CORPUS_ROOT")
 _SOURCE_TREES = ["engineering", "apprenticeship"]
 # Subdirectories that are outputs, not inputs — exclude from manifest.
 _EXCLUDE_TREES = {"merged", "doctrine", "extraction", "feedback", "sessions"}
@@ -98,6 +98,9 @@ def main() -> None:
     )
     args = ap.parse_args()
 
+    if not args.corpus_root:
+        print("ERROR: --corpus-root or SLM_TRAINING_CORPUS_ROOT must be set", file=sys.stderr)
+        sys.exit(2)
     corpus_root = Path(args.corpus_root)
     if not corpus_root.is_dir():
         print(f"ERROR: corpus root not found: {corpus_root}", file=sys.stderr)

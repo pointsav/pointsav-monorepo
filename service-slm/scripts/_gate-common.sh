@@ -89,7 +89,7 @@ gate_common_init() {
 
         # /var/lib/local-slm/ is local-slm:local-slm drwxr-x--- — not traversable by this
         # user even though the file itself is other-readable. Cache a copy once under a
-        # mathew-owned dir rather than running the scratch server as root.
+        # operator-owned dir rather than running the scratch server as root.
         _BASE_CACHE_DIR="${FOUNDRY_ROOT}/data/adapters/.gate-base-model"
         _BASE_CACHE_PATH="${_BASE_CACHE_DIR}/${_SERVED_GGUF}"
         if [[ ! -f "${_BASE_CACHE_PATH}" ]]; then

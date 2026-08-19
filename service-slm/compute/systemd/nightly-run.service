@@ -5,7 +5,7 @@ After=local-doorman.service network-online.target
 
 [Service]
 Type=oneshot
-User=mathew
+User=<operator>
 EnvironmentFile=/etc/local-doorman/local-doorman.env
 ExecStart=/srv/foundry/clones/project-intelligence/service-slm/scripts/nightly-run.sh
 StandardOutput=journal

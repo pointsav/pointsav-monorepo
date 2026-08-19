@@ -48,7 +48,7 @@ cargo build --release -p slm-doorman-server
 Deploy:
 ```bash
 sudo systemctl stop local-doorman
-sudo cp /srv/foundry/cargo-target/mathew/release/slm-doorman-server /usr/local/bin/
+sudo cp /srv/foundry/cargo-target/<operator>/release/slm-doorman-server /usr/local/bin/
 sudo cp /tmp/local-doorman-new.env /etc/local-doorman/local-doorman.env
 sudo systemctl start local-doorman
 ```

@@ -34,11 +34,9 @@ SWEEP_LEDGER = os.environ.get(
     "SWEEP_LEDGER",
     "/srv/foundry/data/yoyo-datagraph-sweep.ledger",
 )
-FEEDBACK_DIR = os.environ.get(
-    "FEEDBACK_DIR",
-    "/home/mathew/deployments/woodfine-fleet-deployment"
-    "/cluster-totebox-jennifer/service-fs/data/training-corpus/feedback",
-)
+FEEDBACK_DIR = os.environ.get("FEEDBACK_DIR")
+if not FEEDBACK_DIR:
+    raise SystemExit("FEEDBACK_DIR must be set (2026-08-19 GitHub-exposure remediation - no real-value default)")
 
 
 def load_ledger(path: str) -> list[str]:

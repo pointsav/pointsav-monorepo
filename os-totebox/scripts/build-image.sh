@@ -22,7 +22,7 @@ NETBSD_VER="10.1"
 ARCH="amd64"
 SETS_URL="https://cdn.netbsd.org/pub/NetBSD/NetBSD-${NETBSD_VER}/${ARCH}/binary/sets"
 TOOLS_DIR="${TOOLS_DIR:-build/netbsd-tools}"
-# CARGO_TARGET_DIR is workspace-wide redirect (e.g. /srv/foundry/cargo-target/mathew).
+# CARGO_TARGET_DIR is workspace-wide redirect (e.g. /srv/foundry/cargo-target/<operator>).
 # Fall back to local target/ if not set.
 _CARGO_RELEASE="${CARGO_TARGET_DIR:-../../target}/x86_64-unknown-netbsd/release"
 BINARIES_DIR="${BINARIES_DIR:-${_CARGO_RELEASE}}"
@@ -238,8 +238,8 @@ echo "veriexec=YES" >> "${OVERLAY}/etc/security.conf"
 echo "kern.veriexec.strict=1" >> "${OVERLAY}/etc/sysctl.conf"
 
 # ── 9. Build FFS2 disk image using NetBSD cross-makefs ───────────────────────
-# Set correct ownership before image capture. tar extraction runs as mathew
-# (uid=1001) so extracted files are owned by uid=1001. PAM, login(1), and
+# Set correct ownership before image capture. tar extraction runs as the
+# operator (uid=1001) so extracted files are owned by uid=1001. PAM, login(1), and
 # sshd enforce that /etc/login.conf, /etc/pam.d/*, and other system files must
 # be owned by root (uid=0); boot fails with "insecure ownership" otherwise.
 # This must run AFTER all file writes (rc.conf, fstab, Veriexec manifest, etc.)
