@@ -5,7 +5,7 @@ After=local-doorman.service network-online.target
 
 [Service]
 Type=oneshot
-User=mathew
+User=<operator>
 EnvironmentFile=-/etc/local-doorman/local-doorman.env
 # SLM_LORA_AUTO_ENABLE is the hard gate — explicitly set in
 # /etc/local-doorman/local-doorman.env by the operator when ready.

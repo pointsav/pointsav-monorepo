@@ -85,9 +85,9 @@ mod tests {
     fn id_matches_acs_engine_convention() {
         // The people-acs-engine derives: Uuid::new_v5(&Uuid::NAMESPACE_DNS, email.as_bytes())
         // where email is already lowercase. Verify we produce the same value.
-        let email = "jennifer@woodfine.ca";
+        let email = "alice@example.com";
         let expected = Uuid::new_v5(&Uuid::NAMESPACE_DNS, email.as_bytes());
-        let p = Person::new("Jennifer Woodfine", email);
+        let p = Person::new("Alice Example", email);
         assert_eq!(p.id, expected);
     }
 

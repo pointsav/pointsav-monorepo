@@ -6,11 +6,11 @@
 # System: os-console (GCP-Node)
 # Objective: Generate Ed25519 identity for secure totebox communication
 
-KEY_DIR="/home/mathew/Foundry/factory-pointsav/pointsav-monorepo/system-gateway-mba/keys"
+KEY_DIR="${MBA_KEY_DIR:?MBA_KEY_DIR must be set (2026-08-19 GitHub-exposure remediation - no real-value default)}"
 KEY_NAME="gcp_node_mba_ed25519"
 
 echo "[SYS] Initializing Machine-Based Authentication Cryptographic Directory..."
-# Lock down the directory to the current user (mathew)
+# Lock down the directory to the current operator
 chmod 700 "$KEY_DIR"
 
 echo "[SYS] Generating Ed25519 Keypair..."

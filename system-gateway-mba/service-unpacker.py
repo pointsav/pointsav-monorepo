@@ -6,7 +6,9 @@ import json
 import base64
 
 # Target the exact WORM drop location
-SOURCE_DIR = "/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-personnel-1/service-fs/data/service-people/source"
+SOURCE_DIR = os.environ.get("MBA_UNPACKER_SOURCE_DIR")
+if not SOURCE_DIR:
+    raise SystemExit("MBA_UNPACKER_SOURCE_DIR must be set (2026-08-19 GitHub-exposure remediation - no real-value default)")
 
 print("[SYSTEM] Scanning WORM drive for encapsulated assets...")
 

@@ -14,7 +14,7 @@
 set -euo pipefail
 
 # In a Workspace, the target folder is at the Monorepo Root
-WORKSPACE_ROOT="/home/mathew/Foundry/factory-pointsav/pointsav-monorepo"
+WORKSPACE_ROOT="${OS_INFRASTRUCTURE_WORKSPACE_ROOT:?OS_INFRASTRUCTURE_WORKSPACE_ROOT must be set (2026-08-19 GitHub-exposure remediation - no real-value default)}"
 PRODUCT_DIR="${WORKSPACE_ROOT}/os-infrastructure"
 BUILD_DIR="${PRODUCT_DIR}/build_iso"
 TARGET="x86_64-unknown-none"

@@ -123,7 +123,7 @@ fn default_gce_ssh_port() -> u16 {
     22
 }
 fn default_gce_user() -> String {
-    "mathew".into()
+    "operator".into()
 }
 
 impl Default for ProfileConfig {

@@ -261,12 +261,12 @@ def load_feedback_files(corpus_path: str) -> list[dict]:
     # different directory from the apprenticeship corpus path. Scan it too so
     # enrichment DPO pairs (Tier B entity disagreements) reach the trainer.
     # Confirmed split-brain by 6-agent audit 2026-06-15: 8 enrichment pairs orphaned.
-    sc_base = os.environ.get(
-        "SERVICE_CONTENT_BASE_DIR",
-        "/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer/service-fs/data",
-    )
-    enrichment_dir = os.path.join(sc_base, "training-corpus", "feedback")
-    if os.path.isdir(enrichment_dir) and os.path.abspath(enrichment_dir) != os.path.abspath(corpus_path):
+    sc_base = os.environ.get("SERVICE_CONTENT_BASE_DIR")
+    if not sc_base:
+        print("[corpus] SERVICE_CONTENT_BASE_DIR not set — skipping enrichment-pair scan")
+        sc_base = ""
+    enrichment_dir = os.path.join(sc_base, "training-corpus", "feedback") if sc_base else ""
+    if enrichment_dir and os.path.isdir(enrichment_dir) and os.path.abspath(enrichment_dir) != os.path.abspath(corpus_path):
         extra = glob.glob(os.path.join(enrichment_dir, "enrichment-*.jsonl"))
         if extra:
             print(f"[corpus] +{len(extra)} enrichment pairs from SERVICE_CONTENT_BASE_DIR")
