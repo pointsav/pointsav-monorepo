@@ -13,7 +13,7 @@
 
 <br/>
 
-**[→ Documentation Wiki](https://github.com/pointsav/content-wiki-documentation)** &nbsp;·&nbsp; **[→ Design System](https://github.com/pointsav/pointsav-design-system)** &nbsp;·&nbsp; **[→ Live Deployment](https://github.com/woodfine/woodfine-fleet-deployment)** &nbsp;·&nbsp; **[→ pointsav.com](https://pointsav.com)**
+**[→ Documentation Wiki](https://github.com/pointsav/media-knowledge-documentation)** &nbsp;·&nbsp; **[→ Design System](https://github.com/pointsav/pointsav-design-system)** &nbsp;·&nbsp; **[→ Live Deployment](https://github.com/woodfine/woodfine-fleet-deployment)** &nbsp;·&nbsp; **[→ pointsav.com](https://pointsav.com)**
 
 </div>
 
@@ -158,7 +158,7 @@ Every third-party dependency is tracked as formal technical debt. For each quara
 |:---|:---|
 | `pointsav-monorepo` | Engineering source — all `system-*`, `service-*`, `os-*`, `moonshot-*` |
 | `pointsav-design-system` | Linguistic protocols and visual standards |
-| `content-wiki-documentation` | Technical library — ADRs, service specifications, glossary |
+| `media-knowledge-documentation` | Technical library — ADRs, service specifications, glossary |
 | `pointsav-fleet-deployment` | Vendor's own operational systems |
 | `pointsav.github.io` | Public-facing marketing site |
 

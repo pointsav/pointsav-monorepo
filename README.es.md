@@ -11,7 +11,7 @@
 
 <br/>
 
-**[→ Wiki de Documentación](https://github.com/pointsav/content-wiki-documentation)** &nbsp;·&nbsp; **[→ Sistema de Diseño](https://github.com/pointsav/pointsav-design-system)** &nbsp;·&nbsp; **[→ Despliegue Operativo](https://github.com/woodfine/woodfine-fleet-deployment)** &nbsp;·&nbsp; **[→ pointsav.com](https://pointsav.com)**
+**[→ Wiki de Documentación](https://github.com/pointsav/media-knowledge-documentation)** &nbsp;·&nbsp; **[→ Sistema de Diseño](https://github.com/pointsav/pointsav-design-system)** &nbsp;·&nbsp; **[→ Despliegue Operativo](https://github.com/woodfine/woodfine-fleet-deployment)** &nbsp;·&nbsp; **[→ pointsav.com](https://pointsav.com)**
 
 </div>
 
