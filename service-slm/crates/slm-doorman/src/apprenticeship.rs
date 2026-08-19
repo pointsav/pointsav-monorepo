@@ -581,7 +581,7 @@ Changed --parallel 2 to --parallel 1 to prevent SWA KV-cache slot collision on O
 +++ b/infrastructure/local-slm.service\n\
 @@ -17,7 +17,7 @@ After=network.target\n\
  [Service]\n\
- User=mathew\n\
+ User=<operator>\n\
  Type=simple\n\
 -ExecStart=/usr/bin/llama-server --parallel 2 --port 8080\n\
 +ExecStart=/usr/bin/llama-server --parallel 1 --port 8080\n\

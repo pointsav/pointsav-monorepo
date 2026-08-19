@@ -28,10 +28,9 @@ import matplotlib.patches as mpatches
 import numpy as np
 from shapely.geometry import Point
 
-BASEMAP_SHP = (
-    "/home/mathew/.local/lib/python3.12/site-packages"
-    "/pyogrio/tests/fixtures/naturalearth_lowres/naturalearth_lowres.shp"
-)
+BASEMAP_SHP = os.environ.get("GIS_BASEMAP_SHP")
+if not BASEMAP_SHP:
+    raise SystemExit("GIS_BASEMAP_SHP must be set (2026-08-19 GitHub-exposure remediation - no real-value default) — point it at pyogrio's bundled naturalearth_lowres.shp fixture in your environment's site-packages")
 
 DATA_DIR = os.environ.get("GIS_DATA_DIR")
 if not DATA_DIR:

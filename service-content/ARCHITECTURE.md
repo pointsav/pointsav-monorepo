@@ -37,7 +37,7 @@ AI-grounding requests come from the Doorman.
 The current `src/main.rs` is a legacy file-watcher with several structural
 problems:
 
-- Hardcoded path `/home/mathew/deployments/woodfine-fleet-deployment/...` (a
+- Hardcoded path `/home/<operator>/deployments/woodfine-fleet-deployment/...` (a
   deployment path that may not exist)
 - Hardcoded SLM endpoint at port 8082 (pre-Doorman; bypasses claim #43)
 - No graph database — flat JSON files

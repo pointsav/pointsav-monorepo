@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "[*] Initializing strict script execution to bypass terminal limits..."
 
-cd /home/mathew/Foundry/factory-pointsav/pointsav-monorepo/vendor-sel4-kernel/
+cd "${SEL4_KERNEL_DIR:?SEL4_KERNEL_DIR must be set (2026-08-19 GitHub-exposure remediation - no real-value default)}"
 rm -rf build
 mkdir -p build
 cd build

@@ -75,6 +75,7 @@ ZONE="${SLM_YOYO_GCP_ZONE:-us-central1-a}"
 INSTANCE="${SLM_YOYO_GCP_INSTANCE:-yoyo-batch}"
 GCLOUD="${GCLOUD_BIN:-/snap/bin/gcloud}"
 SSH_KEY="${SLM_YOYO_SSH_KEY:?SLM_YOYO_SSH_KEY must be set (2026-08-18 GitHub-exposure remediation - no real-value default)}"
+SSH_USER="${SLM_YOYO_SSH_USER:?SLM_YOYO_SSH_USER must be set (2026-08-19 GitHub-exposure remediation - no real-value default)}"
 
 # Kill switch — distinct from the production switch (/srv/foundry/data/yoyo-disabled).
 KILL_SWITCH="${TEST_MODE_KILL_SWITCH:-/srv/foundry/data/yoyo-test-mode-kill}"
@@ -235,14 +236,14 @@ remote_ssh() {
     # remote_ssh <command...>  — run a command on the VM via direct SSH (no IAP).
     ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=no \
         -o ConnectTimeout=10 -o ServerAliveInterval=30 \
-        "mathew@${VM_IP}" "$*" 2>>"${LOG_FILE}"
+        "${SSH_USER}@${VM_IP}" "$*" 2>>"${LOG_FILE}"
 }
 
 remote_rsync() {
     # remote_rsync <local> <remote>  — rsync to VM via direct SSH (no IAP).
     rsync -az \
         -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no -o ConnectTimeout=10" \
-        "$1" "mathew@${VM_IP}:$2" 2>>"${LOG_FILE}"
+        "$1" "${SSH_USER}@${VM_IP}:$2" 2>>"${LOG_FILE}"
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -722,7 +723,7 @@ if (( DRYRUN_OK == 1 )); then
         # Ensure training dependencies are installed on the VM via a persistent venv.
         # Debian PEP 668 blocks pip from touching system python — venv is required.
         # ~/train-venv persists on the 100GB disk so subsequent runs skip this step.
-        TRAIN_VENV="/home/mathew/train-venv"
+        TRAIN_VENV="/home/${SSH_USER}/train-venv"
         # Rebuild venv if: TRL <0.12 (TRL 0.9.x passes tokenizer= to Trainer.__init__
         # which modern transformers 4.47+ renamed to processing_class=). Float16 replaces
         # 4-bit — bitsandbytes no longer needed.
@@ -788,7 +789,7 @@ exit(0 if trl_ok else 1)
             log "  Pulling adapter to ${ADAPTER_OUT} ..."
             rsync -az \
                 -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
-                "mathew@${VM_IP}:${REMOTE_DIR}/adapter/." "${ADAPTER_OUT}/" >>"${LOG_FILE}" 2>&1 \
+                "${SSH_USER}@${VM_IP}:${REMOTE_DIR}/adapter/." "${ADAPTER_OUT}/" >>"${LOG_FILE}" 2>&1 \
                 || log "  WARN adapter pull failed"
             if [[ -f "${ADAPTER_OUT}/adapter_config.json" ]]; then
                 record "sft-train" "pass" "adapter produced + pulled to test tree"
@@ -802,7 +803,7 @@ exit(0 if trl_ok else 1)
         # Always pull back the remote train.log for post-mortem, regardless of outcome.
         rsync -az \
             -e "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no" \
-            "mathew@${VM_IP}:${REMOTE_DIR}/train.log" "${TEST_ROOT}/remote-train.log" \
+            "${SSH_USER}@${VM_IP}:${REMOTE_DIR}/train.log" "${TEST_ROOT}/remote-train.log" \
             >>"${LOG_FILE}" 2>&1 \
             && log "  Remote train.log pulled to ${TEST_ROOT}/remote-train.log" \
             || log "  WARN: remote train.log pull failed (VM may already be stopping)"

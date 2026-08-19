@@ -444,7 +444,7 @@ The full code read reveals service-content is in early scaffold state. What exis
   `CORPUS_*.json` files, sends corpus text to an SLM endpoint at port 8082
   (`http://127.0.0.1:8082/api/semantic-extract`), receives entity JSON, and writes
   enriched CRM records to `service-people/ledgers/`. The endpoint is hardcoded to a
-  local deployment path (`/home/mathew/deployments/woodfine-fleet-deployment/...`).
+  local deployment path (`/home/<operator>/deployments/woodfine-fleet-deployment/...`).
   This is **old code pre-dating the Doorman** — it calls a legacy SLM endpoint (port 8082),
   not the Doorman (port 9080). It does not route through the Doorman.
 - `content-compiler/src/main.rs` — reads JSON files from `knowledge-graph/`, does
@@ -1384,7 +1384,7 @@ Each question is answerable in a sentence and shapes Phase 1-3 implementation.
 - Is the KuzuDB `kuzu` Rust crate (currently in `ARCHITECTURE.md` §5.4) still receiving
   security patches from either the Kineviz bighorn fork or the LadybugDB team?
 - Does the service-content `src/main.rs` watcher assume a specific deployment directory
-  structure (`/home/mathew/deployments/...`) that would need to be generalized for any
+  structure (`/home/<operator>/deployments/...`) that would need to be generalized for any
   deployment path before the Phase 1 refactor?
 - Should the graph context assembly in the Doorman be synchronous (adds latency to every
   Tier B request) or async (pre-assembled context in a brief cache updated on document
