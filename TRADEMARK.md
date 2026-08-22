@@ -24,6 +24,7 @@ This Policy protects the following word marks as "Woodfine Marks":
   - "Woodfine Capital Projects"
   - "Woodfine Capital Projects Inc."
   - "Woodfine Management"
+  - "Woodfine Management Corp."
   - "MCorp"
   - "PointSav"
   - "PointSav Digital Systems"
@@ -36,15 +37,19 @@ product names associated with these word marks, whether identified
 here or adopted in the future. Any mark omitted from this enumeration
 is unprotected by this Policy until added by amendment.
 
-This Policy enumerates ten word marks (the original five canonical marks
-plus four bare-word forms without corporate suffix, plus "Capability Geometry"
-added as an additional canonical mark by amendment) for breadth of legal protection.
-The canonical five-mark short-form notice used in document footers and
-README files — "Woodfine Capital Projects™, MCorp™,
-PointSav Digital Systems™, Totebox Orchestration™, and Totebox Archive™"
-— is an intentional abbreviation of this list for readability. The
-shorter list is sufficient for attribution purposes; this Policy's full
-enumeration governs enforcement.
+This Policy enumerates eleven word marks (seven canonical marks — the five
+full corporate/product marks, "MCorp," and "Capability Geometry" — plus four
+bare-word forms without corporate suffix) for breadth of legal protection.
+"MCorp" is the short-form mark adopted 2026-06-19 for use in the
+canonical short-form notice and public-facing attribution; "Woodfine
+Management Corp." remains the full corporate-suffix mark and the entity's
+legal name as used elsewhere in this Policy (see Preamble). Both are
+separately protected marks. The canonical five-mark short-form notice
+used in document footers and README files — "Woodfine Capital Projects™,
+MCorp™, PointSav Digital Systems™, Totebox Orchestration™, and Totebox
+Archive™" — is an intentional abbreviation of this list for readability.
+The shorter list is sufficient for attribution purposes; this Policy's
+full enumeration governs enforcement.
 
 As of the effective date of this Policy, each Woodfine Mark is an
 unregistered common-law trademark used in commerce in Canada, the
@@ -282,6 +287,7 @@ Woodfine Capital Projects™, MCorp™, PointSav Digital Systems™,
 Totebox Orchestration™, Totebox Archive™, and Capability Geometry™ are trademarks
 of Woodfine Capital Projects Inc., used in Canada, the United States, Latin America,
 and Europe.
+Capability Geometry™ is an unregistered trademark of Woodfine Capital Projects Inc.
 All other trademarks are the property of their respective owners.
 ```
 
